@@ -50,19 +50,19 @@ Local Definition Ord__Down_compare {inst_a} `{GHC.Base.Ord inst_a}
 
 Local Definition Ord__Down_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Down_compare x y) Gt.
+  fun x y => Ord__Down_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Down_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Down_compare x y) Lt.
+  fun x y => Ord__Down_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__Down_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Down_compare x y) Lt.
+  fun x y => Ord__Down_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Down_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Down_compare x y) Gt.
+  fun x y => Ord__Down_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Down_max {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> (Down inst_a) :=

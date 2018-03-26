@@ -315,8 +315,8 @@ Definition mkLocalisedOccName
   fun this_mod mk_occ name =>
     let origin :=
       if nameIsLocalOrFrom this_mod name : bool then None else
-      Some (_GHC.Base.∘_ Module.moduleNameColons (Module.moduleName GHC.Base.∘
-                          nameModule) name) in
+      Some ((Module.moduleNameColons GHC.Base.∘
+             (Module.moduleName GHC.Base.∘ nameModule)) name) in
     mk_occ origin (nameOccName name).
 
 Definition isVarName : Name -> bool :=

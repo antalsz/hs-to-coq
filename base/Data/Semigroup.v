@@ -429,7 +429,7 @@ Local Definition Foldable__Min_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__Min_foldl f' GHC.Base.id xs z0
       end.
@@ -453,7 +453,7 @@ Local Definition Foldable__Min_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__Min_foldr f' GHC.Base.id xs z0
       end.
@@ -462,7 +462,7 @@ Local Definition Foldable__Min_length : forall {a}, Min a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Min_foldl' (fun arg_64__ arg_65__ =>
                             match arg_64__, arg_65__ with
-                            | c, _ => _GHC.Num.+_ c #1
+                            | c, _ => c GHC.Num.+ #1
                             end) #0.
 
 Local Definition Foldable__Min_null : forall {a}, Min a -> bool :=
@@ -655,7 +655,7 @@ Local Definition Foldable__Max_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__Max_foldl f' GHC.Base.id xs z0
       end.
@@ -679,7 +679,7 @@ Local Definition Foldable__Max_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__Max_foldr f' GHC.Base.id xs z0
       end.
@@ -688,7 +688,7 @@ Local Definition Foldable__Max_length : forall {a}, Max a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Max_foldl' (fun arg_64__ arg_65__ =>
                             match arg_64__, arg_65__ with
-                            | c, _ => _GHC.Num.+_ c #1
+                            | c, _ => c GHC.Num.+ #1
                             end) #0.
 
 Local Definition Foldable__Max_null : forall {a}, Max a -> bool :=
@@ -868,7 +868,7 @@ Local Definition Foldable__Arg_foldr' {inst_a}
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__Arg_foldl f' GHC.Base.id xs z0
       end.
@@ -892,7 +892,7 @@ Local Definition Foldable__Arg_foldl' {inst_a}
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__Arg_foldr f' GHC.Base.id xs z0
       end.
@@ -902,7 +902,7 @@ Local Definition Foldable__Arg_length {inst_a}
   fun {a} =>
     Foldable__Arg_foldl' (fun arg_64__ arg_65__ =>
                             match arg_64__, arg_65__ with
-                            | c, _ => _GHC.Num.+_ c #1
+                            | c, _ => c GHC.Num.+ #1
                             end) #0.
 
 Local Definition Foldable__Arg_null {inst_a}
@@ -1071,7 +1071,7 @@ Local Definition Foldable__First_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__First_foldl f' GHC.Base.id xs z0
       end.
@@ -1095,7 +1095,7 @@ Local Definition Foldable__First_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__First_foldr f' GHC.Base.id xs z0
       end.
@@ -1104,7 +1104,7 @@ Local Definition Foldable__First_length : forall {a}, First a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__First_foldl' (fun arg_64__ arg_65__ =>
                               match arg_64__, arg_65__ with
-                              | c, _ => _GHC.Num.+_ c #1
+                              | c, _ => c GHC.Num.+ #1
                               end) #0.
 
 Local Definition Foldable__First_null : forall {a}, First a -> bool :=
@@ -1291,7 +1291,7 @@ Local Definition Foldable__Last_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__Last_foldl f' GHC.Base.id xs z0
       end.
@@ -1315,7 +1315,7 @@ Local Definition Foldable__Last_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__Last_foldr f' GHC.Base.id xs z0
       end.
@@ -1324,7 +1324,7 @@ Local Definition Foldable__Last_length : forall {a}, Last a -> GHC.Num.Int :=
   fun {a} =>
     Foldable__Last_foldl' (fun arg_64__ arg_65__ =>
                              match arg_64__, arg_65__ with
-                             | c, _ => _GHC.Num.+_ c #1
+                             | c, _ => c GHC.Num.+ #1
                              end) #0.
 
 Local Definition Foldable__Last_null : forall {a}, Last a -> bool :=
@@ -1597,7 +1597,7 @@ Local Definition Foldable__Option_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__Option_foldl f' GHC.Base.id xs z0
       end.
@@ -1621,7 +1621,7 @@ Local Definition Foldable__Option_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__Option_foldr f' GHC.Base.id xs z0
       end.
@@ -1631,7 +1631,7 @@ Local Definition Foldable__Option_length
   fun {a} =>
     Foldable__Option_foldl' (fun arg_64__ arg_65__ =>
                                match arg_64__, arg_65__ with
-                               | c, _ => _GHC.Num.+_ c #1
+                               | c, _ => c GHC.Num.+ #1
                                end) #0.
 
 Local Definition Foldable__Option_null : forall {a}, Option a -> bool :=

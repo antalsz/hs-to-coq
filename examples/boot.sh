@@ -30,7 +30,7 @@ clean make -C dlist clean
 clean make -C rle clean
 clean make -C bag clean
 clean make -C quicksort clean
-clean make -C coinductive clean
+clean make -C coinduction clean
 clean make -C ../base-thy clean
 clean make -C containers/theories clean
 
@@ -57,7 +57,7 @@ make -C rle
 make -C bag
 make -C quicksort
 make -C dlist
-make -C coinductive
+make -C coinduction
 
 if [[ -e containers/containers ]]
 then

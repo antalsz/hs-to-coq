@@ -5,6 +5,7 @@ module HsToCoq.Coq.Gallina.Util (
   pattern Var,    pattern App1,    pattern App2,    pattern App3,    appList,
   pattern VarPat, pattern App1Pat, pattern App2Pat, pattern App3Pat,
   pattern BName,
+  mkInfix,
   maybeForall,
   pattern IfBool, pattern IfCase,
   pattern LetFix, pattern LetCofix,
@@ -67,6 +68,10 @@ pattern App3Pat c x1 x2 x3 = ArgsPat c [x1, x2, x3]
 pattern BName :: Ident -> Name
 pattern BName  x          = Ident (Bare x)
 
+-- Legacy combinator, to migrate away from the Infix constructor
+mkInfix :: Term -> Qualid -> Term -> Term
+mkInfix l op r = App2 (Qualid op) l r
+
 maybeForall :: Foldable f => f Binder -> Term -> Term
 maybeForall = maybe id Forall . nonEmpty . toList
 {-# INLINABLE  maybeForall #-}
@@ -107,7 +112,6 @@ termHead (Parens t)           = termHead t
 termHead (InScope t _)        = termHead t
 termHead (App t _)            = termHead t
 termHead (ExplicitApp name _) = Just name
-termHead (Infix _ op _)       = Just op
 termHead (Qualid name)        = Just name
 termHead _                    = Nothing
 
@@ -201,7 +205,6 @@ collectArgs (App t args) = do
   where
     fromArg (PosArg t) = return t
     fromArg _          = fail "non-positional argument"
-collectArgs (Infix a1 f a2) = return (f, [a1, a2])
 collectArgs (Arrow a1 a2) = return (arrow_qid, [a1, a2])
   where arrow_qid = Qualified "GHC.Prim" "arrow"
 collectArgs (Parens t)    = collectArgs t

@@ -240,7 +240,7 @@ Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Mk_ArrowMonad m => Mk_ArrowMonad (_Control.Category.>>>_ m (arr f))
+      | f, Mk_ArrowMonad m => Mk_ArrowMonad (m Control.Category.>>> arr f)
       end.
 
 Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}

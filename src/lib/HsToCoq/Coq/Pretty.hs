@@ -303,13 +303,9 @@ instance Gallina Term where
   renderGallina' _ (App1 "GHC.Num.fromInteger" (Num num)) =
     char '#' <> renderNum num
 
-  renderGallina' p (App f args) =  maybeParen (p > appPrec) $
-    renderGallina' appPrec f </> align (render_args' (appPrec + 1) H args)
-
-  renderGallina' _p (ExplicitApp qid args) = parensN $
-    "@" <> renderGallina qid <> softlineIf args <> render_args' (appPrec + 1) H args
-
-  renderGallina' p (Infix l op r)  =
+  -- Special notation for somehting that looks like an operator an
+  -- is applied to two arguments
+  renderGallina' p (App2 (Qualid op) l r) | qualidIsOp op =
     case lookup op precTable of
       Just (n, LeftAssociativity)  ->
         maybeParen (n < p) $ group $
@@ -323,6 +319,12 @@ instance Gallina Term where
       Nothing                      ->
         maybeParen (p > defaultOpPrec) $ group $
            renderGallina' (defaultOpPrec + 1) l </> renderQOp op <!> renderGallina' (defaultOpPrec + 1) r
+
+  renderGallina' p (App f args) =  maybeParen (p > appPrec) $
+    renderGallina' appPrec f </> align (render_args' (appPrec + 1) H args)
+
+  renderGallina' _p (ExplicitApp qid args) = parensN $
+    "@" <> renderGallina qid <> softlineIf args <> render_args' (appPrec + 1) H args
 
   renderGallina' p (InScope tm scope) = maybeParen (p > scopePrec) $
     renderGallina' scopePrec tm <> "%" <> renderIdent scope

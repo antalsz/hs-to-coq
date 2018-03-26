@@ -396,19 +396,19 @@ Local Definition Ord__FractionalLit_compare
 
 Local Definition Ord__FractionalLit_op_zg__
    : FractionalLit -> FractionalLit -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__FractionalLit_compare x y) Gt.
+  fun x y => Ord__FractionalLit_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__FractionalLit_op_zgze__
    : FractionalLit -> FractionalLit -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__FractionalLit_compare x y) Lt.
+  fun x y => Ord__FractionalLit_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__FractionalLit_op_zl__
    : FractionalLit -> FractionalLit -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__FractionalLit_compare x y) Lt.
+  fun x y => Ord__FractionalLit_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__FractionalLit_op_zlze__
    : FractionalLit -> FractionalLit -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__FractionalLit_compare x y) Gt.
+  fun x y => Ord__FractionalLit_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__FractionalLit_max
    : FractionalLit -> FractionalLit -> FractionalLit :=
@@ -442,16 +442,16 @@ Local Definition Ord__IntWithInf_compare
     end.
 
 Local Definition Ord__IntWithInf_op_zg__ : IntWithInf -> IntWithInf -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__IntWithInf_compare x y) Gt.
+  fun x y => Ord__IntWithInf_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__IntWithInf_op_zgze__ : IntWithInf -> IntWithInf -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__IntWithInf_compare x y) Lt.
+  fun x y => Ord__IntWithInf_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__IntWithInf_op_zl__ : IntWithInf -> IntWithInf -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__IntWithInf_compare x y) Lt.
+  fun x y => Ord__IntWithInf_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__IntWithInf_op_zlze__ : IntWithInf -> IntWithInf -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__IntWithInf_compare x y) Gt.
+  fun x y => Ord__IntWithInf_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__IntWithInf_max : IntWithInf -> IntWithInf -> IntWithInf :=
   fun x y => if Ord__IntWithInf_op_zlze__ x y : bool then y else x.

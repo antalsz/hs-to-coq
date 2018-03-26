@@ -18,7 +18,6 @@ import Data.Maybe
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
 
 ----------------------------------------------------------------------------------------------------
 
@@ -197,16 +196,6 @@ instance Subst Term where
   subst f  (App fu xs) = App (subst f fu) (subst f  xs)
 
   subst f  (ExplicitApp qid xs) = ExplicitApp qid (subst f  xs)
-
-  subst f  (Infix l qid r)
-    | Just t <- M.lookup qid f
-    , Qualid qid' <- t
-    , qualidIsOp qid'
-    = Infix (subst f l) qid' (subst f r)
-    | Just t <- M.lookup qid f
-    = App t [PosArg (subst f l), PosArg (subst f r)]
-    | otherwise
-    = Infix (subst f l) qid (subst f  r)
 
   subst f  (InScope t scope) =  InScope (subst f  t) scope
     -- The scope is a different sort of identifier, not a term-level variable.

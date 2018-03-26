@@ -120,7 +120,7 @@ Local Definition Functor__NonEmpty_fmap
 
 Local Definition Functor__NonEmpty_op_zlzd__
    : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
-  fun {a} {b} f x => let 'NEcons a as_ := x in NEcons f (_GHC.Base.<$_ f as_).
+  fun {a} {b} f x => let 'NEcons a as_ := x in NEcons f (f GHC.Base.<$ as_).
 
 Program Instance Functor__NonEmpty : GHC.Base.Functor NonEmpty :=
   fun _ k =>
@@ -137,8 +137,7 @@ Local Definition Traversable__NonEmpty_traverse
     fun arg_144__ arg_145__ =>
       match arg_144__, arg_145__ with
       | f, NEcons a as_ =>
-          _GHC.Base.<*>_ (_Data.Functor.<$>_ NEcons (f a)) (Data.Traversable.traverse f
-                                                                                      as_)
+          (NEcons Data.Functor.<$> f a) GHC.Base.<*> Data.Traversable.traverse f as_
       end.
 
 Local Definition Traversable__NonEmpty_sequenceA
@@ -208,7 +207,7 @@ Local Definition Foldable__NonEmpty_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__NonEmpty_foldl f' GHC.Base.id xs z0
       end.
@@ -240,8 +239,8 @@ Local Definition Monad__NonEmpty_op_zgzgze__
       match arg_148__, arg_149__ with
       | NEcons a as_, f =>
           let 'NEcons b bs := f a in
-          NEcons b (Coq.Init.Datatypes.app bs (_GHC.Base.>>=_ as_ (_GHC.Base.∘_
-                                                               Foldable__NonEmpty_toList f)))
+          NEcons b (Coq.Init.Datatypes.app bs (as_ GHC.Base.>>=
+                                            (Foldable__NonEmpty_toList GHC.Base.∘ f)))
       end.
 
 Local Definition Foldable__NonEmpty_foldl'
@@ -253,7 +252,7 @@ Local Definition Foldable__NonEmpty_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__NonEmpty_foldr f' GHC.Base.id xs z0
       end.
@@ -263,7 +262,7 @@ Local Definition Foldable__NonEmpty_length
   fun {a} =>
     Foldable__NonEmpty_foldl' (fun arg_64__ arg_65__ =>
                                  match arg_64__, arg_65__ with
-                                 | c, _ => _GHC.Num.+_ c #1
+                                 | c, _ => c GHC.Num.+ #1
                                  end) #0.
 
 Program Instance Foldable__NonEmpty : Data.Foldable.Foldable NonEmpty :=

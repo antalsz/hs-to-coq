@@ -305,9 +305,6 @@ instance FreeVars Term where
   freeVars (ExplicitApp qid xs) =
     freeVars qid *> freeVars xs
 
-  freeVars (Infix l op r) =
-    freeVars l *> occurrence op *> freeVars r
-
   freeVars (InScope t _scope) =
     freeVars t
     -- The scope is a different sort of identifier, not a term-level variable.

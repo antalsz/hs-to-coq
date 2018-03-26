@@ -638,19 +638,19 @@ Local Definition Ord__IntMap_compare {inst_a} `{GHC.Base.Ord inst_a}
 
 Local Definition Ord__IntMap_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__IntMap_compare x y) Gt.
+  fun x y => Ord__IntMap_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__IntMap_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__IntMap_compare x y) Lt.
+  fun x y => Ord__IntMap_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__IntMap_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__IntMap_compare x y) Lt.
+  fun x y => Ord__IntMap_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__IntMap_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__IntMap_compare x y) Gt.
+  fun x y => Ord__IntMap_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__IntMap_max {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
@@ -888,8 +888,9 @@ Definition mapMissing {f} {x} {y} `{GHC.Base.Applicative f}
 
 Definition maskW : Nat -> Nat -> Prefix :=
   fun i m =>
-    _Data.Bits..&._ i (Data.Bits.xor (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ m #1)
-                                                               (Coq.NArith.BinNat.N.ones (64 % N))) m).
+    i Data.Bits..&.(**)
+    (Data.Bits.xor (Coq.NArith.BinNat.N.lxor (m GHC.Num.- #1)
+                                             (Coq.NArith.BinNat.N.ones (64 % N))) m).
 
 Definition match_ : Data.IntSet.Internal.Key -> Prefix -> Mask -> bool :=
   fun i p m => (Data.IntSet.Internal.mask i m) GHC.Base.== p.
@@ -1626,8 +1627,8 @@ Definition restrictKeys {a}
                                       let le_maxbit := maxbit Data.Bits..|.(**) (maxbit GHC.Num.- #1) in
                                       let minbit := bitmapOf p1 in
                                       let ge_minbit :=
-                                        Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ minbit #1) (Coq.NArith.BinNat.N.ones (64 %
-                                                                                                                    N)) in
+                                        Coq.NArith.BinNat.N.lxor (minbit GHC.Num.- #1) (Coq.NArith.BinNat.N.ones (64 %
+                                                                                                                  N)) in
                                       restrictBM ((bm2 Data.Bits..&.(**) ge_minbit) Data.Bits..&.(**) le_maxbit)
                                       (lookupPrefix p2 t1)
                                   | Bin _ _ _ _, Data.IntSet.Internal.Nil => Nil
@@ -1660,7 +1661,7 @@ Definition withoutKeys {a}
                                       let maxbit :=
                                         bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
                                       let gt_maxbit :=
-                                        Data.Bits.xor maxbit (Coq.NArith.BinNat.N.lxor (_GHC.Num.-_ maxbit #1)
+                                        Data.Bits.xor maxbit (Coq.NArith.BinNat.N.lxor (maxbit GHC.Num.- #1)
                                                                                        (Coq.NArith.BinNat.N.ones (64 %
                                                                                                                   N))) in
                                       let minbit := bitmapOf p1 in
@@ -1907,7 +1908,7 @@ Definition zipWithAMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
 Definition zipWithMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> x -> y -> z) -> WhenMatched f x y z :=
   fun f =>
-    Mk_WhenMatched (fun k x y => _GHC.Base.∘_ GHC.Base.pure Some (f k x y)).
+    Mk_WhenMatched (fun k x y => (GHC.Base.pure GHC.Base.∘ Some) (f k x y)).
 
 Definition zipWithMaybeAMatched {x} {y} {f} {z}
    : (Data.IntSet.Internal.Key -> x -> y -> f (option z)) ->

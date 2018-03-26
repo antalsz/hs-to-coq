@@ -49,19 +49,19 @@ Local Definition Ord__Proxy_compare {inst_s}
 
 Local Definition Ord__Proxy_op_zg__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Proxy_compare x y) Gt.
+  fun x y => Ord__Proxy_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Proxy_op_zgze__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Proxy_compare x y) Lt.
+  fun x y => Ord__Proxy_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__Proxy_op_zl__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Proxy_compare x y) Lt.
+  fun x y => Ord__Proxy_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Proxy_op_zlze__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Proxy_compare x y) Gt.
+  fun x y => Ord__Proxy_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Proxy_max {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=

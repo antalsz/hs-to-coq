@@ -297,7 +297,7 @@ LargeTerm :: { Term }
   | 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' Term
 	 { Let $2 $3  $4 $6 $8 }
   | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
-  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
+  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
 
 App :: { Term }
   :     Atom Some(Arg)     { App $1 $2 }

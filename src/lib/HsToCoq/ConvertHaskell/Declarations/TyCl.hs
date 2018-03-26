@@ -3,7 +3,7 @@
              FlexibleContexts, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
-  convertTyClDecls, convertModuleTyClDecls,
+  convertModuleTyClDecls,
   -- * Convert single declarations
   ConvertedDeclaration(..), convDeclName,
   convertTyClDecl,
@@ -335,6 +335,3 @@ convertModuleTyClDecls =   forkM3 (either convUnsupported pure
                                   (foldTraverse generateGroupRecordAccessors)
                        <=< groupTyClDecls
   where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
-
-convertTyClDecls :: ConversionMonad m => [TyClDecl GHC.Name] -> m [Sentence]
-convertTyClDecls = convertModuleTyClDecls . map (Nothing,)

@@ -89,7 +89,7 @@ convertType (HsParTy ty) =
 convertType (HsIParamTy (HsIPName ip) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
-    then Qualid <$> var' TypeNS "CallStack"
+    then pure $ "GHC.Stack.CallStack"
     else convUnsupported "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =

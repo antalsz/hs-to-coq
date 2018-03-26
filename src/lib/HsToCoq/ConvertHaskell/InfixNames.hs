@@ -3,9 +3,8 @@
 module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable,
   infixToPrefix, toPrefix, toLocalPrefix,
-  infixToCoq, toCoqName,
+  infixToCoq,
   identIsOp, identToOp,
-  canonicalName,
   splitModule -- a bit out of place here. oh well.
   ) where
 
@@ -13,7 +12,6 @@ import Control.Lens
 
 import Control.Applicative
 import Data.Semigroup (Semigroup(..))
-import Data.Maybe
 import Data.Char
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -78,15 +76,6 @@ splitModule = fmap fixup . either (const Nothing) Just . parse qualid "" where
     | ".Z" `T.isSuffixOf` mod = (T.take (T.length mod - 2) mod, "Z." <> name)
     | ".N" `T.isSuffixOf` mod = (T.take (T.length mod - 2) mod, "N." <> name)
     | otherwise               = (mod, name)
-
-toCoqName :: Op -> Ident
-toCoqName x | identIsVariable x = x
-            | otherwise         = infixToCoq x
-
-canonicalName :: Op -> Ident
-canonicalName x
-  | identIsVariable x = x
-  | otherwise         = infixToCoq . fromMaybe x $ T.stripPrefix "_" =<< T.stripSuffix "_" x
 
 identIsOp :: Ident -> Bool
 identIsOp t = "op_" `T.isPrefixOf` t && "__" `T.isSuffixOf` t

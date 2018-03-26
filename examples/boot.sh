@@ -28,6 +28,8 @@ clean make -C intervals clean
 clean make -C compiler clean
 clean make -C rle clean
 clean make -C bag clean
+clean make -C quicksort clean
+clean make -C coinductive clean
 clean make -C ../base-thy clean
 clean make -C containers/theories clean
 
@@ -53,6 +55,7 @@ make -C compiler
 make -C rle
 make -C bag
 make -C quicksort
+make -C coinductive
 
 if [[ -e containers/containers ]]
 then

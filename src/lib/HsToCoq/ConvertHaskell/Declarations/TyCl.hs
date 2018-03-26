@@ -173,6 +173,9 @@ convertDeclarationGroup DeclarationGroup{..} =
   (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
     Right $ classSentences classDef
 
+  (Nothing, Nothing, Nothing, Nothing) ->
+    Right []
+
   (_, _, _, _) ->
     Left "too much mutual recursion"
 

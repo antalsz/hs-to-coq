@@ -76,11 +76,6 @@ Definition envR (arg_1__ : RnEnv2) :=
 Definition in_scope (arg_2__ : RnEnv2) :=
   let 'RV2 _ _ in_scope := arg_2__ in
   in_scope.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
@@ -115,9 +110,8 @@ Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable VarEnv.InScopeSet' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__InScopeSet' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Definition alterDVarEnv {a}
    : (option a -> option a) -> DVarEnv a -> Core.Var -> DVarEnv a :=
@@ -175,66 +169,13 @@ Definition elemInScopeSet : Core.Var -> InScopeSet -> bool :=
     | v, InScope in_scope _ => elemVarEnv v in_scope
     end.
 
-Definition rnBndr2_var
-   : RnEnv2 -> Core.Var -> Core.Var -> (RnEnv2 * Core.Var)%type :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | RV2 envL envR in_scope, bL, bR =>
-        let new_b :=
-          if negb (elemInScopeSet bL in_scope) : bool
-          then bL
-          else if negb (elemInScopeSet bR in_scope) : bool
-               then bR
-               else uniqAway' in_scope bL in
-        pair (RV2 missingValue missingValue missingValue) new_b
-    end.
-
-Definition rnBndr2 : RnEnv2 -> Core.Var -> Core.Var -> RnEnv2 :=
-  fun env bL bR => Data.Tuple.fst (rnBndr2_var env bL bR).
-
-Definition rnBndrs2 : RnEnv2 -> list Core.Var -> list Core.Var -> RnEnv2 :=
-  fun env bsL bsR => Util.foldl2 rnBndr2 env bsL bsR.
-
 Definition rnInScope : Core.Var -> RnEnv2 -> bool :=
   fun x env => elemInScopeSet x (in_scope env).
 
 Definition uniqAway : InScopeSet -> Core.Var -> Core.Var :=
   fun in_scope var =>
-    if elemInScopeSet var in_scope : bool
-    then uniqAway' in_scope var
-    else var.
-
-Definition rnBndrL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bL =>
-        let new_b := uniqAway in_scope bL in
-        pair (RV2 missingValue missingValue missingValue) new_b
-    end.
-
-Definition rnBndrR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bR =>
-        let new_b := uniqAway in_scope bR in
-        pair (RV2 missingValue missingValue missingValue) new_b
-    end.
-
-Definition rnEtaL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bL =>
-        let new_b := uniqAway in_scope bL in
-        pair (RV2 missingValue missingValue missingValue) new_b
-    end.
-
-Definition rnEtaR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bR =>
-        let new_b := uniqAway in_scope bR in
-        pair (RV2 missingValue missingValue missingValue) new_b
-    end.
+    if elemInScopeSet var in_scope : bool then uniqAway' in_scope var else
+    var.
 
 Definition elemVarEnvByKey {a} : Unique.Unique -> VarEnv a -> bool :=
   UniqFM.elemUFM_Directly.
@@ -247,6 +188,9 @@ Definition emptyInScopeSet : InScopeSet :=
 
 Definition emptyVarEnv {a} : VarEnv a :=
   UniqFM.emptyUFM.
+
+Definition mkRnEnv2 : InScopeSet -> RnEnv2 :=
+  fun vars => RV2 emptyVarEnv emptyVarEnv vars.
 
 Definition nukeRnEnvL : RnEnv2 -> RnEnv2 :=
   fun env =>
@@ -316,6 +260,61 @@ Definition delBndrL : RnEnv2 -> Core.Var -> RnEnv2 :=
     | (RV2 env _ in_scope as rn), v =>
         let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
         RV2 (delVarEnv env v) envR_3__ (extendInScopeSet in_scope v)
+    end.
+
+Definition rnBndr2_var
+   : RnEnv2 -> Core.Var -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | RV2 envL envR in_scope, bL, bR =>
+        let new_b :=
+          if negb (elemInScopeSet bL in_scope) : bool then bL else
+          if negb (elemInScopeSet bR in_scope) : bool then bR else
+          uniqAway' in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR bR new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
+Definition rnBndr2 : RnEnv2 -> Core.Var -> Core.Var -> RnEnv2 :=
+  fun env bL bR => Data.Tuple.fst (rnBndr2_var env bL bR).
+
+Definition rnBndrs2 : RnEnv2 -> list Core.Var -> list Core.Var -> RnEnv2 :=
+  fun env bsL bsR => Util.foldl2 rnBndr2 env bsL bsR.
+
+Definition rnBndrL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bL =>
+        let new_b := uniqAway in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) envR (extendInScopeSet in_scope new_b))
+             new_b
+    end.
+
+Definition rnBndrR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bR =>
+        let new_b := uniqAway in_scope bR in
+        pair (RV2 envL (extendVarEnv envR bR new_b) (extendInScopeSet in_scope new_b))
+             new_b
+    end.
+
+Definition rnEtaL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bL =>
+        let new_b := uniqAway in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR new_b new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
+Definition rnEtaR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bR =>
+        let new_b := uniqAway in_scope bR in
+        pair (RV2 (extendVarEnv envL new_b new_b) (extendVarEnv envR bR new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
     end.
 
 Definition extendVarEnvList {a}
@@ -458,9 +457,6 @@ Definition minusVarEnv {a} {b} : VarEnv a -> VarEnv b -> VarEnv a :=
 Definition mkInScopeSet : VarEnv Core.Var -> InScopeSet :=
   fun in_scope => InScope in_scope #1.
 
-Definition mkRnEnv2 : InScopeSet -> RnEnv2 :=
-  fun vars => RV2 missingValue missingValue missingValue.
-
 Definition mkVarEnv {a} : list (Core.Var * a)%type -> VarEnv a :=
   UniqFM.listToUFM.
 
@@ -509,10 +505,9 @@ Definition extendInScopeSetSet : InScopeSet -> VarEnv Core.Var -> InScopeSet :=
 
 Definition addRnInScopeSet : RnEnv2 -> VarEnv Core.Var -> RnEnv2 :=
   fun env vs =>
-    if isEmptyVarEnv vs : bool
-    then env
-    else let 'RV2 envL_0__ envR_1__ in_scope_2__ := env in
-         RV2 envL_0__ envR_1__ (extendInScopeSetSet (in_scope env) vs).
+    if isEmptyVarEnv vs : bool then env else
+    let 'RV2 envL_0__ envR_1__ in_scope_2__ := env in
+    RV2 envL_0__ envR_1__ (extendInScopeSetSet (in_scope env) vs).
 
 Definition plusVarEnv_C {a}
    : (a -> a -> a) -> VarEnv a -> VarEnv a -> VarEnv a :=
@@ -528,9 +523,7 @@ Definition rnInScopeSet : RnEnv2 -> InScopeSet :=
   in_scope.
 
 Definition rnSwap : RnEnv2 -> RnEnv2 :=
-  fun arg_0__ =>
-    let 'RV2 envL envR in_scope := arg_0__ in
-    RV2 missingValue missingValue missingValue.
+  fun arg_0__ => let 'RV2 envL envR in_scope := arg_0__ in RV2 envR envL in_scope.
 
 Definition unitDVarEnv {a} : Core.Var -> a -> DVarEnv a :=
   UniqDFM.unitUDFM.

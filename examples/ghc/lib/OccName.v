@@ -132,8 +132,8 @@ Instance Default_OccName : Default OccName := Build_Default _ (Mk_OccName defaul
 
 (* Converted value declarations: *)
 
-(* Translating `instance Data.Data.Data OccName.OccName' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__OccName' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition HasOccName__OccName_occName : OccName -> OccName :=
   GHC.Base.id.
@@ -141,34 +141,29 @@ Local Definition HasOccName__OccName_occName : OccName -> OccName :=
 Program Instance HasOccName__OccName : HasOccName OccName :=
   fun _ k => k {| occName__ := HasOccName__OccName_occName |}.
 
-(* Translating `instance Control.DeepSeq.NFData OccName.OccName' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
+(* Translating `instance NFData__OccName' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
 
-(* Translating `instance Outputable.Outputable OccName.OccName' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__OccName' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.OutputableBndr OccName.OccName' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "OutputableBndr"
-   unsupported *)
+(* Translating `instance OutputableBndr__OccName' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
 
-(* Translating `instance Unique.Uniquable OccName.OccName' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance Uniquable__OccName' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (OccName.OccEnv a)' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__OccEnv' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Binary.Binary OccName.NameSpace' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__NameSpace' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance Binary.Binary OccName.OccName' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__OccName' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (OccName.OccEnv a)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__OccEnv' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Ord__NameSpace_compare
    : NameSpace -> NameSpace -> comparison :=
@@ -475,15 +470,14 @@ Definition minusOccSet : OccSet -> OccSet -> OccSet :=
 Definition mkDFunOcc : GHC.Base.String -> bool -> OccSet -> OccName :=
   fun info_str is_boot set =>
     let prefix :=
-      if is_boot : bool
-      then GHC.Base.hs_string__ "$fx"
-      else GHC.Base.hs_string__ "$f" in
+      if is_boot : bool then GHC.Base.hs_string__ "$fx" else
+      GHC.Base.hs_string__ "$f" in
     chooseUniqueOcc VarName (Coq.Init.Datatypes.app prefix info_str) set.
 
 Definition mkModPrefix : Module.Module -> GHC.Base.String :=
   fun mod_ =>
-    let mn := Module.moduleNameString (moduleName mod_) in
-    let pk := Module.unitIdString (moduleUnitId mod_) in
+    let mn := Module.moduleNameString (Module.moduleName mod_) in
+    let pk := Module.unitIdString (Module.moduleUnitId mod_) in
     Coq.Init.Datatypes.app pk (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "_")
                                                       mn).
 
@@ -746,28 +740,26 @@ Definition mkBuilderOcc : OccName -> OccName :=
 Definition mkTyConRepOcc : OccName -> OccName :=
   fun occ =>
     let prefix :=
-      if isDataOcc occ : bool
-      then GHC.Base.hs_string__ "$tc'"
-      else GHC.Base.hs_string__ "$tc" in
+      if isDataOcc occ : bool then GHC.Base.hs_string__ "$tc'" else
+      GHC.Base.hs_string__ "$tc" in
     mk_simple_deriv varName prefix occ.
 
 (* Unbound variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
      NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
-     comparison cons false list moduleName moduleUnitId negb op_zt__ option orb true
-     Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
-     FastString.mkFastString FastString.unpackFS GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.id GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.return_ GHC.Num.Int
-     GHC.Num.fromInteger Module.Module Module.moduleNameString Module.unitIdString
-     UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM
-     UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM
-     UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM UniqFM.emptyUFM
-     UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM
-     UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
-     UniqSet.emptyUniqSet UniqSet.filterUniqSet UniqSet.foldUniqSet
-     UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet UniqSet.minusUniqSet
-     UniqSet.mkUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.uniqSetToList UniqSet.unitUniqSet Util.thenCmp
+     comparison cons false list negb op_zt__ option orb true Coq.Init.Datatypes.app
+     Data.Foldable.foldl FastString.FastString FastString.mkFastString
+     FastString.unpackFS GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
+     GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zsze__
+     GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger Module.Module Module.moduleName
+     Module.moduleNameString Module.moduleUnitId Module.unitIdString UniqFM.UniqFM
+     UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc
+     UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM
+     UniqFM.elemUFM UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM
+     UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C
+     UniqFM.unitUFM UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
+     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
+     UniqSet.foldUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
+     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.unionManyUniqSets
+     UniqSet.unionUniqSets UniqSet.uniqSetToList UniqSet.unitUniqSet Util.thenCmp
 *)

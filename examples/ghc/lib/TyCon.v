@@ -108,20 +108,8 @@ Inductive AlgTyConRhs : Type
      Core.Type_ ->
      (list TyVar * Core.Type_)%type -> Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
 
-Definition data_con (arg_0__ : AlgTyConRhs) :=
+Definition data_cons (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
-  | AbstractTyCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-  | DataTyCon _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-  | TupleTyCon data_con _ => data_con
-  | NewTyCon data_con _ _ _ => data_con
-  end.
-
-Definition data_cons (arg_1__ : AlgTyConRhs) :=
-  match arg_1__ with
   | AbstractTyCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
@@ -134,8 +122,8 @@ Definition data_cons (arg_1__ : AlgTyConRhs) :=
                      "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 
-Definition is_enum (arg_2__ : AlgTyConRhs) :=
-  match arg_2__ with
+Definition is_enum (arg_1__ : AlgTyConRhs) :=
+  match arg_1__ with
   | AbstractTyCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
@@ -146,6 +134,18 @@ Definition is_enum (arg_2__ : AlgTyConRhs) :=
   | NewTyCon _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
+  end.
+
+Definition data_con (arg_2__ : AlgTyConRhs) :=
+  match arg_2__ with
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon data_con _ => data_con
+  | NewTyCon data_con _ _ _ => data_con
   end.
 
 Definition nt_co (arg_3__ : AlgTyConRhs) :=
@@ -190,8 +190,20 @@ Definition nt_rhs (arg_5__ : AlgTyConRhs) :=
   | NewTyCon _ nt_rhs _ _ => nt_rhs
   end.
 
-Definition tup_sort (arg_6__ : AlgTyConRhs) :=
+Definition data_con (arg_6__ : AlgTyConRhs) :=
   match arg_6__ with
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon data_con _ => data_con
+  | NewTyCon data_con _ _ _ => data_con
+  end.
+
+Definition tup_sort (arg_7__ : AlgTyConRhs) :=
+  match arg_7__ with
   | AbstractTyCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
@@ -205,16 +217,14 @@ Definition tup_sort (arg_6__ : AlgTyConRhs) :=
   end.
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable Core.AlgTyConFlav' failed: using
-   a record pattern for the unknown constructor `VanillaAlgTyCon' unsupported *)
+(* Translating `instance Outputable__AlgTyConFlav' failed: using a record
+   pattern for the unknown constructor `VanillaAlgTyCon' unsupported *)
 
-(* Translating `instance Outputable.Outputable TyCon.PrimRep' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__PrimRep' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable TyCon.PrimElemRep' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__PrimElemRep' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Ord__TyCon_compare : Core.TyCon -> Core.TyCon -> comparison :=
   fun a b => GHC.Base.compare (Unique.getUnique a) (Unique.getUnique b).
@@ -283,26 +293,26 @@ Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon :=
          GHC.Base.max__ := Ord__TyCon_max ;
          GHC.Base.min__ := Ord__TyCon_min |}.
 
-(* Translating `instance Unique.Uniquable Core.TyCon' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance Uniquable__TyCon' failed: OOPS! Cannot find information
+   for class Qualified "Unique" "Uniquable" unsupported *)
 
-(* Translating `instance Outputable.Outputable Core.TyCon' failed: OOPS! Cannot
-   find information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__TyCon' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Name.NamedThing Core.TyCon' failed: OOPS! Cannot find
+(* Translating `instance NamedThing__TyCon' failed: OOPS! Cannot find
    information for class Qualified "Name" "NamedThing" unsupported *)
 
-(* Translating `instance Data.Data.Data Core.TyCon' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__TyCon' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Binary.Binary Core.Injectivity' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__Injectivity' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance GHC.Show.Show TyCon.PrimRep' failed: OOPS! Cannot find
+(* Translating `instance Show__PrimRep' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
+
+(* Translating `instance Show__PrimElemRep' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Translating `instance GHC.Show.Show TyCon.PrimElemRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___PrimElemRep_op_zeze__
    : PrimElemRep -> PrimElemRep -> bool :=
@@ -405,9 +415,8 @@ Axiom isAlgTyCon : forall {A : Type}, A.
 
 Definition tyConFieldLabelEnv : Core.TyCon -> FieldLabel.FieldLabelEnv :=
   fun tc =>
-    if isAlgTyCon tc : bool
-    then algTcFields tc
-    else FastStringEnv.emptyFsEnv.
+    if isAlgTyCon tc : bool then algTcFields tc else
+    FastStringEnv.emptyFsEnv.
 
 Definition tyConFieldLabels : Core.TyCon -> list FieldLabel.FieldLabel :=
   fun tc => FastStringEnv.fsEnvElts (tyConFieldLabelEnv tc).
@@ -552,15 +561,13 @@ Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
     match arg_0__, arg_1__ with
     | (RC bound rec_nts as rc), tc =>
         let tc_name := tyConName tc in
-        if negb (isRecursiveTyCon tc) : bool
-        then Some rc
-        else match NameEnv.lookupNameEnv rec_nts tc_name with
-             | Some n =>
-                 if n GHC.Base.>= bound : bool
-                 then None
-                 else Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name (n GHC.Num.+ #1)))
-             | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name #1))
-             end
+        if negb (isRecursiveTyCon tc) : bool then Some rc else
+        match NameEnv.lookupNameEnv rec_nts tc_name with
+        | Some n =>
+            if n GHC.Base.>= bound : bool then None else
+            Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name (n GHC.Num.+ #1)))
+        | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name #1))
+        end
     end.
 
 (* Translating `isRecursiveTyCon' failed: using a record pattern for the unknown
@@ -829,9 +836,8 @@ Definition tyConRepModOcc
    : Module.Module -> OccName.OccName -> (Module.Module * OccName.OccName)%type :=
   fun tc_module tc_occ =>
     let rep_module :=
-      if tc_module GHC.Base.== PrelNames.gHC_PRIM : bool
-      then PrelNames.gHC_TYPES
-      else tc_module in
+      if tc_module GHC.Base.== PrelNames.gHC_PRIM : bool then PrelNames.gHC_TYPES else
+      tc_module in
     pair rep_module (OccName.mkTyConRepOcc tc_occ).
 
 Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
@@ -840,9 +846,8 @@ Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
     let name_mod := Name.nameModule tc_name in
     let name_occ := Name.nameOccName tc_name in
     let rep_uniq :=
-      if OccName.isTcOcc name_occ : bool
-      then Unique.tyConRepNameUnique name_uniq
-      else Unique.dataConRepNameUnique name_uniq in
+      if OccName.isTcOcc name_occ : bool then Unique.tyConRepNameUnique name_uniq else
+      Unique.dataConRepNameUnique name_uniq in
     let 'pair rep_mod rep_occ := tyConRepModOcc name_mod name_occ in
     Name.mkExternalName rep_uniq rep_mod rep_occ (Name.nameSrcSpan tc_name).
 

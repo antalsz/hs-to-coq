@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Lists.List.
+Require Coq.ZArith.BinInt.
 Require Data.Foldable.
 Require Data.Function.
 Require Data.IntMap.Internal.
@@ -73,18 +74,15 @@ Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap |}.
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (UniqDFM.UniqDFM a)' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__UniqDFM' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 (* Skipping instance Functor__UniqDFM *)
 
-(* Translating `instance forall {ele}, forall `{Data.Data.Data ele},
-   Data.Data.Data (UniqDFM.UniqDFM ele)' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__UniqDFM' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {val}, forall `{Data.Data.Data val},
-   Data.Data.Data (UniqDFM.TaggedVal val)' failed: OOPS! Cannot find information
+(* Translating `instance Data__TaggedVal' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
 
 Definition addToUDFM {key} {elt} `{Unique.Uniquable key}
@@ -352,9 +350,8 @@ Definition plusUDFM_C {elt}
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | f, (UDFM _ i as udfml), (UDFM _ j as udfmr) =>
-        if i GHC.Base.> j : bool
-        then insertUDFMIntoLeft_C f udfml udfmr
-        else insertUDFMIntoLeft_C f udfmr udfml
+        if i GHC.Base.> j : bool then insertUDFMIntoLeft_C f udfml udfmr else
+        insertUDFMIntoLeft_C f udfmr udfml
     end.
 
 Definition insertUDFMIntoLeft {elt}
@@ -365,9 +362,8 @@ Definition plusUDFM {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (UDFM _ i as udfml), (UDFM _ j as udfmr) =>
-        if i GHC.Base.> j : bool
-        then insertUDFMIntoLeft udfml udfmr
-        else insertUDFMIntoLeft udfmr udfml
+        if i GHC.Base.> j : bool then insertUDFMIntoLeft udfml udfmr else
+        insertUDFMIntoLeft udfmr udfml
     end.
 
 Local Definition Monoid__UniqDFM_mappend {inst_a}

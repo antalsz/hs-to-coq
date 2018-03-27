@@ -218,11 +218,6 @@ Definition inl_sat (arg_11__ : InlinePragma) :=
 Definition inl_src (arg_12__ : InlinePragma) :=
   let 'Mk_InlinePragma inl_src _ _ _ _ := arg_12__ in
   inl_src.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Require GHC.Err.
@@ -306,17 +301,14 @@ Instance Default_InlinePragma : GHC.Err.Default InlinePragma :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.OneShotInfo' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__OneShotInfo' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.SwapFlag' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__SwapFlag' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.FunctionOrData'
-   failed: OOPS! Cannot find information for class Qualified "Outputable"
-   "Outputable" unsupported *)
+(* Translating `instance Outputable__FunctionOrData' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Eq___StringLiteral_op_zeze__
    : StringLiteral -> StringLiteral -> bool :=
@@ -334,73 +326,56 @@ Program Instance Eq___StringLiteral : GHC.Base.Eq_ StringLiteral :=
     k {| GHC.Base.op_zeze____ := Eq___StringLiteral_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___StringLiteral_op_zsze__ |}.
 
-(* Translating `instance Outputable.Outputable BasicTypes.WarningTxt' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__WarningTxt' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.Fixity' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Fixity' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.FixityDirection'
-   failed: OOPS! Cannot find information for class Qualified "Outputable"
-   "Outputable" unsupported *)
+(* Translating `instance Outputable__FixityDirection' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.TopLevelFlag' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__TopLevelFlag' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.Boxity' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Boxity' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.RecFlag' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__RecFlag' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.Origin' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Origin' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.OverlapFlag' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__OverlapFlag' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.OverlapMode' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__OverlapMode' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.OccInfo' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__OccInfo' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {ty}, Outputable.Outputable
-   (BasicTypes.DefMethSpec ty)' failed: OOPS! Cannot find information for class
-   Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__DefMethSpec' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.SuccessFlag' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__SuccessFlag' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.CompilerPhase' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__CompilerPhase' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.Activation' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Activation' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.RuleMatchInfo' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__RuleMatchInfo' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.InlineSpec' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__InlineSpec' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable BasicTypes.InlinePragma' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__InlinePragma' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Eq___FractionalLit_op_zeze__
    : FractionalLit -> FractionalLit -> bool :=
@@ -453,9 +428,8 @@ Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit :=
          GHC.Base.max__ := Ord__FractionalLit_max ;
          GHC.Base.min__ := Ord__FractionalLit_min |}.
 
-(* Translating `instance Outputable.Outputable BasicTypes.FractionalLit' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__FractionalLit' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Ord__IntWithInf_compare
    : IntWithInf -> IntWithInf -> comparison :=
@@ -485,12 +459,11 @@ Local Definition Ord__IntWithInf_max : IntWithInf -> IntWithInf -> IntWithInf :=
 Local Definition Ord__IntWithInf_min : IntWithInf -> IntWithInf -> IntWithInf :=
   fun x y => if Ord__IntWithInf_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Outputable.Outputable BasicTypes.IntWithInf' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__IntWithInf' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance GHC.Num.Num BasicTypes.IntWithInf' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__IntWithInf' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Num" "Num" unsupported *)
 
 Local Definition Eq___IntWithInf_op_zeze__ : IntWithInf -> IntWithInf -> bool :=
   fun arg_0__ arg_1__ =>
@@ -518,20 +491,20 @@ Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf :=
          GHC.Base.max__ := Ord__IntWithInf_max ;
          GHC.Base.min__ := Ord__IntWithInf_min |}.
 
-(* Translating `instance GHC.Show.Show BasicTypes.FractionalLit' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__FractionalLit' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.FractionalLit' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__FractionalLit' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.InlinePragma' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__InlinePragma' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance GHC.Show.Show BasicTypes.InlineSpec' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__InlineSpec' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.InlineSpec' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__InlineSpec' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___InlineSpec_op_zeze__ : InlineSpec -> InlineSpec -> bool :=
   fun arg_0__ arg_1__ =>
@@ -551,11 +524,11 @@ Program Instance Eq___InlineSpec : GHC.Base.Eq_ InlineSpec :=
     k {| GHC.Base.op_zeze____ := Eq___InlineSpec_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___InlineSpec_op_zsze__ |}.
 
-(* Translating `instance GHC.Show.Show BasicTypes.RuleMatchInfo' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__RuleMatchInfo' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.RuleMatchInfo' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__RuleMatchInfo' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___RuleMatchInfo_op_zeze__
    : RuleMatchInfo -> RuleMatchInfo -> bool :=
@@ -575,8 +548,8 @@ Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo :=
     k {| GHC.Base.op_zeze____ := Eq___RuleMatchInfo_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___RuleMatchInfo_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.Activation' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Activation' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___Activation_op_zeze__ : Activation -> Activation -> bool :=
   fun arg_0__ arg_1__ =>
@@ -617,8 +590,8 @@ Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma :=
     k {| GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.WarningTxt' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__WarningTxt' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
   fun arg_0__ arg_1__ =>
@@ -638,17 +611,17 @@ Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt :=
     k {| GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.StringLiteral' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__StringLiteral' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.Fixity' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Fixity' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.OverlapFlag' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__OverlapFlag' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data.Data.Data BasicTypes.OverlapMode' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__OverlapMode' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___OverlapMode_op_zeze__
    : OverlapMode -> OverlapMode -> bool :=
@@ -707,8 +680,8 @@ Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo :=
     k {| GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___OccInfo_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.TupleSort' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__TupleSort' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___TupleSort_op_zeze__ : TupleSort -> TupleSort -> bool :=
   fun arg_0__ arg_1__ =>
@@ -727,8 +700,8 @@ Program Instance Eq___TupleSort : GHC.Base.Eq_ TupleSort :=
     k {| GHC.Base.op_zeze____ := Eq___TupleSort_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TupleSort_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.Origin' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Origin' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___Origin_op_zeze__ : Origin -> Origin -> bool :=
   fun arg_0__ arg_1__ =>
@@ -746,8 +719,8 @@ Program Instance Eq___Origin : GHC.Base.Eq_ Origin :=
     k {| GHC.Base.op_zeze____ := Eq___Origin_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Origin_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.RecFlag' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__RecFlag' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___RecFlag_op_zeze__ : RecFlag -> RecFlag -> bool :=
   fun arg_0__ arg_1__ =>
@@ -765,8 +738,8 @@ Program Instance Eq___RecFlag : GHC.Base.Eq_ RecFlag :=
     k {| GHC.Base.op_zeze____ := Eq___RecFlag_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___RecFlag_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.Boxity' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__Boxity' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___Boxity_op_zeze__ : Boxity -> Boxity -> bool :=
   fun arg_0__ arg_1__ =>
@@ -784,9 +757,8 @@ Program Instance Eq___Boxity : GHC.Base.Eq_ Boxity :=
     k {| GHC.Base.op_zeze____ := Eq___Boxity_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Boxity_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.FixityDirection' failed:
-   OOPS! Cannot find information for class Qualified "Data.Data" "Data"
-   unsupported *)
+(* Translating `instance Data__FixityDirection' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___FixityDirection_op_zeze__
    : FixityDirection -> FixityDirection -> bool :=
@@ -822,8 +794,8 @@ Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity :=
     k {| GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data BasicTypes.FunctionOrData' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__FunctionOrData' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Ord__FunctionOrData_compare
    : FunctionOrData -> FunctionOrData -> comparison :=
@@ -980,8 +952,8 @@ Definition competesWith : Activation -> Activation -> bool :=
     end.
 
 Definition defaultInlinePragma : InlinePragma :=
-  Mk_InlinePragma missingValue missingValue missingValue missingValue
-                  missingValue.
+  Mk_InlinePragma (GHC.Base.hs_string__ "{-# INLINE") EmptyInlineSpec None
+                  AlwaysActive FunLike.
 
 Definition dfunInlinePragma : InlinePragma :=
   let 'Mk_InlinePragma inl_src_0__ inl_inline_1__ inl_sat_2__ inl_act_3__
@@ -1254,10 +1226,9 @@ Definition successIf : bool -> SuccessFlag :=
 Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #0 : bool
-    then Infinity
-    else let 'n := arg_0__ in
-         Int n.
+    if num_1__ GHC.Base.== #0 : bool then Infinity else
+    let 'n := arg_0__ in
+    Int n.
 
 Definition tupleSortBoxity : TupleSort -> Boxity :=
   fun arg_0__ =>

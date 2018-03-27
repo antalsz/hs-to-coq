@@ -78,42 +78,35 @@ Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan def
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable SrcLoc.RealSrcLoc' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__RealSrcLoc' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable SrcLoc.SrcLoc' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__SrcLoc' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Data.Data.Data SrcLoc.RealSrcSpan' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__RealSrcSpan' failed: OOPS! Cannot find
+   information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data.Data.Data SrcLoc.SrcSpan' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__SrcSpan' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Control.DeepSeq.NFData SrcLoc.SrcSpan' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
+(* Translating `instance NFData__SrcSpan' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
 
-(* Translating `instance GHC.Show.Show SrcLoc.RealSrcLoc' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__RealSrcLoc' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance GHC.Show.Show SrcLoc.RealSrcSpan' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__RealSrcSpan' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Outputable.Outputable SrcLoc.RealSrcSpan' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__RealSrcSpan' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable SrcLoc.SrcSpan' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__SrcSpan' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {l} {e}, forall `{Outputable.Outputable l}
-   `{Outputable.Outputable e}, Outputable.Outputable (SrcLoc.GenLocated l e)'
-   failed: OOPS! Cannot find information for class Qualified "Outputable"
-   "Outputable" unsupported *)
+(* Translating `instance Outputable__GenLocated' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Traversable__GenLocated_traverse {inst_l}
    : forall {f} {a} {b},
@@ -295,9 +288,8 @@ Program Instance Traversable__GenLocated {l}
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__GenLocated_traverse |}.
 
-(* Translating `instance forall {l} {e}, forall `{Data.Data.Data e}
-   `{Data.Data.Data l}, Data.Data.Data (SrcLoc.GenLocated l e)' failed: OOPS!
-   Cannot find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__GenLocated' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 (* Skipping instance Ord__GenLocated *)
 
@@ -320,8 +312,8 @@ Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ e} `{GHC.Base.Eq_ l}
     k {| GHC.Base.op_zeze____ := Eq___GenLocated_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___GenLocated_op_zsze__ |}.
 
-(* Translating `instance GHC.Show.Show SrcLoc.SrcSpan' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__SrcSpan' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___RealSrcSpan_op_zeze__
    : RealSrcSpan -> RealSrcSpan -> bool :=
@@ -364,8 +356,8 @@ Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
     k {| GHC.Base.op_zeze____ := Eq___SrcSpan_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___SrcSpan_op_zsze__ |}.
 
-(* Translating `instance GHC.Show.Show SrcLoc.SrcLoc' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__SrcLoc' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Definition cmpRealSrcLoc : RealSrcLoc -> RealSrcLoc -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -627,10 +619,10 @@ Definition leftmost_largest : SrcSpan -> SrcSpan -> comparison :=
 Definition isSubspanOf : SrcSpan -> SrcSpan -> bool :=
   fun src parent =>
     if srcSpanFileName_maybe parent GHC.Base./= srcSpanFileName_maybe src : bool
-    then false
-    else andb (srcSpanStart parent GHC.Base.<= srcSpanStart src) (srcSpanEnd parent
-               GHC.Base.>=
-               srcSpanEnd src).
+    then false else
+    andb (srcSpanStart parent GHC.Base.<= srcSpanStart src) (srcSpanEnd parent
+          GHC.Base.>=
+          srcSpanEnd src).
 
 Local Definition Ord__RealSrcSpan_compare
    : RealSrcSpan -> RealSrcSpan -> comparison :=

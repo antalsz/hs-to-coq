@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Coq.ZArith.BinInt.
 Require Data.Bits.
 Require FastString.
 Require GHC.Base.
@@ -50,12 +51,11 @@ Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
 Program Instance Uniquable__Unique : Uniquable Unique :=
   fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
 
-(* Translating `instance Outputable.Outputable Unique.Unique' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Unique' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance GHC.Show.Show Unique.Unique' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Unique' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 Definition eqUnique : Unique -> Unique -> bool :=
   fun arg_0__ arg_1__ =>

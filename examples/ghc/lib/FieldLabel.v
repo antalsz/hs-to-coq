@@ -55,13 +55,11 @@ Definition flSelector {a} (arg_2__ : FieldLbl a) :=
   flSelector.
 (* Converted value declarations: *)
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find
+(* Translating `instance Outputable__FieldLbl' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {a}, forall `{Binary.Binary a}, Binary.Binary
-   (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find information for class
-   Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__FieldLbl' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
 
 Local Definition Foldable__FieldLbl_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> FieldLbl a -> m :=
@@ -258,9 +256,8 @@ Program Instance Eq___FieldLbl {a} `{GHC.Base.Eq_ a}
     k {| GHC.Base.op_zeze____ := Eq___FieldLbl_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___FieldLbl_op_zsze__ |}.
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__FieldLbl' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Definition mkFieldLabelOccs
    : FieldLabelString -> OccName.OccName -> bool -> FieldLbl OccName.OccName :=
@@ -270,9 +267,8 @@ Definition mkFieldLabelOccs
                               (FastString.unpackFS lbl) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ ":")
                                                                                 (OccName.occNameString dc))) in
     let sel_occ :=
-      if is_overloaded : bool
-      then OccName.mkRecFldSelOcc str
-      else OccName.mkVarOccFS lbl in
+      if is_overloaded : bool then OccName.mkRecFldSelOcc str else
+      OccName.mkVarOccFS lbl in
     Mk_FieldLabel lbl is_overloaded sel_occ.
 
 (* Unbound variables:

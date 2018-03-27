@@ -253,9 +253,8 @@ Program Instance Monoid__Pair {a} `{GHC.Base.Monoid a}
          GHC.Base.mconcat__ := Monoid__Pair_mconcat ;
          GHC.Base.mempty__ := Monoid__Pair_mempty |}.
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (Pair.Pair a)' failed: OOPS! Cannot find information for
-   class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__Pair' failed: OOPS! Cannot find information
+   for class Qualified "Outputable" "Outputable" unsupported *)
 
 Definition pLiftFst {a} : (a -> a) -> Pair a -> Pair a :=
   fun arg_0__ arg_1__ =>

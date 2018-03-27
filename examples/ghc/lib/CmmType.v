@@ -59,17 +59,14 @@ Instance Default_CmmType : GHC.Err.Default CmmType :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable CmmType.CmmType' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__CmmType' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable CmmType.CmmCat' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__CmmCat' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable.Outputable CmmType.Width' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__Width' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Eq___ForeignHint_op_zeze__
    : ForeignHint -> ForeignHint -> bool :=
@@ -101,8 +98,8 @@ Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat :=
     k {| GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
 
-(* Translating `instance GHC.Show.Show CmmType.Width' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__Width' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
 
 (* Skipping instance Ord__Width *)
 
@@ -188,20 +185,15 @@ Definition f64 : CmmType :=
 
 Definition halfWordMask : DynFlags.DynFlags -> GHC.Num.Integer :=
   fun dflags =>
-    if DynFlags.wORD_SIZE dflags GHC.Base.== #4 : bool
-    then #65535
-    else if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool
-         then #4294967295
-         else Panic.panic (GHC.Base.hs_string__
-                           "MachOp.halfWordMask: Unknown word size").
+    if DynFlags.wORD_SIZE dflags GHC.Base.== #4 : bool then #65535 else
+    if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool then #4294967295 else
+    Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordMask: Unknown word size").
 
 Definition halfWordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
-    if DynFlags.wORD_SIZE dflags GHC.Base.== #4 : bool
-    then W16
-    else if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool
-         then W32
-         else Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordRep: Unknown word size").
+    if DynFlags.wORD_SIZE dflags GHC.Base.== #4 : bool then W16 else
+    if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool then W32 else
+    Panic.panic (GHC.Base.hs_string__ "MachOp.halfWordRep: Unknown word size").
 
 Definition bHalfWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => cmmBits (halfWordWidth dflags).
@@ -283,32 +275,24 @@ Definition vecLength : CmmType -> Length :=
 Definition widthFromBytes : GHC.Num.Int -> Width :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #1 : bool
-    then W8
-    else let 'num_2__ := arg_0__ in
-         if num_2__ GHC.Base.== #2 : bool
-         then W16
-         else let 'num_3__ := arg_0__ in
-              if num_3__ GHC.Base.== #4 : bool
-              then W32
-              else let 'num_4__ := arg_0__ in
-                   if num_4__ GHC.Base.== #8 : bool
-                   then W64
-                   else let 'num_5__ := arg_0__ in
-                        if num_5__ GHC.Base.== #16 : bool
-                        then W128
-                        else let 'num_6__ := arg_0__ in
-                             if num_6__ GHC.Base.== #32 : bool
-                             then W256
-                             else let 'num_7__ := arg_0__ in
-                                  if num_7__ GHC.Base.== #64 : bool
-                                  then W512
-                                  else let 'num_8__ := arg_0__ in
-                                       if num_8__ GHC.Base.== #10 : bool
-                                       then W80
-                                       else let 'n := arg_0__ in
-                                            Panic.panicStr (GHC.Base.hs_string__ "no width for given number of bytes")
-                                            (Panic.noString n).
+    if num_1__ GHC.Base.== #1 : bool then W8 else
+    let 'num_2__ := arg_0__ in
+    if num_2__ GHC.Base.== #2 : bool then W16 else
+    let 'num_3__ := arg_0__ in
+    if num_3__ GHC.Base.== #4 : bool then W32 else
+    let 'num_4__ := arg_0__ in
+    if num_4__ GHC.Base.== #8 : bool then W64 else
+    let 'num_5__ := arg_0__ in
+    if num_5__ GHC.Base.== #16 : bool then W128 else
+    let 'num_6__ := arg_0__ in
+    if num_6__ GHC.Base.== #32 : bool then W256 else
+    let 'num_7__ := arg_0__ in
+    if num_7__ GHC.Base.== #64 : bool then W512 else
+    let 'num_8__ := arg_0__ in
+    if num_8__ GHC.Base.== #10 : bool then W80 else
+    let 'n := arg_0__ in
+    Panic.panicStr (GHC.Base.hs_string__ "no width for given number of bytes")
+    (Panic.noString n).
 
 Definition widthInBits : Width -> GHC.Num.Int :=
   fun arg_0__ =>
@@ -405,11 +389,9 @@ Definition widthInLog : Width -> GHC.Num.Int :=
 
 Definition wordWidth : DynFlags.DynFlags -> Width :=
   fun dflags =>
-    if DynFlags.wORD_SIZE dflags GHC.Base.== #4 : bool
-    then W32
-    else if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool
-         then W64
-         else Panic.panic (GHC.Base.hs_string__ "MachOp.wordRep: Unknown word size").
+    if DynFlags.wORD_SIZE dflags GHC.Base.== #4 : bool then W32 else
+    if DynFlags.wORD_SIZE dflags GHC.Base.== #8 : bool then W64 else
+    Panic.panic (GHC.Base.hs_string__ "MachOp.wordRep: Unknown word size").
 
 Definition gcWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => Mk_CmmType GcPtrCat (wordWidth dflags).

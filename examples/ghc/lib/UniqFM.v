@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Coq.ZArith.BinInt.
 Require Data.Foldable.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
@@ -41,9 +42,8 @@ Instance Unpeel_UniqFM ele
    : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => let 'UFM y := x in y) UFM.
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (UniqFM.UniqFM a)' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Translating `instance Outputable__UniqFM' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 (* Skipping instance Traversable__UniqFM *)
 
@@ -63,8 +63,7 @@ Program Instance Eq___UniqFM {ele} `{GHC.Base.Eq_ ele}
     k {| GHC.Base.op_zeze____ := Eq___UniqFM_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UniqFM_op_zsze__ |}.
 
-(* Translating `instance forall {ele}, forall `{Data.Data.Data ele},
-   Data.Data.Data (UniqFM.UniqFM ele)' failed: OOPS! Cannot find information for
+(* Translating `instance Data__UniqFM' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
 
 (* Skipping instance Foldable__UniqFM *)

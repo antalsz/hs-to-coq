@@ -401,7 +401,7 @@ Definition unionFVss : list VarSet.DVarSet -> VarSet.DVarSet :=
   VarSet.unionDVarSets.
 
 Definition varTypeTyCoFVs : Core.Var -> FV.FV :=
-  fun var => TyCoRep.tyCoFVsOfType (varType var).
+  fun var => TyCoRep.tyCoFVsOfType (Var.varType var).
 
 Definition varTypeTyCoVars : Core.Var -> VarSet.TyCoVarSet :=
   fun var => FV.fvVarSet (varTypeTyCoFVs var).
@@ -451,7 +451,7 @@ Definition bindFreeVars : CoreSyn.CoreBind -> VarSet.VarSet :=
 
 (* Unbound variables:
      AnnAlt AnnExpr None Some andb bool exprOrphNames expr_fvs list negb op_zt__
-     option orphNamesOfCo pair varType CoAxiom.coAxBranchLHS CoAxiom.coAxiomBranches
+     option orphNamesOfCo pair CoAxiom.coAxBranchLHS CoAxiom.coAxiomBranches
      CoAxiom.coAxiomTyCon CoAxiom.fromBranches Core.Branches Core.CoAxiom
      Core.Coercion Core.HoleProv Core.PhantomProv Core.PluginProv Core.ProofIrrelProv
      Core.TyCon Core.Type_ Core.UnivCoProvenance Core.UnsafeCoerceProv Core.Var
@@ -466,8 +466,8 @@ Definition bindFreeVars : CoreSyn.CoreBind -> VarSet.VarSet :=
      NameSet.NameSet NameSet.emptyNameSet NameSet.extendNameSet NameSet.unionNameSet
      NameSet.unitNameSet Panic.assertPanic TyCoRep.tyCoFVsOfType
      TyCon.tyConClass_maybe Util.debugIsOn Var.Id Var.isId Var.isLocalId
-     Var.isLocalVar Var.isTyVar VarSet.DIdSet VarSet.DTyCoVarSet VarSet.DVarSet
-     VarSet.IdSet VarSet.TyCoVarSet VarSet.VarSet VarSet.dVarSetElems
+     Var.isLocalVar Var.isTyVar Var.varType VarSet.DIdSet VarSet.DTyCoVarSet
+     VarSet.DVarSet VarSet.IdSet VarSet.TyCoVarSet VarSet.VarSet VarSet.dVarSetElems
      VarSet.delDVarSet VarSet.emptyVarSet VarSet.mapUnionVarSet VarSet.unionDVarSet
      VarSet.unionDVarSets VarSet.unitDVarSet
 *)

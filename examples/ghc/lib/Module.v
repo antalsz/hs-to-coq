@@ -90,18 +90,6 @@ Definition moduleUnitId (arg_1__ : Module) :=
 Definition unNDModule (arg_2__ : NDModule) :=
   let 'Mk_NDModule unNDModule := arg_2__ in
   unNDModule.
-
-Definition ml_hi_file (arg_3__ : ModLocation) :=
-  let 'Mk_ModLocation _ ml_hi_file _ := arg_3__ in
-  ml_hi_file.
-
-Definition ml_hs_file (arg_4__ : ModLocation) :=
-  let 'Mk_ModLocation ml_hs_file _ _ := arg_4__ in
-  ml_hs_file.
-
-Definition ml_obj_file (arg_5__ : ModLocation) :=
-  let 'Mk_ModLocation _ _ ml_obj_file := arg_5__ in
-  ml_obj_file.
 (* Midamble *)
 
 Require Import GHC.Err.
@@ -138,12 +126,11 @@ Definition mkModuleName : GHC.Base.String -> ModuleName := fun x => default.
 *)
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable Module.ModLocation' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__ModLocation' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Unique.Uniquable Module.ModuleName' failed: OOPS!
-   Cannot find information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance Uniquable__ModuleName' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
 
 Local Definition Eq___ModuleName_op_zeze__ : ModuleName -> ModuleName -> bool :=
   fun nm1 nm2 => Unique.getUnique nm1 GHC.Base.== Unique.getUnique nm2.
@@ -173,43 +160,38 @@ Local Definition Ord__ModuleName_max : ModuleName -> ModuleName -> ModuleName :=
 Local Definition Ord__ModuleName_min : ModuleName -> ModuleName -> ModuleName :=
   fun x y => if Ord__ModuleName_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Outputable.Outputable Module.ModuleName' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__ModuleName' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Binary.Binary Module.ModuleName' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance GHC.PackageDb.BinaryStringRep Module.ModuleName'
-   failed: OOPS! Cannot find information for class Qualified "GHC.PackageDb"
-   "BinaryStringRep" unsupported *)
-
-(* Translating `instance Data.Data.Data Module.ModuleName' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
-
-(* Translating `instance Control.DeepSeq.NFData Module.ModuleName' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
-
-(* Translating `instance Unique.Uniquable Module.Module' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
-
-(* Translating `instance Outputable.Outputable Module.Module' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
-(* Translating `instance Binary.Binary Module.Module' failed: OOPS! Cannot find
+(* Translating `instance Binary__ModuleName' failed: OOPS! Cannot find
    information for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance Data.Data.Data Module.Module' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance BinaryStringRep__ModuleName' failed: OOPS! Cannot find
+   information for class Qualified "GHC.PackageDb" "BinaryStringRep" unsupported *)
 
-(* Translating `instance Control.DeepSeq.NFData Module.Module' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
+(* Translating `instance Data__ModuleName' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Unique.Uniquable Module.UnitId' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Translating `instance NFData__ModuleName' failed: OOPS! Cannot find
+   information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+
+(* Translating `instance Uniquable__Module' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
+
+(* Translating `instance Outputable__Module' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Binary__Module' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Data__Module' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance NFData__Module' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+
+(* Translating `instance Uniquable__UnitId' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
 
 Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
   fun nm1 nm2 => Eq.
@@ -232,23 +214,20 @@ Local Definition Ord__UnitId_max : UnitId -> UnitId -> UnitId :=
 Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
   fun x y => if Ord__UnitId_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Data.Data.Data Module.UnitId' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__UnitId' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Control.DeepSeq.NFData Module.UnitId' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
+(* Translating `instance NFData__UnitId' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
 
-(* Translating `instance Outputable.Outputable Module.UnitId' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Translating `instance Outputable__UnitId' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Binary.Binary Module.UnitId' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__UnitId' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance GHC.PackageDb.BinaryStringRep Module.UnitId' failed:
-   OOPS! Cannot find information for class Qualified "GHC.PackageDb"
-   "BinaryStringRep" unsupported *)
+(* Translating `instance BinaryStringRep__UnitId' failed: OOPS! Cannot find
+   information for class Qualified "GHC.PackageDb" "BinaryStringRep" unsupported *)
 
 Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -414,8 +393,8 @@ Program Instance Ord__NDModule : GHC.Base.Ord NDModule :=
          GHC.Base.max__ := Ord__NDModule_max ;
          GHC.Base.min__ := Ord__NDModule_min |}.
 
-(* Translating `instance GHC.Show.Show Module.ModLocation' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance Show__ModLocation' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Show" "Show" unsupported *)
 
 Definition delModuleEnv {a} : ModuleEnv a -> Module -> ModuleEnv a :=
   fun arg_0__ arg_1__ =>

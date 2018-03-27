@@ -85,13 +85,11 @@ Definition unitFV : Var.Id -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | var, fv_cand, in_scope, (pair have haveSet as acc) =>
-        if VarSet.elemVarSet var in_scope : bool
-        then acc
-        else if VarSet.elemVarSet var haveSet : bool
-             then acc
-             else if fv_cand var : bool
-                  then pair (cons var have) (VarSet.extendVarSet haveSet var)
-                  else acc
+        if VarSet.elemVarSet var in_scope : bool then acc else
+        if VarSet.elemVarSet var haveSet : bool then acc else
+        if fv_cand var : bool
+        then pair (cons var have) (VarSet.extendVarSet haveSet var) else
+        acc
     end.
 
 Definition mkFVs : list Core.Var -> FV :=

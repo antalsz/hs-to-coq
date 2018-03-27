@@ -136,8 +136,8 @@ Definition findUses : DefUses -> Uses -> Uses :=
             if orb (intersectsNameSet defs uses) (Data.Foldable.any
                     (OccName.startsWithUnderscore GHC.Base.∘ Name.nameOccName) (nameSetElems
                                                                                 defs)) : bool
-            then unionNameSet rhs_uses uses
-            else uses
+            then unionNameSet rhs_uses uses else
+            uses
         end in
     Data.Foldable.foldr get uses dus.
 

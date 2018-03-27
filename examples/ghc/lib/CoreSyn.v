@@ -271,30 +271,8 @@ Definition ug_args (arg_0__ : UnfoldingGuidance) :=
                      "Partial record selector: field `ug_args' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
   end.
 
-Definition ug_arity (arg_1__ : UnfoldingGuidance) :=
+Definition ug_res (arg_1__ : UnfoldingGuidance) :=
   match arg_1__ with
-  | UnfWhen ug_arity _ _ => ug_arity
-  | UnfIfGoodArgs _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ug_arity' has no match in constructor `UnfIfGoodArgs' of type `UnfoldingGuidance'")
-  | UnfNever =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ug_arity' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
-  end.
-
-Definition ug_boring_ok (arg_2__ : UnfoldingGuidance) :=
-  match arg_2__ with
-  | UnfWhen _ _ ug_boring_ok => ug_boring_ok
-  | UnfIfGoodArgs _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ug_boring_ok' has no match in constructor `UnfIfGoodArgs' of type `UnfoldingGuidance'")
-  | UnfNever =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ug_boring_ok' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
-  end.
-
-Definition ug_res (arg_3__ : UnfoldingGuidance) :=
-  match arg_3__ with
   | UnfWhen _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `ug_res' has no match in constructor `UnfWhen' of type `UnfoldingGuidance'")
@@ -304,8 +282,8 @@ Definition ug_res (arg_3__ : UnfoldingGuidance) :=
                      "Partial record selector: field `ug_res' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
   end.
 
-Definition ug_size (arg_4__ : UnfoldingGuidance) :=
-  match arg_4__ with
+Definition ug_size (arg_2__ : UnfoldingGuidance) :=
+  match arg_2__ with
   | UnfWhen _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `ug_size' has no match in constructor `UnfWhen' of type `UnfoldingGuidance'")
@@ -313,6 +291,28 @@ Definition ug_size (arg_4__ : UnfoldingGuidance) :=
   | UnfNever =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `ug_size' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
+  end.
+
+Definition ug_arity (arg_3__ : UnfoldingGuidance) :=
+  match arg_3__ with
+  | UnfWhen ug_arity _ _ => ug_arity
+  | UnfIfGoodArgs _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ug_arity' has no match in constructor `UnfIfGoodArgs' of type `UnfoldingGuidance'")
+  | UnfNever =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ug_arity' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
+  end.
+
+Definition ug_boring_ok (arg_4__ : UnfoldingGuidance) :=
+  match arg_4__ with
+  | UnfWhen _ _ ug_boring_ok => ug_boring_ok
+  | UnfIfGoodArgs _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ug_boring_ok' has no match in constructor `UnfIfGoodArgs' of type `UnfoldingGuidance'")
+  | UnfNever =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ug_boring_ok' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
   end.
 
 Definition ug_unsat_ok (arg_5__ : UnfoldingGuidance) :=
@@ -326,50 +326,8 @@ Definition ug_unsat_ok (arg_5__ : UnfoldingGuidance) :=
                      "Partial record selector: field `ug_unsat_ok' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
   end.
 
-Definition df_args (arg_6__ : Unfolding) :=
+Definition uf_expandable (arg_6__ : Unfolding) :=
   match arg_6__ with
-  | NoUnfolding =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_args' has no match in constructor `NoUnfolding' of type `Unfolding'")
-  | OtherCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_args' has no match in constructor `OtherCon' of type `Unfolding'")
-  | DFunUnfolding _ _ df_args => df_args
-  | CoreUnfolding _ _ _ _ _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_args' has no match in constructor `CoreUnfolding' of type `Unfolding'")
-  end.
-
-Definition df_bndrs (arg_7__ : Unfolding) :=
-  match arg_7__ with
-  | NoUnfolding =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_bndrs' has no match in constructor `NoUnfolding' of type `Unfolding'")
-  | OtherCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_bndrs' has no match in constructor `OtherCon' of type `Unfolding'")
-  | DFunUnfolding df_bndrs _ _ => df_bndrs
-  | CoreUnfolding _ _ _ _ _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_bndrs' has no match in constructor `CoreUnfolding' of type `Unfolding'")
-  end.
-
-Definition df_con (arg_8__ : Unfolding) :=
-  match arg_8__ with
-  | NoUnfolding =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_con' has no match in constructor `NoUnfolding' of type `Unfolding'")
-  | OtherCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_con' has no match in constructor `OtherCon' of type `Unfolding'")
-  | DFunUnfolding _ df_con _ => df_con
-  | CoreUnfolding _ _ _ _ _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `df_con' has no match in constructor `CoreUnfolding' of type `Unfolding'")
-  end.
-
-Definition uf_expandable (arg_9__ : Unfolding) :=
-  match arg_9__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_expandable' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -382,8 +340,8 @@ Definition uf_expandable (arg_9__ : Unfolding) :=
   | CoreUnfolding _ _ _ _ _ _ uf_expandable _ => uf_expandable
   end.
 
-Definition uf_guidance (arg_10__ : Unfolding) :=
-  match arg_10__ with
+Definition uf_guidance (arg_7__ : Unfolding) :=
+  match arg_7__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_guidance' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -396,8 +354,8 @@ Definition uf_guidance (arg_10__ : Unfolding) :=
   | CoreUnfolding _ _ _ _ _ _ _ uf_guidance => uf_guidance
   end.
 
-Definition uf_is_conlike (arg_11__ : Unfolding) :=
-  match arg_11__ with
+Definition uf_is_conlike (arg_8__ : Unfolding) :=
+  match arg_8__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_conlike' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -410,8 +368,8 @@ Definition uf_is_conlike (arg_11__ : Unfolding) :=
   | CoreUnfolding _ _ _ _ uf_is_conlike _ _ _ => uf_is_conlike
   end.
 
-Definition uf_is_top (arg_12__ : Unfolding) :=
-  match arg_12__ with
+Definition uf_is_top (arg_9__ : Unfolding) :=
+  match arg_9__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_top' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -424,8 +382,8 @@ Definition uf_is_top (arg_12__ : Unfolding) :=
   | CoreUnfolding _ _ uf_is_top _ _ _ _ _ => uf_is_top
   end.
 
-Definition uf_is_value (arg_13__ : Unfolding) :=
-  match arg_13__ with
+Definition uf_is_value (arg_10__ : Unfolding) :=
+  match arg_10__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_value' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -438,8 +396,8 @@ Definition uf_is_value (arg_13__ : Unfolding) :=
   | CoreUnfolding _ _ _ uf_is_value _ _ _ _ => uf_is_value
   end.
 
-Definition uf_is_work_free (arg_14__ : Unfolding) :=
-  match arg_14__ with
+Definition uf_is_work_free (arg_11__ : Unfolding) :=
+  match arg_11__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_work_free' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -452,8 +410,8 @@ Definition uf_is_work_free (arg_14__ : Unfolding) :=
   | CoreUnfolding _ _ _ _ _ uf_is_work_free _ _ => uf_is_work_free
   end.
 
-Definition uf_src (arg_15__ : Unfolding) :=
-  match arg_15__ with
+Definition uf_src (arg_12__ : Unfolding) :=
+  match arg_12__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_src' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -466,8 +424,8 @@ Definition uf_src (arg_15__ : Unfolding) :=
   | CoreUnfolding _ uf_src _ _ _ _ _ _ => uf_src
   end.
 
-Definition uf_tmpl (arg_16__ : Unfolding) :=
-  match arg_16__ with
+Definition uf_tmpl (arg_13__ : Unfolding) :=
+  match arg_13__ with
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_tmpl' has no match in constructor `NoUnfolding' of type `Unfolding'")
@@ -480,112 +438,166 @@ Definition uf_tmpl (arg_16__ : Unfolding) :=
   | CoreUnfolding uf_tmpl _ _ _ _ _ _ _ => uf_tmpl
   end.
 
-Definition ru_act (arg_17__ : CoreRule) :=
+Definition df_args (arg_14__ : Unfolding) :=
+  match arg_14__ with
+  | NoUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_args' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | OtherCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_args' has no match in constructor `OtherCon' of type `Unfolding'")
+  | DFunUnfolding _ _ df_args => df_args
+  | CoreUnfolding _ _ _ _ _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_args' has no match in constructor `CoreUnfolding' of type `Unfolding'")
+  end.
+
+Definition df_bndrs (arg_15__ : Unfolding) :=
+  match arg_15__ with
+  | NoUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_bndrs' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | OtherCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_bndrs' has no match in constructor `OtherCon' of type `Unfolding'")
+  | DFunUnfolding df_bndrs _ _ => df_bndrs
+  | CoreUnfolding _ _ _ _ _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_bndrs' has no match in constructor `CoreUnfolding' of type `Unfolding'")
+  end.
+
+Definition df_con (arg_16__ : Unfolding) :=
+  match arg_16__ with
+  | NoUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_con' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | OtherCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_con' has no match in constructor `OtherCon' of type `Unfolding'")
+  | DFunUnfolding _ df_con _ => df_con
+  | CoreUnfolding _ _ _ _ _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_con' has no match in constructor `CoreUnfolding' of type `Unfolding'")
+  end.
+
+Definition ru_fn (arg_17__ : CoreRule) :=
   match arg_17__ with
-  | Rule _ ru_act _ _ _ _ _ _ _ _ _ => ru_act
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_act' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_args (arg_18__ : CoreRule) :=
-  match arg_18__ with
-  | Rule _ _ _ _ _ ru_args _ _ _ _ _ => ru_args
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_args' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_auto (arg_19__ : CoreRule) :=
-  match arg_19__ with
-  | Rule _ _ _ _ _ _ _ ru_auto _ _ _ => ru_auto
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_auto' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_bndrs (arg_20__ : CoreRule) :=
-  match arg_20__ with
-  | Rule _ _ _ _ ru_bndrs _ _ _ _ _ _ => ru_bndrs
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_bndrs' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_fn (arg_21__ : CoreRule) :=
-  match arg_21__ with
   | Rule _ _ ru_fn _ _ _ _ _ _ _ _ => ru_fn
   | BuiltinRule _ ru_fn _ _ => ru_fn
   end.
 
-Definition ru_local (arg_22__ : CoreRule) :=
-  match arg_22__ with
-  | Rule _ _ _ _ _ _ _ _ _ _ ru_local => ru_local
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_local' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_name (arg_23__ : CoreRule) :=
-  match arg_23__ with
+Definition ru_name (arg_18__ : CoreRule) :=
+  match arg_18__ with
   | Rule ru_name _ _ _ _ _ _ _ _ _ _ => ru_name
   | BuiltinRule ru_name _ _ _ => ru_name
   end.
 
-Definition ru_nargs (arg_24__ : CoreRule) :=
-  match arg_24__ with
+Definition ru_nargs (arg_19__ : CoreRule) :=
+  match arg_19__ with
   | Rule _ _ _ _ _ _ _ _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `ru_nargs' has no match in constructor `Rule' of type `CoreRule'")
   | BuiltinRule _ _ ru_nargs _ => ru_nargs
   end.
 
-Definition ru_origin (arg_25__ : CoreRule) :=
-  match arg_25__ with
-  | Rule _ _ _ _ _ _ _ _ ru_origin _ _ => ru_origin
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_origin' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_orphan (arg_26__ : CoreRule) :=
-  match arg_26__ with
-  | Rule _ _ _ _ _ _ _ _ _ ru_orphan _ => ru_orphan
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_orphan' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_rhs (arg_27__ : CoreRule) :=
-  match arg_27__ with
-  | Rule _ _ _ _ _ _ ru_rhs _ _ _ _ => ru_rhs
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_rhs' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_rough (arg_28__ : CoreRule) :=
-  match arg_28__ with
-  | Rule _ _ _ ru_rough _ _ _ _ _ _ _ => ru_rough
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_rough' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
-Definition ru_try (arg_29__ : CoreRule) :=
-  match arg_29__ with
+Definition ru_try (arg_20__ : CoreRule) :=
+  match arg_20__ with
   | Rule _ _ _ _ _ _ _ _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `ru_try' has no match in constructor `Rule' of type `CoreRule'")
   | BuiltinRule _ _ _ ru_try => ru_try
   end.
 
-Definition re_base (arg_30__ : RuleEnv) :=
-  let 'Mk_RuleEnv re_base _ := arg_30__ in
+Definition ru_act (arg_21__ : CoreRule) :=
+  match arg_21__ with
+  | Rule _ ru_act _ _ _ _ _ _ _ _ _ => ru_act
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_act' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_args (arg_22__ : CoreRule) :=
+  match arg_22__ with
+  | Rule _ _ _ _ _ ru_args _ _ _ _ _ => ru_args
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_args' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_auto (arg_23__ : CoreRule) :=
+  match arg_23__ with
+  | Rule _ _ _ _ _ _ _ ru_auto _ _ _ => ru_auto
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_auto' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_bndrs (arg_24__ : CoreRule) :=
+  match arg_24__ with
+  | Rule _ _ _ _ ru_bndrs _ _ _ _ _ _ => ru_bndrs
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_bndrs' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_fn (arg_25__ : CoreRule) :=
+  match arg_25__ with
+  | Rule _ _ ru_fn _ _ _ _ _ _ _ _ => ru_fn
+  | BuiltinRule _ ru_fn _ _ => ru_fn
+  end.
+
+Definition ru_local (arg_26__ : CoreRule) :=
+  match arg_26__ with
+  | Rule _ _ _ _ _ _ _ _ _ _ ru_local => ru_local
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_local' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_name (arg_27__ : CoreRule) :=
+  match arg_27__ with
+  | Rule ru_name _ _ _ _ _ _ _ _ _ _ => ru_name
+  | BuiltinRule ru_name _ _ _ => ru_name
+  end.
+
+Definition ru_origin (arg_28__ : CoreRule) :=
+  match arg_28__ with
+  | Rule _ _ _ _ _ _ _ _ ru_origin _ _ => ru_origin
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_origin' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_orphan (arg_29__ : CoreRule) :=
+  match arg_29__ with
+  | Rule _ _ _ _ _ _ _ _ _ ru_orphan _ => ru_orphan
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_orphan' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_rhs (arg_30__ : CoreRule) :=
+  match arg_30__ with
+  | Rule _ _ _ _ _ _ ru_rhs _ _ _ _ => ru_rhs
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_rhs' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition ru_rough (arg_31__ : CoreRule) :=
+  match arg_31__ with
+  | Rule _ _ _ ru_rough _ _ _ _ _ _ _ => ru_rough
+  | BuiltinRule _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `ru_rough' has no match in constructor `BuiltinRule' of type `CoreRule'")
+  end.
+
+Definition re_base (arg_32__ : RuleEnv) :=
+  let 'Mk_RuleEnv re_base _ := arg_32__ in
   re_base.
 
-Definition re_visible_orphs (arg_31__ : RuleEnv) :=
-  let 'Mk_RuleEnv _ re_visible_orphs := arg_31__ in
+Definition re_visible_orphs (arg_33__ : RuleEnv) :=
+  let 'Mk_RuleEnv _ re_visible_orphs := arg_33__ in
   re_visible_orphs.
 (* Midamble *)
 
@@ -728,19 +740,16 @@ Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Binary.Binary CoreSyn.IsOrphan' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Translating `instance Binary__IsOrphan' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
 
-(* Translating `instance Outputable.Outputable CoreSyn.AltCon' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
-(* Translating `instance forall {b}, forall `{Outputable.Outputable b},
-   Outputable.Outputable (CoreSyn.TaggedBndr b)' failed: OOPS! Cannot find
+(* Translating `instance Outputable__AltCon' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance forall {b}, forall `{Outputable.Outputable b},
-   Outputable.OutputableBndr (CoreSyn.TaggedBndr b)' failed: OOPS! Cannot find
+(* Translating `instance Outputable__TaggedBndr' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance OutputableBndr__TaggedBndr' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "OutputableBndr" unsupported *)
 
 Local Definition Eq___UnfoldingGuidance_op_zeze__
@@ -764,8 +773,8 @@ Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
     k {| GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data CoreSyn.IsOrphan' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__IsOrphan' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Eq___TickishPlacement_op_zeze__
    : TickishPlacement -> TickishPlacement -> bool :=
@@ -805,21 +814,17 @@ Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
     k {| GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
 
-(* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
-   (CoreSyn.Bind b)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {b}, forall `{Data.Data.Data b}, Data.Data.Data
-   (CoreSyn.Expr b)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
-
-(* Translating `instance forall {id}, forall `{Data.Data.Data id},
-   Data.Data.Data (CoreSyn.Tickish id)' failed: OOPS! Cannot find information for
+(* Translating `instance Data__Bind' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance forall {id}, forall `{GHC.Base.Ord id}, GHC.Base.Ord
-   (CoreSyn.Tickish id)' failed: using a record pattern for the unknown constructor
-   `ProfNote' unsupported *)
+(* Translating `instance Data__Expr' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Data__Tickish' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Ord__Tickish' failed: using a record pattern for the
+   unknown constructor `ProfNote' unsupported *)
 
 Local Definition Eq___Tickish_op_zsze__ {inst_id} `{_ : GHC.Base.Eq_ inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
@@ -835,8 +840,8 @@ Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
     k {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
 
-(* Translating `instance Data.Data.Data CoreSyn.AltCon' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Translating `instance Data__AltCon' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun a b =>
@@ -1014,9 +1019,8 @@ Definition collectAnnArgsTicks {b} {a}
                                       match arg_0__, arg_1__, arg_2__ with
                                       | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
                                       | pair _ (AnnTick t e), as_, ts =>
-                                          if tickishOk t : bool
-                                          then go e as_ (cons t ts)
-                                          else j_4__
+                                          if tickishOk t : bool then go e as_ (cons t ts) else
+                                          j_4__
                                       | _, _, _ => j_4__
                                       end) in
     go expr nil nil.
@@ -1244,8 +1248,8 @@ Definition hasStableCoreUnfolding_maybe : Unfolding -> option bool :=
              | UnfWhen _ _ _ => Some true
              | UnfIfGoodArgs _ _ _ => Some false
              | UnfNever => None
-             end
-        else None
+             end else
+        None
     | _ => None
     end.
 
@@ -1422,14 +1426,12 @@ Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if Var.isTyVar v : bool
-    then Type_ (TyCoRep.mkTyVarTy v)
-    else if Var.isCoVar v : bool
-         then Coercion (TyCoRep.mkCoVarCo v)
-         else if andb Util.debugIsOn (negb (Var.isId v)) : bool
-              then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-                    #1549)
-              else Var v.
+    if Var.isTyVar v : bool then Type_ (TyCoRep.mkTyVarTy v) else
+    if Var.isCoVar v : bool then Coercion (TyCoRep.mkCoVarCo v) else
+    if andb Util.debugIsOn (negb (Var.isId v)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+          #1549)
+    else Var v.
 
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.

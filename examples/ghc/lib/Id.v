@@ -103,13 +103,13 @@ Parameter setIdType : Var.Id -> Core.Type_ -> Var.Id.
 (* Converted value declarations: *)
 
 Definition idArity : Var.Id -> BasicTypes.Arity :=
-  fun id => arityInfo (Var.idInfo id).
+  fun id => IdInfo.arityInfo (Var.idInfo id).
 
 Definition idCafInfo : Var.Id -> IdInfo.CafInfo :=
-  fun id => cafInfo (Var.idInfo id).
+  fun id => IdInfo.cafInfo (Var.idInfo id).
 
 Definition idCallArity : Var.Id -> BasicTypes.Arity :=
-  fun id => callArityInfo (Var.idInfo id).
+  fun id => IdInfo.callArityInfo (Var.idInfo id).
 
 Definition idDataCon : Var.Id -> DataCon.DataCon :=
   fun id =>
@@ -117,10 +117,10 @@ Definition idDataCon : Var.Id -> DataCon.DataCon :=
                                                           "idDataCon") (Panic.noString id)).
 
 Definition idDemandInfo : Var.Id -> Demand.Demand :=
-  fun id => demandInfo (Var.idInfo id).
+  fun id => IdInfo2.demandInfo (Var.idInfo id).
 
 Definition idInlinePragma : Var.Id -> BasicTypes.InlinePragma :=
-  fun id => inlinePragInfo (Var.idInfo id).
+  fun id => IdInfo.inlinePragInfo (Var.idInfo id).
 
 Definition idRuleMatchInfo : Var.Id -> BasicTypes.RuleMatchInfo :=
   fun id => BasicTypes.inlinePragmaRuleMatchInfo (idInlinePragma id).
@@ -138,16 +138,15 @@ Definition idIsFrom : Module.Module -> Var.Id -> bool :=
   fun mod_ id => Name.nameIsLocalOrFrom mod_ (idName id).
 
 Definition idOccInfo : Var.Id -> BasicTypes.OccInfo :=
-  fun id => occInfo (Var.idInfo id).
+  fun id => IdInfo.occInfo (Var.idInfo id).
 
 Definition isDeadBinder : Var.Id -> bool :=
   fun bndr =>
-    if Var.isId bndr : bool
-    then BasicTypes.isDeadOcc (idOccInfo bndr)
-    else false.
+    if Var.isId bndr : bool then BasicTypes.isDeadOcc (idOccInfo bndr) else
+    false.
 
 Definition idOneShotInfo : Var.Id -> BasicTypes.OneShotInfo :=
-  fun id => oneShotInfo (Var.idInfo id).
+  fun id => IdInfo.oneShotInfo (Var.idInfo id).
 
 Definition isOneShotLambda : Var.Id -> bool :=
   fun id =>
@@ -168,7 +167,7 @@ Definition isProbablyOneShotLambda : Var.Id -> bool :=
     end.
 
 Definition idSpecialisation : Var.Id -> IdInfo.RuleInfo :=
-  fun id => ruleInfo (Var.idInfo id).
+  fun id => IdInfo.ruleInfo (Var.idInfo id).
 
 Definition idHasRules : Var.Id -> bool :=
   fun id => negb (IdInfo.isEmptyRuleInfo (idSpecialisation id)).
@@ -177,7 +176,7 @@ Definition idCoreRules : Var.Id -> list CoreSyn.CoreRule :=
   fun id => IdInfo2.ruleInfoRules (idSpecialisation id).
 
 Definition idStrictness : Var.Id -> Demand.StrictSig :=
-  fun id => strictnessInfo (Var.idInfo id).
+  fun id => IdInfo2.strictnessInfo (Var.idInfo id).
 
 Definition isBottomingId : Var.Id -> bool :=
   fun id => Demand.isBottomingSig (idStrictness id).
@@ -192,16 +191,16 @@ Definition localiseId : Var.Id -> Var.Id :=
         then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
               #193)
         else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
-    then id
-    else Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (idType id)
-         (Var.idInfo id).
+    then id else
+    Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (idType id)
+    (Var.idInfo id).
 
 Definition idUnfolding : Var.Id -> CoreSyn.Unfolding :=
   fun id =>
     let info := Var.idInfo id in
-    if BasicTypes.isStrongLoopBreaker (occInfo info) : bool
-    then CoreSyn.NoUnfolding
-    else unfoldingInfo info.
+    if BasicTypes.isStrongLoopBreaker (IdInfo.occInfo info) : bool
+    then CoreSyn.NoUnfolding else
+    IdInfo2.unfoldingInfo info.
 
 Definition idUnique : Var.Id -> Unique.Unique :=
   Var.varUnique.
@@ -273,7 +272,7 @@ Definition modifyInlinePragma
    : Var.Id -> (BasicTypes.InlinePragma -> BasicTypes.InlinePragma) -> Var.Id :=
   fun id fn =>
     modifyIdInfo (fun info =>
-                    IdInfo.setInlinePragInfo info (fn (inlinePragInfo info))) id.
+                    IdInfo.setInlinePragInfo info (fn (IdInfo.inlinePragInfo info))) id.
 
 Definition setInlineActivation : Var.Id -> BasicTypes.Activation -> Var.Id :=
   fun id act =>
@@ -316,9 +315,8 @@ Definition updOneShotInfo : Var.Id -> BasicTypes.OneShotInfo -> Var.Id :=
       | pair _ BasicTypes.NoOneShotInfo => false
       | _ => true
       end in
-    if do_upd : bool
-    then setIdOneShotInfo id one_shot
-    else id.
+    if do_upd : bool then setIdOneShotInfo id one_shot else
+    id.
 
 Definition setIdSpecialisation : Var.Id -> IdInfo.RuleInfo -> Var.Id :=
   fun id spec_info =>
@@ -349,10 +347,10 @@ Definition setOneShotLambda : Var.Id -> Var.Id :=
 Definition transferPolyIdInfo : Var.Id -> list Core.Var -> Var.Id -> Var.Id :=
   fun old_id abstract_wrt new_id =>
     let old_info := Var.idInfo old_id in
-    let old_arity := arityInfo old_info in
-    let old_inline_prag := inlinePragInfo old_info in
-    let old_occ_info := occInfo old_info in
-    let old_strictness := strictnessInfo old_info in
+    let old_arity := IdInfo.arityInfo old_info in
+    let old_inline_prag := IdInfo.inlinePragInfo old_info in
+    let old_occ_info := IdInfo.occInfo old_info in
+    let old_strictness := IdInfo2.strictnessInfo old_info in
     let arity_increase := Util.count Var.isId abstract_wrt in
     let new_arity := old_arity GHC.Num.+ arity_increase in
     let new_strictness :=
@@ -425,7 +423,7 @@ Definition mkWorkerId : Unique.Unique -> Var.Id -> Core.Type_ -> Var.Id :=
                       (Name.getName unwrkr)) ty.
 
 Definition realIdUnfolding : Var.Id -> CoreSyn.Unfolding :=
-  fun id => unfoldingInfo (Var.idInfo id).
+  fun id => IdInfo2.unfoldingInfo (Var.idInfo id).
 
 Axiom recordSelectorTyCon : forall {A : Type}, A.
 
@@ -448,34 +446,35 @@ Definition stateHackOneShot : BasicTypes.OneShotInfo :=
   BasicTypes.OneShotLam.
 
 (* Unbound variables:
-     Kind None Some Var.varName Var.varType andb arityInfo bool cafInfo callArityInfo
-     demandInfo false inlinePragInfo isDataConId_maybe isDataConWorkId list mkLocalId
-     mkLocalIdOrCoVar mkSysLocal mkTemplateLocalsNum negb occInfo oneShotInfo option
-     orb pair ruleInfo strictnessInfo true unfoldingInfo BasicTypes.Activation
-     BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.NoOccInfo
-     BasicTypes.NoOneShotInfo BasicTypes.OccInfo BasicTypes.OneShotInfo
-     BasicTypes.OneShotLam BasicTypes.ProbOneShot BasicTypes.RuleMatchInfo
-     BasicTypes.inlinePragmaActivation BasicTypes.inlinePragmaRuleMatchInfo
-     BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isStrongLoopBreaker
-     BasicTypes.setInlinePragmaActivation Core.Type_ Core.Var CoreSyn.CoreRule
-     CoreSyn.NoUnfolding CoreSyn.Unfolding DataCon.DataCon Demand.Demand
-     Demand.StrictSig Demand.increaseStrictSigArity Demand.isBottomingSig
-     Demand.nopSig FastString.FastString FastString.fsLit GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq
-     IdInfo.CafInfo IdInfo.IdDetails IdInfo.IdInfo IdInfo.RuleInfo
-     IdInfo.isEmptyRuleInfo IdInfo.setArityInfo IdInfo.setCafInfo
-     IdInfo.setCallArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
-     IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.vanillaIdInfo
-     IdInfo.zapDemandInfo IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo
+     Kind None Some andb bool false isDataConId_maybe isDataConWorkId list mkLocalId
+     mkLocalIdOrCoVar mkSysLocal mkTemplateLocalsNum negb option orb pair true
+     BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
+     BasicTypes.NoOccInfo BasicTypes.NoOneShotInfo BasicTypes.OccInfo
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.ProbOneShot
+     BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
+     BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
+     BasicTypes.isStrongLoopBreaker BasicTypes.setInlinePragmaActivation Core.Type_
+     Core.Var CoreSyn.CoreRule CoreSyn.NoUnfolding CoreSyn.Unfolding DataCon.DataCon
+     Demand.Demand Demand.StrictSig Demand.increaseStrictSigArity
+     Demand.isBottomingSig Demand.nopSig FastString.FastString FastString.fsLit
+     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zp__ GHC.Prim.seq IdInfo.CafInfo IdInfo.IdDetails IdInfo.IdInfo
+     IdInfo.RuleInfo IdInfo.arityInfo IdInfo.cafInfo IdInfo.callArityInfo
+     IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo IdInfo.occInfo IdInfo.oneShotInfo
+     IdInfo.ruleInfo IdInfo.setArityInfo IdInfo.setCafInfo IdInfo.setCallArityInfo
+     IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
+     IdInfo.setRuleInfo IdInfo.vanillaIdInfo IdInfo.zapDemandInfo
+     IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo IdInfo2.demandInfo
      IdInfo2.ruleInfoRules IdInfo2.setDemandInfo IdInfo2.setStrictnessInfo
-     IdInfo2.setUnfoldingInfo IdInfo2.setUnfoldingInfoLazily Maybes.orElse
-     Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
-     Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
-     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.assertPanic
-     Panic.noString Panic.panicStr SrcLoc.SrcSpan TyCoRep.isCoercionType
-     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Unique.mkBuiltinUnique Util.count Util.debugIsOn Var.Id Var.idDetails Var.idInfo
-     Var.isId Var.isLocalId Var.isTyVar Var.lazySetIdInfo Var.mkExportedLocalVar
-     Var.mkGlobalVar Var.mkLocalVar Var.setIdExported Var.setIdNotExported
-     Var.setVarName Var.setVarUnique Var.varUnique
+     IdInfo2.setUnfoldingInfo IdInfo2.setUnfoldingInfoLazily IdInfo2.strictnessInfo
+     IdInfo2.unfoldingInfo Maybes.orElse Module.Module Name.Name Name.getName
+     Name.isInternalName Name.localiseName Name.mkDerivedInternalName
+     Name.mkInternalName Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName
+     OccName.mkWorkerOcc Panic.assertPanic Panic.noString Panic.panicStr
+     SrcLoc.SrcSpan TyCoRep.isCoercionType UniqSupply.MonadUnique
+     UniqSupply.getUniqueM Unique.Unique Unique.mkBuiltinUnique Util.count
+     Util.debugIsOn Var.Id Var.idDetails Var.idInfo Var.isId Var.isLocalId
+     Var.isTyVar Var.lazySetIdInfo Var.mkExportedLocalVar Var.mkGlobalVar
+     Var.mkLocalVar Var.setIdExported Var.setIdNotExported Var.setVarName
+     Var.setVarUnique Var.varName Var.varType Var.varUnique
 *)

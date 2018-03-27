@@ -324,19 +324,19 @@ Local Definition Ord__CoAxiomRule_compare
 
 Local Definition Ord__CoAxiomRule_op_zg__
    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__CoAxiomRule_compare x y) Gt.
+  fun x y => Ord__CoAxiomRule_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__CoAxiomRule_op_zgze__
    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__CoAxiomRule_compare x y) Lt.
+  fun x y => Ord__CoAxiomRule_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__CoAxiomRule_op_zl__
    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__CoAxiomRule_compare x y) Lt.
+  fun x y => Ord__CoAxiomRule_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__CoAxiomRule_op_zlze__
    : Core.CoAxiomRule -> Core.CoAxiomRule -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__CoAxiomRule_compare x y) Gt.
+  fun x y => Ord__CoAxiomRule_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__CoAxiomRule_max
    : Core.CoAxiomRule -> Core.CoAxiomRule -> Core.CoAxiomRule :=

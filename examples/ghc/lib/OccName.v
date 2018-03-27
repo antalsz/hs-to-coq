@@ -238,16 +238,16 @@ Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
     end.
 
 Local Definition Ord__OccName_op_zg__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__OccName_compare x y) Gt.
+  fun x y => Ord__OccName_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__OccName_op_zgze__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__OccName_compare x y) Lt.
+  fun x y => Ord__OccName_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__OccName_op_zl__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__OccName_compare x y) Lt.
+  fun x y => Ord__OccName_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__OccName_op_zlze__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__OccName_compare x y) Gt.
+  fun x y => Ord__OccName_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__OccName_max : OccName -> OccName -> OccName :=
   fun x y => if Ord__OccName_op_zlze__ x y : bool then y else x.

@@ -3,7 +3,7 @@
              FlexibleContexts, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
-  convertTyClDecls, convertModuleTyClDecls,
+  convertModuleTyClDecls,
   -- * Convert single declarations
   ConvertedDeclaration(..), convDeclName,
   convertTyClDecl,
@@ -173,6 +173,9 @@ convertDeclarationGroup DeclarationGroup{..} =
   (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
     Right $ classSentences classDef
 
+  (Nothing, Nothing, Nothing, Nothing) ->
+    Right []
+
   (_, _, _, _) ->
     Left "too much mutual recursion"
 
@@ -255,8 +258,9 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
 
   let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
-  allFields <- uses (constructorFields.to restrict.folded._RecordFields) (S.toAscList . S.fromList)
-  filteredFields <- filterM (\field -> not <$> use (edits.skipped.contains field)) allFields
+  allFields <- use (constructorFields.to restrict.folded._RecordFields)
+  let nubedFields = S.toAscList (S.fromList allFields)
+  filteredFields <- filterM (\field -> not <$> use (edits.skipped.contains field)) nubedFields
   for filteredFields $ \(field :: Qualid) -> do
     equations <- for conNames $ \con -> do
       (args, hasField) <- use (constructorFields.at con) >>= \case
@@ -331,6 +335,3 @@ convertModuleTyClDecls =   forkM3 (either convUnsupported pure
                                   (foldTraverse generateGroupRecordAccessors)
                        <=< groupTyClDecls
   where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
-
-convertTyClDecls :: ConversionMonad m => [TyClDecl GHC.Name] -> m [Sentence]
-convertTyClDecls = convertModuleTyClDecls . map (Nothing,)

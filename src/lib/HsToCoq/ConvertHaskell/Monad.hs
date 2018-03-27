@@ -240,11 +240,11 @@ builtInClasses =
     , ClassDefinition "Control.Arrow.Arrow"
        [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Control.Category.Category" (PosArg "a" :| []))]
        Nothing
-       [("Control.Arrow.op_zazaza__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg (Infix "c" "*" "c'") :| [])))))
-       ,("Control.Arrow.op_ztztzt__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "b'"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b'" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg (Infix "b" "*" "b'") :| [])) (PosArg (Infix "c" "*" "c'") :| [])))))
+       [("Control.Arrow.op_zazaza__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg (mkInfix "c" "*" "c'") :| [])))))
+       ,("Control.Arrow.op_ztztzt__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "b'"),Inferred Implicit (Ident "c'")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (Arrow (App (App "a" (PosArg "b'" :| [])) (PosArg "c'" :| [])) (App (App "a" (PosArg (mkInfix "b" "*" "b'") :| [])) (PosArg (mkInfix "c" "*" "c'") :| [])))))
        ,("Conrol.Arrow.arr",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (Arrow (Parens (Arrow "b" "c")) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| []))))
-       ,("Control.Arrow.first",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Infix "b" "*" "d") :| [])) (PosArg (Infix "c" "*" "d") :| []))))
-       ,("Control.Arrowsecond",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Infix "d" "*" "b") :| [])) (PosArg (Infix "d" "*" "c") :| []))))]
+       ,("Control.Arrow.first",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (mkInfix "b" "*" "d") :| [])) (PosArg (mkInfix "c" "*" "d") :| []))))
+       ,("Control.Arrowsecond",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (mkInfix "d" "*" "b") :| [])) (PosArg (mkInfix "d" "*" "c") :| []))))]
 
     , ClassDefinition "Control.Arrow.ArrowZero"
       [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Arrow" (PosArg "a" :| []))]
@@ -264,12 +264,12 @@ builtInClasses =
      ,("Control.Arrow.right",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c"),Inferred Implicit (Ident "d")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "d" :| [])) (PosArg "b" :| []))) :| [])) (PosArg (Parens (App (App "sum" (PosArg "d" :| [])) (PosArg "c" :| []))) :| []))))
      ,("Control.Arrow.op_zbzbzb__",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg "b" :| [])) (PosArg "d" :| [])) (Arrow (App (App "a" (PosArg "c" :| [])) (PosArg "d" :| [])) (App (App "a" (PosArg (Parens (App (App "sum" (PosArg "b" :| [])) (PosArg "c" :| []))) :| [])) (PosArg "d" :| [])))))]
 
-    , ClassDefinition "Control.Arrow.ArrowApply" [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Arrow" (PosArg "a" :| []))] Nothing [("app",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (App (App "a" (PosArg (Infix (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) "*" "b") :| [])) (PosArg "c" :| [])))]
+    , ClassDefinition "Control.Arrow.ArrowApply" [Typed Ungeneralizable Explicit (Ident "a" :| []) (Arrow "Type" (Arrow "Type" "Type")),Generalized Implicit (App "Arrow" (PosArg "a" :| []))] Nothing [("app",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "c")]) (App (App "a" (PosArg (mkInfix (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| [])) "*" "b") :| [])) (PosArg "c" :| [])))]
 
     , ClassDefinition "Control.Arrow.ArrowLoop"
       ["a",Generalized Implicit (App "Arrow" (PosArg "a" :| []))]
       Nothing
-      [("Control.Arrow.loop",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg (Infix "b" "*" "d") :| [])) (PosArg (Infix "c" "*" "d") :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| []))))]
+      [("Control.Arrow.loop",Forall (Inferred Implicit (Ident "b") :| [Inferred Implicit (Ident "d"),Inferred Implicit (Ident "c")]) (Arrow (App (App "a" (PosArg (mkInfix "b" "*" "d") :| [])) (PosArg (mkInfix "c" "*" "d") :| [])) (App (App "a" (PosArg "b" :| [])) (PosArg "c" :| []))))]
 
     , ClassDefinition "Data.Functor.Eq1" ["f"] Nothing
       [("Data.Functor.liftEq",Forall (Inferred Implicit (Ident "a") :| [Inferred Implicit (Ident "b")]) (Arrow (Parens (Arrow "a" (Arrow "b" "bool"))) (Arrow (App "f" (PosArg "a" :| [])) (Arrow (App "f" (PosArg "b" :| [])) "bool"))))]

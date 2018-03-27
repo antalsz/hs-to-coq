@@ -21,6 +21,7 @@ Makefile.conf
 # Haskell
 *.o
 *.hi
+*.tix
 
 # emacs autosaves
 \#*

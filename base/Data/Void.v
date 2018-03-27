@@ -38,16 +38,16 @@ Local Definition Ord__Void_compare : Void -> Void -> comparison :=
   fun arg_0__ arg_1__ => Eq.
 
 Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Void_compare x y) Gt.
+  fun x y => Ord__Void_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Void_op_zgze__ : Void -> Void -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Void_compare x y) Lt.
+  fun x y => Ord__Void_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__Void_op_zl__ : Void -> Void -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Void_compare x y) Lt.
+  fun x y => Ord__Void_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Void_op_zlze__ : Void -> Void -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Void_compare x y) Gt.
+  fun x y => Ord__Void_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Void_max : Void -> Void -> Void :=
   fun x y => if Ord__Void_op_zlze__ x y : bool then y else x.

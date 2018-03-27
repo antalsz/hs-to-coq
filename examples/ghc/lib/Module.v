@@ -143,16 +143,16 @@ Local Definition Ord__ModuleName_compare
   fun nm1 nm2 => Eq.
 
 Local Definition Ord__ModuleName_op_zg__ : ModuleName -> ModuleName -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__ModuleName_compare x y) Gt.
+  fun x y => Ord__ModuleName_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__ModuleName_op_zgze__ : ModuleName -> ModuleName -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__ModuleName_compare x y) Lt.
+  fun x y => Ord__ModuleName_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__ModuleName_op_zl__ : ModuleName -> ModuleName -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__ModuleName_compare x y) Lt.
+  fun x y => Ord__ModuleName_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__ModuleName_op_zlze__ : ModuleName -> ModuleName -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__ModuleName_compare x y) Gt.
+  fun x y => Ord__ModuleName_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__ModuleName_max : ModuleName -> ModuleName -> ModuleName :=
   fun x y => if Ord__ModuleName_op_zlze__ x y : bool then y else x.
@@ -197,16 +197,16 @@ Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
   fun nm1 nm2 => Eq.
 
 Local Definition Ord__UnitId_op_zg__ : UnitId -> UnitId -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__UnitId_compare x y) Gt.
+  fun x y => Ord__UnitId_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__UnitId_op_zgze__ : UnitId -> UnitId -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__UnitId_compare x y) Lt.
+  fun x y => Ord__UnitId_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__UnitId_op_zl__ : UnitId -> UnitId -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__UnitId_compare x y) Lt.
+  fun x y => Ord__UnitId_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__UnitId_op_zlze__ : UnitId -> UnitId -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__UnitId_compare x y) Gt.
+  fun x y => Ord__UnitId_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__UnitId_max : UnitId -> UnitId -> UnitId :=
   fun x y => if Ord__UnitId_op_zlze__ x y : bool then y else x.
@@ -238,16 +238,16 @@ Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
     end.
 
 Local Definition Ord__NDModule_op_zg__ : NDModule -> NDModule -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__NDModule_compare x y) Gt.
+  fun x y => Ord__NDModule_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__NDModule_op_zgze__ : NDModule -> NDModule -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__NDModule_compare x y) Lt.
+  fun x y => Ord__NDModule_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__NDModule_op_zl__ : NDModule -> NDModule -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__NDModule_compare x y) Lt.
+  fun x y => Ord__NDModule_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__NDModule_op_zlze__ : NDModule -> NDModule -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__NDModule_compare x y) Gt.
+  fun x y => Ord__NDModule_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__NDModule_max : NDModule -> NDModule -> NDModule :=
   fun x y => if Ord__NDModule_op_zlze__ x y : bool then y else x.

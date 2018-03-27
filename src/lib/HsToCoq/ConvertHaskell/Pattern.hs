@@ -3,7 +3,7 @@
 module HsToCoq.ConvertHaskell.Pattern (
   convertPat,  convertLPat,
   -- * Utility
-  Refutability(..), refutability, refutabilityMult, isRefutable, isConstructor, isSoleConstructor,
+  Refutability(..), refutability, isRefutable, isConstructor, isSoleConstructor,
 
   PatternSummary(..), patternSummary, multPatternSummary,
   isUnderscoreMultPattern,
@@ -15,7 +15,7 @@ import Control.Lens hiding ((<|))
 
 import Data.Maybe
 import Data.Traversable
-import Data.List.NonEmpty ((<|), toList)
+import Data.List.NonEmpty (toList)
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
@@ -168,7 +168,7 @@ convertIntegerPat :: (ConversionMonad m, MonadWriter [Term] m)
 convertIntegerPat what hsInt = do
   var <- gensym "num"
   int <- convertInteger what hsInt
-  Coq.VarPat var <$ tell ([Infix (Var var) "GHC.Base.==" (App1 "GHC.Num.fromInteger" (Num int))] :: [Term])
+  Coq.VarPat var <$ tell ([mkInfix (Var var) "GHC.Base.==" (App1 "GHC.Num.fromInteger" (Num int))] :: [Term])
 
 isConstructor :: MonadState ConversionState m => Qualid -> m Bool
 isConstructor con = isJust <$> (use $ constructorTypes . at con)
@@ -198,10 +198,6 @@ constructor_refutability con args =
     Nothing    -> pure Refutable -- Error
     Just True  -> maximum . (SoleConstructor :) <$> traverse refutability args
     Just False -> pure Refutable
-
-refutabilityMult :: ConversionMonad m => MultPattern -> m Refutability
-refutabilityMult (MultPattern pats) =
-    maximum . (SoleConstructor <|) <$> traverse refutability pats
 
 refutability :: ConversionMonad m => Pattern -> m Refutability
 refutability (ArgsPat con args)         = constructor_refutability con args

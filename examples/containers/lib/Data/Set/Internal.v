@@ -236,19 +236,19 @@ Local Definition Ord__Set__compare {inst_a} `{GHC.Base.Ord inst_a}
 
 Local Definition Ord__Set__op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Set__compare x y) Gt.
+  fun x y => Ord__Set__compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Set__op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Set__compare x y) Lt.
+  fun x y => Ord__Set__compare x y GHC.Base./= Lt.
 
 Local Definition Ord__Set__op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Set__compare x y) Lt.
+  fun x y => Ord__Set__compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Set__op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Set__compare x y) Gt.
+  fun x y => Ord__Set__compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Set__max {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
@@ -468,7 +468,7 @@ Definition lookupIndex {a} `{GHC.Base.Ord a}
                  match GHC.Base.compare x kx with
                  | Lt => go idx x l
                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) x r
-                 | Eq => Some (_GHC.Num.+_ idx (size l))
+                 | Eq => Some (idx GHC.Num.+ size l)
                  end
              end in
   go #0.

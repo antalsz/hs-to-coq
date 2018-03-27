@@ -210,7 +210,7 @@ Local Definition Foldable__BooleanFormula_foldr'
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0
       end.
@@ -267,7 +267,7 @@ Local Definition Foldable__BooleanFormula_foldl'
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0
       end.
@@ -277,7 +277,7 @@ Local Definition Foldable__BooleanFormula_length
   fun {a} =>
     Foldable__BooleanFormula_foldl' (fun arg_64__ arg_65__ =>
                                        match arg_64__, arg_65__ with
-                                       | c, _ => _GHC.Num.+_ c #1
+                                       | c, _ => c GHC.Num.+ #1
                                        end) #0.
 
 Program Instance Foldable__BooleanFormula

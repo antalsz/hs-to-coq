@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var,
+  var,
   recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
@@ -76,9 +76,6 @@ specialForms :: Ident -> Ident
 -- "$sel:rd:Mulw" to "rd"
 specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
                   | otherwise                   = name
-
-var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
-var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
 
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do

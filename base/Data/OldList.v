@@ -178,9 +178,8 @@ Definition dropLengthMaybe {a} {b} : list a -> list b -> option (list b) :=
 
 Definition isSuffixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
   fun ns hs =>
-    Data.Maybe.maybe false GHC.Base.id (_GHC.Base.>>=_ (dropLengthMaybe ns hs)
-                                                       (fun delta =>
-                                                          GHC.Base.return_ (_GHC.Base.==_ ns (dropLength delta hs)))).
+    Data.Maybe.maybe false GHC.Base.id (dropLengthMaybe ns hs GHC.Base.>>=
+                                        (fun delta => GHC.Base.return_ (ns GHC.Base.== dropLength delta hs))).
 
 Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
   fun p =>

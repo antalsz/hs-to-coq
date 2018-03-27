@@ -439,22 +439,22 @@ Local Definition Ord__Map_compare {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
 Local Definition Ord__Map_op_zg__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Map_compare x y) Gt.
+  fun x y => Ord__Map_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Map_op_zgze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Map_compare x y) Lt.
+  fun x y => Ord__Map_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__Map_op_zl__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Map_compare x y) Lt.
+  fun x y => Ord__Map_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Map_op_zlze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Map_compare x y) Gt.
+  fun x y => Ord__Map_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Map_max {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
@@ -847,7 +847,7 @@ Definition lookupIndex {k} {a} `{GHC.Base.Ord k}
                  match GHC.Base.compare k kx with
                  | Lt => go idx k l
                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) k r
-                 | Eq => Some (_GHC.Num.+_ idx (size l))
+                 | Eq => Some (idx GHC.Num.+ size l)
                  end
              end in
   go #0.
@@ -2462,7 +2462,7 @@ Definition zipWithAMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
 Definition zipWithMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> z) -> WhenMatched f k x y z :=
   fun f =>
-    Mk_WhenMatched (fun k x y => _GHC.Base.∘_ GHC.Base.pure Some (f k x y)).
+    Mk_WhenMatched (fun k x y => (GHC.Base.pure GHC.Base.∘ Some) (f k x y)).
 
 Definition zipWithMaybeAMatched {k} {x} {y} {f} {z}
    : (k -> x -> y -> f (option z)) -> WhenMatched f k x y z :=

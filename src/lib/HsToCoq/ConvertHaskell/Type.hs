@@ -78,7 +78,7 @@ convertType (HsTupleTy tupTy tys) = do
   case tys of
     []   -> pure $ Var "unit"
     [ty] -> convertLType ty
-    _    -> (`InScope` "type") <$> foldl1 (Infix ?? "*") <$> traverse convertLType tys
+    _    -> (`InScope` "type") <$> foldl1 (mkInfix ?? "*") <$> traverse convertLType tys
 
 convertType (HsOpTy ty1 op ty2) =
   App2 <$> (Qualid <$> var TypeNS (unLoc op)) <*> convertLType ty1 <*> convertLType ty2   -- ???
@@ -89,7 +89,7 @@ convertType (HsParTy ty) =
 convertType (HsIParamTy (HsIPName ip) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
-    then Qualid <$> var' TypeNS "CallStack"
+    then pure $ "GHC.Stack.CallStack"
     else convUnsupported "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =

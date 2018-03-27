@@ -165,7 +165,7 @@ Local Definition Foldable__GenLocated_foldr' {inst_l}
           let f' :=
             fun arg_12__ arg_13__ arg_14__ =>
               match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
+              | k, x, z => k GHC.Base.$! f x z
               end in
           Foldable__GenLocated_foldl f' GHC.Base.id xs z0
       end.
@@ -226,7 +226,7 @@ Local Definition Foldable__GenLocated_foldl' {inst_l}
           let f' :=
             fun arg_27__ arg_28__ arg_29__ =>
               match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
+              | x, k, z => k GHC.Base.$! f z x
               end in
           Foldable__GenLocated_foldr f' GHC.Base.id xs z0
       end.
@@ -236,7 +236,7 @@ Local Definition Foldable__GenLocated_length {inst_l}
   fun {a} =>
     Foldable__GenLocated_foldl' (fun arg_64__ arg_65__ =>
                                    match arg_64__, arg_65__ with
-                                   | c, _ => _GHC.Num.+_ c #1
+                                   | c, _ => c GHC.Num.+ #1
                                    end) #0.
 
 Local Definition Functor__GenLocated_fmap {inst_l}
@@ -372,16 +372,16 @@ Local Definition Ord__RealSrcLoc_compare
   cmpRealSrcLoc.
 
 Local Definition Ord__RealSrcLoc_op_zg__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__RealSrcLoc_compare x y) Gt.
+  fun x y => Ord__RealSrcLoc_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__RealSrcLoc_op_zgze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__RealSrcLoc_compare x y) Lt.
+  fun x y => Ord__RealSrcLoc_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__RealSrcLoc_op_zl__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__RealSrcLoc_compare x y) Lt.
+  fun x y => Ord__RealSrcLoc_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__RealSrcLoc_compare x y) Gt.
+  fun x y => Ord__RealSrcLoc_compare x y GHC.Base./= Gt.
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun loc1 loc2 =>
@@ -427,16 +427,16 @@ Local Definition Ord__SrcLoc_compare : SrcLoc -> SrcLoc -> comparison :=
   cmpSrcLoc.
 
 Local Definition Ord__SrcLoc_op_zg__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__SrcLoc_compare x y) Gt.
+  fun x y => Ord__SrcLoc_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__SrcLoc_op_zgze__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__SrcLoc_compare x y) Lt.
+  fun x y => Ord__SrcLoc_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__SrcLoc_op_zl__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__SrcLoc_compare x y) Lt.
+  fun x y => Ord__SrcLoc_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__SrcLoc_op_zlze__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__SrcLoc_compare x y) Gt.
+  fun x y => Ord__SrcLoc_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__SrcLoc_min : SrcLoc -> SrcLoc -> SrcLoc :=
   fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then x else y.
@@ -632,19 +632,19 @@ Local Definition Ord__RealSrcSpan_compare
 
 Local Definition Ord__RealSrcSpan_op_zg__
    : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__RealSrcSpan_compare x y) Gt.
+  fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__RealSrcSpan_op_zgze__
    : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__RealSrcSpan_compare x y) Lt.
+  fun x y => Ord__RealSrcSpan_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__RealSrcSpan_op_zl__
    : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__RealSrcSpan_compare x y) Lt.
+  fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__RealSrcSpan_op_zlze__
    : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__RealSrcSpan_compare x y) Gt.
+  fun x y => Ord__RealSrcSpan_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__RealSrcSpan_max
    : RealSrcSpan -> RealSrcSpan -> RealSrcSpan :=

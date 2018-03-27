@@ -141,7 +141,6 @@ data Term = Forall Binders Term                                                 
           | Arrow Term Term                                                                    -- ^@/term/ -> /term/@
           | App Term (NonEmpty Arg)                                                            -- ^@/term/ /arg/ … /arg/@
           | ExplicitApp Qualid [Term]                                                          -- ^@\@ /qualid/ [/term/ … /term/]@
-          | Infix Term Qualid Term                                                             -- ^@/term/ /op/ /term/@ – extra. The qualid must be of the form op_...__
           | InScope Term Ident                                                                 -- ^@/term/ % /ident/@
           | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]                           -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
           | Qualid Qualid                                                                      -- ^@/qualid/@

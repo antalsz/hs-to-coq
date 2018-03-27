@@ -138,7 +138,6 @@ builtInClasses =
         ]
     , ClassDefinition "Data.Semigroup.Semigroup" ["a"] Nothing
         [ "Data.Semigroup.op_zlzg__" =: "a" `Arrow` "a" `Arrow` "a" 
---        , "Data.Semigroup.sconcat__"   =: ("Data.List.NonEmpty.NonEmpty" `App1` "a") `Arrow` "a"
         ]
     , ClassDefinition "GHC.Base.Functor" ["f"] Nothing
         [ "GHC.Base.op_zlzd__" =: (Forall [ Inferred Implicit (Ident "a")
@@ -206,7 +205,21 @@ builtInClasses =
                     App1 "f" "a")
         -}
         ]
-
+    {-
+    -- This is essentially a class for co-inductive types. 
+    , ClassDefinition "GHC.Base.Alternative" 
+        [ "f"
+        , Generalized Implicit (App1 "GHC.Base.Applicative" "f")
+        ]
+        Nothing
+        [ "GHC.Base.empty" =:
+          (Forall [ Inferred Implicit (Ident "a") ] $
+           App1 "f" "a")
+        , "GHC.Base.op_zgzbzl__" =:
+          (Forall [ Inferred Implicit (Ident "a") ] $
+           App1 "f" "a" `Arrow` App1 "f" "a" `Arrow` App1 "f" "a")
+        ]
+    -}
     , ClassDefinition "Data.Foldable.Foldable" ["t"] Nothing
       [("Data.Foldable.elem",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Base.Eq_" (PosArg "a" :| [])) :| []) (Arrow "a" (Arrow (App "t" (PosArg "a" :| [])) "bool")))),
         ("Data.Foldable.fold",Forall (Inferred Implicit (Ident "m") :| []) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (App "t" (PosArg "m" :| [])) "m"))),

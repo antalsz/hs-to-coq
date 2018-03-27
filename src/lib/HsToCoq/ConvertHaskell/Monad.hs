@@ -303,7 +303,15 @@ builtInClasses =
             ("a" `Arrow` "b" `Arrow` "comparison") `Arrow`
             App1 "f" "a" `Arrow`  App1 "f" "b" `Arrow` "comparison")
         ]
-     
+    , ClassDefinition "Control.Monad.Trans.Class.MonadTrans" ["t"] Nothing
+        [ "Control.Monad.Trans.Class.lift" =:
+          (Forall [ Inferred Implicit (Ident "m")
+                  , Inferred Implicit (Ident "a")
+                  , Generalized Implicit (App1 "GHC.Base.Monad" "m")
+                  ] $
+            (App1 "m" "a" `Arrow` App2 "t" "m" "a"))
+          ]
+            
     ]
   where
    (=:) = (,)

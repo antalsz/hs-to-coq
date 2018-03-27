@@ -1,0 +1,15 @@
+rewrite forall eq, Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) = @Data.Functor.Classes.liftEq inst_m _ _ _ (Data.Functor.Classes.liftEq eq)
+
+rewrite forall eq, Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare eq) = @Data.Functor.Classes.liftCompare inst_m _ _ _ _ (Data.Functor.Classes.liftCompare eq)
+
+redefine Definition Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ {inst_m} {inst_e} `{_:(Monad inst_m)}
+   : forall {a} {b},
+     ((ExceptT inst_e inst_m a) ->
+     ((a -> (ExceptT inst_e inst_m b)) -> (ExceptT inst_e inst_m b))) :=
+  fun {a} {b} =>
+    fun m k =>
+      Mk_ExceptT (GHC.Base.op_zgzgze__ (runExceptT m) (fun a =>
+                           match a with
+                           | Data.Either.Left e => GHC.Base.return_ (Data.Either.Left e)
+                           | Data.Either.Right x => runExceptT (k x)
+                           end)).

@@ -1,0 +1,1 @@
+rename value Control.Monad.Trans.State.Lazy.StateT =  Mk_StateT

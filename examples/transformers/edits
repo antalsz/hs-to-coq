@@ -3,6 +3,7 @@ import module Data.Functor.Classes
 import module Data.Functor.Identity
 import module Data.Monoid
 
+## still need to redefine this 
 skip Control.Monad.Signatures.Catch
 skip Control.Monad.Trans.Identity.liftCatch
 skip Control.Monad.Trans.Reader.liftCatch
@@ -12,6 +13,8 @@ skip Control.Monad.Trans.Accum.liftCatch
 skip Control.Monad.Trans.Cont.liftCatch
 skip Control.Monad.Trans.RWS.Lazy.liftCatch
 
+## need Foldable instance, which requires mutual recursion
+skip Data.Functor.Reverse.Traversable__Reverse
 
 ## In midamble
 redefine Definition Control.Monad.Trans.Writer.Lazy.Monad__WriterT_op_zgzgze__ {inst_w} {inst_m} `{_:GHC.Base.Monoid
@@ -35,10 +38,13 @@ data kinds Control.Monad.Trans.Reader.ReaderT Type,(Type -> Type)
 data kinds Control.Monad.Trans.Cont.ContT Type,(Type -> Type)
 data kinds Control.Monad.Trans.Writer.Lazy.WriterT Type,(Type -> Type)
 data kinds Data.Functor.Constant.Constant Type,Type
+data kinds Data.Functor.Reverse.Reverse (Type -> Type),Type
 data kinds Control.Applicative.Backwards.Backwards (Type->Type),Type
+
 
 ## punning
 rename value Data.Functor.Constant.Constant = Data.Functor.Constant.Mk_Constant
+rename value Data.Functor.Reverse.Reverse = Data.Functor.Reverse.Mk_Reverse
 rename value Control.Applicative.Backwards.Backwards = Control.Applicative.Backwards.Mk_Backwards
 rename value Control.Applicative.Lift.Lift = Control.Applicative.Lift.Mk_Lift
 rename value Control.Monad.Trans.Identity.IdentityT =  Control.Monad.Trans.Identity.Mk_IdentityT
@@ -53,6 +59,10 @@ rename value Control.Monad.Trans.Select.SelectT = Control.Monad.Trans.Select.Mk_
 
 
 order Control.Monad.Trans.Identity.Functor__IdentityT Control.Monad.Trans.Identity.Applicative__IdentityT Control.Monad.Trans.Identity.Monad__IdentityT_op_zgzg__ Control.Monad.Trans.Identity.Monad__IdentityT_return_ Control.Monad.Trans.Identity.Monad__IdentityT Control.Monad.Trans.Identity.Traversable__IdentityT
+
+order Data.Functor.Reverse.Functor__Reverse Data.Functor.Reverse.Applicative__Reverse Data.Functor.Reverse.Monad__Reverse_op_zgzg__ Data.Functor.Reverse.Monad__Reverse_return_ Data.Functor.Reverse.Monad__Reverse Data.Functor.Reverse.Traversable__Reverse 
+
+
 
 order Control.Monad.Trans.Accum.Functor__AccumT  Control.Monad.Trans.Accum.Applicative__AccumT_op_ztzg__ Control.Monad.Trans.Accum.Applicative__AccumT Control.Monad.Trans.Accum.Monad__AccumT_op_zgzg__ Control.Monad.Trans.Accum.Monad__AccumT_return_ Control.Monad.Trans.Accum.Monad__AccumT Control.Monad.Trans.Accum.Traversable__AccumT
 

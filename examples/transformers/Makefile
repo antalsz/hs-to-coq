@@ -31,6 +31,7 @@ HANDMOD = \
 # generated directly from GHC/libraries/$(SRC)
 MODULES = \
 	Data/Functor/Constant \
+	Data/Functor/Reverse \
    Control/Applicative/Backwards \
    Control/Applicative/Lift \
 	Control/Monad/Trans/Class \

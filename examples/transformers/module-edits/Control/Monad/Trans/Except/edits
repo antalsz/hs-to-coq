@@ -2,7 +2,7 @@ rewrite forall eq, Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) 
 
 rewrite forall eq, Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare eq) = @Data.Functor.Classes.liftCompare inst_m _ _ _ _ (Data.Functor.Classes.liftCompare eq)
 
-redefine Definition Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ {inst_m} {inst_e} `{_:(Monad inst_m)}
+redefine Definition Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ {inst_m} {inst_e} `{_:(GHC.Base.Monad inst_m)}
    : forall {a} {b},
      ((ExceptT inst_e inst_m a) ->
      ((a -> (ExceptT inst_e inst_m b)) -> (ExceptT inst_e inst_m b))) :=

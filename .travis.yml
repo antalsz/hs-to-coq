@@ -84,6 +84,7 @@ script:
  - make -C examples/containers clean
  - make -C examples/containers
  - make -C examples/containers/theories
+ - make -C examples/transformers
  - make -C examples/coinduction
 
 # Test extraction

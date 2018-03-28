@@ -71,6 +71,17 @@ else
 fi
 make -C containers/theories
 
+if [[ -e transformers/transformers ]]
+then
+	echo "Regenerating transformers"
+	clean make -C transformers clean
+	make -C transformers
+else
+	echo "Rebuiding transformers/lib"
+	clean make -C transformers/lib clean
+	make -C transformers/lib
+fi
+
 
 if [[ -e ghc/ghc ]]
 then

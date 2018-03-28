@@ -320,10 +320,10 @@ Definition mapAccumLF {acc} {x} {y}
      x -> (acc -> (acc * list y)%type) -> acc -> (acc * list y)%type :=
   fun f =>
     fun x r =>
-      GHC.Base.oneShot (fun s =>
-                          let 'pair s' y := f s x in
-                          let 'pair s'' ys := r s' in
-                          pair s'' (cons y ys)).
+      (fun s =>
+         let 'pair s' y := f s x in
+         let 'pair s'' ys := r s' in
+         pair s'' (cons y ys)).
 
 Definition nonEmptySubsequences {a} : list a -> list (list a) :=
   fix nonEmptySubsequences arg_0__
@@ -544,10 +544,9 @@ End Notations.
      Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build'
      GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr GHC.Base.id
-     GHC.Base.map GHC.Base.oneShot GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any
-     GHC.List.filter GHC.List.null GHC.List.reverse GHC.Num.Num GHC.Num.Word
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
-     GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5 GHC.Tuple.pair6
-     GHC.Tuple.pair7
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any GHC.List.filter GHC.List.null
+     GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5
+     GHC.Tuple.pair6 GHC.Tuple.pair7
 *)

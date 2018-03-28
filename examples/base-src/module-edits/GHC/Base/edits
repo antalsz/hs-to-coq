@@ -34,7 +34,7 @@ skip GHC.Base.Monoid__IO
 # Why is this not Monoid__pair_type?
 skip GHC.Base.Monoid__op_zt__
 
-# no unboxed types
+# no unboxed types, redefined in midamble
 skip GHC.Base.unsafeChr
 skip GHC.Base.ord
 
@@ -65,7 +65,7 @@ order GHC.Base.Eq___option GHC.Base.Ord__option
 
 order GHC.Base.Functor__arrow GHC.Base.Applicative__arrow_op_ztzg__ GHC.Base.Applicative__arrow GHC.Base.Monad__arrow_return_ GHC.Base.Monad__arrow GHC.Base.Alternative__arrow GHC.Base.MonadPlus__arrow
 
-order GHC.Base.Functor__list GHC.Base.Applicative__list GHC.Base.Monad__list_return_ GHC.Base.Monad__list_op_zgzg__ GHC.Base.Monad__list
+order GHC.Base.Functor__list GHC.Base.Applicative__list GHC.Base.Monad__list_return_ GHC.Base.Monad__list_op_zgzg__ GHC.Base.Monad__list GHC.Base.Alternative__list
 
 order GHC.Base.Functor__option GHC.Base.Applicative__option_op_zlztzg__ GHC.Base.Applicative__option GHC.Base.Monad__option_op_zgzg__ GHC.Base.Monad__option_return_ GHC.Base.Monad__option GHC.Base.Alternative__option GHC.Base.MonadPlus__option
 
@@ -73,6 +73,7 @@ order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type GHC.Base.Monad
 
 order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type_op_ztzg__
 
+# Needs some and many
 skip GHC.Base.Alternative__list
 skip GHC.Base.MonadPlus__list
 skip GHC.Base.Alternative__option
@@ -84,3 +85,4 @@ skip GHC.Base.MonadPlus__option
 redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
 
 class kinds GHC.Base.MonadPlus (Type -> Type)
+class kinds GHC.Base.Alternative (Type -> Type)

@@ -248,13 +248,11 @@ Definition scanl' {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
 
 Definition scanlFB {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
-  fun f c =>
-    fun b g => GHC.Base.oneShot (fun x => let b' := f x b in c b' (g b')).
+  fun f c => fun b g => (fun x => let b' := f x b in c b' (g b')).
 
 Definition scanlFB' {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
-  fun f c =>
-    fun b g => GHC.Base.oneShot (fun x => let 'b' := f x b in c b' (g b')).
+  fun f c => fun b g => (fun x => let 'b' := f x b in c b' (g b')).
 
 Definition scanrFB {a} {b} {c}
    : (a -> b -> b) -> (b -> c -> c) -> a -> (b * c)%type -> (b * c)%type :=
@@ -363,7 +361,7 @@ Definition zipWithFB {a} {b} {c} {d} {e}
 (* Unbound variables:
      None Some andb bool cons false list nil op_zt__ option orb pair true
      Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
-     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.oneShot GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__
 *)

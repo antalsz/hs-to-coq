@@ -34,7 +34,7 @@ Require Import Data.Set.Internal.
 
 Extract Constant PtrEquality.ptrEq => "\ x y -> Prelude.False".
 Extract Constant PtrEquality.hetPtrEq => "\ x y -> Prelude.False".
-Extract Constant Base.errorWithoutStackTrace => "errorWithoutStackTrace".
+Extract Constant GHC.Err.errorWithoutStackTrace => "errorWithoutStackTrace".
 Extract Constant GHC.Err.patternFailure => "(\d -> Prelude.error ""patternFailure"")".
 Extract Constant GHC.DeferredFix.deferredFix => "(\d f -> let r = f r in r)".
 

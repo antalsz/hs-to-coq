@@ -32,7 +32,9 @@ clean make -C bag clean
 clean make -C quicksort clean
 clean make -C coinduction clean
 clean make -C ../base-thy clean
+clean make -C containers clean
 clean make -C containers/theories clean
+clean make -C transformers clean
 
 if [[ -e base-src/base ]]
 then
@@ -58,19 +60,9 @@ make -C bag
 make -C quicksort
 make -C dlist
 make -C coinduction
-
-if [[ -e containers/containers ]]
-then
-	echo "Regenerating containers"
-	clean make -C containers clean
-	make -C containers
-else
-	echo "Rebuiding containers/lib"
-	clean make -C containers/lib clean
-	make -C containers/lib
-fi
+make -C containers
 make -C containers/theories
-
+make -C transformers
 
 if [[ -e ghc/ghc ]]
 then

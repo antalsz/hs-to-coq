@@ -94,6 +94,7 @@ $(OUT)/_CoqProject: $(OUT) Makefile
 	echo '-R ../../../base ""' >> $@
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
+	echo '-Q ../../transformers/lib  ""' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(CORE_MODULES)) >> $@
@@ -127,6 +128,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
                      --ghc -package=ghc-boot-th \
                      -e ../../base/edits \
                      -e ../containers/edits \
+                     -e ../transformers/edits \
                      -e edits \
                      -N \
                      -o $(OUT) \
@@ -148,6 +150,7 @@ $(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcar
                      --ghc -package=ghc-boot-th \
                      -e ../../base/edits \
                      -e ../containers/edits \
+                     -e ../transformers/edits \
                      -e edits \
                      -e core-edits \
                      -N \

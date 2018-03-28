@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Coq.Init.Datatypes.
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Data.Monoid.
+Require Import Data.Monoid.
 Require Data.Traversable.
 Require FastString.
 Require FastStringEnv.
@@ -75,11 +75,11 @@ Local Definition Foldable__FieldLbl_foldl
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__FieldLbl_foldMap
-                                                    (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                (Coq.Program.Basics.compose
-                                                                                 Data.Monoid.Mk_Endo (GHC.Base.flip f)))
-                                                    t)) z
+          appEndo (getDual (Foldable__FieldLbl_foldMap (Coq.Program.Basics.compose Mk_Dual
+                                                                                   (Coq.Program.Basics.compose Mk_Endo
+                                                                                                               (GHC.Base.flip
+                                                                                                                f))) t))
+          z
       end.
 
 Local Definition Foldable__FieldLbl_foldr'
@@ -99,14 +99,12 @@ Local Definition Foldable__FieldLbl_foldr'
 Local Definition Foldable__FieldLbl_product
    : forall {a}, forall `{GHC.Num.Num a}, FieldLbl a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getProduct (Foldable__FieldLbl_foldMap
-                                Data.Monoid.Mk_Product).
+    Data.Foldable.hash_compose getProduct (Foldable__FieldLbl_foldMap Mk_Product).
 
 Local Definition Foldable__FieldLbl_sum
    : forall {a}, forall `{GHC.Num.Num a}, FieldLbl a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getSum (Foldable__FieldLbl_foldMap
-                                Data.Monoid.Mk_Sum).
+    Data.Foldable.hash_compose getSum (Foldable__FieldLbl_foldMap Mk_Sum).
 
 Local Definition Foldable__FieldLbl_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, FieldLbl m -> m :=
@@ -117,9 +115,8 @@ Local Definition Foldable__FieldLbl_elem
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__FieldLbl_foldMap
-                                                              (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
-                               _GHC.Base.==_.
+                                  Coq.Program.Basics.compose getAny (Foldable__FieldLbl_foldMap
+                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
 
 Local Definition Foldable__FieldLbl_foldr
    : forall {a} {b}, (a -> b -> b) -> b -> FieldLbl a -> b :=
@@ -272,15 +269,13 @@ Definition mkFieldLabelOccs
     Mk_FieldLabel lbl is_overloaded sel_occ.
 
 (* Unbound variables:
-     andb bool false list negb true Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.hash_compose Data.Monoid.Mk_Any
-     Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo Data.Monoid.Mk_Product
-     Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny Data.Monoid.getDual
-     Data.Monoid.getProduct Data.Monoid.getSum Data.Traversable.Traversable
-     FastString.FastString FastString.unpackFS FastStringEnv.FastStringEnv
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.build GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ Name.Name OccName.OccName
+     Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum andb appEndo bool false getAny getDual
+     getProduct getSum list negb true Coq.Init.Datatypes.app
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.hash_compose
+     Data.Traversable.Traversable FastString.FastString FastString.unpackFS
+     FastStringEnv.FastStringEnv GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.build GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ Name.Name OccName.OccName
      OccName.mkRecFldSelOcc OccName.mkVarOccFS OccName.occNameString
 *)

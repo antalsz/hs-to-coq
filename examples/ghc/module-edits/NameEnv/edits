@@ -1,2 +1,5 @@
 skip NameEnv.lookupNameEnv_NF
 skip NameEnv.depAnal
+
+# Needs Data.Graph
+# termination NameEnv.depAnal deferred

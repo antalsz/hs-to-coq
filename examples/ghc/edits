@@ -6,14 +6,13 @@ skip module Deriving
 # TODO: better treatment of primitive values
 skip module GHC.Int
 skip module GHC.Word
-skip module GHC.Integer.Type
 
-rename type GHC.IO.FilePath = GHC.Base.String
+# packages we don't yet support 'bytestring'
 rename type Data.ByteString.Internal.ByteString = GHC.Base.String
 
-## check base edits
+# packages we don't yet support 'integer-simple' and 'integer-gmp'
+skip module GHC.Integer.Type
 rename type GHC.Integer.Type.Integer = GHC.Num.Integer
-rename value GHC.Base.ord = GHC.Char.ord
 
 # don't try to format the error messages
 rename value Outputable.pprPanic     = Panic.panicStr

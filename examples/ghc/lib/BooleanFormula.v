@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Maybe.
-Require Data.Monoid.
+Require Import Data.Monoid.
 Require Data.OldList.
 Require Data.Traversable.
 Require GHC.Base.
@@ -194,11 +194,9 @@ Local Definition Foldable__BooleanFormula_foldl
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__BooleanFormula_foldMap
-                                                    (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                (Coq.Program.Basics.compose
-                                                                                 Data.Monoid.Mk_Endo (GHC.Base.flip f)))
-                                                    t)) z
+          appEndo (getDual (Foldable__BooleanFormula_foldMap (Coq.Program.Basics.compose
+                                                              Mk_Dual (Coq.Program.Basics.compose Mk_Endo (GHC.Base.flip
+                                                                                                   f))) t)) z
       end.
 
 Local Definition Foldable__BooleanFormula_foldr'
@@ -218,14 +216,13 @@ Local Definition Foldable__BooleanFormula_foldr'
 Local Definition Foldable__BooleanFormula_product
    : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getProduct
-                               (Foldable__BooleanFormula_foldMap Data.Monoid.Mk_Product).
+    Data.Foldable.hash_compose getProduct (Foldable__BooleanFormula_foldMap
+                                Mk_Product).
 
 Local Definition Foldable__BooleanFormula_sum
    : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getSum (Foldable__BooleanFormula_foldMap
-                                Data.Monoid.Mk_Sum).
+    Data.Foldable.hash_compose getSum (Foldable__BooleanFormula_foldMap Mk_Sum).
 
 Local Definition Foldable__BooleanFormula_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, BooleanFormula m -> m :=
@@ -236,9 +233,8 @@ Local Definition Foldable__BooleanFormula_elem
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__BooleanFormula_foldMap
-                                                              (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
-                               _GHC.Base.==_.
+                                  Coq.Program.Basics.compose getAny (Foldable__BooleanFormula_foldMap
+                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
 
 Local Definition Foldable__BooleanFormula_foldr {a} {b}
    : (a -> b -> b) -> b -> BooleanFormula a -> b :=
@@ -456,12 +452,10 @@ Definition mkVar {a} : a -> BooleanFormula a :=
 
 (* Unbound variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
-     BooleanFormula_traverse LBooleanFormula None Some bool cons false list negb nil
+     BooleanFormula_traverse LBooleanFormula Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum
+     None Some appEndo bool cons false getAny getDual getProduct getSum list negb nil
      option true Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.all
-     Data.Foldable.any Data.Foldable.hash_compose Data.Maybe.maybe Data.Monoid.Mk_Any
-     Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo Data.Monoid.Mk_Product
-     Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny Data.Monoid.getDual
-     Data.Monoid.getProduct Data.Monoid.getSum Data.OldList.nub
+     Data.Foldable.any Data.Foldable.hash_compose Data.Maybe.maybe Data.OldList.nub
      Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.const
      GHC.Base.flip GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__

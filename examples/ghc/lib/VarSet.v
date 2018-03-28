@@ -19,6 +19,7 @@ Require Import Core.
 Require Core.
 Require Data.Foldable.
 Require GHC.Base.
+Require GHC.DeferredFix.
 Require GHC.Num.
 Require GHC.Prim.
 Require Name.
@@ -172,6 +173,12 @@ Definition minusVarSet : VarSet -> VarSet -> VarSet :=
 Definition subVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => isEmptyVarSet (minusVarSet s1 s2).
 
+Definition fixVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
+  GHC.DeferredFix.deferredFix2 (fun fixVarSet fn vars =>
+                                  let new_vars := fn vars in
+                                  if subVarSet new_vars vars : bool then vars else
+                                  fixVarSet fn new_vars).
+
 Definition mkDVarSet : list Core.Var -> DVarSet :=
   UniqDSet.mkUniqDSet.
 
@@ -181,6 +188,10 @@ Definition mkVarSet : list Core.Var -> VarSet :=
 Definition partitionDVarSet
    : (Core.Var -> bool) -> DVarSet -> (DVarSet * DVarSet)%type :=
   UniqDSet.partitionUniqDSet.
+
+Definition partitionVarSet
+   : (Core.Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
+  UniqSet.partitionUniqSet.
 
 Definition sizeDVarSet : DVarSet -> GHC.Num.Int :=
   UniqDSet.sizeUniqDSet.
@@ -197,6 +208,15 @@ Definition seqVarSet : VarSet -> unit :=
 Definition unionDVarSet : DVarSet -> DVarSet -> DVarSet :=
   UniqDSet.unionUniqDSets.
 
+Definition transCloDVarSet : (DVarSet -> DVarSet) -> DVarSet -> DVarSet :=
+  fun fn seeds =>
+    let go : DVarSet -> DVarSet -> DVarSet :=
+      GHC.DeferredFix.deferredFix2 (fun go acc candidates =>
+                                      let new_vs := minusDVarSet (fn candidates) acc in
+                                      if isEmptyDVarSet new_vs : bool then acc else
+                                      go (unionDVarSet acc new_vs) new_vs) in
+    go seeds seeds.
+
 Definition mapUnionDVarSet {a} : (a -> DVarSet) -> list a -> DVarSet :=
   fun get_set xs =>
     Data.Foldable.foldr (unionDVarSet GHC.Base.∘ get_set) emptyDVarSet xs.
@@ -206,6 +226,15 @@ Definition unionDVarSets : list DVarSet -> DVarSet :=
 
 Definition unionVarSet : VarSet -> VarSet -> VarSet :=
   UniqSet.unionUniqSets.
+
+Definition transCloVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
+  fun fn seeds =>
+    let go : VarSet -> VarSet -> VarSet :=
+      GHC.DeferredFix.deferredFix2 (fun go acc candidates =>
+                                      let new_vs := minusVarSet (fn candidates) acc in
+                                      if isEmptyVarSet new_vs : bool then acc else
+                                      go (unionVarSet acc new_vs) new_vs) in
+    go seeds seeds.
 
 Definition mapUnionVarSet {a} : (a -> VarSet) -> list a -> VarSet :=
   fun get_set xs =>
@@ -225,21 +254,22 @@ Definition varSetElems : VarSet -> list Core.Var :=
 
 (* Unbound variables:
      CoVar TyVar bool list negb op_zt__ option tt unit Core.Var Data.Foldable.foldr
-     GHC.Base.op_z2218U__ GHC.Num.Int GHC.Prim.seq Name.Name UniqDFM.disjointUDFM
-     UniqDFM.udfmToUfm UniqDSet.UniqDSet UniqDSet.addListToUniqDSet
-     UniqDSet.addOneToUniqDSet UniqDSet.delListFromUniqDSet
-     UniqDSet.delOneFromUniqDSet UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet
-     UniqDSet.filterUniqDSet UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets
-     UniqDSet.isEmptyUniqDSet UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet
-     UniqDSet.partitionUniqDSet UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets
-     UniqDSet.unionUniqDSets UniqDSet.uniqDSetMinusUniqSet UniqDSet.uniqDSetToList
-     UniqDSet.unitUniqDSet UniqFM.disjointUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.addOneToUniqSet_C
-     UniqSet.delListFromUniqSet UniqSet.delOneFromUniqSet
-     UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
-     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
-     UniqSet.foldUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
-     UniqSet.lookupUniqSet UniqSet.mapUniqSet UniqSet.minusUniqSet UniqSet.mkUniqSet
+     GHC.Base.op_z2218U__ GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Prim.seq
+     Name.Name UniqDFM.disjointUDFM UniqDFM.udfmToUfm UniqDSet.UniqDSet
+     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
+     UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
+     UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
+     UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet
+     UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet UniqDSet.partitionUniqDSet
+     UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets UniqDSet.unionUniqDSets
+     UniqDSet.uniqDSetMinusUniqSet UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet
+     UniqFM.disjointUFM UniqSet.UniqSet UniqSet.addListToUniqSet
+     UniqSet.addOneToUniqSet UniqSet.addOneToUniqSet_C UniqSet.delListFromUniqSet
+     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
+     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
+     UniqSet.filterUniqSet UniqSet.foldUniqSet UniqSet.intersectUniqSets
+     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.mapUniqSet
+     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.partitionUniqSet
      UniqSet.sizeUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
      UniqSet.uniqSetToList UniqSet.unitUniqSet Unique.Unique Var.Id Var.TyCoVar
 *)

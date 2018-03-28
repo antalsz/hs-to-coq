@@ -108,8 +108,20 @@ Inductive AlgTyConRhs : Type
      Core.Type_ ->
      (list TyVar * Core.Type_)%type -> Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
 
-Definition data_cons (arg_0__ : AlgTyConRhs) :=
+Definition data_con (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
+  | AbstractTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
+  | DataTyCon _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
+  | TupleTyCon data_con _ => data_con
+  | NewTyCon data_con _ _ _ => data_con
+  end.
+
+Definition data_cons (arg_1__ : AlgTyConRhs) :=
+  match arg_1__ with
   | AbstractTyCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
@@ -122,8 +134,8 @@ Definition data_cons (arg_0__ : AlgTyConRhs) :=
                      "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
   end.
 
-Definition is_enum (arg_1__ : AlgTyConRhs) :=
-  match arg_1__ with
+Definition is_enum (arg_2__ : AlgTyConRhs) :=
+  match arg_2__ with
   | AbstractTyCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
@@ -134,18 +146,6 @@ Definition is_enum (arg_1__ : AlgTyConRhs) :=
   | NewTyCon _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
-  end.
-
-Definition data_con (arg_2__ : AlgTyConRhs) :=
-  match arg_2__ with
-  | AbstractTyCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-  | DataTyCon _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-  | TupleTyCon data_con _ => data_con
-  | NewTyCon data_con _ _ _ => data_con
   end.
 
 Definition nt_co (arg_3__ : AlgTyConRhs) :=
@@ -190,20 +190,8 @@ Definition nt_rhs (arg_5__ : AlgTyConRhs) :=
   | NewTyCon _ nt_rhs _ _ => nt_rhs
   end.
 
-Definition data_con (arg_6__ : AlgTyConRhs) :=
+Definition tup_sort (arg_6__ : AlgTyConRhs) :=
   match arg_6__ with
-  | AbstractTyCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
-  | DataTyCon _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
-  | TupleTyCon data_con _ => data_con
-  | NewTyCon data_con _ _ _ => data_con
-  end.
-
-Definition tup_sort (arg_7__ : AlgTyConRhs) :=
-  match arg_7__ with
   | AbstractTyCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")

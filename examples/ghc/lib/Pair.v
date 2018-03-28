@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Functor.
-Require Data.Monoid.
+Require Import Data.Monoid.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
@@ -92,11 +92,10 @@ Local Definition Foldable__Pair_foldl
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__Pair_foldMap
-                                                    (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                (Coq.Program.Basics.compose
-                                                                                 Data.Monoid.Mk_Endo (GHC.Base.flip f)))
-                                                    t)) z
+          appEndo (getDual (Foldable__Pair_foldMap (Coq.Program.Basics.compose Mk_Dual
+                                                                               (Coq.Program.Basics.compose Mk_Endo
+                                                                                                           (GHC.Base.flip
+                                                                                                            f))) t)) z
       end.
 
 Local Definition Foldable__Pair_foldr'
@@ -119,8 +118,7 @@ Local Definition Foldable__Pair_foldr
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__, arg_5__, arg_6__ with
       | f, z, t =>
-          Data.Monoid.appEndo (Foldable__Pair_foldMap (Data.Foldable.hash_compose
-                                                       Data.Monoid.Mk_Endo f) t) z
+          appEndo (Foldable__Pair_foldMap (Data.Foldable.hash_compose Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Pair_foldl'
@@ -159,14 +157,12 @@ Local Definition Foldable__Pair_toList : forall {a}, Pair a -> list a :=
 Local Definition Foldable__Pair_product
    : forall {a}, forall `{GHC.Num.Num a}, Pair a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getProduct (Foldable__Pair_foldMap
-                                Data.Monoid.Mk_Product).
+    Data.Foldable.hash_compose getProduct (Foldable__Pair_foldMap Mk_Product).
 
 Local Definition Foldable__Pair_sum
    : forall {a}, forall `{GHC.Num.Num a}, Pair a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getSum (Foldable__Pair_foldMap
-                                Data.Monoid.Mk_Sum).
+    Data.Foldable.hash_compose getSum (Foldable__Pair_foldMap Mk_Sum).
 
 Local Definition Foldable__Pair_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, Pair m -> m :=
@@ -177,9 +173,8 @@ Local Definition Foldable__Pair_elem
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__Pair_foldMap
-                                                              (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
-                               _GHC.Base.==_.
+                                  Coq.Program.Basics.compose getAny (Foldable__Pair_foldMap
+                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
 
 Program Instance Foldable__Pair : Data.Foldable.Foldable Pair :=
   fun _ k =>
@@ -278,11 +273,9 @@ Definition unPair {a} : Pair a -> (a * a)%type :=
   fun arg_0__ => let 'Mk_Pair x y := arg_0__ in pair x y.
 
 (* Unbound variables:
-     bool false list op_zt__ pair true Coq.Program.Basics.compose
+     Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum appEndo bool false getAny getDual
+     getProduct getSum list op_zt__ pair true Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.hash_compose Data.Functor.op_zlzdzg__
-     Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
-     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny
-     Data.Monoid.getDual Data.Monoid.getProduct Data.Monoid.getSum
      Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.build GHC.Base.const GHC.Base.flip
      GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.mempty

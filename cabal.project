@@ -1,1 +1,3 @@
 packages: hs-to-coq.cabal
+optional-packages: vendor/wl-pprint-text
+

@@ -40,10 +40,10 @@ addDerivedInstances tcm = do
 
     (_gbl_env, inst_infos, _rn_binds) <- initTcHack tcm $ do
         let tcg_env = fst (tm_internals_ tcm)
-            tcg_env_hack = tcg_env { tcg_mod = fakeDerivingMod }
+            tcg_env_hack = tcg_env { tcg_mod = fakeDerivingMod, tcg_semantic_mod = fakeDerivingMod }
                 -- Set the module to make it look like we are in GHCi
                 -- so that GHC will allow us to re-typecheck existing instances
-        setGblEnv tcg_env_hack $ do
+        setGblEnv tcg_env_hack $
             tcInstDeclsDeriv [] (hs_tyclds hsgroup >>= group_tyclds) (hs_derivds hsgroup)
 
     let inst_decls = map instInfoToDecl $ inst_infos

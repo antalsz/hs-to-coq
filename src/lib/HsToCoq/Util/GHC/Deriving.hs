@@ -17,6 +17,7 @@ import TcEnv
 import InstEnv
 import Var
 import TyCoRep
+import TyCon
 import Type
 import TcType
 import HscTypes
@@ -43,11 +44,11 @@ addDerivedInstances tcm = do
                 -- Set the module to make it look like we are in GHCi
                 -- so that GHC will allow us to re-typecheck existing instances
         setGblEnv tcg_env_hack $ do
-            tcInstDecls1 (hs_tyclds hsgroup) [] (hs_derivds hsgroup)
+            tcInstDeclsDeriv [] (hs_tyclds hsgroup >>= group_tyclds) (hs_derivds hsgroup)
 
     let inst_decls = map instInfoToDecl $ inst_infos
 
-    let hsgroup' = hsgroup { hs_instds = inst_decls ++ hs_instds hsgroup }
+    let hsgroup' = hsgroup { hs_tyclds = mkTyClGroup [] inst_decls : hs_tyclds hsgroup }
 
     return $ tcm { tm_renamed_source = Just (hsgroup', a, b, c) }
 
@@ -68,10 +69,10 @@ fakeDerivingMod :: Module
 fakeDerivingMod = mkModule interactiveUnitId (mkModuleName "Deriving")
 
 
-instInfoToDecl :: InstInfo Name -> LInstDecl Name
+instInfoToDecl :: InstInfo GhcRn -> LInstDecl GhcRn
 instInfoToDecl inst_info = noLoc $ ClsInstD (ClsInstDecl {..})
    where
-    cid_poly_ty = HsIB tvars' $ noLoc (HsQualTy (noLoc ctxt) inst_head)
+    cid_poly_ty = HsIB tvars' (noLoc (HsQualTy (noLoc ctxt) inst_head)) True
     cid_binds = ib_binds (iBinds inst_info)
     cid_sigs = []
     cid_tyfam_insts = []
@@ -82,40 +83,47 @@ instInfoToDecl inst_info = noLoc $ ClsInstD (ClsInstDecl {..})
     tvars' :: [Name]
     tvars' = map tyVarName tvars
     ctxt = map typeToLHsType' theta
-    inst_head = foldl lHsAppTy (noLoc (HsTyVar (noLoc (getName cls)))) $
+    inst_head = foldl lHsAppTy (noLoc (HsTyVar NotPromoted (noLoc (getName cls)))) $
         map typeToLHsType' args
 
     lHsAppTy f x = noLoc (HsAppTy f x)
 
 -- Taken from HsUtils. We need it to produce a Name, not a RdrName
-typeToLHsType' :: Type -> LHsType Name
+typeToLHsType' :: Type -> LHsType GhcRn
 typeToLHsType' ty
   = go ty
   where
-    go :: Type -> LHsType Name
-    go ty@(ForAllTy (Anon arg) _)
+    go :: Type -> LHsType GhcRn
+    go ty@(FunTy arg _)
       | isPredTy arg
       , (theta, tau) <- tcSplitPhiTy ty
       = noLoc (HsQualTy { hst_ctxt = noLoc (map go theta)
                         , hst_body = go tau })
-    go (ForAllTy (Anon arg) res) = nlHsFunTy (go arg) (go res)
+    go (FunTy arg res) = nlHsFunTy (go arg) (go res)
     go ty@(ForAllTy {})
       | (tvs, tau) <- tcSplitForAllTys ty
       = noLoc (HsForAllTy { hst_bndrs = map go_tv tvs
                           , hst_body = go tau })
     go (TyVarTy tv)         = nlHsTyVar (getName tv)
     go (AppTy t1 t2)        = nlHsAppTy (go t1) (go t2)
-    go (LitTy (NumTyLit n)) = noLoc $ HsTyLit (HsNumTy "" n)
-    go (LitTy (StrTyLit s)) = noLoc $ HsTyLit (HsStrTy "" s)
-    go (TyConApp tc args)   = nlHsTyConApp (getName tc) (map go args')
+    go (LitTy (NumTyLit n)) = noLoc $ HsTyLit (HsNumTy noSourceText n)
+    go (LitTy (StrTyLit s)) = noLoc $ HsTyLit (HsStrTy noSourceText s)
+    go ty@(TyConApp tc args)
+      | any isInvisibleTyConBinder (tyConBinders tc)
+        -- We must produce an explicit kind signature here to make certain
+        -- programs kind-check. See Note [Kind signatures in typeToLHsType].
+      = noLoc $ HsKindSig lhs_ty (go (TcType.typeKind ty))
+      | otherwise = lhs_ty
        where
-         args' = filterOutInvisibleTypes tc args
+        lhs_ty = nlHsTyConApp (getName tc) (map go args')
+        args'  = filterOutInvisibleTypes tc args
     go (CastTy ty _)        = go ty
     go (CoercionTy co)      = pprPanic "toLHsSigWcType" (ppr co)
 
          -- Source-language types have _invisible_ kind arguments,
          -- so we must remove them here (Trac #8563)
 
-    go_tv :: TyVar -> LHsTyVarBndr Name
+    go_tv :: TyVar -> LHsTyVarBndr GhcRn
     go_tv tv = noLoc $ KindedTyVar (noLoc (getName tv))
                                    (go (tyVarKind tv))
+

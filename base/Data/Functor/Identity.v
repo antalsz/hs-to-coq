@@ -12,14 +12,11 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Data.Semigroup.
-Require Data.Traversable.
+Require Data.Functor.Utils.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -44,6 +41,12 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
 
 (* Translating `instance Show__Identity' failed: OOPS! Cannot find information
    for class Qualified "GHC.Show" "Show" unsupported *)
+
+Local Definition Foldable__Identity_elem
+   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} =>
+    Data.Functor.Utils.hash_compose (fun arg_0__ => arg_0__ GHC.Base.∘ runIdentity)
+                                    _GHC.Base.==_.
 
 Local Definition Foldable__Identity_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
@@ -91,6 +94,25 @@ Local Definition Foldable__Identity_sum
 Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
   fun {a} => fun arg_0__ => let 'Mk_Identity x := arg_0__ in cons x nil.
 
+Program Instance Foldable__Identity : Data.Foldable.Foldable Identity :=
+  fun _ k =>
+    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
+           Foldable__Identity_elem ;
+         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__Identity_fold ;
+         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+           Foldable__Identity_foldMap ;
+         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Identity_foldl ;
+         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Identity_foldl' ;
+         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Identity_foldr ;
+         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Identity_foldr' ;
+         Data.Foldable.length__ := fun {a} => Foldable__Identity_length ;
+         Data.Foldable.null__ := fun {a} => Foldable__Identity_null ;
+         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+           Foldable__Identity_product ;
+         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Identity_sum ;
+         Data.Foldable.toList__ := fun {a} => Foldable__Identity_toList |}.
+
 Local Definition Functor__Identity_fmap
    : forall {a} {b}, (a -> b) -> Identity a -> Identity b :=
   fun {a} {b} => GHC.Prim.coerce.
@@ -104,25 +126,8 @@ Program Instance Functor__Identity : GHC.Base.Functor Identity :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap |}.
 
-Local Definition Applicative__Identity_op_zlztzg__
-   : forall {a} {b}, Identity (a -> b) -> Identity a -> Identity b :=
-  fun {a} {b} => GHC.Prim.coerce.
-
-Local Definition Applicative__Identity_op_ztzg__
-   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
-  fun {a} {b} =>
-    fun x y =>
-      Applicative__Identity_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                        y.
-
-Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
-  fun {a} => Mk_Identity.
-
-Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
-  fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Identity_op_zlztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
+(* Translating `instance Applicative__Identity' failed: Cannot find sig for
+   Qualified "GHC.Base" "liftA2" unsupported *)
 
 Local Definition Monad__Identity_op_zgzg__
    : forall {a} {b}, Identity a -> Identity b -> Identity b :=
@@ -144,45 +149,8 @@ Program Instance Monad__Identity : GHC.Base.Monad Identity :=
 (* Translating `instance MonadFix__Identity' failed: OOPS! Cannot find
    information for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
-(* Translating `instance MonadZip__Identity' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
-
-Local Definition Traversable__Identity_traverse
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f}, (a -> f b) -> Identity a -> f (Identity b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_Identity a1 => GHC.Base.fmap (fun b1 => Mk_Identity b1) (f a1)
-      end.
-
-Local Definition Traversable__Identity_sequenceA
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f}, Identity (f a) -> f (Identity a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} =>
-    Traversable__Identity_traverse GHC.Base.id.
-
-Local Definition Traversable__Identity_sequence
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m}, Identity (m a) -> m (Identity a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__Identity_sequenceA.
-
-Local Definition Traversable__Identity_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> Identity a -> m (Identity b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Identity_traverse.
-
 (* Translating `instance Storable__Identity' failed: OOPS! Cannot find
    information for class Qualified "Foreign.Storable" "Storable" unsupported *)
-
-Local Definition Semigroup__Identity_op_zlzg__ {inst_a}
-  `{Data.Semigroup.Semigroup inst_a}
-   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
-  GHC.Prim.coerce _Data.Semigroup.<>_.
-
-Program Instance Semigroup__Identity {a} `{Data.Semigroup.Semigroup a}
-   : Data.Semigroup.Semigroup (Identity a) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Identity_op_zlzg__ |}.
 
 (* Translating `instance RealFloat__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Float" "RealFloat" unsupported *)
@@ -243,17 +211,18 @@ Program Instance Monoid__Identity {a} `{GHC.Base.Monoid a}
          GHC.Base.mconcat__ := Monoid__Identity_mconcat ;
          GHC.Base.mempty__ := Monoid__Identity_mempty |}.
 
+(* Translating `instance Semigroup__Identity' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "Semigroup" unsupported *)
+
 (* Translating `instance Ix__Identity' failed: OOPS! Cannot find information for
    class Qualified "GHC.Arr" "Ix" unsupported *)
-
-(* Translating `instance IsString__Identity' failed: OOPS! Cannot find
-   information for class Qualified "Data.String" "IsString" unsupported *)
 
 (* Translating `instance Integral__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Real" "Integral" unsupported *)
 
-(* Translating `instance Generic1__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Identity__LiftedRep' failed: OOPS!
+   Cannot find information for class Qualified "GHC.Generics" "Generic1"
+   unsupported *)
 
 (* Translating `instance Generic__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -295,62 +264,18 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
 (* Translating `instance Enum__Identity' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Enum" unsupported *)
 
-(* Translating `instance Data__Identity' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
-
 (* Translating `instance Bounded__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
 (* Translating `instance Bits__Identity' failed: OOPS! Cannot find information
    for class Qualified "Data.Bits" "Bits" unsupported *)
 
-Definition hash_compose {a} {b} {c} :=
-  (@Coq.Program.Basics.compose a b c).
-
-Local Definition Foldable__Identity_elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    hash_compose (fun arg_0__ => arg_0__ GHC.Base.∘ runIdentity) _GHC.Base.==_.
-
-Program Instance Foldable__Identity : Data.Foldable.Foldable Identity :=
-  fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__Identity_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Identity_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Identity_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Identity_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Identity_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Identity_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Identity_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Identity_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Identity_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__Identity_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Identity_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Identity_toList |}.
-
-Program Instance Traversable__Identity
-   : Data.Traversable.Traversable Identity :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__Identity_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__Identity_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__Identity_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__Identity_traverse |}.
-
 (* Unbound variables:
-     bool comparison cons false list nil Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.max GHC.Base.mconcat
-     GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Prim.coerce
+     bool comparison cons false list nil Data.Foldable.Foldable
+     Data.Functor.Utils.hash_compose GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.id
+     GHC.Base.mappend GHC.Base.max GHC.Base.mconcat GHC.Base.mempty GHC.Base.min
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
 *)

@@ -23,19 +23,23 @@ Import GHC.Base.Notations.
 Inductive Void : Type :=.
 (* Converted value declarations: *)
 
-Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
-  fun arg_0__ arg_1__ => true.
+(* Translating `instance Ix__Void' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Arr" "Ix" unsupported *)
 
-Local Definition Eq___Void_op_zsze__ : Void -> Void -> bool :=
-  fun x y => negb (Eq___Void_op_zeze__ x y).
+(* Translating `instance Exception__Void' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Exception" "Exception" unsupported *)
 
-Program Instance Eq___Void : GHC.Base.Eq_ Void :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
+(* Translating `instance Semigroup__Void' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+
+(* Translating `instance Show__Void' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Show" "Show" unsupported *)
+
+(* Translating `instance Read__Void' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
 
 Local Definition Ord__Void_compare : Void -> Void -> comparison :=
-  fun arg_0__ arg_1__ => Eq.
+  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => Eq end.
 
 Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
   fun x y => Ord__Void_compare x y GHC.Base.== Gt.
@@ -65,23 +69,22 @@ Program Instance Ord__Void : GHC.Base.Ord Void :=
          GHC.Base.max__ := Ord__Void_max ;
          GHC.Base.min__ := Ord__Void_min |}.
 
-(* Translating `instance Read__Void' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
-
-(* Translating `instance Show__Void' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Translating `instance Ix__Void' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Arr" "Ix" unsupported *)
-
-(* Translating `instance Exception__Void' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Exception" "Exception" unsupported *)
-
 (* Translating `instance Generic__Void' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
 
 (* Translating `instance Data__Void' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
+  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => true end.
+
+Local Definition Eq___Void_op_zsze__ : Void -> Void -> bool :=
+  fun x y => negb (Eq___Void_op_zeze__ x y).
+
+Program Instance Eq___Void : GHC.Base.Eq_ Void :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
 
 Definition absurd {a} : Void -> a :=
   fun a => match a with end.

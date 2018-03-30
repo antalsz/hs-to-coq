@@ -84,34 +84,19 @@ Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) :=
 (* Translating `instance Show__Proxy' failed: OOPS! Cannot find information for
    class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Read__Proxy' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
-
 (* Translating `instance Enum__Proxy' failed: OOPS! Cannot find information for
    class Qualified "GHC.Enum" "Enum" unsupported *)
 
 (* Translating `instance Ix__Proxy' failed: OOPS! Cannot find information for
    class Qualified "GHC.Arr" "Ix" unsupported *)
 
-(* Translating `instance Bounded__Proxy' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Semigroup__Proxy' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Base" "Semigroup" unsupported *)
 
-Local Definition Monoid__Proxy_mappend {inst_s}
-   : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
-  fun arg_0__ arg_1__ => Mk_Proxy.
-
-Local Definition Monoid__Proxy_mconcat {inst_s}
-   : list (Proxy inst_s) -> (Proxy inst_s) :=
-  fun arg_0__ => Mk_Proxy.
-
-Local Definition Monoid__Proxy_mempty {inst_s} : (Proxy inst_s) :=
-  Mk_Proxy.
-
-Program Instance Monoid__Proxy {s} : GHC.Base.Monoid (Proxy s) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Proxy_mappend ;
-         GHC.Base.mconcat__ := Monoid__Proxy_mconcat ;
-         GHC.Base.mempty__ := Monoid__Proxy_mempty |}.
+(* Translating `instance Monoid__Proxy' failed: missing Qualified "GHC.Base"
+   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified "Data.Proxy"
+   "Monoid__Proxy_mconcat"),(Qualified "GHC.Base" "mempty",Qualified "Data.Proxy"
+   "Monoid__Proxy_mempty")] unsupported *)
 
 Local Definition Functor__Proxy_fmap
    : forall {a} {b}, (a -> b) -> Proxy a -> Proxy b :=
@@ -168,12 +153,18 @@ Program Instance Monad__Proxy : GHC.Base.Monad Proxy :=
 (* Translating `instance MonadPlus__Proxy' failed: OOPS! Cannot find information
    for class Qualified "GHC.Base" "MonadPlus" unsupported *)
 
-Definition asProxyTypeOf {a} : a -> Proxy a -> a :=
+(* Translating `instance Read__Proxy' failed: OOPS! Cannot find information for
+   class Qualified "GHC.Read" "Read" unsupported *)
+
+(* Translating `instance Bounded__Proxy' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+
+Definition asProxyTypeOf {a} {proxy} : a -> proxy a -> a :=
   GHC.Base.const.
 
 (* Unbound variables:
-     Eq Gt Lt Type bool comparison list negb true GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure
+     Eq Gt Lt Type bool comparison negb true GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord GHC.Base.const GHC.Base.fmap
+     GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure
 *)

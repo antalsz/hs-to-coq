@@ -209,5 +209,6 @@ collectArgs (Arrow a1 a2) = return (arrow_qid, [a1, a2])
   where arrow_qid = Qualified "GHC.Prim" "arrow"
 collectArgs (Parens t)    = collectArgs t
 collectArgs (InScope t _) = collectArgs t
+collectArgs (HasType t _) = collectArgs t
 collectArgs t             = fail $ "collectArgs: " ++ show t
 

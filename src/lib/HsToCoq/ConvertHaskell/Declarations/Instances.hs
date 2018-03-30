@@ -267,8 +267,11 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- TODO: multiparameter type classes   "instance C t1 t2 where"
         --       instances with contexts       "instance C a => C (Maybe a) where"
         decomposeClassTy ty = case ty of
-           App (Qualid cn) ((PosArg a) NE.:| []) -> (cn, a)
-           _ -> error ("cannot deconstruct instance head: " ++ (show ty))
+           App1 (Qualid cn) a -> (cn, a)
+           -- Code smell: non-normalized applications.
+           App1 (App1 (Qualid cn) (App1 "GHC.Prim.TYPE" _)) a -> (cn, a)
+           App2 (Qualid cn) (App1 "GHC.Prim.TYPE" _) a -> (cn, a)
+           _ -> error ("cannot deconstruct head of instance " ++ T.unpack (qualidBase instanceName) ++ ": " ++ show ty)
 
         (className, instTy) = decomposeClassTy ty
 

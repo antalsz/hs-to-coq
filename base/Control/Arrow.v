@@ -172,6 +172,54 @@ Definition runKleisli {m : Type -> Type} {a} {b} (arg_0__ : Kleisli m a b) :=
   runKleisli.
 (* Converted value declarations: *)
 
+(* Skipping instance ArrowLoop__arrow *)
+
+(* Skipping instance ArrowLoop__Kleisli *)
+
+Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a}
+   : forall {a} {b}, (a -> b) -> (ArrowMonad inst_a) a -> (ArrowMonad inst_a) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_ArrowMonad m => Mk_ArrowMonad (m Control.Category.>>> arr f)
+      end.
+
+Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}
+   : forall {a} {b}, a -> (ArrowMonad inst_a) b -> (ArrowMonad inst_a) a :=
+  fun {a} {b} => fun x => Functor__ArrowMonad_fmap (GHC.Base.const x).
+
+Program Instance Functor__ArrowMonad {a} `{Arrow a}
+   : GHC.Base.Functor (ArrowMonad a) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ ;
+         GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap |}.
+
+(* Skipping instance Applicative__ArrowMonad *)
+
+(* Skipping instance Monad__ArrowMonad *)
+
+(* Skipping instance Alternative__ArrowMonad *)
+
+(* Skipping instance MonadPlus__ArrowMonad *)
+
+Local Definition ArrowApply__arrow_app
+   : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
+  fun {b} {c} => fun arg_0__ => let 'pair f x := arg_0__ in f x.
+
+(* Skipping instance ArrowApply__Kleisli *)
+
+(* Skipping instance ArrowChoice__arrow *)
+
+(* Skipping instance ArrowChoice__Kleisli *)
+
+(* Skipping instance ArrowPlus__Kleisli *)
+
+(* Skipping instance ArrowZero__Kleisli *)
+
+(* Skipping instance Category__Kleisli *)
+
+(* Skipping instance Arrow__Kleisli *)
+
 Local Definition Arrow__arrow_arr
    : forall {b} {c}, (b -> c) -> GHC.Prim.arrow b c :=
   fun {b} {c} => fun f => f.
@@ -214,56 +262,8 @@ Program Instance Arrow__arrow : Arrow GHC.Prim.arrow :=
          op_ztztzt____ := fun {b} {c} {b'} {c'} => Arrow__arrow_op_ztztzt__ ;
          second__ := fun {b} {c} {d} => Arrow__arrow_second |}.
 
-(* Skipping instance Category__Kleisli *)
-
-(* Skipping instance Arrow__Kleisli *)
-
-(* Skipping instance ArrowZero__Kleisli *)
-
-(* Skipping instance ArrowPlus__Kleisli *)
-
-(* Skipping instance ArrowChoice__arrow *)
-
-(* Skipping instance ArrowChoice__Kleisli *)
-
-Local Definition ArrowApply__arrow_app
-   : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
-  fun {b} {c} => fun arg_0__ => let 'pair f x := arg_0__ in f x.
-
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow :=
   fun _ k => k {| app__ := fun {b} {c} => ArrowApply__arrow_app |}.
-
-(* Skipping instance ArrowApply__Kleisli *)
-
-Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a}
-   : forall {a} {b}, (a -> b) -> (ArrowMonad inst_a) a -> (ArrowMonad inst_a) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_ArrowMonad m => Mk_ArrowMonad (m Control.Category.>>> arr f)
-      end.
-
-Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}
-   : forall {a} {b}, a -> (ArrowMonad inst_a) b -> (ArrowMonad inst_a) a :=
-  fun {a} {b} => fun x => Functor__ArrowMonad_fmap (GHC.Base.const x).
-
-Program Instance Functor__ArrowMonad {a} `{Arrow a}
-   : GHC.Base.Functor (ArrowMonad a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap |}.
-
-(* Skipping instance Applicative__ArrowMonad *)
-
-(* Skipping instance Monad__ArrowMonad *)
-
-(* Skipping instance Alternative__ArrowMonad *)
-
-(* Skipping instance MonadPlus__ArrowMonad *)
-
-(* Skipping instance ArrowLoop__arrow *)
-
-(* Skipping instance ArrowLoop__Kleisli *)
 
 Definition op_zczgzg__ {a} {b} {c} {d} `{Arrow a}
    : (b -> c) -> a c d -> a b d :=

@@ -65,6 +65,7 @@ Defined.
 Require Coq.Init.Datatypes.
 Require GHC.Base.
 Require GHC.Num.
+Require GHC.Prim.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -162,6 +163,13 @@ Definition foldr2_left {a} {b} {c} {d}
 Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
   GHC.Base.id.
 
+Definition iterate' {a} : (a -> a) -> a -> list a :=
+  fix iterate' f x := let x' := f x in GHC.Prim.seq x' (cons x (iterate' f x')).
+
+Definition iterate'FB {a} {b} : (a -> b -> b) -> (a -> a) -> a -> b :=
+  fun c f x0 =>
+    let fix go x := let x' := f x in GHC.Prim.seq x' (c x (go x')) in go x0.
+
 Definition lenAcc {a} : list a -> GHC.Num.Int -> GHC.Num.Int :=
   fix lenAcc arg_0__ arg_1__
         := match arg_0__, arg_1__ with
@@ -254,7 +262,7 @@ Definition scanlFB {b} {a} {c}
 Definition scanlFB' {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
   fun f c =>
-    fun b g => GHC.Base.oneShot (fun x => let 'b' := f x b in c b' (g b')).
+    fun b g => GHC.Base.oneShot (fun x => let b' := f x b in c b' (g b')).
 
 Definition scanrFB {a} {b} {c}
    : (a -> b -> b) -> (b -> c -> c) -> a -> (b * c)%type -> (b * c)%type :=
@@ -341,20 +349,24 @@ Definition zipFB {a} {b} {c} {d}
   fun c => fun x y r => c (pair x y) r.
 
 Definition zipWith {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list c :=
-  fix zipWith arg_0__ arg_1__ arg_2__
-        := match arg_0__, arg_1__, arg_2__ with
-           | _f, nil, _bs => nil
-           | _f, _as, nil => nil
-           | f, cons a as_, cons b bs => cons (f a b) (zipWith f as_ bs)
-           end.
+  fun f =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | nil, _ => nil
+                 | _, nil => nil
+                 | cons x xs, cons y ys => cons (f x y) (go xs ys)
+                 end in
+    go.
 
 Definition zipWith3 {a} {b} {c} {d}
    : (a -> b -> c -> d) -> list a -> list b -> list c -> list d :=
-  fix zipWith3 arg_0__ arg_1__ arg_2__ arg_3__
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | z, cons a as_, cons b bs, cons c cs => cons (z a b c) (zipWith3 z as_ bs cs)
-           | _, _, _, _ => nil
-           end.
+  fun z =>
+    let fix go arg_0__ arg_1__ arg_2__
+              := match arg_0__, arg_1__, arg_2__ with
+                 | cons a as_, cons b bs, cons c cs => cons (z a b c) (go as_ bs cs)
+                 | _, _, _ => nil
+                 end in
+    go.
 
 Definition zipWithFB {a} {b} {c} {d} {e}
    : (a -> b -> c) -> (d -> e -> a) -> d -> e -> b -> c :=
@@ -365,5 +377,5 @@ Definition zipWithFB {a} {b} {c} {d} {e}
      Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
      GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.oneShot GHC.Base.op_zeze__
      GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
 *)

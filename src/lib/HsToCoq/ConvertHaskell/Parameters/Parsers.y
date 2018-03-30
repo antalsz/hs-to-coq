@@ -253,6 +253,8 @@ Edit :: { Edit }
   | data  kinds Qualid SepBy1(Term,',')              { DataKindEdit          $3 $4                            }
   | coinductive Qualid                               { CoinductiveEdit       $2                               }
   | rewrite Rewrite                                  { RewriteEdit           $2                               }
+  | rename module Word Word                          { RenameModuleEdit      (mkModuleName (T.unpack $3))
+                                                                             (mkModuleName (T.unpack $4))     }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

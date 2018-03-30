@@ -79,13 +79,15 @@ specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 
 
 var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
+    qid <- case nameModM of
+             Just m  -> do rm <- use (edits.renamedModules.at m . non m)
+                           pure (Qualified (moduleNameText rm) (bareName name))
+             Nothing -> pure (Bare (localName name))
     renamed_qid <- use (renamed ns qid . non qid)
     pure renamed_qid
   where
-    nameModM = moduleNameText . moduleName <$> nameModule_maybe name
+    nameModM = moduleName <$> nameModule_maybe name
 
-    qid | Just m <- nameModM = Qualified m (bareName name)
-        | otherwise          = Bare        (localName name)
 
 recordField :: (ConversionMonad m) => AmbiguousFieldOcc GHC.Name -> m Qualid
 recordField (Unambiguous _ sel) = var ExprNS sel

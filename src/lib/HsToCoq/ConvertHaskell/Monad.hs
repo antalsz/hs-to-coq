@@ -100,6 +100,8 @@ renamed :: HsNamespace -> Qualid -> Lens' ConversionState (Maybe Qualid)
 renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
+
+
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Qualid () m)
 type ConversionT m = StateT ConversionState (VariablesT Qualid () m)
 

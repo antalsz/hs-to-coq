@@ -17,7 +17,9 @@ import Data.Traversable
 import Data.Foldable
 import Data.Maybe
 import Data.Monoid
+import Data.List (nub)
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NE
 import HsToCoq.Util.Containers
 
 import Data.Generics
@@ -173,6 +175,15 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
+-- Combine the import statements of several modules into one list of import statements
+-- At the same time, remove all self imports
+mergeImports :: [ModuleIdent] -> [[Sentence]] -> [Sentence]
+mergeImports names imports = nub (filter notSelfImport (concat imports)) where
+  notSelfImport (ModuleSentence (Require _ _ ne)) =
+    not (null (NE.filter (\x -> not (x `elem` names)) ne))
+  notSelfImport _ = True
+
+
 -- Module-local
 {-
 convert_module_with_imports :: ConversionMonad m
@@ -190,12 +201,14 @@ convert_module_with_imports convModName (group, imports, _exports, _docstring) =
 -}
 
 -- Module-local
+
 convert_module_with_requires_via :: ConversionMonad m
                                  => (ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations)
                                  -> ModuleName -> RenamedSource ->
                                  m (ConvertedModule, [ModuleName])
-convert_module_with_requires_via convGroup convModName (group, _imports, _exports, _docstring) =
-  withCurrentModule convModName $ do
+convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _exports, _docstring) =
+  withCurrentModule convModNameOrig $ do
+    convModName <- use (edits.renamedModules.at convModNameOrig . non convModNameOrig)
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
                                 , convertedClsInstDecls = convModClsInstDecls

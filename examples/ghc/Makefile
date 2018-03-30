@@ -28,6 +28,10 @@ HANDMOD = \
   TysWiredIn \
   CallArity \
 
+# generated from drop-in/
+DROPIN = \
+
+
 # Generated modules
 # generated directly from ghc/compiler/*/
 MODULES = \
@@ -76,12 +80,12 @@ CORE_MODULES = \
   CoreFVs \
   CoreArity \
 
-
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
 VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
+VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE) $(VFILES_DROPIN)
 
 all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
@@ -112,6 +116,8 @@ $(OUT)/README.md:
 
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
+
+
 
 
 .SECONDEXPANSION:
@@ -158,6 +164,50 @@ $(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcar
 		     ghc/compiler/*/$*.hs
 	test -e $@
 
+
+$(VFILES_DROPIN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits core-edits
+	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
+	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
+                     --ghc-tree ghc \
+                     -I ghc/includes \
+                     -I ghc/compiler \
+                     -I ghc/compiler/stage2 \
+                     -I ghc/compiler/stage2/build \
+                     --ghc -DSTAGE=2 \
+                     --ghc -package=ghc-boot-th \
+                     -e ../../base/edits \
+                     -e ../containers/edits \
+                     -e ../transformers/edits \
+                     -e edits \
+                     -e core-edits \
+                     -N \
+                     -o $(OUT) \
+		     drop-in/$*.hs
+	test -e $@
+
+
+
+tmp: $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
+	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
+	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
+                     --ghc-tree ghc \
+                     -I ghc/includes \
+                     -I ghc/compiler \
+                     -I ghc/compiler/stage2 \
+                     -I ghc/compiler/stage2/build \
+                     --ghc -DSTAGE=2 \
+                     --ghc -package=ghc-boot-th \
+                     -e ../../base/edits \
+                     -e ../containers/edits \
+                     -e ../transformers/edits \
+                     -e edits \
+                     -N \
+                     -o $(OUT)/TyCoRepCoercionType.v \
+		     ghc/compiler/*/TyCoRep.hs ghc/compiler/*/Type.hs ghc/compiler/*/Coercion.hs
+	test -e $@
+# We added the `test` because `hs-to-coq` doesn't return an error
 
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v

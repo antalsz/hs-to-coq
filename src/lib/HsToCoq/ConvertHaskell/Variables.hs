@@ -87,6 +87,6 @@ var ns name = do
     qid | Just m <- nameModM = Qualified m (bareName name)
         | otherwise          = Bare        (localName name)
 
-recordField :: (ConversionMonad m) => AmbiguousFieldOcc GHC.Name -> m Qualid
+recordField :: (ConversionMonad m) => AmbiguousFieldOcc GhcRn -> m Qualid
 recordField (Unambiguous _ sel) = var ExprNS sel
 recordField (Ambiguous _ _)     = error "Cannot handle ambiguous record field names"

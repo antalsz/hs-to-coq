@@ -13,7 +13,6 @@ import qualified Data.Map as M
 import Control.Monad.IO.Class
 
 import GHC hiding (Name)
-import qualified GHC
 import Panic
 import BasicTypes (TopLevelFlag(..))
 
@@ -31,7 +30,7 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
-convertModuleValDecls :: ConversionMonad m => [(Maybe ModuleName, HsDecl GHC.Name)] -> m [Sentence]
+convertModuleValDecls :: ConversionMonad m => [(Maybe ModuleName, HsDecl GhcRn)] -> m [Sentence]
 convertModuleValDecls mdecls = do
   -- TODO: Don't even convert the signatures for `skipped' things here
   (defns, sigs) <- bitraverse pure convertModuleSigs
@@ -74,12 +73,12 @@ convertModuleValDecls mdecls = do
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ NoBinding <$> bindings
 
-  where axiomatizeBinding :: GhcMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
+  where axiomatizeBinding :: GhcMonad m => HsBind GhcRn -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- freeVar $ unLoc fun_id
           pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
 
-convertValDecls :: ConversionMonad m => [HsDecl GHC.Name] -> m [Sentence]
+convertValDecls :: ConversionMonad m => [HsDecl GhcRn] -> m [Sentence]
 convertValDecls = convertModuleValDecls . map (Nothing,)

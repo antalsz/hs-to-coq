@@ -32,7 +32,6 @@ import qualified Data.Set as S
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromMaybe)
-import Data.Monoid
 
 import HsToCoq.Coq.Gallina
 

@@ -42,6 +42,7 @@ import GHC hiding (outputFile)
 import DynFlags hiding (outputFile)
 import HsToCoq.Util.GHC.Exception
 import Module
+import CmdLineParser (Warn(..))
 
 import Control.Monad.Parse
 import HsToCoq.ConvertHaskell.Parameters.Parsers
@@ -177,7 +178,7 @@ processArgs = do
                    map (locate "--ghc")                  ghcOptionsArgs
   
   (dflags, ghcRest, warnings) <- (parseDynamicFlagsCmdLine ?? ghcArgs) =<< getSessionDynFlags
-  printAllIfPresent unLoc "Command-line argument warning" warnings
+  printAllIfPresent unLoc "Command-line argument warning" (map warnMsg warnings)
   printAllIfPresent unLoc "Ignored GHC arguments"         ghcRest
   
   void $ setSessionDynFlags dflags

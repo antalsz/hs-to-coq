@@ -53,7 +53,7 @@ convertConLName :: ConversionMonad m => Located GHC.Name -> m Qualid
 convertConLName (L _ hsCon) = var ExprNS hsCon
 
 convertConDecl :: ConversionMonad m
-               => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
+               => Term -> [Binder] -> ConDecl GhcRn -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
 
@@ -128,7 +128,7 @@ rewriteDataTypeArguments dta bs = do
 --------------------------------------------------------------------------------
 
 convertDataDefn :: ConversionMonad m
-                => Term -> [Binder] -> HsDataDefn GHC.Name
+                => Term -> [Binder] -> HsDataDefn GhcRn
                 -> m (Term, [Constructor])
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
@@ -137,14 +137,15 @@ convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs)
            foldTraverse (convertConDecl curType extraArgs . unLoc) cons)
 
 convertDataDecl :: ConversionMonad m
-                => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name
+                => Located GHC.Name -> [LHsTyVarBndr GhcRn] -> HsDataDefn GhcRn
                 -> m IndBody
 convertDataDecl name tvs defn = do
   coqName   <- var TypeNS $ unLoc name
 
   kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.dataKinds.at coqName)
   let cvtName tv = Ident <$> var TypeNS (unLoc tv)
-  let  go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
+  let  go :: ConversionMonad m => LHsTyVarBndr GhcRn -> Maybe Term -> m Binder
+       go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
        go (L _ (UserTyVar name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
        go (L _ (KindedTyVar name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
        go (L _ (KindedTyVar name _)) Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n  -- dunno if this could happen

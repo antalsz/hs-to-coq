@@ -73,10 +73,10 @@ rewriteExpr tm = do
   rws <- use (edits.rewrites)
   return $ Coq.rewrite rws tm
 
-convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
+convertExpr :: ConversionMonad m => HsExpr GhcRn -> m Term
 convertExpr hsExpr = convertExpr' hsExpr >>= rewriteExpr
 
-convertExpr' :: ConversionMonad m => HsExpr GHC.Name -> m Term
+convertExpr' :: forall m. ConversionMonad m => HsExpr GhcRn -> m Term
 convertExpr' (HsVar (L _ x)) =
   Qualid <$> var ExprNS x
 
@@ -86,7 +86,7 @@ convertExpr' (HsUnboundVar x) =
 convertExpr' (HsRecFld fld) =
   Qualid <$> recordField fld
 
-convertExpr' (HsOverLabel _) =
+convertExpr' HsOverLabel{} =
   convUnsupported "overloaded labels"
 
 convertExpr' (HsIPVar _) =
@@ -94,7 +94,8 @@ convertExpr' (HsIPVar _) =
 
 convertExpr' (HsOverLit OverLit{..}) =
   case ol_val of
-    HsIntegral   _src int -> App1 "GHC.Num.fromInteger" . Num <$> convertInteger "integer literals" int
+    HsIntegral   intl ->
+        App1 "GHC.Num.fromInteger" . Num <$> convertInteger "integer literals" (il_value intl)
     HsFractional fr  -> convertFractional fr
     HsIsString   _src str -> pure $ convertFastString str
 
@@ -104,20 +105,20 @@ convertExpr' (HsLit lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literals"
     GHC.HsString _ fs      -> pure $ convertFastString fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literals"
-    HsInt        _ int     -> Num <$> convertInteger "`Integer' literals" int
+    HsInt        _ intl    -> Num <$> convertInteger "`Integer' literals" (il_value intl)
     HsIntPrim    _ int     -> Num <$> convertInteger "`Integer' literals" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literals"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literals"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literals"
     HsInteger    _ int _ty -> Num <$> convertInteger "`Integer' literals" int
-    HsRat        _ _       -> convUnsupported "`Rational' literals"
-    HsFloatPrim  _         -> convUnsupported "`Float#' literals"
-    HsDoublePrim _         -> convUnsupported "`Double#' literals"
+    HsRat        _ _ _     -> convUnsupported "`Rational' literals"
+    HsFloatPrim  _ _       -> convUnsupported "`Float#' literals"
+    HsDoublePrim _ _       -> convUnsupported "`Double#' literals"
 
 convertExpr' (HsLam mg) =
   uncurry Fun <$> convertFunction mg
 
-convertExpr' (HsLamCase PlaceHolder mg) =
+convertExpr' (HsLamCase mg) =
   uncurry Fun <$> convertFunction mg
 
 convertExpr' (HsApp e1 e2) =
@@ -260,25 +261,25 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
   let loc  = mkGeneralLocated "generated"
       toHs = freshInternalName . T.unpack
 
-  let partialUpdateError con = do
+  let partialUpdateError :: Qualid -> m (Match GhcRn (Located (HsExpr GhcRn)))
+      partialUpdateError con = do
         hsCon   <- toHs (qualidToIdent con)
         hsError <- freshInternalName "error" -- TODO RENAMER this shouldn't be fresh
         pure $ GHC.Match
-          { m_fixity = NonFunBindMatch
+          { m_ctxt = LambdaExpr
           , m_pats   = [ loc . ConPatIn (loc hsCon)
                              . RecCon $ HsRecFields { rec_flds = []
                                                     , rec_dotdot = Nothing } ]
-          , m_type   = Nothing
           , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
                                               -- TODO: A special variable which is special-cased to desugar to `missingValue`?
                                               HsApp (loc . HsVar . loc $ hsError)
-                                                    (loc . HsLit . GHC.HsString "" $ fsLit "Partial record update") ]
+                                                    (loc . HsLit . GHC.HsString (SourceText "") $ fsLit "Partial record update") ]
                              , grhssLocalBinds = loc EmptyLocalBinds } }
 
   matches <- for ctors $ \con ->
     use (constructorFields . at con) >>= \case
       Just (RecordFields fields) | all (`elem` fields) $ M.keysSet updates -> do
-        let addFieldOcc :: HsRecField' GHC.Name arg -> HsRecField GHC.Name arg
+        let addFieldOcc :: HsRecField' GHC.Name arg -> HsRecField GhcRn arg
             addFieldOcc field@HsRecField{hsRecFieldLbl = L s lbl} =
               let rdrLbl     = mkOrig <$> nameModule <*> nameOccName $ lbl
               in field{hsRecFieldLbl = L s $ FieldOcc (L s rdrLbl) lbl}
@@ -296,9 +297,8 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                          $ M.findWithDefault (Just . loc . HsVar $ loc hsFieldVar) field updates )
 
         hsCon <- toHs (qualidToIdent con)
-        pure GHC.Match { m_fixity = NonFunBindMatch
+        pure GHC.Match { m_ctxt   = LambdaExpr
                        , m_pats   = [ loc . ConPatIn (loc hsCon) $ RecCon fieldPats ]
-                       , m_type   = Nothing
                        , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
                                                            RecordCon (loc hsCon)
                                                                      PlaceHolder
@@ -364,7 +364,7 @@ convertExpr' (HsSpliceE _) =
 convertExpr' (HsProc _ _) =
   convUnsupported "`proc' expressions"
 
-convertExpr' (HsStatic _) =
+convertExpr' HsStatic{} =
   convUnsupported "static pointers"
 
 convertExpr' (HsArrApp _ _ _ _ _) =
@@ -397,14 +397,20 @@ convertExpr' (ELazyPat _) =
 convertExpr' (HsWrap _ _) =
   convUnsupported "`HsWrap' constructor"
 
+convertExpr' (HsConLikeOut{}) =
+  convUnsupported "`HsConLikeOut' constructor"
+
+convertExpr' (ExplicitSum{}) =
+  convUnsupported "`ExplicitSum' constructor"
+
 --------------------------------------------------------------------------------
 
 -- Module-local
-convert_section :: ConversionMonad m => Maybe (LHsExpr GHC.Name) -> LHsExpr GHC.Name -> Maybe (LHsExpr GHC.Name) -> m Term
+convert_section :: ConversionMonad m => Maybe (LHsExpr GhcRn) -> LHsExpr GhcRn -> Maybe (LHsExpr GhcRn) -> m Term
 convert_section  ml opE mr = do
   let -- We need this type signature, and I think it's because @let@ isn't being
       -- generalized.
-      hs :: ConversionMonad m => Qualid -> m (HsExpr GHC.Name)
+      hs :: ConversionMonad m => Qualid -> m (HsExpr GhcRn)
       hs  = fmap (HsVar . mkGeneralLocated "generated") . freshInternalName . T.unpack . qualidToIdent
       coq = Inferred Coq.Explicit . Ident
 
@@ -417,12 +423,12 @@ convert_section  ml opE mr = do
 
 --------------------------------------------------------------------------------
 
-convertLExpr :: ConversionMonad m => LHsExpr GHC.Name -> m Term
+convertLExpr :: ConversionMonad m => LHsExpr GhcRn -> m Term
 convertLExpr = convertExpr . unLoc
 
 --------------------------------------------------------------------------------
 
-convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m (Binders, Term)
+convertFunction :: ConversionMonad m => MatchGroup GhcRn (LHsExpr GhcRn) -> m (Binders, Term)
 convertFunction mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
 convertFunction mg = do
   let n_args = matchGroupArity mg
@@ -433,14 +439,13 @@ convertFunction mg = do
  where
    err = convUnsupported "convertFunction: Empty argument list"
 
-isTrivialMatch :: MatchGroup GHC.Name (LHsExpr GHC.Name) -> Maybe (Match GHC.Name (LHsExpr GHC.Name))
+isTrivialMatch :: MatchGroup GhcRn (LHsExpr GhcRn) -> Maybe (Match GhcRn (LHsExpr GhcRn))
 isTrivialMatch (MG (L _ [L _ alt]) _ _ _) = trivMatch alt where
 
-  trivMatch :: Match GHC.Name (LHsExpr GHC.Name) ->
-    Maybe (Match GHC.Name (LHsExpr GHC.Name))
+  trivMatch :: Match GhcRn (LHsExpr GhcRn) -> Maybe (Match GhcRn (LHsExpr GhcRn))
   trivMatch alt = if all trivPat (m_pats alt) then Just alt else Nothing
 
-  trivPat :: LPat GHC.Name -> Bool
+  trivPat :: LPat GhcRn -> Bool
   trivPat (L _ (GHC.WildPat _)) = False
   trivPat (L _ (GHC.VarPat _))  = True
   trivPat (L _ (GHC.BangPat p)) = trivPat p
@@ -450,7 +455,7 @@ isTrivialMatch (MG (L _ [L _ alt]) _ _ _) = trivMatch alt where
 isTrivialMatch _ = Nothing
 
 convTrivialMatch ::  ConversionMonad m =>
-  Match GHC.Name (LHsExpr GHC.Name) ->  m (Binders, Term)
+  Match GhcRn (LHsExpr GhcRn) ->  m (Binders, Term)
 convTrivialMatch alt = do
   (MultPattern pats, _, rhs) <- convertMatch alt
   names <- mapM patToName pats
@@ -466,7 +471,7 @@ patToName _                = convUnsupported "patToArg: not a trivial pat"
 
 --------------------------------------------------------------------------------
 
-isTrueLExpr :: GhcMonad m => LHsExpr GHC.Name -> m Bool
+isTrueLExpr :: GhcMonad m => LHsExpr GhcRn -> m Bool
 isTrueLExpr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
 isTrueLExpr (L _ (HsTick _ e))      = isTrueLExpr e
 isTrueLExpr (L _ (HsBinTick _ _ e)) = isTrueLExpr e
@@ -477,7 +482,7 @@ isTrueLExpr _                       = pure False
 
 -- TODO: Unify `buildTrivial` and `buildNontrivial`?
 convertPatternBinding :: ConversionMonad m
-                      => LPat GHC.Name -> LHsExpr GHC.Name
+                      => LPat GhcRn -> LHsExpr GhcRn
                       -> (Term -> (Term -> Term) -> m a)
                       -> (Term -> Qualid -> (Term -> Term -> Term) -> m a)
                       -> Term
@@ -510,7 +515,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
                    Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
           body
 
-convertDoBlock :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
+convertDoBlock :: ConversionMonad m => [ExprLStmt GhcRn] -> m Term
 convertDoBlock allStmts = do
     case fmap unLoc <$> unsnoc allStmts of
       Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
@@ -545,7 +550,7 @@ convertDoBlock allStmts = do
     monBind e1 e2 = mkInfix e1 "GHC.Base.>>=" e2
     monThen e1 e2 = mkInfix e1 "GHC.Base.>>"  e2
 
-convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
+convertListComprehension :: ConversionMonad m => [ExprLStmt GhcRn] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
   Just (stmts, LastStmt e _applicativeDoInfo _returnInfo) ->
     foldMap (Endo . toExpr . unLoc) stmts `appEndo`
@@ -633,7 +638,7 @@ chainFallThroughs cases failure = go (reverse cases) failure where
 -- * Chain these groups.
 convertMatchGroup :: ConversionMonad m =>
     NonEmpty Term ->
-    MatchGroup GHC.Name (LHsExpr GHC.Name) ->
+    MatchGroup GhcRn (LHsExpr GhcRn) ->
     m Term
 convertMatchGroup args (MG (L _ alts) _ _ _) = do
     convAlts <- mapM (convertMatch . unLoc) alts
@@ -671,7 +676,7 @@ groupMatches pats = map (map snd) . go <$> mapM summarize pats
 
 
 convertMatch :: ConversionMonad m =>
-    Match GHC.Name (LHsExpr GHC.Name) -> -- the match
+    Match GhcRn (LHsExpr GhcRn) -> -- the match
     m (MultPattern, HasGuard, Term -> m Term) -- the pattern, hasGuards, the right-hand side
 convertMatch GHC.Match{..} = do
   (pats, guards) <- runWriterT $
@@ -709,7 +714,7 @@ hasGuards _                             = HasGuard
 
 convertGRHS :: ConversionMonad m
             => [ConvertedGuard m]
-            -> GRHS GHC.Name (LHsExpr GHC.Name)
+            -> GRHS GhcRn (LHsExpr GhcRn)
             -> Term -- failure
             -> m Term
 convertGRHS extraGuards (GRHS gs rhs) failure = do
@@ -719,7 +724,7 @@ convertGRHS extraGuards (GRHS gs rhs) failure = do
 
 convertLGRHSList :: ConversionMonad m
                  => [ConvertedGuard m]
-                 -> [LGRHS GHC.Name (LHsExpr GHC.Name)]
+                 -> [LGRHS GhcRn (LHsExpr GhcRn)]
                  -> Term
                  -> m Term
 convertLGRHSList extraGuards lgrhs failure  = do
@@ -728,7 +733,7 @@ convertLGRHSList extraGuards lgrhs failure  = do
 
 convertGRHSs :: ConversionMonad m
              => [ConvertedGuard m]
-             -> GRHSs GHC.Name (LHsExpr GHC.Name)
+             -> GRHSs GhcRn (LHsExpr GhcRn)
              -> Term
              -> m Term
 convertGRHSs extraGuards GRHSs{..} failure =
@@ -742,7 +747,7 @@ data ConvertedGuard m = OtherwiseGuard
                       | LetGuard       (m Term -> m Term)
 
 convertGuard :: ConversionMonad m =>
-    [GuardLStmt GHC.Name] -> m [ConvertedGuard m]
+    [GuardLStmt GhcRn] -> m [ConvertedGuard m]
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
@@ -810,10 +815,9 @@ withCurrentDefinitionIfTopLevel :: ConversionMonad m => TopLevelFlag -> Qualid -
 withCurrentDefinitionIfTopLevel TopLevel name  = withCurrentDefinition name
 withCurrentDefinitionIfTopLevel NotTopLevel _  = id
 
-convertTypedBinding :: ConversionMonad m => TopLevelFlag -> Maybe Term -> HsBind GHC.Name -> m (Maybe ConvertedBinding)
+convertTypedBinding :: ConversionMonad m => TopLevelFlag -> Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
 convertTypedBinding _ _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
 convertTypedBinding _ _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
-convertTypedBinding _ _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
 convertTypedBinding _ _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
 convertTypedBinding _ _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
@@ -836,10 +840,8 @@ convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
     defn <-
       if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
       then case unLoc $ mg_alts fun_matches of
-             [L _ (GHC.Match _ [] mty grhss)] ->
-               maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss patternFailure
-             _ ->
-               convUnsupported "malformed multi-match variable definitions"
+             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+             _ -> convUnsupported "malformed multi-match variable definitions"
       else do
         whichFix <- use currentDefinition >>= \case
             Nothing -> pure $ Fix . FixOne
@@ -891,10 +893,10 @@ wfFix _ _ = error "wfFix: cannot handle annotations or types"
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad m
                            => TopLevelFlag
-                           -> [(Maybe ModuleName, HsBind GHC.Name)]
+                           -> [(Maybe ModuleName, HsBind GhcRn)]
                            -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
-                           -> Maybe (HsBind GHC.Name -> GhcException -> m a)
+                           -> Maybe (HsBind GhcRn -> GhcException -> m a)
                            -> m [a]
 convertTypedModuleBindings toplvl defns sigs build mhandler =
   fmap catMaybes . for defns $ \(mname, defn) ->
@@ -912,16 +914,16 @@ convertTypedModuleBindings toplvl defns sigs build mhandler =
 
 convertTypedBindings :: ConversionMonad m
                      => TopLevelFlag
-                     -> [HsBind GHC.Name] -> Map Qualid Signature
+                     -> [HsBind GhcRn] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
-                     -> Maybe (HsBind GHC.Name -> GhcException -> m a)
+                     -> Maybe (HsBind GhcRn -> GhcException -> m a)
                      -> m [a]
 convertTypedBindings toplvl =
   convertTypedModuleBindings toplvl . map (Nothing,)
 
 --------------------------------------------------------------------------------
 
-convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m Term
+convertLocalBinds :: ConversionMonad m => HsLocalBinds GhcRn -> m Term -> m Term
 convertLocalBinds (HsValBinds (ValBindsIn _ _)) _ =
   convUnsupported "Unexpected ValBindsIn in post-renamer AST"
 

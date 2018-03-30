@@ -30,7 +30,6 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 import GHC hiding (Name)
-import qualified GHC
 import BasicTypes (TopLevelFlag(..))
 import Bag
 import HsToCoq.Util.GHC.Exception
@@ -52,7 +51,7 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 --------------------------------------------------------------------------------
 
 -- Take the instance head and make it into a valid identifier.
-convertInstanceName :: ConversionMonad m => LHsType GHC.Name -> m Qualid
+convertInstanceName :: ConversionMonad m => LHsType GhcRn -> m Qualid
 convertInstanceName n = do
     coqType <- convertLType n
     qual <- maybe Bare (Qualified . moduleNameText) <$> use currentModule
@@ -111,7 +110,7 @@ convertInstanceName n = do
     merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
 
 -- Looks up what GHC knows about this class (given by an instance head)
-findHsClass :: ConversionMonad m => LHsSigType GHC.Name -> m Class
+findHsClass :: ConversionMonad m => LHsSigType GhcRn -> m Class
 findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
     Just className -> lookupTyThing (unLoc className) >>= \case
         Just (ATyCon tc) | Just cls <- tyConClass_maybe tc -> return cls
@@ -134,25 +133,26 @@ findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
       Class = "Eq"
 
 -}
-data InstanceInfo = InstanceInfo { instanceName  :: !Qualid
-                                 , instanceHead  :: !Term
-                                 , instanceClass :: !Qualid
-                                 , instanceHsClass :: Class}
+data InstanceInfo = InstanceInfo { instanceName       :: !Qualid
+                                 , instanceHead       :: !Term
+                                 , instanceClass      :: !Qualid
+                                 , instanceHasMethods :: Bool}
                   deriving (Eq, Ord)
 
-convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GHC.Name -> m InstanceInfo
+convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GhcRn -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLHsSigType cid_poly_ty
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads") pure $
                     termHead instanceHead
   instanceHsClass <- findHsClass cid_poly_ty
+  let instanceHasMethods = not (null (classMethods  instanceHsClass))
 
   pure InstanceInfo{..}
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecl :: ConversionMonad m => ClsInstDecl GHC.Name -> m [Sentence]
+convertClsInstDecl :: ConversionMonad m => ClsInstDecl GhcRn -> m [Sentence]
 convertClsInstDecl cid@ClsInstDecl{..} = do
   InstanceInfo{..} <- convertClsInstDeclInfo cid
 
@@ -188,7 +188,7 @@ decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty
 decomposeForall t = ([], t)
 
 axiomatizeClsInstDecl :: ConversionMonad m
-                      => ClsInstDecl GHC.Name        -- Haskell instance we are converting
+                      => ClsInstDecl GhcRn        -- Haskell instance we are converting
                       -> m (Maybe InstanceDefinition)
 axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
   instanceName <- convertInstanceName $ hsib_body cid_poly_ty
@@ -198,9 +198,9 @@ axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
       InstanceInfo{..} <- convertClsInstDeclInfo cid
       use (classDefns.at instanceClass) >>= \case
         Just _ -> pure . Just . InstanceDefinition instanceName [] instanceHead []
-             $ if null $ classMethods instanceHsClass
-               then Nothing
-               else Just $ ProofAdmitted ""
+             $ if instanceHasMethods
+               then Just $ ProofAdmitted ""
+               else Nothing
         Nothing ->
           -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
           pure Nothing
@@ -208,11 +208,11 @@ axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
 --------------------------------------------------------------------------------
 
 convertModuleClsInstDecls :: forall m. ConversionMonad m
-                          => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
+                          => [(Maybe ModuleName, ClsInstDecl GhcRn)] -> m [Sentence]
 convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ convertClsInstDecl
 
 axiomatizeModuleClsInstDecls :: forall m. ConversionMonad m
-                             => [(Maybe ModuleName, ClsInstDecl GHC.Name)] -> m [Sentence]
+                             => [(Maybe ModuleName, ClsInstDecl GhcRn)] -> m [Sentence]
 axiomatizeModuleClsInstDecls insts =
   (fmap InstanceSentence .  catMaybes) <$>
     mapM (maybeWithCurrentModule .*^ axiomatizeClsInstDecl) insts
@@ -413,5 +413,5 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecls :: ConversionMonad m => [ClsInstDecl GHC.Name] -> m [Sentence]
+convertClsInstDecls :: ConversionMonad m => [ClsInstDecl GhcRn] -> m [Sentence]
 convertClsInstDecls = convertModuleClsInstDecls . map (Nothing,)

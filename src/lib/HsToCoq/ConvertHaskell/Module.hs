@@ -16,7 +16,6 @@ import HsToCoq.Util.Function
 import Data.Traversable
 import Data.Foldable
 import Data.Maybe
-import Data.Monoid
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
@@ -34,7 +33,6 @@ import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
-import qualified GHC
 import HsToCoq.Util.GHC.Module
 import BasicTypes (TopLevelFlag(..))
 import Panic
@@ -63,7 +61,7 @@ data ConvertedModuleDeclarations =
                               }
   deriving (Eq, Ord, Show, Data)
 
-convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
+convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup mod HsGroup{..} = do
   convertedTyClDecls <- convertModuleTyClDecls
                      .  map ((Just mod,) . unLoc)
@@ -108,13 +106,14 @@ convertHsGroup mod HsGroup{..} = do
         -- TODO RENAMER use RecFlag info to do recursion stuff
         pure . foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ NoBinding <$> defnsMap
 
-  convertedClsInstDecls <- convertModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
+  convertedClsInstDecls <- convertModuleClsInstDecls
+    [(Just mod, cid) | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
 
   convertedAddedDecls <- use (edits.additions.at mod.non [])
 
   pure ConvertedModuleDeclarations{..}
 
-  where axiomatizeBinding :: ConversionMonad m => HsBind GHC.Name -> GhcException -> m (Qualid, [Sentence])
+  where axiomatizeBinding :: ConversionMonad m => HsBind GhcRn -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- var ExprNS (unLoc fun_id)
           pure (name, [translationFailedComment (qualidBase name) exn, axiom name])
@@ -132,7 +131,7 @@ convertHsGroup mod HsGroup{..} = do
                       CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
                 Nothing -> pure sentences
 
-axiomatizeHsGroup :: ConversionMonad m => ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations
+axiomatizeHsGroup :: ConversionMonad m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations
 axiomatizeHsGroup mod HsGroup{..} = do
   convertedTyClDecls <- convertModuleTyClDecls
                      .  map ((Just mod,) . unLoc)
@@ -153,7 +152,8 @@ axiomatizeHsGroup mod HsGroup{..} = do
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   
-  convertedClsInstDecls <- axiomatizeModuleClsInstDecls [(Just mod, cid) | L _ (ClsInstD cid) <- hs_instds]
+  convertedClsInstDecls <- axiomatizeModuleClsInstDecls
+            [(Just mod, cid) | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
 
   convertedAddedDecls <- use (edits.additions.at mod.non [])
 
@@ -191,7 +191,7 @@ convert_module_with_imports convModName (group, imports, _exports, _docstring) =
 
 -- Module-local
 convert_module_with_requires_via :: ConversionMonad m
-                                 => (ModuleName -> HsGroup GHC.Name -> m ConvertedModuleDeclarations)
+                                 => (ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
                                  -> ModuleName -> RenamedSource ->
                                  m (ConvertedModule, [ModuleName])
 convert_module_with_requires_via convGroup convModName (group, _imports, _exports, _docstring) =

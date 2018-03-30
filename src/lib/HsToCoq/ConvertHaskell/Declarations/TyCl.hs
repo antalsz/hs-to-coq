@@ -36,7 +36,6 @@ import qualified Data.Map.Strict as M
 import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
-import qualified GHC
 
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
@@ -78,7 +77,7 @@ failTyClDecl :: ConversionMonad m => Qualid -> GhcException -> m (Maybe Converte
 failTyClDecl name e = pure $ Just $
     ConvFailure name $ translationFailedComment (qualidBase name) e
 
-convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
+convertTyClDecl :: ConversionMonad m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
   let isCoind = use (edits.coinductiveTypes.contains coqName)
@@ -314,7 +313,7 @@ generateGroupRecordAccessors = fmap (fmap DefinitionSentence)
 --------------------------------------------------------------------------------
 
 groupTyClDecls :: ConversionMonad m
-               => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [DeclarationGroup]
+               => [(Maybe ModuleName, TyClDecl GhcRn)] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
@@ -328,7 +327,7 @@ groupTyClDecls decls = do
                   in vars <> setMapMaybe (M.lookup ?? ctypes) vars
 
 convertModuleTyClDecls :: ConversionMonad m
-                       => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [Sentence]
+                       => [(Maybe ModuleName, TyClDecl GhcRn)] -> m [Sentence]
 convertModuleTyClDecls =   forkM3 (either convUnsupported pure
                                     . foldTraverse convertDeclarationGroup)
                                   (foldTraverse generateGroupArgumentSpecifiers)

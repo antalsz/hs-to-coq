@@ -60,14 +60,14 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
 getImplicits _ = []
 
 convertClassDecl :: ConversionMonad m
-                 => LHsContext GHC.Name                   -- ^@tcdCtxt@    Context
+                 => LHsContext GhcRn                      -- ^@tcdCtxt@    Context
                  -> Located GHC.Name                      -- ^@tcdLName@   name of the class
-                 -> [LHsTyVarBndr GHC.Name]               -- ^@tcdTyVars@  class type variables
+                 -> [LHsTyVarBndr GhcRn]                  -- ^@tcdTyVars@  class type variables
                  -> [Located (FunDep (Located GHC.Name))] -- ^@tcdFDs@     functional dependencies
-                 -> [LSig GHC.Name]                       -- ^@tcdSigs@    method signatures
-                 -> LHsBinds GHC.Name                     -- ^@tcdMeths@   default methods
-                 -> [LFamilyDecl GHC.Name]                -- ^@tcdATs@     associated types
-                 -> [LTyFamDefltEqn GHC.Name]             -- ^@tcdATDefs@  associated types defaults
+                 -> [LSig GhcRn]                          -- ^@tcdSigs@    method signatures
+                 -> LHsBinds GhcRn                        -- ^@tcdMeths@   default methods
+                 -> [LFamilyDecl GhcRn]                   -- ^@tcdATs@     associated types
+                 -> [LTyFamDefltEqn GhcRn]                -- ^@tcdATDefs@  associated types defaults
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
   unless (null       fds)          $ convUnsupported "functional dependencies"

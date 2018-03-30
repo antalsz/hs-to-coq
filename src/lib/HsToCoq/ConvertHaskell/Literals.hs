@@ -25,7 +25,7 @@ convertFastString :: FastString -> Term
 convertFastString = HsString . fsToText
 
 convertFractional :: MonadIO f =>  FractionalLit -> f Term
-convertFractional (FL _ fl_v) = do
+convertFractional (FL _ _ fl_v) = do
    let fr = Var "fromRational"
    let qn = App2 (Var "Q.Qmake") (Num (fromInteger (numerator fl_v)))
                                  (Num (fromInteger (denominator fl_v)))

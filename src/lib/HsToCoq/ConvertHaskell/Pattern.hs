@@ -26,6 +26,7 @@ import qualified Data.Map.Strict as M
 
 import GHC hiding (Name, HsChar, HsString)
 import qualified GHC
+import BasicTypes (IntegralLit(..))
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
@@ -40,7 +41,7 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat GHC.Name -> m Pattern
+convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -128,19 +129,19 @@ convertPat (LitPat lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literal patterns"
     GHC.HsString _ fs      -> pure . StringPat $ fsToText fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literal patterns"
-    HsInt        _ int     -> convertIntegerPat "`Integer' literal patterns" int
+    HsInt        _ intl    -> convertIntegerPat "`Integer' literal patterns" (il_value intl)
     HsIntPrim    _ int     -> convertIntegerPat "`Integer' literal patterns" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literal patterns"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literal patterns"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literal patterns"
     HsInteger    _ int _ty -> convertIntegerPat "`Integer' literal patterns" int
-    HsRat        _ _       -> convUnsupported "`Rational' literal patterns"
-    HsFloatPrim  _         -> convUnsupported "`Float#' literal patterns"
-    HsDoublePrim _         -> convUnsupported "`Double#' literal patterns"
+    HsRat        _ _ _     -> convUnsupported "`Rational' literal patterns"
+    HsFloatPrim  _ _       -> convUnsupported "`Float#' literal patterns"
+    HsDoublePrim _ _       -> convUnsupported "`Double#' literal patterns"
 
 convertPat (NPat (L _ OverLit{..}) _negate _eq PlaceHolder) = -- And strings
   case ol_val of
-    HsIntegral   _src int -> convertIntegerPat "integer literal patterns" int
+    HsIntegral   intl     -> convertIntegerPat "integer literal patterns" (il_value intl)
     HsFractional _        -> convUnsupported "fractional literal patterns"
     HsIsString   _src str -> pure . StringPat $ fsToText str
 
@@ -156,9 +157,12 @@ convertPat (SigPatOut _ _) =
 convertPat (CoPat _ _ _) =
   convUnsupported "coercion patterns"
 
+convertPat SumPat{} =
+  convUnsupported "sum type patterns"
+
 --------------------------------------------------------------------------------
 
-convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat GHC.Name -> m Pattern
+convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
 convertLPat = convertPat . unLoc
 
 --------------------------------------------------------------------------------

@@ -10,7 +10,6 @@ import Data.Traversable
 import Data.List.NonEmpty (nonEmpty)
 
 import GHC hiding (Name)
-import qualified GHC as GHC
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
@@ -25,14 +24,14 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GHC.Name] -> m [Binder]
+convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GhcRn] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
   UserTyVar   tv   -> Inferred ex . Ident <$> var TypeNS (unLoc tv)
   KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
-convertType :: ConversionMonad m => HsType GHC.Name -> m Term
+convertType :: ConversionMonad m => HsType GhcRn -> m Term
 convertType (HsForAllTy tvs ty) = do
   explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
   tyBody      <- convertLType ty
@@ -43,7 +42,7 @@ convertType (HsQualTy (L _ ctx) ty) = do
   tyBody  <- convertLType ty
   pure . maybe tyBody (Forall ?? tyBody) $ nonEmpty classes
 
-convertType (HsTyVar (L _ tv)) =
+convertType (HsTyVar _ (L _ tv)) =
   Qualid <$> var TypeNS tv
 
 convertType (HsAppTy ty1 ty2) =
@@ -86,7 +85,7 @@ convertType (HsOpTy ty1 op ty2) =
 convertType (HsParTy ty) =
   Parens <$> convertLType ty
 
-convertType (HsIParamTy (HsIPName ip) lty) = do
+convertType (HsIParamTy (L _ (HsIPName ip)) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
     then pure $ "GHC.Stack.CallStack"
@@ -113,7 +112,7 @@ convertType (HsRecTy _fields) =
 convertType (HsCoreTy _) =
   convUnsupported "[internal] embedded core types"
 
-convertType (HsExplicitListTy PlaceHolder tys) =
+convertType (HsExplicitListTy _ _ tys) =
   foldr (App2 $ Var "cons") (Var "nil") <$> traverse convertLType tys
 
 convertType (HsExplicitTupleTy _PlaceHolders tys) =
@@ -130,19 +129,22 @@ convertType (HsTyLit lit) =
 convertType (HsWildCardTy _) =
   convUnsupported "wildcards"
 
+convertType (HsSumTy _) =
+  convUnsupported "sum types"
+
 --------------------------------------------------------------------------------
 
-convertLType :: ConversionMonad m => LHsType GHC.Name -> m Term
+convertLType :: ConversionMonad m => LHsType GhcRn -> m Term
 convertLType = convertType . unLoc
 
 --------------------------------------------------------------------------------
 
-convertLHsSigType :: ConversionMonad m => LHsSigType GHC.Name -> m Term
-convertLHsSigType (HsIB itvs lty) =
+convertLHsSigType :: ConversionMonad m => LHsSigType GhcRn -> m Term
+convertLHsSigType (HsIB itvs lty _) =
   maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
               <*> convertLType lty
 
-convertLHsSigWcType :: ConversionMonad m => LHsSigWcType GHC.Name -> m Term
-convertLHsSigWcType (HsIB itvs (HsWC wcs _ss lty))
-  | null wcs  = convertLHsSigType (HsIB itvs lty)
+convertLHsSigWcType :: ConversionMonad m => LHsSigWcType GhcRn -> m Term
+convertLHsSigWcType (HsWC wcs hsib)
+  | null wcs  = convertLHsSigType hsib
   | otherwise = convUnsupported "type wildcards"

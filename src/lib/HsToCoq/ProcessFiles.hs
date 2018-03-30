@@ -37,7 +37,7 @@ processFiles mode files = do
           pure . filterM $ fmap (`S.member` filePaths) . moduleFile
       traverse (addDerivedInstances <=< typecheckModule <=< parseModule)
         =<< skipModulesBy ms_mod_name
-        =<< filterModules
+        =<< filterModules . mgModSummaries
         =<< getModuleGraph
     Failed ->
       pure Nothing

@@ -23,7 +23,6 @@ import Prelude hiding (Num())
 
 import Data.Foldable
 import Data.Bifunctor (second)
-import Data.Monoid
 import HsToCoq.Util.Foldable
 import HsToCoq.Util.Functor
 import Control.Applicative

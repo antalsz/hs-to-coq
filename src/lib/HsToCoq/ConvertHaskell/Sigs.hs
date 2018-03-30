@@ -38,11 +38,11 @@ import HsToCoq.ConvertHaskell.Type
 
 -- From Haskell declaration
 data HsSignature = HsSignature { hsSigModule :: Maybe ModuleName
-                               , hsSigType   :: LHsSigType GHC.Name
+                               , hsSigType   :: LHsSigType GhcRn
                                , hsSigFixity :: Maybe Fixity }
 
 
-collectSigs :: [(Maybe ModuleName, Sig GHC.Name)] -> Either String (Map GHC.Name (Either (String, [ModuleName]) HsSignature))
+collectSigs :: [(Maybe ModuleName, Sig GhcRn)] -> Either String (Map GHC.Name (Either (String, [ModuleName]) HsSignature))
 collectSigs modSigs = do
   let asType   mname = (S.singleton mname, , []) . pure
       --asFixity mname = (S.singleton mname, [], ) . pure
@@ -51,18 +51,20 @@ collectSigs modSigs = do
       --asFixities mname lnames fixity = list . map (, asFixity mname fixity) . filter isRdrOperator $ map unLoc lnames
 
   multimap <-  fmap (M.fromListWith (<>)) . runListT $ list modSigs >>= \case
-    (mname, TypeSig lnames (HsIB itvs (HsWC wcs _ss lty)))
-      | null wcs  -> asTypes mname lnames $ HsIB itvs lty
+    (mname, TypeSig lnames (HsWC wcs hsib))
+      | null wcs  -> asTypes mname lnames hsib
       | otherwise -> throwError "type wildcards found"
     (mname, ClassOpSig False lnames sigTy) -> asTypes mname lnames sigTy
     --(mname, FixSig           (FixitySig lnames fixity))                                 -> asFixities mname lnames fixity
 
-    (_, ClassOpSig True _ _)  -> mempty -- Ignore default methods signatures
-    (_, FixSig _)          -> mempty
-    (_, InlineSig   _ _)   -> mempty
-    (_, SpecSig     _ _ _) -> mempty
-    (_, SpecInstSig _ _)   -> mempty
-    (_, MinimalSig  _ _)   -> mempty
+    (_, ClassOpSig True _ _) -> mempty -- Ignore default methods signatures
+    (_, FixSig _)            -> mempty
+    (_, InlineSig   _ _)     -> mempty
+    (_, SpecSig     _ _ _)   -> mempty
+    (_, SpecInstSig _ _)     -> mempty
+    (_, MinimalSig  _ _)     -> mempty
+    (_, SCCFunSig{})         -> mempty
+    (_, CompleteMatchSig{})  -> mempty
 
 --    (_, ClassOpSig True _ _) -> throwError "typeclass-based generic default method signatures"
     (_, PatSynSig  _ _)      -> throwError "pattern synonym signatures"
@@ -82,7 +84,7 @@ collectSigs modSigs = do
          (_,       _,     _)         -> multiplesError $ "multiple type and fixity signatures for the same identifier"
          )
 
-collectSigsWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map GHC.Name HsSignature)
+collectSigsWithErrors :: ConversionMonad m => [(Maybe ModuleName, Sig GhcRn)] -> m (Map GHC.Name HsSignature)
 collectSigsWithErrors =
   either convUnsupported (M.traverseWithKey multiplesError) . collectSigs
   where multiplesError name (Left (err, mnames)) = do
@@ -107,11 +109,11 @@ convertSignature rdrName (HsSignature hsMod sigTy _hsFix) = do
 convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
 convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> (var ExprNS r) <*> convertSignature r hs) . M.toList
 
-convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig GHC.Name)] -> m (Map Qualid Signature)
+convertModuleSigs :: ConversionMonad m => [(Maybe ModuleName, Sig GhcRn)] -> m (Map Qualid Signature)
 convertModuleSigs = convertSignatures <=< collectSigsWithErrors
 
-convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig GHC.Name)] -> m (Map Qualid Signature)
+convertModuleLSigs :: ConversionMonad m => [(Maybe ModuleName, LSig GhcRn)] -> m (Map Qualid Signature)
 convertModuleLSigs = convertModuleSigs . map (second unLoc)
 
-convertLSigs :: ConversionMonad m => [LSig GHC.Name] -> m (Map Qualid Signature)
+convertLSigs :: ConversionMonad m => [LSig GhcRn] -> m (Map Qualid Signature)
 convertLSigs = convertModuleLSigs . map (Nothing,)

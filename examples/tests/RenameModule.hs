@@ -1,5 +1,6 @@
 module RenameModule where
 
 import RenameMe
+import RenameMeToo
 
-y = if x then True else False
+z = if x then y else False

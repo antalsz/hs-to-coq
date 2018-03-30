@@ -17,7 +17,7 @@ import Data.Traversable
 import Data.Foldable
 import Data.Maybe
 import Data.Monoid
-import Data.List (nub)
+import Data.List (nub,groupBy)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import HsToCoq.Util.Containers
@@ -175,6 +175,12 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
+merge :: (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName])
+merge  (ConvertedModule m1 i1 t1 v1 c1 a1, x1) (ConvertedModule m2 i2 t2 v2 c2 a2, x2)
+  | m1 == m2 = (ConvertedModule m1 (i1 ++ i2) (t1 ++ t2) (v1 ++ v2) (c1 ++ c2) (a1 ++ a2), x1 ++ x2)
+merge _ _ = error "Can only merge with same name"
+                                                                                   
+
 -- Combine the import statements of several modules into one list of import statements
 -- At the same time, remove all self imports
 mergeImports :: [ModuleIdent] -> [[Sentence]] -> [Sentence]
@@ -271,7 +277,10 @@ convertModules sources = do
   let convThisMod (mod,src) = use (edits.axiomatizedModules.contains mod) >>= \case
                                 True  -> axiomatize_module_with_requires mod src
                                 False -> convert_module_with_requires    mod src
-  mods <- traverse convThisMod sources
+  mods' <- traverse convThisMod sources
+  -- merge modules with the same name here
+  let grouped = groupBy (\(m1,_) (m2,_) -> convModName m1 == convModName m2) mods'
+  let mods = map (foldl1 merge) grouped
   pure $
     stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 

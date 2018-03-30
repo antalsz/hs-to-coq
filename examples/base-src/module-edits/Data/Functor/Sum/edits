@@ -1,0 +1,11 @@
+add Data.Monoid Instance Unpeel_Sum a : Unpeel (Sum a) a :=
+	 Build_Unpeel _ _ getSum Mk_Sum.
+
+order Data.Monoid.Eq___Sum Data.Monoid.Ord__Sum
+
+order Unpeel_Sum Data.Monoid.Functor__Sum Data.Monoid.Applicative__Sum Data.Monoid.Monad__Sum
+
+skip Data.Monoid.Monoid__Sum
+
+skip Data.Monoid.Read__Sum
+skip Data.Monoid.Show__Sum

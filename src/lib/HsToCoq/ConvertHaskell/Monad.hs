@@ -169,6 +169,14 @@ builtInClasses =
                      App1 "f" ("a" `Arrow` "b") `Arrow`
                      App1 "f" "a" `Arrow`
                      App1 "f" "b")
+        , "GHC.Base.liftA2" =:
+            (Forall [ Inferred Implicit (Ident "a")
+                    , Inferred Implicit (Ident "b")
+                    , Inferred Implicit (Ident "c")] $
+                     ("a" `Arrow` "b" `Arrow` "c") `Arrow`
+                     App1 "f" "a" `Arrow`
+                     App1 "f" "b" `Arrow`
+                     App1 "f" "c")
         , "GHC.Base.pure"  =: (Forall [Inferred Implicit (Ident "a")]  $
                       "a" `Arrow` App1 "f" "a")
         {- skipped
@@ -344,6 +352,8 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
         [ "GHC.Base.op_ztzg__" ~> Fun ["x", "y"]
             (let const_id = App1 "GHC.Base.const" "GHC.Base.id" in
             App2 "GHC.Base.op_zlztzg__" (App2 "GHC.Base.fmap" const_id "x") "y")
+        , "GHC.Base.liftA2" ~> Fun ["f", "x"]
+            (App1 "GHC.Base.op_zlztzg__" (App2 "GHC.Base.fmap" "f" "x"))
         {-
         , "op_zlzt__" ~> Fun ["x", "y"]
             (let const    = "GHC.Base.const" in

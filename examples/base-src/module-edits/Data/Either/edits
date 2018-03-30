@@ -1,4 +1,4 @@
-order Data.Either.Functor__Either Data.Either.Applicative__Either_op_zlztzg__  Data.Either.Monad__Either_op_zgzg__ Data.Either.Monad__Either_return_
+order Data.Either.Functor__Either Data.Either.Applicative__Either_liftA2 Data.Either.Applicative__Either_op_zlztzg__  Data.Either.Monad__Either_op_zgzg__ Data.Either.Monad__Either_return_
 
 order   Data.Either.Eq___Either Data.Either.Ord__Either
 

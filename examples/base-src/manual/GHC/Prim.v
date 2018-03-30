@@ -1,6 +1,12 @@
+Require Import GHC.Types.
+
 Definition arrow  := (fun (x y :Type) => x -> y).
 
 Definition seq {A} {B} (a : A) (b:B) := b.
+
+(* Coq has no levity polymorphism, so map everything to Type *)
+Definition TYPE (_ : RuntimeRep) := Type.
+
 
 (* Unpeel class: A directed form of Coercible, where a is the newtype type,
    and b the base type *)

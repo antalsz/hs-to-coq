@@ -269,8 +269,11 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         decomposeClassTy ty = case ty of
            App1 (Qualid cn) a -> (cn, a)
            -- Code smell: non-normalized applications.
+
+           -- let’s not trip over type classes with a TypeRep parameter (Generic1)
            App1 (App1 (Qualid cn) (App1 "GHC.Prim.TYPE" _)) a -> (cn, a)
            App2 (Qualid cn) (App1 "GHC.Prim.TYPE" _) a -> (cn, a)
+           App1 (App1 (Qualid cn) "k") a -> (cn, a)
            _ -> error ("cannot deconstruct head of instance " ++ T.unpack (qualidBase instanceName) ++ ": " ++ show ty)
 
         (className, instTy) = decomposeClassTy ty
@@ -388,31 +391,39 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
         -- make the final instance declaration, using the current substitution as the instance
         mkID :: M.Map Qualid Qualid -> m [ Sentence ]
         mkID mems = do
-            -- Assemble members in the right order
-            classMethods <- getClassMethods
+            use (edits.redefinitions.at instanceName) >>= \case
+                Nothing -> do
+                    -- Assemble members in the right order
+                    classMethods <- getClassMethods
 
-            mems' <- forM classMethods $ \v -> do
-                case M.lookup v mems of
-                  Just v' -> do
-                      t <- quantify v (Qualid v')
-                      pure $ ((qualidMapBase (<> "__") v), t)
-                  Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
+                    mems' <- forM classMethods $ \v -> do
+                        case M.lookup v mems of
+                          Just v' -> do
+                              t <- quantify v (Qualid v')
+                              pure $ ((qualidMapBase (<> "__") v), t)
+                          Nothing -> convUnsupported ("missing " ++ show v ++ " in " ++ show mems )
 
-            -- When we can use record syntax, we can use this.
-            -- `Instance` plus record syntax does sometimes not work,
-            -- but `Program Instance` does.
-            let body = Record mems'
+                    -- When we can use record syntax, we can use this.
+                    -- `Instance` plus record syntax does sometimes not work,
+                    -- but `Program Instance` does.
+                    let body = Record mems'
 
-            -- This variant uses the explicit `Build` command, which does
-            -- works with `Instance`, but is ugly
-            let _body = appList (Qualid buildName) $ map PosArg $
-                    [ instTy ] ++ map snd mems'
+                    -- This variant uses the explicit `Build` command, which does
+                    -- works with `Instance`, but is ugly
+                    let _body = appList (Qualid buildName) $ map PosArg $
+                            [ instTy ] ++ map snd mems'
 
 
-            let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
-                               (App1 (Var "k") body)
+                    let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
+                                       (App1 (Var "k") body)
 
-            pure [ProgramSentence (InstanceSentence (InstanceTerm instanceName params ty instTerm mp)) Nothing]
+                    pure [ProgramSentence (InstanceSentence (InstanceTerm instanceName params ty instTerm mp)) Nothing]
+                Just (CoqInstanceDef x) -> pure [InstanceSentence x]
+                Just redef -> editFailure $ ("cannot redefine an Instance Definition to be " ++) $
+                        case redef of CoqDefinitionDef       _ -> "a Definition"
+                                      CoqFixpointDef         _ -> "a Fixpoint"
+                                      CoqInductiveDef        _ -> "an Inductive"
+                                      CoqInstanceDef         _ -> "an Instance Definition"
 
 --------------------------------------------------------------------------------
 

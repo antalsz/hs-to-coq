@@ -21,6 +21,7 @@ HANDMOD = \
   GHC/Enum \
   Data/Bits \
   GHC/Prim \
+  GHC/Types \
   GHC/Tuple \
   Data/Type/Equality \
   Data/Functor/Const \
@@ -51,12 +52,15 @@ MODULES = \
   Data/Foldable \
   Control/Arrow \
   Data/Functor/Identity \
+  Data/Functor/Sum \
+  Data/Functor/Product \
   Control/Applicative \
   Data/Functor/Classes \
   Control/Category \
   Data/Bifunctor \
   Data/List/NonEmpty \
-  Data/Semigroup
+  Data/Semigroup \
+  Data/Semigroup/Internal \
 
 
 # generated from drop-in/

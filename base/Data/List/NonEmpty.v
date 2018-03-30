@@ -103,49 +103,47 @@ Definition filter {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
   fun p => GHC.List.filter p GHC.Base.∘ toList.
 
 Definition head {a} : GHC.Base.NonEmpty a -> a :=
-  fun arg_0__ => let 'GHC.Base.op_ZCzb__ a _ := arg_0__ in a.
+  fun arg_0__ => let 'GHC.Base.NEcons a _ := arg_0__ in a.
 
 Definition isPrefixOf {a} `{GHC.Base.Eq_ a}
    : list a -> GHC.Base.NonEmpty a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | nil, _ => true
-    | cons y ys, GHC.Base.op_ZCzb__ x xs =>
+    | cons y ys, GHC.Base.NEcons x xs =>
         andb (y GHC.Base.== x) (Data.OldList.isPrefixOf ys xs)
     end.
 
 Definition length {a} : GHC.Base.NonEmpty a -> GHC.Num.Int :=
   fun arg_0__ =>
-    let 'GHC.Base.op_ZCzb__ _ xs := arg_0__ in
+    let 'GHC.Base.NEcons _ xs := arg_0__ in
     #1 GHC.Num.+ Data.Foldable.length xs.
 
 Definition map {a} {b}
    : (a -> b) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | f, GHC.Base.op_ZCzb__ a as_ => f a GHC.Base.:| GHC.Base.fmap f as_
+    | f, GHC.Base.NEcons a as_ => GHC.Base.NEcons (f a) (GHC.Base.fmap f as_)
     end.
 
 Definition nonEmpty {a} : list a -> option (GHC.Base.NonEmpty a) :=
   fun arg_0__ =>
     match arg_0__ with
     | nil => None
-    | cons a as_ => Some (a GHC.Base.:| as_)
+    | cons a as_ => Some (GHC.Base.NEcons a as_)
     end.
 
 Definition uncons {a}
    : GHC.Base.NonEmpty a -> (a * option (GHC.Base.NonEmpty a))%type :=
-  fun arg_0__ =>
-    let 'GHC.Base.op_ZCzb__ a as_ := arg_0__ in
-    pair a (nonEmpty as_).
+  fun arg_0__ => let 'GHC.Base.NEcons a as_ := arg_0__ in pair a (nonEmpty as_).
 
 Definition nubBy {a}
    : (a -> a -> bool) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | eq, GHC.Base.op_ZCzb__ a as_ =>
-        a GHC.Base.:|
-        Data.OldList.nubBy eq (GHC.List.filter (fun b => negb (eq a b)) as_)
+    | eq, GHC.Base.NEcons a as_ =>
+        GHC.Base.NEcons a (Data.OldList.nubBy eq (GHC.List.filter (fun b =>
+                                                                     negb (eq a b)) as_))
     end.
 
 Definition nub {a} `{GHC.Base.Eq_ a}
@@ -155,7 +153,7 @@ Definition nub {a} `{GHC.Base.Eq_ a}
 Definition op_zlzb__ {a} : a -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | a, GHC.Base.op_ZCzb__ b bs => a GHC.Base.:| cons b bs
+    | a, GHC.Base.NEcons b bs => GHC.Base.NEcons a (cons b bs)
     end.
 
 Notation "'_<|_'" := (op_zlzb__).
@@ -171,7 +169,7 @@ Definition partition {a}
 
 Definition some1 {f} {a} `{GHC.Base.Alternative f}
    : f a -> f (GHC.Base.NonEmpty a) :=
-  fun x => GHC.Base.liftA2 _GHC.Base.:|_ x (GHC.Base.many x).
+  fun x => GHC.Base.liftA2 GHC.Base.NEcons x (GHC.Base.many x).
 
 Definition sortWith {o} {a} `{GHC.Base.Ord o}
    : (a -> o) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
@@ -190,7 +188,7 @@ Definition splitAt {a}
   fun n => GHC.List.splitAt n GHC.Base.∘ toList.
 
 Definition tail {a} : GHC.Base.NonEmpty a -> list a :=
-  fun arg_0__ => let 'GHC.Base.op_ZCzb__ _ as_ := arg_0__ in as_.
+  fun arg_0__ => let 'GHC.Base.NEcons _ as_ := arg_0__ in as_.
 
 Definition take {a} : GHC.Num.Int -> GHC.Base.NonEmpty a -> list a :=
   fun n => GHC.List.take n GHC.Base.∘ toList.
@@ -205,7 +203,7 @@ Definition unzip {f} {a} {b} `{GHC.Base.Functor f}
 
 Definition xor : GHC.Base.NonEmpty bool -> bool :=
   fun arg_0__ =>
-    let 'GHC.Base.op_ZCzb__ x xs := arg_0__ in
+    let 'GHC.Base.NEcons x xs := arg_0__ in
     let xor' :=
       fun arg_1__ arg_2__ =>
         match arg_1__, arg_2__ with
@@ -219,8 +217,8 @@ Definition zip {a} {b}
      GHC.Base.NonEmpty b -> GHC.Base.NonEmpty (a * b)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | GHC.Base.op_ZCzb__ x xs, GHC.Base.op_ZCzb__ y ys =>
-        pair x y GHC.Base.:| GHC.List.zip xs ys
+    | GHC.Base.NEcons x xs, GHC.Base.NEcons y ys =>
+        GHC.Base.NEcons (pair x y) (GHC.List.zip xs ys)
     end.
 
 Definition zipWith {a} {b} {c}
@@ -228,8 +226,8 @@ Definition zipWith {a} {b} {c}
      GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b -> GHC.Base.NonEmpty c :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | f, GHC.Base.op_ZCzb__ x xs, GHC.Base.op_ZCzb__ y ys =>
-        f x y GHC.Base.:| GHC.List.zipWith f xs ys
+    | f, GHC.Base.NEcons x xs, GHC.Base.NEcons y ys =>
+        GHC.Base.NEcons (f x y) (GHC.List.zipWith f xs ys)
     end.
 
 Module Notations.
@@ -242,8 +240,8 @@ End Notations.
      true Data.Foldable.foldr Data.Foldable.length Data.Functor.op_zlzdzg__
      Data.OldList.isPrefixOf Data.OldList.nubBy Data.OldList.partition
      Data.Ord.comparing Data.Tuple.fst Data.Tuple.snd GHC.Base.Alternative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.NonEmpty GHC.Base.Ord GHC.Base.fmap
-     GHC.Base.liftA2 GHC.Base.many GHC.Base.op_ZCzb__ GHC.Base.op_z2218U__
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.Ord
+     GHC.Base.fmap GHC.Base.liftA2 GHC.Base.many GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.List.drop GHC.List.dropWhile GHC.List.filter
      GHC.List.span GHC.List.splitAt GHC.List.take GHC.List.takeWhile GHC.List.zip
      GHC.List.zipWith GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__

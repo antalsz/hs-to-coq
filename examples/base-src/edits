@@ -62,6 +62,8 @@ rename value GHC.List.foldl'     = GHC.Base.foldl'
 
 rename value GHC.Magic.oneShot   = GHC.Base.oneShot
 rewrite forall x, GHC.Magic.lazy x = x
+rewrite forall x y, GHC.Prim.seq x y = y
+rewrite forall x, GHC.Base.oneShot x = x
 
 rename type GHC.Types.Ordering = comparison
 rename value GHC.Types.EQ = Eq
@@ -104,8 +106,8 @@ rename value GHC.Err.errorWithoutStackTrace = GHC.Base.errorWithoutStackTrace
 skip method GHC.Base.Monad fail
 skip method GHC.Enum.Enum enumFromThen
 skip method GHC.Enum.Enum enumFromThenTo
-skip method Data.Semigroup.Semigroup stimes  
-skip method Data.Semigroup.Semigroup sconcat
+skip method GHC.Base.Semigroup stimes
+skip method GHC.Base.Semigroup sconcat
 
 # deprecated
 skip method Data.Bits.Bits bitSize
@@ -122,35 +124,37 @@ skip method Data.Foldable.Foldable minimum
 
 # We do not create notation for constructors yet
 # (but it would not be hard)
-rename value Data.List.NonEmpty.:| = Data.List.NonEmpty.NEcons
+rename value GHC.Base.:| = GHC.Base.NEcons
 
+# Avoid clashing with Coq’s <> notation
+rename value GHC.Base.<> = GHC.Base.<<>>
 
 # Punned constructors
-rename value Control.Arrow.ArrowMonad       = Control.Arrow.Mk_ArrowMonad
-rename value Control.Arrow.Kleisli          = Control.Arrow.Mk_Kleisli
-rename value Data.Foldable.Max              = Data.Foldable.Mk_Max
-rename value Data.Foldable.Min              = Data.Foldable.Mk_Min
-rename value Data.Functor.Const.Const       = Data.Functor.Const.Mk_Const
-rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity
-rename value Data.Monoid.All                = Data.Monoid.Mk_All
-rename value Data.Monoid.Alt                = Data.Monoid.Mk_Alt
-rename value Data.Monoid.Any                = Data.Monoid.Mk_Any
-rename value Data.Monoid.Dual               = Data.Monoid.Mk_Dual
-rename value Data.Monoid.Endo               = Data.Monoid.Mk_Endo
-rename value Data.Monoid.First              = Data.Monoid.Mk_First
-rename value Data.Monoid.Last               = Data.Monoid.Mk_Last
-rename value Data.Monoid.Product            = Data.Monoid.Mk_Product
-rename value Data.Monoid.Sum                = Data.Monoid.Mk_Sum
-rename value Data.OldList.SnocBuilder       = Data.OldList.Mk_SnocBuilder
-rename value Data.Ord.Down                  = Data.Ord.Mk_Down
-rename value Data.Proxy.KProxy              = Data.Proxy.Mk_KProxy
-rename value Data.Proxy.Proxy               = Data.Proxy.Mk_Proxy
-rename value Data.Semigroup.Arg             = Data.Semigroup.Mk_Arg
-rename value Data.Semigroup.First           = Data.Semigroup.Mk_First
-rename value Data.Semigroup.Last            = Data.Semigroup.Mk_Last
-rename value Data.Semigroup.Max             = Data.Semigroup.Mk_Max
-rename value Data.Semigroup.Min             = Data.Semigroup.Mk_Min
-rename value Data.Semigroup.Option          = Data.Semigroup.Mk_Option
-rename value Data.Traversable.Id            = Data.Traversable.Mk_Id
-rename value Data.Traversable.StateL        = Data.Traversable.Mk_StateL
-rename value Data.Traversable.StateR        = Data.Traversable.Mk_StateR
+rename value Control.Arrow.ArrowMonad        = Control.Arrow.Mk_ArrowMonad
+rename value Control.Arrow.Kleisli           = Control.Arrow.Mk_Kleisli
+rename value Data.Foldable.Max               = Data.Foldable.Mk_Max
+rename value Data.Foldable.Min               = Data.Foldable.Mk_Min
+rename value Data.Functor.Const.Const        = Data.Functor.Const.Mk_Const
+rename value Data.Functor.Identity.Identity  = Data.Functor.Identity.Mk_Identity
+rename value Data.Semigroup.Internal.All     = Data.Semigroup.Internal.Mk_All
+rename value Data.Semigroup.Internal.Alt     = Data.Semigroup.Internal.Mk_Alt
+rename value Data.Semigroup.Internal.Any     = Data.Semigroup.Internal.Mk_Any
+rename value Data.Semigroup.Internal.Dual    = Data.Semigroup.Internal.Mk_Dual
+rename value Data.Semigroup.Internal.Endo    = Data.Semigroup.Internal.Mk_Endo
+rename value Data.Semigroup.Internal.Product = Data.Semigroup.Internal.Mk_Product
+rename value Data.Semigroup.Internal.Sum     = Data.Semigroup.Internal.Mk_Sum
+rename value Data.Monoid.First               = Data.Monoid.Mk_First
+rename value Data.Monoid.Last                = Data.Monoid.Mk_Last
+rename value Data.OldList.SnocBuilder        = Data.OldList.Mk_SnocBuilder
+rename value Data.Ord.Down                   = Data.Ord.Mk_Down
+rename value Data.Proxy.KProxy               = Data.Proxy.Mk_KProxy
+rename value Data.Proxy.Proxy                = Data.Proxy.Mk_Proxy
+rename value Data.Semigroup.Arg              = Data.Semigroup.Mk_Arg
+rename value Data.Semigroup.First            = Data.Semigroup.Mk_First
+rename value Data.Semigroup.Last             = Data.Semigroup.Mk_Last
+rename value Data.Semigroup.Max              = Data.Semigroup.Mk_Max
+rename value Data.Semigroup.Min              = Data.Semigroup.Mk_Min
+rename value Data.Semigroup.Option           = Data.Semigroup.Mk_Option
+rename value Data.Traversable.Id             = Data.Traversable.Mk_Id
+rename value Data.Traversable.StateL         = Data.Traversable.Mk_StateL
+rename value Data.Traversable.StateR         = Data.Traversable.Mk_StateR

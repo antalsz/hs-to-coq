@@ -344,7 +344,7 @@ Local Definition Ord1__NonEmpty_liftCompare
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | cmp, GHC.Base.op_ZCzb__ a as_, GHC.Base.op_ZCzb__ b bs =>
+      | cmp, GHC.Base.NEcons a as_, GHC.Base.NEcons b bs =>
           GHC.Base.mappend (cmp a b) (liftCompare cmp as_ bs)
       end.
 
@@ -411,7 +411,7 @@ Local Definition Eq1__NonEmpty_liftEq
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, GHC.Base.op_ZCzb__ a as_, GHC.Base.op_ZCzb__ b bs =>
+      | eq, GHC.Base.NEcons a as_, GHC.Base.NEcons b bs =>
           andb (eq a b) (liftEq eq as_ bs)
       end.
 
@@ -535,14 +535,13 @@ Definition readUnaryWith {a} {t}
      liftReadListPrec2 liftReadPrec liftReadPrec2 list option pair true
      Data.Either.Either Data.Either.Left Data.Either.Right Data.Functor.Const.Const
      Data.Functor.Const.Mk_Const Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Proxy.Proxy GHC.Base.Eq_
+     Data.Functor.Identity.Mk_Identity Data.Proxy.Proxy GHC.Base.Eq_ GHC.Base.NEcons
      GHC.Base.NonEmpty GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
-     GHC.Base.mappend GHC.Base.op_ZCzb__ GHC.Base.op_zeze__ GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger
-     GHC.Read.Read GHC.Read.expectP GHC.Read.list GHC.Read.parens
-     GHC.Read.readListPrec GHC.Read.readPrec GHC.Tuple.pair_type
-     Text.ParserCombinators.ReadP.ReadS Text.ParserCombinators.ReadPrec.ReadPrec
-     Text.ParserCombinators.ReadPrec.prec
+     GHC.Base.mappend GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
+     GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger GHC.Read.Read GHC.Read.expectP
+     GHC.Read.list GHC.Read.parens GHC.Read.readListPrec GHC.Read.readPrec
+     GHC.Tuple.pair_type Text.ParserCombinators.ReadP.ReadS
+     Text.ParserCombinators.ReadPrec.ReadPrec Text.ParserCombinators.ReadPrec.prec
      Text.ParserCombinators.ReadPrec.readPrec_to_S
      Text.ParserCombinators.ReadPrec.readS_to_Prec
      Text.ParserCombinators.ReadPrec.step Text.Read.Lex.Ident

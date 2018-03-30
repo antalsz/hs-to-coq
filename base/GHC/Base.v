@@ -14,38 +14,27 @@ Require Coq.Program.Wf.
 
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
-Require Data.Semigroup.Internal.
 Require GHC.Prim.
-Require GHC.Real.
 Require GHC.Tuple.
 
 (* Converted type declarations: *)
 
-Inductive NonEmpty a : Type := op_ZCzb__ : a -> list a -> NonEmpty a.
-
 Record Semigroup__Dict a := Semigroup__Dict_Build {
-  op_zlzg____ : a -> a -> a ;
-  sconcat__ : NonEmpty a -> a ;
-  stimes__ : forall {b}, forall `{GHC.Real.Integral b}, b -> a -> a }.
+  op_zlzlzgzg____ : a -> a -> a }.
 
 Definition Semigroup a :=
   forall r, (Semigroup__Dict a -> r) -> r.
 
 Existing Class Semigroup.
 
-Definition op_zlzg__ `{g : Semigroup a} : a -> a -> a :=
-  g _ (op_zlzg____ a).
+Definition op_zlzlzgzg__ `{g : Semigroup a} : a -> a -> a :=
+  g _ (op_zlzlzgzg____ a).
 
-Definition sconcat `{g : Semigroup a} : NonEmpty a -> a :=
-  g _ (sconcat__ a).
+Notation "'_<<>>_'" := (op_zlzlzgzg__).
 
-Definition stimes `{g : Semigroup a}
-   : forall {b}, forall `{GHC.Real.Integral b}, b -> a -> a :=
-  g _ (stimes__ a).
+Infix "<<>>" := (_<<>>_) (at level 99).
 
-Notation "'_<>_'" := (op_zlzg__).
-
-Infix "<>" := (_<>_) (at level 70).
+Inductive NonEmpty a : Type := NEcons : a -> list a -> NonEmpty a.
 
 Record Monoid__Dict a := Monoid__Dict_Build {
   mappend__ : a -> a -> a ;
@@ -188,7 +177,7 @@ Definition mplus `{g : MonadPlus m} : forall {a}, m a -> m a -> m a :=
 Definition mzero `{g : MonadPlus m} : forall {a}, m a :=
   g _ (mzero__ m).
 
-Arguments op_ZCzb__ {_} _ _.
+Arguments NEcons {_} _ _.
 (* Midamble *)
 
 (* This includes everything that should be defined in GHC/Base.hs, but cannot
@@ -634,8 +623,7 @@ Local Definition Monad__option_op_zgzgze__
       | None, _ => None
       end.
 
-Local Definition Monad__NonEmpty_return_ : forall {a}, a -> NonEmpty a :=
-  fun {a} => pure.
+(* Skipping instance Monad__NonEmpty *)
 
 Local Definition Monad__list_op_zgzgze__
    : forall {a} {b}, list a -> (a -> list b) -> list b :=
@@ -648,10 +636,6 @@ Local Definition Monad__list_op_zgzgze__
 
 (* Skipping instance Monad__IO *)
 
-Local Definition Monoid__list_mappend {inst_a}
-   : list inst_a -> list inst_a -> list inst_a :=
-  _<>_.
-
 Local Definition Monoid__list_mconcat {inst_a}
    : list (list inst_a) -> list inst_a :=
   fun xss =>
@@ -661,22 +645,9 @@ Local Definition Monoid__list_mconcat {inst_a}
 Local Definition Monoid__list_mempty {inst_a} : list inst_a :=
   nil.
 
-Program Instance Monoid__list {a} : Monoid (list a) :=
-  fun _ k =>
-    k {| mappend__ := Monoid__list_mappend ;
-         mconcat__ := Monoid__list_mconcat ;
-         mempty__ := Monoid__list_mempty |}.
-
-Local Definition Monoid__arrow_mappend {inst_b} {inst_a} `{Monoid inst_b}
-   : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
-  _<>_.
-
 Local Definition Monoid__arrow_mempty {inst_b} {inst_a} `{Monoid inst_b}
    : (inst_a -> inst_b) :=
   fun arg_0__ => mempty.
-
-Local Definition Monoid__unit_mappend : unit -> unit -> unit :=
-  _<>_.
 
 Local Definition Monoid__unit_mconcat : list unit -> unit :=
   fun arg_0__ => tt.
@@ -684,63 +655,16 @@ Local Definition Monoid__unit_mconcat : list unit -> unit :=
 Local Definition Monoid__unit_mempty : unit :=
   tt.
 
-Program Instance Monoid__unit : Monoid unit :=
-  fun _ k =>
-    k {| mappend__ := Monoid__unit_mappend ;
-         mconcat__ := Monoid__unit_mconcat ;
-         mempty__ := Monoid__unit_mempty |}.
-
 (* Skipping instance Monoid__op_zt__ *)
 
-Local Definition Monoid__op_zt____op_zt___mappend {inst_a} {inst_b} {inst_c}
-  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c}
-   : (inst_a * inst_b * inst_c)%type ->
-     (inst_a * inst_b * inst_c)%type -> (inst_a * inst_b * inst_c)%type :=
-  _<>_.
+(* Skipping instance Monoid__op_zt____op_zt__ *)
 
-Local Definition Monoid__op_zt____op_zt___mempty {inst_a} {inst_b} {inst_c}
-  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c}
-   : (inst_a * inst_b * inst_c)%type :=
-  pair (pair mempty mempty) mempty.
+(* Skipping instance Monoid__op_zt____op_zt____op_zt____23 *)
 
-Local Definition Monoid__op_zt____op_zt____op_zt____23_mappend {inst_a} {inst_b}
-  {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} `{Monoid
-  inst_d}
-   : (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type :=
-  _<>_.
-
-Local Definition Monoid__op_zt____op_zt____op_zt____23_mempty {inst_a} {inst_b}
-  {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} `{Monoid
-  inst_d}
-   : (inst_a * inst_b * inst_c * inst_d)%type :=
-  pair (pair (pair mempty mempty) mempty) mempty.
-
-Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend {inst_a}
-  {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid inst_a} `{Monoid inst_b} `{Monoid
-  inst_c} `{Monoid inst_d} `{Monoid inst_e}
-   : (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
-  _<>_.
-
-Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty {inst_a}
-  {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid inst_a} `{Monoid inst_b} `{Monoid
-  inst_c} `{Monoid inst_d} `{Monoid inst_e}
-   : (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
-  pair (pair (pair (pair mempty mempty) mempty) mempty) mempty.
-
-Local Definition Monoid__comparison_mappend
-   : comparison -> comparison -> comparison :=
-  _<>_.
+(* Skipping instance Monoid__op_zt____op_zt____op_zt____op_zt____87 *)
 
 Local Definition Monoid__comparison_mempty : comparison :=
   Eq.
-
-Local Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
-   : (option inst_a) -> (option inst_a) -> (option inst_a) :=
-  _<>_.
 
 Local Definition Monoid__option_mempty {inst_a} `{Semigroup inst_a}
    : (option inst_a) :=
@@ -754,7 +678,7 @@ Local Definition Applicative__pair_type_liftA2 {inst_a} `{Monoid inst_a}
   fun {a} {b} {c} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | f, pair u x, pair v y => pair (u <> v) (f x y)
+      | f, pair u x, pair v y => pair (u <<>> v) (f x y)
       end.
 
 Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
@@ -764,7 +688,7 @@ Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | pair u f, pair v x => pair (u <> v) (f x)
+      | pair u f, pair v x => pair (u <<>> v) (f x)
       end.
 
 Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
@@ -773,291 +697,69 @@ Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
 
 (* Skipping instance Monoid__IO *)
 
-Local Definition Semigroup__list_op_zlzg__ {inst_a}
+Local Definition Semigroup__list_op_zlzlzgzg__ {inst_a}
    : list inst_a -> list inst_a -> list inst_a :=
   Coq.Init.Datatypes.app.
 
-Local Definition Semigroup__list_sconcat {inst_a}
-   : NonEmpty (list inst_a) -> list inst_a :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__list_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__list_stimes {inst_a}
-   : forall {b}, forall `{GHC.Real.Integral b}, b -> list inst_a -> list inst_a :=
-  fun {b} `{GHC.Real.Integral b} => Data.Semigroup.Internal.stimesList.
-
 Program Instance Semigroup__list {a} : Semigroup (list a) :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__list_op_zlzg__ ;
-         sconcat__ := Semigroup__list_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__list_stimes |}.
+  fun _ k => k {| op_zlzlzgzg____ := Semigroup__list_op_zlzlzgzg__ |}.
 
-Local Definition Semigroup__NonEmpty_op_zlzg__ {inst_a}
+Local Definition Monoid__list_mappend {inst_a}
+   : list inst_a -> list inst_a -> list inst_a :=
+  _<<>>_.
+
+Program Instance Monoid__list {a} : Monoid (list a) :=
+  fun _ k =>
+    k {| mappend__ := Monoid__list_mappend ;
+         mconcat__ := Monoid__list_mconcat ;
+         mempty__ := Monoid__list_mempty |}.
+
+Local Definition Semigroup__NonEmpty_op_zlzlzgzg__ {inst_a}
    : (NonEmpty inst_a) -> (NonEmpty inst_a) -> (NonEmpty inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | op_ZCzb__ a as_, op_ZCzb__ b bs =>
-        a :| (Coq.Init.Datatypes.app as_ (cons b bs))
+    | NEcons a as_, NEcons b bs => NEcons a (Coq.Init.Datatypes.app as_ (cons b bs))
     end.
-
-Local Definition Semigroup__NonEmpty_sconcat {inst_a}
-   : NonEmpty (NonEmpty inst_a) -> (NonEmpty inst_a) :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__NonEmpty_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__NonEmpty_stimes {inst_a}
-   : forall {b},
-     forall `{GHC.Real.Integral b}, b -> (NonEmpty inst_a) -> (NonEmpty inst_a) :=
-  fun {b} `{GHC.Real.Integral b} => Data.Semigroup.Internal.stimesDefault.
 
 Program Instance Semigroup__NonEmpty {a} : Semigroup (NonEmpty a) :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__NonEmpty_op_zlzg__ ;
-         sconcat__ := Semigroup__NonEmpty_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__NonEmpty_stimes |}.
+  fun _ k => k {| op_zlzlzgzg____ := Semigroup__NonEmpty_op_zlzlzgzg__ |}.
 
-Local Definition Semigroup__arrow_op_zlzg__ {inst_b} {inst_a} `{Semigroup
+Local Definition Semigroup__arrow_op_zlzlzgzg__ {inst_b} {inst_a} `{Semigroup
   inst_b}
    : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
-  fun f g => fun x => f x <> g x.
-
-Local Definition Semigroup__arrow_sconcat {inst_b} {inst_a} `{Semigroup inst_b}
-   : NonEmpty (inst_a -> inst_b) -> (inst_a -> inst_b) :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__arrow_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__arrow_stimes {inst_b} {inst_a} `{Semigroup inst_b}
-   : forall {b},
-     forall `{GHC.Real.Integral b}, b -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
-  fun {b} `{GHC.Real.Integral b} => fun n f e => stimes n (f e).
+  fun f g => fun x => f x <<>> g x.
 
 Program Instance Semigroup__arrow {b} {a} `{Semigroup b} : Semigroup (a -> b) :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__arrow_op_zlzg__ ;
-         sconcat__ := Semigroup__arrow_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__arrow_stimes |}.
+  fun _ k => k {| op_zlzlzgzg____ := Semigroup__arrow_op_zlzlzgzg__ |}.
 
-Local Definition Semigroup__unit_op_zlzg__ : unit -> unit -> unit :=
+Local Definition Monoid__arrow_mappend {inst_b} {inst_a} `{Monoid inst_b}
+   : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
+  _<<>>_.
+
+Local Definition Semigroup__unit_op_zlzlzgzg__ : unit -> unit -> unit :=
   fun arg_0__ arg_1__ => tt.
 
-Local Definition Semigroup__unit_sconcat : NonEmpty unit -> unit :=
-  fun arg_0__ => tt.
-
-Local Definition Semigroup__unit_stimes
-   : forall {b}, forall `{GHC.Real.Integral b}, b -> unit -> unit :=
-  fun {b} `{GHC.Real.Integral b} => fun arg_0__ arg_1__ => tt.
-
 Program Instance Semigroup__unit : Semigroup unit :=
+  fun _ k => k {| op_zlzlzgzg____ := Semigroup__unit_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__unit_mappend : unit -> unit -> unit :=
+  _<<>>_.
+
+Program Instance Monoid__unit : Monoid unit :=
   fun _ k =>
-    k {| op_zlzg____ := Semigroup__unit_op_zlzg__ ;
-         sconcat__ := Semigroup__unit_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__unit_stimes |}.
+    k {| mappend__ := Monoid__unit_mappend ;
+         mconcat__ := Monoid__unit_mconcat ;
+         mempty__ := Monoid__unit_mempty |}.
 
-Local Definition Semigroup__op_zt___op_zlzg__ {inst_a} {inst_b} `{Semigroup
-  inst_a} `{Semigroup inst_b}
-   : (inst_a * inst_b)%type -> (inst_a * inst_b)%type -> (inst_a * inst_b)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair a b, pair a' b' => pair (a <> a') (b <> b')
-    end.
+(* Skipping instance Semigroup__op_zt__ *)
 
-Local Definition Semigroup__op_zt___sconcat {inst_a} {inst_b} `{Semigroup
-  inst_a} `{Semigroup inst_b}
-   : NonEmpty (inst_a * inst_b)%type -> (inst_a * inst_b)%type :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__op_zt___op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
+(* Skipping instance Semigroup__op_zt____op_zt__ *)
 
-Local Definition Semigroup__op_zt___stimes {inst_a} {inst_b} `{Semigroup inst_a}
-  `{Semigroup inst_b}
-   : forall {b},
-     forall `{GHC.Real.Integral b},
-     b -> (inst_a * inst_b)%type -> (inst_a * inst_b)%type :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | n, pair a b => pair (stimes n a) (stimes n b)
-      end.
+(* Skipping instance Semigroup__op_zt____op_zt____op_zt____23 *)
 
-Program Instance Semigroup__op_zt__ {a} {b} `{Semigroup a} `{Semigroup b}
-   : Semigroup (a * b)%type :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__op_zt___op_zlzg__ ;
-         sconcat__ := Semigroup__op_zt___sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__op_zt___stimes |}.
+(* Skipping instance Semigroup__op_zt____op_zt____op_zt____op_zt____87 *)
 
-Local Definition Semigroup__op_zt____op_zt___op_zlzg__ {inst_a} {inst_b}
-  {inst_c} `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup inst_c}
-   : (inst_a * inst_b * inst_c)%type ->
-     (inst_a * inst_b * inst_c)%type -> (inst_a * inst_b * inst_c)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair (pair a b) c, pair (pair a' b') c' =>
-        pair (pair (a <> a') (b <> b')) (c <> c')
-    end.
-
-Local Definition Semigroup__op_zt____op_zt___sconcat {inst_a} {inst_b} {inst_c}
-  `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup inst_c}
-   : NonEmpty (inst_a * inst_b * inst_c)%type ->
-     (inst_a * inst_b * inst_c)%type :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__op_zt____op_zt___op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__op_zt____op_zt___stimes {inst_a} {inst_b} {inst_c}
-  `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup inst_c}
-   : forall {b},
-     forall `{GHC.Real.Integral b},
-     b -> (inst_a * inst_b * inst_c)%type -> (inst_a * inst_b * inst_c)%type :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | n, pair (pair a b) c => pair (pair (stimes n a) (stimes n b)) (stimes n c)
-      end.
-
-Program Instance Semigroup__op_zt____op_zt__ {a} {b} {c} `{Semigroup a}
-  `{Semigroup b} `{Semigroup c}
-   : Semigroup (a * b * c)%type :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__op_zt____op_zt___op_zlzg__ ;
-         sconcat__ := Semigroup__op_zt____op_zt___sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} =>
-           Semigroup__op_zt____op_zt___stimes |}.
-
-Local Definition Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ {inst_a}
-  {inst_b} {inst_c} {inst_d} `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup
-  inst_c} `{Semigroup inst_d}
-   : (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair (pair (pair a b) c) d, pair (pair (pair a' b') c') d' =>
-        pair (pair (pair (a <> a') (b <> b')) (c <> c')) (d <> d')
-    end.
-
-Local Definition Semigroup__op_zt____op_zt____op_zt____23_sconcat {inst_a}
-  {inst_b} {inst_c} {inst_d} `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup
-  inst_c} `{Semigroup inst_d}
-   : NonEmpty (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__op_zt____op_zt____op_zt____23_stimes {inst_a}
-  {inst_b} {inst_c} {inst_d} `{Semigroup inst_a} `{Semigroup inst_b} `{Semigroup
-  inst_c} `{Semigroup inst_d}
-   : forall {b},
-     forall `{GHC.Real.Integral b},
-     b ->
-     (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | n, pair (pair (pair a b) c) d =>
-          pair (pair (pair (stimes n a) (stimes n b)) (stimes n c)) (stimes n d)
-      end.
-
-Program Instance Semigroup__op_zt____op_zt____op_zt____23 {a} {b} {c} {d}
-  `{Semigroup a} `{Semigroup b} `{Semigroup c} `{Semigroup d}
-   : Semigroup (a * b * c * d)%type :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__op_zt____op_zt____op_zt____23_op_zlzg__ ;
-         sconcat__ := Semigroup__op_zt____op_zt____op_zt____23_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} =>
-           Semigroup__op_zt____op_zt____op_zt____23_stimes |}.
-
-Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ {inst_a}
-  {inst_b} {inst_c} {inst_d} {inst_e} `{Semigroup inst_a} `{Semigroup inst_b}
-  `{Semigroup inst_c} `{Semigroup inst_d} `{Semigroup inst_e}
-   : (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair (pair (pair (pair a b) c) d) e
-    , pair (pair (pair (pair a' b') c') d') e' =>
-        pair (pair (pair (pair (a <> a') (b <> b')) (c <> c')) (d <> d')) (e <> e')
-    end.
-
-Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_sconcat {inst_a}
-  {inst_b} {inst_c} {inst_d} {inst_e} `{Semigroup inst_a} `{Semigroup inst_b}
-  `{Semigroup inst_c} `{Semigroup inst_d} `{Semigroup inst_e}
-   : NonEmpty (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs =>
-                     Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__op_zt____op_zt____op_zt____op_zt____87_stimes {inst_a}
-  {inst_b} {inst_c} {inst_d} {inst_e} `{Semigroup inst_a} `{Semigroup inst_b}
-  `{Semigroup inst_c} `{Semigroup inst_d} `{Semigroup inst_e}
-   : forall {b},
-     forall `{GHC.Real.Integral b},
-     b ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
-  fun {b} `{GHC.Real.Integral b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | n, pair (pair (pair (pair a b) c) d) e =>
-          pair (pair (pair (pair (stimes n a) (stimes n b)) (stimes n c)) (stimes n d))
-               (stimes n e)
-      end.
-
-Program Instance Semigroup__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c}
-  {d} {e} `{Semigroup a} `{Semigroup b} `{Semigroup c} `{Semigroup d} `{Semigroup
-  e}
-   : Semigroup (a * b * c * d * e)%type :=
-  fun _ k =>
-    k
-    {| op_zlzg____ := Semigroup__op_zt____op_zt____op_zt____op_zt____87_op_zlzg__ ;
-       sconcat__ := Semigroup__op_zt____op_zt____op_zt____op_zt____87_sconcat ;
-       stimes__ := fun {b} `{GHC.Real.Integral b} =>
-         Semigroup__op_zt____op_zt____op_zt____op_zt____87_stimes |}.
-
-Local Definition Semigroup__comparison_op_zlzg__
+Local Definition Semigroup__comparison_op_zlzlzgzg__
    : comparison -> comparison -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -1066,110 +768,32 @@ Local Definition Semigroup__comparison_op_zlzg__
     | Gt, _ => Gt
     end.
 
-Local Definition Semigroup__comparison_sconcat
-   : NonEmpty comparison -> comparison :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__comparison_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__comparison_stimes
-   : forall {b}, forall `{GHC.Real.Integral b}, b -> comparison -> comparison :=
-  fun {b} `{GHC.Real.Integral b} =>
-    Data.Semigroup.Internal.stimesIdempotentMonoid.
-
 Program Instance Semigroup__comparison : Semigroup comparison :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__comparison_op_zlzg__ ;
-         sconcat__ := Semigroup__comparison_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__comparison_stimes |}.
+  fun _ k => k {| op_zlzlzgzg____ := Semigroup__comparison_op_zlzlzgzg__ |}.
 
-Local Definition Semigroup__option_op_zlzg__ {inst_a} `{Semigroup inst_a}
+Local Definition Monoid__comparison_mappend
+   : comparison -> comparison -> comparison :=
+  _<<>>_.
+
+Local Definition Semigroup__option_op_zlzlzgzg__ {inst_a} `{Semigroup inst_a}
    : (option inst_a) -> (option inst_a) -> (option inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | None, b => b
     | a, None => a
-    | Some a, Some b => Some (a <> b)
+    | Some a, Some b => Some (a <<>> b)
     end.
 
-Local Definition Semigroup__option_sconcat {inst_a} `{Semigroup inst_a}
-   : NonEmpty (option inst_a) -> (option inst_a) :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__option_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
-
-Local Definition Semigroup__option_stimes {inst_a} `{Semigroup inst_a}
-   : forall {b},
-     forall `{GHC.Real.Integral b}, b -> (option inst_a) -> (option inst_a) :=
-  fun {b} `{GHC.Real.Integral b} => Data.Semigroup.Internal.stimesMaybe.
-
 Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__option_op_zlzg__ ;
-         sconcat__ := Semigroup__option_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__option_stimes |}.
+  fun _ k => k {| op_zlzlzgzg____ := Semigroup__option_op_zlzlzgzg__ |}.
 
-Local Definition Semigroup__IO_op_zlzg__ {inst_a} `{Semigroup inst_a}
-   : (GHC.Types.IO inst_a) -> (GHC.Types.IO inst_a) -> (GHC.Types.IO inst_a) :=
-  liftA2 _<>_.
+Local Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
+   : (option inst_a) -> (option inst_a) -> (option inst_a) :=
+  _<<>>_.
 
-Local Definition Semigroup__IO_sconcat {inst_a} `{Semigroup inst_a}
-   : NonEmpty (GHC.Types.IO inst_a) -> (GHC.Types.IO inst_a) :=
-  fun arg_0__ =>
-    let 'op_ZCzb__ a as_ := arg_0__ in
-    let fix go arg_1__ arg_2__
-              := match arg_1__, arg_2__ with
-                 | b, cons c cs => Semigroup__IO_op_zlzg__ b (go c cs)
-                 | b, nil => b
-                 end in
-    go a as_.
+(* Skipping instance Semigroup__IO *)
 
-Local Definition Semigroup__IO_stimes {inst_a} `{Semigroup inst_a}
-   : forall {b},
-     forall `{GHC.Real.Integral b},
-     b -> (GHC.Types.IO inst_a) -> (GHC.Types.IO inst_a) :=
-  fun {b} `{GHC.Real.Integral b} => Data.Semigroup.Internal.stimesDefault.
-
-Program Instance Semigroup__IO {a} `{Semigroup a}
-   : Semigroup (GHC.Types.IO a) :=
-  fun _ k =>
-    k {| op_zlzg____ := Semigroup__IO_op_zlzg__ ;
-         sconcat__ := Semigroup__IO_sconcat ;
-         stimes__ := fun {b} `{GHC.Real.Integral b} => Semigroup__IO_stimes |}.
-
-Local Definition Functor__NonEmpty_fmap
-   : forall {a} {b}, (a -> b) -> NonEmpty a -> NonEmpty b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, op_ZCzb__ a as_ => f a :| fmap f as_
-      end.
-
-Local Definition Functor__NonEmpty_op_zlzd__
-   : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | b, op_ZCzb__ _ as_ => b :| (b <$ as_)
-      end.
-
-Program Instance Functor__NonEmpty : Functor NonEmpty :=
-  fun _ k =>
-    k {| fmap__ := fun {a} {b} => Functor__NonEmpty_fmap ;
-         op_zlzd____ := fun {a} {b} => Functor__NonEmpty_op_zlzd__ |}.
-
-Local Definition Applicative__NonEmpty_pure : forall {a}, a -> NonEmpty a :=
-  fun {a} => fun a => a :| nil.
+(* Skipping instance Applicative__NonEmpty *)
 
 (* Skipping instance Alternative__option *)
 
@@ -1255,63 +879,13 @@ Local Definition Functor__option_fmap
       | f, Some a => Some (f a)
       end.
 
-Local Definition Ord__NonEmpty_compare {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> comparison :=
-  fun a b =>
-    let 'op_ZCzb__ a1 a2 := a in
-    let 'op_ZCzb__ b1 b2 := b in
-    match (compare a1 b1) with
-    | Lt => Lt
-    | Eq => (compare a2 b2)
-    | Gt => Gt
-    end.
-
-Local Definition Ord__NonEmpty_op_zl__ {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun a b =>
-    let 'op_ZCzb__ a1 a2 := a in
-    let 'op_ZCzb__ b1 b2 := b in
-    match (Ord__NonEmpty_compare a1 b1) with
-    | Lt => true
-    | Eq => (a2 < b2)
-    | Gt => false
-    end.
-
-Local Definition Ord__NonEmpty_op_zg__ {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun a b => Ord__NonEmpty_op_zl__ b a.
-
-Local Definition Ord__NonEmpty_op_zgze__ {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun a b => negb (Ord__NonEmpty_op_zl__ a b).
-
-Local Definition Ord__NonEmpty_op_zlze__ {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
-  fun a b => negb (Ord__NonEmpty_op_zl__ b a).
-
-Local Definition Ord__NonEmpty_max {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> NonEmpty inst_a :=
-  fun x y => if Ord__NonEmpty_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__NonEmpty_min {inst_a} `{Ord inst_a}
-   : NonEmpty inst_a -> NonEmpty inst_a -> NonEmpty inst_a :=
-  fun x y => if Ord__NonEmpty_op_zlze__ x y : bool then x else y.
-
-Program Instance Ord__NonEmpty {a} `{Ord a} : Ord (NonEmpty a) :=
-  fun _ k =>
-    k {| op_zl____ := Ord__NonEmpty_op_zl__ ;
-         op_zlze____ := Ord__NonEmpty_op_zlze__ ;
-         op_zg____ := Ord__NonEmpty_op_zg__ ;
-         op_zgze____ := Ord__NonEmpty_op_zgze__ ;
-         compare__ := Ord__NonEmpty_compare ;
-         max__ := Ord__NonEmpty_max ;
-         min__ := Ord__NonEmpty_min |}.
+(* Skipping instance Ord__NonEmpty *)
 
 Local Definition Eq___NonEmpty_op_zeze__ {inst_a} `{Eq_ inst_a}
    : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | op_ZCzb__ a1 a2, op_ZCzb__ b1 b2 => (andb ((a1 == b1)) ((a2 == b2)))
+    | NEcons a1 a2, NEcons b1 b2 => (andb ((a1 == b1)) ((a2 == b2)))
     end.
 
 Local Definition Eq___NonEmpty_op_zsze__ {inst_a} `{Eq_ inst_a}
@@ -1390,10 +964,6 @@ Program Instance Ord__option {a} `{Ord a} : Ord (option a) :=
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (x1 x2))).
 
-Local Definition Applicative__NonEmpty_op_zlztzg__
-   : forall {a} {b}, NonEmpty (a -> b) -> NonEmpty a -> NonEmpty b :=
-  fun {a} {b} => ap.
-
 Definition assert {a} : bool -> a -> a :=
   fun _pred r => r.
 
@@ -1457,51 +1027,6 @@ Program Instance Monoid__comparison : Monoid comparison :=
          mconcat__ := Monoid__comparison_mconcat ;
          mempty__ := Monoid__comparison_mempty |}.
 
-Local Definition Monoid__op_zt____op_zt____op_zt____op_zt____87_mconcat {inst_a}
-  {inst_b} {inst_c} {inst_d} {inst_e} `{Monoid inst_a} `{Monoid inst_b} `{Monoid
-  inst_c} `{Monoid inst_d} `{Monoid inst_e}
-   : list (inst_a * inst_b * inst_c * inst_d * inst_e)%type ->
-     (inst_a * inst_b * inst_c * inst_d * inst_e)%type :=
-  foldr Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend
-  Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty.
-
-Program Instance Monoid__op_zt____op_zt____op_zt____op_zt____87 {a} {b} {c} {d}
-  {e} `{Monoid a} `{Monoid b} `{Monoid c} `{Monoid d} `{Monoid e}
-   : Monoid (a * b * c * d * e)%type :=
-  fun _ k =>
-    k {| mappend__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mappend ;
-         mconcat__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mconcat ;
-         mempty__ := Monoid__op_zt____op_zt____op_zt____op_zt____87_mempty |}.
-
-Local Definition Monoid__op_zt____op_zt____op_zt____23_mconcat {inst_a} {inst_b}
-  {inst_c} {inst_d} `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c} `{Monoid
-  inst_d}
-   : list (inst_a * inst_b * inst_c * inst_d)%type ->
-     (inst_a * inst_b * inst_c * inst_d)%type :=
-  foldr Monoid__op_zt____op_zt____op_zt____23_mappend
-  Monoid__op_zt____op_zt____op_zt____23_mempty.
-
-Program Instance Monoid__op_zt____op_zt____op_zt____23 {a} {b} {c} {d} `{Monoid
-  a} `{Monoid b} `{Monoid c} `{Monoid d}
-   : Monoid (a * b * c * d)%type :=
-  fun _ k =>
-    k {| mappend__ := Monoid__op_zt____op_zt____op_zt____23_mappend ;
-         mconcat__ := Monoid__op_zt____op_zt____op_zt____23_mconcat ;
-         mempty__ := Monoid__op_zt____op_zt____op_zt____23_mempty |}.
-
-Local Definition Monoid__op_zt____op_zt___mconcat {inst_a} {inst_b} {inst_c}
-  `{Monoid inst_a} `{Monoid inst_b} `{Monoid inst_c}
-   : list (inst_a * inst_b * inst_c)%type -> (inst_a * inst_b * inst_c)%type :=
-  foldr Monoid__op_zt____op_zt___mappend Monoid__op_zt____op_zt___mempty.
-
-Program Instance Monoid__op_zt____op_zt__ {a} {b} {c} `{Monoid a} `{Monoid b}
-  `{Monoid c}
-   : Monoid (a * b * c)%type :=
-  fun _ k =>
-    k {| mappend__ := Monoid__op_zt____op_zt___mappend ;
-         mconcat__ := Monoid__op_zt____op_zt___mconcat ;
-         mempty__ := Monoid__op_zt____op_zt___mempty |}.
-
 Local Definition Monoid__arrow_mconcat {inst_b} {inst_a} `{Monoid inst_b}
    : list (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   foldr Monoid__arrow_mappend Monoid__arrow_mempty.
@@ -1521,10 +1046,6 @@ Definition join {m} {a} `{(Monad m)} : m (m a) -> m a :=
 Definition sequence {m} {a} `{Monad m} : list (m a) -> m (list a) :=
   mapM id.
 
-Local Definition Applicative__NonEmpty_op_ztzg__
-   : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
-  fun {a} {b} => fun a1 a2 => Applicative__NonEmpty_op_zlztzg__ (id <$ a1) a2.
-
 Definition liftA {f} {a} {b} `{Applicative f} : (a -> b) -> f a -> f b :=
   fun f a => pure f <*> a.
 
@@ -1538,18 +1059,6 @@ Definition liftM {m} {a1} {r} `{(Monad m)} : (a1 -> r) -> m a1 -> m r :=
 Definition liftM2 {m} {a1} {a2} {r} `{(Monad m)}
    : (a1 -> a2 -> r) -> m a1 -> m a2 -> m r :=
   fun f m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (f x1 x2))).
-
-Local Definition Applicative__NonEmpty_liftA2
-   : forall {a} {b} {c},
-     (a -> b -> c) -> NonEmpty a -> NonEmpty b -> NonEmpty c :=
-  fun {a} {b} {c} => liftM2.
-
-Program Instance Applicative__NonEmpty : Applicative NonEmpty :=
-  fun _ k =>
-    k {| liftA2__ := fun {a} {b} {c} => Applicative__NonEmpty_liftA2 ;
-         op_zlztzg____ := fun {a} {b} => Applicative__NonEmpty_op_zlztzg__ ;
-         op_ztzg____ := fun {a} {b} => Applicative__NonEmpty_op_ztzg__ ;
-         pure__ := fun {a} => Applicative__NonEmpty_pure |}.
 
 Definition liftM3 {m} {a1} {a2} {a3} {r} `{(Monad m)}
    : (a1 -> a2 -> a3 -> r) -> m a1 -> m a2 -> m a3 -> m r :=
@@ -1621,6 +1130,27 @@ Program Instance Monad__list : Monad list :=
     k {| op_zgzg____ := fun {a} {b} => Monad__list_op_zgzg__ ;
          op_zgzgze____ := fun {a} {b} => Monad__list_op_zgzgze__ ;
          return___ := fun {a} => Monad__list_return_ |}.
+
+Local Definition Functor__NonEmpty_op_zlzd__
+   : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | b, NEcons _ as_ => NEcons b (b <$ as_)
+      end.
+
+Local Definition Functor__NonEmpty_fmap
+   : forall {a} {b}, (a -> b) -> NonEmpty a -> NonEmpty b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, NEcons a as_ => NEcons (f a) (fmap f as_)
+      end.
+
+Program Instance Functor__NonEmpty : Functor NonEmpty :=
+  fun _ k =>
+    k {| fmap__ := fun {a} {b} => Functor__NonEmpty_fmap ;
+         op_zlzd____ := fun {a} {b} => Functor__NonEmpty_op_zlzd__ |}.
 
 Local Definition Functor__option_op_zlzd__
    : forall {a} {b}, a -> option b -> option a :=
@@ -1695,7 +1225,7 @@ Local Definition Monad__pair_type_op_zgzgze__ {inst_a} `{Monoid inst_a}
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | pair u a, k => let 'pair v b := k a in pair (u <> v) b
+      | pair u a, k => let 'pair v b := k a in pair (u <<>> v) b
       end.
 
 Local Definition Monad__pair_type_op_zgzg__ {inst_a} `{Monoid inst_a}
@@ -1749,28 +1279,6 @@ Program Instance Monad__arrow {r} : Monad (GHC.Prim.arrow r) :=
          op_zgzgze____ := fun {a} {b} => Monad__arrow_op_zgzgze__ ;
          return___ := fun {a} => Monad__arrow_return_ |}.
 
-Local Definition Monad__NonEmpty_op_zgzgze__
-   : forall {a} {b}, NonEmpty a -> (a -> NonEmpty b) -> NonEmpty b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | op_ZCzb__ a as_, f =>
-          let toList := fun arg_2__ => let 'op_ZCzb__ c cs := arg_2__ in cons c cs in
-          let bs' := as_ >>= (toList ∘ f) in
-          let 'op_ZCzb__ b bs := f a in
-          b :| (Coq.Init.Datatypes.app bs bs')
-      end.
-
-Local Definition Monad__NonEmpty_op_zgzg__
-   : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
-  fun {a} {b} => fun m k => Monad__NonEmpty_op_zgzgze__ m (fun arg_0__ => k).
-
-Program Instance Monad__NonEmpty : Monad NonEmpty :=
-  fun _ k =>
-    k {| op_zgzg____ := fun {a} {b} => Monad__NonEmpty_op_zgzg__ ;
-         op_zgzgze____ := fun {a} {b} => Monad__NonEmpty_op_zgzgze__ ;
-         return___ := fun {a} => Monad__NonEmpty_return_ |}.
-
 Definition op_zd__ {a} {b} : (a -> b) -> a -> b :=
   fun f x => f x.
 
@@ -1808,8 +1316,8 @@ Definition when {f} `{(Applicative f)} : bool -> f unit -> f unit :=
 
 Module Notations.
 Export ManualNotations.
-Notation "'_GHC.Base.<>_'" := (op_zlzg__).
-Infix "GHC.Base.<>" := (_<>_) (at level 70).
+Notation "'_GHC.Base.<<>>_'" := (op_zlzlzgzg__).
+Infix "GHC.Base.<<>>" := (_<<>>_) (at level 99).
 Notation "'_GHC.Base.<$_'" := (op_zlzd__).
 Infix "GHC.Base.<$" := (_<$_) (at level 99).
 Notation "'_GHC.Base.<*>_'" := (op_zlztzg__).
@@ -1836,10 +1344,6 @@ End Notations.
 
 (* Unbound variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zl__ op_zt__ option pair true tt unit
-     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map
-     Data.Semigroup.Internal.stimesDefault
-     Data.Semigroup.Internal.stimesIdempotentMonoid
-     Data.Semigroup.Internal.stimesList Data.Semigroup.Internal.stimesMaybe
-     GHC.Prim.arrow GHC.Real.Integral GHC.Tuple.pair_type GHC.Types.IO
+     list negb nil op_zeze__ op_zl__ option pair true tt unit Coq.Init.Datatypes.app
+     Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow GHC.Tuple.pair_type
 *)

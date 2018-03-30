@@ -121,6 +121,11 @@ Local Definition Applicative__Proxy_op_ztzg__
     fun x y =>
       Applicative__Proxy_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
 
+Local Definition Applicative__Proxy_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Proxy a -> Proxy b -> Proxy c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Proxy_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Proxy_pure : forall {a}, a -> Proxy a :=
   fun {a} => fun arg_0__ => Mk_Proxy.
 
@@ -128,6 +133,7 @@ Program Instance Applicative__Proxy : GHC.Base.Applicative Proxy :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Proxy_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Proxy_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Proxy_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Proxy_pure |}.
 
 (* Translating `instance Alternative__Proxy' failed: OOPS! Cannot find

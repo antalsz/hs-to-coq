@@ -78,8 +78,12 @@ Program Instance Functor__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedArrow_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedArrow_fmap |}.
 
-(* Translating `instance Applicative__WrappedArrow' failed: Cannot find sig for
-   Qualified "GHC.Base" "liftA2" unsupported *)
+(* Translating `instance Applicative__WrappedArrow' failed: missing Qualified
+   "GHC.Base" "op_zlztzg__" in fromList [(Qualified "GHC.Base" "liftA2",Qualified
+   "Control.Applicative" "Applicative__WrappedArrow_liftA2"),(Qualified "GHC.Base"
+   "op_ztzg__",Qualified "Control.Applicative"
+   "Applicative__WrappedArrow_op_ztzg__"),(Qualified "GHC.Base" "pure",Qualified
+   "Control.Applicative" "Applicative__WrappedArrow_pure")] unsupported *)
 
 (* Translating `instance Alternative__WrappedArrow' failed: OOPS! Cannot find
    information for class Qualified "GHC.Base" "Alternative" unsupported *)
@@ -104,8 +108,50 @@ Program Instance Functor__WrappedMonad {m} `{GHC.Base.Monad m}
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedMonad_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedMonad_fmap |}.
 
-(* Translating `instance Applicative__WrappedMonad' failed: Cannot find sig for
-   Qualified "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__WrappedMonad_liftA2 {inst_m} `{GHC.Base.Monad
+  inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b -> (WrappedMonad inst_m) c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, WrapMonad x, WrapMonad y => WrapMonad (GHC.Base.liftM2 f x y)
+      end.
+
+Local Definition Applicative__WrappedMonad_op_zlztzg__ {inst_m} `{GHC.Base.Monad
+  inst_m}
+   : forall {a} {b},
+     (WrappedMonad inst_m) (a -> b) ->
+     (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | WrapMonad f, WrapMonad v => WrapMonad (GHC.Base.ap f v)
+      end.
+
+Local Definition Applicative__WrappedMonad_op_ztzg__ {inst_m} `{GHC.Base.Monad
+  inst_m}
+   : forall {a} {b},
+     (WrappedMonad inst_m) a -> (WrappedMonad inst_m) b -> (WrappedMonad inst_m) b :=
+  fun {a} {b} =>
+    fun x y =>
+      Applicative__WrappedMonad_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const
+                                                            GHC.Base.id) x) y.
+
+Local Definition Applicative__WrappedMonad_pure {inst_m} `{GHC.Base.Monad
+  inst_m}
+   : forall {a}, a -> (WrappedMonad inst_m) a :=
+  fun {a} => WrapMonad GHC.Base.∘ GHC.Base.pure.
+
+Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
+   : GHC.Base.Applicative (WrappedMonad m) :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} =>
+           Applicative__WrappedMonad_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__WrappedMonad_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__WrappedMonad_pure |}.
 
 (* Translating `instance Alternative__WrappedMonad' failed: OOPS! Cannot find
    information for class Qualified "GHC.Base" "Alternative" unsupported *)
@@ -174,7 +220,8 @@ Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
 (* Unbound variables:
      None Some Type option Control.Arrow.Arrow Control.Arrow.arr
      Control.Category.op_zgzgzg__ Data.Functor.op_zlzdzg__ GHC.Base.Alternative
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.liftM GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.pure GHC.Base.return_
-     GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
+     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.ap GHC.Base.const
+     GHC.Base.fmap GHC.Base.id GHC.Base.liftM GHC.Base.liftM2 GHC.Base.op_z2218U__
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.pure
+     GHC.Base.return_ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
 *)

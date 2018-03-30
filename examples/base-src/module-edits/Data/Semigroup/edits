@@ -5,9 +5,6 @@ skip method Data.Semigroup.Semigroup stimes
 ## Default method refers to other methods. Just define in midamble.
 skip method Data.Semigroup.Semigroup sconcat
 
-# needs stimes
-skip Data.Semigroup.mtimesDefault 
-
 # partial (and type inference can't handle it, and termination is tricky)
 skip Data.Semigroup.stimesMonoid
 

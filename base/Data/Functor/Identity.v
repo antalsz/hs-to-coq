@@ -126,8 +126,31 @@ Program Instance Functor__Identity : GHC.Base.Functor Identity :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap |}.
 
-(* Translating `instance Applicative__Identity' failed: Cannot find sig for
-   Qualified "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__Identity_liftA2
+   : forall {a} {b} {c},
+     (a -> b -> c) -> Identity a -> Identity b -> Identity c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
+
+Local Definition Applicative__Identity_op_zlztzg__
+   : forall {a} {b}, Identity (a -> b) -> Identity a -> Identity b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Identity_op_ztzg__
+   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
+  fun {a} {b} =>
+    fun x y =>
+      Applicative__Identity_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
+                                        y.
+
+Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
+  fun {a} => Mk_Identity.
+
+Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Identity_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Identity_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
 
 Local Definition Monad__Identity_op_zgzg__
    : forall {a} {b}, Identity a -> Identity b -> Identity b :=
@@ -272,10 +295,11 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
 
 (* Unbound variables:
      bool comparison cons false list nil Data.Foldable.Foldable
-     Data.Functor.Utils.hash_compose GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.id
-     GHC.Base.mappend GHC.Base.max GHC.Base.mconcat GHC.Base.mempty GHC.Base.min
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
-     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
+     Data.Functor.Utils.hash_compose GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare
+     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.max
+     GHC.Base.mconcat GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
 *)

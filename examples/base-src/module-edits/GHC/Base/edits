@@ -29,10 +29,23 @@ skip GHC.Base.Applicative__IO
 skip GHC.Base.Alternative__IO
 skip GHC.Base.Monad__IO
 skip GHC.Base.MonadPlus__IO
+skip GHC.Base.Semigroup__IO
 skip GHC.Base.Monoid__IO
 
-# Why is this not Monoid__pair_type?
+skip GHC.Base.Semigroup__op_zt__
+skip GHC.Base.Semigroup__op_zt____op_zt__
+skip GHC.Base.Semigroup__op_zt____op_zt____op_zt____23
+skip GHC.Base.Semigroup__op_zt____op_zt____op_zt____op_zt____87
 skip GHC.Base.Monoid__op_zt__
+skip GHC.Base.Monoid__op_zt____op_zt__
+skip GHC.Base.Monoid__op_zt____op_zt____op_zt____23
+skip GHC.Base.Monoid__op_zt____op_zt____op_zt____op_zt____87
+
+# (<) on NonEmpty calls Ord__NonEmpty_compare on the list component
+skip GHC.Base.Ord__NonEmpty
+# Applicative on NonEmpty defined in terms of ap, which needs Monad NonEmpty
+skip GHC.Base.Applicative__NonEmpty
+skip GHC.Base.Monad__NonEmpty
 
 # no unboxed types
 skip GHC.Base.unsafeChr
@@ -72,6 +85,17 @@ order GHC.Base.Functor__option GHC.Base.Applicative__option_op_zlztzg__ GHC.Base
 order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type GHC.Base.Monad__pair_type_return_ GHC.Base.Monad__pair_type_op_zgzgze__ GHC.Base.Monad__pair_type_op_zgzg__
 
 order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type_op_ztzg__
+
+order GHC.Base.Functor__NonEmpty GHC.Base.Applicative__NonEmpty GHC.Base.Monad__NonEmpty_return_ GHC.Base.Monad__NonEmpty_op_zgzg__ GHC.Base.Monad__NonEmpty
+
+order GHC.Base.Semigroup__list       GHC.Base.Monoid__list_mappend
+order GHC.Base.Semigroup__arrow      GHC.Base.Monoid__arrow_mappend
+order GHC.Base.Semigroup__unit       GHC.Base.Monoid__unit_mappend
+order GHC.Base.Semigroup__comparison GHC.Base.Monoid__comparison_mappend
+order GHC.Base.Semigroup__option     GHC.Base.Monoid__option_mappend
+
+order GHC.Base.Functor__list GHC.Base.Functor__NonEmpty_fmap
+order GHC.Base.Functor__list GHC.Base.Functor__NonEmpty_op_zlzd__
 
 skip GHC.Base.Alternative__list
 skip GHC.Base.MonadPlus__list

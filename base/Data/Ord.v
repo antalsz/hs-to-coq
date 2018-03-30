@@ -105,6 +105,10 @@ Local Definition Applicative__Down_op_ztzg__
     fun x y =>
       Applicative__Down_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
 
+Local Definition Applicative__Down_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Down a -> Down b -> Down c :=
+  fun {a} {b} {c} => fun f x => Applicative__Down_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Down_pure : forall {a}, a -> Down a :=
   fun {a} => Mk_Down.
 
@@ -112,6 +116,7 @@ Program Instance Applicative__Down : GHC.Base.Applicative Down :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Down_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Down_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Down_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Down_pure |}.
 
 Local Definition Monad__Down_op_zgzg__

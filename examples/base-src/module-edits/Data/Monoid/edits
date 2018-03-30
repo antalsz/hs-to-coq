@@ -1,23 +1,7 @@
-data kinds Data.Monoid.Alt (Type -> Type)
-
-
-add Data.Monoid Instance Unpeel_Dual a : Unpeel (Dual a) a :=
-	 Build_Unpeel _ _ getDual Mk_Dual.
-add Data.Monoid Instance Unpeel_Sum a : Unpeel (Sum a) a :=
-	 Build_Unpeel _ _ getSum Mk_Sum.
-add Data.Monoid Instance Unpeel_Product a : Unpeel (Product a) a :=
-	 Build_Unpeel _ _ getProduct Mk_Product.
-add Data.Monoid Instance Unpeel_First a : Unpeel (First a) (option a) :=
-	 Build_Unpeel _ _ getFirst Mk_First.
-add Data.Monoid Instance Unpeel_Last a : Unpeel (Last a) (option a) :=
-	 Build_Unpeel _ _ getLast Mk_Last.
-add Data.Monoid Instance Unpeel_Endo a : Unpeel (Endo a) (a -> a) :=
-	 Build_Unpeel _ _ appEndo Mk_Endo.
-add Data.Monoid Instance Unpeel_Any : Unpeel Any bool :=
-	 Build_Unpeel _ _ getAny Mk_Any.
-add Data.Monoid Instance Unpeel_All : Unpeel All bool :=
-	 Build_Unpeel _ _ getAll Mk_All.
-
+add Data.Monoid Instance Unpeel_First a : GHC.Prim.Unpeel (First a) (option a) :=
+	 GHC.Prim.Build_Unpeel _ _ getFirst Mk_First.
+add Data.Monoid Instance Unpeel_Last a : GHC.Prim.Unpeel (Last a) (option a) :=
+	 GHC.Prim.Build_Unpeel _ _ getLast Mk_Last.
 
 order Data.Monoid.Eq___Dual Data.Monoid.Ord__Dual
 order  Unpeel_Dual Data.Monoid.Functor__Dual Data.Monoid.Applicative__Dual Data.Monoid.Monad__Dual
@@ -28,54 +12,8 @@ order Unpeel_Last Data.Monoid.Functor__Last Data.Monoid.Applicative__Last Data.M
 order Data.Monoid.Eq___First Data.Monoid.Ord__First
 order Unpeel_First Data.Monoid.Functor__First Data.Monoid.Applicative__First Data.Monoid.Monad__First
 
-order Data.Monoid.Eq___Product Data.Monoid.Ord__Product
-order Unpeel_Product Data.Monoid.Functor__Product Data.Monoid.Applicative__Product Data.Monoid.Monad__Product
-
-order Data.Monoid.Eq___Sum Data.Monoid.Ord__Sum
-order Unpeel_Sum Data.Monoid.Functor__Sum Data.Monoid.Applicative__Sum Data.Monoid.Monad__Sum
-
-order Unpeel_Any Data.Monoid.Eq___Any Data.Monoid.Ord__Any
-order Unpeel_All Data.Monoid.Eq___All Data.Monoid.Ord__All
-
-
-# cannot refer to scoped type variables in instance declaration
-# defined in the midamble instance
-skip Data.Monoid.Monoid__Product
-skip Data.Monoid.Monoid__Sum
-
-# <> operator already defined (as not equal)
-# in the preamble.v
-skip Data.Monoid.op_zlzg__
-
-
-
-# skip Data.Monoid.Monoid__Alt
-# scoped type variables
-redefine Local Definition Data.Monoid.Monoid__Alt_mappend {inst_f} {inst_a}`{_:GHC.Base.Alternative inst_f} :
-			(Alt inst_f inst_a) -> ((Alt inst_f inst_a) -> (Alt inst_f inst_a)) :=
-  GHC.Prim.coerce GHC.Base.op_zlzbzg__.
-
-# issues with Alt (extra {inst_k} or {k} abstraction)
-# defined in midamble
-skip Data.Monoid.Eq___Alt
-skip Data.Monoid.Ord__Alt
-
-
-
 # Read and Show instances
 skip Data.Monoid.Read__Last
 skip Data.Monoid.Read__First
-skip Data.Monoid.Read__Product
-skip Data.Monoid.Read__Sum
-skip Data.Monoid.Read__Any
-skip Data.Monoid.Read__All
-skip Data.Monoid.Read__Alt
-skip Data.Monoid.Read__Dual
 skip Data.Monoid.Show__Last
 skip Data.Monoid.Show__First
-skip Data.Monoid.Show__Product
-skip Data.Monoid.Show__Sum
-skip Data.Monoid.Show__Any
-skip Data.Monoid.Show__All
-skip Data.Monoid.Show__Alt
-skip Data.Monoid.Show__Dual

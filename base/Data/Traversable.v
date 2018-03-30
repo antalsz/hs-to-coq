@@ -132,8 +132,8 @@ Local Definition Traversable__NonEmpty_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, GHC.Base.op_ZCzb__ a as_ =>
-          GHC.Base.liftA2 _GHC.Base.:|_ (f a) (traverse f as_)
+      | f, GHC.Base.NEcons a as_ =>
+          GHC.Base.liftA2 GHC.Base.NEcons (f a) (traverse f as_)
       end.
 
 Local Definition Traversable__NonEmpty_sequenceA
@@ -342,8 +342,8 @@ Local Definition Traversable__Dual_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Data.Semigroup.Internal.Dual x =>
-          Data.Semigroup.Internal.Dual Data.Functor.<$> f x
+      | f, Data.Semigroup.Internal.Mk_Dual x =>
+          Data.Semigroup.Internal.Mk_Dual Data.Functor.<$> f x
       end.
 
 Local Definition Traversable__Dual_sequenceA
@@ -382,8 +382,8 @@ Local Definition Traversable__Sum_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Data.Semigroup.Internal.Sum x =>
-          Data.Semigroup.Internal.Sum Data.Functor.<$> f x
+      | f, Data.Semigroup.Internal.Mk_Sum x =>
+          Data.Semigroup.Internal.Mk_Sum Data.Functor.<$> f x
       end.
 
 Local Definition Traversable__Sum_sequenceA
@@ -422,8 +422,8 @@ Local Definition Traversable__Product_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Data.Semigroup.Internal.Product x =>
-          Data.Semigroup.Internal.Product Data.Functor.<$> f x
+      | f, Data.Semigroup.Internal.Mk_Product x =>
+          Data.Semigroup.Internal.Mk_Product Data.Functor.<$> f x
       end.
 
 Local Definition Traversable__Product_sequenceA
@@ -570,9 +570,10 @@ Definition mapAccumR {t} {a} {b} {c} `{Traversable t}
      Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
      Data.Functor.Utils.StateL Data.Functor.Utils.StateR Data.Functor.Utils.runStateL
      Data.Functor.Utils.runStateR Data.Proxy.Mk_Proxy Data.Proxy.Proxy
-     Data.Semigroup.Internal.Dual Data.Semigroup.Internal.Product
-     Data.Semigroup.Internal.Sum GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.NonEmpty GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id
-     GHC.Base.liftA2 GHC.Base.op_ZCzb__ GHC.Base.op_z2218U__ GHC.Base.pure
-     GHC.Prim.coerce GHC.Tuple.pair2 GHC.Tuple.pair_type
+     Data.Semigroup.Internal.Dual Data.Semigroup.Internal.Mk_Dual
+     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
+     Data.Semigroup.Internal.Product Data.Semigroup.Internal.Sum GHC.Base.Applicative
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.flip
+     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.op_z2218U__
+     GHC.Base.pure GHC.Prim.coerce GHC.Tuple.pair2 GHC.Tuple.pair_type
 *)

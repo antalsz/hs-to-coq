@@ -58,6 +58,12 @@ Local Definition Applicative__Either_op_zlztzg__ {inst_e}
       | Right f, r => GHC.Base.fmap f r
       end.
 
+Local Definition Applicative__Either_liftA2 {inst_e}
+   : forall {a} {b} {c},
+     (a -> b -> c) -> (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Either_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Either_op_ztzg__ {inst_e}
    : forall {a} {b},
      (Either inst_e) a -> (Either inst_e) b -> (Either inst_e) b :=
@@ -74,6 +80,7 @@ Program Instance Applicative__Either {e} : GHC.Base.Applicative (Either e) :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Either_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Either_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Either_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Either_pure |}.
 
 Local Definition Monad__Either_op_zgzg__ {inst_e}

@@ -22,6 +22,7 @@ Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
+Require GHC.Real.
 Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -167,8 +168,40 @@ Program Instance Functor__Option : GHC.Base.Functor Option :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Option_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Option_fmap |}.
 
-(* Translating `instance Applicative__Option' failed: Cannot find sig for
-   Qualified "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__Option_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Option a -> Option b -> Option c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, Mk_Option x, Mk_Option y => Mk_Option (GHC.Base.liftA2 f x y)
+      end.
+
+Local Definition Applicative__Option_op_zlztzg__
+   : forall {a} {b}, Option (a -> b) -> Option a -> Option b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Mk_Option a, Mk_Option b => Mk_Option (a GHC.Base.<*> b)
+      end.
+
+Local Definition Applicative__Option_op_ztzg__
+   : forall {a} {b}, Option a -> Option b -> Option b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Mk_Option None, _ => Mk_Option None
+      | _, b => b
+      end.
+
+Local Definition Applicative__Option_pure : forall {a}, a -> Option a :=
+  fun {a} => fun a => Mk_Option (Some a).
+
+Program Instance Applicative__Option : GHC.Base.Applicative Option :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Option_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Option_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Option_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__Option_pure |}.
 
 Local Definition Monad__Option_op_zgzg__
    : forall {a} {b}, Option a -> Option b -> Option b :=
@@ -552,8 +585,28 @@ Program Instance Traversable__Last : Data.Traversable.Traversable Last :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Last_traverse |}.
 
-(* Translating `instance Applicative__Last' failed: Cannot find sig for
-   Qualified "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__Last_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Last a -> Last b -> Last c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
+
+Local Definition Applicative__Last_op_zlztzg__
+   : forall {a} {b}, Last (a -> b) -> Last a -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Last_op_ztzg__
+   : forall {a} {b}, Last a -> Last b -> Last b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
+
+Local Definition Applicative__Last_pure : forall {a}, a -> Last a :=
+  fun {a} => Mk_Last.
+
+Program Instance Applicative__Last : GHC.Base.Applicative Last :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Last_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Last_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Last_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__Last_pure |}.
 
 Local Definition Monad__Last_op_zgzg__
    : forall {a} {b}, Last a -> Last b -> Last b :=
@@ -749,8 +802,28 @@ Program Instance Traversable__First : Data.Traversable.Traversable First :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__First_traverse |}.
 
-(* Translating `instance Applicative__First' failed: Cannot find sig for
-   Qualified "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__First_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> First a -> First b -> First c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
+
+Local Definition Applicative__First_op_zlztzg__
+   : forall {a} {b}, First (a -> b) -> First a -> First b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__First_op_ztzg__
+   : forall {a} {b}, First a -> First b -> First b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
+
+Local Definition Applicative__First_pure : forall {a}, a -> First a :=
+  fun {a} => fun x => Mk_First x.
+
+Program Instance Applicative__First : GHC.Base.Applicative First :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__First_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__First_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__First_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__First_pure |}.
 
 Local Definition Monad__First_op_zgzg__
    : forall {a} {b}, First a -> First b -> First b :=
@@ -1149,8 +1222,28 @@ Program Instance Traversable__Max : Data.Traversable.Traversable Max :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Max_traverse |}.
 
-(* Translating `instance Applicative__Max' failed: Cannot find sig for Qualified
-   "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__Max_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Max a -> Max b -> Max c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
+
+Local Definition Applicative__Max_op_zlztzg__
+   : forall {a} {b}, Max (a -> b) -> Max a -> Max b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Max_op_ztzg__
+   : forall {a} {b}, Max a -> Max b -> Max b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
+
+Local Definition Applicative__Max_pure : forall {a}, a -> Max a :=
+  fun {a} => Mk_Max.
+
+Program Instance Applicative__Max : GHC.Base.Applicative Max :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Max_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Max_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Max_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__Max_pure |}.
 
 Local Definition Monad__Max_op_zgzg__
    : forall {a} {b}, Max a -> Max b -> Max b :=
@@ -1349,8 +1442,28 @@ Program Instance Traversable__Min : Data.Traversable.Traversable Min :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Min_traverse |}.
 
-(* Translating `instance Applicative__Min' failed: Cannot find sig for Qualified
-   "GHC.Base" "liftA2" unsupported *)
+Local Definition Applicative__Min_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Min a -> Min b -> Min c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
+
+Local Definition Applicative__Min_op_zlztzg__
+   : forall {a} {b}, Min (a -> b) -> Min a -> Min b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Min_op_ztzg__
+   : forall {a} {b}, Min a -> Min b -> Min b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
+
+Local Definition Applicative__Min_pure : forall {a}, a -> Min a :=
+  fun {a} => Mk_Min.
+
+Program Instance Applicative__Min : GHC.Base.Applicative Min :=
+  fun _ k =>
+    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Min_op_ztzg__ ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Min_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Min_liftA2 ;
+         GHC.Base.pure__ := fun {a} => Applicative__Min_pure |}.
 
 Local Definition Monad__Min_op_zgzg__
    : forall {a} {b}, Min a -> Min b -> Min b :=
@@ -1813,7 +1926,13 @@ Definition destruct_option {b} {a} : b -> (a -> b) -> Option a -> b :=
 
 Definition diff {m} `{GHC.Base.Semigroup m}
    : m -> Data.Semigroup.Internal.Endo m :=
-  Data.Semigroup.Internal.Endo GHC.Base.∘ _GHC.Base.<>_.
+  Data.Semigroup.Internal.Mk_Endo GHC.Base.∘ _GHC.Base.<<>>_.
+
+Definition mtimesDefault {b} {a} `{GHC.Real.Integral b} `{GHC.Base.Monoid a}
+   : b -> a -> a :=
+  fun n x =>
+    if n GHC.Base.== #0 : bool then GHC.Base.mempty else
+    unwrapMonoid (GHC.Base.stimes n (WrapMonoid x)).
 
 (* Unbound variables:
      None Some bool comparison false list negb option true Coq.Program.Basics.compose
@@ -1821,12 +1940,14 @@ Definition diff {m} `{GHC.Base.Semigroup m}
      Data.Maybe.maybe Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
      Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny
      Data.Monoid.getDual Data.Monoid.getProduct Data.Monoid.getSum
-     Data.Semigroup.Internal.Endo Data.Traversable.Traversable GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.Semigroup GHC.Base.build GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.fmap GHC.Base.id GHC.Base.max GHC.Base.mempty GHC.Base.min
-     GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlzg__
-     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.coerce
+     Data.Semigroup.Internal.Endo Data.Semigroup.Internal.Mk_Endo
+     Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.build
+     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
+     GHC.Base.liftA2 GHC.Base.max GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__
+     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.stimes GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.coerce
+     GHC.Real.Integral
 *)

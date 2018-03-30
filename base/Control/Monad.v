@@ -21,7 +21,6 @@ Require Data.Functor.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.List.
-Require GHC.Prim.
 Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 
@@ -81,8 +80,7 @@ Infix "<=<" := (_<=<_) (at level 99).
 
 Definition op_zlzdznzg__ {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> b) -> m a -> m b :=
-  fun f m =>
-    m GHC.Base.>>= (fun x => let z := f x in GHC.Prim.seq z (GHC.Base.return_ z)).
+  fun f m => m GHC.Base.>>= (fun x => let z := f x in GHC.Base.return_ z).
 
 Notation "'_<$!>_'" := (op_zlzdznzg__).
 
@@ -116,5 +114,5 @@ End Notations.
      GHC.Base.Applicative GHC.Base.Monad GHC.Base.MonadPlus GHC.Base.empty
      GHC.Base.flip GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.mzero
      GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_
-     GHC.List.unzip GHC.List.zipWith GHC.Prim.seq
+     GHC.List.unzip GHC.List.zipWith
 *)

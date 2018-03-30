@@ -372,7 +372,7 @@ ImplicitBinderGuts :: { Binder }
   | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
 
 GeneralizableBinderGuts :: { Explicitness -> Binder }
-  : Atom                            { \ei -> Generalized ei $1 }
+  : '(' Term ')'                    { \ei -> Generalized ei $2 }
   | Some(BinderName) TypeAnnotation { \ei -> Typed Generalizable ei $1 $2 }
 
 Binder :: { Binder }

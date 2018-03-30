@@ -12,8 +12,8 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Data.Functor.Utils.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -45,8 +45,8 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
 Local Definition Foldable__Identity_elem
    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
-    Data.Functor.Utils.hash_compose (fun arg_0__ => arg_0__ GHC.Base.∘ runIdentity)
-                                    _GHC.Base.==_.
+    Coq.Program.Basics.compose (fun arg_0__ => arg_0__ GHC.Base.∘ runIdentity)
+                               _GHC.Base.==_.
 
 Local Definition Foldable__Identity_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
@@ -227,15 +227,22 @@ Local Definition Monoid__Identity_mempty {inst_a} `{GHC.Base.Monoid inst_a}
    : Identity inst_a :=
   GHC.Prim.coerce GHC.Base.mempty.
 
+Local Definition Semigroup__Identity_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
+  inst_a}
+   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
+  GHC.Prim.coerce _GHC.Base.<<>>_.
+
+Program Instance Semigroup__Identity {a} `{GHC.Base.Semigroup a}
+   : GHC.Base.Semigroup (Identity a) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Identity_op_zlzlzgzg__ |}.
+
 Program Instance Monoid__Identity {a} `{GHC.Base.Monoid a}
    : GHC.Base.Monoid (Identity a) :=
   fun _ k =>
     k {| GHC.Base.mappend__ := Monoid__Identity_mappend ;
          GHC.Base.mconcat__ := Monoid__Identity_mconcat ;
          GHC.Base.mempty__ := Monoid__Identity_mempty |}.
-
-(* Translating `instance Semigroup__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Semigroup" unsupported *)
 
 (* Translating `instance Ix__Identity' failed: OOPS! Cannot find information for
    class Qualified "GHC.Arr" "Ix" unsupported *)
@@ -294,12 +301,12 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
    for class Qualified "Data.Bits" "Bits" unsupported *)
 
 (* Unbound variables:
-     bool comparison cons false list nil Data.Foldable.Foldable
-     Data.Functor.Utils.hash_compose GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare
+     bool comparison cons false list nil Coq.Program.Basics.compose
+     Data.Foldable.Foldable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
      GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.max
      GHC.Base.mconcat GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
+     GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Prim.coerce
 *)

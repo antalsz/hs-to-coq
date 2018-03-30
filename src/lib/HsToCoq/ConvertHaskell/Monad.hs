@@ -136,8 +136,8 @@ builtInClasses =
         , "GHC.Base.mconcat" =: ("list" `App1` "a") `Arrow` "a"
         , "GHC.Base.mempty"  =: "a"
         ]
-    , ClassDefinition "Data.Semigroup.Semigroup" ["a"] Nothing
-        [ "Data.Semigroup.op_zlzg__" =: "a" `Arrow` "a" `Arrow` "a" 
+    , ClassDefinition "GHC.Base.Semigroup" ["a"] Nothing
+        [ "GHC.Base.<<>>" =: "a" `Arrow` "a" `Arrow` "a"
 --        , "Data.Semigroup.sconcat__"   =: ("Data.List.NonEmpty.NonEmpty" `App1` "a") `Arrow` "a"
         ]
     , ClassDefinition "GHC.Base.Functor" ["f"] Nothing
@@ -360,11 +360,12 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
             App2 "op_zlztzg__" (App2 "GHC.Base.fmap" const    "x") "y")
         -}
         ]
-    , "Data.Semigroup"  =:
+    , "GHC.Base.Semigroup"  =:
         [ "Data.Semigroup.stimes" ~> App "Data.List.NonEmpty.NonEmpty_foldr1" (PosArg "Data.Semigroup.op_zlzg__" :| [])
         ]
     , "GHC.Base.Monoid" =:
-        [ "GHC.Base.mconcat" ~> App2 "GHC.Base.foldr" "GHC.Base.mappend" "GHC.Base.mempty"
+        [ "GHC.Base.mappend" ~> "GHC.Base.<<>>"
+        , "GHC.Base.mconcat" ~> App2 "GHC.Base.foldr" "GHC.Base.mappend" "GHC.Base.mempty"
         ]
     , "GHC.Base.Monad" =:
         [ "GHC.Base.return_" ~> "GHC.Base.pure"
@@ -385,17 +386,17 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
 
     , "Data.Foldable.Foldable" =:
       -- inline the default definition of elem. Need an edit to modify this default....
-      ["Data.Foldable.elem" ~> App "Coq.Program.Basics.compose" (PosArg (Parens (Fun ("arg_69__" :| []) (Coq.Match (MatchItem "arg_69__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "p") :| []) :| []) (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.getAny" :| [PosArg (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Any" :| [PosArg "p"]))) :| []))]))]))) :| [PosArg "GHC.Base.op_zeze__"]),
+      ["Data.Foldable.elem" ~> App "Coq.Program.Basics.compose" (PosArg (Parens (Fun ("arg_69__" :| []) (Coq.Match (MatchItem "arg_69__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "p") :| []) :| []) (App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.getAny" :| [PosArg (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.Mk_Any" :| [PosArg "p"]))) :| []))]))]))) :| [PosArg "GHC.Base.op_zeze__"]),
        ("Data.Foldable.fold" ~> App "Data.Foldable.foldMap" (PosArg "GHC.Base.id" :| [])),
        ("Data.Foldable.foldMap" ~> Fun ("arg_1__" :| []) (Coq.Match (MatchItem "arg_1__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| []) :| []) (App (App "Data.Foldable.foldr" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "GHC.Base.mappend" :| [PosArg "f"]))) :| [])) (PosArg "GHC.Base.mempty" :| []))])),
-       ("Data.Foldable.foldl" ~> Fun ("arg_19__" :| ["arg_20__","arg_21__"]) (Coq.Match (MatchItem "arg_19__" Nothing Nothing :| [MatchItem "arg_20__" Nothing Nothing,MatchItem "arg_21__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Monoid.appEndo" (PosArg (Parens (App "Data.Monoid.getDual" (PosArg (Parens (App (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Dual" :| [PosArg (App "Coq.Program.Basics.compose" (PosArg "Data.Monoid.Mk_Endo" :| [PosArg (App "GHC.Base.flip" (PosArg "f" :| []))]))]))) :| [])) (PosArg "t" :| []))) :| []))) :| [])) (PosArg "z" :| []))])),
+       ("Data.Foldable.foldl" ~> Fun ("arg_19__" :| ["arg_20__","arg_21__"]) (Coq.Match (MatchItem "arg_19__" Nothing Nothing :| [MatchItem "arg_20__" Nothing Nothing,MatchItem "arg_21__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Semigroup.Internal.appEndo" (PosArg (Parens (App "Data.Semigroup.Internal.getDual" (PosArg (Parens (App (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.Mk_Dual" :| [PosArg (App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.Mk_Endo" :| [PosArg (App "GHC.Base.flip" (PosArg "f" :| []))]))]))) :| [])) (PosArg "t" :| []))) :| []))) :| [])) (PosArg "z" :| []))])),
        ("Data.Foldable.foldl'"~>Fun ("arg_24__" :| ["arg_25__","arg_26__"]) (Coq.Match (MatchItem "arg_24__" Nothing Nothing :| [MatchItem "arg_25__" Nothing Nothing,MatchItem "arg_26__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z0"),QualidPat (Bare "xs")]) :| []) (Let "f'" [] Nothing (Fun ("arg_27__" :| ["arg_28__","arg_29__"]) (Coq.Match (MatchItem "arg_27__" Nothing Nothing :| [MatchItem "arg_28__" Nothing Nothing,MatchItem "arg_29__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "x") :| [QualidPat (Bare "k"),QualidPat (Bare "z")]) :| []) (App "GHC.Base.op_zdzn__" (PosArg "k" :| [PosArg (App (App "f" (PosArg "z" :| [])) (PosArg "x" :| []))]))])) (App (App (App (App "Data.Foldable.foldr" (PosArg "f'" :| [])) (PosArg "GHC.Base.id" :| [])) (PosArg "xs" :| [])) (PosArg "z0" :| [])))])),
-       ("Data.Foldable.foldr"~>Fun ("arg_4__" :| ["arg_5__","arg_6__"]) (Coq.Match (MatchItem "arg_4__" Nothing Nothing :| [MatchItem "arg_5__" Nothing Nothing,MatchItem "arg_6__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Monoid.appEndo" (PosArg (Parens (App (App "Data.Foldable.foldMap" (PosArg (Parens (App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.Mk_Endo" :| [PosArg "f"]))) :| [])) (PosArg "t" :| []))) :| [])) (PosArg "z" :| []))])),
+       ("Data.Foldable.foldr"~>Fun ("arg_4__" :| ["arg_5__","arg_6__"]) (Coq.Match (MatchItem "arg_4__" Nothing Nothing :| [MatchItem "arg_5__" Nothing Nothing,MatchItem "arg_6__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z"),QualidPat (Bare "t")]) :| []) (App (App "Data.Semigroup.Internal.appEndo" (PosArg (Parens (App (App "Data.Foldable.foldMap" (PosArg (Parens (App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.Mk_Endo" :| [PosArg "f"]))) :| [])) (PosArg "t" :| []))) :| [])) (PosArg "z" :| []))])),
        ("Data.Foldable.foldr'"~>Fun ("arg_9__" :| ["arg_10__","arg_11__"]) (Coq.Match (MatchItem "arg_9__" Nothing Nothing :| [MatchItem "arg_10__" Nothing Nothing,MatchItem "arg_11__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "f") :| [QualidPat (Bare "z0"),QualidPat (Bare "xs")]) :| []) (Let "f'" [] Nothing (Fun ("arg_12__" :| ["arg_13__","arg_14__"]) (Coq.Match (MatchItem "arg_12__" Nothing Nothing :| [MatchItem "arg_13__" Nothing Nothing,MatchItem "arg_14__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "k") :| [QualidPat (Bare "x"),QualidPat (Bare "z")]) :| []) (App "GHC.Base.op_zdzn__" (PosArg "k" :| [PosArg (App (App "f" (PosArg "x" :| [])) (PosArg "z" :| []))]))])) (App (App (App (App "Data.Foldable.foldl" (PosArg "f'" :| [])) (PosArg "GHC.Base.id" :| [])) (PosArg "xs" :| [])) (PosArg "z0" :| [])))])),
        ("Data.Foldable.length"~>App (App "Data.Foldable.foldl'" (PosArg (Parens (Fun ("arg_64__" :| ["arg_65__"]) (Coq.Match (MatchItem "arg_64__" Nothing Nothing :| [MatchItem "arg_65__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [UnderscorePat]) :| []) (App "GHC.Num.op_zp__" (PosArg "c" :| [PosArg (App1 "GHC.Num.fromInteger" (Num 1))]))]))) :| [])) (PosArg (App1 "GHC.Num.fromInteger" (Num 0)) :| [])),
        ("Data.Foldable.null"~>App (App "Data.Foldable.foldr" (PosArg (Parens (Fun ("arg_61__" :| ["arg_62__"]) "false")) :| [])) (PosArg "true" :| [])),
-       ("Data.Foldable.product"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getProduct" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Monoid.Mk_Product" :| []))])),
-       ("Data.Foldable.sum"~>App "Data.Foldable.hash_compose" (PosArg "Data.Monoid.getSum" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Monoid.Mk_Sum" :| []))])),
+       ("Data.Foldable.product"~>App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.getProduct" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Semigroup.Internal.Mk_Product" :| []))])),
+       ("Data.Foldable.sum"~>App "Coq.Program.Basics.compose" (PosArg "Data.Semigroup.Internal.getSum" :| [PosArg (App "Data.Foldable.foldMap" (PosArg "Data.Semigroup.Internal.Mk_Sum" :| []))])),
        ("Data.Foldable.toList"~>Fun ("arg_54__" :| []) (Coq.Match (MatchItem "arg_54__" Nothing Nothing :| []) Nothing [Equation (MultPattern (QualidPat (Bare "t") :| []) :| []) (App "GHC.Base.build" (PosArg (Parens (Fun ("_" :| "arg_55__" : ["arg_56__"]) (Coq.Match (MatchItem "arg_55__" Nothing Nothing :| [MatchItem "arg_56__" Nothing Nothing]) Nothing [Equation (MultPattern (QualidPat (Bare "c") :| [QualidPat (Bare "n")]) :| []) (App (App (App "Data.Foldable.foldr" (PosArg "c" :| [])) (PosArg "n" :| [])) (PosArg "t" :| []))]))) :| []))]))]
 
 

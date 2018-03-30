@@ -8,6 +8,10 @@ skip Data.Traversable.Traversable__Last
 # type inference issue
 skip Data.Traversable.foldMapDefault
 
+# Need Data.Functor.Utils (but I am lazy right now)
+skip Data.Traversable.mapAccumL
+skip Data.Traversable.mapAccumR
+
 
 # Generics & out of scope
 skip Data.Traversable.Traversable__Array

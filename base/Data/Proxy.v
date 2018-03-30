@@ -90,13 +90,29 @@ Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) :=
 (* Translating `instance Ix__Proxy' failed: OOPS! Cannot find information for
    class Qualified "GHC.Arr" "Ix" unsupported *)
 
-(* Translating `instance Semigroup__Proxy' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__Proxy_op_zlzlzgzg__ {inst_s}
+   : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
+  fun arg_0__ arg_1__ => Mk_Proxy.
 
-(* Translating `instance Monoid__Proxy' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified "Data.Proxy"
-   "Monoid__Proxy_mconcat"),(Qualified "GHC.Base" "mempty",Qualified "Data.Proxy"
-   "Monoid__Proxy_mempty")] unsupported *)
+Program Instance Semigroup__Proxy {s} : GHC.Base.Semigroup (Proxy s) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Proxy_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__Proxy_mappend {inst_s}
+   : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Proxy_mconcat {inst_s}
+   : list (Proxy inst_s) -> (Proxy inst_s) :=
+  fun arg_0__ => Mk_Proxy.
+
+Local Definition Monoid__Proxy_mempty {inst_s} : (Proxy inst_s) :=
+  Mk_Proxy.
+
+Program Instance Monoid__Proxy {s} : GHC.Base.Monoid (Proxy s) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Proxy_mappend ;
+         GHC.Base.mconcat__ := Monoid__Proxy_mconcat ;
+         GHC.Base.mempty__ := Monoid__Proxy_mempty |}.
 
 Local Definition Functor__Proxy_fmap
    : forall {a} {b}, (a -> b) -> Proxy a -> Proxy b :=
@@ -169,8 +185,8 @@ Definition asProxyTypeOf {a} {proxy} : a -> proxy a -> a :=
   GHC.Base.const.
 
 (* Unbound variables:
-     Eq Gt Lt Type bool comparison negb true GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord GHC.Base.const GHC.Base.fmap
-     GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
-     GHC.Base.pure
+     Eq Gt Lt Type bool comparison list negb true GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup
+     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_zeze__
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
 *)

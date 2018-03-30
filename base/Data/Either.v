@@ -45,8 +45,16 @@ Program Instance Functor__Either {a} : GHC.Base.Functor (Either a) :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Either_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__Either_fmap |}.
 
-(* Translating `instance Semigroup__Either' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__Either_op_zlzlzgzg__ {inst_a} {inst_b}
+   : (Either inst_a inst_b) -> (Either inst_a inst_b) -> (Either inst_a inst_b) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Left _, b => b
+    | a, _ => a
+    end.
+
+Program Instance Semigroup__Either {a} {b} : GHC.Base.Semigroup (Either a b) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Either_op_zlzlzgzg__ |}.
 
 Local Definition Applicative__Either_op_zlztzg__ {inst_e}
    : forall {a} {b},
@@ -254,7 +262,7 @@ Definition rights {a} {b} : list (Either a b) -> list b :=
 (* Unbound variables:
      Gt Lt bool comparison cons false list negb nil op_zt__ pair true
      Coq.Lists.List.flat_map GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.fmap
-     GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zl__
+     GHC.Base.Monad GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const
+     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zl__
      GHC.Base.op_ztzg__ GHC.Base.pure
 *)

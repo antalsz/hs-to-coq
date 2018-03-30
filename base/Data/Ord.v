@@ -10,11 +10,6 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-Require Import GHC.Base.
-Require Import GHC.Num.
-
 (* Converted imports: *)
 
 Require GHC.Base.
@@ -26,20 +21,10 @@ Import GHC.Base.Notations.
 Inductive Down a : Type := Mk_Down : a -> Down a.
 
 Arguments Mk_Down {_} _.
-(* Midamble *)
-
-Instance instance_Down_Eq {a} `(Eq_ a) : Eq_ (Down a) := fun _ k => k {|
-  op_zeze____ := (fun x y =>
-                match x, y with
-                | Mk_Down x0, Mk_Down y0 => x0 == y0
-                end);
-  op_zsze____ := (fun x y =>
-                match x, y with
-                | Mk_Down x0, Mk_Down y0 => x0 /= y0
-                end)
-|}.
-
 (* Converted value declarations: *)
+
+Instance Unpeel_Down a : GHC.Prim.Unpeel (Down a) a :=
+  GHC.Prim.Build_Unpeel _ _ (fun d => let 'Mk_Down x := d in x) Mk_Down.
 
 Local Definition Ord__Down_compare {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> comparison :=
@@ -71,16 +56,6 @@ Local Definition Ord__Down_max {inst_a} `{GHC.Base.Ord inst_a}
 Local Definition Ord__Down_min {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> (Down inst_a) :=
   fun x y => if Ord__Down_op_zlze__ x y : bool then x else y.
-
-Program Instance Ord__Down {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Down_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Down_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Down_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Down_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Down_compare ;
-         GHC.Base.max__ := Ord__Down_max ;
-         GHC.Base.min__ := Ord__Down_min |}.
 
 Local Definition Functor__Down_fmap
    : forall {a} {b}, (a -> b) -> Down a -> Down b :=
@@ -149,15 +124,21 @@ Local Definition Monoid__Down_mempty {inst_a} `{GHC.Base.Monoid inst_a}
    : Down inst_a :=
   GHC.Prim.coerce GHC.Base.mempty.
 
+Local Definition Semigroup__Down_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
+  inst_a}
+   : Down inst_a -> Down inst_a -> Down inst_a :=
+  GHC.Prim.coerce _GHC.Base.<<>>_.
+
+Program Instance Semigroup__Down {a} `{GHC.Base.Semigroup a}
+   : GHC.Base.Semigroup (Down a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Down_op_zlzlzgzg__ |}.
+
 Program Instance Monoid__Down {a} `{GHC.Base.Monoid a}
    : GHC.Base.Monoid (Down a) :=
   fun _ k =>
     k {| GHC.Base.mappend__ := Monoid__Down_mappend ;
          GHC.Base.mconcat__ := Monoid__Down_mconcat ;
          GHC.Base.mempty__ := Monoid__Down_mempty |}.
-
-(* Translating `instance Semigroup__Down' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
 
 (* Translating `instance Num__Down' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
@@ -181,14 +162,25 @@ Program Instance Eq___Down {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Down a) :=
     k {| GHC.Base.op_zeze____ := Eq___Down_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Down_op_zsze__ |}.
 
+Program Instance Ord__Down {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Down a) :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Down_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Down_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Down_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Down_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Down_compare ;
+         GHC.Base.max__ := Ord__Down_max ;
+         GHC.Base.min__ := Ord__Down_min |}.
+
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}
    : (b -> a) -> b -> b -> comparison :=
   fun p x y => GHC.Base.compare (p x) (p y).
 
 (* Unbound variables:
      Gt Lt bool comparison list GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.mconcat GHC.Base.mempty
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
+     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.mconcat
+     GHC.Base.mempty GHC.Base.op_zeze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__
+     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
      GHC.Prim.coerce
 *)

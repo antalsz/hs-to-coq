@@ -41,21 +41,61 @@ Instance Unpeel_First a : GHC.Prim.Unpeel (First a) (option a) :=
 Instance Unpeel_Last a : GHC.Prim.Unpeel (Last a) (option a) :=
   GHC.Prim.Build_Unpeel _ _ getLast Mk_Last.
 
-(* Translating `instance Semigroup__Last' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__Last_op_zlzlzgzg__ {inst_a}
+   : (Last inst_a) -> (Last inst_a) -> (Last inst_a) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | a, Mk_Last None => a
+    | _, b => b
+    end.
 
-(* Translating `instance Monoid__Last' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified "Data.Monoid"
-   "Monoid__Last_mconcat"),(Qualified "GHC.Base" "mempty",Qualified "Data.Monoid"
-   "Monoid__Last_mempty")] unsupported *)
+Program Instance Semigroup__Last {a} : GHC.Base.Semigroup (Last a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Last_op_zlzlzgzg__ |}.
 
-(* Translating `instance Semigroup__First' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Monoid__Last_mappend {inst_a}
+   : (Last inst_a) -> (Last inst_a) -> (Last inst_a) :=
+  _GHC.Base.<<>>_.
 
-(* Translating `instance Monoid__First' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified "Data.Monoid"
-   "Monoid__First_mconcat"),(Qualified "GHC.Base" "mempty",Qualified "Data.Monoid"
-   "Monoid__First_mempty")] unsupported *)
+Local Definition Monoid__Last_mempty {inst_a} : (Last inst_a) :=
+  Mk_Last None.
+
+Local Definition Monoid__Last_mconcat {inst_a}
+   : list (Last inst_a) -> (Last inst_a) :=
+  GHC.Base.foldr Monoid__Last_mappend Monoid__Last_mempty.
+
+Program Instance Monoid__Last {a} : GHC.Base.Monoid (Last a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Last_mappend ;
+         GHC.Base.mconcat__ := Monoid__Last_mconcat ;
+         GHC.Base.mempty__ := Monoid__Last_mempty |}.
+
+Local Definition Semigroup__First_op_zlzlzgzg__ {inst_a}
+   : (First inst_a) -> (First inst_a) -> (First inst_a) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_First None, b => b
+    | a, _ => a
+    end.
+
+Program Instance Semigroup__First {a} : GHC.Base.Semigroup (First a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__First_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__First_mappend {inst_a}
+   : (First inst_a) -> (First inst_a) -> (First inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__First_mempty {inst_a} : (First inst_a) :=
+  Mk_First None.
+
+Local Definition Monoid__First_mconcat {inst_a}
+   : list (First inst_a) -> (First inst_a) :=
+  GHC.Base.foldr Monoid__First_mappend Monoid__First_mempty.
+
+Program Instance Monoid__First {a} : GHC.Base.Monoid (First a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__First_mappend ;
+         GHC.Base.mconcat__ := Monoid__First_mconcat ;
+         GHC.Base.mempty__ := Monoid__First_mempty |}.
 
 Local Definition Monad__Last_op_zgzg__
    : forall {a} {b}, Last a -> Last b -> Last b :=
@@ -284,11 +324,12 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
          GHC.Base.min__ := Ord__First_min |}.
 
 (* Unbound variables:
-     bool comparison option GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Ord GHC.Base.compare GHC.Base.fmap GHC.Base.liftA2
-     GHC.Base.max GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     None bool comparison list option GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup
+     GHC.Base.compare GHC.Base.fmap GHC.Base.foldr GHC.Base.liftA2 GHC.Base.max
+     GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
      GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
-     GHC.Base.pure GHC.Base.return_ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
-     GHC.Prim.coerce
+     GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__
+     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
 *)

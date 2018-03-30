@@ -15,10 +15,8 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Data.Type.Equality.
 Require GHC.Base.
 Require GHC.Prim.
-Import Data.Type.Equality.Notations.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -59,25 +57,7 @@ Program Instance Category__arrow : Category GHC.Prim.arrow :=
 
 (* Skipping instance Category__op_ZCz7eUZC__ *)
 
-Local Definition Category__op_ZCz7eUz7eUZC___id
-   : forall {a}, _Data.Type.Equality.:~~:_ a a :=
-  fun {a} => Data.Type.Equality.HRefl.
-
-Local Definition Category__op_ZCz7eUz7eUZC___op_z2218U__
-   : forall {b} {c} {a},
-     _Data.Type.Equality.:~~:_ b c ->
-     _Data.Type.Equality.:~~:_ a b -> _Data.Type.Equality.:~~:_ a c :=
-  fun {b} {c} {a} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Data.Type.Equality.HRefl, Data.Type.Equality.HRefl => Data.Type.Equality.HRefl
-      end.
-
-Program Instance Category__op_ZCz7eUz7eUZC__
-   : Category _Data.Type.Equality.:~~:_ :=
-  fun _ k =>
-    k {| id__ := fun {a} => Category__op_ZCz7eUz7eUZC___id ;
-         op_z2218U____ := fun {b} {c} {a} => Category__op_ZCz7eUz7eUZC___op_z2218U__ |}.
+(* Skipping instance Category__op_ZCz7eUz7eUZC__ *)
 
 (* Skipping instance Category__Coercion *)
 
@@ -107,6 +87,5 @@ Infix "Control.Category.<<<" := (_<<<_) (at level 99).
 End Notations.
 
 (* Unbound variables:
-     Type Data.Type.Equality.HRefl Data.Type.Equality.op_ZCz7eUz7eUZC__ GHC.Base.id
-     GHC.Base.op_z2218U__ GHC.Prim.arrow
+     Type GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
 *)

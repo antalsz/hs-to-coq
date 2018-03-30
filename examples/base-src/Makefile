@@ -24,7 +24,6 @@ HANDMOD = \
   GHC/Types \
   GHC/Tuple \
   Data/Type/Equality \
-  Data/Functor/Const \
   GHC/Err \
   GHC/Unicode \
   Prelude\
@@ -52,8 +51,7 @@ MODULES = \
   Data/Foldable \
   Control/Arrow \
   Data/Functor/Identity \
-  Data/Functor/Sum \
-  Data/Functor/Product \
+  Data/Functor/Const \
   Control/Applicative \
   Data/Functor/Classes \
   Control/Category \

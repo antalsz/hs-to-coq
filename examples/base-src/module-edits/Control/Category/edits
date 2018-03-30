@@ -2,3 +2,4 @@ class kinds Control.Category.Category (Type -> (Type -> Type))
 
 skip Control.Category.Category__Coercion
 skip Control.Category.Category__op_ZCz7eUZC__
+skip Control.Category.Category__op_ZCz7eUz7eUZC__

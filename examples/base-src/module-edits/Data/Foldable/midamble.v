@@ -1,18 +1,18 @@
-Definition default_elem {t : Type -> Type} {a} `{GHC.Base.Eq_ a} (foldMap : (a -> Any) -> t a -> Any) :
+Definition default_elem {t : Type -> Type} {a} `{GHC.Base.Eq_ a} (foldMap : (a -> Data.Semigroup.Internal.Any) -> t a -> Data.Semigroup.Internal.Any) :
   a -> t a -> bool :=
-   fun x xs => getAny (foldMap (fun y => Mk_Any (GHC.Base.op_zeze__ x y)) xs).
+   fun x xs => Data.Semigroup.Internal.getAny (foldMap (fun y => Data.Semigroup.Internal.Mk_Any (GHC.Base.op_zeze__ x y)) xs).
 
 Definition default_foldable {f:Type -> Type}
-  (foldMap : forall m a, forall (M : GHC.Base.Monoid m), (a -> m) -> f a -> m)
+  (foldMap : forall m a, forall (S : GHC.Base.Semigroup m) (M : GHC.Base.Monoid m), (a -> m) -> f a -> m)
   (foldr : forall a b, (a -> b -> b) -> b -> f a -> b):=
   let foldl : forall b a, (b -> a -> b) -> b -> f a -> b :=
       (fun b a =>
-         fun f  z t => Data.Monoid.appEndo
-                    (Data.Monoid.getDual
-                       (foldMap _ _ _ (Coq.Program.Basics.compose
-                                   Data.Monoid.Mk_Dual
+         fun f  z t => Data.Semigroup.Internal.appEndo
+                    (Data.Semigroup.Internal.getDual
+                       (foldMap _ _ _ _ (Coq.Program.Basics.compose
+                                   Data.Semigroup.Internal.Mk_Dual
                                    (Coq.Program.Basics.compose
-                                      Data.Monoid.Mk_Endo
+                                      Data.Semigroup.Internal.Mk_Endo
                                       (GHC.Base.flip f))) t)) z)
   in
   let foldl' : forall b a, (b -> a -> b) -> b -> f a -> b :=
@@ -26,11 +26,11 @@ Definition default_foldable {f:Type -> Type}
     (fun {a} `{GHC.Base.Eq_ a} =>
        Coq.Program.Basics.compose
          (fun p => Coq.Program.Basics.compose
-                  Data.Monoid.getAny
-                  (foldMap _ _ _ (fun x => Data.Monoid.Mk_Any (p x))))
+                  Data.Semigroup.Internal.getAny
+                  (foldMap _ _ _ _ (fun x => Data.Semigroup.Internal.Mk_Any (p x))))
          GHC.Base.op_zeze__ )
     (* fold *)
-    (fun m (M : GHC.Base.Monoid m) => foldMap _ _ _ GHC.Base.id)
+    (fun m (S : GHC.Base.Semigroup m) (M : GHC.Base.Monoid m) => foldMap _ _ _ _ GHC.Base.id)
     (* foldMap *)
     (@foldMap)
     (* foldl *)
@@ -51,12 +51,12 @@ Definition default_foldable {f:Type -> Type}
     (fun a => @foldr _ _ (fun arg_61__ arg_62__ => false) true)
     (* product *)
     (fun a `{GHC.Num.Num a} =>
-       Coq.Program.Basics.compose Data.Monoid.getProduct
-                                  (foldMap _ _ _ Data.Monoid.Mk_Product))
+       Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                                  (foldMap _ _ _ _ Data.Semigroup.Internal.Mk_Product))
     (* sum *)
     (fun a `{GHC.Num.Num a} =>
-       Coq.Program.Basics.compose Data.Monoid.getSum
-                                  (foldMap _ _ _ Data.Monoid.Mk_Sum))
+       Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                                  (foldMap _ _ _ _ Data.Semigroup.Internal.Mk_Sum))
     (* toList *)
     (fun a => fun t => GHC.Base.build (fun _ c n => @foldr _ _ c n t)).
 
@@ -65,16 +65,16 @@ Definition default_foldable_foldMap {f : Type -> Type}
  :=
   let foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b :=
   fun a b f z t =>
-    Data.Monoid.appEndo
+    Data.Semigroup.Internal.appEndo
       (foldMap
-         (Coq.Program.Basics.compose Data.Monoid.Mk_Endo f) t) z
+         (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Endo f) t) z
   in
   default_foldable (fun {m}{a} `{GHC.Base.Monoid m} => foldMap) foldr.
 
 Definition default_foldable_foldr (f : Type -> Type)
   (foldr : forall {a} {b}, (a -> b -> b) -> b -> f a -> b) :=
   let foldMap :  forall {m} {a} `{GHC.Base.Monoid m}, (a -> m) -> f a -> m :=
-  fun m a (H : GHC.Base.Monoid m) =>
+  fun m a (S : GHC.Base.Semigroup m) (H : GHC.Base.Monoid m) =>
     fun f => foldr
             (Coq.Program.Basics.compose GHC.Base.mappend
                                         f) GHC.Base.mempty

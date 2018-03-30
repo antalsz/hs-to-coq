@@ -9,6 +9,7 @@ skip module GHC.Integer
 skip module GHC.Unicode
 
 skip module Data.Data
+skip module Data.Functor.Util
 
 # manual versions
 # skip module GHC.Num
@@ -63,6 +64,7 @@ rename value GHC.List.foldl'     = GHC.Base.foldl'
 rename value GHC.Magic.oneShot   = GHC.Base.oneShot
 rewrite forall x, GHC.Magic.lazy x = x
 rewrite forall x y, GHC.Prim.seq x y = y
+rewrite forall x y, Data.Functor.Utils.hash_compose x y = Coq.Program.Basics.compose x y
 rewrite forall x, GHC.Base.oneShot x = x
 
 rename type GHC.Types.Ordering = comparison

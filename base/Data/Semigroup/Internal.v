@@ -19,6 +19,7 @@ Implicit Type inst_k: unit_class.
 
 (* Converted imports: *)
 
+Require Coq.Program.Basics.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -192,23 +193,63 @@ Instance Unpeel_Product a : GHC.Prim.Unpeel (Product a) a :=
 Instance Unpeel_Sum a : GHC.Prim.Unpeel (Sum a) a :=
   GHC.Prim.Build_Unpeel _ _ getSum Mk_Sum.
 
-(* Translating `instance Semigroup__Alt' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__Alt_op_zlzlzgzg__ {inst_f} {inst_a}
+  `{GHC.Base.Alternative inst_f}
+   : Alt inst_f inst_a -> Alt inst_f inst_a -> Alt inst_f inst_a :=
+  GHC.Prim.coerce _GHC.Base.<|>_.
 
-(* Translating `instance Monoid__Alt' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__Alt_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__Alt_mempty")]
-   unsupported *)
+Program Instance Semigroup__Alt {f} {a} `{GHC.Base.Alternative f}
+   : GHC.Base.Semigroup (Alt f a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Alt_op_zlzlzgzg__ |}.
 
-(* Translating `instance Semigroup__Product' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Monoid__Alt_mappend {inst_f} {inst_a} `{GHC.Base.Alternative
+  inst_f}
+   : (Alt inst_f inst_a) -> (Alt inst_f inst_a) -> (Alt inst_f inst_a) :=
+  _GHC.Base.<<>>_.
 
-(* Translating `instance Monoid__Product' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__Product_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__Product_mempty")]
-   unsupported *)
+Local Definition Monoid__Alt_mempty {inst_f} {inst_a} `{GHC.Base.Alternative
+  inst_f}
+   : (Alt inst_f inst_a) :=
+  Mk_Alt GHC.Base.empty.
+
+Local Definition Monoid__Alt_mconcat {inst_f} {inst_a} `{GHC.Base.Alternative
+  inst_f}
+   : list (Alt inst_f inst_a) -> (Alt inst_f inst_a) :=
+  GHC.Base.foldr Monoid__Alt_mappend Monoid__Alt_mempty.
+
+Program Instance Monoid__Alt {f} {a} `{GHC.Base.Alternative f}
+   : GHC.Base.Monoid (Alt f a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Alt_mappend ;
+         GHC.Base.mconcat__ := Monoid__Alt_mconcat ;
+         GHC.Base.mempty__ := Monoid__Alt_mempty |}.
+
+Local Definition Semigroup__Product_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
+   : Product inst_a -> Product inst_a -> Product inst_a :=
+  GHC.Prim.coerce _GHC.Num.*_.
+
+Program Instance Semigroup__Product {a} `{GHC.Num.Num a}
+   : GHC.Base.Semigroup (Product a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Product_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__Product_mappend {inst_a} `{GHC.Num.Num inst_a}
+   : (Product inst_a) -> (Product inst_a) -> (Product inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Product_mempty {inst_a} `{GHC.Num.Num inst_a}
+   : (Product inst_a) :=
+  Mk_Product #1.
+
+Local Definition Monoid__Product_mconcat {inst_a} `{GHC.Num.Num inst_a}
+   : list (Product inst_a) -> (Product inst_a) :=
+  GHC.Base.foldr Monoid__Product_mappend Monoid__Product_mempty.
+
+Program Instance Monoid__Product {a} `{GHC.Num.Num a}
+   : GHC.Base.Monoid (Product a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Product_mappend ;
+         GHC.Base.mconcat__ := Monoid__Product_mconcat ;
+         GHC.Base.mempty__ := Monoid__Product_mempty |}.
 
 Local Definition Functor__Product_fmap
    : forall {a} {b}, (a -> b) -> Product a -> Product b :=
@@ -266,14 +307,31 @@ Program Instance Monad__Product : GHC.Base.Monad Product :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Product_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
 
-(* Translating `instance Semigroup__Sum' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
+   : Sum inst_a -> Sum inst_a -> Sum inst_a :=
+  GHC.Prim.coerce _GHC.Num.+_.
 
-(* Translating `instance Monoid__Sum' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__Sum_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__Sum_mempty")]
-   unsupported *)
+Program Instance Semigroup__Sum {a} `{GHC.Num.Num a}
+   : GHC.Base.Semigroup (Sum a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Sum_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__Sum_mappend {inst_a} `{GHC.Num.Num inst_a}
+   : (Sum inst_a) -> (Sum inst_a) -> (Sum inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Sum_mempty {inst_a} `{GHC.Num.Num inst_a}
+   : (Sum inst_a) :=
+  Mk_Sum #0.
+
+Local Definition Monoid__Sum_mconcat {inst_a} `{GHC.Num.Num inst_a}
+   : list (Sum inst_a) -> (Sum inst_a) :=
+  GHC.Base.foldr Monoid__Sum_mappend Monoid__Sum_mempty.
+
+Program Instance Monoid__Sum {a} `{GHC.Num.Num a} : GHC.Base.Monoid (Sum a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Sum_mappend ;
+         GHC.Base.mconcat__ := Monoid__Sum_mconcat ;
+         GHC.Base.mempty__ := Monoid__Sum_mempty |}.
 
 Local Definition Functor__Sum_fmap
    : forall {a} {b}, (a -> b) -> Sum a -> Sum b :=
@@ -328,41 +386,102 @@ Program Instance Monad__Sum : GHC.Base.Monad Sum :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Sum_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Sum_return_ |}.
 
-(* Translating `instance Semigroup__Any' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__Any_op_zlzlzgzg__ : Any -> Any -> Any :=
+  GHC.Prim.coerce orb.
 
-(* Translating `instance Monoid__Any' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__Any_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__Any_mempty")]
-   unsupported *)
+Program Instance Semigroup__Any : GHC.Base.Semigroup Any :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Any_op_zlzlzgzg__ |}.
 
-(* Translating `instance Semigroup__All' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Monoid__Any_mappend : Any -> Any -> Any :=
+  _GHC.Base.<<>>_.
 
-(* Translating `instance Monoid__All' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__All_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__All_mempty")]
-   unsupported *)
+Local Definition Monoid__Any_mempty : Any :=
+  Mk_Any false.
 
-(* Translating `instance Semigroup__Endo' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Monoid__Any_mconcat : list Any -> Any :=
+  GHC.Base.foldr Monoid__Any_mappend Monoid__Any_mempty.
 
-(* Translating `instance Monoid__Endo' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__Endo_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__Endo_mempty")]
-   unsupported *)
+Program Instance Monoid__Any : GHC.Base.Monoid Any :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Any_mappend ;
+         GHC.Base.mconcat__ := Monoid__Any_mconcat ;
+         GHC.Base.mempty__ := Monoid__Any_mempty |}.
 
-(* Translating `instance Semigroup__Dual' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Semigroup" unsupported *)
+Local Definition Semigroup__All_op_zlzlzgzg__ : All -> All -> All :=
+  GHC.Prim.coerce andb.
 
-(* Translating `instance Monoid__Dual' failed: missing Qualified "GHC.Base"
-   "mappend" in fromList [(Qualified "GHC.Base" "mconcat",Qualified
-   "Data.Semigroup.Internal" "Monoid__Dual_mconcat"),(Qualified "GHC.Base"
-   "mempty",Qualified "Data.Semigroup.Internal" "Monoid__Dual_mempty")]
-   unsupported *)
+Program Instance Semigroup__All : GHC.Base.Semigroup All :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__All_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__All_mappend : All -> All -> All :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__All_mempty : All :=
+  Mk_All true.
+
+Local Definition Monoid__All_mconcat : list All -> All :=
+  GHC.Base.foldr Monoid__All_mappend Monoid__All_mempty.
+
+Program Instance Monoid__All : GHC.Base.Monoid All :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__All_mappend ;
+         GHC.Base.mconcat__ := Monoid__All_mconcat ;
+         GHC.Base.mempty__ := Monoid__All_mempty |}.
+
+Local Definition Semigroup__Endo_op_zlzlzgzg__ {inst_a}
+   : Endo inst_a -> Endo inst_a -> Endo inst_a :=
+  GHC.Prim.coerce Coq.Program.Basics.compose.
+
+Program Instance Semigroup__Endo {a} : GHC.Base.Semigroup (Endo a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Endo_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__Endo_mappend {inst_a}
+   : (Endo inst_a) -> (Endo inst_a) -> (Endo inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Endo_mempty {inst_a} : (Endo inst_a) :=
+  Mk_Endo GHC.Base.id.
+
+Local Definition Monoid__Endo_mconcat {inst_a}
+   : list (Endo inst_a) -> (Endo inst_a) :=
+  GHC.Base.foldr Monoid__Endo_mappend Monoid__Endo_mempty.
+
+Program Instance Monoid__Endo {a} : GHC.Base.Monoid (Endo a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Endo_mappend ;
+         GHC.Base.mconcat__ := Monoid__Endo_mconcat ;
+         GHC.Base.mempty__ := Monoid__Endo_mempty |}.
+
+Local Definition Semigroup__Dual_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
+  inst_a}
+   : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Dual a, Mk_Dual b => Mk_Dual (b GHC.Base.<<>> a)
+    end.
+
+Program Instance Semigroup__Dual {a} `{GHC.Base.Semigroup a}
+   : GHC.Base.Semigroup (Dual a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Dual_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__Dual_mappend {inst_a} `{GHC.Base.Monoid inst_a}
+   : (Dual inst_a) -> (Dual inst_a) -> (Dual inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Dual_mempty {inst_a} `{GHC.Base.Monoid inst_a}
+   : (Dual inst_a) :=
+  Mk_Dual GHC.Base.mempty.
+
+Local Definition Monoid__Dual_mconcat {inst_a} `{GHC.Base.Monoid inst_a}
+   : list (Dual inst_a) -> (Dual inst_a) :=
+  GHC.Base.foldr Monoid__Dual_mappend Monoid__Dual_mempty.
+
+Program Instance Monoid__Dual {a} `{GHC.Base.Monoid a}
+   : GHC.Base.Monoid (Dual a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__Dual_mappend ;
+         GHC.Base.mconcat__ := Monoid__Dual_mconcat ;
+         GHC.Base.mempty__ := Monoid__Dual_mempty |}.
 
 Local Definition Functor__Dual_fmap
    : forall {a} {b}, (a -> b) -> Dual a -> Dual b :=
@@ -596,10 +715,10 @@ Local Definition Eq___Alt_op_zsze__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Eq_
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
 
-Instance Eq___Alt {f} {a} `{_ : GHC.Base.Eq_ (f a)} : GHC.Base.Eq_ (Alt f a) :=
+Instance Eq___Alt {f} {a} `{GHC.Base.Eq_ (f a)} : GHC.Base.Eq_ (Alt f a) :=
   fun _ k => k (GHC.Base.Eq___Dict_Build _ Eq___Alt_op_zeze__ Eq___Alt_op_zsze__).
 
-Instance Ord__Alt {f} {a} `{_ : GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
+Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
   fun _ k =>
     k (GHC.Base.Ord__Dict_Build _ Ord__Alt_op_zl__ Ord__Alt_op_zlze__
                                 Ord__Alt_op_zg__ Ord__Alt_op_zgze__ Ord__Alt_compare Ord__Alt_max Ord__Alt_min).
@@ -946,14 +1065,18 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
     end.
 
 (* Unbound variables:
-     Eq Gt Lt Type bool comparison GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.compare GHC.Base.const
-     GHC.Base.errorWithoutStackTrace GHC.Base.fmap GHC.Base.id GHC.Base.liftA2
-     GHC.Base.max GHC.Base.mempty GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__
+     Eq Gt Lt Type andb bool comparison false list orb true
+     Coq.Program.Basics.compose GHC.Base.Alternative GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.Semigroup
+     GHC.Base.compare GHC.Base.const GHC.Base.empty GHC.Base.errorWithoutStackTrace
+     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.max
+     GHC.Base.mempty GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlzd__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_ GHC.Num.fromInteger
-     GHC.Prim.Build_Unpeel GHC.Prim.TYPE GHC.Prim.Unpeel GHC.Prim.coerce
-     GHC.Real.Integral GHC.Types.LiftedRep
+     GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__ GHC.Base.op_zlze__
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
+     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_ GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Build_Unpeel
+     GHC.Prim.TYPE GHC.Prim.Unpeel GHC.Prim.coerce GHC.Real.Integral
+     GHC.Types.LiftedRep
 *)

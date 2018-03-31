@@ -139,6 +139,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
                      -I ghc/compiler/stage2/build \
                      --ghc -DSTAGE=2 \
                      --ghc -package=ghc-boot-th \
+                     --ghc -XNoImplicitPrelude \
                      -e ../../base/edits \
                      -e ../containers/edits \
                      -e ../transformers/edits \
@@ -161,6 +162,7 @@ $(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcar
                      -I ghc/compiler/stage2/build \
                      --ghc -DSTAGE=2 \
                      --ghc -package=ghc-boot-th \
+                     --ghc -XNoImplicitPrelude \
                      -e ../../base/edits \
                      -e ../containers/edits \
                      -e ../transformers/edits \
@@ -183,6 +185,7 @@ $(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-ed
                      -I ghc/compiler/stage2/build \
                      --ghc -DSTAGE=2 \
                      --ghc -package=ghc-boot-th \
+                     --ghc -XNoImplicitPrelude \
                      -e ../../base/edits \
                      -e ../containers/edits \
                      -e ../transformers/edits \

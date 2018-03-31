@@ -551,7 +551,7 @@ Axiom flagsForCompletion : bool -> list GHC.Base.String.
 
 Axiom allNonDeprecatedFlags : list GHC.Base.String.
 
-Axiom allFlagsDeps : bool -> list GHC.Base.String.
+(* allFlagsDeps skipped *)
 
 (* flagsAllDeps skipped *)
 

@@ -122,14 +122,16 @@ cannot derive Ord for OccName (defined by hand)
 
 -  Module
 
-axiomatized
-still needs Data.Map.Base, FiniteMap
 skip FilePath related stuff
 Ord instances for module type guess wrong
 
 -  DynFlags
 
 axiomatized
+
+there is way too much here to bring in. We should figure out 
+what we actually need from this module and do it by hand.
+
 some types "stubbed out" so that they don't bring in irrelevant information
 
 DynFlags.Settings : Type := Mk_Settings.
@@ -152,6 +154,7 @@ the mutual definition.
 
 Partial function (NameEnv.lookupNameEnv_NF), cannot process error message
 TODO: Not obviously terminating function (NameEnv.depAnal)
+Also needs Data.Graph
 
 -  Var
 
@@ -167,11 +170,10 @@ However, redefine/skip edits don't work with record selectors.
 Some operations are not obviously terminating (i.e. fixpoint calculations)
 fixVarSet, transCloDVarSet, transCloVarSet
 
-TODO: needs UniqSet.partitionUniqSet
+To reason about these functions, we need to know that their arguments are
+monotonic.
 
 -  VarEnv
-
-TODO: needs Util.zipEqual, Util.foldl2
 
 -  FastStringEnv
 

@@ -40,11 +40,14 @@ MODULES = \
 	Control/Monad/Trans/Reader \
 	Control/Monad/Trans/Writer/Lazy \
 	Control/Monad/Trans/State/Lazy \
-	Control/Monad/Trans/Accum \
 	Control/Monad/Trans/Cont \
    Control/Monad/Trans/Except \
+	Control/Monad/Trans/Maybe \
    Control/Monad/Trans/RWS/Lazy \
-	Control/Monad/Trans/Select \
+
+# Not in ghc version of transformers
+#	Control/Monad/Trans/Accum \
+#	Control/Monad/Trans/Select \
 
 # Generated modules
 # generated directly from GHC/libraries/$(SRC)/tests

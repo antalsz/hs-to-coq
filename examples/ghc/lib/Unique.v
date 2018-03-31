@@ -183,7 +183,7 @@ Definition unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int)%type :=
 Definition mkUnique : GHC.Char.Char -> GHC.Num.Int -> Unique :=
   fun c i =>
     let bits := i Data.Bits..&.(**) uniqueMask in
-    let tag := Data.Bits.shiftL (GHC.Char.ord c) (#64 GHC.Num.- #8) in
+    let tag := Data.Bits.shiftL (GHC.Base.ord c) (#64 GHC.Num.- #8) in
     MkUnique (tag Data.Bits..|.(**) bits).
 
 Definition mkVarOccUnique : FastString.FastString -> Unique :=
@@ -285,7 +285,7 @@ Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
      BasicTypes.Boxity BasicTypes.Unboxed Coq.ZArith.BinInt.Z.to_N
      Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.shiftL Data.Bits.shiftR
      FastString.FastString FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char
-     GHC.Char.chr GHC.Char.ord GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
+     GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.ord
+     GHC.Char.Char GHC.Char.chr GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

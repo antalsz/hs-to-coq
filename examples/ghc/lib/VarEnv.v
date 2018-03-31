@@ -17,6 +17,7 @@ Require Import Core.
 (* Converted imports: *)
 
 Require Core.
+Require CoreType.
 Require Data.Foldable.
 Require Data.Tuple.
 Require GHC.Err.
@@ -42,13 +43,13 @@ Definition TyCoVarEnv :=
   VarEnv%type.
 
 Definition TidyEnv :=
-  (OccName.TidyOccEnv * VarEnv Core.Var)%type%type.
+  (OccName.TidyOccEnv * VarEnv CoreType.Var)%type%type.
 
 Inductive InScopeSet : Type
-  := InScope : (VarEnv Core.Var) -> GHC.Num.Int -> InScopeSet.
+  := InScope : (VarEnv CoreType.Var) -> GHC.Num.Int -> InScopeSet.
 
 Inductive RnEnv2 : Type
-  := RV2 : VarEnv Core.Var -> VarEnv Core.Var -> InScopeSet -> RnEnv2.
+  := RV2 : VarEnv CoreType.Var -> VarEnv CoreType.Var -> InScopeSet -> RnEnv2.
 
 Definition IdEnv :=
   VarEnv%type.
@@ -114,11 +115,11 @@ Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Definition alterDVarEnv {a}
-   : (option a -> option a) -> DVarEnv a -> Core.Var -> DVarEnv a :=
+   : (option a -> option a) -> DVarEnv a -> CoreType.Var -> DVarEnv a :=
   UniqDFM.alterUDFM.
 
 Definition alterVarEnv {a}
-   : (option a -> option a) -> VarEnv a -> Core.Var -> VarEnv a :=
+   : (option a -> option a) -> VarEnv a -> CoreType.Var -> VarEnv a :=
   UniqFM.alterUFM.
 
 Definition anyDVarEnv {a} : (a -> bool) -> DVarEnv a -> bool :=
@@ -127,52 +128,52 @@ Definition anyDVarEnv {a} : (a -> bool) -> DVarEnv a -> bool :=
 Definition dVarEnvElts {a} : DVarEnv a -> list a :=
   UniqDFM.eltsUDFM.
 
-Definition delDVarEnv {a} : DVarEnv a -> Core.Var -> DVarEnv a :=
+Definition delDVarEnv {a} : DVarEnv a -> CoreType.Var -> DVarEnv a :=
   UniqDFM.delFromUDFM.
 
-Definition delDVarEnvList {a} : DVarEnv a -> list Core.Var -> DVarEnv a :=
+Definition delDVarEnvList {a} : DVarEnv a -> list CoreType.Var -> DVarEnv a :=
   UniqDFM.delListFromUDFM.
 
-Definition delVarEnv {a} : VarEnv a -> Core.Var -> VarEnv a :=
+Definition delVarEnv {a} : VarEnv a -> CoreType.Var -> VarEnv a :=
   UniqFM.delFromUFM.
 
-Definition delInScopeSet : InScopeSet -> Core.Var -> InScopeSet :=
+Definition delInScopeSet : InScopeSet -> CoreType.Var -> InScopeSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope n, v => InScope (delVarEnv in_scope v) n
     end.
 
-Definition delVarEnvList {a} : VarEnv a -> list Core.Var -> VarEnv a :=
+Definition delVarEnvList {a} : VarEnv a -> list CoreType.Var -> VarEnv a :=
   UniqFM.delListFromUFM.
 
 Definition delVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> VarEnv a :=
   UniqFM.delFromUFM_Directly.
 
-Definition elemVarEnv {a} : Core.Var -> VarEnv a -> bool :=
+Definition elemVarEnv {a} : CoreType.Var -> VarEnv a -> bool :=
   UniqFM.elemUFM.
 
-Definition inRnEnvL : RnEnv2 -> Core.Var -> bool :=
+Definition inRnEnvL : RnEnv2 -> CoreType.Var -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 env _ _, v => elemVarEnv v env
     end.
 
-Definition inRnEnvR : RnEnv2 -> Core.Var -> bool :=
+Definition inRnEnvR : RnEnv2 -> CoreType.Var -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 _ env _, v => elemVarEnv v env
     end.
 
-Definition elemInScopeSet : Core.Var -> InScopeSet -> bool :=
+Definition elemInScopeSet : CoreType.Var -> InScopeSet -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | v, InScope in_scope _ => elemVarEnv v in_scope
     end.
 
-Definition rnInScope : Core.Var -> RnEnv2 -> bool :=
+Definition rnInScope : CoreType.Var -> RnEnv2 -> bool :=
   fun x env => elemInScopeSet x (in_scope env).
 
-Definition uniqAway : InScopeSet -> Core.Var -> Core.Var :=
+Definition uniqAway : InScopeSet -> CoreType.Var -> CoreType.Var :=
   fun in_scope var =>
     if elemInScopeSet var in_scope : bool then uniqAway' in_scope var else
     var.
@@ -205,17 +206,18 @@ Definition nukeRnEnvR : RnEnv2 -> RnEnv2 :=
 Definition emptyTidyEnv : TidyEnv :=
   pair OccName.emptyTidyOccEnv emptyVarEnv.
 
-Definition extendDVarEnv {a} : DVarEnv a -> Core.Var -> a -> DVarEnv a :=
+Definition extendDVarEnv {a} : DVarEnv a -> CoreType.Var -> a -> DVarEnv a :=
   UniqDFM.addToUDFM.
 
 Definition extendDVarEnv_C {a}
-   : (a -> a -> a) -> DVarEnv a -> Core.Var -> a -> DVarEnv a :=
+   : (a -> a -> a) -> DVarEnv a -> CoreType.Var -> a -> DVarEnv a :=
   UniqDFM.addToUDFM_C.
 
-Definition extendVarEnv {a} : VarEnv a -> Core.Var -> a -> VarEnv a :=
+Definition extendVarEnv {a} : VarEnv a -> CoreType.Var -> a -> VarEnv a :=
   UniqFM.addToUFM.
 
-Definition extendInScopeSetList : InScopeSet -> list Core.Var -> InScopeSet :=
+Definition extendInScopeSetList
+   : InScopeSet -> list CoreType.Var -> InScopeSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope n, vs =>
@@ -224,7 +226,7 @@ Definition extendInScopeSetList : InScopeSet -> list Core.Var -> InScopeSet :=
                                                                                    Data.Foldable.length vs)
     end.
 
-Definition delBndrsR : RnEnv2 -> list Core.Var -> RnEnv2 :=
+Definition delBndrsR : RnEnv2 -> list CoreType.Var -> RnEnv2 :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (RV2 _ env in_scope as rn), v =>
@@ -232,7 +234,7 @@ Definition delBndrsR : RnEnv2 -> list Core.Var -> RnEnv2 :=
         RV2 envL_2__ (delVarEnvList env v) (extendInScopeSetList in_scope v)
     end.
 
-Definition delBndrsL : RnEnv2 -> list Core.Var -> RnEnv2 :=
+Definition delBndrsL : RnEnv2 -> list CoreType.Var -> RnEnv2 :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (RV2 env _ in_scope as rn), v =>
@@ -240,13 +242,13 @@ Definition delBndrsL : RnEnv2 -> list Core.Var -> RnEnv2 :=
         RV2 (delVarEnvList env v) envR_3__ (extendInScopeSetList in_scope v)
     end.
 
-Definition extendInScopeSet : InScopeSet -> Core.Var -> InScopeSet :=
+Definition extendInScopeSet : InScopeSet -> CoreType.Var -> InScopeSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope n, v => InScope (extendVarEnv in_scope v v) (n GHC.Num.+ #1)
     end.
 
-Definition delBndrR : RnEnv2 -> Core.Var -> RnEnv2 :=
+Definition delBndrR : RnEnv2 -> CoreType.Var -> RnEnv2 :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (RV2 _ env in_scope as rn), v =>
@@ -254,7 +256,7 @@ Definition delBndrR : RnEnv2 -> Core.Var -> RnEnv2 :=
         RV2 envL_2__ (delVarEnv env v) (extendInScopeSet in_scope v)
     end.
 
-Definition delBndrL : RnEnv2 -> Core.Var -> RnEnv2 :=
+Definition delBndrL : RnEnv2 -> CoreType.Var -> RnEnv2 :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (RV2 env _ in_scope as rn), v =>
@@ -263,7 +265,7 @@ Definition delBndrL : RnEnv2 -> Core.Var -> RnEnv2 :=
     end.
 
 Definition rnBndr2_var
-   : RnEnv2 -> Core.Var -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+   : RnEnv2 -> CoreType.Var -> CoreType.Var -> (RnEnv2 * CoreType.Var)%type :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | RV2 envL envR in_scope, bL, bR =>
@@ -275,13 +277,14 @@ Definition rnBndr2_var
                   (extendInScopeSet in_scope new_b)) new_b
     end.
 
-Definition rnBndr2 : RnEnv2 -> Core.Var -> Core.Var -> RnEnv2 :=
+Definition rnBndr2 : RnEnv2 -> CoreType.Var -> CoreType.Var -> RnEnv2 :=
   fun env bL bR => Data.Tuple.fst (rnBndr2_var env bL bR).
 
-Definition rnBndrs2 : RnEnv2 -> list Core.Var -> list Core.Var -> RnEnv2 :=
+Definition rnBndrs2
+   : RnEnv2 -> list CoreType.Var -> list CoreType.Var -> RnEnv2 :=
   fun env bsL bsR => Util.foldl2 rnBndr2 env bsL bsR.
 
-Definition rnBndrL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+Definition rnBndrL : RnEnv2 -> CoreType.Var -> (RnEnv2 * CoreType.Var)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 envL envR in_scope, bL =>
@@ -290,7 +293,7 @@ Definition rnBndrL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
              new_b
     end.
 
-Definition rnBndrR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+Definition rnBndrR : RnEnv2 -> CoreType.Var -> (RnEnv2 * CoreType.Var)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 envL envR in_scope, bR =>
@@ -299,7 +302,7 @@ Definition rnBndrR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
              new_b
     end.
 
-Definition rnEtaL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+Definition rnEtaL : RnEnv2 -> CoreType.Var -> (RnEnv2 * CoreType.Var)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 envL envR in_scope, bL =>
@@ -308,7 +311,7 @@ Definition rnEtaL : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
                   (extendInScopeSet in_scope new_b)) new_b
     end.
 
-Definition rnEtaR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
+Definition rnEtaR : RnEnv2 -> CoreType.Var -> (RnEnv2 * CoreType.Var)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 envL envR in_scope, bR =>
@@ -318,15 +321,15 @@ Definition rnEtaR : RnEnv2 -> Core.Var -> (RnEnv2 * Core.Var)%type :=
     end.
 
 Definition extendVarEnvList {a}
-   : VarEnv a -> list (Core.Var * a)%type -> VarEnv a :=
+   : VarEnv a -> list (CoreType.Var * a)%type -> VarEnv a :=
   UniqFM.addListToUFM.
 
 Definition extendVarEnv_Acc {a} {b}
-   : (a -> b -> b) -> (a -> b) -> VarEnv b -> Core.Var -> a -> VarEnv b :=
+   : (a -> b -> b) -> (a -> b) -> VarEnv b -> CoreType.Var -> a -> VarEnv b :=
   UniqFM.addToUFM_Acc.
 
 Definition extendVarEnv_C {a}
-   : (a -> a -> a) -> VarEnv a -> Core.Var -> a -> VarEnv a :=
+   : (a -> a -> a) -> VarEnv a -> CoreType.Var -> a -> VarEnv a :=
   UniqFM.addToUFM_C.
 
 Definition extendVarEnv_Directly {a}
@@ -359,7 +362,7 @@ Definition foldVarEnv_Directly {a} {b}
    : (Unique.Unique -> a -> b -> b) -> b -> VarEnv a -> b :=
   UniqFM.foldUFM_Directly.
 
-Definition getInScopeVars : InScopeSet -> VarEnv Core.Var :=
+Definition getInScopeVars : InScopeSet -> VarEnv CoreType.Var :=
   fun arg_0__ => let 'InScope vs _ := arg_0__ in vs.
 
 Definition isEmptyDVarEnv {a} : DVarEnv a -> bool :=
@@ -371,53 +374,55 @@ Definition isEmptyVarEnv {a} : VarEnv a -> bool :=
 Definition intersectsVarEnv {a} : VarEnv a -> VarEnv a -> bool :=
   fun e1 e2 => negb (isEmptyVarEnv (UniqFM.intersectUFM e1 e2)).
 
-Definition lookupDVarEnv {a} : DVarEnv a -> Core.Var -> option a :=
+Definition lookupDVarEnv {a} : DVarEnv a -> CoreType.Var -> option a :=
   UniqDFM.lookupUDFM.
 
-Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Core.Var -> DVarEnv a :=
+Definition modifyDVarEnv {a}
+   : (a -> a) -> DVarEnv a -> CoreType.Var -> DVarEnv a :=
   fun mangle_fn env key =>
     match (lookupDVarEnv env key) with
     | None => env
     | Some xx => extendDVarEnv env key (mangle_fn xx)
     end.
 
-Definition lookupVarEnv {a} : VarEnv a -> Core.Var -> option a :=
+Definition lookupVarEnv {a} : VarEnv a -> CoreType.Var -> option a :=
   UniqFM.lookupUFM.
 
-Definition rnOccL : RnEnv2 -> Core.Var -> Core.Var :=
+Definition rnOccL : RnEnv2 -> CoreType.Var -> CoreType.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 env _ _, v => Maybes.orElse (lookupVarEnv env v) v
     end.
 
-Definition rnOccL_maybe : RnEnv2 -> Core.Var -> option Core.Var :=
+Definition rnOccL_maybe : RnEnv2 -> CoreType.Var -> option CoreType.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 env _ _, v => lookupVarEnv env v
     end.
 
-Definition rnOccR : RnEnv2 -> Core.Var -> Core.Var :=
+Definition rnOccR : RnEnv2 -> CoreType.Var -> CoreType.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 _ env _, v => Maybes.orElse (lookupVarEnv env v) v
     end.
 
-Definition rnOccR_maybe : RnEnv2 -> Core.Var -> option Core.Var :=
+Definition rnOccR_maybe : RnEnv2 -> CoreType.Var -> option CoreType.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | RV2 _ env _, v => lookupVarEnv env v
     end.
 
-Definition lookupInScope : InScopeSet -> Core.Var -> option Core.Var :=
+Definition lookupInScope : InScopeSet -> CoreType.Var -> option CoreType.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope _, v => lookupVarEnv in_scope v
     end.
 
-Definition lookupRnInScope : RnEnv2 -> Core.Var -> Core.Var :=
+Definition lookupRnInScope : RnEnv2 -> CoreType.Var -> CoreType.Var :=
   fun env v => Maybes.orElse (lookupInScope (in_scope env) v) v.
 
-Definition modifyVarEnv {a} : (a -> a) -> VarEnv a -> Core.Var -> VarEnv a :=
+Definition modifyVarEnv {a}
+   : (a -> a) -> VarEnv a -> CoreType.Var -> VarEnv a :=
   fun mangle_fn env key =>
     match (lookupVarEnv env key) with
     | None => env
@@ -428,7 +433,7 @@ Definition lookupVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> option a :=
   UniqFM.lookupUFM_Directly.
 
 Definition lookupInScope_Directly
-   : InScopeSet -> Unique.Unique -> option Core.Var :=
+   : InScopeSet -> Unique.Unique -> option CoreType.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope _, uniq => lookupVarEnv_Directly in_scope uniq
@@ -442,7 +447,7 @@ Definition lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) (id
   | None => GHC.Err.default
   end.
 
-Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> Core.Var -> a :=
+Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> CoreType.Var -> a :=
   UniqFM.lookupWithDefaultUFM.
 
 Definition mapDVarEnv {a} {b} : (a -> b) -> DVarEnv a -> DVarEnv b :=
@@ -454,13 +459,13 @@ Definition mapVarEnv {a} {b} : (a -> b) -> VarEnv a -> VarEnv b :=
 Definition minusVarEnv {a} {b} : VarEnv a -> VarEnv b -> VarEnv a :=
   UniqFM.minusUFM.
 
-Definition mkInScopeSet : VarEnv Core.Var -> InScopeSet :=
+Definition mkInScopeSet : VarEnv CoreType.Var -> InScopeSet :=
   fun in_scope => InScope in_scope #1.
 
-Definition mkVarEnv {a} : list (Core.Var * a)%type -> VarEnv a :=
+Definition mkVarEnv {a} : list (CoreType.Var * a)%type -> VarEnv a :=
   UniqFM.listToUFM.
 
-Definition zipVarEnv {a} : list Core.Var -> list a -> VarEnv a :=
+Definition zipVarEnv {a} : list CoreType.Var -> list a -> VarEnv a :=
   fun tyvars tys =>
     mkVarEnv (Util.zipEqual (GHC.Base.hs_string__ "zipVarEnv") tyvars tys).
 
@@ -496,14 +501,15 @@ Definition unionInScope : InScopeSet -> InScopeSet -> InScopeSet :=
     | InScope s1 _, InScope s2 n2 => InScope (plusVarEnv s1 s2) n2
     end.
 
-Definition extendInScopeSetSet : InScopeSet -> VarEnv Core.Var -> InScopeSet :=
+Definition extendInScopeSetSet
+   : InScopeSet -> VarEnv CoreType.Var -> InScopeSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope n, vs =>
         InScope (plusVarEnv in_scope vs) (n GHC.Num.+ UniqFM.sizeUFM vs)
     end.
 
-Definition addRnInScopeSet : RnEnv2 -> VarEnv Core.Var -> RnEnv2 :=
+Definition addRnInScopeSet : RnEnv2 -> VarEnv CoreType.Var -> RnEnv2 :=
   fun env vs =>
     if isEmptyVarEnv vs : bool then env else
     let 'RV2 envL_0__ envR_1__ in_scope_2__ := env in
@@ -513,10 +519,10 @@ Definition plusVarEnv_C {a}
    : (a -> a -> a) -> VarEnv a -> VarEnv a -> VarEnv a :=
   UniqFM.plusUFM_C.
 
-Definition rnEnvL : RnEnv2 -> VarEnv Core.Var :=
+Definition rnEnvL : RnEnv2 -> VarEnv CoreType.Var :=
   envL.
 
-Definition rnEnvR : RnEnv2 -> VarEnv Core.Var :=
+Definition rnEnvR : RnEnv2 -> VarEnv CoreType.Var :=
   envR.
 
 Definition rnInScopeSet : RnEnv2 -> InScopeSet :=
@@ -525,10 +531,10 @@ Definition rnInScopeSet : RnEnv2 -> InScopeSet :=
 Definition rnSwap : RnEnv2 -> RnEnv2 :=
   fun arg_0__ => let 'RV2 envL envR in_scope := arg_0__ in RV2 envR envL in_scope.
 
-Definition unitDVarEnv {a} : Core.Var -> a -> DVarEnv a :=
+Definition unitDVarEnv {a} : CoreType.Var -> a -> DVarEnv a :=
   UniqDFM.unitUDFM.
 
-Definition unitVarEnv {a} : Core.Var -> a -> VarEnv a :=
+Definition unitVarEnv {a} : CoreType.Var -> a -> VarEnv a :=
   UniqFM.unitUFM.
 
 Definition varEnvElts {a} : VarEnv a -> list a :=
@@ -547,7 +553,7 @@ Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
     end.
 
 (* Unbound variables:
-     None Some bool list negb op_zt__ option pair uniqAway' Core.Var
+     None Some bool list negb op_zt__ option pair uniqAway' Core.Var CoreType.Var
      Data.Foldable.foldl Data.Foldable.length Data.Tuple.fst GHC.Err.Default
      GHC.Err.default GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ Maybes.orElse
      OccName.TidyOccEnv OccName.emptyTidyOccEnv UniqDFM.UniqDFM UniqDFM.addToUDFM

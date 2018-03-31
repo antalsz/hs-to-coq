@@ -17,6 +17,7 @@ Require Data.Foldable.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
 Require Data.Semigroup.
+Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -45,9 +46,42 @@ Instance Unpeel_UniqFM ele
 (* Translating `instance Outputable__UniqFM' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Skipping instance Traversable__UniqFM *)
+Local Definition Traversable__UniqFM_traverse
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f}, (a -> f b) -> UniqFM a -> f (UniqFM b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, UFM a1 => GHC.Base.fmap (fun b1 => UFM b1) (Data.Traversable.traverse f a1)
+      end.
 
-(* Skipping instance Functor__UniqFM *)
+Local Definition Traversable__UniqFM_sequenceA
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f}, UniqFM (f a) -> f (UniqFM a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__UniqFM_traverse GHC.Base.id.
+
+Local Definition Traversable__UniqFM_sequence
+   : forall {m} {a}, forall `{GHC.Base.Monad m}, UniqFM (m a) -> m (UniqFM a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__UniqFM_sequenceA.
+
+Local Definition Traversable__UniqFM_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m}, (a -> m b) -> UniqFM a -> m (UniqFM b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__UniqFM_traverse.
+
+Local Definition Functor__UniqFM_fmap
+   : forall {a} {b}, (a -> b) -> UniqFM a -> UniqFM b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
+
+Local Definition Functor__UniqFM_op_zlzd__
+   : forall {a} {b}, a -> UniqFM b -> UniqFM a :=
+  fun {a} {b} => GHC.Prim.coerce _GHC.Base.<$_.
+
+Program Instance Functor__UniqFM : GHC.Base.Functor UniqFM :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqFM_op_zlzd__ ;
+         GHC.Base.fmap__ := fun {a} {b} => Functor__UniqFM_fmap |}.
 
 Local Definition Eq___UniqFM_op_zeze__ {inst_ele} `{GHC.Base.Eq_ inst_ele}
    : UniqFM inst_ele -> UniqFM inst_ele -> bool :=
@@ -66,7 +100,80 @@ Program Instance Eq___UniqFM {ele} `{GHC.Base.Eq_ ele}
 (* Translating `instance Data__UniqFM' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
 
-(* Skipping instance Foldable__UniqFM *)
+Local Definition Foldable__UniqFM_elem
+   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> UniqFM a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} => GHC.Prim.coerce Data.Foldable.elem.
+
+Local Definition Foldable__UniqFM_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, UniqFM m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => GHC.Prim.coerce Data.Foldable.fold.
+
+Local Definition Foldable__UniqFM_foldMap
+   : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> UniqFM a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce Data.Foldable.foldMap.
+
+Local Definition Foldable__UniqFM_foldl
+   : forall {b} {a}, (b -> a -> b) -> b -> UniqFM a -> b :=
+  fun {b} {a} => GHC.Prim.coerce Data.Foldable.foldl.
+
+Local Definition Foldable__UniqFM_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> UniqFM a -> b :=
+  fun {b} {a} => GHC.Prim.coerce Data.Foldable.foldl'.
+
+Local Definition Foldable__UniqFM_foldr
+   : forall {a} {b}, (a -> b -> b) -> b -> UniqFM a -> b :=
+  fun {a} {b} => GHC.Prim.coerce Data.Foldable.foldr.
+
+Local Definition Foldable__UniqFM_foldr'
+   : forall {a} {b}, (a -> b -> b) -> b -> UniqFM a -> b :=
+  fun {a} {b} => GHC.Prim.coerce Data.Foldable.foldr'.
+
+Local Definition Foldable__UniqFM_length
+   : forall {a}, UniqFM a -> GHC.Num.Int :=
+  fun {a} => GHC.Prim.coerce Data.Foldable.length.
+
+Local Definition Foldable__UniqFM_null : forall {a}, UniqFM a -> bool :=
+  fun {a} => GHC.Prim.coerce Data.Foldable.null.
+
+Local Definition Foldable__UniqFM_product
+   : forall {a}, forall `{GHC.Num.Num a}, UniqFM a -> a :=
+  fun {a} `{GHC.Num.Num a} => GHC.Prim.coerce Data.Foldable.product.
+
+Local Definition Foldable__UniqFM_sum
+   : forall {a}, forall `{GHC.Num.Num a}, UniqFM a -> a :=
+  fun {a} `{GHC.Num.Num a} => GHC.Prim.coerce Data.Foldable.sum.
+
+Local Definition Foldable__UniqFM_toList : forall {a}, UniqFM a -> list a :=
+  fun {a} => GHC.Prim.coerce Data.Foldable.toList.
+
+Program Instance Foldable__UniqFM : Data.Foldable.Foldable UniqFM :=
+  fun _ k =>
+    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
+           Foldable__UniqFM_elem ;
+         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__UniqFM_fold ;
+         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+           Foldable__UniqFM_foldMap ;
+         Data.Foldable.foldl__ := fun {b} {a} => Foldable__UniqFM_foldl ;
+         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__UniqFM_foldl' ;
+         Data.Foldable.foldr__ := fun {a} {b} => Foldable__UniqFM_foldr ;
+         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__UniqFM_foldr' ;
+         Data.Foldable.length__ := fun {a} => Foldable__UniqFM_length ;
+         Data.Foldable.null__ := fun {a} => Foldable__UniqFM_null ;
+         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+           Foldable__UniqFM_product ;
+         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__UniqFM_sum ;
+         Data.Foldable.toList__ := fun {a} => Foldable__UniqFM_toList |}.
+
+Program Instance Traversable__UniqFM : Data.Traversable.Traversable UniqFM :=
+  fun _ k =>
+    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+           Traversable__UniqFM_mapM ;
+         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+           Traversable__UniqFM_sequence ;
+         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+           Traversable__UniqFM_sequenceA ;
+         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+           Traversable__UniqFM_traverse |}.
 
 Definition addToUFM {key} {elt} `{Unique.Uniquable key}
    : UniqFM elt -> key -> elt -> UniqFM elt :=
@@ -420,7 +527,11 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
     UFM (Data.IntMap.Internal.singleton (Unique.getWordKey (Unique.getUnique k)) v).
 
 (* Unbound variables:
-     Some bool list op_zt__ option pair Coq.ZArith.BinInt.Z.of_N Data.Foldable.foldl
+     Some bool list op_zt__ option pair Coq.ZArith.BinInt.Z.of_N
+     Data.Foldable.Foldable Data.Foldable.elem Data.Foldable.fold
+     Data.Foldable.foldMap Data.Foldable.foldl Data.Foldable.foldl'
+     Data.Foldable.foldr Data.Foldable.foldr' Data.Foldable.length Data.Foldable.null
+     Data.Foldable.product Data.Foldable.sum Data.Foldable.toList
      Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
      Data.IntMap.Internal.alter Data.IntMap.Internal.delete
      Data.IntMap.Internal.difference Data.IntMap.Internal.elems
@@ -437,9 +548,11 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.size Data.IntMap.Internal.splitLookup
      Data.IntMap.Internal.toList Data.IntMap.Internal.union
      Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet
-     Data.Semigroup.Semigroup GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.flip
-     GHC.Base.foldr GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
+     Data.Semigroup.Semigroup Data.Traversable.Traversable Data.Traversable.traverse
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zlzd__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
      GHC.Prim.coerce Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

@@ -1,9 +1,9 @@
-skip VarSet.fixVarSet
-skip VarSet.transCloDVarSet
-skip VarSet.transCloVarSet
-
-# needs UniqSet.partitionUniqSet
-skip VarSet.partitionVarSet
+# These functions are only terminating when 
+# given monotonic arguments.
+#
+termination       VarSet.fixVarSet       deferred
+termination go in VarSet.transCloDVarSet deferred
+termination go in VarSet.transCloVarSet  deferred
 
 # Outputtable
 skip VarSet.pluralVarSet

@@ -135,13 +135,13 @@ Notation "'_>>=_'" := (op_zgzgze__).
 
 Infix ">>=" := (_>>=_) (at level 99).
 
-Record Alternative__Dict f := Alternative__Dict_Build {
+Record Alternative__Dict (f : Type -> Type) := Alternative__Dict_Build {
   empty__ : forall {a}, f a ;
   many__ : forall {a}, f a -> f (list a) ;
   op_zlzbzg____ : forall {a}, f a -> f a -> f a ;
   some__ : forall {a}, f a -> f (list a) }.
 
-Definition Alternative f `{Applicative f} :=
+Definition Alternative (f : Type -> Type) `{Applicative f} :=
   forall r, (Alternative__Dict f -> r) -> r.
 
 Existing Class Alternative.
@@ -206,11 +206,14 @@ Require Export Coq.Lists.List.
 Require Export Bool.Bool.
 
 (* Int and Integer types *)
+Require NArith.
+Require Import ZArith.
 Require Export GHC.Num.
 
 (* Char type *)
 Require Export GHC.Char.
-
+Definition unsafeChr := Z.to_N.
+Definition ord := Z.of_N.
 
 (* Strings *)
 Require Coq.Strings.String.
@@ -260,10 +263,6 @@ Arguments List.app {_} _ _.
 
 Definition Synonym {A : Type} (_uniq : Type) (x : A) : A := x.
 Arguments Synonym {A}%type _uniq%type x%type.
-
-(****************************************************)
-
-Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 
 
 (*********** built in classes Eq & Ord **********************)
@@ -574,7 +573,7 @@ Definition build' : forall {a}, (forall {b}, (a -> b -> b) -> b -> b) -> list a 
 
 (********************************************************************)
 
-Definition oneShot {a} (x:a) := x.
+(* Definition oneShot {a} (x:a) := x. *)
 
 (** Qualified notation for the notation defined here **)
 

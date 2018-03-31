@@ -11,5 +11,5 @@ Require Import Coq.Strings.Ascii.
 Definition hs_char__ : Ascii.ascii -> Char := N_of_ascii.
 Notation "'&#' c" := (hs_char__ c) (at level 1, format "'&#' c").
 
+
 Definition chr : Int -> Char := Z.to_N.
-Definition ord : Char -> Int := Z.of_N.

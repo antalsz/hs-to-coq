@@ -2,18 +2,13 @@ skip UniqFM.pprUniqFM
 skip UniqFM.pluralUFM
 skip UniqFM.pprUFM
 
+
 skip module Compiler.Hoopl.Dataflow
-
-skip module Data.IntMap
-
 # requires Hoopl
 skip UniqFM.joinUFM
 
 # These instances need the corresponding stuff in IntMap.
-# order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
-skip UniqFM.Functor__UniqFM
-skip UniqFM.Foldable__UniqFM
-skip UniqFM.Traversable__UniqFM
+order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
 
 add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => match x with | UFM y => y end) UFM.

@@ -16,6 +16,7 @@ import HsToCoq.Util.Function
 import Data.Traversable
 import Data.Foldable
 import Data.Maybe
+import Data.List (nub,groupBy)
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
@@ -173,6 +174,13 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
+-- Merge two modules with the same names, combining their components
+merge :: (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName])
+merge  (ConvertedModule m1 i1 t1 v1 c1 a1, x1) (ConvertedModule m2 i2 t2 v2 c2 a2, x2)
+  | m1 == m2 = (ConvertedModule m1 (nub (i1 ++ i2)) (t1 ++ t2) (v1 ++ v2) (c1 ++ c2) (a1 ++ a2), x1 ++ x2)
+merge _ _ = error "Can only merge with same name"
+                                                                                   
+
 -- Module-local
 {-
 convert_module_with_imports :: ConversionMonad m
@@ -190,12 +198,14 @@ convert_module_with_imports convModName (group, imports, _exports, _docstring) =
 -}
 
 -- Module-local
+
 convert_module_with_requires_via :: ConversionMonad m
                                  => (ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
                                  -> ModuleName -> RenamedSource ->
                                  m (ConvertedModule, [ModuleName])
-convert_module_with_requires_via convGroup convModName (group, _imports, _exports, _docstring) =
-  withCurrentModule convModName $ do
+convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _exports, _docstring) =
+  withCurrentModule convModNameOrig $ do
+    convModName <- use (edits.renamedModules.at convModNameOrig . non convModNameOrig)
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
                                 , convertedClsInstDecls = convModClsInstDecls
@@ -258,7 +268,10 @@ convertModules sources = do
   let convThisMod (mod,src) = use (edits.axiomatizedModules.contains mod) >>= \case
                                 True  -> axiomatize_module_with_requires mod src
                                 False -> convert_module_with_requires    mod src
-  mods <- traverse convThisMod sources
+  mods' <- traverse convThisMod sources
+  -- merge modules with the same name here
+  let grouped = groupBy (\(m1,_) (m2,_) -> convModName m1 == convModName m2) mods'
+  let mods = map (foldl1 merge) grouped
   pure $
     stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 

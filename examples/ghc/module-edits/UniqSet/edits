@@ -1,8 +1,9 @@
 # needs UniqFM.partion
-skip UniqSet.partitionUniqSet
+# skip UniqSet.partitionUniqSet
 
 # redefine to not use foldr1
 # skip UniqSet.unionManyUniqSets
+
 
 order UniqSet.unionUniqSets UniqSet.unionManyUniqSets
 

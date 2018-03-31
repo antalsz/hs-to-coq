@@ -5,6 +5,7 @@ skip Data.Semigroup.Internal.stimesDefault
 skip Data.Semigroup.Internal.stimesList
 skip Data.Semigroup.Internal.stimesMaybe
 skip Data.Semigroup.Internal.stimesMonoid
+skip Data.Semigroup.Internal.stimesIdempotent
 
 add Data.Semigroup.Internal Instance Unpeel_Dual a : GHC.Prim.Unpeel (Dual a) a :=
 	 GHC.Prim.Build_Unpeel _ _ getDual Mk_Dual.

@@ -16,26 +16,25 @@ Require Import Core.
 
 (* Converted imports: *)
 
-Require Core.
+Require CoreType.
 Require Data.Tuple.
 Require GHC.Base.
-Require Var.
 Require VarSet.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
 Definition InterestingVarFun :=
-  (Core.Var -> bool)%type.
+  (CoreType.Var -> bool)%type.
 
 Definition FV :=
   (InterestingVarFun ->
    VarSet.VarSet ->
-   (list Core.Var * VarSet.VarSet)%type ->
-   (list Core.Var * VarSet.VarSet)%type)%type.
+   (list CoreType.Var * VarSet.VarSet)%type ->
+   (list CoreType.Var * VarSet.VarSet)%type)%type.
 (* Converted value declarations: *)
 
-Definition delFV : Core.Var -> FV -> FV :=
+Definition delFV : CoreType.Var -> FV -> FV :=
   fun var fv fv_cand in_scope acc =>
     fv fv_cand (VarSet.extendVarSet in_scope var) acc.
 
@@ -53,14 +52,14 @@ Definition filterFV : InterestingVarFun -> FV -> FV :=
   fun fv_cand2 fv fv_cand1 in_scope acc =>
     fv (fun v => andb (fv_cand1 v) (fv_cand2 v)) in_scope acc.
 
-Definition fvVarListVarSet : FV -> (list Core.Var * VarSet.VarSet)%type :=
+Definition fvVarListVarSet : FV -> (list CoreType.Var * VarSet.VarSet)%type :=
   fun fv =>
     fv (GHC.Base.const true) VarSet.emptyVarSet (pair nil VarSet.emptyVarSet).
 
 Definition fvVarSet : FV -> VarSet.VarSet :=
   Data.Tuple.snd GHC.Base.∘ fvVarListVarSet.
 
-Definition fvVarList : FV -> list Core.Var :=
+Definition fvVarList : FV -> list CoreType.Var :=
   Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
 
 Definition fvDVarSet : FV -> VarSet.DVarSet :=
@@ -81,7 +80,7 @@ Definition unionFV : FV -> FV -> FV :=
   fun fv1 fv2 fv_cand in_scope acc =>
     fv1 fv_cand in_scope (fv2 fv_cand in_scope acc).
 
-Definition unitFV : Var.Id -> FV :=
+Definition unitFV : CoreType.Id -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | var, fv_cand, in_scope, (pair have haveSet as acc) =>
@@ -92,12 +91,12 @@ Definition unitFV : Var.Id -> FV :=
         acc
     end.
 
-Definition mkFVs : list Core.Var -> FV :=
+Definition mkFVs : list CoreType.Var -> FV :=
   fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
 
 (* Unbound variables:
-     andb bool cons list nil op_zt__ pair true Core.Var Data.Tuple.fst Data.Tuple.snd
-     GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__ Var.Id VarSet.DVarSet
-     VarSet.VarSet VarSet.elemVarSet VarSet.emptyVarSet VarSet.extendVarSet
-     VarSet.mkDVarSet VarSet.unionVarSet
+     andb bool cons list nil op_zt__ pair true CoreType.Id CoreType.Var
+     Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__
+     VarSet.DVarSet VarSet.VarSet VarSet.elemVarSet VarSet.emptyVarSet
+     VarSet.extendVarSet VarSet.mkDVarSet VarSet.unionVarSet
 *)

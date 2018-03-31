@@ -28,6 +28,10 @@ HANDMOD = \
   TysWiredIn \
   CallArity \
 
+# generated from drop-in/
+DROPIN = \
+
+
 # Generated modules
 # generated directly from ghc/compiler/*/
 MODULES = \
@@ -59,7 +63,6 @@ MODULES = \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
-  Var \
   VarSet \
   VarEnv \
   ConLike \
@@ -76,12 +79,19 @@ CORE_MODULES = \
   CoreFVs \
   CoreArity \
 
+CORETYPE = \
+  TyCoRep \
+  Coercion \
+  Type \
+  Var \
+
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
 VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
+VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE) $(VFILES_DROPIN)
 
 all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
@@ -94,9 +104,11 @@ $(OUT)/_CoqProject: $(OUT) Makefile
 	echo '-R ../../../base ""' >> $@
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
+	echo '-Q ../../transformers/lib  ""' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(CORE_MODULES)) >> $@
+	echo CoreType.v >> $@
 
 $(OUT)/Makefile: $(OUT) $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
@@ -113,6 +125,8 @@ coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
 
+
+
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
@@ -127,6 +141,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
                      --ghc -package=ghc-boot-th \
                      -e ../../base/edits \
                      -e ../containers/edits \
+                     -e ../transformers/edits \
                      -e edits \
                      -N \
                      -o $(OUT) \
@@ -148,6 +163,7 @@ $(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcar
                      --ghc -package=ghc-boot-th \
                      -e ../../base/edits \
                      -e ../containers/edits \
+                     -e ../transformers/edits \
                      -e edits \
                      -e core-edits \
                      -N \
@@ -155,6 +171,31 @@ $(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcar
 		     ghc/compiler/*/$*.hs
 	test -e $@
 
+
+$(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-edits/CoreType/midamble.v module-edits/CoreType/edits 
+	$(HS_TO_COQ) -e module-edits/CoreType/edits \
+	                  -p module-edits/CoreType/preamble.v \
+	                  --midamble module-edits/CoreType/midamble.v \
+                     --ghc-tree ghc \
+                     -I ghc/includes \
+                     -I ghc/compiler \
+                     -I ghc/compiler/stage2 \
+                     -I ghc/compiler/stage2/build \
+                     --ghc -DSTAGE=2 \
+                     --ghc -package=ghc-boot-th \
+                     -e ../../base/edits \
+                     -e ../containers/edits \
+                     -e ../transformers/edits \
+                     -e edits \
+                     -e core-edits \
+                     -N \
+                     -o $(OUT) \
+		     ghc/compiler/types/TyCoRep.hs ghc/compiler/types/Coercion.hs ghc/compiler/types/Type.hs ghc/compiler/basicTypes/Var.hs
+	test -e $@
+
+
+
+# We added the `test` because `hs-to-coq` doesn't return an error
 
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v

@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Data.Monoid.
+Require Import Data.Monoid.
 Require Data.Traversable.
 Require FastString.
 Require GHC.Base.
@@ -149,11 +149,9 @@ Local Definition Foldable__GenLocated_foldl {inst_l}
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__GenLocated_foldMap
-                                                    (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                (Coq.Program.Basics.compose
-                                                                                 Data.Monoid.Mk_Endo (GHC.Base.flip f)))
-                                                    t)) z
+          appEndo (getDual (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
+                                                          Mk_Dual (Coq.Program.Basics.compose Mk_Endo (GHC.Base.flip
+                                                                                               f))) t)) z
       end.
 
 Local Definition Foldable__GenLocated_foldr' {inst_l}
@@ -173,14 +171,12 @@ Local Definition Foldable__GenLocated_foldr' {inst_l}
 Local Definition Foldable__GenLocated_product {inst_l}
    : forall {a}, forall `{GHC.Num.Num a}, GenLocated inst_l a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getProduct (Foldable__GenLocated_foldMap
-                                Data.Monoid.Mk_Product).
+    Data.Foldable.hash_compose getProduct (Foldable__GenLocated_foldMap Mk_Product).
 
 Local Definition Foldable__GenLocated_sum {inst_l}
    : forall {a}, forall `{GHC.Num.Num a}, GenLocated inst_l a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getSum (Foldable__GenLocated_foldMap
-                                Data.Monoid.Mk_Sum).
+    Data.Foldable.hash_compose getSum (Foldable__GenLocated_foldMap Mk_Sum).
 
 Local Definition Foldable__GenLocated_fold {inst_l}
    : forall {m}, forall `{GHC.Base.Monoid m}, GenLocated inst_l m -> m :=
@@ -191,9 +187,8 @@ Local Definition Foldable__GenLocated_elem {inst_l}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__GenLocated_foldMap
-                                                              (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
-                               _GHC.Base.==_.
+                                  Coq.Program.Basics.compose getAny (Foldable__GenLocated_foldMap
+                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
 
 Local Definition Foldable__GenLocated_foldr {inst_l}
    : forall {a} {b}, (a -> b -> b) -> b -> GenLocated inst_l a -> b :=
@@ -782,11 +777,9 @@ Definition wiredInSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<wired into compiler>")).
 
 (* Unbound variables:
-     Eq Gt Lt None Some Type andb bool comparison false list negb option true
+     Eq Gt Lt Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum None Some Type andb appEndo
+     bool comparison false getAny getDual getProduct getSum list negb option true
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.hash_compose
-     Data.Monoid.Mk_Any Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo
-     Data.Monoid.Mk_Product Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny
-     Data.Monoid.getDual Data.Monoid.getProduct Data.Monoid.getSum
      Data.Traversable.Traversable FastString.FastString FastString.fsLit
      GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare

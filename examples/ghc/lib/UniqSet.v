@@ -82,6 +82,10 @@ Definition mapUniqSet {a} {b} : (a -> b) -> UniqSet a -> UniqSet b :=
 Definition minusUniqSet {a} : UniqSet a -> UniqSet a -> UniqSet a :=
   UniqFM.minusUFM.
 
+Definition partitionUniqSet {a}
+   : (a -> bool) -> UniqSet a -> (UniqSet a * UniqSet a)%type :=
+  UniqFM.partitionUFM.
+
 Definition sizeUniqSet {a} : UniqSet a -> GHC.Num.Int :=
   UniqFM.sizeUFM.
 
@@ -101,11 +105,11 @@ Definition unitUniqSet {a} `{Unique.Uniquable a} : a -> UniqSet a :=
   fun x => UniqFM.unitUFM x x.
 
 (* Unbound variables:
-     bool cons list option Data.Foldable.foldl Data.Foldable.foldr GHC.Num.Int
-     UniqFM.UniqFM UniqFM.addToUFM UniqFM.addToUFM_C UniqFM.delFromUFM
+     bool cons list op_zt__ option Data.Foldable.foldl Data.Foldable.foldr
+     GHC.Num.Int UniqFM.UniqFM UniqFM.addToUFM UniqFM.addToUFM_C UniqFM.delFromUFM
      UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.elemUFM
      UniqFM.elemUFM_Directly UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM
      UniqFM.foldUFM UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.lookupUFM
-     UniqFM.mapUFM UniqFM.minusUFM UniqFM.plusUFM UniqFM.sizeUFM UniqFM.unitUFM
-     Unique.Uniquable Unique.Unique
+     UniqFM.mapUFM UniqFM.minusUFM UniqFM.partitionUFM UniqFM.plusUFM UniqFM.sizeUFM
+     UniqFM.unitUFM Unique.Uniquable Unique.Unique
 *)

@@ -1,6 +1,6 @@
 # break the cycle with TyThing
 # we may need to axiomatize these two functions in a separate module.
-rename type TyCoRep.TyThing = unit
+rename type CoreType.TyThing = unit
 skip Name.mkWiredInName
 skip Name.wiredInNameTyThing_maybe
 

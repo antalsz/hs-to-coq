@@ -2,6 +2,8 @@
 -R ../../../base ""
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib   ""
+-Q ../../transformers/lib  ""
 FastString.v Panic.v Util.v ListSetOps.v Digraph.v IdInfo.v IdInfo2.v Class.v DataCon.v PatSyn.v Core.v TyCoRep.v PrelNames.v TysWiredIn.v CallArity.v
 Maybes.v MonadUtils.v Pair.v Bag.v SrcLoc.v Unique.v UniqSupply.v UniqFM.v CmmType.v BooleanFormula.v UniqSet.v BasicTypes.v FiniteMap.v UniqDFM.v UniqDSet.v FastStringEnv.v DynFlags.v Module.v OrdList.v OccName.v Name.v NameEnv.v NameSet.v FieldLabel.v Constants.v
-Var.v VarSet.v VarEnv.v ConLike.v FV.v TyCon.v Literal.v CoreSyn.v UnVarGraph.v Demand.v CoreSubst.v CoreUtils.v CoAxiom.v Id.v CoreFVs.v CoreArity.v
+VarSet.v VarEnv.v ConLike.v FV.v TyCon.v Literal.v CoreSyn.v UnVarGraph.v Demand.v CoreSubst.v CoreUtils.v CoAxiom.v Id.v CoreFVs.v CoreArity.v
+CoreType.v

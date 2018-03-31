@@ -1,3 +1,18 @@
+rename module TyCoRep  CoreType
+rename module Type     CoreType
+rename module Coercion CoreType
+rename module Var      CoreType
+
+rename module Data.Set.Base Data.Set.Internal
+rename module Data.Map.Base Data.Map.Internal
+rename module Data.IntMap.Base Data.IntMap.Internal
+rename module Data.IntSet.Base Data.IntSet.Internal
+
+rename value Data.Set.fold = Data.Set.Internal.foldr
+rename value Data.Map.fold = Data.Map.Internal.foldr
+rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
+rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
+
 # Should skip these everywhere
 skip module Outputable
 skip module GHC.Show
@@ -6,14 +21,13 @@ skip module Deriving
 # TODO: better treatment of primitive values
 skip module GHC.Int
 skip module GHC.Word
-skip module GHC.Integer.Type
 
-rename type GHC.IO.FilePath = GHC.Base.String
+# packages we don't yet support 'bytestring'
 rename type Data.ByteString.Internal.ByteString = GHC.Base.String
 
-## check base edits
+# packages we don't yet support 'integer-simple' and 'integer-gmp'
+skip module GHC.Integer.Type
 rename type GHC.Integer.Type.Integer = GHC.Num.Integer
-rename value GHC.Base.ord = GHC.Char.ord
 
 # don't try to format the error messages
 rename value Outputable.pprPanic     = Panic.panicStr
@@ -21,80 +35,6 @@ rename value Outputable.ppr          = Panic.noString
 rename value Outputable.<+>          = GHC.Base.mappend
 rename value Outputable.text         = id
 rename value Outputable.warnPprTrace = Panic.warnPprTrace
-
-# Moved due to upgrade of containers
-rename type Data.Set.Base.Set_ = Data.Set.Internal.Set_
-rename value Data.Set.fold = Data.Set.Internal.foldr
-rename value Data.Set.Base.empty = Data.Set.Internal.empty
-rename value Data.Set.Base.delete = Data.Set.Internal.delete
-rename value Data.Set.Base.insert = Data.Set.Internal.insert
-rename value Data.Set.Base.insertWith = Data.Set.Internal.insertWith
-rename value Data.Set.Base.fromList = Data.Set.Internal.fromList
-rename value Data.Set.Base.toList = Data.Set.Internal.toList
-rename value Data.Set.Base.member = Data.Set.Internal.member
-
-rename type Data.Map.Base.Map = Data.Map.Internal.Map
-rename value Data.Map.fold = Data.Map.Internal.foldr
-rename value Data.Map.Base.empty = Data.Map.Internal.empty
-rename value Data.Map.Base.delete = Data.Map.Internal.delete
-rename value Data.Map.Base.insert = Data.Map.Internal.insert
-rename value Data.Map.Base.insertWith = Data.Map.Internal.insertWith
-rename value Data.Map.Base.foldrWithKey = Data.Map.Internal.foldrWithKey
-rename value Data.Map.Base.filterWithKey = Data.Map.Internal.filterWithKey
-rename value Data.Map.Base.findWithDefault = Data.Map.Internal.findWithDefault
-rename value Data.Map.Base.fromList = Data.Map.Internal.fromList
-rename value Data.Map.Base.keys = Data.Map.Internal.keys
-rename value Data.Map.Base.lookup = Data.Map.Internal.lookup
-rename value Data.Map.Base.mapWithKey = Data.Map.Internal.mapWithKey
-rename value Data.Map.Base.member = Data.Map.Internal.member
-rename value Data.Map.Base.null = Data.Map.Internal.null
-rename value Data.Map.Base.singleton = Data.Map.Internal.singleton
-rename value Data.Map.Base.toList = Data.Map.Internal.toList
-rename value Data.Map.Base.union = Data.Map.Internal.union
-rename value Data.Map.Base.unionWith = Data.Map.Internal.unionWith
-
-
-rename type Data.IntMap.Base.IntMap = Data.IntMap.Internal.IntMap
-rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
-rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
-rename value Data.IntMap.Base.foldr = Data.IntMap.Internal.foldr
-rename value Data.IntMap.Base.foldWithKey = Data.IntMap.Internal.foldrWithKey
-rename value Data.IntMap.Base.adjust = Data.IntMap.Internal.adjust
-rename value Data.IntMap.Base.alter = Data.IntMap.Internal.alter
-rename value Data.IntMap.Base.delete = Data.IntMap.Internal.delete
-rename value Data.IntMap.Base.difference = Data.IntMap.Internal.difference
-rename value Data.IntMap.Base.elems = Data.IntMap.Internal.elems
-rename value Data.IntMap.Base.empty = Data.IntMap.Internal.empty
-rename value Data.IntMap.Base.filter = Data.IntMap.Internal.filter
-rename value Data.IntMap.Base.filterWithKey = Data.IntMap.Internal.filterWithKey
-rename value Data.IntMap.Base.findWithDefault = Data.IntMap.Internal.findWithDefault
-rename value Data.IntMap.Base.insert = Data.IntMap.Internal.insert
-rename value Data.IntMap.Base.insertWith = Data.IntMap.Internal.insertWith
-rename value Data.IntMap.Base.intersection = Data.IntMap.Internal.intersection
-rename value Data.IntMap.Base.intersectionWith = Data.IntMap.Internal.intersectionWith
-rename value Data.IntMap.Base.keys = Data.IntMap.Internal.keys
-rename value Data.IntMap.Base.lookup = Data.IntMap.Internal.lookup
-rename value Data.IntMap.Base.map = Data.IntMap.Internal.map
-rename value Data.IntMap.Base.mapWithKey = Data.IntMap.Internal.mapWithKey
-rename value Data.IntMap.Base.member = Data.IntMap.Internal.member
-rename value Data.IntMap.Base.null = Data.IntMap.Internal.null
-rename value Data.IntMap.Base.partition = Data.IntMap.Internal.partition
-rename value Data.IntMap.Base.singleton = Data.IntMap.Internal.singleton
-rename value Data.IntMap.Base.size = Data.IntMap.Internal.size
-rename value Data.IntMap.Base.splitLookup = Data.IntMap.Internal.splitLookup
-rename value Data.IntMap.Base.toList = Data.IntMap.Internal.toList
-rename value Data.IntMap.Base.union = Data.IntMap.Internal.union
-rename value Data.IntMap.Base.unionWith = Data.IntMap.Internal.unionWith
-rename value Data.IntMap.Base.mergeWithKey = Data.IntMap.Internal.mergeWithKey
-rename value Data.IntMap.Base.keysSet = Data.IntMap.Internal.keysSet
-
-rename type Data.IntSet.Base.IntSet = Data.IntSet.Internal.IntSet
-rename value Data.IntSet.Base.empty = Data.IntSet.Internal.empty
-rename value Data.IntSet.Base.null = Data.IntSet.Internal.null
-rename value Data.IntSet.Base.fromList = Data.IntSet.Internal.fromList
-rename value Data.IntSet.Base.member = Data.IntSet.Internal.member
-rename value Data.IntSet.Base.delete = Data.IntSet.Internal.delete
-rename value Data.IntSet.Base.union = Data.IntSet.Internal.union
 
 # Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP

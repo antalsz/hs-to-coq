@@ -12,12 +12,12 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Import GHC.Base.
+Require GHC.Base.
 
 (* Converted type declarations: *)
 
 Record MonadTrans__Dict t := MonadTrans__Dict_Build {
-  lift__ : forall {m} {a}, forall `{(Monad m)}, m a -> t m a }.
+  lift__ : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> t m a }.
 
 Definition MonadTrans t :=
   forall r, (MonadTrans__Dict t -> r) -> r.
@@ -25,10 +25,10 @@ Definition MonadTrans t :=
 Existing Class MonadTrans.
 
 Definition lift `{g : MonadTrans t}
-   : forall {m} {a}, forall `{(Monad m)}, m a -> t m a :=
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> t m a :=
   g _ (lift__ t).
 (* No value declarations to convert. *)
 
 (* Unbound variables:
-     Monad
+     GHC.Base.Monad
 *)

@@ -18,6 +18,7 @@ Require Import Core.
 
 Require BasicTypes.
 Require Core.
+Require CoreType.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
@@ -46,7 +47,7 @@ Inductive Literal : Type
   |  MachLabel
    : FastString.FastString ->
      (option GHC.Num.Int) -> BasicTypes.FunctionOrData -> Literal
-  |  LitInteger : GHC.Num.Integer -> Core.Type_ -> Literal.
+  |  LitInteger : GHC.Num.Integer -> CoreType.Type_ -> Literal.
 (* Midamble *)
 
 Instance Default_Literal : GHC.Err.Default Literal :=
@@ -73,7 +74,7 @@ Definition absentLiteralOf : Core.TyCon -> option Literal :=
 Definition char2IntLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
-    | MachChar c => MachInt (GHC.Real.toInteger (GHC.Char.ord c))
+    | MachChar c => MachInt (GHC.Real.toInteger (GHC.Base.ord c))
     | l => Panic.panicStr (GHC.Base.hs_string__ "char2IntLit") (Panic.noString l)
     end.
 
@@ -105,7 +106,7 @@ Definition hashRational : GHC.Real.Rational -> GHC.Num.Int :=
 Definition hashLiteral : Literal -> GHC.Num.Int :=
   fun arg_0__ =>
     match arg_0__ with
-    | MachChar c => GHC.Char.ord c GHC.Num.+ #1000
+    | MachChar c => GHC.Base.ord c GHC.Num.+ #1000
     | MachStr s => FastString.hashByteString s
     | MachNullAddr => #0
     | MachInt i => hashInteger i
@@ -185,9 +186,9 @@ Definition litFitsInChar : Literal -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | MachInt i =>
-        andb (i GHC.Base.>= GHC.Real.toInteger (GHC.Char.ord GHC.Enum.minBound)) (i
+        andb (i GHC.Base.>= GHC.Real.toInteger (GHC.Base.ord GHC.Enum.minBound)) (i
               GHC.Base.<=
-              GHC.Real.toInteger (GHC.Char.ord GHC.Enum.maxBound))
+              GHC.Real.toInteger (GHC.Base.ord GHC.Enum.maxBound))
     | _ => false
     end.
 
@@ -300,7 +301,7 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
 Definition litValue : Literal -> GHC.Num.Integer :=
   fun arg_0__ =>
     match arg_0__ with
-    | MachChar c => GHC.Real.toInteger (GHC.Char.ord c)
+    | MachChar c => GHC.Real.toInteger (GHC.Base.ord c)
     | MachInt i => i
     | MachInt64 i => i
     | MachWord i => i
@@ -309,7 +310,7 @@ Definition litValue : Literal -> GHC.Num.Integer :=
     | l => Panic.panicStr (GHC.Base.hs_string__ "litValue") (Panic.noString l)
     end.
 
-Definition literalType : Literal -> Core.Type_ :=
+Definition literalType : Literal -> CoreType.Type_ :=
   fun arg_0__ =>
     match arg_0__ with
     | MachNullAddr => Core.addrPrimTy
@@ -325,7 +326,7 @@ Definition literalType : Literal -> Core.Type_ :=
     | LitInteger _ t => t
     end.
 
-Definition mkLitInteger : GHC.Num.Integer -> Core.Type_ -> Literal :=
+Definition mkLitInteger : GHC.Num.Integer -> CoreType.Type_ -> Literal :=
   LitInteger.
 
 Definition mkMachChar : GHC.Char.Char -> Literal :=
@@ -365,16 +366,17 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
 
 (* Unbound variables:
      Eq Gt Lt absent_lits andb bool comparison false option true
-     BasicTypes.FunctionOrData Core.TyCon Core.Type_ Core.addrPrimTy Core.charPrimTy
+     BasicTypes.FunctionOrData Core.TyCon Core.addrPrimTy Core.charPrimTy
      Core.doublePrimTy Core.floatPrimTy Core.int64PrimTy Core.intPrimTy
-     Core.word64PrimTy Core.wordPrimTy DynFlags.DynFlags DynFlags.tARGET_MAX_INT
-     DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT FastString.FastString
-     FastString.fastStringToByteString FastString.hashByteString
-     FastString.mkFastString FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char
-     GHC.Char.chr GHC.Char.ord GHC.Enum.maxBound GHC.Enum.minBound GHC.Num.Int
-     GHC.Num.Integer GHC.Num.abs GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Real.Rational GHC.Real.numerator GHC.Real.rem GHC.Real.toInteger
-     Panic.noString Panic.panicStr TyCon.tyConName UniqFM.lookupUFM
+     Core.word64PrimTy Core.wordPrimTy CoreType.Type_ DynFlags.DynFlags
+     DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT
+     FastString.FastString FastString.fastStringToByteString
+     FastString.hashByteString FastString.mkFastString FastString.uniqueOfFS
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound
+     GHC.Num.Int GHC.Num.Integer GHC.Num.abs GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.numerator GHC.Real.rem
+     GHC.Real.toInteger Panic.noString Panic.panicStr TyCon.tyConName
+     UniqFM.lookupUFM
 *)

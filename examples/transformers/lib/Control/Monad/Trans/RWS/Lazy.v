@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Import Data.Functor.Identity.
+Require Import Data.Monoid.
 Require Data.Tuple.
 Require Import GHC.Base.
 

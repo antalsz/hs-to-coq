@@ -100,6 +100,8 @@ renamed :: HsNamespace -> Qualid -> Lens' ConversionState (Maybe Qualid)
 renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
+
+
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Qualid () m)
 type ConversionT m = StateT ConversionState (VariablesT Qualid () m)
 
@@ -214,7 +216,21 @@ builtInClasses =
                     App1 "f" "a")
         -}
         ]
-
+    {-
+    -- This is essentially a class for co-inductive types. 
+    , ClassDefinition "GHC.Base.Alternative" 
+        [ "f"
+        , Generalized Implicit (App1 "GHC.Base.Applicative" "f")
+        ]
+        Nothing
+        [ "GHC.Base.empty" =:
+          (Forall [ Inferred Implicit (Ident "a") ] $
+           App1 "f" "a")
+        , "GHC.Base.op_zgzbzl__" =:
+          (Forall [ Inferred Implicit (Ident "a") ] $
+           App1 "f" "a" `Arrow` App1 "f" "a" `Arrow` App1 "f" "a")
+        ]
+    -}
     , ClassDefinition "Data.Foldable.Foldable" ["t"] Nothing
       [("Data.Foldable.elem",Forall (Inferred Implicit (Ident "a") :| []) (Forall (Generalized Implicit (App "GHC.Base.Eq_" (PosArg "a" :| [])) :| []) (Arrow "a" (Arrow (App "t" (PosArg "a" :| [])) "bool")))),
         ("Data.Foldable.fold",Forall (Inferred Implicit (Ident "m") :| []) (Forall (Generalized Implicit (App "GHC.Base.Monoid" (PosArg "m" :| [])) :| []) (Arrow (App "t" (PosArg "m" :| [])) "m"))),

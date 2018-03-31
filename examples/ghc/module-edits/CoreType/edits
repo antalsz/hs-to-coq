@@ -1,0 +1,6 @@
+skip module GHC.Stack
+skip module StaticFlags
+skip module Kind
+skip module GHC.IORef
+skip module TcType
+skip module TysPrim

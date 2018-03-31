@@ -21,6 +21,7 @@ Implicit Type inst_k: unit_class.
 
 Require Coq.Program.Basics.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Prim.
 Require GHC.Real.
@@ -1045,21 +1046,14 @@ Program Instance Ord__Dual {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Dual a) :=
          GHC.Base.max__ := Ord__Dual_max ;
          GHC.Base.min__ := Ord__Dual_min |}.
 
-Definition stimesIdempotent {b} {a} `{GHC.Real.Integral b} : b -> a -> a :=
-  fun n x =>
-    if n GHC.Base.<= #0 : bool
-    then GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                          "stimesIdempotent: positive multiplier expected") else
-    x.
-
 Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
   `{GHC.Base.Monoid a}
    : b -> a -> a :=
   fun n x =>
     match GHC.Base.compare n #0 with
     | Lt =>
-        GHC.Base.errorWithoutStackTrace (GHC.Base.hs_string__
-                                         "stimesIdempotentMonoid: negative multiplier")
+        GHC.Err.errorWithoutStackTrace (GHC.Base.hs_string__
+                                        "stimesIdempotentMonoid: negative multiplier")
     | Eq => GHC.Base.mempty
     | Gt => x
     end.
@@ -1069,14 +1063,13 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
      Coq.Program.Basics.compose GHC.Base.Alternative GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.Semigroup
-     GHC.Base.compare GHC.Base.const GHC.Base.empty GHC.Base.errorWithoutStackTrace
-     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.max
-     GHC.Base.mempty GHC.Base.min GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__ GHC.Base.op_zlze__
-     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_ GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Build_Unpeel
-     GHC.Prim.TYPE GHC.Prim.Unpeel GHC.Prim.coerce GHC.Real.Integral
-     GHC.Types.LiftedRep
+     GHC.Base.compare GHC.Base.const GHC.Base.empty GHC.Base.fmap GHC.Base.foldr
+     GHC.Base.id GHC.Base.liftA2 GHC.Base.max GHC.Base.mempty GHC.Base.min
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__
+     GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__
+     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     GHC.Err.errorWithoutStackTrace GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     GHC.Num.op_zt__ GHC.Prim.Build_Unpeel GHC.Prim.TYPE GHC.Prim.Unpeel
+     GHC.Prim.coerce GHC.Real.Integral GHC.Types.LiftedRep
 *)

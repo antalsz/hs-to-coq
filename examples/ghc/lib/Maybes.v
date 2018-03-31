@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Trans.Maybe.
 Require Data.Maybe.
 Require GHC.Base.
 Import GHC.Base.Notations.
@@ -122,6 +123,10 @@ Definition failME {err} {val} : err -> MaybeErr err val :=
 Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
   fun arg_0__ => match arg_0__ with | Succeeded _ => true | Failed _ => false end.
 
+Definition liftMaybeT {m} {a} `{GHC.Base.Monad m}
+   : m a -> Control.Monad.Trans.Maybe.MaybeT m a :=
+  fun act => Control.Monad.Trans.Maybe.Mk_MaybeT (GHC.Base.liftM Some act).
+
 Definition orElse {a} : option a -> a -> a :=
   GHC.Base.flip Data.Maybe.fromMaybe.
 
@@ -134,8 +139,8 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
     end.
 
 (* Unbound variables:
-     None Some bool false option true tt unit Data.Maybe.fromMaybe
-     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.const
-     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_
+     None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT
+     Control.Monad.Trans.Maybe.Mk_MaybeT Data.Maybe.fromMaybe GHC.Base.Applicative
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap
+     GHC.Base.id GHC.Base.liftM GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
 *)

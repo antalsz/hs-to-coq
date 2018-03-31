@@ -2,11 +2,10 @@
 skip Maybes.firstJusts
 skip Maybes.firstJust
 
-## needs Control.Monad.Trans.MaybeT
-skip Maybes.liftMaybeT
+# Needs Control.Exception.Base
 skip Maybes.tryMaybeT
 
-## Defined in the midamble to oush the partiality of expectJust to the caller
+## Defined in the midamble to push the partiality of expectJust to the caller
 ## (should we do this??)
 skip Maybes.expectJust
 

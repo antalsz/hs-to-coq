@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 Require Bag.
 Require Coq.Init.Datatypes.
 Require Core.
+Require CoreType.
 Require Data.Foldable.
 Require Data.IntSet.Internal.
 Require GHC.Base.
@@ -92,22 +93,22 @@ Definition completeBipartiteGraph : UnVarSet -> UnVarSet -> UnVarGraph :=
 Definition k : Core.Var -> GHC.Num.Word :=
   fun v => Unique.getWordKey (Unique.getUnique v).
 
-Definition mkUnVarSet : list Core.Var -> UnVarSet :=
+Definition mkUnVarSet : list CoreType.Var -> UnVarSet :=
   fun vs => Mk_UnVarSet (Data.IntSet.Internal.fromList (GHC.Base.map k vs)).
 
-Definition elemUnVarSet : Core.Var -> UnVarSet -> bool :=
+Definition elemUnVarSet : CoreType.Var -> UnVarSet -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | v, Mk_UnVarSet s => Data.IntSet.Internal.member (k v) s
     end.
 
-Definition delUnVarSet : UnVarSet -> Core.Var -> UnVarSet :=
+Definition delUnVarSet : UnVarSet -> CoreType.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UnVarSet s, v => Mk_UnVarSet (Data.IntSet.Internal.delete (k v) s)
     end.
 
-Definition delNode : UnVarGraph -> Core.Var -> UnVarGraph :=
+Definition delNode : UnVarGraph -> CoreType.Var -> UnVarGraph :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UnVarGraph g, v =>
@@ -139,7 +140,7 @@ Definition unionUnVarSet : UnVarSet -> UnVarSet -> UnVarSet :=
 Definition unionUnVarSets : list UnVarSet -> UnVarSet :=
   Data.Foldable.foldr unionUnVarSet emptyUnVarSet.
 
-Definition neighbors : UnVarGraph -> Core.Var -> UnVarSet :=
+Definition neighbors : UnVarGraph -> CoreType.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UnVarGraph g, v =>
@@ -163,7 +164,7 @@ Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
 (* Unbound variables:
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
      Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app Core.Var
-     Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
+     CoreType.Var Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union

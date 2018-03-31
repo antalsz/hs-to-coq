@@ -4,6 +4,8 @@
 
 
 * Generated modules, what are we skipping in them and why?
+  GHC/Base
+
 
   GHC/List
     - five skipped function (take,drop,replicate, scanr, splitAt)
@@ -252,6 +254,7 @@ Text.Printf
 
 GHC.Constants
 Control.Monad.Instances
+Data.Kind  -- completely ignored
 
 - Modules that wrap GHC language features not
   found in Coq.
@@ -317,7 +320,6 @@ X Data.Functor.Identity
 Data.Functor.Product
 Data.Functor.Sum
 Data.Int
-Data.Kind  -- completely ignored
 X Data.List
 X Data.List.NonEmpty -- partial functions aren't really partial, :| constructor
 X Data.Maybe

@@ -16,6 +16,7 @@ Require Import Core.
 
 (* Converted imports: *)
 
+Require BasicTypes.
 Require Core.
 Require CoreSyn.
 Require CoreType.
@@ -29,7 +30,7 @@ Require VarEnv.
 (* Converted type declarations: *)
 
 Definition CheapAppFun :=
-  (CoreType.Id -> GHC.Num.Int -> bool)%type.
+  (CoreType.Id -> BasicTypes.Arity -> bool)%type.
 (* Midamble *)
 
 (* Record selector *)
@@ -62,6 +63,8 @@ Axiom bindNonRec : CoreType.Id ->
                    CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
 (* mkCast skipped *)
+
+Axiom isExprLevPoly : CoreSyn.CoreExpr -> bool.
 
 Axiom coreAltsType : list CoreSyn.CoreAlt -> CoreType.Type_.
 
@@ -99,16 +102,15 @@ Axiom cheapEqExpr' : forall {b},
                      (CoreSyn.Tickish CoreType.Id -> bool) ->
                      CoreSyn.Expr b -> CoreSyn.Expr b -> bool.
 
-Axiom exprOkForSideEffects : forall {b}, CoreSyn.Expr b -> bool.
+Axiom exprOkForSideEffects : CoreSyn.CoreExpr -> bool.
 
 Axiom needsCaseBinding : CoreType.Type_ -> CoreSyn.CoreExpr -> bool.
 
-Axiom exprOkForSpeculation : forall {b}, CoreSyn.Expr b -> bool.
+Axiom exprOkForSpeculation : CoreSyn.CoreExpr -> bool.
 
-Axiom app_ok : forall {b},
-               (unit -> bool) -> CoreType.Id -> list (CoreSyn.Expr b) -> bool.
+Axiom app_ok : (unit -> bool) -> CoreType.Id -> list CoreSyn.CoreExpr -> bool.
 
-Axiom expr_ok : forall {b}, (unit -> bool) -> CoreSyn.Expr b -> bool.
+Axiom expr_ok : (unit -> bool) -> CoreSyn.CoreExpr -> bool.
 
 Axiom stripTicksTopE : forall {b},
                        (CoreSyn.Tickish CoreType.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b.
@@ -171,17 +173,19 @@ Axiom exprIsDupable : DynFlags.DynFlags -> CoreSyn.CoreExpr -> bool.
 
 Axiom dupAppSize : GHC.Num.Int.
 
-Axiom exprIsWorkFree : CoreSyn.CoreExpr -> bool.
-
 Axiom exprIsCheap : CoreSyn.CoreExpr -> bool.
 
 Axiom exprIsExpandable : CoreSyn.CoreExpr -> bool.
 
-Axiom exprIsCheap' : CheapAppFun -> CoreSyn.CoreExpr -> bool.
+Axiom exprIsWorkFree : CoreSyn.CoreExpr -> bool.
+
+Axiom exprIsCheapX : CheapAppFun -> CoreSyn.CoreExpr -> bool.
+
+Axiom isExpandableApp : CheapAppFun.
 
 Axiom isCheapApp : CheapAppFun.
 
-Axiom isExpandableApp : CheapAppFun.
+Axiom isWorkFreeApp : CheapAppFun.
 
 Axiom altsAreExhaustive : forall {b}, list (Alt b) -> bool.
 
@@ -192,6 +196,10 @@ Axiom exprIsHNF : CoreSyn.CoreExpr -> bool.
 Axiom exprIsConLike : CoreSyn.CoreExpr -> bool.
 
 (* exprIsHNFlike skipped *)
+
+Axiom exprIsTopLevelBindable : CoreSyn.CoreExpr -> CoreType.Type_ -> bool.
+
+Axiom exprIsLiteralString : CoreSyn.CoreExpr -> bool.
 
 (* dataConRepInstPat skipped *)
 
@@ -224,10 +232,16 @@ Axiom eqTickish : VarEnv.RnEnv2 ->
 
 Axiom isEmptyTy : CoreType.Type_ -> bool.
 
+Axiom collectMakeStaticArgs : CoreSyn.CoreExpr ->
+                              option (CoreSyn.CoreExpr * CoreType.Type_ * CoreSyn.CoreExpr *
+                                      CoreSyn.CoreExpr)%type.
+
+Axiom isJoinBind : CoreSyn.CoreBind -> bool.
+
 (* Unbound variables:
-     Alt bool list op_zt__ option unit Core.TyCon CoreSyn.AltCon CoreSyn.CoreAlt
-     CoreSyn.CoreArg CoreSyn.CoreBndr CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish
-     CoreType.Id CoreType.TyVar CoreType.Type_ CoreType.Var DataCon.DataCon
-     DynFlags.DynFlags FastString.FastString GHC.Num.Int Unique.Unique
-     VarEnv.InScopeSet VarEnv.RnEnv2
+     Alt bool list op_zt__ option unit BasicTypes.Arity Core.TyCon CoreSyn.AltCon
+     CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreBndr
+     CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish CoreType.Id CoreType.TyVar
+     CoreType.Type_ CoreType.Var DataCon.DataCon DynFlags.DynFlags
+     FastString.FastString GHC.Num.Int Unique.Unique VarEnv.InScopeSet VarEnv.RnEnv2
 *)

@@ -18,6 +18,9 @@ Import GHC.Num.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
+Definition fLOAT_SIZE : GHC.Num.Int :=
+  #4.
+
 Definition mAX_CTUPLE_SIZE : GHC.Num.Int :=
   #62.
 
@@ -26,6 +29,9 @@ Definition mAX_REDUCTION_DEPTH : GHC.Num.Int :=
 
 Definition mAX_SOLVER_ITERATIONS : GHC.Num.Int :=
   #4.
+
+Definition mAX_SUM_SIZE : GHC.Num.Int :=
+  #62.
 
 Definition mAX_TUPLE_SIZE : GHC.Num.Int :=
   #62.

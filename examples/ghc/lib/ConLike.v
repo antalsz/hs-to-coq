@@ -14,7 +14,6 @@ Require Coq.Program.Wf.
 
 Require BasicTypes.
 Require Data.Foldable.
-Require Data.Function.
 Require DataCon.
 Require FieldLabel.
 Require GHC.Base.
@@ -37,48 +36,6 @@ Import FieldLabel.
 Instance Unique_ConLike : Unique.Uniquable ConLike := {}. Admitted.
 
 (* Converted value declarations: *)
-
-Local Definition Eq___ConLike_op_zeze__ : ConLike -> ConLike -> bool :=
-  Data.Function.on _GHC.Base.==_ Unique.getUnique.
-
-Local Definition Eq___ConLike_op_zsze__ : ConLike -> ConLike -> bool :=
-  Data.Function.on _GHC.Base./=_ Unique.getUnique.
-
-Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
-
-Local Definition Ord__ConLike_compare : ConLike -> ConLike -> comparison :=
-  Data.Function.on GHC.Base.compare Unique.getUnique.
-
-Local Definition Ord__ConLike_op_zg__ : ConLike -> ConLike -> bool :=
-  Data.Function.on _GHC.Base.>_ Unique.getUnique.
-
-Local Definition Ord__ConLike_op_zgze__ : ConLike -> ConLike -> bool :=
-  Data.Function.on _GHC.Base.>=_ Unique.getUnique.
-
-Local Definition Ord__ConLike_op_zl__ : ConLike -> ConLike -> bool :=
-  Data.Function.on _GHC.Base.<_ Unique.getUnique.
-
-Local Definition Ord__ConLike_op_zlze__ : ConLike -> ConLike -> bool :=
-  Data.Function.on _GHC.Base.<=_ Unique.getUnique.
-
-Local Definition Ord__ConLike_min : ConLike -> ConLike -> ConLike :=
-  fun x y => if Ord__ConLike_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__ConLike_max : ConLike -> ConLike -> ConLike :=
-  fun x y => if Ord__ConLike_op_zlze__ x y : bool then y else x.
-
-Program Instance Ord__ConLike : GHC.Base.Ord ConLike :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__ConLike_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__ConLike_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__ConLike_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__ConLike_op_zgze__ ;
-         GHC.Base.compare__ := Ord__ConLike_compare ;
-         GHC.Base.max__ := Ord__ConLike_max ;
-         GHC.Base.min__ := Ord__ConLike_min |}.
 
 (* Translating `instance Uniquable__ConLike' failed: OOPS! Cannot find
    information for class Qualified "Unique" "Uniquable" unsupported *)
@@ -119,6 +76,13 @@ Definition conLikesWithFields
     let has_flds := fun dc => Data.Foldable.all (has_fld dc) lbls in
     GHC.List.filter has_flds con_likes.
 
+Definition conLikeIsInfix : ConLike -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | RealDataCon dc => DataCon.dataConIsInfix dc
+    | PatSynCon ps => PatSyn.patSynIsInfix ps
+    end.
+
 Definition conLikeName : ConLike -> Name.Name :=
   fun arg_0__ =>
     match arg_0__ with
@@ -126,12 +90,25 @@ Definition conLikeName : ConLike -> Name.Name :=
     | PatSynCon pat_syn => PatSyn.patSynName pat_syn
     end.
 
+Definition eqConLike : ConLike -> ConLike -> bool :=
+  fun x y => Unique.getUnique x GHC.Base.== Unique.getUnique y.
+
+Local Definition Eq___ConLike_op_zeze__ : ConLike -> ConLike -> bool :=
+  eqConLike.
+
+Local Definition Eq___ConLike_op_zsze__ : ConLike -> ConLike -> bool :=
+  fun x y => negb (Eq___ConLike_op_zeze__ x y).
+
+Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
+
 (* Unbound variables:
-     bool comparison list BasicTypes.Arity Data.Foldable.all Data.Foldable.any
-     Data.Function.on DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConName
-     DataCon.dataConSourceArity FieldLabel.FieldLabel FieldLabel.FieldLabelString
-     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.List.filter Name.Name PatSyn.PatSyn PatSyn.patSynArity
-     PatSyn.patSynFieldLabels PatSyn.patSynName Unique.getUnique
+     bool list negb BasicTypes.Arity Data.Foldable.all Data.Foldable.any
+     DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConIsInfix
+     DataCon.dataConName DataCon.dataConSourceArity FieldLabel.FieldLabel
+     FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__
+     GHC.List.filter Name.Name PatSyn.PatSyn PatSyn.patSynArity
+     PatSyn.patSynFieldLabels PatSyn.patSynIsInfix PatSyn.patSynName Unique.getUnique
 *)

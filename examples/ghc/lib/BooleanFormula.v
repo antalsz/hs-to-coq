@@ -12,16 +12,19 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Coq.Init.Datatypes.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Maybe.
-Require Import Data.Monoid.
 Require Data.OldList.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require MonadUtils.
 Require SrcLoc.
+Require UniqSet.
+Require Unique.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -39,6 +42,9 @@ Inductive BooleanFormula a : Type
 where "'LBooleanFormula'" := (GHC.Base.Synonym LBooleanFormula__raw (fun a_ =>
                                                   (SrcLoc.Located (BooleanFormula a_))%type)).
 
+Inductive Clause a : Type
+  := Clause : UniqSet.UniqSet a -> list (BooleanFormula a) -> Clause a.
+
 Arguments Var {_} _.
 
 Arguments And {_} _.
@@ -46,6 +52,16 @@ Arguments And {_} _.
 Arguments Or {_} _.
 
 Arguments Parens {_} _.
+
+Arguments Clause {_} _ _.
+
+Definition clauseAtoms {a} (arg_0__ : Clause a) :=
+  let 'Clause clauseAtoms _ := arg_0__ in
+  clauseAtoms.
+
+Definition clauseExprs {a} (arg_1__ : Clause a) :=
+  let 'Clause _ clauseExprs := arg_1__ in
+  clauseExprs.
 (* Midamble *)
 
 Local Fixpoint size {a} (bf: BooleanFormula a) : nat :=
@@ -194,9 +210,12 @@ Local Definition Foldable__BooleanFormula_foldl
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          appEndo (getDual (Foldable__BooleanFormula_foldMap (Coq.Program.Basics.compose
-                                                              Mk_Dual (Coq.Program.Basics.compose Mk_Endo (GHC.Base.flip
-                                                                                                   f))) t)) z
+          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
+                                           (Foldable__BooleanFormula_foldMap (Coq.Program.Basics.compose
+                                                                              Data.Semigroup.Internal.Mk_Dual
+                                                                              (Coq.Program.Basics.compose
+                                                                               Data.Semigroup.Internal.Mk_Endo
+                                                                               (GHC.Base.flip f))) t)) z
       end.
 
 Local Definition Foldable__BooleanFormula_foldr'
@@ -216,13 +235,14 @@ Local Definition Foldable__BooleanFormula_foldr'
 Local Definition Foldable__BooleanFormula_product
    : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__BooleanFormula_foldMap
-                                Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__BooleanFormula_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__BooleanFormula_sum
    : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__BooleanFormula_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__BooleanFormula_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__BooleanFormula_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, BooleanFormula m -> m :=
@@ -233,16 +253,14 @@ Local Definition Foldable__BooleanFormula_elem
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__BooleanFormula_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__BooleanFormula_foldMap
+                                                              (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Any
+                                                                                          p))) _GHC.Base.==_.
 
 Local Definition Foldable__BooleanFormula_foldr {a} {b}
    : (a -> b -> b) -> b -> BooleanFormula a -> b :=
   BooleanFormula_foldr.
-
-Local Definition Foldable__BooleanFormula_null
-   : forall {a}, BooleanFormula a -> bool :=
-  fun {a} => Foldable__BooleanFormula_foldr (fun arg_61__ arg_62__ => false) true.
 
 Local Definition Foldable__BooleanFormula_toList
    : forall {a}, BooleanFormula a -> list a :=
@@ -276,6 +294,17 @@ Local Definition Foldable__BooleanFormula_length
                                        | c, _ => c GHC.Num.+ #1
                                        end) #0.
 
+Local Definition Foldable__BooleanFormula_null
+   : forall {a}, BooleanFormula a -> bool :=
+  fun {a} =>
+    fun arg_0__ =>
+      match arg_0__ with
+      | Var _ => false
+      | And a1 => Data.Foldable.all (Data.Foldable.all Data.Foldable.null) a1
+      | Or a1 => Data.Foldable.all (Data.Foldable.all Data.Foldable.null) a1
+      | Parens a1 => Data.Foldable.all Data.Foldable.null a1
+      end.
+
 Program Instance Foldable__BooleanFormula
    : Data.Foldable.Foldable BooleanFormula :=
   fun _ k =>
@@ -303,7 +332,18 @@ Local Definition Functor__BooleanFormula_fmap {a} {b}
 
 Local Definition Functor__BooleanFormula_op_zlzd__
    : forall {a} {b}, a -> BooleanFormula b -> BooleanFormula a :=
-  fun {a} {b} => fun x => Functor__BooleanFormula_fmap (GHC.Base.const x).
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | z, Var a1 => Var ((fun b1 => z) a1)
+      | z, And a1 =>
+          And (Functor__BooleanFormula_fmap (Functor__BooleanFormula_fmap (_GHC.Base.<$_
+                                                                           z)) a1)
+      | z, Or a1 =>
+          Or (Functor__BooleanFormula_fmap (Functor__BooleanFormula_fmap (_GHC.Base.<$_
+                                                                          z)) a1)
+      | z, Parens a1 => Parens (Functor__BooleanFormula_fmap (_GHC.Base.<$_ z) a1)
+      end.
 
 Program Instance Functor__BooleanFormula : GHC.Base.Functor BooleanFormula :=
   fun _ k =>
@@ -338,7 +378,7 @@ Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
 
 Local Definition Eq___BooleanFormula_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
-  fun a b => negb (Eq___BooleanFormula_op_zeze__ a b).
+  fun x y => negb (Eq___BooleanFormula_op_zeze__ x y).
 
 Program Instance Eq___BooleanFormula {a} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (BooleanFormula a) :=
@@ -355,6 +395,12 @@ Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
            | f, Parens x => eval f (SrcLoc.unLoc x)
            end.
 
+Definition extendClauseAtoms {a} `{Unique.Uniquable a}
+   : Clause a -> a -> Clause a :=
+  fun c x =>
+    let 'Clause clauseAtoms_0__ clauseExprs_1__ := c in
+    Clause (UniqSet.addOneToUniqSet (clauseAtoms c) x) clauseExprs_1__.
+
 Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
   fix impliesAtom arg_0__ arg_1__
         := match arg_0__, arg_1__ with
@@ -364,21 +410,63 @@ Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
            | Parens x, y => impliesAtom (SrcLoc.unLoc x) y
            end.
 
-Definition implies {a} `{GHC.Base.Eq_ a}
-   : BooleanFormula a -> BooleanFormula a -> bool :=
-  fix implies arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | x, Var y => impliesAtom x y
-           | x, And ys => Data.Foldable.all (implies x GHC.Base.∘ SrcLoc.unLoc) ys
-           | x, Or ys => Data.Foldable.any (implies x GHC.Base.∘ SrcLoc.unLoc) ys
-           | x, Parens y => implies x (SrcLoc.unLoc y)
-           end.
-
 Definition isFalse {a} : BooleanFormula a -> bool :=
   fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
 
 Definition isTrue {a} : BooleanFormula a -> bool :=
   fun arg_0__ => match arg_0__ with | And nil => true | _ => false end.
+
+Definition memberClauseAtoms {a} `{Unique.Uniquable a}
+   : a -> Clause a -> bool :=
+  fun x c => UniqSet.elementOfUniqSet x (clauseAtoms c).
+
+Definition implies {a} `{Unique.Uniquable a}
+   : BooleanFormula a -> BooleanFormula a -> bool :=
+  fun e1 e2 =>
+    let go {a} `{Unique.Uniquable a} : Clause a -> Clause a -> bool :=
+      fix go arg_0__ arg_1__
+            := match arg_0__, arg_1__ with
+               | (Clause _ (cons hyp hyps) as l), r =>
+                   match hyp with
+                   | Var x =>
+                       if memberClauseAtoms x r : bool then true else
+                       go (let 'Clause clauseAtoms_2__ clauseExprs_3__ := (extendClauseAtoms l x) in
+                           Clause clauseAtoms_2__ hyps) r
+                   | Parens hyp' =>
+                       go (let 'Clause clauseAtoms_9__ clauseExprs_10__ := l in
+                           Clause clauseAtoms_9__ (cons (SrcLoc.unLoc hyp') hyps)) r
+                   | And hyps' =>
+                       go (let 'Clause clauseAtoms_14__ clauseExprs_15__ := l in
+                           Clause clauseAtoms_14__ (Coq.Init.Datatypes.app (GHC.Base.map SrcLoc.unLoc
+                                                                            hyps') hyps)) r
+                   | Or hyps' =>
+                       Data.Foldable.all (fun hyp' =>
+                                            go (let 'Clause clauseAtoms_19__ clauseExprs_20__ := l in
+                                                Clause clauseAtoms_19__ (cons (SrcLoc.unLoc hyp') hyps)) r) hyps'
+                   end
+               | l, (Clause _ (cons con cons_) as r) =>
+                   match con with
+                   | Var x =>
+                       if memberClauseAtoms x l : bool then true else
+                       go l (let 'Clause clauseAtoms_27__ clauseExprs_28__ := (extendClauseAtoms r
+                                                                                 x) in
+                             Clause clauseAtoms_27__ cons_)
+                   | Parens con' =>
+                       go l (let 'Clause clauseAtoms_34__ clauseExprs_35__ := r in
+                             Clause clauseAtoms_34__ (cons (SrcLoc.unLoc con') cons_))
+                   | And cons' =>
+                       Data.Foldable.all (fun con' =>
+                                            go l (let 'Clause clauseAtoms_39__ clauseExprs_40__ := r in
+                                                  Clause clauseAtoms_39__ (cons (SrcLoc.unLoc con') cons_))) cons'
+                   | Or cons' =>
+                       go l (let 'Clause clauseAtoms_45__ clauseExprs_46__ := r in
+                             Clause clauseAtoms_45__ (Coq.Init.Datatypes.app (GHC.Base.map SrcLoc.unLoc
+                                                                              cons') cons_))
+                   end
+               | _, _ => false
+               end in
+    go (Clause UniqSet.emptyUniqSet (cons e1 nil)) (Clause UniqSet.emptyUniqSet
+                                                    (cons e2 nil)).
 
 Definition mkFalse {a} : BooleanFormula a :=
   Or nil.
@@ -450,15 +538,43 @@ Definition isUnsatisfied {a} `{GHC.Base.Eq_ a}
 Definition mkVar {a} : a -> BooleanFormula a :=
   Var.
 
+Definition pprBooleanFormulaNormal {a} `{(Outputable.OutputableBndr a)}
+   : BooleanFormula a -> Outputable.SDoc :=
+  let fix go arg_0__
+            := match arg_0__ with
+               | Var x => Outputable.pprPrefixOcc x
+               | And xs =>
+                   Outputable.fsep (Outputable.punctuate Outputable.comma (GHC.Base.map (go
+                                                                                         GHC.Base.∘
+                                                                                         SrcLoc.unLoc) xs))
+               | Or nil => Outputable.keyword (id (GHC.Base.hs_string__ "FALSE"))
+               | Or xs =>
+                   Outputable.fsep (Data.OldList.intersperse Outputable.vbar (GHC.Base.map (go
+                                                                                            GHC.Base.∘
+                                                                                            SrcLoc.unLoc) xs))
+               | Parens x => Outputable.parens (go (SrcLoc.unLoc x))
+               end in
+  go.
+
 (* Unbound variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
-     BooleanFormula_traverse LBooleanFormula Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum
-     None Some appEndo bool cons false getAny getDual getProduct getSum list negb nil
-     option true Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.all
-     Data.Foldable.any Data.Foldable.hash_compose Data.Maybe.maybe Data.OldList.nub
+     BooleanFormula_traverse LBooleanFormula None Some bool cons false id list negb
+     nil option true Coq.Init.Datatypes.app Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any Data.Foldable.null
+     Data.Maybe.maybe Data.OldList.intersperse Data.OldList.nub
+     Data.Semigroup.Internal.Mk_Any Data.Semigroup.Internal.Mk_Dual
+     Data.Semigroup.Internal.Mk_Endo Data.Semigroup.Internal.Mk_Product
+     Data.Semigroup.Internal.Mk_Sum Data.Semigroup.Internal.appEndo
+     Data.Semigroup.Internal.getAny Data.Semigroup.Internal.getDual
+     Data.Semigroup.Internal.getProduct Data.Semigroup.Internal.getSum
      Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.const
-     GHC.Base.flip GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
-     MonadUtils.concatMapM SrcLoc.L SrcLoc.Located SrcLoc.unLoc
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.flip
+     GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zlzd__ GHC.Num.Int GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.concatMapM
+     Outputable.OutputableBndr Outputable.SDoc Outputable.comma Outputable.fsep
+     Outputable.keyword Outputable.parens Outputable.pprPrefixOcc
+     Outputable.punctuate Outputable.vbar SrcLoc.L SrcLoc.Located SrcLoc.unLoc
+     UniqSet.UniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
+     UniqSet.emptyUniqSet Unique.Uniquable
 *)

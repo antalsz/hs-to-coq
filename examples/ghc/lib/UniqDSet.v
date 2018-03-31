@@ -88,9 +88,13 @@ Definition unionManyUniqDSets {a} (xs : list (UniqDSet a)) : UniqDSet a :=
   | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
   end.
 
-Definition uniqDSetMinusUniqSet {a}
-   : UniqDSet a -> UniqSet.UniqSet a -> UniqDSet a :=
-  UniqDFM.udfmMinusUFM.
+Definition uniqDSetIntersectUniqSet {a} {b}
+   : UniqDSet a -> UniqSet.UniqSet b -> UniqDSet a :=
+  fun xs ys => UniqDFM.udfmIntersectUFM xs (UniqSet.getUniqSet ys).
+
+Definition uniqDSetMinusUniqSet {a} {b}
+   : UniqDSet a -> UniqSet.UniqSet b -> UniqDSet a :=
+  fun xs ys => UniqDFM.udfmMinusUFM xs (UniqSet.getUniqSet ys).
 
 Definition uniqDSetToList {a} : UniqDSet a -> list a :=
   UniqDFM.eltsUDFM.
@@ -104,6 +108,6 @@ Definition unitUniqDSet {a} `{Unique.Uniquable a} : a -> UniqDSet a :=
      UniqDFM.delListFromUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM
      UniqDFM.filterUDFM UniqDFM.foldUDFM UniqDFM.intersectUDFM UniqDFM.intersectsUDFM
      UniqDFM.isNullUDFM UniqDFM.lookupUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM
-     UniqDFM.plusUDFM UniqDFM.sizeUDFM UniqDFM.udfmMinusUFM UniqDFM.unitUDFM
-     UniqSet.UniqSet Unique.Uniquable
+     UniqDFM.plusUDFM UniqDFM.sizeUDFM UniqDFM.udfmIntersectUFM UniqDFM.udfmMinusUFM
+     UniqDFM.unitUDFM UniqSet.UniqSet UniqSet.getUniqSet Unique.Uniquable
 *)

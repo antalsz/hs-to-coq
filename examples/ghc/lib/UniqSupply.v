@@ -81,6 +81,11 @@ Local Definition Applicative__UniqSM_op_zlztzg__
                  pair (ff xx) us'')
       end.
 
+Local Definition Applicative__UniqSM_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> UniqSM a -> UniqSM b -> UniqSM c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__UniqSM_op_zlztzg__ (GHC.Base.fmap f x).
+
 (* Translating `instance MonadFix__UniqSM' failed: OOPS! Cannot find information
    for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
 
@@ -192,6 +197,7 @@ Program Instance Applicative__UniqSM : GHC.Base.Applicative UniqSM :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__UniqSM_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__UniqSM_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__UniqSM_pure |}.
 
 Local Definition Monad__UniqSM_return_ : forall {a}, a -> UniqSM a :=
@@ -234,7 +240,7 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
 
 (* Unbound variables:
      cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.const GHC.Base.flip GHC.Base.liftM3 GHC.Base.op_z2218U__
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.liftM3 GHC.Base.op_z2218U__
      GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
      GHC.Num.Int GHC.Tuple.pair3 Unique.Unique Unique.mkUniqueGrimily
 *)

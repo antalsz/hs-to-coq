@@ -19,7 +19,6 @@ Require Data.OldList.
 Require GHC.Base.
 Require Name.
 Require OccName.
-Require UniqFM.
 Require UniqSet.
 Import GHC.Base.Notations.
 
@@ -80,11 +79,11 @@ Definition extendNameSetList : NameSet -> list Name.Name -> NameSet :=
 Definition filterNameSet : (Name.Name -> bool) -> NameSet -> NameSet :=
   UniqSet.filterUniqSet.
 
-Definition foldNameSet {b} : (Name.Name -> b -> b) -> b -> NameSet -> b :=
-  UniqSet.foldUniqSet.
-
 Definition intersectNameSet : NameSet -> NameSet -> NameSet :=
   UniqSet.intersectUniqSets.
+
+Definition intersectFVs : FreeVars -> FreeVars -> FreeVars :=
+  intersectNameSet.
 
 Definition isEmptyNameSet : NameSet -> bool :=
   UniqSet.isEmptyUniqSet.
@@ -111,11 +110,14 @@ Definition mkNameSet : list Name.Name -> NameSet :=
 Definition mkFVs : list Name.Name -> FreeVars :=
   mkNameSet.
 
-Definition nameSetElems : NameSet -> list Name.Name :=
-  UniqSet.uniqSetToList.
+Definition nameSetAll : (Name.Name -> bool) -> NameSet -> bool :=
+  UniqSet.uniqSetAll.
+
+Definition nameSetAny : (Name.Name -> bool) -> NameSet -> bool :=
+  UniqSet.uniqSetAny.
 
 Definition nameSetElemsStable : NameSet -> list Name.Name :=
-  fun ns => Data.OldList.sortBy Name.stableNameCmp (UniqFM.nonDetEltsUFM ns).
+  fun ns => Data.OldList.sortBy Name.stableNameCmp (UniqSet.nonDetEltsUniqSet ns).
 
 Definition plusDU : DefUses -> DefUses -> DefUses :=
   Coq.Init.Datatypes.app.
@@ -133,9 +135,9 @@ Definition findUses : DefUses -> Uses -> Uses :=
         match arg_0__, arg_1__ with
         | pair None rhs_uses, uses => unionNameSet rhs_uses uses
         | pair (Some defs) rhs_uses, uses =>
-            if orb (intersectsNameSet defs uses) (Data.Foldable.any
-                    (OccName.startsWithUnderscore GHC.Base.∘ Name.nameOccName) (nameSetElems
-                                                                                defs)) : bool
+            if orb (intersectsNameSet defs uses) (nameSetAny (OccName.startsWithUnderscore
+                                                              GHC.Base.∘
+                                                              Name.nameOccName) defs) : bool
             then unionNameSet rhs_uses uses else
             uses
         end in
@@ -188,13 +190,12 @@ Definition usesOnly : Uses -> DefUses :=
 
 (* Unbound variables:
      None Some bool cons list negb nil op_zt__ option orb pair Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Data.Foldable.any Data.Foldable.foldl
-     Data.Foldable.foldr Data.OldList.sortBy GHC.Base.op_z2218U__ Name.Name
-     Name.nameOccName Name.stableNameCmp OccName.startsWithUnderscore
-     UniqFM.nonDetEltsUFM UniqSet.UniqSet UniqSet.addListToUniqSet
-     UniqSet.addOneToUniqSet UniqSet.delOneFromUniqSet UniqSet.elementOfUniqSet
-     UniqSet.emptyUniqSet UniqSet.filterUniqSet UniqSet.foldUniqSet
+     Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
+     Data.OldList.sortBy GHC.Base.op_z2218U__ Name.Name Name.nameOccName
+     Name.stableNameCmp OccName.startsWithUnderscore UniqSet.UniqSet
+     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delOneFromUniqSet
+     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet UniqSet.minusUniqSet
-     UniqSet.mkUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.uniqSetToList UniqSet.unitUniqSet
+     UniqSet.mkUniqSet UniqSet.nonDetEltsUniqSet UniqSet.unionManyUniqSets
+     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
 *)

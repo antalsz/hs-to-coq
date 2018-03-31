@@ -80,7 +80,7 @@ Local Definition Eq___ForeignHint_op_zeze__
 
 Local Definition Eq___ForeignHint_op_zsze__
    : ForeignHint -> ForeignHint -> bool :=
-  fun a b => negb (Eq___ForeignHint_op_zeze__ a b).
+  fun x y => negb (Eq___ForeignHint_op_zeze__ x y).
 
 Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint :=
   fun _ k =>
@@ -91,7 +91,7 @@ Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> CmmCat -> bool :=
   fun x y => true.
 
 Local Definition Eq___CmmCat_op_zsze__ : CmmCat -> CmmCat -> bool :=
-  fun a b => negb (Eq___CmmCat_op_zeze__ a b).
+  fun x y => negb (Eq___CmmCat_op_zeze__ x y).
 
 Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat :=
   fun _ k =>
@@ -118,7 +118,7 @@ Local Definition Eq___Width_op_zeze__ : Width -> Width -> bool :=
     end.
 
 Local Definition Eq___Width_op_zsze__ : Width -> Width -> bool :=
-  fun a b => negb (Eq___Width_op_zeze__ a b).
+  fun x y => negb (Eq___Width_op_zeze__ x y).
 
 Program Instance Eq___Width : GHC.Base.Eq_ Width :=
   fun _ k =>

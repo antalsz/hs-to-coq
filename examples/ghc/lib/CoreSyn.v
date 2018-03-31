@@ -67,12 +67,36 @@ Inductive TickishPlacement : Type
 
 Inductive Tickish (id : Type) : Type := Mk_Tickish_Dummy.
 
+Definition OutType :=
+  CoreType.Type_%type.
+
+Definition OutKind :=
+  CoreType.Kind%type.
+
+Definition OutCoercion :=
+  CoreType.Coercion%type.
+
 Inductive IsOrphan : Type
   := Mk_IsOrphan : IsOrphan
   |  NotOrphan : OccName.OccName -> IsOrphan.
 
+Definition InType :=
+  CoreType.Type_%type.
+
+Definition InKind :=
+  CoreType.Kind%type.
+
+Definition InCoercion :=
+  CoreType.Coercion%type.
+
 Definition CoreBndr :=
   CoreType.Var%type.
+
+Definition InBndr :=
+  CoreBndr%type.
+
+Definition OutBndr :=
+  CoreBndr%type.
 
 Inductive TaggedBndr t : Type := TB : CoreBndr -> t -> TaggedBndr t.
 
@@ -142,8 +166,20 @@ and   "'Alt'" := (GHC.Base.Synonym Alt__raw (fun b_ =>
 Definition CoreAlt :=
   (Alt CoreBndr)%type.
 
+Definition InAlt :=
+  CoreAlt%type.
+
+Definition OutAlt :=
+  CoreAlt%type.
+
 Definition CoreArg :=
   (Arg CoreBndr)%type.
+
+Definition InArg :=
+  CoreArg%type.
+
+Definition OutArg :=
+  CoreArg%type.
 
 Definition TaggedArg t :=
   (Arg (TaggedBndr t))%type.
@@ -153,6 +189,12 @@ Definition CoreBind :=
 
 Definition CoreProgram :=
   (list CoreBind)%type.
+
+Definition InBind :=
+  CoreBind%type.
+
+Definition OutBind :=
+  CoreBind%type.
 
 Definition TaggedBind t :=
   (Bind (TaggedBndr t))%type.
@@ -167,8 +209,15 @@ Inductive CoreVect : Type
   |  VectClass : Core.TyCon -> CoreVect
   |  VectInst : CoreType.Id -> CoreVect.
 
+Definition InExpr :=
+  CoreExpr%type.
+
+Definition OutExpr :=
+  CoreExpr%type.
+
 Inductive Unfolding : Type
   := NoUnfolding : Unfolding
+  |  BootUnfolding : Unfolding
   |  OtherCon : list AltCon -> Unfolding
   |  DFunUnfolding
    : list CoreType.Var -> DataCon.DataCon -> list CoreExpr -> Unfolding
@@ -332,6 +381,9 @@ Definition df_args (arg_6__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `df_args' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_args' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `df_args' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -346,6 +398,9 @@ Definition df_bndrs (arg_7__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `df_bndrs' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_bndrs' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `df_bndrs' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -360,6 +415,9 @@ Definition df_con (arg_8__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `df_con' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `df_con' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `df_con' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -374,6 +432,9 @@ Definition uf_expandable (arg_9__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_expandable' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_expandable' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_expandable' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -388,6 +449,9 @@ Definition uf_guidance (arg_10__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_guidance' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_guidance' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_guidance' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -402,6 +466,9 @@ Definition uf_is_conlike (arg_11__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_conlike' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_is_conlike' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_conlike' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -416,6 +483,9 @@ Definition uf_is_top (arg_12__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_top' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_is_top' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_top' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -430,6 +500,9 @@ Definition uf_is_value (arg_13__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_value' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_is_value' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_value' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -444,6 +517,9 @@ Definition uf_is_work_free (arg_14__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_work_free' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_is_work_free' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_is_work_free' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -458,6 +534,9 @@ Definition uf_src (arg_15__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_src' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_src' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_src' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -472,6 +551,9 @@ Definition uf_tmpl (arg_16__ : Unfolding) :=
   | NoUnfolding =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_tmpl' has no match in constructor `NoUnfolding' of type `Unfolding'")
+  | BootUnfolding =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `uf_tmpl' has no match in constructor `BootUnfolding' of type `Unfolding'")
   | OtherCon _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `uf_tmpl' has no match in constructor `OtherCon' of type `Unfolding'")
@@ -729,17 +811,49 @@ Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Binary__IsOrphan' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Outputable__AltCon' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
 (* Translating `instance Outputable__TaggedBndr' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance OutputableBndr__TaggedBndr' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
+(* Translating `instance Binary__IsOrphan' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | DataAlt con1, DataAlt con2 =>
+        if andb Util.debugIsOn (negb (DataCon.dataConTyCon con1 GHC.Base.==
+                                      DataCon.dataConTyCon con2)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+              #319)
+        else GHC.Base.compare (DataCon.dataConTag con1) (DataCon.dataConTag con2)
+    | DataAlt _, _ => Gt
+    | _, DataAlt _ => Lt
+    | LitAlt l1, LitAlt l2 => GHC.Base.compare l1 l2
+    | LitAlt _, DEFAULT => Gt
+    | DEFAULT, DEFAULT => Eq
+    | DEFAULT, _ => Lt
+    end.
+
+Local Definition Ord__AltCon_op_zg__ : AltCon -> AltCon -> bool :=
+  fun x y => Ord__AltCon_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__AltCon_op_zgze__ : AltCon -> AltCon -> bool :=
+  fun x y => Ord__AltCon_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__AltCon_op_zl__ : AltCon -> AltCon -> bool :=
+  fun x y => Ord__AltCon_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__AltCon_op_zlze__ : AltCon -> AltCon -> bool :=
+  fun x y => Ord__AltCon_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
+  fun x y => if Ord__AltCon_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
+  fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
+
+(* Translating `instance Outputable__AltCon' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Eq___UnfoldingGuidance_op_zeze__
    : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
@@ -755,7 +869,7 @@ Local Definition Eq___UnfoldingGuidance_op_zeze__
 
 Local Definition Eq___UnfoldingGuidance_op_zsze__
    : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
-  fun a b => negb (Eq___UnfoldingGuidance_op_zeze__ a b).
+  fun x y => negb (Eq___UnfoldingGuidance_op_zeze__ x y).
 
 Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
   fun _ k =>
@@ -777,7 +891,7 @@ Local Definition Eq___TickishPlacement_op_zeze__
 
 Local Definition Eq___TickishPlacement_op_zsze__
    : TickishPlacement -> TickishPlacement -> bool :=
-  fun a b => negb (Eq___TickishPlacement_op_zeze__ a b).
+  fun x y => negb (Eq___TickishPlacement_op_zeze__ x y).
 
 Program Instance Eq___TickishPlacement : GHC.Base.Eq_ TickishPlacement :=
   fun _ k =>
@@ -796,7 +910,7 @@ Local Definition Eq___TickishScoping_op_zeze__
 
 Local Definition Eq___TickishScoping_op_zsze__
    : TickishScoping -> TickishScoping -> bool :=
-  fun a b => negb (Eq___TickishScoping_op_zeze__ a b).
+  fun x y => negb (Eq___TickishScoping_op_zeze__ x y).
 
 Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
   fun _ k =>
@@ -832,85 +946,6 @@ Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
 (* Translating `instance Data__AltCon' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
 
-Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
-  fun a b =>
-    match a with
-    | DataAlt a1 =>
-        match b with
-        | DataAlt b1 => (GHC.Base.compare a1 b1)
-        | _ => Lt
-        end
-    | LitAlt a1 =>
-        match b with
-        | DataAlt _ => Gt
-        | LitAlt b1 => (GHC.Base.compare a1 b1)
-        | _ => Lt
-        end
-    | DEFAULT => match b with | DEFAULT => Eq | _ => Gt end
-    end.
-
-Local Definition Ord__AltCon_op_zg__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-    | DataAlt a1 => match b with | DataAlt b1 => (a1 GHC.Base.> b1) | _ => false end
-    | LitAlt a1 =>
-        match b with
-        | DataAlt _ => true
-        | LitAlt b1 => (a1 GHC.Base.> b1)
-        | _ => false
-        end
-    | DEFAULT => match b with | DEFAULT => false | _ => true end
-    end.
-
-Local Definition Ord__AltCon_op_zgze__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-    | DataAlt a1 =>
-        match b with
-        | DataAlt b1 => (a1 GHC.Base.>= b1)
-        | _ => false
-        end
-    | LitAlt a1 =>
-        match b with
-        | DataAlt _ => true
-        | LitAlt b1 => (a1 GHC.Base.>= b1)
-        | _ => false
-        end
-    | DEFAULT => match b with | DEFAULT => true | _ => true end
-    end.
-
-Local Definition Ord__AltCon_op_zl__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-    | DataAlt a1 => match b with | DataAlt b1 => (a1 GHC.Base.< b1) | _ => true end
-    | LitAlt a1 =>
-        match b with
-        | DataAlt _ => false
-        | LitAlt b1 => (a1 GHC.Base.< b1)
-        | _ => true
-        end
-    | DEFAULT => match b with | DEFAULT => false | _ => false end
-    end.
-
-Local Definition Ord__AltCon_op_zlze__ : AltCon -> AltCon -> bool :=
-  fun a b =>
-    match a with
-    | DataAlt a1 => match b with | DataAlt b1 => (a1 GHC.Base.<= b1) | _ => true end
-    | LitAlt a1 =>
-        match b with
-        | DataAlt _ => false
-        | LitAlt b1 => (a1 GHC.Base.<= b1)
-        | _ => true
-        end
-    | DEFAULT => match b with | DEFAULT => true | _ => false end
-    end.
-
-Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
-  fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
-  fun x y => if Ord__AltCon_op_zlze__ x y : bool then y else x.
-
 Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -921,7 +956,7 @@ Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
     end.
 
 Local Definition Eq___AltCon_op_zsze__ : AltCon -> AltCon -> bool :=
-  fun a b => negb (Eq___AltCon_op_zeze__ a b).
+  fun x y => negb (Eq___AltCon_op_zeze__ x y).
 
 Program Instance Eq___AltCon : GHC.Base.Eq_ AltCon :=
   fun _ k =>
@@ -951,6 +986,9 @@ Definition bindersOfBinds {b} : list (Bind b) -> list b :=
   fun binds =>
     Data.Foldable.foldr (Coq.Init.Datatypes.app GHC.Base.∘ bindersOf) nil binds.
 
+Definition bootUnfolding : Unfolding :=
+  BootUnfolding.
+
 Definition boringCxtNotOk : bool :=
   false.
 
@@ -975,7 +1013,7 @@ Definition cmpAltCon : AltCon -> AltCon -> comparison :=
     | LitAlt _, DEFAULT => Gt
     | con1, con2 =>
         Panic.warnPprTrace (true) (GHC.Base.hs_string__
-                            "ghc/compiler/coreSyn/CoreSyn.hs") #1339 (GHC.Base.mappend (GHC.Base.mappend (id
+                            "ghc/compiler/coreSyn/CoreSyn.hs") #1700 (GHC.Base.mappend (GHC.Base.mappend (id
                                                                                                           (GHC.Base.hs_string__
                                                                                                            "Comparing incomparable AltCons"))
                                                                                                          (Panic.noString
@@ -1059,6 +1097,36 @@ Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
                  end in
     go nil expr.
 
+Definition collectNAnnBndrs {bndr} {annot}
+   : GHC.Num.Int -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
+  fun orig_n e =>
+    let fix collect arg_0__ arg_1__ arg_2__
+              := match arg_0__, arg_1__, arg_2__ with
+                 | num_3__, bs, body =>
+                     if num_3__ GHC.Base.== #0 : bool then pair (GHC.List.reverse bs) body else
+                     match arg_0__, arg_1__, arg_2__ with
+                     | n, bs, pair _ (AnnLam b body) => collect (n GHC.Num.- #1) (cons b bs) body
+                     | _, _, _ =>
+                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Outputable.int orig_n)
+                     end
+                 end in
+    collect orig_n nil e.
+
+Definition collectNBinders {b}
+   : GHC.Num.Int -> Expr b -> (list b * Expr b)%type :=
+  fun orig_n orig_expr =>
+    let fix go arg_0__ arg_1__ arg_2__
+              := match arg_0__, arg_1__, arg_2__ with
+                 | num_3__, bs, expr =>
+                     if num_3__ GHC.Base.== #0 : bool then pair (GHC.List.reverse bs) expr else
+                     match arg_0__, arg_1__, arg_2__ with
+                     | n, bs, Lam b e => go (n GHC.Num.- #1) (cons b bs) e
+                     | _, _, _ =>
+                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Outputable.int orig_n)
+                     end
+                 end in
+    go orig_n nil orig_expr.
+
 Definition collectTyBinders
    : CoreExpr -> (list CoreType.TyVar * CoreExpr)%type :=
   fun expr =>
@@ -1095,6 +1163,17 @@ Definition collectTyAndValBinders
 
 Definition deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
   fun arg_0__ => let 'pair _ e := arg_0__ in deAnnotate' e.
+
+Definition deAnnBind {b} {annot} : AnnBind b annot -> Bind b :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
+    | AnnRec pairs =>
+        Rec (let cont_2__ arg_3__ :=
+               let 'pair v rhs := arg_3__ in
+               cons (pair v (deAnnotate rhs)) nil in
+             Coq.Lists.List.flat_map cont_2__ pairs)
+    end.
 
 Definition deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
   fun arg_0__ =>
@@ -1143,7 +1222,12 @@ Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
            end.
 
 Definition hasSomeUnfolding : Unfolding -> bool :=
-  fun arg_0__ => match arg_0__ with | NoUnfolding => false | _ => true end.
+  fun arg_0__ =>
+    match arg_0__ with
+    | NoUnfolding => false
+    | BootUnfolding => false
+    | _ => true
+    end.
 
 Definition isAutoRule : CoreRule -> bool :=
   fun arg_0__ =>
@@ -1151,6 +1235,9 @@ Definition isAutoRule : CoreRule -> bool :=
     | BuiltinRule _ _ _ _ => false
     | Rule _ _ _ _ _ _ _ is_auto _ _ _ => is_auto
     end.
+
+Definition isBootUnfolding : Unfolding -> bool :=
+  fun arg_0__ => match arg_0__ with | BootUnfolding => true | _ => false end.
 
 Definition isBuiltinRule : CoreRule -> bool :=
   fun arg_0__ =>
@@ -1164,14 +1251,6 @@ Definition isCheapUnfolding : Unfolding -> bool :=
     match arg_0__ with
     | CoreUnfolding _ _ _ _ _ is_wf _ _ => is_wf
     | _ => false
-    end.
-
-Definition isClosedUnfolding : Unfolding -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | CoreUnfolding _ _ _ _ _ _ _ _ => false
-    | DFunUnfolding _ _ _ => false
-    | _ => true
     end.
 
 Definition isCompulsoryUnfolding : Unfolding -> bool :=
@@ -1204,6 +1283,14 @@ Definition isExpandableUnfolding : Unfolding -> bool :=
     | _ => false
     end.
 
+Definition isFragileUnfolding : Unfolding -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | CoreUnfolding _ _ _ _ _ _ _ _ => true
+    | DFunUnfolding _ _ _ => true
+    | _ => false
+    end.
+
 Definition isLocalRule : CoreRule -> bool :=
   ru_local.
 
@@ -1227,20 +1314,6 @@ Definition isStableUnfolding : Unfolding -> bool :=
     | CoreUnfolding _ src _ _ _ _ _ _ => isStableSource src
     | DFunUnfolding _ _ _ => true
     | _ => false
-    end.
-
-Definition hasStableCoreUnfolding_maybe : Unfolding -> option bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | CoreUnfolding _ src _ _ _ _ _ guide =>
-        if isStableSource src : bool
-        then match guide with
-             | UnfWhen _ _ _ => Some true
-             | UnfIfGoodArgs _ _ _ => Some false
-             | UnfNever => None
-             end else
-        None
-    | _ => None
     end.
 
 Definition isTyCoArg {b} : Expr b -> bool :=
@@ -1303,8 +1376,25 @@ Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
     | _ => None
     end.
 
+Definition mkLet {b} : Bind b -> Expr b -> Expr b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Rec nil, body => body
+    | bind, body => Let bind body
+    end.
+
 Definition mkLets {b} : list (Bind b) -> Expr b -> Expr b :=
-  fun binds body => Data.Foldable.foldr Let body binds.
+  fun binds body => Data.Foldable.foldr mkLet body binds.
+
+Definition mkLetNonRec {b} : b -> Expr b -> Expr b -> Expr b :=
+  fun b rhs body => Let (NonRec b rhs) body.
+
+Definition mkLetRec {b} : list (b * Expr b)%type -> Expr b -> Expr b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | nil, body => body
+    | bs, body => Let (Rec bs) body
+    end.
 
 Definition mkOtherCon : list AltCon -> Unfolding :=
   OtherCon.
@@ -1315,15 +1405,15 @@ Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
 Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
   fun s => Lit (Literal.mkMachString s).
 
+Definition mkTyArg {b} : CoreType.Type_ -> Expr b :=
+  fun ty =>
+    match CoreType.isCoercionTy_maybe ty with
+    | Some co => Coercion co
+    | _ => Type_ ty
+    end.
+
 Definition mkTyApps {b} : Expr b -> list CoreType.Type_ -> Expr b :=
-  fun f args =>
-    let typeOrCoercion :=
-      fun ty =>
-        match CoreType.isCoercionTy_maybe ty with
-        | Some co => Coercion co
-        | _ => Type_ ty
-        end in
-    Data.Foldable.foldl (fun e a => App e (typeOrCoercion a)) f args.
+  fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
 
 Definition mkTyBind : CoreType.TyVar -> CoreType.Type_ -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
@@ -1381,6 +1471,13 @@ Definition ruleArity : CoreRule -> GHC.Num.Int :=
 Definition ruleIdName : CoreRule -> Name.Name :=
   ru_fn.
 
+Definition ruleModule : CoreRule -> option Module.Module :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Rule _ _ _ _ _ _ _ _ ru_origin _ _ => Some ru_origin
+    | BuiltinRule _ _ _ _ => None
+    end.
+
 Definition ruleName : CoreRule -> BasicTypes.RuleName :=
   ru_name.
 
@@ -1420,7 +1517,7 @@ Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
     if CoreType.isCoVar v : bool then Coercion (CoreType.mkCoVarCo v) else
     if andb Util.debugIsOn (negb (CoreType.isId v)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-          #1549)
+          #1920)
     else Var v.
 
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
@@ -1440,19 +1537,19 @@ Definition mkConApp2 {b}
      deAnnotate' deTagExpr false list negb nil op_zt__ option pair true
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
      BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.TyCon
-     Core.dataConWorkId CoreType.CoVar CoreType.Coercion CoreType.Id CoreType.TyVar
-     CoreType.Type_ CoreType.Var CoreType.isCoVar CoreType.isCoercionTy_maybe
-     CoreType.isId CoreType.isTyVar CoreType.mkCoVarCo CoreType.mkTyVarTy
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length DataCon.DataCon
-     DataCon.dataConTag DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
+     Core.dataConWorkId CoreType.CoVar CoreType.Coercion CoreType.Id CoreType.Kind
+     CoreType.TyVar CoreType.Type_ CoreType.Var CoreType.isCoVar
+     CoreType.isCoercionTy_maybe CoreType.isId CoreType.isTyVar CoreType.mkCoVarCo
+     CoreType.mkTyVarTy Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length
+     DataCon.DataCon DataCon.dataConTag DataCon.dataConTyCon DynFlags.DynFlags
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
+     GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
      GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.List.reverse GHC.Num.Int
-     GHC.Num.fromInteger GHC.Real.Rational Literal.Literal Literal.mkMachChar
-     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
-     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
-     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Panic.assertPanic Panic.noString Panic.warnPprTrace Util.count Util.debugIsOn
-     VarEnv.InScopeSet
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal
+     Literal.mkMachChar Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString
+     Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
+     Name.Name Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
+     Outputable.int Panic.assertPanic Panic.noString Panic.panicStr
+     Panic.warnPprTrace Util.count Util.debugIsOn VarEnv.InScopeSet
 *)

@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 Require Control.Monad.
 Require Data.Either.
 Require Data.Foldable.
+Require Data.Maybe.
 Require Data.OldList.
 Require Data.Traversable.
 Require GHC.Base.
@@ -47,6 +48,15 @@ Arguments ListBag {_} _.
 (* Skipping instance Data__Bag *)
 
 (* Skipping instance Foldable__Bag *)
+
+Definition allBag {a} : (a -> bool) -> Bag a -> bool :=
+  fix allBag arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | _, EmptyBag => true
+           | p, UnitBag v => p v
+           | p, TwoBags b1 b2 => andb (allBag p b1) (allBag p b2)
+           | p, ListBag xs => Data.Foldable.all p xs
+           end.
 
 Definition anyBag {a} : (a -> bool) -> Bag a -> bool :=
   fix anyBag arg_0__ arg_1__
@@ -216,6 +226,18 @@ Definition mapBag {a} {b} : (a -> b) -> Bag a -> Bag b :=
            | f, ListBag xs => ListBag (GHC.Base.map f xs)
            end.
 
+Local Definition Functor__Bag_fmap
+   : forall {a} {b}, (a -> b) -> Bag a -> Bag b :=
+  fun {a} {b} => mapBag.
+
+Local Definition Functor__Bag_op_zlzd__ : forall {a} {b}, a -> Bag b -> Bag a :=
+  fun {a} {b} => fun x => Functor__Bag_fmap (GHC.Base.const x).
+
+Program Instance Functor__Bag : GHC.Base.Functor Bag :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ ;
+         GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap |}.
+
 Definition mapBagM {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> m b) -> Bag a -> m (Bag b) :=
   fix mapBagM arg_0__ arg_1__
@@ -251,6 +273,15 @@ Definition unionBags {a} : Bag a -> Bag a -> Bag a :=
 
 Definition unionManyBags {a} : list (Bag a) -> Bag a :=
   fun xs => Data.Foldable.foldr unionBags EmptyBag xs.
+
+Definition mapMaybeBag {a} {b} : (a -> option b) -> Bag a -> Bag b :=
+  fix mapMaybeBag arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | _, EmptyBag => EmptyBag
+           | f, UnitBag x => match f x with | None => EmptyBag | Some y => UnitBag y end
+           | f, TwoBags b1 b2 => unionBags (mapMaybeBag f b1) (mapMaybeBag f b2)
+           | f, ListBag xs => ListBag (Data.Maybe.mapMaybe f xs)
+           end.
 
 Definition partitionBag {a} : (a -> bool) -> Bag a -> (Bag a * Bag a)%type :=
   fix partitionBag arg_0__ arg_1__
@@ -363,6 +394,15 @@ Definition filterBag {a} : (a -> bool) -> Bag a -> Bag a :=
            | pred, ListBag vs => listToBag (GHC.List.filter pred vs)
            end.
 
+Definition concatMapBag {a} {b} : (a -> Bag b) -> Bag a -> Bag b :=
+  fix concatMapBag arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | _, EmptyBag => EmptyBag
+           | f, UnitBag x => f x
+           | f, TwoBags b1 b2 => unionBags (concatMapBag f b1) (concatMapBag f b2)
+           | f, ListBag xs => Data.Foldable.foldr (unionBags GHC.Base.∘ f) emptyBag xs
+           end.
+
 Definition concatBag {a} : Bag (Bag a) -> Bag a :=
   fun bss => let add := fun bs rs => unionBags bs rs in foldrBag add emptyBag bss.
 
@@ -386,13 +426,14 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
     foldrBag add emptyBag bs.
 
 (* Unbound variables:
-     None Some bool cons false list nil op_zt__ option orb pair true tt unit
+     None Some andb bool cons false list nil op_zt__ option orb pair true tt unit
      Control.Monad.filterM Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length
-     Data.Foldable.mapM_ Data.OldList.partition Data.Traversable.mapM GHC.Base.Eq_
-     GHC.Base.Monad GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.List.filter
-     GHC.List.unzip GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.anyM
-     MonadUtils.foldlM MonadUtils.foldrM MonadUtils.mapAccumLM Util.isSingleton
-     Util.partitionWith
+     Data.Foldable.all Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr
+     Data.Foldable.length Data.Foldable.mapM_ Data.Maybe.mapMaybe
+     Data.OldList.partition Data.Traversable.mapM GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.const GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_
+     GHC.List.filter GHC.List.unzip GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
+     MonadUtils.anyM MonadUtils.foldlM MonadUtils.foldrM MonadUtils.mapAccumLM
+     Util.isSingleton Util.partitionWith
 *)

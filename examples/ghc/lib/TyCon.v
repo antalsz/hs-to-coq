@@ -41,8 +41,10 @@ Parameter fieldsOfAlgTcRhs : AlgTyConRhs -> FieldLabel.FieldLabelEnv.
 
 Require BasicTypes.
 Require Constants.
+Require Coq.Lists.List.
 Require Core.
 Require CoreType.
+Require Data.Foldable.
 Require DataCon.
 Require DynFlags.
 Require FastStringEnv.
@@ -50,7 +52,7 @@ Require FieldLabel.
 Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
-Require GHC.Real.
+Require GHC.Prim.
 Require Maybes.
 Require Module.
 Require Name.
@@ -63,8 +65,30 @@ Require UniqSet.
 Require Unique.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
+Import GHC.Prim.Notations.
 
 (* Converted type declarations: *)
+
+Inductive TyConFlavour : Type
+  := ClassFlavour : TyConFlavour
+  |  TupleFlavour : BasicTypes.Boxity -> TyConFlavour
+  |  SumFlavour : TyConFlavour
+  |  DataTypeFlavour : TyConFlavour
+  |  NewtypeFlavour : TyConFlavour
+  |  AbstractTypeFlavour : TyConFlavour
+  |  DataFamilyFlavour : TyConFlavour
+  |  OpenTypeFamilyFlavour : TyConFlavour
+  |  ClosedTypeFamilyFlavour : TyConFlavour
+  |  TypeSynonymFlavour : TyConFlavour
+  |  BuiltInTypeFlavour : TyConFlavour
+  |  PromotedDataConFlavour : TyConFlavour.
+
+Inductive TyConBndrVis : Type
+  := NamedTCB : CoreType.ArgFlag -> TyConBndrVis
+  |  AnonTCB : TyConBndrVis.
+
+Definition TyConBinder :=
+  (CoreType.TyVarBndr CoreType.TyVar TyConBndrVis)%type.
 
 Inductive RecTcChecker : Type
   := RC : GHC.Num.Int -> (NameEnv.NameEnv GHC.Num.Int) -> RecTcChecker.
@@ -83,7 +107,8 @@ Inductive PrimElemRep : Type
 
 Inductive PrimRep : Type
   := VoidRep : PrimRep
-  |  PtrRep : PrimRep
+  |  LiftedRep : PrimRep
+  |  UnliftedRep : PrimRep
   |  IntRep : PrimRep
   |  WordRep : PrimRep
   |  Int64Rep : PrimRep
@@ -101,9 +126,10 @@ Inductive FamTyConFlav : Type
   |  BuiltInSynFamTyCon : Core.BuiltInSynFamily -> FamTyConFlav.
 
 Inductive AlgTyConRhs : Type
-  := AbstractTyCon : bool -> AlgTyConRhs
+  := AbstractTyCon : AlgTyConRhs
   |  DataTyCon : list DataCon.DataCon -> bool -> AlgTyConRhs
   |  TupleTyCon : DataCon.DataCon -> BasicTypes.TupleSort -> AlgTyConRhs
+  |  SumTyCon : list DataCon.DataCon -> AlgTyConRhs
   |  NewTyCon
    : DataCon.DataCon ->
      CoreType.Type_ ->
@@ -112,25 +138,29 @@ Inductive AlgTyConRhs : Type
 
 Definition data_con (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_con' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_con' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
   | TupleTyCon data_con _ => data_con
+  | SumTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `data_con' has no match in constructor `SumTyCon' of type `AlgTyConRhs'")
   | NewTyCon data_con _ _ _ => data_con
   end.
 
 Definition data_cons (arg_1__ : AlgTyConRhs) :=
   match arg_1__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_cons' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon data_cons _ => data_cons
   | TupleTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_cons' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | SumTyCon data_cons => data_cons
   | NewTyCon _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `data_cons' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
@@ -138,13 +168,16 @@ Definition data_cons (arg_1__ : AlgTyConRhs) :=
 
 Definition is_enum (arg_2__ : AlgTyConRhs) :=
   match arg_2__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon _ is_enum => is_enum
   | TupleTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | SumTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `is_enum' has no match in constructor `SumTyCon' of type `AlgTyConRhs'")
   | NewTyCon _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `is_enum' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
@@ -152,7 +185,7 @@ Definition is_enum (arg_2__ : AlgTyConRhs) :=
 
 Definition nt_co (arg_3__ : AlgTyConRhs) :=
   match arg_3__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `nt_co' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon _ _ =>
@@ -161,12 +194,15 @@ Definition nt_co (arg_3__ : AlgTyConRhs) :=
   | TupleTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `nt_co' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | SumTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_co' has no match in constructor `SumTyCon' of type `AlgTyConRhs'")
   | NewTyCon _ _ _ nt_co => nt_co
   end.
 
 Definition nt_etad_rhs (arg_4__ : AlgTyConRhs) :=
   match arg_4__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `nt_etad_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon _ _ =>
@@ -175,12 +211,15 @@ Definition nt_etad_rhs (arg_4__ : AlgTyConRhs) :=
   | TupleTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `nt_etad_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | SumTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_etad_rhs' has no match in constructor `SumTyCon' of type `AlgTyConRhs'")
   | NewTyCon _ _ nt_etad_rhs _ => nt_etad_rhs
   end.
 
 Definition nt_rhs (arg_5__ : AlgTyConRhs) :=
   match arg_5__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `nt_rhs' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon _ _ =>
@@ -189,18 +228,24 @@ Definition nt_rhs (arg_5__ : AlgTyConRhs) :=
   | TupleTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `nt_rhs' has no match in constructor `TupleTyCon' of type `AlgTyConRhs'")
+  | SumTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `nt_rhs' has no match in constructor `SumTyCon' of type `AlgTyConRhs'")
   | NewTyCon _ nt_rhs _ _ => nt_rhs
   end.
 
 Definition tup_sort (arg_6__ : AlgTyConRhs) :=
   match arg_6__ with
-  | AbstractTyCon _ =>
+  | AbstractTyCon =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `tup_sort' has no match in constructor `AbstractTyCon' of type `AlgTyConRhs'")
   | DataTyCon _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `tup_sort' has no match in constructor `DataTyCon' of type `AlgTyConRhs'")
   | TupleTyCon _ tup_sort => tup_sort
+  | SumTyCon _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tup_sort' has no match in constructor `SumTyCon' of type `AlgTyConRhs'")
   | NewTyCon _ _ _ _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `tup_sort' has no match in constructor `NewTyCon' of type `AlgTyConRhs'")
@@ -209,53 +254,6 @@ Definition tup_sort (arg_6__ : AlgTyConRhs) :=
 
 (* Translating `instance Outputable__AlgTyConFlav' failed: using a record
    pattern for the unknown constructor `VanillaAlgTyCon' unsupported *)
-
-(* Translating `instance Outputable__PrimRep' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Outputable__PrimElemRep' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-Local Definition Ord__TyCon_compare : Core.TyCon -> Core.TyCon -> comparison :=
-  fun a b => GHC.Base.compare (Unique.getUnique a) (Unique.getUnique b).
-
-Local Definition Ord__TyCon_op_zg__ : Core.TyCon -> Core.TyCon -> bool :=
-  fun a b =>
-    match (Ord__TyCon_compare a b) with
-    | Lt => false
-    | Eq => false
-    | Gt => true
-    end.
-
-Local Definition Ord__TyCon_op_zgze__ : Core.TyCon -> Core.TyCon -> bool :=
-  fun a b =>
-    match (Ord__TyCon_compare a b) with
-    | Lt => false
-    | Eq => true
-    | Gt => true
-    end.
-
-Local Definition Ord__TyCon_op_zl__ : Core.TyCon -> Core.TyCon -> bool :=
-  fun a b =>
-    match (Ord__TyCon_compare a b) with
-    | Lt => true
-    | Eq => false
-    | Gt => false
-    end.
-
-Local Definition Ord__TyCon_op_zlze__ : Core.TyCon -> Core.TyCon -> bool :=
-  fun a b =>
-    match (Ord__TyCon_compare a b) with
-    | Lt => true
-    | Eq => true
-    | Gt => false
-    end.
-
-Local Definition Ord__TyCon_max : Core.TyCon -> Core.TyCon -> Core.TyCon :=
-  fun x y => if Ord__TyCon_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__TyCon_min : Core.TyCon -> Core.TyCon -> Core.TyCon :=
-  fun x y => if Ord__TyCon_op_zlze__ x y : bool then x else y.
 
 Local Definition Eq___TyCon_op_zeze__ : Core.TyCon -> Core.TyCon -> bool :=
   fun a b => match Ord__TyCon_compare a b with | Eq => true | _ => false end.
@@ -273,16 +271,6 @@ Program Instance Eq___TyCon : GHC.Base.Eq_ Core.TyCon :=
     k {| GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
 
-Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__TyCon_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__TyCon_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__TyCon_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__TyCon_op_zgze__ ;
-         GHC.Base.compare__ := Ord__TyCon_compare ;
-         GHC.Base.max__ := Ord__TyCon_max ;
-         GHC.Base.min__ := Ord__TyCon_min |}.
-
 (* Translating `instance Uniquable__TyCon' failed: OOPS! Cannot find information
    for class Qualified "Unique" "Uniquable" unsupported *)
 
@@ -295,8 +283,47 @@ Program Instance Ord__TyCon : GHC.Base.Ord Core.TyCon :=
 (* Translating `instance Data__TyCon' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
 
+(* Translating `instance Outputable__TyConFlavour' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Outputable__PrimRep' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Outputable__PrimElemRep' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Outputable__FamTyConFlav' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
 (* Translating `instance Binary__Injectivity' failed: OOPS! Cannot find
    information for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Outputable__TyVarBndr__TyConBndrVis__11' failed: OOPS!
+   Cannot find information for class Qualified "Outputable" "Outputable"
+   unsupported *)
+
+(* Translating `instance Binary__TyConBndrVis' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
+
+Local Definition Eq___TyConFlavour_op_zeze__
+   : TyConFlavour -> TyConFlavour -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | TupleFlavour a1, TupleFlavour b1 => ((a1 GHC.Base.== b1))
+    | a, b =>
+        let 'lop_azh__ := (_Deriving.$con2tag_GDTzQOFa1zUIKOcsSgCJHI_ a) in
+        let 'lop_bzh__ := (_Deriving.$con2tag_GDTzQOFa1zUIKOcsSgCJHI_ b) in
+        (_GHC.Prim.tagToEnum#_ (lop_azh__ GHC.Prim.==# lop_bzh__))
+    end.
+
+Local Definition Eq___TyConFlavour_op_zsze__
+   : TyConFlavour -> TyConFlavour -> bool :=
+  fun x y => negb (Eq___TyConFlavour_op_zeze__ x y).
+
+Program Instance Eq___TyConFlavour : GHC.Base.Eq_ TyConFlavour :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___TyConFlavour_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___TyConFlavour_op_zsze__ |}.
 
 (* Translating `instance Show__PrimRep' failed: OOPS! Cannot find information
    for class Qualified "GHC.Show" "Show" unsupported *)
@@ -323,7 +350,7 @@ Local Definition Eq___PrimElemRep_op_zeze__
 
 Local Definition Eq___PrimElemRep_op_zsze__
    : PrimElemRep -> PrimElemRep -> bool :=
-  fun a b => negb (Eq___PrimElemRep_op_zeze__ a b).
+  fun x y => negb (Eq___PrimElemRep_op_zeze__ x y).
 
 Program Instance Eq___PrimElemRep : GHC.Base.Eq_ PrimElemRep :=
   fun _ k =>
@@ -334,7 +361,8 @@ Local Definition Eq___PrimRep_op_zeze__ : PrimRep -> PrimRep -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | VoidRep, VoidRep => true
-    | PtrRep, PtrRep => true
+    | LiftedRep, LiftedRep => true
+    | UnliftedRep, UnliftedRep => true
     | IntRep, IntRep => true
     | WordRep, WordRep => true
     | Int64Rep, Int64Rep => true
@@ -348,7 +376,7 @@ Local Definition Eq___PrimRep_op_zeze__ : PrimRep -> PrimRep -> bool :=
     end.
 
 Local Definition Eq___PrimRep_op_zsze__ : PrimRep -> PrimRep -> bool :=
-  fun a b => negb (Eq___PrimRep_op_zeze__ a b).
+  fun x y => negb (Eq___PrimRep_op_zeze__ x y).
 
 Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep :=
   fun _ k =>
@@ -366,7 +394,7 @@ Local Definition Eq___Injectivity_op_zeze__
 
 Local Definition Eq___Injectivity_op_zsze__
    : Core.Injectivity -> Core.Injectivity -> bool :=
-  fun a b => negb (Eq___Injectivity_op_zeze__ a b).
+  fun x y => negb (Eq___Injectivity_op_zeze__ x y).
 
 Program Instance Eq___Injectivity : GHC.Base.Eq_ Core.Injectivity :=
   fun _ k =>
@@ -378,6 +406,19 @@ Axiom algTyConRhs : forall {A : Type}, A.
 (* Translating `algTyConRhs' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
 
+Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RC bound rec_nts, tc =>
+        let tc_name := tyConName tc in
+        match NameEnv.lookupNameEnv rec_nts tc_name with
+        | Some n =>
+            if n GHC.Base.>= bound : bool then None else
+            Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name (n GHC.Num.+ #1)))
+        | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name #1))
+        end
+    end.
+
 Axiom expandSynTyCon_maybe : forall {A : Type}, A.
 
 (* Translating `expandSynTyCon_maybe' failed: using a record pattern for the
@@ -387,11 +428,6 @@ Axiom famTyConFlav_maybe : forall {A : Type}, A.
 
 (* Translating `famTyConFlav_maybe' failed: using a record pattern for the
    unknown constructor `FamilyTyCon' unsupported *)
-
-Axiom familyTyConInjectivityInfo : forall {A : Type}, A.
-
-(* Translating `familyTyConInjectivityInfo' failed: using a record pattern for
-   the unknown constructor `FamilyTyCon' unsupported *)
 
 Definition initRecTc : RecTcChecker :=
   RC #100 NameEnv.emptyNameEnv.
@@ -406,10 +442,14 @@ Axiom isAlgTyCon : forall {A : Type}, A.
 Definition tyConFieldLabelEnv : Core.TyCon -> FieldLabel.FieldLabelEnv :=
   fun tc =>
     if isAlgTyCon tc : bool then algTcFields tc else
-    FastStringEnv.emptyFsEnv.
+    FastStringEnv.emptyDFsEnv.
+
+Definition lookupTyConFieldLabel
+   : FieldLabel.FieldLabelString -> Core.TyCon -> option FieldLabel.FieldLabel :=
+  fun lbl tc => FastStringEnv.lookupDFsEnv (tyConFieldLabelEnv tc) lbl.
 
 Definition tyConFieldLabels : Core.TyCon -> list FieldLabel.FieldLabel :=
-  fun tc => FastStringEnv.fsEnvElts (tyConFieldLabelEnv tc).
+  fun tc => FastStringEnv.dFsEnvElts (tyConFieldLabelEnv tc).
 
 (* Translating `isAlgTyCon' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
@@ -447,6 +487,11 @@ Axiom isDataProductTyCon_maybe : forall {A : Type}, A.
 (* Translating `isDataProductTyCon_maybe' failed: using a record pattern for the
    unknown constructor `AlgTyCon' unsupported *)
 
+Axiom isDataSumTyCon_maybe : forall {A : Type}, A.
+
+(* Translating `isDataSumTyCon_maybe' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
 Axiom isDataTyCon : forall {A : Type}, A.
 
 (* Translating `isDataTyCon' failed: using a record pattern for the unknown
@@ -456,6 +501,11 @@ Axiom isEnumerationTyCon : forall {A : Type}, A.
 
 (* Translating `isEnumerationTyCon' failed: using a record pattern for the
    unknown constructor `AlgTyCon' unsupported *)
+
+Axiom isFamFreeTyCon : forall {A : Type}, A.
+
+(* Translating `isFamFreeTyCon' failed: using a record pattern for the unknown
+   constructor `SynonymTyCon' unsupported *)
 
 Axiom isFamInstTyCon : forall {A : Type}, A.
 
@@ -478,14 +528,20 @@ Axiom isGadtSyntaxTyCon : forall {A : Type}, A.
    unknown constructor `AlgTyCon' unsupported *)
 
 Definition isGcPtrRep : PrimRep -> bool :=
-  fun arg_0__ => match arg_0__ with | PtrRep => true | _ => false end.
+  fun arg_0__ =>
+    match arg_0__ with
+    | LiftedRep => true
+    | UnliftedRep => true
+    | _ => false
+    end.
 
 Definition isGenInjAlgRhs : AlgTyConRhs -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | TupleTyCon _ _ => true
+    | SumTyCon _ => true
     | DataTyCon _ _ => true
-    | AbstractTyCon distinct => distinct
+    | AbstractTyCon => false
     | NewTyCon _ _ _ _ => false
     end.
 
@@ -503,6 +559,13 @@ Axiom isInjectiveTyCon : forall {A : Type}, A.
 
 (* Translating `isInjectiveTyCon' failed: using a record pattern for the unknown
    constructor `FunTyCon' unsupported *)
+
+Definition isNamedTyConBinder : TyConBinder -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | CoreType.TvBndr _ (NamedTCB _) => true
+    | _ => false
+    end.
 
 Axiom isNewTyCon : forall {A : Type}, A.
 
@@ -544,24 +607,15 @@ Axiom isPromotedDataCon_maybe : forall {A : Type}, A.
 (* Translating `isPromotedDataCon_maybe' failed: using a record pattern for the
    unknown constructor `PromotedDataCon' unsupported *)
 
-Axiom isRecursiveTyCon : forall {A : Type}, A.
+Axiom isTauTyCon : forall {A : Type}, A.
 
-Definition checkRecTc : RecTcChecker -> Core.TyCon -> option RecTcChecker :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | (RC bound rec_nts as rc), tc =>
-        let tc_name := tyConName tc in
-        if negb (isRecursiveTyCon tc) : bool then Some rc else
-        match NameEnv.lookupNameEnv rec_nts tc_name with
-        | Some n =>
-            if n GHC.Base.>= bound : bool then None else
-            Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name (n GHC.Num.+ #1)))
-        | None => Some (RC bound (NameEnv.extendNameEnv rec_nts tc_name #1))
-        end
-    end.
+(* Translating `isTauTyCon' failed: using a record pattern for the unknown
+   constructor `SynonymTyCon' unsupported *)
 
-(* Translating `isRecursiveTyCon' failed: using a record pattern for the unknown
-   constructor `AlgTyCon' unsupported *)
+Axiom isTcLevPoly : forall {A : Type}, A.
+
+(* Translating `isTcLevPoly' failed: using a record pattern for the unknown
+   constructor `FunTyCon' unsupported *)
 
 Axiom isTcTyCon : forall {A : Type}, A.
 
@@ -569,6 +623,15 @@ Axiom isTcTyCon : forall {A : Type}, A.
    constructor `TcTyCon' unsupported *)
 
 Axiom isTupleTyCon : forall {A : Type}, A.
+
+Definition isPromotedTupleTyCon : Core.TyCon -> bool :=
+  fun tyCon =>
+    match isPromotedDataCon_maybe tyCon with
+    | Some dataCon =>
+        if isTupleTyCon (DataCon.dataConTyCon dataCon) : bool then true else
+        false
+    | _ => false
+    end.
 
 (* Translating `isTupleTyCon' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
@@ -588,6 +651,11 @@ Axiom isTypeSynonymTyCon : forall {A : Type}, A.
 (* Translating `isTypeSynonymTyCon' failed: using a record pattern for the
    unknown constructor `SynonymTyCon' unsupported *)
 
+Axiom isUnboxedSumTyCon : forall {A : Type}, A.
+
+(* Translating `isUnboxedSumTyCon' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
 Axiom isUnboxedTupleTyCon : forall {A : Type}, A.
 
 (* Translating `isUnboxedTupleTyCon' failed: using a record pattern for the
@@ -603,18 +671,47 @@ Axiom isVanillaAlgTyCon : forall {A : Type}, A.
 (* Translating `isVanillaAlgTyCon' failed: using a record pattern for the
    unknown constructor `AlgTyCon' unsupported *)
 
+Definition isVisibleTcbVis : TyConBndrVis -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | NamedTCB vis => CoreType.isVisibleArgFlag vis
+    | AnonTCB => true
+    end.
+
+Definition isVisibleTyConBinder {tv}
+   : CoreType.TyVarBndr tv TyConBndrVis -> bool :=
+  fun arg_0__ =>
+    let 'CoreType.TvBndr _ tcb_vis := arg_0__ in
+    isVisibleTcbVis tcb_vis.
+
+Definition isInvisibleTyConBinder {tv}
+   : CoreType.TyVarBndr tv TyConBndrVis -> bool :=
+  fun tcb => negb (isVisibleTyConBinder tcb).
+
+Definition tyConVisibleTyVars : Core.TyCon -> list CoreType.TyVar :=
+  fun tc =>
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
+      | CoreType.TvBndr tv vis =>
+          if isVisibleTcbVis vis : bool then cons tv nil else
+          nil
+      | _ => nil
+      end in
+    Coq.Lists.List.flat_map cont_0__ (tyConBinders tc).
+
 Definition isVoidRep : PrimRep -> bool :=
   fun arg_0__ => match arg_0__ with | VoidRep => true | _other => false end.
-
-Axiom mightBeUnsaturatedTyCon : forall {A : Type}, A.
-
-(* Translating `mightBeUnsaturatedTyCon' failed: using a record pattern for the
-   unknown constructor `SynonymTyCon' unsupported *)
 
 Axiom mkAlgTyCon : forall {A : Type}, A.
 
 (* Translating `mkAlgTyCon' failed: creating a record with the unknown
    constructor `AlgTyCon' unsupported *)
+
+Definition mkAnonTyConBinder : CoreType.TyVar -> TyConBinder :=
+  fun tv => CoreType.TvBndr tv AnonTCB.
+
+Definition mkAnonTyConBinders : list CoreType.TyVar -> list TyConBinder :=
+  fun tvs => GHC.Base.map mkAnonTyConBinder tvs.
 
 Axiom mkFamilyTyCon : forall {A : Type}, A.
 
@@ -626,11 +723,19 @@ Axiom mkFunTyCon : forall {A : Type}, A.
 (* Translating `mkFunTyCon' failed: creating a record with the unknown
    constructor `FunTyCon' unsupported *)
 
+Definition mkNamedTyConBinder
+   : CoreType.ArgFlag -> CoreType.TyVar -> TyConBinder :=
+  fun vis tv => CoreType.TvBndr tv (NamedTCB vis).
+
+Definition mkNamedTyConBinders
+   : CoreType.ArgFlag -> list CoreType.TyVar -> list TyConBinder :=
+  fun vis tvs => GHC.Base.map (mkNamedTyConBinder vis) tvs.
+
 Axiom mkPrimTyCon' : forall {A : Type}, A.
 
 Definition mkKindTyCon
    : Name.Name ->
-     list CoreType.TyBinder ->
+     list TyConBinder ->
      CoreType.Kind -> list Core.Role -> Name.Name -> Core.TyCon :=
   fun name binders res_kind roles rep_nm =>
     let tc := mkPrimTyCon' name binders res_kind roles false (Some rep_nm) in tc.
@@ -642,6 +747,11 @@ Axiom mkPromotedDataCon : forall {A : Type}, A.
 
 (* Translating `mkPromotedDataCon' failed: creating a record with the unknown
    constructor `PromotedDataCon' unsupported *)
+
+Axiom mkSumTyCon : forall {A : Type}, A.
+
+(* Translating `mkSumTyCon' failed: creating a record with the unknown
+   constructor `AlgTyCon' unsupported *)
 
 Axiom mkSynonymTyCon : forall {A : Type}, A.
 
@@ -657,6 +767,17 @@ Axiom mkTupleTyCon : forall {A : Type}, A.
 
 (* Translating `mkTupleTyCon' failed: creating a record with the unknown
    constructor `AlgTyCon' unsupported *)
+
+Definition mkTyConKind : list TyConBinder -> CoreType.Kind -> CoreType.Kind :=
+  fun bndrs res_kind =>
+    let mk : TyConBinder -> CoreType.Kind -> CoreType.Kind :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | CoreType.TvBndr tv AnonTCB, k =>
+            TysWiredIn.mkFunKind (CoreType.tyVarKind tv) k
+        | CoreType.TvBndr tv (NamedTCB vis), k => TysWiredIn.mkForAllKind tv vis k
+        end in
+    Data.Foldable.foldr mk res_kind bndrs.
 
 Axiom newTyConCo_maybe : forall {A : Type}, A.
 
@@ -715,23 +836,20 @@ Definition primElemRepSizeB : PrimElemRep -> GHC.Num.Int :=
     | DoubleElemRep => #8
     end.
 
-Definition primRepSizeW : DynFlags.DynFlags -> PrimRep -> GHC.Num.Int :=
+Definition primRepSizeB : DynFlags.DynFlags -> PrimRep -> GHC.Num.Int :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | _, IntRep => #1
-    | _, WordRep => #1
-    | dflags, Int64Rep =>
-        GHC.Real.quot Constants.wORD64_SIZE (DynFlags.wORD_SIZE dflags)
-    | dflags, Word64Rep =>
-        GHC.Real.quot Constants.wORD64_SIZE (DynFlags.wORD_SIZE dflags)
-    | _, FloatRep => #1
-    | dflags, DoubleRep =>
-        GHC.Real.quot (DynFlags.dOUBLE_SIZE dflags) (DynFlags.wORD_SIZE dflags)
-    | _, AddrRep => #1
-    | _, PtrRep => #1
+    | dflags, IntRep => DynFlags.wORD_SIZE dflags
+    | dflags, WordRep => DynFlags.wORD_SIZE dflags
+    | _, Int64Rep => Constants.wORD64_SIZE
+    | _, Word64Rep => Constants.wORD64_SIZE
+    | _, FloatRep => Constants.fLOAT_SIZE
+    | dflags, DoubleRep => DynFlags.dOUBLE_SIZE dflags
+    | dflags, AddrRep => DynFlags.wORD_SIZE dflags
+    | dflags, LiftedRep => DynFlags.wORD_SIZE dflags
+    | dflags, UnliftedRep => DynFlags.wORD_SIZE dflags
     | _, VoidRep => #0
-    | dflags, VecRep len rep =>
-        GHC.Real.quot (len GHC.Num.* primElemRepSizeB rep) (DynFlags.wORD_SIZE dflags)
+    | _, VecRep len rep => len GHC.Num.* primElemRepSizeB rep
     end.
 
 Definition primRepIsFloat : PrimRep -> option bool :=
@@ -752,6 +870,47 @@ Axiom synTyConRhs_maybe : forall {A : Type}, A.
 
 (* Translating `synTyConRhs_maybe' failed: using a record pattern for the
    unknown constructor `SynonymTyCon' unsupported *)
+
+Definition tcFlavourCanBeUnsaturated : TyConFlavour -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | ClassFlavour => true
+    | DataTypeFlavour => true
+    | NewtypeFlavour => true
+    | DataFamilyFlavour => true
+    | TupleFlavour _ => true
+    | SumFlavour => true
+    | AbstractTypeFlavour => true
+    | BuiltInTypeFlavour => true
+    | PromotedDataConFlavour => true
+    | TypeSynonymFlavour => false
+    | OpenTypeFamilyFlavour => false
+    | ClosedTypeFamilyFlavour => false
+    end.
+
+Definition tcFlavourIsOpen : TyConFlavour -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | DataFamilyFlavour => true
+    | OpenTypeFamilyFlavour => true
+    | ClosedTypeFamilyFlavour => false
+    | ClassFlavour => false
+    | DataTypeFlavour => false
+    | NewtypeFlavour => false
+    | TupleFlavour _ => false
+    | SumFlavour => false
+    | AbstractTypeFlavour => false
+    | BuiltInTypeFlavour => false
+    | PromotedDataConFlavour => false
+    | TypeSynonymFlavour => false
+    end.
+
+Definition tyConBinderArgFlag : TyConBinder -> CoreType.ArgFlag :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | CoreType.TvBndr _ (NamedTCB vis) => vis
+    | CoreType.TvBndr _ AnonTCB => CoreType.Required
+    end.
 
 Axiom tyConCType_maybe : forall {A : Type}, A.
 
@@ -818,10 +977,28 @@ Axiom tyConFamilySize : forall {A : Type}, A.
 (* Translating `tyConFamilySize' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
 
+Axiom tyConFamilySizeAtMost : forall {A : Type}, A.
+
+(* Translating `tyConFamilySizeAtMost' failed: using a record pattern for the
+   unknown constructor `AlgTyCon' unsupported *)
+
 Axiom tyConFlavour : forall {A : Type}, A.
+
+Definition mightBeUnsaturatedTyCon : Core.TyCon -> bool :=
+  tcFlavourCanBeUnsaturated GHC.Base.∘ tyConFlavour.
+
+Definition makeRecoveryTyCon : Core.TyCon -> Core.TyCon :=
+  fun tc =>
+    mkTcTyCon (tyConName tc) (tyConBinders tc) (tyConResKind tc) nil (tyConFlavour
+                                                                      tc).
 
 (* Translating `tyConFlavour' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
+
+Axiom tyConInjectivityInfo : forall {A : Type}, A.
+
+(* Translating `tyConInjectivityInfo' failed: using a record pattern for the
+   unknown constructor `FamilyTyCon' unsupported *)
 
 Definition tyConRepModOcc
    : Module.Module -> OccName.OccName -> (Module.Module * OccName.OccName)%type :=
@@ -844,13 +1021,13 @@ Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
 
 Definition mkPrimTyCon
    : Name.Name ->
-     list CoreType.TyBinder -> CoreType.Kind -> list Core.Role -> Core.TyCon :=
+     list TyConBinder -> CoreType.Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
     mkPrimTyCon' name binders res_kind roles true (Some (mkPrelTyConRepName name)).
 
 Definition mkLiftedPrimTyCon
    : Name.Name ->
-     list CoreType.TyBinder -> CoreType.Kind -> list Core.Role -> Core.TyCon :=
+     list TyConBinder -> CoreType.Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
     let rep_nm := mkPrelTyConRepName name in
     mkPrimTyCon' name binders res_kind roles false (Some rep_nm).
@@ -888,6 +1065,9 @@ Definition tyConSingleDataCon : Core.TyCon -> DataCon.DataCon :=
 (* Translating `tyConSingleDataCon_maybe' failed: using a record pattern for the
    unknown constructor `AlgTyCon' unsupported *)
 
+Definition tyConSkolem : Core.TyCon -> bool :=
+  Name.isHoleName GHC.Base.∘ tyConName.
+
 Axiom tyConStupidTheta : forall {A : Type}, A.
 
 (* Translating `tyConStupidTheta' failed: using a record pattern for the unknown
@@ -897,6 +1077,20 @@ Axiom tyConTuple_maybe : forall {A : Type}, A.
 
 (* Translating `tyConTuple_maybe' failed: using a record pattern for the unknown
    constructor `AlgTyCon' unsupported *)
+
+Definition tyConTyVarBinders : list TyConBinder -> list CoreType.TyVarBinder :=
+  fun tc_bndrs =>
+    let mk_binder :=
+      fun arg_0__ =>
+        let 'CoreType.TvBndr tv tc_vis := arg_0__ in
+        let vis :=
+          match tc_vis with
+          | AnonTCB => CoreType.Specified
+          | NamedTCB CoreType.Required => CoreType.Specified
+          | NamedTCB vis => vis
+          end in
+        CoreType.mkTyVarBinder vis tv in
+    GHC.Base.map mk_binder tc_bndrs.
 
 Axiom unwrapNewTyConEtad_maybe : forall {A : Type}, A.
 
@@ -911,32 +1105,39 @@ Axiom unwrapNewTyCon_maybe : forall {A : Type}, A.
 Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
   fun arg_0__ =>
     match arg_0__ with
-    | AbstractTyCon _ => nil
+    | AbstractTyCon => nil
     | DataTyCon cs _ => cs
     | NewTyCon c _ _ _ => cons c nil
     | TupleTyCon c _ => cons c nil
+    | SumTyCon cs => cs
     end.
 
 (* Unbound variables:
-     Eq Gt Injective Lt None NotInjective Some algTcFields andb bool comparison cons
-     false list negb nil op_zt__ option pair true tyConName BasicTypes.TupleSort
-     Constants.wORD64_SIZE Core.Branched Core.BuiltInSynFamily Core.CoAxiom
-     Core.Injectivity Core.Role Core.TyCon Core.TyConRepName Core.Unbranched
-     CoreType.Kind CoreType.TyBinder CoreType.TyVar CoreType.Type_ DataCon.DataCon
+     Injective None NotInjective Ord__TyCon_compare Some algTcFields andb bool cons
+     false list negb nil op_zt__ option pair true tyConBinders tyConName tyConResKind
+     BasicTypes.Boxity BasicTypes.TupleSort Constants.fLOAT_SIZE
+     Constants.wORD64_SIZE Coq.Lists.List.flat_map Core.Branched
+     Core.BuiltInSynFamily Core.CoAxiom Core.Injectivity Core.Role Core.TyCon
+     Core.TyConRepName Core.Unbranched CoreType.ArgFlag CoreType.Kind
+     CoreType.Required CoreType.Specified CoreType.TvBndr CoreType.TyVar
+     CoreType.TyVarBinder CoreType.TyVarBndr CoreType.Type_ CoreType.isVisibleArgFlag
+     CoreType.mkTyVarBinder CoreType.tyVarKind Data.Foldable.foldr DataCon.DataCon
+     DataCon.dataConTyCon Deriving.op_zdcon2tagzuGDTzzQOFa1zzUIKOcsSgCJHI__
      DynFlags.DynFlags DynFlags.dOUBLE_SIZE DynFlags.wORD_SIZE
-     FastStringEnv.emptyFsEnv FastStringEnv.fsEnvElts FieldLabel.FieldLabel
-     FieldLabel.FieldLabelEnv GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error
-     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot
-     Maybes.orElse Module.Module Name.Name Name.mkExternalName Name.nameModule
+     FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
+     FieldLabel.FieldLabel FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString
+     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
+     GHC.Num.op_zt__ GHC.Prim.op_tagToEnumzh__ GHC.Prim.op_zezezh__ Maybes.orElse
+     Module.Module Name.Name Name.isHoleName Name.mkExternalName Name.nameModule
      Name.nameOccName Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv
      NameEnv.emptyNameEnv NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.OccName
      OccName.isTcOcc OccName.mkTyConRepOcc Panic.noString Panic.panicStr
      PrelNames.constraintKindTyConKey PrelNames.gHC_PRIM PrelNames.gHC_TYPES
      PrelNames.liftedTypeKindTyConKey PrelNames.starKindTyConKey
-     PrelNames.tYPETyConKey PrelNames.unicodeStarKindTyConKey
-     TysWiredIn.runtimeRepTyCon TysWiredIn.vecCountTyCon TysWiredIn.vecElemTyCon
-     UniqSet.UniqSet UniqSet.elementOfUniqSet UniqSet.mkUniqSet
-     UniqSet.unionManyUniqSets Unique.Unique Unique.dataConRepNameUnique
-     Unique.getUnique Unique.tyConRepNameUnique
+     PrelNames.tYPETyConKey PrelNames.unicodeStarKindTyConKey TysWiredIn.mkForAllKind
+     TysWiredIn.mkFunKind TysWiredIn.runtimeRepTyCon TysWiredIn.vecCountTyCon
+     TysWiredIn.vecElemTyCon UniqSet.UniqSet UniqSet.elementOfUniqSet
+     UniqSet.mkUniqSet UniqSet.unionManyUniqSets Unique.Unique
+     Unique.dataConRepNameUnique Unique.getUnique Unique.tyConRepNameUnique
 *)

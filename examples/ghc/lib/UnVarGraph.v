@@ -44,13 +44,13 @@ Instance Unpeel_UnVarGraph : Prim.Unpeel UnVarGraph (Bag.Bag Gen) :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UnVarGraph y => y end) Mk_UnVarGraph.
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__UnVarSet' failed: OOPS! Cannot find
+(* Translating `instance Outputable__UnVarGraph' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
 (* Translating `instance Outputable__Gen' failed: OOPS! Cannot find information
    for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__UnVarGraph' failed: OOPS! Cannot find
+(* Translating `instance Outputable__UnVarSet' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
 Local Definition Eq___UnVarSet_op_zeze__ : UnVarSet -> UnVarSet -> bool :=

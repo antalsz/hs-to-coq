@@ -41,8 +41,7 @@ Inductive Termination r : Type
   |  ThrowsExn : Termination r
   |  Dunno : r -> Termination r.
 
-Definition KillFlags :=
-  (bool * bool)%type%type.
+Inductive KillFlags : Type := KillFlags : bool -> bool -> bool -> KillFlags.
 
 Inductive JointDmd s u : Type := JD : s -> u -> JointDmd s u.
 
@@ -120,12 +119,24 @@ Arguments Abs {_}.
 
 Arguments Mk_Use {_} _ _.
 
-Definition sd {s} {u} (arg_0__ : JointDmd s u) :=
-  let 'JD sd _ := arg_0__ in
+Definition kf_abs (arg_0__ : KillFlags) :=
+  let 'KillFlags kf_abs _ _ := arg_0__ in
+  kf_abs.
+
+Definition kf_called_once (arg_1__ : KillFlags) :=
+  let 'KillFlags _ _ kf_called_once := arg_1__ in
+  kf_called_once.
+
+Definition kf_used_once (arg_2__ : KillFlags) :=
+  let 'KillFlags _ kf_used_once _ := arg_2__ in
+  kf_used_once.
+
+Definition sd {s} {u} (arg_3__ : JointDmd s u) :=
+  let 'JD sd _ := arg_3__ in
   sd.
 
-Definition ud {s} {u} (arg_1__ : JointDmd s u) :=
-  let 'JD _ ud := arg_1__ in
+Definition ud {s} {u} (arg_4__ : JointDmd s u) :=
+  let 'JD _ ud := arg_4__ in
   ud.
 (* Midamble *)
 
@@ -204,13 +215,31 @@ Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__JointDmd' failed: OOPS! Cannot find
+(* Translating `instance Outputable__StrictSig' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__StrDmd' failed: OOPS! Cannot find
+(* Translating `instance Binary__StrictSig' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Outputable__DmdType' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__ArgStr' failed: OOPS! Cannot find
+(* Translating `instance Binary__DmdType' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Binary__DmdResult' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Outputable__CPRResult' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Binary__CPRResult' failed: OOPS! Cannot find
+   information for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Outputable__Termination' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Outputable__TypeShape' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
 (* Translating `instance Outputable__ArgUse' failed: OOPS! Cannot find
@@ -219,56 +248,38 @@ Definition ArgStrDmd_size := Str_size StrDmd_size.
 (* Translating `instance Outputable__UseDmd' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__Count' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Outputable__TypeShape' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Outputable__Termination' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Outputable__CPRResult' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Outputable__DmdType' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Outputable__StrictSig' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Binary__StrDmd' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__ExnStr' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__ArgStr' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__Count' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
-
 (* Translating `instance Binary__ArgUse' failed: OOPS! Cannot find information
    for class Qualified "Binary" "Binary" unsupported *)
 
 (* Translating `instance Binary__UseDmd' failed: OOPS! Cannot find information
    for class Qualified "Binary" "Binary" unsupported *)
 
+(* Translating `instance Outputable__Count' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Binary__Count' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Outputable__StrDmd' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Outputable__ArgStr' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Binary__StrDmd' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Binary__ArgStr' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Binary__ExnStr' failed: OOPS! Cannot find information
+   for class Qualified "Binary" "Binary" unsupported *)
+
+(* Translating `instance Outputable__JointDmd' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
 (* Translating `instance Binary__JointDmd' failed: OOPS! Cannot find information
    for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__StrictSig' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__DmdType' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__DmdResult' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
-
-(* Translating `instance Binary__CPRResult' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
 
 (* Translating `instance Show__CPRResult' failed: OOPS! Cannot find information
    for class Qualified "GHC.Show" "Show" unsupported *)
@@ -283,7 +294,7 @@ Local Definition Eq___CPRResult_op_zeze__ : CPRResult -> CPRResult -> bool :=
     end.
 
 Local Definition Eq___CPRResult_op_zsze__ : CPRResult -> CPRResult -> bool :=
-  fun a b => negb (Eq___CPRResult_op_zeze__ a b).
+  fun x y => negb (Eq___CPRResult_op_zeze__ x y).
 
 Program Instance Eq___CPRResult : GHC.Base.Eq_ CPRResult :=
   fun _ k =>
@@ -305,7 +316,7 @@ Local Definition Eq___Termination_op_zeze__ {inst_r} `{GHC.Base.Eq_ inst_r}
 
 Local Definition Eq___Termination_op_zsze__ {inst_r} `{GHC.Base.Eq_ inst_r}
    : Termination inst_r -> Termination inst_r -> bool :=
-  fun a b => negb (Eq___Termination_op_zeze__ a b).
+  fun x y => negb (Eq___Termination_op_zeze__ x y).
 
 Program Instance Eq___Termination {r} `{GHC.Base.Eq_ r}
    : GHC.Base.Eq_ (Termination r) :=
@@ -331,7 +342,7 @@ Local Definition Eq___Count_op_zeze__ : Count -> Count -> bool :=
     end.
 
 Local Definition Eq___Count_op_zsze__ : Count -> Count -> bool :=
-  fun a b => negb (Eq___Count_op_zeze__ a b).
+  fun x y => negb (Eq___Count_op_zeze__ x y).
 
 Program Instance Eq___Count : GHC.Base.Eq_ Count :=
   fun _ k =>
@@ -350,7 +361,7 @@ Local Definition Eq___Use_op_zeze__ {inst_u} `{GHC.Base.Eq_ inst_u}
 
 Local Definition Eq___Use_op_zsze__ {inst_u} `{GHC.Base.Eq_ inst_u}
    : Use inst_u -> Use inst_u -> bool :=
-  fun a b => negb (Eq___Use_op_zeze__ a b).
+  fun x y => negb (Eq___Use_op_zeze__ x y).
 
 Program Instance Eq___Use {u} `{GHC.Base.Eq_ u} : GHC.Base.Eq_ (Use u) :=
   fun _ k =>
@@ -369,7 +380,7 @@ Local Definition Eq___UseDmd_op_zeze__ : UseDmd -> UseDmd -> bool :=
            end.
 
 Local Definition Eq___UseDmd_op_zsze__ : UseDmd -> UseDmd -> bool :=
-  fun a b => negb (Eq___UseDmd_op_zeze__ a b).
+  fun x y => negb (Eq___UseDmd_op_zeze__ x y).
 
 Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd :=
   fun _ k =>
@@ -394,7 +405,7 @@ Local Definition Eq___ExnStr_op_zeze__ : ExnStr -> ExnStr -> bool :=
     end.
 
 Local Definition Eq___ExnStr_op_zsze__ : ExnStr -> ExnStr -> bool :=
-  fun a b => negb (Eq___ExnStr_op_zeze__ a b).
+  fun x y => negb (Eq___ExnStr_op_zeze__ x y).
 
 Program Instance Eq___ExnStr : GHC.Base.Eq_ ExnStr :=
   fun _ k =>
@@ -413,7 +424,7 @@ Local Definition Eq___Str_op_zeze__ {inst_s} `{GHC.Base.Eq_ inst_s}
 
 Local Definition Eq___Str_op_zsze__ {inst_s} `{GHC.Base.Eq_ inst_s}
    : Str inst_s -> Str inst_s -> bool :=
-  fun a b => negb (Eq___Str_op_zeze__ a b).
+  fun x y => negb (Eq___Str_op_zeze__ x y).
 
 Program Instance Eq___Str {s} `{GHC.Base.Eq_ s} : GHC.Base.Eq_ (Str s) :=
   fun _ k =>
@@ -432,7 +443,7 @@ Local Definition Eq___StrDmd_op_zeze__ : StrDmd -> StrDmd -> bool :=
            end.
 
 Local Definition Eq___StrDmd_op_zsze__ : StrDmd -> StrDmd -> bool :=
-  fun a b => negb (Eq___StrDmd_op_zeze__ a b).
+  fun x y => negb (Eq___StrDmd_op_zeze__ x y).
 
 Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd :=
   fun _ k =>
@@ -443,7 +454,7 @@ Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd :=
    for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Eq___JointDmd_op_zeze__ {inst_s} {inst_u} `{GHC.Base.Eq_
-  inst_u} `{GHC.Base.Eq_ inst_s}
+  inst_s} `{GHC.Base.Eq_ inst_u}
    : JointDmd inst_s inst_u -> JointDmd inst_s inst_u -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -451,11 +462,11 @@ Local Definition Eq___JointDmd_op_zeze__ {inst_s} {inst_u} `{GHC.Base.Eq_
     end.
 
 Local Definition Eq___JointDmd_op_zsze__ {inst_s} {inst_u} `{GHC.Base.Eq_
-  inst_u} `{GHC.Base.Eq_ inst_s}
+  inst_s} `{GHC.Base.Eq_ inst_u}
    : JointDmd inst_s inst_u -> JointDmd inst_s inst_u -> bool :=
-  fun a b => negb (Eq___JointDmd_op_zeze__ a b).
+  fun x y => negb (Eq___JointDmd_op_zeze__ x y).
 
-Program Instance Eq___JointDmd {s} {u} `{GHC.Base.Eq_ u} `{GHC.Base.Eq_ s}
+Program Instance Eq___JointDmd {s} {u} `{GHC.Base.Eq_ s} `{GHC.Base.Eq_ u}
    : GHC.Base.Eq_ (JointDmd s u) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___JointDmd_op_zeze__ ;
@@ -465,9 +476,8 @@ Local Definition Eq___DmdType_op_zeze__ : DmdType -> DmdType -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv1 ds1 res1, Mk_DmdType fv2 ds2 res2 =>
-        andb (UniqFM.ufmToList fv1 GHC.Base.== UniqFM.ufmToList fv2) (andb (ds1
-                                                                            GHC.Base.==
-                                                                            ds2) (res1 GHC.Base.== res2))
+        andb (UniqFM.nonDetUFMToList fv1 GHC.Base.== UniqFM.nonDetUFMToList fv2) (andb
+              (ds1 GHC.Base.== ds2) (res1 GHC.Base.== res2))
     end.
 
 Local Definition Eq___DmdType_op_zsze__ : DmdType -> DmdType -> bool :=
@@ -498,21 +508,18 @@ Definition addDemand : Demand -> DmdType -> DmdType :=
     | dmd, Mk_DmdType fv ds res => Mk_DmdType fv (cons dmd ds) res
     end.
 
-Definition argOneShots
-   : BasicTypes.OneShotInfo -> Demand -> list BasicTypes.OneShotInfo :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | one_shot_info, JD _ usg =>
-        let fix go arg_2__
-                  := match arg_2__ with
-                     | UCall One u => cons one_shot_info (go u)
-                     | UCall Many u => cons BasicTypes.NoOneShotInfo (go u)
-                     | _ => nil
-                     end in
-        match usg with
-        | Mk_Use _ arg_usg => go arg_usg
-        | _ => nil
-        end
+Definition argOneShots : Demand -> list BasicTypes.OneShotInfo :=
+  fun arg_0__ =>
+    let 'JD _ usg := arg_0__ in
+    let fix go arg_1__
+              := match arg_1__ with
+                 | UCall One u => cons BasicTypes.OneShotLam (go u)
+                 | UCall Many u => cons BasicTypes.NoOneShotInfo (go u)
+                 | _ => nil
+                 end in
+    match usg with
+    | Mk_Use _ arg_usg => go arg_usg
+    | _ => nil
     end.
 
 Definition argsOneShots
@@ -526,15 +533,13 @@ Definition argsOneShots
             | nil, nil => nil
             | a, as_ => cons a as_
             end in
-        let unsaturated_call := Util.lengthExceeds arg_ds n_val_args in
-        let good_one_shot :=
-          if unsaturated_call : bool then BasicTypes.ProbOneShot else
-          BasicTypes.OneShotLam in
-        let fix go arg_8__
-                  := match arg_8__ with
+        let fix go arg_6__
+                  := match arg_6__ with
                      | nil => nil
-                     | cons arg_d arg_ds => cons_ (argOneShots good_one_shot arg_d) (go arg_ds)
+                     | cons arg_d arg_ds => cons_ (argOneShots arg_d) (go arg_ds)
                      end in
+        let unsaturated_call := Util.lengthExceeds arg_ds n_val_args in
+        if unsaturated_call : bool then nil else
         go arg_ds
     end.
 
@@ -593,12 +598,6 @@ Definition cleanEvalDmd : CleanDemand :=
 Definition cleanUseDmd_maybe : Demand -> option UseDmd :=
   fun arg_0__ => match arg_0__ with | JD _ (Mk_Use _ u) => Some u | _ => None end.
 
-Definition countMany : Count :=
-  Many.
-
-Definition countOnce : Count :=
-  One.
-
 Definition cprProdRes : list DmdType -> DmdResult :=
   fun _arg_tys => Dunno RetProd.
 
@@ -617,11 +616,22 @@ Definition botSig : StrictSig :=
 Definition exnRes : DmdResult :=
   ThrowsExn.
 
+Definition exnDmdType : DmdType :=
+  Mk_DmdType emptyDmdEnv nil exnRes.
+
+Definition exnSig : StrictSig :=
+  Mk_StrictSig exnDmdType.
+
 Definition getStrDmd {s} {u} : JointDmd s u -> s :=
   sd.
 
 Definition getUseDmd {s} {u} : JointDmd s u -> u :=
   ud.
+
+Definition hasDemandEnvSig : StrictSig -> bool :=
+  fun arg_0__ =>
+    let 'Mk_StrictSig (Mk_DmdType env _ _) := arg_0__ in
+    negb (VarEnv.isEmptyVarEnv env).
 
 Definition isAbsDmd : Demand -> bool :=
   fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
@@ -687,7 +697,7 @@ Definition isTopDmd : Demand -> bool :=
 Definition isTopRes : DmdResult -> bool :=
   fun arg_0__ => match arg_0__ with | Dunno NoCPR => true | _ => false end.
 
-Definition isNopDmdType : DmdType -> bool :=
+Definition isTopDmdType : DmdType -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_DmdType env nil res =>
@@ -696,15 +706,16 @@ Definition isNopDmdType : DmdType -> bool :=
     | _ => false
     end.
 
-Definition isNopSig : StrictSig -> bool :=
-  fun arg_0__ => let 'Mk_StrictSig ty := arg_0__ in isNopDmdType ty.
+Definition isTopSig : StrictSig -> bool :=
+  fun arg_0__ => let 'Mk_StrictSig ty := arg_0__ in isTopDmdType ty.
 
 Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
   fun dflags =>
-    let kill_one_shot := DynFlags.gopt DynFlags.Opt_KillOneShot dflags in
-    let kill_abs := DynFlags.gopt DynFlags.Opt_KillAbsence dflags in
-    if andb (negb kill_abs) (negb kill_one_shot) : bool then None else
-    Some (pair kill_abs kill_one_shot).
+    let kf_used_once := DynFlags.gopt DynFlags.Opt_KillOneShot dflags in
+    let kf_called_once := kf_used_once in
+    let kf_abs := DynFlags.gopt DynFlags.Opt_KillAbsence dflags in
+    if andb (negb kf_abs) (negb kf_used_once) : bool then None else
+    Some (KillFlags kf_abs kf_used_once kf_called_once).
 
 Definition lazyApply1Dmd : Demand :=
   JD Lazy (Mk_Use One (UCall One Used)).
@@ -832,8 +843,22 @@ Definition mkStrictSig : DmdType -> StrictSig :=
 Definition mkClosedStrictSig : list Demand -> DmdResult -> StrictSig :=
   fun ds res => mkStrictSig (Mk_DmdType emptyDmdEnv ds res).
 
+Definition zapUsageEnvSig : StrictSig -> StrictSig :=
+  fun arg_0__ =>
+    let 'Mk_StrictSig (Mk_DmdType _ ds r) := arg_0__ in
+    mkClosedStrictSig ds r.
+
 Definition mkUCall : Count -> UseDmd -> UseDmd :=
   fun c a => UCall c a.
+
+Definition mkWorkerDemand : GHC.Num.Int -> Demand :=
+  fun n =>
+    let fix go arg_0__
+              := let 'num_1__ := arg_0__ in
+                 if num_1__ GHC.Base.== #0 : bool then Used else
+                 let 'n := arg_0__ in
+                 mkUCall One (go (n GHC.Num.- #1)) in
+    JD Lazy (Mk_Use One (go n)).
 
 Definition mkCallDmd : CleanDemand -> CleanDemand :=
   fun arg_0__ => let 'JD d u := arg_0__ in JD (mkSCall d) (mkUCall One u).
@@ -886,6 +911,25 @@ Definition retCPR_maybe : CPRResult -> option BasicTypes.ConTag :=
 
 Definition returnsCPR_maybe : DmdResult -> option BasicTypes.ConTag :=
   fun arg_0__ => match arg_0__ with | Dunno c => retCPR_maybe c | _ => None end.
+
+Definition saturatedByOneShots : GHC.Num.Int -> Demand -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, JD _ usg =>
+        let fix go arg_2__ arg_3__
+                  := match arg_2__, arg_3__ with
+                     | num_4__, _ =>
+                         if num_4__ GHC.Base.== #0 : bool then true else
+                         match arg_2__, arg_3__ with
+                         | n, UCall One u => go (n GHC.Num.- #1) u
+                         | _, _ => false
+                         end
+                     end in
+        match usg with
+        | Mk_Use _ arg_usg => go n arg_usg
+        | _ => false
+        end
+    end.
 
 Definition seqArgStr : ArgStr -> unit :=
   fun x => tt.
@@ -946,10 +990,11 @@ Definition splitStrProdDmd : GHC.Num.Int -> StrDmd -> option (list ArgStr) :=
     | n, HyperStr => Some (GHC.List.replicate n strBot)
     | n, HeadStr => Some (GHC.List.replicate n strTop)
     | n, SProd ds =>
-        if andb Util.debugIsOn (negb (Util.lengthIs ds n)) : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__
-                                 "ghc/compiler/basicTypes/Demand.hs") #304)
-        else Some ds
+        Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
+                            "ghc/compiler/basicTypes/Demand.hs") #359 ((id (GHC.Base.hs_string__
+                                                                            "splitStrProdDmd") Outputable.$$
+                             Panic.noString n) Outputable.$$
+                            Panic.noString ds) (Some ds)
     | _, SCall _ => None
     end.
 
@@ -962,6 +1007,9 @@ Definition splitArgStrProdDmd : GHC.Num.Int -> ArgStr -> option (list ArgStr) :=
 
 Definition strictApply1Dmd : Demand :=
   JD (Mk_Str VanStr (SCall HeadStr)) (Mk_Use Many (UCall One Used)).
+
+Definition strictSigDmdEnv : StrictSig -> DmdEnv :=
+  fun arg_0__ => let 'Mk_StrictSig (Mk_DmdType env _ _) := arg_0__ in env.
 
 Definition strictenDmd : Demand -> CleanDemand :=
   fun arg_0__ =>
@@ -1051,6 +1099,49 @@ Definition isUsedOnce : Demand -> bool :=
 
 Definition useTop : ArgUse :=
   Mk_Use Many Used.
+
+Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, Abs => if kf_abs kfs : bool then useTop else Abs
+    | kfs, Mk_Use c u =>
+        if kf_used_once kfs : bool then Mk_Use Many (zap_usg kfs u) else
+        Mk_Use c (zap_usg kfs u)
+    end.
+
+Definition kill_usage : KillFlags -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, JD s u => JD s (zap_musg kfs u)
+    end.
+
+Definition zapUsageDemand : Demand -> Demand :=
+  kill_usage (KillFlags true true true).
+
+Definition zapUsedOnceDemand : Demand -> Demand :=
+  kill_usage (KillFlags false true false).
+
+Definition zapUsedOnceSig : StrictSig -> StrictSig :=
+  fun arg_0__ =>
+    let 'Mk_StrictSig (Mk_DmdType env ds r) := arg_0__ in
+    Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
+
+Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
+  fun dflags dmd =>
+    match killFlags dflags with
+    | Some kfs => kill_usage kfs dmd
+    | _ => dmd
+    end.
+
+Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
+        match killFlags dflags with
+        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
+        | _ => sig
+        end
+    end.
 
 Definition topDmd : Demand :=
   JD Lazy useTop.
@@ -1205,57 +1296,19 @@ Definition cprProdDmdType : BasicTypes.Arity -> DmdType :=
 Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
-Definition zap_count : KillFlags -> Count -> Count :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair _ kill_one_shot, c => if kill_one_shot : bool then Many else c
-    end.
-
-Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair kill_abs _, Abs => if kill_abs : bool then useTop else Abs
-    | kfs, Mk_Use c u => Mk_Use (zap_count kfs c) (zap_usg kfs u)
-    end.
-
-Definition kill_usage : KillFlags -> Demand -> Demand :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | kfs, JD s u => JD s (zap_musg kfs u)
-    end.
-
-Definition zapUsageDemand : Demand -> Demand :=
-  kill_usage (pair true true).
-
-Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
-  fun dflags dmd =>
-    match killFlags dflags with
-    | Some kfs => kill_usage kfs dmd
-    | _ => dmd
-    end.
-
-Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
-        match killFlags dflags with
-        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
-        | _ => sig
-        end
-    end.
-
 (* Unbound variables:
-     ArgStr ArgUse None Some andb bool bothStr bothUse cons else false if isUsedMU
+     ArgStr ArgUse None Some andb bool bothStr bothUse cons else false id if isUsedMU
      list lubStr lubUse markReusedDmd negb nil op_zt__ option orb pair peelManyCalls
      postProcessDmdEnv then true tt unit zap_usg BasicTypes.Arity BasicTypes.ConTag
      BasicTypes.NoOneShotInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
-     BasicTypes.ProbOneShot BasicTypes.fIRST_TAG Coq.Init.Datatypes.app CoreType.Var
-     Data.Foldable.all Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
+     BasicTypes.fIRST_TAG Coq.Init.Datatypes.app CoreType.Var Data.Foldable.all
+     Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_
      GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max
      GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.List.replicate GHC.List.take
-     GHC.Num.Int GHC.Num.fromInteger GHC.Prim.coerce Maybes.orElse Panic.assertPanic
-     UniqFM.ufmToList Util.debugIsOn Util.lengthExceeds Util.lengthIs
-     Util.zipWithEqual VarEnv.VarEnv VarEnv.delVarEnv VarEnv.emptyVarEnv
-     VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv VarEnv.mapVarEnv VarEnv.plusVarEnv_CD
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Prim.coerce Maybes.orElse
+     Outputable.op_zdzd__ Panic.noString Panic.warnPprTrace UniqFM.nonDetUFMToList
+     Util.lengthExceeds Util.lengthIs Util.zipWithEqual VarEnv.VarEnv
+     VarEnv.delVarEnv VarEnv.emptyVarEnv VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv
+     VarEnv.mapVarEnv VarEnv.plusVarEnv_CD
 *)

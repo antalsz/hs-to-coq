@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require FastString.
 Require GHC.Base.
@@ -78,23 +78,26 @@ Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan def
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__RealSrcLoc' failed: OOPS! Cannot find
+(* Translating `instance Outputable__GenLocated' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__SrcLoc' failed: OOPS! Cannot find
+(* Translating `instance Data__SrcSpan' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance ToJson__SrcSpan' failed: OOPS! Cannot find information
+   for class Qualified "Json" "ToJson" unsupported *)
+
+(* Translating `instance NFData__SrcSpan' failed: OOPS! Cannot find information
+   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+
+(* Translating `instance Outputable__SrcSpan' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
 (* Translating `instance Data__RealSrcSpan' failed: OOPS! Cannot find
    information for class Qualified "Data.Data" "Data" unsupported *)
 
-(* Translating `instance Data__SrcSpan' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
-
-(* Translating `instance NFData__SrcSpan' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
-
-(* Translating `instance Show__RealSrcLoc' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Translating `instance ToJson__RealSrcSpan' failed: OOPS! Cannot find
+   information for class Qualified "Json" "ToJson" unsupported *)
 
 (* Translating `instance Show__RealSrcSpan' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -102,11 +105,14 @@ Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan def
 (* Translating `instance Outputable__RealSrcSpan' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__SrcSpan' failed: OOPS! Cannot find
+(* Translating `instance Outputable__SrcLoc' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-(* Translating `instance Outputable__GenLocated' failed: OOPS! Cannot find
+(* Translating `instance Outputable__RealSrcLoc' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Show__RealSrcLoc' failed: OOPS! Cannot find information
+   for class Qualified "GHC.Show" "Show" unsupported *)
 
 Local Definition Traversable__GenLocated_traverse {inst_l}
    : forall {f} {a} {b},
@@ -149,9 +155,12 @@ Local Definition Foldable__GenLocated_foldl {inst_l}
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          appEndo (getDual (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
-                                                          Mk_Dual (Coq.Program.Basics.compose Mk_Endo (GHC.Base.flip
-                                                                                               f))) t)) z
+          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
+                                           (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
+                                                                          Data.Semigroup.Internal.Mk_Dual
+                                                                          (Coq.Program.Basics.compose
+                                                                           Data.Semigroup.Internal.Mk_Endo
+                                                                           (GHC.Base.flip f))) t)) z
       end.
 
 Local Definition Foldable__GenLocated_foldr' {inst_l}
@@ -171,12 +180,14 @@ Local Definition Foldable__GenLocated_foldr' {inst_l}
 Local Definition Foldable__GenLocated_product {inst_l}
    : forall {a}, forall `{GHC.Num.Num a}, GenLocated inst_l a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__GenLocated_foldMap Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__GenLocated_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__GenLocated_sum {inst_l}
    : forall {a}, forall `{GHC.Num.Num a}, GenLocated inst_l a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__GenLocated_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__GenLocated_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__GenLocated_fold {inst_l}
    : forall {m}, forall `{GHC.Base.Monoid m}, GenLocated inst_l m -> m :=
@@ -187,8 +198,10 @@ Local Definition Foldable__GenLocated_elem {inst_l}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__GenLocated_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
+                                                                                            Data.Semigroup.Internal.Mk_Any
+                                                                                            p))) _GHC.Base.==_.
 
 Local Definition Foldable__GenLocated_foldr {inst_l}
    : forall {a} {b}, (a -> b -> b) -> b -> GenLocated inst_l a -> b :=
@@ -197,10 +210,6 @@ Local Definition Foldable__GenLocated_foldr {inst_l}
       match arg_0__, arg_1__, arg_2__ with
       | f, z, L a1 a2 => f a2 z
       end.
-
-Local Definition Foldable__GenLocated_null {inst_l}
-   : forall {a}, GenLocated inst_l a -> bool :=
-  fun {a} => Foldable__GenLocated_foldr (fun arg_61__ arg_62__ => false) true.
 
 Local Definition Foldable__GenLocated_toList {inst_l}
    : forall {a}, GenLocated inst_l a -> list a :=
@@ -234,6 +243,10 @@ Local Definition Foldable__GenLocated_length {inst_l}
                                    | c, _ => c GHC.Num.+ #1
                                    end) #0.
 
+Local Definition Foldable__GenLocated_null {inst_l}
+   : forall {a}, GenLocated inst_l a -> bool :=
+  fun {a} => fun arg_0__ => let 'L _ _ := arg_0__ in false.
+
 Local Definition Functor__GenLocated_fmap {inst_l}
    : forall {a} {b}, (a -> b) -> GenLocated inst_l a -> GenLocated inst_l b :=
   fun {a} {b} =>
@@ -244,7 +257,11 @@ Local Definition Functor__GenLocated_fmap {inst_l}
 
 Local Definition Functor__GenLocated_op_zlzd__ {inst_l}
    : forall {a} {b}, a -> GenLocated inst_l b -> GenLocated inst_l a :=
-  fun {a} {b} => fun x => Functor__GenLocated_fmap (GHC.Base.const x).
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | z, L a1 a2 => L ((fun b1 => b1) a1) ((fun b2 => z) a2)
+      end.
 
 Program Instance Functor__GenLocated {l} : GHC.Base.Functor (GenLocated l) :=
   fun _ k =>
@@ -289,7 +306,7 @@ Program Instance Traversable__GenLocated {l}
 (* Skipping instance Ord__GenLocated *)
 
 Local Definition Eq___GenLocated_op_zeze__ {inst_l} {inst_e} `{GHC.Base.Eq_
-  inst_e} `{GHC.Base.Eq_ inst_l}
+  inst_l} `{GHC.Base.Eq_ inst_e}
    : GenLocated inst_l inst_e -> GenLocated inst_l inst_e -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -301,7 +318,7 @@ Local Definition Eq___GenLocated_op_zsze__ {inst_l : Type} {inst_e : Type} `{H
    : GenLocated inst_l inst_e -> GenLocated inst_l inst_e -> bool :=
   fun a b => negb (Eq___GenLocated_op_zeze__ a b).
 
-Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ e} `{GHC.Base.Eq_ l}
+Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ l} `{GHC.Base.Eq_ e}
    : GHC.Base.Eq_ (GenLocated l e) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___GenLocated_op_zeze__ ;
@@ -354,35 +371,122 @@ Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
 (* Translating `instance Show__SrcLoc' failed: OOPS! Cannot find information for
    class Qualified "GHC.Show" "Show" unsupported *)
 
-Definition cmpRealSrcLoc : RealSrcLoc -> RealSrcLoc -> comparison :=
+Local Definition Ord__SrcLoc_compare : SrcLoc -> SrcLoc -> comparison :=
+  fun a b =>
+    match a with
+    | ARealSrcLoc a1 =>
+        match b with
+        | ARealSrcLoc b1 => (GHC.Base.compare a1 b1)
+        | _ => Lt
+        end
+    | UnhelpfulLoc a1 =>
+        match b with
+        | UnhelpfulLoc b1 => (GHC.Base.compare a1 b1)
+        | _ => Gt
+        end
+    end.
+
+Local Definition Ord__SrcLoc_op_zl__ : SrcLoc -> SrcLoc -> bool :=
+  fun a b =>
+    match a with
+    | ARealSrcLoc a1 =>
+        match b with
+        | ARealSrcLoc b1 => (a1 GHC.Base.< b1)
+        | _ => true
+        end
+    | UnhelpfulLoc a1 =>
+        match b with
+        | UnhelpfulLoc b1 => (a1 GHC.Base.< b1)
+        | _ => false
+        end
+    end.
+
+Local Definition Ord__SrcLoc_op_zlze__ : SrcLoc -> SrcLoc -> bool :=
+  fun a b => negb (Ord__SrcLoc_op_zl__ b a).
+
+Local Definition Ord__SrcLoc_min : SrcLoc -> SrcLoc -> SrcLoc :=
+  fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__SrcLoc_max : SrcLoc -> SrcLoc -> SrcLoc :=
+  fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__SrcLoc_op_zgze__ : SrcLoc -> SrcLoc -> bool :=
+  fun a b => negb (Ord__SrcLoc_op_zl__ a b).
+
+Local Definition Ord__SrcLoc_op_zg__ : SrcLoc -> SrcLoc -> bool :=
+  fun a b => Ord__SrcLoc_op_zl__ b a.
+
+Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | ASrcLoc s1 l1 c1, ASrcLoc s2 l2 c2 =>
-        Util.thenCmp (GHC.Base.compare s1 s2) (Util.thenCmp (GHC.Base.compare l1 l2)
-                                                            (GHC.Base.compare c1 c2))
+    | ARealSrcLoc a1, ARealSrcLoc b1 => ((a1 GHC.Base.== b1))
+    | UnhelpfulLoc a1, UnhelpfulLoc b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
     end.
+
+Local Definition Eq___SrcLoc_op_zsze__ : SrcLoc -> SrcLoc -> bool :=
+  fun x y => negb (Eq___SrcLoc_op_zeze__ x y).
+
+Program Instance Eq___SrcLoc : GHC.Base.Eq_ SrcLoc :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
+
+Program Instance Ord__SrcLoc : GHC.Base.Ord SrcLoc :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__SrcLoc_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__SrcLoc_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__SrcLoc_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__SrcLoc_op_zgze__ ;
+         GHC.Base.compare__ := Ord__SrcLoc_compare ;
+         GHC.Base.max__ := Ord__SrcLoc_max ;
+         GHC.Base.min__ := Ord__SrcLoc_min |}.
 
 Local Definition Ord__RealSrcLoc_compare
    : RealSrcLoc -> RealSrcLoc -> comparison :=
-  cmpRealSrcLoc.
-
-Local Definition Ord__RealSrcLoc_op_zg__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => Ord__RealSrcLoc_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__RealSrcLoc_op_zgze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => Ord__RealSrcLoc_compare x y GHC.Base./= Lt.
+  fun a b =>
+    let 'ASrcLoc a1 a2 a3 := a in
+    let 'ASrcLoc b1 b2 b3 := b in
+    match (GHC.Base.compare a1 b1) with
+    | Lt => Lt
+    | Eq =>
+        match (GHC.Base.compare a2 b2) with
+        | Lt => Lt
+        | Eq => (GHC.Base.compare a3 b3)
+        | Gt => Gt
+        end
+    | Gt => Gt
+    end.
 
 Local Definition Ord__RealSrcLoc_op_zl__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => Ord__RealSrcLoc_compare x y GHC.Base.== Lt.
+  fun a b =>
+    let 'ASrcLoc a1 a2 a3 := a in
+    let 'ASrcLoc b1 b2 b3 := b in
+    match (Ord__RealSrcLoc_compare a1 b1) with
+    | Lt => true
+    | Eq =>
+        match (Ord__RealSrcLoc_compare a2 b2) with
+        | Lt => true
+        | Eq => (a3 GHC.Base.< b3)
+        | Gt => false
+        end
+    | Gt => false
+    end.
+
+Local Definition Ord__RealSrcLoc_op_zg__ : RealSrcLoc -> RealSrcLoc -> bool :=
+  fun a b => Ord__RealSrcLoc_op_zl__ b a.
+
+Local Definition Ord__RealSrcLoc_op_zgze__ : RealSrcLoc -> RealSrcLoc -> bool :=
+  fun a b => negb (Ord__RealSrcLoc_op_zl__ a b).
 
 Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun x y => Ord__RealSrcLoc_compare x y GHC.Base./= Gt.
+  fun a b => negb (Ord__RealSrcLoc_op_zl__ b a).
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun loc1 loc2 =>
-    match cmpRealSrcLoc loc1 loc2 with
-    | Eq => true
-    | _other => false
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | ASrcLoc a1 a2 a3, ASrcLoc b1 b2 b3 =>
+        (andb (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3 GHC.Base.== b3)))
     end.
 
 Local Definition Eq___RealSrcLoc_op_zsze__ : RealSrcLoc -> RealSrcLoc -> bool :=
@@ -408,61 +512,6 @@ Program Instance Ord__RealSrcLoc : GHC.Base.Ord RealSrcLoc :=
          GHC.Base.compare__ := Ord__RealSrcLoc_compare ;
          GHC.Base.max__ := Ord__RealSrcLoc_max ;
          GHC.Base.min__ := Ord__RealSrcLoc_min |}.
-
-Definition cmpSrcLoc : SrcLoc -> SrcLoc -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | UnhelpfulLoc s1, UnhelpfulLoc s2 => GHC.Base.compare s1 s2
-    | UnhelpfulLoc _, ARealSrcLoc _ => Gt
-    | ARealSrcLoc _, UnhelpfulLoc _ => Lt
-    | ARealSrcLoc l1, ARealSrcLoc l2 => (GHC.Base.compare l1 l2)
-    end.
-
-Local Definition Ord__SrcLoc_compare : SrcLoc -> SrcLoc -> comparison :=
-  cmpSrcLoc.
-
-Local Definition Ord__SrcLoc_op_zg__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => Ord__SrcLoc_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__SrcLoc_op_zgze__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => Ord__SrcLoc_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__SrcLoc_op_zl__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => Ord__SrcLoc_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__SrcLoc_op_zlze__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => Ord__SrcLoc_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__SrcLoc_min : SrcLoc -> SrcLoc -> SrcLoc :=
-  fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__SrcLoc_max : SrcLoc -> SrcLoc -> SrcLoc :=
-  fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then y else x.
-
-Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
-  fun loc1 loc2 =>
-    match cmpSrcLoc loc1 loc2 with
-    | Eq => true
-    | _other => false
-    end.
-
-Local Definition Eq___SrcLoc_op_zsze__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => negb (Eq___SrcLoc_op_zeze__ x y).
-
-Program Instance Eq___SrcLoc : GHC.Base.Eq_ SrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
-
-Program Instance Ord__SrcLoc : GHC.Base.Ord SrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__SrcLoc_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__SrcLoc_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__SrcLoc_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__SrcLoc_op_zgze__ ;
-         GHC.Base.compare__ := Ord__SrcLoc_compare ;
-         GHC.Base.max__ := Ord__SrcLoc_max ;
-         GHC.Base.min__ := Ord__SrcLoc_min |}.
 
 Definition generatedSrcLoc : SrcLoc :=
   UnhelpfulLoc (FastString.fsLit (GHC.Base.hs_string__
@@ -660,19 +709,7 @@ Program Instance Ord__RealSrcSpan : GHC.Base.Ord RealSrcSpan :=
          GHC.Base.min__ := Ord__RealSrcSpan_min |}.
 
 Local Definition Ord__SrcSpan_op_zlze__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b =>
-    match a with
-    | ARealSrcSpan a1 =>
-        match b with
-        | ARealSrcSpan b1 => (a1 GHC.Base.<= b1)
-        | _ => true
-        end
-    | UnhelpfulSpan a1 =>
-        match b with
-        | UnhelpfulSpan b1 => (a1 GHC.Base.<= b1)
-        | _ => false
-        end
-    end.
+  fun a b => negb (Ord__SrcSpan_op_zl__ b a).
 
 Local Definition Ord__SrcSpan_op_zl__ : SrcSpan -> SrcSpan -> bool :=
   fun a b =>
@@ -690,34 +727,10 @@ Local Definition Ord__SrcSpan_op_zl__ : SrcSpan -> SrcSpan -> bool :=
     end.
 
 Local Definition Ord__SrcSpan_op_zgze__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b =>
-    match a with
-    | ARealSrcSpan a1 =>
-        match b with
-        | ARealSrcSpan b1 => (a1 GHC.Base.>= b1)
-        | _ => false
-        end
-    | UnhelpfulSpan a1 =>
-        match b with
-        | UnhelpfulSpan b1 => (a1 GHC.Base.>= b1)
-        | _ => true
-        end
-    end.
+  fun a b => negb (Ord__SrcSpan_op_zl__ a b).
 
 Local Definition Ord__SrcSpan_op_zg__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b =>
-    match a with
-    | ARealSrcSpan a1 =>
-        match b with
-        | ARealSrcSpan b1 => (a1 GHC.Base.> b1)
-        | _ => false
-        end
-    | UnhelpfulSpan a1 =>
-        match b with
-        | UnhelpfulSpan b1 => (a1 GHC.Base.> b1)
-        | _ => true
-        end
-    end.
+  fun a b => Ord__SrcSpan_op_zl__ b a.
 
 Local Definition Ord__SrcSpan_compare : SrcSpan -> SrcSpan -> comparison :=
   fun a b =>
@@ -777,14 +790,17 @@ Definition wiredInSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<wired into compiler>")).
 
 (* Unbound variables:
-     Eq Gt Lt Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum None Some Type andb appEndo
-     bool comparison false getAny getDual getProduct getSum list negb option true
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.hash_compose
+     Eq Gt Lt None Ord__SrcSpan_op_zl__ Some Type andb bool comparison false list
+     negb option true Coq.Program.Basics.compose Data.Foldable.Foldable
+     Data.Semigroup.Internal.Mk_Any Data.Semigroup.Internal.Mk_Dual
+     Data.Semigroup.Internal.Mk_Endo Data.Semigroup.Internal.Mk_Product
+     Data.Semigroup.Internal.Mk_Sum Data.Semigroup.Internal.appEndo
+     Data.Semigroup.Internal.getAny Data.Semigroup.Internal.getDual
+     Data.Semigroup.Internal.getProduct Data.Semigroup.Internal.getSum
      Data.Traversable.Traversable FastString.FastString FastString.fsLit
      GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ Util.thenCmp
+     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
+     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ Util.thenCmp
 *)

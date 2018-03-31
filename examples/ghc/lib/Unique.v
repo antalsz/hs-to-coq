@@ -92,36 +92,6 @@ Definition tyConRepNameUnique : Unique -> Unique :=
 Definition dataConWorkerUnique : Unique -> Unique :=
   fun u => incrUnique u.
 
-Definition leUnique : Unique -> Unique -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique u1, MkUnique u2 => u1 GHC.Base.<= u2
-    end.
-
-Local Definition Ord__Unique_op_zlze__ : Unique -> Unique -> bool :=
-  fun a b => leUnique a b.
-
-Local Definition Ord__Unique_min : Unique -> Unique -> Unique :=
-  fun x y => if Ord__Unique_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__Unique_max : Unique -> Unique -> Unique :=
-  fun x y => if Ord__Unique_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__Unique_op_zg__ : Unique -> Unique -> bool :=
-  fun a b => negb (leUnique a b).
-
-Definition ltUnique : Unique -> Unique -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique u1, MkUnique u2 => u1 GHC.Base.< u2
-    end.
-
-Local Definition Ord__Unique_op_zl__ : Unique -> Unique -> bool :=
-  fun a b => ltUnique a b.
-
-Local Definition Ord__Unique_op_zgze__ : Unique -> Unique -> bool :=
-  fun a b => negb (ltUnique a b).
-
 Definition mkUniqueGrimily : GHC.Num.Int -> Unique :=
   MkUnique.
 
@@ -149,18 +119,8 @@ Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
              else Gt
     end.
 
-Local Definition Ord__Unique_compare : Unique -> Unique -> comparison :=
-  fun a b => nonDetCmpUnique a b.
-
-Program Instance Ord__Unique : GHC.Base.Ord Unique :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Unique_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Unique_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Unique_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Unique_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Unique_compare ;
-         GHC.Base.max__ := Ord__Unique_max ;
-         GHC.Base.min__ := Ord__Unique_min |}.
+Definition pprUniqueAlways : Unique -> Outputable.SDoc :=
+  fun u => id (showUnique u).
 
 Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
   fun arg_0__ arg_1__ =>
@@ -171,19 +131,27 @@ Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
 Definition dataConRepNameUnique : Unique -> Unique :=
   fun u => stepUnique u #2.
 
+Definition uNIQUE_BITS : GHC.Num.Int :=
+  Data.Bits.finiteBitSize (#0 : GHC.Num.Int) GHC.Num.- #8.
+
 Definition uniqueMask : GHC.Num.Int :=
-  (Data.Bits.shiftL #1 (#64 GHC.Num.- #8)) GHC.Num.- #1.
+  (Data.Bits.shiftL #1 uNIQUE_BITS) GHC.Num.- #1.
 
 Definition unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int)%type :=
   fun arg_0__ =>
     let 'MkUnique u := arg_0__ in
     let i := u Data.Bits..&.(**) uniqueMask in
-    let tag := GHC.Char.chr (Data.Bits.shiftR u (#64 GHC.Num.- #8)) in pair tag i.
+    let tag := GHC.Char.chr (Data.Bits.shiftR u uNIQUE_BITS) in pair tag i.
+
+Definition isValidKnownKeyUnique : Unique -> bool :=
+  fun u =>
+    let 'pair c x := unpkUnique u in
+    andb (GHC.Base.ord c GHC.Base.< #255) (x GHC.Base.<= (Data.Bits.shiftL #1 #22)).
 
 Definition mkUnique : GHC.Char.Char -> GHC.Num.Int -> Unique :=
   fun c i =>
     let bits := i Data.Bits..&.(**) uniqueMask in
-    let tag := Data.Bits.shiftL (GHC.Base.ord c) (#64 GHC.Num.- #8) in
+    let tag := Data.Bits.shiftL (GHC.Base.ord c) uNIQUE_BITS in
     MkUnique (tag Data.Bits..|.(**) bits).
 
 Definition mkVarOccUnique : FastString.FastString -> Unique :=
@@ -194,22 +162,6 @@ Definition newTagUnique : Unique -> GHC.Char.Char -> Unique :=
 
 Definition mkTvOccUnique : FastString.FastString -> Unique :=
   fun fs => mkUnique (GHC.Char.hs_char__ "v") (FastString.uniqueOfFS fs).
-
-Definition mkTupleTyConUnique
-   : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | BasicTypes.Boxed, a => mkUnique (GHC.Char.hs_char__ "4") (#2 GHC.Num.* a)
-    | BasicTypes.Unboxed, a => mkUnique (GHC.Char.hs_char__ "5") (#2 GHC.Num.* a)
-    end.
-
-Definition mkTupleDataConUnique
-   : BasicTypes.Boxity -> BasicTypes.Arity -> Unique :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | BasicTypes.Boxed, a => mkUnique (GHC.Char.hs_char__ "7") (#3 GHC.Num.* a)
-    | BasicTypes.Unboxed, a => mkUnique (GHC.Char.hs_char__ "8") (#3 GHC.Num.* a)
-    end.
 
 Definition mkTcOccUnique : FastString.FastString -> Unique :=
   fun fs => mkUnique (GHC.Char.hs_char__ "c") (FastString.uniqueOfFS fs).
@@ -262,9 +214,6 @@ Definition mkCostCentreUnique : GHC.Num.Int -> Unique :=
 Definition mkCoVarUnique : GHC.Num.Int -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "g") i.
 
-Definition mkCTupleTyConUnique : BasicTypes.Arity -> Unique :=
-  fun a => mkUnique (GHC.Char.hs_char__ "k") (#2 GHC.Num.* a).
-
 Definition mkBuiltinUnique : GHC.Num.Int -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "B") i.
 
@@ -274,6 +223,9 @@ Definition mkAlphaTyVarUnique : GHC.Num.Int -> Unique :=
 Definition initTyVarUnique : Unique :=
   mkUnique (GHC.Char.hs_char__ "t") #0.
 
+Definition initExitJoinUnique : Unique :=
+  mkUnique (GHC.Char.hs_char__ "s") #0.
+
 Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -281,11 +233,11 @@ Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
     end.
 
 (* Unbound variables:
-     Eq Gt Lt bool comparison negb op_zt__ pair BasicTypes.Arity BasicTypes.Boxed
-     BasicTypes.Boxity BasicTypes.Unboxed Coq.ZArith.BinInt.Z.to_N
-     Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.shiftL Data.Bits.shiftR
-     FastString.FastString FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.ord
-     GHC.Char.Char GHC.Char.chr GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     Eq Gt Lt andb bool comparison id negb op_zt__ pair showUnique BasicTypes.Arity
+     Coq.ZArith.BinInt.Z.to_N Data.Bits.finiteBitSize Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.shiftL Data.Bits.shiftR FastString.FastString
+     FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Num.Int
+     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     Outputable.SDoc
 *)

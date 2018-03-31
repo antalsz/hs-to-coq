@@ -40,6 +40,13 @@ Arguments Mk_TaggedVal {_} _ _.
 Arguments UDFM {_} _ _.
 (* Converted value declarations: *)
 
+Local Definition Monoid__UniqDFM_mappend {inst_a}
+   : (UniqDFM inst_a) -> (UniqDFM inst_a) -> (UniqDFM inst_a) :=
+  _GHC.Base.<<>>_.
+
+(* Translating `instance Outputable__UniqDFM' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
 Local Definition Eq___TaggedVal_op_zeze__ {inst_val} `{GHC.Base.Eq_ inst_val}
    : (TaggedVal inst_val) -> (TaggedVal inst_val) -> bool :=
   fun arg_0__ arg_1__ =>
@@ -74,9 +81,6 @@ Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal :=
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap |}.
 
-(* Translating `instance Outputable__UniqDFM' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
 (* Skipping instance Functor__UniqDFM *)
 
 (* Translating `instance Data__UniqDFM' failed: OOPS! Cannot find information
@@ -85,38 +89,30 @@ Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal :=
 (* Translating `instance Data__TaggedVal' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
 
-Definition addToUDFM {key} {elt} `{Unique.Uniquable key}
-   : UniqDFM elt -> key -> elt -> UniqDFM elt :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | UDFM m i, k, v =>
-        UDFM (Data.IntMap.Internal.insert (Unique.getWordKey (Unique.getUnique k))
-              (Mk_TaggedVal v i) m) (i GHC.Num.+ #1)
-    end.
-
-Definition addToUDFM_C {key} {elt} `{Unique.Uniquable key}
-   : (elt -> elt -> elt) -> UniqDFM elt -> key -> elt -> UniqDFM elt :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | f, UDFM m i, k, v =>
-        let tf :=
-          fun arg_4__ arg_5__ =>
-            match arg_4__, arg_5__ with
-            | Mk_TaggedVal a j, Mk_TaggedVal b _ => Mk_TaggedVal (f b a) j
-            end in
-        UDFM (Data.IntMap.Internal.insertWith tf (Unique.getWordKey (Unique.getUnique
-                                                                     k)) (Mk_TaggedVal v i) m) (i GHC.Num.+ #1)
-    end.
-
 Definition addToUDFM_Directly {elt}
    : UniqDFM elt -> Unique.Unique -> elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | UDFM m i, u, v =>
-        UDFM (Data.IntMap.Internal.insert (Unique.getWordKey u) (Mk_TaggedVal v i) m) (i
-                                                                                       GHC.Num.+
-                                                                                       #1)
+        let tf :=
+          fun arg_3__ arg_4__ =>
+            match arg_3__, arg_4__ with
+            | Mk_TaggedVal new_v _, Mk_TaggedVal _ old_i => Mk_TaggedVal new_v old_i
+            end in
+        UDFM (Data.IntMap.Internal.insertWith tf (Unique.getWordKey u) (Mk_TaggedVal v
+                                                                        i) m) (i GHC.Num.+ #1)
     end.
+
+Definition addToUDFM {key} {elt} `{Unique.Uniquable key}
+   : UniqDFM elt -> key -> elt -> UniqDFM elt :=
+  fun m k v => addToUDFM_Directly m (Unique.getUnique k) v.
+
+Definition addListToUDFM {key} {elt} `{Unique.Uniquable key}
+   : UniqDFM elt -> list (key * elt)%type -> UniqDFM elt :=
+  Data.Foldable.foldl (fun arg_0__ arg_1__ =>
+                         match arg_0__, arg_1__ with
+                         | m, pair k v => addToUDFM m k v
+                         end).
 
 Definition addListToUDFM_Directly {elt}
    : UniqDFM elt -> list (Unique.Unique * elt)%type -> UniqDFM elt :=
@@ -133,11 +129,16 @@ Definition addToUDFM_Directly_C {elt}
         let tf :=
           fun arg_4__ arg_5__ =>
             match arg_4__, arg_5__ with
-            | Mk_TaggedVal a j, Mk_TaggedVal b _ => Mk_TaggedVal (f a b) j
+            | Mk_TaggedVal new_v _, Mk_TaggedVal old_v old_i =>
+                Mk_TaggedVal (f old_v new_v) old_i
             end in
         UDFM (Data.IntMap.Internal.insertWith tf (Unique.getWordKey u) (Mk_TaggedVal v
                                                                         i) m) (i GHC.Num.+ #1)
     end.
+
+Definition addToUDFM_C {key} {elt} `{Unique.Uniquable key}
+   : (elt -> elt -> elt) -> UniqDFM elt -> key -> elt -> UniqDFM elt :=
+  fun f m k v => addToUDFM_Directly_C f m (Unique.getUnique k) v.
 
 Definition addListToUDFM_Directly_C {elt}
    : (elt -> elt -> elt) ->
@@ -225,10 +226,27 @@ Definition listToUDFM_Directly {elt}
                          end) emptyUDFM.
 
 Definition alwaysUnsafeUfmToUdfm {elt} : UniqFM.UniqFM elt -> UniqDFM elt :=
-  listToUDFM_Directly GHC.Base.∘ UniqFM.ufmToList.
+  listToUDFM_Directly GHC.Base.∘ UniqFM.nonDetUFMToList.
+
+Definition listToUDFM {key} {elt} `{Unique.Uniquable key}
+   : list (key * elt)%type -> UniqDFM elt :=
+  Data.Foldable.foldl (fun arg_0__ arg_1__ =>
+                         match arg_0__, arg_1__ with
+                         | m, pair k v => addToUDFM m k v
+                         end) emptyUDFM.
 
 Local Definition Monoid__UniqDFM_mempty {inst_a} : (UniqDFM inst_a) :=
   emptyUDFM.
+
+Local Definition Monoid__UniqDFM_mconcat {inst_a}
+   : list (UniqDFM inst_a) -> (UniqDFM inst_a) :=
+  GHC.Base.foldr Monoid__UniqDFM_mappend Monoid__UniqDFM_mempty.
+
+Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
+         GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
+         GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
 
 Definition filterUDFM {elt} : (elt -> bool) -> UniqDFM elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ =>
@@ -312,6 +330,14 @@ Definition nonDetFoldUDFM {elt} {a}
         Data.Foldable.foldr k z (GHC.Base.map taggedFst (Data.IntMap.Internal.elems m))
     end.
 
+Definition lookupUDFM_Directly {elt}
+   : UniqDFM elt -> Unique.Unique -> option elt :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | UDFM m _i, k =>
+        GHC.Base.fmap taggedFst (Data.IntMap.Internal.lookup (Unique.getWordKey k) m)
+    end.
+
 Definition lookupUDFM {key} {elt} `{Unique.Uniquable key}
    : UniqDFM elt -> key -> option elt :=
   fun arg_0__ arg_1__ =>
@@ -326,6 +352,13 @@ Definition anyUDFM {elt} : (elt -> bool) -> UniqDFM elt -> bool :=
     match arg_0__, arg_1__ with
     | p, UDFM m _i =>
         Data.IntMap.Internal.foldr (orb GHC.Base.∘ (p GHC.Base.∘ taggedFst)) false m
+    end.
+
+Definition allUDFM {elt} : (elt -> bool) -> UniqDFM elt -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | p, UDFM m _i =>
+        Data.IntMap.Internal.foldr (andb GHC.Base.∘ (p GHC.Base.∘ taggedFst)) true m
     end.
 
 Definition taggedSnd {val} : TaggedVal val -> GHC.Num.Int :=
@@ -366,19 +399,12 @@ Definition plusUDFM {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM elt :=
         insertUDFMIntoLeft udfmr udfml
     end.
 
-Local Definition Monoid__UniqDFM_mappend {inst_a}
+Local Definition Semigroup__UniqDFM_op_zlzlzgzg__ {inst_a}
    : (UniqDFM inst_a) -> (UniqDFM inst_a) -> (UniqDFM inst_a) :=
   plusUDFM.
 
-Local Definition Monoid__UniqDFM_mconcat {inst_a}
-   : list (UniqDFM inst_a) -> (UniqDFM inst_a) :=
-  GHC.Base.foldr Monoid__UniqDFM_mappend Monoid__UniqDFM_mempty.
-
-Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
-         GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
-         GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
+Program Instance Semigroup__UniqDFM {a} : GHC.Base.Semigroup (UniqDFM a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqDFM_op_zlzlzgzg__ |}.
 
 Definition eltsUDFM {elt} : UniqDFM elt -> list elt :=
   fun arg_0__ =>
@@ -389,8 +415,12 @@ Definition eltsUDFM {elt} : UniqDFM elt -> list elt :=
 Definition foldUDFM {elt} {a} : (elt -> a -> a) -> a -> UniqDFM elt -> a :=
   fun k z m => Data.Foldable.foldr k z (eltsUDFM m).
 
-Definition udfmIntersectUFM {elt}
-   : UniqDFM elt -> UniqFM.UniqFM elt -> UniqDFM elt :=
+Definition pprUDFM {a}
+   : UniqDFM a -> (list a -> Outputable.SDoc) -> Outputable.SDoc :=
+  fun ufm pp => pp (eltsUDFM ufm).
+
+Definition udfmIntersectUFM {elt1} {elt2}
+   : UniqDFM elt1 -> UniqFM.UniqFM elt2 -> UniqDFM elt1 :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | UDFM x i, y =>
@@ -412,22 +442,22 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key}
           (Mk_TaggedVal v #0)) #1.
 
 (* Unbound variables:
-     None Some bool cons false list negb nil op_zt__ option orb pair
+     None Some andb bool cons false list negb nil op_zt__ option orb pair true
      Coq.Lists.List.flat_map Coq.ZArith.BinInt.Z.of_N Data.Foldable.foldl
      Data.Foldable.foldr Data.Function.on Data.IntMap.Internal.IntMap
      Data.IntMap.Internal.adjust Data.IntMap.Internal.alter
      Data.IntMap.Internal.delete Data.IntMap.Internal.difference
      Data.IntMap.Internal.elems Data.IntMap.Internal.empty
      Data.IntMap.Internal.filter Data.IntMap.Internal.filterWithKey
-     Data.IntMap.Internal.foldr Data.IntMap.Internal.insert
-     Data.IntMap.Internal.insertWith Data.IntMap.Internal.intersection
-     Data.IntMap.Internal.lookup Data.IntMap.Internal.map Data.IntMap.Internal.member
-     Data.IntMap.Internal.null Data.IntMap.Internal.partition
-     Data.IntMap.Internal.singleton Data.IntMap.Internal.size
-     Data.IntMap.Internal.toList Data.OldList.sortBy Data.Tuple.snd GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monoid GHC.Base.compare GHC.Base.const GHC.Base.fmap
-     GHC.Base.foldr GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ UniqFM.UniqFM
-     UniqFM.listToUFM_Directly UniqFM.ufmToIntMap UniqFM.ufmToList Unique.Uniquable
-     Unique.Unique Unique.getUnique Unique.getWordKey
+     Data.IntMap.Internal.foldr Data.IntMap.Internal.insertWith
+     Data.IntMap.Internal.intersection Data.IntMap.Internal.lookup
+     Data.IntMap.Internal.map Data.IntMap.Internal.member Data.IntMap.Internal.null
+     Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
+     Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.OldList.sortBy
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup
+     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.foldr GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zlzlzgzg__
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ Outputable.SDoc UniqFM.UniqFM
+     UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList UniqFM.ufmToIntMap
+     Unique.Uniquable Unique.Unique Unique.getUnique Unique.getWordKey
 *)

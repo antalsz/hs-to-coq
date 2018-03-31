@@ -24,7 +24,6 @@ Require Demand.
 Require FastString.
 Require GHC.Base.
 Require GHC.Num.
-Require GHC.Prim.
 Require IdInfo.
 Require IdInfo2.
 Require Maybes.
@@ -32,6 +31,7 @@ Require Module.
 Require Name.
 Require OccName.
 Require Panic.
+Require RepType.
 Require SrcLoc.
 Require UniqSupply.
 Require Unique.
@@ -100,6 +100,11 @@ Parameter setIdType : Var.Id -> Core.Type_ -> Var.Id.
 
 (* Converted value declarations: *)
 
+Axiom asJoinId : forall {A : Type}, A.
+
+(* Translating `asJoinId' failed: using a record pattern for the unknown
+   constructor `JoinId' unsupported *)
+
 Definition idArity : CoreType.Id -> BasicTypes.Arity :=
   fun id => IdInfo.arityInfo (CoreType.idInfo id).
 
@@ -146,24 +151,6 @@ Definition isDeadBinder : CoreType.Id -> bool :=
 Definition idOneShotInfo : CoreType.Id -> BasicTypes.OneShotInfo :=
   fun id => IdInfo.oneShotInfo (CoreType.idInfo id).
 
-Definition isOneShotLambda : CoreType.Id -> bool :=
-  fun id =>
-    match idOneShotInfo id with
-    | BasicTypes.OneShotLam => true
-    | _ => false
-    end.
-
-Definition isOneShotBndr : CoreType.Var -> bool :=
-  fun var => if CoreType.isTyVar var : bool then true else isOneShotLambda var.
-
-Definition isProbablyOneShotLambda : CoreType.Id -> bool :=
-  fun id =>
-    match idOneShotInfo id with
-    | BasicTypes.OneShotLam => true
-    | BasicTypes.ProbOneShot => true
-    | BasicTypes.NoOneShotInfo => false
-    end.
-
 Definition idSpecialisation : CoreType.Id -> IdInfo.RuleInfo :=
   fun id => IdInfo.ruleInfo (CoreType.idInfo id).
 
@@ -176,8 +163,10 @@ Definition idCoreRules : CoreType.Id -> list CoreSyn.CoreRule :=
 Definition idStrictness : CoreType.Id -> Demand.StrictSig :=
   fun id => IdInfo2.strictnessInfo (CoreType.idInfo id).
 
-Definition isBottomingId : CoreType.Id -> bool :=
-  fun id => Demand.isBottomingSig (idStrictness id).
+Definition isBottomingId : CoreType.Var -> bool :=
+  fun v =>
+    if CoreType.isId v : bool then Demand.isBottomingSig (idStrictness v) else
+    false.
 
 Definition idType : CoreType.Id -> CoreType.Kind :=
   CoreType.varType.
@@ -187,11 +176,14 @@ Definition localiseId : CoreType.Id -> CoreType.Id :=
     let name := idName id in
     if (if andb Util.debugIsOn (negb (CoreType.isId id)) : bool
         then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-              #193)
+              #209)
         else andb (CoreType.isLocalId id) (Name.isInternalName name)) : bool
     then id else
     CoreType.mkLocalVar (CoreType.idDetails id) (Name.localiseName name) (idType id)
     (CoreType.idInfo id).
+
+Definition idFunRepArity : CoreType.Id -> BasicTypes.RepArity :=
+  fun x => RepType.countFunRepArgs (idArity x) (idType x).
 
 Definition idUnfolding : CoreType.Id -> CoreSyn.Unfolding :=
   fun id =>
@@ -218,10 +210,40 @@ Axiom isImplicitId : forall {A : Type}, A.
 (* Translating `isImplicitId' failed: using a record pattern for the unknown
    constructor `FCallId' unsupported *)
 
+Axiom isJoinId : forall {A : Type}, A.
+
+Definition isExitJoinId : CoreType.Var -> bool :=
+  fun id =>
+    andb (isJoinId id) (andb (BasicTypes.isOneOcc (idOccInfo id))
+                             (BasicTypes.occ_in_lam (idOccInfo id))).
+
+(* Translating `isJoinId' failed: using a record pattern for the unknown
+   constructor `JoinId' unsupported *)
+
+Definition isJoinId_maybe : CoreType.Var -> option BasicTypes.JoinArity :=
+  fun id =>
+    if CoreType.isId id : bool
+    then if andb Util.debugIsOn (negb (CoreType.isId id)) : bool
+         then (Outputable.assertPprPanic (GHC.Base.hs_string__
+                                          "ghc/compiler/basicTypes/Id.hs") #494 (Panic.noString id))
+         else match CoreType.idDetails id with
+              | IdInfo.JoinId arity => Some arity
+              | _ => None
+              end else
+    None.
+
+Definition idJoinArity : CoreType.JoinId -> BasicTypes.JoinArity :=
+  fun id =>
+    Maybes.orElse (isJoinId_maybe id) (Panic.panicStr (GHC.Base.hs_string__
+                                                       "idJoinArity") (Panic.noString id)).
+
 Axiom isNaughtyRecordSelector : forall {A : Type}, A.
 
 (* Translating `isNaughtyRecordSelector' failed: using a record pattern for the
    unknown constructor `RecSelId' unsupported *)
+
+Definition isNeverLevPolyId : CoreType.Id -> bool :=
+  IdInfo.isNeverLevPolyIdInfo GHC.Base.∘ CoreType.idInfo.
 
 Axiom isPatSynRecordSelector : forall {A : Type}, A.
 
@@ -254,14 +276,37 @@ Definition zapFragileIdInfo : CoreType.Id -> CoreType.Id :=
 Definition zapIdDemandInfo : CoreType.Id -> CoreType.Id :=
   zapInfo IdInfo.zapDemandInfo.
 
+Definition zapIdTailCallInfo : CoreType.Id -> CoreType.Id :=
+  zapInfo IdInfo.zapTailCallInfo.
+
+Definition zapJoinId : CoreType.Id -> CoreType.Id :=
+  fun jid =>
+    if isJoinId jid : bool
+    then zapIdTailCallInfo (CoreType.setIdDetails jid IdInfo.VanillaId) else
+    jid.
+
+Definition asJoinId_maybe
+   : CoreType.Id -> option BasicTypes.JoinArity -> CoreType.Id :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | id, Some arity => asJoinId id arity
+    | id, None => zapJoinId id
+    end.
+
+Definition zapIdUsageEnvInfo : CoreType.Id -> CoreType.Id :=
+  zapInfo IdInfo.zapUsageEnvInfo.
+
 Definition zapIdUsageInfo : CoreType.Id -> CoreType.Id :=
   zapInfo IdInfo.zapUsageInfo.
+
+Definition zapIdUsedOnceInfo : CoreType.Id -> CoreType.Id :=
+  zapInfo IdInfo.zapUsedOnceInfo.
 
 Definition zapLamIdInfo : CoreType.Id -> CoreType.Id :=
   zapInfo IdInfo.zapLamInfo.
 
 Definition setIdInfo : CoreType.Id -> IdInfo.IdInfo -> CoreType.Id :=
-  fun id info => GHC.Prim.seq info (lazySetIdInfo id info).
+  fun id info => lazySetIdInfo id info.
 
 Definition modifyIdInfo
    : (IdInfo.IdInfo -> IdInfo.IdInfo) -> CoreType.Id -> CoreType.Id :=
@@ -301,7 +346,7 @@ Definition setIdOccInfo : CoreType.Id -> BasicTypes.OccInfo -> CoreType.Id :=
     modifyIdInfo (fun arg_0__ => IdInfo.setOccInfo arg_0__ occ_info) id.
 
 Definition zapIdOccInfo : CoreType.Id -> CoreType.Id :=
-  fun b => setIdOccInfo b BasicTypes.NoOccInfo.
+  fun b => setIdOccInfo b BasicTypes.noOccInfo.
 
 Definition setIdOneShotInfo
    : CoreType.Id -> BasicTypes.OneShotInfo -> CoreType.Id :=
@@ -315,8 +360,6 @@ Definition updOneShotInfo
       match pair (idOneShotInfo id) one_shot with
       | pair BasicTypes.NoOneShotInfo _ => true
       | pair BasicTypes.OneShotLam _ => false
-      | pair _ BasicTypes.NoOneShotInfo => false
-      | _ => true
       end in
     if do_upd : bool then setIdOneShotInfo id one_shot else
     id.
@@ -334,10 +377,11 @@ Definition setIdUnfolding : CoreType.Id -> CoreSyn.Unfolding -> CoreType.Id :=
   fun id unfolding =>
     modifyIdInfo (fun arg_0__ => IdInfo2.setUnfoldingInfo arg_0__ unfolding) id.
 
-Definition setIdUnfoldingLazily
-   : CoreType.Id -> CoreSyn.Unfolding -> CoreType.Id :=
-  fun id unfolding =>
-    modifyIdInfo (fun arg_0__ => IdInfo2.setUnfoldingInfoLazily arg_0__ unfolding)
+Definition setCaseBndrEvald
+   : DataCon.StrictnessMark -> CoreType.Id -> CoreType.Id :=
+  fun str id =>
+    if DataCon.isMarkedStrict str : bool
+    then setIdUnfolding id CoreSyn.evaldUnfolding else
     id.
 
 Definition setInlinePragma
@@ -357,6 +401,7 @@ Definition transferPolyIdInfo
     let old_arity := IdInfo.arityInfo old_info in
     let old_inline_prag := IdInfo.inlinePragInfo old_info in
     let old_occ_info := IdInfo.occInfo old_info in
+    let new_occ_info := BasicTypes.zapOccTailCallInfo old_occ_info in
     let old_strictness := IdInfo2.strictnessInfo old_info in
     let arity_increase := Util.count CoreType.isId abstract_wrt in
     let new_arity := old_arity GHC.Num.+ arity_increase in
@@ -366,7 +411,7 @@ Definition transferPolyIdInfo
       fun new_info =>
         IdInfo2.setStrictnessInfo (IdInfo.setOccInfo (IdInfo.setInlinePragInfo
                                                       (IdInfo.setArityInfo new_info new_arity) old_inline_prag)
-                                                     old_occ_info) new_strictness in
+                                                     new_occ_info) new_strictness in
     modifyIdInfo transfer new_id.
 
 Definition zapIdStrictness : CoreType.Id -> CoreType.Id :=
@@ -407,7 +452,7 @@ Definition mkSysLocalOrCoVarM {m} `{UniqSupply.MonadUnique m}
 
 Definition mkTemplateLocal : GHC.Num.Int -> CoreType.Type_ -> CoreType.Id :=
   fun i ty =>
-    mkSysLocalOrCoVar (FastString.fsLit (GHC.Base.hs_string__ "tpl"))
+    mkSysLocalOrCoVar (FastString.fsLit (GHC.Base.hs_string__ "v"))
     (Unique.mkBuiltinUnique i) ty.
 
 Definition mkTemplateLocals : list CoreType.Type_ -> list CoreType.Id :=
@@ -419,7 +464,7 @@ Definition mkUserLocal
   fun occ uniq ty loc =>
     if andb Util.debugIsOn (negb (negb (CoreType.isCoercionType ty))) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-          #315)
+          #330)
     else mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
 Definition mkUserLocalOrCoVar
@@ -435,6 +480,12 @@ Definition mkWorkerId
 
 Definition realIdUnfolding : CoreType.Id -> CoreSyn.Unfolding :=
   fun id => IdInfo2.unfoldingInfo (CoreType.idInfo id).
+
+Definition zapStableUnfolding : CoreType.Id -> CoreType.Id :=
+  fun id =>
+    if CoreSyn.isStableUnfolding (realIdUnfolding id) : bool
+    then setIdUnfolding id CoreSyn.NoUnfolding else
+    id.
 
 Axiom recordSelectorTyCon : forall {A : Type}, A.
 
@@ -456,38 +507,64 @@ Definition setIdUnique : CoreType.Id -> Unique.Unique -> CoreType.Id :=
 Definition stateHackOneShot : BasicTypes.OneShotInfo :=
   BasicTypes.OneShotLam.
 
+Definition idStateHackOneShotInfo : CoreType.Id -> BasicTypes.OneShotInfo :=
+  fun id =>
+    if isStateHackType (idType id) : bool then stateHackOneShot else
+    idOneShotInfo id.
+
+Definition isOneShotBndr : CoreType.Var -> bool :=
+  fun var =>
+    if CoreType.isTyVar var : bool then true else
+    match idStateHackOneShotInfo var with
+    | BasicTypes.OneShotLam => true
+    | _ => false
+    end.
+
+Definition isProbablyOneShotLambda : CoreType.Id -> bool :=
+  fun id =>
+    match idStateHackOneShotInfo id with
+    | BasicTypes.OneShotLam => true
+    | BasicTypes.NoOneShotInfo => false
+    end.
+
 (* Unbound variables:
-     None Some andb bool false isDataConId_maybe isDataConWorkId list mkLocalId
-     mkLocalIdOrCoVar mkSysLocal mkTemplateLocalsNum negb option orb pair true
-     BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
-     BasicTypes.NoOccInfo BasicTypes.NoOneShotInfo BasicTypes.OccInfo
-     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.ProbOneShot
+     None Some andb bool false isDataConId_maybe isDataConWorkId isStateHackType list
+     mkLocalId mkLocalIdOrCoVar mkSysLocal mkTemplateLocalsNum negb option orb pair
+     true BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
+     BasicTypes.JoinArity BasicTypes.NoOneShotInfo BasicTypes.OccInfo
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RepArity
      BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
      BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
-     BasicTypes.isStrongLoopBreaker BasicTypes.setInlinePragmaActivation
-     CoreSyn.CoreRule CoreSyn.NoUnfolding CoreSyn.Unfolding CoreType.Id CoreType.Kind
-     CoreType.Type_ CoreType.Var CoreType.idDetails CoreType.idInfo
-     CoreType.isCoercionType CoreType.isId CoreType.isLocalId CoreType.isTyVar
-     CoreType.lazySetIdInfo CoreType.mkExportedLocalVar CoreType.mkGlobalVar
-     CoreType.mkLocalVar CoreType.setIdExported CoreType.setIdNotExported
-     CoreType.setVarName CoreType.setVarUnique CoreType.varName CoreType.varType
-     CoreType.varUnique DataCon.DataCon Demand.Demand Demand.StrictSig
-     Demand.increaseStrictSigArity Demand.isBottomingSig Demand.nopSig
-     FastString.FastString FastString.fsLit GHC.Base.op_zgzgze__ GHC.Base.return_
-     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq IdInfo.CafInfo
-     IdInfo.IdDetails IdInfo.IdInfo IdInfo.RuleInfo IdInfo.arityInfo IdInfo.cafInfo
-     IdInfo.callArityInfo IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo IdInfo.occInfo
-     IdInfo.oneShotInfo IdInfo.ruleInfo IdInfo.setArityInfo IdInfo.setCafInfo
-     IdInfo.setCallArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
-     IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.vanillaIdInfo
-     IdInfo.zapDemandInfo IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapUsageInfo
+     BasicTypes.isOneOcc BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo
+     BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
+     BasicTypes.zapOccTailCallInfo CoreSyn.CoreRule CoreSyn.NoUnfolding
+     CoreSyn.Unfolding CoreSyn.evaldUnfolding CoreSyn.isStableUnfolding CoreType.Id
+     CoreType.JoinId CoreType.Kind CoreType.Type_ CoreType.Var CoreType.idDetails
+     CoreType.idInfo CoreType.isCoercionType CoreType.isId CoreType.isLocalId
+     CoreType.isTyVar CoreType.lazySetIdInfo CoreType.mkExportedLocalVar
+     CoreType.mkGlobalVar CoreType.mkLocalVar CoreType.setIdDetails
+     CoreType.setIdExported CoreType.setIdNotExported CoreType.setVarName
+     CoreType.setVarUnique CoreType.varName CoreType.varType CoreType.varUnique
+     DataCon.DataCon DataCon.StrictnessMark DataCon.isMarkedStrict Demand.Demand
+     Demand.StrictSig Demand.increaseStrictSigArity Demand.isBottomingSig
+     Demand.nopSig FastString.FastString FastString.fsLit GHC.Base.op_z2218U__
+     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zp__ IdInfo.CafInfo IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId
+     IdInfo.RuleInfo IdInfo.VanillaId IdInfo.arityInfo IdInfo.cafInfo
+     IdInfo.callArityInfo IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo
+     IdInfo.isNeverLevPolyIdInfo IdInfo.occInfo IdInfo.oneShotInfo IdInfo.ruleInfo
+     IdInfo.setArityInfo IdInfo.setCafInfo IdInfo.setCallArityInfo
+     IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
+     IdInfo.setRuleInfo IdInfo.vanillaIdInfo IdInfo.zapDemandInfo
+     IdInfo.zapFragileInfo IdInfo.zapLamInfo IdInfo.zapTailCallInfo
+     IdInfo.zapUsageEnvInfo IdInfo.zapUsageInfo IdInfo.zapUsedOnceInfo
      IdInfo2.demandInfo IdInfo2.ruleInfoRules IdInfo2.setDemandInfo
-     IdInfo2.setStrictnessInfo IdInfo2.setUnfoldingInfo
-     IdInfo2.setUnfoldingInfoLazily IdInfo2.strictnessInfo IdInfo2.unfoldingInfo
-     Maybes.orElse Module.Module Name.Name Name.getName Name.isInternalName
-     Name.localiseName Name.mkDerivedInternalName Name.mkInternalName
-     Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc
-     Panic.assertPanic Panic.noString Panic.panicStr SrcLoc.SrcSpan
-     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Unique.mkBuiltinUnique Util.count Util.debugIsOn
+     IdInfo2.setStrictnessInfo IdInfo2.setUnfoldingInfo IdInfo2.strictnessInfo
+     IdInfo2.unfoldingInfo Maybes.orElse Module.Module Name.Name Name.getName
+     Name.isInternalName Name.localiseName Name.mkDerivedInternalName
+     Name.mkInternalName Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName
+     OccName.mkWorkerOcc Outputable.assertPprPanic Panic.assertPanic Panic.noString
+     Panic.panicStr RepType.countFunRepArgs SrcLoc.SrcSpan UniqSupply.MonadUnique
+     UniqSupply.getUniqueM Unique.Unique Unique.mkBuiltinUnique Util.count
+     Util.debugIsOn
 *)

@@ -80,6 +80,13 @@ Local Definition Applicative__MaybeErr_op_ztzg__ {inst_err}
       Applicative__MaybeErr_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
                                         y.
 
+Local Definition Applicative__MaybeErr_liftA2 {inst_err}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__MaybeErr_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__MaybeErr_pure {inst_err}
    : forall {a}, a -> (MaybeErr inst_err) a :=
   fun {a} => Succeeded.
@@ -89,6 +96,7 @@ Program Instance Applicative__MaybeErr {err}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeErr_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeErr_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
 
 Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}

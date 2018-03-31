@@ -26,13 +26,12 @@ Require Name.
 Require Pair.
 Require Panic.
 Require SrcLoc.
-Require Unique.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Definition Eqn :=
+Definition TypeEqn :=
   (Pair.Pair CoreType.Type_)%type.
 (* Midamble *)
 
@@ -198,108 +197,6 @@ Definition toUnbranchedAxiom {br} : Core.CoAxiom br -> Core.CoAxiom
 
 (* Converted value declarations: *)
 
-Local Definition Ord__CoAxiom_compare {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> comparison :=
-  fun a b => GHC.Base.compare (Unique.getUnique a) (Unique.getUnique b).
-
-Local Definition Ord__CoAxiom_op_zg__ {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
-  fun a b =>
-    match (Ord__CoAxiom_compare a b) with
-    | Lt => false
-    | Eq => false
-    | Gt => true
-    end.
-
-Local Definition Ord__CoAxiom_op_zgze__ {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
-  fun a b =>
-    match (Ord__CoAxiom_compare a b) with
-    | Lt => false
-    | Eq => true
-    | Gt => true
-    end.
-
-Local Definition Ord__CoAxiom_op_zl__ {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
-  fun a b =>
-    match (Ord__CoAxiom_compare a b) with
-    | Lt => true
-    | Eq => false
-    | Gt => false
-    end.
-
-Local Definition Ord__CoAxiom_op_zlze__ {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> bool :=
-  fun a b =>
-    match (Ord__CoAxiom_compare a b) with
-    | Lt => true
-    | Eq => true
-    | Gt => false
-    end.
-
-Local Definition Ord__CoAxiom_max {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) :=
-  fun x y => if Ord__CoAxiom_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__CoAxiom_min {inst_br}
-   : (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) -> (Core.CoAxiom inst_br) :=
-  fun x y => if Ord__CoAxiom_op_zlze__ x y : bool then x else y.
-
-Definition Eq___CoAxiom_op_zeze__ {inst_br}
-   : Core.CoAxiom inst_br -> Core.CoAxiom inst_br -> bool :=
-  fun a b =>
-    let scrut_0__ := Ord__CoAxiom_compare a b in
-    match scrut_0__ with
-    | Eq => true
-    | _ => false
-    end.
-
-Definition Eq___CoAxiom_op_zsze__ {inst_br}
-   : Core.CoAxiom inst_br -> Core.CoAxiom inst_br -> bool :=
-  fun a b =>
-    let scrut_0__ := Ord__CoAxiom_compare a b in
-    match scrut_0__ with
-    | Eq => false
-    | _ => true
-    end.
-
-Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (Core.CoAxiom br) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___CoAxiom_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___CoAxiom_op_zsze__ |}.
-
-Program Instance Ord__CoAxiom {br} : GHC.Base.Ord (Core.CoAxiom br) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__CoAxiom_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__CoAxiom_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__CoAxiom_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__CoAxiom_op_zgze__ ;
-         GHC.Base.compare__ := Ord__CoAxiom_compare ;
-         GHC.Base.max__ := Ord__CoAxiom_max ;
-         GHC.Base.min__ := Ord__CoAxiom_min |}.
-
-(* Translating `instance Uniquable__CoAxiom' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
-
-(* Translating `instance Outputable__CoAxiom' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance NamedThing__CoAxiom' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
-
-(* Translating `instance Data__CoAxiom' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
-
-(* Translating `instance Outputable__CoAxBranch' failed: using a record pattern
-   for the unknown constructor `CoAxBranch' unsupported *)
-
-(* Translating `instance Outputable__Role' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance Binary__Role' failed: OOPS! Cannot find information for
-   class Qualified "Binary" "Binary" unsupported *)
-
 (* Translating `instance Data__CoAxiomRule' failed: OOPS! Cannot find
    information for class Qualified "Data.Data" "Data" unsupported *)
 
@@ -360,6 +257,50 @@ Program Instance Ord__CoAxiomRule : GHC.Base.Ord Core.CoAxiomRule :=
 (* Translating `instance Outputable__CoAxiomRule' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
+Definition Eq___CoAxiom_op_zeze__ {inst_br}
+   : Core.CoAxiom inst_br -> Core.CoAxiom inst_br -> bool :=
+  fun a b =>
+    let scrut_0__ := Ord__CoAxiom_compare a b in
+    match scrut_0__ with
+    | Eq => true
+    | _ => false
+    end.
+
+Definition Eq___CoAxiom_op_zsze__ {inst_br}
+   : Core.CoAxiom inst_br -> Core.CoAxiom inst_br -> bool :=
+  fun a b =>
+    let scrut_0__ := Ord__CoAxiom_compare a b in
+    match scrut_0__ with
+    | Eq => false
+    | _ => true
+    end.
+
+Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (Core.CoAxiom br) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___CoAxiom_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___CoAxiom_op_zsze__ |}.
+
+(* Translating `instance Uniquable__CoAxiom' failed: OOPS! Cannot find
+   information for class Qualified "Unique" "Uniquable" unsupported *)
+
+(* Translating `instance Outputable__CoAxiom' failed: OOPS! Cannot find
+   information for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance NamedThing__CoAxiom' failed: OOPS! Cannot find
+   information for class Qualified "Name" "NamedThing" unsupported *)
+
+(* Translating `instance Data__CoAxiom' failed: OOPS! Cannot find information
+   for class Qualified "Data.Data" "Data" unsupported *)
+
+(* Translating `instance Outputable__CoAxBranch' failed: using a record pattern
+   for the unknown constructor `CoAxBranch' unsupported *)
+
+(* Translating `instance Outputable__Role' failed: OOPS! Cannot find information
+   for class Qualified "Outputable" "Outputable" unsupported *)
+
+(* Translating `instance Binary__Role' failed: OOPS! Cannot find information for
+   class Qualified "Binary" "Binary" unsupported *)
+
 (* Translating `instance Data__CoAxBranch' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
 
@@ -378,7 +319,7 @@ Local Definition Eq___Role_op_zeze__ : Core.Role -> Core.Role -> bool :=
     end.
 
 Local Definition Eq___Role_op_zsze__ : Core.Role -> Core.Role -> bool :=
-  fun a b => negb (Eq___Role_op_zeze__ a b).
+  fun x y => negb (Eq___Role_op_zeze__ x y).
 
 Program Instance Eq___Role : GHC.Base.Eq_ Core.Role :=
   fun _ k =>
@@ -463,13 +404,13 @@ Axiom trivialBuiltInFamily : forall {A : Type}, A.
    constructor `BuiltInSynFamily' unsupported *)
 
 (* Unbound variables:
-     Eq Gt Lt bool cab_cvs cab_incomps cab_lhs cab_loc cab_rhs cab_roles cab_tvs
-     co_ax_branches co_ax_implicit co_ax_name co_ax_role co_ax_tc coaxrName
-     comparison false list negb true Core.Branches Core.CoAxBranch Core.CoAxiom
-     Core.CoAxiomRule Core.Nominal Core.Phantom Core.Representational Core.Role
-     Core.TyCon CoreType.CoVar CoreType.TyVar CoreType.Type_ Data.Foldable.length
-     FastString.FastString FastString.fsLit GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.compare GHC.Base.flip GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.fromInteger Name.Name Pair.Pair
-     Panic.panic SrcLoc.SrcSpan Unique.getUnique
+     Gt Lt Ord__CoAxiom_compare bool cab_cvs cab_incomps cab_lhs cab_loc cab_rhs
+     cab_roles cab_tvs co_ax_branches co_ax_implicit co_ax_name co_ax_role co_ax_tc
+     coaxrName comparison false list negb true Core.Branches Core.CoAxBranch
+     Core.CoAxiom Core.CoAxiomRule Core.Nominal Core.Phantom Core.Representational
+     Core.Role Core.TyCon CoreType.CoVar CoreType.TyVar CoreType.Type_
+     Data.Foldable.length FastString.FastString FastString.fsLit GHC.Base.Eq_
+     GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.fromInteger Name.Name
+     Pair.Pair Panic.panic SrcLoc.SrcSpan
 *)

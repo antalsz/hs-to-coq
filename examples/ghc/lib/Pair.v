@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Functor.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
@@ -69,6 +69,10 @@ Local Definition Applicative__Pair_op_ztzg__
     fun x y =>
       Applicative__Pair_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
 
+Local Definition Applicative__Pair_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Pair a -> Pair b -> Pair c :=
+  fun {a} {b} {c} => fun f x => Applicative__Pair_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Pair_pure : forall {a}, a -> Pair a :=
   fun {a} => fun x => Mk_Pair x x.
 
@@ -76,6 +80,7 @@ Program Instance Applicative__Pair : GHC.Base.Applicative Pair :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Pair_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Pair_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Pair_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Pair_pure |}.
 
 Local Definition Foldable__Pair_foldMap
@@ -92,10 +97,12 @@ Local Definition Foldable__Pair_foldl
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          appEndo (getDual (Foldable__Pair_foldMap (Coq.Program.Basics.compose Mk_Dual
-                                                                               (Coq.Program.Basics.compose Mk_Endo
-                                                                                                           (GHC.Base.flip
-                                                                                                            f))) t)) z
+          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
+                                           (Foldable__Pair_foldMap (Coq.Program.Basics.compose
+                                                                    Data.Semigroup.Internal.Mk_Dual
+                                                                    (Coq.Program.Basics.compose
+                                                                     Data.Semigroup.Internal.Mk_Endo (GHC.Base.flip f)))
+                                            t)) z
       end.
 
 Local Definition Foldable__Pair_foldr'
@@ -118,7 +125,8 @@ Local Definition Foldable__Pair_foldr
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__, arg_5__, arg_6__ with
       | f, z, t =>
-          appEndo (Foldable__Pair_foldMap (Data.Foldable.hash_compose Mk_Endo f) t) z
+          Data.Semigroup.Internal.appEndo (Foldable__Pair_foldMap
+                                           (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Pair_foldl'
@@ -157,12 +165,14 @@ Local Definition Foldable__Pair_toList : forall {a}, Pair a -> list a :=
 Local Definition Foldable__Pair_product
    : forall {a}, forall `{GHC.Num.Num a}, Pair a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__Pair_foldMap Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__Pair_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__Pair_sum
    : forall {a}, forall `{GHC.Num.Num a}, Pair a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__Pair_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__Pair_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__Pair_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, Pair m -> m :=
@@ -173,8 +183,10 @@ Local Definition Foldable__Pair_elem
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__Pair_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__Pair_foldMap (Coq.Program.Basics.compose
+                                                                                      Data.Semigroup.Internal.Mk_Any
+                                                                                      p))) _GHC.Base.==_.
 
 Program Instance Foldable__Pair : Data.Foldable.Foldable Pair :=
   fun _ k =>
@@ -225,23 +237,35 @@ Program Instance Traversable__Pair : Data.Traversable.Traversable Pair :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Pair_traverse |}.
 
-Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Monoid inst_a}
+Local Definition Semigroup__Pair_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
+  inst_a}
    : (Pair inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Pair a1 b1, Mk_Pair a2 b2 =>
-        Mk_Pair (GHC.Base.mappend a1 a2) (GHC.Base.mappend b1 b2)
+        Mk_Pair (a1 GHC.Base.<<>> a2) (b1 GHC.Base.<<>> b2)
     end.
 
-Local Definition Monoid__Pair_mempty {inst_a} `{GHC.Base.Monoid inst_a}
+Program Instance Semigroup__Pair {a} `{GHC.Base.Semigroup a}
+   : GHC.Base.Semigroup (Pair a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Pair_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Semigroup inst_a}
+  `{GHC.Base.Monoid inst_a}
+   : (Pair inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__Pair_mempty {inst_a} `{GHC.Base.Semigroup inst_a}
+  `{GHC.Base.Monoid inst_a}
    : (Pair inst_a) :=
   Mk_Pair GHC.Base.mempty GHC.Base.mempty.
 
-Local Definition Monoid__Pair_mconcat {inst_a} `{GHC.Base.Monoid inst_a}
+Local Definition Monoid__Pair_mconcat {inst_a} `{GHC.Base.Semigroup inst_a}
+  `{GHC.Base.Monoid inst_a}
    : list (Pair inst_a) -> (Pair inst_a) :=
   GHC.Base.foldr Monoid__Pair_mappend Monoid__Pair_mempty.
 
-Program Instance Monoid__Pair {a} `{GHC.Base.Monoid a}
+Program Instance Monoid__Pair {a} `{GHC.Base.Semigroup a} `{GHC.Base.Monoid a}
    : GHC.Base.Monoid (Pair a) :=
   fun _ k =>
     k {| GHC.Base.mappend__ := Monoid__Pair_mappend ;
@@ -273,12 +297,16 @@ Definition unPair {a} : Pair a -> (a * a)%type :=
   fun arg_0__ => let 'Mk_Pair x y := arg_0__ in pair x y.
 
 (* Unbound variables:
-     Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum appEndo bool false getAny getDual
-     getProduct getSum list op_zt__ pair true Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.hash_compose Data.Functor.op_zlzdzg__
-     Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.build GHC.Base.const GHC.Base.flip
-     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zlztzg__ GHC.Num.Int
+     bool false list op_zt__ pair true Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Functor.op_zlzdzg__ Data.Semigroup.Internal.Mk_Any
+     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo
+     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
+     Data.Semigroup.Internal.appEndo Data.Semigroup.Internal.getAny
+     Data.Semigroup.Internal.getDual Data.Semigroup.Internal.getProduct
+     Data.Semigroup.Internal.getSum Data.Traversable.Traversable GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Semigroup
+     GHC.Base.build GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.foldr
+     GHC.Base.id GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__ GHC.Num.Int
      GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

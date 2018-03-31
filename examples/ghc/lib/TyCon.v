@@ -42,6 +42,7 @@ Parameter fieldsOfAlgTcRhs : AlgTyConRhs -> FieldLabel.FieldLabelEnv.
 Require BasicTypes.
 Require Constants.
 Require Core.
+Require CoreType.
 Require DataCon.
 Require DynFlags.
 Require FastStringEnv.
@@ -105,8 +106,9 @@ Inductive AlgTyConRhs : Type
   |  TupleTyCon : DataCon.DataCon -> BasicTypes.TupleSort -> AlgTyConRhs
   |  NewTyCon
    : DataCon.DataCon ->
-     Core.Type_ ->
-     (list TyVar * Core.Type_)%type -> Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
+     CoreType.Type_ ->
+     (list CoreType.TyVar * CoreType.Type_)%type ->
+     Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
 
 Definition data_con (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
@@ -628,7 +630,8 @@ Axiom mkPrimTyCon' : forall {A : Type}, A.
 
 Definition mkKindTyCon
    : Name.Name ->
-     list Core.TyBinder -> Kind -> list Core.Role -> Name.Name -> Core.TyCon :=
+     list CoreType.TyBinder ->
+     CoreType.Kind -> list Core.Role -> Name.Name -> Core.TyCon :=
   fun name binders res_kind roles rep_nm =>
     let tc := mkPrimTyCon' name binders res_kind roles false (Some rep_nm) in tc.
 
@@ -840,12 +843,14 @@ Definition mkPrelTyConRepName : Name.Name -> Core.TyConRepName :=
     Name.mkExternalName rep_uniq rep_mod rep_occ (Name.nameSrcSpan tc_name).
 
 Definition mkPrimTyCon
-   : Name.Name -> list Core.TyBinder -> Kind -> list Core.Role -> Core.TyCon :=
+   : Name.Name ->
+     list CoreType.TyBinder -> CoreType.Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
     mkPrimTyCon' name binders res_kind roles true (Some (mkPrelTyConRepName name)).
 
 Definition mkLiftedPrimTyCon
-   : Name.Name -> list Core.TyBinder -> Kind -> list Core.Role -> Core.TyCon :=
+   : Name.Name ->
+     list CoreType.TyBinder -> CoreType.Kind -> list Core.Role -> Core.TyCon :=
   fun name binders res_kind roles =>
     let rep_nm := mkPrelTyConRepName name in
     mkPrimTyCon' name binders res_kind roles false (Some rep_nm).
@@ -913,20 +918,20 @@ Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
     end.
 
 (* Unbound variables:
-     Eq Gt Injective Kind Lt None NotInjective Some TyVar algTcFields andb bool
-     comparison cons false list negb nil op_zt__ option pair true tyConName
-     BasicTypes.TupleSort Constants.wORD64_SIZE Core.Branched Core.BuiltInSynFamily
-     Core.CoAxiom Core.Injectivity Core.Role Core.TyBinder Core.TyCon
-     Core.TyConRepName Core.Type_ Core.Unbranched DataCon.DataCon DynFlags.DynFlags
-     DynFlags.dOUBLE_SIZE DynFlags.wORD_SIZE FastStringEnv.emptyFsEnv
-     FastStringEnv.fsEnvElts FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot Maybes.orElse
-     Module.Module Name.Name Name.mkExternalName Name.nameModule Name.nameOccName
-     Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
-     NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.OccName OccName.isTcOcc
-     OccName.mkTyConRepOcc Panic.noString Panic.panicStr
+     Eq Gt Injective Lt None NotInjective Some algTcFields andb bool comparison cons
+     false list negb nil op_zt__ option pair true tyConName BasicTypes.TupleSort
+     Constants.wORD64_SIZE Core.Branched Core.BuiltInSynFamily Core.CoAxiom
+     Core.Injectivity Core.Role Core.TyCon Core.TyConRepName Core.Unbranched
+     CoreType.Kind CoreType.TyBinder CoreType.TyVar CoreType.Type_ DataCon.DataCon
+     DynFlags.DynFlags DynFlags.dOUBLE_SIZE DynFlags.wORD_SIZE
+     FastStringEnv.emptyFsEnv FastStringEnv.fsEnvElts FieldLabel.FieldLabel
+     FieldLabel.FieldLabelEnv GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Err.error
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.quot
+     Maybes.orElse Module.Module Name.Name Name.mkExternalName Name.nameModule
+     Name.nameOccName Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv
+     NameEnv.emptyNameEnv NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.OccName
+     OccName.isTcOcc OccName.mkTyConRepOcc Panic.noString Panic.panicStr
      PrelNames.constraintKindTyConKey PrelNames.gHC_PRIM PrelNames.gHC_TYPES
      PrelNames.liftedTypeKindTyConKey PrelNames.starKindTyConKey
      PrelNames.tYPETyConKey PrelNames.unicodeStarKindTyConKey

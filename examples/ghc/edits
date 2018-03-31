@@ -1,7 +1,17 @@
+rename module TyCoRep  CoreType
+rename module Type     CoreType
+rename module Coercion CoreType
+rename module Var      CoreType
+
 rename module Data.Set.Base Data.Set.Internal
 rename module Data.Map.Base Data.Map.Internal
 rename module Data.IntMap.Base Data.IntMap.Internal
 rename module Data.IntSet.Base Data.IntSet.Internal
+
+rename value Data.Set.fold = Data.Set.Internal.foldr
+rename value Data.Map.fold = Data.Map.Internal.foldr
+rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
+rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
 
 # Should skip these everywhere
 skip module Outputable

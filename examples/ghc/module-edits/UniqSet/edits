@@ -4,6 +4,7 @@
 # redefine to not use foldr1
 # skip UniqSet.unionManyUniqSets
 
+
 order UniqSet.unionUniqSets UniqSet.unionManyUniqSets
 
 redefine Definition UniqSet.unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=

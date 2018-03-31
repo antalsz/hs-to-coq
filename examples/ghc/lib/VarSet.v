@@ -16,7 +16,7 @@ Require Import Core.
 
 (* Converted imports: *)
 
-Require Core.
+Require CoreType.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.DeferredFix.
@@ -28,40 +28,39 @@ Require UniqDSet.
 Require UniqFM.
 Require UniqSet.
 Require Unique.
-Require Var.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
 Definition VarSet :=
-  (UniqSet.UniqSet Core.Var)%type.
+  (UniqSet.UniqSet CoreType.Var)%type.
 
 Definition TyVarSet :=
-  (UniqSet.UniqSet TyVar)%type.
+  (UniqSet.UniqSet CoreType.TyVar)%type.
 
 Definition TyCoVarSet :=
-  (UniqSet.UniqSet Var.TyCoVar)%type.
+  (UniqSet.UniqSet CoreType.TyCoVar)%type.
 
 Definition IdSet :=
-  (UniqSet.UniqSet Var.Id)%type.
+  (UniqSet.UniqSet CoreType.Id)%type.
 
 Definition DVarSet :=
-  (UniqDSet.UniqDSet Core.Var)%type.
+  (UniqDSet.UniqDSet CoreType.Var)%type.
 
 Definition DTyVarSet :=
-  (UniqDSet.UniqDSet TyVar)%type.
+  (UniqDSet.UniqDSet CoreType.TyVar)%type.
 
 Definition DTyCoVarSet :=
-  (UniqDSet.UniqDSet Var.TyCoVar)%type.
+  (UniqDSet.UniqDSet CoreType.TyCoVar)%type.
 
 Definition DIdSet :=
-  (UniqDSet.UniqDSet Var.Id)%type.
+  (UniqDSet.UniqDSet CoreType.Id)%type.
 
 Definition CoVarSet :=
-  (UniqSet.UniqSet CoVar)%type.
+  (UniqSet.UniqSet CoreType.CoVar)%type.
 (* Converted value declarations: *)
 
-Definition dVarSetElems : DVarSet -> list Core.Var :=
+Definition dVarSetElems : DVarSet -> list CoreType.Var :=
   UniqDSet.uniqDSetToList.
 
 Definition dVarSetMinusVarSet : DVarSet -> VarSet -> DVarSet :=
@@ -70,19 +69,19 @@ Definition dVarSetMinusVarSet : DVarSet -> VarSet -> DVarSet :=
 Definition dVarSetToVarSet : DVarSet -> VarSet :=
   UniqDFM.udfmToUfm.
 
-Definition delDVarSet : DVarSet -> Core.Var -> DVarSet :=
+Definition delDVarSet : DVarSet -> CoreType.Var -> DVarSet :=
   UniqDSet.delOneFromUniqDSet.
 
-Definition delDVarSetList : DVarSet -> list Core.Var -> DVarSet :=
+Definition delDVarSetList : DVarSet -> list CoreType.Var -> DVarSet :=
   UniqDSet.delListFromUniqDSet.
 
-Definition delVarSet : VarSet -> Core.Var -> VarSet :=
+Definition delVarSet : VarSet -> CoreType.Var -> VarSet :=
   UniqSet.delOneFromUniqSet.
 
 Definition delVarSetByKey : VarSet -> Unique.Unique -> VarSet :=
   UniqSet.delOneFromUniqSet_Directly.
 
-Definition delVarSetList : VarSet -> list Core.Var -> VarSet :=
+Definition delVarSetList : VarSet -> list CoreType.Var -> VarSet :=
   UniqSet.delListFromUniqSet.
 
 Definition disjointDVarSet : DVarSet -> DVarSet -> bool :=
@@ -97,10 +96,10 @@ Definition disjointVarSet : VarSet -> VarSet -> bool :=
 Definition intersectsVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => negb (disjointVarSet s1 s2).
 
-Definition elemDVarSet : Core.Var -> DVarSet -> bool :=
+Definition elemDVarSet : CoreType.Var -> DVarSet -> bool :=
   UniqDSet.elementOfUniqDSet.
 
-Definition elemVarSet : Core.Var -> VarSet -> bool :=
+Definition elemVarSet : CoreType.Var -> VarSet -> bool :=
   UniqSet.elementOfUniqSet.
 
 Definition elemVarSetByKey : Unique.Unique -> VarSet -> bool :=
@@ -112,32 +111,33 @@ Definition emptyDVarSet : DVarSet :=
 Definition emptyVarSet : VarSet :=
   UniqSet.emptyUniqSet.
 
-Definition extendDVarSet : DVarSet -> Core.Var -> DVarSet :=
+Definition extendDVarSet : DVarSet -> CoreType.Var -> DVarSet :=
   UniqDSet.addOneToUniqDSet.
 
-Definition extendDVarSetList : DVarSet -> list Core.Var -> DVarSet :=
+Definition extendDVarSetList : DVarSet -> list CoreType.Var -> DVarSet :=
   UniqDSet.addListToUniqDSet.
 
-Definition extendVarSet : VarSet -> Core.Var -> VarSet :=
+Definition extendVarSet : VarSet -> CoreType.Var -> VarSet :=
   UniqSet.addOneToUniqSet.
 
-Definition extendVarSetList : VarSet -> list Core.Var -> VarSet :=
+Definition extendVarSetList : VarSet -> list CoreType.Var -> VarSet :=
   UniqSet.addListToUniqSet.
 
 Definition extendVarSet_C
-   : (Core.Var -> Core.Var -> Core.Var) -> VarSet -> Core.Var -> VarSet :=
+   : (CoreType.Var -> CoreType.Var -> CoreType.Var) ->
+     VarSet -> CoreType.Var -> VarSet :=
   UniqSet.addOneToUniqSet_C.
 
-Definition filterDVarSet : (Core.Var -> bool) -> DVarSet -> DVarSet :=
+Definition filterDVarSet : (CoreType.Var -> bool) -> DVarSet -> DVarSet :=
   UniqDSet.filterUniqDSet.
 
-Definition filterVarSet : (Core.Var -> bool) -> VarSet -> VarSet :=
+Definition filterVarSet : (CoreType.Var -> bool) -> VarSet -> VarSet :=
   UniqSet.filterUniqSet.
 
-Definition foldDVarSet {a} : (Core.Var -> a -> a) -> a -> DVarSet -> a :=
+Definition foldDVarSet {a} : (CoreType.Var -> a -> a) -> a -> DVarSet -> a :=
   UniqDSet.foldUniqDSet.
 
-Definition foldVarSet {a} : (Core.Var -> a -> a) -> a -> VarSet -> a :=
+Definition foldVarSet {a} : (CoreType.Var -> a -> a) -> a -> VarSet -> a :=
   UniqSet.foldUniqSet.
 
 Definition intersectDVarSet : DVarSet -> DVarSet -> DVarSet :=
@@ -152,13 +152,13 @@ Definition isEmptyDVarSet : DVarSet -> bool :=
 Definition isEmptyVarSet : VarSet -> bool :=
   UniqSet.isEmptyUniqSet.
 
-Definition lookupVarSet : VarSet -> Core.Var -> option Core.Var :=
+Definition lookupVarSet : VarSet -> CoreType.Var -> option CoreType.Var :=
   UniqSet.lookupUniqSet.
 
-Definition lookupVarSetByName : VarSet -> Name.Name -> option Core.Var :=
+Definition lookupVarSetByName : VarSet -> Name.Name -> option CoreType.Var :=
   UniqSet.lookupUniqSet.
 
-Definition mapVarSet : (Core.Var -> Core.Var) -> VarSet -> VarSet :=
+Definition mapVarSet : (CoreType.Var -> CoreType.Var) -> VarSet -> VarSet :=
   UniqSet.mapUniqSet.
 
 Definition minusDVarSet : DVarSet -> DVarSet -> DVarSet :=
@@ -179,18 +179,18 @@ Definition fixVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
                                   if subVarSet new_vars vars : bool then vars else
                                   fixVarSet fn new_vars).
 
-Definition mkDVarSet : list Core.Var -> DVarSet :=
+Definition mkDVarSet : list CoreType.Var -> DVarSet :=
   UniqDSet.mkUniqDSet.
 
-Definition mkVarSet : list Core.Var -> VarSet :=
+Definition mkVarSet : list CoreType.Var -> VarSet :=
   UniqSet.mkUniqSet.
 
 Definition partitionDVarSet
-   : (Core.Var -> bool) -> DVarSet -> (DVarSet * DVarSet)%type :=
+   : (CoreType.Var -> bool) -> DVarSet -> (DVarSet * DVarSet)%type :=
   UniqDSet.partitionUniqDSet.
 
 Definition partitionVarSet
-   : (Core.Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
+   : (CoreType.Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
   UniqSet.partitionUniqSet.
 
 Definition sizeDVarSet : DVarSet -> GHC.Num.Int :=
@@ -243,17 +243,18 @@ Definition mapUnionVarSet {a} : (a -> VarSet) -> list a -> VarSet :=
 Definition unionVarSets : list VarSet -> VarSet :=
   UniqSet.unionManyUniqSets.
 
-Definition unitDVarSet : Core.Var -> DVarSet :=
+Definition unitDVarSet : CoreType.Var -> DVarSet :=
   UniqDSet.unitUniqDSet.
 
-Definition unitVarSet : Core.Var -> VarSet :=
+Definition unitVarSet : CoreType.Var -> VarSet :=
   UniqSet.unitUniqSet.
 
-Definition varSetElems : VarSet -> list Core.Var :=
+Definition varSetElems : VarSet -> list CoreType.Var :=
   UniqSet.uniqSetToList.
 
 (* Unbound variables:
-     CoVar TyVar bool list negb op_zt__ option tt unit Core.Var Data.Foldable.foldr
+     bool list negb op_zt__ option tt unit CoreType.CoVar CoreType.Id
+     CoreType.TyCoVar CoreType.TyVar CoreType.Var Data.Foldable.foldr
      GHC.Base.op_z2218U__ GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Prim.seq
      Name.Name UniqDFM.disjointUDFM UniqDFM.udfmToUfm UniqDSet.UniqDSet
      UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
@@ -271,5 +272,5 @@ Definition varSetElems : VarSet -> list Core.Var :=
      UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.mapUniqSet
      UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.partitionUniqSet
      UniqSet.sizeUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.uniqSetToList UniqSet.unitUniqSet Unique.Unique Var.Id Var.TyCoVar
+     UniqSet.uniqSetToList UniqSet.unitUniqSet Unique.Unique
 *)

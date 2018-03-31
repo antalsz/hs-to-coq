@@ -17,6 +17,7 @@ Require Import Core.
 (* Converted imports: *)
 
 Require Core.
+Require CoreType.
 Require Data.Foldable.
 Require FastString.
 Require GHC.Base.
@@ -32,7 +33,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition Eqn :=
-  (Pair.Pair Core.Type_)%type.
+  (Pair.Pair CoreType.Type_)%type.
 (* Midamble *)
 
 Import GHC.Num.Notations.
@@ -384,16 +385,16 @@ Program Instance Eq___Role : GHC.Base.Eq_ Core.Role :=
     k {| GHC.Base.op_zeze____ := Eq___Role_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Role_op_zsze__ |}.
 
-Definition coAxBranchCoVars : Core.CoAxBranch -> list CoVar :=
+Definition coAxBranchCoVars : Core.CoAxBranch -> list CoreType.CoVar :=
   cab_cvs.
 
 Definition coAxBranchIncomps : Core.CoAxBranch -> list Core.CoAxBranch :=
   cab_incomps.
 
-Definition coAxBranchLHS : Core.CoAxBranch -> list Core.Type_ :=
+Definition coAxBranchLHS : Core.CoAxBranch -> list CoreType.Type_ :=
   cab_lhs.
 
-Definition coAxBranchRHS : Core.CoAxBranch -> Core.Type_ :=
+Definition coAxBranchRHS : Core.CoAxBranch -> CoreType.Type_ :=
   cab_rhs.
 
 Definition coAxBranchRoles : Core.CoAxBranch -> list Core.Role :=
@@ -402,7 +403,7 @@ Definition coAxBranchRoles : Core.CoAxBranch -> list Core.Role :=
 Definition coAxBranchSpan : Core.CoAxBranch -> SrcLoc.SrcSpan :=
   cab_loc.
 
-Definition coAxBranchTyVars : Core.CoAxBranch -> list TyVar :=
+Definition coAxBranchTyVars : Core.CoAxBranch -> list CoreType.TyVar :=
   cab_tvs.
 
 Axiom coAxiomArity : forall {A : Type}, A.
@@ -462,13 +463,13 @@ Axiom trivialBuiltInFamily : forall {A : Type}, A.
    constructor `BuiltInSynFamily' unsupported *)
 
 (* Unbound variables:
-     CoVar Eq Gt Lt TyVar bool cab_cvs cab_incomps cab_lhs cab_loc cab_rhs cab_roles
-     cab_tvs co_ax_branches co_ax_implicit co_ax_name co_ax_role co_ax_tc coaxrName
+     Eq Gt Lt bool cab_cvs cab_incomps cab_lhs cab_loc cab_rhs cab_roles cab_tvs
+     co_ax_branches co_ax_implicit co_ax_name co_ax_role co_ax_tc coaxrName
      comparison false list negb true Core.Branches Core.CoAxBranch Core.CoAxiom
      Core.CoAxiomRule Core.Nominal Core.Phantom Core.Representational Core.Role
-     Core.TyCon Core.Type_ Data.Foldable.length FastString.FastString
-     FastString.fsLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare GHC.Base.flip
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int
-     GHC.Num.fromInteger Name.Name Pair.Pair Panic.panic SrcLoc.SrcSpan
-     Unique.getUnique
+     Core.TyCon CoreType.CoVar CoreType.TyVar CoreType.Type_ Data.Foldable.length
+     FastString.FastString FastString.fsLit GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.compare GHC.Base.flip GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.fromInteger Name.Name Pair.Pair
+     Panic.panic SrcLoc.SrcSpan Unique.getUnique
 *)

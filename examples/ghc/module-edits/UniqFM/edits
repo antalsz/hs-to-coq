@@ -2,6 +2,7 @@ skip UniqFM.pprUniqFM
 skip UniqFM.pluralUFM
 skip UniqFM.pprUFM
 
+
 skip module Compiler.Hoopl.Dataflow
 # requires Hoopl
 skip UniqFM.joinUFM

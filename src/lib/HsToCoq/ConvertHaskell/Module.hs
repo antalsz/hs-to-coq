@@ -175,20 +175,12 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
+-- Merge two modules with the same names, combining their components
 merge :: (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName])
 merge  (ConvertedModule m1 i1 t1 v1 c1 a1, x1) (ConvertedModule m2 i2 t2 v2 c2 a2, x2)
-  | m1 == m2 = (ConvertedModule m1 (i1 ++ i2) (t1 ++ t2) (v1 ++ v2) (c1 ++ c2) (a1 ++ a2), x1 ++ x2)
+  | m1 == m2 = (ConvertedModule m1 (nub (i1 ++ i2)) (t1 ++ t2) (v1 ++ v2) (c1 ++ c2) (a1 ++ a2), x1 ++ x2)
 merge _ _ = error "Can only merge with same name"
                                                                                    
-
--- Combine the import statements of several modules into one list of import statements
--- At the same time, remove all self imports
-mergeImports :: [ModuleIdent] -> [[Sentence]] -> [Sentence]
-mergeImports names imports = nub (filter notSelfImport (concat imports)) where
-  notSelfImport (ModuleSentence (Require _ _ ne)) =
-    not (null (NE.filter (\x -> not (x `elem` names)) ne))
-  notSelfImport _ = True
-
 
 -- Module-local
 {-

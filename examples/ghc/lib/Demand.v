@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require BasicTypes.
 Require Coq.Init.Datatypes.
-Require Core.
+Require CoreType.
 Require Data.Foldable.
 Require DynFlags.
 Require GHC.Base.
@@ -1018,14 +1018,14 @@ Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
                                                                           t2)) ds1 (bothDmdResult r1 t2)
     end.
 
-Definition findIdDemand : DmdType -> Core.Var -> Demand :=
+Definition findIdDemand : DmdType -> CoreType.Var -> Demand :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv _ res, id =>
         Maybes.orElse (VarEnv.lookupVarEnv fv id) (defaultDmd res)
     end.
 
-Definition peelFV : DmdType -> Core.Var -> (DmdType * Demand)%type :=
+Definition peelFV : DmdType -> CoreType.Var -> (DmdType * Demand)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv ds res, id =>
@@ -1249,7 +1249,7 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      list lubStr lubUse markReusedDmd negb nil op_zt__ option orb pair peelManyCalls
      postProcessDmdEnv then true tt unit zap_usg BasicTypes.Arity BasicTypes.ConTag
      BasicTypes.NoOneShotInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
-     BasicTypes.ProbOneShot BasicTypes.fIRST_TAG Coq.Init.Datatypes.app Core.Var
+     BasicTypes.ProbOneShot BasicTypes.fIRST_TAG Coq.Init.Datatypes.app CoreType.Var
      Data.Foldable.all Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_
      GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max

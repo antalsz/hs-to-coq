@@ -6,10 +6,22 @@ skip BasicTypes.integralFractionalLit
 skip BasicTypes.defaultFixity
 
 skip BasicTypes.tupleParens
+skip BasicTypes.maybeParen
+skip BasicTypes.mkFractionalLit
+skip BasicTypes.mkIntegralLit
+skip BasicTypes.negateIntegralLit
 
 skip BasicTypes.pprSafeOverlap
 skip BasicTypes.pprRuleName
 skip BasicTypes.pprOneShotInfo
+
+# Unnecessary partial record accessors
+skip BasicTypes.occ_tail
+
+# Eq implemented via ORd
+skip BasicTypes.Eq___TyPrec
+skip BasicTypes.Ord__TyPrec
+
 
 ##########
 
@@ -21,3 +33,8 @@ order BasicTypes.Eq___FunctionOrData BasicTypes.Ord__FunctionOrData
 order BasicTypes.Eq___OverlapMode BasicTypes.Eq___OverlapFlag_op_zeze__
 order BasicTypes.Eq___Activation BasicTypes.Eq___InlinePragma_op_zeze__
 order BasicTypes.Eq___InlineSpec BasicTypes.Eq___InlinePragma_op_zeze__
+order BasicTypes.Eq___SourceText BasicTypes.Eq___Activation_op_zeze__
+order BasicTypes.Eq___SourceText BasicTypes.Eq___WarningTxt_op_zeze__
+order BasicTypes.Eq___SourceText BasicTypes.Eq___OverlapMode_op_zeze__
+order BasicTypes.Eq___TailCallInfo BasicTypes.Eq___OccInfo_op_zeze__
+

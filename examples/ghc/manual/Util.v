@@ -417,7 +417,7 @@ Definition makeRelativeTo
 Definition mapAccumL2 {s1} {s2} {a} {b} : (s1 -> s2 -> a -> (s1 * s2 *
                                           b)%type) -> s1 -> s2 -> list a -> (s1 * s2 * list b)%type :=
   fun f s1 s2 xs =>
-    match Data.Traversable.mapAccumL (fun arg_361__ arg_362__ =>
+    match Data.OldList.mapAccumL (fun arg_361__ arg_362__ =>
                                        match arg_361__ , arg_362__ with
                                          | pair s1 s2 , x => let scrut_363__ := f s1 s2 x in
                                                              match scrut_363__ with

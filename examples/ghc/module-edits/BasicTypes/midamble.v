@@ -4,6 +4,9 @@ Require GHC.Err.
 Instance Default_Origin : GHC.Err.Default Origin :=
   GHC.Err.Build_Default _ Generated.
 
+Instance Default_SourceText : GHC.Err.Default SourceText :=
+  GHC.Err.Build_Default _ NoSourceText.
+
 Instance Default_OverlapMode : GHC.Err.Default OverlapMode :=
   GHC.Err.Build_Default _ (NoOverlap GHC.Err.default).
 
@@ -41,7 +44,7 @@ Instance Default_IntWithInf : GHC.Err.Default IntWithInf :=
 
 
 Instance Default_OccInfo : GHC.Err.Default OccInfo :=
-  GHC.Err.Build_Default _ NoOccInfo.
+  GHC.Err.Build_Default _ IAmDead.
 
 
 Instance Default_InlineSpec : GHC.Err.Default InlineSpec :=
@@ -76,3 +79,6 @@ Instance Default_Activation : GHC.Err.Default Activation :=
 
 Instance Default_InlinePragma : GHC.Err.Default InlinePragma :=
   GHC.Err.Build_Default _ (Mk_InlinePragma GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default_TailCallInfo : GHC.Err.Default TailCallInfo :=
+  GHC.Err.Build_Default _ NoTailCallInfo.

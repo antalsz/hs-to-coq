@@ -19,7 +19,6 @@ Require Data.Traversable.
 Require FastString.
 Require GHC.Base.
 Require GHC.Num.
-Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -98,6 +97,8 @@ Instance Default_SrcSpan : Default SrcSpan := Build_Default _ (UnhelpfulSpan def
 
 (* Translating `instance ToJson__RealSrcSpan' failed: OOPS! Cannot find
    information for class Qualified "Json" "ToJson" unsupported *)
+
+(* Skipping instance Ord__RealSrcSpan *)
 
 (* Translating `instance Show__RealSrcSpan' failed: OOPS! Cannot find
    information for class Qualified "GHC.Show" "Show" unsupported *)
@@ -313,10 +314,10 @@ Local Definition Eq___GenLocated_op_zeze__ {inst_l} {inst_e} `{GHC.Base.Eq_
     | L a1 a2, L b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
     end.
 
-Local Definition Eq___GenLocated_op_zsze__ {inst_l : Type} {inst_e : Type} `{H
-   : GHC.Base.Eq_ inst_e} `{J : GHC.Base.Eq_ inst_l}
+Local Definition Eq___GenLocated_op_zsze__ {inst_l} {inst_e} `{GHC.Base.Eq_
+  inst_l} `{GHC.Base.Eq_ inst_e}
    : GenLocated inst_l inst_e -> GenLocated inst_l inst_e -> bool :=
-  fun a b => negb (Eq___GenLocated_op_zeze__ a b).
+  fun x y => negb (Eq___GenLocated_op_zeze__ x y).
 
 Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ l} `{GHC.Base.Eq_ e}
    : GHC.Base.Eq_ (GenLocated l e) :=
@@ -326,6 +327,8 @@ Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ l} `{GHC.Base.Eq_ e}
 
 (* Translating `instance Show__SrcSpan' failed: OOPS! Cannot find information
    for class Qualified "GHC.Show" "Show" unsupported *)
+
+(* Skipping instance Ord__SrcSpan *)
 
 Local Definition Eq___RealSrcSpan_op_zeze__
    : RealSrcSpan -> RealSrcSpan -> bool :=
@@ -339,10 +342,7 @@ Local Definition Eq___RealSrcSpan_op_zeze__
 
 Local Definition Eq___RealSrcSpan_op_zsze__
    : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun arg_176__ arg_177__ =>
-    match arg_176__, arg_177__ with
-    | a, b => negb (Eq___RealSrcSpan_op_zeze__ a b)
-    end.
+  fun x y => negb (Eq___RealSrcSpan_op_zeze__ x y).
 
 Program Instance Eq___RealSrcSpan : GHC.Base.Eq_ RealSrcSpan :=
   fun _ k =>
@@ -358,10 +358,7 @@ Local Definition Eq___SrcSpan_op_zeze__ : SrcSpan -> SrcSpan -> bool :=
     end.
 
 Local Definition Eq___SrcSpan_op_zsze__ : SrcSpan -> SrcSpan -> bool :=
-  fun arg_185__ arg_186__ =>
-    match arg_185__, arg_186__ with
-    | a, b => negb (Eq___SrcSpan_op_zeze__ a b)
-    end.
+  fun x y => negb (Eq___SrcSpan_op_zeze__ x y).
 
 Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
   fun _ k =>
@@ -371,116 +368,9 @@ Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
 (* Translating `instance Show__SrcLoc' failed: OOPS! Cannot find information for
    class Qualified "GHC.Show" "Show" unsupported *)
 
-Local Definition Ord__SrcLoc_compare : SrcLoc -> SrcLoc -> comparison :=
-  fun a b =>
-    match a with
-    | ARealSrcLoc a1 =>
-        match b with
-        | ARealSrcLoc b1 => (GHC.Base.compare a1 b1)
-        | _ => Lt
-        end
-    | UnhelpfulLoc a1 =>
-        match b with
-        | UnhelpfulLoc b1 => (GHC.Base.compare a1 b1)
-        | _ => Gt
-        end
-    end.
+(* Skipping instance Ord__SrcLoc *)
 
-Local Definition Ord__SrcLoc_op_zl__ : SrcLoc -> SrcLoc -> bool :=
-  fun a b =>
-    match a with
-    | ARealSrcLoc a1 =>
-        match b with
-        | ARealSrcLoc b1 => (a1 GHC.Base.< b1)
-        | _ => true
-        end
-    | UnhelpfulLoc a1 =>
-        match b with
-        | UnhelpfulLoc b1 => (a1 GHC.Base.< b1)
-        | _ => false
-        end
-    end.
-
-Local Definition Ord__SrcLoc_op_zlze__ : SrcLoc -> SrcLoc -> bool :=
-  fun a b => negb (Ord__SrcLoc_op_zl__ b a).
-
-Local Definition Ord__SrcLoc_min : SrcLoc -> SrcLoc -> SrcLoc :=
-  fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__SrcLoc_max : SrcLoc -> SrcLoc -> SrcLoc :=
-  fun x y => if Ord__SrcLoc_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__SrcLoc_op_zgze__ : SrcLoc -> SrcLoc -> bool :=
-  fun a b => negb (Ord__SrcLoc_op_zl__ a b).
-
-Local Definition Ord__SrcLoc_op_zg__ : SrcLoc -> SrcLoc -> bool :=
-  fun a b => Ord__SrcLoc_op_zl__ b a.
-
-Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | ARealSrcLoc a1, ARealSrcLoc b1 => ((a1 GHC.Base.== b1))
-    | UnhelpfulLoc a1, UnhelpfulLoc b1 => ((a1 GHC.Base.== b1))
-    | _, _ => false
-    end.
-
-Local Definition Eq___SrcLoc_op_zsze__ : SrcLoc -> SrcLoc -> bool :=
-  fun x y => negb (Eq___SrcLoc_op_zeze__ x y).
-
-Program Instance Eq___SrcLoc : GHC.Base.Eq_ SrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
-
-Program Instance Ord__SrcLoc : GHC.Base.Ord SrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__SrcLoc_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__SrcLoc_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__SrcLoc_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__SrcLoc_op_zgze__ ;
-         GHC.Base.compare__ := Ord__SrcLoc_compare ;
-         GHC.Base.max__ := Ord__SrcLoc_max ;
-         GHC.Base.min__ := Ord__SrcLoc_min |}.
-
-Local Definition Ord__RealSrcLoc_compare
-   : RealSrcLoc -> RealSrcLoc -> comparison :=
-  fun a b =>
-    let 'ASrcLoc a1 a2 a3 := a in
-    let 'ASrcLoc b1 b2 b3 := b in
-    match (GHC.Base.compare a1 b1) with
-    | Lt => Lt
-    | Eq =>
-        match (GHC.Base.compare a2 b2) with
-        | Lt => Lt
-        | Eq => (GHC.Base.compare a3 b3)
-        | Gt => Gt
-        end
-    | Gt => Gt
-    end.
-
-Local Definition Ord__RealSrcLoc_op_zl__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b =>
-    let 'ASrcLoc a1 a2 a3 := a in
-    let 'ASrcLoc b1 b2 b3 := b in
-    match (Ord__RealSrcLoc_compare a1 b1) with
-    | Lt => true
-    | Eq =>
-        match (Ord__RealSrcLoc_compare a2 b2) with
-        | Lt => true
-        | Eq => (a3 GHC.Base.< b3)
-        | Gt => false
-        end
-    | Gt => false
-    end.
-
-Local Definition Ord__RealSrcLoc_op_zg__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b => Ord__RealSrcLoc_op_zl__ b a.
-
-Local Definition Ord__RealSrcLoc_op_zgze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b => negb (Ord__RealSrcLoc_op_zl__ a b).
-
-Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b => negb (Ord__RealSrcLoc_op_zl__ b a).
+(* Skipping instance Ord__RealSrcLoc *)
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun arg_0__ arg_1__ =>
@@ -497,21 +387,21 @@ Program Instance Eq___RealSrcLoc : GHC.Base.Eq_ RealSrcLoc :=
     k {| GHC.Base.op_zeze____ := Eq___RealSrcLoc_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___RealSrcLoc_op_zsze__ |}.
 
-Local Definition Ord__RealSrcLoc_min : RealSrcLoc -> RealSrcLoc -> RealSrcLoc :=
-  fun x y => if Ord__RealSrcLoc_op_zlze__ x y : bool then x else y.
+Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | ARealSrcLoc a1, ARealSrcLoc b1 => ((a1 GHC.Base.== b1))
+    | UnhelpfulLoc a1, UnhelpfulLoc b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
+    end.
 
-Local Definition Ord__RealSrcLoc_max : RealSrcLoc -> RealSrcLoc -> RealSrcLoc :=
-  fun x y => if Ord__RealSrcLoc_op_zlze__ x y : bool then y else x.
+Local Definition Eq___SrcLoc_op_zsze__ : SrcLoc -> SrcLoc -> bool :=
+  fun x y => negb (Eq___SrcLoc_op_zeze__ x y).
 
-Program Instance Ord__RealSrcLoc : GHC.Base.Ord RealSrcLoc :=
+Program Instance Eq___SrcLoc : GHC.Base.Eq_ SrcLoc :=
   fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__RealSrcLoc_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__RealSrcLoc_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__RealSrcLoc_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__RealSrcLoc_op_zgze__ ;
-         GHC.Base.compare__ := Ord__RealSrcLoc_compare ;
-         GHC.Base.max__ := Ord__RealSrcLoc_max ;
-         GHC.Base.min__ := Ord__RealSrcLoc_min |}.
+    k {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
 
 Definition generatedSrcLoc : SrcLoc :=
   UnhelpfulLoc (FastString.fsLit (GHC.Base.hs_string__
@@ -655,120 +545,6 @@ Definition srcSpanStart : SrcSpan -> SrcLoc :=
     | ARealSrcSpan s => ARealSrcLoc (realSrcSpanStart s)
     end.
 
-Definition leftmost_largest : SrcSpan -> SrcSpan -> comparison :=
-  fun a b =>
-    Util.thenCmp (GHC.Base.compare (srcSpanStart a) (srcSpanStart b))
-                 (GHC.Base.compare (srcSpanEnd b) (srcSpanEnd a)).
-
-Definition isSubspanOf : SrcSpan -> SrcSpan -> bool :=
-  fun src parent =>
-    if srcSpanFileName_maybe parent GHC.Base./= srcSpanFileName_maybe src : bool
-    then false else
-    andb (srcSpanStart parent GHC.Base.<= srcSpanStart src) (srcSpanEnd parent
-          GHC.Base.>=
-          srcSpanEnd src).
-
-Local Definition Ord__RealSrcSpan_compare
-   : RealSrcSpan -> RealSrcSpan -> comparison :=
-  fun a b =>
-    Util.thenCmp (GHC.Base.compare (realSrcSpanStart a) (realSrcSpanStart b))
-                 (GHC.Base.compare (realSrcSpanEnd a) (realSrcSpanEnd b)).
-
-Local Definition Ord__RealSrcSpan_op_zg__
-   : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__RealSrcSpan_op_zgze__
-   : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => Ord__RealSrcSpan_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__RealSrcSpan_op_zl__
-   : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__RealSrcSpan_op_zlze__
-   : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => Ord__RealSrcSpan_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__RealSrcSpan_max
-   : RealSrcSpan -> RealSrcSpan -> RealSrcSpan :=
-  fun x y => if Ord__RealSrcSpan_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__RealSrcSpan_min
-   : RealSrcSpan -> RealSrcSpan -> RealSrcSpan :=
-  fun x y => if Ord__RealSrcSpan_op_zlze__ x y : bool then x else y.
-
-Program Instance Ord__RealSrcSpan : GHC.Base.Ord RealSrcSpan :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__RealSrcSpan_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__RealSrcSpan_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__RealSrcSpan_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__RealSrcSpan_op_zgze__ ;
-         GHC.Base.compare__ := Ord__RealSrcSpan_compare ;
-         GHC.Base.max__ := Ord__RealSrcSpan_max ;
-         GHC.Base.min__ := Ord__RealSrcSpan_min |}.
-
-Local Definition Ord__SrcSpan_op_zlze__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b => negb (Ord__SrcSpan_op_zl__ b a).
-
-Local Definition Ord__SrcSpan_op_zl__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b =>
-    match a with
-    | ARealSrcSpan a1 =>
-        match b with
-        | ARealSrcSpan b1 => (a1 GHC.Base.< b1)
-        | _ => true
-        end
-    | UnhelpfulSpan a1 =>
-        match b with
-        | UnhelpfulSpan b1 => (a1 GHC.Base.< b1)
-        | _ => false
-        end
-    end.
-
-Local Definition Ord__SrcSpan_op_zgze__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b => negb (Ord__SrcSpan_op_zl__ a b).
-
-Local Definition Ord__SrcSpan_op_zg__ : SrcSpan -> SrcSpan -> bool :=
-  fun a b => Ord__SrcSpan_op_zl__ b a.
-
-Local Definition Ord__SrcSpan_compare : SrcSpan -> SrcSpan -> comparison :=
-  fun a b =>
-    match a with
-    | ARealSrcSpan a1 =>
-        match b with
-        | ARealSrcSpan b1 => (GHC.Base.compare a1 b1)
-        | _ => Lt
-        end
-    | UnhelpfulSpan a1 =>
-        match b with
-        | UnhelpfulSpan b1 => (GHC.Base.compare a1 b1)
-        | _ => Gt
-        end
-    end.
-
-Local Definition Ord__SrcSpan_min : SrcSpan -> SrcSpan -> SrcSpan :=
-  fun x y => if Ord__SrcSpan_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__SrcSpan_max : SrcSpan -> SrcSpan -> SrcSpan :=
-  fun x y => if Ord__SrcSpan_op_zlze__ x y : bool then y else x.
-
-Program Instance Ord__SrcSpan : GHC.Base.Ord SrcSpan :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__SrcSpan_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__SrcSpan_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__SrcSpan_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__SrcSpan_op_zgze__ ;
-         GHC.Base.compare__ := Ord__SrcSpan_compare ;
-         GHC.Base.max__ := Ord__SrcSpan_max ;
-         GHC.Base.min__ := Ord__SrcSpan_min |}.
-
-Definition rightmost : SrcSpan -> SrcSpan -> comparison :=
-  GHC.Base.flip GHC.Base.compare.
-
-Definition leftmost_smallest : SrcSpan -> SrcSpan -> comparison :=
-  GHC.Base.compare.
-
 Definition isOneLineSpan : SrcSpan -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -790,17 +566,16 @@ Definition wiredInSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<wired into compiler>")).
 
 (* Unbound variables:
-     Eq Gt Lt None Ord__SrcSpan_op_zl__ Some Type andb bool comparison false list
-     negb option true Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Semigroup.Internal.Mk_Any Data.Semigroup.Internal.Mk_Dual
-     Data.Semigroup.Internal.Mk_Endo Data.Semigroup.Internal.Mk_Product
-     Data.Semigroup.Internal.Mk_Sum Data.Semigroup.Internal.appEndo
-     Data.Semigroup.Internal.getAny Data.Semigroup.Internal.getDual
-     Data.Semigroup.Internal.getProduct Data.Semigroup.Internal.getSum
-     Data.Traversable.Traversable FastString.FastString FastString.fsLit
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare
-     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ Util.thenCmp
+     None Some andb bool comparison false list negb option true
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Semigroup.Internal.Mk_Any
+     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo
+     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
+     Data.Semigroup.Internal.appEndo Data.Semigroup.Internal.getAny
+     Data.Semigroup.Internal.getDual Data.Semigroup.Internal.getProduct
+     Data.Semigroup.Internal.getSum Data.Traversable.Traversable
+     FastString.FastString FastString.fsLit GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
+     GHC.Base.build GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.id
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zp__
 *)

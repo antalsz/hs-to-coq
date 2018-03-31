@@ -42,6 +42,7 @@ rename value BasicTypes.Fixity   = BasicTypes.Mk_Fixity
 rename value BasicTypes.InlinePragma = BasicTypes.Mk_InlinePragma
 rename value BasicTypes.OverlapFlag   = BasicTypes.Mk_OverlapFlag
 rename value BasicTypes.StringLiteral = BasicTypes.Mk_StringLiteral
+rename value BasicTypes.SourceText = BasicTypes.Mk_SourceText
 rename value BasicTypes.WarningTxt   = BasicTypes.Mk_WarningTxt
 rename value CmmType.CmmType    = CmmType.Mk_CmmType
 rename value Pair.Pair = Pair.Mk_Pair

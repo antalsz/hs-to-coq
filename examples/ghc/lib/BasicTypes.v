@@ -54,7 +54,7 @@ Inductive SpliceExplicitFlag : Type
   |  ImplicitSplice : SpliceExplicitFlag.
 
 Inductive SourceText : Type
-  := SourceText : GHC.Base.String -> SourceText
+  := Mk_SourceText : GHC.Base.String -> SourceText
   |  NoSourceText : SourceText.
 
 Inductive StringLiteral : Type
@@ -288,54 +288,44 @@ Definition occ_rules_only (arg_10__ : OccInfo) :=
   | IAmALoopBreaker occ_rules_only _ => occ_rules_only
   end.
 
-Definition occ_tail (arg_11__ : OccInfo) :=
-  match arg_11__ with
-  | ManyOccs occ_tail => occ_tail
-  | IAmDead =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `occ_tail' has no match in constructor `IAmDead' of type `OccInfo'")
-  | OneOcc _ _ _ occ_tail => occ_tail
-  | IAmALoopBreaker _ occ_tail => occ_tail
-  end.
-
-Definition fl_neg (arg_12__ : FractionalLit) :=
-  let 'FL _ fl_neg _ := arg_12__ in
+Definition fl_neg (arg_11__ : FractionalLit) :=
+  let 'FL _ fl_neg _ := arg_11__ in
   fl_neg.
 
-Definition fl_text (arg_13__ : FractionalLit) :=
-  let 'FL fl_text _ _ := arg_13__ in
+Definition fl_text (arg_12__ : FractionalLit) :=
+  let 'FL fl_text _ _ := arg_12__ in
   fl_text.
 
-Definition fl_value (arg_14__ : FractionalLit) :=
-  let 'FL _ _ fl_value := arg_14__ in
+Definition fl_value (arg_13__ : FractionalLit) :=
+  let 'FL _ _ fl_value := arg_13__ in
   fl_value.
 
-Definition fromEP {a} (arg_15__ : EP a) :=
-  let 'Mk_EP fromEP _ := arg_15__ in
+Definition fromEP {a} (arg_14__ : EP a) :=
+  let 'Mk_EP fromEP _ := arg_14__ in
   fromEP.
 
-Definition toEP {a} (arg_16__ : EP a) :=
-  let 'Mk_EP _ toEP := arg_16__ in
+Definition toEP {a} (arg_15__ : EP a) :=
+  let 'Mk_EP _ toEP := arg_15__ in
   toEP.
 
-Definition inl_act (arg_17__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ _ inl_act _ := arg_17__ in
+Definition inl_act (arg_16__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ _ inl_act _ := arg_16__ in
   inl_act.
 
-Definition inl_inline (arg_18__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ inl_inline _ _ _ := arg_18__ in
+Definition inl_inline (arg_17__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ inl_inline _ _ _ := arg_17__ in
   inl_inline.
 
-Definition inl_rule (arg_19__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ _ _ inl_rule := arg_19__ in
+Definition inl_rule (arg_18__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ _ _ inl_rule := arg_18__ in
   inl_rule.
 
-Definition inl_sat (arg_20__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ inl_sat _ _ := arg_20__ in
+Definition inl_sat (arg_19__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ inl_sat _ _ := arg_19__ in
   inl_sat.
 
-Definition inl_src (arg_21__ : InlinePragma) :=
-  let 'Mk_InlinePragma inl_src _ _ _ _ := arg_21__ in
+Definition inl_src (arg_20__ : InlinePragma) :=
+  let 'Mk_InlinePragma inl_src _ _ _ _ := arg_20__ in
   inl_src.
 (* Midamble *)
 
@@ -344,6 +334,9 @@ Require GHC.Err.
 
 Instance Default_Origin : GHC.Err.Default Origin :=
   GHC.Err.Build_Default _ Generated.
+
+Instance Default_SourceText : GHC.Err.Default SourceText :=
+  GHC.Err.Build_Default _ NoSourceText.
 
 Instance Default_OverlapMode : GHC.Err.Default OverlapMode :=
   GHC.Err.Build_Default _ (NoOverlap GHC.Err.default).
@@ -382,7 +375,7 @@ Instance Default_IntWithInf : GHC.Err.Default IntWithInf :=
 
 
 Instance Default_OccInfo : GHC.Err.Default OccInfo :=
-  GHC.Err.Build_Default _ NoOccInfo.
+  GHC.Err.Build_Default _ IAmDead.
 
 
 Instance Default_InlineSpec : GHC.Err.Default InlineSpec :=
@@ -417,6 +410,9 @@ Instance Default_Activation : GHC.Err.Default Activation :=
 
 Instance Default_InlinePragma : GHC.Err.Default InlinePragma :=
   GHC.Err.Build_Default _ (Mk_InlinePragma GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default_TailCallInfo : GHC.Err.Default TailCallInfo :=
+  GHC.Err.Build_Default _ NoTailCallInfo.
 
 (* Converted value declarations: *)
 
@@ -623,61 +619,9 @@ Program Instance Eq___StringLiteral : GHC.Base.Eq_ StringLiteral :=
 (* Translating `instance Outputable__TailCallInfo' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-Local Definition Eq___TyPrec_op_zeze__ : TyPrec -> TyPrec -> bool :=
-  fun a b => match GHC.Base.compare a b with | Eq => true | _ => false end.
+(* Skipping instance Eq___TyPrec *)
 
-Local Definition Eq___TyPrec_op_zsze__ : TyPrec -> TyPrec -> bool :=
-  fun x y => negb (Eq___TyPrec_op_zeze__ x y).
-
-Program Instance Eq___TyPrec : GHC.Base.Eq_ TyPrec :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TyPrec_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TyPrec_op_zsze__ |}.
-
-Local Definition Ord__TyPrec_compare : TyPrec -> TyPrec -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | TopPrec, TopPrec => Eq
-    | TopPrec, _ => Lt
-    | FunPrec, TopPrec => Gt
-    | FunPrec, FunPrec => Eq
-    | FunPrec, TyOpPrec => Eq
-    | FunPrec, TyConPrec => Lt
-    | TyOpPrec, TopPrec => Gt
-    | TyOpPrec, FunPrec => Eq
-    | TyOpPrec, TyOpPrec => Eq
-    | TyOpPrec, TyConPrec => Lt
-    | TyConPrec, TyConPrec => Eq
-    | TyConPrec, _ => Gt
-    end.
-
-Local Definition Ord__TyPrec_op_zg__ : TyPrec -> TyPrec -> bool :=
-  fun x y => Ord__TyPrec_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__TyPrec_op_zgze__ : TyPrec -> TyPrec -> bool :=
-  fun x y => Ord__TyPrec_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__TyPrec_op_zl__ : TyPrec -> TyPrec -> bool :=
-  fun x y => Ord__TyPrec_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__TyPrec_op_zlze__ : TyPrec -> TyPrec -> bool :=
-  fun x y => Ord__TyPrec_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__TyPrec_max : TyPrec -> TyPrec -> TyPrec :=
-  fun x y => if Ord__TyPrec_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__TyPrec_min : TyPrec -> TyPrec -> TyPrec :=
-  fun x y => if Ord__TyPrec_op_zlze__ x y : bool then x else y.
-
-Program Instance Ord__TyPrec : GHC.Base.Ord TyPrec :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__TyPrec_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__TyPrec_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__TyPrec_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__TyPrec_op_zgze__ ;
-         GHC.Base.compare__ := Ord__TyPrec_compare ;
-         GHC.Base.max__ := Ord__TyPrec_max ;
-         GHC.Base.min__ := Ord__TyPrec_min |}.
+(* Skipping instance Ord__TyPrec *)
 
 (* Translating `instance Outputable__DerivStrategy' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
@@ -807,65 +751,8 @@ Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo :=
 (* Translating `instance Data__Activation' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
 
-Local Definition Eq___Activation_op_zeze__ : Activation -> Activation -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | NeverActive, NeverActive => true
-    | AlwaysActive, AlwaysActive => true
-    | ActiveBefore a1 a2, ActiveBefore b1 b2 =>
-        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
-    | ActiveAfter a1 a2, ActiveAfter b1 b2 =>
-        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
-    | _, _ => false
-    end.
-
-Local Definition Eq___Activation_op_zsze__ : Activation -> Activation -> bool :=
-  fun x y => negb (Eq___Activation_op_zeze__ x y).
-
-Program Instance Eq___Activation : GHC.Base.Eq_ Activation :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Activation_op_zsze__ |}.
-
-Local Definition Eq___InlinePragma_op_zeze__
-   : InlinePragma -> InlinePragma -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_InlinePragma a1 a2 a3 a4 a5, Mk_InlinePragma b1 b2 b3 b4 b5 =>
-        (andb (andb (andb (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3
-                            GHC.Base.==
-                            b3))) ((a4 GHC.Base.== b4))) ((a5 GHC.Base.== b5)))
-    end.
-
-Local Definition Eq___InlinePragma_op_zsze__
-   : InlinePragma -> InlinePragma -> bool :=
-  fun x y => negb (Eq___InlinePragma_op_zeze__ x y).
-
-Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
-
 (* Translating `instance Data__WarningTxt' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
-
-Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_WarningTxt a1 a2, Mk_WarningTxt b1 b2 =>
-        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
-    | DeprecatedTxt a1 a2, DeprecatedTxt b1 b2 =>
-        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
-    | _, _ => false
-    end.
-
-Local Definition Eq___WarningTxt_op_zsze__ : WarningTxt -> WarningTxt -> bool :=
-  fun x y => negb (Eq___WarningTxt_op_zeze__ x y).
-
-Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
 
 (* Translating `instance Data__StringLiteral' failed: OOPS! Cannot find
    information for class Qualified "Data.Data" "Data" unsupported *)
@@ -878,6 +765,22 @@ Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt :=
 
 (* Translating `instance Data__OverlapMode' failed: OOPS! Cannot find
    information for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___SourceText_op_zeze__ : SourceText -> SourceText -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_SourceText a1, Mk_SourceText b1 => ((a1 GHC.Base.== b1))
+    | NoSourceText, NoSourceText => true
+    | _, _ => false
+    end.
+
+Local Definition Eq___SourceText_op_zsze__ : SourceText -> SourceText -> bool :=
+  fun x y => negb (Eq___SourceText_op_zeze__ x y).
+
+Program Instance Eq___SourceText : GHC.Base.Eq_ SourceText :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___SourceText_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___SourceText_op_zsze__ |}.
 
 Local Definition Eq___OverlapMode_op_zeze__
    : OverlapMode -> OverlapMode -> bool :=
@@ -917,27 +820,86 @@ Program Instance Eq___OverlapFlag : GHC.Base.Eq_ OverlapFlag :=
     k {| GHC.Base.op_zeze____ := Eq___OverlapFlag_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___OverlapFlag_op_zsze__ |}.
 
-Local Definition Eq___SourceText_op_zeze__ : SourceText -> SourceText -> bool :=
+Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | SourceText a1, SourceText b1 => ((a1 GHC.Base.== b1))
-    | NoSourceText, NoSourceText => true
+    | Mk_WarningTxt a1 a2, Mk_WarningTxt b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | DeprecatedTxt a1 a2, DeprecatedTxt b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
     | _, _ => false
     end.
 
-Local Definition Eq___SourceText_op_zsze__ : SourceText -> SourceText -> bool :=
-  fun x y => negb (Eq___SourceText_op_zeze__ x y).
+Local Definition Eq___WarningTxt_op_zsze__ : WarningTxt -> WarningTxt -> bool :=
+  fun x y => negb (Eq___WarningTxt_op_zeze__ x y).
 
-Program Instance Eq___SourceText : GHC.Base.Eq_ SourceText :=
+Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt :=
   fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SourceText_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SourceText_op_zsze__ |}.
+    k {| GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
+
+Local Definition Eq___Activation_op_zeze__ : Activation -> Activation -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NeverActive, NeverActive => true
+    | AlwaysActive, AlwaysActive => true
+    | ActiveBefore a1 a2, ActiveBefore b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | ActiveAfter a1 a2, ActiveAfter b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | _, _ => false
+    end.
+
+Local Definition Eq___Activation_op_zsze__ : Activation -> Activation -> bool :=
+  fun x y => negb (Eq___Activation_op_zeze__ x y).
+
+Program Instance Eq___Activation : GHC.Base.Eq_ Activation :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Activation_op_zsze__ |}.
+
+Local Definition Eq___InlinePragma_op_zeze__
+   : InlinePragma -> InlinePragma -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_InlinePragma a1 a2 a3 a4 a5, Mk_InlinePragma b1 b2 b3 b4 b5 =>
+        (andb (andb (andb (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3
+                            GHC.Base.==
+                            b3))) ((a4 GHC.Base.== b4))) ((a5 GHC.Base.== b5)))
+    end.
+
+Local Definition Eq___InlinePragma_op_zsze__
+   : InlinePragma -> InlinePragma -> bool :=
+  fun x y => negb (Eq___InlinePragma_op_zeze__ x y).
+
+Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
 
 (* Translating `instance Show__SourceText' failed: OOPS! Cannot find information
    for class Qualified "GHC.Show" "Show" unsupported *)
 
 (* Translating `instance Data__SourceText' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
+
+Local Definition Eq___TailCallInfo_op_zeze__
+   : TailCallInfo -> TailCallInfo -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | AlwaysTailCalled a1, AlwaysTailCalled b1 => ((a1 GHC.Base.== b1))
+    | NoTailCallInfo, NoTailCallInfo => true
+    | _, _ => false
+    end.
+
+Local Definition Eq___TailCallInfo_op_zsze__
+   : TailCallInfo -> TailCallInfo -> bool :=
+  fun x y => negb (Eq___TailCallInfo_op_zeze__ x y).
+
+Program Instance Eq___TailCallInfo : GHC.Base.Eq_ TailCallInfo :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___TailCallInfo_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___TailCallInfo_op_zsze__ |}.
 
 Local Definition Eq___OccInfo_op_zeze__ : OccInfo -> OccInfo -> bool :=
   fun arg_0__ arg_1__ =>
@@ -959,24 +921,6 @@ Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___OccInfo_op_zsze__ |}.
-
-Local Definition Eq___TailCallInfo_op_zeze__
-   : TailCallInfo -> TailCallInfo -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | AlwaysTailCalled a1, AlwaysTailCalled b1 => ((a1 GHC.Base.== b1))
-    | NoTailCallInfo, NoTailCallInfo => true
-    | _, _ => false
-    end.
-
-Local Definition Eq___TailCallInfo_op_zsze__
-   : TailCallInfo -> TailCallInfo -> bool :=
-  fun x y => negb (Eq___TailCallInfo_op_zeze__ x y).
-
-Program Instance Eq___TailCallInfo : GHC.Base.Eq_ TailCallInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TailCallInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TailCallInfo_op_zsze__ |}.
 
 (* Translating `instance Data__TupleSort' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
@@ -1299,7 +1243,7 @@ Definition competesWith : Activation -> Activation -> bool :=
     end.
 
 Definition defaultInlinePragma : InlinePragma :=
-  Mk_InlinePragma (SourceText (GHC.Base.hs_string__ "{-# INLINE")) NoUserInline
+  Mk_InlinePragma (Mk_SourceText (GHC.Base.hs_string__ "{-# INLINE")) NoUserInline
                   None AlwaysActive FunLike.
 
 Definition dfunInlinePragma : InlinePragma :=
@@ -1528,29 +1472,11 @@ Definition isWeakLoopBreaker : OccInfo -> bool :=
 Definition maxPrecedence : GHC.Num.Int :=
   #9.
 
-Definition maybeParen
-   : TyPrec -> TyPrec -> Outputable.SDoc -> Outputable.SDoc :=
-  fun ctxt_prec inner_prec pretty =>
-    if ctxt_prec GHC.Base.< inner_prec : bool then pretty else
-    Outputable.parens pretty.
-
 Definition minPrecedence : GHC.Num.Int :=
   #0.
 
-Definition mkFractionalLit {a} `{GHC.Real.Real a} : a -> FractionalLit :=
-  fun r =>
-    FL (SourceText (GHC.Show.show (GHC.Real.realToFrac r : GHC.Types.Double))) (r
-        GHC.Base.<
-        #0) (GHC.Real.toRational r).
-
 Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
   Int.
-
-Definition mkIntegralLit {a} `{GHC.Real.Integral a} : a -> IntegralLit :=
-  fun i =>
-    IL (SourceText (GHC.Show.show (GHC.Real.fromIntegral i : GHC.Num.Int))) (i
-        GHC.Base.<
-        #0) (GHC.Real.toInteger i).
 
 Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
   fun arg_0__ arg_1__ =>
@@ -1562,17 +1488,6 @@ Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
 
 Definition negateFixity : Fixity :=
   Mk_Fixity NoSourceText #6 InfixL.
-
-Definition negateIntegralLit : IntegralLit -> IntegralLit :=
-  fun arg_0__ =>
-    let 'IL text neg value := arg_0__ in
-    match text with
-    | SourceText (cons ("-"%char) src) =>
-        IL (SourceText src) false (GHC.Num.negate value)
-    | SourceText src =>
-        IL (SourceText (cons (GHC.Char.hs_char__ "-") src)) true (GHC.Num.negate value)
-    | NoSourceText => IL NoSourceText (negb neg) (GHC.Num.negate value)
-    end.
 
 Definition noOccInfo : OccInfo :=
   ManyOccs NoTailCallInfo.
@@ -1665,7 +1580,7 @@ Definition pprWithSourceText
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | NoSourceText, d => d
-    | SourceText src, _ => id src
+    | Mk_SourceText src, _ => id src
     end.
 
 Definition seqOccInfo : OccInfo -> unit :=
@@ -1780,17 +1695,16 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
 
 (* Unbound variables:
      Eq Gt Lt None Some andb bool comparison cons error false id list negb nil
-     op_zt__ option pair true tt unit Coq.Init.Datatypes.app Data.Function.on
-     FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error GHC.List.replicate
-     GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.Integral GHC.Real.Rational
-     GHC.Real.Real GHC.Real.fromIntegral GHC.Real.realToFrac GHC.Real.toInteger
-     GHC.Real.toRational GHC.Show.show GHC.Types.Double Outputable.SDoc
-     Outputable.brackets Outputable.char Outputable.comma Outputable.doubleQuotes
-     Outputable.empty Outputable.fsep Outputable.ftext Outputable.int
-     Outputable.op_zlzg__ Outputable.parens Outputable.ptext Outputable.punctuate
-     Outputable.vbar Outputable.vcat Panic.noString SrcLoc.Located SrcLoc.unLoc
+     occ_tail op_zt__ option pair true tt unit Coq.Init.Datatypes.app
+     Data.Function.on FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.map GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error
+     GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.Rational
+     Outputable.SDoc Outputable.brackets Outputable.char Outputable.comma
+     Outputable.doubleQuotes Outputable.empty Outputable.fsep Outputable.ftext
+     Outputable.int Outputable.op_zlzg__ Outputable.parens Outputable.ptext
+     Outputable.punctuate Outputable.vbar Outputable.vcat Panic.noString
+     SrcLoc.Located SrcLoc.unLoc
 *)

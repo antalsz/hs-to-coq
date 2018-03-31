@@ -1572,8 +1572,11 @@ Program Instance Monad__Min : GHC.Base.Monad Min :=
 (* Translating `instance Num__Min' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Option__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Option__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup" "Option")) :| []) unsupported *)
 
 (* Translating `instance Generic__Option' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -1638,9 +1641,11 @@ Program Instance Ord__Option {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Option a) :=
          GHC.Base.max__ := Ord__Option_max ;
          GHC.Base.min__ := Ord__Option_min |}.
 
-(* Translating `instance Generic1__TYPE__WrappedMonoid__LiftedRep' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__TYPE__WrappedMonoid__LiftedRep' failed: type
+   class instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1"))
+   (PosArg (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup" "WrappedMonoid")) :| []) unsupported *)
 
 (* Translating `instance Generic__WrappedMonoid' failed: OOPS! Cannot find
    information for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -1710,8 +1715,11 @@ Program Instance Ord__WrappedMonoid {m} `{GHC.Base.Ord m}
 (* Translating `instance Bounded__WrappedMonoid' failed: OOPS! Cannot find
    information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Last__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Last__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup" "Last")) :| []) unsupported *)
 
 (* Translating `instance Generic__Last' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -1779,8 +1787,11 @@ Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
 (* Translating `instance Bounded__Last' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Generic1__TYPE__First__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__First__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup" "First")) :| []) unsupported *)
 
 (* Translating `instance Generic__First' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -1848,8 +1859,12 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
 (* Translating `instance Bounded__First' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Arg__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Arg__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (App (Qualid (Qualified
+   "Data.Semigroup" "Arg")) (PosArg (Qualid (Bare "a")) :| [])) :| [])
+   unsupported *)
 
 (* Translating `instance Generic__Arg' failed: OOPS! Cannot find information for
    class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -1863,8 +1878,11 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
 (* Translating `instance Show__Arg' failed: OOPS! Cannot find information for
    class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Max__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Max__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup" "Max")) :| []) unsupported *)
 
 (* Translating `instance Generic__Max' failed: OOPS! Cannot find information for
    class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -1932,8 +1950,11 @@ Program Instance Ord__Max {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Max a) :=
 (* Translating `instance Bounded__Max' failed: OOPS! Cannot find information for
    class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Min__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Min__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup" "Min")) :| []) unsupported *)
 
 (* Translating `instance Generic__Min' failed: OOPS! Cannot find information for
    class Qualified "GHC.Generics" "Generic" unsupported *)

@@ -181,11 +181,12 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
 
         let (binds, classTy) = decomposeForall instanceHead
 
-        topoSortInstance $ InstanceDefinition instanceName binds classTy methods Nothing
+        -- decomposeClassTy can fail, so run it in the monad so that
+        -- failure will be caugh cause the instance to be skipped
+        (className, instTy) <- decomposeClassTy classTy
 
-decomposeForall :: Term -> ([Binder], Term)
-decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty)
-decomposeForall t = ([], t)
+        topoSortInstance instanceName binds className instTy methods
+
 
 axiomatizeClsInstDecl :: ConversionMonad m
                       => ClsInstDecl GhcRn        -- Haskell instance we are converting
@@ -222,10 +223,9 @@ axiomatizeModuleClsInstDecls insts =
 -- Topo sort the instance members and lift (some of) them outside of
 -- the instance declaration.
 
-topoSortInstance :: forall m.  ConversionMonad m => InstanceDefinition -> m [Sentence]
-topoSortInstance inst_def@(InstanceTerm _ _ _ _ _ ) =
-    pure $ [InstanceSentence inst_def]
-topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sorted M.empty where
+topoSortInstance :: forall m. ConversionMonad m =>
+    Qualid -> [Binder] -> Qualid -> Term -> [(Qualid,Term)] -> m [Sentence]
+topoSortInstance instanceName params className instTy members = go sorted M.empty where
 
         m        = M.fromList members
         sorted   = topoSortEnvironment m
@@ -263,20 +263,6 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                             s2        <- go tl bnds
                             return (s1 ++ s2)
 
-        -- from "instance C ty where" access C and ty
-        -- TODO: multiparameter type classes   "instance C t1 t2 where"
-        --       instances with contexts       "instance C a => C (Maybe a) where"
-        decomposeClassTy ty = case ty of
-           App1 (Qualid cn) a -> (cn, a)
-           -- Code smell: non-normalized applications.
-
-           -- let’s not trip over type classes with a TypeRep parameter (Generic1)
-           App1 (App1 (Qualid cn) (App1 "GHC.Prim.TYPE" _)) a -> (cn, a)
-           App2 (Qualid cn) (App1 "GHC.Prim.TYPE" _) a -> (cn, a)
-           App1 (App1 (Qualid cn) "k") a -> (cn, a)
-           _ -> error ("cannot deconstruct head of instance " ++ T.unpack (qualidBase instanceName) ++ ": " ++ show ty)
-
-        (className, instTy) = decomposeClassTy ty
 
         buildName = qualidExtendBase "__Dict_Build" className
 
@@ -414,16 +400,29 @@ topoSortInstance (InstanceDefinition instanceName params ty members mp) = go sor
                             [ instTy ] ++ map snd mems'
 
 
+                    let instHeadTy = appList (Qualid className) [PosArg instTy]
                     let instTerm = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
                                        (App1 (Var "k") body)
 
-                    pure [ProgramSentence (InstanceSentence (InstanceTerm instanceName params ty instTerm mp)) Nothing]
+                    pure [ProgramSentence (InstanceSentence (InstanceTerm instanceName params instHeadTy instTerm Nothing)) Nothing]
                 Just (CoqInstanceDef x) -> pure [InstanceSentence x]
                 Just redef -> editFailure $ ("cannot redefine an Instance Definition to be " ++) $
                         case redef of CoqDefinitionDef       _ -> "a Definition"
                                       CoqFixpointDef         _ -> "a Fixpoint"
                                       CoqInductiveDef        _ -> "an Inductive"
                                       CoqInstanceDef         _ -> "an Instance Definition"
+
+-- from "instance C ty where" access C and ty
+-- TODO: multiparameter type classes   "instance C t1 t2 where"
+--       instances with contexts       "instance C a => C (Maybe a) where"
+decomposeClassTy :: ConversionMonad m => Term -> m (Qualid, Term)
+decomposeClassTy ty = case ty of
+   App1 (Qualid cn) a -> pure (cn, a)
+   _ -> convUnsupported ("type class instance head:" ++ show ty)
+
+decomposeForall :: Term -> ([Binder], Term)
+decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty)
+decomposeForall t = ([], t)
 
 --------------------------------------------------------------------------------
 

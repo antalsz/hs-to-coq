@@ -149,8 +149,11 @@ Program Instance Monad__Last : GHC.Base.Monad Last :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Last_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Last_return_ |}.
 
-(* Translating `instance Generic1__TYPE__Last__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Last__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Monoid" "Last")) :| []) unsupported *)
 
 (* Translating `instance Generic__Last' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -262,8 +265,11 @@ Program Instance Monad__First : GHC.Base.Monad First :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__First_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__First_return_ |}.
 
-(* Translating `instance Generic1__TYPE__First__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__First__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Monoid" "First")) :| []) unsupported *)
 
 (* Translating `instance Generic__First' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)

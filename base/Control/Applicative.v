@@ -156,9 +156,11 @@ Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
 (* Translating `instance Alternative__WrappedMonad' failed: OOPS! Cannot find
    information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
-(* Translating `instance Generic1__TYPE__ZipList__LiftedRep' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__TYPE__ZipList__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Control.Applicative" "ZipList")) :| []) unsupported *)
 
 (* Translating `instance Generic__ZipList' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -177,9 +179,12 @@ Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
 (* Translating `instance Show__ZipList' failed: OOPS! Cannot find information
    for class Qualified "GHC.Show" "Show" unsupported *)
 
-(* Translating `instance Generic1__TYPE__WrappedArrow__LiftedRep' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__TYPE__WrappedArrow__LiftedRep' failed: type
+   class instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1"))
+   (PosArg (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (App (App (Qualid (Qualified
+   "Control.Applicative" "WrappedArrow")) (PosArg (Qualid (Bare "a")) :| []))
+   (PosArg (Qualid (Bare "b")) :| [])) :| []) unsupported *)
 
 (* Translating `instance Generic__WrappedArrow' failed: OOPS! Cannot find
    information for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -207,9 +212,12 @@ Program Instance Monad__WrappedMonad {m} `{GHC.Base.Monad m}
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WrappedMonad_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__WrappedMonad_return_ |}.
 
-(* Translating `instance Generic1__TYPE__WrappedMonad__LiftedRep' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__TYPE__WrappedMonad__LiftedRep' failed: type
+   class instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1"))
+   (PosArg (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (App (Qualid (Qualified
+   "Control.Applicative" "WrappedMonad")) (PosArg (Qualid (Bare "m")) :| [])) :|
+   []) unsupported *)
 
 (* Translating `instance Generic__WrappedMonad' failed: OOPS! Cannot find
    information for class Qualified "GHC.Generics" "Generic" unsupported *)

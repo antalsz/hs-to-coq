@@ -250,9 +250,11 @@ Program Instance Monoid__Identity {a} `{GHC.Base.Monoid a}
 (* Translating `instance Integral__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Real" "Integral" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Identity__LiftedRep' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__TYPE__Identity__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Functor.Identity" "Identity")) :| []) unsupported *)
 
 (* Translating `instance Generic__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Generics" "Generic" unsupported *)

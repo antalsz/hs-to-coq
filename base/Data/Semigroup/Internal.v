@@ -728,8 +728,12 @@ Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
 
 (* Skipping instance Read__Alt *)
 
-(* Translating `instance Generic1__Alt__5' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__Alt__5' failed: type class instance head:App
+   (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg (Qualid (Bare "k"))
+   :| [])) (PosArg (HasType (App (Qualid (Qualified "Data.Semigroup.Internal"
+   "Alt")) (PosArg (Qualid (Bare "f")) :| [])) (Arrow (Qualid (Bare "k")) (App
+   (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified "GHC.Types"
+   "LiftedRep")) :| [])))) :| []) unsupported *)
 
 (* Translating `instance Generic__Alt' failed: OOPS! Cannot find information for
    class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -737,9 +741,11 @@ Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
 (* Translating `instance Num__Product' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Product__LiftedRep' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Generics" "Generic1"
-   unsupported *)
+(* Translating `instance Generic1__TYPE__Product__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup.Internal" "Product")) :| []) unsupported *)
 
 (* Translating `instance Generic__Product' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -809,8 +815,11 @@ Program Instance Ord__Product {a} `{GHC.Base.Ord a}
 (* Translating `instance Num__Sum' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Sum__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Sum__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup.Internal" "Sum")) :| []) unsupported *)
 
 (* Translating `instance Generic__Sum' failed: OOPS! Cannot find information for
    class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -982,8 +991,11 @@ Program Instance Ord__All : GHC.Base.Ord All :=
 (* Translating `instance Generic__Endo' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Dual__LiftedRep' failed: OOPS! Cannot
-   find information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__TYPE__Dual__LiftedRep' failed: type class
+   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
+   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
+   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
+   "Data.Semigroup.Internal" "Dual")) :| []) unsupported *)
 
 (* Translating `instance Generic__Dual' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)

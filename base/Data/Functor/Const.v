@@ -321,8 +321,12 @@ Instance Monoid__Const {a} {b} `{GHC.Base.Monoid a}
 (* Translating `instance Integral__Const' failed: OOPS! Cannot find information
    for class Qualified "GHC.Real" "Integral" unsupported *)
 
-(* Translating `instance Generic1__Const__5' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Generics" "Generic1" unsupported *)
+(* Translating `instance Generic1__Const__5' failed: type class instance
+   head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg (Qualid
+   (Bare "k")) :| [])) (PosArg (HasType (App (Qualid (Qualified
+   "Data.Functor.Const" "Const")) (PosArg (Qualid (Bare "a")) :| [])) (Arrow
+   (Qualid (Bare "k")) (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid
+   (Qualified "GHC.Types" "LiftedRep")) :| [])))) :| []) unsupported *)
 
 (* Translating `instance Generic__Const' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)

@@ -18,13 +18,12 @@ Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Import Data.Functor.Classes.
 Require Import Data.Functor.Identity.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require Data.Tuple.
 Require GHC.Base.
 Require GHC.Num.
 Import GHC.Base.Notations.
-Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -186,11 +185,12 @@ Local Definition Foldable__WriterT_foldl {inst_f} {inst_w}
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          appEndo (getDual (Foldable__WriterT_foldMap (Coq.Program.Basics.compose Mk_Dual
-                                                                                  (Coq.Program.Basics.compose Mk_Endo
-                                                                                                              (GHC.Base.flip
-                                                                                                               f))) t))
-          z
+          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
+                                           (Foldable__WriterT_foldMap (Coq.Program.Basics.compose
+                                                                       Data.Semigroup.Internal.Mk_Dual
+                                                                       (Coq.Program.Basics.compose
+                                                                        Data.Semigroup.Internal.Mk_Endo (GHC.Base.flip
+                                                                         f))) t)) z
       end.
 
 Local Definition Foldable__WriterT_foldr' {inst_f} {inst_w}
@@ -215,7 +215,8 @@ Local Definition Foldable__WriterT_foldr {inst_f} {inst_w}
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__, arg_5__, arg_6__ with
       | f, z, t =>
-          appEndo (Foldable__WriterT_foldMap (Data.Foldable.hash_compose Mk_Endo f) t) z
+          Data.Semigroup.Internal.appEndo (Foldable__WriterT_foldMap
+                                           (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__WriterT_foldl' {inst_f} {inst_w}
@@ -233,20 +234,6 @@ Local Definition Foldable__WriterT_foldl' {inst_f} {inst_w}
           Foldable__WriterT_foldr f' GHC.Base.id xs z0
       end.
 
-Local Definition Foldable__WriterT_length {inst_f} {inst_w}
-  `{(Data.Foldable.Foldable inst_f)}
-   : forall {a}, (WriterT inst_w inst_f) a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__WriterT_foldl' (fun arg_64__ arg_65__ =>
-                                match arg_64__, arg_65__ with
-                                | c, _ => c GHC.Num.+ #1
-                                end) #0.
-
-Local Definition Foldable__WriterT_null {inst_f} {inst_w}
-  `{(Data.Foldable.Foldable inst_f)}
-   : forall {a}, (WriterT inst_w inst_f) a -> bool :=
-  fun {a} => Foldable__WriterT_foldr (fun arg_61__ arg_62__ => false) true.
-
 Local Definition Foldable__WriterT_toList {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, (WriterT inst_w inst_f) a -> list a :=
@@ -262,13 +249,15 @@ Local Definition Foldable__WriterT_product {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (WriterT inst_w inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__WriterT_foldMap Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__WriterT_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__WriterT_sum {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (WriterT inst_w inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__WriterT_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__WriterT_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__WriterT_fold {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
@@ -282,8 +271,21 @@ Local Definition Foldable__WriterT_elem {inst_f} {inst_w}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__WriterT_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__WriterT_foldMap (Coq.Program.Basics.compose
+                                                                                         Data.Semigroup.Internal.Mk_Any
+                                                                                         p))) _GHC.Base.==_.
+
+Local Definition Foldable__WriterT_length {inst_f} {inst_w}
+  `{(Data.Foldable.Foldable inst_f)}
+   : forall {a}, (WriterT inst_w inst_f) a -> GHC.Num.Int :=
+  fun {a} =>
+    fun arg_0__ => let 'Mk_WriterT t := arg_0__ in Data.Foldable.length t.
+
+Local Definition Foldable__WriterT_null {inst_f} {inst_w}
+  `{(Data.Foldable.Foldable inst_f)}
+   : forall {a}, (WriterT inst_w inst_f) a -> bool :=
+  fun {a} => fun arg_0__ => let 'Mk_WriterT t := arg_0__ in Data.Foldable.null t.
 
 Program Instance Foldable__WriterT {f} {w} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (WriterT w f) :=
@@ -340,29 +342,14 @@ Local Definition Traversable__WriterT_mapM {inst_f} {inst_w}
      (a -> m b) -> (WriterT inst_w inst_f) a -> m ((WriterT inst_w inst_f) b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__WriterT_traverse.
 
-Local Definition Applicative__WriterT_op_zlztzg__ {inst_w} {inst_m}
-  `{GHC.Base.Monoid inst_w} `{GHC.Base.Applicative inst_m}
-   : forall {a} {b},
-     (WriterT inst_w inst_m) (a -> b) ->
-     (WriterT inst_w inst_m) a -> (WriterT inst_w inst_m) b :=
-  fun {a} {b} =>
-    fun f v =>
-      let k :=
-        fun arg_0__ arg_1__ =>
-          match arg_0__, arg_1__ with
-          | pair a w, pair b w' => pair (a b) (GHC.Base.mappend w w')
-          end in
-      Mk_WriterT (GHC.Base.liftA2 k (runWriterT f) (runWriterT v)).
+(* Translating `instance Applicative__WriterT' failed: Giving up on mutual
+   recursion[Qualified "GHC.Base" "liftA2",Qualified "GHC.Base" "op_zlztzg__"]
+   unsupported *)
 
 (* Translating `instance Alternative__WriterT' failed: OOPS! Cannot find
    information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
-Definition Monad__WriterT_op_zgzgze__ {inst_w} {inst_m} `{_
-   : GHC.Base.Monoid inst_w} `{_ : GHC.Base.Monad inst_m}
-   : forall {a} {b},
-     WriterT inst_w inst_m a ->
-     (a -> WriterT inst_w inst_m b) -> WriterT inst_w inst_m b :=
-  fun {a} {b} => Monad__WriterT_tmp.
+(* Skipping instance Monad__WriterT *)
 
 (* Translating `instance MonadFail__WriterT' failed: OOPS! Cannot find
    information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
@@ -459,48 +446,6 @@ Program Instance Functor__WriterT {m} {w} `{(GHC.Base.Functor m)}
     k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WriterT_op_zlzd__ ;
          GHC.Base.fmap__ := fun {a} {b} => Functor__WriterT_fmap |}.
 
-Local Definition Applicative__WriterT_pure {inst_w} {inst_m} `{GHC.Base.Monoid
-  inst_w} `{GHC.Base.Applicative inst_m}
-   : forall {a}, a -> (WriterT inst_w inst_m) a :=
-  fun {a} => fun a => Mk_WriterT (GHC.Base.pure (pair a GHC.Base.mempty)).
-
-Local Definition Applicative__WriterT_op_ztzg__ {inst_w} {inst_m}
-  `{GHC.Base.Monoid inst_w} `{GHC.Base.Applicative inst_m}
-   : forall {a} {b},
-     (WriterT inst_w inst_m) a ->
-     (WriterT inst_w inst_m) b -> (WriterT inst_w inst_m) b :=
-  fun {a} {b} =>
-    fun x y =>
-      Applicative__WriterT_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                       y.
-
-Program Instance Applicative__WriterT {w} {m} `{GHC.Base.Monoid w}
-  `{GHC.Base.Applicative m}
-   : GHC.Base.Applicative (WriterT w m) :=
-  fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WriterT_op_ztzg__ ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WriterT_op_zlztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__WriterT_pure |}.
-
-Local Definition Monad__WriterT_op_zgzg__ {inst_w} {inst_m} `{GHC.Base.Monoid
-  inst_w} `{GHC.Base.Monad inst_m}
-   : forall {a} {b},
-     (WriterT inst_w inst_m) a ->
-     (WriterT inst_w inst_m) b -> (WriterT inst_w inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
-
-Local Definition Monad__WriterT_return_ {inst_w} {inst_m} `{GHC.Base.Monoid
-  inst_w} `{GHC.Base.Monad inst_m}
-   : forall {a}, a -> (WriterT inst_w inst_m) a :=
-  fun {a} => GHC.Base.pure.
-
-Program Instance Monad__WriterT {w} {m} `{GHC.Base.Monoid w} `{GHC.Base.Monad m}
-   : GHC.Base.Monad (WriterT w m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WriterT_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WriterT_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__WriterT_return_ |}.
-
 Program Instance Traversable__WriterT {f} {w} `{(Data.Traversable.Traversable
    f)}
    : Data.Traversable.Traversable (WriterT w f) :=
@@ -536,17 +481,20 @@ Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
   fun w => writer (pair tt w).
 
 (* Unbound variables:
-     Eq1 Gt Identity Lt Mk_Any Mk_Dual Mk_Endo Mk_Identity Mk_Product Mk_Sum
-     Monad__WriterT_tmp Ord1 Type appEndo bool compare1 comparison eq1 false getAny
-     getDual getProduct getSum liftCompare liftCompare2 liftEq liftEq2 list negb
-     op_zt__ pair runIdentity true tt unit Control.Monad.Signatures.CallCC
-     Control.Monad.Trans.Class.MonadTrans Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.hash_compose
-     Data.Traversable.Traversable Data.Traversable.traverse Data.Tuple.fst
-     Data.Tuple.snd GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.compare GHC.Base.const
-     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     Eq1 Gt Identity Lt Mk_Identity Ord1 Type bool compare1 comparison eq1
+     liftCompare liftCompare2 liftEq liftEq2 list negb op_zt__ pair runIdentity tt
+     unit Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
+     Data.Foldable.length Data.Foldable.null Data.Semigroup.Internal.Mk_Any
+     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo
+     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
+     Data.Semigroup.Internal.appEndo Data.Semigroup.Internal.getAny
+     Data.Semigroup.Internal.getDual Data.Semigroup.Internal.getProduct
+     Data.Semigroup.Internal.getSum Data.Traversable.Traversable
+     Data.Traversable.traverse Data.Tuple.fst Data.Tuple.snd GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.build GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap
+     GHC.Base.id GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.return_
+     GHC.Num.Int GHC.Num.Num
 *)

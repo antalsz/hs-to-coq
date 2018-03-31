@@ -18,7 +18,7 @@ Require Data.Foldable.
 Require Data.Functor.
 Require Import Data.Functor.Classes.
 Require Data.Functor.Constant.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
@@ -179,10 +179,12 @@ Local Definition Foldable__Lift_foldl {inst_f} `{(Data.Foldable.Foldable
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          appEndo (getDual (Foldable__Lift_foldMap (Coq.Program.Basics.compose Mk_Dual
-                                                                               (Coq.Program.Basics.compose Mk_Endo
-                                                                                                           (GHC.Base.flip
-                                                                                                            f))) t)) z
+          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
+                                           (Foldable__Lift_foldMap (Coq.Program.Basics.compose
+                                                                    Data.Semigroup.Internal.Mk_Dual
+                                                                    (Coq.Program.Basics.compose
+                                                                     Data.Semigroup.Internal.Mk_Endo (GHC.Base.flip f)))
+                                            t)) z
       end.
 
 Local Definition Foldable__Lift_foldr' {inst_f} `{(Data.Foldable.Foldable
@@ -207,7 +209,8 @@ Local Definition Foldable__Lift_foldr {inst_f} `{(Data.Foldable.Foldable
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__, arg_5__, arg_6__ with
       | f, z, t =>
-          appEndo (Foldable__Lift_foldMap (Data.Foldable.hash_compose Mk_Endo f) t) z
+          Data.Semigroup.Internal.appEndo (Foldable__Lift_foldMap
+                                           (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Lift_foldl' {inst_f} `{(Data.Foldable.Foldable
@@ -253,12 +256,14 @@ Local Definition Foldable__Lift_product {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (Lift inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__Lift_foldMap Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__Lift_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__Lift_sum {inst_f} `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (Lift inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__Lift_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__Lift_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__Lift_fold {inst_f} `{(Data.Foldable.Foldable inst_f)}
    : forall {m}, forall `{GHC.Base.Monoid m}, (Lift inst_f) m -> m :=
@@ -269,8 +274,10 @@ Local Definition Foldable__Lift_elem {inst_f} `{(Data.Foldable.Foldable inst_f)}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__Lift_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__Lift_foldMap (Coq.Program.Basics.compose
+                                                                                      Data.Semigroup.Internal.Mk_Any
+                                                                                      p))) _GHC.Base.==_.
 
 Program Instance Foldable__Lift {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (Lift f) :=
@@ -352,6 +359,12 @@ Local Definition Applicative__Lift_op_ztzg__ {inst_f} `{(GHC.Base.Applicative
     fun x y =>
       Applicative__Lift_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
 
+Local Definition Applicative__Lift_liftA2 {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a} {b} {c},
+     (a -> b -> c) -> (Lift inst_f) a -> (Lift inst_f) b -> (Lift inst_f) c :=
+  fun {a} {b} {c} => fun f x => Applicative__Lift_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Lift_pure {inst_f} `{(GHC.Base.Applicative
    inst_f)}
    : forall {a}, a -> (Lift inst_f) a :=
@@ -362,13 +375,24 @@ Program Instance Applicative__Lift {f} `{(GHC.Base.Applicative f)}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Lift_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Lift_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Lift_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Lift_pure |}.
 
 (* Translating `instance Alternative__Lift' failed: OOPS! Cannot find
    information for class Qualified "GHC.Base" "Alternative" unsupported *)
 
+Definition elimLift {a} {r} {f} : (a -> r) -> (f a -> r) -> Lift f a -> r :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | f, _, Pure x => f x
+    | _, g, Other e => g e
+    end.
+
 Definition failure {e} {a} : e -> Errors e a :=
   fun e => Other (Data.Functor.Constant.Mk_Constant e).
+
+Definition eitherToErrors {e} {a} : Data.Either.Either e a -> Errors e a :=
+  Data.Either.either failure Pure.
 
 Definition mapLift {f} {a} {g} : (f a -> g a) -> Lift f a -> Lift g a :=
   fun arg_0__ arg_1__ =>
@@ -392,15 +416,19 @@ Definition unLift {f} {a} `{(GHC.Base.Applicative f)} : Lift f a -> f a :=
     end.
 
 (* Unbound variables:
-     Eq1 Gt Lt Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum Ord1 appEndo bool compare1
-     comparison eq1 false getAny getDual getProduct getSum liftCompare liftEq list
-     negb true Coq.Program.Basics.compose Data.Either.Either Data.Either.Left
-     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.hash_compose Data.Functor.op_zlzdzg__
-     Data.Functor.Constant.Constant Data.Functor.Constant.Mk_Constant
-     Data.Traversable.Traversable Data.Traversable.traverse GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     Eq1 Gt Lt Ord1 bool compare1 comparison eq1 false liftCompare liftEq list negb
+     true Coq.Program.Basics.compose Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Either.either Data.Foldable.Foldable
+     Data.Foldable.foldMap Data.Functor.op_zlzdzg__ Data.Functor.Constant.Constant
+     Data.Functor.Constant.Mk_Constant Data.Semigroup.Internal.Mk_Any
+     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo
+     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
+     Data.Semigroup.Internal.appEndo Data.Semigroup.Internal.getAny
+     Data.Semigroup.Internal.getDual Data.Semigroup.Internal.getProduct
+     Data.Semigroup.Internal.getSum Data.Traversable.Traversable
+     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.const
+     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zp__
 *)

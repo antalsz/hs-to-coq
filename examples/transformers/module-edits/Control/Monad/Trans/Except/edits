@@ -1,3 +1,6 @@
+order Control.Monad.Trans.Except.Functor__ExceptT Control.Monad.Trans.Except.Applicative__ExceptT_liftA2
+order Control.Monad.Trans.Except.Functor__ExceptT Control.Monad.Trans.Except.Traversable__ExceptT
+
 rewrite forall eq, Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) = @Data.Functor.Classes.liftEq inst_m _ _ _ (Data.Functor.Classes.liftEq eq)
 
 rewrite forall eq, Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare eq) = @Data.Functor.Classes.liftCompare inst_m _ _ _ _ (Data.Functor.Classes.liftCompare eq)

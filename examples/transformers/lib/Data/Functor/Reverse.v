@@ -167,6 +167,14 @@ Local Definition Applicative__Reverse_op_ztzg__ {inst_f} `{(GHC.Base.Applicative
       Applicative__Reverse_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
                                        y.
 
+Local Definition Applicative__Reverse_liftA2 {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (Reverse inst_f) a -> (Reverse inst_f) b -> (Reverse inst_f) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Reverse_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Reverse_pure {inst_f} `{(GHC.Base.Applicative
    inst_f)}
    : forall {a}, a -> (Reverse inst_f) a :=
@@ -177,10 +185,39 @@ Program Instance Applicative__Reverse {f} `{(GHC.Base.Applicative f)}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Reverse_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Reverse_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Reverse_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Reverse_pure |}.
 
 (* Translating `instance Alternative__Reverse' failed: OOPS! Cannot find
    information for class Qualified "GHC.Base" "Alternative" unsupported *)
+
+Local Definition Monad__Reverse_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a} {b},
+     (Reverse inst_m) a -> (Reverse inst_m) b -> (Reverse inst_m) b :=
+  fun {a} {b} => _GHC.Base.*>_.
+
+Local Definition Monad__Reverse_op_zgzgze__ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a} {b},
+     (Reverse inst_m) a -> (a -> (Reverse inst_m) b) -> (Reverse inst_m) b :=
+  fun {a} {b} =>
+    fun m f => Mk_Reverse (getReverse m GHC.Base.>>= (getReverse GHC.Base.∘ f)).
+
+Local Definition Monad__Reverse_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a}, a -> (Reverse inst_m) a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__Reverse {m} `{(GHC.Base.Monad m)}
+   : GHC.Base.Monad (Reverse m) :=
+  fun _ k =>
+    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Reverse_op_zgzg__ ;
+         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Reverse_op_zgzgze__ ;
+         GHC.Base.return___ := fun {a} => Monad__Reverse_return_ |}.
+
+(* Translating `instance MonadFail__Reverse' failed: OOPS! Cannot find
+   information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+
+(* Translating `instance MonadPlus__Reverse' failed: OOPS! Cannot find
+   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
 
 (* Translating `instance Foldable__Reverse' failed: Giving up on mutual
    recursion[Qualified "Data.Foldable" "foldl",Qualified "Data.Foldable" "foldr"]
@@ -190,7 +227,8 @@ Program Instance Applicative__Reverse {f} `{(GHC.Base.Applicative f)}
 
 (* Unbound variables:
      Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq negb
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Ord GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zlztzg__
-     GHC.Base.op_zsze__ GHC.Base.pure
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord
+     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
+     GHC.Base.pure
 *)

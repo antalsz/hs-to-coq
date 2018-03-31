@@ -1,0 +1,6 @@
+order Control.Monad.Trans.Writer.Lazy.Functor__WriterT Control.Monad.Trans.Writer.Lazy.Applicative__WriterT_liftA2
+order Control.Monad.Trans.Writer.Lazy.Functor__WriterT Control.Monad.Trans.Writer.Lazy.Traversable__WriterT
+
+# hs-to-coq fails to translate the Applicative instance, because it thinks
+# that <*> is mutually recursivewith liftA2
+skip  Control.Monad.Trans.Writer.Lazy.Monad__WriterT

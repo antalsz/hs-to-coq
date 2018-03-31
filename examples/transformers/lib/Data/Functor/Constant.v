@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
@@ -103,11 +103,12 @@ Local Definition Foldable__Constant_foldl {inst_a}
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          appEndo (getDual (Foldable__Constant_foldMap (Coq.Program.Basics.compose Mk_Dual
-                                                                                   (Coq.Program.Basics.compose Mk_Endo
-                                                                                                               (GHC.Base.flip
-                                                                                                                f))) t))
-          z
+          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
+                                           (Foldable__Constant_foldMap (Coq.Program.Basics.compose
+                                                                        Data.Semigroup.Internal.Mk_Dual
+                                                                        (Coq.Program.Basics.compose
+                                                                         Data.Semigroup.Internal.Mk_Endo (GHC.Base.flip
+                                                                          f))) t)) z
       end.
 
 Local Definition Foldable__Constant_foldr' {inst_a}
@@ -130,7 +131,8 @@ Local Definition Foldable__Constant_foldr {inst_a}
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__, arg_5__, arg_6__ with
       | f, z, t =>
-          appEndo (Foldable__Constant_foldMap (Data.Foldable.hash_compose Mk_Endo f) t) z
+          Data.Semigroup.Internal.appEndo (Foldable__Constant_foldMap
+                                           (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__Constant_foldl' {inst_a}
@@ -147,18 +149,6 @@ Local Definition Foldable__Constant_foldl' {inst_a}
           Foldable__Constant_foldr f' GHC.Base.id xs z0
       end.
 
-Local Definition Foldable__Constant_length {inst_a}
-   : forall {a}, (Constant inst_a) a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__Constant_foldl' (fun arg_64__ arg_65__ =>
-                                 match arg_64__, arg_65__ with
-                                 | c, _ => c GHC.Num.+ #1
-                                 end) #0.
-
-Local Definition Foldable__Constant_null {inst_a}
-   : forall {a}, (Constant inst_a) a -> bool :=
-  fun {a} => Foldable__Constant_foldr (fun arg_61__ arg_62__ => false) true.
-
 Local Definition Foldable__Constant_toList {inst_a}
    : forall {a}, (Constant inst_a) a -> list a :=
   fun {a} =>
@@ -172,12 +162,14 @@ Local Definition Foldable__Constant_toList {inst_a}
 Local Definition Foldable__Constant_product {inst_a}
    : forall {a}, forall `{GHC.Num.Num a}, (Constant inst_a) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__Constant_foldMap Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__Constant_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__Constant_sum {inst_a}
    : forall {a}, forall `{GHC.Num.Num a}, (Constant inst_a) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__Constant_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__Constant_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__Constant_fold {inst_a}
    : forall {m}, forall `{GHC.Base.Monoid m}, (Constant inst_a) m -> m :=
@@ -188,8 +180,18 @@ Local Definition Foldable__Constant_elem {inst_a}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__Constant_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__Constant_foldMap (Coq.Program.Basics.compose
+                                                                                          Data.Semigroup.Internal.Mk_Any
+                                                                                          p))) _GHC.Base.==_.
+
+Local Definition Foldable__Constant_length {inst_a}
+   : forall {a}, (Constant inst_a) a -> GHC.Num.Int :=
+  fun {a} => fun arg_0__ => let 'Mk_Constant _ := arg_0__ in #0.
+
+Local Definition Foldable__Constant_null {inst_a}
+   : forall {a}, (Constant inst_a) a -> bool :=
+  fun {a} => fun arg_0__ => let 'Mk_Constant _ := arg_0__ in true.
 
 Program Instance Foldable__Constant {a} : Data.Foldable.Foldable (Constant a) :=
   fun _ k =>
@@ -251,6 +253,20 @@ Program Instance Traversable__Constant {a}
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Constant_traverse |}.
 
+Local Definition Semigroup__Constant_op_zlzlzgzg__ {inst_a} {inst_b}
+  `{(GHC.Base.Semigroup inst_a)}
+   : (Constant inst_a inst_b) ->
+     (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Constant x, Mk_Constant y => Mk_Constant (x GHC.Base.<<>> y)
+    end.
+
+Program Instance Semigroup__Constant {a} {b} `{(GHC.Base.Semigroup a)}
+   : GHC.Base.Semigroup (Constant a b) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Constant_op_zlzlzgzg__ |}.
+
 Local Definition Applicative__Constant_op_zlztzg__ {inst_a} `{(GHC.Base.Monoid
    inst_a)}
    : forall {a} {b},
@@ -270,6 +286,14 @@ Local Definition Applicative__Constant_op_ztzg__ {inst_a} `{(GHC.Base.Monoid
       Applicative__Constant_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
                                         y.
 
+Local Definition Applicative__Constant_liftA2 {inst_a} `{(GHC.Base.Monoid
+   inst_a)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (Constant inst_a) a -> (Constant inst_a) b -> (Constant inst_a) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Constant_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Constant_pure {inst_a} `{(GHC.Base.Monoid inst_a)}
    : forall {a}, a -> (Constant inst_a) a :=
   fun {a} => fun arg_0__ => Mk_Constant GHC.Base.mempty.
@@ -279,16 +303,14 @@ Program Instance Applicative__Constant {a} `{(GHC.Base.Monoid a)}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Constant_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Constant_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Constant_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Constant_pure |}.
 
 Local Definition Monoid__Constant_mappend {inst_a} {inst_b} `{(GHC.Base.Monoid
    inst_a)}
    : (Constant inst_a inst_b) ->
      (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Constant x, Mk_Constant y => Mk_Constant (GHC.Base.mappend x y)
-    end.
+  _GHC.Base.<<>>_.
 
 Local Definition Monoid__Constant_mempty {inst_a} {inst_b} `{(GHC.Base.Monoid
    inst_a)}
@@ -313,16 +335,27 @@ Program Instance Monoid__Constant {a} {b} `{(GHC.Base.Monoid a)}
    "Bifunctor__Constant_first"),(Qualified "Data.Bifunctor" "second",Qualified
    "Data.Functor.Constant" "Bifunctor__Constant_second")] unsupported *)
 
+(* Translating `instance Bifoldable__Constant' failed: OOPS! Cannot find
+   information for class Qualified "Data.Bifoldable" "Bifoldable" unsupported *)
+
+(* Translating `instance Bitraversable__Constant' failed: OOPS! Cannot find
+   information for class Qualified "Data.Bitraversable" "Bitraversable"
+   unsupported *)
+
 (* Skipping instance Ord__Constant *)
 
 (* Skipping instance Eq___Constant *)
 
 (* Unbound variables:
-     Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum Type appEndo bool false getAny getDual
-     getProduct getSum list true Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Foldable.hash_compose Data.Traversable.Traversable GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.build
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id
-     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     Type bool list true Coq.Program.Basics.compose Data.Foldable.Foldable
+     Data.Semigroup.Internal.Mk_Any Data.Semigroup.Internal.Mk_Dual
+     Data.Semigroup.Internal.Mk_Endo Data.Semigroup.Internal.Mk_Product
+     Data.Semigroup.Internal.Mk_Sum Data.Semigroup.Internal.appEndo
+     Data.Semigroup.Internal.getAny Data.Semigroup.Internal.getDual
+     Data.Semigroup.Internal.getProduct Data.Semigroup.Internal.getSum
+     Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.build GHC.Base.const
+     GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.mappend
+     GHC.Base.mempty GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zlzlzgzg__
+     GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
 *)

@@ -74,6 +74,15 @@ Local Definition Applicative__StateT_op_zlztzg__ {inst_m} {inst_s}
                        mf s GHC.Base.>>= cont_2__)
       end.
 
+Local Definition Applicative__StateT_liftA2 {inst_m} {inst_s} `{GHC.Base.Functor
+  inst_m} `{GHC.Base.Monad inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (StateT inst_s inst_m) a ->
+     (StateT inst_s inst_m) b -> (StateT inst_s inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__StateT_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__StateT_pure {inst_m} {inst_s} `{GHC.Base.Functor
   inst_m} `{GHC.Base.Monad inst_m}
    : forall {a}, a -> (StateT inst_s inst_m) a :=
@@ -94,6 +103,7 @@ Program Instance Applicative__StateT {m} {s} `{GHC.Base.Functor m}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateT_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateT_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateT_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__StateT_pure |}.
 
 (* Translating `instance Alternative__StateT' failed: OOPS! Cannot find

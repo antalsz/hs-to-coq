@@ -54,6 +54,13 @@ Local Definition Applicative__ContT_op_zlztzg__ {inst_r} {inst_m}
     fun f v =>
       Mk_ContT (fun c => runContT f (fun g => runContT v (c GHC.Base.∘ g))).
 
+Local Definition Applicative__ContT_liftA2 {inst_r} {inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (ContT inst_r inst_m) a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__ContT_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__ContT_pure {inst_r} {inst_m}
    : forall {a}, a -> (ContT inst_r inst_m) a :=
   fun {a} => fun x => Mk_ContT (fun arg_0__ => arg_0__ x).
@@ -71,6 +78,7 @@ Program Instance Applicative__ContT {r} {m}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ContT_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ContT_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ContT_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__ContT_pure |}.
 
 Local Definition Monad__ContT_op_zgzg__ {inst_r} {inst_m}
@@ -170,6 +178,6 @@ Definition withCont {b} {r} {a}
 (* Unbound variables:
      Identity Mk_Identity Type runIdentity Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift GHC.Base.Applicative GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.op_z2218U__ GHC.Base.op_zgzgze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__
+     GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
 *)

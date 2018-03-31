@@ -15,12 +15,11 @@ Require Coq.Program.Wf.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Import Data.Functor.Classes.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Import GHC.Base.Notations.
-Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -173,6 +172,14 @@ Local Definition Applicative__Backwards_op_ztzg__ {inst_f}
       Applicative__Backwards_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id)
                                                         x) y.
 
+Local Definition Applicative__Backwards_liftA2 {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (Backwards inst_f) a -> (Backwards inst_f) b -> (Backwards inst_f) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__Backwards_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__Backwards_pure {inst_f} `{(GHC.Base.Applicative
    inst_f)}
    : forall {a}, a -> (Backwards inst_f) a :=
@@ -183,6 +190,7 @@ Program Instance Applicative__Backwards {f} `{(GHC.Base.Applicative f)}
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Backwards_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__Backwards_pure |}.
 
 (* Translating `instance Alternative__Backwards' failed: OOPS! Cannot find
@@ -202,13 +210,15 @@ Local Definition Foldable__Backwards_product {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (Backwards inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__Backwards_foldMap Mk_Product).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__Backwards_foldMap Data.Semigroup.Internal.Mk_Product).
 
 Local Definition Foldable__Backwards_sum {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (Backwards inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__Backwards_foldMap Mk_Sum).
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__Backwards_foldMap Data.Semigroup.Internal.Mk_Sum).
 
 Local Definition Foldable__Backwards_fold {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -221,8 +231,10 @@ Local Definition Foldable__Backwards_elem {inst_f} `{(Data.Foldable.Foldable
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__Backwards_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__Backwards_foldMap (Coq.Program.Basics.compose
+                                                                                           Data.Semigroup.Internal.Mk_Any
+                                                                                           p))) _GHC.Base.==_.
 
 Local Definition Foldable__Backwards_foldl {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -257,11 +269,6 @@ Local Definition Foldable__Backwards_foldr {inst_f} `{(Data.Foldable.Foldable
       | f, z, Mk_Backwards t => Data.Foldable.foldr f z t
       end.
 
-Local Definition Foldable__Backwards_null {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, (Backwards inst_f) a -> bool :=
-  fun {a} => Foldable__Backwards_foldr (fun arg_61__ arg_62__ => false) true.
-
 Local Definition Foldable__Backwards_toList {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (Backwards inst_f) a -> list a :=
@@ -292,10 +299,13 @@ Local Definition Foldable__Backwards_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (Backwards inst_f) a -> GHC.Num.Int :=
   fun {a} =>
-    Foldable__Backwards_foldl' (fun arg_64__ arg_65__ =>
-                                  match arg_64__, arg_65__ with
-                                  | c, _ => c GHC.Num.+ #1
-                                  end) #0.
+    fun arg_0__ => let 'Mk_Backwards t := arg_0__ in Data.Foldable.length t.
+
+Local Definition Foldable__Backwards_null {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, (Backwards inst_f) a -> bool :=
+  fun {a} =>
+    fun arg_0__ => let 'Mk_Backwards t := arg_0__ in Data.Foldable.null t.
 
 Program Instance Foldable__Backwards {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (Backwards f) :=
@@ -366,14 +376,15 @@ Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
            Traversable__Backwards_traverse |}.
 
 (* Unbound variables:
-     Eq1 Gt Lt Mk_Any Mk_Product Mk_Sum Ord1 Type bool compare1 comparison eq1 false
-     getAny getProduct getSum liftCompare liftEq list negb true
+     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq list negb
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.hash_compose
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length Data.Foldable.null
+     Data.Semigroup.Internal.Mk_Any Data.Semigroup.Internal.Mk_Product
+     Data.Semigroup.Internal.Mk_Sum Data.Semigroup.Internal.getAny
+     Data.Semigroup.Internal.getProduct Data.Semigroup.Internal.getSum
      Data.Traversable.Traversable Data.Traversable.sequenceA
      Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.const
      GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__
      GHC.Base.op_zlztztzg__ GHC.Base.op_zsze__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__
 *)

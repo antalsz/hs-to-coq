@@ -1,7 +1,15 @@
+order Control.Monad.Trans.Maybe.Functor__MaybeT Control.Monad.Trans.Maybe.Applicative__MaybeT_liftA2
+
+#
 # This is so wrong!
 #
-rewrite forall f, Data.Foldable.foldMap (Data.Foldable.foldMap f) = @Data.Foldable.foldMap inst_f _ _ _ _ (Data.Foldable.foldMap f)
+rewrite forall f, Data.Foldable.foldMap (Data.Foldable.foldMap f) = @Data.Foldable.foldMap inst_f _ _ _ _ _ (Data.Foldable.foldMap f)
 
 redefine Definition Control.Monad.Trans.Maybe.Monad__MaybeT_op_zgzgze__ {inst_m} `{_:GHC.Base.Monad inst_m} := fun {a}{b} => @Monad_tmp inst_m _ _ _ a b.
 
 skip Control.Monad.Trans.Maybe.liftCatch
+
+redefine Local Definition Control.Monad.Trans.Maybe.Applicative__MaybeT_op_ztzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a} {b},
+     (MaybeT inst_m a) -> ((MaybeT inst_m b) -> (MaybeT inst_m b)) :=
+  fun {a} {b} => fun m k => Monad_tmp m (fun arg_0__ => k).

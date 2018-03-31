@@ -104,6 +104,14 @@ Local Definition Applicative__RWST_op_ztzg__ {inst_w} {inst_m} {inst_r} {inst_s}
      (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) b :=
   fun {a} {b} => fun x y => Applicative__RWST_op_zlztzg__ (fmap (const id) x) y.
 
+Local Definition Applicative__RWST_liftA2 {inst_w} {inst_m} {inst_r} {inst_s}
+  `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (RWST inst_r inst_w inst_s inst_m) a ->
+     (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) c :=
+  fun {a} {b} {c} => fun f x => Applicative__RWST_op_zlztzg__ (fmap f x).
+
 Local Definition Applicative__RWST_pure {inst_w} {inst_m} {inst_r} {inst_s}
   `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
    : forall {a}, a -> (RWST inst_r inst_w inst_s inst_m) a :=
@@ -120,6 +128,7 @@ Program Instance Applicative__RWST {w} {m} {r} {s} `{Monoid w} `{Functor m}
   fun _ k =>
     k {| op_ztzg____ := fun {a} {b} => Applicative__RWST_op_ztzg__ ;
          op_zlztzg____ := fun {a} {b} => Applicative__RWST_op_zlztzg__ ;
+         liftA2__ := fun {a} {b} {c} => Applicative__RWST_liftA2 ;
          pure__ := fun {a} => Applicative__RWST_pure |}.
 
 (* Translating `instance Alternative__RWST' failed: OOPS! Cannot find

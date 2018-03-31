@@ -18,13 +18,12 @@ Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Functor.
 Require Import Data.Functor.Classes.
-Require Import Data.Monoid.
+Require Data.Semigroup.Internal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Import Data.Functor.Notations.
 Import GHC.Base.Notations.
-Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -146,19 +145,46 @@ Local Definition Foldable__IdentityT_foldMap {inst_f} `{(Data.Foldable.Foldable
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Mk_IdentityT a => Data.Foldable.foldMap f a
+      | f, Mk_IdentityT t => Data.Foldable.foldMap f t
       end.
+
+Local Definition Foldable__IdentityT_product {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, forall `{GHC.Num.Num a}, (IdentityT inst_f) a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
+                               (Foldable__IdentityT_foldMap Data.Semigroup.Internal.Mk_Product).
+
+Local Definition Foldable__IdentityT_sum {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, forall `{GHC.Num.Num a}, (IdentityT inst_f) a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
+                               (Foldable__IdentityT_foldMap Data.Semigroup.Internal.Mk_Sum).
+
+Local Definition Foldable__IdentityT_fold {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {m}, forall `{GHC.Base.Monoid m}, (IdentityT inst_f) m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__IdentityT_foldMap GHC.Base.id.
+
+Local Definition Foldable__IdentityT_elem {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (IdentityT inst_f) a -> bool :=
+  fun {a} `{GHC.Base.Eq_ a} =>
+    Coq.Program.Basics.compose (fun arg_69__ =>
+                                  let 'p := arg_69__ in
+                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                                             (Foldable__IdentityT_foldMap (Coq.Program.Basics.compose
+                                                                                           Data.Semigroup.Internal.Mk_Any
+                                                                                           p))) _GHC.Base.==_.
 
 Local Definition Foldable__IdentityT_foldl {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_19__ arg_20__ arg_21__ =>
-      match arg_19__, arg_20__, arg_21__ with
-      | f, z, t =>
-          appEndo (getDual (Foldable__IdentityT_foldMap (Coq.Program.Basics.compose
-                                                         Mk_Dual (Coq.Program.Basics.compose Mk_Endo (GHC.Base.flip f)))
-                            t)) z
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, Mk_IdentityT t => Data.Foldable.foldl f z t
       end.
 
 Local Definition Foldable__IdentityT_foldr' {inst_f} `{(Data.Foldable.Foldable
@@ -180,11 +206,21 @@ Local Definition Foldable__IdentityT_foldr {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (IdentityT inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_4__ arg_5__ arg_6__ =>
-      match arg_4__, arg_5__, arg_6__ with
-      | f, z, t =>
-          appEndo (Foldable__IdentityT_foldMap (Data.Foldable.hash_compose Mk_Endo f) t) z
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, Mk_IdentityT t => Data.Foldable.foldr f z t
       end.
+
+Local Definition Foldable__IdentityT_toList {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, (IdentityT inst_f) a -> list a :=
+  fun {a} =>
+    fun arg_54__ =>
+      let 't := arg_54__ in
+      GHC.Base.build (fun _ arg_55__ arg_56__ =>
+                        match arg_55__, arg_56__ with
+                        | c, n => Foldable__IdentityT_foldr c n t
+                        end).
 
 Local Definition Foldable__IdentityT_foldl' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -205,52 +241,13 @@ Local Definition Foldable__IdentityT_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (IdentityT inst_f) a -> GHC.Num.Int :=
   fun {a} =>
-    Foldable__IdentityT_foldl' (fun arg_64__ arg_65__ =>
-                                  match arg_64__, arg_65__ with
-                                  | c, _ => c GHC.Num.+ #1
-                                  end) #0.
+    fun arg_0__ => let 'Mk_IdentityT t := arg_0__ in Data.Foldable.length t.
 
 Local Definition Foldable__IdentityT_null {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (IdentityT inst_f) a -> bool :=
-  fun {a} => Foldable__IdentityT_foldr (fun arg_61__ arg_62__ => false) true.
-
-Local Definition Foldable__IdentityT_toList {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, (IdentityT inst_f) a -> list a :=
   fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__IdentityT_foldr c n t
-                        end).
-
-Local Definition Foldable__IdentityT_product {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, forall `{GHC.Num.Num a}, (IdentityT inst_f) a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getProduct (Foldable__IdentityT_foldMap Mk_Product).
-
-Local Definition Foldable__IdentityT_sum {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, forall `{GHC.Num.Num a}, (IdentityT inst_f) a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose getSum (Foldable__IdentityT_foldMap Mk_Sum).
-
-Local Definition Foldable__IdentityT_fold {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {m}, forall `{GHC.Base.Monoid m}, (IdentityT inst_f) m -> m :=
-  fun {m} `{GHC.Base.Monoid m} => Foldable__IdentityT_foldMap GHC.Base.id.
-
-Local Definition Foldable__IdentityT_elem {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (IdentityT inst_f) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose getAny (Foldable__IdentityT_foldMap
-                                                              (Coq.Program.Basics.compose Mk_Any p))) _GHC.Base.==_.
+    fun arg_0__ => let 'Mk_IdentityT t := arg_0__ in Data.Foldable.null t.
 
 Program Instance Foldable__IdentityT {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (IdentityT f) :=
@@ -387,16 +384,22 @@ Local Definition Applicative__IdentityT_op_ztzg__ {inst_m}
   `{(GHC.Base.Applicative inst_m)}
    : forall {a} {b},
      (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
-  fun {a} {b} =>
-    fun x y =>
-      Applicative__IdentityT_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id)
-                                                        x) y.
+  fun {a} {b} => lift2IdentityT _GHC.Base.*>_.
+
+Local Definition Applicative__IdentityT_liftA2 {inst_m} `{(GHC.Base.Applicative
+   inst_m)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__IdentityT_op_zlztzg__ (GHC.Base.fmap f x).
 
 Program Instance Applicative__IdentityT {m} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (IdentityT m) :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__IdentityT_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__IdentityT_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__IdentityT_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__IdentityT_pure |}.
 
 Local Definition Monad__IdentityT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
@@ -428,16 +431,17 @@ Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
            Traversable__IdentityT_traverse |}.
 
 (* Unbound variables:
-     Eq1 Gt Lt Mk_Any Mk_Dual Mk_Endo Mk_Product Mk_Sum Ord1 Type appEndo bool
-     compare1 comparison eq1 false getAny getDual getProduct getSum liftCompare
-     liftEq list negb true Control.Monad.Signatures.CallCC
-     Control.Monad.Trans.Class.MonadTrans Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.hash_compose
-     Data.Functor.op_zlzdzg__ Data.Traversable.Traversable Data.Traversable.traverse
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.const GHC.Base.flip
+     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq list negb
+     Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length Data.Foldable.null
+     Data.Functor.op_zlzdzg__ Data.Semigroup.Internal.Mk_Any
+     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
+     Data.Semigroup.Internal.getAny Data.Semigroup.Internal.getProduct
+     Data.Semigroup.Internal.getSum Data.Traversable.Traversable
+     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.const
      GHC.Base.fmap GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
      GHC.Base.op_zeze__ GHC.Base.op_zezlzl__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zp__
+     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
 *)

@@ -108,17 +108,17 @@ Definition mapReaderT {m} {a} {n} {b} {r}
 Definition mapReader {a} {b} {r} : (a -> b) -> Reader r a -> Reader r b :=
   fun f => mapReaderT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
 
+Local Definition Functor__ReaderT_op_zlzd__ {inst_m} {inst_r}
+  `{(GHC.Base.Functor inst_m)}
+   : forall {a} {b},
+     a -> (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) a :=
+  fun {a} {b} => fun x v => mapReaderT (fun arg_0__ => x GHC.Base.<$ arg_0__) v.
+
 Local Definition Functor__ReaderT_fmap {inst_m} {inst_r} `{(GHC.Base.Functor
    inst_m)}
    : forall {a} {b},
      (a -> b) -> (ReaderT inst_r inst_m) a -> (ReaderT inst_r inst_m) b :=
   fun {a} {b} => fun f => mapReaderT (GHC.Base.fmap f).
-
-Local Definition Functor__ReaderT_op_zlzd__ {inst_m} {inst_r}
-  `{(GHC.Base.Functor inst_m)}
-   : forall {a} {b},
-     a -> (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) a :=
-  fun {a} {b} => fun x => Functor__ReaderT_fmap (GHC.Base.const x).
 
 Program Instance Functor__ReaderT {m} {r} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (ReaderT r m) :=
@@ -132,15 +132,23 @@ Local Definition Applicative__ReaderT_op_ztzg__ {inst_m} {inst_r}
      (ReaderT inst_r inst_m) a ->
      (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__ReaderT_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                       y.
+    fun u v => Mk_ReaderT (fun r => runReaderT u r GHC.Base.*> runReaderT v r).
+
+Local Definition Applicative__ReaderT_liftA2 {inst_m} {inst_r}
+  `{(GHC.Base.Applicative inst_m)}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (ReaderT inst_r inst_m) a ->
+     (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__ReaderT_op_zlztzg__ (GHC.Base.fmap f x).
 
 Program Instance Applicative__ReaderT {m} {r} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (ReaderT r m) :=
   fun _ k =>
     k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ReaderT_op_ztzg__ ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ReaderT_op_zlztzg__ ;
+         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ReaderT_liftA2 ;
          GHC.Base.pure__ := fun {a} => Applicative__ReaderT_pure |}.
 
 Local Definition Monad__ReaderT_op_zgzg__ {inst_m} {inst_r} `{(GHC.Base.Monad
@@ -182,7 +190,7 @@ Definition local {r} {m} {a} : (r -> r) -> ReaderT r m a -> ReaderT r m a :=
 (* Unbound variables:
      Identity Mk_Identity Type runIdentity Control.Monad.Signatures.CallCC
      Control.Monad.Trans.Class.MonadTrans GHC.Base.Applicative GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_z2218U__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_
+     GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__
+     GHC.Base.op_zgzgze__ GHC.Base.op_zlzd__ GHC.Base.op_zlztzg__ GHC.Base.op_ztzg__
+     GHC.Base.pure GHC.Base.return_
 *)

@@ -1,0 +1,1 @@
+order Control.Monad.Trans.Identity.Functor__IdentityT Control.Monad.Trans.Identity.Applicative__IdentityT_liftA2

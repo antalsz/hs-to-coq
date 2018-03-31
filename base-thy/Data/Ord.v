@@ -32,9 +32,8 @@ Proof.
   unfold Ord.Eq___Down_op_zsze__;
   unfold Ord.Eq___Down_op_zeze__;
   unfold coerce, Coercible_Unpeel, unpeel, repeel, Unpeel_refl;
-  unfold "_==_";
-  unfold "_/=_".
-  unfold instance_Down_Eq
+  unfold Unpeel_arrow, Unpeel_Down, unpeel, repeel.
+  unfold Eq___Down
      => - [x] [y] /=.
   case E: (x == y); constructor; move/Eq_eq in E.
   + by rewrite E.

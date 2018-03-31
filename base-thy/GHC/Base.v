@@ -328,6 +328,8 @@ Class ApplicativeLaws (t : Type -> Type) `{!Functor t, !Applicative t, !FunctorL
      (pure f <*> pure x) = (pure (f x));
    applicative_interchange : forall a b (u : t (a -> b)) (y : a),
      (u <*> pure y) = ((pure (fun x => x y)) <*> u);
+   applicative_liftA2 : forall a b c (f : a -> b -> c) (x : t a) (y : t b),
+     liftA2 f x y = (fmap f x <*> y);
    applicative_fmap : forall a b (f : a -> b) (x : t a),
      fmap f x = (pure f <*> x)
      (* free theorem *)
@@ -481,6 +483,7 @@ Proof.
   - intros. destruct u; destruct v; destruct w; auto.
   - intros. auto.
   - intros. destruct u; auto.
+  - intros. destruct x, y; reflexivity.
   - reflexivity.
 Qed.
 
@@ -488,10 +491,12 @@ Instance instance_ApplicativeLaws_list : ApplicativeLaws list.
 Proof.
   split;
     repeat (unfold
-      op_zlztzg__,
+      op_zlztzg__, liftA2, fmap,
       pure, Applicative__list,
       Base.Applicative__list_pure,
       Base.Applicative__list_op_zlztzg__,
+      Functor__list,
+      Base.Applicative__list_liftA2,
       Base.Functor__list_fmap; simpl).
   - intros. induction v; simpl; auto.
     simpl in IHv. rewrite IHv. auto.
@@ -512,6 +517,8 @@ Proof.
     auto.
   - intros. auto.
   - intros. rewrite app_nil_r. auto.
+  - intros. rewrite !flat_map_concat_map !hs_coq_map List.map_map.
+    reflexivity.
   - by move=> *; rewrite flat_map_cons_f app_nil_r.
 Qed.
 

@@ -50,6 +50,7 @@ Proof.
   - intros. destruct u; destruct v; destruct w; auto.
   - intros. auto.
   - intros. destruct u; auto.
+  - intros. destruct x, y; auto.
   - by move=> ? ? f [].
 Qed.
 

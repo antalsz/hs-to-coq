@@ -4419,12 +4419,12 @@ Qed.
 Ltac unfold_Monoid_Set :=
   unfold mappend, mconcat, mempty, Monoid__Set_, mappend__, mconcat__, mempty__,
          Internal.Monoid__Set__mappend, Internal.Monoid__Set__mconcat, Internal.Monoid__Set__mempty,
-         Semigroup.op_zlzg__,  Semigroup__Set_, Semigroup.op_zlzg____,
-         Internal.Semigroup__Set__op_zlzg__
+         op_zlzlzgzg__,  Semigroup__Set_, op_zlzlzgzg____,
+         Internal.Semigroup__Set__op_zlzlzgzg__
     in *.
 
 Global Program Instance Semigroup_WF : Semigroup (WFSet e) := fun _ k => k
-  {| op_zlzg____  := @mappend (Set_ e) _ |}.
+  {| op_zlzlzgzg____  := @mappend (Set_ e) _ _ |}.
 Next Obligation.
   destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
   unfold_Monoid_Set.
@@ -4438,12 +4438,12 @@ Proof.
   intros.
   destruct x as [s1 HB1], y as [s2 HB2], z as [s3 HB3].
   unfold op_zeze__, Eq_Set_WF, op_zeze____, proj1_sig.
-  unfold op_zlzg__, Semigroup_WF, op_zlzg____.
+  unfold op_zlzlzgzg__, Semigroup_WF, op_zlzlzgzg____.
   unfold mappend, Monoid__Set_, mappend__.
   unfold Internal.Monoid__Set__mappend.
   unfold proj1_sig.
-  unfold op_zlzg__, Semigroup__Set_, op_zlzg____.
-  unfold Internal.Semigroup__Set__op_zlzg__.
+  unfold op_zlzlzgzg__, Semigroup__Set_, op_zlzlzgzg____.
+  unfold Internal.Semigroup__Set__op_zlzlzgzg__.
   eapply (union_Desc s1 s2); try eassumption. intros s12 Hs12 _ Hsem12.
   eapply (union_Desc s2 s3); try eassumption. intros s23 Hs23 _ Hsem23.
   eapply (union_Desc s1 s23); try eassumption. intros s1_23 Hs1_23 _ Hsem1_23.
@@ -4456,9 +4456,9 @@ Qed.
 (** ** Verification of [Monoid] *)
 
 Global Program Instance Monoid_WF : Monoid (WFSet e) := fun _ k => k
-  {| mempty__   := @mempty (Set_ e) _
-   ; mappend__  := @mappend (Set_ e) _
-   ; mconcat__  xs := @mconcat (Set_ e) _ (List.map (fun x => unpack x) xs)
+  {| mempty__   := @mempty (Set_ e) _ _
+   ; mappend__  := @mappend (Set_ e) _ _
+   ; mconcat__  xs := @mconcat (Set_ e) _ _ (List.map (fun x => unpack x) xs)
   |}.
 Next Obligation.
   destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
@@ -4504,8 +4504,8 @@ Proof.
     unfold op_zeze__, Eq_Set_WF, op_zeze____,  unpack;
     repeat unfold mappend, mconcat, mempty, Monoid_WF, mappend__, mconcat__, mempty__,
       Internal.Monoid__Set__mappend, Internal.Monoid__Set__mempty,
-      Semigroup.op_zlzg__,  Semigroup__Set_, Semigroup_WF, Semigroup.op_zlzg____,
-      Internal.Semigroup__Set__op_zlzg__,
+      op_zlzlzgzg__,  Semigroup__Set_, Semigroup_WF, op_zlzlzgzg____,
+      Internal.Semigroup__Set__op_zlzlzgzg__,
       mappend, mempty, Monoid__Set_, mappend__, mempty__,
       Internal.Monoid__Set__mappend, Internal.Monoid__Set__mempty, Internal.Monoid__Set__mconcat.
   * intros. destruct x as [s Hs]; unfold proj1_sig.

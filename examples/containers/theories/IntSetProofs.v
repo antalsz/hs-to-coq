@@ -5737,9 +5737,7 @@ Proof.
     match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
     match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
     reflexivity.
-    match goal with [ |- match ?x with _ => _ end = _ ] => destruct x eqn:? end.
-    match goal with [ H : match ?x with _ => _ end = _ |- _] => destruct x eqn:? end.
-    congruence.
+    reflexivity.
 Qed.
 
 Lemma valid_commonPrefix: forall s, WF s -> commonPrefix s = true.
@@ -6008,11 +6006,8 @@ Qed.
 
 (** *** Verification of [Semigroup] *)
 
-Require Import Data.Semigroup.
-Import Data.Semigroup.Notations.
-
 Instance Semigroup_WFIntSet : Semigroup WFIntSet := fun _ k => k
-  {| op_zlzg____ := fun s1 s2 => pack (unpack s1 <> unpack s2)
+  {| op_zlzlzgzg____ := fun s1 s2 => pack (unpack s1 <<>> unpack s2)
                                       (union_WF _ _ (unpack_WF s1) (unpack_WF s2)) |}.
 
 Instance SemigroupLaws_WFIntSet : SemigroupLaws WFIntSet.
@@ -6020,7 +6015,7 @@ Proof.
   constructor; intros [s1 [f1 SEM1]] [s2 [f2 SEM2]] [s3 [f3 SEM3]].
   unfold_WFIntSet_Eq; fold_is_true; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
   repeat match goal with
-         | SEMs : Sem ?s ?fs, SEMt : Sem ?t ?ft |- context[?s <> ?t] =>
+         | SEMs : Sem ?s ?fs, SEMt : Sem ?t ?ft |- context[?s <<>> ?t] =>
            match goal with
            | _ : Sem (s <> t)    _ |- _ => fail 1
            | _ : Sem (union s t) _ |- _ => fail 1
@@ -6044,7 +6039,7 @@ Qed.
 
 Instance Monoid_WFIntSet : Monoid WFIntSet := fun _ k => k
   {| mempty__  := pack mempty empty_WF
-   ; mappend__ := _Data.Semigroup.<>_
+   ; mappend__ := _<<>>_
    ; mconcat__ := fun ss => pack (mconcat (GHC.Base.map unpack ss)) (WFIntSet_unpack_mconcat_WF ss) |}.
 
 Local Ltac WFIntSet_Eq_eq := unfold_WFIntSet_Eq; fold_is_true; rewrite <-(ssrbool.rwP (Eq_eq _ _)).

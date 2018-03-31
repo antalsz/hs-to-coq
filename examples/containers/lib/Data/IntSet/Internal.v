@@ -22,14 +22,12 @@ Require Coq.Numbers.BinNums.
 Require Data.Bits.
 Require Data.Foldable.
 Require Data.Maybe.
-Require Data.Semigroup.
 Require Data.Tuple.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Wf.
 Require Utils.Containers.Internal.BitUtil.
 Import Data.Bits.Notations.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -81,11 +79,11 @@ Require Import Coq.NArith.NArith.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Data__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
-
 (* Translating `instance IsList__IntSet' failed: OOPS! Cannot find information
    for class Qualified "GHC.Exts" "IsList" unsupported *)
+
+(* Translating `instance Data__IntSet' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 (* Translating `instance Show__IntSet' failed: OOPS! Cannot find information for
    class Qualified "GHC.Show" "Show" unsupported *)
@@ -169,8 +167,8 @@ Program Definition foldlBits {a}
                                    if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
                                    match arg_0__, arg_1__ with
                                    | bm, acc =>
-                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
                                        go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
                                    end
                                end) in
@@ -209,8 +207,8 @@ Program Definition foldl'Bits {a}
                                    if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
                                    match arg_0__, arg_1__ with
                                    | bm, acc =>
-                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
                                        go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
                                    end
                                end) in
@@ -305,8 +303,8 @@ Program Definition foldrBits {a}
                                    if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
                                    match arg_0__, arg_1__ with
                                    | bm, acc =>
-                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
                                        go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
                                                                           GHC.Num.-
                                                                           bi)) acc)
@@ -387,8 +385,8 @@ Program Definition foldr'Bits {a}
                                    if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
                                    match arg_0__, arg_1__ with
                                    | bm, acc =>
-                                       let 'bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let 'bi := indexOfTheOnlyBit bitmask in
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
                                        go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
                                                                           GHC.Num.-
                                                                           bi)) acc)
@@ -729,14 +727,14 @@ Definition unions : list IntSet -> IntSet :=
 Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
   unions.
 
-Local Definition Semigroup__IntSet_op_zlzg__ : IntSet -> IntSet -> IntSet :=
+Local Definition Semigroup__IntSet_op_zlzlzgzg__ : IntSet -> IntSet -> IntSet :=
   union.
 
-Program Instance Semigroup__IntSet : Data.Semigroup.Semigroup IntSet :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__IntSet_op_zlzg__ |}.
+Program Instance Semigroup__IntSet : GHC.Base.Semigroup IntSet :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
   fun _ k =>
@@ -926,11 +924,9 @@ Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
         if m GHC.Base.< #0 : bool
         then if x GHC.Base.>= #0 : bool
              then let 'pair lt gt := go x l in
-                  let 'lt' := union lt r in
-                  pair lt' gt
+                  let lt' := union lt r in pair lt' gt
              else let 'pair lt gt := go x r in
-                  let 'gt' := union gt l in
-                  pair lt gt' else
+                  let gt' := union gt l in pair lt gt' else
         j_21__
     | _ => j_21__
     end.
@@ -958,10 +954,9 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                                                   bitmapOfx') in
                      if kx' GHC.Base.> x' : bool then pair (pair Nil false) t' else
                      if kx' GHC.Base.< prefixOf x' : bool then pair (pair t' false) Nil else
-                     let 'gt := tip kx' (bm Data.Bits..&.(**) higherBitmap) in
-                     let 'found := (bm Data.Bits..&.(**) bitmapOfx') GHC.Base./= #0 in
-                     let 'lt := tip kx' (bm Data.Bits..&.(**) lowerBitmap) in
-                     pair (pair lt found) gt
+                     let gt := tip kx' (bm Data.Bits..&.(**) higherBitmap) in
+                     let found := (bm Data.Bits..&.(**) bitmapOfx') GHC.Base./= #0 in
+                     let lt := tip kx' (bm Data.Bits..&.(**) lowerBitmap) in pair (pair lt found) gt
                  | _, Nil => pair (pair Nil false) Nil
                  end in
     let j_22__ := go x t in
@@ -970,11 +965,9 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
         if m GHC.Base.< #0 : bool
         then if x GHC.Base.>= #0 : bool
              then let 'pair (pair lt fnd) gt := go x l in
-                  let 'lt' := union lt r in
-                  pair (pair lt' fnd) gt
+                  let lt' := union lt r in pair (pair lt' fnd) gt
              else let 'pair (pair lt fnd) gt := go x r in
-                  let 'gt' := union gt l in
-                  pair (pair lt fnd) gt' else
+                  let gt' := union gt l in pair (pair lt fnd) gt' else
         j_22__
     | _ => j_22__
     end.
@@ -1103,12 +1096,12 @@ End Notations.
      Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.ones
      Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred Coq.NArith.BinNat.N.to_nat
      Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
-     Data.Foldable.foldl Data.Maybe.maybe Data.Semigroup.Semigroup
-     Data.Semigroup.op_zlzg__ Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.compare GHC.Base.flip GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zsze__ GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     Data.Foldable.foldl Data.Maybe.maybe Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid
+     GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.flip GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
+     Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

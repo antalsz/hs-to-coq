@@ -19,7 +19,6 @@ Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.Classes.
-Require Data.Semigroup.
 Require GHC.Base.
 Require GHC.DeferredFix.
 Require GHC.Err.
@@ -27,7 +26,6 @@ Require GHC.Num.
 Require GHC.Tuple.
 Require Nat.
 Require Utils.Containers.Internal.PtrEquality.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -154,12 +152,12 @@ Definition delta : GHC.Num.Int :=
 Definition empty {a} : Set_ a :=
   Tip.
 
-Local Definition Monoid__MergeSet_mempty {inst_a} : (MergeSet inst_a) :=
-  Mk_MergeSet empty.
-
 Local Definition Monoid__Set__mempty {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) :=
   empty.
+
+Local Definition Monoid__MergeSet_mempty {inst_a} : (MergeSet inst_a) :=
+  Mk_MergeSet empty.
 
 Definition foldl {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
   fun f z =>
@@ -622,15 +620,15 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                | orig, x, (Bin sz y l r as t) =>
                    match GHC.Base.compare x y with
                    | Lt =>
-                       let 'l' := go orig x l in
+                       let l' := go orig x l in
                        if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
                        balanceL y l' r
                    | Gt =>
-                       let 'r' := go orig x r in
+                       let r' := go orig x r in
                        if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                        balanceR y l r'
                    | Eq =>
-                       if (Utils.Containers.Internal.PtrEquality.ptrEq orig y) : bool then t else
+                       if Utils.Containers.Internal.PtrEquality.ptrEq orig y : bool then t else
                        Bin sz (orig) l r
                    end
                end in
@@ -652,11 +650,11 @@ Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                | orig, x, (Bin _ y l r as t) =>
                    match GHC.Base.compare x y with
                    | Lt =>
-                       let 'l' := go orig x l in
+                       let l' := go orig x l in
                        if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
                        balanceL y l' r
                    | Gt =>
-                       let 'r' := go orig x r in
+                       let r' := go orig x r in
                        if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                        balanceR y l r'
                    | Eq => t
@@ -711,8 +709,7 @@ Definition fromDistinctAscList {a} : list a -> Set_ a :=
                                           | _, t, nil => t
                                           | s, l, cons x xs =>
                                               let 'pair r ys := create s xs in
-                                              let 't' := link x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
@@ -744,8 +741,7 @@ Definition fromDistinctDescList {a} : list a -> Set_ a :=
                                           | _, t, nil => t
                                           | s, r, cons x xs =>
                                               let 'pair l ys := create s xs in
-                                              let 't' := link x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
@@ -826,12 +822,10 @@ Definition splitMember {a} `{GHC.Base.Ord a}
                match GHC.Base.compare x y with
                | Lt =>
                    let 'pair (pair lt found) gt := splitMember x l in
-                   let 'gt' := link y gt r in
-                   pair (pair lt found) gt'
+                   let gt' := link y gt r in pair (pair lt found) gt'
                | Gt =>
                    let 'pair (pair lt found) gt := splitMember x r in
-                   let 'lt' := link y l lt in
-                   pair (pair lt' found) gt
+                   let lt' := link y l lt in pair (pair lt' found) gt
                | Eq => pair (pair l true) r
                end
            end.
@@ -891,8 +885,8 @@ Definition union {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
            | Tip, t2 => t2
            | (Bin _ x l1 r1 as t1), t2 =>
                let 'pair l2 r2 := splitS x t2 in
-               let 'r1r2 := union r1 r2 in
-               let 'l1l2 := union l1 l2 in
+               let r1r2 := union r1 r2 in
+               let l1l2 := union l1 l2 in
                if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                        (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
                then t1 else
@@ -906,17 +900,17 @@ Local Definition Monoid__Set__mconcat {inst_a} `{GHC.Base.Ord inst_a}
    : list (Set_ inst_a) -> (Set_ inst_a) :=
   unions.
 
-Local Definition Semigroup__Set__op_zlzg__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Semigroup__Set__op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
   union.
 
 Program Instance Semigroup__Set_ {a} `{GHC.Base.Ord a}
-   : Data.Semigroup.Semigroup (Set_ a) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Set__op_zlzg__ |}.
+   : GHC.Base.Semigroup (Set_ a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Set__op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Set__mappend {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__Set_ {a} `{GHC.Base.Ord a}
    : GHC.Base.Monoid (Set_ a) :=
@@ -970,11 +964,11 @@ Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
              | x, (Bin _ y l r as t) =>
                  match GHC.Base.compare x y with
                  | Lt =>
-                     let 'l' := go x l in
+                     let l' := go x l in
                      if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
                      balanceR y l' r
                  | Gt =>
-                     let 'r' := go x r in
+                     let r' := go x r in
                      if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                      balanceL y l r'
                  | Eq => glue l r
@@ -1006,8 +1000,8 @@ Definition filter {a} : (a -> bool) -> Set_ a -> Set_ a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, (Bin _ x l r as t) =>
-               let 'r' := filter p r in
-               let 'l' := filter p l in
+               let r' := filter p r in
+               let l' := filter p l in
                if p x : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l l')
                             (Utils.Containers.Internal.PtrEquality.ptrEq r r') : bool
@@ -1023,8 +1017,8 @@ Definition intersection {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
            | _, Tip => Tip
            | (Bin _ x l1 r1 as t1), t2 =>
                let 'pair (pair l2 b) r2 := splitMember x t2 in
-               let 'l1l2 := intersection l1 l2 in
-               let 'r1r2 := intersection r1 r2 in
+               let l1l2 := intersection l1 l2 in
+               let r1r2 := intersection r1 r2 in
                if b : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
@@ -1052,20 +1046,20 @@ Definition partition {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
                  end in
     id (go p0 t0).
 
-Local Definition Semigroup__MergeSet_op_zlzg__ {inst_a}
+Local Definition Semigroup__MergeSet_op_zlzlzgzg__ {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_MergeSet xs, Mk_MergeSet ys => Mk_MergeSet (merge xs ys)
     end.
 
-Program Instance Semigroup__MergeSet {a}
-   : Data.Semigroup.Semigroup (MergeSet a) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__MergeSet_op_zlzg__ |}.
+Program Instance Semigroup__MergeSet {a} : GHC.Base.Semigroup (MergeSet a) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzlzgzg____ := Semigroup__MergeSet_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__MergeSet_mappend {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Local Definition Monoid__MergeSet_mconcat {inst_a}
    : list (MergeSet inst_a) -> (MergeSet inst_a) :=
@@ -1158,8 +1152,8 @@ Definition difference {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
            | t1, Tip => t1
            | t1, Bin _ x l2 r2 =>
                let 'pair l1 r1 := split x t1 in
-               let 'r1r2 := difference r1 r2 in
-               let 'l1l2 := difference l1 l2 in
+               let r1r2 := difference r1 r2 in
+               let l1l2 := difference l1 l2 in
                if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool then t1 else
                merge l1l2 r1r2
            end.
@@ -1252,13 +1246,13 @@ End Notations.
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldl
      Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
-     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq
-     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.foldr
-     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.DeferredFix.deferredFix2
-     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.Err.patternFailure GHC.Num.Int
-     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Tuple.pair2 Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq GHC.Base.Eq_
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const
+     GHC.Base.flip GHC.Base.foldr GHC.Base.map GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
+     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
+     Utils.Containers.Internal.PtrEquality.ptrEq
 *)

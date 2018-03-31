@@ -26,7 +26,6 @@ Require Data.Functor.
 Require Data.Functor.Identity.
 Require Data.IntSet.Internal.
 Require Data.Maybe.
-Require Data.Semigroup.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.DeferredFix.
@@ -35,7 +34,6 @@ Require GHC.Num.
 Require Utils.Containers.Internal.BitUtil.
 Import Data.Bits.Notations.
 Import Data.Functor.Notations.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -146,6 +144,22 @@ Require Import Coq.Numbers.BinNums.
 
 (* Converted value declarations: *)
 
+(* Skipping instance Functor__WhenMatched *)
+
+(* Skipping instance Category__WhenMatched *)
+
+(* Skipping instance Applicative__WhenMatched *)
+
+(* Skipping instance Monad__WhenMatched *)
+
+(* Skipping instance Functor__WhenMissing *)
+
+(* Skipping instance Category__WhenMissing *)
+
+(* Skipping instance Applicative__WhenMissing *)
+
+(* Skipping instance Monad__WhenMissing *)
+
 Local Definition Foldable__IntMap_elem
    : forall {a}, forall `{GHC.Base.Eq_ a}, a -> IntMap a -> bool :=
   fun {a} `{GHC.Base.Eq_ a} =>
@@ -185,22 +199,6 @@ Local Definition Foldable__IntMap_foldMap
 
 (* Translating `instance Data__IntMap' failed: OOPS! Cannot find information for
    class Qualified "Data.Data" "Data" unsupported *)
-
-(* Skipping instance Functor__WhenMissing *)
-
-(* Skipping instance Category__WhenMissing *)
-
-(* Skipping instance Applicative__WhenMissing *)
-
-(* Skipping instance Monad__WhenMissing *)
-
-(* Skipping instance Functor__WhenMatched *)
-
-(* Skipping instance Category__WhenMatched *)
-
-(* Skipping instance Applicative__WhenMatched *)
-
-(* Skipping instance Monad__WhenMatched *)
 
 (* Translating `instance IsList__IntMap' failed: OOPS! Cannot find information
    for class Qualified "GHC.Exts" "IsList" unsupported *)
@@ -1453,11 +1451,9 @@ Definition split {a}
         if m GHC.Base.< #0 : bool
         then if k GHC.Base.>= #0 : bool
              then let 'pair lt gt := go k l in
-                  let 'lt' := union r lt in
-                  pair lt' gt
+                  let lt' := union r lt in pair lt' gt
              else let 'pair lt gt := go k r in
-                  let 'gt' := union gt l in
-                  pair lt gt' else
+                  let gt' := union gt l in pair lt gt' else
         j_20__
     | _ => j_20__
     end.
@@ -1501,16 +1497,16 @@ Local Definition Monoid__IntMap_mconcat {inst_a}
    : list (IntMap inst_a) -> (IntMap inst_a) :=
   unions.
 
-Local Definition Semigroup__IntMap_op_zlzg__ {inst_a}
+Local Definition Semigroup__IntMap_op_zlzlzgzg__ {inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
   union.
 
-Program Instance Semigroup__IntMap {a} : Data.Semigroup.Semigroup (IntMap a) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__IntMap_op_zlzg__ |}.
+Program Instance Semigroup__IntMap {a} : GHC.Base.Semigroup (IntMap a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntMap_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__IntMap_mappend {inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__IntMap {a} : GHC.Base.Monoid (IntMap a) :=
   fun _ k =>
@@ -1944,15 +1940,15 @@ End Notations.
      Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
      Data.IntSet.Internal.member Data.IntSet.Internal.singleton
      Data.IntSet.Internal.suffixBitMask Data.IntSet.Internal.zero Data.Maybe.maybe
-     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ Data.Traversable.Traversable
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftA2 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.Base.pure GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4
-     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.String
+     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.liftA2
+     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Base.pure
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix4 GHC.Err.error
+     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL
      Utils.Containers.Internal.BitUtil.shiftRL

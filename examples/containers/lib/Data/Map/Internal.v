@@ -26,7 +26,6 @@ Require Data.Foldable.
 Require Data.Functor.
 Require Data.Functor.Identity.
 Require Data.Maybe.
-Require Data.Semigroup.
 Require Data.Set.Internal.
 Require Data.Traversable.
 Require GHC.Base.
@@ -37,7 +36,6 @@ Require GHC.Prim.
 Require Nat.
 Require Utils.Containers.Internal.PtrEquality.
 Import Data.Functor.Notations.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -151,8 +149,11 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
 
 (* Converted value declarations: *)
 
-(* Translating `instance Data__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Category__WhenMatched *)
+
+(* Skipping instance Applicative__WhenMatched *)
+
+(* Skipping instance Monad__WhenMatched *)
 
 (* Skipping instance Category__WhenMissing *)
 
@@ -160,11 +161,8 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
 
 (* Skipping instance Monad__WhenMissing *)
 
-(* Skipping instance Category__WhenMatched *)
-
-(* Skipping instance Applicative__WhenMatched *)
-
-(* Skipping instance Monad__WhenMatched *)
+(* Translating `instance Data__Map' failed: OOPS! Cannot find information for
+   class Qualified "Data.Data" "Data" unsupported *)
 
 (* Translating `instance IsList__Map' failed: OOPS! Cannot find information for
    class Qualified "GHC.Exts" "IsList" unsupported *)
@@ -1031,17 +1029,16 @@ Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
                | orig, kx, x, (Bin sz ky y l r as t) =>
                    match GHC.Base.compare kx ky with
                    | Lt =>
-                       let 'l' := go orig kx x l in
+                       let l' := go orig kx x l in
                        if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
                        balanceL ky y l' r
                    | Gt =>
-                       let 'r' := go orig kx x r in
+                       let r' := go orig kx x r in
                        if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                        balanceR ky y l r'
                    | Eq =>
-                       if andb (Utils.Containers.Internal.PtrEquality.ptrEq x y) (GHC.Prim.seq orig
-                                                                                               (Utils.Containers.Internal.PtrEquality.ptrEq
-                                                                                                orig ky)) : bool
+                       if andb (Utils.Containers.Internal.PtrEquality.ptrEq x y)
+                               (Utils.Containers.Internal.PtrEquality.ptrEq orig ky) : bool
                        then t else
                        Bin sz (orig) x l r
                    end
@@ -1060,12 +1057,10 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare kx ky with
                    | Lt =>
                        let 'pair found l' := go f kx x l in
-                       let 't' := balanceL ky y l' r in
-                       (pair found t')
+                       let t' := balanceL ky y l' r in (pair found t')
                    | Gt =>
                        let 'pair found r' := go f kx x r in
-                       let 't' := balanceR ky y l r' in
-                       (pair found t')
+                       let t' := balanceR ky y l r' in (pair found t')
                    | Eq => (pair (Some y) (Bin sy kx (f kx x y) l r))
                    end
                end in
@@ -1087,11 +1082,11 @@ Definition insertR {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
                | orig, kx, x, (Bin _ ky y l r as t) =>
                    match GHC.Base.compare kx ky with
                    | Lt =>
-                       let 'l' := go orig kx x l in
+                       let l' := go orig kx x l in
                        if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
                        balanceL ky y l' r
                    | Gt =>
-                       let 'r' := go orig kx x r in
+                       let r' := go orig kx x r in
                        if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                        balanceR ky y l r'
                    | Eq => t
@@ -1237,8 +1232,7 @@ Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
                                           | _, t, nil => t
                                           | s, l, cons (pair kx x) xs =>
                                               let 'pair r ys := create s xs in
-                                              let 't' := link kx x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link kx x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
@@ -1319,8 +1313,7 @@ Definition fromDistinctDescList {k} {a} : list (k * a)%type -> Map k a :=
                                           | _, t, nil => t
                                           | s, r, cons (pair kx x) xs =>
                                               let 'pair l ys := create s xs in
-                                              let 't' := link kx x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link kx x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
@@ -1476,12 +1469,10 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare k kx with
                    | Lt =>
                        let 'Mk_StrictTriple lt z gt := go k l in
-                       let 'gt' := link kx x gt r in
-                       Mk_StrictTriple lt z gt'
+                       let gt' := link kx x gt r in Mk_StrictTriple lt z gt'
                    | Gt =>
                        let 'Mk_StrictTriple lt z gt := go k r in
-                       let 'lt' := link kx x l lt in
-                       Mk_StrictTriple lt' z gt
+                       let lt' := link kx x l lt in Mk_StrictTriple lt' z gt
                    | Eq => Mk_StrictTriple l (Some x) r
                    end
                end in
@@ -1514,12 +1505,10 @@ Definition splitMember {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare k kx with
                    | Lt =>
                        let 'Mk_StrictTriple lt z gt := go k l in
-                       let 'gt' := link kx x gt r in
-                       Mk_StrictTriple lt z gt'
+                       let gt' := link kx x gt r in Mk_StrictTriple lt z gt'
                    | Gt =>
                        let 'Mk_StrictTriple lt z gt := go k r in
-                       let 'lt' := link kx x l lt in
-                       Mk_StrictTriple lt' z gt
+                       let lt' := link kx x l lt in Mk_StrictTriple lt' z gt
                    | Eq => Mk_StrictTriple l true r
                    end
                end in
@@ -1544,8 +1533,8 @@ Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
            | Tip, t2 => t2
            | (Bin _ k1 x1 l1 r1 as t1), t2 =>
                let 'pair l2 r2 := split k1 t2 in
-               let 'r1r2 := union r1 r2 in
-               let 'l1l2 := union l1 l2 in
+               let r1r2 := union r1 r2 in
+               let l1l2 := union l1 l2 in
                if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                        (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
                then t1 else
@@ -1559,18 +1548,18 @@ Local Definition Monoid__Map_mconcat {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : list (Map inst_k inst_v) -> (Map inst_k inst_v) :=
   unions.
 
-Local Definition Semigroup__Map_op_zlzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
+Local Definition Semigroup__Map_op_zlzlzgzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
    inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
   union.
 
 Program Instance Semigroup__Map {k} {v} `{(GHC.Base.Ord k)}
-   : Data.Semigroup.Semigroup (Map k v) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Map_op_zlzg__ |}.
+   : GHC.Base.Semigroup (Map k v) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Map_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Map_mappend {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__Map {k} {v} `{(GHC.Base.Ord k)}
    : GHC.Base.Monoid (Map k v) :=
@@ -1589,8 +1578,8 @@ Definition unionWith {k} {a} `{GHC.Base.Ord k}
            | _f, Tip, t2 => t2
            | f, Bin _ k1 x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
-               let 'r1r2 := unionWith f r1 r2 in
-               let 'l1l2 := unionWith f l1 l2 in
+               let r1r2 := unionWith f r1 r2 in
+               let l1l2 := unionWith f l1 l2 in
                match mb with
                | None => link k1 x1 l1l2 r1r2
                | Some x2 => link k1 (f x1 x2) l1l2 r1r2
@@ -1611,8 +1600,8 @@ Definition unionWithKey {k} {a} `{GHC.Base.Ord k}
            | _f, Tip, t2 => t2
            | f, Bin _ k1 x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
-               let 'r1r2 := unionWithKey f r1 r2 in
-               let 'l1l2 := unionWithKey f l1 l2 in
+               let r1r2 := unionWithKey f r1 r2 in
+               let l1l2 := unionWithKey f l1 l2 in
                match mb with
                | None => link k1 x1 l1l2 r1r2
                | Some x2 => link k1 (f k1 x1 x2) l1l2 r1r2
@@ -1666,11 +1655,11 @@ Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
              | k, (Bin _ kx x l r as t) =>
                  match GHC.Base.compare k kx with
                  | Lt =>
-                     let 'l' := go k l in
+                     let l' := go k l in
                      if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
                      balanceR kx x l' r
                  | Gt =>
-                     let 'r' := go k r in
+                     let r' := go k r in
                      if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                      balanceL kx x l r'
                  | Eq => glue l r
@@ -1697,8 +1686,8 @@ Definition filterWithKey {k} {a} : (k -> a -> bool) -> Map k a -> Map k a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, (Bin _ kx x l r as t) =>
-               let 'pr := filterWithKey p r in
-               let 'pl := filterWithKey p l in
+               let pr := filterWithKey p r in
+               let pl := filterWithKey p l in
                if p kx x : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
                             (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
@@ -1753,8 +1742,8 @@ Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
            | _, Tip => Tip
            | (Bin _ k x l1 r1 as t1), t2 =>
                let 'pair (pair l2 mb) r2 := splitMember k t2 in
-               let 'l1l2 := intersection l1 l2 in
-               let 'r1r2 := intersection r1 r2 in
+               let l1l2 := intersection l1 l2 in
+               let r1r2 := intersection r1 r2 in
                if mb : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
@@ -1771,8 +1760,8 @@ Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
            | _f, _, Tip => Tip
            | f, Bin _ k x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k t2 in
-               let 'l1l2 := intersectionWith f l1 l2 in
-               let 'r1r2 := intersectionWith f r1 r2 in
+               let l1l2 := intersectionWith f l1 l2 in
+               let r1r2 := intersectionWith f r1 r2 in
                match mb with
                | Some x2 => link k (f x1 x2) l1l2 r1r2
                | None => link2 l1l2 r1r2
@@ -1787,8 +1776,8 @@ Definition intersectionWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
            | _f, _, Tip => Tip
            | f, Bin _ k x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k t2 in
-               let 'l1l2 := intersectionWithKey f l1 l2 in
-               let 'r1r2 := intersectionWithKey f r1 r2 in
+               let l1l2 := intersectionWithKey f l1 l2 in
+               let r1r2 := intersectionWithKey f r1 r2 in
                match mb with
                | Some x2 => link k (f k x1 x2) l1l2 r1r2
                | None => link2 l1l2 r1r2
@@ -1858,8 +1847,8 @@ Definition mergeA {f} {k} {a} {c} {b} `{GHC.Base.Applicative f} `{GHC.Base.Ord
                      | Tip, t2 => g2t t2
                      | Bin _ kx x1 l1 r1, t2 =>
                          let 'pair (pair l2 mx2) r2 := splitLookup kx t2 in
-                         let 'r1r2 := go r1 r2 in
-                         let 'l1l2 := go l1 l2 in
+                         let r1r2 := go r1 r2 in
+                         let l1l2 := go l1 l2 in
                          match mx2 with
                          | None =>
                              GHC.Base.liftA3 (fun l' mx' r' => Data.Maybe.maybe link2 (link kx) mx' l' r')
@@ -1945,8 +1934,8 @@ Definition restrictKeys {k} {a} `{GHC.Base.Ord k}
            | _, Data.Set.Internal.Tip => Tip
            | (Bin _ k x l1 r1 as m), s =>
                let 'pair (pair l2 b) r2 := Data.Set.Internal.splitMember k s in
-               let 'l1l2 := restrictKeys l1 l2 in
-               let 'r1r2 := restrictKeys r1 r2 in
+               let l1l2 := restrictKeys l1 l2 in
+               let r1r2 := restrictKeys r1 r2 in
                if b : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
@@ -1985,8 +1974,8 @@ Definition withoutKeys {k} {a} `{GHC.Base.Ord k}
            | m, Data.Set.Internal.Tip => m
            | m, Data.Set.Internal.Bin _ k ls rs =>
                let 'pair (pair lm b) rm := splitMember k m in
-               let 'rm' := withoutKeys rm rs in
-               let 'lm' := withoutKeys lm ls in
+               let rm' := withoutKeys rm rs in
+               let lm' := withoutKeys lm ls in
                if andb (negb b) (andb (Utils.Containers.Internal.PtrEquality.ptrEq lm' lm)
                                       (Utils.Containers.Internal.PtrEquality.ptrEq rm' rm)) : bool
                then m else
@@ -2005,16 +1994,14 @@ Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare k kx with
                    | Lt =>
                        let 'pair found l' := go f k l in
-                       let 't' := balanceR kx x l' r in
-                       (pair found t')
+                       let t' := balanceR kx x l' r in (pair found t')
                    | Gt =>
                        let 'pair found r' := go f k r in
-                       let 't' := balanceL kx x l r' in
-                       (pair found t')
+                       let t' := balanceL kx x l r' in (pair found t')
                    | Eq =>
                        match f kx x with
                        | Some x' => (pair (Some x') (Bin sx kx x' l r))
-                       | None => let 'glued := glue l r in (pair (Some x) glued)
+                       | None => let glued := glue l r in (pair (Some x) glued)
                        end
                    end
                end in
@@ -2077,7 +2064,7 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
                    | Some x =>
                        match strict with
                        | Lazy => AltBigger (singleton k x)
-                       | Strict => GHC.Prim.seq x (AltBigger (singleton k x))
+                       | Strict => AltBigger (singleton k x)
                        end
                    end
                | k, f, Bin sx kx x l r =>
@@ -2101,7 +2088,7 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
                        | Some x' =>
                            match strict with
                            | Lazy => AltAdj (Bin sx kx x' l r)
-                           | Strict => GHC.Prim.seq x' (AltAdj (Bin sx kx x' l r))
+                           | Strict => AltAdj (Bin sx kx x' l r)
                            end
                        | None => AltSmaller (glue l r)
                        end
@@ -2233,8 +2220,8 @@ Definition difference {k} {a} {b} `{GHC.Base.Ord k}
            | t1, Tip => t1
            | t1, Bin _ k _ l2 r2 =>
                let 'pair l1 r1 := split k t1 in
-               let 'r1r2 := difference r1 r2 in
-               let 'l1l2 := difference l1 l2 in
+               let r1r2 := difference r1 r2 in
+               let l1l2 := difference l1 l2 in
                if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool then t1 else
                link2 l1l2 r1r2
            end.
@@ -2492,16 +2479,16 @@ End Notations.
      Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
      Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
      Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
-     Data.Maybe.maybe Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__
-     Data.Set.Internal.Bin Data.Set.Internal.Set_ Data.Set.Internal.Tip
-     Data.Set.Internal.splitMember Data.Traversable.Traversable GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.pure
+     Data.Maybe.maybe Data.Set.Internal.Bin Data.Set.Internal.Set_
+     Data.Set.Internal.Tip Data.Set.Internal.splitMember Data.Traversable.Traversable
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const
+     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend
+     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Base.pure
      GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
      GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
-     Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce Nat.add
+     Utils.Containers.Internal.PtrEquality.ptrEq
 *)

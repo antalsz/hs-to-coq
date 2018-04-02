@@ -89,7 +89,7 @@ Definition valid : Data.IntSet.Internal.IntSet -> bool :=
     andb (nilNeverChildOfBin t) (andb (maskPowerOfTwo t) (andb (commonPrefix t)
                                                                (andb (maskRespected t) (tipsValid t)))).
 
-(* Unbound variables:
+(* External variables:
      andb bool false negb true Coq.Numbers.BinNums.N Data.Bits.op_zizazi__
      Data.Bits.xor Data.Foldable.all Data.IntSet.Internal.Bin
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.Nil Data.IntSet.Internal.Prefix

@@ -81,7 +81,7 @@ library
   exposed-modules: Zeven
 
   build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
+                       base ==4.11.*
   build-depends:       deepseq
   build-depends:       random
   hs-source-dirs:      .

@@ -1240,7 +1240,7 @@ Notation "'_Data.Set.Internal.\\_'" := (op_zrzr__).
 Infix "Data.Set.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
      id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right

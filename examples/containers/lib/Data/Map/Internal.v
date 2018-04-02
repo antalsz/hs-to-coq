@@ -103,6 +103,9 @@ Arguments AltAdj {_} {_} _.
 
 Arguments AltSame {_} {_}.
 
+Instance Default__AreWeStrict : GHC.Err.Default AreWeStrict :=
+  GHC.Err.Build_Default _ Strict.
+
 Definition matchedKey {f} {k} {x} {y} {z} (arg_0__ : WhenMatched f k x y z) :=
   let 'Mk_WhenMatched matchedKey := arg_0__ in
   matchedKey.
@@ -2472,7 +2475,7 @@ Notation "'_Data.Map.Internal.\\_'" := (op_zrzr__).
 Infix "Data.Map.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
      false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
      prod true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
@@ -2487,8 +2490,8 @@ End Notations.
      GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
      GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
      GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Base.pure
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce Nat.add
-     Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.coerce Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

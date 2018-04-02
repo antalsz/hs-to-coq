@@ -1928,7 +1928,7 @@ Notation "'_Data.IntMap.Internal.\\_'" := (op_zrzr__).
 Infix "Data.IntMap.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt IntMap_op_zlzd__ Lt N None Some andb bool comparison cons false id list
      negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.ldiff
      Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones Coq.Numbers.BinNums.N

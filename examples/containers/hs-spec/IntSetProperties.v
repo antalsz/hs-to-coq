@@ -386,7 +386,7 @@ Definition prop_isProperSubsetOf
     Data.IntSet.Internal.isProperSubsetOf a b GHC.Base.==
     Data.Set.Internal.isProperSubsetOf (toSet a) (toSet b).
 
-(* Unbound variables:
+(* External variables:
      Prop andb bool cons enumFromTo list negb nil pair true Coq.Init.Datatypes.length
      Coq.Lists.List.flat_map Coq.NArith.BinNat.N.of_nat Coq.NArith.BinNat.N.pow
      Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Foldable.all Data.Foldable.and

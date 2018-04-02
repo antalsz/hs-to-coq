@@ -24,6 +24,7 @@ Require Data.Foldable.
 Require Data.Maybe.
 Require Data.Tuple.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Wf.
 Require Utils.Containers.Internal.BitUtil.
@@ -56,6 +57,11 @@ Inductive IntSet : Type
 Inductive Stack : Type
   := Push : Prefix -> IntSet -> Stack -> Stack
   |  Nada : Stack.
+
+Instance Default__IntSet : GHC.Err.Default IntSet :=
+  GHC.Err.Build_Default _ Nil.
+
+Instance Default__Stack : GHC.Err.Default Stack := GHC.Err.Build_Default _ Nada.
 (* Midamble *)
 
 (** Additional definitions for termination proof *)
@@ -1089,7 +1095,7 @@ Notation "'_Data.IntSet.Internal.\\_'" := (op_zrzr__).
 Infix "Data.IntSet.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt N None Some andb bool comparison cons
      false id list negb nil op_zm__ op_zp__ op_zt__ op_zv__ option orb pair size_nat
      true Coq.Init.Peano.lt Coq.NArith.BinNat.N.ldiff Coq.NArith.BinNat.N.log2
@@ -1099,9 +1105,9 @@ End Notations.
      Data.Foldable.foldl Data.Maybe.maybe Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid
      GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.flip GHC.Base.map
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
-     Utils.Containers.Internal.BitUtil.bitcount
+     GHC.Base.op_zl__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Err.Build_Default
+     GHC.Err.Default GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

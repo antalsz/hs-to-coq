@@ -252,6 +252,26 @@ generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
 
 --------------------------------------------------------------------------------
 
+generateDefaultInstance :: ConversionMonad m => IndBody -> m [Sentence]
+generateDefaultInstance (IndBody tyName _ _ cons)
+    | Just (con, _, _) <- find suitableCon cons
+        -- Instance Default_TupleSort : GHC.Err.Default TupleSort :=
+        --  GHC.Err.Build_Default _ BoxedTuple.
+    = pure $ pure $ InstanceSentence $
+        InstanceTerm inst_name []
+                     (App1 "GHC.Err.Default" (Qualid tyName))
+                     (App2 "GHC.Err.Build_Default" Underscore (Qualid con))
+                     Nothing
+  where
+    inst_name = qualidMapBase ("Default__" <>) tyName
+
+    suitableCon (_, _bndrs, Just ty) = ty == Qualid tyName
+    suitableCon _ = False
+generateDefaultInstance _ = pure []
+
+generateGroupDefaultInstances :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupDefaultInstances = foldTraverse generateDefaultInstance . dgInductives
+
 generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
@@ -328,9 +348,11 @@ groupTyClDecls decls = do
 
 convertModuleTyClDecls :: ConversionMonad m
                        => [(Maybe ModuleName, TyClDecl GhcRn)] -> m [Sentence]
-convertModuleTyClDecls =   forkM3 (either convUnsupported pure
-                                    . foldTraverse convertDeclarationGroup)
-                                  (foldTraverse generateGroupArgumentSpecifiers)
-                                  (foldTraverse generateGroupRecordAccessors)
+convertModuleTyClDecls =  fork [ either convUnsupported pure
+                                 . foldTraverse convertDeclarationGroup
+                               , foldTraverse generateGroupArgumentSpecifiers
+                               , foldTraverse generateGroupDefaultInstances
+                               , foldTraverse generateGroupRecordAccessors
+                               ]
                        <=< groupTyClDecls
-  where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
+  where fork fns x = mconcat <$> sequence (map ($x) fns)

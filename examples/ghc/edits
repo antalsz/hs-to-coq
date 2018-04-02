@@ -77,6 +77,7 @@ rename value Name.BuiltInSyntax = Name.Mk_BuiltInSyntax
 rename value FieldLabel.FieldLabel = FieldLabel.Mk_FieldLabel
 rename value UniqDFM.TaggedVal = UniqDFM.Mk_TaggedVal
 rename value UniqDFM.UniqDFM   = UniqDFM.Mk_UniqDFM
+rename value EnumSet.EnumSet   = EnumSet.Mk_EnumSet
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here

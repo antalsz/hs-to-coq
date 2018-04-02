@@ -43,6 +43,7 @@ MODULES = \
   Unique \
   UniqSupply \
   UniqFM \
+  EnumSet \
   CmmType \
   BooleanFormula \
   UniqSet \

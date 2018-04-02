@@ -302,7 +302,7 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
 (* Translating `instance Bits__Identity' failed: OOPS! Cannot find information
    for class Qualified "Data.Bits" "Bits" unsupported *)
 
-(* Unbound variables:
+(* External variables:
      bool comparison cons false list nil Coq.Program.Basics.compose
      Data.Foldable.Foldable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare

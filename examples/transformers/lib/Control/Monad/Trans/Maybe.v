@@ -493,7 +493,7 @@ Definition maybeToExceptT {m} {e} {a} `{(GHC.Base.Functor m)}
                                                               (Data.Either.Left e) Data.Either.Right) m)
     end.
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Lt Monad_tmp None Ord1 Some bool compare1 comparison eq1 false
      liftCompare liftEq list negb option pair true Control.Monad.Signatures.CallCC
      Control.Monad.Signatures.Listen Control.Monad.Signatures.Pass

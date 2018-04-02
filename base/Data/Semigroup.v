@@ -2032,7 +2032,7 @@ Definition diff {m} `{GHC.Base.Semigroup m}
    : m -> Data.Semigroup.Internal.Endo m :=
   Data.Semigroup.Internal.Mk_Endo GHC.Base.∘ _GHC.Base.<<>>_.
 
-(* Unbound variables:
+(* External variables:
      None Some bool comparison false list negb option true Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Functor.op_zlzdzg__ Data.Maybe.maybe
      Data.Semigroup.Internal.Endo Data.Semigroup.Internal.Mk_Any

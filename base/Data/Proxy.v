@@ -184,7 +184,7 @@ Program Instance Monad__Proxy : GHC.Base.Monad Proxy :=
 Definition asProxyTypeOf {a} {proxy} : a -> proxy a -> a :=
   GHC.Base.const.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt Type bool comparison list negb true GHC.Base.Applicative GHC.Base.Eq_
      GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup
      GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_zeze__

@@ -329,7 +329,7 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
          GHC.Base.max__ := Ord__First_max ;
          GHC.Base.min__ := Ord__First_min |}.
 
-(* Unbound variables:
+(* External variables:
      None bool comparison list option GHC.Base.Applicative GHC.Base.Eq_
      GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup
      GHC.Base.compare GHC.Base.fmap GHC.Base.foldr GHC.Base.liftA2 GHC.Base.max

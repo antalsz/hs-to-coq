@@ -29,6 +29,6 @@ Definition lift `{g : MonadTrans t}
   g _ (lift__ t).
 (* No value declarations to convert. *)
 
-(* Unbound variables:
+(* External variables:
      GHC.Base.Monad
 *)

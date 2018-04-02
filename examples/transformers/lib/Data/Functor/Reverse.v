@@ -225,7 +225,7 @@ Program Instance Monad__Reverse {m} `{(GHC.Base.Monad m)}
 
 (* Skipping instance Traversable__Reverse *)
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq negb
      GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord
      GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zeze__

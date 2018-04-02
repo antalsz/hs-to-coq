@@ -56,6 +56,6 @@ Notation "'_Data.Functor.<&>_'" := (op_zlzazg__).
 Infix "Data.Functor.<&>" := (_<&>_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      tt unit GHC.Base.Functor GHC.Base.flip GHC.Base.fmap GHC.Base.op_zlzd__
 *)

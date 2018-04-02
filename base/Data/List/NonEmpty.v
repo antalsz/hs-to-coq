@@ -231,7 +231,7 @@ Notation "'_Data.List.NonEmpty.<|_'" := (op_zlzb__).
 Infix "Data.List.NonEmpty.<|" := (_<|_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      None Some andb bool cons false list negb nil op_zt__ option pair sortBy toList
      true Data.Foldable.foldr Data.Foldable.length Data.Functor.op_zlzdzg__
      Data.OldList.isPrefixOf Data.OldList.nubBy Data.OldList.partition

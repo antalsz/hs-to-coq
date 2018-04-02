@@ -33,6 +33,6 @@ Definition uncurry {a} {b} {c} : (a -> b -> c) -> ((a * b)%type -> c) :=
 Definition swap {a} {b} : (a * b)%type -> (b * a)%type :=
   fun arg_0__ => let 'pair a b := arg_0__ in pair b a.
 
-(* Unbound variables:
+(* External variables:
      op_zt__ pair
 *)

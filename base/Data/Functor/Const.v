@@ -371,7 +371,7 @@ Instance Ord__Const {a} {b} `{GHC.Base.Ord a} : GHC.Base.Ord (Const a b) :=
 (* Translating `instance Bits__Const' failed: OOPS! Cannot find information for
    class Qualified "Data.Bits" "Bits" unsupported *)
 
-(* Unbound variables:
+(* External variables:
      bool comparison false list true Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Semigroup.Internal.Mk_Any
      Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo

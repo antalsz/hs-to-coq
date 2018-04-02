@@ -415,7 +415,7 @@ Definition unLift {f} {a} `{(GHC.Base.Applicative f)} : Lift f a -> f a :=
     | Other e => e
     end.
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Lt Ord1 bool compare1 comparison eq1 false liftCompare liftEq list negb
      true Coq.Program.Basics.compose Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Either.either Data.Foldable.Foldable

@@ -254,7 +254,7 @@ Definition withStateT {s} {m} {a} : (s -> s) -> StateT s m a -> StateT s m a :=
 Definition withState {s} {a} : (s -> s) -> State s a -> State s a :=
   withStateT.
 
-(* Unbound variables:
+(* External variables:
      Identity Mk_Identity op_zt__ pair runIdentity tt unit
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans

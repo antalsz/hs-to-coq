@@ -451,7 +451,7 @@ Definition eq2 {f} {a} {b} `{Eq2 f} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b}
    : f a b -> f a b -> bool :=
   liftEq2 _GHC.Base.==_ _GHC.Base.==_.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt None Some andb bool comparison cons false list option pair true
      Data.Either.Either Data.Either.Left Data.Either.Right Data.Functor.Const.Const
      Data.Functor.Const.Mk_Const Data.Functor.Identity.Identity

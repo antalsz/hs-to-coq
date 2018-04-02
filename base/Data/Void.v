@@ -92,7 +92,7 @@ Definition absurd {a} : Void -> a :=
 Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
   GHC.Base.fmap absurd.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt bool comparison negb true GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Ord
      GHC.Base.Semigroup GHC.Base.fmap GHC.Base.op_zeze__ GHC.Base.op_zsze__
 *)

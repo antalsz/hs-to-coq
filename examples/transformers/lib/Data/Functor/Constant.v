@@ -346,7 +346,7 @@ Program Instance Monoid__Constant {a} {b} `{(GHC.Base.Monoid a)}
 
 (* Skipping instance Eq___Constant *)
 
-(* Unbound variables:
+(* External variables:
      Type bool list true Coq.Program.Basics.compose Data.Foldable.Foldable
      Data.Semigroup.Internal.Mk_Any Data.Semigroup.Internal.Mk_Dual
      Data.Semigroup.Internal.Mk_Endo Data.Semigroup.Internal.Mk_Product

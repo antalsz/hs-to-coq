@@ -69,7 +69,7 @@ Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
 Definition maybeToList {a} : option a -> list a :=
   fun arg_0__ => match arg_0__ with | None => nil | Some x => cons x nil end.
 
-(* Unbound variables:
+(* External variables:
      None Some bool cons false list nil option true Coq.Lists.List.flat_map
      GHC.Base.const GHC.Base.foldr GHC.Base.op_z2218U__
 *)

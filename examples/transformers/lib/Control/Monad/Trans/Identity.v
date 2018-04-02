@@ -430,7 +430,7 @@ Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__IdentityT_traverse |}.
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq list negb
      Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap

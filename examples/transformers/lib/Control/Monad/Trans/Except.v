@@ -550,7 +550,7 @@ Program Instance Traversable__ExceptT {f} {e} `{(Data.Traversable.Traversable
 Definition throwE {m} {e} {a} `{(GHC.Base.Monad m)} : e -> ExceptT e m a :=
   Mk_ExceptT GHC.Base.∘ (GHC.Base.return_ GHC.Base.∘ Data.Either.Left).
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Identity Lt Mk_Identity Ord1 bool compare1 comparison eq1 false
      liftCompare liftEq list negb pair runIdentity true
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen

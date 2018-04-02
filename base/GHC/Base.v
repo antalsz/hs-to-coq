@@ -1341,7 +1341,7 @@ Notation "'_GHC.Base.<**>_'" := (op_zlztztzg__).
 Infix "GHC.Base.<**>" := (_<**>_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
      list negb nil op_zeze__ op_zl__ option pair true tt unit Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow GHC.Tuple.pair_type

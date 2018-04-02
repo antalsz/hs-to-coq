@@ -549,7 +549,7 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f}
    : t a -> (a -> f b) -> f (t b) :=
   GHC.Base.flip traverse.
 
-(* Unbound variables:
+(* External variables:
      None Some cons list nil option pair Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.Foldable Data.Functor.op_zlzdzg__
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const

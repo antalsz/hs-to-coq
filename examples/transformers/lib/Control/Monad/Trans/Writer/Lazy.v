@@ -480,7 +480,7 @@ Definition writer {m} {a} {w} `{(GHC.Base.Monad m)}
 Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
   fun w => writer (pair tt w).
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Identity Lt Mk_Identity Ord1 Type bool compare1 comparison eq1
      liftCompare liftCompare2 liftEq liftEq2 list negb op_zt__ pair runIdentity tt
      unit Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans

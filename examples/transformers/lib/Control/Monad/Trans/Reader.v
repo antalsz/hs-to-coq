@@ -187,7 +187,7 @@ Definition withReader {r'} {r} {a} : (r' -> r) -> Reader r a -> Reader r' a :=
 Definition local {r} {m} {a} : (r -> r) -> ReaderT r m a -> ReaderT r m a :=
   withReaderT.
 
-(* Unbound variables:
+(* External variables:
      Identity Mk_Identity Type runIdentity Control.Monad.Signatures.CallCC
      Control.Monad.Trans.Class.MonadTrans GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__

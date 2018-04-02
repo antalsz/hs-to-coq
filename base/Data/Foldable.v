@@ -1024,7 +1024,7 @@ Definition for__ {t} {f} {a} {b} `{Foldable t} `{GHC.Base.Applicative f}
    : t a -> (a -> f b) -> f unit :=
   GHC.Base.flip traverse_.
 
-(* Unbound variables:
+(* External variables:
      None Some bool cons default_elem false list negb nil option pair true tt unit
      Coq.Program.Basics.compose Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Either.isLeft Data.Maybe.maybe Data.Monoid.Mk_First Data.Monoid.getFirst

@@ -175,7 +175,7 @@ Definition withCont {b} {r} {a}
     withContT ((fun arg_0__ => Mk_Identity GHC.Base.∘ arg_0__) GHC.Base.∘
                (f GHC.Base.∘ (fun arg_1__ => runIdentity GHC.Base.∘ arg_1__))).
 
-(* Unbound variables:
+(* External variables:
      Identity Mk_Identity Type runIdentity Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__

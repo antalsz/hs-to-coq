@@ -86,6 +86,6 @@ Notation "'_Control.Category.<<<_'" := (op_zlzlzl__).
 Infix "Control.Category.<<<" := (_<<<_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Type GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
 *)

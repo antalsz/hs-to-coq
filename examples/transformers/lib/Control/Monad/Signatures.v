@@ -24,6 +24,6 @@ Definition CallCC m a b :=
   (((a -> m b) -> m a) -> m a)%type.
 (* No value declarations to convert. *)
 
-(* Unbound variables:
+(* External variables:
      op_zt__
 *)

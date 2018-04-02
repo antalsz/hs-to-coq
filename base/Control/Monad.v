@@ -107,7 +107,7 @@ Notation "'_Control.Monad.<$!>_'" := (op_zlzdznzg__).
 Infix "Control.Monad.<$!>" := (_<$!>_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      bool cons false list nil op_zt__ true tt unit Data.Foldable.Foldable
      Data.Foldable.foldlM Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__
      Data.Traversable.sequenceA Data.Traversable.traverse GHC.Base.Alternative

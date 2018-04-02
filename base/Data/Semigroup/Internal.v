@@ -1070,7 +1070,7 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
     | Gt => x
     end.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt Type andb bool comparison false list orb true
      Coq.Program.Basics.compose GHC.Base.Alternative GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad

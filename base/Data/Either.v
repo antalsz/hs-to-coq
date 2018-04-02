@@ -259,7 +259,7 @@ Definition rights {a} {b} : list (Either a b) -> list b :=
       end in
     Coq.Lists.List.flat_map cont_0__ x.
 
-(* Unbound variables:
+(* External variables:
      Gt Lt bool comparison cons false list negb nil op_zt__ pair true
      Coq.Lists.List.flat_map GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const

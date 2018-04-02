@@ -321,7 +321,7 @@ Notation "'_Control.Arrow.<<^_'" := (op_zlzlzc__).
 Infix "Control.Arrow.<<^" := (_<<^_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Type op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either
      GHC.Base.Functor GHC.Base.const GHC.Prim.arrow

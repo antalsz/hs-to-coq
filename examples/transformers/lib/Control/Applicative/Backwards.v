@@ -375,7 +375,7 @@ Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Backwards_traverse |}.
 
-(* Unbound variables:
+(* External variables:
      Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq list negb
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
      Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length Data.Foldable.null

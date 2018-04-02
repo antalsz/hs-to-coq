@@ -225,7 +225,7 @@ Program Instance Monad__WrappedMonad {m} `{GHC.Base.Monad m}
 Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
   fun v => (Some Data.Functor.<$> v) GHC.Base.<|> GHC.Base.pure None.
 
-(* Unbound variables:
+(* External variables:
      None Some Type option Control.Arrow.Arrow Control.Arrow.arr
      Control.Category.op_zgzgzg__ Data.Functor.op_zlzdzg__ GHC.Base.Alternative
      GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.ap GHC.Base.const

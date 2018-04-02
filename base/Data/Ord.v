@@ -176,7 +176,7 @@ Definition comparing {a} {b} `{(GHC.Base.Ord a)}
    : (b -> a) -> b -> b -> comparison :=
   fun p x y => GHC.Base.compare (p x) (p y).
 
-(* Unbound variables:
+(* External variables:
      Gt Lt bool comparison list GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
      GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.mconcat

@@ -356,7 +356,7 @@ Definition writer {m} {a} {w} {r} {s} `{(Monad m)}
                | _, s => return_ (pair (pair a s) w)
                end).
 
-(* Unbound variables:
+(* External variables:
      Applicative Functor Identity Mk_Identity Monad Monad__RWST_tmp Monoid const fmap
      id mappend mempty op_z2218U__ op_zgzgze__ op_zt__ op_ztzg__ pair pure return_
      runIdentity tt unit Control.Monad.Signatures.CallCC

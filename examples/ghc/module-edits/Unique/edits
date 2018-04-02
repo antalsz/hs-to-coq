@@ -5,8 +5,12 @@ skip Unique.showUnique
 
 # outputtable
 skip Unique.pprUnique
+skip Unique.pprUniqueAlways
 
 order Unique.Eq___Unique Unique.hasKey Ord__Unique
+
+# Avoid use of the FiniteBits type class
+redefine Definition Unique.uNIQUE_BITS : GHC.Num.Int := GHC.Num.fromInteger 56.
 
 # We need to store Ns in IntMap
 skip module Coq.ZArith.BinInt.Z

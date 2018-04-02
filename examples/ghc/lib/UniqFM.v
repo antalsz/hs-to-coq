@@ -14,10 +14,8 @@ Require Coq.Program.Wf.
 
 Require Coq.ZArith.BinInt.
 Require Data.Foldable.
-Require Data.Functor.Const.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
-Require Data.Semigroup.Internal.
 Require GHC.Base.
 Require GHC.Num.
 Require GHC.Prim.
@@ -42,10 +40,6 @@ Instance Default__UniqFM {a} : Err.Default (UniqFM a) :=
 Instance Unpeel_UniqFM ele
    : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => let 'UFM y := x in y) UFM.
-
-Local Definition Monoid__UniqFM_mappend {inst_a}
-   : (UniqFM inst_a) -> (UniqFM inst_a) -> (UniqFM inst_a) :=
-  _GHC.Base.<<>>_.
 
 (* Translating `instance Outputable__UniqFM' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
@@ -246,40 +240,6 @@ Definition listToUFM {key} {elt} `{Unique.Uniquable key}
 Local Definition Monoid__UniqFM_mempty {inst_a} : (UniqFM inst_a) :=
   emptyUFM.
 
-Local Definition Monoid__UniqFM_mconcat {inst_a}
-   : list (UniqFM inst_a) -> (UniqFM inst_a) :=
-  GHC.Base.foldr Monoid__UniqFM_mappend Monoid__UniqFM_mempty.
-
-Program Instance Monoid__UniqFM {a} : GHC.Base.Monoid (UniqFM a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__UniqFM_mappend ;
-         GHC.Base.mconcat__ := Monoid__UniqFM_mconcat ;
-         GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
-
-Definition equalKeysUFM {a} {b} : UniqFM a -> UniqFM b -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | UFM m1, UFM m2 =>
-        Data.Semigroup.Internal.getAll (Data.Functor.Const.getConst
-                                        (Data.IntMap.Internal.mergeA (Data.IntMap.Internal.traverseMissing (fun arg_2__
-                                                                                                            arg_3__ =>
-                                                                                                              Data.Functor.Const.Mk_Const
-                                                                                                              (Data.Semigroup.Internal.Mk_All
-                                                                                                               false)))
-                                                                     (Data.IntMap.Internal.traverseMissing (fun arg_6__
-                                                                                                            arg_7__ =>
-                                                                                                              Data.Functor.Const.Mk_Const
-                                                                                                              (Data.Semigroup.Internal.Mk_All
-                                                                                                               false)))
-                                                                     (Data.IntMap.Internal.zipWithAMatched (fun arg_10__
-                                                                                                            arg_11__
-                                                                                                            arg_12__ =>
-                                                                                                              Data.Functor.Const.Mk_Const
-                                                                                                              (Data.Semigroup.Internal.Mk_All
-                                                                                                               true)))
-                                                                     m1 m2))
-    end.
-
 Definition filterUFM {elt} : (elt -> bool) -> UniqFM elt -> UniqFM elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -443,6 +403,20 @@ Local Definition Semigroup__UniqFM_op_zlzlzgzg__ {inst_a}
 Program Instance Semigroup__UniqFM {a} : GHC.Base.Semigroup (UniqFM a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqFM_op_zlzlzgzg__ |}.
 
+Local Definition Monoid__UniqFM_mappend {inst_a}
+   : (UniqFM inst_a) -> (UniqFM inst_a) -> (UniqFM inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__UniqFM_mconcat {inst_a}
+   : list (UniqFM inst_a) -> (UniqFM inst_a) :=
+  GHC.Base.foldr Monoid__UniqFM_mappend Monoid__UniqFM_mempty.
+
+Program Instance Monoid__UniqFM {a} : GHC.Base.Monoid (UniqFM a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__UniqFM_mappend ;
+         GHC.Base.mconcat__ := Monoid__UniqFM_mconcat ;
+         GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
+
 Definition plusUFM_C {elt}
    : (elt -> elt -> elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -483,10 +457,9 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
   fun k v =>
     UFM (Data.IntMap.Internal.singleton (Unique.getWordKey (Unique.getUnique k)) v).
 
-(* Unbound variables:
+(* External variables:
      Some andb bool false list op_zt__ option orb pair true unit
      Coq.ZArith.BinInt.Z.of_N Data.Foldable.foldl Data.Foldable.foldl'
-     Data.Functor.Const.Mk_Const Data.Functor.Const.getConst
      Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
      Data.IntMap.Internal.alter Data.IntMap.Internal.delete
      Data.IntMap.Internal.difference Data.IntMap.Internal.elems
@@ -498,13 +471,10 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.keys Data.IntMap.Internal.keysSet
      Data.IntMap.Internal.lookup Data.IntMap.Internal.map
      Data.IntMap.Internal.mapWithKey Data.IntMap.Internal.member
-     Data.IntMap.Internal.mergeA Data.IntMap.Internal.mergeWithKey
-     Data.IntMap.Internal.null Data.IntMap.Internal.partition
-     Data.IntMap.Internal.singleton Data.IntMap.Internal.size
-     Data.IntMap.Internal.toList Data.IntMap.Internal.traverseMissing
-     Data.IntMap.Internal.union Data.IntMap.Internal.unionWith
-     Data.IntMap.Internal.zipWithAMatched Data.IntSet.Internal.IntSet
-     Data.Semigroup.Internal.Mk_All Data.Semigroup.Internal.getAll GHC.Base.Eq_
+     Data.IntMap.Internal.mergeWithKey Data.IntMap.Internal.null
+     Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
+     Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.IntMap.Internal.union
+     Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet GHC.Base.Eq_
      GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
      GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.map
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zlzd__

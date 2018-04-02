@@ -119,9 +119,6 @@ Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
              else Gt
     end.
 
-Definition pprUniqueAlways : Unique -> GHC.Base.String :=
-  fun u => id (showUnique u).
-
 Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -132,7 +129,7 @@ Definition dataConRepNameUnique : Unique -> Unique :=
   fun u => stepUnique u #2.
 
 Definition uNIQUE_BITS : GHC.Num.Int :=
-  Data.Bits.finiteBitSize (#0 : GHC.Num.Int) GHC.Num.- #8.
+  #56.
 
 Definition uniqueMask : GHC.Num.Int :=
   (Data.Bits.shiftL #1 uNIQUE_BITS) GHC.Num.- #1.
@@ -232,12 +229,11 @@ Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
     | MkUnique i, delta => mkUnique (GHC.Char.hs_char__ "X") (i GHC.Num.+ delta)
     end.
 
-(* Unbound variables:
-     Eq Gt Lt andb bool comparison id negb op_zt__ pair showUnique BasicTypes.Arity
-     Coq.ZArith.BinInt.Z.to_N Data.Bits.finiteBitSize Data.Bits.op_zizazi__
-     Data.Bits.op_zizbzi__ Data.Bits.shiftL Data.Bits.shiftR FastString.FastString
-     FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.String GHC.Base.op_zeze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr
-     GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__
+(* External variables:
+     Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity
+     Coq.ZArith.BinInt.Z.to_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
+     Data.Bits.shiftL Data.Bits.shiftR FastString.FastString FastString.uniqueOfFS
+     GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.ord
+     GHC.Char.Char GHC.Char.chr GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

@@ -283,7 +283,7 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
           unless (null fvs) $ do
               hPrettyPrint out $
                 line <> "(*" <+> hang 2
-                  ("Unbound variables:" <!> fillSep (map (text . qualidToIdent) fvs))
+                  ("External variables:" <!> fillSep (map (text . qualidToIdent) fvs))
                 <!> "*)" <> line
               hFlush out
 

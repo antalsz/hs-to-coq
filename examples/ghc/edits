@@ -30,11 +30,26 @@ skip module GHC.Integer.Type
 rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 
 # don't try to format the error messages
-rename value Outputable.pprPanic     = Panic.panicStr
-rename value Outputable.ppr          = Panic.noString
-rename value Outputable.<+>          = GHC.Base.mappend
-rename value Outputable.text         = id
-rename value Outputable.warnPprTrace = Panic.warnPprTrace
+rename type Outputable.SDoc           = GHC.Base.String
+rename value Outputable.pprPanic      = Panic.panicStr
+rename value Outputable.ppr           = Panic.noString
+rename value Outputable.<+>           = GHC.Base.mappend
+rename value Outputable.<>            = GHC.Base.mappend
+rename value Outputable.text          = id
+rename value Outputable.empty         = Panic.someSDoc
+rename value Outputable.comma         = Panic.someSDoc
+rename value Outputable.ptext         = Panic.noString
+rename value Outputable.parens        = id
+rename value Outputable.brackets      = id
+rename value Outputable.doubleQuotes  = id
+rename value Outputable.warnPprTrace  = Panic.warnPprTrace
+rename value Outputable.int           = Panic.noString
+rename value Outputable.char          = Panic.noString
+rename value Outputable.ftext         = Panic.noString
+rename value Outputable.fsep          = Panic.noString
+rename value Outputable.vcat          = Panic.noString
+rename value Outputable.vbar          = Panic.someSDoc
+rewrite forall x y, Outputable.punctuate x y = Panic.someSDoc
 
 # Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP

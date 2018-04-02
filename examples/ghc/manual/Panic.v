@@ -22,6 +22,7 @@ Instance default_list {a} : Default (list a) := { default := nil } .
 *)
 
 Parameter noString : forall {a}, a -> String.
+Parameter someSDoc : String.
 
 
 Parameter panicStr : forall {a} `{Default a}, String -> String -> a.

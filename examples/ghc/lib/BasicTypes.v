@@ -1378,37 +1378,37 @@ Definition isEarlyActive : Activation -> bool :=
 Definition isFunLike : RuleMatchInfo -> bool :=
   fun arg_0__ => match arg_0__ with | FunLike => true | _ => false end.
 
-Definition pprInline' : bool -> InlinePragma -> Outputable.SDoc :=
+Definition pprInline' : bool -> InlinePragma -> GHC.Base.String :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | emptyInline, Mk_InlinePragma _ inline mb_arity activation info =>
         let pp_info :=
-          if isFunLike info : bool then Outputable.empty else
+          if isFunLike info : bool then Panic.someSDoc else
           Panic.noString info in
         let pp_sat :=
           match mb_arity with
           | Some ar =>
-              Outputable.parens (id (GHC.Base.hs_string__ "sat-args=") Outputable.<>
-                                 Outputable.int ar)
-          | _ => Outputable.empty
+              id (GHC.Base.mappend (id (GHC.Base.hs_string__ "sat-args=")) (Panic.noString
+                                    ar))
+          | _ => Panic.someSDoc
           end in
         let pp_act :=
           fun arg_5__ arg_6__ =>
             match arg_5__, arg_6__ with
-            | Inline, AlwaysActive => Outputable.empty
-            | NoInline, NeverActive => Outputable.empty
+            | Inline, AlwaysActive => Panic.someSDoc
+            | NoInline, NeverActive => Panic.someSDoc
             | _, act => Panic.noString act
             end in
         let pp_inl :=
-          fun x => if emptyInline : bool then Outputable.empty else Panic.noString x in
-        GHC.Base.mappend (GHC.Base.mappend (pp_inl inline Outputable.<>
-                                            pp_act inline activation) pp_sat) pp_info
+          fun x => if emptyInline : bool then Panic.someSDoc else Panic.noString x in
+        GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (pp_inl inline) (pp_act
+                                                              inline activation)) pp_sat) pp_info
     end.
 
-Definition pprInline : InlinePragma -> Outputable.SDoc :=
+Definition pprInline : InlinePragma -> GHC.Base.String :=
   pprInline' true.
 
-Definition pprInlineDebug : InlinePragma -> Outputable.SDoc :=
+Definition pprInlineDebug : InlinePragma -> GHC.Base.String :=
   pprInline' false.
 
 Definition isGenerated : Origin -> bool :=
@@ -1528,55 +1528,48 @@ Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
     | Int a, Int b => Int (a GHC.Num.+ b)
     end.
 
-Definition pp_ws : list (SrcLoc.Located StringLiteral) -> Outputable.SDoc :=
+Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | cons l nil => Panic.noString (SrcLoc.unLoc l)
     | ws =>
         GHC.Base.mappend (GHC.Base.mappend (id (GHC.Base.hs_string__ "["))
-                                           (Outputable.vcat (Outputable.punctuate Outputable.comma (GHC.Base.map
-                                                                                                    (Panic.noString
-                                                                                                     GHC.Base.∘
-                                                                                                     SrcLoc.unLoc)
-                                                                                                    ws)))) (id
-                          (GHC.Base.hs_string__ "]"))
+                                           (Panic.noString (Panic.someSDoc))) (id (GHC.Base.hs_string__ "]"))
     end.
 
 Definition pprAlternative {a}
-   : (a -> Outputable.SDoc) -> a -> ConTag -> Arity -> Outputable.SDoc :=
+   : (a -> GHC.Base.String) -> a -> ConTag -> Arity -> GHC.Base.String :=
   fun pp x alt arity =>
-    Outputable.fsep (Coq.Init.Datatypes.app (GHC.List.replicate (alt GHC.Num.- #1)
-                                             Outputable.vbar) (Coq.Init.Datatypes.app (cons (pp x) nil)
-                                                                                      (GHC.List.replicate (arity
-                                                                                                           GHC.Num.-
-                                                                                                           alt)
-                                                                                       Outputable.vbar))).
+    Panic.noString (Coq.Init.Datatypes.app (GHC.List.replicate (alt GHC.Num.- #1)
+                                            Panic.someSDoc) (Coq.Init.Datatypes.app (cons (pp x) nil)
+                                                                                    (GHC.List.replicate (arity GHC.Num.-
+                                                                                                         alt)
+                                                                                     Panic.someSDoc))).
 
-Definition pprShortTailCallInfo : TailCallInfo -> Outputable.SDoc :=
+Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | AlwaysTailCalled ar =>
-        Outputable.char (GHC.Char.hs_char__ "T") Outputable.<>
-        Outputable.brackets (Outputable.int ar)
-    | NoTailCallInfo => Outputable.empty
+        GHC.Base.mappend (Panic.noString (GHC.Char.hs_char__ "T")) (id (Panic.noString
+                                                                        ar))
+    | NoTailCallInfo => Panic.someSDoc
     end.
 
-Definition pprWarningTxtForMsg : WarningTxt -> Outputable.SDoc :=
+Definition pprWarningTxtForMsg : WarningTxt -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_WarningTxt _ ws =>
-        Outputable.doubleQuotes (Outputable.vcat (GHC.Base.map (Outputable.ftext
-                                                                GHC.Base.∘
-                                                                (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ws))
+        id (Panic.noString (GHC.Base.map (Panic.noString GHC.Base.∘
+                                          (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ws))
     | DeprecatedTxt _ ds =>
-        GHC.Base.mappend (id (GHC.Base.hs_string__ "Deprecated:"))
-                         (Outputable.doubleQuotes (Outputable.vcat (GHC.Base.map (Outputable.ftext
-                                                                                  GHC.Base.∘
-                                                                                  (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ds)))
+        GHC.Base.mappend (id (GHC.Base.hs_string__ "Deprecated:")) (id (Panic.noString
+                                                                        (GHC.Base.map (Panic.noString GHC.Base.∘
+                                                                                       (sl_fs GHC.Base.∘ SrcLoc.unLoc))
+                                                                         ds)))
     end.
 
 Definition pprWithSourceText
-   : SourceText -> Outputable.SDoc -> Outputable.SDoc :=
+   : SourceText -> GHC.Base.String -> GHC.Base.String :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | NoSourceText, d => d
@@ -1619,10 +1612,10 @@ Definition succeeded : SuccessFlag -> bool :=
 Definition successIf : bool -> SuccessFlag :=
   fun arg_0__ => match arg_0__ with | true => Succeeded | false => Failed end.
 
-Definition sumParens : Outputable.SDoc -> Outputable.SDoc :=
+Definition sumParens : GHC.Base.String -> GHC.Base.String :=
   fun p =>
-    GHC.Base.mappend (GHC.Base.mappend (Outputable.ptext (FastString.sLit
-                                                          (GHC.Base.hs_string__ "(#"))) p) (Outputable.ptext
+    GHC.Base.mappend (GHC.Base.mappend (Panic.noString (FastString.sLit
+                                                        (GHC.Base.hs_string__ "(#"))) p) (Panic.noString
                       (FastString.sLit (GHC.Base.hs_string__ "#)"))).
 
 Definition tailCallInfo : OccInfo -> TailCallInfo :=
@@ -1701,10 +1694,6 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error
      GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.Rational
-     Outputable.SDoc Outputable.brackets Outputable.char Outputable.comma
-     Outputable.doubleQuotes Outputable.empty Outputable.fsep Outputable.ftext
-     Outputable.int Outputable.op_zlzg__ Outputable.parens Outputable.ptext
-     Outputable.punctuate Outputable.vbar Outputable.vcat Panic.noString
-     SrcLoc.Located SrcLoc.unLoc
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.Rational Panic.noString
+     Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
 *)

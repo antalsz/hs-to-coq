@@ -189,14 +189,14 @@ Definition unNDModule (arg_13__ : NDModule) :=
 
 Require Import GHC.Err.
 
-Instance Default_UnitId : Default UnitId := Build_Default _ (PId default).
-Instance Default_ModuleName : Default ModuleName :=
+Instance Default__UnitId : Default UnitId := Build_Default _ (PId default).
+Instance Default__ModuleName : Default ModuleName :=
   Build_Default _ (Mk_ModuleName default).
-Instance Default_Module : Default Module :=
+Instance Default__Module : Default Module :=
   Build_Default _ (Mk_Module default default).
-Instance Default_NDModule : Default NDModule :=
+Instance Default__NDModule : Default NDModule :=
   Build_Default _ (Mk_NDModule default).
-Instance Default_ModLocation : Default ModLocation :=
+Instance Default__ModLocation : Default ModLocation :=
   Build_Default _ (Mk_ModLocation default default default).
 
 
@@ -1250,7 +1250,7 @@ Definition plusModuleEnv_C {a}
         Mk_ModuleEnv (Data.Map.Internal.unionWith f e1 e2)
     end.
 
-Definition pprUnitId : UnitId -> Outputable.SDoc :=
+Definition pprUnitId : UnitId -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | DefiniteUnitId uid => Panic.noString uid
@@ -1477,7 +1477,7 @@ Definition unitModuleSet : Module -> ModuleSet :=
      GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.return_
      GHC.Fingerprint.fingerprintData GHC.Fingerprint.Type.Fingerprint
      GHC.IO.Unsafe.unsafePerformIO GHC.PackageDb.toStringRep GHC.Prim.coerce
-     GHC.Ptr.castPtr GHC.Unicode.isAlphaNum Outputable.SDoc Packages.PackageConfigMap
+     GHC.Ptr.castPtr GHC.Unicode.isAlphaNum Packages.PackageConfigMap
      Packages.getPackageConfigMap Packages.improveUnitId Panic.noString
      Text.ParserCombinators.ReadP.ReadP Text.ParserCombinators.ReadP.between
      Text.ParserCombinators.ReadP.char Text.ParserCombinators.ReadP.munch1

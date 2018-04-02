@@ -136,6 +136,24 @@ Inductive AlgTyConRhs : Type
      (list CoreType.TyVar * CoreType.Type_)%type ->
      Core.CoAxiom Core.Unbranched -> AlgTyConRhs.
 
+Instance Default__TyConFlavour : GHC.Err.Default TyConFlavour :=
+  GHC.Err.Build_Default _ ClassFlavour.
+
+Instance Default__TyConBndrVis : GHC.Err.Default TyConBndrVis :=
+  GHC.Err.Build_Default _ AnonTCB.
+
+Instance Default__PrimElemRep : GHC.Err.Default PrimElemRep :=
+  GHC.Err.Build_Default _ Int8ElemRep.
+
+Instance Default__PrimRep : GHC.Err.Default PrimRep :=
+  GHC.Err.Build_Default _ VoidRep.
+
+Instance Default__FamTyConFlav : GHC.Err.Default FamTyConFlav :=
+  GHC.Err.Build_Default _ OpenSynFamilyTyCon.
+
+Instance Default__AlgTyConRhs : GHC.Err.Default AlgTyConRhs :=
+  GHC.Err.Build_Default _ AbstractTyCon.
+
 Definition data_con (arg_0__ : AlgTyConRhs) :=
   match arg_0__ with
   | AbstractTyCon =>
@@ -1127,12 +1145,13 @@ Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
      FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
      FieldLabel.FieldLabel FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString
      GHC.Base.Eq_ GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zgze__ GHC.Err.error GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
-     GHC.Num.op_zt__ GHC.Prim.op_tagToEnumzh__ GHC.Prim.op_zezezh__ Maybes.orElse
-     Module.Module Name.Name Name.isHoleName Name.mkExternalName Name.nameModule
-     Name.nameOccName Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv
-     NameEnv.emptyNameEnv NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.OccName
-     OccName.isTcOcc OccName.mkTyConRepOcc Panic.noString Panic.panicStr
+     GHC.Base.op_zgze__ GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Prim.op_tagToEnumzh__ GHC.Prim.op_zezezh__ Maybes.orElse Module.Module
+     Name.Name Name.isHoleName Name.mkExternalName Name.nameModule Name.nameOccName
+     Name.nameSrcSpan Name.nameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
+     NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.OccName OccName.isTcOcc
+     OccName.mkTyConRepOcc Panic.noString Panic.panicStr
      PrelNames.constraintKindTyConKey PrelNames.gHC_PRIM PrelNames.gHC_TYPES
      PrelNames.liftedTypeKindTyConKey PrelNames.starKindTyConKey
      PrelNames.tYPETyConKey PrelNames.unicodeStarKindTyConKey TysWiredIn.mkForAllKind

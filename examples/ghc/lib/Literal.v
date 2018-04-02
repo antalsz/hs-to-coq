@@ -26,6 +26,7 @@ Require FastString.
 Require GHC.Base.
 Require GHC.Char.
 Require GHC.Enum.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
 Require Panic.
@@ -52,9 +53,12 @@ Inductive Literal : Type
    : FastString.FastString ->
      (option GHC.Num.Int) -> BasicTypes.FunctionOrData -> Literal
   |  LitInteger : GHC.Num.Integer -> CoreType.Type_ -> Literal.
+
+Instance Default__Literal : GHC.Err.Default Literal :=
+  GHC.Err.Build_Default _ MachNullAddr.
 (* Midamble *)
 
-Instance Default_Literal : GHC.Err.Default Literal :=
+Instance Default__Literal : GHC.Err.Default Literal :=
   GHC.Err.Build_Default _ MachNullAddr.
 
 Parameter absent_lits :  UniqFM.UniqFM Literal.
@@ -440,10 +444,10 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
      GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound
-     GHC.Enum.minBound GHC.Int.Int32 GHC.Int.Int64 GHC.Num.Int GHC.Num.Integer
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.Rational
-     GHC.Real.fromIntegral GHC.Real.toInteger GHC.Show.show GHC.Word.Word32
-     GHC.Word.Word64 Outputable.assertPprPanic Outputable.integer Panic.noString
-     Panic.panic Panic.panicStr Platform.platformWordSize TyCon.tyConName
-     UniqFM.lookupUFM Util.debugIsOn
+     GHC.Enum.minBound GHC.Err.Build_Default GHC.Err.Default GHC.Int.Int32
+     GHC.Int.Int64 GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.fromIntegral GHC.Real.toInteger
+     GHC.Show.show GHC.Word.Word32 GHC.Word.Word64 Outputable.assertPprPanic
+     Outputable.integer Panic.noString Panic.panic Panic.panicStr
+     Platform.platformWordSize TyCon.tyConName UniqFM.lookupUFM Util.debugIsOn
 *)

@@ -132,5 +132,5 @@ Definition exprToType : CoreExpr -> Core.Type_ :=
 Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
   fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg).
 
-Instance Default_Expr {b} : GHC.Err.Default (Expr b).
+Instance Default__Expr {b} : GHC.Err.Default (Expr b).
 Admitted.

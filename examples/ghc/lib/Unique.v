@@ -119,7 +119,7 @@ Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
              else Gt
     end.
 
-Definition pprUniqueAlways : Unique -> Outputable.SDoc :=
+Definition pprUniqueAlways : Unique -> GHC.Base.String :=
   fun u => id (showUnique u).
 
 Definition stepUnique : Unique -> GHC.Num.Int -> Unique :=
@@ -236,8 +236,8 @@ Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
      Eq Gt Lt andb bool comparison id negb op_zt__ pair showUnique BasicTypes.Arity
      Coq.ZArith.BinInt.Z.to_N Data.Bits.finiteBitSize Data.Bits.op_zizazi__
      Data.Bits.op_zizbzi__ Data.Bits.shiftL Data.Bits.shiftR FastString.FastString
-     FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Num.Int
-     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     Outputable.SDoc
+     FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.String GHC.Base.op_zeze__
+     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr
+     GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__
 *)

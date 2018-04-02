@@ -17,6 +17,7 @@ Require Data.Set.Internal.
 Require EnumSet.
 Require GHC.Base.
 Require GHC.Char.
+Require GHC.Err.
 Require GHC.Num.
 Require Module.
 Require SrcLoc.
@@ -512,6 +513,66 @@ Arguments On {_} _.
 
 Arguments Off {_} _.
 
+Instance Default__Way : GHC.Err.Default Way :=
+  GHC.Err.Build_Default _ WayThreaded.
+
+Instance Default__WarningFlag : GHC.Err.Default WarningFlag :=
+  GHC.Err.Build_Default _ Opt_WarnDuplicateExports.
+
+Instance Default__WarnReason : GHC.Err.Default WarnReason :=
+  GHC.Err.Build_Default _ NoReason.
+
+Instance Default__SseVersion : GHC.Err.Default SseVersion :=
+  GHC.Err.Build_Default _ SSE1.
+
+Instance Default__SafeHaskellMode : GHC.Err.Default SafeHaskellMode :=
+  GHC.Err.Build_Default _ Sf_None.
+
+Instance Default__RtsOptsEnabled : GHC.Err.Default RtsOptsEnabled :=
+  GHC.Err.Build_Default _ RtsOptsNone.
+
+Instance Default__ProfAuto : GHC.Err.Default ProfAuto :=
+  GHC.Err.Build_Default _ NoProfAuto.
+
+Instance Default__PkgConfRef : GHC.Err.Default PkgConfRef :=
+  GHC.Err.Build_Default _ GlobalPkgConf.
+
+Instance Default__PackageDBFlag : GHC.Err.Default PackageDBFlag :=
+  GHC.Err.Build_Default _ NoUserPackageDB.
+
+Instance Default__LinkerInfo : GHC.Err.Default LinkerInfo :=
+  GHC.Err.Build_Default _ UnknownLD.
+
+Instance Default__Language : GHC.Err.Default Language :=
+  GHC.Err.Build_Default _ Haskell98.
+
+Instance Default__HscTarget : GHC.Err.Default HscTarget :=
+  GHC.Err.Build_Default _ HscC.
+
+Instance Default__GhcMode : GHC.Err.Default GhcMode :=
+  GHC.Err.Build_Default _ CompManager.
+
+Instance Default__GhcLink : GHC.Err.Default GhcLink :=
+  GHC.Err.Build_Default _ NoLink.
+
+Instance Default__GeneralFlag : GHC.Err.Default GeneralFlag :=
+  GHC.Err.Build_Default _ Opt_DumpToFile.
+
+Instance Default__DynLibLoader : GHC.Err.Default DynLibLoader :=
+  GHC.Err.Build_Default _ Deployable.
+
+Instance Default__DumpFlag : GHC.Err.Default DumpFlag :=
+  GHC.Err.Build_Default _ Opt_D_dump_cmm.
+
+Instance Default__Deprecation : GHC.Err.Default Deprecation :=
+  GHC.Err.Build_Default _ NotDeprecated.
+
+Instance Default__CompilerInfo : GHC.Err.Default CompilerInfo :=
+  GHC.Err.Build_Default _ GCC.
+
+Instance Default__BmiVersion : GHC.Err.Default BmiVersion :=
+  GHC.Err.Build_Default _ BMI1.
+
 Definition modRenamingWithImplicit (arg_0__ : ModRenaming) :=
   let 'Mk_ModRenaming modRenamingWithImplicit _ := arg_0__ in
   modRenamingWithImplicit.
@@ -881,9 +942,9 @@ Axiom setJsonLogAction : DynFlags -> DynFlags.
 
 Axiom jsonLogOutput : GHC.Types.IO (option LogOutput).
 
-Axiom jsonLogAction : GHC.IORef.IORef (list Outputable.SDoc) -> LogAction.
+Axiom jsonLogAction : GHC.IORef.IORef (list GHC.Base.String) -> LogAction.
 
-Axiom jsonLogFinaliser : GHC.IORef.IORef (list Outputable.SDoc) ->
+Axiom jsonLogFinaliser : GHC.IORef.IORef (list GHC.Base.String) ->
                          DynFlags -> GHC.Types.IO unit.
 
 (* defaultLogAction skipped *)
@@ -1619,8 +1680,9 @@ Axiom emptyFilesToClean : FilesToClean.
 (* Unbound variables:
      DynP LogAction Type bool list op_zt__ option unit Data.Either.Either
      Data.Set.Internal.Set_ EnumSet.EnumSet ErrUtils.MsgDoc ErrUtils.Severity
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Char.Char GHC.IORef.IORef
-     GHC.Num.Int GHC.Num.Integer GHC.Types.IO Module.ComponentId Module.Module
-     Module.ModuleName Module.UnitId Outputable.PprStyle Outputable.SDoc
-     SrcLoc.Located SrcLoc.SrcSpan Text.ParserCombinators.ReadP.ReadP
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Char.Char GHC.Err.Build_Default
+     GHC.Err.Default GHC.IORef.IORef GHC.Num.Int GHC.Num.Integer GHC.Types.IO
+     Module.ComponentId Module.Module Module.ModuleName Module.UnitId
+     Outputable.PprStyle SrcLoc.Located SrcLoc.SrcSpan
+     Text.ParserCombinators.ReadP.ReadP
 *)

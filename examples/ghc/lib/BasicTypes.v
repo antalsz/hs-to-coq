@@ -204,6 +204,75 @@ Arguments VanillaDM {_}.
 
 Arguments GenericDM {_} _.
 
+Instance Default__TyPrec : GHC.Err.Default TyPrec :=
+  GHC.Err.Build_Default _ TopPrec.
+
+Instance Default__TupleSort : GHC.Err.Default TupleSort :=
+  GHC.Err.Build_Default _ BoxedTuple.
+
+Instance Default__TopLevelFlag : GHC.Err.Default TopLevelFlag :=
+  GHC.Err.Build_Default _ TopLevel.
+
+Instance Default__SwapFlag : GHC.Err.Default SwapFlag :=
+  GHC.Err.Build_Default _ NotSwapped.
+
+Instance Default__SuccessFlag : GHC.Err.Default SuccessFlag :=
+  GHC.Err.Build_Default _ Succeeded.
+
+Instance Default__SpliceExplicitFlag : GHC.Err.Default SpliceExplicitFlag :=
+  GHC.Err.Build_Default _ ExplicitSplice.
+
+Instance Default__SourceText : GHC.Err.Default SourceText :=
+  GHC.Err.Build_Default _ NoSourceText.
+
+Instance Default__RuleMatchInfo : GHC.Err.Default RuleMatchInfo :=
+  GHC.Err.Build_Default _ ConLike.
+
+Instance Default__RecFlag : GHC.Err.Default RecFlag :=
+  GHC.Err.Build_Default _ Recursive.
+
+Instance Default__Origin : GHC.Err.Default Origin :=
+  GHC.Err.Build_Default _ FromSource.
+
+Instance Default__OneShotInfo : GHC.Err.Default OneShotInfo :=
+  GHC.Err.Build_Default _ NoOneShotInfo.
+
+Instance Default__LexicalFixity : GHC.Err.Default LexicalFixity :=
+  GHC.Err.Build_Default _ Prefix.
+
+Instance Default__LeftOrRight : GHC.Err.Default LeftOrRight :=
+  GHC.Err.Build_Default _ CLeft.
+
+Instance Default__TailCallInfo : GHC.Err.Default TailCallInfo :=
+  GHC.Err.Build_Default _ NoTailCallInfo.
+
+Instance Default__IntWithInf : GHC.Err.Default IntWithInf :=
+  GHC.Err.Build_Default _ Infinity.
+
+Instance Default__OccInfo : GHC.Err.Default OccInfo :=
+  GHC.Err.Build_Default _ IAmDead.
+
+Instance Default__InlineSpec : GHC.Err.Default InlineSpec :=
+  GHC.Err.Build_Default _ Inline.
+
+Instance Default__FunctionOrData : GHC.Err.Default FunctionOrData :=
+  GHC.Err.Build_Default _ IsFunction.
+
+Instance Default__FixityDirection : GHC.Err.Default FixityDirection :=
+  GHC.Err.Build_Default _ InfixL.
+
+Instance Default__DerivStrategy : GHC.Err.Default DerivStrategy :=
+  GHC.Err.Build_Default _ StockStrategy.
+
+Instance Default__CompilerPhase : GHC.Err.Default CompilerPhase :=
+  GHC.Err.Build_Default _ InitialPhase.
+
+Instance Default__Boxity : GHC.Err.Default Boxity :=
+  GHC.Err.Build_Default _ Boxed.
+
+Instance Default__Activation : GHC.Err.Default Activation :=
+  GHC.Err.Build_Default _ NeverActive.
+
 Definition sl_fs (arg_0__ : StringLiteral) :=
   let 'Mk_StringLiteral _ sl_fs := arg_0__ in
   sl_fs.
@@ -288,131 +357,67 @@ Definition occ_rules_only (arg_10__ : OccInfo) :=
   | IAmALoopBreaker occ_rules_only _ => occ_rules_only
   end.
 
-Definition fl_neg (arg_11__ : FractionalLit) :=
-  let 'FL _ fl_neg _ := arg_11__ in
+Definition occ_tail (arg_11__ : OccInfo) :=
+  match arg_11__ with
+  | ManyOccs occ_tail => occ_tail
+  | IAmDead =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `occ_tail' has no match in constructor `IAmDead' of type `OccInfo'")
+  | OneOcc _ _ _ occ_tail => occ_tail
+  | IAmALoopBreaker _ occ_tail => occ_tail
+  end.
+
+Definition fl_neg (arg_12__ : FractionalLit) :=
+  let 'FL _ fl_neg _ := arg_12__ in
   fl_neg.
 
-Definition fl_text (arg_12__ : FractionalLit) :=
-  let 'FL fl_text _ _ := arg_12__ in
+Definition fl_text (arg_13__ : FractionalLit) :=
+  let 'FL fl_text _ _ := arg_13__ in
   fl_text.
 
-Definition fl_value (arg_13__ : FractionalLit) :=
-  let 'FL _ _ fl_value := arg_13__ in
+Definition fl_value (arg_14__ : FractionalLit) :=
+  let 'FL _ _ fl_value := arg_14__ in
   fl_value.
 
-Definition fromEP {a} (arg_14__ : EP a) :=
-  let 'Mk_EP fromEP _ := arg_14__ in
+Definition fromEP {a} (arg_15__ : EP a) :=
+  let 'Mk_EP fromEP _ := arg_15__ in
   fromEP.
 
-Definition toEP {a} (arg_15__ : EP a) :=
-  let 'Mk_EP _ toEP := arg_15__ in
+Definition toEP {a} (arg_16__ : EP a) :=
+  let 'Mk_EP _ toEP := arg_16__ in
   toEP.
 
-Definition inl_act (arg_16__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ _ inl_act _ := arg_16__ in
+Definition inl_act (arg_17__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ _ inl_act _ := arg_17__ in
   inl_act.
 
-Definition inl_inline (arg_17__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ inl_inline _ _ _ := arg_17__ in
+Definition inl_inline (arg_18__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ inl_inline _ _ _ := arg_18__ in
   inl_inline.
 
-Definition inl_rule (arg_18__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ _ _ inl_rule := arg_18__ in
+Definition inl_rule (arg_19__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ _ _ inl_rule := arg_19__ in
   inl_rule.
 
-Definition inl_sat (arg_19__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ inl_sat _ _ := arg_19__ in
+Definition inl_sat (arg_20__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ inl_sat _ _ := arg_20__ in
   inl_sat.
 
-Definition inl_src (arg_20__ : InlinePragma) :=
-  let 'Mk_InlinePragma inl_src _ _ _ _ := arg_20__ in
+Definition inl_src (arg_21__ : InlinePragma) :=
+  let 'Mk_InlinePragma inl_src _ _ _ _ := arg_21__ in
   inl_src.
 (* Midamble *)
 
 Require GHC.Err.
 
-
-Instance Default_Origin : GHC.Err.Default Origin :=
-  GHC.Err.Build_Default _ Generated.
-
-Instance Default_SourceText : GHC.Err.Default SourceText :=
-  GHC.Err.Build_Default _ NoSourceText.
-
-Instance Default_OverlapMode : GHC.Err.Default OverlapMode :=
+Instance Default__OverlapMode : GHC.Err.Default OverlapMode :=
   GHC.Err.Build_Default _ (NoOverlap GHC.Err.default).
-
-Instance Default_RecFlag : GHC.Err.Default RecFlag :=
-  GHC.Err.Build_Default _ Recursive.
-
-Instance Default_RuleMatchInfo : GHC.Err.Default RuleMatchInfo :=
-  GHC.Err.Build_Default _ ConLike.
-
-
-Instance Default_SuccessFlag : GHC.Err.Default SuccessFlag :=
-  GHC.Err.Build_Default _ Succeeded.
-
-
-Instance Default_SwapFlag : GHC.Err.Default SwapFlag :=
-  GHC.Err.Build_Default _ NotSwapped.
-
-
-Instance Default_TopLevelFlag : GHC.Err.Default TopLevelFlag :=
-  GHC.Err.Build_Default _ TopLevel.
-
-
-Instance Default_TupleSort : GHC.Err.Default TupleSort :=
-  GHC.Err.Build_Default _ BoxedTuple.
-
-Instance Default_OverlapFlag : GHC.Err.Default OverlapFlag :=
+Instance Default__OverlapFlag : GHC.Err.Default OverlapFlag :=
   GHC.Err.Build_Default _ (Mk_OverlapFlag GHC.Err.default GHC.Err.default).
-
-Instance Default_OneShotInfo : GHC.Err.Default OneShotInfo :=
-  GHC.Err.Build_Default _ NoOneShotInfo.
-
-
-Instance Default_IntWithInf : GHC.Err.Default IntWithInf :=
-  GHC.Err.Build_Default _ Infinity.
-
-
-Instance Default_OccInfo : GHC.Err.Default OccInfo :=
-  GHC.Err.Build_Default _ IAmDead.
-
-
-Instance Default_InlineSpec : GHC.Err.Default InlineSpec :=
-  GHC.Err.Build_Default _ Inline.
-
-
-
-Instance Default_FixityDirection : GHC.Err.Default FixityDirection :=
-  GHC.Err.Build_Default _ InfixL.
-
-
-Instance Default_Fixity : GHC.Err.Default Fixity :=
+Instance Default__Fixity : GHC.Err.Default Fixity :=
   GHC.Err.Build_Default _ (Mk_Fixity GHC.Err.default GHC.Err.default GHC.Err.default).
-
-
-
-Instance Default_DefMethSpec {ty} : GHC.Err.Default (DefMethSpec ty) :=
-  GHC.Err.Build_Default _ VanillaDM.
-
-Instance Default_CompilerPhase : GHC.Err.Default CompilerPhase :=
-  GHC.Err.Build_Default _ InitialPhase.
-
-
-
-Instance Default_Boxity : GHC.Err.Default Boxity :=
-  GHC.Err.Build_Default _ Boxed.
-
-
-Instance Default_Activation : GHC.Err.Default Activation :=
-  GHC.Err.Build_Default _ NeverActive.
-
-
-Instance Default_InlinePragma : GHC.Err.Default InlinePragma :=
+Instance Default__InlinePragma : GHC.Err.Default InlinePragma :=
   GHC.Err.Build_Default _ (Mk_InlinePragma GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
-
-Instance Default_TailCallInfo : GHC.Err.Default TailCallInfo :=
-  GHC.Err.Build_Default _ NoTailCallInfo.
 
 (* Converted value declarations: *)
 
@@ -1671,7 +1676,7 @@ Definition zapOccTailCallInfo : OccInfo -> OccInfo :=
     | occ =>
         match occ with
         | ManyOccs occ_tail_1__ => ManyOccs NoTailCallInfo
-        | IAmDead => error (GHC.Base.hs_string__ "Partial record update")
+        | IAmDead => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
         | OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__ occ_tail_5__ =>
             OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__ NoTailCallInfo
         | IAmALoopBreaker occ_rules_only_6__ occ_tail_7__ =>
@@ -1687,13 +1692,13 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
     end.
 
 (* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison cons error false id list negb nil
-     occ_tail op_zt__ option pair true tt unit Coq.Init.Datatypes.app
-     Data.Function.on FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.map GHC.Base.mappend
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.error
-     GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
+     Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
+     option pair true tt unit Coq.Init.Datatypes.app Data.Function.on
+     FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.error GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.Rational Panic.noString
      Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
 *)

@@ -416,7 +416,7 @@ Definition foldUDFM {elt} {a} : (elt -> a -> a) -> a -> UniqDFM elt -> a :=
   fun k z m => Data.Foldable.foldr k z (eltsUDFM m).
 
 Definition pprUDFM {a}
-   : UniqDFM a -> (list a -> Outputable.SDoc) -> Outputable.SDoc :=
+   : UniqDFM a -> (list a -> GHC.Base.String) -> GHC.Base.String :=
   fun ufm pp => pp (eltsUDFM ufm).
 
 Definition udfmIntersectUFM {elt1} {elt2}
@@ -455,9 +455,10 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
      Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.OldList.sortBy
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup
-     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.foldr GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zlzlzgzg__
-     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ Outputable.SDoc UniqFM.UniqFM
-     UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList UniqFM.ufmToIntMap
-     Unique.Uniquable Unique.Unique Unique.getUnique Unique.getWordKey
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.foldr
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zlzlzgzg__ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
+     UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
+     UniqFM.ufmToIntMap Unique.Uniquable Unique.Unique Unique.getUnique
+     Unique.getWordKey
 *)

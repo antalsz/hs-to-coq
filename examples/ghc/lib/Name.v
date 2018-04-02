@@ -16,6 +16,7 @@ Require Coq.Init.Datatypes.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
+Require GHC.Err.
 Require Maybes.
 Require Module.
 Require OccName.
@@ -56,6 +57,12 @@ Definition getName `{g : NamedThing a} : a -> Name :=
 Definition getOccName `{g : NamedThing a} : a -> OccName.OccName :=
   g _ (getOccName__ a).
 
+Instance Default__BuiltInSyntax : GHC.Err.Default BuiltInSyntax :=
+  GHC.Err.Build_Default _ Mk_BuiltInSyntax.
+
+Instance Default__NameSort : GHC.Err.Default NameSort :=
+  GHC.Err.Build_Default _ Internal.
+
 Definition n_loc (arg_0__ : Name) :=
   let 'Mk_Name _ _ _ n_loc := arg_0__ in
   n_loc.
@@ -79,8 +86,8 @@ Import Module.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default_NameSort : Default NameSort := Build_Default _ System.
-Instance Default_Name : Default Name := Build_Default _ (Mk_Name default default default default).
+Instance Default__NameSort : Default NameSort := Build_Default _ System.
+Instance Default__Name : Default Name := Build_Default _ (Mk_Name default default default default).
 
 
 Instance Unique_Name : Unique.Uniquable Name := {}.
@@ -399,7 +406,7 @@ Definition getSrcSpan {a} `{NamedThing a} : a -> SrcLoc.SrcSpan :=
 Definition nameUnique : Name -> Unique.Unique :=
   fun name => n_uniq name.
 
-Definition pprUnique : Unique.Unique -> Outputable.SDoc :=
+Definition pprUnique : Unique.Unique -> GHC.Base.String :=
   fun uniq =>
     Outputable.sdocWithDynFlags (fun dflags =>
                                    Outputable.ppUnless (DynFlags.gopt DynFlags.Opt_SuppressUniques dflags)
@@ -452,14 +459,14 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
      Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
      Coq.Init.Datatypes.app DynFlags.Opt_SuppressUniques DynFlags.gopt
      FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ Maybes.orElse
-     Module.Module Module.UnitId Module.isInteractiveModule Module.moduleName
-     Module.moduleNameColons Module.moduleStableString Module.moduleUnitId
-     Module.stableModuleCmp OccName.OccName OccName.isDataOcc OccName.isTcOcc
-     OccName.isTvOcc OccName.isValOcc OccName.isVarOcc OccName.mkTyVarOccFS
-     OccName.mkVarOcc OccName.mkVarOccFS OccName.occNameFS OccName.occNameString
-     Outputable.SDoc Outputable.ppUnless Outputable.sdocWithDynFlags Panic.panic
-     SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan SrcLoc.noSrcSpan
-     SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique Unique.nonDetCmpUnique
-     Unique.pprUniqueAlways Util.thenCmp
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Err.Build_Default
+     GHC.Err.Default Maybes.orElse Module.Module Module.UnitId
+     Module.isInteractiveModule Module.moduleName Module.moduleNameColons
+     Module.moduleStableString Module.moduleUnitId Module.stableModuleCmp
+     OccName.OccName OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc
+     OccName.isValOcc OccName.isVarOcc OccName.mkTyVarOccFS OccName.mkVarOcc
+     OccName.mkVarOccFS OccName.occNameFS OccName.occNameString Outputable.ppUnless
+     Outputable.sdocWithDynFlags Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc
+     SrcLoc.SrcSpan SrcLoc.noSrcSpan SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique
+     Unique.nonDetCmpUnique Unique.pprUniqueAlways Util.thenCmp
 *)

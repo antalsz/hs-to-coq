@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
 Require Panic.
@@ -48,13 +49,21 @@ Inductive CmmCat : Type
   |  VecCat : Length -> CmmCat -> CmmCat.
 
 Inductive CmmType : Type := Mk_CmmType : CmmCat -> Width -> CmmType.
+
+Instance Default__Width : GHC.Err.Default Width := GHC.Err.Build_Default _ W8.
+
+Instance Default__ForeignHint : GHC.Err.Default ForeignHint :=
+  GHC.Err.Build_Default _ NoHint.
+
+Instance Default__CmmCat : GHC.Err.Default CmmCat :=
+  GHC.Err.Build_Default _ GcPtrCat.
 (* Midamble *)
 
-Instance Default_CmmCat  : GHC.Err.Default CmmCat :=
+Instance Default__CmmCat  : GHC.Err.Default CmmCat :=
 	 { default := GcPtrCat }.
-Instance Default_width   : GHC.Err.Default Width :=
+Instance Default__width   : GHC.Err.Default Width :=
 	 { default := W80 }.
-Instance Default_CmmType : GHC.Err.Default CmmType :=
+Instance Default__CmmType : GHC.Err.Default CmmType :=
 	 { default := Mk_CmmType GHC.Err.default GHC.Err.default }.
 
 (* Converted value declarations: *)
@@ -401,7 +410,8 @@ Definition bWord : DynFlags.DynFlags -> CmmType :=
 
 (* Unbound variables:
      andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
-     FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Num.Int
-     GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div Panic.noString
-     Panic.panic Panic.panicStr
+     FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
+     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.Integer
+     GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div Panic.noString Panic.panic
+     Panic.panicStr
 *)

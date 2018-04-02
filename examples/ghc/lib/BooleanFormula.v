@@ -22,6 +22,7 @@ Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
 Require MonadUtils.
+Require Panic.
 Require SrcLoc.
 Require UniqSet.
 Require Unique.
@@ -539,20 +540,17 @@ Definition mkVar {a} : a -> BooleanFormula a :=
   Var.
 
 Definition pprBooleanFormulaNormal {a} `{(Outputable.OutputableBndr a)}
-   : BooleanFormula a -> Outputable.SDoc :=
+   : BooleanFormula a -> GHC.Base.String :=
   let fix go arg_0__
             := match arg_0__ with
                | Var x => Outputable.pprPrefixOcc x
-               | And xs =>
-                   Outputable.fsep (Outputable.punctuate Outputable.comma (GHC.Base.map (go
-                                                                                         GHC.Base.∘
-                                                                                         SrcLoc.unLoc) xs))
+               | And xs => Panic.noString Panic.someSDoc
                | Or nil => Outputable.keyword (id (GHC.Base.hs_string__ "FALSE"))
                | Or xs =>
-                   Outputable.fsep (Data.OldList.intersperse Outputable.vbar (GHC.Base.map (go
-                                                                                            GHC.Base.∘
-                                                                                            SrcLoc.unLoc) xs))
-               | Parens x => Outputable.parens (go (SrcLoc.unLoc x))
+                   Panic.noString (Data.OldList.intersperse Panic.someSDoc (GHC.Base.map (go
+                                                                                          GHC.Base.∘
+                                                                                          SrcLoc.unLoc) xs))
+               | Parens x => id (go (SrcLoc.unLoc x))
                end in
   go.
 
@@ -568,13 +566,12 @@ Definition pprBooleanFormulaNormal {a} `{(Outputable.OutputableBndr a)}
      Data.Semigroup.Internal.getAny Data.Semigroup.Internal.getDual
      Data.Semigroup.Internal.getProduct Data.Semigroup.Internal.getSum
      Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.flip
-     GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.String GHC.Base.Synonym GHC.Base.build
+     GHC.Base.flip GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
      GHC.Base.op_zeze__ GHC.Base.op_zlzd__ GHC.Num.Int GHC.Num.Num
      GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.concatMapM
-     Outputable.OutputableBndr Outputable.SDoc Outputable.comma Outputable.fsep
-     Outputable.keyword Outputable.parens Outputable.pprPrefixOcc
-     Outputable.punctuate Outputable.vbar SrcLoc.L SrcLoc.Located SrcLoc.unLoc
+     Outputable.OutputableBndr Outputable.keyword Outputable.pprPrefixOcc
+     Panic.noString Panic.someSDoc SrcLoc.L SrcLoc.Located SrcLoc.unLoc
      UniqSet.UniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
      UniqSet.emptyUniqSet Unique.Uniquable
 *)

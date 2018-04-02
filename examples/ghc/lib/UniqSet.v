@@ -212,7 +212,7 @@ Definition partitionUniqSet {a}
     end.
 
 Definition pprUniqSet {a}
-   : (a -> Outputable.SDoc) -> UniqSet a -> Outputable.SDoc :=
+   : (a -> GHC.Base.String) -> UniqSet a -> GHC.Base.String :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | f, UniqSet s => UniqFM.pprUniqFM f s
@@ -267,9 +267,9 @@ Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=
 
 (* Unbound variables:
      bool cons list negb op_zt__ option Data.Foldable.foldl' Data.Foldable.foldr
-     GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.map GHC.Base.mappend
-     GHC.Base.mconcat GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zlzlzgzg__
-     GHC.Num.Int GHC.Prim.coerce Outputable.SDoc UniqFM.UniqFM UniqFM.addToUFM
+     GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String GHC.Base.map
+     GHC.Base.mappend GHC.Base.mconcat GHC.Base.mempty GHC.Base.op_z2218U__
+     GHC.Base.op_zlzlzgzg__ GHC.Num.Int GHC.Prim.coerce UniqFM.UniqFM UniqFM.addToUFM
      UniqFM.allUFM UniqFM.anyUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
      UniqFM.delListFromUFM UniqFM.delListFromUFM_Directly UniqFM.elemUFM
      UniqFM.elemUFM_Directly UniqFM.emptyUFM UniqFM.equalKeysUFM UniqFM.filterUFM

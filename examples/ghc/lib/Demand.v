@@ -18,6 +18,7 @@ Require CoreType.
 Require Data.Foldable.
 Require DynFlags.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
@@ -118,6 +119,23 @@ Arguments Mk_Str {_} _ _.
 Arguments Abs {_}.
 
 Arguments Mk_Use {_} _ _.
+
+Instance Default__TypeShape : GHC.Err.Default TypeShape :=
+  GHC.Err.Build_Default _ TsUnk.
+
+Instance Default__ExnStr : GHC.Err.Default ExnStr :=
+  GHC.Err.Build_Default _ VanStr.
+
+Instance Default__Count : GHC.Err.Default Count := GHC.Err.Build_Default _ One.
+
+Instance Default__CPRResult : GHC.Err.Default CPRResult :=
+  GHC.Err.Build_Default _ NoCPR.
+
+Instance Default__UseDmd : GHC.Err.Default UseDmd :=
+  GHC.Err.Build_Default _ UHead.
+
+Instance Default__StrDmd : GHC.Err.Default StrDmd :=
+  GHC.Err.Build_Default _ HyperStr.
 
 Definition kf_abs (arg_0__ : KillFlags) :=
   let 'KillFlags kf_abs _ _ := arg_0__ in
@@ -1305,10 +1323,10 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
      Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_
      GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.List.replicate GHC.List.take
-     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Prim.coerce Maybes.orElse
-     Outputable.op_zdzd__ Panic.noString Panic.warnPprTrace UniqFM.nonDetUFMToList
-     Util.lengthExceeds Util.lengthIs Util.zipWithEqual VarEnv.VarEnv
-     VarEnv.delVarEnv VarEnv.emptyVarEnv VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv
-     VarEnv.mapVarEnv VarEnv.plusVarEnv_CD
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default
+     GHC.List.replicate GHC.List.take GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Prim.coerce Maybes.orElse Outputable.op_zdzd__ Panic.noString
+     Panic.warnPprTrace UniqFM.nonDetUFMToList Util.lengthExceeds Util.lengthIs
+     Util.zipWithEqual VarEnv.VarEnv VarEnv.delVarEnv VarEnv.emptyVarEnv
+     VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv VarEnv.mapVarEnv VarEnv.plusVarEnv_CD
 *)

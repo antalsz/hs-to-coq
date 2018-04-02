@@ -310,6 +310,27 @@ Arguments NonRec {_} _ _.
 
 Arguments Rec {_} _.
 
+Instance Default__UnfoldingSource : GHC.Err.Default UnfoldingSource :=
+  GHC.Err.Build_Default _ InlineRhs.
+
+Instance Default__UnfoldingGuidance : GHC.Err.Default UnfoldingGuidance :=
+  GHC.Err.Build_Default _ UnfNever.
+
+Instance Default__TickishScoping : GHC.Err.Default TickishScoping :=
+  GHC.Err.Build_Default _ NoScope.
+
+Instance Default__TickishPlacement : GHC.Err.Default TickishPlacement :=
+  GHC.Err.Build_Default _ PlaceRuntime.
+
+Instance Default__IsOrphan : GHC.Err.Default IsOrphan :=
+  GHC.Err.Build_Default _ Mk_IsOrphan.
+
+Instance Default__AltCon : GHC.Err.Default AltCon :=
+  GHC.Err.Build_Default _ DEFAULT.
+
+Instance Default__Unfolding : GHC.Err.Default Unfolding :=
+  GHC.Err.Build_Default _ NoUnfolding.
+
 Definition ug_args (arg_0__ : UnfoldingGuidance) :=
   match arg_0__ with
   | UnfWhen _ _ _ =>
@@ -806,7 +827,7 @@ Definition exprToType : CoreExpr -> Core.Type_ :=
 Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
   fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg).
 
-Instance Default_Expr {b} : GHC.Err.Default (Expr b).
+Instance Default__Expr {b} : GHC.Err.Default (Expr b).
 Admitted.
 
 (* Converted value declarations: *)
@@ -1107,7 +1128,7 @@ Definition collectNAnnBndrs {bndr} {annot}
                      match arg_0__, arg_1__, arg_2__ with
                      | n, bs, pair _ (AnnLam b body) => collect (n GHC.Num.- #1) (cons b bs) body
                      | _, _, _ =>
-                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Outputable.int orig_n)
+                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Panic.noString orig_n)
                      end
                  end in
     collect orig_n nil e.
@@ -1122,7 +1143,7 @@ Definition collectNBinders {b}
                      match arg_0__, arg_1__, arg_2__ with
                      | n, bs, Lam b e => go (n GHC.Num.- #1) (cons b bs) e
                      | _, _, _ =>
-                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Outputable.int orig_n)
+                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Panic.noString orig_n)
                      end
                  end in
     go orig_n nil orig_expr.
@@ -1545,11 +1566,12 @@ Definition mkConApp2 {b}
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
      GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
-     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.List.reverse GHC.Num.Int
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal
-     Literal.mkMachChar Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString
-     Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
-     Name.Name Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Outputable.int Panic.assertPanic Panic.noString Panic.panicStr
-     Panic.warnPprTrace Util.count Util.debugIsOn VarEnv.InScopeSet
+     GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
+     GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Real.Rational Literal.Literal Literal.mkMachChar Literal.mkMachDouble
+     Literal.mkMachFloat Literal.mkMachString Module.Module Module.ModuleSet
+     Module.emptyModuleSet Module.mkModuleSet Name.Name Name.nameOccName
+     NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName Panic.assertPanic
+     Panic.noString Panic.panicStr Panic.warnPprTrace Util.count Util.debugIsOn
+     VarEnv.InScopeSet
 *)

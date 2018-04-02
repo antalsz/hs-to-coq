@@ -16,11 +16,11 @@ Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
 
 Require GHC.Err.
 
-Instance Default_InScopeSet : GHC.Err.Default InScopeSet :=
+Instance Default__InScopeSet : GHC.Err.Default InScopeSet :=
   GHC.Err.Build_Default _ (InScope GHC.Err.default GHC.Err.default).
-Instance Default_RnEnv2 : GHC.Err.Default RnEnv2 :=
+Instance Default__RnEnv2 : GHC.Err.Default RnEnv2 :=
   GHC.Err.Build_Default _ (RV2 GHC.Err.default GHC.Err.default GHC.Err.default).
-Instance Default_TidyEnv : GHC.Err.Default TidyEnv.
+Instance Default__TidyEnv : GHC.Err.Default TidyEnv.
 Admitted.
 
 

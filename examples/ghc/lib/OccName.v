@@ -16,6 +16,7 @@ Require Coq.Init.Datatypes.
 Require Data.Foldable.
 Require FastString.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require UniqFM.
 Require UniqSet.
@@ -54,6 +55,9 @@ Definition occName `{g : HasOccName name} : name -> OccName :=
   g _ (occName__ name).
 
 Arguments A {_} _.
+
+Instance Default__NameSpace : GHC.Err.Default NameSpace :=
+  GHC.Err.Build_Default _ VarName.
 
 Definition occNameFS (arg_0__ : OccName) :=
   let 'Mk_OccName _ occNameFS := arg_0__ in
@@ -126,8 +130,8 @@ Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default_NameSpace : Default NameSpace := Build_Default _ VarName.
-Instance Default_OccName : Default OccName := Build_Default _ (Mk_OccName default default).
+Instance Default__NameSpace : Default NameSpace := Build_Default _ VarName.
+Instance Default__OccName : Default OccName := Build_Default _ (Mk_OccName default default).
 
 (* Converted value declarations: *)
 
@@ -763,14 +767,14 @@ Definition mkTyConRepOcc : OccName -> OccName :=
      FastString.concatFS FastString.fsLit FastString.mkFastString FastString.unpackFS
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.id
      GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.return_
-     GHC.Num.Int GHC.Num.fromInteger UniqFM.UniqFM UniqFM.addListToUFM
-     UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C
-     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM
-     UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
-     UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
-     UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
-     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
-     UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet UniqSet.minusUniqSet
-     UniqSet.mkUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.unitUniqSet Util.thenCmp
+     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.fromInteger
+     UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM
+     UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM
+     UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM UniqFM.emptyUFM
+     UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM
+     UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM UniqSet.UniqSet
+     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
+     UniqSet.emptyUniqSet UniqSet.filterUniqSet UniqSet.intersectUniqSets
+     UniqSet.isEmptyUniqSet UniqSet.minusUniqSet UniqSet.mkUniqSet
+     UniqSet.unionManyUniqSets UniqSet.unionUniqSets UniqSet.unitUniqSet Util.thenCmp
 *)

@@ -34,7 +34,7 @@ Arguments UFM {_} _.
 
 Require GHC.Err.
 
-Instance Default_UniqFM {a} : Err.Default (UniqFM a) :=
+Instance Default__UniqFM {a} : Err.Default (UniqFM a) :=
   Err.Build_Default _ (UFM Data.IntMap.Internal.empty).
 
 (* Converted value declarations: *)
@@ -404,7 +404,7 @@ Definition nonDetUFMToList {elt}
 
 Definition pprUFMWithKeys {a}
    : UniqFM a ->
-     (list (Unique.Unique * a)%type -> Outputable.SDoc) -> Outputable.SDoc :=
+     (list (Unique.Unique * a)%type -> GHC.Base.String) -> GHC.Base.String :=
   fun ufm pp => pp (nonDetUFMToList ufm).
 
 Definition partitionUFM {elt}
@@ -505,9 +505,10 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.union Data.IntMap.Internal.unionWith
      Data.IntMap.Internal.zipWithAMatched Data.IntSet.Internal.IntSet
      Data.Semigroup.Internal.Mk_All Data.Semigroup.Internal.getAll GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.flip GHC.Base.fmap
-     GHC.Base.foldr GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zlzd__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Num.Int
-     GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce Outputable.SDoc
-     Unique.Uniquable Unique.Unique Unique.getUnique Unique.getWordKey
+     GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
+     GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zlzd__
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Prim.Build_Unpeel
+     GHC.Prim.Unpeel GHC.Prim.coerce Unique.Uniquable Unique.Unique Unique.getUnique
+     Unique.getWordKey
 *)

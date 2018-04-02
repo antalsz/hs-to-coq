@@ -1,13 +1,13 @@
 Require Import GHC.Err.
 
-Instance Default_UnitId : Default UnitId := Build_Default _ (PId default).
-Instance Default_ModuleName : Default ModuleName :=
+Instance Default__UnitId : Default UnitId := Build_Default _ (PId default).
+Instance Default__ModuleName : Default ModuleName :=
   Build_Default _ (Mk_ModuleName default).
-Instance Default_Module : Default Module :=
+Instance Default__Module : Default Module :=
   Build_Default _ (Mk_Module default default).
-Instance Default_NDModule : Default NDModule :=
+Instance Default__NDModule : Default NDModule :=
   Build_Default _ (Mk_NDModule default).
-Instance Default_ModLocation : Default ModLocation :=
+Instance Default__ModLocation : Default ModLocation :=
   Build_Default _ (Mk_ModLocation default default default).
 
 

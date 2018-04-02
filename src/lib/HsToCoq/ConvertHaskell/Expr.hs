@@ -264,14 +264,13 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
   let partialUpdateError :: Qualid -> m (Match GhcRn (Located (HsExpr GhcRn)))
       partialUpdateError con = do
         hsCon   <- toHs (qualidToIdent con)
-        hsError <- freshInternalName "error" -- TODO RENAMER this shouldn't be fresh
+        hsError <- toHs "GHC.Err.error"
         pure $ GHC.Match
           { m_ctxt = LambdaExpr
           , m_pats   = [ loc . ConPatIn (loc hsCon)
                              . RecCon $ HsRecFields { rec_flds = []
                                                     , rec_dotdot = Nothing } ]
           , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
-                                              -- TODO: A special variable which is special-cased to desugar to `missingValue`?
                                               HsApp (loc . HsVar . loc $ hsError)
                                                     (loc . HsLit . GHC.HsString (SourceText "") $ fsLit "Partial record update") ]
                              , grhssLocalBinds = loc EmptyLocalBinds } }

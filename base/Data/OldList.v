@@ -324,6 +324,17 @@ Definition mapAccumLF {acc} {x} {y}
          let 'pair s'' ys := r s' in
          pair s'' (cons y ys)).
 
+Definition mapAccumR {acc} {x} {y}
+   : (acc -> x -> (acc * y)%type) -> acc -> list x -> (acc * list y)%type :=
+  fix mapAccumR arg_0__ arg_1__ arg_2__
+        := match arg_0__, arg_1__, arg_2__ with
+           | _, s, nil => pair s nil
+           | f, s, cons x xs =>
+               let 'pair s' ys := mapAccumR f s xs in
+               let 'pair s'' y := f s' x in
+               pair s'' (cons y ys)
+           end.
+
 Definition nonEmptySubsequences {a} : list a -> list (list a) :=
   fix nonEmptySubsequences arg_0__
         := match arg_0__ with
@@ -537,7 +548,7 @@ Notation "'_Data.OldList.\\_'" := (op_zrzr__).
 Infix "Data.OldList.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Gt None Some andb bool comparison cons false list nil op_zt__ option orb pair
      sortBy true Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Data.Maybe.listToMaybe Data.Maybe.maybe Data.Ord.comparing Data.Tuple.fst

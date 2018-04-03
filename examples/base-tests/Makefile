@@ -12,12 +12,12 @@ PASS = \
   Pair \
   SplitAt \
   PartialRecordSel \
+  TypeClient \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
   Arrow \
   EqList \
-  TypeClient \
   PaperExamples \
 
 MODULES = $(PASS) $(TODO_PASS)

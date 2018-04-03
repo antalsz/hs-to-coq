@@ -84,7 +84,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
              go a _ = a
 
 
-  (all_sigs :: M.Map Qualid Signature) <- binding' args' $ convertLSigs lsigs
+  (all_sigs :: M.Map Qualid Signature) <- convertLSigs lsigs
 
   -- implement the class part of "skip method"
   skippedMethodsS <- use (edits.skippedMethods)

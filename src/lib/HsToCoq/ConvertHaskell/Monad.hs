@@ -102,7 +102,7 @@ renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 
 
 
-type ConversionMonad m = (GhcMonad m, MonadState ConversionState m, MonadVariables Qualid () m)
+type ConversionMonad m = (GhcMonad m, MonadState ConversionState m)
 type ConversionT m = StateT ConversionState (VariablesT Qualid () m)
 
 -- HACK: Hard-code information about some data types here

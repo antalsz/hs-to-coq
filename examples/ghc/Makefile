@@ -125,7 +125,7 @@ $(OUT)/_CoqProject: $(OUT)/README.md Makefile
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
 	echo '-Q ../../transformers/lib  ""' >> $@
-	echo $(VFILES) >> $@
+	echo $(filter-out $(addsuffix .v,$(BROKEN_MODULES)), $(VFILES)) >> $@
 
 $(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile

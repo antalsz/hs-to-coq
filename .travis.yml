@@ -29,6 +29,7 @@ notifications:
 cache:
   directories:
   - $HOME/.stack
+  - .stack-work
   - $HOME/ghc
   - $HOME/.opam
 
@@ -64,37 +65,47 @@ install:
  # dependencies of the containers code that we translate
  - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
-script:
- - stack --no-terminal --install-ghc install
- # Run test suite
- - make -C examples/tests
- # Build Coq’ified base (generated sources are in the repo)
- - make -C base
- # Build base theory
- - make -C base-thy
- # Run examples that use base:
- - make -C examples/base-tests
- - make -C examples/successors
- - make -C examples/compiler
- - make -C examples/rle
- - make -C examples/bag
- - make -C examples/quicksort
- - make -C examples/dlist
- - make -C examples/intervals
- - make -C examples/containers clean
- - make -C examples/containers
- - make -C examples/containers/theories
- - make -C examples/transformers
- - make -C examples/coinduction
-
-# Test extraction
- - make -C examples/containers/extraction/src
- - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
- - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
-
- # disabled 2018-07-24 due to too big of a fall-out, and the
- # focus is somewhere on containers right now
- #- make -C examples/ghc/lib
-
- # This requires a configured check-out of GHC, so lets not do that on travis
- # - make -C examples/ghc
+jobs:
+  include:
+  - stage: build
+    script:
+      - stack --no-terminal --install-ghc install
+  - stage: basic-tests
+    script:
+      - stack --no-terminal --install-ghc install
+      - make -C examples/tests
+      - make -C base
+      - make -C examples/base-tests
+  - stage: containers
+    script:
+      - stack --no-terminal --install-ghc install
+      - make -C base
+      - make -C base-thy
+      - make -C examples/containers clean
+      - make -C examples/containers
+      - make -C examples/containers/theories
+      # Test extraction
+      - make -C examples/containers/extraction/src
+      - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
+      - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
+  - stage: small examples
+    script:
+      - stack --no-terminal --install-ghc install
+      - make -C base
+      - make -C base-thy
+      - make -C examples/successors
+      - make -C examples/compiler
+      - make -C examples/rle
+      - make -C examples/bag
+      - make -C examples/quicksort
+      - make -C examples/dlist
+      - make -C examples/intervals
+      - make -C examples/transformers
+      - make -C examples/coinduction
+  - stage: GHC
+    script:
+      - make -C base
+      - make -C base-thy
+      # disabled 2018-07-24 due to too big of a fall-out, and the
+      # focus is somewhere on containers right now
+      - make -C examples/ghc/lib

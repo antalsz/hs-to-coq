@@ -92,7 +92,7 @@ VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
 VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
 VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE) $(VFILES_DROPIN)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE) $(VFILES_DROPIN) lib/CoreType.v
 
 all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
@@ -175,7 +175,8 @@ $(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-ed
                      -o $(OUT) \
 		     ghc/compiler/types/TyCoRep.hs \
 		     ghc/compiler/types/Coercion.hs \
-		     ghc/compiler/types/Type.hs ghc/compiler/basicTypes/Var.hs
+		     ghc/compiler/types/Type.hs \
+		     ghc/compiler/basicTypes/Var.hs
 	test -e $@
 
 

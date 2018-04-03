@@ -1,7 +1,7 @@
 Require Import Core.
 Require Name.
 Require Class.
-Require Var.
+Require CoreType.
 
 (* Record selectors *)
 Parameter tyConName    : TyCon -> Name.Name.

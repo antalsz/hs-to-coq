@@ -11,6 +11,7 @@ Inductive IdScope : Type := GlobalId : IdScope
 
 
 (* From TyCon *)
+Require Name.
 Definition TyConRepName := Name.Name%type.
 
 Inductive Injectivity : Type := NotInjective : Injectivity

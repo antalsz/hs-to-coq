@@ -1,14 +1,23 @@
-# needs UniqFM.partion
-# skip UniqSet.partitionUniqSet
+skip UniqSet.pprUniqSet
 
-# redefine to not use foldr1
-# skip UniqSet.unionManyUniqSets
-
+# needs UniqFM.equalKeysUFM
+# which needs Data.IntMap.Internal.mergeA
+skip UniqSet.Eq___UniqSet
+skip UniqSet.Ord__UniqSet
 
 order UniqSet.unionUniqSets UniqSet.unionManyUniqSets
+order UniqSet.Semigroup__UniqSet UniqSet.Monoid__UniqSet
 
 redefine Definition UniqSet.unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=
     match xs with
       | nil => emptyUniqSet
       | cons set sets => Data.Foldable.foldr unionUniqSets set sets
     end.
+
+add UniqSet Instance Unpeel_UniqSet ele : GHC.Prim.Unpeel (UniqSet ele) (UniqFM.UniqFM ele) :=
+  GHC.Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UniqSet y => y end) Mk_UniqSet.
+
+
+redefine Local Definition UniqSet.Monoid__UniqSet_mempty {inst_a} : UniqSet inst_a :=
+  Mk_UniqSet GHC.Base.mempty.
+

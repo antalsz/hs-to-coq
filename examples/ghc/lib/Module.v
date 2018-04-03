@@ -17,9 +17,6 @@ Require Coq.Program.Wf.
 
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
-Require Data.ByteString.
-Require Data.ByteString.Char8.
-Require Data.ByteString.Unsafe.
 Require Data.Foldable.
 Require Data.Function.
 Require Data.Map.Internal.
@@ -27,7 +24,6 @@ Require Data.OldList.
 Require Data.Ord.
 Require Data.Set.Internal.
 Require Data.Tuple.
-Require DynFlags.
 Require Encoding.
 Require FastString.
 Require FiniteMap.
@@ -62,16 +58,16 @@ Inductive ModLocation : Type
    : option GHC.Base.String -> GHC.Base.String -> GHC.Base.String -> ModLocation.
 
 Inductive InstalledUnitId : Type
-  := InstalledUnitId : FastString.FastString -> InstalledUnitId.
+  := Mk_InstalledUnitId : FastString.FastString -> InstalledUnitId.
 
 Inductive InstalledModule : Type
-  := InstalledModule : InstalledUnitId -> ModuleName -> InstalledModule.
+  := Mk_InstalledModule : InstalledUnitId -> ModuleName -> InstalledModule.
 
 Inductive InstalledModuleEnv elt : Type
-  := InstalledModuleEnv
+  := Mk_InstalledModuleEnv
    : (Data.Map.Internal.Map InstalledModule elt) -> InstalledModuleEnv elt.
 
-Inductive DefUnitId : Type := DefUnitId : InstalledUnitId -> DefUnitId.
+Inductive DefUnitId : Type := Mk_DefUnitId : InstalledUnitId -> DefUnitId.
 
 Definition DModuleNameEnv :=
   UniqDFM.UniqDFM%type.
@@ -126,24 +122,24 @@ Definition ModuleSet :=
 Definition ShHoleSubst :=
   (ModuleNameEnv Module)%type.
 
-Arguments InstalledModuleEnv {_} _.
+Arguments Mk_InstalledModuleEnv {_} _.
 
 Arguments Mk_ModuleEnv {_} _.
 
 Definition installedUnitIdFS (arg_0__ : InstalledUnitId) :=
-  let 'InstalledUnitId installedUnitIdFS := arg_0__ in
+  let 'Mk_InstalledUnitId installedUnitIdFS := arg_0__ in
   installedUnitIdFS.
 
 Definition installedModuleName (arg_1__ : InstalledModule) :=
-  let 'InstalledModule _ installedModuleName := arg_1__ in
+  let 'Mk_InstalledModule _ installedModuleName := arg_1__ in
   installedModuleName.
 
 Definition installedModuleUnitId (arg_2__ : InstalledModule) :=
-  let 'InstalledModule installedModuleUnitId _ := arg_2__ in
+  let 'Mk_InstalledModule installedModuleUnitId _ := arg_2__ in
   installedModuleUnitId.
 
 Definition unDefUnitId (arg_3__ : DefUnitId) :=
-  let 'DefUnitId unDefUnitId := arg_3__ in
+  let 'Mk_DefUnitId unDefUnitId := arg_3__ in
   unDefUnitId.
 
 Definition indefUnitIdComponentId (arg_4__ : IndefUnitId) :=
@@ -606,8 +602,8 @@ Program Instance Eq___DefUnitId : GHC.Base.Eq_ DefUnitId :=
 Local Definition Ord__InstalledModule_compare
    : InstalledModule -> InstalledModule -> comparison :=
   fun a b =>
-    let 'InstalledModule a1 a2 := a in
-    let 'InstalledModule b1 b2 := b in
+    let 'Mk_InstalledModule a1 a2 := a in
+    let 'Mk_InstalledModule b1 b2 := b in
     match (GHC.Base.compare a1 b1) with
     | Lt => Lt
     | Eq => (GHC.Base.compare a2 b2)
@@ -617,8 +613,8 @@ Local Definition Ord__InstalledModule_compare
 Local Definition Ord__InstalledModule_op_zl__
    : InstalledModule -> InstalledModule -> bool :=
   fun a b =>
-    let 'InstalledModule a1 a2 := a in
-    let 'InstalledModule b1 b2 := b in
+    let 'Mk_InstalledModule a1 a2 := a in
+    let 'Mk_InstalledModule b1 b2 := b in
     match (Ord__InstalledModule_compare a1 b1) with
     | Lt => true
     | Eq => (a2 GHC.Base.< b2)
@@ -659,7 +655,7 @@ Local Definition Eq___InstalledModule_op_zeze__
    : InstalledModule -> InstalledModule -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | InstalledModule a1 a2, InstalledModule b1 b2 =>
+    | Mk_InstalledModule a1 a2, Mk_InstalledModule b1 b2 =>
         (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
     end.
 
@@ -730,7 +726,8 @@ Definition delInstalledModuleEnv {a}
    : InstalledModuleEnv a -> InstalledModule -> InstalledModuleEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | InstalledModuleEnv e, m => InstalledModuleEnv (Data.Map.Internal.delete m e)
+    | Mk_InstalledModuleEnv e, m =>
+        Mk_InstalledModuleEnv (Data.Map.Internal.delete m e)
     end.
 
 Definition delModuleEnv {a} : ModuleEnv a -> Module -> ModuleEnv a :=
@@ -759,7 +756,7 @@ Definition elemModuleSet : Module -> ModuleSet -> bool :=
   Data.Set.Internal.member GHC.Base.∘ GHC.Prim.coerce.
 
 Definition emptyInstalledModuleEnv {a} : InstalledModuleEnv a :=
-  InstalledModuleEnv Data.Map.Internal.empty.
+  Mk_InstalledModuleEnv Data.Map.Internal.empty.
 
 Definition emptyModuleEnv {a} : ModuleEnv a :=
   Mk_ModuleEnv Data.Map.Internal.empty.
@@ -771,8 +768,8 @@ Definition extendInstalledModuleEnv {a}
    : InstalledModuleEnv a -> InstalledModule -> a -> InstalledModuleEnv a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | InstalledModuleEnv e, m, x =>
-        InstalledModuleEnv (Data.Map.Internal.insert m x e)
+    | Mk_InstalledModuleEnv e, m, x =>
+        Mk_InstalledModuleEnv (Data.Map.Internal.insert m x e)
     end.
 
 Definition extendModuleEnv {a} : ModuleEnv a -> Module -> a -> ModuleEnv a :=
@@ -825,8 +822,8 @@ Definition filterInstalledModuleEnv {a}
      InstalledModuleEnv a -> InstalledModuleEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | f, InstalledModuleEnv e =>
-        InstalledModuleEnv (Data.Map.Internal.filterWithKey f e)
+    | f, Mk_InstalledModuleEnv e =>
+        Mk_InstalledModuleEnv (Data.Map.Internal.filterWithKey f e)
     end.
 
 Definition filterModuleEnv {a}
@@ -859,7 +856,7 @@ Definition fingerprintUnitId
     end.
 
 Definition fsToInstalledUnitId : FastString.FastString -> InstalledUnitId :=
-  fun fs => InstalledUnitId fs.
+  fun fs => Mk_InstalledUnitId fs.
 
 Definition stringToInstalledUnitId : GHC.Base.String -> InstalledUnitId :=
   fsToInstalledUnitId GHC.Base.∘ FastString.mkFastString.
@@ -873,7 +870,7 @@ Definition splitUnitIdInsts
     match arg_0__ with
     | IndefiniteUnitId iuid =>
         pair (componentIdToInstalledUnitId (indefUnitIdComponentId iuid)) (Some iuid)
-    | DefiniteUnitId (DefUnitId uid) => pair uid None
+    | DefiniteUnitId (Mk_DefUnitId uid) => pair uid None
     end.
 
 Definition installedUnitIdEq : InstalledUnitId -> UnitId -> bool :=
@@ -883,8 +880,8 @@ Definition splitModuleInsts
    : Module -> (InstalledModule * option IndefModule)%type :=
   fun m =>
     let 'pair uid mb_iuid := splitUnitIdInsts (moduleUnitId m) in
-    pair (InstalledModule uid (moduleName m)) (GHC.Base.fmap (fun iuid =>
-                                                                IndefModule iuid (moduleName m)) mb_iuid).
+    pair (Mk_InstalledModule uid (moduleName m)) (GHC.Base.fmap (fun iuid =>
+                                                                   IndefModule iuid (moduleName m)) mb_iuid).
 
 Definition installedModuleEq : InstalledModule -> Module -> bool :=
   fun imod mod_ => Data.Tuple.fst (splitModuleInsts mod_) GHC.Base.== imod.
@@ -892,13 +889,13 @@ Definition installedModuleEq : InstalledModule -> Module -> bool :=
 Definition toInstalledUnitId : UnitId -> InstalledUnitId :=
   fun arg_0__ =>
     match arg_0__ with
-    | DefiniteUnitId (DefUnitId iuid) => iuid
+    | DefiniteUnitId (Mk_DefUnitId iuid) => iuid
     | IndefiniteUnitId indef =>
         componentIdToInstalledUnitId (indefUnitIdComponentId indef)
     end.
 
 Definition fsToUnitId : FastString.FastString -> UnitId :=
-  DefiniteUnitId GHC.Base.∘ (DefUnitId GHC.Base.∘ InstalledUnitId).
+  DefiniteUnitId GHC.Base.∘ (Mk_DefUnitId GHC.Base.∘ Mk_InstalledUnitId).
 
 Definition holeUnitId : UnitId :=
   fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "hole")).
@@ -942,11 +939,6 @@ Definition dphParUnitId : UnitId :=
 Definition baseUnitId : UnitId :=
   fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "base")).
 
-Definition indefUnitIdToUnitId : DynFlags.DynFlags -> IndefUnitId -> UnitId :=
-  fun dflags iuid =>
-    Packages.improveUnitId (Packages.getPackageConfigMap dflags) (IndefiniteUnitId
-                                                                  iuid).
-
 Definition installedUnitIdKey : InstalledUnitId -> Unique.Unique :=
   Unique.getUnique GHC.Base.∘ installedUnitIdFS.
 
@@ -954,7 +946,7 @@ Definition unitIdKey : UnitId -> Unique.Unique :=
   fun arg_0__ =>
     match arg_0__ with
     | IndefiniteUnitId x => indefUnitIdKey x
-    | DefiniteUnitId (DefUnitId x) => installedUnitIdKey x
+    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdKey x
     end.
 
 Local Definition Eq___UnitId_op_zeze__ : UnitId -> UnitId -> bool :=
@@ -1130,7 +1122,7 @@ Definition lookupInstalledModuleEnv {a}
    : InstalledModuleEnv a -> InstalledModule -> option a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | InstalledModuleEnv e, m => Data.Map.Internal.lookup m e
+    | Mk_InstalledModuleEnv e, m => Data.Map.Internal.lookup m e
     end.
 
 Definition lookupModuleEnv {a} : ModuleEnv a -> Module -> option a :=
@@ -1160,13 +1152,6 @@ Definition minusModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
 
 Definition mkModule : UnitId -> ModuleName -> Module :=
   Mk_Module.
-
-Definition indefModuleToModule : DynFlags.DynFlags -> IndefModule -> Module :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | dflags, IndefModule iuid mod_name =>
-        mkModule (indefUnitIdToUnitId dflags iuid) mod_name
-    end.
 
 Definition mkHoleModule : ModuleName -> Module :=
   mkModule holeUnitId.
@@ -1264,7 +1249,7 @@ Definition unitIdFS : UnitId -> FastString.FastString :=
   fun arg_0__ =>
     match arg_0__ with
     | IndefiniteUnitId x => indefUnitIdFS x
-    | DefiniteUnitId (DefUnitId x) => installedUnitIdFS x
+    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdFS x
     end.
 
 Definition unitIdString : UnitId -> GHC.Base.String :=
@@ -1435,14 +1420,6 @@ Definition renameHoleModule'
     | _ => m
     end.
 
-Definition renameHoleModule
-   : DynFlags.DynFlags -> ShHoleSubst -> Module -> Module :=
-  fun dflags => renameHoleModule' (Packages.getPackageConfigMap dflags).
-
-Definition renameHoleUnitId
-   : DynFlags.DynFlags -> ShHoleSubst -> UnitId -> UnitId :=
-  fun dflags => renameHoleUnitId' (Packages.getPackageConfigMap dflags).
-
 Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
   fun m x => Mk_ModuleEnv (Data.Map.Internal.singleton (Mk_NDModule m) x).
 
@@ -1467,23 +1444,23 @@ Definition unitModuleSet : Module -> ModuleSet :=
      Data.Set.Internal.fromList Data.Set.Internal.insert
      Data.Set.Internal.intersection Data.Set.Internal.member
      Data.Set.Internal.singleton Data.Set.Internal.toList Data.Set.Internal.union
-     Data.Tuple.fst Data.Tuple.snd DynFlags.DynFlags Encoding.toBase62Padded
-     FastString.FastString FastString.fastStringToByteString FastString.fsLit
-     FastString.mkFastString FastString.mkFastStringByteString FastString.unpackFS
-     FiniteMap.deleteList FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.fmap GHC.Base.map GHC.Base.max GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.return_
+     Data.Tuple.fst Data.Tuple.snd Encoding.toBase62Padded FastString.FastString
+     FastString.fastStringToByteString FastString.fsLit FastString.mkFastString
+     FastString.mkFastStringByteString FastString.unpackFS FiniteMap.deleteList
+     FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap
+     GHC.Base.map GHC.Base.max GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Base.return_
      GHC.Fingerprint.fingerprintData GHC.Fingerprint.Type.Fingerprint
      GHC.IO.Unsafe.unsafePerformIO GHC.PackageDb.toStringRep GHC.Prim.coerce
      GHC.Ptr.castPtr GHC.Unicode.isAlphaNum Packages.PackageConfigMap
-     Packages.getPackageConfigMap Packages.improveUnitId Panic.noString
-     Text.ParserCombinators.ReadP.ReadP Text.ParserCombinators.ReadP.between
-     Text.ParserCombinators.ReadP.char Text.ParserCombinators.ReadP.munch1
-     Text.ParserCombinators.ReadP.op_zlzpzp__ Text.ParserCombinators.ReadP.sepBy
-     UniqDFM.UniqDFM UniqDFM.udfmToUfm UniqDSet.UniqDSet UniqDSet.emptyUniqDSet
-     UniqDSet.isEmptyUniqDSet UniqDSet.unionManyUniqDSets UniqDSet.unitUniqDSet
-     UniqFM.UniqFM UniqFM.intersectUFM_C UniqFM.isNullUFM UniqFM.lookupUFM
-     Unique.Unique Unique.getUnique Unique.nonDetCmpUnique Util.thenCmp
+     Packages.improveUnitId Panic.noString Text.ParserCombinators.ReadP.ReadP
+     Text.ParserCombinators.ReadP.between Text.ParserCombinators.ReadP.char
+     Text.ParserCombinators.ReadP.munch1 Text.ParserCombinators.ReadP.op_zlzpzp__
+     Text.ParserCombinators.ReadP.sepBy UniqDFM.UniqDFM UniqDFM.udfmToUfm
+     UniqDSet.UniqDSet UniqDSet.emptyUniqDSet UniqDSet.isEmptyUniqDSet
+     UniqDSet.unionManyUniqDSets UniqDSet.unitUniqDSet UniqFM.UniqFM
+     UniqFM.intersectUFM_C UniqFM.isNullUFM UniqFM.lookupUFM Unique.Unique
+     Unique.getUnique Unique.nonDetCmpUnique Util.thenCmp
 *)

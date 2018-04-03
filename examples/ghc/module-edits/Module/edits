@@ -1,7 +1,15 @@
 skip module Config
 skip module GHC.IO
 skip module System.FilePath.Posix
+skip module Data.ByteString
+skip module Data.ByteString.Char8
+skip module Data.ByteString.Unsafe
 
+# Avoid dependency on DynFlags here
+skip Module.indefUnitIdToUnitId
+skip Module.renameHoleModule
+skip Module.renameHoleUnitId
+skip Module.indefModuleToModule
 
 # IO.FilePath
 skip Module.addBootSuffix

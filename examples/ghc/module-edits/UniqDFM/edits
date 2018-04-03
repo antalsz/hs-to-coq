@@ -1,6 +1,9 @@
 skip module Data.IntMap
 skip UniqDFM.pprUniqDFM
 
+order UniqDFM.Functor__UniqDFM UniqDFM.Foldable__UniqDFM UniqDFM.Traversable__UniqDFM
+order UniqDFM.Semigroup__UniqDFM UniqDFM.Monoid__UniqDFM_mappend
+order UniqDFM.Semigroup__UniqDFM UniqDFM.Monoid__UniqDFM_mconcat
 
 skip UniqDFM.Functor__UniqDFM
 

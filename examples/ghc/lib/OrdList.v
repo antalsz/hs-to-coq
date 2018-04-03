@@ -67,16 +67,16 @@ Definition appOL {a} : OrdList a -> OrdList a -> OrdList a :=
 Definition concatOL {a} : list (OrdList a) -> OrdList a :=
   fun aas => Data.Foldable.foldr appOL None aas.
 
-Local Definition Monoid__OrdList_mconcat {inst_a}
-   : list (OrdList inst_a) -> (OrdList inst_a) :=
-  concatOL.
-
 Local Definition Semigroup__OrdList_op_zlzlzgzg__ {inst_a}
    : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
   appOL.
 
 Program Instance Semigroup__OrdList {a} : GHC.Base.Semigroup (OrdList a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__OrdList_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__OrdList_mconcat {inst_a}
+   : list (OrdList inst_a) -> (OrdList inst_a) :=
+  concatOL.
 
 Definition consOL {a} : a -> OrdList a -> OrdList a :=
   fun a bs => Cons a bs.

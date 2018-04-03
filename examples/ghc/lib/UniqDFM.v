@@ -40,10 +40,6 @@ Arguments Mk_TaggedVal {_} _ _.
 Arguments UDFM {_} _ _.
 (* Converted value declarations: *)
 
-Local Definition Monoid__UniqDFM_mappend {inst_a}
-   : (UniqDFM inst_a) -> (UniqDFM inst_a) -> (UniqDFM inst_a) :=
-  _GHC.Base.<<>>_.
-
 (* Translating `instance Outputable__UniqDFM' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
@@ -238,16 +234,6 @@ Definition listToUDFM {key} {elt} `{Unique.Uniquable key}
 Local Definition Monoid__UniqDFM_mempty {inst_a} : (UniqDFM inst_a) :=
   emptyUDFM.
 
-Local Definition Monoid__UniqDFM_mconcat {inst_a}
-   : list (UniqDFM inst_a) -> (UniqDFM inst_a) :=
-  GHC.Base.foldr Monoid__UniqDFM_mappend Monoid__UniqDFM_mempty.
-
-Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
-         GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
-         GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
-
 Definition filterUDFM {elt} : (elt -> bool) -> UniqDFM elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -405,6 +391,20 @@ Local Definition Semigroup__UniqDFM_op_zlzlzgzg__ {inst_a}
 
 Program Instance Semigroup__UniqDFM {a} : GHC.Base.Semigroup (UniqDFM a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqDFM_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__UniqDFM_mappend {inst_a}
+   : (UniqDFM inst_a) -> (UniqDFM inst_a) -> (UniqDFM inst_a) :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__UniqDFM_mconcat {inst_a}
+   : list (UniqDFM inst_a) -> (UniqDFM inst_a) :=
+  GHC.Base.foldr Monoid__UniqDFM_mappend Monoid__UniqDFM_mempty.
+
+Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
+         GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
+         GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
 
 Definition eltsUDFM {elt} : UniqDFM elt -> list elt :=
   fun arg_0__ =>

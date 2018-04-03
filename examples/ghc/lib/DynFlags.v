@@ -573,40 +573,8 @@ Instance Default__CompilerInfo : GHC.Err.Default CompilerInfo :=
 Instance Default__BmiVersion : GHC.Err.Default BmiVersion :=
   GHC.Err.Build_Default _ BMI1.
 
-Definition modRenamingWithImplicit (arg_0__ : ModRenaming) :=
-  let 'Mk_ModRenaming modRenamingWithImplicit _ := arg_0__ in
-  modRenamingWithImplicit.
-
-Definition modRenamings (arg_1__ : ModRenaming) :=
-  let 'Mk_ModRenaming _ modRenamings := arg_1__ in
-  modRenamings.
-
-Definition lAttributes (arg_2__ : LlvmTarget) :=
-  let 'LlvmTarget _ _ lAttributes := arg_2__ in
-  lAttributes.
-
-Definition lCPU (arg_3__ : LlvmTarget) :=
-  let 'LlvmTarget _ lCPU _ := arg_3__ in
-  lCPU.
-
-Definition lDataLayout (arg_4__ : LlvmTarget) :=
-  let 'LlvmTarget lDataLayout _ _ := arg_4__ in
-  lDataLayout.
-
-Definition ftcCurrentModule (arg_5__ : FilesToClean) :=
-  let 'FilesToClean _ ftcCurrentModule := arg_5__ in
-  ftcCurrentModule.
-
-Definition ftcGhcSession (arg_6__ : FilesToClean) :=
-  let 'FilesToClean ftcGhcSession _ := arg_6__ in
-  ftcGhcSession.
-
-Definition getLogAction (arg_7__ : LogOutput) :=
-  let 'LogOutput getLogAction _ := arg_7__ in
-  getLogAction.
-
-Definition getLogFinaliser (arg_8__ : LogOutput) :=
-  let 'LogOutput _ getLogFinaliser := arg_8__ in
+Definition getLogFinaliser (arg_0__ : LogOutput) :=
+  let 'LogOutput _ getLogFinaliser := arg_0__ in
   getLogFinaliser.
 (* Midamble *)
 

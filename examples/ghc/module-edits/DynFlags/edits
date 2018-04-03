@@ -167,6 +167,14 @@ skip DynFlags.updM
 skip DynFlags.setTmpDir
 skip DynFlags.parseModuleName
 skip DynFlags.setUnitId
+skip DynFlags.modRenamingWithImplicit
+skip DynFlags.modRenamings
+skip DynFlags.lAttributes
+skip DynFlags.lCPU
+skip DynFlags.lDataLayout
+skip DynFlags.ftcCurrentModule
+skip DynFlags.ftcGhcSession
+skip DynFlags.getLogAction
 
 
 # CmdLineParser

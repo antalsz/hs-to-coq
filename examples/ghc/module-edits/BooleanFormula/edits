@@ -1,6 +1,9 @@
 skip BooleanFormula.pprBooleanFormula'
 skip BooleanFormula.pprBooleanFormula
 skip BooleanFormula.pprBooleanFormulaNice
+skip BooleanFormula.pprBooleanFormulaNormal
+
+termination go in BooleanFormula.implies deferred
 
 redefine Local Definition BooleanFormula.Functor__BooleanFormula_fmap {a} {b} :
 	(a -> b) -> ((BooleanFormula a) -> (BooleanFormula b))
@@ -18,6 +21,27 @@ redefine Local Definition BooleanFormula.Foldable__BooleanFormula_foldMap
 redefine Local Definition BooleanFormula.Foldable__BooleanFormula_foldr
     {a} {b} : (a -> (b -> b)) -> (b -> ((BooleanFormula a) -> b))
 	 := BooleanFormula_foldr.
+
+
+# hs-to-coq gets the method operations all wrong
+redefine Fixpoint BooleanFormula.Foldable__BooleanFormula_null {a} (arg_0__ :  BooleanFormula a) : bool :=
+      match arg_0__ with
+      | Var _ => false
+      | And a1 => Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
+      | Or a1 => Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
+      | Parens a1 => Data.Foldable.all Foldable__BooleanFormula_null a1
+      end.
+
+redefine Fixpoint BooleanFormula.Functor__BooleanFormula_op_zlzd__
+  {a} {b} (arg_0__ : a) (arg_1__ : BooleanFormula b) : BooleanFormula a :=
+      match arg_0__, arg_1__ with
+      | z, Var a1 => Var ((fun b1 => z) a1)
+      | z, And a1 =>
+          And (GHC.Base.fmap (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z)) a1)
+      | z, Or a1 =>
+          Or (GHC.Base.fmap (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z)) a1)
+      | z, Parens a1 => Parens (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z) a1)
+      end.
 
 ## defined in the midamble
 skip Eq___BooleanFormula

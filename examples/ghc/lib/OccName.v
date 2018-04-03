@@ -130,7 +130,6 @@ Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default__NameSpace : Default NameSpace := Build_Default _ VarName.
 Instance Default__OccName : Default OccName := Build_Default _ (Mk_OccName default default).
 
 (* Converted value declarations: *)
@@ -563,21 +562,6 @@ Definition mkDataCOcc : OccName -> OccSet -> OccName :=
   fun occ =>
     chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$c")
                                                     (occNameString occ)).
-
-Definition isTypeableBindOcc : OccName -> bool :=
-  fun occ =>
-    match occNameString occ with
-    | cons ("$"%char) (cons ("t"%char) (cons ("c"%char) _)) => true
-    | cons ("$"%char) (cons ("t"%char) (cons ("r"%char) _)) => true
-    | _ => false
-    end.
-
-Definition isDefaultMethodOcc : OccName -> bool :=
-  fun occ =>
-    match occNameString occ with
-    | cons ("$"%char) (cons ("d"%char) (cons ("m"%char) _)) => true
-    | _ => false
-    end.
 
 Definition otherNameSpace : NameSpace -> NameSpace :=
   fun arg_0__ =>

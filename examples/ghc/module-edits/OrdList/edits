@@ -1,4 +1,5 @@
 # partial
 skip OrdList.lastOL
 
+order OrdList.Semigroup__OrdList OrdList.Monoid__OrdList_mappend
 order OrdList.Semigroup__OrdList OrdList.Monoid__OrdList_mconcat

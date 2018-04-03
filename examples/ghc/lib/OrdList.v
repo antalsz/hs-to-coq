@@ -50,10 +50,6 @@ Arguments Two {_} _ _.
 (* Translating `instance Outputable__OrdList' failed: OOPS! Cannot find
    information for class Qualified "Outputable" "Outputable" unsupported *)
 
-Local Definition Monoid__OrdList_mappend {inst_a}
-   : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
-  _GHC.Base.<<>>_.
-
 Definition appOL {a} : OrdList a -> OrdList a -> OrdList a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -77,6 +73,10 @@ Program Instance Semigroup__OrdList {a} : GHC.Base.Semigroup (OrdList a) :=
 Local Definition Monoid__OrdList_mconcat {inst_a}
    : list (OrdList inst_a) -> (OrdList inst_a) :=
   concatOL.
+
+Local Definition Monoid__OrdList_mappend {inst_a}
+   : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
+  _GHC.Base.<<>>_.
 
 Definition consOL {a} : a -> OrdList a -> OrdList a :=
   fun a bs => Cons a bs.

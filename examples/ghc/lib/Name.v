@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.
-Require DynFlags.
 Require FastString.
 Require GHC.Base.
 Require GHC.Err.
@@ -86,9 +85,7 @@ Import Module.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default__NameSort : Default NameSort := Build_Default _ System.
 Instance Default__Name : Default Name := Build_Default _ (Mk_Name default default default default).
-
 
 Instance Unique_Name : Unique.Uniquable Name := {}.
 Admitted.
@@ -406,12 +403,6 @@ Definition getSrcSpan {a} `{NamedThing a} : a -> SrcLoc.SrcSpan :=
 Definition nameUnique : Name -> Unique.Unique :=
   fun name => n_uniq name.
 
-Definition pprUnique : Unique.Unique -> GHC.Base.String :=
-  fun uniq =>
-    Outputable.sdocWithDynFlags (fun dflags =>
-                                   Outputable.ppUnless (DynFlags.gopt DynFlags.Opt_SuppressUniques dflags)
-                                   (Unique.pprUniqueAlways uniq)).
-
 Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
   fun name loc =>
     let 'Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ := name in
@@ -457,16 +448,15 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
 
 (* External variables:
      Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
-     Coq.Init.Datatypes.app DynFlags.Opt_SuppressUniques DynFlags.gopt
-     FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Err.Build_Default
-     GHC.Err.Default Maybes.orElse Module.Module Module.UnitId
-     Module.isInteractiveModule Module.moduleName Module.moduleNameColons
-     Module.moduleStableString Module.moduleUnitId Module.stableModuleCmp
-     OccName.OccName OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc
-     OccName.isValOcc OccName.isVarOcc OccName.mkTyVarOccFS OccName.mkVarOcc
-     OccName.mkVarOccFS OccName.occNameFS OccName.occNameString Outputable.ppUnless
-     Outputable.sdocWithDynFlags Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc
-     SrcLoc.SrcSpan SrcLoc.noSrcSpan SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique
-     Unique.nonDetCmpUnique Unique.pprUniqueAlways Util.thenCmp
+     Coq.Init.Datatypes.app FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default Maybes.orElse
+     Module.Module Module.UnitId Module.isInteractiveModule Module.moduleName
+     Module.moduleNameColons Module.moduleStableString Module.moduleUnitId
+     Module.stableModuleCmp OccName.OccName OccName.isDataOcc OccName.isTcOcc
+     OccName.isTvOcc OccName.isValOcc OccName.isVarOcc OccName.mkTyVarOccFS
+     OccName.mkVarOcc OccName.mkVarOccFS OccName.occNameFS OccName.occNameString
+     Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan SrcLoc.noSrcSpan
+     SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique Unique.nonDetCmpUnique
+     Util.thenCmp
 *)

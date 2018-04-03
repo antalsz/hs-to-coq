@@ -20,6 +20,8 @@ skip OccName.tidyOccName
 ## character constant
 skip OccName.startsWithUnderscore
 skip OccName.isDerivedOccName
+skip OccName.isTypeableBindOcc
+skip OccName.isDefaultMethodOcc
 
 redefine Local Definition OccName.Ord__NameSpace_compare : NameSpace -> (NameSpace -> comparison) := compare_Namespace.
 

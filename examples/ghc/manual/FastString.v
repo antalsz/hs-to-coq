@@ -2,6 +2,7 @@
    as FastStrings. For right now, just accumulate the interface that we need
    from other files. *)
 
+Require GHC.List.
 Require Import GHC.Base.
 Require Import GHC.Err.
 
@@ -17,6 +18,8 @@ Instance instance_FastString_Default : GHC.Err.Default FastString := {}.
 Admitted.
 
 Definition fsLit (s : String) : FastString := s.
+
+Definition concatFS : list FastString -> FastString := GHC.List.concat.
 
 Parameter uniqueOfFS : FastString -> GHC.Num.Int.
 

@@ -88,6 +88,7 @@ rename value Module.InstalledUnitId   = Module.Mk_InstalledUnitId
 rename value Module.InstalledModule   = Module.Mk_InstalledModule
 rename value Module.InstalledModuleEnv   = Module.Mk_InstalledModuleEnv
 rename value Module.DefUnitId   = Module.Mk_DefUnitId
+rename value BooleanFormula.Clause   = BooleanFormula.Mk_Clause
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here

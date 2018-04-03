@@ -47,35 +47,6 @@ Program Instance Eq___PatSyn : GHC.Base.Eq_ PatSyn := fun _ k =>
     k {|GHC.Base.op_zeze____ := Eq___PatSyn_op_zeze__ ;
       GHC.Base.op_zsze____ := Eq___PatSyn_op_zsze__ |}.
 
-Local Definition Ord__PatSyn_compare : PatSyn -> PatSyn -> comparison :=
-  Data.Function.on GHC.Base.compare Unique.getUnique.
-
-Local Definition Ord__PatSyn_op_zg__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.>_ Unique.getUnique.
-
-Local Definition Ord__PatSyn_op_zgze__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.>=_ Unique.getUnique.
-
-Local Definition Ord__PatSyn_op_zl__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.<_ Unique.getUnique.
-
-Local Definition Ord__PatSyn_op_zlze__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.<=_ Unique.getUnique.
-
-Local Definition Ord__PatSyn_min : PatSyn -> PatSyn -> PatSyn :=
-  fun x y => if Ord__PatSyn_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__PatSyn_max : PatSyn -> PatSyn -> PatSyn :=
-  fun x y => if Ord__PatSyn_op_zlze__ x y : bool then y else x.
-
-Program Instance Ord__PatSyn : GHC.Base.Ord PatSyn := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__PatSyn_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__PatSyn_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__PatSyn_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__PatSyn_op_zgze__ ;
-      GHC.Base.compare__ := Ord__PatSyn_compare ;
-      GHC.Base.max__ := Ord__PatSyn_max ;
-      GHC.Base.min__ := Ord__PatSyn_min |}.
 
 (* Translating `instance Unique.Uniquable PatSyn.PatSyn' failed: OOPS! Cannot
    find information for class Qualified "Unique" "Uniquable" unsupported *)

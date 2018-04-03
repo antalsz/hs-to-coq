@@ -76,13 +76,6 @@ Definition conLikesWithFields
     let has_flds := fun dc => Data.Foldable.all (has_fld dc) lbls in
     GHC.List.filter has_flds con_likes.
 
-Definition conLikeIsInfix : ConLike -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon dc => DataCon.dataConIsInfix dc
-    | PatSynCon ps => PatSyn.patSynIsInfix ps
-    end.
-
 Definition conLikeName : ConLike -> Name.Name :=
   fun arg_0__ =>
     match arg_0__ with
@@ -106,9 +99,9 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
 
 (* External variables:
      bool list negb BasicTypes.Arity Data.Foldable.all Data.Foldable.any
-     DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConIsInfix
-     DataCon.dataConName DataCon.dataConSourceArity FieldLabel.FieldLabel
-     FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__
-     GHC.List.filter Name.Name PatSyn.PatSyn PatSyn.patSynArity
-     PatSyn.patSynFieldLabels PatSyn.patSynIsInfix PatSyn.patSynName Unique.getUnique
+     DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConName
+     DataCon.dataConSourceArity FieldLabel.FieldLabel FieldLabel.FieldLabelString
+     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.List.filter Name.Name
+     PatSyn.PatSyn PatSyn.patSynArity PatSyn.patSynFieldLabels PatSyn.patSynName
+     Unique.getUnique
 *)

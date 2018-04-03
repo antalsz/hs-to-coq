@@ -66,16 +66,16 @@ Definition n_loc (arg_0__ : Name) :=
   let 'Mk_Name _ _ _ n_loc := arg_0__ in
   n_loc.
 
-Definition n_occ (arg_1__ : Name) :=
-  let 'Mk_Name _ n_occ _ _ := arg_1__ in
+Definition n_occ (arg_0__ : Name) :=
+  let 'Mk_Name _ n_occ _ _ := arg_0__ in
   n_occ.
 
-Definition n_sort (arg_2__ : Name) :=
-  let 'Mk_Name n_sort _ _ _ := arg_2__ in
+Definition n_sort (arg_0__ : Name) :=
+  let 'Mk_Name n_sort _ _ _ := arg_0__ in
   n_sort.
 
-Definition n_uniq (arg_3__ : Name) :=
-  let 'Mk_Name _ _ n_uniq _ := arg_3__ in
+Definition n_uniq (arg_0__ : Name) :=
+  let 'Mk_Name _ _ n_uniq _ := arg_0__ in
   n_uniq.
 (* Midamble *)
 

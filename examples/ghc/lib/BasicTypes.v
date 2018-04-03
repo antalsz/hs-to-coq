@@ -277,32 +277,32 @@ Definition sl_fs (arg_0__ : StringLiteral) :=
   let 'Mk_StringLiteral _ sl_fs := arg_0__ in
   sl_fs.
 
-Definition sl_st (arg_1__ : StringLiteral) :=
-  let 'Mk_StringLiteral sl_st _ := arg_1__ in
+Definition sl_st (arg_0__ : StringLiteral) :=
+  let 'Mk_StringLiteral sl_st _ := arg_0__ in
   sl_st.
 
-Definition isSafeOverlap (arg_2__ : OverlapFlag) :=
-  let 'Mk_OverlapFlag _ isSafeOverlap := arg_2__ in
+Definition isSafeOverlap (arg_0__ : OverlapFlag) :=
+  let 'Mk_OverlapFlag _ isSafeOverlap := arg_0__ in
   isSafeOverlap.
 
-Definition overlapMode (arg_3__ : OverlapFlag) :=
-  let 'Mk_OverlapFlag overlapMode _ := arg_3__ in
+Definition overlapMode (arg_0__ : OverlapFlag) :=
+  let 'Mk_OverlapFlag overlapMode _ := arg_0__ in
   overlapMode.
 
-Definition il_neg (arg_4__ : IntegralLit) :=
-  let 'IL _ il_neg _ := arg_4__ in
+Definition il_neg (arg_0__ : IntegralLit) :=
+  let 'IL _ il_neg _ := arg_0__ in
   il_neg.
 
-Definition il_text (arg_5__ : IntegralLit) :=
-  let 'IL il_text _ _ := arg_5__ in
+Definition il_text (arg_0__ : IntegralLit) :=
+  let 'IL il_text _ _ := arg_0__ in
   il_text.
 
-Definition il_value (arg_6__ : IntegralLit) :=
-  let 'IL _ _ il_value := arg_6__ in
+Definition il_value (arg_0__ : IntegralLit) :=
+  let 'IL _ _ il_value := arg_0__ in
   il_value.
 
-Definition occ_in_lam (arg_7__ : OccInfo) :=
-  match arg_7__ with
+Definition occ_in_lam (arg_0__ : OccInfo) :=
+  match arg_0__ with
   | ManyOccs _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `occ_in_lam' has no match in constructor `ManyOccs' of type `OccInfo'")
@@ -315,8 +315,8 @@ Definition occ_in_lam (arg_7__ : OccInfo) :=
                      "Partial record selector: field `occ_in_lam' has no match in constructor `IAmALoopBreaker' of type `OccInfo'")
   end.
 
-Definition occ_int_cxt (arg_8__ : OccInfo) :=
-  match arg_8__ with
+Definition occ_int_cxt (arg_0__ : OccInfo) :=
+  match arg_0__ with
   | ManyOccs _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `occ_int_cxt' has no match in constructor `ManyOccs' of type `OccInfo'")
@@ -329,8 +329,8 @@ Definition occ_int_cxt (arg_8__ : OccInfo) :=
                      "Partial record selector: field `occ_int_cxt' has no match in constructor `IAmALoopBreaker' of type `OccInfo'")
   end.
 
-Definition occ_one_br (arg_9__ : OccInfo) :=
-  match arg_9__ with
+Definition occ_one_br (arg_0__ : OccInfo) :=
+  match arg_0__ with
   | ManyOccs _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `occ_one_br' has no match in constructor `ManyOccs' of type `OccInfo'")
@@ -343,8 +343,8 @@ Definition occ_one_br (arg_9__ : OccInfo) :=
                      "Partial record selector: field `occ_one_br' has no match in constructor `IAmALoopBreaker' of type `OccInfo'")
   end.
 
-Definition occ_rules_only (arg_10__ : OccInfo) :=
-  match arg_10__ with
+Definition occ_rules_only (arg_0__ : OccInfo) :=
+  match arg_0__ with
   | ManyOccs _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `occ_rules_only' has no match in constructor `ManyOccs' of type `OccInfo'")
@@ -357,8 +357,8 @@ Definition occ_rules_only (arg_10__ : OccInfo) :=
   | IAmALoopBreaker occ_rules_only _ => occ_rules_only
   end.
 
-Definition occ_tail (arg_11__ : OccInfo) :=
-  match arg_11__ with
+Definition occ_tail (arg_0__ : OccInfo) :=
+  match arg_0__ with
   | ManyOccs occ_tail => occ_tail
   | IAmDead =>
       GHC.Err.error (GHC.Base.hs_string__
@@ -367,44 +367,44 @@ Definition occ_tail (arg_11__ : OccInfo) :=
   | IAmALoopBreaker _ occ_tail => occ_tail
   end.
 
-Definition fl_neg (arg_12__ : FractionalLit) :=
-  let 'FL _ fl_neg _ := arg_12__ in
+Definition fl_neg (arg_0__ : FractionalLit) :=
+  let 'FL _ fl_neg _ := arg_0__ in
   fl_neg.
 
-Definition fl_text (arg_13__ : FractionalLit) :=
-  let 'FL fl_text _ _ := arg_13__ in
+Definition fl_text (arg_0__ : FractionalLit) :=
+  let 'FL fl_text _ _ := arg_0__ in
   fl_text.
 
-Definition fl_value (arg_14__ : FractionalLit) :=
-  let 'FL _ _ fl_value := arg_14__ in
+Definition fl_value (arg_0__ : FractionalLit) :=
+  let 'FL _ _ fl_value := arg_0__ in
   fl_value.
 
-Definition fromEP {a} (arg_15__ : EP a) :=
-  let 'Mk_EP fromEP _ := arg_15__ in
+Definition fromEP {a} (arg_0__ : EP a) :=
+  let 'Mk_EP fromEP _ := arg_0__ in
   fromEP.
 
-Definition toEP {a} (arg_16__ : EP a) :=
-  let 'Mk_EP _ toEP := arg_16__ in
+Definition toEP {a} (arg_0__ : EP a) :=
+  let 'Mk_EP _ toEP := arg_0__ in
   toEP.
 
-Definition inl_act (arg_17__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ _ inl_act _ := arg_17__ in
+Definition inl_act (arg_0__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ _ inl_act _ := arg_0__ in
   inl_act.
 
-Definition inl_inline (arg_18__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ inl_inline _ _ _ := arg_18__ in
+Definition inl_inline (arg_0__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ inl_inline _ _ _ := arg_0__ in
   inl_inline.
 
-Definition inl_rule (arg_19__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ _ _ inl_rule := arg_19__ in
+Definition inl_rule (arg_0__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ _ _ inl_rule := arg_0__ in
   inl_rule.
 
-Definition inl_sat (arg_20__ : InlinePragma) :=
-  let 'Mk_InlinePragma _ _ inl_sat _ _ := arg_20__ in
+Definition inl_sat (arg_0__ : InlinePragma) :=
+  let 'Mk_InlinePragma _ _ inl_sat _ _ := arg_0__ in
   inl_sat.
 
-Definition inl_src (arg_21__ : InlinePragma) :=
-  let 'Mk_InlinePragma inl_src _ _ _ _ := arg_21__ in
+Definition inl_src (arg_0__ : InlinePragma) :=
+  let 'Mk_InlinePragma inl_src _ _ _ _ := arg_0__ in
   inl_src.
 (* Midamble *)
 

@@ -54,20 +54,20 @@ Definition srcSpanECol (arg_0__ : RealSrcSpan) :=
   let 'RealSrcSpan' _ _ _ _ srcSpanECol := arg_0__ in
   srcSpanECol.
 
-Definition srcSpanELine (arg_1__ : RealSrcSpan) :=
-  let 'RealSrcSpan' _ _ _ srcSpanELine _ := arg_1__ in
+Definition srcSpanELine (arg_0__ : RealSrcSpan) :=
+  let 'RealSrcSpan' _ _ _ srcSpanELine _ := arg_0__ in
   srcSpanELine.
 
-Definition srcSpanFile (arg_2__ : RealSrcSpan) :=
-  let 'RealSrcSpan' srcSpanFile _ _ _ _ := arg_2__ in
+Definition srcSpanFile (arg_0__ : RealSrcSpan) :=
+  let 'RealSrcSpan' srcSpanFile _ _ _ _ := arg_0__ in
   srcSpanFile.
 
-Definition srcSpanSCol (arg_3__ : RealSrcSpan) :=
-  let 'RealSrcSpan' _ _ srcSpanSCol _ _ := arg_3__ in
+Definition srcSpanSCol (arg_0__ : RealSrcSpan) :=
+  let 'RealSrcSpan' _ _ srcSpanSCol _ _ := arg_0__ in
   srcSpanSCol.
 
-Definition srcSpanSLine (arg_4__ : RealSrcSpan) :=
-  let 'RealSrcSpan' _ srcSpanSLine _ _ _ := arg_4__ in
+Definition srcSpanSLine (arg_0__ : RealSrcSpan) :=
+  let 'RealSrcSpan' _ srcSpanSLine _ _ _ := arg_0__ in
   srcSpanSLine.
 (* Midamble *)
 

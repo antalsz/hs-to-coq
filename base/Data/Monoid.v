@@ -30,8 +30,8 @@ Definition getLast {a} (arg_0__ : Last a) :=
   let 'Mk_Last getLast := arg_0__ in
   getLast.
 
-Definition getFirst {a} (arg_1__ : First a) :=
-  let 'Mk_First getFirst := arg_1__ in
+Definition getFirst {a} (arg_0__ : First a) :=
+  let 'Mk_First getFirst := arg_0__ in
   getFirst.
 (* Converted value declarations: *)
 

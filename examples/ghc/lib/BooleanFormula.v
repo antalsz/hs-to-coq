@@ -60,8 +60,8 @@ Definition clauseAtoms {a} (arg_0__ : Clause a) :=
   let 'Mk_Clause clauseAtoms _ := arg_0__ in
   clauseAtoms.
 
-Definition clauseExprs {a} (arg_1__ : Clause a) :=
-  let 'Mk_Clause _ clauseExprs := arg_1__ in
+Definition clauseExprs {a} (arg_0__ : Clause a) :=
+  let 'Mk_Clause _ clauseExprs := arg_0__ in
   clauseExprs.
 (* Midamble *)
 

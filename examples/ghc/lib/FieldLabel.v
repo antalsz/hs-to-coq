@@ -46,12 +46,12 @@ Definition flIsOverloaded {a} (arg_0__ : FieldLbl a) :=
   let 'Mk_FieldLabel _ flIsOverloaded _ := arg_0__ in
   flIsOverloaded.
 
-Definition flLabel {a} (arg_1__ : FieldLbl a) :=
-  let 'Mk_FieldLabel flLabel _ _ := arg_1__ in
+Definition flLabel {a} (arg_0__ : FieldLbl a) :=
+  let 'Mk_FieldLabel flLabel _ _ := arg_0__ in
   flLabel.
 
-Definition flSelector {a} (arg_2__ : FieldLbl a) :=
-  let 'Mk_FieldLabel _ _ flSelector := arg_2__ in
+Definition flSelector {a} (arg_0__ : FieldLbl a) :=
+  let 'Mk_FieldLabel _ _ flSelector := arg_0__ in
   flSelector.
 (* Converted value declarations: *)
 

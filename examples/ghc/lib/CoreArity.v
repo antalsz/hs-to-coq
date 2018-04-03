@@ -40,8 +40,8 @@ Definition ae_cheap_fn (arg_0__ : ArityEnv) :=
   let 'AE ae_cheap_fn _ := arg_0__ in
   ae_cheap_fn.
 
-Definition ae_ped_bot (arg_1__ : ArityEnv) :=
-  let 'AE _ ae_ped_bot := arg_1__ in
+Definition ae_ped_bot (arg_0__ : ArityEnv) :=
+  let 'AE _ ae_ped_bot := arg_0__ in
   ae_ped_bot.
 (* Converted value declarations: *)
 

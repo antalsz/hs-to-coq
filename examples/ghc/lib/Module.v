@@ -120,56 +120,56 @@ Definition installedUnitIdFS (arg_0__ : InstalledUnitId) :=
   let 'Mk_InstalledUnitId installedUnitIdFS := arg_0__ in
   installedUnitIdFS.
 
-Definition installedModuleName (arg_1__ : InstalledModule) :=
-  let 'Mk_InstalledModule _ installedModuleName := arg_1__ in
+Definition installedModuleName (arg_0__ : InstalledModule) :=
+  let 'Mk_InstalledModule _ installedModuleName := arg_0__ in
   installedModuleName.
 
-Definition installedModuleUnitId (arg_2__ : InstalledModule) :=
-  let 'Mk_InstalledModule installedModuleUnitId _ := arg_2__ in
+Definition installedModuleUnitId (arg_0__ : InstalledModule) :=
+  let 'Mk_InstalledModule installedModuleUnitId _ := arg_0__ in
   installedModuleUnitId.
 
-Definition unDefUnitId (arg_3__ : DefUnitId) :=
-  let 'Mk_DefUnitId unDefUnitId := arg_3__ in
+Definition unDefUnitId (arg_0__ : DefUnitId) :=
+  let 'Mk_DefUnitId unDefUnitId := arg_0__ in
   unDefUnitId.
 
-Definition indefUnitIdComponentId (arg_4__ : IndefUnitId) :=
-  let 'Mk_IndefUnitId _ _ indefUnitIdComponentId _ _ := arg_4__ in
+Definition indefUnitIdComponentId (arg_0__ : IndefUnitId) :=
+  let 'Mk_IndefUnitId _ _ indefUnitIdComponentId _ _ := arg_0__ in
   indefUnitIdComponentId.
 
-Definition indefUnitIdFS (arg_5__ : IndefUnitId) :=
-  let 'Mk_IndefUnitId indefUnitIdFS _ _ _ _ := arg_5__ in
+Definition indefUnitIdFS (arg_0__ : IndefUnitId) :=
+  let 'Mk_IndefUnitId indefUnitIdFS _ _ _ _ := arg_0__ in
   indefUnitIdFS.
 
-Definition indefUnitIdFreeHoles (arg_6__ : IndefUnitId) :=
-  let 'Mk_IndefUnitId _ _ _ _ indefUnitIdFreeHoles := arg_6__ in
+Definition indefUnitIdFreeHoles (arg_0__ : IndefUnitId) :=
+  let 'Mk_IndefUnitId _ _ _ _ indefUnitIdFreeHoles := arg_0__ in
   indefUnitIdFreeHoles.
 
-Definition indefUnitIdInsts (arg_7__ : IndefUnitId) :=
-  let 'Mk_IndefUnitId _ _ _ indefUnitIdInsts _ := arg_7__ in
+Definition indefUnitIdInsts (arg_0__ : IndefUnitId) :=
+  let 'Mk_IndefUnitId _ _ _ indefUnitIdInsts _ := arg_0__ in
   indefUnitIdInsts.
 
-Definition indefUnitIdKey (arg_8__ : IndefUnitId) :=
-  let 'Mk_IndefUnitId _ indefUnitIdKey _ _ _ := arg_8__ in
+Definition indefUnitIdKey (arg_0__ : IndefUnitId) :=
+  let 'Mk_IndefUnitId _ indefUnitIdKey _ _ _ := arg_0__ in
   indefUnitIdKey.
 
-Definition moduleName (arg_9__ : Module) :=
-  let 'Mk_Module _ moduleName := arg_9__ in
+Definition moduleName (arg_0__ : Module) :=
+  let 'Mk_Module _ moduleName := arg_0__ in
   moduleName.
 
-Definition moduleUnitId (arg_10__ : Module) :=
-  let 'Mk_Module moduleUnitId _ := arg_10__ in
+Definition moduleUnitId (arg_0__ : Module) :=
+  let 'Mk_Module moduleUnitId _ := arg_0__ in
   moduleUnitId.
 
-Definition indefModuleName (arg_11__ : IndefModule) :=
-  let 'Mk_IndefModule _ indefModuleName := arg_11__ in
+Definition indefModuleName (arg_0__ : IndefModule) :=
+  let 'Mk_IndefModule _ indefModuleName := arg_0__ in
   indefModuleName.
 
-Definition indefModuleUnitId (arg_12__ : IndefModule) :=
-  let 'Mk_IndefModule indefModuleUnitId _ := arg_12__ in
+Definition indefModuleUnitId (arg_0__ : IndefModule) :=
+  let 'Mk_IndefModule indefModuleUnitId _ := arg_0__ in
   indefModuleUnitId.
 
-Definition unNDModule (arg_13__ : NDModule) :=
-  let 'Mk_NDModule unNDModule := arg_13__ in
+Definition unNDModule (arg_0__ : NDModule) :=
+  let 'Mk_NDModule unNDModule := arg_0__ in
   unNDModule.
 (* Midamble *)
 

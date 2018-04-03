@@ -58,28 +58,28 @@ Definition getSum {a} (arg_0__ : Sum a) :=
   let 'Mk_Sum getSum := arg_0__ in
   getSum.
 
-Definition getProduct {a} (arg_1__ : Product a) :=
-  let 'Mk_Product getProduct := arg_1__ in
+Definition getProduct {a} (arg_0__ : Product a) :=
+  let 'Mk_Product getProduct := arg_0__ in
   getProduct.
 
-Definition appEndo {a} (arg_2__ : Endo a) :=
-  let 'Mk_Endo appEndo := arg_2__ in
+Definition appEndo {a} (arg_0__ : Endo a) :=
+  let 'Mk_Endo appEndo := arg_0__ in
   appEndo.
 
-Definition getDual {a} (arg_3__ : Dual a) :=
-  let 'Mk_Dual getDual := arg_3__ in
+Definition getDual {a} (arg_0__ : Dual a) :=
+  let 'Mk_Dual getDual := arg_0__ in
   getDual.
 
-Definition getAny (arg_4__ : Any) :=
-  let 'Mk_Any getAny := arg_4__ in
+Definition getAny (arg_0__ : Any) :=
+  let 'Mk_Any getAny := arg_0__ in
   getAny.
 
-Definition getAlt {f : Type -> Type} {a} (arg_5__ : Alt f a) :=
-  let 'Mk_Alt getAlt := arg_5__ in
+Definition getAlt {f : Type -> Type} {a} (arg_0__ : Alt f a) :=
+  let 'Mk_Alt getAlt := arg_0__ in
   getAlt.
 
-Definition getAll (arg_6__ : All) :=
-  let 'Mk_All getAll := arg_6__ in
+Definition getAll (arg_0__ : All) :=
+  let 'Mk_All getAll := arg_0__ in
   getAll.
 (* Midamble *)
 

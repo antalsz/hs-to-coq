@@ -35,7 +35,6 @@ import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
 import HsToCoq.Util.GHC.Module
-import BasicTypes (TopLevelFlag(..))
 import Panic
 import Bag
 
@@ -74,7 +73,7 @@ convertHsGroup mod HsGroup{..} = do
         convUnsupported "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
         sigs  <- convertLSigs lsigs
-        defns <- (convertTypedBindings TopLevel
+        defns <- (convertTypedModuleBindings
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
                    ??

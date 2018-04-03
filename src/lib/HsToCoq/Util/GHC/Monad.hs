@@ -25,6 +25,7 @@ import qualified Control.Monad.Trans.State.Lazy    as SL
 import qualified Control.Monad.Trans.RWS.Strict    as RWSS
 import qualified Control.Monad.Trans.RWS.Lazy      as RWSL
 import qualified Control.Monad.Trans.Variables     as V
+import qualified Control.Monad.Trans.Counter       as C
 
 instance MonadTrans GhcT where
   lift = liftGhcT
@@ -84,6 +85,10 @@ instance GhcMonad m => GhcMonad (SL.StateT s m) where
   setSession = lift . setSession
 
 instance (GhcMonad m, Monoid w) => GhcMonad (RWSS.RWST r w s m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
+instance (GhcMonad m) => GhcMonad (C.CounterT m) where
   getSession = lift   getSession
   setSession = lift . setSession
 

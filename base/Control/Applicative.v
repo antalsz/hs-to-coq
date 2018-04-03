@@ -37,9 +37,9 @@ Definition unwrapMonad {m : Type -> Type} {a} (arg_0__ : WrappedMonad m a) :=
   let 'WrapMonad unwrapMonad := arg_0__ in
   unwrapMonad.
 
-Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_1__
+Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_0__
     : WrappedArrow a b c) :=
-  let 'WrapArrow unwrapArrow := arg_1__ in
+  let 'WrapArrow unwrapArrow := arg_0__ in
   unwrapArrow.
 (* Converted value declarations: *)
 

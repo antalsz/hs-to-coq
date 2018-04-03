@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, TupleSections, LambdaCase, FlexibleContexts, MultiWayIf #-}
 
-module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls, convertModuleValDecls) where
+module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls) where
 
 import Control.Lens
 
@@ -14,7 +14,6 @@ import Control.Monad.IO.Class
 
 import GHC hiding (Name)
 import Panic
-import BasicTypes (TopLevelFlag(..))
 
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina as Coq
@@ -30,17 +29,17 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
-convertModuleValDecls :: ConversionMonad m => [(Maybe ModuleName, HsDecl GhcRn)] -> m [Sentence]
-convertModuleValDecls mdecls = do
+convertValDecls :: ConversionMonad m => [HsDecl GhcRn] -> m [Sentence]
+convertValDecls mdecls = do
   -- TODO: Don't even convert the signatures for `skipped' things here
-  (defns, sigs) <- bitraverse pure convertModuleSigs
+  (defns, sigs) <- bitraverse pure convertSigs
                 .  partitionEithers
                 .  flip mapMaybe mdecls $ \case
-                     (mname, ValD def) -> Just $ Left  (mname, def)
-                     (mname, SigD sig) -> Just $ Right (mname, sig)
-                     _                 -> Nothing
+                     (ValD def) -> Just $ Left  def
+                     (SigD sig) -> Just $ Right sig
+                     _          -> Nothing
 
-  bindings <- (fmap M.fromList . (convertTypedModuleBindings TopLevel defns sigs ?? Just axiomatizeBinding))
+  bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
                    r <- use (edits.redefinitions.at name)
@@ -79,6 +78,3 @@ convertModuleValDecls mdecls = do
           pure (Bare name, [translationFailedComment name exn, axiom (Bare name)])
         axiomatizeBinding _ exn =
           liftIO $ throwGhcExceptionIO exn
-
-convertValDecls :: ConversionMonad m => [HsDecl GhcRn] -> m [Sentence]
-convertValDecls = convertModuleValDecls . map (Nothing,)

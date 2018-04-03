@@ -5,7 +5,7 @@
 
 module HsToCoq.ConvertHaskell.Monad (
   -- * Types
-  ConversionMonad, ConversionT, evalConversion,
+  ConversionMonad, LocalConvMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
   currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed, axioms,
@@ -16,7 +16,6 @@ module HsToCoq.ConvertHaskell.Monad (
   withCurrentDefinition,
   fresh, gensym, genqid,
   rename,
-  localizeConversionState,
   -- * Access to the typechecker environment ('TcGblEnv')
   lookupTyThing,
   -- * Errors
@@ -33,7 +32,7 @@ import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import Data.Bifunctor
 import qualified Data.Text as T
-import Numeric.Natural
+import Control.Monad.Trans.Counter
 
 import Control.Monad.State
 import Control.Monad.Variables
@@ -77,7 +76,6 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        , _typecheckerEnvironment :: !(Maybe TcGblEnv)
                                        , _axioms                 :: !(Map Qualid Term)
-                                       , __unique                :: !Natural
                                        }
 makeLenses ''ConversionState
 -- '_currentModule', '_currentDefinition) and '_unique' are not exported
@@ -103,6 +101,7 @@ renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 
 
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m)
+type LocalConvMonad m = (ConversionMonad m, CounterMonad m)
 type ConversionT m = StateT ConversionState (VariablesT Qualid () m)
 
 -- HACK: Hard-code information about some data types here
@@ -464,8 +463,6 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
 
   _typecheckerEnvironment = Nothing
 
-  __unique = 0
-
 withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 withCurrentModuleOrNone newModule = gbracket setModule restoreModule . const
   where
@@ -482,39 +479,22 @@ maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 maybeWithCurrentModule = maybe id withCurrentModule
 
 withCurrentDefinition :: ConversionMonad m => Qualid -> m a -> m a
-withCurrentDefinition newDef = gbracket set restore . const . restartUniqCounter
+withCurrentDefinition newDef = gbracket set restore . const
   where
   set = _currentDefinition <<.= Just newDef
   restore oldDef = _currentDefinition .= oldDef
 
--- Uniques are always (?) function-local, so restart the counter, for more reproducible output
--- Possible refactoring: Have a separate monad state for inside local functions
-restartUniqCounter :: ConversionMonad m =>m a -> m a
-restartUniqCounter = gbracket set restore . const
-  where
-  set = _unique <<.= 0
-  restore globalCounter = _unique .= globalCounter
-
-fresh :: ConversionMonad m => m Natural
-fresh = _unique <<+= 1
-
-gensym :: ConversionMonad m => Text -> m Ident
+gensym :: LocalConvMonad m => Text -> m Ident
 gensym name = do u <- fresh
                  pure $ name <> "_" <> T.pack (show u) <> "__"
 
-genqid :: ConversionMonad m => Text -> m Qualid
+genqid :: LocalConvMonad m => Text -> m Qualid
 genqid name = Bare <$> gensym name
 
 -- Mostly for point-free use these days
 rename :: ConversionMonad m => HsNamespace -> Qualid -> Qualid -> m ()
 rename ns x x' = renamed ns x ?= x'
 {-# INLINABLE rename #-}
-
-localizeConversionState :: ConversionMonad m => m a -> m a
-localizeConversionState = gbracket get
-                                   (\cs -> do u <- use _unique
-                                              put $ cs & _unique .~ u)
-                        . const
 
 throwProgramError :: MonadIO m => String -> m a
 throwProgramError = liftIO . throwGhcExceptionIO . ProgramError

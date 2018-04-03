@@ -110,12 +110,12 @@ Definition matchedKey {f} {k} {x} {y} {z} (arg_0__ : WhenMatched f k x y z) :=
   let 'Mk_WhenMatched matchedKey := arg_0__ in
   matchedKey.
 
-Definition missingKey {f} {k} {x} {y} (arg_1__ : WhenMissing f k x y) :=
-  let 'Mk_WhenMissing _ missingKey := arg_1__ in
+Definition missingKey {f} {k} {x} {y} (arg_0__ : WhenMissing f k x y) :=
+  let 'Mk_WhenMissing _ missingKey := arg_0__ in
   missingKey.
 
-Definition missingSubtree {f} {k} {x} {y} (arg_2__ : WhenMissing f k x y) :=
-  let 'Mk_WhenMissing missingSubtree _ := arg_2__ in
+Definition missingSubtree {f} {k} {x} {y} (arg_0__ : WhenMissing f k x y) :=
+  let 'Mk_WhenMissing missingSubtree _ := arg_0__ in
   missingSubtree.
 (* Midamble *)
 

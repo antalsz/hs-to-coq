@@ -41,7 +41,7 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
+convertPat :: (LocalConvMonad m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -162,12 +162,12 @@ convertPat SumPat{} =
 
 --------------------------------------------------------------------------------
 
-convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
+convertLPat :: (LocalConvMonad m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
 convertLPat = convertPat . unLoc
 
 --------------------------------------------------------------------------------
 
-convertIntegerPat :: (ConversionMonad m, MonadWriter [Term] m)
+convertIntegerPat :: (LocalConvMonad m, MonadWriter [Term] m)
                   => String -> Integer -> m Pattern
 convertIntegerPat what hsInt = do
   var <- gensym "num"

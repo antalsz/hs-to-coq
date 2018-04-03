@@ -63,8 +63,8 @@ Definition occNameFS (arg_0__ : OccName) :=
   let 'Mk_OccName _ occNameFS := arg_0__ in
   occNameFS.
 
-Definition occNameSpace (arg_1__ : OccName) :=
-  let 'Mk_OccName occNameSpace _ := arg_1__ in
+Definition occNameSpace (arg_0__ : OccName) :=
+  let 'Mk_OccName occNameSpace _ := arg_0__ in
   occNameSpace.
 (* Midamble *)
 

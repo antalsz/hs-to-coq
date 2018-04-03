@@ -65,24 +65,24 @@ Definition unwrapMonoid {m} (arg_0__ : WrappedMonoid m) :=
   let 'WrapMonoid unwrapMonoid := arg_0__ in
   unwrapMonoid.
 
-Definition getOption {a} (arg_1__ : Option a) :=
-  let 'Mk_Option getOption := arg_1__ in
+Definition getOption {a} (arg_0__ : Option a) :=
+  let 'Mk_Option getOption := arg_0__ in
   getOption.
 
-Definition getMin {a} (arg_2__ : Min a) :=
-  let 'Mk_Min getMin := arg_2__ in
+Definition getMin {a} (arg_0__ : Min a) :=
+  let 'Mk_Min getMin := arg_0__ in
   getMin.
 
-Definition getMax {a} (arg_3__ : Max a) :=
-  let 'Mk_Max getMax := arg_3__ in
+Definition getMax {a} (arg_0__ : Max a) :=
+  let 'Mk_Max getMax := arg_0__ in
   getMax.
 
-Definition getLast {a} (arg_4__ : Last a) :=
-  let 'Mk_Last getLast := arg_4__ in
+Definition getLast {a} (arg_0__ : Last a) :=
+  let 'Mk_Last getLast := arg_0__ in
   getLast.
 
-Definition getFirst {a} (arg_5__ : First a) :=
-  let 'Mk_First getFirst := arg_5__ in
+Definition getFirst {a} (arg_0__ : First a) :=
+  let 'Mk_First getFirst := arg_0__ in
   getFirst.
 (* Midamble *)
 

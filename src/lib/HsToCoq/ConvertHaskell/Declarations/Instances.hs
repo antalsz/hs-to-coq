@@ -30,7 +30,6 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 import GHC hiding (Name)
-import BasicTypes (TopLevelFlag(..))
 import Bag
 import HsToCoq.Util.GHC.Exception
 import HsToCoq.Util.GHC.Module
@@ -160,7 +159,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
   use (edits.skipped.contains instanceName) >>= \case
     True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
     False -> ghandle err_handler $ do
-        cbinds   <- convertTypedBindings TopLevel (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+        cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
                                        (\case ConvertedDefinitionBinding cdef -> pure cdef
                                               ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
                                        Nothing -- error handler

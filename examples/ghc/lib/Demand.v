@@ -140,20 +140,20 @@ Definition kf_abs (arg_0__ : KillFlags) :=
   let 'KillFlags kf_abs _ _ := arg_0__ in
   kf_abs.
 
-Definition kf_called_once (arg_1__ : KillFlags) :=
-  let 'KillFlags _ _ kf_called_once := arg_1__ in
+Definition kf_called_once (arg_0__ : KillFlags) :=
+  let 'KillFlags _ _ kf_called_once := arg_0__ in
   kf_called_once.
 
-Definition kf_used_once (arg_2__ : KillFlags) :=
-  let 'KillFlags _ kf_used_once _ := arg_2__ in
+Definition kf_used_once (arg_0__ : KillFlags) :=
+  let 'KillFlags _ kf_used_once _ := arg_0__ in
   kf_used_once.
 
-Definition sd {s} {u} (arg_3__ : JointDmd s u) :=
-  let 'JD sd _ := arg_3__ in
+Definition sd {s} {u} (arg_0__ : JointDmd s u) :=
+  let 'JD sd _ := arg_0__ in
   sd.
 
-Definition ud {s} {u} (arg_4__ : JointDmd s u) :=
-  let 'JD _ ud := arg_4__ in
+Definition ud {s} {u} (arg_0__ : JointDmd s u) :=
+  let 'JD _ ud := arg_0__ in
   ud.
 (* Midamble *)
 

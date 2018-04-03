@@ -5,6 +5,7 @@ module HsToCoq.Util.GHC.DynFlags (module DynFlags) where
 
 import DynFlags
 
+import Control.Monad.Trans
 import qualified Control.Monad.Trans.Identity           as I
 import qualified Control.Monad.Trans.Writer.Strict      as WS
 import qualified Control.Monad.Trans.State.Strict       as SS
@@ -12,6 +13,7 @@ import qualified Control.Monad.Trans.State.Lazy         as SL
 import qualified Control.Monad.Trans.RWS.Strict         as RWSS
 import qualified Control.Monad.Trans.RWS.Lazy           as RWSL
 import qualified Control.Monad.Trans.Cont               as C
+import qualified Control.Monad.Trans.Counter            as C
 import qualified Pipes                                  as P
 import qualified Control.Monad.Trans.Variables.Internal as V
 
@@ -43,3 +45,6 @@ instance (HasDynFlags m, Monad m) => HasDynFlags (P.ListT m) where
 
 instance (HasDynFlags m, Monad m, Ord i) => HasDynFlags (V.VariablesT i d m) where
   getDynFlags = V.VariablesT getDynFlags
+
+instance (HasDynFlags m, Monad m) => HasDynFlags (C.CounterT m) where
+  getDynFlags = lift getDynFlags

@@ -33,8 +33,8 @@ Definition pFst {a} (arg_0__ : Pair a) :=
   let 'Mk_Pair pFst _ := arg_0__ in
   pFst.
 
-Definition pSnd {a} (arg_1__ : Pair a) :=
-  let 'Mk_Pair _ pSnd := arg_1__ in
+Definition pSnd {a} (arg_0__ : Pair a) :=
+  let 'Mk_Pair _ pSnd := arg_0__ in
   pSnd.
 (* Converted value declarations: *)
 

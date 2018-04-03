@@ -2,6 +2,8 @@ rename module TyCoRep  CoreType
 rename module Type     CoreType
 rename module Coercion CoreType
 rename module Var      CoreType
+rename module CoAxiom  CoreType
+rename module TyCon    CoreType
 
 rename module Data.Set.Base Data.Set.Internal
 rename module Data.Map.Base Data.Map.Internal

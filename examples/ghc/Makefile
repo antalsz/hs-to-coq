@@ -68,14 +68,12 @@ CORE_MODULES = \
   VarEnv \
   ConLike \
   FV \
-  TyCon \
   Literal \
   CoreSyn \
   UnVarGraph \
   Demand \
   CoreSubst \
   CoreUtils \
-  CoAxiom \
   Id \
   CoreFVs \
   CoreArity \
@@ -83,16 +81,16 @@ CORE_MODULES = \
 CORETYPE = \
   TyCoRep \
   Coercion \
+  CoAxiom \
   Type \
   Var \
+  TyCon \
 
 
 # These modules translate, but do not compile, at the momend and
 # should not be processed by coq
 BROKEN_MODULES = \
-  TyCon \
   CoAxiom \
-  CoreType \
   CoreSyn \
   IdInfo2 \
   TyCoRep \
@@ -196,10 +194,7 @@ $(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-ed
 		     $(HS_TO_COQ_GHC_OPTS) \
                      -e core-edits \
                      -o $(OUT) \
-		     ghc/compiler/types/TyCoRep.hs \
-		     ghc/compiler/types/Coercion.hs \
-		     ghc/compiler/types/Type.hs \
-		     ghc/compiler/basicTypes/Var.hs
+		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CORETYPE)))
 	test -e $@
 
 $(OUTFILES_MAN): $(OUT)/%.v : manual/%.v

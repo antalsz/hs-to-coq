@@ -42,6 +42,6 @@ Definition tARGET_MAX_CHAR : GHC.Num.Int :=
 Definition wORD64_SIZE : GHC.Num.Int :=
   #8.
 
-(* Unbound variables:
+(* External variables:
      GHC.Num.Int GHC.Num.fromInteger
 *)

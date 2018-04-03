@@ -265,7 +265,7 @@ Definition unitUniqSet {a} `{Unique.Uniquable a} : a -> UniqSet a :=
 Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=
   UniqSet.
 
-(* Unbound variables:
+(* External variables:
      bool cons list negb op_zt__ option Data.Foldable.foldl' Data.Foldable.foldr
      GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String GHC.Base.map
      GHC.Base.mappend GHC.Base.mconcat GHC.Base.mempty GHC.Base.op_z2218U__

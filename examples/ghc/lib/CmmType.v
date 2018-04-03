@@ -408,7 +408,7 @@ Definition gcWord : DynFlags.DynFlags -> CmmType :=
 Definition bWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => cmmBits (wordWidth dflags).
 
-(* Unbound variables:
+(* External variables:
      andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
      GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.Integer

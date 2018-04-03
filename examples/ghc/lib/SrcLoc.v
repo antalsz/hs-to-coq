@@ -565,7 +565,7 @@ Definition cmpLocated {a} `{GHC.Base.Ord a}
 Definition wiredInSrcSpan : SrcSpan :=
   UnhelpfulSpan (FastString.fsLit (GHC.Base.hs_string__ "<wired into compiler>")).
 
-(* Unbound variables:
+(* External variables:
      None Some andb bool comparison false list negb option true
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Semigroup.Internal.Mk_Any
      Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo

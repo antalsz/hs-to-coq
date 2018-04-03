@@ -444,7 +444,7 @@ Definition bindFreeVars : CoreSyn.CoreBind -> VarSet.VarSet :=
                                                                 Data.Tuple.fst prs) (FV.mapUnionFV rhs_fvs prs)))
     end.
 
-(* Unbound variables:
+(* External variables:
      AnnAlt AnnExpr None Some andb bool exprOrphNames expr_fvs freeVars list negb
      op_zt__ option orphNamesOfCo pair CoAxiom.coAxBranchLHS CoAxiom.coAxiomBranches
      CoAxiom.coAxiomTyCon CoAxiom.fromBranches Core.Branches Core.CoAxiom Core.TyCon

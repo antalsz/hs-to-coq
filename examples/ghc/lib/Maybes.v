@@ -146,7 +146,7 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
     | None, _ => GHC.Base.return_ tt
     end.
 
-(* Unbound variables:
+(* External variables:
      None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT
      Control.Monad.Trans.Maybe.Mk_MaybeT Data.Maybe.fromMaybe GHC.Base.Applicative
      GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap

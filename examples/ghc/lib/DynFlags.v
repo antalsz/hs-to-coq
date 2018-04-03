@@ -1677,7 +1677,7 @@ Axiom decodeSize : GHC.Base.String -> GHC.Num.Integer.
 
 Axiom emptyFilesToClean : FilesToClean.
 
-(* Unbound variables:
+(* External variables:
      DynP LogAction Type bool list op_zt__ option unit Data.Either.Either
      Data.Set.Internal.Set_ EnumSet.EnumSet ErrUtils.MsgDoc ErrUtils.Severity
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Char.Char GHC.Err.Build_Default

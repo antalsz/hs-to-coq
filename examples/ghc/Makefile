@@ -126,6 +126,21 @@ coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
 
+HS_TO_COQ_GHC_OPTS=\
+     --ghc-tree ghc \
+     -I ghc/includes \
+     -I ghc/includes/dist-derivedconstants/header \
+     -I ghc/compiler \
+     -I ghc/compiler/stage2 \
+     -I ghc/compiler/stage2/build \
+     --ghc -DSTAGE=2 \
+     --ghc -package=ghc-boot-th \
+     --ghc -XNoImplicitPrelude \
+     -e ../../base/edits \
+     -e ../containers/edits \
+     -e ../transformers/edits \
+     -e edits \
+     -N \
 
 
 .SECONDEXPANSION:
@@ -133,19 +148,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-                     --ghc-tree ghc \
-                     -I ghc/includes \
-                     -I ghc/compiler \
-                     -I ghc/compiler/stage2 \
-                     -I ghc/compiler/stage2/build \
-                     --ghc -DSTAGE=2 \
-                     --ghc -package=ghc-boot-th \
-                     --ghc -XNoImplicitPrelude \
-                     -e ../../base/edits \
-                     -e ../containers/edits \
-                     -e ../transformers/edits \
-                     -e edits \
-                     -N \
+		     $(HS_TO_COQ_GHC_OPTS) \
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs
 	test -e $@
@@ -156,45 +159,23 @@ $(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcar
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-                     --ghc-tree ghc \
-                     -I ghc/includes \
-                     -I ghc/compiler \
-                     -I ghc/compiler/stage2 \
-                     -I ghc/compiler/stage2/build \
-                     --ghc -DSTAGE=2 \
-                     --ghc -package=ghc-boot-th \
-                     --ghc -XNoImplicitPrelude \
-                     -e ../../base/edits \
-                     -e ../containers/edits \
-                     -e ../transformers/edits \
-                     -e edits \
+		     $(HS_TO_COQ_GHC_OPTS) \
                      -e core-edits \
-                     -N \
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs
 	test -e $@
 
 
-$(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-edits/CoreType/midamble.v module-edits/CoreType/edits 
+$(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-edits/CoreType/midamble.v module-edits/CoreType/edits
 	$(HS_TO_COQ) -e module-edits/CoreType/edits \
 	                  -p module-edits/CoreType/preamble.v \
 	                  --midamble module-edits/CoreType/midamble.v \
-                     --ghc-tree ghc \
-                     -I ghc/includes \
-                     -I ghc/compiler \
-                     -I ghc/compiler/stage2 \
-                     -I ghc/compiler/stage2/build \
-                     --ghc -DSTAGE=2 \
-                     --ghc -package=ghc-boot-th \
-                     --ghc -XNoImplicitPrelude \
-                     -e ../../base/edits \
-                     -e ../containers/edits \
-                     -e ../transformers/edits \
-                     -e edits \
+		     $(HS_TO_COQ_GHC_OPTS) \
                      -e core-edits \
-                     -N \
                      -o $(OUT) \
-		     ghc/compiler/types/TyCoRep.hs ghc/compiler/types/Coercion.hs ghc/compiler/types/Type.hs ghc/compiler/basicTypes/Var.hs
+		     ghc/compiler/types/TyCoRep.hs \
+		     ghc/compiler/types/Coercion.hs \
+		     ghc/compiler/types/Type.hs ghc/compiler/basicTypes/Var.hs
 	test -e $@
 
 

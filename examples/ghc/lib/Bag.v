@@ -425,7 +425,7 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
         end in
     foldrBag add emptyBag bs.
 
-(* Unbound variables:
+(* External variables:
      None Some andb bool cons false list nil op_zt__ option orb pair true tt unit
      Control.Monad.filterM Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Foldable.all Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr

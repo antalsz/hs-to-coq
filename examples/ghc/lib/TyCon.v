@@ -1130,7 +1130,7 @@ Definition visibleDataCons : AlgTyConRhs -> list DataCon.DataCon :=
     | SumTyCon cs => cs
     end.
 
-(* Unbound variables:
+(* External variables:
      Injective None NotInjective Ord__TyCon_compare Some algTcFields andb bool cons
      false list negb nil op_zt__ option pair true tyConBinders tyConName tyConResKind
      BasicTypes.Boxity BasicTypes.TupleSort Constants.fLOAT_SIZE

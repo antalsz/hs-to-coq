@@ -238,7 +238,7 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
          getUniqueSupplyM__ := MonadUnique__UniqSM_getUniqueSupplyM ;
          getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
 
-(* Unbound variables:
+(* External variables:
      cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
      GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.liftM3 GHC.Base.op_z2218U__
      GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_

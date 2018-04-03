@@ -441,7 +441,7 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key}
     UDFM (Data.IntMap.Internal.singleton (Unique.getWordKey (Unique.getUnique k))
           (Mk_TaggedVal v #0)) #1.
 
-(* Unbound variables:
+(* External variables:
      None Some andb bool cons false list negb nil op_zt__ option orb pair true
      Coq.Lists.List.flat_map Coq.ZArith.BinInt.Z.of_N Data.Foldable.foldl
      Data.Foldable.foldr Data.Function.on Data.IntMap.Internal.IntMap

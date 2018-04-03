@@ -260,7 +260,7 @@ Definition unitDVarSet : CoreType.Var -> DVarSet :=
 Definition unitVarSet : CoreType.Var -> VarSet :=
   UniqSet.unitUniqSet.
 
-(* Unbound variables:
+(* External variables:
      bool list negb op_zt__ option tt unit CoreType.CoVar CoreType.Id
      CoreType.TyCoVar CoreType.TyVar CoreType.Var Data.Foldable.foldr
      GHC.Base.op_z2218U__ GHC.DeferredFix.deferredFix2 GHC.Num.Int Name.Name

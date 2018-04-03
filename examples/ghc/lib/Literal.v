@@ -433,7 +433,7 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
         end
     end.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt None Some absent_lits andb bool comparison false negb option true
      BasicTypes.FunctionOrData Coq.Init.Datatypes.app Core.TyCon Core.addrPrimTy
      Core.charPrimTy Core.doublePrimTy Core.floatPrimTy Core.int64PrimTy

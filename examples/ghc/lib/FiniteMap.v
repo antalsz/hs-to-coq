@@ -50,7 +50,7 @@ Definition insertListWith {key} {elt} `{GHC.Base.Ord key}
                            | m, pair k v => Data.Map.Internal.insertWith f k v m
                            end) m0 xs.
 
-(* Unbound variables:
+(* External variables:
      list op_zt__ pair Data.Foldable.foldl Data.Map.Internal.Map
      Data.Map.Internal.delete Data.Map.Internal.foldr Data.Map.Internal.foldrWithKey
      Data.Map.Internal.insert Data.Map.Internal.insertWith GHC.Base.Ord GHC.Base.flip

@@ -238,7 +238,7 @@ Axiom collectMakeStaticArgs : CoreSyn.CoreExpr ->
 
 Axiom isJoinBind : CoreSyn.CoreBind -> bool.
 
-(* Unbound variables:
+(* External variables:
      Alt bool list op_zt__ option unit BasicTypes.Arity Core.TyCon CoreSyn.AltCon
      CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreBndr
      CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish CoreType.Id CoreType.TyVar

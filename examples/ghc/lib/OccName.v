@@ -759,7 +759,7 @@ Definition mkTyConRepOcc : OccName -> OccName :=
       GHC.Base.hs_string__ "$tc" in
     mk_simple_deriv varName prefix occ.
 
-(* Unbound variables:
+(* External variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
      NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
      comparison cons false list negb nil op_zt__ option orb true tt

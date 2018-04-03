@@ -455,7 +455,7 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
         Mk_Name n_sort_9__ occ n_uniq_11__ n_loc_12__
     end.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
      Coq.Init.Datatypes.app DynFlags.Opt_SuppressUniques DynFlags.gopt
      FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare

@@ -314,7 +314,7 @@ Program Instance Traversable__OrdList : Data.Traversable.Traversable OrdList :=
 Definition unitOL {a} : a -> OrdList a :=
   fun as_ => One as_.
 
-(* Unbound variables:
+(* External variables:
      bool cons false list nil true Coq.Init.Datatypes.app Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldl Data.Foldable.foldr
      Data.Functor.op_zlzdzg__ Data.Semigroup.Internal.Mk_Any

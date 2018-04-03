@@ -554,7 +554,7 @@ Definition pprBooleanFormulaNormal {a} `{(Outputable.OutputableBndr a)}
                end in
   go.
 
-(* Unbound variables:
+(* External variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
      BooleanFormula_traverse LBooleanFormula None Some bool cons false id list negb
      nil option true Coq.Init.Datatypes.app Coq.Program.Basics.compose

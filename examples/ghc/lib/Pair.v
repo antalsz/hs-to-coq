@@ -296,7 +296,7 @@ Definition toPair {a} : (a * a)%type -> Pair a :=
 Definition unPair {a} : Pair a -> (a * a)%type :=
   fun arg_0__ => let 'Mk_Pair x y := arg_0__ in pair x y.
 
-(* Unbound variables:
+(* External variables:
      bool false list op_zt__ pair true Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Functor.op_zlzdzg__ Data.Semigroup.Internal.Mk_Any
      Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo

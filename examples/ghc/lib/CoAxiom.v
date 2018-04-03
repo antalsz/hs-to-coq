@@ -403,7 +403,7 @@ Axiom trivialBuiltInFamily : forall {A : Type}, A.
 (* Translating `trivialBuiltInFamily' failed: creating a record with the unknown
    constructor `BuiltInSynFamily' unsupported *)
 
-(* Unbound variables:
+(* External variables:
      Gt Lt Ord__CoAxiom_compare bool cab_cvs cab_incomps cab_lhs cab_loc cab_rhs
      cab_roles cab_tvs co_ax_branches co_ax_implicit co_ax_name co_ax_role co_ax_tc
      coaxrName comparison false list negb true Core.Branches Core.CoAxBranch

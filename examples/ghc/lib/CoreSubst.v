@@ -170,7 +170,7 @@ Axiom substCo : Subst -> CoreType.Coercion -> CoreType.Coercion.
 
 Axiom getTCvSubst : Subst -> CoreType.TCvSubst.
 
-(* Unbound variables:
+(* External variables:
      bool list op_zt__ option unit CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreExpr
      CoreSyn.CoreProgram CoreSyn.CoreRule CoreSyn.Tickish CoreSyn.Unfolding
      CoreType.CoVar CoreType.Coercion CoreType.CvSubstEnv CoreType.Id

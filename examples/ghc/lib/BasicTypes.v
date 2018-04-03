@@ -1691,7 +1691,7 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
     | occ => zapOccTailCallInfo occ
     end.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
      option pair true tt unit Coq.Init.Datatypes.app Data.Function.on
      FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String

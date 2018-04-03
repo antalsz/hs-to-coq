@@ -278,7 +278,7 @@ Definition mkFieldLabelOccs
       OccName.mkVarOccFS lbl in
     Mk_FieldLabel lbl is_overloaded sel_occ.
 
-(* Unbound variables:
+(* External variables:
      andb bool false list negb Coq.Init.Datatypes.app Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Semigroup.Internal.Mk_Any
      Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo

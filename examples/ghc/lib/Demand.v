@@ -1314,7 +1314,7 @@ Definition cprProdDmdType : BasicTypes.Arity -> DmdType :=
 Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
-(* Unbound variables:
+(* External variables:
      ArgStr ArgUse None Some andb bool bothStr bothUse cons else false id if isUsedMU
      list lubStr lubUse markReusedDmd negb nil op_zt__ option orb pair peelManyCalls
      postProcessDmdEnv then true tt unit zap_usg BasicTypes.Arity BasicTypes.ConTag

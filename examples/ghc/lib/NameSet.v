@@ -188,7 +188,7 @@ Definition unitFV : Name.Name -> FreeVars :=
 Definition usesOnly : Uses -> DefUses :=
   fun uses => cons (pair None uses) nil.
 
-(* Unbound variables:
+(* External variables:
      None Some bool cons list negb nil op_zt__ option orb pair Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
      Data.OldList.sortBy GHC.Base.op_z2218U__ Name.Name Name.nameOccName

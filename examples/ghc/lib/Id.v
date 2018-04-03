@@ -527,7 +527,7 @@ Definition isProbablyOneShotLambda : CoreType.Id -> bool :=
     | BasicTypes.NoOneShotInfo => false
     end.
 
-(* Unbound variables:
+(* External variables:
      None Some andb bool false isDataConId_maybe isDataConWorkId isStateHackType list
      mkLocalId mkLocalIdOrCoVar mkSysLocal mkTemplateLocalsNum negb option orb pair
      true BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma

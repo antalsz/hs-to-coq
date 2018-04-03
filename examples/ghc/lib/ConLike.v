@@ -104,7 +104,7 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
     k {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
 
-(* Unbound variables:
+(* External variables:
      bool list negb BasicTypes.Arity Data.Foldable.all Data.Foldable.any
      DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConIsInfix
      DataCon.dataConName DataCon.dataConSourceArity FieldLabel.FieldLabel

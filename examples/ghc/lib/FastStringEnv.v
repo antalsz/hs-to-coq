@@ -109,7 +109,7 @@ Definition plusFsEnv_C {a}
 Definition unitFsEnv {a} : FastString.FastString -> a -> FastStringEnv a :=
   fun x y => UniqFM.unitUFM x y.
 
-(* Unbound variables:
+(* External variables:
      bool list op_zt__ option FastString.FastString UniqDFM.UniqDFM UniqDFM.eltsUDFM
      UniqDFM.emptyUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM UniqFM.UniqFM
      UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc

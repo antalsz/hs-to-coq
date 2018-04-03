@@ -565,7 +565,7 @@ Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
     | vars, InScope s1 _ => VarSet.subVarSet vars s1
     end.
 
-(* Unbound variables:
+(* External variables:
      None Some bool list negb op_zt__ option pair uniqAway' Core.Var CoreType.Var
      Data.Foldable.foldl Data.Foldable.length Data.Tuple.fst GHC.Err.Default
      GHC.Err.default GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ Maybes.orElse

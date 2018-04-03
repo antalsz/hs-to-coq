@@ -1553,7 +1553,7 @@ Definition mkConApp2 {b}
     mkApps (mkApps (Var (Core.dataConWorkId con)) (GHC.Base.map Type_ tys))
            (GHC.Base.map varToCoreExpr arg_ids).
 
-(* Unbound variables:
+(* External variables:
      Alt AnnAlt AnnExpr Arg Eq Gt Lt None Some Type andb bool comparison cons
      deAnnotate' deTagExpr false list negb nil op_zt__ option pair true
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity

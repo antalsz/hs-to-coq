@@ -94,7 +94,7 @@ Definition unitFV : CoreType.Id -> FV :=
 Definition mkFVs : list CoreType.Var -> FV :=
   fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
 
-(* Unbound variables:
+(* External variables:
      andb bool cons list nil op_zt__ pair true CoreType.Id CoreType.Var
      Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__
      VarSet.DVarSet VarSet.VarSet VarSet.elemVarSet VarSet.emptyVarSet

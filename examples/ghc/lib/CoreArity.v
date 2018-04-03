@@ -109,7 +109,7 @@ Axiom etaBodyForJoinPoint : GHC.Num.Int ->
 Axiom freshEtaId : GHC.Num.Int ->
                    CoreType.TCvSubst -> CoreType.Type_ -> (CoreType.TCvSubst * CoreType.Id)%type.
 
-(* Unbound variables:
+(* External variables:
      bool list op_zt__ option BasicTypes.Arity BasicTypes.JoinArity
      BasicTypes.OneShotInfo CoreSubst.Subst CoreSyn.CoreBndr CoreSyn.CoreExpr
      CoreSyn.CoreRule CoreType.Coercion CoreType.Id CoreType.TCvSubst CoreType.Type_

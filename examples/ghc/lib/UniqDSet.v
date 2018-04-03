@@ -102,7 +102,7 @@ Definition uniqDSetToList {a} : UniqDSet a -> list a :=
 Definition unitUniqDSet {a} `{Unique.Uniquable a} : a -> UniqDSet a :=
   fun x => UniqDFM.unitUDFM x x.
 
-(* Unbound variables:
+(* External variables:
      bool cons list op_zt__ option Data.Foldable.foldl Data.Foldable.foldr
      GHC.Num.Int UniqDFM.UniqDFM UniqDFM.addToUDFM UniqDFM.delFromUDFM
      UniqDFM.delListFromUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM

@@ -225,7 +225,7 @@ Definition zipWithAndUnzipM {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
            | _, _, _ => GHC.Base.return_ (pair nil nil)
            end.
 
-(* Unbound variables:
+(* External variables:
      None Some bool cons false list nil op_zt__ option pair true tt unit
      Control.Monad.foldM Control.Monad.foldM_ Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.concat Data.Maybe.catMaybes

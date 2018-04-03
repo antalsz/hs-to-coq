@@ -1449,7 +1449,7 @@ Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
 Definition unitModuleSet : Module -> ModuleSet :=
   GHC.Prim.coerce Data.Set.Internal.singleton.
 
-(* Unbound variables:
+(* External variables:
      Eq Gt Lt None Some andb bool comparison cons default false list mkModuleName
      negb nil op_zt__ option orb pair parseModSubst parseModuleId renameHoleModule'
      true Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.ByteString.concat

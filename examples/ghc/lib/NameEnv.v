@@ -110,7 +110,7 @@ Definition plusNameEnv_C {a}
 Definition unitNameEnv {a} : Name.Name -> a -> NameEnv a :=
   fun x y => UniqFM.unitUFM x y.
 
-(* Unbound variables:
+(* External variables:
      bool false list op_zt__ option orb GHC.Base.op_z2218U__ Name.Name
      UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.lookupUDFM
      UniqDFM.mapUDFM UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C

@@ -161,7 +161,7 @@ Definition neighbors : UnVarGraph -> CoreType.Var -> UnVarSet :=
 Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
   fun ae => Mk_UnVarSet (UniqFM.ufmToSet_Directly ae).
 
-(* Unbound variables:
+(* External variables:
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
      Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app Core.Var
      CoreType.Var Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr

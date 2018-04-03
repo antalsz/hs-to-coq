@@ -1,3 +1,6 @@
+# hs-to-coq
+.ghc-tmp
+
 # Stack
 .stack-work
 

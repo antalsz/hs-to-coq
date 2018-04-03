@@ -173,7 +173,7 @@ Inductive PackageFlag : Type
   |  HidePackage : GHC.Base.String -> PackageFlag.
 
 Inductive LlvmTarget : Type
-  := LlvmTarget
+  := Mk_LlvmTarget
    : GHC.Base.String -> GHC.Base.String -> list GHC.Base.String -> LlvmTarget.
 
 Definition LlvmTargets :=
@@ -375,7 +375,7 @@ Inductive FlushErr : Type := Mk_FlushErr.
 Inductive FlagSpec (flag : Type) : Type := Mk_FlagSpec.
 
 Inductive FilesToClean : Type
-  := FilesToClean
+  := Mk_FilesToClean
    : (Data.Set.Internal.Set_ GHC.Base.String) ->
      (Data.Set.Internal.Set_ GHC.Base.String) -> FilesToClean.
 
@@ -395,12 +395,6 @@ Existing Class HasDynFlags.
 
 Definition getDynFlags `{g : HasDynFlags m} : m DynFlags :=
   g _ (getDynFlags__ m).
-
-Definition LogFinaliser :=
-  (DynFlags -> GHC.Types.IO unit)%type.
-
-Inductive LogOutput : Type
-  := LogOutput : LogAction -> LogFinaliser -> LogOutput.
 
 Inductive DumpFlag : Type
   := Opt_D_dump_cmm : DumpFlag
@@ -572,10 +566,6 @@ Instance Default__CompilerInfo : GHC.Err.Default CompilerInfo :=
 
 Instance Default__BmiVersion : GHC.Err.Default BmiVersion :=
   GHC.Err.Build_Default _ BMI1.
-
-Definition getLogFinaliser (arg_0__ : LogOutput) :=
-  let 'LogOutput _ getLogFinaliser := arg_0__ in
-  getLogFinaliser.
 (* Midamble *)
 
 Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.String :=
@@ -591,11 +581,11 @@ Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo := {}.
 Proof.
 Admitted.
 
-Instance Ord__BmiVersion : GHC.Base.Ord BmiVersion := {}.
+Instance Eq___BmiVersion : GHC.Base.Eq_ BmiVersion := {}.
 Proof.
 Admitted.
 
-Instance Eq___BmiVersion : GHC.Base.Eq_ BmiVersion := {}.
+Instance Ord__BmiVersion : GHC.Base.Ord BmiVersion := {}.
 Proof.
 Admitted.
 
@@ -611,11 +601,11 @@ Instance Eq___PkgConfRef : GHC.Base.Eq_ PkgConfRef := {}.
 Proof.
 Admitted.
 
-Instance Ord__Deprecation : GHC.Base.Ord Deprecation := {}.
+Instance Eq___Deprecation : GHC.Base.Eq_ Deprecation := {}.
 Proof.
 Admitted.
 
-Instance Eq___Deprecation : GHC.Base.Eq_ Deprecation := {}.
+Instance Ord__Deprecation : GHC.Base.Ord Deprecation := {}.
 Proof.
 Admitted.
 
@@ -902,18 +892,17 @@ Axiom interpreterProfiled : DynFlags -> bool.
 
 (* interpreterDynamic skipped *)
 
-Axiom defaultLogOutput : GHC.Types.IO (option LogOutput).
+(* defaultLogOutput skipped *)
 
 (* defaultFatalMessager skipped *)
 
 Axiom setJsonLogAction : DynFlags -> DynFlags.
 
-Axiom jsonLogOutput : GHC.Types.IO (option LogOutput).
+(* jsonLogOutput skipped *)
 
-Axiom jsonLogAction : GHC.IORef.IORef (list GHC.Base.String) -> LogAction.
+(* jsonLogAction skipped *)
 
-Axiom jsonLogFinaliser : GHC.IORef.IORef (list GHC.Base.String) ->
-                         DynFlags -> GHC.Types.IO unit.
+(* jsonLogFinaliser skipped *)
 
 (* defaultLogAction skipped *)
 
@@ -1025,11 +1014,11 @@ Axiom gopt_set : DynFlags -> GeneralFlag -> DynFlags.
 
 Axiom wopt_fatal : WarningFlag -> DynFlags -> bool.
 
-Axiom setFatalWarningFlag : WarningFlag -> DynP unit.
+(* setFatalWarningFlag skipped *)
 
 Axiom wopt_set_fatal : DynFlags -> WarningFlag -> DynFlags.
 
-Axiom unSetFatalWarningFlag : WarningFlag -> DynP unit.
+(* unSetFatalWarningFlag skipped *)
 
 Axiom wopt_unset_fatal : DynFlags -> WarningFlag -> DynFlags.
 
@@ -1139,12 +1128,9 @@ Axiom setInteractivePrint : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom showOpt : Option -> GHC.Base.String.
 
-Axiom setLogAction : DynFlags -> GHC.Types.IO DynFlags.
+(* setLogAction skipped *)
 
-Axiom putLogMsg : DynFlags ->
-                  WarnReason ->
-                  ErrUtils.Severity ->
-                  SrcLoc.SrcSpan -> Outputable.PprStyle -> ErrUtils.MsgDoc -> GHC.Types.IO unit.
+(* putLogMsg skipped *)
 
 (* make_ord_flag skipped *)
 
@@ -1349,12 +1335,11 @@ Axiom alterSettings : (Settings -> Settings) -> DynFlags -> DynFlags.
 
 Axiom exposePackage' : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom parsePackageFlag : GHC.Base.String ->
-                         Text.ParserCombinators.ReadP.ReadP PackageArg -> GHC.Base.String -> PackageFlag.
+(* parsePackageFlag skipped *)
 
-Axiom parsePackageArg : Text.ParserCombinators.ReadP.ReadP PackageArg.
+(* parsePackageArg skipped *)
 
-Axiom parseUnitIdArg : Text.ParserCombinators.ReadP.ReadP PackageArg.
+(* parseUnitIdArg skipped *)
 
 (* setUnitId skipped *)
 
@@ -1646,11 +1631,9 @@ Axiom decodeSize : GHC.Base.String -> GHC.Num.Integer.
 Axiom emptyFilesToClean : FilesToClean.
 
 (* External variables:
-     DynP LogAction Type bool list op_zt__ option unit Data.Either.Either
-     Data.Set.Internal.Set_ EnumSet.EnumSet ErrUtils.MsgDoc ErrUtils.Severity
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Char.Char GHC.Err.Build_Default
-     GHC.Err.Default GHC.IORef.IORef GHC.Num.Int GHC.Num.Integer GHC.Types.IO
-     Module.ComponentId Module.Module Module.ModuleName Module.UnitId
-     Outputable.PprStyle SrcLoc.Located SrcLoc.SrcSpan
-     Text.ParserCombinators.ReadP.ReadP
+     Type bool list op_zt__ option Data.Either.Either Data.Set.Internal.Set_
+     EnumSet.EnumSet GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Char.Char
+     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.Integer
+     Module.ComponentId Module.Module Module.ModuleName Module.UnitId SrcLoc.Located
+     SrcLoc.SrcSpan
 *)

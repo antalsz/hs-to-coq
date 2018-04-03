@@ -19,7 +19,7 @@ skip module ErrUtils
 skip module GHC.IORef
 skip module GHC.IO.Handle
 skip module GHC.IO.Handle.Types
-skip module GHC.IO.Handle.FD 
+skip module GHC.IO.Handle.FD
 skip module GHC.IO.Unsafe
 skip module Text.ParserCombinators
 skip module Text.ParserCombinators.ReadP
@@ -175,6 +175,10 @@ skip DynFlags.lDataLayout
 skip DynFlags.ftcCurrentModule
 skip DynFlags.ftcGhcSession
 skip DynFlags.getLogAction
+skip DynFlags.getLogFinaliser
+
+skip DynFlags.LogFinaliser
+skip DynFlags.LogOutput
 
 
 # CmdLineParser
@@ -210,6 +214,18 @@ skip DynFlags.depFlagSpec'
 skip DynFlags.unusedBindsFlags
 skip DynFlags.glasgowExtsFlags
 skip DynFlags.rtsIsProfiled
+skip DynFlags.defaultLogOutput
+skip DynFlags.jsonLogOutput
+skip DynFlags.jsonLogAction
+skip DynFlags.jsonLogFinaliser
+skip DynFlags.setLogAction
+skip DynFlags.putLogMsg
+skip DynFlags.setFatalWarningFlag
+skip DynFlags.unSetFatalWarningFlag
+skip DynFlags.parsePackageFlag
+skip DynFlags.parsePackageArg
+skip DynFlags.parseUnitIdArg
+
 
 
 
@@ -223,3 +239,6 @@ skip DynFlags.Eq___DumpFlag
 order instance DynFlags.Eq___Option DynFlags.Eq___LinkerInfo_op_zeze__
 
 order instance DynFlags.Eq___PackageArg DynFlags.Eq___ModRenaming DynFlags.Eq___PackageFlag_op_zeze__
+
+order DynFlags.Eq___BmiVersion  DynFlags.Ord__BmiVersion
+order DynFlags.Eq___Deprecation DynFlags.Ord__Deprecation

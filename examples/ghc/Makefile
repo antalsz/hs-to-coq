@@ -87,42 +87,50 @@ CORETYPE = \
   Var \
 
 
-VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
-VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
-VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
-VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
+# These modules translate, but do not compile, at the momend and
+# should not be processed by coq
+BROKEN_MODULES = \
+  TyCon
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE) $(VFILES_DROPIN) lib/CoreType.v
+VFILES_GEN       = $(addsuffix .v,$(MODULES))
+VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
+VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
+VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
+VFILES_CORETYPE  = CoreType.v
 
-all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORETYPE)
 
-$(OUT):
+OUTFILES_GEN       = $(addprefix $(OUT)/,$(VFILES_GEN))
+OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
+OUTFILES_CORE      = $(addprefix $(OUT)/,$(VFILES_CORE))
+OUTFILES_DROPIN    = $(addprefix $(OUT)/,$(VFILES_DROPIN))
+OUTFILES_CORETYPE  = $(addprefix $(OUT)/,$(VFILES_CORETYPE))
+
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORETYPE)
+
+all: $(OUT)/README.md $(OUTFILES) coq
+
+# This target is also used as a dependecy to ensure that $(OUT) exists. 
+$(OUT)/README.md:
 	mkdir -p $(OUT)
+	> $@
+	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
+	ln -fs ../edits $(OUT)/edits
 
-$(OUT)/_CoqProject: $(OUT) Makefile
+$(OUT)/_CoqProject: $(OUT)/README.md Makefile
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../../../base ""' >> $@
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
 	echo '-Q ../../transformers/lib  ""' >> $@
-	echo $(addsuffix .v,$(HANDMOD)) >> $@
-	echo $(addsuffix .v,$(MODULES)) >> $@
-	echo $(addsuffix .v,$(CORE_MODULES)) >> $@
-	echo CoreType.v >> $@
+	echo $(VFILES) >> $@
 
-$(OUT)/Makefile: $(OUT) $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-$(OUT)/edits: $(OUT)
-	ln -fs ../edits $(OUT)/edits
-
-$(OUT)/README.md:
-	> $@
-	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
-
-coq: $(OUT)/Makefile $(VFILES)
+coq: $(OUT)/Makefile $(OUTFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
 
@@ -144,7 +152,7 @@ HS_TO_COQ_GHC_OPTS=\
 
 
 .SECONDEXPANSION:
-$(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
+$(OUTFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
@@ -152,10 +160,8 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs
 	test -e $@
-# We added the `test` because `hs-to-coq` doesn't return an error
 
-
-$(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits core-edits
+$(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits core-edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
@@ -179,12 +185,7 @@ $(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-ed
 		     ghc/compiler/basicTypes/Var.hs
 	test -e $@
 
-
-
-# We added the `test` because `hs-to-coq` doesn't return an error
-
-
-$(VFILES_MAN): $(OUT)/%.v : manual/%.v
+$(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"
 	rm -f $@
 	lndir ../manual $(OUT)/

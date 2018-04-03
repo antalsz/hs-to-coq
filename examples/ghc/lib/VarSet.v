@@ -12,14 +12,30 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require Import Core.
+Parameter TcTyVarDetails : Type.  (* From TcType *)
+Parameter CoercionHole : Type.
+Parameter CType : Type.
+Parameter RuntimeRepInfo : Type.
+
+(* From Var *)
+Inductive ExportFlag : Type := NotExported : ExportFlag
+                            |  Exported : ExportFlag.
+Inductive IdScope : Type := GlobalId : IdScope
+                         |  LocalId : ExportFlag -> IdScope.
+
+
+(* From TyCon *)
+Require Name.
+Definition TyConRepName := Name.Name%type.
+
+Inductive Injectivity : Type := NotInjective : Injectivity
+                             |  Injective : list bool -> Injectivity.
 
 (* Converted imports: *)
 
 Require CoreType.
 Require Data.Foldable.
 Require GHC.Base.
-Require GHC.DeferredFix.
 Require GHC.Num.
 Require Name.
 Require UniqDFM.
@@ -57,6 +73,41 @@ Definition DIdSet :=
 
 Definition CoVarSet :=
   (UniqSet.UniqSet CoreType.CoVar)%type.
+(* Midamble *)
+
+(* Primitive types *)
+(* From TysPrim *)
+Parameter addrPrimTy   : Type_.
+Parameter charPrimTy   : Type_.
+Parameter intPrimTy    : Type_.
+Parameter wordPrimTy   : Type_.
+Parameter int64PrimTy  : Type_.
+Parameter word64PrimTy : Type_.
+Parameter floatPrimTy  : Type_.
+Parameter doublePrimTy : Type_.
+
+(* From DataCon *)
+Parameter dataConWorkId       : DataCon.DataCon -> Var.
+Parameter dataConExTyVars     : DataCon.DataCon -> list TyVar.
+
+(* From PatSyn *)
+Parameter patSynExTyVars     : PatSyn.PatSyn -> list TyVar.
+
+(* From ConLike *)
+Definition conLikeExTyVars : ConLike.ConLike -> list TyVar :=
+  fun arg_0__ =>
+    match arg_0__ with
+      | ConLike.RealDataCon dcon1 => dataConExTyVars dcon1
+      | ConLike.PatSynCon psyn1 => patSynExTyVars psyn1
+    end.
+
+(* From Class *)
+Parameter classTyVars : Class.Class -> list TyVar.
+Parameter classMethods : Class.Class -> list Var.
+Parameter classAllSelIds : Class.Class -> list Var.
+Definition classArity : Class.Class -> BasicTypes.Arity :=
+  fun clas => Data.Foldable.length (classTyVars clas).
+
 (* Converted value declarations: *)
 
 Definition allDVarSet : (CoreType.Var -> bool) -> DVarSet -> bool :=
@@ -185,10 +236,10 @@ Definition subVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => isEmptyVarSet (minusVarSet s1 s2).
 
 Definition fixVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
-  GHC.DeferredFix.deferredFix2 (fun fixVarSet fn vars =>
-                                  let new_vars := fn vars in
-                                  if subVarSet new_vars vars : bool then vars else
-                                  fixVarSet fn new_vars).
+  fix fixVarSet fn vars
+        := let new_vars := fn vars in
+           if subVarSet new_vars vars : bool then vars else
+           fixVarSet fn new_vars.
 
 Definition mkDVarSet : list CoreType.Var -> DVarSet :=
   UniqDSet.mkUniqDSet.
@@ -203,6 +254,13 @@ Definition partitionDVarSet
 Definition partitionVarSet
    : (CoreType.Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
   UniqSet.partitionUniqSet.
+
+Definition pluralVarSet : VarSet -> GHC.Base.String :=
+  UniqFM.pluralUFM GHC.Base.∘ UniqSet.getUniqSet.
+
+Definition pprVarSet
+   : VarSet -> (list CoreType.Var -> GHC.Base.String) -> GHC.Base.String :=
+  UniqFM.pprUFM GHC.Base.∘ UniqSet.getUniqSet.
 
 Definition seqDVarSet : DVarSet -> unit :=
   fun s => tt.
@@ -222,10 +280,10 @@ Definition unionDVarSet : DVarSet -> DVarSet -> DVarSet :=
 Definition transCloDVarSet : (DVarSet -> DVarSet) -> DVarSet -> DVarSet :=
   fun fn seeds =>
     let go : DVarSet -> DVarSet -> DVarSet :=
-      GHC.DeferredFix.deferredFix2 (fun go acc candidates =>
-                                      let new_vs := minusDVarSet (fn candidates) acc in
-                                      if isEmptyDVarSet new_vs : bool then acc else
-                                      go (unionDVarSet acc new_vs) new_vs) in
+      fix go acc candidates
+            := let new_vs := minusDVarSet (fn candidates) acc in
+               if isEmptyDVarSet new_vs : bool then acc else
+               go (unionDVarSet acc new_vs) new_vs in
     go seeds seeds.
 
 Definition mapUnionDVarSet {a} : (a -> DVarSet) -> list a -> DVarSet :=
@@ -241,10 +299,10 @@ Definition unionVarSet : VarSet -> VarSet -> VarSet :=
 Definition transCloVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
   fun fn seeds =>
     let go : VarSet -> VarSet -> VarSet :=
-      GHC.DeferredFix.deferredFix2 (fun go acc candidates =>
-                                      let new_vs := minusVarSet (fn candidates) acc in
-                                      if isEmptyVarSet new_vs : bool then acc else
-                                      go (unionVarSet acc new_vs) new_vs) in
+      fix go acc candidates
+            := let new_vs := minusVarSet (fn candidates) acc in
+               if isEmptyVarSet new_vs : bool then acc else
+               go (unionVarSet acc new_vs) new_vs in
     go seeds seeds.
 
 Definition mapUnionVarSet {a} : (a -> VarSet) -> list a -> VarSet :=
@@ -262,24 +320,25 @@ Definition unitVarSet : CoreType.Var -> VarSet :=
 
 (* External variables:
      bool list negb op_zt__ option tt unit CoreType.CoVar CoreType.Id
-     CoreType.TyCoVar CoreType.TyVar CoreType.Var Data.Foldable.foldr
-     GHC.Base.op_z2218U__ GHC.DeferredFix.deferredFix2 GHC.Num.Int Name.Name
-     UniqDFM.allUDFM UniqDFM.anyUDFM UniqDFM.disjointUDFM UniqDFM.udfmToUfm
-     UniqDSet.UniqDSet UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
+     CoreType.TyCoVar CoreType.TyVar CoreType.Var Data.Foldable.foldr GHC.Base.String
+     GHC.Base.op_z2218U__ GHC.Num.Int Name.Name UniqDFM.allUDFM UniqDFM.anyUDFM
+     UniqDFM.disjointUDFM UniqDFM.udfmToUfm UniqDSet.UniqDSet
+     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
      UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
      UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
      UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet
      UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet UniqDSet.partitionUniqDSet
      UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets UniqDSet.unionUniqDSets
      UniqDSet.uniqDSetIntersectUniqSet UniqDSet.uniqDSetMinusUniqSet
-     UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet UniqFM.disjointUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet
-     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
-     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
-     UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
-     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
-     UniqSet.mapUniqSet UniqSet.minusUniqSet UniqSet.mkUniqSet
-     UniqSet.partitionUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
-     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
+     UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet UniqFM.disjointUFM
+     UniqFM.pluralUFM UniqFM.pprUFM UniqSet.UniqSet UniqSet.addListToUniqSet
+     UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet UniqSet.delOneFromUniqSet
+     UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
+     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
+     UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
+     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.mapUniqSet
+     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.partitionUniqSet
+     UniqSet.sizeUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
+     UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
      UniqSet.unsafeUFMToUniqSet Unique.Uniquable Unique.Unique
 *)

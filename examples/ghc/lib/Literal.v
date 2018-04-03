@@ -31,7 +31,6 @@ Require GHC.Num.
 Require GHC.Real.
 Require Panic.
 Require Platform.
-Require TyCon.
 Require UniqFM.
 Require Util.
 Import GHC.Base.Notations.
@@ -76,8 +75,8 @@ Parameter inCharRange : GHC.Char.Char -> bool.
 (* Translating `instance Data__Literal' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
 
-Definition absentLiteralOf : Core.TyCon -> option Literal :=
-  fun tc => UniqFM.lookupUFM absent_lits (TyCon.tyConName tc).
+Definition absentLiteralOf : CoreType.TyCon -> option Literal :=
+  fun tc => UniqFM.lookupUFM absent_lits (CoreType.tyConName tc).
 
 Definition char2IntLit : Literal -> Literal :=
   fun arg_0__ =>
@@ -435,10 +434,10 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
 
 (* External variables:
      Eq Gt Lt None Some absent_lits andb bool comparison false negb option true
-     BasicTypes.FunctionOrData Coq.Init.Datatypes.app Core.TyCon Core.addrPrimTy
-     Core.charPrimTy Core.doublePrimTy Core.floatPrimTy Core.int64PrimTy
-     Core.intPrimTy Core.word64PrimTy Core.wordPrimTy CoreType.Type_
-     Data.Maybe.isJust DynFlags.DynFlags DynFlags.tARGET_MAX_INT
+     BasicTypes.FunctionOrData Coq.Init.Datatypes.app Core.addrPrimTy Core.charPrimTy
+     Core.doublePrimTy Core.floatPrimTy Core.int64PrimTy Core.intPrimTy
+     Core.word64PrimTy Core.wordPrimTy CoreType.TyCon CoreType.Type_
+     CoreType.tyConName Data.Maybe.isJust DynFlags.DynFlags DynFlags.tARGET_MAX_INT
      DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT DynFlags.targetPlatform
      FastString.FastString FastString.fastStringToByteString FastString.mkFastString
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
@@ -449,5 +448,5 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.fromIntegral GHC.Real.toInteger
      GHC.Show.show GHC.Word.Word32 GHC.Word.Word64 Outputable.assertPprPanic
      Outputable.integer Panic.noString Panic.panic Panic.panicStr
-     Platform.platformWordSize TyCon.tyConName UniqFM.lookupUFM Util.debugIsOn
+     Platform.platformWordSize UniqFM.lookupUFM Util.debugIsOn
 *)

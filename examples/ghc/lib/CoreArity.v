@@ -20,7 +20,6 @@ Require CoreUtils.
 Require Demand.
 Require DynFlags.
 Require GHC.Num.
-Require VarEnv.
 
 (* Converted type declarations: *)
 
@@ -84,7 +83,8 @@ Axiom etaExpand : BasicTypes.Arity -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
 Axiom mkEtaWW : BasicTypes.Arity ->
                 CoreSyn.CoreExpr ->
-                VarEnv.InScopeSet -> CoreType.Type_ -> (VarEnv.InScopeSet * list EtaInfo)%type.
+                CoreType.InScopeSet ->
+                CoreType.Type_ -> (CoreType.InScopeSet * list EtaInfo)%type.
 
 Axiom etaInfoApp : CoreSubst.Subst ->
                    CoreSyn.CoreExpr -> list EtaInfo -> CoreSyn.CoreExpr.
@@ -112,7 +112,7 @@ Axiom freshEtaId : GHC.Num.Int ->
 (* External variables:
      bool list op_zt__ option BasicTypes.Arity BasicTypes.JoinArity
      BasicTypes.OneShotInfo CoreSubst.Subst CoreSyn.CoreBndr CoreSyn.CoreExpr
-     CoreSyn.CoreRule CoreType.Coercion CoreType.Id CoreType.TCvSubst CoreType.Type_
-     CoreType.Var CoreUtils.CheapAppFun Demand.StrictSig DynFlags.DynFlags
-     GHC.Num.Int VarEnv.InScopeSet
+     CoreSyn.CoreRule CoreType.Coercion CoreType.Id CoreType.InScopeSet
+     CoreType.TCvSubst CoreType.Type_ CoreType.Var CoreUtils.CheapAppFun
+     Demand.StrictSig DynFlags.DynFlags GHC.Num.Int
 *)

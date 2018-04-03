@@ -23,7 +23,6 @@ Require GHC.Num.
 Require GHC.Prim.
 Require UniqFM.
 Require Unique.
-Require VarEnv.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -158,17 +157,16 @@ Definition neighbors : UnVarGraph -> CoreType.Var -> UnVarSet :=
         unionUnVarSets (Data.Foldable.concatMap go (Bag.bagToList g))
     end.
 
-Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
+Definition varEnvDom {a} : CoreType.VarEnv a -> UnVarSet :=
   fun ae => Mk_UnVarSet (UniqFM.ufmToSet_Directly ae).
 
 (* External variables:
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
      Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app Core.Var
-     CoreType.Var Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
-     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
+     CoreType.Var CoreType.VarEnv Data.Foldable.concatMap Data.Foldable.foldl'
+     Data.Foldable.foldr Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
      GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Word
      GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey
-     VarEnv.VarEnv
 *)

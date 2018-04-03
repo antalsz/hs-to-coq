@@ -17,7 +17,6 @@ Require Import Core.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require Core.
 Require CoreSyn.
 Require CoreType.
 Require DataCon.
@@ -25,7 +24,6 @@ Require DynFlags.
 Require FastString.
 Require GHC.Num.
 Require Unique.
-Require VarEnv.
 
 (* Converted type declarations: *)
 
@@ -130,7 +128,7 @@ Axiom mkAltExpr : CoreSyn.AltCon ->
                   list CoreSyn.CoreBndr -> list CoreType.Type_ -> CoreSyn.CoreExpr.
 
 Axiom filterAlts : forall {a},
-                   Core.TyCon ->
+                   CoreType.TyCon ->
                    list CoreType.Type_ ->
                    list CoreSyn.AltCon ->
                    list (CoreSyn.AltCon * list CoreType.Var * a)%type ->
@@ -151,7 +149,7 @@ Axiom findAlt : forall {a} {b},
                 list (CoreSyn.AltCon * a * b)%type -> option (CoreSyn.AltCon * a * b)%type.
 
 Axiom refineDefaultAlt : list Unique.Unique ->
-                         Core.TyCon ->
+                         CoreType.TyCon ->
                          list CoreType.Type_ ->
                          list CoreSyn.AltCon ->
                          list CoreSyn.CoreAlt -> (bool * list CoreSyn.CoreAlt)%type.
@@ -212,7 +210,7 @@ Axiom dataConRepFSInstPat : list FastString.FastString ->
 
 Axiom exprIsBig : forall {b}, CoreSyn.Expr b -> bool.
 
-Axiom eqExpr : VarEnv.InScopeSet ->
+Axiom eqExpr : CoreType.InScopeSet ->
                CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> bool.
 
 (* diffUnfold skipped *)
@@ -223,7 +221,7 @@ Axiom eqExpr : VarEnv.InScopeSet ->
 
 (* diffExpr skipped *)
 
-Axiom eqTickish : VarEnv.RnEnv2 ->
+Axiom eqTickish : CoreType.RnEnv2 ->
                   CoreSyn.Tickish CoreType.Id -> CoreSyn.Tickish CoreType.Id -> bool.
 
 (* locBind skipped *)
@@ -239,9 +237,10 @@ Axiom collectMakeStaticArgs : CoreSyn.CoreExpr ->
 Axiom isJoinBind : CoreSyn.CoreBind -> bool.
 
 (* External variables:
-     Alt bool list op_zt__ option unit BasicTypes.Arity Core.TyCon CoreSyn.AltCon
+     Alt bool list op_zt__ option unit BasicTypes.Arity CoreSyn.AltCon
      CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreBndr
-     CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish CoreType.Id CoreType.TyVar
-     CoreType.Type_ CoreType.Var DataCon.DataCon DynFlags.DynFlags
-     FastString.FastString GHC.Num.Int Unique.Unique VarEnv.InScopeSet VarEnv.RnEnv2
+     CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish CoreType.Id CoreType.InScopeSet
+     CoreType.RnEnv2 CoreType.TyCon CoreType.TyVar CoreType.Type_ CoreType.Var
+     DataCon.DataCon DynFlags.DynFlags FastString.FastString GHC.Num.Int
+     Unique.Unique
 *)

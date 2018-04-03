@@ -64,10 +64,7 @@ MODULES = \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
-  VarSet \
-  VarEnv \
   ConLike \
-  FV \
   Literal \
   CoreSyn \
   UnVarGraph \
@@ -84,22 +81,22 @@ CORETYPE = \
   CoAxiom \
   Type \
   Var \
+  VarEnv \
+  VarSet \
   TyCon \
+  FV \
 
 
 # These modules translate, but do not compile, at the momend and
 # should not be processed by coq
 BROKEN_MODULES = \
-  CoAxiom \
+  CoreType \
   CoreSyn \
   IdInfo2 \
   TyCoRep \
   CoreSubst \
   CoreArity \
   CallArity \
-  VarSet \
-  VarEnv \
-  FV \
   Literal \
   UnVarGraph \
   Demand \

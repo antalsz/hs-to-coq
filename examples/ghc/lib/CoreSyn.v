@@ -38,7 +38,6 @@ Require NameEnv.
 Require OccName.
 Require Panic.
 Require Util.
-Require VarEnv.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -205,8 +204,8 @@ Definition CoreExpr :=
 Inductive CoreVect : Type
   := Vect : CoreType.Id -> CoreExpr -> CoreVect
   |  NoVect : CoreType.Id -> CoreVect
-  |  VectType : bool -> Core.TyCon -> (option Core.TyCon) -> CoreVect
-  |  VectClass : Core.TyCon -> CoreVect
+  |  VectType : bool -> CoreType.TyCon -> (option CoreType.TyCon) -> CoreVect
+  |  VectClass : CoreType.TyCon -> CoreVect
   |  VectInst : CoreType.Id -> CoreVect.
 
 Definition InExpr :=
@@ -230,7 +229,7 @@ Definition IdUnfoldingFun :=
   (CoreType.Id -> Unfolding)%type.
 
 Definition InScopeEnv :=
-  (VarEnv.InScopeSet * IdUnfoldingFun)%type%type.
+  (CoreType.InScopeSet * IdUnfoldingFun)%type%type.
 
 Definition RuleFun :=
   (DynFlags.DynFlags ->
@@ -1557,21 +1556,21 @@ Definition mkConApp2 {b}
      Alt AnnAlt AnnExpr Arg Eq Gt Lt None Some Type andb bool comparison cons
      deAnnotate' deTagExpr false list negb nil op_zt__ option pair true
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
-     BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.TyCon
-     Core.dataConWorkId CoreType.CoVar CoreType.Coercion CoreType.Id CoreType.Kind
-     CoreType.TyVar CoreType.Type_ CoreType.Var CoreType.isCoVar
-     CoreType.isCoercionTy_maybe CoreType.isId CoreType.isTyVar CoreType.mkCoVarCo
-     CoreType.mkTyVarTy Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length
-     DataCon.DataCon DataCon.dataConTag DataCon.dataConTyCon DynFlags.DynFlags
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
-     GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
-     GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
-     GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Real.Rational Literal.Literal Literal.mkMachChar Literal.mkMachDouble
-     Literal.mkMachFloat Literal.mkMachString Module.Module Module.ModuleSet
-     Module.emptyModuleSet Module.mkModuleSet Name.Name Name.nameOccName
-     NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName Panic.assertPanic
-     Panic.noString Panic.panicStr Panic.warnPprTrace Util.count Util.debugIsOn
-     VarEnv.InScopeSet
+     BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map
+     Core.dataConWorkId CoreType.CoVar CoreType.Coercion CoreType.Id
+     CoreType.InScopeSet CoreType.Kind CoreType.TyCon CoreType.TyVar CoreType.Type_
+     CoreType.Var CoreType.isCoVar CoreType.isCoercionTy_maybe CoreType.isId
+     CoreType.isTyVar CoreType.mkCoVarCo CoreType.mkTyVarTy Data.Foldable.foldl
+     Data.Foldable.foldr Data.Foldable.length DataCon.DataCon DataCon.dataConTag
+     DataCon.dataConTyCon DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
+     GHC.Base.Synonym GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal Literal.mkMachChar
+     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
+     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
+     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
+     Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace Util.count
+     Util.debugIsOn
 *)

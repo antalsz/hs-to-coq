@@ -22,17 +22,15 @@ Require IdInfo.
 Require Name.
 Require UniqSupply.
 Require Unique.
-Require VarEnv.
-Require VarSet.
 
 (* Converted type declarations: *)
 
 Definition IdSubstEnv :=
-  (VarEnv.IdEnv CoreSyn.CoreExpr)%type.
+  (CoreType.IdEnv CoreSyn.CoreExpr)%type.
 
 Inductive Subst : Type
   := Mk_Subst
-   : VarEnv.InScopeSet ->
+   : CoreType.InScopeSet ->
      IdSubstEnv -> CoreType.TvSubstEnv -> CoreType.CvSubstEnv -> Subst.
 (* Converted value declarations: *)
 
@@ -49,12 +47,12 @@ Axiom deShadowBinds : CoreSyn.CoreProgram -> CoreSyn.CoreProgram.
 
 Axiom emptySubst : Subst.
 
-Axiom mkEmptySubst : VarEnv.InScopeSet -> Subst.
+Axiom mkEmptySubst : CoreType.InScopeSet -> Subst.
 
-Axiom mkSubst : VarEnv.InScopeSet ->
+Axiom mkSubst : CoreType.InScopeSet ->
                 CoreType.TvSubstEnv -> CoreType.CvSubstEnv -> IdSubstEnv -> Subst.
 
-Axiom substInScope : Subst -> VarEnv.InScopeSet.
+Axiom substInScope : Subst -> CoreType.InScopeSet.
 
 Axiom zapSubstEnv : Subst -> Subst.
 
@@ -128,7 +126,7 @@ Axiom subst_expr : unit -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 Axiom substTickish : Subst ->
                      CoreSyn.Tickish CoreType.Id -> CoreSyn.Tickish CoreType.Id.
 
-Axiom substDVarSet : Subst -> VarSet.DVarSet -> VarSet.DVarSet.
+Axiom substDVarSet : Subst -> CoreType.DVarSet -> CoreType.DVarSet.
 
 Axiom substIdOcc : Subst -> CoreType.Id -> CoreType.Id.
 
@@ -140,12 +138,12 @@ Axiom delBndr : Subst -> CoreType.Var -> Subst.
 
 Axiom delBndrs : Subst -> list CoreType.Var -> Subst.
 
-Axiom mkOpenSubst : VarEnv.InScopeSet ->
+Axiom mkOpenSubst : CoreType.InScopeSet ->
                     list (CoreType.Var * CoreSyn.CoreArg)%type -> Subst.
 
 Axiom isInScope : CoreType.Var -> Subst -> bool.
 
-Axiom addInScopeSet : Subst -> VarSet.VarSet -> Subst.
+Axiom addInScopeSet : Subst -> CoreType.VarSet -> Subst.
 
 Axiom extendInScope : Subst -> CoreType.Var -> Subst.
 
@@ -153,7 +151,7 @@ Axiom extendInScopeList : Subst -> list CoreType.Var -> Subst.
 
 Axiom extendInScopeIds : Subst -> list CoreType.Id -> Subst.
 
-Axiom setInScope : Subst -> VarEnv.InScopeSet -> Subst.
+Axiom setInScope : Subst -> CoreType.InScopeSet -> Subst.
 
 Axiom substTyVarBndr : Subst -> CoreType.TyVar -> (Subst * CoreType.TyVar)%type.
 
@@ -173,8 +171,8 @@ Axiom getTCvSubst : Subst -> CoreType.TCvSubst.
 (* External variables:
      bool list op_zt__ option unit CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreExpr
      CoreSyn.CoreProgram CoreSyn.CoreRule CoreSyn.Tickish CoreSyn.Unfolding
-     CoreType.CoVar CoreType.Coercion CoreType.CvSubstEnv CoreType.Id
-     CoreType.TCvSubst CoreType.TvSubstEnv CoreType.TyVar CoreType.Type_ CoreType.Var
+     CoreType.CoVar CoreType.Coercion CoreType.CvSubstEnv CoreType.DVarSet
+     CoreType.Id CoreType.IdEnv CoreType.InScopeSet CoreType.TCvSubst
+     CoreType.TvSubstEnv CoreType.TyVar CoreType.Type_ CoreType.Var CoreType.VarSet
      IdInfo.IdInfo IdInfo.RuleInfo Name.Name UniqSupply.UniqSupply Unique.Unique
-     VarEnv.IdEnv VarEnv.InScopeSet VarSet.DVarSet VarSet.VarSet
 *)

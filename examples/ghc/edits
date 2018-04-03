@@ -4,6 +4,9 @@ rename module Coercion CoreType
 rename module Var      CoreType
 rename module CoAxiom  CoreType
 rename module TyCon    CoreType
+rename module VarEnv   CoreType
+rename module VarSet   CoreType
+rename module FV       CoreType
 
 rename module Data.Set.Base Data.Set.Internal
 rename module Data.Map.Base Data.Map.Internal
@@ -91,6 +94,11 @@ rename value Module.InstalledModule   = Module.Mk_InstalledModule
 rename value Module.InstalledModuleEnv   = Module.Mk_InstalledModuleEnv
 rename value Module.DefUnitId   = Module.Mk_DefUnitId
 rename value BooleanFormula.Clause   = BooleanFormula.Mk_Clause
+rename value CoreType.CoAxiomRule   = CoreType.Mk_CoAxiomRule
+rename value CoreType.CoAxBranch   = CoreType.Mk_CoAxBranch
+rename value CoreType.BuiltInSynFamily   = CoreType.Mk_BuiltInSynFamily
+rename value CoreType.Branched   = CoreType.Mk_Branched
+rename value CoreType.Unbranched   = CoreType.Mk_Unbranched
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here

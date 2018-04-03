@@ -26,7 +26,6 @@ Require Maybes.
 Require Panic.
 Require UniqFM.
 Require Util.
-Require VarEnv.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -91,7 +90,7 @@ Definition Demand :=
   (JointDmd ArgStr ArgUse)%type.
 
 Definition DmdEnv :=
-  (VarEnv.VarEnv Demand)%type.
+  (CoreType.VarEnv Demand)%type.
 
 Definition BothDmdArg :=
   (DmdEnv * Termination unit)%type%type.
@@ -622,8 +621,8 @@ Definition cprProdRes : list DmdType -> DmdResult :=
 Definition cprSumRes : BasicTypes.ConTag -> DmdResult :=
   fun tag => Dunno (RetSum tag).
 
-Definition emptyDmdEnv : VarEnv.VarEnv Demand :=
-  VarEnv.emptyVarEnv.
+Definition emptyDmdEnv : CoreType.VarEnv Demand :=
+  CoreType.emptyVarEnv.
 
 Definition botDmdType : DmdType :=
   Mk_DmdType emptyDmdEnv nil botRes.
@@ -649,7 +648,7 @@ Definition getUseDmd {s} {u} : JointDmd s u -> u :=
 Definition hasDemandEnvSig : StrictSig -> bool :=
   fun arg_0__ =>
     let 'Mk_StrictSig (Mk_DmdType env _ _) := arg_0__ in
-    negb (VarEnv.isEmptyVarEnv env).
+    negb (CoreType.isEmptyVarEnv env).
 
 Definition isAbsDmd : Demand -> bool :=
   fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
@@ -719,7 +718,7 @@ Definition isTopDmdType : DmdType -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_DmdType env nil res =>
-        if andb (isTopRes res) (VarEnv.isEmptyVarEnv env) : bool then true else
+        if andb (isTopRes res) (CoreType.isEmptyVarEnv env) : bool then true else
         false
     | _ => false
     end.
@@ -828,7 +827,7 @@ Definition postProcessDmd : DmdShell -> Demand -> Demand :=
     end.
 
 Definition reuseEnv : DmdEnv -> DmdEnv :=
-  VarEnv.mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
+  CoreType.mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
 
 Definition mkBothDmdArg : DmdEnv -> BothDmdArg :=
   fun env => pair env (Dunno tt).
@@ -1080,23 +1079,23 @@ Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv1 ds1 r1, pair fv2 t2 =>
-        Mk_DmdType (VarEnv.plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd
-                                                                          t2)) ds1 (bothDmdResult r1 t2)
+        Mk_DmdType (CoreType.plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd
+                                                                            t2)) ds1 (bothDmdResult r1 t2)
     end.
 
 Definition findIdDemand : DmdType -> CoreType.Var -> Demand :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv _ res, id =>
-        Maybes.orElse (VarEnv.lookupVarEnv fv id) (defaultDmd res)
+        Maybes.orElse (CoreType.lookupVarEnv fv id) (defaultDmd res)
     end.
 
 Definition peelFV : DmdType -> CoreType.Var -> (DmdType * Demand)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv ds res, id =>
-        let dmd := Maybes.orElse (VarEnv.lookupVarEnv fv id) (defaultDmd res) in
-        let fv' := VarEnv.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
+        let dmd := Maybes.orElse (CoreType.lookupVarEnv fv id) (defaultDmd res) in
+        let fv' := CoreType.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
     end.
 
 Definition useCount {u} : Use u -> Count :=
@@ -1242,7 +1241,7 @@ Definition lubDmdType : DmdType -> DmdType -> DmdType :=
     let 'Mk_DmdType fv1 ds1 r1 := ensureArgs n d1 in
     let 'Mk_DmdType fv2 ds2 r2 := ensureArgs n d2 in
     let lub_fv :=
-      VarEnv.plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
+      CoreType.plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
     let lub_ds :=
       Util.zipWithEqual (GHC.Base.hs_string__ "lubDmdType") lubDmd ds1 ds2 in
     let lub_res := lubDmdResult r1 r2 in Mk_DmdType lub_fv lub_ds lub_res.
@@ -1319,14 +1318,15 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
      list lubStr lubUse markReusedDmd negb nil op_zt__ option orb pair peelManyCalls
      postProcessDmdEnv then true tt unit zap_usg BasicTypes.Arity BasicTypes.ConTag
      BasicTypes.NoOneShotInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
-     BasicTypes.fIRST_TAG Coq.Init.Datatypes.app CoreType.Var Data.Foldable.all
-     Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
+     BasicTypes.fIRST_TAG Coq.Init.Datatypes.app CoreType.Var CoreType.VarEnv
+     CoreType.delVarEnv CoreType.emptyVarEnv CoreType.isEmptyVarEnv
+     CoreType.lookupVarEnv CoreType.mapVarEnv CoreType.plusVarEnv_CD
+     Data.Foldable.all Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_
      GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max
      GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default
      GHC.List.replicate GHC.List.take GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
      GHC.Prim.coerce Maybes.orElse Outputable.op_zdzd__ Panic.noString
      Panic.warnPprTrace UniqFM.nonDetUFMToList Util.lengthExceeds Util.lengthIs
-     Util.zipWithEqual VarEnv.VarEnv VarEnv.delVarEnv VarEnv.emptyVarEnv
-     VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv VarEnv.mapVarEnv VarEnv.plusVarEnv_CD
+     Util.zipWithEqual
 *)

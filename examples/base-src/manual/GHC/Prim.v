@@ -25,6 +25,16 @@ Instance Unpeel_arrow
   ; repeel f x := repeel (f (unpeel x))
   }.
 
+Instance Unpeel_pair
+  a b c d
+  `{Unpeel a b}
+  `{Unpeel c d}
+  : Unpeel (a * c) (b * d) :=
+  { unpeel '(x,y) := (unpeel x, unpeel y)
+  ; repeel '(x,y) := (repeel x, repeel y)
+  }.
+
+
 Require Coq.Lists.List.
 Instance Unpeel_list a b
    `{Unpeel a b} : Unpeel (list a) (list b) :=

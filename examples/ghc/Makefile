@@ -90,7 +90,24 @@ CORETYPE = \
 # These modules translate, but do not compile, at the momend and
 # should not be processed by coq
 BROKEN_MODULES = \
-  TyCon
+  TyCon \
+  CoAxiom \
+  CoreType \
+  CoreSyn \
+  IdInfo2 \
+  TyCoRep \
+  CoreSubst \
+  CoreArity \
+  CallArity \
+  VarSet \
+  VarEnv \
+  FV \
+  Literal \
+  UnVarGraph \
+  Demand \
+  CoreUtils \
+  Id \
+  CoreFVs \
 
 VFILES_GEN       = $(addsuffix .v,$(MODULES))
 VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
@@ -127,7 +144,7 @@ $(OUT)/_CoqProject: $(OUT)/README.md Makefile
 	echo '-Q ../../transformers/lib  ""' >> $@
 	echo $(filter-out $(addsuffix .v,$(BROKEN_MODULES)), $(VFILES)) >> $@
 
-$(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES)
+$(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES) Makefile
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
 coq: $(OUT)/Makefile $(OUTFILES)

@@ -1,9 +1,17 @@
 skip module Config
 skip module GHC.IO
+skip module GHC.IO.Unsafe
+skip module GHC.PackageDb
+skip module GHC.Ptr
+skip module Packages
+skip module Text.ParserCombinators.ReadP
 skip module System.FilePath.Posix
 skip module Data.ByteString
 skip module Data.ByteString.Char8
 skip module Data.ByteString.Unsafe
+skip module Encoding
+skip module GHC.Fingerprint
+skip module GHC.Fingerprint.Type
 
 # Avoid dependency on DynFlags here
 skip Module.indefUnitIdToUnitId
@@ -27,6 +35,66 @@ skip Module.pprModule
 # (should be) in midamble
 skip Module.moduleNameSlashes
 skip Module.mkModuleName
+
+skip Module.parseComponentId
+skip Module.parseModuleName
+skip Module.parseModuleId
+skip Module.parseUnitId
+skip Module.parseModSubst
+
+# Lets skipp stuff related to fingerprintso
+skip Module.fingerprintByteString
+skip Module.fingerprintUnitId
+skip Module.rawHashUnitId
+skip Module.hashUnitId
+skip Module.newIndefUnitId
+skip Module.generalizeIndefUnitId
+skip Module.generalizeIndefModule
+skip Module.newUnitId
+skip Module.renameHoleUnitId'
+skip Module.renameHoleModule'
+
+order Module.Eq___InstalledUnitId Module.Ord__InstalledUnitId
+order Module.Ord__ModuleName Module.Ord__IndefModule_compare
+order Module.Eq___ModuleName Module.Eq___IndefModule_op_zeze__
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_compare
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_max
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_min
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zg__
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zl__
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zgze__
+order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zlze__
+order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zeze__
+order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zsze__
+order Module.Eq___InstalledUnitId Module.Eq___InstalledModule_op_zeze__
+order Module.Ord__InstalledUnitId Module.Ord__InstalledModule_compare
+order Module.Ord__NDModule Module.delInstalledModuleEnv
+order Module.Ord__NDModule Module.delModuleEnv
+order Module.Ord__NDModule Module.delModuleEnvList
+order Module.Ord__NDModule Module.delModuleSet
+order Module.Ord__NDModule Module.elemModuleEnv
+order Module.Ord__NDModule Module.emptyInstalledModuleEnv
+order Module.Ord__NDModule Module.emptyModuleEnv
+order Module.Ord__NDModule Module.elemModuleSet
+order Module.Ord__NDModule Module.extendInstalledModuleEnv
+order Module.Ord__NDModule Module.extendModuleEnv
+order Module.Ord__NDModule Module.extendModuleSet
+order Module.Ord__NDModule Module.extendModuleEnvWith
+order Module.Ord__NDModule Module.extendModuleEnvList
+order Module.Ord__NDModule Module.extendModuleSetList
+order Module.Ord__NDModule Module.extendModuleEnvList_C
+order Module.Ord__InstalledModule Module.extendInstalledModuleEnv
+order Module.Ord__InstalledModule Module.delInstalledModuleEnv
+order Module.Eq___InstalledUnitId Module.installedUnitIdEq
+order Module.Eq___InstalledModule Module.installedModuleEq
+order Module.Eq___UnitId Module.isHoleModule
+order Module.Eq___UnitId Module.isInteractiveModule
+order Module.Ord__InstalledUnitId Module.Ord__InstalledModule_op_zl__
+order Module.Ord__InstalledUnitId Module.Ord__IndefModule_op_zl__
+
+# Loops during type inference.
+skip Module.Eq___ComponentId
+skip Module.Ord__ComponentId
 
 
 
@@ -96,3 +164,23 @@ redefine Local Definition Module.Ord__Module_op_zlze__ : Module -> (Module -> bo
                                                   end
                            end
     end.
+
+redefine Local Definition Module.Ord__InstalledModule_op_zl__
+   : InstalledModule -> (InstalledModule -> bool) :=
+  fun a b => match a with | Mk_InstalledModule a1 a2 =>
+    match b with | Mk_InstalledModule b1 b2 =>
+    match (GHC.Base.compare a1 b1) with
+    | Lt => true
+    | Eq => (a2 GHC.Base.< b2)
+    | Gt => false
+    end end end.
+
+redefine Local Definition Module.Ord__IndefModule_op_zl__
+   : IndefModule -> (IndefModule -> bool) :=
+  fun a b => match a with | Mk_IndefModule a1 a2 =>
+    match b with | Mk_IndefModule b1 b2 =>
+    match (GHC.Base.compare a1 b1) with
+    | Lt => true
+    | Eq => (a2 GHC.Base.< b2)
+    | Gt => false
+    end end end.

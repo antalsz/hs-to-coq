@@ -43,6 +43,12 @@ addons:
       - libgmp-dev
       - xutils-dev
 
+before_install:
+ # Download and unpack the stack executable
+ - mkdir -p ~/.local/bin
+ - export PATH=$HOME/.local/bin:$PATH
+ - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
 before_script:
  - eval $(opam config env)
 
@@ -58,10 +64,6 @@ jobs:
 
   - stage: install haskell dependencies
     install:
-      # Download and unpack the stack executable
-      - mkdir -p ~/.local/bin
-      - export PATH=$HOME/.local/bin:$PATH
-      - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
       - stack --no-terminal --install-ghc test --only-dependencies
       # dependencies of the containers code that we translate
       - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2

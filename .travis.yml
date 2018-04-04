@@ -71,13 +71,17 @@ jobs:
   - stage: build
     script:
       - stack --no-terminal --install-ghc install
-  - stage: basic tests
+
+  - stage: Tests and Examples
+
+    env: TESTING="small tests"
     script:
       - stack --no-terminal --install-ghc install
       - make -C examples/tests
       - make -C base
       - make -C examples/base-tests
-  - stage: containers
+
+  - env: TESTING="containers"
     script:
       - stack --no-terminal --install-ghc install
       - make -C base
@@ -89,7 +93,8 @@ jobs:
       - make -C examples/containers/extraction/src
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
-  - stage: small examples
+
+  - env: TESTING="other examples"
     script:
       - stack --no-terminal --install-ghc install
       - make -C base
@@ -103,7 +108,8 @@ jobs:
       - make -C examples/intervals
       - make -C examples/transformers
       - make -C examples/coinduction
-  - stage: GHC
+
+  - env: TESTING="GHC"
     script:
       - make -C base
       - make -C base-thy

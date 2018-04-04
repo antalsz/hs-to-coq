@@ -68,8 +68,6 @@ import qualified Base
 import qualified Datatypes
 -- import qualified BinNums
 
-import qualified SemigroupInternal as Semigroup
--- import qualified Monoid
 import Internal (Set_(Bin,Tip))
 import qualified Internal as S2
 
@@ -93,8 +91,8 @@ eq_a _ f = f (Base.Eq___Dict_Build (==) (/=))
 ord_a :: Prelude.Ord a => Base.Ord a
 ord_a _ = Base.ord_default Prelude.compare eq_a
   
-semigroup_a :: Data.Semigroup.Semigroup a => Semigroup.Semigroup a
-semigroup_a _ f = f ((Data.Semigroup.<>))
+semigroup_a :: Data.Semigroup.Semigroup a => Base.Semigroup a
+semigroup_a _ f = f (Data.Semigroup.<>)
 
 monoid_a :: Data.Monoid.Monoid a => Base.Monoid a
 monoid_a _ f = f (Base.Monoid__Dict_Build Data.Monoid.mappend
@@ -118,7 +116,7 @@ instance (Prelude.Ord a) => Prelude.Ord (S2.Set_ a) where
   min     = S2.coq_Ord__Set__min eq_a ord_a
 
 instance (Prelude.Ord a) => Data.Semigroup.Semigroup (S2.Set_ a) where
-  (<>)    = S2.coq_Semigroup__Set__op_zlzg__ eq_a ord_a
+  (<>)    = S2.coq_Semigroup__Set__op_zlzlzgzg__ eq_a ord_a
   sconcat = error "no defn"
   stimes  = error "no defn"
 
@@ -132,8 +130,8 @@ instance (Show a) => Show (S2.Set_ a) where
     showString "fromList " . shows (Data.Foldable.toList xs)
 
 instance Data.Foldable.Foldable S2.Set_ where
-  fold    = S2.coq_Foldable__Set__fold    monoid_a
-  foldMap = S2.coq_Foldable__Set__foldMap monoid_a
+  fold    = S2.coq_Foldable__Set__fold    semigroup_a monoid_a
+  foldMap = S2.coq_Foldable__Set__foldMap semigroup_a monoid_a
   foldr   = S2.foldr
   foldr'  = S2.foldr'
   foldl   = S2.foldl

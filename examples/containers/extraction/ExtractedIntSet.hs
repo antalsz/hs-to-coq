@@ -12,8 +12,6 @@ import qualified Base
 import qualified Datatypes
 import qualified BinNums
 import qualified Num
-import qualified Semigroup
-import qualified Monoid
 
 import qualified Internal0 as S2
 
@@ -70,7 +68,7 @@ instance Prelude.Ord (S2.IntSet) where
   min     = S2.coq_Ord__IntSet_min 
 
 instance Data.Semigroup.Semigroup (S2.IntSet) where
-  (<>)    = S2.coq_Semigroup__IntSet_op_zlzg__ 
+  (<>)    = S2.coq_Semigroup__IntSet_op_zlzlzgzg__ 
   sconcat = error "no defn"
   stimes  = error "no defn"
 

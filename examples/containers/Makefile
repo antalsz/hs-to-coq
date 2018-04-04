@@ -61,8 +61,7 @@ VFILES = $(VFILES_GEN_TEST) $(VFILES_GEN) $(VFILES_HS_SPEC_GEN) $(VFILES_MAN) $(
 
 all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md $(HS_SPEC)/README.md
 
-$(OUT)/_CoqProject : Makefile
-	mkdir -p $(OUT)
+$(OUT)/_CoqProject : Makefile $(OUT)/README.md
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../../../base ""' >> $@
@@ -71,18 +70,20 @@ $(OUT)/_CoqProject : Makefile
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 	echo $(addsuffix .v,$(DROPIN)) >> $@
 
-$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES) $(OUT)/README.md
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-$(OUT)/edits:
+$(OUT)/edits: $(OUT)/README.md
 	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/README.md:
+	mkdir -p $(OUT)
 	> $@
 	echo 'This directory contains a Coq’ified version of the Haskell containers library' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/containers`.' >> $@
 
 $(HS_SPEC)/README.md:
+	mkdir -p $(HS_SPEC)
 	> $@
 	echo 'This directory contains a Coq’ified version of the Haskell containers library specification' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/containers`.' >> $@
@@ -98,7 +99,7 @@ $(RENAMED)/IntSetProperties.hs: containers/tests/intset-properties.hs
 
 # KEEP THIS IN SYNC WITH THE NEXT RULE (there ought to be a better way)
 .SECONDEXPANSION:
-$(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $(wildcard module-edits/$$*/flags) edits
+$(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $(wildcard module-edits/$$*/flags) edits $(OUT)/README.md
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
@@ -119,7 +120,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 
 # KEEP THIS IN SYNC WITH THE PREVIOUS RULE (there ought to be a better way)
 .SECONDEXPANSION:
-$(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $$(wildcard module-edits/$$*/flags) edits
+$(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $$(wildcard module-edits/$$*/flags) edits $(HS_SPEC)/README.md
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
@@ -148,7 +149,7 @@ $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	lndir ../manual $(OUT)/
 
 
-$(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
+$(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs $(OUT)/README.md
 	$(HS_TO_COQ) -e module-edits/$*/edits \
 	             -e edits \
 	       -o $(OUT) \

@@ -31,7 +31,5 @@ Makefile.conf
 .\#*
 
 # Scratch work files
-Test*
-test*
 Example.hs
 example.v

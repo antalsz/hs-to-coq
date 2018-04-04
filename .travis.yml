@@ -53,13 +53,13 @@ jobs:
       - stack --no-terminal --install-ghc test --only-dependencies
       - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
-  - stage: build
+  - stage: build hs-to-coq
     script:
       - stack --no-terminal --install-ghc install
 
   - stage: Tests and Examples
 
-    # env: TESTING="small tests"
+  # Tests and base tests
     script:
       - eval $(opam config env)
       - stack --no-terminal --install-ghc install
@@ -68,7 +68,7 @@ jobs:
       - make -j2 -C examples/base-tests
     addons: *coq-addons # This job needs Coq
 
-    # env: TESTING="containers"
+  # Containers
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
@@ -83,7 +83,7 @@ jobs:
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
     addons: *coq-addons # This job needs Coq
 
-    # env: TESTING="other examples"
+  # Other examples
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
@@ -99,7 +99,7 @@ jobs:
       - make -j2 -C examples/coinduction
     addons: *coq-addons # This job needs Coq
 
-    # env: TESTING="GHC"
+  # GHC (including transformers)
   - script:
       - eval $(opam config env)
       - make -j2 -C base

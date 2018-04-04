@@ -76,7 +76,7 @@ jobs:
       - make -j2 -C examples/containers clean
       - make -j2 -C examples/containers
       # Check that the files in git are identical to the generated ones
-      - make     -C examples/containers/lib/Makefile.conf
+      - make     -C examples/containers/lib Makefile.conf
       - git add examples/container/lib
       - git status
       - git diff-index --cached --quiet HEAD -- examples/containers/lib/
@@ -87,9 +87,9 @@ jobs:
       - eval $(opam config env)
       - make -j2 -C base
       - make -j2 -C base-thy
-      - make     -C examples/containers/lib/Makefile.conf
+      - make     -C examples/containers/lib Makefile.conf
       - make -j2 -C examples/containers/lib
-      - make     -C examples/containers/theories/Makefile.conf
+      - make     -C examples/containers/theories Makefile.conf
       - make -j2 -C examples/containers/theories
 
   # Containers (extraction)
@@ -97,7 +97,7 @@ jobs:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -j2 -C base
-      - make     -C examples/containers/lib/Makefile.conf
+      - make     -C examples/containers/lib Makefile.conf
       - make -j2 -C examples/containers/lib
       - make     -C examples/containers/extraction/src Makefile.conf
       - make -j2 -C examples/containers/extraction/src

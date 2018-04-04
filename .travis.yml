@@ -68,16 +68,33 @@ jobs:
       - make -j2 -C base
       - make -j2 -C examples/base-tests
 
-  # Containers
+  # Containers (translation)
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C examples/containers clean
+      - make -j2 -C examples/containers
+      # Check that the files in git are identical to the generated ones
+      - git add example/container/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/containers/lib/
+
+  # Containers (theory)
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -j2 -C base
       - make -j2 -C base-thy
-      - make -j2 -C examples/containers clean
-      - make -j2 -C examples/containers
+      - make -j2 -C examples/containers/lib
       - make -j2 -C examples/containers/theories
-      # Test extraction
+
+  # Containers (extraction)
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C examples/containers/lib
       - make -j2 -C examples/containers/extraction/src
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)

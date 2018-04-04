@@ -49,7 +49,7 @@ before_script:
 jobs:
   include:
   - stage: install coq
-    - install:
+    install:
       # Install COQ
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
@@ -57,7 +57,7 @@ jobs:
       - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
 
   - stage: install haskell dependencies
-    - install:
+    install:
       # Download and unpack the stack executable
       - mkdir -p ~/.local/bin
       - export PATH=$HOME/.local/bin:$PATH

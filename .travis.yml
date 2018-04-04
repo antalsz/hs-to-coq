@@ -23,10 +23,7 @@ cache:
 # Ensure necessary system libraries are present
 addons:
   apt:
-    sources:
-      - avsm
     packages:
-      - opam
       - libgmp-dev
       - xutils-dev
 
@@ -36,12 +33,15 @@ before_install:
  - export PATH=$HOME/.local/bin:$PATH
  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
-before_script:
- - opam list
-
 jobs:
   include:
   - stage: install coq
+    addons: &coq-addons # Remember this config, and re-use in those stages that actually need Coq
+      apt:
+        sources:
+          - avsm
+        packages:
+          - opam
     install:
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
@@ -66,6 +66,7 @@ jobs:
       - make -C examples/tests
       - make -C base
       - make -C examples/base-tests
+    addons: *coq-addons # This job needs Coq
 
     # env: TESTING="containers"
   - script:
@@ -80,6 +81,7 @@ jobs:
       - make -C examples/containers/extraction/src
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
+    addons: *coq-addons # This job needs Coq
 
     # env: TESTING="other examples"
   - script:
@@ -96,6 +98,7 @@ jobs:
       - make -C examples/intervals
       - make -C examples/transformers
       - make -C examples/coinduction
+    addons: *coq-addons # This job needs Coq
 
     # env: TESTING="GHC"
   - script:
@@ -103,3 +106,4 @@ jobs:
       - make -C base
       - make -C base-thy
       - make -C examples/ghc/lib
+    addons: *coq-addons # This job needs Coq

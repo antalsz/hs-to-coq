@@ -23,7 +23,10 @@ cache:
 # Ensure necessary system libraries are present
 addons:
   apt:
+    sources:
+      - avsm
     packages:
+      - opam
       - libgmp-dev
       - xutils-dev
 
@@ -41,12 +44,6 @@ jobs:
   # take longer than 50 minutes. Otherwise it just takes precious minutes
   # to load the cache
   - stage: Install dependencies, build hs-to-coq
-    addons: &coq-addons # Remember this config, and re-use in those stages that actually need Coq
-      apt:
-        sources:
-          - avsm
-        packages:
-          - opam
     install:
       # Coq
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
@@ -70,7 +67,6 @@ jobs:
       - make -j2 -C examples/tests
       - make -j2 -C base
       - make -j2 -C examples/base-tests
-    addons: *coq-addons # This job needs Coq
 
   # Containers
   - script:
@@ -85,7 +81,6 @@ jobs:
       - make -j2 -C examples/containers/extraction/src
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
-    addons: *coq-addons # This job needs Coq
 
   # Other examples
   - script:
@@ -101,7 +96,6 @@ jobs:
       - make -j2 -C examples/dlist
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
-    addons: *coq-addons # This job needs Coq
 
   # GHC (including transformers)
   - script:
@@ -111,4 +105,3 @@ jobs:
       - make -j2 -C examples/containers
       - make -j2 -C examples/transformers
       - make -j2 -C examples/ghc/lib
-    addons: *coq-addons # This job needs Coq

@@ -24,7 +24,6 @@ import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
 import HsToCoq.Util.Traversable
-import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 
@@ -335,9 +334,9 @@ generateGroupRecordAccessors = fmap (fmap DefinitionSentence)
 --------------------------------------------------------------------------------
 
 groupTyClDecls :: ConversionMonad m
-               => [(Maybe ModuleName, TyClDecl GhcRn)] -> m [DeclarationGroup]
+               => [TyClDecl GhcRn] -> m [DeclarationGroup]
 groupTyClDecls decls = do
-  bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
+  bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
 
   -- Might be overgenerous
@@ -349,7 +348,7 @@ groupTyClDecls decls = do
                   in vars <> setMapMaybe (M.lookup ?? ctypes) vars
 
 convertModuleTyClDecls :: ConversionMonad m
-                       => [(Maybe ModuleName, TyClDecl GhcRn)] -> m [Sentence]
+                       => [TyClDecl GhcRn] -> m [Sentence]
 convertModuleTyClDecls =  fork [ either convUnsupported pure
                                  . foldTraverse convertDeclarationGroup
                                , foldTraverse generateGroupArgumentSpecifiers

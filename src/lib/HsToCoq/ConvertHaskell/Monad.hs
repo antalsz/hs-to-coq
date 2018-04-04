@@ -10,9 +10,9 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionState(),
   currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
-  useProgramHere, 
+  useProgramHere,
   -- * Operations
-  maybeWithCurrentModule, withCurrentModule, withCurrentModuleOrNone,
+  withCurrentModule,
   withCurrentDefinition,
   fresh, gensym, genqid,
   rename,
@@ -447,17 +447,11 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
 
   _typecheckerEnvironment = Nothing
 
-withCurrentModuleOrNone :: ConversionMonad m => Maybe ModuleName -> m a -> m a
-withCurrentModuleOrNone newModule = gbracket setModule restoreModule . const
-  where
-  setModule = _currentModule <<.= newModule
-  restoreModule oldModule = _currentModule .= oldModule
-
 withCurrentModule :: ConversionMonad m => ModuleName -> m a -> m a
-withCurrentModule = withCurrentModuleOrNone . Just
-
-maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
-maybeWithCurrentModule = maybe id withCurrentModule
+withCurrentModule newModule = gbracket setModule restoreModule . const
+  where
+  setModule = _currentModule <<.= Just newModule
+  restoreModule oldModule = _currentModule .= oldModule
 
 withCurrentDefinition :: ConversionMonad m =>
     Qualid ->

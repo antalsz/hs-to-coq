@@ -65,7 +65,7 @@ data ConvertedModuleDeclarations =
 convertHsGroup :: ConversionMonad m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup mod HsGroup{..} = do
   convertedTyClDecls <- convertModuleTyClDecls
-                     .  map ((Just mod,) . unLoc)
+                     .  map unLoc
                      $  concatMap group_tyclds hs_tyclds
                           -- Ignore roles
   convertedValDecls  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
@@ -107,8 +107,8 @@ convertHsGroup mod HsGroup{..} = do
         -- TODO RENAMER use RecFlag info to do recursion stuff
         pure . foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ NoBinding <$> defnsMap
 
-  convertedClsInstDecls <- convertModuleClsInstDecls
-    [(Just mod, cid) | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
+  convertedClsInstDecls <- convertClsInstDecls
+    [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
 
   convertedAddedDecls <- use (edits.additions.at mod.non [])
 
@@ -135,7 +135,7 @@ convertHsGroup mod HsGroup{..} = do
 axiomatizeHsGroup :: ConversionMonad m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations
 axiomatizeHsGroup mod HsGroup{..} = do
   convertedTyClDecls <- convertModuleTyClDecls
-                     .  map ((Just mod,) . unLoc)
+                     .  map unLoc
                      $  concatMap group_tyclds hs_tyclds
                           -- Ignore roles
   convertedValDecls  <-
@@ -153,8 +153,8 @@ axiomatizeHsGroup mod HsGroup{..} = do
           _ ->
             convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
   
-  convertedClsInstDecls <- axiomatizeModuleClsInstDecls
-            [(Just mod, cid) | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
+  convertedClsInstDecls <- axiomatizeClsInstDecls
+            [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
 
   convertedAddedDecls <- use (edits.additions.at mod.non [])
 

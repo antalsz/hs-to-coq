@@ -6,17 +6,14 @@
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (
   -- * Top-level entry point
-  convertModuleClsInstDecls,
+  convertClsInstDecls,
   -- * Axiomatizing equivalents
-  axiomatizeModuleClsInstDecls, axiomatizeClsInstDecl,
-  -- * Alternative entry points (you probably don't want to use these)
-  convertClsInstDecls
+  axiomatizeClsInstDecls,
 ) where
 
 import Control.Lens
 
 import Data.Semigroup (Semigroup(..), (<>))
-import HsToCoq.Util.Function
 import Data.Traversable
 import HsToCoq.Util.Traversable
 import Data.Maybe
@@ -198,15 +195,10 @@ axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
-convertModuleClsInstDecls :: forall m. ConversionMonad m
-                          => [(Maybe ModuleName, ClsInstDecl GhcRn)] -> m [Sentence]
-convertModuleClsInstDecls = foldTraverse $ maybeWithCurrentModule .*^ convertClsInstDecl
-
-axiomatizeModuleClsInstDecls :: forall m. ConversionMonad m
-                             => [(Maybe ModuleName, ClsInstDecl GhcRn)] -> m [Sentence]
-axiomatizeModuleClsInstDecls insts =
-  (fmap InstanceSentence .  catMaybes) <$>
-    mapM (maybeWithCurrentModule .*^ axiomatizeClsInstDecl) insts
+convertClsInstDecls, axiomatizeClsInstDecls :: forall m. ConversionMonad m =>
+    [ClsInstDecl GhcRn] -> m [Sentence]
+convertClsInstDecls = foldTraverse convertClsInstDecl
+axiomatizeClsInstDecls insts = (fmap InstanceSentence .  catMaybes) <$> mapM axiomatizeClsInstDecl insts
 
 --------------------------------------------------------------------------------
 
@@ -413,8 +405,3 @@ decomposeClassTy ty = case ty of
 decomposeForall :: Term -> ([Binder], Term)
 decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty)
 decomposeForall t = ([], t)
-
---------------------------------------------------------------------------------
-
-convertClsInstDecls :: ConversionMonad m => [ClsInstDecl GhcRn] -> m [Sentence]
-convertClsInstDecls = convertModuleClsInstDecls . map (Nothing,)

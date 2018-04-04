@@ -63,22 +63,22 @@ jobs:
     script:
       - eval $(opam config env)
       - stack --no-terminal --install-ghc install
-      - make -C examples/tests
-      - make -C base
-      - make -C examples/base-tests
+      - make -j2 -C examples/tests
+      - make -j2 -C base
+      - make -j2 -C examples/base-tests
     addons: *coq-addons # This job needs Coq
 
     # env: TESTING="containers"
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -C base
-      - make -C base-thy
-      - make -C examples/containers clean
-      - make -C examples/containers
-      - make -C examples/containers/theories
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/containers clean
+      - make -j2 -C examples/containers
+      - make -j2 -C examples/containers/theories
       # Test extraction
-      - make -C examples/containers/extraction/src
+      - make -j2 -C examples/containers/extraction/src
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
     addons: *coq-addons # This job needs Coq
@@ -87,23 +87,23 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -C base
-      - make -C base-thy
-      - make -C examples/successors
-      - make -C examples/compiler
-      - make -C examples/rle
-      - make -C examples/bag
-      - make -C examples/quicksort
-      - make -C examples/dlist
-      - make -C examples/intervals
-      - make -C examples/transformers
-      - make -C examples/coinduction
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/successors
+      - make -j2 -C examples/compiler
+      - make -j2 -C examples/rle
+      - make -j2 -C examples/bag
+      - make -j2 -C examples/quicksort
+      - make -j2 -C examples/dlist
+      - make -j2 -C examples/intervals
+      - make -j2 -C examples/transformers
+      - make -j2 -C examples/coinduction
     addons: *coq-addons # This job needs Coq
 
     # env: TESTING="GHC"
   - script:
       - eval $(opam config env)
-      - make -C base
-      - make -C base-thy
-      - make -C examples/ghc/lib
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/ghc/lib
     addons: *coq-addons # This job needs Coq

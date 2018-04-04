@@ -108,14 +108,6 @@ convertInstanceName n = do
     merge []     ys     = ys
     merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
 
--- Looks up what GHC knows about this class (given by an instance head)
-findHsClass :: ConversionMonad m => LHsSigType GhcRn -> m Class
-findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
-    Just className -> lookupTyThing (unLoc className) >>= \case
-        Just (ATyCon tc) | Just cls <- tyConClass_maybe tc -> return cls
-        _  -> convUnsupported "Lookup did not yield a class"
-    Nothing -> convUnsupported "Cannot find class name in instance head"
-
 --------------------------------------------------------------------------------
 {- Haskell:
       instance Functor ((->) r)
@@ -135,7 +127,7 @@ findHsClass insthead = case getLHsInstDeclClass_maybe insthead of
 data InstanceInfo = InstanceInfo { instanceName       :: !Qualid
                                  , instanceHead       :: !Term
                                  , instanceClass      :: !Qualid
-                                 , instanceHasMethods :: Bool}
+                                 }
                   deriving (Eq, Ord)
 
 convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GhcRn -> m InstanceInfo
@@ -144,8 +136,6 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceHead  <- convertLHsSigType cid_poly_ty
   instanceClass <- maybe (convUnsupported "strangely-formed instance heads") pure $
                     termHead instanceHead
-  instanceHsClass <- findHsClass cid_poly_ty
-  let instanceHasMethods = not (null (classMethods  instanceHsClass))
 
   pure InstanceInfo{..}
 
@@ -197,10 +187,11 @@ axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
     False -> do
       InstanceInfo{..} <- convertClsInstDeclInfo cid
       use (classDefns.at instanceClass) >>= \case
-        Just _ -> pure . Just . InstanceDefinition instanceName [] instanceHead []
-             $ if instanceHasMethods
-               then Just $ ProofAdmitted ""
-               else Nothing
+        Just (ClassDefinition _ _ _ methods) ->
+          pure . Just . InstanceDefinition instanceName [] instanceHead []
+             $ if null methods
+               then Nothing
+               else Just $ ProofAdmitted ""
         Nothing ->
           -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
           pure Nothing

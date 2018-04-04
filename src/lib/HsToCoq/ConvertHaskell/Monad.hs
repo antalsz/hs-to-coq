@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, LocalConvMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, typecheckerEnvironment, renamed,
+  currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   useProgramHere, 
   -- * Operations
@@ -16,8 +16,6 @@ module HsToCoq.ConvertHaskell.Monad (
   withCurrentDefinition,
   fresh, gensym, genqid,
   rename,
-  -- * Access to the typechecker environment ('TcGblEnv')
-  lookupTyThing,
   -- * Errors
   throwProgramError, convUnsupported, editFailure,
   -- * Fixity
@@ -41,8 +39,6 @@ import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
 import GHC
-import TcRnTypes (TcGblEnv, tcg_type_env)
-import NameEnv (lookupNameEnv)
 
 import Panic
 
@@ -73,7 +69,6 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        , _classDefns             :: !(Map Qualid ClassDefinition)
                                        , _defaultMethods         :: !(Map Qualid (Map Qualid Term))
                                        , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
-                                       , _typecheckerEnvironment :: !(Maybe TcGblEnv)
                                        }
 makeLenses ''ConversionState
 -- '_currentModule' is exported
@@ -507,14 +502,6 @@ recordFixity id assoc = do
    case M.lookup id m of
      Just _v  -> throwProgramError $ "Multiple fixities for " ++ show id
      Nothing -> put (state { _fixities = (M.insert id assoc m) })
-
-lookupTyThing :: ConversionMonad m => GHC.Name -> m (Maybe TyThing)
-lookupTyThing name = do
-    env <- fmap tcg_type_env <$> use typecheckerEnvironment
-    -- Lookup in this module
-    case (lookupNameEnv ?? name) =<< env of
-        Just thing -> pure $ Just thing
-        Nothing    -> lookupName name
 
 skipModulesBy :: ConversionMonad m => (a -> ModuleName) -> [a] -> m [a]
 skipModulesBy f = filterM $ \a -> use $ edits.skippedModules.contains (f a).to not

@@ -313,11 +313,8 @@ printConvertedModules withModulePrinter =
 
 convertAndPrintModules :: ConversionMonad m => WithModulePrinter m -> [TypecheckedModule] -> m ()
 convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamed
-  where toRenamed tcm
-          | Just rn <- tm_renamed_source tcm = do
-                -- or should we store and use the ModInfo instead?
-                typecheckerEnvironment ?= fst (tm_internals_ tcm)
-                pure (mod, rn)
-          | otherwise = throwProgramError $  "Renamer failed for `"
-                                          ++ moduleNameString mod ++ "'"
-          where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm
+  where
+    toRenamed tcm
+        | Just rn <- tm_renamed_source tcm = pure (mod, rn)
+        | otherwise = throwProgramError $  "Renamer failed for `" ++ moduleNameString mod ++ "'"
+      where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm

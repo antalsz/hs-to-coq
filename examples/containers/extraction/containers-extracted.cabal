@@ -80,8 +80,8 @@ library
                        base ==4.11.*
   build-depends:       deepseq
   build-depends:       random
-  hs-source-dirs:      .
   hs-source-dirs:      src
+  hs-source-dirs:      extracted-src
   default-language:    Haskell2010
 
 

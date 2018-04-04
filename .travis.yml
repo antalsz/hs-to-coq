@@ -95,7 +95,7 @@ jobs:
       - eval $(opam config env)
       - make -j2 -C base
       - make -j2 -C examples/containers/lib
-      - make -j2 -C examples/containers/extraction/src
+      - make -j2 -C examples/containers/extraction/extracted-src/
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
 

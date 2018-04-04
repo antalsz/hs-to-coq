@@ -43,7 +43,6 @@ jobs:
   include:
   - stage: install coq
     install:
-      # Install COQ
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
       - opam list -i coq.8.7.2 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.7.2 ocamlfind.1.7.3-1 ; }
@@ -52,7 +51,6 @@ jobs:
   - stage: install haskell dependencies
     install:
       - stack --no-terminal --install-ghc test --only-dependencies
-      # dependencies of the containers code that we translate
       - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
   - stage: build
@@ -61,7 +59,7 @@ jobs:
 
   - stage: Tests and Examples
 
-    env: TESTING="small tests"
+    # env: TESTING="small tests"
     script:
       - eval $(opam config env)
       - stack --no-terminal --install-ghc install
@@ -69,8 +67,8 @@ jobs:
       - make -C base
       - make -C examples/base-tests
 
-  - env: TESTING="containers"
-    script:
+    # env: TESTING="containers"
+  - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -C base
@@ -83,8 +81,8 @@ jobs:
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
 
-  - env: TESTING="other examples"
-    script:
+    # env: TESTING="other examples"
+  - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -C base
@@ -99,11 +97,9 @@ jobs:
       - make -C examples/transformers
       - make -C examples/coinduction
 
-  - env: TESTING="GHC"
-    script:
+    # env: TESTING="GHC"
+  - script:
       - eval $(opam config env)
       - make -C base
       - make -C base-thy
-      # disabled 2018-07-24 due to too big of a fall-out, and the
-      # focus is somewhere on containers right now
       - make -C examples/ghc/lib

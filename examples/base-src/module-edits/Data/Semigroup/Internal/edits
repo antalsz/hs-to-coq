@@ -1,75 +1,75 @@
-data kinds Data.Semigroup.Internal.Alt (Type -> Type)
+data kinds Data.SemigroupInternal.Alt (Type -> Type)
 
 # needs stimes
-skip Data.Semigroup.Internal.stimesDefault
-skip Data.Semigroup.Internal.stimesList
-skip Data.Semigroup.Internal.stimesMaybe
-skip Data.Semigroup.Internal.stimesMonoid
-skip Data.Semigroup.Internal.stimesIdempotent
+skip Data.SemigroupInternal.stimesDefault
+skip Data.SemigroupInternal.stimesList
+skip Data.SemigroupInternal.stimesMaybe
+skip Data.SemigroupInternal.stimesMonoid
+skip Data.SemigroupInternal.stimesIdempotent
 
-add Data.Semigroup.Internal Instance Unpeel_Dual a : GHC.Prim.Unpeel (Dual a) a :=
+add Data.SemigroupInternal Instance Unpeel_Dual a : GHC.Prim.Unpeel (Dual a) a :=
 	 GHC.Prim.Build_Unpeel _ _ getDual Mk_Dual.
-add Data.Semigroup.Internal Instance Unpeel_Endo a : GHC.Prim.Unpeel (Endo a) (a -> a) :=
+add Data.SemigroupInternal Instance Unpeel_Endo a : GHC.Prim.Unpeel (Endo a) (a -> a) :=
 	 GHC.Prim.Build_Unpeel _ _ appEndo Mk_Endo.
-add Data.Semigroup.Internal Instance Unpeel_Any : GHC.Prim.Unpeel Any bool :=
+add Data.SemigroupInternal Instance Unpeel_Any : GHC.Prim.Unpeel Any bool :=
 	 GHC.Prim.Build_Unpeel _ _ getAny Mk_Any.
-add Data.Semigroup.Internal Instance Unpeel_All : GHC.Prim.Unpeel All bool :=
+add Data.SemigroupInternal Instance Unpeel_All : GHC.Prim.Unpeel All bool :=
 	 GHC.Prim.Build_Unpeel _ _ getAll Mk_All.
-add Data.Semigroup.Internal Instance Unpeel_Product a : GHC.Prim.Unpeel (Product a) a :=
+add Data.SemigroupInternal Instance Unpeel_Product a : GHC.Prim.Unpeel (Product a) a :=
 	 GHC.Prim.Build_Unpeel _ _ getProduct Mk_Product.
-add Data.Semigroup.Internal Instance Unpeel_Sum a : GHC.Prim.Unpeel (Sum a) a :=
+add Data.SemigroupInternal Instance Unpeel_Sum a : GHC.Prim.Unpeel (Sum a) a :=
 	 GHC.Prim.Build_Unpeel _ _ getSum Mk_Sum.
 
-order Unpeel_Any Data.Semigroup.Internal.Eq___Any Data.Semigroup.Internal.Ord__Any
-order Unpeel_All Data.Semigroup.Internal.Eq___All Data.Semigroup.Internal.Ord__All
-order Unpeel_Alt Data.Semigroup.Internal.Eq___Alt Data.Semigroup.Internal.Ord__Alt
-order Unpeel_Product Data.Semigroup.Internal.Eq___Product Data.Semigroup.Internal.Ord__Product
-order Unpeel_Sum Data.Semigroup.Internal.Eq___Sum Data.Semigroup.Internal.Ord__Sum
-order Unpeel_Dual Data.Semigroup.Internal.Eq___Dual Data.Semigroup.Internal.Ord__Dual
+order Unpeel_Any Data.SemigroupInternal.Eq___Any Data.SemigroupInternal.Ord__Any
+order Unpeel_All Data.SemigroupInternal.Eq___All Data.SemigroupInternal.Ord__All
+order Unpeel_Alt Data.SemigroupInternal.Eq___Alt Data.SemigroupInternal.Ord__Alt
+order Unpeel_Product Data.SemigroupInternal.Eq___Product Data.SemigroupInternal.Ord__Product
+order Unpeel_Sum Data.SemigroupInternal.Eq___Sum Data.SemigroupInternal.Ord__Sum
+order Unpeel_Dual Data.SemigroupInternal.Eq___Dual Data.SemigroupInternal.Ord__Dual
 
-order Data.Semigroup.Internal.Semigroup__Alt Data.Semigroup.Internal.Monoid__Alt_mappend
+order Data.SemigroupInternal.Semigroup__Alt Data.SemigroupInternal.Monoid__Alt_mappend
 
-skip Data.Semigroup.Internal.Read__Any
-skip Data.Semigroup.Internal.Read__All
-skip Data.Semigroup.Internal.Read__Alt
-skip Data.Semigroup.Internal.Read__Dual
-skip Data.Semigroup.Internal.Show__Any
-skip Data.Semigroup.Internal.Show__All
-skip Data.Semigroup.Internal.Show__Alt
-skip Data.Semigroup.Internal.Show__Dual
+skip Data.SemigroupInternal.Read__Any
+skip Data.SemigroupInternal.Read__All
+skip Data.SemigroupInternal.Read__Alt
+skip Data.SemigroupInternal.Read__Dual
+skip Data.SemigroupInternal.Show__Any
+skip Data.SemigroupInternal.Show__All
+skip Data.SemigroupInternal.Show__Alt
+skip Data.SemigroupInternal.Show__Dual
 
 # This removes a suprious {k}
-redefine Instance Data.Semigroup.Internal.Eq___Alt {f} {a} `{(GHC.Base.Eq_ (f a))}
+redefine Instance Data.SemigroupInternal.Eq___Alt {f} {a} `{(GHC.Base.Eq_ (f a))}
    : GHC.Base.Eq_ (Alt f a) :=
   fun _ k =>
     k (GHC.Base.Eq___Dict_Build _
-         Data.Semigroup.Internal.Eq___Alt_op_zeze__
-         Data.Semigroup.Internal.Eq___Alt_op_zsze__).
+         Data.SemigroupInternal.Eq___Alt_op_zeze__
+         Data.SemigroupInternal.Eq___Alt_op_zsze__).
 
-redefine Instance Data.Semigroup.Internal.Ord__Alt {f} {a} `{(GHC.Base.Ord (f a))}
+redefine Instance Data.SemigroupInternal.Ord__Alt {f} {a} `{(GHC.Base.Ord (f a))}
    : GHC.Base.Ord (Alt f a) :=
   fun _ k => k (GHC.Base.Ord__Dict_Build _
-     Data.Semigroup.Internal.Ord__Alt_op_zl__
-     Data.Semigroup.Internal.Ord__Alt_op_zlze__
-     Data.Semigroup.Internal.Ord__Alt_op_zg__
-     Data.Semigroup.Internal.Ord__Alt_op_zgze__
-     Data.Semigroup.Internal.Ord__Alt_compare
-     Data.Semigroup.Internal.Ord__Alt_max
-     Data.Semigroup.Internal.Ord__Alt_min).
+     Data.SemigroupInternal.Ord__Alt_op_zl__
+     Data.SemigroupInternal.Ord__Alt_op_zlze__
+     Data.SemigroupInternal.Ord__Alt_op_zg__
+     Data.SemigroupInternal.Ord__Alt_op_zgze__
+     Data.SemigroupInternal.Ord__Alt_compare
+     Data.SemigroupInternal.Ord__Alt_max
+     Data.SemigroupInternal.Ord__Alt_min).
 
 # hs-to-coq uses the wrong type variable names in a type annotation to the argument of `coerce`
-redefine Local Definition Data.Semigroup.Internal.Semigroup__Alt_op_zlzlzgzg__ {inst_f} {inst_a}
+redefine Local Definition Data.SemigroupInternal.Semigroup__Alt_op_zlzlzgzg__ {inst_f} {inst_a}
   `{(GHC.Base.Alternative inst_f)} : (Alt inst_f inst_a) -> ((Alt inst_f inst_a) -> (Alt inst_f inst_a)) :=
   GHC.Prim.coerce (GHC.Base.op_zlzbzg__).
 
-redefine Local Definition Data.Semigroup.Internal.Semigroup__Product_op_zlzlzgzg__ {inst_a} `{(GHC.Num.Num inst_a)}
+redefine Local Definition Data.SemigroupInternal.Semigroup__Product_op_zlzlzgzg__ {inst_a} `{(GHC.Num.Num inst_a)}
    : (Product inst_a) -> ((Product inst_a) -> (Product inst_a)) :=
   GHC.Prim.coerce (GHC.Num.*).
 
-redefine Local Definition Data.Semigroup.Internal.Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{(GHC.Num.Num inst_a)}
+redefine Local Definition Data.SemigroupInternal.Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{(GHC.Num.Num inst_a)}
    : (Sum inst_a) -> ((Sum inst_a) -> (Sum inst_a)) :=
   GHC.Prim.coerce (GHC.Num.+).
 
-redefine Local Definition Data.Semigroup.Internal.Semigroup__Endo_op_zlzlzgzg__ {inst_a}
+redefine Local Definition Data.SemigroupInternal.Semigroup__Endo_op_zlzlzgzg__ {inst_a}
    : (Endo inst_a) -> ((Endo inst_a) -> (Endo inst_a)) :=
   GHC.Prim.coerce (Coq.Program.Basics.compose).

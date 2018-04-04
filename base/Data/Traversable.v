@@ -18,7 +18,7 @@ Require Data.Functor.
 Require Data.Functor.Const.
 Require Data.Functor.Identity.
 Require Data.Proxy.
-Require Data.Semigroup.Internal.
+Require Data.SemigroupInternal.
 Require GHC.Base.
 Require GHC.Prim.
 Require GHC.Tuple.
@@ -336,34 +336,34 @@ Local Definition Traversable__Dual_traverse
    : forall {f} {a} {b},
      forall `{GHC.Base.Applicative f},
      (a -> f b) ->
-     Data.Semigroup.Internal.Dual a -> f (Data.Semigroup.Internal.Dual b) :=
+     Data.SemigroupInternal.Dual a -> f (Data.SemigroupInternal.Dual b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Data.Semigroup.Internal.Mk_Dual x =>
-          Data.Semigroup.Internal.Mk_Dual Data.Functor.<$> f x
+      | f, Data.SemigroupInternal.Mk_Dual x =>
+          Data.SemigroupInternal.Mk_Dual Data.Functor.<$> f x
       end.
 
 Local Definition Traversable__Dual_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f},
-     Data.Semigroup.Internal.Dual (f a) -> f (Data.Semigroup.Internal.Dual a) :=
+     Data.SemigroupInternal.Dual (f a) -> f (Data.SemigroupInternal.Dual a) :=
   fun {f} {a} `{GHC.Base.Applicative f} => Traversable__Dual_traverse GHC.Base.id.
 
 Local Definition Traversable__Dual_sequence
    : forall {m} {a},
      forall `{GHC.Base.Monad m},
-     Data.Semigroup.Internal.Dual (m a) -> m (Data.Semigroup.Internal.Dual a) :=
+     Data.SemigroupInternal.Dual (m a) -> m (Data.SemigroupInternal.Dual a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Dual_sequenceA.
 
 Local Definition Traversable__Dual_mapM
    : forall {m} {a} {b},
      forall `{GHC.Base.Monad m},
      (a -> m b) ->
-     Data.Semigroup.Internal.Dual a -> m (Data.Semigroup.Internal.Dual b) :=
+     Data.SemigroupInternal.Dual a -> m (Data.SemigroupInternal.Dual b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Dual_traverse.
 
-Program Instance Traversable__Dual : Traversable Data.Semigroup.Internal.Dual :=
+Program Instance Traversable__Dual : Traversable Data.SemigroupInternal.Dual :=
   fun _ k =>
     k {| mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Dual_mapM ;
          sequence__ := fun {m} {a} `{GHC.Base.Monad m} => Traversable__Dual_sequence ;
@@ -376,34 +376,34 @@ Local Definition Traversable__Sum_traverse
    : forall {f} {a} {b},
      forall `{GHC.Base.Applicative f},
      (a -> f b) ->
-     Data.Semigroup.Internal.Sum a -> f (Data.Semigroup.Internal.Sum b) :=
+     Data.SemigroupInternal.Sum a -> f (Data.SemigroupInternal.Sum b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Data.Semigroup.Internal.Mk_Sum x =>
-          Data.Semigroup.Internal.Mk_Sum Data.Functor.<$> f x
+      | f, Data.SemigroupInternal.Mk_Sum x =>
+          Data.SemigroupInternal.Mk_Sum Data.Functor.<$> f x
       end.
 
 Local Definition Traversable__Sum_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f},
-     Data.Semigroup.Internal.Sum (f a) -> f (Data.Semigroup.Internal.Sum a) :=
+     Data.SemigroupInternal.Sum (f a) -> f (Data.SemigroupInternal.Sum a) :=
   fun {f} {a} `{GHC.Base.Applicative f} => Traversable__Sum_traverse GHC.Base.id.
 
 Local Definition Traversable__Sum_sequence
    : forall {m} {a},
      forall `{GHC.Base.Monad m},
-     Data.Semigroup.Internal.Sum (m a) -> m (Data.Semigroup.Internal.Sum a) :=
+     Data.SemigroupInternal.Sum (m a) -> m (Data.SemigroupInternal.Sum a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Sum_sequenceA.
 
 Local Definition Traversable__Sum_mapM
    : forall {m} {a} {b},
      forall `{GHC.Base.Monad m},
      (a -> m b) ->
-     Data.Semigroup.Internal.Sum a -> m (Data.Semigroup.Internal.Sum b) :=
+     Data.SemigroupInternal.Sum a -> m (Data.SemigroupInternal.Sum b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Sum_traverse.
 
-Program Instance Traversable__Sum : Traversable Data.Semigroup.Internal.Sum :=
+Program Instance Traversable__Sum : Traversable Data.SemigroupInternal.Sum :=
   fun _ k =>
     k {| mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Sum_mapM ;
          sequence__ := fun {m} {a} `{GHC.Base.Monad m} => Traversable__Sum_sequence ;
@@ -416,38 +416,36 @@ Local Definition Traversable__Product_traverse
    : forall {f} {a} {b},
      forall `{GHC.Base.Applicative f},
      (a -> f b) ->
-     Data.Semigroup.Internal.Product a -> f (Data.Semigroup.Internal.Product b) :=
+     Data.SemigroupInternal.Product a -> f (Data.SemigroupInternal.Product b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | f, Data.Semigroup.Internal.Mk_Product x =>
-          Data.Semigroup.Internal.Mk_Product Data.Functor.<$> f x
+      | f, Data.SemigroupInternal.Mk_Product x =>
+          Data.SemigroupInternal.Mk_Product Data.Functor.<$> f x
       end.
 
 Local Definition Traversable__Product_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f},
-     Data.Semigroup.Internal.Product (f a) ->
-     f (Data.Semigroup.Internal.Product a) :=
+     Data.SemigroupInternal.Product (f a) -> f (Data.SemigroupInternal.Product a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
     Traversable__Product_traverse GHC.Base.id.
 
 Local Definition Traversable__Product_sequence
    : forall {m} {a},
      forall `{GHC.Base.Monad m},
-     Data.Semigroup.Internal.Product (m a) ->
-     m (Data.Semigroup.Internal.Product a) :=
+     Data.SemigroupInternal.Product (m a) -> m (Data.SemigroupInternal.Product a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Product_sequenceA.
 
 Local Definition Traversable__Product_mapM
    : forall {m} {a} {b},
      forall `{GHC.Base.Monad m},
      (a -> m b) ->
-     Data.Semigroup.Internal.Product a -> m (Data.Semigroup.Internal.Product b) :=
+     Data.SemigroupInternal.Product a -> m (Data.SemigroupInternal.Product b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Product_traverse.
 
 Program Instance Traversable__Product
-   : Traversable Data.Semigroup.Internal.Product :=
+   : Traversable Data.SemigroupInternal.Product :=
   fun _ k =>
     k {| mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
            Traversable__Product_mapM ;
@@ -554,10 +552,10 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f}
      Data.Either.Right Data.Foldable.Foldable Data.Functor.op_zlzdzg__
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const
      Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Proxy.Mk_Proxy Data.Proxy.Proxy Data.Semigroup.Internal.Dual
-     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Product
-     Data.Semigroup.Internal.Mk_Sum Data.Semigroup.Internal.Product
-     Data.Semigroup.Internal.Sum GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
+     Data.Proxy.Mk_Proxy Data.Proxy.Proxy Data.SemigroupInternal.Dual
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.Product
+     Data.SemigroupInternal.Sum GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
      GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.flip GHC.Base.fmap GHC.Base.foldr
      GHC.Base.id GHC.Base.liftA2 GHC.Base.pure GHC.Prim.coerce GHC.Tuple.pair2
      GHC.Tuple.pair_type

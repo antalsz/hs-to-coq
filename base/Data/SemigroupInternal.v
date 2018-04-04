@@ -730,7 +730,7 @@ Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
 
 (* Translating `instance Generic1__Alt__5' failed: type class instance head:App
    (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg (Qualid (Bare "k"))
-   :| [])) (PosArg (HasType (App (Qualid (Qualified "Data.Semigroup.Internal"
+   :| [])) (PosArg (HasType (App (Qualid (Qualified "Data.SemigroupInternal"
    "Alt")) (PosArg (Qualid (Bare "f")) :| [])) (Arrow (Qualid (Bare "k")) (App
    (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified "GHC.Types"
    "LiftedRep")) :| [])))) :| []) unsupported *)
@@ -745,7 +745,7 @@ Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
    instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
    (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
    "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.Semigroup.Internal" "Product")) :| []) unsupported *)
+   "Data.SemigroupInternal" "Product")) :| []) unsupported *)
 
 (* Translating `instance Generic__Product' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -819,7 +819,7 @@ Program Instance Ord__Product {a} `{GHC.Base.Ord a}
    instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
    (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
    "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.Semigroup.Internal" "Sum")) :| []) unsupported *)
+   "Data.SemigroupInternal" "Sum")) :| []) unsupported *)
 
 (* Translating `instance Generic__Sum' failed: OOPS! Cannot find information for
    class Qualified "GHC.Generics" "Generic" unsupported *)
@@ -995,7 +995,7 @@ Program Instance Ord__All : GHC.Base.Ord All :=
    instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
    (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
    "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.Semigroup.Internal" "Dual")) :| []) unsupported *)
+   "Data.SemigroupInternal" "Dual")) :| []) unsupported *)
 
 (* Translating `instance Generic__Dual' failed: OOPS! Cannot find information
    for class Qualified "GHC.Generics" "Generic" unsupported *)

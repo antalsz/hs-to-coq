@@ -44,7 +44,6 @@ library
   exposed-modules: Identity
   exposed-modules: Internal
   exposed-modules: Internal0
-  exposed-modules: Internal1
   exposed-modules: List
   exposed-modules: List0
   exposed-modules: Logic
@@ -61,6 +60,7 @@ library
   exposed-modules: QArith_base
   exposed-modules: Real
   exposed-modules: Ring_theory
+  exposed-modules: SemigroupInternal
   exposed-modules: Specif
   exposed-modules: String
   exposed-modules: Sumbool

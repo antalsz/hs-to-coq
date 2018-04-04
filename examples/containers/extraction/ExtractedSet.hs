@@ -68,7 +68,7 @@ import qualified Base
 import qualified Datatypes
 -- import qualified BinNums
 
-import qualified Semigroup
+import qualified SemigroupInternal as Semigroup
 -- import qualified Monoid
 import Internal (Set_(Bin,Tip))
 import qualified Internal as S2

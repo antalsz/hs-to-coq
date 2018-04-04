@@ -18,7 +18,7 @@ Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Import Data.Functor.Classes.
 Require Import Data.Functor.Identity.
-Require Data.Semigroup.Internal.
+Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require Data.Tuple.
 Require GHC.Base.
@@ -185,12 +185,12 @@ Local Definition Foldable__WriterT_foldl {inst_f} {inst_w}
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
-                                           (Foldable__WriterT_foldMap (Coq.Program.Basics.compose
-                                                                       Data.Semigroup.Internal.Mk_Dual
-                                                                       (Coq.Program.Basics.compose
-                                                                        Data.Semigroup.Internal.Mk_Endo (GHC.Base.flip
-                                                                         f))) t)) z
+          Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                          (Foldable__WriterT_foldMap (Coq.Program.Basics.compose
+                                                                      Data.SemigroupInternal.Mk_Dual
+                                                                      (Coq.Program.Basics.compose
+                                                                       Data.SemigroupInternal.Mk_Endo (GHC.Base.flip
+                                                                        f))) t)) z
       end.
 
 Local Definition Foldable__WriterT_foldr' {inst_f} {inst_w}
@@ -215,8 +215,8 @@ Local Definition Foldable__WriterT_foldr {inst_f} {inst_w}
     fun arg_4__ arg_5__ arg_6__ =>
       match arg_4__, arg_5__, arg_6__ with
       | f, z, t =>
-          Data.Semigroup.Internal.appEndo (Foldable__WriterT_foldMap
-                                           (Coq.Program.Basics.compose Data.Semigroup.Internal.Mk_Endo f) t) z
+          Data.SemigroupInternal.appEndo (Foldable__WriterT_foldMap
+                                          (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f) t) z
       end.
 
 Local Definition Foldable__WriterT_foldl' {inst_f} {inst_w}
@@ -249,15 +249,15 @@ Local Definition Foldable__WriterT_product {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (WriterT inst_w inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
-                               (Foldable__WriterT_foldMap Data.Semigroup.Internal.Mk_Product).
+    Coq.Program.Basics.compose Data.SemigroupInternal.getProduct
+                               (Foldable__WriterT_foldMap Data.SemigroupInternal.Mk_Product).
 
 Local Definition Foldable__WriterT_sum {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, forall `{GHC.Num.Num a}, (WriterT inst_w inst_f) a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
-                               (Foldable__WriterT_foldMap Data.Semigroup.Internal.Mk_Sum).
+    Coq.Program.Basics.compose Data.SemigroupInternal.getSum
+                               (Foldable__WriterT_foldMap Data.SemigroupInternal.Mk_Sum).
 
 Local Definition Foldable__WriterT_fold {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
@@ -271,9 +271,9 @@ Local Definition Foldable__WriterT_elem {inst_f} {inst_w}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
                                                              (Foldable__WriterT_foldMap (Coq.Program.Basics.compose
-                                                                                         Data.Semigroup.Internal.Mk_Any
+                                                                                         Data.SemigroupInternal.Mk_Any
                                                                                          p))) _GHC.Base.==_.
 
 Local Definition Foldable__WriterT_length {inst_f} {inst_w}
@@ -485,12 +485,12 @@ Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
      liftCompare liftCompare2 liftEq liftEq2 list negb op_zt__ pair runIdentity tt
      unit Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
      Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.length Data.Foldable.null Data.Semigroup.Internal.Mk_Any
-     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo
-     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
-     Data.Semigroup.Internal.appEndo Data.Semigroup.Internal.getAny
-     Data.Semigroup.Internal.getDual Data.Semigroup.Internal.getProduct
-     Data.Semigroup.Internal.getSum Data.Traversable.Traversable
+     Data.Foldable.length Data.Foldable.null Data.SemigroupInternal.Mk_Any
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getAny
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
      Data.Traversable.traverse Data.Tuple.fst Data.Tuple.snd GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
      GHC.Base.build GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap

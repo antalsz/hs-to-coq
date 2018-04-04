@@ -284,7 +284,7 @@ Proof.
           /Data.Foldable.Foldable__list_foldMap /Data.Foldable.Foldable__list_foldr /=.
   move=> p; elim=> [|x xs IH] //=.
   rewrite -IH.
-  rewrite {1}/mappend /Data.Semigroup.Internal.Monoid__All /=.
+  rewrite {1}/mappend /Data.SemigroupInternal.Monoid__All /=.
   case: (GHC.Base.foldr _ _ _) => //=.
 Qed.
 
@@ -307,7 +307,7 @@ Proof.
           /Data.Foldable.Foldable__list_foldMap /Data.Foldable.Foldable__list_foldr /=.
   move=> p; elim=> [|x xs IH] //=.
   rewrite -IH.
-  rewrite {1}/mappend /Data.Semigroup.Internal.Monoid__Any /=.
+  rewrite {1}/mappend /Data.SemigroupInternal.Monoid__Any /=.
   case: (GHC.Base.foldr _ _ _) => //=.
 Qed.
 

@@ -58,7 +58,9 @@ MODULES = \
   Data/Bifunctor \
   Data/List/NonEmpty \
   Data/Semigroup \
-  Data/Semigroup/Internal \
+
+RENAMED = \
+  Data/SemigroupInternal \
 
 
 # generated from drop-in/
@@ -68,12 +70,13 @@ DROPIN =
 SPECIAL_MODULES =
 
 
-VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
-VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
+VFILES_GEN     = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
+VFILES_RENAMED = $(addprefix $(OUT)/,$(addsuffix .v,$(RENAMED)))
+VFILES_MAN     = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
 VFILES_SPECIAL = $(addprefix $(OUT)/,$(addsuffix .v,$(SPECIAL_MODULES)))
-VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
+VFILES_DROPIN  = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN) $(VFILES_RENAMED)
 
 all:  $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
@@ -83,6 +86,7 @@ $(OUT)/_CoqProject : Makefile
 	echo '-Q . ""' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
+	echo $(addsuffix .v,$(RENAMED)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 	echo $(addsuffix .v,$(DROPIN)) >> $@
 
@@ -117,6 +121,21 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 		     -o $(OUT) \
 		     base/$*.hs
 	test -e $@
+
+# This is renamed, which confuses Make, so hence the special rule 
+$(OUT)/Data/SemigroupInternal.v : $(wildcard module-edits/Data/Semigroup/Internal/preamble.v) $(wildcard module-edits/Data/Semigroup/Internal/midamble.v)  $(wildcard module-edits/Data/Semigroup/Internal/edits) edits
+	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/Data/Semigroup/Internal/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/Data/Semigroup/Internal/preamble.v)) \
+	             $(addprefix --midamble , $(wildcard module-edits/Data/Semigroup/Internal/midamble.v)) \
+	             -e edits \
+           -N \
+		     -i base \
+		     -i base/dist-install/build \
+		     -I base/include \
+		     --ghc -this-unit-id --ghc base \
+		     -o $(OUT) \
+		     base/Data/Semigroup/Internal.hs
+	test -e $(OUT)/Data/SemigroupInternal.v
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"

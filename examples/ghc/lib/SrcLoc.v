@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Data.Semigroup.Internal.
+Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require FastString.
 Require GHC.Base.
@@ -156,12 +156,12 @@ Local Definition Foldable__GenLocated_foldl {inst_l}
     fun arg_19__ arg_20__ arg_21__ =>
       match arg_19__, arg_20__, arg_21__ with
       | f, z, t =>
-          Data.Semigroup.Internal.appEndo (Data.Semigroup.Internal.getDual
-                                           (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
-                                                                          Data.Semigroup.Internal.Mk_Dual
-                                                                          (Coq.Program.Basics.compose
-                                                                           Data.Semigroup.Internal.Mk_Endo
-                                                                           (GHC.Base.flip f))) t)) z
+          Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                          (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
+                                                                         Data.SemigroupInternal.Mk_Dual
+                                                                         (Coq.Program.Basics.compose
+                                                                          Data.SemigroupInternal.Mk_Endo (GHC.Base.flip
+                                                                           f))) t)) z
       end.
 
 Local Definition Foldable__GenLocated_foldr' {inst_l}
@@ -181,14 +181,14 @@ Local Definition Foldable__GenLocated_foldr' {inst_l}
 Local Definition Foldable__GenLocated_product {inst_l}
    : forall {a}, forall `{GHC.Num.Num a}, GenLocated inst_l a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Coq.Program.Basics.compose Data.Semigroup.Internal.getProduct
-                               (Foldable__GenLocated_foldMap Data.Semigroup.Internal.Mk_Product).
+    Coq.Program.Basics.compose Data.SemigroupInternal.getProduct
+                               (Foldable__GenLocated_foldMap Data.SemigroupInternal.Mk_Product).
 
 Local Definition Foldable__GenLocated_sum {inst_l}
    : forall {a}, forall `{GHC.Num.Num a}, GenLocated inst_l a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Coq.Program.Basics.compose Data.Semigroup.Internal.getSum
-                               (Foldable__GenLocated_foldMap Data.Semigroup.Internal.Mk_Sum).
+    Coq.Program.Basics.compose Data.SemigroupInternal.getSum
+                               (Foldable__GenLocated_foldMap Data.SemigroupInternal.Mk_Sum).
 
 Local Definition Foldable__GenLocated_fold {inst_l}
    : forall {m}, forall `{GHC.Base.Monoid m}, GenLocated inst_l m -> m :=
@@ -199,9 +199,9 @@ Local Definition Foldable__GenLocated_elem {inst_l}
   fun {a} `{GHC.Base.Eq_ a} =>
     Coq.Program.Basics.compose (fun arg_69__ =>
                                   let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Semigroup.Internal.getAny
+                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
                                                              (Foldable__GenLocated_foldMap (Coq.Program.Basics.compose
-                                                                                            Data.Semigroup.Internal.Mk_Any
+                                                                                            Data.SemigroupInternal.Mk_Any
                                                                                             p))) _GHC.Base.==_.
 
 Local Definition Foldable__GenLocated_foldr {inst_l}
@@ -567,15 +567,14 @@ Definition wiredInSrcSpan : SrcSpan :=
 
 (* External variables:
      None Some andb bool comparison false list negb option true
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Semigroup.Internal.Mk_Any
-     Data.Semigroup.Internal.Mk_Dual Data.Semigroup.Internal.Mk_Endo
-     Data.Semigroup.Internal.Mk_Product Data.Semigroup.Internal.Mk_Sum
-     Data.Semigroup.Internal.appEndo Data.Semigroup.Internal.getAny
-     Data.Semigroup.Internal.getDual Data.Semigroup.Internal.getProduct
-     Data.Semigroup.Internal.getSum Data.Traversable.Traversable
-     FastString.FastString FastString.fsLit GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.String
-     GHC.Base.build GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.SemigroupInternal.Mk_Any
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getAny
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable FastString.FastString
+     FastString.fsLit GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build
+     GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

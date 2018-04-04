@@ -25,6 +25,7 @@ Makefile.conf
 *.o
 *.hi
 *.tix
+*.prof
 
 # emacs autosaves
 \#*

@@ -35,7 +35,12 @@ before_install:
 
 jobs:
   include:
-  - stage: install coq
+  # This builds Coq, the dependencies of hs-to-coq and hs-to-coq itself,
+  # and puts them in the cache.
+  # One could break it own, but that is only useful if the steps together
+  # take longer than 50 minutes. Otherwise it just takes precious minutes
+  # to load the cache
+  - stage: Install dependencies, build hs-to-coq
     addons: &coq-addons # Remember this config, and re-use in those stages that actually need Coq
       apt:
         sources:
@@ -43,18 +48,17 @@ jobs:
         packages:
           - opam
     install:
+      # Coq
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
       - opam list -i coq.8.7.2 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.7.2 ocamlfind.1.7.3-1 ; }
       - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
 
-  - stage: install haskell dependencies
-    install:
+      # Dependencies
       - stack --no-terminal --install-ghc test --only-dependencies
       - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
-  - stage: build hs-to-coq
-    script:
+      # hs-to-coq
       - stack --no-terminal --install-ghc install
 
   - stage: Tests and Examples

@@ -1,17 +1,4 @@
-# This is the simple Travis configuration, which is intended for use
-# on applications which do not require cross-platform and
-# multiple-GHC-version support. For more information and other
-# options, see:
-#
-# https://docs.haskellstack.org/en/stable/travis_ci/
-#
-# Copy these contents into the root directory of your Github project in a file
-# named .travis.yml
-
-# Use new container infrastructure to enable caching
 sudo: false
-
-# Do not choose a language; we provide our own build tools.
 language: generic
 
 # Travis slack notification
@@ -50,7 +37,7 @@ before_install:
  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 before_script:
- - eval $(opam config env)
+ - opam list
 
 jobs:
   include:
@@ -76,6 +63,7 @@ jobs:
 
     env: TESTING="small tests"
     script:
+      - eval $(opam config env)
       - stack --no-terminal --install-ghc install
       - make -C examples/tests
       - make -C base
@@ -84,6 +72,7 @@ jobs:
   - env: TESTING="containers"
     script:
       - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
       - make -C base
       - make -C base-thy
       - make -C examples/containers clean
@@ -97,6 +86,7 @@ jobs:
   - env: TESTING="other examples"
     script:
       - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
       - make -C base
       - make -C base-thy
       - make -C examples/successors
@@ -111,6 +101,7 @@ jobs:
 
   - env: TESTING="GHC"
     script:
+      - eval $(opam config env)
       - make -C base
       - make -C base-thy
       # disabled 2018-07-24 due to too big of a fall-out, and the

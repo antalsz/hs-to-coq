@@ -99,7 +99,7 @@ benchmark bench-native-set
   ghc-options: -O2
   main-is:             BenchNativeSet.hs
   hs-source-dirs:      .
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base ==4.11.*
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
   build-depends:       criterion >= 0.4.0 && < 1.3
   build-depends:       containers == 0.5.11.0
@@ -112,7 +112,7 @@ benchmark bench-native-intset
   ghc-options:         -O2
   main-is:             BenchNativeIntSet.hs
   hs-source-dirs:      .
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base ==4.11.*
   build-depends:       containers-extracted
   build-depends:       deepseq >= 1.1.0.0 && < 1.5
   build-depends:       criterion  >= 0.4.0 && < 1.3
@@ -127,7 +127,7 @@ benchmark bench-extracted-set
   ghc-options:         -O2
   main-is:             BenchSet.hs
   hs-source-dirs:      .
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base ==4.11.*
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
   build-depends:       criterion >= 0.4.0 && < 1.3
@@ -141,7 +141,7 @@ benchmark bench-extracted-intset
   ghc-options:         -O2
   main-is:             BenchIntSet.hs
   hs-source-dirs:      .
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       base ==4.11.*
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
   build-depends:       criterion >= 0.4.0 && < 1.3
@@ -158,8 +158,8 @@ test-suite tests-set
   type: exitcode-stdio-1.0
   main-is:             SetProperties.hs
   hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
+  build-depends:       base ==4.11.*
+  build-depends:       QuickCheck >= 2.9.2
   build-depends:       containers-extracted
   build-depends:       transformers
   build-depends:       HUnit
@@ -176,8 +176,8 @@ test-suite tests-intset
   type: exitcode-stdio-1.0
   main-is:             IntSetProperties.hs
   hs-source-dirs:      .
-  build-depends:       QuickCheck >= 2.9.2,
-                       base >=4.9 && <4.10
+  build-depends:       base ==4.11.*
+  build-depends:       QuickCheck >= 2.9.2
   build-depends:       containers-extracted
   build-depends:       transformers
   build-depends:       HUnit

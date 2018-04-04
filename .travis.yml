@@ -108,6 +108,7 @@ jobs:
       - eval $(opam config env)
       - make -j2 -C base
       - make -j2 -C base-thy
+      - make -j2 -C examples/containers
       - make -j2 -C examples/transformers
       - make -j2 -C examples/ghc/lib
     addons: *coq-addons # This job needs Coq

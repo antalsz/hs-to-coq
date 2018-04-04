@@ -96,7 +96,6 @@ jobs:
       - make -j2 -C examples/quicksort
       - make -j2 -C examples/dlist
       - make -j2 -C examples/intervals
-      - make -j2 -C examples/transformers
       - make -j2 -C examples/coinduction
     addons: *coq-addons # This job needs Coq
 
@@ -105,5 +104,6 @@ jobs:
       - eval $(opam config env)
       - make -j2 -C base
       - make -j2 -C base-thy
+      - make -j2 -C examples/transformers
       - make -j2 -C examples/ghc/lib
     addons: *coq-addons # This job needs Coq

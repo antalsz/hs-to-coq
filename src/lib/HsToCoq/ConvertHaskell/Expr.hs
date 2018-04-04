@@ -35,7 +35,6 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.Counter
 import Control.Monad.Except
 import Control.Monad.Writer
 
@@ -892,7 +891,7 @@ convertTypedModuleBinding ty defn = do
             FunBind{fun_id = L _ hsName} ->
               var ExprNS hsName
             _ -> convUnsupported "Non-function top level binding"
-    withCounterT $ withCurrentDefinition name $ convertTypedBinding ty defn
+    withCurrentDefinition name $ convertTypedBinding ty defn
 
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad m

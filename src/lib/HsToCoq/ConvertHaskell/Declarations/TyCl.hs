@@ -27,7 +27,6 @@ import HsToCoq.Util.Traversable
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import Control.Monad.Trans.Counter
 
 import Control.Arrow ((&&&))
 import Control.Monad
@@ -283,7 +282,7 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
   allFields <- use (constructorFields.to restrict.folded._RecordFields)
   let nubedFields = S.toAscList (S.fromList allFields)
   filteredFields <- filterM (\field -> not <$> use (edits.skipped.contains field)) nubedFields
-  for filteredFields $ \(field :: Qualid) -> withCounterT $ do
+  for filteredFields $ \(field :: Qualid) -> withCurrentDefinition field $ do
     equations <- for conNames $ \con -> do
       (args, hasField) <- use (constructorFields.at con) >>= \case
         Just (NonRecordFields count) ->

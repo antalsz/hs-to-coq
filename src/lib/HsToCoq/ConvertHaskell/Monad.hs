@@ -478,8 +478,12 @@ withCurrentModule = withCurrentModuleOrNone . Just
 maybeWithCurrentModule :: ConversionMonad m => Maybe ModuleName -> m a -> m a
 maybeWithCurrentModule = maybe id withCurrentModule
 
-withCurrentDefinition :: ConversionMonad m => Qualid -> m a -> m a
-withCurrentDefinition newDef = gbracket set restore . const
+withCurrentDefinition :: ConversionMonad m =>
+    Qualid ->
+    (forall lm. LocalConvMonad lm => lm a) ->
+    m a
+withCurrentDefinition newDef act =
+    gbracket set restore $ const (withCounterT act)
   where
   set = _currentDefinition <<.= Just newDef
   restore oldDef = _currentDefinition .= oldDef

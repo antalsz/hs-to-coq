@@ -258,8 +258,10 @@ generateDefaultInstance (IndBody tyName _ _ cons)
     | Just (con, _, _) <- find suitableCon cons
         -- Instance Default_TupleSort : GHC.Err.Default TupleSort :=
         --  GHC.Err.Build_Default _ BoxedTuple.
-    = pure $ pure $ InstanceSentence $
-        InstanceTerm inst_name []
+    = use (edits.skipped.contains inst_name) >>= \case
+        True -> pure []
+        False -> pure $ pure $ InstanceSentence $
+            InstanceTerm inst_name []
                      (App1 "GHC.Err.Default" (Qualid tyName))
                      (App2 "GHC.Err.Build_Default" Underscore (Qualid con))
                      Nothing

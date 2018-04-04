@@ -69,7 +69,7 @@ jobs:
   - stage: build
     script:
       - stack --no-terminal --install-ghc install
-  - stage: basic-tests
+  - stage: basic tests
     script:
       - stack --no-terminal --install-ghc install
       - make -C examples/tests

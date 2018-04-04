@@ -17,6 +17,7 @@ cache:
   directories:
   - $HOME/.stack
   - .stack-work
+  - examples/containers/extraction/.stack-work
   - $HOME/ghc
   - $HOME/.opam
 

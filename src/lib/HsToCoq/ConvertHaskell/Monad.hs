@@ -434,7 +434,6 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
 evalConversion :: Monad m => Edits -> ConversionT m a -> m a
 evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) where
   __currentModule     = Nothing
-  __currentDefinition = Nothing
 
   _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
   _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
@@ -445,7 +444,6 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
   _defaultMethods    =   builtInDefaultMethods
   _fixities          = M.empty
 
-  _typecheckerEnvironment = Nothing
 
 withCurrentModule :: ConversionMonad m => ModuleName -> m a -> m a
 withCurrentModule newModule = gbracket setModule restoreModule . const

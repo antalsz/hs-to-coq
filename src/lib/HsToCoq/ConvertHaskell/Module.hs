@@ -12,7 +12,6 @@ module HsToCoq.ConvertHaskell.Module (
 
 import Control.Lens
 
-import HsToCoq.Util.Function
 import Data.Traversable
 import Data.Foldable
 import Data.Maybe
@@ -179,25 +178,7 @@ merge :: (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName]) -> (Co
 merge  (ConvertedModule m1 i1 t1 v1 c1 a1, x1) (ConvertedModule m2 i2 t2 v2 c2 a2, x2)
   | m1 == m2 = (ConvertedModule m1 (nub (i1 ++ i2)) (t1 ++ t2) (v1 ++ v2) (c1 ++ c2) (a1 ++ a2), x1 ++ x2)
 merge _ _ = error "Can only merge with same name"
-                                                                                   
 
--- Module-local
-{-
-convert_module_with_imports :: ConversionMonad m
-                            => ModuleName -> RenamedSource ->
-                            m (ConvertedModule, [ConvertedImportDecl])
-convert_module_with_imports convModName (group, imports, _exports, _docstring) =
-  withCurrentModule convModName $ do
-    ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
-                                , convertedValDecls     = convModValDecls
-                                , convertedClsInstDecls = convModClsInstDecls }
-      <- convertHsGroup convModName group
-    convImports    <- traverse (convertImportDecl . unLoc) imports
-    convModImports <- foldTraverse importDeclSentences convImports
-    pure (ConvertedModule{..}, convImports)
--}
-
--- Module-local
 
 convert_module_with_requires_via :: ConversionMonad m
                                  => (ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
@@ -254,12 +235,6 @@ axiomatize_module_with_requires :: ConversionMonad m
                              => ModuleName -> RenamedSource ->
                              m (ConvertedModule, [ModuleName])
 axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsGroup
-
-_convertModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-_convertModule = fmap fst .: convert_module_with_requires
-
-_axiomatizeModule :: ConversionMonad m => ModuleName -> RenamedSource -> m ConvertedModule
-_axiomatizeModule = fmap fst .: axiomatize_module_with_requires
 
 -- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
 -- components and can axiomatize individual modules as per edits

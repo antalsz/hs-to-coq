@@ -77,7 +77,7 @@ jobs:
       - make -j2 -C examples/containers
       # Check that the files in git are identical to the generated ones
       - make     -C examples/containers/lib Makefile.conf
-      - git add examples/container/lib
+      - git add examples/containers/lib
       - git status
       - git diff-index --cached --quiet HEAD -- examples/containers/lib/
 

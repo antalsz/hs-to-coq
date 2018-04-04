@@ -50,6 +50,7 @@ import HsToCoq.ConvertHaskell.Declarations.TyCl
 import HsToCoq.ConvertHaskell.Declarations.Instances
 import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
+import HsToCoq.Coq.Preamble
 
 --------------------------------------------------------------------------------
 
@@ -279,7 +280,7 @@ moduleDeclarations ConvertedModule{..} = do
   orders <- use $ edits.orders
   let sorted = topoSortSentences orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-  ax_decls <- usedAxioms sorted
+  let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
   imported_modules <- use $ edits.importedModules
   return $ deQualifyLocalNames (convModName `S.insert` imported_modules)
@@ -296,21 +297,20 @@ deQualifyLocalNames modNames = everywhere (mkT localize)
     localize (Qualified m b) | m `S.member` modNameTexts = Bare b
     localize qid = qid
 
-usedAxioms :: forall m. ConversionMonad m => [Sentence] -> m [Sentence]
-usedAxioms decls = do
-    axs <- use axioms
-    let ax_decls =
-          [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [i] t))
-          | i <- toList (getFreeVars (NoBinding decls))
-          , Just t <- return $ M.lookup i axs
-          ]
+usedAxioms :: [Sentence] -> [Sentence]
+usedAxioms decls = comment ++ ax_decls
+  where
+    ax_decls =
+      [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [i] t))
+      | i <- toList (getFreeVars (NoBinding decls))
+      , Just t <- return $ M.lookup i builtInAxioms
+      ]
 
-        comment =
-          [ CommentSentence (Comment "The Haskell code containes partial or \
-             \untranslateable code, which needs the following")
-          | not (null ax_decls)
-          ]
-    return $ comment ++ ax_decls
+    comment =
+      [ CommentSentence (Comment "The Haskell code containes partial or \
+         \untranslateable code, which needs the following")
+      | not (null ax_decls)
+      ]
 
 qualifiedNotations :: ConversionMonad m => ModuleName -> [Sentence] -> m [Sentence]
 qualifiedNotations mod decls = do

@@ -8,11 +8,19 @@ Stability   : experimental
 -}
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists #-}
 
-module HsToCoq.Coq.Preamble (staticPreamble) where
+module HsToCoq.Coq.Preamble
+    ( staticPreamble
+    , builtInAxioms
+    ) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Gallina.Orphans ()
+import qualified Data.Map as M
+import Data.Bifunctor
 
 staticPreamble :: Text
 staticPreamble = T.unlines
@@ -28,3 +36,14 @@ staticPreamble = T.unlines
  , "Require Coq.Program.Tactics."
  , "Require Coq.Program.Wf."
  ]
+
+-- | When a free variable of this name appears in the output,
+-- an axiom of the type given here is added to the preamble
+builtInAxioms :: M.Map Qualid Term
+builtInAxioms = M.fromList $ map (first Bare)
+    [ "missingValue"   =: Forall [ Inferred Implicit (Ident (Bare "a")) ] a
+    ]
+  where
+   a = "a"
+   (=:) = (,)
+   infix 0 =:

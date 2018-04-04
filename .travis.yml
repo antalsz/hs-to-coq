@@ -76,7 +76,7 @@ jobs:
       - make -j2 -C examples/containers clean
       - make -j2 -C examples/containers
       # Check that the files in git are identical to the generated ones
-      - git add example/container/lib
+      - git add examples/container/lib
       - git status
       - git diff-index --cached --quiet HEAD -- examples/containers/lib/
 

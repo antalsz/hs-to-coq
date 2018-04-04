@@ -101,7 +101,7 @@ benchmark bench-native-set
   hs-source-dirs:      .
   build-depends:       base ==4.11.*
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -115,7 +115,7 @@ benchmark bench-native-intset
   build-depends:       base ==4.11.*
   build-depends:       containers-extracted
   build-depends:       deepseq >= 1.1.0.0 && < 1.5
-  build-depends:       criterion  >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -130,7 +130,7 @@ benchmark bench-extracted-set
   build-depends:       base ==4.11.*
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -144,7 +144,7 @@ benchmark bench-extracted-intset
   build-depends:       base ==4.11.*
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers  == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random

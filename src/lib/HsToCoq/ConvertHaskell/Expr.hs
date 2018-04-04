@@ -776,7 +776,7 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
 
 
 -- Returns a function waiting for the "else case"
-guardTerm :: ConversionMonad m =>
+guardTerm :: LocalConvMonad m =>
     [ConvertedGuard m] ->
     Term -> -- The guarded expression
     Term -> -- the failure expression
@@ -837,15 +837,14 @@ convertTypedBinding convHsTy FunBind{..}   = runMaybeT $ do
              [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
              _ -> convUnsupported "malformed multi-match variable definitions"
       else do
-        whichFix <- use currentDefinition >>= \case
-            Nothing -> pure $ Fix . FixOne
-            Just n -> do
-                use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
-                    Just order -> pure $ wfFix order
-                    Nothing    -> use (edits.termination.at n) >>= \case
-                        Just Deferred    |  n == name -> pure $ wfFix Deferred
-                        Just Corecursive |  n == name -> pure $ wfFix Corecursive
-                        _ -> pure $ Fix . FixOne
+        whichFix <- do
+            n <- currentDefinition
+            use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
+                Just order -> pure $ wfFix order
+                Nothing    -> use (edits.termination.at n) >>= \case
+                    Just Deferred    |  n == name -> pure $ wfFix Deferred
+                    Just Corecursive |  n == name -> pure $ wfFix Corecursive
+                    _ -> pure $ Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars
@@ -1018,9 +1017,8 @@ missingValue = "missingValue"
 -- | Program does not work nicely with if-then-else, so if we believe we are
 -- producing a term that ends up in a Program Fixpoint or Program Definition,
 -- then desguar if-then-else using case statements.
-ifThenElse :: ConversionMonad m => m (IfStyle -> Term -> Term -> Term -> Term)
-ifThenElse =
-    use useProgramHere >>= \case
-        False -> pure $ IfBool
-        True ->  pure $ IfCase
+ifThenElse :: LocalConvMonad m => m (IfStyle -> Term -> Term -> Term -> Term)
+ifThenElse = useProgramHere >>= \case
+    False -> pure $ IfBool
+    True ->  pure $ IfCase
 

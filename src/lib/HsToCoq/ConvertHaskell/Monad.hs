@@ -35,6 +35,7 @@ import qualified Data.Text as T
 import Control.Monad.Trans.Counter
 
 import Control.Monad.State
+import Control.Monad.Reader
 import Control.Monad.Variables
 
 import           Data.Map.Strict (Map)
@@ -62,7 +63,6 @@ data ConstructorFields = NonRecordFields !Int
 makePrisms ''ConstructorFields
 
 data ConversionState = ConversionState { __currentModule         :: !(Maybe ModuleName)
-                                       , __currentDefinition     :: !(Maybe Qualid)
                                        , _edits                  :: !Edits
                                        , _constructors           :: !(Map Qualid [Qualid])
                                        , _constructorTypes       :: !(Map Qualid Qualid)
@@ -78,30 +78,32 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        , _axioms                 :: !(Map Qualid Term)
                                        }
 makeLenses ''ConversionState
--- '_currentModule', '_currentDefinition) and '_unique' are not exported
+-- '_currentModule' is exported
 
 currentModule :: Getter ConversionState (Maybe ModuleName)
 currentModule = _currentModule
 {-# INLINABLE currentModule #-}
 
-currentDefinition :: Getter ConversionState (Maybe Qualid)
-currentDefinition = _currentDefinition
-{-# INLINABLE currentDefinition #-}
+currentDefinition :: LocalConvMonad m => m Qualid
+currentDefinition = ask
 
-useProgramHere :: Getter ConversionState Bool
-useProgramHere = to $ \cs ->
-    case __currentDefinition cs of
-        Just n -> useProgram n (_edits cs)
-        Nothing -> False
+useProgramHere :: LocalConvMonad m => m Bool
+useProgramHere = do
+    n <- currentDefinition
+    useProgram n <$> use edits
 
 renamed :: HsNamespace -> Qualid -> Lens' ConversionState (Maybe Qualid)
 renamed ns x = edits.renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
 
 
-
+-- | The global monad, used for top-level bindings.
+--   Has edits, current module name, access to GHC etc.
 type ConversionMonad m = (GhcMonad m, MonadState ConversionState m)
-type LocalConvMonad m = (ConversionMonad m, CounterMonad m)
+-- | The local one monad, additional knows the current function name
+--   and a counter for fresh variables
+type LocalConvMonad m = (ConversionMonad m, MonadReader Qualid m, CounterMonad m)
+
 type ConversionT m = StateT ConversionState (VariablesT Qualid () m)
 
 -- HACK: Hard-code information about some data types here
@@ -483,10 +485,7 @@ withCurrentDefinition :: ConversionMonad m =>
     (forall lm. LocalConvMonad lm => lm a) ->
     m a
 withCurrentDefinition newDef act =
-    gbracket set restore $ const (withCounterT act)
-  where
-  set = _currentDefinition <<.= Just newDef
-  restore oldDef = _currentDefinition .= oldDef
+    withCounterT $ runReaderT act newDef
 
 gensym :: LocalConvMonad m => Text -> m Ident
 gensym name = do u <- fresh

@@ -12,7 +12,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   useProgramHere, 
   -- * Operations
-  maybeWithCurrentModule, withCurrentModule, withNoCurrentModule, withCurrentModuleOrNone,
+  maybeWithCurrentModule, withCurrentModule, withCurrentModuleOrNone,
   withCurrentDefinition,
   fresh, gensym, genqid,
   rename,
@@ -452,9 +452,6 @@ withCurrentModuleOrNone newModule = gbracket setModule restoreModule . const
   where
   setModule = _currentModule <<.= newModule
   restoreModule oldModule = _currentModule .= oldModule
-
-withNoCurrentModule :: ConversionMonad m => m a -> m a
-withNoCurrentModule = withCurrentModuleOrNone Nothing
 
 withCurrentModule :: ConversionMonad m => ModuleName -> m a -> m a
 withCurrentModule = withCurrentModuleOrNone . Just

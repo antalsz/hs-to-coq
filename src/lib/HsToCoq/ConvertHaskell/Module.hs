@@ -79,13 +79,10 @@ convertHsGroup mod HsGroup{..} = do
                    ??
                    (Just axiomatizeBinding))
               $  withConvertedBinding
-                   (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
+                   (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
                        t  <- use (edits.termination.at name)
-                       lt <- use (edits.local_termination.at name)
                        obl <- use (edits.obligations.at name)
-                       let isWellFounded (WellFounded {}) = True
-                           isWellFounded _ = False
-                       let useProgram = any isWellFounded t || any (any isWellFounded) lt
+                       useProgram <- useProgramHere
                        if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
                           ->  pure <$> toProgramFixpointSentence cdef order obl
                           | otherwise                   -- no edit

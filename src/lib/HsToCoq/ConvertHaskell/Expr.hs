@@ -837,14 +837,9 @@ convertTypedBinding convHsTy FunBind{..}   = runMaybeT $ do
              [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
              _ -> convUnsupported "malformed multi-match variable definitions"
       else do
-        whichFix <- do
-            n <- currentDefinition
-            use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
-                Just order -> pure $ wfFix order
-                Nothing    -> use (edits.termination.at n) >>= \case
-                    Just Deferred    |  n == name -> pure $ wfFix Deferred
-                    Just Corecursive |  n == name -> pure $ wfFix Corecursive
-                    _ -> pure $ Fix . FixOne
+        whichFix <- use (edits.termination.at name) >>= \case
+            Just order       -> pure $ wfFix order
+            _ -> pure $ Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars

@@ -52,8 +52,8 @@ skip CoreSyn.deAnnotate'
 skip CoreSyn.collectAnnArgs
 skip CoreSyn.deTagExpr
 
-termination go in CoreSyn.collectAnnArgsTicks deferred
-termination collect in CoreSyn.collectAnnBndrs deferred
+in CoreSyn.collectAnnArgsTicks termination go      deferred
+in CoreSyn.collectAnnBndrs     termination collect deferred
 
 rename value Type.isCoercionTy_maybe = TyCoRep.Type_isCoercionTy_maybe
 rename value Coercion.mkCoVarCo      = TyCoRep.mkCoVarCo

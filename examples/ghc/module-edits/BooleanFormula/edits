@@ -3,7 +3,7 @@ skip BooleanFormula.pprBooleanFormula
 skip BooleanFormula.pprBooleanFormulaNice
 skip BooleanFormula.pprBooleanFormulaNormal
 
-termination go in BooleanFormula.implies deferred
+in BooleanFormula.implies termination go deferred
 
 redefine Local Definition BooleanFormula.Functor__BooleanFormula_fmap {a} {b} :
 	(a -> b) -> ((BooleanFormula a) -> (BooleanFormula b))

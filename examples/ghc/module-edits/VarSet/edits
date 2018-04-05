@@ -2,8 +2,8 @@
 # given monotonic arguments.
 #
 termination       VarSet.fixVarSet       deferred
-termination go in VarSet.transCloDVarSet deferred
-termination go in VarSet.transCloVarSet  deferred
+in VarSet.transCloDVarSet termination go deferred
+in VarSet.transCloVarSet  termination go deferred
 
 # Outputtable
 skip VarSet.pluralVarSet

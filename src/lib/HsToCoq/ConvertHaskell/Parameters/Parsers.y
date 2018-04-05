@@ -242,8 +242,7 @@ Edit :: { Edit }
   | skip module Word                                 { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
   | import module Word                               { ImportModuleEdit      (mkModuleName (T.unpack $3))     }
   | manual notation Word                             { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
-  | termination Qualid TerminationArgument           { TerminationEdit       $2 Nothing $3                    }
-  | termination Word 'in' Qualid TerminationArgument { TerminationEdit       $4 (Just $2) $5                  }
+  | termination Qualid TerminationArgument           { TerminationEdit       $2 $3                            }
   | obligations Qualid Word                          { ObligationsEdit       $2 $3 }
   | rename Renaming                                  { RenameEdit            (fst $2) (snd $2)                }
   | axiomatize module Word                           { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
@@ -255,6 +254,7 @@ Edit :: { Edit }
   | rewrite Rewrite                                  { RewriteEdit           $2                               }
   | rename module Word Word                          { RenameModuleEdit      (mkModuleName (T.unpack $3))
                                                                              (mkModuleName (T.unpack $4))     }
+  | 'in' Qualid Edit                                 { InEdit                $2 $3                            }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

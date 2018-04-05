@@ -455,8 +455,16 @@ withCurrentDefinition :: ConversionMonad m =>
     Qualid ->
     (forall lm. LocalConvMonad lm => lm a) ->
     m a
-withCurrentDefinition newDef act =
-    withCounterT $ runReaderT act newDef
+withCurrentDefinition newDef act = do
+    -- This needs to become a reader monad, with `local`
+    old_edits <- use edits
+    local_edits <- use (edits.inEdits.at newDef.non mempty)
+    edits .= old_edits <> local_edits
+    r <- withCounterT $ runReaderT act newDef
+    edits .= old_edits
+    return r
+
+
 
 gensym :: LocalConvMonad m => Text -> m Ident
 gensym name = do u <- fresh

@@ -13,8 +13,8 @@ rename value Data.IntMap.Internal.View = Data.IntMap.Internal.Mk_View
 
 rename value Data.IntMap.Internal.bool = Data.IntMap.Internal.boolITE
 
-termination buildTree in Data.IntMap.Internal.fromSet deferred
-termination go in Data.IntMap.Internal.mergeWithKey' deferred
+in Data.IntMap.Internal.fromSet       termination buildTree deferred
+in Data.IntMap.Internal.mergeWithKey' termination go        deferred
 
 ## get the type classes working
 order Data.IntMap.Internal.Eq___IntMap Data.IntMap.Internal.Ord__IntMap

@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination,  local_termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, rewrites, obligations, renamedModules,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, rewrites, obligations, renamedModules, inEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -60,7 +60,7 @@ data TerminationArgument = WellFounded Order | Deferred | Corecursive
 
 data Edit = TypeSynonymTypeEdit     Ident Ident
           | DataTypeArgumentsEdit   Qualid DataTypeArguments
-          | TerminationEdit         Qualid (Maybe Ident) TerminationArgument
+          | TerminationEdit         Qualid TerminationArgument
           | ObligationsEdit         Qualid Tactics
           | RedefinitionEdit        CoqDefinition
           | AddEdit                 ModuleName CoqDefinition
@@ -78,6 +78,7 @@ data Edit = TypeSynonymTypeEdit     Ident Ident
           | RewriteEdit             Rewrite
           | CoinductiveEdit         Qualid
           | RenameModuleEdit        ModuleName ModuleName
+          | InEdit                  Qualid Edit
           deriving (Eq, Ord, Show)
 
 data HsNamespace = ExprNS | TypeNS
@@ -97,7 +98,6 @@ type Renamings = Map NamespacedIdent Qualid
 data Edits = Edits { _typeSynonymTypes    :: !(Map Ident Ident)
                    , _dataTypeArguments   :: !(Map Qualid DataTypeArguments)
                    , _termination         :: !(Map Qualid TerminationArgument)
-                   , _local_termination   :: !(Map Qualid (Map Ident TerminationArgument))
                    , _redefinitions       :: !(Map Qualid CoqDefinition)
                    , _additions           :: !(Map ModuleName [Sentence])
                    , _skipped             :: !(Set Qualid)
@@ -115,6 +115,7 @@ data Edits = Edits { _typeSynonymTypes    :: !(Map Ident Ident)
                    , _obligations         :: !(Map Qualid Tactics)
                    , _coinductiveTypes    :: !(Set Qualid)
                    , _renamedModules      :: !(Map ModuleName ModuleName)
+                   , _inEdits             :: !(Map Qualid Edits)
                    }
            deriving (Eq, Ord, Show)
 makeLenses ''Edits
@@ -122,8 +123,8 @@ makeLenses ''Edits
 -- Derived edits
 useProgram :: Qualid -> Edits -> Bool
 useProgram name edits = or
-    [ any isWellFounded       (Data.Map.lookup name (_termination edits))
-    , any (any isWellFounded) (Data.Map.lookup name (_local_termination edits))
+    [ any isWellFounded                      (Data.Map.lookup name (_termination edits))
+    , any (any isWellFounded . _termination) (Data.Map.lookup name (_inEdits edits))
     , name `member`_obligations edits
     ]
   where
@@ -132,9 +133,9 @@ useProgram name edits = or
 
 
 instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 trm1 ltm1 rdf1 add1 skp1 smth1 smod1 imod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1 coi1 rm1)
-       (Edits tst2 dta2 trm2 ltm2 rdf2 add2 skp2 smth2 smod2 imod2  axm2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2 coi2 rm2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (ltm1 <> ltm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (imod1 <> imod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2) (coi1 <> coi2) (rm1 <> rm2)
+  (<>) (Edits tst1 dta1 trm1 rdf1 add1 skp1 smth1 smod1 imod1 axm1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1 coi1 rm1 ie1)
+       (Edits tst2 dta2 trm2 rdf2 add2 skp2 smth2 smod2 imod2  axm2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2 coi2 rm2 ie2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (imod1 <> imod2) (axm1 <> axm2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2) (coi1 <> coi2) (rm1 <> rm2) (unionWith (<>) ie1 ie2)
 
 instance Monoid Edits where
   mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
@@ -154,15 +155,11 @@ duplicateI_for what = duplicate_for' what T.unpack
 duplicateQ_for :: String -> Qualid -> String
 duplicateQ_for what = duplicate_for' what (T.unpack . qualidToIdent)
 
-duplicateQL_for :: String -> Qualid -> Ident -> String
-duplicateQL_for what qid lid = "Duplicate " ++ what ++ " for " ++ T.unpack lid ++ " in " ++ T.unpack (qualidToIdent qid)
-
 descDuplEdit :: Edit -> String
 descDuplEdit = \case
   TypeSynonymTypeEdit   syn        _       -> duplicateI_for  "type synonym result types"            syn
   DataTypeArgumentsEdit ty         _       -> duplicateQ_for  "data type argument specifications"    ty
-  TerminationEdit       what Nothing _     -> duplicateQ_for  "termination requests"                 what
-  TerminationEdit       what (Just lid) _  -> duplicateQL_for "local termination requests"           what lid
+  TerminationEdit       what _             -> duplicateQ_for  "termination requests"                 what
   RedefinitionEdit      def                -> duplicateQ_for  "redefinitions"                        (defName def)
   SkipEdit              what               -> duplicateQ_for  "skips"                                what
   SkipMethodEdit        cls meth           -> duplicate_for   "skipped method requests"              (prettyClsMth cls meth)
@@ -180,6 +177,7 @@ descDuplEdit = \case
   AddEdit               _ _                -> error "Add edits are never duplicate"
   RewriteEdit           _                  -> error "Rewrites are never duplicate"
   OrderEdit             _                  -> error "Order edits are never duplicate"
+  InEdit                _ _                -> error "In Edits are never duplicate"
   where
     prettyScoped place name = let pplace = case place of
                                     SPValue       -> "value"
@@ -192,8 +190,7 @@ addEdit :: MonadError String m => Edit -> Edits -> m Edits
 addEdit e = case e of
   TypeSynonymTypeEdit     syn        res     -> addFresh e typeSynonymTypes                       syn          res
   DataTypeArgumentsEdit   ty         args    -> addFresh e dataTypeArguments                      ty           args
-  TerminationEdit         what Nothing ta    -> addFresh e termination                            what         ta
-  TerminationEdit         what (Just lid) ta -> addFresh e (local_termination.at what.non mempty) lid          ta
+  TerminationEdit         what       ta      -> addFresh e termination                            what         ta
   RedefinitionEdit        def                -> addFresh e redefinitions                          (defName def)   def
   SkipEdit                what               -> addFresh e skipped                                what         ()
   SkipMethodEdit          cls meth           -> addFresh e skippedMethods                         (cls,meth)   ()
@@ -211,6 +208,7 @@ addEdit e = case e of
   AddEdit                 mod def            -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
   OrderEdit               idents             -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit             rewrite            -> return . (rewrites %~ (rewrite:))
+  InEdit                  qid edit           -> inEdits.at qid.non mempty %%~ (addEdit edit)
 
 
 defName :: CoqDefinition -> Qualid

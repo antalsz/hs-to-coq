@@ -41,14 +41,11 @@ convertValDecls mdecls = do
 
   bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
-                (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ do
+                (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
                    r <- use (edits.redefinitions.at name)
                    obl <- use (edits.obligations.at name)
                    t <- use (edits.termination.at name)
-                   lt <- use (edits.local_termination.at name)
-                   let isWellFounded (WellFounded {}) = True
-                       isWellFounded _ = False
-                   let useProgram = any isWellFounded t || any (any isWellFounded) lt
+                   useProgram <- useProgramHere
                    if | Just def <- r               -- redefined
                       -> [definitionSentence def] <$ case def of
                           CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"

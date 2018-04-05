@@ -32,6 +32,21 @@ withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> 
 withConvertedBinding  withDef _withPat (ConvertedDefinitionBinding cdef)    = withDef cdef
 withConvertedBinding _withDef  withPat (ConvertedPatternBinding    pat def) = withPat pat def
 
+decomposeFixpoint :: Term -> Maybe (Qualid, Binders, Term)
+decomposeFixpoint (Fix (FixOne (FixBody name binders _ _ body)))
+    = Just (name, binders, body)
+-- This undoes what wfFix does
+-- This is a bit of code smell; I should refactor this that the termination
+-- argument is part of the “Gallina” AST, and the concrete representation
+-- is created by the pretty-printer
+decomposeFixpoint (App _wfFix [PosArg _rel, PosArg _measure, PosArg _underscore, PosArg (Fun binders body)])
+    | (b:bs) <- init $ toList binders
+    , Inferred Explicit (Ident name) <- last $ toList binders
+    = Just (name, b :| bs, body)
+decomposeFixpoint _
+    = Nothing
+
+
 toProgramFixpointSentence ::
     ConversionMonad m =>
     ConvertedDefinition -> Order -> Maybe Tactics -> m Sentence
@@ -39,7 +54,7 @@ toProgramFixpointSentence (ConvertedDefinition{..}) order tac
     | Nothing <- convDefType
     = editFailure "cannot \"termination\" a definition without a type signature"
     | Just ty <- convDefType
-    , Fix (FixOne (FixBody name binders _ _ body)) <- convDefBody
+    , Just (name, binders, body) <- decomposeFixpoint convDefBody
     = if | name /= convDefName
          -> editFailure "internal name and external name disagree?"
          | otherwise

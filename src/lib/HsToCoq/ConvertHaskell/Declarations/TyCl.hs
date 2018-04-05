@@ -43,6 +43,7 @@ import HsToCoq.Coq.FreeVars
 import Data.Generics hiding (Fixity(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Axiomatize

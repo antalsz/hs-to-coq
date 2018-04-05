@@ -37,6 +37,7 @@ import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Type

@@ -14,9 +14,7 @@ module HsToCoq.ConvertHaskell.Monad (
   withCurrentModule,
   withCurrentDefinition,
   -- * Types
-  ConversionState(),
-  currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, 
-  ConstructorFields(..), _NonRecordFields, _RecordFields,
+  edits, currentDefinition, currentModule,
   -- * Operations
   fresh, gensym, genqid,
   useProgramHere, renamed,
@@ -37,25 +35,17 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Variables
 
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as M
-
 import GHC
 
 import Panic
 
-import HsToCoq.Coq.Gallina (Qualid, ClassDefinition(..), Term, Qualid(..), Ident)
+import HsToCoq.Coq.Gallina (Qualid, Qualid(..), Ident)
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
-import HsToCoq.ConvertHaskell.BuiltIn
+import HsToCoq.ConvertHaskell.TypeInfo
 
 
 --------------------------------------------------------------------------------
-
-data ConstructorFields = NonRecordFields !Int
-                       | RecordFields    ![Qualid]
-                       deriving (Eq, Ord, Show, Read)
-makePrisms ''ConstructorFields
 
 -- The reader states
 --
@@ -86,17 +76,6 @@ makeFields ''GlobalEnv
 makeFields ''ModuleEnv
 makeFields ''LocalEnv
 
--- | The stateful parts
--- These fields actually change and transport information out
--- so they are in a MonadState (for now, I will refactor that later)
-data ConversionState = ConversionState
-    { _constructors           :: !(Map Qualid [Qualid])
-    , _constructorTypes       :: !(Map Qualid Qualid)
-    , _constructorFields      :: !(Map Qualid ConstructorFields)
-    , _recordFieldTypes       :: !(Map Qualid Qualid)
-    , _classDefns             :: !(Map Qualid ClassDefinition)
-    , _defaultMethods         :: !(Map Qualid (Map Qualid Term))
-    }
 
 -- The constraint aliases, for the three levels of scoping
 -- Note that they are subconstraints of each other, so you can call a
@@ -110,7 +89,7 @@ data ConversionState = ConversionState
 --
 type GlobalMonad r m =
         ( GhcMonad m
-        , MonadState ConversionState m
+        , MonadState TypeInfo m
         , MonadReader r m
         , HasEdits r Edits
         )
@@ -129,28 +108,14 @@ type LocalConvMonad r m =
         , HasCurrentDefinition r Qualid
         )
 
-
-makeLenses ''ConversionState
-
 runGlobalMonad :: (GhcMonad m, Monad m) => Edits ->
     (forall r m. GlobalMonad r m => m a) ->
     m a
 runGlobalMonad initEdits act =
     evalVariablesT @_ @Qualid $
-    evalStateT ?? ConversionState{..} $
-    runReaderT ?? GlobalEnv{..} $
+    runTypeInfoMonad $
+    runReaderT ?? GlobalEnv{_globalEnvEdits = initEdits} $
     act
-  where
-    _globalEnvEdits    = initEdits
-
-    _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
-    _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
-    _constructorFields = M.fromList [ (d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
-    _recordFieldTypes  = M.empty
-    _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
---    _memberSigs        = M.empty
-    _defaultMethods    =   builtInDefaultMethods
-
 
 withCurrentModule :: GlobalMonad r m =>
     ModuleName ->

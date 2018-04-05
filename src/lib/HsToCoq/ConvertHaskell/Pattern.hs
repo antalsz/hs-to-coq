@@ -35,6 +35,7 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
@@ -174,9 +175,6 @@ convertIntegerPat what hsInt = do
   int <- convertInteger what hsInt
   Coq.VarPat var <$ tell ([mkInfix (Var var) "GHC.Base.==" (App1 "GHC.Num.fromInteger" (Num int))] :: [Term])
 
-isConstructor :: MonadState ConversionState m => Qualid -> m Bool
-isConstructor con = isJust <$> (use $ constructorTypes . at con)
-
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor
 -- Just False: One of many constructors
@@ -226,7 +224,7 @@ refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patt
 data PatternSummary = OtherSummary | ConApp Qualid [PatternSummary]
   deriving Show
 
-patternSummary :: MonadState ConversionState m => Pattern -> m PatternSummary
+patternSummary :: MonadState TypeInfo m => Pattern -> m PatternSummary
 patternSummary (ArgsPat con args)         = ConApp con <$> mapM patternSummary args
 patternSummary (ExplicitArgsPat con args) = ConApp con <$> mapM patternSummary (toList args)
 patternSummary (InfixPat _ _ _)           = pure OtherSummary
@@ -240,7 +238,7 @@ patternSummary (NumPat _)                 = pure OtherSummary
 patternSummary (StringPat _)              = pure OtherSummary
 patternSummary (OrPats _)                 = pure OtherSummary
 
-multPatternSummary :: MonadState ConversionState m => MultPattern -> m [PatternSummary]
+multPatternSummary :: MonadState TypeInfo m => MultPattern -> m [PatternSummary]
 multPatternSummary (MultPattern pats) = mapM patternSummary (toList pats)
 
 mutExcls :: [PatternSummary] -> [PatternSummary] -> Bool
@@ -258,7 +256,7 @@ mutExcl _ _ = False
 type Missing = [PatternSummary]
 type Missings = [Missing]
 
-isCompleteMultiPattern :: forall m. MonadState ConversionState m =>
+isCompleteMultiPattern :: forall m. MonadState TypeInfo m =>
     [MultPattern] -> m Bool
 isCompleteMultiPattern [] = pure True -- Maybe an empty data type?
 isCompleteMultiPattern mpats = null <$> goGroup mpats

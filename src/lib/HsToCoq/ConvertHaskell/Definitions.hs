@@ -48,7 +48,7 @@ decomposeFixpoint _
 
 
 toProgramFixpointSentence ::
-    ConversionMonad m =>
+    ConversionMonad r m =>
     ConvertedDefinition -> Order -> Maybe Tactics -> m Sentence
 toProgramFixpointSentence (ConvertedDefinition{..}) order tac
     | Nothing <- convDefType
@@ -66,7 +66,7 @@ toProgramFixpointSentence (ConvertedDefinition{..}) order tac
     | otherwise
     = editFailure "cannot \"termination\" a definition that is not a recursive function"
   where
-    moveTyToArgs :: ConversionMonad m => NonEmpty Binder -> Term -> m (NonEmpty Binder, Term)
+    moveTyToArgs :: ConversionMonad r m => NonEmpty Binder -> Term -> m (NonEmpty Binder, Term)
         -- Base case
     moveTyToArgs' [] ty = pure ([], ty)
 

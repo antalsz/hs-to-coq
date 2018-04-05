@@ -1,5 +1,6 @@
 module HsToCoq.Util.Containers (
   setMapMaybe,
+  setMapMaybeM,
   invertMap,
   connectedComponents,
   stronglyConnCompNE, connectedComponentsNE,
@@ -13,11 +14,15 @@ import qualified Data.Set as S
 
 import           Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as M
+import Data.Maybe
 
 import Data.Graph
 
 setMapMaybe :: Ord b => (a -> Maybe b) -> Set a -> Set b
 setMapMaybe f = S.foldr (\x s -> maybe s (`S.insert` s) $ f x) S.empty
+
+setMapMaybeM :: (Applicative m, Ord b) => (a -> m (Maybe b)) -> Set a -> m (Set b)
+setMapMaybeM f s = S.fromList . catMaybes <$> traverse f (S.toList s)
 
 invertMap :: (Ord k, Ord v) => Map k (Set v) -> Map v (Set k)
 invertMap m = M.unionsWith S.union [M.fromSet (const $ S.singleton k) vs | (k,vs) <- M.toList m]

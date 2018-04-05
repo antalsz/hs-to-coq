@@ -8,7 +8,7 @@ Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weir
 
 # Requirements
 
-`hs-to-coq` uses GHC-8.0, Coq 8.7.2 and ssreflect.
+`hs-to-coq` uses GHC-8.4.1, Coq 8.7.2 and ssreflect.
 
 # Compilation
 

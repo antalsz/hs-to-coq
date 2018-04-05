@@ -21,6 +21,7 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
 
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
@@ -39,9 +40,9 @@ instance FreeVars ClassBody where
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders
-getImplicitBindersForClassMember  :: ConversionMonad m => Qualid -> Qualid -> m [Binder]
+getImplicitBindersForClassMember  :: ConversionMonad r m => Qualid -> Qualid -> m [Binder]
 getImplicitBindersForClassMember className memberName = do
-  classDef <- use (classDefns.at className)
+  classDef <- lookupClassDefn className
   case classDef of
     (Just (ClassDefinition _ _ _ sigs)) ->
         case (lookup memberName sigs) of
@@ -58,7 +59,7 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
                                  _ -> False) bs
 getImplicits _ = []
 
-convertClassDecl :: ConversionMonad m
+convertClassDecl :: ConversionMonad r m
                  => LHsContext GhcRn                      -- ^@tcdCtxt@    Context
                  -> Located GHC.Name                      -- ^@tcdLName@   name of the class
                  -> [LHsTyVarBndr GhcRn]                  -- ^@tcdTyVars@  class type variables
@@ -77,7 +78,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
 
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
-  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.classKinds.at name)
+  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.classKinds.at name)
   let args' = zipWith go args kinds
        where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
              go a _ = a
@@ -86,7 +87,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   (all_sigs :: M.Map Qualid Signature) <- convertLSigs lsigs
 
   -- implement the class part of "skip method"
-  skippedMethodsS <- use (edits.skippedMethods)
+  skippedMethodsS <- view (edits.skippedMethods)
   let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
         (name,qualidBase meth) `S.notMember` skippedMethodsS
 
@@ -102,14 +103,14 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                 convUnsupported "pattern bindings in class declarations"
             Nothing                                                   ->
                 convUnsupported $ "skipping a type class method in " ++ show name
-  unless (null defs) $ defaultMethods.at name ?= defs
+  unless (null defs) $ storeDefaultMethods name defs
 
 --  liftIO (traceIO (show name))
 --  liftIO (traceIO (show defs))
 
   let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap id sigType <$> M.toList sigs))
 
-  classDefns.at name ?= classDefn
+  storeClassDefn name classDefn
 
   let nots = concatMap (buildInfixNotations sigs) $ M.keys sigs
 

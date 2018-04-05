@@ -43,6 +43,7 @@ import HsToCoq.Coq.FreeVars
 import Data.Generics hiding (Fixity(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Axiomatize
@@ -72,18 +73,18 @@ convDeclName (ConvSyn    (SynBody                    synName _ _ _))    = synNam
 convDeclName (ConvClass  (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 convDeclName (ConvFailure n _)                                         = n
 
-failTyClDecl :: ConversionMonad m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
+failTyClDecl :: ConversionMonad r m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
 failTyClDecl name e = pure $ Just $
     ConvFailure name $ translationFailedComment (qualidBase name) e
 
-convertTyClDecl :: ConversionMonad m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
+convertTyClDecl :: ConversionMonad r m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
-  let isCoind = use (edits.coinductiveTypes.contains coqName)
+  let isCoind = view (edits.coinductiveTypes.contains coqName)
   ghandle (failTyClDecl coqName) $ do
-    use (edits.skipped.contains coqName) >>= \case
+    view (edits.skipped.contains coqName) >>= \case
       True  -> pure Nothing
-      False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
+      False -> view (edits.redefinitions.at coqName) >>= fmap Just . \case
         Nothing -> case decl of
           FamDecl{}     -> convUnsupported "type/data families"
           SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
@@ -223,12 +224,12 @@ convertDeclarationGroup DeclarationGroup{..} =
 -- edits).
 -- TODO: GADTs.
 -- TODO: Keep the argument specifiers with the data types.
-generateArgumentSpecifiers :: ConversionMonad m => IndBody -> m [Arguments]
+generateArgumentSpecifiers :: ConversionMonad r m => IndBody -> m [Arguments]
 generateArgumentSpecifiers (IndBody _ params _resTy cons)
   | null params = pure []
   | otherwise   = catMaybes <$> traverse setImplicits cons
   where
-    setImplicits (con,_,_) = use (constructorFields.at con) >>= \case
+    setImplicits (con,_,_) = lookupConstructorFields con >>= \case
         -- Ignore cons we do not know anythings about
         -- (e.g. because they are skipped or redefined)
         Nothing -> pure Nothing
@@ -244,19 +245,19 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
 
     underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
 
-generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupArgumentSpecifiers :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
                                 . foldTraverse generateArgumentSpecifiers
                                 . (\x -> dgInductives x ++ dgCoInductives x)
 
 --------------------------------------------------------------------------------
 
-generateDefaultInstance :: ConversionMonad m => IndBody -> m [Sentence]
+generateDefaultInstance :: ConversionMonad r m => IndBody -> m [Sentence]
 generateDefaultInstance (IndBody tyName _ _ cons)
     | Just (con, _, _) <- find suitableCon cons
         -- Instance Default_TupleSort : GHC.Err.Default TupleSort :=
         --  GHC.Err.Build_Default _ BoxedTuple.
-    = use (edits.skipped.contains inst_name) >>= \case
+    = view (edits.skipped.contains inst_name) >>= \case
         True -> pure []
         False -> pure $ pure $ InstanceSentence $
             InstanceTerm inst_name []
@@ -270,20 +271,20 @@ generateDefaultInstance (IndBody tyName _ _ cons)
     suitableCon _ = False
 generateDefaultInstance _ = pure []
 
-generateGroupDefaultInstances :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupDefaultInstances :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupDefaultInstances = foldTraverse generateDefaultInstance . dgInductives
 
-generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
+generateRecordAccessors :: ConversionMonad r m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
 
-  let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
-  allFields <- use (constructorFields.to restrict.folded._RecordFields)
-  let nubedFields = S.toAscList (S.fromList allFields)
-  filteredFields <- filterM (\field -> not <$> use (edits.skipped.contains field)) nubedFields
+  allFields <- catMaybes <$> mapM lookupConstructorFields conNames
+  let recordFields = concat [ fields | RecordFields fields <- allFields ]
+  let nubedFields = S.toAscList $ S.fromList recordFields
+  filteredFields <- filterM (\field -> not <$> view (edits.skipped.contains field)) nubedFields
   for filteredFields $ \(field :: Qualid) -> withCurrentDefinition field $ do
     equations <- for conNames $ \con -> do
-      (args, hasField) <- use (constructorFields.at con) >>= \case
+      (args, hasField) <- lookupConstructorFields con >>= \case
         Just (NonRecordFields count) ->
           pure (replicate count UnderscorePat, False)
         Just (RecordFields conFields0) ->
@@ -326,28 +327,32 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
     pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
       Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing equations
 
-generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupRecordAccessors :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupRecordAccessors = fmap (fmap DefinitionSentence)
                              . foldTraverse generateRecordAccessors
                              . dgInductives
 
 --------------------------------------------------------------------------------
 
-groupTyClDecls :: ConversionMonad m
+groupTyClDecls :: ConversionMonad r m
                => [TyClDecl GhcRn] -> m [DeclarationGroup]
 groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
 
-  -- Might be overgenerous
-  ctypes <- use constructorTypes
+  -- We need to do this here, becaues topoSortEnvironment expects
+  -- a pure function as the first argument
+  bodies_fvars <- for bodies $ \decl -> do
+        let vars = getFreeVars decl
+        -- This is very crude; querying all free variables as if
+        -- they are constructor names:
+        ctypes <- setMapMaybeM lookupConstructorType vars
+        return $ vars <> ctypes
 
-  pure . map (foldMap $ singletonDeclarationGroup . (bodies M.!))
-       . flip topoSortEnvironmentWith bodies
-       $ \decl -> let vars = getFreeVars decl
-                  in vars <> setMapMaybe (M.lookup ?? ctypes) vars
+  pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!))
+       $ topoSortEnvironmentWith id bodies_fvars
 
-convertModuleTyClDecls :: ConversionMonad m
+convertModuleTyClDecls :: ConversionMonad r m
                        => [TyClDecl GhcRn] -> m [Sentence]
 convertModuleTyClDecls =  fork [ either convUnsupported pure
                                  . foldTraverse convertDeclarationGroup

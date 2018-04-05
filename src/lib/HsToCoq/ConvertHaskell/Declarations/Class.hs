@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables, MultiParamTypeClasses #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
 
@@ -19,7 +19,7 @@ import Class
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
-import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 
 import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
@@ -35,8 +35,8 @@ import HsToCoq.ConvertHaskell.Declarations.Notations
 data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
 
-instance FreeVars ClassBody where
-  freeVars (ClassBody cls nots) = binding' cls $ freeVars nots
+instance HasBV Qualid ClassBody where
+  bvOf (ClassBody cls nots) = bvOf cls <> fvOf' nots
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders

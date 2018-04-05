@@ -324,5 +324,6 @@ End Notations.
 (* External variables:
      Type op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either
-     GHC.Base.Functor GHC.Base.const GHC.Prim.arrow
+     GHC.Base.Functor GHC.Base.const GHC.Base.fmap__ GHC.Base.op_zlzd____
+     GHC.Prim.arrow
 *)

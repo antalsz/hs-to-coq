@@ -1342,7 +1342,9 @@ Infix "GHC.Base.<**>" := (_<**>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zl__ option pair true tt unit Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow GHC.Tuple.pair_type
+     Eq Eq_ Gt Lt None Ord Some String Type andb bool compare compare__ comparison
+     cons false list max__ min__ negb nil op_zeze__ op_zeze____ op_zg____ op_zgze____
+     op_zl__ op_zl____ op_zlze____ op_zsze____ option pair true tt unit
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow
+     GHC.Tuple.pair_type
 *)

@@ -8957,11 +8957,13 @@ Definition unbranched : CoAxBranch -> Branches Unbranched :=
      FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString FieldLabel.flLabel
      GHC.Arr.Array GHC.Arr.bounds GHC.Arr.elems GHC.Arr.listArray GHC.Arr.op_zn__
      GHC.Base.Eq_ GHC.Base.Monad GHC.Base.Ord GHC.Base.String GHC.Base.Synonym
-     GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlztzg__
-     GHC.Base.op_zsze__ GHC.Base.pure GHC.Base.return_ GHC.Err.Build_Default
+     GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap
+     GHC.Base.id GHC.Base.map GHC.Base.mappend GHC.Base.max__ GHC.Base.mempty
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zl____
+     GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.pure GHC.Base.return_ GHC.Err.Build_Default
      GHC.Err.Default GHC.Err.error GHC.IORef.IORef GHC.List.drop GHC.List.dropWhile
      GHC.List.repeat GHC.List.replicate GHC.List.reverse GHC.List.span
      GHC.List.splitAt GHC.List.take GHC.List.zip GHC.List.zipWith GHC.Num.Int

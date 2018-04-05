@@ -94,5 +94,8 @@ Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
 
 (* External variables:
      Eq Gt Lt bool comparison negb true GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Ord
-     GHC.Base.Semigroup GHC.Base.fmap GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.Base.Semigroup GHC.Base.compare__ GHC.Base.fmap GHC.Base.max__
+     GHC.Base.min__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____
+     GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
+     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
 *)

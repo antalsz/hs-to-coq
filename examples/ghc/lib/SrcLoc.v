@@ -567,14 +567,21 @@ Definition wiredInSrcSpan : SrcSpan :=
 
 (* External variables:
      None Some andb bool comparison false list negb option true
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.SemigroupInternal.Mk_Any
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.elem__
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.SemigroupInternal.Mk_Any
      Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
      Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
      Data.SemigroupInternal.appEndo Data.SemigroupInternal.getAny
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.Traversable FastString.FastString
-     FastString.fsLit GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build
-     GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse__ FastString.FastString FastString.fsLit
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build GHC.Base.compare
+     GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.op_zdzn__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd____
+     GHC.Base.op_zsze____ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

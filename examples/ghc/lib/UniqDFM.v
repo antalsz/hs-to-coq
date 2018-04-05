@@ -455,10 +455,12 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
      Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.OldList.sortBy
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup
-     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.foldr
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zlzlzgzg__ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
-     UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.foldr GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__
+     GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__
+     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze____ GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zp__ UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
      UniqFM.ufmToIntMap Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

@@ -63,7 +63,7 @@ isBound = fmap isJust . bound
 areBound :: MonadVariables i d m => Set i -> m Bool
 areBound = fmap (all isJust) . allBound
 
-instance (Monad m, Ord i) => MonadVariables i d (V.VariablesT i d m) where
+instance Ord i => MonadVariables i d (V.Variables i d) where
   bind     = V.bind
   bindAll  = V.bindAll
   bound    = V.bound

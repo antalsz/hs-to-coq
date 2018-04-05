@@ -167,6 +167,7 @@ Definition varEnvDom {a} : CoreType.VarEnv a -> UnVarSet :=
      Data.Foldable.foldr Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
-     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Word
-     GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey
+     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Num.Word GHC.Prim.coerce
+     UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey
 *)

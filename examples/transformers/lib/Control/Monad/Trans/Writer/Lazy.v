@@ -482,19 +482,28 @@ Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
 
 (* External variables:
      Eq1 Gt Identity Lt Mk_Identity Ord1 Type bool compare1 comparison eq1
-     liftCompare liftCompare2 liftEq liftEq2 list negb op_zt__ pair runIdentity tt
-     unit Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.length Data.Foldable.null Data.SemigroupInternal.Mk_Any
+     liftCompare liftCompare2 liftCompare__ liftEq liftEq2 liftEq__ list negb op_zt__
+     pair runIdentity tt unit Control.Monad.Signatures.CallCC
+     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.elem__
+     Data.Foldable.foldMap Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length Data.Foldable.length__
+     Data.Foldable.null Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.SemigroupInternal.Mk_Any
      Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
      Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
      Data.SemigroupInternal.appEndo Data.SemigroupInternal.getAny
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
      Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.traverse Data.Tuple.fst Data.Tuple.snd GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.id GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.return_
-     GHC.Num.Int GHC.Num.Num
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse Data.Traversable.traverse__ Data.Tuple.fst
+     Data.Tuple.snd GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.compare GHC.Base.compare__
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
+     GHC.Base.max__ GHC.Base.mempty GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____
+     GHC.Base.op_zgze____ GHC.Base.op_zgzgze__ GHC.Base.op_zl____
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.return_ GHC.Num.Int GHC.Num.Num
 *)

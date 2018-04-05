@@ -67,7 +67,7 @@ convertValDecls mdecls = do
                 )(\_ _ -> convUnsupported "top-level pattern bindings")
 
   -- TODO: Mutual recursion
-  pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ NoBinding <$> bindings
+  pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ fmap NoBinding <$> bindings
 
   where axiomatizeBinding :: GhcMonad m => HsBind GhcRn -> GhcException -> m (Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do

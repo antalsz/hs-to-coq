@@ -449,14 +449,16 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
 (* External variables:
      Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
      Coq.Init.Datatypes.app FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default Maybes.orElse
-     Module.Module Module.UnitId Module.isInteractiveModule Module.moduleName
-     Module.moduleNameColons Module.moduleStableString Module.moduleUnitId
-     Module.stableModuleCmp OccName.OccName OccName.isDataOcc OccName.isTcOcc
-     OccName.isTvOcc OccName.isValOcc OccName.isVarOcc OccName.mkTyVarOccFS
-     OccName.mkVarOcc OccName.mkVarOccFS OccName.occNameFS OccName.occNameString
-     Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan SrcLoc.noSrcSpan
-     SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique Unique.nonDetCmpUnique
-     Util.thenCmp
+     GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.max__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     Maybes.orElse Module.Module Module.UnitId Module.isInteractiveModule
+     Module.moduleName Module.moduleNameColons Module.moduleStableString
+     Module.moduleUnitId Module.stableModuleCmp OccName.OccName OccName.isDataOcc
+     OccName.isTcOcc OccName.isTvOcc OccName.isValOcc OccName.isVarOcc
+     OccName.mkTyVarOccFS OccName.mkVarOcc OccName.mkVarOccFS OccName.occNameFS
+     OccName.occNameString Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan
+     SrcLoc.noSrcSpan SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique
+     Unique.nonDetCmpUnique Util.thenCmp
 *)

@@ -316,16 +316,23 @@ Definition unitOL {a} : a -> OrdList a :=
 
 (* External variables:
      bool cons false list nil true Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.foldl Data.Foldable.foldr
+     Data.Foldable.Foldable Data.Foldable.elem__ Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
      Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Any
      Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
      Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
      Data.SemigroupInternal.appEndo Data.SemigroupInternal.getAny
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
      Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.build GHC.Base.const
-     GHC.Base.flip GHC.Base.id GHC.Base.map GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zlzlzgzg__ GHC.Num.Int
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Semigroup
+     GHC.Base.build GHC.Base.const GHC.Base.flip GHC.Base.fmap__ GHC.Base.id
+     GHC.Base.map GHC.Base.mappend GHC.Base.mappend__ GHC.Base.mconcat__
+     GHC.Base.mempty GHC.Base.mempty__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Num.Int
      GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

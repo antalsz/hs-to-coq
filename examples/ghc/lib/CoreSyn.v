@@ -1554,7 +1554,7 @@ Definition mkConApp2 {b}
 
 (* External variables:
      Alt AnnAlt AnnExpr Arg Eq Gt Lt None Some Type andb bool comparison cons
-     deAnnotate' deTagExpr false list negb nil op_zt__ option pair true
+     deAnnotate' deTagExpr false id list negb nil op_zt__ option pair true
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
      BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Core.dataConWorkId CoreType.CoVar CoreType.Coercion CoreType.Id
@@ -1563,14 +1563,16 @@ Definition mkConApp2 {b}
      CoreType.isTyVar CoreType.mkCoVarCo CoreType.mkTyVarTy Data.Foldable.foldl
      Data.Foldable.foldr Data.Foldable.length DataCon.DataCon DataCon.dataConTag
      DataCon.dataConTyCon DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
-     GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal Literal.mkMachChar
-     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
-     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
-     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
+     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.map
+     GHC.Base.mappend GHC.Base.max__ GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Char.Char GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal
+     Literal.mkMachChar Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString
+     Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
+     Name.Name Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
      Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace Util.count
      Util.debugIsOn
 *)

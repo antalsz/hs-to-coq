@@ -101,7 +101,7 @@ convertHsGroup mod HsGroup{..} = do
         let defnsMap = M.fromList defns'
 
         -- TODO RENAMER use RecFlag info to do recursion stuff
-        pure . foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ NoBinding <$> defnsMap
+        pure . foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
 
   convertedClsInstDecls <- convertClsInstDecls
     [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
@@ -192,7 +192,7 @@ convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _ex
       <- convGroup convModName group
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-    let freeVars = toList . getFreeVars $ NoBinding allSentences
+    let freeVars = toList $ foldMap getFreeVars' allSentences
     let modules = filter (/= convModName)
                      . map (mkModuleName . T.unpack)
                      . mapMaybe qualidModule $ freeVars
@@ -273,8 +273,8 @@ usedAxioms :: [Sentence] -> [Sentence]
 usedAxioms decls = comment ++ ax_decls
   where
     ax_decls =
-      [ AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [i] t))
-      | i <- toList (getFreeVars (NoBinding decls))
+      [ AssumptionSentence (Assumption Axiom (Assums [i] t))
+      | i <- toList (foldMap getFreeVars' decls)
       , Just t <- return $ M.lookup i builtInAxioms
       ]
 

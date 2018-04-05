@@ -288,7 +288,6 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
                       (instBnds, instSubst) = (runState ?? M.empty) $ for params $ \case
                         Inferred      ei x     -> Inferred      ei <$> renameInst x
                         Typed       g ei xs ty -> Typed       g ei <$> traverse renameInst xs <*> sub ty
-                        BindLet     x oty val  -> BindLet          <$> renameInst x <*> sub oty <*> sub val
                         Generalized ei tm      -> Generalized   ei <$> sub tm
 
                       -- Why the nested substitution?  The only place the

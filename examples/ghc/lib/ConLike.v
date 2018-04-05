@@ -101,7 +101,7 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
      bool list negb BasicTypes.Arity Data.Foldable.all Data.Foldable.any
      DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConName
      DataCon.dataConSourceArity FieldLabel.FieldLabel FieldLabel.FieldLabelString
-     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.List.filter Name.Name
-     PatSyn.PatSyn PatSyn.patSynArity PatSyn.patSynFieldLabels PatSyn.patSynName
-     Unique.getUnique
+     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zsze____ GHC.List.filter Name.Name PatSyn.PatSyn PatSyn.patSynArity
+     PatSyn.patSynFieldLabels PatSyn.patSynName Unique.getUnique
 *)

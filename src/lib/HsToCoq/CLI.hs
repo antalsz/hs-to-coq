@@ -52,7 +52,7 @@ import HsToCoq.Util.Monad
 import HsToCoq.Util.Messages
 import HsToCoq.PrettyPrint hiding ((</>))
 import HsToCoq.Coq.Gallina.Util
-import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.Preamble
 import HsToCoq.ProcessFiles
@@ -282,7 +282,7 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
   (convModDecls1, convModDecls2) <- moduleDeclarations cmod
 
   let printUnbound out = do
-          let fvs = toList . getFreeVars $ NoBinding (convModDecls1 ++ convModDecls2)
+          let fvs = toList $ getFVs $ foldScopes bvOf (convModDecls1 ++ convModDecls2) mempty
           unless (null fvs) $ do
               hPrettyPrint out $
                 line <> "(*" <+> hang 2

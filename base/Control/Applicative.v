@@ -229,7 +229,10 @@ Definition optional {f} {a} `{GHC.Base.Alternative f} : f a -> f (option a) :=
      None Some Type option Control.Arrow.Arrow Control.Arrow.arr
      Control.Category.op_zgzgzg__ Data.Functor.op_zlzdzg__ GHC.Base.Alternative
      GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.ap GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftM GHC.Base.liftM2 GHC.Base.op_z2218U__
-     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzbzg__ GHC.Base.pure
-     GHC.Base.return_ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
+     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
+     GHC.Base.liftM2 GHC.Base.op_z2218U__ GHC.Base.op_zgzg__ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____ GHC.Base.op_zlzbzg__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____ GHC.Base.op_ztzg____ GHC.Base.pure
+     GHC.Base.pure__ GHC.Base.return_ GHC.Base.return___ GHC.Prim.Build_Unpeel
+     GHC.Prim.Unpeel GHC.Prim.coerce
 *)

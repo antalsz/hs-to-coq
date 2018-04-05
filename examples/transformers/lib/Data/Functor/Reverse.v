@@ -226,9 +226,14 @@ Program Instance Monad__Reverse {m} `{(GHC.Base.Monad m)}
 (* Skipping instance Traversable__Reverse *)
 
 (* External variables:
-     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq negb
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord
-     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
-     GHC.Base.pure
+     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
+     liftEq liftEq__ negb GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Ord GHC.Base.compare__ GHC.Base.const GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____
+     GHC.Base.op_zgze____ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zgzgze____ GHC.Base.op_zl____ GHC.Base.op_zlzd____
+     GHC.Base.op_zlze____ GHC.Base.op_zlztzg__ GHC.Base.op_zlztzg____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.op_ztzg__ GHC.Base.op_ztzg____
+     GHC.Base.pure GHC.Base.pure__ GHC.Base.return___
 *)

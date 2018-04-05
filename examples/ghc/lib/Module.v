@@ -1230,10 +1230,12 @@ Definition unitModuleSet : Module -> ModuleSet :=
      Data.Tuple.fst Data.Tuple.snd FastString.FastString FastString.fsLit
      FastString.mkFastString FastString.unpackFS FiniteMap.deleteList
      FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.map
-     GHC.Base.max GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Prim.coerce Panic.noString UniqDFM.UniqDFM
+     GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.flip GHC.Base.fmap
+     GHC.Base.map GHC.Base.max GHC.Base.max__ GHC.Base.min GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zl__
+     GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Prim.coerce Panic.noString UniqDFM.UniqDFM
      UniqDSet.UniqDSet UniqDSet.emptyUniqDSet UniqDSet.isEmptyUniqDSet
      UniqDSet.unitUniqDSet UniqFM.UniqFM Unique.Unique Unique.getUnique
      Unique.nonDetCmpUnique Util.thenCmp

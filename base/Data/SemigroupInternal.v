@@ -1075,12 +1075,18 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
      Coq.Program.Basics.compose GHC.Base.Alternative GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.Semigroup
-     GHC.Base.compare GHC.Base.const GHC.Base.empty GHC.Base.fmap GHC.Base.foldr
-     GHC.Base.id GHC.Base.liftA2 GHC.Base.max GHC.Base.mempty GHC.Base.min
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__
-     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.empty GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.liftA2__
+     GHC.Base.mappend__ GHC.Base.max GHC.Base.max__ GHC.Base.mconcat__
+     GHC.Base.mempty GHC.Base.mempty__ GHC.Base.min GHC.Base.min__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
+     GHC.Base.op_zgze____ GHC.Base.op_zgzg__ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____ GHC.Base.op_zl__ GHC.Base.op_zl____
+     GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zlztzg__ GHC.Base.op_zlztzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure
+     GHC.Base.pure__ GHC.Base.return_ GHC.Base.return___
      GHC.Err.errorWithoutStackTrace GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
      GHC.Num.op_zt__ GHC.Prim.Build_Unpeel GHC.Prim.TYPE GHC.Prim.Unpeel
      GHC.Prim.coerce GHC.Real.Integral GHC.Types.LiftedRep

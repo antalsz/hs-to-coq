@@ -127,7 +127,6 @@ binderNames :: Traversal' Binder Name
 binderNames f (Inferred        ei name)     =          f name  <&> \name'  -> Inferred        ei name'
 binderNames f (Typed       gen ei names ty) = traverse f names <&> \names' -> Typed       gen ei names' ty
 binderNames _ gen@Generalized{}             = pure gen
-binderNames _ blet@BindLet{}                = pure blet
 {-# INLINEABLE binderNames #-}
 
 binderIdents :: Traversal' Binder Qualid
@@ -138,7 +137,6 @@ binderExplicitness :: Traversal' Binder Explicitness
 binderExplicitness f (Inferred        ei name)     = f ei <&> \ei' -> Inferred        ei' name
 binderExplicitness f (Typed       gen ei names ty) = f ei <&> \ei' -> Typed       gen ei' names ty
 binderExplicitness f (Generalized     ei       ty) = f ei <&> \ei' -> Generalized     ei'       ty
-binderExplicitness _ blet@BindLet{}                = pure blet
 {-# INLINEABLE binderExplicitness #-}
 
 qualidBase :: Qualid -> Ident

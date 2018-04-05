@@ -270,13 +270,6 @@ instance Gallina Term where
                                <+> nest 2 (":=" <!> renderGallina val))
     <+> "in" <!> align (renderGallina body)
 
-  renderGallina' p (LetTickDep pat oin val rty body) = group $ maybeParen (p > letPrec) $
-        "let" <+> align (group $   "'" <> align (renderGallina pat)
-                               <>  render_in_annot oin
-                               <+> nest 2 (":=" <!> renderGallina val
-                                                <>  render_rtype  rty))
-    <+> "in" <!> align (renderGallina body)
-
   renderGallina' p (If SymmetricIf c odrty t f) = maybeParen (p > ifPrec) $
         "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
     <!> "then" <+> align (renderGallina t)
@@ -407,8 +400,6 @@ instance Gallina Binder where
     binder_decoration Ungeneralizable ex False $ renderGallina name
   renderGallina' _ (Typed gen ex names ty) =
     binder_decoration gen ex True $ render_args_ty H names ty
-  renderGallina' _ (BindLet name oty val) =
-    hang 2 . parensN $ renderGallina name <> render_opt_type oty </> ":=" <+> align (renderGallina val)
   renderGallina' _ (Generalized ex ty)  =
     binder_decoration Generalizable ex True $ renderGallina ty
 
@@ -538,9 +529,7 @@ instance Gallina AssumptionKeyword where
   renderGallina' _ Hypotheses = "Hypotheses"
 
 instance Gallina Assums where
-  renderGallina' _ = \case
-    UnparenthesizedAssums ids ty -> renderAss ids ty
-    ParenthesizedAssums   groups -> group . vsep $ parensN . align . uncurry renderAss <$> groups
+  renderGallina' _ (Assums ids ty) = renderAss ids ty
     where
       renderAss ids ty = fillSep (renderGallina <$> ids) <> nest 2 (render_type ty)
 

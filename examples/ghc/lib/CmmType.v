@@ -407,7 +407,7 @@ Definition bWord : DynFlags.DynFlags -> CmmType :=
 (* External variables:
      andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
-     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.Integer
-     GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div Panic.noString Panic.panic
-     Panic.panicStr
+     GHC.Base.op_zeze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div
+     Panic.noString Panic.panic Panic.panicStr
 *)

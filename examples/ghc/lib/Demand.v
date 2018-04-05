@@ -1324,9 +1324,9 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
      Data.Foldable.all Data.Foldable.any Data.Foldable.length DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_
      GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map GHC.Base.max
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default
-     GHC.List.replicate GHC.List.take GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Prim.coerce Maybes.orElse Outputable.op_zdzd__ Panic.noString
-     Panic.warnPprTrace UniqFM.nonDetUFMToList Util.lengthExceeds Util.lengthIs
-     Util.zipWithEqual
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Err.Build_Default GHC.Err.Default GHC.List.replicate GHC.List.take
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Prim.coerce Maybes.orElse
+     Outputable.op_zdzd__ Panic.noString Panic.warnPprTrace UniqFM.nonDetUFMToList
+     Util.lengthExceeds Util.lengthIs Util.zipWithEqual
 *)

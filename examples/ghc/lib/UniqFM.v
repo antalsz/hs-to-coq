@@ -476,9 +476,11 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.IntMap.Internal.union
      Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet GHC.Base.Eq_
      GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
-     GHC.Base.flip GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Num.Int GHC.Prim.Build_Unpeel
+     GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr GHC.Base.id
+     GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__ GHC.Base.mempty__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Num.Int GHC.Prim.Build_Unpeel
      GHC.Prim.Unpeel GHC.Prim.coerce Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

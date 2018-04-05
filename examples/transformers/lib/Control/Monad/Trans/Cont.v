@@ -177,7 +177,11 @@ Definition withCont {b} {r} {a}
 
 (* External variables:
      Identity Mk_Identity Type runIdentity Control.Monad.Trans.Class.MonadTrans
-     Control.Monad.Trans.Class.lift GHC.Base.Applicative GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__
-     GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     Control.Monad.Trans.Class.lift Control.Monad.Trans.Class.lift__
+     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.const
+     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__ GHC.Base.op_z2218U__
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____
+     GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____ GHC.Base.op_ztzg__
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___
 *)

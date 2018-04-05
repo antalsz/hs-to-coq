@@ -358,7 +358,9 @@ Definition writer {m} {a} {w} {r} {s} `{(Monad m)}
 
 (* External variables:
      Applicative Functor Identity Mk_Identity Monad Monad__RWST_tmp Monoid const fmap
-     id mappend mempty op_z2218U__ op_zgzgze__ op_zt__ op_ztzg__ pair pure return_
-     runIdentity tt unit Control.Monad.Signatures.CallCC
-     Control.Monad.Trans.Class.MonadTrans Data.Tuple.uncurry
+     fmap__ id liftA2__ mappend mempty op_z2218U__ op_zgzg____ op_zgzgze__
+     op_zgzgze____ op_zlzd____ op_zlztzg____ op_zt__ op_ztzg__ op_ztzg____ pair pure
+     pure__ return_ return___ runIdentity tt unit Control.Monad.Signatures.CallCC
+     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
+     Data.Tuple.uncurry
 *)

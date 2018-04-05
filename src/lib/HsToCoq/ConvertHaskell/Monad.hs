@@ -33,7 +33,6 @@ import Control.Monad.Trans.Counter
 
 import Control.Monad.State
 import Control.Monad.Reader
-import Control.Monad.Variables
 
 import GHC
 
@@ -112,7 +111,6 @@ runGlobalMonad :: (GhcMonad m, Monad m) => Edits ->
     (forall r m. GlobalMonad r m => m a) ->
     m a
 runGlobalMonad initEdits act =
-    evalVariablesT @_ @Qualid $
     runTypeInfoMonad $
     runReaderT ?? GlobalEnv{_globalEnvEdits = initEdits} $
     act

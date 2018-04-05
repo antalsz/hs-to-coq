@@ -548,16 +548,23 @@ Definition mkVar {a} : a -> BooleanFormula a :=
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
      BooleanFormula_traverse LBooleanFormula None Some bool cons false list negb nil
      option true Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any Data.Maybe.maybe
-     Data.OldList.nub Data.SemigroupInternal.Mk_Any Data.SemigroupInternal.Mk_Dual
+     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any Data.Foldable.elem__
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Maybe.maybe Data.OldList.nub
+     Data.SemigroupInternal.Mk_Any Data.SemigroupInternal.Mk_Dual
      Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
      Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
      Data.SemigroupInternal.getAny Data.SemigroupInternal.getDual
      Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.flip
-     GHC.Base.fmap GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
-     GHC.Base.op_zeze__ GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Num.Num
+     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd____
+     GHC.Base.op_zsze____ GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Num.Num
      GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.concatMapM SrcLoc.L
      SrcLoc.Located SrcLoc.unLoc UniqSet.UniqSet UniqSet.addOneToUniqSet
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet Unique.Uniquable

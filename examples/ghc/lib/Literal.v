@@ -440,13 +440,16 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      CoreType.tyConName Data.Maybe.isJust DynFlags.DynFlags DynFlags.tARGET_MAX_INT
      DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT DynFlags.targetPlatform
      FastString.FastString FastString.fastStringToByteString FastString.mkFastString
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound
-     GHC.Enum.minBound GHC.Err.Build_Default GHC.Err.Default GHC.Int.Int32
-     GHC.Int.Int64 GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.fromIntegral GHC.Real.toInteger
-     GHC.Show.show GHC.Word.Word32 GHC.Word.Word64 Outputable.assertPprPanic
-     Outputable.integer Panic.noString Panic.panic Panic.panicStr
-     Platform.platformWordSize UniqFM.lookupUFM Util.debugIsOn
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
+     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
+     GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char
+     GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound GHC.Err.Build_Default
+     GHC.Err.Default GHC.Int.Int32 GHC.Int.Int64 GHC.Num.Int GHC.Num.Integer
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.Rational
+     GHC.Real.fromIntegral GHC.Real.toInteger GHC.Show.show GHC.Word.Word32
+     GHC.Word.Word64 Outputable.assertPprPanic Outputable.integer Panic.noString
+     Panic.panic Panic.panicStr Platform.platformWordSize UniqFM.lookupUFM
+     Util.debugIsOn
 *)

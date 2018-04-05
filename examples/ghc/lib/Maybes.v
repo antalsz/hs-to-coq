@@ -150,5 +150,8 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
      None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT
      Control.Monad.Trans.Maybe.Mk_MaybeT Data.Maybe.fromMaybe GHC.Base.Applicative
      GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.id GHC.Base.liftM GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____
+     GHC.Base.op_zlztzg____ GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure
+     GHC.Base.pure__ GHC.Base.return_ GHC.Base.return___
 *)

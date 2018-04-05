@@ -30,7 +30,6 @@ import qualified Data.Text as T
 import qualified Control.Monad.Reader.Class    as R
 import qualified Control.Monad.Writer.Class    as W
 import qualified Control.Monad.Cont.Class      as C
-import qualified Control.Monad.Variables.Class as V
 
 --------------------------------------------------------------------------------
 
@@ -39,7 +38,7 @@ newtype ParseT m a = ParseT { getParseT :: StateT Text (ExceptT String m) a }
                             , Alternative, MonadPlus
                             , MonadFail, MonadFix, MonadIO, MonadError String
                             , R.MonadReader r, W.MonadWriter w, C.MonadCont
-                            , V.MonadVariables i d )
+                            )
 
 instance MonadTrans ParseT where lift = ParseT #. (lift . lift)
 

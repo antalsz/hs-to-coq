@@ -360,11 +360,7 @@ BinderName :: { Name }
 ExplicitBinderGuts :: { Binder }
   : BinderName                                        { Inferred Explicit $1 }
   | BinderName Some(BinderName) TypeAnnotation        { Typed Ungeneralizable Explicit ($1 <| $2) $3 }
-  | BinderName BinderColonEq                          { BindLet $1 Nothing $2 }
-  | BinderName TypeAnnotation Optional(BinderColonEq)
-      { case $3 of
-          Just def -> BindLet $1 (Just $2) def
-          Nothing  -> Typed Ungeneralizable Explicit ($1 :| []) $2 }
+  | BinderName TypeAnnotation                         { Typed Ungeneralizable Explicit ($1 :| []) $2 }
 
 BinderColonEq
   : ':=' Term    { $2 }

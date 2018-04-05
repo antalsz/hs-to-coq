@@ -240,7 +240,10 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
 
 (* External variables:
      cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.liftM3 GHC.Base.op_z2218U__
-     GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
-     GHC.Num.Int GHC.Tuple.pair3 Unique.Unique Unique.mkUniqueGrimily
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__
+     GHC.Base.liftM3 GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
+     GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return_ GHC.Base.return___ GHC.Num.Int GHC.Tuple.pair3 Unique.Unique
+     Unique.mkUniqueGrimily
 *)

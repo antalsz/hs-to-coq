@@ -262,7 +262,12 @@ Definition rights {a} {b} : list (Either a b) -> list b :=
 (* External variables:
      Gt Lt bool comparison cons false list negb nil op_zt__ pair true
      Coq.Lists.List.flat_map GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const
-     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zl__
-     GHC.Base.op_ztzg__ GHC.Base.pure
+     GHC.Base.Monad GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr
+     GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze____ GHC.Base.op_zl__ GHC.Base.op_zl____
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze____ GHC.Base.op_ztzg__
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return___
 *)

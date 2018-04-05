@@ -81,14 +81,12 @@ collectSigsWithErrors =
         multiplesError _ (Right sig) =
           pure sig
 
-convertSignature :: ConversionMonad m => GHC.Name -> HsSignature -> m Signature
-convertSignature rdrName (HsSignature sigTy _hsFix) = do
-  name <- ghcPpr rdrName
-  maybeFix <- getFixity name
-  Signature <$> convertLHsSigType sigTy <*> pure maybeFix
+convertSignature :: ConversionMonad m => HsSignature -> m Signature
+convertSignature (HsSignature sigTy _hsFix) = do
+  Signature <$> convertLHsSigType sigTy <*> pure Nothing
 
 convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
-convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> (var ExprNS r) <*> convertSignature r hs) . M.toList
+convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> var ExprNS r <*> convertSignature hs) . M.toList
 
 convertSigs :: ConversionMonad m => [Sig GhcRn] -> m (Map Qualid Signature)
 convertSigs = convertSignatures <=< collectSigsWithErrors

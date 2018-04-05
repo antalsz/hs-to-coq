@@ -8,7 +8,7 @@ module HsToCoq.ConvertHaskell.Monad (
   ConversionMonad, LocalConvMonad, ConversionT, evalConversion,
   -- * Types
   ConversionState(),
-  currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, fixities, renamed,
+  currentModule, currentDefinition, edits, constructors, constructorTypes, constructorFields, recordFieldTypes, classDefns, defaultMethods, renamed,
   ConstructorFields(..), _NonRecordFields, _RecordFields,
   useProgramHere,
   -- * Operations
@@ -18,8 +18,6 @@ module HsToCoq.ConvertHaskell.Monad (
   rename,
   -- * Errors
   throwProgramError, convUnsupported, editFailure,
-  -- * Fixity
-  getFixity, recordFixity,
   -- * Modules
   skipModules, skipModulesBy
   ) where
@@ -68,7 +66,6 @@ data ConversionState = ConversionState { __currentModule         :: !(Maybe Modu
                                        -- translated classes
                                        , _classDefns             :: !(Map Qualid ClassDefinition)
                                        , _defaultMethods         :: !(Map Qualid (Map Qualid Term))
-                                       , _fixities               :: !(Map Ident (Coq.Associativity, Coq.Level))
                                        }
 makeLenses ''ConversionState
 -- '_currentModule' is exported
@@ -442,7 +439,6 @@ evalConversion _edits = evalVariablesT . (evalStateT ?? ConversionState{..}) whe
   _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
 --  _memberSigs        = M.empty
   _defaultMethods    =   builtInDefaultMethods
-  _fixities          = M.empty
 
 
 withCurrentModule :: ConversionMonad m => ModuleName -> m a -> m a
@@ -486,19 +482,6 @@ convUnsupported what = throwProgramError $ what ++ " unsupported"
 
 editFailure :: MonadIO m => String -> m a
 editFailure what = throwProgramError $ "Could not apply edit: " ++ what
-
-getFixity :: ConversionMonad m => Ident -> m (Maybe (Coq.Associativity, Coq.Level))
-getFixity ident = do
-   state <- get
-   return $ M.lookup ident (_fixities state)
-
-recordFixity :: ConversionMonad m => Ident -> (Coq.Associativity, Coq.Level) -> m ()
-recordFixity id assoc = do
-   state <- get
-   let m = _fixities state
-   case M.lookup id m of
-     Just _v  -> throwProgramError $ "Multiple fixities for " ++ show id
-     Nothing -> put (state { _fixities = (M.insert id assoc m) })
 
 skipModulesBy :: ConversionMonad m => (a -> ModuleName) -> [a] -> m [a]
 skipModulesBy f = filterM $ \a -> use $ edits.skippedModules.contains (f a).to not

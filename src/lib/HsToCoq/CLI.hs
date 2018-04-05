@@ -274,7 +274,7 @@ processFilesMain process = do
   runGlobalMonad edits $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
-printConvertedModule :: ConversionMonad r m
+printConvertedModule :: GlobalMonad r m
                      => WithModulePrinter m
                      -> ConvertedModule
                      -> m ()
@@ -307,14 +307,14 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
                                 traverse_ (hPrettyPrint out) . intersperse sep $
                                   map ((<> line) . renderGallina) ds
 
-printConvertedModules :: ConversionMonad r m
+printConvertedModules :: GlobalMonad r m
                       => WithModulePrinter m
                       -> [NonEmpty ConvertedModule]
                       -> m ()
 printConvertedModules withModulePrinter =
   traverse_ (printConvertedModule withModulePrinter) . foldMap toList
 
-convertAndPrintModules :: ConversionMonad r m => WithModulePrinter m -> [TypecheckedModule] -> m ()
+convertAndPrintModules :: GlobalMonad r m => WithModulePrinter m -> [TypecheckedModule] -> m ()
 convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamed
   where
     toRenamed tcm

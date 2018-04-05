@@ -222,20 +222,20 @@ convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _ex
     pure (ConvertedModule{..}, modules)
 
 -- Module-local
-convert_module_with_requires :: ConversionMonad r m
+convert_module_with_requires :: GlobalMonad r m
                              => ModuleName -> RenamedSource ->
                              m (ConvertedModule, [ModuleName])
 convert_module_with_requires = convert_module_with_requires_via convertHsGroup
 
 -- Module-local
-axiomatize_module_with_requires :: ConversionMonad r m
+axiomatize_module_with_requires :: GlobalMonad r m
                              => ModuleName -> RenamedSource ->
                              m (ConvertedModule, [ModuleName])
 axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsGroup
 
 -- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
 -- components and can axiomatize individual modules as per edits
-convertModules :: ConversionMonad r m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
+convertModules :: GlobalMonad r m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
   let convThisMod (mod,src) = view (edits.axiomatizedModules.contains mod) >>= \case
                                 True  -> axiomatize_module_with_requires mod src
@@ -247,7 +247,7 @@ convertModules sources = do
   pure $
     stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
-moduleDeclarations :: ConversionMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
+moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do
   orders <- view $ edits.orders
   let sorted = topoSortSentences orders $
@@ -284,7 +284,7 @@ usedAxioms decls = comment ++ ax_decls
       | not (null ax_decls)
       ]
 
-qualifiedNotations :: ConversionMonad r m => ModuleName -> [Sentence] -> m [Sentence]
+qualifiedNotations :: GlobalMonad r m => ModuleName -> [Sentence] -> m [Sentence]
 qualifiedNotations mod decls = do
     hmn <- view (edits . hasManualNotation . contains mod)
     return $ wrap $

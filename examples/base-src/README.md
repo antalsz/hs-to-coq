@@ -7,7 +7,7 @@ assorted bits of `base`.
 We have the following directories:
 
  * `base`: Create a symlink to a checkout of `base`, e.g.
-   `your/path/ghc-8.0/libraries/base`.
+   `your/path/ghc-8.4/libraries/base`.
    This needs to be configured for certain header files to be present.
  * `edits`: Global edit file
  * `module-edits/Foo/Bar/`: Edit files (`edit` and `preamble.v`) for `Foo.Bar`.

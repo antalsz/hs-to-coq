@@ -13,11 +13,11 @@ compiling here make sure those libraries have already been compiled.
   * make -C ../../base
   * make -C ../containers
 
-Also need to have a the compiled source to ghc-8.0.2 available.  This working
+Also need to have a the compiled source to ghc-8.4.1 available.  This working
 copy needs to be configured for certain header files to be present.
 
  * `ghc`: Create a symlink to a checkout of `ghc`, e.g.
-   `your/path/ghc-8.0.2`.
+   `your/path/ghc-8.4.1`.
 
 Use `make` to build. As with other parts of this repo, requires Coq-8.6 and
 ssreflect.

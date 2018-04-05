@@ -89,7 +89,7 @@ makeFields ''LocalEnv
 --
 type GlobalMonad r m =
         ( GhcMonad m
-        , MonadState TypeInfo m
+        , TypeInfoMonad m
         , MonadReader r m
         , HasEdits r Edits
         )

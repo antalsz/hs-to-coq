@@ -20,7 +20,6 @@ import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
-import Control.Monad.State
 
 import qualified Data.Map.Strict as M
 
@@ -89,7 +88,7 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
             convUnsupported $  "using a record pattern for the "
                             ++ what ++ " constructor `" ++ T.unpack hsConStr ++ "'"
 
-      in use (constructorFields . at con) >>= \case
+      in lookupConstructorFields con >>= \case
            Just (RecordFields conFields) -> do
              let defaultPat field | isJust rec_dotdot = QualidPat field
                                   | otherwise         = UnderscorePat
@@ -180,8 +179,8 @@ convertIntegerPat what hsInt = do
 -- Just False: One of many constructors
 isSoleConstructor :: ConversionMonad r m => Qualid -> m (Maybe Bool)
 isSoleConstructor con = runMaybeT $ do
-  ty    <- MaybeT . use $ constructorTypes . at con
-  ctors <-          use $ constructors     . at ty
+  ty    <- MaybeT $ lookupConstructorType con
+  ctors <-          lookupConstructors ty
   pure $ length (fromMaybe [] ctors) == 1
 
 data Refutability = Trivial (Maybe Qualid) -- Variables (with `Just`), underscore (with `Nothing`)
@@ -224,7 +223,7 @@ refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patt
 data PatternSummary = OtherSummary | ConApp Qualid [PatternSummary]
   deriving Show
 
-patternSummary :: MonadState TypeInfo m => Pattern -> m PatternSummary
+patternSummary :: TypeInfoMonad m => Pattern -> m PatternSummary
 patternSummary (ArgsPat con args)         = ConApp con <$> mapM patternSummary args
 patternSummary (ExplicitArgsPat con args) = ConApp con <$> mapM patternSummary (toList args)
 patternSummary (InfixPat _ _ _)           = pure OtherSummary
@@ -238,7 +237,7 @@ patternSummary (NumPat _)                 = pure OtherSummary
 patternSummary (StringPat _)              = pure OtherSummary
 patternSummary (OrPats _)                 = pure OtherSummary
 
-multPatternSummary :: MonadState TypeInfo m => MultPattern -> m [PatternSummary]
+multPatternSummary :: TypeInfoMonad m => MultPattern -> m [PatternSummary]
 multPatternSummary (MultPattern pats) = mapM patternSummary (toList pats)
 
 mutExcls :: [PatternSummary] -> [PatternSummary] -> Bool
@@ -256,8 +255,7 @@ mutExcl _ _ = False
 type Missing = [PatternSummary]
 type Missings = [Missing]
 
-isCompleteMultiPattern :: forall m. MonadState TypeInfo m =>
-    [MultPattern] -> m Bool
+isCompleteMultiPattern :: forall m. TypeInfoMonad m => [MultPattern] -> m Bool
 isCompleteMultiPattern [] = pure True -- Maybe an empty data type?
 isCompleteMultiPattern mpats = null <$> goGroup mpats
   where
@@ -289,8 +287,8 @@ isCompleteMultiPattern mpats = null <$> goGroup mpats
     -- The pattern applies only partially. Split the input and recurse.
     go OtherSummary p@(ConApp con _) =
         fromMaybe [] <$> runMaybeT (do
-           ty    <- MaybeT . use $ constructorTypes . at con
-           ctors <- MaybeT . use $ constructors     . at ty
+           ty    <- MaybeT $ lookupConstructorType con
+           ctors <- MaybeT $ lookupConstructors ty
            -- Re-run the process with a separate Missing for each constructor
            lift $ concat <$> mapM (\ctor -> go (ConApp ctor []) p) ctors
         )

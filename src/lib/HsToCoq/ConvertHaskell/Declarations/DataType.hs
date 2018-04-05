@@ -73,7 +73,8 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
       concatMap (cd_fld_names . unLoc) fields
     _ ->
       pure . NonRecordFields $ length args
-  constructorFields . at con ?= fieldInfo
+
+  storeConstructorFields con fieldInfo
 
   pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
@@ -163,12 +164,12 @@ convertDataDecl name tvs defn = do
                      <$> convertDataDefn curType conIndices defn
 
   let conNames = [con | (con,_,_) <- cons]
-  constructors . at coqName ?= conNames
+  storeConstructors coqName conNames
   for_ conNames $ \con -> do
-    constructorTypes . at con ?= coqName
-    use (constructorFields . at con) >>= \case
+    storeConstructorType con coqName
+    lookupConstructorFields con >>= \case
       Just (RecordFields fields) ->
-        for_ fields $ \field -> recordFieldTypes . at field ?= coqName
+        for_ fields $ \field -> storeRecordFieldType field coqName
       _ ->
         pure ()
 

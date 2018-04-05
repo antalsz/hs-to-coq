@@ -217,7 +217,7 @@ convertExpr' (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
   con <- var ExprNS hsCon
 
-  use (constructorFields . at con) >>= \case
+  lookupConstructorFields con >>= \case
     Just (RecordFields conFields) -> do
       let defaultVal field | isJust rec_dotdot = Qualid field
                            | otherwise         = missingValue
@@ -253,12 +253,12 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                      ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
                      (fs,   f') -> "s " ++ intercalate ", " (map quote fs) ++ ", and " ++ quote f'
 
-  recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) updFields >>= \case
+  recType <- S.minView . S.fromList <$> traverse (\field -> lookupRecordFieldType field) updFields >>= \case
                Just (Just recType, []) -> pure recType
                Just (Nothing,      []) -> convUnsupported $ "invalid record update with " ++ prettyUpdFields "non-record-field"
                _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
 
-  ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
+  ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< lookupConstructors recType
 
   let loc  = mkGeneralLocated "generated"
       toHs = freshInternalName . T.unpack
@@ -278,7 +278,7 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                              , grhssLocalBinds = loc EmptyLocalBinds } }
 
   matches <- for ctors $ \con ->
-    use (constructorFields . at con) >>= \case
+    lookupConstructorFields con >>= \case
       Just (RecordFields fields) | all (`elem` fields) $ M.keysSet updates -> do
         let addFieldOcc :: HsRecField' GHC.Name arg -> HsRecField GhcRn arg
             addFieldOcc field@HsRecField{hsRecFieldLbl = L s lbl} =

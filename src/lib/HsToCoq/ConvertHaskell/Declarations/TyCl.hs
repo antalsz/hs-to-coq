@@ -229,7 +229,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
   | null params = pure []
   | otherwise   = catMaybes <$> traverse setImplicits cons
   where
-    setImplicits (con,_,_) = use (constructorFields.at con) >>= \case
+    setImplicits (con,_,_) = lookupConstructorFields con >>= \case
         -- Ignore cons we do not know anythings about
         -- (e.g. because they are skipped or redefined)
         Nothing -> pure Nothing
@@ -278,13 +278,13 @@ generateRecordAccessors :: ConversionMonad r m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
 
-  let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
-  allFields <- use (constructorFields.to restrict.folded._RecordFields)
-  let nubedFields = S.toAscList (S.fromList allFields)
+  allFields <- catMaybes <$> mapM lookupConstructorFields conNames
+  let recordFields = concat [ fields | RecordFields fields <- allFields ]
+  let nubedFields = S.toAscList $ S.fromList recordFields
   filteredFields <- filterM (\field -> not <$> view (edits.skipped.contains field)) nubedFields
   for filteredFields $ \(field :: Qualid) -> withCurrentDefinition field $ do
     equations <- for conNames $ \con -> do
-      (args, hasField) <- use (constructorFields.at con) >>= \case
+      (args, hasField) <- lookupConstructorFields con >>= \case
         Just (NonRecordFields count) ->
           pure (replicate count UnderscorePat, False)
         Just (RecordFields conFields0) ->
@@ -340,13 +340,17 @@ groupTyClDecls decls = do
   bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
 
-  -- Might be overgenerous
-  ctypes <- use constructorTypes
+  -- We need to do this here, becaues topoSortEnvironment expects
+  -- a pure function as the first argument
+  bodies_fvars <- for bodies $ \decl -> do
+        let vars = getFreeVars decl
+        -- This is very crude; querying all free variables as if
+        -- they are constructor names:
+        ctypes <- setMapMaybeM lookupConstructorType vars
+        return $ vars <> ctypes
 
-  pure . map (foldMap $ singletonDeclarationGroup . (bodies M.!))
-       . flip topoSortEnvironmentWith bodies
-       $ \decl -> let vars = getFreeVars decl
-                  in vars <> setMapMaybe (M.lookup ?? ctypes) vars
+  pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!))
+       $ topoSortEnvironmentWith id bodies_fvars
 
 convertModuleTyClDecls :: ConversionMonad r m
                        => [TyClDecl GhcRn] -> m [Sentence]

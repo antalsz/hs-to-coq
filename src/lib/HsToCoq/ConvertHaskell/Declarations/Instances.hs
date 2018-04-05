@@ -155,8 +155,9 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
         cdefs <-  mapM (\ConvertedDefinition{..} -> do
                            return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-        defaults <-  use (defaultMethods.at instanceClass.non M.empty)
-                     -- lookup default methods in the global state, using the empty map if the class name is not found
+        defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
+                     -- lookup default methods in the global state, using the
+                     -- empty map if the class name is not found
                      -- otherwise gives you a map
                      -- <&> is flip fmap
                  <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
@@ -184,7 +185,7 @@ axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
     True -> pure Nothing
     False -> do
       InstanceInfo{..} <- convertClsInstDeclInfo cid
-      use (classDefns.at instanceClass) >>= \case
+      lookupClassDefn instanceClass >>= \case
         Just (ClassDefinition _ _ _ methods) ->
           pure . Just . InstanceDefinition instanceName [] instanceHead []
              $ if null methods
@@ -253,8 +254,7 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
         -- add extra quantifiers from the class & instance definitions
         mkTy :: Qualid -> m ([Binder], Maybe Term)
         mkTy memberName = do
-          classDef <- use (classDefns.at className)
-          -- TODO: May be broken by switch away from 'RdrName's
+          classDef <- lookupClassDefn className
           case classDef of
             (Just (ClassDefinition _ (b:_) _ sigs)) | [var] <- toListOf binderIdents b ->
               case lookup memberName sigs of
@@ -315,8 +315,7 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
 
         -- Gets the class method names, in the original
         getClassMethods = do
-          classDef <- use (classDefns.at className)
-          -- TODO: May be broken by switch away from 'RdrName's
+          classDef <- lookupClassDefn className
           case classDef of
             (Just (ClassDefinition _ _ _ sigs)) ->
                 pure $ map fst sigs

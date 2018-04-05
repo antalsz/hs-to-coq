@@ -184,9 +184,9 @@ convert_module_with_requires_via :: ConversionMonad m
                                  => (ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
                                  -> ModuleName -> RenamedSource ->
                                  m (ConvertedModule, [ModuleName])
-convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _exports, _docstring) =
-  withCurrentModule convModNameOrig $ do
-    convModName <- use (edits.renamedModules.at convModNameOrig . non convModNameOrig)
+convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _exports, _docstring) = do
+  convModName <- use (edits.renamedModules.at convModNameOrig . non convModNameOrig)
+  withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
                                 , convertedClsInstDecls = convModClsInstDecls

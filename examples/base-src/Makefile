@@ -117,6 +117,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 		     -i base \
 		     -i base/dist-install/build \
 		     -I base/include \
+		     -I base/dist-install/build/include \
 		     --ghc -this-unit-id --ghc base \
 		     -o $(OUT) \
 		     base/$*.hs
@@ -131,6 +132,7 @@ $(OUT)/Data/SemigroupInternal.v : $(wildcard module-edits/Data/Semigroup/Interna
            -N \
 		     -i base \
 		     -i base/dist-install/build \
+		     -I base/dist-install/build/include \
 		     -I base/include \
 		     --ghc -this-unit-id --ghc base \
 		     -o $(OUT) \
@@ -151,7 +153,8 @@ $(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preambl
 		     -p module-edits/$*/preamble.v \
 		     --ghc -ibase \
 		     --ghc -ibase/dist-install/build \
-		     -Ibase/include \
+		     -I base/dist-install/build/include \
+		     -I base/include \
 		     --ghc -this-unit-id=base \
 		     drop-in/$*.hs
 

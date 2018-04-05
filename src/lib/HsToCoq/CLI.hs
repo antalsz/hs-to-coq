@@ -2,7 +2,8 @@
              OverloadedStrings,
              FlexibleContexts,
              TemplateHaskell,
-             ScopedTypeVariables #-}
+             ScopedTypeVariables,
+             RankNTypes #-}
 
 module HsToCoq.CLI (
   -- * General main-action creator
@@ -211,9 +212,10 @@ type WithModulePrinter m =
     (Handle -> m ()) -> -- print rest
     m ()
 
-processFilesMain :: GhcMonad m
-                 => (WithModulePrinter (ConversionT m) -> [TypecheckedModule] -> ConversionT m ())
-                 -> m ()
+processFilesMain ::
+    forall m . GhcMonad m
+    => (forall r m. GlobalMonad r m => WithModulePrinter m -> [TypecheckedModule] -> m ())
+    -> m ()
 processFilesMain process = do
   conf <- processArgs
   
@@ -251,7 +253,8 @@ processFilesMain process = do
             hPutStrLn hOut ""
             hFlush    hOut
 
-  let withModulePrinter = case conf^.outputFile of
+  let withModulePrinter :: forall r m. GlobalMonad r m => WithModulePrinter m
+      withModulePrinter = case conf^.outputFile of
         Nothing  -> \mod act1 act2 -> do
             liftIO . putStrLn $ "(* " ++ moduleNameString mod ++ " *)"
             liftIO $ putStrLn ""
@@ -268,10 +271,10 @@ processFilesMain process = do
             printMidambles hOut
             void $ act2 hOut
 
-  evalConversion edits $
+  runGlobalMonad edits $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
-printConvertedModule :: ConversionMonad m
+printConvertedModule :: ConversionMonad r m
                      => WithModulePrinter m
                      -> ConvertedModule
                      -> m ()
@@ -304,14 +307,14 @@ printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
                                 traverse_ (hPrettyPrint out) . intersperse sep $
                                   map ((<> line) . renderGallina) ds
 
-printConvertedModules :: ConversionMonad m
+printConvertedModules :: ConversionMonad r m
                       => WithModulePrinter m
                       -> [NonEmpty ConvertedModule]
                       -> m ()
 printConvertedModules withModulePrinter =
   traverse_ (printConvertedModule withModulePrinter) . foldMap toList
 
-convertAndPrintModules :: ConversionMonad m => WithModulePrinter m -> [TypecheckedModule] -> m ()
+convertAndPrintModules :: ConversionMonad r m => WithModulePrinter m -> [TypecheckedModule] -> m ()
 convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamed
   where
     toRenamed tcm

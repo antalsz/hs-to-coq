@@ -24,14 +24,14 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertLHsTyVarBndrs :: ConversionMonad m => Explicitness -> [LHsTyVarBndr GhcRn] -> m [Binder]
+convertLHsTyVarBndrs :: ConversionMonad r m => Explicitness -> [LHsTyVarBndr GhcRn] -> m [Binder]
 convertLHsTyVarBndrs ex tvs = for (map unLoc tvs) $ \case
   UserTyVar   tv   -> Inferred ex . Ident <$> var TypeNS (unLoc tv)
   KindedTyVar tv k -> Typed Ungeneralizable ex <$> (pure . Ident <$> var TypeNS (unLoc tv)) <*> convertLType k
 
 --------------------------------------------------------------------------------
 
-convertType :: ConversionMonad m => HsType GhcRn -> m Term
+convertType :: ConversionMonad r m => HsType GhcRn -> m Term
 convertType (HsForAllTy tvs ty) = do
   explicitTVs <- convertLHsTyVarBndrs Coq.Implicit tvs
   tyBody      <- convertLType ty
@@ -134,17 +134,17 @@ convertType (HsSumTy _) =
 
 --------------------------------------------------------------------------------
 
-convertLType :: ConversionMonad m => LHsType GhcRn -> m Term
+convertLType :: ConversionMonad r m => LHsType GhcRn -> m Term
 convertLType = convertType . unLoc
 
 --------------------------------------------------------------------------------
 
-convertLHsSigType :: ConversionMonad m => LHsSigType GhcRn -> m Term
+convertLHsSigType :: ConversionMonad r m => LHsSigType GhcRn -> m Term
 convertLHsSigType (HsIB itvs lty _) =
   maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
               <*> convertLType lty
 
-convertLHsSigWcType :: ConversionMonad m => LHsSigWcType GhcRn -> m Term
+convertLHsSigWcType :: ConversionMonad r m => LHsSigWcType GhcRn -> m Term
 convertLHsSigWcType (HsWC wcs hsib)
   | null wcs  = convertLHsSigType hsib
   | otherwise = convUnsupported "type wildcards"

@@ -72,7 +72,7 @@ collectSigs sigs = do
          (_,     [])        -> Left $ "multiple type signatures for the same identifier"
          (_,     _)         -> Left $ "multiple type and fixity signatures for the same identifier"
 
-collectSigsWithErrors :: ConversionMonad m => [Sig GhcRn] -> m (Map GHC.Name HsSignature)
+collectSigsWithErrors :: ConversionMonad r m => [Sig GhcRn] -> m (Map GHC.Name HsSignature)
 collectSigsWithErrors =
   either convUnsupported (M.traverseWithKey multiplesError) . collectSigs
   where multiplesError name (Left err) = do
@@ -81,15 +81,15 @@ collectSigsWithErrors =
         multiplesError _ (Right sig) =
           pure sig
 
-convertSignature :: ConversionMonad m => HsSignature -> m Signature
+convertSignature :: ConversionMonad r m => HsSignature -> m Signature
 convertSignature (HsSignature sigTy _hsFix) = do
   Signature <$> convertLHsSigType sigTy <*> pure Nothing
 
-convertSignatures :: ConversionMonad m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
+convertSignatures :: ConversionMonad r m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
 convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> var ExprNS r <*> convertSignature hs) . M.toList
 
-convertSigs :: ConversionMonad m => [Sig GhcRn] -> m (Map Qualid Signature)
+convertSigs :: ConversionMonad r m => [Sig GhcRn] -> m (Map Qualid Signature)
 convertSigs = convertSignatures <=< collectSigsWithErrors
 
-convertLSigs :: ConversionMonad m => [LSig GhcRn] -> m (Map Qualid Signature)
+convertLSigs :: ConversionMonad r m => [LSig GhcRn] -> m (Map Qualid Signature)
 convertLSigs = convertSigs . map unLoc

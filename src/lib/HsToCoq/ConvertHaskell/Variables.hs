@@ -77,18 +77,18 @@ specialForms :: Ident -> Ident
 specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
                   | otherwise                   = name
 
-var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
+var :: ConversionMonad r m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
     qid <- case nameModM of
-             Just m  -> do rm <- use (edits.renamedModules.at m . non m)
+             Just m  -> do rm <- view (edits.renamedModules.at m . non m)
                            pure (Qualified (moduleNameText rm) (bareName name))
              Nothing -> pure (Bare (localName name))
-    renamed_qid <- use (renamed ns qid . non qid)
+    renamed_qid <- view (edits . renamed ns qid . non qid)
     pure renamed_qid
   where
     nameModM = moduleName <$> nameModule_maybe name
 
 
-recordField :: (ConversionMonad m) => AmbiguousFieldOcc GhcRn -> m Qualid
+recordField :: (ConversionMonad r m) => AmbiguousFieldOcc GhcRn -> m Qualid
 recordField (Unambiguous _ sel) = var ExprNS sel
 recordField (Ambiguous _ _)     = error "Cannot handle ambiguous record field names"

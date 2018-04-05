@@ -47,10 +47,10 @@ import HsToCoq.ConvertHaskell.Declarations.Class
 --------------------------------------------------------------------------------
 
 -- Take the instance head and make it into a valid identifier.
-convertInstanceName :: ConversionMonad m => LHsType GhcRn -> m Qualid
+convertInstanceName :: ConversionMonad r m => LHsType GhcRn -> m Qualid
 convertInstanceName n = do
     coqType <- convertLType n
-    qual <- maybe Bare (Qualified . moduleNameText) <$> use currentModule
+    qual <- Qualified . moduleNameText <$> view currentModule
     case skip coqType of
         Left err -> convUnsupported $ "Cannot derive instance name from " ++ show coqType ++ ": " ++ err
         Right name -> return $ qual name
@@ -127,7 +127,7 @@ data InstanceInfo = InstanceInfo { instanceName       :: !Qualid
                                  }
                   deriving (Eq, Ord)
 
-convertClsInstDeclInfo :: ConversionMonad m => ClsInstDecl GhcRn -> m InstanceInfo
+convertClsInstDeclInfo :: ConversionMonad r m => ClsInstDecl GhcRn -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLHsSigType cid_poly_ty
@@ -138,12 +138,12 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecl :: ConversionMonad m => ClsInstDecl GhcRn -> m [Sentence]
+convertClsInstDecl :: ConversionMonad r m => ClsInstDecl GhcRn -> m [Sentence]
 convertClsInstDecl cid@ClsInstDecl{..} = do
   InstanceInfo{..} <- convertClsInstDeclInfo cid
 
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
-  use (edits.skipped.contains instanceName) >>= \case
+  view (edits.skipped.contains instanceName) >>= \case
     True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
     False -> ghandle err_handler $ do
         cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
@@ -161,7 +161,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                  <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
         -- implement the instance part of "skip method"
-        skippedMethodsS <- use (edits.skippedMethods)
+        skippedMethodsS <- view (edits.skippedMethods)
 
         let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
@@ -174,12 +174,12 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
         topoSortInstance instanceName binds className instTy methods
 
 
-axiomatizeClsInstDecl :: ConversionMonad m
+axiomatizeClsInstDecl :: ConversionMonad r m
                       => ClsInstDecl GhcRn        -- Haskell instance we are converting
                       -> m (Maybe InstanceDefinition)
 axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
   instanceName <- convertInstanceName $ hsib_body cid_poly_ty
-  use (edits.skipped.contains instanceName) >>= \case
+  view (edits.skipped.contains instanceName) >>= \case
     True -> pure Nothing
     False -> do
       InstanceInfo{..} <- convertClsInstDeclInfo cid
@@ -195,7 +195,7 @@ axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecls, axiomatizeClsInstDecls :: forall m. ConversionMonad m =>
+convertClsInstDecls, axiomatizeClsInstDecls :: forall r m. ConversionMonad r m =>
     [ClsInstDecl GhcRn] -> m [Sentence]
 convertClsInstDecls = foldTraverse convertClsInstDecl
 axiomatizeClsInstDecls insts = (fmap InstanceSentence .  catMaybes) <$> mapM axiomatizeClsInstDecl insts
@@ -205,7 +205,7 @@ axiomatizeClsInstDecls insts = (fmap InstanceSentence .  catMaybes) <$> mapM axi
 -- Topo sort the instance members and lift (some of) them outside of
 -- the instance declaration.
 
-topoSortInstance :: forall m. ConversionMonad m =>
+topoSortInstance :: forall r m. ConversionMonad r m =>
     Qualid -> [Binder] -> Qualid -> Term -> [(Qualid,Term)] -> m [Sentence]
 topoSortInstance instanceName params className instTy members = go sorted M.empty where
 
@@ -348,7 +348,7 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
            let sub' = M.insert v v' sub
 
            -- implement redefinitions of methods
-           use (edits.redefinitions.at v') >>= \case
+           view (edits.redefinitions.at v') >>= \case
                Just redef -> pure ([ definitionSentence redef], sub')
                Nothing    -> pure ([ DefinitionSentence (DefinitionDef Local v' params mty (unFix body)) ], sub')
 
@@ -359,7 +359,7 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
         -- make the final instance declaration, using the current substitution as the instance
         mkID :: M.Map Qualid Qualid -> m [ Sentence ]
         mkID mems = do
-            use (edits.redefinitions.at instanceName) >>= \case
+            view (edits.redefinitions.at instanceName) >>= \case
                 Nothing -> do
                     -- Assemble members in the right order
                     classMethods <- getClassMethods
@@ -397,7 +397,7 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
 -- from "instance C ty where" access C and ty
 -- TODO: multiparameter type classes   "instance C t1 t2 where"
 --       instances with contexts       "instance C a => C (Maybe a) where"
-decomposeClassTy :: ConversionMonad m => Term -> m (Qualid, Term)
+decomposeClassTy :: ConversionMonad r m => Term -> m (Qualid, Term)
 decomposeClassTy ty = case ty of
    App1 (Qualid cn) a -> pure (cn, a)
    _ -> convUnsupported ("type class instance head:" ++ show ty)

@@ -41,7 +41,7 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: (LocalConvMonad m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
+convertPat :: (LocalConvMonad r m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -162,12 +162,12 @@ convertPat SumPat{} =
 
 --------------------------------------------------------------------------------
 
-convertLPat :: (LocalConvMonad m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
+convertLPat :: (LocalConvMonad r m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
 convertLPat = convertPat . unLoc
 
 --------------------------------------------------------------------------------
 
-convertIntegerPat :: (LocalConvMonad m, MonadWriter [Term] m)
+convertIntegerPat :: (LocalConvMonad r m, MonadWriter [Term] m)
                   => String -> Integer -> m Pattern
 convertIntegerPat what hsInt = do
   var <- gensym "num"
@@ -180,7 +180,7 @@ isConstructor con = isJust <$> (use $ constructorTypes . at con)
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor
 -- Just False: One of many constructors
-isSoleConstructor :: ConversionMonad m => Qualid -> m (Maybe Bool)
+isSoleConstructor :: ConversionMonad r m => Qualid -> m (Maybe Bool)
 isSoleConstructor con = runMaybeT $ do
   ty    <- MaybeT . use $ constructorTypes . at con
   ctors <-          use $ constructors     . at ty
@@ -196,14 +196,14 @@ isRefutable Refutable = True
 isRefutable _ = False
 
 -- Module-local
-constructor_refutability :: ConversionMonad m => Qualid -> [Pattern] -> m Refutability
+constructor_refutability :: ConversionMonad r m => Qualid -> [Pattern] -> m Refutability
 constructor_refutability con args =
   isSoleConstructor con >>= \case
     Nothing    -> pure Refutable -- Error
     Just True  -> maximum . (SoleConstructor :) <$> traverse refutability args
     Just False -> pure Refutable
 
-refutability :: ConversionMonad m => Pattern -> m Refutability
+refutability :: ConversionMonad r m => Pattern -> m Refutability
 refutability (ArgsPat con args)         = constructor_refutability con args
 refutability (ExplicitArgsPat con args) = constructor_refutability con (toList args)
 refutability (InfixPat arg1 con arg2)   = constructor_refutability (Bare con) [arg1,arg2]

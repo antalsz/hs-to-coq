@@ -39,7 +39,7 @@ instance FreeVars ClassBody where
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders
-getImplicitBindersForClassMember  :: ConversionMonad m => Qualid -> Qualid -> m [Binder]
+getImplicitBindersForClassMember  :: ConversionMonad r m => Qualid -> Qualid -> m [Binder]
 getImplicitBindersForClassMember className memberName = do
   classDef <- use (classDefns.at className)
   case classDef of
@@ -58,7 +58,7 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
                                  _ -> False) bs
 getImplicits _ = []
 
-convertClassDecl :: ConversionMonad m
+convertClassDecl :: ConversionMonad r m
                  => LHsContext GhcRn                      -- ^@tcdCtxt@    Context
                  -> Located GHC.Name                      -- ^@tcdLName@   name of the class
                  -> [LHsTyVarBndr GhcRn]                  -- ^@tcdTyVars@  class type variables
@@ -77,7 +77,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
 
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
-  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.classKinds.at name)
+  kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.classKinds.at name)
   let args' = zipWith go args kinds
        where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
              go a _ = a
@@ -86,7 +86,7 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
   (all_sigs :: M.Map Qualid Signature) <- convertLSigs lsigs
 
   -- implement the class part of "skip method"
-  skippedMethodsS <- use (edits.skippedMethods)
+  skippedMethodsS <- view (edits.skippedMethods)
   let sigs = (`M.filterWithKey` all_sigs) $ \meth _ ->
         (name,qualidBase meth) `S.notMember` skippedMethodsS
 

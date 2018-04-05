@@ -68,6 +68,7 @@ library
                      , HsToCoq.ConvertHaskell.Parameters.Edits
                      , HsToCoq.ConvertHaskell.Parameters.Parsers
                      , HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
+                     , HsToCoq.ConvertHaskell.BuiltIn
                      , HsToCoq.ConvertHaskell.Monad
                      , HsToCoq.ConvertHaskell.InfixNames
                      , HsToCoq.ConvertHaskell.Variables

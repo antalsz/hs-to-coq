@@ -29,7 +29,7 @@ data SynBody = SynBody Qualid [Binder] (Maybe Term) Term
 instance FreeVars SynBody where
   freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
 
-convertSynDecl :: ConversionMonad m
+convertSynDecl :: ConversionMonad r m
                => Located GHC.Name -> [LHsTyVarBndr GhcRn] -> LHsType GhcRn
                -> m SynBody
 convertSynDecl name args def  = do
@@ -39,7 +39,7 @@ convertSynDecl name args def  = do
   let (params', rhs') = etaContract params rhs
   SynBody <$> var TypeNS (unLoc name)
           <*> pure params'
-          <*> use (edits.typeSynonymTypes . at coqName . to (fmap Var))
+          <*> view (edits.typeSynonymTypes . at coqName . to (fmap Var))
           <*> pure (rhs' `InScope` "type")
 
 -- Eta-contracting type synonyms allows Coq’s instance resolution mechanism

@@ -29,7 +29,7 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
-convertValDecls :: ConversionMonad m => [HsDecl GhcRn] -> m [Sentence]
+convertValDecls :: ConversionMonad r m => [HsDecl GhcRn] -> m [Sentence]
 convertValDecls mdecls = do
   -- TODO: Don't even convert the signatures for `skipped' things here
   (defns, sigs) <- bitraverse pure convertSigs
@@ -42,9 +42,9 @@ convertValDecls mdecls = do
   bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
-                   r <- use (edits.redefinitions.at name)
-                   obl <- use (edits.obligations.at name)
-                   t <- use (edits.termination.at name)
+                   r <- view (edits.redefinitions.at name)
+                   obl <- view (edits.obligations.at name)
+                   t <- view (edits.termination.at name)
                    useProgram <- useProgramHere
                    if | Just def <- r               -- redefined
                       -> [definitionSentence def] <$ case def of

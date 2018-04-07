@@ -38,6 +38,7 @@ import Control.Monad.Trans.Writer
 import Data.Maybe
 import Text.Read (readMaybe)
 import qualified Data.Text as T
+import Data.Monoid
 
 import System.Directory
 import System.IO
@@ -205,6 +206,8 @@ class Monad m => TypeInfoMonad m where
     storeClassDefn          :: ClassName       -> ClassDefinition     -> m ()
     storeDefaultMethods     :: ClassName       -> Map MethodName Term -> m ()
 
+    serializeIfaceFor       :: ModuleIdent -> m String
+
 lookup' :: MonadIO m => (Lens' TypeInfo (Map Qualid a)) -> Qualid -> TypeInfoT m (Maybe a)
 lookup' lens key = do
     needIface key
@@ -222,6 +225,26 @@ store' lens qid@(Qualified mi _) x = do
             exitFailure
         True -> TypeInfoT $ lens . at qid ?= x
 
+serializeIfaceFor' :: MonadIO m => ModuleIdent -> TypeInfoT m String
+serializeIfaceFor' mi = do
+    TypeInfoT (use (processedModules.contains mi)) >>= \case
+        False -> liftIO $ do
+            hPutStrLn stderr $ "Module " ++ show mi ++ " is not a processed one."
+            exitFailure
+        True -> TypeInfoT $ gets (show . go)
+  where
+    go :: TypeInfo -> TypeInfo
+    go = appEndo $ foldMap Endo $
+        [ searchPaths      .~ []
+        , ifaceLoadCache   .~ M.empty
+        , processedModules .~ S.empty
+        ] ++
+        [ field %~ M.filterWithKey inThisMod
+        | AField _ field <- typeInfoFields ]
+
+    inThisMod ::  Qualid -> a -> Bool
+    inThisMod qid _  = qualidModule qid == Just mi
+
 instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
     isProcessedModule       mi = TypeInfoT $ processedModules %= S.insert mi
 
@@ -238,6 +261,8 @@ instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
     storeRecordFieldType   = store' recordFieldTypes
     storeClassDefn         = store' classDefns
     storeDefaultMethods    = store' defaultMethods
+
+    serializeIfaceFor = serializeIfaceFor'
 
 -- | Interface search paths
 type TypeInfoConfig = [FilePath]
@@ -282,6 +307,8 @@ instance TypeInfoMonad m => TypeInfoMonad (ReaderT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
+    serializeIfaceFor m = lift $ serializeIfaceFor m
+
 instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
 
@@ -298,6 +325,8 @@ instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     storeRecordFieldType    cn x = lift $ storeRecordFieldType   cn x
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
+
+    serializeIfaceFor m = lift $ serializeIfaceFor m
 
 instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -316,6 +345,8 @@ instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
+    serializeIfaceFor m = lift $ serializeIfaceFor m
+
 instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
 
@@ -332,6 +363,8 @@ instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     storeRecordFieldType    cn x = lift $ storeRecordFieldType   cn x
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
+
+    serializeIfaceFor m = lift $ serializeIfaceFor m
 
 instance GhcMonad m => GhcMonad (TypeInfoT m) where
   getSession = lift   getSession

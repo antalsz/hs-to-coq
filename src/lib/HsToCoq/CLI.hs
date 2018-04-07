@@ -52,6 +52,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers
 
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Messages
+import HsToCoq.Util.GHC.Module
 import HsToCoq.PrettyPrint hiding ((</>))
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Util.FVs
@@ -59,6 +60,7 @@ import HsToCoq.Coq.Pretty
 import HsToCoq.Coq.Preamble
 import HsToCoq.ProcessFiles
 import HsToCoq.ConvertHaskell
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.CLI.FileTree
 import HsToCoq.CLI.FileTree.Parser
@@ -282,6 +284,11 @@ processFilesMain process = do
             void $ act1 hOut
             printMidambles hOut
             void $ act2 hOut
+          let ifacepath = outDir </> moduleNameSlashes mod <.> "h2ci"
+          gWithFile ifacepath WriteMode $ \hOut -> do
+            iface <- serializeIfaceFor (moduleNameText mod)
+            liftIO $ hPutStr hOut iface
+
 
   runGlobalMonad edits (conf^.ifaceDirs) $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles

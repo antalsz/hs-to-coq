@@ -283,7 +283,7 @@ processFilesMain process = do
             printMidambles hOut
             void $ act2 hOut
 
-  runGlobalMonad edits (conf^.outputFile, conf^.ifaceDirs) $
+  runGlobalMonad edits (conf^.ifaceDirs) $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
 printConvertedModule :: GlobalMonad r m

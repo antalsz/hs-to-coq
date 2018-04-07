@@ -144,36 +144,39 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
   InstanceInfo{..} <- convertClsInstDeclInfo cid
 
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
-  view (edits.skipped.contains instanceName) >>= \case
-    True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
-    False -> ghandle err_handler $ do
-        cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
-                                       (\case ConvertedDefinitionBinding cdef -> pure cdef
-                                              ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
-                                       Nothing -- error handler
+  view (edits.skipped.contains instanceClass) >>= \case
+    True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName <> " of class " <> qualidBase instanceClass)) ]
+    False -> do
+      view (edits.skipped.contains instanceName) >>= \case
+        True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
+        False -> ghandle err_handler $ do
+            cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+                                           (\case ConvertedDefinitionBinding cdef -> pure cdef
+                                                  ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
+                                           Nothing -- error handler
 
-        cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                           return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
+            cdefs <-  mapM (\ConvertedDefinition{..} -> do
+                               return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-        defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
-                     -- lookup default methods in the global state, using the
-                     -- empty map if the class name is not found
-                     -- otherwise gives you a map
-                     -- <&> is flip fmap
-                 <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
+            defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
+                         -- lookup default methods in the global state, using the
+                         -- empty map if the class name is not found
+                         -- otherwise gives you a map
+                         -- <&> is flip fmap
+                     <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
-        -- implement the instance part of "skip method"
-        skippedMethodsS <- view (edits.skippedMethods)
+            -- implement the instance part of "skip method"
+            skippedMethodsS <- view (edits.skippedMethods)
 
-        let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+            let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
-        let (binds, classTy) = decomposeForall instanceHead
+            let (binds, classTy) = decomposeForall instanceHead
 
-        -- decomposeClassTy can fail, so run it in the monad so that
-        -- failure will be caugh cause the instance to be skipped
-        (className, instTy) <- decomposeClassTy classTy
+            -- decomposeClassTy can fail, so run it in the monad so that
+            -- failure will be caugh cause the instance to be skipped
+            (className, instTy) <- decomposeClassTy classTy
 
-        topoSortInstance instanceName binds className instTy methods
+            topoSortInstance instanceName binds className instTy methods
 
 
 axiomatizeClsInstDecl :: ConversionMonad r m

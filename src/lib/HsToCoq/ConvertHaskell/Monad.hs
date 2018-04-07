@@ -39,6 +39,7 @@ import GHC
 import Panic
 
 import HsToCoq.Coq.Gallina (Qualid, Qualid(..), Ident)
+import HsToCoq.Util.GHC.Module (moduleNameText)
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -123,6 +124,7 @@ withCurrentModule :: GlobalMonad r m =>
     m a
 withCurrentModule newModule act = do
     _edits <- view edits
+    isProcessedModule (moduleNameText newModule) -- Start collecting the interface
     runReaderT act $ ModuleEnv
         { _moduleEnvEdits         = _edits
         , _moduleEnvCurrentModule = newModule

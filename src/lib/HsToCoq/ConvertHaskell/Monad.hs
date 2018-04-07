@@ -107,11 +107,13 @@ type LocalConvMonad r m =
         , HasCurrentDefinition r Qualid
         )
 
-runGlobalMonad :: (GhcMonad m, Monad m) => Edits ->
+runGlobalMonad :: (GhcMonad m, Monad m) =>
+    Edits ->
+    TypeInfoConfig ->
     (forall r m. GlobalMonad r m => m a) ->
     m a
-runGlobalMonad initEdits act =
-    runTypeInfoMonad $
+runGlobalMonad initEdits paths act =
+    runTypeInfoMonad paths $
     runReaderT ?? GlobalEnv{_globalEnvEdits = initEdits} $
     act
 

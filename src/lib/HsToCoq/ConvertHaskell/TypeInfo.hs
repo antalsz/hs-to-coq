@@ -15,6 +15,7 @@ module HsToCoq.ConvertHaskell.TypeInfo
     , _RecordFields
     -- * The Monad
     , runTypeInfoMonad
+    , TypeInfoConfig
     , TypeInfoMonad(..)
     -- * Derived utility functions
     , isConstructor
@@ -98,8 +99,13 @@ instance Monad m => TypeInfoMonad (TypeInfoT m) where
     storeClassDefn         cl x = TypeInfoT $ classDefns        . at cl ?= x
     storeDefaultMethods    cl x = TypeInfoT $ defaultMethods    . at cl ?= x
 
-runTypeInfoMonad :: Monad m => TypeInfoT m a -> m a
-runTypeInfoMonad (TypeInfoT act) = evalStateT act TypeInfo{..}
+-- | Output directory and search paths
+type TypeInfoConfig = (Maybe FilePath, [FilePath])
+
+runTypeInfoMonad :: Monad m =>
+    TypeInfoConfig ->
+    TypeInfoT m a -> m a
+runTypeInfoMonad _ (TypeInfoT act) = evalStateT act TypeInfo{..}
   where
     _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
     _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]

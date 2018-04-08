@@ -109,6 +109,41 @@ with the following directive:
 remame value Foo.SomeType = Foo.MkSomeType
 ```
 
+# Interface files
+
+When translating a module `Foo` that uses a type class or algebraic data type
+from another file `Bar`, then `hs-to-coq` needs to know some information about
+these types. Therefore, when it creates `Bar.v`, it also writes an *interface
+file* `Bar.h2ci`. This interface file is loaded on demand during the translation
+of `Foo`, when and if it needs the information about `Bar`.
+
+Some notes about interface file:
+
+ * You need to pass `--iface-dir foo/` to make `hs-to-coq` search for interface
+   files in `foo/`. This flag can be used multiple times. Usually, you will
+   at least passt `--iface-dir path/to/base --iface-dir output/` where `output/`
+   is the argument to `-o`.
+
+ * When it cannot find the interface file, the translation is aborted. It is up
+   to the user (or the `Makefile`) to translate the files in the right order.
+
+   In some of our `example` directories, a file called `interface-deps.mk` records
+   the dependencies. This does not need to be complete, just add dependencies as
+   you need them to guide `make`.
+
+   (It would be bad to silently ignore a missing file error: It would mean that you
+   translate `Foo` but some instances would be skipped for lack of information about
+   `Bar.Class`, and `Foo` translates and builds. Later you translate `Bar`, creating
+   the interface file. Now, without any change to `Foo`, you’d get a different output
+   with more instances, and suddenly `Foo.v` might fail to compile.)
+
+ * Skipping instances prevents hs-to-coq from trying to load the interface
+   files of the class’es module.
+
+ * Coq types as well as information about the type classes `Eq` and `Ord` are hard-coded
+   in `src/lib/HsToCoq/ConvertHaskell/BuiltIn.hs`.
+
+
 
 # Other directories
 
@@ -122,6 +157,7 @@ remame value Foo.SomeType = Foo.MkSomeType
   * [compiler](examples/compiler) Hutton's razor
   * [quicksort](examples/quicksort) Quicksort
   * [rle](examples/rle) Run-length encoding
+  * [coinduction](examples/coinduction) Translating infinite data structures
   * [base-src](examples/base-src) The sources of the `base/` directory
   * [tests](examples/tests) Simple unit-tests
   * [base-tests](examples/base-tests) Unit-tests that require `base/` 

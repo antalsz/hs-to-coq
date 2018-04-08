@@ -98,7 +98,6 @@ CORETYPE = \
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
-  CoreSyn \
   CoreSubst \
   Exitify \
   Constructors \

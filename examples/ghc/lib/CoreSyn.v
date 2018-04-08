@@ -12,8 +12,12 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+Require Import Coq.ZArith.ZArith.
+Require Import Omega.
 
-
+Ltac termination_by_omega :=
+  Coq.Program.Tactics.program_simpl;
+  simpl;Omega.omega.
 (* Converted imports: *)
 
 Require BasicTypes.
@@ -1080,6 +1084,7 @@ Program Definition collectAnnArgsTicks {b} {a}
                                | _, _, _ => j_4__
                                end) in
             go expr nil nil.
+Admit Obligations.
 
 Program Definition collectAnnBndrs {bndr} {annot}
            : AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
@@ -1092,6 +1097,7 @@ Program Definition collectAnnBndrs {bndr} {annot}
                                | bs, body => pair (GHC.List.reverse bs) body
                                end) in
             collect nil e.
+Admit Obligations.
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
   fun expr =>
@@ -1126,21 +1132,6 @@ Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
                  | bs, e => pair (GHC.List.reverse bs) e
                  end in
     go nil expr.
-
-Definition collectNAnnBndrs {bndr} {annot}
-   : GHC.Num.Int -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
-  fun orig_n e =>
-    let fix collect arg_0__ arg_1__ arg_2__
-              := match arg_0__, arg_1__, arg_2__ with
-                 | num_3__, bs, body =>
-                     if num_3__ GHC.Base.== #0 : bool then pair (GHC.List.reverse bs) body else
-                     match arg_0__, arg_1__, arg_2__ with
-                     | n, bs, pair _ (AnnLam b body) => collect (n GHC.Num.- #1) (cons b bs) body
-                     | _, _, _ =>
-                         Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Panic.noString orig_n)
-                     end
-                 end in
-    collect orig_n nil e.
 
 Definition collectNBinders {b}
    : GHC.Num.Int -> Expr b -> (list b * Expr b)%type :=
@@ -1434,15 +1425,8 @@ Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
 Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
   fun s => Lit (Literal.mkMachString s).
 
-Definition mkTyArg {b} : unit -> Expr b :=
-  fun ty =>
-    match TyCoRep.Type_isCoercionTy_maybe ty with
-    | Some co => Coercion co
-    | _ => Type_ ty
-    end.
-
 Definition mkTyApps {b} : Expr b -> list unit -> Expr b :=
-  fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
+  fun f args => Data.Foldable.foldl (fun e a => App e (Type_ tt)) f args.
 
 Definition mkTyBind : Var.TyVar -> unit -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
@@ -1534,16 +1518,13 @@ Axiom tickishScoped : forall {A : Type}, A.
 Definition unSaturatedOk : bool :=
   true.
 
-Definition unfoldingTemplate : Unfolding -> CoreExpr :=
-  uf_tmpl.
-
 Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
   Util.count Var.isId.
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if Var.isTyVar v : bool then Type_ (TyCoRep.mkTyVarTy v) else
-    if Var.isCoVar v : bool then Coercion (TyCoRep.mkCoVarCo v) else
+    if Var.isTyVar v : bool then Type_ (tt) else
+    if Var.isCoVar v : bool then Coercion (tt) else
     if andb Util.debugIsOn (negb (Var.isId v)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
           #1920)
@@ -1564,7 +1545,7 @@ Definition mkConApp2 {b}
 (* External variables:
      Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb
      bool comparison cons deAnnotate' deTagExpr false id list negb nil op_zt__ option
-     pair size snd true uf_tmpl unit BasicTypes.Activation BasicTypes.AlwaysActive
+     pair size snd true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
      BasicTypes.Arity BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Init.Peano.lt
      Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
      Data.Foldable.length DataCon.DataCon DataCon.dataConTag DataCon.dataConTyCon
@@ -1579,8 +1560,7 @@ Definition mkConApp2 {b}
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
      Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
      Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace
-     TyCoRep.Type_isCoercionTy_maybe TyCoRep.mkCoVarCo TyCoRep.mkTyVarTy TyCon.TyCon
+     Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace TyCon.TyCon
      Util.count Util.debugIsOn Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar
      Var.isId Var.isTyVar VarEnv.InScopeSet
 *)

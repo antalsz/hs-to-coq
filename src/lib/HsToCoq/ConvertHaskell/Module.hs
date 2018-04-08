@@ -15,7 +15,6 @@ import Control.Lens
 import Data.Traversable
 import Data.Foldable
 import Data.Maybe
-import Data.List (nub,groupBy)
 import Data.List.NonEmpty (NonEmpty(..))
 import HsToCoq.Util.Containers
 
@@ -171,12 +170,6 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
--- Merge two modules with the same names, combining their components
-merge :: (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName]) -> (ConvertedModule,[ModuleName])
-merge  (ConvertedModule m1 i1 t1 v1 c1 a1, x1) (ConvertedModule m2 i2 t2 v2 c2 a2, x2)
-  | m1 == m2 = (ConvertedModule m1 (nub (i1 ++ i2)) (t1 ++ t2) (v1 ++ v2) (c1 ++ c2) (a1 ++ a2), x1 ++ x2)
-merge _ _ = error "Can only merge with same name"
-
 
 convert_module_with_requires_via :: GlobalMonad r m
                                  => (forall r m. ConversionMonad r m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
@@ -238,13 +231,15 @@ axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsG
 -- components and can axiomatize individual modules as per edits
 convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
+  sources' <- forM sources $ \(mod_orig, hs_group) -> do
+      mod_final <- view (edits.renamedModules.at mod_orig . non mod_orig)
+      return (mod_final, hs_group)
+  let merged = M.toList $ M.fromListWith appendGroups sources'
+
   let convThisMod (mod,src) = view (edits.axiomatizedModules.contains mod) >>= \case
                                 True  -> axiomatize_module_with_requires mod src
                                 False -> convert_module_with_requires    mod src
-  mods' <- traverse convThisMod sources
-  -- merge modules with the same name here
-  let grouped = groupBy (\(m1,_) (m2,_) -> convModName m1 == convModName m2) mods'
-  let mods = map (foldl1 merge) grouped
+  mods <- traverse convThisMod merged
   pure $
     stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 

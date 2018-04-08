@@ -27,10 +27,10 @@ PASS = \
   PatternGuard \
   Guard2 \
   Notations \
+  Renamed \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  Renamed \
   RenameModule \
   TopBind \
   InstVar \
@@ -95,7 +95,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 
 Renamed.v: RenameMe.hs RenameMe.hs-boot RenameMeToo.hs RenameMe/edits
 	@rm -f Renamed.v
-	$(HS_TO_COQ) -e RenameMe/edits -e renamings -o . RenameMe.hs RenameMeToo.hs 1>/dev/null
+	$(HS_TO_COQ) -N -e RenameMe/edits -e renamings -o . RenameMe.hs RenameMeToo.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

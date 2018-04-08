@@ -51,9 +51,7 @@ Import Test.QuickCheck.Property.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-(* Translating `instance Arbitrary__IntSet' failed: OOPS! Cannot find
-   information for class Qualified "Test.QuickCheck.Arbitrary" "Arbitrary"
-   unsupported *)
+(* Skipping instance Arbitrary__IntSet of class Arbitrary *)
 
 Definition forValid {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=

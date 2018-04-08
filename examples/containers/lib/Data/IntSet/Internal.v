@@ -85,20 +85,15 @@ Require Import Coq.NArith.NArith.
 
 (* Converted value declarations: *)
 
-(* Translating `instance IsList__IntSet' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Exts" "IsList" unsupported *)
+(* Skipping instance IsList__IntSet of class IsList *)
 
-(* Translating `instance Data__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__IntSet of class Data *)
 
-(* Translating `instance Show__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__IntSet of class Show *)
 
-(* Translating `instance Read__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__IntSet of class Read *)
 
-(* Translating `instance NFData__IntSet' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__IntSet of class NFData *)
 
 Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>

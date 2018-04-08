@@ -160,17 +160,6 @@ Require Import Coq.Numbers.BinNums.
 
 (* Skipping instance Monad__WhenMissing *)
 
-Local Definition Foldable__IntMap_elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> IntMap a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | _, Nil => false
-                 | x, Tip _ y => x GHC.Base.== y
-                 | x, Bin _ _ l r => orb (go x l) (go x r)
-                 end in
-    go.
-
 Local Definition Foldable__IntMap_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, IntMap m -> m :=
   fun {m} `{GHC.Base.Monoid m} =>
@@ -194,14 +183,11 @@ Local Definition Foldable__IntMap_foldMap
                    end in
       go t.
 
-(* Translating `instance NFData__IntMap' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__IntMap of class NFData *)
 
-(* Translating `instance Data__IntMap' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__IntMap of class Data *)
 
-(* Translating `instance IsList__IntMap' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Exts" "IsList" unsupported *)
+(* Skipping instance IsList__IntMap of class IsList *)
 
 (* Skipping instance Eq1__IntMap *)
 
@@ -210,17 +196,13 @@ Local Definition Foldable__IntMap_foldMap
 Definition Functor__IntMap_op_zlzd__ {a} {b} :=
   (@IntMap_op_zlzd__ a b).
 
-(* Translating `instance Show__IntMap' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__IntMap of class Show *)
 
-(* Translating `instance Show1__IntMap' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__IntMap of class Show1 *)
 
-(* Translating `instance Read__IntMap' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__IntMap of class Read *)
 
-(* Translating `instance Read1__IntMap' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__IntMap of class Read1 *)
 
 Definition bin {a} : Prefix -> Mask -> IntMap a -> IntMap a -> IntMap a :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
@@ -784,8 +766,8 @@ Local Definition Functor__IntMap_fmap
 
 Program Instance Functor__IntMap : GHC.Base.Functor IntMap :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ |}.
 
 Definition lmapWhenMissing {b} {a} {f} {x}
    : (b -> a) -> WhenMissing f a x -> WhenMissing f b x :=
@@ -1689,9 +1671,8 @@ Definition Foldable__IntMap_length : forall {a}, IntMap a -> GHC.Num.Int :=
 
 Program Instance Foldable__IntMap : Data.Foldable.Foldable IntMap :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__IntMap_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__IntMap_fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__IntMap_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__IntMap_foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__IntMap_foldl ;
@@ -1934,18 +1915,17 @@ End Notations.
      Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones Coq.Numbers.BinNums.N
      Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
      Data.Bits.xor Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.elem__ Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
-     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
-     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
-     Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
-     Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
-     Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
-     Data.IntSet.Internal.member Data.IntSet.Internal.singleton
-     Data.IntSet.Internal.suffixBitMask Data.IntSet.Internal.zero Data.Maybe.maybe
-     Data.Traversable.Traversable Data.Traversable.mapM__
-     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
+     Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key
+     Data.IntSet.Internal.Nil Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf
+     Data.IntSet.Internal.mask Data.IntSet.Internal.member
+     Data.IntSet.Internal.singleton Data.IntSet.Internal.suffixBitMask
+     Data.IntSet.Internal.zero Data.Maybe.maybe Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.String
      GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__

@@ -15,4 +15,3 @@ rename value Data.IntSet.Internal.lowestBitMask = Utils.Containers.Internal.BitU
 
 # This should travel to wherever our Test.QuickCheck modules travel to
 rename type  Test.QuickCheck.Property.Property   = Prop
-

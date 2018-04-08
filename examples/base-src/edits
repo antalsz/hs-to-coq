@@ -43,6 +43,10 @@ skip Data.Bitraversable.Bitraversable
 skip Data.Bifoldable.Bifoldable
 skip GHC.Base.Alternative
 skip GHC.Base.MonadPlus
+skip Control.DeepSeq.NFData
+skip Data.Functor.Classes.Show1
+skip Data.Functor.Classes.Read1
+skip GHC.Exts.IsList
 
 rename type GHC.IO.FilePath = GHC.Base.String
 

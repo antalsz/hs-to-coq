@@ -180,9 +180,9 @@ merge _ _ = error "Can only merge with same name"
 
 convert_module_with_requires_via :: GlobalMonad r m
                                  => (forall r m. ConversionMonad r m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
-                                 -> ModuleName -> RenamedSource ->
+                                 -> ModuleName -> HsGroup GhcRn ->
                                  m (ConvertedModule, [ModuleName])
-convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _exports, _docstring) = do
+convert_module_with_requires_via convGroup convModNameOrig group = do
   convModName <- view (edits.renamedModules.at convModNameOrig . non convModNameOrig)
   withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
@@ -224,19 +224,19 @@ convert_module_with_requires_via convGroup convModNameOrig (group, _imports, _ex
 
 -- Module-local
 convert_module_with_requires :: GlobalMonad r m
-                             => ModuleName -> RenamedSource ->
+                             => ModuleName -> HsGroup GhcRn ->
                              m (ConvertedModule, [ModuleName])
 convert_module_with_requires = convert_module_with_requires_via convertHsGroup
 
 -- Module-local
 axiomatize_module_with_requires :: GlobalMonad r m
-                             => ModuleName -> RenamedSource ->
+                             => ModuleName -> HsGroup GhcRn ->
                              m (ConvertedModule, [ModuleName])
 axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsGroup
 
 -- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
 -- components and can axiomatize individual modules as per edits
-convertModules :: GlobalMonad r m => [(ModuleName, RenamedSource)] -> m [NonEmpty ConvertedModule]
+convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
   let convThisMod (mod,src) = view (edits.axiomatizedModules.contains mod) >>= \case
                                 True  -> axiomatize_module_with_requires mod src

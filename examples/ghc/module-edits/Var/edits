@@ -1,25 +1,4 @@
-# This file drastically prunes the information stored with variables
-# No types or IdInfo at all!
 
-skip module TcType
-skip module Type
-
-skip Core.ExportFlag
-skip Core.Var
-
-skip TyVar
-skip CoVar
-
-
-# skip Var.idInfo
-# skip Var.idDetails
-# skip Var.isCoVar
-# skip Var.isNonCoVarId
-# skip Var.tcTyVarDetails
-# skip Var.mkCoVar
-# skip Var.isTyCoVar
-
-redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
 # ppr
 skip Var.ppr_id_scope

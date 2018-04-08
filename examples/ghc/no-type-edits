@@ -1,0 +1,55 @@
+skip module TyCon
+skip module TyCoRep
+skip module Coercion
+skip module CoAxiom
+skip module Type
+skip module Unify
+skip module TcType
+
+## not sure if we need this
+## rewrite forall x, IdInfo.sel_tycon x = tt
+
+### get rid of some information in the AST
+rename type PrimOp.PrimOp           = unit
+rename type ForeignCall.ForeignCall = unit
+
+## Punning
+rename value Var.Id            = Var.Mk_Id
+rename value Var.TyVar         = Var.Mk_TyVar
+rename value Var.TcTyVar       = Var.Mk_TcTyVar
+
+rename value CoreSyn.IsOrphan  = CoreSyn.Mk_IsOrphan
+rename value CoreSyn.RuleEnv   = CoreSyn.Mk_RuleEnv
+rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
+rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
+rename value Class.Class       = Class.Mk_Class
+rename value CoreFVs.FVAnn     = CoreFVs.Mk_FVAnn
+rename value CoreSubst.Subst   = CoreSubst.Mk_Subst
+
+###############################################################################
+
+
+# bruttaly skipping all type info
+### get rid of type information in the AST
+
+rename type TcType.TcTyVarDetails = unit
+redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
+
+# type used in DataCon
+rename type MkId.DataConBoxer = unit
+
+
+rename type TyCon.TyCon           = unit
+rename type TyCoRep.Coercion      = unit
+rename type TyCoRep.Type_         = unit
+rename type TyCoRep.ThetaType     = unit
+rename type TyCoRep.TyBinder      = unit
+rename type TyCoRep.TyThing       = unit
+rename type TyCoRep.Kind          = unit
+rename type TyCoRep.PredType      = unit
+
+## Could make these unit too.
+redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+redefine Inductive MkId.DataConBoxer        : Type := MkId.Mk_DataConBoxer_Dummy.
+redefine Inductive CoAxiom.CoAxiomRule      : Type := CoAxiom.Mk_CoAxiomRule_Dummy.
+redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamily_Dummy.

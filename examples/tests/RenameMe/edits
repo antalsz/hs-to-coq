@@ -1,2 +1,6 @@
 rename module RenameMe Renamed
 rename module RenameMeToo Renamed
+
+skip Renamed.Default__Odd
+skip Renamed.Default__Even
+

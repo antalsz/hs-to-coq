@@ -1,0 +1,67 @@
+skip module CoreSyn
+skip module VarSet
+
+## Rename local usages
+##
+## The RHSs are defined in the preamble.v
+##
+rename type Class.Class     = ClassId
+rename type DataCon.DataCon = DataConId
+rename type PatSyn.PatSyn   = PatSynId
+
+## parameterized in the preamble.v
+skip IdInfo.RuleInfo
+skip IdInfo.emptyRuleInfo
+skip IdInfo.isEmptyRuleInfo 
+
+skip IdInfo.ruleInfoFreeVars
+skip IdInfo.ruleInfoRules
+skip IdInfo.setRuleInfoHead
+
+## parameterized in the preamble.v
+skip IdInfo.IdInfo
+skip IdInfo.vanillaIdInfo
+skip IdInfo.noCafIdInfo
+
+skip IdInfo.sel_tycon
+
+## Operations on IdInfo
+## 
+## If we need these, we need to move them elsewhere
+##
+skip IdInfo.vanillaCafInfo
+skip IdInfo.setRuleInfo
+skip IdInfo.setInlinePragInfo
+skip IdInfo.setOccInfo
+skip IdInfo.setUnfoldingInfo
+skip IdInfo.setArityInfo
+skip IdInfo.setCallArityInfo
+skip IdInfo.setCafInfo
+skip IdInfo.setOneShotInfo
+skip IdInfo.setDemandInfo
+skip IdInfo.setStrictnessInfo
+
+skip IdInfo.zapLamInfo
+skip IdInfo.zapDemandInfo
+skip IdInfo.zapUsageInfo
+skip IdInfo.zapUsageEnvInfo
+skip IdInfo.zapUsedOnceInfo
+skip IdInfo.zapFragileInfo
+skip IdInfo.zapFragileUnfolding
+skip IdInfo.zapTailCallInfo
+skip IdInfo.zapCallArityInfo
+
+skip IdInfo.setNeverLevPoly
+skip IdInfo.setLevityInfoWithType
+skip IdInfo.isNeverLevPolyIdInfo
+
+## Printing
+
+skip IdInfo.pprArityInfo
+skip IdInfo.pprCafInfo
+skip IdInfo.pprIdDetails
+skip IdInfo.pprStrictness
+skip IdInfo.ppArityInfo
+skip IdInfo.ppCafInfo 
+
+order IdInfo.Eq___CafInfo IdInfo.Ord__CafInfo

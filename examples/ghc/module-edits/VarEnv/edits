@@ -1,10 +1,20 @@
-# defined in midamble
-skip VarEnv.plusVarEnv_CD
-skip VarEnv.uniqAway'
 
-redefine Definition VarEnv.lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) (id
-                             : Core.Var) : a :=
+# skip VarEnv.uniqAway'
+in VarEnv.uniqAway' termination try deferred
+
+# defined in midamble
+# needs UniqFM.plusUFM_CD
+skip VarEnv.plusVarEnv_CD
+
+# needs Util.foldl2 
+skip VarEnv.rnBndrs2
+
+# add default constraint
+redefine Definition VarEnv.lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) id : a :=
       match lookupVarEnv env id with
       | Some xx => xx
       | None => GHC.Err.default
     end.
+
+
+ 

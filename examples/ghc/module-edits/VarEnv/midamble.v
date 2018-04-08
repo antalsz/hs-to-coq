@@ -1,5 +1,4 @@
-Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
-(*
+(*Axiom uniqAway' : InScopeSet -> Core.Var -> Core.Var.
   fun arg_55__ arg_56__ =>
     match arg_55__ , arg_56__ with
       | InScope set n , var =>

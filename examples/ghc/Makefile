@@ -14,19 +14,12 @@ OUT=lib
 HANDMOD = \
   FastString \
   Panic \
-  Util \
   ListSetOps \
   Digraph \
-  IdInfo \
-  IdInfo2 \
-  Class \
-  DataCon \
-  PatSyn \
-  Core \
-  TyCoRep \
   PrelNames \
-  TysWiredIn \
-  CallArity \
+#  CallArity \
+#  TysWiredIn \
+
 
 # generated from drop-in/
 DROPIN = \
@@ -34,7 +27,9 @@ DROPIN = \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
+# These are general purpose utility modules
 MODULES = \
+  Util \
   Maybes \
   MonadUtils \
   Pair \
@@ -56,16 +51,10 @@ MODULES = \
   Module \
   OrdList \
   OccName \
-  Name \
-  NameEnv \
-  NameSet \
-  FieldLabel \
-  Constants \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
-  ConLike \
-  Literal \
+  IdInfo \
   CoreSyn \
   UnVarGraph \
   Demand \
@@ -74,20 +63,31 @@ CORE_MODULES = \
   Id \
   CoreFVs \
   CoreArity \
+  Var \
+  VarEnv \
+  VarSet \
+  FV \
+  Literal \
+  Class \
+  DataCon \
+  PatSyn \
+  ConLike \
+  Name \
+  NameEnv \
+  NameSet \
+  FieldLabel \
+  Constants \
 
 CORETYPE = \
   TyCoRep \
   Coercion \
   CoAxiom \
   Type \
-  Var \
-  VarEnv \
-  VarSet \
   TyCon \
-  FV \
 
 
-# These modules translate, but do not compile, at the momend and
+
+# These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
   CoreType \
@@ -178,7 +178,7 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 		     $(HS_TO_COQ_GHC_OPTS) \
-                     -e core-edits \
+                     -e no-type-edits \
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs
 	test -e $@

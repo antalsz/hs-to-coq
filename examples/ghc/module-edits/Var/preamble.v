@@ -1,1 +1,1 @@
-Require Import Core.
+(* Require Import Core.*)

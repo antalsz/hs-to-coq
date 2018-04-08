@@ -1,0 +1,108 @@
+skip module Data.Char
+skip module GHC.Ptr
+skip module GHC.IO.Encoding.Types 
+skip module GHC.Exts
+skip module GHC.IO.Encoding
+skip module GHC.IO.Exception
+skip module GHC.IO.Handle
+skip module GHC.IO.Handle.Types
+skip module GHC.IO.Unsafe
+skip module GHC.IORef 
+skip module GHC.Read
+skip module GHC.Real
+skip module System.Directory
+skip module System.FilePath.Posix
+skip module System.IO.Error
+skip module Text.ParserCombinators.ReadP
+skip module Text.Read 
+skip module Data.IORef 
+skip module Data.Time.Clock.Internal.UTCTime 
+skip module GHC.Conc.Sync
+skip module Exception
+
+## Generics
+skip Util.abstractConstr
+skip Util.abstractDataType
+
+## IO
+skip Util.consIORef
+skip Util.doesDirNameExist
+
+## Read
+skip Util.maybeRead
+skip Util.maybeReadFuzzy
+skip Util.toArgs
+skip Util.readHexRational__
+skip Util.readHexRational
+skip Util.readRational__
+skip Util.readRational
+
+## 
+skip Util.minWith
+
+## This doesn't seem to work
+rewrite forall x y z, if andb debugIsOn x then y else z = z
+
+## partial, needs {Default acc}
+skip Util.foldl2
+skip Util.mapAccumL2
+skip Util.only
+
+## TODO
+rewrite forall x, GHC.Unicode.toUpper x = x
+
+skip Util.charToC
+skip Util.chunkList
+
+skip Util.removeSpaces
+skip Util.escapeSpaces
+
+skip Util.getCmd
+skip Util.toCmdArgs 
+
+skip Util.golden
+skip Util.looksLikeModuleName
+
+## wrong but not incorrect
+redefine Definition Util.makeRelativeTo  : GHC.Base.String -> (GHC.Base.String -> GHC.Base.String) := fun this that => this.
+redefine Definition Util.looksLikePackageName : GHC.Base.String -> bool := fun x => false.
+
+redefine Definition Util.HasDebugCallStack := unit.
+
+
+skip Util.matchVectors
+skip Util.mulHi
+skip Util.hashInt32
+skip Util.hashString
+
+## termination
+skip Util.nTimes
+termination Util.nTimes deferred
+termination Util.split deferred
+
+in Util.exactLog2 termination pow2 deferred
+in Util.transitiveClosure termination go deferred
+
+skip Util.nubSort
+
+skip Util.reslash
+
+skip Util.restrictedDamerauLevenshteinDistanceWorker
+skip Util.restrictedDamerauLevenshteinDistance'
+skip Util.restrictedDamerauLevenshteinDistanceWithLengths
+skip Util.restrictedDamerauLevenshteinDistance 
+
+skip Util.fuzzyLookup
+skip Util.fuzzyMatch
+
+skip Util.getModificationUTCTime
+skip Util.modificationTimeIfExists
+skip Util.global
+skip Util.globalM
+skip Util.hSetTranslit
+
+skip Util.sharedGlobal
+skip Util.sharedGlobalM
+
+## needs tail
+skip Util.splitLongestPrefix

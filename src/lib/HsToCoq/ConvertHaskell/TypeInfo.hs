@@ -172,6 +172,7 @@ loadIFace mi filepath = do
 
     parseErr = liftIO $ do
         hPutStrLn stderr $ "Could not parse interface file " ++ filepath
+        hPutStrLn stderr $ "(please delete or regenerate this file)"
         exitFailure
 
     shouldBeEmptyErr field = liftIO $ do
@@ -207,8 +208,10 @@ findIFace m errContext = do
     notFoundErr paths = liftIO $ do
         hPutStrLn stderr errContext
         hPutStrLn stderr $ "Could not find " ++ filename  ++ " in any of these directories:"
-        mapM_ (hPutStrLn stderr) paths
-        exitFailure
+        mapM_ (hPutStrLn stderr . ("    * "++)) paths
+        hPutStrLn stderr $ "Please either process " ++ T.unpack m ++ "first, or"
+        hPutStrLn stderr $ "skip declarations that mention " ++ T.unpack m ++ "."
+        -- exitFailure
 
 needIface :: forall m. MonadIO m => Qualid -> String -> TypeInfoT m ()
 needIface qi errContext | Just mi <- qualidModule qi =

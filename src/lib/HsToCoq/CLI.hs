@@ -81,6 +81,7 @@ data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
                                , ifaceDirsArgs        :: [FilePath]
+                               , dependencyDirArg     :: Maybe FilePath
                                , importDirsArgs       :: [FilePath]
                                , includeDirsArgs      :: [FilePath]
                                , ghcTreeDirsArgs      :: [FilePath]
@@ -132,6 +133,10 @@ argParser = ProgramArgs <$> optional (strOption       $  long    "output"
                                                       <> metavar "DIR"
                                                       <> help    "Directory to search for hs-to-coq interface files (.h2ci)" )
 
+                        <*> optional (strOption       $  long    "dependency-dir"
+                                                      <> metavar "DIR"
+                                                      <> help    "Directory to write interface file dependencies to")
+
                         <*> many     (strOption       $  long    "import-dir"
                                                       <> short   'i'
                                                       <> metavar "DIR"
@@ -166,6 +171,7 @@ data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _modulesRoot      :: !(Maybe FilePath)
                      , _directInputFiles :: ![FilePath]
                      , _ifaceDirs        :: ![FilePath]
+                     , _dependencyDir    :: !(Maybe FilePath)
                      }
             deriving (Eq, Ord, Show, Read)
 makeLenses ''Config
@@ -207,6 +213,7 @@ processArgs = do
                 , _modulesRoot      = modulesRootArg
                 , _directInputFiles = directInputFilesArgs
                 , _ifaceDirs        = ifaceDirsArgs
+                , _dependencyDir    = dependencyDirArg
                 }
 
 parseModulesFiles :: (MonadIO m, MonadError String m)
@@ -288,6 +295,11 @@ processFilesMain process = do
           gWithFile ifacepath WriteMode $ \hOut -> do
             iface <- serializeIfaceFor (moduleNameText mod)
             liftIO $ hPutStr hOut iface
+          for_ (conf^.dependencyDir) $ \dir -> do
+            let deppath = dir </> moduleNameString mod <.> "mk"
+            gWithFile deppath WriteMode $ \hOut -> do
+              deps <- loadedInterfaceFiles
+              liftIO $ hPutStrLn hOut $ path ++ ": " ++ unwords deps 
 
 
   runGlobalMonad edits (conf^.ifaceDirs) $

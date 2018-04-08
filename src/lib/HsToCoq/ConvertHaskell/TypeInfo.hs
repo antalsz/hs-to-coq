@@ -252,6 +252,7 @@ class Monad m => TypeInfoMonad m where
     storeDefaultMethods     :: ClassName       -> Map MethodName Term -> m ()
 
     serializeIfaceFor       :: ModuleIdent -> m String
+    loadedInterfaceFiles    :: m [FilePath]
 
 lookup' :: MonadIO m =>
     String -> (Lens' TypeInfo (Map Qualid a)) ->
@@ -299,6 +300,11 @@ serializeIfaceFor' mi = do
     inThisMod ::  Qualid -> a -> Bool
     inThisMod qid _  = qualidModule qid == Just mi
 
+loadedInterfaceFiles' :: Monad m => TypeInfoT m [FilePath]
+loadedInterfaceFiles' = TypeInfoT $ do
+    m <- use loadStatus
+    return $ [ fp | Loaded fp <- M.elems m ]
+
 instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
     isProcessedModule       mi = TypeInfoT $ processedModules %= S.insert mi
 
@@ -316,7 +322,8 @@ instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
     storeClassDefn         = store' classDefns
     storeDefaultMethods    = store' defaultMethods
 
-    serializeIfaceFor = serializeIfaceFor'
+    serializeIfaceFor    = serializeIfaceFor'
+    loadedInterfaceFiles = loadedInterfaceFiles'
 
 -- | Interface search paths
 type TypeInfoConfig = [FilePath]
@@ -352,7 +359,8 @@ instance TypeInfoMonad m => TypeInfoMonad (ReaderT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m   = lift $ serializeIfaceFor m
+    loadedInterfaceFiles  = lift $ loadedInterfaceFiles
 
 instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -371,7 +379,8 @@ instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m  = lift $ serializeIfaceFor m
+    loadedInterfaceFiles = lift $ loadedInterfaceFiles
 
 instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -390,7 +399,8 @@ instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m  = lift $ serializeIfaceFor m
+    loadedInterfaceFiles = lift $ loadedInterfaceFiles
 
 instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -409,7 +419,8 @@ instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m  = lift $ serializeIfaceFor m
+    loadedInterfaceFiles = lift $ loadedInterfaceFiles
 
 instance GhcMonad m => GhcMonad (TypeInfoT m) where
   getSession = lift   getSession

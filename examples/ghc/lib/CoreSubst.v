@@ -34,6 +34,8 @@ Inductive Subst : Type
      IdSubstEnv -> CoreType.TvSubstEnv -> CoreType.CvSubstEnv -> Subst.
 (* Converted value declarations: *)
 
+(* Skipping instance Outputable__Subst of class Outputable *)
+
 Axiom substUnfoldingSC : Subst -> CoreSyn.Unfolding -> CoreSyn.Unfolding.
 
 Axiom substBindSC : Subst ->

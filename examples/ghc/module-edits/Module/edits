@@ -19,6 +19,10 @@ skip Module.renameHoleModule
 skip Module.renameHoleUnitId
 skip Module.indefModuleToModule
 
+# Avoid dependency on Config
+skip Module.integerUnitId
+skip Module.wiredInUnitIds
+
 # IO.FilePath
 skip Module.addBootSuffix
 skip Module.addBootSuffix_maybe
@@ -42,7 +46,7 @@ skip Module.parseModuleId
 skip Module.parseUnitId
 skip Module.parseModSubst
 
-# Lets skipp stuff related to fingerprintso
+# Lets skip stuff related to fingerprints
 skip Module.fingerprintByteString
 skip Module.fingerprintUnitId
 skip Module.rawHashUnitId

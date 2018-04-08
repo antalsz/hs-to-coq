@@ -100,32 +100,19 @@ Local Definition NamedThing__GenLocated_getName {inst_e} {inst_l} `{NamedThing
    : (SrcLoc.GenLocated inst_l inst_e) -> Name :=
   getName GHC.Base.∘ SrcLoc.unLoc.
 
-(* Translating `instance NFData__Name' failed: OOPS! Cannot find information for
-   class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__Name of class NFData *)
 
-(* Translating `instance HasOccName__Name' failed: OOPS! Cannot find information
-   for class Qualified "OccName" "HasOccName" unsupported *)
+(* Skipping instance Data__Name of class Data *)
 
-(* Translating `instance Uniquable__Name' failed: OOPS! Cannot find information
-   for class Qualified "Unique" "Uniquable" unsupported *)
+(* Skipping instance Binary__Name of class Binary *)
 
-(* Translating `instance Data__Name' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Outputable__Name of class Outputable *)
 
-(* Translating `instance Binary__Name' failed: using a record pattern for the
-   unknown constructor `UserData' unsupported *)
+(* Skipping instance OutputableBndr__Name of class OutputableBndr *)
 
-(* Translating `instance Outputable__Name' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__NameSort of class Outputable *)
 
-(* Translating `instance OutputableBndr__Name' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
-
-(* Translating `instance Outputable__NameSort' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
-
-(* Translating `instance NFData__NameSort' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__NameSort of class NFData *)
 
 Definition cmpName : Name -> Name -> comparison :=
   fun n1 n2 => Unique.nonDetCmpUnique (n_uniq n1) (n_uniq n2).
@@ -354,6 +341,12 @@ Definition isTyConName : Name -> bool :=
 Definition isDataConName : Name -> bool :=
   fun name => OccName.isDataOcc (nameOccName name).
 
+Local Definition HasOccName__Name_occName : Name -> OccName.OccName :=
+  nameOccName.
+
+Program Instance HasOccName__Name : OccName.HasOccName Name :=
+  fun _ k => k {| OccName.occName__ := HasOccName__Name_occName |}.
+
 Local Definition NamedThing__GenLocated_getOccName {inst_e} {inst_l}
   `{NamedThing inst_e}
    : (SrcLoc.GenLocated inst_l inst_e) -> OccName.OccName :=
@@ -402,6 +395,12 @@ Definition getSrcSpan {a} `{NamedThing a} : a -> SrcLoc.SrcSpan :=
 
 Definition nameUnique : Name -> Unique.Unique :=
   fun name => n_uniq name.
+
+Local Definition Uniquable__Name_getUnique : Name -> Unique.Unique :=
+  nameUnique.
+
+Program Instance Uniquable__Name : Unique.Uniquable Name :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__Name_getUnique |}.
 
 Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
   fun name loc =>
@@ -455,10 +454,11 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
      GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
      Maybes.orElse Module.Module Module.UnitId Module.isInteractiveModule
      Module.moduleName Module.moduleNameColons Module.moduleStableString
-     Module.moduleUnitId Module.stableModuleCmp OccName.OccName OccName.isDataOcc
-     OccName.isTcOcc OccName.isTvOcc OccName.isValOcc OccName.isVarOcc
-     OccName.mkTyVarOccFS OccName.mkVarOcc OccName.mkVarOccFS OccName.occNameFS
-     OccName.occNameString Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan
-     SrcLoc.noSrcSpan SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Unique
-     Unique.nonDetCmpUnique Util.thenCmp
+     Module.moduleUnitId Module.stableModuleCmp OccName.HasOccName OccName.OccName
+     OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc OccName.isValOcc
+     OccName.isVarOcc OccName.mkTyVarOccFS OccName.mkVarOcc OccName.mkVarOccFS
+     OccName.occNameFS OccName.occNameString OccName.occName__ Panic.panic
+     SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan SrcLoc.noSrcSpan
+     SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Uniquable Unique.Unique
+     Unique.getUnique__ Unique.nonDetCmpUnique Util.thenCmp
 *)

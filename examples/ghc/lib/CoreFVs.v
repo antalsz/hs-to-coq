@@ -16,6 +16,7 @@ Require Import CoreSyn.
 
 (* Converted imports: *)
 
+Require BasicTypes.
 Require CoreSyn.
 Require CoreType.
 Require Data.Foldable.
@@ -29,6 +30,9 @@ Require Maybes.
 Require Name.
 Require NameSet.
 Require Panic.
+Require TysPrim.
+Require UniqSet.
+Require Unique.
 Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -210,6 +214,33 @@ Definition exprsFreeIdsList : list CoreSyn.CoreExpr -> list CoreType.Id :=
 Definition exprs_fvs : list CoreSyn.CoreExpr -> CoreType.FV :=
   fun exprs => CoreType.mapUnionFV expr_fvs exprs.
 
+Definition stableUnfoldingFVs : CoreSyn.Unfolding -> option CoreType.FV :=
+  fun unf =>
+    let j_1__ :=
+      match unf with
+      | CoreSyn.DFunUnfolding bndrs _ args =>
+          Some (CoreType.filterFV CoreType.isLocalVar (CoreType.delFVs (CoreType.mkVarSet
+                                                                        bndrs) (exprs_fvs args)))
+      | _other => None
+      end in
+    match unf with
+    | CoreSyn.CoreUnfolding rhs src _ _ _ _ _ _ =>
+        if CoreSyn.isStableSource src : bool
+        then Some (CoreType.filterFV CoreType.isLocalVar (expr_fvs rhs)) else
+        j_1__
+    | _ => j_1__
+    end.
+
+Definition idUnfoldingFVs : CoreType.Id -> CoreType.FV :=
+  fun id =>
+    Maybes.orElse (stableUnfoldingFVs (Id.realIdUnfolding id)) CoreType.emptyFV.
+
+Definition idUnfoldingVars : CoreType.Id -> CoreType.VarSet :=
+  fun id => CoreType.fvVarSet (idUnfoldingFVs id).
+
+Definition stableUnfoldingVars : CoreSyn.Unfolding -> option CoreType.VarSet :=
+  fun unf => GHC.Base.fmap CoreType.fvVarSet (stableUnfoldingFVs unf).
+
 Definition freeVarsOf : CoreExprWithFVs -> CoreType.DIdSet :=
   fun arg_0__ => let 'pair fvs _ := arg_0__ in fvs.
 
@@ -227,10 +258,19 @@ Definition idRuleFVs : CoreType.Id -> CoreType.FV :=
 Definition idRuleVars : CoreType.Id -> CoreType.VarSet :=
   fun id => CoreType.fvVarSet (idRuleFVs id).
 
-Axiom idRuleRhsVars : forall {A : Type}, A.
+Definition bndrRuleAndUnfoldingFVs : CoreType.Id -> CoreType.FV :=
+  fun id =>
+    if CoreType.isId id : bool
+    then CoreType.unionFV (idRuleFVs id) (idUnfoldingFVs id) else
+    CoreType.emptyFV.
 
-(* Translating `idRuleRhsVars' failed: using a record pattern for the unknown
-   constructor `Rule' unsupported *)
+Definition bndrRuleAndUnfoldingVarsDSet : CoreType.Id -> CoreType.DVarSet :=
+  fun id => CoreType.fvDVarSet (bndrRuleAndUnfoldingFVs id).
+
+Definition rhs_fvs : (CoreType.Id * CoreSyn.CoreExpr)%type -> CoreType.FV :=
+  fun arg_0__ =>
+    let 'pair bndr rhs := arg_0__ in
+    CoreType.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
 
 Definition noFVs : CoreType.VarSet :=
   CoreType.emptyVarSet.
@@ -247,22 +287,6 @@ Definition vectsFreeVars : list CoreSyn.CoreVect -> CoreType.VarSet :=
       | CoreSyn.VectInst _ => noFVs
       end in
   CoreType.mapUnionVarSet vectFreeVars.
-
-Axiom orphNamesOfCoAxBranch : forall {A : Type}, A.
-
-Definition orphNamesOfCoAxBranches {br}
-   : CoreType.Branches br -> NameSet.NameSet :=
-  Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ orphNamesOfCoAxBranch)
-  NameSet.emptyNameSet GHC.Base.∘
-  CoreType.fromBranches.
-
-(* Translating `orphNamesOfCoAxBranch' failed: using a record pattern for the
-   unknown constructor `CoAxBranch' unsupported *)
-
-Axiom orphNamesOfCoCon : forall {A : Type}, A.
-
-(* Translating `orphNamesOfCoCon' failed: using a record pattern for the unknown
-   constructor `CoAxiom' unsupported *)
 
 Definition orphNamesOfProv : CoreType.UnivCoProvenance -> NameSet.NameSet :=
   fun arg_0__ =>
@@ -289,7 +313,31 @@ Definition orphNamesOfTyCon : CoreType.TyCon -> NameSet.NameSet :=
                           | Some cls => NameSet.unitNameSet (Name.getName cls)
                           end).
 
-Axiom orphNamesOfType : forall {A : Type}, A.
+Definition orphNamesOfType : CoreType.Type_ -> NameSet.NameSet :=
+  fix orphNamesOfType arg_0__
+        := let 'ty := arg_0__ in
+           match CoreType.coreView ty with
+           | Some ty' => orphNamesOfType ty'
+           | _ =>
+               match arg_0__ with
+               | CoreType.TyVarTy _ => NameSet.emptyNameSet
+               | CoreType.LitTy _ => NameSet.emptyNameSet
+               | CoreType.TyConApp tycon tys =>
+                   NameSet.unionNameSet (orphNamesOfTyCon tycon) (orphNamesOfTypes tys)
+               | CoreType.ForAllTy bndr res =>
+                   NameSet.unionNameSet (orphNamesOfType (CoreType.binderKind bndr))
+                                        (orphNamesOfType res)
+               | CoreType.FunTy arg res =>
+                   NameSet.unionNameSet (NameSet.unionNameSet (NameSet.unitNameSet
+                                                               TysPrim.funTyConName) (orphNamesOfType arg))
+                                        (orphNamesOfType res)
+               | CoreType.AppTy fun_ arg =>
+                   NameSet.unionNameSet (orphNamesOfType fun_) (orphNamesOfType arg)
+               | CoreType.CastTy ty co =>
+                   NameSet.unionNameSet (orphNamesOfType ty) (orphNamesOfCo co)
+               | CoreType.CoercionTy co => orphNamesOfCo co
+               end
+           end.
 
 Definition orphNamesOfTypes : list CoreType.Type_ -> NameSet.NameSet :=
   orphNamesOfThings orphNamesOfType.
@@ -301,70 +349,21 @@ Definition orphNamesOfAxiom {br} : CoreType.CoAxiom br -> NameSet.NameSet :=
                                                                                             axiom)))) (Name.getName
                            (CoreType.coAxiomTyCon axiom)).
 
-(* Translating `orphNamesOfType' failed: using a record pattern for the unknown
-   constructor `LitTy' unsupported *)
-
-Axiom ruleFVs : forall {A : Type}, A.
-
-Definition ruleFreeVars : CoreSyn.CoreRule -> CoreType.VarSet :=
-  CoreType.fvVarSet GHC.Base.∘ ruleFVs.
-
-Definition rulesFreeVars : list CoreSyn.CoreRule -> CoreType.VarSet :=
-  fun rules => CoreType.mapUnionVarSet ruleFreeVars rules.
-
-Definition rulesFVs : list CoreSyn.CoreRule -> CoreType.FV :=
-  CoreType.mapUnionFV ruleFVs.
-
-Definition rulesFreeVarsDSet : list CoreSyn.CoreRule -> CoreType.DVarSet :=
-  fun rules => CoreType.fvDVarSet (rulesFVs rules).
-
-(* Translating `ruleFVs' failed: using a record pattern for the unknown
-   constructor `BuiltinRule' unsupported *)
-
-Axiom ruleLhsFVIds : forall {A : Type}, A.
-
-Definition ruleLhsFreeIds : CoreSyn.CoreRule -> CoreType.VarSet :=
-  CoreType.fvVarSet GHC.Base.∘ ruleLhsFVIds.
-
-Definition ruleLhsFreeIdsList : CoreSyn.CoreRule -> list CoreType.Var :=
-  CoreType.fvVarList GHC.Base.∘ ruleLhsFVIds.
-
-(* Translating `ruleLhsFVIds' failed: using a record pattern for the unknown
-   constructor `BuiltinRule' unsupported *)
-
-Axiom ruleRhsFreeVars : forall {A : Type}, A.
-
-(* Translating `ruleRhsFreeVars' failed: using a record pattern for the unknown
-   constructor `BuiltinRule' unsupported *)
-
-Axiom stableUnfoldingFVs : forall {A : Type}, A.
-
-Definition stableUnfoldingVars : CoreSyn.Unfolding -> option CoreType.VarSet :=
-  fun unf => GHC.Base.fmap CoreType.fvVarSet (stableUnfoldingFVs unf).
-
-Definition idUnfoldingFVs : CoreType.Id -> CoreType.FV :=
-  fun id =>
-    Maybes.orElse (stableUnfoldingFVs (Id.realIdUnfolding id)) CoreType.emptyFV.
-
-Definition idUnfoldingVars : CoreType.Id -> CoreType.VarSet :=
-  fun id => CoreType.fvVarSet (idUnfoldingFVs id).
-
-Definition bndrRuleAndUnfoldingFVs : CoreType.Id -> CoreType.FV :=
-  fun id =>
-    if CoreType.isId id : bool
-    then CoreType.unionFV (idRuleFVs id) (idUnfoldingFVs id) else
-    CoreType.emptyFV.
-
-Definition bndrRuleAndUnfoldingVarsDSet : CoreType.Id -> CoreType.DVarSet :=
-  fun id => CoreType.fvDVarSet (bndrRuleAndUnfoldingFVs id).
-
-Definition rhs_fvs : (CoreType.Id * CoreSyn.CoreExpr)%type -> CoreType.FV :=
+Definition orphNamesOfCoAxBranch : CoreType.CoAxBranch -> NameSet.NameSet :=
   fun arg_0__ =>
-    let 'pair bndr rhs := arg_0__ in
-    CoreType.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
+    let 'CoreType.Mk_CoAxBranch _ _ _ _ lhs rhs _ := arg_0__ in
+    NameSet.unionNameSet (orphNamesOfTypes lhs) (orphNamesOfType rhs).
 
-(* Translating `stableUnfoldingFVs' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+Definition orphNamesOfCoAxBranches {br}
+   : CoreType.Branches br -> NameSet.NameSet :=
+  Data.Foldable.foldr (NameSet.unionNameSet GHC.Base.∘ orphNamesOfCoAxBranch)
+  NameSet.emptyNameSet GHC.Base.∘
+  CoreType.fromBranches.
+
+Definition orphNamesOfCoCon {br} : CoreType.CoAxiom br -> NameSet.NameSet :=
+  fun arg_0__ =>
+    let 'CoreType.CoAxiom _ _ _ tc branches _ := arg_0__ in
+    NameSet.unionNameSet (orphNamesOfTyCon tc) (orphNamesOfCoAxBranches branches).
 
 Definition unionFVs
    : CoreType.DVarSet -> CoreType.DVarSet -> CoreType.DVarSet :=
@@ -447,28 +446,97 @@ Definition bindFreeVars : CoreSyn.CoreBind -> CoreType.VarSet :=
                                                                             rhs_fvs prs)))
     end.
 
+Definition idRuleRhsVars
+   : (BasicTypes.Activation -> bool) -> CoreType.Id -> CoreType.VarSet :=
+  fun is_active id =>
+    let get_fvs :=
+      fun arg_0__ =>
+        match arg_0__ with
+        | CoreSyn.Rule _ act fn _ bndrs _ rhs _ _ _ _ =>
+            let fvs :=
+              CoreType.fvVarSet (CoreType.filterFV CoreType.isLocalVar (addBndrs bndrs
+                                                                                 (expr_fvs rhs))) in
+            if is_active act : bool
+            then UniqSet.delOneFromUniqSet_Directly fvs (Unique.getUnique fn) else
+            noFVs
+        | _ => noFVs
+        end in
+    CoreType.mapUnionVarSet get_fvs (Id.idCoreRules id).
+
+Definition ruleFVs : CoreSyn.CoreRule -> CoreType.FV :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | CoreSyn.BuiltinRule _ _ _ _ => CoreType.emptyFV
+    | CoreSyn.Rule _ _ _do_not_include _ bndrs args rhs _ _ _ _ =>
+        CoreType.filterFV CoreType.isLocalVar (addBndrs bndrs (exprs_fvs (cons rhs
+                                                                               args)))
+    end.
+
+Definition ruleFreeVars : CoreSyn.CoreRule -> CoreType.VarSet :=
+  CoreType.fvVarSet GHC.Base.∘ ruleFVs.
+
+Definition rulesFreeVars : list CoreSyn.CoreRule -> CoreType.VarSet :=
+  fun rules => CoreType.mapUnionVarSet ruleFreeVars rules.
+
+Definition rulesFVs : list CoreSyn.CoreRule -> CoreType.FV :=
+  CoreType.mapUnionFV ruleFVs.
+
+Definition rulesFreeVarsDSet : list CoreSyn.CoreRule -> CoreType.DVarSet :=
+  fun rules => CoreType.fvDVarSet (rulesFVs rules).
+
+Definition ruleLhsFVIds : CoreSyn.CoreRule -> CoreType.FV :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | CoreSyn.BuiltinRule _ _ _ _ => CoreType.emptyFV
+    | CoreSyn.Rule _ _ _ _ bndrs args _ _ _ _ _ =>
+        CoreType.filterFV CoreType.isLocalId (addBndrs bndrs (exprs_fvs args))
+    end.
+
+Definition ruleLhsFreeIds : CoreSyn.CoreRule -> CoreType.VarSet :=
+  CoreType.fvVarSet GHC.Base.∘ ruleLhsFVIds.
+
+Definition ruleLhsFreeIdsList : CoreSyn.CoreRule -> list CoreType.Var :=
+  CoreType.fvVarList GHC.Base.∘ ruleLhsFVIds.
+
+Definition ruleRhsFreeVars : CoreSyn.CoreRule -> CoreType.VarSet :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | CoreSyn.BuiltinRule _ _ _ _ => noFVs
+    | CoreSyn.Rule _ _ _ _ bndrs _ rhs _ _ _ _ =>
+        CoreType.fvVarSet (CoreType.filterFV CoreType.isLocalVar (addBndrs bndrs
+                                                                           (expr_fvs rhs)))
+    end.
+
 (* External variables:
-     AnnAlt AnnExpr None Some andb bool exprOrphNames expr_fvs freeVars list negb
-     op_zt__ option orphNamesOfCo pair CoreSyn.AnnBind CoreSyn.AnnExpr'
-     CoreSyn.AnnNonRec CoreSyn.AnnRec CoreSyn.CoreBind CoreSyn.CoreBndr
-     CoreSyn.CoreExpr CoreSyn.CoreRule CoreSyn.CoreVect CoreSyn.NoVect CoreSyn.NonRec
-     CoreSyn.Rec CoreSyn.Unfolding CoreSyn.Vect CoreSyn.VectClass CoreSyn.VectInst
-     CoreSyn.VectType CoreType.Branches CoreType.CoAxiom CoreType.Coercion
-     CoreType.DIdSet CoreType.DTyCoVarSet CoreType.DVarSet CoreType.FV CoreType.Id
-     CoreType.IdSet CoreType.InterestingVarFun CoreType.PhantomProv
-     CoreType.PluginProv CoreType.ProofIrrelProv CoreType.TyCoVarSet CoreType.TyCon
+     AnnAlt AnnExpr None Some andb bool cons exprOrphNames expr_fvs freeVars list
+     negb op_zt__ option orphNamesOfCo orphNamesOfTypes pair BasicTypes.Activation
+     CoreSyn.AnnBind CoreSyn.AnnExpr' CoreSyn.AnnNonRec CoreSyn.AnnRec
+     CoreSyn.BuiltinRule CoreSyn.CoreBind CoreSyn.CoreBndr CoreSyn.CoreExpr
+     CoreSyn.CoreRule CoreSyn.CoreUnfolding CoreSyn.CoreVect CoreSyn.DFunUnfolding
+     CoreSyn.NoVect CoreSyn.NonRec CoreSyn.Rec CoreSyn.Rule CoreSyn.Unfolding
+     CoreSyn.Vect CoreSyn.VectClass CoreSyn.VectInst CoreSyn.VectType
+     CoreSyn.isStableSource CoreType.AppTy CoreType.Branches CoreType.CastTy
+     CoreType.CoAxBranch CoreType.CoAxiom CoreType.Coercion CoreType.CoercionTy
+     CoreType.DIdSet CoreType.DTyCoVarSet CoreType.DVarSet CoreType.FV
+     CoreType.ForAllTy CoreType.FunTy CoreType.Id CoreType.IdSet
+     CoreType.InterestingVarFun CoreType.LitTy CoreType.Mk_CoAxBranch
+     CoreType.PhantomProv CoreType.PluginProv CoreType.ProofIrrelProv
+     CoreType.TyCoVarSet CoreType.TyCon CoreType.TyConApp CoreType.TyVarTy
      CoreType.Type_ CoreType.UnivCoProvenance CoreType.UnsafeCoerceProv CoreType.Var
-     CoreType.VarSet CoreType.coAxBranchLHS CoreType.coAxiomBranches
-     CoreType.coAxiomTyCon CoreType.dVarSetElems CoreType.delDVarSet CoreType.delFV
+     CoreType.VarSet CoreType.binderKind CoreType.coAxBranchLHS
+     CoreType.coAxiomBranches CoreType.coAxiomTyCon CoreType.coreView
+     CoreType.dVarSetElems CoreType.delDVarSet CoreType.delFV CoreType.delFVs
      CoreType.emptyFV CoreType.emptyVarSet CoreType.filterFV CoreType.fromBranches
      CoreType.fvDVarSet CoreType.fvVarList CoreType.fvVarSet CoreType.isId
      CoreType.isLocalId CoreType.isLocalVar CoreType.mapUnionFV
-     CoreType.mapUnionVarSet CoreType.mkFVs CoreType.tyCoFVsOfType
+     CoreType.mapUnionVarSet CoreType.mkFVs CoreType.mkVarSet CoreType.tyCoFVsOfType
      CoreType.tyConClass_maybe CoreType.unionDVarSet CoreType.unionDVarSets
      CoreType.unionFV CoreType.unitDVarSet CoreType.varType Data.Foldable.concatMap
      Data.Foldable.foldr Data.Tuple.fst GHC.Base.fmap GHC.Base.map
      GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
-     Id.idSpecialisation Id.realIdUnfolding IdInfo2.ruleInfoFreeVars Maybes.orElse
-     Name.getName NameSet.NameSet NameSet.emptyNameSet NameSet.extendNameSet
-     NameSet.unionNameSet NameSet.unitNameSet Panic.assertPanic Util.debugIsOn
+     Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding IdInfo2.ruleInfoFreeVars
+     Maybes.orElse Name.getName NameSet.NameSet NameSet.emptyNameSet
+     NameSet.extendNameSet NameSet.unionNameSet NameSet.unitNameSet Panic.assertPanic
+     TysPrim.funTyConName UniqSet.delOneFromUniqSet_Directly Unique.getUnique
+     Util.debugIsOn
 *)

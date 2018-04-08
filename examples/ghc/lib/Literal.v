@@ -66,14 +66,11 @@ Parameter inCharRange : GHC.Char.Char -> bool.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Binary__Literal' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__Literal of class Binary *)
 
-(* Translating `instance Outputable__Literal' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Literal of class Outputable *)
 
-(* Translating `instance Data__Literal' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Literal of class Data *)
 
 Definition absentLiteralOf : CoreType.TyCon -> option Literal :=
   fun tc => UniqFM.lookupUFM absent_lits (CoreType.tyConName tc).

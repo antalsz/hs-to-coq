@@ -37,8 +37,7 @@ Instance Unpeel_UniqSet ele
 
 (* Skipping instance Eq___UniqSet *)
 
-(* Translating `instance Outputable__UniqSet' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UniqSet of class Outputable *)
 
 Local Definition Monoid__UniqSet_mappend {inst_a}
    : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
@@ -64,8 +63,7 @@ Program Instance Monoid__UniqSet {a} : GHC.Base.Monoid (UniqSet a) :=
          GHC.Base.mconcat__ := Monoid__UniqSet_mconcat ;
          GHC.Base.mempty__ := Monoid__UniqSet_mempty |}.
 
-(* Translating `instance Data__UniqSet' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__UniqSet of class Data *)
 
 Definition addOneToUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> a -> UniqSet a :=

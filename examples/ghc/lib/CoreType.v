@@ -42,6 +42,7 @@ Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
 Require Name.
+Require OccName.
 Require Pair.
 Require Panic.
 Require SrcLoc.
@@ -65,7 +66,6 @@ Require Class.
 Require ConLike.
 Require DataCon.
 Require DynFlags.
-Require OccName.
 Require UniqSet.
 Require UniqSupply.
 Require Constants.
@@ -1262,14 +1262,8 @@ Definition Id :=
 Definition InId :=
   Id%type.
 
-Definition InVar :=
-  Var%type.
-
 Definition JoinId :=
   Id%type.
-
-Definition KindVar :=
-  Var%type.
 
 Definition NcId :=
   Id%type.
@@ -1277,14 +1271,20 @@ Definition NcId :=
 Definition OutId :=
   Id%type.
 
+Definition TyCoVar :=
+  Id%type.
+
+Definition InVar :=
+  Var%type.
+
+Definition KindVar :=
+  Var%type.
+
 Definition OutVar :=
   Var%type.
 
 Definition TKVar :=
   Var%type.
-
-Definition TyCoVar :=
-  Id%type.
 
 Definition TyVar :=
   Var%type.
@@ -1521,30 +1521,28 @@ Definition classArity : Class.Class -> BasicTypes.Arity :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__InScopeSet' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__InScopeSet of class Outputable *)
 
-(* Translating `instance Outputable__TyVarBndr__ArgFlag__11' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Skipping instance Outputable__TyVarBndr__ArgFlag__11 of class Outputable *)
 
-(* Translating `instance Binary__TyVarBndr' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__TyVarBndr of class Binary *)
 
-(* Translating `instance Outputable__ArgFlag' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ArgFlag of class Outputable *)
 
-(* Translating `instance Binary__ArgFlag' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ArgFlag of class Binary *)
 
-(* Translating `instance Outputable__Var' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Var of class Outputable *)
 
-(* Translating `instance NamedThing__Var' failed: OOPS! Cannot find information
-   for class Qualified "Name" "NamedThing" unsupported *)
+Local Definition NamedThing__Var_getName : Var -> Name.Name :=
+  varName.
 
-(* Translating `instance Uniquable__Var' failed: OOPS! Cannot find information
-   for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition NamedThing__Var_getOccName : Var -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__Var_getName n).
+
+Program Instance NamedThing__Var : Name.NamedThing Var :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__Var_getName ;
+         Name.getOccName__ := NamedThing__Var_getOccName |}.
 
 Local Definition Eq___Var_op_zeze__ : Var -> Var -> bool :=
   fun a b => realUnique a GHC.Base.== realUnique b.
@@ -1575,17 +1573,17 @@ Local Definition Ord__Var_min : Var -> Var -> Var :=
 Local Definition Ord__Var_max : Var -> Var -> Var :=
   fun x y => if Ord__Var_op_zlze__ x y : bool then y else x.
 
-(* Translating `instance Data__Var' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Var of class Data *)
 
-(* Translating `instance HasOccName__Var' failed: OOPS! Cannot find information
-   for class Qualified "OccName" "HasOccName" unsupported *)
+Local Definition HasOccName__Var_occName : Var -> OccName.OccName :=
+  Name.nameOccName GHC.Base.∘ varName.
 
-(* Translating `instance Data__TyVarBndr' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+Program Instance HasOccName__Var : OccName.HasOccName Var :=
+  fun _ k => k {| OccName.occName__ := HasOccName__Var_occName |}.
 
-(* Translating `instance Data__ArgFlag' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__TyVarBndr of class Data *)
+
+(* Skipping instance Data__ArgFlag of class Data *)
 
 Local Definition Eq___ArgFlag_op_zeze__ : ArgFlag -> ArgFlag -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1604,8 +1602,7 @@ Program Instance Eq___ArgFlag : GHC.Base.Eq_ ArgFlag :=
     k {| GHC.Base.op_zeze____ := Eq___ArgFlag_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___ArgFlag_op_zsze__ |}.
 
-(* Translating `instance Outputable__EqRel' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__EqRel of class Outputable *)
 
 (* Translating `instance Bounded__TypeOrdering' failed: OOPS! Cannot find
    information for class Qualified "GHC.Enum" "Bounded" unsupported *)
@@ -1690,8 +1687,7 @@ Program Instance Eq___EqRel : GHC.Base.Eq_ EqRel :=
     k {| GHC.Base.op_zeze____ := Eq___EqRel_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___EqRel_op_zsze__ |}.
 
-(* Translating `instance Outputable__AlgTyConFlav' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__AlgTyConFlav of class Outputable *)
 
 Local Definition Eq___TyCon_op_zeze__ : TyCon -> TyCon -> bool :=
   fun a b => Unique.getUnique a GHC.Base.== Unique.getUnique b.
@@ -1704,44 +1700,45 @@ Program Instance Eq___TyCon : GHC.Base.Eq_ TyCon :=
     k {| GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
 
-(* Translating `instance Uniquable__TyCon' failed: OOPS! Cannot find information
-   for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__TyCon_getUnique : TyCon -> Unique.Unique :=
+  fun tc => tyConUnique tc.
 
-(* Translating `instance Outputable__TyCon' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Program Instance Uniquable__TyCon : Unique.Uniquable TyCon :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__TyCon_getUnique |}.
 
-(* Translating `instance NamedThing__TyCon' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
+(* Skipping instance Outputable__TyCon of class Outputable *)
 
-(* Translating `instance Data__TyCon' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+Local Definition NamedThing__TyCon_getName : TyCon -> Name.Name :=
+  tyConName.
 
-(* Translating `instance Outputable__TyConFlavour' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Local Definition NamedThing__TyCon_getOccName : TyCon -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__TyCon_getName n).
 
-(* Translating `instance Outputable__PrimRep' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Program Instance NamedThing__TyCon : Name.NamedThing TyCon :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__TyCon_getName ;
+         Name.getOccName__ := NamedThing__TyCon_getOccName |}.
 
-(* Translating `instance Outputable__PrimElemRep' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Data__TyCon of class Data *)
 
-(* Translating `instance Outputable__FamTyConFlav' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TyConFlavour of class Outputable *)
 
-(* Translating `instance Binary__Injectivity' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Outputable__PrimRep of class Outputable *)
 
-(* Translating `instance Outputable__TyVarBndr__TyConBndrVis__11' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Skipping instance Outputable__PrimElemRep of class Outputable *)
 
-(* Translating `instance Binary__TyConBndrVis' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Outputable__FamTyConFlav of class Outputable *)
+
+(* Skipping instance Binary__Injectivity of class Binary *)
+
+(* Skipping instance Outputable__TyVarBndr__TyConBndrVis__11 of class
+   Outputable *)
+
+(* Skipping instance Binary__TyConBndrVis of class Binary *)
 
 (* Skipping instance Eq___TyConFlavour *)
 
-(* Translating `instance Show__PrimRep' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__PrimRep of class Show *)
 
 Local Definition Eq___PrimRep_op_zeze__ : PrimRep -> PrimRep -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1769,8 +1766,7 @@ Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep :=
     k {| GHC.Base.op_zeze____ := Eq___PrimRep_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___PrimRep_op_zsze__ |}.
 
-(* Translating `instance Show__PrimElemRep' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__PrimElemRep of class Show *)
 
 Local Definition Eq___PrimElemRep_op_zeze__
    : PrimElemRep -> PrimElemRep -> bool :=
@@ -1816,50 +1812,50 @@ Program Instance Eq___Injectivity : GHC.Base.Eq_ Injectivity :=
     k {| GHC.Base.op_zeze____ := Eq___Injectivity_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Injectivity_op_zsze__ |}.
 
-(* Translating `instance Outputable__TCvSubst' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TCvSubst of class Outputable *)
 
-(* Translating `instance Outputable__TyBinder' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TyBinder of class Outputable *)
 
-(* Translating `instance Outputable__UnivCoProvenance' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UnivCoProvenance of class Outputable *)
 
-(* Translating `instance Data__CoercionHole' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__CoercionHole of class Data *)
 
-(* Translating `instance Outputable__CoercionHole' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__CoercionHole of class Outputable *)
 
-(* Translating `instance Outputable__Type_' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Type_ of class Outputable *)
 
-(* Translating `instance Outputable__Coercion' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Coercion of class Outputable *)
 
-(* Translating `instance Outputable__TyLit' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TyLit of class Outputable *)
 
-(* Translating `instance Outputable__TyThing' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TyThing of class Outputable *)
 
-(* Translating `instance NamedThing__TyThing' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
+Local Definition NamedThing__TyThing_getName : TyThing -> Name.Name :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | AnId id => Name.getName id
+    | ATyCon tc => Name.getName tc
+    | ACoAxiom cc => Name.getName cc
+    | AConLike cl => ConLike.conLikeName cl
+    end.
 
-(* Translating `instance Data__TyBinder' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+Local Definition NamedThing__TyThing_getOccName : TyThing -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__TyThing_getName n).
 
-(* Translating `instance Data__Type_' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+Program Instance NamedThing__TyThing : Name.NamedThing TyThing :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__TyThing_getName ;
+         Name.getOccName__ := NamedThing__TyThing_getOccName |}.
 
-(* Translating `instance Data__UnivCoProvenance' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__TyBinder of class Data *)
 
-(* Translating `instance Data__Coercion' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Type_ of class Data *)
 
-(* Translating `instance Data__TyLit' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__UnivCoProvenance of class Data *)
+
+(* Skipping instance Data__Coercion of class Data *)
+
+(* Skipping instance Data__TyLit of class Data *)
 
 Local Definition Ord__TyLit_compare : TyLit -> TyLit -> comparison :=
   fun a b =>
@@ -1932,14 +1928,16 @@ Program Instance Eq___TyLit : GHC.Base.Eq_ TyLit :=
     k {| GHC.Base.op_zeze____ := Eq___TyLit_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TyLit_op_zsze__ |}.
 
-(* Translating `instance Outputable__LiftingContext' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__LiftingContext of class Outputable *)
 
-(* Translating `instance Data__CoAxiomRule' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__CoAxiomRule of class Data *)
 
-(* Translating `instance Uniquable__CoAxiomRule' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__CoAxiomRule_getUnique
+   : CoAxiomRule -> Unique.Unique :=
+  Unique.getUnique GHC.Base.∘ coaxrName.
+
+Program Instance Uniquable__CoAxiomRule : Unique.Uniquable CoAxiomRule :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__CoAxiomRule_getUnique |}.
 
 Local Definition Eq___CoAxiomRule_op_zeze__
    : CoAxiomRule -> CoAxiomRule -> bool :=
@@ -1992,8 +1990,7 @@ Program Instance Ord__CoAxiomRule : GHC.Base.Ord CoAxiomRule :=
          GHC.Base.max__ := Ord__CoAxiomRule_max ;
          GHC.Base.min__ := Ord__CoAxiomRule_min |}.
 
-(* Translating `instance Outputable__CoAxiomRule' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__CoAxiomRule of class Outputable *)
 
 Local Definition Eq___CoAxiom_op_zeze__ {inst_br}
    : (CoAxiom inst_br) -> (CoAxiom inst_br) -> bool :=
@@ -2008,32 +2005,39 @@ Program Instance Eq___CoAxiom {br} : GHC.Base.Eq_ (CoAxiom br) :=
     k {| GHC.Base.op_zeze____ := Eq___CoAxiom_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___CoAxiom_op_zsze__ |}.
 
-(* Translating `instance Uniquable__CoAxiom' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__CoAxiom_getUnique {inst_br}
+   : (CoAxiom inst_br) -> Unique.Unique :=
+  co_ax_unique.
 
-(* Translating `instance Outputable__CoAxiom' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Program Instance Uniquable__CoAxiom {br} : Unique.Uniquable (CoAxiom br) :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__CoAxiom_getUnique |}.
 
-(* Translating `instance NamedThing__CoAxiom' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
+(* Skipping instance Outputable__CoAxiom of class Outputable *)
 
-(* Translating `instance Data__CoAxiom' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+Local Definition NamedThing__CoAxiom_getName {inst_br}
+   : (CoAxiom inst_br) -> Name.Name :=
+  co_ax_name.
 
-(* Translating `instance Outputable__CoAxBranch' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Local Definition NamedThing__CoAxiom_getOccName {inst_br}
+   : (CoAxiom inst_br) -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__CoAxiom_getName n).
 
-(* Translating `instance Outputable__Role' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+Program Instance NamedThing__CoAxiom {br} : Name.NamedThing (CoAxiom br) :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__CoAxiom_getName ;
+         Name.getOccName__ := NamedThing__CoAxiom_getOccName |}.
 
-(* Translating `instance Binary__Role' failed: OOPS! Cannot find information for
-   class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Data__CoAxiom of class Data *)
 
-(* Translating `instance Data__CoAxBranch' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Outputable__CoAxBranch of class Outputable *)
 
-(* Translating `instance Data__Role' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Outputable__Role of class Outputable *)
+
+(* Skipping instance Binary__Role of class Binary *)
+
+(* Skipping instance Data__CoAxBranch of class Data *)
+
+(* Skipping instance Data__Role of class Data *)
 
 (* Skipping instance Ord__Role *)
 
@@ -3101,6 +3105,12 @@ Program Instance Ord__Var : GHC.Base.Ord Var :=
          GHC.Base.compare__ := Ord__Var_compare ;
          GHC.Base.max__ := Ord__Var_max ;
          GHC.Base.min__ := Ord__Var_min |}.
+
+Local Definition Uniquable__Var_getUnique : Var -> Unique.Unique :=
+  varUnique.
+
+Program Instance Uniquable__Var : Unique.Uniquable Var :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
 
 Definition binderRelevantType_maybe : TyBinder -> option Type_ :=
   fun arg_0__ => match arg_0__ with | Named _ => None | Anon ty => Some ty end.
@@ -8937,14 +8947,15 @@ Definition unbranched : CoAxBranch -> Branches Unbranched :=
      BasicTypes.TupleSort BasicTypes.TyConPrec BasicTypes.TyPrec BasicTypes.isBoxed
      BasicTypes.maybeParen BasicTypes.pickLR BasicTypes.tupleSortBoxity Class.Class
      Class.classATs Class.classTyCon ConLike.ConLike ConLike.PatSynCon
-     ConLike.RealDataCon Constants.fLOAT_SIZE Constants.wORD64_SIZE
-     Control.Arrow.first Control.Arrow.second Control.Monad.foldM Control.Monad.guard
-     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.CType Core.TcTyVarDetails
-     Core.dataConExTyVars Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.all Data.Foldable.and Data.Foldable.concatMap
-     Data.Foldable.foldMap Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.foldr1 Data.Foldable.length Data.Foldable.null Data.Foldable.sum
-     Data.Function.on Data.Functor.op_zlzdzg__ Data.Maybe.isJust Data.Maybe.mapMaybe
+     ConLike.RealDataCon ConLike.conLikeName Constants.fLOAT_SIZE
+     Constants.wORD64_SIZE Control.Arrow.first Control.Arrow.second
+     Control.Monad.foldM Control.Monad.guard Coq.Init.Datatypes.app
+     Coq.Lists.List.flat_map Core.CType Core.TcTyVarDetails Core.dataConExTyVars
+     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.all
+     Data.Foldable.and Data.Foldable.concatMap Data.Foldable.foldMap
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.foldr1
+     Data.Foldable.length Data.Foldable.null Data.Foldable.sum Data.Function.on
+     Data.Functor.op_zlzdzg__ Data.Maybe.isJust Data.Maybe.mapMaybe
      Data.Traversable.mapAccumL Data.Traversable.mapM Data.Traversable.sequenceA
      Data.Traversable.traverse Data.Tuple.fst Data.Tuple.snd Data.Tuple.uncurry
      DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConFullSig
@@ -8977,13 +8988,14 @@ Definition unbranched : CoAxBranch -> Branches Unbranched :=
      IfaceType.pprParendIfaceCoercion IfaceType.pprPrecIfaceType
      IfaceType.pprUserIfaceForAll Kind.isConstraintKind Kind.isKindLevPoly
      Kind.isStarKindSynonymTyCon ListSetOps.getNth Maybes.orElse Module.Module
-     Name.Name Name.getName Name.getOccName Name.isHoleName Name.isSystemName
-     Name.isWiredInName Name.mkExternalName Name.mkInternalName Name.nameModule
-     Name.nameOccName Name.nameSrcSpan Name.nameUnique Name.setNameUnique
-     Name.tidyNameOcc NameEnv.NameEnv NameEnv.emptyNameEnv NameEnv.extendNameEnv
-     NameEnv.lookupNameEnv OccName.OccName OccName.TidyOccEnv
-     OccName.avoidClashesOccEnv OccName.emptyTidyOccEnv OccName.initTidyOccEnv
-     OccName.isTcOcc OccName.mkTyConRepOcc OccName.mkTyVarOcc OccName.occNameString
+     Name.Name Name.NamedThing Name.getName Name.getName__ Name.getOccName
+     Name.getOccName__ Name.isHoleName Name.isSystemName Name.isWiredInName
+     Name.mkExternalName Name.mkInternalName Name.nameModule Name.nameOccName
+     Name.nameSrcSpan Name.nameUnique Name.setNameUnique Name.tidyNameOcc
+     NameEnv.NameEnv NameEnv.emptyNameEnv NameEnv.extendNameEnv NameEnv.lookupNameEnv
+     OccName.HasOccName OccName.OccName OccName.TidyOccEnv OccName.avoidClashesOccEnv
+     OccName.emptyTidyOccEnv OccName.initTidyOccEnv OccName.isTcOcc
+     OccName.mkTyConRepOcc OccName.mkTyVarOcc OccName.occNameString OccName.occName__
      OccName.tidyOccName Outputable.PprStyle Outputable.arrow
      Outputable.assertPprPanic Outputable.dcolon Outputable.debugStyle Outputable.dot
      Outputable.dumpStyle Outputable.equals Outputable.getPprStyle Outputable.hang
@@ -9044,11 +9056,11 @@ Definition unbranched : CoAxBranch -> Branches Unbranched :=
      UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
      UniqSet.unsafeUFMToUniqSet UniqSupply.UniqSupply UniqSupply.takeUniqFromSupply
      Unique.Uniquable Unique.Unique Unique.dataConRepNameUnique Unique.deriveUnique
-     Unique.getKey Unique.getUnique Unique.hasKey Unique.mkUniqueGrimily
-     Unique.nonDetCmpUnique Unique.tyConRepNameUnique Util.HasDebugCallStack
-     Util.capitalise Util.chkAppend Util.debugIsOn Util.equalLength Util.filterByList
-     Util.foldl2 Util.isEqual Util.leLength Util.lengthAtLeast Util.lengthAtMost
-     Util.lengthExceeds Util.lengthIs Util.listLengthCmp Util.neLength
-     Util.op_zlzbzbzg__ Util.partitionWith Util.seqList Util.snocView
-     Util.splitAtList Util.thenCmp Util.zipEqual
+     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.hasKey
+     Unique.mkUniqueGrimily Unique.nonDetCmpUnique Unique.tyConRepNameUnique
+     Util.HasDebugCallStack Util.capitalise Util.chkAppend Util.debugIsOn
+     Util.equalLength Util.filterByList Util.foldl2 Util.isEqual Util.leLength
+     Util.lengthAtLeast Util.lengthAtMost Util.lengthExceeds Util.lengthIs
+     Util.listLengthCmp Util.neLength Util.op_zlzbzbzg__ Util.partitionWith
+     Util.seqList Util.snocView Util.splitAtList Util.thenCmp Util.zipEqual
 *)

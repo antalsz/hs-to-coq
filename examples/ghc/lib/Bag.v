@@ -43,9 +43,9 @@ Arguments TwoBags {_} _ _.
 Arguments ListBag {_} _.
 (* Converted value declarations: *)
 
-(* Skipping instance Outputable__Bag *)
+(* Skipping instance Outputable__Bag of class Outputable *)
 
-(* Skipping instance Data__Bag *)
+(* Skipping instance Data__Bag of class Data *)
 
 (* Skipping instance Foldable__Bag *)
 
@@ -231,12 +231,12 @@ Local Definition Functor__Bag_fmap
   fun {a} {b} => mapBag.
 
 Local Definition Functor__Bag_op_zlzd__ : forall {a} {b}, a -> Bag b -> Bag a :=
-  fun {a} {b} => fun x => Functor__Bag_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Bag_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Bag : GHC.Base.Functor Bag :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ |}.
 
 Definition mapBagM {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> m b) -> Bag a -> m (Bag b) :=

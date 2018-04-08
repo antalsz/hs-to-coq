@@ -62,12 +62,12 @@ Local Definition Functor__UniqSM_fmap
 
 Local Definition Functor__UniqSM_op_zlzd__
    : forall {a} {b}, a -> UniqSM b -> UniqSM a :=
-  fun {a} {b} => fun x => Functor__UniqSM_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__UniqSM_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__UniqSM : GHC.Base.Functor UniqSM :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqSM_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__UniqSM_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqSM_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqSM_op_zlzd__ |}.
 
 Local Definition Applicative__UniqSM_op_zlztzg__
    : forall {a} {b}, UniqSM (a -> b) -> UniqSM a -> UniqSM b :=
@@ -86,8 +86,7 @@ Local Definition Applicative__UniqSM_liftA2
   fun {a} {b} {c} =>
     fun f x => Applicative__UniqSM_op_zlztzg__ (GHC.Base.fmap f x).
 
-(* Translating `instance MonadFix__UniqSM' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadFix__UniqSM of class MonadFix *)
 
 Definition getUniqueSupplyM3 {m} `{MonadUnique m}
    : m (UniqSupply * UniqSupply * UniqSupply)%type :=
@@ -195,9 +194,9 @@ Local Definition Applicative__UniqSM_op_ztzg__
 
 Program Instance Applicative__UniqSM : GHC.Base.Applicative UniqSM :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__UniqSM_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__UniqSM_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__UniqSM_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__UniqSM_pure |}.
 
 Local Definition Monad__UniqSM_return_ : forall {a}, a -> UniqSM a :=

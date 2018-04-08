@@ -240,32 +240,19 @@ Local Definition Ord__NDModule_max : NDModule -> NDModule -> NDModule :=
 Local Definition Ord__NDModule_min : NDModule -> NDModule -> NDModule :=
   fun x y => if Ord__NDModule_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Outputable__IndefModule' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__IndefModule of class Outputable *)
 
-(* Translating `instance Uniquable__Module' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Skipping instance Outputable__Module of class Outputable *)
 
-(* Translating `instance Outputable__Module' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Binary__Module of class Binary *)
 
-(* Translating `instance Binary__Module' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Data__Module of class Data *)
 
-(* Translating `instance Data__Module' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance NFData__Module of class NFData *)
 
-(* Translating `instance NFData__Module' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
-
-(* Translating `instance
-   DbUnitIdModuleRep__InstalledUnitId__ComponentId__UnitId__ModuleName__Module'
-   failed: type class instance head:App (App (App (App (App (Qualid (Qualified
-   "GHC.PackageDb" "DbUnitIdModuleRep")) (PosArg (Qualid (Qualified "Module"
-   "InstalledUnitId")) :| [])) (PosArg (Qualid (Qualified "Module" "ComponentId"))
-   :| [])) (PosArg (Qualid (Qualified "Module" "UnitId")) :| [])) (PosArg (Qualid
-   (Qualified "Module" "ModuleName")) :| [])) (PosArg (Qualid (Qualified "Module"
-   "Module")) :| []) unsupported *)
+(* Skipping instance
+   DbUnitIdModuleRep__InstalledUnitId__ComponentId__UnitId__ModuleName__Module of
+   class DbUnitIdModuleRep *)
 
 Local Definition Eq___IndefUnitId_op_zeze__
    : IndefUnitId -> IndefUnitId -> bool :=
@@ -318,17 +305,11 @@ Program Instance Ord__IndefUnitId : GHC.Base.Ord IndefUnitId :=
          GHC.Base.max__ := Ord__IndefUnitId_max ;
          GHC.Base.min__ := Ord__IndefUnitId_min |}.
 
-(* Translating `instance Binary__IndefUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__IndefUnitId of class Binary *)
 
-(* Translating `instance Outputable__IndefUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__IndefUnitId of class Outputable *)
 
-(* Translating `instance Show__UnitId' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
-
-(* Translating `instance Uniquable__UnitId' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Skipping instance Show__UnitId of class Show *)
 
 Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
   fun nm1 nm2 => Eq.
@@ -351,33 +332,24 @@ Local Definition Ord__UnitId_max : UnitId -> UnitId -> UnitId :=
 Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
   fun x y => if Ord__UnitId_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Data__UnitId' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__UnitId of class Data *)
 
-(* Translating `instance NFData__UnitId' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__UnitId of class NFData *)
 
-(* Translating `instance Outputable__UnitId' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UnitId of class Outputable *)
 
-(* Translating `instance Binary__UnitId' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__UnitId of class Binary *)
 
-(* Translating `instance Outputable__DefUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__DefUnitId of class Outputable *)
 
-(* Translating `instance Binary__DefUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__DefUnitId of class Binary *)
 
-(* Translating `instance Outputable__InstalledModule' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__InstalledModule of class Outputable *)
 
-(* Translating `instance Binary__InstalledUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__InstalledUnitId of class Binary *)
 
-(* Translating `instance BinaryStringRep__InstalledUnitId' failed: OOPS! Cannot
-   find information for class Qualified "GHC.PackageDb" "BinaryStringRep"
-   unsupported *)
+(* Skipping instance BinaryStringRep__InstalledUnitId of class
+   BinaryStringRep *)
 
 Local Definition Ord__InstalledUnitId_compare
    : InstalledUnitId -> InstalledUnitId -> comparison :=
@@ -407,26 +379,27 @@ Local Definition Ord__InstalledUnitId_min
    : InstalledUnitId -> InstalledUnitId -> InstalledUnitId :=
   fun x y => if Ord__InstalledUnitId_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Uniquable__InstalledUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Skipping instance Outputable__InstalledUnitId of class Outputable *)
 
-(* Translating `instance Outputable__InstalledUnitId' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance BinaryStringRep__ComponentId of class BinaryStringRep *)
 
-(* Translating `instance BinaryStringRep__ComponentId' failed: OOPS! Cannot find
-   information for class Qualified "GHC.PackageDb" "BinaryStringRep" unsupported *)
+Local Definition Uniquable__ComponentId_getUnique
+   : ComponentId -> Unique.Unique :=
+  fun arg_0__ => let 'Mk_ComponentId n := arg_0__ in Unique.getUnique n.
 
-(* Translating `instance Uniquable__ComponentId' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+Program Instance Uniquable__ComponentId : Unique.Uniquable ComponentId :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__ComponentId_getUnique |}.
 
-(* Translating `instance Outputable__ComponentId' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ComponentId of class Outputable *)
 
-(* Translating `instance Binary__ComponentId' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ComponentId of class Binary *)
 
-(* Translating `instance Uniquable__ModuleName' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__ModuleName_getUnique
+   : ModuleName -> Unique.Unique :=
+  fun arg_0__ => let 'Mk_ModuleName nm := arg_0__ in Unique.getUnique nm.
+
+Program Instance Uniquable__ModuleName : Unique.Uniquable ModuleName :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__ModuleName_getUnique |}.
 
 Local Definition Eq___ModuleName_op_zeze__ : ModuleName -> ModuleName -> bool :=
   fun nm1 nm2 => Unique.getUnique nm1 GHC.Base.== Unique.getUnique nm2.
@@ -456,30 +429,23 @@ Local Definition Ord__ModuleName_max : ModuleName -> ModuleName -> ModuleName :=
 Local Definition Ord__ModuleName_min : ModuleName -> ModuleName -> ModuleName :=
   fun x y => if Ord__ModuleName_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Outputable__ModuleName' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ModuleName of class Outputable *)
 
-(* Translating `instance Binary__ModuleName' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ModuleName of class Binary *)
 
-(* Translating `instance BinaryStringRep__ModuleName' failed: OOPS! Cannot find
-   information for class Qualified "GHC.PackageDb" "BinaryStringRep" unsupported *)
+(* Skipping instance BinaryStringRep__ModuleName of class BinaryStringRep *)
 
-(* Translating `instance Data__ModuleName' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__ModuleName of class Data *)
 
-(* Translating `instance NFData__ModuleName' failed: OOPS! Cannot find
-   information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__ModuleName of class NFData *)
 
-(* Translating `instance Outputable__ModLocation' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ModLocation of class Outputable *)
 
 (* Skipping instance Ord__ComponentId *)
 
 (* Skipping instance Eq___ComponentId *)
 
-(* Translating `instance Show__ModLocation' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__ModLocation of class Show *)
 
 Definition emptyModuleSet : ModuleSet :=
   Data.Set.Internal.empty.
@@ -582,6 +548,12 @@ Definition unitIdKey : UnitId -> Unique.Unique :=
     | IndefiniteUnitId x => indefUnitIdKey x
     | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdKey x
     end.
+
+Local Definition Uniquable__UnitId_getUnique : UnitId -> Unique.Unique :=
+  unitIdKey.
+
+Program Instance Uniquable__UnitId : Unique.Uniquable UnitId :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__UnitId_getUnique |}.
 
 Local Definition Eq___UnitId_op_zeze__ : UnitId -> UnitId -> bool :=
   fun uid1 uid2 => unitIdKey uid1 GHC.Base.== unitIdKey uid2.
@@ -831,6 +803,14 @@ Program Instance Eq___IndefModule : GHC.Base.Eq_ IndefModule :=
     k {| GHC.Base.op_zeze____ := Eq___IndefModule_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___IndefModule_op_zsze__ |}.
 
+Local Definition Uniquable__InstalledUnitId_getUnique
+   : InstalledUnitId -> Unique.Unique :=
+  installedUnitIdKey.
+
+Program Instance Uniquable__InstalledUnitId
+   : Unique.Uniquable InstalledUnitId :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__InstalledUnitId_getUnique |}.
+
 Local Definition Eq___InstalledUnitId_op_zeze__
    : InstalledUnitId -> InstalledUnitId -> bool :=
   fun uid1 uid2 => installedUnitIdKey uid1 GHC.Base.== installedUnitIdKey uid2.
@@ -1032,15 +1012,6 @@ Program Instance Ord__IndefModule : GHC.Base.Ord IndefModule :=
 Definition installedUnitIdString : InstalledUnitId -> GHC.Base.String :=
   FastString.unpackFS GHC.Base.∘ installedUnitIdFS.
 
-Definition integerUnitId : UnitId :=
-  default.
-
-Definition wiredInUnitIds : list UnitId :=
-  cons primUnitId (cons integerUnitId (cons baseUnitId (cons rtsUnitId (cons
-                                                              thUnitId (cons thisGhcUnitId (cons dphSeqUnitId (cons
-                                                                                                  dphParUnitId
-                                                                                                  nil))))))).
-
 Definition intersectModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
   GHC.Prim.coerce Data.Set.Internal.intersection.
 
@@ -1188,6 +1159,14 @@ Definition stableModuleCmp : Module -> Module -> comparison :=
         Util.thenCmp (stableUnitIdCmp p1 p2) (stableModuleNameCmp n1 n2)
     end.
 
+Local Definition Uniquable__Module_getUnique : Module -> Unique.Unique :=
+  fun arg_0__ =>
+    let 'Mk_Module p n := arg_0__ in
+    Unique.getUnique (FastString.appendFS (unitIdFS p) (moduleNameFS n)).
+
+Program Instance Uniquable__Module : Unique.Uniquable Module :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__Module_getUnique |}.
+
 Definition unitIdFreeHoles : UnitId -> UniqDSet.UniqDSet ModuleName :=
   fun arg_0__ =>
     match arg_0__ with
@@ -1213,30 +1192,30 @@ Definition unitModuleSet : Module -> ModuleSet :=
   GHC.Prim.coerce Data.Set.Internal.singleton.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons default false list negb nil op_zt__
-     option pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     Data.Foldable.foldl' Data.Map.Internal.Map Data.Map.Internal.delete
-     Data.Map.Internal.empty Data.Map.Internal.filterWithKey
-     Data.Map.Internal.findWithDefault Data.Map.Internal.fromList
-     Data.Map.Internal.insert Data.Map.Internal.insertWith Data.Map.Internal.keys
-     Data.Map.Internal.lookup Data.Map.Internal.mapWithKey Data.Map.Internal.member
-     Data.Map.Internal.null Data.Map.Internal.singleton Data.Map.Internal.toList
-     Data.Map.Internal.union Data.Map.Internal.unionWith Data.OldList.sort
-     Data.OldList.sortBy Data.Ord.comparing Data.Set.Internal.Set_
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option
+     pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Foldable.foldl'
+     Data.Map.Internal.Map Data.Map.Internal.delete Data.Map.Internal.empty
+     Data.Map.Internal.filterWithKey Data.Map.Internal.findWithDefault
+     Data.Map.Internal.fromList Data.Map.Internal.insert Data.Map.Internal.insertWith
+     Data.Map.Internal.keys Data.Map.Internal.lookup Data.Map.Internal.mapWithKey
+     Data.Map.Internal.member Data.Map.Internal.null Data.Map.Internal.singleton
+     Data.Map.Internal.toList Data.Map.Internal.union Data.Map.Internal.unionWith
+     Data.OldList.sort Data.OldList.sortBy Data.Ord.comparing Data.Set.Internal.Set_
      Data.Set.Internal.delete Data.Set.Internal.difference Data.Set.Internal.empty
      Data.Set.Internal.fromList Data.Set.Internal.insert
      Data.Set.Internal.intersection Data.Set.Internal.member
      Data.Set.Internal.singleton Data.Set.Internal.toList Data.Set.Internal.union
-     Data.Tuple.fst Data.Tuple.snd FastString.FastString FastString.fsLit
-     FastString.mkFastString FastString.unpackFS FiniteMap.deleteList
-     FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.flip GHC.Base.fmap
-     GHC.Base.map GHC.Base.max GHC.Base.max__ GHC.Base.min GHC.Base.min__
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
-     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zl__
-     GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Prim.coerce Panic.noString UniqDFM.UniqDFM
-     UniqDSet.UniqDSet UniqDSet.emptyUniqDSet UniqDSet.isEmptyUniqDSet
-     UniqDSet.unitUniqDSet UniqFM.UniqFM Unique.Unique Unique.getUnique
-     Unique.nonDetCmpUnique Util.thenCmp
+     Data.Tuple.fst Data.Tuple.snd FastString.FastString FastString.appendFS
+     FastString.fsLit FastString.mkFastString FastString.unpackFS
+     FiniteMap.deleteList FiniteMap.insertList FiniteMap.insertListWith GHC.Base.Eq_
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.flip
+     GHC.Base.fmap GHC.Base.map GHC.Base.max GHC.Base.max__ GHC.Base.min
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Prim.coerce Panic.noString
+     UniqDFM.UniqDFM UniqDSet.UniqDSet UniqDSet.emptyUniqDSet
+     UniqDSet.isEmptyUniqDSet UniqDSet.unitUniqDSet UniqFM.UniqFM Unique.Uniquable
+     Unique.Unique Unique.getUnique Unique.getUnique__ Unique.nonDetCmpUnique
+     Util.thenCmp
 *)

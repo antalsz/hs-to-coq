@@ -41,8 +41,7 @@ Instance Unpeel_UniqFM ele
    : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => let 'UFM y := x in y) UFM.
 
-(* Translating `instance Outputable__UniqFM' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UniqFM of class Outputable *)
 
 Local Definition Functor__UniqFM_fmap
    : forall {a} {b}, (a -> b) -> UniqFM a -> UniqFM b :=
@@ -54,8 +53,8 @@ Local Definition Functor__UniqFM_op_zlzd__
 
 Program Instance Functor__UniqFM : GHC.Base.Functor UniqFM :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqFM_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__UniqFM_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqFM_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqFM_op_zlzd__ |}.
 
 Local Definition Eq___UniqFM_op_zeze__ {inst_ele} `{GHC.Base.Eq_ inst_ele}
    : UniqFM inst_ele -> UniqFM inst_ele -> bool :=
@@ -71,8 +70,7 @@ Program Instance Eq___UniqFM {ele} `{GHC.Base.Eq_ ele}
     k {| GHC.Base.op_zeze____ := Eq___UniqFM_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UniqFM_op_zsze__ |}.
 
-(* Translating `instance Data__UniqFM' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__UniqFM of class Data *)
 
 Definition addToUFM {key} {elt} `{Unique.Uniquable key}
    : UniqFM elt -> key -> elt -> UniqFM elt :=

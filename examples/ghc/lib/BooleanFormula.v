@@ -171,11 +171,9 @@ Local Definition BooleanFormula_foldr
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__BooleanFormula' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__BooleanFormula of class Outputable *)
 
-(* Translating `instance Binary__BooleanFormula' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__BooleanFormula of class Binary *)
 
 Local Definition Traversable__BooleanFormula_traverse {f} {a} {b} `{_
    : GHC.Base.Applicative f}
@@ -208,30 +206,18 @@ Local Definition Foldable__BooleanFormula_foldMap {m} {a} `{_
 Local Definition Foldable__BooleanFormula_foldl
    : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
   fun {b} {a} =>
-    fun arg_19__ arg_20__ arg_21__ =>
-      match arg_19__, arg_20__, arg_21__ with
-      | f, z, t =>
-          Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
-                                          (Foldable__BooleanFormula_foldMap (Coq.Program.Basics.compose
-                                                                             Data.SemigroupInternal.Mk_Dual
-                                                                             (Coq.Program.Basics.compose
-                                                                              Data.SemigroupInternal.Mk_Endo
-                                                                              (GHC.Base.flip f))) t)) z
-      end.
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Foldable__BooleanFormula_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                         (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                          GHC.Base.flip f)) t)) z.
 
 Local Definition Foldable__BooleanFormula_foldr'
    : forall {a} {b}, (a -> b -> b) -> b -> BooleanFormula a -> b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ arg_11__ =>
-      match arg_9__, arg_10__, arg_11__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_12__ arg_13__ arg_14__ =>
-              match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => k GHC.Base.$! f x z
-              end in
-          Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__BooleanFormula_product
    : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
@@ -249,16 +235,6 @@ Local Definition Foldable__BooleanFormula_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, BooleanFormula m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__BooleanFormula_foldMap GHC.Base.id.
 
-Local Definition Foldable__BooleanFormula_elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> BooleanFormula a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
-                                                             (Foldable__BooleanFormula_foldMap
-                                                              (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Any
-                                                                                          p))) _GHC.Base.==_.
-
 Local Definition Foldable__BooleanFormula_foldr {a} {b}
    : (a -> b -> b) -> b -> BooleanFormula a -> b :=
   BooleanFormula_foldr.
@@ -266,32 +242,21 @@ Local Definition Foldable__BooleanFormula_foldr {a} {b}
 Local Definition Foldable__BooleanFormula_toList
    : forall {a}, BooleanFormula a -> list a :=
   fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__BooleanFormula_foldr c n t
-                        end).
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__BooleanFormula_foldr c n t)).
 
 Local Definition Foldable__BooleanFormula_foldl'
    : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
   fun {b} {a} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__, arg_25__, arg_26__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_27__ arg_28__ arg_29__ =>
-              match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => k GHC.Base.$! f z x
-              end in
-          Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__BooleanFormula_length
    : forall {a}, BooleanFormula a -> GHC.Num.Int :=
   fun {a} =>
-    Foldable__BooleanFormula_foldl' (fun arg_64__ arg_65__ =>
-                                       match arg_64__, arg_65__ with
+    Foldable__BooleanFormula_foldl' (fun arg_0__ arg_1__ =>
+                                       match arg_0__, arg_1__ with
                                        | c, _ => c GHC.Num.+ #1
                                        end) #0.
 
@@ -308,9 +273,7 @@ Fixpoint Foldable__BooleanFormula_null {a} (arg_0__ : BooleanFormula a) : bool
 Program Instance Foldable__BooleanFormula
    : Data.Foldable.Foldable BooleanFormula :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__BooleanFormula_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
            Foldable__BooleanFormula_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__BooleanFormula_foldMap ;
@@ -344,8 +307,8 @@ Local Definition Functor__BooleanFormula_fmap {a} {b}
 
 Program Instance Functor__BooleanFormula : GHC.Base.Functor BooleanFormula :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__BooleanFormula_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__BooleanFormula_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__BooleanFormula_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__BooleanFormula_op_zlzd__ |}.
 
 Program Instance Traversable__BooleanFormula
    : Data.Traversable.Traversable BooleanFormula :=
@@ -359,8 +322,7 @@ Program Instance Traversable__BooleanFormula
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__BooleanFormula_traverse |}.
 
-(* Translating `instance Data__BooleanFormula' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__BooleanFormula of class Data *)
 
 Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
@@ -548,22 +510,21 @@ Definition mkVar {a} : a -> BooleanFormula a :=
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
      BooleanFormula_traverse LBooleanFormula None Some bool cons false list negb nil
      option true Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any Data.Foldable.elem__
+     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any
      Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
      Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
      Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
      Data.Foldable.sum__ Data.Foldable.toList__ Data.Maybe.maybe Data.OldList.nub
-     Data.SemigroupInternal.Mk_Any Data.SemigroupInternal.Mk_Dual
-     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getAny Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
      Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
      Data.Traversable.Traversable Data.Traversable.mapM__
      Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build GHC.Base.flip
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build' GHC.Base.flip
      GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd____
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd____
      GHC.Base.op_zsze____ GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Num.Num
      GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.concatMapM SrcLoc.L
      SrcLoc.Located SrcLoc.unLoc UniqSet.UniqSet UniqSet.addOneToUniqSet

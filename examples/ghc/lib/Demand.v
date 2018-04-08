@@ -232,74 +232,51 @@ Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__StrictSig' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__StrictSig of class Outputable *)
 
-(* Translating `instance Binary__StrictSig' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__StrictSig of class Binary *)
 
-(* Translating `instance Outputable__DmdType' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__DmdType of class Outputable *)
 
-(* Translating `instance Binary__DmdType' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__DmdType of class Binary *)
 
-(* Translating `instance Binary__DmdResult' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__DmdResult of class Binary *)
 
-(* Translating `instance Outputable__CPRResult' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__CPRResult of class Outputable *)
 
-(* Translating `instance Binary__CPRResult' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__CPRResult of class Binary *)
 
-(* Translating `instance Outputable__Termination' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Termination of class Outputable *)
 
-(* Translating `instance Outputable__TypeShape' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TypeShape of class Outputable *)
 
-(* Translating `instance Outputable__ArgUse' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ArgUse of class Outputable *)
 
-(* Translating `instance Outputable__UseDmd' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UseDmd of class Outputable *)
 
-(* Translating `instance Binary__ArgUse' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ArgUse of class Binary *)
 
-(* Translating `instance Binary__UseDmd' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__UseDmd of class Binary *)
 
-(* Translating `instance Outputable__Count' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Count of class Outputable *)
 
-(* Translating `instance Binary__Count' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__Count of class Binary *)
 
-(* Translating `instance Outputable__StrDmd' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__StrDmd of class Outputable *)
 
-(* Translating `instance Outputable__ArgStr' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ArgStr of class Outputable *)
 
-(* Translating `instance Binary__StrDmd' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__StrDmd of class Binary *)
 
-(* Translating `instance Binary__ArgStr' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ArgStr of class Binary *)
 
-(* Translating `instance Binary__ExnStr' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ExnStr of class Binary *)
 
-(* Translating `instance Outputable__JointDmd' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__JointDmd of class Outputable *)
 
-(* Translating `instance Binary__JointDmd' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__JointDmd of class Binary *)
 
-(* Translating `instance Show__CPRResult' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__CPRResult of class Show *)
 
 Local Definition Eq___CPRResult_op_zeze__ : CPRResult -> CPRResult -> bool :=
   fun arg_0__ arg_1__ =>
@@ -318,8 +295,7 @@ Program Instance Eq___CPRResult : GHC.Base.Eq_ CPRResult :=
     k {| GHC.Base.op_zeze____ := Eq___CPRResult_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___CPRResult_op_zsze__ |}.
 
-(* Translating `instance Show__Termination' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Termination of class Show *)
 
 Local Definition Eq___Termination_op_zeze__ {inst_r} `{GHC.Base.Eq_ inst_r}
    : Termination inst_r -> Termination inst_r -> bool :=
@@ -341,14 +317,11 @@ Program Instance Eq___Termination {r} `{GHC.Base.Eq_ r}
     k {| GHC.Base.op_zeze____ := Eq___Termination_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Termination_op_zsze__ |}.
 
-(* Translating `instance Show__UseDmd' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__UseDmd of class Show *)
 
-(* Translating `instance Show__Use' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Use of class Show *)
 
-(* Translating `instance Show__Count' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Count of class Show *)
 
 Local Definition Eq___Count_op_zeze__ : Count -> Count -> bool :=
   fun arg_0__ arg_1__ =>
@@ -404,14 +377,11 @@ Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd :=
     k {| GHC.Base.op_zeze____ := Eq___UseDmd_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UseDmd_op_zsze__ |}.
 
-(* Translating `instance Show__StrDmd' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__StrDmd of class Show *)
 
-(* Translating `instance Show__Str' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Str of class Show *)
 
-(* Translating `instance Show__ExnStr' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__ExnStr of class Show *)
 
 Local Definition Eq___ExnStr_op_zeze__ : ExnStr -> ExnStr -> bool :=
   fun arg_0__ arg_1__ =>
@@ -467,8 +437,7 @@ Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd :=
     k {| GHC.Base.op_zeze____ := Eq___StrDmd_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___StrDmd_op_zsze__ |}.
 
-(* Translating `instance Show__JointDmd' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__JointDmd of class Show *)
 
 Local Definition Eq___JointDmd_op_zeze__ {inst_s} {inst_u} `{GHC.Base.Eq_
   inst_s} `{GHC.Base.Eq_ inst_u}

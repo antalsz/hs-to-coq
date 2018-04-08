@@ -831,11 +831,9 @@ Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__TaggedBndr' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TaggedBndr of class Outputable *)
 
-(* Translating `instance Binary__IsOrphan' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__IsOrphan of class Binary *)
 
 Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -872,8 +870,7 @@ Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
 Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
   fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Outputable__AltCon' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__AltCon of class Outputable *)
 
 Local Definition Eq___UnfoldingGuidance_op_zeze__
    : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
@@ -896,8 +893,7 @@ Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
     k {| GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
 
-(* Translating `instance Data__IsOrphan' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__IsOrphan of class Data *)
 
 Local Definition Eq___TickishPlacement_op_zeze__
    : TickishPlacement -> TickishPlacement -> bool :=
@@ -937,14 +933,11 @@ Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
     k {| GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
 
-(* Translating `instance Data__Bind' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Bind of class Data *)
 
-(* Translating `instance Data__Expr' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Expr of class Data *)
 
-(* Translating `instance Data__Tickish' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Tickish of class Data *)
 
 (* Translating `instance Ord__Tickish' failed: using a record pattern for the
    unknown constructor `ProfNote' unsupported *)
@@ -963,8 +956,7 @@ Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
     k {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
 
-(* Translating `instance Data__AltCon' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__AltCon of class Data *)
 
 Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
   fun arg_0__ arg_1__ =>

@@ -45,6 +45,10 @@ Definition ae_ped_bot (arg_0__ : ArityEnv) :=
   ae_ped_bot.
 (* Converted value declarations: *)
 
+(* Skipping instance Outputable__EtaInfo of class Outputable *)
+
+(* Skipping instance Outputable__ArityType of class Outputable *)
+
 Axiom manifestArity : CoreSyn.CoreExpr -> BasicTypes.Arity.
 
 Axiom joinRhsArity : CoreSyn.CoreExpr -> BasicTypes.JoinArity.

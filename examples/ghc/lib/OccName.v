@@ -20,6 +20,7 @@ Require GHC.Err.
 Require GHC.Num.
 Require UniqFM.
 Require UniqSet.
+Require Unique.
 Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -134,8 +135,7 @@ Instance Default__OccName : Default OccName := Build_Default _ (Mk_OccName defau
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__OccEnv' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__OccEnv of class Outputable *)
 
 Local Definition HasOccName__OccName_occName : OccName -> OccName :=
   GHC.Base.id.
@@ -143,29 +143,31 @@ Local Definition HasOccName__OccName_occName : OccName -> OccName :=
 Program Instance HasOccName__OccName : HasOccName OccName :=
   fun _ k => k {| occName__ := HasOccName__OccName_occName |}.
 
-(* Translating `instance Data__OccName' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__OccName of class Data *)
 
-(* Translating `instance NFData__OccName' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__OccName of class NFData *)
 
-(* Translating `instance Outputable__OccName' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__OccName of class Outputable *)
 
-(* Translating `instance OutputableBndr__OccName' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
+(* Skipping instance OutputableBndr__OccName of class OutputableBndr *)
 
-(* Translating `instance Uniquable__OccName' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__OccName_getUnique : OccName -> Unique.Unique :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_OccName VarName fs => Unique.mkVarOccUnique fs
+    | Mk_OccName DataName fs => Unique.mkDataOccUnique fs
+    | Mk_OccName TvName fs => Unique.mkTvOccUnique fs
+    | Mk_OccName TcClsName fs => Unique.mkTcOccUnique fs
+    end.
 
-(* Translating `instance Binary__OccName' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+Program Instance Uniquable__OccName : Unique.Uniquable OccName :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__OccName_getUnique |}.
 
-(* Translating `instance Binary__NameSpace' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__OccName of class Binary *)
 
-(* Translating `instance Data__OccEnv' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Binary__NameSpace of class Binary *)
+
+(* Skipping instance Data__OccEnv of class Data *)
 
 Local Definition Ord__NameSpace_compare
    : NameSpace -> NameSpace -> comparison :=
@@ -763,5 +765,7 @@ Definition mkTyConRepOcc : OccName -> OccName :=
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet UniqSet.minusUniqSet
      UniqSet.mkUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.unitUniqSet Util.thenCmp
+     UniqSet.unitUniqSet Unique.Uniquable Unique.Unique Unique.getUnique__
+     Unique.mkDataOccUnique Unique.mkTcOccUnique Unique.mkTvOccUnique
+     Unique.mkVarOccUnique Util.thenCmp
 *)

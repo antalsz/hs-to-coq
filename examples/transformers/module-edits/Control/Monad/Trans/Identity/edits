@@ -1,1 +1,2 @@
 order Control.Monad.Trans.Identity.Functor__IdentityT Control.Monad.Trans.Identity.Applicative__IdentityT_liftA2
+order Control.Monad.Trans.Identity.Monad__IdentityT Control.Monad.Trans.Identity.MonadFail__IdentityT

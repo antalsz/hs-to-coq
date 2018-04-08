@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Coq.Program.Basics.
@@ -143,11 +144,9 @@ Program Instance Ord__ExceptT {e} {m} {a} `{GHC.Base.Ord e} `{Ord1 m}
          GHC.Base.max__ := Ord__ExceptT_max ;
          GHC.Base.min__ := Ord__ExceptT_min |}.
 
-(* Translating `instance Read__ExceptT' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__ExceptT of class Read *)
 
-(* Translating `instance Show__ExceptT' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__ExceptT of class Show *)
 
 Local Definition Foldable__ExceptT_foldMap {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
@@ -164,82 +163,55 @@ Local Definition Foldable__ExceptT_foldl {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (ExceptT inst_e inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_19__ arg_20__ arg_21__ =>
-      match arg_19__, arg_20__, arg_21__ with
-      | f, z, t =>
-          Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
-                                          (Foldable__ExceptT_foldMap (Coq.Program.Basics.compose
-                                                                      Data.SemigroupInternal.Mk_Dual
-                                                                      (Coq.Program.Basics.compose
-                                                                       Data.SemigroupInternal.Mk_Endo (GHC.Base.flip
-                                                                        f))) t)) z
-      end.
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Foldable__ExceptT_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                  (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                   GHC.Base.flip f)) t)) z.
 
 Local Definition Foldable__ExceptT_foldr' {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (ExceptT inst_e inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ arg_11__ =>
-      match arg_9__, arg_10__, arg_11__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_12__ arg_13__ arg_14__ =>
-              match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => k GHC.Base.$! f x z
-              end in
-          Foldable__ExceptT_foldl f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__ExceptT_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__ExceptT_foldr {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (ExceptT inst_e inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_4__ arg_5__ arg_6__ =>
-      match arg_4__, arg_5__, arg_6__ with
-      | f, z, t =>
-          Data.SemigroupInternal.appEndo (Foldable__ExceptT_foldMap
-                                          (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f) t) z
-      end.
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Foldable__ExceptT_foldMap
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f) t) z.
 
 Local Definition Foldable__ExceptT_foldl' {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (ExceptT inst_e inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__, arg_25__, arg_26__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_27__ arg_28__ arg_29__ =>
-              match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => k GHC.Base.$! f z x
-              end in
-          Foldable__ExceptT_foldr f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__ExceptT_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__ExceptT_length {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, (ExceptT inst_e inst_f) a -> GHC.Num.Int :=
   fun {a} =>
-    Foldable__ExceptT_foldl' (fun arg_64__ arg_65__ =>
-                                match arg_64__, arg_65__ with
+    Foldable__ExceptT_foldl' (fun arg_0__ arg_1__ =>
+                                match arg_0__, arg_1__ with
                                 | c, _ => c GHC.Num.+ #1
                                 end) #0.
 
 Local Definition Foldable__ExceptT_null {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, (ExceptT inst_e inst_f) a -> bool :=
-  fun {a} => Foldable__ExceptT_foldr (fun arg_61__ arg_62__ => false) true.
+  fun {a} => Foldable__ExceptT_foldr (fun arg_0__ arg_1__ => false) true.
 
 Local Definition Foldable__ExceptT_toList {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, (ExceptT inst_e inst_f) a -> list a :=
   fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__ExceptT_foldr c n t
-                        end).
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__ExceptT_foldr c n t)).
 
 Local Definition Foldable__ExceptT_product {inst_f} {inst_e}
   `{(Data.Foldable.Foldable inst_f)}
@@ -260,24 +232,11 @@ Local Definition Foldable__ExceptT_fold {inst_f} {inst_e}
    : forall {m}, forall `{GHC.Base.Monoid m}, (ExceptT inst_e inst_f) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__ExceptT_foldMap GHC.Base.id.
 
-Local Definition Foldable__ExceptT_elem {inst_f} {inst_e}
-  `{(Data.Foldable.Foldable inst_f)}
-   : forall {a},
-     forall `{GHC.Base.Eq_ a}, a -> (ExceptT inst_e inst_f) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
-                                                             (Foldable__ExceptT_foldMap (Coq.Program.Basics.compose
-                                                                                         Data.SemigroupInternal.Mk_Any
-                                                                                         p))) _GHC.Base.==_.
-
 Program Instance Foldable__ExceptT {f} {e} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (ExceptT e f) :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__ExceptT_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__ExceptT_fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__ExceptT_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__ExceptT_foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__ExceptT_foldl ;
@@ -351,34 +310,26 @@ Local Definition Applicative__ExceptT_op_zlztzg__ {inst_m} {inst_e}
                          end))
       end.
 
-(* Translating `instance Alternative__ExceptT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Skipping instance Alternative__ExceptT of class Alternative *)
 
-(* Translating `instance MonadFail__ExceptT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+(* Skipping instance MonadPlus__ExceptT of class MonadPlus *)
 
-(* Translating `instance MonadPlus__ExceptT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
-
-(* Translating `instance MonadFix__ExceptT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadFix__ExceptT of class MonadFix *)
 
 Local Definition MonadTrans__ExceptT_lift {inst_e}
-   : forall {m} {a} `{GHC.Base.Monad m}, m a -> (ExceptT inst_e) m a :=
-  fun {m} {a} `{GHC.Base.Monad m} =>
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> (ExceptT inst_e) m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} =>
     Mk_ExceptT GHC.Base.∘ GHC.Base.liftM Data.Either.Right.
 
 Program Instance MonadTrans__ExceptT {e}
    : Control.Monad.Trans.Class.MonadTrans (ExceptT e) :=
   fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{GHC.Base.Monad m} =>
+    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
            MonadTrans__ExceptT_lift |}.
 
-(* Translating `instance MonadIO__ExceptT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.IO.Class" "MonadIO" unsupported *)
+(* Skipping instance MonadIO__ExceptT of class MonadIO *)
 
-(* Translating `instance MonadZip__ExceptT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
+(* Skipping instance MonadZip__ExceptT of class MonadZip *)
 
 Definition except {e} {a} : Data.Either.Either e a -> Except e a :=
   fun m => Mk_ExceptT (Mk_Identity m).
@@ -449,6 +400,27 @@ Definition catchE {m} {e} {a} {e'} `{(GHC.Base.Monad m)}
                    | Data.Either.Right r => GHC.Base.return_ (Data.Either.Right r)
                    end)).
 
+Definition Monad__ExceptT_op_zgzgze__ {inst_m} {inst_e} `{_
+   : GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     ExceptT inst_e inst_m a ->
+     (a -> ExceptT inst_e inst_m b) -> ExceptT inst_e inst_m b :=
+  fun {a} {b} =>
+    fun m k =>
+      Mk_ExceptT (runExceptT m GHC.Base.>>=
+                  (fun a =>
+                     match a with
+                     | Data.Either.Left e => GHC.Base.return_ (Data.Either.Left e)
+                     | Data.Either.Right x => runExceptT (k x)
+                     end)).
+
+Local Definition Monad__ExceptT_op_zgzg__ {inst_m} {inst_e} `{(GHC.Base.Monad
+   inst_m)}
+   : forall {a} {b},
+     (ExceptT inst_e inst_m) a ->
+     (ExceptT inst_e inst_m) b -> (ExceptT inst_e inst_m) b :=
+  fun {a} {b} => fun m k => Monad__ExceptT_op_zgzgze__ m (fun arg_0__ => k).
+
 Local Definition Functor__ExceptT_fmap {inst_m} {inst_e} `{(GHC.Base.Functor
    inst_m)}
    : forall {a} {b},
@@ -461,13 +433,13 @@ Local Definition Functor__ExceptT_op_zlzd__ {inst_m} {inst_e}
   `{(GHC.Base.Functor inst_m)}
    : forall {a} {b},
      a -> (ExceptT inst_e inst_m) b -> (ExceptT inst_e inst_m) a :=
-  fun {a} {b} => fun x => Functor__ExceptT_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__ExceptT_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__ExceptT {m} {e} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (ExceptT e m) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ExceptT_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__ExceptT_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ExceptT_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ExceptT_op_zlzd__ |}.
 
 Local Definition Applicative__ExceptT_pure {inst_m} {inst_e} `{GHC.Base.Functor
   inst_m} `{GHC.Base.Monad inst_m}
@@ -496,31 +468,10 @@ Program Instance Applicative__ExceptT {m} {e} `{GHC.Base.Functor m}
   `{GHC.Base.Monad m}
    : GHC.Base.Applicative (ExceptT e m) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ExceptT_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ExceptT_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ExceptT_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ExceptT_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ExceptT_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__ExceptT_pure |}.
-
-Local Definition Monad__ExceptT_op_zgzg__ {inst_m} {inst_e} `{(GHC.Base.Monad
-   inst_m)}
-   : forall {a} {b},
-     (ExceptT inst_e inst_m) a ->
-     (ExceptT inst_e inst_m) b -> (ExceptT inst_e inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
-
-Definition Monad__ExceptT_op_zgzgze__ {inst_m} {inst_e} `{_
-   : GHC.Base.Monad inst_m}
-   : forall {a} {b},
-     ExceptT inst_e inst_m a ->
-     (a -> ExceptT inst_e inst_m b) -> ExceptT inst_e inst_m b :=
-  fun {a} {b} =>
-    fun m k =>
-      Mk_ExceptT (runExceptT m GHC.Base.>>=
-                  (fun a =>
-                     match a with
-                     | Data.Either.Left e => GHC.Base.return_ (Data.Either.Left e)
-                     | Data.Either.Right x => runExceptT (k x)
-                     end)).
 
 Local Definition Monad__ExceptT_return_ {inst_m} {inst_e} `{(GHC.Base.Monad
    inst_m)}
@@ -533,6 +484,16 @@ Program Instance Monad__ExceptT {m} {e} `{(GHC.Base.Monad m)}
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__ExceptT_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__ExceptT_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__ExceptT_return_ |}.
+
+Local Definition MonadFail__ExceptT_fail {inst_m} {inst_e}
+  `{(Control.Monad.Fail.MonadFail inst_m)}
+   : forall {a}, GHC.Base.String -> (ExceptT inst_e inst_m) a :=
+  fun {a} => Mk_ExceptT GHC.Base.∘ Control.Monad.Fail.fail.
+
+Program Instance MonadFail__ExceptT {m} {e} `{(Control.Monad.Fail.MonadFail m)}
+   : Control.Monad.Fail.MonadFail (ExceptT e m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ExceptT_fail |}.
 
 Program Instance Traversable__ExceptT {f} {e} `{(Data.Traversable.Traversable
    f)}
@@ -553,31 +514,30 @@ Definition throwE {m} {e} {a} `{(GHC.Base.Monad m)} : e -> ExceptT e m a :=
 (* External variables:
      Eq1 Gt Identity Lt Mk_Identity Ord1 bool compare1 comparison eq1 false
      liftCompare liftCompare__ liftEq liftEq__ list negb pair runIdentity true
+     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose Data.Either.Either
      Data.Either.Left Data.Either.Right Data.Either.either Data.Foldable.Foldable
-     Data.Foldable.elem__ Data.Foldable.foldMap Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Any
-     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
-     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
-     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getAny
+     Data.Foldable.foldMap Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Dual
+     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
      Data.SemigroupInternal.getSum Data.Traversable.Traversable
      Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM GHC.Base.max__
-     GHC.Base.mempty GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zdzn__
+     GHC.Base.String GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
+     GHC.Base.max__ GHC.Base.mempty GHC.Base.min__ GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
      GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____
      GHC.Base.op_zl____ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
      GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
-     GHC.Base.return_ GHC.Base.return___ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zp__
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

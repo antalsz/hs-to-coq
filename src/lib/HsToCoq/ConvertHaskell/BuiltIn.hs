@@ -40,31 +40,6 @@ builtInClasses =
         , "GHC.Base.max"       =: "a" `Arrow` "a" `Arrow` "a"
         , "GHC.Base.min"       =: "a" `Arrow` "a" `Arrow` "a"
         ]
-    {-
-    -- This is essentially a class for co-inductive types. 
-    , ClassDefinition "GHC.Base.Alternative" 
-        [ "f"
-        , Generalized Implicit (App1 "GHC.Base.Applicative" "f")
-        ]
-        Nothing
-        [ "GHC.Base.empty" =:
-          (Forall [ Inferred Implicit (Ident "a") ] $
-           App1 "f" "a")
-        , "GHC.Base.op_zgzbzl__" =:
-          (Forall [ Inferred Implicit (Ident "a") ] $
-           App1 "f" "a" `Arrow` App1 "f" "a" `Arrow` App1 "f" "a")
-        ]
-    -}
-
-
-    , ClassDefinition "Control.Monad.Trans.Class.MonadTrans" ["t"] Nothing
-        [ "Control.Monad.Trans.Class.lift" =:
-          (Forall [ Inferred Implicit (Ident "m")
-                  , Inferred Implicit (Ident "a")
-                  , Generalized Implicit (App1 "GHC.Base.Monad" "m")
-                  ] $
-            (App1 "m" "a" `Arrow` App2 "t" "m" "a"))
-          ]
     ]
   where
    (=:) = (,)

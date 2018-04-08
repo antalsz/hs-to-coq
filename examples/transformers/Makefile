@@ -30,19 +30,19 @@ HANDMOD = \
 # Generated modules
 # generated directly from GHC/libraries/$(SRC)
 MODULES = \
-	Data/Functor/Constant \
-	Data/Functor/Reverse \
+   Data/Functor/Constant \
+   Data/Functor/Reverse \
    Control/Applicative/Backwards \
    Control/Applicative/Lift \
-	Control/Monad/Trans/Class \
-	Control/Monad/Signatures \
-	Control/Monad/Trans/Identity \
-	Control/Monad/Trans/Reader \
-	Control/Monad/Trans/Writer/Lazy \
-	Control/Monad/Trans/State/Lazy \
-	Control/Monad/Trans/Cont \
+   Control/Monad/Trans/Class \
+   Control/Monad/Signatures \
+   Control/Monad/Trans/Identity \
+   Control/Monad/Trans/Reader \
+   Control/Monad/Trans/Writer/Lazy \
+   Control/Monad/Trans/State/Lazy \
+   Control/Monad/Trans/Cont \
    Control/Monad/Trans/Except \
-	Control/Monad/Trans/Maybe \
+   Control/Monad/Trans/Maybe \
    Control/Monad/Trans/RWS/Lazy \
 
 # Not in ghc version of transformers
@@ -68,7 +68,7 @@ VFILES_DROPIN = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 
 VFILES = $(VFILES_GEN_TEST) $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN)
 
-all:  $(VFILES) coq $(OUT)/edits $(OUT)/README.md 
+all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
 $(OUT)/_CoqProject : Makefile
 	mkdir -p $(OUT)
@@ -95,25 +95,35 @@ $(OUT)/README.md:
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
+HS_TO_COQ_OPTS := \
+  -e ../../base/edits \
+  -e edits \
+  --iface-dir ../../base \
+  --iface-dir $(OUT) \
+  -N \
+  -i $(SRC) \
+  -i $(SRC)/tests \
+  -i $(SRC)/dist-install/build \
+  -I $(SRC)/include \
+  -o $(OUT) \
+
+include interface-deps.mk
+
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $(wildcard module-edits/$$*/flags) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-	             -e ../base-src/edits \
-	             -e edits \
-	             -N \
-	             -i $(SRC) \
-	             -i $(SRC)/tests \
-	             -i $(SRC)/dist-install/build \
-	             -I $(SRC)/include \
-	             --ghc -package --ghc QuickCheck \
-	             --ghc -this-unit-id --ghc $(SRC) \
+		     $(HS_TO_COQ_OPTS) \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
-	             -o $(OUT) \
-	             $(wildcard $(SRC)/$*.hs) $(wildcard $(SRC)/tests/$*.hs) 
+	             $(wildcard $(SRC)/$*.hs) $(wildcard $(SRC)/tests/$*.hs)
 	if [[ -e $(OUT)/Main.v && ( ! -e $@ || $(OUT)/Main.v -nt $@ ) ]]; then mv $(OUT)/Main.v $@; fi
 	test -e $@ && test \! -e $(OUT)/Main.v
+
+$(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
+	$(HS_TO_COQ) -e module-edits/$*/edits \
+	             $(HS_TO_COQ_OPTS) \
+	             drop-in/$*.hs
 
 .SECONDEXPANSION:
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v
@@ -121,18 +131,6 @@ $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	rm -f $@
 	lndir ../manual $(OUT)/
 
-
-$(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
-	$(HS_TO_COQ) -e module-edits/$*/edits \
-	             -e edits \
-	       -o $(OUT) \
-	       -N \
-	       -p module-edits/$*/preamble.v \
-	       --ghc -i$(SRC) \
-	       --ghc -i$(SRC)/dist-install/build \
-	       -I$(SRC)/include \
-	       --ghc -this-unit-id=$(SRC) \
-	       drop-in/$*.hs
 
 clean:
 	rm -rf $(OUT) $(RENAMED) $(HS_SPEC)

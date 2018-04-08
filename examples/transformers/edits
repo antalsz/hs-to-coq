@@ -13,6 +13,10 @@ skip Control.Monad.Trans.Cont.liftCatch
 skip Control.Monad.Trans.RWS.Lazy.liftCatch
 skip Contol.Monad.Trans.Maybe.liftCatch
 
+# TODO
+skip Control.Monad.Zip.MonadZip
+skip Control.Monad.IO.Class.MonadIO
+
 ## need Foldable instance, which requires mutual recursion
 skip Data.Functor.Reverse.Traversable__Reverse
 
@@ -28,7 +32,6 @@ redefine Definition Control.Monad.Trans.Accum.Monad__AccumT_op_zgzgze__ {inst_w}
    : forall {a} {b},
      ((AccumT inst_w inst_m a) ->
      ((a -> (AccumT inst_w inst_m b)) -> (AccumT inst_w inst_m b))) := fun {a}{b} =>  Monad__AccumT_tmp.
-
 
 
 

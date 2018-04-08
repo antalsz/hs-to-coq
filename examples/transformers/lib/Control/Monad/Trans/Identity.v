@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Coq.Program.Basics.
@@ -132,11 +133,9 @@ Program Instance Ord__IdentityT {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
          GHC.Base.max__ := Ord__IdentityT_max ;
          GHC.Base.min__ := Ord__IdentityT_min |}.
 
-(* Translating `instance Read__IdentityT' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__IdentityT of class Read *)
 
-(* Translating `instance Show__IdentityT' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__IdentityT of class Show *)
 
 Local Definition Foldable__IdentityT_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -167,17 +166,6 @@ Local Definition Foldable__IdentityT_fold {inst_f} `{(Data.Foldable.Foldable
    : forall {m}, forall `{GHC.Base.Monoid m}, (IdentityT inst_f) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__IdentityT_foldMap GHC.Base.id.
 
-Local Definition Foldable__IdentityT_elem {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (IdentityT inst_f) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
-                                                             (Foldable__IdentityT_foldMap (Coq.Program.Basics.compose
-                                                                                           Data.SemigroupInternal.Mk_Any
-                                                                                           p))) _GHC.Base.==_.
-
 Local Definition Foldable__IdentityT_foldl {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
@@ -191,16 +179,9 @@ Local Definition Foldable__IdentityT_foldr' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (IdentityT inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ arg_11__ =>
-      match arg_9__, arg_10__, arg_11__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_12__ arg_13__ arg_14__ =>
-              match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => k GHC.Base.$! f x z
-              end in
-          Foldable__IdentityT_foldl f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__IdentityT_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__IdentityT_foldr {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -215,27 +196,16 @@ Local Definition Foldable__IdentityT_toList {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (IdentityT inst_f) a -> list a :=
   fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__IdentityT_foldr c n t
-                        end).
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__IdentityT_foldr c n t)).
 
 Local Definition Foldable__IdentityT_foldl' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__, arg_25__, arg_26__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_27__ arg_28__ arg_29__ =>
-              match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => k GHC.Base.$! f z x
-              end in
-          Foldable__IdentityT_foldr f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__IdentityT_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__IdentityT_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -252,9 +222,7 @@ Local Definition Foldable__IdentityT_null {inst_f} `{(Data.Foldable.Foldable
 Program Instance Foldable__IdentityT {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (IdentityT f) :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__IdentityT_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
            Foldable__IdentityT_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__IdentityT_foldMap ;
@@ -308,8 +276,7 @@ Local Definition Applicative__IdentityT_pure {inst_m} `{(GHC.Base.Applicative
    : forall {a}, a -> (IdentityT inst_m) a :=
   fun {a} => fun x => Mk_IdentityT (GHC.Base.pure x).
 
-(* Translating `instance Alternative__IdentityT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Skipping instance Alternative__IdentityT of class Alternative *)
 
 Local Definition Monad__IdentityT_op_zgzgze__ {inst_m} `{(GHC.Base.Monad
    inst_m)}
@@ -319,30 +286,27 @@ Local Definition Monad__IdentityT_op_zgzgze__ {inst_m} `{(GHC.Base.Monad
     fun m k =>
       Mk_IdentityT ((runIdentityT GHC.Base.∘ k) GHC.Base.=<< runIdentityT m).
 
-(* Translating `instance MonadFail__IdentityT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+Local Definition MonadFail__IdentityT_fail {inst_m}
+  `{(Control.Monad.Fail.MonadFail inst_m)}
+   : forall {a}, GHC.Base.String -> (IdentityT inst_m) a :=
+  fun {a} => fun msg => Mk_IdentityT (Control.Monad.Fail.fail msg).
 
-(* Translating `instance MonadPlus__IdentityT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
+(* Skipping instance MonadPlus__IdentityT of class MonadPlus *)
 
-(* Translating `instance MonadFix__IdentityT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadFix__IdentityT of class MonadFix *)
 
-(* Translating `instance MonadIO__IdentityT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.IO.Class" "MonadIO"
-   unsupported *)
+(* Skipping instance MonadIO__IdentityT of class MonadIO *)
 
-(* Translating `instance MonadZip__IdentityT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
+(* Skipping instance MonadZip__IdentityT of class MonadZip *)
 
 Local Definition MonadTrans__IdentityT_lift
-   : forall {m} {a} `{GHC.Base.Monad m}, m a -> IdentityT m a :=
-  fun {m} {a} `{GHC.Base.Monad m} => Mk_IdentityT.
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> IdentityT m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} => Mk_IdentityT.
 
 Program Instance MonadTrans__IdentityT
    : Control.Monad.Trans.Class.MonadTrans IdentityT :=
   fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{GHC.Base.Monad m} =>
+    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
            MonadTrans__IdentityT_lift |}.
 
 Definition lift2IdentityT {m} {a} {n} {b} {p} {c}
@@ -372,13 +336,13 @@ Local Definition Functor__IdentityT_fmap {inst_m} `{(GHC.Base.Functor inst_m)}
 Local Definition Functor__IdentityT_op_zlzd__ {inst_m} `{(GHC.Base.Functor
    inst_m)}
    : forall {a} {b}, a -> (IdentityT inst_m) b -> (IdentityT inst_m) a :=
-  fun {a} {b} => fun x => Functor__IdentityT_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__IdentityT_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__IdentityT {m} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (IdentityT m) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IdentityT_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__IdentityT_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__IdentityT_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IdentityT_op_zlzd__ |}.
 
 Local Definition Applicative__IdentityT_op_ztzg__ {inst_m}
   `{(GHC.Base.Applicative inst_m)}
@@ -397,15 +361,15 @@ Local Definition Applicative__IdentityT_liftA2 {inst_m} `{(GHC.Base.Applicative
 Program Instance Applicative__IdentityT {m} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (IdentityT m) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__IdentityT_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__IdentityT_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__IdentityT_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__IdentityT_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__IdentityT_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__IdentityT_pure |}.
 
 Local Definition Monad__IdentityT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
    : forall {a} {b},
      (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
+  fun {a} {b} => fun m k => Monad__IdentityT_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__IdentityT_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
    : forall {a}, a -> (IdentityT inst_m) a :=
@@ -417,6 +381,11 @@ Program Instance Monad__IdentityT {m} `{(GHC.Base.Monad m)}
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__IdentityT_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__IdentityT_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__IdentityT_return_ |}.
+
+Program Instance MonadFail__IdentityT {m} `{(Control.Monad.Fail.MonadFail m)}
+   : Control.Monad.Fail.MonadFail (IdentityT m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__IdentityT_fail |}.
 
 Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
    : Data.Traversable.Traversable (IdentityT f) :=
@@ -432,27 +401,28 @@ Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
 
 (* External variables:
      Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
-     liftEq liftEq__ list negb Control.Monad.Signatures.CallCC
+     liftEq liftEq__ list negb Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
      Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.elem__
-     Data.Foldable.foldMap Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length Data.Foldable.length__ Data.Foldable.null
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Any
-     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
-     Data.SemigroupInternal.getAny Data.SemigroupInternal.getProduct
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr
+     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length
+     Data.Foldable.length__ Data.Foldable.null Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.getProduct
      Data.SemigroupInternal.getSum Data.Traversable.Traversable
      Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
-     GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__
-     GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zezlzl__
-     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zgzg____
-     GHC.Base.op_zgzgze____ GHC.Base.op_zl____ GHC.Base.op_zlzd____
-     GHC.Base.op_zlze____ GHC.Base.op_zlztzg__ GHC.Base.op_zlztzg____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.op_ztzg__ GHC.Base.op_ztzg____
-     GHC.Base.pure GHC.Base.pure__ GHC.Base.return___ GHC.Num.Int GHC.Num.Num
+     GHC.Base.String GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zezlzl__ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze____ GHC.Base.op_zl____
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze____ GHC.Base.op_zlztzg__
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return___ GHC.Num.Int GHC.Num.Num
 *)

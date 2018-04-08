@@ -14,6 +14,8 @@ skip Data.Map.Internal.differenceWith
 redefine Local Definition Data.Map.Internal.Functor__Map_op_zlzd__ 
 			{k:Type}{a:Type}{b:Type}:= @functor__Map_op_zlzd__ k a b.
 
+order Data.Map.Internal.Eq1__Map Data.Map.Internal.Ord1__Map
+order Data.Map.Internal.Eq2__Map Data.Map.Internal.Ord2__Map
 order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
 order Data.Map.Internal.Semigroup__Map Data.Map.Internal.Monoid__Map_mappend 
 

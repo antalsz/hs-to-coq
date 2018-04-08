@@ -106,20 +106,25 @@ $(OUT)/README.md:
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
+HS_TO_COQ_OPTS := \
+    -e edits \
+    -N \
+    -i base \
+    -i base/dist-install/build \
+    -I base/include \
+    --iface-dir $(OUT) \
+    --ghc -this-unit-id --ghc base \
+    -o $(OUT)
+
+
+include interface-deps.mk
 
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-	             -e edits \
-           -N \
-		     -i base \
-		     -i base/dist-install/build \
-		     -I base/include \
-		     -I base/dist-install/build/include \
-		     --ghc -this-unit-id --ghc base \
-		     -o $(OUT) \
+		     $(HS_TO_COQ_OPTS) \
 		     base/$*.hs
 	test -e $@
 
@@ -128,19 +133,11 @@ $(OUT)/Data/SemigroupInternal.v : $(wildcard module-edits/Data/Semigroup/Interna
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/Data/Semigroup/Internal/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/Data/Semigroup/Internal/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/Data/Semigroup/Internal/midamble.v)) \
-	             -e edits \
-           -N \
-		     -i base \
-		     -i base/dist-install/build \
-		     -I base/dist-install/build/include \
-		     -I base/include \
-		     --ghc -this-unit-id --ghc base \
-		     -o $(OUT) \
+		     $(HS_TO_COQ_OPTS) \
 		     base/Data/Semigroup/Internal.hs
 	test -e $(OUT)/Data/SemigroupInternal.v
 
-$(VFILES_MAN): $(OUT)/%.v : manual/%.v
-	mkdir -p "$$(dirname $(OUT)/$*.v)"
+$(VFILES_MAN): $(OUT)/% : manual/%
 	rm -f $@
 	lndir ../examples/base-src/manual $(OUT)/
 
@@ -148,15 +145,12 @@ $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 $(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
 	$(HS_TO_COQ) -e module-edits/$*/edits \
 	             -e edits \
-		     -o $(OUT) \
-		     -N \
-		     -p module-edits/$*/preamble.v \
-		     --ghc -ibase \
-		     --ghc -ibase/dist-install/build \
-		     -I base/dist-install/build/include \
-		     -I base/include \
-		     --ghc -this-unit-id=base \
+		     $(HS_TO_COQ_OPTS) \
 		     drop-in/$*.hs
+
+# Every rule that builds a .v also produces the corresponding interface file
+%.h2ci: %.v
+	test -e $@
 
 clean:
 	rm -rf $(OUT)

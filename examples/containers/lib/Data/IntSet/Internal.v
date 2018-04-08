@@ -85,20 +85,15 @@ Require Import Coq.NArith.NArith.
 
 (* Converted value declarations: *)
 
-(* Translating `instance IsList__IntSet' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Exts" "IsList" unsupported *)
+(* Skipping instance IsList__IntSet of class IsList *)
 
-(* Translating `instance Data__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__IntSet of class Data *)
 
-(* Translating `instance Show__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__IntSet of class Show *)
 
-(* Translating `instance Read__IntSet' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__IntSet of class Read *)
 
-(* Translating `instance NFData__IntSet' failed: OOPS! Cannot find information
-   for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__IntSet of class NFData *)
 
 Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
@@ -1103,11 +1098,15 @@ End Notations.
      Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred Coq.NArith.BinNat.N.to_nat
      Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
      Data.Foldable.foldl Data.Maybe.maybe Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.flip GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Err.Build_Default
-     GHC.Err.Default GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Wf.wfFix2 Utils.Containers.Internal.BitUtil.bitcount
+     GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.compare__
+     GHC.Base.flip GHC.Base.map GHC.Base.mappend__ GHC.Base.max__ GHC.Base.mconcat__
+     GHC.Base.mempty__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
+     GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze____
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
+     Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask
      Utils.Containers.Internal.BitUtil.shiftLL

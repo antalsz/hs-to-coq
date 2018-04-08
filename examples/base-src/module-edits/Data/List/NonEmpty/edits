@@ -18,6 +18,8 @@ skip Data.List.NonEmpty.sortBy
 skip Data.List.NonEmpty.scanl1
 skip Data.List.NonEmpty.reverse
 
+# Needs Alternative
+skip Data.List.NonEmpty.some1
 
 order Data.List.NonEmpty.zipWith Data.List.NonEmpty.Applicative__NonEmpty_op_zlztzg__ Data.List.NonEmpty.Applicative__NonEmpty Data.List.NonEmpty.Monad__NonEmpty_op_zgzg__ Data.List.NonEmpty.Monad__NonEmpty_return_ Data.List.NonEmpty.Monad__NonEmpty
 

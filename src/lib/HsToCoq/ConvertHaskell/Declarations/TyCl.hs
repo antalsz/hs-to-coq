@@ -1,6 +1,8 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
-             FlexibleContexts, ScopedTypeVariables #-}
+             FlexibleContexts, ScopedTypeVariables,
+             MultiParamTypeClasses
+             #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
   convertModuleTyClDecls,
@@ -32,13 +34,14 @@ import Control.Monad
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
-import HsToCoq.Util.Containers
+-- import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
 
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 
 import Data.Generics hiding (Fixity(..))
 
@@ -61,11 +64,11 @@ data ConvertedDeclaration = ConvData  Bool IndBody
                           | ConvFailure Qualid Sentence
                           deriving (Eq, Ord, Show, Read)
 
-instance FreeVars ConvertedDeclaration where
-  freeVars (ConvData  _ ind)   = freeVars ind
-  freeVars (ConvSyn     syn)   = freeVars syn
-  freeVars (ConvClass   cls)   = freeVars cls
-  freeVars (ConvFailure _ sen) = freeVars (NoBinding sen)
+instance HasBV Qualid ConvertedDeclaration where
+  bvOf (ConvData  _ ind)   = bvOf ind
+  bvOf (ConvSyn     syn)   = bvOf syn
+  bvOf (ConvClass   cls)   = bvOf cls
+  bvOf (ConvFailure _ sen) = bvOf sen
 
 convDeclName :: ConvertedDeclaration -> Qualid
 convDeclName (ConvData _ (IndBody                    tyName  _ _ _))    = tyName
@@ -343,11 +346,12 @@ groupTyClDecls decls = do
   -- We need to do this here, becaues topoSortEnvironment expects
   -- a pure function as the first argument
   bodies_fvars <- for bodies $ \decl -> do
-        let vars = getFreeVars decl
+        let vars = getFreeVars' decl
         -- This is very crude; querying all free variables as if
         -- they are constructor names:
-        ctypes <- setMapMaybeM lookupConstructorType vars
-        return $ vars <> ctypes
+        -- ctypes <- setMapMaybeM lookupConstructorType vars
+        -- With interface loading, this is too crude.
+        return $ vars -- <> ctypes
 
   pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!))
        $ topoSortEnvironmentWith id bodies_fvars

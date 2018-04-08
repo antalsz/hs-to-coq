@@ -2,13 +2,19 @@ skip module GHC.Types
 
 # partial
 
-skip method Foldable foldl1
-skip method Foldable foldr1
-skip method Foldable maximum
-skip method Foldable minimum
-
 skip Data.Foldable.minimumBy
 skip Data.Foldable.maximumBy
+
+# The default implementation of elem is hard to translate
+# (it recurses through the non-method any)
+# So we remove the method and make the default method simply code
+add Data.Foldable Definition Data.Foldable.elem {f} `{(Foldable f)} {a} `{(GHC.Base.Eq_ a)} :
+  a -> ((f a) -> bool) :=
+  fun x xs => Data.Foldable.any (fun y => x GHC.Base.== y) xs.
+
+# Needs Alternative
+skip Data.Foldable.asum
+skip Data.Foldable.msum
 
 redefine Local Definition Data.Foldable.Foldable__pair_type_elem {inst_a}
     {a} {H : GHC.Base.Eq_ a} : (a -> (((GHC.Tuple.pair_type inst_a) a) -> bool))

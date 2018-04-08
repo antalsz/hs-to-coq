@@ -135,48 +135,6 @@ Notation "'_>>=_'" := (op_zgzgze__).
 
 Infix ">>=" := (_>>=_) (at level 99).
 
-Record Alternative__Dict (f : Type -> Type) := Alternative__Dict_Build {
-  empty__ : forall {a}, f a ;
-  many__ : forall {a}, f a -> f (list a) ;
-  op_zlzbzg____ : forall {a}, f a -> f a -> f a ;
-  some__ : forall {a}, f a -> f (list a) }.
-
-Definition Alternative (f : Type -> Type) `{Applicative f} :=
-  forall r, (Alternative__Dict f -> r) -> r.
-
-Existing Class Alternative.
-
-Definition empty `{g : Alternative f} : forall {a}, f a :=
-  g _ (empty__ f).
-
-Definition many `{g : Alternative f} : forall {a}, f a -> f (list a) :=
-  g _ (many__ f).
-
-Definition op_zlzbzg__ `{g : Alternative f} : forall {a}, f a -> f a -> f a :=
-  g _ (op_zlzbzg____ f).
-
-Definition some `{g : Alternative f} : forall {a}, f a -> f (list a) :=
-  g _ (some__ f).
-
-Notation "'_<|>_'" := (op_zlzbzg__).
-
-Infix "<|>" := (_<|>_) (at level 99).
-
-Record MonadPlus__Dict (m : Type -> Type) := MonadPlus__Dict_Build {
-  mplus__ : forall {a}, m a -> m a -> m a ;
-  mzero__ : forall {a}, m a }.
-
-Definition MonadPlus (m : Type -> Type) `{Alternative m} `{Monad m} :=
-  forall r, (MonadPlus__Dict m -> r) -> r.
-
-Existing Class MonadPlus.
-
-Definition mplus `{g : MonadPlus m} : forall {a}, m a -> m a -> m a :=
-  g _ (mplus__ m).
-
-Definition mzero `{g : MonadPlus m} : forall {a}, m a :=
-  g _ (mzero__ m).
-
 Arguments NEcons {_} _ _.
 (* Midamble *)
 
@@ -595,11 +553,11 @@ End ManualNotations.
 
 (* Converted value declarations: *)
 
-(* Skipping instance MonadPlus__option *)
+(* Skipping instance MonadPlus__option of class MonadPlus *)
 
-(* Skipping instance MonadPlus__list *)
+(* Skipping instance MonadPlus__list of class MonadPlus *)
 
-(* Skipping instance MonadPlus__IO *)
+(* Skipping instance MonadPlus__IO of class MonadPlus *)
 
 Local Definition Monad__arrow_op_zgzgze__ {inst_r}
    : forall {a} {b},
@@ -794,11 +752,11 @@ Local Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
 
 (* Skipping instance Applicative__NonEmpty *)
 
-(* Skipping instance Alternative__option *)
+(* Skipping instance Alternative__option of class Alternative *)
 
-(* Skipping instance Alternative__list *)
+(* Skipping instance Alternative__list of class Alternative *)
 
-(* Skipping instance Alternative__IO *)
+(* Skipping instance Alternative__IO of class Alternative *)
 
 Local Definition Applicative__arrow_liftA2 {inst_a}
    : forall {a} {b} {c},
@@ -1327,8 +1285,6 @@ Notation "'_GHC.Base.>>_'" := (op_zgzg__).
 Infix "GHC.Base.>>" := (_>>_) (at level 99).
 Notation "'_GHC.Base.>>=_'" := (op_zgzgze__).
 Infix "GHC.Base.>>=" := (_>>=_) (at level 99).
-Notation "'_GHC.Base.<|>_'" := (op_zlzbzg__).
-Infix "GHC.Base.<|>" := (_<|>_) (at level 99).
 Notation "'_GHC.Base.∘_'" := (op_z2218U__).
 Infix "GHC.Base.∘" := (_∘_) (left associativity, at level 40).
 Notation "'_GHC.Base.$_'" := (op_zd__).
@@ -1342,7 +1298,9 @@ Infix "GHC.Base.<**>" := (_<**>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Eq Eq_ Gt Lt None Ord Some String Type andb bool compare comparison cons false
-     list negb nil op_zeze__ op_zl__ option pair true tt unit Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow GHC.Tuple.pair_type
+     Eq Eq_ Gt Lt None Ord Some String Type andb bool compare compare__ comparison
+     cons false list max__ min__ negb nil op_zeze__ op_zeze____ op_zg____ op_zgze____
+     op_zl__ op_zl____ op_zlze____ op_zsze____ option pair true tt unit
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow
+     GHC.Tuple.pair_type
 *)

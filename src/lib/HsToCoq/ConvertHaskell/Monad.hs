@@ -33,13 +33,13 @@ import Control.Monad.Trans.Counter
 
 import Control.Monad.State
 import Control.Monad.Reader
-import Control.Monad.Variables
 
 import GHC
 
 import Panic
 
 import HsToCoq.Coq.Gallina (Qualid, Qualid(..), Ident)
+import HsToCoq.Util.GHC.Module (moduleNameText)
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -108,12 +108,13 @@ type LocalConvMonad r m =
         , HasCurrentDefinition r Qualid
         )
 
-runGlobalMonad :: (GhcMonad m, Monad m) => Edits ->
+runGlobalMonad :: (GhcMonad m, Monad m) =>
+    Edits ->
+    TypeInfoConfig ->
     (forall r m. GlobalMonad r m => m a) ->
     m a
-runGlobalMonad initEdits act =
-    evalVariablesT @_ @Qualid $
-    runTypeInfoMonad $
+runGlobalMonad initEdits paths act =
+    runTypeInfoMonad paths $
     runReaderT ?? GlobalEnv{_globalEnvEdits = initEdits} $
     act
 
@@ -123,6 +124,7 @@ withCurrentModule :: GlobalMonad r m =>
     m a
 withCurrentModule newModule act = do
     _edits <- view edits
+    isProcessedModule (moduleNameText newModule) -- Start collecting the interface
     runReaderT act $ ModuleEnv
         { _moduleEnvEdits         = _edits
         , _moduleEnvCurrentModule = newModule

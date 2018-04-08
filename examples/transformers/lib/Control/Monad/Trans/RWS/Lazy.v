@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Import Data.Functor.Identity.
@@ -70,13 +71,13 @@ Local Definition Functor__RWST_op_zlzd__ {inst_m} {inst_r} {inst_w} {inst_s}
    : forall {a} {b},
      a ->
      (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) a :=
-  fun {a} {b} => fun x => Functor__RWST_fmap (const x).
+  fun {a} {b} => Functor__RWST_fmap ∘ const.
 
 Program Instance Functor__RWST {m} {r} {w} {s} `{(Functor m)}
    : Functor (RWST r w s m) :=
   fun _ k =>
-    k {| op_zlzd____ := fun {a} {b} => Functor__RWST_op_zlzd__ ;
-         fmap__ := fun {a} {b} => Functor__RWST_fmap |}.
+    k {| fmap__ := fun {a} {b} => Functor__RWST_fmap ;
+         op_zlzd____ := fun {a} {b} => Functor__RWST_op_zlzd__ |}.
 
 Local Definition Applicative__RWST_op_zlztzg__ {inst_w} {inst_m} {inst_r}
   {inst_s} `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
@@ -102,7 +103,7 @@ Local Definition Applicative__RWST_op_ztzg__ {inst_w} {inst_m} {inst_r} {inst_s}
    : forall {a} {b},
      (RWST inst_r inst_w inst_s inst_m) a ->
      (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) b :=
-  fun {a} {b} => fun x y => Applicative__RWST_op_zlztzg__ (fmap (const id) x) y.
+  fun {a} {b} => fun a1 a2 => Applicative__RWST_op_zlztzg__ (id <$ a1) a2.
 
 Local Definition Applicative__RWST_liftA2 {inst_w} {inst_m} {inst_r} {inst_s}
   `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
@@ -126,20 +127,12 @@ Program Instance Applicative__RWST {w} {m} {r} {s} `{Monoid w} `{Functor m}
   `{Monad m}
    : Applicative (RWST r w s m) :=
   fun _ k =>
-    k {| op_ztzg____ := fun {a} {b} => Applicative__RWST_op_ztzg__ ;
+    k {| liftA2__ := fun {a} {b} {c} => Applicative__RWST_liftA2 ;
          op_zlztzg____ := fun {a} {b} => Applicative__RWST_op_zlztzg__ ;
-         liftA2__ := fun {a} {b} {c} => Applicative__RWST_liftA2 ;
+         op_ztzg____ := fun {a} {b} => Applicative__RWST_op_ztzg__ ;
          pure__ := fun {a} => Applicative__RWST_pure |}.
 
-(* Translating `instance Alternative__RWST' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
-
-Local Definition Monad__RWST_op_zgzg__ {inst_w} {inst_m} {inst_r} {inst_s}
-  `{Monoid inst_w} `{Monad inst_m}
-   : forall {a} {b},
-     (RWST inst_r inst_w inst_s inst_m) a ->
-     (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) b :=
-  fun {a} {b} => _*>_.
+(* Skipping instance Alternative__RWST of class Alternative *)
 
 Definition Monad__RWST_op_zgzgze__ {inst_w} {inst_m} {inst_r} {inst_s} `{_
    : Monoid inst_w} `{_ : Monad inst_m}
@@ -148,6 +141,13 @@ Definition Monad__RWST_op_zgzgze__ {inst_w} {inst_m} {inst_r} {inst_s} `{_
      (a -> RWST inst_r inst_w inst_s inst_m b) ->
      RWST inst_r inst_w inst_s inst_m b :=
   fun {a} {b} => Monad__RWST_tmp.
+
+Local Definition Monad__RWST_op_zgzg__ {inst_w} {inst_m} {inst_r} {inst_s}
+  `{Monoid inst_w} `{Monad inst_m}
+   : forall {a} {b},
+     (RWST inst_r inst_w inst_s inst_m) a ->
+     (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) b :=
+  fun {a} {b} => fun m k => Monad__RWST_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__RWST_return_ {inst_w} {inst_m} {inst_r} {inst_s}
   `{Monoid inst_w} `{Monad inst_m}
@@ -161,19 +161,26 @@ Program Instance Monad__RWST {w} {m} {r} {s} `{Monoid w} `{Monad m}
          op_zgzgze____ := fun {a} {b} => Monad__RWST_op_zgzgze__ ;
          return___ := fun {a} => Monad__RWST_return_ |}.
 
-(* Translating `instance MonadFail__RWST' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+Local Definition MonadFail__RWST_fail {inst_w} {inst_m} {inst_r} {inst_s}
+  `{Monoid inst_w} `{Control.Monad.Fail.MonadFail inst_m}
+   : forall {a}, String -> (RWST inst_r inst_w inst_s inst_m) a :=
+  fun {a} =>
+    fun msg => Mk_RWST (fun arg_0__ arg_1__ => Control.Monad.Fail.fail msg).
 
-(* Translating `instance MonadPlus__RWST' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "MonadPlus" unsupported *)
+Program Instance MonadFail__RWST {w} {m} {r} {s} `{Monoid w}
+  `{Control.Monad.Fail.MonadFail m}
+   : Control.Monad.Fail.MonadFail (RWST r w s m) :=
+  fun _ k => k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__RWST_fail |}.
 
-(* Translating `instance MonadFix__RWST' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadPlus__RWST of class MonadPlus *)
+
+(* Skipping instance MonadFix__RWST of class MonadFix *)
 
 Local Definition MonadTrans__RWST_lift {inst_w} {inst_r} {inst_s} `{(Monoid
    inst_w)}
-   : forall {m} {a} `{Monad m}, m a -> (RWST inst_r inst_w inst_s) m a :=
-  fun {m} {a} `{Monad m} =>
+   : forall {m} {a},
+     forall `{(Monad m)}, m a -> (RWST inst_r inst_w inst_s) m a :=
+  fun {m} {a} `{(Monad m)} =>
     fun m =>
       Mk_RWST (fun arg_0__ arg_1__ =>
                  match arg_0__, arg_1__ with
@@ -183,11 +190,10 @@ Local Definition MonadTrans__RWST_lift {inst_w} {inst_r} {inst_s} `{(Monoid
 Program Instance MonadTrans__RWST {w} {r} {s} `{(Monoid w)}
    : Control.Monad.Trans.Class.MonadTrans (RWST r w s) :=
   fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{Monad m} =>
+    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(Monad m)} =>
            MonadTrans__RWST_lift |}.
 
-(* Translating `instance MonadIO__RWST' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.IO.Class" "MonadIO" unsupported *)
+(* Skipping instance MonadIO__RWST of class MonadIO *)
 
 Definition ask {w} {m} {r} {s} `{Monoid w} `{Monad m} : RWST r w s m r :=
   Mk_RWST (fun r s => return_ (pair (pair r s) mempty)).
@@ -357,8 +363,11 @@ Definition writer {m} {a} {w} {r} {s} `{(Monad m)}
                end).
 
 (* External variables:
-     Applicative Functor Identity Mk_Identity Monad Monad__RWST_tmp Monoid const fmap
-     id mappend mempty op_z2218U__ op_zgzgze__ op_zt__ op_ztzg__ pair pure return_
-     runIdentity tt unit Control.Monad.Signatures.CallCC
-     Control.Monad.Trans.Class.MonadTrans Data.Tuple.uncurry
+     Applicative Functor Identity Mk_Identity Monad Monad__RWST_tmp Monoid String
+     const fmap fmap__ id liftA2__ mappend mempty op_z2218U__ op_zgzg____ op_zgzgze__
+     op_zgzgze____ op_zlzd__ op_zlzd____ op_zlztzg____ op_zt__ op_ztzg____ pair pure
+     pure__ return_ return___ runIdentity tt unit Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
+     Control.Monad.Trans.Class.lift__ Data.Tuple.uncurry
 *)

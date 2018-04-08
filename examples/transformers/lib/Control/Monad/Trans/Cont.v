@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Trans.Class.
 Require Import Data.Functor.Identity.
 Require GHC.Base.
@@ -39,12 +40,12 @@ Local Definition Functor__ContT_fmap {inst_r} {inst_m}
 
 Local Definition Functor__ContT_op_zlzd__ {inst_r} {inst_m}
    : forall {a} {b}, a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) a :=
-  fun {a} {b} => fun x => Functor__ContT_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__ContT_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__ContT {r} {m} : GHC.Base.Functor (ContT r m) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ContT_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__ContT_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ContT_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ContT_op_zlzd__ |}.
 
 Local Definition Applicative__ContT_op_zlztzg__ {inst_r} {inst_m}
    : forall {a} {b},
@@ -76,15 +77,10 @@ Definition Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
 Program Instance Applicative__ContT {r} {m}
    : GHC.Base.Applicative (ContT r m) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ContT_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ContT_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ContT_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ContT_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ContT_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__ContT_pure |}.
-
-Local Definition Monad__ContT_op_zgzg__ {inst_r} {inst_m}
-   : forall {a} {b},
-     (ContT inst_r inst_m) a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition Monad__ContT_op_zgzgze__ {inst_r} {inst_m}
    : forall {a} {b},
@@ -92,6 +88,11 @@ Local Definition Monad__ContT_op_zgzgze__ {inst_r} {inst_m}
      (a -> (ContT inst_r inst_m) b) -> (ContT inst_r inst_m) b :=
   fun {a} {b} =>
     fun m k => Mk_ContT (fun c => runContT m (fun x => runContT (k x) c)).
+
+Local Definition Monad__ContT_op_zgzg__ {inst_r} {inst_m}
+   : forall {a} {b},
+     (ContT inst_r inst_m) a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) b :=
+  fun {a} {b} => fun m k => Monad__ContT_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__ContT_return_ {inst_r} {inst_m}
    : forall {a}, a -> (ContT inst_r inst_m) a :=
@@ -103,22 +104,28 @@ Program Instance Monad__ContT {r} {m} : GHC.Base.Monad (ContT r m) :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__ContT_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__ContT_return_ |}.
 
-(* Translating `instance MonadFail__ContT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+Local Definition MonadFail__ContT_fail {inst_m} {inst_r}
+  `{(Control.Monad.Fail.MonadFail inst_m)}
+   : forall {a}, GHC.Base.String -> (ContT inst_r inst_m) a :=
+  fun {a} => fun msg => Mk_ContT (fun arg_0__ => Control.Monad.Fail.fail msg).
+
+Program Instance MonadFail__ContT {m} {r} `{(Control.Monad.Fail.MonadFail m)}
+   : Control.Monad.Fail.MonadFail (ContT r m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ContT_fail |}.
 
 Local Definition MonadTrans__ContT_lift {inst_r}
-   : forall {m} {a} `{GHC.Base.Monad m}, m a -> (ContT inst_r) m a :=
-  fun {m} {a} `{GHC.Base.Monad m} =>
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> (ContT inst_r) m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} =>
     fun m => Mk_ContT (fun arg_0__ => m GHC.Base.>>= arg_0__).
 
 Program Instance MonadTrans__ContT {r}
    : Control.Monad.Trans.Class.MonadTrans (ContT r) :=
   fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{GHC.Base.Monad m} =>
+    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
            MonadTrans__ContT_lift |}.
 
-(* Translating `instance MonadIO__ContT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.IO.Class" "MonadIO" unsupported *)
+(* Skipping instance MonadIO__ContT of class MonadIO *)
 
 Definition callCC {a} {r} {m} {b}
    : ((a -> ContT r m b) -> ContT r m a) -> ContT r m a :=
@@ -176,8 +183,13 @@ Definition withCont {b} {r} {a}
                (f GHC.Base.∘ (fun arg_1__ => runIdentity GHC.Base.∘ arg_1__))).
 
 (* External variables:
-     Identity Mk_Identity Type runIdentity Control.Monad.Trans.Class.MonadTrans
-     Control.Monad.Trans.Class.lift GHC.Base.Applicative GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__
-     GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     Identity Mk_Identity Type runIdentity Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift
+     Control.Monad.Trans.Class.lift__ GHC.Base.Applicative GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.String GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.liftA2__ GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___
 *)

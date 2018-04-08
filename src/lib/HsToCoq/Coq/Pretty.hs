@@ -12,9 +12,8 @@ Stability   : experimental
 
 module HsToCoq.Coq.Pretty (
   renderGallina,
+  showP,
   Gallina(..),
-  renderIdent, renderAccessIdent, renderNum, renderString, renderOp,
-  renderLocality, renderFullLocality,
   ) where
 
 import Prelude hiding (Num)
@@ -139,6 +138,9 @@ maybeParen False = id
 
 class Gallina a where
   renderGallina' :: Int -> a -> Doc
+
+showP :: Gallina a => a -> String
+showP = T.unpack . displayTStrict . renderOneLine . renderGallina
 
 renderGallina :: Gallina a => a -> Doc
 renderGallina = renderGallina' 0
@@ -268,13 +270,6 @@ instance Gallina Term where
   renderGallina' p (LetTick pat val body) = group $ maybeParen (p > letPrec) $
         "let" <+> align (group $   "'" <> align (renderGallina pat)
                                <+> nest 2 (":=" <!> renderGallina val))
-    <+> "in" <!> align (renderGallina body)
-
-  renderGallina' p (LetTickDep pat oin val rty body) = group $ maybeParen (p > letPrec) $
-        "let" <+> align (group $   "'" <> align (renderGallina pat)
-                               <>  render_in_annot oin
-                               <+> nest 2 (":=" <!> renderGallina val
-                                                <>  render_rtype  rty))
     <+> "in" <!> align (renderGallina body)
 
   renderGallina' p (If SymmetricIf c odrty t f) = maybeParen (p > ifPrec) $
@@ -407,8 +402,6 @@ instance Gallina Binder where
     binder_decoration Ungeneralizable ex False $ renderGallina name
   renderGallina' _ (Typed gen ex names ty) =
     binder_decoration gen ex True $ render_args_ty H names ty
-  renderGallina' _ (BindLet name oty val) =
-    hang 2 . parensN $ renderGallina name <> render_opt_type oty </> ":=" <+> align (renderGallina val)
   renderGallina' _ (Generalized ex ty)  =
     binder_decoration Generalizable ex True $ renderGallina ty
 
@@ -538,9 +531,7 @@ instance Gallina AssumptionKeyword where
   renderGallina' _ Hypotheses = "Hypotheses"
 
 instance Gallina Assums where
-  renderGallina' _ = \case
-    UnparenthesizedAssums ids ty -> renderAss ids ty
-    ParenthesizedAssums   groups -> group . vsep $ parensN . align . uncurry renderAss <$> groups
+  renderGallina' _ (Assums ids ty) = renderAss ids ty
     where
       renderAss ids ty = fillSep (renderGallina <$> ids) <> nest 2 (render_type ty)
 

@@ -573,6 +573,34 @@ Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.Strin
 
 (* Converted value declarations: *)
 
+(* Skipping instance HasDynFlags__WriterT *)
+
+(* Skipping instance HasDynFlags__ReaderT *)
+
+(* Skipping instance HasDynFlags__MaybeT *)
+
+(* Skipping instance HasDynFlags__ExceptT *)
+
+(* Skipping instance Outputable__OnOff of class Outputable *)
+
+(* Skipping instance Outputable__PackageFlag of class Outputable *)
+
+(* Skipping instance Outputable__ModRenaming of class Outputable *)
+
+(* Skipping instance Outputable__PackageArg of class Outputable *)
+
+(* Skipping instance Outputable__GhcMode of class Outputable *)
+
+(* Skipping instance Show__SafeHaskellMode of class Show *)
+
+(* Skipping instance Outputable__SafeHaskellMode of class Outputable *)
+
+(* Skipping instance Outputable__Language of class Outputable *)
+
+(* Skipping instance Outputable__WarnReason of class Outputable *)
+
+(* Skipping instance ToJson__WarnReason of class ToJson *)
+
 Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo := {}.
 Proof.
 Admitted.
@@ -588,6 +616,8 @@ Admitted.
 Instance Ord__BmiVersion : GHC.Base.Ord BmiVersion := {}.
 Proof.
 Admitted.
+
+(* Skipping instance Ord__SseVersion *)
 
 Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion := {}.
 Proof.
@@ -613,15 +643,23 @@ Instance Eq___Option : GHC.Base.Eq_ Option := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__OnOff of class Show *)
+
 Instance Eq___OnOff
    : forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (OnOff a) :=
   {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__Way of class Show *)
+
+(* Skipping instance Ord__Way *)
+
 Instance Eq___Way : GHC.Base.Eq_ Way := {}.
 Proof.
 Admitted.
+
+(* Skipping instance Show__RtsOptsEnabled of class Show *)
 
 Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader := {}.
 Proof.
@@ -639,6 +677,8 @@ Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__PackageArg of class Show *)
+
 Instance Eq___PackageArg : GHC.Base.Eq_ PackageArg := {}.
 Proof.
 Admitted.
@@ -647,6 +687,8 @@ Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__GhcLink of class Show *)
+
 Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink := {}.
 Proof.
 Admitted.
@@ -654,6 +696,8 @@ Admitted.
 Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode := {}.
 Proof.
 Admitted.
+
+(* Skipping instance Show__HscTarget of class Show *)
 
 Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget := {}.
 Proof.
@@ -667,9 +711,25 @@ Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__Language of class Show *)
+
 Instance Eq___Language : GHC.Base.Eq_ Language := {}.
 Proof.
 Admitted.
+
+(* Skipping instance Show__WarnReason of class Show *)
+
+(* Skipping instance Show__WarningFlag of class Show *)
+
+(* Skipping instance Eq___WarningFlag *)
+
+(* Skipping instance Show__GeneralFlag of class Show *)
+
+(* Skipping instance Eq___GeneralFlag *)
+
+(* Skipping instance Show__DumpFlag of class Show *)
+
+(* Skipping instance Eq___DumpFlag *)
 
 Axiom optimisationFlags : EnumSet.EnumSet GeneralFlag.
 

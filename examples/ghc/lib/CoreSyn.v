@@ -828,11 +828,9 @@ Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__TaggedBndr' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TaggedBndr of class Outputable *)
 
-(* Translating `instance Binary__IsOrphan' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__IsOrphan of class Binary *)
 
 Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -869,8 +867,7 @@ Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
 Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
   fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Outputable__AltCon' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__AltCon of class Outputable *)
 
 Local Definition Eq___UnfoldingGuidance_op_zeze__
    : UnfoldingGuidance -> UnfoldingGuidance -> bool :=
@@ -893,8 +890,7 @@ Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
     k {| GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
 
-(* Translating `instance Data__IsOrphan' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__IsOrphan of class Data *)
 
 Local Definition Eq___TickishPlacement_op_zeze__
    : TickishPlacement -> TickishPlacement -> bool :=
@@ -934,14 +930,11 @@ Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
     k {| GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
 
-(* Translating `instance Data__Bind' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Bind of class Data *)
 
-(* Translating `instance Data__Expr' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Expr of class Data *)
 
-(* Translating `instance Data__Tickish' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Tickish of class Data *)
 
 (* Translating `instance Ord__Tickish' failed: using a record pattern for the
    unknown constructor `ProfNote' unsupported *)
@@ -960,8 +953,7 @@ Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
     k {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
 
-(* Translating `instance Data__AltCon' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__AltCon of class Data *)
 
 Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1550,22 +1542,24 @@ Definition mkConApp2 {b}
 
 (* External variables:
      Alt AnnAlt AnnExpr Arg Eq Gt Lt None Some Type andb bool comparison cons
-     deAnnotate' deTagExpr false list negb nil op_zt__ option pair true unit
+     deAnnotate' deTagExpr false id list negb nil op_zt__ option pair true unit
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
      BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length DataCon.DataCon
      DataCon.dataConTag DataCon.dataConTyCon DataCon.dataConWorkId DynFlags.DynFlags
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
-     GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
-     GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
-     GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Real.Rational Literal.Literal Literal.mkMachChar Literal.mkMachDouble
-     Literal.mkMachFloat Literal.mkMachString Module.Module Module.ModuleSet
-     Module.emptyModuleSet Module.mkModuleSet Name.Name Name.nameOccName
-     NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName Panic.assertPanic
-     Panic.noString Panic.panicStr Panic.warnPprTrace TyCoRep.Type_isCoercionTy_maybe
-     TyCoRep.mkCoVarCo TyCoRep.mkTyVarTy TyCon.TyCon Util.count Util.debugIsOn
-     Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
-     VarEnv.InScopeSet
+     GHC.Base.compare__ GHC.Base.map GHC.Base.mappend GHC.Base.max__ GHC.Base.min
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Char.Char
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal Literal.mkMachChar
+     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
+     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
+     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
+     Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace
+     TyCoRep.Type_isCoercionTy_maybe TyCoRep.mkCoVarCo TyCoRep.mkTyVarTy TyCon.TyCon
+     Util.count Util.debugIsOn Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar
+     Var.isId Var.isTyVar VarEnv.InScopeSet
 *)

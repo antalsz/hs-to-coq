@@ -128,11 +128,9 @@ Program Instance Ord__Backwards {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
          GHC.Base.max__ := Ord__Backwards_max ;
          GHC.Base.min__ := Ord__Backwards_min |}.
 
-(* Translating `instance Read__Backwards' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Backwards of class Read *)
 
-(* Translating `instance Show__Backwards' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Backwards of class Show *)
 
 Local Definition Functor__Backwards_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
    : forall {a} {b}, (a -> b) -> (Backwards inst_f) a -> (Backwards inst_f) b :=
@@ -145,13 +143,13 @@ Local Definition Functor__Backwards_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
 Local Definition Functor__Backwards_op_zlzd__ {inst_f} `{(GHC.Base.Functor
    inst_f)}
    : forall {a} {b}, a -> (Backwards inst_f) b -> (Backwards inst_f) a :=
-  fun {a} {b} => fun x => Functor__Backwards_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Backwards_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Backwards {f} `{(GHC.Base.Functor f)}
    : GHC.Base.Functor (Backwards f) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Backwards_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Backwards_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Backwards_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Backwards_op_zlzd__ |}.
 
 Local Definition Applicative__Backwards_op_zlztzg__ {inst_f}
   `{(GHC.Base.Applicative inst_f)}
@@ -168,9 +166,7 @@ Local Definition Applicative__Backwards_op_ztzg__ {inst_f}
    : forall {a} {b},
      (Backwards inst_f) a -> (Backwards inst_f) b -> (Backwards inst_f) b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Backwards_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id)
-                                                        x) y.
+    fun a1 a2 => Applicative__Backwards_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Backwards_liftA2 {inst_f} `{(GHC.Base.Applicative
    inst_f)}
@@ -188,13 +184,12 @@ Local Definition Applicative__Backwards_pure {inst_f} `{(GHC.Base.Applicative
 Program Instance Applicative__Backwards {f} `{(GHC.Base.Applicative f)}
    : GHC.Base.Applicative (Backwards f) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Backwards_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Backwards_pure |}.
 
-(* Translating `instance Alternative__Backwards' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Skipping instance Alternative__Backwards of class Alternative *)
 
 Local Definition Foldable__Backwards_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -225,17 +220,6 @@ Local Definition Foldable__Backwards_fold {inst_f} `{(Data.Foldable.Foldable
    : forall {m}, forall `{GHC.Base.Monoid m}, (Backwards inst_f) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__Backwards_foldMap GHC.Base.id.
 
-Local Definition Foldable__Backwards_elem {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (Backwards inst_f) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
-                                                             (Foldable__Backwards_foldMap (Coq.Program.Basics.compose
-                                                                                           Data.SemigroupInternal.Mk_Any
-                                                                                           p))) _GHC.Base.==_.
-
 Local Definition Foldable__Backwards_foldl {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (Backwards inst_f) a -> b :=
@@ -249,16 +233,9 @@ Local Definition Foldable__Backwards_foldr' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (Backwards inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ arg_11__ =>
-      match arg_9__, arg_10__, arg_11__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_12__ arg_13__ arg_14__ =>
-              match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => k GHC.Base.$! f x z
-              end in
-          Foldable__Backwards_foldl f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__Backwards_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__Backwards_foldr {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -273,27 +250,16 @@ Local Definition Foldable__Backwards_toList {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (Backwards inst_f) a -> list a :=
   fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__Backwards_foldr c n t
-                        end).
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__Backwards_foldr c n t)).
 
 Local Definition Foldable__Backwards_foldl' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (Backwards inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__, arg_25__, arg_26__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_27__ arg_28__ arg_29__ =>
-              match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => k GHC.Base.$! f z x
-              end in
-          Foldable__Backwards_foldr f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__Backwards_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__Backwards_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -310,9 +276,7 @@ Local Definition Foldable__Backwards_null {inst_f} `{(Data.Foldable.Foldable
 Program Instance Foldable__Backwards {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (Backwards f) :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__Backwards_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
            Foldable__Backwards_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__Backwards_foldMap ;
@@ -376,15 +340,25 @@ Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
            Traversable__Backwards_traverse |}.
 
 (* External variables:
-     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq list negb
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length Data.Foldable.null
-     Data.SemigroupInternal.Mk_Any Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.getAny
-     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable Data.Traversable.sequenceA
-     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build GHC.Base.const
-     GHC.Base.fmap GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zlztztzg__ GHC.Base.op_zsze__ GHC.Base.pure GHC.Num.Int GHC.Num.Num
+     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
+     liftEq liftEq__ list negb Coq.Program.Basics.compose Data.Foldable.Foldable
+     Data.Foldable.foldMap Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length Data.Foldable.length__ Data.Foldable.null
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA Data.Traversable.sequenceA__
+     Data.Traversable.sequence__ Data.Traversable.traverse
+     Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build' GHC.Base.compare__
+     GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__
+     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
+     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
+     GHC.Base.op_zlztzg____ GHC.Base.op_zlztztzg__ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Num.Int GHC.Num.Num
 *)

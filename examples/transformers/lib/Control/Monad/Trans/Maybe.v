@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Control.Monad.Trans.Except.
@@ -147,11 +148,9 @@ Program Instance Ord__MaybeT {m} {a} `{Ord1 m} `{GHC.Base.Ord a}
          GHC.Base.max__ := Ord__MaybeT_max ;
          GHC.Base.min__ := Ord__MaybeT_min |}.
 
-(* Translating `instance Read__MaybeT' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__MaybeT of class Read *)
 
-(* Translating `instance Show__MaybeT' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__MaybeT of class Show *)
 
 Local Definition Foldable__MaybeT_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -168,82 +167,53 @@ Local Definition Foldable__MaybeT_foldl {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (MaybeT inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_19__ arg_20__ arg_21__ =>
-      match arg_19__, arg_20__, arg_21__ with
-      | f, z, t =>
-          Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
-                                          (Foldable__MaybeT_foldMap (Coq.Program.Basics.compose
-                                                                     Data.SemigroupInternal.Mk_Dual
-                                                                     (Coq.Program.Basics.compose
-                                                                      Data.SemigroupInternal.Mk_Endo (GHC.Base.flip f)))
-                                           t)) z
-      end.
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Foldable__MaybeT_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                 (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                  GHC.Base.flip f)) t)) z.
 
 Local Definition Foldable__MaybeT_foldr' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (MaybeT inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ arg_11__ =>
-      match arg_9__, arg_10__, arg_11__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_12__ arg_13__ arg_14__ =>
-              match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => k GHC.Base.$! f x z
-              end in
-          Foldable__MaybeT_foldl f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in Foldable__MaybeT_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__MaybeT_foldr {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a} {b}, (a -> b -> b) -> b -> (MaybeT inst_f) a -> b :=
   fun {a} {b} =>
-    fun arg_4__ arg_5__ arg_6__ =>
-      match arg_4__, arg_5__, arg_6__ with
-      | f, z, t =>
-          Data.SemigroupInternal.appEndo (Foldable__MaybeT_foldMap
-                                          (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f) t) z
-      end.
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Foldable__MaybeT_foldMap
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f) t) z.
 
 Local Definition Foldable__MaybeT_foldl' {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {b} {a}, (b -> a -> b) -> b -> (MaybeT inst_f) a -> b :=
   fun {b} {a} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__, arg_25__, arg_26__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_27__ arg_28__ arg_29__ =>
-              match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => k GHC.Base.$! f z x
-              end in
-          Foldable__MaybeT_foldr f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in Foldable__MaybeT_foldr f' GHC.Base.id xs z0.
 
 Local Definition Foldable__MaybeT_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (MaybeT inst_f) a -> GHC.Num.Int :=
   fun {a} =>
-    Foldable__MaybeT_foldl' (fun arg_64__ arg_65__ =>
-                               match arg_64__, arg_65__ with
+    Foldable__MaybeT_foldl' (fun arg_0__ arg_1__ =>
+                               match arg_0__, arg_1__ with
                                | c, _ => c GHC.Num.+ #1
                                end) #0.
 
 Local Definition Foldable__MaybeT_null {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (MaybeT inst_f) a -> bool :=
-  fun {a} => Foldable__MaybeT_foldr (fun arg_61__ arg_62__ => false) true.
+  fun {a} => Foldable__MaybeT_foldr (fun arg_0__ arg_1__ => false) true.
 
 Local Definition Foldable__MaybeT_toList {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (MaybeT inst_f) a -> list a :=
   fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__MaybeT_foldr c n t
-                        end).
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__MaybeT_foldr c n t)).
 
 Local Definition Foldable__MaybeT_product {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -264,23 +234,11 @@ Local Definition Foldable__MaybeT_fold {inst_f} `{(Data.Foldable.Foldable
    : forall {m}, forall `{GHC.Base.Monoid m}, (MaybeT inst_f) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__MaybeT_foldMap GHC.Base.id.
 
-Local Definition Foldable__MaybeT_elem {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (MaybeT inst_f) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.SemigroupInternal.getAny
-                                                             (Foldable__MaybeT_foldMap (Coq.Program.Basics.compose
-                                                                                        Data.SemigroupInternal.Mk_Any
-                                                                                        p))) _GHC.Base.==_.
-
 Program Instance Foldable__MaybeT {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (MaybeT f) :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__MaybeT_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__MaybeT_fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__MaybeT_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__MaybeT_foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__MaybeT_foldl ;
@@ -347,33 +305,33 @@ Local Definition Applicative__MaybeT_op_zlztzg__ {inst_m} `{GHC.Base.Functor
                            end)
                     end)).
 
-(* Translating `instance Alternative__MaybeT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Skipping instance Alternative__MaybeT of class Alternative *)
 
-(* Translating `instance MonadFail__MaybeT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+Definition Monad__MaybeT_op_zgzgze__ {inst_m} `{_ : GHC.Base.Monad inst_m} :=
+  fun {a} {b} => (@Monad_tmp inst_m _ _ _ a b).
 
-(* Translating `instance MonadPlus__MaybeT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
+Local Definition Monad__MaybeT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a} {b},
+     (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) b :=
+  fun {a} {b} => fun m k => Monad__MaybeT_op_zgzgze__ m (fun arg_0__ => k).
 
-(* Translating `instance MonadFix__MaybeT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadPlus__MaybeT of class MonadPlus *)
+
+(* Skipping instance MonadFix__MaybeT of class MonadFix *)
 
 Local Definition MonadTrans__MaybeT_lift
-   : forall {m} {a} `{GHC.Base.Monad m}, m a -> MaybeT m a :=
-  fun {m} {a} `{GHC.Base.Monad m} => Mk_MaybeT GHC.Base.∘ GHC.Base.liftM Some.
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> MaybeT m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} => Mk_MaybeT GHC.Base.∘ GHC.Base.liftM Some.
 
 Program Instance MonadTrans__MaybeT
    : Control.Monad.Trans.Class.MonadTrans MaybeT :=
   fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{GHC.Base.Monad m} =>
+    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
            MonadTrans__MaybeT_lift |}.
 
-(* Translating `instance MonadIO__MaybeT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.IO.Class" "MonadIO" unsupported *)
+(* Skipping instance MonadIO__MaybeT of class MonadIO *)
 
-(* Translating `instance MonadZip__MaybeT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
+(* Skipping instance MonadZip__MaybeT of class MonadZip *)
 
 Definition exceptToMaybeT {m} {e} {a} `{(GHC.Base.Functor m)}
    : Control.Monad.Trans.Except.ExceptT e m a -> MaybeT m a :=
@@ -420,13 +378,13 @@ Local Definition Functor__MaybeT_fmap {inst_m} `{(GHC.Base.Functor inst_m)}
 
 Local Definition Functor__MaybeT_op_zlzd__ {inst_m} `{(GHC.Base.Functor inst_m)}
    : forall {a} {b}, a -> (MaybeT inst_m) b -> (MaybeT inst_m) a :=
-  fun {a} {b} => fun x => Functor__MaybeT_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__MaybeT_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__MaybeT {m} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (MaybeT m) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeT_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeT_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeT_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeT_op_zlzd__ |}.
 
 Local Definition Applicative__MaybeT_pure {inst_m} `{GHC.Base.Functor inst_m}
   `{GHC.Base.Monad inst_m}
@@ -448,18 +406,10 @@ Program Instance Applicative__MaybeT {m} `{GHC.Base.Functor m} `{GHC.Base.Monad
   m}
    : GHC.Base.Applicative (MaybeT m) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeT_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeT_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeT_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeT_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeT_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__MaybeT_pure |}.
-
-Local Definition Monad__MaybeT_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a} {b},
-     (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
-
-Definition Monad__MaybeT_op_zgzgze__ {inst_m} `{_ : GHC.Base.Monad inst_m} :=
-  fun {a} {b} => (@Monad_tmp inst_m _ _ _ a b).
 
 Local Definition Monad__MaybeT_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
    : forall {a}, a -> (MaybeT inst_m) a :=
@@ -471,6 +421,15 @@ Program Instance Monad__MaybeT {m} `{(GHC.Base.Monad m)}
     k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeT_op_zgzg__ ;
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeT_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__MaybeT_return_ |}.
+
+Local Definition MonadFail__MaybeT_fail {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a}, GHC.Base.String -> (MaybeT inst_m) a :=
+  fun {a} => fun arg_0__ => Mk_MaybeT (GHC.Base.return_ None).
+
+Program Instance MonadFail__MaybeT {m} `{(GHC.Base.Monad m)}
+   : Control.Monad.Fail.MonadFail (MaybeT m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__MaybeT_fail |}.
 
 Program Instance Traversable__MaybeT {f} `{(Data.Traversable.Traversable f)}
    : Data.Traversable.Traversable (MaybeT f) :=
@@ -495,21 +454,32 @@ Definition maybeToExceptT {m} {e} {a} `{(GHC.Base.Functor m)}
 
 (* External variables:
      Eq1 Gt Lt Monad_tmp None Ord1 Some bool compare1 comparison eq1 false
-     liftCompare liftEq list negb option pair true Control.Monad.Signatures.CallCC
-     Control.Monad.Signatures.Listen Control.Monad.Signatures.Pass
-     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Except.ExceptT
+     liftCompare liftCompare__ liftEq liftEq__ list negb option pair true
+     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail__
+     Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
+     Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
+     Control.Monad.Trans.Class.lift__ Control.Monad.Trans.Except.ExceptT
      Control.Monad.Trans.Except.Mk_ExceptT Coq.Program.Basics.compose
      Data.Either.Left Data.Either.Right Data.Either.either Data.Foldable.Foldable
-     Data.Foldable.foldMap Data.Functor.op_zlzdzg__ Data.Maybe.maybe
-     Data.SemigroupInternal.Mk_Any Data.SemigroupInternal.Mk_Dual
+     Data.Foldable.foldMap Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Functor.op_zlzdzg__ Data.Maybe.maybe Data.SemigroupInternal.Mk_Dual
      Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
      Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getAny Data.SemigroupInternal.getDual
-     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable Data.Traversable.traverse GHC.Base.Applicative
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.id
-     GHC.Base.liftM GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     GHC.Base.String GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
+     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
 *)

@@ -38,6 +38,11 @@ skip Data.SemigroupInternal.Show__All
 skip Data.SemigroupInternal.Show__Alt
 skip Data.SemigroupInternal.Show__Dual
 
+# Needs Alternative
+skip Data.SemigroupInternal.Semigroup__Alt
+skip Data.SemigroupInternal.Monoid__Alt
+skip Data.SemigroupInternal.MonadPlus__Alt
+
 # This removes a suprious {k}
 redefine Instance Data.SemigroupInternal.Eq___Alt {f} {a} `{(GHC.Base.Eq_ (f a))}
    : GHC.Base.Eq_ (Alt f a) :=

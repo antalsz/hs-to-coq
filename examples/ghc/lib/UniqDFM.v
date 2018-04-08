@@ -40,8 +40,7 @@ Arguments Mk_TaggedVal {_} _ _.
 Arguments UDFM {_} _ _.
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__UniqDFM' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UniqDFM of class Outputable *)
 
 Local Definition Eq___TaggedVal_op_zeze__ {inst_val} `{GHC.Base.Eq_ inst_val}
    : (TaggedVal inst_val) -> (TaggedVal inst_val) -> bool :=
@@ -70,20 +69,18 @@ Local Definition Functor__TaggedVal_fmap
 
 Local Definition Functor__TaggedVal_op_zlzd__
    : forall {a} {b}, a -> TaggedVal b -> TaggedVal a :=
-  fun {a} {b} => fun x => Functor__TaggedVal_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__TaggedVal_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ |}.
 
 (* Skipping instance Functor__UniqDFM *)
 
-(* Translating `instance Data__UniqDFM' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__UniqDFM of class Data *)
 
-(* Translating `instance Data__TaggedVal' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__TaggedVal of class Data *)
 
 Definition addToUDFM_Directly {elt}
    : UniqDFM elt -> Unique.Unique -> elt -> UniqDFM elt :=
@@ -455,10 +452,12 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key}
      Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
      Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.OldList.sortBy
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup
-     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.foldr
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zlzlzgzg__ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
-     UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.foldr GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__
+     GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__
+     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze____ GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zp__ UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
      UniqFM.ufmToIntMap Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

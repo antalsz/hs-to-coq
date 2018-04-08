@@ -1,7 +1,3 @@
-Definition default_elem {t : Type -> Type} {a} `{GHC.Base.Eq_ a} (foldMap : (a -> Data.SemigroupInternal.Any) -> t a -> Data.SemigroupInternal.Any) :
-  a -> t a -> bool :=
-   fun x xs => Data.SemigroupInternal.getAny (foldMap (fun y => Data.SemigroupInternal.Mk_Any (GHC.Base.op_zeze__ x y)) xs).
-
 Definition default_foldable {f:Type -> Type}
   (foldMap : forall m a, forall (S : GHC.Base.Semigroup m) (M : GHC.Base.Monoid m), (a -> m) -> f a -> m)
   (foldr : forall a b, (a -> b -> b) -> b -> f a -> b):=
@@ -23,12 +19,6 @@ Definition default_foldable {f:Type -> Type}
   in
   Foldable__Dict_Build
     f
-    (fun {a} `{GHC.Base.Eq_ a} =>
-       Coq.Program.Basics.compose
-         (fun p => Coq.Program.Basics.compose
-                  Data.SemigroupInternal.getAny
-                  (foldMap _ _ _ _ (fun x => Data.SemigroupInternal.Mk_Any (p x))))
-         GHC.Base.op_zeze__ )
     (* fold *)
     (fun m (S : GHC.Base.Semigroup m) (M : GHC.Base.Monoid m) => foldMap _ _ _ _ GHC.Base.id)
     (* foldMap *)

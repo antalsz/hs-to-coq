@@ -44,14 +44,11 @@ Instance Unpeel_UnVarGraph : Prim.Unpeel UnVarGraph (Bag.Bag Gen) :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_UnVarGraph y => y end) Mk_UnVarGraph.
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__UnVarGraph' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UnVarGraph of class Outputable *)
 
-(* Translating `instance Outputable__Gen' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Gen of class Outputable *)
 
-(* Translating `instance Outputable__UnVarSet' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UnVarSet of class Outputable *)
 
 Local Definition Eq___UnVarSet_op_zeze__ : UnVarSet -> UnVarSet -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
@@ -168,7 +165,8 @@ Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
-     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Word
-     GHC.Prim.coerce UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey
-     Var.Var VarEnv.VarEnv
+     GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Num.Word GHC.Prim.coerce
+     UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey Var.Var
+     VarEnv.VarEnv
 *)

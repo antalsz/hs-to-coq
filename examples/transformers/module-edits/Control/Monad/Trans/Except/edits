@@ -1,5 +1,7 @@
-order Control.Monad.Trans.Except.Functor__ExceptT Control.Monad.Trans.Except.Applicative__ExceptT_liftA2
-order Control.Monad.Trans.Except.Functor__ExceptT Control.Monad.Trans.Except.Traversable__ExceptT
+order Control.Monad.Trans.Except.Functor__ExceptT    Control.Monad.Trans.Except.Applicative__ExceptT_liftA2
+order Control.Monad.Trans.Except.Functor__ExceptT    Control.Monad.Trans.Except.Traversable__ExceptT
+order Control.Monad.Trans.Except.MonadTrans__ExceptT Control.Monad.Trans.Except.MonadFail__ExceptT_fail
+order Control.Monad.Trans.Except.Monad__ExceptT      Control.Monad.Trans.Except.MonadFail__ExceptT_fail
 
 rewrite forall eq, Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) = @Data.Functor.Classes.liftEq inst_m _ _ _ (Data.Functor.Classes.liftEq eq)
 
@@ -16,3 +18,7 @@ redefine Definition Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ {inst_
                            | Data.Either.Left e => GHC.Base.return_ (Data.Either.Left e)
                            | Data.Either.Right x => runExceptT (k x)
                            end)).
+
+# Not sure why I need all these order constriants
+order Control.Monad.Trans.Except.Applicative__ExceptT  Control.Monad.Trans.Except.Monad__ExceptT_return_
+order Control.Monad.Trans.Except.runExceptT Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ Control.Monad.Trans.Except.Monad__ExceptT_op_zgzg__

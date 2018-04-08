@@ -13,6 +13,7 @@ skip ConLike.conLikeImplBangs
 
 # Needs stuff in DataCon
 skip ConLike.conLikeIsInfix
+skip ConLike.NamedThing__ConLike
 
 # in Core
 skip ConLike.conLikeExTyVars

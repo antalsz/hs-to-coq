@@ -344,12 +344,15 @@ Class MonadLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !Func
     monad_applicative_ap : forall A B (f : t (A -> B)) (x: t A), (f <*> x) = ap f x
   }.
 
+(* We dropped Alternative
 Class MonadPlusLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !Alternative t, !MonadPlus t, !FunctorLaws t, !ApplicativeLaws t, !MonadLaws t} :=
   { mzero_left : forall A B (f : A -> t B), (mzero >>= f)  =  mzero;
     mzero_right: forall A B (v : t A), (v >> mzero)   =  (mzero : t B);
     mplus_associative : forall A (f g h : t A),
           mplus f (mplus g h) = mplus (mplus f g) h;
   }.
+*)
+
 
 (* --------------------- Semigroup and Monoid ----------------------- *)
 
@@ -367,7 +370,7 @@ Proof.
   split;
     unfold op_zlzlzgzg__, Semigroup__unit, op_zlzlzgzg____,
          Base.Semigroup__unit_op_zlzlzgzg__;
-    unfold mappend, mempty, mconcat, Monoid__unit, mappend__, empty__, mconcat__,
+    unfold mappend, mempty, mconcat, Monoid__unit, mappend__,  mconcat__,
          Base.Monoid__unit_mappend,
          Base.Monoid__unit_mempty,
          Base.Monoid__unit_mconcat.

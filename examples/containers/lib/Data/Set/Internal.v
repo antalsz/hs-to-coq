@@ -72,16 +72,6 @@ Instance MergeSetDefault {a} : Default (MergeSet a) :=
 
 (* Converted value declarations: *)
 
-Local Definition Foldable__Set__elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Set_ a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | _, Tip => false
-                 | x, Bin _ y l r => orb (x GHC.Base.== y) (orb (go x l) (go x r))
-                 end in
-    go.
-
 Local Definition Foldable__Set__fold
    : forall {m}, forall `{GHC.Base.Monoid m}, Set_ m -> m :=
   fun {m} `{GHC.Base.Monoid m} =>
@@ -113,23 +103,17 @@ Local Definition Foldable__Set__foldMap
                    end in
       go t.
 
-(* Translating `instance Data__Set_' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Set_ of class Data *)
 
-(* Translating `instance IsList__Set_' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Exts" "IsList" unsupported *)
+(* Skipping instance IsList__Set_ of class IsList *)
 
-(* Translating `instance Show__Set_' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Set_ of class Show *)
 
-(* Translating `instance Show1__Set_' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Set_ of class Show1 *)
 
-(* Translating `instance Read__Set_' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Set_ of class Read *)
 
-(* Translating `instance NFData__Set_' failed: OOPS! Cannot find information for
-   class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__Set_ of class NFData *)
 
 Definition combineEq {a} `{GHC.Base.Eq_ a} : list a -> list a :=
   fun arg_0__ =>
@@ -1210,8 +1194,8 @@ Local Definition Foldable__Set__length : forall {a}, Set_ a -> GHC.Num.Int :=
 
 Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Set__elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Set__fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__Set__fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__Set__foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__Set__foldl ;
@@ -1244,15 +1228,23 @@ End Notations.
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
      id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldl
-     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
-     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq GHC.Base.Eq_
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const
-     GHC.Base.flip GHC.Base.foldr GHC.Base.map GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.Classes.Eq1
+     Data.Functor.Classes.Ord1 Data.Functor.Classes.liftCompare
+     Data.Functor.Classes.liftCompare__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq__ GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.Semigroup GHC.Base.compare GHC.Base.compare__ GHC.Base.const
+     GHC.Base.flip GHC.Base.foldr GHC.Base.map GHC.Base.mappend GHC.Base.mappend__
+     GHC.Base.max__ GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3
+     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
      Utils.Containers.Internal.PtrEquality.ptrEq
 *)

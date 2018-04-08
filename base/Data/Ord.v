@@ -63,12 +63,12 @@ Local Definition Functor__Down_fmap
 
 Local Definition Functor__Down_op_zlzd__
    : forall {a} {b}, a -> Down b -> Down a :=
-  fun {a} {b} => fun x => Functor__Down_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Down_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Down : GHC.Base.Functor Down :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Down_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Down_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Down_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Down_op_zlzd__ |}.
 
 Local Definition Applicative__Down_op_zlztzg__
    : forall {a} {b}, Down (a -> b) -> Down a -> Down b :=
@@ -77,8 +77,7 @@ Local Definition Applicative__Down_op_zlztzg__
 Local Definition Applicative__Down_op_ztzg__
    : forall {a} {b}, Down a -> Down b -> Down b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Down_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
+    fun a1 a2 => Applicative__Down_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Down_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> Down a -> Down b -> Down c :=
@@ -89,19 +88,19 @@ Local Definition Applicative__Down_pure : forall {a}, a -> Down a :=
 
 Program Instance Applicative__Down : GHC.Base.Applicative Down :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Down_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Down_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Down_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Down_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Down_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Down_pure |}.
-
-Local Definition Monad__Down_op_zgzg__
-   : forall {a} {b}, Down a -> Down b -> Down b :=
-  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition Monad__Down_op_zgzgze__
    : forall {a} {b}, Down a -> (a -> Down b) -> Down b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | Mk_Down a, k => k a end.
+
+Local Definition Monad__Down_op_zgzg__
+   : forall {a} {b}, Down a -> Down b -> Down b :=
+  fun {a} {b} => fun m k => Monad__Down_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__Down_return_ : forall {a}, a -> Down a :=
   fun {a} => GHC.Base.pure.
@@ -143,11 +142,9 @@ Program Instance Monoid__Down {a} `{GHC.Base.Monoid a}
 (* Translating `instance Num__Down' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance Read__Down' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Down of class Read *)
 
-(* Translating `instance Show__Down' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Down of class Show *)
 
 Local Definition Eq___Down_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Down inst_a -> Down inst_a -> bool :=
@@ -179,8 +176,14 @@ Definition comparing {a} {b} `{(GHC.Base.Ord a)}
 (* External variables:
      Gt Lt bool comparison list GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
-     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.mappend GHC.Base.mconcat
-     GHC.Base.mempty GHC.Base.op_zeze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__
-     GHC.Base.op_ztzg__ GHC.Base.pure GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
-     GHC.Prim.coerce
+     GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
+     GHC.Base.liftA2__ GHC.Base.mappend GHC.Base.mappend__ GHC.Base.max__
+     GHC.Base.mconcat GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze____ GHC.Base.op_zl____ GHC.Base.op_zlzd__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__
+     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zlztzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return___ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
 *)

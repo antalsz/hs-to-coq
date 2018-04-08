@@ -194,36 +194,9 @@ Instance Unpeel_Product a : GHC.Prim.Unpeel (Product a) a :=
 Instance Unpeel_Sum a : GHC.Prim.Unpeel (Sum a) a :=
   GHC.Prim.Build_Unpeel _ _ getSum Mk_Sum.
 
-Local Definition Semigroup__Alt_op_zlzlzgzg__ {inst_f} {inst_a}
-  `{GHC.Base.Alternative inst_f}
-   : Alt inst_f inst_a -> Alt inst_f inst_a -> Alt inst_f inst_a :=
-  GHC.Prim.coerce _GHC.Base.<|>_.
+(* Skipping instance Semigroup__Alt *)
 
-Program Instance Semigroup__Alt {f} {a} `{GHC.Base.Alternative f}
-   : GHC.Base.Semigroup (Alt f a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Alt_op_zlzlzgzg__ |}.
-
-Local Definition Monoid__Alt_mappend {inst_f} {inst_a} `{GHC.Base.Alternative
-  inst_f}
-   : (Alt inst_f inst_a) -> (Alt inst_f inst_a) -> (Alt inst_f inst_a) :=
-  _GHC.Base.<<>>_.
-
-Local Definition Monoid__Alt_mempty {inst_f} {inst_a} `{GHC.Base.Alternative
-  inst_f}
-   : (Alt inst_f inst_a) :=
-  Mk_Alt GHC.Base.empty.
-
-Local Definition Monoid__Alt_mconcat {inst_f} {inst_a} `{GHC.Base.Alternative
-  inst_f}
-   : list (Alt inst_f inst_a) -> (Alt inst_f inst_a) :=
-  GHC.Base.foldr Monoid__Alt_mappend Monoid__Alt_mempty.
-
-Program Instance Monoid__Alt {f} {a} `{GHC.Base.Alternative f}
-   : GHC.Base.Monoid (Alt f a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Alt_mappend ;
-         GHC.Base.mconcat__ := Monoid__Alt_mconcat ;
-         GHC.Base.mempty__ := Monoid__Alt_mempty |}.
+(* Skipping instance Monoid__Alt *)
 
 Local Definition Semigroup__Product_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
    : Product inst_a -> Product inst_a -> Product inst_a :=
@@ -258,12 +231,12 @@ Local Definition Functor__Product_fmap
 
 Local Definition Functor__Product_op_zlzd__
    : forall {a} {b}, a -> Product b -> Product a :=
-  fun {a} {b} => fun x => Functor__Product_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Product_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Product : GHC.Base.Functor Product :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ |}.
 
 Local Definition Applicative__Product_op_zlztzg__
    : forall {a} {b}, Product (a -> b) -> Product a -> Product b :=
@@ -272,9 +245,7 @@ Local Definition Applicative__Product_op_zlztzg__
 Local Definition Applicative__Product_op_ztzg__
    : forall {a} {b}, Product a -> Product b -> Product b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Product_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                       y.
+    fun a1 a2 => Applicative__Product_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Product_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> Product a -> Product b -> Product c :=
@@ -286,18 +257,18 @@ Local Definition Applicative__Product_pure : forall {a}, a -> Product a :=
 
 Program Instance Applicative__Product : GHC.Base.Applicative Product :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Product_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Product_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Product_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Product_pure |}.
-
-Local Definition Monad__Product_op_zgzg__
-   : forall {a} {b}, Product a -> Product b -> Product b :=
-  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition Monad__Product_op_zgzgze__
    : forall {a} {b}, Product a -> (a -> Product b) -> Product b :=
   fun {a} {b} => fun m k => k (getProduct m).
+
+Local Definition Monad__Product_op_zgzg__
+   : forall {a} {b}, Product a -> Product b -> Product b :=
+  fun {a} {b} => fun m k => Monad__Product_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__Product_return_ : forall {a}, a -> Product a :=
   fun {a} => GHC.Base.pure.
@@ -339,12 +310,12 @@ Local Definition Functor__Sum_fmap
   fun {a} {b} => GHC.Prim.coerce.
 
 Local Definition Functor__Sum_op_zlzd__ : forall {a} {b}, a -> Sum b -> Sum a :=
-  fun {a} {b} => fun x => Functor__Sum_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Sum_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Sum : GHC.Base.Functor Sum :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Sum_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Sum_op_zlzd__ |}.
 
 Local Definition Applicative__Sum_op_zlztzg__
    : forall {a} {b}, Sum (a -> b) -> Sum a -> Sum b :=
@@ -353,8 +324,7 @@ Local Definition Applicative__Sum_op_zlztzg__
 Local Definition Applicative__Sum_op_ztzg__
    : forall {a} {b}, Sum a -> Sum b -> Sum b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Sum_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
+    fun a1 a2 => Applicative__Sum_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Sum_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> Sum a -> Sum b -> Sum c :=
@@ -365,18 +335,18 @@ Local Definition Applicative__Sum_pure : forall {a}, a -> Sum a :=
 
 Program Instance Applicative__Sum : GHC.Base.Applicative Sum :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Sum_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Sum_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Sum_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Sum_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Sum_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Sum_pure |}.
-
-Local Definition Monad__Sum_op_zgzg__
-   : forall {a} {b}, Sum a -> Sum b -> Sum b :=
-  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition Monad__Sum_op_zgzgze__
    : forall {a} {b}, Sum a -> (a -> Sum b) -> Sum b :=
   fun {a} {b} => fun m k => k (getSum m).
+
+Local Definition Monad__Sum_op_zgzg__
+   : forall {a} {b}, Sum a -> Sum b -> Sum b :=
+  fun {a} {b} => fun m k => Monad__Sum_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__Sum_return_ : forall {a}, a -> Sum a :=
   fun {a} => GHC.Base.pure.
@@ -490,12 +460,12 @@ Local Definition Functor__Dual_fmap
 
 Local Definition Functor__Dual_op_zlzd__
    : forall {a} {b}, a -> Dual b -> Dual a :=
-  fun {a} {b} => fun x => Functor__Dual_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Dual_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Dual : GHC.Base.Functor Dual :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Dual_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Dual_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Dual_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Dual_op_zlzd__ |}.
 
 Local Definition Applicative__Dual_op_zlztzg__
    : forall {a} {b}, Dual (a -> b) -> Dual a -> Dual b :=
@@ -504,8 +474,7 @@ Local Definition Applicative__Dual_op_zlztzg__
 Local Definition Applicative__Dual_op_ztzg__
    : forall {a} {b}, Dual a -> Dual b -> Dual b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Dual_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x) y.
+    fun a1 a2 => Applicative__Dual_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Dual_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> Dual a -> Dual b -> Dual c :=
@@ -516,18 +485,18 @@ Local Definition Applicative__Dual_pure : forall {a}, a -> Dual a :=
 
 Program Instance Applicative__Dual : GHC.Base.Applicative Dual :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Dual_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Dual_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Dual_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Dual_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Dual_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Dual_pure |}.
-
-Local Definition Monad__Dual_op_zgzg__
-   : forall {a} {b}, Dual a -> Dual b -> Dual b :=
-  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition Monad__Dual_op_zgzgze__
    : forall {a} {b}, Dual a -> (a -> Dual b) -> Dual b :=
   fun {a} {b} => fun m k => k (getDual m).
+
+Local Definition Monad__Dual_op_zgzg__
+   : forall {a} {b}, Dual a -> Dual b -> Dual b :=
+  fun {a} {b} => fun m k => Monad__Dual_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__Dual_return_ : forall {a}, a -> Dual a :=
   fun {a} => GHC.Base.pure.
@@ -560,11 +529,10 @@ Program Instance Functor__Alt {f} `{GHC.Base.Functor f}
    : GHC.Base.Functor (Alt f : GHC.Prim.TYPE GHC.Types.LiftedRep ->
                        GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Alt_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Alt_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Alt_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Alt_op_zlzd__ |}.
 
-(* Translating `instance Alternative__Alt' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "Alternative" unsupported *)
+(* Skipping instance Alternative__Alt of class Alternative *)
 
 Local Definition Applicative__Alt_liftA2 {inst_f} `{GHC.Base.Applicative inst_f}
    : forall {a} {b} {c},
@@ -610,13 +578,12 @@ Program Instance Applicative__Alt {f} `{GHC.Base.Applicative f}
    : GHC.Base.Applicative (Alt f : GHC.Prim.TYPE GHC.Types.LiftedRep ->
                            GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Alt_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Alt_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Alt_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Alt_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Alt_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Alt_pure |}.
 
-(* Translating `instance MonadPlus__Alt' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Base" "MonadPlus" unsupported *)
+(* Skipping instance MonadPlus__Alt of class MonadPlus *)
 
 Local Definition Monad__Alt_op_zgzg__ {inst_f} `{GHC.Base.Monad inst_f}
    : forall {a} {b},
@@ -724,40 +691,27 @@ Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
     k (GHC.Base.Ord__Dict_Build _ Ord__Alt_op_zl__ Ord__Alt_op_zlze__
                                 Ord__Alt_op_zg__ Ord__Alt_op_zgze__ Ord__Alt_compare Ord__Alt_max Ord__Alt_min).
 
-(* Skipping instance Show__Alt *)
+(* Skipping instance Show__Alt of class Show *)
 
-(* Skipping instance Read__Alt *)
+(* Skipping instance Read__Alt of class Read *)
 
-(* Translating `instance Generic1__Alt__5' failed: type class instance head:App
-   (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg (Qualid (Bare "k"))
-   :| [])) (PosArg (HasType (App (Qualid (Qualified "Data.SemigroupInternal"
-   "Alt")) (PosArg (Qualid (Bare "f")) :| [])) (Arrow (Qualid (Bare "k")) (App
-   (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified "GHC.Types"
-   "LiftedRep")) :| [])))) :| []) unsupported *)
+(* Skipping instance Generic1__Alt__5 of class Generic1 *)
 
-(* Translating `instance Generic__Alt' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Alt of class Generic *)
 
 (* Translating `instance Num__Product' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Product__LiftedRep' failed: type class
-   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
-   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
-   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.SemigroupInternal" "Product")) :| []) unsupported *)
+(* Skipping instance Generic1__TYPE__Product__LiftedRep of class Generic1 *)
 
-(* Translating `instance Generic__Product' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Product of class Generic *)
 
 (* Translating `instance Bounded__Product' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Show__Product' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Product of class Show *)
 
-(* Translating `instance Read__Product' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Product of class Read *)
 
 Local Definition Ord__Product_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Product inst_a -> Product inst_a -> comparison :=
@@ -815,23 +769,16 @@ Program Instance Ord__Product {a} `{GHC.Base.Ord a}
 (* Translating `instance Num__Sum' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-(* Translating `instance Generic1__TYPE__Sum__LiftedRep' failed: type class
-   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
-   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
-   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.SemigroupInternal" "Sum")) :| []) unsupported *)
+(* Skipping instance Generic1__TYPE__Sum__LiftedRep of class Generic1 *)
 
-(* Translating `instance Generic__Sum' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Sum of class Generic *)
 
 (* Translating `instance Bounded__Sum' failed: OOPS! Cannot find information for
    class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Show__Sum' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Sum of class Show *)
 
-(* Translating `instance Read__Sum' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Sum of class Read *)
 
 Local Definition Ord__Sum_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Sum inst_a -> Sum inst_a -> comparison :=
@@ -884,15 +831,14 @@ Program Instance Ord__Sum {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Sum a) :=
          GHC.Base.max__ := Ord__Sum_max ;
          GHC.Base.min__ := Ord__Sum_min |}.
 
-(* Translating `instance Generic__Any' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Any of class Generic *)
 
 (* Translating `instance Bounded__Any' failed: OOPS! Cannot find information for
    class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Skipping instance Show__Any *)
+(* Skipping instance Show__Any of class Show *)
 
-(* Skipping instance Read__Any *)
+(* Skipping instance Read__Any of class Read *)
 
 Local Definition Ord__Any_compare : Any -> Any -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
@@ -936,15 +882,14 @@ Program Instance Ord__Any : GHC.Base.Ord Any :=
          GHC.Base.max__ := Ord__Any_max ;
          GHC.Base.min__ := Ord__Any_min |}.
 
-(* Translating `instance Generic__All' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__All of class Generic *)
 
 (* Translating `instance Bounded__All' failed: OOPS! Cannot find information for
    class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Skipping instance Show__All *)
+(* Skipping instance Show__All of class Show *)
 
-(* Skipping instance Read__All *)
+(* Skipping instance Read__All of class Read *)
 
 Local Definition Ord__All_compare : All -> All -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
@@ -988,24 +933,18 @@ Program Instance Ord__All : GHC.Base.Ord All :=
          GHC.Base.max__ := Ord__All_max ;
          GHC.Base.min__ := Ord__All_min |}.
 
-(* Translating `instance Generic__Endo' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Endo of class Generic *)
 
-(* Translating `instance Generic1__TYPE__Dual__LiftedRep' failed: type class
-   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
-   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
-   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.SemigroupInternal" "Dual")) :| []) unsupported *)
+(* Skipping instance Generic1__TYPE__Dual__LiftedRep of class Generic1 *)
 
-(* Translating `instance Generic__Dual' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Dual of class Generic *)
 
 (* Translating `instance Bounded__Dual' failed: OOPS! Cannot find information
    for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Skipping instance Show__Dual *)
+(* Skipping instance Show__Dual of class Show *)
 
-(* Skipping instance Read__Dual *)
+(* Skipping instance Read__Dual of class Read *)
 
 Local Definition Ord__Dual_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Dual inst_a -> Dual inst_a -> comparison :=
@@ -1072,16 +1011,22 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
 
 (* External variables:
      Eq Gt Lt Type andb bool comparison false list orb true
-     Coq.Program.Basics.compose GHC.Base.Alternative GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.Semigroup
-     GHC.Base.compare GHC.Base.const GHC.Base.empty GHC.Base.fmap GHC.Base.foldr
-     GHC.Base.id GHC.Base.liftA2 GHC.Base.max GHC.Base.mempty GHC.Base.min
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlzbzg__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlztzg__
-     GHC.Base.op_zsze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
-     GHC.Err.errorWithoutStackTrace GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
-     GHC.Num.op_zt__ GHC.Prim.Build_Unpeel GHC.Prim.TYPE GHC.Prim.Unpeel
-     GHC.Prim.coerce GHC.Real.Integral GHC.Types.LiftedRep
+     Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid
+     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.Semigroup GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr
+     GHC.Base.id GHC.Base.liftA2 GHC.Base.liftA2__ GHC.Base.mappend__ GHC.Base.max
+     GHC.Base.max__ GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__ GHC.Base.min
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zgzgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlzd__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zlztzg__
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return_ GHC.Base.return___ GHC.Err.errorWithoutStackTrace GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Build_Unpeel
+     GHC.Prim.TYPE GHC.Prim.Unpeel GHC.Prim.coerce GHC.Real.Integral
+     GHC.Types.LiftedRep
 *)

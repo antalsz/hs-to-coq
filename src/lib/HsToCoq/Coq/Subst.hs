@@ -33,7 +33,6 @@ class Subst t where
 instance Subst Binder where
   subst _f b@(Inferred _ex _x)    = b
   subst f (Typed gen ex xs ty) = Typed gen ex xs (subst f ty)
-  subst f (BindLet x oty val)  = BindLet x (subst f oty) (subst f val)
   subst f (Generalized ex ty)  = Generalized ex (subst f ty)
 
 instance Subst MatchItem where
@@ -93,8 +92,7 @@ instance Subst Assumption where
     -- The @kwd@ part is pro forma – there are no free variables there
 
 instance Subst Assums where
-  subst f (UnparenthesizedAssums xs ty) = UnparenthesizedAssums xs (subst f ty)
-  subst _f (ParenthesizedAssums _xsTys)   = error "subst"
+  subst f (Assums xs ty) = Assums xs (subst f ty)
 
 instance Subst Definition where
   subst f (LetDef x args oty def) =
@@ -180,8 +178,6 @@ instance Subst Term where
   subst f  (LetTuple xs oret val body) = LetTuple xs (subst f oret) (subst f val) (subst f body)
 
   subst f  (LetTick pat def body) = LetTick (subst f pat) (subst f def) (subst f body)
-
-  subst f  (LetTickDep pat oin def ret body) = LetTickDep (subst f pat) (subst f oin) (subst f def) (subst f ret) (subst f body)
 
   subst f  (If is c oret t fa) = If is (subst f c) (subst f oret) (subst f t) (subst f fa)
 

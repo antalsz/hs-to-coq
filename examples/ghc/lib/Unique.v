@@ -54,11 +54,9 @@ Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
 Program Instance Uniquable__Unique : Uniquable Unique :=
   fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
 
-(* Translating `instance Outputable__Unique' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Unique of class Outputable *)
 
-(* Translating `instance Show__Unique' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Unique of class Show *)
 
 Definition eqUnique : Unique -> Unique -> bool :=
   fun arg_0__ arg_1__ =>
@@ -236,7 +234,8 @@ Definition deriveUnique : Unique -> GHC.Num.Int -> Unique :=
      Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity
      Coq.ZArith.BinInt.Z.to_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
      Data.Bits.shiftL Data.Bits.shiftR FastString.FastString FastString.uniqueOfFS
-     GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.ord
-     GHC.Char.Char GHC.Char.chr GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char GHC.Char.chr
+     GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__
 *)

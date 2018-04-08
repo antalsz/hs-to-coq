@@ -97,21 +97,27 @@ $(RENAMED)/IntSetProperties.hs: containers/tests/intset-properties.hs
 	mkdir -p $(RENAMED)
 	ln -s ../$< $@
 
+HS_TO_COQ_OPTS := \
+  -e ../../base/edits \
+  -e edits \
+  --iface-dir ../../base/ \
+  --iface-dir $(OUT) \
+  -N \
+  -i containers \
+  -i containers/tests \
+  -i containers/dist-install/build \
+  -I containers/include \
+  --ghc -package --ghc QuickCheck \
+
+
 # KEEP THIS IN SYNC WITH THE NEXT RULE (there ought to be a better way)
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $(wildcard module-edits/$$*/flags) edits $(OUT)/README.md
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-	             -e ../base-src/edits \
-	             -e edits \
-	             -N \
-	             -i containers \
-	             -i containers/tests \
-	             -i containers/dist-install/build \
-	             -I containers/include \
-	             --ghc -package --ghc QuickCheck \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
+		     $(HS_TO_COQ_OPTS) \
 	             -o $(OUT) \
 	             $(wildcard containers/$*.hs) $(wildcard containers/tests/$*.hs) $$([[ -e $(RENAMED)/$*.hs ]] && echo $(RENAMED)/$*.hs)
 	               # Can't use $(wildcard $(RENAMED)/$*.hs), I think because of .SECONDEXPANSION
@@ -124,14 +130,7 @@ $(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v)
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-	             -e ../base-src/edits \
-	             -e edits \
-	             -N \
-	             -i containers \
-	             -i containers/tests \
-	             -i containers/dist-install/build \
-	             -I containers/include \
-	             --ghc -package --ghc QuickCheck \
+		     $(HS_TO_COQ_OPTS) \
 	             --ghc -package --ghc HUnit \
 	             --ghc -package --ghc test-framework \
 	             --ghc -package --ghc test-framework-hunit \

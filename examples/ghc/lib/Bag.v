@@ -43,9 +43,9 @@ Arguments TwoBags {_} _ _.
 Arguments ListBag {_} _.
 (* Converted value declarations: *)
 
-(* Skipping instance Outputable__Bag *)
+(* Skipping instance Outputable__Bag of class Outputable *)
 
-(* Skipping instance Data__Bag *)
+(* Skipping instance Data__Bag of class Data *)
 
 (* Skipping instance Foldable__Bag *)
 
@@ -231,12 +231,12 @@ Local Definition Functor__Bag_fmap
   fun {a} {b} => mapBag.
 
 Local Definition Functor__Bag_op_zlzd__ : forall {a} {b}, a -> Bag b -> Bag a :=
-  fun {a} {b} => fun x => Functor__Bag_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Bag_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Bag : GHC.Base.Functor Bag :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ |}.
 
 Definition mapBagM {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> m b) -> Bag a -> m (Bag b) :=
@@ -431,9 +431,9 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
      Data.Foldable.all Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr
      Data.Foldable.length Data.Foldable.mapM_ Data.Maybe.mapMaybe
      Data.OldList.partition Data.Traversable.mapM GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_
-     GHC.List.filter GHC.List.unzip GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
-     MonadUtils.anyM MonadUtils.foldlM MonadUtils.foldrM MonadUtils.mapAccumLM
-     Util.isSingleton Util.partitionWith
+     GHC.Base.Monad GHC.Base.const GHC.Base.fmap__ GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzd____
+     GHC.Base.return_ GHC.List.filter GHC.List.unzip GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zp__ MonadUtils.anyM MonadUtils.foldlM MonadUtils.foldrM
+     MonadUtils.mapAccumLM Util.isSingleton Util.partitionWith
 *)

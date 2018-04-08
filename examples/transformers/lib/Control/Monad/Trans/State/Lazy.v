@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Import Data.Functor.Identity.
@@ -47,13 +48,13 @@ Local Definition Functor__StateT_fmap {inst_m} {inst_s} `{(GHC.Base.Functor
 Local Definition Functor__StateT_op_zlzd__ {inst_m} {inst_s} `{(GHC.Base.Functor
    inst_m)}
    : forall {a} {b}, a -> (StateT inst_s inst_m) b -> (StateT inst_s inst_m) a :=
-  fun {a} {b} => fun x => Functor__StateT_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__StateT_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__StateT {m} {s} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (StateT s m) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateT_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__StateT_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateT_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateT_op_zlzd__ |}.
 
 Local Definition Applicative__StateT_op_zlztzg__ {inst_m} {inst_s}
   `{GHC.Base.Functor inst_m} `{GHC.Base.Monad inst_m}
@@ -101,20 +102,12 @@ Program Instance Applicative__StateT {m} {s} `{GHC.Base.Functor m}
   `{GHC.Base.Monad m}
    : GHC.Base.Applicative (StateT s m) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateT_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateT_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateT_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateT_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateT_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__StateT_pure |}.
 
-(* Translating `instance Alternative__StateT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
-
-Local Definition Monad__StateT_op_zgzg__ {inst_m} {inst_s} `{(GHC.Base.Monad
-   inst_m)}
-   : forall {a} {b},
-     (StateT inst_s inst_m) a ->
-     (StateT inst_s inst_m) b -> (StateT inst_s inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
+(* Skipping instance Alternative__StateT of class Alternative *)
 
 Local Definition Monad__StateT_op_zgzgze__ {inst_m} {inst_s} `{(GHC.Base.Monad
    inst_m)}
@@ -126,6 +119,13 @@ Local Definition Monad__StateT_op_zgzgze__ {inst_m} {inst_s} `{(GHC.Base.Monad
       Mk_StateT (fun s =>
                    let cont_0__ arg_1__ := let 'pair a s' := arg_1__ in runStateT (k a) s' in
                    runStateT m s GHC.Base.>>= cont_0__).
+
+Local Definition Monad__StateT_op_zgzg__ {inst_m} {inst_s} `{(GHC.Base.Monad
+   inst_m)}
+   : forall {a} {b},
+     (StateT inst_s inst_m) a ->
+     (StateT inst_s inst_m) b -> (StateT inst_s inst_m) b :=
+  fun {a} {b} => fun m k => Monad__StateT_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__StateT_return_ {inst_m} {inst_s} `{(GHC.Base.Monad
    inst_m)}
@@ -139,29 +139,33 @@ Program Instance Monad__StateT {m} {s} `{(GHC.Base.Monad m)}
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__StateT_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__StateT_return_ |}.
 
-(* Translating `instance MonadFail__StateT' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+Local Definition MonadFail__StateT_fail {inst_m} {inst_s}
+  `{(Control.Monad.Fail.MonadFail inst_m)}
+   : forall {a}, GHC.Base.String -> (StateT inst_s inst_m) a :=
+  fun {a} => fun str => Mk_StateT (fun arg_0__ => Control.Monad.Fail.fail str).
 
-(* Translating `instance MonadPlus__StateT' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
+Program Instance MonadFail__StateT {m} {s} `{(Control.Monad.Fail.MonadFail m)}
+   : Control.Monad.Fail.MonadFail (StateT s m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__StateT_fail |}.
 
-(* Translating `instance MonadFix__StateT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadPlus__StateT of class MonadPlus *)
+
+(* Skipping instance MonadFix__StateT of class MonadFix *)
 
 Local Definition MonadTrans__StateT_lift {inst_s}
-   : forall {m} {a} `{GHC.Base.Monad m}, m a -> (StateT inst_s) m a :=
-  fun {m} {a} `{GHC.Base.Monad m} =>
+   : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> (StateT inst_s) m a :=
+  fun {m} {a} `{(GHC.Base.Monad m)} =>
     fun m =>
       Mk_StateT (fun s => m GHC.Base.>>= (fun a => GHC.Base.return_ (pair a s))).
 
 Program Instance MonadTrans__StateT {s}
    : Control.Monad.Trans.Class.MonadTrans (StateT s) :=
   fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{GHC.Base.Monad m} =>
+    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
            MonadTrans__StateT_lift |}.
 
-(* Translating `instance MonadIO__StateT' failed: OOPS! Cannot find information
-   for class Qualified "Control.Monad.IO.Class" "MonadIO" unsupported *)
+(* Skipping instance MonadIO__StateT of class MonadIO *)
 
 Definition evalStateT {m} {s} {a} `{(GHC.Base.Monad m)}
    : StateT s m a -> s -> m a :=
@@ -256,9 +260,14 @@ Definition withState {s} {a} : (s -> s) -> State s a -> State s a :=
 
 (* External variables:
      Identity Mk_Identity op_zt__ pair runIdentity tt unit
+     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
-     Data.Tuple.fst Data.Tuple.snd GHC.Base.Applicative GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.fmap GHC.Base.op_z2218U__
-     GHC.Base.op_zgzgze__ GHC.Base.op_ztzg__ GHC.Base.pure GHC.Base.return_
+     Control.Monad.Trans.Class.lift__ Data.Tuple.fst Data.Tuple.snd
+     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.String
+     GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__
+     GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___
 *)

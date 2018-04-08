@@ -28,7 +28,6 @@ import qualified Control.Monad.Trans.State.Lazy    as SL
 import qualified Control.Monad.Trans.RWS.Strict    as RWSS
 import qualified Control.Monad.Trans.RWS.Lazy      as RWSL
 import qualified Control.Monad.Trans.Maybe         as M
-import qualified Control.Monad.Trans.Variables     as V
 
 import qualified Control.Monad.Trans.Parse as P
 
@@ -125,11 +124,6 @@ instance (MonadParse m, Monoid w) => MonadParse (RWSL.RWST r w s m) where
   atEOF      = lift atEOF
 
 instance MonadParse m => MonadParse (M.MaybeT m) where
-  parseWithM = lift . parseWithM
-  peekChar   = lift peekChar
-  atEOF      = lift atEOF
-
-instance (MonadParse m, Ord i) => MonadParse (V.VariablesT i d m) where
   parseWithM = lift . parseWithM
   peekChar   = lift peekChar
   atEOF      = lift atEOF

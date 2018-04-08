@@ -133,7 +133,6 @@ data Term = Forall Binders Term                                                 
           | Let Qualid [Binder] (Maybe Term) Term Term                                         -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
           | LetTuple [Name] (Maybe DepRetType) Term Term                                       -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
           | LetTick Pattern Term Term                                                          -- ^@let ' /pattern/ := /term/ in /term/@
-          | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term                -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
           | If IfStyle Term (Maybe DepRetType) Term Term                                       -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
           | HasType Term Term                                                                  -- ^@/term/ : /term/@
           | CheckType Term Term                                                                -- ^@/term/ <: /term/@
@@ -183,7 +182,6 @@ data Explicitness = Explicit                                                    
 -- |@/binder/ ::=@ – the @/explicitness/@ is extra
 data Binder = Inferred Explicitness Name                                                       -- ^@/name/@ or @{ /name/ }@
             | Typed Generalizability Explicitness (NonEmpty Name) Term                         -- ^@/generalizability/@ @( /name/ … /name/ : /term/ )@ or @/generalizability/@ @{ /name/ … /name/ : /term/ }@
-            | BindLet Name (Maybe Term) Term                                                   -- ^@( /name/ [: /term/] := /term/ )@
             | Generalized Explicitness Term                                                    -- ^@` ( /term/ )@ or @` { /term/ }@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -301,8 +299,7 @@ data AssumptionKeyword = Axiom                                                  
                        deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/assums/ ::=@
-data Assums = UnparenthesizedAssums (NonEmpty Qualid) Term                                     -- ^@/ident/ … /ident/ : /term/@
-            | ParenthesizedAssums (NonEmpty (NonEmpty Qualid, Term))                           -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
+data Assums = Assums (NonEmpty Qualid) Term                                     -- ^@/ident/ … /ident/ : /term/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@[Local] ::=@ – not a part of the grammar /per se/, but a common fragment

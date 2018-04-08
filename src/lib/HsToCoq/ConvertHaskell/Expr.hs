@@ -989,10 +989,10 @@ smartLet ident rhs
 -- variables is caught)
 smartLet ident rhs
     (Coq.Match scruts Nothing eqns)
-    | ident `S.notMember` getFreeVars (NoBinding scruts)
+    | ident `S.notMember` getFreeVars (fmap NoBinding scruts)
     , let intoEqns [] = Just []
           intoEqns [Equation pats body] = do
-            let bound = S.fromList $ definedBy pats
+            let bound = S.fromList $ foldMap definedBy pats
             guard $ ident `S.notMember` bound
             guard $ S.null $ bound `S.intersection` getFreeVars rhs
             return [Equation pats (smartLet ident rhs body)]

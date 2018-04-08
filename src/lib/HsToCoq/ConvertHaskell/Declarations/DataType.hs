@@ -105,7 +105,6 @@ rewriteDataTypeArguments dta bs = do
          Inferred   Coq.Implicit _   -> Left extraImplicit
          Typed    _ Coq.Implicit _ _ -> Left extraImplicit
 
-         BindLet     _ _ _ -> Left complexBinding
          Generalized _ _   -> Left complexBinding
 
   let editIdents  = S.fromList $ dta^.dtParameters <> dta^.dtIndices

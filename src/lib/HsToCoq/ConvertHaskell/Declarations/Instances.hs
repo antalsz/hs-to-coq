@@ -139,68 +139,70 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
+unlessSkipped :: ConversionMonad r m => InstanceInfo -> m [Sentence] -> m [Sentence]
+unlessSkipped (InstanceInfo{..}) act = do
+  view (edits.skipped.contains instanceClass) >>= \case
+    True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName <> " of class " <> qualidBase instanceClass)) ]
+    False -> do
+      view (edits.skipped.contains instanceName) >>= \case
+        True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
+        False -> act
+
 convertClsInstDecl :: ConversionMonad r m => ClsInstDecl GhcRn -> m [Sentence]
 convertClsInstDecl cid@ClsInstDecl{..} = do
-  InstanceInfo{..} <- convertClsInstDeclInfo cid
+  ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
 
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
-  view (edits.skipped.contains instanceName) >>= \case
-    True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
-    False -> ghandle err_handler $ do
-        cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
-                                       (\case ConvertedDefinitionBinding cdef -> pure cdef
-                                              ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
-                                       Nothing -- error handler
+  unlessSkipped ii $ ghandle err_handler $ do
+    cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+                                   (\case ConvertedDefinitionBinding cdef -> pure cdef
+                                          ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
+                                   Nothing -- error handler
 
-        cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                           return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
+    cdefs <-  mapM (\ConvertedDefinition{..} -> do
+                       return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-        defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
-                     -- lookup default methods in the global state, using the
-                     -- empty map if the class name is not found
-                     -- otherwise gives you a map
-                     -- <&> is flip fmap
-                 <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
+    defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
+                 -- lookup default methods in the global state, using the
+                 -- empty map if the class name is not found
+                 -- otherwise gives you a map
+                 -- <&> is flip fmap
+             <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
-        -- implement the instance part of "skip method"
-        skippedMethodsS <- view (edits.skippedMethods)
+    -- implement the instance part of "skip method"
+    skippedMethodsS <- view (edits.skippedMethods)
 
-        let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+    let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
-        let (binds, classTy) = decomposeForall instanceHead
+    let (binds, classTy) = decomposeForall instanceHead
 
-        -- decomposeClassTy can fail, so run it in the monad so that
-        -- failure will be caugh cause the instance to be skipped
-        (className, instTy) <- decomposeClassTy classTy
+    -- decomposeClassTy can fail, so run it in the monad so that
+    -- failure will be caugh cause the instance to be skipped
+    (className, instTy) <- decomposeClassTy classTy
 
-        topoSortInstance instanceName binds className instTy methods
+    topoSortInstance instanceName binds className instTy methods
 
 
 axiomatizeClsInstDecl :: ConversionMonad r m
                       => ClsInstDecl GhcRn        -- Haskell instance we are converting
-                      -> m (Maybe InstanceDefinition)
+                      -> m [Sentence]
 axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
-  instanceName <- convertInstanceName $ hsib_body cid_poly_ty
-  view (edits.skipped.contains instanceName) >>= \case
-    True -> pure Nothing
-    False -> do
-      InstanceInfo{..} <- convertClsInstDeclInfo cid
+  ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
+  unlessSkipped ii $ do
       lookupClassDefn instanceClass >>= \case
         Just (ClassDefinition _ _ _ methods) ->
-          pure . Just . InstanceDefinition instanceName [] instanceHead []
-             $ if null methods
-               then Nothing
-               else Just $ ProofAdmitted ""
+          pure $ [ InstanceSentence $ InstanceDefinition instanceName [] instanceHead []
+                                    $ if null methods then Nothing else Just $ ProofAdmitted "" ]
         Nothing ->
           -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
-          pure Nothing
+          pure []
 
 --------------------------------------------------------------------------------
 
 convertClsInstDecls, axiomatizeClsInstDecls :: forall r m. ConversionMonad r m =>
     [ClsInstDecl GhcRn] -> m [Sentence]
 convertClsInstDecls = foldTraverse convertClsInstDecl
-axiomatizeClsInstDecls insts = (fmap InstanceSentence .  catMaybes) <$> mapM axiomatizeClsInstDecl insts
+axiomatizeClsInstDecls = foldTraverse axiomatizeClsInstDecl
 
 --------------------------------------------------------------------------------
 
@@ -288,7 +290,6 @@ topoSortInstance instanceName params className instTy members = go sorted M.empt
                       (instBnds, instSubst) = (runState ?? M.empty) $ for params $ \case
                         Inferred      ei x     -> Inferred      ei <$> renameInst x
                         Typed       g ei xs ty -> Typed       g ei <$> traverse renameInst xs <*> sub ty
-                        BindLet     x oty val  -> BindLet          <$> renameInst x <*> sub oty <*> sub val
                         Generalized ei tm      -> Generalized   ei <$> sub tm
 
                       -- Why the nested substitution?  The only place the

@@ -16,7 +16,6 @@ import qualified Control.Monad.Trans.RWS.Lazy           as RWSL
 import qualified Control.Monad.Trans.Maybe              as M
 import qualified Control.Monad.Trans.Except             as E
 import qualified Control.Monad.Trans.Cont               as C
-import qualified Control.Monad.Trans.Variables.Internal as V
 import qualified HsToCoq.Util.GHC.Monad                 as GHC
 
 --------------------------------------------------------------------------------
@@ -66,9 +65,6 @@ instance MonadList m => MonadList (E.ExceptT e m) where
   list = lift . list
 
 instance MonadList m => MonadList (C.ContT r m) where
-  list = lift . list
-
-instance (MonadList m, Ord i) => MonadList (V.VariablesT i d m) where
   list = lift . list
 
 instance MonadList m => MonadList (GHC.GhcT m) where

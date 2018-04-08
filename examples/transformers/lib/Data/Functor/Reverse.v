@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Import Data.Functor.Classes.
 Require GHC.Base.
 Import GHC.Base.Notations.
@@ -123,11 +124,9 @@ Program Instance Ord__Reverse {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
          GHC.Base.max__ := Ord__Reverse_max ;
          GHC.Base.min__ := Ord__Reverse_min |}.
 
-(* Translating `instance Read__Reverse' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Reverse of class Read *)
 
-(* Translating `instance Show__Reverse' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Reverse of class Show *)
 
 Local Definition Functor__Reverse_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
    : forall {a} {b}, (a -> b) -> (Reverse inst_f) a -> (Reverse inst_f) b :=
@@ -140,13 +139,13 @@ Local Definition Functor__Reverse_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
 Local Definition Functor__Reverse_op_zlzd__ {inst_f} `{(GHC.Base.Functor
    inst_f)}
    : forall {a} {b}, a -> (Reverse inst_f) b -> (Reverse inst_f) a :=
-  fun {a} {b} => fun x => Functor__Reverse_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Reverse_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Reverse {f} `{(GHC.Base.Functor f)}
    : GHC.Base.Functor (Reverse f) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Reverse_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Reverse_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Reverse_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Reverse_op_zlzd__ |}.
 
 Local Definition Applicative__Reverse_op_zlztzg__ {inst_f}
   `{(GHC.Base.Applicative inst_f)}
@@ -163,9 +162,7 @@ Local Definition Applicative__Reverse_op_ztzg__ {inst_f} `{(GHC.Base.Applicative
    : forall {a} {b},
      (Reverse inst_f) a -> (Reverse inst_f) b -> (Reverse inst_f) b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Reverse_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                       y.
+    fun a1 a2 => Applicative__Reverse_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Reverse_liftA2 {inst_f} `{(GHC.Base.Applicative
    inst_f)}
@@ -183,24 +180,23 @@ Local Definition Applicative__Reverse_pure {inst_f} `{(GHC.Base.Applicative
 Program Instance Applicative__Reverse {f} `{(GHC.Base.Applicative f)}
    : GHC.Base.Applicative (Reverse f) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Reverse_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Reverse_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Reverse_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Reverse_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Reverse_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Reverse_pure |}.
 
-(* Translating `instance Alternative__Reverse' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "Alternative" unsupported *)
-
-Local Definition Monad__Reverse_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
-   : forall {a} {b},
-     (Reverse inst_m) a -> (Reverse inst_m) b -> (Reverse inst_m) b :=
-  fun {a} {b} => _GHC.Base.*>_.
+(* Skipping instance Alternative__Reverse of class Alternative *)
 
 Local Definition Monad__Reverse_op_zgzgze__ {inst_m} `{(GHC.Base.Monad inst_m)}
    : forall {a} {b},
      (Reverse inst_m) a -> (a -> (Reverse inst_m) b) -> (Reverse inst_m) b :=
   fun {a} {b} =>
     fun m f => Mk_Reverse (getReverse m GHC.Base.>>= (getReverse GHC.Base.∘ f)).
+
+Local Definition Monad__Reverse_op_zgzg__ {inst_m} `{(GHC.Base.Monad inst_m)}
+   : forall {a} {b},
+     (Reverse inst_m) a -> (Reverse inst_m) b -> (Reverse inst_m) b :=
+  fun {a} {b} => fun m k => Monad__Reverse_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__Reverse_return_ {inst_m} `{(GHC.Base.Monad inst_m)}
    : forall {a}, a -> (Reverse inst_m) a :=
@@ -213,11 +209,17 @@ Program Instance Monad__Reverse {m} `{(GHC.Base.Monad m)}
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Reverse_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Reverse_return_ |}.
 
-(* Translating `instance MonadFail__Reverse' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fail" "MonadFail" unsupported *)
+Local Definition MonadFail__Reverse_fail {inst_m}
+  `{(Control.Monad.Fail.MonadFail inst_m)}
+   : forall {a}, GHC.Base.String -> (Reverse inst_m) a :=
+  fun {a} => fun msg => Mk_Reverse (Control.Monad.Fail.fail msg).
 
-(* Translating `instance MonadPlus__Reverse' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Base" "MonadPlus" unsupported *)
+Program Instance MonadFail__Reverse {m} `{(Control.Monad.Fail.MonadFail m)}
+   : Control.Monad.Fail.MonadFail (Reverse m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__Reverse_fail |}.
+
+(* Skipping instance MonadPlus__Reverse of class MonadPlus *)
 
 (* Translating `instance Foldable__Reverse' failed: Giving up on mutual
    recursion[Qualified "Data.Foldable" "foldl",Qualified "Data.Foldable" "foldr"]
@@ -226,9 +228,16 @@ Program Instance Monad__Reverse {m} `{(GHC.Base.Monad m)}
 (* Skipping instance Traversable__Reverse *)
 
 (* External variables:
-     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftEq negb
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord
-     GHC.Base.const GHC.Base.fmap GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zlztzg__ GHC.Base.op_zsze__ GHC.Base.op_ztzg__
-     GHC.Base.pure
+     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
+     liftEq liftEq__ negb Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Control.Monad.Fail.fail__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Ord GHC.Base.String GHC.Base.compare__ GHC.Base.const
+     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____ GHC.Base.op_zl____
+     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
+     GHC.Base.op_zlztzg__ GHC.Base.op_zlztzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return___
 *)

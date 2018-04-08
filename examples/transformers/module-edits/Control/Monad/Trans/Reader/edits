@@ -1,1 +1,4 @@
 order Control.Monad.Trans.Reader.Functor__ReaderT Control.Monad.Trans.Reader.Applicative__ReaderT_liftA2
+order Control.Monad.Trans.Reader.MonadTrans__ReaderT Control.Monad.Trans.Reader.MonadFail__ReaderT_fail
+order Control.Monad.Trans.Reader.Monad__ReaderT Control.Monad.Trans.Reader.MonadFail__ReaderT_fail
+

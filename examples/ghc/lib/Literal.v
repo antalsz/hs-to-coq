@@ -64,14 +64,11 @@ Parameter inCharRange : GHC.Char.Char -> bool.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Binary__Literal' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__Literal of class Binary *)
 
-(* Translating `instance Outputable__Literal' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Literal of class Outputable *)
 
-(* Translating `instance Data__Literal' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Literal of class Data *)
 
 Definition absentLiteralOf : TyCon.TyCon -> option Literal :=
   fun tc => UniqFM.lookupUFM absent_lits (TyCon.tyConName tc).
@@ -436,9 +433,11 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      DynFlags.DynFlags DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD
      DynFlags.tARGET_MIN_INT DynFlags.targetPlatform FastString.FastString
      FastString.fastStringToByteString FastString.mkFastString GHC.Base.Eq_
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.max__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound
      GHC.Enum.minBound GHC.Err.Build_Default GHC.Err.Default GHC.Int.Int32
      GHC.Int.Int64 GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
      GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.fromIntegral GHC.Real.toInteger

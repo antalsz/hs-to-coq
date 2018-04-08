@@ -170,9 +170,17 @@ HS_TO_COQ_GHC_OPTS=\
      -e ../../base/edits \
      -e ../containers/edits \
      -e ../transformers/edits \
+     --iface-dir ../../base \
+     --iface-dir ../containers/lib \
+     --iface-dir ../transformers/lib \
+     --iface-dir $(OUT) \
      -e edits \
      -N \
 
+include interface-deps.mk
+
+%.h2ci: %.v
+	test -e $@
 
 .SECONDEXPANSION:
 $(OUTFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits

@@ -64,14 +64,11 @@ Instance Default__CmmType : GHC.Err.Default CmmType :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__CmmType' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__CmmType of class Outputable *)
 
-(* Translating `instance Outputable__CmmCat' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__CmmCat of class Outputable *)
 
-(* Translating `instance Outputable__Width' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Width of class Outputable *)
 
 Local Definition Eq___ForeignHint_op_zeze__
    : ForeignHint -> ForeignHint -> bool :=
@@ -103,8 +100,7 @@ Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat :=
     k {| GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
 
-(* Translating `instance Show__Width' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Width of class Show *)
 
 (* Skipping instance Ord__Width *)
 
@@ -407,7 +403,7 @@ Definition bWord : DynFlags.DynFlags -> CmmType :=
 (* External variables:
      andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
-     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.Integer
-     GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div Panic.noString Panic.panic
-     Panic.panicStr
+     GHC.Base.op_zeze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div
+     Panic.noString Panic.panic Panic.panicStr
 *)

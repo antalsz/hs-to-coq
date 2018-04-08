@@ -21,6 +21,7 @@ Require Data.Either.
 Require GHC.Base.
 Require GHC.Prim.
 Import Control.Category.Notations.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -186,21 +187,21 @@ Local Definition Functor__ArrowMonad_fmap {inst_a} `{Arrow inst_a}
 
 Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}
    : forall {a} {b}, a -> (ArrowMonad inst_a) b -> (ArrowMonad inst_a) a :=
-  fun {a} {b} => fun x => Functor__ArrowMonad_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__ArrowMonad_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__ArrowMonad {a} `{Arrow a}
    : GHC.Base.Functor (ArrowMonad a) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ |}.
 
 (* Skipping instance Applicative__ArrowMonad *)
 
 (* Skipping instance Monad__ArrowMonad *)
 
-(* Skipping instance Alternative__ArrowMonad *)
+(* Skipping instance Alternative__ArrowMonad of class Alternative *)
 
-(* Skipping instance MonadPlus__ArrowMonad *)
+(* Skipping instance MonadPlus__ArrowMonad of class MonadPlus *)
 
 Local Definition ArrowApply__arrow_app
    : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
@@ -324,5 +325,6 @@ End Notations.
 (* External variables:
      Type op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either
-     GHC.Base.Functor GHC.Base.const GHC.Prim.arrow
+     GHC.Base.Functor GHC.Base.const GHC.Base.fmap__ GHC.Base.op_z2218U__
+     GHC.Base.op_zlzd____ GHC.Prim.arrow
 *)

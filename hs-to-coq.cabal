@@ -44,13 +44,8 @@ library
                      , HsToCoq.Util.Parsec
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
+                     , HsToCoq.Util.FVs
                      , Control.Monad.Trans.Counter
-                     , Control.Monad.Trans.Variables.Internal
-                     , Control.Monad.Variables.Class.Internal
-                     , Control.Monad.Variables.Internal
-                     , Control.Monad.Trans.Variables
-                     , Control.Monad.Variables.Class
-                     , Control.Monad.Variables
                      , Control.Monad.DefinedIdents
                      , Control.Monad.Trans.Parse
                      , Control.Monad.Trans.NewlinesParse

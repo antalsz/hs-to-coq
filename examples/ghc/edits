@@ -49,6 +49,15 @@ rename value Outputable.vbar          = Panic.someSDoc
 rewrite forall x y, Outputable.punctuate x y = Panic.someSDoc
 rewrite forall x str msg, Outputable.pprTraceDebug str msg x = x
 
+# Skip serialization-related instances
+skip Outputable.Outputable
+skip Outputable.OutputableBndr
+skip Json.ToJson
+skip Binary.Binary
+# and other non-interesting classes
+skip GHC.PackageDb.BinaryStringRep
+skip GHC.PackageDb.DbUnitIdModuleRep
+
 # Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP
 rename value BasicTypes.Fixity   = BasicTypes.Mk_Fixity

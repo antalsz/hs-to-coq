@@ -37,20 +37,23 @@ Instance Unique_ConLike : Unique.Uniquable ConLike := {}. Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Uniquable__ConLike' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__ConLike_getUnique : ConLike -> Unique.Unique :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | RealDataCon dc => Unique.getUnique dc
+    | PatSynCon ps => Unique.getUnique ps
+    end.
 
-(* Translating `instance NamedThing__ConLike' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
+Program Instance Uniquable__ConLike : Unique.Uniquable ConLike :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__ConLike_getUnique |}.
 
-(* Translating `instance Outputable__ConLike' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance NamedThing__ConLike *)
 
-(* Translating `instance OutputableBndr__ConLike' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "OutputableBndr" unsupported *)
+(* Skipping instance Outputable__ConLike of class Outputable *)
 
-(* Translating `instance Data__ConLike' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance OutputableBndr__ConLike of class OutputableBndr *)
+
+(* Skipping instance Data__ConLike of class Data *)
 
 Definition conLikeArity : ConLike -> BasicTypes.Arity :=
   fun arg_0__ =>
@@ -101,7 +104,8 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
      bool list negb BasicTypes.Arity Data.Foldable.all Data.Foldable.any
      DataCon.DataCon DataCon.dataConFieldLabels DataCon.dataConName
      DataCon.dataConSourceArity FieldLabel.FieldLabel FieldLabel.FieldLabelString
-     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.List.filter Name.Name
-     PatSyn.PatSyn PatSyn.patSynArity PatSyn.patSynFieldLabels PatSyn.patSynName
-     Unique.getUnique
+     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zsze____ GHC.List.filter Name.Name PatSyn.PatSyn PatSyn.patSynArity
+     PatSyn.patSynFieldLabels PatSyn.patSynName Unique.Uniquable Unique.Unique
+     Unique.getUnique Unique.getUnique__
 *)

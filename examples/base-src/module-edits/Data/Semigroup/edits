@@ -19,6 +19,7 @@ skip Data.Semigroup.stimesMonoid
 
 # needs stimesMonoid, Alternative
 skip Data.Semigroup.Semigroup__Alt
+skip Data.Semigroup.MonadPlus__Option
 
 # looping
 skip Data.Semigroup.cycle1

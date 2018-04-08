@@ -37,8 +37,7 @@ Instance Unpeel_UniqSet ele
 
 (* Skipping instance Eq___UniqSet *)
 
-(* Translating `instance Outputable__UniqSet' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__UniqSet of class Outputable *)
 
 Local Definition Monoid__UniqSet_mappend {inst_a}
    : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
@@ -64,8 +63,7 @@ Program Instance Monoid__UniqSet {a} : GHC.Base.Monoid (UniqSet a) :=
          GHC.Base.mconcat__ := Monoid__UniqSet_mconcat ;
          GHC.Base.mempty__ := Monoid__UniqSet_mempty |}.
 
-(* Translating `instance Data__UniqSet' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__UniqSet of class Data *)
 
 Definition addOneToUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> a -> UniqSet a :=
@@ -251,14 +249,15 @@ Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=
 (* External variables:
      bool cons list op_zt__ option Data.Foldable.foldl' Data.Foldable.foldr
      GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.map GHC.Base.mappend
-     GHC.Base.mconcat GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zlzlzgzg__
-     GHC.Num.Int GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce UniqFM.UniqFM
-     UniqFM.addToUFM UniqFM.allUFM UniqFM.anyUFM UniqFM.delFromUFM
-     UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.delListFromUFM_Directly
-     UniqFM.elemUFM UniqFM.elemUFM_Directly UniqFM.emptyUFM UniqFM.filterUFM
-     UniqFM.filterUFM_Directly UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.lookupUFM
-     UniqFM.lookupUFM_Directly UniqFM.minusUFM UniqFM.nonDetEltsUFM
-     UniqFM.nonDetFoldUFM UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetKeysUFM
-     UniqFM.partitionUFM UniqFM.plusUFM UniqFM.sizeUFM UniqFM.unitUFM
-     Unique.Uniquable Unique.Unique
+     GHC.Base.mappend__ GHC.Base.mconcat GHC.Base.mconcat__ GHC.Base.mempty
+     GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zlzlzgzg__
+     GHC.Base.op_zlzlzgzg____ GHC.Num.Int GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
+     GHC.Prim.coerce UniqFM.UniqFM UniqFM.addToUFM UniqFM.allUFM UniqFM.anyUFM
+     UniqFM.delFromUFM UniqFM.delFromUFM_Directly UniqFM.delListFromUFM
+     UniqFM.delListFromUFM_Directly UniqFM.elemUFM UniqFM.elemUFM_Directly
+     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
+     UniqFM.isNullUFM UniqFM.lookupUFM UniqFM.lookupUFM_Directly UniqFM.minusUFM
+     UniqFM.nonDetEltsUFM UniqFM.nonDetFoldUFM UniqFM.nonDetFoldUFM_Directly
+     UniqFM.nonDetKeysUFM UniqFM.partitionUFM UniqFM.plusUFM UniqFM.sizeUFM
+     UniqFM.unitUFM Unique.Uniquable Unique.Unique
 *)

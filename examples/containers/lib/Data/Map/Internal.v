@@ -24,6 +24,7 @@ Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
+Require Data.Functor.Classes.
 Require Data.Functor.Identity.
 Require Data.Maybe.
 Require Data.Set.Internal.
@@ -164,43 +165,23 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
 
 (* Skipping instance Monad__WhenMissing *)
 
-(* Translating `instance Data__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Map of class Data *)
 
-(* Translating `instance IsList__Map' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Exts" "IsList" unsupported *)
-
-(* Translating `instance Eq2__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Eq2" unsupported *)
+(* Skipping instance IsList__Map of class IsList *)
 
 (* Skipping instance Eq1__Map *)
-
-(* Translating `instance Ord2__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Ord2" unsupported *)
 
 (* Skipping instance Ord1__Map *)
 
 (* Translating `instance Show2__Map' failed: OOPS! Cannot find information for
    class Qualified "Data.Functor.Classes" "Show2" unsupported *)
 
-(* Translating `instance Show1__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Map of class Show1 *)
 
-(* Translating `instance Read1__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Map of class Read1 *)
 
 Local Definition Functor__Map_op_zlzd__ {k : Type} {a : Type} {b : Type} :=
   (@functor__Map_op_zlzd__ k a b).
-
-Local Definition Foldable__Map_elem {inst_k}
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (Map inst_k) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | _, Tip => false
-                 | x, Bin _ _ v l r => orb (x GHC.Base.== v) (orb (go x l) (go x r))
-                 end in
-    go.
 
 Local Definition Foldable__Map_fold {inst_k}
    : forall {m}, forall `{GHC.Base.Monoid m}, (Map inst_k) m -> m :=
@@ -234,14 +215,11 @@ Local Definition Foldable__Map_foldMap {inst_k}
                    end in
       go t.
 
-(* Translating `instance NFData__Map' failed: OOPS! Cannot find information for
-   class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance NFData__Map of class NFData *)
 
-(* Translating `instance Read__Map' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Map of class Read *)
 
-(* Translating `instance Show__Map' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Map of class Show *)
 
 Definition adjustWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a) -> k -> Map k a -> Map k a :=
@@ -428,6 +406,15 @@ Definition toAscList {k} {a} : Map k a -> list (k * a)%type :=
 
 Definition toList {k} {a} : Map k a -> list (k * a)%type :=
   toAscList.
+
+Local Definition Ord2__Map_liftCompare2
+   : forall {a} {b} {c} {d},
+     (a -> b -> comparison) ->
+     (c -> d -> comparison) -> Map a c -> Map b d -> comparison :=
+  fun {a} {b} {c} {d} =>
+    fun cmpk cmpv m n =>
+      Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare2 cmpk cmpv)
+      (toList m) (toList n).
 
 Definition assocs {k} {a} : Map k a -> list (k * a)%type :=
   fun m => toAscList m.
@@ -642,8 +629,8 @@ Local Definition Functor__Map_fmap {inst_k}
 
 Program Instance Functor__Map {k} : GHC.Base.Functor (Map k) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ |}.
 
 Definition lmapWhenMissing {b} {a} {f} {k} {x}
    : (b -> a) -> WhenMissing f k a x -> WhenMissing f k b x :=
@@ -724,13 +711,13 @@ Local Definition Functor__WhenMatched_op_zlzd__ {inst_f} {inst_k} {inst_x}
      a ->
      (WhenMatched inst_f inst_k inst_x inst_y) b ->
      (WhenMatched inst_f inst_k inst_x inst_y) a :=
-  fun {a} {b} => fun x => Functor__WhenMatched_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__WhenMatched_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__WhenMatched {f} {k} {x} {y} `{GHC.Base.Functor f}
    : GHC.Base.Functor (WhenMatched f k x y) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ |}.
 
 Definition mapWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
@@ -753,14 +740,14 @@ Local Definition Functor__WhenMissing_op_zlzd__ {inst_f} {inst_k} {inst_x}
    : forall {a} {b},
      a ->
      (WhenMissing inst_f inst_k inst_x) b -> (WhenMissing inst_f inst_k inst_x) a :=
-  fun {a} {b} => fun x => Functor__WhenMissing_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__WhenMissing_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__WhenMissing {f} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : GHC.Base.Functor (WhenMissing f k x) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ |}.
 
 Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
   fix mapWithKey arg_0__ arg_1__
@@ -2347,8 +2334,8 @@ Local Definition Foldable__Map_length {inst_k}
 
 Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Map_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Map_fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__Map_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__Map_foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__Map_foldl ;
@@ -2360,6 +2347,24 @@ Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
+
+Local Definition Eq2__Map_liftEq2
+   : forall {a} {b} {c} {d},
+     (a -> b -> bool) -> (c -> d -> bool) -> Map a c -> Map b d -> bool :=
+  fun {a} {b} {c} {d} =>
+    fun eqk eqv m n =>
+      andb (size m GHC.Base.== size n) (Data.Functor.Classes.liftEq
+            (Data.Functor.Classes.liftEq2 eqk eqv) (toList m) (toList n)).
+
+Program Instance Eq2__Map : Data.Functor.Classes.Eq2 Map :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
+           Eq2__Map_liftEq2 |}.
+
+Program Instance Ord2__Map : Data.Functor.Classes.Ord2 Map :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
+           Ord2__Map_liftCompare2 |}.
 
 Local Definition Eq___Map_op_zeze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
   `{GHC.Base.Eq_ inst_a}
@@ -2477,19 +2482,32 @@ End Notations.
 
 (* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
-     false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
-     prod true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
-     Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
-     Data.Maybe.maybe Data.Set.Internal.Bin Data.Set.Internal.Set_
-     Data.Set.Internal.Tip Data.Set.Internal.splitMember Data.Traversable.Traversable
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.const
-     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend
-     GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zsze__ GHC.Base.pure
+     false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option pair prod
+     true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
+     Data.Functor.Classes.Eq2 Data.Functor.Classes.Ord2
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare2
+     Data.Functor.Classes.liftCompare2__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq2 Data.Functor.Classes.liftEq2__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Functor.Identity.runIdentity Data.Maybe.maybe Data.Set.Internal.Bin
+     Data.Set.Internal.Set_ Data.Set.Internal.Tip Data.Set.Internal.splitMember
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mappend__ GHC.Base.max__
+     GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlzd____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.pure
      GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
      GHC.Err.Default GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num
      GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__

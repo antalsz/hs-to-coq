@@ -25,6 +25,8 @@ Parameter uniqueOfFS : FastString -> GHC.Num.Int.
 
 Parameter unpackFS : FastString -> GHC.Base.String.
 
+Parameter appendFS : FastString -> FastString -> FastString.
+
 Definition LitString := String.
 Definition sLit (s : String) : LitString := s.
 

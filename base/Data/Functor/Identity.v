@@ -12,7 +12,6 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Coq.Program.Basics.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Num.
@@ -36,17 +35,9 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
 
 (* Converted value declarations: *)
 
-(* Translating `instance Read__Identity' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Identity of class Read *)
 
-(* Translating `instance Show__Identity' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Show" "Show" unsupported *)
-
-Local Definition Foldable__Identity_elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Identity a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_0__ => arg_0__ GHC.Base.∘ runIdentity)
-                               _GHC.Base.==_.
+(* Skipping instance Show__Identity of class Show *)
 
 Local Definition Foldable__Identity_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
@@ -96,9 +87,7 @@ Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
 
 Program Instance Foldable__Identity : Data.Foldable.Foldable Identity :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__Identity_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
            Foldable__Identity_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__Identity_foldMap ;
@@ -119,12 +108,12 @@ Local Definition Functor__Identity_fmap
 
 Local Definition Functor__Identity_op_zlzd__
    : forall {a} {b}, a -> Identity b -> Identity a :=
-  fun {a} {b} => fun x => Functor__Identity_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__Identity_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Identity : GHC.Base.Functor Identity :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ |}.
 
 Local Definition Applicative__Identity_liftA2
    : forall {a} {b} {c},
@@ -138,27 +127,25 @@ Local Definition Applicative__Identity_op_zlztzg__
 Local Definition Applicative__Identity_op_ztzg__
    : forall {a} {b}, Identity a -> Identity b -> Identity b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__Identity_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                        y.
+    fun a1 a2 => Applicative__Identity_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
   fun {a} => Mk_Identity.
 
 Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Identity_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Identity_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Identity_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
-
-Local Definition Monad__Identity_op_zgzg__
-   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
-  fun {a} {b} => _GHC.Base.*>_.
 
 Local Definition Monad__Identity_op_zgzgze__
    : forall {a} {b}, Identity a -> (a -> Identity b) -> Identity b :=
   fun {a} {b} => fun m k => k (runIdentity m).
+
+Local Definition Monad__Identity_op_zgzg__
+   : forall {a} {b}, Identity a -> Identity b -> Identity b :=
+  fun {a} {b} => fun m k => Monad__Identity_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Monad__Identity_return_ : forall {a}, a -> Identity a :=
   fun {a} => GHC.Base.pure.
@@ -169,20 +156,15 @@ Program Instance Monad__Identity : GHC.Base.Monad Identity :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Identity_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Identity_return_ |}.
 
-(* Translating `instance MonadFix__Identity' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Fix" "MonadFix" unsupported *)
+(* Skipping instance MonadFix__Identity of class MonadFix *)
 
-(* Translating `instance Storable__Identity' failed: OOPS! Cannot find
-   information for class Qualified "Foreign.Storable" "Storable" unsupported *)
+(* Skipping instance Storable__Identity of class Storable *)
 
-(* Translating `instance RealFloat__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Float" "RealFloat" unsupported *)
+(* Skipping instance RealFloat__Identity of class RealFloat *)
 
-(* Translating `instance RealFrac__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Real" "RealFrac" unsupported *)
+(* Skipping instance RealFrac__Identity of class RealFrac *)
 
-(* Translating `instance Real__Identity' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Real" "Real" unsupported *)
+(* Skipping instance Real__Identity of class Real *)
 
 Local Definition Ord__Identity_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Identity inst_a -> Identity inst_a -> comparison :=
@@ -244,29 +226,19 @@ Program Instance Monoid__Identity {a} `{GHC.Base.Monoid a}
          GHC.Base.mconcat__ := Monoid__Identity_mconcat ;
          GHC.Base.mempty__ := Monoid__Identity_mempty |}.
 
-(* Translating `instance Ix__Identity' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Arr" "Ix" unsupported *)
+(* Skipping instance Ix__Identity of class Ix *)
 
-(* Translating `instance Integral__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Real" "Integral" unsupported *)
+(* Skipping instance Integral__Identity of class Integral *)
 
-(* Translating `instance Generic1__TYPE__Identity__LiftedRep' failed: type class
-   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
-   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
-   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.Functor.Identity" "Identity")) :| []) unsupported *)
+(* Skipping instance Generic1__TYPE__Identity__LiftedRep of class Generic1 *)
 
-(* Translating `instance Generic__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Identity of class Generic *)
 
-(* Translating `instance Fractional__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Real" "Fractional" unsupported *)
+(* Skipping instance Fractional__Identity of class Fractional *)
 
-(* Translating `instance Floating__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Float" "Floating" unsupported *)
+(* Skipping instance Floating__Identity of class Floating *)
 
-(* Translating `instance FiniteBits__Identity' failed: OOPS! Cannot find
-   information for class Qualified "Data.Bits" "FiniteBits" unsupported *)
+(* Skipping instance FiniteBits__Identity of class FiniteBits *)
 
 Local Definition Eq___Identity_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Identity inst_a -> Identity inst_a -> bool :=
@@ -299,27 +271,25 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
 (* Translating `instance Bounded__Identity' failed: OOPS! Cannot find
    information for class Qualified "GHC.Enum" "Bounded" unsupported *)
 
-(* Translating `instance Bits__Identity' failed: OOPS! Cannot find information
-   for class Qualified "Data.Bits" "Bits" unsupported *)
+(* Skipping instance Bits__Identity of class Bits *)
 
 (* External variables:
-     bool comparison cons false list nil Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.elem__ Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
-     GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
+     bool comparison cons false list nil Data.Foldable.Foldable
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup
+     GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.fmap__ GHC.Base.id
      GHC.Base.liftA2__ GHC.Base.mappend GHC.Base.mappend__ GHC.Base.max
      GHC.Base.max__ GHC.Base.mconcat GHC.Base.mconcat__ GHC.Base.mempty
      GHC.Base.mempty__ GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____
      GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzg____
-     GHC.Base.op_zgzgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlzd____
-     GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__
-     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zlztzg____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure
+     GHC.Base.op_zgzgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlzd__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zlztzg____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure
      GHC.Base.pure__ GHC.Base.return___ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
      GHC.Prim.coerce
 *)

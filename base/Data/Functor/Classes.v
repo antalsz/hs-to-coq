@@ -78,41 +78,29 @@ Definition liftCompare `{g : Ord1 f}
   g _ (liftCompare__ f).
 (* Converted value declarations: *)
 
-(* Translating `instance Show2__pair_type' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show2" unsupported *)
+(* Skipping instance Show2__pair_type of class Show2 *)
 
-(* Translating `instance Show1__pair_type' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__pair_type of class Show1 *)
 
-(* Translating `instance Show2__Either' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show2" unsupported *)
+(* Skipping instance Show2__Either of class Show2 *)
 
-(* Translating `instance Show1__Either' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Either of class Show1 *)
 
-(* Translating `instance Show2__Const' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show2" unsupported *)
+(* Skipping instance Show2__Const of class Show2 *)
 
-(* Translating `instance Show1__Const' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Const of class Show1 *)
 
-(* Translating `instance Read2__pair_type' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read2" unsupported *)
+(* Skipping instance Read2__pair_type of class Read2 *)
 
-(* Translating `instance Read1__pair_type' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__pair_type of class Read1 *)
 
-(* Translating `instance Read2__Either' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read2" unsupported *)
+(* Skipping instance Read2__Either of class Read2 *)
 
-(* Translating `instance Read1__Either' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Either of class Read1 *)
 
-(* Translating `instance Read2__Const' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Read2" unsupported *)
+(* Skipping instance Read2__Const of class Read2 *)
 
-(* Translating `instance Read1__Const' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Const of class Read1 *)
 
 Local Definition Ord2__pair_type_liftCompare2
    : forall {a} {b} {c} {d},
@@ -271,35 +259,25 @@ Program Instance Ord1__Const {a} `{(GHC.Base.Ord a)}
    : Ord1 (Data.Functor.Const.Const a) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Const_liftCompare |}.
 
-(* Translating `instance Show1__option' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__option of class Show1 *)
 
-(* Translating `instance Show1__list' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__list of class Show1 *)
 
-(* Translating `instance Show1__NonEmpty' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__NonEmpty of class Show1 *)
 
-(* Translating `instance Show1__Identity' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Identity of class Show1 *)
 
-(* Translating `instance Show1__Proxy' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Proxy of class Show1 *)
 
-(* Translating `instance Read1__option' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__option of class Read1 *)
 
-(* Translating `instance Read1__list' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__list of class Read1 *)
 
-(* Translating `instance Read1__NonEmpty' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__NonEmpty of class Read1 *)
 
-(* Translating `instance Read1__Identity' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Identity of class Read1 *)
 
-(* Translating `instance Read1__Proxy' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Proxy of class Read1 *)
 
 Local Definition Ord1__option_liftCompare
    : forall {a} {b},

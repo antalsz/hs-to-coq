@@ -20,11 +20,9 @@ Import GHC.Base.Notations.
 Inductive Void : Type :=.
 (* Converted value declarations: *)
 
-(* Translating `instance Ix__Void' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Arr" "Ix" unsupported *)
+(* Skipping instance Ix__Void of class Ix *)
 
-(* Translating `instance Exception__Void' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Exception" "Exception" unsupported *)
+(* Skipping instance Exception__Void of class Exception *)
 
 Local Definition Semigroup__Void_op_zlzlzgzg__ : Void -> Void -> Void :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | a, _ => a end.
@@ -32,11 +30,9 @@ Local Definition Semigroup__Void_op_zlzlzgzg__ : Void -> Void -> Void :=
 Program Instance Semigroup__Void : GHC.Base.Semigroup Void :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Void_op_zlzlzgzg__ |}.
 
-(* Translating `instance Show__Void' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__Void of class Show *)
 
-(* Translating `instance Read__Void' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Read__Void of class Read *)
 
 Local Definition Ord__Void_compare : Void -> Void -> comparison :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => Eq end.
@@ -59,11 +55,9 @@ Local Definition Ord__Void_max : Void -> Void -> Void :=
 Local Definition Ord__Void_min : Void -> Void -> Void :=
   fun x y => if Ord__Void_op_zlze__ x y : bool then x else y.
 
-(* Translating `instance Generic__Void' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Void of class Generic *)
 
-(* Translating `instance Data__Void' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Void of class Data *)
 
 Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => true end.

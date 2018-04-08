@@ -163,10 +163,6 @@ Definition partition {a}
    : (a -> bool) -> GHC.Base.NonEmpty a -> (list a * list a)%type :=
   fun p => Data.OldList.partition p GHC.Base.∘ toList.
 
-Definition some1 {f} {a} `{GHC.Base.Alternative f}
-   : f a -> f (GHC.Base.NonEmpty a) :=
-  fun x => GHC.Base.liftA2 GHC.Base.NEcons x (GHC.Base.many x).
-
 Definition sortWith {o} {a} `{GHC.Base.Ord o}
    : (a -> o) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
   sortBy GHC.Base.∘ Data.Ord.comparing.
@@ -235,10 +231,9 @@ End Notations.
      None Some andb bool cons false list negb nil op_zt__ option pair sortBy toList
      true Data.Foldable.foldr Data.Foldable.length Data.Functor.op_zlzdzg__
      Data.OldList.isPrefixOf Data.OldList.nubBy Data.OldList.partition
-     Data.Ord.comparing Data.Tuple.fst Data.Tuple.snd GHC.Base.Alternative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.Ord
-     GHC.Base.fmap GHC.Base.liftA2 GHC.Base.many GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.List.drop GHC.List.dropWhile GHC.List.filter
-     GHC.List.span GHC.List.splitAt GHC.List.take GHC.List.takeWhile GHC.List.zip
-     GHC.List.zipWith GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
+     Data.Ord.comparing Data.Tuple.fst Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.Ord GHC.Base.fmap
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.List.drop GHC.List.dropWhile
+     GHC.List.filter GHC.List.span GHC.List.splitAt GHC.List.take GHC.List.takeWhile
+     GHC.List.zip GHC.List.zipWith GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
 *)

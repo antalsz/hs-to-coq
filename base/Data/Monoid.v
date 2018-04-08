@@ -133,14 +133,14 @@ Local Definition Functor__Last_op_zlzd__
 
 Program Instance Functor__Last : GHC.Base.Functor Last :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Last_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Last_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Last_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Last_op_zlzd__ |}.
 
 Program Instance Applicative__Last : GHC.Base.Applicative Last :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Last_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Last_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Last_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Last_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Last_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Last_pure |}.
 
 Program Instance Monad__Last : GHC.Base.Monad Last :=
@@ -149,18 +149,13 @@ Program Instance Monad__Last : GHC.Base.Monad Last :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Last_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Last_return_ |}.
 
-(* Translating `instance Generic1__TYPE__Last__LiftedRep' failed: type class
-   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
-   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
-   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.Monoid" "Last")) :| []) unsupported *)
+(* Skipping instance Generic1__TYPE__Last__LiftedRep of class Generic1 *)
 
-(* Translating `instance Generic__Last' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__Last of class Generic *)
 
-(* Skipping instance Show__Last *)
+(* Skipping instance Show__Last of class Show *)
 
-(* Skipping instance Read__Last *)
+(* Skipping instance Read__Last of class Read *)
 
 Local Definition Ord__Last_compare {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> comparison :=
@@ -249,14 +244,14 @@ Local Definition Functor__First_op_zlzd__
 
 Program Instance Functor__First : GHC.Base.Functor First :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__First_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__First_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__First_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__First_op_zlzd__ |}.
 
 Program Instance Applicative__First : GHC.Base.Applicative First :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__First_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__First_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__First_op_zlztzg__ ;
-         GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__First_liftA2 ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__First_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__First_pure |}.
 
 Program Instance Monad__First : GHC.Base.Monad First :=
@@ -265,18 +260,13 @@ Program Instance Monad__First : GHC.Base.Monad First :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__First_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__First_return_ |}.
 
-(* Translating `instance Generic1__TYPE__First__LiftedRep' failed: type class
-   instance head:App (App (Qualid (Qualified "GHC.Generics" "Generic1")) (PosArg
-   (App (Qualid (Qualified "GHC.Prim" "TYPE")) (PosArg (Qualid (Qualified
-   "GHC.Types" "LiftedRep")) :| [])) :| [])) (PosArg (Qualid (Qualified
-   "Data.Monoid" "First")) :| []) unsupported *)
+(* Skipping instance Generic1__TYPE__First__LiftedRep of class Generic1 *)
 
-(* Translating `instance Generic__First' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Generics" "Generic" unsupported *)
+(* Skipping instance Generic__First of class Generic *)
 
-(* Skipping instance Show__First *)
+(* Skipping instance Show__First of class Show *)
 
-(* Skipping instance Read__First *)
+(* Skipping instance Read__First of class Read *)
 
 Local Definition Ord__First_compare {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> comparison :=

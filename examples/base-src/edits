@@ -19,6 +19,30 @@ skip module GHC.Int
 skip module GHC.Word
 skip module GHC.Integer.Type
 
+## Classes that are generally not interesting
+# or where we don’t want any interfaces translated
+# automatically
+skip Data.Data.Data
+skip GHC.Show.Show
+skip GHC.Read.Read
+skip GHC.Generics.Generic
+skip GHC.Generics.Generic1
+skip GHC.Exception.Exception
+skip GHC.Arr.Ix
+skip Data.Bits.Bits
+skip Data.Bits.FiniteBits
+skip GHC.Float.Floating
+skip GHC.Real.Fractional
+skip GHC.Real.Integral
+skip GHC.Real.Real
+skip GHC.Real.RealFrac
+skip GHC.Float.RealFloat
+skip Foreign.Storable.Storable
+skip Control.Monad.Fix.MonadFix
+skip Data.Bitraversable.Bitraversable
+skip Data.Bifoldable.Bifoldable
+skip GHC.Base.Alternative
+
 rename type GHC.IO.FilePath = GHC.Base.String
 
 # Work around the fact that build is higher rank, so the generator
@@ -104,11 +128,13 @@ skip method GHC.Enum.Enum enumFromThenTo
 skip method GHC.Base.Semigroup stimes
 skip method GHC.Base.Semigroup sconcat
 
+
 # deprecated
 skip method Data.Bits.Bits bitSize
 
 # default definition cannot be used
 skip method GHC.Base.Applicative op_zlzt__
+skip method Data.Foldable.Foldable elem
 
 # partial methods
 skip method Data.Foldable.Foldable foldl1

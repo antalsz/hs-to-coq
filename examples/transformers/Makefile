@@ -83,10 +83,11 @@ $(OUT)/_CoqProject : Makefile
 $(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-$(OUT)/edits:
+$(OUT)/edits: $(OUT)/README.md
 	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/README.md:
+	mkdir -p $(OUT)
 	> $@
 	echo 'This directory contains a Coq’ified version of the Haskell $(SRC) library' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/$(SRC)`.' >> $@
@@ -100,6 +101,7 @@ HS_TO_COQ_OPTS := \
   -e edits \
   --iface-dir ../../base \
   --iface-dir $(OUT) \
+  --dependency-dir deps/ \
   -N \
   -i $(SRC) \
   -i $(SRC)/tests \
@@ -107,7 +109,7 @@ HS_TO_COQ_OPTS := \
   -I $(SRC)/include \
   -o $(OUT) \
 
-include interface-deps.mk
+include  deps/*.mk
 
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) $(wildcard module-edits/$$*/flags) edits
@@ -117,8 +119,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 		     $(HS_TO_COQ_OPTS) \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
 	             $(wildcard $(SRC)/$*.hs) $(wildcard $(SRC)/tests/$*.hs)
-	if [[ -e $(OUT)/Main.v && ( ! -e $@ || $(OUT)/Main.v -nt $@ ) ]]; then mv $(OUT)/Main.v $@; fi
-	test -e $@ && test \! -e $(OUT)/Main.v
+	test -e $@
 
 $(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preamble.v drop-in/%.hs
 	$(HS_TO_COQ) -e module-edits/$*/edits \
@@ -131,6 +132,8 @@ $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	rm -f $@
 	lndir ../manual $(OUT)/
 
+%.h2ci: %.v
+	test -e $@
 
 clean:
 	rm -rf $(OUT) $(RENAMED) $(HS_SPEC)

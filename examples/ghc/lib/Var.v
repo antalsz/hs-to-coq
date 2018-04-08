@@ -21,6 +21,7 @@ Require GHC.Err.
 Require GHC.Num.
 Require IdInfo.
 Require Name.
+Require OccName.
 Require Panic.
 Require Unique.
 Require Util.
@@ -244,27 +245,26 @@ Definition varName (arg_8__ : Var) :=
 *)
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__TyVarBndr__ArgFlag__11' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Skipping instance Outputable__TyVarBndr__ArgFlag__11 of class Outputable *)
 
-(* Translating `instance Binary__TyVarBndr' failed: OOPS! Cannot find
-   information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__TyVarBndr of class Binary *)
 
-(* Translating `instance Outputable__ArgFlag' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__ArgFlag of class Outputable *)
 
-(* Translating `instance Binary__ArgFlag' failed: OOPS! Cannot find information
-   for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__ArgFlag of class Binary *)
 
-(* Translating `instance Outputable__Var' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__Var of class Outputable *)
 
-(* Translating `instance NamedThing__Var' failed: OOPS! Cannot find information
-   for class Qualified "Name" "NamedThing" unsupported *)
+Local Definition NamedThing__Var_getName : Var -> Name.Name :=
+  varName.
 
-(* Translating `instance Uniquable__Var' failed: OOPS! Cannot find information
-   for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition NamedThing__Var_getOccName : Var -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__Var_getName n).
+
+Program Instance NamedThing__Var : Name.NamedThing Var :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__Var_getName ;
+         Name.getOccName__ := NamedThing__Var_getOccName |}.
 
 Local Definition Eq___Var_op_zeze__ : Var -> Var -> bool :=
   fun a b => realUnique a GHC.Base.== realUnique b.
@@ -295,17 +295,17 @@ Local Definition Ord__Var_min : Var -> Var -> Var :=
 Local Definition Ord__Var_max : Var -> Var -> Var :=
   fun x y => if Ord__Var_op_zlze__ x y : bool then y else x.
 
-(* Translating `instance Data__Var' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__Var of class Data *)
 
-(* Translating `instance HasOccName__Var' failed: OOPS! Cannot find information
-   for class Qualified "OccName" "HasOccName" unsupported *)
+Local Definition HasOccName__Var_occName : Var -> OccName.OccName :=
+  Name.nameOccName GHC.Base.∘ varName.
 
-(* Translating `instance Data__TyVarBndr' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+Program Instance HasOccName__Var : OccName.HasOccName Var :=
+  fun _ k => k {| OccName.occName__ := HasOccName__Var_occName |}.
 
-(* Translating `instance Data__ArgFlag' failed: OOPS! Cannot find information
-   for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__TyVarBndr of class Data *)
+
+(* Skipping instance Data__ArgFlag of class Data *)
 
 Local Definition Eq___ArgFlag_op_zeze__ : ArgFlag -> ArgFlag -> bool :=
   fun arg_0__ arg_1__ =>
@@ -678,15 +678,25 @@ Program Instance Ord__Var : GHC.Base.Ord Var :=
          GHC.Base.max__ := Ord__Var_max ;
          GHC.Base.min__ := Ord__Var_min |}.
 
+Local Definition Uniquable__Var_getUnique : Var -> Unique.Unique :=
+  varUnique.
+
+Program Instance Uniquable__Var : Unique.Uniquable Var :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
+
 (* External variables:
      andb bool comparison false list negb orb true tt unit GHC.Base.Eq_
-     GHC.Base.Monad GHC.Base.Ord GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.return_ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger IdInfo.IdDetails IdInfo.IdInfo
-     IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name
-     Name.nameUnique Name.setNameUnique Panic.assertPanic Panic.noString
-     Panic.panicStr Unique.Unique Unique.getKey Unique.getUnique
+     GHC.Base.Monad GHC.Base.Ord GHC.Base.compare__ GHC.Base.map GHC.Base.max__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Base.return_ GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.error GHC.Num.Int GHC.Num.fromInteger IdInfo.IdDetails
+     IdInfo.IdInfo IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo
+     Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.nameOccName
+     Name.nameUnique Name.setNameUnique OccName.HasOccName OccName.OccName
+     OccName.occName__ Panic.assertPanic Panic.noString Panic.panicStr
+     Unique.Uniquable Unique.Unique Unique.getKey Unique.getUnique Unique.getUnique__
      Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.HasDebugCallStack
      Util.debugIsOn
 *)

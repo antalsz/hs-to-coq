@@ -22,6 +22,7 @@ Require GHC.Err.
 Require GHC.Num.
 Require IdInfo.
 Require Name.
+Require OccName.
 Require Panic.
 Require SrcLoc.
 Require Unique.
@@ -143,17 +144,26 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
     k {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
-(* Translating `instance Uniquable__Class' failed: OOPS! Cannot find information
-   for class Qualified "Unique" "Uniquable" unsupported *)
+Local Definition Uniquable__Class_getUnique : Class -> Unique.Unique :=
+  fun c => classKey c.
 
-(* Translating `instance NamedThing__Class' failed: OOPS! Cannot find
-   information for class Qualified "Name" "NamedThing" unsupported *)
+Program Instance Uniquable__Class : Unique.Uniquable Class :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__Class_getUnique |}.
 
-(* Translating `instance Outputable__Class' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+Local Definition NamedThing__Class_getName : Class -> Name.Name :=
+  fun clas => className clas.
 
-(* Translating `instance Data__Class' failed: OOPS! Cannot find information for
-   class Qualified "Data.Data" "Data" unsupported *)
+Local Definition NamedThing__Class_getOccName : Class -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__Class_getName n).
+
+Program Instance NamedThing__Class : Name.NamedThing Class :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__Class_getName ;
+         Name.getOccName__ := NamedThing__Class_getOccName |}.
+
+(* Skipping instance Outputable__Class of class Outputable *)
+
+(* Skipping instance Data__Class of class Data *)
 
 Definition classATItems : Class -> list ClassATItem :=
   fun arg_0__ =>
@@ -287,7 +297,10 @@ Definition mkClass
      BasicTypes.Arity BasicTypes.DefMethSpec BooleanFormula.BooleanFormula
      BooleanFormula.mkTrue Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Data.Foldable.length Data.Foldable.null GHC.Base.Eq_ GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
-     GHC.Num.fromInteger IdInfo.TyConId Name.Name Name.nameUnique Panic.assertPanic
-     SrcLoc.SrcSpan Unique.Unique Util.debugIsOn Var.Id Var.TyVar
+     GHC.Base.op_zeze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.fromInteger
+     IdInfo.TyConId Name.Name Name.NamedThing Name.getName__ Name.getOccName__
+     Name.nameOccName Name.nameUnique OccName.OccName Panic.assertPanic
+     SrcLoc.SrcSpan Unique.Uniquable Unique.Unique Unique.getUnique__ Util.debugIsOn
+     Var.Id Var.TyVar
 *)

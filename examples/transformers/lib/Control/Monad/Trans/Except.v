@@ -71,11 +71,9 @@ Program Instance Ord1__ExceptT {e} {m} `{GHC.Base.Ord e} `{Ord1 m}
    : Ord1 (ExceptT e m) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__ExceptT_liftCompare |}.
 
-(* Translating `instance Read1__ExceptT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__ExceptT of class Read1 *)
 
-(* Translating `instance Show1__ExceptT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__ExceptT of class Show1 *)
 
 Local Definition Eq___ExceptT_op_zeze__ {inst_e} {inst_m} {inst_a}
   `{GHC.Base.Eq_ inst_e} `{Eq1 inst_m} `{GHC.Base.Eq_ inst_a}

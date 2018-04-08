@@ -51,8 +51,7 @@ Instance Default__Direction : GHC.Err.Default Direction :=
   GHC.Err.Build_Default _ Forwards.
 (* Converted value declarations: *)
 
-(* Translating `instance Show__OverridingBool' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Show__OverridingBool of class Show *)
 
 Definition all2 {a} {b} : (a -> b -> bool) -> list a -> list b -> bool :=
   fix all2 arg_0__ arg_1__ arg_2__

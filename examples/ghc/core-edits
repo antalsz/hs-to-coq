@@ -1,15 +1,15 @@
 ## These are the edits directly related to the Core syntax
 ## Not all files need to see these edits
 
-rename module TyCoRep  CoreType
-rename module Type     CoreType
-rename module Coercion CoreType
-rename module Var      CoreType
-rename module CoAxiom  CoreType
-rename module TyCon    CoreType
-rename module VarEnv   CoreType
-rename module VarSet   CoreType
-rename module FV       CoreType
+# rename module TyCoRep  CoreType
+# rename module Type     CoreType
+# rename module Coercion CoreType
+# rename module Var      CoreType
+# rename module CoAxiom  CoreType
+# rename module TyCon    CoreType
+# rename module VarEnv   CoreType
+# rename module VarSet   CoreType
+# rename module FV       CoreType
 
 
 # skip MkId

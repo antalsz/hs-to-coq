@@ -85,11 +85,9 @@ Program Instance Ord2__Constant : Ord2 Constant :=
 
 (* Skipping instance Ord1__Constant *)
 
-(* Translating `instance Read1__Constant' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Constant of class Read1 *)
 
-(* Translating `instance Show1__Constant' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Constant of class Show1 *)
 
 Local Definition Functor__Constant_fmap {inst_a}
    : forall {a} {b}, (a -> b) -> (Constant inst_a) a -> (Constant inst_a) b :=

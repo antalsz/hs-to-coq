@@ -91,11 +91,9 @@ Program Instance Ord1__WriterT {w} {m} `{GHC.Base.Ord w} `{Ord1 m}
    : Ord1 (WriterT w m) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__WriterT_liftCompare |}.
 
-(* Translating `instance Read1__WriterT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__WriterT of class Read1 *)
 
-(* Translating `instance Show1__WriterT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__WriterT of class Show1 *)
 
 Local Definition Eq___WriterT_op_zeze__ {inst_w} {inst_m} {inst_a}
   `{GHC.Base.Eq_ inst_w} `{Eq1 inst_m} `{GHC.Base.Eq_ inst_a}

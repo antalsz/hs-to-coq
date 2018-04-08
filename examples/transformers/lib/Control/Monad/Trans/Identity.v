@@ -63,11 +63,9 @@ Local Definition Ord1__IdentityT_liftCompare {inst_f} `{(Ord1 inst_f)}
 Program Instance Ord1__IdentityT {f} `{(Ord1 f)} : Ord1 (IdentityT f) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__IdentityT_liftCompare |}.
 
-(* Translating `instance Read1__IdentityT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__IdentityT of class Read1 *)
 
-(* Translating `instance Show1__IdentityT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__IdentityT of class Show1 *)
 
 Local Definition Eq___IdentityT_op_zeze__ {inst_f} {inst_a} `{Eq1 inst_f}
   `{GHC.Base.Eq_ inst_a}

@@ -80,11 +80,9 @@ Local Definition Ord1__MaybeT_liftCompare {inst_m} `{(Ord1 inst_m)}
 Program Instance Ord1__MaybeT {m} `{(Ord1 m)} : Ord1 (MaybeT m) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__MaybeT_liftCompare |}.
 
-(* Translating `instance Read1__MaybeT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__MaybeT of class Read1 *)
 
-(* Translating `instance Show1__MaybeT' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__MaybeT of class Show1 *)
 
 Local Definition Eq___MaybeT_op_zeze__ {inst_m} {inst_a} `{Eq1 inst_m}
   `{GHC.Base.Eq_ inst_a}

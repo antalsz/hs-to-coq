@@ -37,15 +37,6 @@ rename value CoreSubst.Subst   = CoreSubst.Mk_Subst
 rename type TcType.TcTyVarDetails = unit
 redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
-skip DataCon.buildAlgTyCon
-skip DataCon.buildSynTyCon
-
-redefine Definition DataCon.buildAlgTyCon := 
-  fun tc_name ktvs roles cType stupid_theta rhs gadt_syn parent => tt.
-redefine Definition DataCon.buildSynTyCon :=
-  fun name binders res_kind roles rhs => tt.
-
-
 # type used in DataCon
 rename type MkId.DataConBoxer = unit
 
@@ -56,6 +47,16 @@ rename type TyCoRep.TyBinder      = unit
 rename type TyCoRep.TyThing       = unit
 rename type TyCoRep.Kind          = unit
 rename type TyCoRep.PredType      = unit
+
+rename type CoAxiom.CoAxiom = list
+rename type CoAxiom.Branched = unit
+rename type CoAxiom.Unbranched = unit
+rename type CoAxiom.BuiltInSynFamily = unit
+rename type CoAxiom.Role = unit
+rename value CoAxiom.Representational = tt
+rename value CoAxiom.Nominal = tt
+rename value TysWiredIn.liftedTypeKind = tt
+
 
 ## Could make these unit too.
 redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.

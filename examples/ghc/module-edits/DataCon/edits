@@ -36,3 +36,27 @@ skip DataCon.dataConOrigResTy
 skip DataCon.dataConInstSig
 
 skip DataCon.dataConCannotMatch
+
+skip DataCon.buildSynTyCon
+skip DataCon.dataConRepStrictness
+skip DataCon.dataConSig
+skip DataCon.dataConUserType
+skip DataCon.eqHsBang
+
+skip DataCon.mkDataCon
+skip DataCon.isLegacyPromotableDataCon
+skip DataCon.isLegacyPromotableTyCon
+skip DataCon.dataConEqSpec
+skip DataCon.substEqSpec 
+
+#
+# uses enumFrom
+skip DataCon.freshNames
+skip DataCon.mkCleanAnonTyConBinders
+
+#
+# Outputable.$$
+rewrite forall x y, x Outputable.$$ y = x
+rewrite forall x, Type.mkInvForAllTys x y = tt
+
+

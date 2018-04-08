@@ -97,10 +97,35 @@ Parameter setIdType : Var.Id -> Core.Type_ -> Var.Id.
 
 (* Converted value declarations: *)
 
-Axiom asJoinId : forall {A : Type}, A.
-
-(* Translating `asJoinId' failed: using a record pattern for the unknown
-   constructor `JoinId' unsupported *)
+Definition asJoinId : Var.Id -> BasicTypes.JoinArity -> Var.JoinId :=
+  fun id arity =>
+    let is_vanilla_or_join :=
+      fun id =>
+        match Var.idDetails id with
+        | IdInfo.VanillaId => true
+        | IdInfo.JoinId _ => true
+        | _ => false
+        end in
+    Panic.warnPprTrace (negb (Var.isLocalId id)) (GHC.Base.hs_string__
+                        "ghc/compiler/basicTypes/Id.hs") #590 (GHC.Base.mappend (id
+                                                                                 (GHC.Base.hs_string__
+                                                                                  "global id being marked as join var:"))
+                                                                                (Panic.noString id)) (Panic.warnPprTrace
+                                                                                                      (negb
+                                                                                                       (is_vanilla_or_join
+                                                                                                        id))
+                                                                                                      (GHC.Base.hs_string__
+                                                                                                       "ghc/compiler/basicTypes/Id.hs")
+                                                                                                      #592
+                                                                                                      (GHC.Base.mappend
+                                                                                                       (Panic.noString
+                                                                                                        id)
+                                                                                                       (IdInfo.pprIdDetails
+                                                                                                        (Var.idDetails
+                                                                                                         id)))
+                                                                                                      (Var.setIdDetails
+                                                                                                       id (IdInfo.JoinId
+                                                                                                        arity))).
 
 Definition idArity : Var.Id -> BasicTypes.Arity :=
   fun id => IdInfo.arityInfo (Var.idInfo id).
@@ -192,30 +217,44 @@ Definition idUnfolding : Var.Id -> CoreSyn.Unfolding :=
 Definition idUnique : Var.Id -> Unique.Unique :=
   Var.varUnique.
 
-Axiom isDFunId : forall {A : Type}, A.
+Definition isDFunId : Var.Id -> bool :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.DFunId _ => true
+    | _ => false
+    end.
 
-(* Translating `isDFunId' failed: using a record pattern for the unknown
-   constructor `DFunId' unsupported *)
+Definition isDataConRecordSelector : Var.Id -> bool :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.RecSelId (IdInfo.RecSelData _) _ => true
+    | _ => false
+    end.
 
-Axiom isDataConRecordSelector : forall {A : Type}, A.
+Definition isImplicitId : Var.Id -> bool :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.FCallId _ => true
+    | IdInfo.ClassOpId _ => true
+    | IdInfo.PrimOpId _ => true
+    | IdInfo.DataConWorkId _ => true
+    | IdInfo.DataConWrapId _ => true
+    | _ => false
+    end.
 
-(* Translating `isDataConRecordSelector' failed: using a record pattern for the
-   unknown constructor `RecSelId' unsupported *)
-
-Axiom isImplicitId : forall {A : Type}, A.
-
-(* Translating `isImplicitId' failed: using a record pattern for the unknown
-   constructor `FCallId' unsupported *)
-
-Axiom isJoinId : forall {A : Type}, A.
+Definition isJoinId : Var.Var -> bool :=
+  fun id =>
+    if Var.isId id : bool
+    then match Var.idDetails id with
+         | IdInfo.JoinId _ => true
+         | _ => false
+         end else
+    false.
 
 Definition isExitJoinId : Var.Var -> bool :=
   fun id =>
     andb (isJoinId id) (andb (BasicTypes.isOneOcc (idOccInfo id))
                              (BasicTypes.occ_in_lam (idOccInfo id))).
-
-(* Translating `isJoinId' failed: using a record pattern for the unknown
-   constructor `JoinId' unsupported *)
 
 Definition isJoinId_maybe : Var.Var -> option BasicTypes.JoinArity :=
   fun id =>
@@ -234,23 +273,29 @@ Definition idJoinArity : Var.JoinId -> BasicTypes.JoinArity :=
     Maybes.orElse (isJoinId_maybe id) (Panic.panicStr (GHC.Base.hs_string__
                                                        "idJoinArity") (Panic.noString id)).
 
-Axiom isNaughtyRecordSelector : forall {A : Type}, A.
-
-(* Translating `isNaughtyRecordSelector' failed: using a record pattern for the
-   unknown constructor `RecSelId' unsupported *)
+Definition isNaughtyRecordSelector : Var.Id -> bool :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.RecSelId _ n => n
+    | _ => false
+    end.
 
 Definition isNeverLevPolyId : Var.Id -> bool :=
   IdInfo.isNeverLevPolyIdInfo GHC.Base.∘ Var.idInfo.
 
-Axiom isPatSynRecordSelector : forall {A : Type}, A.
+Definition isPatSynRecordSelector : Var.Id -> bool :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.RecSelId (IdInfo.RecSelPatSyn _) _ => true
+    | _ => false
+    end.
 
-(* Translating `isPatSynRecordSelector' failed: using a record pattern for the
-   unknown constructor `RecSelId' unsupported *)
-
-Axiom isRecordSelector : forall {A : Type}, A.
-
-(* Translating `isRecordSelector' failed: using a record pattern for the unknown
-   constructor `RecSelId' unsupported *)
+Definition isRecordSelector : Var.Id -> bool :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.RecSelId _ _ => true
+    | _ => false
+    end.
 
 Definition lazySetIdInfo : Var.Id -> IdInfo.IdInfo -> Var.Id :=
   Var.lazySetIdInfo.
@@ -468,10 +513,12 @@ Definition zapStableUnfolding : Var.Id -> Var.Id :=
     then setIdUnfolding id CoreSyn.NoUnfolding else
     id.
 
-Axiom recordSelectorTyCon : forall {A : Type}, A.
-
-(* Translating `recordSelectorTyCon' failed: using a record pattern for the
-   unknown constructor `RecSelId' unsupported *)
+Definition recordSelectorTyCon : Var.Id -> IdInfo.RecSelParent :=
+  fun id =>
+    match Var.idDetails id with
+    | IdInfo.RecSelId parent _ => parent
+    | _ => Panic.panic (GHC.Base.hs_string__ "recordSelectorTyCon")
+    end.
 
 Definition setIdExported : Var.Id -> Var.Id :=
   Var.setIdExported.
@@ -522,13 +569,16 @@ Definition isProbablyOneShotLambda : Var.Id -> bool :=
      CoreSyn.Unfolding CoreSyn.evaldUnfolding CoreSyn.isStableUnfolding
      DataCon.DataCon DataCon.StrictnessMark DataCon.isMarkedStrict Demand.Demand
      Demand.StrictSig Demand.increaseStrictSigArity Demand.isBottomingSig
-     Demand.nopSig FastString.FastString FastString.fsLit GHC.Base.op_z2218U__
-     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.op_zp__ IdInfo.CafInfo IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId
-     IdInfo.RuleInfo IdInfo.VanillaId IdInfo.arityInfo IdInfo.cafInfo
-     IdInfo.callArityInfo IdInfo.demandInfo IdInfo.inlinePragInfo
-     IdInfo.isEmptyRuleInfo IdInfo.isNeverLevPolyIdInfo IdInfo.occInfo
-     IdInfo.oneShotInfo IdInfo.ruleInfo IdInfo.ruleInfoRules IdInfo.setArityInfo
+     Demand.nopSig FastString.FastString FastString.fsLit GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.Int
+     GHC.Num.fromInteger GHC.Num.op_zp__ IdInfo.CafInfo IdInfo.ClassOpId
+     IdInfo.DFunId IdInfo.DataConWorkId IdInfo.DataConWrapId IdInfo.FCallId
+     IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId IdInfo.PrimOpId IdInfo.RecSelData
+     IdInfo.RecSelId IdInfo.RecSelParent IdInfo.RecSelPatSyn IdInfo.RuleInfo
+     IdInfo.VanillaId IdInfo.arityInfo IdInfo.cafInfo IdInfo.callArityInfo
+     IdInfo.demandInfo IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo
+     IdInfo.isNeverLevPolyIdInfo IdInfo.occInfo IdInfo.oneShotInfo
+     IdInfo.pprIdDetails IdInfo.ruleInfo IdInfo.ruleInfoRules IdInfo.setArityInfo
      IdInfo.setCafInfo IdInfo.setCallArityInfo IdInfo.setDemandInfo
      IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
      IdInfo.setRuleInfo IdInfo.setStrictnessInfo IdInfo.setUnfoldingInfo
@@ -539,11 +589,12 @@ Definition isProbablyOneShotLambda : Var.Id -> bool :=
      Name.isInternalName Name.localiseName Name.mkDerivedInternalName
      Name.mkInternalName Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName
      OccName.mkWorkerOcc Outputable.assertPprPanic Panic.assertPanic Panic.noString
-     Panic.panicStr RepType.countFunRepArgs SrcLoc.SrcSpan TyCoRep.isCoercionType
-     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Unique.mkBuiltinUnique Util.count Util.debugIsOn Var.Id Var.JoinId Var.Var
-     Var.idDetails Var.idInfo Var.isId Var.isLocalId Var.isTyVar Var.lazySetIdInfo
-     Var.mkExportedLocalVar Var.mkGlobalVar Var.mkLocalVar Var.setIdDetails
-     Var.setIdExported Var.setIdNotExported Var.setVarName Var.setVarUnique
-     Var.varName Var.varType Var.varUnique
+     Panic.panic Panic.panicStr Panic.warnPprTrace RepType.countFunRepArgs
+     SrcLoc.SrcSpan TyCoRep.isCoercionType UniqSupply.MonadUnique
+     UniqSupply.getUniqueM Unique.Unique Unique.mkBuiltinUnique Util.count
+     Util.debugIsOn Var.Id Var.JoinId Var.Var Var.idDetails Var.idInfo Var.isId
+     Var.isLocalId Var.isTyVar Var.lazySetIdInfo Var.mkExportedLocalVar
+     Var.mkGlobalVar Var.mkLocalVar Var.setIdDetails Var.setIdExported
+     Var.setIdNotExported Var.setVarName Var.setVarUnique Var.varName Var.varType
+     Var.varUnique
 *)

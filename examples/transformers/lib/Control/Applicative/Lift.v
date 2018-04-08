@@ -68,11 +68,9 @@ Local Definition Ord1__Lift_liftCompare {inst_f} `{(Ord1 inst_f)}
 Program Instance Ord1__Lift {f} `{(Ord1 f)} : Ord1 (Lift f) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Lift_liftCompare |}.
 
-(* Translating `instance Read1__Lift' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Lift of class Read1 *)
 
-(* Translating `instance Show1__Lift' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Lift of class Show1 *)
 
 Local Definition Eq___Lift_op_zeze__ {inst_f} {inst_a} `{Eq1 inst_f}
   `{GHC.Base.Eq_ inst_a}

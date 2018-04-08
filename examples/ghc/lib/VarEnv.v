@@ -114,8 +114,7 @@ Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__InScopeSet' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__InScopeSet of class Outputable *)
 
 Definition alterDVarEnv {a}
    : (option a -> option a) -> DVarEnv a -> Var.Var -> DVarEnv a :=
@@ -582,7 +581,7 @@ Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
     end.
 
 (* External variables:
-     None Some andb bool list negb op_zt__ option pair Data.Foldable.foldl
+     None Some andb bool id list negb op_zt__ option pair Data.Foldable.foldl
      Data.Foldable.length Data.Tuple.fst GHC.Base.mappend GHC.Base.op_zg__
      GHC.DeferredFix.deferredFix1 GHC.Err.Default GHC.Err.default GHC.Num.Int
      GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ Maybes.orElse

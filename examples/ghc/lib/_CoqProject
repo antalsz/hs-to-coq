@@ -3,4 +3,4 @@
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib   ""
 -Q ../../transformers/lib  ""
-Util.v Maybes.v MonadUtils.v Pair.v Bag.v SrcLoc.v Unique.v UniqSupply.v UniqFM.v EnumSet.v CmmType.v BooleanFormula.v UniqSet.v BasicTypes.v FiniteMap.v UniqDFM.v UniqDSet.v FastStringEnv.v DynFlags.v Module.v OrdList.v OccName.v FastString.v Panic.v ListSetOps.v Digraph.v PrelNames.v IdInfo.v Var.v VarEnv.v VarSet.v FV.v Name.v NameEnv.v NameSet.v FieldLabel.v Constants.v
+Util.v Maybes.v MonadUtils.v Pair.v Bag.v SrcLoc.v Unique.v UniqSupply.v UniqFM.v EnumSet.v CmmType.v BooleanFormula.v UniqSet.v BasicTypes.v FiniteMap.v UniqDFM.v UniqDSet.v FastStringEnv.v DynFlags.v Module.v OrdList.v OccName.v FastString.v Panic.v ListSetOps.v Digraph.v PrelNames.v IdInfo.v Name.v NameEnv.v NameSet.v Var.v VarEnv.v VarSet.v FV.v FieldLabel.v Constants.v Class.v TyCon.v DataCon.v

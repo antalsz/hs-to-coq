@@ -58,11 +58,9 @@ Local Definition Ord1__Backwards_liftCompare {inst_f} `{(Ord1 inst_f)}
 Program Instance Ord1__Backwards {f} `{(Ord1 f)} : Ord1 (Backwards f) :=
   fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Backwards_liftCompare |}.
 
-(* Translating `instance Read1__Backwards' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read1" unsupported *)
+(* Skipping instance Read1__Backwards of class Read1 *)
 
-(* Translating `instance Show1__Backwards' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Backwards of class Show1 *)
 
 Local Definition Eq___Backwards_op_zeze__ {inst_f} {inst_a} `{Eq1 inst_f}
   `{GHC.Base.Eq_ inst_a}

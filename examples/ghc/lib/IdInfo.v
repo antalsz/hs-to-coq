@@ -205,20 +205,15 @@ Instance Default_IdInfo : GHC.Err.Default IdInfo :=
 *)
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable__LevityInfo' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__LevityInfo of class Outputable *)
 
-(* Translating `instance Outputable__IdDetails' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__IdDetails of class Outputable *)
 
-(* Translating `instance Outputable__TickBoxOp' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__TickBoxOp of class Outputable *)
 
-(* Translating `instance Outputable__CafInfo' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__CafInfo of class Outputable *)
 
-(* Translating `instance Outputable__RecSelParent' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__RecSelParent of class Outputable *)
 
 Local Definition Eq___LevityInfo_op_zeze__ : LevityInfo -> LevityInfo -> bool :=
   fun arg_0__ arg_1__ =>
@@ -331,6 +326,9 @@ Definition unknownArity : BasicTypes.Arity :=
 (* External variables:
      ClassId DataConId Eq Gt Lt None PatSynId Some TyConId bool comparison false negb
      option true unit BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.JoinArity
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.op_zeze__ GHC.Err.Build_Default
-     GHC.Err.Default GHC.Err.error GHC.Num.Int GHC.Num.fromInteger Module.Module
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare__ GHC.Base.max__ GHC.Base.min__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze____
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.Int
+     GHC.Num.fromInteger Module.Module
 *)

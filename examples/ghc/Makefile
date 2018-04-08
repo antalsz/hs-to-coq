@@ -54,9 +54,6 @@ MODULES = \
 
 ## 
 CONSTRUCTORS = \
-  Class \
-  TyCon \
-  DataCon \
 
 
 ## These are the modules most directly related to the core language
@@ -68,21 +65,25 @@ CORE_MODULES = \
   CoreSubst \
   CoreUtils \
   Id \
-  CoreFVs \
   CoreArity \
+  Name \
+  NameEnv \
+  NameSet \
   Var \
   VarEnv \
   VarSet \
   FV \
   Literal \
-  Name \
-  NameEnv \
-  NameSet \
   FieldLabel \
   Constants \
+  Class \
+  TyCon \
+  DataCon \
   PatSyn \
   ConLike \
 
+NOTRANSLATE = \
+  CoreFVs \
 
 CORETYPE = \
   TyCoRep \
@@ -111,16 +112,15 @@ BROKEN_MODULES = \
   CoreFVs \
   PatSyn \
   ConLike \
-
+  CoreFVs \
 
 VFILES_GEN       = $(addsuffix .v,$(MODULES))
 VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
 VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
 VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
-VFILES_CORETYPE  = CoreType.v
 VFILES_CONSTR    = Constructors.v
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORETYPE)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) 
 
 OUTFILES_GEN       = $(addprefix $(OUT)/,$(VFILES_GEN))
 OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
@@ -129,9 +129,11 @@ OUTFILES_DROPIN    = $(addprefix $(OUT)/,$(VFILES_DROPIN))
 OUTFILES_CORETYPE  = $(addprefix $(OUT)/,$(VFILES_CORETYPE))
 OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
 
-OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CONSTR)
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) 
 
 all: $(OUT)/README.md $(OUTFILES) coq
+
+core: $(OUT)/README.md coq
 
 # This target is also used as a dependecy to ensure that $(OUT) exists. 
 $(OUT)/README.md:
@@ -203,7 +205,7 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
 	test -e $@
 
 
-$(OUT)/Constructors.v : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
+$(OUTFILES_CONSTR) : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
 	$(HS_TO_COQ) -e module-edits/Constructors/edits \
 	                  -p module-edits/Constructors/preamble.v \
 	                  --midamble module-edits/Constructors/midamble.v \
@@ -214,7 +216,7 @@ $(OUT)/Constructors.v : edits no-type-edits module-edits/Constructors/preamble.v
 	test -e $@
 
 
-$(OUT)/CoreType.v : edits core-edits module-edits/CoreType/preamble.v  module-edits/CoreType/midamble.v module-edits/CoreType/edits
+$(OUTFILES_CORETYPE) : edits core-edits module-edits/CoreType/preamble.v  module-edits/CoreType/midamble.v module-edits/CoreType/edits
 	$(HS_TO_COQ) -e module-edits/CoreType/edits \
 	                  -p module-edits/CoreType/preamble.v \
 	                  --midamble module-edits/CoreType/midamble.v \
@@ -232,3 +234,6 @@ $(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 clean:
 	rm -rf $(OUT)
 	rm -f *.aux *.log
+
+cleancore:
+	rm -rf $(OUTFILES_CORE)

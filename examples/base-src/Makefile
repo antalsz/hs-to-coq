@@ -111,6 +111,7 @@ HS_TO_COQ_OPTS := \
     -N \
     -i base \
     -i base/dist-install/build \
+    -I base/dist-install/build/include \
     -I base/include \
     --iface-dir $(OUT) \
     --ghc -this-unit-id --ghc base \

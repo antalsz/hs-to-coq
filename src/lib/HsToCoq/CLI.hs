@@ -187,7 +187,7 @@ processArgs :: GhcMonad m => m Config
 processArgs = do
   ProgramArgs{..} <- liftIO $ customExecParser defaultPrefs{prefMultiSuffix="..."} argParserInfo
 
-  let defaultArgs = map (mkGeneralLocated "defaultArgs") $ words "-hidir=.ghc-tmp -odir=.ghc-tmp"
+  let defaultArgs = map (mkGeneralLocated "defaultArgs") $ words "-no-link -hidir=.ghc-tmp -odir=.ghc-tmp"
 
   let ghcArgs = let locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
                 in defaultArgs ++

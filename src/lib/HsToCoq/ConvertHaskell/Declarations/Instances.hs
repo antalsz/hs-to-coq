@@ -139,71 +139,70 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecl :: ConversionMonad r m => ClsInstDecl GhcRn -> m [Sentence]
-convertClsInstDecl cid@ClsInstDecl{..} = do
-  InstanceInfo{..} <- convertClsInstDeclInfo cid
-
-  let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
+unlessSkipped :: ConversionMonad r m => InstanceInfo -> m [Sentence] -> m [Sentence]
+unlessSkipped (InstanceInfo{..}) act = do
   view (edits.skipped.contains instanceClass) >>= \case
     True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName <> " of class " <> qualidBase instanceClass)) ]
     False -> do
       view (edits.skipped.contains instanceName) >>= \case
         True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
-        False -> ghandle err_handler $ do
-            cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
-                                           (\case ConvertedDefinitionBinding cdef -> pure cdef
-                                                  ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
-                                           Nothing -- error handler
+        False -> act
 
-            cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                               return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
+convertClsInstDecl :: ConversionMonad r m => ClsInstDecl GhcRn -> m [Sentence]
+convertClsInstDecl cid@ClsInstDecl{..} = do
+  ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
 
-            defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
-                         -- lookup default methods in the global state, using the
-                         -- empty map if the class name is not found
-                         -- otherwise gives you a map
-                         -- <&> is flip fmap
-                     <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
+  let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
+  unlessSkipped ii $ ghandle err_handler $ do
+    cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
+                                   (\case ConvertedDefinitionBinding cdef -> pure cdef
+                                          ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
+                                   Nothing -- error handler
 
-            -- implement the instance part of "skip method"
-            skippedMethodsS <- view (edits.skippedMethods)
+    cdefs <-  mapM (\ConvertedDefinition{..} -> do
+                       return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
-            let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
+    defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
+                 -- lookup default methods in the global state, using the
+                 -- empty map if the class name is not found
+                 -- otherwise gives you a map
+                 -- <&> is flip fmap
+             <&> filter (\(meth, _) -> isNothing $ lookup meth cdefs) . M.toList
 
-            let (binds, classTy) = decomposeForall instanceHead
+    -- implement the instance part of "skip method"
+    skippedMethodsS <- view (edits.skippedMethods)
 
-            -- decomposeClassTy can fail, so run it in the monad so that
-            -- failure will be caugh cause the instance to be skipped
-            (className, instTy) <- decomposeClassTy classTy
+    let methods = filter (\(m,_) -> (instanceClass,qualidBase m) `S.notMember` skippedMethodsS) (cdefs ++ defaults)
 
-            topoSortInstance instanceName binds className instTy methods
+    let (binds, classTy) = decomposeForall instanceHead
+
+    -- decomposeClassTy can fail, so run it in the monad so that
+    -- failure will be caugh cause the instance to be skipped
+    (className, instTy) <- decomposeClassTy classTy
+
+    topoSortInstance instanceName binds className instTy methods
 
 
 axiomatizeClsInstDecl :: ConversionMonad r m
                       => ClsInstDecl GhcRn        -- Haskell instance we are converting
-                      -> m (Maybe InstanceDefinition)
+                      -> m [Sentence]
 axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
-  instanceName <- convertInstanceName $ hsib_body cid_poly_ty
-  view (edits.skipped.contains instanceName) >>= \case
-    True -> pure Nothing
-    False -> do
-      InstanceInfo{..} <- convertClsInstDeclInfo cid
+  ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
+  unlessSkipped ii $ do
       lookupClassDefn instanceClass >>= \case
         Just (ClassDefinition _ _ _ methods) ->
-          pure . Just . InstanceDefinition instanceName [] instanceHead []
-             $ if null methods
-               then Nothing
-               else Just $ ProofAdmitted ""
+          pure $ [ InstanceSentence $ InstanceDefinition instanceName [] instanceHead []
+                                    $ if null methods then Nothing else Just $ ProofAdmitted "" ]
         Nothing ->
           -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
-          pure Nothing
+          pure []
 
 --------------------------------------------------------------------------------
 
 convertClsInstDecls, axiomatizeClsInstDecls :: forall r m. ConversionMonad r m =>
     [ClsInstDecl GhcRn] -> m [Sentence]
 convertClsInstDecls = foldTraverse convertClsInstDecl
-axiomatizeClsInstDecls insts = (fmap InstanceSentence .  catMaybes) <$> mapM axiomatizeClsInstDecl insts
+axiomatizeClsInstDecls = foldTraverse axiomatizeClsInstDecl
 
 --------------------------------------------------------------------------------
 

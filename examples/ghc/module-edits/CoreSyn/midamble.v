@@ -1,7 +1,51 @@
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
+(* This is not right, but suffices for now. *)
+Require Import Omega.
+Fixpoint size {a}{b} (e: AnnExpr' a b) :=
+  match e with 
+  | AnnVar _ => 1
+  | AnnLit _ => 1
+  | AnnLam _ (_ , bdy) => 1 + size bdy
+  | AnnApp (_,e1) (_, e2) => 1 + size e1 + size e2
+  | AnnCase (_,e) _ _ brs => 1 + size e
+  | AnnLet _ (_,e) => 1 + size e
+  | AnnCast (_,e) _ => 1 + size e
+  | AnnTick _ _ => 1
+  | AnnType _ => 1
+  | AnnCoercion _ => 1
+end.
 
+
+
+
+Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
+  GHC.Err.Build_Default _ (Var GHC.Err.default).
+
+Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
+  GHC.Err.Build_Default _ (@Mk_Tickish_Dummy _).
+
+Instance Default_TaggedBndr {t}`{GHC.Err.Default t} : GHC.Err.Default (TaggedBndr t) :=
+  GHC.Err.Build_Default _ (TB GHC.Err.default GHC.Err.default).
+
+Instance Default__AnnExpr' {a}{b} : GHC.Err.Default (AnnExpr' a b) :=
+  GHC.Err.Build_Default _ (AnnVar GHC.Err.default). 
+
+Instance Default__AnnBind {a}{b} : GHC.Err.Default (AnnBind a b) :=
+  GHC.Err.Build_Default _ (AnnRec GHC.Err.default). 
+
+Instance Default__Bind {b} : GHC.Err.Default (Bind b) :=
+  GHC.Err.Build_Default _ (Rec GHC.Err.default). 
+
+Instance Default__CoreVect : GHC.Err.Default CoreVect :=
+  GHC.Err.Build_Default _ (Vect GHC.Err.default GHC.Err.default). 
+
+Instance Default__CoreRule : GHC.Err.Default CoreRule :=
+  GHC.Err.Build_Default _ (BuiltinRule GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
+  GHC.Err.Build_Default _ (Mk_RuleEnv GHC.Err.default GHC.Err.default).
 
 
 Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
@@ -122,6 +166,7 @@ Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
      | Cast e co => Cast (deTagExpr e) co
      end.
 
+(*
 Definition exprToType : CoreExpr -> Core.Type_ :=
   fun arg_0__ =>
     match arg_0__ with
@@ -130,7 +175,5 @@ Definition exprToType : CoreExpr -> Core.Type_ :=
     end.
 
 Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
-  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg).
+  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg). *)
 
-Instance Default__Expr {b} : GHC.Err.Default (Expr b).
-Admitted.

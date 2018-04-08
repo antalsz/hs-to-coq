@@ -18,17 +18,18 @@ Require Coq.Program.Wf.
 
 Require BasicTypes.
 Require Coq.Init.Datatypes.
+Require Coq.Init.Peano.
 Require Coq.Lists.List.
 Require Data.Foldable.
 Require DataCon.
 Require DynFlags.
 Require GHC.Base.
 Require GHC.Char.
-Require GHC.DeferredFix.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Real.
+Require GHC.Wf.
 Require Literal.
 Require Module.
 Require Name.
@@ -563,23 +564,6 @@ Definition uf_src (arg_0__ : Unfolding) :=
   | CoreUnfolding _ uf_src _ _ _ _ _ _ => uf_src
   end.
 
-Definition uf_tmpl (arg_0__ : Unfolding) :=
-  match arg_0__ with
-  | NoUnfolding =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `uf_tmpl' has no match in constructor `NoUnfolding' of type `Unfolding'")
-  | BootUnfolding =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `uf_tmpl' has no match in constructor `BootUnfolding' of type `Unfolding'")
-  | OtherCon _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `uf_tmpl' has no match in constructor `OtherCon' of type `Unfolding'")
-  | DFunUnfolding _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `uf_tmpl' has no match in constructor `DFunUnfolding' of type `Unfolding'")
-  | CoreUnfolding uf_tmpl _ _ _ _ _ _ _ => uf_tmpl
-  end.
-
 Definition ru_act (arg_0__ : CoreRule) :=
   match arg_0__ with
   | Rule _ ru_act _ _ _ _ _ _ _ _ _ => ru_act
@@ -656,14 +640,6 @@ Definition ru_orphan (arg_0__ : CoreRule) :=
                      "Partial record selector: field `ru_orphan' has no match in constructor `BuiltinRule' of type `CoreRule'")
   end.
 
-Definition ru_rhs (arg_0__ : CoreRule) :=
-  match arg_0__ with
-  | Rule _ _ _ _ _ _ ru_rhs _ _ _ _ => ru_rhs
-  | BuiltinRule _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `ru_rhs' has no match in constructor `BuiltinRule' of type `CoreRule'")
-  end.
-
 Definition ru_rough (arg_0__ : CoreRule) :=
   match arg_0__ with
   | Rule _ _ _ ru_rough _ _ _ _ _ _ _ => ru_rough
@@ -692,7 +668,51 @@ Definition re_visible_orphs (arg_0__ : RuleEnv) :=
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
+(* This is not right, but suffices for now. *)
+Require Import Omega.
+Fixpoint size {a}{b} (e: AnnExpr' a b) :=
+  match e with 
+  | AnnVar _ => 1
+  | AnnLit _ => 1
+  | AnnLam _ (_ , bdy) => 1 + size bdy
+  | AnnApp (_,e1) (_, e2) => 1 + size e1 + size e2
+  | AnnCase (_,e) _ _ brs => 1 + size e
+  | AnnLet _ (_,e) => 1 + size e
+  | AnnCast (_,e) _ => 1 + size e
+  | AnnTick _ _ => 1
+  | AnnType _ => 1
+  | AnnCoercion _ => 1
+end.
 
+
+
+
+Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
+  GHC.Err.Build_Default _ (Var GHC.Err.default).
+
+Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
+  GHC.Err.Build_Default _ (@Mk_Tickish_Dummy _).
+
+Instance Default_TaggedBndr {t}`{GHC.Err.Default t} : GHC.Err.Default (TaggedBndr t) :=
+  GHC.Err.Build_Default _ (TB GHC.Err.default GHC.Err.default).
+
+Instance Default__AnnExpr' {a}{b} : GHC.Err.Default (AnnExpr' a b) :=
+  GHC.Err.Build_Default _ (AnnVar GHC.Err.default). 
+
+Instance Default__AnnBind {a}{b} : GHC.Err.Default (AnnBind a b) :=
+  GHC.Err.Build_Default _ (AnnRec GHC.Err.default). 
+
+Instance Default__Bind {b} : GHC.Err.Default (Bind b) :=
+  GHC.Err.Build_Default _ (Rec GHC.Err.default). 
+
+Instance Default__CoreVect : GHC.Err.Default CoreVect :=
+  GHC.Err.Build_Default _ (Vect GHC.Err.default GHC.Err.default). 
+
+Instance Default__CoreRule : GHC.Err.Default CoreRule :=
+  GHC.Err.Build_Default _ (BuiltinRule GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
+  GHC.Err.Build_Default _ (Mk_RuleEnv GHC.Err.default GHC.Err.default).
 
 
 Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
@@ -813,6 +833,7 @@ Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
      | Cast e co => Cast (deTagExpr e) co
      end.
 
+(*
 Definition exprToType : CoreExpr -> Core.Type_ :=
   fun arg_0__ =>
     match arg_0__ with
@@ -821,10 +842,8 @@ Definition exprToType : CoreExpr -> Core.Type_ :=
     end.
 
 Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
-  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg).
+  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg). *)
 
-Instance Default__Expr {b} : GHC.Err.Default (Expr b).
-Admitted.
 
 (* Converted value declarations: *)
 
@@ -1041,36 +1060,38 @@ Definition ltAlt {a} {b}
    : (AltCon * a * b)%type -> (AltCon * a * b)%type -> bool :=
   fun a1 a2 => (cmpAlt a1 a2) GHC.Base.== Lt.
 
-Definition collectAnnArgsTicks {b} {a}
-   : (Tickish Var.Var -> bool) ->
-     AnnExpr b a ->
-     (AnnExpr b a * list (AnnExpr b a) * list (Tickish Var.Var))%type :=
-  fun tickishOk expr =>
-    let go :=
-      GHC.DeferredFix.deferredFix3 (fun go arg_0__ arg_1__ arg_2__ =>
-                                      let j_4__ :=
-                                        match arg_0__, arg_1__, arg_2__ with
-                                        | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
-                                        end in
-                                      match arg_0__, arg_1__, arg_2__ with
-                                      | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
-                                      | pair _ (AnnTick t e), as_, ts =>
-                                          if tickishOk t : bool then go e as_ (cons t ts) else
-                                          j_4__
-                                      | _, _, _ => j_4__
-                                      end) in
-    go expr nil nil.
+Program Definition collectAnnArgsTicks {b} {a}
+           : (Tickish Var.Var -> bool) ->
+             AnnExpr b a ->
+             (AnnExpr b a * list (AnnExpr b a) * list (Tickish Var.Var))%type :=
+          fun tickishOk expr =>
+            let go :=
+              GHC.Wf.wfFix3 Coq.Init.Peano.lt (fun arg_0__ arg_1__ arg_2__ =>
+                               size (snd arg_0__)) _ (fun arg_0__ arg_1__ arg_2__ go =>
+                               let j_4__ :=
+                                 match arg_0__, arg_1__, arg_2__ with
+                                 | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
+                                 end in
+                               match arg_0__, arg_1__, arg_2__ with
+                               | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
+                               | pair _ (AnnTick t e), as_, ts =>
+                                   if Bool.Sumbool.sumbool_of_bool (tickishOk t) then go e as_ (cons t ts) else
+                                   j_4__
+                               | _, _, _ => j_4__
+                               end) in
+            go expr nil nil.
 
-Definition collectAnnBndrs {bndr} {annot}
-   : AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
-  fun e =>
-    let collect :=
-      GHC.DeferredFix.deferredFix2 (fun collect arg_0__ arg_1__ =>
-                                      match arg_0__, arg_1__ with
-                                      | bs, pair _ (AnnLam b body) => collect (cons b bs) body
-                                      | bs, body => pair (GHC.List.reverse bs) body
-                                      end) in
-    collect nil e.
+Program Definition collectAnnBndrs {bndr} {annot}
+           : AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
+          fun e =>
+            let collect :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ => size (snd arg_1__)) _
+                            (fun arg_0__ arg_1__ collect =>
+                               match arg_0__, arg_1__ with
+                               | bs, pair _ (AnnLam b body) => collect (cons b bs) body
+                               | bs, body => pair (GHC.List.reverse bs) body
+                               end) in
+            collect nil e.
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
   fun expr =>
@@ -1541,20 +1562,20 @@ Definition mkConApp2 {b}
            (GHC.Base.map varToCoreExpr arg_ids).
 
 (* External variables:
-     Alt AnnAlt AnnExpr Arg Eq Gt Lt None Some Type andb bool comparison cons
-     deAnnotate' deTagExpr false id list negb nil op_zt__ option pair true unit
-     BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
-     BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length DataCon.DataCon
-     DataCon.dataConTag DataCon.dataConTyCon DataCon.dataConWorkId DynFlags.DynFlags
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
-     GHC.Base.compare__ GHC.Base.map GHC.Base.mappend GHC.Base.max__ GHC.Base.min
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Char.Char
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
-     GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal Literal.mkMachChar
+     Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb
+     bool comparison cons deAnnotate' deTagExpr false id list negb nil op_zt__ option
+     pair size snd true uf_tmpl unit BasicTypes.Activation BasicTypes.AlwaysActive
+     BasicTypes.Arity BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Init.Peano.lt
+     Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
+     Data.Foldable.length DataCon.DataCon DataCon.dataConTag DataCon.dataConTyCon
+     DataCon.dataConWorkId DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__
+     GHC.Base.map GHC.Base.mappend GHC.Base.max__ GHC.Base.min GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____
+     GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Real.Rational GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
      Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
      Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName

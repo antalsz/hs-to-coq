@@ -14,7 +14,9 @@ skip CoreSyn.tickishContains
 skip CoreSyn.tickishScopesLike
 skip CoreSyn.tickishFloatable
 
-
+# record selector, no place to add default
+skip CoreSyn.uf_tmpl
+skip CoreSyn.ru_rhs
 
 order CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
 order CoreSyn.Eq___Tickish CoreSyn.Ord__Tickish
@@ -52,8 +54,8 @@ skip CoreSyn.deAnnotate'
 skip CoreSyn.collectAnnArgs
 skip CoreSyn.deTagExpr
 
-in CoreSyn.collectAnnArgsTicks termination go      deferred
-in CoreSyn.collectAnnBndrs     termination collect deferred
+in CoreSyn.collectAnnArgsTicks termination go      { measure (size (snd arg_0__)) }
+in CoreSyn.collectAnnBndrs     termination collect { measure (size (snd arg_1__)) }
 
 rename value Type.isCoercionTy_maybe = TyCoRep.Type_isCoercionTy_maybe
 rename value Coercion.mkCoVarCo      = TyCoRep.mkCoVarCo

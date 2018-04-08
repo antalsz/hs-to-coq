@@ -10,6 +10,10 @@ rename type CoreSyn.AnnExpr = AnnExpr
 rename type CoreSyn.AnnAlt = AnnAlt
 
 skip CoreFVs.orphNamesOfFamInst  # needs FamInstEnv
+skip CoreFVs.orphNamesOfCoCon
+skip CoreFVs.orphNamesOfCoAxBranch
+skip CoreFVs.orphNamesOfType
+skip CoreFVs.orphNamesOfProv
 
 skip CoreFVs.tickish_fvs
 

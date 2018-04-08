@@ -12,8 +12,6 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require Import Core.
-
 (* Converted imports: *)
 
 Require BasicTypes.
@@ -28,9 +26,9 @@ Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
 Require Panic.
-Require Platform.
-Require TyCon.
-Require TysPrim.
+(* Require Platform. *)
+Require TyCon. 
+(* Require TysPrim. *)
 Require UniqFM.
 Require Util.
 Import GHC.Base.Notations.
@@ -96,6 +94,7 @@ Definition float2DoubleLit : Literal -> Literal :=
         Panic.panicStr (GHC.Base.hs_string__ "float2DoubleLit") (Panic.noString l)
     end.
 
+(*
 Definition inInt64Range : GHC.Num.Integer -> bool :=
   fun x =>
     andb (x GHC.Base.>= GHC.Real.toInteger (GHC.Enum.minBound : GHC.Int.Int64)) (x
@@ -107,7 +106,7 @@ Definition mkMachInt64 : GHC.Num.Integer -> Literal :=
     if andb Util.debugIsOn (negb (inInt64Range x)) : bool
     then (Outputable.assertPprPanic (GHC.Base.hs_string__
                                      "ghc/compiler/basicTypes/Literal.hs") #277 (Outputable.integer x))
-    else MachInt64 x.
+    else MachInt64 x. *)
 
 Definition inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
   fun dflags x =>
@@ -122,6 +121,7 @@ Definition litIsDupable : DynFlags.DynFlags -> Literal -> bool :=
     | _, _ => true
     end.
 
+(*
 Definition inWord64Range : GHC.Num.Integer -> bool :=
   fun x =>
     andb (x GHC.Base.>= GHC.Real.toInteger (GHC.Enum.minBound : GHC.Word.Word64)) (x
@@ -133,7 +133,7 @@ Definition mkMachWord64 : GHC.Num.Integer -> Literal :=
     if andb Util.debugIsOn (negb (inWord64Range x)) : bool
     then (Outputable.assertPprPanic (GHC.Base.hs_string__
                                      "ghc/compiler/basicTypes/Literal.hs") #287 (Outputable.integer x))
-    else MachWord64 x.
+    else MachWord64 x. *)
 
 Definition inWordRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
   fun dflags x =>
@@ -322,7 +322,7 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
          GHC.Base.compare__ := Ord__Literal_compare ;
          GHC.Base.max__ := Ord__Literal_max ;
          GHC.Base.min__ := Ord__Literal_min |}.
-
+(*
 Definition literalType : Literal -> unit :=
   fun arg_0__ =>
     match arg_0__ with
@@ -337,7 +337,7 @@ Definition literalType : Literal -> unit :=
     | MachDouble _ => TysPrim.doublePrimTy
     | MachLabel _ _ _ => TysPrim.addrPrimTy
     | LitInteger _ t => t
-    end.
+    end.*)
 
 Definition mkLitInteger : GHC.Num.Integer -> unit -> Literal :=
   LitInteger.
@@ -351,10 +351,13 @@ Definition mkMachDouble : GHC.Real.Rational -> Literal :=
 Definition mkMachFloat : GHC.Real.Rational -> Literal :=
   MachFloat.
 
+(* 
 Definition mkMachInt64Wrap : GHC.Num.Integer -> Literal :=
   fun i =>
     MachInt64 (GHC.Real.toInteger (GHC.Real.fromIntegral i : GHC.Int.Int64)).
+*)
 
+(*
 Definition mkMachIntWrap : DynFlags.DynFlags -> GHC.Num.Integer -> Literal :=
   fun dflags i =>
     MachInt (let scrut_0__ :=
@@ -367,16 +370,18 @@ Definition mkMachIntWrap : DynFlags.DynFlags -> GHC.Num.Integer -> Literal :=
              then GHC.Real.toInteger (GHC.Real.fromIntegral i : GHC.Int.Int64) else
              let 'w := scrut_0__ in
              Panic.panic (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                  "toIntRange: Unknown platformWordSize: ") (GHC.Show.show w))).
+                                                  "toIntRange: Unknown platformWordSize: ") (GHC.Show.show w))). *)
 
 Definition mkMachString : GHC.Base.String -> Literal :=
   fun s =>
     MachStr (FastString.fastStringToByteString (FastString.mkFastString s)).
 
+(*
 Definition mkMachWord64Wrap : GHC.Num.Integer -> Literal :=
   fun i =>
     MachWord64 (GHC.Real.toInteger (GHC.Real.fromIntegral i : GHC.Word.Word64)).
-
+*)
+(*
 Definition mkMachWordWrap : DynFlags.DynFlags -> GHC.Num.Integer -> Literal :=
   fun dflags i =>
     MachWord (let scrut_0__ :=
@@ -389,8 +394,9 @@ Definition mkMachWordWrap : DynFlags.DynFlags -> GHC.Num.Integer -> Literal :=
               then GHC.Real.toInteger (GHC.Num.fromInteger i : GHC.Word.Word64) else
               let 'w := scrut_0__ in
               Panic.panic (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                   "toWordRange: Unknown platformWordSize: ") (GHC.Show.show w))).
+                                                   "toWordRange: Unknown platformWordSize: ") (GHC.Show.show w))). *)
 
+(*
 Definition mapLitValue
    : DynFlags.DynFlags ->
      (GHC.Num.Integer -> GHC.Num.Integer) -> Literal -> Literal :=
@@ -409,7 +415,7 @@ Definition mapLitValue
     | _, f, LitInteger i t => mkLitInteger (f i) t
     | _, _, l =>
         Panic.panicStr (GHC.Base.hs_string__ "mapLitValue") (Panic.noString l)
-    end.
+    end. *)
 
 Definition nullAddrLit : Literal :=
   MachNullAddr.

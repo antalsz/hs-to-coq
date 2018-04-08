@@ -201,7 +201,7 @@ Program Instance Functor__ArrowMonad {a} `{Arrow a}
 
 (* Skipping instance Alternative__ArrowMonad of class Alternative *)
 
-(* Skipping instance MonadPlus__ArrowMonad *)
+(* Skipping instance MonadPlus__ArrowMonad of class MonadPlus *)
 
 Local Definition ArrowApply__arrow_app
    : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=

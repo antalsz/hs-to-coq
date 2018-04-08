@@ -238,7 +238,7 @@ Program Instance Monad__Option : GHC.Base.Monad Option :=
 
 (* Skipping instance Alternative__Option of class Alternative *)
 
-(* Skipping instance MonadPlus__Option *)
+(* Skipping instance MonadPlus__Option of class MonadPlus *)
 
 (* Skipping instance MonadFix__Option of class MonadFix *)
 

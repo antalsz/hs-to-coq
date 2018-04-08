@@ -168,7 +168,7 @@ Program Instance Monad__Proxy : GHC.Base.Monad Proxy :=
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Proxy_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Proxy_return_ |}.
 
-(* Skipping instance MonadPlus__Proxy *)
+(* Skipping instance MonadPlus__Proxy of class MonadPlus *)
 
 (* Skipping instance Read__Proxy of class Read *)
 

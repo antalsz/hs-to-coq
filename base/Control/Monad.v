@@ -49,12 +49,6 @@ Definition mapAndUnzipM {m} {a} {b} {c} `{(GHC.Base.Applicative m)}
    : (a -> m (b * c)%type) -> list a -> m (list b * list c)%type :=
   fun f xs => GHC.List.unzip Data.Functor.<$> Data.Traversable.traverse f xs.
 
-Definition mfilter {m} {a} `{(GHC.Base.MonadPlus m)}
-   : (a -> bool) -> m a -> m a :=
-  fun p ma =>
-    ma GHC.Base.>>=
-    (fun a => if p a : bool then GHC.Base.return_ a else GHC.Base.mzero).
-
 Definition op_zgzezg__ {m} {a} {b} {c} `{GHC.Base.Monad m}
    : (a -> m b) -> (b -> m c) -> (a -> m c) :=
   fun f g => fun x => f x GHC.Base.>>= g.
@@ -103,8 +97,8 @@ End Notations.
 (* External variables:
      bool cons list nil op_zt__ tt unit Data.Foldable.Foldable Data.Foldable.foldlM
      Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__ Data.Traversable.sequenceA
-     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Monad GHC.Base.MonadPlus
-     GHC.Base.flip GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.mzero
-     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_
-     GHC.List.unzip GHC.List.zipWith
+     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Monad GHC.Base.flip
+     GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.op_zgzg__
+     GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_ GHC.List.unzip
+     GHC.List.zipWith
 *)

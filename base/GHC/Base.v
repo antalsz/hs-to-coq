@@ -135,21 +135,6 @@ Notation "'_>>=_'" := (op_zgzgze__).
 
 Infix ">>=" := (_>>=_) (at level 99).
 
-Record MonadPlus__Dict (m : Type -> Type) := MonadPlus__Dict_Build {
-  mplus__ : forall {a}, m a -> m a -> m a ;
-  mzero__ : forall {a}, m a }.
-
-Definition MonadPlus (m : Type -> Type) `{Alternative m} `{Monad m} :=
-  forall r, (MonadPlus__Dict m -> r) -> r.
-
-Existing Class MonadPlus.
-
-Definition mplus `{g : MonadPlus m} : forall {a}, m a -> m a -> m a :=
-  g _ (mplus__ m).
-
-Definition mzero `{g : MonadPlus m} : forall {a}, m a :=
-  g _ (mzero__ m).
-
 Arguments NEcons {_} _ _.
 (* Midamble *)
 
@@ -568,11 +553,11 @@ End ManualNotations.
 
 (* Converted value declarations: *)
 
-(* Skipping instance MonadPlus__option *)
+(* Skipping instance MonadPlus__option of class MonadPlus *)
 
-(* Skipping instance MonadPlus__list *)
+(* Skipping instance MonadPlus__list of class MonadPlus *)
 
-(* Skipping instance MonadPlus__IO *)
+(* Skipping instance MonadPlus__IO of class MonadPlus *)
 
 Local Definition Monad__arrow_op_zgzgze__ {inst_r}
    : forall {a} {b},
@@ -1313,9 +1298,9 @@ Infix "GHC.Base.<**>" := (_<**>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Alternative Eq Eq_ Gt Lt None Ord Some String Type andb bool compare compare__
-     comparison cons false list max__ min__ negb nil op_zeze__ op_zeze____ op_zg____
-     op_zgze____ op_zl__ op_zl____ op_zlze____ op_zsze____ option pair true tt unit
+     Eq Eq_ Gt Lt None Ord Some String Type andb bool compare compare__ comparison
+     cons false list max__ min__ negb nil op_zeze__ op_zeze____ op_zg____ op_zgze____
+     op_zl__ op_zl____ op_zlze____ op_zsze____ option pair true tt unit
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow
      GHC.Tuple.pair_type
 *)

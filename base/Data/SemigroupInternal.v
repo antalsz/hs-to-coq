@@ -583,7 +583,7 @@ Program Instance Applicative__Alt {f} `{GHC.Base.Applicative f}
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Alt_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Alt_pure |}.
 
-(* Skipping instance MonadPlus__Alt *)
+(* Skipping instance MonadPlus__Alt of class MonadPlus *)
 
 Local Definition Monad__Alt_op_zgzg__ {inst_f} `{GHC.Base.Monad inst_f}
    : forall {a} {b},

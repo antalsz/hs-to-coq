@@ -42,6 +42,7 @@ skip Control.Monad.Fix.MonadFix
 skip Data.Bitraversable.Bitraversable
 skip Data.Bifoldable.Bifoldable
 skip GHC.Base.Alternative
+skip GHC.Base.MonadPlus
 
 rename type GHC.IO.FilePath = GHC.Base.String
 

@@ -12,9 +12,8 @@ Stability   : experimental
 
 module HsToCoq.Coq.Pretty (
   renderGallina,
+  showP,
   Gallina(..),
-  renderIdent, renderAccessIdent, renderNum, renderString, renderOp,
-  renderLocality, renderFullLocality,
   ) where
 
 import Prelude hiding (Num)
@@ -139,6 +138,9 @@ maybeParen False = id
 
 class Gallina a where
   renderGallina' :: Int -> a -> Doc
+
+showP :: Gallina a => a -> String
+showP = T.unpack . displayTStrict . renderOneLine . renderGallina
 
 renderGallina :: Gallina a => a -> Doc
 renderGallina = renderGallina' 0

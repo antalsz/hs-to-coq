@@ -34,7 +34,7 @@ import Control.Monad
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
-import HsToCoq.Util.Containers
+-- import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
 
@@ -349,8 +349,9 @@ groupTyClDecls decls = do
         let vars = getFreeVars' decl
         -- This is very crude; querying all free variables as if
         -- they are constructor names:
-        ctypes <- setMapMaybeM lookupConstructorType vars
-        return $ vars <> ctypes
+        -- ctypes <- setMapMaybeM lookupConstructorType vars
+        -- With interface loading, this is too crude.
+        return $ vars -- <> ctypes
 
   pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!))
        $ topoSortEnvironmentWith id bodies_fvars

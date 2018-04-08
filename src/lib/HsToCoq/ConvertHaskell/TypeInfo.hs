@@ -6,6 +6,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiWayIf #-}
 
 -- | This module maintains the TypeInfo data structure, which contains
 -- the information about the type and type classes that we need throughout
@@ -50,6 +51,7 @@ import HsToCoq.Util.GHC.DynFlags
 
 import HsToCoq.Coq.Gallina (Qualid, ClassDefinition(..), Term, Qualid(..), ModuleIdent)
 import HsToCoq.Coq.Gallina.Util (qualidModule)
+import HsToCoq.Coq.Pretty
 import HsToCoq.ConvertHaskell.BuiltIn
 
 
@@ -86,6 +88,34 @@ data TypeInfo = TypeInfo
 
 makeLenses ''TypeInfo
 
+builtIns :: TypeInfo
+builtIns = TypeInfo {..}
+  where
+    _searchPaths       = []
+    _processedModules  = S.empty
+    _ifaceLoadCache    = M.empty
+
+    _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
+    _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
+    _constructorFields = M.fromList [ (d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
+    _recordFieldTypes  = M.empty
+    _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
+    _defaultMethods    = builtInDefaultMethods
+
+emptyTypeInfo :: TypeInfo
+emptyTypeInfo = TypeInfo {..}
+  where
+    _searchPaths       = []
+    _processedModules  = S.empty
+    _ifaceLoadCache    = M.empty
+
+    _constructors      = M.empty
+    _constructorTypes  = M.empty
+    _constructorFields = M.empty
+    _recordFieldTypes  = M.empty
+    _classDefns        = M.empty
+    _defaultMethods    = M.empty
+
 
 data AField where
     AField :: forall a. String -> Lens' TypeInfo (Map Qualid a) -> AField
@@ -104,15 +134,23 @@ newtype TypeInfoT m a = TypeInfoT (StateT TypeInfo m a)
   deriving ( Functor, Applicative, Monad, MonadIO, ExceptionMonad
            , HasDynFlags, MonadTrans)
 
-loadIFace :: forall m. MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
-loadIFace m filepath = do
-    ifaceContent <- liftIO $ readFile filepath
-    case readMaybe ifaceContent of
-        Nothing -> parseErr
-        Just iface ->
-            checkIface iface
+addIface :: Monad m => TypeInfo -> TypeInfoT m ()
+addIface newInfo = TypeInfoT $ mapM_ go typeInfoFields
+  where go (AField _ lens) = lens %= (M.union (newInfo ^. lens))
 
-    return ()
+loadIFace :: forall m. MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
+loadIFace mi filepath = do
+    ifaceContent <- liftIO $ readFile filepath
+    if | lines ifaceContent == ["all built in"]
+       -> return () -- for interface files of manually written modules
+       | Just iface <- readMaybe ifaceContent
+       -> do
+        checkIface iface
+        addIface iface
+        TypeInfoT $ ifaceLoadCache . at mi ?= Loaded
+
+       | otherwise
+       -> parseErr
   where
     checkIface :: TypeInfo -> TypeInfoT m ()
     checkIface iface = do
@@ -123,7 +161,7 @@ loadIFace m filepath = do
     checkField iface (AField lensName lens) = do
         let badKeys =      [ key
                            | key <- M.keys (iface^.lens)
-                           , qualidModule key /= Just m ]
+                           , qualidModule key /= Just mi ]
         unless (null badKeys) $ badKeysErr lensName badKeys
         typeInfo <- TypeInfoT get
         let conflictKeys = [ key
@@ -144,17 +182,17 @@ loadIFace m filepath = do
     badKeysErr field badKeys = liftIO $ do
         hPutStrLn stderr $ "Unexpected keys"
         hPutStrLn stderr $ "In field \"" ++ field ++ "\" of interface file " ++ filepath ++ ":"
-        mapM_ (hPutStrLn stderr . show) $ badKeys
+        mapM_ (hPutStrLn stderr . showP) $ badKeys
         exitFailure
 
     conflictKeysErr field conflictKeys = liftIO $ do
         hPutStrLn stderr $ "Keys already present in TypeInfo map"
         hPutStrLn stderr $ "In field \"" ++ field ++ "\" of interface file " ++ filepath ++ ":"
-        mapM_ (hPutStrLn stderr . show) $ conflictKeys
+        mapM_ (hPutStrLn stderr . showP) $ conflictKeys
         exitFailure
 
-findIFace :: forall m. MonadIO m => ModuleIdent -> TypeInfoT m ()
-findIFace m = do
+findIFace :: forall m. MonadIO m => ModuleIdent -> String -> TypeInfoT m ()
+findIFace m errContext = do
     paths <- TypeInfoT $ use searchPaths
     liftIO (findFile paths filename) >>= \case
         Just filepath -> loadIFace m filepath
@@ -167,18 +205,19 @@ findIFace m = do
                            go c = c
 
     notFoundErr paths = liftIO $ do
+        hPutStrLn stderr errContext
         hPutStrLn stderr $ "Could not find " ++ filename  ++ " in any of these directories:"
         mapM_ (hPutStrLn stderr) paths
         exitFailure
 
-needIface :: forall m. MonadIO m => Qualid -> TypeInfoT m ()
-needIface qi | Just mi <- qualidModule qi =
+needIface :: forall m. MonadIO m => Qualid -> String -> TypeInfoT m ()
+needIface qi errContext | Just mi <- qualidModule qi =
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         True -> return () -- This module is being processed, nothing to load
         False -> TypeInfoT (use (ifaceLoadCache.at mi)) >>= \case
             Just _ -> return () -- We already loaded this module
-            Nothing -> findIFace mi
-needIface _ = return () -- Unqualified name, do nothing
+            Nothing -> findIFace mi errContext
+needIface _ _ = return () -- Unqualified name, do nothing
 
 
 -- | This type class provides an interface to look up type and type class
@@ -208,20 +247,29 @@ class Monad m => TypeInfoMonad m where
 
     serializeIfaceFor       :: ModuleIdent -> m String
 
-lookup' :: MonadIO m => (Lens' TypeInfo (Map Qualid a)) -> Qualid -> TypeInfoT m (Maybe a)
-lookup' lens key = do
-    needIface key
+lookup' :: MonadIO m =>
+    String -> (Lens' TypeInfo (Map Qualid a)) ->
+    Qualid -> TypeInfoT m (Maybe a)
+lookup' _ lens key | Just x <- builtIns ^. lens . at key = pure (Just x)
+ -- Looking up a built in thing does not trigger loading an interface
+lookup' fieldName lens key = do
+    needIface key errContext
     TypeInfoT $ use $ lens . at key
+  where
+    errContext = "When looking up information about " ++ showP key ++ " in " ++ fieldName
 
 store' :: MonadIO m => (Lens' TypeInfo (Map Qualid a)) -> Qualid -> a -> TypeInfoT m ()
 store' _ (Bare n) _ = liftIO $ do
     hPutStrLn stderr $ "Cannot store bare name in the TypeInfo map:"
-    hPutStrLn stderr $ show n
+    hPutStrLn stderr $ T.unpack n
+    exitFailure
+store' lens key _ | Just _ <- builtIns ^. lens . at key = liftIO $ do
+    hPutStrLn stderr $ "Trying to override built-in information about " ++ showP key
     exitFailure
 store' lens qid@(Qualified mi _) x = do
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         False -> liftIO $ do
-            hPutStrLn stderr $ "Cannot store information about " ++ show qid
+            hPutStrLn stderr $ "Cannot store information about " ++ showP qid
             exitFailure
         True -> TypeInfoT $ lens . at qid ?= x
 
@@ -229,7 +277,7 @@ serializeIfaceFor' :: MonadIO m => ModuleIdent -> TypeInfoT m String
 serializeIfaceFor' mi = do
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         False -> liftIO $ do
-            hPutStrLn stderr $ "Module " ++ show mi ++ " is not a processed one."
+            hPutStrLn stderr $ "Module " ++ T.unpack mi ++ " is not a processed one."
             exitFailure
         True -> TypeInfoT $ gets (show . go)
   where
@@ -248,12 +296,12 @@ serializeIfaceFor' mi = do
 instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
     isProcessedModule       mi = TypeInfoT $ processedModules %= S.insert mi
 
-    lookupConstructors      = lookup' constructors
-    lookupConstructorType   = lookup' constructorTypes
-    lookupConstructorFields = lookup' constructorFields
-    lookupRecordFieldType   = lookup' recordFieldTypes
-    lookupClassDefn         = lookup' classDefns
-    lookupDefaultMethods    = lookup' defaultMethods
+    lookupConstructors      = lookup' "constructors"      constructors
+    lookupConstructorType   = lookup' "constructorTypes"  constructorTypes
+    lookupConstructorFields = lookup' "constructorFields" constructorFields
+    lookupRecordFieldType   = lookup' "recordFieldTypes"  recordFieldTypes
+    lookupClassDefn         = lookup' "classDefns"        classDefns
+    lookupDefaultMethods    = lookup' "defaultMethods"    defaultMethods
 
     storeConstructors      = store' constructors
     storeConstructorType   = store' constructorTypes
@@ -267,22 +315,13 @@ instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
 -- | Interface search paths
 type TypeInfoConfig = [FilePath]
 
+
 runTypeInfoMonad :: Monad m =>
     TypeInfoConfig ->
     TypeInfoT m a -> m a
-runTypeInfoMonad paths (TypeInfoT act) = evalStateT act TypeInfo{..}
-  where
-    _searchPaths       = paths
-    _processedModules  = S.empty
-    _ifaceLoadCache    = M.empty
-
-    _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
-    _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
-    _constructorFields = M.fromList [ (d, NonRecordFields n) | (_,ds) <- builtInDataCons, (d,n) <- ds ]
-    _recordFieldTypes  = M.empty
-    _classDefns        = M.fromList [ (i, cls) | cls@(ClassDefinition i _ _ _) <- builtInClasses ]
---    _memberSigs        = M.empty
-    _defaultMethods    =   builtInDefaultMethods
+runTypeInfoMonad paths (TypeInfoT act) = evalStateT ?? emptyTypeInfo $ do
+    searchPaths .= paths
+    act
 
 
 isConstructor :: TypeInfoMonad m => Qualid -> m Bool

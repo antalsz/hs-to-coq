@@ -145,24 +145,27 @@ Some notes about interface file:
    at least passt `--iface-dir path/to/base --iface-dir output/` where `output/`
    is the argument to `-o`.
 
- * When it cannot find the interface file, the translation is aborted. It is up
-   to the user (or the `Makefile`) to translate the files in the right order.
+ * When it cannot find an interface file, `hs-to-coq` complains loudly (but still
+   produces output). It is expected that the user will fix the problem, either
+   by processing the dependent-upon file first, or by skipping the offending
+   declarations.
 
-   In some of our `example` directories, a file called `interface-deps.mk` records
-   the dependencies. This does not need to be complete, just add dependencies as
-   you need them to guide `make`.
-
-   (It would be bad to silently ignore a missing file error: It would mean that you
-   translate `Foo` but some instances would be skipped for lack of information about
-   `Bar.Class`, and `Foo` translates and builds. Later you translate `Bar`, creating
-   the interface file. Now, without any change to `Foo`, you’d get a different output
-   with more instances, and suddenly `Foo.v` might fail to compile.)
+ * `hs-to-coq` can help with figuring out the right dependency order. If you pass
+   `--dependency-dir deps` to it, it will create a file `deps/Foo.mk` after processing
+   module `Foo`. This will, in `Makefile` syntax, list all read interface files
+   as dependencies of `Foo.v`, ensuring that from now on all files are built in
+   the right order.
 
  * Skipping instances prevents hs-to-coq from trying to load the interface
    files of the class’es module.
 
  * Coq types as well as information about the type classes `Eq` and `Ord` are hard-coded
    in `src/lib/HsToCoq/ConvertHaskell/BuiltIn.hs`.
+
+ * When you have a manual file that defines types or type classes, you may have
+   to create a faux interface files. Simply create a text file with the magic string
+   `all built in`.
+
 
 
 

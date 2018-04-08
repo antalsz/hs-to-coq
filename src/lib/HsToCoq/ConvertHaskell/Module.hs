@@ -21,7 +21,6 @@ import HsToCoq.Util.Containers
 
 import Data.Generics
 
-import Control.Monad.IO.Class
 import Control.Exception (SomeException)
 import qualified Data.Set as S
 import qualified Data.Map as M
@@ -34,7 +33,6 @@ import HsToCoq.Coq.Gallina.Util
 
 import GHC hiding (Name)
 import HsToCoq.Util.GHC.Module
-import Panic
 import Bag
 
 import Data.Data (Data(..))
@@ -79,7 +77,7 @@ convertHsGroup mod HsGroup{..} = do
                    ??
                    (Just axiomatizeBinding))
               $  withConvertedBinding
-                   (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
+                   (\cdef@ConvertedDefinition{convDefName = name} -> ((Just name,) <$>) $ withCurrentDefinition name $ do
                        t  <- view (edits.termination.at name)
                        obl <- view (edits.obligations.at name)
                        useProgram <- useProgramHere
@@ -96,12 +94,14 @@ convertHsGroup mod HsGroup{..} = do
                                   else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
                    ) (\_ _ -> convUnsupported "top-level pattern bindings")
+        let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
+        let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
 
-        defns' <- mapM applyRedefines defns
+        defns' <- mapM applyRedefines namedSentences
         let defnsMap = M.fromList defns'
+        let ordered = foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
 
-        -- TODO RENAMER use RecFlag info to do recursion stuff
-        pure . foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
+        pure $ unnamedSentences ++ ordered
 
   convertedClsInstDecls <- convertClsInstDecls
     [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
@@ -110,12 +110,13 @@ convertHsGroup mod HsGroup{..} = do
 
   pure ConvertedModuleDeclarations{..}
 
-  where axiomatizeBinding :: ConversionMonad r m => HsBind GhcRn -> GhcException -> m (Qualid, [Sentence])
+  where axiomatizeBinding :: ConversionMonad r m => HsBind GhcRn -> GhcException -> m (Maybe Qualid, [Sentence])
         axiomatizeBinding FunBind{..} exn = do
           name <- var ExprNS (unLoc fun_id)
-          pure (name, [translationFailedComment (qualidBase name) exn, axiom name])
+          pure (Just name, [translationFailedComment (qualidBase name) exn, axiom name])
         axiomatizeBinding _ exn =
-          liftIO $ throwGhcExceptionIO exn
+          pure (Nothing, [CommentSentence $ Comment $
+            "While translating non-function binding: " <> T.pack (show exn)])
 
         applyRedefines :: ConversionMonad r m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
         applyRedefines (name, sentences)

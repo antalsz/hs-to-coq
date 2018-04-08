@@ -1,4 +1,4 @@
-rename value Intervals.Intervals = ival
+rename value Intervals.Intervals = Intervals.ival
 rename type GHC.Int.Int64 = GHC.Num.Int
 
 in Intervals.union     termination go deferred

@@ -95,6 +95,20 @@ Instance Eq___PatSyn : GHC.Base.Eq_ PatSyn := {}.
 Proof.
 Admitted.
 
+Instance Uniquable__PatSyn : Unique.Uniquable PatSyn := {}.
+Proof.
+Admitted.
+
+Instance NamedThing__PatSyn : Name.NamedThing PatSyn := {}.
+Proof.
+Admitted.
+
+(* Skipping instance Outputable__PatSyn of class Outputable *)
+
+(* Skipping instance OutputableBndr__PatSyn of class OutputableBndr *)
+
+(* Skipping instance Data__PatSyn of class Data *)
+
 Axiom mkPatSyn : Name.Name ->
                  bool ->
                  (list Var.TyVarBinder * unit)%type ->
@@ -139,6 +153,6 @@ Axiom patSynInstResTy : PatSyn -> list unit -> unit.
 
 (* External variables:
      bool list op_zt__ option unit BasicTypes.Arity FieldLabel.FieldLabel
-     FieldLabel.FieldLabelString GHC.Base.Eq_ Name.Name Unique.Unique Var.Id
-     Var.TyVar Var.TyVarBinder
+     FieldLabel.FieldLabelString GHC.Base.Eq_ Name.Name Name.NamedThing
+     Unique.Uniquable Unique.Unique Var.Id Var.TyVar Var.TyVarBinder
 *)

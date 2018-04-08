@@ -178,10 +178,11 @@ HS_TO_COQ_GHC_OPTS=\
      --iface-dir ../containers/lib \
      --iface-dir ../transformers/lib \
      --iface-dir $(OUT) \
+     --dependency-dir deps \
      -e edits \
      -N \
 
-include interface-deps.mk
+-include deps/*.mk
 
 %.h2ci: %.v
 	test -e $@

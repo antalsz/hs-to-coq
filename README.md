@@ -64,6 +64,7 @@ transforming some Haskell constructs into proper Coq.
 
 The following directives are available:
 
+
 ```
 skip module <qualified module name>
 ```
@@ -89,6 +90,26 @@ remame value <qualified constructor> = <qualified name>
 ```
 
 Renames given constructor.
+
+
+```termination <qualified function name> <termarg>```
+
+If `qualid` is not structurally recursive, `termarg` can be one of 
+    - `deferred`
+    - `corecursive`
+    - `{ struct qualid }`
+    - `{ measure id ... }`
+	- `{ wf id qualid }`
+
+
+Edits can be localized to particular definitions. You can write
+
+```in Foo.bar <any edit>```
+and the edit will only apply during the translation of `Foo.bar`.
+So if you need to rename a type or a function, or apply a rewrite rule, in
+just one function, you can.
+
+
 
 ### Common Uses
 

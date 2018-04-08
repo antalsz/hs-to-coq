@@ -1,50 +1,71 @@
+skip module Class
+skip module DataCon
 
-skip module Type
-skip module TysPrim
-skip module TyCoRep
+rewrite forall x, andb Util.debugIsOn x = false
+
+rename type DataCon.DataCon = IdInfo.DataConId
+rename type Class.Class     = IdInfo.ClassId
+
+
+rename type CoAxiom.CoAxiom = list
+rename type CoAxiom.Branched = unit
+rename type CoAxiom.Unbranched = unit
+rename type CoAxiom.BuiltInSynFamily = unit
+rename type CoAxiom.Role = unit
+rename value CoAxiom.Representational = tt
+rename value CoAxiom.Nominal = tt
+rename value TysWiredIn.liftedTypeKind = tt
+
+
+skip TyCon.mkTyConKind
+rewrite forall x y, TyCon.mkTyConKind x y = tt
+
+skip TyCon.kindTyConKeys
+skip TyCon.isKindTyCon
+
+## Cannot add necessary default before partial record selector
+skip TyCon.algTcParent
+skip TyCon.promDcRepInfo
+
+## need name of class
+skip TyCon.okParent
+
+## Needs DataCon.dataConExTyVars
+skip TyCon.isDataProductTyCon_maybe
+skip TyCon.isDataSumTyCon_maybe 
+skip TyCon.isProductTyCon 
+skip TyCon.isPromotedTupleTyCon
+
+skip TyCon.isInjectiveTyCon
+skip TyCon.isGenerativeTyCon
+skip TyCon.tyConInjectivityInfo 
+
+## Needs DataCon.dataConFieldLabels
+skip TyCon.fieldsOfAlgTcRhs
+skip TyCon.mkAlgTyCon
+skip TyCon.mkClassTyCon
+
+## Introduces a redundant case
+skip TyCon.tyConVisibleTyVars
 
 skip TyCon.tyConATs
 skip module ForeignCall
 
 # Needs ClassSpec
 skip TyCon.tyConAssoc_maybe
-
-#### specific to TyCon
-skip Core.TyConRepName
-skip Core.Injectivity
-skip Core.RuntimeRepInfo
-skip Core.TyCon
-skip Core.AlgTyConFlav
+skip TyCon.isTyConAssoc
 
 order TyCon.Ord__TyCon_compare TyCon.Eq___TyCon_op_zeze__ TyCon.Eq___TyCon_op_zsze__ TyCon.Eq___TyCon TyCon.Ord__TyCon
 
-redefine Local Definition TyCon.Eq___TyCon_op_zeze__ : Core.TyCon -> (Core.TyCon -> bool) :=
-  fun a b =>
-    match Ord__TyCon_compare a b with
-      | Eq => true
-      | _ => false
-    end.
-redefine Local Definition TyCon.Eq___TyCon_op_zsze__ : Core.TyCon -> (Core.TyCon -> bool) :=
-  fun a b =>
-    let scrut_0__ := Ord__TyCon_compare a b in
-    match scrut_0__ with
-      | Eq => false
-      | _ => true
-    end.
+redefine Local Definition TyCon.Eq___TyConFlavour_op_zeze__
+   : TyConFlavour -> (TyConFlavour -> bool) := fun a b => false.
 
 order TyCon.Eq___PrimElemRep TyCon.Eq___PrimRep_op_zeze__
 
 ## can't use Applicative ((->)A)
 skip TyCon.isLiftedTypeKindTyConName
 
-redefine Definition TyCon.tyConAssoc_maybe : Core.TyCon -> (option ClassSpec.Class)  :=
-  fun x => match x with
-        | FamilyTyCon _ _ _ _ _ _ _ _ _ mb_cls _ => mb_cls
-        | _ => None
-        end.
+skip TyCon.tyConRuntimeRepInfo
+skip TyCon.tyConSkolem
 
-# in preamble
-skip TyCon.isTyConAssoc
-skip TyCon.makeTyConAbstract
-skip TyCon.mkClassTyCon
-skip TyCon.fieldsOfAlgTcRhs
+

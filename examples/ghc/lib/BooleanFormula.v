@@ -65,6 +65,10 @@ Definition clauseExprs {a} (arg_0__ : Clause a) :=
   clauseExprs.
 (* Midamble *)
 
+Import GHC.Err.
+Instance Default_BooleanFormula {a} : Err.Default (BooleanFormula a) :=
+  Err.Build_Default _ (And nil).
+
 Local Fixpoint size {a} (bf: BooleanFormula a) : nat :=
   match bf with
     | Var a => 0

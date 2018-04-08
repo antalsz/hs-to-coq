@@ -45,7 +45,9 @@ rename value Outputable.ftext         = Panic.noString
 rename value Outputable.fsep          = Panic.noString
 rename value Outputable.vcat          = Panic.noString
 rename value Outputable.vbar          = Panic.someSDoc
+
 rewrite forall x y, Outputable.punctuate x y = Panic.someSDoc
+rewrite forall x str msg, Outputable.pprTraceDebug str msg x = x
 
 # Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP

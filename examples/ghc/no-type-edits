@@ -1,10 +1,11 @@
-skip module TyCon
 skip module TyCoRep
 skip module Coercion
 skip module CoAxiom
 skip module Type
 skip module Unify
 skip module TcType
+skip module TysWiredIn
+skip module RepType
 
 ## not sure if we need this
 ## rewrite forall x, IdInfo.sel_tycon x = tt
@@ -12,6 +13,7 @@ skip module TcType
 ### get rid of some information in the AST
 rename type PrimOp.PrimOp           = unit
 rename type ForeignCall.ForeignCall = unit
+rename type ForeignCall.CType       = unit
 
 ## Punning
 rename value Var.Id            = Var.Mk_Id
@@ -35,11 +37,18 @@ rename value CoreSubst.Subst   = CoreSubst.Mk_Subst
 rename type TcType.TcTyVarDetails = unit
 redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
+skip DataCon.buildAlgTyCon
+skip DataCon.buildSynTyCon
+
+redefine Definition DataCon.buildAlgTyCon := 
+  fun tc_name ktvs roles cType stupid_theta rhs gadt_syn parent => tt.
+redefine Definition DataCon.buildSynTyCon :=
+  fun name binders res_kind roles rhs => tt.
+
+
 # type used in DataCon
 rename type MkId.DataConBoxer = unit
 
-
-rename type TyCon.TyCon           = unit
 rename type TyCoRep.Coercion      = unit
 rename type TyCoRep.Type_         = unit
 rename type TyCoRep.ThetaType     = unit

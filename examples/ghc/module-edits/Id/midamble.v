@@ -1,7 +1,6 @@
 (* Record selectors *)
 Import IdInfo.
 Import IdInfo2.
-Import Core.
 
 Parameter hasNoBinding : Var.Id -> bool.
 

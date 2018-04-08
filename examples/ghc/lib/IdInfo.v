@@ -16,23 +16,27 @@ Require GHC.Err.
 Require GHC.Base.
 
 (* We might put these elsewhere, but these are some types that we 
-   can use for untying the knots in DataCon/Class/PatSyn *)
+   can use for untying the knots in DataCon/Class/PatSyn/TyCon *)
 
 Parameter DataConId : Type.
 Parameter ClassId   : Type.
 Parameter PatSynId  : Type.
+Parameter TyConId   : Type.
 
 Parameter Default_DataConId : GHC.Err.Default DataConId.
 Parameter Default_ClassId   : GHC.Err.Default ClassId.
 Parameter Default_PatSynId  : GHC.Err.Default PatSynId.
+Parameter Default_TyConId   : GHC.Err.Default TyConId.
 
 Parameter Eq_PatSynId  : Base.Eq_ PatSynId.
 Parameter Eq_ClassId   : Base.Eq_ ClassId.
 Parameter Eq_DataConId : Base.Eq_ DataConId.
+Parameter Eq_TyConId   : Base.Eq_ TyConId.
 
 Parameter Ord_PatSynId  : Base.Ord PatSynId.
 Parameter Ord_ClassId   : Base.Ord ClassId.
 Parameter Ord_DataConId : Base.Ord DataConId.
+Parameter Ord_TyConId   : Base.Ord TyConId.
 
 
 (*
@@ -111,7 +115,7 @@ Definition TickBoxId :=
 Inductive TickBoxOp : Type := TickBox : Module.Module -> TickBoxId -> TickBoxOp.
 
 Inductive RecSelParent : Type
-  := RecSelData : unit -> RecSelParent
+  := RecSelData : TyConId -> RecSelParent
   |  RecSelPatSyn : PatSynId -> RecSelParent.
 
 Inductive LevityInfo : Type
@@ -325,8 +329,8 @@ Definition unknownArity : BasicTypes.Arity :=
   #0.
 
 (* External variables:
-     ClassId DataConId Eq Gt Lt None PatSynId Some bool comparison false negb option
-     true unit BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.JoinArity
+     ClassId DataConId Eq Gt Lt None PatSynId Some TyConId bool comparison false negb
+     option true unit BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.JoinArity
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.op_zeze__ GHC.Err.Build_Default
      GHC.Err.Default GHC.Err.error GHC.Num.Int GHC.Num.fromInteger Module.Module
 *)

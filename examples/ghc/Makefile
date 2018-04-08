@@ -52,6 +52,13 @@ MODULES = \
   OrdList \
   OccName \
 
+## 
+CONSTRUCTORS = \
+  Class \
+  TyCon \
+  DataCon \
+
+
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
   IdInfo \
@@ -68,28 +75,27 @@ CORE_MODULES = \
   VarSet \
   FV \
   Literal \
-  Class \
-  DataCon \
-  PatSyn \
-  ConLike \
   Name \
   NameEnv \
   NameSet \
   FieldLabel \
   Constants \
+  PatSyn \
+  ConLike \
+
 
 CORETYPE = \
   TyCoRep \
   Coercion \
   CoAxiom \
   Type \
-  TyCon \
 
 
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
+  Constructors \
   CoreType \
   CoreSyn \
   IdInfo2 \
@@ -103,12 +109,16 @@ BROKEN_MODULES = \
   CoreUtils \
   Id \
   CoreFVs \
+  PatSyn \
+  ConLike \
+
 
 VFILES_GEN       = $(addsuffix .v,$(MODULES))
 VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
 VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
 VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
 VFILES_CORETYPE  = CoreType.v
+VFILES_CONSTR    = Constructors.v
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORETYPE)
 
@@ -117,8 +127,9 @@ OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
 OUTFILES_CORE      = $(addprefix $(OUT)/,$(VFILES_CORE))
 OUTFILES_DROPIN    = $(addprefix $(OUT)/,$(VFILES_DROPIN))
 OUTFILES_CORETYPE  = $(addprefix $(OUT)/,$(VFILES_CORETYPE))
+OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
 
-OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORETYPE)
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CONSTR)
 
 all: $(OUT)/README.md $(OUTFILES) coq
 
@@ -173,7 +184,7 @@ $(OUTFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildca
 		     ghc/compiler/*/$*.hs
 	test -e $@
 
-$(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits core-edits
+$(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits no-type-edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
@@ -181,6 +192,17 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
                      -e no-type-edits \
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs
+	test -e $@
+
+
+$(OUT)/Constructors.v : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
+	$(HS_TO_COQ) -e module-edits/Constructors/edits \
+	                  -p module-edits/Constructors/preamble.v \
+	                  --midamble module-edits/Constructors/midamble.v \
+		     $(HS_TO_COQ_GHC_OPTS) \
+                     -e no-type-edits \
+                     -o $(OUT) \
+		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CONSTRUCTORS)))
 	test -e $@
 
 

@@ -18,8 +18,6 @@ Require Import Core.
 
 Require BasicTypes.
 Require Coq.Init.Datatypes.
-Require Core.
-Require CoreType.
 Require Data.Maybe.
 Require DynFlags.
 Require FastString.
@@ -31,6 +29,8 @@ Require GHC.Num.
 Require GHC.Real.
 Require Panic.
 Require Platform.
+Require TyCon.
+Require TysPrim.
 Require UniqFM.
 Require Util.
 Import GHC.Base.Notations.
@@ -51,14 +51,12 @@ Inductive Literal : Type
   |  MachLabel
    : FastString.FastString ->
      (option GHC.Num.Int) -> BasicTypes.FunctionOrData -> Literal
-  |  LitInteger : GHC.Num.Integer -> CoreType.Type_ -> Literal.
+  |  LitInteger : GHC.Num.Integer -> unit -> Literal.
 
 Instance Default__Literal : GHC.Err.Default Literal :=
   GHC.Err.Build_Default _ MachNullAddr.
 (* Midamble *)
 
-Instance Default__Literal : GHC.Err.Default Literal :=
-  GHC.Err.Build_Default _ MachNullAddr.
 
 Parameter absent_lits :  UniqFM.UniqFM Literal.
 
@@ -75,8 +73,8 @@ Parameter inCharRange : GHC.Char.Char -> bool.
 (* Translating `instance Data__Literal' failed: OOPS! Cannot find information
    for class Qualified "Data.Data" "Data" unsupported *)
 
-Definition absentLiteralOf : CoreType.TyCon -> option Literal :=
-  fun tc => UniqFM.lookupUFM absent_lits (CoreType.tyConName tc).
+Definition absentLiteralOf : TyCon.TyCon -> option Literal :=
+  fun tc => UniqFM.lookupUFM absent_lits (TyCon.tyConName tc).
 
 Definition char2IntLit : Literal -> Literal :=
   fun arg_0__ =>
@@ -328,23 +326,23 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
          GHC.Base.max__ := Ord__Literal_max ;
          GHC.Base.min__ := Ord__Literal_min |}.
 
-Definition literalType : Literal -> CoreType.Type_ :=
+Definition literalType : Literal -> unit :=
   fun arg_0__ =>
     match arg_0__ with
-    | MachNullAddr => Core.addrPrimTy
-    | MachChar _ => Core.charPrimTy
-    | MachStr _ => Core.addrPrimTy
-    | MachInt _ => Core.intPrimTy
-    | MachWord _ => Core.wordPrimTy
-    | MachInt64 _ => Core.int64PrimTy
-    | MachWord64 _ => Core.word64PrimTy
-    | MachFloat _ => Core.floatPrimTy
-    | MachDouble _ => Core.doublePrimTy
-    | MachLabel _ _ _ => Core.addrPrimTy
+    | MachNullAddr => TysPrim.addrPrimTy
+    | MachChar _ => TysPrim.charPrimTy
+    | MachStr _ => TysPrim.addrPrimTy
+    | MachInt _ => TysPrim.intPrimTy
+    | MachWord _ => TysPrim.wordPrimTy
+    | MachInt64 _ => TysPrim.int64PrimTy
+    | MachWord64 _ => TysPrim.word64PrimTy
+    | MachFloat _ => TysPrim.floatPrimTy
+    | MachDouble _ => TysPrim.doublePrimTy
+    | MachLabel _ _ _ => TysPrim.addrPrimTy
     | LitInteger _ t => t
     end.
 
-Definition mkLitInteger : GHC.Num.Integer -> CoreType.Type_ -> Literal :=
+Definition mkLitInteger : GHC.Num.Integer -> unit -> Literal :=
   LitInteger.
 
 Definition mkMachChar : GHC.Char.Char -> Literal :=
@@ -433,14 +431,12 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
     end.
 
 (* External variables:
-     Eq Gt Lt None Some absent_lits andb bool comparison false negb option true
-     BasicTypes.FunctionOrData Coq.Init.Datatypes.app Core.addrPrimTy Core.charPrimTy
-     Core.doublePrimTy Core.floatPrimTy Core.int64PrimTy Core.intPrimTy
-     Core.word64PrimTy Core.wordPrimTy CoreType.TyCon CoreType.Type_
-     CoreType.tyConName Data.Maybe.isJust DynFlags.DynFlags DynFlags.tARGET_MAX_INT
-     DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT DynFlags.targetPlatform
-     FastString.FastString FastString.fastStringToByteString FastString.mkFastString
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
+     Eq Gt Lt None Some absent_lits andb bool comparison false negb option true unit
+     BasicTypes.FunctionOrData Coq.Init.Datatypes.app Data.Maybe.isJust
+     DynFlags.DynFlags DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD
+     DynFlags.tARGET_MIN_INT DynFlags.targetPlatform FastString.FastString
+     FastString.fastStringToByteString FastString.mkFastString GHC.Base.Eq_
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
      GHC.Base.op_zlze__ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound
      GHC.Enum.minBound GHC.Err.Build_Default GHC.Err.Default GHC.Int.Int32
@@ -448,5 +444,8 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.fromIntegral GHC.Real.toInteger
      GHC.Show.show GHC.Word.Word32 GHC.Word.Word64 Outputable.assertPprPanic
      Outputable.integer Panic.noString Panic.panic Panic.panicStr
-     Platform.platformWordSize UniqFM.lookupUFM Util.debugIsOn
+     Platform.platformWordSize TyCon.TyCon TyCon.tyConName TysPrim.addrPrimTy
+     TysPrim.charPrimTy TysPrim.doublePrimTy TysPrim.floatPrimTy TysPrim.int64PrimTy
+     TysPrim.intPrimTy TysPrim.word64PrimTy TysPrim.wordPrimTy UniqFM.lookupUFM
+     Util.debugIsOn
 *)

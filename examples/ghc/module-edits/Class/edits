@@ -1,3 +1,5 @@
+rename type TyCon.TyCon = IdInfo.TyConId
+
 # debugging, uses List.!!
 skip Class.classSCSelId
 

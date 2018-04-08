@@ -12,15 +12,13 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require Import Core.
+
 
 (* Converted imports: *)
 
 Require BasicTypes.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
-Require Core.
-Require CoreType.
 Require Data.Foldable.
 Require DataCon.
 Require DynFlags.
@@ -37,7 +35,10 @@ Require Name.
 Require NameEnv.
 Require OccName.
 Require Panic.
+Require TyCon.
 Require Util.
+Require Var.
+Require VarEnv.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -67,29 +68,29 @@ Inductive TickishPlacement : Type
 Inductive Tickish (id : Type) : Type := Mk_Tickish_Dummy.
 
 Definition OutType :=
-  CoreType.Type_%type.
+  unit%type.
 
 Definition OutKind :=
-  CoreType.Kind%type.
+  unit%type.
 
 Definition OutCoercion :=
-  CoreType.Coercion%type.
+  unit%type.
 
 Inductive IsOrphan : Type
   := Mk_IsOrphan : IsOrphan
   |  NotOrphan : OccName.OccName -> IsOrphan.
 
 Definition InType :=
-  CoreType.Type_%type.
+  unit%type.
 
 Definition InKind :=
-  CoreType.Kind%type.
+  unit%type.
 
 Definition InCoercion :=
-  CoreType.Coercion%type.
+  unit%type.
 
 Definition CoreBndr :=
-  CoreType.Var%type.
+  Var.Var%type.
 
 Definition InBndr :=
   CoreBndr%type.
@@ -113,21 +114,18 @@ Inductive AnnExpr__raw : Type :=.
 Reserved Notation "'AnnExpr'".
 
 Inductive AnnExpr' bndr annot : Type
-  := AnnVar : CoreType.Id -> AnnExpr' bndr annot
+  := AnnVar : Var.Id -> AnnExpr' bndr annot
   |  AnnLit : Literal.Literal -> AnnExpr' bndr annot
   |  AnnLam : bndr -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
   |  AnnApp : (AnnExpr bndr annot) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
   |  AnnCase
    : (AnnExpr bndr annot) ->
-     bndr -> CoreType.Type_ -> list (AnnAlt bndr annot) -> AnnExpr' bndr annot
+     bndr -> unit -> list (AnnAlt bndr annot) -> AnnExpr' bndr annot
   |  AnnLet : (AnnBind bndr annot) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
-  |  AnnCast
-   : (AnnExpr bndr annot) ->
-     (annot * CoreType.Coercion)%type -> AnnExpr' bndr annot
-  |  AnnTick
-   : (Tickish CoreType.Id) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
-  |  AnnType : CoreType.Type_ -> AnnExpr' bndr annot
-  |  AnnCoercion : CoreType.Coercion -> AnnExpr' bndr annot
+  |  AnnCast : (AnnExpr bndr annot) -> (annot * unit)%type -> AnnExpr' bndr annot
+  |  AnnTick : (Tickish Var.Id) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
+  |  AnnType : unit -> AnnExpr' bndr annot
+  |  AnnCoercion : unit -> AnnExpr' bndr annot
 with AnnBind bndr annot : Type
   := AnnNonRec : bndr -> (AnnExpr bndr annot) -> AnnBind bndr annot
   |  AnnRec : list (bndr * AnnExpr bndr annot)%type -> AnnBind bndr annot
@@ -145,16 +143,16 @@ Inductive Arg__raw : Type :=.
 Reserved Notation "'Arg'".
 
 Inductive Expr b : Type
-  := Var : CoreType.Id -> Expr b
+  := Var : Var.Id -> Expr b
   |  Lit : Literal.Literal -> Expr b
   |  App : (Expr b) -> (Arg b) -> Expr b
   |  Lam : b -> (Expr b) -> Expr b
   |  Let : (Bind b) -> (Expr b) -> Expr b
-  |  Case : (Expr b) -> b -> CoreType.Type_ -> list (Alt b) -> Expr b
-  |  Cast : (Expr b) -> CoreType.Coercion -> Expr b
-  |  Tick : (Tickish CoreType.Id) -> (Expr b) -> Expr b
-  |  Type_ : CoreType.Type_ -> Expr b
-  |  Coercion : CoreType.Coercion -> Expr b
+  |  Case : (Expr b) -> b -> unit -> list (Alt b) -> Expr b
+  |  Cast : (Expr b) -> unit -> Expr b
+  |  Tick : (Tickish Var.Id) -> (Expr b) -> Expr b
+  |  Type_ : unit -> Expr b
+  |  Coercion : unit -> Expr b
 with Bind b : Type
   := NonRec : b -> (Expr b) -> Bind b
   |  Rec : list (b * (Expr b))%type -> Bind b
@@ -202,11 +200,11 @@ Definition CoreExpr :=
   (Expr CoreBndr)%type.
 
 Inductive CoreVect : Type
-  := Vect : CoreType.Id -> CoreExpr -> CoreVect
-  |  NoVect : CoreType.Id -> CoreVect
-  |  VectType : bool -> CoreType.TyCon -> (option CoreType.TyCon) -> CoreVect
-  |  VectClass : CoreType.TyCon -> CoreVect
-  |  VectInst : CoreType.Id -> CoreVect.
+  := Vect : Var.Id -> CoreExpr -> CoreVect
+  |  NoVect : Var.Id -> CoreVect
+  |  VectType : bool -> TyCon.TyCon -> (option TyCon.TyCon) -> CoreVect
+  |  VectClass : TyCon.TyCon -> CoreVect
+  |  VectInst : Var.Id -> CoreVect.
 
 Definition InExpr :=
   CoreExpr%type.
@@ -218,22 +216,21 @@ Inductive Unfolding : Type
   := NoUnfolding : Unfolding
   |  BootUnfolding : Unfolding
   |  OtherCon : list AltCon -> Unfolding
-  |  DFunUnfolding
-   : list CoreType.Var -> DataCon.DataCon -> list CoreExpr -> Unfolding
+  |  DFunUnfolding : list Var.Var -> DataCon.DataCon -> list CoreExpr -> Unfolding
   |  CoreUnfolding
    : CoreExpr ->
      UnfoldingSource ->
      bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> Unfolding.
 
 Definition IdUnfoldingFun :=
-  (CoreType.Id -> Unfolding)%type.
+  (Var.Id -> Unfolding)%type.
 
 Definition InScopeEnv :=
-  (CoreType.InScopeSet * IdUnfoldingFun)%type%type.
+  (VarEnv.InScopeSet * IdUnfoldingFun)%type%type.
 
 Definition RuleFun :=
   (DynFlags.DynFlags ->
-   InScopeEnv -> CoreType.Id -> list CoreExpr -> option CoreExpr)%type.
+   InScopeEnv -> Var.Id -> list CoreExpr -> option CoreExpr)%type.
 
 Inductive CoreRule : Type
   := Rule
@@ -1053,9 +1050,9 @@ Definition ltAlt {a} {b}
   fun a1 a2 => (cmpAlt a1 a2) GHC.Base.== Lt.
 
 Definition collectAnnArgsTicks {b} {a}
-   : (Tickish CoreType.Var -> bool) ->
+   : (Tickish Var.Var -> bool) ->
      AnnExpr b a ->
-     (AnnExpr b a * list (AnnExpr b a) * list (Tickish CoreType.Var))%type :=
+     (AnnExpr b a * list (AnnExpr b a) * list (Tickish Var.Var))%type :=
   fun tickishOk expr =>
     let go :=
       GHC.DeferredFix.deferredFix3 (fun go arg_0__ arg_1__ arg_2__ =>
@@ -1093,8 +1090,8 @@ Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
     go expr nil.
 
 Definition collectArgsTicks {b}
-   : (Tickish CoreType.Id -> bool) ->
-     Expr b -> (Expr b * list (Arg b) * list (Tickish CoreType.Id))%type :=
+   : (Tickish Var.Id -> bool) ->
+     Expr b -> (Expr b * list (Arg b) * list (Tickish Var.Id))%type :=
   fun skipTick expr =>
     let fix go arg_0__ arg_1__ arg_2__
               := let j_4__ :=
@@ -1147,8 +1144,7 @@ Definition collectNBinders {b}
                  end in
     go orig_n nil orig_expr.
 
-Definition collectTyBinders
-   : CoreExpr -> (list CoreType.TyVar * CoreExpr)%type :=
+Definition collectTyBinders : CoreExpr -> (list Var.TyVar * CoreExpr)%type :=
   fun expr =>
     let fix go arg_0__ arg_1__
               := let j_3__ :=
@@ -1156,12 +1152,12 @@ Definition collectTyBinders
                    | tvs, e => pair (GHC.List.reverse tvs) e
                    end in
                  match arg_0__, arg_1__ with
-                 | tvs, Lam b e => if CoreType.isTyVar b : bool then go (cons b tvs) e else j_3__
+                 | tvs, Lam b e => if Var.isTyVar b : bool then go (cons b tvs) e else j_3__
                  | _, _ => j_3__
                  end in
     go nil expr.
 
-Definition collectValBinders : CoreExpr -> (list CoreType.Id * CoreExpr)%type :=
+Definition collectValBinders : CoreExpr -> (list Var.Id * CoreExpr)%type :=
   fun expr =>
     let fix go arg_0__ arg_1__
               := let j_3__ :=
@@ -1169,13 +1165,13 @@ Definition collectValBinders : CoreExpr -> (list CoreType.Id * CoreExpr)%type :=
                    | ids, body => pair (GHC.List.reverse ids) body
                    end in
                  match arg_0__, arg_1__ with
-                 | ids, Lam b e => if CoreType.isId b : bool then go (cons b ids) e else j_3__
+                 | ids, Lam b e => if Var.isId b : bool then go (cons b ids) e else j_3__
                  | _, _ => j_3__
                  end in
     go nil expr.
 
 Definition collectTyAndValBinders
-   : CoreExpr -> (list CoreType.TyVar * list CoreType.Id * CoreExpr)%type :=
+   : CoreExpr -> (list Var.TyVar * list Var.Id * CoreExpr)%type :=
   fun expr =>
     let 'pair tvs body1 := collectTyBinders expr in
     let 'pair ids body := collectValBinders body1 in
@@ -1230,7 +1226,7 @@ Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
     | _ => None
     end.
 
-Definition exprToCoercion_maybe : CoreExpr -> option CoreType.Coercion :=
+Definition exprToCoercion_maybe : CoreExpr -> option unit :=
   fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
 
 Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
@@ -1317,8 +1313,8 @@ Definition isLocalRule : CoreRule -> bool :=
 Definition isOrphan : IsOrphan -> bool :=
   fun arg_0__ => match arg_0__ with | Mk_IsOrphan => true | _ => false end.
 
-Definition isRuntimeVar : CoreType.Var -> bool :=
-  CoreType.isId.
+Definition isRuntimeVar : Var.Var -> bool :=
+  Var.isId.
 
 Definition isStableSource : UnfoldingSource -> bool :=
   fun arg_0__ =>
@@ -1367,15 +1363,15 @@ Definition mkApps {b} : Expr b -> list (Arg b) -> Expr b :=
   fun f args => Data.Foldable.foldl App f args.
 
 Definition mkConApp {b} : DataCon.DataCon -> list (Arg b) -> Expr b :=
-  fun con args => mkApps (Var (Core.dataConWorkId con)) args.
+  fun con args => mkApps (Var (DataCon.dataConWorkId con)) args.
 
 Definition mkCharLit {b} : GHC.Char.Char -> Expr b :=
   fun c => Lit (Literal.mkMachChar c).
 
-Definition mkCoApps {b} : Expr b -> list CoreType.Coercion -> Expr b :=
+Definition mkCoApps {b} : Expr b -> list unit -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (Coercion a)) f args.
 
-Definition mkCoBind : CoreType.CoVar -> CoreType.Coercion -> CoreBind :=
+Definition mkCoBind : Var.CoVar -> unit -> CoreBind :=
   fun cv co => NonRec cv (Coercion co).
 
 Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
@@ -1392,7 +1388,7 @@ Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
     match arg_0__ with
     | CoreUnfolding expr _ _ _ _ _ _ _ => Some expr
     | DFunUnfolding bndrs con args =>
-        Some (mkLams bndrs (mkApps (Var (Core.dataConWorkId con)) args))
+        Some (mkLams bndrs (mkApps (Var (DataCon.dataConWorkId con)) args))
     | _ => None
     end.
 
@@ -1425,17 +1421,17 @@ Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
 Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
   fun s => Lit (Literal.mkMachString s).
 
-Definition mkTyArg {b} : CoreType.Type_ -> Expr b :=
+Definition mkTyArg {b} : unit -> Expr b :=
   fun ty =>
-    match CoreType.isCoercionTy_maybe ty with
+    match TyCoRep.Type_isCoercionTy_maybe ty with
     | Some co => Coercion co
     | _ => Type_ ty
     end.
 
-Definition mkTyApps {b} : Expr b -> list CoreType.Type_ -> Expr b :=
+Definition mkTyApps {b} : Expr b -> list unit -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
 
-Definition mkTyBind : CoreType.TyVar -> CoreType.Type_ -> CoreBind :=
+Definition mkTyBind : Var.TyVar -> unit -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
 
 Definition needSaturated : bool :=
@@ -1529,13 +1525,13 @@ Definition unfoldingTemplate : Unfolding -> CoreExpr :=
   uf_tmpl.
 
 Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
-  Util.count CoreType.isId.
+  Util.count Var.isId.
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if CoreType.isTyVar v : bool then Type_ (CoreType.mkTyVarTy v) else
-    if CoreType.isCoVar v : bool then Coercion (CoreType.mkCoVarCo v) else
-    if andb Util.debugIsOn (negb (CoreType.isId v)) : bool
+    if Var.isTyVar v : bool then Type_ (TyCoRep.mkTyVarTy v) else
+    if Var.isCoVar v : bool then Coercion (TyCoRep.mkCoVarCo v) else
+    if andb Util.debugIsOn (negb (Var.isId v)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
           #1920)
     else Var v.
@@ -1543,34 +1539,33 @@ Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.
 
-Definition mkVarApps {b} : Expr b -> list CoreType.Var -> Expr b :=
+Definition mkVarApps {b} : Expr b -> list Var.Var -> Expr b :=
   fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
 
 Definition mkConApp2 {b}
-   : DataCon.DataCon -> list CoreType.Type_ -> list CoreType.Var -> Expr b :=
+   : DataCon.DataCon -> list unit -> list Var.Var -> Expr b :=
   fun con tys arg_ids =>
-    mkApps (mkApps (Var (Core.dataConWorkId con)) (GHC.Base.map Type_ tys))
+    mkApps (mkApps (Var (DataCon.dataConWorkId con)) (GHC.Base.map Type_ tys))
            (GHC.Base.map varToCoreExpr arg_ids).
 
 (* External variables:
      Alt AnnAlt AnnExpr Arg Eq Gt Lt None Some Type andb bool comparison cons
-     deAnnotate' deTagExpr false list negb nil op_zt__ option pair true
+     deAnnotate' deTagExpr false list negb nil op_zt__ option pair true unit
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
      BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     Core.dataConWorkId CoreType.CoVar CoreType.Coercion CoreType.Id
-     CoreType.InScopeSet CoreType.Kind CoreType.TyCon CoreType.TyVar CoreType.Type_
-     CoreType.Var CoreType.isCoVar CoreType.isCoercionTy_maybe CoreType.isId
-     CoreType.isTyVar CoreType.mkCoVarCo CoreType.mkTyVarTy Data.Foldable.foldl
-     Data.Foldable.foldr Data.Foldable.length DataCon.DataCon DataCon.dataConTag
-     DataCon.dataConTyCon DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.map GHC.Base.mappend GHC.Base.min
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
-     GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Real.Rational Literal.Literal Literal.mkMachChar
-     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
-     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
-     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace Util.count
-     Util.debugIsOn
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length DataCon.DataCon
+     DataCon.dataConTag DataCon.dataConTyCon DataCon.dataConWorkId DynFlags.DynFlags
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
+     GHC.Base.map GHC.Base.mappend GHC.Base.min GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix2
+     GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
+     GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Real.Rational Literal.Literal Literal.mkMachChar Literal.mkMachDouble
+     Literal.mkMachFloat Literal.mkMachString Module.Module Module.ModuleSet
+     Module.emptyModuleSet Module.mkModuleSet Name.Name Name.nameOccName
+     NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName Panic.assertPanic
+     Panic.noString Panic.panicStr Panic.warnPprTrace TyCoRep.Type_isCoercionTy_maybe
+     TyCoRep.mkCoVarCo TyCoRep.mkTyVarTy TyCon.TyCon Util.count Util.debugIsOn
+     Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
+     VarEnv.InScopeSet
 *)

@@ -8,6 +8,7 @@ skip module VarSet
 rename type Class.Class     = ClassId
 rename type DataCon.DataCon = DataConId
 rename type PatSyn.PatSyn   = PatSynId
+rename type TyCon.TyCon     = TyConId
 
 ## parameterized in the preamble.v
 skip IdInfo.RuleInfo

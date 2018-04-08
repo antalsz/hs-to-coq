@@ -1,7 +1,7 @@
-Require Import Core.
+
+(*
 Require Name.
 Require Class.
-Require CoreType.
 
 (* Record selectors *)
 Parameter tyConName    : TyCon -> Name.Name.
@@ -22,3 +22,4 @@ Parameter algTcFields : TyCon -> FieldLabel.FieldLabelEnv.
 
 (* record label flLabel is not qualified. *)
 Parameter fieldsOfAlgTcRhs : AlgTyConRhs -> FieldLabel.FieldLabelEnv.
+*)

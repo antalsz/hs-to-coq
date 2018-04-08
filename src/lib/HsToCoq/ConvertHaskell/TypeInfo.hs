@@ -68,13 +68,14 @@ type MethodName      = Qualid
 type DefaultMethods = Map MethodName Term
 
 -- | Did we succeed loading a modules’ interface?
--- (For now, we fail hard if we cannot, so this can only be 'Loaded"
-data LoadStatus = Loaded
+data LoadStatus
+        = Loaded FilePath
+        | NotFound
     deriving (Show, Read)
 
 data TypeInfo = TypeInfo
     { _searchPaths       :: ![FilePath]
-    , _ifaceLoadCache    :: !(Map ModuleIdent LoadStatus)
+    , _loadStatus        :: !(Map ModuleIdent LoadStatus)
     , _processedModules  :: !(Set ModuleIdent)
 
     , _constructors      :: !(Map TypeName [ConstructorName])
@@ -93,7 +94,7 @@ builtIns = TypeInfo {..}
   where
     _searchPaths       = []
     _processedModules  = S.empty
-    _ifaceLoadCache    = M.empty
+    _loadStatus    = M.empty
 
     _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
     _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
@@ -107,7 +108,7 @@ emptyTypeInfo = TypeInfo {..}
   where
     _searchPaths       = []
     _processedModules  = S.empty
-    _ifaceLoadCache    = M.empty
+    _loadStatus    = M.empty
 
     _constructors      = M.empty
     _constructorTypes  = M.empty
@@ -147,7 +148,7 @@ loadIFace mi filepath = do
        -> do
         checkIface iface
         addIface iface
-        TypeInfoT $ ifaceLoadCache . at mi ?= Loaded
+        TypeInfoT $ loadStatus . at mi ?= Loaded filepath
 
        | otherwise
        -> parseErr
@@ -155,7 +156,7 @@ loadIFace mi filepath = do
     checkIface :: TypeInfo -> TypeInfoT m ()
     checkIface iface = do
         unless (null (iface^.searchPaths))      $ shouldBeEmptyErr "seachPaths"
-        unless (M.null (iface^.ifaceLoadCache)) $ shouldBeEmptyErr "ifaceLoadCache"
+        unless (M.null (iface^.loadStatus)) $ shouldBeEmptyErr "loadStatus"
         mapM_ (checkField iface) typeInfoFields
 
     checkField iface (AField lensName lens) = do
@@ -172,7 +173,7 @@ loadIFace mi filepath = do
 
     parseErr = liftIO $ do
         hPutStrLn stderr $ "Could not parse interface file " ++ filepath
-        hPutStrLn stderr $ "(please delete or regenerate this file)"
+        hPutStrLn stderr $ "(please delete or regenerate)"
         exitFailure
 
     shouldBeEmptyErr field = liftIO $ do
@@ -197,7 +198,9 @@ findIFace m errContext = do
     paths <- TypeInfoT $ use searchPaths
     liftIO (findFile paths filename) >>= \case
         Just filepath -> loadIFace m filepath
-        Nothing -> notFoundErr paths
+        Nothing -> do
+            TypeInfoT $ loadStatus . at m ?= NotFound
+            notFoundErr paths
 
   where
     filename = slashIt (T.unpack m) <> ".h2ci"
@@ -217,8 +220,8 @@ needIface :: forall m. MonadIO m => Qualid -> String -> TypeInfoT m ()
 needIface qi errContext | Just mi <- qualidModule qi =
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         True -> return () -- This module is being processed, nothing to load
-        False -> TypeInfoT (use (ifaceLoadCache.at mi)) >>= \case
-            Just _ -> return () -- We already loaded this module
+        False -> TypeInfoT (use (loadStatus.at mi)) >>= \case
+            Just _ -> return () -- We already tried to load this module
             Nothing -> findIFace mi errContext
 needIface _ _ = return () -- Unqualified name, do nothing
 
@@ -287,7 +290,7 @@ serializeIfaceFor' mi = do
     go :: TypeInfo -> TypeInfo
     go = appEndo $ foldMap Endo $
         [ searchPaths      .~ []
-        , ifaceLoadCache   .~ M.empty
+        , loadStatus       .~ M.empty
         , processedModules .~ S.empty
         ] ++
         [ field %~ M.filterWithKey inThisMod

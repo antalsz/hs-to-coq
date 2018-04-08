@@ -212,7 +212,7 @@ findIFace m errContext = do
         hPutStrLn stderr errContext
         hPutStrLn stderr $ "Could not find " ++ filename  ++ " in any of these directories:"
         mapM_ (hPutStrLn stderr . ("    * "++)) paths
-        hPutStrLn stderr $ "Please either process " ++ T.unpack m ++ "first, or"
+        hPutStrLn stderr $ "Please either process " ++ T.unpack m ++ " first, or"
         hPutStrLn stderr $ "skip declarations that mention " ++ T.unpack m ++ "."
         -- exitFailure
 

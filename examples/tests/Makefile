@@ -95,8 +95,6 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 
 Renamed.v: RenameMe.hs RenameMe.hs-boot RenameMeToo.hs RenameMe/edits
 	@rm -f Renamed.v
-	ghc -c RenameMe.hs-boot
-	ghc -c RenameMeToo.hs
 	$(HS_TO_COQ) -e RenameMe/edits -e renamings -o . RenameMe.hs RenameMeToo.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq

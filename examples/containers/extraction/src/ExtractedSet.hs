@@ -141,7 +141,7 @@ instance Data.Foldable.Foldable S2.Set_ where
   toList  = S2.toList
   null    = S2.null
   length  = error "fix int problem" -- S2.length
-  elem    = S2.coq_Foldable__Set__elem eq_a
+  -- elem Uses the default method
   maximum = error "maximum: partial"
   minimum = error "minimum: partial"
   sum     = error "TODO, figure out Num shim"

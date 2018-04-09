@@ -27,11 +27,11 @@ PASS = \
   PatternGuard \
   Guard2 \
   Notations \
+  Renamed \
+  RenameModule \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
-  Renamed \
-  RenameModule \
   TopBind \
   InstVar \
   Mutrec \
@@ -91,13 +91,13 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -e renamings -o . $${P_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} -N -e renamings -o . $${P_ARG} $*.hs 1>/dev/null
 
 Renamed.v: RenameMe.hs RenameMe.hs-boot RenameMeToo.hs RenameMe/edits
 	@rm -f Renamed.v
-	ghc -c RenameMe.hs-boot
-	ghc -c RenameMeToo.hs
-	$(HS_TO_COQ) -e RenameMe/edits -e renamings -o . RenameMe.hs RenameMeToo.hs 1>/dev/null
+	$(HS_TO_COQ) -N -e RenameMe/edits -e renamings -o . RenameMe.hs RenameMeToo.hs 1>/dev/null
+
+RenameModule.v:: Renamed.vo
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

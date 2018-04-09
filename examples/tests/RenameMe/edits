@@ -1,6 +1,9 @@
 rename module RenameMe Renamed
 rename module RenameMeToo Renamed
 
+rename value Renamed.Odd  = Renamed.Mk_Odd
+rename value Renamed.Even = Renamed.Mk_Even
+
 skip Renamed.Default__Odd
 skip Renamed.Default__Even
 

@@ -1,1 +1,11 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "FieldLabel" "FieldLbl",[Qualified "FieldLabel" "Mk_FieldLabel"])], _constructorTypes = fromList [(Qualified "FieldLabel" "Mk_FieldLabel",Qualified "FieldLabel" "FieldLbl")], _constructorFields = fromList [(Qualified "FieldLabel" "Mk_FieldLabel",RecordFields [Qualified "FieldLabel" "flLabel",Qualified "FieldLabel" "flIsOverloaded",Qualified "FieldLabel" "flSelector"])], _recordFieldTypes = fromList [(Qualified "FieldLabel" "flIsOverloaded",Qualified "FieldLabel" "FieldLbl"),(Qualified "FieldLabel" "flLabel",Qualified "FieldLabel" "FieldLbl"),(Qualified "FieldLabel" "flSelector",Qualified "FieldLabel" "FieldLbl")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  FieldLabel.FieldLbl: ! '[Qualified "FieldLabel" "Mk_FieldLabel"]'
+constructorFields:
+  FieldLabel.Mk_FieldLabel: RecordFields [Qualified "FieldLabel" "flLabel",Qualified
+    "FieldLabel" "flIsOverloaded",Qualified "FieldLabel" "flSelector"]
+recordFieldTypes:
+  FieldLabel.flLabel: Qualified "FieldLabel" "FieldLbl"
+  FieldLabel.flSelector: Qualified "FieldLabel" "FieldLbl"
+  FieldLabel.flIsOverloaded: Qualified "FieldLabel" "FieldLbl"
+constructorTypes:
+  FieldLabel.Mk_FieldLabel: Qualified "FieldLabel" "FieldLbl"

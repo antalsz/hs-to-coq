@@ -1,1 +1,6 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Data.OldList" "SnocBuilder",[Qualified "Data.OldList" "Mk_SnocBuilder"])], _constructorTypes = fromList [(Qualified "Data.OldList" "Mk_SnocBuilder",Qualified "Data.OldList" "SnocBuilder")], _constructorFields = fromList [(Qualified "Data.OldList" "Mk_SnocBuilder",NonRecordFields 3)], _recordFieldTypes = fromList [], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Data.OldList.SnocBuilder: ! '[Qualified "Data.OldList" "Mk_SnocBuilder"]'
+constructorFields:
+  Data.OldList.Mk_SnocBuilder: NonRecordFields 3
+constructorTypes:
+  Data.OldList.Mk_SnocBuilder: Qualified "Data.OldList" "SnocBuilder"

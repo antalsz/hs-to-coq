@@ -1,1 +1,9 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Control.Monad.Trans.Reader" "ReaderT",[Qualified "Control.Monad.Trans.Reader" "Mk_ReaderT"])], _constructorTypes = fromList [(Qualified "Control.Monad.Trans.Reader" "Mk_ReaderT",Qualified "Control.Monad.Trans.Reader" "ReaderT")], _constructorFields = fromList [(Qualified "Control.Monad.Trans.Reader" "Mk_ReaderT",RecordFields [Qualified "Control.Monad.Trans.Reader" "runReaderT"])], _recordFieldTypes = fromList [(Qualified "Control.Monad.Trans.Reader" "runReaderT",Qualified "Control.Monad.Trans.Reader" "ReaderT")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Control.Monad.Trans.Reader.ReaderT: ! '[Qualified "Control.Monad.Trans.Reader" "Mk_ReaderT"]'
+constructorFields:
+  Control.Monad.Trans.Reader.Mk_ReaderT: RecordFields [Qualified "Control.Monad.Trans.Reader"
+    "runReaderT"]
+recordFieldTypes:
+  Control.Monad.Trans.Reader.runReaderT: Qualified "Control.Monad.Trans.Reader" "ReaderT"
+constructorTypes:
+  Control.Monad.Trans.Reader.Mk_ReaderT: Qualified "Control.Monad.Trans.Reader" "ReaderT"

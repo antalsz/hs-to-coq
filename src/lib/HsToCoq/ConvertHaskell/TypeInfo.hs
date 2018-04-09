@@ -26,20 +26,25 @@ module HsToCoq.ConvertHaskell.TypeInfo
     , isConstructor
     ) where
 
-import Control.Lens
+import Control.Lens hiding (use)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Control.Monad.State
-import Control.Monad.Trans.Reader
+import Control.Monad
+import Control.Monad.Trans
+import Control.Monad.Reader.Class
+import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import Control.Monad.Trans.Counter
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Writer
+import Data.IORef
 import Data.Maybe
+import Data.Monoid
+import Data.Foldable
 import Text.Read (readMaybe)
 import qualified Data.Text as T
-import Data.Monoid
+import Data.Yaml hiding ((.=))
 
 import System.Directory
 import System.IO
@@ -50,7 +55,7 @@ import HsToCoq.Util.GHC.Exception
 import HsToCoq.Util.GHC.DynFlags
 
 import HsToCoq.Coq.Gallina (Qualid, ClassDefinition(..), Term, Qualid(..), ModuleIdent)
-import HsToCoq.Coq.Gallina.Util (qualidModule)
+import HsToCoq.Coq.Gallina.Util (qualidModule, qualidToIdent, unsafeIdentToQualid)
 import HsToCoq.Coq.Pretty
 import HsToCoq.ConvertHaskell.BuiltIn
 
@@ -68,13 +73,14 @@ type MethodName      = Qualid
 type DefaultMethods = Map MethodName Term
 
 -- | Did we succeed loading a modules’ interface?
--- (For now, we fail hard if we cannot, so this can only be 'Loaded"
-data LoadStatus = Loaded
+data LoadStatus
+        = Loaded FilePath
+        | NotFound
     deriving (Show, Read)
 
 data TypeInfo = TypeInfo
     { _searchPaths       :: ![FilePath]
-    , _ifaceLoadCache    :: !(Map ModuleIdent LoadStatus)
+    , _loadStatus        :: !(Map ModuleIdent LoadStatus)
     , _processedModules  :: !(Set ModuleIdent)
 
     , _constructors      :: !(Map TypeName [ConstructorName])
@@ -93,7 +99,7 @@ builtIns = TypeInfo {..}
   where
     _searchPaths       = []
     _processedModules  = S.empty
-    _ifaceLoadCache    = M.empty
+    _loadStatus        = M.empty
 
     _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
     _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
@@ -107,7 +113,7 @@ emptyTypeInfo = TypeInfo {..}
   where
     _searchPaths       = []
     _processedModules  = S.empty
-    _ifaceLoadCache    = M.empty
+    _loadStatus        = M.empty
 
     _constructors      = M.empty
     _constructorTypes  = M.empty
@@ -118,7 +124,11 @@ emptyTypeInfo = TypeInfo {..}
 
 
 data AField where
-    AField :: forall a. String -> Lens' TypeInfo (Map Qualid a) -> AField
+    AField :: forall a.
+        (Show a, Read a) =>
+        String ->
+        Lens' TypeInfo (Map Qualid a) ->
+        AField
 
 typeInfoFields :: [AField]
 typeInfoFields =
@@ -130,32 +140,47 @@ typeInfoFields =
     , AField "defaultMethods"    defaultMethods
     ]
 
-newtype TypeInfoT m a = TypeInfoT (StateT TypeInfo m a)
+-- We use a ReaderT with an IORef rather than a StateMonad
+-- so that the state (which is mostly a cache) survives error handling
+-- in the rest of the application
+newtype TypeInfoT m a = TypeInfoT (ReaderT (IORef TypeInfo) m a)
   deriving ( Functor, Applicative, Monad, MonadIO, ExceptionMonad
            , HasDynFlags, MonadTrans)
 
-addIface :: Monad m => TypeInfo -> TypeInfoT m ()
-addIface newInfo = TypeInfoT $ mapM_ go typeInfoFields
-  where go (AField _ lens) = lens %= (M.union (newInfo ^. lens))
+get :: (MonadReader (IORef r) m, MonadIO m) => m r
+get = do
+    ref <- ask
+    liftIO $ readIORef ref
+
+use :: (MonadReader (IORef r) m, MonadIO m) => Lens' r a -> m a
+use lens = do
+    ref <- ask
+    v <- liftIO $ readIORef ref
+    return $ v^.lens
+
+modify :: (MonadReader (IORef r) m, MonadIO m) => (r -> r) -> m ()
+modify f = do
+    ref <- ask
+    liftIO $ modifyIORef' ref f
+
+addIface :: MonadIO m => TypeInfo -> TypeInfoT m ()
+addIface newInfo = TypeInfoT $ modify (appEndo (foldMap (Endo . go) typeInfoFields))
+  where go (AField _ lens) = lens %~ M.union (newInfo ^. lens)
 
 loadIFace :: forall m. MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
-loadIFace mi filepath = do
-    ifaceContent <- liftIO $ readFile filepath
-    if | lines ifaceContent == ["all built in"]
-       -> return () -- for interface files of manually written modules
-       | Just iface <- readMaybe ifaceContent
-       -> do
-        checkIface iface
-        addIface iface
-        TypeInfoT $ ifaceLoadCache . at mi ?= Loaded
-
-       | otherwise
-       -> parseErr
+loadIFace mi filepath = liftIO (decodeFileEither filepath) >>= \case
+    Left _err -> parseErr
+    Right content -> case deserialize content of
+        Nothing -> parseErr
+        Just iface -> do
+            checkIface iface
+            addIface iface
+            TypeInfoT $ modify $ loadStatus . at mi ?~ Loaded filepath
   where
     checkIface :: TypeInfo -> TypeInfoT m ()
     checkIface iface = do
         unless (null (iface^.searchPaths))      $ shouldBeEmptyErr "seachPaths"
-        unless (M.null (iface^.ifaceLoadCache)) $ shouldBeEmptyErr "ifaceLoadCache"
+        unless (M.null (iface^.loadStatus)) $ shouldBeEmptyErr "loadStatus"
         mapM_ (checkField iface) typeInfoFields
 
     checkField iface (AField lensName lens) = do
@@ -172,6 +197,7 @@ loadIFace mi filepath = do
 
     parseErr = liftIO $ do
         hPutStrLn stderr $ "Could not parse interface file " ++ filepath
+        hPutStrLn stderr $ "(please delete or regenerate)"
         exitFailure
 
     shouldBeEmptyErr field = liftIO $ do
@@ -196,7 +222,9 @@ findIFace m errContext = do
     paths <- TypeInfoT $ use searchPaths
     liftIO (findFile paths filename) >>= \case
         Just filepath -> loadIFace m filepath
-        Nothing -> notFoundErr paths
+        Nothing -> do
+            TypeInfoT $ modify $ loadStatus . at m ?~ NotFound
+            notFoundErr paths
 
   where
     filename = slashIt (T.unpack m) <> ".h2ci"
@@ -207,15 +235,17 @@ findIFace m errContext = do
     notFoundErr paths = liftIO $ do
         hPutStrLn stderr errContext
         hPutStrLn stderr $ "Could not find " ++ filename  ++ " in any of these directories:"
-        mapM_ (hPutStrLn stderr) paths
-        exitFailure
+        mapM_ (hPutStrLn stderr . ("    * "++)) paths
+        hPutStrLn stderr $ "Please either process " ++ T.unpack m ++ " first, or"
+        hPutStrLn stderr $ "skip declarations that mention " ++ T.unpack m ++ "."
+        -- exitFailure
 
 needIface :: forall m. MonadIO m => Qualid -> String -> TypeInfoT m ()
 needIface qi errContext | Just mi <- qualidModule qi =
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         True -> return () -- This module is being processed, nothing to load
-        False -> TypeInfoT (use (ifaceLoadCache.at mi)) >>= \case
-            Just _ -> return () -- We already loaded this module
+        False -> TypeInfoT (use (loadStatus.at mi)) >>= \case
+            Just _ -> return () -- We already tried to load this module
             Nothing -> findIFace mi errContext
 needIface _ _ = return () -- Unqualified name, do nothing
 
@@ -245,7 +275,8 @@ class Monad m => TypeInfoMonad m where
     storeClassDefn          :: ClassName       -> ClassDefinition     -> m ()
     storeDefaultMethods     :: ClassName       -> Map MethodName Term -> m ()
 
-    serializeIfaceFor       :: ModuleIdent -> m String
+    serializeIfaceFor       :: ModuleIdent -> FilePath -> m ()
+    loadedInterfaceFiles    :: m [FilePath]
 
 lookup' :: MonadIO m =>
     String -> (Lens' TypeInfo (Map Qualid a)) ->
@@ -271,30 +302,45 @@ store' lens qid@(Qualified mi _) x = do
         False -> liftIO $ do
             hPutStrLn stderr $ "Cannot store information about " ++ showP qid
             exitFailure
-        True -> TypeInfoT $ lens . at qid ?= x
+        True -> TypeInfoT $ modify $ lens . at qid ?~ x
 
-serializeIfaceFor' :: MonadIO m => ModuleIdent -> TypeInfoT m String
-serializeIfaceFor' mi = do
+deserialize :: M.Map String (M.Map T.Text String) -> Maybe TypeInfo
+deserialize ifaceMaps = foldlM go emptyTypeInfo typeInfoFields
+  where
+    go ti (AField fieldName lens) =
+        case M.lookup fieldName ifaceMaps of
+            Nothing -> pure ti
+            Just m -> do content <- mapM readMaybe m
+                         let content' = M.mapKeys unsafeIdentToQualid content
+                         pure $ set lens content' ti
+
+serializeIfaceFor' :: MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
+serializeIfaceFor' mi filepath =
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         False -> liftIO $ do
             hPutStrLn stderr $ "Module " ++ T.unpack mi ++ " is not a processed one."
             exitFailure
-        True -> TypeInfoT $ gets (show . go)
+        True -> do
+            ti <- TypeInfoT $ get
+            liftIO $ encodeFile filepath $ M.fromList
+                [ (fieldName, textified)
+                | AField fieldName lens <- typeInfoFields
+                , let content = ti ^. lens
+                , let filtered = M.filterWithKey inThisMod content
+                , not (M.null filtered)
+                , let textified = M.mapKeys qualidToIdent $ M.map show $ filtered
+                ]
   where
-    go :: TypeInfo -> TypeInfo
-    go = appEndo $ foldMap Endo $
-        [ searchPaths      .~ []
-        , ifaceLoadCache   .~ M.empty
-        , processedModules .~ S.empty
-        ] ++
-        [ field %~ M.filterWithKey inThisMod
-        | AField _ field <- typeInfoFields ]
-
     inThisMod ::  Qualid -> a -> Bool
     inThisMod qid _  = qualidModule qid == Just mi
 
+loadedInterfaceFiles' :: MonadIO m => TypeInfoT m [FilePath]
+loadedInterfaceFiles' = TypeInfoT $ do
+    m <- use loadStatus
+    return $ [ fp | Loaded fp <- M.elems m ]
+
 instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
-    isProcessedModule       mi = TypeInfoT $ processedModules %= S.insert mi
+    isProcessedModule       mi = TypeInfoT $ modify $ processedModules %~ S.insert mi
 
     lookupConstructors      = lookup' "constructors"      constructors
     lookupConstructorType   = lookup' "constructorTypes"  constructorTypes
@@ -310,18 +356,17 @@ instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
     storeClassDefn         = store' classDefns
     storeDefaultMethods    = store' defaultMethods
 
-    serializeIfaceFor = serializeIfaceFor'
+    serializeIfaceFor    = serializeIfaceFor'
+    loadedInterfaceFiles = loadedInterfaceFiles'
 
 -- | Interface search paths
 type TypeInfoConfig = [FilePath]
 
 
-runTypeInfoMonad :: Monad m =>
-    TypeInfoConfig ->
-    TypeInfoT m a -> m a
-runTypeInfoMonad paths (TypeInfoT act) = evalStateT ?? emptyTypeInfo $ do
-    searchPaths .= paths
-    act
+runTypeInfoMonad :: MonadIO m => TypeInfoConfig -> TypeInfoT m a -> m a
+runTypeInfoMonad paths (TypeInfoT act) = do
+    ref <- liftIO $ newIORef (emptyTypeInfo & searchPaths .~ paths)
+    runReaderT act ref
 
 
 isConstructor :: TypeInfoMonad m => Qualid -> m Bool
@@ -346,7 +391,8 @@ instance TypeInfoMonad m => TypeInfoMonad (ReaderT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -365,7 +411,8 @@ instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -384,7 +431,8 @@ instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -403,7 +451,8 @@ instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m = lift $ serializeIfaceFor m
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance GhcMonad m => GhcMonad (TypeInfoT m) where
   getSession = lift   getSession

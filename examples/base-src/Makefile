@@ -114,11 +114,12 @@ HS_TO_COQ_OPTS := \
     -I base/dist-install/build/include \
     -I base/include \
     --iface-dir $(OUT) \
+    --dependency-dir deps \
     --ghc -this-unit-id --ghc base \
     -o $(OUT)
 
 
-include interface-deps.mk
+include deps/*.mk
 
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits

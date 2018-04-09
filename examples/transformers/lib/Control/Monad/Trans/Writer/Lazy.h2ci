@@ -1,1 +1,12 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Control.Monad.Trans.Writer.Lazy" "WriterT",[Qualified "Control.Monad.Trans.Writer.Lazy" "Mk_WriterT"])], _constructorTypes = fromList [(Qualified "Control.Monad.Trans.Writer.Lazy" "Mk_WriterT",Qualified "Control.Monad.Trans.Writer.Lazy" "WriterT")], _constructorFields = fromList [(Qualified "Control.Monad.Trans.Writer.Lazy" "Mk_WriterT",RecordFields [Qualified "Control.Monad.Trans.Writer.Lazy" "runWriterT"])], _recordFieldTypes = fromList [(Qualified "Control.Monad.Trans.Writer.Lazy" "runWriterT",Qualified "Control.Monad.Trans.Writer.Lazy" "WriterT")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Control.Monad.Trans.Writer.Lazy.WriterT: ! '[Qualified "Control.Monad.Trans.Writer.Lazy"
+    "Mk_WriterT"]'
+constructorFields:
+  Control.Monad.Trans.Writer.Lazy.Mk_WriterT: RecordFields [Qualified "Control.Monad.Trans.Writer.Lazy"
+    "runWriterT"]
+recordFieldTypes:
+  Control.Monad.Trans.Writer.Lazy.runWriterT: Qualified "Control.Monad.Trans.Writer.Lazy"
+    "WriterT"
+constructorTypes:
+  Control.Monad.Trans.Writer.Lazy.Mk_WriterT: Qualified "Control.Monad.Trans.Writer.Lazy"
+    "WriterT"

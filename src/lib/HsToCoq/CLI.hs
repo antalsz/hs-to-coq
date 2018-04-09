@@ -81,6 +81,7 @@ data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
                                , modulesFilesArgs     :: [FilePath]
                                , modulesRootArg       :: Maybe FilePath
                                , ifaceDirsArgs        :: [FilePath]
+                               , dependencyDirArg     :: Maybe FilePath
                                , importDirsArgs       :: [FilePath]
                                , includeDirsArgs      :: [FilePath]
                                , ghcTreeDirsArgs      :: [FilePath]
@@ -132,6 +133,10 @@ argParser = ProgramArgs <$> optional (strOption       $  long    "output"
                                                       <> metavar "DIR"
                                                       <> help    "Directory to search for hs-to-coq interface files (.h2ci)" )
 
+                        <*> optional (strOption       $  long    "dependency-dir"
+                                                      <> metavar "DIR"
+                                                      <> help    "Directory to write interface file dependencies to")
+
                         <*> many     (strOption       $  long    "import-dir"
                                                       <> short   'i'
                                                       <> metavar "DIR"
@@ -166,6 +171,7 @@ data Config = Config { _outputFile       :: !(Maybe FilePath)
                      , _modulesRoot      :: !(Maybe FilePath)
                      , _directInputFiles :: ![FilePath]
                      , _ifaceDirs        :: ![FilePath]
+                     , _dependencyDir    :: !(Maybe FilePath)
                      }
             deriving (Eq, Ord, Show, Read)
 makeLenses ''Config
@@ -181,7 +187,7 @@ processArgs :: GhcMonad m => m Config
 processArgs = do
   ProgramArgs{..} <- liftIO $ customExecParser defaultPrefs{prefMultiSuffix="..."} argParserInfo
 
-  let defaultArgs = map (mkGeneralLocated "defaultArgs") $ words "-hidir=.ghc-tmp -odir=.ghc-tmp"
+  let defaultArgs = map (mkGeneralLocated "defaultArgs") $ words "-no-link -hidir=.ghc-tmp -odir=.ghc-tmp"
 
   let ghcArgs = let locate opt = mkGeneralLocated $ "command line (" ++ opt ++ ")"
                 in defaultArgs ++
@@ -207,6 +213,7 @@ processArgs = do
                 , _modulesRoot      = modulesRootArg
                 , _directInputFiles = directInputFilesArgs
                 , _ifaceDirs        = ifaceDirsArgs
+                , _dependencyDir    = dependencyDirArg
                 }
 
 parseModulesFiles :: (MonadIO m, MonadError String m)
@@ -285,9 +292,12 @@ processFilesMain process = do
             printMidambles hOut
             void $ act2 hOut
           let ifacepath = outDir </> moduleNameSlashes mod <.> "h2ci"
-          gWithFile ifacepath WriteMode $ \hOut -> do
-            iface <- serializeIfaceFor (moduleNameText mod)
-            liftIO $ hPutStr hOut iface
+          serializeIfaceFor (moduleNameText mod) ifacepath
+          for_ (conf^.dependencyDir) $ \dir -> do
+            let deppath = dir </> moduleNameString mod <.> "mk"
+            gWithFile deppath WriteMode $ \hOut -> do
+              deps <- loadedInterfaceFiles
+              liftIO $ hPutStrLn hOut $ path ++ ": " ++ unwords deps
 
 
   runGlobalMonad edits (conf^.ifaceDirs) $
@@ -334,9 +344,9 @@ printConvertedModules withModulePrinter =
   traverse_ (printConvertedModule withModulePrinter) . foldMap toList
 
 convertAndPrintModules :: GlobalMonad r m => WithModulePrinter m -> [TypecheckedModule] -> m ()
-convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamed
+convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traverse toRenamedHsGroup
   where
-    toRenamed tcm
-        | Just rn <- tm_renamed_source tcm = pure (mod, rn)
+    toRenamedHsGroup tcm
+        | Just (hs_group, _, _, _) <- tm_renamed_source tcm = pure (mod, hs_group)
         | otherwise = throwProgramError $  "Renamer failed for `" ++ moduleNameString mod ++ "'"
       where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm

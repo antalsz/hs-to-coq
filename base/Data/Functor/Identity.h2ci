@@ -1,1 +1,9 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Data.Functor.Identity" "Identity",[Qualified "Data.Functor.Identity" "Mk_Identity"])], _constructorTypes = fromList [(Qualified "Data.Functor.Identity" "Mk_Identity",Qualified "Data.Functor.Identity" "Identity")], _constructorFields = fromList [(Qualified "Data.Functor.Identity" "Mk_Identity",RecordFields [Qualified "Data.Functor.Identity" "runIdentity"])], _recordFieldTypes = fromList [(Qualified "Data.Functor.Identity" "runIdentity",Qualified "Data.Functor.Identity" "Identity")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Data.Functor.Identity.Identity: ! '[Qualified "Data.Functor.Identity" "Mk_Identity"]'
+constructorFields:
+  Data.Functor.Identity.Mk_Identity: RecordFields [Qualified "Data.Functor.Identity"
+    "runIdentity"]
+recordFieldTypes:
+  Data.Functor.Identity.runIdentity: Qualified "Data.Functor.Identity" "Identity"
+constructorTypes:
+  Data.Functor.Identity.Mk_Identity: Qualified "Data.Functor.Identity" "Identity"

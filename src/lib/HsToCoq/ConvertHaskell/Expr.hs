@@ -4,21 +4,8 @@
              ViewPatterns, MultiWayIf  #-}
 
 module HsToCoq.ConvertHaskell.Expr (
-  -- * Expressions
-  convertExpr, convertLExpr,
-  -- * Bindings
-  convertLocalBinds,
-  -- ** Generic
-  convertTypedBinding, convertTypedModuleBinding,
-  convertTypedBindings, convertTypedModuleBindings,
-  -- * Functions, matches, and guards
-  -- ** Functions
-  convertFunction,
-  -- ** Matches
-  convertMatchGroup, convertMatch,
-  -- ** `do' blocks and similar
-  convertDoBlock, convertListComprehension,
-  convertPatternBinding,
+  convertTypedModuleBinding,
+  convertTypedModuleBindings,
   ) where
 
 import Control.Lens

@@ -1,1 +1,13 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Bag" "Bag",[Qualified "Bag" "EmptyBag",Qualified "Bag" "UnitBag",Qualified "Bag" "TwoBags",Qualified "Bag" "ListBag"])], _constructorTypes = fromList [(Qualified "Bag" "EmptyBag",Qualified "Bag" "Bag"),(Qualified "Bag" "ListBag",Qualified "Bag" "Bag"),(Qualified "Bag" "TwoBags",Qualified "Bag" "Bag"),(Qualified "Bag" "UnitBag",Qualified "Bag" "Bag")], _constructorFields = fromList [(Qualified "Bag" "EmptyBag",NonRecordFields 0),(Qualified "Bag" "ListBag",NonRecordFields 1),(Qualified "Bag" "TwoBags",NonRecordFields 2),(Qualified "Bag" "UnitBag",NonRecordFields 1)], _recordFieldTypes = fromList [], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Bag.Bag: ! '[Qualified "Bag" "EmptyBag",Qualified "Bag" "UnitBag",Qualified "Bag"
+    "TwoBags",Qualified "Bag" "ListBag"]'
+constructorFields:
+  Bag.EmptyBag: NonRecordFields 0
+  Bag.ListBag: NonRecordFields 1
+  Bag.UnitBag: NonRecordFields 1
+  Bag.TwoBags: NonRecordFields 2
+constructorTypes:
+  Bag.EmptyBag: Qualified "Bag" "Bag"
+  Bag.ListBag: Qualified "Bag" "Bag"
+  Bag.UnitBag: Qualified "Bag" "Bag"
+  Bag.TwoBags: Qualified "Bag" "Bag"

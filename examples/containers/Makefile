@@ -6,8 +6,6 @@ endif
 
 OUT=lib
 
-RENAMED=renamed
-
 HS_SPEC=hs-spec
 
 # Not all of these need to be handwritten. Eventually we should be able to
@@ -37,7 +35,10 @@ MODULES = \
   IntSetValidity \
 
 HS_SPEC_MODULES = \
-  IntSetProperties # RENAMED from tests/containers/intset-properties.hs
+  IntSetProperties
+
+# Non-standard file names
+SRC_FILE_IntSetProperties = containers/tests/intset-properties.hs
 
 # Generated modules
 # generated directly from GHC/libraries/containers/tests
@@ -91,12 +92,6 @@ $(HS_SPEC)/README.md:
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
-# There ought to be some way to parameterize this
-$(HS_SPEC)/IntSetProperties.v: $(RENAMED)/IntSetProperties.hs
-$(RENAMED)/IntSetProperties.hs: containers/tests/intset-properties.hs
-	mkdir -p $(RENAMED)
-	ln -s ../$< $@
-
 HS_TO_COQ_OPTS := \
   -e ../../base/edits \
   -e edits \
@@ -119,10 +114,10 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
 		     $(HS_TO_COQ_OPTS) \
 	             -o $(OUT) \
-	             $(wildcard containers/$*.hs) $(wildcard containers/tests/$*.hs) $$([[ -e $(RENAMED)/$*.hs ]] && echo $(RENAMED)/$*.hs)
-	               # Can't use $(wildcard $(RENAMED)/$*.hs), I think because of .SECONDEXPANSION
-	if [[ -e $(OUT)/Main.v && ( ! -e $@ || $(OUT)/Main.v -nt $@ ) ]]; then mv $(OUT)/Main.v $@; fi
-	test -e $@ && test \! -e $(OUT)/Main.v
+	             $(wildcard containers/$*.hs) \
+		     $(wildcard containers/tests/$*.hs) \
+		     $(SRC_FILE_$*)
+	test -e $@
 
 # KEEP THIS IN SYNC WITH THE PREVIOUS RULE (there ought to be a better way)
 .SECONDEXPANSION:
@@ -137,10 +132,10 @@ $(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v)
 	             --ghc -package --ghc test-framework-quickcheck2 \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
 	             -o $(HS_SPEC) \
-	             $(wildcard containers/$*.hs) $(wildcard containers/tests/$*.hs) $$([[ -e $(RENAMED)/$*.hs ]] && echo $(RENAMED)/$*.hs)
-	               # Can't use $(wildcard $(RENAMED)/$*.hs), I think because of .SECONDEXPANSION
-	if [[ -e $(HS_SPEC)/Main.v && ( ! -e $@ || $(HS_SPEC)/Main.v -nt $@ ) ]]; then mv $(HS_SPEC)/Main.v $@; fi
-	test -e $@ && test \! -e $(HS_SPEC)/Main.v
+	             $(wildcard containers/$*.hs) \
+		     $(wildcard containers/tests/$*.hs) \
+		     $(SRC_FILE_$*)
+	test -e $@
 
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"
@@ -160,7 +155,7 @@ $(VFILES_DROPIN): $(OUT)/%.v : module-edits/%/edits edits module-edits/%/preambl
 	       drop-in/$*.hs
 
 clean:
-	rm -rf $(OUT) $(RENAMED) $(HS_SPEC)
+	rm -rf $(OUT) $(HS_SPEC)
 	rm -f counts.pdf *.aux *.log
 
 todo:

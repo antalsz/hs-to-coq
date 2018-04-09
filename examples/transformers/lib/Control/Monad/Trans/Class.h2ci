@@ -1,1 +1,8 @@
-TypeInfo {_searchPaths = [], _ifaceLoadCache = fromList [], _processedModules = fromList [], _constructors = fromList [], _constructorTypes = fromList [], _constructorFields = fromList [], _recordFieldTypes = fromList [], _classDefns = fromList [(Qualified "Control.Monad.Trans.Class" "MonadTrans",ClassDefinition (Qualified "Control.Monad.Trans.Class" "MonadTrans") [Inferred Explicit (Ident (Bare "t"))] Nothing [(Qualified "Control.Monad.Trans.Class" "lift",Forall (Inferred Implicit (Ident (Bare "m")) :| [Inferred Implicit (Ident (Bare "a"))]) (Forall (Generalized Implicit (Parens (App (Qualid (Qualified "GHC.Base" "Monad")) (PosArg (Qualid (Bare "m")) :| []))) :| []) (Arrow (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "a")) :| [])) (App (App (Qualid (Bare "t")) (PosArg (Qualid (Bare "m")) :| [])) (PosArg (Qualid (Bare "a")) :| [])))))])], _defaultMethods = fromList []}
+classDefns:
+  Control.Monad.Trans.Class.MonadTrans: ClassDefinition (Qualified "Control.Monad.Trans.Class"
+    "MonadTrans") [Inferred Explicit (Ident (Bare "t"))] Nothing [(Qualified "Control.Monad.Trans.Class"
+    "lift",Forall (Inferred Implicit (Ident (Bare "m")) :| [Inferred Implicit (Ident
+    (Bare "a"))]) (Forall (Generalized Implicit (Parens (App (Qualid (Qualified "GHC.Base"
+    "Monad")) (PosArg (Qualid (Bare "m")) :| []))) :| []) (Arrow (App (Qualid (Bare
+    "m")) (PosArg (Qualid (Bare "a")) :| [])) (App (App (Qualid (Bare "t")) (PosArg
+    (Qualid (Bare "m")) :| [])) (PosArg (Qualid (Bare "a")) :| [])))))]

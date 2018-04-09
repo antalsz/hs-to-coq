@@ -24,6 +24,8 @@ Makefile.conf
 # Haskell
 *.o
 *.hi
+*.o-boot
+*.hi-boot
 *.tix
 *.prof
 

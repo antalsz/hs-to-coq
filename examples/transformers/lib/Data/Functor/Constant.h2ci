@@ -1,1 +1,9 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Data.Functor.Constant" "Constant",[Qualified "Data.Functor.Constant" "Mk_Constant"])], _constructorTypes = fromList [(Qualified "Data.Functor.Constant" "Mk_Constant",Qualified "Data.Functor.Constant" "Constant")], _constructorFields = fromList [(Qualified "Data.Functor.Constant" "Mk_Constant",RecordFields [Qualified "Data.Functor.Constant" "getConstant"])], _recordFieldTypes = fromList [(Qualified "Data.Functor.Constant" "getConstant",Qualified "Data.Functor.Constant" "Constant")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Data.Functor.Constant.Constant: ! '[Qualified "Data.Functor.Constant" "Mk_Constant"]'
+constructorFields:
+  Data.Functor.Constant.Mk_Constant: RecordFields [Qualified "Data.Functor.Constant"
+    "getConstant"]
+recordFieldTypes:
+  Data.Functor.Constant.getConstant: Qualified "Data.Functor.Constant" "Constant"
+constructorTypes:
+  Data.Functor.Constant.Mk_Constant: Qualified "Data.Functor.Constant" "Constant"

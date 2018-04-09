@@ -1,1 +1,27 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "UniqSupply" "UniqSM",[Qualified "UniqSupply" "USM"]),(Qualified "UniqSupply" "UniqSupply",[Qualified "UniqSupply" "MkSplitUniqSupply"])], _constructorTypes = fromList [(Qualified "UniqSupply" "MkSplitUniqSupply",Qualified "UniqSupply" "UniqSupply"),(Qualified "UniqSupply" "USM",Qualified "UniqSupply" "UniqSM")], _constructorFields = fromList [(Qualified "UniqSupply" "MkSplitUniqSupply",NonRecordFields 3),(Qualified "UniqSupply" "USM",RecordFields [Qualified "UniqSupply" "unUSM"])], _recordFieldTypes = fromList [(Qualified "UniqSupply" "unUSM",Qualified "UniqSupply" "UniqSM")], _classDefns = fromList [(Qualified "UniqSupply" "MonadUnique",ClassDefinition (Qualified "UniqSupply" "MonadUnique") [Inferred Explicit (Ident (Bare "m")),Generalized Implicit (App (Qualid (Qualified "GHC.Base" "Monad")) (PosArg (Qualid (Bare "m")) :| []))] Nothing [(Qualified "UniqSupply" "getUniqueM",App (Qualid (Bare "m")) (PosArg (Qualid (Qualified "Unique" "Unique")) :| [])),(Qualified "UniqSupply" "getUniqueSupplyM",App (Qualid (Bare "m")) (PosArg (Qualid (Qualified "UniqSupply" "UniqSupply")) :| [])),(Qualified "UniqSupply" "getUniquesM",App (Qualid (Bare "m")) (PosArg (App (Qualid (Bare "list")) (PosArg (Qualid (Qualified "Unique" "Unique")) :| [])) :| []))])], _defaultMethods = fromList [(Qualified "UniqSupply" "MonadUnique",fromList [(Qualified "UniqSupply" "getUniqueM",App (App (Qualid (Qualified "GHC.Base" "liftM")) (PosArg (Qualid (Qualified "UniqSupply" "uniqFromSupply")) :| [])) (PosArg (Qualid (Qualified "UniqSupply" "getUniqueSupplyM")) :| [])),(Qualified "UniqSupply" "getUniquesM",App (App (Qualid (Qualified "GHC.Base" "liftM")) (PosArg (Qualid (Qualified "UniqSupply" "uniqsFromSupply")) :| [])) (PosArg (Qualid (Qualified "UniqSupply" "getUniqueSupplyM")) :| []))])]}
+defaultMethods:
+  UniqSupply.MonadUnique: fromList [(Qualified "UniqSupply" "getUniqueM",App (App
+    (Qualid (Qualified "GHC.Base" "liftM")) (PosArg (Qualid (Qualified "UniqSupply"
+    "uniqFromSupply")) :| [])) (PosArg (Qualid (Qualified "UniqSupply" "getUniqueSupplyM"))
+    :| [])),(Qualified "UniqSupply" "getUniquesM",App (App (Qualid (Qualified "GHC.Base"
+    "liftM")) (PosArg (Qualid (Qualified "UniqSupply" "uniqsFromSupply")) :| []))
+    (PosArg (Qualid (Qualified "UniqSupply" "getUniqueSupplyM")) :| []))]
+constructors:
+  UniqSupply.UniqSupply: ! '[Qualified "UniqSupply" "MkSplitUniqSupply"]'
+  UniqSupply.UniqSM: ! '[Qualified "UniqSupply" "USM"]'
+constructorFields:
+  UniqSupply.MkSplitUniqSupply: NonRecordFields 3
+  UniqSupply.USM: RecordFields [Qualified "UniqSupply" "unUSM"]
+recordFieldTypes:
+  UniqSupply.unUSM: Qualified "UniqSupply" "UniqSM"
+classDefns:
+  UniqSupply.MonadUnique: ClassDefinition (Qualified "UniqSupply" "MonadUnique") [Inferred
+    Explicit (Ident (Bare "m")),Generalized Implicit (App (Qualid (Qualified "GHC.Base"
+    "Monad")) (PosArg (Qualid (Bare "m")) :| []))] Nothing [(Qualified "UniqSupply"
+    "getUniqueM",App (Qualid (Bare "m")) (PosArg (Qualid (Qualified "Unique" "Unique"))
+    :| [])),(Qualified "UniqSupply" "getUniqueSupplyM",App (Qualid (Bare "m")) (PosArg
+    (Qualid (Qualified "UniqSupply" "UniqSupply")) :| [])),(Qualified "UniqSupply"
+    "getUniquesM",App (Qualid (Bare "m")) (PosArg (App (Qualid (Bare "list")) (PosArg
+    (Qualid (Qualified "Unique" "Unique")) :| [])) :| []))]
+constructorTypes:
+  UniqSupply.MkSplitUniqSupply: Qualified "UniqSupply" "UniqSupply"
+  UniqSupply.USM: Qualified "UniqSupply" "UniqSM"

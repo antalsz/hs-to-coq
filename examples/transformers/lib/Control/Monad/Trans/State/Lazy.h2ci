@@ -1,1 +1,12 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Control.Monad.Trans.State.Lazy" "StateT",[Qualified "Control.Monad.Trans.State.Lazy" "Mk_StateT"])], _constructorTypes = fromList [(Qualified "Control.Monad.Trans.State.Lazy" "Mk_StateT",Qualified "Control.Monad.Trans.State.Lazy" "StateT")], _constructorFields = fromList [(Qualified "Control.Monad.Trans.State.Lazy" "Mk_StateT",RecordFields [Qualified "Control.Monad.Trans.State.Lazy" "runStateT"])], _recordFieldTypes = fromList [(Qualified "Control.Monad.Trans.State.Lazy" "runStateT",Qualified "Control.Monad.Trans.State.Lazy" "StateT")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Control.Monad.Trans.State.Lazy.StateT: ! '[Qualified "Control.Monad.Trans.State.Lazy"
+    "Mk_StateT"]'
+constructorFields:
+  Control.Monad.Trans.State.Lazy.Mk_StateT: RecordFields [Qualified "Control.Monad.Trans.State.Lazy"
+    "runStateT"]
+recordFieldTypes:
+  Control.Monad.Trans.State.Lazy.runStateT: Qualified "Control.Monad.Trans.State.Lazy"
+    "StateT"
+constructorTypes:
+  Control.Monad.Trans.State.Lazy.Mk_StateT: Qualified "Control.Monad.Trans.State.Lazy"
+    "StateT"

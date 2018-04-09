@@ -1,1 +1,9 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Data.Proxy" "KProxy",[Qualified "Data.Proxy" "Mk_KProxy"]),(Qualified "Data.Proxy" "Proxy",[Qualified "Data.Proxy" "Mk_Proxy"])], _constructorTypes = fromList [(Qualified "Data.Proxy" "Mk_KProxy",Qualified "Data.Proxy" "KProxy"),(Qualified "Data.Proxy" "Mk_Proxy",Qualified "Data.Proxy" "Proxy")], _constructorFields = fromList [(Qualified "Data.Proxy" "Mk_KProxy",NonRecordFields 0),(Qualified "Data.Proxy" "Mk_Proxy",NonRecordFields 0)], _recordFieldTypes = fromList [], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Data.Proxy.Proxy: ! '[Qualified "Data.Proxy" "Mk_Proxy"]'
+  Data.Proxy.KProxy: ! '[Qualified "Data.Proxy" "Mk_KProxy"]'
+constructorFields:
+  Data.Proxy.Mk_KProxy: NonRecordFields 0
+  Data.Proxy.Mk_Proxy: NonRecordFields 0
+constructorTypes:
+  Data.Proxy.Mk_KProxy: Qualified "Data.Proxy" "KProxy"
+  Data.Proxy.Mk_Proxy: Qualified "Data.Proxy" "Proxy"

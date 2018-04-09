@@ -1,1 +1,8 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "UniqSet" "UniqSet",[Qualified "UniqSet" "Mk_UniqSet"])], _constructorTypes = fromList [(Qualified "UniqSet" "Mk_UniqSet",Qualified "UniqSet" "UniqSet")], _constructorFields = fromList [(Qualified "UniqSet" "Mk_UniqSet",RecordFields [Qualified "UniqSet" "getUniqSet'"])], _recordFieldTypes = fromList [(Qualified "UniqSet" "getUniqSet'",Qualified "UniqSet" "UniqSet")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  UniqSet.UniqSet: ! '[Qualified "UniqSet" "Mk_UniqSet"]'
+constructorFields:
+  UniqSet.Mk_UniqSet: RecordFields [Qualified "UniqSet" "getUniqSet'"]
+recordFieldTypes:
+  UniqSet.getUniqSet': Qualified "UniqSet" "UniqSet"
+constructorTypes:
+  UniqSet.Mk_UniqSet: Qualified "UniqSet" "UniqSet"

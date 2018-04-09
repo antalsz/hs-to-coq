@@ -1,1 +1,20 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "BooleanFormula" "BooleanFormula",[Qualified "BooleanFormula" "Var",Qualified "BooleanFormula" "And",Qualified "BooleanFormula" "Or",Qualified "BooleanFormula" "Parens"]),(Qualified "BooleanFormula" "Clause",[Qualified "BooleanFormula" "Mk_Clause"])], _constructorTypes = fromList [(Qualified "BooleanFormula" "And",Qualified "BooleanFormula" "BooleanFormula"),(Qualified "BooleanFormula" "Mk_Clause",Qualified "BooleanFormula" "Clause"),(Qualified "BooleanFormula" "Or",Qualified "BooleanFormula" "BooleanFormula"),(Qualified "BooleanFormula" "Parens",Qualified "BooleanFormula" "BooleanFormula"),(Qualified "BooleanFormula" "Var",Qualified "BooleanFormula" "BooleanFormula")], _constructorFields = fromList [(Qualified "BooleanFormula" "And",NonRecordFields 1),(Qualified "BooleanFormula" "Mk_Clause",RecordFields [Qualified "BooleanFormula" "clauseAtoms",Qualified "BooleanFormula" "clauseExprs"]),(Qualified "BooleanFormula" "Or",NonRecordFields 1),(Qualified "BooleanFormula" "Parens",NonRecordFields 1),(Qualified "BooleanFormula" "Var",NonRecordFields 1)], _recordFieldTypes = fromList [(Qualified "BooleanFormula" "clauseAtoms",Qualified "BooleanFormula" "Clause"),(Qualified "BooleanFormula" "clauseExprs",Qualified "BooleanFormula" "Clause")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  BooleanFormula.BooleanFormula: ! '[Qualified "BooleanFormula" "Var",Qualified "BooleanFormula"
+    "And",Qualified "BooleanFormula" "Or",Qualified "BooleanFormula" "Parens"]'
+  BooleanFormula.Clause: ! '[Qualified "BooleanFormula" "Mk_Clause"]'
+constructorFields:
+  BooleanFormula.Mk_Clause: RecordFields [Qualified "BooleanFormula" "clauseAtoms",Qualified
+    "BooleanFormula" "clauseExprs"]
+  BooleanFormula.Or: NonRecordFields 1
+  BooleanFormula.And: NonRecordFields 1
+  BooleanFormula.Parens: NonRecordFields 1
+  BooleanFormula.Var: NonRecordFields 1
+recordFieldTypes:
+  BooleanFormula.clauseAtoms: Qualified "BooleanFormula" "Clause"
+  BooleanFormula.clauseExprs: Qualified "BooleanFormula" "Clause"
+constructorTypes:
+  BooleanFormula.Mk_Clause: Qualified "BooleanFormula" "Clause"
+  BooleanFormula.Or: Qualified "BooleanFormula" "BooleanFormula"
+  BooleanFormula.And: Qualified "BooleanFormula" "BooleanFormula"
+  BooleanFormula.Parens: Qualified "BooleanFormula" "BooleanFormula"
+  BooleanFormula.Var: Qualified "BooleanFormula" "BooleanFormula"

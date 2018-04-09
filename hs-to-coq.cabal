@@ -122,6 +122,7 @@ library
                      , parsec               ==3.1.*
                      , indents              ==0.4.*
                      , optparse-applicative ==0.14.*
+                     , yaml                 ==0.8.*
 
   -- These are actually not used directly by hs-to-coq, but work around a
   -- bug(?) in GHC-8.4 that no longer loads other packages if there is a GHC

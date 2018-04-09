@@ -37,9 +37,10 @@ import Control.Monad.Trans.Counter
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Writer
 import Data.Maybe
+import Data.Foldable
 import Text.Read (readMaybe)
 import qualified Data.Text as T
-import Data.Monoid
+import Data.Yaml hiding ((.=))
 
 import System.Directory
 import System.IO
@@ -50,7 +51,7 @@ import HsToCoq.Util.GHC.Exception
 import HsToCoq.Util.GHC.DynFlags
 
 import HsToCoq.Coq.Gallina (Qualid, ClassDefinition(..), Term, Qualid(..), ModuleIdent)
-import HsToCoq.Coq.Gallina.Util (qualidModule)
+import HsToCoq.Coq.Gallina.Util (qualidModule, qualidToIdent, unsafeIdentToQualid)
 import HsToCoq.Coq.Pretty
 import HsToCoq.ConvertHaskell.BuiltIn
 
@@ -119,7 +120,11 @@ emptyTypeInfo = TypeInfo {..}
 
 
 data AField where
-    AField :: forall a. String -> Lens' TypeInfo (Map Qualid a) -> AField
+    AField :: forall a.
+        (Show a, Read a) =>
+        String ->
+        Lens' TypeInfo (Map Qualid a) ->
+        AField
 
 typeInfoFields :: [AField]
 typeInfoFields =
@@ -140,18 +145,14 @@ addIface newInfo = TypeInfoT $ mapM_ go typeInfoFields
   where go (AField _ lens) = lens %= (M.union (newInfo ^. lens))
 
 loadIFace :: forall m. MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
-loadIFace mi filepath = do
-    ifaceContent <- liftIO $ readFile filepath
-    if | lines ifaceContent == ["all built in"]
-       -> return () -- for interface files of manually written modules
-       | Just iface <- readMaybe ifaceContent
-       -> do
-        checkIface iface
-        addIface iface
-        TypeInfoT $ loadStatus . at mi ?= Loaded filepath
-
-       | otherwise
-       -> parseErr
+loadIFace mi filepath = liftIO (decodeFileEither filepath) >>= \case
+    Left _err -> parseErr
+    Right content -> case deserialize content of
+        Nothing -> parseErr
+        Just iface -> do
+            checkIface iface
+            addIface iface
+            TypeInfoT $ loadStatus . at mi ?= Loaded filepath
   where
     checkIface :: TypeInfo -> TypeInfoT m ()
     checkIface iface = do
@@ -251,7 +252,7 @@ class Monad m => TypeInfoMonad m where
     storeClassDefn          :: ClassName       -> ClassDefinition     -> m ()
     storeDefaultMethods     :: ClassName       -> Map MethodName Term -> m ()
 
-    serializeIfaceFor       :: ModuleIdent -> m String
+    serializeIfaceFor       :: ModuleIdent -> FilePath -> m ()
     loadedInterfaceFiles    :: m [FilePath]
 
 lookup' :: MonadIO m =>
@@ -280,23 +281,33 @@ store' lens qid@(Qualified mi _) x = do
             exitFailure
         True -> TypeInfoT $ lens . at qid ?= x
 
-serializeIfaceFor' :: MonadIO m => ModuleIdent -> TypeInfoT m String
-serializeIfaceFor' mi = do
+deserialize :: M.Map String (M.Map T.Text String) -> Maybe TypeInfo
+deserialize ifaceMaps = foldlM go emptyTypeInfo typeInfoFields
+  where
+    go ti (AField fieldName lens) = do
+        case M.lookup fieldName ifaceMaps of
+            Nothing -> pure ti
+            Just m -> do content <- mapM readMaybe m
+                         let content' = M.mapKeys unsafeIdentToQualid content
+                         pure $ set lens content' ti
+
+serializeIfaceFor' :: MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
+serializeIfaceFor' mi filepath = do
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         False -> liftIO $ do
             hPutStrLn stderr $ "Module " ++ T.unpack mi ++ " is not a processed one."
             exitFailure
-        True -> TypeInfoT $ gets (show . go)
+        True -> do
+            ti <- TypeInfoT $ get
+            liftIO $ encodeFile filepath $ M.fromList
+                [ (fieldName, textified)
+                | AField fieldName lens <- typeInfoFields
+                , let content = ti ^. lens
+                , let filtered = M.filterWithKey inThisMod content
+                , not (M.null filtered)
+                , let textified = M.mapKeys qualidToIdent $ M.map show $ filtered
+                ]
   where
-    go :: TypeInfo -> TypeInfo
-    go = appEndo $ foldMap Endo $
-        [ searchPaths      .~ []
-        , loadStatus       .~ M.empty
-        , processedModules .~ S.empty
-        ] ++
-        [ field %~ M.filterWithKey inThisMod
-        | AField _ field <- typeInfoFields ]
-
     inThisMod ::  Qualid -> a -> Bool
     inThisMod qid _  = qualidModule qid == Just mi
 
@@ -359,8 +370,8 @@ instance TypeInfoMonad m => TypeInfoMonad (ReaderT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m   = lift $ serializeIfaceFor m
-    loadedInterfaceFiles  = lift $ loadedInterfaceFiles
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -379,8 +390,8 @@ instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m  = lift $ serializeIfaceFor m
-    loadedInterfaceFiles = lift $ loadedInterfaceFiles
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -399,8 +410,8 @@ instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m  = lift $ serializeIfaceFor m
-    loadedInterfaceFiles = lift $ loadedInterfaceFiles
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
@@ -419,8 +430,8 @@ instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     storeClassDefn          cl x = lift $ storeClassDefn         cl x
     storeDefaultMethods     cl x = lift $ storeDefaultMethods    cl x
 
-    serializeIfaceFor m  = lift $ serializeIfaceFor m
-    loadedInterfaceFiles = lift $ loadedInterfaceFiles
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
 instance GhcMonad m => GhcMonad (TypeInfoT m) where
   getSession = lift   getSession

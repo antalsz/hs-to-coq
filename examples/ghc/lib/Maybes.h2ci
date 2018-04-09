@@ -1,1 +1,8 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Maybes" "MaybeErr",[Qualified "Maybes" "Succeeded",Qualified "Maybes" "Failed"])], _constructorTypes = fromList [(Qualified "Maybes" "Failed",Qualified "Maybes" "MaybeErr"),(Qualified "Maybes" "Succeeded",Qualified "Maybes" "MaybeErr")], _constructorFields = fromList [(Qualified "Maybes" "Failed",NonRecordFields 1),(Qualified "Maybes" "Succeeded",NonRecordFields 1)], _recordFieldTypes = fromList [], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Maybes.MaybeErr: ! '[Qualified "Maybes" "Succeeded",Qualified "Maybes" "Failed"]'
+constructorFields:
+  Maybes.Failed: NonRecordFields 1
+  Maybes.Succeeded: NonRecordFields 1
+constructorTypes:
+  Maybes.Failed: Qualified "Maybes" "MaybeErr"
+  Maybes.Succeeded: Qualified "Maybes" "MaybeErr"

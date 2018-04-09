@@ -292,14 +292,12 @@ processFilesMain process = do
             printMidambles hOut
             void $ act2 hOut
           let ifacepath = outDir </> moduleNameSlashes mod <.> "h2ci"
-          gWithFile ifacepath WriteMode $ \hOut -> do
-            iface <- serializeIfaceFor (moduleNameText mod)
-            liftIO $ hPutStr hOut iface
+          serializeIfaceFor (moduleNameText mod) ifacepath
           for_ (conf^.dependencyDir) $ \dir -> do
             let deppath = dir </> moduleNameString mod <.> "mk"
             gWithFile deppath WriteMode $ \hOut -> do
               deps <- loadedInterfaceFiles
-              liftIO $ hPutStrLn hOut $ path ++ ": " ++ unwords deps 
+              liftIO $ hPutStrLn hOut $ path ++ ": " ++ unwords deps
 
 
   runGlobalMonad edits (conf^.ifaceDirs) $

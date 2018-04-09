@@ -1,1 +1,9 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Pair" "Pair",[Qualified "Pair" "Mk_Pair"])], _constructorTypes = fromList [(Qualified "Pair" "Mk_Pair",Qualified "Pair" "Pair")], _constructorFields = fromList [(Qualified "Pair" "Mk_Pair",RecordFields [Qualified "Pair" "pFst",Qualified "Pair" "pSnd"])], _recordFieldTypes = fromList [(Qualified "Pair" "pFst",Qualified "Pair" "Pair"),(Qualified "Pair" "pSnd",Qualified "Pair" "Pair")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Pair.Pair: ! '[Qualified "Pair" "Mk_Pair"]'
+constructorFields:
+  Pair.Mk_Pair: RecordFields [Qualified "Pair" "pFst",Qualified "Pair" "pSnd"]
+recordFieldTypes:
+  Pair.pSnd: Qualified "Pair" "Pair"
+  Pair.pFst: Qualified "Pair" "Pair"
+constructorTypes:
+  Pair.Mk_Pair: Qualified "Pair" "Pair"

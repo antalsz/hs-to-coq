@@ -1,0 +1,7 @@
+-Q . ""
+-R ../../../base ""
+-Q ../../../base-thy  Proofs
+-Q ../../ghc/lib ""
+-Q ../../transformers/lib ""
+-Q ../../containers/lib ""
+JoinPointInvariants.v

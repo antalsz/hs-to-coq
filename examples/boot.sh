@@ -34,6 +34,7 @@ clean make -C coinduction clean
 clean make -C ../base-thy clean
 clean make -C containers clean
 clean make -C containers/theories clean
+clean make -C ghc/theories clean
 clean make -C transformers clean
 
 if [[ -e base-src/base ]]
@@ -74,3 +75,4 @@ else
 	clean make -C ghc/lib clean
 	make -C ghc/lib
 fi
+make -C ghc/theories

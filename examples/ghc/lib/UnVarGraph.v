@@ -14,7 +14,6 @@ Require Coq.Program.Wf.
 
 Require Bag.
 Require Coq.Init.Datatypes.
-Require Core.
 Require Data.Foldable.
 Require Data.IntSet.Internal.
 Require GHC.Base.
@@ -87,7 +86,7 @@ Definition completeGraph : UnVarSet -> UnVarGraph :=
 Definition completeBipartiteGraph : UnVarSet -> UnVarSet -> UnVarGraph :=
   fun s1 s2 => prune (Mk_UnVarGraph (Bag.unitBag (CBPG s1 s2))).
 
-Definition k : Core.Var -> GHC.Num.Word :=
+Definition k : Var.Var -> GHC.Num.Word :=
   fun v => Unique.getWordKey (Unique.getUnique v).
 
 Definition mkUnVarSet : list Var.Var -> UnVarSet :=
@@ -160,7 +159,7 @@ Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
 
 (* External variables:
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
-     Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app Core.Var
+     Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app
      Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
      Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList

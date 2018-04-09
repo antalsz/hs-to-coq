@@ -51,6 +51,8 @@ MODULES = \
   Module \
   OrdList \
   OccName \
+  State \
+
 
 ## 
 CONSTRUCTORS = \
@@ -86,6 +88,10 @@ CORE_MODULES = \
 
 NOTRANSLATE = \
   CallArity \
+  Constructors \
+  CoreType \
+  IdInfo2 \
+  TyCoRep \
 
 CORETYPE = \
   TyCoRep \
@@ -94,26 +100,11 @@ CORETYPE = \
   Type \
 
 
-
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
 BROKEN_MODULES = \
-  CoreSubst \
-  Exitify \
-  Constructors \
-  CoreType \
-  IdInfo2 \
-  TyCoRep \
-  CoreArity \
-  CallArity \
-  UnVarGraph \
-  Demand \
-  CoreUtils \
-  Id \
-  CoreFVs \
-  PatSyn \
-  ConLike \
-  CoreFVs \
+
+
 
 VFILES_GEN       = $(addsuffix .v,$(MODULES))
 VFILES_MAN       = $(addsuffix .v,$(HANDMOD))

@@ -42,7 +42,7 @@ Inductive Termination r : Type
   |  ThrowsExn : Termination r
   |  Dunno : r -> Termination r.
 
-Inductive KillFlags : Type := KillFlags : bool -> bool -> bool -> KillFlags.
+Inductive KillFlags : Type := Mk_KillFlags : bool -> bool -> bool -> KillFlags.
 
 Inductive JointDmd s u : Type := JD : s -> u -> JointDmd s u.
 
@@ -138,15 +138,15 @@ Instance Default__StrDmd : GHC.Err.Default StrDmd :=
   GHC.Err.Build_Default _ HyperStr.
 
 Definition kf_abs (arg_0__ : KillFlags) :=
-  let 'KillFlags kf_abs _ _ := arg_0__ in
+  let 'Mk_KillFlags kf_abs _ _ := arg_0__ in
   kf_abs.
 
 Definition kf_called_once (arg_0__ : KillFlags) :=
-  let 'KillFlags _ _ kf_called_once := arg_0__ in
+  let 'Mk_KillFlags _ _ kf_called_once := arg_0__ in
   kf_called_once.
 
 Definition kf_used_once (arg_0__ : KillFlags) :=
-  let 'KillFlags _ kf_used_once _ := arg_0__ in
+  let 'Mk_KillFlags _ kf_used_once _ := arg_0__ in
   kf_used_once.
 
 Definition sd {s} {u} (arg_0__ : JointDmd s u) :=
@@ -702,7 +702,7 @@ Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
     let kf_called_once := kf_used_once in
     let kf_abs := DynFlags.gopt DynFlags.Opt_KillAbsence dflags in
     if andb (negb kf_abs) (negb kf_used_once) : bool then None else
-    Some (KillFlags kf_abs kf_used_once kf_called_once).
+    Some (Mk_KillFlags kf_abs kf_used_once kf_called_once).
 
 Definition lazyApply1Dmd : Demand :=
   JD Lazy (Mk_Use One (UCall One Used)).
@@ -838,15 +838,6 @@ Definition zapUsageEnvSig : StrictSig -> StrictSig :=
 Definition mkUCall : Count -> UseDmd -> UseDmd :=
   fun c a => UCall c a.
 
-Definition mkWorkerDemand : GHC.Num.Int -> Demand :=
-  fun n =>
-    let fix go arg_0__
-              := let 'num_1__ := arg_0__ in
-                 if num_1__ GHC.Base.== #0 : bool then Used else
-                 let 'n := arg_0__ in
-                 mkUCall One (go (n GHC.Num.- #1)) in
-    JD Lazy (Mk_Use One (go n)).
-
 Definition mkCallDmd : CleanDemand -> CleanDemand :=
   fun arg_0__ => let 'JD d u := arg_0__ in JD (mkSCall d) (mkUCall One u).
 
@@ -978,10 +969,7 @@ Definition splitStrProdDmd : GHC.Num.Int -> StrDmd -> option (list ArgStr) :=
     | n, HeadStr => Some (GHC.List.replicate n strTop)
     | n, SProd ds =>
         Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
-                            "ghc/compiler/basicTypes/Demand.hs") #359 ((id (GHC.Base.hs_string__
-                                                                            "splitStrProdDmd") Outputable.$$
-                             Panic.noString n) Outputable.$$
-                            Panic.noString ds) (Some ds)
+                            "ghc/compiler/basicTypes/Demand.hs") #359 (Panic.someSDoc) (Some ds)
     | _, SCall _ => None
     end.
 
@@ -1103,10 +1091,10 @@ Definition kill_usage : KillFlags -> Demand -> Demand :=
     end.
 
 Definition zapUsageDemand : Demand -> Demand :=
-  kill_usage (KillFlags true true true).
+  kill_usage (Mk_KillFlags true true true).
 
 Definition zapUsedOnceDemand : Demand -> Demand :=
-  kill_usage (KillFlags false true false).
+  kill_usage (Mk_KillFlags false true false).
 
 Definition zapUsedOnceSig : StrictSig -> StrictSig :=
   fun arg_0__ =>
@@ -1284,7 +1272,7 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
 (* External variables:
-     ArgStr ArgUse None Some andb bool bothStr bothUse cons else false id if isUsedMU
+     ArgStr ArgUse None Some andb bool bothStr bothUse cons else false if isUsedMU
      list lubStr lubUse markReusedDmd negb nil op_zt__ option orb pair peelManyCalls
      postProcessDmdEnv then true tt unit zap_usg BasicTypes.Arity BasicTypes.ConTag
      BasicTypes.NoOneShotInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
@@ -1295,8 +1283,8 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
      GHC.Base.op_zeze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
      GHC.Err.Build_Default GHC.Err.Default GHC.List.replicate GHC.List.take
      GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Prim.coerce Maybes.orElse
-     Outputable.op_zdzd__ Panic.noString Panic.warnPprTrace UniqFM.nonDetUFMToList
-     Util.lengthExceeds Util.lengthIs Util.zipWithEqual Var.Var VarEnv.VarEnv
-     VarEnv.delVarEnv VarEnv.emptyVarEnv VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv
-     VarEnv.mapVarEnv VarEnv.plusVarEnv_CD
+     Panic.someSDoc Panic.warnPprTrace UniqFM.nonDetUFMToList Util.lengthExceeds
+     Util.lengthIs Util.zipWithEqual Var.Var VarEnv.VarEnv VarEnv.delVarEnv
+     VarEnv.emptyVarEnv VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv VarEnv.mapVarEnv
+     VarEnv.plusVarEnv_CD
 *)

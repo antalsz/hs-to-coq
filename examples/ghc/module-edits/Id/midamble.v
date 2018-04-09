@@ -1,7 +1,7 @@
 (* Record selectors *)
 Import IdInfo.
-Import IdInfo2.
 
+(*
 Parameter hasNoBinding : Var.Id -> bool.
 
 Parameter isDictId : Var.Id -> bool.
@@ -52,3 +52,4 @@ Parameter mkLocalIdOrCoVar : Name.Name -> Core.Type_ -> Var.Id.
 Parameter mkTemplateLocalsNum : GHC.Num.Int -> list Core.Type_ -> list Var.Id.
 
 Parameter setIdType : Var.Id -> Core.Type_ -> Var.Id.
+*)

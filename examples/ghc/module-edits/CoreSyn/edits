@@ -57,7 +57,7 @@ skip CoreSyn.deTagExpr
 
 # needs a default constraint, as well as a termination argument
 skip CoreSyn.collectNAnnBndrs
-# in CoreSyn.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_3__)   }
+# in CoreSyn.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_0__)   }
 # obligations CoreSyn.collectNAnnBndrs admit
 
 
@@ -66,10 +66,6 @@ obligations CoreSyn.collectAnnArgsTicks admit
 in CoreSyn.collectAnnBndrs     termination collect { measure (size (snd arg_1__)) }
 obligations CoreSyn.collectAnnBndrs admit
 
-rename value Type.isCoercionTy_maybe = TyCoRep.Type_isCoercionTy_maybe
-rename value Coercion.mkCoVarCo      = TyCoRep.mkCoVarCo
-
 skip CoreSyn.mkTyArg
-rewrite forall x, CoreSyn.mkTyArg x = CoreSyn.Type_ tt
-rewrite forall x, TyCoRep.mkTyVarTy x = tt
-rewrite forall x, TyCoRep.mkCoVarCo x = tt
+
+

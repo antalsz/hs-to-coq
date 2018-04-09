@@ -8,6 +8,4 @@ skip module CoreSeq
 
 axiomatize module CoreSubst
 
-rename type Outputable.SDoc = unit
-
 skip CoreSubst.simpleOptPgm

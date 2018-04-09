@@ -48,6 +48,10 @@ rename type TyCoRep.TyThing       = unit
 rename type TyCoRep.Kind          = unit
 rename type TyCoRep.PredType      = unit
 
+rename type TyCoRep.TvSubstEnv    = unit
+rename type TyCoRep.CvSubstEnv    = unit
+rename type TyCoRep.TCvSubst      = unit
+
 rename type CoAxiom.CoAxiom = list
 rename type CoAxiom.Branched = unit
 rename type CoAxiom.Unbranched = unit
@@ -63,3 +67,9 @@ redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Du
 redefine Inductive MkId.DataConBoxer        : Type := MkId.Mk_DataConBoxer_Dummy.
 redefine Inductive CoAxiom.CoAxiomRule      : Type := CoAxiom.Mk_CoAxiomRule_Dummy.
 redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamily_Dummy.
+
+rewrite forall x, CoreSyn.mkTyArg x = CoreSyn.Type_ tt
+rewrite forall x, TyCoRep.mkTyVarTy x = tt
+rewrite forall v, Coercion.mkCoVarCo v = tt
+rewrite forall rhs, CoreUtils.exprType rhs = tt
+

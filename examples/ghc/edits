@@ -25,6 +25,9 @@ rename type Data.ByteString.Internal.ByteString = GHC.Base.String
 skip module GHC.Integer.Type
 rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 
+# partial functions
+rename value GHC.List.head = Panic.head
+
 # don't try to format the error messages
 rename type Outputable.SDoc           = GHC.Base.String
 rename value Outputable.pprPanic      = Panic.panicStr
@@ -46,8 +49,10 @@ rename value Outputable.fsep          = Panic.noString
 rename value Outputable.vcat          = Panic.noString
 rename value Outputable.vbar          = Panic.someSDoc
 
-rewrite forall x y, Outputable.punctuate x y = Panic.someSDoc
+rewrite forall x y,       Outputable.punctuate x y = Panic.someSDoc
 rewrite forall x str msg, Outputable.pprTraceDebug str msg x = x
+rewrite forall x y,       x Outputable.$$ y = Panic.someSDoc
+
 
 # Skip serialization-related instances
 skip Outputable.Outputable
@@ -101,6 +106,7 @@ rename value CoreType.CoAxBranch   = CoreType.Mk_CoAxBranch
 rename value CoreType.BuiltInSynFamily   = CoreType.Mk_BuiltInSynFamily
 rename value CoreType.Branched   = CoreType.Mk_Branched
 rename value CoreType.Unbranched   = CoreType.Mk_Unbranched
+rename value State.State = State.Mk_State
 
 # These constructor are named after their argument, not their return type,
 # so use a different, non-confusing convention here

@@ -1,6 +1,14 @@
-skip module Type
-
 ##############
+### NEEDED for Exitify
+# Id.asJoinId Id.idJoinArity Id.isJoinId Id.isJoinId_maybe
+# Id.mkSysLocal Id.setIdOccInfo
+#
+##############
+
+axiomatize module Id
+
+
+rewrite forall v str num msg, Panic.warnPprTrace b str num msg v = v
 
 ## enumFrom
 skip Id.mkTemplateLocalsNum
@@ -23,9 +31,28 @@ skip Id.mkExportedVanillaId
 skip Id.mkVanillaGlobalWithInfo
 skip Id.mkVanillaGlobal
 skip Id.mkLocalId
-skip Id.mkSysLocal
 skip Id.mkLocalIdWithInfo
 
+skip Id.idArity
+skip Id.idCafInfo
+skip Id.idCallArity
+
+skip Id.idInlinePragma
+skip Id.idRuleMatchInfo 
+skip Id.idInlineActivation
+
+skip Id.idOccInfo
+skip Id.isDeadBinder
+
+skip Id.idOneShotInfo
+skip Id.idSpecialisation 
+skip Id.idHasRules
+skip Id.idCoreRules
+
+skip Id.idStrictness
+skip Id.isBottomingId
+
+in Id.localiseId rewrite forall , Var.idInfo id = (@Var.idInfo tt id)
 
 
 # Type/TyCoRep
@@ -42,7 +69,7 @@ skip Id.mkLocalIdOrCoVar
 
 
 # Demand
-# skip Id.idDemandInfo
+skip Id.idDemandInfo
 # skip Id.idStrictness
 # skip Id.isBottomingId
 # skip Id.isStrictId
@@ -59,8 +86,10 @@ skip Id.mkLocalIdOrCoVar
 
 # DataCon
 # skip Id.isDataConId_maybe
-# skip Id.idDataCon
+skip Id.idDataCon
 # skip Id.isDataConWorkId_maybe
+
+skip Id.isConLikeId
 
 # Class
 # skip Id.isClassOpId_maybe

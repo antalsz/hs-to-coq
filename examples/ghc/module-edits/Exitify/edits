@@ -1,0 +1,4 @@
+in Exitify.exitify termination go deferred
+
+# requires mutual recursion
+skip Exitify.exitifyProgram

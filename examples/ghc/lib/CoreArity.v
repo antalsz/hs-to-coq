@@ -110,12 +110,11 @@ Axiom etaExpandToJoinPointRule : BasicTypes.JoinArity ->
 Axiom etaBodyForJoinPoint : GHC.Num.Int ->
                             CoreSyn.CoreExpr -> (list CoreSyn.CoreBndr * CoreSyn.CoreExpr)%type.
 
-Axiom freshEtaId : GHC.Num.Int ->
-                   TyCoRep.TCvSubst -> unit -> (TyCoRep.TCvSubst * Var.Id)%type.
+Axiom freshEtaId : GHC.Num.Int -> unit -> unit -> (unit * Var.Id)%type.
 
 (* External variables:
      bool list op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity
      BasicTypes.OneShotInfo CoreSubst.Subst CoreSyn.CoreBndr CoreSyn.CoreExpr
      CoreSyn.CoreRule CoreUtils.CheapAppFun Demand.StrictSig DynFlags.DynFlags
-     GHC.Num.Int TyCoRep.TCvSubst Var.Id Var.Var VarEnv.InScopeSet
+     GHC.Num.Int Var.Id Var.Var VarEnv.InScopeSet
 *)

@@ -2,7 +2,5 @@ axiomatize module PatSyn
 
 skip PatSyn.pprPatSynType
 
-# in Core
-skip Core.patSynExTyVars
 
-skip module Var
+

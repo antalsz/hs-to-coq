@@ -1,6 +1,10 @@
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
+Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
+           GHC.Num.Int -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
+
+
 (* This is not right, but suffices for now. *)
 Require Import Omega.
 Fixpoint size {a}{b} (e: AnnExpr' a b) :=

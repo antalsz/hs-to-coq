@@ -17,6 +17,7 @@ Require FieldLabel.
 Require GHC.Base.
 Require Name.
 Require Unique.
+Require Var.
 
 (* Converted type declarations: *)
 

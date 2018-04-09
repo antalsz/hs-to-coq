@@ -4,6 +4,7 @@ rename value Demand.Str = Demand.Mk_Str
 rename value Demand.Use = Demand.Mk_Use
 rename value Demand.DmdType = Demand.Mk_DmdType
 rename value Demand.StrictSig = Demand.Mk_StrictSig
+rename value Demand.KillFlags = Demand.Mk_KillFlags
 
 order Demand.Eq___JointDmd_op_zeze__ Demand.Eq___JointDmd_op_zsze__ Demand.Eq___JointDmd Demand.Eq___DmdType_op_zeze__ Demand.Eq___StrictSig_op_zeze__ Demand.Eq___StrictSig_op_zsze__
 order Demand.Eq___DmdType Demand.Eq___StrictSig_op_zeze__
@@ -59,6 +60,7 @@ skip Demand.postProcessDmdEnv
 # This could be easy (GHC.Num.Int - 1)
 # and Program Fixpoint looks good. But I'm not sure how to do it.
 skip Demand.peelManyCalls
+skip Demand.mkWorkerDemand
 
 skip Demand.pprIfaceStrictSig
 
@@ -110,3 +112,5 @@ redefine Definition Demand.splitUseProdDmd (n : GHC.Num.Int) (u: UseDmd) : optio
 
 ## needs Default DmdType, and I'm too lazy to do it now.
 skip Demand.dmdTransformDictSelSig
+
+

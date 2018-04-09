@@ -17,6 +17,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require CoreSyn.
+Require GHC.Base.
 Require IdInfo.
 Require Name.
 Require UniqSupply.
@@ -31,9 +32,7 @@ Definition IdSubstEnv :=
   (VarEnv.IdEnv CoreSyn.CoreExpr)%type.
 
 Inductive Subst : Type
-  := Mk_Subst
-   : VarEnv.InScopeSet ->
-     IdSubstEnv -> TyCoRep.TvSubstEnv -> TyCoRep.CvSubstEnv -> Subst.
+  := Mk_Subst : VarEnv.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 (* Converted value declarations: *)
 
 (* Skipping instance Outputable__Subst of class Outputable *)
@@ -43,7 +42,8 @@ Axiom substUnfoldingSC : Subst -> CoreSyn.Unfolding -> CoreSyn.Unfolding.
 Axiom substBindSC : Subst ->
                     CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type.
 
-Axiom substExprSC : unit -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom substExprSC : GHC.Base.String ->
+                    Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
 Axiom isEmptySubst : Subst -> bool.
 
@@ -53,8 +53,7 @@ Axiom emptySubst : Subst.
 
 Axiom mkEmptySubst : VarEnv.InScopeSet -> Subst.
 
-Axiom mkSubst : VarEnv.InScopeSet ->
-                TyCoRep.TvSubstEnv -> TyCoRep.CvSubstEnv -> IdSubstEnv -> Subst.
+Axiom mkSubst : VarEnv.InScopeSet -> unit -> unit -> IdSubstEnv -> Subst.
 
 Axiom substInScope : Subst -> VarEnv.InScopeSet.
 
@@ -106,19 +105,22 @@ Axiom substSpec : Subst -> Var.Id -> IdInfo.RuleInfo -> IdInfo.RuleInfo.
 
 Axiom substBndrs : Subst -> list Var.Var -> (Subst * list Var.Var)%type.
 
-Axiom substExpr : unit -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom substExpr : GHC.Base.String ->
+                  Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
 Axiom substUnfolding : Subst -> CoreSyn.Unfolding -> CoreSyn.Unfolding.
 
 Axiom substIdInfo : Subst -> Var.Id -> IdInfo.IdInfo -> option IdInfo.IdInfo.
 
-Axiom substIdBndr : unit -> Subst -> Subst -> Var.Id -> (Subst * Var.Id)%type.
+Axiom substIdBndr : GHC.Base.String ->
+                    Subst -> Subst -> Var.Id -> (Subst * Var.Id)%type.
 
 Axiom substBndr : Subst -> Var.Var -> (Subst * Var.Var)%type.
 
 Axiom substBind : Subst -> CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type.
 
-Axiom subst_expr : unit -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom subst_expr : GHC.Base.String ->
+                   Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
 Axiom substTickish : Subst -> CoreSyn.Tickish Var.Id -> CoreSyn.Tickish Var.Id.
 
@@ -126,7 +128,7 @@ Axiom substDVarSet : Subst -> VarSet.DVarSet -> VarSet.DVarSet.
 
 Axiom substIdOcc : Subst -> Var.Id -> Var.Id.
 
-Axiom lookupIdSubst : unit -> Subst -> Var.Id -> CoreSyn.CoreExpr.
+Axiom lookupIdSubst : GHC.Base.String -> Subst -> Var.Id -> CoreSyn.CoreExpr.
 
 Axiom lookupTCvSubst : Subst -> Var.TyVar -> unit.
 
@@ -162,12 +164,12 @@ Axiom substTy : Subst -> unit -> unit.
 
 Axiom substCo : Subst -> unit -> unit.
 
-Axiom getTCvSubst : Subst -> TyCoRep.TCvSubst.
+Axiom getTCvSubst : Subst -> unit.
 
 (* External variables:
      bool list op_zt__ option unit CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreExpr
      CoreSyn.CoreProgram CoreSyn.CoreRule CoreSyn.Tickish CoreSyn.Unfolding
-     IdInfo.IdInfo IdInfo.RuleInfo Name.Name TyCoRep.CvSubstEnv TyCoRep.TCvSubst
-     TyCoRep.TvSubstEnv UniqSupply.UniqSupply Unique.Unique Var.CoVar Var.Id
-     Var.TyVar Var.Var VarEnv.IdEnv VarEnv.InScopeSet VarSet.DVarSet VarSet.VarSet
+     GHC.Base.String IdInfo.IdInfo IdInfo.RuleInfo Name.Name UniqSupply.UniqSupply
+     Unique.Unique Var.CoVar Var.Id Var.TyVar Var.Var VarEnv.IdEnv VarEnv.InScopeSet
+     VarSet.DVarSet VarSet.VarSet
 *)

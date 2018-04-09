@@ -13,11 +13,10 @@ skip ConLike.conLikeImplBangs
 
 # Needs stuff in DataCon
 skip ConLike.conLikeIsInfix
-skip ConLike.NamedThing__ConLike
+
+skip ConLike.conLikeFieldLabels 
+skip ConLike.conLikesWithFields
 
 # in Core
 skip ConLike.conLikeExTyVars
-skip Core.conLikExTyVars
 
-skip module Var
-skip module Core

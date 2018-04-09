@@ -1,1 +1,27 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "OccName" "NameSpace",[Qualified "OccName" "VarName",Qualified "OccName" "DataName",Qualified "OccName" "TvName",Qualified "OccName" "TcClsName"]),(Qualified "OccName" "OccEnv",[Qualified "OccName" "A"]),(Qualified "OccName" "OccName",[Qualified "OccName" "Mk_OccName"])], _constructorTypes = fromList [(Qualified "OccName" "A",Qualified "OccName" "OccEnv"),(Qualified "OccName" "DataName",Qualified "OccName" "NameSpace"),(Qualified "OccName" "Mk_OccName",Qualified "OccName" "OccName"),(Qualified "OccName" "TcClsName",Qualified "OccName" "NameSpace"),(Qualified "OccName" "TvName",Qualified "OccName" "NameSpace"),(Qualified "OccName" "VarName",Qualified "OccName" "NameSpace")], _constructorFields = fromList [(Qualified "OccName" "A",NonRecordFields 1),(Qualified "OccName" "DataName",NonRecordFields 0),(Qualified "OccName" "Mk_OccName",RecordFields [Qualified "OccName" "occNameSpace",Qualified "OccName" "occNameFS"]),(Qualified "OccName" "TcClsName",NonRecordFields 0),(Qualified "OccName" "TvName",NonRecordFields 0),(Qualified "OccName" "VarName",NonRecordFields 0)], _recordFieldTypes = fromList [(Qualified "OccName" "occNameFS",Qualified "OccName" "OccName"),(Qualified "OccName" "occNameSpace",Qualified "OccName" "OccName")], _classDefns = fromList [(Qualified "OccName" "HasOccName",ClassDefinition (Qualified "OccName" "HasOccName") [Inferred Explicit (Ident (Bare "name"))] Nothing [(Qualified "OccName" "occName",Arrow (Qualid (Bare "name")) (Qualid (Qualified "OccName" "OccName")))])], _defaultMethods = fromList []}
+constructors:
+  OccName.NameSpace: ! '[Qualified "OccName" "VarName",Qualified "OccName" "DataName",Qualified
+    "OccName" "TvName",Qualified "OccName" "TcClsName"]'
+  OccName.OccName: ! '[Qualified "OccName" "Mk_OccName"]'
+  OccName.OccEnv: ! '[Qualified "OccName" "A"]'
+constructorFields:
+  OccName.Mk_OccName: RecordFields [Qualified "OccName" "occNameSpace",Qualified "OccName"
+    "occNameFS"]
+  OccName.A: NonRecordFields 1
+  OccName.TcClsName: NonRecordFields 0
+  OccName.TvName: NonRecordFields 0
+  OccName.VarName: NonRecordFields 0
+  OccName.DataName: NonRecordFields 0
+recordFieldTypes:
+  OccName.occNameFS: Qualified "OccName" "OccName"
+  OccName.occNameSpace: Qualified "OccName" "OccName"
+classDefns:
+  OccName.HasOccName: ClassDefinition (Qualified "OccName" "HasOccName") [Inferred
+    Explicit (Ident (Bare "name"))] Nothing [(Qualified "OccName" "occName",Arrow
+    (Qualid (Bare "name")) (Qualid (Qualified "OccName" "OccName")))]
+constructorTypes:
+  OccName.Mk_OccName: Qualified "OccName" "OccName"
+  OccName.A: Qualified "OccName" "OccEnv"
+  OccName.TcClsName: Qualified "OccName" "NameSpace"
+  OccName.TvName: Qualified "OccName" "NameSpace"
+  OccName.VarName: Qualified "OccName" "NameSpace"
+  OccName.DataName: Qualified "OccName" "NameSpace"

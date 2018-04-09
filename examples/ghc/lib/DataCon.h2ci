@@ -1,1 +1,85 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "DataCon" "DataCon",[Qualified "DataCon" "MkData"]),(Qualified "DataCon" "DataConRep",[Qualified "DataCon" "NoDataConRep",Qualified "DataCon" "DCR"]),(Qualified "DataCon" "EqSpec",[Qualified "DataCon" "Mk_EqSpec"]),(Qualified "DataCon" "HsImplBang",[Qualified "DataCon" "HsLazy",Qualified "DataCon" "HsStrict",Qualified "DataCon" "HsUnpack"]),(Qualified "DataCon" "HsSrcBang",[Qualified "DataCon" "Mk_HsSrcBang"]),(Qualified "DataCon" "SrcStrictness",[Qualified "DataCon" "SrcLazy",Qualified "DataCon" "SrcStrict",Qualified "DataCon" "NoSrcStrict"]),(Qualified "DataCon" "SrcUnpackedness",[Qualified "DataCon" "SrcUnpack",Qualified "DataCon" "SrcNoUnpack",Qualified "DataCon" "NoSrcUnpack"]),(Qualified "DataCon" "StrictnessMark",[Qualified "DataCon" "MarkedStrict",Qualified "DataCon" "NotMarkedStrict"])], _constructorTypes = fromList [(Qualified "DataCon" "DCR",Qualified "DataCon" "DataConRep"),(Qualified "DataCon" "HsLazy",Qualified "DataCon" "HsImplBang"),(Qualified "DataCon" "HsStrict",Qualified "DataCon" "HsImplBang"),(Qualified "DataCon" "HsUnpack",Qualified "DataCon" "HsImplBang"),(Qualified "DataCon" "MarkedStrict",Qualified "DataCon" "StrictnessMark"),(Qualified "DataCon" "MkData",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "Mk_EqSpec",Qualified "DataCon" "EqSpec"),(Qualified "DataCon" "Mk_HsSrcBang",Qualified "DataCon" "HsSrcBang"),(Qualified "DataCon" "NoDataConRep",Qualified "DataCon" "DataConRep"),(Qualified "DataCon" "NoSrcStrict",Qualified "DataCon" "SrcStrictness"),(Qualified "DataCon" "NoSrcUnpack",Qualified "DataCon" "SrcUnpackedness"),(Qualified "DataCon" "NotMarkedStrict",Qualified "DataCon" "StrictnessMark"),(Qualified "DataCon" "SrcLazy",Qualified "DataCon" "SrcStrictness"),(Qualified "DataCon" "SrcNoUnpack",Qualified "DataCon" "SrcUnpackedness"),(Qualified "DataCon" "SrcStrict",Qualified "DataCon" "SrcStrictness"),(Qualified "DataCon" "SrcUnpack",Qualified "DataCon" "SrcUnpackedness")], _constructorFields = fromList [(Qualified "DataCon" "DCR",RecordFields [Qualified "DataCon" "dcr_wrap_id",Qualified "DataCon" "dcr_boxer",Qualified "DataCon" "dcr_arg_tys",Qualified "DataCon" "dcr_stricts",Qualified "DataCon" "dcr_bangs"]),(Qualified "DataCon" "HsLazy",NonRecordFields 0),(Qualified "DataCon" "HsStrict",NonRecordFields 0),(Qualified "DataCon" "HsUnpack",NonRecordFields 1),(Qualified "DataCon" "MarkedStrict",NonRecordFields 0),(Qualified "DataCon" "MkData",RecordFields [Qualified "DataCon" "dcName",Qualified "DataCon" "dcUnique",Qualified "DataCon" "dcTag",Qualified "DataCon" "dcVanilla",Qualified "DataCon" "dcUnivTyVars",Qualified "DataCon" "dcExTyVars",Qualified "DataCon" "dcUserTyVarBinders",Qualified "DataCon" "dcEqSpec",Qualified "DataCon" "dcOtherTheta",Qualified "DataCon" "dcStupidTheta",Qualified "DataCon" "dcOrigArgTys",Qualified "DataCon" "dcOrigResTy",Qualified "DataCon" "dcSrcBangs",Qualified "DataCon" "dcFields",Qualified "DataCon" "dcWorkId",Qualified "DataCon" "dcRep",Qualified "DataCon" "dcRepArity",Qualified "DataCon" "dcSourceArity",Qualified "DataCon" "dcRepTyCon",Qualified "DataCon" "dcRepType",Qualified "DataCon" "dcInfix",Qualified "DataCon" "dcPromoted"]),(Qualified "DataCon" "Mk_EqSpec",NonRecordFields 2),(Qualified "DataCon" "Mk_HsSrcBang",NonRecordFields 3),(Qualified "DataCon" "NoDataConRep",NonRecordFields 0),(Qualified "DataCon" "NoSrcStrict",NonRecordFields 0),(Qualified "DataCon" "NoSrcUnpack",NonRecordFields 0),(Qualified "DataCon" "NotMarkedStrict",NonRecordFields 0),(Qualified "DataCon" "SrcLazy",NonRecordFields 0),(Qualified "DataCon" "SrcNoUnpack",NonRecordFields 0),(Qualified "DataCon" "SrcStrict",NonRecordFields 0),(Qualified "DataCon" "SrcUnpack",NonRecordFields 0)], _recordFieldTypes = fromList [(Qualified "DataCon" "dcEqSpec",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcExTyVars",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcFields",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcInfix",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcName",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcOrigArgTys",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcOrigResTy",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcOtherTheta",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcPromoted",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcRep",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcRepArity",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcRepTyCon",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcRepType",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcSourceArity",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcSrcBangs",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcStupidTheta",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcTag",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcUnique",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcUnivTyVars",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcUserTyVarBinders",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcVanilla",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcWorkId",Qualified "DataCon" "DataCon"),(Qualified "DataCon" "dcr_arg_tys",Qualified "DataCon" "DataConRep"),(Qualified "DataCon" "dcr_bangs",Qualified "DataCon" "DataConRep"),(Qualified "DataCon" "dcr_boxer",Qualified "DataCon" "DataConRep"),(Qualified "DataCon" "dcr_stricts",Qualified "DataCon" "DataConRep"),(Qualified "DataCon" "dcr_wrap_id",Qualified "DataCon" "DataConRep")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  DataCon.EqSpec: ! '[Qualified "DataCon" "Mk_EqSpec"]'
+  DataCon.DataCon: ! '[Qualified "DataCon" "MkData"]'
+  DataCon.SrcStrictness: ! '[Qualified "DataCon" "SrcLazy",Qualified "DataCon" "SrcStrict",Qualified
+    "DataCon" "NoSrcStrict"]'
+  DataCon.SrcUnpackedness: ! '[Qualified "DataCon" "SrcUnpack",Qualified "DataCon"
+    "SrcNoUnpack",Qualified "DataCon" "NoSrcUnpack"]'
+  DataCon.DataConRep: ! '[Qualified "DataCon" "NoDataConRep",Qualified "DataCon" "DCR"]'
+  DataCon.StrictnessMark: ! '[Qualified "DataCon" "MarkedStrict",Qualified "DataCon"
+    "NotMarkedStrict"]'
+  DataCon.HsSrcBang: ! '[Qualified "DataCon" "Mk_HsSrcBang"]'
+  DataCon.HsImplBang: ! '[Qualified "DataCon" "HsLazy",Qualified "DataCon" "HsStrict",Qualified
+    "DataCon" "HsUnpack"]'
+constructorFields:
+  DataCon.Mk_EqSpec: NonRecordFields 2
+  DataCon.MkData: RecordFields [Qualified "DataCon" "dcName",Qualified "DataCon" "dcUnique",Qualified
+    "DataCon" "dcTag",Qualified "DataCon" "dcVanilla",Qualified "DataCon" "dcUnivTyVars",Qualified
+    "DataCon" "dcExTyVars",Qualified "DataCon" "dcUserTyVarBinders",Qualified "DataCon"
+    "dcEqSpec",Qualified "DataCon" "dcOtherTheta",Qualified "DataCon" "dcStupidTheta",Qualified
+    "DataCon" "dcOrigArgTys",Qualified "DataCon" "dcOrigResTy",Qualified "DataCon"
+    "dcSrcBangs",Qualified "DataCon" "dcFields",Qualified "DataCon" "dcWorkId",Qualified
+    "DataCon" "dcRep",Qualified "DataCon" "dcRepArity",Qualified "DataCon" "dcSourceArity",Qualified
+    "DataCon" "dcRepTyCon",Qualified "DataCon" "dcRepType",Qualified "DataCon" "dcInfix",Qualified
+    "DataCon" "dcPromoted"]
+  DataCon.HsUnpack: NonRecordFields 1
+  DataCon.NoSrcUnpack: NonRecordFields 0
+  DataCon.SrcStrict: NonRecordFields 0
+  DataCon.NoDataConRep: NonRecordFields 0
+  DataCon.MarkedStrict: NonRecordFields 0
+  DataCon.HsLazy: NonRecordFields 0
+  DataCon.HsStrict: NonRecordFields 0
+  DataCon.NoSrcStrict: NonRecordFields 0
+  DataCon.SrcUnpack: NonRecordFields 0
+  DataCon.SrcNoUnpack: NonRecordFields 0
+  DataCon.SrcLazy: NonRecordFields 0
+  DataCon.NotMarkedStrict: NonRecordFields 0
+  DataCon.Mk_HsSrcBang: NonRecordFields 3
+  DataCon.DCR: RecordFields [Qualified "DataCon" "dcr_wrap_id",Qualified "DataCon"
+    "dcr_boxer",Qualified "DataCon" "dcr_arg_tys",Qualified "DataCon" "dcr_stricts",Qualified
+    "DataCon" "dcr_bangs"]
+recordFieldTypes:
+  DataCon.dcName: Qualified "DataCon" "DataCon"
+  DataCon.dcUnivTyVars: Qualified "DataCon" "DataCon"
+  DataCon.dcr_boxer: Qualified "DataCon" "DataConRep"
+  DataCon.dcRepType: Qualified "DataCon" "DataCon"
+  DataCon.dcr_bangs: Qualified "DataCon" "DataConRep"
+  DataCon.dcUserTyVarBinders: Qualified "DataCon" "DataCon"
+  DataCon.dcFields: Qualified "DataCon" "DataCon"
+  DataCon.dcVanilla: Qualified "DataCon" "DataCon"
+  DataCon.dcEqSpec: Qualified "DataCon" "DataCon"
+  DataCon.dcExTyVars: Qualified "DataCon" "DataCon"
+  DataCon.dcr_wrap_id: Qualified "DataCon" "DataConRep"
+  DataCon.dcr_arg_tys: Qualified "DataCon" "DataConRep"
+  DataCon.dcRepTyCon: Qualified "DataCon" "DataCon"
+  DataCon.dcr_stricts: Qualified "DataCon" "DataConRep"
+  DataCon.dcTag: Qualified "DataCon" "DataCon"
+  DataCon.dcPromoted: Qualified "DataCon" "DataCon"
+  DataCon.dcOrigResTy: Qualified "DataCon" "DataCon"
+  DataCon.dcSourceArity: Qualified "DataCon" "DataCon"
+  DataCon.dcRep: Qualified "DataCon" "DataCon"
+  DataCon.dcWorkId: Qualified "DataCon" "DataCon"
+  DataCon.dcOrigArgTys: Qualified "DataCon" "DataCon"
+  DataCon.dcUnique: Qualified "DataCon" "DataCon"
+  DataCon.dcSrcBangs: Qualified "DataCon" "DataCon"
+  DataCon.dcStupidTheta: Qualified "DataCon" "DataCon"
+  DataCon.dcOtherTheta: Qualified "DataCon" "DataCon"
+  DataCon.dcRepArity: Qualified "DataCon" "DataCon"
+  DataCon.dcInfix: Qualified "DataCon" "DataCon"
+constructorTypes:
+  DataCon.Mk_EqSpec: Qualified "DataCon" "EqSpec"
+  DataCon.MkData: Qualified "DataCon" "DataCon"
+  DataCon.HsUnpack: Qualified "DataCon" "HsImplBang"
+  DataCon.NoSrcUnpack: Qualified "DataCon" "SrcUnpackedness"
+  DataCon.SrcStrict: Qualified "DataCon" "SrcStrictness"
+  DataCon.NoDataConRep: Qualified "DataCon" "DataConRep"
+  DataCon.MarkedStrict: Qualified "DataCon" "StrictnessMark"
+  DataCon.HsLazy: Qualified "DataCon" "HsImplBang"
+  DataCon.HsStrict: Qualified "DataCon" "HsImplBang"
+  DataCon.NoSrcStrict: Qualified "DataCon" "SrcStrictness"
+  DataCon.SrcUnpack: Qualified "DataCon" "SrcUnpackedness"
+  DataCon.SrcNoUnpack: Qualified "DataCon" "SrcUnpackedness"
+  DataCon.SrcLazy: Qualified "DataCon" "SrcStrictness"
+  DataCon.NotMarkedStrict: Qualified "DataCon" "StrictnessMark"
+  DataCon.Mk_HsSrcBang: Qualified "DataCon" "HsSrcBang"
+  DataCon.DCR: Qualified "DataCon" "DataConRep"

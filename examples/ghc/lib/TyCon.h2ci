@@ -1,1 +1,209 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "TyCon" "AlgTyConFlav",[Qualified "TyCon" "VanillaAlgTyCon",Qualified "TyCon" "UnboxedAlgTyCon",Qualified "TyCon" "ClassTyCon",Qualified "TyCon" "DataFamInstTyCon"]),(Qualified "TyCon" "AlgTyConRhs",[Qualified "TyCon" "AbstractTyCon",Qualified "TyCon" "DataTyCon",Qualified "TyCon" "TupleTyCon",Qualified "TyCon" "SumTyCon",Qualified "TyCon" "NewTyCon"]),(Qualified "TyCon" "FamTyConFlav",[Qualified "TyCon" "DataFamilyTyCon",Qualified "TyCon" "OpenSynFamilyTyCon",Qualified "TyCon" "ClosedSynFamilyTyCon",Qualified "TyCon" "AbstractClosedSynFamilyTyCon",Qualified "TyCon" "BuiltInSynFamTyCon"]),(Qualified "TyCon" "Injectivity",[Qualified "TyCon" "NotInjective",Qualified "TyCon" "Injective"]),(Qualified "TyCon" "PrimElemRep",[Qualified "TyCon" "Int8ElemRep",Qualified "TyCon" "Int16ElemRep",Qualified "TyCon" "Int32ElemRep",Qualified "TyCon" "Int64ElemRep",Qualified "TyCon" "Word8ElemRep",Qualified "TyCon" "Word16ElemRep",Qualified "TyCon" "Word32ElemRep",Qualified "TyCon" "Word64ElemRep",Qualified "TyCon" "FloatElemRep",Qualified "TyCon" "DoubleElemRep"]),(Qualified "TyCon" "PrimRep",[Qualified "TyCon" "VoidRep",Qualified "TyCon" "LiftedRep",Qualified "TyCon" "UnliftedRep",Qualified "TyCon" "IntRep",Qualified "TyCon" "WordRep",Qualified "TyCon" "Int64Rep",Qualified "TyCon" "Word64Rep",Qualified "TyCon" "AddrRep",Qualified "TyCon" "FloatRep",Qualified "TyCon" "DoubleRep",Qualified "TyCon" "VecRep"]),(Qualified "TyCon" "RecTcChecker",[Qualified "TyCon" "RC"]),(Qualified "TyCon" "TyCon",[Qualified "TyCon" "FunTyCon",Qualified "TyCon" "AlgTyCon",Qualified "TyCon" "SynonymTyCon",Qualified "TyCon" "FamilyTyCon",Qualified "TyCon" "PrimTyCon",Qualified "TyCon" "PromotedDataCon",Qualified "TyCon" "TcTyCon"]),(Qualified "TyCon" "TyConBndrVis",[Qualified "TyCon" "NamedTCB",Qualified "TyCon" "AnonTCB"]),(Qualified "TyCon" "TyConFlavour",[Qualified "TyCon" "ClassFlavour",Qualified "TyCon" "TupleFlavour",Qualified "TyCon" "SumFlavour",Qualified "TyCon" "DataTypeFlavour",Qualified "TyCon" "NewtypeFlavour",Qualified "TyCon" "AbstractTypeFlavour",Qualified "TyCon" "DataFamilyFlavour",Qualified "TyCon" "OpenTypeFamilyFlavour",Qualified "TyCon" "ClosedTypeFamilyFlavour",Qualified "TyCon" "TypeSynonymFlavour",Qualified "TyCon" "BuiltInTypeFlavour",Qualified "TyCon" "PromotedDataConFlavour"])], _constructorTypes = fromList [(Qualified "TyCon" "AbstractClosedSynFamilyTyCon",Qualified "TyCon" "FamTyConFlav"),(Qualified "TyCon" "AbstractTyCon",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "AbstractTypeFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "AddrRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "AlgTyCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "AnonTCB",Qualified "TyCon" "TyConBndrVis"),(Qualified "TyCon" "BuiltInSynFamTyCon",Qualified "TyCon" "FamTyConFlav"),(Qualified "TyCon" "BuiltInTypeFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "ClassFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "ClassTyCon",Qualified "TyCon" "AlgTyConFlav"),(Qualified "TyCon" "ClosedSynFamilyTyCon",Qualified "TyCon" "FamTyConFlav"),(Qualified "TyCon" "ClosedTypeFamilyFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "DataFamInstTyCon",Qualified "TyCon" "AlgTyConFlav"),(Qualified "TyCon" "DataFamilyFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "DataFamilyTyCon",Qualified "TyCon" "FamTyConFlav"),(Qualified "TyCon" "DataTyCon",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "DataTypeFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "DoubleElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "DoubleRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "FamilyTyCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "FloatElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "FloatRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "FunTyCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "Injective",Qualified "TyCon" "Injectivity"),(Qualified "TyCon" "Int16ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "Int32ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "Int64ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "Int64Rep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "Int8ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "IntRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "LiftedRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "NamedTCB",Qualified "TyCon" "TyConBndrVis"),(Qualified "TyCon" "NewTyCon",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "NewtypeFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "NotInjective",Qualified "TyCon" "Injectivity"),(Qualified "TyCon" "OpenSynFamilyTyCon",Qualified "TyCon" "FamTyConFlav"),(Qualified "TyCon" "OpenTypeFamilyFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "PrimTyCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "PromotedDataCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "PromotedDataConFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "RC",Qualified "TyCon" "RecTcChecker"),(Qualified "TyCon" "SumFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "SumTyCon",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "SynonymTyCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "TcTyCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "TupleFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "TupleTyCon",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "TypeSynonymFlavour",Qualified "TyCon" "TyConFlavour"),(Qualified "TyCon" "UnboxedAlgTyCon",Qualified "TyCon" "AlgTyConFlav"),(Qualified "TyCon" "UnliftedRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "VanillaAlgTyCon",Qualified "TyCon" "AlgTyConFlav"),(Qualified "TyCon" "VecRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "VoidRep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "Word16ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "Word32ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "Word64ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "Word64Rep",Qualified "TyCon" "PrimRep"),(Qualified "TyCon" "Word8ElemRep",Qualified "TyCon" "PrimElemRep"),(Qualified "TyCon" "WordRep",Qualified "TyCon" "PrimRep")], _constructorFields = fromList [(Qualified "TyCon" "AbstractClosedSynFamilyTyCon",NonRecordFields 0),(Qualified "TyCon" "AbstractTyCon",NonRecordFields 0),(Qualified "TyCon" "AbstractTypeFlavour",NonRecordFields 0),(Qualified "TyCon" "AddrRep",NonRecordFields 0),(Qualified "TyCon" "AlgTyCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRoles",Qualified "TyCon" "tyConCType",Qualified "TyCon" "algTcGadtSyntax",Qualified "TyCon" "algTcStupidTheta",Qualified "TyCon" "algTcRhs",Qualified "TyCon" "algTcFields",Qualified "TyCon" "algTcParent"]),(Qualified "TyCon" "AnonTCB",NonRecordFields 0),(Qualified "TyCon" "BuiltInSynFamTyCon",NonRecordFields 1),(Qualified "TyCon" "BuiltInTypeFlavour",NonRecordFields 0),(Qualified "TyCon" "ClassFlavour",NonRecordFields 0),(Qualified "TyCon" "ClassTyCon",NonRecordFields 2),(Qualified "TyCon" "ClosedSynFamilyTyCon",NonRecordFields 1),(Qualified "TyCon" "ClosedTypeFamilyFlavour",NonRecordFields 0),(Qualified "TyCon" "DataFamInstTyCon",NonRecordFields 3),(Qualified "TyCon" "DataFamilyFlavour",NonRecordFields 0),(Qualified "TyCon" "DataFamilyTyCon",NonRecordFields 1),(Qualified "TyCon" "DataTyCon",RecordFields [Qualified "TyCon" "data_cons",Qualified "TyCon" "is_enum"]),(Qualified "TyCon" "DataTypeFlavour",NonRecordFields 0),(Qualified "TyCon" "DoubleElemRep",NonRecordFields 0),(Qualified "TyCon" "DoubleRep",NonRecordFields 0),(Qualified "TyCon" "FamilyTyCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "famTcResVar",Qualified "TyCon" "famTcFlav",Qualified "TyCon" "famTcParent",Qualified "TyCon" "famTcInj"]),(Qualified "TyCon" "FloatElemRep",NonRecordFields 0),(Qualified "TyCon" "FloatRep",NonRecordFields 0),(Qualified "TyCon" "FunTyCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRepName"]),(Qualified "TyCon" "Injective",NonRecordFields 1),(Qualified "TyCon" "Int16ElemRep",NonRecordFields 0),(Qualified "TyCon" "Int32ElemRep",NonRecordFields 0),(Qualified "TyCon" "Int64ElemRep",NonRecordFields 0),(Qualified "TyCon" "Int64Rep",NonRecordFields 0),(Qualified "TyCon" "Int8ElemRep",NonRecordFields 0),(Qualified "TyCon" "IntRep",NonRecordFields 0),(Qualified "TyCon" "LiftedRep",NonRecordFields 0),(Qualified "TyCon" "NamedTCB",NonRecordFields 1),(Qualified "TyCon" "NewTyCon",RecordFields [Qualified "TyCon" "data_con",Qualified "TyCon" "nt_rhs",Qualified "TyCon" "nt_etad_rhs",Qualified "TyCon" "nt_co"]),(Qualified "TyCon" "NewtypeFlavour",NonRecordFields 0),(Qualified "TyCon" "NotInjective",NonRecordFields 0),(Qualified "TyCon" "OpenSynFamilyTyCon",NonRecordFields 0),(Qualified "TyCon" "OpenTypeFamilyFlavour",NonRecordFields 0),(Qualified "TyCon" "PrimTyCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRoles",Qualified "TyCon" "isUnlifted",Qualified "TyCon" "primRepName"]),(Qualified "TyCon" "PromotedDataCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRoles",Qualified "TyCon" "dataCon",Qualified "TyCon" "tcRepName",Qualified "TyCon" "promDcRepInfo"]),(Qualified "TyCon" "PromotedDataConFlavour",NonRecordFields 0),(Qualified "TyCon" "RC",NonRecordFields 2),(Qualified "TyCon" "SumFlavour",NonRecordFields 0),(Qualified "TyCon" "SumTyCon",RecordFields [Qualified "TyCon" "data_cons"]),(Qualified "TyCon" "SynonymTyCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRoles",Qualified "TyCon" "synTcRhs",Qualified "TyCon" "synIsTau",Qualified "TyCon" "synIsFamFree"]),(Qualified "TyCon" "TcTyCon",RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcTyConScopedTyVars",Qualified "TyCon" "tcTyConFlavour"]),(Qualified "TyCon" "TupleFlavour",NonRecordFields 1),(Qualified "TyCon" "TupleTyCon",RecordFields [Qualified "TyCon" "data_con",Qualified "TyCon" "tup_sort"]),(Qualified "TyCon" "TypeSynonymFlavour",NonRecordFields 0),(Qualified "TyCon" "UnboxedAlgTyCon",NonRecordFields 1),(Qualified "TyCon" "UnliftedRep",NonRecordFields 0),(Qualified "TyCon" "VanillaAlgTyCon",NonRecordFields 1),(Qualified "TyCon" "VecRep",NonRecordFields 2),(Qualified "TyCon" "VoidRep",NonRecordFields 0),(Qualified "TyCon" "Word16ElemRep",NonRecordFields 0),(Qualified "TyCon" "Word32ElemRep",NonRecordFields 0),(Qualified "TyCon" "Word64ElemRep",NonRecordFields 0),(Qualified "TyCon" "Word64Rep",NonRecordFields 0),(Qualified "TyCon" "Word8ElemRep",NonRecordFields 0),(Qualified "TyCon" "WordRep",NonRecordFields 0)], _recordFieldTypes = fromList [(Qualified "TyCon" "algTcFields",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "algTcGadtSyntax",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "algTcParent",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "algTcRhs",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "algTcStupidTheta",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "dataCon",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "data_con",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "data_cons",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "famTcFlav",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "famTcInj",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "famTcParent",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "famTcResVar",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "isUnlifted",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "is_enum",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "nt_co",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "nt_etad_rhs",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "nt_rhs",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "primRepName",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "promDcRepInfo",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "synIsFamFree",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "synIsTau",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "synTcRhs",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tcRepName",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tcRoles",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tcTyConFlavour",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tcTyConScopedTyVars",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tup_sort",Qualified "TyCon" "AlgTyConRhs"),(Qualified "TyCon" "tyConArity",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConBinders",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConCType",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConKind",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConName",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConResKind",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConTyVars",Qualified "TyCon" "TyCon"),(Qualified "TyCon" "tyConUnique",Qualified "TyCon" "TyCon")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  TyCon.Injectivity: ! '[Qualified "TyCon" "NotInjective",Qualified "TyCon" "Injective"]'
+  TyCon.TyConBndrVis: ! '[Qualified "TyCon" "NamedTCB",Qualified "TyCon" "AnonTCB"]'
+  TyCon.PrimRep: ! '[Qualified "TyCon" "VoidRep",Qualified "TyCon" "LiftedRep",Qualified
+    "TyCon" "UnliftedRep",Qualified "TyCon" "IntRep",Qualified "TyCon" "WordRep",Qualified
+    "TyCon" "Int64Rep",Qualified "TyCon" "Word64Rep",Qualified "TyCon" "AddrRep",Qualified
+    "TyCon" "FloatRep",Qualified "TyCon" "DoubleRep",Qualified "TyCon" "VecRep"]'
+  TyCon.RecTcChecker: ! '[Qualified "TyCon" "RC"]'
+  TyCon.TyCon: ! '[Qualified "TyCon" "FunTyCon",Qualified "TyCon" "AlgTyCon",Qualified
+    "TyCon" "SynonymTyCon",Qualified "TyCon" "FamilyTyCon",Qualified "TyCon" "PrimTyCon",Qualified
+    "TyCon" "PromotedDataCon",Qualified "TyCon" "TcTyCon"]'
+  TyCon.FamTyConFlav: ! '[Qualified "TyCon" "DataFamilyTyCon",Qualified "TyCon" "OpenSynFamilyTyCon",Qualified
+    "TyCon" "ClosedSynFamilyTyCon",Qualified "TyCon" "AbstractClosedSynFamilyTyCon",Qualified
+    "TyCon" "BuiltInSynFamTyCon"]'
+  TyCon.AlgTyConRhs: ! '[Qualified "TyCon" "AbstractTyCon",Qualified "TyCon" "DataTyCon",Qualified
+    "TyCon" "TupleTyCon",Qualified "TyCon" "SumTyCon",Qualified "TyCon" "NewTyCon"]'
+  TyCon.TyConFlavour: ! '[Qualified "TyCon" "ClassFlavour",Qualified "TyCon" "TupleFlavour",Qualified
+    "TyCon" "SumFlavour",Qualified "TyCon" "DataTypeFlavour",Qualified "TyCon" "NewtypeFlavour",Qualified
+    "TyCon" "AbstractTypeFlavour",Qualified "TyCon" "DataFamilyFlavour",Qualified
+    "TyCon" "OpenTypeFamilyFlavour",Qualified "TyCon" "ClosedTypeFamilyFlavour",Qualified
+    "TyCon" "TypeSynonymFlavour",Qualified "TyCon" "BuiltInTypeFlavour",Qualified
+    "TyCon" "PromotedDataConFlavour"]'
+  TyCon.PrimElemRep: ! '[Qualified "TyCon" "Int8ElemRep",Qualified "TyCon" "Int16ElemRep",Qualified
+    "TyCon" "Int32ElemRep",Qualified "TyCon" "Int64ElemRep",Qualified "TyCon" "Word8ElemRep",Qualified
+    "TyCon" "Word16ElemRep",Qualified "TyCon" "Word32ElemRep",Qualified "TyCon" "Word64ElemRep",Qualified
+    "TyCon" "FloatElemRep",Qualified "TyCon" "DoubleElemRep"]'
+  TyCon.AlgTyConFlav: ! '[Qualified "TyCon" "VanillaAlgTyCon",Qualified "TyCon" "UnboxedAlgTyCon",Qualified
+    "TyCon" "ClassTyCon",Qualified "TyCon" "DataFamInstTyCon"]'
+constructorFields:
+  TyCon.AlgTyCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon"
+    "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified
+    "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified
+    "TyCon" "tcRoles",Qualified "TyCon" "tyConCType",Qualified "TyCon" "algTcGadtSyntax",Qualified
+    "TyCon" "algTcStupidTheta",Qualified "TyCon" "algTcRhs",Qualified "TyCon" "algTcFields",Qualified
+    "TyCon" "algTcParent"]
+  TyCon.AbstractTypeFlavour: NonRecordFields 0
+  TyCon.Int8ElemRep: NonRecordFields 0
+  TyCon.Injective: NonRecordFields 1
+  TyCon.PromotedDataConFlavour: NonRecordFields 0
+  TyCon.SynonymTyCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon"
+    "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified
+    "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified
+    "TyCon" "tcRoles",Qualified "TyCon" "synTcRhs",Qualified "TyCon" "synIsTau",Qualified
+    "TyCon" "synIsFamFree"]
+  TyCon.FloatElemRep: NonRecordFields 0
+  TyCon.Word64Rep: NonRecordFields 0
+  TyCon.SumTyCon: RecordFields [Qualified "TyCon" "data_cons"]
+  TyCon.AddrRep: NonRecordFields 0
+  TyCon.IntRep: NonRecordFields 0
+  TyCon.TypeSynonymFlavour: NonRecordFields 0
+  TyCon.PrimTyCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon"
+    "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConResKind",Qualified
+    "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRoles",Qualified
+    "TyCon" "isUnlifted",Qualified "TyCon" "primRepName"]
+  TyCon.FamilyTyCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon"
+    "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified
+    "TyCon" "tyConResKind",Qualified "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified
+    "TyCon" "famTcResVar",Qualified "TyCon" "famTcFlav",Qualified "TyCon" "famTcParent",Qualified
+    "TyCon" "famTcInj"]
+  TyCon.ClassTyCon: NonRecordFields 2
+  TyCon.DataFamilyTyCon: NonRecordFields 1
+  TyCon.OpenSynFamilyTyCon: NonRecordFields 0
+  TyCon.LiftedRep: NonRecordFields 0
+  TyCon.ClosedTypeFamilyFlavour: NonRecordFields 0
+  TyCon.Word32ElemRep: NonRecordFields 0
+  TyCon.DoubleRep: NonRecordFields 0
+  TyCon.UnliftedRep: NonRecordFields 0
+  TyCon.UnboxedAlgTyCon: NonRecordFields 1
+  TyCon.FunTyCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon"
+    "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConResKind",Qualified
+    "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRepName"]
+  TyCon.ClosedSynFamilyTyCon: NonRecordFields 1
+  TyCon.VecRep: NonRecordFields 2
+  TyCon.FloatRep: NonRecordFields 0
+  TyCon.OpenTypeFamilyFlavour: NonRecordFields 0
+  TyCon.DataTyCon: RecordFields [Qualified "TyCon" "data_cons",Qualified "TyCon" "is_enum"]
+  TyCon.NotInjective: NonRecordFields 0
+  TyCon.TcTyCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon" "tyConName",Qualified
+    "TyCon" "tyConBinders",Qualified "TyCon" "tyConTyVars",Qualified "TyCon" "tyConResKind",Qualified
+    "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcTyConScopedTyVars",Qualified
+    "TyCon" "tcTyConFlavour"]
+  TyCon.Word8ElemRep: NonRecordFields 0
+  TyCon.BuiltInSynFamTyCon: NonRecordFields 1
+  TyCon.DataTypeFlavour: NonRecordFields 0
+  TyCon.TupleFlavour: NonRecordFields 1
+  TyCon.DataFamInstTyCon: NonRecordFields 3
+  TyCon.NamedTCB: NonRecordFields 1
+  TyCon.SumFlavour: NonRecordFields 0
+  TyCon.Int64Rep: NonRecordFields 0
+  TyCon.DoubleElemRep: NonRecordFields 0
+  TyCon.NewTyCon: RecordFields [Qualified "TyCon" "data_con",Qualified "TyCon" "nt_rhs",Qualified
+    "TyCon" "nt_etad_rhs",Qualified "TyCon" "nt_co"]
+  TyCon.VoidRep: NonRecordFields 0
+  TyCon.DataFamilyFlavour: NonRecordFields 0
+  TyCon.ClassFlavour: NonRecordFields 0
+  TyCon.AnonTCB: NonRecordFields 0
+  TyCon.BuiltInTypeFlavour: NonRecordFields 0
+  TyCon.VanillaAlgTyCon: NonRecordFields 1
+  TyCon.Int32ElemRep: NonRecordFields 0
+  TyCon.RC: NonRecordFields 2
+  TyCon.NewtypeFlavour: NonRecordFields 0
+  TyCon.WordRep: NonRecordFields 0
+  TyCon.Word64ElemRep: NonRecordFields 0
+  TyCon.Int16ElemRep: NonRecordFields 0
+  TyCon.TupleTyCon: RecordFields [Qualified "TyCon" "data_con",Qualified "TyCon" "tup_sort"]
+  TyCon.Int64ElemRep: NonRecordFields 0
+  TyCon.Word16ElemRep: NonRecordFields 0
+  TyCon.AbstractTyCon: NonRecordFields 0
+  TyCon.AbstractClosedSynFamilyTyCon: NonRecordFields 0
+  TyCon.PromotedDataCon: RecordFields [Qualified "TyCon" "tyConUnique",Qualified "TyCon"
+    "tyConName",Qualified "TyCon" "tyConBinders",Qualified "TyCon" "tyConResKind",Qualified
+    "TyCon" "tyConKind",Qualified "TyCon" "tyConArity",Qualified "TyCon" "tcRoles",Qualified
+    "TyCon" "dataCon",Qualified "TyCon" "tcRepName",Qualified "TyCon" "promDcRepInfo"]
+recordFieldTypes:
+  TyCon.tcTyConScopedTyVars: Qualified "TyCon" "TyCon"
+  TyCon.data_cons: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.nt_rhs: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.nt_co: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.algTcParent: Qualified "TyCon" "TyCon"
+  TyCon.algTcGadtSyntax: Qualified "TyCon" "TyCon"
+  TyCon.dataCon: Qualified "TyCon" "TyCon"
+  TyCon.tyConKind: Qualified "TyCon" "TyCon"
+  TyCon.nt_etad_rhs: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.tcRepName: Qualified "TyCon" "TyCon"
+  TyCon.tyConName: Qualified "TyCon" "TyCon"
+  TyCon.famTcFlav: Qualified "TyCon" "TyCon"
+  TyCon.data_con: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.tcTyConFlavour: Qualified "TyCon" "TyCon"
+  TyCon.primRepName: Qualified "TyCon" "TyCon"
+  TyCon.algTcStupidTheta: Qualified "TyCon" "TyCon"
+  TyCon.is_enum: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.promDcRepInfo: Qualified "TyCon" "TyCon"
+  TyCon.synIsTau: Qualified "TyCon" "TyCon"
+  TyCon.tyConResKind: Qualified "TyCon" "TyCon"
+  TyCon.tup_sort: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.tyConCType: Qualified "TyCon" "TyCon"
+  TyCon.famTcResVar: Qualified "TyCon" "TyCon"
+  TyCon.algTcFields: Qualified "TyCon" "TyCon"
+  TyCon.tyConUnique: Qualified "TyCon" "TyCon"
+  TyCon.algTcRhs: Qualified "TyCon" "TyCon"
+  TyCon.tyConTyVars: Qualified "TyCon" "TyCon"
+  TyCon.famTcParent: Qualified "TyCon" "TyCon"
+  TyCon.tyConBinders: Qualified "TyCon" "TyCon"
+  TyCon.synTcRhs: Qualified "TyCon" "TyCon"
+  TyCon.isUnlifted: Qualified "TyCon" "TyCon"
+  TyCon.tcRoles: Qualified "TyCon" "TyCon"
+  TyCon.famTcInj: Qualified "TyCon" "TyCon"
+  TyCon.tyConArity: Qualified "TyCon" "TyCon"
+  TyCon.synIsFamFree: Qualified "TyCon" "TyCon"
+constructorTypes:
+  TyCon.AlgTyCon: Qualified "TyCon" "TyCon"
+  TyCon.AbstractTypeFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.Int8ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.Injective: Qualified "TyCon" "Injectivity"
+  TyCon.PromotedDataConFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.SynonymTyCon: Qualified "TyCon" "TyCon"
+  TyCon.FloatElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.Word64Rep: Qualified "TyCon" "PrimRep"
+  TyCon.SumTyCon: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.AddrRep: Qualified "TyCon" "PrimRep"
+  TyCon.IntRep: Qualified "TyCon" "PrimRep"
+  TyCon.TypeSynonymFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.PrimTyCon: Qualified "TyCon" "TyCon"
+  TyCon.FamilyTyCon: Qualified "TyCon" "TyCon"
+  TyCon.ClassTyCon: Qualified "TyCon" "AlgTyConFlav"
+  TyCon.DataFamilyTyCon: Qualified "TyCon" "FamTyConFlav"
+  TyCon.OpenSynFamilyTyCon: Qualified "TyCon" "FamTyConFlav"
+  TyCon.LiftedRep: Qualified "TyCon" "PrimRep"
+  TyCon.ClosedTypeFamilyFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.Word32ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.DoubleRep: Qualified "TyCon" "PrimRep"
+  TyCon.UnliftedRep: Qualified "TyCon" "PrimRep"
+  TyCon.UnboxedAlgTyCon: Qualified "TyCon" "AlgTyConFlav"
+  TyCon.FunTyCon: Qualified "TyCon" "TyCon"
+  TyCon.ClosedSynFamilyTyCon: Qualified "TyCon" "FamTyConFlav"
+  TyCon.VecRep: Qualified "TyCon" "PrimRep"
+  TyCon.FloatRep: Qualified "TyCon" "PrimRep"
+  TyCon.OpenTypeFamilyFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.DataTyCon: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.NotInjective: Qualified "TyCon" "Injectivity"
+  TyCon.TcTyCon: Qualified "TyCon" "TyCon"
+  TyCon.Word8ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.BuiltInSynFamTyCon: Qualified "TyCon" "FamTyConFlav"
+  TyCon.DataTypeFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.TupleFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.DataFamInstTyCon: Qualified "TyCon" "AlgTyConFlav"
+  TyCon.NamedTCB: Qualified "TyCon" "TyConBndrVis"
+  TyCon.SumFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.Int64Rep: Qualified "TyCon" "PrimRep"
+  TyCon.DoubleElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.NewTyCon: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.VoidRep: Qualified "TyCon" "PrimRep"
+  TyCon.DataFamilyFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.ClassFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.AnonTCB: Qualified "TyCon" "TyConBndrVis"
+  TyCon.BuiltInTypeFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.VanillaAlgTyCon: Qualified "TyCon" "AlgTyConFlav"
+  TyCon.Int32ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.RC: Qualified "TyCon" "RecTcChecker"
+  TyCon.NewtypeFlavour: Qualified "TyCon" "TyConFlavour"
+  TyCon.WordRep: Qualified "TyCon" "PrimRep"
+  TyCon.Word64ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.Int16ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.TupleTyCon: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.Int64ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.Word16ElemRep: Qualified "TyCon" "PrimElemRep"
+  TyCon.AbstractTyCon: Qualified "TyCon" "AlgTyConRhs"
+  TyCon.AbstractClosedSynFamilyTyCon: Qualified "TyCon" "FamTyConFlav"
+  TyCon.PromotedDataCon: Qualified "TyCon" "TyCon"

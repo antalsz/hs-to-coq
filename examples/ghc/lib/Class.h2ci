@@ -1,1 +1,30 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "Class" "Class",[Qualified "Class" "Mk_Class"]),(Qualified "Class" "ClassATItem",[Qualified "Class" "ATI"]),(Qualified "Class" "ClassBody",[Qualified "Class" "AbstractClass",Qualified "Class" "ConcreteClass"])], _constructorTypes = fromList [(Qualified "Class" "ATI",Qualified "Class" "ClassATItem"),(Qualified "Class" "AbstractClass",Qualified "Class" "ClassBody"),(Qualified "Class" "ConcreteClass",Qualified "Class" "ClassBody"),(Qualified "Class" "Mk_Class",Qualified "Class" "Class")], _constructorFields = fromList [(Qualified "Class" "ATI",NonRecordFields 2),(Qualified "Class" "AbstractClass",NonRecordFields 0),(Qualified "Class" "ConcreteClass",RecordFields [Qualified "Class" "classSCThetaStuff",Qualified "Class" "classSCSels",Qualified "Class" "classATStuff",Qualified "Class" "classOpStuff",Qualified "Class" "classMinimalDefStuff"]),(Qualified "Class" "Mk_Class",RecordFields [Qualified "Class" "classTyCon",Qualified "Class" "className",Qualified "Class" "classKey",Qualified "Class" "classTyVars",Qualified "Class" "classFunDeps",Qualified "Class" "classBody"])], _recordFieldTypes = fromList [(Qualified "Class" "classATStuff",Qualified "Class" "ClassBody"),(Qualified "Class" "classBody",Qualified "Class" "Class"),(Qualified "Class" "classFunDeps",Qualified "Class" "Class"),(Qualified "Class" "classKey",Qualified "Class" "Class"),(Qualified "Class" "classMinimalDefStuff",Qualified "Class" "ClassBody"),(Qualified "Class" "className",Qualified "Class" "Class"),(Qualified "Class" "classOpStuff",Qualified "Class" "ClassBody"),(Qualified "Class" "classSCSels",Qualified "Class" "ClassBody"),(Qualified "Class" "classSCThetaStuff",Qualified "Class" "ClassBody"),(Qualified "Class" "classTyCon",Qualified "Class" "Class"),(Qualified "Class" "classTyVars",Qualified "Class" "Class")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  Class.Class: ! '[Qualified "Class" "Mk_Class"]'
+  Class.ClassBody: ! '[Qualified "Class" "AbstractClass",Qualified "Class" "ConcreteClass"]'
+  Class.ClassATItem: ! '[Qualified "Class" "ATI"]'
+constructorFields:
+  Class.Mk_Class: RecordFields [Qualified "Class" "classTyCon",Qualified "Class" "className",Qualified
+    "Class" "classKey",Qualified "Class" "classTyVars",Qualified "Class" "classFunDeps",Qualified
+    "Class" "classBody"]
+  Class.ATI: NonRecordFields 2
+  Class.AbstractClass: NonRecordFields 0
+  Class.ConcreteClass: RecordFields [Qualified "Class" "classSCThetaStuff",Qualified
+    "Class" "classSCSels",Qualified "Class" "classATStuff",Qualified "Class" "classOpStuff",Qualified
+    "Class" "classMinimalDefStuff"]
+recordFieldTypes:
+  Class.classSCSels: Qualified "Class" "ClassBody"
+  Class.classMinimalDefStuff: Qualified "Class" "ClassBody"
+  Class.classBody: Qualified "Class" "Class"
+  Class.classKey: Qualified "Class" "Class"
+  Class.classTyCon: Qualified "Class" "Class"
+  Class.className: Qualified "Class" "Class"
+  Class.classTyVars: Qualified "Class" "Class"
+  Class.classSCThetaStuff: Qualified "Class" "ClassBody"
+  Class.classOpStuff: Qualified "Class" "ClassBody"
+  Class.classATStuff: Qualified "Class" "ClassBody"
+  Class.classFunDeps: Qualified "Class" "Class"
+constructorTypes:
+  Class.Mk_Class: Qualified "Class" "Class"
+  Class.ATI: Qualified "Class" "ClassATItem"
+  Class.AbstractClass: Qualified "Class" "ClassBody"
+  Class.ConcreteClass: Qualified "Class" "ClassBody"

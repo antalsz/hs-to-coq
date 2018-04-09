@@ -1,1 +1,52 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "IdInfo" "CafInfo",[Qualified "IdInfo" "MayHaveCafRefs",Qualified "IdInfo" "NoCafRefs"]),(Qualified "IdInfo" "IdDetails",[Qualified "IdInfo" "VanillaId",Qualified "IdInfo" "RecSelId",Qualified "IdInfo" "DataConWorkId",Qualified "IdInfo" "DataConWrapId",Qualified "IdInfo" "ClassOpId",Qualified "IdInfo" "PrimOpId",Qualified "IdInfo" "FCallId",Qualified "IdInfo" "TickBoxOpId",Qualified "IdInfo" "DFunId",Qualified "IdInfo" "CoVarId",Qualified "IdInfo" "JoinId"]),(Qualified "IdInfo" "LevityInfo",[Qualified "IdInfo" "NoLevityInfo",Qualified "IdInfo" "NeverLevityPolymorphic"]),(Qualified "IdInfo" "RecSelParent",[Qualified "IdInfo" "RecSelData",Qualified "IdInfo" "RecSelPatSyn"]),(Qualified "IdInfo" "TickBoxOp",[Qualified "IdInfo" "TickBox"])], _constructorTypes = fromList [(Qualified "IdInfo" "ClassOpId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "CoVarId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "DFunId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "DataConWorkId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "DataConWrapId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "FCallId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "JoinId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "MayHaveCafRefs",Qualified "IdInfo" "CafInfo"),(Qualified "IdInfo" "NeverLevityPolymorphic",Qualified "IdInfo" "LevityInfo"),(Qualified "IdInfo" "NoCafRefs",Qualified "IdInfo" "CafInfo"),(Qualified "IdInfo" "NoLevityInfo",Qualified "IdInfo" "LevityInfo"),(Qualified "IdInfo" "PrimOpId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "RecSelData",Qualified "IdInfo" "RecSelParent"),(Qualified "IdInfo" "RecSelId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "RecSelPatSyn",Qualified "IdInfo" "RecSelParent"),(Qualified "IdInfo" "TickBox",Qualified "IdInfo" "TickBoxOp"),(Qualified "IdInfo" "TickBoxOpId",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "VanillaId",Qualified "IdInfo" "IdDetails")], _constructorFields = fromList [(Qualified "IdInfo" "ClassOpId",NonRecordFields 1),(Qualified "IdInfo" "CoVarId",NonRecordFields 0),(Qualified "IdInfo" "DFunId",NonRecordFields 1),(Qualified "IdInfo" "DataConWorkId",NonRecordFields 1),(Qualified "IdInfo" "DataConWrapId",NonRecordFields 1),(Qualified "IdInfo" "FCallId",NonRecordFields 1),(Qualified "IdInfo" "JoinId",NonRecordFields 1),(Qualified "IdInfo" "MayHaveCafRefs",NonRecordFields 0),(Qualified "IdInfo" "NeverLevityPolymorphic",NonRecordFields 0),(Qualified "IdInfo" "NoCafRefs",NonRecordFields 0),(Qualified "IdInfo" "NoLevityInfo",NonRecordFields 0),(Qualified "IdInfo" "PrimOpId",NonRecordFields 1),(Qualified "IdInfo" "RecSelData",NonRecordFields 1),(Qualified "IdInfo" "RecSelId",RecordFields [Qualified "IdInfo" "sel_tycon",Qualified "IdInfo" "sel_naughty"]),(Qualified "IdInfo" "RecSelPatSyn",NonRecordFields 1),(Qualified "IdInfo" "TickBox",NonRecordFields 2),(Qualified "IdInfo" "TickBoxOpId",NonRecordFields 1),(Qualified "IdInfo" "VanillaId",NonRecordFields 0)], _recordFieldTypes = fromList [(Qualified "IdInfo" "sel_naughty",Qualified "IdInfo" "IdDetails"),(Qualified "IdInfo" "sel_tycon",Qualified "IdInfo" "IdDetails")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  IdInfo.RecSelParent: ! '[Qualified "IdInfo" "RecSelData",Qualified "IdInfo" "RecSelPatSyn"]'
+  IdInfo.CafInfo: ! '[Qualified "IdInfo" "MayHaveCafRefs",Qualified "IdInfo" "NoCafRefs"]'
+  IdInfo.IdDetails: ! '[Qualified "IdInfo" "VanillaId",Qualified "IdInfo" "RecSelId",Qualified
+    "IdInfo" "DataConWorkId",Qualified "IdInfo" "DataConWrapId",Qualified "IdInfo"
+    "ClassOpId",Qualified "IdInfo" "PrimOpId",Qualified "IdInfo" "FCallId",Qualified
+    "IdInfo" "TickBoxOpId",Qualified "IdInfo" "DFunId",Qualified "IdInfo" "CoVarId",Qualified
+    "IdInfo" "JoinId"]'
+  IdInfo.TickBoxOp: ! '[Qualified "IdInfo" "TickBox"]'
+  IdInfo.LevityInfo: ! '[Qualified "IdInfo" "NoLevityInfo",Qualified "IdInfo" "NeverLevityPolymorphic"]'
+constructorFields:
+  IdInfo.TickBoxOpId: NonRecordFields 1
+  IdInfo.NoCafRefs: NonRecordFields 0
+  IdInfo.JoinId: NonRecordFields 1
+  IdInfo.DataConWorkId: NonRecordFields 1
+  IdInfo.RecSelData: NonRecordFields 1
+  IdInfo.RecSelId: RecordFields [Qualified "IdInfo" "sel_tycon",Qualified "IdInfo"
+    "sel_naughty"]
+  IdInfo.DFunId: NonRecordFields 1
+  IdInfo.CoVarId: NonRecordFields 0
+  IdInfo.FCallId: NonRecordFields 1
+  IdInfo.NeverLevityPolymorphic: NonRecordFields 0
+  IdInfo.MayHaveCafRefs: NonRecordFields 0
+  IdInfo.RecSelPatSyn: NonRecordFields 1
+  IdInfo.TickBox: NonRecordFields 2
+  IdInfo.DataConWrapId: NonRecordFields 1
+  IdInfo.NoLevityInfo: NonRecordFields 0
+  IdInfo.ClassOpId: NonRecordFields 1
+  IdInfo.PrimOpId: NonRecordFields 1
+  IdInfo.VanillaId: NonRecordFields 0
+recordFieldTypes:
+  IdInfo.sel_tycon: Qualified "IdInfo" "IdDetails"
+  IdInfo.sel_naughty: Qualified "IdInfo" "IdDetails"
+constructorTypes:
+  IdInfo.TickBoxOpId: Qualified "IdInfo" "IdDetails"
+  IdInfo.NoCafRefs: Qualified "IdInfo" "CafInfo"
+  IdInfo.JoinId: Qualified "IdInfo" "IdDetails"
+  IdInfo.DataConWorkId: Qualified "IdInfo" "IdDetails"
+  IdInfo.RecSelData: Qualified "IdInfo" "RecSelParent"
+  IdInfo.RecSelId: Qualified "IdInfo" "IdDetails"
+  IdInfo.DFunId: Qualified "IdInfo" "IdDetails"
+  IdInfo.CoVarId: Qualified "IdInfo" "IdDetails"
+  IdInfo.FCallId: Qualified "IdInfo" "IdDetails"
+  IdInfo.NeverLevityPolymorphic: Qualified "IdInfo" "LevityInfo"
+  IdInfo.MayHaveCafRefs: Qualified "IdInfo" "CafInfo"
+  IdInfo.RecSelPatSyn: Qualified "IdInfo" "RecSelParent"
+  IdInfo.TickBox: Qualified "IdInfo" "TickBoxOp"
+  IdInfo.DataConWrapId: Qualified "IdInfo" "IdDetails"
+  IdInfo.NoLevityInfo: Qualified "IdInfo" "LevityInfo"
+  IdInfo.ClassOpId: Qualified "IdInfo" "IdDetails"
+  IdInfo.PrimOpId: Qualified "IdInfo" "IdDetails"
+  IdInfo.VanillaId: Qualified "IdInfo" "IdDetails"

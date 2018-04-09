@@ -1,1 +1,8 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "ConLike" "ConLike",[Qualified "ConLike" "RealDataCon",Qualified "ConLike" "PatSynCon"])], _constructorTypes = fromList [(Qualified "ConLike" "PatSynCon",Qualified "ConLike" "ConLike"),(Qualified "ConLike" "RealDataCon",Qualified "ConLike" "ConLike")], _constructorFields = fromList [(Qualified "ConLike" "PatSynCon",NonRecordFields 1),(Qualified "ConLike" "RealDataCon",NonRecordFields 1)], _recordFieldTypes = fromList [], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  ConLike.ConLike: ! '[Qualified "ConLike" "RealDataCon",Qualified "ConLike" "PatSynCon"]'
+constructorFields:
+  ConLike.PatSynCon: NonRecordFields 1
+  ConLike.RealDataCon: NonRecordFields 1
+constructorTypes:
+  ConLike.PatSynCon: Qualified "ConLike" "ConLike"
+  ConLike.RealDataCon: Qualified "ConLike" "ConLike"

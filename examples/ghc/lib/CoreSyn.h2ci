@@ -1,1 +1,185 @@
-TypeInfo {_searchPaths = [], _loadStatus = fromList [], _processedModules = fromList [], _constructors = fromList [(Qualified "CoreSyn" "AltCon",[Qualified "CoreSyn" "DataAlt",Qualified "CoreSyn" "LitAlt",Qualified "CoreSyn" "DEFAULT"]),(Qualified "CoreSyn" "AnnBind",[Qualified "CoreSyn" "AnnNonRec",Qualified "CoreSyn" "AnnRec"]),(Qualified "CoreSyn" "AnnExpr'",[Qualified "CoreSyn" "AnnVar",Qualified "CoreSyn" "AnnLit",Qualified "CoreSyn" "AnnLam",Qualified "CoreSyn" "AnnApp",Qualified "CoreSyn" "AnnCase",Qualified "CoreSyn" "AnnLet",Qualified "CoreSyn" "AnnCast",Qualified "CoreSyn" "AnnTick",Qualified "CoreSyn" "AnnType",Qualified "CoreSyn" "AnnCoercion"]),(Qualified "CoreSyn" "Bind",[Qualified "CoreSyn" "NonRec",Qualified "CoreSyn" "Rec"]),(Qualified "CoreSyn" "CoreRule",[Qualified "CoreSyn" "Rule",Qualified "CoreSyn" "BuiltinRule"]),(Qualified "CoreSyn" "CoreVect",[Qualified "CoreSyn" "Vect",Qualified "CoreSyn" "NoVect",Qualified "CoreSyn" "VectType",Qualified "CoreSyn" "VectClass",Qualified "CoreSyn" "VectInst"]),(Qualified "CoreSyn" "Expr",[Qualified "CoreSyn" "Var",Qualified "CoreSyn" "Lit",Qualified "CoreSyn" "App",Qualified "CoreSyn" "Lam",Qualified "CoreSyn" "Let",Qualified "CoreSyn" "Case",Qualified "CoreSyn" "Cast",Qualified "CoreSyn" "Tick",Qualified "CoreSyn" "Type_",Qualified "CoreSyn" "Coercion"]),(Qualified "CoreSyn" "IsOrphan",[Qualified "CoreSyn" "Mk_IsOrphan",Qualified "CoreSyn" "NotOrphan"]),(Qualified "CoreSyn" "RuleEnv",[Qualified "CoreSyn" "Mk_RuleEnv"]),(Qualified "CoreSyn" "TaggedBndr",[Qualified "CoreSyn" "TB"]),(Qualified "CoreSyn" "TickishPlacement",[Qualified "CoreSyn" "PlaceRuntime",Qualified "CoreSyn" "PlaceNonLam",Qualified "CoreSyn" "PlaceCostCentre"]),(Qualified "CoreSyn" "TickishScoping",[Qualified "CoreSyn" "NoScope",Qualified "CoreSyn" "SoftScope",Qualified "CoreSyn" "CostCentreScope"]),(Qualified "CoreSyn" "Unfolding",[Qualified "CoreSyn" "NoUnfolding",Qualified "CoreSyn" "BootUnfolding",Qualified "CoreSyn" "OtherCon",Qualified "CoreSyn" "DFunUnfolding",Qualified "CoreSyn" "CoreUnfolding"]),(Qualified "CoreSyn" "UnfoldingGuidance",[Qualified "CoreSyn" "UnfWhen",Qualified "CoreSyn" "UnfIfGoodArgs",Qualified "CoreSyn" "UnfNever"]),(Qualified "CoreSyn" "UnfoldingSource",[Qualified "CoreSyn" "InlineRhs",Qualified "CoreSyn" "InlineStable",Qualified "CoreSyn" "InlineCompulsory"])], _constructorTypes = fromList [(Qualified "CoreSyn" "AnnApp",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnCase",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnCast",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnCoercion",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnLam",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnLet",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnLit",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnNonRec",Qualified "CoreSyn" "AnnBind"),(Qualified "CoreSyn" "AnnRec",Qualified "CoreSyn" "AnnBind"),(Qualified "CoreSyn" "AnnTick",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnType",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "AnnVar",Qualified "CoreSyn" "AnnExpr'"),(Qualified "CoreSyn" "App",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "BootUnfolding",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "BuiltinRule",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "Case",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "Cast",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "Coercion",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "CoreUnfolding",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "CostCentreScope",Qualified "CoreSyn" "TickishScoping"),(Qualified "CoreSyn" "DEFAULT",Qualified "CoreSyn" "AltCon"),(Qualified "CoreSyn" "DFunUnfolding",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "DataAlt",Qualified "CoreSyn" "AltCon"),(Qualified "CoreSyn" "InlineCompulsory",Qualified "CoreSyn" "UnfoldingSource"),(Qualified "CoreSyn" "InlineRhs",Qualified "CoreSyn" "UnfoldingSource"),(Qualified "CoreSyn" "InlineStable",Qualified "CoreSyn" "UnfoldingSource"),(Qualified "CoreSyn" "Lam",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "Let",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "Lit",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "LitAlt",Qualified "CoreSyn" "AltCon"),(Qualified "CoreSyn" "Mk_IsOrphan",Qualified "CoreSyn" "IsOrphan"),(Qualified "CoreSyn" "Mk_RuleEnv",Qualified "CoreSyn" "RuleEnv"),(Qualified "CoreSyn" "NoScope",Qualified "CoreSyn" "TickishScoping"),(Qualified "CoreSyn" "NoUnfolding",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "NoVect",Qualified "CoreSyn" "CoreVect"),(Qualified "CoreSyn" "NonRec",Qualified "CoreSyn" "Bind"),(Qualified "CoreSyn" "NotOrphan",Qualified "CoreSyn" "IsOrphan"),(Qualified "CoreSyn" "OtherCon",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "PlaceCostCentre",Qualified "CoreSyn" "TickishPlacement"),(Qualified "CoreSyn" "PlaceNonLam",Qualified "CoreSyn" "TickishPlacement"),(Qualified "CoreSyn" "PlaceRuntime",Qualified "CoreSyn" "TickishPlacement"),(Qualified "CoreSyn" "Rec",Qualified "CoreSyn" "Bind"),(Qualified "CoreSyn" "Rule",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "SoftScope",Qualified "CoreSyn" "TickishScoping"),(Qualified "CoreSyn" "TB",Qualified "CoreSyn" "TaggedBndr"),(Qualified "CoreSyn" "Tick",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "Type_",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "UnfIfGoodArgs",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "UnfNever",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "UnfWhen",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "Var",Qualified "CoreSyn" "Expr"),(Qualified "CoreSyn" "Vect",Qualified "CoreSyn" "CoreVect"),(Qualified "CoreSyn" "VectClass",Qualified "CoreSyn" "CoreVect"),(Qualified "CoreSyn" "VectInst",Qualified "CoreSyn" "CoreVect"),(Qualified "CoreSyn" "VectType",Qualified "CoreSyn" "CoreVect")], _constructorFields = fromList [(Qualified "CoreSyn" "AnnApp",NonRecordFields 2),(Qualified "CoreSyn" "AnnCase",NonRecordFields 4),(Qualified "CoreSyn" "AnnCast",NonRecordFields 2),(Qualified "CoreSyn" "AnnCoercion",NonRecordFields 1),(Qualified "CoreSyn" "AnnLam",NonRecordFields 2),(Qualified "CoreSyn" "AnnLet",NonRecordFields 2),(Qualified "CoreSyn" "AnnLit",NonRecordFields 1),(Qualified "CoreSyn" "AnnNonRec",NonRecordFields 2),(Qualified "CoreSyn" "AnnRec",NonRecordFields 1),(Qualified "CoreSyn" "AnnTick",NonRecordFields 2),(Qualified "CoreSyn" "AnnType",NonRecordFields 1),(Qualified "CoreSyn" "AnnVar",NonRecordFields 1),(Qualified "CoreSyn" "App",NonRecordFields 2),(Qualified "CoreSyn" "BootUnfolding",NonRecordFields 0),(Qualified "CoreSyn" "BuiltinRule",RecordFields [Qualified "CoreSyn" "ru_name",Qualified "CoreSyn" "ru_fn",Qualified "CoreSyn" "ru_nargs",Qualified "CoreSyn" "ru_try"]),(Qualified "CoreSyn" "Case",NonRecordFields 4),(Qualified "CoreSyn" "Cast",NonRecordFields 2),(Qualified "CoreSyn" "Coercion",NonRecordFields 1),(Qualified "CoreSyn" "CoreUnfolding",RecordFields [Qualified "CoreSyn" "uf_tmpl",Qualified "CoreSyn" "uf_src",Qualified "CoreSyn" "uf_is_top",Qualified "CoreSyn" "uf_is_value",Qualified "CoreSyn" "uf_is_conlike",Qualified "CoreSyn" "uf_is_work_free",Qualified "CoreSyn" "uf_expandable",Qualified "CoreSyn" "uf_guidance"]),(Qualified "CoreSyn" "CostCentreScope",NonRecordFields 0),(Qualified "CoreSyn" "DEFAULT",NonRecordFields 0),(Qualified "CoreSyn" "DFunUnfolding",RecordFields [Qualified "CoreSyn" "df_bndrs",Qualified "CoreSyn" "df_con",Qualified "CoreSyn" "df_args"]),(Qualified "CoreSyn" "DataAlt",NonRecordFields 1),(Qualified "CoreSyn" "InlineCompulsory",NonRecordFields 0),(Qualified "CoreSyn" "InlineRhs",NonRecordFields 0),(Qualified "CoreSyn" "InlineStable",NonRecordFields 0),(Qualified "CoreSyn" "Lam",NonRecordFields 2),(Qualified "CoreSyn" "Let",NonRecordFields 2),(Qualified "CoreSyn" "Lit",NonRecordFields 1),(Qualified "CoreSyn" "LitAlt",NonRecordFields 1),(Qualified "CoreSyn" "Mk_IsOrphan",NonRecordFields 0),(Qualified "CoreSyn" "Mk_RuleEnv",RecordFields [Qualified "CoreSyn" "re_base",Qualified "CoreSyn" "re_visible_orphs"]),(Qualified "CoreSyn" "NoScope",NonRecordFields 0),(Qualified "CoreSyn" "NoUnfolding",NonRecordFields 0),(Qualified "CoreSyn" "NoVect",NonRecordFields 1),(Qualified "CoreSyn" "NonRec",NonRecordFields 2),(Qualified "CoreSyn" "NotOrphan",NonRecordFields 1),(Qualified "CoreSyn" "OtherCon",NonRecordFields 1),(Qualified "CoreSyn" "PlaceCostCentre",NonRecordFields 0),(Qualified "CoreSyn" "PlaceNonLam",NonRecordFields 0),(Qualified "CoreSyn" "PlaceRuntime",NonRecordFields 0),(Qualified "CoreSyn" "Rec",NonRecordFields 1),(Qualified "CoreSyn" "Rule",RecordFields [Qualified "CoreSyn" "ru_name",Qualified "CoreSyn" "ru_act",Qualified "CoreSyn" "ru_fn",Qualified "CoreSyn" "ru_rough",Qualified "CoreSyn" "ru_bndrs",Qualified "CoreSyn" "ru_args",Qualified "CoreSyn" "ru_rhs",Qualified "CoreSyn" "ru_auto",Qualified "CoreSyn" "ru_origin",Qualified "CoreSyn" "ru_orphan",Qualified "CoreSyn" "ru_local"]),(Qualified "CoreSyn" "SoftScope",NonRecordFields 0),(Qualified "CoreSyn" "TB",NonRecordFields 2),(Qualified "CoreSyn" "Tick",NonRecordFields 2),(Qualified "CoreSyn" "Type_",NonRecordFields 1),(Qualified "CoreSyn" "UnfIfGoodArgs",RecordFields [Qualified "CoreSyn" "ug_args",Qualified "CoreSyn" "ug_size",Qualified "CoreSyn" "ug_res"]),(Qualified "CoreSyn" "UnfNever",NonRecordFields 0),(Qualified "CoreSyn" "UnfWhen",RecordFields [Qualified "CoreSyn" "ug_arity",Qualified "CoreSyn" "ug_unsat_ok",Qualified "CoreSyn" "ug_boring_ok"]),(Qualified "CoreSyn" "Var",NonRecordFields 1),(Qualified "CoreSyn" "Vect",NonRecordFields 2),(Qualified "CoreSyn" "VectClass",NonRecordFields 1),(Qualified "CoreSyn" "VectInst",NonRecordFields 1),(Qualified "CoreSyn" "VectType",NonRecordFields 3)], _recordFieldTypes = fromList [(Qualified "CoreSyn" "df_args",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "df_bndrs",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "df_con",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "re_base",Qualified "CoreSyn" "RuleEnv"),(Qualified "CoreSyn" "re_visible_orphs",Qualified "CoreSyn" "RuleEnv"),(Qualified "CoreSyn" "ru_act",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_args",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_auto",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_bndrs",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_fn",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_local",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_name",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_nargs",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_origin",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_orphan",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_rhs",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_rough",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "ru_try",Qualified "CoreSyn" "CoreRule"),(Qualified "CoreSyn" "uf_expandable",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_guidance",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_is_conlike",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_is_top",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_is_value",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_is_work_free",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_src",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "uf_tmpl",Qualified "CoreSyn" "Unfolding"),(Qualified "CoreSyn" "ug_args",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "ug_arity",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "ug_boring_ok",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "ug_res",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "ug_size",Qualified "CoreSyn" "UnfoldingGuidance"),(Qualified "CoreSyn" "ug_unsat_ok",Qualified "CoreSyn" "UnfoldingGuidance")], _classDefns = fromList [], _defaultMethods = fromList []}
+constructors:
+  CoreSyn.CoreRule: ! '[Qualified "CoreSyn" "Rule",Qualified "CoreSyn" "BuiltinRule"]'
+  CoreSyn.RuleEnv: ! '[Qualified "CoreSyn" "Mk_RuleEnv"]'
+  CoreSyn.AltCon: ! '[Qualified "CoreSyn" "DataAlt",Qualified "CoreSyn" "LitAlt",Qualified
+    "CoreSyn" "DEFAULT"]'
+  CoreSyn.UnfoldingGuidance: ! '[Qualified "CoreSyn" "UnfWhen",Qualified "CoreSyn"
+    "UnfIfGoodArgs",Qualified "CoreSyn" "UnfNever"]'
+  CoreSyn.Bind: ! '[Qualified "CoreSyn" "NonRec",Qualified "CoreSyn" "Rec"]'
+  CoreSyn.AnnExpr': ! '[Qualified "CoreSyn" "AnnVar",Qualified "CoreSyn" "AnnLit",Qualified
+    "CoreSyn" "AnnLam",Qualified "CoreSyn" "AnnApp",Qualified "CoreSyn" "AnnCase",Qualified
+    "CoreSyn" "AnnLet",Qualified "CoreSyn" "AnnCast",Qualified "CoreSyn" "AnnTick",Qualified
+    "CoreSyn" "AnnType",Qualified "CoreSyn" "AnnCoercion"]'
+  CoreSyn.Unfolding: ! '[Qualified "CoreSyn" "NoUnfolding",Qualified "CoreSyn" "BootUnfolding",Qualified
+    "CoreSyn" "OtherCon",Qualified "CoreSyn" "DFunUnfolding",Qualified "CoreSyn" "CoreUnfolding"]'
+  CoreSyn.UnfoldingSource: ! '[Qualified "CoreSyn" "InlineRhs",Qualified "CoreSyn"
+    "InlineStable",Qualified "CoreSyn" "InlineCompulsory"]'
+  CoreSyn.CoreVect: ! '[Qualified "CoreSyn" "Vect",Qualified "CoreSyn" "NoVect",Qualified
+    "CoreSyn" "VectType",Qualified "CoreSyn" "VectClass",Qualified "CoreSyn" "VectInst"]'
+  CoreSyn.TickishScoping: ! '[Qualified "CoreSyn" "NoScope",Qualified "CoreSyn" "SoftScope",Qualified
+    "CoreSyn" "CostCentreScope"]'
+  CoreSyn.TaggedBndr: ! '[Qualified "CoreSyn" "TB"]'
+  CoreSyn.TickishPlacement: ! '[Qualified "CoreSyn" "PlaceRuntime",Qualified "CoreSyn"
+    "PlaceNonLam",Qualified "CoreSyn" "PlaceCostCentre"]'
+  CoreSyn.Expr: ! '[Qualified "CoreSyn" "Var",Qualified "CoreSyn" "Lit",Qualified
+    "CoreSyn" "App",Qualified "CoreSyn" "Lam",Qualified "CoreSyn" "Let",Qualified
+    "CoreSyn" "Case",Qualified "CoreSyn" "Cast",Qualified "CoreSyn" "Tick",Qualified
+    "CoreSyn" "Type_",Qualified "CoreSyn" "Coercion"]'
+  CoreSyn.IsOrphan: ! '[Qualified "CoreSyn" "Mk_IsOrphan",Qualified "CoreSyn" "NotOrphan"]'
+  CoreSyn.AnnBind: ! '[Qualified "CoreSyn" "AnnNonRec",Qualified "CoreSyn" "AnnRec"]'
+constructorFields:
+  CoreSyn.Let: NonRecordFields 2
+  CoreSyn.Tick: NonRecordFields 2
+  CoreSyn.AnnCase: NonRecordFields 4
+  CoreSyn.NoVect: NonRecordFields 1
+  CoreSyn.OtherCon: NonRecordFields 1
+  CoreSyn.UnfIfGoodArgs: RecordFields [Qualified "CoreSyn" "ug_args",Qualified "CoreSyn"
+    "ug_size",Qualified "CoreSyn" "ug_res"]
+  CoreSyn.TB: NonRecordFields 2
+  CoreSyn.VectInst: NonRecordFields 1
+  CoreSyn.InlineStable: NonRecordFields 0
+  CoreSyn.Vect: NonRecordFields 2
+  CoreSyn.AnnLet: NonRecordFields 2
+  CoreSyn.AnnCast: NonRecordFields 2
+  CoreSyn.SoftScope: NonRecordFields 0
+  CoreSyn.PlaceNonLam: NonRecordFields 0
+  CoreSyn.Lit: NonRecordFields 1
+  CoreSyn.UnfWhen: RecordFields [Qualified "CoreSyn" "ug_arity",Qualified "CoreSyn"
+    "ug_unsat_ok",Qualified "CoreSyn" "ug_boring_ok"]
+  CoreSyn.DataAlt: NonRecordFields 1
+  CoreSyn.Mk_IsOrphan: NonRecordFields 0
+  CoreSyn.AnnType: NonRecordFields 1
+  CoreSyn.AnnLam: NonRecordFields 2
+  CoreSyn.CoreUnfolding: RecordFields [Qualified "CoreSyn" "uf_tmpl",Qualified "CoreSyn"
+    "uf_src",Qualified "CoreSyn" "uf_is_top",Qualified "CoreSyn" "uf_is_value",Qualified
+    "CoreSyn" "uf_is_conlike",Qualified "CoreSyn" "uf_is_work_free",Qualified "CoreSyn"
+    "uf_expandable",Qualified "CoreSyn" "uf_guidance"]
+  CoreSyn.Mk_RuleEnv: RecordFields [Qualified "CoreSyn" "re_base",Qualified "CoreSyn"
+    "re_visible_orphs"]
+  CoreSyn.AnnNonRec: NonRecordFields 2
+  CoreSyn.UnfNever: NonRecordFields 0
+  CoreSyn.Type_: NonRecordFields 1
+  CoreSyn.NotOrphan: NonRecordFields 1
+  CoreSyn.AnnLit: NonRecordFields 1
+  CoreSyn.Coercion: NonRecordFields 1
+  CoreSyn.Lam: NonRecordFields 2
+  CoreSyn.Cast: NonRecordFields 2
+  CoreSyn.Var: NonRecordFields 1
+  CoreSyn.AnnRec: NonRecordFields 1
+  CoreSyn.Rule: RecordFields [Qualified "CoreSyn" "ru_name",Qualified "CoreSyn" "ru_act",Qualified
+    "CoreSyn" "ru_fn",Qualified "CoreSyn" "ru_rough",Qualified "CoreSyn" "ru_bndrs",Qualified
+    "CoreSyn" "ru_args",Qualified "CoreSyn" "ru_rhs",Qualified "CoreSyn" "ru_auto",Qualified
+    "CoreSyn" "ru_origin",Qualified "CoreSyn" "ru_orphan",Qualified "CoreSyn" "ru_local"]
+  CoreSyn.InlineCompulsory: NonRecordFields 0
+  CoreSyn.PlaceCostCentre: NonRecordFields 0
+  CoreSyn.NoScope: NonRecordFields 0
+  CoreSyn.DFunUnfolding: RecordFields [Qualified "CoreSyn" "df_bndrs",Qualified "CoreSyn"
+    "df_con",Qualified "CoreSyn" "df_args"]
+  CoreSyn.NoUnfolding: NonRecordFields 0
+  CoreSyn.NonRec: NonRecordFields 2
+  CoreSyn.DEFAULT: NonRecordFields 0
+  CoreSyn.AnnTick: NonRecordFields 2
+  CoreSyn.AnnVar: NonRecordFields 1
+  CoreSyn.BootUnfolding: NonRecordFields 0
+  CoreSyn.VectType: NonRecordFields 3
+  CoreSyn.Case: NonRecordFields 4
+  CoreSyn.Rec: NonRecordFields 1
+  CoreSyn.App: NonRecordFields 2
+  CoreSyn.AnnCoercion: NonRecordFields 1
+  CoreSyn.CostCentreScope: NonRecordFields 0
+  CoreSyn.VectClass: NonRecordFields 1
+  CoreSyn.BuiltinRule: RecordFields [Qualified "CoreSyn" "ru_name",Qualified "CoreSyn"
+    "ru_fn",Qualified "CoreSyn" "ru_nargs",Qualified "CoreSyn" "ru_try"]
+  CoreSyn.PlaceRuntime: NonRecordFields 0
+  CoreSyn.LitAlt: NonRecordFields 1
+  CoreSyn.InlineRhs: NonRecordFields 0
+  CoreSyn.AnnApp: NonRecordFields 2
+recordFieldTypes:
+  CoreSyn.ru_local: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.df_bndrs: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ug_res: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.uf_tmpl: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ug_arity: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.ug_args: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.uf_is_value: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.re_visible_orphs: Qualified "CoreSyn" "RuleEnv"
+  CoreSyn.ru_auto: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.ru_try: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.ru_args: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.df_con: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ug_size: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.ru_fn: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.re_base: Qualified "CoreSyn" "RuleEnv"
+  CoreSyn.ru_act: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.uf_src: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.uf_is_work_free: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ug_unsat_ok: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.ru_origin: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.ru_rhs: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.ru_bndrs: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.ug_boring_ok: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.ru_nargs: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.df_args: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ru_orphan: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.uf_is_top: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.uf_guidance: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ru_name: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.ru_rough: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.uf_expandable: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.uf_is_conlike: Qualified "CoreSyn" "Unfolding"
+constructorTypes:
+  CoreSyn.Let: Qualified "CoreSyn" "Expr"
+  CoreSyn.Tick: Qualified "CoreSyn" "Expr"
+  CoreSyn.AnnCase: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.NoVect: Qualified "CoreSyn" "CoreVect"
+  CoreSyn.OtherCon: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.UnfIfGoodArgs: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.TB: Qualified "CoreSyn" "TaggedBndr"
+  CoreSyn.VectInst: Qualified "CoreSyn" "CoreVect"
+  CoreSyn.InlineStable: Qualified "CoreSyn" "UnfoldingSource"
+  CoreSyn.Vect: Qualified "CoreSyn" "CoreVect"
+  CoreSyn.AnnLet: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.AnnCast: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.SoftScope: Qualified "CoreSyn" "TickishScoping"
+  CoreSyn.PlaceNonLam: Qualified "CoreSyn" "TickishPlacement"
+  CoreSyn.Lit: Qualified "CoreSyn" "Expr"
+  CoreSyn.UnfWhen: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.DataAlt: Qualified "CoreSyn" "AltCon"
+  CoreSyn.Mk_IsOrphan: Qualified "CoreSyn" "IsOrphan"
+  CoreSyn.AnnType: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.AnnLam: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.CoreUnfolding: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.Mk_RuleEnv: Qualified "CoreSyn" "RuleEnv"
+  CoreSyn.AnnNonRec: Qualified "CoreSyn" "AnnBind"
+  CoreSyn.UnfNever: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.Type_: Qualified "CoreSyn" "Expr"
+  CoreSyn.NotOrphan: Qualified "CoreSyn" "IsOrphan"
+  CoreSyn.AnnLit: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.Coercion: Qualified "CoreSyn" "Expr"
+  CoreSyn.Lam: Qualified "CoreSyn" "Expr"
+  CoreSyn.Cast: Qualified "CoreSyn" "Expr"
+  CoreSyn.Var: Qualified "CoreSyn" "Expr"
+  CoreSyn.AnnRec: Qualified "CoreSyn" "AnnBind"
+  CoreSyn.Rule: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.InlineCompulsory: Qualified "CoreSyn" "UnfoldingSource"
+  CoreSyn.PlaceCostCentre: Qualified "CoreSyn" "TickishPlacement"
+  CoreSyn.NoScope: Qualified "CoreSyn" "TickishScoping"
+  CoreSyn.DFunUnfolding: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.NoUnfolding: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.NonRec: Qualified "CoreSyn" "Bind"
+  CoreSyn.DEFAULT: Qualified "CoreSyn" "AltCon"
+  CoreSyn.AnnTick: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.AnnVar: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.BootUnfolding: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.VectType: Qualified "CoreSyn" "CoreVect"
+  CoreSyn.Case: Qualified "CoreSyn" "Expr"
+  CoreSyn.Rec: Qualified "CoreSyn" "Bind"
+  CoreSyn.App: Qualified "CoreSyn" "Expr"
+  CoreSyn.AnnCoercion: Qualified "CoreSyn" "AnnExpr'"
+  CoreSyn.CostCentreScope: Qualified "CoreSyn" "TickishScoping"
+  CoreSyn.VectClass: Qualified "CoreSyn" "CoreVect"
+  CoreSyn.BuiltinRule: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.PlaceRuntime: Qualified "CoreSyn" "TickishPlacement"
+  CoreSyn.LitAlt: Qualified "CoreSyn" "AltCon"
+  CoreSyn.InlineRhs: Qualified "CoreSyn" "UnfoldingSource"
+  CoreSyn.AnnApp: Qualified "CoreSyn" "AnnExpr'"

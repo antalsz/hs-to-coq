@@ -1,1 +1,1 @@
-lib/BasicTypes.v: 
+lib/BasicTypes.v: ../../base/GHC/Num.h2ci

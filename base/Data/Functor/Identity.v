@@ -83,7 +83,7 @@ Local Definition Foldable__Identity_sum
   fun {a} `{GHC.Num.Num a} => runIdentity.
 
 Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
-  fun {a} => fun arg_0__ => let 'Mk_Identity x := arg_0__ in cons x nil.
+  fun {a} => fun '(Mk_Identity x) => cons x nil.
 
 Program Instance Foldable__Identity : Data.Foldable.Foldable Identity :=
   fun _ k =>

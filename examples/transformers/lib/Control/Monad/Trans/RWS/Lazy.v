@@ -62,9 +62,7 @@ Local Definition Functor__RWST_fmap {inst_m} {inst_r} {inst_w} {inst_s}
   fun {a} {b} =>
     fun f m =>
       Mk_RWST (fun r s =>
-                 fmap (fun arg_0__ =>
-                         let 'pair (pair a s') w := arg_0__ in
-                         pair (pair (f a) s') w) (runRWST m r s)).
+                 fmap (fun '(pair (pair a s') w) => pair (pair (f a) s') w) (runRWST m r s)).
 
 Local Definition Functor__RWST_op_zlzd__ {inst_m} {inst_r} {inst_w} {inst_s}
   `{(Functor inst_m)}
@@ -355,8 +353,7 @@ Definition withRWS {r'} {s} {r} {w} {a}
 
 Definition writer {m} {a} {w} {r} {s} `{(Monad m)}
    : (a * w)%type -> RWST r w s m a :=
-  fun arg_0__ =>
-    let 'pair a w := arg_0__ in
+  fun '(pair a w) =>
     Mk_RWST (fun arg_1__ arg_2__ =>
                match arg_1__, arg_2__ with
                | _, s => return_ (pair (pair a s) w)

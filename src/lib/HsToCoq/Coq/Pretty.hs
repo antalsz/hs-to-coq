@@ -23,6 +23,7 @@ import HsToCoq.Util.Function
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Set as S
 
 import Data.List.NonEmpty (NonEmpty(), (<|), nonEmpty)
 
@@ -31,6 +32,7 @@ import Data.Data (Data(..))
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina.Orphans ()
 import HsToCoq.PrettyPrint
 
@@ -237,6 +239,19 @@ render_mutual_def def bodies notations =
 instance Gallina Term where
   renderGallina' p (Forall vars body) = maybeParen (p > forallPrec) $
     group $ "forall" <+> render_args V vars <> "," <!> renderGallina body
+
+  -- Special case: Fun followed by a case with one pattern can use refutable syntax
+  renderGallina' p (Fun vars (Match scruts Nothing [Equation mps body]))
+    | check (toList vars) (toList scruts)
+    , Just pats <- mapM (\mp -> do {MultPattern [pat] <- pure mp; pure pat}) mps
+    = maybeParen (p > funPrec) $
+      group $ "fun" <+> hcat (fmap (("'"<>) . parens . renderGallina) pats)
+                    <+> nest 2 ("=>" <!> renderGallina' funPrec body)
+    where fvs = getFreeVars body
+          check (Inferred Explicit (Ident name) : vars) (MatchItem (Qualid v) Nothing Nothing:ss)
+              = v `S.notMember` fvs  && name == v  && check vars ss
+          check [] [] = True
+          check _ _ = False
 
   renderGallina' p (Fun vars body) = maybeParen (p > funPrec) $
     group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina' funPrec body)

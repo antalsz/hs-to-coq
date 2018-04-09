@@ -127,7 +127,7 @@ Local Definition Foldable__FieldLbl_length
                                  end) #0.
 
 Local Definition Foldable__FieldLbl_null : forall {a}, FieldLbl a -> bool :=
-  fun {a} => fun arg_0__ => let 'Mk_FieldLabel _ _ _ := arg_0__ in false.
+  fun {a} => fun '(Mk_FieldLabel _ _ _) => false.
 
 Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl :=
   fun _ k =>

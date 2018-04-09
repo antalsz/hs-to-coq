@@ -197,13 +197,11 @@ Definition mkRnEnv2 : InScopeSet -> RnEnv2 :=
   fun vars => RV2 emptyVarEnv emptyVarEnv vars.
 
 Definition nukeRnEnvL : RnEnv2 -> RnEnv2 :=
-  fun env =>
-    let 'RV2 envL_0__ envR_1__ in_scope_2__ := env in
+  fun '(RV2 envL_0__ envR_1__ in_scope_2__) =>
     RV2 emptyVarEnv envR_1__ in_scope_2__.
 
 Definition nukeRnEnvR : RnEnv2 -> RnEnv2 :=
-  fun env =>
-    let 'RV2 envL_0__ envR_1__ in_scope_2__ := env in
+  fun '(RV2 envL_0__ envR_1__ in_scope_2__) =>
     RV2 envL_0__ emptyVarEnv in_scope_2__.
 
 Definition emptyTidyEnv : TidyEnv :=
@@ -322,7 +320,7 @@ Definition foldDVarEnv {a} {b} : (a -> b -> b) -> b -> DVarEnv a -> b :=
   UniqDFM.foldUDFM.
 
 Definition getInScopeVars : InScopeSet -> VarSet.VarSet :=
-  fun arg_0__ => let 'InScope vs _ := arg_0__ in vs.
+  fun '(InScope vs _) => vs.
 
 Definition isEmptyDVarEnv {a} : DVarEnv a -> bool :=
   UniqDFM.isNullUDFM.
@@ -481,7 +479,7 @@ Definition rnInScopeSet : RnEnv2 -> InScopeSet :=
   in_scope.
 
 Definition rnSwap : RnEnv2 -> RnEnv2 :=
-  fun arg_0__ => let 'RV2 envL envR in_scope := arg_0__ in RV2 envR envL in_scope.
+  fun '(RV2 envL envR in_scope) => RV2 envR envL in_scope.
 
 Definition unionInScope : InScopeSet -> InScopeSet -> InScopeSet :=
   fun arg_0__ arg_1__ =>

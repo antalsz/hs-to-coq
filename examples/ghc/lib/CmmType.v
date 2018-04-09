@@ -264,7 +264,7 @@ Definition mrStr : Width -> FastString.LitString :=
     end.
 
 Definition typeWidth : CmmType -> Width :=
-  fun arg_0__ => let 'Mk_CmmType _ w := arg_0__ in w.
+  fun '(Mk_CmmType _ w) => w.
 
 Definition vecLength : CmmType -> Length :=
   fun arg_0__ =>

@@ -247,13 +247,13 @@ Definition pLiftSnd {a} : (a -> a) -> Pair a -> Pair a :=
     end.
 
 Definition swap {a} : Pair a -> Pair a :=
-  fun arg_0__ => let 'Mk_Pair x y := arg_0__ in Mk_Pair y x.
+  fun '(Mk_Pair x y) => Mk_Pair y x.
 
 Definition toPair {a} : (a * a)%type -> Pair a :=
-  fun arg_0__ => let 'pair x y := arg_0__ in Mk_Pair x y.
+  fun '(pair x y) => Mk_Pair x y.
 
 Definition unPair {a} : Pair a -> (a * a)%type :=
-  fun arg_0__ => let 'Mk_Pair x y := arg_0__ in pair x y.
+  fun '(Mk_Pair x y) => pair x y.
 
 (* External variables:
      bool false list op_zt__ pair true Coq.Program.Basics.compose

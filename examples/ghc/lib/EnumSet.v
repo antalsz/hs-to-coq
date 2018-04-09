@@ -59,9 +59,7 @@ Definition member {a} `{GHC.Enum.Enum a} : a -> EnumSet a -> bool :=
     end.
 
 Definition toList {a} `{GHC.Enum.Enum a} : EnumSet a -> list a :=
-  fun arg_0__ =>
-    let 'Mk_EnumSet s := arg_0__ in
-    GHC.Base.map toEnumN (Data.IntSet.Internal.toList s).
+  fun '(Mk_EnumSet s) => GHC.Base.map toEnumN (Data.IntSet.Internal.toList s).
 
 (* External variables:
      Type bool fromEnumN list toEnumN Data.IntSet.Internal.IntSet

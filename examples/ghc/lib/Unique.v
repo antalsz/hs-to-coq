@@ -76,7 +76,7 @@ Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
          GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
 
 Definition getKey : Unique -> GHC.Num.Int :=
-  fun arg_0__ => let 'MkUnique x := arg_0__ in x.
+  fun '(MkUnique x) => x.
 
 Definition getWordKey : Unique -> GHC.Num.Word :=
   fun u => Coq.ZArith.BinInt.Z.to_N (getKey u).
@@ -85,7 +85,7 @@ Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
   fun x k => getUnique x GHC.Base.== k.
 
 Definition incrUnique : Unique -> Unique :=
-  fun arg_0__ => let 'MkUnique i := arg_0__ in MkUnique (i GHC.Num.+ #1).
+  fun '(MkUnique i) => MkUnique (i GHC.Num.+ #1).
 
 Definition tyConRepNameUnique : Unique -> Unique :=
   fun u => incrUnique u.
@@ -136,8 +136,7 @@ Definition uniqueMask : GHC.Num.Int :=
   (Data.Bits.shiftL #1 uNIQUE_BITS) GHC.Num.- #1.
 
 Definition unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int)%type :=
-  fun arg_0__ =>
-    let 'MkUnique u := arg_0__ in
+  fun '(MkUnique u) =>
     let i := u Data.Bits..&.(**) uniqueMask in
     let tag := GHC.Char.chr (Data.Bits.shiftR u uNIQUE_BITS) in pair tag i.
 

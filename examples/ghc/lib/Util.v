@@ -268,7 +268,7 @@ Definition fst3 {a} {d} {b} {c}
     end.
 
 Definition fstOf3 {a} {b} {c} : (a * b * c)%type -> a :=
-  fun arg_0__ => let 'pair (pair a _) _ := arg_0__ in a.
+  fun '(pair (pair a _) _) => a.
 
 Definition ghciSupported : bool :=
   false.
@@ -277,7 +277,7 @@ Definition ghciTablesNextToCode : bool :=
   false.
 
 Definition isDarwinHost : bool :=
-  true.
+  false.
 
 Definition isEqual : comparison -> bool :=
   fun arg_0__ => match arg_0__ with | Gt => false | Eq => true | Lt => false end.
@@ -444,7 +444,7 @@ Definition snd3 {b} {d} {a} {c}
     end.
 
 Definition sndOf3 {a} {b} {c} : (a * b * c)%type -> b :=
-  fun arg_0__ => let 'pair (pair _ b) _ := arg_0__ in b.
+  fun '(pair (pair _ b) _) => b.
 
 Definition snocView {a} : list a -> option (list a * a)%type :=
   fun arg_0__ =>
@@ -528,7 +528,7 @@ Definition takeList {b} {a} : list b -> list a -> list a :=
            end.
 
 Definition thdOf3 {a} {b} {c} : (a * b * c)%type -> c :=
-  fun arg_0__ => let 'pair (pair _ _) c := arg_0__ in c.
+  fun '(pair (pair _ _) c) => c.
 
 Definition thenCmp : comparison -> comparison -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -571,8 +571,7 @@ Definition uncurry3 {a} {b} {c} {d}
 
 Definition unzipWith {a} {b} {c}
    : (a -> b -> c) -> list (a * b)%type -> list c :=
-  fun f pairs =>
-    GHC.Base.map (fun arg_0__ => let 'pair a b := arg_0__ in f a b) pairs.
+  fun f pairs => GHC.Base.map (fun '(pair a b) => f a b) pairs.
 
 Definition zipEqual {a} {b}
    : GHC.Base.String -> list a -> list b -> list (a * b)%type :=

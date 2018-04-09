@@ -333,8 +333,7 @@ Program Instance MonadTrans__MaybeT
 
 Definition exceptToMaybeT {m} {e} {a} `{(GHC.Base.Functor m)}
    : Control.Monad.Trans.Except.ExceptT e m a -> MaybeT m a :=
-  fun arg_0__ =>
-    let 'Control.Monad.Trans.Except.Mk_ExceptT m := arg_0__ in
+  fun '(Control.Monad.Trans.Except.Mk_ExceptT m) =>
     Mk_MaybeT (GHC.Base.fmap (Data.Either.either (GHC.Base.const None) Some) m).
 
 Definition liftCallCC {m} {a} {b}

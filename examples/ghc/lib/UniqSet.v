@@ -33,7 +33,7 @@ Definition getUniqSet' {a} (arg_0__ : UniqSet a) :=
 
 Instance Unpeel_UniqSet ele
    : GHC.Prim.Unpeel (UniqSet ele) (UniqFM.UniqFM ele) :=
-  GHC.Prim.Build_Unpeel _ _ (fun x => let 'Mk_UniqSet y := x in y) Mk_UniqSet.
+  GHC.Prim.Build_Unpeel _ _ (fun '(Mk_UniqSet y) => y) Mk_UniqSet.
 
 (* Skipping instance Eq___UniqSet *)
 
@@ -146,7 +146,7 @@ Definition intersectUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
     end.
 
 Definition isEmptyUniqSet {a} : UniqSet a -> bool :=
-  fun arg_0__ => let 'Mk_UniqSet s := arg_0__ in UniqFM.isNullUFM s.
+  fun '(Mk_UniqSet s) => UniqFM.isNullUFM s.
 
 Definition lookupUniqSet {a} {b} `{Unique.Uniquable a}
    : UniqSet b -> a -> option b :=
@@ -207,7 +207,7 @@ Definition restrictUniqSetToUFM {a} {b}
     end.
 
 Definition sizeUniqSet {a} : UniqSet a -> GHC.Num.Int :=
-  fun arg_0__ => let 'Mk_UniqSet s := arg_0__ in UniqFM.sizeUFM s.
+  fun '(Mk_UniqSet s) => UniqFM.sizeUFM s.
 
 Definition unionUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
   fun arg_0__ arg_1__ =>

@@ -235,9 +235,7 @@ Definition filterUDFM {elt} : (elt -> bool) -> UniqDFM elt -> UniqDFM elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | p, UDFM m i =>
-        UDFM (Data.IntMap.Internal.filter (fun arg_2__ =>
-                                             let 'Mk_TaggedVal v _ := arg_2__ in
-                                             p v) m) i
+        UDFM (Data.IntMap.Internal.filter (fun '(Mk_TaggedVal v _) => p v) m) i
     end.
 
 Definition filterUDFM_Directly {elt}
@@ -260,7 +258,7 @@ Definition intersectUDFM {elt} : UniqDFM elt -> UniqDFM elt -> UniqDFM elt :=
     end.
 
 Definition isNullUDFM {elt} : UniqDFM elt -> bool :=
-  fun arg_0__ => let 'UDFM m _ := arg_0__ in Data.IntMap.Internal.null m.
+  fun '(UDFM m _) => Data.IntMap.Internal.null m.
 
 Definition intersectsUDFM {elt} : UniqDFM elt -> UniqDFM elt -> bool :=
   fun x y => isNullUDFM (intersectUDFM x y).
@@ -280,16 +278,13 @@ Definition minusUDFM {elt1} {elt2}
     end.
 
 Definition sizeUDFM {elt} : UniqDFM elt -> GHC.Num.Int :=
-  fun um =>
-    let 'UDFM m _ := um in
-    Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m).
+  fun '(UDFM m _) => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m).
 
 Definition taggedFst {val} : TaggedVal val -> val :=
-  fun arg_0__ => let 'Mk_TaggedVal v _ := arg_0__ in v.
+  fun '(Mk_TaggedVal v _) => v.
 
 Definition udfmToUfm {elt} : UniqDFM elt -> UniqFM.UniqFM elt :=
-  fun arg_0__ =>
-    let 'UDFM m _i := arg_0__ in
+  fun '(UDFM m _i) =>
     UniqFM.listToUFM_Directly (let cont_1__ arg_2__ :=
                                  let 'pair k tv := arg_2__ in
                                  cons (pair (Unique.getUnique k) (taggedFst tv)) nil in
@@ -345,11 +340,10 @@ Definition allUDFM {elt} : (elt -> bool) -> UniqDFM elt -> bool :=
     end.
 
 Definition taggedSnd {val} : TaggedVal val -> GHC.Num.Int :=
-  fun arg_0__ => let 'Mk_TaggedVal _ i := arg_0__ in i.
+  fun '(Mk_TaggedVal _ i) => i.
 
 Definition udfmToList {elt} : UniqDFM elt -> list (Unique.Unique * elt)%type :=
-  fun arg_0__ =>
-    let 'UDFM m _i := arg_0__ in
+  fun '(UDFM m _i) =>
     let cont_1__ arg_2__ :=
       let 'pair k v := arg_2__ in
       cons (pair (Unique.getUnique k) (taggedFst v)) nil in
@@ -404,8 +398,7 @@ Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
          GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
 
 Definition eltsUDFM {elt} : UniqDFM elt -> list elt :=
-  fun arg_0__ =>
-    let 'UDFM m _i := arg_0__ in
+  fun '(UDFM m _i) =>
     GHC.Base.map taggedFst (Data.OldList.sortBy (Data.Function.on GHC.Base.compare
                                                                   taggedSnd) (Data.IntMap.Internal.elems m)).
 

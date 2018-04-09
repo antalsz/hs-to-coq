@@ -496,8 +496,7 @@ Definition addDemand : Demand -> DmdType -> DmdType :=
     end.
 
 Definition argOneShots : Demand -> list BasicTypes.OneShotInfo :=
-  fun arg_0__ =>
-    let 'JD _ usg := arg_0__ in
+  fun '(JD _ usg) =>
     let fix go arg_1__
               := match arg_1__ with
                  | UCall One u => cons BasicTypes.OneShotLam (go u)
@@ -616,9 +615,7 @@ Definition getUseDmd {s} {u} : JointDmd s u -> u :=
   ud.
 
 Definition hasDemandEnvSig : StrictSig -> bool :=
-  fun arg_0__ =>
-    let 'Mk_StrictSig (Mk_DmdType env _ _) := arg_0__ in
-    negb (VarEnv.isEmptyVarEnv env).
+  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (VarEnv.isEmptyVarEnv env).
 
 Definition isAbsDmd : Demand -> bool :=
   fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
@@ -632,9 +629,7 @@ Definition isBotRes : DmdResult -> bool :=
     end.
 
 Definition isBottomingSig : StrictSig -> bool :=
-  fun arg_0__ =>
-    let 'Mk_StrictSig (Mk_DmdType _ _ res) := arg_0__ in
-    isBotRes res.
+  fun '(Mk_StrictSig (Mk_DmdType _ _ res)) => isBotRes res.
 
 Definition appIsBottom : StrictSig -> GHC.Num.Int -> bool :=
   fun arg_0__ arg_1__ =>
@@ -651,7 +646,7 @@ Definition isLazy : ArgStr -> bool :=
   fun arg_0__ => match arg_0__ with | Lazy => true | Mk_Str _ _ => false end.
 
 Definition isWeakDmd : Demand -> bool :=
-  fun arg_0__ => let 'JD s a := arg_0__ in andb (isLazy s) (isUsedMU a).
+  fun '(JD s a) => andb (isLazy s) (isUsedMU a).
 
 Definition mkSProd : list ArgStr -> StrDmd :=
   fun sx =>
@@ -694,7 +689,7 @@ Definition isTopDmdType : DmdType -> bool :=
     end.
 
 Definition isTopSig : StrictSig -> bool :=
-  fun arg_0__ => let 'Mk_StrictSig ty := arg_0__ in isTopDmdType ty.
+  fun '(Mk_StrictSig ty) => isTopDmdType ty.
 
 Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
   fun dflags =>
@@ -806,7 +801,7 @@ Definition mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType :=
   fun fv ds res => Mk_DmdType fv ds res.
 
 Definition mkHeadStrict : CleanDemand -> CleanDemand :=
-  fun cd => let 'JD sd_0__ ud_1__ := cd in JD HeadStr ud_1__.
+  fun '(JD sd_0__ ud_1__) => JD HeadStr ud_1__.
 
 Definition mkJointDmd {s} {u} : s -> u -> JointDmd s u :=
   fun s u => JD s u.
@@ -816,10 +811,10 @@ Definition mkJointDmds {s} {u} : list s -> list u -> list (JointDmd s u) :=
     Util.zipWithEqual (GHC.Base.hs_string__ "mkJointDmds") mkJointDmd ss as_.
 
 Definition mkManyUsedDmd : CleanDemand -> Demand :=
-  fun arg_0__ => let 'JD s a := arg_0__ in JD (Mk_Str VanStr s) (Mk_Use Many a).
+  fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use Many a).
 
 Definition mkOnceUsedDmd : CleanDemand -> Demand :=
-  fun arg_0__ => let 'JD s a := arg_0__ in JD (Mk_Str VanStr s) (Mk_Use One a).
+  fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use One a).
 
 Definition mkSCall : StrDmd -> StrDmd :=
   fun arg_0__ => match arg_0__ with | HyperStr => HyperStr | s => SCall s end.
@@ -831,15 +826,13 @@ Definition mkClosedStrictSig : list Demand -> DmdResult -> StrictSig :=
   fun ds res => mkStrictSig (Mk_DmdType emptyDmdEnv ds res).
 
 Definition zapUsageEnvSig : StrictSig -> StrictSig :=
-  fun arg_0__ =>
-    let 'Mk_StrictSig (Mk_DmdType _ ds r) := arg_0__ in
-    mkClosedStrictSig ds r.
+  fun '(Mk_StrictSig (Mk_DmdType _ ds r)) => mkClosedStrictSig ds r.
 
 Definition mkUCall : Count -> UseDmd -> UseDmd :=
   fun c a => UCall c a.
 
 Definition mkCallDmd : CleanDemand -> CleanDemand :=
-  fun arg_0__ => let 'JD d u := arg_0__ in JD (mkSCall d) (mkUCall One u).
+  fun '(JD d u) => JD (mkSCall d) (mkUCall One u).
 
 Definition mkUProd : list ArgUse -> UseDmd :=
   fun ux =>
@@ -859,8 +852,7 @@ Definition oneifyDmd : Demand -> Demand :=
     end.
 
 Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
-  fun arg_0__ =>
-    let 'JD s u := arg_0__ in
+  fun '(JD s u) =>
     let 'pair u' us := (match u with
                           | UCall c u' => pair u' (Mk_Use c tt)
                           | _ => pair Used (Mk_Use Many tt)
@@ -952,9 +944,7 @@ Definition seqUseDmd : UseDmd -> unit :=
   fun x => tt.
 
 Definition splitStrictSig : StrictSig -> (list Demand * DmdResult)%type :=
-  fun arg_0__ =>
-    let 'Mk_StrictSig (Mk_DmdType _ dmds res) := arg_0__ in
-    pair dmds res.
+  fun '(Mk_StrictSig (Mk_DmdType _ dmds res)) => pair dmds res.
 
 Definition strBot : ArgStr :=
   Mk_Str VanStr HyperStr.
@@ -984,11 +974,10 @@ Definition strictApply1Dmd : Demand :=
   JD (Mk_Str VanStr (SCall HeadStr)) (Mk_Use Many (UCall One Used)).
 
 Definition strictSigDmdEnv : StrictSig -> DmdEnv :=
-  fun arg_0__ => let 'Mk_StrictSig (Mk_DmdType env _ _) := arg_0__ in env.
+  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => env.
 
 Definition strictenDmd : Demand -> CleanDemand :=
-  fun arg_0__ =>
-    let 'JD s u := arg_0__ in
+  fun '(JD s u) =>
     let poke_u :=
       fun arg_1__ => match arg_1__ with | Abs => UHead | Mk_Use _ u => u end in
     let poke_s :=
@@ -996,8 +985,7 @@ Definition strictenDmd : Demand -> CleanDemand :=
     JD (poke_s s) (poke_u u).
 
 Definition toBothDmdArg : DmdType -> BothDmdArg :=
-  fun arg_0__ =>
-    let 'Mk_DmdType fv _ r := arg_0__ in
+  fun '(Mk_DmdType fv _ r) =>
     let go :=
       fun arg_1__ =>
         match arg_1__ with
@@ -1065,12 +1053,7 @@ Definition useCount {u} : Use u -> Count :=
     end.
 
 Definition isUsedOnce : Demand -> bool :=
-  fun arg_0__ =>
-    let 'JD _ a := arg_0__ in
-    match useCount a with
-    | One => true
-    | Many => false
-    end.
+  fun '(JD _ a) => match useCount a with | One => true | Many => false end.
 
 Definition useTop : ArgUse :=
   Mk_Use Many Used.
@@ -1097,8 +1080,7 @@ Definition zapUsedOnceDemand : Demand -> Demand :=
   kill_usage (Mk_KillFlags false true false).
 
 Definition zapUsedOnceSig : StrictSig -> StrictSig :=
-  fun arg_0__ =>
-    let 'Mk_StrictSig (Mk_DmdType env ds r) := arg_0__ in
+  fun '(Mk_StrictSig (Mk_DmdType env ds r)) =>
     Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
 
 Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
@@ -1178,7 +1160,7 @@ Definition nopSig : StrictSig :=
   Mk_StrictSig nopDmdType.
 
 Definition dmdTypeDepth : DmdType -> BasicTypes.Arity :=
-  fun arg_0__ => let 'Mk_DmdType _ ds _ := arg_0__ in Data.Foldable.length ds.
+  fun '(Mk_DmdType _ ds _) => Data.Foldable.length ds.
 
 Definition ensureArgs (n : BasicTypes.Arity) (d : DmdType) : DmdType :=
   let 'Mk_DmdType fv ds r := d in
@@ -1205,8 +1187,7 @@ Definition lubDmdType : DmdType -> DmdType -> DmdType :=
     let lub_res := lubDmdResult r1 r2 in Mk_DmdType lub_fv lub_ds lub_res.
 
 Definition deferAfterIO : DmdType -> DmdType :=
-  fun arg_0__ =>
-    let '(Mk_DmdType _ _ res as d) := arg_0__ in
+  fun '((Mk_DmdType _ _ res as d)) =>
     let defer_res :=
       fun arg_1__ => match arg_1__ with | (Dunno _ as r) => r | _ => topRes end in
     let 'Mk_DmdType fv ds _ := lubDmdType d nopDmdType in
@@ -1229,8 +1210,7 @@ Definition splitUseProdDmd (n : GHC.Num.Int) (u : UseDmd)
   end.
 
 Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
-  fun arg_0__ =>
-    let 'JD s u := arg_0__ in
+  fun '(JD s u) =>
     let scrut_1__ := pair s u in
     let j_3__ :=
       match scrut_1__ with

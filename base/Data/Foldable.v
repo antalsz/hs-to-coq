@@ -306,9 +306,7 @@ Program Instance Foldable__list : Foldable list :=
 Local Definition Foldable__NonEmpty_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, GHC.Base.NonEmpty m -> m :=
   fun {m} `{GHC.Base.Monoid m} =>
-    fun arg_0__ =>
-      let 'GHC.Base.NEcons m ms := arg_0__ in
-      GHC.Base.mappend m (fold ms).
+    fun '(GHC.Base.NEcons m ms) => GHC.Base.mappend m (fold ms).
 
 Local Definition Foldable__NonEmpty_foldMap
    : forall {m} {a},
@@ -367,14 +365,11 @@ Local Definition Foldable__NonEmpty_foldl'
 
 Local Definition Foldable__NonEmpty_length
    : forall {a}, GHC.Base.NonEmpty a -> GHC.Num.Int :=
-  fun {a} =>
-    fun arg_0__ =>
-      let 'GHC.Base.NEcons _ as_ := arg_0__ in
-      #1 GHC.Num.+ GHC.List.length as_.
+  fun {a} => fun '(GHC.Base.NEcons _ as_) => #1 GHC.Num.+ GHC.List.length as_.
 
 Local Definition Foldable__NonEmpty_toList
    : forall {a}, GHC.Base.NonEmpty a -> list a :=
-  fun {a} => fun arg_0__ => let 'GHC.Base.NEcons a as_ := arg_0__ in cons a as_.
+  fun {a} => fun '(GHC.Base.NEcons a as_) => cons a as_.
 
 Program Instance Foldable__NonEmpty : Foldable GHC.Base.NonEmpty :=
   fun _ k =>
@@ -687,8 +682,7 @@ Local Definition Foldable__Dual_sum
 
 Local Definition Foldable__Dual_toList
    : forall {a}, Data.SemigroupInternal.Dual a -> list a :=
-  fun {a} =>
-    fun arg_0__ => let 'Data.SemigroupInternal.Mk_Dual x := arg_0__ in cons x nil.
+  fun {a} => fun '(Data.SemigroupInternal.Mk_Dual x) => cons x nil.
 
 Program Instance Foldable__Dual : Foldable Data.SemigroupInternal.Dual :=
   fun _ k =>
@@ -751,8 +745,7 @@ Local Definition Foldable__Sum_sum
 
 Local Definition Foldable__Sum_toList
    : forall {a}, Data.SemigroupInternal.Sum a -> list a :=
-  fun {a} =>
-    fun arg_0__ => let 'Data.SemigroupInternal.Mk_Sum x := arg_0__ in cons x nil.
+  fun {a} => fun '(Data.SemigroupInternal.Mk_Sum x) => cons x nil.
 
 Program Instance Foldable__Sum : Foldable Data.SemigroupInternal.Sum :=
   fun _ k =>
@@ -821,10 +814,7 @@ Local Definition Foldable__Product_sum
 
 Local Definition Foldable__Product_toList
    : forall {a}, Data.SemigroupInternal.Product a -> list a :=
-  fun {a} =>
-    fun arg_0__ =>
-      let 'Data.SemigroupInternal.Mk_Product x := arg_0__ in
-      cons x nil.
+  fun {a} => fun '(Data.SemigroupInternal.Mk_Product x) => cons x nil.
 
 Program Instance Foldable__Product : Foldable Data.SemigroupInternal.Product :=
   fun _ k =>

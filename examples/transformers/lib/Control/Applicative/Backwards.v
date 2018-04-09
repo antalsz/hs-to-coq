@@ -262,14 +262,12 @@ Local Definition Foldable__Backwards_foldl' {inst_f} `{(Data.Foldable.Foldable
 Local Definition Foldable__Backwards_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (Backwards inst_f) a -> GHC.Num.Int :=
-  fun {a} =>
-    fun arg_0__ => let 'Mk_Backwards t := arg_0__ in Data.Foldable.length t.
+  fun {a} => fun '(Mk_Backwards t) => Data.Foldable.length t.
 
 Local Definition Foldable__Backwards_null {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (Backwards inst_f) a -> bool :=
-  fun {a} =>
-    fun arg_0__ => let 'Mk_Backwards t := arg_0__ in Data.Foldable.null t.
+  fun {a} => fun '(Mk_Backwards t) => Data.Foldable.null t.
 
 Program Instance Foldable__Backwards {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (Backwards f) :=
@@ -295,8 +293,7 @@ Local Definition Traversable__Backwards_sequenceA {inst_f}
      forall `{GHC.Base.Applicative f},
      (Backwards inst_f) (f a) -> f ((Backwards inst_f) a) :=
   fun {f} {a} `{GHC.Base.Applicative f} =>
-    fun arg_0__ =>
-      let 'Mk_Backwards t := arg_0__ in
+    fun '(Mk_Backwards t) =>
       GHC.Base.fmap Mk_Backwards (Data.Traversable.sequenceA t).
 
 Local Definition Traversable__Backwards_sequence {inst_f}

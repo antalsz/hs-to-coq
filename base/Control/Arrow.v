@@ -205,7 +205,7 @@ Program Instance Functor__ArrowMonad {a} `{Arrow a}
 
 Local Definition ArrowApply__arrow_app
    : forall {b} {c}, GHC.Prim.arrow (GHC.Prim.arrow b c * b)%type c :=
-  fun {b} {c} => fun arg_0__ => let 'pair f x := arg_0__ in f x.
+  fun {b} {c} => fun '(pair f x) => f x.
 
 (* Skipping instance ArrowApply__Kleisli *)
 

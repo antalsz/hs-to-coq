@@ -84,8 +84,7 @@ Definition exitify
                                           let j_22__ :=
                                             match arg_1__, arg_2__ with
                                             | captured, pair _ (CoreSyn.AnnCase scrut bndr ty alts) =>
-                                                Data.Traversable.forM alts (fun arg_5__ =>
-                                                                              let 'pair (pair dc pats) rhs := arg_5__ in
+                                                Data.Traversable.forM alts (fun '(pair (pair dc pats) rhs) =>
                                                                               go (Coq.Init.Datatypes.app captured
                                                                                                          (Coq.Init.Datatypes.app
                                                                                                           (cons bndr
@@ -110,8 +109,7 @@ Definition exitify
                                                   | CoreSyn.AnnRec pairs =>
                                                       if Id.isJoinId (Data.Tuple.fst (Panic.head pairs)) : bool
                                                       then let js := GHC.Base.map Data.Tuple.fst pairs in
-                                                           Data.Traversable.forM pairs (fun arg_12__ =>
-                                                                                          let 'pair j rhs := arg_12__ in
+                                                           Data.Traversable.forM pairs (fun '(pair j rhs) =>
                                                                                           let join_arity :=
                                                                                             Id.idJoinArity j in
                                                                                           let 'pair params join_body :=
@@ -198,8 +196,7 @@ Definition exitify
                                       end) in
     let ann_pairs := GHC.Base.map (Data.Bifunctor.second CoreFVs.freeVars) pairs in
     let 'pair pairs' exits := (fun arg_41__ => State.runState arg_41__ nil)
-                                (Data.Traversable.forM ann_pairs (fun arg_42__ =>
-                                                          let 'pair x rhs := arg_42__ in
+                                (Data.Traversable.forM ann_pairs (fun '(pair x rhs) =>
                                                           let 'pair args body := CoreSyn.collectNAnnBndrs
                                                                                    (Id.idJoinArity x) rhs in
                                                           go args body GHC.Base.>>=

@@ -26,17 +26,21 @@ module HsToCoq.ConvertHaskell.TypeInfo
     , isConstructor
     ) where
 
-import Control.Lens
+import Control.Lens hiding (use)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Control.Monad.State
-import Control.Monad.Trans.Reader
+import Control.Monad
+import Control.Monad.Trans
+import Control.Monad.Reader.Class
+import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import Control.Monad.Trans.Counter
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Writer
+import Data.IORef
 import Data.Maybe
+import Data.Monoid
 import Data.Foldable
 import Text.Read (readMaybe)
 import qualified Data.Text as T
@@ -95,7 +99,7 @@ builtIns = TypeInfo {..}
   where
     _searchPaths       = []
     _processedModules  = S.empty
-    _loadStatus    = M.empty
+    _loadStatus        = M.empty
 
     _constructors      = M.fromList [ (t, [d | (d,_) <- ds]) | (t,ds) <- builtInDataCons]
     _constructorTypes  = M.fromList [ (d, t) | (t,ds) <- builtInDataCons, (d,_) <- ds ]
@@ -109,7 +113,7 @@ emptyTypeInfo = TypeInfo {..}
   where
     _searchPaths       = []
     _processedModules  = S.empty
-    _loadStatus    = M.empty
+    _loadStatus        = M.empty
 
     _constructors      = M.empty
     _constructorTypes  = M.empty
@@ -136,13 +140,32 @@ typeInfoFields =
     , AField "defaultMethods"    defaultMethods
     ]
 
-newtype TypeInfoT m a = TypeInfoT (StateT TypeInfo m a)
+-- We use a ReaderT with an IORef rather than a StateMonad
+-- so that the state (which is mostly a cache) survives error handling
+-- in the rest of the application
+newtype TypeInfoT m a = TypeInfoT (ReaderT (IORef TypeInfo) m a)
   deriving ( Functor, Applicative, Monad, MonadIO, ExceptionMonad
            , HasDynFlags, MonadTrans)
 
-addIface :: Monad m => TypeInfo -> TypeInfoT m ()
-addIface newInfo = TypeInfoT $ mapM_ go typeInfoFields
-  where go (AField _ lens) = lens %= (M.union (newInfo ^. lens))
+get :: (MonadReader (IORef r) m, MonadIO m) => m r
+get = do
+    ref <- ask
+    liftIO $ readIORef ref
+
+use :: (MonadReader (IORef r) m, MonadIO m) => Lens' r a -> m a
+use lens = do
+    ref <- ask
+    v <- liftIO $ readIORef ref
+    return $ v^.lens
+
+modify :: (MonadReader (IORef r) m, MonadIO m) => (r -> r) -> m ()
+modify f = do
+    ref <- ask
+    liftIO $ modifyIORef' ref f
+
+addIface :: MonadIO m => TypeInfo -> TypeInfoT m ()
+addIface newInfo = TypeInfoT $ modify (appEndo (foldMap (Endo . go) typeInfoFields))
+  where go (AField _ lens) = lens %~ M.union (newInfo ^. lens)
 
 loadIFace :: forall m. MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
 loadIFace mi filepath = liftIO (decodeFileEither filepath) >>= \case
@@ -152,7 +175,7 @@ loadIFace mi filepath = liftIO (decodeFileEither filepath) >>= \case
         Just iface -> do
             checkIface iface
             addIface iface
-            TypeInfoT $ loadStatus . at mi ?= Loaded filepath
+            TypeInfoT $ modify $ loadStatus . at mi ?~ Loaded filepath
   where
     checkIface :: TypeInfo -> TypeInfoT m ()
     checkIface iface = do
@@ -200,7 +223,7 @@ findIFace m errContext = do
     liftIO (findFile paths filename) >>= \case
         Just filepath -> loadIFace m filepath
         Nothing -> do
-            TypeInfoT $ loadStatus . at m ?= NotFound
+            TypeInfoT $ modify $ loadStatus . at m ?~ NotFound
             notFoundErr paths
 
   where
@@ -279,12 +302,12 @@ store' lens qid@(Qualified mi _) x = do
         False -> liftIO $ do
             hPutStrLn stderr $ "Cannot store information about " ++ showP qid
             exitFailure
-        True -> TypeInfoT $ lens . at qid ?= x
+        True -> TypeInfoT $ modify $ lens . at qid ?~ x
 
 deserialize :: M.Map String (M.Map T.Text String) -> Maybe TypeInfo
 deserialize ifaceMaps = foldlM go emptyTypeInfo typeInfoFields
   where
-    go ti (AField fieldName lens) = do
+    go ti (AField fieldName lens) =
         case M.lookup fieldName ifaceMaps of
             Nothing -> pure ti
             Just m -> do content <- mapM readMaybe m
@@ -292,7 +315,7 @@ deserialize ifaceMaps = foldlM go emptyTypeInfo typeInfoFields
                          pure $ set lens content' ti
 
 serializeIfaceFor' :: MonadIO m => ModuleIdent -> FilePath -> TypeInfoT m ()
-serializeIfaceFor' mi filepath = do
+serializeIfaceFor' mi filepath =
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         False -> liftIO $ do
             hPutStrLn stderr $ "Module " ++ T.unpack mi ++ " is not a processed one."
@@ -311,13 +334,13 @@ serializeIfaceFor' mi filepath = do
     inThisMod ::  Qualid -> a -> Bool
     inThisMod qid _  = qualidModule qid == Just mi
 
-loadedInterfaceFiles' :: Monad m => TypeInfoT m [FilePath]
+loadedInterfaceFiles' :: MonadIO m => TypeInfoT m [FilePath]
 loadedInterfaceFiles' = TypeInfoT $ do
     m <- use loadStatus
     return $ [ fp | Loaded fp <- M.elems m ]
 
 instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
-    isProcessedModule       mi = TypeInfoT $ processedModules %= S.insert mi
+    isProcessedModule       mi = TypeInfoT $ modify $ processedModules %~ S.insert mi
 
     lookupConstructors      = lookup' "constructors"      constructors
     lookupConstructorType   = lookup' "constructorTypes"  constructorTypes
@@ -340,12 +363,10 @@ instance MonadIO m => TypeInfoMonad (TypeInfoT m) where
 type TypeInfoConfig = [FilePath]
 
 
-runTypeInfoMonad :: Monad m =>
-    TypeInfoConfig ->
-    TypeInfoT m a -> m a
-runTypeInfoMonad paths (TypeInfoT act) = evalStateT ?? emptyTypeInfo $ do
-    searchPaths .= paths
-    act
+runTypeInfoMonad :: MonadIO m => TypeInfoConfig -> TypeInfoT m a -> m a
+runTypeInfoMonad paths (TypeInfoT act) = do
+    ref <- liftIO $ newIORef (emptyTypeInfo & searchPaths .~ paths)
+    runReaderT act ref
 
 
 isConstructor :: TypeInfoMonad m => Qualid -> m Bool

@@ -163,9 +163,8 @@ Some notes about interface file:
    in `src/lib/HsToCoq/ConvertHaskell/BuiltIn.hs`.
 
  * When you have a manual file that defines types or type classes, you may have
-   to create a faux interface files. Simply create a text file with the magic string
-   `all built in`.
-
+   to create a faux interface files. Simply create a text file that is an valid
+   empty yaml file (e.g. '{}').
 
 
 

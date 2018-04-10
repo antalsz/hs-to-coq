@@ -67,11 +67,10 @@ Definition emptyUnVarSet : UnVarSet :=
   Mk_UnVarSet Data.IntSet.Internal.empty.
 
 Definition isEmptyUnVarSet : UnVarSet -> bool :=
-  fun arg_0__ => let 'Mk_UnVarSet s := arg_0__ in Data.IntSet.Internal.null s.
+  fun '(Mk_UnVarSet s) => Data.IntSet.Internal.null s.
 
 Definition prune : UnVarGraph -> UnVarGraph :=
-  fun arg_0__ =>
-    let 'Mk_UnVarGraph g := arg_0__ in
+  fun '(Mk_UnVarGraph g) =>
     let go :=
       fun arg_1__ =>
         match arg_1__ with

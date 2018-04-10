@@ -42,8 +42,7 @@ Local Definition Functor__StateT_fmap {inst_m} {inst_s} `{(GHC.Base.Functor
   fun {a} {b} =>
     fun f m =>
       Mk_StateT (fun s =>
-                   GHC.Base.fmap (fun arg_0__ => let 'pair a s' := arg_0__ in pair (f a) s')
-                   (runStateT m s)).
+                   GHC.Base.fmap (fun '(pair a s') => pair (f a) s') (runStateT m s)).
 
 Local Definition Functor__StateT_op_zlzd__ {inst_m} {inst_s} `{(GHC.Base.Functor
    inst_m)}

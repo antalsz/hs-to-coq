@@ -333,11 +333,11 @@ Definition except {e} {a} : Data.Either.Either e a -> Except e a :=
   fun m => Mk_ExceptT (Mk_Identity m).
 
 Definition runExcept {e} {a} : Except e a -> Data.Either.Either e a :=
-  fun arg_0__ => let 'Mk_ExceptT m := arg_0__ in runIdentity m.
+  fun '(Mk_ExceptT m) => runIdentity m.
 
 Definition runExceptT {e} {m} {a}
    : ExceptT e m a -> m (Data.Either.Either e a) :=
-  fun arg_0__ => let 'Mk_ExceptT m := arg_0__ in m.
+  fun '(Mk_ExceptT m) => m.
 
 Definition mapExceptT {m} {e} {a} {n} {e'} {b}
    : (m (Data.Either.Either e a) -> n (Data.Either.Either e' b)) ->

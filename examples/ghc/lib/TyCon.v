@@ -1389,7 +1389,7 @@ Definition isVisibleTcbVis : TyConBndrVis -> bool :=
     end.
 
 Definition isVisibleTyConBinder {tv} : Var.TyVarBndr tv TyConBndrVis -> bool :=
-  fun arg_0__ => let 'Var.TvBndr _ tcb_vis := arg_0__ in isVisibleTcbVis tcb_vis.
+  fun '(Var.TvBndr _ tcb_vis) => isVisibleTcbVis tcb_vis.
 
 Definition isInvisibleTyConBinder {tv}
    : Var.TyVarBndr tv TyConBndrVis -> bool :=
@@ -1887,8 +1887,7 @@ Definition tyConTuple_maybe : TyCon -> option BasicTypes.TupleSort :=
 Definition tyConTyVarBinders : list TyConBinder -> list Var.TyVarBinder :=
   fun tc_bndrs =>
     let mk_binder :=
-      fun arg_0__ =>
-        let 'Var.TvBndr tv tc_vis := arg_0__ in
+      fun '(Var.TvBndr tv tc_vis) =>
         let vis :=
           match tc_vis with
           | AnonTCB => Var.Specified

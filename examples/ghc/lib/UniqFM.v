@@ -39,7 +39,7 @@ Instance Default__UniqFM {a} : Err.Default (UniqFM a) :=
 
 Instance Unpeel_UniqFM ele
    : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
-  GHC.Prim.Build_Unpeel _ _ (fun x => let 'UFM y := x in y) UFM.
+  GHC.Prim.Build_Unpeel _ _ (fun '(UFM y) => y) UFM.
 
 (* Skipping instance Outputable__UniqFM of class Outputable *)
 
@@ -208,7 +208,7 @@ Definition elemUFM_Directly {elt} : Unique.Unique -> UniqFM elt -> bool :=
     end.
 
 Definition eltsUFM {elt} : UniqFM elt -> list elt :=
-  fun arg_0__ => let 'UFM m := arg_0__ in Data.IntMap.Internal.elems m.
+  fun '(UFM m) => Data.IntMap.Internal.elems m.
 
 Definition emptyUFM {elt} : UniqFM elt :=
   UFM Data.IntMap.Internal.empty.
@@ -273,7 +273,7 @@ Definition intersectUFM_C {elt1} {elt2} {elt3}
     end.
 
 Definition isNullUFM {elt} : UniqFM elt -> bool :=
-  fun arg_0__ => let 'UFM m := arg_0__ in Data.IntMap.Internal.null m.
+  fun '(UFM m) => Data.IntMap.Internal.null m.
 
 Definition lookupUFM {key} {elt} `{Unique.Uniquable key}
    : UniqFM elt -> key -> option elt :=
@@ -328,7 +328,7 @@ Definition minusUFM {elt1} {elt2} : UniqFM elt1 -> UniqFM elt2 -> UniqFM elt1 :=
     end.
 
 Definition nonDetEltsUFM {elt} : UniqFM elt -> list elt :=
-  fun arg_0__ => let 'UFM m := arg_0__ in Data.IntMap.Internal.elems m.
+  fun '(UFM m) => Data.IntMap.Internal.elems m.
 
 Definition seqEltsUFM {elt} : (list elt -> unit) -> UniqFM elt -> unit :=
   fun seqList => seqList GHC.Base.∘ nonDetEltsUFM.
@@ -348,17 +348,13 @@ Definition nonDetFoldUFM_Directly {elt} {a}
     end.
 
 Definition nonDetKeysUFM {elt} : UniqFM elt -> list Unique.Unique :=
-  fun arg_0__ =>
-    let 'UFM m := arg_0__ in
-    GHC.Base.map Unique.getUnique (Data.IntMap.Internal.keys m).
+  fun '(UFM m) => GHC.Base.map Unique.getUnique (Data.IntMap.Internal.keys m).
 
 Definition nonDetUFMToList {elt}
    : UniqFM elt -> list (Unique.Unique * elt)%type :=
-  fun arg_0__ =>
-    let 'UFM m := arg_0__ in
-    GHC.Base.map (fun arg_1__ =>
-                    let 'pair k v := arg_1__ in
-                    pair (Unique.getUnique k) v) (Data.IntMap.Internal.toList m).
+  fun '(UFM m) =>
+    GHC.Base.map (fun '(pair k v) => pair (Unique.getUnique k) v)
+    (Data.IntMap.Internal.toList m).
 
 Definition pprUFMWithKeys {a}
    : UniqFM a ->
@@ -436,16 +432,14 @@ Definition plusUFM_CD {elt}
     end.
 
 Definition sizeUFM {elt} : UniqFM elt -> GHC.Num.Int :=
-  fun um =>
-    let 'UFM m := um in
-    Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m).
+  fun '(UFM m) => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m).
 
 Definition ufmToIntMap {elt} : UniqFM elt -> Data.IntMap.Internal.IntMap elt :=
-  fun arg_0__ => let 'UFM m := arg_0__ in m.
+  fun '(UFM m) => m.
 
 Definition ufmToSet_Directly {elt}
    : UniqFM elt -> Data.IntSet.Internal.IntSet :=
-  fun arg_0__ => let 'UFM m := arg_0__ in Data.IntMap.Internal.keysSet m.
+  fun '(UFM m) => Data.IntMap.Internal.keysSet m.
 
 Definition unitDirectlyUFM {elt} : Unique.Unique -> elt -> UniqFM elt :=
   fun u v => UFM (Data.IntMap.Internal.singleton (Unique.getWordKey u) v).

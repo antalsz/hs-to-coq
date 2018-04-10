@@ -1186,7 +1186,7 @@ Definition collectTyAndValBinders
     pair (pair tvs ids) body.
 
 Definition deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
-  fun arg_0__ => let 'pair _ e := arg_0__ in deAnnotate' e.
+  fun '(pair _ e) => deAnnotate' e.
 
 Definition deAnnBind {b} {annot} : AnnBind b annot -> Bind b :=
   fun arg_0__ =>
@@ -1200,13 +1200,10 @@ Definition deAnnBind {b} {annot} : AnnBind b annot -> Bind b :=
     end.
 
 Definition deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
-  fun arg_0__ =>
-    let 'pair (pair con args) rhs := arg_0__ in
-    pair (pair con args) (deAnnotate rhs).
+  fun '(pair (pair con args) rhs) => pair (pair con args) (deAnnotate rhs).
 
 Definition deTagAlt {t} : TaggedAlt t -> CoreAlt :=
-  fun arg_0__ =>
-    let 'pair (pair con bndrs) rhs := arg_0__ in
+  fun '(pair (pair con bndrs) rhs) =>
     pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
                 Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs).
 

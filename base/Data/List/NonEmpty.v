@@ -99,7 +99,7 @@ Definition filter {a} : (a -> bool) -> GHC.Base.NonEmpty a -> list a :=
   fun p => GHC.List.filter p GHC.Base.∘ toList.
 
 Definition head {a} : GHC.Base.NonEmpty a -> a :=
-  fun arg_0__ => let 'GHC.Base.NEcons a _ := arg_0__ in a.
+  fun '(GHC.Base.NEcons a _) => a.
 
 Definition isPrefixOf {a} `{GHC.Base.Eq_ a}
    : list a -> GHC.Base.NonEmpty a -> bool :=
@@ -111,9 +111,7 @@ Definition isPrefixOf {a} `{GHC.Base.Eq_ a}
     end.
 
 Definition length {a} : GHC.Base.NonEmpty a -> GHC.Num.Int :=
-  fun arg_0__ =>
-    let 'GHC.Base.NEcons _ xs := arg_0__ in
-    #1 GHC.Num.+ Data.Foldable.length xs.
+  fun '(GHC.Base.NEcons _ xs) => #1 GHC.Num.+ Data.Foldable.length xs.
 
 Definition map {a} {b}
    : (a -> b) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty b :=
@@ -131,7 +129,7 @@ Definition nonEmpty {a} : list a -> option (GHC.Base.NonEmpty a) :=
 
 Definition uncons {a}
    : GHC.Base.NonEmpty a -> (a * option (GHC.Base.NonEmpty a))%type :=
-  fun arg_0__ => let 'GHC.Base.NEcons a as_ := arg_0__ in pair a (nonEmpty as_).
+  fun '(GHC.Base.NEcons a as_) => pair a (nonEmpty as_).
 
 Definition nubBy {a}
    : (a -> a -> bool) -> GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
@@ -180,7 +178,7 @@ Definition splitAt {a}
   fun n => GHC.List.splitAt n GHC.Base.∘ toList.
 
 Definition tail {a} : GHC.Base.NonEmpty a -> list a :=
-  fun arg_0__ => let 'GHC.Base.NEcons _ as_ := arg_0__ in as_.
+  fun '(GHC.Base.NEcons _ as_) => as_.
 
 Definition take {a} : GHC.Num.Int -> GHC.Base.NonEmpty a -> list a :=
   fun n => GHC.List.take n GHC.Base.∘ toList.
@@ -194,8 +192,7 @@ Definition unzip {f} {a} {b} `{GHC.Base.Functor f}
     pair (Data.Tuple.fst Data.Functor.<$> xs) (Data.Tuple.snd Data.Functor.<$> xs).
 
 Definition xor : GHC.Base.NonEmpty bool -> bool :=
-  fun arg_0__ =>
-    let 'GHC.Base.NEcons x xs := arg_0__ in
+  fun '(GHC.Base.NEcons x xs) =>
     let xor' :=
       fun arg_1__ arg_2__ =>
         match arg_1__, arg_2__ with

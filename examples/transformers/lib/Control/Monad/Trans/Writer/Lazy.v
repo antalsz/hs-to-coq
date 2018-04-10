@@ -236,13 +236,12 @@ Local Definition Foldable__WriterT_fold {inst_f} {inst_w}
 Local Definition Foldable__WriterT_length {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, (WriterT inst_w inst_f) a -> GHC.Num.Int :=
-  fun {a} =>
-    fun arg_0__ => let 'Mk_WriterT t := arg_0__ in Data.Foldable.length t.
+  fun {a} => fun '(Mk_WriterT t) => Data.Foldable.length t.
 
 Local Definition Foldable__WriterT_null {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
    : forall {a}, (WriterT inst_w inst_f) a -> bool :=
-  fun {a} => fun arg_0__ => let 'Mk_WriterT t := arg_0__ in Data.Foldable.null t.
+  fun {a} => fun '(Mk_WriterT t) => Data.Foldable.null t.
 
 Program Instance Foldable__WriterT {f} {w} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (WriterT w f) :=
@@ -269,10 +268,7 @@ Local Definition Traversable__WriterT_traverse {inst_f} {inst_w}
      (a -> f b) -> (WriterT inst_w inst_f) a -> f ((WriterT inst_w inst_f) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun f =>
-      let f' :=
-        fun arg_0__ =>
-          let 'pair a b := arg_0__ in
-          GHC.Base.fmap (fun c => pair c b) (f a) in
+      let f' := fun '(pair a b) => GHC.Base.fmap (fun c => pair c b) (f a) in
       GHC.Base.fmap Mk_WriterT GHC.Base.∘
       (Data.Traversable.traverse f' GHC.Base.∘ runWriterT).
 
@@ -379,10 +375,7 @@ Local Definition Functor__WriterT_fmap {inst_m} {inst_w} `{(GHC.Base.Functor
    : forall {a} {b},
      (a -> b) -> (WriterT inst_w inst_m) a -> (WriterT inst_w inst_m) b :=
   fun {a} {b} =>
-    fun f =>
-      mapWriterT (GHC.Base.fmap (fun arg_0__ =>
-                                   let 'pair a w := arg_0__ in
-                                   pair (f a) w)).
+    fun f => mapWriterT (GHC.Base.fmap (fun '(pair a w) => pair (f a) w)).
 
 Local Definition Functor__WriterT_op_zlzd__ {inst_m} {inst_w}
   `{(GHC.Base.Functor inst_m)}

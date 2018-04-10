@@ -385,7 +385,7 @@ Local Definition Ord__InstalledUnitId_min
 
 Local Definition Uniquable__ComponentId_getUnique
    : ComponentId -> Unique.Unique :=
-  fun arg_0__ => let 'Mk_ComponentId n := arg_0__ in Unique.getUnique n.
+  fun '(Mk_ComponentId n) => Unique.getUnique n.
 
 Program Instance Uniquable__ComponentId : Unique.Uniquable ComponentId :=
   fun _ k => k {| Unique.getUnique__ := Uniquable__ComponentId_getUnique |}.
@@ -396,7 +396,7 @@ Program Instance Uniquable__ComponentId : Unique.Uniquable ComponentId :=
 
 Local Definition Uniquable__ModuleName_getUnique
    : ModuleName -> Unique.Unique :=
-  fun arg_0__ => let 'Mk_ModuleName nm := arg_0__ in Unique.getUnique nm.
+  fun '(Mk_ModuleName nm) => Unique.getUnique nm.
 
 Program Instance Uniquable__ModuleName : Unique.Uniquable ModuleName :=
   fun _ k => k {| Unique.getUnique__ := Uniquable__ModuleName_getUnique |}.
@@ -474,7 +474,7 @@ Definition stringToInstalledUnitId : GHC.Base.String -> InstalledUnitId :=
   fsToInstalledUnitId GHC.Base.∘ FastString.mkFastString.
 
 Definition componentIdToInstalledUnitId : ComponentId -> InstalledUnitId :=
-  fun arg_0__ => let 'Mk_ComponentId fs := arg_0__ in fsToInstalledUnitId fs.
+  fun '(Mk_ComponentId fs) => fsToInstalledUnitId fs.
 
 Definition splitUnitIdInsts
    : UnitId -> (InstalledUnitId * option IndefUnitId)%type :=
@@ -513,7 +513,7 @@ Definition mainUnitId : UnitId :=
   fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "main")).
 
 Definition newSimpleUnitId : ComponentId -> UnitId :=
-  fun arg_0__ => let 'Mk_ComponentId fs := arg_0__ in fsToUnitId fs.
+  fun '(Mk_ComponentId fs) => fsToUnitId fs.
 
 Definition primUnitId : UnitId :=
   fsToUnitId (FastString.fsLit (GHC.Base.hs_string__ "ghc-prim")).
@@ -1016,7 +1016,7 @@ Definition intersectModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
   GHC.Prim.coerce Data.Set.Internal.intersection.
 
 Definition isEmptyModuleEnv {a} : ModuleEnv a -> bool :=
-  fun arg_0__ => let 'Mk_ModuleEnv e := arg_0__ in Data.Map.Internal.null e.
+  fun '(Mk_ModuleEnv e) => Data.Map.Internal.null e.
 
 Definition lookupInstalledModuleEnv {a}
    : InstalledModuleEnv a -> InstalledModule -> option a :=
@@ -1070,13 +1070,11 @@ Definition mkModuleSet : list Module -> ModuleSet :=
   Data.Set.Internal.fromList GHC.Base.∘ GHC.Prim.coerce.
 
 Definition moduleEnvKeys {a} : ModuleEnv a -> list Module :=
-  fun arg_0__ =>
-    let 'Mk_ModuleEnv e := arg_0__ in
+  fun '(Mk_ModuleEnv e) =>
     Data.OldList.sort (GHC.Base.map unNDModule (Data.Map.Internal.keys e)).
 
 Definition moduleEnvToList {a} : ModuleEnv a -> list (Module * a)%type :=
-  fun arg_0__ =>
-    let 'Mk_ModuleEnv e := arg_0__ in
+  fun '(Mk_ModuleEnv e) =>
     Data.OldList.sortBy (Data.Ord.comparing Data.Tuple.fst) (let cont_1__ arg_2__ :=
                                                                let 'pair (Mk_NDModule m) v := arg_2__ in
                                                                cons (pair m v) nil in
@@ -1087,13 +1085,13 @@ Definition moduleEnvElts {a} : ModuleEnv a -> list a :=
   fun e => GHC.Base.map Data.Tuple.snd (moduleEnvToList e).
 
 Definition moduleNameFS : ModuleName -> FastString.FastString :=
-  fun arg_0__ => let 'Mk_ModuleName mod_ := arg_0__ in mod_.
+  fun '(Mk_ModuleName mod_) => mod_.
 
 Definition stableModuleNameCmp : ModuleName -> ModuleName -> comparison :=
   fun n1 n2 => GHC.Base.compare (moduleNameFS n1) (moduleNameFS n2).
 
 Definition moduleNameString : ModuleName -> GHC.Base.String :=
-  fun arg_0__ => let 'Mk_ModuleName mod_ := arg_0__ in FastString.unpackFS mod_.
+  fun '(Mk_ModuleName mod_) => FastString.unpackFS mod_.
 
 Definition moduleNameColons : ModuleName -> GHC.Base.String :=
   let dots_to_colons :=
@@ -1143,8 +1141,7 @@ Definition unitIdString : UnitId -> GHC.Base.String :=
   FastString.unpackFS GHC.Base.∘ unitIdFS.
 
 Definition moduleStableString : Module -> GHC.Base.String :=
-  fun arg_0__ =>
-    let 'Mk_Module moduleUnitId moduleName := arg_0__ in
+  fun '(Mk_Module moduleUnitId moduleName) =>
     Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$") (Coq.Init.Datatypes.app
                             (unitIdString moduleUnitId) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$")
                                                                                 (moduleNameString moduleName))).
@@ -1160,8 +1157,7 @@ Definition stableModuleCmp : Module -> Module -> comparison :=
     end.
 
 Local Definition Uniquable__Module_getUnique : Module -> Unique.Unique :=
-  fun arg_0__ =>
-    let 'Mk_Module p n := arg_0__ in
+  fun '(Mk_Module p n) =>
     Unique.getUnique (FastString.appendFS (unitIdFS p) (moduleNameFS n)).
 
 Program Instance Uniquable__Module : Unique.Uniquable Module :=

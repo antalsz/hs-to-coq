@@ -208,9 +208,7 @@ Definition classExtraBigSig
     end.
 
 Definition classHasFds : Class -> bool :=
-  fun arg_0__ =>
-    let 'Mk_Class _ _ _ _ fds _ := arg_0__ in
-    negb (Data.Foldable.null fds).
+  fun '(Mk_Class _ _ _ _ fds _) => negb (Data.Foldable.null fds).
 
 Definition classMethods : Class -> list Var.Id :=
   fun arg_0__ =>

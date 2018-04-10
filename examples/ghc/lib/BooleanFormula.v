@@ -491,13 +491,9 @@ Definition simplify {a} `{GHC.Base.Eq_ a}
         := match arg_0__, arg_1__ with
            | f, Var a => match f a with | None => Var a | Some b => mkBool b end
            | f, And xs =>
-               mkAnd (GHC.Base.map (fun arg_7__ =>
-                                      let 'SrcLoc.L l x := arg_7__ in
-                                      SrcLoc.L l (simplify f x)) xs)
+               mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
            | f, Or xs =>
-               mkOr (GHC.Base.map (fun arg_11__ =>
-                                     let 'SrcLoc.L l x := arg_11__ in
-                                     SrcLoc.L l (simplify f x)) xs)
+               mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
            | f, Parens x => simplify f (SrcLoc.unLoc x)
            end.
 

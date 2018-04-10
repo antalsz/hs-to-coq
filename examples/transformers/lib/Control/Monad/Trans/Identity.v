@@ -208,14 +208,12 @@ Local Definition Foldable__IdentityT_foldl' {inst_f} `{(Data.Foldable.Foldable
 Local Definition Foldable__IdentityT_length {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (IdentityT inst_f) a -> GHC.Num.Int :=
-  fun {a} =>
-    fun arg_0__ => let 'Mk_IdentityT t := arg_0__ in Data.Foldable.length t.
+  fun {a} => fun '(Mk_IdentityT t) => Data.Foldable.length t.
 
 Local Definition Foldable__IdentityT_null {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {a}, (IdentityT inst_f) a -> bool :=
-  fun {a} =>
-    fun arg_0__ => let 'Mk_IdentityT t := arg_0__ in Data.Foldable.null t.
+  fun {a} => fun '(Mk_IdentityT t) => Data.Foldable.null t.
 
 Program Instance Foldable__IdentityT {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (IdentityT f) :=

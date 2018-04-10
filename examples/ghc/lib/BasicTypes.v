@@ -1258,10 +1258,10 @@ Definition initialVersion : Version :=
   #1.
 
 Definition inlinePragmaActivation : InlinePragma -> Activation :=
-  fun arg_0__ => let 'Mk_InlinePragma _ _ _ activation _ := arg_0__ in activation.
+  fun '(Mk_InlinePragma _ _ _ activation _) => activation.
 
 Definition inlinePragmaRuleMatchInfo : InlinePragma -> RuleMatchInfo :=
-  fun arg_0__ => let 'Mk_InlinePragma _ _ _ _ info := arg_0__ in info.
+  fun '(Mk_InlinePragma _ _ _ _ info) => info.
 
 Definition inlinePragmaSat : InlinePragma -> option Arity :=
   inl_sat.
@@ -1449,8 +1449,7 @@ Definition noUserInlineSpec : InlineSpec -> bool :=
   fun arg_0__ => match arg_0__ with | NoUserInline => true | _ => false end.
 
 Definition isDefaultInlinePragma : InlinePragma -> bool :=
-  fun arg_0__ =>
-    let 'Mk_InlinePragma _ inline _ activation match_info := arg_0__ in
+  fun '(Mk_InlinePragma _ inline _ activation match_info) =>
     andb (noUserInlineSpec inline) (andb (isAlwaysActive activation) (isFunLike
                                           match_info)).
 

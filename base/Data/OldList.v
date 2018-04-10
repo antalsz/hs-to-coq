@@ -407,9 +407,7 @@ Definition tails {a} : list a -> list (list a) :=
                           tailsGo lst)).
 
 Definition toListSB {a} : SnocBuilder a -> list a :=
-  fun arg_0__ =>
-    let 'Mk_SnocBuilder _ f r := arg_0__ in
-    Coq.Init.Datatypes.app f (GHC.List.reverse r).
+  fun '(Mk_SnocBuilder _ f r) => Coq.Init.Datatypes.app f (GHC.List.reverse r).
 
 Definition unwords : list GHC.Base.String -> GHC.Base.String :=
   fun arg_0__ =>

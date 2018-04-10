@@ -218,8 +218,7 @@ Definition isWiredInName : Name -> bool :=
     end.
 
 Definition localiseName : Name -> Name :=
-  fun n =>
-    let 'Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ := n in
+  fun '(Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__) =>
     Mk_Name Internal n_occ_1__ n_uniq_2__ n_loc_3__.
 
 Definition mkClonedInternalName : Unique.Unique -> Name -> Name :=
@@ -376,8 +375,7 @@ Definition nameSortStableString : NameSort -> GHC.Base.String :=
     end.
 
 Definition nameStableString : Name -> GHC.Base.String :=
-  fun arg_0__ =>
-    let 'Mk_Name n_sort n_occ n_uniq n_loc := arg_0__ in
+  fun '(Mk_Name n_sort n_occ n_uniq n_loc) =>
     Coq.Init.Datatypes.app (nameSortStableString n_sort) (Coq.Init.Datatypes.app
                             (GHC.Base.hs_string__ "$") (OccName.occNameString n_occ)).
 

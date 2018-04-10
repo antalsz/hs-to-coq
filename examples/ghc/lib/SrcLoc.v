@@ -201,7 +201,7 @@ Local Definition Foldable__GenLocated_length {inst_l}
 
 Local Definition Foldable__GenLocated_null {inst_l}
    : forall {a}, GenLocated inst_l a -> bool :=
-  fun {a} => fun arg_0__ => let 'L _ _ := arg_0__ in false.
+  fun {a} => fun '(L _ _) => false.
 
 Local Definition Functor__GenLocated_fmap {inst_l}
    : forall {a} {b}, (a -> b) -> GenLocated inst_l a -> GenLocated inst_l b :=
@@ -358,7 +358,7 @@ Definition generatedSrcLoc : SrcLoc :=
                                   "<compiler-generated code>")).
 
 Definition getLoc {l} {e} : GenLocated l e -> l :=
-  fun arg_0__ => let 'L l _ := arg_0__ in l.
+  fun '(L l _) => l.
 
 Definition interactiveSrcLoc : SrcLoc :=
   UnhelpfulLoc (FastString.fsLit (GHC.Base.hs_string__ "<interactive>")).
@@ -374,13 +374,10 @@ Definition isGoodSrcSpan : SrcSpan -> bool :=
     end.
 
 Definition isOneLineRealSpan : RealSrcSpan -> bool :=
-  fun arg_0__ =>
-    let 'RealSrcSpan' _ line1 _ line2 _ := arg_0__ in
-    line1 GHC.Base.== line2.
+  fun '(RealSrcSpan' _ line1 _ line2 _) => line1 GHC.Base.== line2.
 
 Definition isPointRealSpan : RealSrcSpan -> bool :=
-  fun arg_0__ =>
-    let 'RealSrcSpan' _ line1 col1 line2 col2 := arg_0__ in
+  fun '(RealSrcSpan' _ line1 col1 line2 col2) =>
     andb (line1 GHC.Base.== line2) (col1 GHC.Base.== col2).
 
 Definition mkGeneralSrcLoc : FastString.FastString -> SrcLoc :=
@@ -410,9 +407,7 @@ Definition noLoc {e} : e -> Located e :=
   fun e => L noSrcSpan e.
 
 Definition realSrcLocSpan : RealSrcLoc -> RealSrcSpan :=
-  fun arg_0__ =>
-    let 'ASrcLoc file line col := arg_0__ in
-    RealSrcSpan' file line col line col.
+  fun '(ASrcLoc file line col) => RealSrcSpan' file line col line col.
 
 Definition srcLocSpan : SrcLoc -> SrcSpan :=
   fun arg_0__ =>
@@ -422,13 +417,13 @@ Definition srcLocSpan : SrcLoc -> SrcSpan :=
     end.
 
 Definition srcLocCol : RealSrcLoc -> GHC.Num.Int :=
-  fun arg_0__ => let 'ASrcLoc _ _ c := arg_0__ in c.
+  fun '(ASrcLoc _ _ c) => c.
 
 Definition srcLocFile : RealSrcLoc -> FastString.FastString :=
-  fun arg_0__ => let 'ASrcLoc fname _ _ := arg_0__ in fname.
+  fun '(ASrcLoc fname _ _) => fname.
 
 Definition srcLocLine : RealSrcLoc -> GHC.Num.Int :=
-  fun arg_0__ => let 'ASrcLoc _ l _ := arg_0__ in l.
+  fun '(ASrcLoc _ l _) => l.
 
 Definition mkRealSrcSpan : RealSrcLoc -> RealSrcLoc -> RealSrcSpan :=
   fun loc1 loc2 =>
@@ -447,10 +442,10 @@ Definition mkSrcSpan : SrcLoc -> SrcLoc -> SrcSpan :=
     end.
 
 Definition srcSpanEndCol : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_0__ => let 'RealSrcSpan' _ _ _ _ c := arg_0__ in c.
+  fun '(RealSrcSpan' _ _ _ _ c) => c.
 
 Definition srcSpanEndLine : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_0__ => let 'RealSrcSpan' _ _ _ l _ := arg_0__ in l.
+  fun '(RealSrcSpan' _ _ _ l _) => l.
 
 Definition realSrcSpanEnd : RealSrcSpan -> RealSrcLoc :=
   fun s => mkRealSrcLoc (srcSpanFile s) (srcSpanEndLine s) (srcSpanEndCol s).
@@ -470,10 +465,10 @@ Definition srcSpanFileName_maybe : SrcSpan -> option FastString.FastString :=
     end.
 
 Definition srcSpanStartCol : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_0__ => let 'RealSrcSpan' _ _ l _ _ := arg_0__ in l.
+  fun '(RealSrcSpan' _ _ l _ _) => l.
 
 Definition srcSpanStartLine : RealSrcSpan -> GHC.Num.Int :=
-  fun arg_0__ => let 'RealSrcSpan' _ l _ _ _ := arg_0__ in l.
+  fun '(RealSrcSpan' _ l _ _ _) => l.
 
 Definition realSrcSpanStart : RealSrcSpan -> RealSrcLoc :=
   fun s => mkRealSrcLoc (srcSpanFile s) (srcSpanStartLine s) (srcSpanStartCol s).
@@ -503,7 +498,7 @@ Definition isOneLineSpan : SrcSpan -> bool :=
     end.
 
 Definition unLoc {l} {e} : GenLocated l e -> e :=
-  fun arg_0__ => let 'L _ e := arg_0__ in e.
+  fun '(L _ e) => e.
 
 Definition eqLocated {a} `{GHC.Base.Eq_ a} : Located a -> Located a -> bool :=
   fun a b => unLoc a GHC.Base.== unLoc b.

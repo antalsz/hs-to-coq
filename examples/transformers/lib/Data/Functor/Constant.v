@@ -168,11 +168,11 @@ Local Definition Foldable__Constant_fold {inst_a}
 
 Local Definition Foldable__Constant_length {inst_a}
    : forall {a}, (Constant inst_a) a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => let 'Mk_Constant _ := arg_0__ in #0.
+  fun {a} => fun '(Mk_Constant _) => #0.
 
 Local Definition Foldable__Constant_null {inst_a}
    : forall {a}, (Constant inst_a) a -> bool :=
-  fun {a} => fun arg_0__ => let 'Mk_Constant _ := arg_0__ in true.
+  fun {a} => fun '(Mk_Constant _) => true.
 
 Program Instance Foldable__Constant {a} : Data.Foldable.Foldable (Constant a) :=
   fun _ k =>

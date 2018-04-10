@@ -325,10 +325,10 @@ Program Instance Eq___ArgFlag : GHC.Base.Eq_ ArgFlag :=
          GHC.Base.op_zsze____ := Eq___ArgFlag_op_zsze__ |}.
 
 Definition binderArgFlag {tv} {argf} : TyVarBndr tv argf -> argf :=
-  fun arg_0__ => let 'TvBndr _ argf := arg_0__ in argf.
+  fun '(TvBndr _ argf) => argf.
 
 Definition binderVar {tv} {argf} : TyVarBndr tv argf -> tv :=
-  fun arg_0__ => let 'TvBndr v _ := arg_0__ in v.
+  fun '(TvBndr v _) => v.
 
 Definition binderVars {tv} {argf} : list (TyVarBndr tv argf) -> list tv :=
   fun tvbs => GHC.Base.map binderVar tvbs.
@@ -626,7 +626,7 @@ Definition updateTyVarKindM {m} `{(GHC.Base.Monad m)}
                          end)).
 
 Definition binderKind {argf} : TyVarBndr TyVar argf -> unit :=
-  fun arg_0__ => let 'TvBndr tv _ := arg_0__ in tyVarKind tv.
+  fun '(TvBndr tv _) => tyVarKind tv.
 
 Definition tyVarName : TyVar -> Name.Name :=
   varName.

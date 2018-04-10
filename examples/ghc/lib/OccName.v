@@ -317,8 +317,7 @@ Definition demoteNameSpace : NameSpace -> option NameSpace :=
     end.
 
 Definition demoteOccName : OccName -> option OccName :=
-  fun arg_0__ =>
-    let 'Mk_OccName space name := arg_0__ in
+  fun '(Mk_OccName space name) =>
     demoteNameSpace space GHC.Base.>>=
     (fun space' => GHC.Base.return_ (Mk_OccName space' name)).
 
@@ -550,10 +549,10 @@ Definition mkOccSet : list OccName -> OccSet :=
   UniqSet.mkUniqSet.
 
 Definition occEnvElts {a} : OccEnv a -> list a :=
-  fun arg_0__ => let 'A x := arg_0__ in UniqFM.eltsUFM x.
+  fun '(A x) => UniqFM.eltsUFM x.
 
 Definition occNameString : OccName -> GHC.Base.String :=
-  fun arg_0__ => let 'Mk_OccName _ s := arg_0__ in FastString.unpackFS s.
+  fun '(Mk_OccName _ s) => FastString.unpackFS s.
 
 Definition mkDataTOcc : OccName -> OccSet -> OccName :=
   fun occ =>

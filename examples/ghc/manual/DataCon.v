@@ -359,9 +359,8 @@ Definition dataConFullSig
    : DataCon ->
      (list Var.TyVar * list Var.TyVar * list EqSpec * unit * list unit *
       unit)%type :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ univ_tvs ex_tvs _ eq_spec theta _ arg_tys res_ty _ _ _ _ _ _
-       _ _ _ _ := arg_0__ in
+  fun '(MkData _ _ _ _ univ_tvs ex_tvs _ eq_spec theta _ arg_tys res_ty _ _ _ _ _
+  _ _ _ _ _) =>
     pair (pair (pair (pair (pair univ_tvs ex_tvs) eq_spec) theta) arg_tys) res_ty.
 
 Definition dataConImplBangs : DataCon -> list HsImplBang :=
@@ -378,9 +377,7 @@ Definition dataConName : DataCon -> Name.Name :=
   dcName.
 
 Definition dataConRepArity : DataCon -> BasicTypes.Arity :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _ _ := arg_0__ in
-    arity.
+  fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _ _) => arity.
 
 Definition isNullaryRepDataCon : DataCon -> bool :=
   fun dc => dataConRepArity dc GHC.Base.== #0.
@@ -389,9 +386,7 @@ Definition dataConRepType : DataCon -> unit :=
   dcRepType.
 
 Definition dataConSourceArity : DataCon -> BasicTypes.Arity :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _ := arg_0__ in
-    arity.
+  fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _) => arity.
 
 Definition isNullarySrcDataCon : DataCon -> bool :=
   fun dc => dataConSourceArity dc GHC.Base.== #0.
@@ -412,22 +407,17 @@ Definition dataConTyCon : DataCon -> TyCon.TyCon :=
   dcRepTyCon.
 
 Definition dataConUnivAndExTyVars : DataCon -> list Var.TyVar :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ univ_tvs ex_tvs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ :=
-      arg_0__ in
+  fun '(MkData _ _ _ _ univ_tvs ex_tvs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) =>
     Coq.Init.Datatypes.app univ_tvs ex_tvs.
 
 Definition dataConUnivTyVars : DataCon -> list Var.TyVar :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ tvbs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ := arg_0__ in
-    tvbs.
+  fun '(MkData _ _ _ _ tvbs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) => tvbs.
 
 Definition dataConUserTyVarBinders : DataCon -> list Var.TyVarBinder :=
   dcUserTyVarBinders.
 
 Definition dataConUserTyVars : DataCon -> list Var.TyVar :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ tvbs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  fun '(MkData _ _ _ _ _ _ tvbs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) =>
     Var.binderVars tvbs.
 
 Definition dataConWorkId : DataCon -> Var.Id :=
@@ -448,10 +438,10 @@ Definition dataConWrapId_maybe : DataCon -> option Var.Id :=
     end.
 
 Definition eqSpecPair : EqSpec -> (Var.TyVar * unit)%type :=
-  fun arg_0__ => let 'Mk_EqSpec tv ty := arg_0__ in pair tv ty.
+  fun '(Mk_EqSpec tv ty) => pair tv ty.
 
 Definition eqSpecTyVar : EqSpec -> Var.TyVar :=
-  fun arg_0__ => let 'Mk_EqSpec tv _ := arg_0__ in tv.
+  fun '(Mk_EqSpec tv _) => tv.
 
 Definition filterEqSpec : list EqSpec -> list Var.TyVar -> list Var.TyVar :=
   fun eq_spec =>
@@ -462,14 +452,13 @@ Definition filterEqSpec : list EqSpec -> list Var.TyVar -> list Var.TyVar :=
     GHC.List.filter not_in_eq_spec.
 
 Definition dataConUserTyVarsArePermuted : DataCon -> bool :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ univ_tvs ex_tvs user_tvbs eq_spec _ _ _ _ _ _ _ _ _ _ _ _ _
-       _ := arg_0__ in
+  fun '(MkData _ _ _ _ univ_tvs ex_tvs user_tvbs eq_spec _ _ _ _ _ _ _ _ _ _ _ _ _
+  _) =>
     (Coq.Init.Datatypes.app (filterEqSpec eq_spec univ_tvs) ex_tvs) GHC.Base./=
     Var.binderVars user_tvbs.
 
 Definition eqSpecType : EqSpec -> unit :=
-  fun arg_0__ => let 'Mk_EqSpec _ ty := arg_0__ in ty.
+  fun '(Mk_EqSpec _ ty) => ty.
 
 Definition isBanged : HsImplBang -> bool :=
   fun arg_0__ =>
@@ -489,18 +478,15 @@ Definition isSrcUnpacked : SrcUnpackedness -> bool :=
   fun arg_0__ => match arg_0__ with | SrcUnpack => true | _ => false end.
 
 Definition isTupleDataCon : DataCon -> bool :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc _ _ _ := arg_0__ in
+  fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc _ _ _) =>
     TyCon.isTupleTyCon tc.
 
 Definition isUnboxedSumCon : DataCon -> bool :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc _ _ _ := arg_0__ in
+  fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc _ _ _) =>
     TyCon.isUnboxedSumTyCon tc.
 
 Definition isUnboxedTupleCon : DataCon -> bool :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc _ _ _ := arg_0__ in
+  fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc _ _ _) =>
     TyCon.isUnboxedTupleTyCon tc.
 
 Definition isVanillaDataCon : DataCon -> bool :=
@@ -510,9 +496,7 @@ Definition mkEqSpec : Var.TyVar -> unit -> EqSpec :=
   fun tv ty => Mk_EqSpec tv ty.
 
 Definition promoteDataCon : DataCon -> TyCon.TyCon :=
-  fun arg_0__ =>
-    let 'MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc := arg_0__ in
-    tc.
+  fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc) => tc.
 
 (* External variables:
      None Some bool false list negb op_zt__ option pair true unit BasicTypes.Arity

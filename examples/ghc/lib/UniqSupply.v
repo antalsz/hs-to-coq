@@ -137,7 +137,7 @@ Local Definition Applicative__UniqSM_pure : forall {a}, a -> UniqSM a :=
   fun {a} => returnUs.
 
 Definition splitUniqSupply : UniqSupply -> (UniqSupply * UniqSupply)%type :=
-  fun arg_0__ => let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in pair s1 s2.
+  fun '(MkSplitUniqSupply _ s1 s2) => pair s1 s2.
 
 Definition splitUniqSupply3
    : UniqSupply -> (UniqSupply * UniqSupply * UniqSupply)%type :=
@@ -161,9 +161,7 @@ Local Definition MonadUnique__UniqSM_getUniqueSupplyM : UniqSM UniqSupply :=
 
 Definition takeUniqFromSupply
    : UniqSupply -> (Unique.Unique * UniqSupply)%type :=
-  fun arg_0__ =>
-    let 'MkSplitUniqSupply n s1 _ := arg_0__ in
-    pair (Unique.mkUniqueGrimily n) s1.
+  fun '(MkSplitUniqSupply n s1 _) => pair (Unique.mkUniqueGrimily n) s1.
 
 Definition getUniqueUs : UniqSM Unique.Unique :=
   USM (fun us => let 'pair u us' := takeUniqFromSupply us in pair u us').
@@ -213,9 +211,7 @@ Program Instance Monad__UniqSM : GHC.Base.Monad UniqSM :=
          GHC.Base.return___ := fun {a} => Monad__UniqSM_return_ |}.
 
 Definition uniqFromSupply : UniqSupply -> Unique.Unique :=
-  fun arg_0__ =>
-    let 'MkSplitUniqSupply n _ _ := arg_0__ in
-    Unique.mkUniqueGrimily n.
+  fun '(MkSplitUniqSupply n _ _) => Unique.mkUniqueGrimily n.
 
 Definition uniqsFromSupply : UniqSupply -> list Unique.Unique :=
   fix uniqsFromSupply arg_0__

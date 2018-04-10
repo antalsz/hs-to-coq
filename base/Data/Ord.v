@@ -24,7 +24,7 @@ Arguments Mk_Down {_} _.
 (* Converted value declarations: *)
 
 Instance Unpeel_Down a : GHC.Prim.Unpeel (Down a) a :=
-  GHC.Prim.Build_Unpeel _ _ (fun d => let 'Mk_Down x := d in x) Mk_Down.
+  GHC.Prim.Build_Unpeel _ _ (fun '(Mk_Down x) => x) Mk_Down.
 
 Local Definition Ord__Down_compare {inst_a} `{GHC.Base.Ord inst_a}
    : (Down inst_a) -> (Down inst_a) -> comparison :=

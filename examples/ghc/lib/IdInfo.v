@@ -521,8 +521,7 @@ Definition zapDemandInfo : IdInfo -> option IdInfo :=
                     callArityInfo_9__ levityInfo_10__).
 
 Definition zapLamInfo : IdInfo -> option IdInfo :=
-  fun arg_0__ =>
-    let '(Mk_IdInfo _ _ _ _ _ _ occ _ demand _ _ as info) := arg_0__ in
+  fun '((Mk_IdInfo _ _ _ _ _ _ occ _ demand _ _ as info)) =>
     let is_safe_dmd := fun dmd => negb (false) in
     let safe_occ :=
       match occ with

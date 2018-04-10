@@ -72,7 +72,7 @@ Definition calledWith : CallArityRes -> Var.Var -> UnVarGraph.UnVarSet :=
     end.
 
 Definition domRes : CallArityRes -> UnVarGraph.UnVarSet :=
-  fun arg_0__ => let 'pair _ ae := arg_0__ in UnVarGraph.varEnvDom ae.
+  fun '(pair _ ae) => UnVarGraph.varEnvDom ae.
 
 Definition calledMultipleTimes : CallArityRes -> CallArityRes :=
   fun res =>
@@ -156,8 +156,7 @@ Definition callArityRecEnv
       lubRes (lubRess (GHC.Base.map Data.Tuple.snd ae_rhss)) ae_body in
     let vars := GHC.Base.map Data.Tuple.fst ae_rhss in
     let cross_call :=
-      fun arg_2__ =>
-        let 'pair v ae_rhs := arg_2__ in
+      fun '(pair v ae_rhs) =>
         let called_by_v := domRes ae_rhs in
         let is_thunk := Id.idCallArity v GHC.Base.== #0 in
         let ae_before_v :=
@@ -227,8 +226,7 @@ Definition callArityAnal
              | arity, int, CoreSyn.Case scrut bndr ty alts =>
                  let 'pair scrut_ae scrut' := callArityAnal #0 int scrut in
                  let go :=
-                   fun arg_14__ =>
-                     let 'pair (pair dc bndrs) e := arg_14__ in
+                   fun '(pair (pair dc bndrs) e) =>
                      let 'pair ae e' := callArityAnal arity int e in
                      pair ae (pair (pair dc bndrs) e') in
                  let 'pair alt_aes alts' := GHC.List.unzip (GHC.Base.map go alts) in

@@ -8,8 +8,6 @@
 axiomatize module Id
 
 
-rewrite forall v str num msg, Panic.warnPprTrace b str num msg v = v
-
 ## enumFrom
 skip Id.mkTemplateLocalsNum
 

@@ -69,16 +69,16 @@ data IdInfo
         levityInfo      :: LevityInfo    -- ^ when applied, will this Id ever have a levity-polymorphic type?
     }
 
+data RuleInfo
+  = RuleInfo
+        [CoreRule]
+        DVarSet         -- Locally-defined free vars of *both* LHS and RHS
+
+
 *)
 
-Parameter IdInfo        : Type.
-Parameter vanillaIdInfo : IdInfo.
-Parameter noCafIdInfo   : IdInfo.
-
-Instance Default_IdInfo : GHC.Err.Default IdInfo :=
-  GHC.Err.Build_Default _ vanillaIdInfo.
-
 (* -------------------- *)
+
 
 Parameter RuleInfo : Type.
 Parameter emptyRuleInfo : RuleInfo.
@@ -90,13 +90,6 @@ Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
 
 (* -------------------- *)
 
-(*
-Parameter RecSelParent : Type.
-Parameter Default_RecSelParent : GHC.Err.Default RecSelParent.
-
-Parameter Eq___RecSelParent : GHC.Base.Eq_ RecSelParent.
-*)
-
 (* Converted imports: *)
 
 Require BasicTypes.
@@ -104,6 +97,8 @@ Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
 Require Module.
+Require Panic.
+Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -142,6 +137,16 @@ Inductive CafInfo : Type := MayHaveCafRefs : CafInfo |  NoCafRefs : CafInfo.
 
 Definition ArityInfo :=
   BasicTypes.Arity%type.
+
+Inductive IdInfo : Type
+  := Mk_IdInfo
+   : ArityInfo ->
+     RuleInfo ->
+     unit ->
+     CafInfo ->
+     BasicTypes.OneShotInfo ->
+     BasicTypes.InlinePragma ->
+     BasicTypes.OccInfo -> unit -> unit -> ArityInfo -> LevityInfo -> IdInfo.
 
 Instance Default__LevityInfo : GHC.Err.Default LevityInfo :=
   GHC.Err.Build_Default _ NoLevityInfo.
@@ -186,6 +191,50 @@ Definition sel_naughty (arg_0__ : IdDetails) :=
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `sel_naughty' has no match in constructor `JoinId' of type `IdDetails'")
   end.
+
+Definition arityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo arityInfo _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  arityInfo.
+
+Definition cafInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ cafInfo _ _ _ _ _ _ _ := arg_0__ in
+  cafInfo.
+
+Definition callArityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ callArityInfo _ := arg_0__ in
+  callArityInfo.
+
+Definition demandInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ demandInfo _ _ := arg_0__ in
+  demandInfo.
+
+Definition inlinePragInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ inlinePragInfo _ _ _ _ _ := arg_0__ in
+  inlinePragInfo.
+
+Definition levityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ _ levityInfo := arg_0__ in
+  levityInfo.
+
+Definition occInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ occInfo _ _ _ _ := arg_0__ in
+  occInfo.
+
+Definition oneShotInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ oneShotInfo _ _ _ _ _ _ := arg_0__ in
+  oneShotInfo.
+
+Definition ruleInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ ruleInfo _ _ _ _ _ _ _ _ _ := arg_0__ in
+  ruleInfo.
+
+Definition strictnessInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ strictnessInfo _ _ _ := arg_0__ in
+  strictnessInfo.
+
+Definition unfoldingInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ unfoldingInfo _ _ _ _ _ _ _ _ := arg_0__ in
+  unfoldingInfo.
 (* Midamble *)
 
 Require GHC.Err.
@@ -197,12 +246,15 @@ Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
 Instance Default_CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
 
-(*
 Instance Default_IdInfo : GHC.Err.Default IdInfo :=
   GHC.Err.Build_Default _ (Mk_IdInfo GHC.Err.default GHC.Err.default GHC.Err.default
                          GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default
-                         GHC.Err.default GHC.Err.default GHC.Err.default).
-*)
+                         GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default_RecSelParent : GHC.Err.Default RecSelParent :=
+  GHC.Err.Build_Default _ (RecSelData GHC.Err.default).
+
+
 (* Converted value declarations: *)
 
 (* Skipping instance Outputable__LevityInfo of class Outputable *)
@@ -320,15 +372,233 @@ Definition isJoinIdDetails_maybe : IdDetails -> option BasicTypes.JoinArity :=
 Definition mayHaveCafRefs : CafInfo -> bool :=
   fun arg_0__ => match arg_0__ with | MayHaveCafRefs => true | _ => false end.
 
+Definition setArityInfo : IdInfo -> ArityInfo -> IdInfo :=
+  fun info ar =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo ar ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__ oneShotInfo_4__
+              inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setCafInfo : IdInfo -> CafInfo -> IdInfo :=
+  fun info caf =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ caf oneShotInfo_4__
+              inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setCallArityInfo : IdInfo -> ArityInfo -> IdInfo :=
+  fun info ar =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              ar levityInfo_10__.
+
+Definition zapCallArityInfo : IdInfo -> IdInfo :=
+  fun info => setCallArityInfo info #0.
+
+Definition setDemandInfo : IdInfo -> unit -> IdInfo :=
+  fun info dd =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ dd
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
+  fun info pr =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+              oneShotInfo_4__ pr occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setNeverLevPoly `{Util.HasDebugCallStack}
+   : IdInfo -> unit -> IdInfo :=
+  fun info ty =>
+    if false : bool
+    then (GHC.Err.error (Panic.noString ty))
+    else let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+            oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+            callArityInfo_9__ levityInfo_10__ := info in
+         Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                   oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+                   callArityInfo_9__ NeverLevityPolymorphic.
+
+Definition setOccInfo : IdInfo -> BasicTypes.OccInfo -> IdInfo :=
+  fun info oc =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+              oneShotInfo_4__ inlinePragInfo_5__ oc strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition zapTailCallInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    let 'occ := occInfo info in
+    let safe_occ :=
+      match occ with
+      | BasicTypes.ManyOccs occ_tail_1__ =>
+          BasicTypes.ManyOccs BasicTypes.NoTailCallInfo
+      | BasicTypes.IAmDead =>
+          GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+      | BasicTypes.OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__
+      occ_tail_5__ =>
+          BasicTypes.OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__
+                            BasicTypes.NoTailCallInfo
+      | BasicTypes.IAmALoopBreaker occ_rules_only_6__ occ_tail_7__ =>
+          BasicTypes.IAmALoopBreaker occ_rules_only_6__ BasicTypes.NoTailCallInfo
+      end in
+    if BasicTypes.isAlwaysTailCalled occ : bool
+    then Some (setOccInfo info safe_occ) else
+    None.
+
+Definition setOneShotInfo : IdInfo -> BasicTypes.OneShotInfo -> IdInfo :=
+  fun info lb =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__ lb
+              inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setRuleInfo : IdInfo -> RuleInfo -> IdInfo :=
+  fun info sp =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ sp unfoldingInfo_2__ cafInfo_3__ oneShotInfo_4__
+              inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setStrictnessInfo : IdInfo -> unit -> IdInfo :=
+  fun info dd =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ dd demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
+Definition setUnfoldingInfo : IdInfo -> unit -> IdInfo :=
+  fun info uf =>
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ uf cafInfo_3__ oneShotInfo_4__
+              inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ levityInfo_10__.
+
 Definition unknownArity : BasicTypes.Arity :=
   #0.
 
+Definition vanillaCafInfo : CafInfo :=
+  MayHaveCafRefs.
+
+Definition vanillaIdInfo : IdInfo :=
+  Mk_IdInfo unknownArity emptyRuleInfo tt vanillaCafInfo BasicTypes.NoOneShotInfo
+            BasicTypes.defaultInlinePragma BasicTypes.noOccInfo tt tt unknownArity
+            NoLevityInfo.
+
+Definition noCafIdInfo : IdInfo :=
+  setCafInfo vanillaIdInfo NoCafRefs.
+
+Definition zapDemandInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+             callArityInfo_9__ levityInfo_10__ := info in
+          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ tt
+                    callArityInfo_9__ levityInfo_10__).
+
+Definition zapLamInfo : IdInfo -> option IdInfo :=
+  fun arg_0__ =>
+    let '(Mk_IdInfo _ _ _ _ _ _ occ _ demand _ _ as info) := arg_0__ in
+    let is_safe_dmd := fun dmd => negb (false) in
+    let safe_occ :=
+      match occ with
+      | BasicTypes.OneOcc _ _ _ _ =>
+          match occ with
+          | BasicTypes.ManyOccs _ =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          | BasicTypes.IAmDead =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          | BasicTypes.OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__
+          occ_tail_5__ =>
+              BasicTypes.OneOcc true occ_one_br_3__ occ_int_cxt_4__ BasicTypes.NoTailCallInfo
+          | BasicTypes.IAmALoopBreaker _ _ =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          end
+      | BasicTypes.IAmALoopBreaker _ _ =>
+          match occ with
+          | BasicTypes.ManyOccs occ_tail_12__ =>
+              BasicTypes.ManyOccs BasicTypes.NoTailCallInfo
+          | BasicTypes.IAmDead =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          | BasicTypes.OneOcc occ_in_lam_13__ occ_one_br_14__ occ_int_cxt_15__
+          occ_tail_16__ =>
+              BasicTypes.OneOcc occ_in_lam_13__ occ_one_br_14__ occ_int_cxt_15__
+                                BasicTypes.NoTailCallInfo
+          | BasicTypes.IAmALoopBreaker occ_rules_only_17__ occ_tail_18__ =>
+              BasicTypes.IAmALoopBreaker occ_rules_only_17__ BasicTypes.NoTailCallInfo
+          end
+      | _other => occ
+      end in
+    let is_safe_occ :=
+      fun arg_27__ =>
+        let 'occ := arg_27__ in
+        if BasicTypes.isAlwaysTailCalled occ : bool then false else
+        match arg_27__ with
+        | BasicTypes.OneOcc in_lam _ _ _ => in_lam
+        | _other => true
+        end in
+    if andb (is_safe_occ occ) (is_safe_dmd demand) : bool then None else
+    Some (let 'Mk_IdInfo arityInfo_31__ ruleInfo_32__ unfoldingInfo_33__
+             cafInfo_34__ oneShotInfo_35__ inlinePragInfo_36__ occInfo_37__
+             strictnessInfo_38__ demandInfo_39__ callArityInfo_40__ levityInfo_41__ :=
+            info in
+          Mk_IdInfo arityInfo_31__ ruleInfo_32__ unfoldingInfo_33__ cafInfo_34__
+                    oneShotInfo_35__ inlinePragInfo_36__ safe_occ strictnessInfo_38__ tt
+                    callArityInfo_40__ levityInfo_41__).
+
+Definition zapUsageInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+             callArityInfo_9__ levityInfo_10__ := info in
+          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ tt
+                    callArityInfo_9__ levityInfo_10__).
+
+Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+             callArityInfo_9__ levityInfo_10__ := info in
+          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ tt tt callArityInfo_9__
+                    levityInfo_10__).
+
 (* External variables:
-     ClassId DataConId Eq Gt Lt None PatSynId Some TyConId bool comparison false negb
-     option true unit BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.JoinArity
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare__ GHC.Base.max__ GHC.Base.min__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
-     GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze____
-     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.Int
-     GHC.Num.fromInteger Module.Module
+     ClassId DataConId Eq Gt Lt None PatSynId RuleInfo Some TyConId andb bool
+     comparison emptyRuleInfo false negb option true tt unit BasicTypes.Arity
+     BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
+     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
+     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
+     BasicTypes.OneShotInfo BasicTypes.defaultInlinePragma
+     BasicTypes.isAlwaysTailCalled BasicTypes.noOccInfo GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.compare__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
+     GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger Module.Module Panic.noString
+     Util.HasDebugCallStack
 *)

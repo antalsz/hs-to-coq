@@ -26,7 +26,6 @@ Require OccName.
 Require Panic.
 Require SrcLoc.
 Require Unique.
-Require Util.
 Require Var.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -228,7 +227,7 @@ Definition classAllSelIds : Class -> list Var.Id :=
     | (Mk_Class _ _ _ _ _ (ConcreteClass _ sc_sels _ _ _) as c) =>
         Coq.Init.Datatypes.app sc_sels (classMethods c)
     | c =>
-        if andb Util.debugIsOn (negb (Data.Foldable.null (classMethods c))) : bool
+        if false : bool
         then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/types/Class.hs")
               #244)
         else nil
@@ -293,14 +292,13 @@ Definition mkClass
               super_classes superdict_sels at_stuff op_stuff mindef).
 
 (* External variables:
-     andb bool cons false list negb nil op_zt__ option pair true unit
-     BasicTypes.Arity BasicTypes.DefMethSpec BooleanFormula.BooleanFormula
-     BooleanFormula.mkTrue Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     Data.Foldable.length Data.Foldable.null GHC.Base.Eq_ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.fromInteger
-     IdInfo.TyConId Name.Name Name.NamedThing Name.getName__ Name.getOccName__
-     Name.nameOccName Name.nameUnique OccName.OccName Panic.assertPanic
-     SrcLoc.SrcSpan Unique.Uniquable Unique.Unique Unique.getUnique__ Util.debugIsOn
-     Var.Id Var.TyVar
+     bool cons false list negb nil op_zt__ option pair true unit BasicTypes.Arity
+     BasicTypes.DefMethSpec BooleanFormula.BooleanFormula BooleanFormula.mkTrue
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Foldable.length
+     Data.Foldable.null GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.error GHC.Num.fromInteger IdInfo.TyConId Name.Name Name.NamedThing
+     Name.getName__ Name.getOccName__ Name.nameOccName Name.nameUnique
+     OccName.OccName Panic.assertPanic SrcLoc.SrcSpan Unique.Uniquable Unique.Unique
+     Unique.getUnique__ Var.Id Var.TyVar
 *)

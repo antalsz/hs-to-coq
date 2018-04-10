@@ -7,9 +7,11 @@ Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
 Instance Default_CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
 
-(*
 Instance Default_IdInfo : GHC.Err.Default IdInfo :=
   GHC.Err.Build_Default _ (Mk_IdInfo GHC.Err.default GHC.Err.default GHC.Err.default
                          GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default
-                         GHC.Err.default GHC.Err.default GHC.Err.default).
-*)
+                         GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default_RecSelParent : GHC.Err.Default RecSelParent :=
+  GHC.Err.Build_Default _ (RecSelData GHC.Err.default).
+

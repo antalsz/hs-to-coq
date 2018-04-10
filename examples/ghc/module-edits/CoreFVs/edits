@@ -1,6 +1,15 @@
 skip module	FamInstEnv
 
+## 
+# NEEDED by Exitify
+#
+# CoreFVs.CoreExprWithFVs CoreFVs.freeVars
+# CoreFVs.freeVarsOf
+
 axiomatize module CoreFVs
+
+# NEEDED from Id
+# Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
 
 
 # notation
@@ -13,11 +22,23 @@ skip CoreFVs.orphNamesOfCoAxBranch
 skip CoreFVs.orphNamesOfType
 skip CoreFVs.orphNamesOfProv
 skip CoreFVs.orphNamesOfCoAxBranches
+skip CoreFVs.orphNamesOfTypes
+skip CoreFVs.orphNamesOfAxiom
+skip CoreFVs.orphNamesOfCos
+skip CoreFVs.orphNamesOfTyCon
+
+skip CoreFVs.varTypeTyCoFVs
+skip CoreFVs.varTypeTyCoVars
+skip CoreFVs.dVarTypeTyCoVars
+
 
 skip CoreFVs.tickish_fvs
 
-## mutual recursion /
+
+## mutual recursion 
 skip CoreFVs.exprOrphNames
+skip CoreFVs.exprsOrphNames
+
 skip CoreFVs.orphNamesOfCo
 # skip CoreFVs.freeVars
 # skip CoreFVs.expr_fvs

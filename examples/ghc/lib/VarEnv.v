@@ -18,6 +18,7 @@ Require Coq.Program.Wf.
 
 Require Data.Foldable.
 Require Data.Tuple.
+Require Datatypes.
 Require GHC.Base.
 Require GHC.DeferredFix.
 Require GHC.Err.
@@ -498,13 +499,12 @@ Definition uniqAway' : InScopeSet -> Var.Var -> Var.Var :=
           GHC.DeferredFix.deferredFix1 (fun try k =>
                                           let uniq := Unique.deriveUnique orig_unique (n GHC.Num.* k) in
                                           let msg :=
-                                            GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (Panic.noString k) (id
+                                            GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (Panic.noString k)
+                                                                                                 (Datatypes.id
                                                                                                   (GHC.Base.hs_string__
                                                                                                    "tries")))
                                                                                (Panic.noString var)) (Panic.noString
                                                               n) in
-                                          if andb Util.debugIsOn (k GHC.Base.> #1000) : bool
-                                          then Panic.panicStr (GHC.Base.hs_string__ "uniqAway loop:") msg else
                                           if VarSet.elemVarSetByKey uniq set : bool then try (k GHC.Num.+ #1) else
                                           if k GHC.Base.> #3 : bool then Var.setVarUnique var uniq else
                                           Var.setVarUnique var uniq) in
@@ -581,27 +581,27 @@ Definition varSetInScope : VarSet.VarSet -> InScopeSet -> bool :=
     end.
 
 (* External variables:
-     None Some andb bool id list negb op_zt__ option pair Data.Foldable.foldl
-     Data.Foldable.length Data.Tuple.fst GHC.Base.mappend GHC.Base.op_zg__
-     GHC.DeferredFix.deferredFix1 GHC.Err.Default GHC.Err.default GHC.Num.Int
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ Maybes.orElse
-     OccName.TidyOccEnv OccName.emptyTidyOccEnv Panic.noString Panic.panicStr
-     UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C
-     UniqDFM.alterUDFM UniqDFM.anyUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM
-     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
-     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM
-     UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
-     UniqDFM.plusUDFM_C UniqDFM.unitUDFM UniqFM.UniqFM UniqFM.addListToUFM
-     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.addToUFM_Directly
-     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
-     UniqFM.delListFromUFM UniqFM.disjointUFM UniqFM.elemUFM UniqFM.elemUFM_Directly
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
-     UniqFM.isNullUFM UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
+     None Some bool list negb op_zt__ option pair Data.Foldable.foldl
+     Data.Foldable.length Data.Tuple.fst Datatypes.id GHC.Base.mappend
+     GHC.Base.op_zg__ GHC.DeferredFix.deferredFix1 GHC.Err.Default GHC.Err.default
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ Maybes.orElse
+     OccName.TidyOccEnv OccName.emptyTidyOccEnv Panic.noString UniqDFM.UniqDFM
+     UniqDFM.addListToUDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C UniqDFM.alterUDFM
+     UniqDFM.anyUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.elemUDFM
+     UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM UniqDFM.foldUDFM
+     UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM
+     UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM UniqDFM.plusUDFM_C
+     UniqDFM.unitUDFM UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addToUFM
+     UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.addToUFM_Directly UniqFM.alterUFM
+     UniqFM.delFromUFM UniqFM.delFromUFM_Directly UniqFM.delListFromUFM
+     UniqFM.disjointUFM UniqFM.elemUFM UniqFM.elemUFM_Directly UniqFM.emptyUFM
+     UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM UniqFM.isNullUFM
+     UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
      UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM UniqFM.mapUFM
      UniqFM.minusUFM UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM
      UniqFM.plusUFMList UniqFM.plusUFM_C UniqFM.unitUFM UniqSet.sizeUniqSet
-     Unique.Unique Unique.deriveUnique Unique.getUnique Util.debugIsOn Util.zipEqual
-     Var.Var Var.setVarUnique VarSet.VarSet VarSet.delVarSet VarSet.elemVarSet
+     Unique.Unique Unique.deriveUnique Unique.getUnique Util.zipEqual Var.Var
+     Var.setVarUnique VarSet.VarSet VarSet.delVarSet VarSet.elemVarSet
      VarSet.elemVarSetByKey VarSet.emptyVarSet VarSet.extendVarSet
      VarSet.isEmptyVarSet VarSet.lookupVarSet VarSet.lookupVarSet_Directly
      VarSet.subVarSet VarSet.unionVarSet

@@ -1,5 +1,34 @@
 skip module CoreSyn
 skip module VarSet
+skip module Var
+skip module Demand
+
+rewrite forall x, andb Util.debugIsOn x = false
+rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
+
+# Break dependency on CoreSyn module
+rename type CoreSyn.Unfolding = unit
+rename value CoreSyn.noUnfolding = tt
+
+# Break dependency on Demand module
+rename type Demand.StrictSig  = unit
+rename type Demand.Demand     = unit
+rename value Demand.nopSig    = tt
+rename value Demand.topDmd    = tt
+rewrite forall x, Demand.isStrictDmd x       = false
+rewrite forall x, Demand.hasDemandEnvSig x   = false
+rewrite forall x, Demand.zapUsageDemand x    = tt
+rewrite forall x, Demand.zapUsedOnceDemand x = tt
+rewrite forall x, Demand.zapUsedOnceSig x    = tt
+
+## doesn't do anything
+rewrite forall x, IdInfo.zapUsageEnvInfo x = x
+rewrite forall x, IdInfo.zapUsageInfo x    = x
+rewrite forall x, IdInfo.zapUsedOnceInfo x = x
+
+# punned
+rename value IdInfo.IdInfo = IdInfo.Mk_IdInfo
+
 
 ## Rename local usages
 ##
@@ -19,40 +48,21 @@ skip IdInfo.ruleInfoFreeVars
 skip IdInfo.ruleInfoRules
 skip IdInfo.setRuleInfoHead
 
-## parameterized in the preamble.v
-skip IdInfo.IdInfo
-skip IdInfo.vanillaIdInfo
-skip IdInfo.noCafIdInfo
-
+# needs a default for RecSelParent *before* one can be 
+# provided in the midamble
 skip IdInfo.sel_tycon
 
 ## Operations on IdInfo
 ## 
 ## If we need these, we need to move them elsewhere
 ##
-skip IdInfo.vanillaCafInfo
-skip IdInfo.setRuleInfo
-skip IdInfo.setInlinePragInfo
-skip IdInfo.setOccInfo
-skip IdInfo.setUnfoldingInfo
-skip IdInfo.setArityInfo
-skip IdInfo.setCallArityInfo
-skip IdInfo.setCafInfo
-skip IdInfo.setOneShotInfo
-skip IdInfo.setDemandInfo
-skip IdInfo.setStrictnessInfo
-
-skip IdInfo.zapLamInfo
-skip IdInfo.zapDemandInfo
-skip IdInfo.zapUsageInfo
 skip IdInfo.zapUsageEnvInfo
-skip IdInfo.zapUsedOnceInfo
-skip IdInfo.zapFragileInfo
-skip IdInfo.zapFragileUnfolding
-skip IdInfo.zapTailCallInfo
-skip IdInfo.zapCallArityInfo
 
-skip IdInfo.setNeverLevPoly
+## needs CoreSyn.isFragileUnfolding
+skip IdInfo.zapFragileUnfolding
+skip IdInfo.zapFragileInfo
+
+## needs Type.resultIdLevPoly
 skip IdInfo.setLevityInfoWithType
 skip IdInfo.isNeverLevPolyIdInfo
 

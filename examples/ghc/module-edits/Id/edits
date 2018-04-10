@@ -3,91 +3,87 @@
 # Id.asJoinId Id.idJoinArity Id.isJoinId Id.isJoinId_maybe
 # Id.mkSysLocal Id.setIdOccInfo
 #
+# NEEDED for CoreFVs
+# Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
+# 
 ##############
 
-axiomatize module Id
+# rewrite forall x, andb Util.debugIsOn x = false
 
+rewrite forall x, IdInfo.pprIdDetails x = Panic.someSDoc
+
+# rewrite forall x, TyCoRep.isCoercionType x = false
+
+# rewrite forall arg dmd, IdInfo.setDemandInfo arg dmd = arg
+# rewrite forall arg dmd, IdInfo.setStrictnessInfo arg dmd = arg
+# rewrite forall arg dmd, IdInfo.setUnfoldingInfo arg dmd = arg
+# rewrite forall arg,     IdInfo.strictnessInfo arg = tt
+
+## CallStack
+rewrite forall x, Var.idInfo x = @Var.idInfo tt x
+
+## Rewrites due to skipped functions (here)
+
+# rewrite forall x,     Id.idType x = tt
+# rewrite forall arg y, Id.setIdUnfolding arg y = arg
+
+
+## Local rewrites 
+
+rewrite forall dc, DataCon.isUnboxedTupleCon dc          =  DataCon.isUnboxedTupleCon (lookupDataCon dc)
+rewrite forall dc, DataCon.isUnboxedSumCon dc            = (DataCon.isUnboxedSumCon (lookupDataCon dc))
+
+in Id.isClassOpId_maybe rewrite forall cls, Some cls     = Some (lookupClass cls)
+in Id.isDataConId_maybe rewrite forall con, Some con     = Some (lookupDataCon con)
+in Id.isDataConWorkId_maybe rewrite forall con, Some con = Some (lookupDataCon con)
+
+in Id.isJoinId_maybe rewrite forall str id x, Outputable.assertPprPanic str id x = None
+
+in Id.transferPolyIdInfo rewrite forall x y, Demand.increaseStrictSigArity x y = tt
 
 ## enumFrom
-skip Id.mkTemplateLocalsNum
+in Id.mkTemplateLocalsNum rewrite forall n tys, enumFrom n = (GHC.Enum.enumFromTo n (GHC.List.length tys))  
+
+##################################
+
 
 # StaticFlags
 skip Id.isStateHackType
+skip Id.idStateHackOneShotInfo
+skip Id.isOneShotBndr 
+skip Id.isProbablyOneShotLambda
 skip Id.typeOneShot
 
-# IdInfo
-skip Id.hasNoBinding
-skip Id.isClassOpId_maybe
-skip Id.isDataConId_maybe
-skip Id.isDataConWorkId
-skip Id.isDataConWorkId_maybe
-skip Id.isFCallId
-skip Id.isFCallId_maybe
-skip Id.isPrimOpId
-skip Id.isPrimOpId_maybe
-skip Id.mkExportedVanillaId
-skip Id.mkVanillaGlobalWithInfo
-skip Id.mkVanillaGlobal
-skip Id.mkLocalId
-skip Id.mkLocalIdWithInfo
+# Missing parts of IdInfo
+skip Id.isNeverLevPolyId 
+skip Id.zapFragileIdInfo
+skip Id.zapIdUsageEnvInfo
 
-skip Id.idArity
-skip Id.idCafInfo
-skip Id.idCallArity
-
-skip Id.idInlinePragma
-skip Id.idRuleMatchInfo 
-skip Id.idInlineActivation
-
-skip Id.idOccInfo
-skip Id.isDeadBinder
-
-skip Id.idOneShotInfo
-skip Id.idSpecialisation 
-skip Id.idHasRules
 skip Id.idCoreRules
-
 skip Id.idStrictness
 skip Id.isBottomingId
-
-in Id.localiseId rewrite forall , Var.idInfo id = (@Var.idInfo tt id)
-
 
 # Type/TyCoRep
 skip Id.isStrictId
 skip Id.isDictId
 skip Id.idRepArity
 skip Id.isEvVar
-skip Id.setIdType
-
-# TyCoRep
-skip Id.mkLocalIdOrCoVarWithInfo
 skip Id.mkLocalCoVar
-skip Id.mkLocalIdOrCoVar
 
+# RepType
+skip Id.idFunRepArity
 
 # Demand
+
 skip Id.idDemandInfo
-# skip Id.idStrictness
-# skip Id.isBottomingId
-# skip Id.isStrictId
-# skip Id.setIdDemandInfo
-# skip Id.setIdSpecialization
-# skip Id.transferPolyIdInfo
-# skip Id.zapIdStrictness
+skip Id.zapIdDemandInfo
 
-# CoreSyn
-# skip Id.idUnfolding
-# skip Id.setIdUnfolding
-# skip Id.setIdUnfoldingLazily
-# skip Id.realIdUnfolding
+# CoreSyn (Unfolding)
 
-# DataCon
-# skip Id.isDataConId_maybe
-skip Id.idDataCon
-# skip Id.isDataConWorkId_maybe
+skip Id.idUnfolding
+skip Id.setIdUnfolding
+skip Id.setIdUnfoldingLazily
+skip Id.realIdUnfolding
+skip Id.zapStableUnfolding
 
-skip Id.isConLikeId
 
-# Class
-# skip Id.isClassOpId_maybe

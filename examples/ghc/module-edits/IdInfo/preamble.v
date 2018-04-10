@@ -55,16 +55,16 @@ data IdInfo
         levityInfo      :: LevityInfo    -- ^ when applied, will this Id ever have a levity-polymorphic type?
     }
 
+data RuleInfo
+  = RuleInfo
+        [CoreRule]
+        DVarSet         -- Locally-defined free vars of *both* LHS and RHS
+
+
 *)
 
-Parameter IdInfo        : Type.
-Parameter vanillaIdInfo : IdInfo.
-Parameter noCafIdInfo   : IdInfo.
-
-Instance Default_IdInfo : GHC.Err.Default IdInfo :=
-  GHC.Err.Build_Default _ vanillaIdInfo.
-
 (* -------------------- *)
+
 
 Parameter RuleInfo : Type.
 Parameter emptyRuleInfo : RuleInfo.
@@ -75,10 +75,3 @@ Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
 
 
 (* -------------------- *)
-
-(*
-Parameter RecSelParent : Type.
-Parameter Default_RecSelParent : GHC.Err.Default RecSelParent.
-
-Parameter Eq___RecSelParent : GHC.Base.Eq_ RecSelParent.
-*)

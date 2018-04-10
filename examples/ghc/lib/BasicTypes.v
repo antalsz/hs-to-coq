@@ -14,6 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Init.Datatypes.
 Require Data.Function.
+Require Datatypes.
 Require FastString.
 Require GHC.Base.
 Require GHC.Err.
@@ -1337,8 +1338,8 @@ Definition pprInline' : bool -> InlinePragma -> GHC.Base.String :=
         let pp_sat :=
           match mb_arity with
           | Some ar =>
-              id (GHC.Base.mappend (id (GHC.Base.hs_string__ "sat-args=")) (Panic.noString
-                                    ar))
+              GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "sat-args="))
+                               (Panic.noString ar)
           | _ => Panic.someSDoc
           end in
         let pp_act :=
@@ -1482,8 +1483,8 @@ Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
     match arg_0__ with
     | cons l nil => Panic.noString (SrcLoc.unLoc l)
     | ws =>
-        GHC.Base.mappend (GHC.Base.mappend (id (GHC.Base.hs_string__ "["))
-                                           (Panic.noString (Panic.someSDoc))) (id (GHC.Base.hs_string__ "]"))
+        GHC.Base.mappend (GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "["))
+                                           (Panic.noString (Panic.someSDoc))) (Datatypes.id (GHC.Base.hs_string__ "]"))
     end.
 
 Definition pprAlternative {a}
@@ -1499,8 +1500,7 @@ Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | AlwaysTailCalled ar =>
-        GHC.Base.mappend (Panic.noString (GHC.Char.hs_char__ "T")) (id (Panic.noString
-                                                                        ar))
+        GHC.Base.mappend (Panic.noString (GHC.Char.hs_char__ "T")) (Panic.noString ar)
     | NoTailCallInfo => Panic.someSDoc
     end.
 
@@ -1508,13 +1508,12 @@ Definition pprWarningTxtForMsg : WarningTxt -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_WarningTxt _ ws =>
-        id (Panic.noString (GHC.Base.map (Panic.noString GHC.Base.∘
-                                          (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ws))
+        Panic.noString (GHC.Base.map (Panic.noString GHC.Base.∘
+                                      (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ws)
     | DeprecatedTxt _ ds =>
-        GHC.Base.mappend (id (GHC.Base.hs_string__ "Deprecated:")) (id (Panic.noString
-                                                                        (GHC.Base.map (Panic.noString GHC.Base.∘
-                                                                                       (sl_fs GHC.Base.∘ SrcLoc.unLoc))
-                                                                         ds)))
+        GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "Deprecated:"))
+                         (Panic.noString (GHC.Base.map (Panic.noString GHC.Base.∘
+                                                        (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ds))
     end.
 
 Definition pprWithSourceText
@@ -1522,7 +1521,7 @@ Definition pprWithSourceText
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | NoSourceText, d => d
-    | Mk_SourceText src, _ => id src
+    | Mk_SourceText src, _ => Datatypes.id src
     end.
 
 Definition seqOccInfo : OccInfo -> unit :=
@@ -1636,8 +1635,8 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
     end.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false id list negb nil op_zt__
-     option pair true tt unit Coq.Init.Datatypes.app Data.Function.on
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option
+     pair true tt unit Coq.Init.Datatypes.app Data.Function.on Datatypes.id
      FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
      GHC.Base.compare GHC.Base.compare__ GHC.Base.map GHC.Base.mappend GHC.Base.max__
      GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____

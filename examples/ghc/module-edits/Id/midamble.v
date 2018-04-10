@@ -1,5 +1,6 @@
-(* Record selectors *)
-Import IdInfo.
+Parameter lookupDataCon : IdInfo.DataConId -> DataCon.DataCon.
+Parameter lookupClass : IdInfo.ClassId -> Class.Class.
+
 
 (*
 Parameter hasNoBinding : Var.Id -> bool.

@@ -85,9 +85,9 @@ CORE_MODULES = \
   ConLike \
   CoreFVs \
   Exitify \
+  CallArity \
 
 NOTRANSLATE = \
-  CallArity \
   Constructors \
   CoreType \
   IdInfo2 \

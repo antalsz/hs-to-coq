@@ -1,1 +1,1 @@
-lib/IdInfo.v: 
+lib/IdInfo.v: lib/BasicTypes.h2ci

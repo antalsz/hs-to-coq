@@ -20,7 +20,6 @@ Require BasicTypes.
 Require CoreSyn.
 Require FV.
 Require NameSet.
-Require TyCon.
 Require Var.
 Require VarSet.
 
@@ -147,21 +146,21 @@ Axiom addBndr : CoreSyn.CoreBndr -> FV.FV -> FV.FV.
 
 (* tickish_fvs skipped *)
 
-Axiom exprsOrphNames : list CoreSyn.CoreExpr -> NameSet.NameSet.
+(* exprsOrphNames skipped *)
 
 (* exprOrphNames skipped *)
 
 (* orphNamesOfFamInst skipped *)
 
-Axiom orphNamesOfAxiom : forall {br}, list br -> NameSet.NameSet.
+(* orphNamesOfAxiom skipped *)
 
-Axiom orphNamesOfCos : list unit -> NameSet.NameSet.
+(* orphNamesOfCos skipped *)
 
 (* orphNamesOfProv skipped *)
 
 (* orphNamesOfCo skipped *)
 
-Axiom orphNamesOfTypes : list unit -> NameSet.NameSet.
+(* orphNamesOfTypes skipped *)
 
 (* orphNamesOfType skipped *)
 
@@ -171,7 +170,7 @@ Axiom orphNamesOfTypes : list unit -> NameSet.NameSet.
 
 (* orphNamesOfCoCon skipped *)
 
-Axiom orphNamesOfTyCon : TyCon.TyCon -> NameSet.NameSet.
+(* orphNamesOfTyCon skipped *)
 
 Axiom orphNamesOfThings : forall {a},
                           (a -> NameSet.NameSet) -> list a -> NameSet.NameSet.
@@ -192,20 +191,20 @@ Axiom unionFVs : VarSet.DVarSet -> VarSet.DVarSet -> VarSet.DVarSet.
 
 Axiom unionFVss : list VarSet.DVarSet -> VarSet.DVarSet.
 
-Axiom varTypeTyCoVars : Var.Var -> VarSet.TyCoVarSet.
+(* varTypeTyCoVars skipped *)
 
-Axiom dVarTypeTyCoVars : Var.Var -> VarSet.DTyCoVarSet.
+(* dVarTypeTyCoVars skipped *)
 
-Axiom varTypeTyCoFVs : Var.Var -> FV.FV.
+(* varTypeTyCoFVs skipped *)
 
 Axiom idRuleVars : Var.Id -> VarSet.VarSet.
 
 Axiom idRuleFVs : Var.Id -> FV.FV.
 
 (* External variables:
-     AnnAlt AnnExpr bool list op_zt__ option unit BasicTypes.Activation
-     CoreSyn.AnnBind CoreSyn.AnnExpr' CoreSyn.CoreBind CoreSyn.CoreBndr
-     CoreSyn.CoreExpr CoreSyn.CoreRule CoreSyn.CoreVect CoreSyn.Unfolding FV.FV
-     FV.InterestingVarFun NameSet.NameSet TyCon.TyCon Var.Id Var.Var VarSet.DIdSet
-     VarSet.DTyCoVarSet VarSet.DVarSet VarSet.IdSet VarSet.TyCoVarSet VarSet.VarSet
+     AnnAlt AnnExpr bool list op_zt__ option BasicTypes.Activation CoreSyn.AnnBind
+     CoreSyn.AnnExpr' CoreSyn.CoreBind CoreSyn.CoreBndr CoreSyn.CoreExpr
+     CoreSyn.CoreRule CoreSyn.CoreVect CoreSyn.Unfolding FV.FV FV.InterestingVarFun
+     NameSet.NameSet Var.Id Var.Var VarSet.DIdSet VarSet.DVarSet VarSet.IdSet
+     VarSet.VarSet
 *)

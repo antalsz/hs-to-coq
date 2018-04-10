@@ -397,21 +397,6 @@ Definition isLocalId : Var -> bool :=
     | _ => false
     end.
 
-Definition setIdNotExported : Id -> Id :=
-  fun id =>
-    if andb Util.debugIsOn (negb (isLocalId id)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
-          #591)
-    else match id with
-         | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-         | Mk_TcTyVar _ _ _ _ =>
-             GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-         | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-         id_info_5__ =>
-             Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
-                   id_details_4__ id_info_5__
-         end.
-
 Definition isNonCoVarId : Var -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -521,6 +506,21 @@ Definition setIdExported : Id -> Id :=
     | tv =>
         Panic.panicStr (GHC.Base.hs_string__ "setIdExported") (Panic.noString tv)
     end.
+
+Definition setIdNotExported : Id -> Id :=
+  fun id =>
+    if false : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
+          #591)
+    else match id with
+         | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+         | Mk_TcTyVar _ _ _ _ =>
+             GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+         | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+         id_info_5__ =>
+             Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
+                   id_details_4__ id_info_5__
+         end.
 
 Definition setTcTyVarDetails : TyVar -> unit -> TyVar :=
   fun tv details =>
@@ -685,18 +685,17 @@ Program Instance Uniquable__Var : Unique.Uniquable Var :=
   fun _ k => k {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
 
 (* External variables:
-     andb bool comparison false list negb orb true tt unit GHC.Base.Eq_
-     GHC.Base.Monad GHC.Base.Ord GHC.Base.compare__ GHC.Base.map GHC.Base.max__
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
-     GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Base.return_ GHC.Err.Build_Default
-     GHC.Err.Default GHC.Err.error GHC.Num.Int GHC.Num.fromInteger IdInfo.IdDetails
-     IdInfo.IdInfo IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo
-     Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.nameOccName
+     bool comparison false list negb orb true tt unit GHC.Base.Eq_ GHC.Base.Monad
+     GHC.Base.Ord GHC.Base.compare__ GHC.Base.map GHC.Base.max__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zsze____ GHC.Base.return_ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger IdInfo.IdDetails IdInfo.IdInfo
+     IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name
+     Name.NamedThing Name.getName__ Name.getOccName__ Name.nameOccName
      Name.nameUnique Name.setNameUnique OccName.HasOccName OccName.OccName
      OccName.occName__ Panic.assertPanic Panic.noString Panic.panicStr
      Unique.Uniquable Unique.Unique Unique.getKey Unique.getUnique Unique.getUnique__
      Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.HasDebugCallStack
-     Util.debugIsOn
 *)

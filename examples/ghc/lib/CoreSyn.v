@@ -26,6 +26,7 @@ Require Coq.Init.Peano.
 Require Coq.Lists.List.
 Require Data.Foldable.
 Require DataCon.
+Require Datatypes.
 Require DynFlags.
 Require GHC.Base.
 Require GHC.Char.
@@ -863,8 +864,7 @@ Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | DataAlt con1, DataAlt con2 =>
-        if andb Util.debugIsOn (negb (DataCon.dataConTyCon con1 GHC.Base.==
-                                      DataCon.dataConTyCon con2)) : bool
+        if false : bool
         then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
               #319)
         else GHC.Base.compare (DataCon.dataConTag con1) (DataCon.dataConTag con2)
@@ -1049,11 +1049,11 @@ Definition cmpAltCon : AltCon -> AltCon -> comparison :=
     | LitAlt _, DEFAULT => Gt
     | con1, con2 =>
         Panic.warnPprTrace (true) (GHC.Base.hs_string__
-                            "ghc/compiler/coreSyn/CoreSyn.hs") #1700 (GHC.Base.mappend (GHC.Base.mappend (id
-                                                                                                          (GHC.Base.hs_string__
-                                                                                                           "Comparing incomparable AltCons"))
-                                                                                                         (Panic.noString
-                                                                                                          con1))
+                            "ghc/compiler/coreSyn/CoreSyn.hs") #1700 (GHC.Base.mappend (GHC.Base.mappend
+                                                                                        (Datatypes.id
+                                                                                         (GHC.Base.hs_string__
+                                                                                          "Comparing incomparable AltCons"))
+                                                                                        (Panic.noString con1))
                                                                                        (Panic.noString con2)) Lt
     end.
 
@@ -1529,7 +1529,7 @@ Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
     if Var.isTyVar v : bool then Type_ (tt) else
     if Var.isCoVar v : bool then Coercion (tt) else
-    if andb Util.debugIsOn (negb (Var.isId v)) : bool
+    if false : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
           #1920)
     else Var v.
@@ -1548,23 +1548,23 @@ Definition mkConApp2 {b}
 
 (* External variables:
      Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb
-     bool comparison cons deAnnotate' deTagExpr false id list negb nil op_zt__ option
+     bool comparison cons deAnnotate' deTagExpr false list negb nil op_zt__ option
      pair size snd true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
      BasicTypes.Arity BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Init.Peano.lt
      Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.length DataCon.DataCon DataCon.dataConTag DataCon.dataConTyCon
-     DataCon.dataConWorkId DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__
-     GHC.Base.map GHC.Base.mappend GHC.Base.max__ GHC.Base.min GHC.Base.min__
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____
-     GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
+     Data.Foldable.length DataCon.DataCon DataCon.dataConTag DataCon.dataConWorkId
+     Datatypes.id DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
+     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.map
+     GHC.Base.mappend GHC.Base.max__ GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
+     GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
      GHC.Real.Rational GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
      Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
      Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
      Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace TyCon.TyCon
-     Util.count Util.debugIsOn Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar
-     Var.isId Var.isTyVar VarEnv.InScopeSet
+     Util.count Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
+     VarEnv.InScopeSet
 *)

@@ -9,4 +9,8 @@ rewrite forall x y, Data.Foldable.minimum (cons x y) = Data.Foldable.foldr GHC.B
 
 rewrite forall x, Id.idStrictness x = Demand.botSig
 
+# ANTALZ: even if we get mutrec working, we will still have this issue
+#
+# Error: Anomaly "Evar ?X650 was not declared."
+# Please report at http://coq.inria.fr/bugs/.
 skip CallArity.callArityBind

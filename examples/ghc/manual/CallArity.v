@@ -51,6 +51,8 @@ Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type 
   fun p => match p with (x,y)=> (x, f y) end.
 
 (* ------------------------- mutual recursion hack -------------------- *)
+
+(* ANTALZ: This looks like a good example of structural mutual recursion *)
 Parameter callArityBind
    : VarSet.VarSet ->
      CallArityRes ->

@@ -1,6 +1,10 @@
-axiomatize module PatSyn
+# axiomatize module PatSyn
 
 skip PatSyn.pprPatSynType
 
+# no type information
+skip PatSyn.patSynInstArgTys
+skip PatSyn.patSynInstResTy 
 
+order PatSyn.Uniquable__PatSyn PatSyn.Eq___PatSyn_op_zeze__ PatSyn.Eq___PatSyn_op_zsze__
 

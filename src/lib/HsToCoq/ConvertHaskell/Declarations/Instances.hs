@@ -159,8 +159,10 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                                           ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
                                    Nothing -- error handler
 
-    cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                       return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
+    cdefs <-  mapM (\ConvertedDefinition{..} ->
+                       -- We have a tough time handling recursion (including mutual
+                       -- recursion) here because of name overloading
+                       pure (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
 
     defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
                  -- lookup default methods in the global state, using the

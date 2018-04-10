@@ -21,6 +21,7 @@ Require CoreSyn.
 Require DataCon.
 Require DynFlags.
 Require FastString.
+Require GHC.Base.
 Require GHC.Num.
 Require TyCon.
 Require Unique.
@@ -197,7 +198,9 @@ Axiom exprIsConLike : CoreSyn.CoreExpr -> bool.
 
 Axiom exprIsTopLevelBindable : CoreSyn.CoreExpr -> unit -> bool.
 
-Axiom exprIsLiteralString : CoreSyn.CoreExpr -> bool.
+Axiom exprIsTickedString : CoreSyn.CoreExpr -> bool.
+
+Axiom exprIsTickedString_maybe : CoreSyn.CoreExpr -> option GHC.Base.String.
 
 (* dataConRepInstPat skipped *)
 
@@ -238,6 +241,6 @@ Axiom isJoinBind : CoreSyn.CoreBind -> bool.
      Alt bool list op_zt__ option unit BasicTypes.Arity CoreSyn.AltCon
      CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreBndr
      CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish DataCon.DataCon DynFlags.DynFlags
-     FastString.FastString GHC.Num.Int TyCon.TyCon Unique.Unique Var.Id Var.TyVar
-     Var.Var VarEnv.InScopeSet VarEnv.RnEnv2
+     FastString.FastString GHC.Base.String GHC.Num.Int TyCon.TyCon Unique.Unique
+     Var.Id Var.TyVar Var.Var VarEnv.InScopeSet VarEnv.RnEnv2
 *)

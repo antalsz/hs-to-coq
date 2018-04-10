@@ -10,12 +10,13 @@ module HsToCoq.ConvertHaskell.Expr (
 
 import Control.Lens
 
+import Control.Arrow ((&&&))
 import Data.Bifunctor
 import Data.Traversable
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
-import Data.List.NonEmpty (nonEmpty, NonEmpty)
+import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
 import qualified HsToCoq.Util.List as NEL ((|>))
 import Data.Text (Text)
@@ -24,6 +25,8 @@ import qualified Data.Text as T
 import Control.Monad.Trans.Maybe
 import Control.Monad.Except
 import Control.Monad.Writer
+
+import Data.Graph
 
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
@@ -825,9 +828,9 @@ convertTypedBinding convHsTy FunBind{..}   = runMaybeT $ do
              [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
              _ -> convUnsupported "malformed multi-match variable definitions"
       else do
-        whichFix <- view (edits.termination.at name) >>= \case
-            Just order       -> pure $ wfFix order
-            _ -> pure $ Fix . FixOne
+        whichFix <- view (edits.termination.at name) <&> \case
+            Just order -> wfFix order
+            Nothing    -> Fix . FixOne
         (argBinders, match) <- convertFunction fun_matches
         pure $ let bodyVars = getFreeVars match
                in if name `S.member` bodyVars
@@ -875,45 +878,92 @@ convertTypedModuleBinding ty defn = do
             _ -> convUnsupported "Non-function top level binding"
     withCurrentDefinition name (convertTypedBinding ty defn)
 
--- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad r m
                            => [HsBind GhcRn]
                            -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
                            -> Maybe (HsBind GhcRn -> GhcException -> m a)
                            -> m [a]
-convertTypedModuleBindings defns sigs build mhandler =
-  fmap catMaybes . for defns $ \defn ->
-    runMaybeT $ do
-       let wrap = case mhandler of Just handler -> ghandle (\e ->  lift $ handler defn e)
-                                   Nothing      -> id
-       wrap $ do
-         ty <- case defn of
-                 FunBind{fun_id = L _ hsName} ->
-                   fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
-                 _ ->
-                   pure Nothing
-         conv_bind <- MaybeT $ convertTypedModuleBinding ty defn
-         lift $ build conv_bind
+convertTypedModuleBindings = convertMultipleBindings convertTypedModuleBinding
 
 convertTypedBindings :: LocalConvMonad r m
                      => [HsBind GhcRn] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind GhcRn -> GhcException -> m a)
                      -> m [a]
-convertTypedBindings defns sigs build mhandler =
-  fmap catMaybes . for defns $ \defn ->
-     runMaybeT $ do
-       let wrap = case mhandler of Just handler -> ghandle (\e ->  lift $ handler defn e)
-                                   Nothing      -> id
-       wrap $ do
+convertTypedBindings = convertMultipleBindings convertTypedBinding
+
+-- TODO mutual recursion :-(
+convertMultipleBindings :: ConversionMonad r m
+                        => (Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding))
+                        -> [HsBind GhcRn]
+                        -> Map Qualid Signature
+                        -> (ConvertedBinding -> m a)
+                        -> Maybe (HsBind GhcRn -> GhcException -> m a)
+                        -> m [a]
+convertMultipleBindings convertSingleBinding defns sigs build mhandler =
+  let (handler, wrap) = case mhandler of
+        Just handler -> ( uncurry handler
+                        , \defn -> ghandle $ pure . Left . (defn,))
+        Nothing      -> ( const $ throwProgramError "Internal error: \
+                                                    \convertMultipleBindings tried to both \
+                                                    \handle and ignore an exception"
+                            -- Safe because the only place `Left' is introduced
+                            -- is in the previous case branch
+                        , flip const )
+  in traverse (either handler build) <=< addMutualRecursion <=< fmap catMaybes . for defns $ \defn ->
+       runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
                    fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
                  _ ->
                    pure Nothing
-         conv_bind <- MaybeT $ convertTypedBinding ty defn
-         lift $ build conv_bind
+         MaybeT $ convertSingleBinding ty defn
+
+addMutualRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
+addMutualRecursion eBindings = do
+  fixedBindings <-  M.fromList . map (convDefName &&& id) . concat
+                <$> traverse fixConnComp (stronglyConnComp
+                       [ (cd, convDefName, S.toAscList $ getFreeVars convDefBody)
+                       | Right (ConvertedDefinitionBinding cd@ConvertedDefinition{..}) <- eBindings ])
+      
+  pure . flip map eBindings $ \case
+    Left  e                               -> Left  e
+    Right cpb@ConvertedPatternBinding{}   -> Right cpb
+    Right (ConvertedDefinitionBinding cd) -> case M.lookup (convDefName cd) fixedBindings of
+      Just cd' -> Right $ ConvertedDefinitionBinding cd'
+      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
+  where
+    fixConnComp (AcyclicSCC cd)  = pure [cd]
+    fixConnComp (CyclicSCC  cds) = for cds $ \self -> do
+      bodies <- maybe (convUnsupported "mutual recursion through complex \
+                                       \(non-fix, non-fun) values")
+                      pure
+             $  traverse toFixBody cds
+      let selfName = case convDefBody self of
+                       Fix (FixOne (FixBody name _ _ _ _)) -> name
+                       _                                   -> convDefName self
+      pure $ ConvertedDefinition
+          { convDefName = convDefName self
+          , convDefArgs = []
+          , convDefType = maybeForall (convDefArgs self) <$> convDefType self
+          , convDefBody = case bodies of
+                            body1 : body2 : bodies' ->
+                              Fix $ FixMany body1 (body2 :| bodies') selfName
+                            _ ->
+                              error "INTERNAL ERROR: inserting into a known-nonempty list \
+                                    \produced < 2 elements" }
+    
+    toFixBody ConvertedDefinition{..} = do
+      (mname, args, mord, mty, body) <- case convDefBody of
+        Fix (FixOne (FixBody name args mord mty body)) ->
+          Just (Just name, args, mord, mty, body)
+        Fun args body ->
+          Just (Nothing, args, Nothing, Nothing, body)
+        _ ->
+          Nothing
+      Just $ FixBody (fromMaybe convDefName mname) (convDefArgs <++ args) mord mty body
+
 
 --------------------------------------------------------------------------------
 

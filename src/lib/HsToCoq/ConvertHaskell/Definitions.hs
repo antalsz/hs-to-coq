@@ -9,16 +9,17 @@ module HsToCoq.ConvertHaskell.Definitions (
 import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
+import HsToCoq.Util.List
 
 import Data.Bifunctor
 import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
 
-data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Qualid
-                                               , convDefArgs  :: ![Binder]
-                                               , convDefType  :: !(Maybe Term)
-                                               , convDefBody  :: !Term
+data ConvertedDefinition = ConvertedDefinition { convDefName :: !Qualid
+                                               , convDefArgs :: ![Binder]
+                                               , convDefType :: !(Maybe Term)
+                                               , convDefBody :: !Term
                                                }
                          deriving (Eq, Ord, Show, Read)
 
@@ -40,12 +41,10 @@ decomposeFixpoint (Fix (FixOne (FixBody name binders _ _ body)))
 -- argument is part of the “Gallina” AST, and the concrete representation
 -- is created by the pretty-printer
 decomposeFixpoint (App _wfFix [PosArg _rel, PosArg _measure, PosArg _underscore, PosArg (Fun binders body)])
-    | (b:bs) <- init $ toList binders
-    , Inferred Explicit (Ident name) <- last $ toList binders
+    | (b:bs, Inferred Explicit (Ident name)) <- unsnocNEL binders
     = Just (name, b :| bs, body)
 decomposeFixpoint _
     = Nothing
-
 
 toProgramFixpointSentence ::
     ConversionMonad r m =>

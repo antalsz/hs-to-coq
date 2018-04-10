@@ -14,6 +14,7 @@ import Control.Lens
 
 import Control.Arrow ((&&&))
 import Data.Bifunctor
+import Data.Foldable
 import Data.Traversable
 import Data.Maybe
 import Data.List (intercalate)
@@ -28,7 +29,7 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Except
 import Control.Monad.Writer
 
-import Data.Graph
+import HsToCoq.Util.Containers
 
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
@@ -803,6 +804,7 @@ guardTerm gs rhs failure = go gs where
 
 --------------------------------------------------------------------------------
 
+-- Does not detect recursion/introduce `fix`
 convertTypedBinding :: LocalConvMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
 convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
 convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
@@ -829,15 +831,7 @@ convertTypedBinding convHsTy FunBind{..}   = runMaybeT $ do
       then case unLoc $ mg_alts fun_matches of
              [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
              _ -> convUnsupported "malformed multi-match variable definitions"
-      else do
-        whichFix <- view (edits.termination.at name) <&> \case
-            Just order -> wfFix order
-            Nothing    -> Fix . FixOne
-        (argBinders, match) <- convertFunction fun_matches
-        pure $ let bodyVars = getFreeVars match
-               in if name `S.member` bodyVars
-                  then whichFix $ FixBody name argBinders Nothing Nothing match
-                  else Fun argBinders match
+      else uncurry Fun <$> convertFunction fun_matches
 
     addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
 
@@ -938,7 +932,7 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                             -- Safe because the only place `Left' is introduced
                             -- is in the previous case branch
                         , flip const )
-  in traverse (either handler build) <=< addMutualRecursion <=< fmap catMaybes . for defns $ \defn ->
+  in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \defn ->
        runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
@@ -947,12 +941,12 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                    pure Nothing
          MaybeT $ convertSingleBinding ty defn
 
-addMutualRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
-addMutualRecursion eBindings = do
-  fixedBindings <-  M.fromList . map (convDefName &&& id) . concat
-                <$> traverse fixConnComp (stronglyConnComp
-                       [ (cd, convDefName, S.toAscList $ getFreeVars convDefBody)
-                       | Right (ConvertedDefinitionBinding cd@ConvertedDefinition{..}) <- eBindings ])
+addRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
+addRecursion eBindings = do
+  fixedBindings <-  M.fromList . fmap (convDefName &&& id) . foldMap toList
+                <$> traverse fixConnComp (stronglyConnCompNE
+                      [ (cd, convDefName, S.toAscList $ getFreeVars convDefBody)
+                      | Right (ConvertedDefinitionBinding cd@ConvertedDefinition{..}) <- eBindings ])
       
   pure . flip map eBindings $ \case
     Left  e                               -> Left  e
@@ -961,36 +955,37 @@ addMutualRecursion eBindings = do
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
       Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
   where
-    fixConnComp (AcyclicSCC cd)  = pure [cd]
-    fixConnComp (CyclicSCC  cds) = for cds $ \self -> do
-      bodies <- maybe (convUnsupported "mutual recursion through complex \
-                                       \(non-fix, non-fun) values")
-                      pure
-             $  traverse toFixBody cds
-      let selfName = case convDefBody self of
-                       Fix (FixOne (FixBody name _ _ _ _)) -> name
-                       _                                   -> convDefName self
-      pure $ ConvertedDefinition
-          { convDefName = convDefName self
-          , convDefArgs = []
-          , convDefType = maybeForall (convDefArgs self) <$> convDefType self
-          , convDefBody = case bodies of
-                            body1 : body2 : bodies' ->
-                              Fix $ FixMany body1 (body2 :| bodies') selfName
-                            _ ->
-                              error "INTERNAL ERROR: inserting into a known-nonempty list \
-                                    \produced < 2 elements" }
-    
-    toFixBody ConvertedDefinition{..} = do
-      (mname, args, mord, mty, body) <- case convDefBody of
-        Fix (FixOne (FixBody name args mord mty body)) ->
-          Just (Just name, args, mord, mty, body)
-        Fun args body ->
-          Just (Nothing, args, Nothing, Nothing, body)
+    fixConnComp (cd :| []) | convDefName cd `notElem` getFreeVars (convDefBody cd) =
+      pure $ cd :| []
+    fixConnComp cds = do
+      bodies <- for cds $ \case
+        ConvertedDefinition{convDefBody = Fun args body, ..} ->
+          pure $ FixBody convDefName (convDefArgs <++ args) Nothing Nothing body
         _ ->
-          Nothing
-      Just $ FixBody (fromMaybe convDefName mname) (convDefArgs <++ args) mord mty body
-
+          convUnsupported "mutual recursion through non-lambda values"
+      
+      for cds $ \ConvertedDefinition{..} -> do
+        fixedBody <- view (edits.termination.at convDefName) >>= \case
+          -- TODO: Support non-structural mutual recursion
+          --
+          -- When we do the preceding, we will probably need to check the
+          -- termination status for every name in the mutually recursive block
+          Just order -> case bodies of
+            body1 :| [] ->
+              pure $ wfFix order body1
+            _body1 :| _body2 : _bodies' ->
+              convUnsupported "non-structural mutual recursion"
+          Nothing -> pure . Fix $ case bodies of
+            body1 :| [] ->
+              FixOne body1
+            body1 :| body2 : bodies' ->
+              FixMany body1 (body2 :| bodies') convDefName
+        
+        pure $ ConvertedDefinition
+                 { convDefName = convDefName
+                 , convDefArgs = []
+                 , convDefType = maybeForall convDefArgs <$> convDefType
+                 , convDefBody = fixedBody }
 
 --------------------------------------------------------------------------------
 

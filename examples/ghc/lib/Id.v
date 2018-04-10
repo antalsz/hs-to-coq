@@ -164,11 +164,7 @@ Definition idName : Var.Id -> Name.Name :=
 Definition localiseId : Var.Id -> Var.Id :=
   fun id =>
     let name := idName id in
-    if (if false : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-              #209)
-        else andb (Var.isLocalId id) (Name.isInternalName name)) : bool
-    then id else
+    if andb (Var.isLocalId id) (Name.isInternalName name) : bool then id else
     Var.mkLocalVar (Var.idDetails id) (Name.localiseName name) (tt) ((@Var.idInfo tt
                                                                       id)).
 
@@ -291,12 +287,10 @@ Definition isExitJoinId : Var.Var -> bool :=
 Definition isJoinId_maybe : Var.Var -> option BasicTypes.JoinArity :=
   fun id =>
     if Var.isId id : bool
-    then if false : bool
-         then (None)
-         else match Var.idDetails id with
-              | IdInfo.JoinId arity => Some arity
-              | _ => None
-              end else
+    then match Var.idDetails id with
+         | IdInfo.JoinId arity => Some arity
+         | _ => None
+         end else
     None.
 
 Definition idJoinArity : Var.JoinId -> BasicTypes.JoinArity :=
@@ -541,11 +535,7 @@ Definition mkWorkerId : Unique.Unique -> Var.Id -> unit -> Var.Id :=
 
 Definition mkSysLocal
    : FastString.FastString -> Unique.Unique -> unit -> Var.Id :=
-  fun fs uniq ty =>
-    if false : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-          #313)
-    else mkLocalId (Name.mkSystemVarName uniq fs) ty.
+  fun fs uniq ty => mkLocalId (Name.mkSystemVarName uniq fs) ty.
 
 Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
    : FastString.FastString -> unit -> m Var.Id :=
@@ -555,11 +545,7 @@ Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
 
 Definition mkUserLocal
    : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Var.Id :=
-  fun occ uniq ty loc =>
-    if false : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-          #330)
-    else mkLocalId (Name.mkInternalName uniq occ loc) ty.
+  fun occ uniq ty loc => mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
 Definition recordSelectorTyCon : Var.Id -> IdInfo.RecSelParent :=
   fun id =>
@@ -614,9 +600,9 @@ Definition stateHackOneShot : BasicTypes.OneShotInfo :=
      IdInfo.zapTailCallInfo IdInfo.zapUsageInfo IdInfo.zapUsedOnceInfo Maybes.orElse
      Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
      Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
-     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.assertPanic
-     Panic.noString Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     SrcLoc.SrcSpan UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
+     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.noString
+     Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
+     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
      Unique.mkBuiltinUnique Util.count Var.Id Var.JoinId Var.Var Var.idDetails
      Var.idInfo Var.isId Var.isLocalId Var.lazySetIdInfo Var.mkExportedLocalVar
      Var.mkGlobalVar Var.mkLocalVar Var.setIdDetails Var.setIdExported

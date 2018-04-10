@@ -97,7 +97,6 @@ Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
 Require Module.
-Require Panic.
 Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -423,14 +422,12 @@ Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
 Definition setNeverLevPoly `{Util.HasDebugCallStack}
    : IdInfo -> unit -> IdInfo :=
   fun info ty =>
-    if false : bool
-    then (GHC.Err.error (Panic.noString ty))
-    else let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-            oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-            callArityInfo_9__ levityInfo_10__ := info in
-         Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-                   oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-                   callArityInfo_9__ NeverLevityPolymorphic.
+    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+       callArityInfo_9__ levityInfo_10__ := info in
+    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+              callArityInfo_9__ NeverLevityPolymorphic.
 
 Definition setOccInfo : IdInfo -> BasicTypes.OccInfo -> IdInfo :=
   fun info oc =>
@@ -598,6 +595,6 @@ Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
      GHC.Base.compare__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
      GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger Module.Module Panic.noString
+     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger Module.Module
      Util.HasDebugCallStack
 *)

@@ -864,10 +864,7 @@ Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | DataAlt con1, DataAlt con2 =>
-        if false : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-              #319)
-        else GHC.Base.compare (DataCon.dataConTag con1) (DataCon.dataConTag con2)
+        GHC.Base.compare (DataCon.dataConTag con1) (DataCon.dataConTag con2)
     | DataAlt _, _ => Gt
     | _, DataAlt _ => Lt
     | LitAlt l1, LitAlt l2 => GHC.Base.compare l1 l2
@@ -1526,10 +1523,7 @@ Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
     if Var.isTyVar v : bool then Type_ (tt) else
     if Var.isCoVar v : bool then Coercion (tt) else
-    if false : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-          #1920)
-    else Var v.
+    Var v.
 
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.
@@ -1561,7 +1555,7 @@ Definition mkConApp2 {b}
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
      Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
      Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Panic.assertPanic Panic.noString Panic.panicStr Panic.warnPprTrace TyCon.TyCon
-     Util.count Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
+     Panic.noString Panic.panicStr Panic.warnPprTrace TyCon.TyCon Util.count
+     Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
      VarEnv.InScopeSet
 *)

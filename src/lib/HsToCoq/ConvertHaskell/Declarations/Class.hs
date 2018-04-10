@@ -98,8 +98,6 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
           convertTypedModuleBinding Nothing . unLoc >=> \case
             Just (ConvertedDefinitionBinding ConvertedDefinition{..}) -> do
 --                typeArgs <- getImplicitBindersForClassMember name convDefName
-                -- We have a tough time handling recursion (including mutual
-                -- recursion) here because of name overloading
                 pure (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) convDefBody)
             Just (ConvertedPatternBinding    _ _)                     ->
                 convUnsupported "pattern bindings in class declarations"

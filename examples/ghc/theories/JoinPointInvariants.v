@@ -40,7 +40,7 @@ We will be able to check 4 when we translate types.
 *)
 
 
-
+(* Attempt one: An inductive predicate *)
 Inductive JoinPointsValid : CoreExpr -> Z -> VarSet -> Prop :=
   | JPV_Var     : forall v n jps,
     isJoinId v = false ->
@@ -83,7 +83,7 @@ Inductive JoinPointsValid : CoreExpr -> Z -> VarSet -> Prop :=
     JoinPointsValid body 0 jps' ->     (* Tail-call-position *)
     JoinPointsValid (Let (Rec pairs) body) n jps'
   | JPV_Case  : forall scrut bndr ty alts n jps, 
-    JoinPointsValid scrut 0 jps ->
+    JoinPointsValid scrut 0 emptyVarSet -> (* Non-tail-call position *)
     let jps' := delVarSet jps bndr in
     (forall dc pats rhs, In (dc,pats,rhs) alts ->
                          let jps' := delVarSetList jps pats in
@@ -110,3 +110,80 @@ Inductive JoinPointsValid : CoreExpr -> Z -> VarSet -> Prop :=
     JoinPointsValid e 0 jps->     (* Tail-call-position *)
     GoodJoinRHS a e jps
   .
+
+(* Attempt two: An executable checker *)
+Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
+  match e with
+  | Var v => match isJoinId_maybe v with
+    | None => true
+    | Some a => a <=? n
+    end
+  | Lit l => true
+  | App e1 e2 =>
+    isJoinPointsValid e1 (n+1) jps &&   (* Tail-call-position *)
+    isJoinPointsValid e2 0 emptyVarSet    (* Non-tail-call position *)
+  | Lam v e =>
+    isJoinPointsValid e 0 emptyVarSet     (* Non-tail-call position *)
+  | Let bind body => 
+    isJoinPointsValidBind bind jps &&
+    let jps' := delVarSetList jps (bindersOf bind) in
+    isJoinPointsValid body 0 jps'         (* Tail-call-position *)
+  | Case scrut bndr ty alts  => 
+    isJoinPointsValid scrut 0 emptyVarSet &&  (* Non-tail-call position *)
+    let jps' := delVarSet jps bndr in
+    forallb (fun '(dc,pats,rhs) =>
+      let jps' := delVarSetList jps pats in
+      isJoinPointsValid rhs 0 jps') alts  (* Tail-call position *)
+  | Cast e _ =>    isJoinPointsValid e 0 jps
+  | Tick _ e =>    isJoinPointsValid e 0 jps
+  | Type_ _  =>   true
+  | Coercion _ => true
+  end
+with isJoinRHS (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} : bool :=
+  if a <? 1 then false else
+  match rhs with
+    | Lam v e => if a =? 1
+                 then isJoinPointsValid e 0 jps (* tail-call position *)
+                 else isJoinRHS (a-1) e jps
+    | _ => false
+    end
+with isJoinPointsValidBind (bind : CoreBind) (jps : VarSet) {struct bind} : bool :=
+  let isJoinPointsValidPair (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
+    match isJoinId_maybe v with
+    | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
+    | Some a => 
+      if a =? 0 (* Uh, all for the termination checker *)
+      then isJoinPointsValid rhs 0 jps (* tail-call position *)
+      else isJoinRHS a rhs jps                   (* tail-call position *)
+    end
+  in
+  match bind with
+  | NonRec v e => isJoinPointsValidPair v e  jps
+  | Rec pairs =>
+    (forallb (fun '(v,e) => negb (isJoinId v)) pairs || forallb (fun '(v,e) => isJoinId v) pairs) &&
+    let jps' := delVarSetList jps (map fst pairs) in
+    forallb (fun '(v,e) => isJoinPointsValidPair v e jps') pairs
+  end.
+
+Definition isJoinPointsValidPair (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
+    match isJoinId_maybe v with
+    | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
+    | Some a => 
+      if a =? 0 (* Uh, all for the termination checker *)
+      then isJoinPointsValid rhs 0 jps (* tail-call position *)
+      else isJoinRHS a rhs jps                   (* tail-call position *)
+    end.
+
+(* I had to do two things to make this pass the termination checker that I would
+   have done differently otherwise:
+    - isJoinRHS is structured so that *always* destructs the expression,
+      and calls isJoinPointsValid on the subexpression.
+      This requires some duplication, namely checking the case a=0 in 
+      isJoinPointsValidPair.
+      Normally, I would count down a, and if a=0, call isJoinPointsValid on rhs,
+      which is more natural.
+    - isJoinPointsValidPair does not actually recurse, so it cannot be one
+      of the top-level recursive functions. Instead, it is a local let and
+      I repeat the defininition later to give it a name.
+*)
+   

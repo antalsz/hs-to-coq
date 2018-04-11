@@ -1,6 +1,5 @@
 axiomatize module CoreUtils
 
-## notation!!!
 rename type CoreSyn.Alt = Alt
 
 skip module Type
@@ -12,20 +11,37 @@ skip module Platform
 
 skip CoreUtils.rhsIsStatic
 
+## needs PrelNames
+skip CoreUtils.collectMakeStaticArgs
 
 skip CoreUtils.applyTypeToArgs
 skip CoreUtils.exprType
 skip CoreUtils.coreAltType
-skip CoreUtils.mkCast
-skip CoreUtils.dataConInstPat
+skip CoreUtils.coreAltsType
 
-skip CoreUtils.dataConRepInstPat
+# skip CoreUtils.mkCast
+# skip CoreUtils.dataConInstPat
+
+# skip CoreUtils.dataConRepInstPat
 
 ## pattern matching is non-exhaustive?
-skip CoreUtils.exprIsHNFlike
+# skip CoreUtils.exprIsHNFlike
 
-skip CoreUtils.diffUnfold
-skip CoreUtils.diffIdInfo
-skip CoreUtils.diffBinds
-skip CoreUtils.diffExpr
-skip CoreUtils.locBind
+# skip CoreUtils.diffUnfold
+# skip CoreUtils.diffIdInfo
+# skip CoreUtils.diffBinds
+# skip CoreUtils.diffExpr
+# skip CoreUtils.locBind
+
+rewrite forall subst knd, TyCoRep.substTyUnchecked subst knd = tt
+rewrite forall subst tv new_tv, TyCoRep.extendTvSubstWithClone subst tv new_tv = subst
+rewrite forall subst ty, TyCoRep.substTy subst ty = tt
+
+in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConRepStrictness con = nil
+in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConRepArgTys con = nil
+in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConExTyVars con = @nil unit
+in CoreUtils.dataConInstPat rewrite forall x, TyCoRep.zipTvSubst x y = tt
+in CoreUtils.dataConInstPat rewrite forall x y z, Data.Traversable.mapAccumL x y z = pair univ_subst nil
+
+## Needs Data.Traversable.mappAccumL
+# skip CoreUtils.dataConInstPat

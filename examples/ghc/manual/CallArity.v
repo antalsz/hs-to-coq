@@ -39,7 +39,6 @@ Import GHC.Num.Notations.
 
 Definition CallArityRes :=
   (UnVarGraph.UnVarGraph * VarEnv.VarEnv BasicTypes.Arity)%type%type.
-<<<<<<< HEAD
 (* Midamble *)
 
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes.
@@ -53,14 +52,12 @@ Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type 
 
 (* ------------------------- mutual recursion hack -------------------- *)
 
-(* ANTALZ: This looks like a good example of structural mutual recursion *)
+(* ANTALZ: This looks like a good example of structural mutual recursion *) 
 Parameter callArityBind
    : VarSet.VarSet ->
      CallArityRes ->
      VarSet.VarSet -> CoreSyn.CoreBind -> (CallArityRes * CoreSyn.CoreBind)%type.
 
-=======
->>>>>>> 830082218215421ea515fc935c8e13425eee2af7
 (* Converted value declarations: *)
 
 Definition addCrossCoCalls

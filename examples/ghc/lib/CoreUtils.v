@@ -37,6 +37,7 @@ Definition CheapAppFun :=
 (* Record selector *)
 Require Import Pair.
 
+(* Notation for Alt *)
 Require Import CoreSyn.
 
 (* Uses functions from Type. Also recursion is tricky *)
@@ -63,11 +64,11 @@ Axiom exprIsBottom : CoreSyn.CoreExpr -> bool.
 Axiom bindNonRec : Var.Id ->
                    CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
 
-(* mkCast skipped *)
+Axiom mkCast : CoreSyn.CoreExpr -> unit -> CoreSyn.CoreExpr.
 
 Axiom isExprLevPoly : CoreSyn.CoreExpr -> bool.
 
-Axiom coreAltsType : list CoreSyn.CoreAlt -> unit.
+(* coreAltsType skipped *)
 
 (* coreAltType skipped *)
 
@@ -194,7 +195,8 @@ Axiom exprIsHNF : CoreSyn.CoreExpr -> bool.
 
 Axiom exprIsConLike : CoreSyn.CoreExpr -> bool.
 
-(* exprIsHNFlike skipped *)
+Axiom exprIsHNFlike : (Var.Var -> bool) ->
+                      (CoreSyn.Unfolding -> bool) -> CoreSyn.CoreExpr -> bool.
 
 Axiom exprIsTopLevelBindable : CoreSyn.CoreExpr -> unit -> bool.
 
@@ -202,45 +204,54 @@ Axiom exprIsTickedString : CoreSyn.CoreExpr -> bool.
 
 Axiom exprIsTickedString_maybe : CoreSyn.CoreExpr -> option GHC.Base.String.
 
-(* dataConRepInstPat skipped *)
+Axiom dataConRepInstPat : list Unique.Unique ->
+                          DataCon.DataCon -> list unit -> (list Var.TyVar * list Var.Id)%type.
 
 Axiom dataConRepFSInstPat : list FastString.FastString ->
                             list Unique.Unique ->
                             DataCon.DataCon -> list unit -> (list Var.TyVar * list Var.Id)%type.
 
-(* dataConInstPat skipped *)
+Axiom dataConInstPat : list FastString.FastString ->
+                       list Unique.Unique ->
+                       DataCon.DataCon -> list unit -> (list Var.TyVar * list Var.Id)%type.
 
 Axiom exprIsBig : forall {b}, CoreSyn.Expr b -> bool.
 
 Axiom eqExpr : VarEnv.InScopeSet ->
                CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> bool.
 
-(* diffUnfold skipped *)
+Axiom diffUnfold : VarEnv.RnEnv2 ->
+                   CoreSyn.Unfolding -> CoreSyn.Unfolding -> list GHC.Base.String.
 
-(* diffIdInfo skipped *)
+Axiom diffIdInfo : VarEnv.RnEnv2 -> Var.Var -> Var.Var -> list GHC.Base.String.
 
-(* diffBinds skipped *)
+Axiom diffBinds : bool ->
+                  VarEnv.RnEnv2 ->
+                  list (Var.Var * CoreSyn.CoreExpr)%type ->
+                  list (Var.Var * CoreSyn.CoreExpr)%type ->
+                  (list GHC.Base.String * VarEnv.RnEnv2)%type.
 
-(* diffExpr skipped *)
+Axiom diffExpr : bool ->
+                 VarEnv.RnEnv2 -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> list GHC.Base.String.
 
 Axiom eqTickish : VarEnv.RnEnv2 ->
                   CoreSyn.Tickish Var.Id -> CoreSyn.Tickish Var.Id -> bool.
 
-(* locBind skipped *)
+Axiom locBind : GHC.Base.String ->
+                Var.Var -> Var.Var -> list GHC.Base.String -> list GHC.Base.String.
 
 (* rhsIsStatic skipped *)
 
 Axiom isEmptyTy : unit -> bool.
 
-Axiom collectMakeStaticArgs : CoreSyn.CoreExpr ->
-                              option (CoreSyn.CoreExpr * unit * CoreSyn.CoreExpr * CoreSyn.CoreExpr)%type.
+(* collectMakeStaticArgs skipped *)
 
 Axiom isJoinBind : CoreSyn.CoreBind -> bool.
 
 (* External variables:
      Alt bool list op_zt__ option unit BasicTypes.Arity CoreSyn.AltCon
      CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreBndr
-     CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish DataCon.DataCon DynFlags.DynFlags
-     FastString.FastString GHC.Base.String GHC.Num.Int TyCon.TyCon Unique.Unique
-     Var.Id Var.TyVar Var.Var VarEnv.InScopeSet VarEnv.RnEnv2
+     CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish CoreSyn.Unfolding DataCon.DataCon
+     DynFlags.DynFlags FastString.FastString GHC.Base.String GHC.Num.Int TyCon.TyCon
+     Unique.Unique Var.Id Var.TyVar Var.Var VarEnv.InScopeSet VarEnv.RnEnv2
 *)

@@ -1,6 +1,7 @@
 (* Record selector *)
 Require Import Pair.
 
+(* Notation for Alt *)
 Require Import CoreSyn.
 
 (* Uses functions from Type. Also recursion is tricky *)

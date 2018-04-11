@@ -1,10 +1,13 @@
 skip module CostCentre
+rename type CostCentre.CostCentre = unit
 
-redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
-redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
-    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => true.
-redefine Local Definition CoreSyn.Eq___Tickish_op_zsze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
-    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => false.
+# redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
+# redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
+#    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => true.
+# redefine Local Definition CoreSyn.Eq___Tickish_op_zsze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
+#    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => false.
+
+
 skip CoreSyn.mkNoCount
 skip CoreSyn.mkNoScope
 skip CoreSyn.tickishCanSplit
@@ -28,7 +31,7 @@ redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : 
     | nil => Mk_IsOrphan
     end.
 
-# uses Outputtable.empty in panicStr
+# uses Outputable.empty in panicStr
 # in midamble
 skip CoreSyn.exprToType
 
@@ -61,9 +64,9 @@ skip CoreSyn.collectNAnnBndrs
 # obligations CoreSyn.collectNAnnBndrs admit
 
 
-in CoreSyn.collectAnnArgsTicks termination go      { measure (size (snd arg_0__)) }
+in CoreSyn.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
 obligations CoreSyn.collectAnnArgsTicks admit
-in CoreSyn.collectAnnBndrs     termination collect { measure (size (snd arg_1__)) }
+in CoreSyn.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
 obligations CoreSyn.collectAnnBndrs admit
 
 skip CoreSyn.mkTyArg

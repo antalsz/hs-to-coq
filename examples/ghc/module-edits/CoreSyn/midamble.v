@@ -4,22 +4,72 @@ Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
            GHC.Num.Int -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
 
-
-(* This is not right, but suffices for now. *)
 Require Import Omega.
-Fixpoint size {a}{b} (e: AnnExpr' a b) :=
+
+(* ANTALSZ NOTE: to make this function structurally recursive, we need to 
+   define size_AnnAlt as a *local* helper function, not a mutual 
+   helper function. Changing size_AnnAlt to "with" results in an error. *)
+
+Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
+  let size_AnnAlt {a}{b} : AnnAlt a b -> nat :=
+      fun x => 
+        match x with 
+        | ((con, args), (_,rhs)) => size_AnnExpr' rhs
+        end in
+  let size_AnnBind {a}{b} : AnnBind a b -> nat :=
+      fun x => 
+        match x with 
+        | AnnNonRec _ (_,e) => size_AnnExpr' e
+        | AnnRec grp => List.fold_left 
+                         (fun n y => 
+                            n + size_AnnExpr' (snd (snd y))) grp 1
+        end in
   match e with 
   | AnnVar _ => 1
   | AnnLit _ => 1
-  | AnnLam _ (_ , bdy) => 1 + size bdy
-  | AnnApp (_,e1) (_, e2) => 1 + size e1 + size e2
-  | AnnCase (_,e) _ _ brs => 1 + size e
-  | AnnLet _ (_,e) => 1 + size e
-  | AnnCast (_,e) _ => 1 + size e
+  | AnnLam _ (_ , bdy) => 1 + size_AnnExpr' bdy
+  | AnnApp (_,e1) (_, e2) => 1 + size_AnnExpr' e1 + size_AnnExpr' e2
+  | AnnCase (_,e) _ _ brs => 1 + size_AnnExpr' e + 
+                            List.fold_left (fun x y => x + size_AnnAlt y) brs 1 
+  | AnnLet _ (_,e) => 1 + size_AnnExpr' e
+  | AnnCast (_,e) _ => 1 + size_AnnExpr' e
   | AnnTick _ _ => 1
   | AnnType _ => 1
   | AnnCoercion _ => 1
-end.
+  end.
+
+
+Fixpoint size_Expr {b} (e: Expr b) :=
+  let size_Alt  : Alt b -> nat :=
+      fun x => 
+        match x with 
+        | ((con, args), rhs) => size_Expr rhs
+        end in
+  let size_Bind  : Bind b -> nat :=
+      fun x => 
+        match x with 
+        | NonRec _ e => size_Expr e
+        | Rec grp => List.fold_left 
+                         (fun n y => 
+                            n + size_Expr (snd y)) grp 1
+        end in
+
+  match e with 
+  | Var _ => 1
+  | Lit _ => 1
+  | Lam _ bdy => 1 + size_Expr bdy
+  | App e1 e2 => 1 + size_Expr e1 + size_Expr e2
+  | Case e _ _ brs => 1 + size_Expr e + 
+                            List.fold_left (fun x y => x + size_Alt y) brs 1 
+  | Let _ e => 1 + size_Expr e
+  | Cast e _ => 1 + size_Expr e
+  | Tick _ _ => 1
+  | Type_ _ => 1
+  | Coercion _ => 1
+  end.
+
+
+
 
 
 
@@ -28,7 +78,8 @@ Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
   GHC.Err.Build_Default _ (Var GHC.Err.default).
 
 Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
-  GHC.Err.Build_Default _ (@Mk_Tickish_Dummy _).
+  GHC.Err.Build_Default _ (Breakpoint GHC.Err.default GHC.Err.default).
+
 
 Instance Default_TaggedBndr {t}`{GHC.Err.Default t} : GHC.Err.Default (TaggedBndr t) :=
   GHC.Err.Build_Default _ (TB GHC.Err.default GHC.Err.default).
@@ -51,6 +102,8 @@ Instance Default__CoreRule : GHC.Err.Default CoreRule :=
 Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
   GHC.Err.Build_Default _ (Mk_RuleEnv GHC.Err.default GHC.Err.default).
 
+(* ANTALSZ: Here are some examples of mutual recursion that I've unwound 
+   by hand. We would like to generate these instead. *)
 
 Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
   let deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
@@ -85,44 +138,7 @@ Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr 
                                                                            alts)
     end.
 
-
-(*
-Fixpoint deAnnotate' {bndr} {annot} (ae : AnnExpr' bndr annot)
-         {struct ae} : Expr bndr :=
-    match ae with
-      | AnnType t => Type_ t
-      | AnnCoercion co => Coercion co
-      | AnnVar v => Var v
-      | AnnLit lit => Lit lit
-      | AnnLam binder body => Lam binder (deAnnotate body)
-      | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
-      | AnnCast e (pair _ co) => Cast (deAnnotate e) co
-      | AnnTick tick body => Tick tick (deAnnotate body)
-      | AnnLet bind body =>
-        Let (deAnnBind bind) (deAnnotate body)
-      | AnnCase scrut v t alts =>
-        Case (deAnnotate scrut) v t
-             (List.map deAnnAlt alts)
-    end
-with deAnnotate {bndr} {annot} (ae : AnnExpr bndr annot) {struct ae} : Expr bndr :=
-   match ae with | pair _ e => deAnnotate' e end
-with deAnnAlt {bndr} {annot} (ae : AnnAlt bndr annot) {struct ae}: Alt bndr :=
-   match ae with
-      | pair (pair con args) rhs => pair (pair con args) (deAnnotate rhs)
-    end
-with deAnnBind {bndr} {annot} (ae : AnnBind bndr annot) {struct ae} : Bind bndr :=
-       match ae with
-       | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
-       | AnnRec pairs => Rec (Coq.Lists.List.flat_map
-                               ( fun arg_53__ =>
-                                   match arg_53__ with
-                                   | pair v rhs => cons (pair v (deAnnotate rhs)) nil
-                                   end )
-                               pairs)
-       end.
-*)
-
-(* One way to resolve the fixpoint *)
+(* ANTALSZ: Here is another example *)
 
 Fixpoint collectAnnArgs_go {b}{a}(expr : AnnExpr' b a) g as_ :=
   match expr with

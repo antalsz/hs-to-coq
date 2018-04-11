@@ -40,13 +40,24 @@ skip SrcLoc.containsSpan
 skip SrcLoc.combineRealSrcSpans
 
 # The methods use their own compare instead of the polymorphic one
+#
+# skip SrcLoc.Ord__RealSrcLoc
+#
+redefine Definition SrcLoc.Ord__RealSrcLoc_op_zl__ := Ord__RealSrcLoc_op_zl.
+#
+# TODO: would like to use this edit instead, but it has no effect
+#
+in SrcLoc.Ord__RealSrcLoc_op_zl__ rewrite forall, SrcLoc.Ord__RealSrcLoc_compare = GHC.Base.compare
+
+# Same issue as above, not fixed
+#
 skip SrcLoc.Ord__GenLocated
-skip SrcLoc.Ord__RealSrcLoc
+
 # knock-on effect
 skip SrcLoc.leftmost_largest
 skip SrcLoc.leftmost_smallest
 skip SrcLoc.rightmost
 skip SrcLoc.isSubspanOf
-skip SrcLoc.Ord__RealSrcSpan
+
 skip SrcLoc.Ord__SrcLoc
 skip SrcLoc.Ord__SrcSpan

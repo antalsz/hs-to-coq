@@ -41,6 +41,7 @@ Require Name.
 Require NameEnv.
 Require OccName.
 Require Panic.
+Require SrcLoc.
 Require TyCon.
 Require Util.
 Require Var.
@@ -71,7 +72,11 @@ Inductive TickishPlacement : Type
   |  PlaceNonLam : TickishPlacement
   |  PlaceCostCentre : TickishPlacement.
 
-Inductive Tickish (id : Type) : Type := Mk_Tickish_Dummy.
+Inductive Tickish id : Type
+  := ProfNote : unit -> bool -> bool -> Tickish id
+  |  HpcTick : Module.Module -> GHC.Num.Int -> Tickish id
+  |  Breakpoint : GHC.Num.Int -> list id -> Tickish id
+  |  SourceNote : SrcLoc.RealSrcSpan -> GHC.Base.String -> Tickish id.
 
 Definition OutType :=
   unit%type.
@@ -262,6 +267,14 @@ Definition TaggedExpr t :=
 Definition TaggedAlt t :=
   (Alt (TaggedBndr t))%type.
 
+Arguments ProfNote {_} _ _ _.
+
+Arguments HpcTick {_} _ _.
+
+Arguments Breakpoint {_} _ _.
+
+Arguments SourceNote {_} _ _.
+
 Arguments TB {_} _ _.
 
 Arguments AnnVar {_} {_} _.
@@ -397,6 +410,132 @@ Definition ug_unsat_ok (arg_0__ : UnfoldingGuidance) :=
   | UnfNever =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `ug_unsat_ok' has no match in constructor `UnfNever' of type `UnfoldingGuidance'")
+  end.
+
+Definition breakpointFVs {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `breakpointFVs' has no match in constructor `ProfNote' of type `Tickish'")
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `breakpointFVs' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint _ breakpointFVs => breakpointFVs
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `breakpointFVs' has no match in constructor `SourceNote' of type `Tickish'")
+  end.
+
+Definition breakpointId {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `breakpointId' has no match in constructor `ProfNote' of type `Tickish'")
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `breakpointId' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint breakpointId _ => breakpointId
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `breakpointId' has no match in constructor `SourceNote' of type `Tickish'")
+  end.
+
+Definition profNoteCC {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote profNoteCC _ _ => profNoteCC
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteCC' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteCC' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteCC' has no match in constructor `SourceNote' of type `Tickish'")
+  end.
+
+Definition profNoteCount {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ profNoteCount _ => profNoteCount
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteCount' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteCount' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteCount' has no match in constructor `SourceNote' of type `Tickish'")
+  end.
+
+Definition profNoteScope {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ profNoteScope => profNoteScope
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteScope' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteScope' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `profNoteScope' has no match in constructor `SourceNote' of type `Tickish'")
+  end.
+
+Definition sourceName {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `sourceName' has no match in constructor `ProfNote' of type `Tickish'")
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `sourceName' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `sourceName' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote _ sourceName => sourceName
+  end.
+
+Definition sourceSpan {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `sourceSpan' has no match in constructor `ProfNote' of type `Tickish'")
+  | HpcTick _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `sourceSpan' has no match in constructor `HpcTick' of type `Tickish'")
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `sourceSpan' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote sourceSpan _ => sourceSpan
+  end.
+
+Definition tickId {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tickId' has no match in constructor `ProfNote' of type `Tickish'")
+  | HpcTick _ tickId => tickId
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tickId' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tickId' has no match in constructor `SourceNote' of type `Tickish'")
+  end.
+
+Definition tickModule {id} (arg_0__ : Tickish id) :=
+  match arg_0__ with
+  | ProfNote _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tickModule' has no match in constructor `ProfNote' of type `Tickish'")
+  | HpcTick tickModule _ => tickModule
+  | Breakpoint _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tickModule' has no match in constructor `Breakpoint' of type `Tickish'")
+  | SourceNote _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `tickModule' has no match in constructor `SourceNote' of type `Tickish'")
   end.
 
 Definition df_args (arg_0__ : Unfolding) :=
@@ -676,22 +815,72 @@ Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
            GHC.Num.Int -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
 
-
-(* This is not right, but suffices for now. *)
 Require Import Omega.
-Fixpoint size {a}{b} (e: AnnExpr' a b) :=
+
+(* ANTALSZ NOTE: to make this function structurally recursive, we need to 
+   define size_AnnAlt as a *local* helper function, not a mutual 
+   helper function. Changing size_AnnAlt to "with" results in an error. *)
+
+Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
+  let size_AnnAlt {a}{b} : AnnAlt a b -> nat :=
+      fun x => 
+        match x with 
+        | ((con, args), (_,rhs)) => size_AnnExpr' rhs
+        end in
+  let size_AnnBind {a}{b} : AnnBind a b -> nat :=
+      fun x => 
+        match x with 
+        | AnnNonRec _ (_,e) => size_AnnExpr' e
+        | AnnRec grp => List.fold_left 
+                         (fun n y => 
+                            n + size_AnnExpr' (snd (snd y))) grp 1
+        end in
   match e with 
   | AnnVar _ => 1
   | AnnLit _ => 1
-  | AnnLam _ (_ , bdy) => 1 + size bdy
-  | AnnApp (_,e1) (_, e2) => 1 + size e1 + size e2
-  | AnnCase (_,e) _ _ brs => 1 + size e
-  | AnnLet _ (_,e) => 1 + size e
-  | AnnCast (_,e) _ => 1 + size e
+  | AnnLam _ (_ , bdy) => 1 + size_AnnExpr' bdy
+  | AnnApp (_,e1) (_, e2) => 1 + size_AnnExpr' e1 + size_AnnExpr' e2
+  | AnnCase (_,e) _ _ brs => 1 + size_AnnExpr' e + 
+                            List.fold_left (fun x y => x + size_AnnAlt y) brs 1 
+  | AnnLet _ (_,e) => 1 + size_AnnExpr' e
+  | AnnCast (_,e) _ => 1 + size_AnnExpr' e
   | AnnTick _ _ => 1
   | AnnType _ => 1
   | AnnCoercion _ => 1
-end.
+  end.
+
+
+Fixpoint size_Expr {b} (e: Expr b) :=
+  let size_Alt  : Alt b -> nat :=
+      fun x => 
+        match x with 
+        | ((con, args), rhs) => size_Expr rhs
+        end in
+  let size_Bind  : Bind b -> nat :=
+      fun x => 
+        match x with 
+        | NonRec _ e => size_Expr e
+        | Rec grp => List.fold_left 
+                         (fun n y => 
+                            n + size_Expr (snd y)) grp 1
+        end in
+
+  match e with 
+  | Var _ => 1
+  | Lit _ => 1
+  | Lam _ bdy => 1 + size_Expr bdy
+  | App e1 e2 => 1 + size_Expr e1 + size_Expr e2
+  | Case e _ _ brs => 1 + size_Expr e + 
+                            List.fold_left (fun x y => x + size_Alt y) brs 1 
+  | Let _ e => 1 + size_Expr e
+  | Cast e _ => 1 + size_Expr e
+  | Tick _ _ => 1
+  | Type_ _ => 1
+  | Coercion _ => 1
+  end.
+
+
+
 
 
 
@@ -700,7 +889,8 @@ Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
   GHC.Err.Build_Default _ (Var GHC.Err.default).
 
 Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
-  GHC.Err.Build_Default _ (@Mk_Tickish_Dummy _).
+  GHC.Err.Build_Default _ (Breakpoint GHC.Err.default GHC.Err.default).
+
 
 Instance Default_TaggedBndr {t}`{GHC.Err.Default t} : GHC.Err.Default (TaggedBndr t) :=
   GHC.Err.Build_Default _ (TB GHC.Err.default GHC.Err.default).
@@ -723,6 +913,8 @@ Instance Default__CoreRule : GHC.Err.Default CoreRule :=
 Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
   GHC.Err.Build_Default _ (Mk_RuleEnv GHC.Err.default GHC.Err.default).
 
+(* ANTALSZ: Here are some examples of mutual recursion that I've unwound 
+   by hand. We would like to generate these instead. *)
 
 Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
   let deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
@@ -757,44 +949,7 @@ Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr 
                                                                            alts)
     end.
 
-
-(*
-Fixpoint deAnnotate' {bndr} {annot} (ae : AnnExpr' bndr annot)
-         {struct ae} : Expr bndr :=
-    match ae with
-      | AnnType t => Type_ t
-      | AnnCoercion co => Coercion co
-      | AnnVar v => Var v
-      | AnnLit lit => Lit lit
-      | AnnLam binder body => Lam binder (deAnnotate body)
-      | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
-      | AnnCast e (pair _ co) => Cast (deAnnotate e) co
-      | AnnTick tick body => Tick tick (deAnnotate body)
-      | AnnLet bind body =>
-        Let (deAnnBind bind) (deAnnotate body)
-      | AnnCase scrut v t alts =>
-        Case (deAnnotate scrut) v t
-             (List.map deAnnAlt alts)
-    end
-with deAnnotate {bndr} {annot} (ae : AnnExpr bndr annot) {struct ae} : Expr bndr :=
-   match ae with | pair _ e => deAnnotate' e end
-with deAnnAlt {bndr} {annot} (ae : AnnAlt bndr annot) {struct ae}: Alt bndr :=
-   match ae with
-      | pair (pair con args) rhs => pair (pair con args) (deAnnotate rhs)
-    end
-with deAnnBind {bndr} {annot} (ae : AnnBind bndr annot) {struct ae} : Bind bndr :=
-       match ae with
-       | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
-       | AnnRec pairs => Rec (Coq.Lists.List.flat_map
-                               ( fun arg_53__ =>
-                                   match arg_53__ with
-                                   | pair v rhs => cons (pair v (deAnnotate rhs)) nil
-                                   end )
-                               pairs)
-       end.
-*)
-
-(* One way to resolve the fixpoint *)
+(* ANTALSZ: Here is another example *)
 
 Fixpoint collectAnnArgs_go {b}{a}(expr : AnnExpr' b a) g as_ :=
   match expr with
@@ -960,22 +1115,118 @@ Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
 
 (* Skipping instance Data__Tickish of class Data *)
 
-(* Translating `instance Ord__Tickish' failed: using a record pattern for the
-   unknown constructor `ProfNote' unsupported *)
+Local Definition Ord__Tickish_compare {inst_id} `{GHC.Base.Ord inst_id}
+   : Tickish inst_id -> Tickish inst_id -> comparison :=
+  fun a b =>
+    match a with
+    | ProfNote a1 a2 a3 =>
+        match b with
+        | ProfNote b1 b2 b3 =>
+            match (GHC.Base.compare a1 b1) with
+            | Lt => Lt
+            | Eq =>
+                match (GHC.Base.compare a2 b2) with
+                | Lt => Lt
+                | Eq => (GHC.Base.compare a3 b3)
+                | Gt => Gt
+                end
+            | Gt => Gt
+            end
+        | _ => Lt
+        end
+    | HpcTick a1 a2 =>
+        match b with
+        | ProfNote _ _ _ => Gt
+        | HpcTick b1 b2 =>
+            match (GHC.Base.compare a1 b1) with
+            | Lt => Lt
+            | Eq => (GHC.Base.compare a2 b2)
+            | Gt => Gt
+            end
+        | _ => Lt
+        end
+    | Breakpoint a1 a2 =>
+        match b with
+        | SourceNote _ _ => Lt
+        | Breakpoint b1 b2 =>
+            match (GHC.Base.compare a1 b1) with
+            | Lt => Lt
+            | Eq => (GHC.Base.compare a2 b2)
+            | Gt => Gt
+            end
+        | _ => Gt
+        end
+    | SourceNote a1 a2 =>
+        match b with
+        | SourceNote b1 b2 =>
+            match (GHC.Base.compare a1 b1) with
+            | Lt => Lt
+            | Eq => (GHC.Base.compare a2 b2)
+            | Gt => Gt
+            end
+        | _ => Gt
+        end
+    end.
 
-Local Definition Eq___Tickish_op_zsze__ {inst_id} `{_ : GHC.Base.Eq_ inst_id}
+Local Definition Ord__Tickish_op_zg__ {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
-  fun x y => false.
+  fun x y => Ord__Tickish_compare x y GHC.Base.== Gt.
 
-Local Definition Eq___Tickish_op_zeze__ {inst_id} `{_ : GHC.Base.Eq_ inst_id}
+Local Definition Ord__Tickish_op_zgze__ {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
-  fun x y => true.
+  fun x y => Ord__Tickish_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__Tickish_op_zl__ {inst_id} `{GHC.Base.Ord inst_id}
+   : Tickish inst_id -> Tickish inst_id -> bool :=
+  fun x y => Ord__Tickish_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__Tickish_op_zlze__ {inst_id} `{GHC.Base.Ord inst_id}
+   : Tickish inst_id -> Tickish inst_id -> bool :=
+  fun x y => Ord__Tickish_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__Tickish_max {inst_id} `{GHC.Base.Ord inst_id}
+   : Tickish inst_id -> Tickish inst_id -> Tickish inst_id :=
+  fun x y => if Ord__Tickish_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__Tickish_min {inst_id} `{GHC.Base.Ord inst_id}
+   : Tickish inst_id -> Tickish inst_id -> Tickish inst_id :=
+  fun x y => if Ord__Tickish_op_zlze__ x y : bool then x else y.
+
+Local Definition Eq___Tickish_op_zeze__ {inst_id} `{GHC.Base.Eq_ inst_id}
+   : Tickish inst_id -> Tickish inst_id -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | ProfNote a1 a2 a3, ProfNote b1 b2 b3 =>
+        (andb (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2))) ((a3 GHC.Base.== b3)))
+    | HpcTick a1 a2, HpcTick b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | Breakpoint a1 a2, Breakpoint b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | SourceNote a1 a2, SourceNote b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | _, _ => false
+    end.
+
+Local Definition Eq___Tickish_op_zsze__ {inst_id} `{GHC.Base.Eq_ inst_id}
+   : Tickish inst_id -> Tickish inst_id -> bool :=
+  fun x y => negb (Eq___Tickish_op_zeze__ x y).
 
 Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
    : GHC.Base.Eq_ (Tickish id) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
+
+Program Instance Ord__Tickish {id} `{GHC.Base.Ord id}
+   : GHC.Base.Ord (Tickish id) :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Tickish_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Tickish_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Tickish_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Tickish_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Tickish_compare ;
+         GHC.Base.max__ := Ord__Tickish_max ;
+         GHC.Base.min__ := Ord__Tickish_min |}.
 
 (* Skipping instance Data__AltCon of class Data *)
 
@@ -1072,7 +1323,7 @@ Program Definition collectAnnArgsTicks {b} {a}
           fun tickishOk expr =>
             let go :=
               GHC.Wf.wfFix3 Coq.Init.Peano.lt (fun arg_0__ arg_1__ arg_2__ =>
-                               size (snd arg_0__)) _ (fun arg_0__ arg_1__ arg_2__ go =>
+                               size_AnnExpr' (snd arg_0__)) _ (fun arg_0__ arg_1__ arg_2__ go =>
                                let j_4__ :=
                                  match arg_0__, arg_1__, arg_2__ with
                                  | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
@@ -1091,8 +1342,8 @@ Program Definition collectAnnBndrs {bndr} {annot}
            : AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
           fun e =>
             let collect :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ => size (snd arg_1__)) _
-                            (fun arg_0__ arg_1__ collect =>
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               size_AnnExpr' (snd arg_1__)) _ (fun arg_0__ arg_1__ collect =>
                                match arg_0__, arg_1__ with
                                | bs, pair _ (AnnLam b body) => collect (cons b bs) body
                                | bs, body => pair (GHC.List.reverse bs) body
@@ -1503,15 +1754,27 @@ Definition setRuleIdName : Name.Name -> CoreRule -> CoreRule :=
         BuiltinRule ru_name_11__ nm ru_nargs_13__ ru_try_14__
     end.
 
-Axiom tickishPlace : forall {A : Type}, A.
+Definition tickishPlace {id} : Tickish id -> TickishPlacement :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | (ProfNote _ _ _ as n) =>
+        if profNoteCount n : bool then PlaceRuntime else
+        PlaceCostCentre
+    | HpcTick _ _ => PlaceRuntime
+    | Breakpoint _ _ => PlaceRuntime
+    | SourceNote _ _ => PlaceNonLam
+    end.
 
-(* Translating `tickishPlace' failed: using a record pattern for the unknown
-   constructor `ProfNote' unsupported *)
-
-Axiom tickishScoped : forall {A : Type}, A.
-
-(* Translating `tickishScoped' failed: using a record pattern for the unknown
-   constructor `ProfNote' unsupported *)
+Definition tickishScoped {id} : Tickish id -> TickishScoping :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | (ProfNote _ _ _ as n) =>
+        if profNoteScope n : bool then CostCentreScope else
+        NoScope
+    | HpcTick _ _ => NoScope
+    | Breakpoint _ _ => CostCentreScope
+    | SourceNote _ _ => SoftScope
+    end.
 
 Definition unSaturatedOk : bool :=
   true.
@@ -1538,9 +1801,9 @@ Definition mkConApp2 {b}
            (GHC.Base.map varToCoreExpr arg_ids).
 
 (* External variables:
-     Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb
-     bool comparison cons deAnnotate' deTagExpr false list negb nil op_zt__ option
-     pair size snd true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
+     Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool
+     comparison cons deAnnotate' deTagExpr false list negb nil op_zt__ option pair
+     size_AnnExpr' snd true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
      BasicTypes.Arity BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Init.Peano.lt
      Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
      Data.Foldable.length DataCon.DataCon DataCon.dataConTag DataCon.dataConWorkId
@@ -1555,7 +1818,7 @@ Definition mkConApp2 {b}
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
      Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
      Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Panic.noString Panic.panicStr Panic.warnPprTrace TyCon.TyCon Util.count
-     Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
+     Panic.noString Panic.panicStr Panic.warnPprTrace SrcLoc.RealSrcSpan TyCon.TyCon
+     Util.count Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
      VarEnv.InScopeSet
 *)

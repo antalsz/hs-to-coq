@@ -25,6 +25,8 @@ constructors:
     "CoreSyn" "App",Qualified "CoreSyn" "Lam",Qualified "CoreSyn" "Let",Qualified
     "CoreSyn" "Case",Qualified "CoreSyn" "Cast",Qualified "CoreSyn" "Tick",Qualified
     "CoreSyn" "Type_",Qualified "CoreSyn" "Coercion"]'
+  CoreSyn.Tickish: ! '[Qualified "CoreSyn" "ProfNote",Qualified "CoreSyn" "HpcTick",Qualified
+    "CoreSyn" "Breakpoint",Qualified "CoreSyn" "SourceNote"]'
   CoreSyn.IsOrphan: ! '[Qualified "CoreSyn" "Mk_IsOrphan",Qualified "CoreSyn" "NotOrphan"]'
   CoreSyn.AnnBind: ! '[Qualified "CoreSyn" "AnnNonRec",Qualified "CoreSyn" "AnnRec"]'
 constructorFields:
@@ -36,6 +38,8 @@ constructorFields:
   CoreSyn.UnfIfGoodArgs: RecordFields [Qualified "CoreSyn" "ug_args",Qualified "CoreSyn"
     "ug_size",Qualified "CoreSyn" "ug_res"]
   CoreSyn.TB: NonRecordFields 2
+  CoreSyn.Breakpoint: RecordFields [Qualified "CoreSyn" "breakpointId",Qualified "CoreSyn"
+    "breakpointFVs"]
   CoreSyn.VectInst: NonRecordFields 1
   CoreSyn.InlineStable: NonRecordFields 0
   CoreSyn.Vect: NonRecordFields 2
@@ -66,16 +70,22 @@ constructorFields:
   CoreSyn.Cast: NonRecordFields 2
   CoreSyn.Var: NonRecordFields 1
   CoreSyn.AnnRec: NonRecordFields 1
+  CoreSyn.SourceNote: RecordFields [Qualified "CoreSyn" "sourceSpan",Qualified "CoreSyn"
+    "sourceName"]
   CoreSyn.Rule: RecordFields [Qualified "CoreSyn" "ru_name",Qualified "CoreSyn" "ru_act",Qualified
     "CoreSyn" "ru_fn",Qualified "CoreSyn" "ru_rough",Qualified "CoreSyn" "ru_bndrs",Qualified
     "CoreSyn" "ru_args",Qualified "CoreSyn" "ru_rhs",Qualified "CoreSyn" "ru_auto",Qualified
     "CoreSyn" "ru_origin",Qualified "CoreSyn" "ru_orphan",Qualified "CoreSyn" "ru_local"]
+  CoreSyn.HpcTick: RecordFields [Qualified "CoreSyn" "tickModule",Qualified "CoreSyn"
+    "tickId"]
   CoreSyn.InlineCompulsory: NonRecordFields 0
   CoreSyn.PlaceCostCentre: NonRecordFields 0
   CoreSyn.NoScope: NonRecordFields 0
   CoreSyn.DFunUnfolding: RecordFields [Qualified "CoreSyn" "df_bndrs",Qualified "CoreSyn"
     "df_con",Qualified "CoreSyn" "df_args"]
   CoreSyn.NoUnfolding: NonRecordFields 0
+  CoreSyn.ProfNote: RecordFields [Qualified "CoreSyn" "profNoteCC",Qualified "CoreSyn"
+    "profNoteCount",Qualified "CoreSyn" "profNoteScope"]
   CoreSyn.NonRec: NonRecordFields 2
   CoreSyn.DEFAULT: NonRecordFields 0
   CoreSyn.AnnTick: NonRecordFields 2
@@ -96,12 +106,16 @@ constructorFields:
   CoreSyn.AnnApp: NonRecordFields 2
 recordFieldTypes:
   CoreSyn.ru_local: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.profNoteCC: Qualified "CoreSyn" "Tickish"
   CoreSyn.df_bndrs: Qualified "CoreSyn" "Unfolding"
   CoreSyn.ug_res: Qualified "CoreSyn" "UnfoldingGuidance"
   CoreSyn.uf_tmpl: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.profNoteScope: Qualified "CoreSyn" "Tickish"
   CoreSyn.ug_arity: Qualified "CoreSyn" "UnfoldingGuidance"
+  CoreSyn.sourceName: Qualified "CoreSyn" "Tickish"
   CoreSyn.ug_args: Qualified "CoreSyn" "UnfoldingGuidance"
   CoreSyn.uf_is_value: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.tickModule: Qualified "CoreSyn" "Tickish"
   CoreSyn.re_visible_orphs: Qualified "CoreSyn" "RuleEnv"
   CoreSyn.ru_auto: Qualified "CoreSyn" "CoreRule"
   CoreSyn.ru_try: Qualified "CoreSyn" "CoreRule"
@@ -110,11 +124,13 @@ recordFieldTypes:
   CoreSyn.ug_size: Qualified "CoreSyn" "UnfoldingGuidance"
   CoreSyn.ru_fn: Qualified "CoreSyn" "CoreRule"
   CoreSyn.re_base: Qualified "CoreSyn" "RuleEnv"
+  CoreSyn.breakpointId: Qualified "CoreSyn" "Tickish"
   CoreSyn.ru_act: Qualified "CoreSyn" "CoreRule"
   CoreSyn.uf_src: Qualified "CoreSyn" "Unfolding"
   CoreSyn.uf_is_work_free: Qualified "CoreSyn" "Unfolding"
   CoreSyn.ug_unsat_ok: Qualified "CoreSyn" "UnfoldingGuidance"
   CoreSyn.ru_origin: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.sourceSpan: Qualified "CoreSyn" "Tickish"
   CoreSyn.ru_rhs: Qualified "CoreSyn" "CoreRule"
   CoreSyn.ru_bndrs: Qualified "CoreSyn" "CoreRule"
   CoreSyn.ug_boring_ok: Qualified "CoreSyn" "UnfoldingGuidance"
@@ -126,7 +142,10 @@ recordFieldTypes:
   CoreSyn.ru_name: Qualified "CoreSyn" "CoreRule"
   CoreSyn.ru_rough: Qualified "CoreSyn" "CoreRule"
   CoreSyn.uf_expandable: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.breakpointFVs: Qualified "CoreSyn" "Tickish"
+  CoreSyn.profNoteCount: Qualified "CoreSyn" "Tickish"
   CoreSyn.uf_is_conlike: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.tickId: Qualified "CoreSyn" "Tickish"
 constructorTypes:
   CoreSyn.Let: Qualified "CoreSyn" "Expr"
   CoreSyn.Tick: Qualified "CoreSyn" "Expr"
@@ -135,6 +154,7 @@ constructorTypes:
   CoreSyn.OtherCon: Qualified "CoreSyn" "Unfolding"
   CoreSyn.UnfIfGoodArgs: Qualified "CoreSyn" "UnfoldingGuidance"
   CoreSyn.TB: Qualified "CoreSyn" "TaggedBndr"
+  CoreSyn.Breakpoint: Qualified "CoreSyn" "Tickish"
   CoreSyn.VectInst: Qualified "CoreSyn" "CoreVect"
   CoreSyn.InlineStable: Qualified "CoreSyn" "UnfoldingSource"
   CoreSyn.Vect: Qualified "CoreSyn" "CoreVect"
@@ -160,12 +180,15 @@ constructorTypes:
   CoreSyn.Cast: Qualified "CoreSyn" "Expr"
   CoreSyn.Var: Qualified "CoreSyn" "Expr"
   CoreSyn.AnnRec: Qualified "CoreSyn" "AnnBind"
+  CoreSyn.SourceNote: Qualified "CoreSyn" "Tickish"
   CoreSyn.Rule: Qualified "CoreSyn" "CoreRule"
+  CoreSyn.HpcTick: Qualified "CoreSyn" "Tickish"
   CoreSyn.InlineCompulsory: Qualified "CoreSyn" "UnfoldingSource"
   CoreSyn.PlaceCostCentre: Qualified "CoreSyn" "TickishPlacement"
   CoreSyn.NoScope: Qualified "CoreSyn" "TickishScoping"
   CoreSyn.DFunUnfolding: Qualified "CoreSyn" "Unfolding"
   CoreSyn.NoUnfolding: Qualified "CoreSyn" "Unfolding"
+  CoreSyn.ProfNote: Qualified "CoreSyn" "Tickish"
   CoreSyn.NonRec: Qualified "CoreSyn" "Bind"
   CoreSyn.DEFAULT: Qualified "CoreSyn" "AltCon"
   CoreSyn.AnnTick: Qualified "CoreSyn" "AnnExpr'"

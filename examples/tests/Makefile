@@ -19,7 +19,6 @@ PASS = \
   FTPDefault \
   PolyInstance2 \
   PolyInstance3 \
-  MutrecInst \
   Bits \
   BitsRewrite \
   Records \
@@ -38,6 +37,7 @@ TODO_PASS  = \
   Existential \
   TypeAnnotations \
   StrictPair \
+  MutrecInst \
 
 
 

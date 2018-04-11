@@ -100,10 +100,13 @@ order Module.Ord__InstalledUnitId Module.Ord__IndefModule_op_zl__
 skip Module.Eq___ComponentId
 skip Module.Ord__ComponentId
 
-
-
-order Module.Eq___UnitId Module.Eq___ModuleName Module.Eq___Module_op_zeze__ Module.Eq___Module_op_zsze__ Module.Eq___Module Module.Eq___NDModule_op_zeze__ Module.Eq___NDModule_op_zsze__ Module.Eq___NDModule Module.Ord__UnitId Module.Ord__ModuleName Module.Ord__Module_compare Module.Ord__Module_op_zg__ Module.Ord__Module_op_zgze__ Module.Ord__Module_op_zl__ Module.Ord__Module_op_zlze__ Module.Ord__Module Module.Ord__NDModule
-
+order Module.Eq___Module    Module.Eq___NDModule_op_zsze__
+order Module.Eq___Module    Module.Eq___NDModule_op_zeze__
+order Module.Eq___NDModule  Module.Ord__NDModule
+order Module.Eq___UnitId    Module.Ord__UnitId
+order Module.Eq___UnitId    Module.Eq___Module_op_zeze__
+order Module.Ord__UnitId    Module.Ord__Module_compare
+order Module.Ord__UnitId    Module.Ord__Module_op_zl__
 
 # These are wrong, but when axiomatizing, we cannot put them in order
 # And it is a real pain to put them in the correct order when we are
@@ -117,74 +120,6 @@ redefine Local Definition Module.Ord__UnitId_compare :
 redefine Definition Module.integerUnitId : UnitId := default.
 
 # These definitions make the wrong guesses
-redefine Local Definition Module.Ord__Module_op_zg__ : Module -> (Module -> bool) :=
-  fun a b =>
-    match a with
-    | Mk_Module a1 a2 => match b with
-                        | Mk_Module b1 b2 =>
-                                            match (Ord__UnitId_compare a1 b1) with
-                                            | Lt => false
-                                            | Eq => (a2 GHC.Base.> b2)
-                                            | Gt => true
-                                            end
-                        end
-    end.
-
-redefine Local Definition Module.Ord__Module_op_zgze__ : Module -> (Module -> bool) :=
-  fun a b =>
-    match a with
-      | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 =>
-                                                  match (Ord__UnitId_compare a1 b1) with
-                                                    | Lt => false
-                                                    | Eq => (a2 GHC.Base.>= b2)
-                                                    | Gt => true
-                                                  end
-                           end
-    end.
-
-redefine Local Definition Module.Ord__Module_op_zl__ : Module -> (Module -> bool) :=
-  fun a b =>
-    match a with
-      | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 =>
-                                                  match (Ord__UnitId_compare a1 b1)  with
-                                                    | Lt => true
-                                                    | Eq => (a2 GHC.Base.< b2)
-                                                    | Gt => false
-                                                  end
-                           end
-    end.
-
-redefine Local Definition Module.Ord__Module_op_zlze__ : Module -> (Module -> bool) :=
-  fun a b =>
-    match a with
-      | Mk_Module a1 a2 => match b with
-                             | Mk_Module b1 b2 =>
-                                                  match (Ord__UnitId_compare a1 b1) with
-                                                    | Lt => true
-                                                    | Eq => (a2 GHC.Base.<= b2)
-                                                    | Gt => false
-                                                  end
-                           end
-    end.
-
-redefine Local Definition Module.Ord__InstalledModule_op_zl__
-   : InstalledModule -> (InstalledModule -> bool) :=
-  fun a b => match a with | Mk_InstalledModule a1 a2 =>
-    match b with | Mk_InstalledModule b1 b2 =>
-    match (GHC.Base.compare a1 b1) with
-    | Lt => true
-    | Eq => (a2 GHC.Base.< b2)
-    | Gt => false
-    end end end.
-
-redefine Local Definition Module.Ord__IndefModule_op_zl__
-   : IndefModule -> (IndefModule -> bool) :=
-  fun a b => match a with | Mk_IndefModule a1 a2 =>
-    match b with | Mk_IndefModule b1 b2 =>
-    match (GHC.Base.compare a1 b1) with
-    | Lt => true
-    | Eq => (a2 GHC.Base.< b2)
-    | Gt => false
-    end end end.
+in Module.Ord__Module_op_zl__          rename value GHC.Base.compare = GHC.Base.compare
+in Module.Ord__InstalledModule_op_zl__ rename value GHC.Base.compare = GHC.Base.compare
+in Module.Ord__IndefModule_op_zl__     rename value GHC.Base.compare = GHC.Base.compare

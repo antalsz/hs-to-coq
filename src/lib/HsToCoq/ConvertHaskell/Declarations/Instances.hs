@@ -175,7 +175,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
     let (binds, classTy) = decomposeForall instanceHead
 
     -- decomposeClassTy can fail, so run it in the monad so that
-    -- failure will be caugh cause the instance to be skipped
+    -- failure will be caught and cause the instance to be skipped
     (className, instTy) <- decomposeClassTy classTy
 
     topoSortInstance instanceName binds className instTy methods

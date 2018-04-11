@@ -1,4 +1,3 @@
-# axiomatize module CallArity
 
 ## specialize generic method to (->) constructor
 ## to make type inference easier

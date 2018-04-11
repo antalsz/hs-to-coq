@@ -67,7 +67,6 @@ CORE_MODULES = \
   CoreSubst \
   CoreUtils \
   Id \
-  CoreArity \
   Name \
   NameEnv \
   NameSet \
@@ -88,6 +87,7 @@ CORE_MODULES = \
   CallArity \
 
 NOTRANSLATE = \
+  CoreArity \
   Constructors \
   CoreType \
   IdInfo2 \

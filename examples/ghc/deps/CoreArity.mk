@@ -1,1 +1,1 @@
-lib/CoreArity.v: 
+lib/CoreArity.v: lib/CoreSyn.h2ci

@@ -1,6 +1,9 @@
+(* We parameterize this because we don't have type information *)
+Parameter typeArity :  unit -> list BasicTypes.OneShotInfo.
+
+
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes.
 Admitted.
-
 
 Definition arrow_first {b}{c}{d} (f : (b -> c)) : (b * d)%type -> (c * d)%type :=
   fun p => match p with (x,y)=> (f x, y) end.
@@ -10,7 +13,7 @@ Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type 
 (* ------------------------- mutual recursion hack -------------------- *)
 
 (* ANTALZ: This looks like a good example of structural mutual recursion *) 
-Parameter callArityBind
+Parameter callArityBind1
    : VarSet.VarSet ->
      CallArityRes ->
      VarSet.VarSet -> CoreSyn.CoreBind -> (CallArityRes * CoreSyn.CoreBind)%type.

@@ -1,10 +1,16 @@
-axiomatize module CoreArity
+# axiomatize module CoreArity
 
+#
+# NEEDED by CallArity
+# CoreArity.typeArity
+
+#
 # This module depends strongly on Type/Coercion/TyCoRep/TyCon
+# in order to determine the arity of some of the operations
+# Perhaps we want to axiomatize some of the
 
-skip module Type
-skip module Coercion
-skip module TyCoRep
-skip module TyCon
+# skip etaInfoAbs
 
-skip etaInfoAbs
+
+rewrite forall co,   Coercion.mkSymCo co = tt
+rewrite forall ty v, CoreSyn.applyTypeToArg ty v = v

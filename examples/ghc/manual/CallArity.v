@@ -15,7 +15,6 @@ Require Coq.Program.Wf.
 Require BasicTypes.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
-Require CoreArity.
 Require CoreSyn.
 Require CoreUtils.
 Require Data.Foldable.
@@ -23,6 +22,7 @@ Require Data.Tuple.
 Require Demand.
 Require DynFlags.
 Require GHC.Base.
+Require GHC.DeferredFix.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
@@ -41,9 +41,12 @@ Definition CallArityRes :=
   (UnVarGraph.UnVarGraph * VarEnv.VarEnv BasicTypes.Arity)%type%type.
 (* Midamble *)
 
+(* We parameterize this because we don't have type information *)
+Parameter typeArity :  unit -> list BasicTypes.OneShotInfo.
+
+
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes.
 Admitted.
-
 
 Definition arrow_first {b}{c}{d} (f : (b -> c)) : (b * d)%type -> (c * d)%type :=
   fun p => match p with (x,y)=> (f x, y) end.
@@ -53,7 +56,7 @@ Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type 
 (* ------------------------- mutual recursion hack -------------------- *)
 
 (* ANTALZ: This looks like a good example of structural mutual recursion *) 
-Parameter callArityBind
+Parameter callArityBind1
    : VarSet.VarSet ->
      CallArityRes ->
      VarSet.VarSet -> CoreSyn.CoreBind -> (CallArityRes * CoreSyn.CoreBind)%type.
@@ -84,7 +87,7 @@ Definition emptyArityRes : CallArityRes :=
   pair UnVarGraph.emptyUnVarGraph VarEnv.emptyVarEnv.
 
 Definition isInteresting : Var.Var -> bool :=
-  fun v => negb (Data.Foldable.null (CoreArity.typeArity (tt))).
+  fun v => negb (Data.Foldable.null (typeArity (tt))).
 
 Definition interestingBinds : CoreSyn.CoreBind -> list Var.Var :=
   GHC.List.filter isInteresting GHC.Base.∘ CoreSyn.bindersOf.
@@ -98,32 +101,6 @@ Definition addInterestingBinds
 Definition boringBinds : CoreSyn.CoreBind -> VarSet.VarSet :=
   VarSet.mkVarSet GHC.Base.∘
   (GHC.List.filter (negb GHC.Base.∘ isInteresting) GHC.Base.∘ CoreSyn.bindersOf).
-
-Definition callArityTopLvl
-   : list Var.Var ->
-     VarSet.VarSet ->
-     list CoreSyn.CoreBind -> (CallArityRes * list CoreSyn.CoreBind)%type :=
-  fix callArityTopLvl arg_0__ arg_1__ arg_2__
-        := match arg_0__, arg_1__, arg_2__ with
-           | exported, _, nil =>
-               pair (calledMultipleTimes (pair UnVarGraph.emptyUnVarGraph (VarEnv.mkVarEnv
-                                                (Coq.Lists.List.flat_map (fun v => cons (pair v #0) nil) exported))))
-                    nil
-           | exported, int1, cons b bs =>
-               let int' := addInterestingBinds int1 b in
-               let int2 := CoreSyn.bindersOf b in
-               let exported' :=
-                 Coq.Init.Datatypes.app (GHC.List.filter Var.isExportedId int2) exported in
-               let 'pair ae1 bs' := callArityTopLvl exported' int' bs in
-               let 'pair ae2 b' := callArityBind (boringBinds b) ae1 int1 b in
-               pair ae2 (cons b' bs')
-           end.
-
-Definition callArityAnalProgram
-   : DynFlags.DynFlags -> CoreSyn.CoreProgram -> CoreSyn.CoreProgram :=
-  fun _dflags binds =>
-    let 'pair _ binds' := callArityTopLvl nil VarSet.emptyVarSet binds in
-    binds'.
 
 Definition lookupCallArityRes
    : CallArityRes -> Var.Var -> (BasicTypes.Arity * bool)%type :=
@@ -198,7 +175,7 @@ Definition trimArity : Var.Id -> BasicTypes.Arity -> BasicTypes.Arity :=
     let max_arity_by_strsig :=
       if Demand.isBotRes result_info : bool then Data.Foldable.length demands else
       a in
-    let max_arity_by_type := Data.Foldable.length (CoreArity.typeArity (tt)) in
+    let max_arity_by_type := Data.Foldable.length (typeArity (tt)) in
     Data.Foldable.foldr GHC.Base.min a (cons max_arity_by_type (cons
                                               max_arity_by_strsig nil)).
 
@@ -238,7 +215,8 @@ Definition callArityAnal
              | arity, int, CoreSyn.Let bind e =>
                  let int_body := addInterestingBinds int bind in
                  let 'pair ae_body e' := callArityAnal arity int_body e in
-                 let 'pair final_ae bind' := callArityBind (boringBinds bind) ae_body int bind in
+                 let 'pair final_ae bind' := callArityBind1 (boringBinds bind) ae_body int
+                                               bind in
                  pair final_ae (CoreSyn.Let bind' e')
              | _, _, _ => GHC.Err.patternFailure
              end in
@@ -273,25 +251,147 @@ Definition callArityAnal
 Definition callArityRHS : CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
   Data.Tuple.snd GHC.Base.∘ callArityAnal #0 VarSet.emptyVarSet.
 
+Definition callArityBind
+   : VarSet.VarSet ->
+     CallArityRes ->
+     VarSet.VarSet -> CoreSyn.CoreBind -> (CallArityRes * CoreSyn.CoreBind)%type :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | boring_vars, ae_body, int, CoreSyn.NonRec v rhs =>
+        let boring := VarSet.elemVarSet v boring_vars in
+        let 'pair arity called_once := (if boring : bool then pair #0 false else
+                                        lookupCallArityRes ae_body v) in
+        let called_with_v :=
+          if boring : bool then domRes ae_body else
+          UnVarGraph.delUnVarSet (calledWith ae_body v) v in
+        let is_thunk := negb (CoreUtils.exprIsCheap rhs) in
+        let safe_arity :=
+          if called_once : bool then arity else
+          if is_thunk : bool then #0 else
+          arity in
+        let trimmed_arity := trimArity v safe_arity in
+        let 'pair ae_rhs rhs' := callArityAnal trimmed_arity int rhs in
+        let v' := Id.setIdCallArity v trimmed_arity in
+        let ae_rhs' :=
+          if called_once : bool then ae_rhs else
+          if safe_arity GHC.Base.== #0 : bool then ae_rhs else
+          calledMultipleTimes ae_rhs in
+        let called_by_v := domRes ae_rhs' in
+        let final_ae :=
+          addCrossCoCalls called_by_v called_with_v (lubRes ae_rhs' (resDel v ae_body)) in
+        pair final_ae (CoreSyn.NonRec v' rhs')
+    | boring_vars, ae_body, int, (CoreSyn.Rec binds as b) =>
+        let initial_binds :=
+          let cont_21__ arg_22__ :=
+            let 'pair i e := arg_22__ in
+            cons (pair (pair i None) e) nil in
+          Coq.Lists.List.flat_map cont_21__ binds in
+        let int_body := addInterestingBinds int b in
+        let any_boring :=
+          Data.Foldable.any (fun arg_25__ => VarSet.elemVarSet arg_25__ boring_vars)
+          (let cont_26__ arg_27__ := let 'pair i _ := arg_27__ in cons i nil in
+           Coq.Lists.List.flat_map cont_26__ binds) in
+        let fix_
+         : list (Var.Id * option (bool * BasicTypes.Arity * CallArityRes)%type *
+                 CoreSyn.CoreExpr)%type ->
+           (CallArityRes * list (Var.Id * CoreSyn.CoreExpr)%type)%type :=
+          GHC.DeferredFix.deferredFix1 (fun fix_ ann_binds =>
+                                          let aes_old :=
+                                            let cont_29__ arg_30__ :=
+                                              match arg_30__ with
+                                              | pair (pair i (Some (pair (pair _ _) ae))) _ => cons (pair i ae) nil
+                                              | _ => nil
+                                              end in
+                                            Coq.Lists.List.flat_map cont_29__ ann_binds in
+                                          let ae := callArityRecEnv any_boring aes_old ae_body in
+                                          let rerun :=
+                                            fun '(pair (pair i mbLastRun) rhs) =>
+                                              let 'pair new_arity called_once := (if VarSet.elemVarSet i
+                                                                                                       boring_vars : bool
+                                                                                  then pair #0 false else
+                                                                                  lookupCallArityRes ae i) in
+                                              if andb (VarSet.elemVarSet i int_body) (negb (UnVarGraph.elemUnVarSet i
+                                                                                                                    (domRes
+                                                                                                                     ae))) : bool
+                                              then pair false (pair (pair i None) rhs) else
+                                              let j_44__ :=
+                                                let is_thunk := negb (CoreUtils.exprIsCheap rhs) in
+                                                let safe_arity := if is_thunk : bool then #0 else new_arity in
+                                                let trimmed_arity := trimArity i safe_arity in
+                                                let 'pair ae_rhs rhs' := callArityAnal trimmed_arity int_body rhs in
+                                                let i' := Id.setIdCallArity i trimmed_arity in
+                                                let ae_rhs' :=
+                                                  if called_once : bool then ae_rhs else
+                                                  if safe_arity GHC.Base.== #0 : bool then ae_rhs else
+                                                  calledMultipleTimes ae_rhs in
+                                                pair true (pair (pair i' (Some (pair (pair called_once new_arity)
+                                                                                     ae_rhs'))) rhs') in
+                                              match mbLastRun with
+                                              | Some (pair (pair old_called_once old_arity) _) =>
+                                                  if andb (called_once GHC.Base.== old_called_once) (new_arity
+                                                           GHC.Base.==
+                                                           old_arity) : bool
+                                                  then pair false (pair (pair i mbLastRun) rhs) else
+                                                  j_44__
+                                              | _ => j_44__
+                                              end in
+                                          let 'pair changes ann_binds' := GHC.List.unzip (GHC.Base.map rerun
+                                                                                                       ann_binds) in
+                                          let any_change := Data.Foldable.or changes in
+                                          if any_change : bool then fix_ ann_binds' else
+                                          pair ae (GHC.Base.map (fun '(pair (pair i _) e) => pair i e) ann_binds')) in
+        let 'pair ae_rhs binds' := fix_ initial_binds in
+        let final_ae := resDelList (CoreSyn.bindersOf b) ae_rhs in
+        pair final_ae (CoreSyn.Rec binds')
+    end.
+
+Definition callArityTopLvl
+   : list Var.Var ->
+     VarSet.VarSet ->
+     list CoreSyn.CoreBind -> (CallArityRes * list CoreSyn.CoreBind)%type :=
+  fix callArityTopLvl arg_0__ arg_1__ arg_2__
+        := match arg_0__, arg_1__, arg_2__ with
+           | exported, _, nil =>
+               pair (calledMultipleTimes (pair UnVarGraph.emptyUnVarGraph (VarEnv.mkVarEnv
+                                                (Coq.Lists.List.flat_map (fun v => cons (pair v #0) nil) exported))))
+                    nil
+           | exported, int1, cons b bs =>
+               let int' := addInterestingBinds int1 b in
+               let int2 := CoreSyn.bindersOf b in
+               let exported' :=
+                 Coq.Init.Datatypes.app (GHC.List.filter Var.isExportedId int2) exported in
+               let 'pair ae1 bs' := callArityTopLvl exported' int' bs in
+               let 'pair ae2 b' := callArityBind (boringBinds b) ae1 int1 b in
+               pair ae2 (cons b' bs')
+           end.
+
+Definition callArityAnalProgram
+   : DynFlags.DynFlags -> CoreSyn.CoreProgram -> CoreSyn.CoreProgram :=
+  fun _dflags binds =>
+    let 'pair _ binds' := callArityTopLvl nil VarSet.emptyVarSet binds in
+    binds'.
+
 (* External variables:
-     None Some arrow_first arrow_second bool callArityBind cons false list negb nil
-     op_zt__ pair tt BasicTypes.Arity Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     CoreArity.typeArity CoreSyn.App CoreSyn.Case CoreSyn.Cast CoreSyn.Coercion
-     CoreSyn.CoreBind CoreSyn.CoreExpr CoreSyn.CoreProgram CoreSyn.Lam CoreSyn.Let
-     CoreSyn.Lit CoreSyn.Tick CoreSyn.Type_ CoreSyn.Var CoreSyn.bindersOf
-     CoreUtils.exprIsTrivial Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.length Data.Foldable.null Data.Tuple.fst Data.Tuple.snd
-     Demand.botSig Demand.isBotRes Demand.splitStrictSig DynFlags.DynFlags
-     GHC.Base.const GHC.Base.map GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Err.patternFailure GHC.List.filter GHC.List.unzip
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idCallArity
-     UnVarGraph.UnVarGraph UnVarGraph.UnVarSet UnVarGraph.completeBipartiteGraph
-     UnVarGraph.completeGraph UnVarGraph.delNode UnVarGraph.elemUnVarSet
-     UnVarGraph.emptyUnVarGraph UnVarGraph.neighbors UnVarGraph.unionUnVarGraph
-     UnVarGraph.unionUnVarGraphs UnVarGraph.unionUnVarSets UnVarGraph.varEnvDom
-     Util.lengthExceeds Var.Id Var.Var Var.isExportedId Var.isId VarEnv.VarEnv
-     VarEnv.delVarEnv VarEnv.emptyVarEnv VarEnv.lookupVarEnv VarEnv.mkVarEnv
-     VarEnv.plusVarEnv_C VarEnv.unitVarEnv VarSet.VarSet VarSet.delVarSet
-     VarSet.delVarSetList VarSet.elemVarSet VarSet.emptyVarSet
-     VarSet.extendVarSetList VarSet.mkVarSet
+     None Some andb arrow_first arrow_second bool callArityBind1 cons false list negb
+     nil op_zt__ option pair true tt typeArity BasicTypes.Arity
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map CoreSyn.App CoreSyn.Case
+     CoreSyn.Cast CoreSyn.Coercion CoreSyn.CoreBind CoreSyn.CoreExpr
+     CoreSyn.CoreProgram CoreSyn.Lam CoreSyn.Let CoreSyn.Lit CoreSyn.NonRec
+     CoreSyn.Rec CoreSyn.Tick CoreSyn.Type_ CoreSyn.Var CoreSyn.bindersOf
+     CoreUtils.exprIsCheap CoreUtils.exprIsTrivial Data.Foldable.any
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length Data.Foldable.null
+     Data.Foldable.or Data.Tuple.fst Data.Tuple.snd Demand.botSig Demand.isBotRes
+     Demand.splitStrictSig DynFlags.DynFlags GHC.Base.const GHC.Base.map GHC.Base.min
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.DeferredFix.deferredFix1 GHC.Err.patternFailure GHC.List.filter
+     GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     Id.idCallArity Id.setIdCallArity UnVarGraph.UnVarGraph UnVarGraph.UnVarSet
+     UnVarGraph.completeBipartiteGraph UnVarGraph.completeGraph UnVarGraph.delNode
+     UnVarGraph.delUnVarSet UnVarGraph.elemUnVarSet UnVarGraph.emptyUnVarGraph
+     UnVarGraph.neighbors UnVarGraph.unionUnVarGraph UnVarGraph.unionUnVarGraphs
+     UnVarGraph.unionUnVarSets UnVarGraph.varEnvDom Util.lengthExceeds Var.Id Var.Var
+     Var.isExportedId Var.isId VarEnv.VarEnv VarEnv.delVarEnv VarEnv.emptyVarEnv
+     VarEnv.lookupVarEnv VarEnv.mkVarEnv VarEnv.plusVarEnv_C VarEnv.unitVarEnv
+     VarSet.VarSet VarSet.delVarSet VarSet.delVarSetList VarSet.elemVarSet
+     VarSet.emptyVarSet VarSet.extendVarSetList VarSet.mkVarSet
 *)

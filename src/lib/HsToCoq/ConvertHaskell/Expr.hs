@@ -5,7 +5,9 @@
 
 module HsToCoq.ConvertHaskell.Expr (
   convertTypedModuleBinding,
+  convertMethodBinding,
   convertTypedModuleBindings,
+  hsBindName,
   ) where
 
 import Control.Lens
@@ -866,14 +868,17 @@ wfFix _ _ = error "wfFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------
 
+hsBindName :: ConversionMonad r m => HsBind GhcRn -> m Qualid
+hsBindName defn = case defn of
+    FunBind{fun_id = L _ hsName} -> var ExprNS hsName
+    _ -> convUnsupported "Non-function top level binding"
+
+
 -- This is where we switch from the global monad to the local monad
 convertTypedModuleBinding :: ConversionMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
 convertTypedModuleBinding ty defn = do
-    name <- case defn of
-            FunBind{fun_id = L _ hsName} ->
-              var ExprNS hsName
-            _ -> convUnsupported "Non-function top level binding"
-    withCurrentDefinition name (convertTypedBinding ty defn)
+    name <- hsBindName defn
+    withCurrentDefinition name $ convertTypedBinding ty defn
 
 -- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad r m
@@ -895,6 +900,28 @@ convertTypedModuleBindings defns sigs build mhandler =
                    pure Nothing
          conv_bind <- MaybeT $ convertTypedModuleBinding ty defn
          lift $ build conv_bind
+
+-- | A variant of convertTypedModuleBinding that ignores the name in the HsBind
+-- and uses the provided one instead
+--
+-- It also does not allow skipping,  and does not create fixpoints, does not support a type,
+-- and always returns a binding (or fails with convUnsupported)
+convertMethodBinding :: ConversionMonad r m => Qualid -> HsBind GhcRn -> m ConvertedBinding
+convertMethodBinding _name VarBind{}     = convUnsupported "[internal] `VarBind'"
+convertMethodBinding _name AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
+convertMethodBinding _name PatSynBind{}  = convUnsupported "pattern synonym bindings"
+convertMethodBinding _name PatBind{..}   = convUnsupported "pattern bind"
+convertMethodBinding name FunBind{..}    = withCurrentDefinition name $ do
+    defn <-
+      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+      then case unLoc $ mg_alts fun_matches of
+             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+             _ -> convUnsupported "malformed multi-match variable definitions"
+      else do
+        (argBinders, match) <- convertFunction fun_matches
+        pure $  Fun argBinders match
+    pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
+
 
 convertTypedBindings :: LocalConvMonad r m
                      => [HsBind GhcRn] -> Map Qualid Signature

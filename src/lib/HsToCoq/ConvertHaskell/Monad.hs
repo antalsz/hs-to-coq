@@ -10,6 +10,7 @@
 module HsToCoq.ConvertHaskell.Monad (
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
+  HasEdits,
   runGlobalMonad,
   withCurrentModule,
   withCurrentDefinition,

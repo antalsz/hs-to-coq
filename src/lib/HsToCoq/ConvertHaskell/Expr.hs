@@ -1002,6 +1002,12 @@ missingValue = "missingValue"
 -- then desguar if-then-else using case statements.
 ifThenElse :: LocalConvMonad r m => m (IfStyle -> Term -> Term -> Term -> Term)
 ifThenElse = useProgramHere >>= \case
-    False -> pure $ IfBool
-    True ->  pure $ IfCase
-
+    False -> pure $ evalConstScrut IfBool
+    True ->  pure $ evalConstScrut IfCase
+  where
+    -- Reduce `if true` and `if false`
+    evalConstScrut :: (IfStyle -> Term -> Term -> Term -> Term)
+                   -> (IfStyle -> Term -> Term -> Term -> Term)
+    evalConstScrut _ _ "true"  e _ = e
+    evalConstScrut _ _ "false" _ e = e
+    evalConstScrut ifComb is scrut e1 e2 = ifComb is scrut e1 e2

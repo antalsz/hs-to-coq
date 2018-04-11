@@ -19,16 +19,13 @@ Require Coq.Lists.List.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Err.
-Require GHC.Num.
 Require IdInfo.
 Require Name.
 Require OccName.
-Require Panic.
 Require SrcLoc.
 Require Unique.
 Require Var.
 Import GHC.Base.Notations.
-Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -224,11 +221,7 @@ Definition classAllSelIds : Class -> list Var.Id :=
     match arg_0__ with
     | (Mk_Class _ _ _ _ _ (ConcreteClass _ sc_sels _ _ _) as c) =>
         Coq.Init.Datatypes.app sc_sels (classMethods c)
-    | c =>
-        if false : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/types/Class.hs")
-              #244)
-        else nil
+    | c => nil
     end.
 
 Definition classMinimalDef : Class -> ClassMinimalDef :=
@@ -295,8 +288,8 @@ Definition mkClass
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Foldable.length
      Data.Foldable.null GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____
      GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.Num.fromInteger IdInfo.TyConId Name.Name Name.NamedThing
-     Name.getName__ Name.getOccName__ Name.nameOccName Name.nameUnique
-     OccName.OccName Panic.assertPanic SrcLoc.SrcSpan Unique.Uniquable Unique.Unique
-     Unique.getUnique__ Var.Id Var.TyVar
+     GHC.Err.error IdInfo.TyConId Name.Name Name.NamedThing Name.getName__
+     Name.getOccName__ Name.nameOccName Name.nameUnique OccName.OccName
+     SrcLoc.SrcSpan Unique.Uniquable Unique.Unique Unique.getUnique__ Var.Id
+     Var.TyVar
 *)

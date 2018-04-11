@@ -39,6 +39,7 @@ Import GHC.Num.Notations.
 
 Definition CallArityRes :=
   (UnVarGraph.UnVarGraph * VarEnv.VarEnv BasicTypes.Arity)%type%type.
+<<<<<<< HEAD
 (* Midamble *)
 
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes.
@@ -58,6 +59,8 @@ Parameter callArityBind
      CallArityRes ->
      VarSet.VarSet -> CoreSyn.CoreBind -> (CallArityRes * CoreSyn.CoreBind)%type.
 
+=======
+>>>>>>> 830082218215421ea515fc935c8e13425eee2af7
 (* Converted value declarations: *)
 
 Definition addCrossCoCalls

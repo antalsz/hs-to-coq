@@ -26,7 +26,6 @@ Require Panic.
 Require Unique.
 Require Util.
 Import GHC.Base.Notations.
-Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -509,18 +508,15 @@ Definition setIdExported : Id -> Id :=
 
 Definition setIdNotExported : Id -> Id :=
   fun id =>
-    if false : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
-          #591)
-    else match id with
-         | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-         | Mk_TcTyVar _ _ _ _ =>
-             GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-         | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-         id_info_5__ =>
-             Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
-                   id_details_4__ id_info_5__
-         end.
+    match id with
+    | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+    | Mk_TcTyVar _ _ _ _ =>
+        GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+    | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+    id_info_5__ =>
+        Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
+              id_details_4__ id_info_5__
+    end.
 
 Definition setTcTyVarDetails : TyVar -> unit -> TyVar :=
   fun tv details =>
@@ -691,11 +687,11 @@ Program Instance Uniquable__Var : Unique.Uniquable Var :=
      GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
      GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
      GHC.Base.op_zsze____ GHC.Base.return_ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger IdInfo.IdDetails IdInfo.IdInfo
-     IdInfo.coVarDetails IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name
-     Name.NamedThing Name.getName__ Name.getOccName__ Name.nameOccName
-     Name.nameUnique Name.setNameUnique OccName.HasOccName OccName.OccName
-     OccName.occName__ Panic.assertPanic Panic.noString Panic.panicStr
-     Unique.Uniquable Unique.Unique Unique.getKey Unique.getUnique Unique.getUnique__
-     Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.HasDebugCallStack
+     GHC.Err.error GHC.Num.Int IdInfo.IdDetails IdInfo.IdInfo IdInfo.coVarDetails
+     IdInfo.isCoVarDetails IdInfo.vanillaIdInfo Name.Name Name.NamedThing
+     Name.getName__ Name.getOccName__ Name.nameOccName Name.nameUnique
+     Name.setNameUnique OccName.HasOccName OccName.OccName OccName.occName__
+     Panic.noString Panic.panicStr Unique.Uniquable Unique.Unique Unique.getKey
+     Unique.getUnique Unique.getUnique__ Unique.mkUniqueGrimily
+     Unique.nonDetCmpUnique Util.HasDebugCallStack
 *)

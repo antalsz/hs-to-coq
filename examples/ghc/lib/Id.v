@@ -46,59 +46,20 @@ Import GHC.Num.Notations.
 Parameter lookupDataCon : IdInfo.DataConId -> DataCon.DataCon.
 Parameter lookupClass : IdInfo.ClassId -> Class.Class.
 
+(* Make this a parameter so that we can reason about either case. *)
+Parameter isStateHackType : unit -> bool.
 
-(*
-Parameter hasNoBinding : Var.Id -> bool.
+(* The real definition looks like this, but we don't have the type information
+   around:
+  fun ty =>
+    if DynFlags.hasNoStateHack DynFlags.unsafeGlobalDynFlags : bool then false else
+    match Type.tyConAppTyCon_maybe ty with
+    | Some tycon => tycon GHC.Base.== TysPrim.statePrimTyCon
+    | _ => false
+    end. *)
 
-Parameter isDictId : Var.Id -> bool.
 
-Parameter isStrictId : Var.Id -> bool.
 
-Parameter idRepArity : Var.Id -> BasicTypes.RepArity.
-
-Parameter isClassOpId_maybe : Var.Id -> option Class.Class.
-
-Parameter isDataConId_maybe : Var.Id -> option DataCon.DataCon.
-
-Parameter isDataConWorkId : Var.Id -> bool.
-
-Parameter isDataConWorkId_maybe : Var.Id -> option DataCon.DataCon.
-
-Parameter isEvVar : Var -> bool.
-
-Parameter isFCallId : Var.Id -> bool.
-
-Parameter isFCallId_maybe : Var.Id -> option unit.
-
-Parameter isPrimOpId : Var.Id -> bool.
-
-Parameter isPrimOpId_maybe : Var.Id -> option unit.
-
-Parameter mkExportedVanillaId : Name.Name -> unit -> Var.Id.
-
-Parameter mkVanillaGlobalWithInfo : Name.Name -> unit -> IdInfo.IdInfo -> Var.Id.
-
-Parameter mkVanillaGlobal : Name.Name -> Core.Type_ -> Var.Id.
-
-Parameter mkLocalCoVar : Name.Name -> Core.Type_ -> CoVar.
-
-Parameter mkLocalIdOrCoVarWithInfo
-    : Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Var.Id.
-
-Parameter mkLocalIdWithInfo : Name.Name -> Core.Type_  -> IdInfo.IdInfo -> Var.Id.
-
-Parameter mkLocalId : Name.Name -> Core.Type_  -> Var.Id.
-
-Parameter mkSysLocal
-    : FastString.FastString -> Unique.Unique -> Core.Type_ -> Var.Id.
-
-Parameter mkLocalIdOrCoVar : Name.Name -> Core.Type_ -> Var.Id.
-
-(* zipwith enumFrom !!! *)
-Parameter mkTemplateLocalsNum : GHC.Num.Int -> list Core.Type_ -> list Var.Id.
-
-Parameter setIdType : Var.Id -> Core.Type_ -> Var.Id.
-*)
 (* Converted value declarations: *)
 
 Definition asJoinId : Var.Id -> BasicTypes.JoinArity -> Var.JoinId :=
@@ -575,37 +536,62 @@ Definition setIdUnique : Var.Id -> Unique.Unique -> Var.Id :=
 Definition stateHackOneShot : BasicTypes.OneShotInfo :=
   BasicTypes.OneShotLam.
 
+Definition typeOneShot : unit -> BasicTypes.OneShotInfo :=
+  fun ty =>
+    if isStateHackType ty : bool then stateHackOneShot else
+    BasicTypes.NoOneShotInfo.
+
+Definition idStateHackOneShotInfo : Var.Id -> BasicTypes.OneShotInfo :=
+  fun id =>
+    if isStateHackType (tt) : bool then stateHackOneShot else
+    idOneShotInfo id.
+
+Definition isOneShotBndr : Var.Var -> bool :=
+  fun var =>
+    if Var.isTyVar var : bool then true else
+    match idStateHackOneShotInfo var with
+    | BasicTypes.OneShotLam => true
+    | _ => false
+    end.
+
+Definition isProbablyOneShotLambda : Var.Id -> bool :=
+  fun id =>
+    match idStateHackOneShotInfo id with
+    | BasicTypes.OneShotLam => true
+    | BasicTypes.NoOneShotInfo => false
+    end.
+
 (* External variables:
-     None Some andb bool false list lookupClass lookupDataCon negb option orb pair
-     true tt unit BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
-     BasicTypes.JoinArity BasicTypes.NoOneShotInfo BasicTypes.OccInfo
-     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleMatchInfo
-     BasicTypes.inlinePragmaActivation BasicTypes.inlinePragmaRuleMatchInfo
-     BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isOneOcc
-     BasicTypes.noOccInfo BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
-     BasicTypes.zapOccTailCallInfo Class.Class DataCon.DataCon DataCon.StrictnessMark
-     DataCon.isMarkedStrict DataCon.isUnboxedSumCon DataCon.isUnboxedTupleCon
-     Datatypes.id Demand.Demand Demand.StrictSig FastString.FastString
-     FastString.fsLit GHC.Base.mappend GHC.Base.op_zgzgze__ GHC.Base.return_
-     GHC.Enum.enumFromTo GHC.List.length GHC.List.zipWith GHC.Num.Int
-     GHC.Num.fromInteger GHC.Num.op_zp__ IdInfo.CafInfo IdInfo.ClassOpId
-     IdInfo.DFunId IdInfo.DataConWorkId IdInfo.DataConWrapId IdInfo.FCallId
-     IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId IdInfo.PrimOpId IdInfo.RecSelData
-     IdInfo.RecSelId IdInfo.RecSelParent IdInfo.RecSelPatSyn IdInfo.RuleInfo
-     IdInfo.VanillaId IdInfo.arityInfo IdInfo.cafInfo IdInfo.callArityInfo
-     IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo IdInfo.occInfo IdInfo.oneShotInfo
-     IdInfo.ruleInfo IdInfo.setArityInfo IdInfo.setCafInfo IdInfo.setCallArityInfo
-     IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
-     IdInfo.setRuleInfo IdInfo.strictnessInfo IdInfo.vanillaIdInfo IdInfo.zapLamInfo
-     IdInfo.zapTailCallInfo IdInfo.zapUsageInfo IdInfo.zapUsedOnceInfo Maybes.orElse
-     Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
-     Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
-     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.noString
-     Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
-     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Unique.mkBuiltinUnique Util.count Var.Id Var.JoinId Var.Var Var.idDetails
-     Var.idInfo Var.isId Var.isLocalId Var.lazySetIdInfo Var.mkExportedLocalVar
-     Var.mkGlobalVar Var.mkLocalVar Var.setIdDetails Var.setIdExported
-     Var.setIdNotExported Var.setVarName Var.setVarType Var.setVarUnique Var.varName
-     Var.varType Var.varUnique
+     None Some andb bool false isStateHackType list lookupClass lookupDataCon negb
+     option orb pair true tt unit BasicTypes.Activation BasicTypes.Arity
+     BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.NoOneShotInfo
+     BasicTypes.OccInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
+     BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
+     BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
+     BasicTypes.isOneOcc BasicTypes.noOccInfo BasicTypes.occ_in_lam
+     BasicTypes.setInlinePragmaActivation BasicTypes.zapOccTailCallInfo Class.Class
+     DataCon.DataCon DataCon.StrictnessMark DataCon.isMarkedStrict
+     DataCon.isUnboxedSumCon DataCon.isUnboxedTupleCon Datatypes.id Demand.Demand
+     Demand.StrictSig FastString.FastString FastString.fsLit GHC.Base.mappend
+     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Enum.enumFromTo GHC.List.length
+     GHC.List.zipWith GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ IdInfo.CafInfo
+     IdInfo.ClassOpId IdInfo.DFunId IdInfo.DataConWorkId IdInfo.DataConWrapId
+     IdInfo.FCallId IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId IdInfo.PrimOpId
+     IdInfo.RecSelData IdInfo.RecSelId IdInfo.RecSelParent IdInfo.RecSelPatSyn
+     IdInfo.RuleInfo IdInfo.VanillaId IdInfo.arityInfo IdInfo.cafInfo
+     IdInfo.callArityInfo IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo IdInfo.occInfo
+     IdInfo.oneShotInfo IdInfo.ruleInfo IdInfo.setArityInfo IdInfo.setCafInfo
+     IdInfo.setCallArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
+     IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.strictnessInfo
+     IdInfo.vanillaIdInfo IdInfo.zapLamInfo IdInfo.zapTailCallInfo
+     IdInfo.zapUsageInfo IdInfo.zapUsedOnceInfo Maybes.orElse Module.Module Name.Name
+     Name.getName Name.isInternalName Name.localiseName Name.mkDerivedInternalName
+     Name.mkInternalName Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName
+     OccName.mkWorkerOcc Panic.noString Panic.panic Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace SrcLoc.SrcSpan UniqSupply.MonadUnique UniqSupply.getUniqueM
+     Unique.Unique Unique.mkBuiltinUnique Util.count Var.Id Var.JoinId Var.Var
+     Var.idDetails Var.idInfo Var.isId Var.isLocalId Var.isTyVar Var.lazySetIdInfo
+     Var.mkExportedLocalVar Var.mkGlobalVar Var.mkLocalVar Var.setIdDetails
+     Var.setIdExported Var.setIdNotExported Var.setVarName Var.setVarType
+     Var.setVarUnique Var.varName Var.varType Var.varUnique
 *)

@@ -6,18 +6,12 @@
 # NEEDED for CoreFVs
 # Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
 # 
+# NEEDED for CoreArity
+# Id.idArity Id.idStateHackOneShotInfo Id.idStrictness Id.isJoinId
+# Id.mkSysLocalOrCoVar Id.typeOneShot
 ##############
 
-# rewrite forall x, andb Util.debugIsOn x = false
-
 rewrite forall x, IdInfo.pprIdDetails x = Panic.someSDoc
-
-# rewrite forall x, TyCoRep.isCoercionType x = false
-
-# rewrite forall arg dmd, IdInfo.setDemandInfo arg dmd = arg
-# rewrite forall arg dmd, IdInfo.setStrictnessInfo arg dmd = arg
-# rewrite forall arg dmd, IdInfo.setUnfoldingInfo arg dmd = arg
-# rewrite forall arg,     IdInfo.strictnessInfo arg = tt
 
 ## CallStack
 rewrite forall x, Var.idInfo x = @Var.idInfo tt x
@@ -47,12 +41,10 @@ in Id.mkTemplateLocalsNum rewrite forall n tys, enumFrom n = (GHC.Enum.enumFromT
 ##################################
 
 
-# StaticFlags
+
+# TODO: add an edit for axiomatizing a single function 
+# isStateHackType is a Parameter in the midamble
 skip Id.isStateHackType
-skip Id.idStateHackOneShotInfo
-skip Id.isOneShotBndr 
-skip Id.isProbablyOneShotLambda
-skip Id.typeOneShot
 
 # Missing parts of IdInfo
 skip Id.isNeverLevPolyId 
@@ -60,7 +52,7 @@ skip Id.zapFragileIdInfo
 skip Id.zapIdUsageEnvInfo
 
 skip Id.idCoreRules
-skip Id.idStrictness
+skip Id.idStrictness   
 skip Id.isBottomingId
 
 # Type/TyCoRep

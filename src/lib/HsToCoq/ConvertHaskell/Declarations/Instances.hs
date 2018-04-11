@@ -154,13 +154,11 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
 
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
   unlessSkipped ii $ ghandle err_handler $ do
-    cbinds   <- convertTypedModuleBindings (map unLoc $ bagToList cid_binds) M.empty -- the type signatures (note: no InstanceSigs)
-                                   (\case ConvertedDefinitionBinding cdef -> pure cdef
-                                          ConvertedPatternBinding    _ _  -> convUnsupported "pattern bindings in instances")
-                                   Nothing -- error handler
-
-    cdefs <-  mapM (\ConvertedDefinition{..} -> do
-                       return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)) cbinds
+    cbinds <- fmap catMaybes $ mapM (convertTypedModuleBinding Nothing) $ map unLoc $ bagToList cid_binds
+    cdefs <-  forM cbinds $ \case
+        ConvertedDefinitionBinding (ConvertedDefinition{..})
+            -> return (convDefName, maybe id Fun (NE.nonEmpty (convDefArgs)) $ convDefBody)
+        ConvertedPatternBinding{} -> convUnsupported "pattern bindings in instances"
 
     defaults <-  fromMaybe M.empty <$> lookupDefaultMethods instanceClass
                  -- lookup default methods in the global state, using the

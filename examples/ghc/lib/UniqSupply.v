@@ -197,12 +197,12 @@ Program Instance Applicative__UniqSM : GHC.Base.Applicative UniqSM :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__UniqSM_pure |}.
 
-Local Definition Monad__UniqSM_return_ : forall {a}, a -> UniqSM a :=
-  fun {a} => GHC.Base.pure.
-
 Local Definition Monad__UniqSM_op_zgzg__
    : forall {a} {b}, UniqSM a -> UniqSM b -> UniqSM b :=
   fun {a} {b} => _GHC.Base.*>_.
+
+Local Definition Monad__UniqSM_return_ : forall {a}, a -> UniqSM a :=
+  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__UniqSM : GHC.Base.Monad UniqSM :=
   fun _ k =>

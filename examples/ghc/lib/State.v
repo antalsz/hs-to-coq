@@ -40,6 +40,10 @@ Program Instance Functor__State {s} : GHC.Base.Functor (State s) :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__State_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__State_op_zlzd__ |}.
 
+Local Definition Applicative__State_pure {inst_s}
+   : forall {a}, a -> (State inst_s) a :=
+  fun {a} => fun x => Mk_State (fun s => pair x s).
+
 Local Definition Applicative__State_op_zlztzg__ {inst_s}
    : forall {a} {b},
      (State inst_s) (a -> b) -> (State inst_s) a -> (State inst_s) b :=
@@ -61,16 +65,16 @@ Local Definition Applicative__State_liftA2 {inst_s}
   fun {a} {b} {c} =>
     fun f x => Applicative__State_op_zlztzg__ (GHC.Base.fmap f x).
 
-Local Definition Applicative__State_pure {inst_s}
-   : forall {a}, a -> (State inst_s) a :=
-  fun {a} => fun x => Mk_State (fun s => pair x s).
-
 Program Instance Applicative__State {s} : GHC.Base.Applicative (State s) :=
   fun _ k =>
     k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__State_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__State_op_zlztzg__ ;
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__State_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__State_pure |}.
+
+Local Definition Monad__State_return_ {inst_s}
+   : forall {a}, a -> (State inst_s) a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__State_op_zgzgze__ {inst_s}
    : forall {a} {b},
@@ -82,10 +86,6 @@ Local Definition Monad__State_op_zgzgze__ {inst_s}
 Local Definition Monad__State_op_zgzg__ {inst_s}
    : forall {a} {b}, (State inst_s) a -> (State inst_s) b -> (State inst_s) b :=
   fun {a} {b} => fun m k => Monad__State_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__State_return_ {inst_s}
-   : forall {a}, a -> (State inst_s) a :=
-  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__State {s} : GHC.Base.Monad (State s) :=
   fun _ k =>

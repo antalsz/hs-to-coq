@@ -1028,14 +1028,11 @@ Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
     | DEFAULT, _ => Lt
     end.
 
-Local Definition Ord__AltCon_op_zg__ : AltCon -> AltCon -> bool :=
-  fun x y => Ord__AltCon_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__AltCon_op_zgze__ : AltCon -> AltCon -> bool :=
   fun x y => Ord__AltCon_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__AltCon_op_zl__ : AltCon -> AltCon -> bool :=
-  fun x y => Ord__AltCon_compare x y GHC.Base.== Lt.
+Local Definition Ord__AltCon_op_zg__ : AltCon -> AltCon -> bool :=
+  fun x y => Ord__AltCon_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__AltCon_op_zlze__ : AltCon -> AltCon -> bool :=
   fun x y => Ord__AltCon_compare x y GHC.Base./= Gt.
@@ -1045,6 +1042,9 @@ Local Definition Ord__AltCon_max : AltCon -> AltCon -> AltCon :=
 
 Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
   fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__AltCon_op_zl__ : AltCon -> AltCon -> bool :=
+  fun x y => Ord__AltCon_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Outputable__AltCon of class Outputable *)
 
@@ -1168,17 +1168,13 @@ Local Definition Ord__Tickish_compare {inst_id} `{GHC.Base.Ord inst_id}
         end
     end.
 
-Local Definition Ord__Tickish_op_zg__ {inst_id} `{GHC.Base.Ord inst_id}
-   : Tickish inst_id -> Tickish inst_id -> bool :=
-  fun x y => Ord__Tickish_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__Tickish_op_zgze__ {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
   fun x y => Ord__Tickish_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Tickish_op_zl__ {inst_id} `{GHC.Base.Ord inst_id}
+Local Definition Ord__Tickish_op_zg__ {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
-  fun x y => Ord__Tickish_compare x y GHC.Base.== Lt.
+  fun x y => Ord__Tickish_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Tickish_op_zlze__ {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=
@@ -1191,6 +1187,10 @@ Local Definition Ord__Tickish_max {inst_id} `{GHC.Base.Ord inst_id}
 Local Definition Ord__Tickish_min {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> Tickish inst_id :=
   fun x y => if Ord__Tickish_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Tickish_op_zl__ {inst_id} `{GHC.Base.Ord inst_id}
+   : Tickish inst_id -> Tickish inst_id -> bool :=
+  fun x y => Ord__Tickish_compare x y GHC.Base.== Lt.
 
 Local Definition Eq___Tickish_op_zeze__ {inst_id} `{GHC.Base.Eq_ inst_id}
    : Tickish inst_id -> Tickish inst_id -> bool :=

@@ -222,14 +222,11 @@ Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
                                               p2)) (Unique.nonDetCmpUnique (Unique.getUnique n1) (Unique.getUnique n2))
     end.
 
-Local Definition Ord__NDModule_op_zg__ : NDModule -> NDModule -> bool :=
-  fun x y => Ord__NDModule_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__NDModule_op_zgze__ : NDModule -> NDModule -> bool :=
   fun x y => Ord__NDModule_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__NDModule_op_zl__ : NDModule -> NDModule -> bool :=
-  fun x y => Ord__NDModule_compare x y GHC.Base.== Lt.
+Local Definition Ord__NDModule_op_zg__ : NDModule -> NDModule -> bool :=
+  fun x y => Ord__NDModule_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__NDModule_op_zlze__ : NDModule -> NDModule -> bool :=
   fun x y => Ord__NDModule_compare x y GHC.Base./= Gt.
@@ -239,6 +236,9 @@ Local Definition Ord__NDModule_max : NDModule -> NDModule -> NDModule :=
 
 Local Definition Ord__NDModule_min : NDModule -> NDModule -> NDModule :=
   fun x y => if Ord__NDModule_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__NDModule_op_zl__ : NDModule -> NDModule -> bool :=
+  fun x y => Ord__NDModule_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Outputable__IndefModule of class Outputable *)
 
@@ -271,17 +271,13 @@ Local Definition Ord__IndefUnitId_compare
    : IndefUnitId -> IndefUnitId -> comparison :=
   fun u1 u2 => GHC.Base.compare (indefUnitIdFS u1) (indefUnitIdFS u2).
 
-Local Definition Ord__IndefUnitId_op_zg__
-   : IndefUnitId -> IndefUnitId -> bool :=
-  fun x y => Ord__IndefUnitId_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__IndefUnitId_op_zgze__
    : IndefUnitId -> IndefUnitId -> bool :=
   fun x y => Ord__IndefUnitId_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__IndefUnitId_op_zl__
+Local Definition Ord__IndefUnitId_op_zg__
    : IndefUnitId -> IndefUnitId -> bool :=
-  fun x y => Ord__IndefUnitId_compare x y GHC.Base.== Lt.
+  fun x y => Ord__IndefUnitId_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__IndefUnitId_op_zlze__
    : IndefUnitId -> IndefUnitId -> bool :=
@@ -294,6 +290,10 @@ Local Definition Ord__IndefUnitId_max
 Local Definition Ord__IndefUnitId_min
    : IndefUnitId -> IndefUnitId -> IndefUnitId :=
   fun x y => if Ord__IndefUnitId_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__IndefUnitId_op_zl__
+   : IndefUnitId -> IndefUnitId -> bool :=
+  fun x y => Ord__IndefUnitId_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__IndefUnitId : GHC.Base.Ord IndefUnitId :=
   fun _ k =>
@@ -314,14 +314,11 @@ Program Instance Ord__IndefUnitId : GHC.Base.Ord IndefUnitId :=
 Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
   fun nm1 nm2 => Eq.
 
-Local Definition Ord__UnitId_op_zg__ : UnitId -> UnitId -> bool :=
-  fun x y => Ord__UnitId_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__UnitId_op_zgze__ : UnitId -> UnitId -> bool :=
   fun x y => Ord__UnitId_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__UnitId_op_zl__ : UnitId -> UnitId -> bool :=
-  fun x y => Ord__UnitId_compare x y GHC.Base.== Lt.
+Local Definition Ord__UnitId_op_zg__ : UnitId -> UnitId -> bool :=
+  fun x y => Ord__UnitId_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__UnitId_op_zlze__ : UnitId -> UnitId -> bool :=
   fun x y => Ord__UnitId_compare x y GHC.Base./= Gt.
@@ -331,6 +328,9 @@ Local Definition Ord__UnitId_max : UnitId -> UnitId -> UnitId :=
 
 Local Definition Ord__UnitId_min : UnitId -> UnitId -> UnitId :=
   fun x y => if Ord__UnitId_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__UnitId_op_zl__ : UnitId -> UnitId -> bool :=
+  fun x y => Ord__UnitId_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Data__UnitId of class Data *)
 
@@ -355,17 +355,13 @@ Local Definition Ord__InstalledUnitId_compare
    : InstalledUnitId -> InstalledUnitId -> comparison :=
   fun u1 u2 => GHC.Base.compare (installedUnitIdFS u1) (installedUnitIdFS u2).
 
-Local Definition Ord__InstalledUnitId_op_zg__
-   : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__InstalledUnitId_op_zgze__
    : InstalledUnitId -> InstalledUnitId -> bool :=
   fun x y => Ord__InstalledUnitId_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__InstalledUnitId_op_zl__
+Local Definition Ord__InstalledUnitId_op_zg__
    : InstalledUnitId -> InstalledUnitId -> bool :=
-  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Lt.
+  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__InstalledUnitId_op_zlze__
    : InstalledUnitId -> InstalledUnitId -> bool :=
@@ -378,6 +374,10 @@ Local Definition Ord__InstalledUnitId_max
 Local Definition Ord__InstalledUnitId_min
    : InstalledUnitId -> InstalledUnitId -> InstalledUnitId :=
   fun x y => if Ord__InstalledUnitId_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__InstalledUnitId_op_zl__
+   : InstalledUnitId -> InstalledUnitId -> bool :=
+  fun x y => Ord__InstalledUnitId_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Outputable__InstalledUnitId of class Outputable *)
 
@@ -411,14 +411,11 @@ Local Definition Ord__ModuleName_compare
    : ModuleName -> ModuleName -> comparison :=
   fun nm1 nm2 => Eq.
 
-Local Definition Ord__ModuleName_op_zg__ : ModuleName -> ModuleName -> bool :=
-  fun x y => Ord__ModuleName_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__ModuleName_op_zgze__ : ModuleName -> ModuleName -> bool :=
   fun x y => Ord__ModuleName_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__ModuleName_op_zl__ : ModuleName -> ModuleName -> bool :=
-  fun x y => Ord__ModuleName_compare x y GHC.Base.== Lt.
+Local Definition Ord__ModuleName_op_zg__ : ModuleName -> ModuleName -> bool :=
+  fun x y => Ord__ModuleName_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__ModuleName_op_zlze__ : ModuleName -> ModuleName -> bool :=
   fun x y => Ord__ModuleName_compare x y GHC.Base./= Gt.
@@ -428,6 +425,9 @@ Local Definition Ord__ModuleName_max : ModuleName -> ModuleName -> ModuleName :=
 
 Local Definition Ord__ModuleName_min : ModuleName -> ModuleName -> ModuleName :=
   fun x y => if Ord__ModuleName_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__ModuleName_op_zl__ : ModuleName -> ModuleName -> bool :=
+  fun x y => Ord__ModuleName_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Outputable__ModuleName of class Outputable *)
 
@@ -847,11 +847,11 @@ Program Instance Eq___InstalledModule : GHC.Base.Eq_ InstalledModule :=
 Definition installedModuleEq : InstalledModule -> Module -> bool :=
   fun imod mod_ => Data.Tuple.fst (splitModuleInsts mod_) GHC.Base.== imod.
 
-Local Definition Eq___DefUnitId_op_zsze__ : DefUnitId -> DefUnitId -> bool :=
-  GHC.Prim.coerce _GHC.Base./=_.
-
 Local Definition Eq___DefUnitId_op_zeze__ : DefUnitId -> DefUnitId -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
+
+Local Definition Eq___DefUnitId_op_zsze__ : DefUnitId -> DefUnitId -> bool :=
+  GHC.Prim.coerce _GHC.Base./=_.
 
 Program Instance Eq___DefUnitId : GHC.Base.Eq_ DefUnitId :=
   fun _ k =>
@@ -868,17 +868,6 @@ Program Instance Ord__InstalledUnitId : GHC.Base.Ord InstalledUnitId :=
          GHC.Base.max__ := Ord__InstalledUnitId_max ;
          GHC.Base.min__ := Ord__InstalledUnitId_min |}.
 
-Local Definition Ord__InstalledModule_compare
-   : InstalledModule -> InstalledModule -> comparison :=
-  fun a b =>
-    let 'Mk_InstalledModule a1 a2 := a in
-    let 'Mk_InstalledModule b1 b2 := b in
-    match (GHC.Base.compare a1 b1) with
-    | Lt => Lt
-    | Eq => (GHC.Base.compare a2 b2)
-    | Gt => Gt
-    end.
-
 Local Definition Ord__InstalledModule_op_zl__
    : InstalledModule -> InstalledModule -> bool :=
   fun a b =>
@@ -889,14 +878,6 @@ Local Definition Ord__InstalledModule_op_zl__
     | Eq => a2 GHC.Base.< b2
     | Gt => false
     end.
-
-Local Definition Ord__InstalledModule_op_zg__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun a b => Ord__InstalledModule_op_zl__ b a.
-
-Local Definition Ord__InstalledModule_op_zgze__
-   : InstalledModule -> InstalledModule -> bool :=
-  fun a b => negb (Ord__InstalledModule_op_zl__ a b).
 
 Local Definition Ord__InstalledModule_op_zlze__
    : InstalledModule -> InstalledModule -> bool :=
@@ -909,6 +890,25 @@ Local Definition Ord__InstalledModule_max
 Local Definition Ord__InstalledModule_min
    : InstalledModule -> InstalledModule -> InstalledModule :=
   fun x y => if Ord__InstalledModule_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__InstalledModule_op_zg__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun a b => Ord__InstalledModule_op_zl__ b a.
+
+Local Definition Ord__InstalledModule_op_zgze__
+   : InstalledModule -> InstalledModule -> bool :=
+  fun a b => negb (Ord__InstalledModule_op_zl__ a b).
+
+Local Definition Ord__InstalledModule_compare
+   : InstalledModule -> InstalledModule -> comparison :=
+  fun a b =>
+    let 'Mk_InstalledModule a1 a2 := a in
+    let 'Mk_InstalledModule b1 b2 := b in
+    match (GHC.Base.compare a1 b1) with
+    | Lt => Lt
+    | Eq => (GHC.Base.compare a2 b2)
+    | Gt => Gt
+    end.
 
 Program Instance Ord__InstalledModule : GHC.Base.Ord InstalledModule :=
   fun _ k =>
@@ -936,27 +936,27 @@ Definition delInstalledModuleEnv {a}
         Mk_InstalledModuleEnv (Data.Map.Internal.delete m e)
     end.
 
-Local Definition Ord__DefUnitId_op_zlze__ : DefUnitId -> DefUnitId -> bool :=
-  GHC.Prim.coerce _GHC.Base.<=_.
-
 Local Definition Ord__DefUnitId_op_zl__ : DefUnitId -> DefUnitId -> bool :=
   GHC.Prim.coerce _GHC.Base.<_.
 
-Local Definition Ord__DefUnitId_op_zgze__ : DefUnitId -> DefUnitId -> bool :=
-  GHC.Prim.coerce _GHC.Base.>=_.
+Local Definition Ord__DefUnitId_op_zlze__ : DefUnitId -> DefUnitId -> bool :=
+  GHC.Prim.coerce _GHC.Base.<=_.
 
 Local Definition Ord__DefUnitId_op_zg__ : DefUnitId -> DefUnitId -> bool :=
   GHC.Prim.coerce _GHC.Base.>_.
 
-Local Definition Ord__DefUnitId_min : DefUnitId -> DefUnitId -> DefUnitId :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__DefUnitId_max : DefUnitId -> DefUnitId -> DefUnitId :=
-  GHC.Prim.coerce GHC.Base.max.
+Local Definition Ord__DefUnitId_op_zgze__ : DefUnitId -> DefUnitId -> bool :=
+  GHC.Prim.coerce _GHC.Base.>=_.
 
 Local Definition Ord__DefUnitId_compare
    : DefUnitId -> DefUnitId -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
+
+Local Definition Ord__DefUnitId_max : DefUnitId -> DefUnitId -> DefUnitId :=
+  GHC.Prim.coerce GHC.Base.max.
+
+Local Definition Ord__DefUnitId_min : DefUnitId -> DefUnitId -> DefUnitId :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Program Instance Ord__DefUnitId : GHC.Base.Ord DefUnitId :=
   fun _ k =>
@@ -979,14 +979,6 @@ Local Definition Ord__IndefModule_op_zl__
     | Gt => false
     end.
 
-Local Definition Ord__IndefModule_op_zg__
-   : IndefModule -> IndefModule -> bool :=
-  fun a b => Ord__IndefModule_op_zl__ b a.
-
-Local Definition Ord__IndefModule_op_zgze__
-   : IndefModule -> IndefModule -> bool :=
-  fun a b => negb (Ord__IndefModule_op_zl__ a b).
-
 Local Definition Ord__IndefModule_op_zlze__
    : IndefModule -> IndefModule -> bool :=
   fun a b => negb (Ord__IndefModule_op_zl__ b a).
@@ -998,6 +990,14 @@ Local Definition Ord__IndefModule_max
 Local Definition Ord__IndefModule_min
    : IndefModule -> IndefModule -> IndefModule :=
   fun x y => if Ord__IndefModule_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__IndefModule_op_zg__
+   : IndefModule -> IndefModule -> bool :=
+  fun a b => Ord__IndefModule_op_zl__ b a.
+
+Local Definition Ord__IndefModule_op_zgze__
+   : IndefModule -> IndefModule -> bool :=
+  fun a b => negb (Ord__IndefModule_op_zl__ a b).
 
 Program Instance Ord__IndefModule : GHC.Base.Ord IndefModule :=
   fun _ k =>

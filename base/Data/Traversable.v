@@ -250,18 +250,12 @@ Program Instance Traversable__pair_type {a}
 
 (* Skipping instance Traversable__Array *)
 
-Local Definition Traversable__Proxy_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> Data.Proxy.Proxy a -> m (Data.Proxy.Proxy b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} =>
+Local Definition Traversable__Proxy_traverse
+   : forall {f} {a} {b},
+     forall `{GHC.Base.Applicative f},
+     (a -> f b) -> Data.Proxy.Proxy a -> f (Data.Proxy.Proxy b) :=
+  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun arg_0__ arg_1__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
-
-Local Definition Traversable__Proxy_sequence
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m}, Data.Proxy.Proxy (m a) -> m (Data.Proxy.Proxy a) :=
-  fun {m} {a} `{GHC.Base.Monad m} =>
-    fun arg_0__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Local Definition Traversable__Proxy_sequenceA
    : forall {f} {a},
@@ -270,11 +264,17 @@ Local Definition Traversable__Proxy_sequenceA
   fun {f} {a} `{GHC.Base.Applicative f} =>
     fun arg_0__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
-Local Definition Traversable__Proxy_traverse
-   : forall {f} {a} {b},
-     forall `{GHC.Base.Applicative f},
-     (a -> f b) -> Data.Proxy.Proxy a -> f (Data.Proxy.Proxy b) :=
-  fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+Local Definition Traversable__Proxy_sequence
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m}, Data.Proxy.Proxy (m a) -> m (Data.Proxy.Proxy a) :=
+  fun {m} {a} `{GHC.Base.Monad m} =>
+    fun arg_0__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
+
+Local Definition Traversable__Proxy_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> Data.Proxy.Proxy a -> m (Data.Proxy.Proxy b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} =>
     fun arg_0__ arg_1__ => GHC.Base.pure Data.Proxy.Mk_Proxy.
 
 Program Instance Traversable__Proxy : Traversable Data.Proxy.Proxy :=

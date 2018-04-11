@@ -66,11 +66,8 @@ order Control.Monad.Trans.Identity.Functor__IdentityT Control.Monad.Trans.Identi
 
 order Data.Functor.Reverse.Functor__Reverse Data.Functor.Reverse.Applicative__Reverse Data.Functor.Reverse.Monad__Reverse_op_zgzg__ Data.Functor.Reverse.Monad__Reverse_return_ Data.Functor.Reverse.Monad__Reverse Data.Functor.Reverse.Traversable__Reverse 
 
-
-
 order Control.Monad.Trans.Accum.Functor__AccumT  Control.Monad.Trans.Accum.Applicative__AccumT_op_ztzg__ Control.Monad.Trans.Accum.Applicative__AccumT Control.Monad.Trans.Accum.Monad__AccumT_op_zgzg__ Control.Monad.Trans.Accum.Monad__AccumT_return_ Control.Monad.Trans.Accum.Monad__AccumT Control.Monad.Trans.Accum.Traversable__AccumT
 
-order Control.Monad.Trans.Cont.Functor__ContT   Control.Monad.Trans.Cont.Applicative__ContT_pure Control.Monad.Trans.Cont.Applicative__ContT_op_ztzg__ Control.Monad.Trans.Cont.Applicative__ContT Control.Monad.Trans.Cont.Monad__ContT_op_zgzg__ Control.Monad.Trans.Cont.Monad__ContT_return_ Control.Monad.Trans.Cont.Monad__ContT Control.Monad.Trans.Cont.Traversable__ContT
 
 order Control.Monad.Trans.Except.runExceptT Control.Monad.Trans.Except.Functor__ExceptT  Control.Monad.Trans.Except.Applicative__ExceptT_pure Control.Monad.Trans.Except.Applicative__ExceptT_op_ztzg__ Control.Monad.Trans.Except.Applicative__ExceptT Control.Monad.Trans.Except.Monad__ExceptT_op_zgzg__ Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ Control.Monad.Trans.Except.Monad__ExceptT_return_ Control.Monad.Trans.Except.Monad__ExceptT Control.Monad.Trans.Except.Traversable__ExceptT 
 
@@ -84,7 +81,6 @@ order Control.Monad.Trans.Writer.Lazy.Functor__WriterT Control.Monad.Trans.Write
 order Control.Monad.Trans.Select.MonadTrans__SelectT Control.Monad.Trans.Select.Functor__SelectT Control.Monad.Trans.Select.Applicative__SelectT_pure Control.Monad.Trans.Select.Applicative__SelectT_op_ztzg__ Control.Monad.Trans.Select.Applicative__SelectT_op_ztzg__ Control.Monad.Trans.Select.Applicative__SelectT Control.Monad.Trans.Select.Monad__SelectT_op_zgzg__ Control.Monad.Trans.Select.Monad__SelectT_return_ Control.Monad.Trans.Select.Monad__SelectT Control.Monad.Trans.Select.Traversable__SelectT
 
 
-order Control.Monad.Trans.State.Lazy.Functor__StateT Control.Monad.Trans.State.Lazy.Applicative__StateT_pure Control.Monad.Trans.State.Lazy.Applicative__StateT_op_ztzg__ Control.Monad.Trans.State.Lazy.Applicative__StateT Control.Monad.Trans.State.Lazy.Monad__StateT_op_zgzg__ Control.Monad.Trans.State.Lazy.Monad__StateT_return_ Control.Monad.Trans.State.Lazy.Monad__StateT Control.Monad.Trans.State.Lazy.Traversable__StateT
 
 
 # These are all instances of the same issue. The Applicative *> operator is defined
@@ -95,24 +91,24 @@ redefine Definition Control.Monad.Trans.State.Lazy.Applicative__StateT_op_ztzg__
    : forall {a} {b},
      (StateT inst_s inst_m a) ->
      ((StateT inst_s inst_m b) -> (StateT inst_s inst_m b)) :=
-  fun {a} {b} => fun m k => Applicative__StateT_op_zlztzg__ (Applicative__StateT_op_zlztzg__ (Applicative__StateT_pure (fun x y => x)) k) m.
+  fun {a} {b} => fun m k => Control.Monad.Trans.State.Lazy.Applicative__StateT_op_zlztzg__ (Control.Monad.Trans.State.Lazy.Applicative__StateT_op_zlztzg__ (Applicative__StateT_pure (fun x y => x)) k) m.
 
 
 redefine Definition Control.Monad.Trans.Cont.Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
    : forall {a} {b},
      (ContT inst_s inst_m a) ->
      ((ContT inst_s inst_m b) -> (ContT inst_s inst_m b)) :=
-  fun {a} {b} => fun m k => Applicative__ContT_op_zlztzg__ (Applicative__ContT_op_zlztzg__ (Applicative__ContT_pure (fun x y => x)) k) m.
+  fun {a} {b} => fun m k => Control.Monad.Trans.Cont.Applicative__ContT_op_zlztzg__ (Control.Monad.Trans.Cont.Applicative__ContT_op_zlztzg__ (Applicative__ContT_pure (fun x y => x)) k) m.
 
 redefine Definition Control.Monad.Trans.Except.Applicative__ExceptT_op_ztzg__ {inst_m} {inst_s} `{_ : GHC.Base.Monad inst_m}
    : forall {a} {b},
      (ExceptT inst_s inst_m a) ->
      ((ExceptT inst_s inst_m b) -> (ExceptT inst_s inst_m b)) :=
-  fun {a} {b} => fun m k => Applicative__ExceptT_op_zlztzg__ (Applicative__ExceptT_op_zlztzg__ (Applicative__ExceptT_pure (fun x y => x)) k) m.
+  fun {a} {b} => fun m k => Control.Monad.Trans.Except.Applicative__ExceptT_op_zlztzg__ (Control.Monad.Trans.Except.Applicative__ExceptT_op_zlztzg__ (Applicative__ExceptT_pure (fun x y => x)) k) m.
 
 redefine Definition Control.Monad.Trans.Select.Applicative__SelectT_op_ztzg__ {inst_m} {inst_s} `{_ : GHC.Base.Monad inst_m}
    : forall {a} {b},
      (SelectT inst_s inst_m a) ->
      ((SelectT inst_s inst_m b) -> (SelectT inst_s inst_m b)) :=
-  fun {a} {b} => fun m k => Applicative__SelectT_op_zlztzg__ (Applicative__SelectT_op_zlztzg__ (Applicative__SelectT_pure (fun x y => x)) k) m.
+  fun {a} {b} => fun m k => Control.Monad.Trans.Select.Applicative__SelectT_op_zlztzg__ (Control.Monad.Trans.Select.Applicative__SelectT_op_zlztzg__ (Applicative__SelectT_pure (fun x y => x)) k) m.
 

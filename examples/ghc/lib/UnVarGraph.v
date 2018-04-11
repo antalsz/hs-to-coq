@@ -49,11 +49,11 @@ Instance Unpeel_UnVarGraph : Prim.Unpeel UnVarGraph (Bag.Bag Gen) :=
 
 (* Skipping instance Outputable__UnVarSet of class Outputable *)
 
-Local Definition Eq___UnVarSet_op_zeze__ : UnVarSet -> UnVarSet -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
-
 Local Definition Eq___UnVarSet_op_zsze__ : UnVarSet -> UnVarSet -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___UnVarSet_op_zeze__ : UnVarSet -> UnVarSet -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___UnVarSet : GHC.Base.Eq_ UnVarSet :=
   fun _ k =>

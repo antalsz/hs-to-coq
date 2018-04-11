@@ -179,21 +179,8 @@ Program Instance Functor__Option : GHC.Base.Functor Option :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Option_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Option_op_zlzd__ |}.
 
-Local Definition Applicative__Option_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Option a -> Option b -> Option c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, Mk_Option x, Mk_Option y => Mk_Option (GHC.Base.liftA2 f x y)
-      end.
-
-Local Definition Applicative__Option_op_zlztzg__
-   : forall {a} {b}, Option (a -> b) -> Option a -> Option b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Mk_Option a, Mk_Option b => Mk_Option (a GHC.Base.<*> b)
-      end.
+Local Definition Applicative__Option_pure : forall {a}, a -> Option a :=
+  fun {a} => fun a => Mk_Option (Some a).
 
 Local Definition Applicative__Option_op_ztzg__
    : forall {a} {b}, Option a -> Option b -> Option b :=
@@ -204,8 +191,21 @@ Local Definition Applicative__Option_op_ztzg__
       | _, b => b
       end.
 
-Local Definition Applicative__Option_pure : forall {a}, a -> Option a :=
-  fun {a} => fun a => Mk_Option (Some a).
+Local Definition Applicative__Option_op_zlztzg__
+   : forall {a} {b}, Option (a -> b) -> Option a -> Option b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Mk_Option a, Mk_Option b => Mk_Option (a GHC.Base.<*> b)
+      end.
+
+Local Definition Applicative__Option_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Option a -> Option b -> Option c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, Mk_Option x, Mk_Option y => Mk_Option (GHC.Base.liftA2 f x y)
+      end.
 
 Program Instance Applicative__Option : GHC.Base.Applicative Option :=
   fun _ k =>
@@ -214,9 +214,8 @@ Program Instance Applicative__Option : GHC.Base.Applicative Option :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Option_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Option_pure |}.
 
-Local Definition Monad__Option_op_zgzg__
-   : forall {a} {b}, Option a -> Option b -> Option b :=
-  fun {a} {b} => _GHC.Base.*>_.
+Local Definition Monad__Option_return_ : forall {a}, a -> Option a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__Option_op_zgzgze__
    : forall {a} {b}, Option a -> (a -> Option b) -> Option b :=
@@ -227,8 +226,9 @@ Local Definition Monad__Option_op_zgzgze__
       | _, _ => Mk_Option None
       end.
 
-Local Definition Monad__Option_return_ : forall {a}, a -> Option a :=
-  fun {a} => GHC.Base.pure.
+Local Definition Monad__Option_op_zgzg__
+   : forall {a} {b}, Option a -> Option b -> Option b :=
+  fun {a} {b} => _GHC.Base.*>_.
 
 Program Instance Monad__Option : GHC.Base.Monad Option :=
   fun _ k =>
@@ -372,13 +372,13 @@ Program Instance Semigroup__Option {a} `{GHC.Base.Semigroup a}
    : GHC.Base.Semigroup (Option a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Option_op_zlzlzgzg__ |}.
 
-Local Definition Monoid__Option_mappend {inst_a} `{GHC.Base.Semigroup inst_a}
-   : (Option inst_a) -> (Option inst_a) -> (Option inst_a) :=
-  _GHC.Base.<<>>_.
-
 Local Definition Monoid__Option_mempty {inst_a} `{GHC.Base.Semigroup inst_a}
    : (Option inst_a) :=
   Mk_Option None.
+
+Local Definition Monoid__Option_mappend {inst_a} `{GHC.Base.Semigroup inst_a}
+   : (Option inst_a) -> (Option inst_a) -> (Option inst_a) :=
+  _GHC.Base.<<>>_.
 
 Local Definition Monoid__Option_mconcat {inst_a} `{GHC.Base.Semigroup inst_a}
    : list (Option inst_a) -> (Option inst_a) :=
@@ -401,14 +401,14 @@ Program Instance Semigroup__WrappedMonoid {m} `{GHC.Base.Monoid m}
   fun _ k =>
     k {| GHC.Base.op_zlzlzgzg____ := Semigroup__WrappedMonoid_op_zlzlzgzg__ |}.
 
+Local Definition Monoid__WrappedMonoid_mempty {inst_m} `{GHC.Base.Monoid inst_m}
+   : (WrappedMonoid inst_m) :=
+  WrapMonoid GHC.Base.mempty.
+
 Local Definition Monoid__WrappedMonoid_mappend {inst_m} `{GHC.Base.Monoid
   inst_m}
    : (WrappedMonoid inst_m) -> (WrappedMonoid inst_m) -> (WrappedMonoid inst_m) :=
   _GHC.Base.<<>>_.
-
-Local Definition Monoid__WrappedMonoid_mempty {inst_m} `{GHC.Base.Monoid inst_m}
-   : (WrappedMonoid inst_m) :=
-  WrapMonoid GHC.Base.mempty.
 
 Local Definition Monoid__WrappedMonoid_mconcat {inst_m} `{GHC.Base.Monoid
   inst_m}
@@ -435,6 +435,11 @@ Local Definition Semigroup__Last_op_zlzlzgzg__ {inst_a}
 Program Instance Semigroup__Last {a} : GHC.Base.Semigroup (Last a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Last_op_zlzlzgzg__ |}.
 
+Local Definition Functor__Last_op_zlzd__
+   : forall {a} {b}, a -> Last b -> Last a :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | a, _ => Mk_Last a end.
+
 Local Definition Functor__Last_fmap
    : forall {a} {b}, (a -> b) -> Last a -> Last b :=
   fun {a} {b} =>
@@ -442,11 +447,6 @@ Local Definition Functor__Last_fmap
       match arg_0__, arg_1__ with
       | f, Mk_Last x => Mk_Last (f x)
       end.
-
-Local Definition Functor__Last_op_zlzd__
-   : forall {a} {b}, a -> Last b -> Last a :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | a, _ => Mk_Last a end.
 
 Program Instance Functor__Last : GHC.Base.Functor Last :=
   fun _ k =>
@@ -565,21 +565,21 @@ Program Instance Traversable__Last : Data.Traversable.Traversable Last :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Last_traverse |}.
 
-Local Definition Applicative__Last_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Last a -> Last b -> Last c :=
-  fun {a} {b} {c} => GHC.Prim.coerce.
-
-Local Definition Applicative__Last_op_zlztzg__
-   : forall {a} {b}, Last (a -> b) -> Last a -> Last b :=
-  fun {a} {b} => GHC.Prim.coerce.
+Local Definition Applicative__Last_pure : forall {a}, a -> Last a :=
+  fun {a} => Mk_Last.
 
 Local Definition Applicative__Last_op_ztzg__
    : forall {a} {b}, Last a -> Last b -> Last b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
 
-Local Definition Applicative__Last_pure : forall {a}, a -> Last a :=
-  fun {a} => Mk_Last.
+Local Definition Applicative__Last_op_zlztzg__
+   : forall {a} {b}, Last (a -> b) -> Last a -> Last b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Last_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Last a -> Last b -> Last c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
 
 Program Instance Applicative__Last : GHC.Base.Applicative Last :=
   fun _ k =>
@@ -588,17 +588,17 @@ Program Instance Applicative__Last : GHC.Base.Applicative Last :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Last_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Last_pure |}.
 
-Local Definition Monad__Last_op_zgzg__
-   : forall {a} {b}, Last a -> Last b -> Last b :=
-  fun {a} {b} => _GHC.Base.*>_.
+Local Definition Monad__Last_return_ : forall {a}, a -> Last a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__Last_op_zgzgze__
    : forall {a} {b}, Last a -> (a -> Last b) -> Last b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | Mk_Last a, f => f a end.
 
-Local Definition Monad__Last_return_ : forall {a}, a -> Last a :=
-  fun {a} => GHC.Base.pure.
+Local Definition Monad__Last_op_zgzg__
+   : forall {a} {b}, Last a -> Last b -> Last b :=
+  fun {a} {b} => _GHC.Base.*>_.
 
 Program Instance Monad__Last : GHC.Base.Monad Last :=
   fun _ k =>
@@ -749,21 +749,21 @@ Program Instance Traversable__First : Data.Traversable.Traversable First :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__First_traverse |}.
 
-Local Definition Applicative__First_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> First a -> First b -> First c :=
-  fun {a} {b} {c} => GHC.Prim.coerce.
-
-Local Definition Applicative__First_op_zlztzg__
-   : forall {a} {b}, First (a -> b) -> First a -> First b :=
-  fun {a} {b} => GHC.Prim.coerce.
+Local Definition Applicative__First_pure : forall {a}, a -> First a :=
+  fun {a} => fun x => Mk_First x.
 
 Local Definition Applicative__First_op_ztzg__
    : forall {a} {b}, First a -> First b -> First b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
 
-Local Definition Applicative__First_pure : forall {a}, a -> First a :=
-  fun {a} => fun x => Mk_First x.
+Local Definition Applicative__First_op_zlztzg__
+   : forall {a} {b}, First (a -> b) -> First a -> First b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__First_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> First a -> First b -> First c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
 
 Program Instance Applicative__First : GHC.Base.Applicative First :=
   fun _ k =>
@@ -772,17 +772,17 @@ Program Instance Applicative__First : GHC.Base.Applicative First :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__First_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__First_pure |}.
 
-Local Definition Monad__First_op_zgzg__
-   : forall {a} {b}, First a -> First b -> First b :=
-  fun {a} {b} => _GHC.Base.*>_.
+Local Definition Monad__First_return_ : forall {a}, a -> First a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__First_op_zgzgze__
    : forall {a} {b}, First a -> (a -> First b) -> First b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | Mk_First a, f => f a end.
 
-Local Definition Monad__First_return_ : forall {a}, a -> First a :=
-  fun {a} => GHC.Base.pure.
+Local Definition Monad__First_op_zgzg__
+   : forall {a} {b}, First a -> First b -> First b :=
+  fun {a} {b} => _GHC.Base.*>_.
 
 Program Instance Monad__First : GHC.Base.Monad First :=
   fun _ k =>
@@ -1115,21 +1115,21 @@ Program Instance Traversable__Max : Data.Traversable.Traversable Max :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Max_traverse |}.
 
-Local Definition Applicative__Max_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Max a -> Max b -> Max c :=
-  fun {a} {b} {c} => GHC.Prim.coerce.
-
-Local Definition Applicative__Max_op_zlztzg__
-   : forall {a} {b}, Max (a -> b) -> Max a -> Max b :=
-  fun {a} {b} => GHC.Prim.coerce.
+Local Definition Applicative__Max_pure : forall {a}, a -> Max a :=
+  fun {a} => Mk_Max.
 
 Local Definition Applicative__Max_op_ztzg__
    : forall {a} {b}, Max a -> Max b -> Max b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
 
-Local Definition Applicative__Max_pure : forall {a}, a -> Max a :=
-  fun {a} => Mk_Max.
+Local Definition Applicative__Max_op_zlztzg__
+   : forall {a} {b}, Max (a -> b) -> Max a -> Max b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Max_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Max a -> Max b -> Max c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
 
 Program Instance Applicative__Max : GHC.Base.Applicative Max :=
   fun _ k =>
@@ -1138,17 +1138,17 @@ Program Instance Applicative__Max : GHC.Base.Applicative Max :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Max_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Max_pure |}.
 
-Local Definition Monad__Max_op_zgzg__
-   : forall {a} {b}, Max a -> Max b -> Max b :=
-  fun {a} {b} => _GHC.Base.*>_.
+Local Definition Monad__Max_return_ : forall {a}, a -> Max a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__Max_op_zgzgze__
    : forall {a} {b}, Max a -> (a -> Max b) -> Max b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | Mk_Max a, f => f a end.
 
-Local Definition Monad__Max_return_ : forall {a}, a -> Max a :=
-  fun {a} => GHC.Base.pure.
+Local Definition Monad__Max_op_zgzg__
+   : forall {a} {b}, Max a -> Max b -> Max b :=
+  fun {a} {b} => _GHC.Base.*>_.
 
 Program Instance Monad__Max : GHC.Base.Monad Max :=
   fun _ k =>
@@ -1303,21 +1303,21 @@ Program Instance Traversable__Min : Data.Traversable.Traversable Min :=
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Min_traverse |}.
 
-Local Definition Applicative__Min_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> Min a -> Min b -> Min c :=
-  fun {a} {b} {c} => GHC.Prim.coerce.
-
-Local Definition Applicative__Min_op_zlztzg__
-   : forall {a} {b}, Min (a -> b) -> Min a -> Min b :=
-  fun {a} {b} => GHC.Prim.coerce.
+Local Definition Applicative__Min_pure : forall {a}, a -> Min a :=
+  fun {a} => Mk_Min.
 
 Local Definition Applicative__Min_op_ztzg__
    : forall {a} {b}, Min a -> Min b -> Min b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, a => a end.
 
-Local Definition Applicative__Min_pure : forall {a}, a -> Min a :=
-  fun {a} => Mk_Min.
+Local Definition Applicative__Min_op_zlztzg__
+   : forall {a} {b}, Min (a -> b) -> Min a -> Min b :=
+  fun {a} {b} => GHC.Prim.coerce.
+
+Local Definition Applicative__Min_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> Min a -> Min b -> Min c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
 
 Program Instance Applicative__Min : GHC.Base.Applicative Min :=
   fun _ k =>
@@ -1326,17 +1326,17 @@ Program Instance Applicative__Min : GHC.Base.Applicative Min :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Min_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Min_pure |}.
 
-Local Definition Monad__Min_op_zgzg__
-   : forall {a} {b}, Min a -> Min b -> Min b :=
-  fun {a} {b} => _GHC.Base.*>_.
+Local Definition Monad__Min_return_ : forall {a}, a -> Min a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__Min_op_zgzgze__
    : forall {a} {b}, Min a -> (a -> Min b) -> Min b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | Mk_Min a, f => f a end.
 
-Local Definition Monad__Min_return_ : forall {a}, a -> Min a :=
-  fun {a} => GHC.Base.pure.
+Local Definition Monad__Min_op_zgzg__
+   : forall {a} {b}, Min a -> Min b -> Min b :=
+  fun {a} {b} => _GHC.Base.*>_.
 
 Program Instance Monad__Min : GHC.Base.Monad Min :=
   fun _ k =>
@@ -1359,41 +1359,41 @@ Program Instance Monad__Min : GHC.Base.Monad Min :=
 
 (* Skipping instance Show__Option of class Show *)
 
-Local Definition Ord__Option_compare {inst_a} `{GHC.Base.Ord inst_a}
-   : Option inst_a -> Option inst_a -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__Option_min {inst_a} `{GHC.Base.Ord inst_a}
+   : Option inst_a -> Option inst_a -> Option inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__Option_max {inst_a} `{GHC.Base.Ord inst_a}
    : Option inst_a -> Option inst_a -> Option inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Option_min {inst_a} `{GHC.Base.Ord inst_a}
-   : Option inst_a -> Option inst_a -> Option inst_a :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__Option_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : Option inst_a -> Option inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__Option_compare {inst_a} `{GHC.Base.Ord inst_a}
+   : Option inst_a -> Option inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__Option_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Option inst_a -> Option inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Option_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Ord__Option_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : Option inst_a -> Option inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__Option_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Option inst_a -> Option inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Eq___Option_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+Local Definition Ord__Option_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : Option inst_a -> Option inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition Eq___Option_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Option inst_a -> Option inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___Option_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : Option inst_a -> Option inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___Option {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Option a) :=
   fun _ k =>
@@ -1421,41 +1421,41 @@ Program Instance Ord__Option {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Option a) :=
 
 (* Skipping instance Show__WrappedMonoid of class Show *)
 
-Local Definition Ord__WrappedMonoid_compare {inst_m} `{GHC.Base.Ord inst_m}
-   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__WrappedMonoid_min {inst_m} `{GHC.Base.Ord inst_m}
+   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> WrappedMonoid inst_m :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__WrappedMonoid_max {inst_m} `{GHC.Base.Ord inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> WrappedMonoid inst_m :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__WrappedMonoid_min {inst_m} `{GHC.Base.Ord inst_m}
-   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> WrappedMonoid inst_m :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__WrappedMonoid_op_zg__ {inst_m} `{GHC.Base.Ord inst_m}
-   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__WrappedMonoid_compare {inst_m} `{GHC.Base.Ord inst_m}
+   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__WrappedMonoid_op_zgze__ {inst_m} `{GHC.Base.Ord inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__WrappedMonoid_op_zl__ {inst_m} `{GHC.Base.Ord inst_m}
+Local Definition Ord__WrappedMonoid_op_zg__ {inst_m} `{GHC.Base.Ord inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__WrappedMonoid_op_zlze__ {inst_m} `{GHC.Base.Ord inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Eq___WrappedMonoid_op_zeze__ {inst_m} `{GHC.Base.Eq_ inst_m}
+Local Definition Ord__WrappedMonoid_op_zl__ {inst_m} `{GHC.Base.Ord inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition Eq___WrappedMonoid_op_zsze__ {inst_m} `{GHC.Base.Eq_ inst_m}
    : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___WrappedMonoid_op_zeze__ {inst_m} `{GHC.Base.Eq_ inst_m}
+   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___WrappedMonoid {m} `{GHC.Base.Eq_ m}
    : GHC.Base.Eq_ (WrappedMonoid m) :=
@@ -1487,41 +1487,41 @@ Program Instance Ord__WrappedMonoid {m} `{GHC.Base.Ord m}
 
 (* Skipping instance Show__Last of class Show *)
 
-Local Definition Ord__Last_compare {inst_a} `{GHC.Base.Ord inst_a}
-   : Last inst_a -> Last inst_a -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__Last_min {inst_a} `{GHC.Base.Ord inst_a}
+   : Last inst_a -> Last inst_a -> Last inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__Last_max {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> Last inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Last_min {inst_a} `{GHC.Base.Ord inst_a}
-   : Last inst_a -> Last inst_a -> Last inst_a :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__Last_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : Last inst_a -> Last inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__Last_compare {inst_a} `{GHC.Base.Ord inst_a}
+   : Last inst_a -> Last inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__Last_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Last_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Ord__Last_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__Last_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Eq___Last_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+Local Definition Ord__Last_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : Last inst_a -> Last inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition Eq___Last_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Last inst_a -> Last inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___Last_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : Last inst_a -> Last inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___Last {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Last a) :=
   fun _ k =>
@@ -1551,41 +1551,41 @@ Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
 
 (* Skipping instance Show__First of class Show *)
 
-Local Definition Ord__First_compare {inst_a} `{GHC.Base.Ord inst_a}
-   : First inst_a -> First inst_a -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__First_min {inst_a} `{GHC.Base.Ord inst_a}
+   : First inst_a -> First inst_a -> First inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__First_max {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> First inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__First_min {inst_a} `{GHC.Base.Ord inst_a}
-   : First inst_a -> First inst_a -> First inst_a :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__First_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : First inst_a -> First inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__First_compare {inst_a} `{GHC.Base.Ord inst_a}
+   : First inst_a -> First inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__First_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__First_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Ord__First_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__First_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Eq___First_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+Local Definition Ord__First_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : First inst_a -> First inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition Eq___First_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : First inst_a -> First inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___First_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : First inst_a -> First inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___First {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (First a) :=
   fun _ k =>
@@ -1625,41 +1625,41 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
 
 (* Skipping instance Show__Max of class Show *)
 
-Local Definition Ord__Max_compare {inst_a} `{GHC.Base.Ord inst_a}
-   : Max inst_a -> Max inst_a -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__Max_min {inst_a} `{GHC.Base.Ord inst_a}
+   : Max inst_a -> Max inst_a -> Max inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__Max_max {inst_a} `{GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> Max inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Max_min {inst_a} `{GHC.Base.Ord inst_a}
-   : Max inst_a -> Max inst_a -> Max inst_a :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__Max_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : Max inst_a -> Max inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__Max_compare {inst_a} `{GHC.Base.Ord inst_a}
+   : Max inst_a -> Max inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__Max_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Max_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Ord__Max_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__Max_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Eq___Max_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+Local Definition Ord__Max_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : Max inst_a -> Max inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition Eq___Max_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Max inst_a -> Max inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___Max_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : Max inst_a -> Max inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___Max {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Max a) :=
   fun _ k =>
@@ -1689,41 +1689,41 @@ Program Instance Ord__Max {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Max a) :=
 
 (* Skipping instance Show__Min of class Show *)
 
-Local Definition Ord__Min_compare {inst_a} `{GHC.Base.Ord inst_a}
-   : Min inst_a -> Min inst_a -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__Min_min {inst_a} `{GHC.Base.Ord inst_a}
+   : Min inst_a -> Min inst_a -> Min inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__Min_max {inst_a} `{GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> Min inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Min_min {inst_a} `{GHC.Base.Ord inst_a}
-   : Min inst_a -> Min inst_a -> Min inst_a :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__Min_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : Min inst_a -> Min inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__Min_compare {inst_a} `{GHC.Base.Ord inst_a}
+   : Min inst_a -> Min inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__Min_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Min_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Ord__Min_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__Min_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Eq___Min_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+Local Definition Ord__Min_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : Min inst_a -> Min inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
+  GHC.Prim.coerce _GHC.Base.<_.
 
 Local Definition Eq___Min_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Min inst_a -> Min inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___Min_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : Min inst_a -> Min inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___Min {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Min a) :=
   fun _ k =>

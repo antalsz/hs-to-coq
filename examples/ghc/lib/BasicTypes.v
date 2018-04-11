@@ -432,14 +432,11 @@ Local Definition Ord__IntWithInf_compare
     | Int a, Int b => GHC.Base.compare a b
     end.
 
-Local Definition Ord__IntWithInf_op_zg__ : IntWithInf -> IntWithInf -> bool :=
-  fun x y => Ord__IntWithInf_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__IntWithInf_op_zgze__ : IntWithInf -> IntWithInf -> bool :=
   fun x y => Ord__IntWithInf_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__IntWithInf_op_zl__ : IntWithInf -> IntWithInf -> bool :=
-  fun x y => Ord__IntWithInf_compare x y GHC.Base.== Lt.
+Local Definition Ord__IntWithInf_op_zg__ : IntWithInf -> IntWithInf -> bool :=
+  fun x y => Ord__IntWithInf_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__IntWithInf_op_zlze__ : IntWithInf -> IntWithInf -> bool :=
   fun x y => Ord__IntWithInf_compare x y GHC.Base./= Gt.
@@ -449,6 +446,9 @@ Local Definition Ord__IntWithInf_max : IntWithInf -> IntWithInf -> IntWithInf :=
 
 Local Definition Ord__IntWithInf_min : IntWithInf -> IntWithInf -> IntWithInf :=
   fun x y => if Ord__IntWithInf_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__IntWithInf_op_zl__ : IntWithInf -> IntWithInf -> bool :=
+  fun x y => Ord__IntWithInf_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Outputable__IntWithInf of class Outputable *)
 
@@ -472,17 +472,13 @@ Local Definition Ord__FractionalLit_compare
    : FractionalLit -> FractionalLit -> comparison :=
   Data.Function.on GHC.Base.compare fl_value.
 
-Local Definition Ord__FractionalLit_op_zg__
-   : FractionalLit -> FractionalLit -> bool :=
-  fun x y => Ord__FractionalLit_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__FractionalLit_op_zgze__
    : FractionalLit -> FractionalLit -> bool :=
   fun x y => Ord__FractionalLit_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__FractionalLit_op_zl__
+Local Definition Ord__FractionalLit_op_zg__
    : FractionalLit -> FractionalLit -> bool :=
-  fun x y => Ord__FractionalLit_compare x y GHC.Base.== Lt.
+  fun x y => Ord__FractionalLit_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__FractionalLit_op_zlze__
    : FractionalLit -> FractionalLit -> bool :=
@@ -495,6 +491,10 @@ Local Definition Ord__FractionalLit_max
 Local Definition Ord__FractionalLit_min
    : FractionalLit -> FractionalLit -> FractionalLit :=
   fun x y => if Ord__FractionalLit_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__FractionalLit_op_zl__
+   : FractionalLit -> FractionalLit -> bool :=
+  fun x y => Ord__FractionalLit_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit :=
   fun _ k =>
@@ -525,17 +525,13 @@ Local Definition Ord__IntegralLit_compare
    : IntegralLit -> IntegralLit -> comparison :=
   Data.Function.on GHC.Base.compare il_value.
 
-Local Definition Ord__IntegralLit_op_zg__
-   : IntegralLit -> IntegralLit -> bool :=
-  fun x y => Ord__IntegralLit_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__IntegralLit_op_zgze__
    : IntegralLit -> IntegralLit -> bool :=
   fun x y => Ord__IntegralLit_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__IntegralLit_op_zl__
+Local Definition Ord__IntegralLit_op_zg__
    : IntegralLit -> IntegralLit -> bool :=
-  fun x y => Ord__IntegralLit_compare x y GHC.Base.== Lt.
+  fun x y => Ord__IntegralLit_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__IntegralLit_op_zlze__
    : IntegralLit -> IntegralLit -> bool :=
@@ -548,6 +544,10 @@ Local Definition Ord__IntegralLit_max
 Local Definition Ord__IntegralLit_min
    : IntegralLit -> IntegralLit -> IntegralLit :=
   fun x y => if Ord__IntegralLit_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__IntegralLit_op_zl__
+   : IntegralLit -> IntegralLit -> bool :=
+  fun x y => Ord__IntegralLit_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__IntegralLit : GHC.Base.Ord IntegralLit :=
   fun _ k =>
@@ -1053,21 +1053,21 @@ Local Definition Ord__FunctionOrData_op_zlze__
    : FunctionOrData -> FunctionOrData -> bool :=
   fun a b => negb (Ord__FunctionOrData_op_zl__ b a).
 
-Local Definition Ord__FunctionOrData_min
-   : FunctionOrData -> FunctionOrData -> FunctionOrData :=
-  fun x y => if Ord__FunctionOrData_op_zlze__ x y : bool then x else y.
-
 Local Definition Ord__FunctionOrData_max
    : FunctionOrData -> FunctionOrData -> FunctionOrData :=
   fun x y => if Ord__FunctionOrData_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__FunctionOrData_op_zgze__
-   : FunctionOrData -> FunctionOrData -> bool :=
-  fun a b => negb (Ord__FunctionOrData_op_zl__ a b).
+Local Definition Ord__FunctionOrData_min
+   : FunctionOrData -> FunctionOrData -> FunctionOrData :=
+  fun x y => if Ord__FunctionOrData_op_zlze__ x y : bool then x else y.
 
 Local Definition Ord__FunctionOrData_op_zg__
    : FunctionOrData -> FunctionOrData -> bool :=
   fun a b => Ord__FunctionOrData_op_zl__ b a.
+
+Local Definition Ord__FunctionOrData_op_zgze__
+   : FunctionOrData -> FunctionOrData -> bool :=
+  fun a b => negb (Ord__FunctionOrData_op_zl__ a b).
 
 Local Definition Eq___FunctionOrData_op_zeze__
    : FunctionOrData -> FunctionOrData -> bool :=

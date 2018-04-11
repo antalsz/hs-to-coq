@@ -42,13 +42,13 @@ Notation "'_∘_'" := (op_z2218U__).
 Infix "∘" := (_∘_) (left associativity, at level 40).
 (* Converted value declarations: *)
 
-Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
-  fun {a} => GHC.Base.id.
-
 Local Definition Category__arrow_op_z2218U__
    : forall {b} {c} {a},
      GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
   fun {b} {c} {a} => _GHC.Base.∘_.
+
+Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
+  fun {a} => GHC.Base.id.
 
 Program Instance Category__arrow : Category GHC.Prim.arrow :=
   fun _ k =>

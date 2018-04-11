@@ -343,12 +343,6 @@ Definition elems : IntSet -> list Key :=
 Local Definition Ord__IntSet_compare : IntSet -> IntSet -> comparison :=
   fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
 
-Local Definition Ord__IntSet_op_zg__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__IntSet_op_zgze__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base./= Lt.
-
 Local Definition Ord__IntSet_op_zl__ : IntSet -> IntSet -> bool :=
   fun x y => Ord__IntSet_compare x y GHC.Base.== Lt.
 
@@ -360,6 +354,12 @@ Local Definition Ord__IntSet_max : IntSet -> IntSet -> IntSet :=
 
 Local Definition Ord__IntSet_min : IntSet -> IntSet -> IntSet :=
   fun x y => if Ord__IntSet_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__IntSet_op_zg__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__IntSet_op_zgze__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base./= Lt.
 
 Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
   fun _ k =>

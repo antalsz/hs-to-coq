@@ -98,20 +98,15 @@ Local Definition Ord__ExceptT_compare {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
      (ExceptT inst_e inst_m inst_a) -> comparison :=
   compare1.
 
-Local Definition Ord__ExceptT_op_zg__ {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
-  fun x y => Ord__ExceptT_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__ExceptT_op_zgze__ {inst_e} {inst_m} {inst_a}
   `{GHC.Base.Ord inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
   fun x y => Ord__ExceptT_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__ExceptT_op_zl__ {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
+Local Definition Ord__ExceptT_op_zg__ {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
   inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
-  fun x y => Ord__ExceptT_compare x y GHC.Base.== Lt.
+  fun x y => Ord__ExceptT_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__ExceptT_op_zlze__ {inst_e} {inst_m} {inst_a}
   `{GHC.Base.Ord inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
@@ -129,6 +124,11 @@ Local Definition Ord__ExceptT_min {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
    : (ExceptT inst_e inst_m inst_a) ->
      (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) :=
   fun x y => if Ord__ExceptT_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__ExceptT_op_zl__ {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
+  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
+  fun x y => Ord__ExceptT_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__ExceptT {e} {m} {a} `{GHC.Base.Ord e} `{Ord1 m}
   `{GHC.Base.Ord a}
@@ -439,6 +439,15 @@ Program Instance Functor__ExceptT {m} {e} `{(GHC.Base.Functor m)}
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ExceptT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ExceptT_op_zlzd__ |}.
 
+Local Definition Applicative__ExceptT_liftA2 {inst_m} {inst_e}
+  `{GHC.Base.Functor inst_m} `{GHC.Base.Monad inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (ExceptT inst_e inst_m) a ->
+     (ExceptT inst_e inst_m) b -> (ExceptT inst_e inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__ExceptT_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__ExceptT_pure {inst_m} {inst_e} `{GHC.Base.Functor
   inst_m} `{GHC.Base.Monad inst_m}
    : forall {a}, a -> (ExceptT inst_e inst_m) a :=
@@ -452,15 +461,6 @@ Definition Applicative__ExceptT_op_ztzg__ {inst_m} {inst_s} `{_
     fun m k =>
       Applicative__ExceptT_op_zlztzg__ (Applicative__ExceptT_op_zlztzg__
                                         (Applicative__ExceptT_pure (fun x y => x)) k) m.
-
-Local Definition Applicative__ExceptT_liftA2 {inst_m} {inst_e}
-  `{GHC.Base.Functor inst_m} `{GHC.Base.Monad inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (ExceptT inst_e inst_m) a ->
-     (ExceptT inst_e inst_m) b -> (ExceptT inst_e inst_m) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__ExceptT_op_zlztzg__ (GHC.Base.fmap f x).
 
 Program Instance Applicative__ExceptT {m} {e} `{GHC.Base.Functor m}
   `{GHC.Base.Monad m}

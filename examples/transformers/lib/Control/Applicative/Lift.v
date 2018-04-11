@@ -93,20 +93,15 @@ Local Definition Ord__Lift_compare {inst_f} {inst_a} `{Ord1 inst_f}
    : (Lift inst_f inst_a) -> (Lift inst_f inst_a) -> comparison :=
   compare1.
 
-Local Definition Ord__Lift_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
-   : (Lift inst_f inst_a) -> (Lift inst_f inst_a) -> bool :=
-  fun x y => Ord__Lift_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__Lift_op_zgze__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
    : (Lift inst_f inst_a) -> (Lift inst_f inst_a) -> bool :=
   fun x y => Ord__Lift_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Lift_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
+Local Definition Ord__Lift_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
    : (Lift inst_f inst_a) -> (Lift inst_f inst_a) -> bool :=
-  fun x y => Ord__Lift_compare x y GHC.Base.== Lt.
+  fun x y => Ord__Lift_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Lift_op_zlze__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
@@ -122,6 +117,11 @@ Local Definition Ord__Lift_min {inst_f} {inst_a} `{Ord1 inst_f} `{GHC.Base.Ord
   inst_a}
    : (Lift inst_f inst_a) -> (Lift inst_f inst_a) -> (Lift inst_f inst_a) :=
   fun x y => if Ord__Lift_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Lift_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
+  `{GHC.Base.Ord inst_a}
+   : (Lift inst_f inst_a) -> (Lift inst_f inst_a) -> bool :=
+  fun x y => Ord__Lift_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__Lift {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
    : GHC.Base.Ord (Lift f a) :=
@@ -296,6 +296,11 @@ Program Instance Traversable__Lift {f} `{(Data.Traversable.Traversable f)}
          Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
            Traversable__Lift_traverse |}.
 
+Local Definition Applicative__Lift_pure {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a}, a -> (Lift inst_f) a :=
+  fun {a} => Pure.
+
 Local Definition Applicative__Lift_op_zlztzg__ {inst_f} `{(GHC.Base.Applicative
    inst_f)}
    : forall {a} {b},
@@ -320,11 +325,6 @@ Local Definition Applicative__Lift_liftA2 {inst_f} `{(GHC.Base.Applicative
    : forall {a} {b} {c},
      (a -> b -> c) -> (Lift inst_f) a -> (Lift inst_f) b -> (Lift inst_f) c :=
   fun {a} {b} {c} => fun f x => Applicative__Lift_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Lift_pure {inst_f} `{(GHC.Base.Applicative
-   inst_f)}
-   : forall {a}, a -> (Lift inst_f) a :=
-  fun {a} => Pure.
 
 Program Instance Applicative__Lift {f} `{(GHC.Base.Applicative f)}
    : GHC.Base.Applicative (Lift f) :=

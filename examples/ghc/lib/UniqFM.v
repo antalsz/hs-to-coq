@@ -43,26 +43,26 @@ Instance Unpeel_UniqFM ele
 
 (* Skipping instance Outputable__UniqFM of class Outputable *)
 
-Local Definition Functor__UniqFM_fmap
-   : forall {a} {b}, (a -> b) -> UniqFM a -> UniqFM b :=
-  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
-
 Local Definition Functor__UniqFM_op_zlzd__
    : forall {a} {b}, a -> UniqFM b -> UniqFM a :=
   fun {a} {b} => GHC.Prim.coerce _GHC.Base.<$_.
+
+Local Definition Functor__UniqFM_fmap
+   : forall {a} {b}, (a -> b) -> UniqFM a -> UniqFM b :=
+  fun {a} {b} => GHC.Prim.coerce GHC.Base.fmap.
 
 Program Instance Functor__UniqFM : GHC.Base.Functor UniqFM :=
   fun _ k =>
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqFM_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqFM_op_zlzd__ |}.
 
-Local Definition Eq___UniqFM_op_zeze__ {inst_ele} `{GHC.Base.Eq_ inst_ele}
-   : UniqFM inst_ele -> UniqFM inst_ele -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
-
 Local Definition Eq___UniqFM_op_zsze__ {inst_ele} `{GHC.Base.Eq_ inst_ele}
    : UniqFM inst_ele -> UniqFM inst_ele -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___UniqFM_op_zeze__ {inst_ele} `{GHC.Base.Eq_ inst_ele}
+   : UniqFM inst_ele -> UniqFM inst_ele -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___UniqFM {ele} `{GHC.Base.Eq_ ele}
    : GHC.Base.Eq_ (UniqFM ele) :=

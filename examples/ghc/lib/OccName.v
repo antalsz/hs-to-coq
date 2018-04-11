@@ -173,20 +173,20 @@ Local Definition Ord__NameSpace_compare
    : NameSpace -> NameSpace -> comparison :=
   compare_Namespace.
 
-Local Definition Ord__NameSpace_op_zg__ :=
-  NameSpace_op_zg__.
-
 Local Definition Ord__NameSpace_op_zgze__ :=
   NameSpace_op_zgze__.
+
+Local Definition Ord__NameSpace_op_zg__ :=
+  NameSpace_op_zg__.
 
 Local Definition Ord__NameSpace_op_zlze__ :=
   NameSpace_op_zlze__.
 
-Local Definition Ord__NameSpace_min : NameSpace -> NameSpace -> NameSpace :=
-  fun x y => if Ord__NameSpace_op_zlze__ x y : bool then x else y.
-
 Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
   fun x y => if Ord__NameSpace_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__NameSpace_min : NameSpace -> NameSpace -> NameSpace :=
+  fun x y => if Ord__NameSpace_op_zlze__ x y : bool then x else y.
 
 Local Definition Ord__NameSpace_op_zl__ :=
   NameSpace_op_zl__.
@@ -241,12 +241,6 @@ Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
         Util.thenCmp (GHC.Base.compare s1 s2) (GHC.Base.compare sp1 sp2)
     end.
 
-Local Definition Ord__OccName_op_zg__ : OccName -> OccName -> bool :=
-  fun x y => Ord__OccName_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__OccName_op_zgze__ : OccName -> OccName -> bool :=
-  fun x y => Ord__OccName_compare x y GHC.Base./= Lt.
-
 Local Definition Ord__OccName_op_zl__ : OccName -> OccName -> bool :=
   fun x y => Ord__OccName_compare x y GHC.Base.== Lt.
 
@@ -258,6 +252,12 @@ Local Definition Ord__OccName_max : OccName -> OccName -> OccName :=
 
 Local Definition Ord__OccName_min : OccName -> OccName -> OccName :=
   fun x y => if Ord__OccName_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__OccName_op_zg__ : OccName -> OccName -> bool :=
+  fun x y => Ord__OccName_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__OccName_op_zgze__ : OccName -> OccName -> bool :=
+  fun x y => Ord__OccName_compare x y GHC.Base./= Lt.
 
 Program Instance Ord__OccName : GHC.Base.Ord OccName :=
   fun _ k =>

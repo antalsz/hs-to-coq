@@ -55,6 +55,9 @@ Program Instance Functor__Pair : GHC.Base.Functor Pair :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Pair_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Pair_op_zlzd__ |}.
 
+Local Definition Applicative__Pair_pure : forall {a}, a -> Pair a :=
+  fun {a} => fun x => Mk_Pair x x.
+
 Local Definition Applicative__Pair_op_zlztzg__
    : forall {a} {b}, Pair (a -> b) -> Pair a -> Pair b :=
   fun {a} {b} =>
@@ -71,9 +74,6 @@ Local Definition Applicative__Pair_op_ztzg__
 Local Definition Applicative__Pair_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> Pair a -> Pair b -> Pair c :=
   fun {a} {b} {c} => fun f x => Applicative__Pair_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Pair_pure : forall {a}, a -> Pair a :=
-  fun {a} => fun x => Mk_Pair x x.
 
 Program Instance Applicative__Pair : GHC.Base.Applicative Pair :=
   fun _ k =>
@@ -210,15 +210,15 @@ Program Instance Semigroup__Pair {a} `{GHC.Base.Semigroup a}
    : GHC.Base.Semigroup (Pair a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Pair_op_zlzlzgzg__ |}.
 
-Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Semigroup inst_a}
-  `{GHC.Base.Monoid inst_a}
-   : (Pair inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
-  _GHC.Base.<<>>_.
-
 Local Definition Monoid__Pair_mempty {inst_a} `{GHC.Base.Semigroup inst_a}
   `{GHC.Base.Monoid inst_a}
    : (Pair inst_a) :=
   Mk_Pair GHC.Base.mempty GHC.Base.mempty.
+
+Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Semigroup inst_a}
+  `{GHC.Base.Monoid inst_a}
+   : (Pair inst_a) -> (Pair inst_a) -> (Pair inst_a) :=
+  _GHC.Base.<<>>_.
 
 Local Definition Monoid__Pair_mconcat {inst_a} `{GHC.Base.Semigroup inst_a}
   `{GHC.Base.Monoid inst_a}

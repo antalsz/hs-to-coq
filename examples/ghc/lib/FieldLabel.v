@@ -59,6 +59,36 @@ Definition flSelector {a} (arg_0__ : FieldLbl a) :=
 
 (* Skipping instance Binary__FieldLbl of class Binary *)
 
+Local Definition Foldable__FieldLbl_null : forall {a}, FieldLbl a -> bool :=
+  fun {a} => fun '(Mk_FieldLabel _ _ _) => false.
+
+Local Definition Foldable__FieldLbl_foldr
+   : forall {a} {b}, (a -> b -> b) -> b -> FieldLbl a -> b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, Mk_FieldLabel a1 a2 a3 => f a3 z
+      end.
+
+Local Definition Foldable__FieldLbl_toList : forall {a}, FieldLbl a -> list a :=
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__FieldLbl_foldr c n t)).
+
+Local Definition Foldable__FieldLbl_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> FieldLbl a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__FieldLbl_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__FieldLbl_length
+   : forall {a}, FieldLbl a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__FieldLbl_foldl' (fun arg_0__ arg_1__ =>
+                                 match arg_0__, arg_1__ with
+                                 | c, _ => c GHC.Num.+ #1
+                                 end) #0.
+
 Local Definition Foldable__FieldLbl_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> FieldLbl a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
@@ -99,36 +129,6 @@ Local Definition Foldable__FieldLbl_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, FieldLbl m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__FieldLbl_foldMap GHC.Base.id.
 
-Local Definition Foldable__FieldLbl_foldr
-   : forall {a} {b}, (a -> b -> b) -> b -> FieldLbl a -> b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, z, Mk_FieldLabel a1 a2 a3 => f a3 z
-      end.
-
-Local Definition Foldable__FieldLbl_toList : forall {a}, FieldLbl a -> list a :=
-  fun {a} =>
-    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__FieldLbl_foldr c n t)).
-
-Local Definition Foldable__FieldLbl_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> FieldLbl a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in
-      Foldable__FieldLbl_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__FieldLbl_length
-   : forall {a}, FieldLbl a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__FieldLbl_foldl' (fun arg_0__ arg_1__ =>
-                                 match arg_0__, arg_1__ with
-                                 | c, _ => c GHC.Num.+ #1
-                                 end) #0.
-
-Local Definition Foldable__FieldLbl_null : forall {a}, FieldLbl a -> bool :=
-  fun {a} => fun '(Mk_FieldLabel _ _ _) => false.
-
 Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl :=
   fun _ k =>
     k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
@@ -146,15 +146,6 @@ Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl :=
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__FieldLbl_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__FieldLbl_toList |}.
 
-Local Definition Functor__FieldLbl_fmap
-   : forall {a} {b}, (a -> b) -> FieldLbl a -> FieldLbl b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_FieldLabel a1 a2 a3 =>
-          Mk_FieldLabel ((fun b1 => b1) a1) ((fun b2 => b2) a2) (f a3)
-      end.
-
 Local Definition Functor__FieldLbl_op_zlzd__
    : forall {a} {b}, a -> FieldLbl b -> FieldLbl a :=
   fun {a} {b} =>
@@ -162,6 +153,15 @@ Local Definition Functor__FieldLbl_op_zlzd__
       match arg_0__, arg_1__ with
       | z, Mk_FieldLabel a1 a2 a3 =>
           Mk_FieldLabel ((fun b1 => b1) a1) ((fun b2 => b2) a2) ((fun b3 => z) a3)
+      end.
+
+Local Definition Functor__FieldLbl_fmap
+   : forall {a} {b}, (a -> b) -> FieldLbl a -> FieldLbl b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_FieldLabel a1 a2 a3 =>
+          Mk_FieldLabel ((fun b1 => b1) a1) ((fun b2 => b2) a2) (f a3)
       end.
 
 Program Instance Functor__FieldLbl : GHC.Base.Functor FieldLbl :=
@@ -179,6 +179,11 @@ Local Definition Traversable__FieldLbl_traverse
           GHC.Base.fmap (fun b3 => Mk_FieldLabel a1 a2 b3) (f a3)
       end.
 
+Local Definition Traversable__FieldLbl_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m}, (a -> m b) -> FieldLbl a -> m (FieldLbl b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__FieldLbl_traverse.
+
 Local Definition Traversable__FieldLbl_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f}, FieldLbl (f a) -> f (FieldLbl a) :=
@@ -189,11 +194,6 @@ Local Definition Traversable__FieldLbl_sequence
    : forall {m} {a},
      forall `{GHC.Base.Monad m}, FieldLbl (m a) -> m (FieldLbl a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__FieldLbl_sequenceA.
-
-Local Definition Traversable__FieldLbl_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> FieldLbl a -> m (FieldLbl b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__FieldLbl_traverse.
 
 Program Instance Traversable__FieldLbl
    : Data.Traversable.Traversable FieldLbl :=

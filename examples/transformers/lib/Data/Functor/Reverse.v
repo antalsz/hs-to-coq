@@ -79,20 +79,15 @@ Local Definition Ord__Reverse_compare {inst_f} {inst_a} `{Ord1 inst_f}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> comparison :=
   compare1.
 
-Local Definition Ord__Reverse_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
-   : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
-  fun x y => Ord__Reverse_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__Reverse_op_zgze__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
   fun x y => Ord__Reverse_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Reverse_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
+Local Definition Ord__Reverse_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
-  fun x y => Ord__Reverse_compare x y GHC.Base.== Lt.
+  fun x y => Ord__Reverse_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Reverse_op_zlze__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
@@ -110,6 +105,11 @@ Local Definition Ord__Reverse_min {inst_f} {inst_a} `{Ord1 inst_f}
    : (Reverse inst_f inst_a) ->
      (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) :=
   fun x y => if Ord__Reverse_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Reverse_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
+  `{GHC.Base.Ord inst_a}
+   : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
+  fun x y => Ord__Reverse_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__Reverse {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
    : GHC.Base.Ord (Reverse f a) :=
@@ -145,6 +145,11 @@ Program Instance Functor__Reverse {f} `{(GHC.Base.Functor f)}
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Reverse_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Reverse_op_zlzd__ |}.
 
+Local Definition Applicative__Reverse_pure {inst_f} `{(GHC.Base.Applicative
+   inst_f)}
+   : forall {a}, a -> (Reverse inst_f) a :=
+  fun {a} => fun a => Mk_Reverse (GHC.Base.pure a).
+
 Local Definition Applicative__Reverse_op_zlztzg__ {inst_f}
   `{(GHC.Base.Applicative inst_f)}
    : forall {a} {b},
@@ -169,11 +174,6 @@ Local Definition Applicative__Reverse_liftA2 {inst_f} `{(GHC.Base.Applicative
      (Reverse inst_f) a -> (Reverse inst_f) b -> (Reverse inst_f) c :=
   fun {a} {b} {c} =>
     fun f x => Applicative__Reverse_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__Reverse_pure {inst_f} `{(GHC.Base.Applicative
-   inst_f)}
-   : forall {a}, a -> (Reverse inst_f) a :=
-  fun {a} => fun a => Mk_Reverse (GHC.Base.pure a).
 
 Program Instance Applicative__Reverse {f} `{(GHC.Base.Applicative f)}
    : GHC.Base.Applicative (Reverse f) :=
@@ -219,9 +219,7 @@ Program Instance MonadFail__Reverse {m} `{(Control.Monad.Fail.MonadFail m)}
 
 (* Skipping instance MonadPlus__Reverse of class MonadPlus *)
 
-(* Translating `instance Foldable__Reverse' failed: Giving up on mutual
-   recursion[Qualified "Data.Foldable" "foldl",Qualified "Data.Foldable" "foldr"]
-   unsupported *)
+(* Skipping instance Foldable__Reverse *)
 
 (* Skipping instance Traversable__Reverse *)
 

@@ -55,6 +55,11 @@ Program Instance Functor__StateT {m} {s} `{(GHC.Base.Functor m)}
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateT_op_zlzd__ |}.
 
+Local Definition Applicative__StateT_pure {inst_m} {inst_s} `{GHC.Base.Functor
+  inst_m} `{GHC.Base.Monad inst_m}
+   : forall {a}, a -> (StateT inst_s inst_m) a :=
+  fun {a} => fun a => Mk_StateT (fun s => GHC.Base.return_ (pair a s)).
+
 Local Definition Applicative__StateT_op_zlztzg__ {inst_m} {inst_s}
   `{GHC.Base.Functor inst_m} `{GHC.Base.Monad inst_m}
    : forall {a} {b},
@@ -74,20 +79,6 @@ Local Definition Applicative__StateT_op_zlztzg__ {inst_m} {inst_s}
                        mf s GHC.Base.>>= cont_2__)
       end.
 
-Local Definition Applicative__StateT_liftA2 {inst_m} {inst_s} `{GHC.Base.Functor
-  inst_m} `{GHC.Base.Monad inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (StateT inst_s inst_m) a ->
-     (StateT inst_s inst_m) b -> (StateT inst_s inst_m) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__StateT_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__StateT_pure {inst_m} {inst_s} `{GHC.Base.Functor
-  inst_m} `{GHC.Base.Monad inst_m}
-   : forall {a}, a -> (StateT inst_s inst_m) a :=
-  fun {a} => fun a => Mk_StateT (fun s => GHC.Base.return_ (pair a s)).
-
 Definition Applicative__StateT_op_ztzg__ {inst_m} {inst_s} `{_
    : GHC.Base.Functor inst_m} `{_ : GHC.Base.Monad inst_m}
    : forall {a} {b},
@@ -96,6 +87,15 @@ Definition Applicative__StateT_op_ztzg__ {inst_m} {inst_s} `{_
     fun m k =>
       Applicative__StateT_op_zlztzg__ (Applicative__StateT_op_zlztzg__
                                        (Applicative__StateT_pure (fun x y => x)) k) m.
+
+Local Definition Applicative__StateT_liftA2 {inst_m} {inst_s} `{GHC.Base.Functor
+  inst_m} `{GHC.Base.Monad inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (StateT inst_s inst_m) a ->
+     (StateT inst_s inst_m) b -> (StateT inst_s inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__StateT_op_zlztzg__ (GHC.Base.fmap f x).
 
 Program Instance Applicative__StateT {m} {s} `{GHC.Base.Functor m}
   `{GHC.Base.Monad m}
@@ -107,6 +107,11 @@ Program Instance Applicative__StateT {m} {s} `{GHC.Base.Functor m}
          GHC.Base.pure__ := fun {a} => Applicative__StateT_pure |}.
 
 (* Skipping instance Alternative__StateT of class Alternative *)
+
+Local Definition Monad__StateT_return_ {inst_m} {inst_s} `{(GHC.Base.Monad
+   inst_m)}
+   : forall {a}, a -> (StateT inst_s inst_m) a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__StateT_op_zgzgze__ {inst_m} {inst_s} `{(GHC.Base.Monad
    inst_m)}
@@ -125,11 +130,6 @@ Local Definition Monad__StateT_op_zgzg__ {inst_m} {inst_s} `{(GHC.Base.Monad
      (StateT inst_s inst_m) a ->
      (StateT inst_s inst_m) b -> (StateT inst_s inst_m) b :=
   fun {a} {b} => fun m k => Monad__StateT_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__StateT_return_ {inst_m} {inst_s} `{(GHC.Base.Monad
-   inst_m)}
-   : forall {a}, a -> (StateT inst_s inst_m) a :=
-  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__StateT {m} {s} `{(GHC.Base.Monad m)}
    : GHC.Base.Monad (StateT s m) :=

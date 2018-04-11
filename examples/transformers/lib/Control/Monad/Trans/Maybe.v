@@ -105,20 +105,15 @@ Local Definition Ord__MaybeT_compare {inst_m} {inst_a} `{Ord1 inst_m}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> comparison :=
   compare1.
 
-Local Definition Ord__MaybeT_op_zg__ {inst_m} {inst_a} `{Ord1 inst_m}
-  `{GHC.Base.Ord inst_a}
-   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => Ord__MaybeT_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__MaybeT_op_zgze__ {inst_m} {inst_a} `{Ord1 inst_m}
   `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
   fun x y => Ord__MaybeT_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__MaybeT_op_zl__ {inst_m} {inst_a} `{Ord1 inst_m}
+Local Definition Ord__MaybeT_op_zg__ {inst_m} {inst_a} `{Ord1 inst_m}
   `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  fun x y => Ord__MaybeT_compare x y GHC.Base.== Lt.
+  fun x y => Ord__MaybeT_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__MaybeT_op_zlze__ {inst_m} {inst_a} `{Ord1 inst_m}
   `{GHC.Base.Ord inst_a}
@@ -134,6 +129,11 @@ Local Definition Ord__MaybeT_min {inst_m} {inst_a} `{Ord1 inst_m} `{GHC.Base.Ord
   inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
   fun x y => if Ord__MaybeT_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__MaybeT_op_zl__ {inst_m} {inst_a} `{Ord1 inst_m}
+  `{GHC.Base.Ord inst_a}
+   : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
+  fun x y => Ord__MaybeT_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__MaybeT {m} {a} `{Ord1 m} `{GHC.Base.Ord a}
    : GHC.Base.Ord (MaybeT m a) :=
@@ -383,6 +383,13 @@ Program Instance Functor__MaybeT {m} `{(GHC.Base.Functor m)}
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeT_op_zlzd__ |}.
 
+Local Definition Applicative__MaybeT_liftA2 {inst_m} `{GHC.Base.Functor inst_m}
+  `{GHC.Base.Monad inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__MaybeT_op_zlztzg__ (GHC.Base.fmap f x).
+
 Local Definition Applicative__MaybeT_pure {inst_m} `{GHC.Base.Functor inst_m}
   `{GHC.Base.Monad inst_m}
    : forall {a}, a -> (MaybeT inst_m) a :=
@@ -391,13 +398,6 @@ Local Definition Applicative__MaybeT_pure {inst_m} `{GHC.Base.Functor inst_m}
 Local Definition Applicative__MaybeT_op_ztzg__ {inst_m} `{GHC.Base.Monad inst_m}
    : forall {a} {b}, MaybeT inst_m a -> MaybeT inst_m b -> MaybeT inst_m b :=
   fun {a} {b} => fun m k => Monad_tmp m (fun arg_0__ => k).
-
-Local Definition Applicative__MaybeT_liftA2 {inst_m} `{GHC.Base.Functor inst_m}
-  `{GHC.Base.Monad inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> (MaybeT inst_m) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__MaybeT_op_zlztzg__ (GHC.Base.fmap f x).
 
 Program Instance Applicative__MaybeT {m} `{GHC.Base.Functor m} `{GHC.Base.Monad
   m}

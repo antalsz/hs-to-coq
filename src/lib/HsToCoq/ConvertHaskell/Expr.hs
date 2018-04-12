@@ -942,29 +942,29 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
 
 addRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
 addRecursion eBindings = do
-  fixedBindings <-  M.fromList . fmap (convDefName &&& id) . foldMap toList
+  fixedBindings <-  M.fromList . fmap (view convDefName &&& id) . foldMap toList
                 <$> traverse fixConnComp (stronglyConnCompNE
-                      [ (cd, convDefName, S.toAscList $ getFreeVars convDefBody)
-                      | Right (ConvertedDefinitionBinding cd@ConvertedDefinition{..}) <- eBindings ])
+                      [ (cd, cd^.convDefName, S.toAscList . getFreeVars $ cd^.convDefBody)
+                      | Right (ConvertedDefinitionBinding cd) <- eBindings ])
       
   pure . flip map eBindings $ \case
     Left  e                               -> Left  e
     Right cpb@ConvertedPatternBinding{}   -> Right cpb
-    Right (ConvertedDefinitionBinding cd) -> case M.lookup (convDefName cd) fixedBindings of
+    Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
       Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
   where
-    fixConnComp (cd :| []) | convDefName cd `notElem` getFreeVars (convDefBody cd) =
+    fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
       pure $ cd :| []
-    fixConnComp cds = do
+    fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
       bodies <- for cds $ \case
-        ConvertedDefinition{convDefBody = Fun args body, ..} ->
-          pure $ FixBody convDefName (convDefArgs <++ args) Nothing Nothing body
+        ConvertedDefinition{_convDefBody = Fun args body, ..} ->
+          pure $ FixBody _convDefName (_convDefArgs <++ args) Nothing Nothing body
         _ ->
           convUnsupported "mutual recursion through non-lambda values"
       
       for cds $ \ConvertedDefinition{..} -> do
-        fixedBody <- view (edits.termination.at convDefName) >>= \case
+        fixedBody <- view (edits.termination.at _convDefName) >>= \case
           -- TODO: Support non-structural mutual recursion
           --
           -- When we do the preceding, we will probably need to check the
@@ -974,13 +974,13 @@ addRecursion eBindings = do
             _body1 :| _body2 : _bodies' -> convUnsupported "non-structural mutual recursion"
           Nothing -> pure . Fix $ case bodies of
             body1 :| []              -> FixOne  body1
-            body1 :| body2 : bodies' -> FixMany body1 (body2 :| bodies') convDefName
+            body1 :| body2 : bodies' -> FixMany body1 (body2 :| bodies') _convDefName
         
         pure $ ConvertedDefinition
-                 { convDefName = convDefName
-                 , convDefArgs = []
-                 , convDefType = maybeForall convDefArgs <$> convDefType
-                 , convDefBody = fixedBody }
+                 { _convDefName = _convDefName
+                 , _convDefArgs = commonArgs
+                 , _convDefType = maybeForall _convDefArgs <$> _convDefType
+                 , _convDefBody = fixedBody }
 
 --------------------------------------------------------------------------------
 
@@ -998,7 +998,7 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
 
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
-  let toLet ConvertedDefinition{..} = Let convDefName convDefArgs convDefType convDefBody
+  let toLet ConvertedDefinition{..} = Let _convDefName _convDefArgs _convDefType _convDefBody
   (foldr (withConvertedBinding toLet matchLet) ?? convDefs) <$> body
 
 convertLocalBinds (HsIPBinds _) _ =

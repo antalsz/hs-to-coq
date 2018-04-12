@@ -1,11 +1,12 @@
-{-# LANGUAGE RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
 
 module HsToCoq.ConvertHaskell.Definitions (
-  ConvertedDefinition(..),
+  ConvertedDefinition(..), convDefName, convDefArgs, convDefType, convDefBody,
   ConvertedBinding(..), withConvertedBinding,
   toProgramFixpointSentence
   ) where
 
+import Control.Lens hiding ((<|))
 import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
@@ -16,12 +17,13 @@ import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
 
-data ConvertedDefinition = ConvertedDefinition { convDefName :: !Qualid
-                                               , convDefArgs :: ![Binder]
-                                               , convDefType :: !(Maybe Term)
-                                               , convDefBody :: !Term
+data ConvertedDefinition = ConvertedDefinition { _convDefName :: !Qualid
+                                               , _convDefArgs :: ![Binder]
+                                               , _convDefType :: !(Maybe Term)
+                                               , _convDefBody :: !Term
                                                }
                          deriving (Eq, Ord, Show, Read)
+makeLenses ''ConvertedDefinition
 
 --------------------------------------------------------------------------------
 
@@ -50,17 +52,17 @@ toProgramFixpointSentence ::
     ConversionMonad r m =>
     ConvertedDefinition -> Order -> Maybe Tactics -> m Sentence
 toProgramFixpointSentence (ConvertedDefinition{..}) order tac
-    | Nothing <- convDefType
+    | Nothing <- _convDefType
     = editFailure "cannot \"termination\" a definition without a type signature"
-    | Just ty <- convDefType
-    , Just (name, binders, body) <- decomposeFixpoint convDefBody
-    = if | name /= convDefName
+    | Just ty <- _convDefType
+    , Just (name, binders, body) <- decomposeFixpoint _convDefBody
+    = if | name /= _convDefName
          -> editFailure "internal name and external name disagree?"
          | otherwise
          -> do
             (binders', ty') <- moveTyToArgs binders ty
             pure $ ProgramSentence
-                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' convDefArgs) (Just order) (Just ty') body] []))
+                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' _convDefArgs) (Just order) (Just ty') body] []))
                 tac
     | otherwise
     = editFailure "cannot \"termination\" a definition that is not a recursive function"

@@ -6,3 +6,4 @@
 -Q ../../containers/lib ""
 JoinPointInvariants.v
 JoinPointInvariantsInductive.v
+CoreInduct.v

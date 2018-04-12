@@ -16,6 +16,7 @@ Set Bullet Behavior "Strict Subproofs".
 Open Scope Z_scope.
 
 Require Import JoinPointInvariants.
+Require Import CoreInduct.
 
 (* This lemma exists, but is Opaque. No good for us. *)
 Lemma  forallb_forall
@@ -233,132 +234,110 @@ Lemma isJoinPointsValid_JoinPointsValid:
   forall e n jps,
   isJoinPointsValid e n jps = true -> JoinPointsValid e n jps.
 Proof.
-  refine (fix IH e n jps (H : isJoinPointsValid e n jps = true)  {struct e} : JoinPointsValid e n jps := _
-           with IHrhs a rhs jps (Hnn : a <> 0) (H : isJoinRHS a rhs jps = true) {struct rhs} : GoodJoinRHS a rhs jps := _
-           for IH).
-  * intros. destruct e; simpl in H; rewrite ?andb_true_iff in *.
-    - destruct (isJoinId_maybe i) eqn:?.
-      + rewrite ?andb_true_iff in *. destruct H.
-        rewrite Z.leb_le in *.
-        eapply JPV_JoinVar; try eassumption.
-      + assert (isJoinId i = false) by (rewrite isJoinId_eq; rewrite Heqo; reflexivity).
-        eapply JPV_Var; try eassumption.
-   - constructor.
-   - constructor; intuition.
-   - constructor; intuition.
-   - destruct b as [v rhs | pairs].
-     + rewrite isJoinId_eq in H.
-       destruct (isJoinId_maybe v) eqn:HJI; rewrite ?andb_true_iff in *.
-       ** eapply JPV_LetNonRecJP.
-          -- eassumption.
-          -- destruct (Z.eqb_spec j 0).
-             ++ eapply GJR_RHS; intuition.
-             ++ apply IHrhs; intuition.
-          -- apply IH; intuition.
-       ** eapply JPV_LetNonRec.
-          -- rewrite isJoinId_eq. rewrite HJI. reflexivity.
-          -- intuition.
-          -- intuition.
-     + (* We must be careful to call IH and IHrhs only on arguments that
-          are obviously elements of [pair], otherwise Coq will not accept
-          this proof as structurally termination. *)
-       assert (IH': forall v e n jps, In (v,e) pairs -> isJoinPointsValid e n jps = true -> JoinPointsValid e n jps).
-       { clear -IH.
-         intros. induction pairs; destruct H.
-         - destruct a. specialize (IH e0 n jps). inversion H. subst; intuition.
-         - intuition.
-       }
-       assert (IHrhs': forall v a rhs jps, In (v,rhs) pairs -> a <> 0 -> isJoinRHS a rhs jps = true -> GoodJoinRHS a rhs jps).
-       { clear -IHrhs.
-         intros. induction pairs; destruct H.
-         - destruct a0. specialize (IHrhs a e jps). inversion H. subst; intuition.
-         - intuition.
-       }
+  intro e.
+  enough ((forall n jps (HiJPV : isJoinPointsValid e n jps = true), JoinPointsValid e n jps)
+      /\  (forall a jps (Hnn : a <> 0) (HiJR : isJoinRHS a e jps = true), GoodJoinRHS a e jps))
+       by apply H.
+  induction e using core_induct;
+    (split; intros;
+      [ simpl in HiJPV; rewrite ?andb_true_iff in *
+      | simpl in HiJR; try solve [destruct (Z.ltb_spec a 1); inversion HiJR]]).
+  * destruct (isJoinId_maybe v) eqn:?.
+    + rewrite ?andb_true_iff in *. destruct HiJPV.
+      rewrite Z.leb_le in *.
+      eapply JPV_JoinVar; try eassumption.
+    + assert (isJoinId v = false) by (rewrite isJoinId_eq; rewrite Heqo; reflexivity).
+      eapply JPV_Var; try eassumption.
+ * constructor.
+ * constructor; intuition.
+ * constructor; intuition.
 
-      rewrite ?andb_true_iff in *.
-       destruct H as [[??][??]].
-       rewrite ?orb_true_iff in H0. destruct H0.
-       ** rewrite negb_true_iff in H.
-          rewrite forallb_forall in H0.
-          rewrite forallb_forall in H1.
-
-          assert (Hforallb : forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs = false).
-          {
-             apply not_true_is_false. intro Hforallb.
-             rewrite forallb_forall in Hforallb.
-             destruct pairs; only 1: inversion H.
-             destruct p as [v rhs].
-             specialize (H0 (v, rhs) (or_introl eq_refl)).
-             specialize (Hforallb (v, rhs) (or_introl eq_refl)).
-             simpl in H0, Hforallb.
-             rewrite negb_true_iff in H0.
-             congruence.
-          }
-
-          eapply JPV_LetRec.
-          -- assumption.
-          -- intros v rhs HIn.
-             specialize (H0 (v,rhs) HIn).
-             rewrite negb_true_iff in H0.
-             apply H0.
-          -- intros v rhs HIn.
-             specialize (H0 (v,rhs) HIn).
-             rewrite negb_true_iff in H0. simpl in H0.
-             rewrite isJoinId_eq in H0.
-             specialize (H1 (v,rhs) HIn). simpl in H1.
-             destruct (isJoinId_maybe v) eqn:HJI; inversion_clear H0.
-             eapply IH'; eassumption.
-          -- rewrite Hforallb in H2.
-             eapply IH; eassumption.
-       ** rewrite negb_true_iff in H.
-          pose proof H0 as Hforallb. (* need this later *)
-          rewrite forallb_forall in H0.
-          rewrite forallb_forall in H1.
-
-          eapply JPV_LetRecJP.
-          -- assumption.
-          -- intros v rhs HIn.
-             specialize (H0 (v,rhs) HIn).
-             apply H0.
-          -- intros v rhs a HIn HJI.
-             specialize (H0 (v,rhs) HIn).
-             simpl in H0.
-             rewrite isJoinId_eq in H0.
-             specialize (H1 (v,rhs) HIn). simpl in H1.
-             rewrite HJI in *.
-             rewrite Hforallb in *.
-             destruct (Z.eqb_spec a 0).
-             ++ eapply GJR_RHS; try assumption.
-                eapply IH'; eassumption.
-             ++ eapply IHrhs'; eassumption.
-          -- rewrite Hforallb in *.
-             apply IH; assumption.
-   - destruct H.
-   
-     (* We must be careful to call IH and IHrhs only on arguments that
-        are obviously elements of [pair], otherwise Coq will not accept
-        this proof as structurally termination. *)
-     assert (IH': forall dc pats e n jps, In (dc,pats,e) l -> isJoinPointsValid e n jps = true -> JoinPointsValid e n jps).
-     { clear -IH.
-       intros. induction l; destruct H.
-       - destruct a as [[dc' pats'] e']. specialize (IH e' n jps). inversion H. subst; intuition.
-       - intuition.
-     }   
-   
-     constructor.
-     + apply IH; assumption.
-     + intros dc pats rhs Hin.
-       rewrite forallb_forall in H0.
-       specialize (H0 (dc, pats, rhs) Hin). simpl in H0.
-                Guarded.
-       eapply IH'; eassumption.
-   - constructor; intuition.
-   - constructor; intuition.
-   - constructor; intuition.
-   - constructor; intuition.
- * destruct rhs; simpl in H; destruct (Z.ltb_spec a 1); try congruence.
+ * simpl in HiJR; destruct (Z.ltb_spec a 1); try congruence.
    eapply GJR_Lam. lia.
    destruct (Z.eqb_spec a 1).
-   + apply GJR_RHS. lia. apply IH. assumption.
-   + apply IHrhs. lia. assumption. 
+   + apply GJR_RHS. lia. apply IHe. assumption.
+   + apply IHe. lia. assumption. 
+ 
+ * destruct binds as [v rhs | pairs].
+   + rewrite isJoinId_eq in HiJPV.
+     destruct (isJoinId_maybe v) eqn:HJI; rewrite ?andb_true_iff in *.
+     ** eapply JPV_LetNonRecJP.
+        -- eassumption.
+        -- destruct (Z.eqb_spec j 0).
+           ++ apply GJR_RHS. assumption. apply H. intuition.
+           ++ apply H. assumption. intuition.
+        -- apply IHe; intuition.
+     ** eapply JPV_LetNonRec.
+        -- rewrite isJoinId_eq. rewrite HJI. reflexivity.
+        -- apply H. intuition.
+        -- intuition.
+   + rewrite ?andb_true_iff in *.
+     destruct HiJPV as [[??][??]].
+     rewrite ?orb_true_iff in H1. destruct H1.
+     ** rewrite negb_true_iff in H0.
+        rewrite forallb_forall in H1.
+        rewrite forallb_forall in H2.
+
+        assert (Hforallb : forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs = false).
+        {
+           apply not_true_is_false. intro Hforallb.
+           rewrite forallb_forall in Hforallb.
+           destruct pairs; only 1: inversion H0.
+           destruct p as [v rhs].
+           specialize (H1 (v, rhs) (or_introl eq_refl)).
+           specialize (Hforallb (v, rhs) (or_introl eq_refl)).
+           simpl in H1, Hforallb.
+           rewrite negb_true_iff in H1.
+           congruence.
+        }
+
+        eapply JPV_LetRec.
+        -- assumption.
+        -- intros v rhs HIn.
+           specialize (H1 (v,rhs) HIn).
+           rewrite negb_true_iff in H1.
+           apply H1.
+        -- intros v rhs HIn.
+           specialize (H1 (v,rhs) HIn).
+           rewrite negb_true_iff in H1. simpl in H1.
+           rewrite isJoinId_eq in H1.
+           specialize (H2 (v,rhs) HIn). simpl in H2.
+           destruct (isJoinId_maybe v) eqn:HJI; inversion_clear H1.
+           eapply H; eassumption.
+        -- rewrite Hforallb in H3.
+           eapply IHe; eassumption.
+     ** rewrite negb_true_iff in H0.
+        pose proof H1 as Hforallb. (* need this later *)
+        rewrite forallb_forall in H1.
+        rewrite forallb_forall in H2.
+
+        eapply JPV_LetRecJP.
+        -- assumption.
+        -- intros v rhs HIn.
+           specialize (H1 (v,rhs) HIn).
+           apply H1.
+        -- intros v rhs a HIn HJI.
+           specialize (H1 (v,rhs) HIn).
+           simpl in H1.
+           rewrite isJoinId_eq in H1.
+           specialize (H2 (v,rhs) HIn). simpl in H2.
+           rewrite HJI in *.
+           rewrite Hforallb in *.
+           destruct (Z.eqb_spec a 0).
+           ++ eapply GJR_RHS; try assumption.
+              eapply H; eassumption.
+           ++ eapply H; eassumption.
+        -- rewrite Hforallb in *.
+           apply IHe; assumption.
+ * destruct HiJPV.
+   constructor.
+   + eapply IHe; eassumption.
+   + intros dc pats rhs Hin.
+     rewrite forallb_forall in H1.
+     specialize (H1 (dc, pats, rhs) Hin). simpl in H0.
+     eapply H; eassumption.
+ * constructor; intuition.
+ * constructor; intuition.
+ * constructor; intuition.
+ * constructor; intuition.
 Qed.

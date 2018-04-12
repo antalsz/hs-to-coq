@@ -34,6 +34,21 @@ do
  shift
 done
 
+function check_coq_version() {
+  if ! which coqc >/dev/null
+  then
+    echo "No coqc in the path. Did you forget to run . <(opam config env)?"
+    exit 1
+  fi
+  if ! coqc --version | grep -q -F '8.7.2'
+  then
+    echo "coqc does not seem to be version 8.7.2. Did you forget to run . <(opam config env)?"
+    exit 1
+  fi
+}
+
+coq check_coq_version
+
 clean echo "Cleaning everything"
 clean make -C tests clean
 clean make -C base-tests clean

@@ -7,6 +7,9 @@ Require Import BasicTypes.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 Require Import Coq.ZArith.BinInt.
+Require Import Psatz.
+
+Import ListNotations.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -40,81 +43,13 @@ Join points must follow these invariants:
 We will be able to check 2a when we translate more of IdInfo.
 
 We will be able to check 4 when we translate types.
+
+Additionally, we have the invariant:
+
+ * The join arity must be non-negative.
 *)
 
 
-(* Attempt one: An inductive predicate *)
-Inductive JoinPointsValid : CoreExpr -> Z -> VarSet -> Prop :=
-  | JPV_Var     : forall v n jps,
-    isJoinId v = false ->
-    JoinPointsValid (Var v) n jps
-  | JPV_JoinVar : forall v a n jps,
-    isJoinId_maybe v = Some a ->
-    a <= n ->
-    elemVarSet v jps = true ->
-    JoinPointsValid (Var v) n jps
-  | JPV_List    : forall l n jps, JoinPointsValid (Lit l) n jps
-  | JPV_App     : forall e1 e2 n jps,
-    JoinPointsValid e1 (n+1) jps ->     (* Tail-call-position *)
-    JoinPointsValid e2 0 emptyVarSet -> (* Non-tail-call position *)
-    JoinPointsValid (App e1 e2) n jps
-  | JPV_Lam     : forall v e n jps,
-    JoinPointsValid e 0 emptyVarSet -> (* Non-tail-call position *)
-    JoinPointsValid (Lam v e) n jps
-  | JPV_LetNonRec  : forall v rhs body n jps, 
-    isJoinId v = false ->
-    JoinPointsValid rhs 0 emptyVarSet ->            (* Non-tail-call position *)
-    JoinPointsValid body 0 (delVarSet jps v) ->     (* Tail-call-position *)
-    JoinPointsValid (Let (NonRec v rhs) body) n jps
-  | JPV_LetNonRecJP  : forall v a rhs body n jps, (* Shadowing *)
-    isJoinId_maybe v = Some a ->
-    GoodJoinRHS a rhs jps ->
-    JoinPointsValid body 0 (extendVarSet jps v) ->     (* Tail-call-position *)
-    JoinPointsValid (Let (NonRec v rhs) body) n jps
-  | JPV_LetRec  : forall pairs body n jps,
-    (forall v rhs, In (v,rhs) pairs -> isJoinId v = false) ->
-    (forall v rhs, In (v,rhs) pairs -> JoinPointsValid rhs 0 emptyVarSet)  -> (* Non-tail-call position *)
-    let jps' := delVarSetList jps (map fst pairs) in
-    JoinPointsValid body 0 jps' ->     (* Tail-call-position *)
-    JoinPointsValid (Let (Rec pairs) body) n jps
-  | JPV_LetRecJP  : forall pairs body n jps, 
-    (forall v rhs, In (v,rhs) pairs -> isJoinId v = true) ->
-    let jps' := extendVarSetList jps (map fst pairs) in
-    (forall v rhs a, In (v,rhs) pairs ->
-                     isJoinId_maybe v = Some a ->
-                     GoodJoinRHS a rhs jps')  -> (* Non-tail-call position *)
-    JoinPointsValid body 0 jps' ->     (* Tail-call-position *)
-    JoinPointsValid (Let (Rec pairs) body) n jps
-  | JPV_Case  : forall scrut bndr ty alts n jps, 
-    JoinPointsValid scrut 0 emptyVarSet -> (* Non-tail-call position *)
-    let jps' := delVarSet jps bndr in
-    (forall dc pats rhs, In (dc,pats,rhs) alts ->
-                         let jps' := delVarSetList jps pats in
-                         JoinPointsValid rhs 0 jps')  -> (* Tail-call position *)
-    JoinPointsValid (Case scrut bndr ty alts) n jps
-  | JPV_Cast  : forall e co n jps, 
-    JoinPointsValid e 0 jps ->
-    JoinPointsValid (Cast e co) n jps
-  | JPV_Tick  : forall tickish e n jps, 
-    JoinPointsValid e 0 jps ->
-    JoinPointsValid (Tick tickish e) n jps
-  | JPV_Type  : forall ty n jps, 
-    JoinPointsValid (Type_ ty) n jps
-  | JPV_Coercion  : forall co n jps, 
-    JoinPointsValid (Coercion co) n jps
- with
-  GoodJoinRHS : Z -> CoreExpr -> VarSet -> Prop :=
-  | GJR_Lam : forall a v e jps,
-    0 < a ->
-    GoodJoinRHS (a - 1) e (delVarSet jps v) ->
-    GoodJoinRHS a (Lam v e) jps
-  | GJR_RHS: forall a e jps,
-    a = 0 ->
-    JoinPointsValid e 0 jps->     (* Tail-call-position *)
-    GoodJoinRHS a e jps
-  .
-
-(* Attempt two: An executable checker *)
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
   let isJoinPointsValidPair (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
     match isJoinId_maybe v with
@@ -128,7 +63,7 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bo
   match e with
   | Var v => match isJoinId_maybe v with
     | None => true
-    | Some a => a <=? n
+    | Some a => (a <=? n) && elemVarSet v jps
     end
   | Lit l => true
   | App e1 e2 =>
@@ -143,6 +78,7 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bo
                   else delVarSet    jps v in
       isJoinPointsValid body 0 jps'
   | Let (Rec pairs) body => 
+      negb (List.null pairs) &&  (* Not join-point-specific, could be its own invariant *)
       (forallb (fun p => negb (isJoinId (fst p))) pairs ||
        forallb (fun p =>       isJoinId (fst p))  pairs) &&
       let jps' := if forallb (fun p => isJoinId (fst p)) pairs 
@@ -165,8 +101,8 @@ with isJoinRHS (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} : bo
   if a <? 1 then false else
   match rhs with
     | Lam v e => if a =? 1
-                 then isJoinPointsValid e 0 jps (* tail-call position *)
-                 else isJoinRHS (a-1) e jps
+                 then isJoinPointsValid e 0 (delVarSet jps v) (* tail-call position *)
+                 else isJoinRHS (a-1) e (delVarSet jps v)
     | _ => false
     end.
 
@@ -191,86 +127,3 @@ Definition isJoinPointsValidPair (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) 
       of the top-level recursive functions. Instead, it is a local let and
       I repeat the defininition later to give it a name.
 *)
-
-
-(* Relating the two definitions (may not be needed or useful) *)
-
-
-Scheme JPV_mut := Induction for JoinPointsValid Sort Prop
-with GJR_mut := Induction for GoodJoinRHS Sort Prop.
-
-Axiom isJoinId_eq : forall v,
-  isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
-
-Axiom delVarList_singleton: forall jps v,
-  delVarSetList jps (v :: nil) = delVarSet jps v.
-
-Axiom extendVarList_singleton: forall jps v,
-  extendVarSetList jps (v :: nil) = extendVarSet jps v.
-
-Lemma bindersOf_cleanup:
-  forall {a b} (pairs : list (a * b)),
-  flat_map (fun '(binder, _) => binder :: nil) pairs = map fst pairs.
-Proof. intros.  induction pairs. reflexivity. destruct a0. simpl. rewrite IHpairs. reflexivity. Qed.
-
-Lemma JoinPointsValid_isJoinPointsValid:
-  forall e n jps,
-  JoinPointsValid e n jps -> isJoinPointsValid e n jps = true.
-Proof.
-  eapply JPV_mut with
-    (P0 := fun a rhs jps _ => 
-      (if a =? 0
-        then isJoinPointsValid rhs 0 jps 
-        else isJoinRHS a rhs jps) = true);
-  intros; simpl;
-  rewrite ?isJoinId_eq in *;
-  rewrite ?orb_true_iff, ?andb_true_iff in *;
-  rewrite ?bindersOf_cleanup.
-  * destruct (isJoinId_maybe v); congruence.
-  * rewrite e, Z.leb_le. assumption.
-  * reflexivity.
-  * split; assumption.
-  * assumption.
-  * destruct (isJoinId_maybe v); inversion_clear e.
-    split; assumption.
-  * rewrite e in *; clear e.
-    split; assumption.
-  * split; only 2: split.
-    - rewrite orb_true_iff. left.
-      rewrite forallb_forall.
-      intros [v rhs] HIn.
-      erewrite e by eassumption.
-      reflexivity.
-    - rewrite forallb_forall.
-      intros [v rhs] HIn.
-      specialize (e _ _ HIn).
-      rewrite isJoinId_eq in e.
-      destruct (isJoinId_maybe v); inversion_clear e.
-      specialize (H _ _ HIn).
-      assumption.
-    - rewrite ?orb_true_iff, ?andb_true_iff in *.
-      admit. (* need to handle pairs = [] separately *)
-      (*
-      replace (forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs) with false.
-      assumption.
-      symmetry.
-      *)
-  * assert (forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs = true).
-    { rewrite forallb_forall.
-      intros [v rhs] HIn.
-      erewrite e by eassumption.
-      reflexivity. }
-    rewrite H1. clear H1.
-    split; only 2: split.
-    - rewrite orb_true_iff. right.
-      reflexivity.
-    - rewrite forallb_forall.
-      intros [v rhs] HIn.
-      specialize (e _ _ HIn).
-      rewrite isJoinId_eq in e.
-      destruct (isJoinId_maybe v) eqn:HiJI; inversion_clear e.
-      specialize (H _ _ _ HIn HiJI).
-      assumption.
-    - rewrite ?orb_true_iff, ?andb_true_iff in *.
-      assumption.
-Admitted.

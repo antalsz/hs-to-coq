@@ -7,3 +7,4 @@
 JoinPointInvariants.v
 JoinPointInvariantsInductive.v
 CoreInduct.v
+ExitifyProofs.v

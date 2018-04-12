@@ -204,8 +204,10 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                 fmap (\(_,body) -> (meth,body)) $
                 local (envFor meth) $
                 convertMethodBinding  (localNameFor meth) bind >>= \case
-                    ConvertedDefinitionBinding (ConvertedDefinition {..})
-                        -> return (convDefName, maybe id Fun (NE.nonEmpty convDefArgs) $ convDefBody)
+                    ConvertedDefinitionBinding cd
+                        -> pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
+                           -- We have a tough time handling recursion (including mutual
+                           -- recursion) here because of name overloading
                     ConvertedPatternBinding {}
                         -> convUnsupported "pattern bindings in instances"
             Nothing -> case M.lookup meth classDefaults  of

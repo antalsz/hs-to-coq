@@ -14,6 +14,9 @@ module HsToCoq.Coq.Gallina.Util (
   -- * Manipulating 'Term's
   termHead,
 
+  -- * Manipulating 'FixBody's
+  fixBodyName, fixBodyArgs, fixBodyTermination, fixBodyResultType, fixBodyBody,
+
   -- * Manipulating 'Binder's, 'Name's, and 'Qualid's
   -- ** Optics
   _Ident, _UnderscoreName, nameToIdent,
@@ -114,6 +117,27 @@ termHead (App t _)            = termHead t
 termHead (ExplicitApp name _) = Just name
 termHead (Qualid name)        = Just name
 termHead _                    = Nothing
+
+fixBodyName :: Lens' FixBody Qualid
+fixBodyName = lens (\(FixBody name _ _ _ _) -> name)
+                   (\(FixBody _ args mord mty body) name -> FixBody name args mord mty body)
+
+fixBodyArgs :: Lens' FixBody Binders
+fixBodyArgs = lens (\(FixBody _ args _ _ _) -> args)
+                   (\(FixBody name _ mord mty body) args -> FixBody name args mord mty body)
+
+fixBodyTermination :: Lens' FixBody (Maybe Order)
+fixBodyTermination = lens (\(FixBody _ _ mord _ _) -> mord)
+                   (\(FixBody name args _ mty body) mord -> FixBody name args mord mty body)
+
+fixBodyResultType :: Lens' FixBody (Maybe Term)
+fixBodyResultType = lens (\(FixBody _ _ _ mty _) -> mty)
+                   (\(FixBody name args mord _ body) mty -> FixBody name args mord mty body)
+
+fixBodyBody :: Lens' FixBody Term
+fixBodyBody = lens (\(FixBody _ _ _ _ body) -> body)
+                   (\(FixBody name args mord mty _) body -> FixBody name args mord mty body)
+
 
 makePrisms ''Name
 

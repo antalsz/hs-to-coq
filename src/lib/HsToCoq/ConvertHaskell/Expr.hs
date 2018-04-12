@@ -914,7 +914,6 @@ convertTypedBindings :: LocalConvMonad r m
                      -> m [a]
 convertTypedBindings = convertMultipleBindings convertTypedBinding
 
--- TODO mutual recursion :-(
 convertMultipleBindings :: ConversionMonad r m
                         => (Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding))
                         -> [HsBind GhcRn]
@@ -926,7 +925,7 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
   let (handler, wrap) = case mhandler of
         Just handler -> ( uncurry handler
                         , \defn -> ghandle $ pure . Left . (defn,))
-        Nothing      -> ( const $ throwProgramError "Internal error: \
+        Nothing      -> ( const $ throwProgramError "INTERNAL ERROR: \
                                                     \convertMultipleBindings tried to both \
                                                     \handle and ignore an exception"
                             -- Safe because the only place `Left' is introduced
@@ -971,15 +970,11 @@ addRecursion eBindings = do
           -- When we do the preceding, we will probably need to check the
           -- termination status for every name in the mutually recursive block
           Just order -> case bodies of
-            body1 :| [] ->
-              pure $ wfFix order body1
-            _body1 :| _body2 : _bodies' ->
-              convUnsupported "non-structural mutual recursion"
+            body1  :| []                -> pure $ wfFix order body1
+            _body1 :| _body2 : _bodies' -> convUnsupported "non-structural mutual recursion"
           Nothing -> pure . Fix $ case bodies of
-            body1 :| [] ->
-              FixOne body1
-            body1 :| body2 : bodies' ->
-              FixMany body1 (body2 :| bodies') convDefName
+            body1 :| []              -> FixOne  body1
+            body1 :| body2 : bodies' -> FixMany body1 (body2 :| bodies') convDefName
         
         pure $ ConvertedDefinition
                  { convDefName = convDefName
@@ -1010,7 +1005,6 @@ convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =
   body
-
 
 --------------------------------------------------------------------------------
 

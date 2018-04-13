@@ -1,26 +1,29 @@
-{-# LANGUAGE RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
 
 module HsToCoq.ConvertHaskell.Definitions (
-  ConvertedDefinition(..),
+  ConvertedDefinition(..), convDefName, convDefArgs, convDefType, convDefBody,
   ConvertedBinding(..), withConvertedBinding,
   toProgramFixpointSentence
   ) where
 
+import Control.Lens hiding ((<|))
 import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
+import HsToCoq.Util.List
 
 import Data.Bifunctor
 import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
 
-data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Qualid
-                                               , convDefArgs  :: ![Binder]
-                                               , convDefType  :: !(Maybe Term)
-                                               , convDefBody  :: !Term
+data ConvertedDefinition = ConvertedDefinition { _convDefName :: !Qualid
+                                               , _convDefArgs :: ![Binder]
+                                               , _convDefType :: !(Maybe Term)
+                                               , _convDefBody :: !Term
                                                }
                          deriving (Eq, Ord, Show, Read)
+makeLenses ''ConvertedDefinition
 
 --------------------------------------------------------------------------------
 
@@ -40,28 +43,26 @@ decomposeFixpoint (Fix (FixOne (FixBody name binders _ _ body)))
 -- argument is part of the “Gallina” AST, and the concrete representation
 -- is created by the pretty-printer
 decomposeFixpoint (App _wfFix [PosArg _rel, PosArg _measure, PosArg _underscore, PosArg (Fun binders body)])
-    | (b:bs) <- init $ toList binders
-    , Inferred Explicit (Ident name) <- last $ toList binders
+    | (b:bs, Inferred Explicit (Ident name)) <- unsnocNEL binders
     = Just (name, b :| bs, body)
 decomposeFixpoint _
     = Nothing
-
 
 toProgramFixpointSentence ::
     ConversionMonad r m =>
     ConvertedDefinition -> Order -> Maybe Tactics -> m Sentence
 toProgramFixpointSentence (ConvertedDefinition{..}) order tac
-    | Nothing <- convDefType
+    | Nothing <- _convDefType
     = editFailure "cannot \"termination\" a definition without a type signature"
-    | Just ty <- convDefType
-    , Just (name, binders, body) <- decomposeFixpoint convDefBody
-    = if | name /= convDefName
+    | Just ty <- _convDefType
+    , Just (name, binders, body) <- decomposeFixpoint _convDefBody
+    = if | name /= _convDefName
          -> editFailure "internal name and external name disagree?"
          | otherwise
          -> do
             (binders', ty') <- moveTyToArgs binders ty
             pure $ ProgramSentence
-                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' convDefArgs) (Just order) (Just ty') body] []))
+                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' _convDefArgs) (Just order) (Just ty') body] []))
                 tac
     | otherwise
     = editFailure "cannot \"termination\" a definition that is not a recursive function"

@@ -96,6 +96,7 @@ Require BasicTypes.
 Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
+Require GHC.Prim.
 Require Module.
 Require Util.
 Import GHC.Base.Notations.
@@ -403,21 +404,21 @@ Definition zapCallArityInfo : IdInfo -> IdInfo :=
 
 Definition setDemandInfo : IdInfo -> unit -> IdInfo :=
   fun info dd =>
-    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-       callArityInfo_9__ levityInfo_10__ := info in
-    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ dd
-              callArityInfo_9__ levityInfo_10__.
+    GHC.Prim.seq dd (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
+                        cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                        demandInfo_8__ callArityInfo_9__ levityInfo_10__ := info in
+                  Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                            oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ dd
+                            callArityInfo_9__ levityInfo_10__).
 
 Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
   fun info pr =>
-    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-       callArityInfo_9__ levityInfo_10__ := info in
-    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-              oneShotInfo_4__ pr occInfo_6__ strictnessInfo_7__ demandInfo_8__
-              callArityInfo_9__ levityInfo_10__.
+    GHC.Prim.seq pr (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
+                        cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                        demandInfo_8__ callArityInfo_9__ levityInfo_10__ := info in
+                  Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                            oneShotInfo_4__ pr occInfo_6__ strictnessInfo_7__ demandInfo_8__
+                            callArityInfo_9__ levityInfo_10__).
 
 Definition setNeverLevPoly `{Util.HasDebugCallStack}
    : IdInfo -> unit -> IdInfo :=
@@ -431,12 +432,12 @@ Definition setNeverLevPoly `{Util.HasDebugCallStack}
 
 Definition setOccInfo : IdInfo -> BasicTypes.OccInfo -> IdInfo :=
   fun info oc =>
-    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-       callArityInfo_9__ levityInfo_10__ := info in
-    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-              oneShotInfo_4__ inlinePragInfo_5__ oc strictnessInfo_7__ demandInfo_8__
-              callArityInfo_9__ levityInfo_10__.
+    GHC.Prim.seq oc (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
+                        cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                        demandInfo_8__ callArityInfo_9__ levityInfo_10__ := info in
+                  Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                            oneShotInfo_4__ inlinePragInfo_5__ oc strictnessInfo_7__ demandInfo_8__
+                            callArityInfo_9__ levityInfo_10__).
 
 Definition zapTailCallInfo : IdInfo -> option IdInfo :=
   fun info =>
@@ -469,21 +470,21 @@ Definition setOneShotInfo : IdInfo -> BasicTypes.OneShotInfo -> IdInfo :=
 
 Definition setRuleInfo : IdInfo -> RuleInfo -> IdInfo :=
   fun info sp =>
-    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-       callArityInfo_9__ levityInfo_10__ := info in
-    Mk_IdInfo arityInfo_0__ sp unfoldingInfo_2__ cafInfo_3__ oneShotInfo_4__
-              inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-              callArityInfo_9__ levityInfo_10__.
+    GHC.Prim.seq sp (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
+                        cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                        demandInfo_8__ callArityInfo_9__ levityInfo_10__ := info in
+                  Mk_IdInfo arityInfo_0__ sp unfoldingInfo_2__ cafInfo_3__ oneShotInfo_4__
+                            inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+                            callArityInfo_9__ levityInfo_10__).
 
 Definition setStrictnessInfo : IdInfo -> unit -> IdInfo :=
   fun info dd =>
-    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-       callArityInfo_9__ levityInfo_10__ := info in
-    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ dd demandInfo_8__
-              callArityInfo_9__ levityInfo_10__.
+    GHC.Prim.seq dd (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
+                        cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                        demandInfo_8__ callArityInfo_9__ levityInfo_10__ := info in
+                  Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                            oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ dd demandInfo_8__
+                            callArityInfo_9__ levityInfo_10__).
 
 Definition setUnfoldingInfo : IdInfo -> unit -> IdInfo :=
   fun info uf =>
@@ -595,6 +596,6 @@ Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
      GHC.Base.compare__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
      GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger Module.Module
+     GHC.Err.error GHC.Num.Int GHC.Num.fromInteger GHC.Prim.seq Module.Module
      Util.HasDebugCallStack
 *)

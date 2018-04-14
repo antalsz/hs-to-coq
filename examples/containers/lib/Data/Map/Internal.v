@@ -1027,8 +1027,9 @@ Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
                        if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                        balanceR ky y l r'
                    | Eq =>
-                       if andb (Utils.Containers.Internal.PtrEquality.ptrEq x y)
-                               (Utils.Containers.Internal.PtrEquality.ptrEq orig ky) : bool
+                       if andb (Utils.Containers.Internal.PtrEquality.ptrEq x y) (GHC.Prim.seq orig
+                                                                                               (Utils.Containers.Internal.PtrEquality.ptrEq
+                                                                                                orig ky)) : bool
                        then t else
                        Bin sz (orig) x l r
                    end
@@ -2054,7 +2055,7 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
                    | Some x =>
                        match strict with
                        | Lazy => AltBigger (singleton k x)
-                       | Strict => AltBigger (singleton k x)
+                       | Strict => GHC.Prim.seq x (AltBigger (singleton k x))
                        end
                    end
                | k, f, Bin sx kx x l r =>
@@ -2078,7 +2079,7 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
                        | Some x' =>
                            match strict with
                            | Lazy => AltAdj (Bin sx kx x' l r)
-                           | Strict => AltAdj (Bin sx kx x' l r)
+                           | Strict => GHC.Prim.seq x' (AltAdj (Bin sx kx x' l r))
                            end
                        | None => AltSmaller (glue l r)
                        end
@@ -2511,5 +2512,5 @@ End Notations.
      GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
      GHC.Err.Default GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num
      GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
-     GHC.Prim.coerce Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
+     GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

@@ -81,7 +81,7 @@ defaultMethods:
     (PosArg (Qualid (Qualified "Data.Functor.Utils" "getMax")) :| [PosArg (App (Qualid
     (Qualified "Data.Foldable" "foldMap")) (PosArg (Parens (App (Qualid (Qualified
     "Coq.Program.Basics" "compose")) (PosArg (Qualid (Qualified "Data.Functor.Utils"
-    "Max")) :| [PosArg (Qualid (Bare "Some"))]))) :| []))]))])),(Qualified "Data.Foldable"
+    "Mk_Max")) :| [PosArg (Qualid (Bare "Some"))]))) :| []))]))])),(Qualified "Data.Foldable"
     "minimum",App (Qualid (Qualified "GHC.Base" "op_z2218U__")) (PosArg (App (Qualid
     (Qualified "Data.Maybe" "fromMaybe")) (PosArg (Parens (App (Qualid (Qualified
     "GHC.Err" "errorWithoutStackTrace")) (PosArg (HsString "minimum: empty structure")
@@ -89,7 +89,7 @@ defaultMethods:
     (PosArg (Qualid (Qualified "Data.Functor.Utils" "getMin")) :| [PosArg (App (Qualid
     (Qualified "Data.Foldable" "foldMap")) (PosArg (Parens (App (Qualid (Qualified
     "Coq.Program.Basics" "compose")) (PosArg (Qualid (Qualified "Data.Functor.Utils"
-    "Min")) :| [PosArg (Qualid (Bare "Some"))]))) :| []))]))])),(Qualified "Data.Foldable"
+    "Mk_Min")) :| [PosArg (Qualid (Bare "Some"))]))) :| []))]))])),(Qualified "Data.Foldable"
     "null",App (App (Qualid (Qualified "Data.Foldable" "foldr")) (PosArg (Parens (Fun
     (Inferred Explicit (Ident (Bare "arg_0__")) :| [Inferred Explicit (Ident (Bare
     "arg_1__"))]) (Qualid (Bare "false")))) :| [])) (PosArg (Qualid (Bare "true"))

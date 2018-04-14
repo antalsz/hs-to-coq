@@ -17,12 +17,14 @@ Require Data.Foldable.
 Require Data.Functor.
 Require Data.Functor.Const.
 Require Data.Functor.Identity.
+Require Data.Functor.Utils.
 Require Data.Proxy.
 Require Data.SemigroupInternal.
 Require GHC.Base.
 Require GHC.Prim.
 Require GHC.Tuple.
 Import Data.Functor.Notations.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -547,16 +549,29 @@ Definition for_ {t} {f} {a} {b} `{Traversable t} `{GHC.Base.Applicative f}
    : t a -> (a -> f b) -> f (t b) :=
   GHC.Base.flip traverse.
 
+Definition mapAccumL {t} {a} {b} {c} `{Traversable t}
+   : (a -> b -> (a * c)%type) -> a -> t b -> (a * t c)%type :=
+  fun f s t =>
+    Data.Functor.Utils.runStateL (traverse (Data.Functor.Utils.Mk_StateL GHC.Base.∘
+                                            GHC.Base.flip f) t) s.
+
+Definition mapAccumR {t} {a} {b} {c} `{Traversable t}
+   : (a -> b -> (a * c)%type) -> a -> t b -> (a * t c)%type :=
+  fun f s t =>
+    Data.Functor.Utils.runStateR (traverse (Data.Functor.Utils.Mk_StateR GHC.Base.∘
+                                            GHC.Base.flip f) t) s.
+
 (* External variables:
-     None Some cons list nil option pair Data.Either.Either Data.Either.Left
+     None Some cons list nil op_zt__ option pair Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.Foldable Data.Functor.op_zlzdzg__
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const
      Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Proxy.Mk_Proxy Data.Proxy.Proxy Data.SemigroupInternal.Dual
-     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.Product
-     Data.SemigroupInternal.Sum GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.flip GHC.Base.fmap GHC.Base.foldr
-     GHC.Base.id GHC.Base.liftA2 GHC.Base.pure GHC.Prim.coerce GHC.Tuple.pair2
-     GHC.Tuple.pair_type
+     Data.Functor.Utils.Mk_StateL Data.Functor.Utils.Mk_StateR
+     Data.Functor.Utils.runStateL Data.Functor.Utils.runStateR Data.Proxy.Mk_Proxy
+     Data.Proxy.Proxy Data.SemigroupInternal.Dual Data.SemigroupInternal.Mk_Dual
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.Product Data.SemigroupInternal.Sum GHC.Base.Applicative
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.flip
+     GHC.Base.fmap GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.op_z2218U__
+     GHC.Base.pure GHC.Prim.coerce GHC.Tuple.pair2 GHC.Tuple.pair_type
 *)

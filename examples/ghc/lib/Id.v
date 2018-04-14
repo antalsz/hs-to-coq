@@ -26,6 +26,7 @@ Require GHC.Base.
 Require GHC.Enum.
 Require GHC.List.
 Require GHC.Num.
+Require GHC.Prim.
 Require IdInfo.
 Require Maybes.
 Require Module.
@@ -334,7 +335,7 @@ Definition zapLamIdInfo : Var.Id -> Var.Id :=
   zapInfo IdInfo.zapLamInfo.
 
 Definition setIdInfo : Var.Id -> IdInfo.IdInfo -> Var.Id :=
-  fun id info => lazySetIdInfo id info.
+  fun id info => GHC.Prim.seq info (lazySetIdInfo id info).
 
 Definition modifyIdInfo
    : (IdInfo.IdInfo -> IdInfo.IdInfo) -> Var.Id -> Var.Id :=
@@ -527,9 +528,6 @@ Definition setIdName : Var.Id -> Name.Name -> Var.Id :=
 Definition setIdNotExported : Var.Id -> Var.Id :=
   Var.setIdNotExported.
 
-Definition setIdType : Var.Id -> unit -> Var.Id :=
-  fun id ty => Var.setVarType id ty.
-
 Definition setIdUnique : Var.Id -> Unique.Unique -> Var.Id :=
   Var.setVarUnique.
 
@@ -574,15 +572,15 @@ Definition isProbablyOneShotLambda : Var.Id -> bool :=
      DataCon.isUnboxedSumCon DataCon.isUnboxedTupleCon Datatypes.id Demand.Demand
      Demand.StrictSig FastString.FastString FastString.fsLit GHC.Base.mappend
      GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Enum.enumFromTo GHC.List.length
-     GHC.List.zipWith GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ IdInfo.CafInfo
-     IdInfo.ClassOpId IdInfo.DFunId IdInfo.DataConWorkId IdInfo.DataConWrapId
-     IdInfo.FCallId IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId IdInfo.PrimOpId
-     IdInfo.RecSelData IdInfo.RecSelId IdInfo.RecSelParent IdInfo.RecSelPatSyn
-     IdInfo.RuleInfo IdInfo.VanillaId IdInfo.arityInfo IdInfo.cafInfo
-     IdInfo.callArityInfo IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo IdInfo.occInfo
-     IdInfo.oneShotInfo IdInfo.ruleInfo IdInfo.setArityInfo IdInfo.setCafInfo
-     IdInfo.setCallArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
-     IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.strictnessInfo
+     GHC.List.zipWith GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq
+     IdInfo.CafInfo IdInfo.ClassOpId IdInfo.DFunId IdInfo.DataConWorkId
+     IdInfo.DataConWrapId IdInfo.FCallId IdInfo.IdDetails IdInfo.IdInfo IdInfo.JoinId
+     IdInfo.PrimOpId IdInfo.RecSelData IdInfo.RecSelId IdInfo.RecSelParent
+     IdInfo.RecSelPatSyn IdInfo.RuleInfo IdInfo.VanillaId IdInfo.arityInfo
+     IdInfo.cafInfo IdInfo.callArityInfo IdInfo.inlinePragInfo IdInfo.isEmptyRuleInfo
+     IdInfo.occInfo IdInfo.oneShotInfo IdInfo.ruleInfo IdInfo.setArityInfo
+     IdInfo.setCafInfo IdInfo.setCallArityInfo IdInfo.setInlinePragInfo
+     IdInfo.setOccInfo IdInfo.setOneShotInfo IdInfo.setRuleInfo IdInfo.strictnessInfo
      IdInfo.vanillaIdInfo IdInfo.zapLamInfo IdInfo.zapTailCallInfo
      IdInfo.zapUsageInfo IdInfo.zapUsedOnceInfo Maybes.orElse Module.Module Name.Name
      Name.getName Name.isInternalName Name.localiseName Name.mkDerivedInternalName
@@ -592,6 +590,6 @@ Definition isProbablyOneShotLambda : Var.Id -> bool :=
      Unique.Unique Unique.mkBuiltinUnique Util.count Var.Id Var.JoinId Var.Var
      Var.idDetails Var.idInfo Var.isId Var.isLocalId Var.isTyVar Var.lazySetIdInfo
      Var.mkExportedLocalVar Var.mkGlobalVar Var.mkLocalVar Var.setIdDetails
-     Var.setIdExported Var.setIdNotExported Var.setVarName Var.setVarType
-     Var.setVarUnique Var.varName Var.varType Var.varUnique
+     Var.setIdExported Var.setIdNotExported Var.setVarName Var.setVarUnique
+     Var.varName Var.varType Var.varUnique
 *)

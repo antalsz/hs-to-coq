@@ -46,6 +46,7 @@ MODULES = \
   Data/Proxy \
   Control/Monad \
   Data/Monoid \
+  Data/Functor/Utils \
   Data/Traversable \
   Control/Monad/Fail \
   Data/Foldable \

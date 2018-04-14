@@ -20,6 +20,7 @@ Require GHC.Base.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
+Require GHC.Prim.
 Require GHC.Real.
 Require Panic.
 Require SrcLoc.
@@ -1524,7 +1525,7 @@ Definition pprWithSourceText
     end.
 
 Definition seqOccInfo : OccInfo -> unit :=
-  fun occ => tt.
+  fun occ => GHC.Prim.seq occ tt.
 
 Definition setInlinePragmaActivation
    : InlinePragma -> Activation -> InlinePragma :=
@@ -1643,6 +1644,6 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
      GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
      GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
      GHC.Err.error GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Real.Rational Panic.noString
-     Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational
+     Panic.noString Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
 *)

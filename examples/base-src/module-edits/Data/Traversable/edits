@@ -9,8 +9,8 @@ skip Data.Traversable.Traversable__Last
 skip Data.Traversable.foldMapDefault
 
 # Need Data.Functor.Utils (but I am lazy right now)
-skip Data.Traversable.mapAccumL
-skip Data.Traversable.mapAccumR
+# skip Data.Traversable.mapAccumL
+# skip Data.Traversable.mapAccumR
 
 
 # Generics & out of scope

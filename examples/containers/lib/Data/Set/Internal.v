@@ -612,7 +612,7 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                        if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
                        balanceR y l r'
                    | Eq =>
-                       if Utils.Containers.Internal.PtrEquality.ptrEq orig y : bool then t else
+                       if (Utils.Containers.Internal.PtrEquality.ptrEq orig y) : bool then t else
                        Bin sz (orig) l r
                    end
                end in

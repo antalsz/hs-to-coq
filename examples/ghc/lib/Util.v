@@ -24,6 +24,7 @@ Require GHC.DeferredFix.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
+Require GHC.Prim.
 Require Panic.
 Import Data.Bits.Notations.
 Import GHC.Base.Notations.
@@ -427,7 +428,7 @@ Definition seqList {a} {b} : list a -> b -> b :=
   fix seqList arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | nil, b => b
-           | cons x xs, b => seqList xs b
+           | cons x xs, b => GHC.Prim.seq x (seqList xs b)
            end.
 
 Definition singleton {a} : a -> list a :=
@@ -649,5 +650,5 @@ End Notations.
      GHC.Err.Build_Default GHC.Err.Default GHC.Err.patternFailure GHC.List.break
      GHC.List.drop GHC.List.replicate GHC.List.reverse GHC.List.zip GHC.List.zipWith
      GHC.List.zipWith3 GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.negate
-     GHC.Num.op_zm__ GHC.Num.op_zp__ Panic.panic
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq Panic.panic
 *)

@@ -20,6 +20,7 @@ Require Data.Foldable.
 Require GHC.Base.
 Require GHC.DeferredFix.
 Require GHC.Num.
+Require GHC.Prim.
 Require Name.
 Require UniqDFM.
 Require UniqDSet.
@@ -203,17 +204,17 @@ Definition partitionVarSet
    : (Var.Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
   UniqSet.partitionUniqSet.
 
-Definition seqDVarSet : DVarSet -> unit :=
-  fun s => tt.
-
-Definition seqVarSet : VarSet -> unit :=
-  fun s => tt.
-
 Definition sizeDVarSet : DVarSet -> GHC.Num.Int :=
   UniqDSet.sizeUniqDSet.
 
+Definition seqDVarSet : DVarSet -> unit :=
+  fun s => GHC.Prim.seq (sizeDVarSet s) tt.
+
 Definition sizeVarSet : VarSet -> GHC.Num.Int :=
   UniqSet.sizeUniqSet.
+
+Definition seqVarSet : VarSet -> unit :=
+  fun s => GHC.Prim.seq (sizeVarSet s) tt.
 
 Definition unionDVarSet : DVarSet -> DVarSet -> DVarSet :=
   UniqDSet.unionUniqDSets.
@@ -261,7 +262,7 @@ Definition unitVarSet : Var.Var -> VarSet :=
 
 (* External variables:
      bool list negb op_zt__ option tt unit Data.Foldable.foldr GHC.Base.op_z2218U__
-     GHC.DeferredFix.deferredFix2 GHC.Num.Int Name.Name UniqDFM.allUDFM
+     GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Prim.seq Name.Name UniqDFM.allUDFM
      UniqDFM.anyUDFM UniqDFM.disjointUDFM UniqDFM.udfmToUfm UniqDSet.UniqDSet
      UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
      UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet

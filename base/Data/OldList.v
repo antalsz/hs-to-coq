@@ -20,6 +20,7 @@ Require Data.Tuple.
 Require GHC.Base.
 Require GHC.List.
 Require GHC.Num.
+Require GHC.Prim.
 Require GHC.Real.
 Require GHC.Tuple.
 Import GHC.Base.Notations.
@@ -373,14 +374,14 @@ Definition sortOn {b} {a} `{GHC.Base.Ord b} : (a -> b) -> list a -> list a :=
   fun f =>
     GHC.Base.map Data.Tuple.snd GHC.Base.∘
     (sortBy (Data.Ord.comparing Data.Tuple.fst) GHC.Base.∘
-     GHC.Base.map (fun x => let y := f x in pair y x)).
+     GHC.Base.map (fun x => let y := f x in GHC.Prim.seq y (pair y x))).
 
 Definition strictGenericLength {i} {b} `{(GHC.Num.Num i)} : list b -> i :=
   fun l =>
     let fix gl arg_0__ arg_1__
               := match arg_0__, arg_1__ with
                  | nil, a => a
-                 | cons _ xs, a => let a' := a GHC.Num.+ #1 in gl xs a'
+                 | cons _ xs, a => let a' := a GHC.Num.+ #1 in GHC.Prim.seq a' (gl xs a')
                  end in
     gl l #0.
 
@@ -555,6 +556,6 @@ End Notations.
      GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
      GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any GHC.List.filter GHC.List.null
      GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5
+     GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5
      GHC.Tuple.pair6 GHC.Tuple.pair7
 *)

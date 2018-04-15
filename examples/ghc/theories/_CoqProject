@@ -5,3 +5,4 @@
 -Q ../../transformers/lib ""
 -Q ../../containers/lib ""
 JoinPointInvariants.v
+CoreSubstInvariants.v

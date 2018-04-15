@@ -2,8 +2,6 @@ axiomatize module CoreUtils
 
 rename type CoreSyn.Alt = Alt
 
-skip module Type
-skip module Coercion
 skip module PprCore
 skip module PrimOp
 skip module TysPrim
@@ -33,15 +31,14 @@ skip CoreUtils.coreAltsType
 # skip CoreUtils.diffExpr
 # skip CoreUtils.locBind
 
-rewrite forall subst knd, TyCoRep.substTyUnchecked subst knd = tt
+rewrite forall subst knd,       TyCoRep.substTyUnchecked subst knd = tt
 rewrite forall subst tv new_tv, TyCoRep.extendTvSubstWithClone subst tv new_tv = subst
-rewrite forall subst ty, TyCoRep.substTy subst ty = tt
+rewrite forall subst ty,        TyCoRep.substTy subst ty = tt
 
 in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConRepStrictness con = nil
 in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConRepArgTys con = nil
 in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConExTyVars con = @nil unit
-in CoreUtils.dataConInstPat rewrite forall x, TyCoRep.zipTvSubst x y = tt
-in CoreUtils.dataConInstPat rewrite forall x y z, Data.Traversable.mapAccumL x y z = pair univ_subst nil
+in CoreUtils.dataConInstPat rewrite forall x y, TyCoRep.zipTvSubst x y = tt
+# in CoreUtils.dataConInstPat rewrite forall x y z, Data.Traversable.mapAccumL x y z = pair univ_subst nil
 
-## Needs Data.Traversable.mappAccumL
 # skip CoreUtils.dataConInstPat

@@ -1,7 +1,2 @@
-# Needs Data.Traversable.mapAccumL
-skip Bag.mapAccumBagL
 
-skip Bag.Data__Bag
-skip Bag.Outputable__Bag
 
-skip Bag.Foldable__Bag # still produces Admitted

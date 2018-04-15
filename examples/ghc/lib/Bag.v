@@ -13,10 +13,12 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Control.Monad.
+Require Coq.Program.Basics.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Maybe.
 Require Data.OldList.
+Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.List.
@@ -46,8 +48,6 @@ Arguments ListBag {_} _.
 (* Skipping instance Outputable__Bag of class Outputable *)
 
 (* Skipping instance Data__Bag of class Data *)
-
-(* Skipping instance Foldable__Bag *)
 
 Definition allBag {a} : (a -> bool) -> Bag a -> bool :=
   fix allBag arg_0__ arg_1__
@@ -132,6 +132,82 @@ Definition foldrBag {a} {r} : (a -> r -> r) -> r -> Bag a -> r :=
 Definition bagToList {a} : Bag a -> list a :=
   fun b => foldrBag cons nil b.
 
+Local Definition Foldable__Bag_foldr
+   : forall {a} {b}, (a -> b -> b) -> b -> Bag a -> b :=
+  fun {a} {b} => foldrBag.
+
+Local Definition Foldable__Bag_null : forall {a}, Bag a -> bool :=
+  fun {a} => Foldable__Bag_foldr (fun arg_0__ arg_1__ => false) true.
+
+Local Definition Foldable__Bag_toList : forall {a}, Bag a -> list a :=
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Bag_foldr c n t)).
+
+Local Definition Foldable__Bag_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> Bag a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in Foldable__Bag_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__Bag_length : forall {a}, Bag a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__Bag_foldl' (fun arg_0__ arg_1__ =>
+                            match arg_0__, arg_1__ with
+                            | c, _ => c GHC.Num.+ #1
+                            end) #0.
+
+Local Definition Foldable__Bag_foldMap
+   : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Bag a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} =>
+    fun f => Foldable__Bag_foldr (GHC.Base.mappend GHC.Base.∘ f) GHC.Base.mempty.
+
+Local Definition Foldable__Bag_foldl
+   : forall {b} {a}, (b -> a -> b) -> b -> Bag a -> b :=
+  fun {b} {a} =>
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Foldable__Bag_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                              (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                               GHC.Base.flip f)) t)) z.
+
+Local Definition Foldable__Bag_foldr'
+   : forall {a} {b}, (a -> b -> b) -> b -> Bag a -> b :=
+  fun {a} {b} =>
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in Foldable__Bag_foldl f' GHC.Base.id xs z0.
+
+Local Definition Foldable__Bag_product
+   : forall {a}, forall `{GHC.Num.Num a}, Bag a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Coq.Program.Basics.compose Data.SemigroupInternal.getProduct
+                               (Foldable__Bag_foldMap Data.SemigroupInternal.Mk_Product).
+
+Local Definition Foldable__Bag_sum
+   : forall {a}, forall `{GHC.Num.Num a}, Bag a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Coq.Program.Basics.compose Data.SemigroupInternal.getSum (Foldable__Bag_foldMap
+                                Data.SemigroupInternal.Mk_Sum).
+
+Local Definition Foldable__Bag_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Bag m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Bag_foldMap GHC.Base.id.
+
+Program Instance Foldable__Bag : Data.Foldable.Foldable Bag :=
+  fun _ k =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__Bag_fold ;
+         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+           Foldable__Bag_foldMap ;
+         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Bag_foldl ;
+         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Bag_foldl' ;
+         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Bag_foldr ;
+         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Bag_foldr' ;
+         Data.Foldable.length__ := fun {a} => Foldable__Bag_length ;
+         Data.Foldable.null__ := fun {a} => Foldable__Bag_null ;
+         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Bag_product ;
+         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Bag_sum ;
+         Data.Foldable.toList__ := fun {a} => Foldable__Bag_toList |}.
+
 Definition foldrBagM {m} {a} {b} `{(GHC.Base.Monad m)}
    : (a -> b -> m b) -> b -> Bag a -> m b :=
   fix foldrBagM arg_0__ arg_1__ arg_2__
@@ -166,6 +242,21 @@ Definition lengthBag {a} : Bag a -> GHC.Num.Int :=
 
 Definition listToBag {a} : list a -> Bag a :=
   fun arg_0__ => match arg_0__ with | nil => EmptyBag | vs => ListBag vs end.
+
+Definition mapAccumBagL {acc} {x} {y}
+   : (acc -> x -> (acc * y)%type) -> acc -> Bag x -> (acc * Bag y)%type :=
+  fix mapAccumBagL arg_0__ arg_1__ arg_2__
+        := match arg_0__, arg_1__, arg_2__ with
+           | _, s, EmptyBag => pair s EmptyBag
+           | f, s, UnitBag x => let 'pair s1 x1 := f s x in pair s1 (UnitBag x1)
+           | f, s, TwoBags b1 b2 =>
+               let 'pair s1 b1' := mapAccumBagL f s b1 in
+               let 'pair s2 b2' := mapAccumBagL f s1 b2 in
+               pair s2 (TwoBags b1' b2')
+           | f, s, ListBag xs =>
+               let 'pair s' xs' := Data.Traversable.mapAccumL f s xs in
+               pair s' (ListBag xs')
+           end.
 
 Definition mapAccumBagLM {m} {acc} {x} {y} `{GHC.Base.Monad m}
    : (acc -> x -> m (acc * y)%type) -> acc -> Bag x -> m (acc * Bag y)%type :=
@@ -427,13 +518,24 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
 
 (* External variables:
      None Some andb bool cons false list nil op_zt__ option orb pair true tt unit
-     Control.Monad.filterM Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.all Data.Foldable.any Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.length Data.Foldable.mapM_ Data.Maybe.mapMaybe
-     Data.OldList.partition Data.Traversable.mapM GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.const GHC.Base.fmap__ GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzd____
-     GHC.Base.return_ GHC.List.filter GHC.List.unzip GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.op_zp__ MonadUtils.anyM MonadUtils.foldlM MonadUtils.foldrM
-     MonadUtils.mapAccumLM Util.isSingleton Util.partitionWith
+     Control.Monad.filterM Coq.Program.Basics.compose Data.Either.Either
+     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.all
+     Data.Foldable.any Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length Data.Foldable.length__ Data.Foldable.mapM_
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.Maybe.mapMaybe Data.OldList.partition
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.mapAccumL Data.Traversable.mapM GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.build' GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlzd____ GHC.Base.return_ GHC.List.filter GHC.List.unzip GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.anyM
+     MonadUtils.foldlM MonadUtils.foldrM MonadUtils.mapAccumLM Util.isSingleton
+     Util.partitionWith
 *)

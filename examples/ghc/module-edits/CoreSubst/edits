@@ -16,13 +16,18 @@ in CoreSubst.substUnfolding rewrite forall x y, GHC.Prim.seq x y = y
 # These edits get rid of all of the substitutions for tyvars and covars
 #
 #
-skip CoreSubst.cloneTyVarBndr
 
 rewrite forall v, Var.isCoVar v = false
 rewrite forall v, Var.isTyVar v = false
+rewrite forall v, Var.isId fv   = true
 
-rewrite forall v,  Var.isId fv  = true
+rewrite forall x t, Id.setIdType x t = x
 
+rewrite forall s x m , TyCoRep.tyCoFVsOfType s x m  = id
+
+#
+# These are easier to redefine than to rewrite
+#
 redefine Definition CoreSubst.emptySubst : Subst :=
   Mk_Subst VarEnv.emptyInScopeSet VarEnv.emptyVarEnv tt tt.
 
@@ -39,12 +44,9 @@ redefine Definition CoreSubst.zapSubstEnv : Subst -> Subst :=
     Mk_Subst in_scope VarEnv.emptyVarEnv tt tt end.
 
 
-
-# In midamble
+# In midamble, hard to redefine and hard to rewrite
 #
 skip CoreSubst.mkOpenSubst
-
-rewrite forall s x m , TyCoRep.tyCoFVsOfType s x m  = id
 
 #
 # Yuck! 
@@ -60,7 +62,8 @@ in CoreSubst.extendInScopeList rewrite forall, (VarEnv.delVarEnvList cvs vs) = t
 
 in CoreSubst.isEmptySubst rewrite forall, (VarEnv.isEmptyVarEnv tv_env) = true
 in CoreSubst.isEmptySubst rewrite forall, (VarEnv.isEmptyVarEnv cv_env) = true
- 
+
+in CoreSubst.substIdBndr rewrite forall, VarEnv.isEmptyVarEnv tvs = true 
 in CoreSubst.substIdBndr rewrite forall, VarEnv.isEmptyVarEnv cvs = true
 in CoreSubst.substIdBndr rewrite forall x, TyCoRep.noFreeVarsOfType x = true
 
@@ -80,7 +83,6 @@ rewrite forall s v t, CoreSubst.extendTvSubst s v t = s
 skip CoreSubst.extendTvSubstList
 rewrite forall s vs, CoreSubst.extendTvSubstList s vs = s
 
-
 skip CoreSubst.getTCvSubst
 rewrite forall s, CoreSubst.getTCvSubst s = tt
 
@@ -99,11 +101,9 @@ rewrite forall s x id, CoreSubst.substSpec s x id = id
 skip CoreSubst.substCoVarBndr
 rewrite forall s x b, CoreSubst.substCoVarBndr s x b = b
 
+skip CoreSubst.cloneTyVarBndr
 
 
-rewrite forall x t, Id.setIdType x t = x
-
-in CoreSubst.substIdBndr rewrite forall, VarEnv.isEmptyVarEnv tvs = true
 
 #
 # Mutual recursion

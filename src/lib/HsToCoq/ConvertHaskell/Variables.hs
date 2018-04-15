@@ -13,6 +13,8 @@ import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Maybe
+import Data.List
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import Control.Monad
@@ -77,14 +79,24 @@ specialForms :: Ident -> Ident
 specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
                   | otherwise                   = name
 
+rename :: ConversionMonad r m => HsNamespace -> Qualid -> m Qualid
+rename ns = go S.empty
+  where
+    go seen qid | qid `S.member` seen =
+        fail $ "Cyclic renamings " ++ intercalate ", " (map show (S.toList seen))
+    go seen qid = view (edits . renamed ns qid) >>= \case
+        Nothing ->   return qid
+            -- A self rename is also fine, it signals stopping.
+        Just qid' | qid' == qid -> return qid
+        Just qid' -> go (S.insert qid seen) qid'
+
 var :: ConversionMonad r m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
     qid <- case nameModM of
              Just m  -> do rm <- view (edits.renamedModules.at m . non m)
                            pure (Qualified (moduleNameText rm) (bareName name))
              Nothing -> pure (Bare (localName name))
-    renamed_qid <- view (edits . renamed ns qid . non qid)
-    pure renamed_qid
+    rename ns qid
   where
     nameModM = moduleName <$> nameModule_maybe name
 

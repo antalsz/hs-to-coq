@@ -148,14 +148,9 @@ Program Instance Functor__Const {m} : GHC.Base.Functor (Const m) :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Const_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Const_op_zlzd__ |}.
 
-Local Definition Applicative__Const_liftA2 {inst_m} `{GHC.Base.Monoid inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) -> (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | _, Mk_Const x, Mk_Const y => Mk_Const (GHC.Base.mappend x y)
-      end.
+Local Definition Applicative__Const_pure {inst_m} `{GHC.Base.Monoid inst_m}
+   : forall {a}, a -> (Const inst_m) a :=
+  fun {a} => fun arg_0__ => Mk_Const GHC.Base.mempty.
 
 Local Definition Applicative__Const_op_zlztzg__ {inst_m} `{GHC.Base.Monoid
   inst_m}
@@ -167,9 +162,14 @@ Local Definition Applicative__Const_op_ztzg__ {inst_m} `{GHC.Base.Monoid inst_m}
   fun {a} {b} =>
     fun a1 a2 => Applicative__Const_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
-Local Definition Applicative__Const_pure {inst_m} `{GHC.Base.Monoid inst_m}
-   : forall {a}, a -> (Const inst_m) a :=
-  fun {a} => fun arg_0__ => Mk_Const GHC.Base.mempty.
+Local Definition Applicative__Const_liftA2 {inst_m} `{GHC.Base.Monoid inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) -> (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | _, Mk_Const x, Mk_Const y => Mk_Const (GHC.Base.mappend x y)
+      end.
 
 Program Instance Applicative__Const {m} `{GHC.Base.Monoid m}
    : GHC.Base.Applicative (Const m) :=
@@ -187,11 +187,12 @@ Program Instance Applicative__Const {m} `{GHC.Base.Monoid m}
 
 (* Skipping instance Real__Const of class Real *)
 
-Local Definition Ord__Const_compare {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
+Local Definition Ord__Const_min {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
   inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__Const_max {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
   inst_a}
@@ -200,18 +201,11 @@ Local Definition Ord__Const_max {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Const_min {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
+Local Definition Ord__Const_compare {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
   inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__Const_op_zg__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
-   : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__Const_op_zgze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
   inst_a}
@@ -219,11 +213,11 @@ Local Definition Ord__Const_op_zgze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Const_op_zl__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
+Local Definition Ord__Const_op_zg__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
   inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__Const_op_zlze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
   inst_a}
@@ -231,15 +225,19 @@ Local Definition Ord__Const_op_zlze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
+Local Definition Ord__Const_op_zl__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
+  inst_a}
+   : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
+  GHC.Prim.coerce _GHC.Base.<_.
+
 (* Translating `instance Num__Const' failed: OOPS! Cannot find information for
    class Qualified "GHC.Num" "Num" unsupported *)
 
-Local Definition Monoid__Const_mappend {inst_a} {inst_k} {inst_b}
+Local Definition Monoid__Const_mempty {inst_a} {inst_k} {inst_b}
   `{GHC.Base.Monoid inst_a}
-   : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
-  GHC.Prim.coerce GHC.Base.mappend.
+   : Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep :=
+  GHC.Prim.coerce GHC.Base.mempty.
 
 Local Definition Monoid__Const_mconcat {inst_a} {inst_k} {inst_b}
   `{GHC.Base.Monoid inst_a}
@@ -247,10 +245,12 @@ Local Definition Monoid__Const_mconcat {inst_a} {inst_k} {inst_b}
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.mconcat.
 
-Local Definition Monoid__Const_mempty {inst_a} {inst_k} {inst_b}
+Local Definition Monoid__Const_mappend {inst_a} {inst_k} {inst_b}
   `{GHC.Base.Monoid inst_a}
-   : Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep :=
-  GHC.Prim.coerce GHC.Base.mempty.
+   : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
+  GHC.Prim.coerce GHC.Base.mappend.
 
 Local Definition Semigroup__Const_op_zlzlzgzg__ {inst_a} {inst_k} {inst_b}
   `{GHC.Base.Semigroup inst_a}
@@ -283,17 +283,17 @@ Instance Monoid__Const {a} {b} `{GHC.Base.Monoid a}
 
 (* Skipping instance FiniteBits__Const of class FiniteBits *)
 
-Local Definition Eq___Const_op_zeze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Eq_
-  inst_a}
-   : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
-     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
-
 Local Definition Eq___Const_op_zsze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Eq_
   inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___Const_op_zeze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Eq_
+  inst_a}
+   : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
+     (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Instance Eq___Const {a} {b} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Const a b) :=
   fun _ k =>

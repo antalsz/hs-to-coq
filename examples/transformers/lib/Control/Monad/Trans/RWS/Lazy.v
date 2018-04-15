@@ -77,6 +77,16 @@ Program Instance Functor__RWST {m} {r} {w} {s} `{(Functor m)}
     k {| fmap__ := fun {a} {b} => Functor__RWST_fmap ;
          op_zlzd____ := fun {a} {b} => Functor__RWST_op_zlzd__ |}.
 
+Local Definition Applicative__RWST_pure {inst_w} {inst_m} {inst_r} {inst_s}
+  `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
+   : forall {a}, a -> (RWST inst_r inst_w inst_s inst_m) a :=
+  fun {a} =>
+    fun a =>
+      Mk_RWST (fun arg_0__ arg_1__ =>
+                 match arg_0__, arg_1__ with
+                 | _, s => return_ (pair (pair a s) mempty)
+                 end).
+
 Local Definition Applicative__RWST_op_zlztzg__ {inst_w} {inst_m} {inst_r}
   {inst_s} `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
    : forall {a} {b},
@@ -111,16 +121,6 @@ Local Definition Applicative__RWST_liftA2 {inst_w} {inst_m} {inst_r} {inst_s}
      (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) c :=
   fun {a} {b} {c} => fun f x => Applicative__RWST_op_zlztzg__ (fmap f x).
 
-Local Definition Applicative__RWST_pure {inst_w} {inst_m} {inst_r} {inst_s}
-  `{Monoid inst_w} `{Functor inst_m} `{Monad inst_m}
-   : forall {a}, a -> (RWST inst_r inst_w inst_s inst_m) a :=
-  fun {a} =>
-    fun a =>
-      Mk_RWST (fun arg_0__ arg_1__ =>
-                 match arg_0__, arg_1__ with
-                 | _, s => return_ (pair (pair a s) mempty)
-                 end).
-
 Program Instance Applicative__RWST {w} {m} {r} {s} `{Monoid w} `{Functor m}
   `{Monad m}
    : Applicative (RWST r w s m) :=
@@ -131,6 +131,11 @@ Program Instance Applicative__RWST {w} {m} {r} {s} `{Monoid w} `{Functor m}
          pure__ := fun {a} => Applicative__RWST_pure |}.
 
 (* Skipping instance Alternative__RWST of class Alternative *)
+
+Local Definition Monad__RWST_return_ {inst_w} {inst_m} {inst_r} {inst_s}
+  `{Monoid inst_w} `{Monad inst_m}
+   : forall {a}, a -> (RWST inst_r inst_w inst_s inst_m) a :=
+  fun {a} => pure.
 
 Definition Monad__RWST_op_zgzgze__ {inst_w} {inst_m} {inst_r} {inst_s} `{_
    : Monoid inst_w} `{_ : Monad inst_m}
@@ -146,11 +151,6 @@ Local Definition Monad__RWST_op_zgzg__ {inst_w} {inst_m} {inst_r} {inst_s}
      (RWST inst_r inst_w inst_s inst_m) a ->
      (RWST inst_r inst_w inst_s inst_m) b -> (RWST inst_r inst_w inst_s inst_m) b :=
   fun {a} {b} => fun m k => Monad__RWST_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__RWST_return_ {inst_w} {inst_m} {inst_r} {inst_s}
-  `{Monoid inst_w} `{Monad inst_m}
-   : forall {a}, a -> (RWST inst_r inst_w inst_s inst_m) a :=
-  fun {a} => pure.
 
 Program Instance Monad__RWST {w} {m} {r} {s} `{Monoid w} `{Monad m}
    : Monad (RWST r w s m) :=

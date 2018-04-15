@@ -5,4 +5,8 @@
 -Q ../../transformers/lib ""
 -Q ../../containers/lib ""
 JoinPointInvariants.v
+JoinPointInvariantsInductive.v
+CoreInduct.v
+ExitifyProofs.v
 CoreSubstInvariants.v
+

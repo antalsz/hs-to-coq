@@ -593,24 +593,24 @@ Local Definition Monad__list_op_zgzgze__
 
 (* Skipping instance Monad__IO *)
 
+Local Definition Monoid__list_mempty {inst_a} : list inst_a :=
+  nil.
+
 Local Definition Monoid__list_mconcat {inst_a}
    : list (list inst_a) -> list inst_a :=
   fun xss =>
     Coq.Lists.List.flat_map (fun xs =>
                                Coq.Lists.List.flat_map (fun x => cons x nil) xs) xss.
 
-Local Definition Monoid__list_mempty {inst_a} : list inst_a :=
-  nil.
-
 Local Definition Monoid__arrow_mempty {inst_b} {inst_a} `{Monoid inst_b}
    : (inst_a -> inst_b) :=
   fun arg_0__ => mempty.
 
-Local Definition Monoid__unit_mconcat : list unit -> unit :=
-  fun arg_0__ => tt.
-
 Local Definition Monoid__unit_mempty : unit :=
   tt.
+
+Local Definition Monoid__unit_mconcat : list unit -> unit :=
+  fun arg_0__ => tt.
 
 (* Skipping instance Monoid__op_zt__ *)
 
@@ -627,16 +627,9 @@ Local Definition Monoid__option_mempty {inst_a} `{Semigroup inst_a}
    : (option inst_a) :=
   None.
 
-Local Definition Applicative__pair_type_liftA2 {inst_a} `{Monoid inst_a}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (GHC.Tuple.pair_type inst_a) a ->
-     (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, pair u x, pair v y => pair (u <<>> v) (f x y)
-      end.
+Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
+   : forall {a}, a -> (GHC.Tuple.pair_type inst_a) a :=
+  fun {a} => fun x => pair mempty x.
 
 Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
    : forall {a} {b},
@@ -648,9 +641,16 @@ Local Definition Applicative__pair_type_op_zlztzg__ {inst_a} `{Monoid inst_a}
       | pair u f, pair v x => pair (u <<>> v) (f x)
       end.
 
-Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
-   : forall {a}, a -> (GHC.Tuple.pair_type inst_a) a :=
-  fun {a} => fun x => pair mempty x.
+Local Definition Applicative__pair_type_liftA2 {inst_a} `{Monoid inst_a}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (GHC.Tuple.pair_type inst_a) a ->
+     (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, pair u x, pair v y => pair (u <<>> v) (f x y)
+      end.
 
 (* Skipping instance Monoid__IO *)
 
@@ -758,6 +758,12 @@ Local Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
 
 (* Skipping instance Alternative__IO of class Alternative *)
 
+Local Definition Applicative__arrow_op_zlztzg__ {inst_a}
+   : forall {a} {b},
+     (GHC.Prim.arrow inst_a) (a -> b) ->
+     (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow inst_a) b :=
+  fun {a} {b} => fun f g x => f x (g x).
+
 Local Definition Applicative__arrow_liftA2 {inst_a}
    : forall {a} {b} {c},
      (a -> b -> c) ->
@@ -765,20 +771,8 @@ Local Definition Applicative__arrow_liftA2 {inst_a}
      (GHC.Prim.arrow inst_a) b -> (GHC.Prim.arrow inst_a) c :=
   fun {a} {b} {c} => fun q f g x => q (f x) (g x).
 
-Local Definition Applicative__arrow_op_zlztzg__ {inst_a}
-   : forall {a} {b},
-     (GHC.Prim.arrow inst_a) (a -> b) ->
-     (GHC.Prim.arrow inst_a) a -> (GHC.Prim.arrow inst_a) b :=
-  fun {a} {b} => fun f g x => f x (g x).
-
-Local Definition Applicative__option_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> option a -> option b -> option c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, Some x, Some y => Some (f x y)
-      | _, _, _ => None
-      end.
+Local Definition Applicative__option_pure : forall {a}, a -> option a :=
+  fun {a} => Some.
 
 Local Definition Applicative__option_op_ztzg__
    : forall {a} {b}, option a -> option b -> option b :=
@@ -789,22 +783,17 @@ Local Definition Applicative__option_op_ztzg__
       | None, _m2 => None
       end.
 
-Local Definition Applicative__option_pure : forall {a}, a -> option a :=
-  fun {a} => Some.
-
-Local Definition Applicative__list_liftA2
-   : forall {a} {b} {c}, (a -> b -> c) -> list a -> list b -> list c :=
+Local Definition Applicative__option_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> option a -> option b -> option c :=
   fun {a} {b} {c} =>
-    fun f xs ys =>
-      Coq.Lists.List.flat_map (fun x =>
-                                 Coq.Lists.List.flat_map (fun y => cons (f x y) nil) ys) xs.
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, Some x, Some y => Some (f x y)
+      | _, _, _ => None
+      end.
 
-Local Definition Applicative__list_op_zlztzg__
-   : forall {a} {b}, list (a -> b) -> list a -> list b :=
-  fun {a} {b} =>
-    fun fs xs =>
-      Coq.Lists.List.flat_map (fun f =>
-                                 Coq.Lists.List.flat_map (fun x => cons (f x) nil) xs) fs.
+Local Definition Applicative__list_pure : forall {a}, a -> list a :=
+  fun {a} => fun x => cons x nil.
 
 Local Definition Applicative__list_op_ztzg__
    : forall {a} {b}, list a -> list b -> list b :=
@@ -813,8 +802,19 @@ Local Definition Applicative__list_op_ztzg__
       Coq.Lists.List.flat_map (fun _ =>
                                  Coq.Lists.List.flat_map (fun y => cons y nil) ys) xs.
 
-Local Definition Applicative__list_pure : forall {a}, a -> list a :=
-  fun {a} => fun x => cons x nil.
+Local Definition Applicative__list_op_zlztzg__
+   : forall {a} {b}, list (a -> b) -> list a -> list b :=
+  fun {a} {b} =>
+    fun fs xs =>
+      Coq.Lists.List.flat_map (fun f =>
+                                 Coq.Lists.List.flat_map (fun x => cons (f x) nil) xs) fs.
+
+Local Definition Applicative__list_liftA2
+   : forall {a} {b} {c}, (a -> b -> c) -> list a -> list b -> list c :=
+  fun {a} {b} {c} =>
+    fun f xs ys =>
+      Coq.Lists.List.flat_map (fun x =>
+                                 Coq.Lists.List.flat_map (fun y => cons (f x y) nil) ys) xs.
 
 (* Skipping instance Applicative__IO *)
 
@@ -874,21 +874,21 @@ Local Definition Ord__option_op_zlze__ {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun a b => negb (Ord__option_op_zl__ b a).
 
-Local Definition Ord__option_min {inst_a} `{Ord inst_a}
-   : option inst_a -> option inst_a -> option inst_a :=
-  fun x y => if Ord__option_op_zlze__ x y : bool then x else y.
-
 Local Definition Ord__option_max {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> option inst_a :=
   fun x y => if Ord__option_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__option_op_zgze__ {inst_a} `{Ord inst_a}
-   : option inst_a -> option inst_a -> bool :=
-  fun a b => negb (Ord__option_op_zl__ a b).
+Local Definition Ord__option_min {inst_a} `{Ord inst_a}
+   : option inst_a -> option inst_a -> option inst_a :=
+  fun x y => if Ord__option_op_zlze__ x y : bool then x else y.
 
 Local Definition Ord__option_op_zg__ {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun a b => Ord__option_op_zl__ b a.
+
+Local Definition Ord__option_op_zgze__ {inst_a} `{Ord inst_a}
+   : option inst_a -> option inst_a -> bool :=
+  fun a b => negb (Ord__option_op_zl__ a b).
 
 Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a}
    : option inst_a -> option inst_a -> bool :=
@@ -1088,20 +1088,20 @@ Program Instance Monad__list : Monad list :=
          op_zgzgze____ := fun {a} {b} => Monad__list_op_zgzgze__ ;
          return___ := fun {a} => Monad__list_return_ |}.
 
-Local Definition Functor__NonEmpty_op_zlzd__
-   : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | b, NEcons _ as_ => NEcons b (b <$ as_)
-      end.
-
 Local Definition Functor__NonEmpty_fmap
    : forall {a} {b}, (a -> b) -> NonEmpty a -> NonEmpty b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | f, NEcons a as_ => NEcons (f a) (fmap f as_)
+      end.
+
+Local Definition Functor__NonEmpty_op_zlzd__
+   : forall {a} {b}, a -> NonEmpty b -> NonEmpty a :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | b, NEcons _ as_ => NEcons b (b <$ as_)
       end.
 
 Program Instance Functor__NonEmpty : Functor NonEmpty :=

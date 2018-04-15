@@ -39,21 +39,23 @@ Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=
 
 (* Skipping instance Show__Identity of class Show *)
 
-Local Definition Foldable__Identity_foldMap
-   : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
-  fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce.
+Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
+  fun {a} => fun '(Mk_Identity x) => cons x nil.
 
-Local Definition Foldable__Identity_fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, Identity m -> m :=
-  fun {m} `{GHC.Base.Monoid m} => Foldable__Identity_foldMap GHC.Base.id.
+Local Definition Foldable__Identity_sum
+   : forall {a}, forall `{GHC.Num.Num a}, Identity a -> a :=
+  fun {a} `{GHC.Num.Num a} => runIdentity.
 
-Local Definition Foldable__Identity_foldl
-   : forall {b} {a}, (b -> a -> b) -> b -> Identity a -> b :=
-  fun {b} {a} => GHC.Prim.coerce.
+Local Definition Foldable__Identity_product
+   : forall {a}, forall `{GHC.Num.Num a}, Identity a -> a :=
+  fun {a} `{GHC.Num.Num a} => runIdentity.
 
-Local Definition Foldable__Identity_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> Identity a -> b :=
-  fun {b} {a} => GHC.Prim.coerce.
+Local Definition Foldable__Identity_null : forall {a}, Identity a -> bool :=
+  fun {a} => fun arg_0__ => false.
+
+Local Definition Foldable__Identity_length
+   : forall {a}, Identity a -> GHC.Num.Int :=
+  fun {a} => fun arg_0__ => #1.
 
 Local Definition Foldable__Identity_foldr
    : forall {a} {b}, (a -> b -> b) -> b -> Identity a -> b :=
@@ -67,23 +69,21 @@ Local Definition Foldable__Identity_foldr'
    : forall {a} {b}, (a -> b -> b) -> b -> Identity a -> b :=
   fun {a} {b} => Foldable__Identity_foldr.
 
-Local Definition Foldable__Identity_length
-   : forall {a}, Identity a -> GHC.Num.Int :=
-  fun {a} => fun arg_0__ => #1.
+Local Definition Foldable__Identity_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> Identity a -> b :=
+  fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition Foldable__Identity_null : forall {a}, Identity a -> bool :=
-  fun {a} => fun arg_0__ => false.
+Local Definition Foldable__Identity_foldl
+   : forall {b} {a}, (b -> a -> b) -> b -> Identity a -> b :=
+  fun {b} {a} => GHC.Prim.coerce.
 
-Local Definition Foldable__Identity_product
-   : forall {a}, forall `{GHC.Num.Num a}, Identity a -> a :=
-  fun {a} `{GHC.Num.Num a} => runIdentity.
+Local Definition Foldable__Identity_foldMap
+   : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Identity a -> m :=
+  fun {m} {a} `{GHC.Base.Monoid m} => GHC.Prim.coerce.
 
-Local Definition Foldable__Identity_sum
-   : forall {a}, forall `{GHC.Num.Num a}, Identity a -> a :=
-  fun {a} `{GHC.Num.Num a} => runIdentity.
-
-Local Definition Foldable__Identity_toList : forall {a}, Identity a -> list a :=
-  fun {a} => fun '(Mk_Identity x) => cons x nil.
+Local Definition Foldable__Identity_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Identity m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Identity_foldMap GHC.Base.id.
 
 Program Instance Foldable__Identity : Data.Foldable.Foldable Identity :=
   fun _ k =>
@@ -115,10 +115,8 @@ Program Instance Functor__Identity : GHC.Base.Functor Identity :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Identity_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Identity_op_zlzd__ |}.
 
-Local Definition Applicative__Identity_liftA2
-   : forall {a} {b} {c},
-     (a -> b -> c) -> Identity a -> Identity b -> Identity c :=
-  fun {a} {b} {c} => GHC.Prim.coerce.
+Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
+  fun {a} => Mk_Identity.
 
 Local Definition Applicative__Identity_op_zlztzg__
    : forall {a} {b}, Identity (a -> b) -> Identity a -> Identity b :=
@@ -129,8 +127,10 @@ Local Definition Applicative__Identity_op_ztzg__
   fun {a} {b} =>
     fun a1 a2 => Applicative__Identity_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
-Local Definition Applicative__Identity_pure : forall {a}, a -> Identity a :=
-  fun {a} => Mk_Identity.
+Local Definition Applicative__Identity_liftA2
+   : forall {a} {b} {c},
+     (a -> b -> c) -> Identity a -> Identity b -> Identity c :=
+  fun {a} {b} {c} => GHC.Prim.coerce.
 
 Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
   fun _ k =>
@@ -139,6 +139,9 @@ Program Instance Applicative__Identity : GHC.Base.Applicative Identity :=
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Identity_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Identity_pure |}.
 
+Local Definition Monad__Identity_return_ : forall {a}, a -> Identity a :=
+  fun {a} => GHC.Base.pure.
+
 Local Definition Monad__Identity_op_zgzgze__
    : forall {a} {b}, Identity a -> (a -> Identity b) -> Identity b :=
   fun {a} {b} => fun m k => k (runIdentity m).
@@ -146,9 +149,6 @@ Local Definition Monad__Identity_op_zgzgze__
 Local Definition Monad__Identity_op_zgzg__
    : forall {a} {b}, Identity a -> Identity b -> Identity b :=
   fun {a} {b} => fun m k => Monad__Identity_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__Identity_return_ : forall {a}, a -> Identity a :=
-  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__Identity : GHC.Base.Monad Identity :=
   fun _ k =>
@@ -166,48 +166,48 @@ Program Instance Monad__Identity : GHC.Base.Monad Identity :=
 
 (* Skipping instance Real__Identity of class Real *)
 
-Local Definition Ord__Identity_compare {inst_a} `{GHC.Base.Ord inst_a}
-   : Identity inst_a -> Identity inst_a -> comparison :=
-  GHC.Prim.coerce GHC.Base.compare.
+Local Definition Ord__Identity_min {inst_a} `{GHC.Base.Ord inst_a}
+   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
+  GHC.Prim.coerce GHC.Base.min.
 
 Local Definition Ord__Identity_max {inst_a} `{GHC.Base.Ord inst_a}
    : Identity inst_a -> Identity inst_a -> Identity inst_a :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Identity_min {inst_a} `{GHC.Base.Ord inst_a}
-   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
-  GHC.Prim.coerce GHC.Base.min.
-
-Local Definition Ord__Identity_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.>_.
+Local Definition Ord__Identity_compare {inst_a} `{GHC.Base.Ord inst_a}
+   : Identity inst_a -> Identity inst_a -> comparison :=
+  GHC.Prim.coerce GHC.Base.compare.
 
 Local Definition Ord__Identity_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Identity inst_a -> Identity inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Identity_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Ord__Identity_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
    : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.<_.
+  GHC.Prim.coerce _GHC.Base.>_.
 
 Local Definition Ord__Identity_op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : Identity inst_a -> Identity inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
+Local Definition Ord__Identity_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
+   : Identity inst_a -> Identity inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.<_.
+
 (* Translating `instance Num__Identity' failed: OOPS! Cannot find information
    for class Qualified "GHC.Num" "Num" unsupported *)
 
-Local Definition Monoid__Identity_mappend {inst_a} `{GHC.Base.Monoid inst_a}
-   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
-  GHC.Prim.coerce GHC.Base.mappend.
+Local Definition Monoid__Identity_mempty {inst_a} `{GHC.Base.Monoid inst_a}
+   : Identity inst_a :=
+  GHC.Prim.coerce GHC.Base.mempty.
 
 Local Definition Monoid__Identity_mconcat {inst_a} `{GHC.Base.Monoid inst_a}
    : list (Identity inst_a) -> Identity inst_a :=
   GHC.Prim.coerce GHC.Base.mconcat.
 
-Local Definition Monoid__Identity_mempty {inst_a} `{GHC.Base.Monoid inst_a}
-   : Identity inst_a :=
-  GHC.Prim.coerce GHC.Base.mempty.
+Local Definition Monoid__Identity_mappend {inst_a} `{GHC.Base.Monoid inst_a}
+   : Identity inst_a -> Identity inst_a -> Identity inst_a :=
+  GHC.Prim.coerce GHC.Base.mappend.
 
 Local Definition Semigroup__Identity_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
   inst_a}
@@ -240,13 +240,13 @@ Program Instance Monoid__Identity {a} `{GHC.Base.Monoid a}
 
 (* Skipping instance FiniteBits__Identity of class FiniteBits *)
 
-Local Definition Eq___Identity_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
-   : Identity inst_a -> Identity inst_a -> bool :=
-  GHC.Prim.coerce _GHC.Base.==_.
-
 Local Definition Eq___Identity_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : Identity inst_a -> Identity inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
+
+Local Definition Eq___Identity_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : Identity inst_a -> Identity inst_a -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
 
 Program Instance Eq___Identity {a} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Identity a) :=

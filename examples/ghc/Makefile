@@ -123,16 +123,20 @@ OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
 
 OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) 
 
-all: $(OUT)/README.md $(OUTFILES) coq
+all: vfiles coq
+
+vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES)
 
 core: $(OUT)/README.md coq
 
-# This target is also used as a dependecy to ensure that $(OUT) exists. 
+# This target is also used as a dependecy to ensure that $(OUT) exists.
 $(OUT)/README.md:
 	mkdir -p $(OUT)
 	> $@
 	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
+
+$(OUT)/edits: $(OUT)/README.md
 	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/_CoqProject: $(OUT)/README.md Makefile

@@ -150,6 +150,39 @@ Local Definition Traversable__GenLocated_mapM {inst_l}
      (a -> m b) -> GenLocated inst_l a -> m (GenLocated inst_l b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__GenLocated_traverse.
 
+Local Definition Foldable__GenLocated_null {inst_l}
+   : forall {a}, GenLocated inst_l a -> bool :=
+  fun {a} => fun '(L _ _) => false.
+
+Local Definition Foldable__GenLocated_foldr {inst_l}
+   : forall {a} {b}, (a -> b -> b) -> b -> GenLocated inst_l a -> b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, L a1 a2 => f a2 z
+      end.
+
+Local Definition Foldable__GenLocated_toList {inst_l}
+   : forall {a}, GenLocated inst_l a -> list a :=
+  fun {a} =>
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__GenLocated_foldr c n t)).
+
+Local Definition Foldable__GenLocated_foldl' {inst_l}
+   : forall {b} {a}, (b -> a -> b) -> b -> GenLocated inst_l a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__GenLocated_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__GenLocated_length {inst_l}
+   : forall {a}, GenLocated inst_l a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__GenLocated_foldl' (fun arg_0__ arg_1__ =>
+                                   match arg_0__, arg_1__ with
+                                   | c, _ => c GHC.Num.+ #1
+                                   end) #0.
+
 Local Definition Foldable__GenLocated_foldMap {inst_l}
    : forall {m} {a},
      forall `{GHC.Base.Monoid m}, (a -> m) -> GenLocated inst_l a -> m :=
@@ -188,38 +221,13 @@ Local Definition Foldable__GenLocated_fold {inst_l}
    : forall {m}, forall `{GHC.Base.Monoid m}, GenLocated inst_l m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__GenLocated_foldMap GHC.Base.id.
 
-Local Definition Foldable__GenLocated_foldr {inst_l}
-   : forall {a} {b}, (a -> b -> b) -> b -> GenLocated inst_l a -> b :=
+Local Definition Functor__GenLocated_op_zlzd__ {inst_l}
+   : forall {a} {b}, a -> GenLocated inst_l b -> GenLocated inst_l a :=
   fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, z, L a1 a2 => f a2 z
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | z, L a1 a2 => L ((fun b1 => b1) a1) ((fun b2 => z) a2)
       end.
-
-Local Definition Foldable__GenLocated_toList {inst_l}
-   : forall {a}, GenLocated inst_l a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build' (fun _ => (fun c n => Foldable__GenLocated_foldr c n t)).
-
-Local Definition Foldable__GenLocated_foldl' {inst_l}
-   : forall {b} {a}, (b -> a -> b) -> b -> GenLocated inst_l a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in
-      Foldable__GenLocated_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__GenLocated_length {inst_l}
-   : forall {a}, GenLocated inst_l a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__GenLocated_foldl' (fun arg_0__ arg_1__ =>
-                                   match arg_0__, arg_1__ with
-                                   | c, _ => c GHC.Num.+ #1
-                                   end) #0.
-
-Local Definition Foldable__GenLocated_null {inst_l}
-   : forall {a}, GenLocated inst_l a -> bool :=
-  fun {a} => fun '(L _ _) => false.
 
 Local Definition Functor__GenLocated_fmap {inst_l}
    : forall {a} {b}, (a -> b) -> GenLocated inst_l a -> GenLocated inst_l b :=
@@ -227,14 +235,6 @@ Local Definition Functor__GenLocated_fmap {inst_l}
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | f, L a1 a2 => L ((fun b1 => b1) a1) (f a2)
-      end.
-
-Local Definition Functor__GenLocated_op_zlzd__ {inst_l}
-   : forall {a} {b}, a -> GenLocated inst_l b -> GenLocated inst_l a :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | z, L a1 a2 => L ((fun b1 => b1) a1) ((fun b2 => z) a2)
       end.
 
 Program Instance Functor__GenLocated {l} : GHC.Base.Functor (GenLocated l) :=
@@ -338,18 +338,6 @@ Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
 
 (* Skipping instance Ord__SrcLoc *)
 
-Definition Ord__RealSrcLoc_op_zl__ :=
-  Ord__RealSrcLoc_op_zl.
-
-Local Definition Ord__RealSrcLoc_op_zg__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b => Ord__RealSrcLoc_op_zl__ b a.
-
-Local Definition Ord__RealSrcLoc_op_zgze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b => negb (Ord__RealSrcLoc_op_zl__ a b).
-
-Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
-  fun a b => negb (Ord__RealSrcLoc_op_zl__ b a).
-
 Local Definition Ord__RealSrcLoc_compare
    : RealSrcLoc -> RealSrcLoc -> comparison :=
   fun a b =>
@@ -365,6 +353,18 @@ Local Definition Ord__RealSrcLoc_compare
         end
     | Gt => Gt
     end.
+
+Definition Ord__RealSrcLoc_op_zl__ :=
+  Ord__RealSrcLoc_op_zl.
+
+Local Definition Ord__RealSrcLoc_op_zlze__ : RealSrcLoc -> RealSrcLoc -> bool :=
+  fun a b => negb (Ord__RealSrcLoc_op_zl__ b a).
+
+Local Definition Ord__RealSrcLoc_op_zg__ : RealSrcLoc -> RealSrcLoc -> bool :=
+  fun a b => Ord__RealSrcLoc_op_zl__ b a.
+
+Local Definition Ord__RealSrcLoc_op_zgze__ : RealSrcLoc -> RealSrcLoc -> bool :=
+  fun a b => negb (Ord__RealSrcLoc_op_zl__ a b).
 
 Local Definition Eq___RealSrcLoc_op_zeze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun arg_0__ arg_1__ =>
@@ -556,14 +556,6 @@ Local Definition Ord__RealSrcSpan_compare
     Util.thenCmp (GHC.Base.compare (realSrcSpanStart a) (realSrcSpanStart b))
                  (GHC.Base.compare (realSrcSpanEnd a) (realSrcSpanEnd b)).
 
-Local Definition Ord__RealSrcSpan_op_zg__
-   : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__RealSrcSpan_op_zgze__
-   : RealSrcSpan -> RealSrcSpan -> bool :=
-  fun x y => Ord__RealSrcSpan_compare x y GHC.Base./= Lt.
-
 Local Definition Ord__RealSrcSpan_op_zl__
    : RealSrcSpan -> RealSrcSpan -> bool :=
   fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Lt.
@@ -579,6 +571,14 @@ Local Definition Ord__RealSrcSpan_max
 Local Definition Ord__RealSrcSpan_min
    : RealSrcSpan -> RealSrcSpan -> RealSrcSpan :=
   fun x y => if Ord__RealSrcSpan_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__RealSrcSpan_op_zg__
+   : RealSrcSpan -> RealSrcSpan -> bool :=
+  fun x y => Ord__RealSrcSpan_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__RealSrcSpan_op_zgze__
+   : RealSrcSpan -> RealSrcSpan -> bool :=
+  fun x y => Ord__RealSrcSpan_compare x y GHC.Base./= Lt.
 
 Program Instance Ord__RealSrcSpan : GHC.Base.Ord RealSrcSpan :=
   fun _ k =>

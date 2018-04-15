@@ -276,23 +276,23 @@ Program Instance Eq___Var : GHC.Base.Eq_ Var :=
     k {| GHC.Base.op_zeze____ := Eq___Var_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Var_op_zsze__ |}.
 
-Local Definition Ord__Var_op_zg__ : Var -> Var -> bool :=
-  fun a b => realUnique a GHC.Base.> realUnique b.
-
 Local Definition Ord__Var_op_zgze__ : Var -> Var -> bool :=
   fun a b => realUnique a GHC.Base.>= realUnique b.
 
-Local Definition Ord__Var_op_zl__ : Var -> Var -> bool :=
-  fun a b => realUnique a GHC.Base.< realUnique b.
+Local Definition Ord__Var_op_zg__ : Var -> Var -> bool :=
+  fun a b => realUnique a GHC.Base.> realUnique b.
 
 Local Definition Ord__Var_op_zlze__ : Var -> Var -> bool :=
   fun a b => realUnique a GHC.Base.<= realUnique b.
 
+Local Definition Ord__Var_max : Var -> Var -> Var :=
+  fun x y => if Ord__Var_op_zlze__ x y : bool then y else x.
+
 Local Definition Ord__Var_min : Var -> Var -> Var :=
   fun x y => if Ord__Var_op_zlze__ x y : bool then x else y.
 
-Local Definition Ord__Var_max : Var -> Var -> Var :=
-  fun x y => if Ord__Var_op_zlze__ x y : bool then y else x.
+Local Definition Ord__Var_op_zl__ : Var -> Var -> bool :=
+  fun a b => realUnique a GHC.Base.< realUnique b.
 
 (* Skipping instance Data__Var of class Data *)
 

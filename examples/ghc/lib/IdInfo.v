@@ -300,17 +300,17 @@ Local Definition Ord__CafInfo_op_zl__ : CafInfo -> CafInfo -> bool :=
 Local Definition Ord__CafInfo_op_zlze__ : CafInfo -> CafInfo -> bool :=
   fun a b => negb (Ord__CafInfo_op_zl__ b a).
 
-Local Definition Ord__CafInfo_min : CafInfo -> CafInfo -> CafInfo :=
-  fun x y => if Ord__CafInfo_op_zlze__ x y : bool then x else y.
-
 Local Definition Ord__CafInfo_max : CafInfo -> CafInfo -> CafInfo :=
   fun x y => if Ord__CafInfo_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__CafInfo_op_zgze__ : CafInfo -> CafInfo -> bool :=
-  fun a b => negb (Ord__CafInfo_op_zl__ a b).
+Local Definition Ord__CafInfo_min : CafInfo -> CafInfo -> CafInfo :=
+  fun x y => if Ord__CafInfo_op_zlze__ x y : bool then x else y.
 
 Local Definition Ord__CafInfo_op_zg__ : CafInfo -> CafInfo -> bool :=
   fun a b => Ord__CafInfo_op_zl__ b a.
+
+Local Definition Ord__CafInfo_op_zgze__ : CafInfo -> CafInfo -> bool :=
+  fun a b => negb (Ord__CafInfo_op_zl__ a b).
 
 Local Definition Eq___CafInfo_op_zeze__ : CafInfo -> CafInfo -> bool :=
   fun arg_0__ arg_1__ =>

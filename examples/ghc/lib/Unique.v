@@ -64,11 +64,11 @@ Definition eqUnique : Unique -> Unique -> bool :=
     | MkUnique u1, MkUnique u2 => u1 GHC.Base.== u2
     end.
 
-Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
-  fun a b => negb (eqUnique a b).
-
 Local Definition Eq___Unique_op_zeze__ : Unique -> Unique -> bool :=
   fun a b => eqUnique a b.
+
+Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
+  fun a b => negb (eqUnique a b).
 
 Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
   fun _ k =>

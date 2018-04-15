@@ -47,17 +47,13 @@ Local Definition Ord__Proxy_compare {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> comparison :=
   fun arg_0__ arg_1__ => Eq.
 
-Local Definition Ord__Proxy_op_zg__ {inst_s}
-   : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
-  fun x y => Ord__Proxy_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__Proxy_op_zgze__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
   fun x y => Ord__Proxy_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Proxy_op_zl__ {inst_s}
+Local Definition Ord__Proxy_op_zg__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
-  fun x y => Ord__Proxy_compare x y GHC.Base.== Lt.
+  fun x y => Ord__Proxy_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Proxy_op_zlze__ {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
@@ -70,6 +66,10 @@ Local Definition Ord__Proxy_max {inst_s}
 Local Definition Ord__Proxy_min {inst_s}
    : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
   fun x y => if Ord__Proxy_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Proxy_op_zl__ {inst_s}
+   : (Proxy inst_s) -> (Proxy inst_s) -> bool :=
+  fun x y => Ord__Proxy_compare x y GHC.Base.== Lt.
 
 Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) :=
   fun _ k =>
@@ -95,16 +95,16 @@ Local Definition Semigroup__Proxy_op_zlzlzgzg__ {inst_s}
 Program Instance Semigroup__Proxy {s} : GHC.Base.Semigroup (Proxy s) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Proxy_op_zlzlzgzg__ |}.
 
-Local Definition Monoid__Proxy_mappend {inst_s}
-   : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
-  _GHC.Base.<<>>_.
+Local Definition Monoid__Proxy_mempty {inst_s} : (Proxy inst_s) :=
+  Mk_Proxy.
 
 Local Definition Monoid__Proxy_mconcat {inst_s}
    : list (Proxy inst_s) -> (Proxy inst_s) :=
   fun arg_0__ => Mk_Proxy.
 
-Local Definition Monoid__Proxy_mempty {inst_s} : (Proxy inst_s) :=
-  Mk_Proxy.
+Local Definition Monoid__Proxy_mappend {inst_s}
+   : (Proxy inst_s) -> (Proxy inst_s) -> (Proxy inst_s) :=
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__Proxy {s} : GHC.Base.Monoid (Proxy s) :=
   fun _ k =>
@@ -125,6 +125,9 @@ Program Instance Functor__Proxy : GHC.Base.Functor Proxy :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Proxy_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Proxy_op_zlzd__ |}.
 
+Local Definition Applicative__Proxy_pure : forall {a}, a -> Proxy a :=
+  fun {a} => fun arg_0__ => Mk_Proxy.
+
 Local Definition Applicative__Proxy_op_zlztzg__
    : forall {a} {b}, Proxy (a -> b) -> Proxy a -> Proxy b :=
   fun {a} {b} => fun arg_0__ arg_1__ => Mk_Proxy.
@@ -139,9 +142,6 @@ Local Definition Applicative__Proxy_liftA2
   fun {a} {b} {c} =>
     fun f x => Applicative__Proxy_op_zlztzg__ (GHC.Base.fmap f x).
 
-Local Definition Applicative__Proxy_pure : forall {a}, a -> Proxy a :=
-  fun {a} => fun arg_0__ => Mk_Proxy.
-
 Program Instance Applicative__Proxy : GHC.Base.Applicative Proxy :=
   fun _ k =>
     k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Proxy_liftA2 ;
@@ -151,6 +151,9 @@ Program Instance Applicative__Proxy : GHC.Base.Applicative Proxy :=
 
 (* Skipping instance Alternative__Proxy of class Alternative *)
 
+Local Definition Monad__Proxy_return_ : forall {a}, a -> Proxy a :=
+  fun {a} => GHC.Base.pure.
+
 Local Definition Monad__Proxy_op_zgzgze__
    : forall {a} {b}, Proxy a -> (a -> Proxy b) -> Proxy b :=
   fun {a} {b} => fun arg_0__ arg_1__ => Mk_Proxy.
@@ -158,9 +161,6 @@ Local Definition Monad__Proxy_op_zgzgze__
 Local Definition Monad__Proxy_op_zgzg__
    : forall {a} {b}, Proxy a -> Proxy b -> Proxy b :=
   fun {a} {b} => fun m k => Monad__Proxy_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__Proxy_return_ : forall {a}, a -> Proxy a :=
-  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__Proxy : GHC.Base.Monad Proxy :=
   fun _ k =>

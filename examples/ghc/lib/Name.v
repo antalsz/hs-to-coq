@@ -120,22 +120,6 @@ Definition cmpName : Name -> Name -> comparison :=
 Local Definition Ord__Name_compare : Name -> Name -> comparison :=
   fun a b => cmpName a b.
 
-Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
-  fun a b =>
-    match (Ord__Name_compare a b) with
-    | Lt => false
-    | Eq => false
-    | Gt => true
-    end.
-
-Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
-  fun a b =>
-    match (Ord__Name_compare a b) with
-    | Lt => false
-    | Eq => true
-    | Gt => true
-    end.
-
 Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
   fun a b =>
     match (Ord__Name_compare a b) with
@@ -157,6 +141,22 @@ Local Definition Ord__Name_max : Name -> Name -> Name :=
 
 Local Definition Ord__Name_min : Name -> Name -> Name :=
   fun x y => if Ord__Name_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
+  fun a b =>
+    match (Ord__Name_compare a b) with
+    | Lt => false
+    | Eq => false
+    | Gt => true
+    end.
+
+Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
+  fun a b =>
+    match (Ord__Name_compare a b) with
+    | Lt => false
+    | Eq => true
+    | Gt => true
+    end.
 
 Local Definition Eq___Name_op_zeze__ : Name -> Name -> bool :=
   fun a b => match cmpName a b with | Eq => true | _ => false end.

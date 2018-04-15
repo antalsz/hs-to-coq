@@ -72,21 +72,6 @@ Instance MergeSetDefault {a} : Default (MergeSet a) :=
 
 (* Converted value declarations: *)
 
-Local Definition Foldable__Set__fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, Set_ m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    let fix go arg_0__
-              := match arg_0__ with
-                 | Tip => GHC.Base.mempty
-                 | Bin num_1__ k _ _ =>
-                     if num_1__ GHC.Base.== #1 : bool then k else
-                     match arg_0__ with
-                     | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend k (go r))
-                     | _ => GHC.Err.patternFailure
-                     end
-                 end in
-    go.
-
 Local Definition Foldable__Set__foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Set_ a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
@@ -102,6 +87,21 @@ Local Definition Foldable__Set__foldMap
                        end
                    end in
       go t.
+
+Local Definition Foldable__Set__fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Set_ m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Tip => GHC.Base.mempty
+                 | Bin num_1__ k _ _ =>
+                     if num_1__ GHC.Base.== #1 : bool then k else
+                     match arg_0__ with
+                     | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend k (go r))
+                     | _ => GHC.Err.patternFailure
+                     end
+                 end in
+    go.
 
 (* Skipping instance Data__Set_ of class Data *)
 
@@ -171,17 +171,17 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
                  end in
     go z.
 
-Local Definition Foldable__Set__sum
-   : forall {a}, forall `{GHC.Num.Num a}, Set_ a -> a :=
-  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
+Local Definition Foldable__Set__foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> Set_ a -> b :=
+  fun {b} {a} => foldl'.
 
 Local Definition Foldable__Set__product
    : forall {a}, forall `{GHC.Num.Num a}, Set_ a -> a :=
   fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ #1.
 
-Local Definition Foldable__Set__foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> Set_ a -> b :=
-  fun {b} {a} => foldl'.
+Local Definition Foldable__Set__sum
+   : forall {a}, forall `{GHC.Num.Num a}, Set_ a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
 
 Definition foldr {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   fun f z =>
@@ -216,14 +216,6 @@ Local Definition Ord__Set__compare {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> comparison :=
   fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
 
-Local Definition Ord__Set__op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => Ord__Set__compare x y GHC.Base.== Gt.
-
-Local Definition Ord__Set__op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
-   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => Ord__Set__compare x y GHC.Base./= Lt.
-
 Local Definition Ord__Set__op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
   fun x y => Ord__Set__compare x y GHC.Base.== Lt.
@@ -239,6 +231,14 @@ Local Definition Ord__Set__max {inst_a} `{GHC.Base.Ord inst_a}
 Local Definition Ord__Set__min {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
   fun x y => if Ord__Set__op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Set__op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
+   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
+  fun x y => Ord__Set__compare x y GHC.Base.== Gt.
+
+Local Definition Ord__Set__op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
+   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
+  fun x y => Ord__Set__compare x y GHC.Base./= Lt.
 
 Definition fold {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   foldr.

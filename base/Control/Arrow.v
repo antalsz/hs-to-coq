@@ -221,10 +221,6 @@ Local Definition ArrowApply__arrow_app
 
 (* Skipping instance Arrow__Kleisli *)
 
-Local Definition Arrow__arrow_arr
-   : forall {b} {c}, (b -> c) -> GHC.Prim.arrow b c :=
-  fun {b} {c} => fun f => f.
-
 Local Definition Arrow__arrow_op_ztztzt__
    : forall {b} {c} {b'} {c'},
      GHC.Prim.arrow b c ->
@@ -246,6 +242,10 @@ Local Definition Arrow__arrow_first
      GHC.Prim.arrow b c -> GHC.Prim.arrow (b * d)%type (c * d)%type :=
   fun {b} {c} {d} =>
     (fun arg_0__ => Arrow__arrow_op_ztztzt__ arg_0__ Control.Category.id).
+
+Local Definition Arrow__arrow_arr
+   : forall {b} {c}, (b -> c) -> GHC.Prim.arrow b c :=
+  fun {b} {c} => fun f => f.
 
 Local Definition Arrow__arrow_op_zazaza__
    : forall {b} {c} {c'},

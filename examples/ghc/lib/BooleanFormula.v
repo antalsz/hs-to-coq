@@ -202,6 +202,41 @@ Local Definition Traversable__BooleanFormula_mapM
      (a -> m b) -> BooleanFormula a -> m (BooleanFormula b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__BooleanFormula_traverse.
 
+Fixpoint Foldable__BooleanFormula_null {a} (arg_0__ : BooleanFormula a) : bool
+           := match arg_0__ with
+              | Var _ => false
+              | And a1 =>
+                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
+              | Or a1 =>
+                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
+              | Parens a1 => Data.Foldable.all Foldable__BooleanFormula_null a1
+              end.
+
+Local Definition Foldable__BooleanFormula_foldr {a} {b}
+   : (a -> b -> b) -> b -> BooleanFormula a -> b :=
+  BooleanFormula_foldr.
+
+Local Definition Foldable__BooleanFormula_toList
+   : forall {a}, BooleanFormula a -> list a :=
+  fun {a} =>
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__BooleanFormula_foldr c n t)).
+
+Local Definition Foldable__BooleanFormula_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__BooleanFormula_length
+   : forall {a}, BooleanFormula a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__BooleanFormula_foldl' (fun arg_0__ arg_1__ =>
+                                       match arg_0__, arg_1__ with
+                                       | c, _ => c GHC.Num.+ #1
+                                       end) #0.
+
 Local Definition Foldable__BooleanFormula_foldMap {m} {a} `{_
    : GHC.Base.Monoid m}
    : (a -> m) -> BooleanFormula a -> m :=
@@ -238,41 +273,6 @@ Local Definition Foldable__BooleanFormula_sum
 Local Definition Foldable__BooleanFormula_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, BooleanFormula m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__BooleanFormula_foldMap GHC.Base.id.
-
-Local Definition Foldable__BooleanFormula_foldr {a} {b}
-   : (a -> b -> b) -> b -> BooleanFormula a -> b :=
-  BooleanFormula_foldr.
-
-Local Definition Foldable__BooleanFormula_toList
-   : forall {a}, BooleanFormula a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build' (fun _ => (fun c n => Foldable__BooleanFormula_foldr c n t)).
-
-Local Definition Foldable__BooleanFormula_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in
-      Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__BooleanFormula_length
-   : forall {a}, BooleanFormula a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__BooleanFormula_foldl' (fun arg_0__ arg_1__ =>
-                                       match arg_0__, arg_1__ with
-                                       | c, _ => c GHC.Num.+ #1
-                                       end) #0.
-
-Fixpoint Foldable__BooleanFormula_null {a} (arg_0__ : BooleanFormula a) : bool
-           := match arg_0__ with
-              | Var _ => false
-              | And a1 =>
-                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
-              | Or a1 =>
-                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
-              | Parens a1 => Data.Foldable.all Foldable__BooleanFormula_null a1
-              end.
 
 Program Instance Foldable__BooleanFormula
    : Data.Foldable.Foldable BooleanFormula :=

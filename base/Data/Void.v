@@ -37,14 +37,11 @@ Program Instance Semigroup__Void : GHC.Base.Semigroup Void :=
 Local Definition Ord__Void_compare : Void -> Void -> comparison :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => Eq end.
 
-Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
-  fun x y => Ord__Void_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__Void_op_zgze__ : Void -> Void -> bool :=
   fun x y => Ord__Void_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Void_op_zl__ : Void -> Void -> bool :=
-  fun x y => Ord__Void_compare x y GHC.Base.== Lt.
+Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
+  fun x y => Ord__Void_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__Void_op_zlze__ : Void -> Void -> bool :=
   fun x y => Ord__Void_compare x y GHC.Base./= Gt.
@@ -54,6 +51,9 @@ Local Definition Ord__Void_max : Void -> Void -> Void :=
 
 Local Definition Ord__Void_min : Void -> Void -> Void :=
   fun x y => if Ord__Void_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Void_op_zl__ : Void -> Void -> bool :=
+  fun x y => Ord__Void_compare x y GHC.Base.== Lt.
 
 (* Skipping instance Generic__Void of class Generic *)
 

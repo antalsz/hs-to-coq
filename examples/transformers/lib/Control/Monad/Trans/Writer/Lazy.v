@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Coq.Program.Basics.
@@ -118,20 +119,15 @@ Local Definition Ord__WriterT_compare {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
      (WriterT inst_w inst_m inst_a) -> comparison :=
   compare1.
 
-Local Definition Ord__WriterT_op_zg__ {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
-   : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
-  fun x y => Ord__WriterT_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__WriterT_op_zgze__ {inst_w} {inst_m} {inst_a}
   `{GHC.Base.Ord inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
   fun x y => Ord__WriterT_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__WriterT_op_zl__ {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
+Local Definition Ord__WriterT_op_zg__ {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
   inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
-  fun x y => Ord__WriterT_compare x y GHC.Base.== Lt.
+  fun x y => Ord__WriterT_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__WriterT_op_zlze__ {inst_w} {inst_m} {inst_a}
   `{GHC.Base.Ord inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
@@ -150,6 +146,11 @@ Local Definition Ord__WriterT_min {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
      (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) :=
   fun x y => if Ord__WriterT_op_zlze__ x y : bool then x else y.
 
+Local Definition Ord__WriterT_op_zl__ {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
+  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+   : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
+  fun x y => Ord__WriterT_compare x y GHC.Base.== Lt.
+
 Program Instance Ord__WriterT {w} {m} {a} `{GHC.Base.Ord w} `{Ord1 m}
   `{GHC.Base.Ord a}
    : GHC.Base.Ord (WriterT w m a) :=
@@ -165,6 +166,16 @@ Program Instance Ord__WriterT {w} {m} {a} `{GHC.Base.Ord w} `{Ord1 m}
 (* Skipping instance Read__WriterT of class Read *)
 
 (* Skipping instance Show__WriterT of class Show *)
+
+Local Definition Foldable__WriterT_null {inst_f} {inst_w}
+  `{(Data.Foldable.Foldable inst_f)}
+   : forall {a}, (WriterT inst_w inst_f) a -> bool :=
+  fun {a} => fun '(Mk_WriterT t) => Data.Foldable.null t.
+
+Local Definition Foldable__WriterT_length {inst_f} {inst_w}
+  `{(Data.Foldable.Foldable inst_f)}
+   : forall {a}, (WriterT inst_w inst_f) a -> GHC.Num.Int :=
+  fun {a} => fun '(Mk_WriterT t) => Data.Foldable.length t.
 
 Local Definition Foldable__WriterT_foldMap {inst_f} {inst_w}
   `{(Data.Foldable.Foldable inst_f)}
@@ -233,16 +244,6 @@ Local Definition Foldable__WriterT_fold {inst_f} {inst_w}
    : forall {m}, forall `{GHC.Base.Monoid m}, (WriterT inst_w inst_f) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__WriterT_foldMap GHC.Base.id.
 
-Local Definition Foldable__WriterT_length {inst_f} {inst_w}
-  `{(Data.Foldable.Foldable inst_f)}
-   : forall {a}, (WriterT inst_w inst_f) a -> GHC.Num.Int :=
-  fun {a} => fun '(Mk_WriterT t) => Data.Foldable.length t.
-
-Local Definition Foldable__WriterT_null {inst_f} {inst_w}
-  `{(Data.Foldable.Foldable inst_f)}
-   : forall {a}, (WriterT inst_w inst_f) a -> bool :=
-  fun {a} => fun '(Mk_WriterT t) => Data.Foldable.null t.
-
 Program Instance Foldable__WriterT {f} {w} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (WriterT w f) :=
   fun _ k =>
@@ -294,15 +295,28 @@ Local Definition Traversable__WriterT_mapM {inst_f} {inst_w}
      (a -> m b) -> (WriterT inst_w inst_f) a -> m ((WriterT inst_w inst_f) b) :=
   fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__WriterT_traverse.
 
-(* Translating `instance Applicative__WriterT' failed: Giving up on mutual
-   recursion[Qualified "GHC.Base" "liftA2",Qualified "GHC.Base" "op_zlztzg__"]
-   unsupported *)
+Local Definition Applicative__WriterT_op_zlztzg__ {inst_w} {inst_m}
+  `{GHC.Base.Monoid inst_w} `{GHC.Base.Applicative inst_m}
+   : forall {a} {b},
+     (WriterT inst_w inst_m) (a -> b) ->
+     (WriterT inst_w inst_m) a -> (WriterT inst_w inst_m) b :=
+  fun {a} {b} =>
+    fun f v =>
+      let k :=
+        fun arg_0__ arg_1__ =>
+          match arg_0__, arg_1__ with
+          | pair a w, pair b w' => pair (a b) (GHC.Base.mappend w w')
+          end in
+      Mk_WriterT (GHC.Base.liftA2 k (runWriterT f) (runWriterT v)).
 
 (* Skipping instance Alternative__WriterT of class Alternative *)
 
-(* Skipping instance Monad__WriterT *)
-
-(* Skipping instance MonadFail__WriterT *)
+Definition Monad__WriterT_op_zgzgze__ {inst_w} {inst_m} `{_
+   : GHC.Base.Monoid inst_w} `{_ : GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     WriterT inst_w inst_m a ->
+     (a -> WriterT inst_w inst_m b) -> WriterT inst_w inst_m b :=
+  fun {a} {b} => Monad__WriterT_tmp.
 
 (* Skipping instance MonadPlus__WriterT of class MonadPlus *)
 
@@ -389,6 +403,67 @@ Program Instance Functor__WriterT {m} {w} `{(GHC.Base.Functor m)}
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WriterT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WriterT_op_zlzd__ |}.
 
+Local Definition Applicative__WriterT_liftA2 {inst_w} {inst_m} `{GHC.Base.Monoid
+  inst_w} `{GHC.Base.Applicative inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (WriterT inst_w inst_m) a ->
+     (WriterT inst_w inst_m) b -> (WriterT inst_w inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__WriterT_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__WriterT_pure {inst_w} {inst_m} `{GHC.Base.Monoid
+  inst_w} `{GHC.Base.Applicative inst_m}
+   : forall {a}, a -> (WriterT inst_w inst_m) a :=
+  fun {a} => fun a => Mk_WriterT (GHC.Base.pure (pair a GHC.Base.mempty)).
+
+Local Definition Applicative__WriterT_op_ztzg__ {inst_w} {inst_m}
+  `{GHC.Base.Monoid inst_w} `{GHC.Base.Applicative inst_m}
+   : forall {a} {b},
+     (WriterT inst_w inst_m) a ->
+     (WriterT inst_w inst_m) b -> (WriterT inst_w inst_m) b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__WriterT_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
+Program Instance Applicative__WriterT {w} {m} `{GHC.Base.Monoid w}
+  `{GHC.Base.Applicative m}
+   : GHC.Base.Applicative (WriterT w m) :=
+  fun _ k =>
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__WriterT_liftA2 ;
+         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WriterT_op_zlztzg__ ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WriterT_op_ztzg__ ;
+         GHC.Base.pure__ := fun {a} => Applicative__WriterT_pure |}.
+
+Local Definition Monad__WriterT_op_zgzg__ {inst_w} {inst_m} `{GHC.Base.Monoid
+  inst_w} `{GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     (WriterT inst_w inst_m) a ->
+     (WriterT inst_w inst_m) b -> (WriterT inst_w inst_m) b :=
+  fun {a} {b} => fun m k => Monad__WriterT_op_zgzgze__ m (fun arg_0__ => k).
+
+Local Definition Monad__WriterT_return_ {inst_w} {inst_m} `{GHC.Base.Monoid
+  inst_w} `{GHC.Base.Monad inst_m}
+   : forall {a}, a -> (WriterT inst_w inst_m) a :=
+  fun {a} => GHC.Base.pure.
+
+Program Instance Monad__WriterT {w} {m} `{GHC.Base.Monoid w} `{GHC.Base.Monad m}
+   : GHC.Base.Monad (WriterT w m) :=
+  fun _ k =>
+    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WriterT_op_zgzg__ ;
+         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WriterT_op_zgzgze__ ;
+         GHC.Base.return___ := fun {a} => Monad__WriterT_return_ |}.
+
+Local Definition MonadFail__WriterT_fail {inst_w} {inst_m} `{GHC.Base.Monoid
+  inst_w} `{Control.Monad.Fail.MonadFail inst_m}
+   : forall {a}, GHC.Base.String -> (WriterT inst_w inst_m) a :=
+  fun {a} => fun msg => Mk_WriterT (Control.Monad.Fail.fail msg).
+
+Program Instance MonadFail__WriterT {w} {m} `{GHC.Base.Monoid w}
+  `{Control.Monad.Fail.MonadFail m}
+   : Control.Monad.Fail.MonadFail (WriterT w m) :=
+  fun _ k =>
+    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__WriterT_fail |}.
+
 Program Instance Traversable__WriterT {f} {w} `{(Data.Traversable.Traversable
    f)}
    : Data.Traversable.Traversable (WriterT w f) :=
@@ -424,28 +499,33 @@ Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
   fun w => writer (pair tt w).
 
 (* External variables:
-     Eq1 Gt Identity Lt Mk_Identity Ord1 Type bool compare1 comparison eq1
-     liftCompare liftCompare2 liftCompare__ liftEq liftEq2 liftEq__ list negb op_zt__
-     pair runIdentity tt unit Control.Monad.Signatures.CallCC
-     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
-     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length Data.Foldable.length__ Data.Foldable.null
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.SemigroupInternal.Mk_Dual
-     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Eq1 Gt Identity Lt Mk_Identity Monad__WriterT_tmp Ord1 Type bool compare1
+     comparison eq1 liftCompare liftCompare2 liftCompare__ liftEq liftEq2 liftEq__
+     list negb op_zt__ pair runIdentity tt unit Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
+     Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length
+     Data.Foldable.length__ Data.Foldable.null Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse Data.Traversable.traverse__ Data.Tuple.fst
      Data.Tuple.snd GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build' GHC.Base.compare GHC.Base.compare__
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
-     GHC.Base.max__ GHC.Base.mempty GHC.Base.min__ GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
-     GHC.Base.op_zgzgze__ GHC.Base.op_zl____ GHC.Base.op_zlzd____
-     GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.return_
-     GHC.Num.Int GHC.Num.Num
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build' GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.id GHC.Base.liftA2 GHC.Base.liftA2__ GHC.Base.mappend GHC.Base.max__
+     GHC.Base.mempty GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___ GHC.Num.Int GHC.Num.Num
 *)

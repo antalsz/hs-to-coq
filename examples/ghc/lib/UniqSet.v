@@ -39,16 +39,16 @@ Instance Unpeel_UniqSet ele
 
 (* Skipping instance Outputable__UniqSet of class Outputable *)
 
-Local Definition Monoid__UniqSet_mappend {inst_a}
-   : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
-  GHC.Prim.coerce GHC.Base.mappend.
+Local Definition Monoid__UniqSet_mempty {inst_a} : UniqSet inst_a :=
+  Mk_UniqSet GHC.Base.mempty.
 
 Local Definition Monoid__UniqSet_mconcat {inst_a}
    : list (UniqSet inst_a) -> UniqSet inst_a :=
   GHC.Prim.coerce GHC.Base.mconcat.
 
-Local Definition Monoid__UniqSet_mempty {inst_a} : UniqSet inst_a :=
-  Mk_UniqSet GHC.Base.mempty.
+Local Definition Monoid__UniqSet_mappend {inst_a}
+   : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
+  GHC.Prim.coerce GHC.Base.mappend.
 
 Local Definition Semigroup__UniqSet_op_zlzlzgzg__ {inst_a}
    : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=

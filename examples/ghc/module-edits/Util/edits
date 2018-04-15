@@ -48,6 +48,9 @@ skip Util.foldl2
 skip Util.mapAccumL2
 skip Util.only
 
+# Environment dependent
+skip Util.isDarwinHost
+
 ## TODO
 rewrite forall x, GHC.Unicode.toUpper x = x
 

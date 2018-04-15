@@ -106,6 +106,14 @@ Program Instance Functor__Constant {a} : GHC.Base.Functor (Constant a) :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Constant_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Constant_op_zlzd__ |}.
 
+Local Definition Foldable__Constant_null {inst_a}
+   : forall {a}, (Constant inst_a) a -> bool :=
+  fun {a} => fun '(Mk_Constant _) => true.
+
+Local Definition Foldable__Constant_length {inst_a}
+   : forall {a}, (Constant inst_a) a -> GHC.Num.Int :=
+  fun {a} => fun '(Mk_Constant _) => #0.
+
 Local Definition Foldable__Constant_foldMap {inst_a}
    : forall {m} {a},
      forall `{GHC.Base.Monoid m}, (a -> m) -> (Constant inst_a) a -> m :=
@@ -165,14 +173,6 @@ Local Definition Foldable__Constant_sum {inst_a}
 Local Definition Foldable__Constant_fold {inst_a}
    : forall {m}, forall `{GHC.Base.Monoid m}, (Constant inst_a) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__Constant_foldMap GHC.Base.id.
-
-Local Definition Foldable__Constant_length {inst_a}
-   : forall {a}, (Constant inst_a) a -> GHC.Num.Int :=
-  fun {a} => fun '(Mk_Constant _) => #0.
-
-Local Definition Foldable__Constant_null {inst_a}
-   : forall {a}, (Constant inst_a) a -> bool :=
-  fun {a} => fun '(Mk_Constant _) => true.
 
 Program Instance Foldable__Constant {a} : Data.Foldable.Foldable (Constant a) :=
   fun _ k =>
@@ -246,6 +246,10 @@ Program Instance Semigroup__Constant {a} {b} `{(GHC.Base.Semigroup a)}
   fun _ k =>
     k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Constant_op_zlzlzgzg__ |}.
 
+Local Definition Applicative__Constant_pure {inst_a} `{(GHC.Base.Monoid inst_a)}
+   : forall {a}, a -> (Constant inst_a) a :=
+  fun {a} => fun arg_0__ => Mk_Constant GHC.Base.mempty.
+
 Local Definition Applicative__Constant_op_zlztzg__ {inst_a} `{(GHC.Base.Monoid
    inst_a)}
    : forall {a} {b},
@@ -271,10 +275,6 @@ Local Definition Applicative__Constant_liftA2 {inst_a} `{(GHC.Base.Monoid
   fun {a} {b} {c} =>
     fun f x => Applicative__Constant_op_zlztzg__ (GHC.Base.fmap f x).
 
-Local Definition Applicative__Constant_pure {inst_a} `{(GHC.Base.Monoid inst_a)}
-   : forall {a}, a -> (Constant inst_a) a :=
-  fun {a} => fun arg_0__ => Mk_Constant GHC.Base.mempty.
-
 Program Instance Applicative__Constant {a} `{(GHC.Base.Monoid a)}
    : GHC.Base.Applicative (Constant a) :=
   fun _ k =>
@@ -283,16 +283,16 @@ Program Instance Applicative__Constant {a} `{(GHC.Base.Monoid a)}
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Constant_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__Constant_pure |}.
 
+Local Definition Monoid__Constant_mempty {inst_a} {inst_b} `{(GHC.Base.Monoid
+   inst_a)}
+   : (Constant inst_a inst_b) :=
+  Mk_Constant GHC.Base.mempty.
+
 Local Definition Monoid__Constant_mappend {inst_a} {inst_b} `{(GHC.Base.Monoid
    inst_a)}
    : (Constant inst_a inst_b) ->
      (Constant inst_a inst_b) -> (Constant inst_a inst_b) :=
   _GHC.Base.<<>>_.
-
-Local Definition Monoid__Constant_mempty {inst_a} {inst_b} `{(GHC.Base.Monoid
-   inst_a)}
-   : (Constant inst_a inst_b) :=
-  Mk_Constant GHC.Base.mempty.
 
 Local Definition Monoid__Constant_mconcat {inst_a} {inst_b} `{(GHC.Base.Monoid
    inst_a)}
@@ -306,20 +306,20 @@ Program Instance Monoid__Constant {a} {b} `{(GHC.Base.Monoid a)}
          GHC.Base.mconcat__ := Monoid__Constant_mconcat ;
          GHC.Base.mempty__ := Monoid__Constant_mempty |}.
 
-Local Definition Bifunctor__Constant_first
-   : forall {a} {b} {c}, (a -> b) -> Constant a c -> Constant b c :=
-  fun {a} {b} {c} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | f, Mk_Constant x => Mk_Constant (f x)
-      end.
-
 Local Definition Bifunctor__Constant_second
    : forall {b} {c} {a}, (b -> c) -> Constant a b -> Constant a c :=
   fun {b} {c} {a} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
       | _, Mk_Constant x => Mk_Constant x
+      end.
+
+Local Definition Bifunctor__Constant_first
+   : forall {a} {b} {c}, (a -> b) -> Constant a c -> Constant b c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | f, Mk_Constant x => Mk_Constant (f x)
       end.
 
 Local Definition Bifunctor__Constant_bimap

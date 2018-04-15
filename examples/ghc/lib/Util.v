@@ -277,9 +277,6 @@ Definition ghciSupported : bool :=
 Definition ghciTablesNextToCode : bool :=
   false.
 
-Definition isDarwinHost : bool :=
-  true.
-
 Definition isEqual : comparison -> bool :=
   fun arg_0__ => match arg_0__ with | Gt => false | Eq => true | Lt => false end.
 

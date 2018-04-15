@@ -160,17 +160,6 @@ Require Import Coq.Numbers.BinNums.
 
 (* Skipping instance Monad__WhenMissing *)
 
-Local Definition Foldable__IntMap_fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, IntMap m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    let fix go arg_0__
-              := match arg_0__ with
-                 | Nil => GHC.Base.mempty
-                 | Tip _ v => v
-                 | Bin _ _ l r => GHC.Base.mappend (go l) (go r)
-                 end in
-    go.
-
 Local Definition Foldable__IntMap_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> IntMap a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
@@ -182,6 +171,17 @@ Local Definition Foldable__IntMap_foldMap
                    | Bin _ _ l r => GHC.Base.mappend (go l) (go r)
                    end in
       go t.
+
+Local Definition Foldable__IntMap_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, IntMap m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Nil => GHC.Base.mempty
+                 | Tip _ v => v
+                 | Bin _ _ l r => GHC.Base.mappend (go l) (go r)
+                 end in
+    go.
 
 (* Skipping instance NFData__IntMap of class NFData *)
 
@@ -492,17 +492,17 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> IntMap b -> a :=
       | _ => go z t
       end.
 
-Local Definition Foldable__IntMap_sum
-   : forall {a}, forall `{GHC.Num.Num a}, IntMap a -> a :=
-  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
+Local Definition Foldable__IntMap_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> IntMap a -> b :=
+  fun {b} {a} => foldl'.
 
 Local Definition Foldable__IntMap_product
    : forall {a}, forall `{GHC.Num.Num a}, IntMap a -> a :=
   fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ #1.
 
-Local Definition Foldable__IntMap_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> IntMap a -> b :=
-  fun {b} {a} => foldl'.
+Local Definition Foldable__IntMap_sum
+   : forall {a}, forall `{GHC.Num.Num a}, IntMap a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
 
 Definition foldlWithKey {a} {b}
    : (a -> Data.IntSet.Internal.Key -> b -> a) -> a -> IntMap b -> a :=
@@ -616,14 +616,6 @@ Local Definition Ord__IntMap_compare {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> comparison :=
   fun m1 m2 => GHC.Base.compare (toList m1) (toList m2).
 
-Local Definition Ord__IntMap_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
-  fun x y => Ord__IntMap_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__IntMap_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
-   : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
-  fun x y => Ord__IntMap_compare x y GHC.Base./= Lt.
-
 Local Definition Ord__IntMap_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
   fun x y => Ord__IntMap_compare x y GHC.Base.== Lt.
@@ -639,6 +631,14 @@ Local Definition Ord__IntMap_max {inst_a} `{GHC.Base.Ord inst_a}
 Local Definition Ord__IntMap_min {inst_a} `{GHC.Base.Ord inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
   fun x y => if Ord__IntMap_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__IntMap_op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
+   : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
+  fun x y => Ord__IntMap_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__IntMap_op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
+   : (IntMap inst_a) -> (IntMap inst_a) -> bool :=
+  fun x y => Ord__IntMap_compare x y GHC.Base./= Lt.
 
 Definition assocs {a} : IntMap a -> list (Data.IntSet.Internal.Key * a)%type :=
   toAscList.
@@ -1718,6 +1718,11 @@ Local Definition Traversable__IntMap_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun f => traverseWithKey (fun arg_0__ => f).
 
+Local Definition Traversable__IntMap_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m}, (a -> m b) -> IntMap a -> m (IntMap b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__IntMap_traverse.
+
 Local Definition Traversable__IntMap_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f}, IntMap (f a) -> f (IntMap a) :=
@@ -1727,11 +1732,6 @@ Local Definition Traversable__IntMap_sequenceA
 Local Definition Traversable__IntMap_sequence
    : forall {m} {a}, forall `{GHC.Base.Monad m}, IntMap (m a) -> m (IntMap a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__IntMap_sequenceA.
-
-Local Definition Traversable__IntMap_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> IntMap a -> m (IntMap b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__IntMap_traverse.
 
 Program Instance Traversable__IntMap : Data.Traversable.Traversable IntMap :=
   fun _ k =>

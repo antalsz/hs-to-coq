@@ -47,6 +47,10 @@ Program Instance Functor__ContT {r} {m} : GHC.Base.Functor (ContT r m) :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ContT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ContT_op_zlzd__ |}.
 
+Local Definition Applicative__ContT_pure {inst_r} {inst_m}
+   : forall {a}, a -> (ContT inst_r inst_m) a :=
+  fun {a} => fun x => Mk_ContT (fun arg_0__ => arg_0__ x).
+
 Local Definition Applicative__ContT_op_zlztzg__ {inst_r} {inst_m}
    : forall {a} {b},
      (ContT inst_r inst_m) (a -> b) ->
@@ -54,17 +58,6 @@ Local Definition Applicative__ContT_op_zlztzg__ {inst_r} {inst_m}
   fun {a} {b} =>
     fun f v =>
       Mk_ContT (fun c => runContT f (fun g => runContT v (c GHC.Base.∘ g))).
-
-Local Definition Applicative__ContT_liftA2 {inst_r} {inst_m}
-   : forall {a} {b} {c},
-     (a -> b -> c) ->
-     (ContT inst_r inst_m) a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) c :=
-  fun {a} {b} {c} =>
-    fun f x => Applicative__ContT_op_zlztzg__ (GHC.Base.fmap f x).
-
-Local Definition Applicative__ContT_pure {inst_r} {inst_m}
-   : forall {a}, a -> (ContT inst_r inst_m) a :=
-  fun {a} => fun x => Mk_ContT (fun arg_0__ => arg_0__ x).
 
 Definition Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
    : forall {a} {b},
@@ -74,6 +67,13 @@ Definition Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
       Applicative__ContT_op_zlztzg__ (Applicative__ContT_op_zlztzg__
                                       (Applicative__ContT_pure (fun x y => x)) k) m.
 
+Local Definition Applicative__ContT_liftA2 {inst_r} {inst_m}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (ContT inst_r inst_m) a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__ContT_op_zlztzg__ (GHC.Base.fmap f x).
+
 Program Instance Applicative__ContT {r} {m}
    : GHC.Base.Applicative (ContT r m) :=
   fun _ k =>
@@ -81,6 +81,10 @@ Program Instance Applicative__ContT {r} {m}
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ContT_op_zlztzg__ ;
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ContT_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__ContT_pure |}.
+
+Local Definition Monad__ContT_return_ {inst_r} {inst_m}
+   : forall {a}, a -> (ContT inst_r inst_m) a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__ContT_op_zgzgze__ {inst_r} {inst_m}
    : forall {a} {b},
@@ -93,10 +97,6 @@ Local Definition Monad__ContT_op_zgzg__ {inst_r} {inst_m}
    : forall {a} {b},
      (ContT inst_r inst_m) a -> (ContT inst_r inst_m) b -> (ContT inst_r inst_m) b :=
   fun {a} {b} => fun m k => Monad__ContT_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__ContT_return_ {inst_r} {inst_m}
-   : forall {a}, a -> (ContT inst_r inst_m) a :=
-  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__ContT {r} {m} : GHC.Base.Monad (ContT r m) :=
   fun _ k =>

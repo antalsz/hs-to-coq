@@ -41,7 +41,7 @@ convertValDecls mdecls = do
 
   bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
            $  withConvertedBinding
-                (\cdef@ConvertedDefinition{convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
+                (\cdef@ConvertedDefinition{_convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
                    r <- view (edits.redefinitions.at name)
                    obl <- view (edits.obligations.at name)
                    t <- view (edits.termination.at name)
@@ -55,15 +55,15 @@ convertValDecls mdecls = do
                       | Just (WellFounded order) <- t  -- turn into Program Fixpoint
                       ->  pure <$> toProgramFixpointSentence cdef order obl
                       | otherwise                   -- no edit
-                      -> let def = DefinitionDef Global (convDefName cdef)
-                                                        (convDefArgs cdef)
-                                                        (convDefType cdef)
-                                                        (convDefBody cdef)
+                      -> let def = DefinitionDef Global (cdef^.convDefName)
+                                                        (cdef^.convDefArgs)
+                                                        (cdef^.convDefType)
+                                                        (cdef^.convDefBody)
                          in pure $
                             [ if useProgram
                               then ProgramSentence (DefinitionSentence def) obl
                               else DefinitionSentence def ] ++
-                            [ NotationSentence n | n <- buildInfixNotations sigs (convDefName cdef) ]
+                            [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                 )(\_ _ -> convUnsupported "top-level pattern bindings")
 
   -- TODO: Mutual recursion

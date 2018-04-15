@@ -58,6 +58,10 @@ Program Instance Functor__MaybeErr {err} : GHC.Base.Functor (MaybeErr err) :=
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeErr_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeErr_op_zlzd__ |}.
 
+Local Definition Applicative__MaybeErr_pure {inst_err}
+   : forall {a}, a -> (MaybeErr inst_err) a :=
+  fun {a} => Succeeded.
+
 Local Definition Applicative__MaybeErr_op_zlztzg__ {inst_err}
    : forall {a} {b},
      MaybeErr inst_err (a -> b) -> MaybeErr inst_err a -> MaybeErr inst_err b :=
@@ -85,10 +89,6 @@ Local Definition Applicative__MaybeErr_liftA2 {inst_err}
   fun {a} {b} {c} =>
     fun f x => Applicative__MaybeErr_op_zlztzg__ (GHC.Base.fmap f x).
 
-Local Definition Applicative__MaybeErr_pure {inst_err}
-   : forall {a}, a -> (MaybeErr inst_err) a :=
-  fun {a} => Succeeded.
-
 Program Instance Applicative__MaybeErr {err}
    : GHC.Base.Applicative (MaybeErr err) :=
   fun _ k =>
@@ -96,6 +96,10 @@ Program Instance Applicative__MaybeErr {err}
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeErr_op_zlztzg__ ;
          GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
+
+Local Definition Monad__MaybeErr_return_ {inst_err}
+   : forall {a}, a -> (MaybeErr inst_err) a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err}
    : forall {a} {b},
@@ -112,10 +116,6 @@ Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
    : forall {a} {b},
      (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
   fun {a} {b} => fun m k => Monad__MaybeErr_op_zgzgze__ m (fun arg_0__ => k).
-
-Local Definition Monad__MaybeErr_return_ {inst_err}
-   : forall {a}, a -> (MaybeErr inst_err) a :=
-  fun {a} => GHC.Base.pure.
 
 Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
   fun _ k =>

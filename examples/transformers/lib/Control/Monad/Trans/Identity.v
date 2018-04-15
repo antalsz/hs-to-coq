@@ -88,20 +88,15 @@ Local Definition Ord__IdentityT_compare {inst_f} {inst_a} `{Ord1 inst_f}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> comparison :=
   compare1.
 
-Local Definition Ord__IdentityT_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
-   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => Ord__IdentityT_compare x y GHC.Base.== Gt.
-
 Local Definition Ord__IdentityT_op_zgze__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
   fun x y => Ord__IdentityT_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__IdentityT_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
+Local Definition Ord__IdentityT_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  fun x y => Ord__IdentityT_compare x y GHC.Base.== Lt.
+  fun x y => Ord__IdentityT_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__IdentityT_op_zlze__ {inst_f} {inst_a} `{Ord1 inst_f}
   `{GHC.Base.Ord inst_a}
@@ -120,6 +115,11 @@ Local Definition Ord__IdentityT_min {inst_f} {inst_a} `{Ord1 inst_f}
      (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
   fun x y => if Ord__IdentityT_op_zlze__ x y : bool then x else y.
 
+Local Definition Ord__IdentityT_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
+  `{GHC.Base.Ord inst_a}
+   : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
+  fun x y => Ord__IdentityT_compare x y GHC.Base.== Lt.
+
 Program Instance Ord__IdentityT {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
    : GHC.Base.Ord (IdentityT f a) :=
   fun _ k =>
@@ -134,6 +134,57 @@ Program Instance Ord__IdentityT {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
 (* Skipping instance Read__IdentityT of class Read *)
 
 (* Skipping instance Show__IdentityT of class Show *)
+
+Local Definition Foldable__IdentityT_null {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, (IdentityT inst_f) a -> bool :=
+  fun {a} => fun '(Mk_IdentityT t) => Data.Foldable.null t.
+
+Local Definition Foldable__IdentityT_length {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, (IdentityT inst_f) a -> GHC.Num.Int :=
+  fun {a} => fun '(Mk_IdentityT t) => Data.Foldable.length t.
+
+Local Definition Foldable__IdentityT_foldr {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a} {b}, (a -> b -> b) -> b -> (IdentityT inst_f) a -> b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, Mk_IdentityT t => Data.Foldable.foldr f z t
+      end.
+
+Local Definition Foldable__IdentityT_toList {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a}, (IdentityT inst_f) a -> list a :=
+  fun {a} =>
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__IdentityT_foldr c n t)).
+
+Local Definition Foldable__IdentityT_foldl' {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__IdentityT_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__IdentityT_foldl {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
+  fun {b} {a} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, Mk_IdentityT t => Data.Foldable.foldl f z t
+      end.
+
+Local Definition Foldable__IdentityT_foldr' {inst_f} `{(Data.Foldable.Foldable
+   inst_f)}
+   : forall {a} {b}, (a -> b -> b) -> b -> (IdentityT inst_f) a -> b :=
+  fun {a} {b} =>
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__IdentityT_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__IdentityT_foldMap {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
@@ -163,57 +214,6 @@ Local Definition Foldable__IdentityT_fold {inst_f} `{(Data.Foldable.Foldable
    inst_f)}
    : forall {m}, forall `{GHC.Base.Monoid m}, (IdentityT inst_f) m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__IdentityT_foldMap GHC.Base.id.
-
-Local Definition Foldable__IdentityT_foldl {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
-  fun {b} {a} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, z, Mk_IdentityT t => Data.Foldable.foldl f z t
-      end.
-
-Local Definition Foldable__IdentityT_foldr' {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a} {b}, (a -> b -> b) -> b -> (IdentityT inst_f) a -> b :=
-  fun {a} {b} =>
-    fun f z0 xs =>
-      let f' := fun k x z => k (f x z) in
-      Foldable__IdentityT_foldl f' GHC.Base.id xs z0.
-
-Local Definition Foldable__IdentityT_foldr {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a} {b}, (a -> b -> b) -> b -> (IdentityT inst_f) a -> b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, z, Mk_IdentityT t => Data.Foldable.foldr f z t
-      end.
-
-Local Definition Foldable__IdentityT_toList {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, (IdentityT inst_f) a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build' (fun _ => (fun c n => Foldable__IdentityT_foldr c n t)).
-
-Local Definition Foldable__IdentityT_foldl' {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {b} {a}, (b -> a -> b) -> b -> (IdentityT inst_f) a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in
-      Foldable__IdentityT_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__IdentityT_length {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, (IdentityT inst_f) a -> GHC.Num.Int :=
-  fun {a} => fun '(Mk_IdentityT t) => Data.Foldable.length t.
-
-Local Definition Foldable__IdentityT_null {inst_f} `{(Data.Foldable.Foldable
-   inst_f)}
-   : forall {a}, (IdentityT inst_f) a -> bool :=
-  fun {a} => fun '(Mk_IdentityT t) => Data.Foldable.null t.
 
 Program Instance Foldable__IdentityT {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (IdentityT f) :=
@@ -340,12 +340,6 @@ Program Instance Functor__IdentityT {m} `{(GHC.Base.Functor m)}
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__IdentityT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IdentityT_op_zlzd__ |}.
 
-Local Definition Applicative__IdentityT_op_ztzg__ {inst_m}
-  `{(GHC.Base.Applicative inst_m)}
-   : forall {a} {b},
-     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
-  fun {a} {b} => lift2IdentityT _GHC.Base.*>_.
-
 Local Definition Applicative__IdentityT_liftA2 {inst_m} `{(GHC.Base.Applicative
    inst_m)}
    : forall {a} {b} {c},
@@ -353,6 +347,12 @@ Local Definition Applicative__IdentityT_liftA2 {inst_m} `{(GHC.Base.Applicative
      (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) c :=
   fun {a} {b} {c} =>
     fun f x => Applicative__IdentityT_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__IdentityT_op_ztzg__ {inst_m}
+  `{(GHC.Base.Applicative inst_m)}
+   : forall {a} {b},
+     (IdentityT inst_m) a -> (IdentityT inst_m) b -> (IdentityT inst_m) b :=
+  fun {a} {b} => lift2IdentityT _GHC.Base.*>_.
 
 Program Instance Applicative__IdentityT {m} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (IdentityT m) :=

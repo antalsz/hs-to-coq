@@ -69,13 +69,13 @@ Local Definition Semigroup__OrdList_op_zlzlzgzg__ {inst_a}
 Program Instance Semigroup__OrdList {a} : GHC.Base.Semigroup (OrdList a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__OrdList_op_zlzlzgzg__ |}.
 
-Local Definition Monoid__OrdList_mconcat {inst_a}
-   : list (OrdList inst_a) -> (OrdList inst_a) :=
-  concatOL.
-
 Local Definition Monoid__OrdList_mappend {inst_a}
    : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
   _GHC.Base.<<>>_.
+
+Local Definition Monoid__OrdList_mconcat {inst_a}
+   : list (OrdList inst_a) -> (OrdList inst_a) :=
+  concatOL.
 
 Definition consOL {a} : a -> OrdList a -> OrdList a :=
   fun a bs => Cons a bs.
@@ -106,33 +106,15 @@ Local Definition Foldable__OrdList_foldr
    : forall {a} {b}, (a -> b -> b) -> b -> OrdList a -> b :=
   fun {a} {b} => foldrOL.
 
-Local Definition Foldable__OrdList_null : forall {a}, OrdList a -> bool :=
-  fun {a} => Foldable__OrdList_foldr (fun arg_0__ arg_1__ => false) true.
-
-Local Definition Foldable__OrdList_toList : forall {a}, OrdList a -> list a :=
-  fun {a} =>
-    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__OrdList_foldr c n t)).
-
-Local Definition Foldable__OrdList_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> OrdList a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in
-      Foldable__OrdList_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__OrdList_length
-   : forall {a}, OrdList a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__OrdList_foldl' (fun arg_0__ arg_1__ =>
-                                match arg_0__, arg_1__ with
-                                | c, _ => c GHC.Num.+ #1
-                                end) #0.
-
 Local Definition Foldable__OrdList_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> OrdList a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun f =>
       Foldable__OrdList_foldr (GHC.Base.mappend GHC.Base.∘ f) GHC.Base.mempty.
+
+Local Definition Foldable__OrdList_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, OrdList m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__OrdList_foldMap GHC.Base.id.
 
 Local Definition Foldable__OrdList_foldl
    : forall {b} {a}, (b -> a -> b) -> b -> OrdList a -> b :=
@@ -162,9 +144,27 @@ Local Definition Foldable__OrdList_sum
     Coq.Program.Basics.compose Data.SemigroupInternal.getSum
                                (Foldable__OrdList_foldMap Data.SemigroupInternal.Mk_Sum).
 
-Local Definition Foldable__OrdList_fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, OrdList m -> m :=
-  fun {m} `{GHC.Base.Monoid m} => Foldable__OrdList_foldMap GHC.Base.id.
+Local Definition Foldable__OrdList_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> OrdList a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__OrdList_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__OrdList_length
+   : forall {a}, OrdList a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__OrdList_foldl' (fun arg_0__ arg_1__ =>
+                                match arg_0__, arg_1__ with
+                                | c, _ => c GHC.Num.+ #1
+                                end) #0.
+
+Local Definition Foldable__OrdList_null : forall {a}, OrdList a -> bool :=
+  fun {a} => Foldable__OrdList_foldr (fun arg_0__ arg_1__ => false) true.
+
+Local Definition Foldable__OrdList_toList : forall {a}, OrdList a -> list a :=
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__OrdList_foldr c n t)).
 
 Program Instance Foldable__OrdList : Data.Foldable.Foldable OrdList :=
   fun _ k =>
@@ -247,6 +247,11 @@ Local Definition Traversable__OrdList_traverse
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun f xs => toOL Data.Functor.<$> Data.Traversable.traverse f (fromOL xs).
 
+Local Definition Traversable__OrdList_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m}, (a -> m b) -> OrdList a -> m (OrdList b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__OrdList_traverse.
+
 Local Definition Traversable__OrdList_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f}, OrdList (f a) -> f (OrdList a) :=
@@ -256,11 +261,6 @@ Local Definition Traversable__OrdList_sequenceA
 Local Definition Traversable__OrdList_sequence
    : forall {m} {a}, forall `{GHC.Base.Monad m}, OrdList (m a) -> m (OrdList a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__OrdList_sequenceA.
-
-Local Definition Traversable__OrdList_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> OrdList a -> m (OrdList b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__OrdList_traverse.
 
 Program Instance Traversable__OrdList : Data.Traversable.Traversable OrdList :=
   fun _ k =>

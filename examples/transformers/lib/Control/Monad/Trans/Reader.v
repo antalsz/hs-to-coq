@@ -101,31 +101,23 @@ Definition mapReaderT {m} {a} {n} {b} {r}
 Definition mapReader {a} {b} {r} : (a -> b) -> Reader r a -> Reader r b :=
   fun f => mapReaderT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
 
-Local Definition Functor__ReaderT_op_zlzd__ {inst_m} {inst_r}
-  `{(GHC.Base.Functor inst_m)}
-   : forall {a} {b},
-     a -> (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) a :=
-  fun {a} {b} => fun x v => mapReaderT (fun arg_0__ => x GHC.Base.<$ arg_0__) v.
-
 Local Definition Functor__ReaderT_fmap {inst_m} {inst_r} `{(GHC.Base.Functor
    inst_m)}
    : forall {a} {b},
      (a -> b) -> (ReaderT inst_r inst_m) a -> (ReaderT inst_r inst_m) b :=
   fun {a} {b} => fun f => mapReaderT (GHC.Base.fmap f).
 
+Local Definition Functor__ReaderT_op_zlzd__ {inst_m} {inst_r}
+  `{(GHC.Base.Functor inst_m)}
+   : forall {a} {b},
+     a -> (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) a :=
+  fun {a} {b} => fun x v => mapReaderT (fun arg_0__ => x GHC.Base.<$ arg_0__) v.
+
 Program Instance Functor__ReaderT {m} {r} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (ReaderT r m) :=
   fun _ k =>
     k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ReaderT_fmap ;
          GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ReaderT_op_zlzd__ |}.
-
-Local Definition Applicative__ReaderT_op_ztzg__ {inst_m} {inst_r}
-  `{(GHC.Base.Applicative inst_m)}
-   : forall {a} {b},
-     (ReaderT inst_r inst_m) a ->
-     (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) b :=
-  fun {a} {b} =>
-    fun u v => Mk_ReaderT (fun r => runReaderT u r GHC.Base.*> runReaderT v r).
 
 Local Definition Applicative__ReaderT_liftA2 {inst_m} {inst_r}
   `{(GHC.Base.Applicative inst_m)}
@@ -135,6 +127,14 @@ Local Definition Applicative__ReaderT_liftA2 {inst_m} {inst_r}
      (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) c :=
   fun {a} {b} {c} =>
     fun f x => Applicative__ReaderT_op_zlztzg__ (GHC.Base.fmap f x).
+
+Local Definition Applicative__ReaderT_op_ztzg__ {inst_m} {inst_r}
+  `{(GHC.Base.Applicative inst_m)}
+   : forall {a} {b},
+     (ReaderT inst_r inst_m) a ->
+     (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) b :=
+  fun {a} {b} =>
+    fun u v => Mk_ReaderT (fun r => runReaderT u r GHC.Base.*> runReaderT v r).
 
 Program Instance Applicative__ReaderT {m} {r} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (ReaderT r m) :=

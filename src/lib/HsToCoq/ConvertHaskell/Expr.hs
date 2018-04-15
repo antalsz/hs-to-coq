@@ -5,17 +5,21 @@
 
 module HsToCoq.ConvertHaskell.Expr (
   convertTypedModuleBinding,
+  convertMethodBinding,
   convertTypedModuleBindings,
+  hsBindName,
   ) where
 
 import Control.Lens
 
+import Control.Arrow ((&&&))
 import Data.Bifunctor
+import Data.Foldable
 import Data.Traversable
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
-import Data.List.NonEmpty (nonEmpty, NonEmpty)
+import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
 import qualified HsToCoq.Util.List as NEL ((|>))
 import Data.Text (Text)
@@ -24,6 +28,8 @@ import qualified Data.Text as T
 import Control.Monad.Trans.Maybe
 import Control.Monad.Except
 import Control.Monad.Writer
+
+import HsToCoq.Util.Containers
 
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
@@ -798,6 +804,7 @@ guardTerm gs rhs failure = go gs where
 
 --------------------------------------------------------------------------------
 
+-- Does not detect recursion/introduce `fix`
 convertTypedBinding :: LocalConvMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
 convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
 convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
@@ -824,15 +831,7 @@ convertTypedBinding convHsTy FunBind{..}   = runMaybeT $ do
       then case unLoc $ mg_alts fun_matches of
              [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
              _ -> convUnsupported "malformed multi-match variable definitions"
-      else do
-        whichFix <- view (edits.termination.at name) >>= \case
-            Just order       -> pure $ wfFix order
-            _ -> pure $ Fix . FixOne
-        (argBinders, match) <- convertFunction fun_matches
-        pure $ let bodyVars = getFreeVars match
-               in if name `S.member` bodyVars
-                  then whichFix $ FixBody name argBinders Nothing Nothing match
-                  else Fun argBinders match
+      else uncurry Fun <$> convertFunction fun_matches
 
     addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
 
@@ -866,54 +865,122 @@ wfFix _ _ = error "wfFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------
 
+hsBindName :: ConversionMonad r m => HsBind GhcRn -> m Qualid
+hsBindName defn = case defn of
+    FunBind{fun_id = L _ hsName} -> var ExprNS hsName
+    _ -> convUnsupported "Non-function top level binding"
+
+
 -- This is where we switch from the global monad to the local monad
 convertTypedModuleBinding :: ConversionMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
 convertTypedModuleBinding ty defn = do
-    name <- case defn of
-            FunBind{fun_id = L _ hsName} ->
-              var ExprNS hsName
-            _ -> convUnsupported "Non-function top level binding"
-    withCurrentDefinition name (convertTypedBinding ty defn)
+    name <- hsBindName defn
+    withCurrentDefinition name $ convertTypedBinding ty defn
 
--- TODO mutual recursion :-(
 convertTypedModuleBindings :: ConversionMonad r m
                            => [HsBind GhcRn]
                            -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
                            -> Maybe (HsBind GhcRn -> GhcException -> m a)
                            -> m [a]
-convertTypedModuleBindings defns sigs build mhandler =
-  fmap catMaybes . for defns $ \defn ->
-    runMaybeT $ do
-       let wrap = case mhandler of Just handler -> ghandle (\e ->  lift $ handler defn e)
-                                   Nothing      -> id
-       wrap $ do
-         ty <- case defn of
-                 FunBind{fun_id = L _ hsName} ->
-                   fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
-                 _ ->
-                   pure Nothing
-         conv_bind <- MaybeT $ convertTypedModuleBinding ty defn
-         lift $ build conv_bind
+convertTypedModuleBindings = convertMultipleBindings convertTypedModuleBinding
+
+-- | A variant of convertTypedModuleBinding that ignores the name in the HsBind
+-- and uses the provided one instead
+--
+-- It also does not allow skipping,  and does not create fixpoints, does not support a type,
+-- and always returns a binding (or fails with convUnsupported)
+convertMethodBinding :: ConversionMonad r m => Qualid -> HsBind GhcRn -> m ConvertedBinding
+convertMethodBinding _name VarBind{}     = convUnsupported "[internal] `VarBind'"
+convertMethodBinding _name AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
+convertMethodBinding _name PatSynBind{}  = convUnsupported "pattern synonym bindings"
+convertMethodBinding _name PatBind{..}   = convUnsupported "pattern bind"
+convertMethodBinding name FunBind{..}    = withCurrentDefinition name $ do
+    defn <-
+      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+      then case unLoc $ mg_alts fun_matches of
+             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+             _ -> convUnsupported "malformed multi-match variable definitions"
+      else do
+        (argBinders, match) <- convertFunction fun_matches
+        pure $  Fun argBinders match
+    pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
+
 
 convertTypedBindings :: LocalConvMonad r m
                      => [HsBind GhcRn] -> Map Qualid Signature
                      -> (ConvertedBinding -> m a)
                      -> Maybe (HsBind GhcRn -> GhcException -> m a)
                      -> m [a]
-convertTypedBindings defns sigs build mhandler =
-  fmap catMaybes . for defns $ \defn ->
-     runMaybeT $ do
-       let wrap = case mhandler of Just handler -> ghandle (\e ->  lift $ handler defn e)
-                                   Nothing      -> id
-       wrap $ do
+convertTypedBindings = convertMultipleBindings convertTypedBinding
+
+convertMultipleBindings :: ConversionMonad r m
+                        => (Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding))
+                        -> [HsBind GhcRn]
+                        -> Map Qualid Signature
+                        -> (ConvertedBinding -> m a)
+                        -> Maybe (HsBind GhcRn -> GhcException -> m a)
+                        -> m [a]
+convertMultipleBindings convertSingleBinding defns sigs build mhandler =
+  let (handler, wrap) = case mhandler of
+        Just handler -> ( uncurry handler
+                        , \defn -> ghandle $ pure . Left . (defn,))
+        Nothing      -> ( const $ throwProgramError "INTERNAL ERROR: \
+                                                    \convertMultipleBindings tried to both \
+                                                    \handle and ignore an exception"
+                            -- Safe because the only place `Left' is introduced
+                            -- is in the previous case branch
+                        , flip const )
+  in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \defn ->
+       runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
                    fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
                  _ ->
                    pure Nothing
-         conv_bind <- MaybeT $ convertTypedBinding ty defn
-         lift $ build conv_bind
+         MaybeT $ convertSingleBinding ty defn
+
+addRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
+addRecursion eBindings = do
+  fixedBindings <-  M.fromList . fmap (view convDefName &&& id) . foldMap toList
+                <$> traverse fixConnComp (stronglyConnCompNE
+                      [ (cd, cd^.convDefName, S.toAscList . getFreeVars $ cd^.convDefBody)
+                      | Right (ConvertedDefinitionBinding cd) <- eBindings ])
+      
+  pure . flip map eBindings $ \case
+    Left  e                               -> Left  e
+    Right cpb@ConvertedPatternBinding{}   -> Right cpb
+    Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
+      Just cd' -> Right $ ConvertedDefinitionBinding cd'
+      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
+  where
+    fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
+      pure $ cd :| []
+    fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
+      bodies <- for cds $ \case
+        ConvertedDefinition{_convDefBody = Fun args body, ..} ->
+          pure $ FixBody _convDefName (_convDefArgs <++ args) Nothing Nothing body
+        _ ->
+          convUnsupported "mutual recursion through non-lambda values"
+      
+      for cds $ \ConvertedDefinition{..} -> do
+        fixedBody <- view (edits.termination.at _convDefName) >>= \case
+          -- TODO: Support non-structural mutual recursion
+          --
+          -- When we do the preceding, we will probably need to check the
+          -- termination status for every name in the mutually recursive block
+          Just order -> case bodies of
+            body1  :| []                -> pure $ wfFix order body1
+            _body1 :| _body2 : _bodies' -> convUnsupported "non-structural mutual recursion"
+          Nothing -> pure . Fix $ case bodies of
+            body1 :| []              -> FixOne  body1
+            body1 :| body2 : bodies' -> FixMany body1 (body2 :| bodies') _convDefName
+        
+        pure $ ConvertedDefinition
+                 { _convDefName = _convDefName
+                 , _convDefArgs = commonArgs
+                 , _convDefType = maybeForall _convDefArgs <$> _convDefType
+                 , _convDefBody = fixedBody }
 
 --------------------------------------------------------------------------------
 
@@ -931,14 +998,13 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
 
   let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
                                          [Equation [MultPattern [pat]] body]
-  let toLet ConvertedDefinition{..} = Let convDefName convDefArgs convDefType convDefBody
+  let toLet ConvertedDefinition{..} = Let _convDefName _convDefArgs _convDefType _convDefBody
   (foldr (withConvertedBinding toLet matchLet) ?? convDefs) <$> body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =
   body
-
 
 --------------------------------------------------------------------------------
 

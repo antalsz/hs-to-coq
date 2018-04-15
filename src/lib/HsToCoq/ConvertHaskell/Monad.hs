@@ -10,6 +10,7 @@
 module HsToCoq.ConvertHaskell.Monad (
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
+  HasEdits,
   runGlobalMonad,
   withCurrentModule,
   withCurrentDefinition,
@@ -137,7 +138,7 @@ withCurrentDefinition :: ConversionMonad r m =>
 withCurrentDefinition newDef act = do
     global_edits <- view edits
     local_edits <- view (edits.inEdits.at newDef.non mempty)
-    let edits_in_scope = global_edits <> local_edits
+    let edits_in_scope = local_edits <> global_edits
 
     _currentModule <- view currentModule
     withCounterT $ runReaderT act $ LocalEnv

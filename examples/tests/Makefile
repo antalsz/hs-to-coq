@@ -19,7 +19,6 @@ PASS = \
   FTPDefault \
   PolyInstance2 \
   PolyInstance3 \
-  MutrecInst \
   Bits \
   BitsRewrite \
   Records \
@@ -29,15 +28,16 @@ PASS = \
   Notations \
   Renamed \
   RenameModule \
+  Mutrec \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
   TopBind \
   InstVar \
-  Mutrec \
   Existential \
   TypeAnnotations \
   StrictPair \
+  MutrecInst \
 
 
 

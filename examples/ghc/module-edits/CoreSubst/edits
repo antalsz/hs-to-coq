@@ -106,7 +106,7 @@ skip CoreSubst.cloneTyVarBndr
 
 
 #
-# Mutual recursion
+# ANTALSZ: Mutual recursion
 #
 #
 in CoreSubst.subst_expr rewrite forall, CoreSubst.substBind  = CoreSubst.substBind1
@@ -122,7 +122,7 @@ in CoreSubst.substIdBndr rewrite forall, CoreSubst.substIdInfo = CoreSubst.subst
 
 
 #
-# These two require recursive knot tying
+# TODO: These two require recursive knot tying
 #
 skip CoreSubst.substRecBndrs
 skip CoreSubst.cloneRecIdBndrs

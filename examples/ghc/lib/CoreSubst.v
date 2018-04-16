@@ -234,68 +234,6 @@ Definition substTickish
     | _subst, other => other
     end.
 
-Definition subst_expr
-   : GHC.Base.String -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
-  fix subst_expr doc subst expr
-        := let go_alt :=
-             fun arg_0__ arg_1__ =>
-               match arg_0__, arg_1__ with
-               | subst, pair (pair con bndrs) rhs =>
-                   let 'pair subst' bndrs' := substBndrs1 subst bndrs in
-                   pair (pair con bndrs') (subst_expr doc subst' rhs)
-               end in
-           let fix go arg_5__
-                     := match arg_5__ with
-                        | CoreSyn.Var v => lookupIdSubst (Panic.someSDoc) subst v
-                        | CoreSyn.Type_ ty => CoreSyn.Type_ (tt)
-                        | CoreSyn.Coercion co => CoreSyn.Coercion (tt)
-                        | CoreSyn.Lit lit => CoreSyn.Lit lit
-                        | CoreSyn.App fun_ arg => CoreSyn.App (go fun_) (go arg)
-                        | CoreSyn.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
-                        | CoreSyn.Cast e co => CoreSyn.Cast (go e) (tt)
-                        | CoreSyn.Lam bndr body =>
-                            let 'pair subst' bndr' := substBndr1 subst bndr in
-                            CoreSyn.Lam bndr' (subst_expr doc subst' body)
-                        | CoreSyn.Let bind body =>
-                            let 'pair subst' bind' := substBind1 subst bind in
-                            CoreSyn.Let bind' (subst_expr doc subst' body)
-                        | CoreSyn.Case scrut bndr ty alts =>
-                            let 'pair subst' bndr' := substBndr1 subst bndr in
-                            CoreSyn.Case (go scrut) bndr' (tt) (GHC.Base.map (go_alt subst') alts)
-                        end in
-           go expr.
-
-Definition substBind
-   : Subst -> CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | subst, CoreSyn.NonRec bndr rhs =>
-        let 'pair subst' bndr' := substBndr1 subst bndr in
-        pair subst' (CoreSyn.NonRec bndr' (subst_expr (Datatypes.id
-                                                       (GHC.Base.hs_string__ "substBind")) subst rhs))
-    | subst, CoreSyn.Rec pairs =>
-        let 'pair bndrs rhss := GHC.List.unzip pairs in
-        let 'pair subst' bndrs' := substRecBndrs1 subst bndrs in
-        let rhss' :=
-          GHC.Base.map (subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBind"))
-                        subst') rhss in
-        pair subst' (CoreSyn.Rec (GHC.List.zip bndrs' rhss'))
-    end.
-
-Definition deShadowBinds : CoreSyn.CoreProgram -> CoreSyn.CoreProgram :=
-  fun binds =>
-    Data.Tuple.snd (Data.Traversable.mapAccumL substBind emptySubst binds).
-
-Definition substExpr
-   : GHC.Base.String -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
-  fun doc subst orig_expr => subst_expr doc subst orig_expr.
-
-Definition substExprSC
-   : GHC.Base.String -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
-  fun doc subst orig_expr =>
-    if isEmptySubst subst : bool then orig_expr else
-    subst_expr doc subst orig_expr.
-
 Definition mkEmptySubst : VarEnv.InScopeSet -> Subst :=
   fun in_scope => Mk_Subst in_scope VarEnv.emptyVarEnv tt tt.
 
@@ -308,12 +246,137 @@ Definition setInScope : Subst -> VarEnv.InScopeSet -> Subst :=
     | Mk_Subst _ ids tvs cvs, in_scope => Mk_Subst in_scope ids tvs cvs
     end.
 
+Definition substIdInfo
+   : Subst -> Var.Id -> IdInfo.IdInfo -> option IdInfo.IdInfo :=
+  fun subst new_id info =>
+    let old_unf := IdInfo.unfoldingInfo info in
+    let old_rules := IdInfo.ruleInfo info in
+    let nothing_to_do := andb true (negb (false)) in
+    if nothing_to_do : bool then None else
+    Some (IdInfo.setRuleInfo info old_rules).
+
+Definition substIdBndr
+   : GHC.Base.String -> Subst -> Subst -> Var.Id -> (Subst * Var.Id)%type :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | _doc, rec_subst, (Mk_Subst in_scope env tvs cvs as subst), old_id =>
+        let old_ty := tt in
+        let no_type_change := orb (andb true true) true in
+        let id1 := VarEnv.uniqAway in_scope old_id in
+        let id2 := if no_type_change : bool then id1 else id1 in
+        let mb_new_info := substIdInfo rec_subst id2 ((@Var.idInfo tt id2)) in
+        let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
+        let no_change := id1 GHC.Base.== old_id in
+        let new_env :=
+          if no_change : bool then VarEnv.delVarEnv env old_id else
+          VarEnv.extendVarEnv env old_id (CoreSyn.Var new_id) in
+        pair (Mk_Subst (VarEnv.extendInScopeSet in_scope new_id) new_env tvs cvs) new_id
+    end.
+
 Definition substBndr : Subst -> Var.Var -> (Subst * Var.Var)%type :=
   fun subst bndr =>
-    substIdBndr1 (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
+    substIdBndr (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
 
 Definition substBndrs : Subst -> list Var.Var -> (Subst * list Var.Var)%type :=
   fun subst bndrs => Data.Traversable.mapAccumL substBndr subst bndrs.
+
+Definition substBind
+   : Subst -> CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type :=
+  fix subst_expr doc subst expr
+        := let go_alt :=
+             fun arg_0__ arg_1__ =>
+               match arg_0__, arg_1__ with
+               | subst, pair (pair con bndrs) rhs =>
+                   let 'pair subst' bndrs' := substBndrs subst bndrs in
+                   pair (pair con bndrs') (subst_expr doc subst' rhs)
+               end in
+           let fix go arg_5__
+                     := match arg_5__ with
+                        | CoreSyn.Var v => lookupIdSubst (Panic.someSDoc) subst v
+                        | CoreSyn.Type_ ty => CoreSyn.Type_ (tt)
+                        | CoreSyn.Coercion co => CoreSyn.Coercion (tt)
+                        | CoreSyn.Lit lit => CoreSyn.Lit lit
+                        | CoreSyn.App fun_ arg => CoreSyn.App (go fun_) (go arg)
+                        | CoreSyn.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
+                        | CoreSyn.Cast e co => CoreSyn.Cast (go e) (tt)
+                        | CoreSyn.Lam bndr body =>
+                            let 'pair subst' bndr' := substBndr subst bndr in
+                            CoreSyn.Lam bndr' (subst_expr doc subst' body)
+                        | CoreSyn.Let bind body =>
+                            let 'pair subst' bind' := substBind subst bind in
+                            CoreSyn.Let bind' (subst_expr doc subst' body)
+                        | CoreSyn.Case scrut bndr ty alts =>
+                            let 'pair subst' bndr' := substBndr subst bndr in
+                            CoreSyn.Case (go scrut) bndr' (tt) (GHC.Base.map (go_alt subst') alts)
+                        end in
+           go expr with substBind arg_0__ arg_1__
+                          := match arg_0__, arg_1__ with
+                             | subst, CoreSyn.NonRec bndr rhs =>
+                                 let 'pair subst' bndr' := substBndr subst bndr in
+                                 pair subst' (CoreSyn.NonRec bndr' (subst_expr (Datatypes.id
+                                                                                (GHC.Base.hs_string__ "substBind"))
+                                                                    subst rhs))
+                             | subst, CoreSyn.Rec pairs =>
+                                 let 'pair bndrs rhss := GHC.List.unzip pairs in
+                                 let 'pair subst' bndrs' := substRecBndrs subst bndrs in
+                                 let rhss' :=
+                                   GHC.Base.map (subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBind"))
+                                                 subst') rhss in
+                                 pair subst' (CoreSyn.Rec (GHC.List.zip bndrs' rhss'))
+                             end for substBind.
+
+Definition deShadowBinds : CoreSyn.CoreProgram -> CoreSyn.CoreProgram :=
+  fun binds =>
+    Data.Tuple.snd (Data.Traversable.mapAccumL substBind emptySubst binds).
+
+Definition subst_expr
+   : GHC.Base.String -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
+  fix subst_expr doc subst expr
+        := let go_alt :=
+             fun arg_0__ arg_1__ =>
+               match arg_0__, arg_1__ with
+               | subst, pair (pair con bndrs) rhs =>
+                   let 'pair subst' bndrs' := substBndrs subst bndrs in
+                   pair (pair con bndrs') (subst_expr doc subst' rhs)
+               end in
+           let fix go arg_5__
+                     := match arg_5__ with
+                        | CoreSyn.Var v => lookupIdSubst (Panic.someSDoc) subst v
+                        | CoreSyn.Type_ ty => CoreSyn.Type_ (tt)
+                        | CoreSyn.Coercion co => CoreSyn.Coercion (tt)
+                        | CoreSyn.Lit lit => CoreSyn.Lit lit
+                        | CoreSyn.App fun_ arg => CoreSyn.App (go fun_) (go arg)
+                        | CoreSyn.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
+                        | CoreSyn.Cast e co => CoreSyn.Cast (go e) (tt)
+                        | CoreSyn.Lam bndr body =>
+                            let 'pair subst' bndr' := substBndr subst bndr in
+                            CoreSyn.Lam bndr' (subst_expr doc subst' body)
+                        | CoreSyn.Let bind body =>
+                            let 'pair subst' bind' := substBind subst bind in
+                            CoreSyn.Let bind' (subst_expr doc subst' body)
+                        | CoreSyn.Case scrut bndr ty alts =>
+                            let 'pair subst' bndr' := substBndr subst bndr in
+                            CoreSyn.Case (go scrut) bndr' (tt) (GHC.Base.map (go_alt subst') alts)
+                        end in
+           go expr with substBind arg_0__ arg_1__
+                          := match arg_0__, arg_1__ with
+                             | subst, CoreSyn.NonRec bndr rhs =>
+                                 let 'pair subst' bndr' := substBndr subst bndr in
+                                 pair subst' (CoreSyn.NonRec bndr' (subst_expr (Datatypes.id
+                                                                                (GHC.Base.hs_string__ "substBind"))
+                                                                    subst rhs))
+                             | subst, CoreSyn.Rec pairs =>
+                                 let 'pair bndrs rhss := GHC.List.unzip pairs in
+                                 let 'pair subst' bndrs' := substRecBndrs subst bndrs in
+                                 let rhss' :=
+                                   GHC.Base.map (subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBind"))
+                                                 subst') rhss in
+                                 pair subst' (CoreSyn.Rec (GHC.List.zip bndrs' rhss'))
+                             end for subst_expr.
+
+Definition substExpr
+   : GHC.Base.String -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
+  fun doc subst orig_expr => subst_expr doc subst orig_expr.
 
 Definition substRule
    : Subst -> (Name.Name -> Name.Name) -> CoreSyn.CoreRule -> CoreSyn.CoreRule :=
@@ -396,6 +459,12 @@ Definition substUnfoldingSC : Subst -> CoreSyn.Unfolding -> CoreSyn.Unfolding :=
     if isEmptySubst subst : bool then unf else
     substUnfolding subst unf.
 
+Definition substExprSC
+   : GHC.Base.String -> Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
+  fun doc subst orig_expr =>
+    if isEmptySubst subst : bool then orig_expr else
+    subst_expr doc subst orig_expr.
+
 Definition substBindSC
    : Subst -> CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type :=
   fun subst bind =>
@@ -413,33 +482,6 @@ Definition substBindSC
                         subst') rhss in
         pair subst' (CoreSyn.Rec (GHC.List.zip bndrs' rhss'))
     end.
-
-Definition substIdBndr
-   : GHC.Base.String -> Subst -> Subst -> Var.Id -> (Subst * Var.Id)%type :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | _doc, rec_subst, (Mk_Subst in_scope env tvs cvs as subst), old_id =>
-        let old_ty := tt in
-        let no_type_change := orb (andb true true) true in
-        let id1 := VarEnv.uniqAway in_scope old_id in
-        let id2 := if no_type_change : bool then id1 else id1 in
-        let mb_new_info := substIdInfo1 rec_subst id2 ((@Var.idInfo tt id2)) in
-        let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
-        let no_change := id1 GHC.Base.== old_id in
-        let new_env :=
-          if no_change : bool then VarEnv.delVarEnv env old_id else
-          VarEnv.extendVarEnv env old_id (CoreSyn.Var new_id) in
-        pair (Mk_Subst (VarEnv.extendInScopeSet in_scope new_id) new_env tvs cvs) new_id
-    end.
-
-Definition substIdInfo
-   : Subst -> Var.Id -> IdInfo.IdInfo -> option IdInfo.IdInfo :=
-  fun subst new_id info =>
-    let old_unf := IdInfo.unfoldingInfo info in
-    let old_rules := IdInfo.ruleInfo info in
-    let nothing_to_do := andb true (negb (false)) in
-    if nothing_to_do : bool then None else
-    Some (IdInfo.setRuleInfo info old_rules).
 
 Definition substIdType : Subst -> Var.Id -> Var.Id :=
   fun arg_0__ arg_1__ =>
@@ -500,8 +542,7 @@ Definition zapSubstEnv : Subst -> Subst :=
 
 (* External variables:
      None Some andb bool cons false id list negb nil op_zt__ option orb pair
-     substBind1 substBndr1 substBndrs1 substIdBndr1 substIdInfo1 substRecBndrs
-     substRecBndrs1 true tt unit CoreFVs.expr_fvs CoreSyn.App CoreSyn.BootUnfolding
+     substRecBndrs true tt unit CoreFVs.expr_fvs CoreSyn.App CoreSyn.BootUnfolding
      CoreSyn.Breakpoint CoreSyn.BuiltinRule CoreSyn.Case CoreSyn.Cast
      CoreSyn.Coercion CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreExpr
      CoreSyn.CoreProgram CoreSyn.CoreRule CoreSyn.CoreUnfolding CoreSyn.DFunUnfolding

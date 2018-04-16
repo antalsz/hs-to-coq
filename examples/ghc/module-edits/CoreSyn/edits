@@ -1,13 +1,6 @@
 skip module CostCentre
 rename type CostCentre.CostCentre = unit
 
-# redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
-# redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
-#    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => true.
-# redefine Local Definition CoreSyn.Eq___Tickish_op_zsze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
-#    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => false.
-
-
 skip CoreSyn.mkNoCount
 skip CoreSyn.mkNoScope
 skip CoreSyn.tickishCanSplit
@@ -48,11 +41,12 @@ skip CoreSyn.mkInt64LitInt64
 # needs Literal.mkMachInt
 skip CoreSyn.mkIntLit
 skip CoreSyn.mkIntLitInt
-# Literal.mlMachWord64, Literal.mkMachWOrd
+# needs Literal.mlMachWord64, Literal.mkMachWOrd
 skip CoreSyn.mkWord64LitWord64
 skip CoreSyn.mkWordLit
 skip CoreSyn.mkWordLitWord
 
+# ANTALSZ
 # in midamble (due to mutual recursion)
 skip CoreSyn.deAnnotate'
 skip CoreSyn.collectAnnArgs

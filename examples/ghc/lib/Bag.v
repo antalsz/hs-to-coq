@@ -136,30 +136,14 @@ Local Definition Foldable__Bag_foldr
    : forall {a} {b}, (a -> b -> b) -> b -> Bag a -> b :=
   fun {a} {b} => foldrBag.
 
-Local Definition Foldable__Bag_null : forall {a}, Bag a -> bool :=
-  fun {a} => Foldable__Bag_foldr (fun arg_0__ arg_1__ => false) true.
-
-Local Definition Foldable__Bag_toList : forall {a}, Bag a -> list a :=
-  fun {a} =>
-    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Bag_foldr c n t)).
-
-Local Definition Foldable__Bag_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> Bag a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in Foldable__Bag_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__Bag_length : forall {a}, Bag a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__Bag_foldl' (fun arg_0__ arg_1__ =>
-                            match arg_0__, arg_1__ with
-                            | c, _ => c GHC.Num.+ #1
-                            end) #0.
-
 Local Definition Foldable__Bag_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Bag a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
     fun f => Foldable__Bag_foldr (GHC.Base.mappend GHC.Base.∘ f) GHC.Base.mempty.
+
+Local Definition Foldable__Bag_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Bag m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__Bag_foldMap GHC.Base.id.
 
 Local Definition Foldable__Bag_foldl
    : forall {b} {a}, (b -> a -> b) -> b -> Bag a -> b :=
@@ -188,9 +172,25 @@ Local Definition Foldable__Bag_sum
     Coq.Program.Basics.compose Data.SemigroupInternal.getSum (Foldable__Bag_foldMap
                                 Data.SemigroupInternal.Mk_Sum).
 
-Local Definition Foldable__Bag_fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, Bag m -> m :=
-  fun {m} `{GHC.Base.Monoid m} => Foldable__Bag_foldMap GHC.Base.id.
+Local Definition Foldable__Bag_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> Bag a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in Foldable__Bag_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__Bag_length : forall {a}, Bag a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__Bag_foldl' (fun arg_0__ arg_1__ =>
+                            match arg_0__, arg_1__ with
+                            | c, _ => c GHC.Num.+ #1
+                            end) #0.
+
+Local Definition Foldable__Bag_null : forall {a}, Bag a -> bool :=
+  fun {a} => Foldable__Bag_foldr (fun arg_0__ arg_1__ => false) true.
+
+Local Definition Foldable__Bag_toList : forall {a}, Bag a -> list a :=
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Bag_foldr c n t)).
 
 Program Instance Foldable__Bag : Data.Foldable.Foldable Bag :=
   fun _ k =>

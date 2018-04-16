@@ -21,6 +21,7 @@ HANDMOD = \
   Test/QuickCheck/Property \
   Test/QuickCheck/Arbitrary \
   Test/QuickCheck/Gen \
+  IntWord \
 
 #  Data/SequenceManual \
 
@@ -30,6 +31,7 @@ MODULES = \
   Data/Set/Internal \
   Utils/Containers/Internal/BitUtil \
   Data/IntSet/Internal \
+  Data/IntSet/InternalWord \
   Data/IntMap/Internal \
   Data/Map/Internal \
   IntSetValidity \
@@ -39,6 +41,7 @@ HS_SPEC_MODULES = \
 
 # Non-standard file names
 SRC_FILE_IntSetProperties = containers/tests/intset-properties.hs
+SRC_FILE_Data/IntSet/InternalWord = containers/Data/IntSet/Internal.hs
 
 # Generated modules
 # generated directly from GHC/libraries/containers/tests

@@ -2,7 +2,7 @@
    Compared to the Internal version, some of the operations 
    require that the type be a lawful instance of the Ord class. 
    (Otherwise, we cannot show that the resulting set 
-   is well-formed. Clients may either use this interface or 
+   is well-formed.) Clients may either use this interface or 
    the Internal interface. *)
 
 Require Data.Set.Internal.
@@ -31,7 +31,7 @@ This is the annotated export list of Set. The first column says:
 V            Set
 
             -- * Operators
-             , (\\)
+V            , (\\)
 
             -- * Query
 V            , S.null
@@ -72,7 +72,7 @@ V            , splitMember
             , splitRoot
 
             -- * Indexed
-            , lookupIndex
+V            , lookupIndex
 P            , findIndex
 P            , elemAt
 P            , deleteAt
@@ -361,3 +361,15 @@ Program Definition fromDistinctAscList {a} `{OrdLaws a} : forall x
 Next Obligation.
   eapply SetProofs.fromDistinctAscList_Desc; intuition.
 Defined.
+
+Definition op_zrzr__ {a} `{OrdLaws a} : Set_ a -> Set_ a -> Set_ a :=
+  fun m1 m2 => difference m1 m2.
+Notation "'_\\_'" := (op_zrzr__).
+Infix "\\" := (_\\_) (at level 99).
+
+Module Notations.
+Notation "'_Data.Set.\\_'" := (op_zrzr__).
+Infix "Data.Set.\\" := (_\\_) (at level 99).
+End Notations.
+
+           

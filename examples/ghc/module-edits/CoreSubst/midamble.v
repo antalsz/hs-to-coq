@@ -17,6 +17,7 @@ Definition mkOpenSubst
                                           nil) pairs)) tt tt. 
 
 (* TODO: Recursive KNOT tying!!! *)
+(*
 Parameter substRecBndrs : Subst -> list Var.Id -> (Subst * list Var.Id)%type.
 
 (*
@@ -33,3 +34,4 @@ Definition substRecBndrs : Subst -> list Var.Id -> (Subst * list Var.Id)%type :=
 Parameter cloneRecIdBndrs
    : Subst ->
      UniqSupply.UniqSupply -> list Var.Id -> (Subst * list Var.Id)%type.
+*)

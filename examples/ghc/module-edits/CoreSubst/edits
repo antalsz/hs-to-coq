@@ -4,8 +4,6 @@ skip module ErrUtils
 skip module OccurAnal
 skip module CoreSeq
 
-rewrite forall v, Var.idInfo v = (@Var.idInfo tt v)
-
 ###################################################
 # TODO: seq
 #
@@ -106,23 +104,15 @@ skip CoreSubst.cloneTyVarBndr
 
 
 #
-# ANTALSZ: Mutual recursion
+## Fixes for mutual recursion (subst_expr/substBind/substIdBndr)
 #
 #
-in CoreSubst.subst_expr rewrite forall, CoreSubst.substBind  = CoreSubst.substBind1
-in CoreSubst.subst_expr rewrite forall, CoreSubst.substBndrs = CoreSubst.substBndrs1
-in CoreSubst.subst_expr rewrite forall, CoreSubst.substBndr = CoreSubst.substBndr1
-
-in CoreSubst.substBind rewrite forall, CoreSubst.substBndr = CoreSubst.substBndr1
-in CoreSubst.substBind rewrite forall, CoreSubst.substBndrs = CoreSubst.substBndrs1
-in CoreSubst.substBind rewrite forall, CoreSubst.substRecBndrs = CoreSubst.substRecBndrs1
-in CoreSubst.substBndr rewrite forall, CoreSubst.substIdBndr = CoreSubst.substIdBndr1
-
-in CoreSubst.substIdBndr rewrite forall, CoreSubst.substIdInfo = CoreSubst.substIdInfo1
-
-
+# These two require recursive knot tying
 #
-# TODO: These two require recursive knot tying
+in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = substIdBndr x subst
+in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id subst
 #
-skip CoreSubst.substRecBndrs
-skip CoreSubst.cloneRecIdBndrs
+# Pairs are awful!!
+#
+in CoreSubst.substBind rewrite forall x rhss, GHC.Base.map (CoreSubst.subst_expr x subst') rhss = GHC.Base.map (fun ps => CoreSubst.subst_expr x subst' (snd ps)) pairs
+

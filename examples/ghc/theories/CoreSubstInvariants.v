@@ -8,7 +8,75 @@ Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 Require Import Coq.ZArith.BinInt.
 
+Require Import CoreFVs.
+Require Import CoreSubst.
+
+Require Import GHC.Base.
+Import GHC.Base.Notations.
+
+Require Proofs.GHC.Base.
+
 Set Bullet Behavior "Strict Subproofs".
+
+Lemma lookup_insert: forall A k1 k2 (v:A) m,
+    k1 == k2 = true ->
+    IntMap.Internal.lookup k1 (IntMap.Internal.insert k2 v m) = Some v.
+Admitted.
+
+Lemma lookup_insertVarEnv: forall A k1 k2 (v:A) m,
+    k1 == k2 = true ->
+    VarEnv.lookupVarEnv (VarEnv.extendVarEnv m k1 v) k2 = Some v.
+Admitted.
+
+Lemma lookup_insertVarEnv_neq: forall A k1 k2 (v:A) m,
+    k1 == k2 = false ->
+    VarEnv.lookupVarEnv (VarEnv.extendVarEnv m k1 v) k2 = VarEnv.lookupVarEnv m k2.
+Admitted.
+
+
+(* 
+Definition IdSubstEnv :=
+  (VarEnv.IdEnv CoreSyn.CoreExpr)%type.
+
+Inductive Subst : Type
+  := Mk_Subst : VarEnv.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
+*)
+
+Definition in_scope_invariant (s : Subst) :=
+  match s with 
+    | Mk_Subst inScopeSet idSubstEnv _ _ => 
+      forall v exp, 
+        (VarEnv.lookupVarEnv idSubstEnv v = Some exp) -> 
+        VarEnv.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) inScopeSet = true
+  end.
+  
+Lemma in_scope_invariant_emptySubst : in_scope_invariant emptySubst.
+Proof. 
+  unfold in_scope_invariant, emptySubst.
+  intros x exp. simpl. intros H. inversion H.
+Qed.
+
+
+Lemma in_scope_invariant_extendIdSubst : forall s v e, 
+    in_scope_invariant s -> 
+    VarEnv.varSetInScope (FV.fvVarSet (expr_fvs e)) (substInScope s) = true ->
+    in_scope_invariant (CoreSubst.extendIdSubst s v e).
+Proof.
+  intros.
+  unfold in_scope_invariant, extendIdSubst.
+  destruct s. simpl in *.
+  intros x exp h0.
+  destruct (v == x) eqn:hEq.
+  rewrite lookup_insertVarEnv in h0; eauto.  
+  inversion h0. subst. clear h0.
+  auto.
+  rewrite lookup_insertVarEnv_neq in h0; eauto.
+Qed.
+
+Lemma 
+
+
+
 
 (*
 -- | A substitution environment, containing 'Id', 'TyVar', and 'CoVar'

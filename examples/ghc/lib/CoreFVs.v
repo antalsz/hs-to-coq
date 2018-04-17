@@ -22,7 +22,6 @@ Require Data.Foldable.
 Require Data.Tuple.
 Require FV.
 Require GHC.Base.
-Require GHC.DeferredFix.
 Require GHC.List.
 Require Lists.List.
 Require NameSet.
@@ -50,8 +49,6 @@ Definition CoreAltWithFVs :=
   (AnnAlt Var.Id FVAnn)%type.
 (* Midamble *)
 
-(* Break mutual recursion *)
-Parameter rhs_fvs1 : (Var.Id * CoreSyn.CoreExpr)%type -> FV.FV.
 
 (* Break mutual recursion *)
 Parameter freeVarsBind1 : CoreSyn.CoreBind ->
@@ -69,6 +66,9 @@ The required annotation is
 
 Definition aFreeVar : Var.Var -> VarSet.DVarSet :=
   VarSet.unitDVarSet.
+
+Definition bndrRuleAndUnfoldingVarsDSet : Var.Id -> VarSet.DVarSet :=
+  fun id => FV.fvDVarSet FV.emptyFV.
 
 Definition freeVarsOf : CoreExprWithFVs -> VarSet.DIdSet :=
   fun '(pair fvs _) => fvs.
@@ -92,9 +92,6 @@ Definition bndrRuleAndUnfoldingFVs : Var.Id -> FV.FV :=
   fun id =>
     if Var.isId id : bool then FV.unionFV (idRuleFVs id) (idUnfoldingFVs id) else
     FV.emptyFV.
-
-Definition bndrRuleAndUnfoldingVarsDSet : Var.Id -> VarSet.DVarSet :=
-  fun id => FV.fvDVarSet (bndrRuleAndUnfoldingFVs id).
 
 Definition noFVs : VarSet.VarSet :=
   VarSet.emptyVarSet.
@@ -122,6 +119,15 @@ Definition varTypeTyCoFVs : Var.Var -> FV.FV :=
 
 Definition varTypeTyCoVars : Var.Var -> VarSet.TyCoVarSet :=
   fun var => FV.fvVarSet (varTypeTyCoFVs var).
+
+Definition idFVs : Var.Id -> FV.FV :=
+  fun id => FV.unionFV (varTypeTyCoFVs id) FV.emptyFV.
+
+Definition idFreeVars : Var.Id -> VarSet.VarSet :=
+  fun id => FV.fvVarSet (idFVs id).
+
+Definition dIdFreeVars : Var.Id -> VarSet.DVarSet :=
+  fun id => FV.fvDVarSet (idFVs id).
 
 Definition dVarTypeTyCoVars : Var.Var -> VarSet.DTyCoVarSet :=
   fun var => FV.fvDVarSet (varTypeTyCoFVs var).
@@ -206,15 +212,6 @@ Definition freeVarsBind
               all_fvs)
     end.
 
-Definition idFVs : Var.Id -> FV.FV :=
-  fun id => FV.unionFV (varTypeTyCoFVs id) (bndrRuleAndUnfoldingFVs id).
-
-Definition dIdFreeVars : Var.Id -> VarSet.DVarSet :=
-  fun id => FV.fvDVarSet (idFVs id).
-
-Definition idFreeVars : Var.Id -> VarSet.VarSet :=
-  fun id => FV.fvVarSet (idFVs id).
-
 Definition addBndr : CoreSyn.CoreBndr -> FV.FV -> FV.FV :=
   fun bndr fv fv_cand in_scope acc =>
     (FV.unionFV (varTypeTyCoFVs bndr) (FV.delFV bndr fv)) fv_cand in_scope acc.
@@ -223,33 +220,35 @@ Definition addBndrs : list CoreSyn.CoreBndr -> FV.FV -> FV.FV :=
   fun bndrs fv => Data.Foldable.foldr addBndr fv bndrs.
 
 Definition expr_fvs : CoreSyn.CoreExpr -> FV.FV :=
-  GHC.DeferredFix.deferredFix4 (fun expr_fvs arg_0__ arg_1__ arg_2__ arg_3__ =>
-                                  match arg_0__, arg_1__, arg_2__, arg_3__ with
-                                  | CoreSyn.Type_ ty, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
-                                  | CoreSyn.Coercion co, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
-                                  | CoreSyn.Var var, fv_cand, in_scope, acc => FV.unitFV var fv_cand in_scope acc
-                                  | CoreSyn.Lit _, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
-                                  | CoreSyn.Tick t expr, fv_cand, in_scope, acc =>
-                                      (FV.unionFV (tickish_fvs t) (expr_fvs expr)) fv_cand in_scope acc
-                                  | CoreSyn.App fun_ arg, fv_cand, in_scope, acc =>
-                                      (FV.unionFV (expr_fvs fun_) (expr_fvs arg)) fv_cand in_scope acc
-                                  | CoreSyn.Lam bndr body, fv_cand, in_scope, acc =>
-                                      addBndr bndr (expr_fvs body) fv_cand in_scope acc
-                                  | CoreSyn.Cast expr co, fv_cand, in_scope, acc =>
-                                      (FV.unionFV (expr_fvs expr) FV.emptyFV) fv_cand in_scope acc
-                                  | CoreSyn.Case scrut bndr ty alts, fv_cand, in_scope, acc =>
-                                      let alt_fvs :=
-                                        fun '(pair (pair _ bndrs) rhs) => addBndrs bndrs (expr_fvs rhs) in
-                                      (FV.unionFV (FV.unionFV (expr_fvs scrut) FV.emptyFV) (addBndr bndr
-                                                   (FV.mapUnionFV alt_fvs alts))) fv_cand in_scope acc
-                                  | CoreSyn.Let (CoreSyn.NonRec bndr rhs) body, fv_cand, in_scope, acc =>
-                                      (FV.unionFV (rhs_fvs1 (pair bndr rhs)) (addBndr bndr (expr_fvs body))) fv_cand
-                                      in_scope acc
-                                  | CoreSyn.Let (CoreSyn.Rec pairs) body, fv_cand, in_scope, acc =>
-                                      addBndrs (GHC.Base.map Data.Tuple.fst pairs) (FV.unionFV (FV.mapUnionFV rhs_fvs1
-                                                                                                pairs) (expr_fvs body))
-                                      fv_cand in_scope acc
-                                  end).
+  fix expr_fvs arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__, arg_1__, arg_2__, arg_3__ with
+           | CoreSyn.Type_ ty, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+           | CoreSyn.Coercion co, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+           | CoreSyn.Var var, fv_cand, in_scope, acc => FV.unitFV var fv_cand in_scope acc
+           | CoreSyn.Lit _, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+           | CoreSyn.Tick t expr, fv_cand, in_scope, acc =>
+               (FV.unionFV (tickish_fvs t) (expr_fvs expr)) fv_cand in_scope acc
+           | CoreSyn.App fun_ arg, fv_cand, in_scope, acc =>
+               (FV.unionFV (expr_fvs fun_) (expr_fvs arg)) fv_cand in_scope acc
+           | CoreSyn.Lam bndr body, fv_cand, in_scope, acc =>
+               addBndr bndr (expr_fvs body) fv_cand in_scope acc
+           | CoreSyn.Cast expr co, fv_cand, in_scope, acc =>
+               (FV.unionFV (expr_fvs expr) FV.emptyFV) fv_cand in_scope acc
+           | CoreSyn.Case scrut bndr ty alts, fv_cand, in_scope, acc =>
+               let alt_fvs :=
+                 fun '(pair (pair _ bndrs) rhs) => addBndrs bndrs (expr_fvs rhs) in
+               (FV.unionFV (FV.unionFV (expr_fvs scrut) FV.emptyFV) (addBndr bndr (FV.unionsFV
+                                                                                   (Lists.List.map alt_fvs alts))))
+               fv_cand in_scope acc
+           | CoreSyn.Let (CoreSyn.NonRec bndr rhs) body, fv_cand, in_scope, acc =>
+               (FV.unionFV (FV.unionFV (expr_fvs rhs) FV.emptyFV) (addBndr bndr (expr_fvs
+                                                                                 body))) fv_cand in_scope acc
+           | CoreSyn.Let (CoreSyn.Rec pairs) body, fv_cand, in_scope, acc =>
+               addBndrs (GHC.Base.map Data.Tuple.fst pairs) (FV.unionFV (FV.unionsFV
+                                                                         (Lists.List.map (fun '(pair bndr rhs) =>
+                                                                                            expr_fvs rhs) pairs))
+                                                                        (expr_fvs body)) fv_cand in_scope acc
+           end.
 
 Definition exprFVs : CoreSyn.CoreExpr -> FV.FV :=
   FV.filterFV Var.isLocalVar GHC.Base.∘ expr_fvs.
@@ -366,8 +365,7 @@ Definition idRuleRhsVars
     VarSet.emptyVarSet.
 
 Definition rhs_fvs : (Var.Id * CoreSyn.CoreExpr)%type -> FV.FV :=
-  fun '(pair bndr rhs) =>
-    FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
+  fun '(pair bndr rhs) => FV.unionFV (expr_fvs rhs) FV.emptyFV.
 
 Definition bindFreeVars : CoreSyn.CoreBind -> VarSet.VarSet :=
   fun arg_0__ =>
@@ -420,8 +418,8 @@ Definition vectsFreeVars : list CoreSyn.CoreVect -> VarSet.VarSet :=
   VarSet.mapUnionVarSet vectFreeVars.
 
 (* External variables:
-     AnnAlt AnnExpr None Some bool cons freeVarsBind1 list op_zt__ option pair
-     rhs_fvs1 tt BasicTypes.Activation CoreSyn.AnnApp CoreSyn.AnnBind CoreSyn.AnnCase
+     AnnAlt AnnExpr None Some bool cons freeVarsBind1 list op_zt__ option pair tt
+     BasicTypes.Activation CoreSyn.AnnApp CoreSyn.AnnBind CoreSyn.AnnCase
      CoreSyn.AnnCast CoreSyn.AnnCoercion CoreSyn.AnnExpr' CoreSyn.AnnLam
      CoreSyn.AnnLet CoreSyn.AnnLit CoreSyn.AnnNonRec CoreSyn.AnnRec CoreSyn.AnnTick
      CoreSyn.AnnType CoreSyn.AnnVar CoreSyn.App CoreSyn.Breakpoint
@@ -433,12 +431,12 @@ Definition vectsFreeVars : list CoreSyn.CoreVect -> VarSet.VarSet :=
      CoreSyn.VectClass CoreSyn.VectInst CoreSyn.VectType CoreSyn.isStableSource
      Data.Foldable.foldr Data.Tuple.fst FV.FV FV.InterestingVarFun FV.delFV FV.delFVs
      FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList FV.fvVarSet FV.mapUnionFV
-     FV.mkFVs FV.unionFV FV.unitFV GHC.Base.fmap GHC.Base.map GHC.Base.op_z2218U__
-     GHC.DeferredFix.deferredFix4 GHC.List.unzip GHC.List.zip Lists.List.map
-     NameSet.NameSet NameSet.emptyNameSet NameSet.unionNameSet
-     UniqSet.delOneFromUniqSet_Directly Unique.getUnique Var.Id Var.Var Var.isId
-     Var.isLocalId Var.isLocalVar VarSet.DIdSet VarSet.DTyCoVarSet VarSet.DVarSet
-     VarSet.IdSet VarSet.TyCoVarSet VarSet.VarSet VarSet.delDVarSet
-     VarSet.emptyDVarSet VarSet.emptyVarSet VarSet.mapUnionVarSet VarSet.mkDVarSet
-     VarSet.mkVarSet VarSet.unionDVarSet VarSet.unionDVarSets VarSet.unitDVarSet
+     FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.fmap GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip Lists.List.map NameSet.NameSet
+     NameSet.emptyNameSet NameSet.unionNameSet UniqSet.delOneFromUniqSet_Directly
+     Unique.getUnique Var.Id Var.Var Var.isId Var.isLocalId Var.isLocalVar
+     VarSet.DIdSet VarSet.DTyCoVarSet VarSet.DVarSet VarSet.IdSet VarSet.TyCoVarSet
+     VarSet.VarSet VarSet.delDVarSet VarSet.emptyDVarSet VarSet.emptyVarSet
+     VarSet.mapUnionVarSet VarSet.mkDVarSet VarSet.mkVarSet VarSet.unionDVarSet
+     VarSet.unionDVarSets VarSet.unitDVarSet
 *)

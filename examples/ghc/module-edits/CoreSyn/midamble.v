@@ -33,7 +33,7 @@ Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
                             List.fold_left (fun x y => x + size_AnnAlt y) brs 1 
   | AnnLet _ (_,e) => 1 + size_AnnExpr' e
   | AnnCast (_,e) _ => 1 + size_AnnExpr' e
-  | AnnTick _ _ => 1
+  | AnnTick _ (_,e) => 1 + size_AnnExpr' e
   | AnnType _ => 1
   | AnnCoercion _ => 1
   end.
@@ -63,7 +63,7 @@ Fixpoint size_Expr {b} (e: Expr b) :=
                             List.fold_left (fun x y => x + size_Alt y) brs 1 
   | Let _ e => 1 + size_Expr e
   | Cast e _ => 1 + size_Expr e
-  | Tick _ _ => 1
+  | Tick _ e => 1 + size_Expr e
   | Type_ _ => 1
   | Coercion _ => 1
   end.

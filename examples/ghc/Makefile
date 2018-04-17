@@ -85,9 +85,10 @@ CORE_MODULES = \
   CoreFVs \
   Exitify \
   CallArity \
+  CoreArity \
+  CoreTidy \
 
 NOTRANSLATE = \
-  CoreArity \
   Constructors \
   CoreType \
   IdInfo2 \

@@ -7,6 +7,9 @@ skip module TcType
 skip module TysWiredIn
 skip module RepType
 
+## CallStack
+rewrite forall x, Var.idInfo x = @Var.idInfo tt x
+
 ### get rid of some information in the AST
 rename type PrimOp.PrimOp           = unit
 rename type ForeignCall.ForeignCall = unit
@@ -28,7 +31,10 @@ rename value IdInfo.IdInfo     = IdInfo.Mk_IdInfo
 
 
 ###############################################################################
-
+#
+# IdInfo  --- edit out demandInfo, unfoldingIndo, ruleInfo, strictnessInfo from 
+#             this data structure
+#
 rewrite forall x, IdInfo.zapUsageEnvInfo x = x
 rewrite forall x, IdInfo.zapUsageInfo x    = x
 rewrite forall x, IdInfo.zapUsedOnceInfo x = x
@@ -42,6 +48,12 @@ rewrite forall arg dmd, IdInfo.setDemandInfo arg dmd = arg
 rewrite forall arg dmd, IdInfo.setStrictnessInfo arg dmd = arg
 rewrite forall arg dmd, IdInfo.setUnfoldingInfo arg dmd = arg
 
+rewrite forall x, IdInfo.ruleInfoFreeVars x = FV.emptyFVs
+
+
+#
+# Id -- 
+#
 rewrite forall arg y, Id.setIdUnfolding arg y = arg
 
 

@@ -1,4 +1,4 @@
-# axiomatize module CoreArity
+axiomatize module CoreArity
 
 #
 # NEEDED by CallArity
@@ -7,7 +7,6 @@
 #
 # This module depends strongly on Type/Coercion/TyCoRep/TyCon
 # in order to determine the arity of some of the operations
-# Perhaps we want to axiomatize some of the
 
 # skip etaInfoAbs
 

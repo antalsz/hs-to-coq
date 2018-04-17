@@ -1,5 +1,3 @@
-(* Break mutual recursion *)
-Parameter rhs_fvs1 : (Var.Id * CoreSyn.CoreExpr)%type -> FV.FV.
 
 (* Break mutual recursion *)
 Parameter freeVarsBind1 : CoreSyn.CoreBind ->

@@ -1,0 +1,42 @@
+skip module CoreSeq
+
+# rewrite forall x y, GHC.Prim.seq x y = y
+
+rewrite forall id, Var.idInfo id  = @Var.idInfo tt id
+
+#
+# No type information in the AST
+#
+rewrite forall var,    Var.isTyCoVar var = false
+rewrite forall env x,  TyCoRep.tidyType env x = tt
+rewrite forall env co, TyCoRep.tidyCo env co = tt
+
+#
+# No unfolding / rules in IdInfo
+#
+rewrite forall x, IdInfo.unfoldInfo x = tt
+rewrite forall x, CoreSyn.isEvaldUnfolding x = false
+rewrite forall x, CoreSyn.isStableUnfolding x = false
+
+skip CoreTidy.tidyUnfolding
+skip CoreTidy.tidyRule
+skip CoreTidy.tidyRules
+
+#
+# mutual recursion (!!!)
+#
+# HACK around lack of mutual recursion -- inline the definition of CoreTidy.tidyAlt where it is used
+# so that Coq can tell that this is a structural recursion
+#
+in CoreTidy.tidyExpr rewrite forall, CoreTidy.tidyAlt = fun env x => match x with | (pair (pair con vs) rhs) => match (tidyBndrs env vs) with | (pair env' vs) => pair (pair con vs) (tidyExpr env' rhs) end end
+
+
+# 
+# make tidyBind/tidyExpr more structural by fusing maps
+#
+in CoreTidy.tidyBind rewrite forall env' prs, GHC.Base.map (CoreTidy.tidyExpr env') (GHC.Base.map Data.Tuple.snd prs) = GHC.Base.map (fun x => CoreTidy.tidyExpr env' (snd x)) prs
+
+#
+# crazy knot tying: this is ok because tidyLetBndr doesn't actually use its first argument.
+#
+in CoreTidy.tidyBind rewrite forall, CoreTidy.tidyLetBndr env' = CoreTidy.tidyLetBndr env

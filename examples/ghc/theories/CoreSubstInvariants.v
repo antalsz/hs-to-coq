@@ -14,9 +14,16 @@ Require Import CoreSubst.
 Require Import GHC.Base.
 Import GHC.Base.Notations.
 
+(* Reasoning about FV.v requires funext. *)
+Import Coq.Logic.FunctionalExtensionality.
+
 Require Proofs.GHC.Base.
+Require CoreInduct.
+
 
 Set Bullet Behavior "Strict Subproofs".
+
+(* Some of these lemmas should move elsewhere *)
 
 Lemma lookup_insert: forall A k1 k2 (v:A) m,
     k1 == k2 = true ->
@@ -33,6 +40,80 @@ Lemma lookup_insertVarEnv_neq: forall A k1 k2 (v:A) m,
     VarEnv.lookupVarEnv (VarEnv.extendVarEnv m k1 v) k2 = VarEnv.lookupVarEnv m k2.
 Admitted.
 
+Lemma no_elem_empty : forall v, elemVarSet v emptyVarSet = false.
+Admitted.
+
+
+Lemma union_empty : forall fv, FV.unionFV fv FV.emptyFV = fv.
+intro fv. unfold FV.unionFV. unfold FV.emptyFV.
+  apply functional_extensionality. intro f.
+  apply functional_extensionality. intro vs.
+  apply functional_extensionality. intro bs.
+  reflexivity.
+Qed.
+
+Lemma fvVarSet_union : forall s1 s2, 
+    FV.fvVarSet (FV.unionFV s1 s2) = VarSet.unionVarSet (FV.fvVarSet s1) (FV.fvVarSet s2).
+  intros. unfold FV.fvVarSet.
+Admitted.
+
+Lemma varSetInScope_union : forall s1 s2 s,
+    (VarEnv.varSetInScope (unionVarSet s1 s2) s = true) <->
+    (VarEnv.varSetInScope s1 s = true) /\ (VarEnv.varSetInScope s2 s = true).
+
+Admitted.
+
+Lemma expr_fvs_App : forall e1 e2, 
+    expr_fvs (App e1 e2) = FV.unionFV (expr_fvs e1) (expr_fvs e2).
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
+
+
+Lemma expr_fvs_Case : forall e b u l, 
+    expr_fvs (Case e b u l) = 
+    FV.unionFV (expr_fvs e)
+               (addBndr b
+                        (FV.unionsFV
+                           (List.map (fun '(_, bndrs, rhs) => 
+                                        addBndrs bndrs (expr_fvs rhs)) l))).
+Proof.
+  intros.
+  simpl.
+  apply functional_extensionality. intro f.
+  apply functional_extensionality. intro vs.
+  apply functional_extensionality. intro bs.
+  rewrite union_empty. reflexivity.
+Qed.
+
+Lemma substExpr_App : forall s str e1 e2, substExpr str s (App e1 e2) = 
+                                 App (substExpr str s e1) (substExpr str s e2).
+Proof. intros. simpl.
+       f_equal.
+       unfold substExpr. 
+       destruct e1; reflexivity.
+       destruct e2; reflexivity.
+Qed.
+
+Definition substAlt str subst (alt:AltCon * list Var.Var * CoreExpr) := 
+  let '((con,bndrs), rhs) := alt in
+  let '(subst', bndrs') := substBndrs subst bndrs in
+  (con, bndrs', substExpr str subst' rhs).
+
+Lemma substExpr_Case : forall str s e b u l, 
+    substExpr str s (Case e b u l) = 
+    let '(subst', bndr') := substBndr s b in 
+    Case (substExpr str s e) bndr' tt (map (substAlt str subst') l).
+Proof. intros.                                        
+unfold substExpr. simpl.
+destruct (substBndr s b) as [subst' bndr'].       
+f_equal. destruct e; reflexivity.
+Qed.
+
+Hint Rewrite expr_fvs_App expr_fvs_Case substExpr_App substExpr_Case
+     fvVarSet_union varSetInScope_union : substfv.
 
 (* 
 Definition IdSubstEnv :=
@@ -42,12 +123,18 @@ Inductive Subst : Type
   := Mk_Subst : VarEnv.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 *)
 
+Definition expr_in_scope exp s := 
+  VarEnv.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) (substInScope s) = true.
+  
+
+
 Definition in_scope_invariant (s : Subst) :=
   match s with 
     | Mk_Subst inScopeSet idSubstEnv _ _ => 
       forall v exp, 
         (VarEnv.lookupVarEnv idSubstEnv v = Some exp) -> 
-        VarEnv.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) inScopeSet = true
+        expr_in_scope exp s
+(*        VarEnv.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) inScopeSet = true *)
   end.
   
 Lemma in_scope_invariant_emptySubst : in_scope_invariant emptySubst.
@@ -63,7 +150,7 @@ Lemma in_scope_invariant_extendIdSubst : forall s v e,
     in_scope_invariant (CoreSubst.extendIdSubst s v e).
 Proof.
   intros.
-  unfold in_scope_invariant, extendIdSubst.
+  unfold in_scope_invariant, extendIdSubst, expr_in_scope in *.
   destruct s. simpl in *.
   intros x exp h0.
   destruct (v == x) eqn:hEq.
@@ -74,8 +161,50 @@ Proof.
 Qed.
 
 
-
-
+Lemma in_scope_invariant_subst_expr : forall str s e,
+  in_scope_invariant s ->
+  expr_in_scope e s -> 
+  expr_in_scope (CoreSubst.substExpr str s e) s.
+Proof.
+  intros.
+  induction e.
+  - simpl. unfold expr_in_scope in *.
+    simpl in *.
+    unfold lookupIdSubst.
+    destruct s as [inScopeSet idSubst ? ?].
+    destruct (Var.isLocalId i) eqn:local.
+    destruct (VarEnv.lookupVarEnv idSubst i) eqn:lkp.
+    + simpl.
+      simpl in H.
+      apply H in lkp.
+      unfold expr_in_scope in lkp. simpl in lkp. auto.
+    + destruct (VarEnv.lookupInScope inScopeSet i) eqn:ins.
+      simpl in H.
+      simpl in H0.
+      unfold FV.unitFV.
+      unfold FV.fvVarSet.
+      unfold VarEnv.varSetInScope.
+      destruct inScopeSet.
+      unfold FV.fvVarListVarSet.
+      unfold GHC.Base.op_z2218U__.
+      admit.
+      admit.
+    + admit.
+  - auto. 
+  - unfold expr_in_scope in *. 
+    autorewrite with substfv in *.
+    destruct H0 as [h0 h1].
+    split; eauto.
+  - (* Lam *) admit.
+  - (* Let *) admit.
+  - (* Case *) 
+    unfold expr_in_scope in *.
+    autorewrite with substfv in *.
+    destruct H0 as [h0 h1].
+    destruct (substBndr s b) as [subst' bndr'].
+    autorewrite with substfv. split.
+    eauto.
+Admitted.    
 
 (*
 -- | A substitution environment, containing 'Id', 'TyVar', and 'CoVar'

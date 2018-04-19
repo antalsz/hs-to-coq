@@ -70,8 +70,6 @@ Proof.
   reflexivity.
 Qed.
 
-
-
 Lemma expr_fvs_Case : forall e b u l, 
     expr_fvs (Case e b u l) = 
     FV.unionFV (expr_fvs e)
@@ -123,8 +121,17 @@ Inductive Subst : Type
   := Mk_Subst : VarEnv.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 *)
 
+Definition in_scope fvs s :=
+  VarEnv.varSetInScope (FV.fvVarSet fvs) (substInScope s) = true.
+
+Lemma inscope_union : forall fv1 fv2 s,
+ in_scope (FV.unionFV fv1 fv2) s <-> in_scope fv1 s /\ in_scope fv2 s.
+Admitted.
+
+Hint Rewrite inscope_union : substfv.
+
 Definition expr_in_scope exp s := 
-  VarEnv.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) (substInScope s) = true.
+  in_scope (CoreFVs.expr_fvs exp) s.
   
 
 
@@ -150,7 +157,7 @@ Lemma in_scope_invariant_extendIdSubst : forall s v e,
     in_scope_invariant (CoreSubst.extendIdSubst s v e).
 Proof.
   intros.
-  unfold in_scope_invariant, extendIdSubst, expr_in_scope in *.
+  unfold in_scope_invariant, extendIdSubst, expr_in_scope, in_scope in *.
   destruct s. simpl in *.
   intros x exp h0.
   destruct (v == x) eqn:hEq.
@@ -161,24 +168,24 @@ Proof.
 Qed.
 
 
-Lemma in_scope_invariant_subst_expr : forall str s e,
+Lemma in_scope_invariant_subst_expr : forall e str s,
   in_scope_invariant s ->
   expr_in_scope e s -> 
   expr_in_scope (CoreSubst.substExpr str s e) s.
 Proof.
-  intros.
-  induction e.
+  intro e.
+  induction e using CoreInduct.core_induct; intros.
   - simpl. unfold expr_in_scope in *.
     simpl in *.
     unfold lookupIdSubst.
     destruct s as [inScopeSet idSubst ? ?].
-    destruct (Var.isLocalId i) eqn:local.
-    destruct (VarEnv.lookupVarEnv idSubst i) eqn:lkp.
+    destruct (Var.isLocalId v) eqn:local.
+    destruct (VarEnv.lookupVarEnv idSubst v) eqn:lkp.
     + simpl.
       simpl in H.
       apply H in lkp.
       unfold expr_in_scope in lkp. simpl in lkp. auto.
-    + destruct (VarEnv.lookupInScope inScopeSet i) eqn:ins.
+    + destruct (VarEnv.lookupInScope inScopeSet v) eqn:ins.
       simpl in H.
       simpl in H0.
       unfold FV.unitFV.
@@ -191,7 +198,7 @@ Proof.
       admit.
     + admit.
   - auto. 
-  - unfold expr_in_scope in *. 
+  - unfold expr_in_scope, in_scope in *. 
     autorewrite with substfv in *.
     destruct H0 as [h0 h1].
     split; eauto.
@@ -200,11 +207,61 @@ Proof.
   - (* Case *) 
     unfold expr_in_scope in *.
     autorewrite with substfv in *.
-    destruct H0 as [h0 h1].
-    destruct (substBndr s b) as [subst' bndr'].
-    autorewrite with substfv. split.
-    eauto.
-Admitted.    
+    destruct H1 as [h0 h1].
+    destruct (substBndr s bndr) as [subst' bndr'] eqn:sb.
+    autorewrite with substfv. split. auto.
+Admitted.        
+
+Lemma in_scope_Bndr : forall bndr s s' bndr' fvs,
+  substBndr s bndr = (s' , bndr' ) ->
+  in_scope fvs s' ->
+  in_scope (addBndr bndr fvs) s.
+Proof.
+  intros.
+  unfold substBndr, substIdBndr in H.
+  unfold addBndr.
+  destruct s.
+  autorewrite with substfv.
+  simpl in H.
+  inversion H. clear H. subst.
+  unfold varTypeTyCoFVs.
+  split. admit.
+
+  unfold in_scope in *.
+  simpl in *.
+Admitted.
+
+Lemma varSetInScope_delFV : forall bndr fvs i,
+  VarEnv.varSetInScope (FV.fvVarSet fvs) (VarEnv.extendInScopeSet i (VarEnv.uniqAway i bndr)) = true ->
+  VarEnv.varSetInScope (FV.fvVarSet (FV.delFV bndr fvs)) i = true.
+Proof.  
+  intros.
+  unfold VarEnv.varSetInScope, FV.fvVarSet, FV.delFV, VarEnv.extendInScopeSet in *.
+  destruct i.
+  unfold subVarSet in *.
+  unfold isEmptyVarSet in *.
+  unfold minusVarSet in *.
+  unfold extendVarSet in *.
+  unfold UniqSet.isEmptyUniqSet in *.
+Admitted.
+
+Lemma In_ind : forall A (l:list A) (P : list A -> Prop), 
+        (P nil) -> 
+        (forall x xs, In x l -> P xs -> P (x :: xs)) -> P l.
+Proof.
+  intros.
+  induction l. auto.
+  apply H0. apply in_eq.
+  apply IHl.
+  intros.
+  apply H0.
+  apply in_cons. auto. auto.
+Qed.
+
+
+   
+    
+
 
 (*
 -- | A substitution environment, containing 'Id', 'TyVar', and 'CoVar'

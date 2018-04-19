@@ -42,11 +42,12 @@ Definition CallArityRes :=
 (* Midamble *)
 
 (* We parameterize this because we don't have type information *)
-Parameter typeArity :  unit -> list BasicTypes.OneShotInfo.
+Definition typeArity :  unit -> list BasicTypes.OneShotInfo.
+apply GHC.Err.default. 
+Qed.
 
-
-Instance Default_CallArityRes : GHC.Err.Default CallArityRes.
-Admitted.
+Instance Default_CallArityRes : GHC.Err.Default CallArityRes := 
+GHC.Err.Build_Default _ (GHC.Err.default, GHC.Err.default).
 
 Definition arrow_first {b}{c}{d} (f : (b -> c)) : (b * d)%type -> (c * d)%type :=
   fun p => match p with (x,y)=> (f x, y) end.

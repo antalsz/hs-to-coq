@@ -50,16 +50,19 @@ Additionally, we have the invariant:
 *)
 
 
-Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
-  let isJoinPointsValidPair (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
+Definition isJoinPointsValidPair_aux
+  isJoinPointsValid isJoinRHS
+  (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
     match isJoinId_maybe v with
     | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
     | Some a => 
       if a =? 0 (* Uh, all for the termination checker *)
       then isJoinPointsValid rhs 0 jps (* tail-call position *)
       else isJoinRHS a rhs jps                   (* tail-call position *)
-    end
-  in
+    end.
+
+
+Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
   match e with
   | Var v => match isJoinId_maybe v with
     | None => true
@@ -72,7 +75,7 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bo
   | Lam v e =>
     isJoinPointsValid e 0 emptyVarSet     (* Non-tail-call position *)
   | Let (NonRec v rhs) body => 
-      isJoinPointsValidPair v rhs jps &&
+      isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS v rhs jps &&
       let jps' := if isJoinId v
                   then extendVarSet jps v
                   else delVarSet    jps v in
@@ -84,7 +87,7 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bo
       let jps' := if forallb (fun p => isJoinId (fst p)) pairs 
                   then extendVarSetList jps (map fst pairs)
                   else delVarSetList    jps (map fst pairs) in
-      forallb (fun '(v,e) => isJoinPointsValidPair v e jps') pairs &&
+      forallb (fun '(v,e) => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS v e jps') pairs &&
       isJoinPointsValid body 0 jps'
   | Case scrut bndr ty alts  => 
     isJoinPointsValid scrut 0 emptyVarSet &&  (* Non-tail-call position *)
@@ -106,15 +109,9 @@ with isJoinRHS (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} : bo
     | _ => false
     end.
 
-Definition isJoinPointsValidPair (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
-    match isJoinId_maybe v with
-    | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
-    | Some a => 
-      if a =? 0 (* Uh, all for the termination checker *)
-      then isJoinPointsValid rhs 0 jps (* tail-call position *)
-      else isJoinRHS a rhs jps                   (* tail-call position *)
-    end.
-
+Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS.
+    
+    
 (* I had to do two things to make this pass the termination checker that I would
    have done differently otherwise:
     - isJoinRHS is structured so that *always* destructs the expression,

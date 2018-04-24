@@ -1,8 +1,13 @@
+Require Import GHC.Base.
+
 Require Import Exitify.
 Require Import CoreSyn.
 Require Import Var.
 Require Import VarEnv.
 Require Import VarSet.
+Require Import Id.
+Require Import IdInfo.
+
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -15,16 +20,27 @@ Set Bullet Behavior "Strict Subproofs".
 
 Require Import JoinPointInvariants.
 
-Ltac get_let n e :=
- lazymatch e with 
- | (let x := ?rhs in ?body) => 
-  let n' := eval cbv in n in
-  lazymatch n' with
-  | O => rhs
-  | S ?nsub1 => get_let nsub1 body
-  end
- | _ => fail "expression" e "is not a let-binding"
- end.
+
+(** ** Punted-on lemmas about GHC functions *)
+
+Axiom isJoinId_eq : forall v,
+  isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
+
+Axiom extendVarSetList_cons:
+  forall s v vs,
+  extendVarSetList s (v :: vs) = extendVarSetList (extendVarSet s v) vs.
+
+Axiom isJoinPointValidPair_extendVarSet:
+  forall v rhs jps v',
+  isJoinPointsValidPair v rhs jps = true ->
+  isJoinPointsValidPair v rhs (extendVarSet jps v') = true.
+
+Axiom forallb_imp:
+  forall a P Q (xs : list a),
+  forallb P xs = true ->
+  (forall x, P x = true -> Q x = true) ->
+  forallb Q xs = true.
+
 
 (* This section reflects the context of the local definition of exitify *)
 Section in_exitify.
@@ -40,28 +56,10 @@ Section in_exitify.
    *)
   Definition recursive_calls := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
-    let def := get_let 0%nat rhs in
-    exact def).
+    lazymatch rhs with | (let x := ?rhs in ?body) => 
+      exact rhs
+    end).
 
-  (* But for the next nested let we have a problem. *)
-  Fail Definition go := ltac:(
-    let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
-    let def := get_let 1%nat rhs in
-    let ty := type of def in
-    exact ty).
-    (* 
-    In nested Ltac calls to "get_let" and "get_let", last call failed.
-    Must evaluate to a closed term
-    offending expression: 
-    e
-    this is an object of type constr_under_binders
-    *)
-    (* We cannot go under a binder with ltac, this way it seems. *)
-
-  (* It works for every given depths if 
-     we pattern-match on the nested [let]s in one go,
-     and abstract over the free variables correctly:
-  *)
   Definition go := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
     lazymatch rhs with | (let x := _ in let y := ?rhs in ?body) => 
@@ -91,20 +89,50 @@ Section in_exitify.
       exact def
     end).
 
-  (* This is tedious, but doable. Maybe some not too big ML hacking
-     can give us a
-     [Lift Local Definition (exitify in_scope pairs body)]
-     command that does precisely that?
-   *)
-
   Ltac expand_pairs :=
   match goal with
     |- context[let (_,_) := ?e in _] =>
     rewrite (surjective_pairing e)
   end.
 
+  Ltac simpl_bool :=
+    rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r,
+            ?andb_true_l, ?andb_true_r, ?andb_false_l, ?andb_false_r,
+            ?orb_true_iff, ?andb_true_iff
+            in *.
+
+  (** When is the result of [mkExitLets] valid? *)
+  
+  Lemma mkExitLets_JPI:
+    forall exits' e jps',
+    isJoinPointsValid e 0 (extendVarSetList jps' (map fst exits')) = true ->
+    forallb (fun '(v,rhs) => isJoinId v) exits' = true ->
+    forallb (fun '(v,rhs) => isJoinPointsValidPair v rhs jps') exits' = true ->
+    isJoinPointsValid (mkExitLets exits' e) 0 jps' = true.
+  Proof.
+    intros ??.
+    induction exits' as [|[v rhs] exits']; intros jps' Hbase HiJI Hpairs.
+    * simpl. unfold Base.id. assumption.
+    * simpl in *; fold isJoinPointsValidPair in *.
+      simpl_bool.
+      destruct HiJI as [HiJIv HiJIvs].
+      destruct Hpairs as [Hpair Hpairs].
+      split.
+      - assumption. 
+      - apply IHexits'.
+        + rewrite HiJIv. rewrite extendVarSetList_cons in Hbase. assumption.
+        + assumption.
+        + rewrite HiJIv.
+          eapply forallb_imp. apply Hpairs.
+          intros [v' rhs'].
+          apply isJoinPointValidPair_extendVarSet.
+  Qed.
+
+  (** Main result *)
+
   Theorem exitify_JPI:
-    forall body jps,
+    forall body,
+    pairs <> [] ->
     isJoinPointsValid (Let (Rec pairs) body) 0 jps = true ->
     isJoinPointsValid (exitify in_scope pairs body) 0 jps = true.
   Proof.
@@ -119,7 +147,11 @@ Section in_exitify.
     expand_pairs.
     fold pairs'.
     fold exits.
-    change (isJoinPointsValid (mkExitLets exits (mkLetRec pairs' body)) 0 jps0 = true).
-  Abort.
+    change (isJoinPointsValid (mkExitLets exits (mkLetRec pairs' body)) 0 jps = true).
+    apply mkExitLets_JPI.
+    * admit.
+    * admit.
+    * admit.
+  Admitted.
 
 End in_exitify.

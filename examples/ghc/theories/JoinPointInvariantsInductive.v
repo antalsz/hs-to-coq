@@ -147,15 +147,17 @@ Proof.
   intros; simpl;
   rewrite ?isJoinId_eq in *;
   rewrite ?orb_true_iff, ?andb_true_iff in *;
-  rewrite ?bindersOf_cleanup.
+  rewrite ?bindersOf_cleanup; fold isJoinPointsValidPair.
   * destruct (isJoinId_maybe v); congruence.
   * rewrite e, andb_true_iff, Z.leb_le. split; assumption.
   * reflexivity.
   * split; assumption.
   * assumption.
-  * destruct (isJoinId_maybe v); inversion_clear e.
+  * unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux.
+    destruct (isJoinId_maybe v); inversion_clear e.
     split; assumption.
-  * rewrite e in *; clear e.
+  * unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux.
+    rewrite e in *; clear e.
     split; assumption.
   * split; split.
     - rewrite negb_true_iff.
@@ -167,6 +169,7 @@ Proof.
       reflexivity.
     - rewrite forallb_forall.
       intros [v rhs] HIn.
+      unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux.
       specialize (e0 _ _ HIn).
       rewrite isJoinId_eq in e0.
       destruct (isJoinId_maybe v); inversion_clear e0.
@@ -195,6 +198,7 @@ Proof.
       reflexivity.
     - rewrite forallb_forall.
       intros [v rhs] HIn.
+      unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux.
       specialize (e0 _ _ HIn).
       rewrite isJoinId_eq in e0.
       destruct (isJoinId_maybe v) eqn:HiJI; inversion_clear e0.
@@ -260,6 +264,7 @@ Proof.
  
  * destruct binds as [v rhs | pairs].
    + rewrite isJoinId_eq in HiJPV.
+     unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux in *.
      destruct (isJoinId_maybe v) eqn:HJI; rewrite ?andb_true_iff in *.
      ** eapply JPV_LetNonRecJP.
         -- eassumption.
@@ -302,6 +307,7 @@ Proof.
            rewrite negb_true_iff in H1. simpl in H1.
            rewrite isJoinId_eq in H1.
            specialize (H2 (v,rhs) HIn). simpl in H2.
+           unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux in *.
            destruct (isJoinId_maybe v) eqn:HJI; inversion_clear H1.
            eapply H; eassumption.
         -- rewrite Hforallb in H3.
@@ -321,6 +327,7 @@ Proof.
            simpl in H1.
            rewrite isJoinId_eq in H1.
            specialize (H2 (v,rhs) HIn). simpl in H2.
+           unfold isJoinPointsValidPair,  isJoinPointsValidPair_aux in *.
            rewrite HJI in *.
            rewrite Hforallb in *.
            destruct (Z.eqb_spec a 0).

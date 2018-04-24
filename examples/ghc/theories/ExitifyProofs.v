@@ -34,6 +34,32 @@ Ltac simpl_bool :=
           ?orb_true_iff, ?andb_true_iff
           in *.
 
+(** This tactic finds a [let x := rhs in body] anywhere in the goal,
+    and moves it into the context, without zeta-reducing it. *)
+Ltac find_let e k :=
+  lazymatch e with 
+    | let x := ?rhs in ?body => k x rhs body
+    | ?e1 ?e2 =>
+      find_let e1 ltac:(fun x rhs body => k x rhs uconstr:(body e2)) ||
+      find_let e2 ltac:(fun x rhs body => k x rhs uconstr:(e1 body))
+    | _ => fail
+  end.
+Ltac float_let :=
+  lazymatch goal with |- ?goal =>
+    find_let goal ltac:(fun x rhs body =>
+      let goal' := uconstr:(let x := rhs in body) in
+      (change goal'; intro) || fail 1000 "Failed to change to" goal'
+    )
+  end.
+
+(* NB, this does not work:
+Ltac float_let :=
+  lazymatch goal with |-  context C [let x := ?rhs in ?body] =>
+    let goal' := context C[body] in
+    change (let x := rhs in goal'); intro
+  end.
+*)
+
 
 
 (** ** Punted-on lemmas about GHC functions *)
@@ -211,14 +237,7 @@ Section in_exitify.
     rewrite go_eq.
     cbv delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
-    repeat lazymatch goal with | |- StateInvariant ?P ((let x := ?rhs in ?body) ?a ?b ?c) =>
-      change (let x := rhs in StateInvariant P (body a b c)); intro
-    end.
-    cbv beta. (* Do some beta reduction *)
-    (* Flout out more lets *)
-    repeat lazymatch goal with | |- StateInvariant ?P ((let x := ?rhs in ?body)) =>
-      change (let x := rhs in StateInvariant P body); intro
-    end.
+    float_let. cbv beta. repeat float_let.
 
     (* First case *)
     enough (Hnext: StateInvariant P j_37__). {
@@ -263,10 +282,7 @@ Section in_exitify.
         apply StateInvariant_bind_return.
         apply IH.
       * (* Case Let *) 
-        (* Flout out more lets *)
-        repeat lazymatch goal with | |- StateInvariant ?P ((let x := ?rhs in ?body)) =>
-          change (let x := rhs in StateInvariant P body); intro
-        end.
+        repeat float_let.
 
         enough (Hnext': StateInvariant P j_18__). {
           destruct a as [j rhs|pairs']; try apply Hnext'.
@@ -286,8 +302,8 @@ Section in_exitify.
             apply StateInvariant_bind.
             - apply StateInvariant_forM.
               intros [j rhs] HIn.
-              cbv zeta.
-              destruct (collectNAnnBndrs (idJoinArity j) rhs) as [params join_body].
+              repeat float_let.
+              destruct (collectNAnnBndrs join_arity rhs) as [params join_body].
               apply StateInvariant_bind_return.
               apply IH.
             - intro x.

@@ -117,21 +117,21 @@ Section in_exitify.
 
   Definition go := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
-    lazymatch rhs with | (let x := _ in let y := ?rhs in ?body) => 
-      exact (let x := recursive_calls in rhs)
+    lazymatch rhs with | (let x := _ in let y := @?rhs x in _) => 
+      let def := eval cbv beta in (rhs recursive_calls) in
+      exact def
     end).
 
   Definition ann_pairs := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let y := ?rhs in ?body) => 
-      let def := constr:(let x1 := recursive_calls in let x2 := go in rhs) in
-      exact def
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let y := ?rhs in _) => 
+      exact rhs
     end).
 
   Definition pairs'_exits := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := ?rhs in ?body) => 
-      let def := constr:(let x1 := recursive_calls in let x2 := go in let x3 := ann_pairs in rhs) in
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := @?rhs x2 x3 in ?body) => 
+      let def := eval cbv beta in (rhs go ann_pairs) in
       exact def
     end).
   Definition pairs' := fst pairs'_exits.
@@ -140,8 +140,7 @@ Section in_exitify.
   Definition mkExitLets := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
     lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := _ in let y := ?rhs in ?body) => 
-      let def := constr:(rhs) in (* Aha, we only have to abstract over the actually captured variables here. *)
-      exact def
+      exact rhs
     end).
   (** When is the result of [mkExitLets] valid? *)
   
@@ -176,11 +175,10 @@ Section in_exitify.
   Definition go_f := ltac:(
     let rhs := eval cbv delta [go] in go in
     lazymatch rhs with
-      | let x := recursive_calls in  @DeferredFix.deferredFix2 ?a ?b ?r ?HDefault ?f =>
-      let f' := constr:(let x := recursive_calls in f) in
-      exact f'
+      | @DeferredFix.deferredFix2 ?a ?b ?r ?HDefault ?f =>
+      exact f
     end).
-    
+
   Lemma go_eq : forall x y, go x y = go_f go x y.
   Proof. apply unsafe_deferredFix2_eq. Qed.
 
@@ -223,9 +221,9 @@ Section in_exitify.
     fix 2. rename go_all_joinIds into IH.
     intros.
     rewrite go_eq.
-    cbv delta [go_f]. (* No [zeta]! *)
+    cbv beta delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
-    float_let. cbv beta. repeat float_let.
+    repeat float_let.
 
     (* First case *)
     enough (Hnext: StateInvariant P j_37__). {

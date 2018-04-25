@@ -9,4 +9,5 @@ JoinPointInvariantsInductive.v
 CoreInduct.v
 ExitifyProofs.v
 CoreSubstInvariants.v
+StateLogic.v
 

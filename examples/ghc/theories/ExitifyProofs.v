@@ -19,6 +19,8 @@ Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
 Require Import JoinPointInvariants.
+Require Import StateLogic.
+
 
 (** Tactics *)
 
@@ -67,6 +69,18 @@ Ltac float_let :=
 Axiom isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
 
+Axiom isJoinId_uniqAway:
+  forall s v, 
+  isJoinId (uniqAway s v) = isJoinId v.
+
+Axiom isJoinId_setIdOccInfo:
+  forall v occ_info, 
+  isJoinId (setIdOccInfo v occ_info) = isJoinId v.
+
+Axiom isJoinId_asJoinId:
+  forall v a,
+  isJoinId (asJoinId v a) = true.
+
 Axiom extendVarSetList_cons:
   forall s v vs,
   extendVarSetList s (v :: vs) = extendVarSetList (extendVarSet s v) vs.
@@ -82,55 +96,6 @@ Axiom forallb_imp:
   (forall x, P x = true -> Q x = true) ->
   forallb Q xs = true.
 
-Definition StateInvariant {a} {s} (P : s -> Prop) (act : State.State s a) :=
-  forall s, P s -> P (snd (State.runState act s)).
-
-Lemma StateInvariant_return:
-  forall {a s} (P : s -> Prop) (x : a),
-  StateInvariant P (return_ x).
-Proof.
-  intros.
-  intros s0 H. apply H.
-Qed.
-
-Lemma StateInvariant_bind:
-  forall {a b s} P (act1 : State.State s a) (act2 : a -> State.State s b),
-  StateInvariant P act1 ->
-  (forall x, StateInvariant P (act2 x)) ->
-  StateInvariant P (act1 >>= act2).
-Proof.
-  intros ?????? H1 H2.
-  intros s0 H.
-  unfold State.runState.
-  expand_pairs; simpl.
-  expand_pairs; simpl.
-  enough (P (snd (State.runState (act2 (fst (State.runState act1 s0))) (snd (State.runState act1 s0))))) by admit.
-  eapply H2.
-  eapply H1.
-  assumption.
-Admitted.
-
-Lemma StateInvariant_bind_return: (*  acommon pattern *)
-  forall {a b s} P (act1 : State.State s a) (f : a -> b),
-  StateInvariant P act1 ->
-  StateInvariant P (act1 >>= (fun x => return_ (f x))).
-Proof.
-  intros.
-  apply StateInvariant_bind.
-  * apply H.
-  * intro. apply StateInvariant_return.
-Qed.
-
-Lemma StateInvariant_forM:
-  forall {a b s} P (act : a -> State.State s b) (xs : list a),
-  (forall x, In x xs -> StateInvariant P (act x)) ->
-  StateInvariant P (Traversable.forM xs act).
-Proof.
-  intros ?????? Hact.
-  induction xs.
-  * intros s0 H. apply H.
-  * admit.
-Admitted.
 
 (* This section reflects the context of the local definition of exitify *)
 Section in_exitify.
@@ -223,7 +188,30 @@ Section in_exitify.
     forall in_scope_set ty ja e,
     StateInvariant (fun xs => forallb (fun '(v0, _) => isJoinId v0) xs = true)
                    (addExit in_scope_set ty ja e).
-  Admitted.
+  Proof.
+    set (P := (fun xs => forallb (fun '(v0, _) => isJoinId v0) xs = true)).
+    intros.
+    unfold addExit.
+    eapply SP_bind with (R := fun v => isJoinId v = true).
+    * unfold mkExitJoinId.
+      eapply SP_bind.
+      - apply SP_get.
+      - intros xs HPxs.
+        apply SP_return.
+        (* Here we actually show that we only generate join ids *)
+        rewrite isJoinId_uniqAway.
+        rewrite isJoinId_setIdOccInfo.
+        apply isJoinId_asJoinId.
+    * intros x HiJI.
+      eapply SP_bind.
+      - apply SP_get.
+      - intros xs HPxs.
+        apply StateInvariant_bind_return.
+        apply SP_put.
+        subst P.
+        simpl; simpl_bool. split; assumption.
+  Qed.
+
 
   Lemma go_all_joinIds:
     forall captured ann_e,
@@ -328,8 +316,9 @@ Section in_exitify.
   Proof.
     unfold exits.
     unfold pairs'_exits.
-    apply StateInvariant_forM.
-    * intros [v rhs] HIn.
+    eapply SP_snd_runState.
+    * apply StateInvariant_forM.
+      intros [v rhs] HIn.
       expand_pairs.
       apply StateInvariant_bind.
       + apply go_all_joinIds.
@@ -360,7 +349,7 @@ Section in_exitify.
     change (isJoinPointsValid (mkExitLets exits (mkLetRec pairs' body)) 0 jps = true).
     apply mkExitLets_JPI.
     * admit.
-    * admit.
+    * apply all_exists_joinIds.
     * admit.
   Admitted.
 

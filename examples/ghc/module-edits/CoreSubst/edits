@@ -109,8 +109,8 @@ skip CoreSubst.cloneTyVarBndr
 #
 # These two require recursive knot tying
 #
-in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = substIdBndr x subst
-in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id subst
+in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = substIdBndr x GHC.Err.default
+in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id GHC.Err.default
 #
 # Pairs are awful!!
 #

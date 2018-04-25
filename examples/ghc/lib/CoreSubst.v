@@ -48,6 +48,10 @@ Inductive Subst : Type
   := Mk_Subst : VarEnv.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 (* Midamble *)
 
+Instance Default_Subst : GHC.Err.Default Subst :=
+  GHC.Err.Build_Default _ (Mk_Subst GHC.Err.default GHC.Err.default tt tt).
+
+
 Parameter substBind1 :  Subst -> CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type.
 Parameter substBndrs1 : Subst -> list Var.Var -> (Subst * list Var.Var)%type.
 Parameter substBndr1 : Subst -> Var.Var -> (Subst * Var.Var)%type.
@@ -308,8 +312,8 @@ Definition cloneRecIdBndrs
    : Subst ->
      UniqSupply.UniqSupply -> list Var.Id -> (Subst * list Var.Id)%type :=
   fun subst us ids =>
-    let 'pair subst' ids' := Data.Traversable.mapAccumL (clone_id subst) subst
-                               (GHC.List.zip ids (UniqSupply.uniqsFromSupply us)) in
+    let 'pair subst' ids' := Data.Traversable.mapAccumL (clone_id GHC.Err.default)
+                               subst (GHC.List.zip ids (UniqSupply.uniqsFromSupply us)) in
     pair subst' ids'.
 
 Definition cloneIdBndrs
@@ -343,8 +347,8 @@ Definition substInScope : Subst -> VarEnv.InScopeSet :=
 Definition substRecBndrs : Subst -> list Var.Id -> (Subst * list Var.Id)%type :=
   fun subst bndrs =>
     let 'pair new_subst new_bndrs := Data.Traversable.mapAccumL (substIdBndr
-                                                                 (Datatypes.id (GHC.Base.hs_string__ "rec-bndr")) subst)
-                                       subst bndrs in
+                                                                 (Datatypes.id (GHC.Base.hs_string__ "rec-bndr"))
+                                                                 GHC.Err.default) subst bndrs in
     pair new_subst new_bndrs.
 
 Definition substBind
@@ -569,16 +573,16 @@ Definition zapSubstEnv : Subst -> Subst :=
      CoreSyn.isStableSource CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
      Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
      Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Err.error GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
-     Id.maybeModifyIdInfo IdInfo.IdInfo IdInfo.ruleInfo IdInfo.setRuleInfo
-     IdInfo.unfoldingInfo Name.Name Panic.noString Panic.panicStr Panic.someSDoc
-     Panic.warnPprTrace UniqSupply.UniqSupply UniqSupply.uniqFromSupply
-     UniqSupply.uniqsFromSupply Unique.Unique Var.Id Var.TyVar Var.Var Var.idInfo
-     Var.isLocalId Var.isLocalVar Var.setVarUnique VarEnv.IdEnv VarEnv.InScopeSet
-     VarEnv.delVarEnv VarEnv.delVarEnvList VarEnv.elemInScopeSet
-     VarEnv.emptyInScopeSet VarEnv.emptyVarEnv VarEnv.extendInScopeSet
-     VarEnv.extendInScopeSetList VarEnv.extendInScopeSetSet VarEnv.extendVarEnv
-     VarEnv.extendVarEnvList VarEnv.isEmptyVarEnv VarEnv.lookupInScope
-     VarEnv.lookupVarEnv VarEnv.uniqAway VarSet.DVarSet VarSet.VarSet
-     VarSet.dVarSetElems VarSet.emptyVarSet VarSet.mkDVarSet
+     GHC.Base.op_zeze__ GHC.Err.default GHC.Err.error GHC.List.unzip GHC.List.zip
+     GHC.Num.fromInteger Id.maybeModifyIdInfo IdInfo.IdInfo IdInfo.ruleInfo
+     IdInfo.setRuleInfo IdInfo.unfoldingInfo Name.Name Panic.noString Panic.panicStr
+     Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
+     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique Var.Id
+     Var.TyVar Var.Var Var.idInfo Var.isLocalId Var.isLocalVar Var.setVarUnique
+     VarEnv.IdEnv VarEnv.InScopeSet VarEnv.delVarEnv VarEnv.delVarEnvList
+     VarEnv.elemInScopeSet VarEnv.emptyInScopeSet VarEnv.emptyVarEnv
+     VarEnv.extendInScopeSet VarEnv.extendInScopeSetList VarEnv.extendInScopeSetSet
+     VarEnv.extendVarEnv VarEnv.extendVarEnvList VarEnv.isEmptyVarEnv
+     VarEnv.lookupInScope VarEnv.lookupVarEnv VarEnv.uniqAway VarSet.DVarSet
+     VarSet.VarSet VarSet.dVarSetElems VarSet.emptyVarSet VarSet.mkDVarSet
 *)

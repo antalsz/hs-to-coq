@@ -1,3 +1,7 @@
+Instance Default_Subst : GHC.Err.Default Subst :=
+  GHC.Err.Build_Default _ (Mk_Subst GHC.Err.default GHC.Err.default tt tt).
+
+
 Parameter substBind1 :  Subst -> CoreSyn.CoreBind -> (Subst * CoreSyn.CoreBind)%type.
 Parameter substBndrs1 : Subst -> list Var.Var -> (Subst * list Var.Var)%type.
 Parameter substBndr1 : Subst -> Var.Var -> (Subst * Var.Var)%type.

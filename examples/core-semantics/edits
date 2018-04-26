@@ -1,0 +1,19 @@
+
+rename value GHC.SmallStep.Step = GHC.SmallStep.Mk_Step
+
+rewrite forall , Outputable.empty = (GHC.Base.hs_string__ "Outputable.empty")
+
+# move to no-type-edits
+rewrite forall dc, (DataCon.dataConRepArgTys dc) = nil
+
+# above is nil and zipped with
+## rewrite forall f n y, zipWith f (GHC.Enum.enumFrom n) y = zipWith f (GHC.Enum.enumFromTo n (n + (List.length y)) y
+
+in GHC.SmallStep.etaExpandDCWorker rewrite forall x, GHC.Enum.enumFrom x = nil
+
+# problem with guards
+# skip GHC.SmallStep.exprIsTrivial'
+# skip GHC.SmallStep.isDataConApp 
+
+termination GHC.SmallStep.step { measure (step_measure arg_0__) }
+obligations GHC.SmallStep.step solve_step_obligations

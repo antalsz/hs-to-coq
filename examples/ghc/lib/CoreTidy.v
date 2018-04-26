@@ -16,6 +16,7 @@ Require CoreArity.
 Require CoreSyn.
 Require Data.Traversable.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.List.
 Require GHC.Prim.
 Require Id.
@@ -143,7 +144,8 @@ Definition tidyBind
                              tidyLetBndr env env (pair bndr rhs) =:
                              (fun '(pair env' bndr') => pair env' (CoreSyn.NonRec bndr' (tidyExpr env' rhs)))
                          | env, CoreSyn.Rec prs =>
-                             let 'pair env' bndrs' := Data.Traversable.mapAccumL (tidyLetBndr env) env prs in
+                             let 'pair env' bndrs' := Data.Traversable.mapAccumL (tidyLetBndr
+                                                                                  GHC.Err.default) env prs in
                              GHC.Base.map (fun x => tidyExpr env' (snd x)) prs =:
                              (fun rhss' => pair env' (CoreSyn.Rec (GHC.List.zip bndrs' rhss')))
                          end for tidyBind.
@@ -176,7 +178,8 @@ Definition tidyExpr : VarEnv.TidyEnv -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr :=
                              tidyLetBndr env env (pair bndr rhs) =:
                              (fun '(pair env' bndr') => pair env' (CoreSyn.NonRec bndr' (tidyExpr env' rhs)))
                          | env, CoreSyn.Rec prs =>
-                             let 'pair env' bndrs' := Data.Traversable.mapAccumL (tidyLetBndr env) env prs in
+                             let 'pair env' bndrs' := Data.Traversable.mapAccumL (tidyLetBndr
+                                                                                  GHC.Err.default) env prs in
                              GHC.Base.map (fun x => tidyExpr env' (snd x)) prs =:
                              (fun rhss' => pair env' (CoreSyn.Rec (GHC.List.zip bndrs' rhss')))
                          end for tidyExpr.
@@ -200,11 +203,11 @@ End Notations.
      CoreSyn.CoreBind CoreSyn.CoreExpr CoreSyn.Lam CoreSyn.Let CoreSyn.Lit
      CoreSyn.NonRec CoreSyn.Rec CoreSyn.Tick CoreSyn.Tickish CoreSyn.Type_
      CoreSyn.Var CoreSyn.noUnfolding Data.Traversable.mapAccumL GHC.Base.map
-     GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique Id.mkLocalIdWithInfo
-     IdInfo.inlinePragInfo IdInfo.occInfo IdInfo.oneShotInfo IdInfo.setArityInfo
-     IdInfo.setInlinePragInfo IdInfo.setOccInfo IdInfo.setOneShotInfo
-     IdInfo.unfoldingInfo IdInfo.vanillaIdInfo Maybes.orElse Name.Name
-     Name.getOccName Name.mkInternalName OccName.tidyOccName SrcLoc.noSrcSpan
-     UniqFM.lookupUFM Var.Id Var.Var Var.idDetails Var.idInfo Var.mkLocalVar
-     VarEnv.TidyEnv VarEnv.extendVarEnv VarEnv.lookupVarEnv
+     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique
+     Id.mkLocalIdWithInfo IdInfo.inlinePragInfo IdInfo.occInfo IdInfo.oneShotInfo
+     IdInfo.setArityInfo IdInfo.setInlinePragInfo IdInfo.setOccInfo
+     IdInfo.setOneShotInfo IdInfo.unfoldingInfo IdInfo.vanillaIdInfo Maybes.orElse
+     Name.Name Name.getOccName Name.mkInternalName OccName.tidyOccName
+     SrcLoc.noSrcSpan UniqFM.lookupUFM Var.Id Var.Var Var.idDetails Var.idInfo
+     Var.mkLocalVar VarEnv.TidyEnv VarEnv.extendVarEnv VarEnv.lookupVarEnv
 *)

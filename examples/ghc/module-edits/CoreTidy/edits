@@ -39,4 +39,4 @@ in CoreTidy.tidyBind rewrite forall env' prs, GHC.Base.map (CoreTidy.tidyExpr en
 #
 # crazy knot tying: this is ok because tidyLetBndr doesn't actually use its first argument.
 #
-in CoreTidy.tidyBind rewrite forall, CoreTidy.tidyLetBndr env' = CoreTidy.tidyLetBndr env
+in CoreTidy.tidyBind rewrite forall, CoreTidy.tidyLetBndr env' = CoreTidy.tidyLetBndr GHC.Err.default

@@ -329,10 +329,10 @@ convertExpr' (ArithSeq _postTc _overloadedLists info) =
   --
   -- Only `'..'` doesn't work for some reason.
   case info of
-    From       low           -> App1 "enumFrom"       <$> convertLExpr low
-    FromThen   low next      -> App2 "enumFromThen"   <$> convertLExpr low <*> convertLExpr next
-    FromTo     low      high -> App2 "enumFromTo"     <$> convertLExpr low                       <*> convertLExpr high
-    FromThenTo low next high -> App3 "enumFromThenTo" <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
+    From       low           -> App1 "GHC.Enum.enumFrom"       <$> convertLExpr low
+    FromThen   low next      -> App2 "GHC.Enum.enumFromThen"   <$> convertLExpr low <*> convertLExpr next
+    FromTo     low      high -> App2 "GHC.Enum.enumFromTo"     <$> convertLExpr low                       <*> convertLExpr high
+    FromThenTo low next high -> App3 "GHC.Enum.enumFromThenTo" <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
 
 convertExpr' (PArrSeq _ _) =
   convUnsupported "parallel array arithmetic sequences"

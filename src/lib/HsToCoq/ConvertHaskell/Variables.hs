@@ -19,10 +19,12 @@ import qualified Data.Text as T
 
 import Control.Monad
 
-import GHC hiding (Name)
+import GHC (GhcMonad,AmbiguousFieldOcc(..),GhcRn)
+--import GHC hiding (Name)
 import qualified GHC
 import Outputable (OutputableBndr)
-import Name hiding (Name)
+import Name(occNameString, nameOccName, nameModule_maybe)
+-- import Name hiding (Name)
 
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
@@ -79,6 +81,14 @@ specialForms :: Ident -> Ident
 specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
                   | otherwise                   = name
 
+-- convert to a Qid but don't lookup renamings
+toQid :: ConversionMonad r m => GHC.Name -> m Qualid
+toQid name = case nameModM of
+    Just m  -> pure (Qualified (moduleNameText m) (bareName name))
+    Nothing -> pure (Bare (localName name))
+  where
+    nameModM = moduleName <$> nameModule_maybe name
+
 rename :: ConversionMonad r m => HsNamespace -> Qualid -> m Qualid
 rename ns = go S.empty
   where
@@ -90,15 +100,20 @@ rename ns = go S.empty
         Just qid' | qid' == qid -> return qid
         Just qid' -> go (S.insert qid seen) qid'
 
+renameModule :: ConversionMonad r m => Qualid -> m Qualid     
+renameModule (Qualified mod ident) = do
+  let m = mkModuleName (T.unpack mod)
+  rm <- view (edits.renamedModules.at m . non m)
+  pure (Qualified (moduleNameText rm) ident)
+renameModule qid = pure qid
+
+
 var :: ConversionMonad r m => HsNamespace -> GHC.Name -> m Qualid
 var ns name = do
-    qid <- case nameModM of
-             Just m  -> do rm <- view (edits.renamedModules.at m . non m)
-                           pure (Qualified (moduleNameText rm) (bareName name))
-             Nothing -> pure (Bare (localName name))
-    rename ns qid
-  where
-    nameModM = moduleName <$> nameModule_maybe name
+    qid <- toQid name
+    qid1 <- rename ns qid
+    renameModule qid1
+
 
 
 recordField :: (ConversionMonad r m) => AmbiguousFieldOcc GhcRn -> m Qualid

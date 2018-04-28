@@ -1,4 +1,5 @@
 Require Import CoreSyn.
+Require Import Var.
 Require Import VarSet.
 
 Require Import Coq.Lists.List.
@@ -23,7 +24,7 @@ Definition Forall' {a} (P : a -> Prop) xs := Forall id (map P xs).
 
 Fixpoint wellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   match e with
-  | Var v => match lookupVarSet in_scope v with
+  | CoreSyn.Var v => match lookupVarSet in_scope v with
     | None => False
     | Some v' => v = v'
     end
@@ -33,7 +34,7 @@ Fixpoint wellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   | Let (NonRec v rhs) body => 
       wellScoped rhs in_scope /\ wellScoped body (extendVarSet in_scope v)
   | Let (Rec pairs) body => 
-      (* TODO: Maybe we want the variables to be disjoint? *)
+      NoDup (map varUnique (map fst pairs)) /\
       let in_scope' := extendVarSetList in_scope (map fst pairs) in
       Forall' (fun p => wellScoped (snd p) in_scope') pairs /\
       wellScoped body in_scope'

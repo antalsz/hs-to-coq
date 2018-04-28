@@ -4,6 +4,7 @@
 -Q ../../ghc/lib ""
 -Q ../../transformers/lib ""
 -Q ../../containers/lib ""
+ScopeInvariant.v
 JoinPointInvariants.v
 # JoinPointInvariantsInductive.v
 CoreInduct.v

@@ -202,10 +202,8 @@ Section in_exitify.
 
   (** ** Scope validity *)
   
-  (* At first I had this expressed using lots of [Forall]. But
-     if we construct this piecewise, and destruct this piecewise, then
-     an inductive definition is better.*)
-  Definition WellScopedFloats isvs floats :=
+  Definition isvs := getInScopeVars in_scope.
+  Definition WellScopedFloats floats :=
     (* All added bindings are fresh with regard to the environment *)
     Forall (fun 'p => elemVarSet (fst p) isvs = false) floats /\
     (* All added bindings are fresh with regard to each other  *)
@@ -214,15 +212,18 @@ Section in_exitify.
     Forall (fun 'p => WellScoped (snd p) isvs) floats.
 
   Lemma mkExitLets_WellScoped:
-    forall exits' e isvs,
+    forall exits' e,
     (* The body is well-scoped in the extended environment *)
     WellScoped e (extendVarSetList isvs (map fst exits')) ->
-    WellScopedFloats isvs exits' ->
+    WellScopedFloats exits' ->
     (* Then wrapping these bindings around [e] is well-scoped *)
     WellScoped (mkExitLets exits' e) isvs.
   Proof.
-    intros ??.
-    induction exits' as [|[v rhs] exits']; intros isvs' Hbase Hfloats.
+    intros ?.
+    unfold WellScopedFloats.
+    generalize isvs as isvs.
+    clear in_scope pairs jps.
+    induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
     * simpl. unfold Base.id. assumption.
     * simpl in *.
       destruct Hfloats as [Hfreshs [HNoDup Hrhss]].
@@ -260,12 +261,11 @@ Section in_exitify.
 
 
   Lemma addExit_all_WellScopedFloats:
-    forall in_scope_set ty ja e,
-    StateInvariant (WellScopedFloats (getInScopeVars in_scope_set))
-                   (addExit in_scope_set ty ja e).
+    forall captured ty ja e,
+    StateInvariant WellScopedFloats
+                   (addExit (extendInScopeSetList in_scope captured) ty ja e).
   Proof.
     intros.
-    set (P := WellScopedFloats _).
     (* This is much easier to prove by breaking the State abstraction and turning
        it into a simple function. *)
     unfold addExit, mkExitJoinId.
@@ -292,13 +292,12 @@ Admitted.
   (* This needs a WellScoped expression as input *)
   Lemma go_all_WellScopedFloats:
     forall captured ann_e,
-    StateInvariant (WellScopedFloats (getInScopeVars (extendInScopeSetList in_scope captured)))
-                   (go captured ann_e).
+    StateInvariant WellScopedFloats (go captured ann_e).
   Proof.
     (* This cannot be structural recursion. Will need a size on expressions. *)
     fix 2. rename go_all_WellScopedFloats into IH.
     intros.
-    set (P := WellScopedFloats _).
+    set (P := WellScopedFloats).
     rewrite go_eq.
     cbv beta delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
@@ -345,10 +344,7 @@ Admitted.
         apply StateInvariant_forM.
         intros [[dc pats] rhs] HIn.
         apply StateInvariant_bind_return.
-        Fail apply IH.
-        (* Need to use WellScopedness of the expression to know that 
-           [P] does not mind extending the varSet, in both directions *)
-        admit.
+        apply IH.
       * (* Case [Let] *) 
         repeat float_let.
 
@@ -357,9 +353,9 @@ Admitted.
           destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI; try apply Hnext'.
           destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
           apply StateInvariant_bind.
-          + admit. (* dito *)
+          + apply IH.
           + intros. apply StateInvariant_bind_return.
-            admit. (* dito *)
+            apply IH.
         }
 
         subst j_18__.
@@ -373,32 +369,38 @@ Admitted.
               repeat float_let.
               destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
               apply StateInvariant_bind_return.
-              admit. (* dito *)
+              apply IH.
             - intro x.
               apply StateInvariant_bind_return.
-              admit. (* dito *)
+              apply IH.
         }
 
         subst j_10__.
         apply StateInvariant_bind_return.
-        admit. (* dito *)
+        apply IH.
     }
 
     subst j_4__.
     apply StateInvariant_return.
 
   (* Not structurally recursive *)
-  (* Fail Guarded. *)
+  Fail Guarded.
   Admitted.
 
   Lemma all_exists_WellScoped:
-    WellScopedFloats (getInScopeVars in_scope) exits.
+    WellScopedFloats exits.
   Proof.
     unfold exits.
     unfold pairs'_exits.
-    (* Have to go past [fst (collectNAnnBndrs (idJoinArity v) rhs)] here *)
-  Admitted.
-
+    eapply SP_snd_runState.
+    * apply StateInvariant_forM.
+      intros [v rhs] HIn.
+      expand_pairs.
+      apply StateInvariant_bind_return.
+      apply go_all_WellScopedFloats.
+    * repeat split; constructor.
+  Qed.
+    
   Theorem exitify_WellScoped:
     forall body,
     WellScoped (Let (Rec pairs) body) (getInScopeVars in_scope)  ->

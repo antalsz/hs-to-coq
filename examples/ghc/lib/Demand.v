@@ -13,7 +13,11 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require BinInt.
+Require Combined.
 Require Coq.Init.Datatypes.
+Require Coq.Init.Peano.
+Require Coq.Lists.List.
 Require Data.Foldable.
 Require DynFlags.
 Require GHC.Base.
@@ -21,12 +25,12 @@ Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
+Require GHC.Wf.
 Require Maybes.
+Require Nat.
 Require Panic.
 Require UniqFM.
 Require Util.
-Require Var.
-Require VarEnv.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -91,7 +95,7 @@ Definition Demand :=
   (JointDmd ArgStr ArgUse)%type.
 
 Definition DmdEnv :=
-  (VarEnv.VarEnv Demand)%type.
+  (Combined.VarEnv Demand)%type.
 
 Definition BothDmdArg :=
   (DmdEnv * Termination unit)%type%type.
@@ -158,11 +162,48 @@ Definition ud {s} {u} (arg_0__ : JointDmd s u) :=
   ud.
 (* Midamble *)
 
+Instance Num_nat : GHC.Num.Num nat := {
+     op_zp__ := Nat.add;
+     op_zm__ := Nat.sub;
+     op_zt__ := Nat.mul;
+     abs     := fun x => x;
+     fromInteger := BinIntDef.Z.to_nat;
+     negate  := fun x => x;
+     signum  :=  fun x => x; }.
+
+Instance Eq_nat : GHC.Base.Eq_ nat :=
+  fun _ k => k {| GHC.Base.op_zeze____ := fun x y => (Nat.eqb x y);
+               GHC.Base.op_zsze____ := fun x y => negb (Nat.eqb x y);
+            |}.
+
+Instance Ord_nat : GHC.Base.Ord nat :=
+  GHC.Base.ord_default Nat.compare.
+
+Require Import Omega.
+Ltac solve_not_zero := match goal with 
+  | [ H : GHC.Base.op_zeze__ ?x ?y = false |- _ ] => 
+    unfold GHC.Base.op_zeze__, Eq_nat in H; simpl in H; apply EqNat.beq_nat_false in H
+end; omega.
+
+
+
 Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_StrictSig y => y end) Mk_StrictSig.
 
+Instance Default_Termination {r} : GHC.Err.Default (Termination r) :=
+  GHC.Err.Build_Default _ Diverges.
+
+Instance Default_DmdResult : GHC.Err.Default DmdType :=
+  GHC.Err.Build_Default _ (Mk_DmdType GHC.Err.default GHC.Err.default GHC.Err.default).
+
 (* Definitions that we cannot process, see edits file for details. *)
 
+Axiom lubUse : UseDmd -> UseDmd -> UseDmd.
+Axiom lubArgUse :  Use UseDmd ->  Use UseDmd ->  Use UseDmd.
+Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
+Axiom bothArgUse :  Use UseDmd ->  Use UseDmd ->  Use UseDmd.
+
+(*
 Axiom bothStr : StrDmd -> StrDmd -> StrDmd.
 Axiom lubStr : StrDmd -> StrDmd -> StrDmd.
 Axiom splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type.
@@ -174,12 +215,12 @@ Axiom dmdTransformDictSelSig : StrictSig -> CleanDemand -> DmdType.
 Axiom strictifyDictDmd : unit -> Demand -> Demand.
 Axiom dmdTransformDataConSig  : BasicTypes.Arity -> StrictSig -> CleanDemand -> DmdType.
 Axiom addCaseBndrDmd : Demand -> list Demand -> list Demand.
-Axiom lubUse : UseDmd -> UseDmd -> UseDmd.
 Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
 Axiom zap_usg : KillFlags -> UseDmd -> UseDmd.
-
+*)
 
 (* Example of successful mutual recursion. Not sure that we can automate this *)
+(*
 Definition isUsedMU' isUsedU (au : ArgUse) : bool :=
     match au with
       | Abs => true
@@ -212,6 +253,7 @@ Fixpoint markReused (x : UseDmd) : UseDmd :=
       | u => u
     end.
 Definition markReusedDmd := markReusedDmd' markReused.
+*)
 
 (* size metric, incase it is useful *)
 
@@ -509,7 +551,7 @@ Definition argOneShots : Demand -> list BasicTypes.OneShotInfo :=
     end.
 
 Definition argsOneShots
-   : StrictSig -> BasicTypes.Arity -> list (list BasicTypes.OneShotInfo) :=
+   : StrictSig -> nat -> list (list BasicTypes.OneShotInfo) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ arg_ds _), n_val_args =>
@@ -524,27 +566,14 @@ Definition argsOneShots
                      | nil => nil
                      | cons arg_d arg_ds => cons_ (argOneShots arg_d) (go arg_ds)
                      end in
-        let unsaturated_call := Util.lengthExceeds arg_ds n_val_args in
+        let unsaturated_call :=
+          Util.lengthExceeds arg_ds (BinInt.Z.of_nat n_val_args) in
         if unsaturated_call : bool then nil else
         go arg_ds
     end.
 
 Definition botRes : DmdResult :=
   Diverges.
-
-Definition bothArgUse : ArgUse -> ArgUse -> ArgUse :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Abs, x => x
-    | x, Abs => x
-    | Mk_Use _ a1, Mk_Use _ a2 => Mk_Use Many (bothUse a1 a2)
-    end.
-
-Definition bothCleanDmd : CleanDemand -> CleanDemand -> CleanDemand :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | JD s1 a1, JD s2 a2 => JD (bothStr s1 s2) (bothUse a1 a2)
-    end.
 
 Definition bothDmdResult : DmdResult -> Termination unit -> DmdResult :=
   fun arg_0__ arg_1__ =>
@@ -559,20 +588,6 @@ Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
     match arg_0__, arg_1__ with
     | Mk_ExnStr, Mk_ExnStr => Mk_ExnStr
     | _, _ => VanStr
-    end.
-
-Definition bothArgStr : ArgStr -> ArgStr -> ArgStr :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Lazy, s => s
-    | s, Lazy => s
-    | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (bothExnStr x1 x2) (bothStr s1 s2)
-    end.
-
-Definition bothDmd : Demand -> Demand -> Demand :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | JD s1 a1, JD s2 a2 => JD (bothArgStr s1 s2) (bothArgUse a1 a2)
     end.
 
 Definition catchArgDmd : Demand :=
@@ -590,8 +605,8 @@ Definition cprProdRes : list DmdType -> DmdResult :=
 Definition cprSumRes : BasicTypes.ConTag -> DmdResult :=
   fun tag => Dunno (RetSum tag).
 
-Definition emptyDmdEnv : VarEnv.VarEnv Demand :=
-  VarEnv.emptyVarEnv.
+Definition emptyDmdEnv : Combined.VarEnv Demand :=
+  Combined.emptyVarEnv.
 
 Definition botDmdType : DmdType :=
   Mk_DmdType emptyDmdEnv nil botRes.
@@ -615,7 +630,7 @@ Definition getUseDmd {s} {u} : JointDmd s u -> u :=
   ud.
 
 Definition hasDemandEnvSig : StrictSig -> bool :=
-  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (VarEnv.isEmptyVarEnv env).
+  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (Combined.isEmptyVarEnv env).
 
 Definition isAbsDmd : Demand -> bool :=
   fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
@@ -631,11 +646,12 @@ Definition isBotRes : DmdResult -> bool :=
 Definition isBottomingSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType _ _ res)) => isBotRes res.
 
-Definition appIsBottom : StrictSig -> GHC.Num.Int -> bool :=
+Definition appIsBottom : StrictSig -> nat -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ ds res), n =>
-        if isBotRes res : bool then negb (Util.lengthExceeds ds n) else
+        if isBotRes res : bool
+        then negb (Util.lengthExceeds ds (BinInt.Z.of_nat n)) else
         false
     end.
 
@@ -645,14 +661,54 @@ Definition isHyperStr : ArgStr -> bool :=
 Definition isLazy : ArgStr -> bool :=
   fun arg_0__ => match arg_0__ with | Lazy => true | Mk_Str _ _ => false end.
 
-Definition isWeakDmd : Demand -> bool :=
-  fun '(JD s a) => andb (isLazy s) (isUsedMU a).
-
 Definition mkSProd : list ArgStr -> StrDmd :=
   fun sx =>
     if Data.Foldable.any isHyperStr sx : bool then HyperStr else
     if Data.Foldable.all isLazy sx : bool then HeadStr else
     SProd sx.
+
+Definition bothStr : StrDmd -> StrDmd -> StrDmd :=
+  fix bothStr arg_0__ arg_1__
+        := let bothArgStr arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | Lazy, s => s
+             | s, Lazy => s
+             | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (bothExnStr x1 x2) (bothStr s1 s2)
+             end in
+           match arg_0__, arg_1__ with
+           | HyperStr, _ => HyperStr
+           | HeadStr, s => s
+           | SCall _, HyperStr => HyperStr
+           | SCall s1, HeadStr => SCall s1
+           | SCall s1, SCall s2 => SCall (bothStr s1 s2)
+           | SCall _, SProd _ => HyperStr
+           | SProd _, HyperStr => HyperStr
+           | SProd s1, HeadStr => SProd s1
+           | SProd s1, SProd s2 =>
+               if Util.equalLength s1 s2 then mkSProd (GHC.List.zipWith bothArgStr s1 s2) else
+                  HyperStr
+           | SProd _, SCall _ => HyperStr
+           end.
+
+Definition bothCleanDmd : CleanDemand -> CleanDemand -> CleanDemand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD s1 a1, JD s2 a2 => JD (bothStr s1 s2) (bothUse a1 a2)
+    end.
+
+Definition bothArgStr : ArgStr -> ArgStr -> ArgStr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Lazy, s => s
+    | s, Lazy => s
+    | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (bothExnStr x1 x2) (bothStr s1 s2)
+    end.
+
+Definition bothDmd : Demand -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD s1 a1, JD s2 a2 => JD (bothArgStr s1 s2) (bothArgUse a1 a2)
+    end.
 
 Definition isSeqDmd : Demand -> bool :=
   fun arg_0__ =>
@@ -683,13 +739,58 @@ Definition isTopDmdType : DmdType -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_DmdType env nil res =>
-        if andb (isTopRes res) (VarEnv.isEmptyVarEnv env) : bool then true else
+        if andb (isTopRes res) (Combined.isEmptyVarEnv env) : bool then true else
         false
     | _ => false
     end.
 
 Definition isTopSig : StrictSig -> bool :=
   fun '(Mk_StrictSig ty) => isTopDmdType ty.
+
+Definition isUsedU : UseDmd -> bool :=
+  fix isUsedU arg_0__
+        := let isUsedMU arg_0__ :=
+             match arg_0__ with
+             | Abs => true
+             | Mk_Use One _ => false
+             | Mk_Use Many u => isUsedU u
+             end in
+           match arg_0__ with
+           | Used => true
+           | UHead => true
+           | UProd us => Data.Foldable.all isUsedMU us
+           | UCall One _ => false
+           | UCall Many _ => true
+           end.
+
+Definition isUsedMU : ArgUse -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Abs => true
+    | Mk_Use One _ => false
+    | Mk_Use Many u => isUsedU u
+    end.
+
+Definition isWeakDmd : Demand -> bool :=
+  fun '(JD s a) => andb (isLazy s) (isUsedMU a).
+
+Definition splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type :=
+  fun is_thunk rhs_fvs =>
+    let add :=
+      fun arg_0__ arg_1__ arg_2__ =>
+        match arg_0__, arg_1__, arg_2__ with
+        | uniq, (JD s u as dmd), pair lazy_fv sig_fv =>
+            match s with
+            | Lazy => pair (UniqFM.addToUFM_Directly lazy_fv uniq dmd) sig_fv
+            | _ =>
+                pair (UniqFM.addToUFM_Directly lazy_fv uniq (JD Lazy u))
+                     (UniqFM.addToUFM_Directly sig_fv uniq (JD s Abs))
+            end
+        end in
+    if is_thunk : bool
+    then UniqFM.nonDetFoldUFM_Directly add (pair Combined.emptyVarEnv
+                                                 Combined.emptyVarEnv) rhs_fvs else
+    Combined.partitionVarEnv isWeakDmd rhs_fvs.
 
 Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
   fun dflags =>
@@ -736,20 +837,35 @@ Definition lubCount : Count -> Count -> Count :=
     | x, _ => x
     end.
 
-Definition lubArgUse : ArgUse -> ArgUse -> ArgUse :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Abs, x => x
-    | x, Abs => x
-    | Mk_Use c1 a1, Mk_Use c2 a2 => Mk_Use (lubCount c1 c2) (lubUse a1 a2)
-    end.
-
 Definition lubExnStr : ExnStr -> ExnStr -> ExnStr :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | VanStr, VanStr => VanStr
     | _, _ => Mk_ExnStr
     end.
+
+Definition lubStr : StrDmd -> StrDmd -> StrDmd :=
+  fix lubStr arg_0__ arg_1__
+        := let lubArgStr arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | Lazy, _ => Lazy
+             | _, Lazy => Lazy
+             | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (lubExnStr x1 x2) (lubStr s1 s2)
+             end in
+           match arg_0__, arg_1__ with
+           | HyperStr, s => s
+           | SCall s1, HyperStr => SCall s1
+           | SCall _, HeadStr => HeadStr
+           | SCall s1, SCall s2 => SCall (lubStr s1 s2)
+           | SCall _, SProd _ => HeadStr
+           | SProd sx, HyperStr => SProd sx
+           | SProd _, HeadStr => HeadStr
+           | SProd s1, SProd s2 =>
+               if Util.equalLength s1 s2 then mkSProd (GHC.List.zipWith lubArgStr s1 s2) else
+                  HeadStr
+           | SProd _, SCall _ => HeadStr
+           | HeadStr, _ => HeadStr
+           end.
 
 Definition lubArgStr : ArgStr -> ArgStr -> ArgStr :=
   fun arg_0__ arg_1__ =>
@@ -772,6 +888,26 @@ Definition markExnStr : ArgStr -> ArgStr :=
     | s => s
     end.
 
+Definition markReused : UseDmd -> UseDmd :=
+  fix markReused arg_0__
+        := let markReusedDmd arg_0__ :=
+             match arg_0__ with
+             | Abs => Abs
+             | Mk_Use _ a => Mk_Use Many (markReused a)
+             end in
+           match arg_0__ with
+           | UCall _ u => UCall Many u
+           | UProd ux => UProd (GHC.Base.map markReusedDmd ux)
+           | u => u
+           end.
+
+Definition markReusedDmd : ArgUse -> ArgUse :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Abs => Abs
+    | Mk_Use _ a => Mk_Use Many (markReused a)
+    end.
+
 Definition postProcessDmd : DmdShell -> Demand -> Demand :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -792,7 +928,22 @@ Definition postProcessDmd : DmdShell -> Demand -> Demand :=
     end.
 
 Definition reuseEnv : DmdEnv -> DmdEnv :=
-  VarEnv.mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
+  Combined.mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
+
+Definition postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (JD ss us as ds), env =>
+        match us with
+        | Abs => emptyDmdEnv
+        | _ =>
+            let j_2__ := Combined.mapVarEnv (postProcessDmd ds) env in
+            match ss with
+            | Mk_Str VanStr _ => match us with | Mk_Use One _ => env | _ => j_2__ end
+            | _ => j_2__
+            end
+        end
+    end.
 
 Definition mkBothDmdArg : DmdEnv -> BothDmdArg :=
   fun env => pair env (Dunno tt).
@@ -831,6 +982,17 @@ Definition zapUsageEnvSig : StrictSig -> StrictSig :=
 Definition mkUCall : Count -> UseDmd -> UseDmd :=
   fun c a => UCall c a.
 
+Program Definition mkWorkerDemand : nat -> Demand :=
+          fun n =>
+            let go :=
+              GHC.Wf.wfFix1 Coq.Init.Peano.lt (fun arg_0__ => arg_0__) _ (fun arg_0__ go =>
+                               let 'num_1__ := arg_0__ in
+                               if Bool.Sumbool.sumbool_of_bool (num_1__ GHC.Base.== #0) then Used else
+                               let 'n := arg_0__ in
+                               mkUCall One (go (Nat.pred n))) in
+            JD Lazy (Mk_Use One (go n)).
+Admit Obligations.
+
 Definition mkCallDmd : CleanDemand -> CleanDemand :=
   fun '(JD d u) => JD (mkSCall d) (mkUCall One u).
 
@@ -864,6 +1026,34 @@ Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
                           end) in
     pair (JD s' u') (JD ss us).
 
+Definition peelManyCalls : nat -> CleanDemand -> DmdShell :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, JD str abs =>
+        let go_abs : nat -> UseDmd -> Use unit :=
+          fix go_abs arg_2__ arg_3__
+                := match arg_2__, arg_3__ with
+                   | num_4__, _ =>
+                       if num_4__ GHC.Base.== #0 : bool then Mk_Use One tt else
+                       match arg_2__, arg_3__ with
+                       | n, UCall One d' => go_abs (Nat.pred n) d'
+                       | _, _ => Mk_Use Many tt
+                       end
+                   end in
+        let go_str : nat -> StrDmd -> Str unit :=
+          fix go_str arg_10__ arg_11__
+                := match arg_10__, arg_11__ with
+                   | num_12__, _ =>
+                       if num_12__ GHC.Base.== #0 : bool then Mk_Str VanStr tt else
+                       match arg_10__, arg_11__ with
+                       | _, HyperStr => Mk_Str VanStr tt
+                       | n, SCall d' => go_str (Nat.pred n) d'
+                       | _, _ => Lazy
+                       end
+                   end in
+        JD (go_str n str) (go_abs n abs)
+    end.
+
 Definition peelUseCall : UseDmd -> option (Count * UseDmd)%type :=
   fun arg_0__ =>
     match arg_0__ with
@@ -882,7 +1072,7 @@ Definition retCPR_maybe : CPRResult -> option BasicTypes.ConTag :=
 Definition returnsCPR_maybe : DmdResult -> option BasicTypes.ConTag :=
   fun arg_0__ => match arg_0__ with | Dunno c => retCPR_maybe c | _ => None end.
 
-Definition saturatedByOneShots : GHC.Num.Int -> Demand -> bool :=
+Definition saturatedByOneShots : nat -> Demand -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | n, JD _ usg =>
@@ -891,7 +1081,7 @@ Definition saturatedByOneShots : GHC.Num.Int -> Demand -> bool :=
                      | num_4__, _ =>
                          if num_4__ GHC.Base.== #0 : bool then true else
                          match arg_2__, arg_3__ with
-                         | n, UCall One u => go (n GHC.Num.- #1) u
+                         | n, UCall One u => go (Nat.pred n) u
                          | _, _ => false
                          end
                      end in
@@ -952,21 +1142,22 @@ Definition strBot : ArgStr :=
 Definition strTop : ArgStr :=
   Lazy.
 
-Definition splitStrProdDmd : GHC.Num.Int -> StrDmd -> option (list ArgStr) :=
+Definition splitStrProdDmd : nat -> StrDmd -> option (list ArgStr) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | n, HyperStr => Some (GHC.List.replicate n strBot)
-    | n, HeadStr => Some (GHC.List.replicate n strTop)
+    | n, HyperStr => Some (Coq.Lists.List.repeat strBot n)
+    | n, HeadStr => Some (Coq.Lists.List.repeat strTop n)
     | n, SProd ds =>
-        Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
-                            "ghc/compiler/basicTypes/Demand.hs") #359 (Panic.someSDoc) (Some ds)
+        Panic.warnPprTrace (negb (Util.lengthIs ds (BinInt.Z.of_nat n)))
+                           (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Demand.hs") #359 (Panic.someSDoc)
+        (Some ds)
     | _, SCall _ => None
     end.
 
-Definition splitArgStrProdDmd : GHC.Num.Int -> ArgStr -> option (list ArgStr) :=
+Definition splitArgStrProdDmd : nat -> ArgStr -> option (list ArgStr) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | n, Lazy => Some (GHC.List.replicate n Lazy)
+    | n, Lazy => Some (Coq.Lists.List.repeat Lazy n)
     | n, Mk_Str _ s => splitStrProdDmd n s
     end.
 
@@ -1025,23 +1216,23 @@ Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv1 ds1 r1, pair fv2 t2 =>
-        Mk_DmdType (VarEnv.plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd
-                                                                          t2)) ds1 (bothDmdResult r1 t2)
+        Mk_DmdType (Combined.plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd
+                                                                            t2)) ds1 (bothDmdResult r1 t2)
     end.
 
-Definition findIdDemand : DmdType -> Var.Var -> Demand :=
+Definition findIdDemand : DmdType -> Combined.Var -> Demand :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv _ res, id =>
-        Maybes.orElse (VarEnv.lookupVarEnv fv id) (defaultDmd res)
+        Maybes.orElse (Combined.lookupVarEnv fv id) (defaultDmd res)
     end.
 
-Definition peelFV : DmdType -> Var.Var -> (DmdType * Demand)%type :=
+Definition peelFV : DmdType -> Combined.Var -> (DmdType * Demand)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv ds res, id =>
-        let dmd := Maybes.orElse (VarEnv.lookupVarEnv fv id) (defaultDmd res) in
-        let fv' := VarEnv.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
+        let dmd := Maybes.orElse (Combined.lookupVarEnv fv id) (defaultDmd res) in
+        let fv' := Combined.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
     end.
 
 Definition useCount {u} : Use u -> Count :=
@@ -1058,57 +1249,15 @@ Definition isUsedOnce : Demand -> bool :=
 Definition useTop : ArgUse :=
   Mk_Use Many Used.
 
-Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | kfs, Abs => if kf_abs kfs : bool then useTop else Abs
-    | kfs, Mk_Use c u =>
-        if kf_used_once kfs : bool then Mk_Use Many (zap_usg kfs u) else
-        Mk_Use c (zap_usg kfs u)
-    end.
-
-Definition kill_usage : KillFlags -> Demand -> Demand :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | kfs, JD s u => JD s (zap_musg kfs u)
-    end.
-
-Definition zapUsageDemand : Demand -> Demand :=
-  kill_usage (Mk_KillFlags true true true).
-
-Definition zapUsedOnceDemand : Demand -> Demand :=
-  kill_usage (Mk_KillFlags false true false).
-
-Definition zapUsedOnceSig : StrictSig -> StrictSig :=
-  fun '(Mk_StrictSig (Mk_DmdType env ds r)) =>
-    Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
-
-Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
-  fun dflags dmd =>
-    match killFlags dflags with
-    | Some kfs => kill_usage kfs dmd
-    | _ => dmd
-    end.
-
-Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
-        match killFlags dflags with
-        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
-        | _ => sig
-        end
-    end.
-
 Definition topDmd : Demand :=
   JD Lazy useTop.
 
-Definition increaseStrictSigArity : GHC.Num.Int -> StrictSig -> StrictSig :=
+Definition increaseStrictSigArity : nat -> StrictSig -> StrictSig :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | arity_increase, Mk_StrictSig (Mk_DmdType env dmds res) =>
-        Mk_StrictSig (Mk_DmdType env (Coq.Init.Datatypes.app (GHC.List.replicate
-                                                              arity_increase topDmd) dmds) res)
+        Mk_StrictSig (Mk_DmdType env (Coq.Init.Datatypes.app (Coq.Lists.List.repeat
+                                                              topDmd arity_increase) dmds) res)
     end.
 
 Definition resTypeArgDmd {r} : Termination r -> Demand :=
@@ -1150,7 +1299,7 @@ Definition dmdTransformSig : StrictSig -> CleanDemand -> DmdType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ arg_ds _ as dmd_ty), cd =>
-        postProcessUnsat (peelManyCalls (Data.Foldable.length arg_ds) cd) dmd_ty
+        postProcessUnsat (peelManyCalls (Coq.Lists.List.length arg_ds) cd) dmd_ty
     end.
 
 Definition nopDmdType : DmdType :=
@@ -1159,18 +1308,18 @@ Definition nopDmdType : DmdType :=
 Definition nopSig : StrictSig :=
   Mk_StrictSig nopDmdType.
 
-Definition dmdTypeDepth : DmdType -> BasicTypes.Arity :=
-  fun '(Mk_DmdType _ ds _) => Data.Foldable.length ds.
+Definition dmdTypeDepth : DmdType -> nat :=
+  fun '(Mk_DmdType _ ds _) => Coq.Lists.List.length ds.
 
-Definition ensureArgs (n : BasicTypes.Arity) (d : DmdType) : DmdType :=
-  let 'Mk_DmdType fv ds r := d in
-  let ds' :=
-    GHC.List.take n (Coq.Init.Datatypes.app ds (GHC.List.replicate
-                                             (GHC.Num.fromInteger n) (resTypeArgDmd r))) in
-  if _GHC.Base.==_ n (dmdTypeDepth d) then d else Mk_DmdType fv ds' (match r with
-      | Dunno _ => topRes
-      | _ => r
-      end).
+Definition ensureArgs : nat -> DmdType -> DmdType :=
+  fun n d =>
+    let 'Mk_DmdType fv ds r := d in
+    let ds' :=
+      Coq.Lists.List.skipn n (app ds (Coq.Lists.List.repeat (resTypeArgDmd r) n)) in
+    let r' := match r with | Dunno _ => topRes | _ => r end in
+    let depth := dmdTypeDepth d in
+    if n GHC.Base.== depth : bool then d else
+    Mk_DmdType fv ds' r'.
 
 Definition removeDmdTyArgs : DmdType -> DmdType :=
   ensureArgs #0.
@@ -1181,7 +1330,7 @@ Definition lubDmdType : DmdType -> DmdType -> DmdType :=
     let 'Mk_DmdType fv1 ds1 r1 := ensureArgs n d1 in
     let 'Mk_DmdType fv2 ds2 r2 := ensureArgs n d2 in
     let lub_fv :=
-      VarEnv.plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
+      Combined.plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
     let lub_ds :=
       Util.zipWithEqual (GHC.Base.hs_string__ "lubDmdType") lubDmd ds1 ds2 in
     let lub_res := lubDmdResult r1 r2 in Mk_DmdType lub_fv lub_ds lub_res.
@@ -1200,14 +1349,17 @@ Definition splitDmdTy : DmdType -> (Demand * DmdType)%type :=
     | (Mk_DmdType _ nil res_ty as ty) => pair (resTypeArgDmd res_ty) ty
     end.
 
-Definition splitUseProdDmd (n : GHC.Num.Int) (u : UseDmd)
-   : option (list ArgUse) :=
-  match u with
-  | Used => Some (GHC.List.replicate n useTop)
-  | UHead => Some (GHC.List.replicate n Abs)
-  | UProd ds => Some ds
-  | UCall _ _ => None
-  end.
+Definition splitUseProdDmd : nat -> UseDmd -> option (list ArgUse) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, Used => Some (Coq.Lists.List.repeat useTop n)
+    | n, UHead => Some (Coq.Lists.List.repeat Abs n)
+    | n, UProd ds =>
+        Panic.warnPprTrace (negb (Util.lengthIs ds (BinInt.Z.of_nat n)))
+                           (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Demand.hs") #645 (Panic.someSDoc)
+        (Some ds)
+    | _, UCall _ _ => None
+    end.
 
 Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
   fun '(JD s u) =>
@@ -1215,13 +1367,13 @@ Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
     let j_3__ :=
       match scrut_1__ with
       | pair Lazy (Mk_Use _ (UProd ux)) =>
-          Some (mkJointDmds (GHC.List.replicate (Data.Foldable.length ux) Lazy) ux)
+          Some (mkJointDmds (Coq.Lists.List.repeat Lazy (Coq.Lists.List.length ux)) ux)
       | _ => None
       end in
     let j_5__ :=
       match scrut_1__ with
       | pair (Mk_Str _ s) (Mk_Use _ (UProd ux)) =>
-          match splitStrProdDmd (Data.Foldable.length ux) s with
+          match splitStrProdDmd (Coq.Lists.List.length ux) s with
           | Some sx => Some (mkJointDmds sx ux)
           | _ => j_3__
           end
@@ -1229,42 +1381,163 @@ Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
       end in
     match scrut_1__ with
     | pair (Mk_Str _ (SProd sx)) (Mk_Use _ u) =>
-        match splitUseProdDmd (Data.Foldable.length sx) u with
+        match splitUseProdDmd (Coq.Lists.List.length sx) u with
         | Some ux => Some (mkJointDmds sx ux)
         | _ => j_5__
         end
     | _ => j_5__
     end.
 
+Definition dmdTransformDictSelSig : StrictSig -> CleanDemand -> DmdType :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_StrictSig (Mk_DmdType _ (cons dict_dmd nil) _), cd =>
+        let enhance :=
+          fun cd old => if isAbsDmd old : bool then old else mkOnceUsedDmd cd in
+        let 'pair cd' defer_use := peelCallDmd cd in
+        match splitProdDmd_maybe dict_dmd with
+        | Some jds =>
+            postProcessUnsat defer_use (Mk_DmdType emptyDmdEnv (cons (mkOnceUsedDmd
+                                                                      (mkProdDmd (GHC.Base.map (enhance cd') jds))) nil)
+                                                   topRes)
+        | _ => nopDmdType
+        end
+    | _, _ => Panic.panic (GHC.Base.hs_string__ "dmdTransformDictSelSig: no args")
+    end.
+
+Program Definition dmdTransformDataConSig
+           : nat -> StrictSig -> CleanDemand -> DmdType :=
+          fun arg_0__ arg_1__ arg_2__ =>
+            match arg_0__, arg_1__, arg_2__ with
+            | arity, Mk_StrictSig (Mk_DmdType _ _ con_res), JD str abs =>
+                let fix go_abs arg_3__ arg_4__
+                          := match arg_3__, arg_4__ with
+                             | num_5__, dmd =>
+                                 if Bool.Sumbool.sumbool_of_bool (num_5__ GHC.Base.== #0)
+                                 then splitUseProdDmd arity dmd else
+                                 match arg_3__, arg_4__ with
+                                 | n, UCall One u' => go_abs (Nat.pred n) u'
+                                 | _, _ => None
+                                 end
+                             end in
+                let go_str :=
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_10__ arg_11__ => arg_10__) _
+                                (fun arg_10__ arg_11__ go_str =>
+                                   match arg_10__, arg_11__ with
+                                   | num_12__, dmd =>
+                                       if Bool.Sumbool.sumbool_of_bool (num_12__ GHC.Base.== #0)
+                                       then splitStrProdDmd arity dmd else
+                                       match arg_10__, arg_11__ with
+                                       | n, SCall s' => go_str (Nat.pred n) s'
+                                       | n, HyperStr => go_str (Nat.pred n) HyperStr
+                                       | _, _ => None
+                                       end
+                                   end) in
+                match go_str arity str with
+                | Some str_dmds =>
+                    match go_abs arity abs with
+                    | Some abs_dmds =>
+                        Mk_DmdType emptyDmdEnv (mkJointDmds str_dmds abs_dmds) con_res
+                    | _ => nopDmdType
+                    end
+                | _ => nopDmdType
+                end
+            end.
+Admit Obligations.
+
 Definition evalDmd : Demand :=
   JD (Mk_Str VanStr HeadStr) useTop.
 
-Definition cleanEvalProdDmd : BasicTypes.Arity -> CleanDemand :=
-  fun n => JD HeadStr (UProd (GHC.List.replicate n useTop)).
+Definition cleanEvalProdDmd : nat -> CleanDemand :=
+  fun n => JD HeadStr (UProd (Coq.Lists.List.repeat useTop n)).
 
-Definition vanillaCprProdRes : BasicTypes.Arity -> DmdResult :=
+Definition vanillaCprProdRes : nat -> DmdResult :=
   fun _arity => Dunno RetProd.
 
-Definition cprProdDmdType : BasicTypes.Arity -> DmdType :=
+Definition cprProdDmdType : nat -> DmdType :=
   fun arity => Mk_DmdType emptyDmdEnv nil (vanillaCprProdRes arity).
 
-Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
+Definition cprProdSig : nat -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
+Definition zap_usg : KillFlags -> UseDmd -> UseDmd :=
+  fix zap_usg arg_0__ arg_1__
+        := let zap_musg arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | kfs, Abs => if kf_abs kfs then useTop else Abs
+             | kfs, Mk_Use c u =>
+                 if kf_used_once kfs then Mk_Use Many (zap_usg kfs u) else Mk_Use c (zap_usg kfs
+                                                                                             u)
+             end in
+           match arg_0__, arg_1__ with
+           | kfs, UCall c u =>
+               if kf_called_once kfs then UCall Many (zap_usg kfs u) else UCall c (zap_usg kfs
+                                                                                           u)
+           | _, _ =>
+               match arg_0__, arg_1__ with
+               | kfs, UProd us => UProd (GHC.Base.map (zap_musg kfs) us)
+               | _, u => u
+               end
+           end.
+
+Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, Abs => if kf_abs kfs then useTop else Abs
+    | kfs, Mk_Use c u =>
+        if kf_used_once kfs then Mk_Use Many (zap_usg kfs u) else Mk_Use c (zap_usg kfs
+                                                                                    u)
+    end.
+
+Definition kill_usage : KillFlags -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, JD s u => JD s (zap_musg kfs u)
+    end.
+
+Definition zapUsageDemand : Demand -> Demand :=
+  kill_usage (Mk_KillFlags true true true).
+
+Definition zapUsedOnceDemand : Demand -> Demand :=
+  kill_usage (Mk_KillFlags false true false).
+
+Definition zapUsedOnceSig : StrictSig -> StrictSig :=
+  fun '(Mk_StrictSig (Mk_DmdType env ds r)) =>
+    Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
+
+Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
+  fun dflags dmd =>
+    match killFlags dflags with
+    | Some kfs => kill_usage kfs dmd
+    | _ => dmd
+    end.
+
+Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
+        match killFlags dflags with
+        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
+        | _ => sig
+        end
+    end.
+
 (* External variables:
-     ArgStr ArgUse None Some andb bool bothStr bothUse cons else false if isUsedMU
-     list lubStr lubUse markReusedDmd negb nil op_zt__ option orb pair peelManyCalls
-     postProcessDmdEnv then true tt unit zap_usg BasicTypes.Arity BasicTypes.ConTag
-     BasicTypes.NoOneShotInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
-     BasicTypes.fIRST_TAG Coq.Init.Datatypes.app Data.Foldable.all Data.Foldable.any
-     Data.Foldable.length DynFlags.DynFlags DynFlags.Opt_KillAbsence
-     DynFlags.Opt_KillOneShot DynFlags.gopt GHC.Base.Eq_ GHC.Base.Synonym
-     GHC.Base.eq_default GHC.Base.map GHC.Base.max GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Err.Build_Default GHC.Err.Default GHC.List.replicate GHC.List.take
-     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Prim.coerce Maybes.orElse
-     Panic.someSDoc Panic.warnPprTrace UniqFM.nonDetUFMToList Util.lengthExceeds
-     Util.lengthIs Util.zipWithEqual Var.Var VarEnv.VarEnv VarEnv.delVarEnv
-     VarEnv.emptyVarEnv VarEnv.isEmptyVarEnv VarEnv.lookupVarEnv VarEnv.mapVarEnv
-     VarEnv.plusVarEnv_CD
+     ArgStr ArgUse Bool.Sumbool.sumbool_of_bool None Some andb app bool bothArgUse
+     bothUse cons else false if list lubArgUse nat negb nil op_zt__ option orb pair
+     then true tt unit BasicTypes.ConTag BasicTypes.NoOneShotInfo
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.fIRST_TAG
+     BinInt.Z.of_nat Combined.Var Combined.VarEnv Combined.delVarEnv
+     Combined.emptyVarEnv Combined.isEmptyVarEnv Combined.lookupVarEnv
+     Combined.mapVarEnv Combined.partitionVarEnv Combined.plusVarEnv_CD
+     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.length
+     Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any
+     DynFlags.DynFlags DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot
+     DynFlags.gopt GHC.Base.Eq_ GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map
+     GHC.Base.max GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default GHC.List.zipWith
+     GHC.Num.fromInteger GHC.Prim.coerce GHC.Wf.wfFix1 GHC.Wf.wfFix2 Maybes.orElse
+     Nat.pred Panic.panic Panic.someSDoc Panic.warnPprTrace UniqFM.addToUFM_Directly
+     UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetUFMToList Util.equalLength
+     Util.lengthExceeds Util.lengthIs Util.zipWithEqual
 *)

@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Combined.
 Require Data.Foldable.
 Require Data.Function.
 Require Data.Tuple.
@@ -23,7 +24,6 @@ Require Name.
 Require OccName.
 Require Panic.
 Require Unique.
-Require Var.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -36,10 +36,12 @@ Inductive PatSyn : Type
      BasicTypes.Arity ->
      bool ->
      list FieldLabel.FieldLabel ->
-     list Var.TyVarBinder ->
+     list Combined.TyVarBinder ->
      unit ->
-     list Var.TyVarBinder ->
-     unit -> unit -> (Var.Id * bool)%type -> option (Var.Id * bool)%type -> PatSyn.
+     list Combined.TyVarBinder ->
+     unit ->
+     unit ->
+     (Combined.Var * bool)%type -> option (Combined.Var * bool)%type -> PatSyn.
 
 Definition psArgs (arg_0__ : PatSyn) :=
   let 'MkPatSyn _ _ psArgs _ _ _ _ _ _ _ _ _ _ := arg_0__ in
@@ -123,12 +125,12 @@ Program Instance Eq___PatSyn : GHC.Base.Eq_ PatSyn :=
 Definition mkPatSyn
    : Name.Name ->
      bool ->
-     (list Var.TyVarBinder * unit)%type ->
-     (list Var.TyVarBinder * unit)%type ->
+     (list Combined.TyVarBinder * unit)%type ->
+     (list Combined.TyVarBinder * unit)%type ->
      list unit ->
      unit ->
-     (Var.Id * bool)%type ->
-     option (Var.Id * bool)%type -> list FieldLabel.FieldLabel -> PatSyn :=
+     (Combined.Var * bool)%type ->
+     option (Combined.Var * bool)%type -> list FieldLabel.FieldLabel -> PatSyn :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ arg_5__ arg_6__ arg_7__ arg_8__ =>
     match arg_0__
         , arg_1__
@@ -159,14 +161,14 @@ Definition patSynArgs : PatSyn -> list unit :=
 Definition patSynArity : PatSyn -> BasicTypes.Arity :=
   psArity.
 
-Definition patSynBuilder : PatSyn -> option (Var.Id * bool)%type :=
+Definition patSynBuilder : PatSyn -> option (Combined.Var * bool)%type :=
   psBuilder.
 
-Definition patSynExTyVarBinders : PatSyn -> list Var.TyVarBinder :=
+Definition patSynExTyVarBinders : PatSyn -> list Combined.TyVarBinder :=
   psExTyVars.
 
-Definition patSynExTyVars : PatSyn -> list Var.TyVar :=
-  fun ps => Var.binderVars (psExTyVars ps).
+Definition patSynExTyVars : PatSyn -> list Combined.Var :=
+  fun ps => Combined.binderVars (psExTyVars ps).
 
 Definition patSynFieldLabels : PatSyn -> list FieldLabel.FieldLabel :=
   psFieldLabels.
@@ -185,7 +187,7 @@ Definition patSynFieldType : PatSyn -> FieldLabel.FieldLabelString -> unit :=
 Definition patSynIsInfix : PatSyn -> bool :=
   psInfix.
 
-Definition patSynMatcher : PatSyn -> (Var.Id * bool)%type :=
+Definition patSynMatcher : PatSyn -> (Combined.Var * bool)%type :=
   psMatcher.
 
 Definition patSynName : PatSyn -> Name.Name :=
@@ -204,15 +206,15 @@ Program Instance NamedThing__PatSyn : Name.NamedThing PatSyn :=
 
 Definition patSynSig
    : PatSyn ->
-     (list Var.TyVar * unit * list Var.TyVar * unit * list unit * unit)%type :=
+     (list Combined.Var * unit * list Combined.Var * unit * list unit * unit)%type :=
   fun '(MkPatSyn _ _ arg_tys _ _ _ univ_tvs req ex_tvs prov res_ty _ _) =>
-    pair (pair (pair (pair (pair (Var.binderVars univ_tvs) req) (Var.binderVars
-                            ex_tvs)) prov) arg_tys) res_ty.
+    pair (pair (pair (pair (pair (Combined.binderVars univ_tvs) req)
+                           (Combined.binderVars ex_tvs)) prov) arg_tys) res_ty.
 
-Definition patSynUnivTyVarBinders : PatSyn -> list Var.TyVarBinder :=
+Definition patSynUnivTyVarBinders : PatSyn -> list Combined.TyVarBinder :=
   psUnivTyVars.
 
-Definition tidyPatSynIds : (Var.Id -> Var.Id) -> PatSyn -> PatSyn :=
+Definition tidyPatSynIds : (Combined.Var -> Combined.Var) -> PatSyn -> PatSyn :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | tidy_fn, (MkPatSyn _ _ _ _ _ _ _ _ _ _ _ matcher builder as ps) =>
@@ -227,12 +229,13 @@ Definition tidyPatSynIds : (Var.Id -> Var.Id) -> PatSyn -> PatSyn :=
     end.
 
 (* External variables:
-     None Some bool list op_zt__ option pair unit BasicTypes.Arity Data.Foldable.find
+     None Some bool list op_zt__ option pair unit BasicTypes.Arity
+     Combined.TyVarBinder Combined.Var Combined.binderVars Data.Foldable.find
      Data.Foldable.length Data.Function.on Data.Tuple.fst FieldLabel.FieldLabel
      FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.fmap
      GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
      GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.List.zip Name.Name Name.NamedThing
      Name.getName__ Name.getOccName__ Name.nameOccName OccName.OccName Panic.noString
      Panic.panicStr Unique.Uniquable Unique.Unique Unique.getUnique
-     Unique.getUnique__ Var.Id Var.TyVar Var.TyVarBinder Var.binderVars
+     Unique.getUnique__
 *)

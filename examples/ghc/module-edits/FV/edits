@@ -1,0 +1,2 @@
+rename type Var.Id    = Combined.Var
+rename type Var.TyVar = Combined.Var

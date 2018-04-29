@@ -12,61 +12,45 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+Require Import Combined.
 
 
 (* Converted imports: *)
 
 Require BasicTypes.
-Require CoreSyn.
-Require DataCon.
+Require Combined.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
 Require GHC.Num.
-Require TyCon.
 Require Unique.
-Require Var.
-Require VarEnv.
 
 (* Converted type declarations: *)
 
 Definition CheapAppFun :=
-  (Var.Id -> BasicTypes.Arity -> bool)%type.
+  (Combined.Var -> BasicTypes.Arity -> bool)%type.
 (* Midamble *)
 
 (* Record selector *)
 Require Import Pair.
 
 (* Notation for Alt *)
-Require Import CoreSyn.
+Require Import Combined.
 
-(* Uses functions from Type. Also recursion is tricky *)
-(*
-Parameter applyTypeToArgs : CoreSyn.CoreExpr -> Core.Type_ -> list
-                            CoreSyn.CoreExpr -> Core.Type_.
-Parameter exprType : CoreSyn.CoreExpr -> Core.Type_.
 
-Parameter coreAltType : CoreSyn.CoreAlt -> Core.Type_.
-
-Parameter mkCast : CoreSyn.CoreExpr -> Core.Coercion -> CoreSyn.CoreExpr.
-
-Parameter dataConInstPat : list FastString.FastString -> list
-                            Unique.Unique -> DataCon.DataCon -> list Core.Type_ -> (list TyVar * list
-                            Var.Id)%type.
-*)
 (* Converted value declarations: *)
 
-Axiom tryEtaReduce : list Var.Var ->
-                     CoreSyn.CoreExpr -> option CoreSyn.CoreExpr.
+Axiom tryEtaReduce : list Combined.Var ->
+                     Combined.CoreExpr -> option Combined.CoreExpr.
 
-Axiom exprIsBottom : CoreSyn.CoreExpr -> bool.
+Axiom exprIsBottom : Combined.CoreExpr -> bool.
 
-Axiom bindNonRec : Var.Id ->
-                   CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom bindNonRec : Combined.Var ->
+                   Combined.CoreExpr -> Combined.CoreExpr -> Combined.CoreExpr.
 
-Axiom mkCast : CoreSyn.CoreExpr -> unit -> CoreSyn.CoreExpr.
+Axiom mkCast : Combined.CoreExpr -> unit -> Combined.CoreExpr.
 
-Axiom isExprLevPoly : CoreSyn.CoreExpr -> bool.
+Axiom isExprLevPoly : Combined.CoreExpr -> bool.
 
 (* coreAltsType skipped *)
 
@@ -76,110 +60,114 @@ Axiom isExprLevPoly : CoreSyn.CoreExpr -> bool.
 
 (* applyTypeToArgs skipped *)
 
-Axiom mkTickNoHNF : CoreSyn.Tickish Var.Id ->
-                    CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom mkTickNoHNF : Combined.Tickish Combined.Var ->
+                    Combined.CoreExpr -> Combined.CoreExpr.
 
-Axiom combineIdenticalAlts : list CoreSyn.AltCon ->
-                             list CoreSyn.CoreAlt ->
-                             (bool * list CoreSyn.AltCon * list CoreSyn.CoreAlt)%type.
+Axiom combineIdenticalAlts : list Combined.AltCon ->
+                             list Combined.CoreAlt ->
+                             (bool * list Combined.AltCon * list Combined.CoreAlt)%type.
 
-Axiom mkTicks : list (CoreSyn.Tickish Var.Id) ->
-                CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom mkTicks : list (Combined.Tickish Combined.Var) ->
+                Combined.CoreExpr -> Combined.CoreExpr.
 
-Axiom tickHNFArgs : CoreSyn.Tickish Var.Id ->
-                    CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom tickHNFArgs : Combined.Tickish Combined.Var ->
+                    Combined.CoreExpr -> Combined.CoreExpr.
 
-Axiom mkTick : CoreSyn.Tickish Var.Id -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom mkTick : Combined.Tickish Combined.Var ->
+               Combined.CoreExpr -> Combined.CoreExpr.
 
-Axiom isSaturatedConApp : CoreSyn.CoreExpr -> bool.
+Axiom isSaturatedConApp : Combined.CoreExpr -> bool.
 
 Axiom stripTicksTop : forall {b},
-                      (CoreSyn.Tickish Var.Id -> bool) ->
-                      CoreSyn.Expr b -> (list (CoreSyn.Tickish Var.Id) * CoreSyn.Expr b)%type.
+                      (Combined.Tickish Combined.Var -> bool) ->
+                      Combined.Expr b ->
+                      (list (Combined.Tickish Combined.Var) * Combined.Expr b)%type.
 
-Axiom cheapEqExpr : forall {b}, CoreSyn.Expr b -> CoreSyn.Expr b -> bool.
+Axiom cheapEqExpr : forall {b}, Combined.Expr b -> Combined.Expr b -> bool.
 
 Axiom cheapEqExpr' : forall {b},
-                     (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b -> bool.
+                     (Combined.Tickish Combined.Var -> bool) ->
+                     Combined.Expr b -> Combined.Expr b -> bool.
 
-Axiom exprOkForSideEffects : CoreSyn.CoreExpr -> bool.
+Axiom exprOkForSideEffects : Combined.CoreExpr -> bool.
 
-Axiom needsCaseBinding : unit -> CoreSyn.CoreExpr -> bool.
+Axiom needsCaseBinding : unit -> Combined.CoreExpr -> bool.
 
-Axiom exprOkForSpeculation : CoreSyn.CoreExpr -> bool.
+Axiom exprOkForSpeculation : Combined.CoreExpr -> bool.
 
-Axiom app_ok : (unit -> bool) -> Var.Id -> list CoreSyn.CoreExpr -> bool.
+Axiom app_ok : (unit -> bool) -> Combined.Var -> list Combined.CoreExpr -> bool.
 
-Axiom expr_ok : (unit -> bool) -> CoreSyn.CoreExpr -> bool.
+Axiom expr_ok : (unit -> bool) -> Combined.CoreExpr -> bool.
 
 Axiom stripTicksTopE : forall {b},
-                       (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b.
+                       (Combined.Tickish Combined.Var -> bool) -> Combined.Expr b -> Combined.Expr b.
 
 Axiom stripTicksTopT : forall {b},
-                       (CoreSyn.Tickish Var.Id -> bool) ->
-                       CoreSyn.Expr b -> list (CoreSyn.Tickish Var.Id).
+                       (Combined.Tickish Combined.Var -> bool) ->
+                       Combined.Expr b -> list (Combined.Tickish Combined.Var).
 
 Axiom stripTicksE : forall {b},
-                    (CoreSyn.Tickish Var.Id -> bool) -> CoreSyn.Expr b -> CoreSyn.Expr b.
+                    (Combined.Tickish Combined.Var -> bool) -> Combined.Expr b -> Combined.Expr b.
 
 Axiom stripTicksT : forall {b},
-                    (CoreSyn.Tickish Var.Id -> bool) ->
-                    CoreSyn.Expr b -> list (CoreSyn.Tickish Var.Id).
+                    (Combined.Tickish Combined.Var -> bool) ->
+                    Combined.Expr b -> list (Combined.Tickish Combined.Var).
 
-Axiom mkAltExpr : CoreSyn.AltCon ->
-                  list CoreSyn.CoreBndr -> list unit -> CoreSyn.CoreExpr.
+Axiom mkAltExpr : Combined.AltCon ->
+                  list Combined.CoreBndr -> list unit -> Combined.CoreExpr.
 
 Axiom filterAlts : forall {a},
-                   TyCon.TyCon ->
+                   Combined.TyCon ->
                    list unit ->
-                   list CoreSyn.AltCon ->
-                   list (CoreSyn.AltCon * list Var.Var * a)%type ->
-                   (list CoreSyn.AltCon * list (CoreSyn.AltCon * list Var.Var * a)%type)%type.
+                   list Combined.AltCon ->
+                   list (Combined.AltCon * list Combined.Var * a)%type ->
+                   (list Combined.AltCon *
+                    list (Combined.AltCon * list Combined.Var * a)%type)%type.
 
 Axiom findDefault : forall {a} {b},
-                    list (CoreSyn.AltCon * list a * b)%type ->
-                    (list (CoreSyn.AltCon * list a * b)%type * option b)%type.
+                    list (Combined.AltCon * list a * b)%type ->
+                    (list (Combined.AltCon * list a * b)%type * option b)%type.
 
 Axiom addDefault : forall {a} {b},
-                   list (CoreSyn.AltCon * list a * b)%type ->
-                   option b -> list (CoreSyn.AltCon * list a * b)%type.
+                   list (Combined.AltCon * list a * b)%type ->
+                   option b -> list (Combined.AltCon * list a * b)%type.
 
-Axiom isDefaultAlt : forall {a} {b}, (CoreSyn.AltCon * a * b)%type -> bool.
+Axiom isDefaultAlt : forall {a} {b}, (Combined.AltCon * a * b)%type -> bool.
 
 Axiom findAlt : forall {a} {b},
-                CoreSyn.AltCon ->
-                list (CoreSyn.AltCon * a * b)%type -> option (CoreSyn.AltCon * a * b)%type.
+                Combined.AltCon ->
+                list (Combined.AltCon * a * b)%type -> option (Combined.AltCon * a * b)%type.
 
 Axiom refineDefaultAlt : list Unique.Unique ->
-                         TyCon.TyCon ->
+                         Combined.TyCon ->
                          list unit ->
-                         list CoreSyn.AltCon ->
-                         list CoreSyn.CoreAlt -> (bool * list CoreSyn.CoreAlt)%type.
+                         list Combined.AltCon ->
+                         list Combined.CoreAlt -> (bool * list Combined.CoreAlt)%type.
 
 Axiom mergeAlts : forall {a} {b},
-                  list (CoreSyn.AltCon * a * b)%type ->
-                  list (CoreSyn.AltCon * a * b)%type -> list (CoreSyn.AltCon * a * b)%type.
+                  list (Combined.AltCon * a * b)%type ->
+                  list (Combined.AltCon * a * b)%type -> list (Combined.AltCon * a * b)%type.
 
-Axiom trimConArgs : CoreSyn.AltCon ->
-                    list CoreSyn.CoreArg -> list CoreSyn.CoreArg.
+Axiom trimConArgs : Combined.AltCon ->
+                    list Combined.CoreArg -> list Combined.CoreArg.
 
-Axiom exprIsTrivial : CoreSyn.CoreExpr -> bool.
+Axiom exprIsTrivial : Combined.CoreExpr -> bool.
 
-Axiom getIdFromTrivialExpr : CoreSyn.CoreExpr -> Var.Id.
+Axiom getIdFromTrivialExpr : Combined.CoreExpr -> Combined.Var.
 
-Axiom getIdFromTrivialExpr_maybe : CoreSyn.CoreExpr -> option Var.Id.
+Axiom getIdFromTrivialExpr_maybe : Combined.CoreExpr -> option Combined.Var.
 
-Axiom exprIsDupable : DynFlags.DynFlags -> CoreSyn.CoreExpr -> bool.
+Axiom exprIsDupable : DynFlags.DynFlags -> Combined.CoreExpr -> bool.
 
 Axiom dupAppSize : GHC.Num.Int.
 
-Axiom exprIsCheap : CoreSyn.CoreExpr -> bool.
+Axiom exprIsCheap : Combined.CoreExpr -> bool.
 
-Axiom exprIsExpandable : CoreSyn.CoreExpr -> bool.
+Axiom exprIsExpandable : Combined.CoreExpr -> bool.
 
-Axiom exprIsWorkFree : CoreSyn.CoreExpr -> bool.
+Axiom exprIsWorkFree : Combined.CoreExpr -> bool.
 
-Axiom exprIsCheapX : CheapAppFun -> CoreSyn.CoreExpr -> bool.
+Axiom exprIsCheapX : CheapAppFun -> Combined.CoreExpr -> bool.
 
 Axiom isExpandableApp : CheapAppFun.
 
@@ -191,54 +179,56 @@ Axiom altsAreExhaustive : forall {b}, list (Alt b) -> bool.
 
 Axiom isDivOp : unit -> bool.
 
-Axiom exprIsHNF : CoreSyn.CoreExpr -> bool.
+Axiom exprIsHNF : Combined.CoreExpr -> bool.
 
-Axiom exprIsConLike : CoreSyn.CoreExpr -> bool.
+Axiom exprIsConLike : Combined.CoreExpr -> bool.
 
-Axiom exprIsHNFlike : (Var.Var -> bool) ->
-                      (CoreSyn.Unfolding -> bool) -> CoreSyn.CoreExpr -> bool.
+Axiom exprIsHNFlike : (Combined.Var -> bool) ->
+                      (Combined.Unfolding -> bool) -> Combined.CoreExpr -> bool.
 
-Axiom exprIsTopLevelBindable : CoreSyn.CoreExpr -> unit -> bool.
+Axiom exprIsTopLevelBindable : Combined.CoreExpr -> unit -> bool.
 
-Axiom exprIsTickedString : CoreSyn.CoreExpr -> bool.
+Axiom exprIsTickedString : Combined.CoreExpr -> bool.
 
-Axiom exprIsTickedString_maybe : CoreSyn.CoreExpr -> option GHC.Base.String.
+Axiom exprIsTickedString_maybe : Combined.CoreExpr -> option GHC.Base.String.
 
 Axiom dataConRepInstPat : list Unique.Unique ->
-                          DataCon.DataCon -> list unit -> (list Var.TyVar * list Var.Id)%type.
+                          Combined.DataCon -> list unit -> (list Combined.Var * list Combined.Var)%type.
 
 Axiom dataConRepFSInstPat : list FastString.FastString ->
                             list Unique.Unique ->
-                            DataCon.DataCon -> list unit -> (list Var.TyVar * list Var.Id)%type.
+                            Combined.DataCon -> list unit -> (list Combined.Var * list Combined.Var)%type.
 
 Axiom dataConInstPat : list FastString.FastString ->
                        list Unique.Unique ->
-                       DataCon.DataCon -> list unit -> (list Var.TyVar * list Var.Id)%type.
+                       Combined.DataCon -> list unit -> (list Combined.Var * list Combined.Var)%type.
 
-Axiom exprIsBig : forall {b}, CoreSyn.Expr b -> bool.
+Axiom exprIsBig : forall {b}, Combined.Expr b -> bool.
 
-Axiom eqExpr : VarEnv.InScopeSet ->
-               CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> bool.
+Axiom eqExpr : Combined.InScopeSet ->
+               Combined.CoreExpr -> Combined.CoreExpr -> bool.
 
-Axiom diffUnfold : VarEnv.RnEnv2 ->
-                   CoreSyn.Unfolding -> CoreSyn.Unfolding -> list GHC.Base.String.
+Axiom diffUnfold : Combined.RnEnv2 ->
+                   Combined.Unfolding -> Combined.Unfolding -> list GHC.Base.String.
 
-Axiom diffIdInfo : VarEnv.RnEnv2 -> Var.Var -> Var.Var -> list GHC.Base.String.
+Axiom diffIdInfo : Combined.RnEnv2 ->
+                   Combined.Var -> Combined.Var -> list GHC.Base.String.
 
 Axiom diffBinds : bool ->
-                  VarEnv.RnEnv2 ->
-                  list (Var.Var * CoreSyn.CoreExpr)%type ->
-                  list (Var.Var * CoreSyn.CoreExpr)%type ->
-                  (list GHC.Base.String * VarEnv.RnEnv2)%type.
+                  Combined.RnEnv2 ->
+                  list (Combined.Var * Combined.CoreExpr)%type ->
+                  list (Combined.Var * Combined.CoreExpr)%type ->
+                  (list GHC.Base.String * Combined.RnEnv2)%type.
 
 Axiom diffExpr : bool ->
-                 VarEnv.RnEnv2 -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr -> list GHC.Base.String.
+                 Combined.RnEnv2 ->
+                 Combined.CoreExpr -> Combined.CoreExpr -> list GHC.Base.String.
 
-Axiom eqTickish : VarEnv.RnEnv2 ->
-                  CoreSyn.Tickish Var.Id -> CoreSyn.Tickish Var.Id -> bool.
+Axiom eqTickish : Combined.RnEnv2 ->
+                  Combined.Tickish Combined.Var -> Combined.Tickish Combined.Var -> bool.
 
 Axiom locBind : GHC.Base.String ->
-                Var.Var -> Var.Var -> list GHC.Base.String -> list GHC.Base.String.
+                Combined.Var -> Combined.Var -> list GHC.Base.String -> list GHC.Base.String.
 
 (* rhsIsStatic skipped *)
 
@@ -246,12 +236,13 @@ Axiom isEmptyTy : unit -> bool.
 
 (* collectMakeStaticArgs skipped *)
 
-Axiom isJoinBind : CoreSyn.CoreBind -> bool.
+Axiom isJoinBind : Combined.CoreBind -> bool.
 
 (* External variables:
-     Alt bool list op_zt__ option unit BasicTypes.Arity CoreSyn.AltCon
-     CoreSyn.CoreAlt CoreSyn.CoreArg CoreSyn.CoreBind CoreSyn.CoreBndr
-     CoreSyn.CoreExpr CoreSyn.Expr CoreSyn.Tickish CoreSyn.Unfolding DataCon.DataCon
-     DynFlags.DynFlags FastString.FastString GHC.Base.String GHC.Num.Int TyCon.TyCon
-     Unique.Unique Var.Id Var.TyVar Var.Var VarEnv.InScopeSet VarEnv.RnEnv2
+     Alt bool list op_zt__ option unit BasicTypes.Arity Combined.AltCon
+     Combined.CoreAlt Combined.CoreArg Combined.CoreBind Combined.CoreBndr
+     Combined.CoreExpr Combined.DataCon Combined.Expr Combined.InScopeSet
+     Combined.RnEnv2 Combined.Tickish Combined.TyCon Combined.Unfolding Combined.Var
+     DynFlags.DynFlags FastString.FastString GHC.Base.String GHC.Num.Int
+     Unique.Unique
 *)

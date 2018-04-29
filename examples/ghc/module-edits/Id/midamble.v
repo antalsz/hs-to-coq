@@ -1,8 +1,9 @@
-Parameter lookupDataCon : IdInfo.DataConId -> DataCon.DataCon.
-Parameter lookupClass : IdInfo.ClassId -> Class.Class.
+Parameter lookupDataCon : Combined.DataConId -> Combined.DataCon.
+Parameter lookupClass   : Combined.ClassId -> Combined.Class.
 
-(* Make this a parameter so that we can reason about either case. *)
-Parameter isStateHackType : unit -> bool.
+(* Make this default so that we can reason about either case. *)
+Import GHC.Err.
+Definition isStateHackType : unit -> bool := GHC.Err.default.
 
 (* The real definition looks like this, but we don't have the type information
    around:

@@ -13,19 +13,18 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require DataCon.
+Require Combined.
 Require GHC.Base.
 Require Name.
 Require OccName.
-Require PatSyn.
 Require Unique.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
 Inductive ConLike : Type
-  := RealDataCon : DataCon.DataCon -> ConLike
-  |  PatSynCon : PatSyn.PatSyn -> ConLike.
+  := RealDataCon : Combined.DataCon -> ConLike
+  |  PatSynCon : Combined.PatSyn -> ConLike.
 (* Midamble *)
 
 
@@ -66,15 +65,15 @@ Program Instance NamedThing__ConLike : Name.NamedThing ConLike :=
 Definition conLikeArity : ConLike -> BasicTypes.Arity :=
   fun arg_0__ =>
     match arg_0__ with
-    | RealDataCon data_con => DataCon.dataConSourceArity data_con
-    | PatSynCon pat_syn => PatSyn.patSynArity pat_syn
+    | RealDataCon data_con => Combined.dataConSourceArity data_con
+    | PatSynCon pat_syn => Combined.patSynArity pat_syn
     end.
 
 Definition conLikeName : ConLike -> Name.Name :=
   fun arg_0__ =>
     match arg_0__ with
-    | RealDataCon data_con => DataCon.dataConName data_con
-    | PatSynCon pat_syn => PatSyn.patSynName pat_syn
+    | RealDataCon data_con => Combined.dataConName data_con
+    | PatSynCon pat_syn => Combined.patSynName pat_syn
     end.
 
 Definition eqConLike : ConLike -> ConLike -> bool :=
@@ -92,10 +91,10 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
          GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
 
 (* External variables:
-     bool negb BasicTypes.Arity DataCon.DataCon DataCon.dataConName
-     DataCon.dataConSourceArity GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zsze____ Name.Name Name.NamedThing Name.getName Name.getName__
-     Name.getOccName__ Name.nameOccName OccName.OccName PatSyn.PatSyn
-     PatSyn.patSynArity PatSyn.patSynName Unique.Uniquable Unique.Unique
-     Unique.getUnique Unique.getUnique__
+     bool negb BasicTypes.Arity Combined.DataCon Combined.PatSyn Combined.dataConName
+     Combined.dataConSourceArity Combined.patSynArity Combined.patSynName
+     GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zsze____
+     Name.Name Name.NamedThing Name.getName Name.getName__ Name.getOccName__
+     Name.nameOccName OccName.OccName Unique.Uniquable Unique.Unique Unique.getUnique
+     Unique.getUnique__
 *)

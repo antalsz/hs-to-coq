@@ -1,3 +1,5 @@
+rename type Var.Id = Combined.Var
+
 axiomatize module CoreArity
 
 #

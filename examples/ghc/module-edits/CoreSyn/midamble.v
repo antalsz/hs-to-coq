@@ -1,3 +1,5 @@
+
+
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
@@ -55,7 +57,7 @@ Fixpoint size_Expr {b} (e: Expr b) :=
         end in
 
   match e with 
-  | Var _ => 1
+  | Mk_Var _ => 1
   | Lit _ => 1
   | Lam _ bdy => 1 + size_Expr bdy
   | App e1 e2 => 1 + size_Expr e1 + size_Expr e2
@@ -75,7 +77,7 @@ Fixpoint size_Expr {b} (e: Expr b) :=
 
 
 Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
-  GHC.Err.Build_Default _ (Var GHC.Err.default).
+  GHC.Err.Build_Default _ (Mk_Var GHC.Err.default).
 
 Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
   GHC.Err.Build_Default _ (Breakpoint GHC.Err.default GHC.Err.default).
@@ -116,7 +118,7 @@ Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr 
     match arg_0__ with
       | AnnType t => Type_ t
       | AnnCoercion co => Coercion co
-      | AnnVar v => Var v
+      | AnnVar v => Mk_Var v
       | AnnLit lit => Lit lit
       | AnnLam binder body => Lam binder (deAnnotate body)
       | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
@@ -173,7 +175,7 @@ Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
                          Coq.Lists.List.flat_map cont_2__ prs)
         end
   in match arg_0__ with
-     | Var v => Var v
+     | Mk_Var v => Mk_Var v
      | Lit l => Lit l
      | Type_ ty => Type_ ty
      | Coercion co => Coercion co

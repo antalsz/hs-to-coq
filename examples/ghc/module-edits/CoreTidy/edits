@@ -1,22 +1,7 @@
+rename type Var.Id = Combined.Var
+
 skip module CoreSeq
 
-# rewrite forall x y, GHC.Prim.seq x y = y
-
-rewrite forall id, Var.idInfo id  = @Var.idInfo tt id
-
-#
-# No type information in the AST
-#
-rewrite forall var,    Var.isTyCoVar var = false
-rewrite forall env x,  TyCoRep.tidyType env x = tt
-rewrite forall env co, TyCoRep.tidyCo env co = tt
-
-#
-# No unfolding / rules in IdInfo
-#
-rewrite forall x, IdInfo.unfoldInfo x = tt
-rewrite forall x, CoreSyn.isEvaldUnfolding x = false
-rewrite forall x, CoreSyn.isStableUnfolding x = false
 
 skip CoreTidy.tidyUnfolding
 skip CoreTidy.tidyRule

@@ -1,3 +1,5 @@
+rename type Var.Id = Combined.Var
+
 in Exitify.exitify termination go deferred
 
 # requires mutual recursion

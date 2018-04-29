@@ -1,12 +1,12 @@
-rename type TyCon.TyCon = IdInfo.TyConId
+# rename type TyCon.TyCon = ConIds.TyConId
 
 # debugging, uses List.!!
-skip Class.classSCSelId
+skip Combined.classSCSelId
 
 # needs information about prelude (parameter in midamble)
-skip Class.naturallyCoherentClass
+skip Combined.naturallyCoherentClass
 
 # ppr
-skip Class.pprDefMethInfo
-skip Class.pprFunDep
-skip Class.pprFundeps
+skip Combined.pprDefMethInfo
+skip Combined.pprFunDep
+skip Combined.pprFundeps

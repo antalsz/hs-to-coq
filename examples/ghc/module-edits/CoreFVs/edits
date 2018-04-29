@@ -1,5 +1,8 @@
 skip module	FamInstEnv
 
+rename type Var.Id    = Combined.Var
+rename type Var.TyVar = Combined.Var
+
 ## 
 # NEEDED by Exitify
 # CoreFVs.CoreExprWithFVs CoreFVs.freeVars
@@ -9,9 +12,9 @@ skip module	FamInstEnv
 # Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
 #
 
-rewrite forall id, Id.realIdUnfolding id = CoreSyn.NoUnfolding
+rewrite forall id, Id.realIdUnfolding id = Combined.NoUnfolding
 
-in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, VarSet.mapUnionVarSet get_fvs (Id.idCoreRules id) = VarSet.emptyVarSet
+in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Combined.mapUnionVarSet get_fvs (Id.idCoreRules id) = Combined.emptyVarSet
 
 # notation
 rename type CoreSyn.AnnExpr = AnnExpr
@@ -48,14 +51,14 @@ in CoreFVs.exprOrphNames skip go_alt
 # We assume that the missing information does not contain any free variables
 #
 #
-redefine Definition CoreFVs.idRuleFVs      : Var.Id  -> FV.FV := fun id  => FV.emptyFV.
-redefine Definition CoreFVs.varTypeTyCoFVs : Var.Var -> FV.FV := fun var => FV.emptyFV.
-redefine Definition CoreFVs.idUnfoldingFVs : Var.Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition CoreFVs.idRuleFVs      : Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition CoreFVs.varTypeTyCoFVs : Combined.Var -> FV.FV := fun var => FV.emptyFV.
+redefine Definition CoreFVs.idUnfoldingFVs : Id  -> FV.FV := fun id  => FV.emptyFV.
 
 rewrite forall co,   TyCoRep.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,   TyCoRep.tyCoFVsOfType ty        = FV.emptyFV
-rewrite forall b_ty, TyCoRep.tyCoVarsOfTypeDSet b_ty = VarSet.emptyDVarSet
-rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = VarSet.emptyDVarSet
+rewrite forall b_ty, TyCoRep.tyCoVarsOfTypeDSet b_ty = Combined.emptyDVarSet
+rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Combined.emptyDVarSet
 
 
 

@@ -53,6 +53,9 @@ MODULES = \
   OccName \
   State \
 
+## 
+CORESYN = \
+   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn 
 
 ## 
 CONSTRUCTORS = \
@@ -60,27 +63,18 @@ CONSTRUCTORS = \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
-  IdInfo \
-  CoreSyn \
+  Id \
   UnVarGraph \
   Demand \
   CoreSubst \
   CoreUtils \
-  Id \
   Name \
   NameEnv \
   NameSet \
-  Var \
-  VarEnv \
-  VarSet \
   FV \
   Literal \
   FieldLabel \
   Constants \
-  Class \
-  TyCon \
-  DataCon \
-  PatSyn \
   ConLike \
   CoreFVs \
   Exitify \
@@ -112,8 +106,9 @@ VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
 VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
 VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
 VFILES_CONSTR    = Constructors.v
+VFILES_CORESYN   = Combined.v
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) 
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN)
 
 OUTFILES_GEN       = $(addprefix $(OUT)/,$(VFILES_GEN))
 OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
@@ -121,8 +116,9 @@ OUTFILES_CORE      = $(addprefix $(OUT)/,$(VFILES_CORE))
 OUTFILES_DROPIN    = $(addprefix $(OUT)/,$(VFILES_DROPIN))
 OUTFILES_CORETYPE  = $(addprefix $(OUT)/,$(VFILES_CORETYPE))
 OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
+OUTFILES_CORESYN   = $(addprefix $(OUT)/,$(VFILES_CORESYN))
 
-OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) 
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN)
 
 all: vfiles coq
 
@@ -177,6 +173,20 @@ HS_TO_COQ_GHC_OPTS=\
      -e edits \
      -N \
 
+#
+# Can only have one preamble/midamble. So concatenate all of the individual files together
+#
+CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))
+
+CoreSyn_preamble.v : $(CORESYN_PRE) manual/ConIds.v
+	cat manual/ConIds.v $(CORESYN_PRE) > CoreSyn_preamble.v
+
+CORESYN_MID = $(wildcard $(addprefix module-edits/, $(addsuffix /midamble.v, $(CORESYN))))
+
+CoreSyn_midamble.v : $(CORESYN_MID)
+	cat $(CORESYN_MID) > CoreSyn_midamble.v
+
+
 -include deps/*.mk
 
 %.h2ci: %.v
@@ -201,6 +211,18 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
                      -o $(OUT) \
 		     ghc/compiler/*/$*.hs
 	test -e $@
+
+
+$(OUTFILES_CORESYN) : edits no-type-edits CoreSyn_preamble.v CoreSyn_midamble.v $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
+	$(HS_TO_COQ) $(HS_TO_COQ_GHC_OPTS) \
+                -p CoreSyn_preamble.v \
+                --midamble CoreSyn_midamble.v \
+	             $(addprefix -e , $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))) \
+                -e no-type-edits \
+                -o $(OUT) \
+		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CORESYN)))
+	test -e $@
+	rm CoreSyn_preamble.v CoreSyn_midamble.v
 
 
 $(OUTFILES_CONSTR) : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
@@ -234,4 +256,4 @@ clean:
 	rm -f *.aux *.log
 
 cleancore:
-	rm -rf $(OUTFILES_CORE)
+	rm -rf $(OUTFILES_CORE) 

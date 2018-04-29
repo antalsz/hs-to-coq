@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Bag.
+Require Combined.
 Require Coq.Init.Datatypes.
 Require Data.Foldable.
 Require Data.IntSet.Internal.
@@ -21,8 +22,6 @@ Require GHC.Num.
 Require GHC.Prim.
 Require UniqFM.
 Require Unique.
-Require Var.
-Require VarEnv.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -91,25 +90,25 @@ Definition completeGraph : UnVarSet -> UnVarGraph :=
 Definition completeBipartiteGraph : UnVarSet -> UnVarSet -> UnVarGraph :=
   fun s1 s2 => prune (Mk_UnVarGraph (Bag.unitBag (CBPG s1 s2))).
 
-Definition k : Var.Var -> GHC.Num.Word :=
+Definition k : Combined.Var -> GHC.Num.Word :=
   fun v => Unique.getWordKey (Unique.getUnique v).
 
-Definition mkUnVarSet : list Var.Var -> UnVarSet :=
+Definition mkUnVarSet : list Combined.Var -> UnVarSet :=
   fun vs => Mk_UnVarSet (Data.IntSet.Internal.fromList (GHC.Base.map k vs)).
 
-Definition elemUnVarSet : Var.Var -> UnVarSet -> bool :=
+Definition elemUnVarSet : Combined.Var -> UnVarSet -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | v, Mk_UnVarSet s => Data.IntSet.Internal.member (k v) s
     end.
 
-Definition delUnVarSet : UnVarSet -> Var.Var -> UnVarSet :=
+Definition delUnVarSet : UnVarSet -> Combined.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UnVarSet s, v => Mk_UnVarSet (Data.IntSet.Internal.delete (k v) s)
     end.
 
-Definition delNode : UnVarGraph -> Var.Var -> UnVarGraph :=
+Definition delNode : UnVarGraph -> Combined.Var -> UnVarGraph :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UnVarGraph g, v =>
@@ -141,7 +140,7 @@ Definition unionUnVarSet : UnVarSet -> UnVarSet -> UnVarSet :=
 Definition unionUnVarSets : list UnVarSet -> UnVarSet :=
   Data.Foldable.foldr unionUnVarSet emptyUnVarSet.
 
-Definition neighbors : UnVarGraph -> Var.Var -> UnVarSet :=
+Definition neighbors : UnVarGraph -> Combined.Var -> UnVarSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UnVarGraph g, v =>
@@ -159,18 +158,17 @@ Definition neighbors : UnVarGraph -> Var.Var -> UnVarSet :=
         unionUnVarSets (Data.Foldable.concatMap go (Bag.bagToList g))
     end.
 
-Definition varEnvDom {a} : VarEnv.VarEnv a -> UnVarSet :=
+Definition varEnvDom {a} : Combined.VarEnv a -> UnVarSet :=
   fun ae => Mk_UnVarSet (UniqFM.ufmToSet_Directly ae).
 
 (* External variables:
      andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
-     Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app
-     Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
-     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
+     Bag.mapBag Bag.unionBags Bag.unitBag Combined.Var Combined.VarEnv
+     Coq.Init.Datatypes.app Data.Foldable.concatMap Data.Foldable.foldl'
+     Data.Foldable.foldr Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
      GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zeze____
      GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Num.Word GHC.Prim.coerce
-     UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey Var.Var
-     VarEnv.VarEnv
+     UniqFM.ufmToSet_Directly Unique.getUnique Unique.getWordKey
 *)

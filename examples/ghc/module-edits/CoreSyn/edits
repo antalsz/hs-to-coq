@@ -1,24 +1,59 @@
+# data type arguments Combined.Expr (indices: b)
+# data type arguments Combined.Bind (indices: b)
+
+#
+# This would be better if we had a rewrite for types
+#
+redefine Inductive Combined.Unfolding : Type := Mk_Unfolding.
+
+rewrite forall , Combined.BootUnfolding = getUnfolding Combined.BootUnfolding
+rewrite forall , Combined.OtherCon      = fun x => getUnfolding (Combined.OtherCon x)
+rewrite forall , Combined.NoUnfolding   = getUnfolding Combined.NoUnfolding
+
+# redefine Definition Combined.bootUnfolding : Combined.UnfoldingInfo :=
+#  Combined.BootUnfolding.
+# redefine Definition Combined.evaldUnfolding : Combined.UnfoldingInfo :=
+#   Combined.OtherCon nil.
+redefine Definition Combined.hasSomeUnfolding : Combined.Unfolding -> bool :=
+  fun arg_0__ =>
+    match Combined.getUnfoldingInfo arg_0__ with
+    | Combined.NoUnfolding => false
+    | Combined.BootUnfolding => false
+    | _ => true
+    end.
+redefine Definition Combined.isBootUnfolding : Combined.Unfolding -> bool :=
+  fun arg_0__ => match Combined.getUnfoldingInfo arg_0__ with | Combined.BootUnfolding => true | _ => false end.
+
+# redefine Definition Combined.mkOtherCon : (list Combined.AltCon) -> Combined.UnfoldingInfo :=
+#  Combined.OtherCon.
+# redefine Definition Combined.noUnfolding : Combined.UnfoldingInfo :=
+#  NoUnfolding.
+redefine Definition Combined.otherCons : Combined.Unfolding -> (list Combined.AltCon) :=
+  fun arg_0__ => match Combined.getUnfoldingInfo arg_0__ with | Combined.OtherCon cons_ => cons_ | _ => nil end.
+
+
+
 skip module CostCentre
 rename type CostCentre.CostCentre = unit
 
-skip CoreSyn.mkNoCount
-skip CoreSyn.mkNoScope
-skip CoreSyn.tickishCanSplit
-skip CoreSyn.tickishCounts
-skip CoreSyn.tickishIsCode
-skip CoreSyn.tickishContains
-skip CoreSyn.tickishScopesLike
-skip CoreSyn.tickishFloatable
+skip Combined.mkNoCount
+skip Combined.mkNoScope
+skip Combined.tickishCanSplit
+skip Combined.tickishCounts
+skip Combined.tickishIsCode
+skip Combined.tickishContains
+skip Combined.tickishScopesLike
+skip Combined.tickishFloatable
 
 # record selector, no place to add default
-skip CoreSyn.uf_tmpl
-skip CoreSyn.unfoldingTemplate
-skip CoreSyn.ru_rhs
+skip Combined.uf_tmpl
+skip Combined.unfoldingTemplate
+skip Combined.ru_rhs
 
-order CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
-order CoreSyn.Eq___Tickish CoreSyn.Ord__Tickish
+order Combined.Eq___DataCon Combined.Eq___AltCon_op_zeze__ Combined.Eq___AltCon Combined.Ord__AltCon
+order Combined.Eq___Tickish Combined.Ord__Tickish
 
-redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
+redefine Definition Combined.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
     match  GHC.Base.map Name.nameOccName local_names with
     | cons hd tl => NotOrphan (Data.Foldable.foldr GHC.Base.min hd tl)
     | nil => Mk_IsOrphan
@@ -26,43 +61,45 @@ redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : 
 
 # uses Outputable.empty in panicStr
 # in midamble
-skip CoreSyn.exprToType
+skip Combined.exprToType
 
 # piResultTy is in module Type
 # in midamble
-skip CoreSyn.applyTypeToArg
+skip Combined.applyTypeToArg
 
 
 # needs GHC.Types.Double & other types ( GHC.Types.Float, GHC.Int.Int64)
-skip CoreSyn.mkDoubleLitDouble
-skip CoreSyn.mkFloatLitFloat
-skip CoreSyn.mkInt64LitInt64
+skip Combined.mkDoubleLitDouble
+skip Combined.mkFloatLitFloat
+skip Combined.mkInt64LitInt64
 
 # needs Literal.mkMachInt
-skip CoreSyn.mkIntLit
-skip CoreSyn.mkIntLitInt
+skip Combined.mkIntLit
+skip Combined.mkIntLitInt
 # needs Literal.mlMachWord64, Literal.mkMachWOrd
-skip CoreSyn.mkWord64LitWord64
-skip CoreSyn.mkWordLit
-skip CoreSyn.mkWordLitWord
+skip Combined.mkWord64LitWord64
+skip Combined.mkWordLit
+skip Combined.mkWordLitWord
 
 # ANTALSZ
 # in midamble (due to mutual recursion)
-skip CoreSyn.deAnnotate'
-skip CoreSyn.collectAnnArgs
-skip CoreSyn.deTagExpr
+skip Combined.deAnnotate'
+skip Combined.collectAnnArgs
+skip Combined.deTagExpr
 
 # needs a default constraint, as well as a termination argument
-skip CoreSyn.collectNAnnBndrs
-# in CoreSyn.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_0__)   }
-# obligations CoreSyn.collectNAnnBndrs admit
+skip Combined.collectNAnnBndrs
+# in Combined.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_0__)   }
+# obligations Combined.collectNAnnBndrs admit
 
 
-in CoreSyn.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
-obligations CoreSyn.collectAnnArgsTicks admit
-in CoreSyn.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
-obligations CoreSyn.collectAnnBndrs admit
+in Combined.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
+obligations Combined.collectAnnArgsTicks admit
+in Combined.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
+obligations Combined.collectAnnBndrs admit
 
-skip CoreSyn.mkTyArg
+# skip Combined.mkTyArg
+
+rewrite forall x, Type.isCoercionTy_maybe x = None
 
 

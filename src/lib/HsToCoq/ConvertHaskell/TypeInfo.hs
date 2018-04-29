@@ -293,7 +293,7 @@ store' :: MonadIO m => (Lens' TypeInfo (Map Qualid a)) -> Qualid -> a -> TypeInf
 store' _ (Bare n) _ = liftIO $ do
     hPutStrLn stderr $ "Cannot store bare name in the TypeInfo map:"
     hPutStrLn stderr $ T.unpack n
-    exitFailure
+    --exitFailure
 store' lens key _ | Just _ <- builtIns ^. lens . at key = liftIO $ do
     hPutStrLn stderr $ "Trying to override built-in information about " ++ showP key
     exitFailure
@@ -301,7 +301,7 @@ store' lens qid@(Qualified mi _) x = do
     TypeInfoT (use (processedModules.contains mi)) >>= \case
         False -> liftIO $ do
             hPutStrLn stderr $ "Cannot store information about " ++ showP qid
-            exitFailure
+            --exitFailure
         True -> TypeInfoT $ modify $ lens . at qid ?~ x
 
 deserialize :: M.Map String (M.Map T.Text String) -> Maybe TypeInfo

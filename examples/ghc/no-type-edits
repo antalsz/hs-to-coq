@@ -7,8 +7,47 @@ skip module TcType
 skip module TysWiredIn
 skip module RepType
 
+
+#
+# This must stay in sync with the Makefile
+#
+rename module Class   Combined
+rename module TyCon   Combined
+rename module DataCon Combined
+rename module Var     Combined
+rename module IdInfo  Combined
+rename module PatSyn  Combined
+rename module VarSet  Combined
+rename module VarEnv  Combined
+rename module CoreSyn Combined
+
+# 
+# These are notation (synonyms). So Combined must be imported when they are.
+# Instead it is easier to define them as their defns.
+#
+
+# rename type Var.Id    = Combined.Var
+# rename type Var.TyVar = Combined.Var
+
+
+#
+# Punned constructor values
+#
+rename value DataCon.HsSrcBang  = Combined.Mk_HsSrcBang
+rename value DataCon.EqSpec     = Combined.Mk_EqSpec
+rename value Class.Class        = Combined.Mk_Class
+rename value Var.Id             = Combined.Mk_Id
+rename value Var.TyVar          = Combined.Mk_TyVar
+rename value Var.TcTyVar        = Combined.Mk_TcTyVar
+rename value IdInfo.IdInfo      = Combined.Mk_IdInfo
+
+rename value IdInfo.DFunId      = Combined.Mk_DFunId
+rename value IdInfo.JoinId      = Combined.Mk_JoinId
+
+rename value CoreSyn.Var        = Combined.Mk_Var
+
 ## CallStack
-rewrite forall x, Var.idInfo x = @Var.idInfo tt x
+rewrite forall x, Combined.idInfo x = @Combined.idInfo tt x
 
 ### get rid of some information in the AST
 rename type PrimOp.PrimOp           = unit
@@ -16,18 +55,19 @@ rename type ForeignCall.ForeignCall = unit
 rename type ForeignCall.CType       = unit
 
 ## Punning
-rename value Var.Id            = Var.Mk_Id
-rename value Var.TyVar         = Var.Mk_TyVar
-rename value Var.TcTyVar       = Var.Mk_TcTyVar
 
-rename value CoreSyn.IsOrphan  = CoreSyn.Mk_IsOrphan
-rename value CoreSyn.RuleEnv   = CoreSyn.Mk_RuleEnv
-rename value DataCon.HsSrcBang = DataCon.Mk_HsSrcBang
-rename value DataCon.EqSpec    = DataCon.Mk_EqSpec
-rename value Class.Class       = Class.Mk_Class
+rename value CoreSyn.IsOrphan  = Combined.Mk_IsOrphan
+rename value CoreSyn.RuleEnv   = Combined.Mk_RuleEnv
 rename value CoreFVs.FVAnn     = CoreFVs.Mk_FVAnn
 rename value CoreSubst.Subst   = CoreSubst.Mk_Subst
-rename value IdInfo.IdInfo     = IdInfo.Mk_IdInfo
+
+rename value Demand.ExnStr = Demand.Mk_ExnStr
+rename value Demand.Str = Demand.Mk_Str
+rename value Demand.Use = Demand.Mk_Use
+rename value Demand.DmdType = Demand.Mk_DmdType
+rename value Demand.StrictSig = Demand.Mk_StrictSig
+rename value Demand.KillFlags = Demand.Mk_KillFlags
+
 
 
 ###############################################################################
@@ -35,26 +75,30 @@ rename value IdInfo.IdInfo     = IdInfo.Mk_IdInfo
 # IdInfo  --- edit out demandInfo, unfoldingIndo, ruleInfo, strictnessInfo from 
 #             this data structure
 #
-rewrite forall x, IdInfo.zapUsageEnvInfo x = x
-rewrite forall x, IdInfo.zapUsageInfo x    = x
-rewrite forall x, IdInfo.zapUsedOnceInfo x = x
-rewrite forall x, IdInfo.zapDemandInfo x   = x 
+rewrite forall x, Combined.zapUsageEnvInfo x = x
+rewrite forall x, Combined.zapUsageInfo x    = x
+rewrite forall x, Combined.zapUsedOnceInfo x = x
+rewrite forall x, Combined.zapDemandInfo x   = x 
 
-rewrite forall x, IdInfo.setStrictnessInfo x = x
-rewrite forall x, IdInfo.setUnfoldingInfo  x = x
-rewrite forall x, IdInfo.setDemandInfo     x = x
+rewrite forall x, Combined.setStrictnessInfo x = x
+rewrite forall x, Combined.setUnfoldingInfo  x = x
+rewrite forall x, Combined.setDemandInfo     x = x
 
-rewrite forall arg dmd, IdInfo.setDemandInfo arg dmd = arg
-rewrite forall arg dmd, IdInfo.setStrictnessInfo arg dmd = arg
-rewrite forall arg dmd, IdInfo.setUnfoldingInfo arg dmd = arg
+rewrite forall arg dmd, Combined.setDemandInfo arg dmd = arg
+rewrite forall arg dmd, Combined.setStrictnessInfo arg dmd = arg
+rewrite forall arg dmd, Combined.setUnfoldingInfo arg dmd = arg
 
-rewrite forall x, IdInfo.ruleInfoFreeVars x = FV.emptyFVs
+rewrite forall x, Combined.ruleInfoFreeVars x = FV.emptyFVs
 
+rewrite forall x, Combined.unfoldInfo x = tt
+
+rewrite forall x, Combined.sel_tycon x = tt
 
 #
 # Id -- 
 #
 rewrite forall arg y, Id.setIdUnfolding arg y = arg
+rewrite forall x, Id.idType x = tt
 
 
 ###############################################################################
@@ -64,7 +108,7 @@ rewrite forall arg y, Id.setIdUnfolding arg y = arg
 ### get rid of type information in the AST
 
 rename type TcType.TcTyVarDetails = unit
-redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
+redefine Definition Combined.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
 # type used in DataCon
 rename type MkId.DataConBoxer = unit
@@ -89,7 +133,7 @@ rename type CoAxiom.Role = unit
 rename value CoAxiom.Representational = tt
 rename value CoAxiom.Nominal = tt
 rename value TysWiredIn.liftedTypeKind = tt
-
+rename value TysWiredIn.constraintKind = tt
 
 ## Could make these unit too.
 redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
@@ -99,12 +143,21 @@ redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamil
 
 ## rewrite things that are unit to tt
 
-rewrite forall x, CoreSyn.mkTyArg x = CoreSyn.Type_ tt
+# rewrite forall x, Combined.mkTyArg x = Combined.Type_ tt
 rewrite forall x, TyCoRep.mkTyVarTy x = tt
 rewrite forall v, Coercion.mkCoVarCo v = tt
 rewrite forall rhs, CoreUtils.exprType rhs = tt
 
 rewrite forall x, TyCoRep.isCoercionType x = false
 
-rewrite forall x, Id.idType x = tt
-rewrite forall x, IdInfo.sel_tycon x = tt
+
+#
+rewrite forall var,    Combined.isTyCoVar var = false
+rewrite forall env x,  TyCoRep.tidyType env x = tt
+rewrite forall env co, TyCoRep.tidyCo env co = tt
+
+#
+# No unfolding / rules in IdInfo
+#
+rewrite forall x, CoreSyn.isEvaldUnfolding x = false
+rewrite forall x, Combined.isStableUnfolding x = false

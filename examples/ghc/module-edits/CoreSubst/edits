@@ -4,6 +4,10 @@ skip module ErrUtils
 skip module OccurAnal
 skip module CoreSeq
 
+rename type Var.Id    = Combined.Var
+rename type Var.TyVar = Combined.Var
+
+
 ###################################################
 # TODO: seq
 #
@@ -15,9 +19,9 @@ in CoreSubst.substUnfolding rewrite forall x y, GHC.Prim.seq x y = y
 #
 #
 
-rewrite forall v, Var.isCoVar v = false
-rewrite forall v, Var.isTyVar v = false
-rewrite forall v, Var.isId fv   = true
+rewrite forall v, Combined.isCoVar v = false
+rewrite forall v, Combined.isTyVar v = false
+rewrite forall v, Combined.isId fv   = true
 
 rewrite forall x t, Id.setIdType x t = x
 
@@ -27,19 +31,19 @@ rewrite forall s x m , TyCoRep.tyCoFVsOfType s x m  = id
 # These are easier to redefine than to rewrite
 #
 redefine Definition CoreSubst.emptySubst : Subst :=
-  Mk_Subst VarEnv.emptyInScopeSet VarEnv.emptyVarEnv tt tt.
+  Mk_Subst Combined.emptyInScopeSet Combined.emptyVarEnv tt tt.
 
-redefine Definition CoreSubst.mkEmptySubst : VarEnv.InScopeSet -> Subst :=
+redefine Definition CoreSubst.mkEmptySubst : Combined.InScopeSet -> Subst :=
   fun in_scope =>
-    Mk_Subst in_scope VarEnv.emptyVarEnv tt tt.
+    Mk_Subst in_scope Combined.emptyVarEnv tt tt.
 
 redefine Definition CoreSubst.substTyVarBndr : 
-			Subst -> (Var.TyVar -> (Subst * Var.TyVar)) :=
+			Subst -> (Combined.Var -> (Subst * Combined.Var)) :=
   fun s v => pair s v.
 
 redefine Definition CoreSubst.zapSubstEnv : Subst -> Subst :=
   fun x => match x with | (Mk_Subst in_scope _ _ _) =>
-    Mk_Subst in_scope VarEnv.emptyVarEnv tt tt end.
+    Mk_Subst in_scope Combined.emptyVarEnv tt tt end.
 
 
 # In midamble, hard to redefine and hard to rewrite
@@ -49,27 +53,27 @@ skip CoreSubst.mkOpenSubst
 #
 # Yuck! 
 #
-in CoreSubst.delBndrs rewrite forall, (VarEnv.delVarEnvList tvs vs) = tt
-in CoreSubst.delBndrs rewrite forall, (VarEnv.delVarEnvList cvs vs) = tt
+in CoreSubst.delBndrs rewrite forall, (Combined.delVarEnvList tvs vs) = tt
+in CoreSubst.delBndrs rewrite forall, (Combined.delVarEnvList cvs vs) = tt
 
-in CoreSubst.extendInScope rewrite forall, (VarEnv.delVarEnv tvs v) = tt
-in CoreSubst.extendInScope rewrite forall, (VarEnv.delVarEnv cvs v) = tt
+in CoreSubst.extendInScope rewrite forall, (Combined.delVarEnv tvs v) = tt
+in CoreSubst.extendInScope rewrite forall, (Combined.delVarEnv cvs v) = tt
 
-in CoreSubst.extendInScopeList rewrite forall, (VarEnv.delVarEnvList tvs vs) = tt
-in CoreSubst.extendInScopeList rewrite forall, (VarEnv.delVarEnvList cvs vs) = tt
+in CoreSubst.extendInScopeList rewrite forall, (Combined.delVarEnvList tvs vs) = tt
+in CoreSubst.extendInScopeList rewrite forall, (Combined.delVarEnvList cvs vs) = tt
 
-in CoreSubst.isEmptySubst rewrite forall, (VarEnv.isEmptyVarEnv tv_env) = true
-in CoreSubst.isEmptySubst rewrite forall, (VarEnv.isEmptyVarEnv cv_env) = true
+in CoreSubst.isEmptySubst rewrite forall, (Combined.isEmptyVarEnv tv_env) = true
+in CoreSubst.isEmptySubst rewrite forall, (Combined.isEmptyVarEnv cv_env) = true
 
-in CoreSubst.substIdBndr rewrite forall, VarEnv.isEmptyVarEnv tvs = true 
-in CoreSubst.substIdBndr rewrite forall, VarEnv.isEmptyVarEnv cvs = true
+in CoreSubst.substIdBndr rewrite forall, Combined.isEmptyVarEnv tvs = true 
+in CoreSubst.substIdBndr rewrite forall, Combined.isEmptyVarEnv cvs = true
 in CoreSubst.substIdBndr rewrite forall x, TyCoRep.noFreeVarsOfType x = true
 
-in CoreSubst.substIdInfo rewrite forall x, IdInfo.isEmptyRuleInfo x = true
-in CoreSubst.substIdInfo rewrite forall x, CoreSyn.isFragileUnfolding x = false
+in CoreSubst.substIdInfo rewrite forall x, Combined.isEmptyRuleInfo x = true
+in CoreSubst.substIdInfo rewrite forall x, Combined.isFragileUnfolding x = false
 
-in CoreSubst.substIdType rewrite forall, VarEnv.isEmptyVarEnv tv_env = true
-in CoreSubst.substIdType rewrite forall, VarEnv.isEmptyVarEnv cv_env = true
+in CoreSubst.substIdType rewrite forall, Combined.isEmptyVarEnv tv_env = true
+in CoreSubst.substIdType rewrite forall, Combined.isEmptyVarEnv cv_env = true
 in CoreSubst.substIdType rewrite forall old_ty, TyCoRep.noFreeVarsOfType old_ty = true
 
 skip CoreSubst.extendCvSubst

@@ -1,71 +1,57 @@
-skip module Class
-skip module DataCon
-
 rewrite forall x, andb Util.debugIsOn x = false
 
-rename type DataCon.DataCon = IdInfo.DataConId
-rename type Class.Class     = IdInfo.ClassId
-
-
-rename type CoAxiom.CoAxiom = list
-rename type CoAxiom.Branched = unit
-rename type CoAxiom.Unbranched = unit
-rename type CoAxiom.BuiltInSynFamily = unit
-rename type CoAxiom.Role = unit
-rename value CoAxiom.Representational = tt
-rename value CoAxiom.Nominal = tt
-rename value TysWiredIn.liftedTypeKind = tt
-
-
-skip TyCon.mkTyConKind
-rewrite forall x y, TyCon.mkTyConKind x y = tt
-
-skip TyCon.kindTyConKeys
-skip TyCon.isKindTyCon
+## need default DataCon for record selector, but cannot add it now
+skip Combined.dataCon
+skip Combined.data_con
 
 ## Cannot add necessary default before partial record selector
-skip TyCon.algTcParent
-skip TyCon.promDcRepInfo
+skip Combined.algTcParent
+skip Combined.promDcRepInfo
+
+
+skip Combined.mkTyConKind
+rewrite forall x y, Combined.mkTyConKind x y = tt
+
+skip Combined.kindTyConKeys
+skip Combined.isKindTyCon
+
 
 ## need name of class
-skip TyCon.okParent
+skip Combined.okParent
 
 ## Needs DataCon.dataConExTyVars
-skip TyCon.isDataProductTyCon_maybe
-skip TyCon.isDataSumTyCon_maybe 
-skip TyCon.isProductTyCon 
-skip TyCon.isPromotedTupleTyCon
+skip Combined.isDataProductTyCon_maybe
+skip Combined.isDataSumTyCon_maybe 
+skip Combined.isProductTyCon 
+skip Combined.isPromotedTupleTyCon
 
-skip TyCon.isInjectiveTyCon
-skip TyCon.isGenerativeTyCon
-skip TyCon.tyConInjectivityInfo 
+skip Combined.isInjectiveTyCon
+skip Combined.isGenerativeTyCon
+skip Combined.tyConInjectivityInfo 
 
 ## Needs DataCon.dataConFieldLabels
-skip TyCon.fieldsOfAlgTcRhs
-skip TyCon.mkAlgTyCon
-skip TyCon.mkClassTyCon
+# skip Combined.fieldsOfAlgTcRhs
+# skip Combined.mkAlgTyCon
+# skip Combined.mkClassTyCon
 
-## Introduces a redundant case
-skip TyCon.tyConVisibleTyVars
-
-skip TyCon.tyConATs
+skip Combined.tyConATs
 skip module ForeignCall
 
 # Needs ClassSpec
-skip TyCon.tyConAssoc_maybe
-skip TyCon.isTyConAssoc
+skip Combined.tyConAssoc_maybe
+skip Combined.isTyConAssoc
 
-order TyCon.Ord__TyCon_compare TyCon.Eq___TyCon_op_zeze__ TyCon.Eq___TyCon_op_zsze__ TyCon.Eq___TyCon TyCon.Ord__TyCon
+order Combined.Ord__TyCon_compare Combined.Eq___TyCon_op_zeze__ Combined.Eq___TyCon_op_zsze__ Combined.Eq___TyCon Combined.Ord__TyCon
 
-redefine Local Definition TyCon.Eq___TyConFlavour_op_zeze__
+redefine Local Definition Combined.Eq___TyConFlavour_op_zeze__
    : TyConFlavour -> (TyConFlavour -> bool) := fun a b => false.
 
-order TyCon.Eq___PrimElemRep TyCon.Eq___PrimRep_op_zeze__
+order Combined.Eq___PrimElemRep Combined.Eq___PrimRep_op_zeze__
 
 ## can't use Applicative ((->)A)
-skip TyCon.isLiftedTypeKindTyConName
+skip Combined.isLiftedTypeKindTyConName
 
-skip TyCon.tyConRuntimeRepInfo
-skip TyCon.tyConSkolem
+skip Combined.tyConRuntimeRepInfo
+skip Combined.tyConSkolem
 
 

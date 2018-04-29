@@ -1,3 +1,6 @@
+rename type Var.Id    = Combined.Var
+rename type Var.TyVar = Combined.Var
+
 axiomatize module CoreUtils
 
 rename type CoreSyn.Alt = Alt

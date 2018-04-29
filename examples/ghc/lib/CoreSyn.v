@@ -12,6 +12,8 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+Require Import Combined.
+
 Require Import Coq.ZArith.ZArith.
 Require Import Omega.
 
@@ -21,11 +23,11 @@ Ltac termination_by_omega :=
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Combined.
 Require Coq.Init.Datatypes.
 Require Coq.Init.Peano.
 Require Coq.Lists.List.
 Require Data.Foldable.
-Require DataCon.
 Require Datatypes.
 Require DynFlags.
 Require GHC.Base.
@@ -42,10 +44,7 @@ Require NameEnv.
 Require OccName.
 Require Panic.
 Require SrcLoc.
-Require TyCon.
 Require Util.
-Require Var.
-Require VarEnv.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -101,7 +100,7 @@ Definition InCoercion :=
   unit%type.
 
 Definition CoreBndr :=
-  Var.Var%type.
+  Combined.Var%type.
 
 Definition InBndr :=
   CoreBndr%type.
@@ -112,7 +111,7 @@ Definition OutBndr :=
 Inductive TaggedBndr t : Type := TB : CoreBndr -> t -> TaggedBndr t.
 
 Inductive AltCon : Type
-  := DataAlt : DataCon.DataCon -> AltCon
+  := DataAlt : Combined.DataCon -> AltCon
   |  LitAlt : Literal.Literal -> AltCon
   |  DEFAULT : AltCon.
 
@@ -125,7 +124,7 @@ Inductive AnnExpr__raw : Type :=.
 Reserved Notation "'AnnExpr'".
 
 Inductive AnnExpr' bndr annot : Type
-  := AnnVar : Var.Id -> AnnExpr' bndr annot
+  := AnnVar : Combined.Var -> AnnExpr' bndr annot
   |  AnnLit : Literal.Literal -> AnnExpr' bndr annot
   |  AnnLam : bndr -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
   |  AnnApp : (AnnExpr bndr annot) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
@@ -134,7 +133,8 @@ Inductive AnnExpr' bndr annot : Type
      bndr -> unit -> list (AnnAlt bndr annot) -> AnnExpr' bndr annot
   |  AnnLet : (AnnBind bndr annot) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
   |  AnnCast : (AnnExpr bndr annot) -> (annot * unit)%type -> AnnExpr' bndr annot
-  |  AnnTick : (Tickish Var.Id) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
+  |  AnnTick
+   : (Tickish Combined.Var) -> (AnnExpr bndr annot) -> AnnExpr' bndr annot
   |  AnnType : unit -> AnnExpr' bndr annot
   |  AnnCoercion : unit -> AnnExpr' bndr annot
 with AnnBind bndr annot : Type
@@ -154,14 +154,14 @@ Inductive Arg__raw : Type :=.
 Reserved Notation "'Arg'".
 
 Inductive Expr b : Type
-  := Var : Var.Id -> Expr b
+  := Var : Combined.Var -> Expr b
   |  Lit : Literal.Literal -> Expr b
   |  App : (Expr b) -> (Arg b) -> Expr b
   |  Lam : b -> (Expr b) -> Expr b
   |  Let : (Bind b) -> (Expr b) -> Expr b
   |  Case : (Expr b) -> b -> unit -> list (Alt b) -> Expr b
   |  Cast : (Expr b) -> unit -> Expr b
-  |  Tick : (Tickish Var.Id) -> (Expr b) -> Expr b
+  |  Tick : (Tickish Combined.Var) -> (Expr b) -> Expr b
   |  Type_ : unit -> Expr b
   |  Coercion : unit -> Expr b
 with Bind b : Type
@@ -211,11 +211,11 @@ Definition CoreExpr :=
   (Expr CoreBndr)%type.
 
 Inductive CoreVect : Type
-  := Vect : Var.Id -> CoreExpr -> CoreVect
-  |  NoVect : Var.Id -> CoreVect
-  |  VectType : bool -> TyCon.TyCon -> (option TyCon.TyCon) -> CoreVect
-  |  VectClass : TyCon.TyCon -> CoreVect
-  |  VectInst : Var.Id -> CoreVect.
+  := Vect : Combined.Var -> CoreExpr -> CoreVect
+  |  NoVect : Combined.Var -> CoreVect
+  |  VectType : bool -> Combined.TyCon -> (option Combined.TyCon) -> CoreVect
+  |  VectClass : Combined.TyCon -> CoreVect
+  |  VectInst : Combined.Var -> CoreVect.
 
 Definition InExpr :=
   CoreExpr%type.
@@ -227,21 +227,22 @@ Inductive Unfolding : Type
   := NoUnfolding : Unfolding
   |  BootUnfolding : Unfolding
   |  OtherCon : list AltCon -> Unfolding
-  |  DFunUnfolding : list Var.Var -> DataCon.DataCon -> list CoreExpr -> Unfolding
+  |  DFunUnfolding
+   : list Combined.Var -> Combined.DataCon -> list CoreExpr -> Unfolding
   |  CoreUnfolding
    : CoreExpr ->
      UnfoldingSource ->
      bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> Unfolding.
 
 Definition IdUnfoldingFun :=
-  (Var.Id -> Unfolding)%type.
+  (Combined.Var -> Unfolding)%type.
 
 Definition InScopeEnv :=
-  (VarEnv.InScopeSet * IdUnfoldingFun)%type%type.
+  (Combined.InScopeSet * IdUnfoldingFun)%type%type.
 
 Definition RuleFun :=
   (DynFlags.DynFlags ->
-   InScopeEnv -> Var.Id -> list CoreExpr -> option CoreExpr)%type.
+   InScopeEnv -> Combined.Var -> list CoreExpr -> option CoreExpr)%type.
 
 Inductive CoreRule : Type
   := Rule
@@ -809,6 +810,8 @@ Definition re_visible_orphs (arg_0__ : RuleEnv) :=
   re_visible_orphs.
 (* Midamble *)
 
+
+
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
@@ -1019,7 +1022,7 @@ Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | DataAlt con1, DataAlt con2 =>
-        GHC.Base.compare (DataCon.dataConTag con1) (DataCon.dataConTag con2)
+        GHC.Base.compare (Combined.dataConTag con1) (Combined.dataConTag con2)
     | DataAlt _, _ => Gt
     | _, DataAlt _ => Lt
     | LitAlt l1, LitAlt l2 => GHC.Base.compare l1 l2
@@ -1291,7 +1294,7 @@ Definition cmpAltCon : AltCon -> AltCon -> comparison :=
     | DEFAULT, DEFAULT => Eq
     | DEFAULT, _ => Lt
     | DataAlt d1, DataAlt d2 =>
-        GHC.Base.compare (DataCon.dataConTag d1) (DataCon.dataConTag d2)
+        GHC.Base.compare (Combined.dataConTag d1) (Combined.dataConTag d2)
     | DataAlt _, DEFAULT => Gt
     | LitAlt l1, LitAlt l2 => GHC.Base.compare l1 l2
     | LitAlt _, DEFAULT => Gt
@@ -1317,9 +1320,9 @@ Definition ltAlt {a} {b}
   fun a1 a2 => (cmpAlt a1 a2) GHC.Base.== Lt.
 
 Program Definition collectAnnArgsTicks {b} {a}
-           : (Tickish Var.Var -> bool) ->
+           : (Tickish Combined.Var -> bool) ->
              AnnExpr b a ->
-             (AnnExpr b a * list (AnnExpr b a) * list (Tickish Var.Var))%type :=
+             (AnnExpr b a * list (AnnExpr b a) * list (Tickish Combined.Var))%type :=
           fun tickishOk expr =>
             let go :=
               GHC.Wf.wfFix3 Coq.Init.Peano.lt (fun arg_0__ arg_1__ arg_2__ =>
@@ -1361,8 +1364,8 @@ Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
     go expr nil.
 
 Definition collectArgsTicks {b}
-   : (Tickish Var.Id -> bool) ->
-     Expr b -> (Expr b * list (Arg b) * list (Tickish Var.Id))%type :=
+   : (Tickish Combined.Var -> bool) ->
+     Expr b -> (Expr b * list (Arg b) * list (Tickish Combined.Var))%type :=
   fun skipTick expr =>
     let fix go arg_0__ arg_1__ arg_2__
               := let j_4__ :=
@@ -1400,7 +1403,7 @@ Definition collectNBinders {b}
                  end in
     go orig_n nil orig_expr.
 
-Definition collectTyBinders : CoreExpr -> (list Var.TyVar * CoreExpr)%type :=
+Definition collectTyBinders : CoreExpr -> (list Combined.Var * CoreExpr)%type :=
   fun expr =>
     let fix go arg_0__ arg_1__
               := let j_3__ :=
@@ -1408,12 +1411,13 @@ Definition collectTyBinders : CoreExpr -> (list Var.TyVar * CoreExpr)%type :=
                    | tvs, e => pair (GHC.List.reverse tvs) e
                    end in
                  match arg_0__, arg_1__ with
-                 | tvs, Lam b e => if Var.isTyVar b : bool then go (cons b tvs) e else j_3__
+                 | tvs, Lam b e => if Combined.isTyVar b : bool then go (cons b tvs) e else j_3__
                  | _, _ => j_3__
                  end in
     go nil expr.
 
-Definition collectValBinders : CoreExpr -> (list Var.Id * CoreExpr)%type :=
+Definition collectValBinders
+   : CoreExpr -> (list Combined.Var * CoreExpr)%type :=
   fun expr =>
     let fix go arg_0__ arg_1__
               := let j_3__ :=
@@ -1421,13 +1425,13 @@ Definition collectValBinders : CoreExpr -> (list Var.Id * CoreExpr)%type :=
                    | ids, body => pair (GHC.List.reverse ids) body
                    end in
                  match arg_0__, arg_1__ with
-                 | ids, Lam b e => if Var.isId b : bool then go (cons b ids) e else j_3__
+                 | ids, Lam b e => if Combined.isId b : bool then go (cons b ids) e else j_3__
                  | _, _ => j_3__
                  end in
     go nil expr.
 
 Definition collectTyAndValBinders
-   : CoreExpr -> (list Var.TyVar * list Var.Id * CoreExpr)%type :=
+   : CoreExpr -> (list Combined.Var * list Combined.Var * CoreExpr)%type :=
   fun expr =>
     let 'pair tvs body1 := collectTyBinders expr in
     let 'pair ids body := collectValBinders body1 in
@@ -1566,8 +1570,8 @@ Definition isLocalRule : CoreRule -> bool :=
 Definition isOrphan : IsOrphan -> bool :=
   fun arg_0__ => match arg_0__ with | Mk_IsOrphan => true | _ => false end.
 
-Definition isRuntimeVar : Var.Var -> bool :=
-  Var.isId.
+Definition isRuntimeVar : Combined.Var -> bool :=
+  Combined.isId.
 
 Definition isStableSource : UnfoldingSource -> bool :=
   fun arg_0__ =>
@@ -1615,8 +1619,8 @@ Definition isValueUnfolding : Unfolding -> bool :=
 Definition mkApps {b} : Expr b -> list (Arg b) -> Expr b :=
   fun f args => Data.Foldable.foldl App f args.
 
-Definition mkConApp {b} : DataCon.DataCon -> list (Arg b) -> Expr b :=
-  fun con args => mkApps (Var (DataCon.dataConWorkId con)) args.
+Definition mkConApp {b} : Combined.DataCon -> list (Arg b) -> Expr b :=
+  fun con args => mkApps (Var (Combined.dataConWorkId con)) args.
 
 Definition mkCharLit {b} : GHC.Char.Char -> Expr b :=
   fun c => Lit (Literal.mkMachChar c).
@@ -1624,7 +1628,7 @@ Definition mkCharLit {b} : GHC.Char.Char -> Expr b :=
 Definition mkCoApps {b} : Expr b -> list unit -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (Coercion a)) f args.
 
-Definition mkCoBind : Var.CoVar -> unit -> CoreBind :=
+Definition mkCoBind : Combined.CoVar -> unit -> CoreBind :=
   fun cv co => NonRec cv (Coercion co).
 
 Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
@@ -1641,7 +1645,7 @@ Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
     match arg_0__ with
     | CoreUnfolding expr _ _ _ _ _ _ _ => Some expr
     | DFunUnfolding bndrs con args =>
-        Some (mkLams bndrs (mkApps (Var (DataCon.dataConWorkId con)) args))
+        Some (mkLams bndrs (mkApps (Var (Combined.dataConWorkId con)) args))
     | _ => None
     end.
 
@@ -1677,7 +1681,7 @@ Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
 Definition mkTyApps {b} : Expr b -> list unit -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (Type_ tt)) f args.
 
-Definition mkTyBind : Var.TyVar -> unit -> CoreBind :=
+Definition mkTyBind : Combined.Var -> unit -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
 
 Definition needSaturated : bool :=
@@ -1780,45 +1784,45 @@ Definition unSaturatedOk : bool :=
   true.
 
 Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
-  Util.count Var.isId.
+  Util.count Combined.isId.
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if Var.isTyVar v : bool then Type_ (tt) else
-    if Var.isCoVar v : bool then Coercion (tt) else
+    if Combined.isTyVar v : bool then Type_ (tt) else
+    if Combined.isCoVar v : bool then Coercion (tt) else
     Var v.
 
 Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.
 
-Definition mkVarApps {b} : Expr b -> list Var.Var -> Expr b :=
+Definition mkVarApps {b} : Expr b -> list Combined.Var -> Expr b :=
   fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
 
 Definition mkConApp2 {b}
-   : DataCon.DataCon -> list unit -> list Var.Var -> Expr b :=
+   : Combined.DataCon -> list unit -> list Combined.Var -> Expr b :=
   fun con tys arg_ids =>
-    mkApps (mkApps (Var (DataCon.dataConWorkId con)) (GHC.Base.map Type_ tys))
+    mkApps (mkApps (Var (Combined.dataConWorkId con)) (GHC.Base.map Type_ tys))
            (GHC.Base.map varToCoreExpr arg_ids).
 
 (* External variables:
      Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool
      comparison cons deAnnotate' deTagExpr false list negb nil op_zt__ option pair
      size_AnnExpr' snd true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
-     BasicTypes.Arity BasicTypes.RuleName Coq.Init.Datatypes.app Coq.Init.Peano.lt
-     Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
-     Data.Foldable.length DataCon.DataCon DataCon.dataConTag DataCon.dataConWorkId
-     Datatypes.id DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.map
-     GHC.Base.mappend GHC.Base.max__ GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
-     GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default GHC.Err.error
-     GHC.List.reverse GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Real.Rational GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
-     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Module.Module
-     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
-     Name.nameOccName NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName
-     Panic.noString Panic.panicStr Panic.warnPprTrace SrcLoc.RealSrcSpan TyCon.TyCon
-     Util.count Var.CoVar Var.Id Var.TyVar Var.Var Var.isCoVar Var.isId Var.isTyVar
-     VarEnv.InScopeSet
+     BasicTypes.Arity BasicTypes.RuleName Combined.CoVar Combined.DataCon
+     Combined.InScopeSet Combined.TyCon Combined.Var Combined.dataConTag
+     Combined.dataConWorkId Combined.isCoVar Combined.isId Combined.isTyVar
+     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.flat_map
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.length Datatypes.id
+     DynFlags.DynFlags GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.Synonym
+     GHC.Base.compare GHC.Base.compare__ GHC.Base.map GHC.Base.mappend GHC.Base.max__
+     GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
+     GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Char.Char
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.List.reverse GHC.Num.Int
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Real.Rational GHC.Wf.wfFix2
+     GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar Literal.mkMachDouble
+     Literal.mkMachFloat Literal.mkMachString Module.Module Module.ModuleSet
+     Module.emptyModuleSet Module.mkModuleSet Name.Name Name.nameOccName
+     NameEnv.NameEnv NameEnv.emptyNameEnv OccName.OccName Panic.noString
+     Panic.panicStr Panic.warnPprTrace SrcLoc.RealSrcSpan Util.count
 *)

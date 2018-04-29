@@ -1,14 +1,9 @@
-skip module CoreSyn
-skip module VarSet
-skip module Var
-skip module Demand
-
 rewrite forall x, andb Util.debugIsOn x = false
 rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
 
 # Break dependency on CoreSyn module
-rename type CoreSyn.Unfolding = unit
-rename value CoreSyn.noUnfolding = tt
+# rename type CoreSyn.Unfolding = unit
+# rename value CoreSyn.noUnfolding = tt
 
 # Break dependency on Demand module
 rename type Demand.StrictSig  = unit
@@ -21,58 +16,43 @@ rewrite forall x, Demand.zapUsageDemand x    = tt
 rewrite forall x, Demand.zapUsedOnceDemand x = tt
 rewrite forall x, Demand.zapUsedOnceSig x    = tt
 
-## doesn't do anything
-rewrite forall x, IdInfo.zapUsageEnvInfo x = x
-rewrite forall x, IdInfo.zapUsageInfo x    = x
-rewrite forall x, IdInfo.zapUsedOnceInfo x = x
-
-# punned
-rename value IdInfo.IdInfo = IdInfo.Mk_IdInfo
-
-
-## Rename local usages
-##
-## The RHSs are defined in the preamble.v
-##
-rename type Class.Class     = ClassId
-rename type DataCon.DataCon = DataConId
-rename type PatSyn.PatSyn   = PatSynId
-rename type TyCon.TyCon     = TyConId
 
 ## parameterized in the preamble.v
-skip IdInfo.RuleInfo
-skip IdInfo.emptyRuleInfo
-skip IdInfo.isEmptyRuleInfo 
+skip Combined.RuleInfo
+skip Combined.emptyRuleInfo
+skip Combined.isEmptyRuleInfo 
 
-skip IdInfo.ruleInfoFreeVars
-skip IdInfo.ruleInfoRules
-skip IdInfo.setRuleInfoHead
+skip Combined.ruleInfoFreeVars
+skip Combined.ruleInfoRules
+skip Combined.setRuleInfoHead
 
 # needs a default for RecSelParent *before* one can be 
 # provided in the midamble
-skip IdInfo.sel_tycon
+skip Combined.sel_tycon
 
 ## Operations on IdInfo
 ## 
 ## If we need these, we need to move them elsewhere
 ##
-skip IdInfo.zapUsageEnvInfo
+skip Combined.zapUsageEnvInfo
 
 ## needs CoreSyn.isFragileUnfolding
-skip IdInfo.zapFragileUnfolding
-skip IdInfo.zapFragileInfo
+skip Combined.zapFragileUnfolding
+skip Combined.zapFragileInfo
 
 ## needs Type.resultIdLevPoly
-skip IdInfo.setLevityInfoWithType
-skip IdInfo.isNeverLevPolyIdInfo
+skip Combined.setLevityInfoWithType
+skip Combined.isNeverLevPolyIdInfo
 
 ## Printing
 
-skip IdInfo.pprArityInfo
-skip IdInfo.pprCafInfo
-skip IdInfo.pprIdDetails
-skip IdInfo.pprStrictness
-skip IdInfo.ppArityInfo
-skip IdInfo.ppCafInfo 
+skip Combined.pprArityInfo
+skip Combined.pprCafInfo
+skip Combined.pprIdDetails
+skip Combined.pprStrictness
+skip Combined.ppArityInfo
+skip Combined.ppCafInfo 
 
-order IdInfo.Eq___CafInfo IdInfo.Ord__CafInfo
+order Combined.Eq___CafInfo Combined.Ord__CafInfo
+
+order Combined.Eq___TyCon Combined.Eq___RecSelParent_op_zeze__

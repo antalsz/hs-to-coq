@@ -9,6 +9,8 @@ Require Import VarSet.
 Require Import Id.
 Require Import IdInfo.
 
+Require Import Proofs.GHC.Base.
+
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -20,6 +22,7 @@ Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
 Require Import JoinPointInvariants.
+Require Import ScopeInvariant.
 Require Import StateLogic.
 
 
@@ -34,7 +37,8 @@ end.
 Ltac simpl_bool :=
   rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r,
           ?andb_true_l, ?andb_true_r, ?andb_false_l, ?andb_false_r,
-          ?orb_true_iff, ?andb_true_iff
+          ?orb_true_iff, ?andb_true_iff,
+          ?orb_false_iff, ?andb_false_iff
           in *.
 
 (** This tactic finds a [let x := rhs in body] anywhere in the goal,
@@ -67,6 +71,9 @@ Ltac float_let :=
 
 (** ** Punted-on lemmas about GHC functions *)
 
+Instance EqLaws_Unique : EqLaws Unique.Unique. Admitted.
+Instance EqExact_Unique : EqExact Unique.Unique. Admitted.
+
 Axiom isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
 
@@ -93,6 +100,32 @@ Axiom dVarSet_freeVarsOf_Ann:
 Axiom extendVarSetList_cons:
   forall s v vs,
   extendVarSetList s (v :: vs) = extendVarSetList (extendVarSet s v) vs.
+
+Axiom elemVarSet_extendVarSet:
+  forall v vs v',
+  elemVarSet v (extendVarSet vs v') = (Var.varUnique v == Var.varUnique v') || elemVarSet v vs.
+
+Axiom subVarSet_elemVarSet_true:
+  forall v vs vs',
+  subVarSet vs vs' = true ->
+  elemVarSet v vs = true ->
+  elemVarSet v vs' = true.
+
+Axiom subVarSet_elemVarSet_false:
+  forall v vs vs',
+  subVarSet vs vs' = true ->
+  elemVarSet v vs' = false ->
+  elemVarSet v vs = false.
+
+
+Axiom WellScoped_extendVarSet_fresh:
+  forall v e vs,
+  elemVarSet v (exprFreeVars e) = false ->
+  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
+
+Axiom WellScoped_subset:
+  forall e vs,
+  WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
 
 Axiom isJoinPointValidPair_extendVarSet:
   forall v rhs jps v',
@@ -131,6 +164,20 @@ Section in_exitify.
       exact def
     end).
 
+  (* Punting on termination for now *)
+  Axiom unsafe_deferredFix2_eq: forall {a b c} `{GHC.Err.Default c} (f : (a -> b -> c) -> (a -> b -> c)),
+    forall x y, DeferredFix.deferredFix2 f x y = f (DeferredFix.deferredFix2 f) x y.
+
+  Definition go_f := ltac:(
+    let rhs := eval cbv delta [go] in go in
+    lazymatch rhs with
+      | @DeferredFix.deferredFix2 ?a ?b ?r ?HDefault ?f =>
+      exact f
+    end).
+
+  Lemma go_eq : forall x y, go x y = go_f go x y.
+  Proof. apply unsafe_deferredFix2_eq. Qed.
+
   Definition ann_pairs := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
     lazymatch rhs with | (let x1 := _ in let x2 := _ in let y := ?rhs in _) => 
@@ -151,6 +198,232 @@ Section in_exitify.
     lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := _ in let y := ?rhs in ?body) => 
       exact rhs
     end).
+
+
+  (** ** Scope validity *)
+  
+  (* At first I had this expressed using lots of [Forall]. But
+     if we construct this piecewise, and destruct this piecewise, then
+     an inductive definition is better.*)
+  Definition WellScopedFloats isvs floats :=
+    (* All added bindings are fresh with regard to the environment *)
+    Forall (fun 'p => elemVarSet (fst p) isvs = false) floats /\
+    (* All added bindings are fresh with regard to each other  *)
+    NoDup (map (fun p => Var.varUnique (fst p)) floats) /\
+    (* All added bindings are well-scoped in the original environment  *)
+    Forall (fun 'p => WellScoped (snd p) isvs) floats.
+
+  Lemma mkExitLets_WellScoped:
+    forall exits' e isvs,
+    (* The body is well-scoped in the extended environment *)
+    WellScoped e (extendVarSetList isvs (map fst exits')) ->
+    WellScopedFloats isvs exits' ->
+    (* Then wrapping these bindings around [e] is well-scoped *)
+    WellScoped (mkExitLets exits' e) isvs.
+  Proof.
+    intros ??.
+    induction exits' as [|[v rhs] exits']; intros isvs' Hbase Hfloats.
+    * simpl. unfold Base.id. assumption.
+    * simpl in *.
+      destruct Hfloats as [Hfreshs [HNoDup Hrhss]].
+      inversion HNoDup; subst; clear HNoDup. rename H1 into Hfresh, H2 into HNoDup.
+      inversion_clear Hrhss. rename H into Hrhs, H0 into Hrhss.
+      inversion_clear Hfreshs. rename H into Hfresh_v, H0 into Hfreshs.
+      simpl in *.
+      rewrite extendVarSetList_cons in Hbase.
+      split; only 1: apply Hrhs.
+      apply IHexits'.
+      - assumption.
+      - repeat split.
+        + rewrite Forall_forall.
+          rewrite Forall_forall in Hfreshs.
+          rewrite in_map_iff in Hfresh.
+          intros [v' rhs'] HIn.
+          rewrite elemVarSet_extendVarSet.
+          simpl_bool.
+          split.
+          ** simpl.
+             destruct (Eq_eq (varUnique v') (varUnique v)); (reflexivity || exfalso).
+             contradict Hfresh.
+             exists (v', rhs'). split; assumption.
+          ** apply Hfreshs. assumption.
+        + assumption.
+        + rewrite Forall_forall.
+          rewrite Forall_forall in Hrhss.
+          intros pair HIn. simpl.
+          rewrite WellScoped_extendVarSet_fresh.
+          apply Hrhss; assumption.
+          eapply subVarSet_elemVarSet_false; only 2: eassumption.
+          apply WellScoped_subset.
+          apply Hrhss; assumption.
+  Qed.
+
+
+  Lemma addExit_all_WellScopedFloats:
+    forall in_scope_set ty ja e,
+    StateInvariant (WellScopedFloats (getInScopeVars in_scope_set))
+                   (addExit in_scope_set ty ja e).
+  Proof.
+    intros.
+    set (P := WellScopedFloats _).
+    (* This is much easier to prove by breaking the State abstraction and turning
+       it into a simple function. *)
+    unfold addExit, mkExitJoinId.
+    unfold StateInvariant, SP,
+           op_zgzgze__, return_, State.Monad__State, op_zgzgze____, return___,
+           State.Monad__State_op_zgzgze__,
+           State.Monad__State_return_,
+           pure, State.Applicative__State , pure__,
+           State.Applicative__State_pure,
+           State.runState', State.get, State.put.
+    simpl.
+    intros floats Hfloats.
+    set (v := uniqAway _ _).
+    constructor; only 2: trivial.
+    constructor; only 2: constructor; simpl.
+    * constructor; only 2: apply Hfloats; simpl.
+      admit. (* uniqAway *)
+    * constructor; only 2: apply Hfloats; simpl.
+      admit. 
+    * constructor; only 2: apply Hfloats; simpl.
+      admit. (* WellScoped e *)
+Admitted.
+
+  (* This needs a WellScoped expression as input *)
+  Lemma go_all_WellScopedFloats:
+    forall captured ann_e,
+    StateInvariant (WellScopedFloats (getInScopeVars (extendInScopeSetList in_scope captured)))
+                   (go captured ann_e).
+  Proof.
+    (* This cannot be structural recursion. Will need a size on expressions. *)
+    fix 2. rename go_all_WellScopedFloats into IH.
+    intros.
+    set (P := WellScopedFloats _).
+    rewrite go_eq.
+    cbv beta delta [go_f]. (* No [zeta]! *)
+    (* Float out lets *)
+    repeat float_let.
+
+    (* First case *)
+    enough (Hnext: StateInvariant P j_37__). {
+      destruct (collectArgs e) as [rhs fun_args] eqn:HcA.
+      destruct rhs; try apply Hnext.
+      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+
+    (* Second case *)
+    subst j_37__.
+    enough (Hnext: StateInvariant P j_36__). {
+      destruct (is_exit && negb is_interesting) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+
+    (* Third case *)
+    subst j_36__.
+    enough (Hnext: StateInvariant P j_35__). {
+      destruct (is_exit && captures_join_points ) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+
+    (* Third case: Actual exitification *)
+    subst j_35__.
+    enough (Hnext: StateInvariant P j_22__). {
+      destruct is_exit ; try apply Hnext.
+      apply StateInvariant_bind_return.
+      apply addExit_all_WellScopedFloats.
+    }
+    clear is_exit isCapturedVarArg is_interesting captures_join_points args e fvs.
+
+    (* Fourth case: No exitification here, so descend*)
+    subst j_22__.
+    enough (Hnext: StateInvariant P j_4__). {
+      destruct ann_e as [fvs e] eqn:Hann.
+      destruct e; try apply Hnext.
+      * (* Case [Case] *)
+        apply StateInvariant_bind_return.
+        apply StateInvariant_forM.
+        intros [[dc pats] rhs] HIn.
+        apply StateInvariant_bind_return.
+        Fail apply IH.
+        (* Need to use WellScopedness of the expression to know that 
+           [P] does not mind extending the varSet, in both directions *)
+        admit.
+      * (* Case [Let] *) 
+        repeat float_let.
+
+        enough (Hnext': StateInvariant P j_18__). {
+          destruct a as [j rhs|pairs']; try apply Hnext'.
+          destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI; try apply Hnext'.
+          destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
+          apply StateInvariant_bind.
+          + admit. (* dito *)
+          + intros. apply StateInvariant_bind_return.
+            admit. (* dito *)
+        }
+
+        subst j_18__.
+        enough (Hnext': StateInvariant P j_10__). {
+          destruct a as [j rhs|pairs']; try apply Hnext'.
+          destruct (isJoinId (Tuple.fst (Panic.head pairs'))); try apply Hnext'.
+          + intros.
+            apply StateInvariant_bind.
+            - apply StateInvariant_forM.
+              intros [j rhs] HIn.
+              repeat float_let.
+              destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
+              apply StateInvariant_bind_return.
+              admit. (* dito *)
+            - intro x.
+              apply StateInvariant_bind_return.
+              admit. (* dito *)
+        }
+
+        subst j_10__.
+        apply StateInvariant_bind_return.
+        admit. (* dito *)
+    }
+
+    subst j_4__.
+    apply StateInvariant_return.
+
+  (* Not structurally recursive *)
+  (* Fail Guarded. *)
+  Admitted.
+
+  Lemma all_exists_WellScoped:
+    WellScopedFloats (getInScopeVars in_scope) exits.
+  Proof.
+    unfold exits.
+    unfold pairs'_exits.
+    (* Have to go past [fst (collectNAnnBndrs (idJoinArity v) rhs)] here *)
+  Admitted.
+
+  Theorem exitify_WellScoped:
+    forall body,
+    WellScoped (Let (Rec pairs) body) (getInScopeVars in_scope)  ->
+    WellScoped (exitify in_scope pairs body) (getInScopeVars in_scope).
+  Proof.
+    intros.
+    cbv beta delta [exitify].
+    cbv zeta.
+    fold recursive_calls.
+    fold go.
+    fold ann_pairs.
+    fold pairs'_exits.
+    fold mkExitLets.
+    expand_pairs.
+    fold pairs'.
+    fold exits.
+    change (WellScoped (mkExitLets exits (mkLetRec pairs' body)) (getInScopeVars in_scope)).
+    apply mkExitLets_WellScoped.
+    * admit.
+    * apply all_exists_WellScoped.
+  Admitted.
+
+
+  (** ** Join point validity *)
+
   (** When is the result of [mkExitLets] valid? *)
   
   Lemma mkExitLets_JPI:
@@ -178,18 +451,6 @@ Section in_exitify.
           apply isJoinPointValidPair_extendVarSet.
   Qed.
 
-  Axiom unsafe_deferredFix2_eq: forall {a b c} `{GHC.Err.Default c} (f : (a -> b -> c) -> (a -> b -> c)),
-    forall x y, DeferredFix.deferredFix2 f x y = f (DeferredFix.deferredFix2 f) x y.
-
-  Definition go_f := ltac:(
-    let rhs := eval cbv delta [go] in go in
-    lazymatch rhs with
-      | @DeferredFix.deferredFix2 ?a ?b ?r ?HDefault ?f =>
-      exact f
-    end).
-
-  Lemma go_eq : forall x y, go x y = go_f go x y.
-  Proof. apply unsafe_deferredFix2_eq. Qed.
 
   Lemma addExit_all_joinIds:
     forall in_scope_set ty ja e,

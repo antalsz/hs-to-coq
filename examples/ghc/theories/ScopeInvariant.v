@@ -1,6 +1,4 @@
-Require Import CoreSyn.
-Require Import Var.
-Require Import VarSet.
+Require Import Core.
 
 Require Import Coq.Lists.List.
 Import ListNotations.
@@ -24,7 +22,7 @@ Definition Forall' {a} (P : a -> Prop) xs := Forall id (map P xs).
 
 Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   match e with
-  | CoreSyn.Var v => match lookupVarSet in_scope v with
+  | Mk_Var v => match lookupVarSet in_scope v with
     | None => False
     | Some v' => v = v'
     end

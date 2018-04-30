@@ -125,7 +125,7 @@ Axiom elemVarSet_mkVarset_iff_In:
 
 Axiom elemVarSet_extendVarSet:
   forall v vs v',
-  elemVarSet v (extendVarSet vs v') = (Var.varUnique v == Var.varUnique v') || elemVarSet v vs.
+  elemVarSet v (extendVarSet vs v') = (varUnique v == varUnique v') || elemVarSet v vs.
 
 Axiom subVarSet_refl:
   forall vs1,
@@ -309,7 +309,7 @@ Section in_exitify.
     (* All added bindings are fresh with regard to the environment *)
     Forall (fun 'p => elemVarSet (fst p) isvs = false) floats /\
     (* All added bindings are fresh with regard to each other  *)
-    NoDup (map (fun p => Var.varUnique (fst p)) floats) /\
+    NoDup (map (fun p => varUnique (fst p)) floats) /\
     (* All added bindings are well-scoped in the original environment  *)
     Forall (fun 'p => WellScoped (snd p) isvs) floats.
 
@@ -427,9 +427,10 @@ Section in_exitify.
 
     (* First case *)
     enough (Hnext: StateInvariant P j_37__). {
+      clearbody j_37__; cleardefs.
       destruct (collectArgs e) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
     cleardefs.
@@ -904,7 +905,7 @@ Section in_exitify.
     enough (Hnext: StateInvariant P j_37__). {
       destruct (collectArgs e) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
     clear isCapturedVarArg.

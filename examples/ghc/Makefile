@@ -129,7 +129,7 @@ core: $(OUT)/README.md coq
 # This target is also used as a dependecy to ensure that $(OUT) exists.
 $(OUT)/README.md:
 	mkdir -p $(OUT)
-	mkdir deps
+	mkdir -p deps
 	> $@
 	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
@@ -254,7 +254,6 @@ $(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 
 clean:
 	rm -rf $(OUT)
-	rm -rf deps
 	rm -f CoreSyn_preamble.v CoreSyn_midamble.v
 	rm -f *.aux *.log
 

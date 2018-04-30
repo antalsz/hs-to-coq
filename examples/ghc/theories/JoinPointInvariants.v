@@ -46,6 +46,10 @@ We will be able to check 4 when we translate types.
 Additionally, we have the invariant:
 
  * The join arity must be non-negative.
+
+TODO are these invariants:
+
+ * A lambda-, case- or pattern-bound variable is not a join point
 *)
 
 
@@ -60,6 +64,27 @@ Definition isJoinPointsValidPair_aux
       else isJoinRHS a rhs jps                   (* tail-call position *)
     end.
 
+Definition updJPS jps v :=
+   if isJoinId v
+   then extendVarSet jps v
+   else delVarSet    jps v.
+
+Definition updJPSs jps vs :=
+  fold_left updJPS vs jps.
+
+Lemma updJPSs_nil:
+  forall jps, updJPSs jps [] = jps.
+Proof. intros. reflexivity. Qed.
+
+Lemma updJPSs_cons:
+  forall jps v vs, updJPSs jps (v :: vs) = updJPSs (updJPS jps v) vs.
+Proof. intros. reflexivity. Qed.
+
+Lemma updJPSs_append:
+  forall jps vs1 vs2, updJPSs jps (vs1 ++ vs2) = updJPSs (updJPSs jps vs1) vs2.
+Proof. intros. apply fold_left_app. Qed.
+
+
 
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
   match e with
@@ -72,28 +97,27 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bo
     isJoinPointsValid e1 (n+1) jps &&   (* Tail-call-position *)
     isJoinPointsValid e2 0 emptyVarSet    (* Non-tail-call position *)
   | Lam v e =>
+    negb (isJoinId v) &&
     isJoinPointsValid e 0 emptyVarSet     (* Non-tail-call position *)
   | Let (NonRec v rhs) body => 
       isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS v rhs jps &&
-      let jps' := if isJoinId v
-                  then extendVarSet jps v
-                  else delVarSet    jps v in
+      let jps' := updJPS jps v in
       isJoinPointsValid body 0 jps'
   | Let (Rec pairs) body => 
       negb (List.null pairs) &&  (* Not join-point-specific, could be its own invariant *)
       (forallb (fun p => negb (isJoinId (fst p))) pairs ||
        forallb (fun p =>       isJoinId (fst p))  pairs) &&
-      let jps' := if forallb (fun p => isJoinId (fst p)) pairs 
-                  then extendVarSetList jps (map fst pairs)
-                  else delVarSetList    jps (map fst pairs) in
+      let jps' := updJPSs jps (map fst pairs) in
       forallb (fun '(v,e) => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS v e jps') pairs &&
       isJoinPointsValid body 0 jps'
   | Case scrut bndr ty alts  => 
+    negb (isJoinId bndr) &&
     isJoinPointsValid scrut 0 emptyVarSet &&  (* Non-tail-call position *)
-    let jps' := delVarSet jps bndr in
+    let jps' := updJPS jps bndr in
     forallb (fun '(dc,pats,rhs) =>
-      let jps' := delVarSetList jps pats in
-      isJoinPointsValid rhs 0 jps') alts  (* Tail-call position *)
+      let jps'' := updJPSs jps' pats  in
+      forallb (fun v => negb (isJoinId v)) pats &&
+      isJoinPointsValid rhs 0 jps'') alts  (* Tail-call position *)
   | Cast e _ =>    isJoinPointsValid e 0 jps
   | Tick _ e =>    isJoinPointsValid e 0 jps
   | Type_ _  =>   true

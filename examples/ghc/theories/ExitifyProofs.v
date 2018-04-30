@@ -627,7 +627,15 @@ Section in_exitify.
       assumption.
     * repeat split; constructor.
   Qed.
-  
+
+  Lemma all_pairs_WellScoped:
+    Forall (fun p => WellScoped (snd p) (extendVarSetList isvs (map fst pairs))) pairs ->
+    Forall (fun p => WellScoped (snd p) (extendVarSetList (extendVarSetList isvs (map fst exits)) (map fst pairs))) pairs'.
+  Proof.
+    intros.
+    unfold pairs', pairs'_exits, ann_pairs.
+
+
   Lemma map_fst_pairs':
     map fst pairs' = map fst pairs.
   Proof.
@@ -687,7 +695,8 @@ Section in_exitify.
       rewrite map_fst_pairs'.
       repeat split.
       + assumption.
-      + admit.
+      + rewrite Forall'_Forall in *.
+        apply all_pairs_WellScoped; assumption.
       + rewrite <- WellScoped_mkLams.
         rewrite <- WellScoped_mkLams in HWSbody.
         apply WellScoped_extendVarSetList; only 2: assumption.
@@ -695,8 +704,7 @@ Section in_exitify.
         rewrite Forall_map.
         apply H0.
     * apply H0.
-  Admitted.
-
+  Qed.
 
   (** ** Join point validity *)
 

@@ -36,3 +36,8 @@ Makefile.conf
 # Scratch work files
 Example.hs
 example.v
+
+# links to ghc
+ghc-8.0.2
+ghc-8.4.1
+ghc-head

@@ -2,10 +2,10 @@
 # These functions are only terminating when 
 # given monotonic arguments.
 #
-termination       Combined.fixVarSet       deferred
-in Combined.transCloDVarSet termination go deferred
-in Combined.transCloVarSet  termination go deferred
+termination       Core.fixVarSet       deferred
+in Core.transCloDVarSet termination go deferred
+in Core.transCloVarSet  termination go deferred
 
 # Outputtable
-skip Combined.pluralVarSet
-skip Combined.pprVarSet
+skip Core.pluralVarSet
+skip Core.pprVarSet

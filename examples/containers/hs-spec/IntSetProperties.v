@@ -36,6 +36,7 @@ Require Data.IntSet.Internal.
 Require Data.OldList.
 Require Data.Set.Internal.
 Require GHC.Base.
+Require GHC.Enum.
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Real.
@@ -102,8 +103,8 @@ Definition prop_Valid : Prop :=
 
 Definition powersOf2 : Data.IntSet.Internal.IntSet :=
   Data.IntSet.Internal.fromList (Coq.Lists.List.flat_map (fun i =>
-                                                            cons (Coq.NArith.BinNat.N.pow #2 i) nil) (enumFromTo #0
-                                                                                                                 #63)).
+                                                            cons (Coq.NArith.BinNat.N.pow #2 i) nil)
+                                                         (GHC.Enum.enumFromTo #0 #63)).
 
 Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
   fix prop_MaskPow2 arg_0__
@@ -385,7 +386,7 @@ Definition prop_isProperSubsetOf
     Data.Set.Internal.isProperSubsetOf (toSet a) (toSet b).
 
 (* External variables:
-     Prop andb bool cons enumFromTo list negb nil pair true Coq.Init.Datatypes.length
+     Prop andb bool cons list negb nil pair true Coq.Init.Datatypes.length
      Coq.Lists.List.flat_map Coq.NArith.BinNat.N.of_nat Coq.NArith.BinNat.N.pow
      Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Foldable.all Data.Foldable.and
      Data.Foldable.elem Data.Foldable.foldl Data.Foldable.foldl'
@@ -410,9 +411,9 @@ Definition prop_isProperSubsetOf
      Data.Set.Internal.fromList Data.Set.Internal.isProperSubsetOf
      Data.Set.Internal.isSubsetOf GHC.Base.compare GHC.Base.flip GHC.Base.id
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.List.reverse GHC.Num.abs
-     GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even GHC.Real.odd
-     IntSetValidity.valid Test.QuickCheck.Arbitrary.arbitrary
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Enum.enumFromTo GHC.List.reverse
+     GHC.Num.abs GHC.Num.fromInteger GHC.Num.negate GHC.Num.op_zp__ GHC.Real.even
+     GHC.Real.odd IntSetValidity.valid Test.QuickCheck.Arbitrary.arbitrary
      Test.QuickCheck.Property.Testable Test.QuickCheck.Property.classify
      Test.QuickCheck.Property.forAll Test.QuickCheck.Property.op_zezeze__
      Test.QuickCheck.Property.op_zezezg__ Test.QuickCheck.Property.op_zizazazi__

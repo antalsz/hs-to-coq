@@ -18,41 +18,41 @@ rewrite forall x, Demand.zapUsedOnceSig x    = tt
 
 
 ## parameterized in the preamble.v
-skip Combined.RuleInfo
-skip Combined.emptyRuleInfo
-skip Combined.isEmptyRuleInfo 
+skip Core.RuleInfo
+skip Core.emptyRuleInfo
+skip Core.isEmptyRuleInfo 
 
-skip Combined.ruleInfoFreeVars
-skip Combined.ruleInfoRules
-skip Combined.setRuleInfoHead
+skip Core.ruleInfoFreeVars
+skip Core.ruleInfoRules
+skip Core.setRuleInfoHead
 
 # needs a default for RecSelParent *before* one can be 
 # provided in the midamble
-skip Combined.sel_tycon
+skip Core.sel_tycon
 
 ## Operations on IdInfo
 ## 
 ## If we need these, we need to move them elsewhere
 ##
-skip Combined.zapUsageEnvInfo
+skip Core.zapUsageEnvInfo
 
 ## needs CoreSyn.isFragileUnfolding
-skip Combined.zapFragileUnfolding
-skip Combined.zapFragileInfo
+skip Core.zapFragileUnfolding
+skip Core.zapFragileInfo
 
 ## needs Type.resultIdLevPoly
-skip Combined.setLevityInfoWithType
-skip Combined.isNeverLevPolyIdInfo
+skip Core.setLevityInfoWithType
+skip Core.isNeverLevPolyIdInfo
 
 ## Printing
 
-skip Combined.pprArityInfo
-skip Combined.pprCafInfo
-skip Combined.pprIdDetails
-skip Combined.pprStrictness
-skip Combined.ppArityInfo
-skip Combined.ppCafInfo 
+skip Core.pprArityInfo
+skip Core.pprCafInfo
+skip Core.pprIdDetails
+skip Core.pprStrictness
+skip Core.ppArityInfo
+skip Core.ppCafInfo 
 
-order Combined.Eq___CafInfo Combined.Ord__CafInfo
+order Core.Eq___CafInfo Core.Ord__CafInfo
 
-order Combined.Eq___TyCon Combined.Eq___RecSelParent_op_zeze__
+order Core.Eq___TyCon Core.Eq___RecSelParent_op_zeze__

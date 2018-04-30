@@ -106,7 +106,7 @@ VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
 VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
 VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
 VFILES_CONSTR    = Constructors.v
-VFILES_CORESYN   = Combined.v
+VFILES_CORESYN   = Core.v
 
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN)
 
@@ -253,6 +253,8 @@ $(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 
 clean:
 	rm -rf $(OUT)
+	rm -rf deps
+	rm CoreSyn_preamble.v CoreSyn_midamble.v
 	rm -f *.aux *.log
 
 cleancore:

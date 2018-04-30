@@ -18,7 +18,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Combined.
+Require Core.
 Require Data.Tuple.
 Require GHC.Base.
 Import GHC.Base.Notations.
@@ -26,22 +26,21 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Definition InterestingVarFun :=
-  (Combined.Var -> bool)%type.
+  (Core.Var -> bool)%type.
 
 Definition FV :=
   (InterestingVarFun ->
-   Combined.VarSet ->
-   (list Combined.Var * Combined.VarSet)%type ->
-   (list Combined.Var * Combined.VarSet)%type)%type.
+   Core.VarSet ->
+   (list Core.Var * Core.VarSet)%type -> (list Core.Var * Core.VarSet)%type)%type.
 (* Converted value declarations: *)
 
-Definition delFV : Combined.Var -> FV -> FV :=
+Definition delFV : Core.Var -> FV -> FV :=
   fun var fv fv_cand in_scope acc =>
-    fv fv_cand (Combined.extendVarSet in_scope var) acc.
+    fv fv_cand (Core.extendVarSet in_scope var) acc.
 
-Definition delFVs : Combined.VarSet -> FV -> FV :=
+Definition delFVs : Core.VarSet -> FV -> FV :=
   fun vars fv fv_cand in_scope acc =>
-    fv fv_cand (Combined.unionVarSet in_scope vars) acc.
+    fv fv_cand (Core.unionVarSet in_scope vars) acc.
 
 Definition emptyFV : FV :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -53,18 +52,17 @@ Definition filterFV : InterestingVarFun -> FV -> FV :=
   fun fv_cand2 fv fv_cand1 in_scope acc =>
     fv (fun v => andb (fv_cand1 v) (fv_cand2 v)) in_scope acc.
 
-Definition fvVarListVarSet : FV -> (list Combined.Var * Combined.VarSet)%type :=
-  fun fv =>
-    fv (GHC.Base.const true) Combined.emptyVarSet (pair nil Combined.emptyVarSet).
+Definition fvVarListVarSet : FV -> (list Core.Var * Core.VarSet)%type :=
+  fun fv => fv (GHC.Base.const true) Core.emptyVarSet (pair nil Core.emptyVarSet).
 
-Definition fvVarSet : FV -> Combined.VarSet :=
+Definition fvVarSet : FV -> Core.VarSet :=
   Data.Tuple.snd GHC.Base.∘ fvVarListVarSet.
 
-Definition fvVarList : FV -> list Combined.Var :=
+Definition fvVarList : FV -> list Core.Var :=
   Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
 
-Definition fvDVarSet : FV -> Combined.DVarSet :=
-  Combined.mkDVarSet GHC.Base.∘ (Data.Tuple.fst GHC.Base.∘ fvVarListVarSet).
+Definition fvDVarSet : FV -> Core.DVarSet :=
+  Core.mkDVarSet GHC.Base.∘ (Data.Tuple.fst GHC.Base.∘ fvVarListVarSet).
 
 Definition mapUnionFV {a} : (a -> FV) -> list a -> FV :=
   fix mapUnionFV arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
@@ -81,23 +79,23 @@ Definition unionFV : FV -> FV -> FV :=
   fun fv1 fv2 fv_cand in_scope acc =>
     fv1 fv_cand in_scope (fv2 fv_cand in_scope acc).
 
-Definition unitFV : Combined.Var -> FV :=
+Definition unitFV : Core.Var -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | var, fv_cand, in_scope, (pair have haveSet as acc) =>
-        if Combined.elemVarSet var in_scope : bool then acc else
-        if Combined.elemVarSet var haveSet : bool then acc else
+        if Core.elemVarSet var in_scope : bool then acc else
+        if Core.elemVarSet var haveSet : bool then acc else
         if fv_cand var : bool
-        then pair (cons var have) (Combined.extendVarSet haveSet var) else
+        then pair (cons var have) (Core.extendVarSet haveSet var) else
         acc
     end.
 
-Definition mkFVs : list Combined.Var -> FV :=
+Definition mkFVs : list Core.Var -> FV :=
   fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
 
 (* External variables:
-     andb bool cons list nil op_zt__ pair true Combined.DVarSet Combined.Var
-     Combined.VarSet Combined.elemVarSet Combined.emptyVarSet Combined.extendVarSet
-     Combined.mkDVarSet Combined.unionVarSet Data.Tuple.fst Data.Tuple.snd
-     GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__
+     andb bool cons list nil op_zt__ pair true Core.DVarSet Core.Var Core.VarSet
+     Core.elemVarSet Core.emptyVarSet Core.extendVarSet Core.mkDVarSet
+     Core.unionVarSet Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id
+     GHC.Base.op_z2218U__
 *)

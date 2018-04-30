@@ -1,8 +1,8 @@
 
 
 (* Break mutual recursion *)
-Parameter freeVarsBind1 : Combined.CoreBind ->
-     Combined.DVarSet -> (CoreBindWithFVs * Combined.DVarSet)%type.
+Parameter freeVarsBind1 : Core.CoreBind ->
+     Core.DVarSet -> (CoreBindWithFVs * Core.DVarSet)%type.
 
 (*
 NOTE (freeVars): if you try to use a termination edit for freeVars instead of 

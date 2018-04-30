@@ -1,7 +1,6 @@
-Require Import CoreSyn.
+
 Require Import Id.
-Require Import IdInfo.
-Require Import VarSet.
+Require Import Core.
 Require Import BasicTypes.
 
 Require Import Coq.Lists.List.
@@ -32,12 +31,12 @@ Admitted.
 
 Lemma lookup_insertVarEnv: forall A k1 k2 (v:A) m,
     k1 == k2 = true ->
-    VarEnv.lookupVarEnv (VarEnv.extendVarEnv m k1 v) k2 = Some v.
+    Core.lookupVarEnv (Core.extendVarEnv m k1 v) k2 = Some v.
 Admitted.
 
 Lemma lookup_insertVarEnv_neq: forall A k1 k2 (v:A) m,
     k1 == k2 = false ->
-    VarEnv.lookupVarEnv (VarEnv.extendVarEnv m k1 v) k2 = VarEnv.lookupVarEnv m k2.
+    Core.lookupVarEnv (Core.extendVarEnv m k1 v) k2 = Core.lookupVarEnv m k2.
 Admitted.
 
 Lemma no_elem_empty : forall v, elemVarSet v emptyVarSet = false.
@@ -53,13 +52,13 @@ intro fv. unfold FV.unionFV. unfold FV.emptyFV.
 Qed.
 
 Lemma fvVarSet_union : forall s1 s2, 
-    FV.fvVarSet (FV.unionFV s1 s2) = VarSet.unionVarSet (FV.fvVarSet s1) (FV.fvVarSet s2).
+    FV.fvVarSet (FV.unionFV s1 s2) = Core.unionVarSet (FV.fvVarSet s1) (FV.fvVarSet s2).
   intros. unfold FV.fvVarSet.
 Admitted.
 
 Lemma varSetInScope_union : forall s1 s2 s,
-    (VarEnv.varSetInScope (unionVarSet s1 s2) s = true) <->
-    (VarEnv.varSetInScope s1 s = true) /\ (VarEnv.varSetInScope s2 s = true).
+    (Core.varSetInScope (unionVarSet s1 s2) s = true) <->
+    (Core.varSetInScope s1 s = true) /\ (Core.varSetInScope s2 s = true).
 
 Admitted.
 
@@ -95,7 +94,7 @@ Proof. intros. simpl.
        destruct e2; reflexivity.
 Qed.
 
-Definition substAlt str subst (alt:AltCon * list Var.Var * CoreExpr) := 
+Definition substAlt str subst (alt:AltCon * list Core.Var * CoreExpr) := 
   let '((con,bndrs), rhs) := alt in
   let '(subst', bndrs') := substBndrs subst bndrs in
   (con, bndrs', substExpr str subst' rhs).
@@ -115,14 +114,14 @@ Hint Rewrite expr_fvs_App expr_fvs_Case substExpr_App substExpr_Case
 
 (* 
 Definition IdSubstEnv :=
-  (VarEnv.IdEnv CoreSyn.CoreExpr)%type.
+  (Core.IdEnv Core.CoreExpr)%type.
 
 Inductive Subst : Type
-  := Mk_Subst : VarEnv.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
+  := Mk_Subst : Core.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 *)
 
 Definition in_scope fvs s :=
-  VarEnv.varSetInScope (FV.fvVarSet fvs) (substInScope s) = true.
+  Core.varSetInScope (FV.fvVarSet fvs) (substInScope s) = true.
 
 Lemma inscope_union : forall fv1 fv2 s,
  in_scope (FV.unionFV fv1 fv2) s <-> in_scope fv1 s /\ in_scope fv2 s.
@@ -139,9 +138,9 @@ Definition in_scope_invariant (s : Subst) :=
   match s with 
     | Mk_Subst inScopeSet idSubstEnv _ _ => 
       forall v exp, 
-        (VarEnv.lookupVarEnv idSubstEnv v = Some exp) -> 
+        (Core.lookupVarEnv idSubstEnv v = Some exp) -> 
         expr_in_scope exp s
-(*        VarEnv.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) inScopeSet = true *)
+(*        Core.varSetInScope (FV.fvVarSet (CoreFVs.expr_fvs exp)) inScopeSet = true *)
   end.
   
 Lemma in_scope_invariant_emptySubst : in_scope_invariant emptySubst.
@@ -153,7 +152,7 @@ Qed.
 
 Lemma in_scope_invariant_extendIdSubst : forall s v e, 
     in_scope_invariant s -> 
-    VarEnv.varSetInScope (FV.fvVarSet (expr_fvs e)) (substInScope s) = true ->
+    Core.varSetInScope (FV.fvVarSet (expr_fvs e)) (substInScope s) = true ->
     in_scope_invariant (CoreSubst.extendIdSubst s v e).
 Proof.
   intros.
@@ -179,18 +178,18 @@ Proof.
     simpl in *.
     unfold lookupIdSubst.
     destruct s as [inScopeSet idSubst ? ?].
-    destruct (Var.isLocalId v) eqn:local.
-    destruct (VarEnv.lookupVarEnv idSubst v) eqn:lkp.
+    destruct (Core.isLocalId v) eqn:local.
+    destruct (Core.lookupVarEnv idSubst v) eqn:lkp.
     + simpl.
       simpl in H.
       apply H in lkp.
       unfold expr_in_scope in lkp. simpl in lkp. auto.
-    + destruct (VarEnv.lookupInScope inScopeSet v) eqn:ins.
+    + destruct (Core.lookupInScope inScopeSet v) eqn:ins.
       simpl in H.
       simpl in H0.
       unfold FV.unitFV.
       unfold FV.fvVarSet.
-      unfold VarEnv.varSetInScope.
+      unfold Core.varSetInScope.
       destruct inScopeSet.
       unfold FV.fvVarListVarSet.
       unfold GHC.Base.op_z2218U__.
@@ -232,11 +231,11 @@ Proof.
 Admitted.
 
 Lemma varSetInScope_delFV : forall bndr fvs i,
-  VarEnv.varSetInScope (FV.fvVarSet fvs) (VarEnv.extendInScopeSet i (VarEnv.uniqAway i bndr)) = true ->
-  VarEnv.varSetInScope (FV.fvVarSet (FV.delFV bndr fvs)) i = true.
+  Core.varSetInScope (FV.fvVarSet fvs) (Core.extendInScopeSet i (Core.uniqAway i bndr)) = true ->
+  Core.varSetInScope (FV.fvVarSet (FV.delFV bndr fvs)) i = true.
 Proof.  
   intros.
-  unfold VarEnv.varSetInScope, FV.fvVarSet, FV.delFV, VarEnv.extendInScopeSet in *.
+  unfold Core.varSetInScope, FV.fvVarSet, FV.delFV, Core.extendInScopeSet in *.
   destruct i.
   unfold subVarSet in *.
   unfold isEmptyVarSet in *.

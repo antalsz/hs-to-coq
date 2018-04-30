@@ -1,4 +1,4 @@
-rename type Var.Id = Combined.Var
+rename type Var.Id = Core.Var
 
 ## specialize generic method to (->) constructor
 ## to make type inference easier

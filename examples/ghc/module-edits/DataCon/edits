@@ -5,54 +5,54 @@
 # redefine Inductive DataCon.DataCon    : Type := .
 
 # no Word8
-skip Combined.dataConIdentity
+skip Core.dataConIdentity
 
 # skipped fcns as a result of eliminating type information
 # generally these fcns return units so are easy to replace
 
-skip Combined.dataConRepArgTys
-skip Combined.buildAlgTyCon
-skip Combined.classDataCon
-skip Combined.dataFieldType
-skip Combined.dataConImplicitTyThings
-skip Combined.dataConInstOrigArgTys
-skip Combined.dataConOrigTyCon
-skip Combined.dataConInstArgTys
-skip Combined.splitDataProductType_maybe
-skip Combined.dataConRepRepArity
-skip Combined.specialPromotedDc
-skip Combined.eqSpecPreds
-skip Combined.dataConTheta
+skip Core.dataConRepArgTys
+skip Core.buildAlgTyCon
+skip Core.classDataCon
+skip Core.dataFieldType
+skip Core.dataConImplicitTyThings
+skip Core.dataConInstOrigArgTys
+skip Core.dataConOrigTyCon
+skip Core.dataConInstArgTys
+skip Core.splitDataProductType_maybe
+skip Core.dataConRepRepArity
+skip Core.specialPromotedDc
+skip Core.eqSpecPreds
+skip Core.dataConTheta
 
 
 # still refer to TyCoRep
-skip Combined.dataConExTyBinders
-skip Combined.dataConExTyVars
-# skip Combined.dataConFieldLabels
-skip Combined.dataConFieldType
-skip Combined.dataConOrigArgTys
-skip Combined.dataConOrigResTy
-skip Combined.dataConInstSig
-skip Combined.dataConCannotMatch
+skip Core.dataConExTyBinders
+skip Core.dataConExTyVars
+# skip Core.dataConFieldLabels
+skip Core.dataConFieldType
+skip Core.dataConOrigArgTys
+skip Core.dataConOrigResTy
+skip Core.dataConInstSig
+skip Core.dataConCannotMatch
 
-skip Combined.buildSynTyCon
-skip Combined.dataConRepStrictness
-skip Combined.dataConSig
-skip Combined.dataConUserType
-skip Combined.eqHsBang
+skip Core.buildSynTyCon
+skip Core.dataConRepStrictness
+skip Core.dataConSig
+skip Core.dataConUserType
+skip Core.eqHsBang
 
-skip Combined.mkDataCon
-skip Combined.isLegacyPromotableDataCon
-skip Combined.isLegacyPromotableTyCon
-skip Combined.dataConEqSpec
-skip Combined.substEqSpec 
+skip Core.mkDataCon
+skip Core.isLegacyPromotableDataCon
+skip Core.isLegacyPromotableTyCon
+skip Core.dataConEqSpec
+skip Core.substEqSpec 
 
 
 # uses enumFrom, coinductively
 ## Can locally add a length argument to freshNames, and then pass it in 
 ## in the call to mkCleanAnonTyConBinders
-skip Combined.freshNames
-skip Combined.mkCleanAnonTyConBinders
+skip Core.freshNames
+skip Core.mkCleanAnonTyConBinders
 
 #
 # Outputable.$$

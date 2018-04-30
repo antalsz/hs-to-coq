@@ -1,9 +1,9 @@
 # pretty printing
-skip Combined.pprPatSynType
+skip Core.pprPatSynType
 
 # no type information
-skip Combined.patSynInstArgTys
-skip Combined.patSynInstResTy 
+skip Core.patSynInstArgTys
+skip Core.patSynInstResTy 
 
-order Combined.Uniquable__PatSyn Combined.Eq___PatSyn_op_zeze__ Combined.Eq___PatSyn_op_zsze__
+order Core.Uniquable__PatSyn Core.Eq___PatSyn_op_zeze__ Core.Eq___PatSyn_op_zsze__
 

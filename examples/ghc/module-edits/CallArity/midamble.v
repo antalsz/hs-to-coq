@@ -15,6 +15,6 @@ Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type 
 
 (* ANTALZ: This looks like a good example of structural mutual recursion *) 
 Parameter callArityBind1
-   : Combined.VarSet ->
+   : Core.VarSet ->
      CallArityRes ->
-     Combined.VarSet -> Combined.CoreBind -> (CallArityRes * Combined.CoreBind)%type.
+     Core.VarSet -> Core.CoreBind -> (CallArityRes * Core.CoreBind)%type.

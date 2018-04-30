@@ -1,4 +1,4 @@
-rename type Var.Id = Combined.Var
+rename type Var.Id = Core.Var
 
 skip module CoreSeq
 

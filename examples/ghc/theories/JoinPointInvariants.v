@@ -1,7 +1,6 @@
-Require Import CoreSyn.
+
 Require Import Id.
-Require Import IdInfo.
-Require Import VarSet.
+Require Import Core.
 Require Import BasicTypes.
 
 Require Import Coq.Lists.List.
@@ -64,7 +63,7 @@ Definition isJoinPointsValidPair_aux
 
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
   match e with
-  | Var v => match isJoinId_maybe v with
+  | Mk_Var v => match isJoinId_maybe v with
     | None => true
     | Some a => (a <=? n) && elemVarSet v jps
     end

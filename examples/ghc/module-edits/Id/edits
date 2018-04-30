@@ -1,5 +1,5 @@
-rename type Var.Id    = Combined.Var
-rename type Var.TyVar = Combined.Var
+rename type Var.Id    = Core.Var
+rename type Var.TyVar = Core.Var
 
 
 ##############
@@ -15,7 +15,7 @@ rename type Var.TyVar = Combined.Var
 # Id.mkSysLocalOrCoVar Id.typeOneShot
 ##############
 
-rewrite forall x, Combined.pprIdDetails x = Panic.someSDoc
+rewrite forall x, Core.pprIdDetails x = Panic.someSDoc
 
 
 ## Rewrites due to skipped functions (here)
@@ -26,8 +26,8 @@ rewrite forall x, Combined.pprIdDetails x = Panic.someSDoc
 
 ## Local rewrites 
 
-# rewrite forall dc, Combined.isUnboxedTupleCon dc          =  Combined.isUnboxedTupleCon (lookupDataCon dc)
-# rewrite forall dc, Combined.isUnboxedSumCon dc            = Combined.isUnboxedSumCon (lookupDataCon dc))
+# rewrite forall dc, Core.isUnboxedTupleCon dc          =  Core.isUnboxedTupleCon (lookupDataCon dc)
+# rewrite forall dc, Core.isUnboxedSumCon dc            = Core.isUnboxedSumCon (lookupDataCon dc))
 
 # in Id.isClassOpId_maybe rewrite forall cls, Some cls     = Some (lookupClass cls)
 # in Id.isDataConId_maybe rewrite forall con, Some con     = Some (lookupDataCon con)

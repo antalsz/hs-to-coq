@@ -1,5 +1,5 @@
 rename value UnVarGraph.UnVarSet = UnVarGraph.Mk_UnVarSet
 rename value UnVarGraph.UnVarGraph = UnVarGraph.Mk_UnVarGraph
 
-redefine Definition UnVarGraph.k : Combined.Var -> GHC.Num.Word :=
+redefine Definition UnVarGraph.k : Core.Var -> GHC.Num.Word :=
   fun v => Unique.getWordKey (Unique.getUnique v).

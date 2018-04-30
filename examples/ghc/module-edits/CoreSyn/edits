@@ -1,59 +1,59 @@
-# data type arguments Combined.Expr (indices: b)
-# data type arguments Combined.Bind (indices: b)
+# data type arguments Core.Expr (indices: b)
+# data type arguments Core.Bind (indices: b)
 
 #
 # This would be better if we had a rewrite for types
 #
-redefine Inductive Combined.Unfolding : Type := Mk_Unfolding.
+redefine Inductive Core.Unfolding : Type := Mk_Unfolding.
 
-rewrite forall , Combined.BootUnfolding = getUnfolding Combined.BootUnfolding
-rewrite forall , Combined.OtherCon      = fun x => getUnfolding (Combined.OtherCon x)
-rewrite forall , Combined.NoUnfolding   = getUnfolding Combined.NoUnfolding
+rewrite forall , Core.BootUnfolding = getUnfolding Core.BootUnfolding
+rewrite forall , Core.OtherCon      = fun x => getUnfolding (Core.OtherCon x)
+rewrite forall , Core.NoUnfolding   = getUnfolding Core.NoUnfolding
 
-# redefine Definition Combined.bootUnfolding : Combined.UnfoldingInfo :=
-#  Combined.BootUnfolding.
-# redefine Definition Combined.evaldUnfolding : Combined.UnfoldingInfo :=
-#   Combined.OtherCon nil.
-redefine Definition Combined.hasSomeUnfolding : Combined.Unfolding -> bool :=
+# redefine Definition Core.bootUnfolding : Core.UnfoldingInfo :=
+#  Core.BootUnfolding.
+# redefine Definition Core.evaldUnfolding : Core.UnfoldingInfo :=
+#   Core.OtherCon nil.
+redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
   fun arg_0__ =>
-    match Combined.getUnfoldingInfo arg_0__ with
-    | Combined.NoUnfolding => false
-    | Combined.BootUnfolding => false
+    match Core.getUnfoldingInfo arg_0__ with
+    | Core.NoUnfolding => false
+    | Core.BootUnfolding => false
     | _ => true
     end.
-redefine Definition Combined.isBootUnfolding : Combined.Unfolding -> bool :=
-  fun arg_0__ => match Combined.getUnfoldingInfo arg_0__ with | Combined.BootUnfolding => true | _ => false end.
+redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
+  fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.BootUnfolding => true | _ => false end.
 
-# redefine Definition Combined.mkOtherCon : (list Combined.AltCon) -> Combined.UnfoldingInfo :=
-#  Combined.OtherCon.
-# redefine Definition Combined.noUnfolding : Combined.UnfoldingInfo :=
+# redefine Definition Core.mkOtherCon : (list Core.AltCon) -> Core.UnfoldingInfo :=
+#  Core.OtherCon.
+# redefine Definition Core.noUnfolding : Core.UnfoldingInfo :=
 #  NoUnfolding.
-redefine Definition Combined.otherCons : Combined.Unfolding -> (list Combined.AltCon) :=
-  fun arg_0__ => match Combined.getUnfoldingInfo arg_0__ with | Combined.OtherCon cons_ => cons_ | _ => nil end.
+redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
+  fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.OtherCon cons_ => cons_ | _ => nil end.
 
 
 
 skip module CostCentre
 rename type CostCentre.CostCentre = unit
 
-skip Combined.mkNoCount
-skip Combined.mkNoScope
-skip Combined.tickishCanSplit
-skip Combined.tickishCounts
-skip Combined.tickishIsCode
-skip Combined.tickishContains
-skip Combined.tickishScopesLike
-skip Combined.tickishFloatable
+skip Core.mkNoCount
+skip Core.mkNoScope
+skip Core.tickishCanSplit
+skip Core.tickishCounts
+skip Core.tickishIsCode
+skip Core.tickishContains
+skip Core.tickishScopesLike
+skip Core.tickishFloatable
 
 # record selector, no place to add default
-skip Combined.uf_tmpl
-skip Combined.unfoldingTemplate
-skip Combined.ru_rhs
+skip Core.uf_tmpl
+skip Core.unfoldingTemplate
+skip Core.ru_rhs
 
-order Combined.Eq___DataCon Combined.Eq___AltCon_op_zeze__ Combined.Eq___AltCon Combined.Ord__AltCon
-order Combined.Eq___Tickish Combined.Ord__Tickish
+order Core.Eq___DataCon Core.Eq___AltCon_op_zeze__ Core.Eq___AltCon Core.Ord__AltCon
+order Core.Eq___Tickish Core.Ord__Tickish
 
-redefine Definition Combined.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
+redefine Definition Core.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
     match  GHC.Base.map Name.nameOccName local_names with
     | cons hd tl => NotOrphan (Data.Foldable.foldr GHC.Base.min hd tl)
     | nil => Mk_IsOrphan
@@ -61,44 +61,44 @@ redefine Definition Combined.chooseOrphanAnchor (local_names : list Name.Name) :
 
 # uses Outputable.empty in panicStr
 # in midamble
-skip Combined.exprToType
+skip Core.exprToType
 
 # piResultTy is in module Type
 # in midamble
-skip Combined.applyTypeToArg
+skip Core.applyTypeToArg
 
 
 # needs GHC.Types.Double & other types ( GHC.Types.Float, GHC.Int.Int64)
-skip Combined.mkDoubleLitDouble
-skip Combined.mkFloatLitFloat
-skip Combined.mkInt64LitInt64
+skip Core.mkDoubleLitDouble
+skip Core.mkFloatLitFloat
+skip Core.mkInt64LitInt64
 
 # needs Literal.mkMachInt
-skip Combined.mkIntLit
-skip Combined.mkIntLitInt
+skip Core.mkIntLit
+skip Core.mkIntLitInt
 # needs Literal.mlMachWord64, Literal.mkMachWOrd
-skip Combined.mkWord64LitWord64
-skip Combined.mkWordLit
-skip Combined.mkWordLitWord
+skip Core.mkWord64LitWord64
+skip Core.mkWordLit
+skip Core.mkWordLitWord
 
 # ANTALSZ
 # in midamble (due to mutual recursion)
-skip Combined.deAnnotate'
-skip Combined.collectAnnArgs
-skip Combined.deTagExpr
+skip Core.deAnnotate'
+skip Core.collectAnnArgs
+skip Core.deTagExpr
 
 # needs a default constraint, as well as a termination argument
-skip Combined.collectNAnnBndrs
-# in Combined.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_0__)   }
-# obligations Combined.collectNAnnBndrs admit
+skip Core.collectNAnnBndrs
+# in Core.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_0__)   }
+# obligations Core.collectNAnnBndrs admit
 
 
-in Combined.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
-obligations Combined.collectAnnArgsTicks admit
-in Combined.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
-obligations Combined.collectAnnBndrs admit
+in Core.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
+obligations Core.collectAnnArgsTicks admit
+in Core.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
+obligations Core.collectAnnBndrs admit
 
-# skip Combined.mkTyArg
+# skip Core.mkTyArg
 
 rewrite forall x, Type.isCoercionTy_maybe x = None
 

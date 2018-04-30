@@ -1,4 +1,4 @@
-Require Import CoreSyn.
+Require Import Core.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
@@ -8,7 +8,7 @@ Set Bullet Behavior "Strict Subproofs".
 Lemma core_induct :
   forall (e : CoreExpr)
   (P : CoreExpr -> Prop)
-  (HVar  : forall v, P (Var v))
+  (HVar  : forall v, P (Mk_Var v))
   (HLit  : forall l, P (Lit l))
   (HApp  : forall e1 e2, P e1 -> P e2 -> P (App e1 e2))
   (HLam  : forall v e, P e -> P (Lam v e))

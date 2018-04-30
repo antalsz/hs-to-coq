@@ -128,11 +128,12 @@ Set Bullet Behavior "Strict Subproofs".
 exposes the underlying Coq concepts.
 *)
 
+
 Ltac unfoldMethods :=
   unfold op_zsze__, op_zeze__, Eq___Int, Eq___Word, Eq___IntSet, op_zsze____, op_zeze____,
          op_zl__, op_zg__, Ord__Int, Ord__Word, op_zl____,  op_zg____,
          GHC.Real.fromIntegral, GHC.Real.instance__Integral_Int__74__,
-         fromInteger, GHC.Real.toInteger,
+         fromInteger, GHC.Real.toInteger, natFromInt,
          Num_Word__, Num__Word, Num__Int,
          op_zm__, op_zp__, Num_Integer__,
          Prim.seq,
@@ -171,7 +172,7 @@ Admitted.
 
 
 Ltac Int_Word_N :=
-  unfold wordFromInt in *;
+  unfold natFromInt, wordFromInt in *;
   rewrite ?intToN_inj_iff, ?wordToN_inj_iff,
           ?wordToN_NToWord, ?intToN_NToInt,
           ?NToWord_wordToN, ?NToInt_intToN,
@@ -5645,7 +5646,7 @@ Next Obligation.
     repeat rewrite andb_true_iff.
     repeat rewrite !N.eqb_eq.
     repeat rewrite !N.eqb_eq.
-    unfold op_zg__, Ord__Word, op_zg____, wordFromInt. Int_Word_N.
+    unfold op_zg__, Ord__Word, op_zg____, natFromInt, wordFromInt. Int_Word_N.
     destruct (N.ltb_spec (rMask r4) (rMask r));
       only 2: destruct (N.ltb_spec (rMask r) (rMask r4)).
     - (* left is bigger than right *)

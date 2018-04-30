@@ -1,7 +1,6 @@
-Require Import CoreSyn.
+
 Require Import Id.
-Require Import IdInfo.
-Require Import VarSet.
+Require Import Core.
 Require Import BasicTypes.
 
 Require Import Coq.Lists.List.
@@ -44,12 +43,12 @@ Defined.
 Inductive JoinPointsValid : CoreExpr -> Z -> VarSet -> Prop :=
   | JPV_Var     : forall v n jps,
     isJoinId v = false ->
-    JoinPointsValid (Var v) n jps
+    JoinPointsValid (Mk_Var v) n jps
   | JPV_JoinVar : forall v a n jps,
     isJoinId_maybe v = Some a ->
     a <= n ->
     elemVarSet v jps = true ->
-    JoinPointsValid (Var v) n jps
+    JoinPointsValid (Mk_Var v) n jps
   | JPV_List    : forall l n jps, JoinPointsValid (Lit l) n jps
   | JPV_App     : forall e1 e2 n jps,
     JoinPointsValid e1 (n+1) jps ->     (* Tail-call-position *)
@@ -175,7 +174,7 @@ Proof.
       destruct (isJoinId_maybe v); inversion_clear e0.
       specialize (H _ _ HIn).
       assumption.
-    - enough (Htmp : (forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs) = false)
+    - enough (Htmp : (forallb (fun p : Core.Var * Expr CoreBndr => isJoinId (fst p)) pairs) = false)
          by (rewrite Htmp; assumption).
       apply not_true_is_false. intro Hforallb.
       rewrite forallb_forall in Hforallb.
@@ -185,7 +184,7 @@ Proof.
       specialize (Hforallb (v, rhs) (or_introl eq_refl)).
       simpl in Hforallb.
       congruence.
-  * assert (Hforallb: forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs = true).
+  * assert (Hforallb: forallb (fun p : Core.Var * Expr CoreBndr => isJoinId (fst p)) pairs = true).
     { rewrite forallb_forall.
       intros [v rhs] HIn.
       erewrite e0 by eassumption.
@@ -283,7 +282,7 @@ Proof.
         rewrite forallb_forall in H1.
         rewrite forallb_forall in H2.
 
-        assert (Hforallb : forallb (fun p : Var.Var * Expr CoreBndr => isJoinId (fst p)) pairs = false).
+        assert (Hforallb : forallb (fun p : Core.Var * Expr CoreBndr => isJoinId (fst p)) pairs = false).
         {
            apply not_true_is_false. intro Hforallb.
            rewrite forallb_forall in Hforallb.

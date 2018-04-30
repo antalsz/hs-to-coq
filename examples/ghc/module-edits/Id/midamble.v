@@ -1,5 +1,5 @@
-Parameter lookupDataCon : Combined.DataConId -> Combined.DataCon.
-Parameter lookupClass   : Combined.ClassId -> Combined.Class.
+Parameter lookupDataCon : Core.DataConId -> Core.DataCon.
+Parameter lookupClass   : Core.ClassId -> Core.Class.
 
 (* Make this default so that we can reason about either case. *)
 Import GHC.Err.

@@ -2,5 +2,5 @@
 Require Import Pair.
 
 (* Notation for Alt *)
-Require Import Combined.
+Require Import Core.
 

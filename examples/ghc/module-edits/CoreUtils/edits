@@ -1,5 +1,5 @@
-rename type Var.Id    = Combined.Var
-rename type Var.TyVar = Combined.Var
+rename type Var.Id    = Core.Var
+rename type Var.TyVar = Core.Var
 
 axiomatize module CoreUtils
 

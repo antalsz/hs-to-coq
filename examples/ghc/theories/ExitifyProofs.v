@@ -1,12 +1,7 @@
 Require Import GHC.Base.
-
-Require Import Exitify.
-Require Import CoreSyn.
-Require Import Var.
-Require Import VarEnv.
-Require Import VarSet.
 Require Import Id.
-Require Import IdInfo.
+Require Import Exitify.
+Require Import Core.
 
 
 Require Import Psatz.
@@ -231,7 +226,7 @@ Section in_exitify.
     enough (Hnext: StateInvariant P j_37__). {
       destruct (collectArgs e) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
 

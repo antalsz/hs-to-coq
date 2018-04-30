@@ -41,10 +41,11 @@ rename value Utils.Containers.Internal.BitUtil.shiftRL = IntWord.shiftRWord
 rename value Utils.Containers.Internal.BitUtil.highestBitMask = IntWord.highestBitMask
 rename value Utils.Containers.Internal.BitUtil.bitcount = IntWord.bitcount
 
-rename value Data.IntSet.InternalWord.intFromNat = IntWord.intFromWord
-rename value Data.IntSet.InternalWord.natFromInt = IntWord.wordFromInt
-skip IntWord.intFromWord
-skip IntWord.wordFromInt
+## undo the toplevel rename
+rename value Utils.Containers.Internal.BitUtil.lowestBitMask = Data.IntSet.InternalWord.lowestBitMask
+
+redefine Definition Data.IntSet.InternalWord.intFromNat := IntWord.intFromWord.
+redefine Definition Data.IntSet.InternalWord.natFromInt := IntWord.wordFromInt.
 
 # indexOfTheOnlyBit uses pointers and ugly stuff
 redefine Definition Data.IntSet.InternalWord.indexOfTheOnlyBit := IntWord.indexOfTheOnlyBit.

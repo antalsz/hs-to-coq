@@ -14,10 +14,10 @@ Require Coq.Program.Wf.
 
 Require BasicTypes.
 Require BinInt.
-Require Combined.
 Require Coq.Init.Datatypes.
 Require Coq.Init.Peano.
 Require Coq.Lists.List.
+Require Core.
 Require Data.Foldable.
 Require DynFlags.
 Require GHC.Base.
@@ -95,7 +95,7 @@ Definition Demand :=
   (JointDmd ArgStr ArgUse)%type.
 
 Definition DmdEnv :=
-  (Combined.VarEnv Demand)%type.
+  (Core.VarEnv Demand)%type.
 
 Definition BothDmdArg :=
   (DmdEnv * Termination unit)%type%type.
@@ -605,8 +605,8 @@ Definition cprProdRes : list DmdType -> DmdResult :=
 Definition cprSumRes : BasicTypes.ConTag -> DmdResult :=
   fun tag => Dunno (RetSum tag).
 
-Definition emptyDmdEnv : Combined.VarEnv Demand :=
-  Combined.emptyVarEnv.
+Definition emptyDmdEnv : Core.VarEnv Demand :=
+  Core.emptyVarEnv.
 
 Definition botDmdType : DmdType :=
   Mk_DmdType emptyDmdEnv nil botRes.
@@ -630,7 +630,7 @@ Definition getUseDmd {s} {u} : JointDmd s u -> u :=
   ud.
 
 Definition hasDemandEnvSig : StrictSig -> bool :=
-  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (Combined.isEmptyVarEnv env).
+  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (Core.isEmptyVarEnv env).
 
 Definition isAbsDmd : Demand -> bool :=
   fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
@@ -739,7 +739,7 @@ Definition isTopDmdType : DmdType -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_DmdType env nil res =>
-        if andb (isTopRes res) (Combined.isEmptyVarEnv env) : bool then true else
+        if andb (isTopRes res) (Core.isEmptyVarEnv env) : bool then true else
         false
     | _ => false
     end.
@@ -788,9 +788,9 @@ Definition splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type :=
             end
         end in
     if is_thunk : bool
-    then UniqFM.nonDetFoldUFM_Directly add (pair Combined.emptyVarEnv
-                                                 Combined.emptyVarEnv) rhs_fvs else
-    Combined.partitionVarEnv isWeakDmd rhs_fvs.
+    then UniqFM.nonDetFoldUFM_Directly add (pair Core.emptyVarEnv Core.emptyVarEnv)
+         rhs_fvs else
+    Core.partitionVarEnv isWeakDmd rhs_fvs.
 
 Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
   fun dflags =>
@@ -928,7 +928,7 @@ Definition postProcessDmd : DmdShell -> Demand -> Demand :=
     end.
 
 Definition reuseEnv : DmdEnv -> DmdEnv :=
-  Combined.mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
+  Core.mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
 
 Definition postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv :=
   fun arg_0__ arg_1__ =>
@@ -937,7 +937,7 @@ Definition postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv :=
         match us with
         | Abs => emptyDmdEnv
         | _ =>
-            let j_2__ := Combined.mapVarEnv (postProcessDmd ds) env in
+            let j_2__ := Core.mapVarEnv (postProcessDmd ds) env in
             match ss with
             | Mk_Str VanStr _ => match us with | Mk_Use One _ => env | _ => j_2__ end
             | _ => j_2__
@@ -1216,23 +1216,23 @@ Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv1 ds1 r1, pair fv2 t2 =>
-        Mk_DmdType (Combined.plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd
-                                                                            t2)) ds1 (bothDmdResult r1 t2)
+        Mk_DmdType (Core.plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd t2))
+        ds1 (bothDmdResult r1 t2)
     end.
 
-Definition findIdDemand : DmdType -> Combined.Var -> Demand :=
+Definition findIdDemand : DmdType -> Core.Var -> Demand :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv _ res, id =>
-        Maybes.orElse (Combined.lookupVarEnv fv id) (defaultDmd res)
+        Maybes.orElse (Core.lookupVarEnv fv id) (defaultDmd res)
     end.
 
-Definition peelFV : DmdType -> Combined.Var -> (DmdType * Demand)%type :=
+Definition peelFV : DmdType -> Core.Var -> (DmdType * Demand)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_DmdType fv ds res, id =>
-        let dmd := Maybes.orElse (Combined.lookupVarEnv fv id) (defaultDmd res) in
-        let fv' := Combined.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
+        let dmd := Maybes.orElse (Core.lookupVarEnv fv id) (defaultDmd res) in
+        let fv' := Core.delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
     end.
 
 Definition useCount {u} : Use u -> Count :=
@@ -1330,7 +1330,7 @@ Definition lubDmdType : DmdType -> DmdType -> DmdType :=
     let 'Mk_DmdType fv1 ds1 r1 := ensureArgs n d1 in
     let 'Mk_DmdType fv2 ds2 r2 := ensureArgs n d2 in
     let lub_fv :=
-      Combined.plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
+      Core.plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
     let lub_ds :=
       Util.zipWithEqual (GHC.Base.hs_string__ "lubDmdType") lubDmd ds1 ds2 in
     let lub_res := lubDmdResult r1 r2 in Mk_DmdType lub_fv lub_ds lub_res.
@@ -1527,11 +1527,10 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      bothUse cons else false if list lubArgUse nat negb nil op_zt__ option orb pair
      then true tt unit BasicTypes.ConTag BasicTypes.NoOneShotInfo
      BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.fIRST_TAG
-     BinInt.Z.of_nat Combined.Var Combined.VarEnv Combined.delVarEnv
-     Combined.emptyVarEnv Combined.isEmptyVarEnv Combined.lookupVarEnv
-     Combined.mapVarEnv Combined.partitionVarEnv Combined.plusVarEnv_CD
-     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.length
-     Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any
+     BinInt.Z.of_nat Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.length
+     Coq.Lists.List.repeat Coq.Lists.List.skipn Core.Var Core.VarEnv Core.delVarEnv
+     Core.emptyVarEnv Core.isEmptyVarEnv Core.lookupVarEnv Core.mapVarEnv
+     Core.partitionVarEnv Core.plusVarEnv_CD Data.Foldable.all Data.Foldable.any
      DynFlags.DynFlags DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot
      DynFlags.gopt GHC.Base.Eq_ GHC.Base.Synonym GHC.Base.eq_default GHC.Base.map
      GHC.Base.max GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zsze__

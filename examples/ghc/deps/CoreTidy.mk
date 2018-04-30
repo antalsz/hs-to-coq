@@ -1,1 +1,1 @@
-lib/CoreTidy.v: lib/Combined.h2ci
+lib/CoreTidy.v: lib/Core.h2ci

@@ -1,7 +1,7 @@
 # record selector, can't add Default fast enough
-skip Combined.dcr_wrap_id
-skip Combined.id_info
+skip Core.dcr_wrap_id
+skip Core.id_info
 
 # ppr
-skip Combined.ppr_id_scope
-skip Combined.ppr_debug
+skip Core.ppr_id_scope
+skip Core.ppr_debug

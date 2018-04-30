@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Combined.
+Require Core.
 Require CoreArity.
 Require Data.Traversable.
 Require GHC.Base.
@@ -37,63 +37,60 @@ Notation "'_=:_'" := (op_zeZC__).
 Infix "=:" := (_=:_) (at level 99).
 
 Definition tidyIdBndr
-   : Combined.TidyEnv -> Combined.Var -> (Combined.TidyEnv * Combined.Var)%type :=
+   : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (pair tidy_env var_env as env), id =>
         let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := (@Combined.idInfo tt id) in
-        let old_unf := Combined.unfoldingInfo old_info in
+        let old_info := (@Core.idInfo tt id) in
+        let old_unf := Core.unfoldingInfo old_info in
         let new_unf :=
-          if Combined.isEvaldUnfolding old_unf : bool then Combined.evaldUnfolding else
-          Combined.noUnfolding in
+          if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
+          Core.noUnfolding in
         let new_info :=
-          Combined.setOneShotInfo (Combined.setOccInfo Combined.vanillaIdInfo
-                                                       (Combined.occInfo old_info)) (Combined.oneShotInfo old_info) in
+          Core.setOneShotInfo (Core.setOccInfo Core.vanillaIdInfo (Core.occInfo old_info))
+                              (Core.oneShotInfo old_info) in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
         let ty' := tt in
         let id' := Id.mkLocalIdWithInfo name' ty' new_info in
-        let var_env' := Combined.extendVarEnv var_env id id' in
+        let var_env' := Core.extendVarEnv var_env id id' in
         pair (pair tidy_env' var_env') id'
     end.
 
 Definition tidyBndr
-   : Combined.TidyEnv -> Combined.Var -> (Combined.TidyEnv * Combined.Var)%type :=
+   : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
   fun env var => tidyIdBndr env var.
 
 Definition tidyBndrs
-   : Combined.TidyEnv ->
-     list Combined.Var -> (Combined.TidyEnv * list Combined.Var)%type :=
+   : Core.TidyEnv -> list Core.Var -> (Core.TidyEnv * list Core.Var)%type :=
   fun env vars => Data.Traversable.mapAccumL tidyBndr env vars.
 
 Definition tidyLetBndr
-   : Combined.TidyEnv ->
-     Combined.TidyEnv ->
-     (Combined.Var * Combined.CoreExpr)%type ->
-     (Combined.TidyEnv * Combined.Var)%type :=
+   : Core.TidyEnv ->
+     Core.TidyEnv ->
+     (Core.Var * Core.CoreExpr)%type -> (Core.TidyEnv * Core.Var)%type :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | rec_tidy_env, (pair tidy_env var_env as env), pair id rhs =>
         let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := (@Combined.idInfo tt id) in
-        let old_unf := Combined.unfoldingInfo old_info in
+        let old_info := (@Core.idInfo tt id) in
+        let old_unf := Core.unfoldingInfo old_info in
         let new_unf :=
-          if Combined.isEvaldUnfolding old_unf : bool then Combined.evaldUnfolding else
-          Combined.noUnfolding in
+          if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
+          Core.noUnfolding in
         let new_info :=
-          Combined.setInlinePragInfo (Combined.setArityInfo (Combined.setOccInfo
-                                                             Combined.vanillaIdInfo (Combined.occInfo old_info))
-                                                            (CoreArity.exprArity rhs)) (Combined.inlinePragInfo
-                                      old_info) in
-        let details := Combined.idDetails id in
+          Core.setInlinePragInfo (Core.setArityInfo (Core.setOccInfo Core.vanillaIdInfo
+                                                                     (Core.occInfo old_info)) (CoreArity.exprArity rhs))
+                                 (Core.inlinePragInfo old_info) in
+        let details := Core.idDetails id in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
         let ty' := tt in
-        let id' := Combined.mkLocalVar details name' ty' new_info in
-        let var_env' := Combined.extendVarEnv var_env id id' in
+        let id' := Core.mkLocalVar details name' ty' new_info in
+        let var_env' := Core.extendVarEnv var_env id id' in
         pair (pair tidy_env' var_env') id'
     end.
 
-Definition tidyNameOcc : Combined.TidyEnv -> Name.Name -> Name.Name :=
+Definition tidyNameOcc : Core.TidyEnv -> Name.Name -> Name.Name :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | pair _ var_env, n =>
@@ -103,96 +100,91 @@ Definition tidyNameOcc : Combined.TidyEnv -> Name.Name -> Name.Name :=
         end
     end.
 
-Definition tidyVarOcc : Combined.TidyEnv -> Combined.Var -> Combined.Var :=
+Definition tidyVarOcc : Core.TidyEnv -> Core.Var -> Core.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | pair _ var_env, v => Maybes.orElse (Combined.lookupVarEnv var_env v) v
+    | pair _ var_env, v => Maybes.orElse (Core.lookupVarEnv var_env v) v
     end.
 
 Definition tidyTickish
-   : Combined.TidyEnv ->
-     Combined.Tickish Combined.Var -> Combined.Tickish Combined.Var :=
+   : Core.TidyEnv -> Core.Tickish Core.Var -> Core.Tickish Core.Var :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | env, Combined.Breakpoint ix ids =>
-        Combined.Breakpoint ix (GHC.Base.map (tidyVarOcc env) ids)
+    | env, Core.Breakpoint ix ids =>
+        Core.Breakpoint ix (GHC.Base.map (tidyVarOcc env) ids)
     | _, other_tickish => other_tickish
     end.
 
 Definition tidyBind
-   : Combined.TidyEnv ->
-     Combined.CoreBind -> (Combined.TidyEnv * Combined.CoreBind)%type :=
+   : Core.TidyEnv -> Core.CoreBind -> (Core.TidyEnv * Core.CoreBind)%type :=
   fix tidyExpr arg_0__ arg_1__
         := match arg_0__, arg_1__ with
-           | env, Combined.Mk_Var v => Combined.Mk_Var (tidyVarOcc env v)
-           | env, Combined.Type_ ty => Combined.Type_ (tt)
-           | env, Combined.Coercion co => Combined.Coercion (tt)
-           | _, Combined.Lit lit => Combined.Lit lit
-           | env, Combined.App f a => Combined.App (tidyExpr env f) (tidyExpr env a)
-           | env, Combined.Tick t e => Combined.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Combined.Cast e co => Combined.Cast (tidyExpr env e) (tt)
-           | env, Combined.Let b e =>
-               tidyBind env b =: (fun '(pair env' b') => Combined.Let b' (tidyExpr env' e))
-           | env, Combined.Case e b ty alts =>
+           | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
+           | env, Core.Type_ ty => Core.Type_ (tt)
+           | env, Core.Coercion co => Core.Coercion (tt)
+           | _, Core.Lit lit => Core.Lit lit
+           | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
+           | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (tt)
+           | env, Core.Let b e =>
+               tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
+           | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Combined.Case (tidyExpr env e) b (tt) (GHC.Base.map ((fun env x =>
-                                                                          let 'pair (pair con vs) rhs := x in
-                                                                          let 'pair env' vs := tidyBndrs env vs in
-                                                                          pair (pair con vs) (tidyExpr env' rhs)) env')
-                                                         alts))
-           | env, Combined.Lam b e =>
-               tidyBndr env b =: (fun '(pair env' b) => Combined.Lam b (tidyExpr env' e))
+                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map ((fun env x =>
+                                                                      let 'pair (pair con vs) rhs := x in
+                                                                      let 'pair env' vs := tidyBndrs env vs in
+                                                                      pair (pair con vs) (tidyExpr env' rhs)) env')
+                                                     alts))
+           | env, Core.Lam b e =>
+               tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind arg_0__ arg_1__
                       := match arg_0__, arg_1__ with
-                         | env, Combined.NonRec bndr rhs =>
+                         | env, Core.NonRec bndr rhs =>
                              tidyLetBndr env env (pair bndr rhs) =:
-                             (fun '(pair env' bndr') =>
-                                pair env' (Combined.NonRec bndr' (tidyExpr env' rhs)))
-                         | env, Combined.Rec prs =>
+                             (fun '(pair env' bndr') => pair env' (Core.NonRec bndr' (tidyExpr env' rhs)))
+                         | env, Core.Rec prs =>
                              let 'pair env' bndrs' := Data.Traversable.mapAccumL (tidyLetBndr
                                                                                   GHC.Err.default) env prs in
                              GHC.Base.map (fun x => tidyExpr env' (snd x)) prs =:
-                             (fun rhss' => pair env' (Combined.Rec (GHC.List.zip bndrs' rhss')))
+                             (fun rhss' => pair env' (Core.Rec (GHC.List.zip bndrs' rhss')))
                          end for tidyBind.
 
-Definition tidyExpr
-   : Combined.TidyEnv -> Combined.CoreExpr -> Combined.CoreExpr :=
+Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
   fix tidyExpr arg_0__ arg_1__
         := match arg_0__, arg_1__ with
-           | env, Combined.Mk_Var v => Combined.Mk_Var (tidyVarOcc env v)
-           | env, Combined.Type_ ty => Combined.Type_ (tt)
-           | env, Combined.Coercion co => Combined.Coercion (tt)
-           | _, Combined.Lit lit => Combined.Lit lit
-           | env, Combined.App f a => Combined.App (tidyExpr env f) (tidyExpr env a)
-           | env, Combined.Tick t e => Combined.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Combined.Cast e co => Combined.Cast (tidyExpr env e) (tt)
-           | env, Combined.Let b e =>
-               tidyBind env b =: (fun '(pair env' b') => Combined.Let b' (tidyExpr env' e))
-           | env, Combined.Case e b ty alts =>
+           | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
+           | env, Core.Type_ ty => Core.Type_ (tt)
+           | env, Core.Coercion co => Core.Coercion (tt)
+           | _, Core.Lit lit => Core.Lit lit
+           | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
+           | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (tt)
+           | env, Core.Let b e =>
+               tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
+           | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Combined.Case (tidyExpr env e) b (tt) (GHC.Base.map ((fun env x =>
-                                                                          let 'pair (pair con vs) rhs := x in
-                                                                          let 'pair env' vs := tidyBndrs env vs in
-                                                                          pair (pair con vs) (tidyExpr env' rhs)) env')
-                                                         alts))
-           | env, Combined.Lam b e =>
-               tidyBndr env b =: (fun '(pair env' b) => Combined.Lam b (tidyExpr env' e))
+                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map ((fun env x =>
+                                                                      let 'pair (pair con vs) rhs := x in
+                                                                      let 'pair env' vs := tidyBndrs env vs in
+                                                                      pair (pair con vs) (tidyExpr env' rhs)) env')
+                                                     alts))
+           | env, Core.Lam b e =>
+               tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind arg_0__ arg_1__
                       := match arg_0__, arg_1__ with
-                         | env, Combined.NonRec bndr rhs =>
+                         | env, Core.NonRec bndr rhs =>
                              tidyLetBndr env env (pair bndr rhs) =:
-                             (fun '(pair env' bndr') =>
-                                pair env' (Combined.NonRec bndr' (tidyExpr env' rhs)))
-                         | env, Combined.Rec prs =>
+                             (fun '(pair env' bndr') => pair env' (Core.NonRec bndr' (tidyExpr env' rhs)))
+                         | env, Core.Rec prs =>
                              let 'pair env' bndrs' := Data.Traversable.mapAccumL (tidyLetBndr
                                                                                   GHC.Err.default) env prs in
                              GHC.Base.map (fun x => tidyExpr env' (snd x)) prs =:
-                             (fun rhss' => pair env' (Combined.Rec (GHC.List.zip bndrs' rhss')))
+                             (fun rhss' => pair env' (Core.Rec (GHC.List.zip bndrs' rhss')))
                          end for tidyExpr.
 
-Definition tidyAlt : Combined.TidyEnv -> Combined.CoreAlt -> Combined.CoreAlt :=
+Definition tidyAlt : Core.TidyEnv -> Core.CoreAlt -> Core.CoreAlt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | env, pair (pair con vs) rhs =>
@@ -206,16 +198,14 @@ Infix "CoreTidy.=:" := (_=:_) (at level 99).
 End Notations.
 
 (* External variables:
-     None Some bool list op_zt__ pair snd tt Combined.App Combined.Breakpoint
-     Combined.Case Combined.Cast Combined.Coercion Combined.CoreAlt Combined.CoreBind
-     Combined.CoreExpr Combined.Lam Combined.Let Combined.Lit Combined.Mk_Var
-     Combined.NonRec Combined.Rec Combined.Tick Combined.Tickish Combined.TidyEnv
-     Combined.Type_ Combined.Var Combined.evaldUnfolding Combined.extendVarEnv
-     Combined.idDetails Combined.idInfo Combined.inlinePragInfo
-     Combined.isEvaldUnfolding Combined.lookupVarEnv Combined.mkLocalVar
-     Combined.noUnfolding Combined.occInfo Combined.oneShotInfo Combined.setArityInfo
-     Combined.setInlinePragInfo Combined.setOccInfo Combined.setOneShotInfo
-     Combined.unfoldingInfo Combined.vanillaIdInfo CoreArity.exprArity
+     None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
+     Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Lam
+     Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Tickish
+     Core.TidyEnv Core.Type_ Core.Var Core.evaldUnfolding Core.extendVarEnv
+     Core.idDetails Core.idInfo Core.inlinePragInfo Core.isEvaldUnfolding
+     Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo
+     Core.setArityInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
+     Core.unfoldingInfo Core.vanillaIdInfo CoreArity.exprArity
      Data.Traversable.mapAccumL GHC.Base.map GHC.Err.default GHC.List.zip
      GHC.Prim.seq Id.idName Id.idUnique Id.mkLocalIdWithInfo Maybes.orElse Name.Name
      Name.getOccName Name.mkInternalName OccName.tidyOccName SrcLoc.noSrcSpan

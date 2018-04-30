@@ -1,57 +1,57 @@
 rewrite forall x, andb Util.debugIsOn x = false
 
 ## need default DataCon for record selector, but cannot add it now
-skip Combined.dataCon
-skip Combined.data_con
+skip Core.dataCon
+skip Core.data_con
 
 ## Cannot add necessary default before partial record selector
-skip Combined.algTcParent
-skip Combined.promDcRepInfo
+skip Core.algTcParent
+skip Core.promDcRepInfo
 
 
-skip Combined.mkTyConKind
-rewrite forall x y, Combined.mkTyConKind x y = tt
+skip Core.mkTyConKind
+rewrite forall x y, Core.mkTyConKind x y = tt
 
-skip Combined.kindTyConKeys
-skip Combined.isKindTyCon
+skip Core.kindTyConKeys
+skip Core.isKindTyCon
 
 
 ## need name of class
-skip Combined.okParent
+skip Core.okParent
 
 ## Needs DataCon.dataConExTyVars
-skip Combined.isDataProductTyCon_maybe
-skip Combined.isDataSumTyCon_maybe 
-skip Combined.isProductTyCon 
-skip Combined.isPromotedTupleTyCon
+skip Core.isDataProductTyCon_maybe
+skip Core.isDataSumTyCon_maybe 
+skip Core.isProductTyCon 
+skip Core.isPromotedTupleTyCon
 
-skip Combined.isInjectiveTyCon
-skip Combined.isGenerativeTyCon
-skip Combined.tyConInjectivityInfo 
+skip Core.isInjectiveTyCon
+skip Core.isGenerativeTyCon
+skip Core.tyConInjectivityInfo 
 
 ## Needs DataCon.dataConFieldLabels
-# skip Combined.fieldsOfAlgTcRhs
-# skip Combined.mkAlgTyCon
-# skip Combined.mkClassTyCon
+# skip Core.fieldsOfAlgTcRhs
+# skip Core.mkAlgTyCon
+# skip Core.mkClassTyCon
 
-skip Combined.tyConATs
+skip Core.tyConATs
 skip module ForeignCall
 
 # Needs ClassSpec
-skip Combined.tyConAssoc_maybe
-skip Combined.isTyConAssoc
+skip Core.tyConAssoc_maybe
+skip Core.isTyConAssoc
 
-order Combined.Ord__TyCon_compare Combined.Eq___TyCon_op_zeze__ Combined.Eq___TyCon_op_zsze__ Combined.Eq___TyCon Combined.Ord__TyCon
+order Core.Ord__TyCon_compare Core.Eq___TyCon_op_zeze__ Core.Eq___TyCon_op_zsze__ Core.Eq___TyCon Core.Ord__TyCon
 
-redefine Local Definition Combined.Eq___TyConFlavour_op_zeze__
+redefine Local Definition Core.Eq___TyConFlavour_op_zeze__
    : TyConFlavour -> (TyConFlavour -> bool) := fun a b => false.
 
-order Combined.Eq___PrimElemRep Combined.Eq___PrimRep_op_zeze__
+order Core.Eq___PrimElemRep Core.Eq___PrimRep_op_zeze__
 
 ## can't use Applicative ((->)A)
-skip Combined.isLiftedTypeKindTyConName
+skip Core.isLiftedTypeKindTyConName
 
-skip Combined.tyConRuntimeRepInfo
-skip Combined.tyConSkolem
+skip Core.tyConRuntimeRepInfo
+skip Core.tyConSkolem
 
 

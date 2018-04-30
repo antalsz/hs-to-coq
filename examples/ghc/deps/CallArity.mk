@@ -1,1 +1,1 @@
-lib/CallArity.v: lib/Combined.h2ci
+lib/CallArity.v: lib/Core.h2ci

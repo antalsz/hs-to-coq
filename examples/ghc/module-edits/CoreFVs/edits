@@ -1,7 +1,7 @@
 skip module	FamInstEnv
 
-rename type Var.Id    = Combined.Var
-rename type Var.TyVar = Combined.Var
+rename type Var.Id    = Core.Var
+rename type Var.TyVar = Core.Var
 
 ## 
 # NEEDED by Exitify
@@ -12,9 +12,9 @@ rename type Var.TyVar = Combined.Var
 # Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
 #
 
-rewrite forall id, Id.realIdUnfolding id = Combined.NoUnfolding
+rewrite forall id, Id.realIdUnfolding id = Core.NoUnfolding
 
-in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Combined.mapUnionVarSet get_fvs (Id.idCoreRules id) = Combined.emptyVarSet
+in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
 
 # notation
 rename type CoreSyn.AnnExpr = AnnExpr
@@ -52,13 +52,13 @@ in CoreFVs.exprOrphNames skip go_alt
 #
 #
 redefine Definition CoreFVs.idRuleFVs      : Id  -> FV.FV := fun id  => FV.emptyFV.
-redefine Definition CoreFVs.varTypeTyCoFVs : Combined.Var -> FV.FV := fun var => FV.emptyFV.
+redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
 redefine Definition CoreFVs.idUnfoldingFVs : Id  -> FV.FV := fun id  => FV.emptyFV.
 
 rewrite forall co,   TyCoRep.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,   TyCoRep.tyCoFVsOfType ty        = FV.emptyFV
-rewrite forall b_ty, TyCoRep.tyCoVarsOfTypeDSet b_ty = Combined.emptyDVarSet
-rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Combined.emptyDVarSet
+rewrite forall b_ty, TyCoRep.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
+rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 
 
 

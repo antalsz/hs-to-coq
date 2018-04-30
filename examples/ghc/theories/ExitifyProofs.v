@@ -36,6 +36,9 @@ Ltac simpl_bool :=
           ?orb_false_iff, ?andb_false_iff
           in *.
 
+(** Removes all unused local definitions (but not assumptions) from the context *)
+Ltac cleardefs := repeat (multimatch goal with [ x := _  |- _ ] => clear x end).
+
 (** This tactic finds a [let x := rhs in body] anywhere in the goal,
     and moves it into the context, without zeta-reducing it. *)
 Ltac find_let e k :=
@@ -62,6 +65,13 @@ Ltac float_let :=
   end.
 *)
 
+
+(** ** Punted-on lemmas about Coq functions *)
+
+Lemma Forall_map:
+  forall {a b} P (f : a -> b) xs,
+  Forall P (map f xs) = Forall (fun x => P (f x)) xs.
+Admitted.
 
 
 (** ** Punted-on lemmas about GHC functions *)
@@ -92,13 +102,34 @@ Axiom dVarSet_freeVarsOf_Ann:
   (* @lastland, this is one spec that you might want to do *)
   forall ann_e, dVarSetToVarSet (freeVarsOf ann_e) = exprFreeVars (deAnnotate ann_e).
 
+Axiom deAnnotate_freeVars:
+  forall e, deAnnotate (freeVars e) = e.
+
+Axiom extendVarSetList_nil:
+  forall s,
+  extendVarSetList s [] = s.
+
 Axiom extendVarSetList_cons:
   forall s v vs,
   extendVarSetList s (v :: vs) = extendVarSetList (extendVarSet s v) vs.
 
+Axiom extendVarSetList_append:
+  forall s vs1 vs2,
+  extendVarSetList s (vs1 ++ vs2) = extendVarSetList (extendVarSetList s vs1) vs2.
+
+
+Axiom elemVarSet_mkVarset_iff_In:
+  forall v vs,
+  elemVarSet v (mkVarSet vs) = true <->  In (varUnique v) (map varUnique vs).
+
+
 Axiom elemVarSet_extendVarSet:
   forall v vs v',
   elemVarSet v (extendVarSet vs v') = (Var.varUnique v == Var.varUnique v') || elemVarSet v vs.
+
+Axiom subVarSet_refl:
+  forall vs1,
+  subVarSet vs1 vs1 = true.
 
 Axiom subVarSet_elemVarSet_true:
   forall v vs vs',
@@ -112,6 +143,34 @@ Axiom subVarSet_elemVarSet_false:
   elemVarSet v vs' = false ->
   elemVarSet v vs = false.
 
+Axiom subVarSet_extendVarSetList_l:
+  forall vs1 vs2 vs,
+  subVarSet vs1 vs2 = true ->
+  subVarSet vs1 (extendVarSetList vs2 vs) = true.
+
+Axiom subVarSet_extendVarSetList_r:
+  forall vs1 vs2 vs,
+  subVarSet vs1 (mkVarSet vs) = true ->
+  subVarSet vs1 (extendVarSetList vs2 vs) = true.
+
+
+Axiom subVarSet_extendVarSet:
+  forall vs1 vs2 v,
+  subVarSet vs1 vs2 = true ->
+  subVarSet vs1 (extendVarSet vs2 v) = true.
+
+Axiom getInScopeVars_extendInScopeSet:
+  forall iss v,
+  getInScopeVars (extendInScopeSet iss v) = extendVarSet (getInScopeVars iss) v.
+
+Axiom getInScopeVars_extendInScopeSetList:
+  forall iss vs,
+  getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
+
+Axiom elemVarSet_uniqAway:
+  forall v iss vs,
+  subVarSet vs (getInScopeVars iss) = true ->
+  elemVarSet (uniqAway iss v) vs = false.
 
 Axiom WellScoped_extendVarSet_fresh:
   forall v e vs,
@@ -122,10 +181,44 @@ Axiom WellScoped_subset:
   forall e vs,
   WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
 
+Axiom WellScoped_mkLams:
+  forall vs e isvs,
+  WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
+
+Axiom WellScoped_extended_filtered:
+  forall vs e isvs,
+  WellScoped e (extendVarSetList isvs vs) ->
+  WellScoped e (extendVarSetList isvs (filter (fun v => elemVarSet v (exprFreeVars e)) vs)).
+
 Axiom isJoinPointValidPair_extendVarSet:
   forall v rhs jps v',
   isJoinPointsValidPair v rhs jps = true ->
   isJoinPointsValidPair v rhs (extendVarSet jps v') = true.
+  
+Axiom WellScoped_collectNBinders:
+  forall e n isvs body params,
+  WellScoped e isvs ->
+  collectNBinders n e = (params, body) ->
+  WellScoped body (extendVarSetList isvs params).
+
+Axiom collectAnnNBndrs_collectNBinders:
+  forall {a v} `{GHC.Err.Default v} (e : AnnExpr a v) n params body,
+  collectNAnnBndrs n e = (params, body) ->
+  collectNBinders n (deAnnotate e) = (params, deAnnotate body).
+
+(* Just [simpl] is too ugly; uses [flat_map] *)
+Axiom deAnnBinds_AnnRec:
+ forall {a v} (pairs : list (v * AnnExpr v a)),
+ deAnnBind (AnnRec pairs) = Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs).
+
+Axiom deAnnotate_AnnLet_AnnRec:
+ forall {a v} fvs pairs (e : AnnExpr a v),
+ deAnnotate (fvs, AnnLet (AnnRec pairs) e)
+  = Let (Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs)) (deAnnotate e).
+
+Axiom bindersOf_Rec:
+  forall {v} (pairs : list (v * Expr v)),
+  bindersOf (Rec pairs) = map fst pairs.
 
 Axiom forallb_imp:
   forall a P Q (xs : list a),
@@ -139,6 +232,13 @@ Section in_exitify.
   (* Parameters of exitify *)
   Variable in_scope : InScopeSet.
   Variable pairs : list (Var * CoreExpr).
+
+  (* When [exitify] is called, then the [in_scope_set] actually contains
+     the recursive functions *)
+  Variable in_scope_has_funs:
+    subVarSet (mkVarSet (map fst pairs)) (getInScopeVars in_scope) = true.
+  Variable in_scope_has_funs':
+    extendVarSetList (getInScopeVars in_scope) (map fst pairs) = (getInScopeVars in_scope).
 
   (* Parameters and assumptions of the proof *)
   Variable jps : VarSet.
@@ -217,7 +317,7 @@ Section in_exitify.
     intros ?.
     unfold WellScopedFloats.
     generalize isvs as isvs.
-    clear in_scope pairs jps.
+    clear in_scope pairs jps in_scope_has_funs' in_scope_has_funs.
     induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
     * simpl. unfold Base.id. assumption.
     * simpl in *.
@@ -257,6 +357,7 @@ Section in_exitify.
 
   Lemma addExit_all_WellScopedFloats:
     forall captured ty ja e,
+    WellScoped e isvs ->
     StateInvariant WellScopedFloats
                    (addExit (extendInScopeSetList in_scope captured) ty ja e).
   Proof.
@@ -277,21 +378,34 @@ Section in_exitify.
     constructor; only 2: trivial.
     constructor; only 2: constructor; simpl.
     * constructor; only 2: apply Hfloats; simpl.
-      admit. (* uniqAway *)
+      unfold isvs.
+      apply elemVarSet_uniqAway.
+      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+      apply subVarSet_extendVarSet.
+      repeat apply subVarSet_extendVarSetList_l.
+      apply subVarSet_refl.
     * constructor; only 2: apply Hfloats; simpl.
-      admit. 
+      rewrite <- map_map.
+      rewrite <- elemVarSet_mkVarset_iff_In.
+      rewrite not_true_iff_false.
+      apply elemVarSet_uniqAway.
+      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+      apply subVarSet_extendVarSet.
+      apply subVarSet_extendVarSetList_r.
+      apply subVarSet_refl.
     * constructor; only 2: apply Hfloats; simpl.
-      admit. (* WellScoped e *)
-Admitted.
+      assumption.
+  Qed.
 
   (* This needs a WellScoped expression as input *)
   Lemma go_all_WellScopedFloats:
     forall captured ann_e,
+    WellScoped (deAnnotate ann_e) (extendVarSetList isvs captured) ->
     StateInvariant WellScopedFloats (go captured ann_e).
   Proof.
     (* This cannot be structural recursion. Will need a size on expressions. *)
     fix 2. rename go_all_WellScopedFloats into IH.
-    intros.
+    intros ?? HWS.
     set (P := WellScopedFloats).
     rewrite go_eq.
     cbv beta delta [go_f]. (* No [zeta]! *)
@@ -305,6 +419,7 @@ Admitted.
       destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
+    cleardefs.
 
     (* Second case *)
     subst j_37__.
@@ -312,6 +427,7 @@ Admitted.
       destruct (is_exit && negb is_interesting) ; try apply Hnext.
       apply StateInvariant_return.
     }
+    cleardefs.
 
     (* Third case *)
     subst j_36__.
@@ -319,44 +435,70 @@ Admitted.
       destruct (is_exit && captures_join_points ) ; try apply Hnext.
       apply StateInvariant_return.
     }
+    cleardefs.
 
     (* Third case: Actual exitification *)
     subst j_35__.
     enough (Hnext: StateInvariant P j_22__). {
+      clearbody j_22__. 
       destruct is_exit ; try apply Hnext.
       apply StateInvariant_bind_return.
       apply addExit_all_WellScopedFloats.
+      rewrite WellScoped_mkLams.
+      subst args fvs.
+      rewrite dVarSet_freeVarsOf_Ann.
+      replace @List.filter with filter by admit.
+      apply WellScoped_extended_filtered.
+      assumption.
     }
-    clear is_exit isCapturedVarArg is_interesting captures_join_points args e fvs.
+    cleardefs.
 
     (* Fourth case: No exitification here, so descend*)
     subst j_22__.
     enough (Hnext: StateInvariant P j_4__). {
+      clearbody j_4__.
       destruct ann_e as [fvs e] eqn:Hann.
-      destruct e; try apply Hnext.
+      destruct e; try apply Hnext. simpl in *.
       * (* Case [Case] *)
         apply StateInvariant_bind_return.
         apply StateInvariant_forM.
         intros [[dc pats] rhs] HIn.
         apply StateInvariant_bind_return.
         apply IH.
+        - (* This needs automation! *)
+          destruct HWS as [_ HWSpairs].
+          rewrite extendVarSetList_append.
+          replace @Forall' with @Forall in HWSpairs by admit.
+          rewrite Forall_map in HWSpairs.
+          rewrite Forall_forall in HWSpairs.
+          specialize (HWSpairs (dc, pats, rhs)). simpl in HWSpairs.
+          apply HWSpairs.
+          assumption.
       * (* Case [Let] *) 
         repeat float_let.
 
         enough (Hnext': StateInvariant P j_18__). {
           destruct a as [j rhs|pairs']; try apply Hnext'.
           destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI; try apply Hnext'.
+          unfold CoreBndr in *.
           destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
           apply StateInvariant_bind.
           + apply IH.
+            ** rewrite extendVarSetList_append.
+               simpl in HWS.
+               eapply WellScoped_collectNBinders; only 1: apply HWS.
+               apply collectAnnNBndrs_collectNBinders.
+               eassumption.
           + intros. apply StateInvariant_bind_return.
             apply IH.
+            ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+               apply HWS.
         }
 
         subst j_18__.
         enough (Hnext': StateInvariant P j_10__). {
           destruct a as [j rhs|pairs']; try apply Hnext'.
-          destruct (isJoinId (Tuple.fst (Panic.head pairs'))); try apply Hnext'.
+          destruct (isJoinId _); try apply Hnext'.
           + intros.
             apply StateInvariant_bind.
             - apply StateInvariant_forM.
@@ -365,14 +507,44 @@ Admitted.
               destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
               apply StateInvariant_bind_return.
               apply IH.
+              ** rewrite !extendVarSetList_append.
+                 rewrite deAnnotate_AnnLet_AnnRec in HWS.
+                 destruct HWS as [_ [HWS _]].
+                 replace @Forall' with @Forall in HWS by admit.
+                 rewrite map_map in HWS.
+                 rewrite Forall_map in HWS.
+                 rewrite Forall_forall in HWS.
+                 eapply WellScoped_collectNBinders; only 1: apply HWS.
+                 eassumption.
+                 apply collectAnnNBndrs_collectNBinders; eassumption.
             - intro x.
               apply StateInvariant_bind_return.
               apply IH.
+              ** rewrite !extendVarSetList_append.
+                 rewrite deAnnotate_AnnLet_AnnRec in HWS.
+                 destruct HWS as [_ [_ HWS]].
+                 replace @Forall' with @Forall in HWS by admit.
+                 rewrite map_map in HWS.
+                 apply HWS.
         }
 
         subst j_10__.
         apply StateInvariant_bind_return.
         apply IH.
+        ** rewrite !extendVarSetList_append.
+           subst bind.
+           destruct a as [v rhs|apairs].
+           ++ simpl in *.
+              rewrite extendVarSetList_cons, extendVarSetList_nil.
+              apply HWS.
+           ++ rewrite deAnnotate_AnnLet_AnnRec in HWS.
+              rewrite deAnnBinds_AnnRec.
+              rewrite bindersOf_Rec.
+              destruct HWS as [_ [_ HWS]].
+              replace @Forall' with @Forall in HWS by admit.
+              rewrite map_map in HWS. simpl in HWS.
+              rewrite map_map; simpl.
+              apply HWS.
     }
 
     subst j_4__.
@@ -383,8 +555,10 @@ Admitted.
   Admitted.
 
   Lemma all_exists_WellScoped:
+    Forall (fun p => WellScoped (snd p) (extendVarSetList (getInScopeVars in_scope) (map fst pairs))) pairs ->
     WellScopedFloats exits.
   Proof.
+    intro pairs_WS.
     unfold exits.
     unfold pairs'_exits.
     eapply SP_snd_runState.
@@ -393,9 +567,22 @@ Admitted.
       expand_pairs.
       apply StateInvariant_bind_return.
       apply go_all_WellScopedFloats.
+      destruct (collectNAnnBndrs (idJoinArity v) rhs) as [params join_body] eqn:HcAB.
+      eapply WellScoped_collectNBinders;
+        only 2: (apply collectAnnNBndrs_collectNBinders; eassumption).
+      rewrite Forall_forall in pairs_WS.
+      rewrite in_scope_has_funs' in pairs_WS.
+      specialize (pairs_WS (v, deAnnotate rhs)).
+      apply pairs_WS.
+      unfold ann_pairs in HIn.
+      rewrite in_map_iff in HIn.
+      destruct HIn as [[v' rhs'] [Heq HIn]].
+      inversion Heq. unfold id in H0. subst.
+      rewrite deAnnotate_freeVars.
+      assumption.
     * repeat split; constructor.
   Qed.
-    
+
   Theorem exitify_WellScoped:
     forall body,
     WellScoped (Let (Rec pairs) body) (getInScopeVars in_scope)  ->
@@ -416,6 +603,9 @@ Admitted.
     apply mkExitLets_WellScoped.
     * admit.
     * apply all_exists_WellScoped.
+      simpl in  H.
+      replace @Forall' with @Forall in H by admit.
+      apply H.
   Admitted.
 
 

@@ -242,9 +242,10 @@ Section in_exitify.
 
   (* Parameters and assumptions of the proof *)
   Variable jps : VarSet.
-  
-  (* Local function of exitify. Automation here would be great! 
-     We can use Ltac to get the outermost let.
+
+  (* Giving names to the local functions of exitify.
+     See http://www.joachim-breitner.de/blog/738-Verifying_local_definitions_in_Coq
+     for more on that idiom.
    *)
   Definition recursive_calls := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope pairs) in
@@ -259,7 +260,7 @@ Section in_exitify.
       exact def
     end).
 
-  (* Punting on termination for now *)
+  (* Punting on termination of [go] for now *)
   Axiom unsafe_deferredFix2_eq: forall {a b c} `{GHC.Err.Default c} (f : (a -> b -> c) -> (a -> b -> c)),
     forall x y, DeferredFix.deferredFix2 f x y = f (DeferredFix.deferredFix2 f) x y.
 
@@ -298,6 +299,12 @@ Section in_exitify.
   (** ** Scope validity *)
   
   Definition isvs := getInScopeVars in_scope.
+  
+  (** This predicate describes when a list of non-recursive bindings
+      is ok to wrap around the [Let (Rec [pairs] body)] pair.
+      
+      (This could move to [ScopeInvariants])
+  *)
   Definition WellScopedFloats floats :=
     (* All added bindings are fresh with regard to the environment *)
     Forall (fun 'p => elemVarSet (fst p) isvs = false) floats /\
@@ -306,6 +313,7 @@ Section in_exitify.
     (* All added bindings are well-scoped in the original environment  *)
     Forall (fun 'p => WellScoped (snd p) isvs) floats.
 
+  (* Here we do the actual wrapping *)
   Lemma mkExitLets_WellScoped:
     forall exits' e,
     (* The body is well-scoped in the extended environment *)
@@ -355,6 +363,9 @@ Section in_exitify.
   Qed.
 
 
+  (* the [addExit] function ensures that the new exit floats are well-scoped
+     where we are going to put them.
+   *)
   Lemma addExit_all_WellScopedFloats:
     forall captured ty ja e,
     WellScoped e isvs ->
@@ -397,7 +408,9 @@ Section in_exitify.
       assumption.
   Qed.
 
-  (* This needs a WellScoped expression as input *)
+  (* [addExit] is called somewhere in [go], so we need to follow [go]'s traversal
+     of the AST and collect all calls to [addExit].
+   *)
   Lemma go_all_WellScopedFloats:
     forall captured ann_e,
     WellScoped (deAnnotate ann_e) (extendVarSetList isvs captured) ->
@@ -550,7 +563,7 @@ Section in_exitify.
     subst j_4__.
     apply StateInvariant_return.
 
-  (* Not structurally recursive *)
+  (* TODO: Not structurally recursive *)
   Fail Guarded.
   Admitted.
 
@@ -583,6 +596,8 @@ Section in_exitify.
     * repeat split; constructor.
   Qed.
 
+  (** Main well-scopedness theorem:
+      If the input is well-scoped, then so is the output of [exitify]. *)
   Theorem exitify_WellScoped:
     forall body,
     WellScoped (Let (Rec pairs) body) (getInScopeVars in_scope)  ->

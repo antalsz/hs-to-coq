@@ -5,7 +5,7 @@ Require Import Exitify.
 Require Import Core.
 
 Require Import Proofs.GHC.Base.
-
+Require Import Proofs.GHC.List.
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -65,13 +65,6 @@ Ltac float_let :=
   end.
 *)
 
-
-(** ** Punted-on lemmas about Coq functions *)
-
-Lemma Forall_map:
-  forall {a b} P (f : a -> b) xs,
-  Forall P (map f xs) = Forall (fun x => P (f x)) xs.
-Admitted.
 
 
 (** ** Punted-on lemmas about GHC functions *)
@@ -184,6 +177,18 @@ Axiom WellScoped_subset:
 Axiom WellScoped_mkLams:
   forall vs e isvs,
   WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
+
+
+Lemma WellScoped_MkLetRec: forall pairs body isvs,
+  WellScoped (mkLetRec pairs body) isvs <-> WellScoped (Let (Rec pairs) body) isvs .
+Proof.
+  intros.
+  unfold mkLetRec.
+  destruct pairs; try reflexivity.
+  simpl.
+  rewrite extendVarSetList_nil.
+  split; intro; repeat split; try constructor; intuition.
+Qed.
 
 Axiom WellScoped_extended_filtered:
   forall vs e isvs,
@@ -461,7 +466,7 @@ Section in_exitify.
       rewrite WellScoped_mkLams.
       subst args fvs.
       rewrite dVarSet_freeVarsOf_Ann.
-      replace @List.filter with filter by admit.
+      rewrite hs_coq_filter.
       apply WellScoped_extended_filtered.
       assumption.
     }
@@ -482,7 +487,7 @@ Section in_exitify.
         - (* This needs automation! *)
           destruct HWS as [_ HWSpairs].
           rewrite extendVarSetList_append.
-          replace @Forall' with @Forall in HWSpairs by admit.
+          rewrite Forall'_Forall in HWSpairs.
           rewrite Forall_map in HWSpairs.
           rewrite Forall_forall in HWSpairs.
           specialize (HWSpairs (dc, pats, rhs)). simpl in HWSpairs.
@@ -524,7 +529,7 @@ Section in_exitify.
               ** rewrite !extendVarSetList_append.
                  rewrite deAnnotate_AnnLet_AnnRec in HWS.
                  destruct HWS as [_ [HWS _]].
-                 replace @Forall' with @Forall in HWS by admit.
+                 rewrite Forall'_Forall in HWS.
                  rewrite map_map in HWS.
                  rewrite Forall_map in HWS.
                  rewrite Forall_forall in HWS.
@@ -537,7 +542,6 @@ Section in_exitify.
               ** rewrite !extendVarSetList_append.
                  rewrite deAnnotate_AnnLet_AnnRec in HWS.
                  destruct HWS as [_ [_ HWS]].
-                 replace @Forall' with @Forall in HWS by admit.
                  rewrite map_map in HWS.
                  apply HWS.
         }
@@ -555,7 +559,6 @@ Section in_exitify.
               rewrite deAnnBinds_AnnRec.
               rewrite bindersOf_Rec.
               destruct HWS as [_ [_ HWS]].
-              replace @Forall' with @Forall in HWS by admit.
               rewrite map_map in HWS. simpl in HWS.
               rewrite map_map; simpl.
               apply HWS.
@@ -596,6 +599,33 @@ Section in_exitify.
       assumption.
     * repeat split; constructor.
   Qed.
+  
+  Lemma map_fst_pairs':
+    map fst pairs' = map fst pairs.
+  Proof.
+    intros.
+    clear in_scope_has_funs in_scope_has_funs'.
+    unfold pairs', pairs'_exits, ann_pairs.
+    unfold Traversable.forM, flip.
+    unfold Traversable.mapM, Traversable.Traversable__list, Traversable.mapM__, Traversable.Traversable__list_mapM.
+    unfold Traversable.Traversable__list_traverse.
+    unfold liftA2, State.Applicative__State, liftA2__, State.Applicative__State_liftA2.
+    unfold State.Applicative__State_op_zlztzg__.
+    unfold State.runState.
+    expand_pairs; simpl.
+    unfold pure, pure__, State.Applicative__State_pure.
+    unfold op_zgzgze__, State.Monad__State, op_zgzgze____,State.Monad__State_op_zgzgze__.
+    unfold Bifunctor.second, Bifunctor.Bifunctor__pair_type, Bifunctor.second__,
+           Bifunctor.Bifunctor__pair_type_second, Bifunctor.Bifunctor__pair_type_bimap.
+    unfold id.
+    generalize (@nil (CoreBndr * Expr CoreBndr)) as s.
+    induction pairs.
+    * reflexivity.
+    * intro.
+      simpl. repeat (expand_pairs; simpl).
+      f_equal.
+      apply IHl.
+  Qed.
 
   (** Main well-scopedness theorem:
       If the input is well-scoped, then so is the output of [exitify]. *)
@@ -617,7 +647,13 @@ Section in_exitify.
     fold exits.
     change (WellScoped (mkExitLets exits (mkLetRec pairs' body)) (getInScopeVars in_scope)).
     apply mkExitLets_WellScoped.
-    * admit.
+    * apply WellScoped_MkLetRec.
+      simpl in *.
+      destruct H as [HNoDup [HWspairs HWSbody]].
+      repeat split.
+      + rewrite map_fst_pairs'. assumption.
+      + admit.
+      + admit.
     * apply all_exists_WellScoped.
       simpl in  H.
       replace @Forall' with @Forall in H by admit.
@@ -908,7 +944,7 @@ Section in_exitify.
       destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
-    clear isCapturedVarArg.
+    cleardefs.
 
     (* Second case *)
     subst j_37__.

@@ -634,7 +634,7 @@ Section in_exitify.
   Proof.
     intros.
     unfold pairs', pairs'_exits, ann_pairs.
-
+  Admitted.
 
   Lemma map_fst_pairs':
     map fst pairs' = map fst pairs.

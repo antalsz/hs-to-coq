@@ -37,7 +37,8 @@ redefine Definition CoreSubst.mkEmptySubst : Core.InScopeSet -> Subst :=
   fun in_scope =>
     Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
-redefine Definition CoreSubst.substTyVarBndr : 
+skip CoreSubst.substTyVarBndr
+add CoreSubst Definition CoreSubst.substTyVarBndr : 
 			Subst -> (Core.Var -> (Subst * Core.Var)) :=
   fun s v => pair s v.
 

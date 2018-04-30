@@ -88,6 +88,9 @@ Parameter cloneRecIdBndrs
 
 (* Converted value declarations: *)
 
+Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
+  fun s v => pair s v.
+
 (* Skipping instance Outputable__Subst of class Outputable *)
 
 Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
@@ -471,9 +474,6 @@ Definition substBindSC
                         subst') rhss in
         pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
     end.
-
-Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
-  fun s v => pair s v.
 
 Definition zapSubstEnv : Subst -> Subst :=
   fun '(Mk_Subst in_scope _ _ _) => Mk_Subst in_scope Core.emptyVarEnv tt tt.

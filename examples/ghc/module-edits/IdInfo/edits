@@ -1,9 +1,3 @@
-rewrite forall x, andb Util.debugIsOn x = false
-rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
-
-# Break dependency on CoreSyn module
-# rename type CoreSyn.Unfolding = unit
-# rename value CoreSyn.noUnfolding = tt
 
 # Break dependency on Demand module
 rename type Demand.StrictSig  = unit
@@ -37,10 +31,12 @@ skip Core.sel_tycon
 skip Core.zapUsageEnvInfo
 
 ## needs CoreSyn.isFragileUnfolding
+
 skip Core.zapFragileUnfolding
 skip Core.zapFragileInfo
 
 ## needs Type.resultIdLevPoly
+
 skip Core.setLevityInfoWithType
 skip Core.isNeverLevPolyIdInfo
 
@@ -53,6 +49,8 @@ skip Core.pprStrictness
 skip Core.ppArityInfo
 skip Core.ppCafInfo 
 
-order Core.Eq___CafInfo Core.Ord__CafInfo
 
+## Ordering
+
+order Core.Eq___CafInfo Core.Ord__CafInfo
 order Core.Eq___TyCon Core.Eq___RecSelParent_op_zeze__

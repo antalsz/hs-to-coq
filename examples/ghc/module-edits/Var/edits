@@ -1,3 +1,5 @@
+redefine Definition Core.tcTyVarDetails : TyVar -> unit := fun x => tt.
+
 # record selector, can't add Default fast enough
 skip Core.dcr_wrap_id
 skip Core.id_info
@@ -5,3 +7,5 @@ skip Core.id_info
 # ppr
 skip Core.ppr_id_scope
 skip Core.ppr_debug
+
+

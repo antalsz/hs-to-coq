@@ -29,7 +29,6 @@ Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require Id.
-Require Name.
 Require Panic.
 Require UniqSupply.
 Require Unique.
@@ -449,41 +448,6 @@ Definition substExpr
    : GHC.Base.String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
   fun doc subst orig_expr => subst_expr doc subst orig_expr.
 
-Definition substRule
-   : Subst -> (Name.Name -> Name.Name) -> Core.CoreRule -> Core.CoreRule :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | _, _, (Core.BuiltinRule _ _ _ _ as rule) => rule
-    | subst
-    , subst_ru_fn
-    , (Core.Rule _ _ fn_name _ bndrs args rhs _ _ _ is_local as rule) =>
-        let 'pair subst' bndrs' := substBndrs subst bndrs in
-        let doc :=
-          GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "subst-rule"))
-                           (Panic.noString fn_name) in
-        match rule with
-        | Core.Rule ru_name_5__ ru_act_6__ ru_fn_7__ ru_rough_8__ ru_bndrs_9__
-        ru_args_10__ ru_rhs_11__ ru_auto_12__ ru_origin_13__ ru_orphan_14__
-        ru_local_15__ =>
-            Core.Rule ru_name_5__ ru_act_6__ (if is_local : bool
-                       then subst_ru_fn fn_name
-                       else fn_name) ru_rough_8__ bndrs' (GHC.Base.map (substExpr doc subst') args)
-                      (substExpr (Datatypes.id (GHC.Base.hs_string__ "foo")) subst' rhs) ru_auto_12__
-                      ru_origin_13__ ru_orphan_14__ ru_local_15__
-        | Core.BuiltinRule _ _ _ _ =>
-            GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-        end
-    end.
-
-Definition substRulesForImportedIds
-   : Subst -> list Core.CoreRule -> list Core.CoreRule :=
-  fun subst rules =>
-    let not_needed :=
-      fun name =>
-        Panic.panicStr (GHC.Base.hs_string__ "substRulesForImportedIds") (Panic.noString
-                                                                          name) in
-    GHC.Base.map (substRule subst not_needed) rules.
-
 Definition substExprSC
    : GHC.Base.String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
   fun doc subst orig_expr =>
@@ -511,26 +475,15 @@ Definition substBindSC
 Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
   fun s v => pair s v.
 
-Axiom substUnfolding : forall {A : Type}, A.
-
-Definition substUnfoldingSC : Subst -> Core.Unfolding -> Core.Unfolding :=
-  fun subst unf =>
-    if isEmptySubst subst : bool then unf else
-    substUnfolding subst unf.
-
-(* Translating `substUnfolding' failed: using a record pattern for the unknown
-   constructor `DFunUnfolding' unsupported *)
-
 Definition zapSubstEnv : Subst -> Subst :=
   fun '(Mk_Subst in_scope _ _ _) => Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
 (* External variables:
      None Some andb bool cons false id list negb nil op_zt__ option orb pair snd true
-     tt unit Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.Cast
-     Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr Core.CoreProgram
-     Core.CoreRule Core.DVarSet Core.IdEnv Core.IdInfo Core.InScopeSet Core.Lam
-     Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Rule Core.Tick
-     Core.Tickish Core.Type_ Core.Unfolding Core.Var Core.VarSet Core.dVarSetElems
+     tt unit Core.App Core.Breakpoint Core.Case Core.Cast Core.Coercion Core.CoreArg
+     Core.CoreBind Core.CoreExpr Core.CoreProgram Core.DVarSet Core.IdEnv Core.IdInfo
+     Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec
+     Core.Tick Core.Tickish Core.Type_ Core.Var Core.VarSet Core.dVarSetElems
      Core.delVarEnv Core.delVarEnvList Core.elemInScopeSet Core.emptyInScopeSet
      Core.emptyVarEnv Core.emptyVarSet Core.extendInScopeSet
      Core.extendInScopeSetList Core.extendInScopeSetSet Core.extendVarEnv
@@ -540,8 +493,8 @@ Definition zapSubstEnv : Subst -> Subst :=
      Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
      Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
      Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Err.default GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Id.maybeModifyIdInfo Name.Name Panic.noString Panic.panicStr
+     GHC.Base.op_zeze__ GHC.Err.default GHC.List.unzip GHC.List.zip
+     GHC.Num.fromInteger Id.maybeModifyIdInfo Panic.noString Panic.panicStr
      Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
      UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
 *)

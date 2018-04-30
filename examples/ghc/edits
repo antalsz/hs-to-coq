@@ -1,9 +1,4 @@
 
-# rename module Data.Set.Base Data.Set.Internal
-# rename module Data.Map.Base Data.Map.Internal
-# rename module Data.IntMap.Base Data.IntMap.Internal
-# rename module Data.IntSet.Base Data.IntSet.Internal
-
 rename value Data.Set.fold = Data.Set.Internal.foldr
 rename value Data.Map.fold = Data.Map.Internal.foldr
 rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
@@ -41,9 +36,6 @@ rename value Outputable.text          = Datatypes.id
 rename value Outputable.empty         = Panic.someSDoc
 rename value Outputable.comma         = Panic.someSDoc
 rename value Outputable.ptext         = Panic.noString
-# rename value Outputable.parens        = id
-# rename value Outputable.brackets      = id
-# rename value Outputable.doubleQuotes  = id
 rename value Outputable.int           = Panic.noString
 rename value Outputable.char          = Panic.noString
 rename value Outputable.ftext         = Panic.noString
@@ -55,12 +47,11 @@ rename value Outputable.warnPprTrace  = Panic.warnPprTrace
 rewrite forall x, Outputable.parens x = x
 rewrite forall x, Outputable.brackets x = x
 rewrite forall x, Outputable.doubleQuotes x = x
-# rewrite forall x, Outputable.text x = x
 rewrite forall x y,       Outputable.punctuate x y = Panic.someSDoc
 rewrite forall x str msg, Outputable.pprTraceDebug str msg x = x
 rewrite forall x y,       x Outputable.$$ y = Panic.someSDoc
 rewrite forall v str num msg, Outputable.warnPprTrace b str num msg v = v
-
+rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
 
 # Skip serialization-related instances
 skip Outputable.Outputable

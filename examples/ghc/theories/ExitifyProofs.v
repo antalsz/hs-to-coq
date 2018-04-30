@@ -152,6 +152,12 @@ Axiom subVarSet_extendVarSet:
   subVarSet vs1 vs2 = true ->
   subVarSet vs1 (extendVarSet vs2 v) = true.
 
+Axiom disjointVarSet_mkVarSet:
+  forall vs1 vs2,
+  disjointVarSet vs1 (mkVarSet vs2) = true <->
+  Forall (fun v => elemVarSet v vs1 = false) vs2.
+
+
 Axiom getInScopeVars_extendInScopeSet:
   forall iss v,
   getInScopeVars (extendInScopeSet iss v) = extendVarSet (getInScopeVars iss) v.
@@ -175,11 +181,10 @@ Axiom WellScoped_extendVarSetList_fresh:
   disjointVarSet (exprFreeVars e) (mkVarSet vs) = true ->
   WellScoped e (extendVarSetList vs1 vs) <-> WellScoped e vs1.
 
-Axiom WellScoped_extendVarSetList_fresh_under:
-  forall vs1 vs2 e vs,
-  disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
-  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <-> WellScoped e (extendVarSetList vs vs2).
-
+Axiom WellScoped_extendVarSetList:
+  forall vs e vs1,
+  disjointVarSet vs1 (mkVarSet vs) = true ->
+  WellScoped e vs1 -> WellScoped e (extendVarSetList vs1 vs).
 
 Axiom WellScoped_subset:
   forall e vs,
@@ -188,6 +193,20 @@ Axiom WellScoped_subset:
 Axiom WellScoped_mkLams:
   forall vs e isvs,
   WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
+
+Lemma WellScoped_extendVarSetList_fresh_under:
+  forall vs1 vs2 e vs,
+  disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
+  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <-> WellScoped e (extendVarSetList vs vs2).
+Proof.
+  intros.
+  rewrite <- WellScoped_mkLams.
+  rewrite WellScoped_extendVarSetList_fresh.
+  rewrite -> WellScoped_mkLams.
+  reflexivity.
+  admit. (* need something about exprFreeVars, mkLams, and subVarSet
+                       and about subVarSet and disjointVarSet *)
+Admitted.
 
 
 Lemma WellScoped_MkLetRec: forall pairs body isvs,
@@ -305,7 +324,6 @@ Section in_exitify.
     lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := _ in let y := ?rhs in ?body) => 
       exact rhs
     end).
-
 
   (** ** Scope validity *)
   
@@ -656,6 +674,12 @@ Section in_exitify.
     fold pairs'.
     fold exits.
     change (WellScoped (mkExitLets exits (mkLetRec pairs' body)) (getInScopeVars in_scope)).
+    assert (WellScopedFloats exits). {
+      apply all_exists_WellScoped.
+      simpl in  H.
+      rewrite Forall'_Forall in H.
+      apply H.
+    }
     apply mkExitLets_WellScoped.
     * apply WellScoped_MkLetRec.
       simpl in *.
@@ -664,12 +688,13 @@ Section in_exitify.
       repeat split.
       + assumption.
       + admit.
-      + admit.
-    * apply all_exists_WellScoped.
-      simpl in  H.
-      rewrite Forall'_Forall in H.
-      replace @Forall' with @Forall in H by admit.
-      apply H.
+      + rewrite <- WellScoped_mkLams.
+        rewrite <- WellScoped_mkLams in HWSbody.
+        apply WellScoped_extendVarSetList; only 2: assumption.
+        rewrite disjointVarSet_mkVarSet.
+        rewrite Forall_map.
+        apply H0.
+    * apply H0.
   Admitted.
 
 

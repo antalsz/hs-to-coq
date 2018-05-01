@@ -965,7 +965,7 @@ Section in_exitify.
         rewrite WellScoped_mkLams.
         assumption.
     * change (sublistOf exits exits).
-      constructor.
+      intro. auto.
   Qed.
 
   Lemma map_fst_pairs':

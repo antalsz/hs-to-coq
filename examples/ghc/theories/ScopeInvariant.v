@@ -43,12 +43,15 @@ Proof.
   reflexivity.
 Qed.
 
-Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
-  match e with
-  | Mk_Var v => match lookupVarSet in_scope v with
+Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
+   match lookupVarSet in_scope v with
     | None => False
     | Some v' => v = v'
-    end
+    end.
+
+Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
+  match e with
+  | Mk_Var v => WellScopedVar v in_scope
   | Lit l => True
   | App e1 e2 => WellScoped e1 in_scope /\  WellScoped e2 in_scope
   | Lam v e => WellScoped e (extendVarSet in_scope v)
@@ -69,3 +72,7 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   | Type_ _  =>   True
   | Coercion _ => True
   end.
+
+Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
+    let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
+    WellScoped (snd alt) in_scope'.

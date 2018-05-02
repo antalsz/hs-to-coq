@@ -221,10 +221,10 @@ Proof.
       assumption.
 Qed.
 
-Lemma RevStateInvariant_mapM:
+Lemma RevStateInvariant_mapM2:
   forall {a b s} P (act : a -> State.State s b) (xs : list a) R,
-  (forall x, In x xs -> RevStateInvariant P (act x) R) ->
-  RevStateInvariant P (Traversable.mapM act xs) (Forall R).
+  (forall x, In x xs -> RevStateInvariant P (act x) (R x)) ->
+  RevStateInvariant P (Traversable.mapM act xs) (Forall2 R xs).
 Proof.
   intros ??????? Hact.
   unfold Traversable.mapM, Traversable.Traversable__list, Traversable.mapM__,
@@ -232,10 +232,48 @@ Proof.
   induction xs.
   * apply RevStateInvariant_return. constructor.
   * simpl.
-    apply RevStateInvariant_liftA2 with (R1 := R) (R2 := Forall R).
+    apply RevStateInvariant_liftA2 with (R1 := R a0) (R2 := Forall2 R xs).
     - apply Hact. left. reflexivity.
     - apply IHxs. intros x Hin. apply Hact. right. assumption.
     - intros. constructor; assumption.
+Qed.
+
+Lemma RevStateInvariant_forM2:
+  forall {a b s} P (act : a -> State.State s b) (xs : list a) R,
+  (forall x, In x xs -> RevStateInvariant P (act x) (R x)) ->
+  RevStateInvariant P (Traversable.forM xs act) (Forall2 R xs).
+Proof.
+  intros.
+  unfold Traversable.forM, flip.
+  apply RevStateInvariant_mapM2.
+  assumption.
+Qed.
+
+Lemma Forall2_const_Forall:
+  forall {a b} R (xs : list a) (ys : list b),
+  Forall2 (fun _ => R) xs ys -> Forall R ys.
+Proof.
+  intros. induction H.
+  * constructor.
+  * constructor; assumption.
+Qed.
+
+Lemma Forall2_and:
+  forall {a b} P Q (xs : list a) (ys : list b),
+  Forall2 (fun x y => P x y /\ Q x y) xs ys -> (Forall2 P xs ys /\ Forall2 Q xs ys).
+Proof.
+  intros. induction H.
+  * constructor; constructor.
+  * constructor; constructor; intuition.
+Qed.
+
+Lemma Forall2_eq:
+  forall {a b c} (f : a -> c) (g : b -> c) (xs : list a) (ys : list b),
+  Forall2 (fun x y => f x = g y) xs ys -> List.map f xs = List.map g ys.
+Proof.
+  intros. induction H.
+  * reflexivity.
+  * simpl. f_equal; assumption.
 Qed.
 
 Lemma RevStateInvariant_forM:
@@ -244,7 +282,8 @@ Lemma RevStateInvariant_forM:
   RevStateInvariant P (Traversable.forM xs act) (Forall R).
 Proof.
   intros.
-  unfold Traversable.forM, flip.
-  apply RevStateInvariant_mapM.
-  assumption.
+  eapply RevStateInvariant_impl.
+  * apply RevStateInvariant_forM2.
+    apply H.
+  * apply Forall2_const_Forall.
 Qed.

@@ -120,7 +120,7 @@ Require Import Data.Bits.
 Import Data.Bits.Notations.
 Require Import Data.IntSet.InternalWord.
 Require Import IntWord.
-Require Import Popcount.
+Require Import Proods.Data.Bits.Popcount.
 Local Open Scope N_scope.
 Set Bullet Behavior "Strict Subproofs".
 

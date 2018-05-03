@@ -25,6 +25,7 @@ HANDMOD = \
   GHC/Tuple \
   Data/Type/Equality \
   GHC/Err \
+  GHC/Nat \
   GHC/Unicode \
   Prelude\
 

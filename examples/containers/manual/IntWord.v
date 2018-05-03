@@ -2,7 +2,7 @@ Require Import Coq.ZArith.BinInt.
 Require Import Coq.NArith.BinNat.
 Require Import GHC.Base.
 Require Import Data.Bits.
-Require Import Popcount.
+(* Require Import Popcount. *)
 
 
 (** 

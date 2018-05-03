@@ -302,6 +302,53 @@ Instance instance_Bits_Int : Bits Int :=  {
   zeroBits := #0;
 }.
 
+
+
+Definition shiftLL (n: N) (s : N) : N := Coq.NArith.BinNat.N.shiftl n s.
+Definition shiftRL (n: N) (s : N) : N := Coq.NArith.BinNat.N.shiftr n s.
+
+Definition bit_N s := shiftLL 1%N (Coq.ZArith.BinInt.Z.to_N s).
+
+Fixpoint Pos_popcount (p : positive) : positive :=
+  match p with
+  | 1%positive => 1%positive
+  | (p~1)%positive => Pos.succ (Pos_popcount p)
+  | (p~0)%positive => Pos_popcount p
+  end.
+
+
+Definition N_popcount (a : N) : N :=
+  match a with
+  | 0%N => 0%N
+  | N.pos p => N.pos (Pos_popcount p)
+  end.
+
+
+Instance Bits__N : Bits N :=  {
+  op_zizazi__ := N.land ;
+  op_zizbzi__ := N.lor ;
+  bit := bit_N;
+  bitSizeMaybe := fun _ => None ;
+  clearBit := fun n i => N.clearbit n (Coq.ZArith.BinInt.Z.to_N i) ;
+  complement := fun _ => 0%N  ; (* Not legally possible with N *)
+  complementBit := fun x i => N.lxor x (bit_N i) ;
+  isSigned := fun x => true ;
+  popCount := fun n => Z.of_N (N_popcount n);
+  rotate  := fun n s => Coq.NArith.BinNat.N.shiftl n (Coq.ZArith.BinInt.Z.to_N s);
+  rotateL := fun n s => Coq.NArith.BinNat.N.shiftl n (Coq.ZArith.BinInt.Z.to_N s);
+  rotateR := fun n s => Coq.NArith.BinNat.N.shiftr n (Coq.ZArith.BinInt.Z.to_N s);
+  setBit := fun x i => N.lor x (bit_N i);
+  shift  := fun n s => Coq.NArith.BinNat.N.shiftl n (Coq.ZArith.BinInt.Z.to_N s);
+  shiftL := fun n s => Coq.NArith.BinNat.N.shiftl n (Coq.ZArith.BinInt.Z.to_N s);
+  shiftR := fun n s => Coq.NArith.BinNat.N.shiftr n (Coq.ZArith.BinInt.Z.to_N s);
+  testBit := fun x i => N.testbit x (Coq.ZArith.BinInt.Z.to_N i);
+  unsafeShiftL := fun n s => Coq.NArith.BinNat.N.shiftl n (Coq.ZArith.BinInt.Z.to_N s);
+  unsafeShiftR := fun n s => Coq.NArith.BinNat.N.shiftr n (Coq.ZArith.BinInt.Z.to_N s);
+  xor := N.lxor;
+  zeroBits := 0%N;
+}.
+
+
 Module Notations.
 Notation "'_Data.Bits..&._'" := (op_zizazi__).
 Infix "Data.Bits..&." := (op_zizazi__) (at level 99).

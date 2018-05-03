@@ -199,7 +199,7 @@ Import Data.Bits.Notations.
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import CTZ.
-Require Import Popcount.
+Require Import Proofs.Data.Bits.Popcount.
 Local Open Scope N_scope.
 Set Bullet Behavior "Strict Subproofs".
 

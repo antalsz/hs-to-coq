@@ -17,7 +17,7 @@ Require Import GHC.List      Proofs.GHC.List.
 Require Import GHC.Enum      Proofs.GHC.Enum.
 Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
-Require Import Data.Bits.
+Require Import Data.Bits     Proofs.Data.Bits.Popcount.
 
 (* Quickcheck *)
 Require Import Test.QuickCheck.Property.
@@ -25,7 +25,6 @@ Require Import Test.QuickCheck.Property.
 
 (* IntSet library *)
 Require Import Data.IntSet.Internal.
-Require Import Popcount.
 
 (* IntSet proofs *)
 Require Import IntSetProperties.

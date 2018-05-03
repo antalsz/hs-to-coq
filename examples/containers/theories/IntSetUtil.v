@@ -14,12 +14,11 @@ Require Import Coq.Sorting.Sorted.
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
 Require Import Data.Foldable Proofs.Data.Foldable.
-Require Import Data.Bits.
+Require Import Data.Bits     Proofs.Data.Bits.Popcount.
 
 (* IntSet library *)
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
-Require Import Popcount.
 
 (* IntSet proofs *)
 Require Import DyadicIntervals.

@@ -10,3 +10,4 @@
 ./GHC/Enum.v
 ./GHC/List.v
 ./Termination.v
+./Data/Bits/Popcount.v

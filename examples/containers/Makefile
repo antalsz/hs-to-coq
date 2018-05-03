@@ -16,7 +16,6 @@ HS_SPEC=hs-spec
 HANDMOD = \
   Utils/Containers/Internal/PtrEquality \
   CTZ \
-  Popcount \
   BitTerminationProofs \
   Test/QuickCheck/Property \
   Test/QuickCheck/Arbitrary \

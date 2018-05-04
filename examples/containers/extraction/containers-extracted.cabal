@@ -16,9 +16,9 @@ library
   exposed-modules:     ExtractedIntSet
   exposed-modules:     ExtractedNumbers
 
--- the following are extracted and in src/, this list
+-- the following are extracted and in extracted-src/, this list
 -- needs to be manually maintained, e.g. with
--- find src/ -name \*.hs -printf "  exposed-modules: %f\n"|sed -e s/.hs//|sort
+-- find extracted-src/ -name \*.hs -printf "  exposed-modules: %f\n"|sed -e s/.hs//|sort
   exposed-modules: Ascii
   exposed-modules: Base
   exposed-modules: Basics
@@ -54,7 +54,6 @@ library
   exposed-modules: Num
   exposed-modules: PeanoNat
   exposed-modules: Plus
-  exposed-modules: Popcount
   exposed-modules: Prim
   exposed-modules: PtrEquality
   exposed-modules: QArith_base

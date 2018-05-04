@@ -1285,7 +1285,7 @@ Axiom deprecatedForExtension : GHC.Base.String -> TurnOnFlag -> GHC.Base.String.
 
 (* default_PIC skipped *)
 
-Axiom optLevelFlags : list (list GHC.Num.Int * GeneralFlag)%type.
+Axiom optLevelFlags : list (list nat * GeneralFlag)%type.
 
 Axiom smallestGroups : WarningFlag -> list GHC.Base.String.
 
@@ -1403,7 +1403,7 @@ Axiom exposePackage' : GHC.Base.String -> DynFlags -> DynFlags.
 
 (* setUnitId skipped *)
 
-Axiom checkOptLevel : GHC.Num.Int ->
+Axiom checkOptLevel : nat ->
                       DynFlags -> Data.Either.Either GHC.Base.String DynFlags.
 
 Axiom addLdInputs : Option -> DynFlags -> DynFlags.
@@ -1414,257 +1414,257 @@ Axiom split_marker : GHC.Char.Char.
 
 Axiom can_split : bool.
 
-Axiom cONTROL_GROUP_CONST_291 : DynFlags -> GHC.Num.Int.
+Axiom cONTROL_GROUP_CONST_291 : DynFlags -> nat.
 
-Axiom sTD_HDR_SIZE : DynFlags -> GHC.Num.Int.
+Axiom sTD_HDR_SIZE : DynFlags -> nat.
 
-Axiom pROF_HDR_SIZE : DynFlags -> GHC.Num.Int.
+Axiom pROF_HDR_SIZE : DynFlags -> nat.
 
-Axiom bLOCK_SIZE_W : DynFlags -> GHC.Num.Int.
+Axiom bLOCK_SIZE_W : DynFlags -> nat.
 
-Axiom bLOCK_SIZE : DynFlags -> GHC.Num.Int.
+Axiom bLOCK_SIZE : DynFlags -> nat.
 
-Axiom bLOCKS_PER_MBLOCK : DynFlags -> GHC.Num.Int.
+Axiom bLOCKS_PER_MBLOCK : DynFlags -> nat.
 
-Axiom tICKY_BIN_COUNT : DynFlags -> GHC.Num.Int.
+Axiom tICKY_BIN_COUNT : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR2 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR3 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR4 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR5 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR6 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR7 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR7 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR8 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR8 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR9 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR9 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rR10 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR10 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rF1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rF2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF2 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rF3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF3 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rF4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF4 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rF5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF5 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rF6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF6 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rD1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rD2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD2 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rD3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD3 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rD4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD4 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rD5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD5 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rD6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD6 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rXMM1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rXMM2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM2 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rXMM3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM3 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rXMM4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM4 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rXMM5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM5 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rXMM6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM6 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rYMM1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rYMM2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM2 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rYMM3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM3 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rYMM4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM4 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rYMM5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM5 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rYMM6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM6 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rZMM1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rZMM2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM2 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rZMM3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM3 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rZMM4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM4 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rZMM5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM5 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rZMM6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM6 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rL1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rL1 : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rSp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rSp : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rSpLim : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rSpLim : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rHp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rHp : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rHpLim : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rHpLim : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rCCCS : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rCCCS : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rCurrentTSO : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rCurrentTSO : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rCurrentNursery : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rCurrentNursery : DynFlags -> nat.
 
-Axiom oFFSET_StgRegTable_rHpAlloc : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rHpAlloc : DynFlags -> nat.
 
-Axiom oFFSET_stgEagerBlackholeInfo : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_stgEagerBlackholeInfo : DynFlags -> nat.
 
-Axiom oFFSET_stgGCEnter1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_stgGCEnter1 : DynFlags -> nat.
 
-Axiom oFFSET_stgGCFun : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_stgGCFun : DynFlags -> nat.
 
-Axiom oFFSET_Capability_r : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_Capability_r : DynFlags -> nat.
 
-Axiom oFFSET_bdescr_start : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_start : DynFlags -> nat.
 
-Axiom oFFSET_bdescr_free : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_free : DynFlags -> nat.
 
-Axiom oFFSET_bdescr_blocks : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_blocks : DynFlags -> nat.
 
-Axiom oFFSET_bdescr_flags : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_flags : DynFlags -> nat.
 
-Axiom sIZEOF_CostCentreStack : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_CostCentreStack : DynFlags -> nat.
 
-Axiom oFFSET_CostCentreStack_mem_alloc : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_CostCentreStack_mem_alloc : DynFlags -> nat.
 
-Axiom oFFSET_CostCentreStack_scc_count : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_CostCentreStack_scc_count : DynFlags -> nat.
 
-Axiom oFFSET_StgHeader_ccs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgHeader_ccs : DynFlags -> nat.
 
-Axiom oFFSET_StgHeader_ldvw : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgHeader_ldvw : DynFlags -> nat.
 
-Axiom sIZEOF_StgSMPThunkHeader : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgSMPThunkHeader : DynFlags -> nat.
 
-Axiom oFFSET_StgEntCounter_allocs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_allocs : DynFlags -> nat.
 
-Axiom oFFSET_StgEntCounter_allocd : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_allocd : DynFlags -> nat.
 
-Axiom oFFSET_StgEntCounter_registeredp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_registeredp : DynFlags -> nat.
 
-Axiom oFFSET_StgEntCounter_link : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_link : DynFlags -> nat.
 
-Axiom oFFSET_StgEntCounter_entry_count : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_entry_count : DynFlags -> nat.
 
-Axiom sIZEOF_StgUpdateFrame_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgUpdateFrame_NoHdr : DynFlags -> nat.
 
-Axiom sIZEOF_StgMutArrPtrs_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgMutArrPtrs_NoHdr : DynFlags -> nat.
 
-Axiom oFFSET_StgMutArrPtrs_ptrs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgMutArrPtrs_ptrs : DynFlags -> nat.
 
-Axiom oFFSET_StgMutArrPtrs_size : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgMutArrPtrs_size : DynFlags -> nat.
 
-Axiom sIZEOF_StgSmallMutArrPtrs_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgSmallMutArrPtrs_NoHdr : DynFlags -> nat.
 
-Axiom oFFSET_StgSmallMutArrPtrs_ptrs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgSmallMutArrPtrs_ptrs : DynFlags -> nat.
 
-Axiom sIZEOF_StgArrBytes_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgArrBytes_NoHdr : DynFlags -> nat.
 
-Axiom oFFSET_StgArrBytes_bytes : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgArrBytes_bytes : DynFlags -> nat.
 
-Axiom oFFSET_StgTSO_alloc_limit : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgTSO_alloc_limit : DynFlags -> nat.
 
-Axiom oFFSET_StgTSO_cccs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgTSO_cccs : DynFlags -> nat.
 
-Axiom oFFSET_StgTSO_stackobj : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgTSO_stackobj : DynFlags -> nat.
 
-Axiom oFFSET_StgStack_sp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgStack_sp : DynFlags -> nat.
 
-Axiom oFFSET_StgStack_stack : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgStack_stack : DynFlags -> nat.
 
-Axiom oFFSET_StgUpdateFrame_updatee : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgUpdateFrame_updatee : DynFlags -> nat.
 
-Axiom oFFSET_StgFunInfoExtraFwd_arity : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgFunInfoExtraFwd_arity : DynFlags -> nat.
 
-Axiom sIZEOF_StgFunInfoExtraRev : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgFunInfoExtraRev : DynFlags -> nat.
 
-Axiom oFFSET_StgFunInfoExtraRev_arity : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgFunInfoExtraRev_arity : DynFlags -> nat.
 
-Axiom mAX_SPEC_SELECTEE_SIZE : DynFlags -> GHC.Num.Int.
+Axiom mAX_SPEC_SELECTEE_SIZE : DynFlags -> nat.
 
-Axiom mAX_SPEC_AP_SIZE : DynFlags -> GHC.Num.Int.
+Axiom mAX_SPEC_AP_SIZE : DynFlags -> nat.
 
-Axiom mIN_PAYLOAD_SIZE : DynFlags -> GHC.Num.Int.
+Axiom mIN_PAYLOAD_SIZE : DynFlags -> nat.
 
-Axiom mIN_INTLIKE : DynFlags -> GHC.Num.Int.
+Axiom mIN_INTLIKE : DynFlags -> nat.
 
-Axiom mAX_INTLIKE : DynFlags -> GHC.Num.Int.
+Axiom mAX_INTLIKE : DynFlags -> nat.
 
-Axiom mIN_CHARLIKE : DynFlags -> GHC.Num.Int.
+Axiom mIN_CHARLIKE : DynFlags -> nat.
 
-Axiom mAX_CHARLIKE : DynFlags -> GHC.Num.Int.
+Axiom mAX_CHARLIKE : DynFlags -> nat.
 
-Axiom mUT_ARR_PTRS_CARD_BITS : DynFlags -> GHC.Num.Int.
+Axiom mUT_ARR_PTRS_CARD_BITS : DynFlags -> nat.
 
-Axiom mAX_Vanilla_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Vanilla_REG : DynFlags -> nat.
 
-Axiom mAX_Float_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Float_REG : DynFlags -> nat.
 
-Axiom mAX_Double_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Double_REG : DynFlags -> nat.
 
-Axiom mAX_Long_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Long_REG : DynFlags -> nat.
 
-Axiom mAX_XMM_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_XMM_REG : DynFlags -> nat.
 
-Axiom mAX_Real_Vanilla_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Vanilla_REG : DynFlags -> nat.
 
-Axiom mAX_Real_Float_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Float_REG : DynFlags -> nat.
 
-Axiom mAX_Real_Double_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Double_REG : DynFlags -> nat.
 
-Axiom mAX_Real_XMM_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_XMM_REG : DynFlags -> nat.
 
-Axiom mAX_Real_Long_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Long_REG : DynFlags -> nat.
 
-Axiom rESERVED_C_STACK_BYTES : DynFlags -> GHC.Num.Int.
+Axiom rESERVED_C_STACK_BYTES : DynFlags -> nat.
 
-Axiom rESERVED_STACK_WORDS : DynFlags -> GHC.Num.Int.
+Axiom rESERVED_STACK_WORDS : DynFlags -> nat.
 
-Axiom aP_STACK_SPLIM : DynFlags -> GHC.Num.Int.
+Axiom aP_STACK_SPLIM : DynFlags -> nat.
 
-Axiom wORD_SIZE_IN_BITS : DynFlags -> GHC.Num.Int.
+Axiom wORD_SIZE_IN_BITS : DynFlags -> nat.
 
-Axiom wORD_SIZE : DynFlags -> GHC.Num.Int.
+Axiom wORD_SIZE : DynFlags -> nat.
 
-Axiom dOUBLE_SIZE : DynFlags -> GHC.Num.Int.
+Axiom dOUBLE_SIZE : DynFlags -> nat.
 
-Axiom cINT_SIZE : DynFlags -> GHC.Num.Int.
+Axiom cINT_SIZE : DynFlags -> nat.
 
-Axiom cLONG_SIZE : DynFlags -> GHC.Num.Int.
+Axiom cLONG_SIZE : DynFlags -> nat.
 
-Axiom cLONG_LONG_SIZE : DynFlags -> GHC.Num.Int.
+Axiom cLONG_LONG_SIZE : DynFlags -> nat.
 
-Axiom bITMAP_BITS_SHIFT : DynFlags -> GHC.Num.Int.
+Axiom bITMAP_BITS_SHIFT : DynFlags -> nat.
 
-Axiom mAX_PTR_TAG : DynFlags -> GHC.Num.Int.
+Axiom mAX_PTR_TAG : DynFlags -> nat.
 
-Axiom tAG_MASK : DynFlags -> GHC.Num.Int.
+Axiom tAG_MASK : DynFlags -> nat.
 
-Axiom tAG_BITS : DynFlags -> GHC.Num.Int.
+Axiom tAG_BITS : DynFlags -> nat.
 
 Axiom wORDS_BIGENDIAN : DynFlags -> bool.
 
 Axiom dYNAMIC_BY_DEFAULT : DynFlags -> bool.
 
-Axiom lDV_SHIFT : DynFlags -> GHC.Num.Int.
+Axiom lDV_SHIFT : DynFlags -> nat.
 
 Axiom iLDV_CREATE_MASK : DynFlags -> GHC.Num.Integer.
 
@@ -1691,9 +1691,8 @@ Axiom decodeSize : GHC.Base.String -> GHC.Num.Integer.
 Axiom emptyFilesToClean : FilesToClean.
 
 (* External variables:
-     Type bool list op_zt__ option Data.Either.Either Data.Set.Internal.Set_
+     Type bool list nat op_zt__ option Data.Either.Either Data.Set.Internal.Set_
      EnumSet.EnumSet GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Char.Char
-     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Int GHC.Num.Integer
-     Module.ComponentId Module.Module Module.ModuleName Module.UnitId SrcLoc.Located
-     SrcLoc.SrcSpan
+     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Integer Module.ComponentId
+     Module.Module Module.ModuleName Module.UnitId SrcLoc.Located SrcLoc.SrcSpan
 *)

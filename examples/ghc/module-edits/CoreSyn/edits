@@ -1,6 +1,3 @@
-# data type arguments Core.Expr (indices: b)
-# data type arguments Core.Bind (indices: b)
-
 #
 # This would be better if we had a rewrite for types
 #

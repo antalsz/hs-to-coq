@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+Require GHC.Nat.
 
 (* Converted imports: *)
 
@@ -42,8 +43,7 @@ Inductive Literal : Type
   |  MachFloat : GHC.Real.Rational -> Literal
   |  MachDouble : GHC.Real.Rational -> Literal
   |  MachLabel
-   : FastString.FastString ->
-     (option GHC.Num.Int) -> BasicTypes.FunctionOrData -> Literal
+   : FastString.FastString -> (option nat) -> BasicTypes.FunctionOrData -> Literal
   |  LitInteger : GHC.Num.Integer -> unit -> Literal.
 
 Instance Default__Literal : GHC.Err.Default Literal :=
@@ -192,7 +192,7 @@ Definition litIsTrivial : Literal -> bool :=
     | _ => true
     end.
 
-Definition litTag : Literal -> GHC.Num.Int :=
+Definition litTag : Literal -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | MachChar _ => #1
@@ -320,7 +320,7 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
     end.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison false option true unit
+     Eq Gt Lt None Some andb bool comparison false nat option true unit
      BasicTypes.FunctionOrData Data.Maybe.isJust DynFlags.DynFlags
      DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT
      FastString.FastString FastString.fastStringToByteString FastString.mkFastString
@@ -330,7 +330,7 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
      GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char
      GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound GHC.Err.Build_Default
-     GHC.Err.Default GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Err.Default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
      GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.toInteger Panic.noString
      Panic.panicStr
 *)

@@ -14,7 +14,6 @@ Require Coq.Program.Wf.
 
 Require Data.Foldable.
 Require GHC.Base.
-Require GHC.Num.
 Require GHC.Prim.
 Require UniqFM.
 Require Unique.
@@ -206,7 +205,7 @@ Definition restrictUniqSetToUFM {a} {b}
     | Mk_UniqSet s, m => Mk_UniqSet (UniqFM.intersectUFM s m)
     end.
 
-Definition sizeUniqSet {a} : UniqSet a -> GHC.Num.Int :=
+Definition sizeUniqSet {a} : UniqSet a -> nat :=
   fun '(Mk_UniqSet s) => UniqFM.sizeUFM s.
 
 Definition unionUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
@@ -247,17 +246,17 @@ Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=
   Mk_UniqSet.
 
 (* External variables:
-     bool cons list op_zt__ option Data.Foldable.foldl' Data.Foldable.foldr
+     bool cons list nat op_zt__ option Data.Foldable.foldl' Data.Foldable.foldr
      GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.map GHC.Base.mappend
      GHC.Base.mappend__ GHC.Base.mconcat GHC.Base.mconcat__ GHC.Base.mempty
      GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zlzlzgzg__
-     GHC.Base.op_zlzlzgzg____ GHC.Num.Int GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
-     GHC.Prim.coerce UniqFM.UniqFM UniqFM.addToUFM UniqFM.allUFM UniqFM.anyUFM
-     UniqFM.delFromUFM UniqFM.delFromUFM_Directly UniqFM.delListFromUFM
-     UniqFM.delListFromUFM_Directly UniqFM.elemUFM UniqFM.elemUFM_Directly
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
-     UniqFM.isNullUFM UniqFM.lookupUFM UniqFM.lookupUFM_Directly UniqFM.minusUFM
-     UniqFM.nonDetEltsUFM UniqFM.nonDetFoldUFM UniqFM.nonDetFoldUFM_Directly
-     UniqFM.nonDetKeysUFM UniqFM.partitionUFM UniqFM.plusUFM UniqFM.sizeUFM
-     UniqFM.unitUFM Unique.Uniquable Unique.Unique
+     GHC.Base.op_zlzlzgzg____ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
+     UniqFM.UniqFM UniqFM.addToUFM UniqFM.allUFM UniqFM.anyUFM UniqFM.delFromUFM
+     UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.delListFromUFM_Directly
+     UniqFM.elemUFM UniqFM.elemUFM_Directly UniqFM.emptyUFM UniqFM.filterUFM
+     UniqFM.filterUFM_Directly UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.lookupUFM
+     UniqFM.lookupUFM_Directly UniqFM.minusUFM UniqFM.nonDetEltsUFM
+     UniqFM.nonDetFoldUFM UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetKeysUFM
+     UniqFM.partitionUFM UniqFM.plusUFM UniqFM.sizeUFM UniqFM.unitUFM
+     Unique.Uniquable Unique.Unique
 *)

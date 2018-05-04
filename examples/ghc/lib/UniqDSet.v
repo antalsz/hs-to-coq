@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Data.Foldable.
-Require GHC.Num.
 Require UniqDFM.
 Require UniqSet.
 Require Unique.
@@ -76,7 +75,7 @@ Definition partitionUniqDSet {a}
    : (a -> bool) -> UniqDSet a -> (UniqDSet a * UniqDSet a)%type :=
   UniqDFM.partitionUDFM.
 
-Definition sizeUniqDSet {a} : UniqDSet a -> GHC.Num.Int :=
+Definition sizeUniqDSet {a} : UniqDSet a -> nat :=
   UniqDFM.sizeUDFM.
 
 Definition unionUniqDSets {a} : UniqDSet a -> UniqDSet a -> UniqDSet a :=
@@ -103,11 +102,11 @@ Definition unitUniqDSet {a} `{Unique.Uniquable a} : a -> UniqDSet a :=
   fun x => UniqDFM.unitUDFM x x.
 
 (* External variables:
-     bool cons list op_zt__ option Data.Foldable.foldl Data.Foldable.foldr
-     GHC.Num.Int UniqDFM.UniqDFM UniqDFM.addToUDFM UniqDFM.delFromUDFM
-     UniqDFM.delListFromUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM
-     UniqDFM.filterUDFM UniqDFM.foldUDFM UniqDFM.intersectUDFM UniqDFM.intersectsUDFM
-     UniqDFM.isNullUDFM UniqDFM.lookupUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM
-     UniqDFM.plusUDFM UniqDFM.sizeUDFM UniqDFM.udfmIntersectUFM UniqDFM.udfmMinusUFM
-     UniqDFM.unitUDFM UniqSet.UniqSet UniqSet.getUniqSet Unique.Uniquable
+     bool cons list nat op_zt__ option Data.Foldable.foldl Data.Foldable.foldr
+     UniqDFM.UniqDFM UniqDFM.addToUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM
+     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
+     UniqDFM.foldUDFM UniqDFM.intersectUDFM UniqDFM.intersectsUDFM UniqDFM.isNullUDFM
+     UniqDFM.lookupUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
+     UniqDFM.sizeUDFM UniqDFM.udfmIntersectUFM UniqDFM.udfmMinusUFM UniqDFM.unitUDFM
+     UniqSet.UniqSet UniqSet.getUniqSet Unique.Uniquable
 *)

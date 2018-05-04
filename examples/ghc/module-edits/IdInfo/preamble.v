@@ -1,3 +1,7 @@
+(*  IdInfo: preamble *)
+
+Require GHC.Nat.
+
 (*
 -- An 'IdInfo' gives /optional/ information about an 'Id'.  If
 -- present it never lies, but it may not be present, in which case there

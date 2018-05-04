@@ -17,7 +17,6 @@ Require FastString.
 Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
-Require GHC.Real.
 Require Panic.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -35,7 +34,7 @@ Inductive Width : Type
   |  W512 : Width.
 
 Definition Length :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive ForeignHint : Type
   := NoHint : ForeignHint
@@ -58,6 +57,8 @@ Instance Default__ForeignHint : GHC.Err.Default ForeignHint :=
 Instance Default__CmmCat : GHC.Err.Default CmmCat :=
   GHC.Err.Build_Default _ GcPtrCat.
 (* Midamble *)
+
+Require Import GHC.Nat.
 
 Instance Default__CmmType : GHC.Err.Default CmmType :=
 	 { default := Mk_CmmType GHC.Err.default GHC.Err.default }.
@@ -273,7 +274,7 @@ Definition vecLength : CmmType -> Length :=
     | _ => Panic.panic (GHC.Base.hs_string__ "vecLength: not a vector")
     end.
 
-Definition widthFromBytes : GHC.Num.Int -> Width :=
+Definition widthFromBytes : nat -> Width :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
     if num_1__ GHC.Base.== #1 : bool then W8 else
@@ -295,7 +296,7 @@ Definition widthFromBytes : GHC.Num.Int -> Width :=
     Panic.panicStr (GHC.Base.hs_string__ "no width for given number of bytes")
     (Panic.noString n).
 
-Definition widthInBits : Width -> GHC.Num.Int :=
+Definition widthInBits : Width -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | W8 => #8
@@ -308,7 +309,7 @@ Definition widthInBits : Width -> GHC.Num.Int :=
     | W80 => #80
     end.
 
-Definition widthInBytes : Width -> GHC.Num.Int :=
+Definition widthInBytes : Width -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | W8 => #1
@@ -319,15 +320,6 @@ Definition widthInBytes : Width -> GHC.Num.Int :=
     | W256 => #32
     | W512 => #64
     | W80 => #10
-    end.
-
-Definition vecElemType : CmmType -> CmmType :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_CmmType (VecCat l cat) w =>
-        let scalw : Width := widthFromBytes (GHC.Real.div (widthInBytes w) l) in
-        Mk_CmmType cat scalw
-    | _ => Panic.panic (GHC.Base.hs_string__ "vecElemType: not a vector")
     end.
 
 Definition vec : Length -> CmmType -> CmmType :=
@@ -368,14 +360,14 @@ Definition vec4b32 : CmmType :=
 Definition vec8b16 : CmmType :=
   vec #8 b16.
 
-Definition cmmVec : GHC.Num.Int -> CmmType -> CmmType :=
+Definition cmmVec : nat -> CmmType -> CmmType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | n, Mk_CmmType cat w =>
         Mk_CmmType (VecCat n cat) (widthFromBytes (n GHC.Num.* widthInBytes w))
     end.
 
-Definition widthInLog : Width -> GHC.Num.Int :=
+Definition widthInLog : Width -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | W8 => #0
@@ -401,9 +393,9 @@ Definition bWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => cmmBits (wordWidth dflags).
 
 (* External variables:
-     andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
+     andb bool false nat negb true DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ GHC.Real.div
-     Panic.noString Panic.panic Panic.panicStr
+     GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ Panic.noString Panic.panic
+     Panic.panicStr
 *)

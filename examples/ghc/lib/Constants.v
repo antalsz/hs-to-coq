@@ -10,6 +10,10 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require GHC.Nat.
+
 (* Converted imports: *)
 
 Require GHC.Num.
@@ -18,30 +22,30 @@ Import GHC.Num.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-Definition fLOAT_SIZE : GHC.Num.Int :=
+Definition fLOAT_SIZE : nat :=
   #4.
 
-Definition mAX_CTUPLE_SIZE : GHC.Num.Int :=
+Definition mAX_CTUPLE_SIZE : nat :=
   #62.
 
-Definition mAX_REDUCTION_DEPTH : GHC.Num.Int :=
+Definition mAX_REDUCTION_DEPTH : nat :=
   #200.
 
-Definition mAX_SOLVER_ITERATIONS : GHC.Num.Int :=
+Definition mAX_SOLVER_ITERATIONS : nat :=
   #4.
 
-Definition mAX_SUM_SIZE : GHC.Num.Int :=
+Definition mAX_SUM_SIZE : nat :=
   #62.
 
-Definition mAX_TUPLE_SIZE : GHC.Num.Int :=
+Definition mAX_TUPLE_SIZE : nat :=
   #62.
 
-Definition tARGET_MAX_CHAR : GHC.Num.Int :=
+Definition tARGET_MAX_CHAR : nat :=
   #1114111.
 
-Definition wORD64_SIZE : GHC.Num.Int :=
+Definition wORD64_SIZE : nat :=
   #8.
 
 (* External variables:
-     GHC.Num.Int GHC.Num.fromInteger
+     nat GHC.Num.fromInteger
 *)

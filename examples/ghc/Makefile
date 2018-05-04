@@ -55,7 +55,7 @@ MODULES = \
 
 ## 
 CORESYN = \
-   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn 
+   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand \
 
 ## 
 CONSTRUCTORS = \
@@ -63,9 +63,9 @@ CONSTRUCTORS = \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
+  Constants \
   Id \
   UnVarGraph \
-  Demand \
   CoreSubst \
   CoreUtils \
   Name \
@@ -74,7 +74,6 @@ CORE_MODULES = \
   FV \
   Literal \
   FieldLabel \
-  Constants \
   ConLike \
   CoreFVs \
   Exitify \

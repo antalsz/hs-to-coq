@@ -12,7 +12,6 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require BasicTypes.
 Require Core.
 Require GHC.Base.
 Require Name.
@@ -62,7 +61,7 @@ Program Instance NamedThing__ConLike : Name.NamedThing ConLike :=
 
 (* Skipping instance Data__ConLike of class Data *)
 
-Definition conLikeArity : ConLike -> BasicTypes.Arity :=
+Definition conLikeArity : ConLike -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | RealDataCon data_con => Core.dataConSourceArity data_con
@@ -91,10 +90,9 @@ Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
          GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
 
 (* External variables:
-     bool negb BasicTypes.Arity Core.DataCon Core.PatSyn Core.dataConName
-     Core.dataConSourceArity Core.patSynArity Core.patSynName GHC.Base.Eq_
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zsze____ Name.Name
-     Name.NamedThing Name.getName Name.getName__ Name.getOccName__ Name.nameOccName
-     OccName.OccName Unique.Uniquable Unique.Unique Unique.getUnique
-     Unique.getUnique__
+     bool nat negb Core.DataCon Core.PatSyn Core.dataConName Core.dataConSourceArity
+     Core.patSynArity Core.patSynName GHC.Base.Eq_ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zsze____ Name.Name Name.NamedThing Name.getName
+     Name.getName__ Name.getOccName__ Name.nameOccName OccName.OccName
+     Unique.Uniquable Unique.Unique Unique.getUnique Unique.getUnique__
 *)

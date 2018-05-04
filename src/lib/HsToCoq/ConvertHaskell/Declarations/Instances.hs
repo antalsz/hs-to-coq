@@ -85,6 +85,7 @@ convertInstanceName n = do
         unTyCon (Bare "option")     = Just "option"
         unTyCon (Bare "op_zt__")    = Just "op_zt__"
         unTyCon (Bare "unit")       = Just "unit"
+        unTyCon (Bare "nat")        = Just "nat"      
         unTyCon _                   = Nothing
 
         bitsToInt :: [Bool] -> Integer

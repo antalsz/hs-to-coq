@@ -1,3 +1,5 @@
+(*  IdInfo: midamble *)
+
 Require GHC.Err.
 
 Inductive UnfoldingInfo : Type
@@ -22,6 +24,26 @@ Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
 
 Instance Default_CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
+
+
+
+Instance Default_Termination {r} : GHC.Err.Default (Termination r) :=
+  GHC.Err.Build_Default _ Diverges.
+
+Instance Default_DmdType : GHC.Err.Default DmdType :=
+  GHC.Err.Build_Default _ (Mk_DmdType GHC.Err.default GHC.Err.default GHC.Err.default).
+
+
+Instance Default_StrictSig : GHC.Err.Default StrictSig :=
+  GHC.Err.Build_Default _ (Mk_StrictSig GHC.Err.default).
+
+Instance Default_JointDmd `{GHC.Err.Default a} `{GHC.Err.Default b} : GHC.Err.Default (JointDmd a b) :=
+  GHC.Err.Build_Default _ (JD GHC.Err.default GHC.Err.default).
+
+Instance Default_Str {s} : GHC.Err.Default (Str s) :=
+  GHC.Err.Build_Default _ Lazy.
+Instance Default_Use {s} : GHC.Err.Default (Use s) :=
+  GHC.Err.Build_Default _ Abs.
 
 Instance Default_IdInfo : GHC.Err.Default IdInfo :=
   GHC.Err.Build_Default _ (Mk_IdInfo GHC.Err.default GHC.Err.default GHC.Err.default

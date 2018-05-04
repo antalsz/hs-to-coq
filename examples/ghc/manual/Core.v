@@ -16,6 +16,7 @@ Require Coq.Program.Wf.
    can use for untying the knots in DataCon/Class/PatSyn/TyCon *)
 
 Require GHC.Err.
+Require GHC.Nat.
 Require GHC.Base.
 
 Parameter DataConId : Type.
@@ -37,6 +38,11 @@ Parameter Ord_PatSynId  : Base.Ord PatSynId.
 Parameter Ord_ClassId   : Base.Ord ClassId.
 Parameter Ord_DataConId : Base.Ord DataConId.
 Parameter Ord_TyConId   : Base.Ord TyConId.
+
+(*  IdInfo: preamble *)
+
+Require GHC.Nat.
+
 (*
 -- An 'IdInfo' gives /optional/ information about an 'Id'.  If
 -- present it never lies, but it may not be present, in which case there
@@ -155,6 +161,7 @@ Require Maybes.
 Require Module.
 Require Name.
 Require NameEnv.
+Require Nat.
 Require OccName.
 Require Panic.
 Require PrelNames.
@@ -179,12 +186,16 @@ Inductive UnfoldingSource : Type
   |  InlineCompulsory : UnfoldingSource.
 
 Inductive UnfoldingGuidance : Type
-  := UnfWhen : BasicTypes.Arity -> bool -> bool -> UnfoldingGuidance
-  |  UnfIfGoodArgs
-   : list GHC.Num.Int -> GHC.Num.Int -> GHC.Num.Int -> UnfoldingGuidance
+  := UnfWhen : nat -> bool -> bool -> UnfoldingGuidance
+  |  UnfIfGoodArgs : list nat -> nat -> nat -> UnfoldingGuidance
   |  UnfNever : UnfoldingGuidance.
 
 Inductive Unfolding : Type := Mk_Unfolding.
+
+Inductive TypeShape : Type
+  := TsFun : TypeShape -> TypeShape
+  |  TsProd : list TypeShape -> TypeShape
+  |  TsUnk : TypeShape.
 
 Definition TyVarEnv :=
   VarEnv%type.
@@ -224,14 +235,19 @@ Inductive TickishPlacement : Type
 
 Inductive Tickish id : Type
   := ProfNote : unit -> bool -> bool -> Tickish id
-  |  HpcTick : Module.Module -> GHC.Num.Int -> Tickish id
-  |  Breakpoint : GHC.Num.Int -> list id -> Tickish id
+  |  HpcTick : Module.Module -> nat -> Tickish id
+  |  Breakpoint : nat -> list id -> Tickish id
   |  SourceNote : SrcLoc.RealSrcSpan -> GHC.Base.String -> Tickish id.
 
 Definition TickBoxId :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive TickBoxOp : Type := TickBox : Module.Module -> TickBoxId -> TickBoxOp.
+
+Inductive Termination r : Type
+  := Diverges : Termination r
+  |  ThrowsExn : Termination r
+  |  Dunno : r -> Termination r.
 
 Inductive StrictnessMark : Type
   := MarkedStrict : StrictnessMark
@@ -248,7 +264,7 @@ Inductive SrcStrictness : Type
   |  NoSrcStrict : SrcStrictness.
 
 Inductive RecTcChecker : Type
-  := RC : GHC.Num.Int -> (NameEnv.NameEnv GHC.Num.Int) -> RecTcChecker.
+  := RC : nat -> (NameEnv.NameEnv nat) -> RecTcChecker.
 
 Inductive PrimElemRep : Type
   := Int8ElemRep : PrimElemRep
@@ -273,12 +289,12 @@ Inductive PrimRep : Type
   |  AddrRep : PrimRep
   |  FloatRep : PrimRep
   |  DoubleRep : PrimRep
-  |  VecRep : GHC.Num.Int -> PrimElemRep -> PrimRep.
+  |  VecRep : nat -> PrimElemRep -> PrimRep.
 
 Inductive RuntimeRepInfo : Type
   := NoRRI : RuntimeRepInfo
   |  RuntimeRep : (list unit -> list PrimRep) -> RuntimeRepInfo
-  |  VecCount : GHC.Num.Int -> RuntimeRepInfo
+  |  VecCount : nat -> RuntimeRepInfo
   |  VecElem : PrimElemRep -> RuntimeRepInfo.
 
 Definition OutType :=
@@ -293,6 +309,10 @@ Definition OutCoercion :=
 Inductive LevityInfo : Type
   := NoLevityInfo : LevityInfo
   |  NeverLevityPolymorphic : LevityInfo.
+
+Inductive KillFlags : Type := Mk_KillFlags : bool -> bool -> bool -> KillFlags.
+
+Inductive JointDmd s u : Type := JD : s -> u -> JointDmd s u.
 
 Inductive IsOrphan : Type
   := Mk_IsOrphan : IsOrphan
@@ -344,6 +364,10 @@ Inductive IdScope : Type
   := GlobalId : IdScope
   |  LocalId : ExportFlag -> IdScope.
 
+Inductive ExnStr : Type := VanStr : ExnStr |  Mk_ExnStr : ExnStr.
+
+Inductive Str s : Type := Lazy : Str s |  Mk_Str : ExnStr -> s -> Str s.
+
 Definition DefMethInfo :=
   (option (Name.Name * BasicTypes.DefMethSpec unit)%type)%type.
 
@@ -356,6 +380,13 @@ Definition DTyVarEnv :=
 Definition DIdEnv :=
   DVarEnv%type.
 
+Inductive Count : Type := One : Count |  Many : Count.
+
+Inductive Use u : Type := Abs : Use u |  Mk_Use : Count -> u -> Use u.
+
+Definition DmdShell :=
+  (JointDmd (Str unit) (Use unit))%type.
+
 Definition CoVarEnv :=
   VarEnv%type.
 
@@ -364,8 +395,52 @@ Definition ClassMinimalDef :=
 
 Inductive CafInfo : Type := MayHaveCafRefs : CafInfo |  NoCafRefs : CafInfo.
 
+Inductive CPRResult : Type
+  := NoCPR : CPRResult
+  |  RetProd : CPRResult
+  |  RetSum : BasicTypes.ConTag -> CPRResult.
+
+Definition DmdResult :=
+  (Termination CPRResult)%type.
+
 Definition ArityInfo :=
-  BasicTypes.Arity%type.
+  nat%type.
+
+Inductive ArgUse__raw : Type :=.
+
+Reserved Notation "'ArgUse'".
+
+Inductive UseDmd : Type
+  := UCall : Count -> UseDmd -> UseDmd
+  |  UProd : list ArgUse -> UseDmd
+  |  UHead : UseDmd
+  |  Used : UseDmd
+where "'ArgUse'" := (GHC.Base.Synonym ArgUse__raw (Use UseDmd)%type).
+
+Inductive ArgStr__raw : Type :=.
+
+Reserved Notation "'ArgStr'".
+
+Inductive StrDmd : Type
+  := HyperStr : StrDmd
+  |  SCall : StrDmd -> StrDmd
+  |  SProd : list ArgStr -> StrDmd
+  |  HeadStr : StrDmd
+where "'ArgStr'" := (GHC.Base.Synonym ArgStr__raw (Str StrDmd)%type).
+
+Definition Demand :=
+  (JointDmd ArgStr ArgUse)%type.
+
+Definition DmdEnv :=
+  (VarEnv Demand)%type.
+
+Definition BothDmdArg :=
+  (DmdEnv * Termination unit)%type%type.
+
+Inductive DmdType : Type
+  := Mk_DmdType : DmdEnv -> list Demand -> DmdResult -> DmdType.
+
+Inductive StrictSig : Type := Mk_StrictSig : DmdType -> StrictSig.
 
 Inductive IdInfo : Type
   := Mk_IdInfo
@@ -375,7 +450,10 @@ Inductive IdInfo : Type
      CafInfo ->
      BasicTypes.OneShotInfo ->
      BasicTypes.InlinePragma ->
-     BasicTypes.OccInfo -> unit -> unit -> ArityInfo -> LevityInfo -> IdInfo.
+     BasicTypes.OccInfo -> StrictSig -> Demand -> ArityInfo -> LevityInfo -> IdInfo.
+
+Definition CleanDemand :=
+  (JointDmd StrDmd UseDmd)%type.
 
 Inductive ArgFlag : Type
   := Required : ArgFlag
@@ -426,8 +504,7 @@ with ClassATItem : Type
 with TyCon : Type
   := FunTyCon
    : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder -> unit -> unit -> BasicTypes.Arity -> TyConRepName -> TyCon
+     Name.Name -> list TyConBinder -> unit -> unit -> nat -> TyConRepName -> TyCon
   |  AlgTyCon
    : Unique.Unique ->
      Name.Name ->
@@ -435,7 +512,7 @@ with TyCon : Type
      list TyVar ->
      unit ->
      unit ->
-     BasicTypes.Arity ->
+     nat ->
      list unit ->
      option unit ->
      bool ->
@@ -444,8 +521,7 @@ with TyCon : Type
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
-     list TyVar ->
-     unit -> unit -> BasicTypes.Arity -> list unit -> unit -> bool -> bool -> TyCon
+     list TyVar -> unit -> unit -> nat -> list unit -> unit -> bool -> bool -> TyCon
   |  FamilyTyCon
    : Unique.Unique ->
      Name.Name ->
@@ -453,30 +529,24 @@ with TyCon : Type
      list TyVar ->
      unit ->
      unit ->
-     BasicTypes.Arity ->
-     option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon
+     nat -> option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon
   |  PrimTyCon
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
-     unit ->
-     unit -> BasicTypes.Arity -> list unit -> bool -> option TyConRepName -> TyCon
+     unit -> unit -> nat -> list unit -> bool -> option TyConRepName -> TyCon
   |  PromotedDataCon
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
      unit ->
-     unit ->
-     BasicTypes.Arity ->
-     list unit -> DataCon -> TyConRepName -> RuntimeRepInfo -> TyCon
+     unit -> nat -> list unit -> DataCon -> TyConRepName -> RuntimeRepInfo -> TyCon
   |  TcTyCon
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
      list TyVar ->
-     unit ->
-     unit ->
-     BasicTypes.Arity -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon
+     unit -> unit -> nat -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon
 with AlgTyConRhs : Type
   := AbstractTyCon : AlgTyConRhs
   |  DataTyCon : list DataCon -> bool -> AlgTyConRhs
@@ -500,20 +570,16 @@ with DataCon : Type
      unit ->
      list HsSrcBang ->
      list FieldLabel.FieldLabel ->
-     Id ->
-     DataConRep ->
-     BasicTypes.Arity ->
-     BasicTypes.Arity -> TyCon -> unit -> bool -> TyCon -> DataCon
+     Id -> DataConRep -> nat -> nat -> TyCon -> unit -> bool -> TyCon -> DataCon
 with DataConRep : Type
   := NoDataConRep : DataConRep
   |  DCR
    : Id ->
      unit -> list unit -> list StrictnessMark -> list HsImplBang -> DataConRep
 with Var : Type
-  := Mk_TyVar : Name.Name -> GHC.Num.Int -> unit -> Var
-  |  Mk_TcTyVar : Name.Name -> GHC.Num.Int -> unit -> unit -> Var
-  |  Mk_Id
-   : Name.Name -> GHC.Num.Int -> unit -> IdScope -> IdDetails -> IdInfo -> Var
+  := Mk_TyVar : Name.Name -> nat -> unit -> Var
+  |  Mk_TcTyVar : Name.Name -> nat -> unit -> unit -> Var
+  |  Mk_Id : Name.Name -> nat -> unit -> IdScope -> IdDetails -> IdInfo -> Var
 with IdDetails : Type
   := VanillaId : IdDetails
   |  RecSelId : RecSelParent -> bool -> IdDetails
@@ -534,7 +600,7 @@ with PatSyn : Type
    : Name.Name ->
      Unique.Unique ->
      list unit ->
-     BasicTypes.Arity ->
+     nat ->
      bool ->
      list FieldLabel.FieldLabel ->
      list TyVarBinder ->
@@ -776,7 +842,7 @@ Definition TypeVar :=
 Definition VarSet :=
   (UniqSet.UniqSet Var)%type.
 
-Inductive InScopeSet : Type := InScope : VarSet -> GHC.Num.Int -> InScopeSet.
+Inductive InScopeSet : Type := InScope : VarSet -> nat -> InScopeSet.
 
 Definition InScopeEnv :=
   (InScopeSet * IdUnfoldingFun)%type%type.
@@ -794,8 +860,7 @@ Inductive CoreRule : Type
      list CoreBndr ->
      list CoreExpr ->
      CoreExpr -> bool -> Module.Module -> IsOrphan -> bool -> CoreRule
-  |  BuiltinRule
-   : BasicTypes.RuleName -> Name.Name -> GHC.Num.Int -> RuleFun -> CoreRule.
+  |  BuiltinRule : BasicTypes.RuleName -> Name.Name -> nat -> RuleFun -> CoreRule.
 
 Definition RuleBase :=
   (NameEnv.NameEnv (list CoreRule))%type.
@@ -815,6 +880,22 @@ Arguments HpcTick {_} _ _.
 Arguments Breakpoint {_} _ _.
 
 Arguments SourceNote {_} _ _.
+
+Arguments Diverges {_}.
+
+Arguments ThrowsExn {_}.
+
+Arguments Dunno {_} _.
+
+Arguments JD {_} {_} _ _.
+
+Arguments Lazy {_}.
+
+Arguments Mk_Str {_} _ _.
+
+Arguments Abs {_}.
+
+Arguments Mk_Use {_} _ _.
 
 Arguments TB {_} _ _.
 
@@ -872,6 +953,9 @@ Instance Default__UnfoldingSource : GHC.Err.Default UnfoldingSource :=
 Instance Default__UnfoldingGuidance : GHC.Err.Default UnfoldingGuidance :=
   GHC.Err.Build_Default _ UnfNever.
 
+Instance Default__TypeShape : GHC.Err.Default TypeShape :=
+  GHC.Err.Build_Default _ TsUnk.
+
 Instance Default__TyConFlavour : GHC.Err.Default TyConFlavour :=
   GHC.Err.Build_Default _ ClassFlavour.
 
@@ -920,8 +1004,22 @@ Instance Default__ExportFlag : GHC.Err.Default ExportFlag :=
 Instance Default__IdScope : GHC.Err.Default IdScope :=
   GHC.Err.Build_Default _ GlobalId.
 
+Instance Default__ExnStr : GHC.Err.Default ExnStr :=
+  GHC.Err.Build_Default _ VanStr.
+
+Instance Default__Count : GHC.Err.Default Count := GHC.Err.Build_Default _ One.
+
 Instance Default__CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
+
+Instance Default__CPRResult : GHC.Err.Default CPRResult :=
+  GHC.Err.Build_Default _ NoCPR.
+
+Instance Default__UseDmd : GHC.Err.Default UseDmd :=
+  GHC.Err.Build_Default _ UHead.
+
+Instance Default__StrDmd : GHC.Err.Default StrDmd :=
+  GHC.Err.Build_Default _ HyperStr.
 
 Instance Default__ArgFlag : GHC.Err.Default ArgFlag :=
   GHC.Err.Build_Default _ Required.
@@ -1135,6 +1233,26 @@ Definition tickModule {id} (arg_0__ : Tickish id) :=
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `tickModule' has no match in constructor `SourceNote' of type `Tickish'")
   end.
+
+Definition kf_abs (arg_0__ : KillFlags) :=
+  let 'Mk_KillFlags kf_abs _ _ := arg_0__ in
+  kf_abs.
+
+Definition kf_called_once (arg_0__ : KillFlags) :=
+  let 'Mk_KillFlags _ _ kf_called_once := arg_0__ in
+  kf_called_once.
+
+Definition kf_used_once (arg_0__ : KillFlags) :=
+  let 'Mk_KillFlags _ kf_used_once _ := arg_0__ in
+  kf_used_once.
+
+Definition sd {s} {u} (arg_0__ : JointDmd s u) :=
+  let 'JD sd _ := arg_0__ in
+  sd.
+
+Definition ud {s} {u} (arg_0__ : JointDmd s u) :=
+  let 'JD _ ud := arg_0__ in
+  ud.
 
 Definition arityInfo (arg_0__ : IdInfo) :=
   let 'Mk_IdInfo arityInfo _ _ _ _ _ _ _ _ _ _ := arg_0__ in
@@ -2210,6 +2328,8 @@ Definition in_scope (arg_0__ : RnEnv2) :=
   in_scope.
 (* Midamble *)
 
+(*  IdInfo: midamble *)
+
 Require GHC.Err.
 
 Inductive UnfoldingInfo : Type
@@ -2234,6 +2354,26 @@ Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
 
 Instance Default_CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
+
+
+
+Instance Default_Termination {r} : GHC.Err.Default (Termination r) :=
+  GHC.Err.Build_Default _ Diverges.
+
+Instance Default_DmdType : GHC.Err.Default DmdType :=
+  GHC.Err.Build_Default _ (Mk_DmdType GHC.Err.default GHC.Err.default GHC.Err.default).
+
+
+Instance Default_StrictSig : GHC.Err.Default StrictSig :=
+  GHC.Err.Build_Default _ (Mk_StrictSig GHC.Err.default).
+
+Instance Default_JointDmd `{GHC.Err.Default a} `{GHC.Err.Default b} : GHC.Err.Default (JointDmd a b) :=
+  GHC.Err.Build_Default _ (JD GHC.Err.default GHC.Err.default).
+
+Instance Default_Str {s} : GHC.Err.Default (Str s) :=
+  GHC.Err.Build_Default _ Lazy.
+Instance Default_Use {s} : GHC.Err.Default (Use s) :=
+  GHC.Err.Build_Default _ Abs.
 
 Instance Default_IdInfo : GHC.Err.Default IdInfo :=
   GHC.Err.Build_Default _ (Mk_IdInfo GHC.Err.default GHC.Err.default GHC.Err.default
@@ -2343,7 +2483,7 @@ Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
 Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
-           GHC.Num.Int -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
+           nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
 
 Require Import Omega.
 
@@ -2538,6 +2678,96 @@ Definition exprToType : CoreExpr -> Core.Type_ :=
 Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
   fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg). *)
 
+(* DEMAND midamble file *)
+
+Require Import GHC.Nat.
+Require Import Omega.
+Ltac solve_not_zero := match goal with 
+  | [ H : GHC.Base.op_zeze__ ?x ?y = false |- _ ] => 
+    unfold GHC.Base.op_zeze__, Eq_nat in H; simpl in H; apply EqNat.beq_nat_false in H
+end; omega.
+
+
+
+Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=
+  Prim.Build_Unpeel _ _ (fun x => match x with | Mk_StrictSig y => y end) Mk_StrictSig.
+
+(* Definitions that we cannot process, see edits file for details. *)
+
+Axiom lubUse : UseDmd -> UseDmd -> UseDmd.
+Axiom lubArgUse :  Use UseDmd ->  Use UseDmd ->  Use UseDmd.
+Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
+Axiom bothArgUse :  Use UseDmd ->  Use UseDmd ->  Use UseDmd.
+
+(*
+Axiom bothStr : StrDmd -> StrDmd -> StrDmd.
+Axiom lubStr : StrDmd -> StrDmd -> StrDmd.
+Axiom splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type.
+Axiom postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv.
+Axiom peelManyCalls : GHC.Num.Int -> CleanDemand -> DmdShell.
+Axiom toCleanDmd : Demand -> unit -> (DmdShell * CleanDemand)%type.
+Axiom trimToType : Demand -> TypeShape -> Demand.
+Axiom dmdTransformDictSelSig : StrictSig -> CleanDemand -> DmdType.
+Axiom strictifyDictDmd : unit -> Demand -> Demand.
+Axiom dmdTransformDataConSig  : BasicTypes.Arity -> StrictSig -> CleanDemand -> DmdType.
+Axiom addCaseBndrDmd : Demand -> list Demand -> list Demand.
+Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
+Axiom zap_usg : KillFlags -> UseDmd -> UseDmd.
+*)
+
+(* Example of successful mutual recursion. Not sure that we can automate this *)
+(*
+Definition isUsedMU' isUsedU (au : ArgUse) : bool :=
+    match au with
+      | Abs => true
+      | Mk_Use One _ => false
+      | Mk_Use Many u => isUsedU u
+    end.
+
+Fixpoint isUsedU (ud : UseDmd) : bool :=
+    match ud with
+      | Used => true
+      | UHead => true
+      | UProd us => Data.Foldable.all (isUsedMU' isUsedU) us
+      | UCall One _ => false
+      | UCall Many _ => true
+    end.
+
+Definition isUsedMU := isUsedMU' isUsedU.
+
+Definition markReusedDmd' markReused : ArgUse -> ArgUse :=
+  fun arg_258__ =>
+    match arg_258__ with
+      | Abs => Abs
+      | Mk_Use _ a => Mk_Use Many (markReused a)
+    end.
+
+Fixpoint markReused (x : UseDmd) : UseDmd :=
+    match x with
+      | UCall _ u => UCall Many u
+      | UProd ux => UProd (GHC.Base.map (markReusedDmd' markReused) ux)
+      | u => u
+    end.
+Definition markReusedDmd := markReusedDmd' markReused.
+*)
+
+(* size metric, incase it is useful *)
+
+Definition Str_size {a} (f : a -> nat) (x : Str a) : nat :=
+  match x with
+  | Lazy => 0
+  | Mk_Str _ s => f s
+  end.
+
+Fixpoint StrDmd_size (s1 : StrDmd): nat :=
+  match s1 with
+  | HyperStr => 0
+  | SCall s => Nat.add 1 (StrDmd_size s)
+  | SProd ss => List.fold_left Nat.add (List.map (Str_size StrDmd_size) ss) 1
+  | HeadStr => 0
+  end.
+
+Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
 
@@ -2873,6 +3103,259 @@ Program Instance Eq___SrcStrictness : GHC.Base.Eq_ SrcStrictness :=
          GHC.Base.op_zsze____ := Eq___SrcStrictness_op_zsze__ |}.
 
 (* Skipping instance Data__HsImplBang of class Data *)
+
+(* Skipping instance Outputable__StrictSig of class Outputable *)
+
+(* Skipping instance Binary__StrictSig of class Binary *)
+
+(* Skipping instance Outputable__DmdType of class Outputable *)
+
+(* Skipping instance Binary__DmdType of class Binary *)
+
+(* Skipping instance Binary__DmdResult of class Binary *)
+
+(* Skipping instance Outputable__CPRResult of class Outputable *)
+
+(* Skipping instance Binary__CPRResult of class Binary *)
+
+(* Skipping instance Outputable__Termination of class Outputable *)
+
+(* Skipping instance Outputable__TypeShape of class Outputable *)
+
+(* Skipping instance Outputable__ArgUse of class Outputable *)
+
+(* Skipping instance Outputable__UseDmd of class Outputable *)
+
+(* Skipping instance Binary__ArgUse of class Binary *)
+
+(* Skipping instance Binary__UseDmd of class Binary *)
+
+(* Skipping instance Outputable__Count of class Outputable *)
+
+(* Skipping instance Binary__Count of class Binary *)
+
+(* Skipping instance Outputable__StrDmd of class Outputable *)
+
+(* Skipping instance Outputable__ArgStr of class Outputable *)
+
+(* Skipping instance Binary__StrDmd of class Binary *)
+
+(* Skipping instance Binary__ArgStr of class Binary *)
+
+(* Skipping instance Binary__ExnStr of class Binary *)
+
+(* Skipping instance Outputable__JointDmd of class Outputable *)
+
+(* Skipping instance Binary__JointDmd of class Binary *)
+
+(* Skipping instance Show__CPRResult of class Show *)
+
+Local Definition Eq___CPRResult_op_zeze__ : CPRResult -> CPRResult -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NoCPR, NoCPR => true
+    | RetProd, RetProd => true
+    | RetSum a1, RetSum b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
+    end.
+
+Local Definition Eq___CPRResult_op_zsze__ : CPRResult -> CPRResult -> bool :=
+  fun x y => negb (Eq___CPRResult_op_zeze__ x y).
+
+Program Instance Eq___CPRResult : GHC.Base.Eq_ CPRResult :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___CPRResult_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___CPRResult_op_zsze__ |}.
+
+(* Skipping instance Show__Termination of class Show *)
+
+Local Definition Eq___Termination_op_zeze__ {inst_r} `{GHC.Base.Eq_ inst_r}
+   : Termination inst_r -> Termination inst_r -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Diverges, Diverges => true
+    | ThrowsExn, ThrowsExn => true
+    | Dunno a1, Dunno b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
+    end.
+
+Local Definition Eq___Termination_op_zsze__ {inst_r} `{GHC.Base.Eq_ inst_r}
+   : Termination inst_r -> Termination inst_r -> bool :=
+  fun x y => negb (Eq___Termination_op_zeze__ x y).
+
+Program Instance Eq___Termination {r} `{GHC.Base.Eq_ r}
+   : GHC.Base.Eq_ (Termination r) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Termination_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Termination_op_zsze__ |}.
+
+(* Skipping instance Show__UseDmd of class Show *)
+
+(* Skipping instance Show__Use of class Show *)
+
+(* Skipping instance Show__Count of class Show *)
+
+Local Definition Eq___Count_op_zeze__ : Count -> Count -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | One, One => true
+    | Many, Many => true
+    | _, _ => false
+    end.
+
+Local Definition Eq___Count_op_zsze__ : Count -> Count -> bool :=
+  fun x y => negb (Eq___Count_op_zeze__ x y).
+
+Program Instance Eq___Count : GHC.Base.Eq_ Count :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Count_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Count_op_zsze__ |}.
+
+Local Definition Eq___Use_op_zeze__ {inst_u} `{GHC.Base.Eq_ inst_u}
+   : Use inst_u -> Use inst_u -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Abs, Abs => true
+    | Mk_Use a1 a2, Mk_Use b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | _, _ => false
+    end.
+
+Local Definition Eq___Use_op_zsze__ {inst_u} `{GHC.Base.Eq_ inst_u}
+   : Use inst_u -> Use inst_u -> bool :=
+  fun x y => negb (Eq___Use_op_zeze__ x y).
+
+Program Instance Eq___Use {u} `{GHC.Base.Eq_ u} : GHC.Base.Eq_ (Use u) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Use_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Use_op_zsze__ |}.
+
+Local Definition Eq___UseDmd_op_zeze__ : UseDmd -> UseDmd -> bool :=
+  fix UseDmd_eq x y
+        := let eq' : GHC.Base.Eq_ UseDmd := GHC.Base.eq_default UseDmd_eq in
+           match x, y with
+           | UCall a1 a2, UCall b1 b2 => andb (a1 GHC.Base.== b1) (a2 GHC.Base.== b2)
+           | UProd a1, UProd b1 => a1 GHC.Base.== b1
+           | UHead, UHead => true
+           | Used, Used => true
+           | _, _ => false
+           end.
+
+Local Definition Eq___UseDmd_op_zsze__ : UseDmd -> UseDmd -> bool :=
+  fun x y => negb (Eq___UseDmd_op_zeze__ x y).
+
+Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___UseDmd_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___UseDmd_op_zsze__ |}.
+
+(* Skipping instance Show__StrDmd of class Show *)
+
+(* Skipping instance Show__Str of class Show *)
+
+(* Skipping instance Show__ExnStr of class Show *)
+
+Local Definition Eq___ExnStr_op_zeze__ : ExnStr -> ExnStr -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | VanStr, VanStr => true
+    | Mk_ExnStr, Mk_ExnStr => true
+    | _, _ => false
+    end.
+
+Local Definition Eq___ExnStr_op_zsze__ : ExnStr -> ExnStr -> bool :=
+  fun x y => negb (Eq___ExnStr_op_zeze__ x y).
+
+Program Instance Eq___ExnStr : GHC.Base.Eq_ ExnStr :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___ExnStr_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___ExnStr_op_zsze__ |}.
+
+Local Definition Eq___Str_op_zeze__ {inst_s} `{GHC.Base.Eq_ inst_s}
+   : Str inst_s -> Str inst_s -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Lazy, Lazy => true
+    | Mk_Str a1 a2, Mk_Str b1 b2 =>
+        (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    | _, _ => false
+    end.
+
+Local Definition Eq___Str_op_zsze__ {inst_s} `{GHC.Base.Eq_ inst_s}
+   : Str inst_s -> Str inst_s -> bool :=
+  fun x y => negb (Eq___Str_op_zeze__ x y).
+
+Program Instance Eq___Str {s} `{GHC.Base.Eq_ s} : GHC.Base.Eq_ (Str s) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Str_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Str_op_zsze__ |}.
+
+Local Definition Eq___StrDmd_op_zeze__ : StrDmd -> StrDmd -> bool :=
+  fix StrDmd_eq x y
+        := let eq' : GHC.Base.Eq_ StrDmd := GHC.Base.eq_default StrDmd_eq in
+           match x, y with
+           | HyperStr, HyperStr => true
+           | SCall a1, SCall b1 => a1 GHC.Base.== b1
+           | SProd a1, SProd b1 => a1 GHC.Base.== b1
+           | HeadStr, HeadStr => true
+           | _, _ => false
+           end.
+
+Local Definition Eq___StrDmd_op_zsze__ : StrDmd -> StrDmd -> bool :=
+  fun x y => negb (Eq___StrDmd_op_zeze__ x y).
+
+Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___StrDmd_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___StrDmd_op_zsze__ |}.
+
+(* Skipping instance Show__JointDmd of class Show *)
+
+Local Definition Eq___JointDmd_op_zeze__ {inst_s} {inst_u} `{GHC.Base.Eq_
+  inst_s} `{GHC.Base.Eq_ inst_u}
+   : JointDmd inst_s inst_u -> JointDmd inst_s inst_u -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD a1 a2, JD b1 b2 => (andb ((a1 GHC.Base.== b1)) ((a2 GHC.Base.== b2)))
+    end.
+
+Local Definition Eq___JointDmd_op_zsze__ {inst_s} {inst_u} `{GHC.Base.Eq_
+  inst_s} `{GHC.Base.Eq_ inst_u}
+   : JointDmd inst_s inst_u -> JointDmd inst_s inst_u -> bool :=
+  fun x y => negb (Eq___JointDmd_op_zeze__ x y).
+
+Program Instance Eq___JointDmd {s} {u} `{GHC.Base.Eq_ s} `{GHC.Base.Eq_ u}
+   : GHC.Base.Eq_ (JointDmd s u) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___JointDmd_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___JointDmd_op_zsze__ |}.
+
+Local Definition Eq___DmdType_op_zeze__ : DmdType -> DmdType -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_DmdType fv1 ds1 res1, Mk_DmdType fv2 ds2 res2 =>
+        andb (UniqFM.nonDetUFMToList fv1 GHC.Base.== UniqFM.nonDetUFMToList fv2) (andb
+              (ds1 GHC.Base.== ds2) (res1 GHC.Base.== res2))
+    end.
+
+Local Definition Eq___DmdType_op_zsze__ : DmdType -> DmdType -> bool :=
+  fun x y => negb (Eq___DmdType_op_zeze__ x y).
+
+Program Instance Eq___DmdType : GHC.Base.Eq_ DmdType :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___DmdType_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___DmdType_op_zsze__ |}.
+
+Local Definition Eq___StrictSig_op_zeze__ : StrictSig -> StrictSig -> bool :=
+  GHC.Prim.coerce _GHC.Base.==_.
+
+Local Definition Eq___StrictSig_op_zsze__ : StrictSig -> StrictSig -> bool :=
+  GHC.Prim.coerce _GHC.Base./=_.
+
+Program Instance Eq___StrictSig : GHC.Base.Eq_ StrictSig :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___StrictSig_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___StrictSig_op_zsze__ |}.
 
 (* Skipping instance Outputable__LevityInfo of class Outputable *)
 
@@ -3213,6 +3696,15 @@ Program Instance Eq___ArgFlag : GHC.Base.Eq_ ArgFlag :=
 
 (* Skipping instance Outputable__InScopeSet of class Outputable *)
 
+Definition absDmd : Demand :=
+  JD Lazy Abs.
+
+Definition addDemand : Demand -> DmdType -> DmdType :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | dmd, Mk_DmdType fv ds res => Mk_DmdType fv (cons dmd ds) res
+    end.
+
 Definition algTyConRhs : TyCon -> AlgTyConRhs :=
   fun arg_0__ =>
     match arg_0__ with
@@ -3244,6 +3736,40 @@ Definition anyDVarSet : (Var -> bool) -> DVarSet -> bool :=
 Definition anyVarSet : (Var -> bool) -> VarSet -> bool :=
   UniqSet.uniqSetAny.
 
+Definition argOneShots : Demand -> list BasicTypes.OneShotInfo :=
+  fun '(JD _ usg) =>
+    let fix go arg_1__
+              := match arg_1__ with
+                 | UCall One u => cons BasicTypes.OneShotLam (go u)
+                 | UCall Many u => cons BasicTypes.NoOneShotInfo (go u)
+                 | _ => nil
+                 end in
+    match usg with
+    | Mk_Use _ arg_usg => go arg_usg
+    | _ => nil
+    end.
+
+Definition argsOneShots
+   : StrictSig -> nat -> list (list BasicTypes.OneShotInfo) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_StrictSig (Mk_DmdType _ arg_ds _), n_val_args =>
+        let cons_ :=
+          fun arg_2__ arg_3__ =>
+            match arg_2__, arg_3__ with
+            | nil, nil => nil
+            | a, as_ => cons a as_
+            end in
+        let fix go arg_6__
+                  := match arg_6__ with
+                     | nil => nil
+                     | cons arg_d arg_ds => cons_ (argOneShots arg_d) (go arg_ds)
+                     end in
+        let unsaturated_call := Util.lengthExceeds arg_ds n_val_args in
+        if unsaturated_call : bool then nil else
+        go arg_ds
+    end.
+
 Definition binderArgFlag {tv} {argf} : TyVarBndr tv argf -> argf :=
   fun '(TvBndr _ argf) => argf.
 
@@ -3263,14 +3789,14 @@ Definition mkFamilyTyCon
      option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon :=
   fun name binders res_kind resVar flav parent inj =>
     FamilyTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-                (Data.Foldable.length binders) resVar flav parent inj.
+                (Coq.Lists.List.length binders) resVar flav parent inj.
 
 Definition mkSynonymTyCon
    : Name.Name ->
      list TyConBinder -> unit -> list unit -> unit -> bool -> bool -> TyCon :=
   fun name binders res_kind roles rhs is_tau is_fam_free =>
     SynonymTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind
-                 tt (Data.Foldable.length binders) roles rhs is_tau is_fam_free.
+                 tt (Coq.Lists.List.length binders) roles rhs is_tau is_fam_free.
 
 Definition mkTcTyCon
    : Name.Name ->
@@ -3278,16 +3804,15 @@ Definition mkTcTyCon
      unit -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon :=
   fun name binders res_kind scoped_tvs flav =>
     TcTyCon (Unique.getUnique name) name binders (binderVars binders) res_kind tt
-            (Data.Foldable.length binders) scoped_tvs flav.
+            (Coq.Lists.List.length binders) scoped_tvs flav.
 
 Definition mkTupleTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit ->
-     BasicTypes.Arity -> DataCon -> BasicTypes.TupleSort -> AlgTyConFlav -> TyCon :=
+     unit -> nat -> DataCon -> BasicTypes.TupleSort -> AlgTyConFlav -> TyCon :=
   fun name binders res_kind arity con sort parent =>
     AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-             arity (GHC.List.replicate arity tt) None false nil (TupleTyCon con sort)
+             arity (Coq.Lists.List.repeat tt arity) None false nil (TupleTyCon con sort)
              FastStringEnv.emptyDFsEnv parent.
 
 Definition patSynExTyVars : PatSyn -> list TyVar :=
@@ -3321,10 +3846,31 @@ Definition boringCxtNotOk : bool :=
 Definition boringCxtOk : bool :=
   true.
 
+Definition botRes : DmdResult :=
+  Diverges.
+
+Definition bothDmdResult : DmdResult -> Termination unit -> DmdResult :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, Diverges => Diverges
+    | r, ThrowsExn => match r with | Diverges => r | _ => ThrowsExn end
+    | r, Dunno _ => r
+    end.
+
+Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_ExnStr, Mk_ExnStr => Mk_ExnStr
+    | _, _ => VanStr
+    end.
+
 Axiom canUnfold : forall {A : Type}, A.
 
 (* Translating `canUnfold' failed: using a record pattern for the unknown
    constructor `CoreUnfolding' unsupported *)
+
+Definition catchArgDmd : Demand :=
+  JD (Mk_Str Mk_ExnStr (SCall HeadStr)) (Mk_Use One (UCall One Used)).
 
 Definition checkRecTc : RecTcChecker -> TyCon -> option RecTcChecker :=
   fun arg_0__ arg_1__ =>
@@ -3361,8 +3907,8 @@ Definition classATs : Class -> list TyCon :=
     | _ => nil
     end.
 
-Definition classArity : Class -> BasicTypes.Arity :=
-  fun clas => Data.Foldable.length (classTyVars clas).
+Definition classArity : Class -> nat :=
+  fun clas => Coq.Lists.List.length (classTyVars clas).
 
 Definition classBigSig
    : Class -> (list TyVar * list unit * list Id * list ClassOpItem)%type :=
@@ -3429,6 +3975,12 @@ Definition classSCTheta : Class -> list unit :=
 
 Definition classTvsFds : Class -> (list TyVar * list (FunDep TyVar))%type :=
   fun c => pair (classTyVars c) (classFunDeps c).
+
+Definition cleanEvalDmd : CleanDemand :=
+  JD HeadStr Used.
+
+Definition cleanUseDmd_maybe : Demand -> option UseDmd :=
+  fun arg_0__ => match arg_0__ with | JD _ (Mk_Use _ u) => Some u | _ => None end.
 
 Definition coVarDetails : IdDetails :=
   CoVarId.
@@ -3501,20 +4053,25 @@ Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
                  end in
     go nil expr.
 
-Definition collectNBinders {b}
-   : GHC.Num.Int -> Expr b -> (list b * Expr b)%type :=
+Definition collectNBinders {b} : nat -> Expr b -> (list b * Expr b)%type :=
   fun orig_n orig_expr =>
     let fix go arg_0__ arg_1__ arg_2__
               := match arg_0__, arg_1__, arg_2__ with
                  | num_3__, bs, expr =>
                      if num_3__ GHC.Base.== #0 : bool then pair (GHC.List.reverse bs) expr else
                      match arg_0__, arg_1__, arg_2__ with
-                     | n, bs, Lam b e => go (n GHC.Num.- #1) (cons b bs) e
+                     | n, bs, Lam b e => go (Nat.pred n) (cons b bs) e
                      | _, _, _ =>
                          Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Panic.noString orig_n)
                      end
                  end in
     go orig_n nil orig_expr.
+
+Definition cprProdRes : list DmdType -> DmdResult :=
+  fun _arg_tys => Dunno RetProd.
+
+Definition cprSumRes : BasicTypes.ConTag -> DmdResult :=
+  fun tag => Dunno (RetSum tag).
 
 Definition dVarEnvElts {a} : DVarEnv a -> list a :=
   UniqDFM.eltsUDFM.
@@ -3560,7 +4117,7 @@ Definition dataConFullSig
 Definition dataConImplBangs : DataCon -> list HsImplBang :=
   fun dc =>
     match dcRep dc with
-    | NoDataConRep => GHC.List.replicate (dcSourceArity dc) HsLazy
+    | NoDataConRep => Coq.Lists.List.repeat HsLazy (dcSourceArity dc)
     | DCR _ _ _ _ bangs => bangs
     end.
 
@@ -3570,7 +4127,7 @@ Definition dataConIsInfix : DataCon -> bool :=
 Definition dataConName : DataCon -> Name.Name :=
   dcName.
 
-Definition dataConRepArity : DataCon -> BasicTypes.Arity :=
+Definition dataConRepArity : DataCon -> nat :=
   fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _ _) => arity.
 
 Definition isNullaryRepDataCon : DataCon -> bool :=
@@ -3579,7 +4136,7 @@ Definition isNullaryRepDataCon : DataCon -> bool :=
 Definition dataConRepType : DataCon -> unit :=
   dcRepType.
 
-Definition dataConSourceArity : DataCon -> BasicTypes.Arity :=
+Definition dataConSourceArity : DataCon -> nat :=
   fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _) => arity.
 
 Definition isNullarySrcDataCon : DataCon -> bool :=
@@ -3847,6 +4404,15 @@ Definition nukeRnEnvR : RnEnv2 -> RnEnv2 :=
 Definition emptyTidyEnv : TidyEnv :=
   pair OccName.emptyTidyOccEnv emptyVarEnv.
 
+Definition emptyDmdEnv : VarEnv Demand :=
+  emptyVarEnv.
+
+Definition botDmdType : DmdType :=
+  Mk_DmdType emptyDmdEnv nil botRes.
+
+Definition botSig : StrictSig :=
+  Mk_StrictSig botDmdType.
+
 Definition emptyVarSet : VarSet :=
   UniqSet.emptyUniqSet.
 
@@ -3879,6 +4445,15 @@ Definition eqSpecType : EqSpec -> unit :=
 Definition evaldUnfolding : Unfolding :=
   (fun x => getUnfolding (OtherCon x)) nil.
 
+Definition exnRes : DmdResult :=
+  ThrowsExn.
+
+Definition exnDmdType : DmdType :=
+  Mk_DmdType emptyDmdEnv nil exnRes.
+
+Definition exnSig : StrictSig :=
+  Mk_StrictSig exnDmdType.
+
 Definition expandSynTyCon_maybe {tyco}
    : TyCon ->
      list tyco -> option (list (TyVar * tyco)%type * unit * list tyco)%type :=
@@ -3886,7 +4461,8 @@ Definition expandSynTyCon_maybe {tyco}
     match tc with
     | SynonymTyCon _ _ _ tvs _ _ arity _ rhs _ _ =>
         match Util.listLengthCmp tys arity with
-        | Gt => Some (pair (pair (GHC.List.zip tvs tys) rhs) (GHC.List.drop arity tys))
+        | Gt =>
+            Some (pair (pair (GHC.List.zip tvs tys) rhs) (Coq.Lists.List.skipn arity tys))
         | Eq => Some (pair (pair (GHC.List.zip tvs tys) rhs) nil)
         | Lt => None
         end
@@ -3945,7 +4521,7 @@ Definition extendInScopeSetList : InScopeSet -> list Var -> InScopeSet :=
     | InScope in_scope n, vs =>
         InScope (Data.Foldable.foldl (fun s v => extendVarSet s v) in_scope vs) (n
                                                                                  GHC.Num.+
-                                                                                 Data.Foldable.length vs)
+                                                                                 Coq.Lists.List.length vs)
     end.
 
 Definition delBndrsR : RnEnv2 -> list Var -> RnEnv2 :=
@@ -4038,6 +4614,12 @@ Definition foldDVarSet {a} : (Var -> a -> a) -> a -> DVarSet -> a :=
 Definition getInScopeVars : InScopeSet -> VarSet :=
   fun '(InScope vs _) => vs.
 
+Definition getStrDmd {s} {u} : JointDmd s u -> s :=
+  sd.
+
+Definition getUseDmd {s} {u} : JointDmd s u -> u :=
+  ud.
+
 Definition globaliseId : Id -> Id :=
   fun id =>
     match id with
@@ -4080,6 +4662,9 @@ Definition intersectDVarSet : DVarSet -> DVarSet -> DVarSet :=
 
 Definition intersectVarSet : VarSet -> VarSet -> VarSet :=
   UniqSet.intersectUniqSets.
+
+Definition isAbsDmd : Demand -> bool :=
+  fun arg_0__ => match arg_0__ with | JD _ Abs => true | _ => false end.
 
 Definition isAbstractClass : Class -> bool :=
   fun arg_0__ =>
@@ -4134,6 +4719,25 @@ Definition isBootUnfolding : Unfolding -> bool :=
     match getUnfoldingInfo arg_0__ with
     | BootUnfolding => true
     | _ => false
+    end.
+
+Definition isBotRes : DmdResult -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Diverges => true
+    | ThrowsExn => true
+    | Dunno _ => false
+    end.
+
+Definition isBottomingSig : StrictSig -> bool :=
+  fun '(Mk_StrictSig (Mk_DmdType _ _ res)) => isBotRes res.
+
+Definition appIsBottom : StrictSig -> nat -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_StrictSig (Mk_DmdType _ ds res), n =>
+        if isBotRes res : bool then negb (Util.lengthExceeds ds n) else
+        false
     end.
 
 Definition isBoxedTupleTyCon : TyCon -> bool :=
@@ -4259,6 +4863,9 @@ Definition isEmptyVarEnv {a} : VarEnv a -> bool :=
 Definition intersectsVarEnv {a} : VarEnv a -> VarEnv a -> bool :=
   fun e1 e2 => negb (isEmptyVarEnv (UniqFM.intersectUFM e1 e2)).
 
+Definition hasDemandEnvSig : StrictSig -> bool :=
+  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (isEmptyVarEnv env).
+
 Definition isEmptyVarSet : VarSet -> bool :=
   UniqSet.isEmptyUniqSet.
 
@@ -4356,13 +4963,16 @@ Definition isLocalVar : Var -> bool :=
 Definition mustHaveLocalBinding : Var -> bool :=
   fun var => isLocalVar var.
 
+Definition isHyperStr : ArgStr -> bool :=
+  fun arg_0__ => match arg_0__ with | Mk_Str _ HyperStr => true | _ => false end.
+
 Definition isId : Var -> bool :=
   fun arg_0__ => match arg_0__ with | Mk_Id _ _ _ _ _ _ => true | _ => false end.
 
 Definition isRuntimeVar : Var -> bool :=
   isId.
 
-Definition valBndrCount : list CoreBndr -> GHC.Num.Int :=
+Definition valBndrCount : list CoreBndr -> nat :=
   Util.count isId.
 
 Definition collectValBinders : CoreExpr -> (list Id * CoreExpr)%type :=
@@ -4399,6 +5009,58 @@ Definition isJoinIdDetails_maybe : IdDetails -> option BasicTypes.JoinArity :=
     match arg_0__ with
     | Mk_JoinId join_arity => Some join_arity
     | _ => None
+    end.
+
+Definition isLazy : ArgStr -> bool :=
+  fun arg_0__ => match arg_0__ with | Lazy => true | Mk_Str _ _ => false end.
+
+Definition mkSProd : list ArgStr -> StrDmd :=
+  fun sx =>
+    if Data.Foldable.any isHyperStr sx : bool then HyperStr else
+    if Data.Foldable.all isLazy sx : bool then HeadStr else
+    SProd sx.
+
+Definition bothStr : StrDmd -> StrDmd -> StrDmd :=
+  fix bothStr arg_0__ arg_1__
+        := let bothArgStr arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | Lazy, s => s
+             | s, Lazy => s
+             | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (bothExnStr x1 x2) (bothStr s1 s2)
+             end in
+           match arg_0__, arg_1__ with
+           | HyperStr, _ => HyperStr
+           | HeadStr, s => s
+           | SCall _, HyperStr => HyperStr
+           | SCall s1, HeadStr => SCall s1
+           | SCall s1, SCall s2 => SCall (bothStr s1 s2)
+           | SCall _, SProd _ => HyperStr
+           | SProd _, HyperStr => HyperStr
+           | SProd s1, HeadStr => SProd s1
+           | SProd s1, SProd s2 =>
+               if Util.equalLength s1 s2 then mkSProd (GHC.List.zipWith bothArgStr s1 s2) else
+                  HyperStr
+           | SProd _, SCall _ => HyperStr
+           end.
+
+Definition bothCleanDmd : CleanDemand -> CleanDemand -> CleanDemand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD s1 a1, JD s2 a2 => JD (bothStr s1 s2) (bothUse a1 a2)
+    end.
+
+Definition bothArgStr : ArgStr -> ArgStr -> ArgStr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Lazy, s => s
+    | s, Lazy => s
+    | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (bothExnStr x1 x2) (bothStr s1 s2)
+    end.
+
+Definition bothDmd : Demand -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD s1 a1, JD s2 a2 => JD (bothArgStr s1 s2) (bothArgUse a1 a2)
     end.
 
 Definition isLocalId : Var -> bool :=
@@ -4488,6 +5150,13 @@ Definition isPromotedDataCon_maybe : TyCon -> option DataCon :=
     | _ => None
     end.
 
+Definition isSeqDmd : Demand -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | JD (Mk_Str VanStr HeadStr) (Mk_Use _ UHead) => true
+    | _ => false
+    end.
+
 Definition isSrcStrict : SrcStrictness -> bool :=
   fun arg_0__ => match arg_0__ with | SrcStrict => true | _ => false end.
 
@@ -4506,6 +5175,14 @@ Axiom isStableUnfolding : forall {A : Type}, A.
 
 (* Translating `isStableUnfolding' failed: using a record pattern for the
    unknown constructor `CoreUnfolding' unsupported *)
+
+Definition isStrictDmd : Demand -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | JD _ Abs => false
+    | JD Lazy _ => false
+    | _ => true
+    end.
 
 Definition isTauTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -4537,6 +5214,28 @@ Definition isTcTyCon : TyCon -> bool :=
 
 Definition isTcTyVar : Var -> bool :=
   fun arg_0__ => match arg_0__ with | Mk_TcTyVar _ _ _ _ => true | _ => false end.
+
+Definition isTopDmd : Demand -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | JD Lazy (Mk_Use Many Used) => true
+    | _ => false
+    end.
+
+Definition isTopRes : DmdResult -> bool :=
+  fun arg_0__ => match arg_0__ with | Dunno NoCPR => true | _ => false end.
+
+Definition isTopDmdType : DmdType -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_DmdType env nil res =>
+        if andb (isTopRes res) (isEmptyVarEnv env) : bool then true else
+        false
+    | _ => false
+    end.
+
+Definition isTopSig : StrictSig -> bool :=
+  fun '(Mk_StrictSig ty) => isTopDmdType ty.
 
 Definition isTupleTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -4605,7 +5304,7 @@ Definition isTypeArg {b} : Expr b -> bool :=
 Definition isValArg {b} : Expr b -> bool :=
   fun e => negb (isTypeArg e).
 
-Definition valArgCount {b} : list (Arg b) -> GHC.Num.Int :=
+Definition valArgCount {b} : list (Arg b) -> nat :=
   Util.count isValArg.
 
 Definition isRuntimeArg : CoreExpr -> bool :=
@@ -4671,6 +5370,33 @@ Definition isUnliftedTyCon : TyCon -> bool :=
     | _ => j_2__
     end.
 
+Definition isUsedU : UseDmd -> bool :=
+  fix isUsedU arg_0__
+        := let isUsedMU arg_0__ :=
+             match arg_0__ with
+             | Abs => true
+             | Mk_Use One _ => false
+             | Mk_Use Many u => isUsedU u
+             end in
+           match arg_0__ with
+           | Used => true
+           | UHead => true
+           | UProd us => Data.Foldable.all isUsedMU us
+           | UCall One _ => false
+           | UCall Many _ => true
+           end.
+
+Definition isUsedMU : ArgUse -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Abs => true
+    | Mk_Use One _ => false
+    | Mk_Use Many u => isUsedU u
+    end.
+
+Definition isWeakDmd : Demand -> bool :=
+  fun '(JD s a) => andb (isLazy s) (isUsedMU a).
+
 Axiom isValueUnfolding : forall {A : Type}, A.
 
 (* Translating `isValueUnfolding' failed: using a record pattern for the unknown
@@ -4715,6 +5441,20 @@ Definition isInvisibleArgFlag : ArgFlag -> bool :=
 
 Definition isVoidRep : PrimRep -> bool :=
   fun arg_0__ => match arg_0__ with | VoidRep => true | _other => false end.
+
+Definition killFlags : DynFlags.DynFlags -> option KillFlags :=
+  fun dflags =>
+    let kf_used_once := DynFlags.gopt DynFlags.Opt_KillOneShot dflags in
+    let kf_called_once := kf_used_once in
+    let kf_abs := DynFlags.gopt DynFlags.Opt_KillAbsence dflags in
+    if andb (negb kf_abs) (negb kf_used_once) : bool then None else
+    Some (Mk_KillFlags kf_abs kf_used_once kf_called_once).
+
+Definition lazyApply1Dmd : Demand :=
+  JD Lazy (Mk_Use One (UCall One Used)).
+
+Definition lazyApply2Dmd : Demand :=
+  JD Lazy (Mk_Use One (UCall One (UCall One Used))).
 
 Definition lazySetIdInfo : Id -> IdInfo -> Var :=
   fun id info =>
@@ -4808,6 +5548,81 @@ Definition lookupInScope_Directly : InScopeSet -> Unique.Unique -> option Var :=
 Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> Var -> a :=
   UniqFM.lookupWithDefaultUFM.
 
+Definition lubCPR : CPRResult -> CPRResult -> CPRResult :=
+  fun arg_0__ arg_1__ =>
+    let j_2__ :=
+      match arg_0__, arg_1__ with
+      | RetProd, RetProd => RetProd
+      | _, _ => NoCPR
+      end in
+    match arg_0__, arg_1__ with
+    | RetSum t1, RetSum t2 => if t1 GHC.Base.== t2 : bool then RetSum t1 else j_2__
+    | _, _ => j_2__
+    end.
+
+Definition lubDmdResult : DmdResult -> DmdResult -> DmdResult :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Diverges, r => r
+    | ThrowsExn, Diverges => ThrowsExn
+    | ThrowsExn, r => r
+    | Dunno c1, Diverges => Dunno c1
+    | Dunno c1, ThrowsExn => Dunno c1
+    | Dunno c1, Dunno c2 => Dunno (lubCPR c1 c2)
+    end.
+
+Definition lubCount : Count -> Count -> Count :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, Many => Many
+    | Many, _ => Many
+    | x, _ => x
+    end.
+
+Definition lubExnStr : ExnStr -> ExnStr -> ExnStr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | VanStr, VanStr => VanStr
+    | _, _ => Mk_ExnStr
+    end.
+
+Definition lubStr : StrDmd -> StrDmd -> StrDmd :=
+  fix lubStr arg_0__ arg_1__
+        := let lubArgStr arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | Lazy, _ => Lazy
+             | _, Lazy => Lazy
+             | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (lubExnStr x1 x2) (lubStr s1 s2)
+             end in
+           match arg_0__, arg_1__ with
+           | HyperStr, s => s
+           | SCall s1, HyperStr => SCall s1
+           | SCall _, HeadStr => HeadStr
+           | SCall s1, SCall s2 => SCall (lubStr s1 s2)
+           | SCall _, SProd _ => HeadStr
+           | SProd sx, HyperStr => SProd sx
+           | SProd _, HeadStr => HeadStr
+           | SProd s1, SProd s2 =>
+               if Util.equalLength s1 s2 then mkSProd (GHC.List.zipWith lubArgStr s1 s2) else
+                  HeadStr
+           | SProd _, SCall _ => HeadStr
+           | HeadStr, _ => HeadStr
+           end.
+
+Definition lubArgStr : ArgStr -> ArgStr -> ArgStr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Lazy, _ => Lazy
+    | _, Lazy => Lazy
+    | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (lubExnStr x1 x2) (lubStr s1 s2)
+    end.
+
+Definition lubDmd : Demand -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD s1 a1, JD s2 a2 => JD (lubArgStr s1 s2) (lubArgUse a1 a2)
+    end.
+
 Definition mapDVarEnv {a} {b} : (a -> b) -> DVarEnv a -> DVarEnv b :=
   UniqDFM.mapUDFM.
 
@@ -4817,6 +5632,70 @@ Definition mapVarEnv {a} {b} : (a -> b) -> VarEnv a -> VarEnv b :=
 Definition mapVarSet {b} {a} `{Unique.Uniquable b}
    : (a -> b) -> UniqSet.UniqSet a -> UniqSet.UniqSet b :=
   UniqSet.mapUniqSet.
+
+Definition markExnStr : ArgStr -> ArgStr :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_Str VanStr s => Mk_Str Mk_ExnStr s
+    | s => s
+    end.
+
+Definition markReused : UseDmd -> UseDmd :=
+  fix markReused arg_0__
+        := let markReusedDmd arg_0__ :=
+             match arg_0__ with
+             | Abs => Abs
+             | Mk_Use _ a => Mk_Use Many (markReused a)
+             end in
+           match arg_0__ with
+           | UCall _ u => UCall Many u
+           | UProd ux => UProd (GHC.Base.map markReusedDmd ux)
+           | u => u
+           end.
+
+Definition markReusedDmd : ArgUse -> ArgUse :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Abs => Abs
+    | Mk_Use _ a => Mk_Use Many (markReused a)
+    end.
+
+Definition postProcessDmd : DmdShell -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | JD ss us, JD s a =>
+        let a' :=
+          match us with
+          | Abs => Abs
+          | Mk_Use Many _ => markReusedDmd a
+          | Mk_Use One _ => a
+          end in
+        let s' :=
+          match ss with
+          | Lazy => Lazy
+          | Mk_Str Mk_ExnStr _ => markExnStr s
+          | Mk_Str VanStr _ => s
+          end in
+        JD s' a'
+    end.
+
+Definition reuseEnv : DmdEnv -> DmdEnv :=
+  mapVarEnv (postProcessDmd (JD (Mk_Str VanStr tt) (Mk_Use Many tt))).
+
+Definition postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (JD ss us as ds), env =>
+        match us with
+        | Abs => emptyDmdEnv
+        | _ =>
+            let j_2__ := mapVarEnv (postProcessDmd ds) env in
+            match ss with
+            | Mk_Str VanStr _ => match us with | Mk_Use One _ => env | _ => j_2__ end
+            | _ => j_2__
+            end
+        end
+    end.
 
 Definition mayHaveCafRefs : CafInfo -> bool :=
   fun arg_0__ => match arg_0__ with | MayHaveCafRefs => true | _ => false end.
@@ -4878,6 +5757,9 @@ Definition mkConApp2 {b} : DataCon -> list unit -> list Var -> Expr b :=
     mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map Type_ tys))
            (GHC.Base.map varToCoreExpr arg_ids).
 
+Definition mkBothDmdArg : DmdEnv -> BothDmdArg :=
+  fun env => pair env (Dunno tt).
+
 Definition mkCharLit {b} : GHC.Char.Char -> Expr b :=
   fun c => Lit (Literal.mkMachChar c).
 
@@ -4912,6 +5794,9 @@ Definition mkDVarEnv {a} : list (Var * a)%type -> DVarEnv a :=
 Definition mkDVarSet : list Var -> DVarSet :=
   UniqDSet.mkUniqDSet.
 
+Definition mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType :=
+  fun fv ds res => Mk_DmdType fv ds res.
+
 Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
   fun d => Lit (Literal.mkMachDouble d).
 
@@ -4923,11 +5808,21 @@ Definition mkFloatLit {b} : GHC.Real.Rational -> Expr b :=
 
 Definition mkFunTyCon : Name.Name -> list TyConBinder -> Name.Name -> TyCon :=
   fun name binders rep_nm =>
-    FunTyCon (Name.nameUnique name) name binders tt tt (Data.Foldable.length
+    FunTyCon (Name.nameUnique name) name binders tt tt (Coq.Lists.List.length
               binders) rep_nm.
+
+Definition mkHeadStrict : CleanDemand -> CleanDemand :=
+  fun '(JD sd_0__ ud_1__) => JD HeadStr ud_1__.
 
 Definition mkInScopeSet : VarSet -> InScopeSet :=
   fun in_scope => InScope in_scope #1.
+
+Definition mkJointDmd {s} {u} : s -> u -> JointDmd s u :=
+  fun s u => JD s u.
+
+Definition mkJointDmds {s} {u} : list s -> list u -> list (JointDmd s u) :=
+  fun ss as_ =>
+    Util.zipWithEqual (GHC.Base.hs_string__ "mkJointDmds") mkJointDmd ss as_.
 
 Definition mkLams {b} : list b -> Expr b -> Expr b :=
   fun binders body => Data.Foldable.foldr Lam body binders.
@@ -4952,11 +5847,17 @@ Definition mkLetRec {b} : list (b * Expr b)%type -> Expr b -> Expr b :=
     | bs, body => Let (Rec bs) body
     end.
 
+Definition mkManyUsedDmd : CleanDemand -> Demand :=
+  fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use Many a).
+
 Definition mkNamedTyConBinder : ArgFlag -> TyVar -> TyConBinder :=
   fun vis tv => TvBndr tv (NamedTCB vis).
 
 Definition mkNamedTyConBinders : ArgFlag -> list TyVar -> list TyConBinder :=
   fun vis tvs => GHC.Base.map (mkNamedTyConBinder vis) tvs.
+
+Definition mkOnceUsedDmd : CleanDemand -> Demand :=
+  fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use One a).
 
 Definition mkOtherCon : list AltCon -> Unfolding :=
   fun x => getUnfolding (OtherCon x).
@@ -4989,16 +5890,16 @@ Definition mkPatSyn
     , matcher
     , builder
     , field_labels =>
-        MkPatSyn name (Unique.getUnique name) orig_args (Data.Foldable.length orig_args)
-                 declared_infix field_labels univ_tvs req_theta ex_tvs prov_theta orig_res_ty
-                 matcher builder
+        MkPatSyn name (Unique.getUnique name) orig_args (Coq.Lists.List.length
+                  orig_args) declared_infix field_labels univ_tvs req_theta ex_tvs prov_theta
+                 orig_res_ty matcher builder
     end.
 
 Definition mkPrimTyCon'
    : Name.Name ->
      list TyConBinder -> unit -> list unit -> bool -> option TyConRepName -> TyCon :=
   fun name binders res_kind roles is_unlifted rep_nm =>
-    PrimTyCon (Name.nameUnique name) name binders res_kind tt (Data.Foldable.length
+    PrimTyCon (Name.nameUnique name) name binders res_kind tt (Coq.Lists.List.length
                roles) roles is_unlifted rep_nm.
 
 Definition mkKindTyCon
@@ -5013,10 +5914,34 @@ Definition mkPromotedDataCon
      list TyConBinder -> unit -> list unit -> RuntimeRepInfo -> TyCon :=
   fun con name rep_name binders res_kind roles rep_info =>
     PromotedDataCon (Name.nameUnique name) name binders res_kind tt
-                    (Data.Foldable.length roles) roles con rep_name rep_info.
+                    (Coq.Lists.List.length roles) roles con rep_name rep_info.
 
 Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
   fun rules vis_orphs => Mk_RuleEnv rules (Module.mkModuleSet vis_orphs).
+
+Definition mkSCall : StrDmd -> StrDmd :=
+  fun arg_0__ => match arg_0__ with | HyperStr => HyperStr | s => SCall s end.
+
+Definition mkStrictSig : DmdType -> StrictSig :=
+  fun dmd_ty => Mk_StrictSig dmd_ty.
+
+Definition mkClosedStrictSig : list Demand -> DmdResult -> StrictSig :=
+  fun ds res => mkStrictSig (Mk_DmdType emptyDmdEnv ds res).
+
+Definition zapUsageEnvSig : StrictSig -> StrictSig :=
+  fun '(Mk_StrictSig (Mk_DmdType _ ds r)) => mkClosedStrictSig ds r.
+
+Definition zapUsageEnvInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    if hasDemandEnvSig (strictnessInfo info) : bool
+    then Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
+                  cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                  demandInfo_8__ callArityInfo_9__ levityInfo_10__ := info in
+               Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                         oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ (zapUsageEnvSig (strictnessInfo
+                                                                                         info)) demandInfo_8__
+                         callArityInfo_9__ levityInfo_10__) else
+    None.
 
 Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
   fun s => Lit (Literal.mkMachString s).
@@ -5024,11 +5949,10 @@ Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
 Definition mkSumTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit ->
-     BasicTypes.Arity -> list TyVar -> list DataCon -> AlgTyConFlav -> TyCon :=
+     unit -> nat -> list TyVar -> list DataCon -> AlgTyConFlav -> TyCon :=
   fun name binders res_kind arity tyvars cons_ parent =>
     AlgTyCon (Name.nameUnique name) name binders tyvars res_kind tt arity
-             (GHC.List.replicate arity tt) None false nil (SumTyCon cons_)
+             (Coq.Lists.List.repeat tt arity) None false nil (SumTyCon cons_)
              FastStringEnv.emptyDFsEnv parent.
 
 Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
@@ -5065,6 +5989,33 @@ Definition tyConTyVarBinders : list TyConBinder -> list TyVarBinder :=
           end in
         mkTyVarBinder vis tv in
     GHC.Base.map mk_binder tc_bndrs.
+
+Definition mkUCall : Count -> UseDmd -> UseDmd :=
+  fun c a => UCall c a.
+
+Program Definition mkWorkerDemand : nat -> Demand :=
+          fun n =>
+            let go :=
+              GHC.Wf.wfFix1 Coq.Init.Peano.lt (fun arg_0__ => arg_0__) _ (fun arg_0__ go =>
+                               let 'num_1__ := arg_0__ in
+                               if Bool.Sumbool.sumbool_of_bool (num_1__ GHC.Base.== #0) then Used else
+                               let 'n := arg_0__ in
+                               mkUCall One (go (Nat.pred n))) in
+            JD Lazy (Mk_Use One (go n)).
+Admit Obligations.
+
+Definition mkCallDmd : CleanDemand -> CleanDemand :=
+  fun '(JD d u) => JD (mkSCall d) (mkUCall One u).
+
+Definition mkUProd : list ArgUse -> UseDmd :=
+  fun ux =>
+    if Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.== Abs) ux : bool
+    then UHead else
+    UProd ux.
+
+Definition mkProdDmd : list Demand -> CleanDemand :=
+  fun dx =>
+    JD (mkSProd (GHC.Base.map getStrDmd dx)) (mkUProd (GHC.Base.map getUseDmd dx)).
 
 Definition mkVarEnv {a} : list (Var * a)%type -> VarEnv a :=
   UniqFM.listToUFM.
@@ -5128,11 +6079,11 @@ Definition newTyConDataCon_maybe : TyCon -> option DataCon :=
     | _ => None
     end.
 
-Definition newTyConEtadArity : TyCon -> GHC.Num.Int :=
+Definition newTyConEtadArity : TyCon -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ (NewTyCon _ _ tvs_rhs _) _ _ =>
-        Data.Foldable.length (Data.Tuple.fst tvs_rhs)
+        Coq.Lists.List.length (Data.Tuple.fst tvs_rhs)
     | tycon =>
         Panic.panicStr (GHC.Base.hs_string__ "newTyConEtadArity") (Panic.noString tycon)
     end.
@@ -5159,6 +6110,13 @@ Definition noUnfolding : Unfolding :=
 Definition notOrphan : IsOrphan -> bool :=
   fun arg_0__ => match arg_0__ with | NotOrphan _ => true | _ => false end.
 
+Definition oneifyDmd : Demand -> Demand :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | JD s (Mk_Use _ a) => JD s (Mk_Use One a)
+    | jd => jd
+    end.
+
 Definition otherCons : Unfolding -> list AltCon :=
   fun arg_0__ =>
     match getUnfoldingInfo arg_0__ with
@@ -5178,6 +6136,24 @@ Definition partitionVarEnv {a}
    : (a -> bool) -> VarEnv a -> (VarEnv a * VarEnv a)%type :=
   UniqFM.partitionUFM.
 
+Definition splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type :=
+  fun is_thunk rhs_fvs =>
+    let add :=
+      fun arg_0__ arg_1__ arg_2__ =>
+        match arg_0__, arg_1__, arg_2__ with
+        | uniq, (JD s u as dmd), pair lazy_fv sig_fv =>
+            match s with
+            | Lazy => pair (UniqFM.addToUFM_Directly lazy_fv uniq dmd) sig_fv
+            | _ =>
+                pair (UniqFM.addToUFM_Directly lazy_fv uniq (JD Lazy u))
+                     (UniqFM.addToUFM_Directly sig_fv uniq (JD s Abs))
+            end
+        end in
+    if is_thunk : bool
+    then UniqFM.nonDetFoldUFM_Directly add (pair emptyVarEnv emptyVarEnv)
+         rhs_fvs else
+    partitionVarEnv isWeakDmd rhs_fvs.
+
 Definition partitionVarSet
    : (Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
   UniqSet.partitionUniqSet.
@@ -5185,7 +6161,7 @@ Definition partitionVarSet
 Definition patSynArgs : PatSyn -> list unit :=
   psArgs.
 
-Definition patSynArity : PatSyn -> BasicTypes.Arity :=
+Definition patSynArity : PatSyn -> nat :=
   psArity.
 
 Definition patSynBuilder : PatSyn -> option (Id * bool)%type :=
@@ -5231,6 +6207,54 @@ Program Instance NamedThing__PatSyn : Name.NamedThing PatSyn :=
 Definition patSynUnivTyVarBinders : PatSyn -> list TyVarBinder :=
   psUnivTyVars.
 
+Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
+  fun '(JD s u) =>
+    let 'pair u' us := (match u with
+                          | UCall c u' => pair u' (Mk_Use c tt)
+                          | _ => pair Used (Mk_Use Many tt)
+                          end) in
+    let 'pair s' ss := (match s with
+                          | SCall s' => pair s' (Mk_Str VanStr tt)
+                          | HyperStr => pair HyperStr (Mk_Str VanStr tt)
+                          | _ => pair HeadStr Lazy
+                          end) in
+    pair (JD s' u') (JD ss us).
+
+Definition peelManyCalls : nat -> CleanDemand -> DmdShell :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, JD str abs =>
+        let go_abs : nat -> UseDmd -> Use unit :=
+          fix go_abs arg_2__ arg_3__
+                := match arg_2__, arg_3__ with
+                   | num_4__, _ =>
+                       if num_4__ GHC.Base.== #0 : bool then Mk_Use One tt else
+                       match arg_2__, arg_3__ with
+                       | n, UCall One d' => go_abs (Nat.pred n) d'
+                       | _, _ => Mk_Use Many tt
+                       end
+                   end in
+        let go_str : nat -> StrDmd -> Str unit :=
+          fix go_str arg_10__ arg_11__
+                := match arg_10__, arg_11__ with
+                   | num_12__, _ =>
+                       if num_12__ GHC.Base.== #0 : bool then Mk_Str VanStr tt else
+                       match arg_10__, arg_11__ with
+                       | _, HyperStr => Mk_Str VanStr tt
+                       | n, SCall d' => go_str (Nat.pred n) d'
+                       | _, _ => Lazy
+                       end
+                   end in
+        JD (go_str n str) (go_abs n abs)
+    end.
+
+Definition peelUseCall : UseDmd -> option (Count * UseDmd)%type :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | UCall c u => Some (pair c u)
+    | _ => None
+    end.
+
 Definition plusDVarEnv {a} : DVarEnv a -> DVarEnv a -> DVarEnv a :=
   UniqDFM.plusUDFM.
 
@@ -5259,7 +6283,7 @@ Definition pprPromotionQuote : TyCon -> GHC.Base.String :=
     | _ => Panic.someSDoc
     end.
 
-Definition primElemRepSizeB : PrimElemRep -> GHC.Num.Int :=
+Definition primElemRepSizeB : PrimElemRep -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | Int8ElemRep => #1
@@ -5274,7 +6298,7 @@ Definition primElemRepSizeB : PrimElemRep -> GHC.Num.Int :=
     | DoubleElemRep => #8
     end.
 
-Definition primRepSizeB : DynFlags.DynFlags -> PrimRep -> GHC.Num.Int :=
+Definition primRepSizeB : DynFlags.DynFlags -> PrimRep -> nat :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | dflags, IntRep => DynFlags.wORD_SIZE dflags
@@ -5301,6 +6325,17 @@ Definition primRepIsFloat : PrimRep -> option bool :=
 
 Definition promoteDataCon : DataCon -> TyCon :=
   fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ tc) => tc.
+
+Definition retCPR_maybe : CPRResult -> option BasicTypes.ConTag :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | RetSum t => Some t
+    | RetProd => Some BasicTypes.fIRST_TAG
+    | NoCPR => None
+    end.
+
+Definition returnsCPR_maybe : DmdResult -> option BasicTypes.ConTag :=
+  fun arg_0__ => match arg_0__ with | Dunno c => retCPR_maybe c | _ => None end.
 
 Definition rhssOfAlts {b} : list (Alt b) -> list (Expr b) :=
   fun alts =>
@@ -5335,11 +6370,11 @@ Definition ruleActivation : CoreRule -> BasicTypes.Activation :=
     | Rule _ act _ _ _ _ _ _ _ _ _ => act
     end.
 
-Definition ruleArity : CoreRule -> GHC.Num.Int :=
+Definition ruleArity : CoreRule -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | BuiltinRule _ _ n _ => n
-    | Rule _ _ _ _ _ args _ _ _ _ _ => Data.Foldable.length args
+    | Rule _ _ _ _ _ args _ _ _ _ _ => Coq.Lists.List.length args
     end.
 
 Definition ruleIdName : CoreRule -> Name.Name :=
@@ -5363,6 +6398,67 @@ Definition sameVis : ArgFlag -> ArgFlag -> bool :=
     | _, Required => false
     | _, _ => true
     end.
+
+Definition saturatedByOneShots : nat -> Demand -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, JD _ usg =>
+        let fix go arg_2__ arg_3__
+                  := match arg_2__, arg_3__ with
+                     | num_4__, _ =>
+                         if num_4__ GHC.Base.== #0 : bool then true else
+                         match arg_2__, arg_3__ with
+                         | n, UCall One u => go (Nat.pred n) u
+                         | _, _ => false
+                         end
+                     end in
+        match usg with
+        | Mk_Use _ arg_usg => go n arg_usg
+        | _ => false
+        end
+    end.
+
+Definition seqArgStr : ArgStr -> unit :=
+  fun x => tt.
+
+Definition seqArgUse : ArgUse -> unit :=
+  fun x => tt.
+
+Definition seqArgUseList : list ArgUse -> unit :=
+  fun x => tt.
+
+Definition seqCPRResult : CPRResult -> unit :=
+  fun x => tt.
+
+Definition seqDemand : Demand -> unit :=
+  fun x => tt.
+
+Definition seqDemandList : list Demand -> unit :=
+  fun x => tt.
+
+Definition seqDmd : Demand :=
+  JD (Mk_Str VanStr HeadStr) (Mk_Use One UHead).
+
+Definition seqDmdEnv : DmdEnv -> unit :=
+  fun x => tt.
+
+Definition seqDmdResult : DmdResult -> unit :=
+  fun x => tt.
+
+Definition seqDmdType : DmdType -> unit :=
+  fun x => tt.
+
+Definition seqStrDmd : StrDmd -> unit :=
+  fun x => tt.
+
+Definition seqStrDmdList : list ArgStr -> unit :=
+  fun x => tt.
+
+Definition seqStrictSig : StrictSig -> unit :=
+  fun x => tt.
+
+Definition seqUseDmd : UseDmd -> unit :=
+  fun x => tt.
 
 Definition setArityInfo : IdInfo -> ArityInfo -> IdInfo :=
   fun info ar =>
@@ -5394,7 +6490,7 @@ Definition setCallArityInfo : IdInfo -> ArityInfo -> IdInfo :=
 Definition zapCallArityInfo : IdInfo -> IdInfo :=
   fun info => setCallArityInfo info #0.
 
-Definition setDemandInfo : IdInfo -> unit -> IdInfo :=
+Definition setDemandInfo : IdInfo -> Demand -> IdInfo :=
   fun info dd =>
     GHC.Prim.seq dd (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
                         cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
@@ -5521,7 +6617,7 @@ Definition setRuleInfo : IdInfo -> RuleInfo -> IdInfo :=
                             inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
                             callArityInfo_9__ levityInfo_10__).
 
-Definition setStrictnessInfo : IdInfo -> unit -> IdInfo :=
+Definition setStrictnessInfo : IdInfo -> StrictSig -> IdInfo :=
   fun info dd =>
     GHC.Prim.seq dd (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
                         cafInfo_3__ oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
@@ -5685,17 +6781,58 @@ Definition rnEtaR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
                   (extendInScopeSet in_scope new_b)) new_b
     end.
 
-Definition sizeDVarSet : DVarSet -> GHC.Num.Int :=
+Definition sizeDVarSet : DVarSet -> nat :=
   UniqDSet.sizeUniqDSet.
 
 Definition seqDVarSet : DVarSet -> unit :=
   fun s => GHC.Prim.seq (sizeDVarSet s) tt.
 
-Definition sizeVarSet : VarSet -> GHC.Num.Int :=
+Definition sizeVarSet : VarSet -> nat :=
   UniqSet.sizeUniqSet.
 
 Definition seqVarSet : VarSet -> unit :=
   fun s => GHC.Prim.seq (sizeVarSet s) tt.
+
+Definition splitStrictSig : StrictSig -> (list Demand * DmdResult)%type :=
+  fun '(Mk_StrictSig (Mk_DmdType _ dmds res)) => pair dmds res.
+
+Definition strBot : ArgStr :=
+  Mk_Str VanStr HyperStr.
+
+Definition strTop : ArgStr :=
+  Lazy.
+
+Definition splitStrProdDmd : nat -> StrDmd -> option (list ArgStr) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, HyperStr => Some (Coq.Lists.List.repeat strBot n)
+    | n, HeadStr => Some (Coq.Lists.List.repeat strTop n)
+    | n, SProd ds =>
+        Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
+                            "ghc/compiler/basicTypes/Demand.hs") #359 (Panic.someSDoc) (Some ds)
+    | _, SCall _ => None
+    end.
+
+Definition splitArgStrProdDmd : nat -> ArgStr -> option (list ArgStr) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, Lazy => Some (Coq.Lists.List.repeat Lazy n)
+    | n, Mk_Str _ s => splitStrProdDmd n s
+    end.
+
+Definition strictApply1Dmd : Demand :=
+  JD (Mk_Str VanStr (SCall HeadStr)) (Mk_Use Many (UCall One Used)).
+
+Definition strictSigDmdEnv : StrictSig -> DmdEnv :=
+  fun '(Mk_StrictSig (Mk_DmdType env _ _)) => env.
+
+Definition strictenDmd : Demand -> CleanDemand :=
+  fun '(JD s u) =>
+    let poke_u :=
+      fun arg_1__ => match arg_1__ with | Abs => UHead | Mk_Use _ u => u end in
+    let poke_s :=
+      fun arg_3__ => match arg_3__ with | Lazy => HeadStr | Mk_Str _ s => s end in
+    JD (poke_s s) (poke_u u).
 
 Definition synTyConDefn_maybe : TyCon -> option (list TyVar * unit)%type :=
   fun arg_0__ =>
@@ -5784,6 +6921,34 @@ Definition tidyPatSynIds : (Id -> Id) -> PatSyn -> PatSyn :=
                   builder)
     end.
 
+Definition toBothDmdArg : DmdType -> BothDmdArg :=
+  fun '(Mk_DmdType fv _ r) =>
+    let go :=
+      fun arg_1__ =>
+        match arg_1__ with
+        | Dunno _ => Dunno tt
+        | ThrowsExn => ThrowsExn
+        | Diverges => Diverges
+        end in
+    pair fv (go r).
+
+Definition trimCPRInfo : bool -> bool -> DmdResult -> DmdResult :=
+  fun trim_all trim_sums res =>
+    let trimC :=
+      fun arg_0__ =>
+        match arg_0__ with
+        | RetSum n => if orb trim_all trim_sums : bool then NoCPR else RetSum n
+        | RetProd => if trim_all : bool then NoCPR else RetProd
+        | NoCPR => NoCPR
+        end in
+    let trimR :=
+      fun arg_5__ =>
+        match arg_5__ with
+        | Dunno c => Dunno (trimC c)
+        | res => res
+        end in
+    trimR res.
+
 Definition tyConBinderArgFlag : TyConBinder -> ArgFlag :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5853,15 +7018,15 @@ Definition tyConFamilyResVar_maybe : TyCon -> option Name.Name :=
     | _ => None
     end.
 
-Definition tyConFamilySize : TyCon -> GHC.Num.Int :=
+Definition tyConFamilySize : TyCon -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | (AlgTyCon _ _ _ _ _ _ _ _ _ _ _ rhs _ _ as tc) =>
         match rhs with
-        | DataTyCon cons_ _ => Data.Foldable.length cons_
+        | DataTyCon cons_ _ => Coq.Lists.List.length cons_
         | NewTyCon _ _ _ _ => #1
         | TupleTyCon _ _ => #1
-        | SumTyCon cons_ => Data.Foldable.length cons_
+        | SumTyCon cons_ => Coq.Lists.List.length cons_
         | _ =>
             Panic.panicStr (GHC.Base.hs_string__ "tyConFamilySize 1") (Panic.noString tc)
         end
@@ -5869,7 +7034,7 @@ Definition tyConFamilySize : TyCon -> GHC.Num.Int :=
         Panic.panicStr (GHC.Base.hs_string__ "tyConFamilySize 2") (Panic.noString tc)
     end.
 
-Definition tyConFamilySizeAtMost : TyCon -> GHC.Num.Int -> bool :=
+Definition tyConFamilySizeAtMost : TyCon -> nat -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (AlgTyCon _ _ _ _ _ _ _ _ _ _ _ rhs _ _ as tc), n =>
@@ -5980,7 +7145,7 @@ Definition tyConRepName_maybe : TyCon -> option TyConRepName :=
 
 Definition tyConRoles : TyCon -> list unit :=
   fun tc =>
-    let const_role := fun r => GHC.List.replicate (tyConArity tc) r in
+    let const_role := fun r => Coq.Lists.List.repeat r (tyConArity tc) in
     match tc with
     | FunTyCon _ _ _ _ _ _ _ => const_role tt
     | AlgTyCon _ _ _ _ _ _ _ roles _ _ _ _ _ _ => roles
@@ -6152,7 +7317,7 @@ Definition unitVarEnv {a} : Var -> a -> VarEnv a :=
 Definition unitVarSet : Var -> VarSet :=
   UniqSet.unitUniqSet.
 
-Definition unknownArity : BasicTypes.Arity :=
+Definition unknownArity : nat :=
   #0.
 
 Definition unwrapNewTyConEtad_maybe
@@ -6201,19 +7366,331 @@ Definition updateVarTypeM {m} `{GHC.Base.Monad m}
                              Mk_Id varName_7__ realUnique_8__ ty' idScope_10__ id_details_11__ id_info_12__
                          end)).
 
+Definition useBot : ArgUse :=
+  Abs.
+
+Definition botDmd : Demand :=
+  JD strBot useBot.
+
+Definition defaultDmd {r} : Termination r -> Demand :=
+  fun arg_0__ => match arg_0__ with | Dunno _ => absDmd | _ => botDmd end.
+
+Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_DmdType fv1 ds1 r1, pair fv2 t2 =>
+        Mk_DmdType (plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd t2)) ds1
+        (bothDmdResult r1 t2)
+    end.
+
+Definition findIdDemand : DmdType -> Var -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_DmdType fv _ res, id => Maybes.orElse (lookupVarEnv fv id) (defaultDmd res)
+    end.
+
+Definition peelFV : DmdType -> Var -> (DmdType * Demand)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_DmdType fv ds res, id =>
+        let dmd := Maybes.orElse (lookupVarEnv fv id) (defaultDmd res) in
+        let fv' := delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
+    end.
+
+Definition useCount {u} : Use u -> Count :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Abs => One
+    | Mk_Use One _ => One
+    | _ => Many
+    end.
+
+Definition isUsedOnce : Demand -> bool :=
+  fun '(JD _ a) => match useCount a with | One => true | Many => false end.
+
+Definition useTop : ArgUse :=
+  Mk_Use Many Used.
+
+Definition topDmd : Demand :=
+  JD Lazy useTop.
+
+Definition zapDemandInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+             callArityInfo_9__ levityInfo_10__ := info in
+          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ topDmd
+                    callArityInfo_9__ levityInfo_10__).
+
+Definition zapLamInfo : IdInfo -> option IdInfo :=
+  fun '((Mk_IdInfo _ _ _ _ _ _ occ _ demand _ _ as info)) =>
+    let is_safe_dmd := fun dmd => negb (isStrictDmd dmd) in
+    let safe_occ :=
+      match occ with
+      | BasicTypes.OneOcc _ _ _ _ =>
+          match occ with
+          | BasicTypes.ManyOccs _ =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          | BasicTypes.IAmDead =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          | BasicTypes.OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__
+          occ_tail_5__ =>
+              BasicTypes.OneOcc true occ_one_br_3__ occ_int_cxt_4__ BasicTypes.NoTailCallInfo
+          | BasicTypes.IAmALoopBreaker _ _ =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          end
+      | BasicTypes.IAmALoopBreaker _ _ =>
+          match occ with
+          | BasicTypes.ManyOccs occ_tail_12__ =>
+              BasicTypes.ManyOccs BasicTypes.NoTailCallInfo
+          | BasicTypes.IAmDead =>
+              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+          | BasicTypes.OneOcc occ_in_lam_13__ occ_one_br_14__ occ_int_cxt_15__
+          occ_tail_16__ =>
+              BasicTypes.OneOcc occ_in_lam_13__ occ_one_br_14__ occ_int_cxt_15__
+                                BasicTypes.NoTailCallInfo
+          | BasicTypes.IAmALoopBreaker occ_rules_only_17__ occ_tail_18__ =>
+              BasicTypes.IAmALoopBreaker occ_rules_only_17__ BasicTypes.NoTailCallInfo
+          end
+      | _other => occ
+      end in
+    let is_safe_occ :=
+      fun arg_27__ =>
+        let 'occ := arg_27__ in
+        if BasicTypes.isAlwaysTailCalled occ : bool then false else
+        match arg_27__ with
+        | BasicTypes.OneOcc in_lam _ _ _ => in_lam
+        | _other => true
+        end in
+    if andb (is_safe_occ occ) (is_safe_dmd demand) : bool then None else
+    Some (let 'Mk_IdInfo arityInfo_31__ ruleInfo_32__ unfoldingInfo_33__
+             cafInfo_34__ oneShotInfo_35__ inlinePragInfo_36__ occInfo_37__
+             strictnessInfo_38__ demandInfo_39__ callArityInfo_40__ levityInfo_41__ :=
+            info in
+          Mk_IdInfo arityInfo_31__ ruleInfo_32__ unfoldingInfo_33__ cafInfo_34__
+                    oneShotInfo_35__ inlinePragInfo_36__ safe_occ strictnessInfo_38__ topDmd
+                    callArityInfo_40__ levityInfo_41__).
+
+Definition increaseStrictSigArity : nat -> StrictSig -> StrictSig :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | arity_increase, Mk_StrictSig (Mk_DmdType env dmds res) =>
+        Mk_StrictSig (Mk_DmdType env (Coq.Init.Datatypes.app (Coq.Lists.List.repeat
+                                                              topDmd arity_increase) dmds) res)
+    end.
+
+Definition resTypeArgDmd {r} : Termination r -> Demand :=
+  fun arg_0__ => match arg_0__ with | Dunno _ => topDmd | _ => botDmd end.
+
+Definition topRes : DmdResult :=
+  Dunno NoCPR.
+
+Definition postProcessDmdResult : Str unit -> DmdResult -> DmdResult :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Lazy, _ => topRes
+    | Mk_Str Mk_ExnStr _, ThrowsExn => topRes
+    | _, res => res
+    end.
+
+Definition postProcessDmdType : DmdShell -> DmdType -> BothDmdArg :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (JD ss _ as du), Mk_DmdType fv _ res_ty =>
+        let term_info :=
+          match postProcessDmdResult ss res_ty with
+          | Dunno _ => Dunno tt
+          | ThrowsExn => ThrowsExn
+          | Diverges => Diverges
+          end in
+        pair (postProcessDmdEnv du fv) term_info
+    end.
+
+Definition postProcessUnsat : DmdShell -> DmdType -> DmdType :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (JD ss _ as ds), Mk_DmdType fv args res_ty =>
+        Mk_DmdType (postProcessDmdEnv ds fv) (GHC.Base.map (postProcessDmd ds) args)
+        (postProcessDmdResult ss res_ty)
+    end.
+
+Definition dmdTransformSig : StrictSig -> CleanDemand -> DmdType :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_StrictSig (Mk_DmdType _ arg_ds _ as dmd_ty), cd =>
+        postProcessUnsat (peelManyCalls (Coq.Lists.List.length arg_ds) cd) dmd_ty
+    end.
+
+Definition nopDmdType : DmdType :=
+  Mk_DmdType emptyDmdEnv nil topRes.
+
+Definition nopSig : StrictSig :=
+  Mk_StrictSig nopDmdType.
+
+Definition dmdTypeDepth : DmdType -> nat :=
+  fun '(Mk_DmdType _ ds _) => Coq.Lists.List.length ds.
+
+Definition ensureArgs : nat -> DmdType -> DmdType :=
+  fun n d =>
+    let 'Mk_DmdType fv ds r := d in
+    let ds' :=
+      Coq.Lists.List.firstn n (app ds (Coq.Lists.List.repeat (resTypeArgDmd r) n)) in
+    let r' := match r with | Dunno _ => topRes | _ => r end in
+    let depth := dmdTypeDepth d in
+    if n GHC.Base.== depth : bool then d else
+    Mk_DmdType fv ds' r'.
+
+Definition removeDmdTyArgs : DmdType -> DmdType :=
+  ensureArgs #0.
+
+Definition lubDmdType : DmdType -> DmdType -> DmdType :=
+  fun d1 d2 =>
+    let n := GHC.Base.max (dmdTypeDepth d1) (dmdTypeDepth d2) in
+    let 'Mk_DmdType fv1 ds1 r1 := ensureArgs n d1 in
+    let 'Mk_DmdType fv2 ds2 r2 := ensureArgs n d2 in
+    let lub_fv := plusVarEnv_CD lubDmd fv1 (defaultDmd r1) fv2 (defaultDmd r2) in
+    let lub_ds :=
+      Util.zipWithEqual (GHC.Base.hs_string__ "lubDmdType") lubDmd ds1 ds2 in
+    let lub_res := lubDmdResult r1 r2 in Mk_DmdType lub_fv lub_ds lub_res.
+
+Definition deferAfterIO : DmdType -> DmdType :=
+  fun '((Mk_DmdType _ _ res as d)) =>
+    let defer_res :=
+      fun arg_1__ => match arg_1__ with | (Dunno _ as r) => r | _ => topRes end in
+    let 'Mk_DmdType fv ds _ := lubDmdType d nopDmdType in
+    Mk_DmdType fv ds (defer_res res).
+
+Definition splitDmdTy : DmdType -> (Demand * DmdType)%type :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_DmdType fv (cons dmd dmds) res_ty => pair dmd (Mk_DmdType fv dmds res_ty)
+    | (Mk_DmdType _ nil res_ty as ty) => pair (resTypeArgDmd res_ty) ty
+    end.
+
+Definition splitUseProdDmd : nat -> UseDmd -> option (list ArgUse) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | n, Used => Some (Coq.Lists.List.repeat useTop n)
+    | n, UHead => Some (Coq.Lists.List.repeat Abs n)
+    | n, UProd ds =>
+        Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
+                            "ghc/compiler/basicTypes/Demand.hs") #645 (Panic.someSDoc) (Some ds)
+    | _, UCall _ _ => None
+    end.
+
+Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
+  fun '(JD s u) =>
+    let scrut_1__ := pair s u in
+    let j_3__ :=
+      match scrut_1__ with
+      | pair Lazy (Mk_Use _ (UProd ux)) =>
+          Some (mkJointDmds (Coq.Lists.List.repeat Lazy (Coq.Lists.List.length ux)) ux)
+      | _ => None
+      end in
+    let j_5__ :=
+      match scrut_1__ with
+      | pair (Mk_Str _ s) (Mk_Use _ (UProd ux)) =>
+          match splitStrProdDmd (Coq.Lists.List.length ux) s with
+          | Some sx => Some (mkJointDmds sx ux)
+          | _ => j_3__
+          end
+      | _ => j_3__
+      end in
+    match scrut_1__ with
+    | pair (Mk_Str _ (SProd sx)) (Mk_Use _ u) =>
+        match splitUseProdDmd (Coq.Lists.List.length sx) u with
+        | Some ux => Some (mkJointDmds sx ux)
+        | _ => j_5__
+        end
+    | _ => j_5__
+    end.
+
+Definition dmdTransformDictSelSig : StrictSig -> CleanDemand -> DmdType :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_StrictSig (Mk_DmdType _ (cons dict_dmd nil) _), cd =>
+        let enhance :=
+          fun cd old => if isAbsDmd old : bool then old else mkOnceUsedDmd cd in
+        let 'pair cd' defer_use := peelCallDmd cd in
+        match splitProdDmd_maybe dict_dmd with
+        | Some jds =>
+            postProcessUnsat defer_use (Mk_DmdType emptyDmdEnv (cons (mkOnceUsedDmd
+                                                                      (mkProdDmd (GHC.Base.map (enhance cd') jds))) nil)
+                                                   topRes)
+        | _ => nopDmdType
+        end
+    | _, _ => Panic.panic (GHC.Base.hs_string__ "dmdTransformDictSelSig: no args")
+    end.
+
+Program Definition dmdTransformDataConSig
+           : nat -> StrictSig -> CleanDemand -> DmdType :=
+          fun arg_0__ arg_1__ arg_2__ =>
+            match arg_0__, arg_1__, arg_2__ with
+            | arity, Mk_StrictSig (Mk_DmdType _ _ con_res), JD str abs =>
+                let fix go_abs arg_3__ arg_4__
+                          := match arg_3__, arg_4__ with
+                             | num_5__, dmd =>
+                                 if Bool.Sumbool.sumbool_of_bool (num_5__ GHC.Base.== #0)
+                                 then splitUseProdDmd arity dmd else
+                                 match arg_3__, arg_4__ with
+                                 | n, UCall One u' => go_abs (Nat.pred n) u'
+                                 | _, _ => None
+                                 end
+                             end in
+                let go_str :=
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_10__ arg_11__ => arg_10__) _
+                                (fun arg_10__ arg_11__ go_str =>
+                                   match arg_10__, arg_11__ with
+                                   | num_12__, dmd =>
+                                       if Bool.Sumbool.sumbool_of_bool (num_12__ GHC.Base.== #0)
+                                       then splitStrProdDmd arity dmd else
+                                       match arg_10__, arg_11__ with
+                                       | n, SCall s' => go_str (Nat.pred n) s'
+                                       | n, HyperStr => go_str (Nat.pred n) HyperStr
+                                       | _, _ => None
+                                       end
+                                   end) in
+                match go_str arity str with
+                | Some str_dmds =>
+                    match go_abs arity abs with
+                    | Some abs_dmds =>
+                        Mk_DmdType emptyDmdEnv (mkJointDmds str_dmds abs_dmds) con_res
+                    | _ => nopDmdType
+                    end
+                | _ => nopDmdType
+                end
+            end.
+Admit Obligations.
+
+Definition evalDmd : Demand :=
+  JD (Mk_Str VanStr HeadStr) useTop.
+
+Definition cleanEvalProdDmd : nat -> CleanDemand :=
+  fun n => JD HeadStr (UProd (Coq.Lists.List.repeat useTop n)).
+
 Definition vanillaCafInfo : CafInfo :=
   MayHaveCafRefs.
 
 Definition vanillaIdInfo : IdInfo :=
   Mk_IdInfo unknownArity emptyRuleInfo noUnfolding vanillaCafInfo
-            BasicTypes.NoOneShotInfo BasicTypes.defaultInlinePragma BasicTypes.noOccInfo tt
-            tt unknownArity NoLevityInfo.
+            BasicTypes.NoOneShotInfo BasicTypes.defaultInlinePragma BasicTypes.noOccInfo
+            nopSig topDmd unknownArity NoLevityInfo.
 
 Definition noCafIdInfo : IdInfo :=
   setCafInfo vanillaIdInfo NoCafRefs.
 
 Definition mkCoVar : Name.Name -> unit -> CoVar :=
   fun name ty => mk_id name ty (LocalId NotExported) coVarDetails vanillaIdInfo.
+
+Definition vanillaCprProdRes : nat -> DmdResult :=
+  fun _arity => Dunno RetProd.
+
+Definition cprProdDmdType : nat -> DmdType :=
+  fun arity => Mk_DmdType emptyDmdEnv nil (vanillaCprProdRes arity).
+
+Definition cprProdSig : nat -> StrictSig :=
+  fun arity => Mk_StrictSig (cprProdDmdType arity).
 
 Definition varUnique : Var -> Unique.Unique :=
   fun var => Unique.mkUniqueGrimily (realUnique var).
@@ -6266,8 +7743,8 @@ Definition mkAlgTyCon
      option unit -> list unit -> AlgTyConRhs -> AlgTyConFlav -> bool -> TyCon :=
   fun name binders res_kind roles cType stupid rhs parent gadt_syn =>
     AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-             (Data.Foldable.length binders) roles cType gadt_syn stupid rhs (fieldsOfAlgTcRhs
-              rhs) parent.
+             (Coq.Lists.List.length binders) roles cType gadt_syn stupid rhs
+             (fieldsOfAlgTcRhs rhs) parent.
 
 Definition mkClassTyCon
    : Name.Name ->
@@ -6276,63 +7753,43 @@ Definition mkClassTyCon
     mkAlgTyCon name binders tt roles None nil rhs (ClassTyCon clas tc_rep_name)
     false.
 
-Definition zapDemandInfo : IdInfo -> option IdInfo :=
-  fun info =>
-    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-             callArityInfo_9__ levityInfo_10__ := info in
-          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ tt
-                    callArityInfo_9__ levityInfo_10__).
+Definition zap_usg : KillFlags -> UseDmd -> UseDmd :=
+  fix zap_usg arg_0__ arg_1__
+        := let zap_musg arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | kfs, Abs => if kf_abs kfs then useTop else Abs
+             | kfs, Mk_Use c u =>
+                 if kf_used_once kfs then Mk_Use Many (zap_usg kfs u) else Mk_Use c (zap_usg kfs
+                                                                                             u)
+             end in
+           match arg_0__, arg_1__ with
+           | kfs, UCall c u =>
+               if kf_called_once kfs then UCall Many (zap_usg kfs u) else UCall c (zap_usg kfs
+                                                                                           u)
+           | _, _ =>
+               match arg_0__, arg_1__ with
+               | kfs, UProd us => UProd (GHC.Base.map (zap_musg kfs) us)
+               | _, u => u
+               end
+           end.
 
-Definition zapLamInfo : IdInfo -> option IdInfo :=
-  fun '((Mk_IdInfo _ _ _ _ _ _ occ _ demand _ _ as info)) =>
-    let is_safe_dmd := fun dmd => negb (false) in
-    let safe_occ :=
-      match occ with
-      | BasicTypes.OneOcc _ _ _ _ =>
-          match occ with
-          | BasicTypes.ManyOccs _ =>
-              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-          | BasicTypes.IAmDead =>
-              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-          | BasicTypes.OneOcc occ_in_lam_2__ occ_one_br_3__ occ_int_cxt_4__
-          occ_tail_5__ =>
-              BasicTypes.OneOcc true occ_one_br_3__ occ_int_cxt_4__ BasicTypes.NoTailCallInfo
-          | BasicTypes.IAmALoopBreaker _ _ =>
-              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-          end
-      | BasicTypes.IAmALoopBreaker _ _ =>
-          match occ with
-          | BasicTypes.ManyOccs occ_tail_12__ =>
-              BasicTypes.ManyOccs BasicTypes.NoTailCallInfo
-          | BasicTypes.IAmDead =>
-              GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-          | BasicTypes.OneOcc occ_in_lam_13__ occ_one_br_14__ occ_int_cxt_15__
-          occ_tail_16__ =>
-              BasicTypes.OneOcc occ_in_lam_13__ occ_one_br_14__ occ_int_cxt_15__
-                                BasicTypes.NoTailCallInfo
-          | BasicTypes.IAmALoopBreaker occ_rules_only_17__ occ_tail_18__ =>
-              BasicTypes.IAmALoopBreaker occ_rules_only_17__ BasicTypes.NoTailCallInfo
-          end
-      | _other => occ
-      end in
-    let is_safe_occ :=
-      fun arg_27__ =>
-        let 'occ := arg_27__ in
-        if BasicTypes.isAlwaysTailCalled occ : bool then false else
-        match arg_27__ with
-        | BasicTypes.OneOcc in_lam _ _ _ => in_lam
-        | _other => true
-        end in
-    if andb (is_safe_occ occ) (is_safe_dmd demand) : bool then None else
-    Some (let 'Mk_IdInfo arityInfo_31__ ruleInfo_32__ unfoldingInfo_33__
-             cafInfo_34__ oneShotInfo_35__ inlinePragInfo_36__ occInfo_37__
-             strictnessInfo_38__ demandInfo_39__ callArityInfo_40__ levityInfo_41__ :=
-            info in
-          Mk_IdInfo arityInfo_31__ ruleInfo_32__ unfoldingInfo_33__ cafInfo_34__
-                    oneShotInfo_35__ inlinePragInfo_36__ safe_occ strictnessInfo_38__ tt
-                    callArityInfo_40__ levityInfo_41__).
+Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, Abs => if kf_abs kfs then useTop else Abs
+    | kfs, Mk_Use c u =>
+        if kf_used_once kfs then Mk_Use Many (zap_usg kfs u) else Mk_Use c (zap_usg kfs
+                                                                                    u)
+    end.
+
+Definition kill_usage : KillFlags -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, JD s u => JD s (zap_musg kfs u)
+    end.
+
+Definition zapUsageDemand : Demand -> Demand :=
+  kill_usage (Mk_KillFlags true true true).
 
 Definition zapUsageInfo : IdInfo -> option IdInfo :=
   fun info =>
@@ -6340,8 +7797,15 @@ Definition zapUsageInfo : IdInfo -> option IdInfo :=
              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
              callArityInfo_9__ levityInfo_10__ := info in
           Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ tt
-                    callArityInfo_9__ levityInfo_10__).
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                    (zapUsageDemand (demandInfo info)) callArityInfo_9__ levityInfo_10__).
+
+Definition zapUsedOnceDemand : Demand -> Demand :=
+  kill_usage (Mk_KillFlags false true false).
+
+Definition zapUsedOnceSig : StrictSig -> StrictSig :=
+  fun '(Mk_StrictSig (Mk_DmdType env ds r)) =>
+    Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
 
 Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
   fun info =>
@@ -6349,60 +7813,82 @@ Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
              callArityInfo_9__ levityInfo_10__ := info in
           Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ tt tt callArityInfo_9__
-                    levityInfo_10__).
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ (zapUsedOnceSig (strictnessInfo
+                                                                                    info)) (zapUsedOnceDemand
+                     (demandInfo info)) callArityInfo_9__ levityInfo_10__).
+
+Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
+  fun dflags dmd =>
+    match killFlags dflags with
+    | Some kfs => kill_usage kfs dmd
+    | _ => dmd
+    end.
+
+Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
+        match killFlags dflags with
+        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
+        | _ => sig
+        end
+    end.
 
 (* External variables:
-     Alt AnnAlt AnnExpr Arg Bool.Sumbool.sumbool_of_bool BootUnfolding ClassOpItem Eq
-     Gt Id Lt NoUnfolding None OtherCon RuleInfo Some TyConBinder TyVar TyVarBinder
-     Type andb bool comparison cons deAnnotate' deTagExpr emptyRuleInfo false
-     getUnfolding getUnfoldingInfo list negb nil op_zt__ option orb pair
-     size_AnnExpr' snd true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
-     BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ
-     BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker BasicTypes.IAmDead
-     BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.ManyOccs
-     BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo BasicTypes.OccInfo
-     BasicTypes.OneOcc BasicTypes.OneShotInfo BasicTypes.RuleName
+     Alt AnnAlt AnnExpr Arg ArgStr ArgUse Bool.Sumbool.sumbool_of_bool BootUnfolding
+     ClassOpItem Eq Gt Id Lt NoUnfolding None OtherCon RuleInfo Some TyConBinder
+     TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison cons
+     deAnnotate' deTagExpr else emptyRuleInfo false getUnfolding getUnfoldingInfo if
+     list lubArgUse nat negb nil op_zt__ option orb pair plusVarEnv_CD size_AnnExpr'
+     snd then true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
+     BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
+     BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
+     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
+     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleName
      BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.defaultInlinePragma
      BasicTypes.fIRST_TAG BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed
      BasicTypes.noOccInfo BasicTypes.tupleSortBoxity BooleanFormula.BooleanFormula
      BooleanFormula.mkTrue Constants.fLOAT_SIZE Constants.wORD64_SIZE
-     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.flat_map
-     Data.Foldable.all Data.Foldable.concatMap Data.Foldable.find Data.Foldable.foldl
-     Data.Foldable.foldr Data.Foldable.length Data.Foldable.null Data.Function.on
-     Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
-     DynFlags.dOUBLE_SIZE DynFlags.wORD_SIZE FastStringEnv.dFsEnvElts
+     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
+     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.repeat
+     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
+     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
+     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.dOUBLE_SIZE
+     DynFlags.gopt DynFlags.wORD_SIZE FastStringEnv.dFsEnvElts
      FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv FastStringEnv.mkDFsEnv
      FieldLabel.FieldLabel FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString
      FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Monad GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.fmap GHC.Base.map
-     GHC.Base.mappend GHC.Base.max__ GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____
-     GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
-     GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Base.return_ GHC.Char.Char GHC.DeferredFix.deferredFix1
+     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.eq_default
+     GHC.Base.fmap GHC.Base.map GHC.Base.mappend GHC.Base.max GHC.Base.max__
+     GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
+     GHC.Base.op_zgze____ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zl____
+     GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.return_ GHC.Char.Char GHC.DeferredFix.deferredFix1
      GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.default GHC.Err.error GHC.List.drop GHC.List.filter GHC.List.replicate
-     GHC.List.reverse GHC.List.zip GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational GHC.Wf.wfFix2
-     GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar Literal.mkMachDouble
-     Literal.mkMachFloat Literal.mkMachString Maybes.orElse Module.Module
-     Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet Name.Name
-     Name.NamedThing Name.getName__ Name.getOccName__ Name.isWiredInName
+     GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse GHC.List.zip
+     GHC.List.zipWith GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq GHC.Real.Rational GHC.Wf.wfFix1
+     GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
+     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Maybes.orElse
+     Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
+     Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.isWiredInName
      Name.mkExternalName Name.nameModule Name.nameOccName Name.nameSrcSpan
      Name.nameUnique Name.setNameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
-     NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.HasOccName OccName.OccName
-     OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.isTcOcc OccName.mkTyConRepOcc
-     OccName.occName__ Panic.noString Panic.panicStr Panic.someSDoc
-     Panic.warnPprTrace PrelNames.gHC_PRIM PrelNames.gHC_TYPES SrcLoc.RealSrcSpan
-     SrcLoc.SrcSpan UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM
-     UniqDFM.addToUDFM_C UniqDFM.allUDFM UniqDFM.alterUDFM UniqDFM.anyUDFM
-     UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.disjointUDFM
-     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
-     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM
-     UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
-     UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM UniqDSet.UniqDSet
-     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
+     NameEnv.extendNameEnv NameEnv.lookupNameEnv Nat.pred OccName.HasOccName
+     OccName.OccName OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.isTcOcc
+     OccName.mkTyConRepOcc OccName.occName__ Panic.noString Panic.panic
+     Panic.panicStr Panic.someSDoc Panic.warnPprTrace PrelNames.gHC_PRIM
+     PrelNames.gHC_TYPES SrcLoc.RealSrcSpan SrcLoc.SrcSpan UniqDFM.UniqDFM
+     UniqDFM.addListToUDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C UniqDFM.allUDFM
+     UniqDFM.alterUDFM UniqDFM.anyUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM
+     UniqDFM.disjointUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM
+     UniqDFM.filterUDFM UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM
+     UniqDFM.lookupUDFM UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM
+     UniqDFM.plusUDFM UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM
+     UniqDSet.UniqDSet UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
      UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
      UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
      UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet
@@ -6416,19 +7902,21 @@ Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
      UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
      UniqFM.isNullUFM UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
      UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM UniqFM.mapUFM
-     UniqFM.minusUFM UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM
-     UniqFM.plusUFMList UniqFM.plusUFM_C UniqFM.unitUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet
-     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
-     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
-     UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
-     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
-     UniqSet.mapUniqSet UniqSet.minusUniqSet UniqSet.mkUniqSet
-     UniqSet.partitionUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
-     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
+     UniqFM.minusUFM UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetUFMToList
+     UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList
+     UniqFM.plusUFM_C UniqFM.unitUFM UniqSet.UniqSet UniqSet.addListToUniqSet
+     UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet UniqSet.delOneFromUniqSet
+     UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
+     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
+     UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
+     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.mapUniqSet
+     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.partitionUniqSet
+     UniqSet.sizeUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
+     UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
      UniqSet.unsafeUFMToUniqSet Unique.Uniquable Unique.Unique
      Unique.dataConRepNameUnique Unique.deriveUnique Unique.getKey Unique.getUnique
      Unique.getUnique__ Unique.mkUniqueGrimily Unique.nonDetCmpUnique
-     Unique.tyConRepNameUnique Util.HasDebugCallStack Util.count Util.lengthAtMost
-     Util.listLengthCmp Util.zipEqual
+     Unique.tyConRepNameUnique Util.HasDebugCallStack Util.count Util.equalLength
+     Util.lengthAtMost Util.lengthExceeds Util.lengthIs Util.listLengthCmp
+     Util.zipEqual Util.zipWithEqual
 *)

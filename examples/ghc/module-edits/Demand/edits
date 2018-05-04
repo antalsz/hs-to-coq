@@ -1,56 +1,75 @@
 ## Needs type info
-skip Demand.toCleanDmd
-skip Demand.strictifyDictDmd
+skip Core.toCleanDmd
+skip Core.strictifyDictDmd
 
 #
 # Termination arguments for these are too difficult.
 #
-skip Demand.trimToType
-skip Demand.lubUse
-skip Demand.lubArgUse
-skip Demand.bothUse
-skip Demand.bothArgUse
+skip Core.trimToType
+skip Core.lubUse
+skip Core.lubArgUse
+skip Core.bothUse
+skip Core.bothArgUse
 
 #
 # pattern guard  "let 'Some x := ..."
 #
-skip Demand.addCaseBndrDmd
+skip Core.addCaseBndrDmd
 
 #
 # pretty printing
 # 
-skip Demand.pprIfaceStrictSig
+skip Core.pprIfaceStrictSig
 
 
-in Demand.mkWorkerDemand termination go { measure arg_0__ } 
-obligations Demand.mkWorkerDemand admit
+in Core.mkWorkerDemand termination go { measure arg_0__ } 
+obligations Core.mkWorkerDemand admit
 
-in Demand.dmdTransformDataConSig termination go_str { measure arg_10__ }
-obligations Demand.dmdTransformDataConSig admit
+in Core.dmdTransformDataConSig termination go_str { measure arg_10__ }
+obligations Core.dmdTransformDataConSig admit
 
 #
 # To make some of the termination arguments provable, we translate Z to nat
 # We'll need to migrate 
 #
-rename type GHC.Num.Int = nat
-rename type BasicTypes.Arity = nat
+# rename type GHC.Num.Int = nat
+# rename type BasicTypes.Arity = nat
 
 rewrite forall n  , GHC.Num.op_zm__ n (GHC.Num.fromInteger 1) = Nat.pred n
 rewrite forall    , Data.Foldable.length   = Coq.Lists.List.length
 rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
-rewrite forall    , GHC.List.take          = Coq.Lists.List.skipn
+rewrite forall    , GHC.List.take          = Coq.Lists.List.firstn
+rewrite forall    , GHC.List.drop          = Coq.Lists.List.skipn
 
-rewrite forall ds n, Util.lengthExceeds ds n = Util.lengthExceeds ds (BinInt.Z.of_nat n)
-rewrite forall ds, Util.lengthIs ds n = Util.lengthIs ds (BinInt.Z.of_nat n)
+# rewrite forall ds n, Util.lengthExceeds ds n = Util.lengthExceeds ds (BinInt.Z.of_nat n)
+# rewrite forall ds,   Util.lengthIs ds n = Util.lengthIs ds (BinInt.Z.of_nat n)
+# rewrite forall cons_ n, Util.lengthAtMost cons_ n = Util.lengthAtMost cons_ (BinInt.Z.of_nat n)
+# in Core.expandSynTyCon_maybe rewrite forall , Util.listLengthCmp tys arity = Util.listLengthCmp tys (BinInt.Z.of_nat arity)
 
-in Demand.ensureArgs rewrite forall ds n x, Coq.Lists.List.skipn n (Coq.Init.Datatypes.app ds (GHC.List.repeat x)) = Coq.Lists.List.skipn n (app ds (Coq.Lists.List.repeat x n))
+in Core.ensureArgs rewrite forall ds n x, Coq.Lists.List.firstn n (Coq.Init.Datatypes.app ds (GHC.List.repeat x)) = Coq.Lists.List.firstn n (app ds (Coq.Lists.List.repeat x n))
+
+# redefine Definition Core.valBndrCount : (list CoreBndr) -> nat := fun x => BinIntDef.Z.to_nat (Util.count isId x).
+# redefine Definition Core.valArgCount {b} : (list (Arg b)) -> nat := fun x => BinIntDef.Z.to_nat (Util.count isValArg x).
+# redefine Definition Core.sizeDVarSet : DVarSet -> nat := fun x => BinIntDef.Z.to_nat (UniqDSet.sizeUniqDSet x).
+# redefine Definition Core.sizeVarSet : VarSet -> nat := fun x => BinIntDef.Z.to_nat (UniqSet.sizeUniqSet x). 
+
+# in Core.extendInScopeSetSet rewrite forall vs, UniqSet.sizeUniqSet vs = BinIntDef.Z.to_nat (UniqSet.sizeUniqSet vs)
+
+# rewrite forall k, Unique.getKey k = BinIntDef.Z.to_nat (Unique.getKey k)
+# rewrite forall var, (Core.realUnique var) = (BinInt.Z.of_nat (Core.realUnique var))
+
+# skip Core.primRepSizeB
+
+# in Core.uniqAway' rewrite forall o n, Unique.deriveUnique o n = Unique.deriveUnique o (BinInt.Z.of_nat n)
+
+
 
 
 #
 # TODO: I don't know how to do these modifications with rewrites
 #
 
-redefine Local Definition Demand.Eq___UseDmd_op_zeze__ : UseDmd -> (UseDmd -> bool) :=
+redefine Local Definition Core.Eq___UseDmd_op_zeze__ : UseDmd -> (UseDmd -> bool) :=
  fix UseDmd_eq x y :=
   let eq' : GHC.Base.Eq_ UseDmd := GHC.Base.eq_default UseDmd_eq in
     match x , y with
@@ -62,7 +81,7 @@ redefine Local Definition Demand.Eq___UseDmd_op_zeze__ : UseDmd -> (UseDmd -> bo
       | _ , _ => false
     end.
 
-redefine Local Definition Demand.Eq___StrDmd_op_zeze__ : StrDmd -> (StrDmd -> bool) :=
+redefine Local Definition Core.Eq___StrDmd_op_zeze__ : StrDmd -> (StrDmd -> bool) :=
   fix StrDmd_eq x y  :=
     let eq' : GHC.Base.Eq_ StrDmd := GHC.Base.eq_default StrDmd_eq in
     match x , y with
@@ -81,7 +100,7 @@ redefine Local Definition Demand.Eq___StrDmd_op_zeze__ : StrDmd -> (StrDmd -> bo
 # For now, all of these functions are defined with redefine, but if we get 
 # this new edit form, we can eliminate them.
 #
-redefine Definition Demand.bothStr : StrDmd -> (StrDmd -> StrDmd) :=
+redefine Definition Core.bothStr : StrDmd -> (StrDmd -> StrDmd) :=
   fix  bothStr arg_0__ arg_1__ := 
       let bothArgStr arg_0__ arg_1__
         := match arg_0__, arg_1__ with
@@ -100,23 +119,23 @@ redefine Definition Demand.bothStr : StrDmd -> (StrDmd -> StrDmd) :=
       | SProd s1, HeadStr => SProd s1
       | SProd s1, SProd s2 =>
         if Util.equalLength s1 s2
-        then Demand.mkSProd (GHC.List.zipWith bothArgStr s1 s2) else
+        then Core.mkSProd (GHC.List.zipWith bothArgStr s1 s2) else
           HyperStr
       | SProd _, SCall _ => HyperStr
       end.
 
-redefine Definition Demand.bothArgStr : ArgStr -> (ArgStr -> ArgStr) :=
+redefine Definition Core.bothArgStr : ArgStr -> (ArgStr -> ArgStr) :=
   fun arg_0__ arg_1__ =>
         match arg_0__, arg_1__ with
            | Lazy, s => s
            | s, Lazy => s
-           | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (Demand.bothExnStr x1 x2) 
-			  (Demand.bothStr s1 s2)
+           | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (Core.bothExnStr x1 x2) 
+			  (Core.bothStr s1 s2)
            end.
 
 ######
 
-redefine Definition Demand.isUsedU : UseDmd -> bool :=
+redefine Definition Core.isUsedU : UseDmd -> bool :=
   fix  isUsedU arg_0__
     := let isUsedMU arg_0__
         := match arg_0__ with
@@ -131,23 +150,23 @@ redefine Definition Demand.isUsedU : UseDmd -> bool :=
       | UCall One _ => false
       | UCall Many _ => true
       end.
-redefine Definition Demand.isUsedMU : ArgUse -> bool :=
+redefine Definition Core.isUsedMU : ArgUse -> bool :=
   fun arg_0__ =>
         match arg_0__ with
            | Abs => true
            | Mk_Use One _ => false
-           | Mk_Use Many u => Demand.isUsedU u
+           | Mk_Use Many u => Core.isUsedU u
            end. 
 
 ######
 
-redefine Definition Demand.lubStr : StrDmd -> (StrDmd -> StrDmd) :=
+redefine Definition Core.lubStr : StrDmd -> (StrDmd -> StrDmd) :=
   fix lubStr arg_0__ arg_1__
         := let lubArgStr arg_0__ arg_1__
                := match arg_0__, arg_1__ with
                   | Lazy, _ => Lazy
                   | _, Lazy => Lazy
-                  | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (Demand.lubExnStr x1 x2) (lubStr s1 s2)
+                  | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (Core.lubExnStr x1 x2) (lubStr s1 s2)
                   end in
            match arg_0__, arg_1__ with
            | HyperStr, s => s
@@ -159,23 +178,23 @@ redefine Definition Demand.lubStr : StrDmd -> (StrDmd -> StrDmd) :=
            | SProd _, HeadStr => HeadStr
            | SProd s1, SProd s2 =>
                if Util.equalLength s1 s2 
-               then Demand.mkSProd (GHC.List.zipWith lubArgStr s1 s2) else
+               then Core.mkSProd (GHC.List.zipWith lubArgStr s1 s2) else
                HeadStr
            | SProd _, SCall _ => HeadStr
            | HeadStr, _ => HeadStr
            end.
 
-redefine Definition Demand.lubArgStr : ArgStr -> (ArgStr -> ArgStr) :=
+redefine Definition Core.lubArgStr : ArgStr -> (ArgStr -> ArgStr) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Lazy, _ => Lazy
     | _, Lazy => Lazy
-    | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (Demand.lubExnStr x1 x2) (Demand.lubStr s1 s2)
+    | Mk_Str x1 s1, Mk_Str x2 s2 => Mk_Str (Core.lubExnStr x1 x2) (Core.lubStr s1 s2)
     end. 
 
 ######
 
-redefine Definition Demand.markReused : UseDmd -> UseDmd :=
+redefine Definition Core.markReused : UseDmd -> UseDmd :=
   fix markReused arg_0__
         := let  markReusedDmd arg_0__
                       := match arg_0__ with
@@ -187,15 +206,15 @@ redefine Definition Demand.markReused : UseDmd -> UseDmd :=
            | u => u
            end.
 
-redefine Definition Demand.markReusedDmd : ArgUse -> ArgUse :=
+redefine Definition Core.markReusedDmd : ArgUse -> ArgUse :=
   fun arg_0__ => match arg_0__ with
               | Abs => Abs
-              | Mk_Use _ a => Mk_Use Many (Demand.markReused a)
+              | Mk_Use _ a => Mk_Use Many (Core.markReused a)
               end.
 
 ######
 
-redefine Definition Demand.zap_usg : KillFlags -> (UseDmd -> UseDmd) :=
+redefine Definition Core.zap_usg : KillFlags -> (UseDmd -> UseDmd) :=
   fix  zap_usg arg_0__ arg_1__ := 
     let zap_musg arg_0__ arg_1__
         := match arg_0__, arg_1__ with
@@ -215,43 +234,43 @@ redefine Definition Demand.zap_usg : KillFlags -> (UseDmd -> UseDmd) :=
       end
     end. 
 
-redefine Definition Demand.zap_musg : KillFlags -> (ArgUse -> ArgUse) :=
+redefine Definition Core.zap_musg : KillFlags -> (ArgUse -> ArgUse) :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with
            | kfs, Abs => if kf_abs kfs then useTop else Abs
            | kfs, Mk_Use c u =>
-               if kf_used_once kfs then Mk_Use Many (Demand.zap_usg kfs u) else
-               Mk_Use c (Demand.zap_usg kfs u)
+               if kf_used_once kfs then Mk_Use Many (Core.zap_usg kfs u) else
+               Mk_Use c (Core.zap_usg kfs u)
            end. 
 
 
 ## hard metrics, but they don't do anything
-redefine Definition Demand.seqArgStr : ArgStr -> unit := fun x => tt.
-redefine Definition Demand.seqStrDmd : StrDmd -> unit := fun x => tt.
-redefine Definition Demand.seqStrDmdList : (list ArgStr) -> unit := fun x => tt.
-redefine Definition Demand.seqArgUse : ArgUse -> unit := fun x => tt.
-redefine Definition Demand.seqUseDmd : UseDmd -> unit := fun x => tt.
-redefine Definition Demand.seqArgUseList : (list ArgUse) -> unit := fun x => tt.
-redefine Definition Demand.seqDemand : Demand -> unit := fun x => tt.
-redefine Definition Demand.seqDemandList : (list Demand) -> unit := fun x => tt.
-redefine Definition Demand.seqDmdEnv : DmdEnv -> unit := fun x => tt.
-redefine Definition Demand.seqCPRResult : CPRResult -> unit := fun x => tt.
-redefine Definition Demand.seqDmdResult : DmdResult -> unit := fun x => tt.
-redefine Definition Demand.seqDmdType : DmdType -> unit := fun x => tt.
-redefine Definition Demand.seqStrictSig : StrictSig -> unit := fun x => tt.
+redefine Definition Core.seqArgStr : ArgStr -> unit := fun x => tt.
+redefine Definition Core.seqStrDmd : StrDmd -> unit := fun x => tt.
+redefine Definition Core.seqStrDmdList : (list ArgStr) -> unit := fun x => tt.
+redefine Definition Core.seqArgUse : ArgUse -> unit := fun x => tt.
+redefine Definition Core.seqUseDmd : UseDmd -> unit := fun x => tt.
+redefine Definition Core.seqArgUseList : (list ArgUse) -> unit := fun x => tt.
+redefine Definition Core.seqDemand : Demand -> unit := fun x => tt.
+redefine Definition Core.seqDemandList : (list Demand) -> unit := fun x => tt.
+redefine Definition Core.seqDmdEnv : DmdEnv -> unit := fun x => tt.
+redefine Definition Core.seqCPRResult : CPRResult -> unit := fun x => tt.
+redefine Definition Core.seqDmdResult : DmdResult -> unit := fun x => tt.
+redefine Definition Core.seqDmdType : DmdType -> unit := fun x => tt.
+redefine Definition Core.seqStrictSig : StrictSig -> unit := fun x => tt.
 
 
 #
 # order edits
 #
 
-order Demand.Eq___JointDmd_op_zeze__ Demand.Eq___JointDmd_op_zsze__ Demand.Eq___JointDmd Demand.Eq___DmdType_op_zeze__ Demand.Eq___StrictSig_op_zeze__ Demand.Eq___StrictSig_op_zsze__
-order Demand.Eq___DmdType Demand.Eq___StrictSig_op_zeze__
+order Core.Eq___JointDmd_op_zeze__ Core.Eq___JointDmd_op_zsze__ Core.Eq___JointDmd Core.Eq___DmdType_op_zeze__ Core.Eq___StrictSig_op_zeze__ Core.Eq___StrictSig_op_zsze__
+order Core.Eq___DmdType Core.Eq___StrictSig_op_zeze__
 
-order Demand.Eq___Count Demand.Eq___Use_op_zeze__ Demand.Eq___Use Demand.Eq___UseDmd_op_zeze__
+order Core.Eq___Count Core.Eq___Use_op_zeze__ Core.Eq___Use Core.Eq___UseDmd_op_zeze__
 
 
-order Demand.resTypeArgDmd Demand.topRes Demand.dmdTypeDepth Demand.ensureArgs
-order Demand.useTop Demand.splitUseProdDmd
+order Core.resTypeArgDmd Core.topRes Core.dmdTypeDepth Core.ensureArgs
+order Core.useTop Core.splitUseProdDmd
 
-order Demand.Eq___ExnStr Demand.Eq___Str_op_zeze__
-order Demand.Eq___Str Demand.Eq___StrDmd_op_zeze__
+order Core.Eq___ExnStr Core.Eq___Str_op_zeze__
+order Core.Eq___Str Core.Eq___StrDmd_op_zeze__

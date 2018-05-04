@@ -1,20 +1,6 @@
-Instance Num_nat : GHC.Num.Num nat := {
-     op_zp__ := Nat.add;
-     op_zm__ := Nat.sub;
-     op_zt__ := Nat.mul;
-     abs     := fun x => x;
-     fromInteger := BinIntDef.Z.to_nat;
-     negate  := fun x => x;
-     signum  :=  fun x => x; }.
+(* DEMAND midamble file *)
 
-Instance Eq_nat : GHC.Base.Eq_ nat :=
-  fun _ k => k {| GHC.Base.op_zeze____ := fun x y => (Nat.eqb x y);
-               GHC.Base.op_zsze____ := fun x y => negb (Nat.eqb x y);
-            |}.
-
-Instance Ord_nat : GHC.Base.Ord nat :=
-  GHC.Base.ord_default Nat.compare.
-
+Require Import GHC.Nat.
 Require Import Omega.
 Ltac solve_not_zero := match goal with 
   | [ H : GHC.Base.op_zeze__ ?x ?y = false |- _ ] => 
@@ -25,12 +11,6 @@ end; omega.
 
 Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_StrictSig y => y end) Mk_StrictSig.
-
-Instance Default_Termination {r} : GHC.Err.Default (Termination r) :=
-  GHC.Err.Build_Default _ Diverges.
-
-Instance Default_DmdResult : GHC.Err.Default DmdType :=
-  GHC.Err.Build_Default _ (Mk_DmdType GHC.Err.default GHC.Err.default GHC.Err.default).
 
 (* Definitions that we cannot process, see edits file for details. *)
 

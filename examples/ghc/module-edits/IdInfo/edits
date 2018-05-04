@@ -1,21 +1,20 @@
 
 # Break dependency on Demand module
-rename type Demand.StrictSig  = unit
-rename type Demand.Demand     = unit
-rename value Demand.nopSig    = tt
-rename value Demand.topDmd    = tt
-rewrite forall x, Demand.isStrictDmd x       = false
-rewrite forall x, Demand.hasDemandEnvSig x   = false
-rewrite forall x, Demand.zapUsageDemand x    = tt
-rewrite forall x, Demand.zapUsedOnceDemand x = tt
-rewrite forall x, Demand.zapUsedOnceSig x    = tt
+# rename type Demand.StrictSig  = unit
+# rename type Demand.Demand     = unit
+# rename value Demand.nopSig    = tt
+# rename value Demand.topDmd    = tt
+# rewrite forall x, Demand.isStrictDmd x       = false
+# rewrite forall x, Demand.hasDemandEnvSig x   = false
+# rewrite forall x, Demand.zapUsageDemand x    = tt
+# rewrite forall x, Demand.zapUsedOnceDemand x = tt
+# rewrite forall x, Demand.zapUsedOnceSig x    = tt
 
 
 ## parameterized in the preamble.v
 skip Core.RuleInfo
 skip Core.emptyRuleInfo
 skip Core.isEmptyRuleInfo 
-
 skip Core.ruleInfoFreeVars
 skip Core.ruleInfoRules
 skip Core.setRuleInfoHead
@@ -26,9 +25,6 @@ skip Core.sel_tycon
 
 ## Operations on IdInfo
 ## 
-## If we need these, we need to move them elsewhere
-##
-skip Core.zapUsageEnvInfo
 
 ## needs CoreSyn.isFragileUnfolding
 

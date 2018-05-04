@@ -4,6 +4,18 @@ rename value Data.Map.fold = Data.Map.Internal.foldr
 rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
 rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
 
+#
+# All GHC.Num.Int's should be nat in this compiler (double check that that makes sense).
+#
+rename type GHC.Num.Int = nat
+
+rewrite forall    , Data.Foldable.length   = Coq.Lists.List.length
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
+rewrite forall    , GHC.List.take          = Coq.Lists.List.firstn
+rewrite forall    , GHC.List.drop          = Coq.Lists.List.skipn
+
+
+
 # Should skip these everywhere
 skip module Outputable
 skip module GHC.Show

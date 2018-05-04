@@ -2,6 +2,7 @@
    can use for untying the knots in DataCon/Class/PatSyn/TyCon *)
 
 Require GHC.Err.
+Require GHC.Nat.
 Require GHC.Base.
 
 Parameter DataConId : Type.
@@ -23,3 +24,4 @@ Parameter Ord_PatSynId  : Base.Ord PatSynId.
 Parameter Ord_ClassId   : Base.Ord ClassId.
 Parameter Ord_DataConId : Base.Ord DataConId.
 Parameter Ord_TyConId   : Base.Ord TyConId.
+

@@ -12,12 +12,11 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Coq.ZArith.BinInt.
+Require Coq.NArith.BinNat.
 Require Data.Foldable.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
 Require GHC.Base.
-Require GHC.Num.
 Require GHC.Prim.
 Require Unique.
 Import GHC.Base.Notations.
@@ -431,8 +430,8 @@ Definition plusUFM_CD {elt}
                                                (Data.IntMap.Internal.map (fun y => f dx y)) xm ym)
     end.
 
-Definition sizeUFM {elt} : UniqFM elt -> GHC.Num.Int :=
-  fun '(UFM m) => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m).
+Definition sizeUFM {elt} : UniqFM elt -> nat :=
+  fun '(UFM m) => Coq.NArith.BinNat.N.to_nat (Data.IntMap.Internal.size m).
 
 Definition ufmToIntMap {elt} : UniqFM elt -> Data.IntMap.Internal.IntMap elt :=
   fun '(UFM m) => m.
@@ -450,8 +449,8 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
     UFM (Data.IntMap.Internal.singleton (Unique.getWordKey (Unique.getUnique k)) v).
 
 (* External variables:
-     Some andb bool false list op_zt__ option orb pair true unit
-     Coq.ZArith.BinInt.Z.of_N Data.Foldable.foldl Data.Foldable.foldl'
+     Some andb bool false list nat op_zt__ option orb pair true unit
+     Coq.NArith.BinNat.N.to_nat Data.Foldable.foldl Data.Foldable.foldl'
      Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
      Data.IntMap.Internal.alter Data.IntMap.Internal.delete
      Data.IntMap.Internal.difference Data.IntMap.Internal.elems
@@ -472,7 +471,7 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
      GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__ GHC.Base.mempty__
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd__
      GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Num.Int GHC.Prim.Build_Unpeel
-     GHC.Prim.Unpeel GHC.Prim.coerce Unique.Uniquable Unique.Unique Unique.getUnique
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
+     GHC.Prim.coerce Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

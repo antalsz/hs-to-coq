@@ -79,8 +79,11 @@ Definition tidyLetBndr
           if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
           Core.noUnfolding in
         let new_info :=
-          Core.setInlinePragInfo (Core.setArityInfo (Core.setOccInfo Core.vanillaIdInfo
-                                                                     (Core.occInfo old_info)) (CoreArity.exprArity rhs))
+          Core.setInlinePragInfo (Core.setDemandInfo (Core.setStrictnessInfo
+                                                      (Core.setArityInfo (Core.setOccInfo Core.vanillaIdInfo
+                                                                                          (Core.occInfo old_info))
+                                                                         (CoreArity.exprArity rhs)) (Core.zapUsageEnvSig
+                                                       (Core.strictnessInfo old_info))) (Core.demandInfo old_info))
                                  (Core.inlinePragInfo old_info) in
         let details := Core.idDetails id in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
@@ -201,13 +204,14 @@ End Notations.
      None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
      Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Lam
      Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Tickish
-     Core.TidyEnv Core.Type_ Core.Var Core.evaldUnfolding Core.extendVarEnv
-     Core.idDetails Core.idInfo Core.inlinePragInfo Core.isEvaldUnfolding
-     Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo
-     Core.setArityInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
-     Core.unfoldingInfo Core.vanillaIdInfo CoreArity.exprArity
-     Data.Traversable.mapAccumL GHC.Base.map GHC.Err.default GHC.List.zip
-     GHC.Prim.seq Id.idName Id.idUnique Id.mkLocalIdWithInfo Maybes.orElse Name.Name
-     Name.getOccName Name.mkInternalName OccName.tidyOccName SrcLoc.noSrcSpan
-     UniqFM.lookupUFM
+     Core.TidyEnv Core.Type_ Core.Var Core.demandInfo Core.evaldUnfolding
+     Core.extendVarEnv Core.idDetails Core.idInfo Core.inlinePragInfo
+     Core.isEvaldUnfolding Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding
+     Core.occInfo Core.oneShotInfo Core.setArityInfo Core.setDemandInfo
+     Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
+     Core.setStrictnessInfo Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo
+     Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
+     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique
+     Id.mkLocalIdWithInfo Maybes.orElse Name.Name Name.getOccName Name.mkInternalName
+     OccName.tidyOccName SrcLoc.noSrcSpan UniqFM.lookupUFM
 *)

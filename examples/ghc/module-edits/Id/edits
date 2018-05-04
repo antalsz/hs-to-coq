@@ -54,8 +54,8 @@ skip Id.zapFragileIdInfo
 skip Id.zapIdUsageEnvInfo
 
 skip Id.idCoreRules
-skip Id.idStrictness   
-skip Id.isBottomingId
+# skip Id.idStrictness   
+# skip Id.isBottomingId
 
 # Type/TyCoRep
 skip Id.isStrictId
@@ -69,8 +69,8 @@ skip Id.idFunRepArity
 
 # Demand
 
-skip Id.idDemandInfo
-skip Id.zapIdDemandInfo
+# skip Id.idDemandInfo
+# skip Id.zapIdDemandInfo
 
 # CoreSyn (Unfolding)
 

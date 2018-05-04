@@ -13,12 +13,12 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.
+Require Coq.Lists.List.
 Require Data.Function.
 Require Datatypes.
 Require FastString.
 Require GHC.Base.
 Require GHC.Err.
-Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
 Require GHC.Real.
@@ -30,7 +30,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition Version :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive TyPrec : Type
   := TopPrec : TyPrec
@@ -81,12 +81,12 @@ Inductive RuleMatchInfo : Type
   |  FunLike : RuleMatchInfo.
 
 Definition RepArity :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive RecFlag : Type := Recursive : RecFlag |  NonRecursive : RecFlag.
 
 Definition PhaseNum :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive OverlapMode : Type
   := NoOverlap : SourceText -> OverlapMode
@@ -114,7 +114,7 @@ Inductive LexicalFixity : Type
 Inductive LeftOrRight : Type := CLeft : LeftOrRight |  CRight : LeftOrRight.
 
 Definition JoinArity :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive TailCallInfo : Type
   := AlwaysTailCalled : JoinArity -> TailCallInfo
@@ -126,9 +126,7 @@ Definition InterestingCxt :=
 Inductive IntegralLit : Type
   := IL : SourceText -> bool -> GHC.Num.Integer -> IntegralLit.
 
-Inductive IntWithInf : Type
-  := Int : GHC.Num.Int -> IntWithInf
-  |  Infinity : IntWithInf.
+Inductive IntWithInf : Type := Int : nat -> IntWithInf |  Infinity : IntWithInf.
 
 Definition InsideLam :=
   bool%type.
@@ -158,7 +156,7 @@ Inductive FixityDirection : Type
   |  InfixN : FixityDirection.
 
 Inductive Fixity : Type
-  := Mk_Fixity : SourceText -> GHC.Num.Int -> FixityDirection -> Fixity.
+  := Mk_Fixity : SourceText -> nat -> FixityDirection -> Fixity.
 
 Inductive EP a : Type := Mk_EP : a -> a -> EP a.
 
@@ -172,10 +170,10 @@ Inductive DefMethSpec ty : Type
   |  GenericDM : ty -> DefMethSpec ty.
 
 Definition ConTagZ :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Definition ConTag :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive CompilerPhase : Type
   := Phase : PhaseNum -> CompilerPhase
@@ -184,10 +182,10 @@ Inductive CompilerPhase : Type
 Inductive Boxity : Type := Boxed : Boxity |  Unboxed : Boxity.
 
 Definition Arity :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Definition Alignment :=
-  GHC.Num.Int%type.
+  nat%type.
 
 Inductive Activation : Type
   := NeverActive : Activation
@@ -1273,7 +1271,7 @@ Definition inlinePragmaSpec : InlinePragma -> InlineSpec :=
 Definition insideLam : InsideLam :=
   true.
 
-Definition intGtLimit : GHC.Num.Int -> IntWithInf -> bool :=
+Definition intGtLimit : nat -> IntWithInf -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | _, Infinity => false
@@ -1420,13 +1418,13 @@ Definition isWeakLoopBreaker : OccInfo -> bool :=
     | _ => false
     end.
 
-Definition maxPrecedence : GHC.Num.Int :=
+Definition maxPrecedence : nat :=
   #9.
 
-Definition minPrecedence : GHC.Num.Int :=
+Definition minPrecedence : nat :=
   #0.
 
-Definition mkIntWithInf : GHC.Num.Int -> IntWithInf :=
+Definition mkIntWithInf : nat -> IntWithInf :=
   Int.
 
 Definition mulWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
@@ -1490,11 +1488,15 @@ Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
 Definition pprAlternative {a}
    : (a -> GHC.Base.String) -> a -> ConTag -> Arity -> GHC.Base.String :=
   fun pp x alt arity =>
-    Panic.noString (Coq.Init.Datatypes.app (GHC.List.replicate (alt GHC.Num.- #1)
-                                            Panic.someSDoc) (Coq.Init.Datatypes.app (cons (pp x) nil)
-                                                                                    (GHC.List.replicate (arity GHC.Num.-
-                                                                                                         alt)
-                                                                                     Panic.someSDoc))).
+    Panic.noString (Coq.Init.Datatypes.app (Coq.Lists.List.repeat Panic.someSDoc
+                                                                  (alt GHC.Num.- #1)) (Coq.Init.Datatypes.app (cons (pp
+                                                                                                                     x)
+                                                                                                                    nil)
+                                                                                                              (Coq.Lists.List.repeat
+                                                                                                               Panic.someSDoc
+                                                                                                               (arity
+                                                                                                                GHC.Num.-
+                                                                                                                alt)))).
 
 Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
   fun arg_0__ =>
@@ -1580,7 +1582,7 @@ Definition isAlwaysTailCalled : OccInfo -> bool :=
     | NoTailCallInfo => false
     end.
 
-Definition treatZeroAsInf : GHC.Num.Int -> IntWithInf :=
+Definition treatZeroAsInf : nat -> IntWithInf :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
     if num_1__ GHC.Base.== #0 : bool then Infinity else
@@ -1635,15 +1637,15 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
     end.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option
-     pair true tt unit Coq.Init.Datatypes.app Data.Function.on Datatypes.id
-     FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.compare__ GHC.Base.map GHC.Base.mappend GHC.Base.max__
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
-     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational
-     Panic.noString Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
+     Eq Gt Lt None Some andb bool comparison cons false list nat negb nil op_zt__
+     option pair true tt unit Coq.Init.Datatypes.app Coq.Lists.List.repeat
+     Data.Function.on Datatypes.id FastString.FastString FastString.sLit GHC.Base.Eq_
+     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.map
+     GHC.Base.mappend GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____
+     GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____
+     GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.Integer
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
+     GHC.Real.Rational Panic.noString Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
 *)

@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require GHC.Base.
-Require GHC.Num.
 Require GHC.Tuple.
 Require Unique.
 Import GHC.Base.Notations.
@@ -21,7 +20,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive UniqSupply : Type
-  := MkSplitUniqSupply : GHC.Num.Int -> UniqSupply -> UniqSupply -> UniqSupply.
+  := MkSplitUniqSupply : nat -> UniqSupply -> UniqSupply -> UniqSupply.
 
 Inductive UniqSM result : Type
   := USM : (UniqSupply -> (result * UniqSupply)%type) -> UniqSM result.
@@ -234,11 +233,11 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
          getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
 
 (* External variables:
-     cons list nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__
-     GHC.Base.liftM3 GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
-     GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
-     GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
-     GHC.Base.return_ GHC.Base.return___ GHC.Num.Int GHC.Tuple.pair3 Unique.Unique
-     Unique.mkUniqueGrimily
+     cons list nat nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.liftA2__ GHC.Base.liftM3 GHC.Base.op_z2218U__ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____
+     GHC.Base.op_zlztzg____ GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure
+     GHC.Base.pure__ GHC.Base.return_ GHC.Base.return___ GHC.Tuple.pair3
+     Unique.Unique Unique.mkUniqueGrimily
 *)

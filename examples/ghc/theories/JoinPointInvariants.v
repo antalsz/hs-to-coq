@@ -12,7 +12,11 @@ Import ListNotations.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Open Scope Z_scope.
+Open Scope nat_scope.
+
+Notation "a =? b" := (Nat.eqb a b).
+Notation "a <=? b" := (Nat.leb a b).
+Notation "a <? b" := (Nat.ltb a b).
 
 (*
 Note [Invariants on join points]
@@ -86,7 +90,7 @@ Proof. intros. apply fold_left_app. Qed.
 
 
 
-Fixpoint isJoinPointsValid (e : CoreExpr) (n : Z) (jps : VarSet) {struct e} : bool :=
+Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
   match e with
   | Mk_Var v => match isJoinId_maybe v with
     | None => true

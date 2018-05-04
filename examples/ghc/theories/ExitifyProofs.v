@@ -1294,7 +1294,7 @@ Section in_exitify.
     (* The RHS needs to be valid *)
     isJoinPointsValid e 0 jps = true -> 
     (* The join arity should match the number of lambdas added *)
-    ja = Z.of_nat (length args) ->
+    ja = (length args) ->
     (* No argument may be a join point *)
     forallb (fun a => negb (isJoinId a)) args = true ->
 
@@ -1334,13 +1334,13 @@ Section in_exitify.
         revert dependent jps.  clear jps.
         induction args; intros jps HiJPVe.
         + simpl. cbn. assumption.
-        + replace (Z.of_nat (length (a :: args))) with (1 + Z.of_nat (length args)) by admit.
-          destruct (Z.eqb_spec (1 + Z.of_nat (length args)) 0); only 1: lia.
+        + replace ((length (a :: args))) with (1 + (length args)) by admit.
+          destruct (Nat.eqb_spec (1 + (length args)) 0); only 1: lia.
           replace (mkLams (a :: args) e) with (Lam a (mkLams args e)) by reflexivity.
-          cbn -[Z.add].
-          destruct (Z.ltb_spec (1 + Z.of_nat (length args)) 1); only 1: lia.
-          replace (1 + Z.of_nat (length args) =? 1) with (Z.of_nat (length args) =? 0) by admit.
-          replace (1 + Z.of_nat (length args) - 1) with (Z.of_nat (length args)) by admit.
+          cbn -[Nat.add].
+          destruct (Nat.ltb_spec (1 + (length args)) 1); only 1: lia.
+          replace (1 +  (length args) =? 1) with ((length args) =? 0) by admit.
+          replace (1 +  (length args) - 1) with ( (length args)) by admit.
           simpl in H1. simpl_bool. destruct H1.
           apply IHargs.
           ** apply H1.

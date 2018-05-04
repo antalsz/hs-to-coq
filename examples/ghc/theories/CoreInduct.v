@@ -62,30 +62,52 @@ Proof.
   * apply HCoercion.
 Qed.
 
-Require Import Coq.NArith.BinNat.
-
-Local Open Scope N_scope.
-
-Fixpoint core_size (e : CoreExpr) : N :=
+Fixpoint core_size (e : CoreExpr) : nat :=
   match e with
   | Mk_Var v => 0
   | Lit l => 0
-  | App e1 e2 => core_size e1 + core_size e2 + 1
-  | Lam v e => core_size e + 1
+  | App e1 e2 => S (core_size e1 + core_size e2)
+  | Lam v e => S (core_size e)
   | Let (NonRec v rhs) body => 
-      core_size rhs + core_size body + 1
+      S (core_size rhs + core_size body)
   | Let (Rec pairs) body => 
-      fold_right N.add 0 (map (fun p => core_size (snd p)) pairs) +
-      core_size body + 1
+      S (fold_right plus 0 (map (fun p => core_size (snd p)) pairs) +
+         core_size body)
   | Case scrut bndr ty alts  => 
-      fold_right N.add 0 (map (fun p => core_size (snd p)) alts) +
-      core_size scrut + 1
-  | Cast e _ =>   core_size e + 1
-  | Tick _ e =>   core_size e + 1
+      S (core_size scrut +
+         fold_right plus 0 (map (fun p => core_size (snd p)) alts))
+  | Cast e _ =>   S (core_size e)
+  | Tick _ e =>   S (core_size e)
   | Type_ _  =>   0
   | Coercion _ => 0
-  end.  
+  end.
+
+(* We use the size only for comparisons. So lets
+   make a definition here that we never unfold otherwise,
+   and isntead create a tactic that handles all cases.
+*)
+Definition CoreLT := fun x y => core_size x < core_size y.
+
+Lemma CoreLT_wf : well_founded CoreLT.
+Proof.
+  apply Wf_nat.well_founded_ltof. 
+Qed.
 
 (* For less obligations from [Program Fixpoint]: *)
+Hint Resolve CoreLT_wf : arith.
 
-Hint Resolve N.lt_wf_0 : arith.
+Require Import Psatz.
+
+Lemma CoreLT_case_alts:
+  forall scrut b t alts dc pats rhs,
+  In (dc, pats, rhs) alts ->
+  CoreLT rhs (Case scrut b t alts).
+Proof.
+  intros.
+  unfold CoreLT. simpl.
+  apply Lt.le_lt_n_Sm.
+  etransitivity; only 2: apply Plus.le_plus_r.
+  induction alts; inversion H.
+  * subst. simpl. lia.
+  * intuition. simpl. lia.
+Qed.

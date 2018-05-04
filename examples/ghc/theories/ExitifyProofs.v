@@ -471,7 +471,7 @@ Section in_exitify.
      of the AST and collect all calls to [addExit].
    *)
   Program Fixpoint go_all_WellScopedFloats 
-      captured ann_e { measure (core_size (deAnnotate ann_e)) (N.lt)} : 
+      captured ann_e { measure (deAnnotate ann_e) (CoreLT) } : 
     WellScoped (deAnnotate ann_e) (extendVarSetList (getInScopeVars in_scope2) captured) ->
     StateInvariant WellScopedFloats (go captured ann_e) := _.
   Next Obligation.
@@ -541,7 +541,9 @@ Section in_exitify.
         intros [[dc pats] rhs] HIn.
         apply StateInvariant_bind_return.
         apply IH.
-        - admit.
+        - eapply CoreLT_case_alts.
+          apply in_map_iff.
+          eexists. split; only 2: eassumption. reflexivity.
         - (* This needs automation! *)
           destruct HWS as [_ HWSpairs].
           rewrite extendVarSetList_append.

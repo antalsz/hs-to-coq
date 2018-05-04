@@ -11,7 +11,6 @@ import qualified Num
 import qualified Real
 import qualified Bits
 import qualified BitUtil
-import qualified Popcount
 
 import qualified Data.Bits
 import Test.QuickCheck(NonNegative(..))
@@ -149,7 +148,7 @@ instance Data.Bits.Bits Num.Word where
   complement    = error "complement on Word undefined"
   complementBit = error "complementBit on Word undefined"
   isSigned      = \_ -> Prelude.True
-  popCount      = fromIntegral . fromBinN . Popcount.coq_N_popcount
+  popCount      = fromIntegral . fromBinN . Bits.coq_N_popcount
   rotate        = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
   rotateL       = \x i -> BinNat._N__shiftl x (toBinN (fromIntegral i))
   rotateR       = \x i -> BinNat._N__shiftr x (toBinN (fromIntegral i))

@@ -2,6 +2,7 @@ Require Import GHC.Base.
 Require State.
 Require Traversable.
 
+Set Bullet Behavior "Strict Subproofs".
 
 Local Ltac expand_pairs :=
 match goal with
@@ -127,4 +128,162 @@ Proof.
   unfold Traversable.forM, flip.
   apply StateInvariant_mapM.
   assumption.
+Qed.
+
+
+
+Definition RevStateInvariant {a} {s} (P : s -> Prop) (act : State.State s a)  (R : a -> Prop) :=
+  forall s, P (snd (State.runState' act s)) -> P s /\ R (fst (State.runState' act s)).
+  
+Lemma RevStateInvariant_runState {a} {s} (P : s -> Prop)  (act : State.State s a)  (R : a -> Prop)(s0 : s) :
+  RevStateInvariant P act R ->
+  P (snd (State.runState act s0)) ->
+  R (fst (State.runState act s0)).
+Proof.  unfold State.runState in *. expand_pairs. intros. apply H. apply H0. Qed.
+
+Lemma RevStateInvariant_return {a} {s} (P : s -> Prop) (x : a)  (R : a -> Prop):
+  R x ->
+  RevStateInvariant P (return_ x) R.
+Proof. intros. intros ??. simpl in *. intuition. Qed.
+
+Lemma RevStateInvariant_bind {a b} {s} (P : s -> Prop)
+    (act1 : State.State s a) (act2 : a -> State.State s b)
+    (Q : a -> Prop) (R : b -> Prop):
+  RevStateInvariant P (act1) Q ->
+  (forall x,  RevStateInvariant P (act2 x) (fun x' => Q x -> R x')) ->
+  RevStateInvariant P (act1 >>= act2) R.
+Proof.
+  intros Hact1 Hact2.
+  unfold RevStateInvariant,
+         op_zgzgze__, State.Monad__State, op_zgzgze____, State.Monad__State_op_zgzgze__ in *.
+  simpl in *.
+  intro s0.
+  expand_pairs. simpl in *.
+  intros HPs''.
+  split.
+  * apply Hact1.
+    apply (Hact2 (fst (State.runState' act1 s0)) (snd (State.runState' act1 s0)) HPs'').
+  * apply Hact2.
+    + apply HPs''.
+    + apply Hact1.
+      apply (Hact2 (fst (State.runState' act1 s0)) (snd (State.runState' act1 s0)) HPs'').
+Qed.
+
+Lemma RevStateInvariant_impl {a} {s} (P : s -> Prop)
+    (act1 : State.State s a) (R Q : a -> Prop):
+  RevStateInvariant P act1 R ->
+  (forall x, R x -> Q x) ->
+  RevStateInvariant P act1 Q.
+Proof.
+  intros Hact1 Himpl.
+  split.
+  * apply Hact1. apply H.
+  * apply Himpl. apply Hact1. apply H.
+Qed.
+
+
+Lemma RevStateInvariant_bind_return {a b} {s} (P : s -> Prop)
+    (act1 : State.State s a) (f : a -> b)
+    (R : b -> Prop):
+  RevStateInvariant P act1 (fun x => R (f x)) ->
+  RevStateInvariant P (act1 >>= (fun x => return_ (f x))) R.
+Proof.
+  intros Hact1.
+  eapply RevStateInvariant_bind.
+  * apply Hact1.
+  * intro x.
+    apply RevStateInvariant_return.
+    auto.
+Qed.
+
+
+Lemma RevStateInvariant_liftA2:
+  forall {a b c s} P (f : a -> b -> c) (act1 : State.State s a) (act2 : State.State s b) R1 R2 (R3 : c -> Prop),
+  RevStateInvariant P act1 R1 ->
+  RevStateInvariant P act2 R2 ->
+  (forall x y, R1 x -> R2 y -> R3 (f x y)) ->
+  RevStateInvariant P (liftA2 f act1 act2) R3.
+Proof.
+  intros ??????????? Hact1 Hact2 Hf s1.
+  unfold liftA2, State.Applicative__State, liftA2__, State.Applicative__State_liftA2,
+         State.Applicative__State_op_zlztzg__.
+  simpl; repeat (expand_pairs;simpl).
+  intro HPs3.
+  split.
+  * apply Hact1.
+    apply Hact2.
+    assumption.
+  * apply Hf.
+    + apply Hact1.
+      apply Hact2.
+      assumption.
+    + apply Hact2.
+      assumption.
+Qed.
+
+Lemma RevStateInvariant_mapM2:
+  forall {a b s} P (act : a -> State.State s b) (xs : list a) R,
+  (forall x, In x xs -> RevStateInvariant P (act x) (R x)) ->
+  RevStateInvariant P (Traversable.mapM act xs) (Forall2 R xs).
+Proof.
+  intros ??????? Hact.
+  unfold Traversable.mapM, Traversable.Traversable__list, Traversable.mapM__,
+         Traversable.Traversable__list_mapM, Traversable.Traversable__list_traverse.
+  induction xs.
+  * apply RevStateInvariant_return. constructor.
+  * simpl.
+    apply RevStateInvariant_liftA2 with (R1 := R a0) (R2 := Forall2 R xs).
+    - apply Hact. left. reflexivity.
+    - apply IHxs. intros x Hin. apply Hact. right. assumption.
+    - intros. constructor; assumption.
+Qed.
+
+Lemma RevStateInvariant_forM2:
+  forall {a b s} P (act : a -> State.State s b) (xs : list a) R,
+  (forall x, In x xs -> RevStateInvariant P (act x) (R x)) ->
+  RevStateInvariant P (Traversable.forM xs act) (Forall2 R xs).
+Proof.
+  intros.
+  unfold Traversable.forM, flip.
+  apply RevStateInvariant_mapM2.
+  assumption.
+Qed.
+
+Lemma Forall2_const_Forall:
+  forall {a b} R (xs : list a) (ys : list b),
+  Forall2 (fun _ => R) xs ys -> Forall R ys.
+Proof.
+  intros. induction H.
+  * constructor.
+  * constructor; assumption.
+Qed.
+
+Lemma Forall2_and:
+  forall {a b} P Q (xs : list a) (ys : list b),
+  Forall2 (fun x y => P x y /\ Q x y) xs ys -> (Forall2 P xs ys /\ Forall2 Q xs ys).
+Proof.
+  intros. induction H.
+  * constructor; constructor.
+  * constructor; constructor; intuition.
+Qed.
+
+Lemma Forall2_eq:
+  forall {a b c} (f : a -> c) (g : b -> c) (xs : list a) (ys : list b),
+  Forall2 (fun x y => f x = g y) xs ys -> List.map f xs = List.map g ys.
+Proof.
+  intros. induction H.
+  * reflexivity.
+  * simpl. f_equal; assumption.
+Qed.
+
+Lemma RevStateInvariant_forM:
+  forall {a b s} P (act : a -> State.State s b) (xs : list a) R,
+  (forall x, In x xs -> RevStateInvariant P (act x) R) ->
+  RevStateInvariant P (Traversable.forM xs act) (Forall R).
+Proof.
+  intros.
+  eapply RevStateInvariant_impl.
+  * apply RevStateInvariant_forM2.
+    apply H.
+  * apply Forall2_const_Forall.
 Qed.

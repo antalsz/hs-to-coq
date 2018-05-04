@@ -61,3 +61,31 @@ Proof.
   * apply HType.
   * apply HCoercion.
 Qed.
+
+Require Import Coq.NArith.BinNat.
+
+Local Open Scope N_scope.
+
+Fixpoint core_size (e : CoreExpr) : N :=
+  match e with
+  | Mk_Var v => 0
+  | Lit l => 0
+  | App e1 e2 => core_size e1 + core_size e2 + 1
+  | Lam v e => core_size e + 1
+  | Let (NonRec v rhs) body => 
+      core_size rhs + core_size body + 1
+  | Let (Rec pairs) body => 
+      fold_right N.add 0 (map (fun p => core_size (snd p)) pairs) +
+      core_size body + 1
+  | Case scrut bndr ty alts  => 
+      fold_right N.add 0 (map (fun p => core_size (snd p)) alts) +
+      core_size scrut + 1
+  | Cast e _ =>   core_size e + 1
+  | Tick _ e =>   core_size e + 1
+  | Type_ _  =>   0
+  | Coercion _ => 0
+  end.  
+
+(* For less obligations from [Program Fixpoint]: *)
+
+Hint Resolve N.lt_wf_0 : arith.

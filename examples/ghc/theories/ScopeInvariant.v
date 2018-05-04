@@ -1,9 +1,21 @@
 Require Import Core.
+Require Import CoreUtils.
 
 Require Import Coq.Lists.List.
 Import ListNotations.
 
 Set Bullet Behavior "Strict Subproofs".
+
+
+Lemma Forall_map:
+  forall {a b} P (f : a -> b) xs,
+  Forall P (map f xs) <-> Forall (fun x => P (f x)) xs.
+Proof.
+  intros.
+  induction xs; simpl.
+  * split; intro; constructor.
+  * split; intro H; inversion_clear H; constructor; try apply IHxs; assumption.
+Qed.
 
 (*
 This file describes an invariant of Core files that
@@ -20,12 +32,26 @@ This file describes an invariant of Core files that
    through [map] is fine... oh well. *)
 Definition Forall' {a} (P : a -> Prop) xs := Forall id (map P xs).
 
-Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
-  match e with
-  | Mk_Var v => match lookupVarSet in_scope v with
+Lemma Forall'_Forall:
+  forall  {a} (P : a -> Prop) xs,
+  Forall' P xs <-> Forall P xs.
+Proof.
+  intros.
+  unfold Forall'.
+  unfold id.
+  rewrite Forall_map.
+  reflexivity.
+Qed.
+
+Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
+   match lookupVarSet in_scope v with
     | None => False
     | Some v' => v = v'
-    end
+    end.
+
+Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
+  match e with
+  | Mk_Var v => WellScopedVar v in_scope
   | Lit l => True
   | App e1 e2 => WellScoped e1 in_scope /\  WellScoped e2 in_scope
   | Lam v e => WellScoped e (extendVarSet in_scope v)
@@ -46,3 +72,7 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   | Type_ _  =>   True
   | Coercion _ => True
   end.
+
+Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
+    let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
+    WellScoped (snd alt) in_scope'.

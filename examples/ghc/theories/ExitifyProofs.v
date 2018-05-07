@@ -715,8 +715,7 @@ Section in_exitify.
             rewrite <- not_false_iff_true in Heq_isJoinId.
             contradict Heq_isJoinId.
             dependent inversion pairs'; subst; clear.
-            inversion h.
-            enough (isJoinId v = false) by admit. (* Needs head defined *)
+            dependent inversion h. simpl.
             rewrite isJoinId_eq. rewrite HnotJoin. reflexivity.
           clear Heq_isJoinId.
 
@@ -743,8 +742,7 @@ Section in_exitify.
             rewrite <- not_true_iff_false in Heq_isJoinId.
             contradict Heq_isJoinId.
             dependent inversion pairs'; subst; clear.
-            inversion h.
-            enough (isJoinId v = true) by admit. (* Needs head defined *)
+            dependent inversion h. simpl.
             rewrite isJoinId_eq. rewrite HisJoin. reflexivity.
           clear Heq_isJoinId.
 

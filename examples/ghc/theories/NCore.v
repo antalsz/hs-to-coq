@@ -43,7 +43,7 @@ with NPair :=
       NPair
 with NJPair :=
   | Mk_NJPair : forall (v : Var) (params: list Var) (rhs : NExpr)
-      (HnotJoin : isJoinId_maybe v = Some (length params)),
+      (HisJoin : isJoinId_maybe v = Some (length params)),
       NJPair
 .
 
@@ -59,10 +59,12 @@ Fixpoint toExpr (e : NExpr) : CoreExpr := match e with
   | NType  => Type_ tt
   | NCoercion  => Coercion tt
 end with toBind (b : NBind) : CoreBind := match b with
-  | NNonRec     (Mk_NPair     v rhs _)       => NonRec v (toExpr rhs)
+  | NNonRec     (Mk_NPair  v rhs _)        => NonRec v (toExpr rhs)
   | NNonRecJoin (Mk_NJPair v params rhs _) => NonRec v (mkLams params (toExpr rhs))
-  | NRec     _ pairs => Rec (to_list (Vector.map (fun '(Mk_NPair v rhs _) => (v, toExpr rhs)) pairs))
-  | NRecJoin _ pairs =>
-      Rec (to_list (Vector.map (fun '(Mk_NJPair v params rhs _) => (v, (mkLams params (toExpr rhs)))) pairs))
+  | NRec     _ pairs => Rec (to_list (Vector.map toPair  pairs))
+  | NRecJoin _ pairs => Rec (to_list (Vector.map toJPair pairs))
+end with toJPair (p : NJPair) := match p with
+  | Mk_NJPair v params rhs _ => (v, (mkLams params (toExpr rhs)))
+end with toPair (p : NPair) := match p with
+  | Mk_NPair v  rhs _ => (v, toExpr rhs)
 end.
- 

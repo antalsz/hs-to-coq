@@ -2,6 +2,8 @@ Require Import Core.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
+Require Import Tactics.
+
 Set Bullet Behavior "Strict Subproofs".
 
 
@@ -111,3 +113,67 @@ Proof.
   * subst. simpl. lia.
   * intuition. simpl. lia.
 Qed.
+
+
+Lemma CoreLT_let_rhs:
+  forall v rhs e,
+  CoreLT rhs (Let (NonRec v rhs) e).
+Proof.
+  intros.
+  unfold CoreLT. simpl.
+  apply Lt.le_lt_n_Sm.
+  etransitivity; only 2: apply Plus.le_plus_l.
+  lia.
+Qed.
+
+
+Lemma CoreLT_let_pairs:
+  forall v rhs pairs e,
+  In (v, rhs) pairs ->
+  CoreLT rhs (Let (Rec pairs) e).
+Proof.
+  intros.
+  unfold CoreLT. simpl.
+  apply Lt.le_lt_n_Sm.
+  etransitivity; only 2: apply Plus.le_plus_l.
+  induction pairs; inversion H.
+  * subst. simpl. lia.
+  * intuition. simpl. lia.
+Qed.
+
+
+Lemma CoreLT_let_body:
+  forall binds e,
+  CoreLT e (Let binds e).
+Proof. intros. unfold CoreLT. simpl. destruct binds; lia. Qed.
+
+(* Needs a precondition that there are enough lambdas *)
+Lemma CoreLT_collectNBinders:
+  forall n e e',
+  CoreLT e e' ->
+  CoreLT (snd (collectNBinders n e)) e'.
+Proof.
+  intros.
+  cbv beta delta[collectNBinders].
+  float_let.
+  generalize (@nil CoreBndr); intro args.
+  generalize n; intro n'.
+  revert args e H.
+  induction n'; intros.
+  * destruct e; simpl; try apply H.
+  * destruct e; simpl.
+    Focus 4. apply IHn'. clear IHn'. cleardefs.
+    unfold CoreLT in *. simpl in *. lia.
+Admitted.
+
+(* This is a bit plump yet *)
+Ltac Core_termination :=
+  try apply CoreLT_collectNBinders;
+  first 
+    [ apply CoreLT_let_rhs
+    | apply CoreLT_let_body
+    | eapply CoreLT_let_pairs; eassumption
+    | eapply CoreLT_case_alts; eassumption
+    ].
+
+  

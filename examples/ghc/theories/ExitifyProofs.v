@@ -21,51 +21,7 @@ Require Import JoinPointInvariants.
 Require Import ScopeInvariant.
 Require Import StateLogic.
 Require Import CoreInduct.
-
-(** Tactics *)
-
-Ltac expand_pairs :=
-match goal with
-  |- context[let (_,_) := ?e in _] =>
-  rewrite (surjective_pairing e)
-end.
-
-Ltac simpl_bool :=
-  rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r,
-          ?andb_true_l, ?andb_true_r, ?andb_false_l, ?andb_false_r,
-          ?orb_true_iff, ?andb_true_iff,
-          ?orb_false_iff, ?andb_false_iff
-          in *.
-
-(** Removes all unused local definitions (but not assumptions) from the context *)
-Ltac cleardefs := repeat (multimatch goal with [ x := _  |- _ ] => clear x end).
-
-(** This tactic finds a [let x := rhs in body] anywhere in the goal,
-    and moves it into the context, without zeta-reducing it. *)
-Ltac find_let e k :=
-  lazymatch e with 
-    | let x := ?rhs in ?body => k x rhs body
-    | ?e1 ?e2 =>
-      find_let e1 ltac:(fun x rhs body => k x rhs uconstr:(body e2)) ||
-      find_let e2 ltac:(fun x rhs body => k x rhs uconstr:(e1 body))
-    | _ => fail
-  end.
-Ltac float_let :=
-  lazymatch goal with |- ?goal =>
-    find_let goal ltac:(fun x rhs body =>
-      let goal' := uconstr:(let x := rhs in body) in
-      (change goal'; intro) || fail 1000 "Failed to change to" goal'
-    )
-  end.
-
-(* NB, this does not work:
-Ltac float_let :=
-  lazymatch goal with |-  context C [let x := ?rhs in ?body] =>
-    let goal' := context C[body] in
-    change (let x := rhs in goal'); intro
-  end.
-*)
-
+Require Import Tactics.
 
 
 (** ** Punted-on lemmas about GHC functions *)
@@ -212,6 +168,8 @@ Axiom WellScoped_mkVarApps:
 Axiom exprFreeVars_mkLams:
   forall vs e,
   exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
+
+Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
 
 Lemma WellScoped_extendVarSetList_fresh_under:
@@ -600,7 +558,7 @@ Section in_exitify.
         repeat float_let.
         simpl.
         do 2 expand_pairs. simpl.
-        replace freeVarsBind1 with freeVarsBind by admit.
+        rewrite freeVarsBind1_freeVarsBind.
         unfold freeVarsBind.
         destruct b as [j rhs | pairs']; simpl.
         + destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI.
@@ -609,21 +567,18 @@ Section in_exitify.
             apply collectAnnNBndrs_collectNBinders2 in HcAB.
             destruct HcAB; subst.
             apply StateInvariant_bind.
-            ++ apply IH.
-               ** admit.
+            ++ apply IH; only 1: Core_termination.
                ** rewrite extendVarSetList_append.
                   simpl in HWS.
                   apply WellScoped_collectNBinders2.
                   apply HWS.
             ++ intros. apply StateInvariant_bind_return.
-               apply IH.
-               ** admit.
+               apply IH; only 1: Core_termination.
                ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                   apply HWS.
            - simpl in *.
              apply StateInvariant_bind_return.
-             apply IH.
-             ** admit.
+             apply IH; only 1: Core_termination.
              ** simpl. 
                 rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                 apply HWS.
@@ -642,8 +597,7 @@ Section in_exitify.
                destruct HcAB; subst.
 
                apply StateInvariant_bind_return.
-               apply IH.
-               ** admit.
+               apply IH; only 1: Core_termination.
                ** rewrite !extendVarSetList_append.
                   destruct HWS as [_ [HWS _]].
                   rewrite Forall'_Forall in HWS.
@@ -655,8 +609,7 @@ Section in_exitify.
                   eapply (HWS _ HIn).
              - intro x.
                apply StateInvariant_bind_return.
-               apply IH.
-               ** admit.              
+               apply IH; only 1: Core_termination.
                ** rewrite !extendVarSetList_append.
                   destruct HWS as [_ [_ HWS]].
                   rewrite map_map.
@@ -664,8 +617,7 @@ Section in_exitify.
                     by (intros; expand_pairs; reflexivity).
                   apply HWS.
            ++ apply StateInvariant_bind_return.
-              apply IH.
-              ** admit.        
+              apply IH; only 1: Core_termination.
               ** rewrite !extendVarSetList_append.
                  do 2 rewrite flat_map_unpack_cons_f.
                  do 2 rewrite map_map.
@@ -681,21 +633,19 @@ Section in_exitify.
         apply StateInvariant_forM.
         intros [[dc pats] rhs] HIn.
         apply StateInvariant_bind_return.
-        apply IH.
-        - eapply CoreLT_case_alts.
-          eassumption.
-        - (* This needs automation! *)
-          destruct HWS as [_ HWSpairs].
-          rewrite extendVarSetList_append.
-          rewrite Forall'_Forall in HWSpairs.
-          rewrite Forall_forall in HWSpairs.
-          apply (HWSpairs (dc, pats, rhs)).
-          assumption.
+        apply IH; only 1: Core_termination.
+        ** (* This needs automation! *)
+           destruct HWS as [_ HWSpairs].
+           rewrite extendVarSetList_append.
+           rewrite Forall'_Forall in HWSpairs.
+           rewrite Forall_forall in HWSpairs.
+           apply (HWSpairs (dc, pats, rhs)).
+           assumption.
     }
 
     subst j_4__.
     apply StateInvariant_return.
-  Admitted.
+  Qed.
 
   (* Clearly we expect the input pairs be well-scoped *)
   Variable pairs_WS :

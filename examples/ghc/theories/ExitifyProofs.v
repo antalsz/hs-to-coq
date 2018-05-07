@@ -307,7 +307,25 @@ Lemma forM_map:
   forall (m : Type -> Type) (a b c : Type) `{Monad m}
   (xs : list a) (act : b -> m c) (f : a -> b),
   Traversable.forM (map f xs) act = Traversable.forM xs (fun x => act (f x)).
-Admitted.  
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * cbv. f_equal. apply IHxs.
+Qed.
+
+Lemma forM_cong:
+  forall {a m b} `{Monad m} (f g : a -> m b) (xs : list a),
+  (forall x, In x xs -> f x = g x) ->
+  Traversable.forM xs f = Traversable.forM xs g.
+Proof.
+  intros.
+  rewrite <- forM_map with (act := fun x => x) (f := f).
+  rewrite <- forM_map with (act := fun x => x) (f := g).
+  f_equal.
+  apply map_ext_in.
+  assumption.
+Qed.
 
 (* This section reflects the context of the local definition of exitify *)
 Section in_exitify.
@@ -345,13 +363,6 @@ Section in_exitify.
     end).
 
   (* Termination of [go] *)
-  
-  Lemma forM_cong:
-    forall {a m b} `{Monad m} (f g : a -> m b) (xs : list a),
-    (forall x, In x xs -> f x = g x) ->
-    Traversable.forM xs f = Traversable.forM xs g.
-  Admitted.
-  
   Lemma go_eq : forall x y, go x y = go_f go x y.
   Proof.
     intros.

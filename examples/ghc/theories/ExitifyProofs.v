@@ -23,6 +23,8 @@ Require Import JoinPointInvariants.
 Require Import ScopeInvariant.
 Require Import StateLogic.
 Require Import CoreInduct.
+Require Import Forall.
+Require Import CoreLemmas.
 Require Import Tactics.
 
 

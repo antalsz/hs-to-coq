@@ -1,4 +1,3 @@
-
 Require Import Id.
 Require Import Core.
 Require Import BasicTypes.
@@ -9,6 +8,9 @@ Require Import Coq.ZArith.BinInt.
 Require Import Psatz.
 
 Import ListNotations.
+
+Require Import Forall.
+Require Import CoreLemmas.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -55,6 +57,44 @@ TODO are these invariants:
 
  * A lambda-, case- or pattern-bound variable is not a join point
 *)
+
+
+
+(** Invariant 2 is special: It is local (does not need a context),
+    and it is crucial to make AST traversals, that use [collectNBinders],
+    total. This means that many functions will have that as a precondition.
+    So lets isolate that.
+*)
+
+Definition HasJoinLamsPair {v : Type} x (e : Expr v) :=
+  match isJoinId_maybe x with
+  | Some n => HasNLams n e
+  | None   => True
+  end.
+  
+
+Fixpoint HasJoinLams (e : CoreExpr) {struct e} : Prop :=
+  match e with
+  | Mk_Var v => True
+  | Lit l => True
+  | App e1 e2 => HasJoinLams e1 /\  HasJoinLams e2
+  | Lam v e => HasJoinLams e
+  | Let (NonRec v rhs) body => 
+      HasJoinLamsPair v rhs /\ HasJoinLams rhs /\ HasJoinLams body
+  | Let (Rec pairs) body => 
+      Forall' (fun p => HasJoinLamsPair (fst p) (snd p)) pairs /\
+      Forall' (fun p => HasJoinLams (snd p)) pairs /\
+      HasJoinLams body
+  | Case scrut bndr ty alts  => 
+    HasJoinLams scrut /\
+      Forall' (fun alt => HasJoinLams (snd alt)) alts
+  | Cast e _ =>   HasJoinLams e
+  | Tick _ e =>   HasJoinLams e
+  | Type_ _  =>   True
+  | Coercion _ => True
+  end.
+
+(** And now the full join point invariants *)
 
 
 Definition isJoinPointsValidPair_aux

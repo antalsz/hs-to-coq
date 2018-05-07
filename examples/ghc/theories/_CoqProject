@@ -12,4 +12,5 @@ ExitifyProofs.v
 CoreSubstInvariants.v
 StateLogic.v
 Tactics.v
-
+Forall.v
+CoreLemmas.v

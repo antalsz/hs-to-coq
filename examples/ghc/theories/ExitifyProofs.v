@@ -11,6 +11,8 @@ Require Import Psatz.
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.BinNat.
 
+Require Import Coq.Logic.FunctionalExtensionality.
+
 Import ListNotations.
 
 Open Scope Z_scope.
@@ -335,10 +337,6 @@ Section in_exitify.
       exact def
     end).
 
-  (* Punting on termination of [go] for now *)
-  Axiom unsafe_deferredFix2_eq: forall {a b c} `{GHC.Err.Default c} (f : (a -> b -> c) -> (a -> b -> c)),
-    forall x y, DeferredFix.deferredFix2 f x y = f (DeferredFix.deferredFix2 f) x y.
-
   Definition go_f := ltac:(
     let rhs := eval cbv delta [go] in go in
     lazymatch rhs with
@@ -346,8 +344,99 @@ Section in_exitify.
       exact f
     end).
 
+  (* Termination of [go] *)
+  
+  Lemma forM_cong:
+    forall {a m b} `{Monad m} (f g : a -> m b) (xs : list a),
+    (forall x, In x xs -> f x = g x) ->
+    Traversable.forM xs f = Traversable.forM xs g.
+  Admitted.
+  
   Lemma go_eq : forall x y, go x y = go_f go x y.
-  Proof. apply unsafe_deferredFix2_eq. Qed.
+  Proof.
+    intros.
+    unfold go; fold go_f.
+    unfold DeferredFix.deferredFix2.
+    unfold DeferredFix.curry.
+    rewrite DeferredFix.deferredFix_eq_on with
+      (P := fun _ => True)
+      (R := fun p1 p2 => AnnCoreLT (snd p1) (snd p2)).
+    * reflexivity.
+    * apply Inverse_Image.wf_inverse_image.
+      apply AnnCoreLT_wf.
+    * intros g h [captured ann_e] HP Hgh.
+      simpl. cbv beta delta [go_f].
+      repeat float_let; cse_let.
+
+      enough (Hnext : j_37__ = j_37__0). {
+        repeat (destruct_match; try reflexivity); try apply Hnext.
+      }
+      subst j_37__ j_37__0. cleardefs.
+
+      enough (Hnext : j_36__ = j_36__0). {
+        repeat (destruct_match; try reflexivity); try apply Hnext.
+      }
+      subst j_36__ j_36__0. cleardefs.
+
+      enough (Hnext : j_35__ = j_35__0). {
+        repeat (destruct_match; try reflexivity); try apply Hnext.
+      }
+      subst j_35__ j_35__0. cleardefs.
+
+      enough (Hnext : j_22__ = j_22__0). {
+        repeat (destruct_match; try reflexivity); try apply Hnext.
+      }
+      subst j_22__ j_22__0. cleardefs.
+
+      subst j_4__.
+      repeat destruct_match; try reflexivity; subst.
+      (* Found 5 recursive calls *)
+      - f_equal. apply forM_cong. intros [[dc pats] rhs] HIn.
+        f_equal. apply Hgh.
+        + trivial.
+        + AnnCore_termination.
+      - repeat float_let; cse_let.
+        f_equal.
+        ** apply Hgh.
+           + trivial.
+           + rewrite (surjective_pairing (collectNAnnBndrs _ _)) in Heq3. inversion_clear Heq3.
+             AnnCore_termination.
+        ** extensionality join_body'.
+           repeat float_let; cse_let.
+           f_equal.
+           apply Hgh.
+           + trivial.
+           + AnnCore_termination.
+      - repeat float_let; cse_let.
+        subst j_10__ j_10__0.
+        f_equal.
+         apply Hgh.
+         + trivial.
+         + AnnCore_termination.
+      - repeat float_let; cse_let.
+        subst j_18__ j_18__0.
+        repeat float_let; cse_let.
+        f_equal.
+        ** apply forM_cong. intros [j rhs] HIn.
+           simpl.
+           expand_pairs.
+           f_equal.
+           apply Hgh.
+           + trivial.
+           + AnnCore_termination.
+        ** extensionality pairs'.
+           f_equal.
+           apply Hgh.
+           + trivial.
+           + AnnCore_termination.
+      - repeat float_let; cse_let.
+        subst j_10__ j_10__0.
+        f_equal.
+        apply Hgh.
+        + trivial.
+        + AnnCore_termination.
+  * trivial.
+  Qed.
 
   Definition ann_pairs := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 pairs) in

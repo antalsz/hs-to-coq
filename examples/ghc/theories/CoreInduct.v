@@ -1,6 +1,7 @@
 Require Import Core.
 Require Import Coq.Lists.List.
 Import ListNotations.
+Require Import Psatz.
 
 Require Import Tactics.
 
@@ -64,107 +65,111 @@ Proof.
   * apply HCoercion.
 Qed.
 
-Fixpoint core_size (e : CoreExpr) : nat :=
-  match e with
-  | Mk_Var v => 0
-  | Lit l => 0
-  | App e1 e2 => S (core_size e1 + core_size e2)
-  | Lam v e => S (core_size e)
-  | Let (NonRec v rhs) body => 
-      S (core_size rhs + core_size body)
-  | Let (Rec pairs) body => 
-      S (fold_right plus 0 (map (fun p => core_size (snd p)) pairs) +
-         core_size body)
-  | Case scrut bndr ty alts  => 
-      S (core_size scrut +
-         fold_right plus 0 (map (fun p => core_size (snd p)) alts))
-  | Cast e _ =>   S (core_size e)
-  | Tick _ e =>   S (core_size e)
-  | Type_ _  =>   0
-  | Coercion _ => 0
-  end.
+Section CoreLT.
+  Context {v : Type}.
+  
+  Fixpoint core_size (e : Expr v) : nat :=
+    match e with
+    | Mk_Var v => 0
+    | Lit l => 0
+    | App e1 e2 => S (core_size e1 + core_size e2)
+    | Lam v e => S (core_size e)
+    | Let (NonRec v rhs) body => 
+        S (core_size rhs + core_size body)
+    | Let (Rec pairs) body => 
+        S (fold_right plus 0 (map (fun p => core_size (snd p)) pairs) +
+           core_size body)
+    | Case scrut bndr ty alts  => 
+        S (core_size scrut +
+           fold_right plus 0 (map (fun p => core_size (snd p)) alts))
+    | Cast e _ =>   S (core_size e)
+    | Tick _ e =>   S (core_size e)
+    | Type_ _  =>   0
+    | Coercion _ => 0
+    end.
 
-(* We use the size only for comparisons. So lets
-   make a definition here that we never unfold otherwise,
-   and isntead create a tactic that handles all cases.
-*)
-Definition CoreLT := fun x y => core_size x < core_size y.
+  (* We use the size only for comparisons. So lets
+     make a definition here that we never unfold otherwise,
+     and isntead create a tactic that handles all cases.
+  *)
+  Definition CoreLT := fun x y => core_size x < core_size y.
 
-Lemma CoreLT_wf : well_founded CoreLT.
-Proof.
-  apply Wf_nat.well_founded_ltof. 
-Qed.
+  Lemma CoreLT_wf : well_founded CoreLT.
+  Proof.
+    apply Wf_nat.well_founded_ltof. 
+  Qed.
+
+  Lemma CoreLT_case_alts:
+    forall scrut b t alts dc pats rhs,
+    In (dc, pats, rhs) alts ->
+    CoreLT rhs (Case scrut b t alts).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_r.
+    induction alts; inversion H.
+    * subst. simpl. lia.
+    * intuition. simpl. lia.
+  Qed.
+
+
+  Lemma CoreLT_let_rhs:
+    forall v rhs e,
+    CoreLT rhs (Let (NonRec v rhs) e).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_l.
+    lia.
+  Qed.
+
+
+  Lemma CoreLT_let_pairs:
+    forall v rhs pairs e,
+    In (v, rhs) pairs ->
+    CoreLT rhs (Let (Rec pairs) e).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_l.
+    induction pairs; inversion H.
+    * subst. simpl. lia.
+    * intuition. simpl. lia.
+  Qed.
+
+
+  Lemma CoreLT_let_body:
+    forall binds e,
+    CoreLT e (Let binds e).
+  Proof. intros. unfold CoreLT. simpl. destruct binds; lia. Qed.
+
+  (* Needs a precondition that there are enough lambdas *)
+  Lemma CoreLT_collectNBinders:
+    forall n e e',
+    CoreLT e e' ->
+    CoreLT (snd (collectNBinders n e)) e'.
+  Proof.
+    intros.
+    cbv beta delta[collectNBinders].
+    float_let.
+    generalize (@nil v); intro args.
+    generalize n; intro n'.
+    revert args e H.
+    induction n'; intros.
+    * destruct e; simpl; try apply H.
+    * destruct e; simpl.
+      Focus 4. apply IHn'. clear IHn'. cleardefs.
+      unfold CoreLT in *. simpl in *. lia.
+  Admitted.
+End CoreLT.
+
+Opaque CoreLT.
 
 (* For less obligations from [Program Fixpoint]: *)
 Hint Resolve CoreLT_wf : arith.
-
-Require Import Psatz.
-
-Lemma CoreLT_case_alts:
-  forall scrut b t alts dc pats rhs,
-  In (dc, pats, rhs) alts ->
-  CoreLT rhs (Case scrut b t alts).
-Proof.
-  intros.
-  unfold CoreLT. simpl.
-  apply Lt.le_lt_n_Sm.
-  etransitivity; only 2: apply Plus.le_plus_r.
-  induction alts; inversion H.
-  * subst. simpl. lia.
-  * intuition. simpl. lia.
-Qed.
-
-
-Lemma CoreLT_let_rhs:
-  forall v rhs e,
-  CoreLT rhs (Let (NonRec v rhs) e).
-Proof.
-  intros.
-  unfold CoreLT. simpl.
-  apply Lt.le_lt_n_Sm.
-  etransitivity; only 2: apply Plus.le_plus_l.
-  lia.
-Qed.
-
-
-Lemma CoreLT_let_pairs:
-  forall v rhs pairs e,
-  In (v, rhs) pairs ->
-  CoreLT rhs (Let (Rec pairs) e).
-Proof.
-  intros.
-  unfold CoreLT. simpl.
-  apply Lt.le_lt_n_Sm.
-  etransitivity; only 2: apply Plus.le_plus_l.
-  induction pairs; inversion H.
-  * subst. simpl. lia.
-  * intuition. simpl. lia.
-Qed.
-
-
-Lemma CoreLT_let_body:
-  forall binds e,
-  CoreLT e (Let binds e).
-Proof. intros. unfold CoreLT. simpl. destruct binds; lia. Qed.
-
-(* Needs a precondition that there are enough lambdas *)
-Lemma CoreLT_collectNBinders:
-  forall n e e',
-  CoreLT e e' ->
-  CoreLT (snd (collectNBinders n e)) e'.
-Proof.
-  intros.
-  cbv beta delta[collectNBinders].
-  float_let.
-  generalize (@nil CoreBndr); intro args.
-  generalize n; intro n'.
-  revert args e H.
-  induction n'; intros.
-  * destruct e; simpl; try apply H.
-  * destruct e; simpl.
-    Focus 4. apply IHn'. clear IHn'. cleardefs.
-    unfold CoreLT in *. simpl in *. lia.
-Admitted.
 
 (* This is a bit plump yet *)
 Ltac Core_termination :=
@@ -176,4 +181,95 @@ Ltac Core_termination :=
     | eapply CoreLT_case_alts; eassumption
     ].
 
-  
+(** And now the same for annotated core expressions *)
+Section AnnCoreLT.
+  Context {a v : Type}.
+  Definition AnnCoreLT := fun (x y : AnnExpr a v) =>
+     CoreLT (deAnnotate x) (deAnnotate y).
+
+  Lemma AnnCoreLT_wf : well_founded AnnCoreLT.
+  Proof.
+    unfold AnnCoreLT.
+    apply Inverse_Image.wf_inverse_image.
+    apply CoreLT_wf.
+  Qed.
+
+  Lemma AnnCoreLT_case_alts:
+    forall scrut b t alts dc pats rhs ann,
+    In (dc, pats, rhs) alts ->
+    AnnCoreLT rhs (ann, AnnCase scrut b t alts).
+  Proof.
+    intros.
+    unfold AnnCoreLT.
+    simpl.
+    eapply CoreLT_case_alts.
+    rewrite in_map_iff.
+    exists (dc, pats, rhs).
+    split; [reflexivity|assumption].
+  Qed.
+
+  Lemma AnnCoreLT_let_rhs:
+    forall v rhs e fvs,
+    AnnCoreLT rhs (fvs, AnnLet (AnnNonRec v rhs) e).
+  Proof.
+    intros.
+    unfold AnnCoreLT. simpl.
+    apply CoreLT_let_rhs.
+  Qed.
+
+
+
+  Local Lemma flat_map_unpack_cons_f:
+    forall (A B C : Type) (f : A -> B -> C ) (xs : list (A * B)),
+     flat_map (fun '(x,y) => [f x y]) xs = map (fun '(x,y) => f x y) xs.
+  Proof.
+    intros.
+    induction xs.
+    * reflexivity.
+    * simpl. repeat expand_pairs. simpl.
+      f_equal. apply IHxs.
+  Qed.
+
+
+  Lemma AnnCoreLT_let_pairs:
+    forall v rhs pairs e fvs,
+    In (v, rhs) pairs ->
+    AnnCoreLT rhs (fvs, AnnLet (AnnRec pairs) e).
+  Proof.
+    intros.
+    unfold AnnCoreLT. simpl.
+    eapply CoreLT_let_pairs.
+    rewrite flat_map_unpack_cons_f.
+    rewrite in_map_iff.
+    exists (v0, rhs).
+    split; [reflexivity|assumption].
+  Qed.
+
+
+  Lemma AnnCoreLT_let_body:
+    forall binds e fvs,
+    AnnCoreLT e (fvs, AnnLet binds e).
+  Proof. intros. unfold AnnCoreLT. simpl. destruct binds; apply CoreLT_let_body. Qed.
+
+  (* Needs a precondition that there are enough lambdas *)
+  Lemma AnnCoreLT_collectNAnnBndrs:
+    forall n e e' `{GHC.Err.Default v},
+    AnnCoreLT e e' ->
+    AnnCoreLT (snd (collectNAnnBndrs n e)) e'.
+  Admitted.
+
+End AnnCoreLT.
+
+(* For less obligations from [Program Fixpoint]: *)
+Hint Resolve AnnCoreLT_wf : arith.
+
+(* This is a bit plump yet *)
+Ltac AnnCore_termination :=
+  try apply AnnCoreLT_collectNAnnBndrs;
+  first 
+    [ apply AnnCoreLT_let_rhs
+    | apply AnnCoreLT_let_body
+    | eapply AnnCoreLT_let_pairs; eassumption
+    | eapply AnnCoreLT_case_alts; eassumption
+    ].
+

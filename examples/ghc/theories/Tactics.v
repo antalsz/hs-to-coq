@@ -15,6 +15,17 @@ Ltac simpl_bool :=
           ?orb_false_iff, ?andb_false_iff
           in *.
 
+Ltac destruct_match :=
+  match goal with
+  | [ H :context[match ?a with _ => _ end] |- _] =>
+    let Heq := fresh "Heq" in
+    destruct a eqn:Heq
+  | [ |- context[match ?a with _ => _ end]] =>
+    let Heq := fresh "Heq" in
+    destruct a eqn:Heq
+  end.
+
+
 (** Removes all unused local definitions (but not assumptions) from the context *)
 Ltac cleardefs := repeat (multimatch goal with [ x := _  |- _ ] => clear x end).
 
@@ -44,4 +55,10 @@ Ltac float_let :=
   end.
 *)
 
+(** Common subexpression elimination *)
+Ltac cse_let :=
+      repeat lazymatch goal with
+        [ x := ?rhs, x0 := ?rhs |- _ ] =>
+          change x0 with x in *;clear x0
+        end.
 

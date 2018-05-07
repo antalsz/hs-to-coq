@@ -94,6 +94,49 @@ Fixpoint HasJoinLams (e : CoreExpr) {struct e} : Prop :=
   | Coercion _ => True
   end.
 
+Definition AnnHasJoinLamsPair {a v : Type} (x : Id) (e : AnnExpr v a) :=
+  match isJoinId_maybe x with
+  | Some n => AnnHasNLams n e
+  | None   => True
+  end.
+
+
+(* With AnnExpr, [Fixpoint] is too confused *)
+Inductive AnnHasJoinLams {a : Type} : AnnExpr Id a -> Prop :=
+  | AnnHasJoinLams_Var : forall fvs v,  AnnHasJoinLams (fvs, AnnVar v)
+  | AnnHasJoinLams_Lit : forall fvs l,  AnnHasJoinLams (fvs, AnnLit l)
+  | AnnHasJoinLams_App : forall fvs e1 e2,
+      AnnHasJoinLams e1 -> AnnHasJoinLams e2 -> AnnHasJoinLams (fvs, AnnApp e1 e2)
+  | AnnHasJoinLams_Lam : forall fvs v e,
+      AnnHasJoinLams e -> AnnHasJoinLams (fvs, AnnLam v e)
+  | AnnHasJoinLams_LetNonRec : forall fvs v rhs body,
+      AnnHasJoinLamsPair v rhs ->
+      AnnHasJoinLams rhs ->
+      AnnHasJoinLams body ->
+      AnnHasJoinLams (fvs, AnnLet (AnnNonRec v rhs) body)
+  | AnnHasJoinLams_LetRec : forall fvs pairs body,
+      Forall (fun p => AnnHasJoinLamsPair (fst p) (snd p)) pairs ->
+      Forall (fun p => AnnHasJoinLams (snd p)) pairs ->
+      AnnHasJoinLams body ->
+      AnnHasJoinLams (fvs, AnnLet (AnnRec pairs) body)
+  | AnnHasJoinLams_Case : forall fvs scrut bndr ty alts,
+      AnnHasJoinLams scrut ->
+      Forall (fun alt => AnnHasJoinLams (snd alt)) alts ->
+      AnnHasJoinLams (fvs, AnnCase scrut bndr ty alts)
+  | AnnHasJoinLams_Cast : forall fvs e co,
+        AnnHasJoinLams e -> AnnHasJoinLams (fvs, AnnCast e co)
+  | AnnHasJoinLams_Tick: forall fvs t e,
+        AnnHasJoinLams e -> AnnHasJoinLams (fvs, AnnTick t e)
+  | AnnHasJoinLams_Type :    forall fvs t,  AnnHasJoinLams (fvs, AnnType t)
+  | AnnHasJoinLams_Coercion: forall fvs co, AnnHasJoinLams (fvs, AnnCoercion co)
+  .
+
+
+Lemma HasJoinLams_deAnnotate:
+  forall { a : Type} (e : AnnExpr Id a),
+  HasJoinLams (deAnnotate e) <-> AnnHasJoinLams e.
+Admitted.
+
 (** And now the full join point invariants *)
 
 

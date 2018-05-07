@@ -4,6 +4,7 @@ Import ListNotations.
 Require Import Psatz.
 
 Require Import Tactics.
+Require Import CoreLemmas.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -149,6 +150,7 @@ Section CoreLT.
   (* Needs a precondition that there are enough lambdas *)
   Lemma CoreLT_collectNBinders:
     forall n e e',
+    HasNLams n e ->
     CoreLT e e' ->
     CoreLT (snd (collectNBinders n e)) e'.
   Proof.
@@ -156,14 +158,15 @@ Section CoreLT.
     cbv beta delta[collectNBinders].
     float_let.
     generalize (@nil v); intro args.
+    revert args e H H0.
     generalize n; intro n'.
-    revert args e H.
-    induction n'; intros.
-    * destruct e; simpl; try apply H.
-    * destruct e; simpl.
-      Focus 4. apply IHn'. clear IHn'. cleardefs.
-      unfold CoreLT in *. simpl in *. lia.
-  Admitted.
+    induction n'; intros args e HLams Hlt.
+    * destruct e; simpl; try apply Hlt.
+    * destruct e; simpl; simpl in HLams; try contradiction.
+      apply IHn'; clear IHn'; cleardefs.
+      + apply HLams.
+      + unfold CoreLT in *. simpl in *. lia.
+  Qed.
 End CoreLT.
 
 Opaque CoreLT.
@@ -173,7 +176,7 @@ Hint Resolve CoreLT_wf : arith.
 
 (* This is a bit plump yet *)
 Ltac Core_termination :=
-  try apply CoreLT_collectNBinders;
+  try (apply CoreLT_collectNBinders; only 1: assumption);
   first 
     [ apply CoreLT_let_rhs
     | apply CoreLT_let_body
@@ -254,9 +257,17 @@ Section AnnCoreLT.
   (* Needs a precondition that there are enough lambdas *)
   Lemma AnnCoreLT_collectNAnnBndrs:
     forall n e e' `{GHC.Err.Default v},
+    AnnHasNLams n e ->
     AnnCoreLT e e' ->
     AnnCoreLT (snd (collectNAnnBndrs n e)) e'.
-  Admitted.
+  Proof.
+    intros.
+    unfold AnnCoreLT.
+    rewrite deAnnotate_snd_collectNAnnBndrs by assumption.
+    apply CoreLT_collectNBinders.
+    + apply HasNLams_deAnnotate; assumption.
+    + apply H1.
+  Qed.
 
 End AnnCoreLT.
 
@@ -265,7 +276,7 @@ Hint Resolve AnnCoreLT_wf : arith.
 
 (* This is a bit plump yet *)
 Ltac AnnCore_termination :=
-  try apply AnnCoreLT_collectNAnnBndrs;
+  try (apply AnnCoreLT_collectNAnnBndrs; only 1: assumption);
   first 
     [ apply AnnCoreLT_let_rhs
     | apply AnnCoreLT_let_body

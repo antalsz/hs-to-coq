@@ -365,14 +365,17 @@ Section in_exitify.
     end).
 
   (* Termination of [go] *)
-  Lemma go_eq : forall x y, go x y = go_f go x y.
+  Lemma go_eq :
+     forall x y,
+     HasJoinLams (deAnnotate y) ->
+     go x y = go_f go x y.
   Proof.
     intros.
     unfold go; fold go_f.
     unfold DeferredFix.deferredFix2.
     unfold DeferredFix.curry.
     rewrite DeferredFix.deferredFix_eq_on with
-      (P := fun _ => True)
+      (P := fun p => AnnHasJoinLams (snd p))
       (R := fun p1 p2 => AnnCoreLT (snd p1) (snd p2)).
     * reflexivity.
     * apply Inverse_Image.wf_inverse_image.
@@ -406,50 +409,61 @@ Section in_exitify.
       (* Found 5 recursive calls *)
       - f_equal. apply forM_cong. intros [[dc pats] rhs] HIn.
         f_equal. apply Hgh.
-        + trivial.
+        + inversion HP; subst; clear HP.
+          rewrite Forall_forall in H6.
+          apply (H6 _ HIn).
         + AnnCore_termination.
       - repeat float_let; cse_let.
+        inversion HP; subst; clear HP.
+        unfold AnnHasJoinLamsPair in H3. rewrite Heq2 in H3.
         f_equal.
         ** apply Hgh.
-           + trivial.
+           + admit.
            + rewrite (surjective_pairing (collectNAnnBndrs _ _)) in Heq3. inversion_clear Heq3.
              AnnCore_termination.
         ** extensionality join_body'.
            repeat float_let; cse_let.
            f_equal.
            apply Hgh.
-           + trivial.
+           + admit.
            + AnnCore_termination.
       - repeat float_let; cse_let.
         subst j_10__ j_10__0.
         f_equal.
          apply Hgh.
-         + trivial.
+         + admit.
          + AnnCore_termination.
       - repeat float_let; cse_let.
         subst j_18__ j_18__0.
         repeat float_let; cse_let.
+        inversion HP; subst; clear HP.
         f_equal.
         ** apply forM_cong. intros [j rhs] HIn.
            simpl.
            expand_pairs.
            f_equal.
            apply Hgh.
-           + trivial.
-           + AnnCore_termination.
+           + admit.
+           + Fail AnnCore_termination.
+             (* This is still bad. [idJoinArity] errors out when the id
+                is not a join id. But to know this, we neeed
+                to know that either all or none of a [Rec] are join ids... *)
+             admit.
         ** extensionality pairs'.
            f_equal.
            apply Hgh.
-           + trivial.
+           + apply H5.
            + AnnCore_termination.
       - repeat float_let; cse_let.
         subst j_10__ j_10__0.
+        inversion HP; subst; clear HP.
         f_equal.
         apply Hgh.
-        + trivial.
+        + apply H5. 
         + AnnCore_termination.
-  * trivial.
-  Qed.
+  * rewrite HasJoinLams_deAnnotate in H.
+    assumption.
+  Admitted.
 
   Definition ann_pairs := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 pairs) in
@@ -587,13 +601,15 @@ Section in_exitify.
    *)
   Program Fixpoint go_all_WellScopedFloats 
       captured e { measure e (CoreLT) } : 
+    HasJoinLams e ->
     WellScoped e (extendVarSetList (getInScopeVars in_scope2) captured) ->
     StateInvariant WellScopedFloats (go captured (freeVars e)) := _.
   Next Obligation.
     rename go_all_WellScopedFloats into IH.
-    rename H into HWS.
+    rename H into HJoinLams.
+    rename H0 into HWS.
     set (P := WellScopedFloats).
-    rewrite go_eq.
+    rewrite go_eq  by (rewrite deAnnotate_freeVars; apply HJoinLams).
     cbv beta delta [go_f]. (* No [zeta]! *)
 
     rewrite !dVarSet_freeVarsOf_Ann in *.
@@ -663,29 +679,35 @@ Section in_exitify.
         rewrite freeVarsBind1_freeVarsBind.
         unfold freeVarsBind.
         destruct b as [j rhs | pairs']; simpl.
-        + destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI.
+        + destruct HJoinLams as [HJLP [HJLrhs HJe]].
+          unfold HasJoinLamsPair in HJLP.
+          destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI.
           - unfold CoreBndr in *.
             destruct (collectNAnnBndrs _ _) as [params join_body] eqn:HcAB.
             apply collectAnnNBndrs_collectNBinders2 in HcAB.
             destruct HcAB; subst.
             apply StateInvariant_bind.
             ++ apply IH; only 1: Core_termination.
+               ** admit.
                ** rewrite extendVarSetList_append.
                   simpl in HWS.
                   apply WellScoped_collectNBinders2.
                   apply HWS.
             ++ intros. apply StateInvariant_bind_return.
                apply IH; only 1: Core_termination.
+               ** apply HJe.
                ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                   apply HWS.
            - simpl in *.
              apply StateInvariant_bind_return.
              apply IH; only 1: Core_termination.
+             ** apply HJe.
              ** simpl. 
                 rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                 apply HWS.
         + expand_pairs. simpl.
           rewrite !zip_unzip_map.
+          destruct HJoinLams as [HJLP [HJLrhss HJe]].
 
           destruct (isJoinId _).
           ++ intros.
@@ -699,7 +721,8 @@ Section in_exitify.
                destruct HcAB; subst.
 
                apply StateInvariant_bind_return.
-               apply IH; only 1: Core_termination.
+               apply IH; only 1: (admit; Core_termination).
+               ** admit.
                ** rewrite !extendVarSetList_append.
                   destruct HWS as [_ [HWS _]].
                   rewrite Forall'_Forall in HWS.
@@ -712,6 +735,7 @@ Section in_exitify.
              - intro x.
                apply StateInvariant_bind_return.
                apply IH; only 1: Core_termination.
+               ** apply HJe.
                ** rewrite !extendVarSetList_append.
                   destruct HWS as [_ [_ HWS]].
                   rewrite map_map.
@@ -720,6 +744,7 @@ Section in_exitify.
                   apply HWS.
            ++ apply StateInvariant_bind_return.
               apply IH; only 1: Core_termination.
+              ** apply HJe.
               ** rewrite !extendVarSetList_append.
                  do 2 rewrite flat_map_unpack_cons_f.
                  do 2 rewrite map_map.
@@ -728,6 +753,10 @@ Section in_exitify.
                  apply HWS.
       * (* Case [Case] *)
         simpl in *.
+        destruct HJoinLams as [HJLscrut HJLalts].
+        rewrite Forall'_Forall in HJLalts.
+        rewrite Forall_forall in HJLalts.
+        
         do 2 expand_pairs. simpl.
         rewrite snd_unzip, !map_map.
         rewrite forM_map.
@@ -736,6 +765,7 @@ Section in_exitify.
         intros [[dc pats] rhs] HIn.
         apply StateInvariant_bind_return.
         apply IH; only 1: Core_termination.
+        ** apply (HJLalts _ HIn).
         ** (* This needs automation! *)
            destruct HWS as [_ HWSpairs].
            rewrite extendVarSetList_append.
@@ -747,11 +777,13 @@ Section in_exitify.
 
     subst j_4__.
     apply StateInvariant_return.
-  Qed.
+  Admitted.
 
   (* Clearly we expect the input pairs be well-scoped *)
   Variable pairs_WS :
     Forall (fun p => WellScoped (snd p) (extendVarSetList (getInScopeVars in_scope) (map fst pairs))) pairs .
+  Variable pairs_HJL:
+    Forall (fun p => HasJoinLams (snd p)) pairs .
 
 
   Lemma all_exists_WellScoped:
@@ -769,12 +801,14 @@ Section in_exitify.
       rewrite collectAnnNBndrs_collectNBinders3; simpl.
       apply StateInvariant_bind_return.
       apply go_all_WellScopedFloats.
-      eapply WellScoped_collectNBinders2.
-      unfold in_scope2. rewrite getInScopeVars_extendInScopeSetList.
-      rewrite Forall_forall in pairs_WS.
-      apply (pairs_WS _ HIn).
+      + rewrite Forall_forall in pairs_HJL. 
+        admit.
+      + eapply WellScoped_collectNBinders2.
+        unfold in_scope2. rewrite getInScopeVars_extendInScopeSetList.
+        rewrite Forall_forall in pairs_WS.
+        apply (pairs_WS _ HIn).
     * repeat split; constructor.
-  Qed.
+  Admitted.
 
   Definition sublistOf {a} (xs ys : list a) := incl ys xs.
 
@@ -1151,7 +1185,7 @@ Section in_exitify.
            Bifunctor.Bifunctor__pair_type_second, Bifunctor.Bifunctor__pair_type_bimap.
     unfold id.
     generalize (@nil (CoreBndr * Expr CoreBndr)) as s.
-    clear pairs_WS.
+    clear pairs_WS pairs_HJL.
     induction pairs.
     * reflexivity.
     * intro.

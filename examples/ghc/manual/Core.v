@@ -89,31 +89,6 @@ Require GHC.Err.
 Parameter CoreRuleInfo  : Type.
 
 (* -------------------- *)
-
-(*
-Require Name.
-Require Class.
-
-(* Record selectors *)
-Parameter tyConName    : TyCon -> Name.Name.
-Parameter tyConKind    : TyCon -> Kind.
-Parameter tyConResKind : TyCon -> Kind.
-Parameter tyConBinders : TyCon -> list TyBinder.
-Parameter tyConTyVars  : TyCon -> list TyVar.
-
-Parameter isLiftedTypeKindTyConName : Name.Name -> bool.
-
-(* Need to skip tyConAssoc_maybe *)
-Parameter isTyConAssoc : TyCon -> bool.
-Parameter makeTyConAbstract : TyCon -> TyCon.
-Parameter mkClassTyCon : Name.Name -> list TyBinder -> list TyVar
-                          -> list Role -> AlgTyConRhs -> Class.Class
-                          -> BasicTypes.RecFlag -> Name.Name -> TyCon.
-Parameter algTcFields : TyCon -> FieldLabel.FieldLabelEnv.
-
-(* record label flLabel is not qualified. *)
-Parameter fieldsOfAlgTcRhs : AlgTyConRhs -> FieldLabel.FieldLabelEnv.
-*)
 (* Require Import Core.*)
 
 
@@ -128,6 +103,9 @@ Ltac termination_by_omega :=
 (* Converted imports: *)
 
 Require BasicTypes.
+Require BinNat.
+Require BinNatDef.
+Require BinNums.
 Require BooleanFormula.
 Require Constants.
 Require Coq.Init.Datatypes.
@@ -155,7 +133,6 @@ Require Maybes.
 Require Module.
 Require Name.
 Require NameEnv.
-Require Nat.
 Require OccName.
 Require Panic.
 Require PrelNames.
@@ -180,8 +157,8 @@ Inductive UnfoldingSource : Type
   |  InlineCompulsory : UnfoldingSource.
 
 Inductive UnfoldingGuidance : Type
-  := UnfWhen : nat -> bool -> bool -> UnfoldingGuidance
-  |  UnfIfGoodArgs : list nat -> nat -> nat -> UnfoldingGuidance
+  := UnfWhen : BasicTypes.Arity -> bool -> bool -> UnfoldingGuidance
+  |  UnfIfGoodArgs : list BinNums.N -> BinNums.N -> BinNums.N -> UnfoldingGuidance
   |  UnfNever : UnfoldingGuidance.
 
 Inductive Unfolding : Type := Mk_Unfolding.
@@ -229,12 +206,12 @@ Inductive TickishPlacement : Type
 
 Inductive Tickish id : Type
   := ProfNote : unit -> bool -> bool -> Tickish id
-  |  HpcTick : Module.Module -> nat -> Tickish id
-  |  Breakpoint : nat -> list id -> Tickish id
+  |  HpcTick : Module.Module -> BinNums.N -> Tickish id
+  |  Breakpoint : BinNums.N -> list id -> Tickish id
   |  SourceNote : SrcLoc.RealSrcSpan -> GHC.Base.String -> Tickish id.
 
 Definition TickBoxId :=
-  nat%type.
+  BinNums.N%type.
 
 Inductive TickBoxOp : Type := TickBox : Module.Module -> TickBoxId -> TickBoxOp.
 
@@ -258,7 +235,7 @@ Inductive SrcStrictness : Type
   |  NoSrcStrict : SrcStrictness.
 
 Inductive RecTcChecker : Type
-  := RC : nat -> (NameEnv.NameEnv nat) -> RecTcChecker.
+  := RC : BinNums.N -> (NameEnv.NameEnv BinNums.N) -> RecTcChecker.
 
 Inductive PrimElemRep : Type
   := Int8ElemRep : PrimElemRep
@@ -283,12 +260,12 @@ Inductive PrimRep : Type
   |  AddrRep : PrimRep
   |  FloatRep : PrimRep
   |  DoubleRep : PrimRep
-  |  VecRep : nat -> PrimElemRep -> PrimRep.
+  |  VecRep : BinNums.N -> PrimElemRep -> PrimRep.
 
 Inductive RuntimeRepInfo : Type
   := NoRRI : RuntimeRepInfo
   |  RuntimeRep : (list unit -> list PrimRep) -> RuntimeRepInfo
-  |  VecCount : nat -> RuntimeRepInfo
+  |  VecCount : BinNums.N -> RuntimeRepInfo
   |  VecElem : PrimElemRep -> RuntimeRepInfo.
 
 Definition OutType :=
@@ -398,7 +375,7 @@ Definition DmdResult :=
   (Termination CPRResult)%type.
 
 Definition ArityInfo :=
-  nat%type.
+  BasicTypes.Arity%type.
 
 Inductive ArgUse__raw : Type :=.
 
@@ -492,7 +469,8 @@ with ClassATItem : Type
 with TyCon : Type
   := FunTyCon
    : Unique.Unique ->
-     Name.Name -> list TyConBinder -> unit -> unit -> nat -> TyConRepName -> TyCon
+     Name.Name ->
+     list TyConBinder -> unit -> unit -> BasicTypes.Arity -> TyConRepName -> TyCon
   |  AlgTyCon
    : Unique.Unique ->
      Name.Name ->
@@ -500,7 +478,7 @@ with TyCon : Type
      list TyVar ->
      unit ->
      unit ->
-     nat ->
+     BasicTypes.Arity ->
      list unit ->
      option unit ->
      bool ->
@@ -509,7 +487,8 @@ with TyCon : Type
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
-     list TyVar -> unit -> unit -> nat -> list unit -> unit -> bool -> bool -> TyCon
+     list TyVar ->
+     unit -> unit -> BasicTypes.Arity -> list unit -> unit -> bool -> bool -> TyCon
   |  FamilyTyCon
    : Unique.Unique ->
      Name.Name ->
@@ -517,24 +496,30 @@ with TyCon : Type
      list TyVar ->
      unit ->
      unit ->
-     nat -> option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon
+     BasicTypes.Arity ->
+     option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon
   |  PrimTyCon
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
-     unit -> unit -> nat -> list unit -> bool -> option TyConRepName -> TyCon
+     unit ->
+     unit -> BasicTypes.Arity -> list unit -> bool -> option TyConRepName -> TyCon
   |  PromotedDataCon
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
      unit ->
-     unit -> nat -> list unit -> DataCon -> TyConRepName -> RuntimeRepInfo -> TyCon
+     unit ->
+     BasicTypes.Arity ->
+     list unit -> DataCon -> TyConRepName -> RuntimeRepInfo -> TyCon
   |  TcTyCon
    : Unique.Unique ->
      Name.Name ->
      list TyConBinder ->
      list TyVar ->
-     unit -> unit -> nat -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon
+     unit ->
+     unit ->
+     BasicTypes.Arity -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon
 with AlgTyConRhs : Type
   := AbstractTyCon : AlgTyConRhs
   |  DataTyCon : list DataCon -> bool -> AlgTyConRhs
@@ -558,16 +543,20 @@ with DataCon : Type
      unit ->
      list HsSrcBang ->
      list FieldLabel.FieldLabel ->
-     Id -> DataConRep -> nat -> nat -> TyCon -> unit -> bool -> TyCon -> DataCon
+     Id ->
+     DataConRep ->
+     BasicTypes.Arity ->
+     BasicTypes.Arity -> TyCon -> unit -> bool -> TyCon -> DataCon
 with DataConRep : Type
   := NoDataConRep : DataConRep
   |  DCR
    : Id ->
      unit -> list unit -> list StrictnessMark -> list HsImplBang -> DataConRep
 with Var : Type
-  := Mk_TyVar : Name.Name -> nat -> unit -> Var
-  |  Mk_TcTyVar : Name.Name -> nat -> unit -> unit -> Var
-  |  Mk_Id : Name.Name -> nat -> unit -> IdScope -> IdDetails -> IdInfo -> Var
+  := Mk_TyVar : Name.Name -> BinNums.N -> unit -> Var
+  |  Mk_TcTyVar : Name.Name -> BinNums.N -> unit -> unit -> Var
+  |  Mk_Id
+   : Name.Name -> BinNums.N -> unit -> IdScope -> IdDetails -> IdInfo -> Var
 with IdDetails : Type
   := VanillaId : IdDetails
   |  RecSelId : RecSelParent -> bool -> IdDetails
@@ -588,7 +577,7 @@ with PatSyn : Type
    : Name.Name ->
      Unique.Unique ->
      list unit ->
-     nat ->
+     BasicTypes.Arity ->
      bool ->
      list FieldLabel.FieldLabel ->
      list TyVarBinder ->
@@ -839,7 +828,7 @@ Definition TypeVar :=
 Definition VarSet :=
   (UniqSet.UniqSet Var)%type.
 
-Inductive InScopeSet : Type := InScope : VarSet -> nat -> InScopeSet.
+Inductive InScopeSet : Type := InScope : VarSet -> BinNums.N -> InScopeSet.
 
 Definition InScopeEnv :=
   (InScopeSet * IdUnfoldingFun)%type%type.
@@ -857,7 +846,8 @@ Inductive CoreRule : Type
      list CoreBndr ->
      list CoreExpr ->
      CoreExpr -> bool -> Module.Module -> IsOrphan -> bool -> CoreRule
-  |  BuiltinRule : BasicTypes.RuleName -> Name.Name -> nat -> RuleFun -> CoreRule.
+  |  BuiltinRule
+   : BasicTypes.RuleName -> Name.Name -> BinNums.N -> RuleFun -> CoreRule.
 
 Definition RuleBase :=
   (NameEnv.NameEnv (list CoreRule))%type.
@@ -2486,13 +2476,13 @@ Admitted.
 (* needs UniqFM.plusUFM_CD *)
 Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
                                a -> a -> VarEnv a.
-
+(* ------------- CoreSyn midamble.v ------------ *)
 
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
 Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
-           nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
+           GHC.Num.Word -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type. 
 
 Require Import Omega.
 
@@ -2693,9 +2683,16 @@ Require Import GHC.Nat.
 Require Import Omega.
 Ltac solve_not_zero := match goal with 
   | [ H : GHC.Base.op_zeze__ ?x ?y = false |- _ ] => 
-    unfold GHC.Base.op_zeze__, Eq_nat in H; simpl in H; apply EqNat.beq_nat_false in H
-end; omega.
+    unfold GHC.Base.op_zeze__ in H;
+    unfold GHC.Base.Eq_Char___ in H;
+    simpl in H;
+    apply N.eqb_neq in H end;
+    zify;
+    omega.
 
+Ltac distinguish := split; intros; unfold not; intros [? ?]; discriminate.
+Ltac solve_mkWorkerDemand := Tactics.program_simpl; solve_not_zero.
+Ltac solve_dmdTransform := Tactics.program_simpl; try solve_not_zero; try distinguish.
 
 
 Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=
@@ -3759,7 +3756,7 @@ Definition argOneShots : Demand -> list BasicTypes.OneShotInfo :=
     end.
 
 Definition argsOneShots
-   : StrictSig -> nat -> list (list BasicTypes.OneShotInfo) :=
+   : StrictSig -> BasicTypes.Arity -> list (list BasicTypes.OneShotInfo) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ arg_ds _), n_val_args =>
@@ -3798,14 +3795,15 @@ Definition mkFamilyTyCon
      option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon :=
   fun name binders res_kind resVar flav parent inj =>
     FamilyTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-                (Coq.Lists.List.length binders) resVar flav parent inj.
+                (BinNat.N.of_nat (Coq.Lists.List.length binders)) resVar flav parent inj.
 
 Definition mkSynonymTyCon
    : Name.Name ->
      list TyConBinder -> unit -> list unit -> unit -> bool -> bool -> TyCon :=
   fun name binders res_kind roles rhs is_tau is_fam_free =>
     SynonymTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind
-                 tt (Coq.Lists.List.length binders) roles rhs is_tau is_fam_free.
+                 tt (BinNat.N.of_nat (Coq.Lists.List.length binders)) roles rhs is_tau
+                 is_fam_free.
 
 Definition mkTcTyCon
    : Name.Name ->
@@ -3813,16 +3811,17 @@ Definition mkTcTyCon
      unit -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon :=
   fun name binders res_kind scoped_tvs flav =>
     TcTyCon (Unique.getUnique name) name binders (binderVars binders) res_kind tt
-            (Coq.Lists.List.length binders) scoped_tvs flav.
+            (BinNat.N.of_nat (Coq.Lists.List.length binders)) scoped_tvs flav.
 
 Definition mkTupleTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit -> nat -> DataCon -> BasicTypes.TupleSort -> AlgTyConFlav -> TyCon :=
+     unit ->
+     BasicTypes.Arity -> DataCon -> BasicTypes.TupleSort -> AlgTyConFlav -> TyCon :=
   fun name binders res_kind arity con sort parent =>
     AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-             arity (Coq.Lists.List.repeat tt arity) None false nil (TupleTyCon con sort)
-             FastStringEnv.emptyDFsEnv parent.
+             arity (Coq.Lists.List.repeat tt (BinNat.N.to_nat arity)) None false nil
+             (TupleTyCon con sort) FastStringEnv.emptyDFsEnv parent.
 
 Definition patSynExTyVars : PatSyn -> list TyVar :=
   fun ps => binderVars (psExTyVars ps).
@@ -3916,8 +3915,8 @@ Definition classATs : Class -> list TyCon :=
     | _ => nil
     end.
 
-Definition classArity : Class -> nat :=
-  fun clas => Coq.Lists.List.length (classTyVars clas).
+Definition classArity : Class -> BasicTypes.Arity :=
+  fun clas => BinNat.N.of_nat (Coq.Lists.List.length (classTyVars clas)).
 
 Definition classBigSig
    : Class -> (list TyVar * list unit * list Id * list ClassOpItem)%type :=
@@ -4062,14 +4061,15 @@ Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
                  end in
     go nil expr.
 
-Definition collectNBinders {b} : nat -> Expr b -> (list b * Expr b)%type :=
+Definition collectNBinders {b}
+   : BinNums.N -> Expr b -> (list b * Expr b)%type :=
   fun orig_n orig_expr =>
     let fix go arg_0__ arg_1__ arg_2__
               := match arg_0__, arg_1__, arg_2__ with
                  | num_3__, bs, expr =>
                      if num_3__ GHC.Base.== #0 : bool then pair (GHC.List.reverse bs) expr else
                      match arg_0__, arg_1__, arg_2__ with
-                     | n, bs, Lam b e => go (Nat.pred n) (cons b bs) e
+                     | n, bs, Lam b e => go (n GHC.Num.- #1) (cons b bs) e
                      | _, _, _ =>
                          Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") (Panic.noString orig_n)
                      end
@@ -4126,7 +4126,8 @@ Definition dataConFullSig
 Definition dataConImplBangs : DataCon -> list HsImplBang :=
   fun dc =>
     match dcRep dc with
-    | NoDataConRep => Coq.Lists.List.repeat HsLazy (dcSourceArity dc)
+    | NoDataConRep =>
+        Coq.Lists.List.repeat HsLazy (BinNat.N.to_nat (dcSourceArity dc))
     | DCR _ _ _ _ bangs => bangs
     end.
 
@@ -4136,7 +4137,7 @@ Definition dataConIsInfix : DataCon -> bool :=
 Definition dataConName : DataCon -> Name.Name :=
   dcName.
 
-Definition dataConRepArity : DataCon -> nat :=
+Definition dataConRepArity : DataCon -> BasicTypes.Arity :=
   fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _ _) => arity.
 
 Definition isNullaryRepDataCon : DataCon -> bool :=
@@ -4145,7 +4146,7 @@ Definition isNullaryRepDataCon : DataCon -> bool :=
 Definition dataConRepType : DataCon -> unit :=
   dcRepType.
 
-Definition dataConSourceArity : DataCon -> nat :=
+Definition dataConSourceArity : DataCon -> BasicTypes.Arity :=
   fun '(MkData _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ arity _ _ _ _) => arity.
 
 Definition isNullarySrcDataCon : DataCon -> bool :=
@@ -4474,7 +4475,8 @@ Definition expandSynTyCon_maybe {tyco}
     | SynonymTyCon _ _ _ tvs _ _ arity _ rhs _ _ =>
         match Util.listLengthCmp tys arity with
         | Gt =>
-            Some (pair (pair (GHC.List.zip tvs tys) rhs) (Coq.Lists.List.skipn arity tys))
+            Some (pair (pair (GHC.List.zip tvs tys) rhs) (Coq.Lists.List.skipn
+                        (BinNat.N.to_nat arity) tys))
         | Eq => Some (pair (pair (GHC.List.zip tvs tys) rhs) nil)
         | Lt => None
         end
@@ -4533,7 +4535,8 @@ Definition extendInScopeSetList : InScopeSet -> list Var -> InScopeSet :=
     | InScope in_scope n, vs =>
         InScope (Data.Foldable.foldl (fun s v => extendVarSet s v) in_scope vs) (n
                                                                                  GHC.Num.+
-                                                                                 Coq.Lists.List.length vs)
+                                                                                 BinNat.N.of_nat (Coq.Lists.List.length
+                                                                                                  vs))
     end.
 
 Definition delBndrsR : RnEnv2 -> list Var -> RnEnv2 :=
@@ -4744,7 +4747,7 @@ Definition isBotRes : DmdResult -> bool :=
 Definition isBottomingSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType _ _ res)) => isBotRes res.
 
-Definition appIsBottom : StrictSig -> nat -> bool :=
+Definition appIsBottom : StrictSig -> BinNums.N -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ ds res), n =>
@@ -4987,7 +4990,7 @@ Definition isId : Var -> bool :=
 Definition isRuntimeVar : Var -> bool :=
   isId.
 
-Definition valBndrCount : list CoreBndr -> nat :=
+Definition valBndrCount : list CoreBndr -> BinNums.N :=
   Util.count isId.
 
 Definition collectValBinders : CoreExpr -> (list Id * CoreExpr)%type :=
@@ -5319,7 +5322,7 @@ Definition isTypeArg {b} : Expr b -> bool :=
 Definition isValArg {b} : Expr b -> bool :=
   fun e => negb (isTypeArg e).
 
-Definition valArgCount {b} : list (Arg b) -> nat :=
+Definition valArgCount {b} : list (Arg b) -> BinNums.N :=
   Util.count isValArg.
 
 Definition isRuntimeArg : CoreExpr -> bool :=
@@ -5823,8 +5826,8 @@ Definition mkFloatLit {b} : GHC.Real.Rational -> Expr b :=
 
 Definition mkFunTyCon : Name.Name -> list TyConBinder -> Name.Name -> TyCon :=
   fun name binders rep_nm =>
-    FunTyCon (Name.nameUnique name) name binders tt tt (Coq.Lists.List.length
-              binders) rep_nm.
+    FunTyCon (Name.nameUnique name) name binders tt tt (BinNat.N.of_nat
+              (Coq.Lists.List.length binders)) rep_nm.
 
 Definition mkHeadStrict : CleanDemand -> CleanDemand :=
   fun '(JD sd_0__ ud_1__) => JD HeadStr ud_1__.
@@ -5905,17 +5908,17 @@ Definition mkPatSyn
     , matcher
     , builder
     , field_labels =>
-        MkPatSyn name (Unique.getUnique name) orig_args (Coq.Lists.List.length
-                  orig_args) declared_infix field_labels univ_tvs req_theta ex_tvs prov_theta
-                 orig_res_ty matcher builder
+        MkPatSyn name (Unique.getUnique name) orig_args (BinNat.N.of_nat
+                  (Coq.Lists.List.length orig_args)) declared_infix field_labels univ_tvs
+                 req_theta ex_tvs prov_theta orig_res_ty matcher builder
     end.
 
 Definition mkPrimTyCon'
    : Name.Name ->
      list TyConBinder -> unit -> list unit -> bool -> option TyConRepName -> TyCon :=
   fun name binders res_kind roles is_unlifted rep_nm =>
-    PrimTyCon (Name.nameUnique name) name binders res_kind tt (Coq.Lists.List.length
-               roles) roles is_unlifted rep_nm.
+    PrimTyCon (Name.nameUnique name) name binders res_kind tt (BinNat.N.of_nat
+               (Coq.Lists.List.length roles)) roles is_unlifted rep_nm.
 
 Definition mkKindTyCon
    : Name.Name -> list TyConBinder -> unit -> list unit -> Name.Name -> TyCon :=
@@ -5928,8 +5931,8 @@ Definition mkPromotedDataCon
      TyConRepName ->
      list TyConBinder -> unit -> list unit -> RuntimeRepInfo -> TyCon :=
   fun con name rep_name binders res_kind roles rep_info =>
-    PromotedDataCon (Name.nameUnique name) name binders res_kind tt
-                    (Coq.Lists.List.length roles) roles con rep_name rep_info.
+    PromotedDataCon (Name.nameUnique name) name binders res_kind tt (BinNat.N.of_nat
+                     (Coq.Lists.List.length roles)) roles con rep_name rep_info.
 
 Definition mkRuleEnv : RuleBase -> list Module.Module -> RuleEnv :=
   fun rules vis_orphs => Mk_RuleEnv rules (Module.mkModuleSet vis_orphs).
@@ -5964,11 +5967,12 @@ Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
 Definition mkSumTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit -> nat -> list TyVar -> list DataCon -> AlgTyConFlav -> TyCon :=
+     unit ->
+     BasicTypes.Arity -> list TyVar -> list DataCon -> AlgTyConFlav -> TyCon :=
   fun name binders res_kind arity tyvars cons_ parent =>
     AlgTyCon (Name.nameUnique name) name binders tyvars res_kind tt arity
-             (Coq.Lists.List.repeat tt arity) None false nil (SumTyCon cons_)
-             FastStringEnv.emptyDFsEnv parent.
+             (Coq.Lists.List.repeat tt (BinNat.N.to_nat arity)) None false nil (SumTyCon
+              cons_) FastStringEnv.emptyDFsEnv parent.
 
 Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
   fun name kind details =>
@@ -6008,16 +6012,17 @@ Definition tyConTyVarBinders : list TyConBinder -> list TyVarBinder :=
 Definition mkUCall : Count -> UseDmd -> UseDmd :=
   fun c a => UCall c a.
 
-Program Definition mkWorkerDemand : nat -> Demand :=
+Program Definition mkWorkerDemand : BinNums.N -> Demand :=
           fun n =>
             let go :=
-              GHC.Wf.wfFix1 Coq.Init.Peano.lt (fun arg_0__ => arg_0__) _ (fun arg_0__ go =>
+              GHC.Wf.wfFix1 Coq.Init.Peano.lt (fun arg_0__ => BinNatDef.N.to_nat arg_0__) _
+                            (fun arg_0__ go =>
                                let 'num_1__ := arg_0__ in
                                if Bool.Sumbool.sumbool_of_bool (num_1__ GHC.Base.== #0) then Used else
                                let 'n := arg_0__ in
-                               mkUCall One (go (Nat.pred n))) in
+                               mkUCall One (go (n GHC.Num.- #1))) in
             JD Lazy (Mk_Use One (go n)).
-Admit Obligations.
+Solve Obligations with (solve_mkWorkerDemand).
 
 Definition mkCallDmd : CleanDemand -> CleanDemand :=
   fun '(JD d u) => JD (mkSCall d) (mkUCall One u).
@@ -6094,11 +6099,11 @@ Definition newTyConDataCon_maybe : TyCon -> option DataCon :=
     | _ => None
     end.
 
-Definition newTyConEtadArity : TyCon -> nat :=
+Definition newTyConEtadArity : TyCon -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ (NewTyCon _ _ tvs_rhs _) _ _ =>
-        Coq.Lists.List.length (Data.Tuple.fst tvs_rhs)
+        BinNat.N.of_nat (Coq.Lists.List.length (Data.Tuple.fst tvs_rhs))
     | tycon =>
         Panic.panicStr (GHC.Base.hs_string__ "newTyConEtadArity") (Panic.noString tycon)
     end.
@@ -6179,7 +6184,7 @@ Definition partitionVarSet
 Definition patSynArgs : PatSyn -> list unit :=
   psArgs.
 
-Definition patSynArity : PatSyn -> nat :=
+Definition patSynArity : PatSyn -> BasicTypes.Arity :=
   psArity.
 
 Definition patSynBuilder : PatSyn -> option (Id * bool)%type :=
@@ -6238,33 +6243,37 @@ Definition peelCallDmd : CleanDemand -> (CleanDemand * DmdShell)%type :=
                           end) in
     pair (JD s' u') (JD ss us).
 
-Definition peelManyCalls : nat -> CleanDemand -> DmdShell :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | n, JD str abs =>
-        let go_abs : nat -> UseDmd -> Use unit :=
-          fix go_abs arg_2__ arg_3__
-                := match arg_2__, arg_3__ with
-                   | num_4__, _ =>
-                       if num_4__ GHC.Base.== #0 : bool then Mk_Use One tt else
-                       match arg_2__, arg_3__ with
-                       | n, UCall One d' => go_abs (Nat.pred n) d'
-                       | _, _ => Mk_Use Many tt
-                       end
-                   end in
-        let go_str : nat -> StrDmd -> Str unit :=
-          fix go_str arg_10__ arg_11__
-                := match arg_10__, arg_11__ with
-                   | num_12__, _ =>
-                       if num_12__ GHC.Base.== #0 : bool then Mk_Str VanStr tt else
-                       match arg_10__, arg_11__ with
-                       | _, HyperStr => Mk_Str VanStr tt
-                       | n, SCall d' => go_str (Nat.pred n) d'
-                       | _, _ => Lazy
-                       end
-                   end in
-        JD (go_str n str) (go_abs n abs)
-    end.
+Program Definition peelManyCalls : BinNums.N -> CleanDemand -> DmdShell :=
+          fun arg_0__ arg_1__ =>
+            match arg_0__, arg_1__ with
+            | n, JD str abs =>
+                let go_abs : BinNums.N -> UseDmd -> Use unit :=
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_2__ arg_3__ =>
+                                   BinNatDef.N.to_nat arg_2__) _ (fun arg_2__ arg_3__ go_abs =>
+                                   match arg_2__, arg_3__ with
+                                   | num_4__, _ =>
+                                       if Bool.Sumbool.sumbool_of_bool (num_4__ GHC.Base.== #0) then Mk_Use One tt else
+                                       match arg_2__, arg_3__ with
+                                       | n, UCall One d' => go_abs (n GHC.Num.- #1) d'
+                                       | _, _ => Mk_Use Many tt
+                                       end
+                                   end) in
+                let go_str : BinNums.N -> StrDmd -> Str unit :=
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_10__ arg_11__ =>
+                                   BinNatDef.N.to_nat arg_10__) _ (fun arg_10__ arg_11__ go_str =>
+                                   match arg_10__, arg_11__ with
+                                   | num_12__, _ =>
+                                       if Bool.Sumbool.sumbool_of_bool (num_12__ GHC.Base.== #0)
+                                       then Mk_Str VanStr tt else
+                                       match arg_10__, arg_11__ with
+                                       | _, HyperStr => Mk_Str VanStr tt
+                                       | n, SCall d' => go_str (n GHC.Num.- #1) d'
+                                       | _, _ => Lazy
+                                       end
+                                   end) in
+                JD (go_str n str) (go_abs n abs)
+            end.
+Solve Obligations with (solve_dmdTransform).
 
 Definition peelUseCall : UseDmd -> option (Count * UseDmd)%type :=
   fun arg_0__ =>
@@ -6301,7 +6310,7 @@ Definition pprPromotionQuote : TyCon -> GHC.Base.String :=
     | _ => Panic.someSDoc
     end.
 
-Definition primElemRepSizeB : PrimElemRep -> nat :=
+Definition primElemRepSizeB : PrimElemRep -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | Int8ElemRep => #1
@@ -6316,7 +6325,7 @@ Definition primElemRepSizeB : PrimElemRep -> nat :=
     | DoubleElemRep => #8
     end.
 
-Definition primRepSizeB : DynFlags.DynFlags -> PrimRep -> nat :=
+Definition primRepSizeB : DynFlags.DynFlags -> PrimRep -> BinNums.N :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | dflags, IntRep => DynFlags.wORD_SIZE dflags
@@ -6388,11 +6397,11 @@ Definition ruleActivation : CoreRule -> BasicTypes.Activation :=
     | Rule _ act _ _ _ _ _ _ _ _ _ => act
     end.
 
-Definition ruleArity : CoreRule -> nat :=
+Definition ruleArity : CoreRule -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | BuiltinRule _ _ n _ => n
-    | Rule _ _ _ _ _ args _ _ _ _ _ => Coq.Lists.List.length args
+    | Rule _ _ _ _ _ args _ _ _ _ _ => BinNat.N.of_nat (Coq.Lists.List.length args)
     end.
 
 Definition ruleIdName : CoreRule -> Name.Name :=
@@ -6423,7 +6432,7 @@ Definition sameVis : ArgFlag -> ArgFlag -> bool :=
     | _, _ => true
     end.
 
-Definition saturatedByOneShots : nat -> Demand -> bool :=
+Definition saturatedByOneShots : BinNums.N -> Demand -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | n, JD _ usg =>
@@ -6432,7 +6441,7 @@ Definition saturatedByOneShots : nat -> Demand -> bool :=
                      | num_4__, _ =>
                          if num_4__ GHC.Base.== #0 : bool then true else
                          match arg_2__, arg_3__ with
-                         | n, UCall One u => go (Nat.pred n) u
+                         | n, UCall One u => go (n GHC.Num.- #1) u
                          | _, _ => false
                          end
                      end in
@@ -6819,13 +6828,13 @@ Definition rnEtaR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
                   (extendInScopeSet in_scope new_b)) new_b
     end.
 
-Definition sizeDVarSet : DVarSet -> nat :=
+Definition sizeDVarSet : DVarSet -> BinNums.N :=
   UniqDSet.sizeUniqDSet.
 
 Definition seqDVarSet : DVarSet -> unit :=
   fun s => GHC.Prim.seq (sizeDVarSet s) tt.
 
-Definition sizeVarSet : VarSet -> nat :=
+Definition sizeVarSet : VarSet -> BinNums.N :=
   UniqSet.sizeUniqSet.
 
 Definition seqVarSet : VarSet -> unit :=
@@ -6840,21 +6849,21 @@ Definition strBot : ArgStr :=
 Definition strTop : ArgStr :=
   Lazy.
 
-Definition splitStrProdDmd : nat -> StrDmd -> option (list ArgStr) :=
+Definition splitStrProdDmd : BinNums.N -> StrDmd -> option (list ArgStr) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | n, HyperStr => Some (Coq.Lists.List.repeat strBot n)
-    | n, HeadStr => Some (Coq.Lists.List.repeat strTop n)
+    | n, HyperStr => Some (Coq.Lists.List.repeat strBot (BinNat.N.to_nat n))
+    | n, HeadStr => Some (Coq.Lists.List.repeat strTop (BinNat.N.to_nat n))
     | n, SProd ds =>
         Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
                             "ghc/compiler/basicTypes/Demand.hs") #359 (Panic.someSDoc) (Some ds)
     | _, SCall _ => None
     end.
 
-Definition splitArgStrProdDmd : nat -> ArgStr -> option (list ArgStr) :=
+Definition splitArgStrProdDmd : BinNums.N -> ArgStr -> option (list ArgStr) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | n, Lazy => Some (Coq.Lists.List.repeat Lazy n)
+    | n, Lazy => Some (Coq.Lists.List.repeat Lazy (BinNat.N.to_nat n))
     | n, Mk_Str _ s => splitStrProdDmd n s
     end.
 
@@ -7056,15 +7065,15 @@ Definition tyConFamilyResVar_maybe : TyCon -> option Name.Name :=
     | _ => None
     end.
 
-Definition tyConFamilySize : TyCon -> nat :=
+Definition tyConFamilySize : TyCon -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | (AlgTyCon _ _ _ _ _ _ _ _ _ _ _ rhs _ _ as tc) =>
         match rhs with
-        | DataTyCon cons_ _ => Coq.Lists.List.length cons_
+        | DataTyCon cons_ _ => BinNat.N.of_nat (Coq.Lists.List.length cons_)
         | NewTyCon _ _ _ _ => #1
         | TupleTyCon _ _ => #1
-        | SumTyCon cons_ => Coq.Lists.List.length cons_
+        | SumTyCon cons_ => BinNat.N.of_nat (Coq.Lists.List.length cons_)
         | _ =>
             Panic.panicStr (GHC.Base.hs_string__ "tyConFamilySize 1") (Panic.noString tc)
         end
@@ -7072,7 +7081,7 @@ Definition tyConFamilySize : TyCon -> nat :=
         Panic.panicStr (GHC.Base.hs_string__ "tyConFamilySize 2") (Panic.noString tc)
     end.
 
-Definition tyConFamilySizeAtMost : TyCon -> nat -> bool :=
+Definition tyConFamilySizeAtMost : TyCon -> BinNums.N -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (AlgTyCon _ _ _ _ _ _ _ _ _ _ _ rhs _ _ as tc), n =>
@@ -7183,7 +7192,8 @@ Definition tyConRepName_maybe : TyCon -> option TyConRepName :=
 
 Definition tyConRoles : TyCon -> list unit :=
   fun tc =>
-    let const_role := fun r => Coq.Lists.List.repeat r (tyConArity tc) in
+    let const_role :=
+      fun r => Coq.Lists.List.repeat r (BinNat.N.to_nat (tyConArity tc)) in
     match tc with
     | FunTyCon _ _ _ _ _ _ _ => const_role tt
     | AlgTyCon _ _ _ _ _ _ _ roles _ _ _ _ _ _ => roles
@@ -7355,7 +7365,7 @@ Definition unitVarEnv {a} : Var -> a -> VarEnv a :=
 Definition unitVarSet : Var -> VarSet :=
   UniqSet.unitUniqSet.
 
-Definition unknownArity : nat :=
+Definition unknownArity : BasicTypes.Arity :=
   #0.
 
 Definition unwrapNewTyConEtad_maybe
@@ -7510,12 +7520,12 @@ Definition zapLamInfo : IdInfo -> option IdInfo :=
                     oneShotInfo_35__ inlinePragInfo_36__ safe_occ strictnessInfo_38__ topDmd
                     callArityInfo_40__ levityInfo_41__).
 
-Definition increaseStrictSigArity : nat -> StrictSig -> StrictSig :=
+Definition increaseStrictSigArity : BinNums.N -> StrictSig -> StrictSig :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | arity_increase, Mk_StrictSig (Mk_DmdType env dmds res) =>
         Mk_StrictSig (Mk_DmdType env (Coq.Init.Datatypes.app (Coq.Lists.List.repeat
-                                                              topDmd arity_increase) dmds) res)
+                                                              topDmd (BinNat.N.to_nat arity_increase)) dmds) res)
     end.
 
 Definition resTypeArgDmd {r} : Termination r -> Demand :=
@@ -7557,7 +7567,8 @@ Definition dmdTransformSig : StrictSig -> CleanDemand -> DmdType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_StrictSig (Mk_DmdType _ arg_ds _ as dmd_ty), cd =>
-        postProcessUnsat (peelManyCalls (Coq.Lists.List.length arg_ds) cd) dmd_ty
+        postProcessUnsat (peelManyCalls (BinNat.N.of_nat (Coq.Lists.List.length arg_ds))
+                          cd) dmd_ty
     end.
 
 Definition nopDmdType : DmdType :=
@@ -7566,14 +7577,15 @@ Definition nopDmdType : DmdType :=
 Definition nopSig : StrictSig :=
   Mk_StrictSig nopDmdType.
 
-Definition dmdTypeDepth : DmdType -> nat :=
-  fun '(Mk_DmdType _ ds _) => Coq.Lists.List.length ds.
+Definition dmdTypeDepth : DmdType -> BasicTypes.Arity :=
+  fun '(Mk_DmdType _ ds _) => BinNat.N.of_nat (Coq.Lists.List.length ds).
 
-Definition ensureArgs : nat -> DmdType -> DmdType :=
+Definition ensureArgs : BasicTypes.Arity -> DmdType -> DmdType :=
   fun n d =>
     let 'Mk_DmdType fv ds r := d in
     let ds' :=
-      Coq.Lists.List.firstn n (app ds (Coq.Lists.List.repeat (resTypeArgDmd r) n)) in
+      Coq.Lists.List.firstn (BinNat.N.to_nat n) (app ds (Coq.Lists.List.repeat
+                                                      (resTypeArgDmd r) (BinNat.N.to_nat n))) in
     let r' := match r with | Dunno _ => topRes | _ => r end in
     let depth := dmdTypeDepth d in
     if n GHC.Base.== depth : bool then d else
@@ -7606,11 +7618,11 @@ Definition splitDmdTy : DmdType -> (Demand * DmdType)%type :=
     | (Mk_DmdType _ nil res_ty as ty) => pair (resTypeArgDmd res_ty) ty
     end.
 
-Definition splitUseProdDmd : nat -> UseDmd -> option (list ArgUse) :=
+Definition splitUseProdDmd : BinNums.N -> UseDmd -> option (list ArgUse) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | n, Used => Some (Coq.Lists.List.repeat useTop n)
-    | n, UHead => Some (Coq.Lists.List.repeat Abs n)
+    | n, Used => Some (Coq.Lists.List.repeat useTop (BinNat.N.to_nat n))
+    | n, UHead => Some (Coq.Lists.List.repeat Abs (BinNat.N.to_nat n))
     | n, UProd ds =>
         Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
                             "ghc/compiler/basicTypes/Demand.hs") #645 (Panic.someSDoc) (Some ds)
@@ -7623,13 +7635,14 @@ Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
     let j_3__ :=
       match scrut_1__ with
       | pair Lazy (Mk_Use _ (UProd ux)) =>
-          Some (mkJointDmds (Coq.Lists.List.repeat Lazy (Coq.Lists.List.length ux)) ux)
+          Some (mkJointDmds (Coq.Lists.List.repeat Lazy (BinNat.N.to_nat (BinNat.N.of_nat
+                                                                          (Coq.Lists.List.length ux)))) ux)
       | _ => None
       end in
     let j_5__ :=
       match scrut_1__ with
       | pair (Mk_Str _ s) (Mk_Use _ (UProd ux)) =>
-          match splitStrProdDmd (Coq.Lists.List.length ux) s with
+          match splitStrProdDmd (BinNat.N.of_nat (Coq.Lists.List.length ux)) s with
           | Some sx => Some (mkJointDmds sx ux)
           | _ => j_3__
           end
@@ -7637,7 +7650,7 @@ Definition splitProdDmd_maybe : Demand -> option (list Demand) :=
       end in
     match scrut_1__ with
     | pair (Mk_Str _ (SProd sx)) (Mk_Use _ u) =>
-        match splitUseProdDmd (Coq.Lists.List.length sx) u with
+        match splitUseProdDmd (BinNat.N.of_nat (Coq.Lists.List.length sx)) u with
         | Some ux => Some (mkJointDmds sx ux)
         | _ => j_5__
         end
@@ -7662,7 +7675,7 @@ Definition dmdTransformDictSelSig : StrictSig -> CleanDemand -> DmdType :=
     end.
 
 Program Definition dmdTransformDataConSig
-           : nat -> StrictSig -> CleanDemand -> DmdType :=
+           : BasicTypes.Arity -> StrictSig -> CleanDemand -> DmdType :=
           fun arg_0__ arg_1__ arg_2__ =>
             match arg_0__, arg_1__, arg_2__ with
             | arity, Mk_StrictSig (Mk_DmdType _ _ con_res), JD str abs =>
@@ -7672,20 +7685,20 @@ Program Definition dmdTransformDataConSig
                                  if Bool.Sumbool.sumbool_of_bool (num_5__ GHC.Base.== #0)
                                  then splitUseProdDmd arity dmd else
                                  match arg_3__, arg_4__ with
-                                 | n, UCall One u' => go_abs (Nat.pred n) u'
+                                 | n, UCall One u' => go_abs (n GHC.Num.- #1) u'
                                  | _, _ => None
                                  end
                              end in
                 let go_str :=
-                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_10__ arg_11__ => arg_10__) _
-                                (fun arg_10__ arg_11__ go_str =>
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_10__ arg_11__ =>
+                                   BinNatDef.N.to_nat arg_10__) _ (fun arg_10__ arg_11__ go_str =>
                                    match arg_10__, arg_11__ with
                                    | num_12__, dmd =>
                                        if Bool.Sumbool.sumbool_of_bool (num_12__ GHC.Base.== #0)
                                        then splitStrProdDmd arity dmd else
                                        match arg_10__, arg_11__ with
-                                       | n, SCall s' => go_str (Nat.pred n) s'
-                                       | n, HyperStr => go_str (Nat.pred n) HyperStr
+                                       | n, SCall s' => go_str (n GHC.Num.- #1) s'
+                                       | n, HyperStr => go_str (n GHC.Num.- #1) HyperStr
                                        | _, _ => None
                                        end
                                    end) in
@@ -7699,13 +7712,13 @@ Program Definition dmdTransformDataConSig
                 | _ => nopDmdType
                 end
             end.
-Admit Obligations.
+Solve Obligations with (solve_dmdTransform).
 
 Definition evalDmd : Demand :=
   JD (Mk_Str VanStr HeadStr) useTop.
 
-Definition cleanEvalProdDmd : nat -> CleanDemand :=
-  fun n => JD HeadStr (UProd (Coq.Lists.List.repeat useTop n)).
+Definition cleanEvalProdDmd : BasicTypes.Arity -> CleanDemand :=
+  fun n => JD HeadStr (UProd (Coq.Lists.List.repeat useTop (BinNat.N.to_nat n))).
 
 Definition vanillaCafInfo : CafInfo :=
   MayHaveCafRefs.
@@ -7721,13 +7734,13 @@ Definition noCafIdInfo : IdInfo :=
 Definition mkCoVar : Name.Name -> unit -> CoVar :=
   fun name ty => mk_id name ty (LocalId NotExported) coVarDetails vanillaIdInfo.
 
-Definition vanillaCprProdRes : nat -> DmdResult :=
+Definition vanillaCprProdRes : BasicTypes.Arity -> DmdResult :=
   fun _arity => Dunno RetProd.
 
-Definition cprProdDmdType : nat -> DmdType :=
+Definition cprProdDmdType : BasicTypes.Arity -> DmdType :=
   fun arity => Mk_DmdType emptyDmdEnv nil (vanillaCprProdRes arity).
 
-Definition cprProdSig : nat -> StrictSig :=
+Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
 Definition varUnique : Var -> Unique.Unique :=
@@ -7781,8 +7794,8 @@ Definition mkAlgTyCon
      option unit -> list unit -> AlgTyConRhs -> AlgTyConFlav -> bool -> TyCon :=
   fun name binders res_kind roles cType stupid rhs parent gadt_syn =>
     AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-             (Coq.Lists.List.length binders) roles cType gadt_syn stupid rhs
-             (fieldsOfAlgTcRhs rhs) parent.
+             (BinNat.N.of_nat (Coq.Lists.List.length binders)) roles cType gadt_syn stupid
+             rhs (fieldsOfAlgTcRhs rhs) parent.
 
 Definition mkClassTyCon
    : Name.Name ->
@@ -7877,22 +7890,23 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      ClassOpItem CoreRuleInfo DVarSet Eq Gt Id Lt NoUnfolding None OtherCon Some
      TyConBinder TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison
      cons deAnnotate' deTagExpr else false getCoreRule getCoreRuleInfo getUnfolding
-     getUnfoldingInfo if list lubArgUse nat negb nil op_zt__ option orb pair
+     getUnfoldingInfo if list lubArgUse negb nil op_zt__ option orb pair
      plusVarEnv_CD size_AnnExpr' snd then true tt unit BasicTypes.Activation
-     BasicTypes.AlwaysActive BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ
-     BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker BasicTypes.IAmDead
-     BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.ManyOccs
-     BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo BasicTypes.OccInfo
-     BasicTypes.OneOcc BasicTypes.OneShotInfo BasicTypes.OneShotLam
-     BasicTypes.RuleName BasicTypes.SourceText BasicTypes.TupleSort
-     BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
+     BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
+     BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
+     BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity
+     BasicTypes.ManyOccs BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo
+     BasicTypes.OccInfo BasicTypes.OneOcc BasicTypes.OneShotInfo
+     BasicTypes.OneShotLam BasicTypes.RuleName BasicTypes.SourceText
+     BasicTypes.TupleSort BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
      BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
-     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc
-     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Constants.fLOAT_SIZE
-     Constants.wORD64_SIZE Coq.Init.Datatypes.app Coq.Init.Peano.lt
-     Coq.Lists.List.firstn Coq.Lists.List.flat_map Coq.Lists.List.length
-     Coq.Lists.List.map Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Foldable.all
-     Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find Data.Foldable.foldl
+     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat
+     BinNat.N.to_nat BinNatDef.N.to_nat BinNums.N BooleanFormula.BooleanFormula
+     BooleanFormula.mkTrue Constants.fLOAT_SIZE Constants.wORD64_SIZE
+     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
+     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.map
+     Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any
+     Data.Foldable.concatMap Data.Foldable.find Data.Foldable.foldl
      Data.Foldable.foldr Data.Foldable.null Data.Function.on Data.Maybe.isJust
      Data.Tuple.fst Datatypes.id DynFlags.DynFlags DynFlags.Opt_KillAbsence
      DynFlags.Opt_KillOneShot DynFlags.dOUBLE_SIZE DynFlags.gopt DynFlags.wORD_SIZE
@@ -7916,18 +7930,18 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.isWiredInName
      Name.mkExternalName Name.nameModule Name.nameOccName Name.nameSrcSpan
      Name.nameUnique Name.setNameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
-     NameEnv.extendNameEnv NameEnv.lookupNameEnv Nat.pred OccName.HasOccName
-     OccName.OccName OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.isTcOcc
-     OccName.mkTyConRepOcc OccName.occName__ Panic.noString Panic.panic
-     Panic.panicStr Panic.someSDoc Panic.warnPprTrace PrelNames.gHC_PRIM
-     PrelNames.gHC_TYPES SrcLoc.RealSrcSpan SrcLoc.SrcSpan UniqDFM.UniqDFM
-     UniqDFM.addListToUDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C UniqDFM.allUDFM
-     UniqDFM.alterUDFM UniqDFM.anyUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM
-     UniqDFM.disjointUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM
-     UniqDFM.filterUDFM UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM
-     UniqDFM.lookupUDFM UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM
-     UniqDFM.plusUDFM UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM
-     UniqDSet.UniqDSet UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
+     NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.HasOccName OccName.OccName
+     OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.isTcOcc OccName.mkTyConRepOcc
+     OccName.occName__ Panic.noString Panic.panic Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace PrelNames.gHC_PRIM PrelNames.gHC_TYPES SrcLoc.RealSrcSpan
+     SrcLoc.SrcSpan UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM
+     UniqDFM.addToUDFM_C UniqDFM.allUDFM UniqDFM.alterUDFM UniqDFM.anyUDFM
+     UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.disjointUDFM
+     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
+     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM
+     UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
+     UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM UniqDSet.UniqDSet
+     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
      UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
      UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
      UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet

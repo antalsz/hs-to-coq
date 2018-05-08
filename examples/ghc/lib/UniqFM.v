@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Coq.NArith.BinNat.
+Require BinNums.
 Require Data.Foldable.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
@@ -430,8 +430,8 @@ Definition plusUFM_CD {elt}
                                                (Data.IntMap.Internal.map (fun y => f dx y)) xm ym)
     end.
 
-Definition sizeUFM {elt} : UniqFM elt -> nat :=
-  fun '(UFM m) => Coq.NArith.BinNat.N.to_nat (Data.IntMap.Internal.size m).
+Definition sizeUFM {elt} : UniqFM elt -> BinNums.N :=
+  fun '(UFM m) => Data.IntMap.Internal.size m.
 
 Definition ufmToIntMap {elt} : UniqFM elt -> Data.IntMap.Internal.IntMap elt :=
   fun '(UFM m) => m.
@@ -449,22 +449,22 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
     UFM (Data.IntMap.Internal.singleton (Unique.getWordKey (Unique.getUnique k)) v).
 
 (* External variables:
-     Some andb bool false list nat op_zt__ option orb pair true unit
-     Coq.NArith.BinNat.N.to_nat Data.Foldable.foldl Data.Foldable.foldl'
-     Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
-     Data.IntMap.Internal.alter Data.IntMap.Internal.delete
-     Data.IntMap.Internal.difference Data.IntMap.Internal.elems
-     Data.IntMap.Internal.empty Data.IntMap.Internal.filter
-     Data.IntMap.Internal.filterWithKey Data.IntMap.Internal.findWithDefault
-     Data.IntMap.Internal.foldr Data.IntMap.Internal.foldrWithKey
-     Data.IntMap.Internal.insert Data.IntMap.Internal.insertWith
-     Data.IntMap.Internal.intersection Data.IntMap.Internal.intersectionWith
-     Data.IntMap.Internal.keys Data.IntMap.Internal.keysSet
-     Data.IntMap.Internal.lookup Data.IntMap.Internal.map
-     Data.IntMap.Internal.mapWithKey Data.IntMap.Internal.member
-     Data.IntMap.Internal.mergeWithKey Data.IntMap.Internal.null
-     Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
-     Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.IntMap.Internal.union
+     Some andb bool false list op_zt__ option orb pair true unit BinNums.N
+     Data.Foldable.foldl Data.Foldable.foldl' Data.IntMap.Internal.IntMap
+     Data.IntMap.Internal.adjust Data.IntMap.Internal.alter
+     Data.IntMap.Internal.delete Data.IntMap.Internal.difference
+     Data.IntMap.Internal.elems Data.IntMap.Internal.empty
+     Data.IntMap.Internal.filter Data.IntMap.Internal.filterWithKey
+     Data.IntMap.Internal.findWithDefault Data.IntMap.Internal.foldr
+     Data.IntMap.Internal.foldrWithKey Data.IntMap.Internal.insert
+     Data.IntMap.Internal.insertWith Data.IntMap.Internal.intersection
+     Data.IntMap.Internal.intersectionWith Data.IntMap.Internal.keys
+     Data.IntMap.Internal.keysSet Data.IntMap.Internal.lookup
+     Data.IntMap.Internal.map Data.IntMap.Internal.mapWithKey
+     Data.IntMap.Internal.member Data.IntMap.Internal.mergeWithKey
+     Data.IntMap.Internal.null Data.IntMap.Internal.partition
+     Data.IntMap.Internal.singleton Data.IntMap.Internal.size
+     Data.IntMap.Internal.toList Data.IntMap.Internal.union
      Data.IntMap.Internal.unionWith Data.IntSet.Internal.IntSet GHC.Base.Eq_
      GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
      GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr GHC.Base.id

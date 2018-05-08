@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNums.
 Require Data.Foldable.
 Require UniqDFM.
 Require UniqSet.
@@ -75,7 +76,7 @@ Definition partitionUniqDSet {a}
    : (a -> bool) -> UniqDSet a -> (UniqDSet a * UniqDSet a)%type :=
   UniqDFM.partitionUDFM.
 
-Definition sizeUniqDSet {a} : UniqDSet a -> nat :=
+Definition sizeUniqDSet {a} : UniqDSet a -> BinNums.N :=
   UniqDFM.sizeUDFM.
 
 Definition unionUniqDSets {a} : UniqDSet a -> UniqDSet a -> UniqDSet a :=
@@ -102,7 +103,7 @@ Definition unitUniqDSet {a} `{Unique.Uniquable a} : a -> UniqDSet a :=
   fun x => UniqDFM.unitUDFM x x.
 
 (* External variables:
-     bool cons list nat op_zt__ option Data.Foldable.foldl Data.Foldable.foldr
+     bool cons list op_zt__ option BinNums.N Data.Foldable.foldl Data.Foldable.foldr
      UniqDFM.UniqDFM UniqDFM.addToUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM
      UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
      UniqDFM.foldUDFM UniqDFM.intersectUDFM UniqDFM.intersectsUDFM UniqDFM.isNullUDFM

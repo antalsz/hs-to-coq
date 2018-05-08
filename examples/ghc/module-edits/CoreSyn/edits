@@ -79,7 +79,7 @@ skip Core.deTagExpr
 
 # needs a default constraint, as well as a termination argument
 skip Core.collectNAnnBndrs
-# in Core.collectNAnnBndrs    termination collect { measure (BinIntDef.Z.to_nat arg_0__)   }
+# in Core.collectNAnnBndrs    termination collect { measure (BinNatDef.N.to_nat arg_0__)   }
 # obligations Core.collectNAnnBndrs admit
 
 

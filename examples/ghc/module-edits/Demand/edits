@@ -21,47 +21,23 @@ skip Core.addCaseBndrDmd
 # 
 skip Core.pprIfaceStrictSig
 
-
-in Core.mkWorkerDemand termination go { measure arg_0__ } 
-obligations Core.mkWorkerDemand admit
-
-in Core.dmdTransformDataConSig termination go_str { measure arg_10__ }
-obligations Core.dmdTransformDataConSig admit
-
 #
-# To make some of the termination arguments provable, we translate Z to nat
-# We'll need to migrate 
+# termination edits
 #
-# rename type GHC.Num.Int = nat
-# rename type BasicTypes.Arity = nat
 
-rewrite forall n  , GHC.Num.op_zm__ n (GHC.Num.fromInteger 1) = Nat.pred n
-rewrite forall    , Data.Foldable.length   = Coq.Lists.List.length
-rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
-rewrite forall    , GHC.List.take          = Coq.Lists.List.firstn
-rewrite forall    , GHC.List.drop          = Coq.Lists.List.skipn
+in Core.mkWorkerDemand termination go { measure (BinNatDef.N.to_nat arg_0__) } 
+obligations Core.mkWorkerDemand solve_mkWorkerDemand
 
-# rewrite forall ds n, Util.lengthExceeds ds n = Util.lengthExceeds ds (BinInt.Z.of_nat n)
-# rewrite forall ds,   Util.lengthIs ds n = Util.lengthIs ds (BinInt.Z.of_nat n)
-# rewrite forall cons_ n, Util.lengthAtMost cons_ n = Util.lengthAtMost cons_ (BinInt.Z.of_nat n)
-# in Core.expandSynTyCon_maybe rewrite forall , Util.listLengthCmp tys arity = Util.listLengthCmp tys (BinInt.Z.of_nat arity)
+in Core.dmdTransformDataConSig termination go_str { measure (BinNatDef.N.to_nat arg_10__) }
+obligations Core.dmdTransformDataConSig solve_dmdTransform 
+
+in Core.peelManyCalls termination go_abs { measure (BinNatDef.N.to_nat arg_2__) } 
+in Core.peelManyCalls termination go_str { measure (BinNatDef.N.to_nat arg_10__) } 
+obligations Core.peelManyCalls solve_dmdTransform 
+
+
 
 in Core.ensureArgs rewrite forall ds n x, Coq.Lists.List.firstn n (Coq.Init.Datatypes.app ds (GHC.List.repeat x)) = Coq.Lists.List.firstn n (app ds (Coq.Lists.List.repeat x n))
-
-# redefine Definition Core.valBndrCount : (list CoreBndr) -> nat := fun x => BinIntDef.Z.to_nat (Util.count isId x).
-# redefine Definition Core.valArgCount {b} : (list (Arg b)) -> nat := fun x => BinIntDef.Z.to_nat (Util.count isValArg x).
-# redefine Definition Core.sizeDVarSet : DVarSet -> nat := fun x => BinIntDef.Z.to_nat (UniqDSet.sizeUniqDSet x).
-# redefine Definition Core.sizeVarSet : VarSet -> nat := fun x => BinIntDef.Z.to_nat (UniqSet.sizeUniqSet x). 
-
-# in Core.extendInScopeSetSet rewrite forall vs, UniqSet.sizeUniqSet vs = BinIntDef.Z.to_nat (UniqSet.sizeUniqSet vs)
-
-# rewrite forall k, Unique.getKey k = BinIntDef.Z.to_nat (Unique.getKey k)
-# rewrite forall var, (Core.realUnique var) = (BinInt.Z.of_nat (Core.realUnique var))
-
-# skip Core.primRepSizeB
-
-# in Core.uniqAway' rewrite forall o n, Unique.deriveUnique o n = Unique.deriveUnique o (BinInt.Z.of_nat n)
-
 
 
 

@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNums.
 Require Coq.Init.Datatypes.
 Require Data.Foldable.
 Require FastString.
@@ -28,7 +29,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition TidyOccEnv :=
-  (UniqFM.UniqFM nat)%type.
+  (UniqFM.UniqFM BinNums.N)%type.
 
 Inductive OccEnv a : Type := A : (UniqFM.UniqFM a) -> OccEnv a.
 
@@ -747,7 +748,7 @@ Definition mkTyConRepOcc : OccName -> OccName :=
 (* External variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
      NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
-     comparison cons false list nat negb nil op_zt__ option orb true tt
+     comparison cons false list negb nil op_zt__ option orb true tt BinNums.N
      Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
      FastString.concatFS FastString.fsLit FastString.mkFastString FastString.unpackFS
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__

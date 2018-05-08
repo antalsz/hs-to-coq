@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNums.
 Require GHC.Base.
 Require GHC.Tuple.
 Require Unique.
@@ -20,7 +21,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive UniqSupply : Type
-  := MkSplitUniqSupply : nat -> UniqSupply -> UniqSupply -> UniqSupply.
+  := MkSplitUniqSupply : BinNums.N -> UniqSupply -> UniqSupply -> UniqSupply.
 
 Inductive UniqSM result : Type
   := USM : (UniqSupply -> (result * UniqSupply)%type) -> UniqSM result.
@@ -233,7 +234,7 @@ Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
          getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
 
 (* External variables:
-     cons list nat nil op_zt__ pair GHC.Base.Applicative GHC.Base.Functor
+     cons list nil op_zt__ pair BinNums.N GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__
      GHC.Base.liftA2__ GHC.Base.liftM3 GHC.Base.op_z2218U__ GHC.Base.op_zgzg____
      GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____

@@ -1,18 +1,24 @@
-
+####################################################
+#
+####################################################
 rename value Data.Set.fold = Data.Set.Internal.foldr
 rename value Data.Map.fold = Data.Map.Internal.foldr
 rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
 rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
 
-#
-# All GHC.Num.Int's should be nat in this compiler (double check that that makes sense).
-#
-rename type GHC.Num.Int = nat
+####################################################
+# Now we are serious
+####################################################
+rename type GHC.Num.Int = BinNums.N
 
-rewrite forall    , Data.Foldable.length   = Coq.Lists.List.length
-rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
-rewrite forall    , GHC.List.take          = Coq.Lists.List.firstn
-rewrite forall    , GHC.List.drop          = Coq.Lists.List.skipn
+#
+# All GHC.Num.Int's should be N in this compiler (double check that that makes sense).
+#
+
+rewrite forall x , Data.Foldable.length x  = BinNat.N.of_nat (Coq.Lists.List.length x)
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y (BinNat.N.to_nat x)
+rewrite forall x  , GHC.List.take x        = Coq.Lists.List.firstn (BinNat.N.to_nat x)
+rewrite forall x  , GHC.List.drop x        = Coq.Lists.List.skipn (BinNat.N.to_nat x)
 
 
 

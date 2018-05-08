@@ -22,4 +22,4 @@ redefine Local Definition UniqDFM.Functor__UniqDFM_fmap : forall {a} {b},
 rename value Unique.getKey = Unique.getWordKey
 
 skip module Coq.ZArith.BinInt.Z
-redefine Definition UniqDFM.sizeUDFM {elt} : (UniqDFM.UniqDFM elt) -> nat := fun um => match um with | UDFM m _ => Coq.NArith.BinNat.N.to_nat (Data.IntMap.Internal.size m) end.
+

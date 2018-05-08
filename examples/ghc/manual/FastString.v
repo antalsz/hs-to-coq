@@ -5,6 +5,7 @@
 Require GHC.List.
 Require Import GHC.Base.
 Require Import GHC.Err.
+Require Import Coq.Numbers.BinNums.
 
 Definition FastString := String.
 
@@ -21,7 +22,7 @@ Definition fsLit (s : String) : FastString := s.
 
 Definition concatFS : list FastString -> FastString := GHC.List.concat.
 
-Parameter uniqueOfFS : FastString -> nat.
+Parameter uniqueOfFS : FastString -> BinNums.N.
 
 Parameter unpackFS : FastString -> GHC.Base.String.
 

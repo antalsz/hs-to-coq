@@ -1,10 +1,10 @@
-
+(* ------------- CoreSyn midamble.v ------------ *)
 
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
 Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
-           nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type.
+           GHC.Num.Word -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type. 
 
 Require Import Omega.
 

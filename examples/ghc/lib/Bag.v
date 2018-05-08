@@ -12,6 +12,8 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNat.
+Require BinNums.
 Require Control.Monad.
 Require Coq.Lists.List.
 Require Coq.Program.Basics.
@@ -237,13 +239,13 @@ Definition isSingletonBag {a} : Bag a -> bool :=
     | ListBag xs => Util.isSingleton xs
     end.
 
-Definition lengthBag {a} : Bag a -> nat :=
+Definition lengthBag {a} : Bag a -> BinNums.N :=
   fix lengthBag arg_0__
         := match arg_0__ with
            | EmptyBag => #0
            | UnitBag _ => #1
            | TwoBags b1 b2 => lengthBag b1 GHC.Num.+ lengthBag b2
-           | ListBag xs => Coq.Lists.List.length xs
+           | ListBag xs => BinNat.N.of_nat (Coq.Lists.List.length xs)
            end.
 
 Definition listToBag {a} : list a -> Bag a :=
@@ -523,15 +525,16 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
     foldrBag add emptyBag bs.
 
 (* External variables:
-     None Some andb bool cons false list nat nil op_zt__ option orb pair true tt unit
-     Control.Monad.filterM Coq.Lists.List.length Coq.Program.Basics.compose
-     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.Foldable
-     Data.Foldable.all Data.Foldable.any Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length__ Data.Foldable.mapM_ Data.Foldable.null__
-     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
-     Data.Maybe.mapMaybe Data.OldList.partition Data.SemigroupInternal.Mk_Dual
+     None Some andb bool cons false list nil op_zt__ option orb pair true tt unit
+     BinNat.N.of_nat BinNums.N Control.Monad.filterM Coq.Lists.List.length
+     Coq.Program.Basics.compose Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr
+     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
+     Data.Foldable.mapM_ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Maybe.mapMaybe
+     Data.OldList.partition Data.SemigroupInternal.Mk_Dual
      Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
      Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct

@@ -21,4 +21,4 @@ add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMa
 rename value Unique.getKey = Unique.getWordKey
 
 skip module Coq.ZArith.BinInt.Z
-redefine Definition UniqFM.sizeUFM {elt} : (UniqFM.UniqFM elt) -> nat := fun um => match um with | UFM m => Coq.NArith.BinNat.N.to_nat (Data.IntMap.Internal.size m) end.
+

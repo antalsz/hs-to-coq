@@ -8,12 +8,6 @@ skip module TysWiredIn
 skip module RepType
 
 ####################################################
-# Now we are serious
-####################################################
-rename type GHC.Num.Int = nat
-
-
-####################################################
 ## Glueing together the Core
 ####################################################
 
@@ -47,21 +41,18 @@ rename value IdInfo.JoinId      = Core.Mk_JoinId
 rename value CoreSyn.Var        = Core.Mk_Var
 rename value CoreSyn.IsOrphan   = Core.Mk_IsOrphan
 rename value CoreSyn.RuleEnv    = Core.Mk_RuleEnv
+rename value Demand.ExnStr      = Core.Mk_ExnStr
+rename value Demand.Str         = Core.Mk_Str
+rename value Demand.Use         = Core.Mk_Use
+rename value Demand.DmdType     = Core.Mk_DmdType
+rename value Demand.StrictSig   = Core.Mk_StrictSig
+rename value Demand.KillFlags   = Core.Mk_KillFlags
 
-## CallStack
-rewrite forall x, Core.idInfo x = @Core.idInfo tt x
-
-## Punning
+## Other punning
 
 rename value CoreFVs.FVAnn    = CoreFVs.Mk_FVAnn
 rename value CoreSubst.Subst  = CoreSubst.Mk_Subst
 
-rename value Demand.ExnStr    = Core.Mk_ExnStr
-rename value Demand.Str       = Core.Mk_Str
-rename value Demand.Use       = Core.Mk_Use
-rename value Demand.DmdType   = Core.Mk_DmdType
-rename value Demand.StrictSig = Core.Mk_StrictSig
-rename value Demand.KillFlags = Core.Mk_KillFlags
 
 ###############################################################################
 #  Pruning the AST
@@ -75,14 +66,15 @@ rename type ForeignCall.CType       = unit
 rename type MkId.DataConBoxer = unit
 
 # could make this unit too
-redefine Inductive TyCon.RuntimeRepInfo     : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+redefine Inductive TyCon.RuntimeRepInfo : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
 
 ###############################################################################
 # IdInfo  --- edit out unfoldingIndo, ruleInfo, demandInfo, strictnessInfo 
 # and Id
 ###############################################################################
 
-rename type BasicTypes.Arity = nat
+## CallStack 
+rewrite forall x, Core.idInfo x = @Core.idInfo tt x
 
 #
 # IdInfo
@@ -91,7 +83,7 @@ rename type BasicTypes.Arity = nat
 rewrite forall x, Core.setUnfoldingInfo  x = x
 rewrite forall x dmd, Core.setUnfoldingInfo  x dmd = x
 
-rewrite forall x, Core.ruleInfoFreeVars x = FV.emptyFVs
+# rewrite forall x, Core.ruleInfoFreeVars x = FV.emptyFVs
 
 #
 # Id 

@@ -4,9 +4,16 @@ Require Import GHC.Nat.
 Require Import Omega.
 Ltac solve_not_zero := match goal with 
   | [ H : GHC.Base.op_zeze__ ?x ?y = false |- _ ] => 
-    unfold GHC.Base.op_zeze__, Eq_nat in H; simpl in H; apply EqNat.beq_nat_false in H
-end; omega.
+    unfold GHC.Base.op_zeze__ in H;
+    unfold GHC.Base.Eq_Char___ in H;
+    simpl in H;
+    apply N.eqb_neq in H end;
+    zify;
+    omega.
 
+Ltac distinguish := split; intros; unfold not; intros [? ?]; discriminate.
+Ltac solve_mkWorkerDemand := Tactics.program_simpl; solve_not_zero.
+Ltac solve_dmdTransform := Tactics.program_simpl; try solve_not_zero; try distinguish.
 
 
 Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=

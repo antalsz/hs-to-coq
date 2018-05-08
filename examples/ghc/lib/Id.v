@@ -18,6 +18,7 @@ Require Import Core.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require BinNums.
 Require Core.
 Require Datatypes.
 Require FastString.
@@ -100,13 +101,13 @@ Definition hasNoBinding : Core.Var -> bool :=
     | _ => false
     end.
 
-Definition idArity : Core.Var -> nat :=
+Definition idArity : Core.Var -> BasicTypes.Arity :=
   fun id => Core.arityInfo ((@Core.idInfo tt id)).
 
 Definition idCafInfo : Core.Var -> Core.CafInfo :=
   fun id => Core.cafInfo ((@Core.idInfo tt id)).
 
-Definition idCallArity : Core.Var -> nat :=
+Definition idCallArity : Core.Var -> BasicTypes.Arity :=
   fun id => Core.callArityInfo ((@Core.idInfo tt id)).
 
 Definition idDemandInfo : Core.Var -> Core.Demand :=
@@ -367,7 +368,7 @@ Definition setInlineActivation
     modifyInlinePragma id (fun prag =>
                              BasicTypes.setInlinePragmaActivation prag act).
 
-Definition setIdArity : Core.Var -> nat -> Core.Var :=
+Definition setIdArity : Core.Var -> BasicTypes.Arity -> Core.Var :=
   fun id arity =>
     modifyIdInfo (fun arg_0__ => Core.setArityInfo arg_0__ arity) id.
 
@@ -375,7 +376,7 @@ Definition setIdCafInfo : Core.Var -> Core.CafInfo -> Core.Var :=
   fun id caf_info =>
     modifyIdInfo (fun arg_0__ => Core.setCafInfo arg_0__ caf_info) id.
 
-Definition setIdCallArity : Core.Var -> nat -> Core.Var :=
+Definition setIdCallArity : Core.Var -> BasicTypes.Arity -> Core.Var :=
   fun id arity =>
     modifyIdInfo (fun arg_0__ => Core.setCallArityInfo arg_0__ arity) id.
 
@@ -493,12 +494,12 @@ Definition mkSysLocalOrCoVarM {m} `{UniqSupply.MonadUnique m}
     UniqSupply.getUniqueM GHC.Base.>>=
     (fun uniq => GHC.Base.return_ (mkSysLocalOrCoVar fs uniq ty)).
 
-Definition mkTemplateLocal : nat -> unit -> Core.Var :=
+Definition mkTemplateLocal : BinNums.N -> unit -> Core.Var :=
   fun i ty =>
     mkSysLocalOrCoVar (FastString.fsLit (GHC.Base.hs_string__ "v"))
     (Unique.mkBuiltinUnique i) ty.
 
-Definition mkTemplateLocalsNum : nat -> list unit -> list Core.Var :=
+Definition mkTemplateLocalsNum : BinNums.N -> list unit -> list Core.Var :=
   fun n tys => GHC.List.zipWith mkTemplateLocal (GHC.Enum.enumFrom n) tys.
 
 Definition mkTemplateLocals : list unit -> list Core.Var :=
@@ -575,19 +576,20 @@ Definition isProbablyOneShotLambda : Core.Var -> bool :=
     end.
 
 (* External variables:
-     None Some andb bool false isStateHackType list nat negb option orb pair true tt
-     unit BasicTypes.Activation BasicTypes.InlinePragma BasicTypes.JoinArity
-     BasicTypes.NoOneShotInfo BasicTypes.OccInfo BasicTypes.OneShotInfo
-     BasicTypes.OneShotLam BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
-     BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
-     BasicTypes.isOneOcc BasicTypes.noOccInfo BasicTypes.occ_in_lam
-     BasicTypes.setInlinePragmaActivation BasicTypes.zapOccTailCallInfo Core.CafInfo
-     Core.Class Core.ClassOpId Core.DataCon Core.DataConWorkId Core.DataConWrapId
-     Core.Demand Core.FCallId Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId
-     Core.Mk_JoinId Core.PrimOpId Core.RecSelData Core.RecSelId Core.RecSelParent
-     Core.RecSelPatSyn Core.RuleInfo Core.StrictSig Core.VanillaId Core.Var
-     Core.arityInfo Core.cafInfo Core.callArityInfo Core.demandInfo Core.idDetails
-     Core.idInfo Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig
+     None Some andb bool false isStateHackType list negb option orb pair true tt unit
+     BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
+     BasicTypes.JoinArity BasicTypes.NoOneShotInfo BasicTypes.OccInfo
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleMatchInfo
+     BasicTypes.inlinePragmaActivation BasicTypes.inlinePragmaRuleMatchInfo
+     BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isOneOcc
+     BasicTypes.noOccInfo BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
+     BasicTypes.zapOccTailCallInfo BinNums.N Core.CafInfo Core.Class Core.ClassOpId
+     Core.DataCon Core.DataConWorkId Core.DataConWrapId Core.Demand Core.FCallId
+     Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId Core.Mk_JoinId
+     Core.PrimOpId Core.RecSelData Core.RecSelId Core.RecSelParent Core.RecSelPatSyn
+     Core.RuleInfo Core.StrictSig Core.VanillaId Core.Var Core.arityInfo Core.cafInfo
+     Core.callArityInfo Core.demandInfo Core.idDetails Core.idInfo
+     Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig
      Core.isEmptyRuleInfo Core.isId Core.isLocalId Core.isTyVar Core.isUnboxedSumCon
      Core.isUnboxedTupleCon Core.lazySetIdInfo Core.mkExportedLocalVar
      Core.mkGlobalVar Core.mkLocalVar Core.nopSig Core.occInfo Core.oneShotInfo

@@ -17,6 +17,8 @@ Require Import Core.
 
 (* Converted imports: *)
 
+Require BasicTypes.
+Require BinNums.
 Require Core.
 Require DynFlags.
 Require FastString.
@@ -26,7 +28,7 @@ Require Unique.
 (* Converted type declarations: *)
 
 Definition CheapAppFun :=
-  (Core.Var -> nat -> bool)%type.
+  (Core.Var -> BasicTypes.Arity -> bool)%type.
 (* Midamble *)
 
 (* Record selector *)
@@ -143,7 +145,7 @@ Axiom getIdFromTrivialExpr_maybe : Core.CoreExpr -> option Core.Var.
 
 Axiom exprIsDupable : DynFlags.DynFlags -> Core.CoreExpr -> bool.
 
-Axiom dupAppSize : nat.
+Axiom dupAppSize : BinNums.N.
 
 Axiom exprIsCheap : Core.CoreExpr -> bool.
 
@@ -220,8 +222,8 @@ Axiom isEmptyTy : unit -> bool.
 Axiom isJoinBind : Core.CoreBind -> bool.
 
 (* External variables:
-     Alt bool list nat op_zt__ option unit Core.AltCon Core.CoreAlt Core.CoreArg
-     Core.CoreBind Core.CoreBndr Core.CoreExpr Core.DataCon Core.Expr Core.InScopeSet
-     Core.RnEnv2 Core.Tickish Core.TyCon Core.Unfolding Core.Var DynFlags.DynFlags
-     FastString.FastString GHC.Base.String Unique.Unique
+     Alt bool list op_zt__ option unit BasicTypes.Arity BinNums.N Core.AltCon
+     Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr Core.CoreExpr Core.DataCon
+     Core.Expr Core.InScopeSet Core.RnEnv2 Core.Tickish Core.TyCon Core.Unfolding
+     Core.Var DynFlags.DynFlags FastString.FastString GHC.Base.String Unique.Unique
 *)

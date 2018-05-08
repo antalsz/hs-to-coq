@@ -12,6 +12,8 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BasicTypes.
+Require BinNat.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Core.
@@ -33,7 +35,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition CallArityRes :=
-  (UnVarGraph.UnVarGraph * Core.VarEnv nat)%type%type.
+  (UnVarGraph.UnVarGraph * Core.VarEnv BasicTypes.Arity)%type%type.
 (* Midamble *)
 
 (* We parameterize this because we don't have type information *)
@@ -97,7 +99,8 @@ Definition boringBinds : Core.CoreBind -> Core.VarSet :=
   Core.mkVarSet GHC.Base.∘
   (GHC.List.filter (negb GHC.Base.∘ isInteresting) GHC.Base.∘ Core.bindersOf).
 
-Definition lookupCallArityRes : CallArityRes -> Core.Var -> (nat * bool)%type :=
+Definition lookupCallArityRes
+   : CallArityRes -> Core.Var -> (BasicTypes.Arity * bool)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | pair g ae, v =>
@@ -108,7 +111,8 @@ Definition lookupCallArityRes : CallArityRes -> Core.Var -> (nat * bool)%type :=
     end.
 
 Definition lubArityEnv
-   : Core.VarEnv nat -> Core.VarEnv nat -> Core.VarEnv nat :=
+   : Core.VarEnv BasicTypes.Arity ->
+     Core.VarEnv BasicTypes.Arity -> Core.VarEnv BasicTypes.Arity :=
   Core.plusVarEnv_C GHC.Base.min.
 
 Definition lubRes : CallArityRes -> CallArityRes -> CallArityRes :=
@@ -163,21 +167,24 @@ Definition resDel : Core.Var -> CallArityRes -> CallArityRes :=
 Definition resDelList : list Core.Var -> CallArityRes -> CallArityRes :=
   fun vs ae => Data.Foldable.foldr resDel ae vs.
 
-Definition trimArity : Core.Var -> nat -> nat :=
+Definition trimArity : Core.Var -> BasicTypes.Arity -> BasicTypes.Arity :=
   fun v a =>
     let 'pair demands result_info := Core.splitStrictSig (Id.idStrictness v) in
     let max_arity_by_strsig :=
-      if Core.isBotRes result_info : bool then Coq.Lists.List.length demands else
+      if Core.isBotRes result_info : bool
+      then BinNat.N.of_nat (Coq.Lists.List.length demands) else
       a in
-    let max_arity_by_type := Coq.Lists.List.length (typeArity (tt)) in
+    let max_arity_by_type :=
+      BinNat.N.of_nat (Coq.Lists.List.length (typeArity (tt))) in
     Data.Foldable.foldr GHC.Base.min a (cons max_arity_by_type (cons
                                               max_arity_by_strsig nil)).
 
-Definition unitArityRes : Core.Var -> nat -> CallArityRes :=
+Definition unitArityRes : Core.Var -> BasicTypes.Arity -> CallArityRes :=
   fun v arity => pair UnVarGraph.emptyUnVarGraph (Core.unitVarEnv v arity).
 
 Definition callArityAnal
-   : nat -> Core.VarSet -> Core.CoreExpr -> (CallArityRes * Core.CoreExpr)%type :=
+   : BasicTypes.Arity ->
+     Core.VarSet -> Core.CoreExpr -> (CallArityRes * Core.CoreExpr)%type :=
   fix callArityAnal arg_0__ arg_1__ arg_2__
         := let j_26__ :=
              match arg_0__, arg_1__, arg_2__ with
@@ -284,7 +291,7 @@ Definition callArityBind
           (let cont_26__ arg_27__ := let 'pair i _ := arg_27__ in cons i nil in
            Coq.Lists.List.flat_map cont_26__ binds) in
         let fix_
-         : list (Core.Var * option (bool * nat * CallArityRes)%type *
+         : list (Core.Var * option (bool * BasicTypes.Arity * CallArityRes)%type *
                  Core.CoreExpr)%type ->
            (CallArityRes * list (Core.Var * Core.CoreExpr)%type)%type :=
           GHC.DeferredFix.deferredFix1 (fun fix_ ann_binds =>
@@ -363,12 +370,12 @@ Definition callArityAnalProgram
     binds'.
 
 (* External variables:
-     None Some andb arrow_first arrow_second bool callArityBind1 cons false list nat
-     negb nil op_zt__ option pair true tt typeArity Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Coq.Lists.List.length Core.App Core.Case Core.Cast
-     Core.Coercion Core.CoreBind Core.CoreExpr Core.CoreProgram Core.Lam Core.Let
-     Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Type_ Core.Var
-     Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv Core.delVarSet
+     None Some andb arrow_first arrow_second bool callArityBind1 cons false list negb
+     nil op_zt__ option pair true tt typeArity BasicTypes.Arity BinNat.N.of_nat
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.length Core.App
+     Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr Core.CoreProgram
+     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Type_
+     Core.Var Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv Core.delVarSet
      Core.delVarSetList Core.elemVarSet Core.emptyVarEnv Core.emptyVarSet
      Core.extendVarSetList Core.isBotRes Core.isExportedId Core.isId
      Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet Core.plusVarEnv_C

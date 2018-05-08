@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNums.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
@@ -34,7 +35,7 @@ Inductive Width : Type
   |  W512 : Width.
 
 Definition Length :=
-  nat%type.
+  BinNums.N%type.
 
 Inductive ForeignHint : Type
   := NoHint : ForeignHint
@@ -274,7 +275,7 @@ Definition vecLength : CmmType -> Length :=
     | _ => Panic.panic (GHC.Base.hs_string__ "vecLength: not a vector")
     end.
 
-Definition widthFromBytes : nat -> Width :=
+Definition widthFromBytes : BinNums.N -> Width :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
     if num_1__ GHC.Base.== #1 : bool then W8 else
@@ -296,7 +297,7 @@ Definition widthFromBytes : nat -> Width :=
     Panic.panicStr (GHC.Base.hs_string__ "no width for given number of bytes")
     (Panic.noString n).
 
-Definition widthInBits : Width -> nat :=
+Definition widthInBits : Width -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | W8 => #8
@@ -309,7 +310,7 @@ Definition widthInBits : Width -> nat :=
     | W80 => #80
     end.
 
-Definition widthInBytes : Width -> nat :=
+Definition widthInBytes : Width -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | W8 => #1
@@ -360,14 +361,14 @@ Definition vec4b32 : CmmType :=
 Definition vec8b16 : CmmType :=
   vec #8 b16.
 
-Definition cmmVec : nat -> CmmType -> CmmType :=
+Definition cmmVec : BinNums.N -> CmmType -> CmmType :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | n, Mk_CmmType cat w =>
         Mk_CmmType (VecCat n cat) (widthFromBytes (n GHC.Num.* widthInBytes w))
     end.
 
-Definition widthInLog : Width -> nat :=
+Definition widthInLog : Width -> BinNums.N :=
   fun arg_0__ =>
     match arg_0__ with
     | W8 => #0
@@ -393,7 +394,7 @@ Definition bWord : DynFlags.DynFlags -> CmmType :=
   fun dflags => cmmBits (wordWidth dflags).
 
 (* External variables:
-     andb bool false nat negb true DynFlags.DynFlags DynFlags.wORD_SIZE
+     andb bool false negb true BinNums.N DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
      GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ Panic.noString Panic.panic

@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+Require Import Core.
 
 
 
@@ -61,7 +62,7 @@ Definition fvVarSet : FV -> Core.VarSet :=
 Definition fvVarList : FV -> list Core.Var :=
   Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
 
-Definition fvDVarSet : FV -> Core.DVarSet :=
+Definition fvDVarSet : FV -> DVarSet :=
   Core.mkDVarSet GHC.Base.∘ (Data.Tuple.fst GHC.Base.∘ fvVarListVarSet).
 
 Definition mapUnionFV {a} : (a -> FV) -> list a -> FV :=
@@ -94,7 +95,7 @@ Definition mkFVs : list Core.Var -> FV :=
   fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
 
 (* External variables:
-     andb bool cons list nil op_zt__ pair true Core.DVarSet Core.Var Core.VarSet
+     DVarSet andb bool cons list nil op_zt__ pair true Core.Var Core.VarSet
      Core.elemVarSet Core.emptyVarSet Core.extendVarSet Core.mkDVarSet
      Core.unionVarSet Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id
      GHC.Base.op_z2218U__

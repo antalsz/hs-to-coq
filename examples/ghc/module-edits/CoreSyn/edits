@@ -7,10 +7,6 @@ rewrite forall , Core.BootUnfolding = getUnfolding Core.BootUnfolding
 rewrite forall , Core.OtherCon      = fun x => getUnfolding (Core.OtherCon x)
 rewrite forall , Core.NoUnfolding   = getUnfolding Core.NoUnfolding
 
-# redefine Definition Core.bootUnfolding : Core.UnfoldingInfo :=
-#  Core.BootUnfolding.
-# redefine Definition Core.evaldUnfolding : Core.UnfoldingInfo :=
-#   Core.OtherCon nil.
 redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
   fun arg_0__ =>
     match Core.getUnfoldingInfo arg_0__ with
@@ -18,13 +14,10 @@ redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
     | Core.BootUnfolding => false
     | _ => true
     end.
+
 redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
   fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.BootUnfolding => true | _ => false end.
 
-# redefine Definition Core.mkOtherCon : (list Core.AltCon) -> Core.UnfoldingInfo :=
-#  Core.OtherCon.
-# redefine Definition Core.noUnfolding : Core.UnfoldingInfo :=
-#  NoUnfolding.
 redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
   fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.OtherCon cons_ => cons_ | _ => nil end.
 

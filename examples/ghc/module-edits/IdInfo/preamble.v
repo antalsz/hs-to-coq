@@ -44,13 +44,7 @@ data RuleInfo
 
 Require GHC.Err.
 
-
-Parameter RuleInfo : Type.
-Parameter emptyRuleInfo : RuleInfo.
-Parameter isEmptyRuleInfo : RuleInfo -> bool.
-
-Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
-  GHC.Err.Build_Default _ emptyRuleInfo.
-
+(* This is parameterized to break the dependence of IdInfo on CoreExpr. *)
+Parameter CoreRuleInfo  : Type.
 
 (* -------------------- *)

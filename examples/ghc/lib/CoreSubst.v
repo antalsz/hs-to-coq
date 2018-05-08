@@ -14,7 +14,6 @@ Require Coq.Program.Wf.
 
 
 
-
 (* Converted imports: *)
 
 Require Core.
@@ -28,7 +27,6 @@ Require GHC.Base.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
-Require Id.
 Require Panic.
 Require UniqSupply.
 Require Unique.
@@ -43,6 +41,9 @@ Definition IdSubstEnv :=
 Inductive Subst : Type
   := Mk_Subst : Core.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 (* Midamble *)
+
+Require Import Id.
+Require Import Core.
 
 Instance Default_Subst : GHC.Err.Default Subst :=
   GHC.Err.Build_Default _ (Mk_Subst GHC.Err.default GHC.Err.default tt tt).
@@ -203,7 +204,7 @@ Definition lookupIdSubst
         end
     end.
 
-Definition substDVarSet : Subst -> Core.DVarSet -> Core.DVarSet :=
+Definition substDVarSet : Subst -> DVarSet -> DVarSet :=
   fun subst fvs =>
     let subst_fv :=
       fun subst fv acc =>
@@ -270,7 +271,7 @@ Definition substIdBndr
         let id1 := Core.uniqAway in_scope old_id in
         let id2 := if no_type_change : bool then id1 else id1 in
         let mb_new_info := substIdInfo rec_subst id2 ((@Core.idInfo tt id2)) in
-        let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
+        let new_id := maybeModifyIdInfo mb_new_info id2 in
         let no_change := id1 GHC.Base.== old_id in
         let new_env :=
           if no_change : bool then Core.delVarEnv env old_id else
@@ -302,8 +303,7 @@ Definition clone_id
         let id1 := Core.setVarUnique old_id uniq in
         let id2 := substIdType subst id1 in
         let new_id :=
-          Id.maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id)))
-          id2 in
+          maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id))) id2 in
         let 'pair new_idvs new_cvs := pair (Core.extendVarEnv idvs old_id (Core.Mk_Var
                                                                            new_id)) cvs in
         pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_idvs tvs new_cvs)
@@ -479,22 +479,22 @@ Definition zapSubstEnv : Subst -> Subst :=
   fun '(Mk_Subst in_scope _ _ _) => Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
 (* External variables:
-     None Some andb bool cons false id list negb nil op_zt__ option orb pair snd true
-     tt unit Core.App Core.Breakpoint Core.Case Core.Cast Core.Coercion Core.CoreArg
-     Core.CoreBind Core.CoreExpr Core.CoreProgram Core.DVarSet Core.IdEnv Core.IdInfo
-     Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec
-     Core.Tick Core.Tickish Core.Type_ Core.Var Core.VarSet Core.dVarSetElems
-     Core.delVarEnv Core.delVarEnvList Core.elemInScopeSet Core.emptyInScopeSet
-     Core.emptyVarEnv Core.emptyVarSet Core.extendInScopeSet
-     Core.extendInScopeSetList Core.extendInScopeSetSet Core.extendVarEnv
-     Core.extendVarEnvList Core.idInfo Core.isEmptyVarEnv Core.isLocalId
-     Core.isLocalVar Core.lookupInScope Core.lookupVarEnv Core.mkDVarSet
-     Core.ruleInfo Core.setRuleInfo Core.setVarUnique Core.unfoldingInfo
-     Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
-     Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
-     Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Err.default GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Id.maybeModifyIdInfo Panic.noString Panic.panicStr
-     Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
-     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
+     DVarSet None Some andb bool cons false id list maybeModifyIdInfo negb nil
+     op_zt__ option orb pair snd true tt unit Core.App Core.Breakpoint Core.Case
+     Core.Cast Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr
+     Core.CoreProgram Core.IdEnv Core.IdInfo Core.InScopeSet Core.Lam Core.Let
+     Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Tickish Core.Type_
+     Core.Var Core.VarSet Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
+     Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet
+     Core.extendInScopeSet Core.extendInScopeSetList Core.extendInScopeSetSet
+     Core.extendVarEnv Core.extendVarEnvList Core.idInfo Core.isEmptyVarEnv
+     Core.isLocalId Core.isLocalVar Core.lookupInScope Core.lookupVarEnv
+     Core.mkDVarSet Core.ruleInfo Core.setRuleInfo Core.setVarUnique
+     Core.unfoldingInfo Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr
+     CoreUtils.mkTick Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst
+     Data.Tuple.snd Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Err.default GHC.List.unzip
+     GHC.List.zip GHC.Num.fromInteger Panic.noString Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace UniqSupply.UniqSupply UniqSupply.uniqFromSupply
+     UniqSupply.uniqsFromSupply Unique.Unique
 *)

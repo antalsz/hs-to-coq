@@ -6,7 +6,10 @@ skip module CoreSeq
 
 rename type Var.Id    = Core.Var
 rename type Var.TyVar = Core.Var
+rename type VarSet.DVarSet = DVarSet
 
+# Ugh. notation.
+rewrite forall , Id.maybeModifyIdInfo = maybeModifyIdInfo 
 
 ###################################################
 # TODO: seq

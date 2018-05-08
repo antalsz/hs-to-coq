@@ -85,14 +85,8 @@ data RuleInfo
 
 Require GHC.Err.
 
-
-Parameter RuleInfo : Type.
-Parameter emptyRuleInfo : RuleInfo.
-Parameter isEmptyRuleInfo : RuleInfo -> bool.
-
-Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
-  GHC.Err.Build_Default _ emptyRuleInfo.
-
+(* This is parameterized to break the dependence of IdInfo on CoreExpr. *)
+Parameter CoreRuleInfo  : Type.
 
 (* -------------------- *)
 
@@ -442,16 +436,6 @@ Inductive DmdType : Type
 
 Inductive StrictSig : Type := Mk_StrictSig : DmdType -> StrictSig.
 
-Inductive IdInfo : Type
-  := Mk_IdInfo
-   : ArityInfo ->
-     RuleInfo ->
-     Unfolding ->
-     CafInfo ->
-     BasicTypes.OneShotInfo ->
-     BasicTypes.InlinePragma ->
-     BasicTypes.OccInfo -> StrictSig -> Demand -> ArityInfo -> LevityInfo -> IdInfo.
-
 Definition CleanDemand :=
   (JointDmd StrDmd UseDmd)%type.
 
@@ -475,6 +459,10 @@ Reserved Notation "'TyVarBinder'".
 Inductive TyVar__raw : Type :=.
 
 Reserved Notation "'TyVar'".
+
+Inductive DVarSet__raw : Type :=.
+
+Reserved Notation "'DVarSet'".
 
 Inductive TyConBinder__raw : Type :=.
 
@@ -607,6 +595,16 @@ with PatSyn : Type
      unit ->
      list TyVarBinder ->
      unit -> unit -> (Id * bool)%type -> option (Id * bool)%type -> PatSyn
+with IdInfo : Type
+  := Mk_IdInfo
+   : ArityInfo ->
+     RuleInfo ->
+     Unfolding ->
+     CafInfo ->
+     BasicTypes.OneShotInfo ->
+     BasicTypes.InlinePragma ->
+     BasicTypes.OccInfo -> StrictSig -> Demand -> ArityInfo -> LevityInfo -> IdInfo
+with RuleInfo : Type := Mk_RuleInfo : list CoreRuleInfo -> DVarSet -> RuleInfo
 with EqSpec : Type := Mk_EqSpec : TyVar -> unit -> EqSpec
 where "'TyVar'" := (GHC.Base.Synonym TyVar__raw Var%type)
 and   "'TyVarBinder'" := (GHC.Base.Synonym TyVarBinder__raw (TyVarBndr TyVar
@@ -614,6 +612,8 @@ and   "'TyVarBinder'" := (GHC.Base.Synonym TyVarBinder__raw (TyVarBndr TyVar
 and   "'TyConBinder'" := (GHC.Base.Synonym TyConBinder__raw (TyVarBndr TyVar
                                             TyConBndrVis)%type)
 and   "'Id'" := (GHC.Base.Synonym Id__raw Var%type)
+and   "'DVarSet'" := (GHC.Base.Synonym DVarSet__raw (UniqDSet.UniqDSet
+                                        Var)%type)
 and   "'ClassOpItem'" := (GHC.Base.Synonym ClassOpItem__raw (Id *
                                             DefMethInfo)%type%type).
 
@@ -627,9 +627,6 @@ Definition OutBndr :=
   CoreBndr%type.
 
 Inductive TaggedBndr t : Type := TB : CoreBndr -> t -> TaggedBndr t.
-
-Definition DVarSet :=
-  (UniqDSet.UniqDSet Var)%type.
 
 Definition CoVar :=
   Id%type.
@@ -1253,50 +1250,6 @@ Definition sd {s} {u} (arg_0__ : JointDmd s u) :=
 Definition ud {s} {u} (arg_0__ : JointDmd s u) :=
   let 'JD _ ud := arg_0__ in
   ud.
-
-Definition arityInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo arityInfo _ _ _ _ _ _ _ _ _ _ := arg_0__ in
-  arityInfo.
-
-Definition cafInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ cafInfo _ _ _ _ _ _ _ := arg_0__ in
-  cafInfo.
-
-Definition callArityInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ callArityInfo _ := arg_0__ in
-  callArityInfo.
-
-Definition demandInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ _ demandInfo _ _ := arg_0__ in
-  demandInfo.
-
-Definition inlinePragInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ inlinePragInfo _ _ _ _ _ := arg_0__ in
-  inlinePragInfo.
-
-Definition levityInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ _ levityInfo := arg_0__ in
-  levityInfo.
-
-Definition occInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ occInfo _ _ _ _ := arg_0__ in
-  occInfo.
-
-Definition oneShotInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ oneShotInfo _ _ _ _ _ _ := arg_0__ in
-  oneShotInfo.
-
-Definition ruleInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ ruleInfo _ _ _ _ _ _ _ _ _ := arg_0__ in
-  ruleInfo.
-
-Definition strictnessInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ strictnessInfo _ _ _ := arg_0__ in
-  strictnessInfo.
-
-Definition unfoldingInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ unfoldingInfo _ _ _ _ _ _ _ _ := arg_0__ in
-  unfoldingInfo.
 
 Definition classBody (arg_0__ : Class) :=
   let 'Mk_Class _ _ _ _ _ classBody := arg_0__ in
@@ -2215,6 +2168,50 @@ Definition psUnivTyVars (arg_0__ : PatSyn) :=
   let 'MkPatSyn _ _ _ _ _ _ psUnivTyVars _ _ _ _ _ _ := arg_0__ in
   psUnivTyVars.
 
+Definition arityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo arityInfo _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  arityInfo.
+
+Definition cafInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ cafInfo _ _ _ _ _ _ _ := arg_0__ in
+  cafInfo.
+
+Definition callArityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ callArityInfo _ := arg_0__ in
+  callArityInfo.
+
+Definition demandInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ demandInfo _ _ := arg_0__ in
+  demandInfo.
+
+Definition inlinePragInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ inlinePragInfo _ _ _ _ _ := arg_0__ in
+  inlinePragInfo.
+
+Definition levityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ _ levityInfo := arg_0__ in
+  levityInfo.
+
+Definition occInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ occInfo _ _ _ _ := arg_0__ in
+  occInfo.
+
+Definition oneShotInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ oneShotInfo _ _ _ _ _ _ := arg_0__ in
+  oneShotInfo.
+
+Definition ruleInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ ruleInfo _ _ _ _ _ _ _ _ _ := arg_0__ in
+  ruleInfo.
+
+Definition strictnessInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ strictnessInfo _ _ _ := arg_0__ in
+  strictnessInfo.
+
+Definition unfoldingInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ unfoldingInfo _ _ _ _ _ _ _ _ := arg_0__ in
+  unfoldingInfo.
+
 Definition ru_act (arg_0__ : CoreRule) :=
   match arg_0__ with
   | Rule _ ru_act _ _ _ _ _ _ _ _ _ => ru_act
@@ -2332,22 +2329,39 @@ Definition in_scope (arg_0__ : RnEnv2) :=
 
 Require GHC.Err.
 
+(* --------------------- *)
+(* There are two parts of IdInfo that cause trouble -- Rules & unfolding information. 
+   Part of the issue is that types contain embedded CoreExpr's 
+*)
+(* We break the cyclic structure for the unfolding info here. The type "Unfolding" is parameterized 
+   in the midamble. *)
+
+
 Inductive UnfoldingInfo : Type
   := NoUnfolding : UnfoldingInfo
   |  BootUnfolding : UnfoldingInfo
   |  OtherCon : list AltCon -> UnfoldingInfo
   |  DFunUnfolding : list Var -> DataCon -> list CoreExpr -> UnfoldingInfo
-  |  CoreUnfolding
-   : CoreExpr ->
-     UnfoldingSource ->
-     bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> UnfoldingInfo.
+  |  CoreUnfolding : CoreExpr ->  UnfoldingSource -> bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> UnfoldingInfo.
 
-Instance Default_Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ Mk_Unfolding.
 
-(*****)
 Parameter getUnfoldingInfo : Unfolding -> UnfoldingInfo.
 Parameter getUnfolding     : UnfoldingInfo -> Unfolding.
+
+Parameter getCoreRule : CoreRuleInfo -> CoreRule.
+Parameter getCoreRuleInfo : CoreRule -> CoreRuleInfo.
+
+(*****)
+
+Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
+  GHC.Err.Build_Default _ (Mk_RuleInfo nil UniqDSet.emptyUniqDSet).
+
+Instance Default_UnfoldingInfo : GHC.Err.Default UnfoldingInfo :=
+  GHC.Err.Build_Default _ NoUnfolding.
+
+Instance Default_Unfolding : GHC.Err.Default Unfolding :=
+  GHC.Err.Build_Default _ (getUnfolding GHC.Err.default).
+
 
 Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
@@ -2355,14 +2369,11 @@ Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
 Instance Default_CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
 
-
-
 Instance Default_Termination {r} : GHC.Err.Default (Termination r) :=
   GHC.Err.Build_Default _ Diverges.
 
 Instance Default_DmdType : GHC.Err.Default DmdType :=
   GHC.Err.Build_Default _ (Mk_DmdType GHC.Err.default GHC.Err.default GHC.Err.default).
-
 
 Instance Default_StrictSig : GHC.Err.Default StrictSig :=
   GHC.Err.Build_Default _ (Mk_StrictSig GHC.Err.default).
@@ -2383,10 +2394,8 @@ Instance Default_IdInfo : GHC.Err.Default IdInfo :=
 Instance Default_TyCon : GHC.Err.Default TyCon :=
   GHC.Err.Build_Default _ (PrimTyCon GHC.Err.default GHC.Err.default nil tt tt GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default ).
 
-
 Instance Default_RecSelParent : GHC.Err.Default RecSelParent :=
   GHC.Err.Build_Default _ (RecSelData GHC.Err.default).
-
 Parameter naturallyCoherentClass : Class -> bool.
 
 
@@ -4384,6 +4393,9 @@ Definition emptyDVarEnv {a} : DVarEnv a :=
 Definition emptyDVarSet : DVarSet :=
   UniqDSet.emptyUniqDSet.
 
+Definition emptyRuleInfo : RuleInfo :=
+  Mk_RuleInfo nil emptyDVarSet.
+
 Definition emptyRuleEnv : RuleEnv :=
   Mk_RuleEnv NameEnv.emptyNameEnv Module.emptyModuleSet.
 
@@ -4856,6 +4868,9 @@ Definition isEmptyDVarEnv {a} : DVarEnv a -> bool :=
 
 Definition isEmptyDVarSet : DVarSet -> bool :=
   UniqDSet.isEmptyUniqDSet.
+
+Definition isEmptyRuleInfo : RuleInfo -> bool :=
+  fun '(Mk_RuleInfo rs _) => Data.Foldable.null rs.
 
 Definition isEmptyVarEnv {a} : VarEnv a -> bool :=
   UniqFM.isNullUFM.
@@ -6107,6 +6122,9 @@ Definition newTyConRhs : TyCon -> (list TyVar * unit)%type :=
 Definition noUnfolding : Unfolding :=
   getUnfolding NoUnfolding.
 
+Definition zapFragileUnfolding : Unfolding -> Unfolding :=
+  fun unf => if isFragileUnfolding unf : bool then noUnfolding else unf.
+
 Definition notOrphan : IsOrphan -> bool :=
   fun arg_0__ => match arg_0__ with | NotOrphan _ => true | _ => false end.
 
@@ -6380,6 +6398,12 @@ Definition ruleArity : CoreRule -> nat :=
 Definition ruleIdName : CoreRule -> Name.Name :=
   ru_fn.
 
+Definition ruleInfoFreeVars : RuleInfo -> DVarSet :=
+  fun '(Mk_RuleInfo _ fvs) => fvs.
+
+Definition ruleInfoRules : RuleInfo -> list CoreRule :=
+  fun '(Mk_RuleInfo rules _) => Coq.Lists.List.map getCoreRule rules.
+
 Definition ruleModule : CoreRule -> option Module.Module :=
   fun arg_0__ =>
     match arg_0__ with
@@ -6608,6 +6632,14 @@ Definition setRuleIdName : Name.Name -> CoreRule -> CoreRule :=
         BuiltinRule ru_name_11__ nm ru_nargs_13__ ru_try_14__
     end.
 
+Definition setRuleInfoHead : Name.Name -> RuleInfo -> RuleInfo :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | fn, Mk_RuleInfo rules fvs =>
+        Mk_RuleInfo (Coq.Lists.List.map getCoreRuleInfo (Coq.Lists.List.map
+                                         (setRuleIdName fn) (Coq.Lists.List.map getCoreRule rules))) fvs
+    end.
+
 Definition setRuleInfo : IdInfo -> RuleInfo -> IdInfo :=
   fun info sp =>
     GHC.Prim.seq sp (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
@@ -6616,6 +6648,12 @@ Definition setRuleInfo : IdInfo -> RuleInfo -> IdInfo :=
                   Mk_IdInfo arityInfo_0__ sp unfoldingInfo_2__ cafInfo_3__ oneShotInfo_4__
                             inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
                             callArityInfo_9__ levityInfo_10__).
+
+Definition zapFragileInfo : IdInfo -> option IdInfo :=
+  fun '((Mk_IdInfo _ _ unf _ _ _ occ _ _ _ _ as info)) =>
+    let new_unf := zapFragileUnfolding unf in
+    GHC.Prim.seq new_unf (Some (setOccInfo (setRuleInfo info emptyRuleInfo)
+                                           (BasicTypes.zapFragileOcc occ))).
 
 Definition setStrictnessInfo : IdInfo -> StrictSig -> IdInfo :=
   fun info dd =>
@@ -7836,42 +7874,43 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
 
 (* External variables:
      Alt AnnAlt AnnExpr Arg ArgStr ArgUse Bool.Sumbool.sumbool_of_bool BootUnfolding
-     ClassOpItem Eq Gt Id Lt NoUnfolding None OtherCon RuleInfo Some TyConBinder
-     TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison cons
-     deAnnotate' deTagExpr else emptyRuleInfo false getUnfolding getUnfoldingInfo if
-     list lubArgUse nat negb nil op_zt__ option orb pair plusVarEnv_CD size_AnnExpr'
-     snd then true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
-     BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
-     BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
-     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
-     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
-     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleName
-     BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.defaultInlinePragma
-     BasicTypes.fIRST_TAG BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed
-     BasicTypes.noOccInfo BasicTypes.tupleSortBoxity BooleanFormula.BooleanFormula
-     BooleanFormula.mkTrue Constants.fLOAT_SIZE Constants.wORD64_SIZE
-     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
-     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.repeat
-     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
-     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
-     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
-     DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.dOUBLE_SIZE
-     DynFlags.gopt DynFlags.wORD_SIZE FastStringEnv.dFsEnvElts
-     FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv FastStringEnv.mkDFsEnv
-     FieldLabel.FieldLabel FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString
-     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Monad GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.eq_default
-     GHC.Base.fmap GHC.Base.map GHC.Base.mappend GHC.Base.max GHC.Base.max__
-     GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
-     GHC.Base.op_zgze____ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zl____
-     GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Base.return_ GHC.Char.Char GHC.DeferredFix.deferredFix1
-     GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse GHC.List.zip
-     GHC.List.zipWith GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq GHC.Real.Rational GHC.Wf.wfFix1
-     GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
+     ClassOpItem CoreRuleInfo DVarSet Eq Gt Id Lt NoUnfolding None OtherCon Some
+     TyConBinder TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison
+     cons deAnnotate' deTagExpr else false getCoreRule getCoreRuleInfo getUnfolding
+     getUnfoldingInfo if list lubArgUse nat negb nil op_zt__ option orb pair
+     plusVarEnv_CD size_AnnExpr' snd then true tt unit BasicTypes.Activation
+     BasicTypes.AlwaysActive BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ
+     BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker BasicTypes.IAmDead
+     BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.ManyOccs
+     BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo BasicTypes.OccInfo
+     BasicTypes.OneOcc BasicTypes.OneShotInfo BasicTypes.OneShotLam
+     BasicTypes.RuleName BasicTypes.SourceText BasicTypes.TupleSort
+     BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
+     BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
+     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc
+     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Constants.fLOAT_SIZE
+     Constants.wORD64_SIZE Coq.Init.Datatypes.app Coq.Init.Peano.lt
+     Coq.Lists.List.firstn Coq.Lists.List.flat_map Coq.Lists.List.length
+     Coq.Lists.List.map Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Foldable.all
+     Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find Data.Foldable.foldl
+     Data.Foldable.foldr Data.Foldable.null Data.Function.on Data.Maybe.isJust
+     Data.Tuple.fst Datatypes.id DynFlags.DynFlags DynFlags.Opt_KillAbsence
+     DynFlags.Opt_KillOneShot DynFlags.dOUBLE_SIZE DynFlags.gopt DynFlags.wORD_SIZE
+     FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
+     FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
+     FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Monad
+     GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.eq_default GHC.Base.fmap GHC.Base.map
+     GHC.Base.mappend GHC.Base.max GHC.Base.max__ GHC.Base.min GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.return_ GHC.Char.Char
+     GHC.DeferredFix.deferredFix1 GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse
+     GHC.List.zip GHC.List.zipWith GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq GHC.Real.Rational
+     GHC.Wf.wfFix1 GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Maybes.orElse
      Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
      Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.isWiredInName

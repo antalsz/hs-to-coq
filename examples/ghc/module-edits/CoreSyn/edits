@@ -84,9 +84,9 @@ skip Core.collectNAnnBndrs
 
 
 in Core.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
-obligations Core.collectAnnArgsTicks admit
+obligations Core.collectAnnArgsTicks solve_collectAnnArgsTicks
 in Core.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
-obligations Core.collectAnnBndrs admit
+obligations Core.collectAnnBndrs solve_collectAnnArgsTicks
 
 # skip Core.mkTyArg
 

@@ -2486,6 +2486,22 @@ Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot},
 
 Require Import Omega.
 
+Ltac intro_split := 
+  try intros [? [? [? ?]]];
+  try intros [? [? ?]];
+  try intros [? ?].
+  
+Ltac distinguish3 := 
+  split; intros; unfold not;  intro_split; discriminate.
+
+Ltac solve_collectAnnArgsTicks :=   
+  Tactics.program_simpl;
+  try solve [distinguish3];
+  try solve [repeat match goal with [ f : AnnExpr _ _ |- _ ] => destruct f end;
+             Tactics.program_simpl;
+             omega].
+
+
 (* ANTALSZ NOTE: to make this function structurally recursive, we need to 
    define size_AnnAlt as a *local* helper function, not a mutual 
    helper function. Changing size_AnnAlt to "with" results in an error. *)
@@ -4012,7 +4028,7 @@ Program Definition collectAnnArgsTicks {b} {a}
                                | _, _, _ => j_4__
                                end) in
             go expr nil nil.
-Admit Obligations.
+Solve Obligations with (solve_collectAnnArgsTicks).
 
 Program Definition collectAnnBndrs {bndr} {annot}
            : AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
@@ -4025,7 +4041,7 @@ Program Definition collectAnnBndrs {bndr} {annot}
                                | bs, body => pair (GHC.List.reverse bs) body
                                end) in
             collect nil e.
-Admit Obligations.
+Solve Obligations with (solve_collectAnnArgsTicks).
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
   fun expr =>

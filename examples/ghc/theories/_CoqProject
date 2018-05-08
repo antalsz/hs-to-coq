@@ -11,4 +11,8 @@ CoreInduct.v
 ExitifyProofs.v
 CoreSubstInvariants.v
 StateLogic.v
-
+Tactics.v
+Forall.v
+CoreLemmas.v
+NCore.v
+VectorUtils.v

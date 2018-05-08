@@ -4,18 +4,9 @@ Require Import CoreUtils.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
+Require Import Forall.
+
 Set Bullet Behavior "Strict Subproofs".
-
-
-Lemma Forall_map:
-  forall {a b} P (f : a -> b) xs,
-  Forall P (map f xs) <-> Forall (fun x => P (f x)) xs.
-Proof.
-  intros.
-  induction xs; simpl.
-  * split; intro; constructor.
-  * split; intro H; inversion_clear H; constructor; try apply IHxs; assumption.
-Qed.
 
 (*
 This file describes an invariant of Core files that
@@ -28,20 +19,6 @@ This file describes an invariant of Core files that
    equality.
 *)
 
-(* The termination checker does not like recursion through [Forall], but
-   through [map] is fine... oh well. *)
-Definition Forall' {a} (P : a -> Prop) xs := Forall id (map P xs).
-
-Lemma Forall'_Forall:
-  forall  {a} (P : a -> Prop) xs,
-  Forall' P xs <-> Forall P xs.
-Proof.
-  intros.
-  unfold Forall'.
-  unfold id.
-  rewrite Forall_map.
-  reflexivity.
-Qed.
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
    match lookupVarSet in_scope v with

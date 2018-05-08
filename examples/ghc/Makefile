@@ -133,7 +133,8 @@ $(OUT)/README.md:
 	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
 	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
 
-$(OUT)/edits: $(OUT)/README.md
+$(OUT)/edits:
+	mkdir -p $(OUT)
 	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/_CoqProject: $(OUT)/README.md Makefile
@@ -173,19 +174,6 @@ HS_TO_COQ_GHC_OPTS=\
      -e edits \
      -N \
 
-#
-# Can only have one preamble/midamble. So concatenate all of the individual files together
-#
-CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))
-
-CoreSyn_preamble.v : $(CORESYN_PRE) manual/ConIds.v
-	cat manual/ConIds.v $(CORESYN_PRE) > CoreSyn_preamble.v
-
-CORESYN_MID = $(wildcard $(addprefix module-edits/, $(addsuffix /midamble.v, $(CORESYN))))
-
-CoreSyn_midamble.v : $(CORESYN_MID)
-	cat $(CORESYN_MID) > CoreSyn_midamble.v
-
 
 -include deps/*.mk
 
@@ -212,8 +200,12 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
 		     ghc/compiler/*/$*.hs
 	test -e $@
 
+CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))
+CORESYN_MID = $(wildcard $(addprefix module-edits/, $(addsuffix /midamble.v, $(CORESYN))))
 
-$(OUTFILES_CORESYN) : edits no-type-edits CoreSyn_preamble.v CoreSyn_midamble.v $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
+$(OUTFILES_CORESYN) : edits no-type-edits $(CORESYN_PRE) manual/ConIds.v $(CORESYN_MID) $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
+	cat manual/ConIds.v $(CORESYN_PRE) > CoreSyn_preamble.v
+	cat $(CORESYN_MID) > CoreSyn_midamble.v
 	$(HS_TO_COQ) $(HS_TO_COQ_GHC_OPTS) \
                 -p CoreSyn_preamble.v \
                 --midamble CoreSyn_midamble.v \
@@ -222,8 +214,7 @@ $(OUTFILES_CORESYN) : edits no-type-edits CoreSyn_preamble.v CoreSyn_midamble.v 
                 -o $(OUT) \
 		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CORESYN)))
 	test -e $@
-	rm CoreSyn_preamble.v CoreSyn_midamble.v
-
+	rm -f CoreSyn_preamble.v CoreSyn_midamble.v
 
 $(OUTFILES_CONSTR) : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
 	$(HS_TO_COQ) -e module-edits/Constructors/edits \
@@ -253,7 +244,6 @@ $(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 
 clean:
 	rm -rf $(OUT)
-	rm -f CoreSyn_preamble.v CoreSyn_midamble.v
 	rm -f *.aux *.log
 
 cleancore:

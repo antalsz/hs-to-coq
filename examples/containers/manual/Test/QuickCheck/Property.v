@@ -1,4 +1,4 @@
-From mathcomp Require Import ssreflect ssrbool.
+From Coq Require Import ssreflect ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
 Require Coq.ZArith.BinInt.

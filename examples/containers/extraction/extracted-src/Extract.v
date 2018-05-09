@@ -16,7 +16,7 @@ Require GHC.Err.
 Require Data.Either.
 Require Utils.Containers.Internal.PtrEquality.
 
-Require Import mathcomp.ssreflect.ssreflect.
+From Coq Require Import ssreflect.
 
 Extraction Blacklist Prelude.
 Extraction Language Haskell.

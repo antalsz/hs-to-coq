@@ -8,7 +8,7 @@ Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Require Import mathcomp.ssreflect.ssreflect.
+From Coq Require Import ssreflect.
 
 (* Note, standard practice is for pred/succ/toError to throw errors on invalid inputs.
    I have changed these to return dummy answers instead so that they are total

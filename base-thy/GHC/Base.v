@@ -12,7 +12,7 @@ Require Import Data.Semigroup.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-From mathcomp Require Import ssreflect ssrbool ssrfun.
+From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Properties of basic functions *)
@@ -287,7 +287,7 @@ Proof.
   split; rewrite /op_zeze__ /op_zsze__ /Eq___option /op_zeze____ /op_zsze____.
   - case=> [?|] //=; apply Eq_refl.
   - repeat case=> [?|] //=; apply Eq_sym.
-  - repeat case=> [?|] //=; apply Eq_trans.
+  - do 3 case=> [?|] //=; apply Eq_trans. (* COQ8.8: Why not `repeat'? *)
   - repeat case=> [?|] //=. rewrite negb_involutive. reflexivity.
 Qed.
 

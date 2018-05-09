@@ -5,7 +5,7 @@ Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Proofs.GHC.Base.
 Require Import Data.Either.
 
-From mathcomp Require Import ssreflect ssrfun ssrbool.
+From Coq Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
 Instance EqLaws_Data_Either_Either {a b} `{EqLaws a} `{EqLaws b} : EqLaws (Either a b).

@@ -1,4 +1,4 @@
-From mathcomp Require Import ssreflect ssrfun.
+From Coq Require Import ssreflect ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
 Require Import GHC.Base.
@@ -142,8 +142,7 @@ Proof.
   rewrite eftInt_aux_iterates iterates_In.
   split=> [[i LE ->{a}] | [LE_a a_LE]].
   - rewrite iter_plus_Z.
-    move: LE => /inj_le; rewrite Z2Nat.id; last omega.
-    move=> LE; omega.
+    move: LE => /inj_le; rewrite Z2Nat.id => [|LE]; omega.
   - remember (Z.to_nat (to - from)) as diff eqn:def_diff.
     elim: diff from pf def_diff LE_a => [|diff IH] from pf def_diff LE_a.
     + exists 0 => //=.

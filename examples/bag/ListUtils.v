@@ -9,7 +9,7 @@ Require Data.Foldable.
 Require Data.Monoid.
 Require Import Proofs.Data.Foldable.
 
-From mathcomp Require Import ssreflect ssrfun ssrbool.
+From Coq Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
 (***** null *****)

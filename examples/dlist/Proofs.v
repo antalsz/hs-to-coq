@@ -1,4 +1,4 @@
-From mathcomp Require Import ssreflect ssrfun.
+From Coq Require Import ssreflect ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
 Require Import GHC.Base.

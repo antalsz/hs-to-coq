@@ -40,12 +40,13 @@ skip Util.readRational
 ## 
 skip Util.minWith
 
-## This doesn't seem to work
-rewrite forall x y z, if andb debugIsOn x then y else z = z
-
-## partial, needs {Default acc}
+## partial, needs {Default acc}, in midamble
 skip Util.foldl2
+
+## needs Data.Traversable.mapAccumL
 skip Util.mapAccumL2
+
+rewrite forall , Util.only = Panic.head
 skip Util.only
 
 # Environment dependent

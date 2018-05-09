@@ -24,5 +24,6 @@ Admitted.
 
 
 (* needs UniqFM.plusUFM_CD *)
+(*
 Parameter plusVarEnv_CD : forall {a}, (a -> a -> a) -> VarEnv a -> a -> VarEnv
-                               a -> a -> VarEnv a.
+                               a -> a -> VarEnv a. *)

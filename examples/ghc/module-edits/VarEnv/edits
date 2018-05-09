@@ -1,13 +1,12 @@
 
-# skip VarEnv.uniqAway'
 in Core.uniqAway' termination try deferred
 
 # defined in midamble
 # needs UniqFM.plusUFM_CD
-skip Core.plusVarEnv_CD
+# skip Core.plusVarEnv_CD
 
 # needs Util.foldl2 
-skip Core.rnBndrs2
+# skip Core.rnBndrs2
 
 # add default constraint
 redefine Definition Core.lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) id : a :=

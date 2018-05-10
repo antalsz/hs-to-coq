@@ -39,8 +39,3 @@ Proof.
     + expand_pairs.
       reflexivity.
 Qed.
-
-Lemma collectNAnnBndrs_freeVars_mkLams:
-  forall vs rhs,
-  collectNAnnBndrs (length vs) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
-Admitted.

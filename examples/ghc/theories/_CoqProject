@@ -16,3 +16,4 @@ Forall.v
 CoreLemmas.v
 NCore.v
 VectorUtils.v
+CoreFVsLemmas.v

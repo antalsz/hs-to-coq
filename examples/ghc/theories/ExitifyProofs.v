@@ -25,6 +25,7 @@ Require Import StateLogic.
 Require Import CoreInduct.
 Require Import Forall.
 Require Import CoreLemmas.
+Require Import CoreFVsLemmas.
 Require Import Tactics.
 Require Import NCore.
 Require Import VectorUtils.
@@ -60,9 +61,6 @@ Axiom dVarSet_freeVarsOf_Ann:
   (* @lastland, this is one spec that you might want to do *)
   forall ann_e, dVarSetToVarSet (freeVarsOf ann_e) = exprFreeVars (deAnnotate ann_e).
 
-Axiom deAnnotate_freeVars:
-  forall e, deAnnotate (freeVars e) = e.
-
 Axiom extendVarSetList_nil:
   forall s,
   extendVarSetList s [] = s.
@@ -74,7 +72,6 @@ Axiom extendVarSetList_cons:
 Axiom extendVarSetList_append:
   forall s vs1 vs2,
   extendVarSetList s (vs1 ++ vs2) = extendVarSetList (extendVarSetList s vs1) vs2.
-
 
 Axiom elemVarSet_mkVarset_iff_In:
   forall v vs,
@@ -177,9 +174,6 @@ Axiom exprFreeVars_mkLams:
   forall vs e,
   exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
 
-Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
-
-
 Lemma WellScoped_extendVarSetList_fresh_under:
   forall vs1 vs2 e vs,
   disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
@@ -226,23 +220,6 @@ Axiom WellScoped_collectNBinders2:
   forall e n isvs,
   WellScoped e isvs ->
   WellScoped (snd (collectNBinders n e)) (extendVarSetList isvs (fst (collectNBinders n e))).
-
-
-Axiom collectAnnNBndrs_collectNBinders:
-  forall {a v} `{GHC.Err.Default v} (e : AnnExpr a v) n params body,
-  collectNAnnBndrs n e = (params, body) ->
-  collectNBinders n (deAnnotate e) = (params, deAnnotate body).
-
-(* A variant, probably more true. *)
-Axiom collectAnnNBndrs_collectNBinders2:
-  forall {v} `{GHC.Err.Default v} (e : CoreExpr) n params body,
-  collectNAnnBndrs n (freeVars e) = (params, body) ->
-  body = freeVars (snd (collectNBinders n e)) /\ params = fst (collectNBinders n e).
-
-Axiom collectAnnNBndrs_collectNBinders3:
-  forall {v} `{GHC.Err.Default v} (e : CoreExpr) n,
-  collectNAnnBndrs n (freeVars e) = (fst (collectNBinders n e),  freeVars (snd (collectNBinders n e))).
-
 
 (* Just [simpl] is too ugly; uses [flat_map] *)
 Axiom deAnnBinds_AnnRec:
@@ -1033,8 +1010,8 @@ Section in_exitify.
             ** rewrite extendVarSetList_append.
                simpl in HWS.
                eapply WellScoped_collectNBinders; only 1: apply HWS.
-               apply collectAnnNBndrs_collectNBinders.
-               eassumption.
+               Fail apply collectAnnNBndrs_collectNBinders.
+               admit.
           + intros body'. eapply RevStateInvariant_bind.
             - apply IH.
               ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
@@ -1076,7 +1053,8 @@ Section in_exitify.
                     rewrite Forall_forall in HWS.
                     eapply WellScoped_collectNBinders; only 1: apply HWS.
                     eassumption.
-                    apply collectAnnNBndrs_collectNBinders; eassumption.
+                    Fail apply collectAnnNBndrs_collectNBinders; eassumption.
+                    admit.
               ++ intro e'; apply RevStateInvariant_return; intro He'.
                  simpl.
                  rewrite WellScoped_mkLams.
@@ -1176,7 +1154,9 @@ Section in_exitify.
       apply RevStateInvariant_bind_return. simpl.
       eapply RevStateInvariant_impl.
       + apply go_res_WellScoped.
-        - eapply WellScoped_collectNBinders;
+        - admit.
+          (*
+          eapply WellScoped_collectNBinders;
             only 2: (apply collectAnnNBndrs_collectNBinders; eassumption).
           rewrite Forall_forall in pairs_WS.
           specialize (pairs_WS (v, deAnnotate rhs)).
@@ -1187,12 +1167,13 @@ Section in_exitify.
           inversion Heq. unfold id in H0. subst.
           rewrite deAnnotate_freeVars.
           assumption.
+          *)
       + intros. simpl in *.
         rewrite WellScoped_mkLams.
         assumption.
     * change (sublistOf exits exits).
       intro. auto.
-  Qed.
+  Admitted.
 
   Lemma map_fst_pairs':
     map fst pairs' = (map (fun '(Mk_NJPair v _ _ _) => v) pairs).

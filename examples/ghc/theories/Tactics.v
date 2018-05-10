@@ -8,6 +8,12 @@ match goal with
   rewrite (surjective_pairing e)
 end.
 
+Ltac expand_pairs_ctx :=
+match goal with
+  H : context[let (_,_) := ?e in _] |- _ =>
+  rewrite (surjective_pairing e) in H
+end.
+
 Ltac simpl_bool :=
   rewrite ?orb_true_l, ?orb_true_r, ?orb_false_l, ?orb_false_r,
           ?andb_true_l, ?andb_true_r, ?andb_false_l, ?andb_false_r,

@@ -253,7 +253,6 @@ Axiom WellScopedVar_extendVarSetList_r:
   NoDup (map varUnique vs2) ->
   WellScopedVar v (extendVarSetList vs1 vs2).
 
-
 Lemma snd_unzip:
   forall a b (xs : list (a * b)),
   snd (List.unzip xs) = map snd xs.
@@ -263,6 +262,17 @@ Proof.
   * reflexivity.
   * simpl. repeat expand_pairs. simpl. f_equal. apply IHxs.
 Qed.
+
+Lemma snd_unzip_map:
+  forall a b c (f : a -> b) (g : a -> c) xs,
+  snd (List.unzip (map (fun x => (f x, g x)) xs)) = map g xs.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. repeat expand_pairs. simpl. f_equal. apply IHxs.
+Qed.
+
 
 Lemma zip_unzip_map:
   forall a b c (f : b -> c) (xs : list (a * b)),
@@ -347,21 +357,23 @@ Section in_exitify.
 
   (* Termination of [go] *)
   Lemma go_eq :
-     forall x y,
-     HasJoinLams (deAnnotate y) ->
-     go x y = go_f go x y.
+     forall captured e,
+     go captured (freeVars (toExpr e)) = go_f go captured (freeVars (toExpr e)).
   Proof.
     intros.
     unfold go; fold go_f.
     unfold DeferredFix.deferredFix2.
     unfold DeferredFix.curry.
     rewrite DeferredFix.deferredFix_eq_on with
-      (P := fun p => AnnHasJoinLams (snd p))
+      (P := fun p => exists u, snd p = freeVars (toExpr u))
       (R := fun p1 p2 => AnnCoreLT (snd p1) (snd p2)).
     * reflexivity.
     * apply Inverse_Image.wf_inverse_image.
       apply AnnCoreLT_wf.
-    * intros g h [captured ann_e] HP Hgh.
+    * clear captured e.
+      intros g h [captured ann_e] HP Hgh.
+      destruct HP as [e Heq]. simpl in Heq. subst ann_e.
+
       simpl. cbv beta delta [go_f].
       repeat float_let; cse_let.
 
@@ -386,64 +398,102 @@ Section in_exitify.
       subst j_22__ j_22__0. cleardefs.
 
       subst j_4__.
-      repeat destruct_match; try reflexivity; subst.
-      (* Found 5 recursive calls *)
-      - f_equal. apply forM_cong. intros [[dc pats] rhs] HIn.
-        f_equal. apply Hgh.
-        + inversion HP; subst; clear HP.
-          rewrite Forall_forall in H6.
-          apply (H6 _ HIn).
-        + AnnCore_termination.
-      - repeat float_let; cse_let.
-        inversion HP; subst; clear HP.
-        unfold AnnHasJoinLamsPair in H3. rewrite Heq2 in H3.
-        f_equal.
-        ** apply Hgh.
-           + admit.
-           + rewrite (surjective_pairing (collectNAnnBndrs _ _)) in Heq3. inversion_clear Heq3.
-             AnnCore_termination.
+      destruct e;
+        simpl; rewrite ?freeVarsBind1_freeVarsBind;
+        try destruct n;
+        simpl;
+        try destruct (isLocalVar _);
+        repeat expand_pairs;
+        simpl;
+        repeat destruct_match;
+        simpl; rewrite ?freeVarsBind1_freeVarsBind;
+        rewrite ?collectNAnnBndrs_freeVars_mkLams in *;
+        try (simpl in Heq);
+        try (inversion Heq; subst; clear Heq);
+        try solve [congruence];
+        try reflexivity.
+      - f_equal.
+        apply Hgh; simpl.
+        + eexists; reflexivity.
+        + simpl; rewrite ?freeVarsBind1_freeVarsBind.
+          simpl.
+          AnnCore_termination.
+      - f_equal.
+        ** replace j with (length params) in Heq2 by congruence.
+           rewrite collectNAnnBndrs_freeVars_mkLams in Heq2.
+           inversion Heq2; subst; clear Heq2.
+           apply Hgh; simpl.
+           + eexists; reflexivity.
+           + simpl; rewrite ?freeVarsBind1_freeVarsBind.
+             simpl.
+             admit.
         ** extensionality join_body'.
-           repeat float_let; cse_let.
            f_equal.
            apply Hgh.
-           + admit.
-           + AnnCore_termination.
-      - repeat float_let; cse_let.
-        subst j_10__ j_10__0.
+           + eexists; reflexivity.
+           + simpl. expand_pairs.
+             AnnCore_termination.
+      - contradict H0.
+        apply not_true_iff_false.
+        rewrite zip_unzip_map.
+        rewrite to_list_map.
+        dependent inversion pairs0; subst.
+        destruct h0.
+        rewrite to_list_cons.
+        simpl.
+        rewrite isJoinId_eq. rewrite HnotJoin. reflexivity.
+      - clear H0. f_equal.
+        apply Hgh; simpl.
+        + eexists; reflexivity.
+        + simpl; rewrite ?freeVarsBind1_freeVarsBind.
+          simpl. repeat expand_pairs. simpl.
+          AnnCore_termination.
+      - clear H0.
+        rewrite zip_unzip_map.
+        rewrite to_list_map.
+        rewrite !forM_map.
         f_equal.
-         apply Hgh.
-         + admit.
-         + AnnCore_termination.
-      - repeat float_let; cse_let.
-        subst j_18__ j_18__0.
-        repeat float_let; cse_let.
-        inversion HP; subst; clear HP.
-        f_equal.
-        ** apply forM_cong. intros [j rhs] HIn.
+        ** apply forM_cong. intros [j params rhs HiNJ] HIn.
            simpl.
            expand_pairs.
+           erewrite idJoinArity_join by eassumption.
+           rewrite collectNAnnBndrs_freeVars_mkLams.
            f_equal.
            apply Hgh.
-           + admit.
-           + Fail AnnCore_termination.
-             (* This is still bad. [idJoinArity] errors out when the id
-                is not a join id. But to know this, we neeed
-                to know that either all or none of a [Rec] are join ids... *)
+           + eexists; reflexivity.
+           + simpl.
+             rewrite ?freeVarsBind1_freeVarsBind. simpl.
+             repeat expand_pairs. simpl.
+             rewrite !zip_unzip_map. rewrite !to_list_map.
+             rewrite map_map.
              admit.
         ** extensionality pairs'.
            f_equal.
            apply Hgh.
-           + apply H5.
-           + AnnCore_termination.
-      - repeat float_let; cse_let.
-        subst j_10__ j_10__0.
-        inversion HP; subst; clear HP.
-        f_equal.
-        apply Hgh.
-        + apply H5. 
-        + AnnCore_termination.
-  * rewrite HasJoinLams_deAnnotate in H.
-    assumption.
+           + eexists; reflexivity.
+           + simpl.
+             rewrite ?freeVarsBind1_freeVarsBind. simpl.
+             repeat expand_pairs. simpl.
+             AnnCore_termination.
+      - contradict H0.
+        apply not_false_iff_true.
+        rewrite zip_unzip_map.
+        rewrite to_list_map.
+        dependent inversion pairs0; subst.
+        destruct h0.
+        rewrite to_list_cons.
+        simpl.
+        rewrite isJoinId_eq. rewrite HisJoin. reflexivity.
+      - f_equal.
+        rewrite snd_unzip. rewrite !map_map, !forM_map.
+        apply forM_cong. intros [[dc pats] rhs] HIn.
+        simpl.
+        f_equal. apply Hgh; clear Hgh.
+        + eexists; reflexivity.
+        + simpl. expand_pairs. simpl.
+          rewrite snd_unzip, !map_map.
+          admit.
+  * eexists; reflexivity.
   Admitted.
 
   Definition ann_pairs := ltac:(
@@ -588,7 +638,7 @@ Section in_exitify.
     rename go_all_WellScopedFloats into IH.
     rename H into  HWS.
     set (P := WellScopedFloats).
-    rewrite go_eq by admit.
+    rewrite go_eq.
     cbv beta delta [go_f]. (* No [zeta]! *)
 
     rewrite !dVarSet_freeVarsOf_Ann in *.
@@ -907,7 +957,7 @@ Section in_exitify.
     intros ??? ? HWS.
     set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => WellScoped e' after)).
     change (P (go captured ann_e)).
-    rewrite go_eq.
+    replace go with (go_f go) by admit. (* Need to use [go_eq] here *)
     cbv beta delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
     repeat float_let.
@@ -1319,7 +1369,7 @@ Section in_exitify.
     (* This cannot be structural recursion. Will need a size on expression. *)
     fix 2. rename go_all_joinIds into IH.
     intros.
-    rewrite go_eq.
+    replace go with (go_f go) by admit. (* Need to use [go_eq] here *)
     cbv beta delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
     repeat float_let.
@@ -1521,7 +1571,8 @@ Section in_exitify.
     (* This cannot be structural recursion. Will need a size on expression. *)
     fix 2. rename go_all_valid into IH.
     intros ?? HiJPVe.
-    rewrite go_eq.
+(*     rewrite go_eq. *)
+    replace go with (go_f go) by admit. (* Need to use [go_eq] here *)
     cbv beta delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
     repeat float_let.

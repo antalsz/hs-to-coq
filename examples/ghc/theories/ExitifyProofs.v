@@ -581,7 +581,7 @@ Section in_exitify.
      of the AST and collect all calls to [addExit].
    *)
   Program Fixpoint go_all_WellScopedFloats 
-      captured e { measure 0} : 
+      captured e { measure e (NCoreLT)} : 
     WellScoped (toExpr e) (extendVarSetList (getInScopeVars in_scope2) captured) ->
     StateInvariant WellScopedFloats (go captured (freeVars (toExpr e))) := _.
   Next Obligation.
@@ -664,7 +664,8 @@ Section in_exitify.
         + rewrite HnotJoin.
           simpl in *.
           apply StateInvariant_bind_return.
-          apply IH; only 1: admit.
+          apply IH.
+          ** NCore_termination.
           ** simpl. 
              rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
              apply HWS.
@@ -672,13 +673,15 @@ Section in_exitify.
           rewrite HisJoin.
           rewrite collectNAnnBndrs_freeVars_mkLams.
           apply StateInvariant_bind.
-          ++ apply IH; only 1: admit.
+          ++ apply IH.
+             ** NCore_termination.
              ** rewrite extendVarSetList_append.
                 simpl in HWS.
                 rewrite WellScoped_mkLams in HWS.
                 apply HWS.
           ++ intros. apply StateInvariant_bind_return.
-             apply IH; only 1: admit.
+             apply IH.
+             ** NCore_termination.
              ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                 apply HWS.
         + expand_pairs. simpl.
@@ -697,7 +700,8 @@ Section in_exitify.
           clear Heq_isJoinId.
 
           apply StateInvariant_bind_return.
-          apply IH; only 1: admit.
+          apply IH.
+          ** NCore_termination.
           ** rewrite !extendVarSetList_append.
              do 2 rewrite flat_map_unpack_cons_f.
              do 2 rewrite map_map.
@@ -735,7 +739,8 @@ Section in_exitify.
             rewrite collectNAnnBndrs_freeVars_mkLams.
 
             apply StateInvariant_bind_return.
-            apply IH; only 1: admit.
+            apply IH.
+            ** NCore_termination.
             ** rewrite !extendVarSetList_append.
                destruct HWS as [_ [HWS _]].
                rewrite Forall'_Forall in HWS.
@@ -750,7 +755,8 @@ Section in_exitify.
                eapply (HWS _ HIn).
           - intro x.
             apply StateInvariant_bind_return.
-            apply IH; only 1: admit.
+            apply IH.
+            ** NCore_termination.
             ** rewrite !extendVarSetList_append.
                destruct HWS as [_ [_ HWS]].
                rewrite to_list_map in HWS.
@@ -769,7 +775,8 @@ Section in_exitify.
         apply StateInvariant_forM.
         intros [[dc pats] rhs] HIn.
         apply StateInvariant_bind_return.
-        apply IH; only 1: admit.
+        apply IH.
+        ** NCore_termination.
         ** (* This needs automation! *)
            destruct HWS as [_ HWSpairs].
            rewrite extendVarSetList_append.

@@ -20,19 +20,10 @@ skip CoreUtils.exprType
 skip CoreUtils.coreAltType
 skip CoreUtils.coreAltsType
 
-# skip CoreUtils.mkCast
-# skip CoreUtils.dataConInstPat
+# mutual recursion
+skip CoreUtils.cheapEqExpr'
+skip CoreUtils.cheapEqExpr
 
-# skip CoreUtils.dataConRepInstPat
-
-## pattern matching is non-exhaustive?
-# skip CoreUtils.exprIsHNFlike
-
-# skip CoreUtils.diffUnfold
-# skip CoreUtils.diffIdInfo
-# skip CoreUtils.diffBinds
-# skip CoreUtils.diffExpr
-# skip CoreUtils.locBind
 
 rewrite forall subst knd,       TyCoRep.substTyUnchecked subst knd = tt
 rewrite forall subst tv new_tv, TyCoRep.extendTvSubstWithClone subst tv new_tv = subst
@@ -44,4 +35,41 @@ in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConExTyVars con = @n
 in CoreUtils.dataConInstPat rewrite forall x y, TyCoRep.zipTvSubst x y = tt
 # in CoreUtils.dataConInstPat rewrite forall x y z, Data.Traversable.mapAccumL x y z = pair univ_subst nil
 
-# skip CoreUtils.dataConInstPat
+
+
+## 
+## needs more from DataCon
+
+skip CoreUtils.dataConInstPat
+skip CoreUtils.dataConRepFSInstPat
+skip CoreUtils.dataConRepInstPat
+
+
+##
+
+
+in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Type.eqTypeX env t1 t2 = true
+in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Type.eqCoercionX env t1 t2 = true
+in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Core.rnBndrs2 env t1 t2 = env
+in CoreUtils.eqExpr termination go deferred
+in CoreUtils.eqExpr termination go_alt deferred
+
+in CoreUtils.exprIsCheapX termination go deferred
+
+#
+# TODO: translate PrelNames
+#
+in CoreUtils.exprIsHNFlike rewrite forall id, (Unique.hasKey id PrelNames.absentErrorIdKey) = false
+
+
+# skip CoreUtils.mkCast
+# skip CoreUtils.dataConRepInstPat
+
+## pattern matching is non-exhaustive?
+# skip CoreUtils.exprIsHNFlike
+
+# skip CoreUtils.diffUnfold
+# skip CoreUtils.diffIdInfo
+# skip CoreUtils.diffBinds
+# skip CoreUtils.diffExpr
+# skip CoreUtils.locBind

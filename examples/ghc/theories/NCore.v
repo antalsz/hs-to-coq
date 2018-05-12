@@ -5,6 +5,7 @@ Require Import BasicTypes.
 Require Import Coq.Lists.List.
 Require Import Coq.Vectors.Vector.
 Require Import Coq.Bool.Bool.
+Require Import Coq.NArith.BinNat.
 
 Import ListNotations.
 
@@ -43,7 +44,7 @@ with NPair :=
       NPair
 with NJPair :=
   | Mk_NJPair : forall (v : Var) (params: list Var) (rhs : NExpr)
-      (HisJoin : isJoinId_maybe v = Some (length params)),
+      (HisJoin : isJoinId_maybe v = Some (N.of_nat (length params))),
       NJPair
 .
 

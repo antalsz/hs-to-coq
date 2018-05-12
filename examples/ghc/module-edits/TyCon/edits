@@ -29,29 +29,29 @@ skip Core.isInjectiveTyCon
 skip Core.isGenerativeTyCon
 skip Core.tyConInjectivityInfo 
 
-## Needs DataCon.dataConFieldLabels
-# skip Core.fieldsOfAlgTcRhs
-# skip Core.mkAlgTyCon
-# skip Core.mkClassTyCon
-
 skip Core.tyConATs
 skip module ForeignCall
 
 # Needs ClassSpec
-skip Core.tyConAssoc_maybe
-skip Core.isTyConAssoc
-
-order Core.Ord__TyCon_compare Core.Eq___TyCon_op_zeze__ Core.Eq___TyCon_op_zsze__ Core.Eq___TyCon Core.Ord__TyCon
-
-redefine Local Definition Core.Eq___TyConFlavour_op_zeze__
-   : TyConFlavour -> (TyConFlavour -> bool) := fun a b => false.
-
-order Core.Eq___PrimElemRep Core.Eq___PrimRep_op_zeze__
+# skip Core.tyConAssoc_maybe
+# skip Core.isTyConAssoc
 
 ## can't use Applicative ((->)A)
 skip Core.isLiftedTypeKindTyConName
 
 skip Core.tyConRuntimeRepInfo
 skip Core.tyConSkolem
+
+
+
+redefine Local Definition Core.Eq___TyConFlavour_op_zeze__
+   : TyConFlavour -> (TyConFlavour -> bool) := fun a b => false.
+
+
+order Core.Uniquable__TyCon_getUnique Core.Uniquable__TyCon Core.Ord__TyCon_compare Core.Eq___TyCon_op_zeze__ Core.Eq___TyCon_op_zsze__ Core.Eq___TyCon Core.Ord__TyCon
+
+order Core.Uniquable__TyCon Core.Eq___TyCon_op_zeze__ Core.Eq___TyCon_op_zsze__
+order Core.Eq___PrimElemRep Core.Eq___PrimRep_op_zeze__
+
 
 

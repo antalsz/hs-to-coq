@@ -5,6 +5,7 @@ Require Import BasicTypes.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 Require Import Coq.ZArith.BinInt.
+Require Import Coq.NArith.BinNat.
 Require Import Psatz.
 
 Import ListNotations.
@@ -68,7 +69,7 @@ TODO are these invariants:
 
 Definition HasJoinLamsPair {v : Type} x (e : Expr v) :=
   match isJoinId_maybe x with
-  | Some n => HasNLams n e
+  | Some n => HasNLams (N.to_nat n) e
   | None   => True
   end.
   
@@ -96,7 +97,7 @@ Fixpoint HasJoinLams (e : CoreExpr) {struct e} : Prop :=
 
 Definition AnnHasJoinLamsPair {a v : Type} (x : Id) (e : AnnExpr v a) :=
   match isJoinId_maybe x with
-  | Some n => AnnHasNLams n e
+  | Some n => AnnHasNLams (N.to_nat n) e
   | None   => True
   end.
 
@@ -139,6 +140,7 @@ Admitted.
 
 (** And now the full join point invariants *)
 
+Open Scope N_scope.
 
 Definition isJoinPointsValidPair_aux
   isJoinPointsValid isJoinRHS
@@ -146,7 +148,7 @@ Definition isJoinPointsValidPair_aux
     match isJoinId_maybe v with
     | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
     | Some a => 
-      if a =? 0 (* Uh, all for the termination checker *)
+      if (a =? 0) (* Uh, all for the termination checker *)
       then isJoinPointsValid rhs 0 jps (* tail-call position *)
       else isJoinRHS a rhs jps                   (* tail-call position *)
     end.
@@ -173,11 +175,11 @@ Proof. intros. apply fold_left_app. Qed.
 
 
 
-Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
+Fixpoint isJoinPointsValid (e : CoreExpr) (n : N) (jps : VarSet) {struct e} : bool :=
   match e with
   | Mk_Var v => match isJoinId_maybe v with
     | None => true
-    | Some a => (a <=? n) && elemVarSet v jps
+    | Some a => (a <=? n)%N && elemVarSet v jps
     end
   | Lit l => true
   | App e1 e2 =>

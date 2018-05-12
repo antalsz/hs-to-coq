@@ -69,3 +69,8 @@ Instance Default_TyCon : GHC.Err.Default TyCon :=
 
 Instance Default_RecSelParent : GHC.Err.Default RecSelParent :=
   GHC.Err.Build_Default _ (RecSelData GHC.Err.default).
+
+Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default__DataCon : GHC.Err.Default DataCon :=
+ Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).

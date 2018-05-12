@@ -1,9 +1,4 @@
 
-# redefine Inductive DataCon.HsImplBang : Type := .
-# redefine Inductive DataCon.EqSpec     : Type := .
-# redefine Inductive DataCon.DataConRep : Type := .
-# redefine Inductive DataCon.DataCon    : Type := .
-
 # no Word8
 skip Core.dataConIdentity
 
@@ -28,7 +23,6 @@ skip Core.dataConTheta
 # still refer to TyCoRep
 skip Core.dataConExTyBinders
 skip Core.dataConExTyVars
-# skip Core.dataConFieldLabels
 skip Core.dataConFieldType
 skip Core.dataConOrigArgTys
 skip Core.dataConOrigResTy
@@ -60,3 +54,4 @@ rewrite forall x y, x Outputable.$$ y = x
 rewrite forall x, Type.mkInvForAllTys x y = tt
 
 
+order Core.Uniquable__DataCon Core.Eq___DataCon_op_zsze__ Core.Eq___DataCon_op_zeze__

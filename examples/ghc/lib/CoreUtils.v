@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require Import Core.
+
 
 
 (* Converted imports: *)
@@ -21,7 +21,6 @@ Require BasicTypes.
 Require BinNums.
 Require Core.
 Require DynFlags.
-Require FastString.
 Require GHC.Base.
 Require Unique.
 
@@ -35,8 +34,8 @@ Definition CheapAppFun :=
 Require Import Pair.
 
 (* Notation for Alt *)
-Require Import Core.
 
+Definition Alt b := prod (prod Core.AltCon (list b)) (Core.Expr b).
 
 (* Converted value declarations: *)
 
@@ -75,10 +74,9 @@ Axiom stripTicksTop : forall {b},
                       (Core.Tickish Core.Var -> bool) ->
                       Core.Expr b -> (list (Core.Tickish Core.Var) * Core.Expr b)%type.
 
-Axiom cheapEqExpr : forall {b}, Core.Expr b -> Core.Expr b -> bool.
+(* cheapEqExpr skipped *)
 
-Axiom cheapEqExpr' : forall {b},
-                     (Core.Tickish Core.Var -> bool) -> Core.Expr b -> Core.Expr b -> bool.
+(* cheapEqExpr' skipped *)
 
 Axiom exprOkForSideEffects : Core.CoreExpr -> bool.
 
@@ -178,16 +176,11 @@ Axiom exprIsTickedString : Core.CoreExpr -> bool.
 
 Axiom exprIsTickedString_maybe : Core.CoreExpr -> option GHC.Base.String.
 
-Axiom dataConRepInstPat : list Unique.Unique ->
-                          Core.DataCon -> list unit -> (list Core.Var * list Core.Var)%type.
+(* dataConRepInstPat skipped *)
 
-Axiom dataConRepFSInstPat : list FastString.FastString ->
-                            list Unique.Unique ->
-                            Core.DataCon -> list unit -> (list Core.Var * list Core.Var)%type.
+(* dataConRepFSInstPat skipped *)
 
-Axiom dataConInstPat : list FastString.FastString ->
-                       list Unique.Unique ->
-                       Core.DataCon -> list unit -> (list Core.Var * list Core.Var)%type.
+(* dataConInstPat skipped *)
 
 Axiom exprIsBig : forall {b}, Core.Expr b -> bool.
 
@@ -223,7 +216,7 @@ Axiom isJoinBind : Core.CoreBind -> bool.
 
 (* External variables:
      Alt bool list op_zt__ option unit BasicTypes.Arity BinNums.N Core.AltCon
-     Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr Core.CoreExpr Core.DataCon
-     Core.Expr Core.InScopeSet Core.RnEnv2 Core.Tickish Core.TyCon Core.Unfolding
-     Core.Var DynFlags.DynFlags FastString.FastString GHC.Base.String Unique.Unique
+     Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr Core.CoreExpr Core.Expr
+     Core.InScopeSet Core.RnEnv2 Core.Tickish Core.TyCon Core.Unfolding Core.Var
+     DynFlags.DynFlags GHC.Base.String Unique.Unique
 *)

@@ -8,4 +8,5 @@ skip Core.id_info
 skip Core.ppr_id_scope
 skip Core.ppr_debug
 
-
+order Core.Uniquable__Var Core.alterDVarEnv
+ 

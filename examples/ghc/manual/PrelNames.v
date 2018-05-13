@@ -3,6 +3,7 @@
 
 Require Import Module.
 Require Unique.
+Require Name.
 
 Parameter gHC_PRIM  : Module.
 Parameter gHC_TYPES : Module.
@@ -16,3 +17,5 @@ Parameter ptrRepLiftedDataConKey  : Unique.Unique.
 Parameter eqReprPrimTyConKey      : Unique.Unique.
 Parameter eqPrimTyConKey          : Unique.Unique.
 Parameter runtimeRepTyConKey      : Unique.Unique.
+
+Parameter makeStaticName : Name.Name.

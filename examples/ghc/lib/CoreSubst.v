@@ -222,11 +222,7 @@ Definition substIdOcc : Subst -> Core.Var -> Core.Var :=
     match lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "substIdOcc")) subst
             v with
     | Core.Mk_Var v' => v'
-    | other =>
-        Panic.panicStr (GHC.Base.hs_string__ "substIdOcc") (Panic.noString (cons
-                                                                            (GHC.Base.mappend (Panic.noString v)
-                                                                                              (Panic.noString other))
-                                                                            (cons (Panic.noString subst) nil)))
+    | other => Panic.panicStr (GHC.Base.hs_string__ "substIdOcc") (Panic.someSDoc)
     end.
 
 Definition substTickish
@@ -463,7 +459,7 @@ Definition substRule
         let 'pair subst' bndrs' := substBndrs subst bndrs in
         let doc :=
           GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "subst-rule"))
-                           (Panic.noString fn_name) in
+                           Panic.someSDoc in
         match rule with
         | Core.Rule ru_name_5__ ru_act_6__ ru_fn_7__ ru_rough_8__ ru_bndrs_9__
         ru_args_10__ ru_rhs_11__ ru_auto_12__ ru_origin_13__ ru_orphan_14__
@@ -483,8 +479,8 @@ Definition substRulesForImportedIds
   fun subst rules =>
     let not_needed :=
       fun name =>
-        Panic.panicStr (GHC.Base.hs_string__ "substRulesForImportedIds") (Panic.noString
-                                                                          name) in
+        Panic.panicStr (GHC.Base.hs_string__ "substRulesForImportedIds")
+        (Panic.someSDoc) in
     GHC.Base.map (substRule subst not_needed) rules.
 
 Definition substExprSC
@@ -541,7 +537,7 @@ Definition zapSubstEnv : Subst -> Subst :=
      Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
      Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
      GHC.Base.op_zeze__ GHC.Err.default GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Name.Name Panic.noString Panic.panicStr Panic.someSDoc
-     Panic.warnPprTrace UniqSupply.UniqSupply UniqSupply.uniqFromSupply
-     UniqSupply.uniqsFromSupply Unique.Unique
+     GHC.Num.fromInteger Name.Name Panic.panicStr Panic.someSDoc Panic.warnPprTrace
+     UniqSupply.UniqSupply UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply
+     Unique.Unique
 *)

@@ -48,18 +48,20 @@ rewrite forall x, andb Util.debugIsOn x = false
 # don't try to format the error messages
 rename type Outputable.SDoc           = GHC.Base.String
 rename value Outputable.pprPanic      = Panic.panicStr
-rename value Outputable.ppr           = Panic.noString
 rename value Outputable.<+>           = GHC.Base.mappend
 rename value Outputable.<>            = GHC.Base.mappend
 rename value Outputable.text          = Datatypes.id
 rename value Outputable.empty         = Panic.someSDoc
 rename value Outputable.comma         = Panic.someSDoc
-rename value Outputable.ptext         = Panic.noString
-rename value Outputable.int           = Panic.noString
-rename value Outputable.char          = Panic.noString
-rename value Outputable.ftext         = Panic.noString
-rename value Outputable.fsep          = Panic.noString
-rename value Outputable.vcat          = Panic.noString
+
+rewrite forall x, Outputable.ppr x         = Panic.someSDoc
+rewrite forall x, Outputable.ptext x       = Panic.someSDoc
+rewrite forall x, Outputable.int x         = Panic.someSDoc
+rewrite forall x, Outputable.char x        = Panic.someSDoc
+rewrite forall x, Outputable.ftext x       = Panic.someSDoc
+rewrite forall x, Outputable.fsep x        = Panic.someSDoc
+rewrite forall x, Outputable.vcat x        = Panic.someSDoc
+
 rename value Outputable.vbar          = Panic.someSDoc
 rename value Outputable.warnPprTrace  = Panic.warnPprTrace
 

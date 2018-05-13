@@ -72,21 +72,18 @@ Definition asJoinId : Core.Var -> BasicTypes.JoinArity -> Core.JoinId :=
                         "ghc/compiler/basicTypes/Id.hs") #590 (GHC.Base.mappend (Datatypes.id
                                                                                  (GHC.Base.hs_string__
                                                                                   "global id being marked as join var:"))
-                                                                                (Panic.noString id)) (Panic.warnPprTrace
-                                                                                                      (negb
-                                                                                                       (is_vanilla_or_join
-                                                                                                        id))
-                                                                                                      (GHC.Base.hs_string__
-                                                                                                       "ghc/compiler/basicTypes/Id.hs")
-                                                                                                      #592
-                                                                                                      (GHC.Base.mappend
-                                                                                                       (Panic.noString
-                                                                                                        id)
-                                                                                                       Panic.someSDoc)
-                                                                                                      (Core.setIdDetails
-                                                                                                       id
-                                                                                                       (Core.Mk_JoinId
-                                                                                                        arity))).
+                                                                                Panic.someSDoc) (Panic.warnPprTrace
+                                                                                                 (negb
+                                                                                                  (is_vanilla_or_join
+                                                                                                   id))
+                                                                                                 (GHC.Base.hs_string__
+                                                                                                  "ghc/compiler/basicTypes/Id.hs")
+                                                                                                 #592 (GHC.Base.mappend
+                                                                                                  Panic.someSDoc
+                                                                                                  Panic.someSDoc)
+                                                                                                 (Core.setIdDetails id
+                                                                                                                    (Core.Mk_JoinId
+                                                                                                                     arity))).
 
 Definition hasNoBinding : Core.Var -> bool :=
   fun id =>
@@ -160,6 +157,13 @@ Definition isBottomingId : Core.Var -> bool :=
 Definition idType : Core.Var -> unit :=
   Core.varType.
 
+Definition idUnfolding : Core.Var -> Core.Unfolding :=
+  fun id =>
+    let info := (@Core.idInfo tt id) in
+    if BasicTypes.isStrongLoopBreaker (Core.occInfo info) : bool
+    then Core.getUnfolding Core.NoUnfolding else
+    Core.unfoldingInfo info.
+
 Definition idUnique : Core.Var -> Unique.Unique :=
   Core.varUnique.
 
@@ -188,7 +192,7 @@ Definition isDataConId_maybe : Core.Var -> option Core.DataCon :=
 Definition idDataCon : Core.Var -> Core.DataCon :=
   fun id =>
     Maybes.orElse (isDataConId_maybe id) (Panic.panicStr (GHC.Base.hs_string__
-                                                          "idDataCon") (Panic.noString id)).
+                                                          "idDataCon") (Panic.someSDoc)).
 
 Definition isDataConRecordSelector : Core.Var -> bool :=
   fun id =>
@@ -265,7 +269,7 @@ Definition isJoinId_maybe : Core.Var -> option BasicTypes.JoinArity :=
 Definition idJoinArity : Core.JoinId -> BasicTypes.JoinArity :=
   fun id =>
     Maybes.orElse (isJoinId_maybe id) (Panic.panicStr (GHC.Base.hs_string__
-                                                       "idJoinArity") (Panic.noString id)).
+                                                       "idJoinArity") (Panic.someSDoc)).
 
 Definition isNaughtyRecordSelector : Core.Var -> bool :=
   fun id =>
@@ -409,6 +413,9 @@ Definition setIdStrictness : Core.Var -> Core.StrictSig -> Core.Var :=
   fun id sig =>
     modifyIdInfo (fun arg_0__ => Core.setStrictnessInfo arg_0__ sig) id.
 
+Definition setIdUnfolding : Core.Var -> Core.Unfolding -> Core.Var :=
+  fun id unfolding => modifyIdInfo (fun arg_0__ => arg_0__) id.
+
 Definition setInlinePragma : Core.Var -> BasicTypes.InlinePragma -> Core.Var :=
   fun id prag =>
     modifyIdInfo (fun arg_0__ => Core.setInlinePragInfo arg_0__ prag) id.
@@ -514,6 +521,9 @@ Definition mkUserLocal
    : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Var :=
   fun occ uniq ty loc => mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
+Definition realIdUnfolding : Core.Var -> Core.Unfolding :=
+  fun id => Core.unfoldingInfo ((@Core.idInfo tt id)).
+
 Definition recordSelectorTyCon : Core.Var -> Core.RecSelParent :=
   fun id =>
     match Core.idDetails id with
@@ -561,6 +571,9 @@ Definition isProbablyOneShotLambda : Core.Var -> bool :=
     | BasicTypes.NoOneShotInfo => false
     end.
 
+Definition zapStableUnfolding : Core.Var -> Core.Var :=
+  fun id => id.
+
 (* External variables:
      None Some andb bool false isStateHackType list negb option orb pair true tt unit
      BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
@@ -568,13 +581,14 @@ Definition isProbablyOneShotLambda : Core.Var -> bool :=
      BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleMatchInfo
      BasicTypes.inlinePragmaActivation BasicTypes.inlinePragmaRuleMatchInfo
      BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isOneOcc
-     BasicTypes.noOccInfo BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
-     BasicTypes.zapOccTailCallInfo Core.CafInfo Core.Class Core.ClassOpId
-     Core.DataCon Core.DataConWorkId Core.DataConWrapId Core.Demand Core.FCallId
-     Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId Core.Mk_JoinId
-     Core.PrimOpId Core.RecSelData Core.RecSelId Core.RecSelParent Core.RecSelPatSyn
-     Core.RuleInfo Core.StrictSig Core.VanillaId Core.Var Core.arityInfo Core.cafInfo
-     Core.callArityInfo Core.demandInfo Core.idDetails Core.idInfo
+     BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo BasicTypes.occ_in_lam
+     BasicTypes.setInlinePragmaActivation BasicTypes.zapOccTailCallInfo Core.CafInfo
+     Core.Class Core.ClassOpId Core.DataCon Core.DataConWorkId Core.DataConWrapId
+     Core.Demand Core.FCallId Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId
+     Core.Mk_JoinId Core.NoUnfolding Core.PrimOpId Core.RecSelData Core.RecSelId
+     Core.RecSelParent Core.RecSelPatSyn Core.RuleInfo Core.StrictSig Core.Unfolding
+     Core.VanillaId Core.Var Core.arityInfo Core.cafInfo Core.callArityInfo
+     Core.demandInfo Core.getUnfolding Core.idDetails Core.idInfo
      Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig
      Core.isEmptyRuleInfo Core.isId Core.isLocalId Core.isTyVar Core.isUnboxedSumCon
      Core.isUnboxedTupleCon Core.lazySetIdInfo Core.mkExportedLocalVar
@@ -583,13 +597,14 @@ Definition isProbablyOneShotLambda : Core.Var -> bool :=
      Core.setDemandInfo Core.setIdDetails Core.setIdExported Core.setIdNotExported
      Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo Core.setRuleInfo
      Core.setStrictnessInfo Core.setVarName Core.setVarUnique Core.strictnessInfo
-     Core.vanillaIdInfo Core.varName Core.varType Core.varUnique Core.zapDemandInfo
-     Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo
-     Datatypes.id FastString.FastString GHC.Base.mappend GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse
-     Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
-     Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
-     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.noString
-     Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
-     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique Util.count
+     Core.unfoldingInfo Core.vanillaIdInfo Core.varName Core.varType Core.varUnique
+     Core.zapDemandInfo Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageInfo
+     Core.zapUsedOnceInfo Datatypes.id FastString.FastString GHC.Base.mappend
+     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.fromInteger GHC.Num.op_zp__
+     GHC.Prim.seq Maybes.orElse Module.Module Name.Name Name.getName
+     Name.isInternalName Name.localiseName Name.mkDerivedInternalName
+     Name.mkInternalName Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName
+     OccName.mkWorkerOcc Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
+     SrcLoc.SrcSpan UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
+     Util.count
 *)

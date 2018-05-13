@@ -74,11 +74,7 @@ skip Id.idFunRepArity
 
 # CoreSyn (Unfolding)
 
-skip Id.idUnfolding
-skip Id.setIdUnfolding
-skip Id.setIdUnfoldingLazily
-skip Id.realIdUnfolding
-skip Id.zapStableUnfolding
+rewrite forall , Core.NoUnfolding = Core.getUnfolding Core.NoUnfolding
 
 skip Id.setCaseBndrEvald
 

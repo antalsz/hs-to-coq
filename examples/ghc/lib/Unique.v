@@ -18,6 +18,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require BinNat.
 Require BinNums.
 Require Coq.ZArith.BinInt.
 Require Data.Bits.
@@ -201,7 +202,7 @@ Definition mkPreludeMiscIdUnique : BinNums.N -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "0") i.
 
 Definition mkPreludeDataConUnique : BasicTypes.Arity -> Unique :=
-  fun i => mkUnique (GHC.Char.hs_char__ "6") (#3 GHC.Num.* (BinNat.N.of_nat i)).
+  fun i => mkUnique (GHC.Char.hs_char__ "6") (#3 GHC.Num.* BinNat.N.of_nat i).
 
 Definition mkPreludeClassUnique : BinNums.N -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "2") i.
@@ -237,11 +238,11 @@ Definition deriveUnique : Unique -> BinNums.N -> Unique :=
     end.
 
 (* External variables:
-     Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity BinNums.N
-     Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lor Coq.ZArith.BinInt.Z.of_N
-     Coq.ZArith.BinInt.Z.to_N Data.Bits.shiftL Data.Bits.shiftR FastString.FastString
-     FastString.uniqueOfFS GHC.Base.Eq_ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze____ GHC.Base.ord
-     GHC.Char.Char GHC.Char.chr GHC.Num.Int GHC.Num.Word GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity BinNat.N.of_nat
+     BinNums.N Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lor
+     Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.to_N Data.Bits.shiftL
+     Data.Bits.shiftR FastString.FastString FastString.uniqueOfFS GHC.Base.Eq_
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zl__ GHC.Base.op_zlze__
+     GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Num.Int
+     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

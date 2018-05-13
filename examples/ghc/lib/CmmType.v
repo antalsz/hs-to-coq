@@ -294,7 +294,7 @@ Definition widthFromBytes : GHC.Num.Int -> Width :=
     if num_8__ GHC.Base.== #10 : bool then W80 else
     let 'n := arg_0__ in
     Panic.panicStr (GHC.Base.hs_string__ "no width for given number of bytes")
-    (Panic.noString n).
+    (Panic.someSDoc).
 
 Definition widthInBits : Width -> GHC.Num.Int :=
   fun arg_0__ =>
@@ -396,6 +396,6 @@ Definition bWord : DynFlags.DynFlags -> CmmType :=
      andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ Panic.noString
-     Panic.panic Panic.panicStr
+     GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ Panic.panic
+     Panic.panicStr Panic.someSDoc
 *)

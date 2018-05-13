@@ -1102,8 +1102,8 @@ Definition plusModuleEnv_C {a}
 Definition pprUnitId : UnitId -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
-    | DefiniteUnitId uid => Panic.noString uid
-    | IndefiniteUnitId uid => Panic.noString uid
+    | DefiniteUnitId uid => Panic.someSDoc
+    | IndefiniteUnitId uid => Panic.someSDoc
     end.
 
 Definition unionModuleSet : ModuleSet -> ModuleSet -> ModuleSet :=
@@ -1188,7 +1188,7 @@ Definition unitModuleSet : Module -> ModuleSet :=
      GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
      GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
      GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Prim.coerce Panic.noString
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Prim.coerce Panic.someSDoc
      UniqDFM.UniqDFM UniqDSet.UniqDSet UniqDSet.emptyUniqDSet
      UniqDSet.isEmptyUniqDSet UniqDSet.unitUniqDSet UniqFM.UniqFM Unique.Uniquable
      Unique.Unique Unique.getUnique Unique.getUnique__ Unique.nonDetCmpUnique

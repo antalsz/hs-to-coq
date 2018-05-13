@@ -12,13 +12,11 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require Coq.Init.Datatypes.
 Require Data.Function.
 Require Datatypes.
 Require FastString.
 Require GHC.Base.
 Require GHC.Err.
-Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
 Require GHC.Real.
@@ -1335,23 +1333,23 @@ Definition pprInline' : bool -> InlinePragma -> GHC.Base.String :=
     | emptyInline, Mk_InlinePragma _ inline mb_arity activation info =>
         let pp_info :=
           if isFunLike info : bool then Panic.someSDoc else
-          Panic.noString info in
+          Panic.someSDoc in
         let pp_sat :=
           match mb_arity with
           | Some ar =>
               GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "sat-args="))
-                               (Panic.noString ar)
+                               Panic.someSDoc
           | _ => Panic.someSDoc
           end in
         let pp_act :=
-          fun arg_5__ arg_6__ =>
-            match arg_5__, arg_6__ with
+          fun arg_4__ arg_5__ =>
+            match arg_4__, arg_5__ with
             | Inline, AlwaysActive => Panic.someSDoc
             | NoInline, NeverActive => Panic.someSDoc
-            | _, act => Panic.noString act
+            | _, act => Panic.someSDoc
             end in
         let pp_inl :=
-          fun x => if emptyInline : bool then Panic.someSDoc else Panic.noString x in
+          fun x => if emptyInline : bool then Panic.someSDoc else Panic.someSDoc in
         GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (pp_inl inline) (pp_act
                                                               inline activation)) pp_sat) pp_info
     end.
@@ -1481,39 +1479,26 @@ Definition plusWithInf : IntWithInf -> IntWithInf -> IntWithInf :=
 Definition pp_ws : list (SrcLoc.Located StringLiteral) -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
-    | cons l nil => Panic.noString (SrcLoc.unLoc l)
+    | cons l nil => Panic.someSDoc
     | ws =>
         GHC.Base.mappend (GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "["))
-                                           (Panic.noString (Panic.someSDoc))) (Datatypes.id (GHC.Base.hs_string__ "]"))
+                                           Panic.someSDoc) (Datatypes.id (GHC.Base.hs_string__ "]"))
     end.
-(*
-Definition pprAlternative {a}
-   : (a -> GHC.Base.String) -> a -> ConTag -> Arity -> GHC.Base.String :=
-  fun pp x alt arity =>
-    Panic.noString (Coq.Init.Datatypes.app (GHC.List.replicate (alt GHC.Num.- #1)
-                                            Panic.someSDoc) (Coq.Init.Datatypes.app (cons (pp x) nil)
-                                                                                    (GHC.List.replicate (arity GHC.Num.-
-                                                                                                         alt)
-                                                                                     Panic.someSDoc))).
-*)
+
 Definition pprShortTailCallInfo : TailCallInfo -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
-    | AlwaysTailCalled ar =>
-        GHC.Base.mappend (Panic.noString (GHC.Char.hs_char__ "T")) (Panic.noString ar)
+    | AlwaysTailCalled ar => GHC.Base.mappend Panic.someSDoc Panic.someSDoc
     | NoTailCallInfo => Panic.someSDoc
     end.
 
 Definition pprWarningTxtForMsg : WarningTxt -> GHC.Base.String :=
   fun arg_0__ =>
     match arg_0__ with
-    | Mk_WarningTxt _ ws =>
-        Panic.noString (GHC.Base.map (Panic.noString GHC.Base.∘
-                                      (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ws)
+    | Mk_WarningTxt _ ws => Panic.someSDoc
     | DeprecatedTxt _ ds =>
         GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__ "Deprecated:"))
-                         (Panic.noString (GHC.Base.map (Panic.noString GHC.Base.∘
-                                                        (sl_fs GHC.Base.∘ SrcLoc.unLoc)) ds))
+                         Panic.someSDoc
     end.
 
 Definition pprWithSourceText
@@ -1561,10 +1546,7 @@ Definition successIf : bool -> SuccessFlag :=
   fun arg_0__ => match arg_0__ with | true => Succeeded | false => Failed end.
 
 Definition sumParens : GHC.Base.String -> GHC.Base.String :=
-  fun p =>
-    GHC.Base.mappend (GHC.Base.mappend (Panic.noString (FastString.sLit
-                                                        (GHC.Base.hs_string__ "(#"))) p) (Panic.noString
-                      (FastString.sLit (GHC.Base.hs_string__ "#)"))).
+  fun p => GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc p) Panic.someSDoc.
 
 Definition tailCallInfo : OccInfo -> TailCallInfo :=
   fun arg_0__ =>
@@ -1635,15 +1617,14 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
     end.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false list nat negb nil op_zt__
-     option pair true tt unit Coq.Init.Datatypes.app Data.Function.on Datatypes.id
-     FastString.FastString FastString.sLit GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Base.compare GHC.Base.compare__ GHC.Base.map GHC.Base.mappend GHC.Base.max__
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
-     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.error GHC.List.replicate GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq GHC.Real.Rational
-     Panic.noString Panic.someSDoc SrcLoc.Located SrcLoc.unLoc
+     Eq Gt Lt None Some andb bool comparison cons false list nat negb op_zt__ option
+     pair true tt unit Data.Function.on Datatypes.id FastString.FastString
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
+     GHC.Base.mappend GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
+     GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.Int GHC.Num.Integer
+     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
+     GHC.Real.Rational Panic.someSDoc SrcLoc.Located
 *)

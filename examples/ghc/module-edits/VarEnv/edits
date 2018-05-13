@@ -1,6 +1,9 @@
 
 in Core.uniqAway' termination try deferred
 
+in Core.uniqAway' rewrite forall , n = (BinNat.N.of_nat n)
+
+
 # defined in midamble
 # needs UniqFM.plusUFM_CD
 # skip Core.plusVarEnv_CD

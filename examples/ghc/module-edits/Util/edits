@@ -1,3 +1,11 @@
+rename type GHC.Num.Int = nat
+
+rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
+rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x
+rewrite forall x, GHC.List.drop x        = Coq.Lists.List.skipn x
+
+
 skip module Data.Char
 skip module GHC.Ptr
 skip module GHC.IO.Encoding.Types 

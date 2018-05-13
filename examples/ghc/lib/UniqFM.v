@@ -12,7 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require BinNums.
+Require BinNat.
 Require Data.Foldable.
 Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
@@ -430,8 +430,8 @@ Definition plusUFM_CD {elt}
                                                (Data.IntMap.Internal.map (fun y => f dx y)) xm ym)
     end.
 
-Definition sizeUFM {elt} : UniqFM elt -> BinNums.N :=
-  fun '(UFM m) => Data.IntMap.Internal.size m.
+Definition sizeUFM {elt} : UniqFM elt -> nat :=
+  fun '(UFM m) => BinNat.N.to_nat (Data.IntMap.Internal.size m).
 
 Definition ufmToIntMap {elt} : UniqFM elt -> Data.IntMap.Internal.IntMap elt :=
   fun '(UFM m) => m.
@@ -449,7 +449,7 @@ Definition unitUFM {key} {elt} `{Unique.Uniquable key}
     UFM (Data.IntMap.Internal.singleton (Unique.getWordKey (Unique.getUnique k)) v).
 
 (* External variables:
-     Some andb bool false list op_zt__ option orb pair true unit BinNums.N
+     Some andb bool false list nat op_zt__ option orb pair true unit BinNat.N.to_nat
      Data.Foldable.foldl Data.Foldable.foldl' Data.IntMap.Internal.IntMap
      Data.IntMap.Internal.adjust Data.IntMap.Internal.alter
      Data.IntMap.Internal.delete Data.IntMap.Internal.difference

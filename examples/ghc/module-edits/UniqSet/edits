@@ -1,3 +1,6 @@
+rename type GHC.Num.Int = nat
+
+
 skip UniqSet.pprUniqSet
 
 # needs UniqFM.equalKeysUFM

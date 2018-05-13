@@ -1,3 +1,5 @@
+in Core.varUnique rewrite forall var, (Core.realUnique var) = (BinNat.N.of_nat (Core.realUnique var))
+
 redefine Definition Core.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
 # record selector, can't add Default fast enough

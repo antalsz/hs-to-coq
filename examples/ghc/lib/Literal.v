@@ -17,7 +17,6 @@ Require GHC.Nat.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require BinNums.
 Require Data.Maybe.
 Require DynFlags.
 Require FastString.
@@ -44,8 +43,7 @@ Inductive Literal : Type
   |  MachFloat : GHC.Real.Rational -> Literal
   |  MachDouble : GHC.Real.Rational -> Literal
   |  MachLabel
-   : FastString.FastString ->
-     (option BinNums.N) -> BasicTypes.FunctionOrData -> Literal
+   : FastString.FastString -> (option nat) -> BasicTypes.FunctionOrData -> Literal
   |  LitInteger : GHC.Num.Integer -> unit -> Literal.
 
 Instance Default__Literal : GHC.Err.Default Literal :=
@@ -194,7 +192,7 @@ Definition litIsTrivial : Literal -> bool :=
     | _ => true
     end.
 
-Definition litTag : Literal -> BinNums.N :=
+Definition litTag : Literal -> nat :=
   fun arg_0__ =>
     match arg_0__ with
     | MachChar _ => #1
@@ -322,8 +320,8 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
     end.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison false option true unit
-     BasicTypes.FunctionOrData BinNums.N Data.Maybe.isJust DynFlags.DynFlags
+     Eq Gt Lt None Some andb bool comparison false nat option true unit
+     BasicTypes.FunctionOrData Data.Maybe.isJust DynFlags.DynFlags
      DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT
      FastString.FastString FastString.fastStringToByteString FastString.mkFastString
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__

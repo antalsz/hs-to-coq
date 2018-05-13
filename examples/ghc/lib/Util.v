@@ -16,8 +16,6 @@ Require GHC.Nat.
 
 (* Converted imports: *)
 
-Require BinNat.
-Require BinNums.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Data.Bits.
@@ -82,7 +80,7 @@ Definition all2 {a} {b} : (a -> b -> bool) -> list a -> list b -> bool :=
            | _, _, _ => false
            end.
 
-Definition atLength {a} {b} : (list a -> b) -> b -> list a -> BinNums.N -> b :=
+Definition atLength {a} {b} : (list a -> b) -> b -> list a -> nat -> b :=
   fun atLenPred atEnd ls0 n0 =>
     let fix go arg_0__ arg_1__
               := match arg_0__, arg_1__ with
@@ -96,23 +94,23 @@ Definition atLength {a} {b} : (list a -> b) -> b -> list a -> BinNums.N -> b :=
     if n0 GHC.Base.< #0 : bool then atLenPred ls0 else
     go n0 ls0.
 
-Definition lengthAtLeast {a} : list a -> BinNums.N -> bool :=
+Definition lengthAtLeast {a} : list a -> nat -> bool :=
   atLength (GHC.Base.const true) false.
 
-Definition lengthAtMost {a} : list a -> BinNums.N -> bool :=
+Definition lengthAtMost {a} : list a -> nat -> bool :=
   fun lst n =>
     if n GHC.Base.< #0 : bool then false else
     atLength Data.Foldable.null true lst n.
 
-Definition lengthIs {a} : list a -> BinNums.N -> bool :=
+Definition lengthIs {a} : list a -> nat -> bool :=
   fun lst n =>
     if n GHC.Base.< #0 : bool then false else
     atLength Data.Foldable.null false lst n.
 
-Definition lengthLessThan {a} : list a -> BinNums.N -> bool :=
+Definition lengthLessThan {a} : list a -> nat -> bool :=
   atLength (GHC.Base.const false) true.
 
-Definition listLengthCmp {a} : list a -> BinNums.N -> comparison :=
+Definition listLengthCmp {a} : list a -> nat -> comparison :=
   let atLen := fun arg_0__ => match arg_0__ with | nil => Eq | _ => Gt end in
   let atEnd := Lt in atLength atLen atEnd.
 
@@ -171,7 +169,7 @@ Definition ltLength {a} {b} : list a -> list b -> bool :=
     | Gt => false
     end.
 
-Definition count {a} : (a -> bool) -> list a -> BinNums.N :=
+Definition count {a} : (a -> bool) -> list a -> nat :=
   fun p =>
     let fix go arg_0__ arg_1__
               := match arg_0__, arg_1__ with
@@ -191,14 +189,14 @@ Definition dropList {b} {a} : list b -> list a -> list a :=
            | cons _ xs, cons _ ys => dropList xs ys
            end.
 
-Definition dropTail {a} : BinNums.N -> list a -> list a :=
+Definition dropTail {a} : nat -> list a -> list a :=
   fun n xs =>
     let fix go arg_0__ arg_1__
               := match arg_0__, arg_1__ with
                  | cons _ ys, cons x xs => cons x (go ys xs)
                  | _, _ => nil
                  end in
-    go (Coq.Lists.List.skipn (BinNat.N.to_nat n) xs) xs.
+    go (Coq.Lists.List.skipn n xs) xs.
 
 Definition dropWhileEndLE {a} : (a -> bool) -> list a -> list a :=
   fun p =>
@@ -366,8 +364,8 @@ Definition mapSnd {b} {c} {a}
     let cont_0__ arg_1__ := let 'pair x y := arg_1__ in cons (pair x (f y)) nil in
     Coq.Lists.List.flat_map cont_0__ xys.
 
-Definition nOfThem {a} : BinNums.N -> a -> list a :=
-  fun n thing => Coq.Lists.List.repeat thing (BinNat.N.to_nat n).
+Definition nOfThem {a} : nat -> a -> list a :=
+  fun n thing => Coq.Lists.List.repeat thing n.
 
 Definition ncgDebugIsOn : bool :=
   false.
@@ -383,12 +381,12 @@ Definition neLength {a} {b} : list a -> list b -> bool :=
 Definition notNull {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => false | _ => true end.
 
-Definition lengthExceeds {a} : list a -> BinNums.N -> bool :=
+Definition lengthExceeds {a} : list a -> nat -> bool :=
   fun lst n =>
     if n GHC.Base.< #0 : bool then true else
     atLength notNull false lst n.
 
-Definition lengthIsNot {a} : list a -> BinNums.N -> bool :=
+Definition lengthIsNot {a} : list a -> nat -> bool :=
   fun lst n =>
     if n GHC.Base.< #0 : bool then true else
     atLength notNull true lst n.
@@ -654,16 +652,15 @@ Infix "Util.<||>" := (_<||>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false list nil op_zt__ option orb
-     pair true unit BinNat.N.to_nat BinNums.N Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Coq.Lists.List.repeat Coq.Lists.List.skipn
-     Data.Bits.Bits Data.Bits.op_zizazi__ Data.Bits.shiftR Data.Bits.xor
-     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.elem
-     Data.Foldable.foldr Data.Foldable.notElem Data.Foldable.null
-     Data.OldList.zipWith4 GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Monad
-     GHC.Base.String GHC.Base.const GHC.Base.liftA2 GHC.Base.liftM GHC.Base.map
-     GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix1
+     Eq Gt Lt None Some andb bool comparison cons false list nat nil op_zt__ option
+     orb pair true unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map
+     Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Bits.Bits Data.Bits.op_zizazi__
+     Data.Bits.shiftR Data.Bits.xor Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.elem Data.Foldable.foldr Data.Foldable.notElem
+     Data.Foldable.null Data.OldList.zipWith4 GHC.Base.Applicative GHC.Base.Eq_
+     GHC.Base.Monad GHC.Base.String GHC.Base.const GHC.Base.liftA2 GHC.Base.liftM
+     GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Base.op_zsze__ GHC.Char.Char GHC.DeferredFix.deferredFix1
      GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default GHC.Err.Default
      GHC.Err.patternFailure GHC.List.break GHC.List.reverse GHC.List.zip
      GHC.List.zipWith GHC.List.zipWith3 GHC.Num.Integer GHC.Num.fromInteger

@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require BinNums.
 Require Core.
 Require CoreSubst.
 Require CoreUtils.
@@ -103,14 +102,13 @@ Axiom etaExpandToJoinPoint : BasicTypes.JoinArity ->
 Axiom etaExpandToJoinPointRule : BasicTypes.JoinArity ->
                                  Core.CoreRule -> Core.CoreRule.
 
-Axiom etaBodyForJoinPoint : BinNums.N ->
+Axiom etaBodyForJoinPoint : nat ->
                             Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
 
-Axiom freshEtaId : BinNums.N -> unit -> unit -> (unit * Core.Var)%type.
+Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Var)%type.
 
 (* External variables:
-     bool list op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity
-     BasicTypes.OneShotInfo BinNums.N Core.CoreBndr Core.CoreExpr Core.CoreRule
-     Core.InScopeSet Core.StrictSig Core.Var CoreSubst.Subst CoreUtils.CheapAppFun
-     DynFlags.DynFlags
+     bool list nat op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity
+     BasicTypes.OneShotInfo Core.CoreBndr Core.CoreExpr Core.CoreRule Core.InScopeSet
+     Core.StrictSig Core.Var CoreSubst.Subst CoreUtils.CheapAppFun DynFlags.DynFlags
 *)

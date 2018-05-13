@@ -1,2 +1,3 @@
+rename type GHC.Num.Int = nat
 
-
+in Bag.lengthBag rewrite forall xs, Data.Foldable.length xs = BinInt.Z.to_nat (Data.Foldable.length xs) 

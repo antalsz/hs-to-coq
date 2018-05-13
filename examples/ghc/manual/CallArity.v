@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require BinNat.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Core.
@@ -171,11 +170,9 @@ Definition trimArity : Core.Var -> BasicTypes.Arity -> BasicTypes.Arity :=
   fun v a =>
     let 'pair demands result_info := Core.splitStrictSig (Id.idStrictness v) in
     let max_arity_by_strsig :=
-      if Core.isBotRes result_info : bool
-      then BinNat.N.of_nat (Coq.Lists.List.length demands) else
+      if Core.isBotRes result_info : bool then Coq.Lists.List.length demands else
       a in
-    let max_arity_by_type :=
-      BinNat.N.of_nat (Coq.Lists.List.length (typeArity (tt))) in
+    let max_arity_by_type := Coq.Lists.List.length (typeArity (tt)) in
     Data.Foldable.foldr GHC.Base.min a (cons max_arity_by_type (cons
                                               max_arity_by_strsig nil)).
 
@@ -371,7 +368,7 @@ Definition callArityAnalProgram
 
 (* External variables:
      None Some andb arrow_first arrow_second bool callArityBind1 cons false list negb
-     nil op_zt__ option pair true tt typeArity BasicTypes.Arity BinNat.N.of_nat
+     nil op_zt__ option pair true tt typeArity BasicTypes.Arity
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.length Core.App
      Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr Core.CoreProgram
      Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Type_

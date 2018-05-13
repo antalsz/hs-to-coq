@@ -201,7 +201,7 @@ Definition mkPreludeMiscIdUnique : BinNums.N -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "0") i.
 
 Definition mkPreludeDataConUnique : BasicTypes.Arity -> Unique :=
-  fun i => mkUnique (GHC.Char.hs_char__ "6") (#3 GHC.Num.* i).
+  fun i => mkUnique (GHC.Char.hs_char__ "6") (#3 GHC.Num.* (BinNat.N.of_nat i)).
 
 Definition mkPreludeClassUnique : BinNums.N -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "2") i.

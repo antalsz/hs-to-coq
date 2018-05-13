@@ -18,7 +18,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require BinNums.
 Require Core.
 Require DynFlags.
 Require GHC.Base.
@@ -143,7 +142,7 @@ Axiom getIdFromTrivialExpr_maybe : Core.CoreExpr -> option Core.Var.
 
 Axiom exprIsDupable : DynFlags.DynFlags -> Core.CoreExpr -> bool.
 
-Axiom dupAppSize : BinNums.N.
+Axiom dupAppSize : nat.
 
 Axiom exprIsCheap : Core.CoreExpr -> bool.
 
@@ -215,8 +214,8 @@ Axiom isEmptyTy : unit -> bool.
 Axiom isJoinBind : Core.CoreBind -> bool.
 
 (* External variables:
-     Alt bool list op_zt__ option unit BasicTypes.Arity BinNums.N Core.AltCon
-     Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr Core.CoreExpr Core.Expr
-     Core.InScopeSet Core.RnEnv2 Core.Tickish Core.TyCon Core.Unfolding Core.Var
-     DynFlags.DynFlags GHC.Base.String Unique.Unique
+     Alt bool list nat op_zt__ option unit BasicTypes.Arity Core.AltCon Core.CoreAlt
+     Core.CoreArg Core.CoreBind Core.CoreBndr Core.CoreExpr Core.Expr Core.InScopeSet
+     Core.RnEnv2 Core.Tickish Core.TyCon Core.Unfolding Core.Var DynFlags.DynFlags
+     GHC.Base.String Unique.Unique
 *)

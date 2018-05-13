@@ -38,3 +38,10 @@ order BasicTypes.Eq___SourceText BasicTypes.Eq___WarningTxt_op_zeze__
 order BasicTypes.Eq___SourceText BasicTypes.Eq___OverlapMode_op_zeze__
 order BasicTypes.Eq___TailCallInfo BasicTypes.Eq___OccInfo_op_zeze__
 
+redefine Definition BasicTypes.RepArity  := nat.
+redefine Definition BasicTypes.PhaseNum  := nat.
+redefine Definition BasicTypes.JoinArity := nat.
+redefine Definition BasicTypes.Arity     := nat.
+
+
+skip BasicTypes.pprAlternative

@@ -8,6 +8,18 @@ skip module TysWiredIn
 skip module RepType
 
 ####################################################
+
+rename type GHC.Num.Int = nat
+
+rewrite forall x, Unique.getKey x = (BinNat.N.to_nat (Unique.getKey x))
+
+rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
+rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x
+rewrite forall x, GHC.List.drop x        = Coq.Lists.List.skipn x
+
+
+####################################################
 ## Glueing together the Core
 ####################################################
 
@@ -24,6 +36,8 @@ rename module VarSet  Core
 rename module VarEnv  Core
 rename module CoreSyn Core
 rename module Demand  Core
+
+
 
 
 #

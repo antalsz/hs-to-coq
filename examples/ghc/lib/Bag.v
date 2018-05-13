@@ -12,10 +12,8 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require BinNat.
-Require BinNums.
+Require BinInt.
 Require Control.Monad.
-Require Coq.Lists.List.
 Require Coq.Program.Basics.
 Require Data.Either.
 Require Data.Foldable.
@@ -47,6 +45,8 @@ Arguments TwoBags {_} _ _.
 
 Arguments ListBag {_} _.
 (* Midamble *)
+
+Require ZArith.BinInt.
 
 Instance Default_Bag {a} : GHC.Err.Default (Bag a):=
   GHC.Err.Build_Default _ EmptyBag.
@@ -239,13 +239,13 @@ Definition isSingletonBag {a} : Bag a -> bool :=
     | ListBag xs => Util.isSingleton xs
     end.
 
-Definition lengthBag {a} : Bag a -> BinNums.N :=
+Definition lengthBag {a} : Bag a -> nat :=
   fix lengthBag arg_0__
         := match arg_0__ with
            | EmptyBag => #0
            | UnitBag _ => #1
            | TwoBags b1 b2 => lengthBag b1 GHC.Num.+ lengthBag b2
-           | ListBag xs => BinNat.N.of_nat (Coq.Lists.List.length xs)
+           | ListBag xs => BinInt.Z.to_nat (Data.Foldable.length xs)
            end.
 
 Definition listToBag {a} : list a -> Bag a :=
@@ -525,25 +525,25 @@ Definition catBagMaybes {a} : Bag (option a) -> Bag a :=
     foldrBag add emptyBag bs.
 
 (* External variables:
-     None Some andb bool cons false list nil op_zt__ option orb pair true tt unit
-     BinNat.N.of_nat BinNums.N Control.Monad.filterM Coq.Lists.List.length
-     Coq.Program.Basics.compose Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any
-     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl
-     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.mapM_ Data.Foldable.null__ Data.Foldable.product__
-     Data.Foldable.sum__ Data.Foldable.toList__ Data.Maybe.mapMaybe
-     Data.OldList.partition Data.SemigroupInternal.Mk_Dual
-     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.mapAccumL Data.Traversable.mapM
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.build'
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap__ GHC.Base.id GHC.Base.map
-     GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.op_zlzd____ GHC.Base.return_
-     GHC.List.filter GHC.List.unzip GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
-     GHC.Num.op_zp__ MonadUtils.anyM MonadUtils.foldlM MonadUtils.foldrM
-     MonadUtils.mapAccumLM Util.isSingleton Util.partitionWith
+     None Some andb bool cons false list nat nil op_zt__ option orb pair true tt unit
+     BinInt.Z.to_nat Control.Monad.filterM Coq.Program.Basics.compose
+     Data.Either.Either Data.Either.Left Data.Either.Right Data.Foldable.Foldable
+     Data.Foldable.all Data.Foldable.any Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length Data.Foldable.length__ Data.Foldable.mapM_
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.Maybe.mapMaybe Data.OldList.partition
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.mapAccumL Data.Traversable.mapM GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.build' GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.mappend GHC.Base.mempty
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__
+     GHC.Base.op_zlzd____ GHC.Base.return_ GHC.List.filter GHC.List.unzip GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.anyM
+     MonadUtils.foldlM MonadUtils.foldrM MonadUtils.mapAccumLM Util.isSingleton
+     Util.partitionWith
 *)

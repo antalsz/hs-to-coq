@@ -1,5 +1,7 @@
 axiomatize module DynFlags
 
+rename type GHC.Num.Int = BinNums.N
+
 
 skip module Config
 skip module CmdLineParser

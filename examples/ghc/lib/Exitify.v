@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require BinNat.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Core.
@@ -172,8 +171,7 @@ Definition exitify
                                             then let rhs := Core.mkLams args e in
                                                  let ty := tt in
                                                  let avoid := Core.extendInScopeSetList in_scope captured in
-                                                 addExit avoid ty (BinNat.N.of_nat (Coq.Lists.List.length args)) rhs
-                                                 GHC.Base.>>=
+                                                 addExit avoid ty (Coq.Lists.List.length args) rhs GHC.Base.>>=
                                                  (fun v => GHC.Base.return_ (Core.mkVarApps (Core.Mk_Var v) args)) else
                                             j_22__ in
                                           let j_36__ :=
@@ -210,14 +208,14 @@ Definition exitify
 (* External variables:
      Some andb bool cons false list negb nil op_zt__ pair true tt unit
      BasicTypes.AlwaysTailCalled BasicTypes.JoinArity BasicTypes.OneOcc
-     BinNat.N.of_nat Coq.Init.Datatypes.app Coq.Lists.List.length Core.AnnCase
-     Core.AnnLet Core.AnnNonRec Core.AnnRec Core.Case Core.CoreExpr Core.InScopeSet
-     Core.JoinId Core.Let Core.Mk_Var Core.NonRec Core.Rec Core.Var Core.anyVarSet
-     Core.bindersOf Core.collectArgs Core.collectNAnnBndrs Core.dVarSetToVarSet
-     Core.deAnnBind Core.deAnnotate Core.disjointVarSet Core.elemVarSet
-     Core.extendInScopeSet Core.extendInScopeSetList Core.isLocalId Core.minusVarSet
-     Core.mkLams Core.mkLetNonRec Core.mkLetRec Core.mkVarApps Core.mkVarSet
-     Core.uniqAway CoreFVs.CoreExprWithFVs CoreFVs.freeVars CoreFVs.freeVarsOf
+     Coq.Init.Datatypes.app Coq.Lists.List.length Core.AnnCase Core.AnnLet
+     Core.AnnNonRec Core.AnnRec Core.Case Core.CoreExpr Core.InScopeSet Core.JoinId
+     Core.Let Core.Mk_Var Core.NonRec Core.Rec Core.Var Core.anyVarSet Core.bindersOf
+     Core.collectArgs Core.collectNAnnBndrs Core.dVarSetToVarSet Core.deAnnBind
+     Core.deAnnotate Core.disjointVarSet Core.elemVarSet Core.extendInScopeSet
+     Core.extendInScopeSetList Core.isLocalId Core.minusVarSet Core.mkLams
+     Core.mkLetNonRec Core.mkLetRec Core.mkVarApps Core.mkVarSet Core.uniqAway
+     CoreFVs.CoreExprWithFVs CoreFVs.freeVars CoreFVs.freeVarsOf
      Data.Bifunctor.second Data.Foldable.all Data.Foldable.any Data.Foldable.elem
      Data.Traversable.forM Data.Tuple.fst FastString.fsLit GHC.Base.id GHC.Base.map
      GHC.Base.op_z2218U__ GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_

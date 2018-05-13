@@ -12,7 +12,6 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require BinNums.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.SemigroupInternal.
@@ -29,14 +28,14 @@ Import GHC.Num.Notations.
 Inductive RealSrcSpan : Type
   := RealSrcSpan'
    : FastString.FastString ->
-     BinNums.N -> BinNums.N -> BinNums.N -> BinNums.N -> RealSrcSpan.
+     GHC.Num.Int -> GHC.Num.Int -> GHC.Num.Int -> GHC.Num.Int -> RealSrcSpan.
 
 Inductive SrcSpan : Type
   := ARealSrcSpan : RealSrcSpan -> SrcSpan
   |  UnhelpfulSpan : FastString.FastString -> SrcSpan.
 
 Inductive RealSrcLoc : Type
-  := ASrcLoc : FastString.FastString -> BinNums.N -> BinNums.N -> RealSrcLoc.
+  := ASrcLoc : FastString.FastString -> GHC.Num.Int -> GHC.Num.Int -> RealSrcLoc.
 
 Inductive SrcLoc : Type
   := ARealSrcLoc : RealSrcLoc -> SrcLoc
@@ -451,11 +450,11 @@ Definition mkGeneralLocated {e} : GHC.Base.String -> e -> Located e :=
   fun s e => L (mkGeneralSrcSpan (FastString.fsLit s)) e.
 
 Definition mkRealSrcLoc
-   : FastString.FastString -> BinNums.N -> BinNums.N -> RealSrcLoc :=
+   : FastString.FastString -> GHC.Num.Int -> GHC.Num.Int -> RealSrcLoc :=
   fun x line col => ASrcLoc x line col.
 
 Definition mkSrcLoc
-   : FastString.FastString -> BinNums.N -> BinNums.N -> SrcLoc :=
+   : FastString.FastString -> GHC.Num.Int -> GHC.Num.Int -> SrcLoc :=
   fun x line col => ARealSrcLoc (mkRealSrcLoc x line col).
 
 Definition noSrcLoc : SrcLoc :=
@@ -477,13 +476,13 @@ Definition srcLocSpan : SrcLoc -> SrcSpan :=
     | ARealSrcLoc l => ARealSrcSpan (realSrcLocSpan l)
     end.
 
-Definition srcLocCol : RealSrcLoc -> BinNums.N :=
+Definition srcLocCol : RealSrcLoc -> GHC.Num.Int :=
   fun '(ASrcLoc _ _ c) => c.
 
 Definition srcLocFile : RealSrcLoc -> FastString.FastString :=
   fun '(ASrcLoc fname _ _) => fname.
 
-Definition srcLocLine : RealSrcLoc -> BinNums.N :=
+Definition srcLocLine : RealSrcLoc -> GHC.Num.Int :=
   fun '(ASrcLoc _ l _) => l.
 
 Definition mkRealSrcSpan : RealSrcLoc -> RealSrcLoc -> RealSrcSpan :=
@@ -502,10 +501,10 @@ Definition mkSrcSpan : SrcLoc -> SrcLoc -> SrcSpan :=
     | ARealSrcLoc loc1, ARealSrcLoc loc2 => ARealSrcSpan (mkRealSrcSpan loc1 loc2)
     end.
 
-Definition srcSpanEndCol : RealSrcSpan -> BinNums.N :=
+Definition srcSpanEndCol : RealSrcSpan -> GHC.Num.Int :=
   fun '(RealSrcSpan' _ _ _ _ c) => c.
 
-Definition srcSpanEndLine : RealSrcSpan -> BinNums.N :=
+Definition srcSpanEndLine : RealSrcSpan -> GHC.Num.Int :=
   fun '(RealSrcSpan' _ _ _ l _) => l.
 
 Definition realSrcSpanEnd : RealSrcSpan -> RealSrcLoc :=
@@ -525,10 +524,10 @@ Definition srcSpanFileName_maybe : SrcSpan -> option FastString.FastString :=
     | UnhelpfulSpan _ => None
     end.
 
-Definition srcSpanStartCol : RealSrcSpan -> BinNums.N :=
+Definition srcSpanStartCol : RealSrcSpan -> GHC.Num.Int :=
   fun '(RealSrcSpan' _ _ l _ _) => l.
 
-Definition srcSpanStartLine : RealSrcSpan -> BinNums.N :=
+Definition srcSpanStartLine : RealSrcSpan -> GHC.Num.Int :=
   fun '(RealSrcSpan' _ l _ _ _) => l.
 
 Definition realSrcSpanStart : RealSrcSpan -> RealSrcLoc :=
@@ -613,7 +612,7 @@ Definition wiredInSrcSpan : SrcSpan :=
 
 (* External variables:
      Eq Gt Lt None Ord__RealSrcLoc_op_zl Some andb bool comparison false list negb
-     option true BinNums.N Coq.Program.Basics.compose Data.Foldable.Foldable
+     option true Coq.Program.Basics.compose Data.Foldable.Foldable
      Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
      Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
      Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__

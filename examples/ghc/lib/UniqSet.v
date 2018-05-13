@@ -12,7 +12,6 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require BinNums.
 Require Data.Foldable.
 Require GHC.Base.
 Require GHC.Prim.
@@ -206,7 +205,7 @@ Definition restrictUniqSetToUFM {a} {b}
     | Mk_UniqSet s, m => Mk_UniqSet (UniqFM.intersectUFM s m)
     end.
 
-Definition sizeUniqSet {a} : UniqSet a -> BinNums.N :=
+Definition sizeUniqSet {a} : UniqSet a -> nat :=
   fun '(Mk_UniqSet s) => UniqFM.sizeUFM s.
 
 Definition unionUniqSets {a} : UniqSet a -> UniqSet a -> UniqSet a :=
@@ -247,7 +246,7 @@ Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=
   Mk_UniqSet.
 
 (* External variables:
-     bool cons list op_zt__ option BinNums.N Data.Foldable.foldl' Data.Foldable.foldr
+     bool cons list nat op_zt__ option Data.Foldable.foldl' Data.Foldable.foldr
      GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.map GHC.Base.mappend
      GHC.Base.mappend__ GHC.Base.mconcat GHC.Base.mconcat__ GHC.Base.mempty
      GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zlzlzgzg__

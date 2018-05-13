@@ -7,6 +7,14 @@ order UniqDFM.Semigroup__UniqDFM UniqDFM.Monoid__UniqDFM_mconcat
 
 skip UniqDFM.Functor__UniqDFM
 
+# sizes are nats
+#
+
+redefine Definition UniqDFM.sizeUDFM {elt} : (UniqDFM elt) -> nat :=
+  fun x => match x with | (UDFM m _i) => BinNat.N.to_nat (Data.IntMap.Internal.size m) end.
+
+
+
 ## type inference issue
 ## but this redefine does nothing
 redefine Local Definition UniqDFM.Functor__UniqDFM_fmap : forall {a} {b},

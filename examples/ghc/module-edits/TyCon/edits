@@ -1,3 +1,7 @@
+# need a type edit -- should return an N instead of a nat
+#
+skip Core.primRepSizeB
+
 rewrite forall x, andb Util.debugIsOn x = false
 
 ## need default DataCon for record selector, but cannot add it now

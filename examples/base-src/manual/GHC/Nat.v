@@ -11,6 +11,11 @@ Require GHC.Enum.
 Instance Default_nat : GHC.Err.Default nat := 
   GHC.Err.Build_Default _ 0.
 
+(* Question: should we replace the - instance with this 
+   checked subtraction? *)
+Definition error_sub := 
+  fun x y => if Nat.ltb x y then GHC.Err.default else Nat.sub x y.
+
 Instance Num_nat : GHC.Num.Num nat := {
      op_zp__ := Nat.add;
      op_zm__ := Nat.sub;
@@ -33,3 +38,4 @@ Admitted.
 
 Instance Enum_nat : GHC.Enum.Enum nat.
 Admitted.
+

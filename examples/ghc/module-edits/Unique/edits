@@ -2,6 +2,19 @@
 skip module Coq.ZArith.BinInt.Z
 skip module Coq.NArith.BinNat.N
 
+rename type GHC.Num.Int = BinNums.N
+
+#
+# All GHC.Num.Int's should be N in this compiler (double check that that makes sense).
+#
+
+rewrite forall x , Data.Foldable.length x  = BinNat.N.of_nat (Coq.Lists.List.length x)
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y (BinNat.N.to_nat x)
+rewrite forall x  , GHC.List.take x        = Coq.Lists.List.firstn (BinNat.N.to_nat x)
+rewrite forall x  , GHC.List.drop x        = Coq.Lists.List.skipn (BinNat.N.to_nat x)
+
+
+in Unique.mkPreludeDataConUnique rewrite forall , i = (BinNat.N.of_nat i)
 
 # chars
 skip Unique.finish_show

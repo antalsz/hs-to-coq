@@ -5,6 +5,9 @@ skip UniqFM.pprUFM
 # Needs Data.IntMap.Internal.mergeA
 skip UniqFM.equalKeysUFM
 
+# pick result type, GHC.Num.Int or N or nat?
+rename type GHC.Num.Int = nat
+in UniqFM.sizeUFM rewrite forall ,  Data.IntMap.Internal.size m = BinNat.N.to_nat (Data.IntMap.Internal.size m)
 
 skip module Compiler.Hoopl.Dataflow
 # requires Hoopl

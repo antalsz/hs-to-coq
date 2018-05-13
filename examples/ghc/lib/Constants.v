@@ -16,37 +16,36 @@ Require GHC.Nat.
 
 (* Converted imports: *)
 
-Require BinNums.
 Require GHC.Num.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-Definition fLOAT_SIZE : BinNums.N :=
+Definition fLOAT_SIZE : nat :=
   #4.
 
-Definition mAX_CTUPLE_SIZE : BinNums.N :=
+Definition mAX_CTUPLE_SIZE : nat :=
   #62.
 
-Definition mAX_REDUCTION_DEPTH : BinNums.N :=
+Definition mAX_REDUCTION_DEPTH : nat :=
   #200.
 
-Definition mAX_SOLVER_ITERATIONS : BinNums.N :=
+Definition mAX_SOLVER_ITERATIONS : nat :=
   #4.
 
-Definition mAX_SUM_SIZE : BinNums.N :=
+Definition mAX_SUM_SIZE : nat :=
   #62.
 
-Definition mAX_TUPLE_SIZE : BinNums.N :=
+Definition mAX_TUPLE_SIZE : nat :=
   #62.
 
-Definition tARGET_MAX_CHAR : BinNums.N :=
+Definition tARGET_MAX_CHAR : nat :=
   #1114111.
 
-Definition wORD64_SIZE : BinNums.N :=
+Definition wORD64_SIZE : nat :=
   #8.
 
 (* External variables:
-     BinNums.N GHC.Num.fromInteger
+     nat GHC.Num.fromInteger
 *)

@@ -18,13 +18,10 @@ Require Import Core.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require BinNums.
 Require Core.
 Require Datatypes.
 Require FastString.
 Require GHC.Base.
-Require GHC.Enum.
-Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
 Require Maybes.
@@ -494,17 +491,6 @@ Definition mkSysLocalOrCoVarM {m} `{UniqSupply.MonadUnique m}
     UniqSupply.getUniqueM GHC.Base.>>=
     (fun uniq => GHC.Base.return_ (mkSysLocalOrCoVar fs uniq ty)).
 
-Definition mkTemplateLocal : BinNums.N -> unit -> Core.Var :=
-  fun i ty =>
-    mkSysLocalOrCoVar (FastString.fsLit (GHC.Base.hs_string__ "v"))
-    (Unique.mkBuiltinUnique i) ty.
-
-Definition mkTemplateLocalsNum : BinNums.N -> list unit -> list Core.Var :=
-  fun n tys => GHC.List.zipWith mkTemplateLocal (GHC.Enum.enumFrom n) tys.
-
-Definition mkTemplateLocals : list unit -> list Core.Var :=
-  mkTemplateLocalsNum #1.
-
 Definition mkUserLocalOrCoVar
    : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Var :=
   fun occ uniq ty loc => mkLocalIdOrCoVar (Name.mkInternalName uniq occ loc) ty.
@@ -583,7 +569,7 @@ Definition isProbablyOneShotLambda : Core.Var -> bool :=
      BasicTypes.inlinePragmaActivation BasicTypes.inlinePragmaRuleMatchInfo
      BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isOneOcc
      BasicTypes.noOccInfo BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
-     BasicTypes.zapOccTailCallInfo BinNums.N Core.CafInfo Core.Class Core.ClassOpId
+     BasicTypes.zapOccTailCallInfo Core.CafInfo Core.Class Core.ClassOpId
      Core.DataCon Core.DataConWorkId Core.DataConWrapId Core.Demand Core.FCallId
      Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId Core.Mk_JoinId
      Core.PrimOpId Core.RecSelData Core.RecSelId Core.RecSelParent Core.RecSelPatSyn
@@ -599,13 +585,11 @@ Definition isProbablyOneShotLambda : Core.Var -> bool :=
      Core.setStrictnessInfo Core.setVarName Core.setVarUnique Core.strictnessInfo
      Core.vanillaIdInfo Core.varName Core.varType Core.varUnique Core.zapDemandInfo
      Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo
-     Datatypes.id FastString.FastString FastString.fsLit GHC.Base.mappend
-     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Enum.enumFrom GHC.List.zipWith
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse Module.Module
-     Name.Name Name.getName Name.isInternalName Name.localiseName
+     Datatypes.id FastString.FastString GHC.Base.mappend GHC.Base.op_zgzgze__
+     GHC.Base.return_ GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse
+     Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
      Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
      Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.noString
      Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
-     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Unique.mkBuiltinUnique Util.count
+     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique Util.count
 *)

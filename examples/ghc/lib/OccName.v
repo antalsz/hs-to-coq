@@ -12,7 +12,6 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
-Require BinNums.
 Require Coq.Init.Datatypes.
 Require Data.Foldable.
 Require FastString.
@@ -29,7 +28,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition TidyOccEnv :=
-  (UniqFM.UniqFM BinNums.N)%type.
+  (UniqFM.UniqFM GHC.Num.Int)%type.
 
 Inductive OccEnv a : Type := A : (UniqFM.UniqFM a) -> OccEnv a.
 
@@ -748,7 +747,7 @@ Definition mkTyConRepOcc : OccName -> OccName :=
 (* External variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
      NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
-     comparison cons false list negb nil op_zt__ option orb true tt BinNums.N
+     comparison cons false list negb nil op_zt__ option orb true tt
      Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
      FastString.concatFS FastString.fsLit FastString.mkFastString FastString.unpackFS
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
@@ -756,10 +755,10 @@ Definition mkTyConRepOcc : OccName -> OccName :=
      GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
      GHC.Base.op_zgzgze__ GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__
      GHC.Base.op_zsze____ GHC.Base.return_ GHC.Err.Build_Default GHC.Err.Default
-     GHC.Num.fromInteger UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C
-     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.alterUFM
-     UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
+     GHC.Num.Int GHC.Num.fromInteger UniqFM.UniqFM UniqFM.addListToUFM
+     UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C
+     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM
+     UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
      UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
      UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet

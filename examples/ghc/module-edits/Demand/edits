@@ -25,14 +25,18 @@ skip Core.pprIfaceStrictSig
 # termination edits
 #
 
-in Core.mkWorkerDemand termination go { measure (BinNatDef.N.to_nat arg_0__) } 
+# in Core.mkWorkerDemand termination go { measure (BinNatDef.N.to_nat arg_0__) } 
+# obligations Core.mkWorkerDemand solve_mkWorkerDemand
+
+in Core.mkWorkerDemand termination go { measure arg_0__ } 
 obligations Core.mkWorkerDemand solve_mkWorkerDemand
 
-in Core.dmdTransformDataConSig termination go_str { measure (BinNatDef.N.to_nat arg_10__) }
+
+in Core.dmdTransformDataConSig termination go_str { measure (arg_10__) }
 obligations Core.dmdTransformDataConSig solve_dmdTransform 
 
-in Core.peelManyCalls termination go_abs { measure (BinNatDef.N.to_nat arg_2__) } 
-in Core.peelManyCalls termination go_str { measure (BinNatDef.N.to_nat arg_10__) } 
+in Core.peelManyCalls termination go_abs { measure (arg_2__) } 
+in Core.peelManyCalls termination go_str { measure (arg_10__) } 
 obligations Core.peelManyCalls solve_dmdTransform 
 
 

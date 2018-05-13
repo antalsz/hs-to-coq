@@ -6,7 +6,6 @@ Require Import Psatz.
 Require Import Tactics.
 Require Import CoreLemmas.
 
-Require Import NArith.BinNat.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -154,7 +153,7 @@ Section CoreLT.
     forall n e e',
     HasNLams n e ->
     CoreLT e e' ->
-    CoreLT (snd (collectNBinders (N.of_nat n) e)) e'.
+    CoreLT (snd (collectNBinders n e)) e'.
   Proof.
     intros.
     cbv beta delta[collectNBinders].
@@ -166,8 +165,7 @@ Section CoreLT.
     * destruct e; simpl; try apply Hlt.
     * destruct e; simpl; simpl in HLams; try contradiction.
 Admitted.
-(*
-      apply IHn'; clear IHn'; cleardefs.
+(*      apply IHn'; clear IHn'; cleardefs.
       + apply HLams.
       + unfold CoreLT in *. simpl in *. lia.
   Qed. *)
@@ -263,7 +261,7 @@ Section AnnCoreLT.
     forall n e e' `{GHC.Err.Default v},
     AnnHasNLams n e ->
     AnnCoreLT e e' ->
-    AnnCoreLT (snd (collectNAnnBndrs (N.of_nat n) e)) e'.
+    AnnCoreLT (snd (collectNAnnBndrs n e)) e'.
   Proof.
     intros.
     unfold AnnCoreLT.

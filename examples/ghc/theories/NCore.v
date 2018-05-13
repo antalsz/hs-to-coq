@@ -47,7 +47,7 @@ with NPair :=
       NPair
 with NJPair :=
   | Mk_NJPair : forall (v : Var) (params: list Var) (rhs : NExpr)
-      (HisJoin : isJoinId_maybe v = Some (N.of_nat (length params))),
+      (HisJoin : isJoinId_maybe v = Some (length params)),
       NJPair
 .
 

@@ -69,7 +69,7 @@ TODO are these invariants:
 
 Definition HasJoinLamsPair {v : Type} x (e : Expr v) :=
   match isJoinId_maybe x with
-  | Some n => HasNLams (N.to_nat n) e
+  | Some n => HasNLams n e
   | None   => True
   end.
   
@@ -97,7 +97,7 @@ Fixpoint HasJoinLams (e : CoreExpr) {struct e} : Prop :=
 
 Definition AnnHasJoinLamsPair {a v : Type} (x : Id) (e : AnnExpr v a) :=
   match isJoinId_maybe x with
-  | Some n => AnnHasNLams (N.to_nat n) e
+  | Some n => AnnHasNLams n e
   | None   => True
   end.
 
@@ -140,7 +140,6 @@ Admitted.
 
 (** And now the full join point invariants *)
 
-Open Scope N_scope.
 
 Definition isJoinPointsValidPair_aux
   isJoinPointsValid isJoinRHS
@@ -175,11 +174,11 @@ Proof. intros. apply fold_left_app. Qed.
 
 
 
-Fixpoint isJoinPointsValid (e : CoreExpr) (n : N) (jps : VarSet) {struct e} : bool :=
+Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
   match e with
   | Mk_Var v => match isJoinId_maybe v with
     | None => true
-    | Some a => (a <=? n)%N && elemVarSet v jps
+    | Some a => (a <=? n) && elemVarSet v jps
     end
   | Lit l => true
   | App e1 e2 =>

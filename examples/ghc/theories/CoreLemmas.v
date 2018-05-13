@@ -40,8 +40,8 @@ Fixpoint AnnHasNLams {a v : Type} (n : BinNums.N) : AnnExpr a v -> Prop :=
 Lemma deAnnotate_snd_collectNAnnBndrs:
   forall { a v : Type} n (e : AnnExpr a v) `{GHC.Err.Default v},
   AnnHasNLams n e ->
-  deAnnotate (snd (collectNAnnBndrs (N.of_nat n) e)) = 
-  snd (collectNBinders (N.of_nat n) (deAnnotate e)).
+  deAnnotate (snd (collectNAnnBndrs n e)) = 
+  snd (collectNBinders n (deAnnotate e)).
 Admitted.
 
 Lemma HasNLams_deAnnotate:
@@ -59,6 +59,6 @@ Qed.
 
 Lemma collectNAnnBndrs_freeVars_mkLams:
   forall vs rhs,
-  collectNAnnBndrs (N.of_nat (length vs)) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
+  collectNAnnBndrs (length vs) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
 Admitted.
 

@@ -36,12 +36,40 @@ Fixpoint AnnHasNLams {a v : Type} (n : BinNums.N) : AnnExpr a v -> Prop :=
                      n.
 *)
 
+Lemma AnnHasNLams_weaken : forall n a v (s : AnnExpr a v) v0 a0, 
+    AnnHasNLams n s ->
+    AnnHasNLams n (v0, AnnLam a0 s).
+Proof.
+  induction n.
+  intros. 
+  simpl in *; auto.
+  intros. simpl in *. destruct s. destruct a1; try contradiction.
+  eapply IHn in H.
+  eauto.
+Qed.
 
 Lemma deAnnotate_snd_collectNAnnBndrs:
   forall { a v : Type} n (e : AnnExpr a v) `{GHC.Err.Default v},
   AnnHasNLams n e ->
   deAnnotate (snd (collectNAnnBndrs n e)) = 
   snd (collectNBinders n (deAnnotate e)).
+Proof.
+  intros.
+  induction n; simpl in *.
+  + destruct e.
+    simpl.
+    unfold collectNBinders.
+    destruct (deAnnotate' a0);
+      unfold Base.op_zeze__;
+      unfold Nat.Eq_nat;
+      unfold Base.op_zeze____;
+      unfold Nat.eqb;
+      simpl;
+      auto.
+  + destruct e.
+    destruct a0; try contradiction.
+    eapply AnnHasNLams_weaken in H0.
+    apply IHn in H0. clear IHn.
 Admitted.
 
 Lemma HasNLams_deAnnotate:

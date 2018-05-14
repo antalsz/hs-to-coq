@@ -3,9 +3,6 @@
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 
-Parameter collectNAnnBndrs : forall {bndr} {annot} `{Err.Default annot}, 
-           nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type. 
-
 Require Import Omega.
 
 Ltac intro_split := 
@@ -203,6 +200,24 @@ Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
      | Tick t e => Tick t (deTagExpr e)
      | Cast e co => Cast (deTagExpr e) co
      end.
+
+Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
+           : nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
+          fun orig_n e =>
+            let fix collect (arg_0__:nat) (arg_1__ : list bndr) (arg_2__:AnnExpr bndr annot) :=
+                               match arg_0__, arg_1__, arg_2__ with
+                               | O, bs, body =>
+                                 pair (GHC.List.reverse bs) body 
+                               | S m, bs, body =>
+                                   match arg_0__, arg_1__, arg_2__ with
+                                   | n, bs, pair _ (AnnLam b body) => collect m (cons b bs) body
+                                   | _, _, _ =>
+                                       Panic.panicStr (GHC.Base.hs_string__ "collectNBinders") Panic.someSDoc
+                                   end
+                               end in
+            collect orig_n nil e.
+
+
 
 (*
 Definition exprToType : CoreExpr -> Core.Type_ :=

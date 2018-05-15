@@ -643,8 +643,7 @@ Section in_exitify.
   (* [addExit] is called somewhere in [go], so we need to follow [go]'s traversal
      of the AST and collect all calls to [addExit].
    *)
-  Program Fixpoint go_all_WellScopedFloats 
-      captured e { measure e (NCoreLT)} : 
+  Program Fixpoint go_all_WellScopedFloats captured e { measure e (NCoreLT)} : 
     WellScoped (toExpr e) (extendVarSetList (getInScopeVars in_scope2) captured) ->
     StateInvariant WellScopedFloats (go captured (freeVars (toExpr e))) := _.
   Next Obligation.
@@ -852,7 +851,7 @@ Section in_exitify.
 
     subst j_4__.
     apply StateInvariant_return.
-  Admitted.
+  Qed.
 
   (* Clearly we expect the input pairs be well-scoped *)
   Variable pairs_WS :
@@ -953,42 +952,49 @@ Section in_exitify.
       apply subVarSet_refl.
   Qed.
 
+  (* The in_scope vars after *)
+  Definition in_scope_after := (extendVarSetList (extendVarSetList isvs (map fst exits)) (map (fun '(Mk_NJPair v _ _ _) => v) pairs)).
+
+
   (* No we go throught [go] again and see that pairs' is well-scoped.
      We start assuming that the result of the computation is a subset of exits'
      for which we already know [WellScopedFloats]. By going backwards,
      we will recover that [mkExit] produces a name of this set.
   *)
-  Lemma go_res_WellScoped:
-    forall captured ann_e,
-    let orig := extendVarSetList (extendVarSetList isvs (map (fun '(Mk_NJPair v _ _ _) => v) pairs)) captured in
-    let after := extendVarSetList (extendVarSetList (extendVarSetList isvs (map fst exits)) (map (fun '(Mk_NJPair v _ _ _) => v) pairs)) captured in
-    WellScoped (deAnnotate ann_e) orig ->
-    RevStateInvariant (sublistOf exits) (go captured ann_e) (fun e' => WellScoped e' after) .
-  Proof.
-    (* This cannot be structural recursion. Will need a size on expressions. *)
-    fix 2. rename go_res_WellScoped into IH.
-    intros ??? ? HWS.
+  Local Obligation Tactic := try solve [Coq.Program.Tactics.program_simpl]. (* Preserve [let] *)
+  Program Fixpoint go_res_WellScoped captured e { measure e (NCoreLT)} : 
+    let orig := extendVarSetList (getInScopeVars in_scope2) captured in
+    let after := extendVarSetList in_scope_after captured in
+    WellScoped (toExpr e) orig ->
+    RevStateInvariant (sublistOf exits) (go captured (freeVars (toExpr e))) (fun e' => WellScoped e' after) := _ .
+  Next Obligation.
+    intros ?? IH ?? HWS.
     set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => WellScoped e' after)).
-    change (P (go captured ann_e)).
-    replace go with (go_f go) by admit. (* Need to use [go_eq] here *)
+    change (P (go captured (freeVars (toExpr e)))).
+    rewrite go_eq.
     cbv beta delta [go_f]. (* No [zeta]! *)
     (* Float out lets *)
     repeat float_let.
-    
+
+    subst e0.
+    rewrite !deAnnotate_freeVars in *.
+
     (* Common case *)
-    assert (Hreturn : P (return_ e)). {
+    assert (Hreturn : P (return_ (toExpr e))). {
        apply RevStateInvariant_return. cleardefs.
-       subst after.
+       subst after. unfold in_scope_after.
        do 2 rewrite <- WellScoped_mkLams.
        apply extend_scope_with_exits.
        do 2 rewrite -> WellScoped_mkLams.
+       subst orig. unfold in_scope2 in HWS. unfold isvs.
+       rewrite getInScopeVars_extendInScopeSetList in *.
        assumption.
     } 
 
     (* First case *)
     enough (Hnext: P j_37__). {
       clearbody j_37__; cleardefs.
-      destruct (collectArgs e) as [rhs fun_args] eqn:HcA.
+      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
       destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply Hreturn.
@@ -999,6 +1005,7 @@ Section in_exitify.
     subst j_37__.
     enough (Hnext: P j_36__). {
       destruct (is_exit && negb is_interesting) ; try apply Hnext.
+      rewrite !deAnnotate_freeVars in *.
       apply Hreturn.
     }
     cleardefs.
@@ -1007,6 +1014,7 @@ Section in_exitify.
     subst j_36__.
     enough (Hnext: P j_35__). {
       destruct (is_exit && captures_join_points ) ; try apply Hnext.
+      rewrite !deAnnotate_freeVars in *.
       apply Hreturn.
     }
     cleardefs.
@@ -1033,184 +1041,258 @@ Section in_exitify.
     subst j_22__.
     enough (Hnext: P j_4__). {
       clearbody j_4__. clear Hreturn. cleardefs.
-      destruct ann_e as [fvs e] eqn:Hann.
-      destruct e; try apply Hnext;
-        clear Hnext j_4__; cleardefs.
-      * (* Case [Case] *)
+      destruct e; try apply Hnext.
+      * (* spurious case Mk_Var *)
+        simpl in *. destruct (isLocalVar _); apply Hnext.
+      * (* spurious case Lam *)
+        simpl in *. repeat expand_pairs. apply Hnext.
+      * (* Case [Let] *) 
+        repeat float_let.
+        simpl.
+        do 2 expand_pairs. simpl.
+        rewrite freeVarsBind1_freeVarsBind.
+        unfold freeVarsBind.
+        destruct n as [[x rhs] | [j params rhs] | n pairs' | n pairs']; simpl.
+        + rewrite HnotJoin.
+          simpl in *.
+          destruct HWS as [HWSrhs HWSe].
+          eapply RevStateInvariant_bind.
+          - apply IH.
+            ** NCore_termination.
+            ** simpl. 
+               rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+               apply HWSe.
+          - intro e'; apply RevStateInvariant_return; intro He'.
+            rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in He'.
+            simpl.
+            rewrite deAnnotate_freeVars.
+            split.
+            ++ subst after. unfold in_scope_after.
+               do 2 rewrite <- WellScoped_mkLams.
+               apply extend_scope_with_exits.
+               do 2 rewrite -> WellScoped_mkLams.
+               unfold orig, in_scope2 in HWSrhs.
+               rewrite getInScopeVars_extendInScopeSetList in HWSrhs.
+               apply HWSrhs.
+            ++ apply He'.
+       + unfold CoreBndr in *.
+          rewrite HisJoin.
+          rewrite collectNAnnBndrs_freeVars_mkLams.
+          eapply RevStateInvariant_bind.
+          ++ apply IH.
+             ** NCore_termination.
+             ** rewrite extendVarSetList_append.
+                simpl in HWS.
+                rewrite WellScoped_mkLams in HWS.
+                apply HWS.
+          ++ intros body'.
+             eapply RevStateInvariant_bind.
+             -- apply IH.
+                ** NCore_termination.
+                ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+                   apply HWS.
+             -- intro rhs'. apply RevStateInvariant_return; intros Hrhs' Hbody'.
+                split.
+                ** rewrite WellScoped_mkLams.
+                   rewrite extendVarSetList_append in Hbody'.
+                   apply Hbody'.
+                ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in Hrhs'.
+                   apply Hrhs'.
+        + expand_pairs. simpl.
+          rewrite to_list_map.
+          rewrite !zip_unzip_map.
+          rewrite !map_map.
+
+          destruct HWS as [HNoDup [HWSpairs HWSe]].
+          rewrite Forall'_Forall in HWSpairs.
+          rewrite to_list_map in HWSpairs.
+          rewrite !map_map in HWSpairs.
+          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWSpairs
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite Forall_map in HWSpairs.
+          rewrite to_list_map in HWSe.
+          rewrite !map_map in HWSe.
+          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWSe
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite to_list_map in HNoDup.
+          rewrite !map_map in HNoDup.
+          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => varUnique x) in HNoDup
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+
+
+          destruct (isJoinId _) eqn:Heq_isJoinId.
+          Focus 1.
+            exfalso.
+            rewrite <- not_false_iff_true in Heq_isJoinId.
+            contradict Heq_isJoinId.
+            dependent inversion pairs'; subst; clear.
+            dependent inversion h. simpl.
+            rewrite isJoinId_eq. rewrite HnotJoin. reflexivity.
+          clear Heq_isJoinId.
+
+          eapply RevStateInvariant_bind.
+          - apply IH.
+            ** NCore_termination.
+            ** rewrite !extendVarSetList_append.
+               do 2 rewrite flat_map_unpack_cons_f.
+               do 2 rewrite map_map.
+               rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
+                  by (intros; repeat expand_pairs; destruct a; reflexivity).
+               apply HWSe.
+          - intro body'. apply RevStateInvariant_return; intros Hbody'.
+            rewrite !flat_map_unpack_cons_f in Hbody'.
+            rewrite !flat_map_unpack_cons_f.
+            rewrite extendVarSetList_append in Hbody'.
+            rewrite !map_map in Hbody'.
+            rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in Hbody'
+               by (intros; repeat expand_pairs; destruct a; reflexivity).
+            split; only 2: split.
+            ++ rewrite !map_map.
+               rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => varUnique x)
+                 by (intros; repeat expand_pairs; destruct a; reflexivity).
+               apply HNoDup.
+            ++ rewrite Forall'_Forall.
+               rewrite !map_map. 
+               rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
+                 by (intros; repeat expand_pairs; destruct a; reflexivity).
+               rewrite Forall_map.
+               eapply Forall_impl; only 2: apply HWSpairs.
+               intros [v rhs] HWSv. simpl in *.
+               fold orig in HWSv.
+               unfold after, in_scope_after.
+               do 3 rewrite <- WellScoped_mkLams.
+               apply extend_scope_with_exits.
+               do 3 rewrite -> WellScoped_mkLams.
+               unfold orig, in_scope2 in HWSv.
+               rewrite getInScopeVars_extendInScopeSetList in HWSv.
+               rewrite deAnnotate_freeVars.
+               apply HWSv.
+            ++ rewrite !map_map.
+               rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
+                  by (intros; repeat expand_pairs; destruct a; reflexivity).
+               apply Hbody'.
+        + expand_pairs. simpl.
+          rewrite to_list_map.
+          rewrite !zip_unzip_map.
+          rewrite !map_map.
+          destruct (isJoinId _) eqn:Heq_isJoinId.
+          Focus 2.
+            exfalso.
+            rewrite <- not_true_iff_false in Heq_isJoinId.
+            contradict Heq_isJoinId.
+            dependent inversion pairs'; subst; clear.
+            dependent inversion h. simpl.
+            rewrite isJoinId_eq. rewrite HisJoin. reflexivity.
+          clear Heq_isJoinId.
+
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x)
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+
+          destruct HWS as [HNoDup [HWSpairs HWSe]].
+          rewrite Forall'_Forall in HWSpairs.
+          rewrite to_list_map in HWSpairs.
+          rewrite !map_map in HWSpairs.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWSpairs
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite Forall_map in HWSpairs.
+          rewrite to_list_map in HWSe.
+          rewrite !map_map in HWSe.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWSe
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite to_list_map in HNoDup.
+          rewrite !map_map in HNoDup.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => varUnique x) in HNoDup
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+
+
+          rewrite forM_map.
+          eapply RevStateInvariant_bind.
+          - apply RevStateInvariant_forM2 with
+              (R := fun p p' =>
+                  (fun '(Mk_NJPair x _ _ _) => x) p = fst p' /\
+                  WellScoped (snd p') (extendVarSetList after (map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs')))).
+            intros [j rhs] HIn.
+            simpl.
+            erewrite idJoinArity_join by eassumption.
+            rewrite collectNAnnBndrs_freeVars_mkLams.
+            eapply RevStateInvariant_bind.
+            ++ apply IH.
+               ** NCore_termination.
+               ** rewrite !extendVarSetList_append.
+                  rewrite Forall_forall in HWSpairs.
+                  apply WellScoped_mkLams.
+                  eapply (HWSpairs _ HIn).
+            ++ intro e'; apply RevStateInvariant_return; intro He'.
+               simpl.
+               rewrite WellScoped_mkLams.
+               rewrite !extendVarSetList_append in He'.
+               split; only 1: reflexivity.
+               apply He'. 
+          - intro pairs''.
+            eapply RevStateInvariant_bind.
+            ++ apply IH.
+               ** NCore_termination.
+               ** rewrite !extendVarSetList_append.
+                  apply HWSe.
+            ++ intro e'; apply RevStateInvariant_return; intros He' Hpairs''.
+               apply Forall2_and in Hpairs''.
+               destruct Hpairs'' as [Hfst Hpairs''].
+               apply Forall2_const_Forall in Hpairs''.
+               eapply Forall2_eq with (f := (fun '(Mk_NJPair x _ _ _) => x)) (g := fst) in Hfst.
+               symmetry in Hfst.
+               change ((@map (CoreBndr * Expr CoreBndr) CoreBndr (@fst CoreBndr (Expr CoreBndr)) pairs'') = map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs')) in Hfst.
+               simpl.
+               rewrite Hfst.
+               split; only 2: split.
+               -- simpl in HNoDup.
+                  rewrite map_map.
+                  rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => varUnique x)
+                    by (intros; repeat expand_pairs; destruct a; reflexivity).
+                  apply HNoDup.
+               -- rewrite Forall'_Forall.
+                  apply Hpairs''.
+               -- rewrite !extendVarSetList_append in He'.
+                  apply He'.
+      * (* [Case] *)
         destruct HWS as [Hscrut HWSalts].
         rewrite Forall'_Forall in HWSalts.
         rewrite Forall_map in HWSalts.
         rewrite Forall_forall in HWSalts.
 
-
+        simpl.
+        do 2 expand_pairs. simpl.
+        rewrite snd_unzip, !map_map.
+        rewrite forM_map.
         eapply RevStateInvariant_bind.
-        + apply RevStateInvariant_forM with (R := fun alt => WellScopedAlt c alt after).
+        + apply RevStateInvariant_forM with (R := fun alt => WellScopedAlt v alt after).
           intros [[dc pats] rhs] HIn.
           eapply RevStateInvariant_bind.
           - apply IH.
-            (* This needs automation! *)
-            rewrite extendVarSetList_append.
-            specialize (HWSalts (dc, pats, rhs)). simpl in HWSalts.
-            apply HWSalts.
-            assumption.
-          - intro e; apply RevStateInvariant_return; intro He.
-            rewrite extendVarSetList_append in He.
-            apply He.
+            ** NCore_termination.
+            ** (* This needs automation! *)
+               rewrite extendVarSetList_append.
+               apply (HWSalts (dc, pats, rhs)).
+               assumption.
+          - intro e'; apply RevStateInvariant_return; intro He'.
+            rewrite extendVarSetList_append in He'.
+            apply He'.
         + intros alts'; apply RevStateInvariant_return; intro He.
           simpl. split.
-          - subst after.
+          - subst after. unfold in_scope_after.
             do 2 rewrite <- WellScoped_mkLams.
             apply extend_scope_with_exits.
             do 2 rewrite -> WellScoped_mkLams.
-            assumption.
+            rewrite deAnnotate_freeVars.
+            unfold orig, in_scope2 in Hscrut.
+            rewrite getInScopeVars_extendInScopeSetList in Hscrut.
+            apply Hscrut.
           - rewrite Forall'_Forall.
             apply He.
-
-      * (* Case [Let] *) 
-        repeat float_let.
-
-        enough (Hnext': P j_18__). {
-          clearbody j_18__.
-          destruct a as [j rhs|pairs']; try apply Hnext'.
-          destruct (isJoinId_maybe j) as [join_arity|] eqn:HiJI; try apply Hnext'.
-          unfold CoreBndr in *.
-          destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
-          eapply RevStateInvariant_bind.
-          + apply IH.
-            ** rewrite extendVarSetList_append.
-               simpl in HWS.
-               eapply WellScoped_collectNBinders; only 1: apply HWS.
-               Fail apply collectAnnNBndrs_collectNBinders.
-               admit.
-          + intros body'. eapply RevStateInvariant_bind.
-            - apply IH.
-              ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
-                 apply HWS.
-            - intro e'; apply RevStateInvariant_return; intros He' Hbody'.
-              split.
-              ++ rewrite WellScoped_mkLams.
-                 rewrite extendVarSetList_append in Hbody'.
-                 apply Hbody'.
-              ++ rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in He'.
-                 apply He'.
-        }
-
-        subst j_18__.
-        enough (Hnext': P j_10__). {
-          destruct a as [j rhs|pairs']; try apply Hnext'.
-          destruct (isJoinId _); try apply Hnext'.
-          + intros.
-
-            rewrite deAnnotate_AnnLet_AnnRec in HWS.
-            destruct HWS as [HNoDup [HWS HWSbody]].
-            rewrite Forall'_Forall in HWS.
-            rewrite !map_map in HWS.
-            rewrite !map_map in HNoDup.
-            rewrite !map_map in HWSbody.
-
-            eapply RevStateInvariant_bind.
-            - apply RevStateInvariant_forM2 with
-                (R := fun p p' =>
-                    fst p = fst p' /\
-                    WellScoped (snd p') (extendVarSetList after (map fst pairs'))).
-              intros [j rhs] HIn.
-              repeat float_let.
-              destruct (collectNAnnBndrs join_arity rhs) as [params join_body] eqn:HcAB.
-              eapply RevStateInvariant_bind.
-              ++ apply IH.
-                 ** rewrite !extendVarSetList_append.
-                    rewrite Forall_map in HWS.
-                    rewrite Forall_forall in HWS.
-                    eapply WellScoped_collectNBinders; only 1: apply HWS.
-                    eassumption.
-                    Fail apply collectAnnNBndrs_collectNBinders; eassumption.
-                    admit.
-              ++ intro e'; apply RevStateInvariant_return; intro He'.
-                 simpl.
-                 rewrite WellScoped_mkLams.
-                 rewrite !extendVarSetList_append in He'.
-                 split; only 1: reflexivity.
-                 apply He'. 
-            - intro pairs''.
-              eapply RevStateInvariant_bind.
-              ++ apply IH.
-                 ** rewrite !extendVarSetList_append.
-                    apply HWSbody.
-              ++ intro e'; apply RevStateInvariant_return; intros He' Hpairs''.
-                 apply Forall2_and in Hpairs''.
-                 destruct Hpairs'' as [Hfst Hpairs''].
-                 apply Forall2_const_Forall in Hpairs''.
-                 eapply Forall2_eq with (f := fst) (g := fst) in Hfst.
-                 symmetry in Hfst.
-                 change ((@map (CoreBndr * Expr CoreBndr) CoreBndr (@fst CoreBndr (Expr CoreBndr)) pairs'') = map fst pairs') in Hfst.
-                 simpl.
-                 rewrite Hfst.
-                 split; only 2: split.
-                 -- simpl in HNoDup.
-                    rewrite map_map.
-                    apply HNoDup.
-                 -- rewrite Forall'_Forall.
-                    apply Hpairs''.
-                 -- rewrite !extendVarSetList_append in He'.
-                    apply He'.
-        }
-
-        subst j_10__.
-        eapply RevStateInvariant_bind.
-        - apply IH.
-          ** rewrite !extendVarSetList_append.
-             subst bind.
-             destruct a as [v rhs|apairs].
-             ++ simpl in *.
-                rewrite extendVarSetList_cons, extendVarSetList_nil.
-                apply HWS.
-             ++ rewrite deAnnotate_AnnLet_AnnRec in HWS.
-                rewrite deAnnBinds_AnnRec.
-                rewrite bindersOf_Rec.
-                destruct HWS as [_ [_ HWS]].
-                rewrite map_map in HWS. simpl in HWS.
-                rewrite map_map; simpl.
-                apply HWS.
-        - intro e'; apply RevStateInvariant_return; intros He'.
-          simpl.
-          subst bind.
-          destruct a as [v rhs|apairs].
-          ++ simpl in *.
-             rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in He'.
-             split.
-             + subst after.
-               do 2 rewrite <- WellScoped_mkLams.
-               apply extend_scope_with_exits.
-               do 2 rewrite -> WellScoped_mkLams.
-               apply HWS.
-             + apply He'.
-          ++ rewrite deAnnotate_AnnLet_AnnRec in HWS. simpl in HWS.
-             rewrite deAnnBinds_AnnRec.
-             destruct HWS as [HNoDups [HWS _]].
-             rewrite !map_map in HNoDups. simpl in HNoDups.
-             split; only 2: split.
-             + rewrite !map_map. simpl. apply HNoDups .
-             + rewrite Forall'_Forall in *.
-               eapply Forall_impl; only 2: apply HWS.
-               intros [v rhs] HWSv. simpl in *.
-               fold orig in HWSv.
-               subst after.
-               do 3 rewrite <- WellScoped_mkLams.
-               apply extend_scope_with_exits.
-               do 3 rewrite -> WellScoped_mkLams.
-               apply HWSv.
-             + rewrite extendVarSetList_append in He'.
-               fold after in He'.
-               rewrite deAnnBinds_AnnRec in He'.
-               rewrite bindersOf_Rec in He'.
-               apply He'.
     }
 
     subst j_4__.
+    rewrite deAnnotate_freeVars.
     apply Hreturn.
-
-  (* TODO: Not structurally recursive *)
-  Fail Guarded.
   Admitted.
 
   Lemma pairs'_WS:
@@ -1218,32 +1300,28 @@ Section in_exitify.
   Proof.
     unfold pairs', pairs'_exits, ann_pairs.
     eapply RevStateInvariant_runState with (P := sublistOf exits).
-    * apply RevStateInvariant_forM.
-      intros [v rhs] HIn.
-      destruct (collectNAnnBndrs (idJoinArity v) rhs) as [params join_body] eqn:HcAB.
-      apply RevStateInvariant_bind_return. simpl.
-      eapply RevStateInvariant_impl.
-      + apply go_res_WellScoped.
-        - admit.
-          (*
-          eapply WellScoped_collectNBinders;
-            only 2: (apply collectAnnNBndrs_collectNBinders; eassumption).
-          rewrite Forall_forall in pairs_WS.
-          specialize (pairs_WS (v, deAnnotate rhs)).
-          apply pairs_WS.
-          unfold ann_pairs in HIn.
-          rewrite in_map_iff in HIn.
-          destruct HIn as [[v' rhs'] [Heq HIn]].
-          inversion Heq. unfold id in H0. subst.
-          rewrite deAnnotate_freeVars.
-          assumption.
-          *)
-      + intros. simpl in *.
-        rewrite WellScoped_mkLams.
-        assumption.
+    * rewrite hs_coq_map, !map_map, forM_map.
+      apply RevStateInvariant_forM.
+      intros [v param rhs HisJoin] HIn.
+      unfold id.
+      simpl.
+      erewrite idJoinArity_join by eassumption.
+      rewrite collectNAnnBndrs_freeVars_mkLams.
+      eapply RevStateInvariant_bind.
+      ++ apply go_res_WellScoped.
+         ** rewrite <- WellScoped_mkLams.
+            rewrite Forall_map in pairs_WS.
+            rewrite Forall_forall in pairs_WS.
+            unfold in_scope2.
+            rewrite getInScopeVars_extendInScopeSetList.
+            apply (pairs_WS _ HIn).
+        ++ intro e'; apply RevStateInvariant_return; intro He'.
+           simpl.
+           rewrite WellScoped_mkLams.
+           apply He'.
     * change (sublistOf exits exits).
       intro. auto.
-  Admitted.
+  Qed.
 
   Lemma map_fst_pairs':
     map fst pairs' = (map (fun '(Mk_NJPair v _ _ _) => v) pairs).
@@ -1283,19 +1361,16 @@ Section in_exitify.
   Proof.
     intros ? HNoDup HWSbody.
     cbv beta delta [exitify].
-    cbv zeta.
-    fold recursive_calls.
-    fold go.
-    fold ann_pairs.
+    zeta_with recursive_calls.
+    zeta_with go.
+    zeta_with ann_pairs.
     fold pairs'_exits.
-    fold mkExitLets.
     expand_pairs.
+    zeta_with mkExitLets.
     fold pairs'.
     fold exits.
+    cbv beta.
     change (WellScoped (mkExitLets exits (mkLetRec pairs' body)) (getInScopeVars in_scope)).
-    assert (WellScopedFloats exits). {
-      apply all_exists_WellScoped.
-    }
     apply mkExitLets_WellScoped.
     * apply WellScoped_MkLetRec.
       simpl in *.
@@ -1309,8 +1384,8 @@ Section in_exitify.
         apply WellScoped_extendVarSetList; only 2: assumption.
         rewrite disjointVarSet_mkVarSet.
         rewrite Forall_map.
-        apply H.
-    * apply H.
+        apply all_exists_WellScoped.
+    * apply all_exists_WellScoped.
   Qed.
 
   (** ** Join point validity *)

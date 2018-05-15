@@ -14,10 +14,5 @@ Lemma exprFreeVars_mkLams:
 Admitted.
 
 
-Lemma collectNAnnBndrs_freeVars_mkLams:
-  forall vs rhs,
-  collectNAnnBndrs (length vs) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
-Admitted.
-
 Axiom deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.

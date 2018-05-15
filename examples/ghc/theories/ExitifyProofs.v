@@ -35,6 +35,20 @@ Require Import VectorUtils.
 Instance EqLaws_Unique : EqLaws Unique.Unique. Admitted.
 Instance EqExact_Unique : EqExact Unique.Unique. Admitted.
 
+Axiom mkLets_append:
+  forall b binds1 binds2 (e : Expr b),
+  mkLets (binds1 ++ binds2) e = mkLets binds1 (mkLets binds2 e).
+
+Axiom mkLets_cons:
+  forall b bind binds (e : Expr b),
+  mkLets (bind :: binds) e = mkLet bind (mkLets binds e).
+
+Axiom mkLets_nil:
+  forall b (e : Expr b),
+  mkLets [] e = e.
+
+
+
 Axiom isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
 
@@ -200,6 +214,18 @@ Proof.
   split; intro; repeat split; try constructor; intuition.
 Qed.
 
+Lemma WellScoped_MkLet: forall bind body isvs,
+  WellScoped (mkLet bind body) isvs <-> WellScoped (Let bind body) isvs .
+Proof.
+  intros.
+  unfold mkLet.
+  destruct bind; try reflexivity.
+  destruct l; try reflexivity.
+  simpl.
+  rewrite extendVarSetList_nil.
+  split; intro; repeat split; try constructor; intuition.
+Qed.
+
 Axiom WellScoped_extended_filtered:
   forall vs e isvs,
   WellScoped e (extendVarSetList isvs vs) ->
@@ -320,9 +346,9 @@ Proof.
   assumption.
 Qed.
 
-(* This section reflects the context of the local definition of exitify *)
-Section in_exitify.
-  (* Parameters of exitify *)
+(* This section reflects the context of the local definition of exitifyRec *)
+Section in_exitifyRec.
+  (* Parameters of exitifyRec *)
   Variable in_scope : InScopeSet.
   Variable pairs : list NJPair.
   (* The actual parameter passed *)
@@ -331,20 +357,26 @@ Section in_exitify.
   (* Parameters and assumptions of the proof *)
   Variable jps : VarSet.
 
-  (* Giving names to the local functions of exitify.
+  (* Giving names to the local functions of exitifyRec.
      See http://www.joachim-breitner.de/blog/738-Verifying_local_definitions_in_Coq
      for more on that idiom.
    *)
-  Definition recursive_calls := ltac:(
-    let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 (map toJPair pairs)) in
+  Definition go_exit := ltac:(
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
     lazymatch rhs with | (let x := ?rhs in ?body) => 
       exact rhs
     end).
 
+  Definition recursive_calls := ltac:(
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
+    lazymatch rhs with | (let x := _ in let y := ?rhs in _) => 
+      exact rhs
+    end).
+
   Definition go := ltac:(
-    let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 (map toJPair pairs)) in
-    lazymatch rhs with | (let x := _ in let y := @?rhs x in _) => 
-      let def := eval cbv beta in (rhs recursive_calls) in
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let y := @?rhs x1 x2 in _) => 
+      let def := eval cbv beta in (rhs go_exit recursive_calls) in
       exact def
     end).
 
@@ -377,27 +409,11 @@ Section in_exitify.
       simpl. cbv beta delta [go_f].
       repeat float_let; cse_let.
 
-      enough (Hnext : j_37__ = j_37__0). {
+      enough (Hnext : j_40__ = j_40__0). {
         repeat (destruct_match; try reflexivity); try apply Hnext.
       }
-      subst j_37__ j_37__0. cleardefs.
+      subst j_40__ j_40__0. cleardefs.
 
-      enough (Hnext : j_36__ = j_36__0). {
-        repeat (destruct_match; try reflexivity); try apply Hnext.
-      }
-      subst j_36__ j_36__0. cleardefs.
-
-      enough (Hnext : j_35__ = j_35__0). {
-        repeat (destruct_match; try reflexivity); try apply Hnext.
-      }
-      subst j_35__ j_35__0. cleardefs.
-
-      enough (Hnext : j_22__ = j_22__0). {
-        repeat (destruct_match; try reflexivity); try apply Hnext.
-      }
-      subst j_22__ j_22__0. cleardefs.
-
-      subst j_4__.
       destruct e;
         simpl; rewrite ?freeVarsBind1_freeVarsBind;
         try destruct n;
@@ -510,25 +526,19 @@ Section in_exitify.
   Qed.
 
   Definition ann_pairs := ltac:(
-    let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 (map toJPair pairs)) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let y := ?rhs in _) => 
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let y := ?rhs in _) => 
       exact rhs
     end).
 
   Definition pairs'_exits := ltac:(
-    let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 (map toJPair pairs)) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := @?rhs x2 x3 in ?body) => 
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let x4 := _ in let '(pairs',exits) := @?rhs x3 x4 in ?body) => 
       let def := eval cbv beta in (rhs go ann_pairs) in
       exact def
     end).
   Definition pairs' := fst pairs'_exits.
   Definition exits := snd pairs'_exits.
-  
-  Definition mkExitLets := ltac:(
-    let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 (map toJPair pairs)) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let '(pairs',exits) := _ in let y := ?rhs in ?body) => 
-      exact rhs
-    end).
 
   (* Some useful definitions *)
   
@@ -564,14 +574,14 @@ Section in_exitify.
     Forall (fun 'p => WellScoped (snd p) isvs) floats.
 
   (* Here we do the actual wrapping *)
-  Lemma mkExitLets_WellScoped:
+  Lemma mkLets_WellScoped:
     forall exits' e,
     (* The body is well-scoped in the extended environment *)
     WellScoped e (extendVarSetList isvs (map fst exits')) ->
     WellScopedFloats exits' ->
     (* Then wrapping these bindings around [e] is well-scoped *)
-    WellScoped (mkExitLets exits' e) isvs.
-  Proof.
+    WellScoped (mkLets (map (fun '(v,rhs) => NonRec v rhs) exits') e) isvs.
+   Proof.
     intros ?.
     unfold WellScopedFloats.
     generalize isvs as isvs.
@@ -616,10 +626,10 @@ Section in_exitify.
      where we are going to put them.
    *)
   Lemma addExit_all_WellScopedFloats:
-    forall captured ty ja e,
+    forall captured ja e,
     WellScoped e isvs ->
     StateInvariant WellScopedFloats
-                   (addExit (extendInScopeSetList in_scope2 captured) ty ja e).
+                   (addExit (extendInScopeSetList in_scope2 captured) ja e).
   Proof.
     intros.
     (* This is much easier to prove by breaking the State abstraction and turning
@@ -657,6 +667,62 @@ Section in_exitify.
       assumption.
   Qed.
 
+
+  Lemma go_exit_all_WellScopedFloats captured e : 
+    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
+    StateInvariant WellScopedFloats (go_exit captured (toExpr e) (exprFreeVars (toExpr e))).
+  Proof.
+    intros HWSe Hdisjoint.
+    set (P := WellScopedFloats).
+    cbv beta delta [go_exit]. (* No [zeta]! *)
+    repeat float_let.
+
+    (* First case *)
+    enough (Hnext: StateInvariant P j_16__). {
+      clearbody j_16__; cleardefs.
+      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
+      destruct rhs; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+    cleardefs.
+
+    (* Second case *)
+    subst j_16__.
+    enough (Hnext: StateInvariant P j_15__). {
+      destruct (negb is_interesting) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+    cleardefs.
+
+    (* Third case *)
+    subst j_15__.
+    enough (Hnext: StateInvariant P j_14__). {
+      destruct captures_join_points ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+    cleardefs.
+
+    (* Third case: Actual exitification *)
+    subst j_14__.
+    unfold recursive_calls in Hdisjoint.
+    apply StateInvariant_bind_return.
+    apply addExit_all_WellScopedFloats.
+    rewrite WellScoped_mkLams.
+    subst abs_vars.
+    float_let.
+    admit.
+    (* Need a lemma bout foldr pick here *)
+    (*     rewrite hs_coq_filter.
+    apply WellScoped_extended_filtered.
+    unfold in_scope2 in HWS.
+    rewrite map_map in Heqb.
+    rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Heqb
+      by (intros; repeat expand_pairs; destruct a; reflexivity).
+    eapply WellScoped_extendVarSetList_fresh_under; eassumption. *)
+  Admitted.
+
   (* [addExit] is called somewhere in [go], so we need to follow [go]'s traversal
      of the AST and collect all calls to [addExit].
    *)
@@ -672,60 +738,20 @@ Section in_exitify.
 
     rewrite !dVarSet_freeVarsOf_Ann in *.
     rewrite !deAnnotate_freeVars in *.
-    
+
     (* Float out lets *)
     repeat float_let.
+    enough (Hnext : StateInvariant P j_40__). {
+      clearbody j_40__; cleardefs.
+      destruct (disjointVarSet fvs recursive_calls) eqn:Hdisjoint; try apply Hnext.
+      apply go_exit_all_WellScopedFloats; assumption.
+    } 
 
-    (* First case *)
-    enough (Hnext: StateInvariant P j_37__). {
-      clearbody j_37__; cleardefs.
-      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
-      destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
-      apply StateInvariant_return.
-    }
     cleardefs.
-
-    (* Second case *)
-    subst j_37__.
-    enough (Hnext: StateInvariant P j_36__). {
-      destruct (is_exit && negb is_interesting) ; try apply Hnext.
-      apply StateInvariant_return.
-    }
-    cleardefs.
-
-    (* Third case *)
-    subst j_36__.
-    enough (Hnext: StateInvariant P j_35__). {
-      destruct (is_exit && captures_join_points ) ; try apply Hnext.
-      apply StateInvariant_return.
-    }
-    cleardefs.
-
-    (* Third case: Actual exitification *)
-    subst j_35__.
+    (* No exitification here, so descend*)
+    subst j_40__.
     enough (Hnext: StateInvariant P j_22__). {
-      clearbody j_22__. 
-      destruct is_exit eqn:? ; try apply Hnext.
-      subst is_exit. unfold recursive_calls in Heqb.
-      apply StateInvariant_bind_return.
-      apply addExit_all_WellScopedFloats.
-      rewrite WellScoped_mkLams.
-      subst args fvs.
-      rewrite hs_coq_filter.
-      apply WellScoped_extended_filtered.
-      unfold in_scope2 in HWS.
-      rewrite map_map in Heqb.
-      rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Heqb
-        by (intros; repeat expand_pairs; destruct a; reflexivity).
-      eapply WellScoped_extendVarSetList_fresh_under; eassumption.
-    }
-    cleardefs.
-
-    (* Fourth case: No exitification here, so descend*)
-    subst j_22__.
-    enough (Hnext: StateInvariant P j_4__). {
-      clearbody j_4__.
+      clearbody j_22__.
       destruct e; try apply Hnext.
       * (* spurious case Mk_Var *)
         simpl in *. destruct (isLocalVar _); apply Hnext.
@@ -864,7 +890,7 @@ Section in_exitify.
            assumption.
     }
 
-    subst j_4__.
+    subst j_22__.
     apply StateInvariant_return.
   Qed.
 
@@ -952,10 +978,10 @@ Section in_exitify.
   Qed.
 
   Lemma addExit_all_WellScopedVar:
-    forall captured ty ja e,
+    forall captured ja e,
     let after := extendVarSetList isvsp' captured in
     RevStateInvariant (sublistOf exits) 
-         (addExit (extendInScopeSetList in_scope2 captured) ty ja e)
+         (addExit (extendInScopeSetList in_scope2 captured) ja e)
          (fun v => WellScopedVar v after).
   Proof.
     intros.
@@ -998,11 +1024,75 @@ Section in_exitify.
       apply subVarSet_refl.
   Qed.
 
-  (* No we go throught [go] again and see that pairs' is well-scoped.
+  (* No we go through [go] again and see that pairs' is well-scoped.
      We start assuming that the result of the computation is a subset of exits'
      for which we already know [WellScopedFloats]. By going backwards,
      we will recover that [mkExit] produces a name of this set.
   *)
+
+  Lemma go_exit_all_WellScoped captured e : 
+    let orig := extendVarSetList isvsp captured in
+    let after := extendVarSetList isvsp' captured in
+    WellScoped (toExpr e) orig ->
+    disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
+    RevStateInvariant (sublistOf exits) (go_exit captured (toExpr e) (exprFreeVars (toExpr e))) (fun e' => WellScoped e' after).
+  Proof.
+    intros ?? HWSe Hdisjoint.
+
+    set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => WellScoped e' after)).
+    change (P (go_exit captured (toExpr e) (exprFreeVars (toExpr e)))).
+
+    cbv beta delta [go_exit]. (* No [zeta]! *)
+    repeat float_let.
+
+    (* Common case *)
+    assert (Hreturn : P (return_ (toExpr e))). {
+       apply RevStateInvariant_return. cleardefs.
+       apply isvsp_to_isvsp'_extended; assumption.
+    } 
+
+    (* First case *)
+    enough (Hnext: P j_16__). {
+      clearbody j_16__; cleardefs.
+      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
+      destruct rhs; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      apply Hreturn.
+    }
+    cleardefs.
+
+    (* Second case *)
+    subst j_16__.
+    enough (Hnext: P j_15__). {
+      destruct (negb is_interesting) ; try apply Hnext.
+      apply Hreturn.
+    }
+    cleardefs.
+
+    (* Third case *)
+    subst j_15__.
+    enough (Hnext: P j_14__). {
+      destruct (captures_join_points) ; try apply Hnext.
+      apply Hreturn.
+    }
+    cleardefs.
+
+    (* Third case: Actual exitification *)
+    subst j_14__.
+    subst P. cleardefs. 
+    unfold recursive_calls in Hdisjoint.
+    eapply RevStateInvariant_bind; only 1: apply addExit_all_WellScopedVar.
+    intro v.
+    apply RevStateInvariant_return.
+    intro HWSv.
+    rewrite WellScoped_mkVarApps.
+    split; only 1 : apply HWSv.
+    subst abs_vars.
+    admit.
+    (* Need lemma bout foldr pick *)
+  Admitted.
+
+
   Local Obligation Tactic := try solve [Coq.Program.Tactics.program_simpl]. (* Preserve [let] *)
   Program Fixpoint go_res_WellScoped captured e { measure e (NCoreLT)} : 
     let orig := extendVarSetList isvsp captured in
@@ -1018,65 +1108,21 @@ Section in_exitify.
     (* Float out lets *)
     repeat float_let.
 
-    subst e0.
+    subst fvs.
+    rewrite !dVarSet_freeVarsOf_Ann in *.
     rewrite !deAnnotate_freeVars in *.
 
-    (* Common case *)
-    assert (Hreturn : P (return_ (toExpr e))). {
-       apply RevStateInvariant_return. cleardefs.
-       apply isvsp_to_isvsp'_extended; assumption.
-    } 
-
     (* First case *)
-    enough (Hnext: P j_37__). {
-      clearbody j_37__; cleardefs.
-      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
-      destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
-      apply Hreturn.
+    enough (Hnext: P j_40__). {
+      clearbody j_40__; cleardefs.
+      destruct (disjointVarSet _ _) eqn:Hdisjoint; try apply Hnext.
+      apply go_exit_all_WellScoped; assumption.
     }
-    cleardefs.
 
-    (* Second case *)
-    subst j_37__.
-    enough (Hnext: P j_36__). {
-      destruct (is_exit && negb is_interesting) ; try apply Hnext.
-      rewrite !deAnnotate_freeVars in *.
-      apply Hreturn.
-    }
-    cleardefs.
-
-    (* Third case *)
-    subst j_36__.
-    enough (Hnext: P j_35__). {
-      destruct (is_exit && captures_join_points ) ; try apply Hnext.
-      rewrite !deAnnotate_freeVars in *.
-      apply Hreturn.
-    }
-    cleardefs.
-
-    (* Third case: Actual exitification *)
-    subst j_35__.
+    (* No exitification here, so descend*)
+    subst j_40__.
     enough (Hnext: P j_22__). {
-      clearbody j_22__. 
-      destruct is_exit eqn:? ; try apply Hnext.
-      clear Hnext j_22__. subst P. cleardefs. 
-      subst is_exit. unfold recursive_calls in Heqb.
-      eapply RevStateInvariant_bind; only 1: apply addExit_all_WellScopedVar.
-      intro v.
-      apply RevStateInvariant_return.
-      intro HWSv.
-      rewrite WellScoped_mkVarApps.
-      split; only 1 : apply HWSv.
-      subst args.
-      admit. (* somewhere here is the bug. not all variables in [captured] are in scope here. *)
-    }
-    cleardefs.
-
-    (* Fourth case: No exitification here, so descend*)
-    subst j_22__.
-    enough (Hnext: P j_4__). {
-      clearbody j_4__. clear Hreturn. cleardefs.
+      clearbody j_22__. cleardefs.
       destruct e; try apply Hnext.
       * (* spurious case Mk_Var *)
         simpl in *. destruct (isLocalVar _); apply Hnext.
@@ -1307,10 +1353,12 @@ Section in_exitify.
             apply He.
     }
 
-    subst j_4__.
+    subst j_22__.
     rewrite deAnnotate_freeVars.
-    apply Hreturn.
-  Admitted.
+    apply RevStateInvariant_return.
+    apply isvsp_to_isvsp'_extended.
+    assumption.
+  Qed.
 
   Lemma pairs'_WS:
     Forall (fun p => WellScoped (snd p) isvsp') pairs'.
@@ -1339,7 +1387,7 @@ Section in_exitify.
   Qed.
 
   Lemma map_fst_pairs':
-    map fst pairs' = fs.
+    map (@fst CoreBndr (Expr CoreBndr)) pairs' = fs.
   Proof.
     intros.
     unfold fs.
@@ -1356,7 +1404,7 @@ Section in_exitify.
     unfold Bifunctor.second, Bifunctor.Bifunctor__pair_type, Bifunctor.second__,
            Bifunctor.Bifunctor__pair_type_second, Bifunctor.Bifunctor__pair_type_bimap.
     unfold id.
-    generalize (@nil (CoreBndr * Expr CoreBndr)) as s.
+    generalize (@nil (prod JoinId CoreExpr)) as s.
     clear pairs_WS.
     induction pairs.
     * reflexivity.
@@ -1367,27 +1415,28 @@ Section in_exitify.
   Qed.
 
   (** Main well-scopedness theorem:
-      If the input is well-scoped, then so is the output of [exitify].*)
-  Theorem exitify_WellScoped:
+      If the input is well-scoped, then so is the output of [exitifyRec].*)
+  Theorem exitifyRec_WellScoped:
     forall body,
     NoDup (map varUnique fs) ->
     WellScoped body isvsp ->
-    WellScoped (exitify (extendInScopeSetList in_scope fs) (map toJPair pairs) body) isvs.
+    WellScoped (mkLets (exitifyRec (extendInScopeSetList in_scope fs) (map toJPair pairs)) body) isvs.
   Proof.
     intros ? HNoDup HWSbody.
-    cbv beta delta [exitify].
+    cbv beta delta [exitifyRec].
+    zeta_with go_exit.
     zeta_with recursive_calls.
     zeta_with go.
     zeta_with ann_pairs.
     fold pairs'_exits.
     expand_pairs.
-    zeta_with mkExitLets.
     fold pairs'.
     fold exits.
-    cbv beta.
-    change (WellScoped (mkExitLets exits (mkLetRec pairs' body)) isvs).
-    apply mkExitLets_WellScoped.
-    * apply WellScoped_MkLetRec.
+    rewrite flat_map_unpack_cons_f.
+    change (WellScoped (mkLets (map (fun '(x, y) => NonRec x y) exits ++ [Rec pairs']) body) isvs).
+    rewrite mkLets_append, mkLets_cons, mkLets_nil.
+    apply mkLets_WellScoped.
+    * rewrite WellScoped_MkLet.
       simpl in *.
       rewrite map_fst_pairs'.
       repeat split.
@@ -1398,6 +1447,9 @@ Section in_exitify.
         assumption.
     * apply all_exists_WellScoped.
   Qed.
+
+(* Join point stuff commented after updating Exitify.hs to GHC HEAD
+
 
   (** ** Join point validity *)
 
@@ -1851,14 +1903,14 @@ Section in_exitify.
 
   (** Main result *)
 
-  Theorem exitify_JPI:
+  Theorem exitifyRec_JPI:
     forall body,
     pairs <> [] ->
     isJoinPointsValid (Let (Rec (map toJPair pairs)) body) 0 jps = true ->
-    isJoinPointsValid (exitify (extendInScopeSetList in_scope (map (fun '(Mk_NJPair v _ _ _) => v) pairs)) (map toJPair pairs) body) 0 jps = true.
+    isJoinPointsValid (exitifyRec (extendInScopeSetList in_scope (map (fun '(Mk_NJPair v _ _ _) => v) pairs)) (map toJPair pairs) body) 0 jps = true.
   Proof.
     intros.
-    cbv beta delta [exitify].
+    cbv beta delta [exitifyRec].
     cbv zeta.
     fold recursive_calls.
     fold go.
@@ -1874,5 +1926,6 @@ Section in_exitify.
     * apply all_exists_joinIds.
     * apply all_exists_valid.
   Admitted.
+*)
 
-End in_exitify.
+End in_exitifyRec.

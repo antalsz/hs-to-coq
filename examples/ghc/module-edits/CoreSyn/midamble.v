@@ -26,34 +26,54 @@ Ltac solve_collectAnnArgsTicks :=
    helper function. Changing size_AnnAlt to "with" results in an error. *)
 
 Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
-  let size_AnnAlt {a}{b} : AnnAlt a b -> nat :=
-      fun x => 
-        match x with 
-        | ((con, args), (_,rhs)) => size_AnnExpr' rhs
-        end in
-  let size_AnnBind {a}{b} : AnnBind a b -> nat :=
-      fun x => 
-        match x with 
-        | AnnNonRec _ (_,e) => size_AnnExpr' e
-        | AnnRec grp => List.fold_left 
-                         (fun n y => 
-                            n + size_AnnExpr' (snd (snd y))) grp 1
-        end in
   match e with 
-  | AnnVar _ => 1
-  | AnnLit _ => 1
-  | AnnLam _ (_ , bdy) => 1 + size_AnnExpr' bdy
-  | AnnApp (_,e1) (_, e2) => 1 + size_AnnExpr' e1 + size_AnnExpr' e2
-  | AnnCase (_,e) _ _ brs => 1 + size_AnnExpr' e + 
-                            List.fold_left (fun x y => x + size_AnnAlt y) brs 1 
-  | AnnLet _ (_,e) => 1 + size_AnnExpr' e
-  | AnnCast (_,e) _ => 1 + size_AnnExpr' e
-  | AnnTick _ (_,e) => 1 + size_AnnExpr' e
-  | AnnType _ => 1
-  | AnnCoercion _ => 1
+  | AnnVar _ => 0
+  | AnnLit _ => 0
+  | AnnLam _ (_ , bdy) => S (size_AnnExpr' bdy)
+  | AnnApp (_,e1) (_, e2) => S (size_AnnExpr' e1 + size_AnnExpr' e2)
+  | AnnCase (_,scrut) bndr _ alts => 
+    S (size_AnnExpr' scrut + 
+       List.fold_right plus 0 
+                          (List.map (fun p =>
+                                       match p with 
+                                         | (_,_,(_,e)) => size_AnnExpr' e
+                                    end) 
+                                    alts))
+  | AnnLet (AnnNonRec v (_,rhs)) (_,body) => 
+        S (size_AnnExpr' rhs + size_AnnExpr' body)
+  | AnnLet (AnnRec pairs) (_,body) => 
+        S (Lists.List.fold_right plus 0 
+                                 (Lists.List.map (fun p => size_AnnExpr' (snd (snd p))) pairs) +
+           size_AnnExpr' body)
+
+  | AnnCast (_,e) _ => S (size_AnnExpr' e)
+  | AnnTick _ (_,e) => S (size_AnnExpr' e)
+  | AnnType _ => 0
+  | AnnCoercion _ => 0
   end.
 
 
+Fixpoint core_size {v} (e : Expr v) : nat :=
+    match e with
+    | Mk_Var v => 0
+    | Lit l => 0
+    | App e1 e2 => S (core_size e1 + core_size e2)
+    | Lam v e => S (core_size e)
+    | Let (NonRec v rhs) body => 
+        S (core_size rhs + core_size body)
+    | Let (Rec pairs) body => 
+        S (Lists.List.fold_right plus 0 (Lists.List.map (fun p => core_size (snd p)) pairs) +
+           core_size body)
+    | Case scrut bndr ty alts  => 
+        S (core_size scrut +
+           Lists.List.fold_right plus 0 (Lists.List.map (fun p => core_size (snd p)) alts))
+    | Cast e _ =>   S (core_size e)
+    | Tick _ e =>   S (core_size e)
+    | Type_ _  =>   0
+    | Coercion _ => 0
+    end.
+
+(*
 Fixpoint size_Expr {b} (e: Expr b) :=
   let size_Alt  : Alt b -> nat :=
       fun x => 
@@ -82,7 +102,7 @@ Fixpoint size_Expr {b} (e: Expr b) :=
   | Type_ _ => 1
   | Coercion _ => 1
   end.
-
+*)
 
 
 

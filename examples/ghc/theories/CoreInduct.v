@@ -128,6 +128,46 @@ Section CoreLT.
   Qed.
 
 
+  Lemma core_size_mkLams_le:
+    forall vs rhs,
+    core_size rhs <= core_size (mkLams vs rhs).
+  Proof.
+    intros.
+    induction vs.
+    (* mkLams does not simplify automatically. *)
+    * change (core_size rhs <= core_size rhs).
+      lia.
+    * change (core_size rhs <= S (core_size (mkLams vs rhs))).
+      lia.
+  Qed.
+
+  Lemma CoreLT_let_rhs_mkLams:
+    forall v vs rhs e,
+    CoreLT rhs (Let (NonRec v (mkLams vs rhs)) e).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_l.
+    apply core_size_mkLams_le.
+  Qed.
+
+  Lemma CoreLT_let_pairs_mkLam:
+    forall v rhs vs pairs e,
+    In (v, mkLams vs rhs) pairs ->
+    CoreLT rhs (Let (Rec pairs) e).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_l.
+    induction pairs; inversion H.
+    * subst. simpl.
+      pose proof (core_size_mkLams_le vs rhs).
+      lia.
+    * intuition. simpl. lia.
+  Qed.
+
   Lemma CoreLT_let_pairs:
     forall v rhs pairs e,
     In (v, rhs) pairs ->
@@ -181,6 +221,7 @@ Ltac Core_termination :=
   try (apply CoreLT_collectNBinders; only 1: assumption);
   first 
     [ apply CoreLT_let_rhs
+    | apply CoreLT_let_rhs_mkLams
     | apply CoreLT_let_body
     | eapply CoreLT_let_pairs; eassumption
     | eapply CoreLT_case_alts; eassumption

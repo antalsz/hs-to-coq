@@ -366,10 +366,10 @@ Section in_exitify.
     unfold DeferredFix.curry.
     rewrite DeferredFix.deferredFix_eq_on with
       (P := fun p => exists u, snd p = freeVars (toExpr u))
-      (R := fun p1 p2 => AnnCoreLT (snd p1) (snd p2)).
+      (R := fun p1 p2 => CoreLT (deAnnotate (snd p1)) (deAnnotate (snd p2))).
     * reflexivity.
     * apply Inverse_Image.wf_inverse_image.
-      apply AnnCoreLT_wf.
+      apply CoreLT_wf.
     * clear captured e.
       intros g h [captured ann_e] HP Hgh.
       destruct HP as [e Heq]. simpl in Heq. subst ann_e.
@@ -417,7 +417,7 @@ Section in_exitify.
         + eexists; reflexivity.
         + simpl; rewrite ?freeVarsBind1_freeVarsBind.
           simpl.
-          AnnCore_termination.
+          Core_termination.
       - f_equal.
         ** replace j with (length params) in Heq2 by congruence.
            rewrite collectNAnnBndrs_freeVars_mkLams in Heq2.
@@ -425,14 +425,15 @@ Section in_exitify.
            apply Hgh; simpl.
            + eexists; reflexivity.
            + simpl; rewrite ?freeVarsBind1_freeVarsBind.
-             simpl.
-             admit.
+             simpl. repeat expand_pairs.
+             rewrite !deAnnotate_freeVars, !deAnnotate'_snd_freeVars.
+             Core_termination.
         ** extensionality join_body'.
            f_equal.
            apply Hgh.
            + eexists; reflexivity.
            + simpl. expand_pairs.
-             AnnCore_termination.
+             Core_termination.
       - contradict H0.
         apply not_true_iff_false.
         rewrite zip_unzip_map.
@@ -447,7 +448,7 @@ Section in_exitify.
         + eexists; reflexivity.
         + simpl; rewrite ?freeVarsBind1_freeVarsBind.
           simpl. repeat expand_pairs. simpl.
-          AnnCore_termination.
+          Core_termination.
       - clear H0.
         rewrite zip_unzip_map.
         rewrite to_list_map.
@@ -465,8 +466,14 @@ Section in_exitify.
              rewrite ?freeVarsBind1_freeVarsBind. simpl.
              repeat expand_pairs. simpl.
              rewrite !zip_unzip_map. rewrite !to_list_map.
-             rewrite map_map.
-             admit.
+             rewrite flat_map_unpack_cons_f.
+             rewrite !map_map.
+             eapply CoreLT_let_pairs_mkLam.
+             rewrite in_map_iff.
+             eexists. split. 2: eassumption. simpl.
+             expand_pairs.
+             rewrite ?deAnnotate_freeVars, ?deAnnotate'_snd_freeVars.
+             reflexivity.
         ** extensionality pairs'.
            f_equal.
            apply Hgh.
@@ -474,7 +481,7 @@ Section in_exitify.
            + simpl.
              rewrite ?freeVarsBind1_freeVarsBind. simpl.
              repeat expand_pairs. simpl.
-             AnnCore_termination.
+             Core_termination.
       - contradict H0.
         apply not_false_iff_true.
         rewrite zip_unzip_map.
@@ -492,9 +499,15 @@ Section in_exitify.
         + eexists; reflexivity.
         + simpl. expand_pairs. simpl.
           rewrite snd_unzip, !map_map.
-          admit.
+          simpl.
+          eapply CoreLT_case_alts.
+          rewrite in_map_iff.
+          eexists. split. 2: eassumption. simpl.
+          repeat expand_pairs. simpl.
+          rewrite ?deAnnotate_freeVars, ?deAnnotate'_snd_freeVars.
+          reflexivity.
   * eexists; reflexivity.
-  Admitted.
+  Qed.
 
   Definition ann_pairs := ltac:(
     let rhs := eval cbv beta delta [exitify] in (exitify in_scope2 (map toJPair pairs)) in

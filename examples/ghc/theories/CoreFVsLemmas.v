@@ -13,6 +13,9 @@ Lemma exprFreeVars_mkLams:
   exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
 Admitted.
 
+Axiom deAnnotate'_snd_freeVars:
+  forall e, deAnnotate' (snd (freeVars e)) = e.
+
 
 Axiom deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.

@@ -2,6 +2,7 @@ Require Import Core.
 Require Import Tactics.
 Require Import CoreFVs.
 
+Require Import Proofs.GHC.List.
 Require Import Coq.NArith.BinNat.
 
 Opaque Base.hs_string__.
@@ -112,34 +113,14 @@ Ltac unfold_Foldable :=
 
 Open Scope list_scope.
 
-(* Haskell library reverse is equivalent to Coq library rev *)
-Lemma reverse_rev : forall A (xs : list A), 
-    List.rev xs = List.reverse xs.
-Proof.
-  intros A.
-  unfold List.reverse.
-  set (rev := fix rev (arg_0__ arg_1__ : list A) {struct arg_0__} : 
-   list A :=
-     match arg_0__ with
-     | nil => arg_1__
-     | x :: xs => rev xs (x :: arg_1__)
-     end).
-  induction xs.
-  simpl.
-  auto.
-  simpl.
-  rewrite <- List.rev_append_rev.
-  replace (List.rev_append xs (a :: nil)) with 
-      (List.rev_append (a :: xs) nil); auto.
-Qed.
 
 Lemma reverse_append : forall A (vs1:list A) (vs0:list A)  a ,
   (List.reverse (a :: vs0) ++ vs1 = List.reverse vs0 ++ (a :: vs1)).
 Proof.
   intros A.
   intros.
-  rewrite <- reverse_rev.
-  rewrite <- reverse_rev.
+  rewrite hs_coq_reverse.
+  rewrite hs_coq_reverse.
   rewrite <- List.rev_append_rev.
   rewrite <- List.rev_append_rev.
   simpl.

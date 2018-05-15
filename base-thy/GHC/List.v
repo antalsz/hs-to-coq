@@ -37,6 +37,27 @@ Proof.
   destruct (p _); f_equal; auto.
 Qed.
 
+Theorem hs_coq_reverse : forall A (xs : list A), 
+    List.reverse xs = Coq.Lists.List.rev xs.
+Proof.
+  intros A.
+  unfold List.reverse.
+  set (rev := fix rev (arg_0__ arg_1__ : list A) {struct arg_0__} : 
+   list A :=
+     match arg_0__ with
+     | nil => arg_1__
+     | cons x xs => rev xs (cons x arg_1__)
+     end).
+  induction xs.
+  simpl.
+  auto.
+  simpl.
+  rewrite <- List.rev_append_rev.
+  replace (List.rev_append xs (a :: nil)) with 
+      (List.rev_append (a :: xs) nil); auto.
+Qed.
+
+
 (* -------------------------------------------------------------------- *)
 
 (* Make sure by-hand definitions are suitable for reasoning. *)

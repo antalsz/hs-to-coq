@@ -1177,17 +1177,37 @@ Section in_exitifyRec.
     clear IH. revert e captured HWS.
     refine IH7.
   Defined. (* important! *)
-
-  Definition go_ind P := proj2_sig (go_ind_aux P).
+  
+  (* We now uncurry the induction hypotheses
+     (since we can’t do that right away in [go_ind_aux] *)
+  Lemma uncurry_and : forall {A B C},
+    (A /\ B -> C) -> (A -> B -> C).
+  Proof. intros. intuition. Qed.
+  Lemma under_imp: forall {A B C},
+    (B -> C) -> (A -> B) -> (A -> C).
+  Proof. intros. intuition. Qed.
+  Ltac iterate n f x := lazymatch n with
+    | 0 => x
+    | S ?n => iterate n f uconstr:(f x)
+  end.
+  Ltac uncurryN n x :=
+    let n' := eval compute in n in
+    lazymatch n' with
+    | 0 => x
+    | S ?n => let uc := iterate n uconstr:(under_imp) uconstr:(uncurry_and) in
+              let x' := uncurryN n x in
+              uconstr:(uc x')
+  end.
+  Definition go_ind P
+    := ltac:(let x := uncurryN 6 (proj2_sig (go_ind_aux P)) in exact x).
+  Opaque go_ind go_ind_aux.
 
   Lemma go_all_WellScopedFloats captured e: 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
     StateInvariant WellScopedFloats (go captured (freeVars (toExpr e))).
   Proof.
     revert e captured.
-    refine (go_ind (fun _ _ => _) _).
-    simpl.
-    repeat apply conj; intros.
+    refine (go_ind (fun _ _ => _) _ _ _ _ _ _ _ ); intros.
     * apply go_exit_all_WellScopedFloats; assumption.
     * apply StateInvariant_bind_return.
       apply H.
@@ -1421,9 +1441,8 @@ Section in_exitifyRec.
     RevStateInvariant (sublistOf exits) (go captured (freeVars (toExpr e))) (fun e' => WellScoped e' after).
   Proof.
     revert e captured.
-    refine (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r (fun e' => WellScoped e' (extendVarSetList isvsp' captured))) _).
-    simpl.
-    repeat apply conj; intros; set (after := extendVarSetList isvsp' captured).
+    apply (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r (fun e' => WellScoped e' (extendVarSetList isvsp' captured))));
+      intros; set (after := extendVarSetList isvsp' captured).
     * apply go_exit_res_WellScoped; assumption.
     * eapply RevStateInvariant_bind.
       - apply H.

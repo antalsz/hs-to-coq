@@ -1055,6 +1055,23 @@ Section in_exitifyRec.
 
           clear IH1 IH2 IH3.
 
+          (* Destruct well-scopedness assumption *)
+          destruct HWS as [HNoDup [HWSpairs HWSe]].
+          rewrite Forall'_Forall in HWSpairs.
+          rewrite to_list_map in HWSpairs.
+          rewrite !map_map in HWSpairs.
+          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWSpairs
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite Forall_map in HWSpairs.
+          rewrite to_list_map in HWSe.
+          rewrite !map_map in HWSe.
+          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWSe
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite to_list_map in HNoDup.
+          rewrite !map_map in HNoDup.
+          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => varUnique x) in HNoDup
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+
           do 2 rewrite flat_map_unpack_cons_f.
           repeat rewrite map_map.
           rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
@@ -1064,15 +1081,10 @@ Section in_exitifyRec.
             apply IH.
             ** NCore_termination.
             ** rewrite !extendVarSetList_append.
-               simpl in HWS.
-               rewrite to_list_map in HWS.
-               rewrite !map_map in HWS.
-               rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWS
-                  by (intros; repeat expand_pairs; destruct a; reflexivity).
-               apply HWS.
+               apply HWSe.
           }
           clear IH.
-          revert n pairs' e captured HWS H.
+          revert n pairs' e captured HNoDup HWSpairs HWSe H.
           refine IH4.
         + clear IH1 IH2 IH3 IH4.
 
@@ -1080,6 +1092,9 @@ Section in_exitifyRec.
           rewrite to_list_map.
           rewrite !zip_unzip_map.
           rewrite !map_map.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x)
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+
           destruct (isJoinId _) eqn:Heq_isJoinId.
           Focus 2.
             exfalso.
@@ -1090,7 +1105,22 @@ Section in_exitifyRec.
             rewrite isJoinId_eq. rewrite HisJoin. reflexivity.
           clear Heq_isJoinId.
 
-          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x)
+          (* Destruct well-scopedness assumption *)
+          destruct HWS as [HNoDup [HWSpairs HWSe]].
+          rewrite Forall'_Forall in HWSpairs.
+          rewrite to_list_map in HWSpairs.
+          rewrite !map_map in HWSpairs.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWSpairs
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite Forall_map in HWSpairs.
+          rewrite Forall_forall in HWSpairs.
+          rewrite to_list_map in HWSe.
+          rewrite !map_map in HWSe.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWSe
+             by (intros; repeat expand_pairs; destruct a; reflexivity).
+          rewrite to_list_map in HNoDup.
+          rewrite !map_map in HNoDup.
+          rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => varUnique x) in HNoDup
              by (intros; repeat expand_pairs; destruct a; reflexivity).
 
           rewrite forM_map.
@@ -1103,17 +1133,8 @@ Section in_exitifyRec.
             apply IH.
             ** NCore_termination.
             ** rewrite !extendVarSetList_append.
-               destruct HWS as [_ [HWS _]].
-               rewrite Forall'_Forall in HWS.
-               rewrite to_list_map in HWS.
-               rewrite Forall_map in HWS.
-               rewrite Forall_forall in HWS.
-               simpl in HWS.
-               rewrite !map_map in HWS.
-               rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWS
-                 by (intros; repeat expand_pairs; destruct a; reflexivity).
                apply WellScoped_mkLams.
-               eapply (HWS _ HIn).
+               eapply (HWSpairs _ HIn).
           }
           assert (P (captured ++ map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs')) e
                     (go (captured ++ map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs')) (freeVars (toExpr e)))).
@@ -1121,14 +1142,9 @@ Section in_exitifyRec.
             apply IH.
             ** NCore_termination.
             ** rewrite !extendVarSetList_append.
-               destruct HWS as [_ [_ HWS]].
-               rewrite to_list_map in HWS.
-               rewrite map_map in HWS.
-               rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWS
-                 by (intros; repeat expand_pairs; destruct a; reflexivity).
-               apply HWS.
+               apply HWSe.
           }
-          clear IH. revert n pairs' e captured HWS H H0.
+          clear IH. revert n pairs' e captured HNoDup HWSpairs HWSe H H0.
           refine IH5.
       * (* Case [Case] *)
         clear IH1 IH2 IH3 IH4 IH5.
@@ -1138,22 +1154,22 @@ Section in_exitifyRec.
         rewrite snd_unzip, !map_map.
         rewrite forM_map.
 
+        destruct HWS as [HWSscrut HWSalts].
+        rewrite Forall'_Forall in HWSalts.
+        rewrite Forall_map in HWSalts.
+        rewrite Forall_forall in HWSalts.
+
         assert (forall dc pats rhs (HIn : In (dc, pats, rhs) l),
             P (captured ++ v :: pats) rhs (go (captured ++ v :: pats ) (freeVars (toExpr rhs)))). {
           intros.
           apply IH.
           ** NCore_termination.
           ** (* This needs automation! *)
-             destruct HWS as [_ HWSpairs].
              rewrite extendVarSetList_append.
-             rewrite Forall'_Forall in HWSpairs.
-             rewrite Forall_map in HWSpairs.
-             rewrite Forall_forall in HWSpairs.
-             apply (HWSpairs (dc, pats, rhs)).
-             assumption.
+             apply (HWSalts _ HIn).
         }
         clear IH Hnext. rename l into alts.
-        revert e v alts captured HWS H.
+        revert e v alts captured HWSscrut HWSalts H.
         refine IH6.
     }
 
@@ -1429,23 +1445,7 @@ Section in_exitifyRec.
            apply Hbody'.
         ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in Hrhs'.
            apply Hrhs'.
-   * destruct HWS as [HNoDup [HWSpairs HWSe]].
-     rewrite Forall'_Forall in HWSpairs.
-     rewrite to_list_map in HWSpairs.
-     rewrite !map_map in HWSpairs.
-     rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWSpairs
-        by (intros; repeat expand_pairs; destruct a; reflexivity).
-     rewrite Forall_map in HWSpairs.
-     rewrite to_list_map in HWSe.
-     rewrite !map_map in HWSe.
-     rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HWSe
-        by (intros; repeat expand_pairs; destruct a; reflexivity).
-     rewrite to_list_map in HNoDup.
-     rewrite !map_map in HNoDup.
-     rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => varUnique x) in HNoDup
-        by (intros; repeat expand_pairs; destruct a; reflexivity).
-
-      eapply RevStateInvariant_bind; only 1: apply H.
+   *  eapply RevStateInvariant_bind; only 1: apply H.
       intro body'. apply RevStateInvariant_return; intros Hbody'.
       rewrite extendVarSetList_append in Hbody'.
       split; only 2: split.
@@ -1466,24 +1466,7 @@ Section in_exitifyRec.
                rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
                   by (intros; repeat expand_pairs; destruct a; reflexivity).
                apply Hbody'.
-     * destruct HWS as [HNoDup [HWSpairs HWSe]].
-       rewrite Forall'_Forall in HWSpairs.
-       rewrite to_list_map in HWSpairs.
-       rewrite !map_map in HWSpairs.
-       rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWSpairs
-          by (intros; repeat expand_pairs; destruct a; reflexivity).
-       rewrite Forall_map in HWSpairs.
-       rewrite to_list_map in HWSe.
-       rewrite !map_map in HWSe.
-       rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HWSe
-          by (intros; repeat expand_pairs; destruct a; reflexivity).
-       rewrite to_list_map in HNoDup.
-       rewrite !map_map in HNoDup.
-       rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => varUnique x) in HNoDup
-          by (intros; repeat expand_pairs; destruct a; reflexivity).
-
-
-       eapply RevStateInvariant_bind.
+     * eapply RevStateInvariant_bind.
        - apply RevStateInvariant_forM2 with
               (R := fun p p' =>
                   (fun '(Mk_NJPair x _ _ _) => x) p = fst p' /\
@@ -1522,11 +1505,6 @@ Section in_exitifyRec.
         -- rewrite !extendVarSetList_append in He'.
            apply He'.
       * (* [Case] *)
-        destruct HWS as [Hscrut HWSalts].
-        rewrite Forall'_Forall in HWSalts.
-        rewrite Forall_map in HWSalts.
-        rewrite Forall_forall in HWSalts.
-
         simpl.
         eapply RevStateInvariant_bind.
         + apply RevStateInvariant_forM with (R := fun alt => WellScopedAlt v alt after).

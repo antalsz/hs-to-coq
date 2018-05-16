@@ -3,8 +3,8 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import Psatz.
 
-Require Import Tactics.
-Require Import CoreLemmas.
+Require Import GhcProofs.Tactics.
+Require Import GhcProofs.CoreLemmas.
 
 
 Set Bullet Behavior "Strict Subproofs".
@@ -70,6 +70,8 @@ Qed.
 Section CoreLT.
   Context {v : Type}.
   
+  (*
+
   Fixpoint core_size (e : Expr v) : nat :=
     match e with
     | Mk_Var v => 0
@@ -89,12 +91,13 @@ Section CoreLT.
     | Type_ _  =>   0
     | Coercion _ => 0
     end.
-
+    *)
+  
   (* We use the size only for comparisons. So lets
      make a definition here that we never unfold otherwise,
      and isntead create a tactic that handles all cases.
   *)
-  Definition CoreLT := fun x y => core_size x < core_size y.
+  Definition CoreLT := fun (x:Expr v) (y:Expr v) => core_size x < core_size y.
 
   Lemma CoreLT_wf : well_founded CoreLT.
   Proof.

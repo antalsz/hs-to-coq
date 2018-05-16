@@ -4,7 +4,7 @@ Require Import CoreUtils.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
-Require Import Forall.
+Require Import GhcProofs.Forall.
 
 Set Bullet Behavior "Strict Subproofs".
 

@@ -1,4 +1,10 @@
 Require Import Coq.Bool.Bool.
+Require GHC.Base.
+Require GHC.Nat.
+Require Data.Foldable.
+Require Import Data.Foldable.
+Require Import GHC.List.
+Require Import Coq.Lists.List.
 
 (** Tactics *)
 
@@ -67,4 +73,26 @@ Ltac cse_let :=
         [ x := ?rhs, x0 := ?rhs |- _ ] =>
           change x0 with x in *;clear x0
         end.
+
+
+(** Unfolding stuff *)
+
+Ltac simplify_zeze :=
+  unfold Base.op_zeze__;
+  unfold Nat.Eq_nat;
+  unfold Base.op_zeze____;
+  unfold Nat.eqb.
+
+Ltac unfold_Foldable :=
+  unfold Foldable.foldr,
+  Foldable.foldr__,
+  Foldable.Foldable__list,
+  Foldable.Foldable__list_foldr,
+  Base.foldr;
+  unfold Foldable.foldl', 
+  Foldable.foldl'__, 
+  Foldable.Foldable__list_foldl', 
+  foldl',
+  fold_right.
+
 

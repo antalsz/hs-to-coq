@@ -17,7 +17,7 @@ Import GHC.Base.Notations.
 Import Coq.Logic.FunctionalExtensionality.
 
 Require Proofs.GHC.Base.
-Require CoreInduct.
+Require GhcProofs.CoreInduct.
 
 
 Set Bullet Behavior "Strict Subproofs".

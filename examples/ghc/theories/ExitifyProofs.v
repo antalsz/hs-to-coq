@@ -19,21 +19,71 @@ Open Scope Z_scope.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Require Import JoinPointInvariants.
-Require Import ScopeInvariant.
-Require Import StateLogic.
-Require Import CoreInduct.
-Require Import Forall.
-Require Import CoreLemmas.
-Require Import CoreFVsLemmas.
-Require Import Tactics.
-Require Import NCore.
-Require Import VectorUtils.
+Require Import GhcProofs.JoinPointInvariants.
+Require Import GhcProofs.ScopeInvariant.
+Require Import GhcProofs.StateLogic.
+Require Import GhcProofs.CoreInduct.
+Require Import GhcProofs.Forall.
+Require Import GhcProofs.CoreLemmas.
+Require Import GhcProofs.CoreFVsLemmas.
+Require Import GhcProofs.Tactics.
+Require Import GhcProofs.NCore.
+Require Import GhcProofs.VectorUtils.
+
+
+Require Import IntSetProofs.
+(* Require Import IntMapProofs. *)
+
+
+(* Q: is there a way to do the automatic destructs safely? Sometimes 
+   loses too much information. *)
+
+Ltac unfold_VarSet :=
+  unfold subVarSet,elemVarSet, isEmptyVarSet, 
+         minusVarSet, extendVarSet, extendVarSetList in *;
+  unfold UniqSet.elementOfUniqSet, 
+         UniqSet.isEmptyUniqSet, 
+         UniqSet.addOneToUniqSet,
+         UniqSet.minusUniqSet,
+         UniqSet.addListToUniqSet in *;
+  try repeat match goal with
+  | vs: VarSet, H : context[match ?vs with _ => _ end]  |- _ => destruct vs
+  end;
+  try repeat match goal with
+  | vs: VarSet |- context[match ?vs with _ => _ end ] => destruct vs
+  end;
+
+  unfold UniqFM.addToUFM, 
+         UniqFM.minusUFM, UniqFM.isNullUFM, 
+         UniqFM.elemUFM in *;
+  try repeat match goal with
+  | u: UniqFM.UniqFM ?a, H : context[match ?u with _ => _ end]  |- _ => destruct u
+  end;
+  try repeat match goal with
+  | u: UniqFM.UniqFM ?a |- context[match ?u with _ => _ end] => destruct u
+  end.
+
+Ltac safe_unfold_VarSet :=
+  unfold subVarSet,elemVarSet, isEmptyVarSet, 
+         minusVarSet, extendVarSet, extendVarSetList in *;
+  unfold UniqSet.elementOfUniqSet, 
+         UniqSet.isEmptyUniqSet, 
+         UniqSet.addOneToUniqSet,
+         UniqSet.minusUniqSet,
+         UniqSet.addListToUniqSet in *;
+  unfold UniqFM.addToUFM, 
+         UniqFM.minusUFM, UniqFM.isNullUFM, 
+         UniqFM.elemUFM in *.
+
+
 
 (** ** Punted-on lemmas about GHC functions *)
 
 Instance EqLaws_Unique : EqLaws Unique.Unique. Admitted.
 Instance EqExact_Unique : EqExact Unique.Unique. Admitted.
+
+
+
 
 Axiom isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
@@ -61,30 +111,166 @@ Axiom dVarSet_freeVarsOf_Ann:
   (* @lastland, this is one spec that you might want to do *)
   forall ann_e, dVarSetToVarSet (freeVarsOf ann_e) = exprFreeVars (deAnnotate ann_e).
 
-Axiom extendVarSetList_nil:
+
+Ltac unfold_Foldable :=
+  unfold Foldable.foldr,
+  Foldable.foldr__,
+  Foldable.Foldable__list,
+  Foldable.Foldable__list_foldr,
+  Base.foldr.
+
+Ltac unfold_Foldable_foldl' :=
+  unfold Foldable.foldl',  Foldable.Foldable__list, 
+  Foldable.foldl'__, Foldable.Foldable__list_foldl', foldl'.
+
+
+Lemma extendVarSetList_nil:
   forall s,
   extendVarSetList s [] = s.
+Proof.
+  intro s. repeat unfold_VarSet.
+  unfold_Foldable.
+  unfold_Foldable_foldl'.
+  simpl.
+  auto.
+Qed.
 
-Axiom extendVarSetList_cons:
+Lemma extendVarSetList_cons:
   forall s v vs,
   extendVarSetList s (v :: vs) = extendVarSetList (extendVarSet s v) vs.
+Proof.
+  intros.
+  repeat unfold_VarSet.
+  unfold_Foldable_foldl'.
+  simpl.
+  f_equal.
+Qed.
 
-Axiom extendVarSetList_append:
+
+Lemma List_foldl_foldr:
+  forall {a b} f (x : b) (xs : list a),
+    fold_left f xs x = List.fold_right (fun x g a => g (f a x)) id xs x.
+Proof.
+  intros. revert x.
+  induction xs; intro.
+  * reflexivity.
+  * simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Lemma Foldable_foldl'_app : forall a b (f:b -> a -> b) (s:b) 
+                              (vs1 : list a) (vs2: list a),
+    Foldable.foldl' f s (vs1 ++ vs2) =
+    Foldable.foldl' f (Foldable.foldl' f s vs1) vs2.
+Proof.
+  unfold_Foldable_foldl'.
+  intros.
+  rewrite <- List_foldl_foldr.
+  rewrite <- List_foldl_foldr.
+  rewrite <- List_foldl_foldr.
+  rewrite fold_left_app.
+  auto.
+Qed.
+
+Lemma extendVarSetList_append:
   forall s vs1 vs2,
   extendVarSetList s (vs1 ++ vs2) = extendVarSetList (extendVarSetList s vs1) vs2.
+Proof.
+  intros.
+  repeat unfold_VarSet.
+  rewrite Foldable_foldl'_app.
+  auto.
+Qed.
 
-Axiom elemVarSet_mkVarset_iff_In:
+Lemma getUnique_varUnique: 
+    (Unique.getUnique : Var -> Unique.Unique) = varUnique.
+Proof.
+  unfold Unique.getUnique, Unique.getUnique__,Uniquable__Var,
+     Core.Uniquable__Var_getUnique.
+  auto.
+Qed.
+
+(* This looks really useful 
+https://github.com/Zimmi48/transfer 
+*)
+
+Axiom member_in : forall k (i:Internal.IntMap Var) (vs: list Var)(f : Var -> Word), 
+ IntMap.Internal.member k i = true <->
+ In k (map f vs).
+
+Lemma elemVarSet_mkVarset_iff_In:
   forall v vs,
   elemVarSet v (mkVarSet vs) = true <->  In (varUnique v) (map varUnique vs).
+Proof.
+  intros.
+  unfold_VarSet.
+  remember (mkVarSet vs) as vss.
+  unfold_VarSet.
+  unfold Unique.getWordKey. 
+  rewrite <- getUnique_varUnique.
+
+  unfold mkVarSet in *.
+  unfold UniqSet.mkUniqSet in *.
+  unfold UniqSet.addOneToUniqSet in *.
+  unfold UniqSet.emptyUniqSet in *.
+  unfold UniqFM.emptyUFM in *.
+  unfold UniqFM.addToUFM in *.
+  (* Need theory about IntMap. *)
+Admitted. 
 
 
-Axiom elemVarSet_extendVarSet:
+
+
+Lemma unique_word: forall v v', 
+    ( v ==  v') =
+    (Unique.getWordKey v == Unique.getWordKey v').
+Proof.
+  intros.
+  unfold Unique.getWordKey.
+  unfold Unique.getKey.
+  destruct v.
+  destruct v'.
+  unfold GHC.Base.op_zeze__.
+  unfold Unique.Eq___Unique.
+  unfold Eq_Char___.
+  unfold op_zeze____.
+  unfold Unique.Eq___Unique_op_zeze__.
+  unfold Unique.eqUnique.
+  unfold GHC.Base.op_zeze__.
+  unfold Eq_Char___.
+  unfold op_zeze____.
+  auto.
+Qed.
+
+Lemma member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
+IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
+  (k == k')
+  || IntMap.Internal.member k i.
+Admitted.
+
+
+Lemma elemVarSet_extendVarSet:
   forall v vs v',
   elemVarSet v (extendVarSet vs v') = (varUnique v == varUnique v') || elemVarSet v vs.
-
-Axiom subVarSet_refl:
+Proof.
+  intros.
+  safe_unfold_VarSet.
+  destruct vs.
+  destruct u.
+  rewrite unique_word.
+  rewrite <- getUnique_varUnique.
+  apply member_insert.
+Qed.
+  
+Lemma subVarSet_refl:
   forall vs1,
   subVarSet vs1 vs1 = true.
+Proof.
+  intros.
+  safe_unfold_VarSet.
+  destruct vs1.
+  destruct u.
+Admitted.
+
 
 Axiom subVarSet_elemVarSet_true:
   forall v vs vs',
@@ -143,10 +329,6 @@ Axiom elemVarSet_uniqAway:
   subVarSet vs (getInScopeVars iss) = true ->
   elemVarSet (uniqAway iss v) vs = false.
 
-Axiom WellScoped_extendVarSet_fresh:
-  forall v e vs,
-  elemVarSet v (exprFreeVars e) = false ->
-  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
 
 Axiom WellScoped_extendVarSetList_fresh:
   forall vs e vs1,
@@ -161,6 +343,25 @@ Axiom WellScoped_extendVarSetList:
 Axiom WellScoped_subset:
   forall e vs,
   WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
+
+
+Lemma WellScoped_extendVarSet_fresh:
+  forall v e vs,
+  elemVarSet v (exprFreeVars e) = false ->
+  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
+Proof.
+  intros.
+  split.
+  intro h.
+  pose (K := WellScoped_subset e _ h). clearbody K.
+  set (fve := exprFreeVars e) in *.
+  
+  unfold_VarSet.
+
+  set (key := Unique.getWordKey (Unique.getUnique v)) in *.
+Admitted.  
+  
+
 
 Axiom WellScoped_mkLams:
   forall vs e isvs,

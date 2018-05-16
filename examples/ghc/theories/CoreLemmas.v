@@ -1,9 +1,10 @@
 Require Import Core.
-Require Import Tactics.
 Require Import CoreFVs.
 
 Require Import Proofs.GHC.List.
 Require Import Coq.NArith.BinNat.
+
+Require Import GhcProofs.Tactics.
 
 Opaque Base.hs_string__.
 
@@ -23,11 +24,6 @@ Fixpoint AnnHasNLams {a v : Type} (n : nat) (e : AnnExpr a v) : Prop :=
   | _, _ => False
   end.
 
-Ltac simplify_zeze :=
-  unfold Base.op_zeze__;
-  unfold Nat.Eq_nat;
-  unfold Base.op_zeze____;
-  unfold Nat.eqb.
 
 
 Lemma AnnHasNLams_weaken : forall n a v (s : AnnExpr a v) v0 a0, 
@@ -104,12 +100,6 @@ Proof.
       reflexivity.
 Qed.
 
-Ltac unfold_Foldable :=
-  unfold Foldable.foldr,
-  Foldable.foldr__,
-  Foldable.Foldable__list,
-  Foldable.Foldable__list_foldr,
-  Base.foldr.
 
 Open Scope list_scope.
 

@@ -132,7 +132,7 @@ Section CoreLT.
 
 
   Lemma core_size_mkLams_le:
-    forall vs rhs,
+    forall vs (rhs : Expr v),
     core_size rhs <= core_size (mkLams vs rhs).
   Proof.
     intros.

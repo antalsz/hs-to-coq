@@ -2,11 +2,11 @@ Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
 Require Import Core.
-Require Import CoreInduct.
 
 Require Import Coq.Lists.List.
 
 Require Import GhcProofs.Tactics.
+Require Import GhcProofs.CoreInduct.
 
 Set Bullet Behavior "Strict Subproofs".
 

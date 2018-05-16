@@ -2409,9 +2409,6 @@ Require GHC.Err.
 Instance Uniqable_DataCon : Unique.Uniquable DataCon := {}.
 Admitted. *)
 
-Instance Unique_Var : Unique.Uniquable Var := {}.
-Admitted.
-
 
 Instance Name_NamedThing_TyCoVar : Name.NamedThing TyCoVar.
 Admitted.
@@ -3760,10 +3757,6 @@ Definition allDVarSet : (Var -> bool) -> DVarSet -> bool :=
 Definition allVarSet : (Var -> bool) -> VarSet -> bool :=
   UniqSet.uniqSetAll.
 
-Definition alterVarEnv {a}
-   : (option a -> option a) -> VarEnv a -> Var -> VarEnv a :=
-  UniqFM.alterUFM.
-
 Definition anyDVarEnv {a} : (a -> bool) -> DVarEnv a -> bool :=
   UniqDFM.anyUDFM.
 
@@ -4326,42 +4319,6 @@ Definition deTagBind {t} : TaggedBind t -> CoreBind :=
              Coq.Lists.List.flat_map cont_2__ prs)
     end.
 
-Definition delDVarEnv {a} : DVarEnv a -> Var -> DVarEnv a :=
-  UniqDFM.delFromUDFM.
-
-Definition delDVarEnvList {a} : DVarEnv a -> list Var -> DVarEnv a :=
-  UniqDFM.delListFromUDFM.
-
-Definition delDVarSet : DVarSet -> Var -> DVarSet :=
-  UniqDSet.delOneFromUniqDSet.
-
-Definition delDVarSetList : DVarSet -> list Var -> DVarSet :=
-  UniqDSet.delListFromUniqDSet.
-
-Definition delVarEnv {a} : VarEnv a -> Var -> VarEnv a :=
-  UniqFM.delFromUFM.
-
-Definition delVarEnvList {a} : VarEnv a -> list Var -> VarEnv a :=
-  UniqFM.delListFromUFM.
-
-Definition delVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> VarEnv a :=
-  UniqFM.delFromUFM_Directly.
-
-Definition delVarSet : VarSet -> Var -> VarSet :=
-  UniqSet.delOneFromUniqSet.
-
-Definition delInScopeSet : InScopeSet -> Var -> InScopeSet :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InScope in_scope n, v => InScope (delVarSet in_scope v) n
-    end.
-
-Definition delVarSetByKey : VarSet -> Unique.Unique -> VarSet :=
-  UniqSet.delOneFromUniqSet_Directly.
-
-Definition delVarSetList : VarSet -> list Var -> VarSet :=
-  UniqSet.delListFromUniqSet.
-
 Definition disjointDVarSet : DVarSet -> DVarSet -> bool :=
   fun s1 s2 => UniqDFM.disjointUDFM s1 s2.
 
@@ -4377,41 +4334,8 @@ Definition disjointVarSet : VarSet -> VarSet -> bool :=
 Definition intersectsVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => negb (disjointVarSet s1 s2).
 
-Definition elemDVarEnv {a} : Var -> DVarEnv a -> bool :=
-  UniqDFM.elemUDFM.
-
-Definition elemDVarSet : Var -> DVarSet -> bool :=
-  UniqDSet.elementOfUniqDSet.
-
-Definition elemVarEnv {a} : Var -> VarEnv a -> bool :=
-  UniqFM.elemUFM.
-
-Definition inRnEnvL : RnEnv2 -> Var -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 env _ _, v => elemVarEnv v env
-    end.
-
-Definition inRnEnvR : RnEnv2 -> Var -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 _ env _, v => elemVarEnv v env
-    end.
-
 Definition elemVarEnvByKey {a} : Unique.Unique -> VarEnv a -> bool :=
   UniqFM.elemUFM_Directly.
-
-Definition elemVarSet : Var -> VarSet -> bool :=
-  UniqSet.elementOfUniqSet.
-
-Definition elemInScopeSet : Var -> InScopeSet -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | v, InScope in_scope _ => elemVarSet v in_scope
-    end.
-
-Definition rnInScope : Var -> RnEnv2 -> bool :=
-  fun x env => elemInScopeSet x (in_scope env).
 
 Definition elemVarSetByKey : Unique.Unique -> VarSet -> bool :=
   UniqSet.elemUniqSet_Directly.
@@ -4517,94 +4441,6 @@ Axiom expandUnfolding_maybe : forall {A : Type}, A.
 
 Definition exprToCoercion_maybe : CoreExpr -> option unit :=
   fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
-
-Definition extendDVarEnv {a} : DVarEnv a -> Var -> a -> DVarEnv a :=
-  UniqDFM.addToUDFM.
-
-Definition extendDVarEnvList {a}
-   : DVarEnv a -> list (Var * a)%type -> DVarEnv a :=
-  UniqDFM.addListToUDFM.
-
-Definition extendDVarEnv_C {a}
-   : (a -> a -> a) -> DVarEnv a -> Var -> a -> DVarEnv a :=
-  UniqDFM.addToUDFM_C.
-
-Definition extendDVarSet : DVarSet -> Var -> DVarSet :=
-  UniqDSet.addOneToUniqDSet.
-
-Definition extendDVarSetList : DVarSet -> list Var -> DVarSet :=
-  UniqDSet.addListToUniqDSet.
-
-Definition extendVarEnv {a} : VarEnv a -> Var -> a -> VarEnv a :=
-  UniqFM.addToUFM.
-
-Definition extendVarEnvList {a} : VarEnv a -> list (Var * a)%type -> VarEnv a :=
-  UniqFM.addListToUFM.
-
-Definition extendVarEnv_Acc {a} {b}
-   : (a -> b -> b) -> (a -> b) -> VarEnv b -> Var -> a -> VarEnv b :=
-  UniqFM.addToUFM_Acc.
-
-Definition extendVarEnv_C {a}
-   : (a -> a -> a) -> VarEnv a -> Var -> a -> VarEnv a :=
-  UniqFM.addToUFM_C.
-
-Definition extendVarEnv_Directly {a}
-   : VarEnv a -> Unique.Unique -> a -> VarEnv a :=
-  UniqFM.addToUFM_Directly.
-
-Definition extendVarSet : VarSet -> Var -> VarSet :=
-  UniqSet.addOneToUniqSet.
-
-Definition extendInScopeSetList : InScopeSet -> list Var -> InScopeSet :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InScope in_scope n, vs =>
-        InScope (Data.Foldable.foldl (fun s v => extendVarSet s v) in_scope vs) (n
-                                                                                 GHC.Num.+
-                                                                                 Coq.Lists.List.length vs)
-    end.
-
-Definition delBndrsR : RnEnv2 -> list Var -> RnEnv2 :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | (RV2 _ env in_scope as rn), v =>
-        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
-        RV2 envL_2__ (delVarEnvList env v) (extendInScopeSetList in_scope v)
-    end.
-
-Definition delBndrsL : RnEnv2 -> list Var -> RnEnv2 :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | (RV2 env _ in_scope as rn), v =>
-        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
-        RV2 (delVarEnvList env v) envR_3__ (extendInScopeSetList in_scope v)
-    end.
-
-Definition extendInScopeSet : InScopeSet -> Var -> InScopeSet :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InScope in_scope n, v => InScope (extendVarSet in_scope v) (n GHC.Num.+ #1)
-    end.
-
-Definition delBndrR : RnEnv2 -> Var -> RnEnv2 :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | (RV2 _ env in_scope as rn), v =>
-        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
-        RV2 envL_2__ (delVarEnv env v) (extendInScopeSet in_scope v)
-    end.
-
-Definition delBndrL : RnEnv2 -> Var -> RnEnv2 :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | (RV2 env _ in_scope as rn), v =>
-        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
-        RV2 (delVarEnv env v) envR_3__ (extendInScopeSet in_scope v)
-    end.
-
-Definition extendVarSetList : VarSet -> list Var -> VarSet :=
-  UniqSet.addListToUniqSet.
 
 Definition famTyConFlav_maybe : TyCon -> option FamTyConFlav :=
   fun arg_0__ =>
@@ -5510,87 +5346,6 @@ Definition lazySetIdInfo : Id -> IdInfo -> Var :=
         Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__ info
     end.
 
-Definition lookupDVarEnv {a} : DVarEnv a -> Var -> option a :=
-  UniqDFM.lookupUDFM.
-
-Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
-  fun mangle_fn env key =>
-    match (lookupDVarEnv env key) with
-    | None => env
-    | Some xx => extendDVarEnv env key (mangle_fn xx)
-    end.
-
-Definition lookupVarEnv {a} : VarEnv a -> Var -> option a :=
-  UniqFM.lookupUFM.
-
-Definition rnOccL : RnEnv2 -> Var -> Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 env _ _, v => Maybes.orElse (lookupVarEnv env v) v
-    end.
-
-Definition rnOccL_maybe : RnEnv2 -> Var -> option Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 env _ _, v => lookupVarEnv env v
-    end.
-
-Definition rnOccR : RnEnv2 -> Var -> Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 _ env _, v => Maybes.orElse (lookupVarEnv env v) v
-    end.
-
-Definition rnOccR_maybe : RnEnv2 -> Var -> option Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 _ env _, v => lookupVarEnv env v
-    end.
-
-Definition modifyVarEnv {a} : (a -> a) -> VarEnv a -> Var -> VarEnv a :=
-  fun mangle_fn env key =>
-    match (lookupVarEnv env key) with
-    | None => env
-    | Some xx => extendVarEnv env key (mangle_fn xx)
-    end.
-
-Definition lookupVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> option a :=
-  UniqFM.lookupUFM_Directly.
-
-Definition lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) id
-   : a :=
-  match lookupVarEnv env id with
-  | Some xx => xx
-  | None => GHC.Err.default
-  end.
-
-Definition lookupVarSet : VarSet -> Var -> option Var :=
-  UniqSet.lookupUniqSet.
-
-Definition lookupInScope : InScopeSet -> Var -> option Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InScope in_scope _, v => lookupVarSet in_scope v
-    end.
-
-Definition lookupRnInScope : RnEnv2 -> Var -> Var :=
-  fun env v => Maybes.orElse (lookupInScope (in_scope env) v) v.
-
-Definition lookupVarSetByName : VarSet -> Name.Name -> option Var :=
-  UniqSet.lookupUniqSet.
-
-Definition lookupVarSet_Directly : VarSet -> Unique.Unique -> option Var :=
-  UniqSet.lookupUniqSet_Directly.
-
-Definition lookupInScope_Directly : InScopeSet -> Unique.Unique -> option Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InScope in_scope _, uniq => lookupVarSet_Directly in_scope uniq
-    end.
-
-Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> Var -> a :=
-  UniqFM.lookupWithDefaultUFM.
-
 Definition lubCPR : CPRResult -> CPRResult -> CPRResult :=
   fun arg_0__ arg_1__ =>
     let j_2__ :=
@@ -5831,12 +5586,6 @@ Definition mkCoApps {b} : Expr b -> list unit -> Expr b :=
 Definition mkCoBind : CoVar -> unit -> CoreBind :=
   fun cv co => NonRec cv (Coercion co).
 
-Definition mkDVarEnv {a} : list (Var * a)%type -> DVarEnv a :=
-  UniqDFM.listToUDFM.
-
-Definition mkDVarSet : list Var -> DVarSet :=
-  UniqDSet.mkUniqDSet.
-
 Definition mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType :=
   fun fv ds res => Mk_DmdType fv ds res.
 
@@ -6063,18 +5812,8 @@ Definition mkProdDmd : list Demand -> CleanDemand :=
   fun dx =>
     JD (mkSProd (GHC.Base.map getStrDmd dx)) (mkUProd (GHC.Base.map getUseDmd dx)).
 
-Definition mkVarEnv {a} : list (Var * a)%type -> VarEnv a :=
-  UniqFM.listToUFM.
-
-Definition zipVarEnv {a} : list Var -> list a -> VarEnv a :=
-  fun tyvars tys =>
-    mkVarEnv (Util.zipEqual (GHC.Base.hs_string__ "zipVarEnv") tyvars tys).
-
 Definition mkVarEnv_Directly {a} : list (Unique.Unique * a)%type -> VarEnv a :=
   UniqFM.listToUFM_Directly.
-
-Definition mkVarSet : list Var -> VarSet :=
-  UniqSet.mkUniqSet.
 
 Definition mk_id : Name.Name -> unit -> IdScope -> IdDetails -> IdInfo -> Id :=
   fun name ty scope details info =>
@@ -6767,85 +6506,6 @@ Definition setVarUnique : Var -> Unique.Unique -> Var :=
 Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
   setVarUnique.
 
-Definition uniqAway' : InScopeSet -> Var -> Var :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | InScope set n, var =>
-        let orig_unique := Unique.getUnique var in
-        let try :=
-          GHC.DeferredFix.deferredFix1 (fun try k =>
-                                          let uniq := Unique.deriveUnique orig_unique (BinNat.N.of_nat n GHC.Num.* k) in
-                                          let msg :=
-                                            GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc
-                                                                                                 (Datatypes.id
-                                                                                                  (GHC.Base.hs_string__
-                                                                                                   "tries")))
-                                                                               Panic.someSDoc) Panic.someSDoc in
-                                          if elemVarSetByKey uniq set : bool then try (k GHC.Num.+ #1) else
-                                          if k GHC.Base.> #3 : bool then setVarUnique var uniq else
-                                          setVarUnique var uniq) in
-        try #1
-    end.
-
-Definition rnBndr2_var : RnEnv2 -> Var -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | RV2 envL envR in_scope, bL, bR =>
-        let new_b :=
-          if negb (elemInScopeSet bL in_scope) : bool then bL else
-          if negb (elemInScopeSet bR in_scope) : bool then bR else
-          uniqAway' in_scope bL in
-        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR bR new_b)
-                  (extendInScopeSet in_scope new_b)) new_b
-    end.
-
-Definition rnBndr2 : RnEnv2 -> Var -> Var -> RnEnv2 :=
-  fun env bL bR => Data.Tuple.fst (rnBndr2_var env bL bR).
-
-Definition rnBndrs2 : RnEnv2 -> list Var -> list Var -> RnEnv2 :=
-  fun env bsL bsR => Util.foldl2 rnBndr2 env bsL bsR.
-
-Definition uniqAway : InScopeSet -> Var -> Var :=
-  fun in_scope var =>
-    if elemInScopeSet var in_scope : bool then uniqAway' in_scope var else
-    var.
-
-Definition rnBndrL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bL =>
-        let new_b := uniqAway in_scope bL in
-        pair (RV2 (extendVarEnv envL bL new_b) envR (extendInScopeSet in_scope new_b))
-             new_b
-    end.
-
-Definition rnBndrR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bR =>
-        let new_b := uniqAway in_scope bR in
-        pair (RV2 envL (extendVarEnv envR bR new_b) (extendInScopeSet in_scope new_b))
-             new_b
-    end.
-
-Definition rnEtaL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bL =>
-        let new_b := uniqAway in_scope bL in
-        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR new_b new_b)
-                  (extendInScopeSet in_scope new_b)) new_b
-    end.
-
-Definition rnEtaR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bR =>
-        let new_b := uniqAway in_scope bR in
-        pair (RV2 (extendVarEnv envL new_b new_b) (extendVarEnv envR bR new_b)
-                  (extendInScopeSet in_scope new_b)) new_b
-    end.
-
 Definition sizeDVarSet : DVarSet -> nat :=
   UniqDSet.sizeUniqDSet.
 
@@ -7377,18 +7037,6 @@ Definition mapUnionVarSet {a} : (a -> VarSet) -> list a -> VarSet :=
 Definition unionVarSets : list VarSet -> VarSet :=
   UniqSet.unionManyUniqSets.
 
-Definition unitDVarEnv {a} : Var -> a -> DVarEnv a :=
-  UniqDFM.unitUDFM.
-
-Definition unitDVarSet : Var -> DVarSet :=
-  UniqDSet.unitUniqDSet.
-
-Definition unitVarEnv {a} : Var -> a -> VarEnv a :=
-  UniqFM.unitUFM.
-
-Definition unitVarSet : Var -> VarSet :=
-  UniqSet.unitUniqSet.
-
 Definition unknownArity : BasicTypes.Arity :=
   #0.
 
@@ -7453,20 +7101,6 @@ Definition bothDmdType : DmdType -> BothDmdArg -> DmdType :=
     | Mk_DmdType fv1 ds1 r1, pair fv2 t2 =>
         Mk_DmdType (plusVarEnv_CD bothDmd fv1 (defaultDmd r1) fv2 (defaultDmd t2)) ds1
         (bothDmdResult r1 t2)
-    end.
-
-Definition findIdDemand : DmdType -> Var -> Demand :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_DmdType fv _ res, id => Maybes.orElse (lookupVarEnv fv id) (defaultDmd res)
-    end.
-
-Definition peelFV : DmdType -> Var -> (DmdType * Demand)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_DmdType fv ds res, id =>
-        let dmd := Maybes.orElse (lookupVarEnv fv id) (defaultDmd res) in
-        let fv' := delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
     end.
 
 Definition useCount {u} : Use u -> Count :=
@@ -7789,9 +7423,372 @@ Local Definition Uniquable__Var_getUnique : Var -> Unique.Unique :=
 Program Instance Uniquable__Var : Unique.Uniquable Var :=
   fun _ k => k {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
 
+Definition unitDVarEnv {a} : Var -> a -> DVarEnv a :=
+  UniqDFM.unitUDFM.
+
+Definition unitVarEnv {a} : Var -> a -> VarEnv a :=
+  UniqFM.unitUFM.
+
+Definition unitDVarSet : Var -> DVarSet :=
+  UniqDSet.unitUniqDSet.
+
+Definition unitVarSet : Var -> VarSet :=
+  UniqSet.unitUniqSet.
+
+Definition mkDVarEnv {a} : list (Var * a)%type -> DVarEnv a :=
+  UniqDFM.listToUDFM.
+
+Definition mkVarEnv {a} : list (Var * a)%type -> VarEnv a :=
+  UniqFM.listToUFM.
+
+Definition zipVarEnv {a} : list Var -> list a -> VarEnv a :=
+  fun tyvars tys =>
+    mkVarEnv (Util.zipEqual (GHC.Base.hs_string__ "zipVarEnv") tyvars tys).
+
+Definition mkDVarSet : list Var -> DVarSet :=
+  UniqDSet.mkUniqDSet.
+
+Definition mkVarSet : list Var -> VarSet :=
+  UniqSet.mkUniqSet.
+
+Definition uniqAway' : InScopeSet -> Var -> Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InScope set n, var =>
+        let orig_unique := Unique.getUnique var in
+        let try :=
+          GHC.DeferredFix.deferredFix1 (fun try k =>
+                                          let uniq := Unique.deriveUnique orig_unique (BinNat.N.of_nat n GHC.Num.* k) in
+                                          let msg :=
+                                            GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc
+                                                                                                 (Datatypes.id
+                                                                                                  (GHC.Base.hs_string__
+                                                                                                   "tries")))
+                                                                               Panic.someSDoc) Panic.someSDoc in
+                                          if elemVarSetByKey uniq set : bool then try (k GHC.Num.+ #1) else
+                                          if k GHC.Base.> #3 : bool then setVarUnique var uniq else
+                                          setVarUnique var uniq) in
+        try #1
+    end.
+
+Definition lookupDVarEnv {a} : DVarEnv a -> Var -> option a :=
+  UniqDFM.lookupUDFM.
+
+Definition lookupVarEnv {a} : VarEnv a -> Var -> option a :=
+  UniqFM.lookupUFM.
+
+Definition lookupVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> option a :=
+  UniqFM.lookupUFM_Directly.
+
+Definition lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) id
+   : a :=
+  match lookupVarEnv env id with
+  | Some xx => xx
+  | None => GHC.Err.default
+  end.
+
+Definition lookupVarSet : VarSet -> Var -> option Var :=
+  UniqSet.lookupUniqSet.
+
+Definition lookupVarSetByName : VarSet -> Name.Name -> option Var :=
+  UniqSet.lookupUniqSet.
+
+Definition lookupVarSet_Directly : VarSet -> Unique.Unique -> option Var :=
+  UniqSet.lookupUniqSet_Directly.
+
+Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> Var -> a :=
+  UniqFM.lookupWithDefaultUFM.
+
+Definition lookupInScope_Directly : InScopeSet -> Unique.Unique -> option Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InScope in_scope _, uniq => lookupVarSet_Directly in_scope uniq
+    end.
+
+Definition lookupInScope : InScopeSet -> Var -> option Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InScope in_scope _, v => lookupVarSet in_scope v
+    end.
+
+Definition lookupRnInScope : RnEnv2 -> Var -> Var :=
+  fun env v => Maybes.orElse (lookupInScope (in_scope env) v) v.
+
+Definition rnOccL : RnEnv2 -> Var -> Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 env _ _, v => Maybes.orElse (lookupVarEnv env v) v
+    end.
+
+Definition rnOccL_maybe : RnEnv2 -> Var -> option Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 env _ _, v => lookupVarEnv env v
+    end.
+
+Definition rnOccR : RnEnv2 -> Var -> Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 _ env _, v => Maybes.orElse (lookupVarEnv env v) v
+    end.
+
+Definition rnOccR_maybe : RnEnv2 -> Var -> option Var :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 _ env _, v => lookupVarEnv env v
+    end.
+
+Definition findIdDemand : DmdType -> Var -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_DmdType fv _ res, id => Maybes.orElse (lookupVarEnv fv id) (defaultDmd res)
+    end.
+
+Definition extendVarEnv_Acc {a} {b}
+   : (a -> b -> b) -> (a -> b) -> VarEnv b -> Var -> a -> VarEnv b :=
+  UniqFM.addToUFM_Acc.
+
+Definition extendDVarEnv {a} : DVarEnv a -> Var -> a -> DVarEnv a :=
+  UniqDFM.addToUDFM.
+
+Definition extendVarEnv {a} : VarEnv a -> Var -> a -> VarEnv a :=
+  UniqFM.addToUFM.
+
+Definition modifyVarEnv {a} : (a -> a) -> VarEnv a -> Var -> VarEnv a :=
+  fun mangle_fn env key =>
+    match (lookupVarEnv env key) with
+    | None => env
+    | Some xx => extendVarEnv env key (mangle_fn xx)
+    end.
+
+Definition extendDVarEnvList {a}
+   : DVarEnv a -> list (Var * a)%type -> DVarEnv a :=
+  UniqDFM.addListToUDFM.
+
+Definition extendVarEnvList {a} : VarEnv a -> list (Var * a)%type -> VarEnv a :=
+  UniqFM.addListToUFM.
+
+Definition extendDVarEnv_C {a}
+   : (a -> a -> a) -> DVarEnv a -> Var -> a -> DVarEnv a :=
+  UniqDFM.addToUDFM_C.
+
+Definition extendVarEnv_C {a}
+   : (a -> a -> a) -> VarEnv a -> Var -> a -> VarEnv a :=
+  UniqFM.addToUFM_C.
+
+Definition extendVarEnv_Directly {a}
+   : VarEnv a -> Unique.Unique -> a -> VarEnv a :=
+  UniqFM.addToUFM_Directly.
+
+Definition extendVarSet : VarSet -> Var -> VarSet :=
+  UniqSet.addOneToUniqSet.
+
+Definition extendInScopeSetList : InScopeSet -> list Var -> InScopeSet :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InScope in_scope n, vs =>
+        InScope (Data.Foldable.foldl (fun s v => extendVarSet s v) in_scope vs) (n
+                                                                                 GHC.Num.+
+                                                                                 Coq.Lists.List.length vs)
+    end.
+
+Definition extendInScopeSet : InScopeSet -> Var -> InScopeSet :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InScope in_scope n, v => InScope (extendVarSet in_scope v) (n GHC.Num.+ #1)
+    end.
+
+Definition extendDVarSet : DVarSet -> Var -> DVarSet :=
+  UniqDSet.addOneToUniqDSet.
+
+Definition extendDVarSetList : DVarSet -> list Var -> DVarSet :=
+  UniqDSet.addListToUniqDSet.
+
+Definition extendVarSetList : VarSet -> list Var -> VarSet :=
+  UniqSet.addListToUniqSet.
+
+Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
+  fun mangle_fn env key =>
+    match (lookupDVarEnv env key) with
+    | None => env
+    | Some xx => extendDVarEnv env key (mangle_fn xx)
+    end.
+
 Definition alterDVarEnv {a}
    : (option a -> option a) -> DVarEnv a -> Var -> DVarEnv a :=
   UniqDFM.alterUDFM.
+
+Definition alterVarEnv {a}
+   : (option a -> option a) -> VarEnv a -> Var -> VarEnv a :=
+  UniqFM.alterUFM.
+
+Definition delDVarEnv {a} : DVarEnv a -> Var -> DVarEnv a :=
+  UniqDFM.delFromUDFM.
+
+Definition delVarEnv {a} : VarEnv a -> Var -> VarEnv a :=
+  UniqFM.delFromUFM.
+
+Definition delDVarEnvList {a} : DVarEnv a -> list Var -> DVarEnv a :=
+  UniqDFM.delListFromUDFM.
+
+Definition delVarEnvList {a} : VarEnv a -> list Var -> VarEnv a :=
+  UniqFM.delListFromUFM.
+
+Definition delDVarSet : DVarSet -> Var -> DVarSet :=
+  UniqDSet.delOneFromUniqDSet.
+
+Definition delVarSet : VarSet -> Var -> VarSet :=
+  UniqSet.delOneFromUniqSet.
+
+Definition delInScopeSet : InScopeSet -> Var -> InScopeSet :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | InScope in_scope n, v => InScope (delVarSet in_scope v) n
+    end.
+
+Definition delDVarSetList : DVarSet -> list Var -> DVarSet :=
+  UniqDSet.delListFromUniqDSet.
+
+Definition delVarSetList : VarSet -> list Var -> VarSet :=
+  UniqSet.delListFromUniqSet.
+
+Definition delVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> VarEnv a :=
+  UniqFM.delFromUFM_Directly.
+
+Definition delVarSetByKey : VarSet -> Unique.Unique -> VarSet :=
+  UniqSet.delOneFromUniqSet_Directly.
+
+Definition elemDVarEnv {a} : Var -> DVarEnv a -> bool :=
+  UniqDFM.elemUDFM.
+
+Definition elemVarEnv {a} : Var -> VarEnv a -> bool :=
+  UniqFM.elemUFM.
+
+Definition inRnEnvL : RnEnv2 -> Var -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 env _ _, v => elemVarEnv v env
+    end.
+
+Definition inRnEnvR : RnEnv2 -> Var -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 _ env _, v => elemVarEnv v env
+    end.
+
+Definition elemDVarSet : Var -> DVarSet -> bool :=
+  UniqDSet.elementOfUniqDSet.
+
+Definition elemVarSet : Var -> VarSet -> bool :=
+  UniqSet.elementOfUniqSet.
+
+Definition elemInScopeSet : Var -> InScopeSet -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | v, InScope in_scope _ => elemVarSet v in_scope
+    end.
+
+Definition rnBndr2_var : RnEnv2 -> Var -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | RV2 envL envR in_scope, bL, bR =>
+        let new_b :=
+          if negb (elemInScopeSet bL in_scope) : bool then bL else
+          if negb (elemInScopeSet bR in_scope) : bool then bR else
+          uniqAway' in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR bR new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
+Definition rnBndr2 : RnEnv2 -> Var -> Var -> RnEnv2 :=
+  fun env bL bR => Data.Tuple.fst (rnBndr2_var env bL bR).
+
+Definition rnBndrs2 : RnEnv2 -> list Var -> list Var -> RnEnv2 :=
+  fun env bsL bsR => Util.foldl2 rnBndr2 env bsL bsR.
+
+Definition rnInScope : Var -> RnEnv2 -> bool :=
+  fun x env => elemInScopeSet x (in_scope env).
+
+Definition uniqAway : InScopeSet -> Var -> Var :=
+  fun in_scope var =>
+    if elemInScopeSet var in_scope : bool then uniqAway' in_scope var else
+    var.
+
+Definition rnBndrL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bL =>
+        let new_b := uniqAway in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) envR (extendInScopeSet in_scope new_b))
+             new_b
+    end.
+
+Definition rnBndrR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bR =>
+        let new_b := uniqAway in_scope bR in
+        pair (RV2 envL (extendVarEnv envR bR new_b) (extendInScopeSet in_scope new_b))
+             new_b
+    end.
+
+Definition rnEtaL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bL =>
+        let new_b := uniqAway in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR new_b new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
+Definition rnEtaR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bR =>
+        let new_b := uniqAway in_scope bR in
+        pair (RV2 (extendVarEnv envL new_b new_b) (extendVarEnv envR bR new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
+Definition delBndrsR : RnEnv2 -> list Var -> RnEnv2 :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (RV2 _ env in_scope as rn), v =>
+        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
+        RV2 envL_2__ (delVarEnvList env v) (extendInScopeSetList in_scope v)
+    end.
+
+Definition delBndrsL : RnEnv2 -> list Var -> RnEnv2 :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (RV2 env _ in_scope as rn), v =>
+        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
+        RV2 (delVarEnvList env v) envR_3__ (extendInScopeSetList in_scope v)
+    end.
+
+Definition delBndrR : RnEnv2 -> Var -> RnEnv2 :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (RV2 _ env in_scope as rn), v =>
+        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
+        RV2 envL_2__ (delVarEnv env v) (extendInScopeSet in_scope v)
+    end.
+
+Definition delBndrL : RnEnv2 -> Var -> RnEnv2 :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (RV2 env _ in_scope as rn), v =>
+        let 'RV2 envL_2__ envR_3__ in_scope_4__ := rn in
+        RV2 (delVarEnv env v) envR_3__ (extendInScopeSet in_scope v)
+    end.
+
+Definition peelFV : DmdType -> Var -> (DmdType * Demand)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_DmdType fv ds res, id =>
+        let dmd := Maybes.orElse (lookupVarEnv fv id) (defaultDmd res) in
+        let fv' := delVarEnv fv id in pair (Mk_DmdType fv' ds res) dmd
+    end.
 
 Definition visibleDataCons : AlgTyConRhs -> list DataCon :=
   fun arg_0__ =>

@@ -1,6 +1,3 @@
-Instance Unique_Var : Unique.Uniquable Var := {}.
-Admitted.
-
 
 Instance Name_NamedThing_TyCoVar : Name.NamedThing TyCoVar.
 Admitted.

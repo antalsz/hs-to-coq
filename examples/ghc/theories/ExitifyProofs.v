@@ -252,10 +252,20 @@ Axiom deAnnBinds_AnnRec:
  forall {a v} (pairs : list (v * AnnExpr v a)),
  deAnnBind (AnnRec pairs) = Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs).
 
-Axiom deAnnotate_AnnLet_AnnRec:
+Theorem deAnnotate_AnnLet_AnnRec:
  forall {a v} fvs pairs (e : AnnExpr a v),
  deAnnotate (fvs, AnnLet (AnnRec pairs) e)
   = Let (Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs)) (deAnnotate e).
+Proof.
+  induction pairs; simpl; intros; auto.
+  f_equal; f_equal.
+  destruct a0; simpl; f_equal.
+  symmetry.
+  rewrite <- flat_map_cons_f.
+  f_equal.
+  extensionality x.
+  now destruct x.
+Qed.
 
 Theorem bindersOf_Rec:
   forall {v} (pairs : list (v * Expr v)),

@@ -257,9 +257,14 @@ Axiom deAnnotate_AnnLet_AnnRec:
  deAnnotate (fvs, AnnLet (AnnRec pairs) e)
   = Let (Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs)) (deAnnotate e).
 
-Axiom bindersOf_Rec:
+Theorem bindersOf_Rec:
   forall {v} (pairs : list (v * Expr v)),
   bindersOf (Rec pairs) = map fst pairs.
+Proof.
+  induction pairs; simpl; intros; auto.
+  destruct a.
+  now rewrite <- IHpairs.
+Qed.
 
 Theorem forallb_imp:
   forall a P Q (xs : list a),

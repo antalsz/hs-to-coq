@@ -18,9 +18,6 @@ Lemma exprFreeVars_mkLams:
   exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
 Admitted.
 
-Axiom deAnnotate'_snd_freeVars:
-  forall e, deAnnotate' (snd (freeVars e)) = e.
-
 Lemma deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.
 Proof.
@@ -35,7 +32,7 @@ Proof.
   - destruct (freeVars e0) eqn:Hfv.
     destruct (delBinderFV v f) eqn:Hdb.
     unfold deAnnotate in H.
-    destruct (Base.op_zg__ 0 n); simpl; rewrite H; reflexivity.
+    destruct (Base.op_zg__ BinNums.Z0 i0); simpl; rewrite H; reflexivity.
   - rewrite freeVarsBind1_freeVarsBind.
     destruct binds; simpl.
     + destruct (freeVars body) eqn:Hfv. rewrite <- H0.
@@ -74,7 +71,9 @@ Proof.
         intros. eapply H0; apply in_cons; eassumption.
 Qed.
 
-Lemma collectNAnnBndrs_freeVars_mkLams:
-  forall vs rhs,
-  collectNAnnBndrs (length vs) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
-Admitted.
+Lemma deAnnotate'_snd_freeVars:
+  forall e, deAnnotate' (snd (freeVars e)) = e.
+Proof.
+  intros. symmetry. rewrite <- deAnnotate_freeVars at 1.
+  destruct (freeVars e); reflexivity.
+Qed.

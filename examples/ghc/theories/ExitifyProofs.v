@@ -280,6 +280,17 @@ Proof.
   destruct u.
 Admitted.
 
+Axiom exprFreeVars_Var: forall v, exprFreeVars (Mk_Var v) = unitVarSet v.
+Axiom elemVarSet_unitVarSet: forall v1 v2,
+  (elemVarSet v1 (unitVarSet v2) = true) <-> (varUnique v1 = varUnique v2).
+Axiom elemVarSet_delVarSet: forall v1 fvs v2,
+  elemVarSet v1 (delVarSet fvs v2) = true <-> (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).
+Axiom elemVarSet_false_true:
+  forall v1 fvs v2,
+  elemVarSet v1 fvs = false ->
+  elemVarSet v2 fvs = true ->
+  varUnique v1 <> varUnique v2.
+
 
 Axiom subVarSet_elemVarSet_true:
   forall v vs vs',
@@ -357,6 +368,11 @@ Axiom delVarSet_ae:
   almostEqual v1 v2 ->
   delVarSet vs v1 = delVarSet vs v2.
 
+Axiom elemVarSet_ae:
+  forall vs v1 v2,
+  almostEqual v1 v2 ->
+  elemVarSet v1 vs = elemVarSet v2 vs.
+
 
 Axiom WellScoped_extendVarSetList:
   forall vs e vs1,
@@ -395,10 +411,14 @@ Axiom WellScoped_mkLams:
 Axiom WellScoped_mkVarApps:
   forall e vs isvs,
   WellScoped (mkVarApps e vs) isvs <-> WellScoped e isvs /\ Forall (fun v => WellScopedVar v isvs) vs.
-
+  
 Axiom exprFreeVars_mkLams:
   forall vs e,
   exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
+
+Axiom WellScopedVar_extendVarSet:
+  forall v vs,
+  WellScopedVar v (extendVarSet vs v).
 
 Lemma WellScoped_extendVarSetList_fresh_under:
   forall vs1 vs2 e vs,
@@ -1162,6 +1182,147 @@ Section in_exitifyRec.
   Qed.
 
 
+  (** in [go_exit], we [pick] variables to abstract over and [zap] them.
+      That is somewhat involved, ([pick] is weird mix between a left-fold
+      and a right fold) so extract their definitions to the top level
+      and state lemmas about them.
+   *)
+  Definition zap := ltac:(
+    let rhs := eval cbv beta delta [go_exit] in (go_exit [] (Type_ tt)  emptyVarSet) in
+    lazymatch rhs with (let zap := ?rhs in ?body) =>
+      exact rhs
+    end
+   ).
+
+   Definition pick := ltac:(
+    let rhs := eval cbv beta delta [go_exit] in (go_exit [] (Type_ tt)  emptyVarSet) in
+    lazymatch rhs with (let zap' := _ in let abs_vars := let pick := @?rhs zap' in _ in _) =>
+      let e' := eval cbv beta in (rhs zap) in
+      exact e'
+    end
+    ).
+
+  Lemma zap_ae: forall x, almostEqual x (zap x).
+  Proof. intro v; unfold zap; destruct v; simpl; constructor. Qed.
+
+  Lemma fst_pick_list:
+    forall fvs vs xs,
+    fst (fold_right pick (fvs,vs) xs) = fst (fold_right pick (fvs,[]) xs).
+  Proof.
+    induction xs.
+    * reflexivity.
+    * simpl. unfold pick at 1 3. do 2 expand_pairs.
+      rewrite !IHxs. destruct_match; simpl; reflexivity.
+  Qed.
+  Lemma snd_pick_list: 
+    forall fvs vs xs,
+    snd (fold_right pick (fvs,vs) xs) = snd (fold_right pick (fvs,[]) xs) ++ vs.
+  Proof.
+    induction xs.
+    * reflexivity.
+    * simpl. unfold pick at 1 3. do 2 expand_pairs.
+      rewrite !fst_pick_list. simpl. destruct_match; simpl.
+      + rewrite IHxs. reflexivity. 
+      + rewrite IHxs. reflexivity. 
+  Qed.
+  
+  Lemma WellScoped_picked:
+    forall fvs captured e,
+    WellScoped e (extendVarSetList fvs captured) ->
+    WellScoped e (extendVarSetList fvs (snd (fold_right pick (exprFreeVars e, []) captured))).
+  Proof.
+    induction captured using rev_ind; intros e HWSe; simpl.
+    * simpl. assumption.
+    * simpl.
+      rewrite fold_right_app.
+      rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in HWSe.
+      simpl.
+      destruct_match; simpl.
+      + rewrite snd_pick_list.
+        rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+        rewrite <- WellScoped_Lam.
+        erewrite delVarSet_ae by (apply zap_ae).
+        rewrite <- exprFreeVars_Lam.
+        apply IHcaptured.
+        rewrite -> WellScoped_Lam.
+        rewrite <- WellScoped_extendVarSet_ae by apply zap_ae.
+        assumption.
+      + apply IHcaptured.
+        rewrite WellScoped_extendVarSet_fresh in HWSe; assumption.
+  Qed.
+  
+  Lemma Forall_app:
+    forall a P (xs ys : list a),
+    Forall P xs -> Forall P ys ->
+    Forall P (xs ++ ys).
+  Proof.
+    intros. induction xs; try assumption. constructor.
+    inversion H; assumption.
+    apply IHxs. inversion H; assumption.
+  Qed.
+
+  (* This following lemma verifies the bugfix of #15110 *)
+  Lemma WellScopedVar_picked_aux:
+    forall vsis captured fvs,
+    Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
+           (snd (fold_right pick (fvs, []) captured)) /\
+    Forall (fun v => elemVarSet v fvs = true)
+           (snd (fold_right pick (fvs, []) captured)).
+  Proof.
+    induction captured using rev_ind; intros.
+    * constructor; constructor.
+    * simpl.
+      rewrite fold_right_app.
+      simpl.
+      rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+      destruct_match.
+      + rewrite snd_pick_list.
+        specialize (IHcaptured (delVarSet fvs x)).
+        destruct IHcaptured as [IH1 IH2].
+        split; apply Forall_app.
+        - rewrite Forall_forall in *.
+          intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
+          change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
+          apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
+          rewrite exprFreeVars_Var.
+          apply not_true_is_false.
+          rewrite elemVarSet_unitVarSet.
+          rewrite elemVarSet_delVarSet in *.
+          intuition.
+        - constructor; only 2: constructor.
+          change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
+          rewrite WellScoped_extendVarSet_ae by (apply zap_ae).
+          apply WellScopedVar_extendVarSet.
+        - rewrite Forall_forall in *.
+          intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
+          rewrite elemVarSet_delVarSet in *.
+          intuition.
+        - constructor; only 2: constructor.
+          erewrite <- elemVarSet_ae by (apply zap_ae).
+          assumption.
+       + specialize (IHcaptured fvs).
+         destruct IHcaptured as [IH1 IH2].
+         split.
+        - rewrite Forall_forall in *.
+          intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
+          change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
+          apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
+          rewrite exprFreeVars_Var.
+          apply not_true_is_false.
+          rewrite elemVarSet_unitVarSet.
+          eapply elemVarSet_false_true; eassumption.
+        - rewrite Forall_forall in *.
+          intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
+          assumption.
+  Qed.
+
+  Lemma WellScopedVar_picked:
+    forall vsis captured fvs,
+    Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
+           (snd (fold_right pick (fvs, []) captured)).
+  Proof. intros. apply WellScopedVar_picked_aux. Qed.
+
+
   Lemma go_exit_all_WellScopedFloats captured e : 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
     disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
@@ -1208,69 +1369,22 @@ Section in_exitifyRec.
     float_let.
     cleardefs.
 
-    (* [e] captures nothing in [fs] *)
-    assert (HWSe' : WellScoped (toExpr e) (extendVarSetList isvs captured)). {
-      rewrite <- WellScoped_mkLams.
-      rewrite <- WellScoped_mkLams in HWSe.
-      unfold isvsp in HWSe.
-      rewrite WellScoped_extendVarSetList_fresh in HWSe; only 1: assumption.
-      rewrite hs_coq_map in Hdisjoint.
-      rewrite map_map in Hdisjoint.
-      rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
-           by (intros; repeat expand_pairs; destruct a; reflexivity).
-      fold fs in Hdisjoint.
-      eapply disjointVarSet_subVarSet_l; only 1 : eassumption.
-      rewrite exprFreeVars_mkLams.
-      apply subVarSet_delVarSetList.
-    }
-    clear Hdisjoint.
-
-    (* Now we prove something about [pick] and [zap] *)
-    assert (zap_ae: forall x, almostEqual x (zap x))
-      by (intro v; unfold zap; destruct v; simpl; constructor).
-    clearbody zap.
-
-    assert (Hfst_app : forall fvs vs xs,
-      fst (fold_right pick (fvs,vs) xs) = fst (fold_right pick (fvs,[]) xs)). {
-      clear.
-      induction xs.
-      * reflexivity.
-      * simpl. unfold pick at 1 3. do 2 expand_pairs.
-        rewrite !IHxs. destruct_match; simpl; reflexivity.
-    }
-    assert (Hsnd_app : forall fvs vs xs,
-      snd (fold_right pick (fvs,vs) xs) = snd (fold_right pick (fvs,[]) xs) ++ vs). {
-      clear -Hfst_app.
-      induction xs.
-      * reflexivity.
-      * simpl. unfold pick at 1 3. do 2 expand_pairs. rewrite !Hfst_app. simpl. destruct_match; simpl.
-        + rewrite IHxs. reflexivity. 
-        + rewrite IHxs. reflexivity. 
-    }
-
     rewrite Foldable.hs_coq_foldr_list.
-    replace @Tuple.snd with @snd by reflexivity.
-    clear -captured HWSe' zap_ae Hfst_app Hsnd_app.
-    revert HWSe'.
-    generalize (toExpr e). clear e.
-    induction captured using rev_ind; intros e HWSe; simpl.
-    * simpl. assumption.
-    * simpl.
-      rewrite fold_right_app.
-      rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in HWSe.
-      simpl.
-      destruct_match; simpl.
-      + rewrite Hsnd_app.
-        rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
-        rewrite <- WellScoped_Lam.
-        erewrite delVarSet_ae by (apply zap_ae).
-        rewrite <- exprFreeVars_Lam.
-        apply IHcaptured.
-        rewrite -> WellScoped_Lam.
-        rewrite <- WellScoped_extendVarSet_ae by apply zap_ae.
-        assumption.
-      + apply IHcaptured.
-        rewrite WellScoped_extendVarSet_fresh in HWSe; assumption.
+    apply WellScoped_picked.
+
+    (* [e] captures nothing in [fs] *)
+    rewrite <- WellScoped_mkLams.
+    rewrite <- WellScoped_mkLams in HWSe.
+    unfold isvsp in HWSe.
+    rewrite WellScoped_extendVarSetList_fresh in HWSe; only 1: assumption.
+    rewrite hs_coq_map in Hdisjoint.
+    rewrite map_map in Hdisjoint.
+    rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
+         by (intros; repeat expand_pairs; destruct a; reflexivity).
+    fold fs in Hdisjoint.
+    eapply disjointVarSet_subVarSet_l; only 1 : eassumption.
+    rewrite exprFreeVars_mkLams.
+    apply subVarSet_delVarSetList.
   Qed.
 
   Lemma go_all_WellScopedFloats captured e: 
@@ -1377,6 +1491,16 @@ Section in_exitifyRec.
     apply isvsp_to_isvsp'.
     assumption.
   Qed.
+
+  Lemma isvsp_to_isvsp'_extended_Var:
+     forall v vs, WellScopedVar v (extendVarSetList isvsp vs) -> WellScopedVar v (extendVarSetList isvsp' vs).
+  Proof.
+    intros.
+    change (WellScoped (Mk_Var v) (extendVarSetList isvsp' vs)).
+    apply isvsp_to_isvsp'_extended.
+    assumption.
+  Qed.
+
 
   Lemma isvsp_to_isvsp'_extended2:
      forall e vs1 vs2,
@@ -1501,9 +1625,14 @@ Section in_exitifyRec.
     rewrite WellScoped_mkVarApps.
     split; only 1 : apply HWSv.
     subst abs_vars.
-    admit.
-    (* Need lemma bout foldr pick *)
-  Admitted.
+    eapply Forall_impl.
+    * intros v' HWSv'.
+      apply isvsp_to_isvsp'_extended_Var.
+      apply HWSv'.
+    * subst zap0. fold zap. fold pick. simpl.
+      rewrite Foldable.hs_coq_foldr_list.
+      apply WellScopedVar_picked.
+  Qed.
 
   Lemma go_res_WellScoped captured e: 
     let orig := extendVarSetList isvsp captured in

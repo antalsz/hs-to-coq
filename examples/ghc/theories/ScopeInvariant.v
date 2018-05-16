@@ -19,11 +19,21 @@ This file describes an invariant of Core files that
    equality.
 *)
 
+Inductive almostEqual : Var -> Var -> Prop :=
+ | AE_TyVar   : forall n u ty,
+   almostEqual (Mk_TyVar n u ty)
+               (Mk_TyVar n u ty)
+ | AE_TcTyVar : forall n u ty1 ty2,
+   almostEqual (Mk_TcTyVar n u ty1 ty2)
+               (Mk_TcTyVar n u ty1 ty2)
+ | AE_Id : forall n u ty ids idd id1 id2,
+   almostEqual (Mk_Id n u ty ids idd id1)
+               (Mk_Id n u ty ids idd id2).
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
    match lookupVarSet in_scope v with
     | None => False
-    | Some v' => v = v'
+    | Some v' => almostEqual v v'
     end.
 
 Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=

@@ -607,6 +607,39 @@ Section in_exitifyRec.
       exact def
     end).
 
+  Definition ann_pairs := ltac:(
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let y := ?rhs in _) => 
+      exact rhs
+    end).
+
+  Definition pairs'_exits := ltac:(
+    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
+    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let x4 := _ in let '(pairs',exits) := @?rhs x3 x4 in ?body) => 
+      let def := eval cbv beta in (rhs go ann_pairs) in
+      exact def
+    end).
+  Definition pairs' := fst pairs'_exits.
+  Definition exits := snd pairs'_exits.
+
+  (* Some useful definitions *)
+  
+  (* The names of the functions bound in this letrec *)
+  Definition fs := map (fun '(Mk_NJPair v _ _ _) => v) pairs.
+
+  (* [in_scope] and [in_scope2] should only be mentioned as concrete arguments
+     to functions, but ideally quickly rewritten to these. *)
+  (* The outermost scope *)
+  Definition isvs := getInScopeVars in_scope.
+  (* The let-scope, before *)
+  Definition isvsp := extendVarSetList isvs fs .
+  (* The outermost scope, including exits *)
+  Definition isvs' := extendVarSetList isvs (map fst exits).
+  (* The let-scope, after *)
+  Definition isvsp' := extendVarSetList isvs' fs.
+
+  (** Termination of [go] and a suitable induction lemma *)
+
   Definition go_f := ltac:(
     let rhs := eval cbv delta [go] in go in
     lazymatch rhs with
@@ -752,208 +785,9 @@ Section in_exitifyRec.
   * eexists; reflexivity.
   Qed.
 
-  Definition ann_pairs := ltac:(
-    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let y := ?rhs in _) => 
-      exact rhs
-    end).
-
-  Definition pairs'_exits := ltac:(
-    let rhs := eval cbv beta delta [exitifyRec] in (exitifyRec in_scope2 (map toJPair pairs)) in
-    lazymatch rhs with | (let x1 := _ in let x2 := _ in let x3 := _ in let x4 := _ in let '(pairs',exits) := @?rhs x3 x4 in ?body) => 
-      let def := eval cbv beta in (rhs go ann_pairs) in
-      exact def
-    end).
-  Definition pairs' := fst pairs'_exits.
-  Definition exits := snd pairs'_exits.
-
-  (* Some useful definitions *)
-  
-  (* The names of the functions bound in this letrec *)
-  Definition fs := map (fun '(Mk_NJPair v _ _ _) => v) pairs.
-
-  (* [in_scope] and [in_scope2] should only be mentioned as concrete arguments
-     to functions, but ideally quickly rewritten to these. *)
-  (* The outermost scope *)
-  Definition isvs := getInScopeVars in_scope.
-  (* The let-scope, before *)
-  Definition isvsp := extendVarSetList isvs fs .
-  (* The outermost scope, including exits *)
-  Definition isvs' := extendVarSetList isvs (map fst exits).
-  (* The let-scope, after *)
-  Definition isvsp' := extendVarSetList isvs' fs.
-
-  (** ** Scope validity *)
-
-
-
-  (** This predicate describes when a list of non-recursive bindings
-      is ok to wrap around the [Let (Rec [pairs] body)] pair.
-
-      (This could move to [ScopeInvariants])
-  *)
-  Definition WellScopedFloats floats :=
-    (* All added bindings are fresh with regard to the environment *)
-    Forall (fun 'p => elemVarSet (fst p) isvs = false) floats /\
-    (* All added bindings are fresh with regard to each other  *)
-    NoDup (map (fun p => varUnique (fst p)) floats) /\
-    (* All added bindings are well-scoped in the original environment  *)
-    Forall (fun 'p => WellScoped (snd p) isvs) floats.
-
-  (* Here we do the actual wrapping *)
-  Lemma mkLets_WellScoped:
-    forall exits' e,
-    (* The body is well-scoped in the extended environment *)
-    WellScoped e (extendVarSetList isvs (map fst exits')) ->
-    WellScopedFloats exits' ->
-    (* Then wrapping these bindings around [e] is well-scoped *)
-    WellScoped (mkLets (map (fun '(v,rhs) => NonRec v rhs) exits') e) isvs.
-   Proof.
-    intros ?.
-    unfold WellScopedFloats.
-    generalize isvs as isvs.
-    clear in_scope pairs jps.
-    induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
-    * simpl. unfold Base.id. assumption.
-    * simpl in *.
-      destruct Hfloats as [Hfreshs [HNoDup Hrhss]].
-      inversion HNoDup; subst; clear HNoDup. rename H1 into Hfresh, H2 into HNoDup.
-      inversion_clear Hrhss. rename H into Hrhs, H0 into Hrhss.
-      inversion_clear Hfreshs. rename H into Hfresh_v, H0 into Hfreshs.
-      simpl in *.
-      rewrite extendVarSetList_cons in Hbase.
-      split; only 1: apply Hrhs.
-      apply IHexits'.
-      - assumption.
-      - repeat split.
-        + rewrite Forall_forall.
-          rewrite Forall_forall in Hfreshs.
-          rewrite in_map_iff in Hfresh.
-          intros [v' rhs'] HIn.
-          rewrite elemVarSet_extendVarSet.
-          simpl_bool.
-          split.
-          ** simpl.
-             destruct (Eq_eq (varUnique v') (varUnique v)); (reflexivity || exfalso).
-             contradict Hfresh.
-             exists (v', rhs'). split; assumption.
-          ** apply Hfreshs. assumption.
-        + assumption.
-        + rewrite Forall_forall.
-          rewrite Forall_forall in Hrhss.
-          intros pair HIn. simpl.
-          rewrite WellScoped_extendVarSet_fresh.
-          apply Hrhss; assumption.
-          eapply subVarSet_elemVarSet_false; only 2: eassumption.
-          apply WellScoped_subset.
-          apply Hrhss; assumption.
-  Qed.
-
-  (* the [addExit] function ensures that the new exit floats are well-scoped
-     where we are going to put them.
-   *)
-  Lemma addExit_all_WellScopedFloats:
-    forall captured ja e,
-    WellScoped e isvs ->
-    StateInvariant WellScopedFloats
-                   (addExit (extendInScopeSetList in_scope2 captured) ja e).
-  Proof.
-    intros.
-    (* This is much easier to prove by breaking the State abstraction and turning
-       it into a simple function. *)
-    unfold addExit, mkExitJoinId.
-    unfold StateInvariant, SP,
-           op_zgzgze__, return_, State.Monad__State, op_zgzgze____, return___,
-           State.Monad__State_op_zgzgze__,
-           State.Monad__State_return_,
-           pure, State.Applicative__State , pure__,
-           State.Applicative__State_pure,
-           State.runState', State.get, State.put.
-    simpl.
-    intros floats Hfloats.
-    set (v := uniqAway _ _).
-    constructor; only 2: trivial.
-    constructor; only 2: constructor; simpl.
-    * constructor; only 2: apply Hfloats; simpl.
-      unfold isvs, in_scope2 in *.
-      apply elemVarSet_uniqAway.
-      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
-      apply subVarSet_extendVarSet.
-      repeat apply subVarSet_extendVarSetList_l.
-      apply subVarSet_refl.
-    * constructor; only 2: apply Hfloats; simpl.
-      rewrite <- map_map.
-      rewrite <- elemVarSet_mkVarset_iff_In.
-      rewrite not_true_iff_false.
-      apply elemVarSet_uniqAway.
-      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
-      apply subVarSet_extendVarSet.
-      apply subVarSet_extendVarSetList_r.
-      apply subVarSet_refl.
-    * constructor; only 2: apply Hfloats; simpl.
-      assumption.
-  Qed.
-
-
-  Lemma go_exit_all_WellScopedFloats captured e : 
-    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
-    disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
-    StateInvariant WellScopedFloats (go_exit captured (toExpr e) (exprFreeVars (toExpr e))).
-  Proof.
-    intros HWSe Hdisjoint.
-    set (P := WellScopedFloats).
-    cbv beta delta [go_exit]. (* No [zeta]! *)
-    repeat float_let.
-
-    (* First case *)
-    enough (Hnext: StateInvariant P j_16__). {
-      clearbody j_16__; cleardefs.
-      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
-      destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
-      apply StateInvariant_return.
-    }
-    cleardefs.
-
-    (* Second case *)
-    subst j_16__.
-    enough (Hnext: StateInvariant P j_15__). {
-      destruct (negb is_interesting) ; try apply Hnext.
-      apply StateInvariant_return.
-    }
-    cleardefs.
-
-    (* Third case *)
-    subst j_15__.
-    enough (Hnext: StateInvariant P j_14__). {
-      destruct captures_join_points ; try apply Hnext.
-      apply StateInvariant_return.
-    }
-    cleardefs.
-
-    (* Third case: Actual exitification *)
-    subst j_14__.
-    unfold recursive_calls in Hdisjoint.
-    apply StateInvariant_bind_return.
-    apply addExit_all_WellScopedFloats.
-    rewrite WellScoped_mkLams.
-    subst abs_vars.
-    float_let.
-    admit.
-    (* Need a lemma bout foldr pick here *)
-    (*     rewrite hs_coq_filter.
-    apply WellScoped_extended_filtered.
-    unfold in_scope2 in HWS.
-    rewrite map_map in Heqb.
-    rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Heqb
-      by (intros; repeat expand_pairs; destruct a; reflexivity).
-    eapply WellScoped_extendVarSetList_fresh_under; eassumption. *)
-  Admitted.
-
-  
   Lemma go_ind_aux:
     forall (P : _ -> _ -> _ -> Prop),
-    { IHs : Prop |
+    { IHs : Prop | 
     IHs ->
     forall e captured,
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
@@ -1177,7 +1011,7 @@ Section in_exitifyRec.
     clear IH. revert e captured HWS.
     refine IH7.
   Defined. (* important! *)
-  
+
   (* We now uncurry the induction hypotheses
      (since we can’t do that right away in [go_ind_aux] *)
   Lemma uncurry_and : forall {A B C},
@@ -1202,6 +1036,170 @@ Section in_exitifyRec.
     := ltac:(let x := uncurryN 6 (proj2_sig (go_ind_aux P)) in exact x).
   Opaque go_ind go_ind_aux.
 
+  (** ** Scope validity *)
+
+  (** This predicate describes when a list of non-recursive bindings
+      is ok to wrap around the [Let (Rec [pairs] body)] pair.
+
+      (Maybe this could be abstracted over isvs and moved to [ScopeInvariants])
+  *)
+  Definition WellScopedFloats floats :=
+    (* All added bindings are fresh with regard to the environment *)
+    Forall (fun 'p => elemVarSet (fst p) isvs = false) floats /\
+    (* All added bindings are fresh with regard to each other  *)
+    NoDup (map (fun p => varUnique (fst p)) floats) /\
+    (* All added bindings are well-scoped in the original environment  *)
+    Forall (fun 'p => WellScoped (snd p) isvs) floats.
+
+  (* Here we do the actual wrapping *)
+  Lemma mkLets_WellScoped:
+    forall exits' e,
+    (* The body is well-scoped in the extended environment *)
+    WellScoped e (extendVarSetList isvs (map fst exits')) ->
+    WellScopedFloats exits' ->
+    (* Then wrapping these bindings around [e] is well-scoped *)
+    WellScoped (mkLets (map (fun '(v,rhs) => NonRec v rhs) exits') e) isvs.
+   Proof.
+    intros ?.
+    unfold WellScopedFloats.
+    generalize isvs as isvs.
+    clear in_scope pairs jps.
+    induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
+    * simpl. unfold Base.id. assumption.
+    * simpl in *.
+      destruct Hfloats as [Hfreshs [HNoDup Hrhss]].
+      inversion HNoDup; subst; clear HNoDup. rename H1 into Hfresh, H2 into HNoDup.
+      inversion_clear Hrhss. rename H into Hrhs, H0 into Hrhss.
+      inversion_clear Hfreshs. rename H into Hfresh_v, H0 into Hfreshs.
+      simpl in *.
+      rewrite extendVarSetList_cons in Hbase.
+      split; only 1: apply Hrhs.
+      apply IHexits'.
+      - assumption.
+      - repeat split.
+        + rewrite Forall_forall.
+          rewrite Forall_forall in Hfreshs.
+          rewrite in_map_iff in Hfresh.
+          intros [v' rhs'] HIn.
+          rewrite elemVarSet_extendVarSet.
+          simpl_bool.
+          split.
+          ** simpl.
+             destruct (Eq_eq (varUnique v') (varUnique v)); (reflexivity || exfalso).
+             contradict Hfresh.
+             exists (v', rhs'). split; assumption.
+          ** apply Hfreshs. assumption.
+        + assumption.
+        + rewrite Forall_forall.
+          rewrite Forall_forall in Hrhss.
+          intros pair HIn. simpl.
+          rewrite WellScoped_extendVarSet_fresh.
+          apply Hrhss; assumption.
+          eapply subVarSet_elemVarSet_false; only 2: eassumption.
+          apply WellScoped_subset.
+          apply Hrhss; assumption.
+  Qed.
+
+  (* the [addExit] function ensures that the new exit floats are well-scoped
+     where we are going to put them.
+   *)
+  Lemma addExit_all_WellScopedFloats:
+    forall captured ja e,
+    WellScoped e isvs ->
+    StateInvariant WellScopedFloats
+                   (addExit (extendInScopeSetList in_scope2 captured) ja e).
+  Proof.
+    intros.
+    (* This is much easier to prove by breaking the State abstraction and turning
+       it into a simple function. *)
+    unfold addExit, mkExitJoinId.
+    unfold StateInvariant, SP,
+           op_zgzgze__, return_, State.Monad__State, op_zgzgze____, return___,
+           State.Monad__State_op_zgzgze__,
+           State.Monad__State_return_,
+           pure, State.Applicative__State , pure__,
+           State.Applicative__State_pure,
+           State.runState', State.get, State.put.
+    simpl.
+    intros floats Hfloats.
+    set (v := uniqAway _ _).
+    constructor; only 2: trivial.
+    constructor; only 2: constructor; simpl.
+    * constructor; only 2: apply Hfloats; simpl.
+      unfold isvs, in_scope2 in *.
+      apply elemVarSet_uniqAway.
+      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+      apply subVarSet_extendVarSet.
+      repeat apply subVarSet_extendVarSetList_l.
+      apply subVarSet_refl.
+    * constructor; only 2: apply Hfloats; simpl.
+      rewrite <- map_map.
+      rewrite <- elemVarSet_mkVarset_iff_In.
+      rewrite not_true_iff_false.
+      apply elemVarSet_uniqAway.
+      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+      apply subVarSet_extendVarSet.
+      apply subVarSet_extendVarSetList_r.
+      apply subVarSet_refl.
+    * constructor; only 2: apply Hfloats; simpl.
+      assumption.
+  Qed.
+
+
+  Lemma go_exit_all_WellScopedFloats captured e : 
+    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
+    StateInvariant WellScopedFloats (go_exit captured (toExpr e) (exprFreeVars (toExpr e))).
+  Proof.
+    intros HWSe Hdisjoint.
+    set (P := WellScopedFloats).
+    cbv beta delta [go_exit]. (* No [zeta]! *)
+    repeat float_let.
+
+    (* First case *)
+    enough (Hnext: StateInvariant P j_16__). {
+      clearbody j_16__; cleardefs.
+      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
+      destruct rhs; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+    cleardefs.
+
+    (* Second case *)
+    subst j_16__.
+    enough (Hnext: StateInvariant P j_15__). {
+      destruct (negb is_interesting) ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+    cleardefs.
+
+    (* Third case *)
+    subst j_15__.
+    enough (Hnext: StateInvariant P j_14__). {
+      destruct captures_join_points ; try apply Hnext.
+      apply StateInvariant_return.
+    }
+    cleardefs.
+
+    (* Third case: Actual exitification *)
+    subst j_14__.
+    unfold recursive_calls in Hdisjoint.
+    apply StateInvariant_bind_return.
+    apply addExit_all_WellScopedFloats.
+    rewrite WellScoped_mkLams.
+    subst abs_vars.
+    float_let.
+    admit.
+    (* Need a lemma bout foldr pick here *)
+    (*     rewrite hs_coq_filter.
+    apply WellScoped_extended_filtered.
+    unfold in_scope2 in HWS.
+    rewrite map_map in Heqb.
+    rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Heqb
+      by (intros; repeat expand_pairs; destruct a; reflexivity).
+    eapply WellScoped_extendVarSetList_fresh_under; eassumption. *)
+  Admitted.
   Lemma go_all_WellScopedFloats captured e: 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
     StateInvariant WellScopedFloats (go captured (freeVars (toExpr e))).

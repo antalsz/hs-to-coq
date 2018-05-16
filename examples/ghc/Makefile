@@ -187,7 +187,7 @@ $(OUTFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildca
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 		     $(HS_TO_COQ_GHC_OPTS) \
                      -o $(OUT) \
-		     ghc/compiler/*/$*.hs
+		     $(word 1,$(wildcard ghc-head/$*.hs ghc/compiler/*/$*.hs))
 	test -e $@
 
 $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits no-type-edits
@@ -197,7 +197,7 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
 		     $(HS_TO_COQ_GHC_OPTS) \
                      -e no-type-edits \
                      -o $(OUT) \
-		     ghc/compiler/*/$*.hs
+		     $(word 1,$(wildcard ghc-head/$*.hs ghc/compiler/*/$*.hs))
 	test -e $@
 
 CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))

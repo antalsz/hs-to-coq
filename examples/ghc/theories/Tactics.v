@@ -75,6 +75,7 @@ Ltac cse_let :=
         end.
 
 
+
 (** Unfolding stuff *)
 
 Ltac simplify_zeze :=
@@ -94,5 +95,22 @@ Ltac unfold_Foldable :=
   Foldable.Foldable__list_foldl', 
   foldl',
   fold_right.
+
+
+(** zeta-reduces exactly one (the outermost) [let] *)
+Ltac zeta_one :=
+  lazymatch goal with |- context A [let x := ?rhs in @?body x] =>
+     let e' := eval cbv beta in (body rhs) in
+     let e'' := context A [e'] in
+     change e''
+  end.
+
+(** Changes the outermost [let x := rhs in body] with [body[rhs'/x]] *)
+  Ltac zeta_with rhs' :=
+    lazymatch goal with |- context A [let x := ?rhs in @?body x] =>
+       let e' := eval cbv beta in (body rhs') in
+       let e'' := context A [e'] in
+       change e''
+    end.
 
 

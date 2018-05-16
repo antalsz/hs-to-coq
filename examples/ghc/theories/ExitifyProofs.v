@@ -247,10 +247,17 @@ Axiom WellScoped_collectNBinders2:
   WellScoped e isvs ->
   WellScoped (snd (collectNBinders n e)) (extendVarSetList isvs (fst (collectNBinders n e))).
 
-(* Just [simpl] is too ugly; uses [flat_map] *)
-Axiom deAnnBinds_AnnRec:
+Theorem deAnnBinds_AnnRec:
  forall {a v} (pairs : list (v * AnnExpr v a)),
  deAnnBind (AnnRec pairs) = Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs).
+Proof.
+  unfold deAnnBind.
+  symmetry.
+  rewrite <- flat_map_cons_f.
+  f_equal; f_equal.
+  extensionality x.
+  now destruct x.
+Qed.
 
 Theorem deAnnotate_AnnLet_AnnRec:
  forall {a v} fvs pairs (e : AnnExpr a v),

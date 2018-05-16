@@ -261,11 +261,17 @@ Axiom bindersOf_Rec:
   forall {v} (pairs : list (v * Expr v)),
   bindersOf (Rec pairs) = map fst pairs.
 
-Axiom forallb_imp:
+Theorem forallb_imp:
   forall a P Q (xs : list a),
   forallb P xs = true ->
   (forall x, P x = true -> Q x = true) ->
   forallb Q xs = true.
+Proof.
+  induction xs; simpl; intros; auto.
+  apply andb_prop in H.
+  apply andb_true_intro.
+  intuition.
+Qed.
 
 Axiom WellScopedVar_extendVarSetList_l:
   forall v vs1 vs2,

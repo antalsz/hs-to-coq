@@ -372,11 +372,14 @@ Proof.
   unfold UniqFM.delFromUFM; simpl; auto.
 Qed.
 
-Axiom elemVarSet_ae:
+Lemma elemVarSet_ae:
   forall vs v1 v2,
   almostEqual v1 v2 ->
   elemVarSet v1 vs = elemVarSet v2 vs.
-
+Proof.
+  induction 1; simpl;
+  unfold UniqFM.delFromUFM; simpl; auto.
+Qed.
 
 Axiom WellScoped_extendVarSetList:
   forall vs e vs1,

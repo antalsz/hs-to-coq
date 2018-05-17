@@ -69,60 +69,7 @@ Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
 
 (** ** Lots of lemmas *)
 
-
-Axiom WellScoped_extendVarSetList_fresh:
-  forall vs e vs1,
-  disjointVarSet (exprFreeVars e) (mkVarSet vs) = true ->
-  WellScoped e (extendVarSetList vs1 vs) <-> WellScoped e vs1.
-
-Axiom WellScoped_extendVarSet_ae:
-  forall e vs v1 v2,
-  almostEqual v1 v2 ->
-  WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
-
-Lemma delVarSet_ae:
-  forall vs v1 v2,
-  almostEqual v1 v2 ->
-  delVarSet vs v1 = delVarSet vs v2.
-Proof.
-  induction 1; simpl;
-  unfold UniqFM.delFromUFM; simpl; auto.
-Qed.
-
-Lemma elemVarSet_ae:
-  forall vs v1 v2,
-  almostEqual v1 v2 ->
-  elemVarSet v1 vs = elemVarSet v2 vs.
-Proof.
-  induction 1; simpl;
-  unfold UniqFM.delFromUFM; simpl; auto.
-Qed.
-
-Axiom WellScoped_extendVarSetList:
-  forall vs e vs1,
-  disjointVarSet vs1 (mkVarSet vs) = true ->
-  WellScoped e vs1 -> WellScoped e (extendVarSetList vs1 vs).
-
-Axiom WellScoped_subset:
-  forall e vs,
-  WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
-
-
-Lemma WellScoped_extendVarSet_fresh:
-  forall v e vs,
-  elemVarSet v (exprFreeVars e) = false ->
-  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
-Proof.
-  intros.
-  split.
-  intro h.
-  pose (K := WellScoped_subset e _ h). clearbody K.
-  set (fve := exprFreeVars e) in *.
-  
-  unfold_VarSet.
-
-  set (key := Unique.getWordKey (Unique.getUnique v)) in *.
-Admitted.  
+(** *** Structural lemmas *)
 
 Axiom WellScoped_Lam:
   forall v e isvs,
@@ -139,21 +86,6 @@ Axiom WellScoped_mkVarApps:
 Axiom WellScopedVar_extendVarSet:
   forall v vs,
   WellScopedVar v (extendVarSet vs v).
-
-Lemma WellScoped_extendVarSetList_fresh_under:
-  forall vs1 vs2 e vs,
-  disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
-  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <-> WellScoped e (extendVarSetList vs vs2).
-Proof.
-  intros.
-  rewrite <- WellScoped_mkLams.
-  rewrite WellScoped_extendVarSetList_fresh.
-  rewrite -> WellScoped_mkLams.
-  reflexivity.
-  rewrite exprFreeVars_mkLams.
-  eapply disjointVarSet_subVarSet_l; only 1: eassumption.
-  apply subVarSet_delVarSetList.
-Qed.
 
 Lemma WellScoped_MkLetRec: forall pairs body isvs,
   WellScoped (mkLetRec pairs body) isvs <-> WellScoped (Let (Rec pairs) body) isvs .
@@ -178,21 +110,40 @@ Proof.
   split; intro; repeat split; try constructor; intuition.
 Qed.
 
-Axiom WellScoped_extended_filtered:
-  forall vs e isvs,
-  WellScoped e (extendVarSetList isvs vs) ->
-  WellScoped e (extendVarSetList isvs (filter (fun v => elemVarSet v (exprFreeVars e)) vs)).
 
-Axiom WellScoped_collectNBinders:
-  forall e n isvs body params,
-  WellScoped e isvs ->
-  collectNBinders n e = (params, body) ->
-  WellScoped body (extendVarSetList isvs params).
+(** *** [almostEqual] *)
 
-Axiom WellScoped_collectNBinders2:
-  forall e n isvs,
-  WellScoped e isvs ->
-  WellScoped (snd (collectNBinders n e)) (extendVarSetList isvs (fst (collectNBinders n e))).
+Lemma delVarSet_ae:
+  forall vs v1 v2,
+  almostEqual v1 v2 ->
+  delVarSet vs v1 = delVarSet vs v2.
+Proof.
+  induction 1; simpl;
+  unfold UniqFM.delFromUFM; simpl; auto.
+Qed.
+
+Lemma elemVarSet_ae:
+  forall vs v1 v2,
+  almostEqual v1 v2 ->
+  elemVarSet v1 vs = elemVarSet v2 vs.
+Proof.
+  induction 1; simpl;
+  unfold UniqFM.delFromUFM; simpl; auto.
+Qed.
+
+Axiom WellScoped_extendVarSet_ae:
+  forall e vs v1 v2,
+  almostEqual v1 v2 ->
+  WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
+
+(** *** Relation to [exprFreeVars] *)
+
+Axiom WellScoped_subset:
+  forall e vs,
+  WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
+
+
+(** *** Freshness *)
 
 Axiom WellScopedVar_extendVarSetList_l:
   forall v vs1 vs2,
@@ -205,3 +156,48 @@ Axiom WellScopedVar_extendVarSetList_r:
   In v vs2 ->
   NoDup (map varUnique vs2) ->
   WellScopedVar v (extendVarSetList vs1 vs2).
+
+
+Lemma WellScoped_extendVarSet_fresh:
+  forall v e vs,
+  elemVarSet v (exprFreeVars e) = false ->
+  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
+Proof.
+  intros.
+  split.
+  intro h.
+  pose (K := WellScoped_subset e _ h). clearbody K.
+  set (fve := exprFreeVars e) in *.
+  
+  unfold_VarSet.
+
+  set (key := Unique.getWordKey (Unique.getUnique v)) in *.
+Admitted.  
+
+Axiom WellScoped_extendVarSetList_fresh:
+  forall vs e vs1,
+  disjointVarSet (exprFreeVars e) (mkVarSet vs) = true ->
+  WellScoped e (extendVarSetList vs1 vs) <-> WellScoped e vs1.
+
+
+Axiom WellScoped_extendVarSetList:
+  forall vs e vs1,
+  disjointVarSet vs1 (mkVarSet vs) = true ->
+  WellScoped e vs1 -> WellScoped e (extendVarSetList vs1 vs).
+
+
+Lemma WellScoped_extendVarSetList_fresh_under:
+  forall vs1 vs2 e vs,
+  disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
+  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <-> WellScoped e (extendVarSetList vs vs2).
+Proof.
+  intros.
+  rewrite <- WellScoped_mkLams.
+  rewrite WellScoped_extendVarSetList_fresh.
+  rewrite -> WellScoped_mkLams.
+  reflexivity.
+  rewrite exprFreeVars_mkLams.
+  eapply disjointVarSet_subVarSet_l; only 1: eassumption.
+  apply subVarSet_delVarSetList.
+Qed.
+

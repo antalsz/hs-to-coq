@@ -363,10 +363,14 @@ Axiom WellScoped_extendVarSet_ae:
   almostEqual v1 v2 ->
   WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
 
-Axiom delVarSet_ae:
+Lemma delVarSet_ae:
   forall vs v1 v2,
   almostEqual v1 v2 ->
   delVarSet vs v1 = delVarSet vs v2.
+Proof.
+  induction 1; simpl;
+  unfold UniqFM.delFromUFM; simpl; auto.
+Qed.
 
 Axiom elemVarSet_ae:
   forall vs v1 v2,

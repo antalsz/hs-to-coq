@@ -115,8 +115,13 @@ Axiom mkLets_nil:
 
 
 
-Axiom isJoinId_eq : forall v,
+Lemma isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
+Proof.
+  unfold isJoinId.
+  induction v; auto.
+  now destruct i0.
+Qed.
 
 Axiom isJoinId_isJoinId_maybe: forall v,
   isJoinId v = true ->

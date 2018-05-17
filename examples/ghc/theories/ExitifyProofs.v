@@ -123,9 +123,14 @@ Proof.
   now destruct i0.
 Qed.
 
-Axiom isJoinId_isJoinId_maybe: forall v,
+Lemma isJoinId_isJoinId_maybe: forall v,
   isJoinId v = true ->
   isJoinId_maybe v = Some (idJoinArity v).
+Proof.
+  unfold isJoinId.
+  induction v; simpl; intros; auto; try discriminate.
+  now destruct i0.
+Qed.
 
 Axiom idJoinArity_join: forall v a,
   isJoinId_maybe v = Some a -> idJoinArity v = a.

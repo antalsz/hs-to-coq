@@ -124,5 +124,6 @@ jobs:
       - make -j2 -C base-thy
       - make -j2 -C examples/containers
       - make -j2 -C examples/transformers
+      - make -j2 -C examples/containers/theories
       - make -j2 -C examples/ghc/lib
       - make -j2 -C examples/ghc/theories

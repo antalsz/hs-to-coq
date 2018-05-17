@@ -79,9 +79,27 @@ Ltac safe_unfold_VarSet :=
 
 (** ** Punted-on lemmas about GHC functions *)
 
-Instance EqLaws_Unique : EqLaws Unique.Unique. Admitted.
-Instance EqExact_Unique : EqExact Unique.Unique. Admitted.
+Program Instance EqLaws_Unique : EqLaws Unique.Unique.
+Next Obligation. repeat intro; destruct x; apply EqLaws_Word. Qed.
+Next Obligation. repeat intro; destruct x, y; apply EqLaws_Word. Qed.
+Next Obligation. do 3 intro; destruct x, y, z; apply EqLaws_Word. Qed.
+Next Obligation. destruct x, y; apply EqLaws_Word. Qed.
 
+Program Instance EqExact_Unique : EqExact Unique.Unique.
+Next Obligation.
+  assert (forall n n0 : N, (n =? n0)%N = (Unique.MkUnique n == Unique.MkUnique n0))
+    by (now induction n, n0).
+  destruct x, y.
+  rewrite <- H.
+  destruct (Eq_eq_Word n n0).
+    subst.
+    rewrite N.eqb_refl.
+    now constructor.
+  rewrite (proj2 (N.eqb_neq _ _) n1).
+  constructor.
+  intro; apply n1.
+  now inversion H0.
+Qed.
 
 Axiom mkLets_append:
   forall b binds1 binds2 (e : Expr b),

@@ -63,19 +63,20 @@ jobs:
 
   - stage: Tests and Examples
 
-  # Tests and base tests
+  # Tests, base, base tests and base-theory
     script:
       - eval $(opam config env)
       - stack --no-terminal --install-ghc install
       - make -j2 -C examples/tests
       - make -j2 -C base
       - make -j2 -C examples/base-tests
+      - make -j2 -C base-thy
 
   # Containers (translation)
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C base
+      - make -j2 -C base quick
       - make -j2 -C examples/containers clean
       - make -j2 -C examples/containers
       # Check that the files in git are identical to the generated ones
@@ -87,9 +88,9 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/containers/lib
+      - make -j2 -C base quick
+      - make -j2 -C base-thy quick
+      - make -j2 -C examples/containers/lib quick
       - make -j2 -C examples/containers/theories
 
   # Containers (extraction)
@@ -106,8 +107,8 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
+      - make -j2 -C base quick
+      - make -j2 -C base-thy quick
       - make -j2 -C examples/successors
       - make -j2 -C examples/compiler
       - make -j2 -C examples/rle
@@ -120,10 +121,10 @@ jobs:
   # GHC (including transformers)
   - script:
       - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/containers
-      - make -j2 -C examples/transformers
+      - make -j2 -C base quick
+      - make -j2 -C base-thy quick
+      - make -j2 -C examples/containers quick
       - make -j2 -C examples/containers/theories
+      - make -j2 -C examples/transformers
       - make -j2 -C examples/ghc/lib
       - make -j2 -C examples/ghc/theories

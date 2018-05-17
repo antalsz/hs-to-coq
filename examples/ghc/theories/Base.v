@@ -5,7 +5,7 @@ Require Import Proofs.GHC.List.
 
 Require Import Coq.Lists.List.
 
-Require Import GhcProofs.Tactics.
+Require Import Proofs.GhcTactics.
 
 Import ListNotations.
 

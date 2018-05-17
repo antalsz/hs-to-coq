@@ -5,9 +5,9 @@ Require Import CoreUtils.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
-Require Import GhcProofs.Forall.
-Require Import GhcProofs.CoreFVsLemmas.
-Require Import GhcProofs.VarSet.
+Require Import Proofs.Forall.
+Require Import Proofs.CoreFVs.
+Require Import Proofs.VarSet.
 
 Set Bullet Behavior "Strict Subproofs".
 

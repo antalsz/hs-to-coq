@@ -5,10 +5,10 @@ Require Import Core.
 
 Require Import Coq.Lists.List.
 
-Require Import GhcProofs.Tactics.
-Require Import GhcProofs.BaseLemmas.
-Require Import GhcProofs.CoreInduct.
-Require Import GhcProofs.CoreLemmas.
+Require Import Proofs.GhcTactics.
+Require Import Proofs.Base.
+Require Import Proofs.CoreInduct.
+Require Import Proofs.Core.
 
 Set Bullet Behavior "Strict Subproofs".
 

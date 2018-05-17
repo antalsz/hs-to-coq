@@ -16,20 +16,20 @@ Require Import Coq.Logic.FunctionalExtensionality.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Require Import GhcProofs.BaseLemmas.
-Require Import GhcProofs.JoinPointInvariants.
-Require Import GhcProofs.ScopeInvariant.
-Require Import GhcProofs.StateLogic.
-Require Import GhcProofs.CoreInduct.
-Require Import GhcProofs.Forall.
-Require Import GhcProofs.CoreLemmas.
-Require Import GhcProofs.CoreFVsLemmas.
-Require Import GhcProofs.Tactics.
-Require Import GhcProofs.NCore.
-Require Import GhcProofs.VectorUtils.
-Require Import GhcProofs.VarLemmas.
-Require Import GhcProofs.VarSet.
-Require Import GhcProofs.Unique.
+Require Import Proofs.Base.
+Require Import Proofs.JoinPointInvariants.
+Require Import Proofs.ScopeInvariant.
+Require Import Proofs.StateLogic.
+Require Import Proofs.CoreInduct.
+Require Import Proofs.Forall.
+Require Import Proofs.Core.
+Require Import Proofs.CoreFVs.
+Require Import Proofs.GhcTactics.
+Require Import Proofs.NCore.
+Require Import Proofs.VectorUtils.
+Require Import Proofs.Var.
+Require Import Proofs.VarSet.
+Require Import Proofs.Unique.
 
 Close Scope Z_scope.
 

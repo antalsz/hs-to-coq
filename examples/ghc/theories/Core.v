@@ -4,8 +4,8 @@ Require Import CoreFVs.
 
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
-Require Import GhcProofs.Tactics.
-Require Import GhcProofs.BaseLemmas.
+Require Import Proofs.GhcTactics.
+Require Import Proofs.Base.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Lists.List.

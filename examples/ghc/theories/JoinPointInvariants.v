@@ -10,8 +10,8 @@ Require Import Psatz.
 
 Import ListNotations.
 
-Require Import GhcProofs.Forall.
-Require Import GhcProofs.CoreLemmas.
+Require Import Proofs.Forall.
+Require Import Proofs.Core.
 
 Set Bullet Behavior "Strict Subproofs".
 

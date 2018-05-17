@@ -8,7 +8,7 @@ Require Import Coq.Bool.Bool.
 Require Import Coq.NArith.BinNat.
 Require Import Psatz.
 
-Require Import GhcProofs.VectorUtils.
+Require Import Proofs.VectorUtils.
 
 Import ListNotations.
 

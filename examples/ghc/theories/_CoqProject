@@ -1,4 +1,4 @@
--Q . GhcProofs
+-Q . Proofs
 -R ../../../base ""
 -Q ../../../base-thy  Proofs
 -Q ../../ghc/lib ""
@@ -9,17 +9,17 @@ ScopeInvariant.v
 JoinPointInvariants.v
 # JoinPointInvariantsInductive.v
 CoreInduct.v
-ExitifyProofs.v
+Exitify.v
 CoreSubstInvariants.v
 StateLogic.v
-Tactics.v
+GhcTactics.v
 Forall.v
-CoreLemmas.v
+Core.v
 NCore.v
 VectorUtils.v
-CoreFVsLemmas.v
-BaseLemmas.v
+CoreFVs.v
+Base.v
 VarSet.v
 Unique.v
 ContainerAxioms.v
-VarLemmas.v
+Var.v

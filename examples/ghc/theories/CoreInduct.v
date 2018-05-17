@@ -3,8 +3,8 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import Psatz.
 
-Require Import GhcProofs.Tactics.
-Require Import GhcProofs.CoreLemmas.
+Require Import Proofs.GhcTactics.
+Require Import Proofs.Core.
 
 
 Set Bullet Behavior "Strict Subproofs".

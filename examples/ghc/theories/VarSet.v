@@ -16,11 +16,11 @@ Open Scope Z_scope.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Require Import GhcProofs.Tactics.
-Require Import GhcProofs.BaseLemmas.
-Require Import GhcProofs.ContainerAxioms.
-Require Import GhcProofs.Unique.
-Require Import GhcProofs.VarLemmas.
+Require Import Proofs.GhcTactics.
+Require Import Proofs.Base.
+Require Import Proofs.ContainerAxioms.
+Require Import Proofs.Unique.
+Require Import Proofs.Var.
 
 Require Import IntSetProofs.
 (* Require Import IntMapProofs. *)

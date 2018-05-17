@@ -47,13 +47,9 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   | Lit l => True
   | App e1 e2 => WellScoped e1 in_scope /\  WellScoped e2 in_scope
   | Lam v e => WellScoped e (extendVarSet in_scope v)
-  | Let (NonRec v rhs) body => 
-      WellScoped rhs in_scope /\ WellScoped body (extendVarSet in_scope v)
-  | Let (Rec pairs) body => 
-      NoDup (map varUnique (map fst pairs)) /\
-      let in_scope' := extendVarSetList in_scope (map fst pairs) in
-      Forall' (fun p => WellScoped (snd p) in_scope') pairs /\
-      WellScoped body in_scope'
+  | Let bind body =>
+      WellScopedBind bind in_scope /\
+      WellScoped body (extendVarSetList in_scope (bindersOf bind))
   | Case scrut bndr ty alts  => 
     WellScoped scrut in_scope /\
     Forall' (fun alt =>
@@ -63,6 +59,13 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   | Tick _ e =>   WellScoped e in_scope
   | Type_ _  =>   True
   | Coercion _ => True
+  end
+with WellScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
+  match bind with
+  | NonRec v rhs => WellScoped rhs in_scope
+  | Rec pairs => 
+     NoDup (map varUnique (map fst pairs)) /\
+      Forall' (fun p => WellScoped (snd p) (extendVarSetList in_scope (map fst pairs))) pairs
   end.
 
 Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=

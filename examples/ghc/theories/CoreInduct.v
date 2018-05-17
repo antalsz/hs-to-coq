@@ -4,6 +4,7 @@ Import ListNotations.
 Require Import Psatz.
 
 Require Import Proofs.GhcTactics.
+Require Import Proofs.Base.
 Require Import Proofs.Core.
 
 
@@ -265,20 +266,6 @@ Section AnnCoreLT.
     unfold AnnCoreLT. simpl.
     apply CoreLT_let_rhs.
   Qed.
-
-
-
-  Local Lemma flat_map_unpack_cons_f:
-    forall (A B C : Type) (f : A -> B -> C ) (xs : list (A * B)),
-     flat_map (fun '(x,y) => [f x y]) xs = map (fun '(x,y) => f x y) xs.
-  Proof.
-    intros.
-    induction xs.
-    * reflexivity.
-    * simpl. repeat expand_pairs. simpl.
-      f_equal. apply IHxs.
-  Qed.
-
 
   Lemma AnnCoreLT_let_pairs:
     forall v rhs pairs e fvs,

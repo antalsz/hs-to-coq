@@ -353,7 +353,9 @@ Section in_exitifyRec.
           clear IH1 IH2 IH3.
 
           (* Destruct well-scopedness assumption *)
-          destruct HWS as [HNoDup [HWSpairs HWSe]].
+          destruct HWS as [[HNoDup HWSpairs] HWSe].
+          simpl toBind in HWSe.
+          rewrite bindersOf_Rec in HWSe.
           rewrite Forall'_Forall in HWSpairs.
           rewrite to_list_map in HWSpairs.
           rewrite !map_map in HWSpairs.
@@ -404,7 +406,9 @@ Section in_exitifyRec.
           clear Heq_isJoinId.
 
           (* Destruct well-scopedness assumption *)
-          destruct HWS as [HNoDup [HWSpairs HWSe]].
+          destruct HWS as [[HNoDup HWSpairs] HWSe].
+          simpl toBind in HWSe.
+          rewrite bindersOf_Rec in HWSe.
           rewrite Forall'_Forall in HWSpairs.
           rewrite to_list_map in HWSpairs.
           rewrite !map_map in HWSpairs.
@@ -534,6 +538,7 @@ Section in_exitifyRec.
     induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
     * simpl. unfold Base.id. assumption.
     * simpl in *.
+      rewrite extendVarSetList_cons, extendVarSetList_nil.
       destruct Hfloats as [Hfreshs [HNoDup Hrhss]].
       inversion HNoDup; subst; clear HNoDup. rename H1 into Hfresh, H2 into HNoDup.
       inversion_clear Hrhss. rename H into Hrhs, H0 into Hrhss.
@@ -1089,7 +1094,8 @@ Section in_exitifyRec.
       - apply IHe.
       - apply RevStateInvariant_return; intros Hrhs' Hbody'.
         split.
-        ** rewrite WellScoped_mkLams.
+        ** simpl.
+           rewrite WellScoped_mkLams.
            rewrite extendVarSetList_append in Hbody'.
            apply Hbody'.
         ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in Hrhs'.
@@ -1097,7 +1103,7 @@ Section in_exitifyRec.
    *  eapply RevStateInvariant_bind; only 1: apply IHe.
       intro body'. apply RevStateInvariant_return; intros Hbody'.
       rewrite extendVarSetList_append in Hbody'.
-      split; only 2: split.
+      split; only 1: split.
       ++ rewrite !map_map.
          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => varUnique x)
            by (intros; repeat expand_pairs; destruct a; reflexivity).
@@ -1111,10 +1117,11 @@ Section in_exitifyRec.
          intros [v rhs] HWSv. simpl in *.
          rewrite deAnnotate_freeVars.
          apply isvsp_to_isvsp'_extended2; assumption.
-            ++ rewrite !map_map.
-               rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
-                  by (intros; repeat expand_pairs; destruct a; reflexivity).
-               apply Hbody'.
+      ++ rewrite bindersOf_Rec.
+         rewrite !map_map.
+         rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
+            by (intros; repeat expand_pairs; destruct a; reflexivity).
+         apply Hbody'.
      * eapply RevStateInvariant_bind.
        - apply RevStateInvariant_forM2 with
               (R := fun p p' =>
@@ -1142,8 +1149,9 @@ Section in_exitifyRec.
         symmetry in Hfst.
         change ((@map (CoreBndr * Expr CoreBndr) CoreBndr (@fst CoreBndr (Expr CoreBndr)) pairs'') = map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs'0)) in Hfst.
         simpl.
+        rewrite bindersOf_Rec_cleanup.
         rewrite Hfst.
-        split; only 2: split.
+        split; only 1: split.
         -- simpl in HNoDup.
            rewrite map_map.
            rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => varUnique x)
@@ -1252,6 +1260,8 @@ Section in_exitifyRec.
     apply mkLets_WellScoped.
     * rewrite WellScoped_MkLet.
       simpl in *.
+      rewrite bindersOf_Rec_cleanup.
+      fold (@fst CoreBndr CoreExpr).
       rewrite map_fst_pairs'.
       repeat split.
       + assumption.

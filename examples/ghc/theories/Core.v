@@ -60,6 +60,10 @@ Proof.
   now rewrite <- IHpairs.
 Qed.
 
+Lemma bindersOf_Rec_cleanup:
+  forall {v} (pairs : list (v * Expr v)),
+  flat_map (fun '(x, _) => [x]) pairs = map fst pairs.
+Proof. exact @bindersOf_Rec. Qed.
 
 
 (** ** [AnnExpr] related lemmas *)

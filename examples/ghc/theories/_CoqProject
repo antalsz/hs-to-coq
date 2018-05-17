@@ -18,3 +18,8 @@ CoreLemmas.v
 NCore.v
 VectorUtils.v
 CoreFVsLemmas.v
+BaseLemmas.v
+VarSet.v
+Unique.v
+ContainerAxioms.v
+VarLemmas.v

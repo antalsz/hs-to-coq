@@ -65,6 +65,8 @@ TODO are these invariants:
     and it is crucial to make AST traversals, that use [collectNBinders],
     total. This means that many functions will have that as a precondition.
     So lets isolate that.
+    
+    Currently unused.
 *)
 
 Definition HasJoinLamsPair {v : Type} x (e : Expr v) :=
@@ -235,3 +237,9 @@ Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid 
       of the top-level recursive functions. Instead, it is a local let and
       I repeat the defininition later to give it a name.
 *)
+
+Axiom isJoinPointValidPair_extendVarSet:
+  forall v rhs jps v',
+  isJoinPointsValidPair v rhs jps = true ->
+  isJoinPointsValidPair v rhs (extendVarSet jps v') = true.
+  

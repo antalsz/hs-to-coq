@@ -1,14 +1,98 @@
+Require Import Id.
 Require Import Core.
 Require Import CoreFVs.
 
+Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
-Require Import Coq.NArith.BinNat.
-
 Require Import GhcProofs.Tactics.
+Require Import GhcProofs.BaseLemmas.
+
+Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Coq.Lists.List.
+Import ListNotations.
+
 
 Opaque Base.hs_string__.
 
 Set Bullet Behavior "Strict Subproofs".
+
+Open Scope list_scope.
+Close Scope Z_scope.
+
+(** ** AST functions *)
+
+Lemma mkLets_append:
+  forall b binds1 binds2 (e : Expr b),
+  mkLets (binds1 ++ binds2) e = mkLets binds1 (mkLets binds2 e).
+Proof.
+  intros.
+  unfold mkLets.
+  rewrite Foldable_foldr_app.
+  auto.
+Qed.
+  
+Lemma mkLets_cons:
+  forall b bind binds (e : Expr b),
+  mkLets (bind :: binds) e = mkLet bind (mkLets binds e).
+Proof.
+  intros.
+  unfold mkLets.
+  unfold_Foldable.
+  reflexivity.
+Qed.
+
+Lemma mkLets_nil:
+  forall b (e : Expr b),
+  mkLets [] e = e.
+Proof.
+  intros.
+  unfold mkLets. unfold_Foldable.
+  reflexivity.
+Qed.
+
+
+Lemma bindersOf_Rec:
+  forall {v} (pairs : list (v * Expr v)),
+  bindersOf (Rec pairs) = map fst pairs.
+Proof.
+  induction pairs; simpl; intros; auto.
+  destruct a.
+  now rewrite <- IHpairs.
+Qed.
+
+
+
+(** ** [AnnExpr] related lemmas *)
+
+Lemma deAnnBinds_AnnRec:
+ forall {a v} (pairs : list (v * AnnExpr v a)),
+ deAnnBind (AnnRec pairs) = Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs).
+Proof.
+  unfold deAnnBind.
+  symmetry.
+  rewrite <- flat_map_cons_f.
+  f_equal; f_equal.
+  extensionality x.
+  now destruct x.
+Qed.
+
+Lemma deAnnotate_AnnLet_AnnRec:
+ forall {a v} fvs pairs (e : AnnExpr a v),
+ deAnnotate (fvs, AnnLet (AnnRec pairs) e)
+  = Let (Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs)) (deAnnotate e).
+Proof.
+  induction pairs; simpl; intros; auto.
+  f_equal; f_equal.
+  destruct a0; simpl; f_equal.
+  symmetry.
+  rewrite <- flat_map_cons_f.
+  f_equal.
+  extensionality x.
+  now destruct x.
+Qed.
+
+(** ** [HasNLams] related lemmas (currently unused) *)
+
 
 Fixpoint HasNLams {v : Type} (n : nat) (e : Expr v) : Prop :=
   match n, e with
@@ -23,7 +107,6 @@ Fixpoint AnnHasNLams {a v : Type} (n : nat) (e : AnnExpr a v) : Prop :=
   | S n, (_, AnnLam _ e) => AnnHasNLams n e
   | _, _ => False
   end.
-
 
 
 Lemma AnnHasNLams_weaken : forall n a v (s : AnnExpr a v) v0 a0, 
@@ -59,6 +142,20 @@ Ltac name_go go :=
 
 
 
+Lemma HasNLams_deAnnotate:
+  forall { a v : Type} n (e : AnnExpr a v) `{GHC.Err.Default v},
+  HasNLams n (deAnnotate e) <-> AnnHasNLams n e.
+Proof.
+  induction n; intros.
+  * reflexivity.
+  * destruct e as [fvs e']; destruct e'; simpl; try reflexivity.
+    + apply IHn; assumption.
+    + expand_pairs.
+      reflexivity.
+Qed.
+
+
+
 Lemma deAnnotate_snd_collectNAnnBndrs:
   forall { a v : Type} n (e : AnnExpr a v) `{GHC.Err.Default v},
   AnnHasNLams n e ->
@@ -87,69 +184,3 @@ Proof.
     apply IHn; auto.
     omega.
 Qed.
-
-Lemma HasNLams_deAnnotate:
-  forall { a v : Type} n (e : AnnExpr a v) `{GHC.Err.Default v},
-  HasNLams n (deAnnotate e) <-> AnnHasNLams n e.
-Proof.
-  induction n; intros.
-  * reflexivity.
-  * destruct e as [fvs e']; destruct e'; simpl; try reflexivity.
-    + apply IHn; assumption.
-    + expand_pairs.
-      reflexivity.
-Qed.
-
-
-Open Scope list_scope.
-
-
-Lemma reverse_append : forall A (vs1:list A) (vs0:list A)  a ,
-  (List.reverse (a :: vs0) ++ vs1 = List.reverse vs0 ++ (a :: vs1)).
-Proof.
-  intros A.
-  intros.
-  rewrite hs_coq_reverse.
-  rewrite hs_coq_reverse.
-  rewrite <- List.rev_append_rev.
-  rewrite <- List.rev_append_rev.
-  simpl.
-  auto.
-Qed.
-
-Lemma collectNAnnBndrs_freeVars_mkLams:
-  forall vs rhs,
-  collectNAnnBndrs (length vs) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
-Proof.
-  intros vs rhs.
-  name_collect collect.
-  assert (forall vs1 vs0 n, 
-             n = length vs1 ->
-             collect n vs0 (freeVars (mkLams vs1 rhs)) = (List.app (List.reverse vs0)  vs1, freeVars rhs)).
-  { induction vs1; intros.
-    + simpl in *.  subst. 
-      unfold mkLams.
-      unfold_Foldable.
-      simpl. 
-      rewrite List.app_nil_r.
-      auto.
-    + simpl in *. 
-      destruct n; inversion H.
-      pose (IH := IHvs1 (cons a vs0) n H1). clearbody IH. clear IHvs1.
-      unfold mkLams in IH.
-      unfold Foldable.foldr in IH.
-      unfold Foldable.Foldable__list in IH.
-      unfold Foldable.foldr__ in IH.
-      simpl. 
-      remember (freeVars (Foldable.Foldable__list_foldr Lam rhs vs1)) as fv.
-      destruct fv.
-      rewrite <-  H1.
-      rewrite reverse_append in IH.
-      auto.
-  }       
-  pose (K := H vs nil (length vs) eq_refl).
-  simpl in K.
-  auto.
-Qed.
-
-

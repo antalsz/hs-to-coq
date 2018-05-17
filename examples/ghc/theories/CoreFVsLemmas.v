@@ -6,18 +6,26 @@ Require Import Core.
 Require Import Coq.Lists.List.
 
 Require Import GhcProofs.Tactics.
+Require Import GhcProofs.BaseLemmas.
 Require Import GhcProofs.CoreInduct.
+Require Import GhcProofs.CoreLemmas.
 
 Set Bullet Behavior "Strict Subproofs".
 
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
-
 
 Import GHC.Base.Notations.
 
 Scheme expr_mut := Induction for Expr Sort Prop
   with bind_mut := Induction for Bind Sort Prop.
 
+(** Basic properties of [exprFreeVars] *)
+
+Axiom exprFreeVars_Var: forall v, exprFreeVars (Mk_Var v) = unitVarSet v.
+
+Axiom exprFreeVars_Lam:
+  forall v e,
+  exprFreeVars (Lam v e) = delVarSet (exprFreeVars e) v.
 
 Lemma exprFreeVars_mkLams:
   forall vs e,
@@ -40,6 +48,9 @@ Proof.
     unfold Base.op_z2218U__.
     simpl.
 Admitted.
+
+(** Working with [freeVars] *)
+
 
 Lemma deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.
@@ -100,3 +111,44 @@ Proof.
   intros. symmetry. rewrite <- deAnnotate_freeVars at 1.
   destruct (freeVars e); reflexivity.
 Qed.
+
+Lemma freeVarsOf_freeVars:
+  forall e,
+  dVarSetToVarSet (freeVarsOf (freeVars e)) = exprFreeVars e.
+Admitted.
+
+Lemma collectNAnnBndrs_freeVars_mkLams:
+  forall vs rhs,
+  collectNAnnBndrs (length vs) (freeVars (mkLams vs rhs)) = (vs, freeVars rhs).
+Proof.
+  intros vs rhs.
+  name_collect collect.
+  assert (forall vs1 vs0 n, 
+             n = length vs1 ->
+             collect n vs0 (freeVars (mkLams vs1 rhs)) = (List.app (List.reverse vs0)  vs1, freeVars rhs)).
+  { induction vs1; intros.
+    + simpl in *.  subst. 
+      unfold mkLams.
+      unfold_Foldable.
+      simpl. 
+      rewrite List.app_nil_r.
+      auto.
+    + simpl in *. 
+      destruct n; inversion H.
+      pose (IH := IHvs1 (cons a vs0) n H1). clearbody IH. clear IHvs1.
+      unfold mkLams in IH.
+      unfold Foldable.foldr in IH.
+      unfold Foldable.Foldable__list in IH.
+      unfold Foldable.foldr__ in IH.
+      simpl. 
+      remember (freeVars (Foldable.Foldable__list_foldr Lam rhs vs1)) as fv.
+      destruct fv.
+      rewrite <-  H1.
+      rewrite reverse_append in IH.
+      auto.
+  }       
+  pose (K := H vs nil (length vs) eq_refl).
+  simpl in K.
+  auto.
+Qed.
+

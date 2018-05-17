@@ -5,6 +5,8 @@ Require Import CoreUtils.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
+Require Import Proofs.Base.
+Require Import Proofs.GhcTactics.
 Require Import Proofs.Forall.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSet.
@@ -69,49 +71,11 @@ Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
 
 (** ** Lots of lemmas *)
 
-(** *** Structural lemmas *)
-
-Axiom WellScoped_Lam:
-  forall v e isvs,
-  WellScoped (Lam v e) isvs <-> WellScoped e (extendVarSet isvs v).
-
-Axiom WellScoped_mkLams:
-  forall vs e isvs,
-  WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
-
-Axiom WellScoped_mkVarApps:
-  forall e vs isvs,
-  WellScoped (mkVarApps e vs) isvs <-> WellScoped e isvs /\ Forall (fun v => WellScopedVar v isvs) vs.
-  
-Axiom WellScopedVar_extendVarSet:
-  forall v vs,
-  WellScopedVar v (extendVarSet vs v).
-
-Lemma WellScoped_MkLetRec: forall pairs body isvs,
-  WellScoped (mkLetRec pairs body) isvs <-> WellScoped (Let (Rec pairs) body) isvs .
-Proof.
-  intros.
-  unfold mkLetRec.
-  destruct pairs; try reflexivity.
-  simpl.
-  rewrite extendVarSetList_nil.
-  split; intro; repeat split; try constructor; intuition.
-Qed.
-
-Lemma WellScoped_MkLet: forall bind body isvs,
-  WellScoped (mkLet bind body) isvs <-> WellScoped (Let bind body) isvs .
-Proof.
-  intros.
-  unfold mkLet.
-  destruct bind; try reflexivity.
-  destruct l; try reflexivity.
-  simpl.
-  rewrite extendVarSetList_nil.
-  split; intro; repeat split; try constructor; intuition.
-Qed.
-
-
 (** *** [almostEqual] *)
+
+Lemma almostEqual_refl:
+  forall v, almostEqual v v.
+Proof. intros. destruct v; constructor. Qed.
 
 Lemma delVarSet_ae:
   forall vs v1 v2,
@@ -135,6 +99,86 @@ Axiom WellScoped_extendVarSet_ae:
   forall e vs v1 v2,
   almostEqual v1 v2 ->
   WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
+
+
+(** *** Structural lemmas *)
+
+Lemma WellScoped_Lam:
+  forall v e isvs,
+  WellScoped (Lam v e) isvs <-> WellScoped e (extendVarSet isvs v).
+Proof. intros. reflexivity. Qed.
+
+
+Lemma WellScoped_mkLams:
+  forall vs e isvs,
+  WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
+Proof.
+  induction vs; intros.
+  * reflexivity.
+  * simpl.
+    rewrite extendVarSetList_cons.
+    refine (IHvs _ _).
+Qed.
+
+Lemma WellScoped_varToCoreExpr:
+  forall v isvs,
+  WellScopedVar v isvs -> WellScoped (varToCoreExpr v) isvs.
+Proof.
+  intros.
+  destruct v; simpl; try trivial.
+  unfold varToCoreExpr; simpl.
+  destruct_match; simpl; try trivial.
+Qed.
+
+Lemma WellScoped_mkVarApps:
+  forall e vs isvs,
+  WellScoped e isvs -> Forall (fun v => WellScopedVar v isvs) vs -> WellScoped (mkVarApps e vs) isvs.
+Proof.
+  intros.
+  unfold mkVarApps.
+  rewrite Foldable.hs_coq_foldl_list.
+  revert e H.
+  induction H0; intros.
+  * simpl. intuition.
+  * simpl.
+    apply IHForall; clear IHForall.
+    simpl.
+    split; try assumption.
+    apply WellScoped_varToCoreExpr; assumption.
+Qed.
+
+Lemma WellScopedVar_extendVarSet:
+  forall v vs,
+  WellScopedVar v (extendVarSet vs v).
+Proof.
+  intros.
+  unfold WellScopedVar.
+  rewrite lookupVarSet_extendVarSet_self.
+  apply almostEqual_refl.
+Qed.
+
+Lemma WellScoped_MkLetRec: forall pairs body isvs,
+  WellScoped (mkLetRec pairs body) isvs <-> WellScoped (Let (Rec pairs) body) isvs .
+Proof.
+  intros.
+  unfold mkLetRec.
+  destruct pairs; try reflexivity.
+  simpl.
+  rewrite extendVarSetList_nil.
+  split; intro; repeat split; try constructor; intuition.
+Qed.
+
+Lemma WellScoped_MkLet: forall bind body isvs,
+  WellScoped (mkLet bind body) isvs <-> WellScoped (Let bind body) isvs .
+Proof.
+  intros.
+  unfold mkLet.
+  destruct bind; try reflexivity.
+  destruct l; try reflexivity.
+  simpl.
+  rewrite extendVarSetList_nil.
+  split; intro; repeat split; try constructor; intuition.
+Qed.
 
 (** *** Relation to [exprFreeVars] *)
 

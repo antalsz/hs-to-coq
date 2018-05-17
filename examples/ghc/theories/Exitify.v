@@ -1050,8 +1050,7 @@ Section in_exitifyRec.
     intro v.
     apply RevStateInvariant_return.
     intro HWSv.
-    rewrite WellScoped_mkVarApps.
-    split; only 1 : apply HWSv.
+    apply WellScoped_mkVarApps; only 1 : apply HWSv.
     subst abs_vars.
     eapply Forall_impl.
     * intros v' HWSv'.

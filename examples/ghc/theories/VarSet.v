@@ -114,6 +114,11 @@ Proof.
   (* Need theory about IntMap. *)
 Admitted. 
 
+Lemma lookupVarSet_extendVarSet_self:
+  forall v vs,
+  lookupVarSet (extendVarSet vs v) v = Some v.
+Admitted.
+
 
 Lemma elemVarSet_extendVarSet:
   forall v vs v',

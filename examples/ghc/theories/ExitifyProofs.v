@@ -479,7 +479,7 @@ Axiom WellScoped_collectNBinders2:
   WellScoped e isvs ->
   WellScoped (snd (collectNBinders n e)) (extendVarSetList isvs (fst (collectNBinders n e))).
 
-Theorem deAnnBinds_AnnRec:
+Lemma deAnnBinds_AnnRec:
  forall {a v} (pairs : list (v * AnnExpr v a)),
  deAnnBind (AnnRec pairs) = Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs).
 Proof.
@@ -491,7 +491,7 @@ Proof.
   now destruct x.
 Qed.
 
-Theorem deAnnotate_AnnLet_AnnRec:
+Lemma deAnnotate_AnnLet_AnnRec:
  forall {a v} fvs pairs (e : AnnExpr a v),
  deAnnotate (fvs, AnnLet (AnnRec pairs) e)
   = Let (Rec (map (fun p => (fst p, deAnnotate (snd p))) pairs)) (deAnnotate e).
@@ -506,7 +506,7 @@ Proof.
   now destruct x.
 Qed.
 
-Theorem bindersOf_Rec:
+Lemma bindersOf_Rec:
   forall {v} (pairs : list (v * Expr v)),
   bindersOf (Rec pairs) = map fst pairs.
 Proof.
@@ -515,7 +515,7 @@ Proof.
   now rewrite <- IHpairs.
 Qed.
 
-Theorem forallb_imp:
+Lemma forallb_imp:
   forall a P Q (xs : list a),
   forallb P xs = true ->
   (forall x, P x = true -> Q x = true) ->

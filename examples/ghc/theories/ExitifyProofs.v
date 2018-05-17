@@ -132,8 +132,14 @@ Proof.
   now destruct i0.
 Qed.
 
-Axiom idJoinArity_join: forall v a,
+Lemma idJoinArity_join: forall v a,
   isJoinId_maybe v = Some a -> idJoinArity v = a.
+Proof.
+  unfold isJoinId, isJoinId_maybe, idJoinArity.
+  induction v; simpl; intros; auto; try discriminate.
+  destruct i0; simpl; try discriminate.
+  now inversion H.
+Qed.
 
 Axiom isJoinId_maybe_uniqAway:
   forall s v, 

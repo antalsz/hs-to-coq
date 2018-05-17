@@ -1753,3 +1753,66 @@ Section in_exitifyRec.
 *)
 
 End in_exitifyRec.
+
+Definition top_go := ltac:(
+  let rhs := eval cbv beta delta [exitifyProgram] in (exitifyProgram []) in
+  lazymatch rhs with | (let x := ?rhs in ?body) => 
+    exact rhs
+  end).
+
+
+(* This is incomplete; need to nail down connection between
+  [in_scope] and [isvs].
+*)
+Theorem top_go_WellScoped:
+  forall e in_scope isvs,
+  WellScoped e isvs->
+  WellScoped (top_go in_scope e) isvs.
+Admitted.
+
+Theorem exitifyProgram_WellScoped:
+  forall pgm isvs,
+  WellScopedProgram pgm isvs->
+  WellScopedProgram (exitifyProgram pgm) isvs.
+Proof.
+  intros.
+  cbv beta delta [exitifyProgram].
+  fold top_go.
+  zeta_one.
+  do 2 float_let.
+
+  assert (HbindersOf: forall a, bindersOf (goTopLvl a) = bindersOf a). admit.
+  
+  clearbody in_scope_toplvl.
+  rewrite hs_coq_map.
+  revert isvs0 H.
+  induction pgm; intros.
+  * constructor.
+  * destruct H as [HWSbind HWSpgm].
+    split.
+    + destruct a; simpl.
+      - apply top_go_WellScoped. apply HWSbind.
+      - destruct HWSbind as [HNoDup Hpairs].
+        split.
+        ** rewrite hs_coq_map.
+           rewrite !map_map.
+           rewrite map_ext with (g := fun '(x, rhs) => varUnique x)
+              by (intros; repeat expand_pairs; destruct a; reflexivity).
+           rewrite map_map in HNoDup.
+           rewrite map_ext with (g := fun '(x, rhs) => varUnique x) in HNoDup
+              by (intros; repeat expand_pairs; destruct a; reflexivity).
+           apply HNoDup.
+        ** rewrite Forall'_Forall in *.
+           rewrite Forall_map in *.
+           eapply Forall_impl; only 2: apply Hpairs.
+           intros [v rhs] HWSrhs.
+           simpl in *.
+           apply top_go_WellScoped.
+           rewrite !map_map.
+           rewrite map_ext with (g := fun '(x, rhs) =>  x)
+              by (intros; repeat expand_pairs; destruct a; reflexivity).
+           apply HWSrhs.
+    + apply IHpgm.
+      rewrite HbindersOf.
+      apply HWSpgm.
+Admitted.

@@ -72,6 +72,14 @@ Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
     let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
     WellScoped (snd alt) in_scope'.
 
+Fixpoint WellScopedProgram (pgm : CoreProgram) (in_scope : VarSet) : Prop :=
+  match pgm with
+  | [] => True
+  | bind :: pgm' =>
+    WellScopedBind bind in_scope /\
+    WellScopedProgram pgm' (extendVarSetList in_scope (bindersOf bind))
+  end.
+
 (** ** Lots of lemmas *)
 
 (** *** [almostEqual] *)

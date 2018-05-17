@@ -75,6 +75,46 @@ Ltac safe_unfold_VarSet :=
          UniqFM.minusUFM, UniqFM.isNullUFM, 
          UniqFM.elemUFM in *.
 
+(*  Theory about foldable for lists *)
+
+Ltac unfold_Foldable_foldr :=
+  unfold Foldable.foldr,
+  Foldable.foldr__,
+  Foldable.Foldable__list,
+  Foldable.Foldable__list_foldr.
+
+Ltac unfold_Foldable_foldl' :=
+  unfold Foldable.foldl',  Foldable.Foldable__list, 
+  Foldable.foldl'__, Foldable.Foldable__list_foldl', foldl'.
+
+Ltac unfold_Foldable_foldl :=
+  unfold Foldable.foldl,  Foldable.Foldable__list, 
+  Foldable.foldl__, Foldable.Foldable__list_foldl, foldl.
+
+
+Lemma Foldable_foldr_app : forall a b (f:a -> b -> b) (s:b) 
+                              (vs1 : list a) (vs2: list a),
+    Foldable.foldr f s (vs1 ++ vs2) =
+    Foldable.foldr f (Foldable.foldr f s vs2) vs1.
+Proof.
+  intros.
+  unfold_Foldable_foldr.
+  rewrite hs_coq_foldr_base.
+  rewrite fold_right_app.
+  auto.
+Qed.
+
+Lemma Foldable_foldl'_app : forall a b (f:b -> a -> b) (s:b) 
+                              (vs1 : list a) (vs2: list a),
+    Foldable.foldl' f s (vs1 ++ vs2) =
+    Foldable.foldl' f (Foldable.foldl' f s vs1) vs2.
+Proof.
+  unfold_Foldable_foldl'.
+  intros.
+  repeat rewrite <- List_foldl_foldr.
+  rewrite fold_left_app.
+  auto.
+Qed.
 
 
 (** ** Punted-on lemmas about GHC functions *)
@@ -83,19 +123,36 @@ Instance EqLaws_Unique : EqLaws Unique.Unique. Admitted.
 Instance EqExact_Unique : EqExact Unique.Unique. Admitted.
 
 
-Axiom mkLets_append:
+Lemma mkLets_append:
   forall b binds1 binds2 (e : Expr b),
   mkLets (binds1 ++ binds2) e = mkLets binds1 (mkLets binds2 e).
-
-Axiom mkLets_cons:
+Proof.
+  intros.
+  unfold mkLets.
+  rewrite Foldable_foldr_app.
+  auto.
+Qed.
+  
+Lemma mkLets_cons:
   forall b bind binds (e : Expr b),
   mkLets (bind :: binds) e = mkLet bind (mkLets binds e).
+Proof.
+  intros.
+  unfold mkLets.
+  unfold_Foldable.
+  reflexivity.
+Qed.
 
-Axiom mkLets_nil:
+Lemma mkLets_nil:
   forall b (e : Expr b),
   mkLets [] e = e.
+Proof.
+  intros.
+  unfold mkLets. unfold_Foldable.
+  reflexivity.
+Qed.
 
-
+(* ---------------------------------------------- *)
 
 Axiom isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
@@ -119,32 +176,23 @@ Axiom isJoinId_maybe_asJoinId:
   forall v a,
   isJoinId_maybe (asJoinId v a) = Some a.
 
+(* ---------------------------------------------- *)
+
 Axiom dVarSet_freeVarsOf_Ann:
   (* @lastland, this is one spec that you might want to do *)
   forall ann_e, dVarSetToVarSet (freeVarsOf ann_e) = exprFreeVars (deAnnotate ann_e).
 
-
-Ltac unfold_Foldable :=
-  unfold Foldable.foldr,
-  Foldable.foldr__,
-  Foldable.Foldable__list,
-  Foldable.Foldable__list_foldr,
-  Base.foldr.
-
-Ltac unfold_Foldable_foldl' :=
-  unfold Foldable.foldl',  Foldable.Foldable__list, 
-  Foldable.foldl'__, Foldable.Foldable__list_foldl', foldl'.
+(* ---------------------------------------------- *)
 
 
 Lemma extendVarSetList_nil:
   forall s,
   extendVarSetList s [] = s.
 Proof.
-  intro s. repeat unfold_VarSet.
-  unfold_Foldable.
+  intro s. 
+  repeat unfold_VarSet.
   unfold_Foldable_foldl'.
-  simpl.
-  auto.
+  reflexivity.
 Qed.
 
 Lemma extendVarSetList_cons:
@@ -154,34 +202,10 @@ Proof.
   intros.
   repeat unfold_VarSet.
   unfold_Foldable_foldl'.
-  simpl.
-  f_equal.
+  reflexivity.
 Qed.
 
 
-Lemma List_foldl_foldr:
-  forall {a b} f (x : b) (xs : list a),
-    fold_left f xs x = List.fold_right (fun x g a => g (f a x)) id xs x.
-Proof.
-  intros. revert x.
-  induction xs; intro.
-  * reflexivity.
-  * simpl. rewrite IHxs. reflexivity.
-Qed.
-
-Lemma Foldable_foldl'_app : forall a b (f:b -> a -> b) (s:b) 
-                              (vs1 : list a) (vs2: list a),
-    Foldable.foldl' f s (vs1 ++ vs2) =
-    Foldable.foldl' f (Foldable.foldl' f s vs1) vs2.
-Proof.
-  unfold_Foldable_foldl'.
-  intros.
-  rewrite <- List_foldl_foldr.
-  rewrite <- List_foldl_foldr.
-  rewrite <- List_foldl_foldr.
-  rewrite fold_left_app.
-  auto.
-Qed.
 
 Lemma extendVarSetList_append:
   forall s vs1 vs2,
@@ -201,34 +225,14 @@ Proof.
   auto.
 Qed.
 
-(* This looks really useful 
-https://github.com/Zimmi48/transfer 
-*)
-
-Axiom member_in : forall k (i:Internal.IntMap Var) (vs: list Var)(f : Var -> Word), 
- IntMap.Internal.member k i = true <->
- In k (map f vs).
-
-Lemma elemVarSet_mkVarset_iff_In:
-  forall v vs,
-  elemVarSet v (mkVarSet vs) = true <->  In (varUnique v) (map varUnique vs).
-Proof.
-  intros.
-  unfold_VarSet.
-  remember (mkVarSet vs) as vss.
-  unfold_VarSet.
-  unfold Unique.getWordKey. 
-  rewrite <- getUnique_varUnique.
-
-  unfold mkVarSet in *.
-  unfold UniqSet.mkUniqSet in *.
-  unfold UniqSet.addOneToUniqSet in *.
-  unfold UniqSet.emptyUniqSet in *.
-  unfold UniqFM.emptyUFM in *.
-  unfold UniqFM.addToUFM in *.
-  (* Need theory about IntMap. *)
-Admitted. 
-
+Ltac unfold_zeze :=
+  repeat unfold Base.op_zeze__,
+  Nat.Eq_nat,
+  Eq_Char___,
+  Unique.Eq___Unique,
+  op_zeze____,
+  Unique.Eq___Unique_op_zeze__,
+  Unique.eqUnique.
 
 
 
@@ -241,23 +245,79 @@ Proof.
   unfold Unique.getKey.
   destruct v.
   destruct v'.
-  unfold GHC.Base.op_zeze__.
-  unfold Unique.Eq___Unique.
-  unfold Eq_Char___.
-  unfold op_zeze____.
-  unfold Unique.Eq___Unique_op_zeze__.
-  unfold Unique.eqUnique.
-  unfold GHC.Base.op_zeze__.
-  unfold Eq_Char___.
-  unfold op_zeze____.
+  unfold_zeze.
   auto.
 Qed.
 
-Lemma member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
+Require Import FunctionalExtensionality.
+
+Lemma unique_In : forall v vs,
+ In v vs <->
+ In (Unique.getWordKey v) (map Unique.getWordKey vs).
+Proof.
+  unfold Unique.getWordKey.
+  unfold Unique.getKey.
+  intro v. destruct v.
+  induction vs.
+  - simpl. tauto.
+  - simpl.
+    destruct a.
+    split.
+    intros [H1 | H2].
+    inversion H1. auto.
+    right.
+    apply in_map with (f := (fun '(Unique.MkUnique x) => x)) in H2.
+    auto.
+    intros [H1 | H2].
+    subst. auto.
+    right.
+    replace vs with (map Unique.MkUnique (map (fun '(Unique.MkUnique x) => x) vs)).
+    apply in_map. auto.
+    rewrite map_map.
+    replace
+      (fun x => Unique.MkUnique (let 'Unique.MkUnique x0 := x in x0)) 
+      with (fun (x:Unique.Unique) => x).
+    rewrite map_id. auto.
+    apply functional_extensionality. 
+    (* May be able to replace this by inner induction *)
+    intro x. destruct x. auto.
+Qed.
+
+
+(* This looks really useful 
+https://github.com/Zimmi48/transfer 
+*)
+
+
+Axiom member_in : forall k (i:Internal.IntMap Var) (vs: list Var)(f : Var -> Word), 
+ IntMap.Internal.member k i = true <->
+ In k (map f vs).
+
+Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
 IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
   (k == k')
   || IntMap.Internal.member k i.
-Admitted.
+
+Axiom difference_self : forall A (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.difference i i = IntMap.Internal.empty.
+
+Axiom null_empty : forall A,
+    (@IntMap.Internal.null A IntMap.Internal.empty) = true.
+
+Lemma elemVarSet_mkVarset_iff_In:
+  forall v vs,
+  elemVarSet v (mkVarSet vs) = true <->  In (varUnique v) (map varUnique vs).
+Proof.
+  intros.
+  remember (mkVarSet vs) as vss.
+  unfold_VarSet.
+  rewrite <- getUnique_varUnique.
+  rewrite unique_In.
+  set (key := (Unique.getWordKey (Unique.getUnique v))).
+  (* Need theory about IntMap. *)
+Admitted. 
+
+
 
 
 Lemma elemVarSet_extendVarSet:
@@ -281,14 +341,25 @@ Proof.
   safe_unfold_VarSet.
   destruct vs1.
   destruct u.
-Admitted.
+  rewrite difference_self.
+  apply null_empty.
+Qed.
 
 
-Axiom subVarSet_elemVarSet_true:
+Lemma subVarSet_elemVarSet_true:
   forall v vs vs',
   subVarSet vs vs' = true ->
   elemVarSet v vs = true ->
   elemVarSet v vs' = true.
+Proof.
+  intros.
+  safe_unfold_VarSet.
+  destruct vs.
+  destruct vs'.
+  destruct u.
+  destruct u0.
+  set (key := Unique.getWordKey (Unique.getUnique v)) in *.
+Admitted.
 
 Axiom subVarSet_elemVarSet_false:
   forall v vs vs',
@@ -327,20 +398,52 @@ Axiom disjointVarSet_subVarSet_l:
   subVarSet vs1 vs2 = true ->
   disjointVarSet vs1 vs3 = true.
   
+(* ------------------------------------------------------------ *)
 
-Axiom getInScopeVars_extendInScopeSet:
+Lemma getInScopeVars_extendInScopeSet:
   forall iss v,
   getInScopeVars (extendInScopeSet iss v) = extendVarSet (getInScopeVars iss) v.
+Proof.
+  intros.
+  unfold getInScopeVars.
+  unfold extendInScopeSet.
+  destruct iss.
+  reflexivity.
+Qed.
 
-Axiom getInScopeVars_extendInScopeSetList:
+Lemma getInScopeVars_extendInScopeSetList:
   forall iss vs,
   getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
+Proof.
+  intros.
+  unfold getInScopeVars.
+  unfold extendInScopeSetList.
+  unfold_VarSet.
+  destruct iss.
+  unfold_Foldable_foldl'.
+  unfold_Foldable_foldl.
+  f_equal.
+Qed.
 
-Axiom elemVarSet_uniqAway:
+Lemma elemVarSet_uniqAway:
   forall v iss vs,
   subVarSet vs (getInScopeVars iss) = true ->
   elemVarSet (uniqAway iss v) vs = false.
-
+Proof.
+  intros.
+  safe_unfold_VarSet.
+  destruct vs.
+  destruct iss.
+  destruct v0.
+  destruct u.
+  destruct u0.
+  simpl in *.
+  unfold uniqAway.
+  unfold elemInScopeSet.
+  unfold elemVarSet.
+  unfold uniqAway'.
+  unfold realUnique.
+Admitted.
 
 Axiom WellScoped_extendVarSetList_fresh:
   forall vs e vs1,

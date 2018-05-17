@@ -1,5 +1,6 @@
 
 in Core.uniqAway' termination try deferred
+# obligations Core.uniqAway' admit
 
 in Core.uniqAway' rewrite forall , n = (BinNat.N.of_nat n)
 

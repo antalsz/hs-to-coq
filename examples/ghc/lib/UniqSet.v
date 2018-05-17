@@ -30,9 +30,11 @@ Definition getUniqSet' {a} (arg_0__ : UniqSet a) :=
   getUniqSet'.
 (* Converted value declarations: *)
 
+
 Instance Unpeel_UniqSet ele
    : GHC.Prim.Unpeel (UniqSet ele) (UniqFM.UniqFM ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun '(Mk_UniqSet y) => y) Mk_UniqSet.
+
 
 (* Skipping instance Eq___UniqSet *)
 

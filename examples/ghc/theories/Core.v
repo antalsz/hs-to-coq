@@ -184,6 +184,8 @@ Proof.
     destruct a0; try contradiction.
     destruct s.
     simpl in *.
+    solve_error_sub.
+    simpl in *.
     replace (n - 0) with n; auto.
     apply IHn; auto.
     omega.

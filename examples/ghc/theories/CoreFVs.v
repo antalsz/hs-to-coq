@@ -2,8 +2,8 @@ Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
 Require Import Core.
-Require Import CoreInduct.
-Require Import CoreSubstInvariants.
+Require Import Proofs.CoreInduct.
+Require Import Proofs.CoreSubstInvariants.
 
 Require Import Proofs.Data.Foldable.
 Require Import Coq.Lists.List.

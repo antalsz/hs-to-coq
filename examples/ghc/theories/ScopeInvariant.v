@@ -251,8 +251,10 @@ Proof.
   rewrite WellScoped_extendVarSetList_fresh.
   rewrite -> WellScoped_mkLams.
   reflexivity.
+  replace vs2 with (rev (rev vs2)).
   rewrite exprFreeVars_mkLams.
   eapply disjointVarSet_subVarSet_l; only 1: eassumption.
   apply subVarSet_delVarSetList.
+  apply rev_involutive.
 Qed.
 

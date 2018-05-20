@@ -44,20 +44,10 @@ Admitted.
 
 
 Lemma union_empty_l : forall fv, FV.unionFV FV.emptyFV fv = fv.
-intro fv. unfold FV.unionFV. unfold FV.emptyFV.
-  apply functional_extensionality. intro f.
-  apply functional_extensionality. intro vs.
-  apply functional_extensionality. intro bs.
-  reflexivity.
-Qed.
+Proof. reflexivity. Qed.
 
 Lemma union_empty_r : forall fv, FV.unionFV fv FV.emptyFV = fv.
-intro fv. unfold FV.unionFV. unfold FV.emptyFV.
-  apply functional_extensionality. intro f.
-  apply functional_extensionality. intro vs.
-  apply functional_extensionality. intro bs.
-  reflexivity.
-Qed.
+Proof. reflexivity. Qed.
 
 Lemma fvVarSet_union : forall s1 s2, 
     FV.fvVarSet (FV.unionFV s1 s2) = Core.unionVarSet (FV.fvVarSet s1) (FV.fvVarSet s2).

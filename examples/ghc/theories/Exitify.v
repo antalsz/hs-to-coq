@@ -822,10 +822,8 @@ Section in_exitifyRec.
          by (intros; repeat expand_pairs; destruct a; reflexivity).
     fold fs in Hdisjoint.
     eapply disjointVarSet_subVarSet_l; only 1 : eassumption.
-    replace captured with (rev (rev captured)).
     rewrite exprFreeVars_mkLams.
     apply subVarSet_delVarSetList.
-    apply rev_involutive.
   Qed.
 
   Lemma go_all_WellScopedFloats captured e: 

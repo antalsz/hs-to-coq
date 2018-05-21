@@ -193,7 +193,7 @@ rewrite NG.
 auto.
 Qed.
 
-Lemma exprFreeVars_mkLams:
+Lemma exprFreeVars_mkLams_rev:
   forall vs e, exprFreeVars (mkLams (rev vs) e) = delVarSetList (exprFreeVars e) vs.
 Proof.
   intros vs e. revert vs. apply rev_ind; intros.
@@ -209,11 +209,11 @@ Proof.
     rewrite delVarSet_delFV. reflexivity.
 Qed.
 
-Lemma exprFreeVars_mkLams_rev:
+Lemma exprFreeVars_mkLams:
   forall vs e, exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) (rev vs).
 Proof.
   intros. replace vs with (rev (rev vs)) at 1.
-  - apply exprFreeVars_mkLams.
+  - apply exprFreeVars_mkLams_rev.
   - apply rev_involutive.
 Qed.
 
@@ -222,7 +222,7 @@ Lemma exprFreeVars_Lam:
 Proof.
   intros v e.
   replace (Lam v e) with (mkLams (rev [v]) e).
-  - rewrite <- delVarSetList_single. apply exprFreeVars_mkLams.
+  - rewrite <- delVarSetList_single. apply exprFreeVars_mkLams_rev.
   - simpl. unfold mkLams. rewrite hs_coq_foldr_list. reflexivity.
 Qed.
 

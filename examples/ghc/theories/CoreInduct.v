@@ -3,6 +3,8 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import Psatz.
 
+Require Import Omega.
+
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Base.
 Require Import Proofs.Core.
@@ -192,6 +194,7 @@ Section CoreLT.
     CoreLT e (Let binds e).
   Proof. intros. unfold CoreLT. simpl. destruct binds; lia. Qed.
 
+
   (* Needs a precondition that there are enough lambdas *)
   Lemma CoreLT_collectNBinders:
     forall n e e',
@@ -208,16 +211,17 @@ Section CoreLT.
     induction n'; intros args e HLams Hlt.
     * destruct e; simpl; try apply Hlt.
     * destruct e; simpl; simpl in HLams; try contradiction.
-Admitted.
-(*      apply IHn'; clear IHn'; cleardefs.
-      + apply HLams.
-      + unfold CoreLT in *. simpl in *. lia.
-  Qed. *)
+      solve_error_sub.
+      simpl. replace (n' - 0) with n'; try omega.
+      apply IHn'; clear IHn'; cleardefs.
+      auto.
+      unfold CoreLT in *. simpl in *. lia.
+  Qed.
 End CoreLT.
 
 Opaque CoreLT.
 
-(* For less obligations from [Program Fixpoint]: *)
+(* For fewer obligations from [Program Fixpoint]: *)
 Hint Resolve CoreLT_wf : arith.
 
 (* This is a bit plump yet *)

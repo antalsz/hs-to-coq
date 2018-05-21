@@ -560,6 +560,7 @@ Section in_exitifyRec.
              destruct (Eq_eq (varUnique v') (varUnique v)); (reflexivity || exfalso).
              contradict Hfresh.
              exists (v', rhs'). split; assumption.
+             admit.
           ** apply Hfreshs. assumption.
         + assumption.
         + rewrite Forall_forall.
@@ -570,7 +571,7 @@ Section in_exitifyRec.
           eapply subVarSet_elemVarSet_false; only 2: eassumption.
           apply WellScoped_subset.
           apply Hrhss; assumption.
-  Qed.
+  Admitted.
 
   (* the [addExit] function ensures that the new exit floats are well-scoped
      where we are going to put them.
@@ -725,6 +726,7 @@ Section in_exitifyRec.
           rewrite elemVarSet_unitVarSet.
           rewrite elemVarSet_delVarSet in *.
           intuition.
+          admit.
         - constructor; only 2: constructor.
           change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
           rewrite WellScoped_extendVarSet_ae by (apply zap_ae).
@@ -747,10 +749,11 @@ Section in_exitifyRec.
           apply not_true_is_false.
           rewrite elemVarSet_unitVarSet.
           eapply elemVarSet_false_true; eassumption.
+          admit.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           assumption.
-  Qed.
+  Admitted.
 
   Lemma WellScopedVar_picked:
     forall vsis captured fvs,

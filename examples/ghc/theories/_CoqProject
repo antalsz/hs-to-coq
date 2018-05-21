@@ -19,6 +19,7 @@ NCore.v
 VectorUtils.v
 CoreFVs.v
 Base.v
+VarSetFSet.v
 VarSet.v
 Unique.v
 ContainerAxioms.v

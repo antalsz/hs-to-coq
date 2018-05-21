@@ -10,43 +10,192 @@ Require Import Proofs.Base.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
 
+Require Import Proofs.VarSet.
+Import VarSetFSet.
+Import VarSetDecide.
+Import VarSetFacts.
+Import VarSetProperties.
+Import VarSetFSet.Notin.
+
+Require GHC.Base.
+Import GHC.Base.ManualNotations.
+
 Set Bullet Behavior "Strict Subproofs".
 
+(* TODO: fix mutual recursion. *)
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
-
-Import GHC.Base.Notations.
 
 Scheme expr_mut := Induction for Expr Sort Prop
   with bind_mut := Induction for Bind Sort Prop.
 
-(** Basic properties of [exprFreeVars] *)
+(** ** [FV] *)
 
-Axiom exprFreeVars_Var: forall v, exprFreeVars (Mk_Var v) = unitVarSet v.
+Axiom unionFV_empty_right : forall fv, FV.unionFV fv FV.emptyFV = fv.
+Axiom unionFV_empty_left  : forall fv, FV.unionFV FV.emptyFV fv = fv.
 
-Axiom exprFreeVars_Lam:
+(** Unfolding tactics *)
+
+Ltac unfold_FV := 
+  repeat unfold Base.op_z2218U__, FV.filterFV, FV.fvVarSet, 
+       FV.unitFV, FV.fvVarListVarSet.
+
+
+(** ** [VarSet] *)
+
+Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
+fsetdec.
+Qed.
+
+
+Lemma delVarSet_elemVarSet_false : forall v set, 
+    elemVarSet v set = false -> delVarSet set v [=] set.
+intros.
+set_b_iff.
+apply remove_equal.
+auto.
+Qed.
+
+
+Lemma extendVarSet_elemVarSet_true : forall set v, 
+    elemVarSet v set = true -> extendVarSet set v [=] set.
+Proof. 
+  intros.
+  set_b_iff.
+  apply add_equal.
+  auto.
+Qed.
+
+Lemma delVarSet_extendVarSet : 
+  forall set v, 
+    elemVarSet v set = false -> 
+    (delVarSet (extendVarSet set v) v) [=] set.
+Proof.
+  intros.
+  set_b_iff.
+  apply remove_add.
+  auto.
+Qed.
+
+Lemma elemVarSet_extendVarSet :
+  forall set v0 v, 
+    elemVarSet v0 (extendVarSet set v) = true -> 
+    (elemVarSet v0 set = true) \/ (Var_as_DT.eqb v v0 = true).
+Proof.
+  intros.
+  set_b_iff.
+  rewrite add_iff in H.
+  tauto.
+Qed.
+
+
+Definition disjoint E F := inter E F [=] empty.
+
+
+Lemma pass_through_unitFV : forall f v vs1 have haveSet v0,
+  disjoint vs1 haveSet ->
+  ~ (In v haveSet) ->
+  Tuple.snd (FV.unitFV v0 f (add v vs1) (have, haveSet)) [=]
+  remove v (Tuple.snd (FV.unitFV v0 f vs1 (have, haveSet))).
+Proof. 
+  intros.
+  unfold FV.unitFV.
+  destruct (elemVarSet v0 (add v vs1)) eqn:HE.
+  destruct (elemVarSet v0 haveSet) eqn:HE1;
+    destruct (elemVarSet v0 vs1) eqn:HE2;
+    simpl;
+    set_b_iff;
+    try fsetdec.  
+  + rewrite remove_equal; fsetdec.
+  + rewrite remove_equal; fsetdec.
+  + rewrite remove_equal; fsetdec.
+  + destruct (f v0); simpl.
+    assert (Var_as_DT.eqb v v0 = true). fsetdec.
+    admit. (* variant of remove_add *)
+    rewrite remove_equal; fsetdec.
+  + set_b_iff.
+    destruct_notin.
+    destruct (elemVarSet v0 vs1) eqn:HE2;
+      set_b_iff; try contradiction.
+    rewrite remove_equal.
+    fsetdec.
+    destruct (elemVarSet v0 haveSet) eqn: HE1.
+    auto.
+    destruct (f v0); simpl.
+    set_b_iff.
+    admit. (* seems like solve_notin should work here. *)
+    auto.
+Admitted.
+
+(** ** [expr_fvs] *)
+Lemma pass_through : forall e f v vs1 acc res1 res2,
+    disjoint vs1 (snd acc) ->
+    ~ (In v (snd acc)) ->
+    expr_fvs e f (add v vs1) acc = res1 ->
+    expr_fvs e f vs1         acc = res2 ->
+    snd res1 [=] remove v (snd res2).
+
+Proof.
+  intros e f v vs1.
+  apply (core_induct e); intros; unfold expr_fvs in *; simpl.
+  - subst. destruct acc. rewrite pass_through_unitFV. fsetdec.
+    simpl; auto. simpl; auto.
+Admitted.
+
+  (** Basic properties of [exprFreeVars] *)
+
+Lemma exprFreeVars_Var: forall v, 
+    isLocalVar v = true -> 
+    exprFreeVars (Mk_Var v) = unitVarSet v.
+Proof.
+intros v NG.
+unfold exprFreeVars, exprFVs, expr_fvs.
+unfold_FV.
+set_b_iff.
+rewrite NG.
+auto.
+Qed.
+
+Lemma exprFreeVars_Lam:
   forall v e,
   exprFreeVars (Lam v e) = delVarSet (exprFreeVars e) v.
+Proof.
+  intros.
+  unfold exprFreeVars, exprFVs.
+  unfold_FV.
+  unfold expr_fvs. fold expr_fvs.
+  unfold addBndr.
+  unfold varTypeTyCoFVs.
+  rewrite unionFV_empty_left.
+  unfold FV.delFV.
+  simpl.
+Admitted.
 
+
+
+  
 Lemma exprFreeVars_mkLams:
   forall vs e,
   exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
 Proof.
-  intros. 
+  intros.
+  set_b_iff.
   induction vs.
-  - unfold mkLams. unfold_Foldable.
-    unfold delVarSetList.
-    unfold UniqSet.delListFromUniqSet.
-    unfold UniqFM.delListFromUFM.
-    destruct (exprFreeVars e).
-    f_equal.
+  - unfold mkLams. 
+    unfold_Foldable_foldr.
+    unfold_Foldable_foldl.
+    simpl.
+    fsetdec.
   - revert IHvs.
     unfold mkLams.
-    unfold_Foldable.
-    unfold exprFreeVars.
-    unfold Base.op_z2218U__.
-    unfold exprFVs.
-    unfold Base.op_z2218U__.
+    unfold_Foldable_foldr.
     simpl.
+    rewrite exprFreeVars_Lam.
+    set_b_iff.
+    intro h.
+    rewrite h.
+    unfold_Foldable_foldl.
+    simpl.
+    set_b_iff.
 Admitted.
 
 (** Working with [freeVars] *)
@@ -80,10 +229,10 @@ Proof.
         simpl. do 2 f_equal.
         -- f_equal. erewrite <- H with (v:=c). reflexivity. intuition.
         -- assert (forall (v : CoreBndr) (rhs : Expr CoreBndr),
-                      In (v, rhs) l -> deAnnotate (freeVars rhs) = rhs).
+                      List.In (v, rhs) l -> deAnnotate (freeVars rhs) = rhs).
            { intros. apply H with (v:=v).
              apply in_cons; assumption. }
-           specialize (IHl H0 l2 l3 eq_refl). inversion IHl; reflexivity.
+           specialize (IHl H0 l2 l3 Logic.eq_refl). inversion IHl; reflexivity.
   - destruct (List.unzip
                 (List.map
                    (fun '(con, args, rhs) =>
@@ -147,7 +296,7 @@ Proof.
       rewrite reverse_append in IH.
       auto.
   }       
-  pose (K := H vs nil (length vs) eq_refl).
+  pose (K := H vs nil (length vs) Logic.eq_refl).
   simpl in K.
   auto.
 Qed.

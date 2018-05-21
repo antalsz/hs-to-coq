@@ -2,8 +2,12 @@ Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
 Require Import Core.
+Require Import Proofs.CoreInduct.
+Require Import Proofs.CoreSubstInvariants.
 
+Require Import Proofs.Data.Foldable.
 Require Import Coq.Lists.List.
+Import ListNotations.
 
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Base.
@@ -25,8 +29,48 @@ Set Bullet Behavior "Strict Subproofs".
 (* TODO: fix mutual recursion. *)
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
+
 Scheme expr_mut := Induction for Expr Sort Prop
   with bind_mut := Induction for Bind Sort Prop.
+
+Lemma delVarSetList_single:
+  forall e a, delVarSetList e [a] = delVarSet e a.
+Proof.
+  intros. unfold delVarSetList, delVarSet.
+  unfold UniqSet.delListFromUniqSet, UniqSet.delOneFromUniqSet.
+  destruct e; reflexivity.
+Qed.
+
+Lemma delVarSetList_cons:
+  forall e a vs, delVarSetList e (a :: vs) = delVarSetList (delVarSet e a) vs.
+Proof.
+  induction vs; try revert IHvs;
+    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e;
+      try reflexivity.
+Qed.
+
+Lemma delVarSetList_app:
+  forall e vs vs', delVarSetList e (vs ++ vs') = delVarSetList (delVarSetList e vs) vs'.
+Proof.
+  induction vs'.
+  - rewrite app_nil_r.
+    unfold delVarSetList, UniqSet.delListFromUniqSet.
+    destruct e; reflexivity.
+  - intros.
+    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e.
+    unfold UniqFM.delListFromUFM.
+    repeat rewrite hs_coq_foldl_list. rewrite fold_left_app. reflexivity.
+Qed.
+
+(** LY: This lemma should be wrong, because [fv] is a function, and
+    this is clearly not true for any functions. However, I am leaving
+    this here for now as I have not yet found a good predicates for
+    [fv] here. *)
+Lemma delVarSet_delFV:
+  forall fv x, delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
+Proof.
+Admitted.  
+
 
 (** ** [FV] *)
 
@@ -174,8 +218,7 @@ Admitted.
 
   
 Lemma exprFreeVars_mkLams:
-  forall vs e,
-  exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) vs.
+  forall vs e, exprFreeVars (mkLams (rev vs) e) = delVarSetList (exprFreeVars e) vs.
 Proof.
   intros.
   set_b_iff.
@@ -189,23 +232,35 @@ Proof.
     unfold mkLams.
     unfold_Foldable_foldr.
     simpl.
+(*
     rewrite exprFreeVars_Lam.
     set_b_iff.
     intro h.
     rewrite h.
     unfold_Foldable_foldl.
     simpl.
-    set_b_iff.
+    set_b_iff. *)
 Admitted.
+(*
+  intros vs e. revert vs. apply rev_ind; intros.
+  - unfold exprFreeVars, Base.op_z2218U__, exprFVs, Base.op_z2218U__, mkLams.
+    unfold Foldable.foldr, Foldable.Foldable__list. simpl.
+    unfold delVarSetList, UniqSet.delListFromUniqSet.
+    destruct (FV.fvVarSet (FV.filterFV isLocalVar (expr_fvs e))); reflexivity.
+  - revert H; unfold exprFreeVars, exprFVs, Base.op_z2218U__, mkLams.
+    rewrite delVarSetList_app, delVarSetList_single.
+    rewrite rev_app_distr. repeat rewrite hs_coq_foldr_list.
+    rewrite fold_right_app. intros H. rewrite <- H. simpl.
+    unfold addBndr, varTypeTyCoFVs. rewrite union_empty_l.
+    rewrite delVarSet_delFV. reflexivity.
+Qed. *)
 
 (** Working with [freeVars] *)
-
 
 Lemma deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.
 Proof.
-  intro e.
-  apply (core_induct e);
+  intro e; apply (core_induct e);
     intros; simpl; try reflexivity;
       try solve [destruct (freeVars e0) eqn:Hfv; simpl in H; rewrite H; reflexivity].
   - destruct (isLocalVar v); reflexivity.

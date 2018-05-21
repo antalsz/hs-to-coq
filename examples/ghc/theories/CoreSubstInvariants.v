@@ -43,13 +43,11 @@ Lemma no_elem_empty : forall v, elemVarSet v emptyVarSet = false.
 Admitted.
 
 
-Lemma union_empty : forall fv, FV.unionFV fv FV.emptyFV = fv.
-intro fv. unfold FV.unionFV. unfold FV.emptyFV.
-  apply functional_extensionality. intro f.
-  apply functional_extensionality. intro vs.
-  apply functional_extensionality. intro bs.
-  reflexivity.
-Qed.
+Lemma union_empty_l : forall fv, FV.unionFV FV.emptyFV fv = fv.
+Proof. reflexivity. Qed.
+
+Lemma union_empty_r : forall fv, FV.unionFV fv FV.emptyFV = fv.
+Proof. reflexivity. Qed.
 
 Lemma fvVarSet_union : forall s1 s2, 
     FV.fvVarSet (FV.unionFV s1 s2) = Core.unionVarSet (FV.fvVarSet s1) (FV.fvVarSet s2).
@@ -82,7 +80,7 @@ Proof.
   apply functional_extensionality. intro f.
   apply functional_extensionality. intro vs.
   apply functional_extensionality. intro bs.
-  rewrite union_empty. reflexivity.
+  rewrite union_empty_r. reflexivity.
 Qed.
 
 Lemma substExpr_App : forall s str e1 e2, substExpr str s (App e1 e2) = 

@@ -181,6 +181,26 @@ Admitted.
 
   (** Basic properties of [exprFreeVars] *)
 
+
+Lemma elemVarSet_exprFreeVars_Var_false: forall v' v,
+    varUnique v' <> varUnique v ->
+    elemVarSet v' (exprFreeVars (Mk_Var v)) = false.
+Proof.
+intros.
+unfold exprFreeVars, exprFVs, expr_fvs.
+unfold_FV.
+simpl.
+destruct (isLocalVar v).
+* simpl.
+  unfold varUnique in H.
+  unfold GHC.Base.op_zeze__, GHC.Base.Eq_Char___, GHC.Base.op_zeze____.
+  rewrite BinNat.N.eqb_neq.
+  rewrite Nnat.Nat2N.inj_iff.
+  contradict H.
+  congruence.
+* reflexivity.
+Qed.
+
 Lemma exprFreeVars_Var: forall v, 
     isLocalVar v = true -> 
     exprFreeVars (Mk_Var v) = unitVarSet v.

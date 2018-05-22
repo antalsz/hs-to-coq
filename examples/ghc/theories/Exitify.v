@@ -557,10 +557,16 @@ Section in_exitifyRec.
           simpl_bool.
           split.
           ** simpl.
-             destruct (Eq_eq (varUnique v') (varUnique v)); (reflexivity || exfalso).
+             unfold VarSetFSet.VarSetDecide.F.eqb.
+             destruct (VarSetFSet.Var_as_DT.eq_dec _ _); [exfalso|reflexivity].
+             unfold VarSetFSet.Var_as_DT.eq in e0.
+             unfold VarSetFSet.Var_as_DT.eqb in e0.
+             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__ in e0.
+             unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____ in e0.
+             rewrite Nat.eqb_eq in e0.
+             assert (varUnique v' = varUnique v) by (unfold varUnique; congruence).
              contradict Hfresh.
              exists (v', rhs'). split; assumption.
-             admit.
           ** apply Hfreshs. assumption.
         + assumption.
         + rewrite Forall_forall.
@@ -571,7 +577,7 @@ Section in_exitifyRec.
           eapply subVarSet_elemVarSet_false; only 2: eassumption.
           apply WellScoped_subset.
           apply Hrhss; assumption.
-  Admitted.
+  Qed.
 
   (* the [addExit] function ensures that the new exit floats are well-scoped
      where we are going to put them.
@@ -721,12 +727,9 @@ Section in_exitifyRec.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
           apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
-          rewrite exprFreeVars_Var.
-          apply not_true_is_false.
-          rewrite elemVarSet_unitVarSet.
+          apply elemVarSet_exprFreeVars_Var_false.
           rewrite elemVarSet_delVarSet in *.
           intuition.
-          admit.
         - constructor; only 2: constructor.
           change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
           rewrite WellScoped_extendVarSet_ae by (apply zap_ae).
@@ -745,15 +748,12 @@ Section in_exitifyRec.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
           apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
-          rewrite exprFreeVars_Var.
-          apply not_true_is_false.
-          rewrite elemVarSet_unitVarSet.
+          apply elemVarSet_exprFreeVars_Var_false.
           eapply elemVarSet_false_true; eassumption.
-          admit.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           assumption.
-  Admitted.
+  Qed.
 
   Lemma WellScopedVar_picked:
     forall vsis captured fvs,

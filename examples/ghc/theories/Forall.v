@@ -10,6 +10,13 @@ Proof.
   * split; intro H; inversion_clear H; constructor; try apply IHxs; assumption.
 Qed.
 
+Lemma Forall_cons_iff:
+  forall  {a} (P : a -> Prop) x xs,
+  Forall P (x :: xs) <-> P x /\ Forall P xs.
+Proof.
+  intros.
+  intuition; inversion H; intuition.
+Qed.
 
 (* The termination checker does not like recursion through [Forall], but
    through [map] is fine... oh well. *)

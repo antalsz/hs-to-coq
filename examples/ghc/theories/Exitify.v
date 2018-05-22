@@ -322,8 +322,8 @@ Section in_exitifyRec.
              apply IH.
              ** NCore_termination.
              ** rewrite extendVarSetList_append.
-                rewrite <- WellScoped_mkLams.
                 simpl in HWS.
+                rewrite WellScoped_mkLams in HWS.
                 apply HWS.
           }
           assert (IHe : P (captured ++ [j]) e (go (captured ++ [j]) (freeVars (toExpr e)))). {
@@ -353,8 +353,9 @@ Section in_exitifyRec.
           clear IH1 IH2 IH3.
 
           (* Destruct well-scopedness assumption *)
-          destruct HWS as [[HNoDup HWSpairs] HWSe].
+          destruct HWS as [[HGLV [HNoDup HWSpairs]] HWSe].
           simpl toBind in HWSe.
+          rewrite to_list_map in HGLV.
           rewrite bindersOf_Rec in HWSe.
           rewrite Forall'_Forall in HWSpairs.
           rewrite to_list_map in HWSpairs.
@@ -384,7 +385,7 @@ Section in_exitifyRec.
                apply HWSe.
           }
           clear IH.
-          revert n pairs' e captured HNoDup HWSpairs HWSe IHe.
+          revert n pairs' e captured HGLV HNoDup HWSpairs HWSe IHe.
           refine IH4.
         + clear IH1 IH2 IH3 IH4.
 
@@ -406,9 +407,10 @@ Section in_exitifyRec.
           clear Heq_isJoinId.
 
           (* Destruct well-scopedness assumption *)
-          destruct HWS as [[HNoDup HWSpairs] HWSe].
+          destruct HWS as [[HGLV [HNoDup HWSpairs]] HWSe].
           simpl toBind in HWSe.
           rewrite bindersOf_Rec in HWSe.
+          rewrite to_list_map in HGLV.
           rewrite Forall'_Forall in HWSpairs.
           rewrite to_list_map in HWSpairs.
           rewrite !map_map in HWSpairs.
@@ -446,7 +448,7 @@ Section in_exitifyRec.
             ** rewrite !extendVarSetList_append.
                apply HWSe.
           }
-          clear IH. revert n pairs' e captured HNoDup HWSpairs HWSe IHpairs IHe.
+          clear IH. revert n pairs' e captured HGLV HNoDup HWSpairs HWSe IHpairs IHe.
           refine IH5.
       * (* Case [Case] *)
         clear IH1 IH2 IH3 IH4 IH5.
@@ -456,7 +458,7 @@ Section in_exitifyRec.
         rewrite snd_unzip, !map_map.
         rewrite forM_map.
 
-        destruct HWS as [HWSscrut HWSalts].
+        destruct HWS as [HWSscrut [HGLVv HWSalts]].
         rewrite Forall'_Forall in HWSalts.
         rewrite Forall_map in HWSalts.
         rewrite Forall_forall in HWSalts.
@@ -471,7 +473,7 @@ Section in_exitifyRec.
              apply (HWSalts _ HIn).
         }
         clear IH Hnext. rename l into alts.
-        revert e v alts captured HWSscrut HWSalts IHalts.
+        revert e v alts captured HWSscrut HGLVv HWSalts IHalts.
         refine IH6.
     }
 
@@ -520,7 +522,9 @@ Section in_exitifyRec.
     (* All added bindings are fresh with regard to each other  *)
     NoDup (map (fun p => varUnique (fst p)) floats) /\
     (* All added bindings are well-scoped in the original environment  *)
-    Forall (fun 'p => WellScoped (snd p) isvs) floats.
+    Forall (fun 'p => WellScoped (snd p) isvs) floats /\
+    (* All are good local variables *)
+    Forall (fun 'p => GoodLocalVar (fst p)) floats.
 
   (* Here we do the actual wrapping *)
   Lemma mkLets_WellScoped:
@@ -539,13 +543,14 @@ Section in_exitifyRec.
     * simpl. unfold Base.id. assumption.
     * simpl in *.
       rewrite extendVarSetList_cons, extendVarSetList_nil.
-      destruct Hfloats as [Hfreshs [HNoDup Hrhss]].
+      destruct Hfloats as [Hfreshs [HNoDup [Hrhss HGLVs]]].
       inversion HNoDup; subst; clear HNoDup. rename H1 into Hfresh, H2 into HNoDup.
       inversion_clear Hrhss. rename H into Hrhs, H0 into Hrhss.
       inversion_clear Hfreshs. rename H into Hfresh_v, H0 into Hfreshs.
+      inversion_clear HGLVs. rename H into HGLVv, H0 into HGLSVs.
       simpl in *.
       rewrite extendVarSetList_cons in Hbase.
-      split; only 1: apply Hrhs.
+      split; [split|]; [apply HGLVv | apply Hrhs |].
       apply IHexits'.
       - assumption.
       - repeat split.
@@ -577,6 +582,7 @@ Section in_exitifyRec.
           eapply subVarSet_elemVarSet_false; only 2: eassumption.
           apply WellScoped_subset.
           apply Hrhss; assumption.
+        + assumption.
   Qed.
 
   (* the [addExit] function ensures that the new exit floats are well-scoped
@@ -603,7 +609,7 @@ Section in_exitifyRec.
     intros floats Hfloats.
     set (v := uniqAway _ _).
     constructor; only 2: trivial.
-    constructor; only 2: constructor; simpl.
+    constructor; only 2: constructor; only 3: constructor; simpl.
     * constructor; only 2: apply Hfloats; simpl.
       unfold isvs, in_scope2 in *.
       apply elemVarSet_uniqAway.
@@ -622,6 +628,11 @@ Section in_exitifyRec.
       apply subVarSet_refl.
     * constructor; only 2: apply Hfloats; simpl.
       assumption.
+    * constructor; only 2: apply Hfloats; simpl.
+      apply GoodLocalVar_uniqAway.
+      apply GoodLocalVar_asJoinid.
+      apply GoodLocalVar_mkSysLocal.
+      apply isLocalUnique_initExitJoinUnique.
   Qed.
 
 
@@ -683,6 +694,8 @@ Section in_exitifyRec.
       destruct_match; simpl.
       + rewrite snd_pick_list.
         rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+        admit.
+        (*
         rewrite <- WellScoped_Lam.
         erewrite delVarSet_ae by (apply zap_ae).
         rewrite <- exprFreeVars_Lam.
@@ -690,9 +703,10 @@ Section in_exitifyRec.
         rewrite -> WellScoped_Lam.
         rewrite <- WellScoped_extendVarSet_ae by apply zap_ae.
         assumption.
+        *)
       + apply IHcaptured.
         rewrite WellScoped_extendVarSet_fresh in HWSe; assumption.
-  Qed.
+  Admitted.
   
   Lemma Forall_app:
     forall a P (xs ys : list a),
@@ -807,24 +821,31 @@ Section in_exitifyRec.
     subst abs_vars.
     float_let.
     cleardefs.
-
     rewrite Foldable.hs_coq_foldr_list.
-    apply WellScoped_picked.
-
-    (* [e] captures nothing in [fs] *)
-    rewrite <- WellScoped_mkLams.
-    rewrite <- WellScoped_mkLams in HWSe.
-    unfold isvsp in HWSe.
-    rewrite WellScoped_extendVarSetList_fresh in HWSe; only 1: assumption.
-    rewrite hs_coq_map in Hdisjoint.
-    rewrite map_map in Hdisjoint.
-    rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
-         by (intros; repeat expand_pairs; destruct a; reflexivity).
-    fold fs in Hdisjoint.
-    eapply disjointVarSet_subVarSet_l; only 1 : eassumption.
-    rewrite exprFreeVars_mkLams.
-    apply subVarSet_delVarSetList.
-  Qed.
+    split.
+    * eapply Forall_impl; only 2: apply WellScopedVar_picked_aux.
+      intros v HinFVs. simpl in *.
+      (* need that exprFreeVars of a well-scoped variables are all good local vars *)
+      admit.
+      exact GHC.Err.default. (* spurious existential variable *)
+    * apply WellScoped_picked.
+      admit.
+      (*
+      (* [e] captures nothing in [fs] *)
+      rewrite <- WellScoped_mkLams.
+      rewrite <- WellScoped_mkLams in HWSe.
+      unfold isvsp in HWSe.
+      rewrite WellScoped_extendVarSetList_fresh in HWSe; only 1: assumption.
+      rewrite hs_coq_map in Hdisjoint.
+      rewrite map_map in Hdisjoint.
+      rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
+           by (intros; repeat expand_pairs; destruct a; reflexivity).
+      fold fs in Hdisjoint.
+      eapply disjointVarSet_subVarSet_l; only 1 : eassumption.
+      rewrite exprFreeVars_mkLams.
+      apply subVarSet_delVarSetList.
+      *)
+  Admitted.
 
   Lemma go_all_WellScopedFloats captured e: 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
@@ -880,13 +901,16 @@ Section in_exitifyRec.
       rewrite collectNAnnBndrs_freeVars_mkLams.
       apply StateInvariant_bind_return.
       apply go_all_WellScopedFloats.
-      + rewrite <- WellScoped_mkLams.
+      + admit.
+        (*
+        rewrite <- WellScoped_mkLams.
         rewrite Forall_map in pairs_WS.
         rewrite Forall_forall in pairs_WS.
         unfold in_scope2.
         apply (pairs_WS _ HIn).
+        *)
     * repeat split; constructor.
-  Qed.
+  Admitted.
 
   Definition sublistOf {a} (xs ys : list a) := incl ys xs.
 
@@ -915,14 +939,19 @@ Section in_exitifyRec.
   Proof.
     intros.
     unfold isvsp, isvsp' in *.
+  Admitted.
+  (*
     rewrite <- WellScoped_mkLams.
     rewrite <- WellScoped_mkLams in H.
     apply isvs_to_isvs'.
     assumption.
   Qed.
+  *)
 
   Lemma isvsp_to_isvsp'_extended:
      forall e vs, WellScoped e (extendVarSetList isvsp vs) -> WellScoped e (extendVarSetList isvsp' vs).
+  Admitted.
+  (*
   Proof.
     intros.
     rewrite <- WellScoped_mkLams.
@@ -930,6 +959,7 @@ Section in_exitifyRec.
     apply isvsp_to_isvsp'.
     assumption.
   Qed.
+  *)
 
   Lemma isvsp_to_isvsp'_extended_Var:
      forall v vs, WellScopedVar v (extendVarSetList isvsp vs) -> WellScopedVar v (extendVarSetList isvsp' vs).
@@ -945,6 +975,8 @@ Section in_exitifyRec.
      forall e vs1 vs2,
      WellScoped e (extendVarSetList (extendVarSetList isvsp vs1) vs2) ->
      WellScoped e (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
+  Admitted.
+  (*
   Proof.
     intros.
     rewrite <- WellScoped_mkLams.
@@ -952,6 +984,7 @@ Section in_exitifyRec.
     apply isvsp_to_isvsp'_extended.
     assumption.
   Qed.
+  *)
 
   Lemma addExit_all_WellScopedVar:
     forall captured ja e,
@@ -1088,7 +1121,8 @@ Section in_exitifyRec.
         rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in He'.
         simpl.
         rewrite deAnnotate_freeVars.
-        split.
+        split; only 1: split.
+        ++ admit.
         ++ apply isvsp_to_isvsp'_extended. apply HWS.
         ++ apply He'.
     * unfold CoreBndr in *.
@@ -1096,7 +1130,8 @@ Section in_exitifyRec.
       - apply IHrhs.
       - apply IHe.
       - apply RevStateInvariant_return; intros Hrhs' Hbody'.
-        split.
+        split; only 1: split.
+        ** admit.
         ** simpl.
            rewrite WellScoped_mkLams.
            rewrite extendVarSetList_append in Hbody'.

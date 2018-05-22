@@ -59,7 +59,10 @@ Ltac unfold_zeze :=
   unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__;
   unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____.  
 
-
+(* Define the Var type as a decidable type by using the Eq instance.
+   (This instance only looks at the Unique components of the Var *)
+(* We could also show that the Eq instance satisfies the Eq laws first, 
+   and the perhaps derive this module from that. *)
 Module Var_as_DT <: BooleanDecidableType <: DecidableType.
   Definition t := Var.
 
@@ -145,7 +148,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
      making a signature that is stricter than this one. *)
 
   Definition equal  : t -> t -> bool := 
-    fun x y : t =>
+    fun x y : t => 
       match x with
       | UniqSet.Mk_UniqSet u =>
         match y with

@@ -27,8 +27,6 @@ Require Import IntSetProofs.
 
 Require Import Proofs.VarSetFSet.
 
-Import VarSetFSet.VarSetFacts.
-
 Open Scope Z_scope.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -36,6 +34,8 @@ Set Bullet Behavior "Strict Subproofs".
 
 (** ** [VarSet] *)
 
+(* These lemmas relate the GHC VarSet operations to more general 
+   operations on finite sets. *)
 
 Lemma delVarSet_remove : forall x s, delVarSet s x = remove x s.
 tauto. Qed.
@@ -84,6 +84,9 @@ Proof.
     auto.
 Qed.
 
+
+
+
 Lemma mkVarSet_extendVarSetList : forall xs,
     mkVarSet xs = extendVarSetList emptyVarSet xs.
 Proof.
@@ -95,7 +98,7 @@ Ltac rewrite_extendVarSetList :=
   unfold extendVarSetList, UniqSet.addListToUniqSet;
   replace UniqSet.addOneToUniqSet with (fun x y => add y x) by auto.
 
-
+(**************************************)
 
 (* This tactic rewrites the boolean functions into the 
    set properties to make them more suitable for fsetdec. *)
@@ -114,23 +117,10 @@ Ltac set_b_iff :=
   || rewrite_extendVarSetList
   || rewrite delVarSetList_foldl in *.
 
-
-(*
-Hint Rewrite <- F.not_mem_iff : set_b.
-Hint Rewrite <- F.mem_iff : set_b.
-Hint Rewrite <- F.subset_iff : set_b.
-Hint Rewrite <- F.is_empty_iff : set_b.
-Hint Rewrite delVarSet_remove : set_b.
-Hint Rewrite extendVarSet_add : set_b.
-Hint Rewrite empty_b : set_b.
-*)
-
 (**************************************)
 
 (* Q: is there a way to do the automatic destructs safely? Sometimes 
    loses too much information. *)
-
-
 
 Ltac unfold_VarSet :=
   unfold subVarSet,elemVarSet, isEmptyVarSet, 
@@ -169,6 +159,8 @@ Ltac safe_unfold_VarSet :=
          UniqFM.minusUFM, UniqFM.isNullUFM, 
          UniqFM.elemUFM in *.
 
+(**************************************)
+
 Lemma extendVarSetList_nil:
   forall s,
   extendVarSetList s [] = s.
@@ -189,7 +181,6 @@ Proof.
 Qed.
 
 
-
 Lemma extendVarSetList_append:
   forall s vs1 vs2,
   extendVarSetList s (vs1 ++ vs2) = extendVarSetList (extendVarSetList s vs1) vs2.
@@ -199,6 +190,89 @@ Proof.
   rewrite Foldable_foldl'_app.
   auto.
 Qed.
+
+
+
+Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
+fsetdec.
+Qed.
+
+
+Lemma delVarSet_elemVarSet_false : forall v set, 
+    elemVarSet v set = false -> delVarSet set v [=] set.
+intros.
+set_b_iff.
+apply remove_equal.
+auto.
+Qed.
+
+
+Lemma extendVarSet_elemVarSet_true : forall set v, 
+    elemVarSet v set = true -> extendVarSet set v [=] set.
+Proof. 
+  intros.
+  set_b_iff.
+  apply add_equal.
+  auto.
+Qed.
+
+Lemma delVarSet_extendVarSet : 
+  forall set v, 
+    elemVarSet v set = false -> 
+    (delVarSet (extendVarSet set v) v) [=] set.
+Proof.
+  intros.
+  set_b_iff.
+  apply remove_add.
+  auto.
+Qed.
+
+(*
+Lemma elemVarSet_extendVarSet :
+  forall set v0 v, 
+    elemVarSet v0 (extendVarSet set v) = true -> 
+    (elemVarSet v0 set = true) \/ (Var_as_DT.eqb v v0 = true).
+Proof.
+  intros.
+  set_b_iff.
+  rewrite add_iff in H.
+  tauto.
+Qed.
+
+*)
+Lemma delVarSetList_single:
+  forall e a, delVarSetList e [a] = delVarSet e a.
+Proof.
+  intros. unfold delVarSetList, delVarSet.
+  unfold UniqSet.delListFromUniqSet, UniqSet.delOneFromUniqSet.
+  destruct e; reflexivity.
+Qed.
+
+Lemma delVarSetList_cons:
+  forall e a vs, delVarSetList e (a :: vs) = delVarSetList (delVarSet e a) vs.
+Proof.
+  induction vs; try revert IHvs;
+    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e;
+      try reflexivity.
+Qed.
+
+Lemma delVarSetList_app:
+  forall e vs vs', delVarSetList e (vs ++ vs') = delVarSetList (delVarSetList e vs) vs'.
+Proof.
+  induction vs'.
+  - rewrite app_nil_r.
+    unfold delVarSetList, UniqSet.delListFromUniqSet.
+    destruct e; reflexivity.
+  - intros.
+    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e.
+    unfold UniqFM.delListFromUFM.
+Admitted.
+(*
+    repeat rewrite hs_coq_foldl_list. rewrite fold_left_app. reflexivity.
+Qed. *)
+
+
+(**************************************)
 
 Lemma elemVarSet_mkVarset_iff_In:
   forall v vs,
@@ -214,11 +288,11 @@ Proof.
   (* Need theory about IntMap. *)
 Admitted. 
 
+
 Lemma lookupVarSet_extendVarSet_self:
   forall v vs,
   lookupVarSet (extendVarSet vs v) v = Some v.
 Admitted.
-
 
 
 Lemma elemVarSet_extendVarSet:
@@ -250,7 +324,8 @@ Admitted.
   
 
 Lemma elemVarSet_delVarSet: forall v1 fvs v2,
-  elemVarSet v1 (delVarSet fvs v2) = true <-> (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).
+  elemVarSet v1 (delVarSet fvs v2) = true <-> 
+  (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).
 Proof.
   intros.
   set_b_iff.

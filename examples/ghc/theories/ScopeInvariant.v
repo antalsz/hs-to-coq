@@ -24,6 +24,10 @@ This file describes an invariant of Core files that
    equality.
 *)
 
+(* SCW: why not use the GHC.Base.== instance for Var here? 
+   This instance just compares realUnique a and realUnique b. 
+*)
+
 Inductive almostEqual : Var -> Var -> Prop :=
  | AE_TyVar   : forall n u ty,
    almostEqual (Mk_TyVar n u ty)
@@ -143,7 +147,9 @@ Qed.
 
 Lemma WellScoped_mkVarApps:
   forall e vs isvs,
-  WellScoped e isvs -> Forall (fun v => WellScopedVar v isvs) vs -> WellScoped (mkVarApps e vs) isvs.
+  WellScoped e isvs -> 
+  Forall (fun v => WellScopedVar v isvs) vs ->
+  WellScoped (mkVarApps e vs) isvs.
 Proof.
   intros.
   unfold mkVarApps.

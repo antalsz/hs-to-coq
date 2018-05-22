@@ -33,34 +33,11 @@ Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 Scheme expr_mut := Induction for Expr Sort Prop
   with bind_mut := Induction for Bind Sort Prop.
 
-Lemma delVarSetList_single:
-  forall e a, delVarSetList e [a] = delVarSet e a.
-Proof.
-  intros. unfold delVarSetList, delVarSet.
-  unfold UniqSet.delListFromUniqSet, UniqSet.delOneFromUniqSet.
-  destruct e; reflexivity.
-Qed.
 
-Lemma delVarSetList_cons:
-  forall e a vs, delVarSetList e (a :: vs) = delVarSetList (delVarSet e a) vs.
-Proof.
-  induction vs; try revert IHvs;
-    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e;
-      try reflexivity.
-Qed.
+(** ** [FV] *)
 
-Lemma delVarSetList_app:
-  forall e vs vs', delVarSetList e (vs ++ vs') = delVarSetList (delVarSetList e vs) vs'.
-Proof.
-  induction vs'.
-  - rewrite app_nil_r.
-    unfold delVarSetList, UniqSet.delListFromUniqSet.
-    destruct e; reflexivity.
-  - intros.
-    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e.
-    unfold UniqFM.delListFromUFM.
-    repeat rewrite hs_coq_foldl_list. rewrite fold_left_app. reflexivity.
-Qed.
+Axiom unionFV_empty_right : forall fv, FV.unionFV fv FV.emptyFV = fv.
+Axiom unionFV_empty_left  : forall fv, FV.unionFV FV.emptyFV fv = fv.
 
 (** LY: This lemma should be wrong, because [fv] is a function, and
     this is clearly not true for any functions. However, I am leaving
@@ -72,64 +49,11 @@ Proof.
 Admitted.  
 
 
-(** ** [FV] *)
-
-Axiom unionFV_empty_right : forall fv, FV.unionFV fv FV.emptyFV = fv.
-Axiom unionFV_empty_left  : forall fv, FV.unionFV FV.emptyFV fv = fv.
-
 (** Unfolding tactics *)
 
 Ltac unfold_FV := 
   repeat unfold Base.op_z2218U__, FV.filterFV, FV.fvVarSet, 
        FV.unitFV, FV.fvVarListVarSet.
-
-
-(** ** [VarSet] *)
-
-Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
-fsetdec.
-Qed.
-
-
-Lemma delVarSet_elemVarSet_false : forall v set, 
-    elemVarSet v set = false -> delVarSet set v [=] set.
-intros.
-set_b_iff.
-apply remove_equal.
-auto.
-Qed.
-
-
-Lemma extendVarSet_elemVarSet_true : forall set v, 
-    elemVarSet v set = true -> extendVarSet set v [=] set.
-Proof. 
-  intros.
-  set_b_iff.
-  apply add_equal.
-  auto.
-Qed.
-
-Lemma delVarSet_extendVarSet : 
-  forall set v, 
-    elemVarSet v set = false -> 
-    (delVarSet (extendVarSet set v) v) [=] set.
-Proof.
-  intros.
-  set_b_iff.
-  apply remove_add.
-  auto.
-Qed.
-
-Lemma elemVarSet_extendVarSet :
-  forall set v0 v, 
-    elemVarSet v0 (extendVarSet set v) = true -> 
-    (elemVarSet v0 set = true) \/ (Var_as_DT.eqb v v0 = true).
-Proof.
-  intros.
-  set_b_iff.
-  rewrite add_iff in H.
-  tauto.
-Qed.
 
 
 Definition disjoint E F := inter E F [=] empty.
@@ -171,6 +95,7 @@ Proof.
 Admitted.
 
 (** ** [expr_fvs] *)
+
 Lemma pass_through : forall e f v vs1 acc res1 res2,
     disjoint vs1 (snd acc) ->
     ~ (In v (snd acc)) ->

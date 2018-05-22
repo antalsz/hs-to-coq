@@ -15,6 +15,18 @@ Ltac unfold_Unique_zeze :=
   Unique.Eq___Unique_op_zeze__,
   Unique.eqUnique.
 
+(**
+The Uniques in GHC are partitioned in classes, e.g. local variables have a different
+class than external names, which are different from data constructors and so on.
+
+The class is encoded in the upper 8 bits of the Unique. Our representation does not have 
+upper bits... and we hope we can make do with less details. So for now we axiomatize
+what we need:
+
+ * A predicate that distinguishes the uniques used for (module)-local variables, [isLocalUnique]
+ * An axiom stating that [uniqAway] always generates local uniques; that axiom lives in [VarSet.v].
+*)
+Axiom isLocalUnique : Unique.Unique -> bool.
 
 Program Instance EqLaws_Unique : EqLaws Unique.Unique.
 Next Obligation. repeat intro; destruct x; apply EqLaws_Word. Qed.

@@ -399,6 +399,10 @@ Axiom isJoinId_maybe_uniqAway:
   forall s v, 
   isJoinId_maybe (uniqAway s v) = isJoinId_maybe v.
 
+(* See discussion of [isLocalUnique] in [Proofs.Unique] *)
+Axiom isLocalUnique_uniqAway:
+  forall iss v,
+  isLocalUnique (varUnique (uniqAway iss v)) = true.
 
 
 Lemma elemVarSet_uniqAway:

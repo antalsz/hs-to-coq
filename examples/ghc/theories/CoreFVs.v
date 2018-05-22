@@ -48,7 +48,6 @@ Lemma delVarSet_delFV:
 Proof.
 Admitted.  
 
-
 (** Unfolding tactics *)
 
 Ltac unfold_FV := 
@@ -112,6 +111,26 @@ Admitted.
 
   (** Basic properties of [exprFreeVars] *)
 
+
+Lemma elemVarSet_exprFreeVars_Var_false: forall v' v,
+    varUnique v' <> varUnique v ->
+    elemVarSet v' (exprFreeVars (Mk_Var v)) = false.
+Proof.
+intros.
+unfold exprFreeVars, exprFVs, expr_fvs.
+unfold_FV.
+simpl.
+destruct (isLocalVar v).
+* simpl.
+  unfold varUnique in H.
+  unfold GHC.Base.op_zeze__, GHC.Base.Eq_Char___, GHC.Base.op_zeze____.
+  rewrite BinNat.N.eqb_neq.
+  rewrite Nnat.Nat2N.inj_iff.
+  contradict H.
+  congruence.
+* reflexivity.
+Qed.
+
 Lemma exprFreeVars_Var: forall v, 
     isLocalVar v = true -> 
     exprFreeVars (Mk_Var v) = unitVarSet v.
@@ -124,51 +143,11 @@ rewrite NG.
 auto.
 Qed.
 
-Lemma exprFreeVars_Lam:
-  forall v e,
-  exprFreeVars (Lam v e) = delVarSet (exprFreeVars e) v.
-Proof.
-  intros.
-  unfold exprFreeVars, exprFVs.
-  unfold_FV.
-  unfold expr_fvs. fold expr_fvs.
-  unfold addBndr.
-  unfold varTypeTyCoFVs.
-  rewrite unionFV_empty_left.
-  unfold FV.delFV.
-  simpl.
-Admitted.
-
-
-
-  
-Lemma exprFreeVars_mkLams:
+Lemma exprFreeVars_mkLams_rev:
   forall vs e, exprFreeVars (mkLams (rev vs) e) = delVarSetList (exprFreeVars e) vs.
 Proof.
-  intros.
-  set_b_iff.
-  induction vs.
-  - unfold mkLams. 
-    unfold_Foldable_foldr.
-    unfold_Foldable_foldl.
-    simpl.
-    fsetdec.
-  - revert IHvs.
-    unfold mkLams.
-    unfold_Foldable_foldr.
-    simpl.
-(*
-    rewrite exprFreeVars_Lam.
-    set_b_iff.
-    intro h.
-    rewrite h.
-    unfold_Foldable_foldl.
-    simpl.
-    set_b_iff. *)
-Admitted.
-(*
   intros vs e. revert vs. apply rev_ind; intros.
-  - unfold exprFreeVars, Base.op_z2218U__, exprFVs, Base.op_z2218U__, mkLams.
+  - unfold exprFreeVars, exprFVs, Base.op_z2218U__, mkLams.
     unfold Foldable.foldr, Foldable.Foldable__list. simpl.
     unfold delVarSetList, UniqSet.delListFromUniqSet.
     destruct (FV.fvVarSet (FV.filterFV isLocalVar (expr_fvs e))); reflexivity.
@@ -178,7 +157,24 @@ Admitted.
     rewrite fold_right_app. intros H. rewrite <- H. simpl.
     unfold addBndr, varTypeTyCoFVs. rewrite union_empty_l.
     rewrite delVarSet_delFV. reflexivity.
-Qed. *)
+Qed.
+
+Lemma exprFreeVars_mkLams:
+  forall vs e, exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) (rev vs).
+Proof.
+  intros. replace vs with (rev (rev vs)) at 1.
+  - apply exprFreeVars_mkLams_rev.
+  - apply rev_involutive.
+Qed.
+
+Lemma exprFreeVars_Lam:	
+  forall v e, exprFreeVars (Lam v e) = delVarSet (exprFreeVars e) v.
+Proof.
+  intros v e.
+  replace (Lam v e) with (mkLams (rev [v]) e).
+  - rewrite <- delVarSetList_single. apply exprFreeVars_mkLams_rev.
+  - simpl. unfold mkLams. rewrite hs_coq_foldr_list. reflexivity.
+Qed.
 
 (** Working with [freeVars] *)
 
@@ -280,4 +276,3 @@ Proof.
   simpl in K.
   auto.
 Qed.
-

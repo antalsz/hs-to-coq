@@ -44,10 +44,20 @@ Axiom unionFV_empty_left  : forall fv, FV.unionFV FV.emptyFV fv = fv.
     this is clearly not true for any functions. However, I am leaving
     this here for now as I have not yet found a good predicates for
     [fv] here. *)
-Lemma delVarSet_delFV:
-  forall fv x, delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
+Lemma delVarSet_delFV: forall fv x,
+    WF_fv fv ->
+    delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
 Proof.
-Admitted.  
+  intros. assert (WF_fv fv) by assumption.
+  unfold FV.delFV, FV.fvVarSet, delVarSet, UniqSet.delOneFromUniqSet.
+  unfold Base.op_z2218U__, FV.fvVarListVarSet.
+  unfold WF_fv in H, H0.
+  specialize (H (Base.const true) emptyVarSet [] emptyVarSet x).
+  destruct (fv (Base.const true) emptyVarSet ([], emptyVarSet)) eqn:Hfv1.
+  specialize (H0 (Base.const true) (extendVarSet emptyVarSet x) [] emptyVarSet x).
+  destruct (fv (Base.const true) (extendVarSet emptyVarSet x) ([], emptyVarSet)) eqn:Hfv2.
+  simpl. destruct v, v0. f_equal.
+Admitted.
 
 (** Unfolding tactics *)
 

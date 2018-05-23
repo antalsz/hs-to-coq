@@ -3,6 +3,10 @@
 Require Import GHC.Base.
 Require Import Data.IntMap.Internal.
 
+Axiom member_eq : forall A k k' (i : IntMap.Internal.IntMap A),
+    k == k' = true ->
+    IntMap.Internal.member k i = IntMap.Internal.member k' i.
+
 Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
 IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
   (k == k')

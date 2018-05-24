@@ -557,16 +557,18 @@ Section in_exitifyRec.
           simpl_bool.
           split.
           ** simpl.
-             unfold VarSetFSet.VarSetDecide.F.eqb.
-             destruct (VarSetFSet.Var_as_DT.eq_dec _ _); [exfalso|reflexivity].
-             unfold VarSetFSet.Var_as_DT.eq in e0.
-             unfold VarSetFSet.Var_as_DT.eqb in e0.
-             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__ in e0.
-             unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____ in e0.
-             rewrite Nat.eqb_eq in e0.
-             assert (varUnique v' = varUnique v) by (unfold varUnique; congruence).
+             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, 
+             Core.Eq___Var_op_zeze__ .
+             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____,
+             Nat.Eq_nat.
+             
+             apply not_true_is_false. intro h.
+             apply beq_nat_true in h.
+
              contradict Hfresh.
-             exists (v', rhs'). split; assumption.
+             exists (v', rhs'). split. simpl. 
+             unfold varUnique. rewrite h. auto.
+             assumption.
           ** apply Hfreshs. assumption.
         + assumption.
         + rewrite Forall_forall.

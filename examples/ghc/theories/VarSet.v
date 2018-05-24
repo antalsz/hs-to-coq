@@ -106,7 +106,7 @@ Ltac rewrite_extendVarSetList :=
 Ltac set_b_iff :=
   repeat
    progress
-   rewrite <- not_mem_iff in *
+    rewrite <- not_mem_iff in *
   || rewrite <- mem_iff in *
   || rewrite <- subset_iff in *
   || rewrite <- is_empty_iff in *
@@ -194,7 +194,9 @@ Qed.
 
 
 Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
-fsetdec.
+  intro v.
+  set_b_iff.
+  fsetdec.
 Qed.
 
 
@@ -211,7 +213,6 @@ Lemma extendVarSet_elemVarSet_true : forall set v,
     elemVarSet v set = true -> extendVarSet set v [=] set.
 Proof. 
   intros.
-  set_b_iff.
   apply add_equal.
   auto.
 Qed.
@@ -297,10 +298,25 @@ Admitted.
 
 Lemma elemVarSet_extendVarSet:
   forall v vs v',
-  elemVarSet v (extendVarSet vs v') = (F.eqb v' v) || elemVarSet v vs.
+  elemVarSet v (extendVarSet vs v') = (v' GHC.Base.== v) || elemVarSet v vs.
 Proof.
   intros.
+  unfold_zeze.
+  replace (realUnique v' =? realUnique v)%nat with 
+    (F.eqb v' v).
   eapply MP.Dec.F.add_b.
+  unfold F.eqb. destruct F.eq_dec.
+  unfold Var_as_DT.eq in e.
+  unfold Var_as_DT.eqb in e.
+  revert e.
+  unfold_zeze.
+  auto.
+  unfold Var_as_DT.eq in n.
+  unfold Var_as_DT.eqb in n.
+  revert n.
+  unfold_zeze.
+  set (blah := (realUnique v' =? realUnique v)%nat).
+  now destruct blah.
 Qed.
   
 Lemma subVarSet_refl:

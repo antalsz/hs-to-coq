@@ -18,12 +18,9 @@ Import ListNotations.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
 Require Import Proofs.Var.
-
-
 Require Import Proofs.Base.
-Require Import Proofs.ContainerAxioms.
-Require Import IntSetProofs. 
-(* Require Import IntMapProofs. *)
+(* Require Import Proofs.ContainerAxioms.
+   Require Import IntSetProofs.  *)
 
 Require Import Proofs.VarSetFSet.
 
@@ -32,7 +29,7 @@ Open Scope Z_scope.
 Set Bullet Behavior "Strict Subproofs".
 
 
-(** ** [VarSet] *)
+(** ** [VarSet] as FiniteSets  *)
 
 (* These lemmas relate the GHC VarSet operations to more general 
    operations on finite sets. *)
@@ -85,8 +82,6 @@ Proof.
 Qed.
 
 
-
-
 Lemma mkVarSet_extendVarSetList : forall xs,
     mkVarSet xs = extendVarSetList emptyVarSet xs.
 Proof.
@@ -97,8 +92,6 @@ Qed.
 Ltac rewrite_extendVarSetList := 
   unfold extendVarSetList, UniqSet.addListToUniqSet;
   replace UniqSet.addOneToUniqSet with (fun x y => add y x) by auto.
-
-(**************************************)
 
 (* This tactic rewrites the boolean functions into the 
    set properties to make them more suitable for fsetdec. *)
@@ -161,6 +154,8 @@ Ltac safe_unfold_VarSet :=
 
 (**************************************)
 
+(** ** [extendVarSetList]  *)
+
 Lemma extendVarSetList_nil:
   forall s,
   extendVarSetList s [] = s.
@@ -191,7 +186,7 @@ Proof.
   auto.
 Qed.
 
-
+(** ** [elemVarSet]  *)
 
 Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
   intro v.
@@ -199,14 +194,12 @@ Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
   fsetdec.
 Qed.
 
+(** ** [extendVarSet]  *)
 
-Lemma delVarSet_elemVarSet_false : forall v set, 
-    elemVarSet v set = false -> delVarSet set v [=] set.
-intros.
-set_b_iff.
-apply remove_equal.
-auto.
-Qed.
+Lemma lookupVarSet_extendVarSet_self:
+  forall v vs,
+  lookupVarSet (extendVarSet vs v) v = Some v.
+Admitted.
 
 
 Lemma extendVarSet_elemVarSet_true : forall set v, 
@@ -216,6 +209,42 @@ Proof.
   apply add_equal.
   auto.
 Qed.
+
+
+Lemma elemVarSet_extendVarSet:
+  forall v vs v',
+  elemVarSet v (extendVarSet vs v') = (v' GHC.Base.== v) || elemVarSet v vs.
+Proof.
+  intros.
+  unfold_zeze.
+  replace (realUnique v' =? realUnique v)%nat with 
+    (F.eqb v' v).
+  eapply MP.Dec.F.add_b.
+  unfold F.eqb. destruct F.eq_dec.
+  unfold Var_as_DT.eq in e.
+  unfold Var_as_DT.eqb in e.
+  revert e.
+  unfold_zeze.
+  auto.
+  unfold Var_as_DT.eq in n.
+  unfold Var_as_DT.eqb in n.
+  revert n.
+  unfold_zeze.
+  set (blah := (realUnique v' =? realUnique v)%nat).
+  now destruct blah.
+Qed.
+
+
+(** ** [delVarSet]  *)
+
+Lemma delVarSet_elemVarSet_false : forall v set, 
+    elemVarSet v set = false -> delVarSet set v [=] set.
+intros.
+set_b_iff.
+apply remove_equal.
+auto.
+Qed.
+
 
 Lemma delVarSet_extendVarSet : 
   forall set v, 
@@ -228,19 +257,8 @@ Proof.
   auto.
 Qed.
 
-(*
-Lemma elemVarSet_extendVarSet :
-  forall set v0 v, 
-    elemVarSet v0 (extendVarSet set v) = true -> 
-    (elemVarSet v0 set = true) \/ (Var_as_DT.eqb v v0 = true).
-Proof.
-  intros.
-  set_b_iff.
-  rewrite add_iff in H.
-  tauto.
-Qed.
+(** ** [delVarSetList]  *)
 
-*)
 Lemma delVarSetList_single:
   forall e a, delVarSetList e [a] = delVarSet e a.
 Proof.
@@ -273,51 +291,22 @@ Admitted.
 Qed. *)
 
 
-(**************************************)
-
-Lemma elemVarSet_mkVarset_iff_In:
-  forall v vs,
-  elemVarSet v (mkVarSet vs) = true <->  List.In (varUnique v) (map varUnique vs).
+Lemma elemVarSet_delVarSet: forall v1 fvs v2,
+  elemVarSet v1 (delVarSet fvs v2) = true <-> 
+  (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).
 Proof.
   intros.
   set_b_iff.
-  remember (mkVarSet vs) as vss.
-  unfold_VarSet.
-  rewrite <- getUnique_varUnique.
-  rewrite unique_In.
-  set (key := (Unique.getWordKey (Unique.getUnique v))).
-  (* Need theory about IntMap. *)
-Admitted. 
-
-
-Lemma lookupVarSet_extendVarSet_self:
-  forall v vs,
-  lookupVarSet (extendVarSet vs v) v = Some v.
+  set_iff.
+  unfold Var_as_DT.eqb.
+  unfold_zeze.
 Admitted.
 
 
-Lemma elemVarSet_extendVarSet:
-  forall v vs v',
-  elemVarSet v (extendVarSet vs v') = (v' GHC.Base.== v) || elemVarSet v vs.
-Proof.
-  intros.
-  unfold_zeze.
-  replace (realUnique v' =? realUnique v)%nat with 
-    (F.eqb v' v).
-  eapply MP.Dec.F.add_b.
-  unfold F.eqb. destruct F.eq_dec.
-  unfold Var_as_DT.eq in e.
-  unfold Var_as_DT.eqb in e.
-  revert e.
-  unfold_zeze.
-  auto.
-  unfold Var_as_DT.eq in n.
-  unfold Var_as_DT.eqb in n.
-  revert n.
-  unfold_zeze.
-  set (blah := (realUnique v' =? realUnique v)%nat).
-  now destruct blah.
-Qed.
+(**************************************)
+
+
+(** ** [subVarSet]  *)
   
 Lemma subVarSet_refl:
   forall vs1,
@@ -338,17 +327,6 @@ Proof.
   unfold_zeze.
 Admitted.
   
-
-Lemma elemVarSet_delVarSet: forall v1 fvs v2,
-  elemVarSet v1 (delVarSet fvs v2) = true <-> 
-  (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).
-Proof.
-  intros.
-  set_b_iff.
-  set_iff.
-  unfold Var_as_DT.eqb.
-  unfold_zeze.
-Admitted.
 
 Lemma elemVarSet_false_true:
   forall v1 fvs v2,
@@ -445,6 +423,23 @@ Proof.
     set_b_iff.
     fsetdec.
 Qed.
+
+(** ** [mkVarSet]  *)
+
+
+Lemma elemVarSet_mkVarset_iff_In:
+  forall v vs,
+  elemVarSet v (mkVarSet vs) = true <->  List.In (varUnique v) (map varUnique vs).
+Proof.
+  intros.
+  set_b_iff.
+  remember (mkVarSet vs) as vss.
+  unfold_VarSet.
+  rewrite <- getUnique_varUnique.
+  rewrite unique_In.
+  set (key := (Unique.getWordKey (Unique.getUnique v))).
+  (* Need theory about IntMap. *)
+Admitted. 
 
 Axiom disjointVarSet_mkVarSet:
   forall vs1 vs2,

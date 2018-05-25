@@ -51,59 +51,6 @@ Set Bullet Behavior "Strict Subproofs".
 
    *)
 
-(** The interface only requires that the key type has a decidable equality.
-    
- *)
-
-Ltac unfold_zeze :=
-  unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__;
-  unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____.  
-
-(* Define the Var type as a decidable type by using the Eq instance.
-   (This instance only looks at the Unique components of the Var *)
-(* We could also show that the Eq instance satisfies the Eq laws first, 
-   and the perhaps derive this module from that. *)
-Module Var_as_DT <: BooleanDecidableType <: DecidableType.
-  Definition t := Var.
-
-  Definition eqb : t -> t -> bool := _GHC.Base.==_.
-
-  Definition eq : t -> t -> Prop := fun x y => eqb x y = true.
-
-  Definition eq_equiv : Equivalence eq.
-  split. 
-  - unfold eq, eqb, Reflexive. 
-    unfold_zeze.
-    intro x. destruct x; simpl; apply Nat.eqb_refl.
-  - unfold eq, eqb, Symmetric.
-    unfold_zeze.
-    intros x y. 
-    destruct x; destruct y; simpl; rewrite Nat.eqb_sym; auto.
-  - unfold eq, eqb, Transitive.
-    unfold_zeze.
-    intros x y z. 
-    destruct x; destruct y; destruct z; simpl;
-    repeat erewrite Nat.eqb_eq; intro h; rewrite h; auto.
-  Defined.
-
-  Definition eq_dec : forall x y : t, { eq x y } + { ~ (eq x y) }.
-  intros x y.
-  unfold eq, eqb.
-  unfold_zeze.
-  destruct x eqn:X; destruct y eqn:Y;  simpl.
-  all: destruct (Nat.eqb n0 n2) eqn:EQ ; [left; auto | right; auto].
-  Defined.
-
-  Lemma eqb_eq : forall x y, eqb x y = true <-> eq x y.
-    unfold eq. tauto.
-  Qed. 
-
- Definition eq_refl := eq_equiv.(@Equivalence_Reflexive _ _).
- Definition eq_sym := eq_equiv.(@Equivalence_Symmetric _ _).
- Definition eq_trans := eq_equiv.(@Equivalence_Transitive _ _).
-
-End Var_as_DT.
-
 (** Note: This module is actually *more* than what we need for fsetdec.  Maybe
     we want to redesign fsetdec to state only the properties and operations
     that it uses?

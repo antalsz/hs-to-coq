@@ -14,6 +14,7 @@ Require Import Proofs.Base.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
 
+Require Import Proofs.Var.
 Require Import Proofs.VarSet.
 Import VarSetFSet.
 Import VarSetDecide.

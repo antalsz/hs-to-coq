@@ -10,6 +10,8 @@ Require Import Proofs.GhcTactics.
 Require Import Proofs.Forall.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSet.
+Require Import Proofs.CoreInduct.
+Require Import Proofs.Var.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -19,21 +21,6 @@ This file describes an invariant of Core files that
  * and be structurally equal to their binder
 *)
 
-(* This returns a [Prop] rather than a bool because
-   we do not have a function that determines structural
-   equality.
-*)
-
-Inductive almostEqual : Var -> Var -> Prop :=
- | AE_TyVar   : forall n u ty,
-   almostEqual (Mk_TyVar n u ty)
-               (Mk_TyVar n u ty)
- | AE_TcTyVar : forall n u ty1 ty2,
-   almostEqual (Mk_TcTyVar n u ty1 ty2)
-               (Mk_TcTyVar n u ty1 ty2)
- | AE_Id : forall n u ty ids idd id1 id2,
-   almostEqual (Mk_Id n u ty ids idd id1)
-               (Mk_Id n u ty ids idd id2).
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
    match lookupVarSet in_scope v with
@@ -83,10 +70,6 @@ Fixpoint WellScopedProgram (pgm : CoreProgram) (in_scope : VarSet) : Prop :=
 (** ** Lots of lemmas *)
 
 (** *** [almostEqual] *)
-
-Lemma almostEqual_refl:
-  forall v, almostEqual v v.
-Proof. intros. destruct v; constructor. Qed.
 
 Lemma delVarSet_ae:
   forall vs v1 v2,
@@ -195,10 +178,21 @@ Qed.
 
 (** *** Relation to [exprFreeVars] *)
 
-Axiom WellScoped_subset:
+Lemma WellScoped_subset:
   forall e vs,
   WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
-
+Proof.
+  intro e.
+  apply (core_induct e); intros.
+  - unfold WellScoped, WellScopedVar, exprFreeVars in *.
+    unfold Base.op_z2218U__.
+    unfold exprFVs.
+    unfold Base.op_z2218U__.
+    destruct (lookupVarSet vs v) eqn:Hl.
+    unfold FV.fvVarSet, Base.op_z2218U__,
+    FV.fvVarListVarSet, FV.filterFV, expr_fvs,
+    FV.unitFV.
+Admitted.
 
 (** *** Freshness *)
 

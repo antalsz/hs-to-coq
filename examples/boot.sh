@@ -64,7 +64,6 @@ clean make -C ../base-thy clean
 clean make -C containers clean
 clean make -C containers/theories clean
 clean make -C ghc/theories clean
-clean make -C transformers clean
 
 if [[ -e base-src/base ]]
 then
@@ -93,7 +92,16 @@ coq make -C coinduction
 make -C containers vfiles
 coq make -C containers coq
 coq make -C containers/theories
-make -C transformers vfiles
+
+if [[ -e transformers/transformers ]]
+then
+	echo "Regenerating transformers"
+	clean make -C transformers clean
+	make -C transformers vfiles
+else
+	echo "Rebuiding transformers/lib"
+	clean make -C transformers/lib clean
+fi
 coq make -C transformers coq
 
 if [[ -e ghc/ghc ]]

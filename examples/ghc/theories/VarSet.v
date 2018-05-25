@@ -28,6 +28,11 @@ Open Scope Z_scope.
 
 Set Bullet Behavior "Strict Subproofs".
 
+(** ** Valid VarSets *)
+
+Definition ValidVarSet (vs : VarSet) : Prop :=
+  forall v1 v2, lookupVarSet vs v1 = Some v2 -> (v1 GHC.Base.== v2) = true.
+
 
 (** ** [VarSet] as FiniteSets  *)
 
@@ -507,4 +512,71 @@ Proof.
   unfold realUnique.
 Admitted.
 
+(** ** [lookupVarSet] *)
+
+Lemma lookupVarSet_elemVarSet : 
+  forall v1 v2 vs, lookupVarSet vs v1 = Some v2 -> elemVarSet v1 vs = true.
+Admitted.
+
+Lemma elemVarSet_lookupVarSet :
+  forall v1 vs, elemVarSet v1 vs = true -> exists v2, lookupVarSet vs v1 = Some v2.
+Admitted.
+
+Lemma lookupVarSet_extendVarSet_eq :
+      forall v1 v2 vs,
+      v1 GHC.Base.== v2 = true ->
+      lookupVarSet (extendVarSet vs v1) v2 = Some v1.
+Proof.
+  intros.
+  unfold lookupVarSet, extendVarSet.
+  unfold UniqSet.lookupUniqSet, UniqSet.addOneToUniqSet.
+  destruct vs.
+  unfold UniqFM.lookupUFM, UniqFM.addToUFM.
+  destruct u.
+  unfold GHC.Base.op_zeze__, Eq___Var, Base.op_zeze____, 
+  Core.Eq___Var_op_zeze__ in H.
+Admitted.
+
+
+(** ** Compatibility with [almostEqual] *)
+
+Lemma lookupVarSet_ae : 
+  forall vs v1 v2, 
+    almostEqual v1 v2 -> 
+    lookupVarSet vs v1 = lookupVarSet vs v2.
+Proof. 
+  induction 1; simpl; unfold UniqFM.lookupUFM; simpl; auto.
+Qed.
+
+Lemma delVarSet_ae:
+  forall vs v1 v2,
+  almostEqual v1 v2 ->
+  delVarSet vs v1 = delVarSet vs v2.
+Proof.
+  induction 1; simpl;
+  unfold UniqFM.delFromUFM; simpl; auto.
+Qed.
+
+Lemma elemVarSet_ae:
+  forall vs v1 v2,
+  almostEqual v1 v2 ->
+  elemVarSet v1 vs = elemVarSet v2 vs.
+Proof.
+  induction 1; simpl;
+  unfold UniqFM.delFromUFM; simpl; auto.
+Qed.
+
+(** ** [StrongSubset] *)
+
+
+(* A strong subset doesn't just have a subset of the uniques, but 
+     also requires that the variables in common be almostEqual. *)
+Definition StrongSubset (vs1 : VarSet) (vs2: VarSet) := 
+  forall var, match lookupVarSet vs1 var with 
+           | Some v =>  match lookupVarSet vs2 v with
+                          | Some v' => almostEqual v v'
+                          | None => False
+                       end
+           | None => True 
+         end.
 

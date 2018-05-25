@@ -71,24 +71,6 @@ Fixpoint WellScopedProgram (pgm : CoreProgram) (in_scope : VarSet) : Prop :=
 
 (** *** [almostEqual] *)
 
-Lemma delVarSet_ae:
-  forall vs v1 v2,
-  almostEqual v1 v2 ->
-  delVarSet vs v1 = delVarSet vs v2.
-Proof.
-  induction 1; simpl;
-  unfold UniqFM.delFromUFM; simpl; auto.
-Qed.
-
-Lemma elemVarSet_ae:
-  forall vs v1 v2,
-  almostEqual v1 v2 ->
-  elemVarSet v1 vs = elemVarSet v2 vs.
-Proof.
-  induction 1; simpl;
-  unfold UniqFM.delFromUFM; simpl; auto.
-Qed.
-
 Axiom WellScoped_extendVarSet_ae:
   forall e vs v1 v2,
   almostEqual v1 v2 ->

@@ -1,6 +1,8 @@
-
 HAVE_STACK := $(shell command -v stack 2> /dev/null)
-ifdef HAVE_STACK
+
+ifeq ($(USE_SYSTEM_HS_TO_COQ),"True")
+HS_TO_COQ = HS_TO_COQ
+else ifdef HAVE_STACK
 HS_TO_COQ = stack exec hs-to-coq --
 else
 ifeq ($(HS_TO_COQ_COVERAGE),True)

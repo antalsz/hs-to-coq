@@ -3,106 +3,6 @@
 This module contains a formalization of Haskell's Data.IntSet which implements a set of
 integers as a patricia trie.
 
-** Status
-
-This is the annotated export list of IntSet. The first column says:
-
- V verified
- F verified according to the FMapInterface specification
- P skipped, because of partiality
- S skipped, for other reasons
- N nothing to be done
-
-    -- * Set type
- V    IntSet(..), Key -- instance Eq,Show
- N  , Prefix, Mask, BitMap
-
-    -- * Operators
- F  , (\\)
-
-    -- * Query
- F  , null
- F  , size
- F  , member
- V  , notMember
-    , lookupLT
-    , lookupGT
-    , lookupLE
-    , lookupGE
- F  , isSubsetOf
- V  , isProperSubsetOf
- V  , disjoint
-
-    -- * Construction
- F  , empty
- F  , singleton
- F  , insert
- F  , delete
-
-    -- * Combine
- F  , union
- F  , unions
- F  , difference
- F  , intersection
-
-    -- * Filter
- F  , filter
- F  , partition
- V  , split
- V  , splitMember
-    , splitRoot
-
-    -- * Map
- V  , map
-
-    -- * Folds
- V  , foldr
- F  , foldl
-    -- ** Strict folds
- V  , foldr'
- V  , foldl'
-    -- ** Legacy folds
- V  , fold
-
-    -- * Min\/Max
- P  , findMin
- P  , findMax
-    , deleteMin
-    , deleteMax
- P  , deleteFindMin
- P  , deleteFindMax
-    , maxView
-    , minView
-
-    -- * Conversion
-
-    -- ** List
- F  , elems
- F  , toList
- V  , fromList
-
-    -- ** Ordered list
- V  , toAscList
- V  , toDescList
-    , fromAscList
-    , fromDistinctAscList
-
-    -- * Debugging
- S  , showTree
- S  , showTreeWith
-
-    -- * Internals
- V  , match
- V  , suffixBitMask
- V  , prefixBitMask
- V  , bitmapOf
- V  , zero
-
-Additionall stuff:
- 
- * valid: (from the test suite): correctness (but not completeness of)
- * Eq IntSet: Lawfulness.
-
 *)
 
 Require Import Omega.
@@ -184,10 +84,10 @@ Definition oro {a} : option a -> option a -> option a :=
     | None => y
     end.
 
-(** ** IntMap-specific operations
+(** ** IntSet-specific operations
 
-These definitions and lemmas are used to link some concepts from the IntMap
-implementation to the range sets above.
+These definitions and lemmas are used to link some concepts from the IntSet
+implementation to the dyadic intervals in [DyadicIntervals]
 *)
 
 Require Import GHC.Base.

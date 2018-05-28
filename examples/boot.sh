@@ -2,7 +2,7 @@
 
 set -e
 
-if [ -z "USE_SYSTEM_HS_TO_COQ" ] && which stack >/dev/null
+if [ -z "$NO_BUILD_HS_TO_COQ" ] && which stack >/dev/null
 then
   echo "Rebuilding the tool"
   stack build

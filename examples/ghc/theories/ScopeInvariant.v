@@ -13,6 +13,10 @@ Require Import Proofs.VarSet.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Var.
 
+Import GHC.Base.ManualNotations.
+
+
+
 Set Bullet Behavior "Strict Subproofs".
 
 (*
@@ -20,7 +24,6 @@ This file describes an invariant of Core files that
  * all variables must be in scope
  * and be structurally equal to their binder
 *)
-
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
    match lookupVarSet in_scope v with
@@ -158,11 +161,74 @@ Proof.
   split; intro; repeat split; try constructor; intuition.
 Qed.
 
+(** *** StrongSubset *)
+
+Lemma WellScopedVar_StrongSubset : forall e vs1 vs2, 
+    WellScopedVar e vs1 -> StrongSubset vs1 vs2 -> WellScopedVar e vs2.
+Proof.
+  intros v vs1 vs2 WS SS.
+  unfold WellScopedVar, StrongSubset in *.
+  specialize (SS v).
+  destruct (lookupVarSet vs1 v); try contradiction.
+  destruct (lookupVarSet vs2 v) eqn:LV2; try contradiction.
+  eapply almostEqual_trans with (v2 := v0); auto.
+Qed.
+
+Lemma WellScoped_StrongSubset : forall e vs1 vs2, 
+    WellScoped e vs1 -> StrongSubset vs1 vs2 -> WellScoped e vs2.
+Proof.
+  intro e.
+  apply (core_induct e); intros; try (destruct binds);
+    unfold WellScoped in *; fold WellScoped in *; eauto.
+  - eapply WellScopedVar_StrongSubset; eauto.
+  - destruct H1. split; eauto.
+  - eapply H; eauto.
+    unfold StrongSubset in *.
+    intro var.
+    specialize (H1 var).
+    unfold CoreBndr in v. (* make sure that the type class looks right.*)
+    destruct (v GHC.Base.== var) eqn:Eq.
+    + rewrite lookupVarSet_extendVarSet_eq; auto.
+      rewrite lookupVarSet_extendVarSet_eq; auto.
+      eapply almostEqual_refl.
+    + rewrite lookupVarSet_extendVarSet_neq.
+      destruct (lookupVarSet vs1 var) eqn:IN; auto.
+      rewrite lookupVarSet_extendVarSet_neq.
+      auto.
+      intro h;
+      rewrite h in Eq; discriminate.
+      intro h;
+      rewrite h in Eq; discriminate.
+   - destruct H1 as [WE Wb].
+      split; eauto.
+      eapply H0; eauto.
+      eapply StrongSubset_extendVarSetList.
+      auto.
+  - destruct H1 as [[WE1 WE2] Wb].
+     repeat split; auto.
+     rewrite Forall'_Forall in *.
+     rewrite Forall_forall in *.
+     intros h IN. destruct h as [v rhs].
+     specialize (WE2 (v,rhs)).
+     simpl in *.
+     eauto using StrongSubset_extendVarSetList.
+     eauto using StrongSubset_extendVarSetList.
+  - destruct H1 as [W1 W2].
+    split; eauto.
+     rewrite Forall'_Forall in *.
+     rewrite Forall_forall in *.
+     intros h IN. destruct h as [[dc pats] rhs].
+     specialize (H0 dc pats rhs IN).
+     specialize (W2 (dc,pats,rhs) IN).
+     simpl in *.
+     eauto using StrongSubset_extendVarSetList.
+Qed.
+
 (** *** Relation to [exprFreeVars] *)
 
 Lemma WellScoped_subset:
   forall e vs,
-  WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
+    WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
 Proof.
   intro e.
   apply (core_induct e); intros.
@@ -176,6 +242,7 @@ Proof.
     FV.unitFV.
 Admitted.
 
+
 (** *** Freshness *)
 
 Axiom WellScopedVar_extendVarSetList_l:
@@ -183,6 +250,7 @@ Axiom WellScopedVar_extendVarSetList_l:
   WellScopedVar v vs1 ->
   elemVarSet v (mkVarSet vs2) = false ->
   WellScopedVar v (extendVarSetList vs1 vs2).
+  
 
 Axiom WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,

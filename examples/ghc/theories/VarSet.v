@@ -30,6 +30,9 @@ Set Bullet Behavior "Strict Subproofs".
 
 (** ** Valid VarSets *)
 
+(* This property is an invariant of the VarSet/UniqFM type. We may want to either 
+   axiomatize it or add it to a sigma type in one of the definitions. *)
+
 Definition ValidVarSet (vs : VarSet) : Prop :=
   forall v1 v2, lookupVarSet vs v1 = Some v2 -> (v1 GHC.Base.== v2) = true.
 
@@ -201,10 +204,6 @@ Qed.
 
 (** ** [extendVarSet]  *)
 
-Lemma lookupVarSet_extendVarSet_self:
-  forall v vs,
-  lookupVarSet (extendVarSet vs v) v = Some v.
-Admitted.
 
 
 Lemma extendVarSet_elemVarSet_true : forall set v, 
@@ -522,6 +521,15 @@ Lemma elemVarSet_lookupVarSet :
   forall v1 vs, elemVarSet v1 vs = true -> exists v2, lookupVarSet vs v1 = Some v2.
 Admitted.
 
+
+
+Lemma lookupVarSet_extendVarSet_self:
+  forall v vs,
+  lookupVarSet (extendVarSet vs v) v = Some v.
+Admitted.
+
+(** ** Compatibility with [GHC.Base.==] *)
+
 Lemma lookupVarSet_extendVarSet_eq :
       forall v1 v2 vs,
       v1 GHC.Base.== v2 = true ->
@@ -536,6 +544,29 @@ Proof.
   unfold GHC.Base.op_zeze__, Eq___Var, Base.op_zeze____, 
   Core.Eq___Var_op_zeze__ in H.
 Admitted.
+
+Axiom lookupVarSet_extendVarSet_neq :
+      forall v1 v2 vs,
+      not (v1 GHC.Base.== v2 = true) ->
+      lookupVarSet (extendVarSet vs v1) v2 = lookupVarSet vs v2.
+
+Lemma lookupVarSet_eq :
+  forall v1 v2 vs var,
+    (v1 GHC.Base.== v2) = true ->
+    lookupVarSet vs v1 = Some var ->
+    lookupVarSet vs v2 = Some var. 
+Proof.
+  intros.
+  unfold lookupVarSet in *.
+  unfold UniqSet.lookupUniqSet in *. destruct vs. 
+  unfold UniqFM.lookupUFM in *. destruct u.
+Admitted.
+
+Lemma elemVarSet_eq : forall v1 v2 vs,
+  (v1 GHC.Base.== v2) = true -> 
+  elemVarSet v1 vs = elemVarSet v2 vs.
+Admitted.
+
 
 
 (** ** Compatibility with [almostEqual] *)
@@ -573,10 +604,56 @@ Qed.
      also requires that the variables in common be almostEqual. *)
 Definition StrongSubset (vs1 : VarSet) (vs2: VarSet) := 
   forall var, match lookupVarSet vs1 var with 
-           | Some v =>  match lookupVarSet vs2 v with
+           | Some v =>  match lookupVarSet vs2 var with
                           | Some v' => almostEqual v v'
                           | None => False
                        end
            | None => True 
          end.
 
+
+
+Lemma strongSubset_implies_subset :
+  forall vs1 vs2 , 
+    StrongSubset vs1 vs2 -> vs1 [<=] vs2.
+Proof. 
+  intros vs1 vs2.
+  unfold StrongSubset, Subset.
+  intros SS var IN.
+  unfold In in *.
+  specialize (SS var). 
+  destruct (lookupVarSet vs1 var) eqn:VS1;
+  destruct (lookupVarSet vs2 var) eqn:VS2; try contradiction.
+  - apply lookupVarSet_elemVarSet in VS2.   
+    auto.
+  - apply elemVarSet_lookupVarSet in IN. destruct IN.
+    rewrite VS1 in H. discriminate.
+  - apply elemVarSet_lookupVarSet in IN. destruct IN.
+    rewrite VS1 in H. discriminate.
+Qed.
+
+
+Lemma StrongSubset_extendVarSetList : forall l vs1 vs2, StrongSubset vs1 vs2 -> StrongSubset (extendVarSetList vs1 l) (extendVarSetList vs2 l).
+Proof.
+  induction l; intros vs1 vs2 h.
+  repeat rewrite extendVarSetList_nil.
+  auto.
+  rewrite extendVarSetList_cons.
+  rewrite extendVarSetList_cons.
+  eapply IHl.
+  unfold StrongSubset.
+  intro var.
+  destruct (a GHC.Base.== var) eqn:Eq.
+  + rewrite lookupVarSet_extendVarSet_eq; auto.
+    rewrite lookupVarSet_extendVarSet_eq; auto.
+    eapply almostEqual_refl.
+  + rewrite lookupVarSet_extendVarSet_neq.
+    destruct (lookupVarSet vs1 var) eqn:IN; auto.
+    rewrite lookupVarSet_extendVarSet_neq.
+    unfold StrongSubset in h. 
+    specialize (h var). rewrite IN in h. auto.
+    intro h1;
+      rewrite h1 in Eq; discriminate.
+    intro h1;
+      rewrite h1 in Eq; discriminate.
+Qed.

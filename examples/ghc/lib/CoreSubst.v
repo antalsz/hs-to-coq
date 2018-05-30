@@ -56,7 +56,6 @@ Parameter substBndr1 : Subst -> Core.Var -> (Subst * Core.Var)%type.
 Parameter substRecBndrs1 : Subst -> list Core.Var -> (Subst * list Core.Var)%type.
 Parameter substIdBndr1
    : GHC.Base.String -> Subst -> Subst -> Core.Var -> (Subst * Core.Var)%type.
-
 Parameter substIdInfo1
    : Subst -> Core.Var -> Core.IdInfo -> option Core.IdInfo.
 

@@ -94,12 +94,12 @@ Renames given constructor.
 
 ```termination <qualified function name> <termarg>```
 
-If `qualid` is not structurally recursive, `termarg` can be one of 
+If `qualid` is not structurally recursive, `termarg` can be one of
     - `deferred`
     - `corecursive`
     - `{ struct qualid }`
     - `{ measure id ... }`
-	- `{ wf id qualid }`
+    - `{ wf id qualid }`
 
 
 Edits can be localized to particular definitions. You can write
@@ -173,7 +173,8 @@ Some notes about interface file:
 * The `examples/` directories contains a number of example translation and
   verification projects, including
 
-  * [containers](examples/containers) Modules from the `containers` library, 
+  * [ghc](examples/ghc) Modules of GHC itself.
+  * [containers](examples/containers) Modules from the `containers` library,
 	including `Data.Set` and `Data.IntSet`
   * [bag](examples/bag) Multiset implementation from GHC's implemention
   * [successors](examples/successors) Successors Monad
@@ -183,8 +184,8 @@ Some notes about interface file:
   * [coinduction](examples/coinduction) Translating infinite data structures
   * [base-src](examples/base-src) The sources of the `base/` directory
   * [tests](examples/tests) Simple unit-tests
-  * [base-tests](examples/base-tests) Unit-tests that require `base/` 
-  
+  * [base-tests](examples/base-tests) Unit-tests that require `base/`
+
 * `structural-isomorphism-plugin`: (In progress.)  A GHC plugin that connects
    the re-extracted converted code back into GHC, allowing us to run Haskell
    programs against verified/verifiable code.  Currently does not work.

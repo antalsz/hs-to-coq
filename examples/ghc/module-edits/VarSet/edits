@@ -9,3 +9,7 @@ in Core.transCloVarSet  termination go deferred
 # Outputtable
 skip Core.pluralVarSet
 skip Core.pprVarSet
+
+
+# unused in GHC, and could require additional Uniquable constraints
+skip Core.mapVarSet

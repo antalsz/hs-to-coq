@@ -13,6 +13,8 @@ Import GHC.Base.ManualNotations.
 
 Set Bullet Behavior "Strict Subproofs".
 
+(** * Well-formedness of [FV]s. *)
+
 Reserved Notation "A ⊢ B" (at level 70, no associativity).
 Inductive Denotes : VarSet -> FV -> Prop :=
 | DenotesVarSet : forall vs fv,
@@ -59,35 +61,10 @@ Qed.
 
 Definition WF_fv (fv : FV) : Prop := exists vs, vs ⊢ fv.
 
-Lemma elemVarSet_neq :
-  forall x y vs,
-    elemVarSet x vs = true ->
-    elemVarSet y vs = false ->
-    x == y = false.
-Proof.
-  intros. apply not_true_is_false. intro. revert H. revert H0.
-  unfold elemVarSet, UniqSet.elementOfUniqSet; destruct vs.
-  unfold UniqFM.elemUFM; destruct u. intro H.
-  rewrite member_eq with (k':=(Unique.getWordKey (Unique.getUnique x))) in H.
-  - rewrite H. discriminate.
-  - simpl. rewrite <- realUnique_eq in H1. cbn in H1.
-    apply Nat.eqb_eq in H1. rewrite H1. cbn. apply N.eqb_refl.
-Qed.
-
-Lemma elemVarSet_extendVarSet :
-  forall x y vs,
-    x == y = false ->
-    elemVarSet x vs = false ->
-    elemVarSet x (extendVarSet vs y) = false.
-Proof.
-  intros. unfold extendVarSet, UniqSet.addOneToUniqSet. revert H0.
-  destruct vs. unfold elemVarSet, UniqSet.elementOfUniqSet.
-  unfold UniqFM.addToUFM, UniqFM.elemUFM. destruct u. intros Hmem.
-  rewrite member_insert. apply orb_false_iff; split; [ | assumption].
-  apply not_true_is_false. intro.
-  cbn in H0. cbn in H. apply N.eqb_eq in H0. apply Nat2N.inj in H0.
-  rewrite <- Nat.eqb_eq in H0. rewrite H in H0. discriminate.
-Qed.
+(** Many well-formedness theorems remain unproven. However, because
+    the [WF] is definined based on [Denotes], which relates [FV]s to
+    [VarSet]s, most of these theorems should be easily provable once
+    we have some good theorems or tactics for [VarSet]s. *)
 
 Lemma empty_FV_WF :
   WF_fv emptyFV.
@@ -198,15 +175,17 @@ Proof.
   intros. apply map_union_FV_WF; intros. apply unit_FV_WF.
 Qed.
 
-Lemma union_empty_l : forall fv, FV.unionFV FV.emptyFV fv = fv.
-Proof. reflexivity. Qed.
-
-Lemma union_empty_r : forall fv, FV.unionFV fv FV.emptyFV = fv.
-Proof. reflexivity. Qed.
-
 Hint Resolve unit_FV_WF.
 Hint Resolve empty_FV_WF.
 Hint Resolve union_FV_WF.
 Hint Resolve unions_FV_WF.
 Hint Resolve del_FV_WF.
 Hint Resolve mkFVs_FV_WF.
+
+(** * Some other theroems about [FV]s. *)
+
+Lemma union_empty_l : forall fv, FV.unionFV FV.emptyFV fv = fv.
+Proof. reflexivity. Qed.
+
+Lemma union_empty_r : forall fv, FV.unionFV fv FV.emptyFV = fv.
+Proof. reflexivity. Qed.

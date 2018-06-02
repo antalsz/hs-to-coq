@@ -34,13 +34,6 @@ Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
 (** ** [FV] *)
 
-Axiom unionFV_empty_right : forall fv, FV.unionFV fv FV.emptyFV = fv.
-Axiom unionFV_empty_left  : forall fv, FV.unionFV FV.emptyFV fv = fv.
-
-(** LY: This lemma should be wrong, because [fv] is a function, and
-    this is clearly not true for any functions. However, I am leaving
-    this here for now as I have not yet found a good predicates for
-    [fv] here. *)
 Lemma delVarSet_delFV: forall fv x,
     WF_fv fv ->
     delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).

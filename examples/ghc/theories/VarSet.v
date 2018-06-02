@@ -28,6 +28,17 @@ Open Scope Z_scope.
 
 Set Bullet Behavior "Strict Subproofs".
 
+Ltac unfold_VarSet_to_IntMap :=
+  repeat match goal with
+         | [vs : VarSet |- _ ] =>
+           let u := fresh "u" in
+           destruct vs as [u]; destruct u; simpl
+         | [ |- UniqSet.Mk_UniqSet _ = UniqSet.Mk_UniqSet _ ] =>
+           f_equal
+         | [ |- UniqFM.UFM _ = UniqFM.UFM _ ] =>
+           f_equal
+         end.
+
 (** ** Valid VarSets *)
 
 (* This property is an invariant of the VarSet/UniqFM type. We may want to either 

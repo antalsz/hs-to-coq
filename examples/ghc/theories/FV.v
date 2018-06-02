@@ -164,9 +164,49 @@ Proof.
   replace vs_mid with (fst vs_mid, snd vs_mid); [| destruct vs_mid; reflexivity].
   intuition. rewrite H3. rewrite H2.
 Admitted.
-  
+
+Lemma map_union_FV_WF : forall A f (ls : list A),
+    (forall e, In e ls -> WF_fv (f e)) ->
+    WF_fv (mapUnionFV f ls).
+Proof.
+  induction ls.
+  - intros; unfold_WF. exists emptyVarSet. constructor; intros. simpl.
+    intuition. unfold_fv. unfold_VarSet_to_IntMap.
+    rewrite difference_nil_l, union_nil_r; reflexivity.
+  - intros. simpl in H.
+    assert (forall e : A, In e ls -> WF_fv (f e)). { intros. apply H. tauto. }
+    apply IHls in H0.
+    assert (WF_fv (f a)). { apply H; tauto. }
+    unfold_WF. simpl. exists (unionVarSet vs vs0). constructor; intros.
+    specialize (H2 f0 in_scope vs' l H0); destruct H2.
+    remember (f a f0 in_scope (l, vs')) as vs_mid.
+    specialize (H1 f0 in_scope (snd vs_mid) (fst vs_mid) H2). destruct H1.
+    replace vs_mid with (fst vs_mid, snd vs_mid); [| destruct vs_mid; reflexivity].
+    intuition. rewrite H4. rewrite H3.
+Admitted.
+
+Lemma unions_FV_WF : forall fvs,
+    (forall fv, In fv fvs -> WF_fv fv) ->
+    WF_fv (unionsFV fvs).
+Proof.
+  apply map_union_FV_WF.
+Qed.
+
+Lemma mkFVs_FV_WF : forall vs,
+    WF_fv (mkFVs vs).
+Proof.
+  intros. apply map_union_FV_WF; intros. apply unit_FV_WF.
+Qed.
+
 Lemma union_empty_l : forall fv, FV.unionFV FV.emptyFV fv = fv.
 Proof. reflexivity. Qed.
 
 Lemma union_empty_r : forall fv, FV.unionFV fv FV.emptyFV = fv.
 Proof. reflexivity. Qed.
+
+Hint Resolve unit_FV_WF.
+Hint Resolve empty_FV_WF.
+Hint Resolve union_FV_WF.
+Hint Resolve unions_FV_WF.
+Hint Resolve del_FV_WF.
+Hint Resolve mkFVs_FV_WF.

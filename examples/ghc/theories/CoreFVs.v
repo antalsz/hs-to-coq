@@ -56,24 +56,49 @@ Proof.
   destruct H0; destruct H1.
   rewrite hs_coq_tuple_snd. rewrite H3.
   rewrite hs_coq_tuple_snd. rewrite H4.
+  unfold_VarSet_to_IntMap.
   (* Seems true. *)
 Admitted.
 
-Hint Resolve unit_FV_WF.
-Hint Resolve empty_FV_WF.
-Hint Resolve union_FV_WF.
-Hint Resolve del_FV_WF.
+Lemma addBndr_WF : forall fv bndr,
+    WF_fv fv ->
+    WF_fv (addBndr bndr fv).
+Proof.
+  intros; unfold addBndr, varTypeTyCoFVs.
+  rewrite union_empty_l. apply del_FV_WF; auto.
+Qed.
+
+Lemma addBndrs_WF : forall fv bndrs,
+    WF_fv fv ->
+    WF_fv (addBndrs bndrs fv).
+Proof.
+  induction bndrs; unfold addBndrs;
+    rewrite hs_coq_foldr_list; auto.
+  intros. simpl. apply addBndr_WF. auto.
+Qed.
 
 Lemma expr_fvs_WF : forall e,
     WF_fv (expr_fvs e).
 Proof.
   intros e. apply (core_induct e); intros; simpl; auto.
-  - destruct binds; auto. admit.
-  - admit.
+  - destruct binds; auto. apply addBndrs_WF.
+    apply union_FV_WF; auto. apply unions_FV_WF.
+    intros. induction l; simpl in H1; try contradiction.
+    destruct a. destruct H1. 
+    + rewrite <- H1. apply H with (v:=c). constructor; reflexivity.
+    + apply IHl; auto. intros.
+      specialize (H v rhs). apply H. apply in_cons; auto.
   - apply union_FV_WF; auto.
-    unfold tickish_fvs.
-    destruct tickish; auto. admit.
-Admitted.
+    apply addBndr_WF. apply unions_FV_WF.
+    induction alts; simpl; try contradiction.
+    intros. destruct a as [[? ?] ?]. destruct H1.
+    + rewrite <- H1. apply addBndrs_WF. apply (H0 a l c).
+      constructor; reflexivity.
+    + apply IHalts; auto. intros. specialize (H0 dc pats rhs).
+      apply H0. apply in_cons; auto.
+  - apply union_FV_WF; auto.
+    unfold tickish_fvs. destruct tickish; auto. 
+Qed.
 
 (** Unfolding tactics *)
 

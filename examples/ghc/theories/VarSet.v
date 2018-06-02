@@ -42,14 +42,27 @@ Definition ValidVarSet (vs : VarSet) : Prop :=
 (* These lemmas relate the GHC VarSet operations to more general 
    operations on finite sets. *)
 
+Lemma emptyVarSet_empty : emptyVarSet = empty.
+  reflexivity. Qed.
+
 Lemma delVarSet_remove : forall x s, delVarSet s x = remove x s.
-tauto. Qed.
+  reflexivity. Qed.
 
 Lemma extendVarSet_add : forall x s, extendVarSet s x = add x s.
-tauto. Qed.
+  reflexivity. Qed.
 
 Lemma unitVarSet_singleton : forall x, unitVarSet x = singleton x.
-auto. Qed.
+  reflexivity. Qed.
+
+Lemma unionVarSet_union : forall x y, unionVarSet x y = union x y.
+  reflexivity. Qed.
+
+Lemma minusVarSet_diff : forall x y, minusVarSet x y = diff x y.
+  (* Why simply [reflexivity] does not work? *)
+  intros. destruct x; destruct u. destruct y; destruct u. reflexivity. Qed.
+
+Lemma filterVarSet_filter : forall f x, filterVarSet f x = filter f x.
+  reflexivity. Qed.
 
 Lemma extendVarSetList_foldl' : forall x xs, 
     extendVarSetList x xs = 
@@ -111,8 +124,12 @@ Ltac set_b_iff :=
   || rewrite <- mem_iff in *
   || rewrite <- subset_iff in *
   || rewrite <- is_empty_iff in *
+  || rewrite emptyVarSet_empty in *
   || rewrite delVarSet_remove in *
   || rewrite extendVarSet_add in *
+  || rewrite unionVarSet_union in *
+  || rewrite minusVarSet_diff in *
+  || rewrite filterVarSet_filter in *
   || rewrite empty_b in *
   || rewrite unitVarSet_singleton in *
   || rewrite_extendVarSetList
@@ -222,20 +239,14 @@ Proof.
   intros.
   unfold_zeze.
   replace (realUnique v' =? realUnique v)%nat with 
-    (F.eqb v' v).
-  eapply MP.Dec.F.add_b.
-  unfold F.eqb. destruct F.eq_dec.
-  unfold Var_as_DT.eq in e.
-  unfold Var_as_DT.eqb in e.
-  revert e.
-  unfold_zeze.
-  auto.
-  unfold Var_as_DT.eq in n.
-  unfold Var_as_DT.eqb in n.
-  revert n.
-  unfold_zeze.
-  set (blah := (realUnique v' =? realUnique v)%nat).
-  now destruct blah.
+      (F.eqb v' v).
+  eapply F.add_b.
+  unfold F.eqb.
+  destruct F.eq_dec.
+  - unfold Var_as_DT.eq in e.
+    rewrite <- realUnique_eq in e; auto.
+  - unfold Var_as_DT.eq in n.
+    rewrite <- realUnique_eq in n; apply not_true_is_false in n; auto.
 Qed.
 
 
@@ -568,6 +579,13 @@ Lemma elemVarSet_eq : forall v1 v2 vs,
 Admitted.
 
 
+(** ** [filterVarSet] *)
+
+Lemma filterVarSet_comp : forall f f' vs,
+    filterVarSet f (filterVarSet f' vs) = filterVarSet (fun v => f v && f' v) vs.
+Proof.
+  intros. destruct vs; destruct u. simpl. do 2 f_equal.
+Admitted.
 
 (** ** Compatibility with [almostEqual] *)
 

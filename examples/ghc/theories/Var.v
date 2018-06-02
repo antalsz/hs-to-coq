@@ -202,3 +202,10 @@ Axiom isJoinId_maybe_setIdOccInfo:
 Axiom isJoinId_maybe_asJoinId:
   forall v a,
   isJoinId_maybe (asJoinId v a) = Some a.
+
+Lemma realUnique_eq: forall v v',
+    realUnique v =? realUnique v' = Var_as_DT.eqb v v'.
+Proof.
+  intros.
+  unfold Var_as_DT.eqb. cbn. reflexivity.
+Qed.

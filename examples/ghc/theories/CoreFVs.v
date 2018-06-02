@@ -6,6 +6,7 @@ Require Import Proofs.CoreInduct.
 Require Import Proofs.FV.
 
 Require Import Proofs.Data.Foldable.
+Require Import Proofs.Data.Tuple.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
@@ -31,10 +32,6 @@ Set Bullet Behavior "Strict Subproofs".
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
 
-Scheme expr_mut := Induction for Expr Sort Prop
-  with bind_mut := Induction for Bind Sort Prop.
-
-
 (** ** [FV] *)
 
 Axiom unionFV_empty_right : forall fv, FV.unionFV fv FV.emptyFV = fv.
@@ -48,15 +45,34 @@ Lemma delVarSet_delFV: forall fv x,
     WF_fv fv ->
     delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
 Proof.
-  intros. assert (WF_fv fv) by assumption.
+  intros. unfold WF_fv in H. destruct H as [vs H].
   unfold FV.delFV, FV.fvVarSet, delVarSet, UniqSet.delOneFromUniqSet.
   unfold Base.op_z2218U__, FV.fvVarListVarSet.
-  unfold WF_fv in H, H0.
-  specialize (H (Base.const true) emptyVarSet [] emptyVarSet x).
-  destruct (fv (Base.const true) emptyVarSet ([], emptyVarSet)) eqn:Hfv1.
-  specialize (H0 (Base.const true) (extendVarSet emptyVarSet x) [] emptyVarSet x).
-  destruct (fv (Base.const true) (extendVarSet emptyVarSet x) ([], emptyVarSet)) eqn:Hfv2.
-  simpl. destruct v, v0. f_equal.
+  inversion H; subst. inversion H; subst.
+  assert (extendVarSetList emptyVarSet [] = emptyVarSet).
+  { rewrite <- mkVarSet_extendVarSetList. reflexivity. }
+  specialize (H0 (Base.const true) emptyVarSet emptyVarSet [] H2).
+  specialize (H1 (Base.const true) (extendVarSet emptyVarSet x) emptyVarSet [] H2).
+  destruct H0; destruct H1.
+  rewrite hs_coq_tuple_snd. rewrite H3.
+  rewrite hs_coq_tuple_snd. rewrite H4.
+  (* Seems true. *)
+Admitted.
+
+Hint Resolve unit_FV_WF.
+Hint Resolve empty_FV_WF.
+Hint Resolve union_FV_WF.
+Hint Resolve del_FV_WF.
+
+Lemma expr_fvs_WF : forall e,
+    WF_fv (expr_fvs e).
+Proof.
+  intros e. apply (core_induct e); intros; simpl; auto.
+  - destruct binds; auto. admit.
+  - admit.
+  - apply union_FV_WF; auto.
+    unfold tickish_fvs.
+    destruct tickish; auto. admit.
 Admitted.
 
 (** Unfolding tactics *)
@@ -167,7 +183,8 @@ Proof.
     rewrite rev_app_distr. repeat rewrite hs_coq_foldr_list.
     rewrite fold_right_app. intros H. rewrite <- H. simpl.
     unfold addBndr, varTypeTyCoFVs. rewrite union_empty_l.
-    rewrite delVarSet_delFV. reflexivity.
+    rewrite delVarSet_delFV; [reflexivity |].
+    apply filter_FV_WF. apply expr_fvs_WF.
 Qed.
 
 Lemma exprFreeVars_mkLams:

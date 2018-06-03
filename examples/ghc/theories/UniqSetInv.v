@@ -28,95 +28,26 @@ Import UniqFM.
 Require Proofs.GHC.List.
 Require Proofs.Data.Foldable.
 Require Import Data.IntMap.Internal.
-Require IntMapFMap.
-
-Import IntMapFMap.IntMapFMap.
-
-(* Properties about finite maps that we need. *)
-Lemma lookup_insert : 
-  forall b key (val:b) m, Internal.lookup key (Internal.insert key val m) = Some val.
-Proof.
-  intros.
-  eapply add_1.
-  unfold E.eq.
-  auto.
-Qed.  
-
-Axiom lookup_insert_neq : 
-  forall b key1 key2 (val:b) m, 
-    key1 <> key2 ->
-    Internal.lookup key1 (Internal.insert key2 val m) = Internal.lookup key1 m.
-
-Axiom lookup_filterWithKey : 
-  forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
-                       Internal.lookup key m = Some val.
 
 
-Axiom lookup_intersection :
-  forall a b key (val1:a) m1 m2, 
-    Internal.lookup key m1 = Some val1 /\
-    (exists (val2:b), Internal.lookup key m2 = Some val2) <-> 
-    Internal.lookup key (Internal.intersection m1 m2) = Some val1.
-
-Axiom delete_eq : forall key b (i : IntMap b),
-  lookup key (delete key i) = None.
-Axiom delete_neq : forall key1 key2 b (i : IntMap b),
-    key1 <> key2 ->
-    lookup key1 (delete key2 i) = lookup key1 i.
-
+Require Import Proofs.ContainerAxioms.
+Require Import Proofs.Unique.
 
 
 (* Properties about Uniques that we need. *)
-Definition eqUnique_eq : forall u1 u2, eqUnique u1 u2 = true <-> u1 = u2.
-Proof.
-  intros.
-  unfold eqUnique.
-  destruct u1; destruct u2.
-  unfold GHC.Base.op_zeze__.
-  unfold Base.Eq_Char___.
-  unfold Base.op_zeze____.
-  rewrite BinNat.N.eqb_eq. 
-  split. intros h; rewrite h; auto.
-  intros h; inversion h; auto.
-Qed.
 
-Definition eqUnique_neq : forall u1 u2, eqUnique u1 u2 = false <-> u1 <> u2.
-Proof.
-  intros.
-  unfold eqUnique.
-  destruct u1; destruct u2.
-  unfold GHC.Base.op_zeze__.
-  unfold Base.Eq_Char___.
-  unfold Base.op_zeze____.
-  rewrite BinNat.N.eqb_neq. 
-  split. unfold not. intros m h; inversion h; auto.
-  unfold not. intros m h; rewrite h in m; auto.
-Qed.
+Import GHC.Base.
 
 Lemma eq_getWordKey : forall (x y : Unique) ,  
-    _GHC.Base.==_ (getWordKey x) (getWordKey y) = true -> x = y.
+    (getWordKey x) == (getWordKey y) = true -> x = y.
 Proof. 
   intros x y EQ.
-  unfold Base.op_zeze__ in *. unfold Base.Eq_Char___, Base.op_zeze____ in *.
-  rewrite BinNat.N.eqb_eq in EQ.
-  destruct x. destruct y. simpl in *.
-  subst. auto.
-Qed.
-
-
-
-
-Lemma getUnique_idempotent : forall a `{Uniquable a} (x:a), getUnique(getUnique x) = getUnique x. 
-Proof.
-  intros.
-  unfold getUnique.
-  unfold Uniquable__Unique.
-  unfold getUnique__.
-  unfold Unique.Uniquable__Unique_getUnique.
+  rewrite <- unique_word in EQ.
+  apply (ssrbool.elimT (@Base.Eq_eq _ _ _ _ _ _)) in EQ.
   auto.
 Qed.
 
-(* ----------------------------------------------------------------------------------- *)
+(* -------------------------------------------------------------------- *)
 
 (** The invariant is that for any unique, the result that we get out has the same unique 
     stored.
@@ -298,7 +229,7 @@ Program Definition filterUniqSet {a} `{Unique.Uniquable a} : (a -> bool) -> Uniq
 Next Obligation.
   unfold UniqInv in *.
   intros x y.
-  unfold lookupUFM, filterUFM in *. unfold filter.
+  unfold lookupUFM, filterUFM in *. unfold IntMap.Internal.filter.
   destruct s.
   intro h.
   apply wildcard'.
@@ -335,7 +266,7 @@ Next Obligation.
   unfold UniqInv in *.
   intros x y.
   unfold lookupUFM, intersectUFM in *.
-  destruct s. destruct t0.
+  destruct s. destruct t.
   intro h.
   eapply lookup_intersection in h. destruct h.
   eauto.
@@ -367,7 +298,7 @@ Next Obligation.
   unfold UniqInv in *.
   intros x y.
   unfold lookupUFM, minusUFM in *.
-  destruct s. destruct t0.
+  destruct s. destruct t.
 Admitted.
 
 Definition nonDetEltsUniqSet {elt} `{Unique.Uniquable elt} : UniqSet elt -> list elt :=

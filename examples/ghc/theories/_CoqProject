@@ -25,3 +25,4 @@ Unique.v
 ContainerAxioms.v
 Var.v
 FV.v
+UniqSetInv.v

@@ -1,7 +1,10 @@
 Require Import GHC.Base.
+
 Require Import Core.
+Require Import Unique.
 
 Require Import Proofs.GHC.Base.
+
 Require Import Coq.NArith.BinNat.
 
 Set Bullet Behavior "Strict Subproofs".
@@ -65,4 +68,30 @@ Proof.
     destruct u, v.
     simpl in *.
     subst; reflexivity.
+Qed.
+
+Definition eqUnique_eq : forall u1 u2, eqUnique u1 u2 = true <-> u1 = u2.
+Proof.
+  intros.
+  unfold eqUnique.
+  destruct u1; destruct u2.
+  unfold GHC.Base.op_zeze__.
+  unfold Base.Eq_Char___.
+  unfold Base.op_zeze____.
+  rewrite BinNat.N.eqb_eq. 
+  split. intros h; rewrite h; auto.
+  intros h; inversion h; auto.
+Qed.
+
+Definition eqUnique_neq : forall u1 u2, eqUnique u1 u2 = false <-> u1 <> u2.
+Proof.
+  intros.
+  unfold eqUnique.
+  destruct u1; destruct u2.
+  unfold GHC.Base.op_zeze__.
+  unfold Base.Eq_Char___.
+  unfold Base.op_zeze____.
+  rewrite BinNat.N.eqb_neq. 
+  split. unfold not. intros m h; inversion h; auto.
+  unfold not. intros m h; rewrite h in m; auto.
 Qed.

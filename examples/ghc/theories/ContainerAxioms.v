@@ -25,7 +25,8 @@ Axiom difference_nil_r : forall A B (i : IntMap.Internal.IntMap A),
     IntMap.Internal.difference i (@IntMap.Internal.Nil B) = i.
 
 Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.difference (@IntMap.Internal.Nil B) i = (@IntMap.Internal.Nil B).
+    IntMap.Internal.difference (@IntMap.Internal.Nil B) i = 
+    (@IntMap.Internal.Nil B).
 
 Axiom null_empty : forall A,
     (@IntMap.Internal.null A IntMap.Internal.empty) = true.
@@ -33,3 +34,29 @@ Axiom null_empty : forall A,
 Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
     IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
     IntMap.Internal.filter (fun v => f v && f' v) i.
+
+Axiom lookup_insert : forall A key (val:A) i, 
+    IntMap.Internal.lookup key (IntMap.Internal.insert key val i) = Some val.
+
+Axiom lookup_insert_neq : 
+  forall b key1 key2 (val:b) m, 
+    key1 <> key2 ->
+    Internal.lookup key1 (Internal.insert key2 val m) = Internal.lookup key1 m.
+
+Axiom lookup_filterWithKey : 
+  forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
+                       Internal.lookup key m = Some val.
+
+
+Axiom lookup_intersection :
+  forall a b key (val1:a) m1 m2, 
+    Internal.lookup key m1 = Some val1 /\
+    (exists (val2:b), Internal.lookup key m2 = Some val2) <-> 
+    Internal.lookup key (Internal.intersection m1 m2) = Some val1.
+
+Axiom delete_eq : forall key b (i : IntMap b),
+  lookup key (delete key i) = None.
+
+Axiom delete_neq : forall key1 key2 b (i : IntMap b),
+    key1 <> key2 ->
+    lookup key1 (delete key2 i) = lookup key1 i.

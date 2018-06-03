@@ -162,7 +162,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Definition filter  := filterVarSet.
 
-  Definition partition := partitionVarSet.
+  Definition partition : (elt -> bool) -> t -> t * t := GHC.Err.default.
 
   Definition cardinal := sizeVarSet.
 
@@ -782,5 +782,7 @@ Proof.
   - intros. cbn. destruct (VarSetFSet.eq_dec x y); reflexivity.
 Qed.
 
+(*
 Instance EqExact_VarSet : EqExact VarSet.
 Admitted.
+*)

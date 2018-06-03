@@ -14,6 +14,7 @@ Require Import Proofs.GhcTactics.
 Require Import Proofs.Base.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
+Require Import Proofs.GHC.List.
 
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.

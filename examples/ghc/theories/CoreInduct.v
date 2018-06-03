@@ -5,6 +5,8 @@ Require Import Psatz.
 
 Require Import Omega.
 
+Require Import Proofs.GHC.List.
+
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Base.
 Require Import Proofs.Core.

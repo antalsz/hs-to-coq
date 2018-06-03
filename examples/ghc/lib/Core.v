@@ -5438,10 +5438,6 @@ Definition mapDVarEnv {a} {b} : (a -> b) -> DVarEnv a -> DVarEnv b :=
 Definition mapVarEnv {a} {b} : (a -> b) -> VarEnv a -> VarEnv b :=
   UniqFM.mapUFM.
 
-Definition mapVarSet {b} {a} `{Unique.Uniquable b}
-   : (a -> b) -> UniqSet.UniqSet a -> UniqSet.UniqSet b :=
-  UniqSet.mapUniqSet.
-
 Definition markExnStr : ArgStr -> ArgStr :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5952,10 +5948,6 @@ Definition splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type :=
     then UniqFM.nonDetFoldUFM_Directly add (pair emptyVarEnv emptyVarEnv)
          rhs_fvs else
     partitionVarEnv isWeakDmd rhs_fvs.
-
-Definition partitionVarSet
-   : (Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
-  UniqSet.partitionUniqSet.
 
 Definition patSynArgs : PatSyn -> list unit :=
   psArgs.
@@ -7994,10 +7986,9 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
-     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.mapUniqSet
-     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.partitionUniqSet
-     UniqSet.sizeUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
+     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.minusUniqSet
+     UniqSet.mkUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
+     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
      UniqSet.unsafeUFMToUniqSet Unique.Uniquable Unique.Unique
      Unique.dataConRepNameUnique Unique.deriveUnique Unique.getKey Unique.getUnique
      Unique.getUnique__ Unique.mkUniqueGrimily Unique.nonDetCmpUnique

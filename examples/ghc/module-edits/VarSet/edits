@@ -13,3 +13,6 @@ skip Core.pprVarSet
 
 # unused in GHC, and could require additional Uniquable constraints
 skip Core.mapVarSet
+
+skip Core.partitionVarSet
+

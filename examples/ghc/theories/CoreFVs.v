@@ -3,9 +3,10 @@ Require Import Id.
 Require Import Exitify.
 Require Import Core.
 Require Import Proofs.CoreInduct.
-Require Import Proofs.CoreSubstInvariants.
+Require Import Proofs.FV.
 
 Require Import Proofs.Data.Foldable.
+Require Import Proofs.Data.Tuple.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
@@ -31,23 +32,66 @@ Set Bullet Behavior "Strict Subproofs".
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
 
-Scheme expr_mut := Induction for Expr Sort Prop
-  with bind_mut := Induction for Bind Sort Prop.
-
-
 (** ** [FV] *)
 
-Axiom unionFV_empty_right : forall fv, FV.unionFV fv FV.emptyFV = fv.
-Axiom unionFV_empty_left  : forall fv, FV.unionFV FV.emptyFV fv = fv.
-
-(** LY: This lemma should be wrong, because [fv] is a function, and
-    this is clearly not true for any functions. However, I am leaving
-    this here for now as I have not yet found a good predicates for
-    [fv] here. *)
-Lemma delVarSet_delFV:
-  forall fv x, delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
+Lemma delVarSet_delFV: forall fv x,
+    WF_fv fv ->
+    delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
 Proof.
-Admitted.  
+  intros. unfold WF_fv in H. destruct H as [vs H].
+  unfold FV.delFV, FV.fvVarSet, delVarSet, UniqSet.delOneFromUniqSet.
+  unfold Base.op_z2218U__, FV.fvVarListVarSet.
+  inversion H; subst. inversion H; subst.
+  assert (extendVarSetList emptyVarSet [] = emptyVarSet).
+  { rewrite <- mkVarSet_extendVarSetList. reflexivity. }
+  specialize (H0 (Base.const true) emptyVarSet emptyVarSet [] H2).
+  specialize (H1 (Base.const true) (extendVarSet emptyVarSet x) emptyVarSet [] H2).
+  destruct H0; destruct H1.
+  rewrite hs_coq_tuple_snd. rewrite H3.
+  rewrite hs_coq_tuple_snd. rewrite H4.
+  unfold_VarSet_to_IntMap.
+  (* Seems true. *)
+Admitted.
+
+Lemma addBndr_WF : forall fv bndr,
+    WF_fv fv ->
+    WF_fv (addBndr bndr fv).
+Proof.
+  intros; unfold addBndr, varTypeTyCoFVs.
+  rewrite union_empty_l. apply del_FV_WF; auto.
+Qed.
+
+Lemma addBndrs_WF : forall fv bndrs,
+    WF_fv fv ->
+    WF_fv (addBndrs bndrs fv).
+Proof.
+  induction bndrs; unfold addBndrs;
+    rewrite hs_coq_foldr_list; auto.
+  intros. simpl. apply addBndr_WF. auto.
+Qed.
+
+Lemma expr_fvs_WF : forall e,
+    WF_fv (expr_fvs e).
+Proof.
+  intros e. apply (core_induct e); intros; simpl; auto.
+  - destruct binds; auto. apply addBndrs_WF.
+    apply union_FV_WF; auto. apply unions_FV_WF.
+    intros. induction l; simpl in H1; try contradiction.
+    destruct a. destruct H1. 
+    + rewrite <- H1. apply H with (v:=c). constructor; reflexivity.
+    + apply IHl; auto. intros.
+      specialize (H v rhs). apply H. apply in_cons; auto.
+  - apply union_FV_WF; auto.
+    apply addBndr_WF. apply unions_FV_WF.
+    induction alts; simpl; try contradiction.
+    intros. destruct a as [[? ?] ?]. destruct H1.
+    + rewrite <- H1. apply addBndrs_WF. apply (H0 a l c).
+      constructor; reflexivity.
+    + apply IHalts; auto. intros. specialize (H0 dc pats rhs).
+      apply H0. apply in_cons; auto.
+  - apply union_FV_WF; auto.
+    unfold tickish_fvs. destruct tickish; auto. 
+Qed.
 
 (** Unfolding tactics *)
 
@@ -157,7 +201,8 @@ Proof.
     rewrite rev_app_distr. repeat rewrite hs_coq_foldr_list.
     rewrite fold_right_app. intros H. rewrite <- H. simpl.
     unfold addBndr, varTypeTyCoFVs. rewrite union_empty_l.
-    rewrite delVarSet_delFV. reflexivity.
+    rewrite delVarSet_delFV; [reflexivity |].
+    apply filter_FV_WF. apply expr_fvs_WF.
 Qed.
 
 Lemma exprFreeVars_mkLams:

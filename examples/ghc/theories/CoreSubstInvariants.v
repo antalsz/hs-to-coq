@@ -13,12 +13,9 @@ Require Import CoreSubst.
 Require Import GHC.Base.
 Import GHC.Base.Notations.
 
-(* Reasoning about FV.v requires funext. *)
-Import Coq.Logic.FunctionalExtensionality.
-
 Require Proofs.GHC.Base.
 Require Proofs.CoreInduct.
-
+Require Proofs.FV.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -42,12 +39,6 @@ Admitted.
 Lemma no_elem_empty : forall v, elemVarSet v emptyVarSet = false.
 Admitted.
 
-
-Lemma union_empty_l : forall fv, FV.unionFV FV.emptyFV fv = fv.
-Proof. reflexivity. Qed.
-
-Lemma union_empty_r : forall fv, FV.unionFV fv FV.emptyFV = fv.
-Proof. reflexivity. Qed.
 
 Lemma fvVarSet_union : forall s1 s2, 
     FV.fvVarSet (FV.unionFV s1 s2) = Core.unionVarSet (FV.fvVarSet s1) (FV.fvVarSet s2).
@@ -77,10 +68,7 @@ Lemma expr_fvs_Case : forall e b u l,
 Proof.
   intros.
   simpl.
-  apply functional_extensionality. intro f.
-  apply functional_extensionality. intro vs.
-  apply functional_extensionality. intro bs.
-  rewrite union_empty_r. reflexivity.
+  rewrite Proofs.FV.union_empty_r. reflexivity.
 Qed.
 
 Lemma substExpr_App : forall s str e1 e2, substExpr str s (App e1 e2) = 

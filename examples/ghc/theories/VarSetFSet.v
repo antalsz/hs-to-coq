@@ -755,3 +755,32 @@ Ltac solve_notin :=
   fail "Not solvable by [solve_notin]; try [destruct_notin]".
 
 End Notin.
+
+Require Import ssrbool.
+Instance Eq_VarSet : Eq_ VarSet :=
+  fun _ k => k {|
+              op_zeze____ := VarSetFSet.eq_dec;
+              op_zsze____ := fun x y => negb (VarSetFSet.eq_dec x y);
+            |}.
+
+Instance EqLaws_VarSet : EqLaws VarSet.
+Proof.
+  constructor.
+  - red. intros. cbn. destruct (VarSetFSet.eq_dec x x); try reflexivity.
+    exfalso. apply n. reflexivity.
+  - red. cbn. intros.
+    destruct (VarSetFSet.eq_dec x y);
+      destruct (VarSetFSet.eq_dec y x); try reflexivity.
+    + exfalso. apply VarSetFSet.eq_sym in e. contradiction.
+    + exfalso. apply VarSetFSet.eq_sym in e. contradiction.
+  - red. cbn. intros.
+    destruct (VarSetFSet.eq_dec x y); try discriminate.
+    destruct (VarSetFSet.eq_dec y z); try discriminate.
+    destruct (VarSetFSet.eq_dec x z); try reflexivity.
+    clear H. clear H0. apply (VarSetFSet.eq_trans _ _ _ e) in e0.
+    contradiction.
+  - intros. cbn. destruct (VarSetFSet.eq_dec x y); reflexivity.
+Qed.
+
+Instance EqExact_VarSet : EqExact VarSet.
+Admitted.

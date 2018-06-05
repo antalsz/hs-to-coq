@@ -27,6 +27,21 @@ Axiom difference_nil_r : forall A B (i : IntMap.Internal.IntMap A),
 Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
     IntMap.Internal.difference (@IntMap.Internal.Nil B) i = (@IntMap.Internal.Nil B).
 
+Axiom difference_Tip_member:
+  forall A (i : Internal.IntMap A) (n : Internal.Key),
+    (IntMap.Internal.member n i) = true ->
+    forall x:A,
+      IntMap.Internal.difference
+        (IntMap.Internal.Tip n x) i = Internal.Nil.
+
+Axiom difference_Tip_non_member: 
+    forall A (i : Internal.IntMap A) (n : Internal.Key),
+      (IntMap.Internal.member n i) = false ->
+      forall x : A,
+        IntMap.Internal.difference
+          (IntMap.Internal.Tip n x) i =
+        IntMap.Internal.Tip n x.
+
 Axiom null_empty : forall A,
     (@IntMap.Internal.null A IntMap.Internal.empty) = true.
 

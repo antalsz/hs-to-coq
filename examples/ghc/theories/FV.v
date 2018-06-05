@@ -74,28 +74,56 @@ Proof.
   unfold_fv. intuition. do 2 f_equal. symmetry. apply union_nil_r.
 Qed.
 
+Lemma extendVarSetList_extendVarSet_iff: forall l x l',
+  extendVarSetList (extendVarSet l' x) l =
+  extendVarSet (extendVarSetList l' l) x.
+Proof.
+  induction l; intros x [l'].
+  - reflexivity.
+  - simpl.
+    repeat rewrite extendVarSetList_cons.
+    repeat rewrite IHl.
+    clear IHl.
+    unfold extendVarSetList,
+         UniqSet.addListToUniqSet,
+         UniqFM.addToUFM,
+         UniqSet.addOneToUniqSet, Foldable.foldl',
+         Foldable.Foldable__list, extendVarSet,
+         UniqSet.addOneToUniqSet, Foldable.foldl',
+         UniqFM.addToUFM.
+    simpl.
+    repeat destruct_match.
+    simpl.
+    unfold_VarSet.
+    subst.
+    admit.
+Admitted.
+
 Lemma unit_FV_WF :
   forall x, WF_fv (unitFV x).
 Proof.
   intros. unfold WF_fv.
   exists (unitVarSet x).
   constructor; intros; subst. simpl.
-  destruct_match; simpl.
-  - unfold_fv. rewrite <- mkVarSet_extendVarSetList.
-    destruct_match; unfold_fv; repeat f_equal.
-    + admit. (* should be true *)
+  destruct_match; simpl; intuition;
+    rewrite <- mkVarSet_extendVarSetList.
+  - unfold_fv.
+    destruct_match; unfold_fv.
+    + do 2 f_equal.
+      rewrite <-union_nil_r with (i:=i0).
+      f_equal.
+      * rewrite union_nil_r. reflexivity.
+      * symmetry.
+        simpl in Hmatch.
+        rewrite difference_Tip_member; auto.
     + rewrite difference_nil_l, union_nil_r. intuition.
-  - destruct_match; simpl.
-    + unfold_fv. rewrite <- mkVarSet_extendVarSetList.
-      destruct_match; unfold_fv; repeat f_equal.
-      * admit.
-      * rewrite difference_nil_l, union_nil_r. intuition.
-    + destruct_match.
-      * unfold_fv. rewrite <- mkVarSet_extendVarSetList.
-        unfold_fv. simpl. repeat f_equal. admit.
-      * unfold_fv. rewrite <- mkVarSet_extendVarSetList.
-        unfold_fv. repeat f_equal.
-        rewrite difference_nil_l, union_nil_r. intuition.
+  - destruct_match; simpl; [auto|].
+    destruct_match; simpl; [|auto].
+    rewrite mkVarSet_extendVarSetList.
+    rewrite extendVarSetList_cons.
+    apply extendVarSetList_extendVarSet_iff.
+  - unfold_fv.
+    destruct_match; unfold_fv.
 Admitted.
 
 Ltac unfold_WF :=

@@ -17,7 +17,7 @@ HANDMOD = \
   ListSetOps \
   Digraph \
   PrelNames \
-  UniqSetInv 
+#  UniqSetInv 
 #  CallArity \
 #  TysWiredIn \
 

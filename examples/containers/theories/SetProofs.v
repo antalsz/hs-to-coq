@@ -3914,6 +3914,7 @@ Proof.
         f_solver.
 Qed.
 
+
 (** ** Verification of [Eq] *)
 
 Lemma eqlist_sym:
@@ -4665,6 +4666,31 @@ Qed.
 
 End WF.
 
+(** ** Verification of [map] *)
+
+Lemma elem_map:
+  forall a b `{Eq_ b} (f : a -> b) (xs : list a) i,
+  List.elem i (List.map f xs) = existsb (fun j : a => i == f j) xs.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Lemma map_spec:
+  forall e ee `{Ord e} `{OrdLaws ee} (f : e -> ee) (s : Set_ e) lb ub,
+  Bounded s lb ub ->
+  (forall i, sem (map f s) i = existsb (fun j => i == f j) (toList s)).
+Proof.
+  intros.
+  unfold map.
+  unfold Base.map.
+  simpl.
+  eapply fromList_Desc. intros s' Hs' _ Hsem'.
+  rewrite Hsem'.
+  apply elem_map.
+Qed.
 
 (** ** Verification of [mapMonotonic] *)
 

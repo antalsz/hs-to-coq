@@ -41,8 +41,7 @@ redefine Definition CoreSubst.mkEmptySubst : Core.InScopeSet -> Subst :=
     Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
 skip CoreSubst.substTyVarBndr
-add CoreSubst Definition CoreSubst.substTyVarBndr : 
-			Subst -> (Core.Var -> (Subst * Core.Var)) :=
+add CoreSubst Definition CoreSubst.substTyVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) :=
   fun s v => pair s v.
 
 redefine Definition CoreSubst.zapSubstEnv : Subst -> Subst :=
@@ -117,8 +116,8 @@ skip CoreSubst.cloneTyVarBndr
 #
 # These two require recursive knot tying
 #
-in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = substIdBndr x GHC.Err.default
-in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id GHC.Err.default
+in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = substIdBndr x (GHC.Err.error Panic.someSDoc)
+in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id (GHC.Err.error Panic.someSDoc)
 #
 # Pairs are awful!!
 #

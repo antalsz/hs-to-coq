@@ -10,7 +10,7 @@ JoinPointInvariants.v
 # JoinPointInvariantsInductive.v
 CoreInduct.v
 Exitify.v
-CoreSubstInvariants.v
+# CoreSubstInvariants.v
 StateLogic.v
 GhcTactics.v
 Forall.v
@@ -26,3 +26,4 @@ ContainerAxioms.v
 Var.v
 FV.v
 UniqSetInv.v
+CoreSubst.v

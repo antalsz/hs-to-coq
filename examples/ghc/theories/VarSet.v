@@ -572,6 +572,7 @@ Axiom lookupVarSet_extendVarSet_neq :
       not (v1 GHC.Base.== v2 = true) ->
       lookupVarSet (extendVarSet vs v1) v2 = lookupVarSet vs v2.
 
+(*
 Lemma lookupVarSet_eq :
   forall v1 v2 vs var,
     (v1 GHC.Base.== v2) = true ->
@@ -583,6 +584,12 @@ Proof.
   unfold UniqSet.lookupUniqSet in *. destruct vs. 
   unfold UniqFM.lookupUFM in *. destruct u.
 Admitted.
+*)
+
+Axiom lookupVarSet_eq :
+  forall v1 v2 vs,
+    (v1 GHC.Base.== v2) = true ->
+    lookupVarSet vs v1 = lookupVarSet vs v2.
 
 Lemma elemVarSet_eq : forall v1 v2 vs,
   (v1 GHC.Base.== v2) = true -> 
@@ -641,6 +648,12 @@ Definition StrongSubset (vs1 : VarSet) (vs2: VarSet) :=
          end.
 
 
+Axiom StrongSubset_refl : forall vs, 
+    StrongSubset vs vs.
+
+Axiom StrongSubset_trans : forall vs2 vs1 vs3, 
+    StrongSubset vs1 vs2 -> StrongSubset vs2 vs3 -> StrongSubset vs1 vs3.
+
 
 Lemma strongSubset_implies_subset :
   forall vs1 vs2 , 
@@ -660,6 +673,41 @@ Proof.
   - apply elemVarSet_lookupVarSet in IN. destruct IN.
     rewrite VS1 in H. discriminate.
 Qed.
+
+
+
+Lemma StrongSubset_extend_fresh : forall vs v, lookupVarSet vs v = None -> StrongSubset vs (extendVarSet vs v).
+Proof.
+  intros.
+  unfold StrongSubset.
+  intros var.
+  destruct (var == v) eqn:EQV.
+  rewrite lookupVarSet_eq with (v2 := v); auto.
+  rewrite H. auto.
+  destruct (lookupVarSet vs var) eqn:Lvar; auto.
+  rewrite lookupVarSet_extendVarSet_neq.
+  rewrite Lvar.
+  apply almostEqual_refl.
+  unfold CoreBndr in *. intro h. rewrite Base.Eq_sym in h. rewrite h in EQV. discriminate.
+Qed.
+
+Lemma StrongSubset_extend : forall vs1 vs2 v, StrongSubset vs1 vs2 -> StrongSubset (extendVarSet vs1 v) (extendVarSet vs2 v).
+  intros.
+  unfold StrongSubset in *.
+  intro var.
+  destruct (v == var) eqn:EQv.
+  rewrite lookupVarSet_extendVarSet_eq; auto.  
+  rewrite lookupVarSet_extendVarSet_eq.
+  apply almostEqual_refl.
+  auto.
+  rewrite lookupVarSet_extendVarSet_neq; auto.
+  rewrite lookupVarSet_extendVarSet_neq; auto.
+  eapply H.
+  unfold CoreBndr in *.
+  unfold not. intro. rewrite EQv in H0. discriminate.
+  unfold CoreBndr in *.
+  unfold not. intro. rewrite EQv in H0. discriminate.
+Qed.  
 
 
 Lemma StrongSubset_extendVarSetList : forall l vs1 vs2, StrongSubset vs1 vs2 -> StrongSubset (extendVarSetList vs1 l) (extendVarSetList vs2 l).

@@ -1711,8 +1711,8 @@ Lemma union_destruct :
   forall s1 s2,
   (s2 = Tip -> P s1) ->
   (s1 = Tip -> P s2) ->
-  (forall sz2 x, (s2 = Bin sz2 x Tip Tip) -> P (insertR x s1)) ->
-  (forall sz1 x, (s1 = Bin sz1 x Tip Tip) -> P (insert x s2)) ->
+  (forall x l r, (s2 = Bin 1 x l r) -> P (insertR x s1)) ->
+  (forall x l r, (s1 = Bin 1 x l r) -> P (insert x s2)) ->
   (forall sz1 x l1 r1, (s1 = Bin sz1 x l1 r1) -> 
     P (
       match splitS x s2 with
@@ -1728,8 +1728,9 @@ Lemma union_destruct :
 Proof.
   intros P s1 s2 HTipR HTipL HSingletonR HSingletonL HBins.
   destruct s1, s2; simpl union;
-  try destruct s1_1, s1_2;
-  try destruct s2_1, s2_2;
+  unfold op_zeze__, Eq_Integer___, op_zeze____;
+  try destruct (Z.eqb_spec s0 1);
+  try destruct (Z.eqb_spec s 1); subst;
   first [ eapply HBins; reflexivity
         | eapply HSingletonL; reflexivity
         | eapply HSingletonR; reflexivity
@@ -1756,7 +1757,7 @@ Proof.
     + solve_Desc.
     + solve_Desc.
     + inversion HB3; subst; clear HB3.
-      clear H3 H4.
+      repeat find_Tip.
       (* We need to give [applyDesc] a hint about the bounds that we care about: *)
       assert (Bounded Tip lb ub) by constructor.
       applyDesc insertR_Desc.
@@ -1764,9 +1765,11 @@ Proof.
   * apply union_destruct; intros; subst; try congruence.
     + solve_Desc.
     + inversion HB3; subst; clear HB3.
+      repeat find_Tip.
       applyDesc insertR_Desc.
       solve_Desc.
-    + inversion H3; subst; clear H3.
+    + remember (1 + _ + _). inversion H3; subst; clear H3.
+      repeat find_Tip.
       applyDesc insert_Desc. solve_Desc.
     + inversion H3; subst; clear H3.
       eapply splitS_Desc; try eassumption.
@@ -1801,7 +1804,7 @@ Proof.
   intros.
   unfold unions.
   (* Switch to a fold right *)
-  rewrite Proofs.Data.Foldable.hs_coq_foldl_list.
+  rewrite Proofs.Data.Foldable.hs_coq_foldl'_list.
   rewrite <- fold_left_rev_right.
   rewrite <- (rev_involutive ss).
   rewrite <- (rev_involutive ss), Forall_rev in H.

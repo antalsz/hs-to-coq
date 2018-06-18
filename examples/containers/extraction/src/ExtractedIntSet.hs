@@ -7,11 +7,14 @@
 
 module ExtractedIntSet where
 
+import Unsafe.Coerce
+
 -- import other extracted modules
 import qualified Base
 import qualified Datatypes
 import qualified BinNums
 import qualified Num
+import qualified Foldable
 
 import qualified Internal0 as S2
 
@@ -243,8 +246,8 @@ splitMember m s = (x,y,z) where
   ((x,y),z) = S2.splitMember (nonNegToBinZ m) s
 
 -- See comment in src/ExtractedSet.hs
--- unions :: Foldable f => f IntSet -> IntSet
--- unions = S2.unions foldable_a
+unions :: [IntSet] -> IntSet
+unions = S2.unions (unsafeCoerce (\_ -> Foldable.coq_Foldable__list))
 
 splitRoot :: IntSet -> [IntSet]
 splitRoot = S2.splitRoot

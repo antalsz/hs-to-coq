@@ -1,0 +1,3 @@
+[submodule "examples/containers/containers"]
+	path = examples/containers/containers
+	url = https://github.com/haskell/containers/

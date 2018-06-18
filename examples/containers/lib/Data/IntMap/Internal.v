@@ -1004,7 +1004,7 @@ Definition fromList {a}
         match arg_0__, arg_1__ with
         | t, pair k x => insert k x t
         end in
-    Data.Foldable.foldl ins empty xs.
+    Data.Foldable.foldl' ins empty xs.
 
 Definition mapKeys {a}
    : (Data.IntSet.Internal.Key -> Data.IntSet.Internal.Key) ->
@@ -1055,7 +1055,7 @@ Definition fromListWithKey {a}
         match arg_0__, arg_1__ with
         | t, pair k x => insertWithKey f k x t
         end in
-    Data.Foldable.foldl ins empty xs.
+    Data.Foldable.foldl' ins empty xs.
 
 Definition fromListWith {a}
    : (a -> a -> a) -> list (Data.IntSet.Internal.Key * a)%type -> IntMap a :=
@@ -1472,8 +1472,9 @@ Definition splitLookup {a}
                                         end) in
     pair (pair lt fnd) gt.
 
-Definition unions {a} : list (IntMap a) -> IntMap a :=
-  fun xs => Data.Foldable.foldl union empty xs.
+Definition unions {f} {a} `{Data.Foldable.Foldable f}
+   : f (IntMap a) -> IntMap a :=
+  fun xs => Data.Foldable.foldl' union empty xs.
 
 Local Definition Monoid__IntMap_mconcat {inst_a}
    : list (IntMap inst_a) -> (IntMap inst_a) :=
@@ -1513,8 +1514,9 @@ Definition unionWith {a} : (a -> a -> a) -> IntMap a -> IntMap a -> IntMap a :=
                     | _, x, y => f x y
                     end) m1 m2.
 
-Definition unionsWith {a} : (a -> a -> a) -> list (IntMap a) -> IntMap a :=
-  fun f ts => Data.Foldable.foldl (unionWith f) empty ts.
+Definition unionsWith {f} {a} `{Data.Foldable.Foldable f}
+   : (a -> a -> a) -> f (IntMap a) -> IntMap a :=
+  fun f ts => Data.Foldable.foldl' (unionWith f) empty ts.
 
 Definition intersection {a} {b} : IntMap a -> IntMap b -> IntMap a :=
   fun m1 m2 =>
@@ -1916,7 +1918,7 @@ End Notations.
      Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
      Data.Bits.xor Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldl' Data.Foldable.foldl'__ Data.Foldable.foldl__
      Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
      Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
      Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity

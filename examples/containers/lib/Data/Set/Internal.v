@@ -741,7 +741,7 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
     | cons x0 xs0 =>
         let fromList' :=
           fun t0 xs =>
-            let ins := fun t x => insert x t in Data.Foldable.foldl ins t0 xs in
+            let ins := fun t x => insert x t in Data.Foldable.foldl' ins t0 xs in
         let not_ordered :=
           fun arg_4__ arg_5__ =>
             match arg_4__, arg_5__ with
@@ -864,21 +864,31 @@ Definition union {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
   fix union arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | t1, Tip => t1
-           | t1, Bin _ x Tip Tip => insertR x t1
-           | Bin _ x Tip Tip, t2 => insert x t2
-           | Tip, t2 => t2
-           | (Bin _ x l1 r1 as t1), t2 =>
-               let 'pair l2 r2 := splitS x t2 in
-               let r1r2 := union r1 r2 in
-               let l1l2 := union l1 l2 in
-               if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
-                       (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
-               then t1 else
-               link x l1l2 r1r2
+           | t1, Bin num_2__ x _ _ =>
+               if num_2__ GHC.Base.== #1 : bool then insertR x t1 else
+               let j_11__ :=
+                 match arg_0__, arg_1__ with
+                 | Tip, t2 => t2
+                 | (Bin _ x l1 r1 as t1), t2 =>
+                     let 'pair l2 r2 := splitS x t2 in
+                     let r1r2 := union r1 r2 in
+                     let l1l2 := union l1 l2 in
+                     if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
+                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
+                     then t1 else
+                     link x l1l2 r1r2
+                 end in
+               match arg_0__, arg_1__ with
+               | Bin num_3__ x _ _, t2 =>
+                   if num_3__ GHC.Base.== #1 : bool then insert x t2 else
+                   j_11__
+               | _, _ => j_11__
+               end
            end.
 
-Definition unions {a} `{GHC.Base.Ord a} : list (Set_ a) -> Set_ a :=
-  Data.Foldable.foldl union empty.
+Definition unions {f} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord a}
+   : f (Set_ a) -> Set_ a :=
+  Data.Foldable.foldl' union empty.
 
 Local Definition Monoid__Set__mconcat {inst_a} `{GHC.Base.Ord inst_a}
    : list (Set_ inst_a) -> (Set_ inst_a) :=
@@ -1229,7 +1239,7 @@ End Notations.
      id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.fold__ Data.Foldable.foldl' Data.Foldable.foldl'__
      Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
      Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
      Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.Classes.Eq1

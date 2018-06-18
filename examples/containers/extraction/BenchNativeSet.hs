@@ -1,1 +1,1 @@
-../containers-0.5.11.0a/benchmarks/Set.hs
+../containers/benchmarks/Set.hs

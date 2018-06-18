@@ -1,7 +1,7 @@
 -- This module is a wrapper (shim) for the extracted version of
 -- Data.Set.Internal
 
-{-# LANGUAGE PatternSynonyms, ViewPatterns #-}
+{-# LANGUAGE PatternSynonyms, ViewPatterns, TypeApplications, ScopedTypeVariables #-}
 
 module ExtractedSet
 {-
@@ -66,6 +66,7 @@ module ExtractedSet
 
 import qualified Base
 import qualified Datatypes
+import qualified Foldable
 -- import qualified BinNums
 
 import Internal (Set_(Bin,Tip))
@@ -329,8 +330,15 @@ splitMember :: Ord a => a -> Set a -> (Set a, Bool, Set a)
 splitMember m s = (x,y,z) where
   ((x,y),z) = S2.splitMember eq_a ord_a m s
 
-unions :: Ord a => [Set a] -> Set a
-unions = S2.unions eq_a ord_a
+-- Since containers-0.6, we cannot do unions any more:
+-- it would require a `foldable_a` that synthesizes a `Foldable f` dictionary
+-- as expected by S2.uions. But I could not find out how to
+-- write such a definition, as some methods themselves expect
+-- types and dictionaries, and we cannot go from Coq-extracted dictionary to
+-- Haskell instance.
+--
+-- unions :: (Foldable f, Ord a) => f (Set a) -> Set a
+-- unions = S2.unions eq_a ord_a
 
 splitRoot :: Set a -> [Set a]
 splitRoot = S2.splitRoot

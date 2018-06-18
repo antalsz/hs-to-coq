@@ -242,9 +242,9 @@ splitMember :: Nat -> IntSet -> (IntSet, Bool, IntSet)
 splitMember m s = (x,y,z) where
   ((x,y),z) = S2.splitMember (nonNegToBinZ m) s
 
-
-unions :: [IntSet] -> IntSet
-unions = S2.unions 
+-- See comment in src/ExtractedSet.hs
+-- unions :: Foldable f => f IntSet -> IntSet
+-- unions = S2.unions foldable_a
 
 splitRoot :: IntSet -> [IntSet]
 splitRoot = S2.splitRoot

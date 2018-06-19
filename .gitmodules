@@ -1,0 +1,3 @@
+[submodule "examples/core-semantics/ghc-core-smallstep"]
+	path = examples/core-semantics/ghc-core-smallstep
+	url = https://github.com/nomeata/ghc-core-smallstep

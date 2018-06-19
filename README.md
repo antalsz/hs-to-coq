@@ -166,8 +166,6 @@ Some notes about interface file:
    to create a faux interface files. Simply create a text file that is an valid
    empty yaml file (e.g. '{}').
 
-
-
 # Other directories
 
 * The `examples/` directories contains a number of example translation and
@@ -185,6 +183,12 @@ Some notes about interface file:
   * [base-src](examples/base-src) The sources of the `base/` directory
   * [tests](examples/tests) Simple unit-tests
   * [base-tests](examples/base-tests) Unit-tests that require `base/`
+
+  Some examples use git submodule, so run
+
+      git submodule update --init --recursive
+
+  once.
 
 * `structural-isomorphism-plugin`: (In progress.)  A GHC plugin that connects
    the re-extracted converted code back into GHC, allowing us to run Haskell

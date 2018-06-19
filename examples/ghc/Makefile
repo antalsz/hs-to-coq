@@ -155,6 +155,8 @@ coq: $(OUT)/Makefile $(OUTFILES)
 
 HS_TO_COQ_GHC_OPTS=\
      --ghc-tree ghc \
+     -ighc-gen-files \
+     -I ghc-gen-files \
      -I ghc/includes \
      -I ghc/includes/dist-derivedconstants/header \
      -I ghc/compiler \

@@ -117,6 +117,21 @@ jobs:
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
 
+  # GHC (translation)
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/containers
+      - make -j2 -C examples/transformers
+      - make -j2 -C examples/ghc clean
+      - make -j2 -C examples/ghc
+      # Check that the files in git are identical to the generated ones
+      - git add examples/ghc/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
+
   # GHC (including transformers)
   - script:
       - eval $(opam config env)

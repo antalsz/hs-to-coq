@@ -5,3 +5,7 @@
 [submodule "examples/containers/containers"]
 	path = examples/containers/containers
 	url = https://github.com/haskell/containers/
+
+[submodule "examples/ghc/ghc"]
+	path = examples/ghc/ghc
+	url = https://github.com/ghc/ghc

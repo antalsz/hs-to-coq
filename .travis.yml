@@ -42,7 +42,7 @@ jobs:
   include:
   # This builds Coq, the dependencies of hs-to-coq and hs-to-coq itself,
   # and puts them in the cache.
-  # One could break it own, but that is only useful if the steps together
+  # One could break it down, but that is only useful if the steps together
   # take longer than 50 minutes. Otherwise it just takes precious minutes
   # to load the cache
   - stage: Install dependencies, build hs-to-coq
@@ -63,6 +63,10 @@ jobs:
 
   - stage: Tests and Examples
 
+  # It would be super-nice to give proper names to all these jobs,
+  # but GitHub does not support that at the moment:
+  # https://github.com/travis-ci/travis-ci/issues/5898
+
   # Tests and base tests
     script:
       - eval $(opam config env)
@@ -70,17 +74,6 @@ jobs:
       - make -j2 -C examples/tests
       - make -j2 -C base
       - make -j2 -C examples/base-tests
-
-  # Containers (translation)
-  - script:
-      - stack --no-terminal --install-ghc install
-      - eval $(opam config env)
-      - make -j2 -C examples/containers clean
-      - make -j2 -C examples/containers vfiles
-      # Check that the files in git are identical to the generated ones
-      - git add examples/containers/lib
-      - git status
-      - git diff-index --cached --quiet HEAD -- examples/containers/lib/
 
   # Containers (theory)
   - script:
@@ -116,16 +109,6 @@ jobs:
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
 
-  # GHC (translation)
-  - script:
-      - stack --no-terminal --install-ghc install
-      - make -j2 -C examples/ghc clean
-      - make -j2 -C examples/ghc vfiles
-      # Check that the files in git are identical to the generated ones
-      - git add examples/ghc/lib
-      - git status
-      - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
-
   # GHC (including transformers)
   - script:
       - eval $(opam config env)
@@ -137,3 +120,44 @@ jobs:
       - make -j2 -C examples/ghc/lib
       - make -j2 -C examples/ghc/theories
       - make -j2 -C examples/core-semantics
+
+  # Checking translation: base
+  - script:
+      - stack --no-terminal --install-ghc install
+      - make -j2 -C examples/base-src clean
+      - make -j2 -C examples/base-src vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add base
+      - git status
+      - git diff-index --cached --quiet HEAD -- base
+
+  # Checking translation: containers
+  - script:
+      - stack --no-terminal --install-ghc install
+      - make -j2 -C examples/containers clean
+      - make -j2 -C examples/containers vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/containers/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/containers/lib/
+
+  # Checking translation: transformers
+  - script:
+      - stack --no-terminal --install-ghc install
+      - make -j2 -C examples/transformers clean
+      - make -j2 -C examples/transformers vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/transformers/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/transformers/lib/
+
+  # Checking translation: GHC
+  - script:
+      - stack --no-terminal --install-ghc install
+      - make -j2 -C examples/ghc clean
+      - make -j2 -C examples/ghc vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/ghc/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
+

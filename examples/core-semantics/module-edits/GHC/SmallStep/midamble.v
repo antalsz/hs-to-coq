@@ -18,7 +18,7 @@ Ltac solve_step_obligations :=
 
 Definition step_measure (conf : Conf) : nat := 
   match conf with 
-  | (heap , expr, stack ) => CoreSyn.size_Expr expr 
+  | (heap , expr, stack ) => Core.core_size expr 
   end.
 
 (* ----------- ----------------------------------- --------------- *)

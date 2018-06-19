@@ -1,7 +1,9 @@
 include ../../common.mk
 
-ifeq (,$(wildcard ghc-core-smallstep))
-$(error Please create a symlink ghc-core-smallstep (see README.md))
+SRC=ghc-core-smallstep
+
+ifeq (,$(wildcard $(SRC)))
+$(error Please create a symlink to $(SRC) (see README.md))
 endif
 
 OUT=lib
@@ -21,16 +23,14 @@ MODULES = \
 
 VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
 VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
-VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN)
 
-all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
+all: vfiles coq
 
-$(OUT):
-	mkdir -p $(OUT)
+vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(VFILES)
 
-$(OUT)/_CoqProject: $(OUT) Makefile
+$(OUT)/_CoqProject : Makefile
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../../../base ""' >> $@
@@ -40,53 +40,60 @@ $(OUT)/_CoqProject: $(OUT) Makefile
 	echo '-Q ../../ghc/lib  ""' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
-	echo $(addsuffix .v,$(CORE_MODULES)) >> $@
 
-$(OUT)/Makefile: $(OUT) $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES)
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-$(OUT)/edits: $(OUT)
+$(OUT)/edits: $(OUT)/README.md
 	ln -fs ../edits $(OUT)/edits
 
 $(OUT)/README.md:
+	mkdir -p $(OUT)
 	> $@
-	echo 'This directory contains a Coq’ified version of parts of GHC-CORE-SMALLSTEP' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/ghc-core-smallstep`.' >> $@
+	echo 'This directory contains a Coq’ified version of the Haskell $(SRC) library' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/$(SRC)`.' >> $@
+
 
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
+HS_TO_COQ_OPTS := \
+  --ghc -package=ghc-boot-th \
+  --ghc -package=ghc \
+  -e ../../base/edits \
+  -e ../containers/edits \
+  -e ../transformers/edits \
+  -e ../ghc/edits \
+  -e ../ghc/no-type-edits \
+  -e edits \
+   --iface-dir ../../base \
+   --iface-dir ../containers/lib \
+   --iface-dir ../transformers/lib \
+   --iface-dir ../ghc/lib \
+   --iface-dir $(OUT) \
+  -N \
+  -o $(OUT) \
+
+include  deps/*.mk
 
 .SECONDEXPANSION:
 $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-                     --ghc -package=ghc-boot-th \
-                     --ghc -package=ghc \
-                     -e ../../base/edits \
-                     -e ../containers/edits \
-                     -e ../transformers/edits \
-	                  -e ../ghc/edits \
-	                  -e ../ghc/no-type-edits \
-                     -e edits \
-                      --iface-dir ../../base \
-                      --iface-dir ../containers/lib \
-                      --iface-dir ../transformers/lib \
-                      --iface-dir ../ghc/lib \
-                      --iface-dir $(OUT) \
-                     -N \
-                     -o $(OUT) \
-		     ghc-core-smallstep/$*.hs
+		     $(HS_TO_COQ_OPTS) \
+		     $(SRC)/$*.hs
 	test -e $@
-# We added the `test` because `hs-to-coq` doesn't return an error
 
 
-
+.SECONDEXPANSION:
 $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"
 	rm -f $@
 	lndir ../manual $(OUT)/
+
+%.h2ci: %.v
+	test -e $@
 
 clean:
 	rm -rf $(OUT)

@@ -9,7 +9,7 @@ SHELL = bash
 SRC=transformers
 
 ifeq (,$(wildcard $(SRC)))
-$(error Please create a symlink to transformers (see README.md))
+$(error Please create a symlink to $(SRC) (see README.md))
 endif
 
 OUT=lib

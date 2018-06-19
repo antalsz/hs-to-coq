@@ -64,6 +64,7 @@ clean make -C ../base-thy clean
 clean make -C containers clean
 clean make -C containers/theories clean
 clean make -C ghc/theories clean
+clean make -C core-semantics clean
 
 if [[ -e base-src/base ]]
 then
@@ -115,3 +116,6 @@ else
 fi
 coq make -C ghc/lib
 coq make -C ghc/theories
+
+make -C core-semantics vfiles
+coq make -C core-semantics/lib

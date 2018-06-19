@@ -1,9 +1,5 @@
 include ../../common.mk
 
-ifeq (,$(wildcard ghc))
-$(error Please create a symlink ghc (see README.md))
-endif
-
 OUT=lib
 
 # Not all of these need to be handwritten. Eventually we should be able to

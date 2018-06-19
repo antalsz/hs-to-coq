@@ -1,9 +1,5 @@
 include ../../common.mk
 
-ifeq (,$(wildcard base))
-$(error Please create a symlink base (see README.md))
-endif
-
 OUT=../../base
 
 # Not all of these need to be handwritten. Eventually we should be able to

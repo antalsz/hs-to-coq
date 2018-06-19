@@ -49,6 +49,10 @@ Theorem hs_coq_foldl_list {A B} (f : B -> A -> B) (z : B) (l : list A) :
   foldl f z l = Coq.Lists.List.fold_left f l z.
 Proof. apply hs_coq_foldl_base. Qed.
 
+Theorem hs_coq_foldl'_list {A B} (f : B -> A -> B) (z : B) (l : list A) :
+  foldl' f z l = Coq.Lists.List.fold_left f l z.
+Proof. apply hs_coq_foldl_base. Qed.
+
 Theorem hs_coq_foldl_list' {A B} (f : B -> A -> B) (z : B) (l : list A) :
   Data.Foldable.Foldable__list_foldl f z l = Coq.Lists.List.fold_left f l z.
 Proof. apply hs_coq_foldl_list. Qed.

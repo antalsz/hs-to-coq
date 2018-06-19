@@ -1,3 +1,7 @@
 [submodule "examples/core-semantics/ghc-core-smallstep"]
 	path = examples/core-semantics/ghc-core-smallstep
 	url = https://github.com/nomeata/ghc-core-smallstep
+
+[submodule "examples/containers/containers"]
+	path = examples/containers/containers
+	url = https://github.com/haskell/containers/

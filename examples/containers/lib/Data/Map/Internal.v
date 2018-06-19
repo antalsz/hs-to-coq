@@ -1125,7 +1125,7 @@ Definition fromListWithKey {k} {a} `{GHC.Base.Ord k}
         match arg_0__, arg_1__ with
         | t, pair k x => insertWithKey f k x t
         end in
-    Data.Foldable.foldl ins empty xs.
+    Data.Foldable.foldl' ins empty xs.
 
 Definition fromListWith {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> list (k * a)%type -> Map k a :=
@@ -1372,7 +1372,7 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
                 match arg_2__, arg_3__ with
                 | t, pair k x => insert k x t
                 end in
-            Data.Foldable.foldl ins t0 xs in
+            Data.Foldable.foldl' ins t0 xs in
         let not_ordered :=
           fun arg_7__ arg_8__ =>
             match arg_7__, arg_8__ with
@@ -1532,8 +1532,9 @@ Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
                link k1 x1 l1l2 r1r2
            end.
 
-Definition unions {k} {a} `{GHC.Base.Ord k} : list (Map k a) -> Map k a :=
-  fun ts => Data.Foldable.foldl union empty ts.
+Definition unions {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
+   : f (Map k a) -> Map k a :=
+  fun ts => Data.Foldable.foldl' union empty ts.
 
 Local Definition Monoid__Map_mconcat {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : list (Map inst_k inst_v) -> (Map inst_k inst_v) :=
@@ -1577,9 +1578,9 @@ Definition unionWith {k} {a} `{GHC.Base.Ord k}
                end
            end.
 
-Definition unionsWith {k} {a} `{GHC.Base.Ord k}
-   : (a -> a -> a) -> list (Map k a) -> Map k a :=
-  fun f ts => Data.Foldable.foldl (unionWith f) empty ts.
+Definition unionsWith {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
+   : (a -> a -> a) -> f (Map k a) -> Map k a :=
+  fun f ts => Data.Foldable.foldl' (unionWith f) empty ts.
 
 Definition unionWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> Map k a -> Map k a -> Map k a :=
@@ -2486,7 +2487,7 @@ End Notations.
      false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option pair prod
      true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.fold__ Data.Foldable.foldl' Data.Foldable.foldl'__
      Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
      Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
      Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__

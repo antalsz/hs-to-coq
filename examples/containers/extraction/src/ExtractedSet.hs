@@ -64,8 +64,11 @@ module ExtractedSet
                     spanAntitone
                     ) -}  where
 
+import Unsafe.Coerce
+
 import qualified Base
 import qualified Datatypes
+import qualified Foldable
 -- import qualified BinNums
 
 import Internal (Set_(Bin,Tip))
@@ -329,8 +332,19 @@ splitMember :: Ord a => a -> Set a -> (Set a, Bool, Set a)
 splitMember m s = (x,y,z) where
   ((x,y),z) = S2.splitMember eq_a ord_a m s
 
+-- Since containers-0.6, unions uses Foldable.
+--
+-- We cannot do that here:
+-- it would require a `foldable_a` that synthesizes a `Foldable f` dictionary
+-- as expected by S2.uions. But I could not find out how to
+-- write such a definition, as some methods themselves expect
+-- types and dictionaries, and we cannot go from Coq-extracted dictionary to
+-- Haskell instance.
+--
+-- But we can export unions with the old type (good enough for the test suite)
+--
 unions :: Ord a => [Set a] -> Set a
-unions = S2.unions eq_a ord_a
+unions = S2.unions (unsafeCoerce (\_ -> Foldable.coq_Foldable__list)) eq_a ord_a
 
 splitRoot :: Set a -> [Set a]
 splitRoot = S2.splitRoot

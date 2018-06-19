@@ -126,6 +126,7 @@ jobs:
   # Checking translation: base
   - script:
       - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
       - make -j2 -C examples/base-src clean
       - make -j2 -C examples/base-src vfiles
       # Check that the files in git are identical to the generated ones
@@ -136,6 +137,7 @@ jobs:
   # Checking translation: containers
   - script:
       - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
       - make -j2 -C examples/containers clean
       - make -j2 -C examples/containers vfiles
       # Check that the files in git are identical to the generated ones
@@ -146,6 +148,7 @@ jobs:
   # Checking translation: transformers
   - script:
       - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
       - make -j2 -C examples/transformers clean
       - make -j2 -C examples/transformers vfiles
       # Check that the files in git are identical to the generated ones
@@ -156,6 +159,7 @@ jobs:
   # Checking translation: GHC
   - script:
       - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
       - make -j2 -C examples/ghc clean
       - make -j2 -C examples/ghc vfiles
       # Check that the files in git are identical to the generated ones

@@ -75,9 +75,8 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C base
       - make -j2 -C examples/containers clean
-      - make -j2 -C examples/containers
+      - make -j2 -C examples/containers vfiles
       # Check that the files in git are identical to the generated ones
       - git add examples/containers/lib
       - git status
@@ -120,13 +119,8 @@ jobs:
   # GHC (translation)
   - script:
       - stack --no-terminal --install-ghc install
-      - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/containers
-      - make -j2 -C examples/transformers
       - make -j2 -C examples/ghc clean
-      - make -j2 -C examples/ghc
+      - make -j2 -C examples/ghc vfiles
       # Check that the files in git are identical to the generated ones
       - git add examples/ghc/lib
       - git status

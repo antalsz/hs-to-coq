@@ -110,6 +110,7 @@ HS_TO_COQ_OPTS := \
     -e edits \
     -N \
     -i gen-files \
+    -I gen-files \
     -i base \
     -I base/include \
     --iface-dir $(OUT) \

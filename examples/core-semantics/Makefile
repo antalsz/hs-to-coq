@@ -3,7 +3,7 @@ include ../../common.mk
 SRC=ghc-core-smallstep
 
 ifeq (,$(wildcard $(SRC)))
-$(error Please create a symlink to $(SRC) (see README.md))
+$(error Please run git submodule update --init --recursive)
 endif
 
 OUT=lib

@@ -35,6 +35,7 @@ library
   exposed-modules: Const
   exposed-modules: CTZ
   exposed-modules: Datatypes
+  exposed-modules: Decimal
   exposed-modules: DeferredFix
   exposed-modules: Either
   exposed-modules: Enum

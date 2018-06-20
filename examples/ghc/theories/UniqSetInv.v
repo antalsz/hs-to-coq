@@ -65,7 +65,7 @@ Definition Mk_UniqSet := existT.
 Arguments Mk_UniqSet {_} {_} _.
 
 Definition getUniqSet' {a}`{Uniquable a} (arg_0__ : UniqSet a) :=
-  let 'existT getUniqSet' _ := arg_0__ in
+  let 'existT _ getUniqSet' _ := arg_0__ in
   getUniqSet'.
 
 (* Converted value declarations: *)
@@ -114,7 +114,7 @@ Program Definition addOneToUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT set _, x => Mk_UniqSet (UniqFM.addToUFM set x x) _
+    | existT _ set _, x => Mk_UniqSet (UniqFM.addToUFM set x x) _
     end.
 Next Obligation.
 unfold UniqInv in *.
@@ -151,7 +151,7 @@ Program Definition delListFromUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> list a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, l => Mk_UniqSet (UniqFM.delListFromUFM s l) _
+    | existT _ s _, l => Mk_UniqSet (UniqFM.delListFromUFM s l) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -164,7 +164,7 @@ Program Definition delListFromUniqSet_Directly {a} `{Unique.Uniquable a}
    : UniqSet a -> list Unique.Unique -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, l => Mk_UniqSet (UniqFM.delListFromUFM_Directly s l) _
+    | existT _ s _, l => Mk_UniqSet (UniqFM.delListFromUFM_Directly s l) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -179,7 +179,7 @@ Program Definition delOneFromUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, a => Mk_UniqSet (UniqFM.delFromUFM s a) _
+    | existT _ s _, a => Mk_UniqSet (UniqFM.delFromUFM s a) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -197,7 +197,7 @@ Program Definition delOneFromUniqSet_Directly {a} `{Unique.Uniquable a}
    : UniqSet a -> Unique.Unique -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, u => Mk_UniqSet (UniqFM.delFromUFM_Directly s u) _
+    | existT _ s _, u => Mk_UniqSet (UniqFM.delFromUFM_Directly s u) _
     end.
 Next Obligation.
 Admitted.
@@ -205,14 +205,14 @@ Admitted.
 Definition elemUniqSet_Directly {a} `{Unique.Uniquable a} : Unique.Unique -> UniqSet a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | a, existT s _ => UniqFM.elemUFM_Directly a s 
+    | a, existT _ s _ => UniqFM.elemUFM_Directly a s 
     end.
 
 Definition elementOfUniqSet {a} `{Unique.Uniquable a}
    : a -> UniqSet a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | a, existT s _ => UniqFM.elemUFM a s
+    | a, existT _ s _ => UniqFM.elemUFM a s
     end.
 
 Program Definition emptyUniqSet {a} `{Unique.Uniquable a}: UniqSet a :=
@@ -224,7 +224,7 @@ Definition mkUniqSet {a} `{Unique.Uniquable a} : list a -> UniqSet a :=
 Program Definition filterUniqSet {a} `{Unique.Uniquable a} : (a -> bool) -> UniqSet a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | p, existT s _ => Mk_UniqSet (UniqFM.filterUFM p s) _
+    | p, existT _ s _ => Mk_UniqSet (UniqFM.filterUFM p s) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -241,7 +241,7 @@ Program Definition filterUniqSet_Directly {elt} `{Unique.Uniquable elt}
    : (Unique.Unique -> elt -> bool) -> UniqSet elt -> UniqSet elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | f, existT s _ => Mk_UniqSet (UniqFM.filterUFM_Directly f s) _
+    | f, existT _ s _ => Mk_UniqSet (UniqFM.filterUFM_Directly f s) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -260,7 +260,7 @@ Definition getUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> UniqFM.UniqFM a :
 Program Definition intersectUniqSets {a} `{Unique.Uniquable a} : UniqSet a -> UniqSet a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, existT t _ => Mk_UniqSet (UniqFM.intersectUFM s t) _
+    | existT _ s _, existT _ t _ => Mk_UniqSet (UniqFM.intersectUFM s t) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -273,26 +273,26 @@ Next Obligation.
 Defined.
 
 Definition isEmptyUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> bool :=
-  fun '(existT s _) => UniqFM.isNullUFM s.
+  fun '(existT _ s _) => UniqFM.isNullUFM s.
 
 Definition lookupUniqSet {a} {b} `{Unique.Uniquable a} `{Unique.Uniquable b}
    : UniqSet b -> a -> option b :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, k => UniqFM.lookupUFM s k
+    | existT _ s _, k => UniqFM.lookupUFM s k
     end.
 
 Definition lookupUniqSet_Directly {a} `{Unique.Uniquable a}
    : UniqSet a -> Unique.Unique -> option a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, k => UniqFM.lookupUFM_Directly s k
+    | existT _ s _, k => UniqFM.lookupUFM_Directly s k
     end.
 
 Program Definition minusUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> UniqSet a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, existT t _ => Mk_UniqSet (UniqFM.minusUFM s t) _
+    | existT _ s _, existT _ t _ => Mk_UniqSet (UniqFM.minusUFM s t) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -312,14 +312,14 @@ Definition nonDetFoldUniqSet {elt} {a} `{Unique.Uniquable elt}
    : (elt -> a -> a) -> a -> UniqSet elt -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | c, n, existT s _ => UniqFM.nonDetFoldUFM c n s
+    | c, n, existT _ s _ => UniqFM.nonDetFoldUFM c n s
     end.
 
 Definition nonDetFoldUniqSet_Directly {elt} {a} `{Unique.Uniquable elt} `{Unique.Uniquable a}
    : (Unique.Unique -> elt -> a -> a) -> a -> UniqSet elt -> a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | f, n, existT s _ => UniqFM.nonDetFoldUFM_Directly f n s
+    | f, n, existT _ s _ => UniqFM.nonDetFoldUFM_Directly f n s
     end.
 
 Definition nonDetKeysUniqSet {elt} `{Unique.Uniquable elt} : UniqSet elt -> list Unique.Unique :=
@@ -330,7 +330,7 @@ Program Definition partitionUniqSet {a} `{Unique.Uniquable a}
    : (a -> bool) -> UniqSet a -> (UniqSet a * UniqSet a)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | p, existT s _ => let '(x,y):= (UniqFM.partitionUFM p s) in (existT _ x _, existT _ y _)
+    | p, existT _ s _ => let '(x,y):= (UniqFM.partitionUFM p s) in (existT _ x _, existT _ y _)
     end.
 Next Obligation.
 Admitted.
@@ -341,7 +341,7 @@ Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.U
    : UniqSet a -> UniqFM.UniqFM b -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, m => Mk_UniqSet (UniqFM.intersectUFM s m) _
+    | existT _ s _, m => Mk_UniqSet (UniqFM.intersectUFM s m) _
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -354,12 +354,12 @@ Next Obligation.
 Defined.
 
 Definition sizeUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> nat :=
-  fun '(existT s _) => UniqFM.sizeUFM s.
+  fun '(existT _ s _) => UniqFM.sizeUFM s.
 
 Program Definition unionUniqSets {a} `{Unique.Uniquable a} : UniqSet a -> UniqSet a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, existT t _ => Mk_UniqSet (UniqFM.plusUFM s t) _
+    | existT _ s _, existT _ t _ => Mk_UniqSet (UniqFM.plusUFM s t) _
     end.
 Next Obligation.
 Admitted.
@@ -373,13 +373,13 @@ Definition unionManyUniqSets {a} `{Unique.Uniquable a} (xs : list (UniqSet a)) :
 Definition uniqSetAll {a} `{Unique.Uniquable a} : (a -> bool) -> UniqSet a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | p, existT s _ => UniqFM.allUFM p s
+    | p, existT _ s _ => UniqFM.allUFM p s
     end.
 
 Definition uniqSetAny {a} `{Unique.Uniquable a} : (a -> bool) -> UniqSet a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | p, existT s _ => UniqFM.anyUFM p s
+    | p, existT _ s _ => UniqFM.anyUFM p s
     end.
 
 (*
@@ -387,7 +387,7 @@ Program Definition uniqSetMinusUFM {a} {b} `{Unique.Uniquable a} `{Unique.Uniqua
    : UniqSet a -> UniqFM.UniqFM b -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | existT s _, t => Mk_UniqSet (UniqFM.minusUFM s t) _
+    | existT _ s _, t => Mk_UniqSet (UniqFM.minusUFM s t) _
     end.
 Next Obligation.
 Admitted. *)

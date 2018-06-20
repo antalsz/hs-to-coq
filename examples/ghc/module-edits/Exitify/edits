@@ -1,6 +1,3 @@
 rename type Var.Id = Core.Var
 
-in Exitify.exitify termination go deferred
-
-# requires mutual recursion
-skip Exitify.exitifyProgram
+in Exitify.exitifyRec termination go deferred

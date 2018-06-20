@@ -263,11 +263,11 @@ Edits :: { [Edit] }
 -- Gallina
 --------------------------------------------------------------------------------
 
--- TODO: parse operator names à la _*_
+-- TODO: parse operator names a la _*_
 -- TODO: *sometimes* parse () and [] (Haskell) (fixed?)
 -- TODO: split qualified and unqualified names
 
--- Wrap all references to Coq parsing with `Coq(…)` at the top level in order to
+-- Wrap all references to Coq parsing with `Coq(...)` at the top level in order to
 -- ignore newlines inside them
 Coq(p)
   : EnterCoqParsing p ExitCoqParsing    { $2 }

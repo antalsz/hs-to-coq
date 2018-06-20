@@ -3,8 +3,14 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import Psatz.
 
-Require Import Tactics.
-Require Import CoreLemmas.
+Require Import Omega.
+
+Require Import Proofs.GHC.List.
+
+Require Import Proofs.GhcTactics.
+Require Import Proofs.Base.
+Require Import Proofs.Core.
+
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -69,6 +75,8 @@ Qed.
 Section CoreLT.
   Context {v : Type}.
   
+  (*
+
   Fixpoint core_size (e : Expr v) : nat :=
     match e with
     | Mk_Var v => 0
@@ -88,12 +96,13 @@ Section CoreLT.
     | Type_ _  =>   0
     | Coercion _ => 0
     end.
-
+    *)
+  
   (* We use the size only for comparisons. So lets
      make a definition here that we never unfold otherwise,
      and isntead create a tactic that handles all cases.
   *)
-  Definition CoreLT := fun x y => core_size x < core_size y.
+  Definition CoreLT := fun (x:Expr v) (y:Expr v) => core_size x < core_size y.
 
   Lemma CoreLT_wf : well_founded CoreLT.
   Proof.
@@ -127,6 +136,46 @@ Section CoreLT.
   Qed.
 
 
+  Lemma core_size_mkLams_le:
+    forall vs (rhs : Expr v),
+    core_size rhs <= core_size (mkLams vs rhs).
+  Proof.
+    intros.
+    induction vs.
+    (* mkLams does not simplify automatically. *)
+    * change (core_size rhs <= core_size rhs).
+      lia.
+    * change (core_size rhs <= S (core_size (mkLams vs rhs))).
+      lia.
+  Qed.
+
+  Lemma CoreLT_let_rhs_mkLams:
+    forall v vs rhs e,
+    CoreLT rhs (Let (NonRec v (mkLams vs rhs)) e).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_l.
+    apply core_size_mkLams_le.
+  Qed.
+
+  Lemma CoreLT_let_pairs_mkLam:
+    forall v rhs vs pairs e,
+    In (v, mkLams vs rhs) pairs ->
+    CoreLT rhs (Let (Rec pairs) e).
+  Proof.
+    intros.
+    unfold CoreLT. simpl.
+    apply Lt.le_lt_n_Sm.
+    etransitivity; only 2: apply Plus.le_plus_l.
+    induction pairs; inversion H.
+    * subst. simpl.
+      pose proof (core_size_mkLams_le vs rhs).
+      lia.
+    * intuition. simpl. lia.
+  Qed.
+
   Lemma CoreLT_let_pairs:
     forall v rhs pairs e,
     In (v, rhs) pairs ->
@@ -147,6 +196,7 @@ Section CoreLT.
     CoreLT e (Let binds e).
   Proof. intros. unfold CoreLT. simpl. destruct binds; lia. Qed.
 
+
   (* Needs a precondition that there are enough lambdas *)
   Lemma CoreLT_collectNBinders:
     forall n e e',
@@ -163,15 +213,17 @@ Section CoreLT.
     induction n'; intros args e HLams Hlt.
     * destruct e; simpl; try apply Hlt.
     * destruct e; simpl; simpl in HLams; try contradiction.
+      solve_error_sub.
+      simpl. replace (n' - 0) with n'; try omega.
       apply IHn'; clear IHn'; cleardefs.
-      + apply HLams.
-      + unfold CoreLT in *. simpl in *. lia.
+      auto.
+      unfold CoreLT in *. simpl in *. lia.
   Qed.
 End CoreLT.
 
 Opaque CoreLT.
 
-(* For less obligations from [Program Fixpoint]: *)
+(* For fewer obligations from [Program Fixpoint]: *)
 Hint Resolve CoreLT_wf : arith.
 
 (* This is a bit plump yet *)
@@ -179,6 +231,7 @@ Ltac Core_termination :=
   try (apply CoreLT_collectNBinders; only 1: assumption);
   first 
     [ apply CoreLT_let_rhs
+    | apply CoreLT_let_rhs_mkLams
     | apply CoreLT_let_body
     | eapply CoreLT_let_pairs; eassumption
     | eapply CoreLT_case_alts; eassumption
@@ -219,20 +272,6 @@ Section AnnCoreLT.
     unfold AnnCoreLT. simpl.
     apply CoreLT_let_rhs.
   Qed.
-
-
-
-  Local Lemma flat_map_unpack_cons_f:
-    forall (A B C : Type) (f : A -> B -> C ) (xs : list (A * B)),
-     flat_map (fun '(x,y) => [f x y]) xs = map (fun '(x,y) => f x y) xs.
-  Proof.
-    intros.
-    induction xs.
-    * reflexivity.
-    * simpl. repeat expand_pairs. simpl.
-      f_equal. apply IHxs.
-  Qed.
-
 
   Lemma AnnCoreLT_let_pairs:
     forall v rhs pairs e fvs,

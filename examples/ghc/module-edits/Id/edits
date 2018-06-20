@@ -74,11 +74,7 @@ skip Id.idFunRepArity
 
 # CoreSyn (Unfolding)
 
-skip Id.idUnfolding
-skip Id.setIdUnfolding
-skip Id.setIdUnfoldingLazily
-skip Id.realIdUnfolding
-skip Id.zapStableUnfolding
+rewrite forall , Core.NoUnfolding = Core.getUnfolding Core.NoUnfolding
 
 skip Id.setCaseBndrEvald
 
@@ -87,3 +83,8 @@ skip Id.setCaseBndrEvald
 skip Id.setIdType
 # in Id.setIdType rewrite forall ty, GHC.Prim.seq (Type.seqType ty) = Datatypes.id
 
+# figure out GHC.Num.Int representation
+#
+skip Id.mkTemplateLocal 
+skip Id.mkTemplateLocalsNum
+skip Id.mkTemplateLocals 

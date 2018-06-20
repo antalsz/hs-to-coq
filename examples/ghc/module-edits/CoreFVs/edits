@@ -1,7 +1,12 @@
 skip module	FamInstEnv
 
-rename type Var.Id    = Core.Var
-rename type Var.TyVar = Core.Var
+# notation
+rename type Var.Id          = Core.Var
+rename type Var.TyVar       = Core.Var
+rename type VarSet.DVarSet  = DVarSet
+rename type CoreSyn.AnnExpr = AnnExpr
+rename type CoreSyn.AnnAlt  = AnnAlt
+
 
 ## 
 # NEEDED by Exitify
@@ -16,9 +21,6 @@ rewrite forall id, Id.realIdUnfolding id = Core.NoUnfolding
 
 in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
 
-# notation
-rename type CoreSyn.AnnExpr = AnnExpr
-rename type CoreSyn.AnnAlt  = AnnAlt
 
 #
 # TODO: we don't try to translate the orphNames functions

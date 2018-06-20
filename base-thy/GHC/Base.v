@@ -573,3 +573,74 @@ Proof.
 Qed.
 
 (* -------------------------------------------------------------------- *)
+
+(* These are the RULES from the GHC/Base.hs source file. *)
+
+(* RULES
+"fold/build"    forall k z (g::forall b. (a->b->b) -> b -> b) .
+                foldr k z (build g) = g k z
+
+"foldr/augment" forall k z xs (g::forall b. (a->b->b) -> b -> b) .
+                foldr k z (augment g xs) = g k (foldr k z xs)
+
+"foldr/id"                        foldr (:) [] = \x  -> x
+"foldr/app"     [1] forall ys. foldr (:) ys = \xs -> xs ++ ys
+        -- Only activate this from phase 1, because that's
+        -- when we disable the rule that expands (++) into foldr
+
+-- The foldr/cons rule looks nice, but it can give disastrously
+-- bloated code when commpiling
+--      array (a,b) [(1,2), (2,2), (3,2), ...very long list... ]
+-- i.e. when there are very very long literal lists
+-- So I've disabled it for now. We could have special cases
+-- for short lists, I suppose.
+-- "foldr/cons" forall k z x xs. foldr k z (x:xs) = k x (foldr k z xs)
+
+"foldr/single"  forall k z x. foldr k z [x] = k x z
+"foldr/nil"     forall k z.   foldr k z []  = z
+
+"foldr/cons/build" forall k z x (g::forall b. (a->b->b) -> b -> b) .
+                           foldr k z (x:build g) = k x (g k z)
+
+"augment/build" forall (g::forall b. (a->b->b) -> b -> b)
+                       (h::forall b. (a->b->b) -> b -> b) .
+                       augment g (build h) = build (\c n -> g c (h c n))
+"augment/nil"   forall (g::forall b. (a->b->b) -> b -> b) .
+                        augment g [] = build g
+ *)
+
+Lemma fold_build : forall {a}{b} k (z:b) (g: forall{b}, (a -> b -> b) -> b -> b), 
+    foldr k z (build (fun {b} => g)) = g k z.
+Proof.
+(* Parametericity *)
+Admitted.
+
+
+Lemma fold_id : forall A, foldr cons nil = (id : list A -> list A).
+Proof.
+  intro A.
+  apply functional_extensionality.
+  induction x.
+  simpl. auto.
+  simpl. f_equal. auto.
+Qed.
+
+Lemma foldr_single : forall A B k (z:B) (x:A), foldr k z (x :: nil) = k x z.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+Lemma foldr_nil : forall A B k (z:B), foldr k z (@nil A) = z.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+
+Lemma foldr_cons_build: forall {a} k (z:a) x (g:forall {b}, (a->b->b) -> b -> b),
+                           foldr k z (x::build (fun {b} => g)) = k x (g k z).
+Proof.
+  intros.
+  simpl. f_equal.
+  apply fold_build.
+Qed.
+

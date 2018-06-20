@@ -28,7 +28,6 @@ obligations Data.IntSet.Internal.foldrBits BitTerminationProofs.termination_fold
 in Data.IntSet.Internal.foldr'Bits termination go  {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
 obligations Data.IntSet.Internal.foldr'Bits BitTerminationProofs.termination_foldl
 
-
 ### Rewrites and replacements ###
 
 # Eliminate some type conversions that are not needed due to number representation

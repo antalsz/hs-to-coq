@@ -67,23 +67,21 @@ Definition char2IntLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
     | MachChar c => MachInt (GHC.Real.toInteger (GHC.Base.ord c))
-    | l => Panic.panicStr (GHC.Base.hs_string__ "char2IntLit") (Panic.noString l)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "char2IntLit") (Panic.someSDoc)
     end.
 
 Definition double2FloatLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
     | MachDouble d => MachFloat d
-    | l =>
-        Panic.panicStr (GHC.Base.hs_string__ "double2FloatLit") (Panic.noString l)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "double2FloatLit") (Panic.someSDoc)
     end.
 
 Definition float2DoubleLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
     | MachFloat f => MachDouble f
-    | l =>
-        Panic.panicStr (GHC.Base.hs_string__ "float2DoubleLit") (Panic.noString l)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "float2DoubleLit") (Panic.someSDoc)
     end.
 
 Definition inIntRange : DynFlags.DynFlags -> GHC.Num.Integer -> bool :=
@@ -107,21 +105,21 @@ Definition int2CharLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
     | MachInt i => MachChar (GHC.Char.chr (GHC.Num.fromInteger i))
-    | l => Panic.panicStr (GHC.Base.hs_string__ "int2CharLit") (Panic.noString l)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "int2CharLit") (Panic.someSDoc)
     end.
 
 Definition int2DoubleLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
     | MachInt i => MachDouble (GHC.Num.fromInteger i)
-    | l => Panic.panicStr (GHC.Base.hs_string__ "int2DoubleLit") (Panic.noString l)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "int2DoubleLit") (Panic.someSDoc)
     end.
 
 Definition int2FloatLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
     | MachInt i => MachFloat (GHC.Num.fromInteger i)
-    | l => Panic.panicStr (GHC.Base.hs_string__ "int2FloatLit") (Panic.noString l)
+    | l => Panic.panicStr (GHC.Base.hs_string__ "int2FloatLit") (Panic.someSDoc)
     end.
 
 Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
@@ -133,7 +131,7 @@ Definition int2WordLit : DynFlags.DynFlags -> Literal -> Literal :=
         MachWord i
     | _, _ =>
         match arg_0__, arg_1__ with
-        | _, l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.noString l)
+        | _, l => Panic.panicStr (GHC.Base.hs_string__ "int2WordLit") (Panic.someSDoc)
         end
     end.
 
@@ -153,7 +151,7 @@ Definition litValue : Literal -> GHC.Num.Integer :=
   fun l =>
     match isLitValue_maybe l with
     | Some x => x
-    | None => Panic.panicStr (GHC.Base.hs_string__ "litValue") (Panic.noString l)
+    | None => Panic.panicStr (GHC.Base.hs_string__ "litValue") (Panic.someSDoc)
     end.
 
 Definition isLitValue : Literal -> bool :=
@@ -315,7 +313,7 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
         MachInt w
     | _, _ =>
         match arg_0__, arg_1__ with
-        | _, l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.noString l)
+        | _, l => Panic.panicStr (GHC.Base.hs_string__ "word2IntLit") (Panic.someSDoc)
         end
     end.
 
@@ -331,6 +329,6 @@ Definition word2IntLit : DynFlags.DynFlags -> Literal -> Literal :=
      GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char
      GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound GHC.Err.Build_Default
      GHC.Err.Default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.toInteger Panic.noString
-     Panic.panicStr
+     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.toInteger Panic.panicStr
+     Panic.someSDoc
 *)

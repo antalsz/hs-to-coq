@@ -29,7 +29,7 @@ Definition CheapFun :=
 
 Inductive ArityType : Type
   := ATop : list BasicTypes.OneShotInfo -> ArityType
-  |  ABot : nat -> ArityType.
+  |  ABot : BasicTypes.Arity -> ArityType.
 
 Inductive ArityEnv : Type := AE : CheapFun -> bool -> ArityEnv.
 
@@ -46,19 +46,20 @@ Definition ae_ped_bot (arg_0__ : ArityEnv) :=
 
 (* Skipping instance Outputable__ArityType of class Outputable *)
 
-Axiom manifestArity : Core.CoreExpr -> nat.
+Axiom manifestArity : Core.CoreExpr -> BasicTypes.Arity.
 
 Axiom joinRhsArity : Core.CoreExpr -> BasicTypes.JoinArity.
 
-Axiom exprArity : Core.CoreExpr -> nat.
+Axiom exprArity : Core.CoreExpr -> BasicTypes.Arity.
 
 Axiom findRhsArity : DynFlags.DynFlags ->
-                     Core.Var -> Core.CoreExpr -> nat -> (nat * bool)%type.
+                     Core.Var -> Core.CoreExpr -> BasicTypes.Arity -> (BasicTypes.Arity * bool)%type.
 
-Axiom exprEtaExpandArity : DynFlags.DynFlags -> Core.CoreExpr -> nat.
+Axiom exprEtaExpandArity : DynFlags.DynFlags ->
+                           Core.CoreExpr -> BasicTypes.Arity.
 
 Axiom exprBotStrictness_maybe : Core.CoreExpr ->
-                                option (nat * Core.StrictSig)%type.
+                                option (BasicTypes.Arity * Core.StrictSig)%type.
 
 Axiom arityType : ArityEnv -> Core.CoreExpr -> ArityType.
 
@@ -66,7 +67,7 @@ Axiom typeArity : unit -> list BasicTypes.OneShotInfo.
 
 Axiom vanillaArityType : ArityType.
 
-Axiom getBotArity : ArityType -> option nat.
+Axiom getBotArity : ArityType -> option BasicTypes.Arity.
 
 Axiom mk_cheap_fn : DynFlags.DynFlags -> CoreUtils.CheapAppFun -> CheapFun.
 
@@ -78,9 +79,9 @@ Axiom floatIn : bool -> ArityType -> ArityType.
 
 Axiom andArityType : ArityType -> ArityType -> ArityType.
 
-Axiom etaExpand : nat -> Core.CoreExpr -> Core.CoreExpr.
+Axiom etaExpand : BasicTypes.Arity -> Core.CoreExpr -> Core.CoreExpr.
 
-Axiom mkEtaWW : nat ->
+Axiom mkEtaWW : BasicTypes.Arity ->
                 Core.CoreExpr ->
                 Core.InScopeSet -> unit -> (Core.InScopeSet * list EtaInfo)%type.
 
@@ -107,7 +108,7 @@ Axiom etaBodyForJoinPoint : nat ->
 Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Var)%type.
 
 (* External variables:
-     bool list nat op_zt__ option unit BasicTypes.JoinArity BasicTypes.OneShotInfo
-     Core.CoreBndr Core.CoreExpr Core.CoreRule Core.InScopeSet Core.StrictSig
-     Core.Var CoreSubst.Subst CoreUtils.CheapAppFun DynFlags.DynFlags
+     bool list nat op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity
+     BasicTypes.OneShotInfo Core.CoreBndr Core.CoreExpr Core.CoreRule Core.InScopeSet
+     Core.StrictSig Core.Var CoreSubst.Subst CoreUtils.CheapAppFun DynFlags.DynFlags
 *)

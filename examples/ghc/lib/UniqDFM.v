@@ -12,8 +12,8 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNat.
 Require Coq.Lists.List.
-Require Coq.NArith.BinNat.
 Require Data.Foldable.
 Require Data.Function.
 Require Data.IntMap.Internal.
@@ -28,10 +28,12 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive TaggedVal val : Type := Mk_TaggedVal : val -> nat -> TaggedVal val.
+Inductive TaggedVal val : Type
+  := Mk_TaggedVal : val -> GHC.Num.Int -> TaggedVal val.
 
 Inductive UniqDFM ele : Type
-  := UDFM : (Data.IntMap.Internal.IntMap (TaggedVal ele)) -> nat -> UniqDFM ele.
+  := UDFM
+   : (Data.IntMap.Internal.IntMap (TaggedVal ele)) -> GHC.Num.Int -> UniqDFM ele.
 
 Arguments Mk_TaggedVal {_} _ _.
 
@@ -276,7 +278,7 @@ Definition minusUDFM {elt1} {elt2}
     end.
 
 Definition sizeUDFM {elt} : UniqDFM elt -> nat :=
-  fun '(UDFM m _) => Coq.NArith.BinNat.N.to_nat (Data.IntMap.Internal.size m).
+  fun '(UDFM m _i) => BinNat.N.to_nat (Data.IntMap.Internal.size m).
 
 Definition taggedFst {val} : TaggedVal val -> val :=
   fun '(Mk_TaggedVal v _) => v.
@@ -337,7 +339,7 @@ Definition allUDFM {elt} : (elt -> bool) -> UniqDFM elt -> bool :=
         Data.IntMap.Internal.foldr (andb GHC.Base.∘ (p GHC.Base.∘ taggedFst)) true m
     end.
 
-Definition taggedSnd {val} : TaggedVal val -> nat :=
+Definition taggedSnd {val} : TaggedVal val -> GHC.Num.Int :=
   fun '(Mk_TaggedVal _ i) => i.
 
 Definition udfmToList {elt} : UniqDFM elt -> list (Unique.Unique * elt)%type :=
@@ -431,24 +433,24 @@ Definition unitUDFM {key} {elt} `{Unique.Uniquable key}
 
 (* External variables:
      None Some andb bool cons false list nat negb nil op_zt__ option orb pair true
-     Coq.Lists.List.flat_map Coq.NArith.BinNat.N.to_nat Data.Foldable.foldl
-     Data.Foldable.foldr Data.Function.on Data.IntMap.Internal.IntMap
-     Data.IntMap.Internal.adjust Data.IntMap.Internal.alter
-     Data.IntMap.Internal.delete Data.IntMap.Internal.difference
-     Data.IntMap.Internal.elems Data.IntMap.Internal.empty
-     Data.IntMap.Internal.filter Data.IntMap.Internal.filterWithKey
-     Data.IntMap.Internal.foldr Data.IntMap.Internal.insertWith
-     Data.IntMap.Internal.intersection Data.IntMap.Internal.lookup
-     Data.IntMap.Internal.map Data.IntMap.Internal.member Data.IntMap.Internal.null
-     Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
-     Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.OldList.sortBy
-     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup
-     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
-     GHC.Base.foldr GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__
-     GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg__ GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__
-     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze____ GHC.Num.fromInteger
-     GHC.Num.op_zp__ UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
+     BinNat.N.to_nat Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
+     Data.Function.on Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
+     Data.IntMap.Internal.alter Data.IntMap.Internal.delete
+     Data.IntMap.Internal.difference Data.IntMap.Internal.elems
+     Data.IntMap.Internal.empty Data.IntMap.Internal.filter
+     Data.IntMap.Internal.filterWithKey Data.IntMap.Internal.foldr
+     Data.IntMap.Internal.insertWith Data.IntMap.Internal.intersection
+     Data.IntMap.Internal.lookup Data.IntMap.Internal.map Data.IntMap.Internal.member
+     Data.IntMap.Internal.null Data.IntMap.Internal.partition
+     Data.IntMap.Internal.singleton Data.IntMap.Internal.size
+     Data.IntMap.Internal.toList Data.OldList.sortBy Data.Tuple.snd GHC.Base.Eq_
+     GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
+     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr
+     GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__ GHC.Base.mempty__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zsze____ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
+     UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
      UniqFM.ufmToIntMap Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

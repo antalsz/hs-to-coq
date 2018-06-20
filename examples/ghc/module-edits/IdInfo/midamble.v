@@ -2,22 +2,39 @@
 
 Require GHC.Err.
 
+(* --------------------- *)
+(* There are two parts of IdInfo that cause trouble -- Rules & unfolding information. 
+   Part of the issue is that types contain embedded CoreExpr's 
+*)
+(* We break the cyclic structure for the unfolding info here. The type "Unfolding" is parameterized 
+   in the midamble. *)
+
+
 Inductive UnfoldingInfo : Type
   := NoUnfolding : UnfoldingInfo
   |  BootUnfolding : UnfoldingInfo
   |  OtherCon : list AltCon -> UnfoldingInfo
   |  DFunUnfolding : list Var -> DataCon -> list CoreExpr -> UnfoldingInfo
-  |  CoreUnfolding
-   : CoreExpr ->
-     UnfoldingSource ->
-     bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> UnfoldingInfo.
+  |  CoreUnfolding : CoreExpr ->  UnfoldingSource -> bool -> bool -> bool -> bool -> bool -> UnfoldingGuidance -> UnfoldingInfo.
 
-Instance Default_Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ Mk_Unfolding.
 
-(*****)
 Parameter getUnfoldingInfo : Unfolding -> UnfoldingInfo.
 Parameter getUnfolding     : UnfoldingInfo -> Unfolding.
+
+Parameter getCoreRule : CoreRuleInfo -> CoreRule.
+Parameter getCoreRuleInfo : CoreRule -> CoreRuleInfo.
+
+(*****)
+
+Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
+  GHC.Err.Build_Default _ (Mk_RuleInfo nil UniqDSet.emptyUniqDSet).
+
+Instance Default_UnfoldingInfo : GHC.Err.Default UnfoldingInfo :=
+  GHC.Err.Build_Default _ NoUnfolding.
+
+Instance Default_Unfolding : GHC.Err.Default Unfolding :=
+  GHC.Err.Build_Default _ (getUnfolding GHC.Err.default).
+
 
 Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
@@ -25,14 +42,11 @@ Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
 Instance Default_CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
 
-
-
 Instance Default_Termination {r} : GHC.Err.Default (Termination r) :=
   GHC.Err.Build_Default _ Diverges.
 
 Instance Default_DmdType : GHC.Err.Default DmdType :=
   GHC.Err.Build_Default _ (Mk_DmdType GHC.Err.default GHC.Err.default GHC.Err.default).
-
 
 Instance Default_StrictSig : GHC.Err.Default StrictSig :=
   GHC.Err.Build_Default _ (Mk_StrictSig GHC.Err.default).
@@ -53,7 +67,10 @@ Instance Default_IdInfo : GHC.Err.Default IdInfo :=
 Instance Default_TyCon : GHC.Err.Default TyCon :=
   GHC.Err.Build_Default _ (PrimTyCon GHC.Err.default GHC.Err.default nil tt tt GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default ).
 
-
 Instance Default_RecSelParent : GHC.Err.Default RecSelParent :=
   GHC.Err.Build_Default _ (RecSelData GHC.Err.default).
 
+Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
+Instance Default__DataCon : GHC.Err.Default DataCon :=
+ Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).

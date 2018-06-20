@@ -6,4 +6,3 @@
 -Q ../../ghc/lib  ""
 
 GHC/SmallStep.v
-

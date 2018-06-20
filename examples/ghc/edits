@@ -1,18 +1,25 @@
-
+####################################################
+#
+####################################################
 rename value Data.Set.fold = Data.Set.Internal.foldr
 rename value Data.Map.fold = Data.Map.Internal.foldr
 rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
 rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
 
-#
-# All GHC.Num.Int's should be nat in this compiler (double check that that makes sense).
-#
-rename type GHC.Num.Int = nat
+####################################################
+# Now we are serious
+####################################################
 
-rewrite forall    , Data.Foldable.length   = Coq.Lists.List.length
-rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
-rewrite forall    , GHC.List.take          = Coq.Lists.List.firstn
-rewrite forall    , GHC.List.drop          = Coq.Lists.List.skipn
+# rename type GHC.Num.Int = BinNums.N
+
+#
+# All GHC.Num.Int's should be N in this compiler (double check that that makes sense).
+#
+
+# rewrite forall x , Data.Foldable.length x  = BinNat.N.of_nat (Coq.Lists.List.length x)
+# rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y (BinNat.N.to_nat x)
+# rewrite forall x  , GHC.List.take x        = Coq.Lists.List.firstn (BinNat.N.to_nat x)
+# rewrite forall x  , GHC.List.drop x        = Coq.Lists.List.skipn (BinNat.N.to_nat x)
 
 
 
@@ -41,18 +48,20 @@ rewrite forall x, andb Util.debugIsOn x = false
 # don't try to format the error messages
 rename type Outputable.SDoc           = GHC.Base.String
 rename value Outputable.pprPanic      = Panic.panicStr
-rename value Outputable.ppr           = Panic.noString
 rename value Outputable.<+>           = GHC.Base.mappend
 rename value Outputable.<>            = GHC.Base.mappend
 rename value Outputable.text          = Datatypes.id
 rename value Outputable.empty         = Panic.someSDoc
 rename value Outputable.comma         = Panic.someSDoc
-rename value Outputable.ptext         = Panic.noString
-rename value Outputable.int           = Panic.noString
-rename value Outputable.char          = Panic.noString
-rename value Outputable.ftext         = Panic.noString
-rename value Outputable.fsep          = Panic.noString
-rename value Outputable.vcat          = Panic.noString
+
+rewrite forall x, Outputable.ppr x         = Panic.someSDoc
+rewrite forall x, Outputable.ptext x       = Panic.someSDoc
+rewrite forall x, Outputable.int x         = Panic.someSDoc
+rewrite forall x, Outputable.char x        = Panic.someSDoc
+rewrite forall x, Outputable.ftext x       = Panic.someSDoc
+rewrite forall x, Outputable.fsep x        = Panic.someSDoc
+rewrite forall x, Outputable.vcat x        = Panic.someSDoc
+
 rename value Outputable.vbar          = Panic.someSDoc
 rename value Outputable.warnPprTrace  = Panic.warnPprTrace
 

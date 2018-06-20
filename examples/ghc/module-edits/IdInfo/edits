@@ -1,40 +1,36 @@
+###################################
+#
+#   We have parameterized a new type "CoreRuleInfo" that is isomorphic to the 
+#   "CoreRule" type.
+#   That way we break the dependence of IdInfo on core expressions. 
+#   (We do the same thing for Unfolding, but those edits are in the CoreSyn file.)
+#   This would be better if we had a rewrite type edit
+# 
+redefine Inductive Core.RuleInfo : Type := Mk_RuleInfo : (list Core.CoreRuleInfo) -> (Core.DVarSet -> RuleInfo).
 
-# Break dependency on Demand module
-# rename type Demand.StrictSig  = unit
-# rename type Demand.Demand     = unit
-# rename value Demand.nopSig    = tt
-# rename value Demand.topDmd    = tt
-# rewrite forall x, Demand.isStrictDmd x       = false
-# rewrite forall x, Demand.hasDemandEnvSig x   = false
-# rewrite forall x, Demand.zapUsageDemand x    = tt
-# rewrite forall x, Demand.zapUsedOnceDemand x = tt
-# rewrite forall x, Demand.zapUsedOnceSig x    = tt
+rename value IdInfo.RuleInfo = Core.Mk_RuleInfo
 
+redefine Definition Core.ruleInfoRules : Core.RuleInfo -> (list Core.CoreRule) :=
+  fun x => match x with |(Mk_RuleInfo rules _) => Coq.Lists.List.map getCoreRule rules end.
 
-## parameterized in the preamble.v
-skip Core.RuleInfo
-skip Core.emptyRuleInfo
-skip Core.isEmptyRuleInfo 
-skip Core.ruleInfoFreeVars
-skip Core.ruleInfoRules
-skip Core.setRuleInfoHead
+redefine Definition Core.setRuleInfoHead : Name.Name -> (Core.RuleInfo -> Core.RuleInfo) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | fn, Mk_RuleInfo rules fvs =>
+        Mk_RuleInfo (Coq.Lists.List.map getCoreRuleInfo (Coq.Lists.List.map (Core.setRuleIdName fn) (Coq.Lists.List.map getCoreRule rules))) fvs
+    end.
+
+##################################
 
 # needs a default for RecSelParent *before* one can be 
 # provided in the midamble
 skip Core.sel_tycon
-
-## Operations on IdInfo
-## 
-
-## needs CoreSyn.isFragileUnfolding
-
-skip Core.zapFragileUnfolding
-skip Core.zapFragileInfo
+skip Core.df_con
 
 ## needs Type.resultIdLevPoly
-
 skip Core.setLevityInfoWithType
-skip Core.isNeverLevPolyIdInfo
+## needs IdInfo.levityInfo
+skip Core.isNeverLevPolyIdInfo  
 
 ## Printing
 
@@ -44,7 +40,6 @@ skip Core.pprIdDetails
 skip Core.pprStrictness
 skip Core.ppArityInfo
 skip Core.ppCafInfo 
-
 
 ## Ordering
 

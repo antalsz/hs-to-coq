@@ -1,7 +1,7 @@
 include ../../common.mk
 
 ifeq (,$(wildcard containers))
-$(error Please create a symlink containers (see README.md))
+$(error Please run git submodule update --init --recursive)
 endif
 
 OUT=lib

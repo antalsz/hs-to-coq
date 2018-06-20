@@ -1,5 +1,3 @@
-# rename type TyCon.TyCon = ConIds.TyConId
-
 # debugging, uses List.!!
 skip Core.classSCSelId
 

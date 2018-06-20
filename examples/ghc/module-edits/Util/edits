@@ -1,3 +1,11 @@
+rename type GHC.Num.Int = nat
+
+rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
+rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x
+rewrite forall x, GHC.List.drop x        = Coq.Lists.List.skipn x
+
+
 skip module Data.Char
 skip module GHC.Ptr
 skip module GHC.IO.Encoding.Types 
@@ -40,12 +48,13 @@ skip Util.readRational
 ## 
 skip Util.minWith
 
-## This doesn't seem to work
-rewrite forall x y z, if andb debugIsOn x then y else z = z
-
-## partial, needs {Default acc}
+## partial, needs {Default acc}, in midamble
 skip Util.foldl2
+
+## needs Data.Traversable.mapAccumL
 skip Util.mapAccumL2
+
+rewrite forall , Util.only = Panic.head
 skip Util.only
 
 # Environment dependent

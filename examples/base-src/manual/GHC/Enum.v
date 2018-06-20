@@ -3,6 +3,8 @@ Require Import GHC.Base.
 Require Import GHC.Char.
 Require Import GHC.Num.
 
+Require Import GHC.Err.
+
 Set Implicit Arguments.
 Generalizable All Variables.
 Unset Strict Implicit.
@@ -10,34 +12,13 @@ Unset Printing Implicit Defensive.
 
 From Coq Require Import ssreflect.
 
-(* Note, standard practice is for pred/succ/toError to throw errors on invalid inputs.
-   I have changed these to return dummy answers instead so that they are total
-   functions. *)
+(* Note: we will only be able to make instances of this class for bounded
+   types so that we can support enumFrom and still terminate.
 
-(* toEnumError, succError, predError, fromEnumError
+   We cheat on Int and N.
 
- eftWordFB
- eftWord
- eftIntFB
- eftInt
- eftCharFB
- eftChar
- efdtCharFB : (forall {A : Type}, A).
- efdtChar : (forall {A : Type}, A).
- efdCharFB : (forall {A : Type}, A).
- efdChar : (forall {A : Type}, A).
-
-
-
-*)
-
-(* Converted data type declarations: *)
-
-(* Note: we will only be able to make instances of this class for bounded types
-   so that we can support enumFrom and still terminate.
-
-   Furthermore, we need to remove `enumFromThen` and `enumFromThenTo` as they don't
-   terminate when the first two arguments are equal.
+   Furthermore, we need to remove `enumFromThen` and `enumFromThenTo` as they
+   don't terminate when the first two arguments are equal.
 
 *)
 Class Enum a := {
@@ -63,8 +44,8 @@ Instance instance__Bounded_unit__141__ : (Bounded unit) := {
   maxBound := tt }.
 
 Instance instance__Enum_unit__142__ : (Enum unit) := {
-  succ := id;
-  pred := id;
+  succ := GHC.Err.default;
+  pred := GHC.Err.default;
   toEnum := fun _ => tt ;
   fromEnum := (fun arg_146__ => (match arg_146__ with | tt => #0 end)) ;
   enumFrom := (fun arg_147__ => (match arg_147__ with | tt => (tt :: nil) end)) ;
@@ -342,13 +323,13 @@ Instance instance__Enum_Int__184__ : (Enum Int) := {
   succ := (fun arg_185__ =>
     (match arg_185__ with
       | x => (if (x == maxBound)
-             then x
+             then GHC.Err.default
              else (x + #1))
     end)) ;
   pred := (fun arg_186__ =>
     (match arg_186__ with
       | x => (if (x == minBound)
-             then x
+             then GHC.Err.default
              else (x - #1))
     end)) ;
   toEnum := (fun arg_187__ => (match arg_187__ with | x => x end)) ;
@@ -466,7 +447,7 @@ Definition fromEnumChar (c : Char) : Integer :=
 
 Instance instance__Enum_N : (Enum N) := {
   succ := N.succ ;
-  pred := N.pred ;
+  pred := fun x => if N.eqb x 0%N then GHC.Err.default else N.pred x;
   toEnum := Z.to_N ;
   fromEnum := Z.of_N ;
   enumFrom := fun _ => nil; (* we do not support infinite lists *)

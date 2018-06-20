@@ -1,3 +1,21 @@
+# We need to store Ns in IntMap
+skip module Coq.ZArith.BinInt.Z
+skip module Coq.NArith.BinNat.N
+
+rename type GHC.Num.Int = BinNums.N
+
+#
+# All GHC.Num.Int's should be N in this compiler (double check that that makes sense).
+#
+
+rewrite forall x , Data.Foldable.length x  = BinNat.N.of_nat (Coq.Lists.List.length x)
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y (BinNat.N.to_nat x)
+rewrite forall x  , GHC.List.take x        = Coq.Lists.List.firstn (BinNat.N.to_nat x)
+rewrite forall x  , GHC.List.drop x        = Coq.Lists.List.skipn (BinNat.N.to_nat x)
+
+
+in Unique.mkPreludeDataConUnique rewrite forall , i = (BinNat.N.of_nat i)
+
 # chars
 skip Unique.finish_show
 skip Unique.iToBase62
@@ -7,9 +25,8 @@ skip Unique.showUnique
 skip Unique.pprUnique
 skip Unique.pprUniqueAlways
 
-order Unique.Eq___Unique Unique.hasKey Ord__Unique
 
-redefine Inductive Unique.Unique : Type := MkUnique : GHC.Num.Word -> Unique.
+add Unique Definition Unique.getWordKey : Unique.Unique -> GHC.Num.Word := Unique.getKey.
 
 # Avoid use of the FiniteBits type class
 redefine Definition Unique.uNIQUE_BITS : GHC.Num.Int := GHC.Num.fromInteger 56.
@@ -19,31 +36,10 @@ redefine Definition Unique.uniqueMask : GHC.Num.Int :=
   GHC.Num.op_zm__ (Data.Bits.shiftL (GHC.Num.fromInteger 1) Unique.uNIQUE_BITS)
    (GHC.Num.fromInteger 1).
 
-
-# We need to store Ns in IntMap
-skip module Coq.ZArith.BinInt.Z
-skip module Coq.NArith.BinNat.N
-
-add Unique Definition Unique.getWordKey : Unique.Unique -> GHC.Num.Word := fun u =>  Coq.NArith.BinNat.N.of_nat (Unique.getKey u).
-
-
-redefine Definition Unique.getKey : Unique -> nat := 
-   fun y => match y with | (MkUnique x) => Coq.NArith.BinNatDef.N.to_nat x end.
-
-redefine Definition Unique.mkUniqueGrimily : nat -> Unique :=
-  fun n => MkUnique (Coq.NArith.BinNat.N.of_nat n).
-
-redefine Definition Unique.stepUnique : Unique -> (GHC.Num.Word -> Unique) := fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique i, n => MkUnique (GHC.Num.op_zp__ i n)
-    end.
-
-skip Unique.mkUnique
-# redefine Definition Unique.mkUnique : GHC.Char.Char -> (nat -> Unique) := fun c i =>
-#    let bits := (Coq.NArith.BinNat.N.land (Coq.NArith.BinNat.N.of_nat i) Unique.uniqueMask) in
-#    let tag := Data.Bits.shiftL (GHC.Base.ord c) Unique.uNIQUE_BITS in
-#    MkUnique (Coq.NArith.BinNat.N.lor (Coq.ZArith.BinInt.Z.to_N tag) bits). 
-
+redefine Definition Unique.mkUnique : GHC.Char.Char -> (GHC.Num.Word -> Unique) := fun c i =>
+    let bits := (Coq.ZArith.BinInt.Z.land (Coq.ZArith.BinInt.Z.of_N i) Unique.uniqueMask) in
+    let tag := Data.Bits.shiftL (GHC.Base.ord c) Unique.uNIQUE_BITS in
+    MkUnique (Coq.ZArith.BinInt.Z.to_N (Coq.ZArith.BinInt.Z.lor tag bits)). 
 
 redefine Definition Unique.unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int) :=
   fun y => match y with | (MkUnique u) =>
@@ -51,15 +47,9 @@ redefine Definition Unique.unpkUnique : Unique -> (GHC.Char.Char * GHC.Num.Int) 
     let tag := GHC.Char.chr (Data.Bits.shiftR (Coq.ZArith.BinInt.Z.of_N u) Unique.uNIQUE_BITS) in pair tag i
         end.
 
-redefine Definition Unique.deriveUnique : Unique -> (nat -> Unique) :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique i, delta => Unique.mkUnique (GHC.Char.hs_char__ "X") 
-                                   (GHC.Num.op_zp__ (NArith.BinNat.N.to_nat i) delta)
-    end.
-
 
 # unused
 skip Unique.newTagUnique
 
 
+order Unique.Eq___Unique Unique.hasKey Ord__Unique

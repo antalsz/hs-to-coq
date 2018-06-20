@@ -6,6 +6,7 @@
 ./Data/OldList.v
 ./Data/Ord.v
 ./Data/Proxy.v
+./Data/Tuple.v
 ./GHC/Base.v
 ./GHC/Enum.v
 ./GHC/List.v

@@ -2,7 +2,7 @@ Require Import Omega.
 Require Import Coq.ZArith.ZArith.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Bool.Bool.
-Local Open Scope Z_scope.
+
 
 
 Require Import BitUtils.
@@ -30,12 +30,14 @@ and functional correctness of an operation can be expressed in one go.
 Definition singletonRange k : range := (k, 0%N).
 
 
-Inductive Desc : forall {a}, IntMap a -> range -> (Z -> option a) -> Prop :=
+Local Open Scope N_scope.
+
+Inductive Desc : forall {a}, IntMap a -> range -> (N -> option a) -> Prop :=
   | DescTip : forall a k (v : a) r f,
     (forall i, f i = if i =? k then Some v else None) ->
     r = singletonRange k ->
     Desc (Tip k v) r f
-  | DescBin : forall a m1 r1 f1 m2 r2 f2 p msk r (f : Z  -> option a),
+  | DescBin : forall a m1 r1 f1 m2 r2 f2 p msk r (f : N  -> option a),
     Desc m1 r1 f1 ->
     Desc m2 r2 f2 ->
     (0 < rBits r)%N ->
@@ -51,11 +53,11 @@ Inductive Desc : forall {a}, IntMap a -> range -> (Z -> option a) -> Prop :=
     This is used to describe operations that may delete elements.
  *)
 
-Inductive Desc0 : forall {a}, IntMap a -> range -> (Z -> option a) -> Prop :=
-  | Desc0Nil : forall {a} r (f : Z -> option a), (forall i, f i = None) -> Desc0 Nil r f
+Inductive Desc0 : forall {a}, IntMap a -> range -> (N -> option a) -> Prop :=
+  | Desc0Nil : forall {a} r (f : N -> option a), (forall i, f i = None) -> Desc0 Nil r f
   | Desc0NotNil :
       forall {a},
-      forall m r f r' (f' : Z -> option a),
+      forall m r f r' (f' : N -> option a),
       forall (HD : Desc m r f),
       forall (Hsubrange: isSubrange r r' = true)
       (Hf : forall i, f' i = f i),
@@ -65,9 +67,9 @@ Inductive Desc0 : forall {a}, IntMap a -> range -> (Z -> option a) -> Prop :=
     for the top-level specification.
  *)
 
-Inductive Sem : forall {a}, IntMap a -> (Z -> option a) -> Prop :=
-  | SemNil : forall {a} (f : Z -> option a), (forall i, f i = None) -> Sem Nil f
-  | DescSem : forall {a} s r (f : Z -> option a) (HD : Desc s r f), Sem s f.
+Inductive Sem : forall {a}, IntMap a -> (N -> option a) -> Prop :=
+  | SemNil : forall {a} (f : N -> option a), (forall i, f i = None) -> Sem Nil f
+  | DescSem : forall {a} s r (f : N -> option a) (HD : Desc s r f), Sem s f.
 
 (** The highest level: Just well-formedness.
  *)
@@ -108,9 +110,9 @@ Qed.
 Definition restrictBitMapToRange r bm :=
   let p := rPrefix r in
   let msk := rMask r in 
-    N.land (N.land bm (N.lxor (bitmapOf p - Z.to_N 1)%N (N.ones 64%N)))
-           (N.lor (bitmapOf (Z.lor p (Z.lor msk (msk - 1))))
-           (bitmapOf (Z.lor p (Z.lor msk (msk - 1))) - Z.to_N 1)%N).
+    N.land (N.land bm (N.lxor (bitmapOf p - 1)%N (N.ones 64%N)))
+           (N.lor (bitmapOf (N.lor p (N.lor msk (msk - 1))))
+           (bitmapOf (N.lor p (N.lor msk (msk - 1))) - 1)%N).
 
 Lemma Desc0_subRange:
   forall {a} {m : IntMap a} {r r' f}, Desc0 m r f -> isSubrange r r' = true -> Desc0 m r' f.
@@ -178,13 +180,13 @@ Next Obligation.
       eapply DescTip; try reflexivity.
       intro i.
       rewrite Hf, H; clear Hf H.
-      destruct (Z.eqb_spec i k).
+      destruct (N.eqb_spec i k).
       - subst. rewrite Hf2. reflexivity.
       - destruct (f2 i); reflexivity.
     + apply Desc0Nil.
       intro i.
       rewrite Hf, H; clear Hf H.
-      destruct (Z.eqb_spec i k).
+      destruct (N.eqb_spec i k).
       - subst. rewrite Hf2. reflexivity.
       - destruct (f2 i); reflexivity.
 
@@ -287,3 +289,5 @@ Proof.
   destruct H, H0.
   eexists. apply restrictKeys_Sem; eassumption.
 Qed.
+
+

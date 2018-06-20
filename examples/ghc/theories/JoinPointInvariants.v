@@ -5,12 +5,13 @@ Require Import BasicTypes.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 Require Import Coq.ZArith.BinInt.
+Require Import Coq.NArith.BinNat.
 Require Import Psatz.
 
 Import ListNotations.
 
-Require Import Forall.
-Require Import CoreLemmas.
+Require Import Proofs.Forall.
+Require Import Proofs.Core.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -64,6 +65,8 @@ TODO are these invariants:
     and it is crucial to make AST traversals, that use [collectNBinders],
     total. This means that many functions will have that as a precondition.
     So lets isolate that.
+    
+    Currently unused.
 *)
 
 Definition HasJoinLamsPair {v : Type} x (e : Expr v) :=
@@ -146,7 +149,7 @@ Definition isJoinPointsValidPair_aux
     match isJoinId_maybe v with
     | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
     | Some a => 
-      if a =? 0 (* Uh, all for the termination checker *)
+      if (a =? 0) (* Uh, all for the termination checker *)
       then isJoinPointsValid rhs 0 jps (* tail-call position *)
       else isJoinRHS a rhs jps                   (* tail-call position *)
     end.
@@ -234,3 +237,9 @@ Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid 
       of the top-level recursive functions. Instead, it is a local let and
       I repeat the defininition later to give it a name.
 *)
+
+Axiom isJoinPointValidPair_extendVarSet:
+  forall v rhs jps v',
+  isJoinPointsValidPair v rhs jps = true ->
+  isJoinPointsValidPair v rhs (extendVarSet jps v') = true.
+  

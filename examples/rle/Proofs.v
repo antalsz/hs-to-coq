@@ -14,11 +14,11 @@ Proof.
     - destruct l eqn:?.
       + intuition.
       + destruct (f a e).
-        - contradict IHxs.
-          destruct IHxs; try congruence.
-          intuition.
-        - contradict IHxs.
-          destruct IHxs; try congruence.
+        ** contradict IHxs.
+           destruct IHxs; try congruence.
+           intuition.
+        ** contradict IHxs.
+           destruct IHxs; try congruence.
 Qed.
 
 
@@ -33,11 +33,11 @@ Proof.
     destruct (groupBy f xs) eqn:?.
     - simpl in IHxs.  unfold concat in *. simpl in *. congruence.
     - destruct l eqn:?.
-      - exfalso.
+      + exfalso.
         apply (group_by_not_nil f xs).
         rewrite Heql.
         intuition.
-      - destruct (f a e); unfold concat in *; simpl in *; congruence.
+      + destruct (f a e); unfold concat in *; simpl in *; congruence.
 Qed.
 
 Lemma map_map:
@@ -66,12 +66,12 @@ Proof.
     - left.
       subst.
       destruct a.
-      * contradict H. intuition.
-      * intuition.
+      + contradict H. intuition.
+      + intuition.
     - right.
       apply IHxs.
-      * contradict H. right. assumption.
-      * assumption.
+      + contradict H. right. assumption.
+      + assumption.
 Qed.
 
 (* For the good rle, we can prove

@@ -13,6 +13,7 @@ cd $(dirname $0)
 
 CLEAN=YES
 COQ=YES
+COQ_VERSION=8.8
 
 function clean () { if [ "$CLEAN" = "YES" ]; then "$@"; fi }
 function coq ()   { if [ "$COQ"   = "YES" ]; then "$@"; fi }
@@ -40,9 +41,9 @@ function check_coq_version() {
     echo "No coqc in the path. Did you forget to run . <(opam config env)?"
     exit 1
   fi
-  if ! coqc --version | grep -q -F '8.7.2'
+  if ! coqc --version | grep -q -F "$COQ_VERSION"
   then
-    echo "coqc does not seem to be version 8.7.2. Did you forget to run . <(opam config env)?"
+    echo "coqc does not seem to be version $COQ_VERSION. Did you forget to run . <(opam config env)?"
     exit 1
   fi
 }

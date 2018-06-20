@@ -4,7 +4,7 @@ Require Import GHC.Num.
 Import Notations.
 Require Import Proofs.GHC.Base.
 
-From mathcomp Require Import ssrbool ssreflect.
+From Coq Require Import ssrbool ssreflect.
 Set Bullet Behavior "Strict Subproofs".
 
 Require Import OrderedType.

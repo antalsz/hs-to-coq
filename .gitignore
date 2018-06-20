@@ -16,6 +16,7 @@ cabal.project.local
 *.glob
 .*.aux
 *.v.d
+.coqdeps.d
 Makefile.coq.conf
 Makefile.bak
 Makefile.conf

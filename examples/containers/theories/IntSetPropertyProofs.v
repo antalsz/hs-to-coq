@@ -5,7 +5,8 @@
 Set Warnings "-notation-overridden".
 
 (* SSReflect *)
-From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
+From Coq Require Import ssreflect ssrbool ssrfun.
+From mathcomp Require Import ssrnat seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Sortedness *)

@@ -4,7 +4,7 @@ Require Import Data.Foldable.
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
 
-Require Import mathcomp.ssreflect.ssreflect.
+From Coq Require Import ssreflect.
 Set Bullet Behavior "Strict Subproofs".
 
 (* -------------------------------------------------------------------- *)

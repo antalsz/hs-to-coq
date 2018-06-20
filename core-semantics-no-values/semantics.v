@@ -1,5 +1,5 @@
 Require Import Utf8.
-From mathcomp Require Import ssreflect ssrnat ssrbool ssrfun seq.
+From Coq Require Import ssreflect ssrnat ssrbool ssrfun seq.
 
 Require Import core.
 

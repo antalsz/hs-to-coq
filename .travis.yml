@@ -52,7 +52,7 @@ jobs:
       # Coq
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
-      - opam list -i coq.8.7.2 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.7.2 ocamlfind.1.7.3-1 ; }
+      - opam list -i coq.8.8.0 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.8.0 ocamlfind.1.7.3-1 ; }
       - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
 
       # Dependencies
@@ -127,8 +127,8 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C examples/base-src clean
-      - make -j2 -C examples/base-src vfiles
+      - make -C examples/base-src clean
+      - make -C examples/base-src vfiles
       # Check that the files in git are identical to the generated ones
       - git add base
       - git status
@@ -138,8 +138,8 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C examples/containers clean
-      - make -j2 -C examples/containers vfiles
+      - make -C examples/containers clean
+      - make -C examples/containers vfiles
       # Check that the files in git are identical to the generated ones
       - git add examples/containers/lib
       - git status
@@ -149,8 +149,8 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C examples/transformers clean
-      - make -j2 -C examples/transformers vfiles
+      - make -C examples/transformers clean
+      - make -C examples/transformers vfiles
       # Check that the files in git are identical to the generated ones
       - git add examples/transformers/lib
       - git status
@@ -160,8 +160,8 @@ jobs:
   - script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
-      - make -j2 -C examples/ghc clean
-      - make -j2 -C examples/ghc vfiles
+      - make -C examples/ghc clean
+      - make -C examples/ghc vfiles
       # Check that the files in git are identical to the generated ones
       - git add examples/ghc/lib
       - git status

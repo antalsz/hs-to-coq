@@ -52,7 +52,7 @@ jobs:
       # Coq
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
-      - opam list -i coq.8.7.2 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.7.2 ocamlfind.1.7.3-1 ; }
+      - opam list -i coq.8.8.0 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.8.0 ocamlfind.1.7.3-1 ; }
       - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
 
       # Dependencies

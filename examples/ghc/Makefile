@@ -1,9 +1,5 @@
 include ../../common.mk
 
-ifeq (,$(wildcard ghc))
-$(error Please create a symlink ghc (see README.md))
-endif
-
 OUT=lib
 
 # Not all of these need to be handwritten. Eventually we should be able to
@@ -155,11 +151,10 @@ coq: $(OUT)/Makefile $(OUTFILES)
 
 HS_TO_COQ_GHC_OPTS=\
      --ghc-tree ghc \
+     -i gen-files \
+     -I gen-files \
      -I ghc/includes \
-     -I ghc/includes/dist-derivedconstants/header \
      -I ghc/compiler \
-     -I ghc/compiler/stage2 \
-     -I ghc/compiler/stage2/build \
      --ghc -DSTAGE=2 \
      --ghc -package=ghc-boot-th \
      --ghc -XNoImplicitPrelude \

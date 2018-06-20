@@ -65,23 +65,28 @@ clean make -C containers clean
 clean make -C containers/theories clean
 clean make -C ghc/theories clean
 clean make -C core-semantics clean
+clean make -C base-src clean
+clean make -C transformers clean
+clean make -C ghc clean
 
-if [[ -e base-src/base ]]
-then
-	echo "Regenerating ../base"
-	clean make -C base-src clean
-	make -C base-src vfiles
-else
-	echo "Rebuiding ../base"
-	clean make -C ../base clean
-fi
+make -C base-src vfiles
 coq make -C ../base
-
-coq echo "Building ../base-thy"
 coq make -C ../base-thy
-
-coq echo "Building examples"
 coq make -C base-tests
+
+make -C containers vfiles
+coq make -C containers coq
+coq make -C containers/theories
+make -C transformers vfiles
+coq make -C transformers coq
+#coq make -C transformers/theories no theories yet
+make -C ghc vfiles
+coq make -C ghc/lib
+coq make -C ghc/theories
+make -C core-semantics vfiles
+coq make -C core-semantics/lib
+#coq make -C core-semantics/theories theories yet
+
 coq make -C successors
 coq make -C intervals
 coq make -C compiler
@@ -90,32 +95,3 @@ coq make -C bag
 coq make -C quicksort
 coq make -C dlist
 coq make -C coinduction
-make -C containers vfiles
-coq make -C containers coq
-coq make -C containers/theories
-
-if [[ -e transformers/transformers ]]
-then
-	echo "Regenerating transformers"
-	clean make -C transformers clean
-	make -C transformers vfiles
-else
-	echo "Rebuiding transformers/lib"
-	clean make -C transformers/lib clean
-fi
-coq make -C transformers coq
-
-if [[ -e ghc/ghc ]]
-then
-	echo "Regenerating ghc"
-	clean make -C ghc clean
-	make -C ghc vfiles
-else
-	echo "Rebuiding ghc/lib"
-	clean make -C ghc/lib clean
-fi
-coq make -C ghc/lib
-coq make -C ghc/theories
-
-make -C core-semantics vfiles
-coq make -C core-semantics/lib

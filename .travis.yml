@@ -13,6 +13,8 @@ notifications:
      - secure: B38DsPEJPcxRoTwDS4JHks2bi+ViZkTwI6sB/5R+xKXSz4ZEU9chrQ15mXS/NVwdEaQZLNjuIKdxj1LgKAr9gelXZMDLS9lv/bzajx6SRq8x6MZxlYcd7e5ej+xZSmo8R+2ivMLB23iSBtZDi98aTulplbmXb2Qdh5WznShrGRftdtyO7Aqf5xZOy3Q3+0ji7qAXQpWB4sDLJr4Iu2Fjkvj5fBkq9dLHmkK08AR1xyo3kswNx4pssPbfiAiuk3zJY9h+iPGOCj8F3rfVlGdVOGXnF6Qa12rmEVmxCoQ66JNf97ESAp92+lqB84bpNuxLdfn+XZZLQOLZCIRZxm/noJYlQgYs9LPUA5RZ014ryR2B+ThiX/Cgod6toNDVN/vl/lg9QqyQoo+jZbloy/Ot3Z74eFNaVY8vDUkuPpkdSo7bkKDdzQcojmjLXKCT47hnIImD5AclzAv5WnYJd+387XEf2nD3F2RBwi++m2smE+CI66GZ0rizRZKMHIzWUJoEunQY2xRnFqo0XU+jYz50guIdu7h6X5sw2TfilbWLPigaWM03JYwbp4hrB4hqbkEeYaDA4ygqnyePo7oMQMmv57fwwcpvYN2yO6kgun0npSmBg0sWYFkrwQsxT3sI9mTljbhgXtuk0SRDOdXrOvlK1/fRqiq76o6RZ16cE8JN7eQ=
 
 # Caching so the next build will be fast too
+before_cache:
+  - rm -rf $HOME/.opam/log
 cache:
   timeout: 600
   directories:
@@ -42,7 +44,7 @@ jobs:
   include:
   # This builds Coq, the dependencies of hs-to-coq and hs-to-coq itself,
   # and puts them in the cache.
-  # One could break it own, but that is only useful if the steps together
+  # One could break it down, but that is only useful if the steps together
   # take longer than 50 minutes. Otherwise it just takes precious minutes
   # to load the cache
   - stage: Install dependencies, build hs-to-coq
@@ -63,6 +65,10 @@ jobs:
 
   - stage: Tests and Examples
 
+  # It would be super-nice to give proper names to all these jobs,
+  # but GitHub does not support that at the moment:
+  # https://github.com/travis-ci/travis-ci/issues/5898
+
   # Tests and base tests
     script:
       - eval $(opam config env)
@@ -70,18 +76,6 @@ jobs:
       - make -j2 -C examples/tests
       - make -j2 -C base
       - make -j2 -C examples/base-tests
-
-  # Containers (translation)
-  - script:
-      - stack --no-terminal --install-ghc install
-      - eval $(opam config env)
-      - make -j2 -C base
-      - make -j2 -C examples/containers clean
-      - make -j2 -C examples/containers
-      # Check that the files in git are identical to the generated ones
-      - git add examples/containers/lib
-      - git status
-      - git diff-index --cached --quiet HEAD -- examples/containers/lib/
 
   # Containers (theory)
   - script:
@@ -128,3 +122,48 @@ jobs:
       - make -j2 -C examples/ghc/lib
       - make -j2 -C examples/ghc/theories
       - make -j2 -C examples/core-semantics
+
+  # Checking translation: base
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C examples/base-src clean
+      - make -j2 -C examples/base-src vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add base
+      - git status
+      - git diff-index --cached --quiet HEAD -- base
+
+  # Checking translation: containers
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C examples/containers clean
+      - make -j2 -C examples/containers vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/containers/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/containers/lib/
+
+  # Checking translation: transformers
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C examples/transformers clean
+      - make -j2 -C examples/transformers vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/transformers/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/transformers/lib/
+
+  # Checking translation: GHC
+  - script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C examples/ghc clean
+      - make -j2 -C examples/ghc vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/ghc/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
+

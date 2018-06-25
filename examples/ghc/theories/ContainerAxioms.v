@@ -62,7 +62,6 @@ Axiom lookup_filterWithKey :
   forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
                        Internal.lookup key m = Some val.
 
-
 Axiom lookup_intersection :
   forall a b key (val1:a) m1 m2, 
     Internal.lookup key m1 = Some val1 /\
@@ -75,3 +74,18 @@ Axiom delete_eq : forall key b (i : IntMap b),
 Axiom delete_neq : forall key1 key2 b (i : IntMap b),
     key1 <> key2 ->
     lookup key1 (delete key2 i) = lookup key1 i.
+
+Axiom lookup_union :
+  forall (A:Type) key (val:A) (m1 m2: IntMap A), 
+    (lookup key m1 = Some val \/ lookup key m2 = Some val) <->
+    lookup key (union m1 m2) = Some val.
+
+Axiom lookup_difference_in_snd:
+  forall (key : Internal.Key) (b : Type) (i i': IntMap b) (y:b),
+    lookup key i' = Some y -> 
+    lookup key (difference i i') = None.
+
+Axiom lookup_difference_not_in_snd:
+  forall (key : Internal.Key) (b : Type) (i i': IntMap b)(y:b),
+    lookup key i' = None ->
+    lookup key (difference i i') = lookup key i.

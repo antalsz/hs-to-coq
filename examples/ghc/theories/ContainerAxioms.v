@@ -89,3 +89,39 @@ Axiom lookup_difference_not_in_snd:
   forall (key : Internal.Key) (b : Type) (i i': IntMap b)(y:b),
     lookup key i' = None ->
     lookup key (difference i i') = lookup key i.
+
+(*
+This is a QuickChick setup to test the above axioms
+(as bugs easily lurk there).
+
+Unfortunately, we have to wait for 
+https://github.com/QuickChick/QuickChick/issues/87
+to be fixed, as currently the programs that QuickChick extracts to
+test stuff do not compile...
+
+From QuickChick Require Import QuickChick.
+Import QcDefaultNotation. Open Scope qc_scope.
+Import GenLow GenHigh.
+From QuickChick Require Import Instances.
+Set Warnings "-extraction-opaque-accessed,-extraction".
+
+Global Instance genKey : GenSized Internal.Key := 
+  {| arbitrarySized n := fmap N.of_nat (arbitrarySized n) |}.
+
+Global Instance genIntMap {A} `{GenSized A} : GenSized (IntMap A) := 
+  {| arbitrarySized n := fmap Internal.fromList (arbitrarySized n) |}.
+
+Global Instance shrinkIntMap {A} : Shrink (IntMap A) := 
+  {| shrink := fun _ => nil |}.
+
+Global Instance shrinkKey : Shrink Internal.Key := 
+  {| shrink := fun _ => nil |}.
+
+Global Instance showKey : Show Internal.Key :=
+  {| show := fun s => show (N.to_nat s) |}.
+
+Global Instance showIntMap {A} `{Show A} : Show (IntMap A) :=
+  {| show := fun s => show (Internal.toList s) |}.
+
+QuickCheck delete_eq.
+*)

@@ -77,7 +77,7 @@ Axiom delete_neq : forall key1 key2 b (i : IntMap b),
 
 Axiom lookup_union :
   forall (A:Type) key (val:A) (m1 m2: IntMap A), 
-    (lookup key m1 = Some val \/ lookup key m2 = Some val) <->
+    (lookup key m1 = Some val \/ (lookup key m1 = None /\ lookup key m2 = Some val)) <->
     lookup key (union m1 m2) = Some val.
 
 Axiom lookup_difference_in_snd:

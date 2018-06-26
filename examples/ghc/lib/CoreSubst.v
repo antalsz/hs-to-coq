@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
+Require Panic.
 
 
 (* Converted imports: *)
@@ -311,8 +312,10 @@ Definition cloneRecIdBndrs
    : Subst ->
      UniqSupply.UniqSupply -> list Core.Var -> (Subst * list Core.Var)%type :=
   fun subst us ids =>
-    let 'pair subst' ids' := Data.Traversable.mapAccumL (clone_id GHC.Err.default)
-                               subst (GHC.List.zip ids (UniqSupply.uniqsFromSupply us)) in
+    let 'pair subst' ids' := Data.Traversable.mapAccumL (clone_id (GHC.Err.error
+                                                                   Panic.someSDoc)) subst (GHC.List.zip ids
+                                                                                                        (UniqSupply.uniqsFromSupply
+                                                                                                         us)) in
     pair subst' ids'.
 
 Definition cloneIdBndrs
@@ -348,7 +351,7 @@ Definition substRecBndrs
   fun subst bndrs =>
     let 'pair new_subst new_bndrs := Data.Traversable.mapAccumL (substIdBndr
                                                                  (Datatypes.id (GHC.Base.hs_string__ "rec-bndr"))
-                                                                 GHC.Err.default) subst bndrs in
+                                                                 (GHC.Err.error Panic.someSDoc)) subst bndrs in
     pair new_subst new_bndrs.
 
 Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
@@ -536,8 +539,7 @@ Definition zapSubstEnv : Subst -> Subst :=
      Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
      Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
      Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Err.default GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Name.Name Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     UniqSupply.UniqSupply UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply
-     Unique.Unique
+     GHC.Base.op_zeze__ GHC.Err.error GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
+     Name.Name Panic.panicStr Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
+     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
 *)

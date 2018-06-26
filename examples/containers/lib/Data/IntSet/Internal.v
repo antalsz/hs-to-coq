@@ -690,7 +690,7 @@ Definition insert : Key -> IntSet -> IntSet :=
   fun x => insertBM (prefixOf x) (bitmapOf x).
 
 Definition fromList : list Key -> IntSet :=
-  fun xs => let ins := fun t x => insert x t in Data.Foldable.foldl ins empty xs.
+  fun xs => let ins := fun t x => insert x t in Data.Foldable.foldl' ins empty xs.
 
 Definition map : (Key -> Key) -> IntSet -> IntSet :=
   fun f => fromList GHC.Base.∘ (GHC.Base.map f GHC.Base.∘ toList).
@@ -722,8 +722,8 @@ Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) {measure (size_nat
                       end.
 Solve Obligations with (termination_by_omega).
 
-Definition unions : list IntSet -> IntSet :=
-  fun xs => Data.Foldable.foldl union empty xs.
+Definition unions {f} `{Data.Foldable.Foldable f} : f IntSet -> IntSet :=
+  fun xs => Data.Foldable.foldl' union empty xs.
 
 Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
   unions.
@@ -1097,15 +1097,15 @@ End Notations.
      Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.modulo Coq.NArith.BinNat.N.ones
      Coq.NArith.BinNat.N.pow Coq.NArith.BinNat.N.pred Coq.NArith.BinNat.N.to_nat
      Coq.Numbers.BinNums.N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__ Data.Bits.xor
-     Data.Foldable.foldl Data.Maybe.maybe Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare GHC.Base.compare__
-     GHC.Base.flip GHC.Base.map GHC.Base.mappend__ GHC.Base.max__ GHC.Base.mconcat__
-     GHC.Base.mempty__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
-     GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze____
-     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
+     Data.Foldable.Foldable Data.Foldable.foldl' Data.Maybe.maybe Data.Tuple.snd
+     GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.flip GHC.Base.map GHC.Base.mappend__ GHC.Base.max__
+     GHC.Base.mconcat__ GHC.Base.mempty__ GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____
+     GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____
+     GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Wf.wfFix2
      Utils.Containers.Internal.BitUtil.bitcount
      Utils.Containers.Internal.BitUtil.highestBitMask
      Utils.Containers.Internal.BitUtil.lowestBitMask

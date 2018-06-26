@@ -3,106 +3,6 @@
 This module contains a formalization of Haskell's Data.IntSet which implements a set of
 integers as a patricia trie.
 
-** Status
-
-This is the annotated export list of IntSet. The first column says:
-
- V verified
- F verified according to the FMapInterface specification
- P skipped, because of partiality
- S skipped, for other reasons
- N nothing to be done
-
-    -- * Set type
- V    IntSet(..), Key -- instance Eq,Show
- N  , Prefix, Mask, BitMap
-
-    -- * Operators
- F  , (\\)
-
-    -- * Query
- F  , null
- F  , size
- F  , member
- V  , notMember
-    , lookupLT
-    , lookupGT
-    , lookupLE
-    , lookupGE
- F  , isSubsetOf
- V  , isProperSubsetOf
- V  , disjoint
-
-    -- * Construction
- F  , empty
- F  , singleton
- F  , insert
- F  , delete
-
-    -- * Combine
- F  , union
- F  , unions
- F  , difference
- F  , intersection
-
-    -- * Filter
- F  , filter
- F  , partition
- V  , split
- V  , splitMember
-    , splitRoot
-
-    -- * Map
- V  , map
-
-    -- * Folds
- V  , foldr
- F  , foldl
-    -- ** Strict folds
- V  , foldr'
- V  , foldl'
-    -- ** Legacy folds
- V  , fold
-
-    -- * Min\/Max
- P  , findMin
- P  , findMax
-    , deleteMin
-    , deleteMax
- P  , deleteFindMin
- P  , deleteFindMax
-    , maxView
-    , minView
-
-    -- * Conversion
-
-    -- ** List
- F  , elems
- F  , toList
- V  , fromList
-
-    -- ** Ordered list
- V  , toAscList
- V  , toDescList
-    , fromAscList
-    , fromDistinctAscList
-
-    -- * Debugging
- S  , showTree
- S  , showTreeWith
-
-    -- * Internals
- V  , match
- V  , suffixBitMask
- V  , prefixBitMask
- V  , bitmapOf
- V  , zero
-
-Additionall stuff:
- 
- * valid: (from the test suite): correctness (but not completeness of)
- * Eq IntSet: Lawfulness.
-
 *)
 
 Require Import Omega.
@@ -184,10 +84,10 @@ Definition oro {a} : option a -> option a -> option a :=
     | None => y
     end.
 
-(** ** IntMap-specific operations
+(** ** IntSet-specific operations
 
-These definitions and lemmas are used to link some concepts from the IntMap
-implementation to the range sets above.
+These definitions and lemmas are used to link some concepts from the IntSet
+implementation to the dyadic intervals in [DyadicIntervals]
 *)
 
 Require Import GHC.Base.
@@ -3046,7 +2946,7 @@ Lemma unions_Sem (ss : list IntSet) :
   Forall WF ss ->
   Sem (unions ss) (fun i => existsb (member i) ss).
 Proof.
-  unfold unions; rewrite hs_coq_foldl_list, <-fold_left_rev_right.
+  unfold unions; rewrite hs_coq_foldl'_list, <-fold_left_rev_right.
   remember (rev ss) as rss eqn:def_rss.
   replace ss with (rev rss) by now subst; apply rev_involutive.
   clear def_rss.
@@ -5180,7 +5080,7 @@ Lemma fromList_Sem:
 Proof.
   intros l.
   unfold fromList.
-  rewrite hs_coq_foldl_list.
+  rewrite hs_coq_foldl'_list.
   (* Rewrite to use fold_right instead of fold_left *)
   enough (forall l,
     exists f : N -> bool,
@@ -5673,10 +5573,8 @@ Qed.
 (** *** Verification of [valid] *)
 
 (** The [valid] function is used in the test suite to detect whether
-   functions return valid trees. It should be equivalent to our [WF].
-   
-   For now it is not complete (see https://github.com/haskell/containers/issues/522)
-   and even with that fixed we might have a problem due to too wide types.
+   functions return valid trees. It should be equivalent to our [WF],
+   but we cannot fully prove that as long as we use arbitrary width numbers.
 *)
 
 Require Import IntSetValidity.
@@ -5746,13 +5644,13 @@ Proof.
   destruct H as [f HSem].
   destruct HSem.
   * reflexivity.
-  * destruct HD.
+  * induction HD.
     - reflexivity.
-    - unfold commonPrefix.
+    - cbv fix beta delta [commonPrefix]. fold commonPrefix.
       unfoldMethods.
+      rewrite IHHD1, IHHD2. rewrite andb_true_r.
       set (s := Bin p msk s1 s2).
       assert (Desc s r f) by (eapply DescBin; eassumption).
-      
       replace elems with toList by reflexivity.
       rewrite Foldable_all_forallb.
       rewrite forallb_forall.
@@ -5761,7 +5659,6 @@ Proof.
       eapply Desc_inside in Hi; try eassumption.
       rewrite N.eqb_eq.
       symmetry.
-      apply N.lxor_eq_0_iff.
       subst p.
       clear - Hi.
       destruct r as [p b].
@@ -5787,11 +5684,9 @@ Proof.
   destruct H as [f HSem].
   destruct HSem.
   * reflexivity.
-  * destruct HD.
+  * induction HD.
     - reflexivity.
-    - unfold maskRespected.
-      unfoldMethods.
-      replace elems with toList by reflexivity.
+    - simpl.
       rewrite !Foldable_all_forallb.
       rewrite andb_true_iff; split.
       + rewrite forallb_forall.
@@ -5804,7 +5699,9 @@ Proof.
         apply testbit_halfRange_true_false; try assumption.
         eapply inRange_isSubrange_true; [|eassumption]; isSubrange_true.
         inRange_false; fail.
-      + rewrite forallb_forall.
+      + rewrite IHHD1, IHHD2.
+        rewrite andb_true_r.
+        rewrite forallb_forall.
         intros i Hi.
         rewrite <- toList_In in Hi by (eapply DescSem; eassumption).
         eapply Desc_inside in Hi; try eassumption.
@@ -6075,7 +5972,7 @@ Proof.
     reflexivity.
   - intros ss; WFIntSet_Eq_eq. 
     unfold mconcat, Monoid__IntSet, Data.IntSet.Internal.Monoid__IntSet_mconcat; simpl.
-    unfold unions; rewrite hs_coq_foldl_list, hs_coq_foldr_base, hs_coq_map.
+    unfold unions; rewrite hs_coq_foldl'_list, hs_coq_foldr_base, hs_coq_map.
     induction ss as [|s ss IH]; simpl.
     + reflexivity.
     + rewrite MonoidLaws_WFIntSet_mconcat_swing, IH; auto using unpack_WF.

@@ -9,7 +9,7 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import ListUtils.
 
-From mathcomp Require Import ssreflect ssrfun ssrbool.
+From Coq Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
 (**** Bag invariant *****)

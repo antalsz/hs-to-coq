@@ -18,31 +18,6 @@ Some of this can migrate to [base-thy] at some point, but maybe some lemmas or
 tactics are rather specific.
 *)
 
-Lemma reverse_append : forall A (vs1:list A) (vs0:list A)  a ,
-  (List.reverse (a :: vs0) ++ vs1 = List.reverse vs0 ++ (a :: vs1)).
-Proof.
-  intros A.
-  intros.
-  rewrite hs_coq_reverse.
-  rewrite hs_coq_reverse.
-  rewrite <- List.rev_append_rev.
-  rewrite <- List.rev_append_rev.
-  simpl.
-  auto.
-Qed.
-
-
-Lemma List_foldl_foldr:
-  forall {a b} f (x : b) (xs : list a),
-    fold_left f xs x = List.fold_right (fun x g a => g (f a x)) id xs x.
-Proof.
-  intros. revert x.
-  induction xs; intro.
-  * reflexivity.
-  * simpl. rewrite IHxs. reflexivity.
-Qed.
-
-
 Lemma forallb_imp:
   forall a P Q (xs : list a),
   forallb P xs = true ->
@@ -55,48 +30,6 @@ Proof.
   intuition.
 Qed.
 
-Lemma snd_unzip:
-  forall a b (xs : list (a * b)),
-  snd (List.unzip xs) = map snd xs.
-Proof.
-  intros.
-  induction xs.
-  * reflexivity.
-  * simpl. repeat expand_pairs. simpl. f_equal. apply IHxs.
-Qed.
-
-Lemma snd_unzip_map:
-  forall a b c (f : a -> b) (g : a -> c) xs,
-  snd (List.unzip (map (fun x => (f x, g x)) xs)) = map g xs.
-Proof.
-  intros.
-  induction xs.
-  * reflexivity.
-  * simpl. repeat expand_pairs. simpl. f_equal. apply IHxs.
-Qed.
-
-
-Lemma zip_unzip_map:
-  forall a b c (f : b -> c) (xs : list (a * b)),
-  List.zip (fst (List.unzip xs)) (Base.map f (snd (List.unzip xs)))
-  = map (fun '(x,y) => (x, f y)) xs.
-Proof.
-  intros.
-  induction xs.
-  * reflexivity.
-  * simpl. repeat expand_pairs. simpl. f_equal. apply IHxs.
-Qed.
-
-Lemma flat_map_unpack_cons_f:
-  forall (A B C : Type) (f : A -> B -> C ) (xs : list (A * B)),
-   flat_map (fun '(x,y) => [f x y]) xs = map (fun '(x,y) => f x y) xs.
-Proof.
-  intros.
-  induction xs.
-  * reflexivity.
-  * simpl. repeat expand_pairs. simpl.
-    f_equal. apply IHxs.
-Qed.
 
 Lemma forM_map:
   forall (m : Type -> Type) (a b c : Type) `{Monad m}

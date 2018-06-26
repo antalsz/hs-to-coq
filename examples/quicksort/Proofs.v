@@ -44,8 +44,8 @@ Proof.
     rewrite unroll_deferred_fix.
     rewrite Forall_partition by assumption.
     f_equal;[|f_equal].
-    * rewrite unroll_deferred_fix. reflexivity.
-    * apply IHAlreadySorted.
+    + rewrite unroll_deferred_fix. reflexivity.
+    + apply IHAlreadySorted.
 Qed.
 
 Require Import Coq.Sorting.Permutation.
@@ -220,8 +220,9 @@ Proof.
   intros.
   induction H0.
   * auto.
-  * constructor. inversion_clear H. assumption.
-  * apply IHPermutation. inversion_clear H. assumption.
+  * constructor.
+    + inversion_clear H. assumption.
+    + apply IHPermutation. inversion_clear H. assumption.
   * inversion_clear H. inversion_clear H1.
     repeat (constructor; try assumption).
   * auto.

@@ -1,9 +1,5 @@
 include ../../common.mk
 
-ifeq (,$(wildcard base))
-$(error Please create a symlink base (see README.md))
-endif
-
 OUT=../../base
 
 # Not all of these need to be handwritten. Eventually we should be able to
@@ -113,9 +109,9 @@ coq: $(OUT)/Makefile $(VFILES)
 HS_TO_COQ_OPTS := \
     -e edits \
     -N \
+    -i gen-files \
+    -I gen-files \
     -i base \
-    -i base/dist-install/build \
-    -I base/dist-install/build/include \
     -I base/include \
     --iface-dir $(OUT) \
     --dependency-dir deps \

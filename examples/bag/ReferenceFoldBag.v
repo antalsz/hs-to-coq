@@ -8,7 +8,7 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 Open Scope program_scope.
 
-From mathcomp Require Import ssreflect ssrfun ssrbool.
+From Coq Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
 (* From Bag.hs:171-176, in the comments *)

@@ -2,7 +2,7 @@ Require Import GHC.Base.
 Require Import Proofs.GHC.Base.
 Require Import Data.Proxy.
 
-From mathcomp Require Import ssreflect ssrbool ssrfun.
+From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
 Instance EqLaws_Proxy {a} : EqLaws (Proxy a).

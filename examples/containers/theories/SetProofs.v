@@ -1711,8 +1711,8 @@ Lemma union_destruct :
   forall s1 s2,
   (s2 = Tip -> P s1) ->
   (s1 = Tip -> P s2) ->
-  (forall sz2 x, (s2 = Bin sz2 x Tip Tip) -> P (insertR x s1)) ->
-  (forall sz1 x, (s1 = Bin sz1 x Tip Tip) -> P (insert x s2)) ->
+  (forall x l r, (s2 = Bin 1 x l r) -> P (insertR x s1)) ->
+  (forall x l r, (s1 = Bin 1 x l r) -> P (insert x s2)) ->
   (forall sz1 x l1 r1, (s1 = Bin sz1 x l1 r1) -> 
     P (
       match splitS x s2 with
@@ -1728,8 +1728,9 @@ Lemma union_destruct :
 Proof.
   intros P s1 s2 HTipR HTipL HSingletonR HSingletonL HBins.
   destruct s1, s2; simpl union;
-  try destruct s1_1, s1_2;
-  try destruct s2_1, s2_2;
+  unfold op_zeze__, Eq_Integer___, op_zeze____;
+  try destruct (Z.eqb_spec s0 1);
+  try destruct (Z.eqb_spec s 1); subst;
   first [ eapply HBins; reflexivity
         | eapply HSingletonL; reflexivity
         | eapply HSingletonR; reflexivity
@@ -1756,7 +1757,7 @@ Proof.
     + solve_Desc.
     + solve_Desc.
     + inversion HB3; subst; clear HB3.
-      clear H3 H4.
+      repeat find_Tip.
       (* We need to give [applyDesc] a hint about the bounds that we care about: *)
       assert (Bounded Tip lb ub) by constructor.
       applyDesc insertR_Desc.
@@ -1764,9 +1765,11 @@ Proof.
   * apply union_destruct; intros; subst; try congruence.
     + solve_Desc.
     + inversion HB3; subst; clear HB3.
+      repeat find_Tip.
       applyDesc insertR_Desc.
       solve_Desc.
-    + inversion H3; subst; clear H3.
+    + remember (1 + _ + _). inversion H3; subst; clear H3.
+      repeat find_Tip.
       applyDesc insert_Desc. solve_Desc.
     + inversion H3; subst; clear H3.
       eapply splitS_Desc; try eassumption.
@@ -1801,7 +1804,7 @@ Proof.
   intros.
   unfold unions.
   (* Switch to a fold right *)
-  rewrite Proofs.Data.Foldable.hs_coq_foldl_list.
+  rewrite Proofs.Data.Foldable.hs_coq_foldl'_list.
   rewrite <- fold_left_rev_right.
   rewrite <- (rev_involutive ss).
   rewrite <- (rev_involutive ss), Forall_rev in H.
@@ -3487,6 +3490,434 @@ Proof.
   solve_Desc.
 Qed.
 
+(** ** Verification of [fromList] *)
+
+(** The verification of [fromList] should be similar to that of [fromDistinctAscList], only
+that the condition is checked and -- if it fails -- we resort to a backup implementation. *)
+
+(* The following definitions are copied from the local definitions of [fromList]; 
+   my ltac foo failed to do that automatic.
+*)
+Definition fromList' :=
+     fun (t0 : Set_ e) (xs : list e) =>
+     let ins := fun (t : Set_ e) (x : e) => insert x t in Foldable.foldl ins t0 xs.
+
+Definition not_ordered :=
+      fun (arg_4__ : e) (arg_5__ : list e) =>
+      match arg_5__ with
+      | [] => false
+      | y :: _ => _GHC.Base.>=_ arg_4__ y
+      end.
+
+Definition fromList_create_f : (Int -> list e -> Set_ e * list e * list e) -> (Int -> list e -> Set_ e * list e  * list e)
+  := (fun create (arg_8__ : Int) (arg_9__ : list e) =>
+           match arg_9__ with
+           | [] => (Tip, [], [])
+           | x :: xss =>
+               if _GHC.Base.==_ arg_8__ #1
+               then
+                if not_ordered x xss
+                then (Bin #1 x Tip Tip, [], xss)
+                else (Bin #1 x Tip Tip, xss, [])
+               else
+                let (p, zs) := create (Bits.shiftR arg_8__ #1) arg_9__ in
+                let (l0, ys) := p in
+                match ys with
+                | [] => (l0, [], zs)
+                | [y] => (insertMax y l0, [], zs)
+                | y :: (_ :: _) as yss =>
+                    if not_ordered y yss
+                    then (l0, [], ys)
+                    else
+                     let
+                     '(r, zs0, ws) := create (Bits.shiftR arg_8__ #1) yss in
+                      (link y l0 r, zs0, ws)
+                end
+           end).
+
+Definition fromList_create : Int -> list e -> Set_ e * list e * list e
+  := deferredFix2 (fromList_create_f).
+
+Definition fromList_go_f :=
+  (fun (go : Int -> Set_ e -> list e -> Set_ e) (arg_22__ : Int) 
+          (arg_23__ : Set_ e) (arg_24__ : list e) =>
+        match arg_24__ with
+        | [] => arg_23__
+        | [x] => insertMax x arg_23__
+        | x :: (_ :: _) as xss =>
+            if not_ordered x xss
+            then fromList' arg_23__ arg_24__
+            else
+             let (p, ys) := fromList_create arg_22__ xss in
+             let (r, ys0) := p in
+             match ys with
+             | [] => go (Bits.shiftL arg_22__ #1) (link x arg_23__ r) ys0
+             | _ :: _ => fromList' (link x arg_23__ r) ys
+             end
+        end).
+
+Definition fromList_go := deferredFix3 (fromList_go_f).
+
+
+(** zeta-reduces exactly one (the outermost) [let] *)
+Ltac zeta_one :=
+  lazymatch goal with |- context A [let x := ?rhs in @?body x] =>
+     let e' := eval cbv beta in (body rhs) in
+     let e'' := context A [e'] in
+     change e''
+  end.
+
+(* Identical to [fromDistinctAscList_create_eq] *)
+Lemma fromList_create_eq:
+  forall i xs, (1 <= i)%Z ->
+  fromList_create i xs = fromList_create_f fromList_create i xs.
+Proof.
+  intros.
+  change (uncurry fromList_create (i, xs) = uncurry (fromList_create_f fromList_create) (i, xs)).
+  apply deferredFix_eq_on with
+    (f := fun g => uncurry (fromList_create_f (curry g)))
+    (P := fun p => (1 <= fst p)%Z)
+    (R := fun x y => (1 <= fst x < fst y)%Z).
+  * eapply wf_inverse_image with (R := fun x y => (1 <= x < y)%Z).
+    apply Z.lt_wf with (z := 1%Z).
+  * clear i xs H.
+    intros g h x Px Heq.
+    destruct x as [i xs]. simpl in *.
+    unfold fromList_create_f.
+    destruct_match; try reflexivity.
+    repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+    destruct (Z.eqb_spec i 1); try reflexivity.
+    unfold curry.
+    assert (1 < i)%Z by lia.
+    assert (1 <= Z.shiftr i 1)%Z by (apply Z_shiftr_pos; lia).
+    assert (Z.shiftr i 1 < i)%Z by (apply Z_shiftr_lt; lia).
+    repeat expand_pairs. simpl.
+    rewrite Heq by eauto.
+    destruct_match; try reflexivity.
+    rewrite Heq by eauto.
+    reflexivity.
+  * simpl; lia.
+Qed.
+
+(* We need to know that [create] returns no longer list than it receives.
+   Like [fromDistinctAscList_create_preserves_length], just a few more cases.
+ *)
+Program Fixpoint fromList_create_preserves_length
+  i xs {measure (Z.to_nat i)} :
+  (1 <= i)%Z ->
+  forall (P : Set_ e * list e * list e -> Prop),
+  ( forall s ys zs ,
+    (length ys <= length xs)%nat ->
+    P (s, ys, zs)
+  ) ->
+  P (fromList_create i xs) := _.
+Next Obligation.
+  intros.
+  rename fromList_create_preserves_length into IH.
+  rewrite fromList_create_eq by assumption.
+  unfold fromList_create_f.
+  destruct xs.
+  * apply H0. reflexivity.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+    destruct (Z.eqb_spec i 1).
+    + destruct_match.
+      - apply H0. simpl. lia.
+      - apply H0. simpl. lia.
+    + assert (Z.to_nat (Bits.shiftR i #1) < Z.to_nat i)%nat. {
+        apply Z2Nat.inj_lt.
+        apply Z.shiftr_nonneg. lia.
+        lia.
+        apply Z_shiftr_lt; lia.
+      }
+      apply IH.
+      - assumption. 
+      - apply Z_shiftr_pos; lia.
+      - intros.
+        destruct_match.
+        ** apply H0. simpl in *. lia.
+        ** apply IH.
+           -- assumption.
+           -- apply Z_shiftr_pos; lia.
+           -- intros.
+              repeat destruct_match.
+              ++ apply H0. simpl in *. lia.
+              ++ apply H0. simpl in *. lia.
+              ++ apply H0. simpl in *. lia.
+Qed.
+
+Lemma fromList_go_eq:
+  forall i s xs, (0 < i)%Z ->
+  fromList_go i s xs = fromList_go_f fromList_go i s xs.
+Proof.
+  intros.
+  change (deferredFix (fun g => uncurry (uncurry (fromList_go_f (curry (curry g))))) (i, s, xs) =
+    uncurry (uncurry (fromList_go_f fromList_go)) (i, s, xs)).
+  rewrite deferredFix_eq_on with
+    (P := fun p => (1 <= fst (fst p))%Z)
+    (R := fun x y => (length (snd x) < length (snd y))%nat); only 1: reflexivity.
+  * apply well_founded_ltof with (f := fun x => length (snd x)).
+  * intros g h p Px Heq.
+    destruct p as [[x y] z].
+    simpl in *.
+    unfold fromList_go_f.
+    destruct_match; try reflexivity.
+    eapply fromList_create_preserves_length; try lia.
+    intros s' ys zs Hlength.
+    destruct_match; try reflexivity.
+    destruct_match; try reflexivity.
+    destruct_match; try reflexivity.
+    apply Heq.
+    + apply Z_shiftl_pos.
+      lia.
+    + simpl. simpl in *. lia.
+  * simpl. lia.
+Qed.
+
+Program Fixpoint fromList_create_Desc
+  sz lb xs {measure (Z.to_nat sz)} :
+  (0 <= sz)%Z ->
+  not_ordered lb xs = false ->
+(*   StronglySorted (fun x y => x < y = true) (lb :: xs) -> *)
+  forall (P : Set_ e * list e * list e -> Prop),
+  ( forall s ys zs,
+    Bounded s (Some lb) (safeHd ys) ->
+    isUB (safeHd ys) lb = true ->
+    xs = toList s ++ ys ++ zs->
+    ys = [] \/ (size s = (2*2^sz-1)%Z /\ zs = []) ->
+    P (s, ys, zs)
+  ) ->
+  P (fromList_create (2^sz)%Z xs) := _.
+Next Obligation.
+  intros ???? Hnonneg HheadOrdered.
+  rename fromList_create_Desc into IH.
+  rewrite fromList_create_eq
+    by (enough (0 < 2^sz)%Z by lia; apply Z.pow_pos_nonneg; lia).
+  unfold fromList_create_f.
+  destruct xs.
+  * intros X HX. apply HX. clear HX.
+    - solve_Bounded.
+    - reflexivity.
+    - reflexivity.
+    - left. reflexivity.
+  * repeat replace (#1) with 1%Z by reflexivity.
+    unfold op_zeze__, Eq_Integer___, op_zeze____.
+    
+    simpl in HheadOrdered.
+
+(*     assert (isUB (safeHd xs) e0 = true). {
+      destruct xs; try reflexivity.
+      inversion H5. assumption.
+    } *)
+
+    destruct (Z.eqb_spec (2^sz) 1); [ destruct_match | ].
+    - intros X HX. apply HX; clear HX.
+      ++ solve_Bounded.
+      ++ reflexivity.
+      ++ rewrite toList_Bin, toList_Tip, app_nil_r. reflexivity.
+      ++ left. reflexivity.
+    - intros X HX. apply HX; clear HX.
+      ++ destruct xs; simpl in Heq; solve_Bounded.
+      ++ destruct xs; simpl in *; solve_Bounds.
+      ++ rewrite toList_Bin, toList_Tip, !app_nil_r, !app_nil_l. reflexivity.
+      ++ right. split. rewrite size_Bin. lia. reflexivity.
+    - assert (~ (sz = 0))%Z by (intro; subst; simpl in n; congruence).
+      assert (sz > 0)%Z by lia.
+      replace ((Bits.shiftR (2 ^ sz)%Z 1%Z)) with (2^(sz - 1))%Z.
+      Focus 2.
+        unfold Bits.shiftR, Bits.instance_Bits_Int.
+        rewrite Z.shiftr_div_pow2 by lia.
+        rewrite Z.pow_sub_r by lia.
+        reflexivity.
+      assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
+      { rewrite Z2Nat.inj_sub by lia. 
+        apply Nat.sub_lt.
+        apply Z2Nat.inj_le.
+        lia.
+        lia.
+        lia.
+        replace (Z.to_nat 1) with 1 by reflexivity.
+        lia.
+      }
+      eapply IH.
+      ++ assumption.
+      ++ lia.
+      ++ eassumption.
+      ++ intros l ys zs HBounded_l HisUB_l Hlist_l Hsize_l.
+         destruct ys.
+         + intros X HX. apply HX. clear HX.
+           ** solve_Bounded.
+           ** assumption.
+           ** assumption.
+           ** left; reflexivity.
+         + simpl in HBounded_l.
+           destruct Hsize_l as [? | [??]]; try congruence.
+           subst. rewrite app_nil_r in Hlist_l.
+           assert (isLB (Some lb) e1 = true) by solve_Bounds.
+           destruct ys; only 2: destruct_match.
+           -- intros X HX. apply HX; clear HX.
+              ** assert (isUB None e1 = true) by reflexivity.
+                 applyDesc insertMax_Desc.
+              ** reflexivity.
+              ** erewrite toList_insertMax by eassumption.
+                 rewrite app_nil_l, <- app_assoc.
+                 assumption.
+              ** left; reflexivity.
+           -- intros X HX. apply HX; clear HX.
+              ** solve_Bounded.
+              ** reflexivity.
+              ** rewrite app_nil_l. simpl in Hlist_l.
+                 assumption.
+              ** left; reflexivity.
+           -- eapply IH; clear IH.
+              ** assumption.
+              ** lia.
+              ** eassumption.
+              ** simpl in Heq.
+                 intros r zs zs' HBounded_r HisUB_r Hlist_r Hsize_r.
+                 intros X HX. apply HX. clear HX.
+                 --- applyDesc link_Desc.
+                 --- solve_Bounds.
+                 --- erewrite toList_link by eassumption.
+                     rewrite Hlist_l. rewrite Hlist_r.
+                     rewrite <- !app_assoc.  reflexivity.
+                 --- destruct Hsize_r; [left; assumption| right].
+                     destruct H4.
+                     split; only 2: assumption.
+                     applyDesc link_Desc.
+                     replace (size l). rewrite H4.
+                     rewrite mul_pow_sub in * by lia.
+                     lia.
+Qed.
+
+Lemma fromList'_Desc:
+  forall s l,
+  Bounded s None None ->
+  Desc' (fromList' s l) None None (fun i => sem s i || List.elem i l).
+Proof.
+  intros.
+  unfold fromList'.
+  rewrite Foldable.hs_coq_foldl_list.
+  revert s H.
+  induction l.
+  * intros.
+    simpl.
+    solve_Desc.
+  * intros.
+    simpl.
+    applyDesc insert_Desc.
+    applyDesc IHl.
+    solve_Desc.
+Qed.
+
+Program Fixpoint fromList_go_Desc
+  sz s xs {measure (length xs)} :
+  (0 <= sz)%Z ->
+  Bounded s None (safeHd xs) ->
+  xs = [] \/ size s = (2*2^sz-1)%Z ->
+  Desc' (fromList_go (2^sz)%Z s xs) None None
+    (fun i => sem s i || List.elem i xs) := _.
+Next Obligation.
+  intros.
+  rename fromList_go_Desc into IH.
+  rewrite fromList_go_eq by (apply Z.pow_pos_nonneg; lia).
+  unfold fromList_go_f.
+  destruct xs as [ | ? [ | ?? ]].
+  * solve_Desc.
+  * destruct H1; try congruence.
+    simpl safeHd in *.
+    assert (isUB None e0 = true) by reflexivity.
+    applyDesc insertMax_Desc.
+    solve_Desc.
+    setoid_rewrite elem_cons.
+    f_solver.
+  * destruct H1; try congruence.
+    repeat replace (#1) with 1%Z by reflexivity.
+    replace ((Bits.shiftL (2 ^ sz)%Z 1))%Z with (2 ^ (1 + sz))%Z.
+    Focus 2.
+      unfold Bits.shiftL, Bits.instance_Bits_Int.
+      rewrite Z.shiftl_mul_pow2 by lia.
+      rewrite Z.pow_add_r by lia.
+      lia.
+    destruct_match.
+    --  apply Bounded_relax_ub_None in H0.
+        applyDesc fromList'_Desc.
+        solve_Desc.
+    --  eapply fromList_create_Desc.
+        - lia.
+        - eassumption.
+        - intros.
+          subst.
+          simpl safeHd in *.
+
+          applyDesc link_Desc.
+          destruct zs.
+          ++  rewrite app_nil_r in H4.
+              eapply IH.
+              + rewrite H4. simpl. rewrite app_length. lia.
+              + lia.
+              + assumption.
+              + destruct H5 as [?|[??]]; [left; assumption | right].
+                replace (size s1). replace (size s).  replace (size s0).
+                rewrite Z.pow_add_r by lia.
+                lia.
+              + intros.
+                rewrite H4.
+                solve_Desc.
+                setoid_rewrite elem_cons.
+                setoid_rewrite elem_app.
+                setoid_rewrite <- toList_sem; only 2: eassumption.
+                f_solver.
+         ++ destruct H5 as [ ? | [? Habsurd]]; try congruence.
+            subst. rewrite app_nil_l in H4.
+            rewrite H4.
+            apply Bounded_relax_ub_None in HB.
+            applyDesc fromList'_Desc.
+            solve_Desc.
+            setoid_rewrite elem_cons.
+            setoid_rewrite elem_app.
+            setoid_rewrite <- toList_sem; only 2: eassumption.
+            f_solver.
+Qed.
+
+Lemma fromList_Desc:
+  forall xs,
+  Desc' (fromList xs) None None (fun i => List.elem i xs).
+Proof.
+  intros.
+  cbv beta delta [fromList].
+  destruct xs as [ | ? [|??] ].
+  * solve_Desc.
+  * solve_Desc.
+  * fold fromList'.
+    zeta_one.
+    fold not_ordered.
+    zeta_one.
+    fold fromList_create_f.
+    fold fromList_create.
+    zeta_one.
+    fold fromList_go_f.
+    fold fromList_go.
+    zeta_one.
+    destruct_match.
+    - applyDesc fromList'_Desc.
+      solve_Desc.
+      setoid_rewrite elem_cons.
+      f_solver.
+    - repeat replace (#1) with (2^0)%Z by reflexivity.
+      eapply fromList_go_Desc.
+      + lia.
+      + simpl in Heq. 
+        solve_Bounded.
+      + right. reflexivity.
+      + intros.
+        solve_Desc.
+        setoid_rewrite elem_cons.
+        f_solver.
+Qed.
+
+
 (** ** Verification of [Eq] *)
 
 Lemma eqlist_sym:
@@ -4238,6 +4669,31 @@ Qed.
 
 End WF.
 
+(** ** Verification of [map] *)
+
+Lemma elem_map:
+  forall a b `{Eq_ b} (f : a -> b) (xs : list a) i,
+  List.elem i (List.map f xs) = existsb (fun j : a => i == f j) xs.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. reflexivity.
+Qed.
+
+Lemma map_spec:
+  forall e ee `{Ord e} `{OrdLaws ee} (f : e -> ee) (s : Set_ e) lb ub,
+  Bounded s lb ub ->
+  (forall i, sem (map f s) i = existsb (fun j => i == f j) (toList s)).
+Proof.
+  intros.
+  unfold map.
+  unfold Base.map.
+  simpl.
+  eapply fromList_Desc. intros s' Hs' _ Hsem'.
+  rewrite Hsem'.
+  apply elem_map.
+Qed.
 
 (** ** Verification of [mapMonotonic] *)
 

@@ -24,21 +24,20 @@ Parameter ClassId   : Type.
 Parameter PatSynId  : Type.
 Parameter TyConId   : Type.
 
-Parameter Default_DataConId : GHC.Err.Default DataConId.
-Parameter Default_ClassId   : GHC.Err.Default ClassId.
-Parameter Default_PatSynId  : GHC.Err.Default PatSynId.
-Parameter Default_TyConId   : GHC.Err.Default TyConId.
+Parameter Default_PatSynId  : GHC.Err.Default PatSynId.  Existing Instance Default_PatSynId.
+Parameter Default_ClassId   : GHC.Err.Default ClassId.   Existing Instance Default_ClassId.
+Parameter Default_DataConId : GHC.Err.Default DataConId. Existing Instance Default_DataConId.
+Parameter Default_TyConId   : GHC.Err.Default TyConId.   Existing Instance Default_TyConId.
 
-Parameter Eq_PatSynId  : Base.Eq_ PatSynId.
-Parameter Eq_ClassId   : Base.Eq_ ClassId.
-Parameter Eq_DataConId : Base.Eq_ DataConId.
-Parameter Eq_TyConId   : Base.Eq_ TyConId.
+Parameter Eq_PatSynId  : Base.Eq_ PatSynId.  Existing Instance Eq_PatSynId.
+Parameter Eq_ClassId   : Base.Eq_ ClassId.   Existing Instance Eq_ClassId.
+Parameter Eq_DataConId : Base.Eq_ DataConId. Existing Instance Eq_DataConId.
+Parameter Eq_TyConId   : Base.Eq_ TyConId.   Existing Instance Eq_TyConId.
 
-Parameter Ord_PatSynId  : Base.Ord PatSynId.
-Parameter Ord_ClassId   : Base.Ord ClassId.
-Parameter Ord_DataConId : Base.Ord DataConId.
-Parameter Ord_TyConId   : Base.Ord TyConId.
-
+Parameter Ord_PatSynId  : Base.Ord PatSynId.  Existing Instance Ord_PatSynId.
+Parameter Ord_ClassId   : Base.Ord ClassId.   Existing Instance Ord_ClassId.
+Parameter Ord_DataConId : Base.Ord DataConId. Existing Instance Ord_DataConId.
+Parameter Ord_TyConId   : Base.Ord TyConId.   Existing Instance Ord_TyConId.
 (*  IdInfo: preamble *)
 
 Require GHC.Nat.
@@ -5438,10 +5437,6 @@ Definition mapDVarEnv {a} {b} : (a -> b) -> DVarEnv a -> DVarEnv b :=
 Definition mapVarEnv {a} {b} : (a -> b) -> VarEnv a -> VarEnv b :=
   UniqFM.mapUFM.
 
-Definition mapVarSet {b} {a} `{Unique.Uniquable b}
-   : (a -> b) -> UniqSet.UniqSet a -> UniqSet.UniqSet b :=
-  UniqSet.mapUniqSet.
-
 Definition markExnStr : ArgStr -> ArgStr :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5952,10 +5947,6 @@ Definition splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type :=
     then UniqFM.nonDetFoldUFM_Directly add (pair emptyVarEnv emptyVarEnv)
          rhs_fvs else
     partitionVarEnv isWeakDmd rhs_fvs.
-
-Definition partitionVarSet
-   : (Var -> bool) -> VarSet -> (VarSet * VarSet)%type :=
-  UniqSet.partitionUniqSet.
 
 Definition patSynArgs : PatSyn -> list unit :=
   psArgs.
@@ -7994,10 +7985,9 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
      UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
-     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.mapUniqSet
-     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.partitionUniqSet
-     UniqSet.sizeUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
+     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.minusUniqSet
+     UniqSet.mkUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
+     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
      UniqSet.unsafeUFMToUniqSet Unique.Uniquable Unique.Unique
      Unique.dataConRepNameUnique Unique.deriveUnique Unique.getKey Unique.getUnique
      Unique.getUnique__ Unique.mkUniqueGrimily Unique.nonDetCmpUnique

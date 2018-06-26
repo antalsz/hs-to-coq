@@ -10,7 +10,7 @@ Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Require Import mathcomp.ssreflect.ssreflect.
+From Coq Require Import ssreflect.
 
 (* Note: we will only be able to make instances of this class for bounded
    types so that we can support enumFrom and still terminate.

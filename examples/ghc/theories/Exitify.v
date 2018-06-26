@@ -14,8 +14,6 @@ Require Import Coq.NArith.BinNat.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-Set Bullet Behavior "Strict Subproofs".
-
 Require Import Proofs.Base.
 Require Import Proofs.JoinPointInvariants.
 Require Import Proofs.ScopeInvariant.
@@ -30,6 +28,10 @@ Require Import Proofs.VectorUtils.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
 Require Import Proofs.Unique.
+
+Set Bullet Behavior "Strict Subproofs".
+
+
 
 Close Scope Z_scope.
 
@@ -562,16 +564,18 @@ Section in_exitifyRec.
           simpl_bool.
           split.
           ** simpl.
-             unfold VarSetFSet.VarSetDecide.F.eqb.
-             destruct (VarSetFSet.Var_as_DT.eq_dec _ _); [exfalso|reflexivity].
-             unfold VarSetFSet.Var_as_DT.eq in e0.
-             unfold VarSetFSet.Var_as_DT.eqb in e0.
-             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__ in e0.
-             unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____ in e0.
-             rewrite Nat.eqb_eq in e0.
-             assert (varUnique v' = varUnique v) by (unfold varUnique; congruence).
+             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, 
+             Core.Eq___Var_op_zeze__ .
+             unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____,
+             Nat.Eq_nat.
+             
+             apply not_true_is_false. intro h.
+             apply beq_nat_true in h.
+
              contradict Hfresh.
-             exists (v', rhs'). split; assumption.
+             exists (v', rhs'). split. simpl. 
+             unfold varUnique. rewrite h. auto.
+             assumption.
           ** apply Hfreshs. assumption.
         + assumption.
         + rewrite Forall_forall.
@@ -1808,10 +1812,16 @@ Theorem top_go_WellScoped:
   WellScoped (top_go in_scope e) isvs.
 Admitted.
 
+Lemma Forall_flattenBinds:
+  forall {b} P (binds : list (Bind b)),
+  Forall P (flattenBinds binds) <->
+  Forall (fun bind => Forall P (flattenBinds [bind])) binds.
+Admitted.
+
 Theorem exitifyProgram_WellScoped:
-  forall pgm isvs,
-  WellScopedProgram pgm isvs->
-  WellScopedProgram (exitifyProgram pgm) isvs.
+  forall pgm,
+  WellScopedProgram pgm->
+  WellScopedProgram (exitifyProgram pgm).
 Proof.
   intros.
   cbv beta delta [exitifyProgram].
@@ -1821,36 +1831,36 @@ Proof.
 
   assert (HbindersOf: forall a, bindersOf (goTopLvl a) = bindersOf a). admit.
   
-  clearbody in_scope_toplvl.
-  rewrite hs_coq_map.
-  revert isvs0 H.
-  induction pgm; intros.
-  * constructor.
-  * destruct H as [HWSbind HWSpgm].
-    split.
-    + destruct a; simpl.
-      - apply top_go_WellScoped. apply HWSbind.
-      - destruct HWSbind as [HNoDup Hpairs].
-        split.
-        ** rewrite hs_coq_map.
-           rewrite !map_map.
-           rewrite map_ext with (g := fun '(x, rhs) => varUnique x)
-              by (intros; repeat expand_pairs; destruct a; reflexivity).
-           rewrite map_map in HNoDup.
-           rewrite map_ext with (g := fun '(x, rhs) => varUnique x) in HNoDup
-              by (intros; repeat expand_pairs; destruct a; reflexivity).
-           apply HNoDup.
-        ** rewrite Forall'_Forall in *.
-           rewrite Forall_map in *.
-           eapply Forall_impl; only 2: apply Hpairs.
-           intros [v rhs] HWSrhs.
-           simpl in *.
-           apply top_go_WellScoped.
-           rewrite !map_map.
-           rewrite map_ext with (g := fun '(x, rhs) =>  x)
-              by (intros; repeat expand_pairs; destruct a; reflexivity).
-           apply HWSrhs.
-    + apply IHpgm.
-      rewrite HbindersOf.
-      apply HWSpgm.
+  assert (HbindersOfBinds: bindersOfBinds (Base.map goTopLvl pgm) = bindersOfBinds pgm). admit.
+
+  destruct H as [HNoDup HWS].
+
+  unfold WellScopedProgram.
+  split.
+  * rewrite HbindersOfBinds.
+    apply HNoDup.
+  * rewrite Forall'_Forall.
+    rewrite Forall'_Forall in HWS.
+    rewrite Forall_flattenBinds.
+    rewrite Forall_flattenBinds in HWS.
+    rewrite HbindersOfBinds.
+    rewrite Forall_map.
+
+    eapply Forall_impl; only 2: apply HWS; clear HWS.
+    intros bind HWS. simpl.
+    destruct bind.
+    + unfold goTopLvl.
+      inversion_clear HWS. clear H0.
+      constructor; only 2: constructor.
+      simpl.
+      apply top_go_WellScoped.
+      assumption.
+    + unfold goTopLvl.
+      simpl in *.
+      rewrite app_nil_r in *.
+      rewrite Forall_map.
+      eapply Forall_impl; only 2: apply HWS; clear HWS.
+      intros [v e] HWS.
+      apply top_go_WellScoped.
+      assumption.
 Admitted.

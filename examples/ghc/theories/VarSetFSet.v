@@ -51,56 +51,6 @@ Set Bullet Behavior "Strict Subproofs".
 
    *)
 
-(** The interface only requires that the key type has a decidable equality.
-    
- *)
-
-Ltac unfold_zeze :=
-  unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__;
-  unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____.  
-
-
-Module Var_as_DT <: BooleanDecidableType <: DecidableType.
-  Definition t := Var.
-
-  Definition eqb : t -> t -> bool := _GHC.Base.==_.
-
-  Definition eq : t -> t -> Prop := fun x y => eqb x y = true.
-
-  Definition eq_equiv : Equivalence eq.
-  split. 
-  - unfold eq, eqb, Reflexive. 
-    unfold_zeze.
-    intro x. destruct x; simpl; apply Nat.eqb_refl.
-  - unfold eq, eqb, Symmetric.
-    unfold_zeze.
-    intros x y. 
-    destruct x; destruct y; simpl; rewrite Nat.eqb_sym; auto.
-  - unfold eq, eqb, Transitive.
-    unfold_zeze.
-    intros x y z. 
-    destruct x; destruct y; destruct z; simpl;
-    repeat erewrite Nat.eqb_eq; intro h; rewrite h; auto.
-  Defined.
-
-  Definition eq_dec : forall x y : t, { eq x y } + { ~ (eq x y) }.
-  intros x y.
-  unfold eq, eqb.
-  unfold_zeze.
-  destruct x eqn:X; destruct y eqn:Y;  simpl.
-  all: destruct (Nat.eqb n0 n2) eqn:EQ ; [left; auto | right; auto].
-  Defined.
-
-  Lemma eqb_eq : forall x y, eqb x y = true <-> eq x y.
-    unfold eq. tauto.
-  Qed. 
-
- Definition eq_refl := eq_equiv.(@Equivalence_Reflexive _ _).
- Definition eq_sym := eq_equiv.(@Equivalence_Symmetric _ _).
- Definition eq_trans := eq_equiv.(@Equivalence_Transitive _ _).
-
-End Var_as_DT.
-
 (** Note: This module is actually *more* than what we need for fsetdec.  Maybe
     we want to redesign fsetdec to state only the properties and operations
     that it uses?
@@ -145,7 +95,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
      making a signature that is stricter than this one. *)
 
   Definition equal  : t -> t -> bool := 
-    fun x y : t =>
+    fun x y : t => 
       match x with
       | UniqSet.Mk_UniqSet u =>
         match y with
@@ -212,7 +162,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Definition filter  := filterVarSet.
 
-  Definition partition := partitionVarSet.
+  Definition partition : (elt -> bool) -> t -> t * t := GHC.Err.default.
 
   Definition cardinal := sizeVarSet.
 
@@ -805,3 +755,34 @@ Ltac solve_notin :=
   fail "Not solvable by [solve_notin]; try [destruct_notin]".
 
 End Notin.
+
+Require Import ssrbool.
+Instance Eq_VarSet : Eq_ VarSet :=
+  fun _ k => k {|
+              op_zeze____ := VarSetFSet.eq_dec;
+              op_zsze____ := fun x y => negb (VarSetFSet.eq_dec x y);
+            |}.
+
+Instance EqLaws_VarSet : EqLaws VarSet.
+Proof.
+  constructor.
+  - red. intros. cbn. destruct (VarSetFSet.eq_dec x x); try reflexivity.
+    exfalso. apply n. reflexivity.
+  - red. cbn. intros.
+    destruct (VarSetFSet.eq_dec x y);
+      destruct (VarSetFSet.eq_dec y x); try reflexivity.
+    + exfalso. apply VarSetFSet.eq_sym in e. contradiction.
+    + exfalso. apply VarSetFSet.eq_sym in e. contradiction.
+  - red. cbn. intros.
+    destruct (VarSetFSet.eq_dec x y); try discriminate.
+    destruct (VarSetFSet.eq_dec y z); try discriminate.
+    destruct (VarSetFSet.eq_dec x z); try reflexivity.
+    clear H. clear H0. apply (VarSetFSet.eq_trans _ _ _ e) in e0.
+    contradiction.
+  - intros. cbn. destruct (VarSetFSet.eq_dec x y); reflexivity.
+Qed.
+
+(*
+Instance EqExact_VarSet : EqExact VarSet.
+Admitted.
+*)

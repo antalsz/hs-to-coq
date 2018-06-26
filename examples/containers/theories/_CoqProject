@@ -20,3 +20,7 @@ IntSetPropertyProofs.v
 BitUtils.v
 DyadicIntervals.v
 Set.v
+IntMapProofs.v
+
+
+

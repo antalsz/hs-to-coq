@@ -13,6 +13,12 @@ Require Import Proofs.Forall.
 Require Import Proofs.Unique.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSet.
+Require Import Proofs.CoreInduct.
+Require Import Proofs.Var.
+
+Import GHC.Base.ManualNotations.
+
+
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -23,22 +29,6 @@ This file describes an invariant of Core files that
  * all local variables are indeed local variables
    (both according to [IdDetail] and [isLocalUnique])
 *)
-
-(* This returns a [Prop] rather than a bool because
-   we do not have a function that determines structural
-   equality.
-*)
-
-Inductive almostEqual : Var -> Var -> Prop :=
- | AE_TyVar   : forall n u ty,
-   almostEqual (Mk_TyVar n u ty)
-               (Mk_TyVar n u ty)
- | AE_TcTyVar : forall n u ty1 ty2,
-   almostEqual (Mk_TcTyVar n u ty1 ty2)
-               (Mk_TcTyVar n u ty1 ty2)
- | AE_Id : forall n u ty ids idd id1 id2, (* idinfo may differ! *)
-   almostEqual (Mk_Id n u ty ids idd id1)
-               (Mk_Id n u ty ids idd id2).
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
    match lookupVarSet in_scope v with
@@ -95,39 +85,15 @@ Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
     let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
     WellScoped (snd alt) in_scope'.
 
-Fixpoint WellScopedProgram (pgm : CoreProgram) (in_scope : VarSet) : Prop :=
-  match pgm with
-  | [] => True
-  | bind :: pgm' =>
-    WellScopedBind bind in_scope /\
-    WellScopedProgram pgm' (extendVarSetList in_scope (bindersOf bind))
-  end.
+(** We can treat a [CoreProgram] as one big recursive group, it seems. *)
+Definition WellScopedProgram (pgm : CoreProgram) : Prop :=
+   NoDup (map varUnique (bindersOfBinds pgm)) /\
+   Forall' (fun p => WellScoped (snd p) (mkVarSet (bindersOfBinds pgm))) (flattenBinds pgm).
+
 
 (** ** Lots of lemmas *)
 
 (** *** [almostEqual] *)
-
-Lemma almostEqual_refl:
-  forall v, almostEqual v v.
-Proof. intros. destruct v; constructor. Qed.
-
-Lemma delVarSet_ae:
-  forall vs v1 v2,
-  almostEqual v1 v2 ->
-  delVarSet vs v1 = delVarSet vs v2.
-Proof.
-  induction 1; simpl;
-  unfold UniqFM.delFromUFM; simpl; auto.
-Qed.
-
-Lemma elemVarSet_ae:
-  forall vs v1 v2,
-  almostEqual v1 v2 ->
-  elemVarSet v1 vs = elemVarSet v2 vs.
-Proof.
-  induction 1; simpl;
-  unfold UniqFM.delFromUFM; simpl; auto.
-Qed.
 
 Axiom WellScoped_extendVarSet_ae:
   forall e vs v1 v2,
@@ -145,7 +111,7 @@ Proof. intros. reflexivity. Qed.
 
 Lemma WellScoped_mkLams:
   forall vs e isvs,
-  WellScoped (mkLams vs e) isvs <-> Forall GoodLocalVar vs /\ WellScoped e (extendVarSetList  isvs vs).
+  WellScoped (mkLams vs e) isvs <-> Forall GoodLocalVar vs /\ WellScoped e (extendVarSetList isvs vs).
 Proof.
   induction vs; intros.
   * intuition.
@@ -169,7 +135,9 @@ Qed.
 
 Lemma WellScoped_mkVarApps:
   forall e vs isvs,
-  WellScoped e isvs -> Forall (fun v => WellScopedVar v isvs) vs -> WellScoped (mkVarApps e vs) isvs.
+  WellScoped e isvs -> 
+  Forall (fun v => WellScopedVar v isvs) vs ->
+  WellScoped (mkVarApps e vs) isvs.
 Proof.
   intros.
   unfold mkVarApps.
@@ -217,11 +185,99 @@ Proof.
   split; intro; repeat split; try constructor; intuition.
 Qed.
 
+(** *** StrongSubset *)
+
+Lemma WellScopedVar_StrongSubset : forall e vs1 vs2, 
+    WellScopedVar e vs1 -> StrongSubset vs1 vs2 -> WellScopedVar e vs2.
+Proof.
+  intros v vs1 vs2 WS SS.
+  unfold WellScopedVar, StrongSubset in *.
+  specialize (SS v).
+  destruct (lookupVarSet vs1 v); try contradiction.
+  destruct (lookupVarSet vs2 v) eqn:LV2; try contradiction.
+  eapply almostEqual_trans with (v2 := v0); auto.
+Qed.
+
+Lemma WellScoped_StrongSubset : forall e vs1 vs2, 
+    WellScoped e vs1 -> StrongSubset vs1 vs2 -> WellScoped e vs2.
+Proof.
+  intro e.
+  apply (core_induct e); intros; try (destruct binds);
+    unfold WellScoped in *; fold WellScoped in *; eauto.
+  - eapply WellScopedVar_StrongSubset; eauto.
+  - destruct H1. split; eauto.
+  - eapply H; eauto.
+    unfold StrongSubset in *.
+    intro var.
+    specialize (H1 var).
+    unfold CoreBndr in v. (* make sure that the type class looks right.*)
+    destruct (v GHC.Base.== var) eqn:Eq.
+    + rewrite lookupVarSet_extendVarSet_eq; auto.
+      rewrite lookupVarSet_extendVarSet_eq; auto.
+      eapply almostEqual_refl.
+    + rewrite lookupVarSet_extendVarSet_neq.
+      destruct (lookupVarSet vs1 var) eqn:IN; auto.
+      rewrite lookupVarSet_extendVarSet_neq.
+      auto.
+      intro h;
+      rewrite h in Eq; discriminate.
+      intro h;
+      rewrite h in Eq; discriminate.
+   - destruct H1 as [WE Wb].
+      split; eauto.
+      eapply H0; eauto.
+      eapply StrongSubset_extendVarSetList.
+      auto.
+  - destruct H1 as [[WE1 WE2] Wb].
+     repeat split; auto.
+     rewrite Forall'_Forall in *.
+     rewrite Forall_forall in *.
+     intros h IN. destruct h as [v rhs].
+     specialize (WE2 (v,rhs)).
+     simpl in *.
+     eauto using StrongSubset_extendVarSetList.
+     eauto using StrongSubset_extendVarSetList.
+  - destruct H1 as [W1 W2].
+    split; eauto.
+     rewrite Forall'_Forall in *.
+     rewrite Forall_forall in *.
+     intros h IN. destruct h as [[dc pats] rhs].
+     specialize (H0 dc pats rhs IN).
+     specialize (W2 (dc,pats,rhs) IN).
+     simpl in *.
+     eauto using StrongSubset_extendVarSetList.
+Qed.
+
 (** *** Relation to [exprFreeVars] *)
 
-Axiom WellScoped_subset:
+(* This proof will be nicer if we have a naive calculation
+   of exprFreeVars, and first rewrite to that one.*)
+Lemma WellScoped_subset:
   forall e vs,
-  WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
+    WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
+Proof.
+  intro e.
+  unfold exprFreeVars, exprFVs, Base.op_z2218U__.
+  unfold FV.fvVarSet, Base.op_z2218U__,
+         FV.fvVarListVarSet, FV.filterFV, Base.const, andb.
+
+  apply (core_induct e); intros.
+  - unfold WellScoped, WellScopedVar in *.
+    destruct (lookupVarSet vs v) eqn:Hl; try contradiction.
+    unfold expr_fvs, FV.unitFV.
+    rewrite elemVarSet_emptyVarSet.
+    unfold Base.const.
+    simpl andb.
+    destruct (isLocalVar v).
+    + unfold Tuple.snd.
+      eapply subVarSet_extendVarSet_l.
+      * apply subVarSet_emptyVarSet.
+      * eassumption.
+    + simpl.
+      apply subVarSet_emptyVarSet.
+  - apply subVarSet_emptyVarSet.
+  - simpl.
+Admitted.
 
 
 (** *** Freshness *)
@@ -231,6 +287,7 @@ Axiom WellScopedVar_extendVarSetList_l:
   WellScopedVar v vs1 ->
   elemVarSet v (mkVarSet vs2) = false ->
   WellScopedVar v (extendVarSetList vs1 vs2).
+
 
 Axiom WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,

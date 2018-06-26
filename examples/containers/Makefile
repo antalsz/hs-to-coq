@@ -1,7 +1,7 @@
 include ../../common.mk
 
 ifeq (,$(wildcard containers))
-$(error Please create a symlink containers (see README.md))
+$(error Please run git submodule update --init --recursive)
 endif
 
 OUT=lib
@@ -106,7 +106,6 @@ HS_TO_COQ_OPTS := \
   -i containers/tests \
   -i containers/dist-install/build \
   -I containers/include \
-  --ghc -package --ghc QuickCheck \
 
 
 # KEEP THIS IN SYNC WITH THE NEXT RULE (there ought to be a better way)
@@ -130,10 +129,6 @@ $(VFILES_HS_SPEC_GEN): $(HS_SPEC)/%.v : $$(wildcard module-edits/$$*/preamble.v)
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 		     $(HS_TO_COQ_OPTS) \
-	             --ghc -package --ghc HUnit \
-	             --ghc -package --ghc test-framework \
-	             --ghc -package --ghc test-framework-hunit \
-	             --ghc -package --ghc test-framework-quickcheck2 \
 	             $(addprefix `cat , $(addsuffix ` , $(wildcard module-edits/$*/flags))) \
 	             -o $(HS_SPEC) \
 	             $(wildcard containers/$*.hs) \

@@ -5,7 +5,7 @@ Require Import Proofs.GHC.Base.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-From mathcomp Require Import ssreflect ssrbool ssrfun.
+From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
 

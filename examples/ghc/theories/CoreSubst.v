@@ -1289,8 +1289,10 @@ Proof.
     rewrite subst_expr_Lam.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *; fold WellScoped in *.
-    eapply WellScoped_substBndr; eauto.
-
+    destruct H1 as [GLV H1].
+    split.
+    -- admit.
+    -- eapply WellScoped_substBndr; eauto.
   - destruct binds.
     + intros body He0 Hbody s vs in_scope_set env u u0 WSS WSL.
       rewrite subst_expr_Let.
@@ -1298,18 +1300,19 @@ Proof.
       destruct substBndr as [subst' bndr'] eqn:SB.
      
       unfold WellScoped in *. fold WellScoped in *.
-      destruct WSL as [WSe WSb].
-     
-      split; eauto.
-      unfold bindersOf in *.
-      rewrite extendVarSetList_cons in *.
-      rewrite extendVarSetList_nil  in *.
-      eapply WellScoped_substBndr; eauto.
+      destruct WSL as [[GLV WSe] WSb].
+
+      split; only 1: split; eauto.
+      -- admit.
+      -- unfold bindersOf in *.
+         rewrite extendVarSetList_cons in *.
+         rewrite extendVarSetList_nil  in *.
+         eapply WellScoped_substBndr; eauto.
 
     + intros body IHrhs IHbody s vs in_scope_set env u u0 WSvs WSe.
       rewrite subst_expr_Let.
       rewrite substBind_Rec. 
-      destruct WSe as [[ND FF] WSB].
+      destruct WSe as [[GLV [ND FF]] WSB].
       
       unfold bindersOf in WSB.
       rewrite bindersOf_Rec_cleanup in WSB.
@@ -1331,6 +1334,8 @@ Proof.
       rewrite Forall_forall in FF.     
       unfold WellScoped in *. fold WellScoped in *.
       repeat split.
+      ++ admit.
+
       ++ destruct_SubstExtends.
          rewrite map_fst_zip in *; auto.
          admit.
@@ -1413,34 +1418,38 @@ Proof.
     rewrite subst_expr_Case.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *. fold WellScoped in *.
-    destruct H2 as [WS FF].
-    split; eauto.
-    rewrite Forall.Forall'_Forall in *.
-    rewrite Forall_forall in *.
-    intros alt IA.
-    unfold substAlt in IA.
-    rewrite in_map_iff in IA.
-    destruct IA as [[[dc pats] rhs] [IAA IN]].
-    destruct (substBndrs subst' pats) as [subst'' bndr''] eqn:SB2.
-    destruct alt as [[dc0 bdnr''0] ss0]. inversion IAA. subst. clear IAA.
-    pose (wf := FF _ IN). clearbody wf. simpl in wf.
-    simpl.
-    destruct (WellScoped_Subst_substBndr _ _ _ _ vs SB) as [h0 h1]. auto.
-    destruct (SubstExtends_substBndrs _ _ _ _ vs SB2) as [h2 h3].
-    eapply WellScoped_Subst_StrongSubset; eauto.
-    admit.
-    destruct subst'' as [i0'' i1'' u0'' u1''].
-    eapply WellScoped_StrongSubset.
-    eapply H0. eapply IN.
-    eauto.
-    eapply WellScoped_StrongSubset.
-    eauto.
+    destruct H2 as [WS [GLV FF]].
+    split; only 2: split; eauto.
+    -- admit.
+    -- rewrite Forall.Forall'_Forall in *.
+      rewrite Forall_forall in *.
+      intros alt IA.
+      unfold substAlt in IA.
+      rewrite in_map_iff in IA.
+      destruct IA as [[[dc pats] rhs] [IAA IN]].
+      destruct (substBndrs subst' pats) as [subst'' bndr''] eqn:SB2.
+      destruct alt as [[dc0 bdnr''0] ss0]. inversion IAA. subst. clear IAA.
+      pose (wf := FF _ IN). clearbody wf. simpl in wf.
+      simpl.
+      destruct (WellScoped_Subst_substBndr _ _ _ _ vs SB) as [h0 h1]. auto.
+      destruct (SubstExtends_substBndrs _ _ _ _ vs SB2) as [h2 h3].
+      eapply WellScoped_Subst_StrongSubset; eauto.
+      admit.
+      split.
+      ++ admit.
+      ++ destruct subst'' as [i0'' i1'' u0'' u1''].
+        eapply WellScoped_StrongSubset.
+        eapply H0. eapply IN.
+        eauto.
+        eapply WellScoped_StrongSubset.
+        eauto.
+        admit.
 
-(*    assert (WW : WellScoped_Subst (Mk_Subst in_scope_set env tt tt) 
-                           (extendVarSetList vs (bndr :: pats))).  admit.
-    pose (h := H0 dc0 pats rhs IN s _ _ _ WW wf). clearbody h. *)
-    admit.
-    admit.
+    (*    assert (WW : WellScoped_Subst (Mk_Subst in_scope_set env tt tt) 
+                               (extendVarSetList vs (bndr :: pats))).  admit.
+        pose (h := H0 dc0 pats rhs IN s _ _ _ WW wf). clearbody h. *)
+        admit.
+        admit.
   - intros.
 
     rewrite subst_expr_Cast.

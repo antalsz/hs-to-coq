@@ -82,6 +82,7 @@ with WellScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
   end.
 
 Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
+    Forall GoodLocalVar (snd (fst alt)) /\
     let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
     WellScoped (snd alt) in_scope'.
 
@@ -206,7 +207,9 @@ Proof.
     unfold WellScoped in *; fold WellScoped in *; eauto.
   - eapply WellScopedVar_StrongSubset; eauto.
   - destruct H1. split; eauto.
-  - eapply H; eauto.
+  - split; only 1: apply H0.
+    destruct H0 as [_ H0].
+    eapply H; eauto.
     unfold StrongSubset in *.
     intro var.
     specialize (H1 var).
@@ -223,28 +226,29 @@ Proof.
       rewrite h in Eq; discriminate.
       intro h;
       rewrite h in Eq; discriminate.
-   - destruct H1 as [WE Wb].
-      split; eauto.
-      eapply H0; eauto.
-      eapply StrongSubset_extendVarSetList.
-      auto.
-  - destruct H1 as [[WE1 WE2] Wb].
+  - destruct H1 as [[GLV WE] Wb].
+     split; only 1: split; eauto.
+     eapply H0; eauto.
+     eapply StrongSubset_extendVarSetList.
+     auto.
+  - destruct H1 as [[WE1 [WE2 WE3]] Wb].
      repeat split; auto.
      rewrite Forall'_Forall in *.
      rewrite Forall_forall in *.
      intros h IN. destruct h as [v rhs].
-     specialize (WE2 (v,rhs)).
+     specialize (WE3 (v,rhs)).
      simpl in *.
      eauto using StrongSubset_extendVarSetList.
      eauto using StrongSubset_extendVarSetList.
-  - destruct H1 as [W1 W2].
-    split; eauto.
+  - destruct H1 as [W1 [W2 W3]].
+    split; only 2: split; eauto.
      rewrite Forall'_Forall in *.
      rewrite Forall_forall in *.
      intros h IN. destruct h as [[dc pats] rhs].
      specialize (H0 dc pats rhs IN).
-     specialize (W2 (dc,pats,rhs) IN).
+     specialize (W3 (dc,pats,rhs) IN).
      simpl in *.
+     destruct W3 as [GLV WS].
      eauto using StrongSubset_extendVarSetList.
 Qed.
 

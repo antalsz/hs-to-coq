@@ -343,13 +343,14 @@ Section in_exitifyRec.
           rewrite !map_map.
 
           destruct (isJoinId _) eqn:Heq_isJoinId.
-          Focus 1.
+          1:{
             exfalso.
             rewrite <- not_false_iff_true in Heq_isJoinId.
             contradict Heq_isJoinId.
             dependent inversion pairs'; subst; clear.
             dependent inversion h. simpl.
             rewrite isJoinId_eq. rewrite HnotJoin. reflexivity.
+          }
           clear Heq_isJoinId.
 
           clear IH1 IH2 IH3.
@@ -399,13 +400,14 @@ Section in_exitifyRec.
              by (intros; repeat expand_pairs; destruct a; reflexivity).
 
           destruct (isJoinId _) eqn:Heq_isJoinId.
-          Focus 2.
+          2:{
             exfalso.
             rewrite <- not_true_iff_false in Heq_isJoinId.
             contradict Heq_isJoinId.
             dependent inversion pairs'; subst; clear.
             dependent inversion h. simpl.
             rewrite isJoinId_eq. rewrite HisJoin. reflexivity.
+          }
           clear Heq_isJoinId.
 
           (* Destruct well-scopedness assumption *)
@@ -1138,14 +1140,17 @@ Section in_exitifyRec.
         ** admit.
         ** simpl.
            rewrite WellScoped_mkLams.
-           rewrite extendVarSetList_append in Hbody'.
-           apply Hbody'.
+           split.
+           -- admit.
+           -- rewrite extendVarSetList_append in Hbody'.
+              apply Hbody'.
         ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in Hrhs'.
            apply Hrhs'.
    *  eapply RevStateInvariant_bind; only 1: apply IHe.
       intro body'. apply RevStateInvariant_return; intros Hbody'.
       rewrite extendVarSetList_append in Hbody'.
-      split; only 1: split.
+      split; only 1: split; only 2: split.
+      ++ admit.
       ++ rewrite !map_map.
          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => varUnique x)
            by (intros; repeat expand_pairs; destruct a; reflexivity).
@@ -1179,8 +1184,10 @@ Section in_exitifyRec.
             simpl.
             rewrite WellScoped_mkLams.
             rewrite !extendVarSetList_append in He'.
-            split; only 1: reflexivity.
-            apply He'.
+            split; only 2: split.
+            -- reflexivity.
+            -- admit.
+            -- apply He'.
       - intro pairs''.
         eapply RevStateInvariant_bind; only 1: apply IHe.
         intro e'; apply RevStateInvariant_return; intros He' Hpairs''.
@@ -1193,7 +1200,8 @@ Section in_exitifyRec.
         simpl.
         rewrite bindersOf_Rec_cleanup.
         rewrite Hfst.
-        split; only 1: split.
+        repeat apply conj.
+        -- admit.
         -- simpl in HNoDup.
            rewrite map_map.
            rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => varUnique x)
@@ -1212,17 +1220,20 @@ Section in_exitifyRec.
           - apply (IHalts _ _ _  HIn).
           - intro e'; apply RevStateInvariant_return; intro He'.
             rewrite extendVarSetList_append in He'.
-            apply He'.
+            split.
+            -- apply (HWSalts _ HIn).
+            -- apply He'.
         + intros alts'; apply RevStateInvariant_return; intro He.
-          simpl. split.
+          simpl. split; only 2: split.
           - rewrite deAnnotate_freeVars.
             apply isvsp_to_isvsp'_extended; assumption.
+          - admit.
           - rewrite Forall'_Forall.
             apply He.
   * apply RevStateInvariant_return.
     apply isvsp_to_isvsp'_extended.
     assumption.
-  Qed.
+  Admitted.
 
   Lemma pairs'_WS:
     Forall (fun p => WellScoped (snd p) isvsp') pairs'.
@@ -1238,17 +1249,19 @@ Section in_exitifyRec.
       rewrite collectNAnnBndrs_freeVars_mkLams.
       eapply RevStateInvariant_bind.
       ++ apply go_res_WellScoped.
-         ** rewrite <- WellScoped_mkLams.
+         ** apply WellScoped_mkLams.
             rewrite Forall_map in pairs_WS.
             rewrite Forall_forall in pairs_WS.
             apply (pairs_WS _ HIn).
         ++ intro e'; apply RevStateInvariant_return; intro He'.
            simpl.
            rewrite WellScoped_mkLams.
-           apply He'.
+           split.
+           -- admit.
+           -- apply He'.
     * change (sublistOf exits exits).
       intro. auto.
-  Qed.
+  Admitted.
 
   Lemma map_fst_pairs':
     map (@fst CoreBndr (Expr CoreBndr)) pairs' = fs.
@@ -1305,14 +1318,15 @@ Section in_exitifyRec.
       rewrite bindersOf_Rec_cleanup.
       fold (@fst CoreBndr CoreExpr).
       rewrite map_fst_pairs'.
-      repeat split.
+      repeat apply conj.
+      + admit.
       + assumption.
       + rewrite Forall'_Forall in *.
         apply pairs'_WS.
       + apply isvsp_to_isvsp'.
         assumption.
     * apply all_exists_WellScoped.
-  Qed.
+  Admitted.
 
 (* Join point stuff commented after updating Exitify.hs to GHC HEAD
 

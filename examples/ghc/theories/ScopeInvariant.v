@@ -370,3 +370,11 @@ Admitted.
 Lemma GoodLocalVar_mkSysLocal:
   forall s u ty, isLocalUnique u = true -> GoodLocalVar (mkSysLocal s u ty).
 Admitted.
+
+Lemma GoodLocalVar_almostEqual:
+  forall v1 v2,
+  GoodLocalVar v1 ->
+  almostEqual v1 v2 ->
+  GoodLocalVar v2.
+Admitted.
+

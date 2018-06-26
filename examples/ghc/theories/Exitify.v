@@ -807,13 +807,30 @@ Section in_exitifyRec.
            (snd (fold_right pick (fvs, []) captured)).
   Proof. intros. apply WellScopedVar_picked_aux. Qed.
 
+  Lemma Forall_picked:
+    forall P captured fvs,
+    Forall (fun x => P (zap x)) captured ->
+    Forall P (snd (fold_right pick (fvs, []) captured)).
+  Proof.
+    intros.
+    induction H.
+    * constructor.
+    * simpl. unfold pick.
+      expand_pairs.
+      destruct_match. clear Heq.
+      - constructor.
+        ** apply H.
+        ** apply IHForall.
+      - apply IHForall.
+  Qed.
 
   Lemma go_exit_all_WellScopedFloats captured e : 
+    Forall GoodLocalVar captured ->
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
     disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
     StateInvariant WellScopedFloats (go_exit captured (toExpr e) (exprFreeVars (toExpr e))).
   Proof.
-    intros HWSe Hdisjoint.
+    intros HGLV HWSe Hdisjoint.
     set (P := WellScopedFloats).
     cbv beta delta [go_exit]. (* No [zeta]! *)
     repeat float_let.
@@ -855,43 +872,51 @@ Section in_exitifyRec.
     cleardefs.
     rewrite Foldable.hs_coq_foldr_list.
     split.
-    * eapply Forall_impl; only 2: apply WellScopedVar_picked_aux.
-      intros v HinFVs. simpl in *.
-      (* need that exprFreeVars of a well-scoped variables are all good local vars *)
-      admit.
-      exact GHC.Err.default. (* spurious existential variable *)
+    * apply Forall_picked.
+      eapply Forall_impl; only 2: eapply HGLV.
+      intros v HGLVv.
+      eapply GoodLocalVar_almostEqual. apply HGLVv.
+      apply zap_ae.
+
     * apply WellScoped_picked.
-      admit.
-      (*
-      (* [e] captures nothing in [fs] *)
-      rewrite <- WellScoped_mkLams.
-      rewrite <- WellScoped_mkLams in HWSe.
-      unfold isvsp in HWSe.
-      rewrite WellScoped_extendVarSetList_fresh in HWSe; only 1: assumption.
+      clear zap0 pick0.
       rewrite hs_coq_map in Hdisjoint.
       rewrite map_map in Hdisjoint.
       rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
            by (intros; repeat expand_pairs; destruct a; reflexivity).
       fold fs in Hdisjoint.
-      eapply disjointVarSet_subVarSet_l; only 1 : eassumption.
-      rewrite exprFreeVars_mkLams.
-      apply subVarSet_delVarSetList.
-      *)
-  Admitted.
+
+      unfold isvsp in HWSe.
+      rewrite WellScoped_extendVarSetList_fresh_under in HWSe; auto.
+  Qed.
 
   Lemma go_all_WellScopedFloats captured e: 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    Forall GoodLocalVar captured ->
     StateInvariant WellScopedFloats (go captured (freeVars (toExpr e))).
   Proof.
     revert e captured.
-    refine (go_ind (fun _ _ => _) _ _ _ _ _ _ _ ); intros.
+    refine (go_ind (fun captured _ r => impl (Forall GoodLocalVar captured) (_ r)) _ _ _ _ _ _ _);
+      intros; intro HGLVcaptured.
     * apply go_exit_all_WellScopedFloats; assumption.
     * apply StateInvariant_bind_return.
       apply IHe.
+      -- apply Forall_app; only 1: apply HGLVcaptured.
+         constructor; only 2: constructor.
+         admit.
     * apply StateInvariant_bind; only 1: apply IHrhs.
-      intros. apply StateInvariant_bind_return. apply IHe.
+      -- apply Forall_app; only 1: apply HGLVcaptured.
+         admit.
+      -- intros. apply StateInvariant_bind_return.
+         apply IHe.
+         ++ apply Forall_app; only 1: apply HGLVcaptured.
+            constructor; only 2: constructor.
+            admit.
     * apply StateInvariant_bind_return.
       apply IHe.
+      -- apply Forall_app; only 1: apply HGLVcaptured.
+         rewrite Forall_map.
+         admit.
     * apply StateInvariant_bind.
       - apply StateInvariant_forM.
         intros [j params rhs] HIn.
@@ -900,9 +925,17 @@ Section in_exitifyRec.
         rewrite collectNAnnBndrs_freeVars_mkLams.
         apply StateInvariant_bind_return.
         apply (IHpairs _ _ _ _ HIn).
+        -- apply Forall_app; only 1: apply HGLVcaptured.
+           apply Forall_app.
+           ++ rewrite Forall_map.
+              admit.
+           ++ admit.
       - intro x.
         apply StateInvariant_bind_return.
         apply IHe.
+        ++ apply Forall_app; only 1: apply HGLVcaptured.
+           rewrite Forall_map.
+           admit.
     * (* Case [Case] *)
       simpl in *.
       apply StateInvariant_bind_return.
@@ -910,8 +943,12 @@ Section in_exitifyRec.
       intros [[dc pats] rhs] HIn.
       apply StateInvariant_bind_return.
       apply (IHalts _ _ _ HIn).
+      ++ apply Forall_app; only 1: apply HGLVcaptured.
+         constructor.
+         -- admit.
+         -- admit.
     * apply StateInvariant_return.
-  Qed.
+  Admitted.
 
   (* Clearly we expect the input pairs be well-scoped *)
   Variable pairs_WS :
@@ -933,14 +970,12 @@ Section in_exitifyRec.
       rewrite collectNAnnBndrs_freeVars_mkLams.
       apply StateInvariant_bind_return.
       apply go_all_WellScopedFloats.
-      + admit.
-        (*
-        rewrite <- WellScoped_mkLams.
+      + apply WellScoped_mkLams.
         rewrite Forall_map in pairs_WS.
         rewrite Forall_forall in pairs_WS.
-        unfold in_scope2.
         apply (pairs_WS _ HIn).
-        *)
+      + simpl.
+        admit.
     * repeat split; constructor.
   Admitted.
 

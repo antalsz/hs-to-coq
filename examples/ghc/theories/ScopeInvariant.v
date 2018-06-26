@@ -62,13 +62,11 @@ Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
     let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
     WellScoped (snd alt) in_scope'.
 
-Fixpoint WellScopedProgram (pgm : CoreProgram) (in_scope : VarSet) : Prop :=
-  match pgm with
-  | [] => True
-  | bind :: pgm' =>
-    WellScopedBind bind in_scope /\
-    WellScopedProgram pgm' (extendVarSetList in_scope (bindersOf bind))
-  end.
+(** We can treat a [CoreProgram] as one big recursive group, it seems. *)
+Definition WellScopedProgram (pgm : CoreProgram) : Prop :=
+   NoDup (map varUnique (bindersOfBinds pgm)) /\
+   Forall' (fun p => WellScoped (snd p) (mkVarSet (bindersOfBinds pgm))) (flattenBinds pgm).
+
 
 (** ** Lots of lemmas *)
 
@@ -90,7 +88,7 @@ Proof. intros. reflexivity. Qed.
 
 Lemma WellScoped_mkLams:
   forall vs e isvs,
-  WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
+  WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList isvs vs).
 Proof.
   induction vs; intros.
   * reflexivity.
@@ -226,20 +224,33 @@ Qed.
 
 (** *** Relation to [exprFreeVars] *)
 
+(* This proof will be nicer if we have a naive calculation
+   of exprFreeVars, and first rewrite to that one.*)
 Lemma WellScoped_subset:
   forall e vs,
     WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
 Proof.
   intro e.
+  unfold exprFreeVars, exprFVs, Base.op_z2218U__.
+  unfold FV.fvVarSet, Base.op_z2218U__,
+         FV.fvVarListVarSet, FV.filterFV, Base.const, andb.
+
   apply (core_induct e); intros.
-  - unfold WellScoped, WellScopedVar, exprFreeVars in *.
-    unfold Base.op_z2218U__.
-    unfold exprFVs.
-    unfold Base.op_z2218U__.
-    destruct (lookupVarSet vs v) eqn:Hl.
-    unfold FV.fvVarSet, Base.op_z2218U__,
-    FV.fvVarListVarSet, FV.filterFV, expr_fvs,
-    FV.unitFV.
+  - unfold WellScoped, WellScopedVar in *.
+    destruct (lookupVarSet vs v) eqn:Hl; try contradiction.
+    unfold expr_fvs, FV.unitFV.
+    rewrite elemVarSet_emptyVarSet.
+    unfold Base.const.
+    simpl andb.
+    destruct (isLocalVar v).
+    + unfold Tuple.snd.
+      eapply subVarSet_extendVarSet_l.
+      * apply subVarSet_emptyVarSet.
+      * eassumption.
+    + simpl.
+      apply subVarSet_emptyVarSet.
+  - apply subVarSet_emptyVarSet.
+  - simpl.
 Admitted.
 
 
@@ -250,7 +261,7 @@ Axiom WellScopedVar_extendVarSetList_l:
   WellScopedVar v vs1 ->
   elemVarSet v (mkVarSet vs2) = false ->
   WellScopedVar v (extendVarSetList vs1 vs2).
-  
+
 
 Axiom WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,

@@ -14,8 +14,6 @@ Require Import Coq.NArith.BinNat.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-Set Bullet Behavior "Strict Subproofs".
-
 Require Import Proofs.Base.
 Require Import Proofs.JoinPointInvariants.
 Require Import Proofs.ScopeInvariant.
@@ -30,6 +28,10 @@ Require Import Proofs.VectorUtils.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
 Require Import Proofs.Unique.
+
+Set Bullet Behavior "Strict Subproofs".
+
+
 
 Close Scope Z_scope.
 
@@ -1775,10 +1777,16 @@ Theorem top_go_WellScoped:
   WellScoped (top_go in_scope e) isvs.
 Admitted.
 
+Lemma Forall_flattenBinds:
+  forall {b} P (binds : list (Bind b)),
+  Forall P (flattenBinds binds) <->
+  Forall (fun bind => Forall P (flattenBinds [bind])) binds.
+Admitted.
+
 Theorem exitifyProgram_WellScoped:
-  forall pgm isvs,
-  WellScopedProgram pgm isvs->
-  WellScopedProgram (exitifyProgram pgm) isvs.
+  forall pgm,
+  WellScopedProgram pgm->
+  WellScopedProgram (exitifyProgram pgm).
 Proof.
   intros.
   cbv beta delta [exitifyProgram].
@@ -1788,36 +1796,36 @@ Proof.
 
   assert (HbindersOf: forall a, bindersOf (goTopLvl a) = bindersOf a). admit.
   
-  clearbody in_scope_toplvl.
-  rewrite hs_coq_map.
-  revert isvs0 H.
-  induction pgm; intros.
-  * constructor.
-  * destruct H as [HWSbind HWSpgm].
-    split.
-    + destruct a; simpl.
-      - apply top_go_WellScoped. apply HWSbind.
-      - destruct HWSbind as [HNoDup Hpairs].
-        split.
-        ** rewrite hs_coq_map.
-           rewrite !map_map.
-           rewrite map_ext with (g := fun '(x, rhs) => varUnique x)
-              by (intros; repeat expand_pairs; destruct a; reflexivity).
-           rewrite map_map in HNoDup.
-           rewrite map_ext with (g := fun '(x, rhs) => varUnique x) in HNoDup
-              by (intros; repeat expand_pairs; destruct a; reflexivity).
-           apply HNoDup.
-        ** rewrite Forall'_Forall in *.
-           rewrite Forall_map in *.
-           eapply Forall_impl; only 2: apply Hpairs.
-           intros [v rhs] HWSrhs.
-           simpl in *.
-           apply top_go_WellScoped.
-           rewrite !map_map.
-           rewrite map_ext with (g := fun '(x, rhs) =>  x)
-              by (intros; repeat expand_pairs; destruct a; reflexivity).
-           apply HWSrhs.
-    + apply IHpgm.
-      rewrite HbindersOf.
-      apply HWSpgm.
+  assert (HbindersOfBinds: bindersOfBinds (Base.map goTopLvl pgm) = bindersOfBinds pgm). admit.
+
+  destruct H as [HNoDup HWS].
+
+  unfold WellScopedProgram.
+  split.
+  * rewrite HbindersOfBinds.
+    apply HNoDup.
+  * rewrite Forall'_Forall.
+    rewrite Forall'_Forall in HWS.
+    rewrite Forall_flattenBinds.
+    rewrite Forall_flattenBinds in HWS.
+    rewrite HbindersOfBinds.
+    rewrite Forall_map.
+
+    eapply Forall_impl; only 2: apply HWS; clear HWS.
+    intros bind HWS. simpl.
+    destruct bind.
+    + unfold goTopLvl.
+      inversion_clear HWS. clear H0.
+      constructor; only 2: constructor.
+      simpl.
+      apply top_go_WellScoped.
+      assumption.
+    + unfold goTopLvl.
+      simpl in *.
+      rewrite app_nil_r in *.
+      rewrite Forall_map.
+      eapply Forall_impl; only 2: apply HWS; clear HWS.
+      intros [v e] HWS.
+      apply top_go_WellScoped.
+      assumption.
 Admitted.

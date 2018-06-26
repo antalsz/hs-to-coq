@@ -230,6 +230,11 @@ Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
   fsetdec.
 Qed.
 
+Lemma elemVarSet_unionVarSet:
+  forall v vs1 vs2,
+  elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
+Admitted.
+
 (** ** [extendVarSet]  *)
 
 
@@ -343,6 +348,16 @@ Proof.
   fsetdec.
 Qed.
 
+
+Lemma subVarSet_emptyVarSet:
+  forall vs,
+  subVarSet emptyVarSet vs = true.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+
 Lemma elemVarSet_unitVarSet: forall v1 v2,
   (elemVarSet v1 (unitVarSet v2) = true) <-> (varUnique v1 = varUnique v2).
 Proof.
@@ -430,6 +445,12 @@ Proof.
   fsetdec.
 Qed.
 
+Lemma subVarSet_extendVarSet_l:
+  forall vs1 vs2 v v',
+  subVarSet vs1 vs2 = true ->
+  lookupVarSet vs2 v = Some v' ->
+  subVarSet (extendVarSet vs1 v) vs2 = true.
+Admitted.
 
 Lemma subVarSet_delVarSetList:
   forall vs1 vl,

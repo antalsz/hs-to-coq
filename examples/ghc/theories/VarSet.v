@@ -290,6 +290,14 @@ Qed.
 
 (** ** [delVarSetList]  *)
 
+Lemma delVarSetList_nil:
+  forall e, delVarSetList e [] = e.
+Proof.
+  intros. unfold delVarSetList, delVarSet.
+  unfold UniqSet.delListFromUniqSet, UniqSet.delOneFromUniqSet.
+  destruct e; reflexivity.
+Qed.
+
 Lemma delVarSetList_single:
   forall e a, delVarSetList e [a] = delVarSet e a.
 Proof.
@@ -305,6 +313,10 @@ Proof.
     unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e;
       try reflexivity.
 Qed.
+
+Lemma delVarSetList_cons2:
+  forall e a vs, delVarSetList e (a :: vs) = delVarSet (delVarSetList e vs) a.
+Admitted.
 
 Lemma delVarSetList_app:
   forall e vs vs', delVarSetList e (vs ++ vs') = delVarSetList (delVarSetList e vs) vs'.

@@ -101,6 +101,11 @@ Axiom WellScoped_extendVarSet_ae:
   almostEqual v1 v2 ->
   WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
 
+Axiom WellScoped_extendVarSetList_ae:
+  forall e vs vs1 vs2,
+  Forall2 almostEqual vs1 vs2 ->
+  WellScoped e (extendVarSetList vs vs1) <-> WellScoped e (extendVarSetList vs vs2).
+
 
 (** *** Structural lemmas *)
 
@@ -344,6 +349,13 @@ Admitted.
   apply subVarSet_delVarSetList.
 Qed.
  *)
+
+Lemma WellScoped_extendVarSetList_fresh_between:
+  forall (vs1 vs2 vs3 : list Var) (e : CoreExpr) (vs : VarSet),
+  disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
+  WellScoped e (extendVarSetList vs ((vs1 ++ vs2) ++ vs3)) <->
+  WellScoped e (extendVarSetList vs (vs1 ++ vs3)).
+Admitted.
 
 (** ** Lemmas about [GoodLocalVar] *)
 

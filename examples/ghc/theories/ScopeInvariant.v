@@ -332,6 +332,11 @@ Axiom WellScoped_extendVarSetList:
   disjointVarSet vs1 (mkVarSet vs) = true ->
   WellScoped e vs1 -> WellScoped e (extendVarSetList vs1 vs).
 
+Axiom WellScoped_extendVarSetList_under:
+  forall vs e vs1 vs2,
+  disjointVarSet vs1 (mkVarSet vs) = true ->
+  WellScoped e (extendVarSetList vs1 vs2) -> WellScoped e (extendVarSetList (extendVarSetList vs1 vs) vs2).
+
 
 Lemma WellScoped_extendVarSetList_fresh_under:
   forall vs1 vs2 e vs,

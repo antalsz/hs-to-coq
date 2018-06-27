@@ -1017,28 +1017,26 @@ Section in_exitifyRec.
      forall e, WellScoped e isvsp -> WellScoped e isvsp'.
   Proof.
     intros.
-    unfold isvsp, isvsp' in *.
-  Admitted.
-  (*
-    rewrite <- WellScoped_mkLams.
-    rewrite <- WellScoped_mkLams in H.
-    apply isvs_to_isvs'.
+    unfold isvsp, isvsp', isvs' in *.
+    apply WellScoped_extendVarSetList_under.
+    rewrite disjointVarSet_mkVarSet.
+    rewrite Forall_map. simpl.
+    apply all_exists_WellScoped.
     assumption.
   Qed.
-  *)
 
   Lemma isvsp_to_isvsp'_extended:
      forall e vs, WellScoped e (extendVarSetList isvsp vs) -> WellScoped e (extendVarSetList isvsp' vs).
-  Admitted.
-  (*
   Proof.
     intros.
-    rewrite <- WellScoped_mkLams.
-    rewrite <- WellScoped_mkLams in H.
-    apply isvsp_to_isvsp'.
+    unfold isvsp, isvsp', isvs' in *.
+    rewrite <- extendVarSetList_append in *.
+    apply WellScoped_extendVarSetList_under.
+    rewrite disjointVarSet_mkVarSet.
+    rewrite Forall_map. simpl.
+    apply all_exists_WellScoped.
     assumption.
   Qed.
-  *)
 
   Lemma isvsp_to_isvsp'_extended_Var:
      forall v vs, WellScopedVar v (extendVarSetList isvsp vs) -> WellScopedVar v (extendVarSetList isvsp' vs).
@@ -1054,16 +1052,17 @@ Section in_exitifyRec.
      forall e vs1 vs2,
      WellScoped e (extendVarSetList (extendVarSetList isvsp vs1) vs2) ->
      WellScoped e (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
-  Admitted.
-  (*
   Proof.
     intros.
-    rewrite <- WellScoped_mkLams.
-    rewrite <- WellScoped_mkLams in H.
-    apply isvsp_to_isvsp'_extended.
+    unfold isvsp, isvsp', isvs' in *.
+    rewrite <- extendVarSetList_append in *.
+    rewrite <- extendVarSetList_append in *.
+    apply WellScoped_extendVarSetList_under.
+    rewrite disjointVarSet_mkVarSet.
+    rewrite Forall_map. simpl.
+    apply all_exists_WellScoped.
     assumption.
   Qed.
-  *)
 
   Lemma addExit_all_WellScopedVar:
     forall captured ja e,

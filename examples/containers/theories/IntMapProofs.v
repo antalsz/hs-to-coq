@@ -195,7 +195,6 @@ Next Obligation.
     + (* s2 is a Tip *)
       clear restrictKeys_Desc. subst.
       set (m := Bin (rPrefix r) (rMask r) m1 m2) in *.
-      change (Desc0 (restrictBM (restrictBitMapToRange r bm) (lookupPrefix (rPrefix r2) m)) r f).
       admit.
     + (* s2 is also a Bin *)
       subst.

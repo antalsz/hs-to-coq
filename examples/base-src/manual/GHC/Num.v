@@ -60,9 +60,25 @@ Instance Num_Integer__ : Num Integer := {
   negate      := Z.opp %Z;
   signum      := Z.sgn %Z; }.
 
+Definition subNError : N.
+Proof. exact 42%N. Qed.
+
+Definition safeSubN x y :=
+	if N.ltb x y then subNError else N.sub x y.
+
+Lemma safeSubN_sub: forall (a b : N),
+  (b <= a -> safeSubN a b = a - b)%N.
+Proof.
+  intros.
+  unfold safeSubN.
+  destruct (N.ltb_spec a b); try reflexivity.
+  rewrite N.lt_nge in H0.
+  contradiction.
+Qed.
+
 Instance Num_Word__ : Num Word := {
   op_zp__   := N.add %N;
-  op_zm__   := N.sub %N;
+  op_zm__   := safeSubN;
   op_zt__   := N.mul %N;
   abs         := fun x => x;
   fromInteger := Z.to_N;

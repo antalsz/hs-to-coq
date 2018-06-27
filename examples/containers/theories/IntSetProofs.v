@@ -238,6 +238,16 @@ Proof.
   Nomega.
 Qed.
 
+Lemma bitmapOf_sub_1:
+  forall x, safeSubN (bitmapOf x) 1 = bitmapOf x - 1.
+Proof.
+  intros.
+  apply safeSubN_sub.
+  unfold bitmapOf. rewrite bitmapOfSuffix_pow.
+  pose proof (N_pow_pos_nonneg 2 (suffixOf x)).
+  lia.
+Qed.
+
 (** *** Operation: [rMask]
 Calculates a mask in the sense of the IntSet implementation:
 A single bit set just to the right of the prefix.
@@ -3797,7 +3807,7 @@ Proof.
         rewrite prefixOf_rPrefix in H3 by assumption.
         lia.
       }
-      rewrite Htmp; clear Htmp.
+      rewrite bitmapOf_sub_1; rewrite Htmp; clear Htmp.
       eapply HX.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
@@ -4084,7 +4094,7 @@ Proof.
         rewrite bitmapOfSuffix_pow.
         reflexivity.
       }
-      rewrite Htmp.
+      rewrite bitmapOf_sub_1, Htmp.
       assert (prefixOf x = rPrefix r). {
         subst.
         unfold Prefix, Nat in *.
@@ -4390,12 +4400,12 @@ Proof.
     unfold indexOfTheOnlyBit.
     rewrite N.log2_pow2 by Nomega.
     rewrite N_log2_ctz by isBitMask.
-    unfold WIDTH.
-    rewrite !N.add_sub_assoc. reflexivity.
-    unfold WIDTH; Nomega.
     assert (N_ctz (revNatSafe bm) < WIDTH)%N by isBitMask.
-    unfold WIDTH in *; lia.
-    simpl. lia.
+    unfold WIDTH in *.
+    replace (safeSubN (Z.to_N 64) (Z.to_N 1)) with (64 - 1)%N by reflexivity.
+    rewrite safeSubN_sub by lia.
+    rewrite !N.add_sub_assoc by lia.
+    reflexivity.
   * rewrite lxor_lowestBitMask by isBitMask.
     rewrite clearbit_revNat by isBitMask.
     rewrite revNat_revNat by isBitMask.

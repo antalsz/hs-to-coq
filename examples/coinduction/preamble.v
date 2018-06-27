@@ -1,6 +1,6 @@
 Require Coq.NArith.BinNat.
 Require Psatz.
-
+Require GHC.Num.
 
 (* There is [Coq.NArith.BinNat.N.lt_wf_0], but it is Opauqe, so we cannot
    compute with Program Fixpoint that recurse on [N].
@@ -33,4 +33,5 @@ Ltac solve_lookupTrie :=
 Ltac solve_fib := Coq.Program.Tactics.program_simplify;
   try apply N_lt_wf;
   repeat match goal with  H : _ = false |- _ => apply Coq.NArith.BinNat.N.eqb_neq in H end;
+  rewrite ?GHC.Num.safeSubN_sub by Psatz.lia;
   Psatz.lia.

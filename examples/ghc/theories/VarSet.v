@@ -464,6 +464,16 @@ Lemma subVarSet_extendVarSet_l:
   subVarSet (extendVarSet vs1 v) vs2 = true.
 Admitted.
 
+Lemma subVarSet_delVarSet:
+  forall vs1 v,
+  subVarSet (delVarSet vs1 v) vs1 = true.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+
+
 Lemma subVarSet_delVarSetList:
   forall vs1 vl,
   subVarSet (delVarSetList vs1 vl) vs1 = true.
@@ -504,6 +514,12 @@ Axiom disjointVarSet_mkVarSet:
   forall vs1 vs2,
   disjointVarSet vs1 (mkVarSet vs2) = true <->
   Forall (fun v => elemVarSet v vs1 = false) vs2.
+
+Axiom disjointVarSet_mkVarSet_cons:
+  forall v vs1 vs2,
+  disjointVarSet vs1 (mkVarSet (v :: vs2)) = true <->
+  elemVarSet v vs1 = false /\ disjointVarSet vs1 (mkVarSet vs2) = true.
+
 
 Axiom disjointVarSet_subVarSet_l:
   forall vs1 vs2 vs3,

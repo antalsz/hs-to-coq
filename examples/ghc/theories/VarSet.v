@@ -230,6 +230,11 @@ Lemma elemVarSet_emptyVarSet : forall v, elemVarSet v emptyVarSet = false.
   fsetdec.
 Qed.
 
+Lemma elemVarSet_unionVarSet:
+  forall v vs1 vs2,
+  elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
+Admitted.
+
 (** ** [extendVarSet]  *)
 
 
@@ -285,6 +290,14 @@ Qed.
 
 (** ** [delVarSetList]  *)
 
+Lemma delVarSetList_nil:
+  forall e, delVarSetList e [] = e.
+Proof.
+  intros. unfold delVarSetList, delVarSet.
+  unfold UniqSet.delListFromUniqSet, UniqSet.delOneFromUniqSet.
+  destruct e; reflexivity.
+Qed.
+
 Lemma delVarSetList_single:
   forall e a, delVarSetList e [a] = delVarSet e a.
 Proof.
@@ -300,6 +313,10 @@ Proof.
     unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e;
       try reflexivity.
 Qed.
+
+Lemma delVarSetList_cons2:
+  forall e a vs, delVarSetList e (a :: vs) = delVarSet (delVarSetList e vs) a.
+Admitted.
 
 Lemma delVarSetList_app:
   forall e vs vs', delVarSetList e (vs ++ vs') = delVarSetList (delVarSetList e vs) vs'.
@@ -337,6 +354,16 @@ Admitted.
 Lemma subVarSet_refl:
   forall vs1,
   subVarSet vs1 vs1 = true.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+
+
+Lemma subVarSet_emptyVarSet:
+  forall vs,
+  subVarSet emptyVarSet vs = true.
 Proof.
   intros.
   set_b_iff.
@@ -430,6 +457,22 @@ Proof.
   fsetdec.
 Qed.
 
+Lemma subVarSet_extendVarSet_l:
+  forall vs1 vs2 v v',
+  subVarSet vs1 vs2 = true ->
+  lookupVarSet vs2 v = Some v' ->
+  subVarSet (extendVarSet vs1 v) vs2 = true.
+Admitted.
+
+Lemma subVarSet_delVarSet:
+  forall vs1 v,
+  subVarSet (delVarSet vs1 v) vs1 = true.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+
 
 Lemma subVarSet_delVarSetList:
   forall vs1 vl,
@@ -472,6 +515,12 @@ Axiom disjointVarSet_mkVarSet:
   disjointVarSet vs1 (mkVarSet vs2) = true <->
   Forall (fun v => elemVarSet v vs1 = false) vs2.
 
+Axiom disjointVarSet_mkVarSet_cons:
+  forall v vs1 vs2,
+  disjointVarSet vs1 (mkVarSet (v :: vs2)) = true <->
+  elemVarSet v vs1 = false /\ disjointVarSet vs1 (mkVarSet vs2) = true.
+
+
 Axiom disjointVarSet_subVarSet_l:
   forall vs1 vs2 vs3,
   disjointVarSet vs2 vs3 = true ->
@@ -511,6 +560,10 @@ Axiom isJoinId_maybe_uniqAway:
   forall s v, 
   isJoinId_maybe (uniqAway s v) = isJoinId_maybe v.
 
+(* See discussion of [isLocalUnique] in [Proofs.Unique] *)
+Axiom isLocalUnique_uniqAway:
+  forall iss v,
+  isLocalUnique (varUnique (uniqAway iss v)) = true.
 
 
 Lemma elemVarSet_uniqAway:

@@ -12,6 +12,9 @@ Import ListNotations.
 
 Require Import Proofs.Forall.
 Require Import Proofs.Core.
+Require Import Proofs.Var.
+Require Import Proofs.VarSet.
+Require Import Proofs.GhcTactics.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -144,14 +147,14 @@ Admitted.
 
 
 Definition isJoinPointsValidPair_aux
-  isJoinPointsValid isJoinRHS
+  isJoinPointsValid isJoinRHS_aux
   (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
     match isJoinId_maybe v with
     | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
     | Some a => 
       if (a =? 0) (* Uh, all for the termination checker *)
       then isJoinPointsValid rhs 0 jps (* tail-call position *)
-      else isJoinRHS a rhs jps                   (* tail-call position *)
+      else isJoinRHS_aux a rhs jps                   (* tail-call position *)
     end.
 
 Definition updJPS jps v :=
@@ -190,7 +193,7 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : 
     negb (isJoinId v) &&
     isJoinPointsValid e 0 emptyVarSet     (* Non-tail-call position *)
   | Let (NonRec v rhs) body => 
-      isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS v rhs jps &&
+      isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux v rhs jps &&
       let jps' := updJPS jps v in
       isJoinPointsValid body 0 jps'
   | Let (Rec pairs) body => 
@@ -198,14 +201,14 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : 
       (forallb (fun p => negb (isJoinId (fst p))) pairs ||
        forallb (fun p =>       isJoinId (fst p))  pairs) &&
       let jps' := updJPSs jps (map fst pairs) in
-      forallb (fun '(v,e) => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS v e jps') pairs &&
+      forallb (fun '(v,e) => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux v e jps') pairs &&
       isJoinPointsValid body 0 jps'
   | Case scrut bndr ty alts  => 
     negb (isJoinId bndr) &&
     isJoinPointsValid scrut 0 emptyVarSet &&  (* Non-tail-call position *)
-    let jps' := updJPS jps bndr in
+    let jps' := delVarSet jps bndr in
     forallb (fun '(dc,pats,rhs) =>
-      let jps'' := updJPSs jps' pats  in
+      let jps'' := delVarSetList jps' pats  in
       forallb (fun v => negb (isJoinId v)) pats &&
       isJoinPointsValid rhs 0 jps'') alts  (* Tail-call position *)
   | Cast e _ =>    isJoinPointsValid e 0 jps
@@ -213,18 +216,116 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : 
   | Type_ _  =>   true
   | Coercion _ => true
   end
-with isJoinRHS (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} : bool :=
+with isJoinRHS_aux (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} : bool :=
   if a <? 1 then false else
   match rhs with
     | Lam v e => if a =? 1
                  then isJoinPointsValid e 0 (delVarSet jps v) (* tail-call position *)
-                 else isJoinRHS (a-1) e (delVarSet jps v)
+                 else isJoinRHS_aux (a-1) e (delVarSet jps v)
     | _ => false
     end.
 
-Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS.
-    
-    
+Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux.
+
+(* Conjuction of [isJoinId] and [isJoinPointsValidPair] *)
+
+Definition isJoinRHS rhs a jps :=
+      if (a =? 0)
+      then isJoinPointsValid rhs 0 jps
+      else isJoinRHS_aux a rhs jps.
+
+Definition isValidJoinPointsPair
+  (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
+    match isJoinId_maybe v with
+    | None => false (* NB *)
+    | Some a => isJoinRHS rhs a jps
+    end.
+
+
+Lemma isJoinPointsValidPair_isJoinPoints_isJoinRHS:
+  forall v rhs jps a,
+  isJoinPointsValidPair v rhs jps = true ->
+  isJoinId_maybe v = Some a ->
+  isJoinRHS rhs a jps = true.
+Proof.
+  intros.
+  unfold isJoinPointsValidPair,isJoinPointsValidPair_aux in H.
+  rewrite H0 in H.
+  apply H.
+Qed.
+
+Lemma isValidJoinPointsPair_isJoinPointsValidPair:
+  forall v rhs jps,
+  isValidJoinPointsPair v rhs jps = true -> isJoinPointsValidPair v rhs jps = true.
+Proof.
+  intros.
+  unfold isValidJoinPointsPair, isJoinPointsValidPair, isJoinPointsValidPair_aux in *.
+  destruct_match.
+  * assumption.
+  * congruence.
+Qed.
+
+Lemma isValidJoinPointsPair_isJoinId:
+  forall v rhs jps,
+  isValidJoinPointsPair v rhs jps = true -> isJoinId v = true.
+Proof.
+  intros.
+  unfold isValidJoinPointsPair in *.
+  rewrite isJoinId_eq.
+  destruct_match; congruence.
+Qed.
+
+Lemma isJoinPointsValid_delVarSet_not_there:
+  forall e jps v,
+  elemVarSet v jps = false ->
+  isJoinPointsValid e 0 jps = true <->
+  isJoinPointsValid e 0 (delVarSet jps v) = true.
+Admitted.
+
+Lemma isJoinRHS_aux_delVarSet_not_there:
+  forall a e jps v,
+  elemVarSet v jps = false ->
+  isJoinRHS_aux a e jps = true <->
+  isJoinRHS_aux a e (delVarSet jps v) = true.
+Admitted.
+
+
+Lemma isJoinPointsValid_subVarSet:
+  forall e jps1 jps2,
+  subVarSet jps1 jps2 = true ->
+  isJoinPointsValid e 0 jps1 = true ->
+  isJoinPointsValid e 0 jps2 = true.
+Admitted.
+
+
+Lemma isJoinRHS_mkLams:
+  forall vs e jps,
+  disjointVarSet jps (mkVarSet vs) = true ->
+  isJoinPointsValid e 0 jps = true <->
+  isJoinRHS (mkLams vs e) (length vs) jps = true.
+Proof.
+  intros. revert jps H.
+  induction vs; intros jps Hdisjoint.
+  * reflexivity.
+  * simpl.
+    replace (mkLams _ _) with (Lam a (mkLams vs e)) by reflexivity.
+    unfold isJoinRHS.
+    destruct_match.
+    + apply EqNat.beq_nat_true in Heq. congruence.
+    + clear Heq.
+      rewrite disjointVarSet_mkVarSet_cons in Hdisjoint.
+      destruct Hdisjoint.
+      rewrite IHvs by assumption.
+      simpl.
+      rewrite PeanoNat.Nat.sub_0_r.
+      unfold isJoinRHS.
+      destruct_match.
+      -- rewrite <- isJoinPointsValid_delVarSet_not_there by assumption.
+         reflexivity.
+      -- rewrite <- isJoinRHS_aux_delVarSet_not_there by assumption.
+         reflexivity.
+Qed.
+
 (* I had to do two things to make this pass the termination checker that I would
    have done differently otherwise:
     - isJoinRHS is structured so that *always* destructs the expression,
@@ -238,8 +339,8 @@ Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid 
       I repeat the defininition later to give it a name.
 *)
 
-Axiom isJoinPointValidPair_extendVarSet:
+Axiom isValidJoinPointsPair_extendVarSet:
   forall v rhs jps v',
-  isJoinPointsValidPair v rhs jps = true ->
-  isJoinPointsValidPair v rhs (extendVarSet jps v') = true.
+  isValidJoinPointsPair v rhs jps = true ->
+  isValidJoinPointsPair v rhs (extendVarSet jps v') = true.
   

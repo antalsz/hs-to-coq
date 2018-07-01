@@ -95,3 +95,23 @@ Proof.
   split. unfold not. intros m h; inversion h; auto.
   unfold not. intros m h; rewrite h in m; auto.
 Qed.
+
+(**
+
+** Local uniques
+
+The Uniques in GHC are partitioned in classes, e.g. local variables have a different
+class than external names, which are different from data constructors and so on.
+
+The class is encoded in the upper 8 bits of the Unique. Our representation does not have 
+upper bits... and we hope we can make do with less details. So for now we axiomatize
+what we need:
+
+ * A predicate that distinguishes the uniques used for (module)-local variables, [isLocalUnique]
+ * An axiom stating that [uniqAway] always generates local uniques; that axiom lives in [VarSet.v].
+*)
+Axiom isLocalUnique : Unique.Unique -> bool.
+
+(** [initExitJoinUnique] better be a local unique *)
+Axiom isLocalUnique_initExitJoinUnique:
+  isLocalUnique Unique.initExitJoinUnique = true.

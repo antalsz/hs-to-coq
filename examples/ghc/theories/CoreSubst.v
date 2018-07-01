@@ -1643,8 +1643,10 @@ Proof.
     rewrite subst_expr_Lam.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *; fold WellScoped in *.
-    eapply WellScoped_substBndr; eauto.
-
+    destruct H1 as [GLV H1].
+    split.
+    -- admit.
+    -- eapply WellScoped_substBndr; eauto.
   - destruct binds.
     + intros body He0 Hbody s vs in_scope_set env u u0 WSS WSL.
       rewrite subst_expr_Let.
@@ -1652,18 +1654,19 @@ Proof.
       destruct substBndr as [subst' bndr'] eqn:SB.
      
       unfold WellScoped in *. fold WellScoped in *.
-      destruct WSL as [WSe WSb].
-     
-      split; eauto.
-      unfold bindersOf in *.
-      rewrite extendVarSetList_cons in *.
-      rewrite extendVarSetList_nil  in *.
-      eapply WellScoped_substBndr; eauto.
+      destruct WSL as [[GLV WSe] WSb].
+
+      split; only 1: split; eauto.
+      -- admit.
+      -- unfold bindersOf in *.
+         rewrite extendVarSetList_cons in *.
+         rewrite extendVarSetList_nil  in *.
+         eapply WellScoped_substBndr; eauto.
 
     + intros body IHrhs IHbody s vs in_scope_set env u u0 WSvs WSe.
       rewrite subst_expr_Let.
       rewrite substBind_Rec. 
-      destruct WSe as [[ND FF] WSB].
+      destruct WSe as [[GLV [ND FF]] WSB].
       
       unfold bindersOf in WSB.
       rewrite bindersOf_Rec_cleanup in WSB.
@@ -1685,6 +1688,7 @@ Proof.
       rewrite Forall_forall in FF.     
       unfold WellScoped in *. fold WellScoped in *.
       repeat split.
+
      ++ destruct_SubstExtends.
         unfold CoreBndr,CoreExpr in *.
         rewrite map_fst_zip in *; auto.
@@ -1776,6 +1780,7 @@ Proof.
     rewrite subst_expr_Case.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *. fold WellScoped in *.
+
     destruct H2 as [WS FF].
     split; eauto.
     rewrite Forall.Forall'_Forall in *.
@@ -1804,7 +1809,6 @@ Proof.
     rewrite extendVarSetList_nil in *.
     eapply StrongSubset_extendVarSetList.
     eauto.
-
   - intros.
     rewrite subst_expr_Cast.
     unfold WellScoped in *. fold WellScoped in *.

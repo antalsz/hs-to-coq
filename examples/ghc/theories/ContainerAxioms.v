@@ -62,7 +62,6 @@ Axiom lookup_filterWithKey :
   forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
                        Internal.lookup key m = Some val.
 
-
 Axiom lookup_intersection :
   forall a b key (val1:a) m1 m2, 
     Internal.lookup key m1 = Some val1 /\
@@ -75,3 +74,54 @@ Axiom delete_eq : forall key b (i : IntMap b),
 Axiom delete_neq : forall key1 key2 b (i : IntMap b),
     key1 <> key2 ->
     lookup key1 (delete key2 i) = lookup key1 i.
+
+Axiom lookup_union :
+  forall (A:Type) key (val:A) (m1 m2: IntMap A), 
+    (lookup key m1 = Some val \/ (lookup key m1 = None /\ lookup key m2 = Some val)) <->
+    lookup key (union m1 m2) = Some val.
+
+Axiom lookup_difference_in_snd:
+  forall (key : Internal.Key) (b : Type) (i i': IntMap b) (y:b),
+    lookup key i' = Some y -> 
+    lookup key (difference i i') = None.
+
+Axiom lookup_difference_not_in_snd:
+  forall (key : Internal.Key) (b : Type) (i i': IntMap b)(y:b),
+    lookup key i' = None ->
+    lookup key (difference i i') = lookup key i.
+
+(*
+This is a QuickChick setup to test the above axioms
+(as bugs easily lurk there).
+
+Unfortunately, we have to wait for 
+https://github.com/QuickChick/QuickChick/issues/87
+to be fixed, as currently the programs that QuickChick extracts to
+test stuff do not compile...
+
+From QuickChick Require Import QuickChick.
+Import QcDefaultNotation. Open Scope qc_scope.
+Import GenLow GenHigh.
+From QuickChick Require Import Instances.
+Set Warnings "-extraction-opaque-accessed,-extraction".
+
+Global Instance genKey : GenSized Internal.Key := 
+  {| arbitrarySized n := fmap N.of_nat (arbitrarySized n) |}.
+
+Global Instance genIntMap {A} `{GenSized A} : GenSized (IntMap A) := 
+  {| arbitrarySized n := fmap Internal.fromList (arbitrarySized n) |}.
+
+Global Instance shrinkIntMap {A} : Shrink (IntMap A) := 
+  {| shrink := fun _ => nil |}.
+
+Global Instance shrinkKey : Shrink Internal.Key := 
+  {| shrink := fun _ => nil |}.
+
+Global Instance showKey : Show Internal.Key :=
+  {| show := fun s => show (N.to_nat s) |}.
+
+Global Instance showIntMap {A} `{Show A} : Show (IntMap A) :=
+  {| show := fun s => show (Internal.toList s) |}.
+
+QuickCheck delete_eq.
+*)

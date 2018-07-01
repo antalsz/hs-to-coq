@@ -1,3 +1,5 @@
+Require Import Name.
+Require Import Id.
 Require Import Core.
 Require Import CoreFVs.
 Require Import CoreUtils.
@@ -8,6 +10,7 @@ Import ListNotations.
 Require Import Proofs.Base.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Forall.
+Require Import Proofs.Unique.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSet.
 Require Import Proofs.CoreInduct.
@@ -22,7 +25,9 @@ Set Bullet Behavior "Strict Subproofs".
 (*
 This file describes an invariant of Core files that
  * all variables must be in scope
- * and be structurally equal to their binder
+ * and be structurally almost equal to their binder
+ * all local variables are indeed local variables
+   (both according to [IdDetail] and [isLocalUnique])
 *)
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
@@ -31,18 +36,33 @@ Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
     | Some v' => almostEqual v v'
     end.
 
+(**
+This captures all invariants that we can state about a
+[Var] in isolation:
+- It is a localVar when the unique is local.
+- Its unique agrees with the uniqe of the name
+*)
+Definition GoodVar (v : Var) : Prop :=
+  isLocalVar v = isLocalUnique (varUnique v) /\
+  varUnique v = nameUnique (varName v).
+
+Definition GoodLocalVar (v : Var) : Prop :=
+  GoodVar v /\ isLocalVar v = true.
+
 Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   match e with
   | Mk_Var v => WellScopedVar v in_scope
   | Lit l => True
   | App e1 e2 => WellScoped e1 in_scope /\  WellScoped e2 in_scope
-  | Lam v e => WellScoped e (extendVarSet in_scope v)
+  | Lam v e => GoodLocalVar v /\ WellScoped e (extendVarSet in_scope v)
   | Let bind body =>
       WellScopedBind bind in_scope /\
       WellScoped body (extendVarSetList in_scope (bindersOf bind))
   | Case scrut bndr ty alts  => 
     WellScoped scrut in_scope /\
+    GoodLocalVar bndr /\
     Forall' (fun alt =>
+      Forall GoodLocalVar (snd (fst alt)) /\
       let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
       WellScoped (snd alt) in_scope') alts
   | Cast e _ =>   WellScoped e in_scope
@@ -52,23 +72,25 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   end
 with WellScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
   match bind with
-  | NonRec v rhs => WellScoped rhs in_scope
+  | NonRec v rhs =>
+    GoodLocalVar v /\
+    WellScoped rhs in_scope
   | Rec pairs => 
-     NoDup (map varUnique (map fst pairs)) /\
-      Forall' (fun p => WellScoped (snd p) (extendVarSetList in_scope (map fst pairs))) pairs
+    Forall (fun p => GoodLocalVar (fst p)) pairs /\
+    NoDup (map varUnique (map fst pairs)) /\
+    Forall' (fun p => WellScoped (snd p) (extendVarSetList in_scope (map fst pairs))) pairs
   end.
 
 Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
+    Forall GoodLocalVar (snd (fst alt)) /\
     let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
     WellScoped (snd alt) in_scope'.
 
-Fixpoint WellScopedProgram (pgm : CoreProgram) (in_scope : VarSet) : Prop :=
-  match pgm with
-  | [] => True
-  | bind :: pgm' =>
-    WellScopedBind bind in_scope /\
-    WellScopedProgram pgm' (extendVarSetList in_scope (bindersOf bind))
-  end.
+(** We can treat a [CoreProgram] as one big recursive group, it seems. *)
+Definition WellScopedProgram (pgm : CoreProgram) : Prop :=
+   NoDup (map varUnique (bindersOfBinds pgm)) /\
+   Forall' (fun p => WellScoped (snd p) (mkVarSet (bindersOfBinds pgm))) (flattenBinds pgm).
+
 
 (** ** Lots of lemmas *)
 
@@ -79,24 +101,32 @@ Axiom WellScoped_extendVarSet_ae:
   almostEqual v1 v2 ->
   WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
 
+Axiom WellScoped_extendVarSetList_ae:
+  forall e vs vs1 vs2,
+  Forall2 almostEqual vs1 vs2 ->
+  WellScoped e (extendVarSetList vs vs1) <-> WellScoped e (extendVarSetList vs vs2).
+
 
 (** *** Structural lemmas *)
 
 Lemma WellScoped_Lam:
   forall v e isvs,
-  WellScoped (Lam v e) isvs <-> WellScoped e (extendVarSet isvs v).
+  WellScoped (Lam v e) isvs <-> GoodLocalVar v /\ WellScoped e (extendVarSet isvs v).
 Proof. intros. reflexivity. Qed.
 
 
 Lemma WellScoped_mkLams:
   forall vs e isvs,
-  WellScoped (mkLams vs e) isvs <-> WellScoped e (extendVarSetList  isvs vs).
+  WellScoped (mkLams vs e) isvs <-> Forall GoodLocalVar vs /\ WellScoped e (extendVarSetList isvs vs).
 Proof.
   induction vs; intros.
-  * reflexivity.
+  * intuition.
   * simpl.
     rewrite extendVarSetList_cons.
-    refine (IHvs _ _).
+    rewrite Forall_cons_iff.
+    rewrite and_assoc.
+    rewrite <- (IHvs _ _).
+    reflexivity.
 Qed.
 
 Lemma WellScoped_varToCoreExpr:
@@ -182,7 +212,9 @@ Proof.
     unfold WellScoped in *; fold WellScoped in *; eauto.
   - eapply WellScopedVar_StrongSubset; eauto.
   - destruct H1. split; eauto.
-  - eapply H; eauto.
+  - split; only 1: apply H0.
+    destruct H0 as [_ H0].
+    eapply H; eauto.
     unfold StrongSubset in *.
     intro var.
     specialize (H1 var).
@@ -199,47 +231,61 @@ Proof.
       rewrite h in Eq; discriminate.
       intro h;
       rewrite h in Eq; discriminate.
-   - destruct H1 as [WE Wb].
-      split; eauto.
-      eapply H0; eauto.
-      eapply StrongSubset_extendVarSetList.
-      auto.
-  - destruct H1 as [[WE1 WE2] Wb].
+  - destruct H1 as [[GLV WE] Wb].
+     split; only 1: split; eauto.
+     eapply H0; eauto.
+     eapply StrongSubset_extendVarSetList.
+     auto.
+  - destruct H1 as [[WE1 [WE2 WE3]] Wb].
      repeat split; auto.
      rewrite Forall'_Forall in *.
      rewrite Forall_forall in *.
      intros h IN. destruct h as [v rhs].
-     specialize (WE2 (v,rhs)).
+     specialize (WE3 (v,rhs)).
      simpl in *.
      eauto using StrongSubset_extendVarSetList.
      eauto using StrongSubset_extendVarSetList.
-  - destruct H1 as [W1 W2].
-    split; eauto.
+  - destruct H1 as [W1 [W2 W3]].
+    split; only 2: split; eauto.
      rewrite Forall'_Forall in *.
      rewrite Forall_forall in *.
      intros h IN. destruct h as [[dc pats] rhs].
      specialize (H0 dc pats rhs IN).
-     specialize (W2 (dc,pats,rhs) IN).
+     specialize (W3 (dc,pats,rhs) IN).
      simpl in *.
+     destruct W3 as [GLV WS].
      eauto using StrongSubset_extendVarSetList.
 Qed.
 
 (** *** Relation to [exprFreeVars] *)
 
+(* This proof will be nicer if we have a naive calculation
+   of exprFreeVars, and first rewrite to that one.*)
 Lemma WellScoped_subset:
   forall e vs,
     WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
 Proof.
   intro e.
+  unfold exprFreeVars, exprFVs, Base.op_z2218U__.
+  unfold FV.fvVarSet, Base.op_z2218U__,
+         FV.fvVarListVarSet, FV.filterFV, Base.const, andb.
+
   apply (core_induct e); intros.
-  - unfold WellScoped, WellScopedVar, exprFreeVars in *.
-    unfold Base.op_z2218U__.
-    unfold exprFVs.
-    unfold Base.op_z2218U__.
-    destruct (lookupVarSet vs v) eqn:Hl.
-    unfold FV.fvVarSet, Base.op_z2218U__,
-    FV.fvVarListVarSet, FV.filterFV, expr_fvs,
-    FV.unitFV.
+  - unfold WellScoped, WellScopedVar in *.
+    destruct (lookupVarSet vs v) eqn:Hl; try contradiction.
+    unfold expr_fvs, FV.unitFV.
+    rewrite elemVarSet_emptyVarSet.
+    unfold Base.const.
+    simpl andb.
+    destruct (isLocalVar v).
+    + unfold Tuple.snd.
+      eapply subVarSet_extendVarSet_l.
+      * apply subVarSet_emptyVarSet.
+      * eassumption.
+    + simpl.
+      apply subVarSet_emptyVarSet.
+  - apply subVarSet_emptyVarSet.
+  - simpl.
 Admitted.
 
 
@@ -250,7 +296,7 @@ Axiom WellScopedVar_extendVarSetList_l:
   WellScopedVar v vs1 ->
   elemVarSet v (mkVarSet vs2) = false ->
   WellScopedVar v (extendVarSetList vs1 vs2).
-  
+
 
 Axiom WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,
@@ -286,12 +332,18 @@ Axiom WellScoped_extendVarSetList:
   disjointVarSet vs1 (mkVarSet vs) = true ->
   WellScoped e vs1 -> WellScoped e (extendVarSetList vs1 vs).
 
+Axiom WellScoped_extendVarSetList_under:
+  forall vs e vs1 vs2,
+  disjointVarSet vs1 (mkVarSet vs) = true ->
+  WellScoped e (extendVarSetList vs1 vs2) -> WellScoped e (extendVarSetList (extendVarSetList vs1 vs) vs2).
+
 
 Lemma WellScoped_extendVarSetList_fresh_under:
   forall vs1 vs2 e vs,
   disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
   WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <-> WellScoped e (extendVarSetList vs vs2).
-Proof.
+Admitted.
+(* Proof.
   intros.
   rewrite <- WellScoped_mkLams.
   rewrite WellScoped_extendVarSetList_fresh.
@@ -301,4 +353,33 @@ Proof.
   eapply disjointVarSet_subVarSet_l; only 1: eassumption.
   apply subVarSet_delVarSetList.
 Qed.
+ *)
+
+Lemma WellScoped_extendVarSetList_fresh_between:
+  forall (vs1 vs2 vs3 : list Var) (e : CoreExpr) (vs : VarSet),
+  disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
+  WellScoped e (extendVarSetList vs ((vs1 ++ vs2) ++ vs3)) <->
+  WellScoped e (extendVarSetList vs (vs1 ++ vs3)).
+Admitted.
+
+(** ** Lemmas about [GoodLocalVar] *)
+
+Lemma GoodLocalVar_asJoinid :
+  forall v n, GoodLocalVar v -> GoodLocalVar (asJoinId v n).
+Admitted.
+
+Lemma GoodLocalVar_uniqAway:
+  forall vss v, GoodLocalVar v -> GoodLocalVar (uniqAway vss v).
+Admitted.
+
+Lemma GoodLocalVar_mkSysLocal:
+  forall s u ty, isLocalUnique u = true -> GoodLocalVar (mkSysLocal s u ty).
+Admitted.
+
+Lemma GoodLocalVar_almostEqual:
+  forall v1 v2,
+  GoodLocalVar v1 ->
+  almostEqual v1 v2 ->
+  GoodLocalVar v2.
+Admitted.
 

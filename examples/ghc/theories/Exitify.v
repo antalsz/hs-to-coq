@@ -1497,6 +1497,55 @@ Section in_exitifyRec.
         + assumption.
   Qed.
 
+  Lemma isJoinPointsValid_picked_aux:
+    forall jps captured e vs,
+    isJoinPointsValid e 0 (updJPSs jps (captured ++ vs)) = true ->
+    let abs_vars := snd (fold_right pick (delVarSetList (exprFreeVars e) vs, []) captured) in
+    forallb (fun x : Var => negb (isJoinId x)) abs_vars = true ->
+    isJoinPointsValid e 0 (updJPSs (delVarSetList jps abs_vars) vs) = true.
+  Proof.
+    intros.
+    revert vs abs_vars H H0.
+    induction captured using rev_ind; intros vs abs_vars HWSe HnotJoinId; simpl.
+    * subst abs_vars. simpl. rewrite delVarSetList_nil. assumption.
+    * subst abs_vars. rewrite fold_right_app. rewrite fold_right_app in HnotJoinId.
+      simpl in *.
+      destruct_match; simpl.
+      + rewrite snd_pick_list. rewrite snd_pick_list in HnotJoinId.
+        rewrite forallb_app in HnotJoinId. simpl_bool. destruct HnotJoinId as [HnotJoinId HnotJoinx].
+        simpl in HnotJoinx. simpl_bool. rewrite negb_true_iff in HnotJoinx.
+        rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
+        (* remove all mentions of [zap] *)
+        erewrite delVarSet_ae by (apply almostEqual_sym; apply zap_ae).
+        erewrite isJoinId_ae in HnotJoinx  by (apply almostEqual_sym; apply zap_ae).
+        rewrite <- updJPS_not_joinId by assumption.
+        rewrite <- updJPSs_cons.
+        rewrite <- delVarSetList_cons2.
+        rewrite <- delVarSetList_cons2 in HnotJoinId.
+        apply IHcaptured.
+        - rewrite <- app_assoc in HWSe.
+          apply HWSe.
+        - apply HnotJoinId.
+      + apply IHcaptured.
+        - admit.
+        - apply HnotJoinId.
+  Admitted.
+
+  Lemma isJoinPointsValid_picked:
+    forall jps captured e,
+    isJoinPointsValid e 0 (updJPSs jps captured) = true ->
+    let abs_vars := snd (fold_right pick (exprFreeVars e, []) captured) in
+    forallb (fun x : Var => negb (isJoinId x)) abs_vars = true ->
+    isJoinPointsValid e 0 (delVarSetList jps abs_vars) = true.
+  Proof.
+    intros.
+    pose proof (isJoinPointsValid_picked_aux jps0 captured e []).
+    rewrite !app_nil_r in *.
+    rewrite delVarSetList_nil in *.
+    specialize (H1 H H0).
+    rewrite updJPSs_nil in H1.
+    assumption.
+  Qed.
 
   Lemma existsb_false_iff_forallb:
     forall a p (xs : list a),
@@ -1563,8 +1612,10 @@ Section in_exitifyRec.
       specialize (Hno_capture_jp v HIn).
       rewrite negb_true_iff in Hno_capture_jp.
       assumption.
-    * admit; apply HIJPV.
-  Admitted.
+    * apply isJoinPointsValid_picked.
+      - apply HIJPV.
+      - apply Hno_capture_jp.
+  Qed.
 
   Lemma go_all_ValidJoinPairs captured e: 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->

@@ -176,6 +176,15 @@ Proof.
   now destruct i0.
 Qed.
 
+Lemma isJoinId_ae: forall v1 v2,
+  almostEqual v1 v2 ->
+  isJoinId v1 = isJoinId v2.
+Proof.
+  intros.
+  induction H; reflexivity.
+Qed.
+
+
 Lemma isJoinId_isJoinId_maybe: forall v,
   isJoinId v = true ->
   isJoinId_maybe v = Some (idJoinArity v).

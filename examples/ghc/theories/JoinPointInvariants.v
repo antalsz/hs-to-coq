@@ -162,6 +162,12 @@ Definition updJPS jps v :=
 Definition updJPSs jps vs :=
   fold_left updJPS vs jps.
 
+Lemma updJPS_not_joinId:
+  forall jps v,
+  isJoinId v = false ->
+  updJPS jps v = delVarSet jps v.
+Proof. intros. unfold updJPS. rewrite H. reflexivity. Qed.
+
 Lemma updJPSs_nil:
   forall jps, updJPSs jps [] = jps.
 Proof. intros. reflexivity. Qed.

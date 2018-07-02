@@ -56,9 +56,6 @@ We will be able to check 4 when we translate types.
 Additionally, we have the invariant:
 
  * The join arity must be non-negative.
-
-TODO are these invariants:
-
  * A lambda-, case- or pattern-bound variable is not a join point
 *)
 
@@ -275,19 +272,6 @@ Proof.
   destruct_match; congruence.
 Qed.
 
-Lemma isJoinPointsValid_delVarSet_not_there:
-  forall e jps v,
-  elemVarSet v jps = false ->
-  isJoinPointsValid e 0 jps = true <->
-  isJoinPointsValid e 0 (delVarSet jps v) = true.
-Admitted.
-
-Lemma isJoinRHS_aux_delVarSet_not_there:
-  forall a e jps v,
-  elemVarSet v jps = false ->
-  isJoinRHS_aux a e jps = true <->
-  isJoinRHS_aux a e (delVarSet jps v) = true.
-Admitted.
 
 
 Lemma isJoinPointsValid_subVarSet:
@@ -300,31 +284,29 @@ Admitted.
 
 Lemma isJoinRHS_mkLams:
   forall vs e jps,
-  disjointVarSet jps (mkVarSet vs) = true ->
-  isJoinPointsValid e 0 jps = true <->
+  Forall (fun v => isJoinId v = false) vs ->
+  isJoinPointsValid e 0 (delVarSetList jps vs) = true <->
   isJoinRHS (mkLams vs e) (length vs) jps = true.
 Proof.
   intros. revert jps H.
   induction vs; intros jps Hdisjoint.
-  * reflexivity.
+  * rewrite delVarSetList_nil.
+    reflexivity.
   * simpl.
     replace (mkLams _ _) with (Lam a (mkLams vs e)) by reflexivity.
+    rewrite delVarSetList_cons.
     unfold isJoinRHS.
     destruct_match.
     + apply EqNat.beq_nat_true in Heq. congruence.
     + clear Heq.
-      rewrite disjointVarSet_mkVarSet_cons in Hdisjoint.
-      destruct Hdisjoint.
+      inversion_clear Hdisjoint.
       rewrite IHvs by assumption.
       simpl.
       rewrite PeanoNat.Nat.sub_0_r.
       unfold isJoinRHS.
-      destruct_match.
-      -- rewrite <- isJoinPointsValid_delVarSet_not_there by assumption.
-         reflexivity.
-      -- rewrite <- isJoinRHS_aux_delVarSet_not_there by assumption.
-         reflexivity.
+      reflexivity.
 Qed.
+
 
 (* I had to do two things to make this pass the termination checker that I would
    have done differently otherwise:

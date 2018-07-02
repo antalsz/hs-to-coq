@@ -870,7 +870,9 @@ Section in_exitifyRec.
     apply addExit_all_WellScopedFloats.
     rewrite WellScoped_mkLams.
     subst abs_vars.
-    float_let.
+    repeat float_let.
+    replace pick0 with pick by reflexivity.
+    replace pick1 with pick by reflexivity.
     cleardefs.
     rewrite Foldable.hs_coq_foldr_list.
     split.
@@ -881,7 +883,6 @@ Section in_exitifyRec.
       apply zap_ae.
 
     * apply WellScoped_picked.
-      clear zap0 pick0.
       rewrite hs_coq_map in Hdisjoint.
       rewrite map_map in Hdisjoint.
       rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
@@ -1497,13 +1498,25 @@ Section in_exitifyRec.
   Qed.
 
 
+  Lemma existsb_false_iff_forallb:
+    forall a p (xs : list a),
+    existsb p xs = false <-> forallb (fun x => negb (p x)) xs = true.
+  Proof.
+    intros.
+    induction xs.
+    * simpl. intuition congruence.
+    * simpl. rewrite orb_false_iff, andb_true_iff, negb_true_iff, IHxs.
+      reflexivity.
+  Qed.
+
   Lemma go_exit_all_ValidJoinPairs captured e : 
-    isJoinPointsValid (toExpr e) 0 jps = true ->
+    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    isJoinPointsValid (toExpr e) 0 (updJPSs jps captured) = true ->
     disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
     StateInvariant (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)
                    (go_exit captured (toExpr e) (exprFreeVars (toExpr e))).
   Proof.
-    intros HIJPV Hdisjoint.
+    intros HWS HIJPV Hdisjoint.
     set (P := (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)).
     cbv beta delta [go_exit]. (* No [zeta]! *)
     repeat float_let.
@@ -1528,20 +1541,29 @@ Section in_exitifyRec.
 
     (* Third case *)
     subst j_15__.
-    enough (Hnext: StateInvariant P j_14__). {
-      destruct captures_join_points ; try apply Hnext.
+    enough (Hnext: captures_join_points = false -> StateInvariant P j_14__). {
+      destruct captures_join_points ; try (apply Hnext; auto).
       apply StateInvariant_return.
     }
     cleardefs.
 
     (* Third case: Actual exitification *)
     subst j_14__.
+    intro Hno_capture_jp.
     unfold recursive_calls in Hdisjoint.
+    subst captures_join_points.
+    rewrite HSUtil.Foldable_any_existsb in Hno_capture_jp.
+    rewrite existsb_false_iff_forallb in Hno_capture_jp.
     apply StateInvariant_bind_return.
     apply addExit_all_joinIds.
     apply isJoinRHS_mkLams.
-    * admit.
-    * apply HIJPV.
+    * rewrite Forall_forall.
+      rewrite forallb_forall in Hno_capture_jp.
+      intros v HIn.
+      specialize (Hno_capture_jp v HIn).
+      rewrite negb_true_iff in Hno_capture_jp.
+      assumption.
+    * admit; apply HIJPV.
   Admitted.
 
   Lemma go_all_ValidJoinPairs captured e: 
@@ -1554,8 +1576,9 @@ Section in_exitifyRec.
     refine (go_ind (fun captured e r => impl (isJoinPointsValid (toExpr e) 0 (updJPSs jps captured) = true) (_ r)) _ _ _ _ _ _ _);
       intros; intro HIJPV.
     * apply go_exit_all_ValidJoinPairs.
-      -- admit. (* Need that no captured join points are in the free var set here *)
-      -- assumption.
+      -- apply HWS.
+      -- apply HIJPV.
+      -- apply Hdisjoint.
     * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
       apply StateInvariant_bind_return.
       apply IHe; clear IHe.
@@ -1568,7 +1591,7 @@ Section in_exitifyRec.
       apply StateInvariant_bind; only 1: apply IHrhs; clear IHrhs.
       -- rewrite updJPSs_append.
          eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS in HIJPVrhs; try eassumption.
-         assert (disjointVarSet (updJPSs jps captured) (mkVarSet params) = true) by admit.
+         assert (Forall (fun v : Var => isJoinId v = false) params) by admit.
          rewrite <- isJoinRHS_mkLams in HIJPVrhs by assumption.
          admit. (* if all [params] are no join points and disjoint, then updJPSs does not affect it *)
       -- intros. apply StateInvariant_bind_return.

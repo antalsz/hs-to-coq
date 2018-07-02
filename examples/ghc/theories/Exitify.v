@@ -32,12 +32,14 @@ Require Import Proofs.Unique.
 Set Bullet Behavior "Strict Subproofs".
 
 
-
 Close Scope Z_scope.
 
 
 (* This section reflects the context of the local definition of exitifyRec *)
 Section in_exitifyRec.
+
+  Set Default Proof Using "Type".
+
   (* Parameters of exitifyRec *)
   Variable in_scope : InScopeSet.
   Variable pairs : list NJPair.
@@ -969,7 +971,7 @@ Section in_exitifyRec.
 
   Lemma all_exits_WellScoped:
     WellScopedFloats exits.
-  Proof.
+  Proof using Type pairs_WS.
     unfold exits.
     unfold pairs'_exits.
     unfold ann_pairs.
@@ -1004,7 +1006,7 @@ Section in_exitifyRec.
 
   Lemma isvs_to_isvs':
      forall e, WellScoped e isvs -> WellScoped e isvs'.
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     apply WellScoped_extendVarSetList.
     rewrite disjointVarSet_mkVarSet.
@@ -1015,7 +1017,7 @@ Section in_exitifyRec.
 
   Lemma isvsp_to_isvsp':
      forall e, WellScoped e isvsp -> WellScoped e isvsp'.
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     unfold isvsp, isvsp', isvs' in *.
     apply WellScoped_extendVarSetList_under.
@@ -1027,7 +1029,7 @@ Section in_exitifyRec.
 
   Lemma isvsp_to_isvsp'_extended:
      forall e vs, WellScoped e (extendVarSetList isvsp vs) -> WellScoped e (extendVarSetList isvsp' vs).
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     unfold isvsp, isvsp', isvs' in *.
     rewrite <- extendVarSetList_append in *.
@@ -1040,7 +1042,7 @@ Section in_exitifyRec.
 
   Lemma isvsp_to_isvsp'_extended_Var:
      forall v vs, WellScopedVar v (extendVarSetList isvsp vs) -> WellScopedVar v (extendVarSetList isvsp' vs).
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     change (WellScoped (Mk_Var v) (extendVarSetList isvsp' vs)).
     apply isvsp_to_isvsp'_extended.
@@ -1052,7 +1054,7 @@ Section in_exitifyRec.
      forall e vs1 vs2,
      WellScoped e (extendVarSetList (extendVarSetList isvsp vs1) vs2) ->
      WellScoped e (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     unfold isvsp, isvsp', isvs' in *.
     rewrite <- extendVarSetList_append in *.
@@ -1070,7 +1072,7 @@ Section in_exitifyRec.
     RevStateInvariant (sublistOf exits) 
          (addExit (extendInScopeSetList in_scope2 captured) ja e)
          (fun v => WellScopedVar v after).
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     (* This is much easier to prove by breaking the State abstraction and turning
        it into a simple function. *)
@@ -1123,7 +1125,7 @@ Section in_exitifyRec.
     WellScoped (toExpr e) orig ->
     disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
     RevStateInvariant (sublistOf exits) (go_exit captured (toExpr e) (exprFreeVars (toExpr e))) (fun e' => WellScoped e' after).
-  Proof.
+  Proof using Type pairs_WS.
     intros ?? HWSe Hdisjoint.
 
     set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => WellScoped e' after)).
@@ -1188,7 +1190,7 @@ Section in_exitifyRec.
     let after := extendVarSetList isvsp' captured in
     WellScoped (toExpr e) orig ->
     RevStateInvariant (sublistOf exits) (go captured (freeVars (toExpr e))) (fun e' => WellScoped e' after).
-  Proof.
+  Proof using Type pairs_WS.
     revert e captured.
     apply (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r (fun e' => WellScoped e' (extendVarSetList isvsp' captured))));
       intros; set (after := extendVarSetList isvsp' captured).
@@ -1327,7 +1329,7 @@ Section in_exitifyRec.
 
   Lemma pairs'_WS:
     Forall (fun p => WellScoped (snd p) isvsp') pairs'.
-  Proof.
+  Proof using Type pairs_WS.
     unfold pairs', pairs'_exits, ann_pairs.
     eapply RevStateInvariant_runState with (P := sublistOf exits).
     * rewrite hs_coq_map, !map_map, forM_map.
@@ -1389,7 +1391,6 @@ Section in_exitifyRec.
   Lemma map_fst_pairs'':
     map (@fst Var (Expr CoreBndr)) pairs' = fs.
   Proof. exact map_fst_pairs'. Qed.
-  
 
   (** Main well-scopedness theorem:
       If the input is well-scoped, then so is the output of [exitifyRec].*)
@@ -1398,7 +1399,7 @@ Section in_exitifyRec.
     NoDup (map varUnique fs) ->
     WellScoped body isvsp ->
     WellScoped (mkLets (exitifyRec (extendInScopeSetList in_scope fs) (map toJPair pairs)) body) isvs.
-  Proof.
+  Proof using Type pairs_GLV pairs_WS.
     intros ? HNoDup HWSbody.
     cbv beta delta [exitifyRec].
     zeta_with go_exit.

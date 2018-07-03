@@ -684,7 +684,7 @@ Proof.
   intros.
   destruct_WellScoped_Subst.
   repeat split; auto.
-  eapply (StrongSubset_trans (minusDom vs1 i0)); auto.
+  eapply (StrongSubset_trans _ (minusDom vs1 i0)); auto.
   eapply StrongSubset_minusDom; eauto.
 Qed.
 

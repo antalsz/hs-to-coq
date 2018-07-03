@@ -1028,56 +1028,37 @@ Section in_exitifyRec.
   Qed.
 
   Lemma isvs_to_isvs':
-     forall e, WellScoped e isvs -> WellScoped e isvs'.
+     StrongSubset isvs isvs'.
   Proof using Type pairs_WS.
     intros.
-    apply WellScoped_extendVarSetList.
+    apply StrongSubset_extendList_fresh.
     apply disjoint_isvs_exits.
-    assumption.
   Qed.
 
   Lemma isvsp_to_isvsp':
-     forall e, WellScoped e isvsp -> WellScoped e isvsp'.
+     StrongSubset isvsp isvsp'.
   Proof using Type pairs_WS.
     intros.
-    unfold isvsp, isvsp', isvs' in *.
-    apply WellScoped_extendVarSetList_under.
-    apply disjoint_isvs_exits.
-    assumption.
+    apply StrongSubset_extendVarSetList.
+    apply isvs_to_isvs'.
   Qed.
 
   Lemma isvsp_to_isvsp'_extended:
-     forall e vs, WellScoped e (extendVarSetList isvsp vs) -> WellScoped e (extendVarSetList isvsp' vs).
+     forall vs, StrongSubset (extendVarSetList isvsp vs) (extendVarSetList isvsp' vs).
   Proof using Type pairs_WS.
     intros.
-    unfold isvsp, isvsp', isvs' in *.
-    rewrite <- extendVarSetList_append in *.
-    apply WellScoped_extendVarSetList_under.
-    apply disjoint_isvs_exits.
-    assumption.
-  Qed.
-
-  Lemma isvsp_to_isvsp'_extended_Var:
-     forall v vs, WellScopedVar v (extendVarSetList isvsp vs) -> WellScopedVar v (extendVarSetList isvsp' vs).
-  Proof using Type pairs_WS.
-    intros.
-    change (WellScoped (Mk_Var v) (extendVarSetList isvsp' vs)).
-    apply isvsp_to_isvsp'_extended.
-    assumption.
+    apply StrongSubset_extendVarSetList.
+    apply isvsp_to_isvsp'.
   Qed.
 
   Lemma isvsp_to_isvsp'_extended2:
-     forall e vs1 vs2,
-     WellScoped e (extendVarSetList (extendVarSetList isvsp vs1) vs2) ->
-     WellScoped e (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
+     forall vs1 vs2,
+     StrongSubset (extendVarSetList (extendVarSetList isvsp vs1) vs2)
+                  (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
   Proof using Type pairs_WS.
     intros.
-    unfold isvsp, isvsp', isvs' in *.
-    rewrite <- extendVarSetList_append in *.
-    rewrite <- extendVarSetList_append in *.
-    apply WellScoped_extendVarSetList_under.
-    apply disjoint_isvs_exits.
-    assumption.
+    apply StrongSubset_extendVarSetList.
+    apply isvsp_to_isvsp'_extended.
   Qed.
 
   Lemma addExit_all_WellScopedVar:
@@ -1151,7 +1132,8 @@ Section in_exitifyRec.
     (* Common case *)
     assert (Hreturn : P (return_ (toExpr e))). {
        apply RevStateInvariant_return. cleardefs.
-       apply isvsp_to_isvsp'_extended; assumption.
+       apply (weaken (isvsp_to_isvsp'_extended _)).
+       assumption.
     } 
 
     (* First case *)
@@ -1192,7 +1174,7 @@ Section in_exitifyRec.
     subst abs_vars.
     eapply Forall_impl.
     * intros v' HWSv'.
-      apply isvsp_to_isvsp'_extended_Var.
+      apply (weaken (isvsp_to_isvsp'_extended _)).
       apply HWSv'.
     * subst zap0. fold zap. fold pick. simpl.
       rewrite Foldable.hs_coq_foldr_list.
@@ -1217,7 +1199,7 @@ Section in_exitifyRec.
         rewrite deAnnotate_freeVars.
         split; only 1: split.
         ++ apply HWS.
-        ++ apply isvsp_to_isvsp'_extended. apply HWS.
+        ++ apply (weaken (isvsp_to_isvsp'_extended _)). apply HWS.
         ++ apply He'.
     * unfold CoreBndr in *.
       eapply RevStateInvariant_bind; only 2: (intro body'; eapply RevStateInvariant_bind; only 2: intro hs').
@@ -1256,7 +1238,7 @@ Section in_exitifyRec.
          eapply Forall_impl; only 2: apply HWSpairs.
          intros [v rhs] HWSv. simpl in *.
          rewrite deAnnotate_freeVars.
-         apply isvsp_to_isvsp'_extended2; assumption.
+         apply (weaken (isvsp_to_isvsp'_extended2 _ _)); assumption.
       ++ rewrite bindersOf_Rec.
          rewrite !map_map.
          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
@@ -1332,12 +1314,12 @@ Section in_exitifyRec.
         + intros alts'; apply RevStateInvariant_return; intro He.
           simpl. split; only 2: split.
           - rewrite deAnnotate_freeVars.
-            apply isvsp_to_isvsp'_extended; assumption.
+            apply (weaken (isvsp_to_isvsp'_extended _)); assumption.
           - apply HGLVv.
           - rewrite Forall'_Forall.
             apply He.
   * apply RevStateInvariant_return.
-    apply isvsp_to_isvsp'_extended.
+    apply (weaken (isvsp_to_isvsp'_extended _)).
     assumption.
   Qed.
 
@@ -1443,7 +1425,7 @@ Section in_exitifyRec.
       + assumption.
       + rewrite Forall'_Forall in *.
         apply pairs'_WS.
-      + apply isvsp_to_isvsp'.
+      + apply (weaken isvsp_to_isvsp').
         assumption.
     * apply all_exits_WellScoped.
   Qed.

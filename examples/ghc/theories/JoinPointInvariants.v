@@ -273,6 +273,34 @@ Proof.
   apply H.
 Qed.
 
+Lemma isJoinPointsValidPair_isJoinRHS:
+  forall v rhs jps a,
+  isJoinId_maybe v = Some a ->
+  isJoinPointsValidPair v rhs jps = true <->
+  isJoinRHS rhs a jps = true.
+Proof.
+  intros.
+  unfold isJoinPointsValidPair,isJoinPointsValidPair_aux.
+  rewrite H.
+  unfold isJoinRHS.
+  reflexivity.
+Qed.
+
+Lemma isJoinPointsValidPair_isJoinPointsValid:
+  forall v rhs jps,
+  isJoinId_maybe v = None ->
+  isJoinPointsValidPair v rhs jps = true <->
+  isJoinPointsValid rhs 0 emptyVarSet = true.
+Proof.
+  intros.
+  unfold isJoinPointsValidPair,isJoinPointsValidPair_aux.
+  rewrite H.
+  unfold isJoinRHS.
+  reflexivity.
+Qed.
+
+
+
 Lemma isValidJoinPointsPair_isJoinPointsValidPair:
   forall v rhs jps,
   isValidJoinPointsPair v rhs jps = true -> isJoinPointsValidPair v rhs jps = true.
@@ -353,6 +381,62 @@ Proof.
       unfold updJPS. rewrite Hnot_isJoin.
       intuition.
 Qed.
+
+Lemma isJoinPointsValid_mkVarApps:
+  forall e n vs jps,
+  Forall (fun v => isJoinId v = false) vs ->
+  isJoinPointsValid e (n + length vs) jps = true ->
+  isJoinPointsValid (mkVarApps e vs) n jps = true.
+Proof.
+  intros ???? Hnot_iJI HiJPV.
+  unfold mkVarApps.
+  rewrite Foldable.hs_coq_foldl_list.
+  SearchAbout fold_left fold_right.
+  revert e HiJPV.
+  induction Hnot_iJI; intros.
+  * simpl.
+    simpl in HiJPV. rewrite PeanoNat.Nat.add_0_r in HiJPV.
+    assumption.
+  * simpl.
+    apply IHHnot_iJI; clear IHHnot_iJI.
+    simpl.
+    rewrite andb_true_iff. split.
+    - simpl in HiJPV.
+      replace (_ + _ + _) with (n + S (length l)) by lia. 
+      assumption.
+    - unfold varToCoreExpr.
+      repeat destruct_match; try reflexivity.
+      simpl. rewrite isJoinId_eq in H.
+      destruct_match; congruence.
+Qed.
+
+Lemma isJoinPointsValid_MkLetRec: forall pairs body jps,
+  isJoinPointsValid (mkLetRec pairs body) 0 jps = true <->
+  ( (forallb (fun p => negb (isJoinId (fst p))) pairs ||
+     forallb (fun p =>       isJoinId (fst p))  pairs) &&
+     let jps' := updJPSs jps (map fst pairs) in
+     forallb (fun '(v,e) => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux v e jps') pairs &&
+     isJoinPointsValid body 0 jps'
+  ) = true.
+Proof.
+  intros.
+  unfold mkLetRec.
+  destruct pairs; try reflexivity.
+Qed.
+
+Lemma isJoinPointsValid_MkLet_Rec: forall pairs body jps,
+  isJoinPointsValid (mkLet (Rec pairs) body) 0 jps = true <->
+  ( (forallb (fun p => negb (isJoinId (fst p))) pairs ||
+     forallb (fun p =>       isJoinId (fst p))  pairs) &&
+     let jps' := updJPSs jps (map fst pairs) in
+     forallb (fun '(v,e) => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux v e jps') pairs &&
+     isJoinPointsValid body 0 jps'
+  ) = true.
+Proof.
+  intros.
+  destruct pairs; try reflexivity.
+Qed.
+
 
 
 Require Import CoreFVs.

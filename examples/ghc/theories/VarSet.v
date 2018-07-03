@@ -822,18 +822,23 @@ Proof.
       rewrite h1 in Eq; discriminate.
 Qed.
 
-Definition Respects_StrongSubset {a} P :=
-  forall (x : a) (vs1 vs2 : VarSet),
+Definition Respects_StrongSubset P :=
+  forall (vs1 vs2 : VarSet),
   StrongSubset vs1 vs2 ->
-  P x vs1 -> P x vs2.
+  P vs1 -> P vs2.
 Existing Class Respects_StrongSubset.
 
 (* Is this weakening? *)
 Lemma weaken:
-  forall {a} {P : a -> VarSet -> Prop} {R : Respects_StrongSubset P},
+  forall {P : VarSet -> Prop} {R : Respects_StrongSubset P},
   forall {vs1} {vs2},
   StrongSubset vs1 vs2 ->
-  forall (x : a),
-  P x vs1 -> P x vs2.
+  P vs1 -> P vs2.
 Proof. intros. unfold Respects_StrongSubset in R. eapply R; eassumption. Qed.
-  
+
+Lemma weakenb:
+  forall {P : VarSet -> bool} {R : Respects_StrongSubset (fun x => P x = true)},
+  forall {vs1} {vs2},
+  StrongSubset vs1 vs2 ->
+  P vs1 = true -> P vs2 = true.
+Proof. intros. unfold Respects_StrongSubset in R. eapply R; eassumption. Qed.

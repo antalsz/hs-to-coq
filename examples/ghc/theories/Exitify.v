@@ -104,11 +104,11 @@ Section in_exitifyRec.
   Definition isvsp' := extendVarSetList isvs' fs.
 
   (* The let-scope, before *)
-  Definition jpsp := extendVarSetList jps fs .
+  Definition jpsp := updJPSs jps fs .
   (* The outermost scope, including exits *)
-  Definition jps' := extendVarSetList jps (map fst exits).
+  Definition jps' := updJPSs jps (map fst exits).
   (* The let-scope, after *)
-  Definition jpsp' := extendVarSetList jps' fs.
+  Definition jpsp' := updJPSs jps' fs.
 
   Variable jps_subset_isvs:
     subVarSet jps isvs = true.
@@ -1436,27 +1436,37 @@ Section in_exitifyRec.
   (** When is the result of [mkExitLets] valid? *)
   
   Lemma mkLets_JPI:
-    forall exits' e jps',
-    isJoinPointsValid e 0 (updJPSs jps' (map fst exits')) = true ->
-    forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps') exits' = true ->
-    isJoinPointsValid (mkLets (map (fun '(v,rhs) => NonRec v rhs) exits') e) 0 jps' = true.
+    forall floats e jps',
+    (* All added bindings are fresh with regard to the environment *)
+    disjointVarSet jps' (mkVarSet (map fst floats)) = true ->
+    (* All added bindings are fresh with regard to each other  *)
+    NoDup (map (fun p => varUnique (fst p)) floats) ->
+    (* The body is valid in the extended environment *)
+    isJoinPointsValid e 0 (updJPSs jps' (map fst floats)) = true ->
+    (* Each thing is valid in its environment *)
+    forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps') floats = true ->
+    isJoinPointsValid (mkLets (map (fun '(v,rhs) => NonRec v rhs) floats) e) 0 jps' = true.
   Proof.
     intros ??.
-    induction exits' as [|[v rhs] exits']; intros jps' Hbase Hpairs.
+    induction floats as [|[v rhs] floats]; intros jps' Hdisjoint HNoDup Hbase Hpairs.
     * simpl. unfold Base.id. assumption.
     * simpl in *; fold isJoinPointsValidPair in *.
       simpl_bool.
       destruct Hpairs as [Hpair Hpairs].
       split.
       - apply isValidJoinPointsPair_isJoinPointsValidPair. assumption.
-      - apply IHexits'; clear IHexits'.
+      - apply disjointVarSet_mkVarSet_cons in Hdisjoint.
+        destruct Hdisjoint as [Hfreshv Hdisjoint].
+        inversion_clear HNoDup as [|?? HnotInv HNoHup].
+        apply IHfloats; clear IHfloats.
+        + admit.
+        + assumption.
         + assumption.
         + eapply forallb_imp. apply Hpairs.
-          intros [v' rhs'].
-          unfold updJPS.
-          erewrite isValidJoinPointsPair_isJoinId by eassumption.
-          apply isValidJoinPointsPair_extendVarSet.
-  Qed.
+          intros [v' rhs'] HiJVJPP.
+          refine (weakenb (StrongSubset_updJPS_fresh _ _ Hfreshv) _).
+          assumption.
+  Admitted.
 
   Lemma addExit_all_joinIds:
     forall jps' captured ja e,
@@ -1612,7 +1622,11 @@ Section in_exitifyRec.
       rewrite negb_true_iff in Hno_capture_jp.
       assumption.
     * apply isJoinPointsValid_picked.
-      - admit. (* apply HIJPV. *)
+      - unfold jpsp in *.
+        rewrite <- updJPSs_append in HIJPV.
+        erewrite <- isJoinPointsValid_fresh_updJPSs.
+        eassumption.
+        admit.
       - apply Hno_capture_jp.
   Admitted.
 
@@ -1836,29 +1850,43 @@ Section in_exitifyRec.
   Qed.
 
   Lemma jps_to_jps':
-     forall e, isJoinPointsValid e 0 jps = true -> isJoinPointsValid e 0 jps' = true.
+     StrongSubset jps jps'.
   Proof using Type pairs_WS jps_subset_isvs.
     intros.
-  Admitted.
+    apply StrongSubset_updJPSs_fresh.
+    apply disjoint_jps_exits.
+  Qed.
 
   Lemma jpsp_to_jpsp':
-     forall e, isJoinPointsValid e 0 jpsp = true -> isJoinPointsValid e 0 jpsp' = true.
-  Proof using Type pairs_WS.
+     StrongSubset jpsp jpsp'.
+  Proof using Type pairs_WS jps_subset_isvs.
     intros.
-    unfold jpsp, jpsp', jps' in *.
-  Admitted.
+    apply StrongSubset_updJPSs.
+    apply jps_to_jps'.
+  Qed.
 
   Lemma jpsp_to_jpsp'_extended:
-     forall e vs, isJoinPointsValid e 0 (updJPSs jpsp vs) = true -> isJoinPointsValid e 0 (updJPSs jpsp' vs) = true.
-  Proof using Type pairs_WS.
+     forall vs, StrongSubset (updJPSs jpsp vs) (updJPSs jpsp' vs).
+  Proof using Type pairs_WS jps_subset_isvs.
     intros.
-    unfold jpsp, jpsp', jps' in *.
-  Admitted.
+    apply StrongSubset_updJPSs.
+    apply jpsp_to_jpsp'.
+  Qed.
+
+  Lemma jpsp_to_jpsp'_extended2:
+     forall vs1 vs2,
+     StrongSubset (updJPSs (updJPSs jpsp vs1) vs2)
+                  (updJPSs (updJPSs jpsp' vs1) vs2).
+  Proof using Type pairs_WS jps_subset_isvs.
+    intros.
+    apply StrongSubset_updJPSs.
+    apply jpsp_to_jpsp'_extended.
+  Qed.
 
 
   (* Again, we go  [go] again and see that pairs' is join-point valid.
   *)
-  
+
   Lemma addExit_isJoinPointsValid:
     forall captured ja e,
     let after := updJPSs jpsp' captured in
@@ -1904,7 +1932,7 @@ Section in_exitifyRec.
     isJoinPointsValid (toExpr e) 0 orig = true ->
     RevStateInvariant (sublistOf exits) (go_exit captured (toExpr e) (exprFreeVars (toExpr e)))
                       (fun e' => isJoinPointsValid e' 0 after = true).
-  Proof using Type pairs_WS.
+  Proof using Type pairs_WS jps_subset_isvs.
     intros ?? HJPVe.
 
     set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => isJoinPointsValid e' 0 after = true)).
@@ -1916,7 +1944,8 @@ Section in_exitifyRec.
     (* Common case *)
     assert (Hreturn : P (return_ (toExpr e))). {
        apply RevStateInvariant_return. cleardefs.
-       apply jpsp_to_jpsp'_extended; assumption.
+       apply (weakenb (jpsp_to_jpsp'_extended _)).
+       assumption.
     } 
 
     (* First case *)
@@ -2104,7 +2133,7 @@ Section in_exitifyRec.
             apply He.
          *)
   * apply RevStateInvariant_return.
-    apply jpsp_to_jpsp'_extended.
+    apply (weakenb (jpsp_to_jpsp'_extended _)).
     assumption.
   Admitted.
 
@@ -2158,7 +2187,7 @@ Section in_exitifyRec.
     let jps' := updJPSs jps fs in
     isJoinPointsValid body 0 jps' = true ->
     isJoinPointsValid (mkLets (exitifyRec (extendInScopeSetList in_scope fs) (map toJPair pairs)) body) 0 jps = true.
-  Proof.
+  Proof using Type jps_subset_isvs pairs_VJPP pairs_WS.
     intros.
     cbv beta delta [exitifyRec].
     zeta_with go_exit.
@@ -2173,11 +2202,16 @@ Section in_exitifyRec.
     change (isJoinPointsValid (mkLets (map (fun '(x, y) => NonRec x y) exits ++ [Rec pairs']) body) 0 jps = true).
     rewrite mkLets_append, mkLets_cons, mkLets_nil.
     apply mkLets_JPI.
+    * eapply disjointVarSet_subVarSet_l.
+      + apply disjointVarSet_mkVarSet.
+        rewrite Forall_map.
+        apply all_exits_WellScoped.
+      + apply jps_subset_isvs.
+    * apply all_exits_WellScoped.
     * rewrite isJoinPointsValid_MkLet_Rec.
       subst jps'0.
       float_let. subst jps'0.
-      replace (updJPSs _ _) with jpsp'.
-      2: { admit. }
+      rewrite map_fst_pairs'.
       simpl_bool; repeat apply conj.
       -- simpl_bool. right.
          rewrite forallb_forall.
@@ -2197,11 +2231,10 @@ Section in_exitifyRec.
          simpl in HIn.
          apply isValidJoinPointsPair_isJoinPointsValidPair in H1.
          assumption.
-      -- apply jpsp_to_jpsp'.
-         unfold jpsp.
-         admit.
+      -- apply (weakenb jpsp_to_jpsp').
+         assumption.
     * apply all_exits_ValidJoinPairs.
-  Admitted.
+  Qed.
 
 
 End in_exitifyRec.

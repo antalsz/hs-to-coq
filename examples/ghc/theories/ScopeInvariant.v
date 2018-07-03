@@ -326,12 +326,12 @@ Axiom WellScoped_extendVarSetList_fresh:
   disjointVarSet (exprFreeVars e) (mkVarSet vs) = true ->
   WellScoped e (extendVarSetList vs1 vs) <-> WellScoped e vs1.
 
-Instance Respects_StrongSubset_WellScopedVar : Respects_StrongSubset WellScopedVar.
+Instance Respects_StrongSubset_WellScopedVar v : Respects_StrongSubset (WellScopedVar v).
 Proof.
   admit.
 Admitted.
 
-Instance Respects_StrongSubset_WellScoped : Respects_StrongSubset WellScoped.
+Instance Respects_StrongSubset_WellScoped e : Respects_StrongSubset (WellScoped e).
 Proof.
   admit.
 Admitted.

@@ -189,7 +189,6 @@ Proof.
   * rewrite delVarSetList_nil. reflexivity.
   * rewrite updJPSs_append, updJPSs_cons, updJPSs_nil.
     rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
-    SearchAbout Forall.
     rewrite forallb_app in H. simpl in H. rewrite andb_true_r, andb_true_iff, negb_true_iff in H. 
     rewrite IHvs by intuition.
     rewrite updJPS_not_joinId by intuition.
@@ -391,7 +390,6 @@ Proof.
   intros ???? Hnot_iJI HiJPV.
   unfold mkVarApps.
   rewrite Foldable.hs_coq_foldl_list.
-  SearchAbout fold_left fold_right.
   revert e HiJPV.
   induction Hnot_iJI; intros.
   * simpl.
@@ -443,6 +441,14 @@ Require Import CoreFVs.
 
 (* There is some worrying duplication/similarity with
 [WellScoped_extendVarSetList_fresh_between] *)
+Lemma isJoinPointsValid_fresh_updJPSs:
+  forall (vs2 vs3 : list Var) (e : CoreExpr) (jps : VarSet),
+  disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
+  isJoinPointsValid e 0 (updJPSs jps (vs2 ++ vs3)) =
+  isJoinPointsValid e 0 (updJPSs jps vs3).
+Admitted.
+
+
 Lemma isJoinPointsValid_fresh_between:
   forall (vs1 vs2 vs3 : list Var) (e : CoreExpr) (jps : VarSet),
   disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
@@ -463,8 +469,33 @@ Admitted.
       I repeat the defininition later to give it a name.
 *)
 
-Axiom isValidJoinPointsPair_extendVarSet:
-  forall v rhs jps v',
-  isValidJoinPointsPair v rhs jps = true ->
-  isValidJoinPointsPair v rhs (extendVarSet jps v') = true.
-  
+Lemma StrongSubset_updJPSs:
+  forall (vs3 : list Var) (vs1 vs2 : VarSet),
+  StrongSubset vs1 vs2 ->
+  StrongSubset (updJPSs vs1 vs3) (updJPSs vs2 vs3).
+Admitted.
+
+
+Lemma StrongSubset_updJPS_fresh :
+  forall vs v,
+  elemVarSet v vs = false ->
+  StrongSubset vs (updJPS vs v).
+Admitted.
+
+Lemma StrongSubset_updJPSs_fresh :
+  forall vs vs2,
+  disjointVarSet vs (mkVarSet vs2) = true ->
+  StrongSubset vs (updJPSs vs vs2).
+Admitted.
+
+
+
+Instance Respects_StrongSubset_isJoinPointsValid e n : Respects_StrongSubset (fun jps => isJoinPointsValid e n jps = true).
+Proof.
+  admit.
+Admitted.
+
+Instance Respects_StrongSubset_isValidJoinPointsPair x e : Respects_StrongSubset (fun jps => isValidJoinPointsPair x e jps = true).
+Proof.
+  admit.
+Admitted.

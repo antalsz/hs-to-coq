@@ -235,6 +235,13 @@ Lemma elemVarSet_unionVarSet:
   elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
 Admitted.
 
+Lemma elemVarSet_extendVarSetList_r:
+  forall v vs1 vs2,
+  elemVarSet v (mkVarSet vs2) = true ->
+  elemVarSet v (extendVarSetList vs1 vs2) = true.
+Admitted.
+
+
 (** ** [extendVarSet]  *)
 
 
@@ -509,6 +516,9 @@ Proof.
   set (key := (Unique.getWordKey (Unique.getUnique v))).
   (* Need theory about IntMap. *)
 Admitted. 
+
+(** ** [disjointVarSet]  *)
+
 
 Axiom disjointVarSet_mkVarSet:
   forall vs1 vs2,

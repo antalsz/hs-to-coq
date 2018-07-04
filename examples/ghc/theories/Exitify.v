@@ -1624,11 +1624,15 @@ Section in_exitifyRec.
     * apply isJoinPointsValid_picked.
       - unfold jpsp in *.
         rewrite <- updJPSs_append in HIJPV.
-        erewrite <- isJoinPointsValid_fresh_updJPSs.
-        eassumption.
-        admit.
+        erewrite <- isJoinPointsValid_fresh_updJPSs; only 1: eassumption.
+        rewrite map_map in Hdisjoint.
+        rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
+            by (intros; repeat expand_pairs; destruct a; reflexivity).
+        fold fs in Hdisjoint.
+        eapply disjointVarSet_subVarSet_l; only 1: apply Hdisjoint.
+        apply subVarSet_delVarSetList.
       - apply Hno_capture_jp.
-  Admitted.
+  Qed.
 
   (* Now we need to do induction on go over a well-scoped _and_ join-point-valid term.
      And actually we need that twice. So hence I define a new induction principle, based on the old one, to be used twice.
@@ -1841,6 +1845,21 @@ Section in_exitifyRec.
     * repeat split; constructor.
   Qed.
 
+  Lemma all_exits_isJoinId:
+    forallb isJoinId (map fst exits) = true.
+  Proof using Type pairs_VJPP pairs_WS.
+    rewrite forallb_forall.
+    rewrite <- Forall_forall.
+    rewrite Forall_map.
+    rewrite Forall_forall.
+    intros [v e] HIn.
+    pose proof all_exits_ValidJoinPairs.
+    rewrite forallb_forall in H.
+    specialize (H _ HIn).
+    apply isValidJoinPointsPair_isJoinId in H.
+    assumption.
+  Qed.
+
   Lemma disjoint_jps_exits:
      disjointVarSet jps (mkVarSet (map fst exits)) = true.
   Proof using Type pairs_WS jps_subset_isvs.
@@ -1884,7 +1903,7 @@ Section in_exitifyRec.
   Qed.
 
 
-  (* Again, we go  [go] again and see that pairs' is join-point valid.
+  (* Again, we go through [go] again and see that pairs' is join-point valid.
   *)
 
   Lemma addExit_isJoinPointsValid:
@@ -1922,8 +1941,28 @@ Section in_exitifyRec.
     rewrite Nat.leb_refl. simpl.
     unfold jpsp', jps'.
     (* There is again a lot of repetition to above *)
-    admit.
-  Admitted.
+    apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.
+    * rewrite updJPSs_joinId by apply all_exits_isJoinId.
+      apply elemVarSet_extendVarSetList_r.
+      apply elemVarSet_mkVarset_iff_In.
+      apply in_map.
+      assumption.
+    * apply elemVarSet_uniqAway.
+      unfold in_scope2.
+      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+      apply subVarSet_extendVarSet.
+      apply subVarSet_extendVarSetList_l.
+      apply subVarSet_extendVarSetList_l.
+      apply subVarSet_extendVarSetList_r.
+      apply subVarSet_refl.
+    * apply elemVarSet_uniqAway.
+      unfold in_scope2.
+      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+      apply subVarSet_extendVarSet.
+      apply subVarSet_extendVarSetList_l.
+      apply subVarSet_extendVarSetList_r.
+      apply subVarSet_refl.
+  Qed.
 
 
   Lemma go_exit_res_isJoinPointsValid captured e : 

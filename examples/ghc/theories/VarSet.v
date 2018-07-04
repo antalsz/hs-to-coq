@@ -592,6 +592,10 @@ Lemma lookupVarSet_elemVarSet :
   forall v1 v2 vs, lookupVarSet vs v1 = Some v2 -> elemVarSet v1 vs = true.
 Admitted.
 
+Lemma lookupVarSet_None_elemVarSet: 
+  forall v1 vs, lookupVarSet vs v1 = None <-> elemVarSet v1 vs = false.
+Admitted.
+
 Lemma elemVarSet_lookupVarSet :
   forall v1 vs, elemVarSet v1 vs = true -> exists v2, lookupVarSet vs v1 = Some v2.
 Admitted.
@@ -700,12 +704,17 @@ Definition StrongSubset (vs1 : VarSet) (vs2: VarSet) :=
            | None => True 
          end.
 
+Require Import Coq.Classes.RelationClasses.
 
 Axiom StrongSubset_refl : forall vs, 
     StrongSubset vs vs.
 
-Axiom StrongSubset_trans : forall vs2 vs1 vs3, 
+Instance StrongSubset_Reflexive : Reflexive StrongSubset := StrongSubset_refl.
+
+Axiom StrongSubset_trans : forall vs1 vs2 vs3, 
     StrongSubset vs1 vs2 -> StrongSubset vs2 vs3 -> StrongSubset vs1 vs3.
+
+Instance StrongSubset_Transitive : Transitive StrongSubset := StrongSubset_trans.
 
 
 Lemma strongSubset_implies_subset :
@@ -729,7 +738,10 @@ Qed.
 
 
 
-Lemma StrongSubset_extend_fresh : forall vs v, lookupVarSet vs v = None -> StrongSubset vs (extendVarSet vs v).
+Lemma StrongSubset_extend_fresh :
+  forall vs v,
+  lookupVarSet vs v = None ->
+  StrongSubset vs (extendVarSet vs v).
 Proof.
   intros.
   unfold StrongSubset.
@@ -744,7 +756,26 @@ Proof.
   unfold CoreBndr in *. intro h. rewrite Base.Eq_sym in h. rewrite h in EQV. discriminate.
 Qed.
 
-Lemma StrongSubset_extend : forall vs1 vs2 v, StrongSubset vs1 vs2 -> StrongSubset (extendVarSet vs1 v) (extendVarSet vs2 v).
+Lemma StrongSubset_extendList_fresh :
+  forall vs vs2,
+  disjointVarSet vs (mkVarSet vs2) = true ->
+  StrongSubset vs (extendVarSetList vs vs2).
+Proof.
+  intros.
+  unfold StrongSubset.
+  intros v.
+  destruct_match; try trivial.
+  destruct_match.
+  * admit.
+  * admit.
+Admitted.
+
+
+Lemma StrongSubset_extend :
+  forall vs1 vs2 v,
+  StrongSubset vs1 vs2 ->
+  StrongSubset (extendVarSet vs1 v) (extendVarSet vs2 v).
+Proof.
   intros.
   unfold StrongSubset in *.
   intro var.
@@ -763,7 +794,10 @@ Lemma StrongSubset_extend : forall vs1 vs2 v, StrongSubset vs1 vs2 -> StrongSubs
 Qed.  
 
 
-Lemma StrongSubset_extendVarSetList : forall l vs1 vs2, StrongSubset vs1 vs2 -> StrongSubset (extendVarSetList vs1 l) (extendVarSetList vs2 l).
+Lemma StrongSubset_extendVarSetList :
+  forall l vs1 vs2,
+  StrongSubset vs1 vs2 ->
+  StrongSubset (extendVarSetList vs1 l) (extendVarSetList vs2 l).
 Proof.
   induction l; intros vs1 vs2 h.
   repeat rewrite extendVarSetList_nil.
@@ -787,3 +821,24 @@ Proof.
     intro h1;
       rewrite h1 in Eq; discriminate.
 Qed.
+
+Definition Respects_StrongSubset P :=
+  forall (vs1 vs2 : VarSet),
+  StrongSubset vs1 vs2 ->
+  P vs1 -> P vs2.
+Existing Class Respects_StrongSubset.
+
+(* Is this weakening? *)
+Lemma weaken:
+  forall {P : VarSet -> Prop} {R : Respects_StrongSubset P},
+  forall {vs1} {vs2},
+  StrongSubset vs1 vs2 ->
+  P vs1 -> P vs2.
+Proof. intros. unfold Respects_StrongSubset in R. eapply R; eassumption. Qed.
+
+Lemma weakenb:
+  forall {P : VarSet -> bool} {R : Respects_StrongSubset (fun x => P x = true)},
+  forall {vs1} {vs2},
+  StrongSubset vs1 vs2 ->
+  P vs1 = true -> P vs2 = true.
+Proof. intros. unfold Respects_StrongSubset in R. eapply R; eassumption. Qed.

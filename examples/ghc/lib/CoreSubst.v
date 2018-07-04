@@ -107,6 +107,8 @@ Definition delBndr : Subst -> Core.Var -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, v =>
+        if Core.isCoVar v : bool then Mk_Subst in_scope ids tvs (cvs) else
+        if Core.isTyVar v : bool then Mk_Subst in_scope ids (tvs) cvs else
         Mk_Subst in_scope (Core.delVarEnv ids v) tvs cvs
     end.
 
@@ -145,7 +147,10 @@ Definition extendSubstList
            end.
 
 Definition extendSubstWithVar : Subst -> Core.Var -> Core.Var -> Subst :=
-  fun subst v1 v2 => extendIdSubst subst v1 (Core.Mk_Var v2).
+  fun subst v1 v2 =>
+    if Core.isTyVar v1 : bool then subst else
+    if Core.isCoVar v1 : bool then subst else
+    extendIdSubst subst v1 (Core.Mk_Var v2).
 
 Definition extendIdSubstList
    : Subst -> list (Core.Var * Core.CoreExpr)%type -> Subst :=
@@ -210,10 +215,11 @@ Definition substDVarSet : Subst -> DVarSet -> DVarSet :=
   fun subst fvs =>
     let subst_fv :=
       fun subst fv acc =>
-        let j_0__ := id acc in
-        CoreFVs.expr_fvs (lookupIdSubst (Datatypes.id (GHC.Base.hs_string__
-                                                       "substDVarSet")) subst fv) Core.isLocalVar Core.emptyVarSet
-        acc in
+        if Core.isId fv : bool
+        then CoreFVs.expr_fvs (lookupIdSubst (Datatypes.id (GHC.Base.hs_string__
+                                                            "substDVarSet")) subst fv) Core.isLocalVar Core.emptyVarSet
+             acc else
+        id acc in
     Core.mkDVarSet (Data.Tuple.fst (Data.Foldable.foldr (subst_fv subst) (pair nil
                                                                                Core.emptyVarSet) (Core.dVarSetElems
                                                          fvs))).
@@ -279,6 +285,8 @@ Definition substIdBndr
 
 Definition substBndr : Subst -> Core.Var -> (Subst * Core.Var)%type :=
   fun subst bndr =>
+    if Core.isTyVar bndr : bool then pair subst bndr else
+    if Core.isCoVar bndr : bool then pair subst bndr else
     substIdBndr (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
 
 Definition substBndrs
@@ -302,8 +310,9 @@ Definition clone_id
         let id2 := substIdType subst id1 in
         let new_id :=
           maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id))) id2 in
-        let 'pair new_idvs new_cvs := pair (Core.extendVarEnv idvs old_id (Core.Mk_Var
-                                                                           new_id)) cvs in
+        let 'pair new_idvs new_cvs := (if Core.isCoVar old_id : bool
+                                       then pair idvs cvs else
+                                       pair (Core.extendVarEnv idvs old_id (Core.Mk_Var new_id)) cvs) in
         pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_idvs tvs new_cvs)
              new_id
     end.
@@ -332,7 +341,9 @@ Definition cloneIdBndr
 
 Definition cloneBndr
    : Subst -> Unique.Unique -> Core.Var -> (Subst * Core.Var)%type :=
-  fun subst uniq v => clone_id subst subst (pair v uniq).
+  fun subst uniq v =>
+    if Core.isTyVar v : bool then pair subst v else
+    clone_id subst subst (pair v uniq).
 
 Definition cloneBndrs
    : Subst ->
@@ -533,13 +544,14 @@ Definition zapSubstEnv : Subst -> Subst :=
      Core.dVarSetElems Core.delVarEnv Core.delVarEnvList Core.elemInScopeSet
      Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet Core.extendInScopeSet
      Core.extendInScopeSetList Core.extendInScopeSetSet Core.extendVarEnv
-     Core.extendVarEnvList Core.idInfo Core.isEmptyVarEnv Core.isLocalId
-     Core.isLocalVar Core.lookupInScope Core.lookupVarEnv Core.mkDVarSet
-     Core.ruleInfo Core.setRuleInfo Core.setVarUnique Core.unfoldingInfo
-     Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
-     Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
-     Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Err.error GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
-     Name.Name Panic.panicStr Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
-     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
+     Core.extendVarEnvList Core.idInfo Core.isCoVar Core.isEmptyVarEnv Core.isId
+     Core.isLocalId Core.isLocalVar Core.isTyVar Core.lookupInScope Core.lookupVarEnv
+     Core.mkDVarSet Core.ruleInfo Core.setRuleInfo Core.setVarUnique
+     Core.unfoldingInfo Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr
+     CoreUtils.mkTick Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst
+     Data.Tuple.snd Datatypes.id GHC.Base.String GHC.Base.map GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Err.error GHC.List.unzip
+     GHC.List.zip GHC.Num.fromInteger Name.Name Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace UniqSupply.UniqSupply UniqSupply.uniqFromSupply
+     UniqSupply.uniqsFromSupply Unique.Unique
 *)

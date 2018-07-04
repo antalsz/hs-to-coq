@@ -21,10 +21,20 @@ in CoreSubst.substUnfolding rewrite forall x y, GHC.Prim.seq x y = y
 # These edits get rid of all of the substitutions for tyvars and covars
 #
 #
+in CoreSubst.delBndr rewrite forall , Core.delVarEnv cvs v = cvs
+in CoreSubst.delBndr rewrite forall , Core.delVarEnv tvs v = tvs
 
-rewrite forall v, Core.isCoVar v = false
-rewrite forall v, Core.isTyVar v = false
-rewrite forall v, Core.isId fv   = true
+in CoreSubst.substBndr rewrite forall , CoreSubst.substTyVarBndr subst bndr = ( pair subst bndr )
+in CoreSubst.substBndr rewrite forall , CoreSubst.substCoVarBndr subst bndr = ( pair subst bndr )
+
+in CoreSubst.clone_id rewrite forall , Core.extendVarEnv cvs old_id tt = cvs
+
+in CoreSubst.cloneBndr rewrite forall , CoreSubst.cloneTyVarBndr subst v uniq = ( pair subst v )
+
+
+# rewrite forall v, Core.isCoVar v = false
+# rewrite forall v, Core.isTyVar v = false
+# rewrite forall v, Core.isId fv   = true
 
 rewrite forall x t, Id.setIdType x t = x
 

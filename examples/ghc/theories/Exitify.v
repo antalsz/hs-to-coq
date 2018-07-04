@@ -32,12 +32,14 @@ Require Import Proofs.Unique.
 Set Bullet Behavior "Strict Subproofs".
 
 
-
 Close Scope Z_scope.
 
 
 (* This section reflects the context of the local definition of exitifyRec *)
 Section in_exitifyRec.
+
+  Set Default Proof Using "Type".
+
   (* Parameters of exitifyRec *)
   Variable in_scope : InScopeSet.
   Variable pairs : list NJPair.
@@ -100,6 +102,17 @@ Section in_exitifyRec.
   Definition isvs' := extendVarSetList isvs (map fst exits).
   (* The let-scope, after *)
   Definition isvsp' := extendVarSetList isvs' fs.
+
+  (* The let-scope, before *)
+  Definition jpsp := updJPSs jps fs .
+  (* The outermost scope, including exits *)
+  Definition jps' := updJPSs jps (map fst exits).
+  (* The let-scope, after *)
+  Definition jpsp' := updJPSs jps' fs.
+
+  Variable jps_subset_isvs:
+    subVarSet jps isvs = true.
+
 
   (** Termination of [go] and a suitable induction lemma *)
 
@@ -542,7 +555,7 @@ Section in_exitifyRec.
     intros ?.
     unfold WellScopedFloats.
     generalize isvs as isvs.
-    clear in_scope pairs jps.
+    clear in_scope pairs jps jps_subset_isvs.
     induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
     * simpl. unfold Base.id. assumption.
     * simpl in *.
@@ -868,7 +881,9 @@ Section in_exitifyRec.
     apply addExit_all_WellScopedFloats.
     rewrite WellScoped_mkLams.
     subst abs_vars.
-    float_let.
+    repeat float_let.
+    replace pick0 with pick by reflexivity.
+    replace pick1 with pick by reflexivity.
     cleardefs.
     rewrite Foldable.hs_coq_foldr_list.
     split.
@@ -879,7 +894,6 @@ Section in_exitifyRec.
       apply zap_ae.
 
     * apply WellScoped_picked.
-      clear zap0 pick0.
       rewrite hs_coq_map in Hdisjoint.
       rewrite map_map in Hdisjoint.
       rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in Hdisjoint
@@ -966,10 +980,13 @@ Section in_exitifyRec.
     Forall (fun p => WellScoped (snd p) isvsp) (map toJPair pairs) .
   Variable pairs_GLV:
     Forall (fun p : Var * Expr CoreBndr => GoodLocalVar (fst p)) (map toJPair pairs).
+  Variable pairs_VJPP:
+    Forall (fun p : Var * Expr CoreBndr => isValidJoinPointsPair (fst p) (snd p) jpsp = true) (map toJPair pairs).
+
 
   Lemma all_exits_WellScoped:
     WellScopedFloats exits.
-  Proof.
+  Proof using Type pairs_WS.
     unfold exits.
     unfold pairs'_exits.
     unfold ann_pairs.
@@ -1002,66 +1019,46 @@ Section in_exitifyRec.
     destruct H; subst; auto.
   Qed.
 
-  Lemma isvs_to_isvs':
-     forall e, WellScoped e isvs -> WellScoped e isvs'.
-  Proof.
-    intros.
-    apply WellScoped_extendVarSetList.
+  Lemma disjoint_isvs_exits:
+     disjointVarSet isvs (mkVarSet (map fst exits)) = true.
+  Proof using Type pairs_WS.
     rewrite disjointVarSet_mkVarSet.
     rewrite Forall_map. simpl.
     apply all_exits_WellScoped.
-    assumption.
+  Qed.
+
+  Lemma isvs_to_isvs':
+     StrongSubset isvs isvs'.
+  Proof using Type pairs_WS.
+    intros.
+    apply StrongSubset_extendList_fresh.
+    apply disjoint_isvs_exits.
   Qed.
 
   Lemma isvsp_to_isvsp':
-     forall e, WellScoped e isvsp -> WellScoped e isvsp'.
-  Proof.
+     StrongSubset isvsp isvsp'.
+  Proof using Type pairs_WS.
     intros.
-    unfold isvsp, isvsp', isvs' in *.
-    apply WellScoped_extendVarSetList_under.
-    rewrite disjointVarSet_mkVarSet.
-    rewrite Forall_map. simpl.
-    apply all_exits_WellScoped.
-    assumption.
+    apply StrongSubset_extendVarSetList.
+    apply isvs_to_isvs'.
   Qed.
 
   Lemma isvsp_to_isvsp'_extended:
-     forall e vs, WellScoped e (extendVarSetList isvsp vs) -> WellScoped e (extendVarSetList isvsp' vs).
-  Proof.
+     forall vs, StrongSubset (extendVarSetList isvsp vs) (extendVarSetList isvsp' vs).
+  Proof using Type pairs_WS.
     intros.
-    unfold isvsp, isvsp', isvs' in *.
-    rewrite <- extendVarSetList_append in *.
-    apply WellScoped_extendVarSetList_under.
-    rewrite disjointVarSet_mkVarSet.
-    rewrite Forall_map. simpl.
-    apply all_exits_WellScoped.
-    assumption.
+    apply StrongSubset_extendVarSetList.
+    apply isvsp_to_isvsp'.
   Qed.
-
-  Lemma isvsp_to_isvsp'_extended_Var:
-     forall v vs, WellScopedVar v (extendVarSetList isvsp vs) -> WellScopedVar v (extendVarSetList isvsp' vs).
-  Proof.
-    intros.
-    change (WellScoped (Mk_Var v) (extendVarSetList isvsp' vs)).
-    apply isvsp_to_isvsp'_extended.
-    assumption.
-  Qed.
-
 
   Lemma isvsp_to_isvsp'_extended2:
-     forall e vs1 vs2,
-     WellScoped e (extendVarSetList (extendVarSetList isvsp vs1) vs2) ->
-     WellScoped e (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
-  Proof.
+     forall vs1 vs2,
+     StrongSubset (extendVarSetList (extendVarSetList isvsp vs1) vs2)
+                  (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
+  Proof using Type pairs_WS.
     intros.
-    unfold isvsp, isvsp', isvs' in *.
-    rewrite <- extendVarSetList_append in *.
-    rewrite <- extendVarSetList_append in *.
-    apply WellScoped_extendVarSetList_under.
-    rewrite disjointVarSet_mkVarSet.
-    rewrite Forall_map. simpl.
-    apply all_exits_WellScoped.
-    assumption.
+    apply StrongSubset_extendVarSetList.
+    apply isvsp_to_isvsp'_extended.
   Qed.
 
   Lemma addExit_all_WellScopedVar:
@@ -1070,7 +1067,7 @@ Section in_exitifyRec.
     RevStateInvariant (sublistOf exits) 
          (addExit (extendInScopeSetList in_scope2 captured) ja e)
          (fun v => WellScopedVar v after).
-  Proof.
+  Proof using Type pairs_WS.
     intros.
     (* This is much easier to prove by breaking the State abstraction and turning
        it into a simple function. *)
@@ -1123,7 +1120,7 @@ Section in_exitifyRec.
     WellScoped (toExpr e) orig ->
     disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
     RevStateInvariant (sublistOf exits) (go_exit captured (toExpr e) (exprFreeVars (toExpr e))) (fun e' => WellScoped e' after).
-  Proof.
+  Proof using Type pairs_WS.
     intros ?? HWSe Hdisjoint.
 
     set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => WellScoped e' after)).
@@ -1135,7 +1132,8 @@ Section in_exitifyRec.
     (* Common case *)
     assert (Hreturn : P (return_ (toExpr e))). {
        apply RevStateInvariant_return. cleardefs.
-       apply isvsp_to_isvsp'_extended; assumption.
+       apply (weaken (isvsp_to_isvsp'_extended _)).
+       assumption.
     } 
 
     (* First case *)
@@ -1176,7 +1174,7 @@ Section in_exitifyRec.
     subst abs_vars.
     eapply Forall_impl.
     * intros v' HWSv'.
-      apply isvsp_to_isvsp'_extended_Var.
+      apply (weaken (isvsp_to_isvsp'_extended _)).
       apply HWSv'.
     * subst zap0. fold zap. fold pick. simpl.
       rewrite Foldable.hs_coq_foldr_list.
@@ -1188,7 +1186,7 @@ Section in_exitifyRec.
     let after := extendVarSetList isvsp' captured in
     WellScoped (toExpr e) orig ->
     RevStateInvariant (sublistOf exits) (go captured (freeVars (toExpr e))) (fun e' => WellScoped e' after).
-  Proof.
+  Proof using Type pairs_WS.
     revert e captured.
     apply (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r (fun e' => WellScoped e' (extendVarSetList isvsp' captured))));
       intros; set (after := extendVarSetList isvsp' captured).
@@ -1201,7 +1199,7 @@ Section in_exitifyRec.
         rewrite deAnnotate_freeVars.
         split; only 1: split.
         ++ apply HWS.
-        ++ apply isvsp_to_isvsp'_extended. apply HWS.
+        ++ apply (weaken (isvsp_to_isvsp'_extended _)). apply HWS.
         ++ apply He'.
     * unfold CoreBndr in *.
       eapply RevStateInvariant_bind; only 2: (intro body'; eapply RevStateInvariant_bind; only 2: intro hs').
@@ -1240,7 +1238,7 @@ Section in_exitifyRec.
          eapply Forall_impl; only 2: apply HWSpairs.
          intros [v rhs] HWSv. simpl in *.
          rewrite deAnnotate_freeVars.
-         apply isvsp_to_isvsp'_extended2; assumption.
+         apply (weaken (isvsp_to_isvsp'_extended2 _ _)); assumption.
       ++ rewrite bindersOf_Rec.
          rewrite !map_map.
          rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
@@ -1316,18 +1314,18 @@ Section in_exitifyRec.
         + intros alts'; apply RevStateInvariant_return; intro He.
           simpl. split; only 2: split.
           - rewrite deAnnotate_freeVars.
-            apply isvsp_to_isvsp'_extended; assumption.
+            apply (weaken (isvsp_to_isvsp'_extended _)); assumption.
           - apply HGLVv.
           - rewrite Forall'_Forall.
             apply He.
   * apply RevStateInvariant_return.
-    apply isvsp_to_isvsp'_extended.
+    apply (weaken (isvsp_to_isvsp'_extended _)).
     assumption.
   Qed.
 
   Lemma pairs'_WS:
     Forall (fun p => WellScoped (snd p) isvsp') pairs'.
-  Proof.
+  Proof using Type pairs_WS.
     unfold pairs', pairs'_exits, ann_pairs.
     eapply RevStateInvariant_runState with (P := sublistOf exits).
     * rewrite hs_coq_map, !map_map, forM_map.
@@ -1377,7 +1375,7 @@ Section in_exitifyRec.
            Bifunctor.Bifunctor__pair_type_second, Bifunctor.Bifunctor__pair_type_bimap.
     unfold id.
     generalize (@nil (prod JoinId CoreExpr)) as s.
-    clear pairs_WS pairs_GLV.
+    clear pairs_WS pairs_GLV pairs_VJPP.
     induction pairs.
     * reflexivity.
     * intro.
@@ -1389,7 +1387,6 @@ Section in_exitifyRec.
   Lemma map_fst_pairs'':
     map (@fst Var (Expr CoreBndr)) pairs' = fs.
   Proof. exact map_fst_pairs'. Qed.
-  
 
   (** Main well-scopedness theorem:
       If the input is well-scoped, then so is the output of [exitifyRec].*)
@@ -1398,7 +1395,7 @@ Section in_exitifyRec.
     NoDup (map varUnique fs) ->
     WellScoped body isvsp ->
     WellScoped (mkLets (exitifyRec (extendInScopeSetList in_scope fs) (map toJPair pairs)) body) isvs.
-  Proof.
+  Proof using Type pairs_GLV pairs_WS.
     intros ? HNoDup HWSbody.
     cbv beta delta [exitifyRec].
     zeta_with go_exit.
@@ -1428,7 +1425,7 @@ Section in_exitifyRec.
       + assumption.
       + rewrite Forall'_Forall in *.
         apply pairs'_WS.
-      + apply isvsp_to_isvsp'.
+      + apply (weaken isvsp_to_isvsp').
         assumption.
     * apply all_exits_WellScoped.
   Qed.
@@ -1439,27 +1436,37 @@ Section in_exitifyRec.
   (** When is the result of [mkExitLets] valid? *)
   
   Lemma mkLets_JPI:
-    forall exits' e jps',
-    isJoinPointsValid e 0 (updJPSs jps' (map fst exits')) = true ->
-    forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps') exits' = true ->
-    isJoinPointsValid (mkLets (map (fun '(v,rhs) => NonRec v rhs) exits') e) 0 jps' = true.
+    forall floats e jps',
+    (* All added bindings are fresh with regard to the environment *)
+    disjointVarSet jps' (mkVarSet (map fst floats)) = true ->
+    (* All added bindings are fresh with regard to each other  *)
+    NoDup (map (fun p => varUnique (fst p)) floats) ->
+    (* The body is valid in the extended environment *)
+    isJoinPointsValid e 0 (updJPSs jps' (map fst floats)) = true ->
+    (* Each thing is valid in its environment *)
+    forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps') floats = true ->
+    isJoinPointsValid (mkLets (map (fun '(v,rhs) => NonRec v rhs) floats) e) 0 jps' = true.
   Proof.
     intros ??.
-    induction exits' as [|[v rhs] exits']; intros jps' Hbase Hpairs.
+    induction floats as [|[v rhs] floats]; intros jps' Hdisjoint HNoDup Hbase Hpairs.
     * simpl. unfold Base.id. assumption.
     * simpl in *; fold isJoinPointsValidPair in *.
       simpl_bool.
       destruct Hpairs as [Hpair Hpairs].
       split.
       - apply isValidJoinPointsPair_isJoinPointsValidPair. assumption.
-      - apply IHexits'; clear IHexits'.
+      - apply disjointVarSet_mkVarSet_cons in Hdisjoint.
+        destruct Hdisjoint as [Hfreshv Hdisjoint].
+        inversion_clear HNoDup as [|?? HnotInv HNoHup].
+        apply IHfloats; clear IHfloats.
+        + admit.
+        + assumption.
         + assumption.
         + eapply forallb_imp. apply Hpairs.
-          intros [v' rhs'].
-          unfold updJPS.
-          erewrite isValidJoinPointsPair_isJoinId by eassumption.
-          apply isValidJoinPointsPair_extendVarSet.
-  Qed.
+          intros [v' rhs'] HiJVJPP.
+          refine (weakenb (StrongSubset_updJPS_fresh _ _ Hfreshv) _).
+          assumption.
+  Admitted.
 
   Lemma addExit_all_joinIds:
     forall jps' captured ja e,
@@ -1495,14 +1502,79 @@ Section in_exitifyRec.
         + assumption.
   Qed.
 
+  Lemma isJoinPointsValid_picked_aux:
+    forall jps captured e vs,
+    isJoinPointsValid e 0 (updJPSs jps (captured ++ vs)) = true ->
+    let abs_vars := snd (fold_right pick (delVarSetList (exprFreeVars e) vs, []) captured) in
+    forallb (fun x : Var => negb (isJoinId x)) abs_vars = true ->
+    isJoinPointsValid e 0 (updJPSs (delVarSetList jps abs_vars) vs) = true.
+  Proof.
+    intros.
+    revert vs abs_vars H H0.
+    induction captured using rev_ind; intros vs abs_vars HIJPVe HnotJoinId; simpl.
+    * subst abs_vars. simpl. rewrite delVarSetList_nil. assumption.
+    * subst abs_vars. rewrite fold_right_app. rewrite fold_right_app in HnotJoinId.
+      simpl in *.
+      destruct_match; simpl.
+      + rewrite snd_pick_list. rewrite snd_pick_list in HnotJoinId.
+        rewrite forallb_app in HnotJoinId. simpl_bool. destruct HnotJoinId as [HnotJoinId HnotJoinx].
+        simpl in HnotJoinx. simpl_bool. rewrite negb_true_iff in HnotJoinx.
+        rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
+        (* remove all mentions of [zap] *)
+        erewrite delVarSet_ae by (apply almostEqual_sym; apply zap_ae).
+        erewrite isJoinId_ae in HnotJoinx  by (apply almostEqual_sym; apply zap_ae).
+        rewrite <- updJPS_not_joinId by assumption.
+        rewrite <- updJPSs_cons.
+        rewrite <- delVarSetList_cons2.
+        rewrite <- delVarSetList_cons2 in HnotJoinId.
+        apply IHcaptured.
+        - rewrite <- app_assoc in HIJPVe.
+          apply HIJPVe.
+        - apply HnotJoinId.
+      + apply IHcaptured.
+        - rewrite isJoinPointsValid_fresh_between in HIJPVe.
+          assumption.
+          apply disjointVarSet_mkVarSet.
+          constructor; only 2: constructor.
+          assumption.
+        - apply HnotJoinId.
+  Qed.
+
+  Lemma isJoinPointsValid_picked:
+    forall jps captured e,
+    isJoinPointsValid e 0 (updJPSs jps captured) = true ->
+    let abs_vars := snd (fold_right pick (exprFreeVars e, []) captured) in
+    forallb (fun x : Var => negb (isJoinId x)) abs_vars = true ->
+    isJoinPointsValid e 0 (delVarSetList jps abs_vars) = true.
+  Proof.
+    intros.
+    pose proof (isJoinPointsValid_picked_aux jps0 captured e []).
+    rewrite !app_nil_r in *.
+    rewrite delVarSetList_nil in *.
+    specialize (H1 H H0).
+    rewrite updJPSs_nil in H1.
+    assumption.
+  Qed.
+
+  Lemma existsb_false_iff_forallb:
+    forall a p (xs : list a),
+    existsb p xs = false <-> forallb (fun x => negb (p x)) xs = true.
+  Proof.
+    intros.
+    induction xs.
+    * simpl. intuition congruence.
+    * simpl. rewrite orb_false_iff, andb_true_iff, negb_true_iff, IHxs.
+      reflexivity.
+  Qed.
 
   Lemma go_exit_all_ValidJoinPairs captured e : 
-    isJoinPointsValid (toExpr e) 0 jps = true ->
+    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    isJoinPointsValid (toExpr e) 0 (updJPSs jpsp captured) = true ->
     disjointVarSet (exprFreeVars (toExpr e)) recursive_calls = true ->
     StateInvariant (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)
                    (go_exit captured (toExpr e) (exprFreeVars (toExpr e))).
   Proof.
-    intros HIJPV Hdisjoint.
+    intros HWS HIJPV Hdisjoint.
     set (P := (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)).
     cbv beta delta [go_exit]. (* No [zeta]! *)
     repeat float_let.
@@ -1527,105 +1599,215 @@ Section in_exitifyRec.
 
     (* Third case *)
     subst j_15__.
-    enough (Hnext: StateInvariant P j_14__). {
-      destruct captures_join_points ; try apply Hnext.
+    enough (Hnext: captures_join_points = false -> StateInvariant P j_14__). {
+      destruct captures_join_points ; try (apply Hnext; auto).
       apply StateInvariant_return.
     }
     cleardefs.
 
     (* Third case: Actual exitification *)
     subst j_14__.
+    intro Hno_capture_jp.
     unfold recursive_calls in Hdisjoint.
+    subst captures_join_points.
+    rewrite HSUtil.Foldable_any_existsb in Hno_capture_jp.
+    rewrite existsb_false_iff_forallb in Hno_capture_jp.
     apply StateInvariant_bind_return.
     apply addExit_all_joinIds.
     apply isJoinRHS_mkLams.
-    * admit.
-    * apply HIJPV.
+    * rewrite Forall_forall.
+      rewrite forallb_forall in Hno_capture_jp.
+      intros v HIn.
+      specialize (Hno_capture_jp v HIn).
+      rewrite negb_true_iff in Hno_capture_jp.
+      assumption.
+    * apply isJoinPointsValid_picked.
+      - unfold jpsp in *.
+        rewrite <- updJPSs_append in HIJPV.
+        erewrite <- isJoinPointsValid_fresh_updJPSs.
+        eassumption.
+        admit.
+      - apply Hno_capture_jp.
   Admitted.
+
+  (* Now we need to do induction on go over a well-scoped _and_ join-point-valid term.
+     And actually we need that twice. So hence I define a new induction principle, based on the old one, to be used twice.
+  *)
+  
+  Lemma go_ind2_aux:
+    forall (P : _ -> _ -> _ -> Prop),
+    { IHs : Prop | 
+    IHs ->
+    forall e captured,
+    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    isJoinPointsValid (toExpr e) 0 (updJPSs jpsp captured) = true ->
+    P captured e (go captured (freeVars (toExpr e)))
+    }.
+  Proof.
+    intros P.
+    eexists.
+    intros IHs.
+    pose proof IHs as IH1. eapply proj1 in IH1. eapply proj2 in IHs.
+    pose proof IHs as IH2. eapply proj1 in IH2. eapply proj2 in IHs.
+    pose proof IHs as IH3. eapply proj1 in IH3. eapply proj2 in IHs.
+    pose proof IHs as IH4. eapply proj1 in IH4. eapply proj2 in IHs.
+    pose proof IHs as IH5. eapply proj1 in IH5. eapply proj2 in IHs.
+    pose proof IHs as IH6. eapply proj1 in IH6. eapply proj2 in IHs.
+    rename IHs into IH7.
+    refine (go_ind (fun captured e r => impl (isJoinPointsValid (toExpr e) 0 (updJPSs jpsp captured) = true) (P captured e r)) _ _ _ _ _ _ _);
+      intros; intro HIJPV.
+    * revert e captured fvs HWS Hdisjoint HIJPV.
+      eapply IH1.
+    * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
+      fold isJoinPointsValidPair in HIJPVrhs.
+      lapply IHe; only 1: (clear IHe; intro IHe).
+      + revert captured x rhs e HnotJoin HWS HIJPVrhs HIJPVe IHe.
+        eapply IH2.
+      + rewrite updJPSs_append.
+        rewrite updJPSs_cons.
+        rewrite updJPSs_nil.
+        assumption.
+    * clear IH1 IH2.
+      simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
+      fold isJoinPointsValidPair in HIJPVrhs.
+      lapply IHe; only 1: (clear IHe; intro IHe).
+      lapply IHrhs; only 1: (clear IHrhs; intro IHrhs).
+      + revert captured j params rhs e HisJoin HWS HIJPVrhs HIJPVe IHrhs IHe.
+        eapply IH3.
+      + rewrite updJPSs_append.
+        eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS in HIJPVrhs; try eassumption.
+        apply isJoinRHS_mkLams2 in HIJPVrhs.
+        destruct HIJPVrhs as [Hno_isJoinId_params HIJPVrhs].
+        assumption.
+      + rewrite updJPSs_append.
+        rewrite updJPSs_cons.
+        rewrite updJPSs_nil.
+        assumption.
+    * clear IH1 IH2 IH3.
+      simpl in HIJPV.
+      simpl_bool.
+      destruct HIJPV as [[HnotNull HjoinOrNotJoin] [HIJPVrhs HIJPVe]].
+      fold isJoinPointsValidPair in HIJPVrhs.
+      lapply IHe; only 1: (clear IHe; intro IHe).
+      + clear HnotNull HjoinOrNotJoin.
+        revert n pairs'0 e captured HGLV HNoDup HWSpairs HWSe HIJPVrhs HIJPVe IHe.
+        eapply IH4.
+      + rewrite updJPSs_append.
+        rewrite to_list_map, map_map in HIJPVe.
+        rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HIJPVe
+            by (intros; repeat expand_pairs; destruct a; reflexivity).
+        assumption.
+    * clear IH1 IH2 IH4.
+      simpl in HIJPV. simpl_bool.
+      destruct HIJPV as [[HnotNull HjoinOrNotJoin] [HIJPVrhs HIJPVe]].
+      fold isJoinPointsValidPair in HIJPVrhs.
+      lapply IHe; only 1: (clear IHe; intro IHe).
+      match type of IHpairs with (forall (j:?T1) (params:?T2) (join_body:?T3) (HisJoin : ?T4), ?HIn -> impl ?A ?B) =>
+       assert (forall (j:T1) (params:T2) (join_body:T3) (HisJoin : T4), HIn -> B) end.
+      + intros ???? HIn.
+        refine (IHpairs _ _ _ _ HIn _).
+        rewrite to_list_map in HIJPVrhs.
+        rewrite forallb_forall in HIJPVrhs.
+        rewrite <- Forall_forall  in HIJPVrhs.
+        rewrite Forall_map in HIJPVrhs.
+        rewrite -> Forall_forall  in HIJPVrhs.
+        specialize (HIJPVrhs _ HIn).
+        fold isJoinPointsValidPair in HIJPVrhs.
+        simpl in HIJPVrhs.
+        rewrite map_map in HIJPVrhs.
+        rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HIJPVrhs
+            by (intros; repeat expand_pairs; destruct a; reflexivity).
+        pose proof (isJoinPointsValidPair_isJoinPoints_isJoinRHS _ _ _ _ HIJPVrhs HisJoin).
+        apply isJoinRHS_mkLams2 in H.
+        destruct H as [Hno_isJoinId_params H].
+        rewrite !updJPSs_append.
+        assumption.
+      + clear HnotNull HjoinOrNotJoin.
+        clear IHpairs. rename H into IHpairs.
+        revert n pairs'0 e captured HGLV HNoDup HWSpairs HWSe HIJPVrhs HIJPVe IHpairs IHe.
+        eapply IH5.
+      + rewrite updJPSs_append.
+        rewrite to_list_map, map_map in HIJPVe.
+        rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HIJPVe
+            by (intros; repeat expand_pairs; destruct a; reflexivity).
+        assumption. 
+    * clear IH1 IH2 IH4 IH5.
+      simpl in HIJPV. simpl_bool.
+      destruct HIJPV as [[HnotJoin HIJPVe] HIJPValts].
+      match type of IHalts with (forall (dc:?T1) (pats:?T2) (rhs:?T3), ?HIn -> impl ?A ?B) =>
+        assert (forall (dc:T1) (pats:T2) (rhs:T3), HIn -> B) end.
+      + intros ??? HIn.
+        refine (IHalts  _ _ _ HIn _).
+        rewrite forallb_forall in HIJPValts.
+        rewrite <- Forall_forall  in HIJPValts.
+        rewrite Forall_map in HIJPValts.
+        rewrite -> Forall_forall  in HIJPValts.
+        specialize (HIJPValts _ HIn).
+        simpl in HIJPValts.
+        simpl_bool.
+        destruct HIJPValts as [Hno_isJoinId_pats HIJPValts].
+        rewrite updJPSs_append, updJPSs_cons.
+        rewrite updJPSs_not_joinId by assumption.
+        rewrite negb_true_iff in HnotJoin.
+        rewrite updJPS_not_joinId by assumption.
+        assumption.
+      + clear IHalts. rename H into IHalts.
+        revert e v alts captured HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
+        eapply IH6.
+    * clear IH1 IH2 IH4 IH5 IH6.
+      revert e captured HWS HIJPV.
+      eapply IH7.
+  Defined.
+
+  Definition go_ind2 P
+    := ltac:(let x := uncurryN 6 (proj2_sig (go_ind2_aux P)) in exact x).
+  Opaque go_ind2 go_ind2_aux.
+
 
   Lemma go_all_ValidJoinPairs captured e: 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
-    isJoinPointsValid (toExpr e) 0 (updJPSs jps captured) = true ->
+    isJoinPointsValid (toExpr e) 0 (updJPSs jpsp captured) = true ->
     StateInvariant (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)
                    (go captured (freeVars (toExpr e))).
   Proof.
     revert e captured.
-    refine (go_ind (fun captured e r => impl (isJoinPointsValid (toExpr e) 0 (updJPSs jps captured) = true) (_ r)) _ _ _ _ _ _ _);
-      intros; intro HIJPV.
+    refine (go_ind2 (fun captured e r => _ r) _ _ _ _ _ _ _);
+      intros.
     * apply go_exit_all_ValidJoinPairs.
-      -- admit. (* Need that no captured join points are in the free var set here *)
-      -- assumption.
-    * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
-      apply StateInvariant_bind_return.
-      apply IHe; clear IHe.
-      -- rewrite updJPSs_append.
-         rewrite updJPSs_cons.
-         rewrite updJPSs_nil.
-         assumption.
-    * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
-      fold isJoinPointsValidPair in HIJPVrhs.
-      apply StateInvariant_bind; only 1: apply IHrhs; clear IHrhs.
-      -- rewrite updJPSs_append.
-         eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS in HIJPVrhs; try eassumption.
-         assert (disjointVarSet (updJPSs jps captured) (mkVarSet params) = true) by admit.
-         rewrite <- isJoinRHS_mkLams in HIJPVrhs by assumption.
-         admit. (* if all [params] are no join points and disjoint, then updJPSs does not affect it *)
+      -- apply HWS.
+      -- apply HIJPV.
+      -- apply Hdisjoint.
+    * apply StateInvariant_bind_return.
+      apply IHe.
+    * apply StateInvariant_bind; only 1: apply IHrhs.
       -- intros. apply StateInvariant_bind_return.
-         apply IHe; clear IHe.
-         ++ rewrite updJPSs_append.
-            rewrite updJPSs_cons.
-            rewrite updJPSs_nil.
-            assumption.
-    * simpl in HIJPV. simpl_bool.
-      destruct HIJPV as [[HnotNull HjoinOrNotJoin] [HIJPVrhs HIJPVe]].
-      clear HnotNull. (* guaranteed by NCore *)
-      clear HjoinOrNotJoin. (* guaranteed by NCore? *)
-      apply StateInvariant_bind_return.
-      apply IHe; clear IHe.
-      -- rewrite updJPSs_append.
-         rewrite to_list_map, map_map in HIJPVe.
-         rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x) in HIJPVe
-             by (intros; repeat expand_pairs; destruct a; reflexivity).
-         assumption. 
-    * simpl in HIJPV. simpl_bool.
-      destruct HIJPV as [[HnotNull HjoinOrNotJoin] [HIJPVrhs HIJPVe]].
-      clear HnotNull. (* guaranteed by NCore *)
-      clear HjoinOrNotJoin. (* guaranteed by NCore? *)
-      apply StateInvariant_bind.
+         apply IHe.
+    * apply StateInvariant_bind_return.
+      apply IHe.
+    * apply StateInvariant_bind.
       - apply StateInvariant_forM.
         intros [j params rhs] HIn.
         simpl.
         erewrite idJoinArity_join by eassumption.
         rewrite collectNAnnBndrs_freeVars_mkLams.
         apply StateInvariant_bind_return.
-        apply (IHpairs _ _ _ _ HIn); clear IHpairs IHe.
-        -- rewrite to_list_map in HIJPVrhs.
-           admit.
+        apply (IHpairs _ _ _ _ HIn).
       - intro x.
         apply StateInvariant_bind_return.
-        apply IHe; clear IHpairs IHe.
-        ++ rewrite updJPSs_append.
-           rewrite to_list_map, map_map in HIJPVe.
-           rewrite map_ext with (g := fun '(Mk_NJPair x _ _ _) => x) in HIJPVe
-               by (intros; repeat expand_pairs; destruct a; reflexivity).
-           assumption. 
+        apply IHe.
     * (* Case [Case] *)
-      simpl in HIJPV. simpl_bool.
-      destruct HIJPV as [[HnotJoin HIJPVe] HIJPValts].
       apply StateInvariant_bind_return.
       apply StateInvariant_forM.
       intros [[dc pats] rhs] HIn.
       apply StateInvariant_bind_return.
       apply (IHalts _ _ _ HIn).
-      ++ admit.
     * apply StateInvariant_return.
-  Admitted.
+  Qed.
 
 
   Lemma all_exits_ValidJoinPairs:
     forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) exits = true.
-    
-  Proof.
+  Proof using Type pairs_VJPP pairs_WS.
     unfold exits.
     unfold pairs'_exits.
     unfold ann_pairs.
@@ -1647,9 +1829,355 @@ Section in_exitifyRec.
       apply go_all_ValidJoinPairs.
       + apply HWS_pairs.
       + simpl.
-        admit.
+        rewrite Forall_map in pairs_VJPP.
+        rewrite Forall_forall in pairs_VJPP.
+        specialize (pairs_VJPP _ HIn).
+        simpl in pairs_VJPP.
+        unfold isValidJoinPointsPair in pairs_VJPP.
+        rewrite HisJoin in pairs_VJPP.
+        apply isJoinRHS_mkLams2 in pairs_VJPP.
+        destruct pairs_VJPP as [Hno_isJoinId_params H].
+        apply H.
     * repeat split; constructor.
+  Qed.
+
+  Lemma disjoint_jps_exits:
+     disjointVarSet jps (mkVarSet (map fst exits)) = true.
+  Proof using Type pairs_WS jps_subset_isvs.
+    eapply disjointVarSet_subVarSet_l.
+    apply disjoint_isvs_exits.
+    apply jps_subset_isvs.
+  Qed.
+
+  Lemma jps_to_jps':
+     StrongSubset jps jps'.
+  Proof using Type pairs_WS jps_subset_isvs.
+    intros.
+    apply StrongSubset_updJPSs_fresh.
+    apply disjoint_jps_exits.
+  Qed.
+
+  Lemma jpsp_to_jpsp':
+     StrongSubset jpsp jpsp'.
+  Proof using Type pairs_WS jps_subset_isvs.
+    intros.
+    apply StrongSubset_updJPSs.
+    apply jps_to_jps'.
+  Qed.
+
+  Lemma jpsp_to_jpsp'_extended:
+     forall vs, StrongSubset (updJPSs jpsp vs) (updJPSs jpsp' vs).
+  Proof using Type pairs_WS jps_subset_isvs.
+    intros.
+    apply StrongSubset_updJPSs.
+    apply jpsp_to_jpsp'.
+  Qed.
+
+  Lemma jpsp_to_jpsp'_extended2:
+     forall vs1 vs2,
+     StrongSubset (updJPSs (updJPSs jpsp vs1) vs2)
+                  (updJPSs (updJPSs jpsp' vs1) vs2).
+  Proof using Type pairs_WS jps_subset_isvs.
+    intros.
+    apply StrongSubset_updJPSs.
+    apply jpsp_to_jpsp'_extended.
+  Qed.
+
+
+  (* Again, we go  [go] again and see that pairs' is join-point valid.
+  *)
+
+  Lemma addExit_isJoinPointsValid:
+    forall captured ja e,
+    let after := updJPSs jpsp' captured in
+    RevStateInvariant (sublistOf exits) 
+         (addExit (extendInScopeSetList in_scope2 captured) ja e)
+         (fun v => isJoinPointsValid (Mk_Var v) ja after = true).
+  Proof using Type pairs_WS.
+    intros.
+    (* This is much easier to prove by breaking the State abstraction and turning
+       it into a simple function. *)
+    unfold addExit, mkExitJoinId.
+    unfold RevStateInvariant, SP,
+           op_zgzgze__, return_, State.Monad__State, op_zgzgze____, return___,
+           State.Monad__State_op_zgzgze__,
+           State.Monad__State_return_,
+           pure, State.Applicative__State , pure__,
+           State.Applicative__State_pure,
+           State.runState', State.get, State.put.
+    simpl.
+    intros floats Hfloats.
+    set (v := uniqAway _ _) in *.
+    apply sublistOf_cons in Hfloats.
+    destruct Hfloats as [HIn HsublistOf].
+    apply in_map with (f := fst) in HIn. simpl in HIn.
+    split; only 1: assumption.
+    subst after.
+    assert (isJoinId_maybe v = Some ja). {
+      subst v.
+      rewrite isJoinId_maybe_uniqAway, isJoinId_maybe_asJoinId.
+      reflexivity.
+    } 
+    rewrite H; clear H.
+    rewrite Nat.leb_refl. simpl.
+    unfold jpsp', jps'.
+    (* There is again a lot of repetition to above *)
+    admit.
   Admitted.
+
+
+  Lemma go_exit_res_isJoinPointsValid captured e : 
+    let orig := updJPSs jpsp captured in
+    let after := updJPSs jpsp' captured in
+    isJoinPointsValid (toExpr e) 0 orig = true ->
+    RevStateInvariant (sublistOf exits) (go_exit captured (toExpr e) (exprFreeVars (toExpr e)))
+                      (fun e' => isJoinPointsValid e' 0 after = true).
+  Proof using Type pairs_WS jps_subset_isvs.
+    intros ?? HJPVe.
+
+    set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => isJoinPointsValid e' 0 after = true)).
+    change (P (go_exit captured (toExpr e) (exprFreeVars (toExpr e)))).
+
+    cbv beta delta [go_exit]. (* No [zeta]! *)
+    repeat float_let.
+
+    (* Common case *)
+    assert (Hreturn : P (return_ (toExpr e))). {
+       apply RevStateInvariant_return. cleardefs.
+       apply (weakenb (jpsp_to_jpsp'_extended _)).
+       assumption.
+    } 
+
+    (* First case *)
+    enough (Hnext: P j_16__). {
+      clearbody j_16__; cleardefs.
+      destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
+      destruct rhs; try apply Hnext.
+      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      apply Hreturn.
+    }
+    cleardefs.
+
+    (* Second case *)
+    subst j_16__.
+    enough (Hnext: P j_15__). {
+      destruct (negb is_interesting) ; try apply Hnext.
+      apply Hreturn.
+    }
+    cleardefs.
+
+    (* Third case *)
+    subst j_15__.
+    enough (Hnext: captures_join_points = false ->  P j_14__). {
+      destruct (captures_join_points) ; try (apply Hnext; auto).
+      apply Hreturn.
+    }
+    cleardefs.
+
+    (* Third case: Actual exitification *)
+    subst j_14__.
+
+    intro Hno_capture_jp.
+    subst captures_join_points.
+    rewrite HSUtil.Foldable_any_existsb in Hno_capture_jp.
+    rewrite existsb_false_iff_forallb in Hno_capture_jp.
+    rewrite forallb_forall in Hno_capture_jp.
+    setoid_rewrite negb_true_iff in Hno_capture_jp.
+    rewrite <- Forall_forall in Hno_capture_jp.
+
+    subst P. cleardefs. simpl.
+    eapply RevStateInvariant_bind; only 1: apply addExit_isJoinPointsValid.
+    intro v.
+    apply RevStateInvariant_return.
+    intro HJPVv.
+    apply isJoinPointsValid_mkVarApps; only 1: apply Hno_capture_jp.
+    simpl (0 + _).
+    assumption.
+  Qed.
+
+  Lemma go_res_isJoinPointsValid captured e: 
+    let orig := updJPSs jpsp captured in
+    let after := updJPSs jpsp' captured in
+    WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
+    isJoinPointsValid (toExpr e) 0 orig = true ->
+    RevStateInvariant (sublistOf exits) (go captured (freeVars (toExpr e)))
+                      (fun e' => isJoinPointsValid e' 0 after = true).
+  Proof using Type pairs_WS.
+    revert e captured.
+    refine (go_ind2 (fun captured e r => RevStateInvariant (sublistOf exits) r (fun e' => isJoinPointsValid e' 0 (updJPSs jpsp' captured) = true)) _ _ _ _ _ _ _);
+      intros.
+    * apply go_exit_res_isJoinPointsValid; assumption.
+    * eapply RevStateInvariant_bind.
+      - apply IHe.
+      - intro e'; apply RevStateInvariant_return; intro He'.
+        rewrite  updJPSs_append, updJPSs_cons, updJPSs_nil in He'.
+        rewrite deAnnotate_freeVars.
+        simpl; simpl_bool; split.
+        ++ fold isJoinPointsValidPair.
+           rewrite isJoinPointsValidPair_isJoinPointsValid by apply HnotJoin.
+           rewrite isJoinPointsValidPair_isJoinPointsValid in HIJPVrhs by apply HnotJoin.
+           assumption.
+        ++ apply He'.
+    * unfold CoreBndr in *.
+      eapply RevStateInvariant_bind; only 2: (intro body'; eapply RevStateInvariant_bind; only 2: intro rhs').
+      - apply IHrhs.
+      - apply IHe.
+      - apply RevStateInvariant_return; intros Hrhs' Hbody'.
+        simpl; simpl_bool; split.
+        ** fold isJoinPointsValidPair.
+           rewrite isJoinPointsValidPair_isJoinRHS by (apply HisJoin).
+           rewrite isJoinPointsValidPair_isJoinRHS in HIJPVrhs by (apply HisJoin).
+           apply isJoinRHS_mkLams2 in HIJPVrhs.
+           destruct HIJPVrhs as [HnotIsJoinID_params HIJPVrhs].
+           rewrite <- isJoinRHS_mkLams by assumption.
+           rewrite <- updJPSs_not_joinId
+             by (rewrite forallb_forall; setoid_rewrite negb_true_iff; rewrite <- Forall_forall; assumption).
+           rewrite updJPSs_append in Hbody'.
+           assumption.
+        ** simpl.
+           rewrite updJPSs_append, updJPSs_cons, updJPSs_nil in Hrhs'.
+           assumption.
+   *  eapply RevStateInvariant_bind; only 1: apply IHe.
+      intro body'. apply RevStateInvariant_return; intros Hbody'.
+      rewrite updJPSs_append in Hbody'.
+      simpl; simpl_bool; repeat apply conj.
+      ++ admit.
+      ++ simpl_bool. left.
+         rewrite forallb_forall, <- Forall_forall, Forall_map, Forall_forall.
+         intros [v rhs] HIn. simpl.
+         rewrite isJoinId_eq. rewrite HnotJoin. reflexivity.
+      ++ rewrite forallb_forall, <- Forall_forall, Forall_map, Forall_forall.
+         intros [v rhs] HIn. simpl.
+         fold isJoinPointsValidPair.
+         rewrite isJoinPointsValidPair_isJoinPointsValid by assumption.
+         rewrite deAnnotate_freeVars.
+
+         rewrite to_list_map, forallb_forall, <- Forall_forall, Forall_map, Forall_forall in HIJPVrhs.
+         specialize (HIJPVrhs _ HIn).
+         simpl in HIJPVrhs.
+         rewrite isJoinPointsValidPair_isJoinPointsValid in HIJPVrhs by assumption.
+         assumption.
+      ++ rewrite !map_map.
+         rewrite map_ext with (g := fun '(Mk_NPair x rhs _) => x)
+            by (intros; repeat expand_pairs; destruct a; reflexivity).
+         apply Hbody'.
+     * eapply RevStateInvariant_bind.
+       - apply RevStateInvariant_forM2 with
+              (R := fun p p' =>
+                  (fun '(Mk_NJPair x _ _ _) => x) p = fst p' /\
+                  isJoinRHS (snd p') (length ((fun '(Mk_NJPair _ a _ _) => a) p)) (updJPSs (updJPSs jpsp' captured) (map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs'0))) = true).
+         intros [j params rhs] HIn.
+         simpl.
+         erewrite idJoinArity_join by eassumption.
+         rewrite collectNAnnBndrs_freeVars_mkLams.
+         eapply RevStateInvariant_bind.
+         ++ apply (IHpairs _ _ _ _ HIn).
+         ++ intro e'; apply RevStateInvariant_return; intro He'.
+            simpl.
+            rewrite !updJPSs_append in He'.
+            split.
+            -- reflexivity.
+            -- rewrite to_list_map, forallb_forall, <- Forall_forall, Forall_map, Forall_forall in HIJPVrhs.
+               specialize (HIJPVrhs _ HIn).
+               simpl in HIJPVrhs.
+               rewrite isJoinPointsValidPair_isJoinRHS in HIJPVrhs by eassumption.
+
+               apply isJoinRHS_mkLams2 in HIJPVrhs.
+               destruct HIJPVrhs as [HnotIsJoinID_params HIJPVrhs].
+               rewrite <- isJoinRHS_mkLams by assumption.
+               rewrite <- updJPSs_not_joinId
+                 by (rewrite forallb_forall; setoid_rewrite negb_true_iff; rewrite <- Forall_forall; assumption).
+               assumption.
+      - intro pairs''.
+        eapply RevStateInvariant_bind; only 1: apply IHe.
+        intro e'; apply RevStateInvariant_return; intros He' Hpairs''.
+        apply Forall2_and in Hpairs''.
+        destruct Hpairs'' as [Hfst Hpairs''].
+        eapply Forall2_eq with (f := (fun '(Mk_NJPair x _ _ _) => x)) (g := fst) in Hfst.
+(*         apply Forall2_const_Forall in Hpairs''. *)
+        symmetry in Hfst.
+        change ((@map (CoreBndr * Expr CoreBndr) CoreBndr (@fst CoreBndr (Expr CoreBndr)) pairs'') = map (fun '(Mk_NJPair x _ _ _) => x) (Vector.to_list pairs'0)) in Hfst.
+        simpl.
+        rewrite Hfst.
+        simpl_bool. repeat apply conj.
+        -- admit.
+        -- simpl_bool. right.
+           rewrite forallb_forall, <- Forall_forall.
+           admit.
+        -- rewrite forallb_forall, <- Forall_forall, Forall_forall.
+           intros [v rhs] HIn. simpl.
+           fold isJoinPointsValidPair.
+           admit.
+        -- rewrite updJPSs_append in He'.
+           assumption.
+      * (* [Case] *)
+        simpl.
+        admit.
+        (*
+        eapply RevStateInvariant_bind.
+        + apply RevStateInvariant_forM with (R := fun alt => WellScopedAlt v alt after).
+          intros [[dc pats] rhs] HIn.
+          eapply RevStateInvariant_bind.
+          - apply (IHalts _ _ _  HIn).
+          - intro e'; apply RevStateInvariant_return; intro He'.
+            rewrite extendVarSetList_append in He'.
+            split.
+            -- apply (HWSalts _ HIn).
+            -- apply He'.
+        + intros alts'; apply RevStateInvariant_return; intro He.
+          simpl. split; only 2: split.
+          - rewrite deAnnotate_freeVars.
+            apply isvsp_to_isvsp'_extended; assumption.
+          - apply HGLVv.
+          - rewrite Forall'_Forall.
+            apply He.
+         *)
+  * apply RevStateInvariant_return.
+    apply (weakenb (jpsp_to_jpsp'_extended _)).
+    assumption.
+  Admitted.
+
+  Lemma pairs'_JPV:
+    Forall (fun '(v,rhs) => isValidJoinPointsPair v rhs jpsp' = true) pairs'.
+  Proof using Type pairs_WS pairs_VJPP.
+    unfold pairs', pairs'_exits, ann_pairs.
+    eapply RevStateInvariant_runState with (P := sublistOf exits).
+    * rewrite hs_coq_map, !map_map, forM_map.
+      apply RevStateInvariant_forM.
+      intros [v param rhs HisJoin] HIn.
+
+      rewrite Forall_map in pairs_VJPP.
+      rewrite Forall_forall in pairs_VJPP.
+      specialize (pairs_VJPP _ HIn).
+      simpl in pairs_VJPP.
+      unfold isValidJoinPointsPair in pairs_VJPP.
+      rewrite HisJoin in pairs_VJPP.
+      apply isJoinRHS_mkLams2 in pairs_VJPP.
+      destruct pairs_VJPP as [Hno_joinId_param HJPVrhs].
+
+      unfold id.
+      simpl.
+      erewrite idJoinArity_join by eassumption.
+      rewrite collectNAnnBndrs_freeVars_mkLams.
+      eapply RevStateInvariant_bind.
+      ++ apply go_res_isJoinPointsValid.
+         ** apply WellScoped_mkLams.
+            rewrite Forall_map in pairs_WS.
+            rewrite Forall_forall in pairs_WS.
+            apply (pairs_WS _ HIn).
+         ** assumption.
+        ++ intro e'; apply RevStateInvariant_return; intro He'.
+           simpl.
+           unfold isValidJoinPointsPair.
+           rewrite HisJoin.
+           rewrite <- isJoinRHS_mkLams by assumption.
+           rewrite <- updJPSs_not_joinId
+             by (rewrite forallb_forall; setoid_rewrite negb_true_iff; rewrite <- Forall_forall; assumption).
+           assumption.
+    * change (sublistOf exits exits).
+      intro. auto.
+  Qed.
+
 
   (** Main result *)
 
@@ -1659,7 +2187,7 @@ Section in_exitifyRec.
     let jps' := updJPSs jps fs in
     isJoinPointsValid body 0 jps' = true ->
     isJoinPointsValid (mkLets (exitifyRec (extendInScopeSetList in_scope fs) (map toJPair pairs)) body) 0 jps = true.
-  Proof.
+  Proof using Type jps_subset_isvs pairs_VJPP pairs_WS.
     intros.
     cbv beta delta [exitifyRec].
     zeta_with go_exit.
@@ -1674,9 +2202,39 @@ Section in_exitifyRec.
     change (isJoinPointsValid (mkLets (map (fun '(x, y) => NonRec x y) exits ++ [Rec pairs']) body) 0 jps = true).
     rewrite mkLets_append, mkLets_cons, mkLets_nil.
     apply mkLets_JPI.
-    * admit.
+    * eapply disjointVarSet_subVarSet_l.
+      + apply disjointVarSet_mkVarSet.
+        rewrite Forall_map.
+        apply all_exits_WellScoped.
+      + apply jps_subset_isvs.
+    * apply all_exits_WellScoped.
+    * rewrite isJoinPointsValid_MkLet_Rec.
+      subst jps'0.
+      float_let. subst jps'0.
+      rewrite map_fst_pairs'.
+      simpl_bool; repeat apply conj.
+      -- simpl_bool. right.
+         rewrite forallb_forall.
+         intros [v e] HIn.
+         pose proof pairs'_JPV.
+         rewrite Forall_forall in H1.
+         specialize (H1 _ HIn).
+         simpl in HIn.
+         apply isValidJoinPointsPair_isJoinId in H1.
+         assumption.
+      -- fold isJoinPointsValidPair.
+         rewrite forallb_forall.
+         intros [v e] HIn.
+         pose proof pairs'_JPV.
+         rewrite Forall_forall in H1.
+         specialize (H1 _ HIn).
+         simpl in HIn.
+         apply isValidJoinPointsPair_isJoinPointsValidPair in H1.
+         assumption.
+      -- apply (weakenb jpsp_to_jpsp').
+         assumption.
     * apply all_exits_ValidJoinPairs.
-  Admitted.
+  Qed.
 
 
 End in_exitifyRec.

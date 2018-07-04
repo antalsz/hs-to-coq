@@ -40,7 +40,7 @@ Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
 This captures all invariants that we can state about a
 [Var] in isolation:
 - It is a localVar when the unique is local.
-- Its unique agrees with the uniqe of the name
+- Its unique agrees with the unique of the name
 *)
 Definition GoodVar (v : Var) : Prop :=
   isLocalVar v = isLocalUnique (varUnique v) /\

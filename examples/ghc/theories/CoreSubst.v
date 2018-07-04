@@ -15,11 +15,9 @@ Require Import Proofs.Core.
 (* Require Import Proofs.VarSetFSet. *)
 Require Import Proofs.VarSet.
 Require Import Proofs.Var.
-
 Require Import Proofs.ScopeInvariant.
 
 Require Import Coq.omega.Omega.
-
 
 Opaque Base.hs_string__.
 Opaque GHC.Err.default.
@@ -119,6 +117,57 @@ Proof.
          end) (Utils.Mk_StateL (fun s0 : a => (s0, nil))) xs) eqn:EQ.
   unfold flip.
   auto.
+Qed.
+
+Lemma elem_nil : forall {A} `{Eq_ A}  (x:A),  
+  Foldable.elem x nil = false.
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma elem_cons : 
+  forall {A} `{Eq_ A} (v:A) (x:A) (l:list A),  
+    Foldable.elem v (x :: l) = (v == x) || Foldable.elem v l.
+Proof.
+  intros.
+  unfold Foldable.elem.
+  unfold Foldable.any.
+  unfold compose, SemigroupInternal.getAny, Foldable.foldMap.
+  unfold Foldable.Foldable__list,Foldable.foldMap__,
+  SemigroupInternal.Semigroup__Any,SemigroupInternal.Monoid__Any.
+  unfold Foldable.Foldable__list_foldMap. 
+  unfold Foldable.Foldable__list_foldr, mappend, mempty.
+  simpl.
+  f_equal.
+Qed.
+
+
+Lemma Foldable_any_app : forall {A} `{Eq_ A} (v:A) (l1 l2:list A),
+      Foldable.any (fun y : A => v == y) (l1 ++ l2) =
+      Foldable.any (fun y : A => v == y) l1
+      || Foldable.any (fun y : A => v == y) l2.
+Proof.
+  intros.
+  unfold Foldable.any.
+  unfold compose, Foldable.foldMap.
+  unfold Foldable.Foldable__list,Foldable.foldMap__,
+         Foldable.Foldable__list_foldMap,
+         Foldable.Foldable__list_foldr. 
+  simpl.
+  induction l1.
+  + simpl. auto.
+  + simpl.
+    rewrite <- orb_assoc.
+    f_equal.
+    unfold SemigroupInternal.getAny.
+    auto.
+Qed.
+
+Lemma Foldable_elem_app : forall {A}`{Eq_ A} (v:A) (l1 l2:list A),  
+    Foldable.elem v (l1 ++ l2) = Foldable.elem v l1 || Foldable.elem v l2.
+Proof.
+  intros. apply Foldable_any_app.
 Qed.
 
 (** [zip] and [unzip] *)
@@ -263,9 +312,10 @@ Axiom uniqAway_eq_same : forall v in_scope_set,
 Axiom uniqAway_lookupVarSet_fresh : forall v in_scope_set,
     lookupVarSet (getInScopeVars in_scope_set) (uniqAway in_scope_set v) = None.
 
-(* ... and also a local identifier *)
-Axiom uniqAway_isLocalId : forall v in_scope_set,
-    isLocalId (uniqAway in_scope_set v) = true.
+(* ... and also a local var *)
+Axiom uniqAway_isLocalVar : forall v in_scope_set,
+    GoodLocalVar (uniqAway in_scope_set v).
+
 
 (* ---------------------------- *)
 
@@ -273,6 +323,19 @@ Axiom uniqAway_isLocalId : forall v in_scope_set,
 
 Lemma isLocalId_isLocalVar : 
   forall var, isLocalVar var = false -> isLocalId var = false.
+Proof.
+  intros var.
+  unfold isLocalVar.
+  unfold isGlobalId.
+  unfold isLocalId. 
+  destruct var.
+  simpl. tauto.
+  tauto.
+  destruct i; simpl; tauto.
+Qed.
+
+Lemma isLocalVar_isLocalId : 
+  forall var, isLocalId var = true -> isLocalVar var = true.
 Proof.
   intros var.
   unfold isLocalVar.
@@ -345,39 +408,58 @@ Axiom ValidVarSet_invariant: forall vs, ValidVarSet vs.
 Notation "s1 {<=} s2" := (StrongSubset s1 s2) (at level 70, no associativity).
 Notation "s1 {=} s2" := (StrongSubset s1 s2 /\ StrongSubset s2 s1) (at level 70, no associativity).
 
+(* We could axiomatize these in terms of In, but that would not be strong 
+   enough. As lookup is keyed on the uniques only, we need to specify 
+   list membership via Var's == only. *)
 
 Lemma lookupVarSet_extendVarSetList_self:
-  forall vars v vs,
-    In v vars -> 
+  forall (vars:list Var) v vs,
+    Foldable.elem v vars = true -> 
     lookupVarSet (extendVarSetList vs vars) v = Some v.
 Admitted.
 
 Lemma lookupVarSet_extendVarSetList_false:
-  forall vars v vs,
-    not (In v vars) -> 
+  forall (vars:list Var) v vs,
+    not (Foldable.elem v vars = true) -> 
     lookupVarSet (extendVarSetList vs vars) v = lookupVarSet vs v.
 Admitted.
 
 
+(* A list of variables is fresh for a given varset when 
+   any variable with a unique found in the list is not found 
+   in the set. i.e. this is list membership using GHC.Base.==
+   for vars. 
+*)
 
-Definition freshList vars vs :=
-  (forall v, In v vars -> lookupVarSet vs v = None).
+Definition freshList (vars: list Var) (vs :VarSet) :=
+  (forall (v:Var), Foldable.elem v vars = true -> 
+              lookupVarSet vs v = None).
 
 Lemma freshList_nil : forall v,  freshList nil v.
 Proof.
   unfold freshList. intros v v0 H. inversion H.
 Qed.
 
-Lemma freshList_cons : forall x l v,  
-    lookupVarSet v x = None /\ freshList l v <-> freshList (x :: l) v.
+Lemma freshList_cons : forall (x:Var) l (v:VarSet),  
+    lookupVarSet v x= None /\ freshList l v <-> freshList (x :: l) v.
 Proof.
   unfold freshList. intros. 
-  split. intros [? ?] ? ?.
-  inversion H1. subst. auto. auto.
-  intros. split.
-  eapply H. econstructor; eauto.
-  intros. eapply H.
-  right. auto.
+  split. 
+  + intros [? ?] ? ?.
+    rewrite elem_cons in H1.
+    destruct (orb_prop _ _ H1) as [EQ|IN].
+    rewrite lookupVarSet_eq with (v2 := x); auto.
+    eauto.
+  + intros. split.
+    eapply H. 
+    rewrite elem_cons.
+    eapply orb_true_intro.
+    left. eapply Base.Eq_refl.
+    intros.
+    eapply H.
+    rewrite elem_cons.
+    eapply orb_true_intro.
+    right. auto.
 Qed.
 
 
@@ -511,7 +593,7 @@ Axiom lookupVarEnv_delVarEnv_neq :
 
 
 Definition minusDom {a} (vs : VarSet) (e : VarEnv a) : VarSet :=
-  filterVarSet (fun v => negb (elemVarEnv v e)) vs.
+  filterVarSet (fun v => negb (elemVarEnv v e && isLocalId v)) vs.
 
 
 Ltac specialize_all var := 
@@ -524,37 +606,37 @@ Ltac specialize_all var :=
    rewrite a use of minusDom appropriately. *)
 Ltac rewrite_minusDom_true := 
   match goal with 
-  | [ H : elemVarEnv ?var ?init_env = true |- 
+  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = true |- 
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
     repeat rewrite lookupVarSet_filterVarSet_false with 
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env))); try rewrite H; auto 
-  | [ H : elemVarEnv ?var ?init_env = true, 
+        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))); try rewrite H; auto 
+  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = true, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
     rewrite lookupVarSet_filterVarSet_false with
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env))) in H2; 
+        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))) in H2; 
     try rewrite H; auto 
                                                                     
   end.
 
 Ltac rewrite_minusDom_false := 
   match goal with 
-  | [ H : elemVarEnv ?var ?init_env = false |- 
+  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = false |- 
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
     repeat rewrite lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env))); 
+    with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))); 
     try rewrite H; auto 
-  | [ H : elemVarEnv ?var ?init_env = false, 
+  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = false, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
     rewrite lookupVarSet_filterVarSet_true with 
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env))) in H2 ; 
+        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))) in H2 ; 
     try rewrite H; auto  
   end.
 
@@ -566,33 +648,54 @@ Proof.
   intros. 
   unfold StrongSubset in *.
   intros var.
-  destruct (elemVarEnv var e) eqn:IN_ENV.
+  destruct (elemVarEnv var e && isLocalId var) eqn:IN_ENV.
   + rewrite_minusDom_true. 
-  + rewrite_minusDom_false. 
-    destruct (lookupVarSet vs1 var) eqn:IN1; auto.
-    specialize (H var). rewrite IN1 in *.
-  auto.
+  + rewrite_minusDom_false.
+    eapply H.
 Qed.
 
 
-Lemma lookupVarSet_minusDom :
+Lemma lookupVarSet_minusDom_1 :
   forall a (env : VarEnv a) vs v,
     lookupVarEnv env v = None -> 
     lookupVarSet (minusDom vs env) v = lookupVarSet vs v.
 Proof.
   intros.
   rewrite <- lookupVarEnv_elemVarEnv_false in H.
-  rewrite_minusDom_false.
+  unfold minusDom.
+  rewrite lookupVarSet_filterVarSet_true
+    with (f := (fun v0 : Var => negb (elemVarEnv v0 env && isLocalId v0))).
+  auto.
+  rewrite H. simpl. auto.
 Qed.
 
+
+Lemma lookupVarSet_minusDom_2 :
+  forall a (env : VarEnv a) vs v,
+    isLocalId v = false -> 
+    lookupVarSet (minusDom vs env) v = lookupVarSet vs v.
+Proof.
+  intros.
+  unfold minusDom.
+  rewrite lookupVarSet_filterVarSet_true
+    with (f := (fun v0 : Var => negb (elemVarEnv v0 env && isLocalId v0))).
+  auto.
+  rewrite H.
+  rewrite andb_false_r.
+  simpl.
+  auto.
+Qed.
 
 Lemma lookup_minusDom_inDom : forall a vs (env:VarEnv a) v',
     elemVarEnv v' env = true ->
+    isLocalId v' = true ->
     lookupVarSet (minusDom vs env) v' = None.
 Proof.
   intros.
-  rewrite_minusDom_true.
-Qed.
+Admitted.
+(*  rewrite_minusDom_true.
+  simpl. rewrite H0. auto.
+Qed. *)
 
 
 Lemma minusDom_extend : 
@@ -603,7 +706,7 @@ Proof.
   intros.
   unfold StrongSubset.
   intros var.
-  destruct (elemVarEnv var (delVarEnv env v)) eqn:IN.
+  destruct (elemVarEnv var (delVarEnv env v) && isLocalId var) eqn:IN.
   rewrite_minusDom_true.
   rewrite_minusDom_false.
   destruct (v == var) eqn:EQ.
@@ -627,7 +730,7 @@ Lemma lookup_minusDom_extend : forall a vs (env:VarEnv a) v v' e,
     lookupVarSet (minusDom vs env) v'.
 Proof.
   intros.
-  destruct (elemVarEnv v' env) eqn:Eenv; auto.
+  destruct (elemVarEnv v' env && isLocalId v') eqn:Eenv; auto.
   + (* v' is in dom of env. so cannot be looked up. *)
     unfold minusDom.
     rewrite 2 lookupVarSet_filterVarSet_false; auto.  
@@ -650,7 +753,7 @@ Lemma StrongSubset_minusDom_left {a} : forall vs (e: VarEnv a),
 Proof.
   intros.
   unfold StrongSubset. intro var.
-  destruct (elemVarEnv var e) eqn:EL.
+  destruct (elemVarEnv var e && isLocalId var) eqn:EL.
   rewrite_minusDom_true.
   rewrite_minusDom_false.
   destruct lookupVarSet.
@@ -810,7 +913,7 @@ Definition getSubstInScopeVars (s : Subst) : VarSet :=
 
   We also need to enforce that 
 
-    - the domain of the substitution only contains local variables
+    - the domain of the substitution only contains good local variables
 
 *)
 
@@ -823,11 +926,15 @@ Definition WellScoped_Subst  (s : Subst) (vs:VarSet) :=
 
     (forall var, 
       (match lookupVarEnv subst_env var with
-        | Some expr => WellScoped expr (getInScopeVars in_scope_set)
-        | None => True
-        end))  /\
+        | Some expr => 
 
-    (forall var, isLocalId var = false -> elemVarEnv var subst_env = false) 
+          GoodLocalVar var /\
+
+          WellScoped expr (getInScopeVars in_scope_set)
+
+        | None => True
+        end))  
+
 
   end.
 
@@ -836,7 +943,7 @@ Ltac destruct_WellScoped_Subst :=
       | [H0 : WellScoped_Subst ?s ?vs |- _ ] => 
          unfold WellScoped_Subst in H0;
          try (is_var s ; destruct s);
-         destruct H0 as [? [? ?]]
+         destruct H0 as [? ? ]
   end.
 
 
@@ -856,17 +963,38 @@ Qed.
 
 (* ---------------------------------------- *)
 
-
-Definition Disjoint {a} (l1 l2 : list a) :=
-  Forall (fun x => ~ In x l2) l1. 
-
-Lemma NoDup_app : forall {a} (l1 l2 : list a), 
-    NoDup l1 ->
-    NoDup l2 ->
-    Disjoint l1 l2 ->
-    NoDup (l1 ++ l2).
+Lemma In_varUnique_elem : forall a l, 
+    In (varUnique a) (map varUnique l) <-> 
+    Foldable.elem a l = true.
 Proof.
-  induction l1.
+  intros.
+  induction l.
+  - simpl. rewrite elem_nil.
+    split; intro. contradiction. discriminate.
+  - rewrite elem_cons.
+    rewrite orb_true_iff.
+    split.
+    intro h. inversion h.
+    left. admit.
+    right. tauto.
+    intro h.
+    rewrite <- IHl in h.
+    simpl.
+    destruct h.
+    left. admit.
+    right. auto.
+Admitted.
+
+Definition Disjoint {a}`{Eq_ a} (l1 l2 : list a) :=
+  Forall (fun x => ~ (In x l2)) l1. 
+
+Lemma NoDup_app : forall (l1 l2 : list Var), 
+    NoDup (map varUnique l1) ->
+    NoDup (map varUnique l2) ->
+    Disjoint (map varUnique l1) (map varUnique l2) ->
+    NoDup (map varUnique l1 ++ map varUnique l2).
+Proof.
+(*  induction l1.
   intros. simpl. auto.
   intros. simpl.
   inversion H. inversion  H1.
@@ -874,9 +1002,12 @@ Proof.
   econstructor.
   - intro x.
     apply in_app_or in x.
-    destruct x; eauto.
+    destruct x; eauto. *)
+Admitted.
+(*
   - eapply IHl1; eauto.
-Qed.
+    unfold Disjoint.
+Qed. *)
 
 
 (* ---------------------------------------- *)
@@ -902,8 +1033,8 @@ Definition VarEnvExtends
         | Some val1 => val1 = val2 /\ not (In var vars)
         | None      => 
           exists var2, val2 = Mk_Var var2 
-                  /\ In var2 vars' 
-                  /\ In var vars
+                  /\ In var2 vars'
+                  /\ In var vars 
         end
     | None =>
       lookupVarEnv e1 var = None 
@@ -938,16 +1069,20 @@ Proof.
   unfold subVarEnv in *.
   intros.
   intro var. specialize (H var).
-  destruct (elemVarEnv var e1) eqn:EL1.
+  destruct (elemVarEnv var e1 && isLocalId var) eqn:EL1.
   rewrite_minusDom_true.
   rewrite_minusDom_false.
 
-  destruct (elemVarEnv var e2) eqn:EL2.
+  destruct (elemVarEnv var e2 && isLocalId var) eqn:EL2.
   rewrite lookupVarSet_filterVarSet_false; try rewrite EL2; auto.
-  rewrite lookupVarEnv_elemVarEnv_true in EL2. destruct EL2 as [a LU2].
+  rewrite andb_true_iff in EL2.
+  rewrite lookupVarEnv_elemVarEnv_true in EL2. destruct EL2 as [[a LU2] ?].
   rewrite LU2 in H.
+  rewrite andb_false_iff in EL1.
+  destruct EL1 as [EL1 | ?].
   rewrite lookupVarEnv_elemVarEnv_false in EL1. 
   rewrite H in EL1. discriminate.
+  rewrite H1 in H0. discriminate.
   rewrite lookupVarSet_filterVarSet_true; try rewrite EL2; auto.
   destruct lookupVarSet.
   apply almostEqual_refl.
@@ -962,7 +1097,7 @@ Definition SubstExtends (s1 : Subst) (vars  : list Var)
 
   NoDup (map varUnique vars') /\
 
-  Forall (fun v => isLocalId v = true) vars' /\
+  Forall GoodLocalVar vars' /\
 
   match (s1, s2) with 
     | (Mk_Subst i1 e1 _ _ , Mk_Subst i2 e2 _ _) => 
@@ -998,7 +1133,7 @@ Ltac destruct_SubstExtends :=
 Ltac lookup_StrongSubset :=
     match goal with 
       [ h1 : StrongSubset (extendVarSetList ?i3 ?vars1) ?i,
-        h2 : forall v:Var, In v ?vars1 -> lookupVarSet ?i3 v = None,
+        h2 : forall v:Var, Foldable.elem v ?vars1 = true -> lookupVarSet ?i3 v = None,
         m  : lookupVarSet ?i ?v  = ?r |- 
              lookupVarSet ?i3 ?v = ?r ] =>
       let k := fresh in
@@ -1025,7 +1160,7 @@ Proof.
   eapply StrongSubset_refl.
   eapply StrongSubset_minusDom_left.
   intros var.
-  destruct lookupVarEnv eqn:LU; tauto.
+  destruct lookupVarEnv eqn:LU; try tauto.
 Qed.
 
 Ltac destruct_one_id var2 :=
@@ -1049,37 +1184,48 @@ Proof.
     destruct (lookupVarEnv i0 var) eqn:LU0; 
     destruct (lookupVarEnv i4 var) eqn:LU4; auto.
     + repeat destruct_one_pair. 
-      split. subst. auto.  intro h. apply in_app_or in h. tauto.
+      split. subst. auto.  intro h. 
+(*      rewrite Foldable_elem_app in h.
+      rewrite orb_true_iff in h.
+      tauto. *)
+      admit.
     + repeat destruct_one_pair.
       destruct_one_id var2.
-      subst. exists var2. repeat split.
+      subst. exists var2. 
+      repeat split.
       apply in_or_app. tauto.
       apply in_or_app. tauto.
+(*      rewrite Foldable_elem_app;
+      rewrite orb_true_iff; tauto. *)
     + destruct_one_pair. discriminate.
     + destruct_one_id var2.
       subst. exists var2.
       repeat split.
       apply in_or_app. tauto.
       apply in_or_app. tauto.
+(* 
+      rewrite Foldable_elem_app;
+      rewrite orb_true_iff; tauto. *)
     + repeat destruct_one_pair. discriminate.
     + repeat destruct_one_pair. discriminate. 
     + repeat destruct_one_pair. discriminate. 
     + repeat destruct_one_pair. split. auto. 
-      intro h. apply in_app_or in h. tauto.
+      intro h. 
+      admit.
+(*      rewrite Foldable_elem_app in h. 
+      rewrite orb_true_iff in h. tauto. *)
   }
 
   repeat split; auto.
   - rewrite app_length. rewrite app_length. auto.
   - rewrite map_app.
     apply NoDup_app; auto.
-  - 
-
-    eauto using Forall_app.
+  - eauto using Forall_app.
   - rewrite freshList_app.
     split; auto.
     unfold freshList in *.
     intros v IN.
-    match goal with [ f2 : forall v:Var, In v vars2' -> _ |- _ ] =>
+    match goal with [ f2 : forall v:Var, Foldable.elem v vars2' = true -> _ |- _ ] =>
                     pose (m := f2 _ IN); clearbody m end.
     lookup_StrongSubset.
    - rewrite extendVarSetList_append.
@@ -1110,37 +1256,45 @@ Proof.
      unfold StrongSubset in *. 
      intros var. 
      specialize_all var.
-     destruct (elemVarEnv var fin_env) eqn:ELEM.
-
-
+     destruct (elemVarEnv var fin_env && isLocalId var) eqn:ELEM.
 
      rewrite_minusDom_true.
      rewrite_minusDom_false.
      rewrite_minusDom_false.
 
-     destruct (elemVarEnv var mid_env) eqn: ELEM2.
+     destruct (elemVarEnv var mid_env && isLocalId var) eqn: ELEM2.
      + rewrite_minusDom_true.
        (* var is a binder in mid env that is NOT present in 
           the final env. *)
        unfold VarEnvExtends in *.
        specialize_all var.
+       rewrite andb_true_iff in ELEM2.
        rewrite lookupVarEnv_elemVarEnv_true in ELEM2.
-       destruct ELEM2 as [c k0].
+       destruct ELEM2 as [[c k0] ?].
        rewrite k0 in H7.
+       rewrite andb_false_iff in ELEM.
+       destruct ELEM as [ELEM|?].
        rewrite lookupVarEnv_elemVarEnv_false in ELEM.
        rewrite ELEM in H7.
        destruct H7.
        discriminate.
+       rewrite H17 in H16. discriminate.
      + rewrite_minusDom_false.
        (* var is not in mid or final env, so cannot be in vars1 or vars2 *)
        unfold VarEnvExtends in k. specialize (k var).
+       rewrite andb_false_iff in ELEM.
+       destruct ELEM as [ELEM|?].
+
        rewrite lookupVarEnv_elemVarEnv_false in ELEM.
        rewrite ELEM in k.
        destruct k.       
        assert (not (In var vars2)).
-       rewrite in_app_iff in H17. tauto.
+(*        rewrite Foldable_elem_app in H17.  
+       rewrite orb_true_iff in H17. tauto. *)
+       admit.
        assert (not (In var vars1)). 
-       rewrite in_app_iff in H17. tauto.
+       (* rewrite Foldable_elem_app, orb_true_iff in H17. tauto. *)
+       admit.
        rewrite lookupVarSet_extendVarSetList_false; auto.
        rewrite lookupVarSet_extendVarSetList_false in H6; auto.
        rewrite lookupVarSet_extendVarSetList_false in H13; auto.
@@ -1150,7 +1304,7 @@ Proof.
        destruct (lookupVarSet (getInScopeVars fin_scope) var) eqn:FIN.
        eapply almostEqual_trans; eauto.
        contradiction.
-Qed.
+Admitted.
         
 
 
@@ -1160,11 +1314,13 @@ Qed.
    to the *old* list of binders. *)
 
 Lemma SubstExtends_WellScoped_Subst : forall s1 s2 vs vars vars', 
+    Forall GoodLocalVar vars ->
     SubstExtends s1 vars s2 vars' ->
     WellScoped_Subst s1 vs ->
     WellScoped_Subst s2 (extendVarSetList vs vars).
 Proof.
   intros.
+  rewrite Forall_forall in H.
   destruct_WellScoped_Subst.
   destruct_SubstExtends.
   unfold VarEnvExtends in *. 
@@ -1176,16 +1332,21 @@ Proof.
   + intro var. specialize_all var.
     destruct (lookupVarEnv new_env var) eqn:LU; auto.
     destruct (lookupVarEnv old_env var) eqn:OL.
-    ++ admit. 
+    ++ repeat destruct_one_pair; subst. split. auto. admit. 
     ++ destruct_one_id var2.
        subst.
+       split.
+       auto.
        eapply WellScoped_StrongSubset with 
        (vs1 := extendVarSetList (getInScopeVars i) vars'); eauto.
        unfold WellScoped.
        unfold WellScopedVar.
        rewrite lookupVarSet_extendVarSetList_self.
        eapply almostEqual_refl; auto.
+       rewrite <- In_varUnique_elem.
+       apply in_map.
        auto.
+(*
   + (* Need to show we only add local ids to the new_env. *)
     intro var. specialize_all var.
     intro h. (* assume it is nonlocal. *)
@@ -1199,7 +1360,7 @@ Proof.
       - destruct_one_id var'.
         subst.
         admit. 
-    ++ apply lookupVarEnv_elemVarEnv_false. auto.
+    ++ apply lookupVarEnv_elemVarEnv_false. auto. *)
 Admitted.
 
 
@@ -1207,6 +1368,7 @@ Lemma WellScoped_substBody : forall doc vs vars vars' body s1 s2,
    forall (IH : forall subst,  
       WellScoped_Subst subst (extendVarSetList vs vars) ->
       WellScoped (subst_expr doc subst body) (getSubstInScopeVars subst)),
+   Forall GoodLocalVar vars ->
    SubstExtends s1 vars s2 vars' ->     
    WellScoped_Subst s1 vs ->      
    WellScoped (subst_expr doc s2 body) 
@@ -1233,6 +1395,7 @@ Lemma WellScoped_substIdBndr : forall doc s rec_subst in_scope_set
       WellScoped_Subst (Mk_Subst in_scope_set env tt tt) (extendVarSet vs v) ->
       WellScoped (subst_expr s (Mk_Subst in_scope_set env tt tt) body) 
                  (getInScopeVars in_scope_set)),
+  GoodLocalVar v ->
   forall (SB : substIdBndr doc rec_subst (Mk_Subst in_scope_set env tt tt) v = 
           (subst', bndr')),
   WellScoped_Subst (Mk_Subst in_scope_set env tt tt) vs ->
@@ -1242,7 +1405,7 @@ Proof.
   intros.
   rewrite extend_getInScopeVars.
   match goal with [ H0 : WellScoped_Subst ?ss ?vs |- _ ] => 
-                  destruct H0 as [SS [LVi ?]] end.
+                  destruct H0 as [SS LVi] end.
   unfold substIdBndr in SB. simpl in SB. inversion SB. subst. clear SB. 
   eapply IH; auto.
   (* Case analysis on whether we freshen the binder v. *)
@@ -1265,22 +1428,17 @@ Proof.
        destruct (v == var) eqn:Evvar.
        rewrite lookupVarEnv_delVarEnv_eq; auto.
        rewrite lookupVarEnv_delVarEnv_neq.
-       specialize (LVi var).
+       specialize_all var.
        destruct (lookupVarEnv env var); auto.
+       destruct_one_pair.
        rewrite <- extend_getInScopeVars.
+       split. auto.
        eapply WellScoped_StrongSubset; eauto.
        
        eapply StrongSubset_extend_fresh.
        rewrite <- NC.
        eapply uniqAway_lookupVarSet_fresh.
        unfold CoreBndr in *. intro h. rewrite h in Evvar. discriminate.
-    -- intros var h. 
-       specialize (H var h).
-       destruct (v == var) eqn:EQ.
-       rewrite elemVarEnv_delVarEnv_eq; auto.
-       rewrite elemVarEnv_delVarEnv_neq.
-       auto.
-       auto.
   + (* Binder needs to be freshened. *)
     (* Need to prove that the new substitution (i.e. extended with the 
        fresh binder) is WellScoped with respect to the old vs with the 
@@ -1293,7 +1451,8 @@ Proof.
     -- rewrite <- extend_getInScopeVars.
       pose (M := SS v'). clearbody M.
       rewrite K in M.
-      destruct (lookupVarSet (minusDom vs env) v') eqn:LVS; try contradiction; clear M.
+      destruct (lookupVarSet (minusDom vs env) v') eqn:LVS; 
+        try contradiction; clear M.
 
        intro var.
        destruct (v' == var) eqn:EQ;
@@ -1307,10 +1466,13 @@ Proof.
           rewrite Base.Eq_sym. auto.
           intro h. rewrite h in H0. discriminate.
        ++ destruct (var == v) eqn:EQ2.
+          destruct (isLocalId v) eqn:LOCAL.
          rewrite lookupVarSet_eq with (v2 := v); eauto.
          rewrite lookup_minusDom_inDom. auto.
          apply elemVarEnv_extendVarEnv_eq.
-         apply Base.Eq_refl.
+         apply Base.Eq_refl. auto.
+         rewrite lookup_minusDom
+
          rewrite lookup_minusDom_extend; eauto.
          eapply SS.
          rewrite Base.Eq_sym.
@@ -1319,6 +1481,7 @@ Proof.
     -- intro var.
        destruct (v == var) eqn:Eq_vvar.
        rewrite lookupVarEnv_extendVarEnv_eq.
+       split. admit.
        unfold WellScoped.
        rewrite <- extend_getInScopeVars.
        unfold WellScopedVar.
@@ -1329,6 +1492,8 @@ Proof.
        rewrite lookupVarEnv_extendVarEnv_neq.
        specialize (LVi var).
        destruct lookupVarEnv; auto.
+       destruct_one_pair.
+       split. auto.
        rewrite <- extend_getInScopeVars.
        eapply WellScoped_StrongSubset; eauto.
        eapply StrongSubset_extend_fresh.
@@ -1342,6 +1507,7 @@ Admitted.
 
 Lemma WellScoped_Subst_substBndr : forall subst subst' bndr' v vs,
   forall (SB : substBndr subst v = (subst', bndr')),
+  GoodLocalVar v ->
   WellScoped_Subst subst vs ->
   SubstExtends subst (cons v nil) subst' (cons bndr' nil) /\
   WellScoped_Subst subst' (extendVarSet vs v).
@@ -1349,7 +1515,7 @@ Proof.
   intros.
   destruct subst as [in_scope_set env u u0].
   match goal with [ H0 : WellScoped_Subst ?ss ?vs |- _ ] => 
-                  destruct H0 as [SS [LVi k]] end.
+                  destruct H0 as [SS LVi] end.
   unfold substBndr, substIdBndr in SB. simpl in SB. inversion SB. subst. clear SB. 
   (* Case analysis on whether we freshen the binder v. *)
   destruct (uniqAway in_scope_set v == v) eqn:NC.
@@ -1359,16 +1525,18 @@ Proof.
     unfold WellScoped_Subst.
     repeat split.
     -- econstructor.
-       intro H; inversion H.
+       intro h; inversion h.
        econstructor.
     -- admit.
     -- unfold freshList.
        intros v1 InV.
-       rewrite (IntSetProofs.In_cons_iff v1 v  nil) in InV.
-       destruct InV. subst. 
+       rewrite elem_cons, orb_true_iff in InV.
+       destruct InV.
+       rewrite lookupVarSet_eq with (v2 := v); auto.
        rewrite <- NC.
        apply uniqAway_lookupVarSet_fresh. 
        inversion H.
+       admit.
     -- rewrite extendList_getInScopeVars.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
@@ -1405,16 +1573,13 @@ Proof.
        specialize (LVi var).
        destruct (lookupVarEnv env var); auto.
        rewrite <- extend_getInScopeVars.
+       destruct_one_pair. split. auto.
        eapply WellScoped_StrongSubset; eauto.       
        eapply StrongSubset_extend_fresh.
        rewrite <- NC.
        eapply uniqAway_lookupVarSet_fresh.
        unfold CoreBndr in *. intro h. rewrite h in Evvar. discriminate.
-    -- intros var h. 
-       specialize (k var h).
-       destruct (v == var) eqn:EQ.
-       rewrite elemVarEnv_delVarEnv_eq; auto.
-       rewrite elemVarEnv_delVarEnv_neq; auto.
+
   + (* Binder needs to be freshened. *)
     unfold WellScoped_Subst.
     unfold SubstExtends.
@@ -1423,10 +1588,12 @@ Proof.
     -- admit.
     -- unfold freshList.
        intros v0 InV.
-       rewrite (IntSetProofs.In_cons_iff) in InV.
-       destruct InV. subst. 
+       rewrite elem_cons, orb_true_iff in InV.
+       destruct InV.
+       erewrite lookupVarSet_eq; eauto.
        apply uniqAway_lookupVarSet_fresh. 
        inversion H.
+       admit.
     -- rewrite extendList_getInScopeVars.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
@@ -1465,18 +1632,19 @@ Proof.
          rewrite lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
          rewrite <- extend_getInScopeVars.
+         split. admit.
          rewrite lookupVarSet_extendVarSet_self.
          eapply almostEqual_refl.
        - rewrite lookupVarEnv_extendVarEnv_neq; auto.
          specialize (LVi var).
          destruct lookupVarEnv eqn:LU.
          rewrite <- extend_getInScopeVars.
+         destruct_one_pair. split. auto.
          eapply WellScoped_StrongSubset; eauto.
          eapply StrongSubset_extendVarSet_fresh.
          eapply uniqAway_lookupVarSet_fresh.
          auto.
          intro h. rewrite h in Eq_vvar. discriminate.
-     -- admit.
 Admitted.
 
 
@@ -1486,6 +1654,7 @@ Lemma WellScoped_substBndr : forall s in_scope_set env subst' bndr' body v vs u 
       WellScoped (subst_expr s (Mk_Subst in_scope_set env u u0) body) 
                  (getInScopeVars in_scope_set)),
   forall (SB : substBndr (Mk_Subst in_scope_set env u u0) v = (subst', bndr')),
+  GoodLocalVar v ->
   WellScoped_Subst (Mk_Subst in_scope_set env u u0) vs ->
   WellScoped (subst_expr s subst' body) 
              (extendVarSet (getInScopeVars in_scope_set) bndr').
@@ -1517,6 +1686,7 @@ Ltac lift_let_in_eq H :=
 
 Lemma SubstExtends_substBndrs : forall bndrs subst subst' bndrs' vs,
   forall (SB : substBndrs subst bndrs = (subst', bndrs')),
+    Forall GoodLocalVar bndrs ->
     WellScoped_Subst subst vs ->
     SubstExtends subst bndrs subst' bndrs' /\
     WellScoped_Subst subst' (extendVarSetList vs bndrs).
@@ -1530,8 +1700,9 @@ Proof.
     lift_let_in_eq Hsb1.
     lift_let_in_eq Hsb2.
     inversion SB. subst; clear SB.
-    destruct (WellScoped_Subst_substBndr _ _ y _ _ Hsb1 H) as [h0 h1].
-    destruct (IHbndrs s' subst' ys _ Hsb2 h1) as [h2 h3].
+    inversion H.
+    destruct (WellScoped_Subst_substBndr _ _ y _ _  Hsb1 ltac:(auto) H0) as [h0 h1].
+    destruct (IHbndrs s' subst' ys _ Hsb2 ltac:(auto) h1) as [h2 h3].
     replace (y :: ys) with (cons y nil ++ ys); try reflexivity.
     replace (a :: bndrs) with (cons a nil ++ bndrs); try reflexivity.
     split.
@@ -1578,7 +1749,7 @@ Proof.
   inversion SB.
   subst.
   auto.
-Qed.
+Admitted.
 
 
 Lemma substExpr : forall e s vs in_scope_set env u0 u1, 
@@ -1591,10 +1762,11 @@ Proof.
   apply (core_induct e); unfold substExpr.
   - unfold subst_expr. intros v s vs in_scope_set env u0 u1 WSsubst WSvar.
     unfold lookupIdSubst. 
-    simpl in WSsubst. destruct WSsubst as [ ss [vv k]] . specialize (vv v).         
+    simpl in WSsubst. 
+    destruct WSsubst as [ss vv] . specialize (vv v).         
     destruct (isLocalId v) eqn:HLocal; simpl.
     -- destruct (lookupVarEnv env v) eqn:HLookup. 
-        + auto.
+        + tauto.
         + destruct (lookupInScope in_scope_set v) eqn:HIS.
           ++ unfold WellScoped, WellScopedVar in *.
              destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
@@ -1615,23 +1787,16 @@ Proof.
              rewrite lookupVarSet_minusDom in ss; eauto.
              destruct (lookupVarSet vs v); try contradiction.
              
-    -- (* This is a global id, so we shouldn't be able to substitute for it. 
-          Furthermore, it doesn't need to be inscope??  *)
-       unfold WellScoped in WSvar. 
-
-       apply k in HLocal.
-
-       unfold WellScopedVar in *.
-       unfold StrongSubset in ss.
-       specialize (ss v).
-       rewrite lookupVarSet_minusDom in ss.
-       destruct (lookupVarSet vs v) eqn:LU.
-       destruct (lookupVarSet (getInScopeVars in_scope_set) v) eqn:LU2.
-       eapply almostEqual_trans; eauto.
-       contradiction.
-       contradiction.
-       rewrite <- lookupVarEnv_elemVarEnv_false.
-       auto.
+    -- (* This is not a global id, so we don't substitute for it. *)
+       unfold WellScoped, WellScopedVar in WSvar. 
+       eapply WellScopedVar_StrongSubset with (vs1 := minusDom vs env); eauto.
+       unfold WellScopedVar.
+       destruct (lookupVarEnv env v) eqn:LU.
+       + destruct_one_pair.
+       unfold GoodLocalVar in *.
+       destruct_one_pair.
+       admit. (* This seems sketchy. *)
+       rewrite lookupVarSet_minusDom; auto.
 
   - unfold subst_expr. auto. 
   - intros. 
@@ -1688,10 +1853,11 @@ Proof.
       rewrite Forall_forall in FF.     
       unfold WellScoped in *. fold WellScoped in *.
       repeat split.
+      ++ admit.
 
      ++ destruct_SubstExtends.
         unfold CoreBndr,CoreExpr in *.
-        rewrite map_fst_zip in *; auto.
+        rewrite map_fst_zip in *; auto. 
 
 (*
         rewrite <- map_map with (g := fun p => subst_expr & "substBind" subst' p)
@@ -1750,15 +1916,15 @@ Proof.
 
          rewrite map_fst_zip.
 
-         eapply WellScoped_substBody; eauto.
+         eapply WellScoped_substBody with (vars := vars); eauto.
          intros subst0 WS0.
          destruct subst0.
          eapply IHrhs; eauto.
-
+         admit.
+         rewrite map_snd_zip.
          rewrite map_length.
-              
-        rewrite <- length_zip.
-        congruence.
+         rewrite L1. rewrite <- L.
+        auto.
         auto.
       ++ unfold bindersOf.
          rewrite bindersOf_Rec_cleanup.
@@ -1775,33 +1941,39 @@ Proof.
          rewrite <- H.
          eauto.
          eauto.
-
   - intros.
     rewrite subst_expr_Case.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *. fold WellScoped in *.
-
-    destruct H2 as [WS FF].
-    split; eauto.
+    repeat destruct_one_pair.
     rewrite Forall.Forall'_Forall in *.
     rewrite Forall_forall in *.
+    split; [|split].
+    + admit.
+    + admit.
+    + 
     intros alt IA.
     unfold substAlt in IA.
     rewrite in_map_iff in IA.
     destruct IA as [[[dc pats] rhs] [IAA IN]].
     destruct (substBndrs subst' pats) as [subst'' bndr''] eqn:SB2.
     destruct alt as [[dc0 bdnr''0] ss0]. inversion IAA. subst. clear IAA.
-    pose (wf := FF _ IN). clearbody wf. simpl in wf.
+    pose (wf := H4 _ IN). clearbody wf. simpl in wf.
     simpl.
-    destruct (WellScoped_Subst_substBndr _ _ _ _ vs SB) as [h0 h1]. auto.
+    destruct_one_pair.
+
+    destruct (WellScoped_Subst_substBndr _ _ _ _ vs SB) as [h0 h1]; auto.
+
     destruct (SubstExtends_substBndrs _ _ _ _ (extendVarSet vs bndr)
-                                      SB2) as [h2 h3].
-    auto.
+                                      SB2) as [h2 h3]; auto.
+    split.
+    { destruct_SubstExtends. auto. }
     destruct subst'' as [i0'' i1'' u0'' u1''].
+
     eapply WellScoped_StrongSubset.
     eapply H0. eapply IN.
     eauto.
-    rewrite extendVarSetList_cons in wf.
+    rewrite extendVarSetList_cons in *.
     auto.
     destruct_SubstExtends.
     eapply StrongSubset_trans; eauto. 
@@ -1828,4 +2000,4 @@ Proof.
     unfold subst_expr.
     unfold WellScoped in *. fold WellScoped in *.
     auto.
-Qed.
+Admitted.

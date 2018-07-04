@@ -593,7 +593,7 @@ Axiom lookupVarEnv_delVarEnv_neq :
 
 
 Definition minusDom {a} (vs : VarSet) (e : VarEnv a) : VarSet :=
-  filterVarSet (fun v => negb (elemVarEnv v e && isLocalId v)) vs.
+  filterVarSet (fun v => negb (elemVarEnv v e)) vs.
 
 
 Ltac specialize_all var := 
@@ -606,37 +606,37 @@ Ltac specialize_all var :=
    rewrite a use of minusDom appropriately. *)
 Ltac rewrite_minusDom_true := 
   match goal with 
-  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = true |- 
+  | [ H : elemVarEnv ?var ?init_env = true |- 
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
     repeat rewrite lookupVarSet_filterVarSet_false with 
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))); try rewrite H; auto 
-  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = true, 
+        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); try rewrite H; auto 
+  | [ H : elemVarEnv ?var ?init_env = true, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
     rewrite lookupVarSet_filterVarSet_false with
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))) in H2; 
+        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2; 
     try rewrite H; auto 
                                                                     
   end.
 
 Ltac rewrite_minusDom_false := 
   match goal with 
-  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = false |- 
+  | [ H : elemVarEnv ?var ?init_env  = false |- 
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
     repeat rewrite lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))); 
+    with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); 
     try rewrite H; auto 
-  | [ H : elemVarEnv ?var ?init_env && isLocalId ?var = false, 
+  | [ H : elemVarEnv ?var ?init_env = false, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
     rewrite lookupVarSet_filterVarSet_true with 
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env && isLocalId v0))) in H2 ; 
+        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2 ; 
     try rewrite H; auto  
   end.
 
@@ -648,7 +648,7 @@ Proof.
   intros. 
   unfold StrongSubset in *.
   intros var.
-  destruct (elemVarEnv var e && isLocalId var) eqn:IN_ENV.
+  destruct (elemVarEnv var e) eqn:IN_ENV.
   + rewrite_minusDom_true. 
   + rewrite_minusDom_false.
     eapply H.
@@ -664,31 +664,15 @@ Proof.
   rewrite <- lookupVarEnv_elemVarEnv_false in H.
   unfold minusDom.
   rewrite lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 env && isLocalId v0))).
+    with (f := (fun v0 : Var => negb (elemVarEnv v0 env))).
   auto.
   rewrite H. simpl. auto.
 Qed.
 
 
-Lemma lookupVarSet_minusDom_2 :
-  forall a (env : VarEnv a) vs v,
-    isLocalId v = false -> 
-    lookupVarSet (minusDom vs env) v = lookupVarSet vs v.
-Proof.
-  intros.
-  unfold minusDom.
-  rewrite lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 env && isLocalId v0))).
-  auto.
-  rewrite H.
-  rewrite andb_false_r.
-  simpl.
-  auto.
-Qed.
 
 Lemma lookup_minusDom_inDom : forall a vs (env:VarEnv a) v',
     elemVarEnv v' env = true ->
-    isLocalId v' = true ->
     lookupVarSet (minusDom vs env) v' = None.
 Proof.
   intros.
@@ -706,7 +690,7 @@ Proof.
   intros.
   unfold StrongSubset.
   intros var.
-  destruct (elemVarEnv var (delVarEnv env v) && isLocalId var) eqn:IN.
+  destruct (elemVarEnv var (delVarEnv env v)) eqn:IN.
   rewrite_minusDom_true.
   rewrite_minusDom_false.
   destruct (v == var) eqn:EQ.
@@ -730,7 +714,7 @@ Lemma lookup_minusDom_extend : forall a vs (env:VarEnv a) v v' e,
     lookupVarSet (minusDom vs env) v'.
 Proof.
   intros.
-  destruct (elemVarEnv v' env && isLocalId v') eqn:Eenv; auto.
+  destruct (elemVarEnv v' env) eqn:Eenv; auto.
   + (* v' is in dom of env. so cannot be looked up. *)
     unfold minusDom.
     rewrite 2 lookupVarSet_filterVarSet_false; auto.  
@@ -753,7 +737,7 @@ Lemma StrongSubset_minusDom_left {a} : forall vs (e: VarEnv a),
 Proof.
   intros.
   unfold StrongSubset. intro var.
-  destruct (elemVarEnv var e && isLocalId var) eqn:EL.
+  destruct (elemVarEnv var e) eqn:EL.
   rewrite_minusDom_true.
   rewrite_minusDom_false.
   destruct lookupVarSet.
@@ -913,7 +897,13 @@ Definition getSubstInScopeVars (s : Subst) : VarSet :=
 
   We also need to enforce that 
 
-    - the domain of the substitution only contains good local variables
+    - the domain of the substitution only contains good local *identifiers*
+    [SCW: how can we enforce that ??? lookup is by unique only, so if we try to 
+    lookup a tyvar with the same unique, it will work. Instead: we need an 
+    invariant that we only lookup localIds in this subst_env.]
+
+    (i.e. we only use subst_env local term variables, not 
+    local type/coercion variables.)
 
 *)
 
@@ -925,16 +915,16 @@ Definition WellScoped_Subst  (s : Subst) (vs:VarSet) :=
     (minusDom vs subst_env) {<=} (getInScopeVars in_scope_set) /\
 
     (forall var, 
+
       (match lookupVarEnv subst_env var with
+
         | Some expr => 
 
-          GoodLocalVar var /\
-
-          WellScoped expr (getInScopeVars in_scope_set)
+             WellScoped expr (getInScopeVars in_scope_set)
 
         | None => True
-        end))  
 
+        end))  
 
   end.
 
@@ -955,7 +945,7 @@ Proof.
   intros.
   destruct_WellScoped_Subst.
   repeat split; auto.
-  eapply (StrongSubset_trans (minusDom vs1 i0)); eauto.
+  eapply (StrongSubset_trans (minusDom vs2 i0)); eauto.
   eapply StrongSubset_minusDom; eauto.
 Qed.
 
@@ -1032,9 +1022,11 @@ Definition VarEnvExtends
       match lookupVarEnv e1 var with
         | Some val1 => val1 = val2 /\ not (In var vars)
         | None      => 
+          (* Renamings only occur for localIds. *)
           exists var2, val2 = Mk_Var var2 
                   /\ In var2 vars'
                   /\ In var vars 
+                  /\ isLocalId var = true
         end
     | None =>
       lookupVarEnv e1 var = None 
@@ -1069,20 +1061,16 @@ Proof.
   unfold subVarEnv in *.
   intros.
   intro var. specialize (H var).
-  destruct (elemVarEnv var e1 && isLocalId var) eqn:EL1.
+  destruct (elemVarEnv var e1) eqn:EL1.
   rewrite_minusDom_true.
   rewrite_minusDom_false.
 
-  destruct (elemVarEnv var e2 && isLocalId var) eqn:EL2.
+  destruct (elemVarEnv var e2) eqn:EL2.
   rewrite lookupVarSet_filterVarSet_false; try rewrite EL2; auto.
-  rewrite andb_true_iff in EL2.
-  rewrite lookupVarEnv_elemVarEnv_true in EL2. destruct EL2 as [[a LU2] ?].
+  rewrite lookupVarEnv_elemVarEnv_true in EL2. destruct EL2 as [a LU2].
   rewrite LU2 in H.
-  rewrite andb_false_iff in EL1.
-  destruct EL1 as [EL1 | ?].
   rewrite lookupVarEnv_elemVarEnv_false in EL1. 
   rewrite H in EL1. discriminate.
-  rewrite H1 in H0. discriminate.
   rewrite lookupVarSet_filterVarSet_true; try rewrite EL2; auto.
   destruct lookupVarSet.
   apply almostEqual_refl.
@@ -1195,6 +1183,7 @@ Proof.
       repeat split.
       apply in_or_app. tauto.
       apply in_or_app. tauto.
+      auto.
 (*      rewrite Foldable_elem_app;
       rewrite orb_true_iff; tauto. *)
     + destruct_one_pair. discriminate.
@@ -1203,6 +1192,7 @@ Proof.
       repeat split.
       apply in_or_app. tauto.
       apply in_or_app. tauto.
+      auto.
 (* 
       rewrite Foldable_elem_app;
       rewrite orb_true_iff; tauto. *)
@@ -1256,35 +1246,28 @@ Proof.
      unfold StrongSubset in *. 
      intros var. 
      specialize_all var.
-     destruct (elemVarEnv var fin_env && isLocalId var) eqn:ELEM.
+     destruct (elemVarEnv var fin_env) eqn:ELEM.
 
      rewrite_minusDom_true.
      rewrite_minusDom_false.
      rewrite_minusDom_false.
 
-     destruct (elemVarEnv var mid_env && isLocalId var) eqn: ELEM2.
+     destruct (elemVarEnv var mid_env) eqn: ELEM2.
      + rewrite_minusDom_true.
        (* var is a binder in mid env that is NOT present in 
           the final env. *)
        unfold VarEnvExtends in *.
        specialize_all var.
-       rewrite andb_true_iff in ELEM2.
        rewrite lookupVarEnv_elemVarEnv_true in ELEM2.
-       destruct ELEM2 as [[c k0] ?].
+       destruct ELEM2 as [c k0].
        rewrite k0 in H7.
-       rewrite andb_false_iff in ELEM.
-       destruct ELEM as [ELEM|?].
        rewrite lookupVarEnv_elemVarEnv_false in ELEM.
        rewrite ELEM in H7.
        destruct H7.
        discriminate.
-       rewrite H17 in H16. discriminate.
      + rewrite_minusDom_false.
        (* var is not in mid or final env, so cannot be in vars1 or vars2 *)
        unfold VarEnvExtends in k. specialize (k var).
-       rewrite andb_false_iff in ELEM.
-       destruct ELEM as [ELEM|?].
-
        rewrite lookupVarEnv_elemVarEnv_false in ELEM.
        rewrite ELEM in k.
        destruct k.       
@@ -1329,14 +1312,17 @@ Proof.
   simpl in *.
   repeat split. 
   + admit.
-  + intro var. specialize_all var.
+  + intros var. specialize_all var.
     destruct (lookupVarEnv new_env var) eqn:LU; auto.
     destruct (lookupVarEnv old_env var) eqn:OL.
-    ++ repeat destruct_one_pair; subst. split. auto. admit. 
+    ++ repeat destruct_one_pair; subst. 
+       eapply WellScoped_StrongSubset with 
+       (vs1 := extendVarSetList (getInScopeVars i) vars'); eauto.
+       eapply WellScoped_StrongSubset; eauto.
+       eapply StrongSubset_extendVarSetList_fresh.
+       auto.       
     ++ destruct_one_id var2.
        subst.
-       split.
-       auto.
        eapply WellScoped_StrongSubset with 
        (vs1 := extendVarSetList (getInScopeVars i) vars'); eauto.
        unfold WellScoped.
@@ -1396,6 +1382,7 @@ Lemma WellScoped_substIdBndr : forall doc s rec_subst in_scope_set
       WellScoped (subst_expr s (Mk_Subst in_scope_set env tt tt) body) 
                  (getInScopeVars in_scope_set)),
   GoodLocalVar v ->
+  isLocalId v = true ->
   forall (SB : substIdBndr doc rec_subst (Mk_Subst in_scope_set env tt tt) v = 
           (subst', bndr')),
   WellScoped_Subst (Mk_Subst in_scope_set env tt tt) vs ->
@@ -1424,17 +1411,14 @@ Proof.
        eapply minusDom_extend.
        eapply StrongSubset_extend.
        auto.
-    -- intro var.
+    -- intros var.
        destruct (v == var) eqn:Evvar.
        rewrite lookupVarEnv_delVarEnv_eq; auto.
        rewrite lookupVarEnv_delVarEnv_neq.
        specialize_all var.
        destruct (lookupVarEnv env var); auto.
-       destruct_one_pair.
        rewrite <- extend_getInScopeVars.
-       split. auto.
-       eapply WellScoped_StrongSubset; eauto.
-       
+       eapply WellScoped_StrongSubset; eauto.       
        eapply StrongSubset_extend_fresh.
        rewrite <- NC.
        eapply uniqAway_lookupVarSet_fresh.
@@ -1453,47 +1437,44 @@ Proof.
       rewrite K in M.
       destruct (lookupVarSet (minusDom vs env) v') eqn:LVS; 
         try contradiction; clear M.
-
        intro var.
        destruct (v' == var) eqn:EQ;
        [rewrite (lookupVarSet_extendVarSet_eq); eauto|
         rewrite (lookupVarSet_extendVarSet_neq); auto].
-       ++ assert (v == var = false). 
+       ++ (* The arbitrary var is the same as v', the freshened binder.
+             so it cannot be the same as the v, the old binder. *)
+          assert (v == var = false). 
           admit.
           rewrite lookup_minusDom_extend.
           rewrite (lookupVarSet_eq) with (v2 := v'); eauto.
           rewrite LVS. auto.
           rewrite Base.Eq_sym. auto.
-          intro h. rewrite h in H0. discriminate.
-       ++ destruct (var == v) eqn:EQ2.
-          destruct (isLocalId v) eqn:LOCAL.
-         rewrite lookupVarSet_eq with (v2 := v); eauto.
-         rewrite lookup_minusDom_inDom. auto.
-         apply elemVarEnv_extendVarEnv_eq.
-         apply Base.Eq_refl. auto.
-         rewrite lookup_minusDom
-
-         rewrite lookup_minusDom_extend; eauto.
-         eapply SS.
-         rewrite Base.Eq_sym.
-         intro h. rewrite h in EQ2. discriminate.
+          intro h. rewrite h in H1. discriminate.
+       ++ (* The arbitrary var is not the freshened binder *)
+         destruct (var == v) eqn:EQ2.
+         +++ (* What if it were the old binder v? *) 
+           rewrite lookupVarSet_eq with (v2 := v); eauto.
+           rewrite lookup_minusDom_inDom. auto.
+           apply elemVarEnv_extendVarEnv_eq.             
+           apply Base.Eq_refl. 
+         +++ 
+           rewrite lookup_minusDom_extend; eauto.
+           eapply SS.
+           rewrite Base.Eq_sym.
+           intro h. rewrite h in EQ2. discriminate.
        ++ intro h. rewrite h in EQ. discriminate.
-    -- intro var.
+    -- intros var.
+       specialize_all var.
        destruct (v == var) eqn:Eq_vvar.
-       rewrite lookupVarEnv_extendVarEnv_eq.
-       split. admit.
+       rewrite lookupVarEnv_extendVarEnv_eq; auto.
        unfold WellScoped.
        rewrite <- extend_getInScopeVars.
        unfold WellScopedVar.
        rewrite lookupVarSet_extendVarSet_eq.
        apply almostEqual_refl; auto.
        apply Base.Eq_refl; auto.
-       auto.
        rewrite lookupVarEnv_extendVarEnv_neq.
-       specialize (LVi var).
        destruct lookupVarEnv; auto.
-       destruct_one_pair.
-       split. auto.
        rewrite <- extend_getInScopeVars.
        eapply WellScoped_StrongSubset; eauto.
        eapply StrongSubset_extend_fresh.
@@ -1513,15 +1494,24 @@ Lemma WellScoped_Subst_substBndr : forall subst subst' bndr' v vs,
   WellScoped_Subst subst' (extendVarSet vs v).
 Proof. 
   intros.
+  unfold substBndr, substIdBndr in SB. simpl in SB.
+  destruct (isTyVar v) eqn:IsTyVar. 
+  { inversion SB; subst; clear SB. admit. }
+  destruct (isCoVar v) eqn:IsCoVar.
+  { inversion SB; subst; clear SB. admit. }
+  assert (ISL : isLocalId v = true).
+  { unfold isLocalId, isTyVar, isCoVar, GoodLocalVar, isLocalVar in *.
+    destruct v; try discriminate.
+    destruct_one_pair.
+    destruct i. simpl in *. discriminate. auto. }
   destruct subst as [in_scope_set env u u0].
   match goal with [ H0 : WellScoped_Subst ?ss ?vs |- _ ] => 
                   destruct H0 as [SS LVi] end.
-  unfold substBndr, substIdBndr in SB. simpl in SB. inversion SB. subst. clear SB. 
+  inversion SB; subst; clear SB.
   (* Case analysis on whether we freshen the binder v. *)
   destruct (uniqAway in_scope_set v == v) eqn:NC.
   + (* Binder is already fresh enough. *)
     apply uniqAway_eq_same in NC.
-    rewrite NC.
     unfold WellScoped_Subst.
     repeat split.
     -- econstructor.
@@ -1532,11 +1522,10 @@ Proof.
        intros v1 InV.
        rewrite elem_cons, orb_true_iff in InV.
        destruct InV.
-       rewrite lookupVarSet_eq with (v2 := v); auto.
-       rewrite <- NC.
+       rewrite lookupVarSet_eq with (v2 := v);
+       rewrite <- NC; auto.
        apply uniqAway_lookupVarSet_fresh. 
-       inversion H.
-       admit.
+       rewrite elem_nil in H0. discriminate.
     -- rewrite extendList_getInScopeVars.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
@@ -1551,6 +1540,8 @@ Proof.
        rewrite <- extend_getInScopeVars.
        eapply StrongSubset_trans.
        eapply minusDom_extend.
+       rewrite <- extend_getInScopeVars.
+       rewrite NC.
        eapply StrongSubset_extend.
        eapply StrongSubset_minusDom_left.
     -- admit.
@@ -1564,6 +1555,7 @@ Proof.
        rewrite <- extend_getInScopeVars.
        eapply StrongSubset_trans with (vs2 := extendVarSet (minusDom vs env) v).
        eapply minusDom_extend.
+       rewrite NC.
        eapply StrongSubset_extend. 
        auto.
     -- intro var.
@@ -1573,7 +1565,6 @@ Proof.
        specialize (LVi var).
        destruct (lookupVarEnv env var); auto.
        rewrite <- extend_getInScopeVars.
-       destruct_one_pair. split. auto.
        eapply WellScoped_StrongSubset; eauto.       
        eapply StrongSubset_extend_fresh.
        rewrite <- NC.
@@ -1592,8 +1583,8 @@ Proof.
        destruct InV.
        erewrite lookupVarSet_eq; eauto.
        apply uniqAway_lookupVarSet_fresh. 
-       inversion H.
-       admit.
+       rewrite elem_nil in H0.
+       discriminate.
     -- rewrite extendList_getInScopeVars.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
@@ -1628,18 +1619,15 @@ Proof.
        admit. (* eapply StrongSubset_refl. *)
     -- intros var.
        destruct (v == var) eqn:Eq_vvar.
-       - 
-         rewrite lookupVarEnv_extendVarEnv_eq; auto.
+       - rewrite lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
          rewrite <- extend_getInScopeVars.
-         split. admit.
          rewrite lookupVarSet_extendVarSet_self.
          eapply almostEqual_refl.
        - rewrite lookupVarEnv_extendVarEnv_neq; auto.
          specialize (LVi var).
          destruct lookupVarEnv eqn:LU.
          rewrite <- extend_getInScopeVars.
-         destruct_one_pair. split. auto.
          eapply WellScoped_StrongSubset; eauto.
          eapply StrongSubset_extendVarSet_fresh.
          eapply uniqAway_lookupVarSet_fresh.
@@ -1745,10 +1733,8 @@ Proof.
   intros.
   unfold substRecBndrs in *.
   lift_let_in_eq h0.
-  eapply SubstExtends_substBndrs in h0; eauto.
   inversion SB.
   subst.
-  auto.
 Admitted.
 
 
@@ -1784,19 +1770,17 @@ Proof.
              unfold StrongSubset in ss.
              specialize (ss v). simpl in ss.
              rewrite HIS in ss.
-             rewrite lookupVarSet_minusDom in ss; eauto.
+             rewrite lookupVarSet_minusDom_1 in ss; eauto.
              destruct (lookupVarSet vs v); try contradiction.
              
-    -- (* This is not a global id, so we don't substitute for it. *)
+    -- (* This is a global id, so we don't substitute for it. *)
+       (* Need to add an assumption that v is either a localId or 
+          a globalId to the scope invariant.  
+          (And add a restriction that global id's are not in the dom 
+          of the substitution.) *)
+
        unfold WellScoped, WellScopedVar in WSvar. 
-       eapply WellScopedVar_StrongSubset with (vs1 := minusDom vs env); eauto.
-       unfold WellScopedVar.
-       destruct (lookupVarEnv env v) eqn:LU.
-       + destruct_one_pair.
-       unfold GoodLocalVar in *.
-       destruct_one_pair.
-       admit. (* This seems sketchy. *)
-       rewrite lookupVarSet_minusDom; auto.
+       admit.
 
   - unfold subst_expr. auto. 
   - intros. 

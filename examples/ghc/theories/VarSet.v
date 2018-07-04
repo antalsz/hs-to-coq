@@ -525,6 +525,11 @@ Axiom disjointVarSet_mkVarSet:
   disjointVarSet vs1 (mkVarSet vs2) = true <->
   Forall (fun v => elemVarSet v vs1 = false) vs2.
 
+Axiom disjointVarSet_mkVarSet_append:
+  forall vs1 vs2 vs3,
+  disjointVarSet vs1 (mkVarSet (vs2 ++ vs3)) = true <->
+  disjointVarSet vs1 (mkVarSet vs2) = true /\ disjointVarSet vs1 (mkVarSet vs3) = true.
+
 Axiom disjointVarSet_mkVarSet_cons:
   forall v vs1 vs2,
   disjointVarSet vs1 (mkVarSet (v :: vs2)) = true <->

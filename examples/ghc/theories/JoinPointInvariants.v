@@ -272,6 +272,12 @@ with isJoinRHS_aux (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} 
     | _ => false
     end.
 
+Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
+  fun '(dc,pats,rhs) jps =>
+      let jps'' := delVarSetList jps pats  in
+      forallb (fun v => negb (isJoinId v)) pats &&
+      isJoinPointsValid rhs 0 jps''.
+
 Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux.
 
 (* Conjuction of [isJoinId] and [isJoinPointsValidPair] *)

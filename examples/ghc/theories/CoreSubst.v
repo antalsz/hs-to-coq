@@ -347,6 +347,32 @@ Proof.
   destruct i; simpl; tauto.
 Qed.
 
+Lemma varUnique_iff :
+  forall v1 v2,
+    v1 == v2 = true <-> varUnique v1 = varUnique v2.
+Proof.
+  intros.
+  unfold_zeze.
+  unfold varUnique.
+  set (n1 := realUnique v1).
+  set (n2 := realUnique v2).
+  destruct (n1 =? n2) eqn:EQ.
+  apply beq_nat_true in EQ.
+  rewrite EQ in *.
+  tauto.
+  apply beq_nat_false in EQ.
+  split.
+  intro h. discriminate.
+  intro h.
+  assert False.
+  apply EQ.
+  unfold Unique.mkUniqueGrimily in *.
+  inversion h.
+  apply Nat2N.inj in H0.
+  auto.
+  contradiction.
+Qed.
+
 (* ---------------------------- *)
 
     
@@ -676,10 +702,8 @@ Lemma lookup_minusDom_inDom : forall a vs (env:VarEnv a) v',
     lookupVarSet (minusDom vs env) v' = None.
 Proof.
   intros.
-Admitted.
-(*  rewrite_minusDom_true.
-  simpl. rewrite H0. auto.
-Qed. *)
+  rewrite_minusDom_true.
+Qed. 
 
 
 Lemma minusDom_extend : 
@@ -705,8 +729,9 @@ Proof.
   apply almostEqual_refl; auto.
   rewrite elemVarEnv_delVarEnv_neq in IN; auto.
   rewrite IN. auto.
-Admitted.
-
+  intro h. rewrite h in EQ. discriminate.
+  intro h. rewrite h in EQ. discriminate.
+Qed.
 
 
 Lemma lookup_minusDom_extend : forall a vs (env:VarEnv a) v v' e,
@@ -987,15 +1012,17 @@ Proof.
     rewrite orb_true_iff.
     split.
     intro h. inversion h.
-    left. admit.
+    left. 
+    rewrite varUnique_iff in *.
+    auto.
     right. tauto.
     intro h.
     rewrite <- IHl in h.
     simpl.
     destruct h.
-    left. admit.
+    left. rewrite varUnique_iff in *. auto.
     right. auto.
-Admitted.
+Qed.
 
 Definition Disjoint {a}`{Eq_ a} (l1 l2 : list a) :=
   Forall (fun x => ~ (In x l2)) l1. 
@@ -1006,7 +1033,7 @@ Lemma NoDup_app : forall (l1 l2 : list Var),
     Disjoint (map varUnique l1) (map varUnique l2) ->
     NoDup (map varUnique l1 ++ map varUnique l2).
 Proof.
-(*  induction l1.
+  induction l1.
   intros. simpl. auto.
   intros. simpl.
   inversion H. inversion  H1.
@@ -1014,13 +1041,9 @@ Proof.
   econstructor.
   - intro x.
     apply in_app_or in x.
-    destruct x; eauto. *)
-Admitted.
-(*
+    destruct x; eauto. 
   - eapply IHl1; eauto.
-    unfold Disjoint.
-Qed. *)
-
+Qed. 
 
 (* ---------------------------------------- *)
 

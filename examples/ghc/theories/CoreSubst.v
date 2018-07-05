@@ -942,15 +942,14 @@ Definition getSubstInScopeVars (s : Subst) : VarSet :=
     - the current scope minus the domain is a strongSubset of in_scope_set
     - the range of the subst_env is wellscoped according to the in_scope_set
 
-  We also need to enforce that 
+  We should to enforce that 
 
     - the domain of the substitution only contains good local *identifiers*
-    [SCW: how can we enforce that ??? lookup is by unique only, so if we try to 
-    lookup a tyvar with the same unique, it will work. Instead: we need an 
-    invariant that we only lookup localIds in this subst_env.]
+      (i.e. not global ids, type vars or coercion vars.) 
 
-    (i.e. we only use subst_env local term variables, not 
-    local type/coercion variables.)
+  However, we cannot access the domain of VarEnvs directly. So we do not 
+  capture this invariant here. Instead, we should only lookup localIds in this 
+  subst_env.
 
 *)
 
@@ -1061,13 +1060,11 @@ Ltac destruct_one_expr val1 :=
 
 
 (* This property describes the invariants we need about the freshened
-   binder list and new substitution returned by substBndrs.  
+   binder list and new VarEnv after a use of substIdBndrs.
   
-  - [s2] is a substitution extended from [s1] by the freshened [vars'] 
-  - This means that the inscope set of s2 is s1 ++ vars 
+  - [e2] is a subst env extended from [e1], where the binders in [vars]
+    have been freshened to [vars']. 
 
-    [This prop does not talk about the part of the domain of s1 that is 
-    eliminated from s2 because we've reused a bound variable.]
 *)
 
 
@@ -1104,7 +1101,7 @@ Definition VarEnvExtends
     end.
 
 Lemma VarEnvExtends_trans : forall beg mid end_env vars1 vars2 vars1' vars2', 
-  Disjoint (map varUnique vars1') (map varUnique vars2') ->
+  Disjoint (map varUnique vars1') (map varUnique vars2') -> 
   VarEnvExtends beg vars1 mid vars1' ->
   VarEnvExtends mid vars2 end_env vars2' ->
   VarEnvExtends beg (vars1 ++ vars2) end_env (vars1' ++ vars2').
@@ -1157,6 +1154,15 @@ Proof.
     repeat rewrite orb_true_iff in *.
     tauto.
 Qed.
+
+
+(* This property describes the invariants we need about the freshened
+   binder list and new subst after a use of substIdBndrs.
+  
+  - [s2] is a subst extended from [s1], where the binders in [vars]
+    have been freshened to [vars']
+
+*)
 
 
 Definition SubstExtends (s1 : Subst) (vars  : list Var) 

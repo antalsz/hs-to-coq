@@ -180,6 +180,12 @@ Lemma updJPS_not_joinId:
   updJPS jps v = delVarSet jps v.
 Proof. intros. unfold updJPS. rewrite H. reflexivity. Qed.
 
+Lemma updJPS_joinId:
+  forall jps v,
+  isJoinId v = true ->
+  updJPS jps v = extendVarSet jps v.
+Proof. intros. unfold updJPS. rewrite H. reflexivity. Qed.
+
 Lemma updJPSs_not_joinId:
   forall jps vs,
   forallb (fun v => negb (isJoinId v)) vs = true ->
@@ -194,6 +200,29 @@ Proof.
     rewrite updJPS_not_joinId by intuition.
     reflexivity.
 Qed.
+
+Lemma updJPSs_joinId:
+  forall jps vs,
+  forallb isJoinId vs = true ->
+  updJPSs jps vs = extendVarSetList jps vs.
+Proof. 
+  intros. induction vs using rev_ind.
+  * rewrite extendVarSetList_nil. reflexivity.
+  * rewrite updJPSs_append, updJPSs_cons, updJPSs_nil.
+    rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
+    rewrite forallb_app in H. simpl in H. rewrite andb_true_r, andb_true_iff in H. 
+    rewrite IHvs by intuition.
+    rewrite updJPS_joinId by intuition.
+    reflexivity.
+Qed.
+
+
+Lemma elemVarSet_updJPSs_l:
+  forall v jps vs,
+  elemVarSet v jps  = true  ->
+  elemVarSet v (mkVarSet vs) = false ->
+  elemVarSet v (updJPSs jps vs) = true .
+Admitted.
 
 
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
@@ -242,6 +271,12 @@ with isJoinRHS_aux (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} 
                  else isJoinRHS_aux (a-1) e (delVarSet jps v)
     | _ => false
     end.
+
+Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
+  fun '(dc,pats,rhs) jps =>
+      let jps'' := delVarSetList jps pats  in
+      forallb (fun v => negb (isJoinId v)) pats &&
+      isJoinPointsValid rhs 0 jps''.
 
 Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux.
 

@@ -16,6 +16,7 @@ PASS = \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
+  Deriv2 \
   Arrow \
   EqList \
   PaperExamples \

@@ -2316,6 +2316,33 @@ Section in_exitifyRec.
 
 End in_exitifyRec.
 
+(* This re-formulates the main lemma about [exitifyRec] without using [NCore] stuff. *)
+(* Also, introduce some equalities for easier application *)
+Lemma exitifyRec_WellScoped':
+  forall (in_scope : InScopeSet) (pairs : list (CoreBndr * CoreExpr)) fst_pairs,
+  fst_pairs = map fst pairs -> 
+  Forall (fun p : CoreBndr * CoreExpr => WellScoped (snd p) (extendVarSetList (isvs in_scope) fst_pairs)) pairs ->
+  Forall (fun p : Var * Expr CoreBndr => GoodLocalVar (fst p)) pairs ->
+  forall body : CoreExpr,
+  NoDup (map varUnique fst_pairs) ->
+  WellScoped body (extendVarSetList (isvs in_scope) fst_pairs) ->
+  WellScoped
+    (mkLets (exitifyRec (extendInScopeSetList in_scope fst_pairs) pairs) body)
+    (isvs in_scope).
+Proof.
+  intros ??? Heq.
+  subst.
+  assert (exists npairs, pairs = map toJPair npairs) as Hex by admit.
+  destruct Hex as [npairs ?]. subst.
+  replace (map fst _) with (fs npairs).
+  2: {
+    unfold fs. rewrite map_map.
+    apply map_ext. destruct a. reflexivity.
+  }
+  apply (exitifyRec_WellScoped in_scope  npairs).
+Admitted.
+
+
 Definition top_go := ltac:(
   let rhs := eval cbv beta delta [exitifyProgram] in (exitifyProgram []) in
   lazymatch rhs with | (let x := ?rhs in ?body) => 
@@ -2371,7 +2398,29 @@ Proof.
       - (* join points *)
         rewrite bindersOf_Rec_cleanup in *.
         (* at this point the NCore stuff bites *)
-        admit.
+        apply exitifyRec_WellScoped'.
+        ** rewrite mapSnd_map, map_map.
+           apply map_ext.
+           intros. reflexivity.
+        ** rewrite Forall'_Forall in Hpairs.
+           rewrite mapSnd_map, Forall_map.
+           rewrite Forall_forall in *.
+           intros [v rhs] HIn.
+           specialize (H _ _ HIn).
+           simpl.
+           rewrite <- getInScopeVars_extendInScopeSetList.
+           apply H.
+           rewrite -> getInScopeVars_extendInScopeSetList.
+           apply (Hpairs _  HIn).
+        ** rewrite mapSnd_map, Forall_map.
+           rewrite Forall_forall in *.
+           intros [v rhs] HIn.
+           apply (HGoodVars _ HIn).
+        ** assumption.
+        ** rewrite <- getInScopeVars_extendInScopeSetList.
+           apply H0.
+           rewrite -> getInScopeVars_extendInScopeSetList.
+           apply He.
       - (* non-join points *)
         simpl.
         repeat apply conj.
@@ -2437,7 +2486,7 @@ Proof.
     intuition.
   * (* Coercion *)
     intuition.
-Admitted.
+Qed.
 
 Lemma Forall_flattenBinds:
   forall {b} P (binds : list (Bind b)),

@@ -416,6 +416,34 @@ Proof.
       intuition.
 Qed.
 
+Lemma isJoinRHS_mkLams3:
+  forall e ja jps,
+  isJoinRHS e ja jps = true ->
+  exists body vs,
+  e = mkLams vs body /\ ja = length vs.
+Proof.
+  intros. revert e jps H. induction ja; intros.
+  * exists e. exists nil.
+    repeat apply conj.
+    + reflexivity.
+    + reflexivity.
+  * unfold isJoinRHS in H.
+    destruct (PeanoNat.Nat.eqb_spec (S ja) 0); only 1: (exfalso; lia). clear n.
+    destruct e; simpl in H; try congruence.
+    simpl_bool.
+    destruct H as [HnotJoinId H].
+    rewrite negb_true_iff in HnotJoinId.
+    rewrite PeanoNat.Nat.sub_0_r in H.
+    change (isJoinRHS e ja (delVarSet jps c) = true) in H.
+    specialize (IHja _ _ H).
+    destruct IHja as [body [vs [Heq1 Heq2]]].
+    subst.
+    exists body. exists (c :: vs).
+    repeat apply conj.
+    + reflexivity.
+    + reflexivity.
+Qed.
+
 Lemma isJoinPointsValid_mkVarApps:
   forall e n vs jps,
   Forall (fun v => isJoinId v = false) vs ->

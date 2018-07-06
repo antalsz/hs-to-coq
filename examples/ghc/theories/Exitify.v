@@ -25,6 +25,7 @@ Require Import Proofs.Core.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.NCore.
+Require Import Proofs.NCoreExists.
 Require Import Proofs.VectorUtils.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
@@ -2332,7 +2333,11 @@ Lemma exitifyRec_WellScoped':
 Proof.
   intros ??? Heq.
   subst.
-  assert (exists npairs, pairs = map toJPair npairs) as Hex by admit.
+  assert (exists npairs, pairs = map toJPair npairs) as Hex.
+  { eapply isJoinPointsValid_to_NCore_join_pairs.
+    * admit.
+    * admit.
+  } 
   destruct Hex as [npairs ?]. subst.
   replace (map fst _) with (fs npairs).
   2: {

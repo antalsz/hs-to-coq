@@ -16,6 +16,7 @@ GhcTactics.v
 Forall.v
 Core.v
 NCore.v
+NCoreExists.v
 VectorUtils.v
 CoreFVs.v
 Base.v

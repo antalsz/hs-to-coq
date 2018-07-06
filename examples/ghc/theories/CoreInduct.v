@@ -234,6 +234,7 @@ Ltac Core_termination :=
     | apply CoreLT_let_rhs_mkLams
     | apply CoreLT_let_body
     | eapply CoreLT_let_pairs; eassumption
+    | eapply CoreLT_let_pairs_mkLam; eassumption
     | eapply CoreLT_case_alts; eassumption
     ].
 

@@ -2322,14 +2322,121 @@ Definition top_go := ltac:(
     exact rhs
   end).
 
+Lemma mapSnd_map:
+  forall {a b c} (f : b -> c) (xs : list (a * b)),
+  Util.mapSnd f xs = map (fun x => (fst x, f (snd x))) xs.
+Proof. intros. induction xs. reflexivity. simpl. destruct a0. rewrite <- IHxs.  reflexivity. Qed.
 
 (* This is incomplete; need to nail down connection between
   [in_scope] and [isvs].
 *)
 Theorem top_go_WellScoped:
-  forall e in_scope isvs,
-  WellScoped e isvs->
-  WellScoped (top_go in_scope e) isvs.
+  forall e in_scope,
+  WellScoped e (getInScopeVars in_scope)->
+  WellScoped (top_go in_scope e) (getInScopeVars in_scope).
+Proof.
+  intro e.
+  apply (core_induct e); intros; simpl.
+  * (* Var *)
+    assumption.
+  * (* Lit *)
+    apply I.
+  * (* App *)
+    inversion H1.
+    intuition.
+  * (* Lam *)
+    idtac.
+    inversion H0.
+    split; only 1: assumption.
+    rewrite <- getInScopeVars_extendInScopeSet.
+    apply H.
+    rewrite -> getInScopeVars_extendInScopeSet.
+    assumption.
+  * (* Let *)
+    destruct H1 as [HBind He].
+    destruct binds as [v rhs|pairs]; simpl in *.
+    + (* NonRec *)
+      destruct HBind as [HGoodVar Hrhs].
+      split; only 1: split.
+      - assumption.
+      - apply H.
+        assumption.
+      - rewrite <- getInScopeVars_extendInScopeSetList.
+        apply H0.
+        rewrite -> getInScopeVars_extendInScopeSetList.
+        assumption.
+    + (* Rec *)
+      destruct HBind as [HGoodVars [HNoDup Hpairs]].
+      destruct_match.
+      - (* join points *)
+        rewrite bindersOf_Rec_cleanup in *.
+        (* at this point the NCore stuff bites *)
+        admit.
+      - (* non-join points *)
+        simpl.
+        repeat apply conj.
+        ** rewrite mapSnd_map.
+           rewrite Forall_map.
+           eapply Forall_impl; only 2: apply HGoodVars. simpl.
+           intros [v rhs] HGoodVar.
+           apply HGoodVar.
+        ** rewrite mapSnd_map.
+           repeat rewrite map_map.
+           rewrite map_map in HNoDup.
+           apply HNoDup.
+        ** rewrite Forall'_Forall in *.
+           rewrite bindersOf_Rec_cleanup in *.
+           rewrite mapSnd_map.
+           rewrite !Forall_map.
+           rewrite Forall_forall.
+           intros [v rhs] HIn.
+           rewrite Forall_forall in Hpairs.
+           specialize (Hpairs _ HIn).
+           simpl in *.
+           rewrite <- getInScopeVars_extendInScopeSetList.
+           rewrite map_map. simpl.
+           apply (H _ _ HIn).
+           rewrite -> getInScopeVars_extendInScopeSetList.
+           apply Hpairs.
+        ** rewrite !bindersOf_Rec_cleanup in *.
+           rewrite mapSnd_map.
+           rewrite map_map. simpl.
+           rewrite <- getInScopeVars_extendInScopeSetList.
+           apply H0.
+           rewrite -> getInScopeVars_extendInScopeSetList.
+           apply He.
+  * (* Case *)
+    destruct H1 as [Hscrut [HGoodVar Halts]].
+    rewrite Forall'_Forall in *.
+    split; only 2: split.
+    + apply H. apply Hscrut.
+    + assumption.
+    + unfold Base.map.
+      rewrite Forall_map. simpl.
+      rewrite Forall_forall in *.
+      intros [[dc pats] rhs] HIn.
+      specialize (Halts _ HIn).
+      destruct Halts as [HGoodVars Hrhs].
+      specialize (H0 _ _ _ HIn).
+      split.
+      - apply HGoodVars. 
+      - simpl.
+        rewrite extendVarSetList_cons.
+        rewrite <- getInScopeVars_extendInScopeSet.
+        rewrite <- getInScopeVars_extendInScopeSetList.
+        apply H0.
+        rewrite -> getInScopeVars_extendInScopeSetList.
+        rewrite -> getInScopeVars_extendInScopeSet.
+        rewrite <- extendVarSetList_cons.
+        apply Hrhs.
+  * (* Cast *)
+    intuition.
+  * (* Tick *)
+    intuition.
+  * (* Type *)
+    intuition.
+  * (* Coercion *)
+    intuition.
 Admitted.
 
 Lemma Forall_flattenBinds:

@@ -314,6 +314,7 @@ Axiom uniqAway_lookupVarSet_fresh : forall v in_scope_set,
 
 (* ... and also a local var *)
 Axiom uniqAway_isLocalVar : forall v in_scope_set,
+    GoodLocalVar v ->
     GoodLocalVar (uniqAway in_scope_set v).
 
 
@@ -1723,6 +1724,7 @@ Proof. intros.
   inversion H0. clear H0. 
   subst.
   eapply uniqAway_isLocalVar. 
+  assumption.
 Qed.
 
 Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',

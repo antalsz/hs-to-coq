@@ -30,7 +30,7 @@ all: vfiles coq
 
 vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(VFILES)
 
-$(OUT)/_CoqProject : Makefile
+$(OUT)/_CoqProject : $(OUT)/README.md Makefile
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../../../base ""' >> $@

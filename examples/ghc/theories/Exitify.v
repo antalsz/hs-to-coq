@@ -1574,6 +1574,18 @@ Section in_exitifyRec.
     assumption.
   Qed.
 
+  Lemma existsb_morgan:
+    forall a p (xs : list a),
+    existsb p xs = negb (forallb (fun x => negb (p x)) xs).
+  Proof.
+    intros.
+    induction xs.
+    * simpl. intuition congruence.
+    * simpl. rewrite IHxs, negb_andb, negb_involutive.
+      reflexivity.
+  Qed.
+
+  (* TODO: Remove this *)
   Lemma existsb_false_iff_forallb:
     forall a p (xs : list a),
     existsb p xs = false <-> forallb (fun x => negb (p x)) xs = true.
@@ -1584,6 +1596,8 @@ Section in_exitifyRec.
     * simpl. rewrite orb_false_iff, andb_true_iff, negb_true_iff, IHxs.
       reflexivity.
   Qed.
+  
+
 
   Lemma go_exit_all_ValidJoinPairs captured e : 
     WellScoped (toExpr e) (extendVarSetList isvsp captured) ->
@@ -2320,8 +2334,10 @@ End in_exitifyRec.
 (* This re-formulates the main lemma about [exitifyRec] without using [NCore] stuff. *)
 (* Also, introduce some equalities for easier application *)
 Lemma exitifyRec_WellScoped':
-  forall (in_scope : InScopeSet) (pairs : list (CoreBndr * CoreExpr)) fst_pairs,
+  forall (in_scope : InScopeSet) (pairs : list (CoreBndr * CoreExpr)) fst_pairs jps,
   fst_pairs = map fst pairs -> 
+  forallb (fun p : Var * Expr CoreBndr => isJoinId (fst p)) pairs = true ->
+  forallb (fun '(v, e) => isJoinPointsValidPair v e (updJPSs jps (map fst pairs))) pairs = true -> 
   Forall (fun p : CoreBndr * CoreExpr => WellScoped (snd p) (extendVarSetList (isvs in_scope) fst_pairs)) pairs ->
   Forall (fun p : Var * Expr CoreBndr => GoodLocalVar (fst p)) pairs ->
   forall body : CoreExpr,
@@ -2331,12 +2347,12 @@ Lemma exitifyRec_WellScoped':
     (mkLets (exitifyRec (extendInScopeSetList in_scope fst_pairs) pairs) body)
     (isvs in_scope).
 Proof.
-  intros ??? Heq.
+  intros ???? Heq Hall_join HiJP.
   subst.
   assert (exists npairs, pairs = map toJPair npairs) as Hex.
   { eapply isJoinPointsValid_to_NCore_join_pairs.
-    * admit.
-    * admit.
+    * apply Hall_join.
+    * apply HiJP.
   } 
   destruct Hex as [npairs ?]. subst.
   replace (map fst _) with (fs npairs).
@@ -2345,7 +2361,7 @@ Proof.
     apply map_ext. destruct a. reflexivity.
   }
   apply (exitifyRec_WellScoped in_scope  npairs).
-Admitted.
+Qed.
 
 
 Definition top_go := ltac:(
@@ -2359,73 +2375,163 @@ Lemma mapSnd_map:
   Util.mapSnd f xs = map (fun x => (fst x, f (snd x))) xs.
 Proof. intros. induction xs. reflexivity. simpl. destruct a0. rewrite <- IHxs.  reflexivity. Qed.
 
-(* This is incomplete; need to nail down connection between
-  [in_scope] and [isvs].
-*)
-Theorem top_go_WellScoped:
-  forall e in_scope,
-  WellScoped e (getInScopeVars in_scope)->
-  WellScoped (top_go in_scope e) (getInScopeVars in_scope).
+Lemma extendInScopeSetList_nil:
+  forall in_scope,
+  extendInScopeSetList in_scope [] = in_scope.
+Admitted.
+
+Lemma extendInScopeSetList_cons:
+  forall in_scope x xs,
+  extendInScopeSetList in_scope (x::xs) = extendInScopeSetList (extendInScopeSet in_scope x) xs.
+Admitted.
+
+
+Lemma top_go_WellScoped_mkLams:
+  forall in_scope body vs,
+  Forall GoodLocalVar vs ->
+  WellScoped (top_go (extendInScopeSetList in_scope vs) body)
+      (getInScopeVars (extendInScopeSetList in_scope vs)) ->
+  WellScoped (top_go in_scope (mkLams vs body)) (getInScopeVars in_scope).
 Proof.
-  intro e.
-  apply (core_induct e); intros; simpl.
+  intros ??? H HWS.
+  revert in_scope HWS. induction H; intros.
+  * rewrite extendInScopeSetList_nil in HWS.
+    apply HWS.
+  * replace (mkLams _ _) with (Lam x (mkLams l body)) in * by reflexivity.
+    simpl in *.
+    split; only 1: assumption.
+    rewrite <- getInScopeVars_extendInScopeSet.
+    apply IHForall.
+    rewrite <- extendInScopeSetList_cons.
+    assumption.
+Qed.
+
+Program Fixpoint top_go_WellScoped
+  e in_scope n jps {measure e (CoreLT)} :
+  WellScoped e (getInScopeVars in_scope)->
+  isJoinPointsValid e n jps = true ->
+  WellScoped (top_go in_scope e) (getInScopeVars in_scope) := _.
+Next Obligation.
+  rename top_go_WellScoped into IH.
+  rename H into HWS.
+  rename H0 into HJPV.
+  destruct e; simpl in HJPV; simpl_bool; simpl.
   * (* Var *)
     assumption.
   * (* Lit *)
     apply I.
   * (* App *)
-    inversion H1.
+    inversion HWS as [HWSe1 HWSe2].
+    inversion HJPV as [HJPVe1 HJPVe2].
+    epose proof (IH _ _ _ _ _ HWSe1 HJPVe1).
+    epose proof (IH _ _ _ _ _ HWSe2 HJPVe2).
     intuition.
   * (* Lam *)
-    idtac.
-    inversion H0.
+    inversion HWS as [HGoodVar HWSe].
+    simpl in HJPV. simpl_bool. destruct HJPV as [_ HJPVe].
     split; only 1: assumption.
     rewrite <- getInScopeVars_extendInScopeSet.
-    apply H.
-    rewrite -> getInScopeVars_extendInScopeSet.
-    assumption.
+    rewrite <- getInScopeVars_extendInScopeSet in HWSe.
+    epose proof (IH _ _ _ _ _ HWSe HJPVe).
+    eassumption.
   * (* Let *)
-    destruct H1 as [HBind He].
-    destruct binds as [v rhs|pairs]; simpl in *.
+    destruct HWS as [HBind HWSe].
+    destruct b as [v rhs|pairs]; simpl in *.
     + (* NonRec *)
       destruct HBind as [HGoodVar Hrhs].
+      simpl_bool. destruct HJPV as [HJPV_pair HJPVe].
+      fold isJoinPointsValidPair in HJPV_pair.
       split; only 1: split.
       - assumption.
-      - apply H.
-        assumption.
+      - destruct (isJoinId_maybe v) eqn:HiJI.
+        ** eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS in HJPV_pair; only 2: apply HiJI.
+           pose proof (isJoinRHS_mkLams3 _ _ _ HJPV_pair).
+           destruct H as [body [vs [Heq1 Heq2]]]. subst.
+           pose proof (isJoinRHS_mkLams2 _ _ _ HJPV_pair).
+           destruct H as [Hnot_join_params HJPVbody].
+           clear HGoodVar.
+           rewrite WellScoped_mkLams in Hrhs.
+           destruct Hrhs as [HGoodVars HWSbody].
+           rewrite <- getInScopeVars_extendInScopeSetList in HWSbody.
+           epose proof (IH _ _ _ _ _ HWSbody HJPVbody).
+           apply top_go_WellScoped_mkLams; assumption.
+        ** eapply isJoinPointsValidPair_isJoinPointsValid in HJPV_pair; only 2: apply HiJI.
+           epose proof (IH _ _ _ _ _ Hrhs HJPV_pair).
+           assumption.
       - rewrite <- getInScopeVars_extendInScopeSetList.
-        apply H0.
-        rewrite -> getInScopeVars_extendInScopeSetList.
+        rewrite <- getInScopeVars_extendInScopeSetList in HWSe.
+        epose proof (IH _ _ _ _ _ HWSe HJPVe).
         assumption.
     + (* Rec *)
       destruct HBind as [HGoodVars [HNoDup Hpairs]].
+      simpl_bool. destruct HJPV as [[Hnot_null Hall_or_none] [HJPVpairs HJPVe]].
+      clear Hnot_null.
+      fold isJoinPointsValidPair in HJPVpairs.
       destruct_match.
       - (* join points *)
+        rewrite HSUtil.Foldable_any_existsb in Heq.
+        rewrite existsb_morgan in Heq.
+        rewrite negb_true_iff in Heq.
+        rewrite orb_true_iff in Hall_or_none.
+        destruct Hall_or_none as [Hnone | Hall].
+        1 : { exfalso. apply (eq_true_false_abs _ Hnone Heq). }
+
         rewrite bindersOf_Rec_cleanup in *.
-        (* at this point the NCore stuff bites *)
-        apply exitifyRec_WellScoped'.
+        eapply exitifyRec_WellScoped'.
         ** rewrite mapSnd_map, map_map.
            apply map_ext.
            intros. reflexivity.
+        ** rewrite mapSnd_map.
+           rewrite forallb_forall, <- Forall_forall, Forall_map, Forall_forall.
+           rewrite forallb_forall in Hall.
+           intros [v rhs] HIn.
+           specialize (Hall _ HIn).
+           apply Hall.
+        ** rewrite mapSnd_map.
+           rewrite forallb_forall, <- Forall_forall, Forall_map, Forall_forall.
+           rewrite forallb_forall in HJPVpairs.
+           intros [v rhs] HIn.
+           specialize (HJPVpairs _ HIn).
+           simpl in *.
+           admit. (* Here we need that the output of top_go is a isJoinPointsValidPair *)
         ** rewrite Forall'_Forall in Hpairs.
            rewrite mapSnd_map, Forall_map.
            rewrite Forall_forall in *.
            intros [v rhs] HIn.
-           specialize (H _ _ HIn).
            simpl.
-           rewrite <- getInScopeVars_extendInScopeSetList.
-           apply H.
-           rewrite -> getInScopeVars_extendInScopeSetList.
-           apply (Hpairs _  HIn).
+           rewrite forallb_forall in HJPVpairs.
+           specialize (Hpairs _ HIn).
+           specialize (HJPVpairs _ HIn).
+           simpl in HJPVpairs.
+           destruct (isJoinId_maybe v) eqn:HiJI.
+           2: {
+             exfalso.
+             rewrite forallb_forall in Hall.
+             specialize (Hall _ HIn). simpl in Hall.
+             rewrite isJoinId_eq in Hall. rewrite HiJI in Hall. congruence.
+           } 
+           eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS in HJPVpairs; only 2: apply HiJI.
+           pose proof (isJoinRHS_mkLams3 _ _ _ HJPVpairs).
+           destruct H as [body [vs [Heq1 Heq2]]]. subst.
+           pose proof (isJoinRHS_mkLams2 _ _ _ HJPVpairs).
+           destruct H as [Hnot_join_params HJPVbody].
+           simpl in Hpairs.
+           rewrite WellScoped_mkLams in Hpairs.
+           clear HGoodVars.
+           destruct Hpairs as [HGoodVars HWSbody].
+           rewrite <- !getInScopeVars_extendInScopeSetList in HWSbody.
+           rewrite <- !getInScopeVars_extendInScopeSetList.
+           epose proof (IH _ _ _ _ _ HWSbody HJPVbody).
+           apply top_go_WellScoped_mkLams; assumption.
         ** rewrite mapSnd_map, Forall_map.
            rewrite Forall_forall in *.
            intros [v rhs] HIn.
            apply (HGoodVars _ HIn).
         ** assumption.
-        ** rewrite <- getInScopeVars_extendInScopeSetList.
-           apply H0.
-           rewrite -> getInScopeVars_extendInScopeSetList.
-           apply He.
+        ** rewrite <- getInScopeVars_extendInScopeSetList in HWSe.
+           rewrite <- getInScopeVars_extendInScopeSetList.
+           epose proof (IH _ _ _ _ _ HWSe HJPVe).
+           assumption.
       - (* non-join points *)
         simpl.
         repeat apply conj.
@@ -2438,60 +2544,84 @@ Proof.
            repeat rewrite map_map.
            rewrite map_map in HNoDup.
            apply HNoDup.
-        ** rewrite Forall'_Forall in *.
+        ** clear HWSe HJPVe.
+           rewrite Forall'_Forall in *.
            rewrite bindersOf_Rec_cleanup in *.
            rewrite mapSnd_map.
            rewrite !Forall_map.
            rewrite Forall_forall.
            intros [v rhs] HIn.
            rewrite Forall_forall in Hpairs.
+           rewrite forallb_forall in HJPVpairs.
            specialize (Hpairs _ HIn).
+           specialize (HJPVpairs _ HIn).
            simpl in *.
            rewrite <- getInScopeVars_extendInScopeSetList.
            rewrite map_map. simpl.
-           apply (H _ _ HIn).
-           rewrite -> getInScopeVars_extendInScopeSetList.
-           apply Hpairs.
+           rewrite <- getInScopeVars_extendInScopeSetList in Hpairs.
+           destruct (isJoinId_maybe v) eqn:HiJI.
+           1: {
+             exfalso.
+             rewrite HSUtil.Foldable_any_existsb in Heq.
+             rewrite existsb_morgan in Heq.
+             rewrite negb_false_iff in Heq.
+             rewrite forallb_forall in Heq.
+             specialize (Heq _ HIn). simpl in Heq.
+             rewrite isJoinId_eq in Heq. rewrite HiJI in Heq. simpl in Heq. congruence.
+           }
+           eapply isJoinPointsValidPair_isJoinPointsValid in HJPVpairs; only 2: apply HiJI.
+           epose proof (IH _ _ _ _ _ Hpairs HJPVpairs).
+           apply H.
         ** rewrite !bindersOf_Rec_cleanup in *.
            rewrite mapSnd_map.
            rewrite map_map. simpl.
            rewrite <- getInScopeVars_extendInScopeSetList.
-           apply H0.
-           rewrite -> getInScopeVars_extendInScopeSetList.
-           apply He.
+           rewrite <- getInScopeVars_extendInScopeSetList in *.
+           epose proof (IH _ _ _ _ _ HWSe HJPVe).
+           apply H.
   * (* Case *)
-    destruct H1 as [Hscrut [HGoodVar Halts]].
+    destruct HWS as [HWSscrut [HGoodVar HWSalts]].
     rewrite Forall'_Forall in *.
+    destruct HJPV as [[Hnot_join HJPVscrut] HJPValts].
     split; only 2: split.
-    + apply H. apply Hscrut.
+    + epose proof (IH _ _ _ _ _ HWSscrut HJPVscrut).
+      assumption.
     + assumption.
     + unfold Base.map.
       rewrite Forall_map. simpl.
       rewrite Forall_forall in *.
+      rewrite forallb_forall in *.
       intros [[dc pats] rhs] HIn.
-      specialize (Halts _ HIn).
-      destruct Halts as [HGoodVars Hrhs].
-      specialize (H0 _ _ _ HIn).
+      specialize (HWSalts _ HIn). simpl in HWSalts.
+      specialize (HJPValts _ HIn). simpl in HJPValts.
+      simpl_bool.
+      destruct HWSalts as [HGoodVars HWSrhs].
+      destruct HJPValts as [Hnot_joins HJPVrhs].
       split.
       - apply HGoodVars. 
       - simpl.
         rewrite extendVarSetList_cons.
         rewrite <- getInScopeVars_extendInScopeSet.
         rewrite <- getInScopeVars_extendInScopeSetList.
-        apply H0.
-        rewrite -> getInScopeVars_extendInScopeSetList.
-        rewrite -> getInScopeVars_extendInScopeSet.
-        rewrite <- extendVarSetList_cons.
-        apply Hrhs.
+        rewrite <- extendInScopeSetList_cons.
+        rewrite <- getInScopeVars_extendInScopeSetList in HWSrhs.
+        epose proof (IH _ _ _ _ _ HWSrhs HJPVrhs).
+        assumption.
   * (* Cast *)
-    intuition.
+    simpl in *.
+    epose proof (IH _ _ _ _ _ HWS HJPV).
+    assumption.
   * (* Tick *)
-    intuition.
+    simpl in *.
+    epose proof (IH _ _ _ _ _ HWS HJPV).
+    assumption.
   * (* Type *)
     intuition.
   * (* Coercion *)
     intuition.
-Qed.
+Unshelve.
+  all: Core_termination || (unfold CoreLT; simpl; lia). (* phew *)
+Admitted.
 
 Lemma Forall_flattenBinds:
   forall {b} P (binds : list (Bind b)),
@@ -2534,14 +2664,16 @@ Proof.
       inversion_clear HWS. clear H0.
       constructor; only 2: constructor.
       simpl.
-      apply top_go_WellScoped.
-      assumption.
+      eapply top_go_WellScoped.
+      -- assumption.
+      -- admit.
     + unfold goTopLvl.
       simpl in *.
       rewrite app_nil_r in *.
       rewrite Forall_map.
       eapply Forall_impl; only 2: apply HWS; clear HWS.
       intros [v e] HWS.
-      apply top_go_WellScoped.
-      assumption.
+      eapply top_go_WellScoped.
+      -- assumption.
+      -- admit.
 Admitted.

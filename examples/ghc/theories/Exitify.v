@@ -36,6 +36,14 @@ Set Bullet Behavior "Strict Subproofs".
 
 Close Scope Z_scope.
 
+Lemma Forall_and:
+  forall {a} (P Q : a -> Prop) xs,
+  (Forall P xs /\ Forall Q xs) <->  Forall (fun x =>  P x /\ Q x) xs.
+Proof.
+  intros.
+  rewrite !Forall_forall in *.
+  firstorder.
+Qed.
 
 (* This section reflects the context of the local definition of exitifyRec *)
 Section in_exitifyRec.
@@ -700,16 +708,6 @@ Section in_exitifyRec.
       + rewrite IHxs. reflexivity. 
       + rewrite IHxs. reflexivity. 
   Qed.
-
-  Lemma Forall_and:
-    forall {a} (P Q : a -> Prop) xs,
-    (Forall P xs /\ Forall Q xs) <->  Forall (fun x =>  P x /\ Q x) xs.
-  Proof.
-    intros.
-    rewrite !Forall_forall in *.
-    firstorder.
-  Qed.
-
 
   Lemma Forall2_symmetric:
     forall {a} (P : a -> a -> Prop) xs,
@@ -2436,10 +2434,58 @@ Proof.
     reflexivity.
 Qed.
 
+
+Lemma subVarSet_updJPS_extendInScopeSet:
+  forall jps isvs v,
+  subVarSet jps isvs = true ->
+  subVarSet (updJPS jps v) (extendVarSet isvs v) = true.
+Admitted.
+
+Lemma subVarSet_updJPSs_extendInScopeSetList:
+  forall jps isvs vs,
+  subVarSet jps isvs = true ->
+  subVarSet (updJPSs jps vs) (extendVarSetList isvs vs) = true.
+Admitted.
+
+Lemma subVarSet_delVarSet_extendInScopeSet:
+  forall jps isvs v,
+  subVarSet jps isvs = true ->
+  subVarSet (delVarSet jps v) (extendVarSet isvs v) = true.
+Admitted.
+
+Lemma subVarSet_delVarSetList_extendInScopeSetList:
+  forall jps isvs vs,
+  subVarSet jps isvs = true ->
+  subVarSet (delVarSetList jps vs) (extendVarSetList isvs vs) = true.
+Admitted.
+
+
+
+Ltac solve_subVarSet :=
+  unfold isvs;
+  rewrite ?getInScopeVars_extendInScopeSet;
+  rewrite ?getInScopeVars_extendInScopeSetList;
+  rewrite ?extendVarSetList_append;
+  rewrite ?extendVarSetList_cons;
+  rewrite ?extendVarSetList_nil;
+  rewrite ?updJPSs_append;
+  rewrite ?updJPSs_cons;
+  rewrite ?updJPSs_nil;
+  repeat first [ apply subVarSet_updJPSs_extendInScopeSetList
+               | apply subVarSet_updJPS_extendInScopeSet
+               | apply subVarSet_delVarSetList_extendInScopeSetList
+               | apply subVarSet_delVarSet_extendInScopeSet
+               ];
+  first [ assumption
+        | apply subVarSet_emptyVarSet
+        ].
+  
+
 Program Fixpoint top_go_WellScoped
   e in_scope n jps {measure e (CoreLT)} :
   WellScoped e (getInScopeVars in_scope)->
   isJoinPointsValid e n jps = true ->
+  subVarSet jps (isvs in_scope) = true ->
   WellScoped (top_go in_scope e) (getInScopeVars in_scope) /\
   isJoinPointsValid (top_go in_scope e) n jps = true
   := _.
@@ -2447,6 +2493,7 @@ Next Obligation.
   rename top_go_WellScoped into IH.
   rename H into HWS.
   rename H0 into HJPV.
+  rename H1 into Hsubset.
   destruct e; simpl in HJPV; simpl_bool; simpl.
   * (* Var *)
     split; assumption.
@@ -2455,15 +2502,15 @@ Next Obligation.
   * (* App *)
     inversion HWS as [HWSe1 HWSe2].
     inversion HJPV as [HJPVe1 HJPVe2].
-    epose proof (IH _ _ _ _ _ HWSe1 HJPVe1).
-    epose proof (IH _ _ _ _ _ HWSe2 HJPVe2).
+    epose proof (IH _ _ _ _ _ HWSe1 HJPVe1 ltac:(solve_subVarSet)).
+    epose proof (IH _ _ _ _ _ HWSe2 HJPVe2 ltac:(solve_subVarSet)).
     intuition.
   * (* Lam *)
     inversion HWS as [HGoodVar HWSe].
     simpl in HJPV. simpl_bool. destruct HJPV as [Hnot_join HJPVe].
     rewrite <- getInScopeVars_extendInScopeSet.
     rewrite <- getInScopeVars_extendInScopeSet in HWSe.
-    epose proof (IH _ _ _ _ _ HWSe HJPVe) as IHe.
+    epose proof (IH _ _ _ _ _ HWSe HJPVe ltac:(solve_subVarSet)) as IHe.
     split.
     -- split; only 1: assumption.
        apply IHe.
@@ -2487,9 +2534,9 @@ Next Obligation.
          destruct Hrhs as [HGoodVars HWSbody].
          rewrite <- getInScopeVars_extendInScopeSetList.
          rewrite <- getInScopeVars_extendInScopeSetList in HWSbody.
-         epose proof (IH _ _ _ _ _ HWSbody HJPVbody) as IHbody.
+         epose proof (IH _ _ _ _ _ HWSbody HJPVbody ltac:(solve_subVarSet)) as IHbody.
          rewrite <- getInScopeVars_extendInScopeSetList in HWSe.
-         epose proof (IH _ _ _ _ _ HWSe HJPVe) as IHe.
+         epose proof (IH _ _ _ _ _ HWSe HJPVe ltac:(solve_subVarSet)) as IHe.
          rewrite top_go_mkLams.
          split.
          -- split; only 1: split.
@@ -2510,10 +2557,10 @@ Next Obligation.
                apply IHbody.
             - apply IHe.
       ** eapply isJoinPointsValidPair_isJoinPointsValid in HJPV_pair; only 2: apply HiJI.
-         epose proof (IH _ _ _ _ _ Hrhs HJPV_pair) as IHrhs.
+         epose proof (IH _ _ _ _ _ Hrhs HJPV_pair  ltac:(solve_subVarSet)) as IHrhs.
          rewrite <- getInScopeVars_extendInScopeSetList, extendInScopeSetList_cons, extendInScopeSetList_nil in HWSe.
          rewrite <- getInScopeVars_extendInScopeSetList, extendInScopeSetList_cons, extendInScopeSetList_nil.
-         epose proof (IH _ _ _ _ _ HWSe HJPVe) as IHe.
+         epose proof (IH _ _ _ _ _ HWSe HJPVe  ltac:(solve_subVarSet)) as IHe.
          split.
          -- split; only 1: split.
             - assumption.
@@ -2537,12 +2584,11 @@ Next Obligation.
         1 : { exfalso. apply (eq_true_false_abs _ Hnone Heq). }
 
         rewrite bindersOf_Rec_cleanup in *.
-        replace n with 0 by admit.
         eapply exitifyRec_WellScoped_JPI.
         ** rewrite mapSnd_map, map_map.
            apply map_ext.
            intros. reflexivity.
-        ** admit.
+        ** assumption.
         ** assumption.
         ** destruct pairs; simpl in *; try congruence; destruct p; simpl; congruence.
         ** rewrite Forall'_Forall in Hpairs.
@@ -2575,7 +2621,7 @@ Next Obligation.
            destruct Hpairs as [HGoodVars HWSbody].
            rewrite <- !getInScopeVars_extendInScopeSetList in HWSbody.
            rewrite <- !getInScopeVars_extendInScopeSetList.
-           epose proof (IH _ _ _ _ _ HWSbody HJPVbody).
+           epose proof (IH _ _ _ _ _ HWSbody HJPVbody ltac:(solve_subVarSet)).
            rewrite top_go_mkLams.
            split.
            -- rewrite WellScoped_mkLams; split.
@@ -2591,10 +2637,10 @@ Next Obligation.
               apply H.
         ** rewrite <- getInScopeVars_extendInScopeSetList in HWSe.
            rewrite <- getInScopeVars_extendInScopeSetList.
-           epose proof (IH _ _ _ _ _ HWSe HJPVe).
+           epose proof (IH _ _ _ _ _ HWSe HJPVe ltac:(solve_subVarSet)).
            apply H.
         ** rewrite <- getInScopeVars_extendInScopeSetList in HWSe.
-           epose proof (IH _ _ _ _ _ HWSe HJPVe).
+           epose proof (IH _ _ _ _ _ HWSe HJPVe  ltac:(solve_subVarSet)).
            apply H.
       - (* non-join points *)
         rewrite HSUtil.Foldable_any_existsb in Heq.
@@ -2619,7 +2665,7 @@ Next Obligation.
            rewrite map_map. simpl.
            rewrite <- getInScopeVars_extendInScopeSetList.
            rewrite <- getInScopeVars_extendInScopeSetList in *.
-           epose proof (IH _ _ _ _ _ HWSe HJPVe).
+           epose proof (IH _ _ _ _ _ HWSe HJPVe ltac:(solve_subVarSet)).
            apply H.
         ** destruct pairs; simpl in *; try congruence. destruct p; simpl; reflexivity.
         ** simpl_bool.
@@ -2636,7 +2682,7 @@ Next Obligation.
            rewrite mapSnd_map.
            rewrite map_map. simpl.
            rewrite <- getInScopeVars_extendInScopeSetList in *.
-           epose proof (IH _ _ _ _ _ HWSe HJPVe).
+           epose proof (IH _ _ _ _ _ HWSe HJPVe ltac:(solve_subVarSet)).
            apply H.
         ** rewrite Forall'_Forall.
            rewrite forallb_forall, <- Forall_forall.
@@ -2665,13 +2711,13 @@ Next Obligation.
              rewrite isJoinId_eq in Heq. rewrite HiJI in Heq. simpl in Heq. congruence.
            }
            rewrite isJoinPointsValidPair_isJoinPointsValid in * by apply HiJI.
-           epose proof (IH _ _ _ _ _ Hpairs HJPVpairs).
+           epose proof (IH _ _ _ _ _ Hpairs HJPVpairs ltac:(solve_subVarSet)).
            apply H.
   * (* Case *)
     destruct HWS as [HWSscrut [HGoodVar HWSalts]].
     rewrite Forall'_Forall in *.
     destruct HJPV as [[Hnot_join HJPVscrut] HJPValts].
-    epose proof (IH _ _ _ _ _ HWSscrut HJPVscrut) as IHe.
+    epose proof (IH _ _ _ _ _ HWSscrut HJPVscrut ltac:(solve_subVarSet)) as IHe.
     eassert (_ /\ _) as HWS_JPI; swap 1 2.
     simpl_bool.
     split; [split; only 2: split|split; only 1: split].
@@ -2699,7 +2745,7 @@ Next Obligation.
       rewrite <- getInScopeVars_extendInScopeSetList.
       rewrite <- !extendInScopeSetList_cons.
       rewrite <- getInScopeVars_extendInScopeSetList in HWSrhs.
-      epose proof (IH _ _ _ _ _ HWSrhs HJPVrhs) as IHrhs.
+      epose proof (IH _ _ _ _ _ HWSrhs HJPVrhs ltac:(solve_subVarSet)) as IHrhs.
       split; split.
       - apply HGoodVars. 
       - apply IHrhs.
@@ -2707,11 +2753,11 @@ Next Obligation.
       - apply IHrhs.
   * (* Cast *)
     simpl in *.
-    epose proof (IH _ _ _ _ _ HWS HJPV).
+    epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
     assumption.
   * (* Tick *)
     simpl in *.
-    epose proof (IH _ _ _ _ _ HWS HJPV).
+    epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
     assumption.
   * (* Type *)
     intuition.
@@ -2719,7 +2765,7 @@ Next Obligation.
     intuition.
 Unshelve.
   all: Core_termination || (unfold CoreLT; simpl; lia). (* phew *)
-Admitted.
+Qed.
 
 Lemma Forall_flattenBinds:
   forall {b} P (binds : list (Bind b)),
@@ -2764,6 +2810,7 @@ Proof.
       simpl.
       eapply top_go_WellScoped.
       -- assumption.
+      -- admit.
       -- admit.
     + unfold goTopLvl.
       simpl in *.

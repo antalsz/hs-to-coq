@@ -356,7 +356,33 @@ Proof.
   destruct_match; congruence.
 Qed.
 
-
+Lemma Forall_isValidJoinPointsPair_forallb_isJoinId_isJoinPointsValidPair:
+  forall pairs jps,
+  Forall (fun p => isValidJoinPointsPair (fst p) (snd p) jps = true) pairs <->
+  forallb (fun p : Var * Expr CoreBndr => isJoinId (fst p)) pairs = true /\
+  forallb (fun '(v, e) => isJoinPointsValidPair v e jps) pairs = true.
+Proof.
+  intros.
+  rewrite Forall_forall, !forallb_forall.
+  split; intro; only 1: split.
+  * intros [v e] HIn.
+    specialize (H _ HIn).
+    simpl in *.
+    eapply isValidJoinPointsPair_isJoinId; eassumption.
+  * intros [v e] HIn.
+    specialize (H _ HIn).
+    simpl in *.
+    eapply isValidJoinPointsPair_isJoinPointsValidPair; eassumption.
+  * intros [v e] HIn.
+    destruct H.
+    specialize (H _ HIn).
+    specialize (H0 _ HIn).
+    simpl in *.
+    unfold isValidJoinPointsPair in *.
+    rewrite isJoinId_eq in H.
+    destruct_match; auto.
+    eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS; eassumption.
+Qed.
 
 Lemma isJoinPointsValid_subVarSet:
   forall e jps1 jps2,

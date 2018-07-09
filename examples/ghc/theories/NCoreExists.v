@@ -234,3 +234,14 @@ Proof.
   exists (Mk_NJPair v vs ne HiJI).
   reflexivity.
 Qed.
+
+Lemma isValidJoinPointsPair_to_NCore_join_pairs:
+  forall pairs jps,
+  Forall (fun p => isValidJoinPointsPair (fst p) (snd p) (updJPSs jps (map fst pairs)) = true) pairs ->
+  exists npairs, pairs = map toJPair npairs.
+Proof.
+  intros.
+  rewrite Forall_isValidJoinPointsPair_forallb_isJoinId_isJoinPointsValidPair in H.
+  destruct H.
+  eapply isJoinPointsValid_to_NCore_join_pairs; eassumption.
+Qed.

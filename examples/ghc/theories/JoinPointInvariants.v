@@ -280,6 +280,13 @@ Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
 
 Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux.
 
+Lemma isJoinPointsValid_more_args:
+  forall e n n' jps,
+  n <= n' ->
+  isJoinPointsValid e n jps = true ->
+  isJoinPointsValid e n' jps = true.
+Admitted.
+
 (* Conjuction of [isJoinId] and [isJoinPointsValidPair] *)
 
 Definition isJoinRHS rhs a jps :=

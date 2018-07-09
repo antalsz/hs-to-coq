@@ -307,6 +307,12 @@ Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
 
 Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux.
 
+(* Top-level binders are never join-points *)
+Definition isJoinPointsValidProgram (pgm : CoreProgram)  :=
+  Forall (fun '(v,e) =>
+    isJoinId v = false /\
+    isJoinPointsValid e 0 emptyVarSet = true) (flattenBinds pgm).
+
 Lemma isJoinPointsValid_more_args:
   forall e n n' jps,
   n <= n' ->

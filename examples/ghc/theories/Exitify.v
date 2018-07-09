@@ -45,6 +45,17 @@ Proof.
   firstorder.
 Qed.
 
+Lemma Forall_app:
+  forall {a} (P : a -> Prop) xs ys,
+  Forall P (xs ++ ys) <->  Forall P xs /\ Forall P ys.
+Proof.
+  intros.
+  rewrite !Forall_forall in *.
+  setoid_rewrite in_app_iff.
+  firstorder.
+Qed.
+
+
 (* This section reflects the context of the local definition of exitifyRec *)
 Section in_exitifyRec.
 
@@ -775,16 +786,6 @@ Section in_exitifyRec.
     auto.
   Qed.
 
-  Lemma Forall_app:
-    forall a P (xs ys : list a),
-    Forall P xs -> Forall P ys ->
-    Forall P (xs ++ ys).
-  Proof.
-    intros. induction xs; try assumption. constructor.
-    inversion H; assumption.
-    apply IHxs. inversion H; assumption.
-  Qed.
-
   (* This following lemma verifies the bugfix of #15110 *)
   Lemma WellScopedVar_picked_aux:
     forall vsis captured fvs,
@@ -803,7 +804,7 @@ Section in_exitifyRec.
       + rewrite snd_pick_list.
         specialize (IHcaptured (delVarSet fvs x)).
         destruct IHcaptured as [IH1 IH2].
-        split; apply Forall_app.
+        split; apply Forall_app; split.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
@@ -937,22 +938,22 @@ Section in_exitifyRec.
     * apply go_exit_all_WellScopedFloats; assumption.
     * apply StateInvariant_bind_return.
       apply IHe.
-      -- apply Forall_app; only 1: apply HGLVcaptured.
+      -- apply Forall_app; split; only 1: apply HGLVcaptured.
          constructor; only 2: constructor.
          apply HWS.
     * apply StateInvariant_bind; only 1: apply IHrhs.
-      -- apply Forall_app; only 1: apply HGLVcaptured.
+      -- apply Forall_app; split; only 1: apply HGLVcaptured.
          simpl in HWS.
          rewrite WellScoped_mkLams in HWS.
          apply HWS.
       -- intros. apply StateInvariant_bind_return.
          apply IHe.
-         ++ apply Forall_app; only 1: apply HGLVcaptured.
+         ++ apply Forall_app; split; only 1: apply HGLVcaptured.
             constructor; only 2: constructor.
             apply HWS.
     * apply StateInvariant_bind_return.
       apply IHe.
-      -- apply Forall_app; only 1: apply HGLVcaptured.
+      -- apply Forall_app; split; only 1: apply HGLVcaptured.
          rewrite Forall_map.
          rewrite Forall_map in HGLV.
          eapply Forall_impl; only 2: apply HGLV.
@@ -965,8 +966,8 @@ Section in_exitifyRec.
         rewrite collectNAnnBndrs_freeVars_mkLams.
         apply StateInvariant_bind_return.
         apply (IHpairs _ _ _ _ HIn).
-        -- apply Forall_app; only 1: apply HGLVcaptured.
-           apply Forall_app.
+        -- apply Forall_app; split; only 1: apply HGLVcaptured.
+           apply Forall_app; split.
            ++ rewrite Forall_map.
               rewrite Forall_map in HGLV.
               eapply Forall_impl; only 2: apply HGLV.
@@ -978,7 +979,7 @@ Section in_exitifyRec.
       - intro x.
         apply StateInvariant_bind_return.
         apply IHe.
-        ++ apply Forall_app; only 1: apply HGLVcaptured.
+        ++ apply Forall_app; split; only 1: apply HGLVcaptured.
            rewrite Forall_map.
            rewrite Forall_map in HGLV.
            eapply Forall_impl; only 2: apply HGLV.
@@ -990,7 +991,7 @@ Section in_exitifyRec.
       intros [[dc pats] rhs] HIn.
       apply StateInvariant_bind_return.
       apply (IHalts _ _ _ HIn).
-      ++ apply Forall_app; only 1: apply HGLVcaptured.
+      ++ apply Forall_app; split; only 1: apply HGLVcaptured.
          constructor.
          -- apply HGLVv.
          -- apply (HWSalts _ HIn).
@@ -2733,54 +2734,125 @@ Lemma Forall_flattenBinds:
   forall {b} P (binds : list (Bind b)),
   Forall P (flattenBinds binds) <->
   Forall (fun bind => Forall P (flattenBinds [bind])) binds.
-Admitted.
-
-Theorem exitifyProgram_WellScoped:
-  forall pgm,
-  WellScopedProgram pgm->
-  WellScopedProgram (exitifyProgram pgm).
 Proof.
   intros.
+  induction binds.
+  * split; intro; constructor.
+  * rewrite Forall_cons_iff.
+    rewrite <- IHbinds.
+    simpl; destruct a.
+    - rewrite !Forall_cons_iff. intuition.
+    - rewrite !Forall_app. intuition.
+Qed.
+
+Lemma bindersOfBinds_cons:
+  forall bind (pgm : CoreProgram),
+  bindersOfBinds (bind :: pgm) = bindersOf bind ++ bindersOfBinds pgm.
+Proof.
+  intros.
+  unfold bindersOfBinds.
+  simpl. rewrite !Foldable.hs_coq_foldr_list.
+  reflexivity.
+Qed.
+
+Theorem exitifyProgram_WellScoped_JPV:
+  forall pgm,
+  WellScopedProgram pgm ->
+  isJoinPointsValidProgram pgm ->
+  WellScopedProgram (exitifyProgram pgm) /\
+  isJoinPointsValidProgram (exitifyProgram pgm).
+Proof.
+  intros ? HWS HJPV.
   cbv beta delta [exitifyProgram].
   fold top_go.
   zeta_one.
   do 2 float_let.
+  zeta_one.
+  fold in_scope_toplvl; zeta_one.
+  fold goTopLvl; zeta_one.
 
-  assert (HbindersOf: forall a, bindersOf (goTopLvl a) = bindersOf a). admit.
-  
-  assert (HbindersOfBinds: bindersOfBinds (Base.map goTopLvl pgm) = bindersOfBinds pgm). admit.
+  assert (HbindersOf: forall a, bindersOf (goTopLvl a) = bindersOf a).
+  { clear.
+    unfold goTopLvl. intros bind. destruct bind.
+    * reflexivity.
+    * simpl. rewrite !bindersOf_Rec_cleanup.
+      rewrite map_map.
+      apply map_ext.
+      intros [v rhs].
+      reflexivity.
+  }
 
-  destruct H as [HNoDup HWS].
+  assert (HbindersOfBinds: bindersOfBinds (Base.map goTopLvl pgm) = bindersOfBinds pgm).
+  { clear.
+    clearbody in_scope_toplvl.
+    induction pgm.
+    * reflexivity.
+    * simpl.
+      rewrite !bindersOfBinds_cons.
+      rewrite IHpgm; clear IHpgm.
+      destruct a.
+      + reflexivity.
+      + simpl. rewrite !bindersOf_Rec_cleanup.
+        f_equal.
+        rewrite map_map.
+        apply map_ext.
+        intros [v rhs].
+        reflexivity.
+  }
+
+  destruct HWS as [HNoDup HWS].
+  unfold isJoinPointsValidProgram in HJPV.
 
   unfold WellScopedProgram.
-  split.
-  * rewrite HbindersOfBinds.
-    apply HNoDup.
-  * rewrite Forall'_Forall.
-    rewrite Forall'_Forall in HWS.
-    rewrite Forall_flattenBinds.
-    rewrite Forall_flattenBinds in HWS.
-    rewrite HbindersOfBinds.
+  unfold isJoinPointsValidProgram.
+  rewrite Forall'_Forall.
+  rewrite and_assoc.
+  rewrite HbindersOfBinds.
+  split; only 1: apply HNoDup.
+  apply Forall_and.
+  * rewrite Forall'_Forall in HWS.
+    rewrite Forall_flattenBinds in *.
     rewrite Forall_map.
-
-    eapply Forall_impl; only 2: apply HWS; clear HWS.
-    intros bind HWS. simpl.
+    rewrite Forall_forall in *.
+    intros bind HIn.
+    specialize (HWS _ HIn).
+    specialize (HJPV _ HIn).
+    simpl in *.
     destruct bind.
     + unfold goTopLvl.
-      inversion_clear HWS. clear H0.
       constructor; only 2: constructor.
-      simpl.
-      eapply top_go_WellScoped.
+      inversion_clear HWS as [|?? HWSrhs _].
+      inversion_clear HJPV as [|?? HJPVrhs _].
+      destruct HJPVrhs as [HisJoinId HJPVrhs].
+      simpl in *.
+      split; only 2: split.
+      -- eapply top_go_WellScoped.
+         ** apply HWSrhs.
+         ** apply HJPVrhs.
+         ** apply subVarSet_emptyVarSet.
       -- assumption.
-      -- admit.
-      -- admit.
+      -- eapply top_go_WellScoped.
+         ** apply HWSrhs.
+         ** apply HJPVrhs.
+         ** apply subVarSet_emptyVarSet.
     + unfold goTopLvl.
       simpl in *.
       rewrite app_nil_r in *.
       rewrite Forall_map.
-      eapply Forall_impl; only 2: apply HWS; clear HWS.
-      intros [v e] HWS.
-      eapply top_go_WellScoped.
+      rewrite Forall_forall in *.
+      intros [v e] HIn'.
+      specialize (HWS _ HIn').
+      specialize (HJPV _ HIn').
+      destruct HJPV as [HisJoinId HJPVrhs].
+      simpl in *.
+      split; only 2: split.
+      -- eapply top_go_WellScoped.
+         ** apply HWS.
+         ** apply HJPVrhs.
+         ** apply subVarSet_emptyVarSet.
       -- assumption.
-      -- admit.
-Admitted.
+      -- eapply top_go_WellScoped.
+         ** apply HWS.
+         ** apply HJPVrhs.
+         ** apply subVarSet_emptyVarSet.
+Qed.

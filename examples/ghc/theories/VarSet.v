@@ -120,7 +120,6 @@ Proof.
   reflexivity.
 Qed.
 
-
 Ltac rewrite_extendVarSetList := 
   unfold extendVarSetList, UniqSet.addListToUniqSet;
   replace UniqSet.addOneToUniqSet with (fun x y => add y x) by auto.
@@ -272,6 +271,16 @@ Proof.
     rewrite <- realUnique_eq in n; apply not_true_is_false in n; auto.
 Qed.
 
+
+Lemma elemVarSet_mkVarSet_cons:
+  forall v v' vs,
+  elemVarSet v (mkVarSet (v' :: vs)) = false
+  <-> varUnique v <> varUnique v' /\ elemVarSet v (mkVarSet vs) = false.
+Proof.
+  intros.
+  rewrite !mkVarSet_extendVarSetList.
+  rewrite extendVarSetList_cons.
+Admitted.
 
 (** ** [delVarSet]  *)
 

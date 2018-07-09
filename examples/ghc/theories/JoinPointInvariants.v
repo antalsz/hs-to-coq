@@ -133,14 +133,40 @@ Proof.
     reflexivity.
 Qed.
 
+Lemma elemVarSet_updJPS_l:
+  forall v jps v',
+  elemVarSet v jps  = true  ->
+  varUnique v <> varUnique v' ->
+  elemVarSet v (updJPS jps v') = true .
+Proof.
+  intros.
+  unfold updJPS.
+  destruct_match.
+  + rewrite elemVarSet_extendVarSet.
+    rewrite orb_true_iff.
+    intuition.
+  + rewrite elemVarSet_delVarSet.
+    intuition.
+Qed.
 
 Lemma elemVarSet_updJPSs_l:
   forall v jps vs,
   elemVarSet v jps  = true  ->
   elemVarSet v (mkVarSet vs) = false ->
   elemVarSet v (updJPSs jps vs) = true .
-Admitted.
-
+Proof.
+  intros.
+  revert jps v H H0. induction vs; intros.
+  * apply H.
+  * simpl.
+    rewrite elemVarSet_mkVarSet_cons in H0.
+    destruct H0.
+    apply IHvs.
+    + apply elemVarSet_updJPS_l.
+      - assumption.
+      - assumption.
+    + assumption.
+Qed.
 
 Lemma subVarSet_updJPS_extendVarSet:
   forall jps isvs v,

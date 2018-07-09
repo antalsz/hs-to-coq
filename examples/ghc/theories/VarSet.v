@@ -542,7 +542,7 @@ Axiom disjointVarSet_subVarSet_l:
   subVarSet vs1 vs2 = true ->
   disjointVarSet vs1 vs3 = true.
 
-(** ** [InScopeVars] *)
+(** ** [InScopeSet] *)
 
 Lemma getInScopeVars_extendInScopeSet:
   forall iss v,
@@ -567,6 +567,32 @@ Proof.
   unfold_Foldable_foldl'.
   unfold_Foldable_foldl.
   f_equal.
+Qed.
+
+
+Lemma extendInScopeSetList_cons : forall v vs in_scope_set,
+           (extendInScopeSetList in_scope_set (v :: vs) = 
+            (extendInScopeSetList (extendInScopeSet in_scope_set v) vs)).
+Proof.
+  unfold extendInScopeSetList.
+  destruct in_scope_set.
+  unfold_Foldable_foldl.
+  simpl.
+  f_equal.
+  unfold Pos.to_nat.
+  unfold Pos.iter_op.
+  omega.
+Qed.
+
+Lemma extendInScopeSetList_nil : forall in_scope_set,
+           extendInScopeSetList in_scope_set nil = in_scope_set.
+Proof.
+  unfold extendInScopeSetList.
+  destruct in_scope_set.
+  unfold_Foldable_foldl.
+  simpl.
+  f_equal.
+  omega.
 Qed.
 
 (** ** [uniqAway] *)

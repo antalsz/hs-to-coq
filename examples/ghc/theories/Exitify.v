@@ -2408,17 +2408,6 @@ Lemma mapSnd_map:
   Util.mapSnd f xs = map (fun x => (fst x, f (snd x))) xs.
 Proof. intros. induction xs. reflexivity. simpl. destruct a0. rewrite <- IHxs.  reflexivity. Qed.
 
-Lemma extendInScopeSetList_nil:
-  forall in_scope,
-  extendInScopeSetList in_scope [] = in_scope.
-Admitted.
-
-Lemma extendInScopeSetList_cons:
-  forall in_scope x xs,
-  extendInScopeSetList in_scope (x::xs) = extendInScopeSetList (extendInScopeSet in_scope x) xs.
-Admitted.
-
-
 Lemma top_go_mkLams:
   forall in_scope body vs,
   top_go in_scope (mkLams vs body) = 

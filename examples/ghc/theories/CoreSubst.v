@@ -377,57 +377,6 @@ Qed.
 (* ---------------------------- *)
 
     
-(** [InScopeSet] *) 
-
-Lemma extend_getInScopeVars : forall in_scope_set v, 
-      (extendVarSet (getInScopeVars in_scope_set) v) = 
-      (getInScopeVars (extendInScopeSet in_scope_set v)).
-Proof. 
-  intros.
-  unfold extendVarSet, getInScopeVars, extendInScopeSet.
-  destruct in_scope_set.
-  unfold extendVarSet. auto.
-Qed.
-
-Lemma extendList_getInScopeVars : forall in_scope_set v, 
-      (extendVarSetList (getInScopeVars in_scope_set) v) = 
-      (getInScopeVars (extendInScopeSetList in_scope_set v)).
-Proof. 
-  intros.
-  unfold extendVarSetList, getInScopeVars, extendInScopeSetList.
-  destruct in_scope_set.
-  unfold extendVarSet. auto.
-Qed.
-
-
-Lemma extendInScopeSetList_cons : forall v vs in_scope_set,
-           (extendInScopeSetList in_scope_set (v :: vs) = 
-            (extendInScopeSetList (extendInScopeSet in_scope_set v) vs)).
-Proof.
-  unfold extendInScopeSetList.
-  destruct in_scope_set.
-  unfold_Foldable_foldl.
-  simpl.
-  f_equal.
-  unfold Pos.to_nat.
-  unfold Pos.iter_op.
-  omega.
-Qed.
-
-Lemma extendInScopeSetList_nil : forall in_scope_set,
-           extendInScopeSetList in_scope_set nil = in_scope_set.
-Proof.
-  unfold extendInScopeSetList.
-  destruct in_scope_set.
-  unfold_Foldable_foldl.
-  simpl.
-  f_equal.
-  omega.
-Qed.
-
-Hint Rewrite extend_getInScopeVars extendList_getInScopeVars extendInScopeSetList_nil 
-             extendInScopeSetList_cons : varset.
-
 (** [VarSet] *)
 
 Axiom ValidVarSet_invariant: forall vs, ValidVarSet vs.
@@ -1467,13 +1416,13 @@ Proof.
   intros.
   destruct s1.
   simpl.
-  rewrite extendList_getInScopeVars.
+  rewrite <- getInScopeVars_extendInScopeSetList.
   eapply WellScoped_StrongSubset.
   eapply IH.
   eapply SubstExtends_WellScoped_Subst; eauto.
   destruct s2.
   simpl.
-  rewrite <- extendList_getInScopeVars.
+  rewrite getInScopeVars_extendInScopeSetList.
   destruct_SubstExtends. auto.
 Qed.  
 
@@ -1513,21 +1462,21 @@ Proof.
        rewrite <- NC; auto.
        apply uniqAway_lookupVarSet_fresh. 
        rewrite elem_nil in H0. discriminate.
-    -- rewrite extendList_getInScopeVars.
+    -- rewrite <- getInScopeVars_extendInScopeSetList.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
        eapply StrongSubset_refl.
-    -- rewrite extendList_getInScopeVars. 
+    -- rewrite <- getInScopeVars_extendInScopeSetList.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
        eapply StrongSubset_refl.
-    -- rewrite extendList_getInScopeVars. 
+    -- rewrite <- getInScopeVars_extendInScopeSetList.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
-       rewrite <- extend_getInScopeVars.
+       rewrite getInScopeVars_extendInScopeSet.
        eapply StrongSubset_trans.
        eapply minusDom_extend.
-       rewrite <- extend_getInScopeVars.
+       rewrite getInScopeVars_extendInScopeSet.
        rewrite NC.
        eapply StrongSubset_extend.
        eapply StrongSubset_minusDom_left.
@@ -1557,7 +1506,7 @@ Proof.
           split; auto.
           intros h. rewrite h in EQv. discriminate.
     -- simpl.
-       rewrite <- extend_getInScopeVars.
+       rewrite getInScopeVars_extendInScopeSet.
        eapply StrongSubset_trans with (vs2 := extendVarSet (minusDom vs env) v).
        eapply minusDom_extend.
        rewrite NC.
@@ -1569,7 +1518,7 @@ Proof.
        rewrite lookupVarEnv_delVarEnv_neq.
        specialize (LVi var).
        destruct (lookupVarEnv env var); auto.
-       rewrite <- extend_getInScopeVars.
+       rewrite getInScopeVars_extendInScopeSet.
        eapply WellScoped_StrongSubset; eauto.       
        eapply StrongSubset_extend_fresh.
        rewrite <- NC.
@@ -1592,20 +1541,20 @@ Proof.
        apply uniqAway_lookupVarSet_fresh. 
        rewrite elem_nil in H0.
        discriminate.
-    -- rewrite extendList_getInScopeVars.
+    -- rewrite <- getInScopeVars_extendInScopeSetList.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
        eapply StrongSubset_refl.
-    -- rewrite extendList_getInScopeVars.
+    -- rewrite <- getInScopeVars_extendInScopeSetList.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
-       eapply StrongSubset_refl.       
+       eapply StrongSubset_refl.
     -- (* We have freshened binder v. *)
-       rewrite extendList_getInScopeVars.
+       rewrite <- getInScopeVars_extendInScopeSetList.
        rewrite extendInScopeSetList_cons.
        rewrite extendInScopeSetList_nil.
-       rewrite <- extend_getInScopeVars.
-       rewrite <- extend_getInScopeVars.
+       rewrite getInScopeVars_extendInScopeSet.
+       rewrite getInScopeVars_extendInScopeSet.
        pose (k := uniqAway_lookupVarSet_fresh v in_scope_set).
        clearbody k.
        set (v' := uniqAway in_scope_set v) in *.
@@ -1634,20 +1583,20 @@ Proof.
     -- eapply StrongSubset_trans; eauto.
        eapply StrongSubset_minusDom_extend_extend.
        eapply StrongSubset_trans; eauto.
-       rewrite <- extend_getInScopeVars.
+       rewrite getInScopeVars_extendInScopeSet.
        eapply StrongSubset_extendVarSet_fresh.
        eapply uniqAway_lookupVarSet_fresh.
     -- intros var.
        destruct (v == var) eqn:Eq_vvar.
        - rewrite lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
-         rewrite <- extend_getInScopeVars.
+         rewrite getInScopeVars_extendInScopeSet.
          rewrite lookupVarSet_extendVarSet_self.
          eapply almostEqual_refl.
        - rewrite lookupVarEnv_extendVarEnv_neq; auto.
          specialize (LVi var).
          destruct lookupVarEnv eqn:LU.
-         rewrite <- extend_getInScopeVars.
+         rewrite getInScopeVars_extendInScopeSet.
          eapply WellScoped_StrongSubset; eauto.
          eapply StrongSubset_extendVarSet_fresh.
          eapply uniqAway_lookupVarSet_fresh.
@@ -1695,12 +1644,12 @@ Proof.
   intros.
   edestruct WellScoped_Subst_substBndr; eauto.
   destruct_SubstExtends.
-  rewrite extend_getInScopeVars.
+  rewrite <- getInScopeVars_extendInScopeSet.
   eapply WellScoped_StrongSubset.
   eapply IH; eauto. clear IH. 
   rewrite extendVarSetList_cons in *.
   rewrite extendVarSetList_nil in *.
-  rewrite <- extend_getInScopeVars.
+  rewrite getInScopeVars_extendInScopeSet.
   eauto.
 Qed.
 
@@ -2046,10 +1995,10 @@ Proof.
          rewrite bindersOf_Rec_cleanup.
          destruct_SubstExtends.
          rewrite map_fst_zip.
-         rewrite extendList_getInScopeVars.
+         rewrite <- getInScopeVars_extendInScopeSetList.
          eapply WellScoped_StrongSubset.
          eapply IHbody;eauto.
-         rewrite <- extendList_getInScopeVars.
+         rewrite getInScopeVars_extendInScopeSetList.
          eauto.
          unfold CoreBndr, CoreExpr in *.
          rewrite map_snd_zip.

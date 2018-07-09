@@ -225,6 +225,33 @@ Lemma elemVarSet_updJPSs_l:
 Admitted.
 
 
+Lemma subVarSet_updJPS_extendVarSet:
+  forall jps isvs v,
+  subVarSet jps isvs = true ->
+  subVarSet (updJPS jps v) (extendVarSet isvs v) = true.
+Admitted.
+
+Lemma subVarSet_updJPSs_extendVarSetList:
+  forall jps isvs vs,
+  subVarSet jps isvs = true ->
+  subVarSet (updJPSs jps vs) (extendVarSetList isvs vs) = true.
+Admitted.
+
+Lemma subVarSet_delVarSet_extendVarSet:
+  forall jps isvs v,
+  subVarSet jps isvs = true ->
+  subVarSet (delVarSet jps v) (extendVarSet isvs v) = true.
+Admitted.
+
+Lemma subVarSet_delVarSetList_extendVarSetList:
+  forall jps isvs vs,
+  subVarSet jps isvs = true ->
+  subVarSet (delVarSetList jps vs) (extendVarSetList isvs vs) = true.
+Admitted.
+
+
+
+
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
   match e with
   | Mk_Var v => match isJoinId_maybe v with

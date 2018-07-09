@@ -2423,33 +2423,6 @@ Proof.
     reflexivity.
 Qed.
 
-
-Lemma subVarSet_updJPS_extendInScopeSet:
-  forall jps isvs v,
-  subVarSet jps isvs = true ->
-  subVarSet (updJPS jps v) (extendVarSet isvs v) = true.
-Admitted.
-
-Lemma subVarSet_updJPSs_extendInScopeSetList:
-  forall jps isvs vs,
-  subVarSet jps isvs = true ->
-  subVarSet (updJPSs jps vs) (extendVarSetList isvs vs) = true.
-Admitted.
-
-Lemma subVarSet_delVarSet_extendInScopeSet:
-  forall jps isvs v,
-  subVarSet jps isvs = true ->
-  subVarSet (delVarSet jps v) (extendVarSet isvs v) = true.
-Admitted.
-
-Lemma subVarSet_delVarSetList_extendInScopeSetList:
-  forall jps isvs vs,
-  subVarSet jps isvs = true ->
-  subVarSet (delVarSetList jps vs) (extendVarSetList isvs vs) = true.
-Admitted.
-
-
-
 Ltac solve_subVarSet :=
   unfold isvs;
   rewrite ?getInScopeVars_extendInScopeSet;
@@ -2460,10 +2433,10 @@ Ltac solve_subVarSet :=
   rewrite ?updJPSs_append;
   rewrite ?updJPSs_cons;
   rewrite ?updJPSs_nil;
-  repeat first [ apply subVarSet_updJPSs_extendInScopeSetList
-               | apply subVarSet_updJPS_extendInScopeSet
-               | apply subVarSet_delVarSetList_extendInScopeSetList
-               | apply subVarSet_delVarSet_extendInScopeSet
+  repeat first [ apply subVarSet_updJPSs_extendVarSetList
+               | apply subVarSet_updJPS_extendVarSet
+               | apply subVarSet_delVarSetList_extendVarSetList
+               | apply subVarSet_delVarSet_extendVarSet
                ];
   first [ assumption
         | apply subVarSet_emptyVarSet

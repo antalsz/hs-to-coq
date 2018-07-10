@@ -221,13 +221,12 @@ Section CoreLT.
   Qed.
 End CoreLT.
 
-Opaque CoreLT.
-
 (* For fewer obligations from [Program Fixpoint]: *)
 Hint Resolve CoreLT_wf : arith.
 
 (* This is a bit plump yet *)
 Ltac Core_termination :=
+  try solve [unfold CoreLT; simpl; lia]; 
   try (apply CoreLT_collectNBinders; only 1: assumption);
   first 
     [ apply CoreLT_let_rhs
@@ -237,6 +236,9 @@ Ltac Core_termination :=
     | eapply CoreLT_let_pairs_mkLam; eassumption
     | eapply CoreLT_case_alts; eassumption
     ].
+
+Opaque CoreLT.
+
 
 (** And now the same for annotated core expressions *)
 Section AnnCoreLT.

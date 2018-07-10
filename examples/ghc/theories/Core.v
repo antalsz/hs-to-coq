@@ -6,11 +6,12 @@ Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Base.
+Require Import Proofs.Data.Foldable.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Lists.List.
 Import ListNotations.
-
+Require Import Coq.Program.Equality. (* for dependent destruction *)
 
 Opaque Base.hs_string__.
 
@@ -65,6 +66,23 @@ Lemma bindersOf_Rec_cleanup:
   flat_map (fun '(x, _) => [x]) pairs = map fst pairs.
 Proof. exact @bindersOf_Rec. Qed.
 
+Lemma mkLams_inj:
+  forall vs1 vs2 (e1 e2 : CoreExpr),
+  length vs1 = length vs2 ->
+  mkLams vs1 e1 = mkLams vs2 e2 <-> (vs1 = vs2 /\ e1 = e2).
+Proof.
+  intros.
+  unfold mkLams. rewrite !Foldable.hs_coq_foldr_list.
+  revert vs2 H. induction vs1; intros; destruct vs2; simpl in *; try congruence.
+  * intuition.
+  * dependent destruction H.
+    specialize (IHvs1 _ x).
+    intuition.
+    + dependent destruction H0. f_equal. intuition.
+    + dependent destruction H0. f_equal. intuition.
+    + dependent destruction H2. f_equal. intuition.
+Qed.
+
 
 (** ** [AnnExpr] related lemmas *)
 
@@ -94,6 +112,38 @@ Proof.
   extensionality x.
   now destruct x.
 Qed.
+
+Lemma collectNAnnBndrs_mkLams_collectNBinders:
+  forall params (a : CoreExprWithFVs) rhs,
+  mkLams params rhs = deAnnotate a ->
+  fst (collectNAnnBndrs (length params) a) = params /\
+  deAnnotate (snd (collectNAnnBndrs (length params) a)) = rhs.
+Proof.
+  intros.
+  unfold collectNAnnBndrs.
+  match goal with |- fst (?f' _ _ _) = _ /\ _ => set (f := f') end.
+  replace params with (rev (@nil Var) ++ params) at 2 by (rewrite app_nil_l; reflexivity).
+  generalize (@nil Var). intros r.
+  split.
+  * revert r a H. induction params; intros.
+    + simpl. rewrite hs_coq_reverse. rewrite app_nil_r. reflexivity.
+    + replace (mkLams _ _ ) with (Lam a (mkLams params rhs)) in H by reflexivity.
+      destruct a0, a0; simpl in H; try destruct p; try congruence.
+      dependent destruction H.
+      simpl.
+      rewrite (IHparams (v :: r) _ x).
+      simpl.
+      rewrite <- app_assoc.
+      reflexivity.
+  * revert r a H. induction params; intros.
+    + simpl. rewrite <- H. reflexivity.
+    + replace (mkLams _ _ ) with (Lam a (mkLams params rhs)) in H by reflexivity.
+      destruct a0, a0; simpl in H; try destruct p; try congruence.
+      dependent destruction H.
+      apply (IHparams (v :: r) _ x).
+Qed.
+
+
 
 (** ** [HasNLams] related lemmas (currently unused) *)
 

@@ -15,7 +15,6 @@ StateLogic.v
 GhcTactics.v
 Forall.v
 Core.v
-VectorUtils.v
 CoreFVs.v
 Base.v
 VarSetFSet.v

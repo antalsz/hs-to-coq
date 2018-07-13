@@ -2,10 +2,13 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiWayIf #-}
 
 module GHC.Proof.Plugin (plugin) where
 
 import Data.Maybe
+import Data.Text (pack)
 import Control.Monad
 import Control.Monad.IO.Class
 import System.IO
@@ -21,11 +24,15 @@ import GhcPlugins hiding (vcat)
 -- import CSE
 import Unique
 import TcType
+import Module
+import OccName hiding (varName)
 import HsToCoq.Coq.Gallina hiding (Type, Let, App, Var, Name)
 import HsToCoq.Coq.Gallina.Orphans
 import HsToCoq.Coq.Gallina.Util hiding (Var)
 import HsToCoq.Coq.Pretty
 import HsToCoq.PrettyPrint
+
+n <: xs = appList n (map PosArg xs)
 
 class ToTerm a where
     t :: a -> Term
@@ -34,28 +41,70 @@ instance ToTerm (Tickish b) where
     t _ = undefined
 
 instance ToTerm Int where
-    t n = Num (fromIntegral n)
+    t n = Num 0                 -- jww (2018-07-13): TODO
+
+instance ToTerm Module where
+    t (Module a b) = App2 "Mk_Module" (t a) (t b)
+
+instance ToTerm IndefUnitId where
+    t _ = "default"
+
+instance ToTerm DefUnitId where
+    t _ = "default"
+
+instance ToTerm UnitId where
+    t (IndefiniteUnitId a) = "IndefiniteUnitId" <: [t a]
+    t (DefiniteUnitId a)   = "DefiniteUnitId" <: [t a]
+
+instance ToTerm ModuleName where
+    t _ = "default"
 
 instance ToTerm Type where
-    t _ = "tt"
+    t _ = "default"
+
+instance ToTerm NameSpace where
+    t _ = "default"
+
+instance ToTerm FastString where
+    t f = HsString (pack (unpackFS f))
+
+instance ToTerm OccName where
+    t o = "Mk_OccName" <: [t (occNameSpace o), t (occNameFS o)]
+
+instance ToTerm Unique where
+    t _ = "default"
+
+instance ToTerm SrcSpan where
+    t _ = "default"
 
 instance ToTerm Name where
-    t _ = "tt"
-
-n <: xs = appList n (map PosArg xs)
+    t n = "Mk_Name"
+        <: [ if | isWiredInName n  ->
+                  App3 "WiredIn" (t (nameModule n)) "default"
+                      (if isBuiltInSyntax n
+                       then "BuiltInSyntax"
+                       else "UserSyntax")
+                | isExternalName n ->
+                  App1 "External" (t (nameModule n))
+                | isInternalName n -> "Internal"
+                | isSystemName n   -> "System"
+           , t (nameOccName n)
+           , t (nameUnique n)
+           , t (nameSrcSpan n)
+           ]
 
 instance ToTerm Var where
     t v | isTyVar v =
-          App3 "Mk_TyVar" (t a) (t b) (t c)
-        | isTyVar v =
-          "Mk_TyVar" <:
+          "Mk_TyVar" <: [t a, t b, t c]
+        | isTcTyVar v =
+          "Mk_TcTyVar" <:
               [ t a
               , t b
               , t c
               , t (tcTyVarDetails v)
               ]
         | isId v =
-          "Mk_TyVar" <:
+          "Mk_Id" <:
               [ t a
               , t b
               , t c
@@ -72,22 +121,22 @@ instance ToTerm Var where
         c = varType v
 
 instance ToTerm Coercion where
-    t _ = "tt"
+    t _ = "default"
 
 instance ToTerm AltCon where
-    t _ = "tt"
+    t _ = "default"
 
 instance ToTerm Literal where
-    t _ = "tt"
+    t _ = "default"
 
 instance ToTerm IdInfo where
-    t _ = "tt"
+    t _ = "default"
 
 instance ToTerm IdDetails where
-    t _ = "tt"
+    t _ = "default"
 
 instance ToTerm TcType.TcTyVarDetails where
-    t _ = "tt"
+    t _ = "default"
 
 instance (ToTerm a, ToTerm b) => ToTerm (a, b) where
     t (x, y) = App2 "pair" (t x) (t y)
@@ -133,7 +182,11 @@ proofPass guts@ModGuts {..} = do
 
     mod :: [Sentence]
     mod = [ ModuleSentence (Require Nothing (Just Import) ["Core"])
+          , ModuleSentence (Require Nothing (Just Import) ["Name"])
+          , ModuleSentence (Require Nothing (Just Import) ["OccName"])
+          , ModuleSentence (Require Nothing (Just Import) ["Module"])
           , ModuleSentence (Require Nothing (Just Import) ["GHC.Tuple"])
+          , ModuleSentence (Require Nothing (Just Import) ["GHC.Err"])
           , DefinitionSentence
               (DefinitionDef Global "program" []
                  (Just (Qualid "CoreProgram")) body)

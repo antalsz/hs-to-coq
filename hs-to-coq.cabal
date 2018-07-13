@@ -116,11 +116,11 @@ library
                      , validation           ==1.*
                      , syb                  ==0.7.*
                      , text                 ==1.2.*
-                     , directory            ==1.2.* || ==1.3.*
+                     , directory            ==1.3.*
                      , filepath             ==1.4.*
-                     , wl-pprint-text       ==1.1.*
+                     , wl-pprint-text       ==1.2.*
                      , parsec               ==3.1.*
-                     , indents              ==0.4.*
+                     , indents              ==0.5.*
                      , optparse-applicative ==0.14.*
                      , yaml                 ==0.8.*
 

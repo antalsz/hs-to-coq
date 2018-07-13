@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: nightly-2018-03-29
+resolver: lts-12.0
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,10 +37,6 @@ resolver: nightly-2018-03-29
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- location:
-    git: https://github.com/ddssff/wl-pprint-text
-    commit: 9ece4801962fc510ef0e32892ee5ad550a5883bc
-  extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)

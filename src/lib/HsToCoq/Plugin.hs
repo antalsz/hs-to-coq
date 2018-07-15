@@ -2,10 +2,9 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 
-module GHC.Proof.Plugin (plugin) where
+module HsToCoq.Plugin (plugin) where
 
 import Data.Maybe
 import Data.Text (pack)
@@ -14,14 +13,6 @@ import Control.Monad.IO.Class
 import System.IO
 
 import GhcPlugins hiding (vcat)
--- import Simplify
--- import CoreStats
--- import CoreMonad
--- import SimplMonad
--- import OccurAnal
--- import FamInstEnv
--- import SimplEnv
--- import CSE
 import Unique
 import TcType
 import Module

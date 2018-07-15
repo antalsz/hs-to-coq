@@ -1388,6 +1388,12 @@ Proof.
        (vs1 := extendVarSetList (getInScopeVars i) vars'); eauto.
        unfold WellScoped.
        unfold WellScopedVar.
+       replace (isLocalVar var2) with true; swap 1 2. {
+        symmetry.
+        rewrite Forall_forall in H4.
+        specialize (H4 _ H10).
+        unfold GoodLocalVar in H4. intuition.
+       }
        rewrite lookupVarSet_extendVarSetList_self.
        eapply almostEqual_refl; auto.
        rewrite <- In_varUnique_elem.
@@ -1590,6 +1596,7 @@ Proof.
        destruct (v == var) eqn:Eq_vvar.
        - rewrite lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
+         destruct_match; only 2: apply I.
          rewrite getInScopeVars_extendInScopeSet.
          rewrite lookupVarSet_extendVarSet_self.
          eapply almostEqual_refl.
@@ -1827,6 +1834,8 @@ Proof.
         + tauto.
         + destruct (lookupInScope in_scope_set v) eqn:HIS.
           ++ unfold WellScoped, WellScopedVar in *.
+             rewrite isLocalVar_isLocalId in WSvar by assumption.
+             destruct (isLocalVar v0) eqn:iLV; only 2: apply I.
              destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
              unfold lookupInScope in HIS. destruct in_scope_set. simpl.
              pose (VV := ValidVarSet_invariant v2). clearbody VV.
@@ -1843,6 +1852,7 @@ Proof.
              specialize (ss v). simpl in ss.
              rewrite HIS in ss.
              rewrite lookupVarSet_minusDom_1 in ss; eauto.
+             rewrite isLocalVar_isLocalId in WSvar by assumption.
              destruct (lookupVarSet vs v); try contradiction.
              
     -- (* TODO *)

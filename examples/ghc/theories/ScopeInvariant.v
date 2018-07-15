@@ -31,10 +31,12 @@ This file describes an invariant of Core files that
 *)
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
+  if isLocalVar v then
    match lookupVarSet in_scope v with
     | None => False
     | Some v' => almostEqual v v'
-    end.
+    end
+  else True (* we do not track local variables yet *).
 
 (**
 This captures all invariants that we can state about a
@@ -165,7 +167,9 @@ Proof.
   intros.
   unfold WellScopedVar.
   rewrite lookupVarSet_extendVarSet_self.
-  apply almostEqual_refl.
+  destruct_match.
+  * apply almostEqual_refl.
+  * trivial.
 Qed.
 
 Lemma WellScoped_MkLetRec: forall pairs body isvs,
@@ -198,6 +202,7 @@ Lemma WellScopedVar_StrongSubset : forall e vs1 vs2,
 Proof.
   intros v vs1 vs2 WS SS.
   unfold WellScopedVar, StrongSubset in *.
+  destruct_match; only 2: trivial.
   specialize (SS v).
   destruct (lookupVarSet vs1 v); try contradiction.
   destruct (lookupVarSet vs2 v) eqn:LV2; try contradiction.
@@ -272,20 +277,21 @@ Proof.
 
   apply (core_induct e); intros.
   - unfold WellScoped, WellScopedVar in *.
-    destruct (lookupVarSet vs v) eqn:Hl; try contradiction.
-    unfold expr_fvs, FV.unitFV.
-    rewrite elemVarSet_emptyVarSet.
-    unfold Base.const.
-    simpl andb.
-    destruct (isLocalVar v).
-    + unfold Tuple.snd.
+    destruct (isLocalVar v) eqn:HisLocal.
+    + destruct (lookupVarSet vs v) eqn:Hl; try contradiction.
+      unfold expr_fvs, FV.unitFV.
+      rewrite elemVarSet_emptyVarSet.
+      rewrite HisLocal.
+      unfold Tuple.snd.
       eapply subVarSet_extendVarSet_l.
       * apply subVarSet_emptyVarSet.
       * eassumption.
-    + simpl.
+    + simpl. rewrite HisLocal.
+      unfold Tuple.snd.
       apply subVarSet_emptyVarSet.
   - apply subVarSet_emptyVarSet.
   - simpl.
+    admit.
 Admitted.
 
 

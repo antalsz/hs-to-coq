@@ -21,7 +21,7 @@ module HsToCoq.PrettyPrint (
   renderOneLineT
   ) where
 
-import Text.PrettyPrint.Leijen.Text hiding ( (<>), (<$>)
+import Text.PrettyPrint.Leijen.Text hiding ( (<$>)
                                            , text
                                            , string
                                            , encloseSep

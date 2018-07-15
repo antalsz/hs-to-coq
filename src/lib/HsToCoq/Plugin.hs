@@ -6,23 +6,21 @@
 
 module HsToCoq.Plugin (plugin) where
 
-import Data.Maybe
 import Data.Text (pack)
-import Control.Monad
 import Control.Monad.IO.Class
 import System.IO
 
 import GhcPlugins hiding (vcat)
 import Unique
 import TcType
-import Module
-import OccName hiding (varName)
-import HsToCoq.Coq.Gallina hiding (Type, Let, App, Var, Name)
-import HsToCoq.Coq.Gallina.Orphans
+import HsToCoq.Coq.Gallina hiding (Type, Let, App, Name)
+import HsToCoq.Coq.Gallina.Orphans ()
 import HsToCoq.Coq.Gallina.Util hiding (Var)
 import HsToCoq.Coq.Pretty
 import HsToCoq.PrettyPrint
 
+-- | A more convenient Gallina application operator
+(<:) :: Term -> [Term] -> Term
 n <: xs = appList n (map PosArg xs)
 
 class ToTerm a where
@@ -32,7 +30,7 @@ instance ToTerm (Tickish b) where
     t _ = undefined
 
 instance ToTerm Int where
-    t n = Num 0                 -- jww (2018-07-13): TODO
+    t _n = Num 0                 -- jww (2018-07-13): TODO
 
 instance ToTerm Module where
     t (Module a b) = App2 "Mk_Module" (t a) (t b)
@@ -106,6 +104,7 @@ instance ToTerm Var where
                                    else "NotExported"]
               , t (idDetails v)
               , t (idInfo v) ]
+        | otherwise = error "What kind of Var is that?"
       where
         a = varName v
         b = getKey (getUnique v)
@@ -188,6 +187,3 @@ proofPass guts@ModGuts {..} = do
 
 hPrettyPrint :: MonadIO m => Handle -> Doc -> m ()
 hPrettyPrint h = liftIO . displayIO h . renderPretty 0.67 120
-
-prettyPrint :: MonadIO m => Doc -> m ()
-prettyPrint = hPrettyPrint stdout

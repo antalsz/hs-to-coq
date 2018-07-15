@@ -30,7 +30,11 @@ instance ToTerm (Tickish b) where
     t _ = undefined
 
 instance ToTerm Int where
-    t n = "N.to_nat" <: [ Num (fromIntegral n) ]
+    t n = InScope (Num (fromIntegral n)) "N"
+
+-- | Sometimes we want `nat` not `N`
+as_nat :: Term -> Term
+as_nat x = ("N.to_nat" <: [x])
 
 instance ToTerm Module where
     t (Module a b) = App2 "Mk_Module" (t a) (t b)
@@ -61,7 +65,7 @@ instance ToTerm OccName where
     t o = "Mk_OccName" <: [t (occNameSpace o), t (occNameFS o)]
 
 instance ToTerm Unique where
-    t _ = "default"
+    t u = "MkUnique" <: [t (getKey u)]
 
 instance ToTerm SrcSpan where
     t _ = "default"
@@ -95,7 +99,7 @@ instance ToTerm Var where
         | isId v =
           "Mk_Id" <:
               [ t a
-              , t b
+              , as_nat (t b)
               , t c
               , if isGlobalId v
                 then "GlobalId"
@@ -175,6 +179,7 @@ proofPass guts@ModGuts {..} = do
           , ModuleSentence (Require Nothing (Just Import) ["Name"])
           , ModuleSentence (Require Nothing (Just Import) ["OccName"])
           , ModuleSentence (Require Nothing (Just Import) ["Module"])
+          , ModuleSentence (Require Nothing (Just Import) ["Unique"])
           , ModuleSentence (Require Nothing (Just Import) ["GHC.Tuple"])
           , ModuleSentence (Require Nothing (Just Import) ["GHC.Err"])
           , ModuleSentence (Require Nothing (Just Import) ["Coq.NArith.BinNat"])

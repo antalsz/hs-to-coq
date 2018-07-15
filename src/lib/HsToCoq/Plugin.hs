@@ -30,7 +30,7 @@ instance ToTerm (Tickish b) where
     t _ = undefined
 
 instance ToTerm Int where
-    t _n = Num 0                 -- jww (2018-07-13): TODO
+    t n = "N.to_nat" <: [ Num (fromIntegral n) ]
 
 instance ToTerm Module where
     t (Module a b) = App2 "Mk_Module" (t a) (t b)
@@ -177,6 +177,7 @@ proofPass guts@ModGuts {..} = do
           , ModuleSentence (Require Nothing (Just Import) ["Module"])
           , ModuleSentence (Require Nothing (Just Import) ["GHC.Tuple"])
           , ModuleSentence (Require Nothing (Just Import) ["GHC.Err"])
+          , ModuleSentence (Require Nothing (Just Import) ["Coq.NArith.BinNat"])
           , DefinitionSentence
               (DefinitionDef Global "program" []
                  (Just (Qualid "CoreProgram")) body)

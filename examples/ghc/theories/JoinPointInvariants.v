@@ -546,85 +546,94 @@ Require Import CoreFVs.
 
 (* There is some worrying duplication/similarity with
 [WellScoped_extendVarSetList_fresh_between] *)
-Lemma isJoinPointsValid_fresh_updJPSs:
-  forall (vs2 vs3 : list Var) n (e : CoreExpr) (jps : VarSet),
+Lemma isJoinPointsValid_fresh_updJPSs_aux:
+  forall (vs2 vs3 : list Var) (e : CoreExpr) (jps : VarSet),
   disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
+  (forall n,
   isJoinPointsValid e n (updJPSs jps (vs2 ++ vs3)) =
   isJoinPointsValid e n (updJPSs jps vs3)
-with isJoinRHS_aux_fresh_updJPSs:
-  forall (vs2 vs3 : list Var) v (e : CoreExpr) (jps : VarSet),
-  disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
-  isJoinRHS_aux v e (updJPSs jps (vs2 ++ vs3)) =
-  isJoinRHS_aux v e (updJPSs jps vs3).
+  )
+  /\
+  (forall v, isJoinRHS_aux v e (updJPSs jps (vs2 ++ vs3)) =
+  isJoinRHS_aux v e (updJPSs jps vs3)).
 (* It is unclear if this partial proof is actually ok, the  [Guarded] command fails. *)
 Proof.
-* intros.
-  destruct e; simpl.
-  - destruct_match; only 2: reflexivity.
+  intros.
+  revert vs3 jps H.
+  apply (core_induct e); intros;
+    (split; intro; simpl; [| try solve[ destruct_match; reflexivity]] ).
+  - simpl.
+    destruct_match; only 2: reflexivity.
     f_equal.
     admit.
   - reflexivity.
   - f_equal.
-    apply isJoinPointsValid_fresh_updJPSs.
-    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+    apply H.
+    eapply disjointVarSet_subVarSet_l; only 1: apply H1.
     apply subVarSet_delVarSetList_both.
     admit. (* Need lemma about exprFreeVars (App e s) *)
   - reflexivity.
-  - destruct b as [v rhs | pairs].
+  - destruct_match; only 1: reflexivity.
+    destruct (isJoinId v) eqn:?; only 1: reflexivity.
+    simpl.
+    rewrite <- !updJPS_not_joinId by assumption.
+    rewrite <- !updJPSs_singleton.
+    rewrite <- !updJPSs_append.
+    rewrite <- app_assoc.
+    destruct_match.
+    + apply H.
+      eapply disjointVarSet_subVarSet_l; only 1: apply H0.
+      admit.
+    + apply H.
+      eapply disjointVarSet_subVarSet_l; only 1: apply H0.
+      admit.
+  - destruct binds as [v rhs | pairs].
     + f_equal.
       ** unfold isJoinPointsValidPair_aux.
          destruct_match; only 2: reflexivity.
          destruct_match.
-         -- apply isJoinPointsValid_fresh_updJPSs.
-            eapply disjointVarSet_subVarSet_l; only 1: apply H.
+         -- apply H.
+            eapply disjointVarSet_subVarSet_l; only 1: apply H1.
             apply subVarSet_delVarSetList_both.
             admit.
-         -- apply isJoinRHS_aux_fresh_updJPSs.
-            eapply disjointVarSet_subVarSet_l; only 1: apply H.
+         -- apply H.
+            eapply disjointVarSet_subVarSet_l; only 1: apply H1.
             apply subVarSet_delVarSetList_both.
             admit.
       ** rewrite <- !updJPSs_singleton.
          rewrite <- !updJPSs_append.
          rewrite <- app_assoc.
-         apply isJoinPointsValid_fresh_updJPSs.
-         eapply disjointVarSet_subVarSet_l; only 1: apply H.
+         apply H0.
+         eapply disjointVarSet_subVarSet_l; only 1: apply H1.
          rewrite delVarSetList_app.
          eapply subVarSet_trans; only 1: apply subVarSet_delVarSetList.
          apply subVarSet_delVarSetList_both.
          admit.
      + f_equal.
-       (* How do we do a proof about [forallb _ pairs] that pleases
-          Coq’s terminiation checker?
-        *)
        admit.
-  - destruct (isJoinId c) eqn:?; only 1: reflexivity; simpl.
+  - destruct (isJoinId bndr) eqn:?; only 1: reflexivity; simpl.
     f_equal.
-    (* Againg [forallb] *)
+    (* Again [forallb] *)
     admit.
-  - apply isJoinPointsValid_fresh_updJPSs. 
-    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+  - apply H. 
+    eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     admit.
-  - apply isJoinPointsValid_fresh_updJPSs. 
-    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+  - apply H. 
+    eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     admit.
   - reflexivity.
   - reflexivity.
-* intros.
-  destruct e; simpl; destruct_match; try reflexivity.
-  destruct (isJoinId c) eqn:?; only 1: reflexivity.
-  simpl.
-  rewrite <- !updJPS_not_joinId by assumption.
-  rewrite <- !updJPSs_singleton.
-  rewrite <- !updJPSs_append.
-  rewrite <- app_assoc.
-  destruct_match.
-  - apply isJoinPointsValid_fresh_updJPSs.
-    eapply disjointVarSet_subVarSet_l; only 1: apply H.
-    admit.
-  - apply isJoinRHS_aux_fresh_updJPSs.
-    eapply disjointVarSet_subVarSet_l; only 1: apply H.
-    admit.
 Admitted.
+
+Lemma isJoinPointsValid_fresh_updJPSs:
+  forall (vs2 vs3 : list Var) n (e : CoreExpr) (jps : VarSet),
+  disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
+  isJoinPointsValid e n (updJPSs jps (vs2 ++ vs3)) =
+  isJoinPointsValid e n (updJPSs jps vs3).
+Proof.
+  intros.
+  apply isJoinPointsValid_fresh_updJPSs_aux; assumption.
+Qed.
 
 
 Lemma isJoinPointsValid_fresh_between:

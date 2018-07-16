@@ -376,6 +376,17 @@ Proof.
   fsetdec.
 Qed.
 
+Lemma subVarSet_trans:
+  forall vs1 vs2 vs3,
+  subVarSet vs1 vs2 = true ->
+  subVarSet vs2 vs3 = true ->
+  subVarSet vs1 vs3 = true.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+
 
 Lemma subVarSet_emptyVarSet:
   forall vs,
@@ -462,7 +473,18 @@ Proof.
     rewrite extendVarSetList_cons in *.
 Admitted.
     
-    
+
+
+Lemma subVarSet_extendVarSet_both:
+  forall vs1 vs2 v,
+  subVarSet vs1 vs2 = true ->
+  subVarSet (extendVarSet vs1 v) (extendVarSet vs2 v) = true.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+
 Lemma subVarSet_extendVarSet:
   forall vs1 vs2 v,
   subVarSet vs1 vs2 = true ->
@@ -505,6 +527,22 @@ Proof.
     simpl.
     intro IH. 
     rewrite IH with (vs1 := delVarSet vs1 a).
+    set_b_iff.
+    fsetdec.
+Qed.
+
+
+Lemma subVarSet_delVarSetList_both:
+  forall vs1 vs2 vl,
+  subVarSet vs1 vs2 = true ->
+  subVarSet (delVarSetList vs1 vl) (delVarSetList vs2 vl) = true.
+Proof.
+  intros.
+  revert vs1 vs2 H. induction vl; intros.
+  - rewrite !delVarSetList_nil.
+    assumption.
+  - rewrite !delVarSetList_cons.
+    apply IHvl.
     set_b_iff.
     fsetdec.
 Qed.
@@ -678,6 +716,12 @@ Axiom lookupVarSet_extendVarSet_neq :
       forall v1 v2 vs,
       not (v1 GHC.Base.== v2 = true) ->
       lookupVarSet (extendVarSet vs v1) v2 = lookupVarSet vs v2.
+
+Axiom lookupVarSet_delVarSet_neq :
+      forall v1 v2 vs,
+      not (v1 GHC.Base.== v2 = true) ->
+      lookupVarSet (delVarSet vs v1) v2 = lookupVarSet vs v2.
+
 
 (*
 Lemma lookupVarSet_eq :
@@ -871,6 +915,19 @@ Proof.
     intro h1;
       rewrite h1 in Eq; discriminate.
 Qed.
+
+
+Lemma StrongSubset_delVarSet :
+  forall vs1 vs2 v,
+  StrongSubset vs1 vs2 ->
+  StrongSubset (delVarSet vs1 v) (delVarSet vs2 v).
+Admitted.
+
+Lemma StrongSubset_delete_fresh :
+  forall vs v,
+  lookupVarSet vs v = None ->
+  StrongSubset vs (delVarSet vs v).
+Admitted.
 
 Definition Respects_StrongSubset P :=
   forall (vs1 vs2 : VarSet),

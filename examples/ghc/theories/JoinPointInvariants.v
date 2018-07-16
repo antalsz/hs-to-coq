@@ -1,6 +1,7 @@
 Require Import Id.
 Require Import Core.
 Require Import BasicTypes.
+Import GHC.Base.Notations.
 
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
@@ -12,6 +13,7 @@ Import ListNotations.
 
 Require Import Proofs.Forall.
 Require Import Proofs.Core.
+Require Import Proofs.CoreInduct.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
 Require Import Proofs.GhcTactics.
@@ -86,6 +88,11 @@ Proof. intros. reflexivity. Qed.
 Lemma updJPSs_cons:
   forall jps v vs, updJPSs jps (v :: vs) = updJPSs (updJPS jps v) vs.
 Proof. intros. reflexivity. Qed.
+
+Lemma updJPSs_singleton:
+  forall jps v, updJPSs jps [v] = updJPS jps v.
+Proof. intros. reflexivity. Qed.
+
 
 Lemma updJPSs_append:
   forall jps vs1 vs2, updJPSs jps (vs1 ++ vs2) = updJPSs (updJPSs jps vs1) vs2.
@@ -172,27 +179,31 @@ Lemma subVarSet_updJPS_extendVarSet:
   forall jps isvs v,
   subVarSet jps isvs = true ->
   subVarSet (updJPS jps v) (extendVarSet isvs v) = true.
-Admitted.
+Proof.
+  intros.
+  unfold updJPS.
+  destruct_match.
+  * apply subVarSet_extendVarSet_both.
+    assumption.
+  * eapply subVarSet_trans.
+    apply subVarSet_delVarSet.
+    apply subVarSet_extendVarSet.
+    eassumption.
+Qed.
 
 Lemma subVarSet_updJPSs_extendVarSetList:
   forall jps isvs vs,
   subVarSet jps isvs = true ->
   subVarSet (updJPSs jps vs) (extendVarSetList isvs vs) = true.
-Admitted.
-
-Lemma subVarSet_delVarSet_extendVarSet:
-  forall jps isvs v,
-  subVarSet jps isvs = true ->
-  subVarSet (delVarSet jps v) (extendVarSet isvs v) = true.
-Admitted.
-
-Lemma subVarSet_delVarSetList_extendVarSetList:
-  forall jps isvs vs,
-  subVarSet jps isvs = true ->
-  subVarSet (delVarSetList jps vs) (extendVarSetList isvs vs) = true.
-Admitted.
-
-
+Proof.
+  intros. revert jps isvs H. induction vs; intros.
+  * rewrite updJPSs_nil, extendVarSetList_nil.
+    assumption.
+  * rewrite updJPSs_cons, extendVarSetList_cons.
+    apply IHvs.
+    apply subVarSet_updJPS_extendVarSet.
+    assumption.
+Qed.
 
 
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
@@ -242,6 +253,19 @@ with isJoinRHS_aux (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} 
     | _ => false
     end.
 
+(* I had to do two things to make this pass the termination checker that I would
+   have done differently otherwise:
+    - isJoinRHS is structured so that *always* destructs the expression,
+      and calls isJoinPointsValid on the subexpression.
+      This requires some duplication, namely checking the case a=0 in 
+      isJoinPointsValidPair.
+      Normally, I would count down a, and if a=0, call isJoinPointsValid on rhs,
+      which is more natural.
+    - isJoinPointsValidPair does not actually recurse, so it cannot be one
+      of the top-level recursive functions. Instead, it is a local let and
+      I repeat the defininition later to give it a name.
+*)
+
 Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
   fun '(dc,pats,rhs) jps =>
       let jps'' := delVarSetList jps pats  in
@@ -261,7 +285,23 @@ Lemma isJoinPointsValid_more_args:
   n <= n' ->
   isJoinPointsValid e n jps = true ->
   isJoinPointsValid e n' jps = true.
-Admitted.
+Proof.
+  intros.
+  revert n n' jps H H0. apply (core_induct e);
+    intros; simpl in *;
+    try assumption.
+  * (* Var *)
+    destruct_match; only 2: reflexivity.
+    destruct (PeanoNat.Nat.leb_spec j n), (PeanoNat.Nat.leb_spec j n').
+    - assumption.
+    - exfalso. lia.
+    - exfalso. simpl in *. congruence.
+    - assumption.
+  * (* App *)
+    simpl_bool. destruct H2. split.
+    - refine (H _ _ _ _ H2). lia.
+    - assumption.
+Qed.
 
 (* Conjuction of [isJoinId] and [isJoinPointsValidPair] *)
 
@@ -366,13 +406,6 @@ Proof.
     destruct_match; auto.
     eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS; eassumption.
 Qed.
-
-Lemma isJoinPointsValid_subVarSet:
-  forall e jps1 jps2,
-  subVarSet jps1 jps2 = true ->
-  isJoinPointsValid e 0 jps1 = true ->
-  isJoinPointsValid e 0 jps2 = true.
-Admitted.
 
 Lemma isJoinRHS_mkLams:
   forall vs e jps,
@@ -514,10 +547,83 @@ Require Import CoreFVs.
 (* There is some worrying duplication/similarity with
 [WellScoped_extendVarSetList_fresh_between] *)
 Lemma isJoinPointsValid_fresh_updJPSs:
-  forall (vs2 vs3 : list Var) (e : CoreExpr) (jps : VarSet),
+  forall (vs2 vs3 : list Var) n (e : CoreExpr) (jps : VarSet),
   disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
-  isJoinPointsValid e 0 (updJPSs jps (vs2 ++ vs3)) =
-  isJoinPointsValid e 0 (updJPSs jps vs3).
+  isJoinPointsValid e n (updJPSs jps (vs2 ++ vs3)) =
+  isJoinPointsValid e n (updJPSs jps vs3)
+with isJoinRHS_aux_fresh_updJPSs:
+  forall (vs2 vs3 : list Var) v (e : CoreExpr) (jps : VarSet),
+  disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
+  isJoinRHS_aux v e (updJPSs jps (vs2 ++ vs3)) =
+  isJoinRHS_aux v e (updJPSs jps vs3).
+(* It is unclear if this partial proof is actually ok, the  [Guarded] command fails. *)
+Proof.
+* intros.
+  destruct e; simpl.
+  - destruct_match; only 2: reflexivity.
+    f_equal.
+    admit.
+  - reflexivity.
+  - f_equal.
+    apply isJoinPointsValid_fresh_updJPSs.
+    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+    apply subVarSet_delVarSetList_both.
+    admit. (* Need lemma about exprFreeVars (App e s) *)
+  - reflexivity.
+  - destruct b as [v rhs | pairs].
+    + f_equal.
+      ** unfold isJoinPointsValidPair_aux.
+         destruct_match; only 2: reflexivity.
+         destruct_match.
+         -- apply isJoinPointsValid_fresh_updJPSs.
+            eapply disjointVarSet_subVarSet_l; only 1: apply H.
+            apply subVarSet_delVarSetList_both.
+            admit.
+         -- apply isJoinRHS_aux_fresh_updJPSs.
+            eapply disjointVarSet_subVarSet_l; only 1: apply H.
+            apply subVarSet_delVarSetList_both.
+            admit.
+      ** rewrite <- !updJPSs_singleton.
+         rewrite <- !updJPSs_append.
+         rewrite <- app_assoc.
+         apply isJoinPointsValid_fresh_updJPSs.
+         eapply disjointVarSet_subVarSet_l; only 1: apply H.
+         rewrite delVarSetList_app.
+         eapply subVarSet_trans; only 1: apply subVarSet_delVarSetList.
+         apply subVarSet_delVarSetList_both.
+         admit.
+     + f_equal.
+       (* How do we do a proof about [forallb _ pairs] that pleases
+          Coq’s terminiation checker?
+        *)
+       admit.
+  - destruct (isJoinId c) eqn:?; only 1: reflexivity; simpl.
+    f_equal.
+    (* Againg [forallb] *)
+    admit.
+  - apply isJoinPointsValid_fresh_updJPSs. 
+    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+    admit.
+  - apply isJoinPointsValid_fresh_updJPSs. 
+    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+    admit.
+  - reflexivity.
+  - reflexivity.
+* intros.
+  destruct e; simpl; destruct_match; try reflexivity.
+  destruct (isJoinId c) eqn:?; only 1: reflexivity.
+  simpl.
+  rewrite <- !updJPS_not_joinId by assumption.
+  rewrite <- !updJPSs_singleton.
+  rewrite <- !updJPSs_append.
+  rewrite <- app_assoc.
+  destruct_match.
+  - apply isJoinPointsValid_fresh_updJPSs.
+    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+    admit.
+  - apply isJoinRHS_aux_fresh_updJPSs.
+    eapply disjointVarSet_subVarSet_l; only 1: apply H.
+    admit.
 Admitted.
 
 
@@ -526,48 +632,112 @@ Lemma isJoinPointsValid_fresh_between:
   disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
   isJoinPointsValid e 0 (updJPSs jps ((vs1 ++ vs2) ++ vs3)) =
   isJoinPointsValid e 0 (updJPSs jps (vs1 ++ vs3)).
-Admitted.
+Proof.
+  intros.
+  rewrite <- app_assoc.
+  rewrite !updJPSs_append with (vs1 := vs1).
+  apply isJoinPointsValid_fresh_updJPSs.
+  assumption.
+Qed.
 
-(* I had to do two things to make this pass the termination checker that I would
-   have done differently otherwise:
-    - isJoinRHS is structured so that *always* destructs the expression,
-      and calls isJoinPointsValid on the subexpression.
-      This requires some duplication, namely checking the case a=0 in 
-      isJoinPointsValidPair.
-      Normally, I would count down a, and if a=0, call isJoinPointsValid on rhs,
-      which is more natural.
-    - isJoinPointsValidPair does not actually recurse, so it cannot be one
-      of the top-level recursive functions. Instead, it is a local let and
-      I repeat the defininition later to give it a name.
-*)
+Lemma StrongSubset_updJPS:
+  forall (v : Var) (vs1 vs2 : VarSet),
+  StrongSubset vs1 vs2 ->
+  StrongSubset (updJPS vs1 v) (updJPS vs2 v).
+Proof.
+  intros.
+  unfold updJPS.
+  destruct_match.
+  * apply StrongSubset_extend.
+    assumption.
+  * apply StrongSubset_delVarSet.
+    assumption.
+Qed.
+
 
 Lemma StrongSubset_updJPSs:
   forall (vs3 : list Var) (vs1 vs2 : VarSet),
   StrongSubset vs1 vs2 ->
   StrongSubset (updJPSs vs1 vs3) (updJPSs vs2 vs3).
-Admitted.
-
+Proof.
+  induction vs3; intros.
+  * assumption.
+  * simpl.
+    apply IHvs3.
+    apply StrongSubset_updJPS.
+    assumption.
+Qed.
 
 Lemma StrongSubset_updJPS_fresh :
   forall vs v,
   elemVarSet v vs = false ->
   StrongSubset vs (updJPS vs v).
-Admitted.
+Proof.
+  intros.
+  unfold updJPS. destruct_match.
+  * apply StrongSubset_extend_fresh.
+    apply lookupVarSet_None_elemVarSet.
+    assumption.
+  * apply StrongSubset_delete_fresh.
+    apply lookupVarSet_None_elemVarSet.
+    assumption.
+Qed.
+
+Lemma lookupVarSet_updJPS_neq:
+  forall (v1 v2 : Var) (vs : VarSet),
+  v1 GHC.Base.== v2 = false ->
+  lookupVarSet (updJPS vs v1) v2 = lookupVarSet vs v2.
+Proof.
+  intros.
+  unfold updJPS.
+  destruct_match.
+  * apply lookupVarSet_extendVarSet_neq.
+    rewrite H. congruence.
+  * apply lookupVarSet_delVarSet_neq.
+    rewrite H. congruence.
+Qed.
 
 Lemma StrongSubset_updJPSs_fresh :
   forall vs vs2,
   disjointVarSet vs (mkVarSet vs2) = true ->
   StrongSubset vs (updJPSs vs vs2).
-Admitted.
+Proof.
+  intros.
+  (* A naive induction using [StrongSubset_updJPS_fresh] does not go through
+     because we do not know that the [vs2] are disjoint.
+  *)
+  intro v.
+  destruct_match; only 2: apply I.
+  assert (lookupVarSet (updJPSs vs vs2) v = Some v0).
+  { induction vs2 using rev_ind; intros.
+    * apply Heq.
+    * rewrite disjointVarSet_mkVarSet_append, disjointVarSet_mkVarSet_cons in H.
+      destruct H. destruct H0.
+      rewrite updJPSs_append, updJPSs_cons, updJPSs_nil.
+      SearchAbout extendVarSet lookupVarSet.
+      assert (x GHC.Base.== v = false).
+      { rewrite <- lookupVarSet_None_elemVarSet in H0.
+        apply not_true_is_false. intro.
+        erewrite lookupVarSet_eq  in H0 by eassumption.
+        congruence.
+      }
+      rewrite lookupVarSet_updJPS_neq by assumption.
+      apply IHvs2.
+      assumption.
+  }
+  rewrite H0. apply almostEqual_refl.
+Qed.
 
 
-
-Instance Respects_StrongSubset_isJoinPointsValid e n : Respects_StrongSubset (fun jps => isJoinPointsValid e n jps = true).
+Instance Respects_StrongSubset_isJoinPointsValid e n :
+  Respects_StrongSubset (fun jps => isJoinPointsValid e n jps = true).
 Proof.
   admit.
 Admitted.
 
-Instance Respects_StrongSubset_isValidJoinPointsPair x e : Respects_StrongSubset (fun jps => isValidJoinPointsPair x e jps = true).
+Instance Respects_StrongSubset_isValidJoinPointsPair x e :
+  Respects_StrongSubset (fun jps => isValidJoinPointsPair x e jps = true).
 Proof.
-  admit.
+  unfold isValidJoinPointsPair.
+  destruct_match.
 Admitted.

@@ -13,6 +13,9 @@ import System.IO
 import GhcPlugins hiding (vcat)
 import Unique
 import TcType
+import qualified Pretty
+import qualified Outputable
+
 import HsToCoq.Coq.Gallina hiding (Type, Let, App, Name)
 import HsToCoq.Coq.Gallina.Orphans ()
 import HsToCoq.Coq.Gallina.Util hiding (Var)
@@ -167,7 +170,10 @@ install _ xs = return $ pass : xs
 
 proofPass :: PluginPass -- ModGuts -> CoreM ModGuts
 proofPass guts@ModGuts {..} = do
-    liftIO $ withFile coq WriteMode $ \h ->
+    dflags <- getDynFlags
+    liftIO $ withFile coq WriteMode $ \h -> do
+      printSDocLn Pretty.PageMode dflags h (defaultDumpStyle dflags) $
+        Outputable.vcat ["(*", Outputable.ppr mg_binds, "*)"]
       hPrettyPrint h $ vcat (map renderGallina mod)
     return guts
   where

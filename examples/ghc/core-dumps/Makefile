@@ -5,8 +5,11 @@ all: coq vfiles
 VFILES = $(addsuffix .v, $(FILES))
 vfiles: _CoqProject Makefile.coq $(VFILES)
 
-%.v: %.hs
+%.v: %.hs proof-suffix.v
 	cabal new-exec -- ghc --make $<
+	echo >> $@
+	echo >> $@
+	cat proof-suffix.v >> $@
 	rm -f $*.o $*.hi
 
 _CoqProject: Makefile

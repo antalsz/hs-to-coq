@@ -3,9 +3,7 @@
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.DataType (
-  convertDataDecl, convertDataDefn,
-  Constructor, convertConDecl, convertConLName,
-  addAdditionalConstructorScope, rewriteDataTypeArguments
+  convertDataDecl,
   ) where
 
 import Control.Lens

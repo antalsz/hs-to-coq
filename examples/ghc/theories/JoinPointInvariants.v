@@ -714,7 +714,6 @@ Proof.
     * rewrite disjointVarSet_mkVarSet_append, disjointVarSet_mkVarSet_cons in H.
       destruct H. destruct H0.
       rewrite updJPSs_append, updJPSs_cons, updJPSs_nil.
-      SearchAbout extendVarSet lookupVarSet.
       assert (x GHC.Base.== v = false).
       { rewrite <- lookupVarSet_None_elemVarSet in H0.
         apply not_true_is_false. intro.

@@ -495,6 +495,12 @@ Proof.
   fsetdec.
 Qed.
 
+Lemma subVarSet_extendVarSetList:
+  forall vs1 vs2 vs3,
+  subVarSet vs1 vs2 = true ->
+  subVarSet vs1 (extendVarSetList vs2 vs3) = true.
+Admitted.
+
 Lemma subVarSet_extendVarSet_l:
   forall vs1 vs2 v v',
   subVarSet vs1 vs2 = true ->
@@ -545,6 +551,30 @@ Proof.
     apply IHvl.
     set_b_iff.
     fsetdec.
+Qed.
+
+Lemma subVarSet_delVarSet_extendVarSet:
+  forall jps isvs v,
+  subVarSet jps isvs = true ->
+  subVarSet (delVarSet jps v) (extendVarSet isvs v) = true.
+Proof.
+  intros.
+  eapply subVarSet_trans.
+  apply subVarSet_delVarSet.
+  apply subVarSet_extendVarSet.
+  assumption.
+Qed.
+
+Lemma subVarSet_delVarSetList_extendVarSetList:
+  forall jps isvs vs,
+  subVarSet jps isvs = true ->
+  subVarSet (delVarSetList jps vs) (extendVarSetList isvs vs) = true.
+Proof.
+  intros.
+  eapply subVarSet_trans.
+  apply subVarSet_delVarSetList.
+  apply subVarSet_extendVarSetList.
+  assumption.
 Qed.
 
 (** ** [mkVarSet]  *)

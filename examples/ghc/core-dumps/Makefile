@@ -22,6 +22,7 @@ _CoqProject: Makefile
 	echo '-Q ../../transformers/lib  ""' >> $@
 	echo '-Q ../../containers/lib ""' >> $@
 	echo '-Q ../../containers/theories ""' >> $@
+	echo '-arg -w -arg -masking-absolute-name' >> $@
 	echo $(VFILES) >> $@
 
 Makefile.coq: _CoqProject

@@ -171,7 +171,6 @@ destruct (isLocalVar v).
   unfold varUnique in H.
   unfold GHC.Base.op_zeze__, GHC.Base.Eq_Char___, GHC.Base.op_zeze____.
   rewrite BinNat.N.eqb_neq.
-  rewrite Nnat.Nat2N.inj_iff.
   contradict H.
   congruence.
 * reflexivity.

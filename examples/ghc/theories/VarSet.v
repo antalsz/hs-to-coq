@@ -260,7 +260,7 @@ Lemma elemVarSet_extendVarSet:
 Proof.
   intros.
   unfold_zeze.
-  replace (realUnique v' =? realUnique v)%nat with 
+  replace (realUnique v' =? realUnique v)%N with 
       (F.eqb v' v).
   eapply F.add_b.
   unfold F.eqb.
@@ -915,7 +915,7 @@ Proof.
   unfold not. intro. rewrite EQv in H0. discriminate.
   unfold CoreBndr in *.
   unfold not. intro. rewrite EQv in H0. discriminate.
-Qed.  
+Qed.
 
 
 Lemma StrongSubset_extendVarSetList :

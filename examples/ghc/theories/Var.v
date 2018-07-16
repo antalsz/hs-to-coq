@@ -13,11 +13,11 @@ Require Import Proofs.Unique.
 
 Ltac unfold_zeze :=
   unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, 
-  Core.Eq___Var_op_zeze__;
+  Core.Eq___Var_op_zeze__, Eq_Char___;
   unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____.  
 Ltac unfold_zsze :=
   unfold GHC.Base.op_zsze__, Core.Eq___Var, op_zsze____, 
-  Core.Eq___Var_op_zsze__;
+  Core.Eq___Var_op_zsze__, Eq_Char___;
   unfold GHC.Base.op_zsze__, Nat.Eq_nat, op_zsze____.  
 
 
@@ -46,8 +46,7 @@ Proof.
   unfold Uniquable__Var, getUnique__, Core.Uniquable__Var_getUnique, 
   varUnique.
   destruct v1; destruct v2; simpl;
-  rewrite Nat2N.inj_iff;
-  apply Nat.eqb_eq.
+  apply N.eqb_eq.
 Qed.
 
 Instance EqLaws_Var : EqLaws Var := {}.
@@ -55,22 +54,22 @@ Proof.
   - unfold ssrbool.reflexive.
     unfold_zeze.
     intros. unfold is_true.
-    apply Nat.eqb_refl.
+    apply N.eqb_refl.
   - unfold ssrbool.symmetric.
     intros. unfold_zeze.
-    rewrite Nat.eqb_sym; auto.
+    rewrite N.eqb_sym; auto.
   - unfold ssrbool.transitive.
     unfold_zeze.
     unfold is_true.
     intros x y z. 
     destruct x; destruct y; destruct z; simpl;
-    repeat erewrite Nat.eqb_eq; intro h; rewrite h; auto.
+    repeat erewrite N.eqb_eq; intro h; rewrite h; auto.
   - intros.
     unfold_zsze.
     unfold_zeze.
-    unfold negb.
-    destruct (realUnique x =? realUnique y); auto.
-Qed.    
+    rewrite negb_involutive.
+    reflexivity.
+Qed.
 
 (** ** A DecidableType structure based on  [GHC.Base.==]. *)
 
@@ -85,6 +84,7 @@ Module Var_as_DT <: BooleanDecidableType <: DecidableType.
   Definition eq : t -> t -> Prop := fun x y => eqb x y = true.
 
   Definition eq_equiv : Equivalence eq.
+  Proof.
   split. 
   - unfold eq, eqb, Reflexive.
     apply Eq_refl.
@@ -96,11 +96,12 @@ Module Var_as_DT <: BooleanDecidableType <: DecidableType.
   Defined.
 
   Definition eq_dec : forall x y : t, { eq x y } + { ~ (eq x y) }.
+  Proof.
   intros x y.
   unfold eq, eqb.
   unfold_zeze.
   destruct x eqn:X; destruct y eqn:Y;  simpl.
-  all: destruct (Nat.eqb n0 n2) eqn:EQ ; [left; auto | right; auto].
+  all: destruct (N.eqb n0 n2) eqn:EQ ; [left; auto | right; auto].
   Defined.
 
   Lemma eqb_eq : forall x y, eqb x y = true <-> eq x y.
@@ -163,7 +164,7 @@ Lemma almostEqual_eq :
     almostEqual v1 v2 -> (v1 GHC.Base.== v2 = true).
 Proof.
   intros v1 v2 H.
-  inversion H; unfold_zeze; simpl; apply Nat.eqb_refl.
+  inversion H; unfold_zeze; simpl; apply N.eqb_refl.
 Qed.
 
 (** ** [isJoinId] etc. *)
@@ -213,7 +214,7 @@ Axiom isJoinId_maybe_asJoinId:
   isJoinId_maybe (asJoinId v a) = Some a.
 
 Lemma realUnique_eq: forall v v',
-    realUnique v =? realUnique v' = Var_as_DT.eqb v v'.
+    (realUnique v =? realUnique v')%N = Var_as_DT.eqb v v'.
 Proof.
   intros.
   unfold Var_as_DT.eqb. cbn. reflexivity.

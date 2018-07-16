@@ -357,21 +357,9 @@ Proof.
   unfold varUnique.
   set (n1 := realUnique v1).
   set (n2 := realUnique v2).
-  destruct (n1 =? n2) eqn:EQ.
-  apply beq_nat_true in EQ.
-  rewrite EQ in *.
-  tauto.
-  apply beq_nat_false in EQ.
-  split.
-  intro h. discriminate.
-  intro h.
-  assert False.
-  apply EQ.
+  rewrite N.eqb_eq.
   unfold Unique.mkUniqueGrimily in *.
-  inversion h.
-  apply Nat2N.inj in H0.
-  auto.
-  contradiction.
+  intuition congruence.
 Qed.
 
 (* ---------------------------- *)

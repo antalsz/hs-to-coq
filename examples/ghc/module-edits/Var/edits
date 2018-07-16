@@ -1,4 +1,5 @@
-in Core.varUnique rewrite forall var, (Core.realUnique var) = (BinNat.N.of_nat (Core.realUnique var))
+# Override the Core-edit back to
+in Core.Var rename type GHC.Num.Int = BinNums.N
 
 redefine Definition Core.tcTyVarDetails : TyVar -> unit := fun x => tt.
 

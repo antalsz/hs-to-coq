@@ -11,8 +11,6 @@ skip module RepType
 
 rename type GHC.Num.Int = nat
 
-rewrite forall x, Unique.getKey x = (BinNat.N.to_nat (Unique.getKey x))
-
 rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
 rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
 rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x

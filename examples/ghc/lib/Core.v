@@ -103,6 +103,7 @@ Ltac termination_by_omega :=
 
 Require BasicTypes.
 Require BinNat.
+Require BinNums.
 Require BooleanFormula.
 Require Coq.Init.Datatypes.
 Require Coq.Init.Peano.
@@ -549,9 +550,10 @@ with DataConRep : Type
    : Id ->
      unit -> list unit -> list StrictnessMark -> list HsImplBang -> DataConRep
 with Var : Type
-  := Mk_TyVar : Name.Name -> nat -> unit -> Var
-  |  Mk_TcTyVar : Name.Name -> nat -> unit -> unit -> Var
-  |  Mk_Id : Name.Name -> nat -> unit -> IdScope -> IdDetails -> IdInfo -> Var
+  := Mk_TyVar : Name.Name -> BinNums.N -> unit -> Var
+  |  Mk_TcTyVar : Name.Name -> BinNums.N -> unit -> unit -> Var
+  |  Mk_Id
+   : Name.Name -> BinNums.N -> unit -> IdScope -> IdDetails -> IdInfo -> Var
 with IdDetails : Type
   := VanillaId : IdDetails
   |  RecSelId : RecSelParent -> bool -> IdDetails
@@ -5731,8 +5733,7 @@ Definition mkSumTyCon
 
 Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
   fun name kind details =>
-    Mk_TcTyVar name (BinNat.N.to_nat (Unique.getKey (Name.nameUnique name))) kind
-               details.
+    Mk_TcTyVar name (Unique.getKey (Name.nameUnique name)) kind details.
 
 Definition mkTyArg {b} : unit -> Expr b :=
   fun ty => match None with | Some co => Coercion co | _ => Type_ ty end.
@@ -5744,8 +5745,7 @@ Definition mkTyBind : TyVar -> unit -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
 
 Definition mkTyVar : Name.Name -> unit -> TyVar :=
-  fun name kind =>
-    Mk_TyVar name (BinNat.N.to_nat (Unique.getKey (Name.nameUnique name))) kind.
+  fun name kind => Mk_TyVar name (Unique.getKey (Name.nameUnique name)) kind.
 
 Definition mkTyVarBinder : ArgFlag -> Var -> TyVarBinder :=
   fun vis var => TvBndr var vis.
@@ -5798,8 +5798,7 @@ Definition mkVarEnv_Directly {a} : list (Unique.Unique * a)%type -> VarEnv a :=
 
 Definition mk_id : Name.Name -> unit -> IdScope -> IdDetails -> IdInfo -> Id :=
   fun name ty scope details info =>
-    Mk_Id name (BinNat.N.to_nat (Unique.getKey (Name.nameUnique name))) ty scope
-          details info.
+    Mk_Id name (Unique.getKey (Name.nameUnique name)) ty scope details info.
 
 Definition mkLocalVar : IdDetails -> Name.Name -> unit -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId NotExported) details info.
@@ -6438,15 +6437,14 @@ Definition setVarName : Var -> Name.Name -> Var :=
   fun var new_name =>
     match var with
     | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar new_name (BinNat.N.to_nat (Unique.getKey (Unique.getUnique new_name)))
-                 varType_2__
+        Mk_TyVar new_name (Unique.getKey (Unique.getUnique new_name)) varType_2__
     | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar new_name (BinNat.N.to_nat (Unique.getKey (Unique.getUnique
-                                                             new_name))) varType_5__ tc_tv_details_6__
+        Mk_TcTyVar new_name (Unique.getKey (Unique.getUnique new_name)) varType_5__
+                   tc_tv_details_6__
     | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
     id_info_12__ =>
-        Mk_Id new_name (BinNat.N.to_nat (Unique.getKey (Unique.getUnique new_name)))
-              varType_9__ idScope_10__ id_details_11__ id_info_12__
+        Mk_Id new_name (Unique.getKey (Unique.getUnique new_name)) varType_9__
+              idScope_10__ id_details_11__ id_info_12__
     end.
 
 Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
@@ -6468,16 +6466,15 @@ Definition setVarUnique : Var -> Unique.Unique -> Var :=
   fun var uniq =>
     match var with
     | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar (Name.setNameUnique (varName var) uniq) (BinNat.N.to_nat (Unique.getKey
-                                                                           uniq)) varType_2__
+        Mk_TyVar (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq)
+                 varType_2__
     | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar (Name.setNameUnique (varName var) uniq) (BinNat.N.to_nat
-                    (Unique.getKey uniq)) varType_5__ tc_tv_details_6__
+        Mk_TcTyVar (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq)
+                   varType_5__ tc_tv_details_6__
     | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
     id_info_12__ =>
-        Mk_Id (Name.setNameUnique (varName var) uniq) (BinNat.N.to_nat (Unique.getKey
-                                                                        uniq)) varType_9__ idScope_10__ id_details_11__
-              id_info_12__
+        Mk_Id (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq) varType_9__
+              idScope_10__ id_details_11__ id_info_12__
     end.
 
 Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
@@ -7376,7 +7373,7 @@ Definition cprProdSig : BasicTypes.Arity -> StrictSig :=
   fun arity => Mk_StrictSig (cprProdDmdType arity).
 
 Definition varUnique : Var -> Unique.Unique :=
-  fun var => Unique.mkUniqueGrimily (BinNat.N.of_nat (realUnique var)).
+  fun var => Unique.mkUniqueGrimily (realUnique var).
 
 Definition nonDetCmpVar : Var -> Var -> comparison :=
   fun a b => Unique.nonDetCmpUnique (varUnique a) (varUnique b).
@@ -7899,30 +7896,29 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      BasicTypes.OneShotLam BasicTypes.RuleName BasicTypes.SourceText
      BasicTypes.TupleSort BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
      BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
-     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat
-     BinNat.N.to_nat BooleanFormula.BooleanFormula BooleanFormula.mkTrue
-     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
-     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.map
-     Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any
-     Data.Foldable.concatMap Data.Foldable.find Data.Foldable.foldl
-     Data.Foldable.foldr Data.Foldable.null Data.Function.on Data.Maybe.isJust
-     Data.Tuple.fst Datatypes.id DynFlags.DynFlags DynFlags.Opt_KillAbsence
-     DynFlags.Opt_KillOneShot DynFlags.gopt FastStringEnv.dFsEnvElts
-     FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv FastStringEnv.mkDFsEnv
-     FieldLabel.FieldLabel FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString
-     FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Monad GHC.Base.Ord GHC.Base.String
-     GHC.Base.Synonym GHC.Base.compare GHC.Base.compare__ GHC.Base.eq_default
-     GHC.Base.fmap GHC.Base.map GHC.Base.mappend GHC.Base.max GHC.Base.max__
-     GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
-     GHC.Base.op_zgze____ GHC.Base.op_zgzgze__ GHC.Base.op_zl__ GHC.Base.op_zl____
-     GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Base.return_ GHC.Char.Char GHC.DeferredFix.deferredFix1
-     GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse GHC.List.zip
-     GHC.List.zipWith GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq GHC.Real.Rational GHC.Wf.wfFix1
-     GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
+     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
+     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app
+     Coq.Init.Peano.lt Coq.Lists.List.firstn Coq.Lists.List.flat_map
+     Coq.Lists.List.length Coq.Lists.List.map Coq.Lists.List.repeat
+     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
+     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
+     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt
+     FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
+     FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
+     FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Monad
+     GHC.Base.Ord GHC.Base.String GHC.Base.Synonym GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.eq_default GHC.Base.fmap GHC.Base.map
+     GHC.Base.mappend GHC.Base.max GHC.Base.max__ GHC.Base.min GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.return_ GHC.Char.Char
+     GHC.DeferredFix.deferredFix1 GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse
+     GHC.List.zip GHC.List.zipWith GHC.Num.fromInteger GHC.Num.op_zm__
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq GHC.Real.Rational
+     GHC.Wf.wfFix1 GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
      Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Maybes.orElse
      Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
      Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.isWiredInName

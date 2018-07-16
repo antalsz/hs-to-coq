@@ -849,14 +849,11 @@ Section in_exitifyRec.
              unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, 
              Core.Eq___Var_op_zeze__ .
              unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____,
-             Nat.Eq_nat.
-             
-             apply not_true_is_false. intro h.
-             apply beq_nat_true in h.
-
+             Eq_Char___.
+             rewrite N.eqb_neq.
              contradict Hfresh.
              exists (v', rhs'). split. simpl. 
-             unfold varUnique. rewrite h. auto.
+             unfold varUnique. rewrite Hfresh. auto.
              assumption.
           ** apply Hfreshs. assumption.
         + assumption.

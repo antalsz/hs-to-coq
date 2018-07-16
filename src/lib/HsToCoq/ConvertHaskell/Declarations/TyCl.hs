@@ -83,8 +83,8 @@ failTyClDecl name e = pure $ Just $
 convertTyClDecl :: ConversionMonad r m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
-  let isCoind = view (edits.coinductiveTypes.contains coqName)
-  ghandle (failTyClDecl coqName) $ do
+  withCurrentDefinition coqName $ ghandle (failTyClDecl coqName) $ do
+    let isCoind = view (edits.coinductiveTypes.contains coqName)
     view (edits.skipped.contains coqName) >>= \case
       True  -> pure Nothing
       False -> view (edits.redefinitions.at coqName) >>= fmap Just . \case

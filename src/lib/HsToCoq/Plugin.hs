@@ -35,10 +35,6 @@ instance ToTerm (Tickish b) where
 instance ToTerm Int where
     t n = InScope (Num (fromIntegral n)) "N"
 
--- | Sometimes we want `nat` not `N`
-as_nat :: Term -> Term
-as_nat x = ("N.to_nat" <: [x])
-
 instance ToTerm Module where
     t (Module a b) = App2 "Mk_Module" (t a) (t b)
 
@@ -102,7 +98,7 @@ instance ToTerm Var where
         | isId v =
           "Mk_Id" <:
               [ t a
-              , as_nat (t b)
+              , t b
               , t c
               , if isGlobalId v
                 then "GlobalId"

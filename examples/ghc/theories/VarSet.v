@@ -350,6 +350,12 @@ Admitted.
 Qed. *)
 
 
+Lemma delVarSetList_rev:
+  forall vs1 vs2,
+  delVarSetList vs1 (rev vs2) = delVarSetList vs1 vs2.
+Admitted.
+
+
 Lemma elemVarSet_delVarSet: forall v1 fvs v2,
   elemVarSet v1 (delVarSet fvs v2) = true <-> 
   (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).

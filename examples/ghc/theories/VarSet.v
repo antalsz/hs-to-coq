@@ -583,6 +583,13 @@ Proof.
   assumption.
 Qed.
 
+
+Lemma mapUnionVarSet_In_subVarSet:
+  forall a (x : a) xs f,
+  List.In x xs ->
+  subVarSet (f x) (mapUnionVarSet f xs) = true.
+Admitted.
+
 (** ** [mkVarSet]  *)
 
 

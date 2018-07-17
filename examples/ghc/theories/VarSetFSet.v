@@ -509,7 +509,6 @@ Export VarSetFSet.
 Module VarSetFacts        := FSetFacts.WFacts_fun Var_as_DT VarSetFSet.
 Export VarSetFacts.
 
-
 (** This functor gives us properties about the boolean function specification
     of sets. 
 

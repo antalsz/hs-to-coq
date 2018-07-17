@@ -322,3 +322,54 @@ Proof.
   simpl in K.
   auto.
 Qed.
+
+
+(* Nice rewirte rules for [exprFreeVars] *)
+
+
+Lemma exprFreeVars_App:
+  forall e1 e2,
+  exprFreeVars (App e1 e2) [=] unionVarSet (exprFreeVars e1) (exprFreeVars e2).
+Admitted.
+
+(*
+Lemma exprFreeVars_Lam:
+  forall v e,
+  exprFreeVars (Lam v e) [=] delVarSet (exprFreeVars e) v.
+Admitted.
+*)
+
+Lemma exprFreeVars_Let_NonRec:
+  forall v rhs body,
+  exprFreeVars (Let (NonRec v rhs) body) [=]
+    unionVarSet (exprFreeVars rhs) (delVarSet (exprFreeVars body) v).
+Admitted.
+
+Lemma exprFreeVars_Let_Rec:
+  forall pairs body,
+  exprFreeVars (Let (Rec pairs) body) [=]
+    delVarSetList (unionVarSet (exprsFreeVars (map snd pairs)) (exprFreeVars body))  (map fst pairs).
+Admitted.
+
+Lemma exprFreeVars_Case:
+  forall scrut bndr ty alts,
+  exprFreeVars (Case scrut bndr ty alts) [=]
+    unionVarSet (exprFreeVars scrut) (mapUnionVarSet (fun '(dc,pats,rhs) => delVarSetList (exprFreeVars rhs) (pats ++ [bndr])) alts).
+Admitted.
+
+Lemma exprFreeVars_Cast:
+  forall e co,
+  exprFreeVars (Cast e co) [=] exprFreeVars e.
+Admitted.
+
+Lemma exprFreeVars_Tick:
+  forall e t,
+  exprFreeVars (Tick t e) [=] exprFreeVars e.
+Admitted.
+
+
+Lemma subVarSet_exprFreeVars_exprsFreeVars:
+  forall v rhs (pairs : list (CoreBndr * CoreExpr)) ,
+  List.In (v, rhs) pairs ->
+  subVarSet (exprFreeVars rhs) (exprsFreeVars (map snd pairs)) = true.
+Admitted.

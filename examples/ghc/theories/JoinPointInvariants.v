@@ -540,7 +540,6 @@ Proof.
   destruct pairs; try reflexivity.
 Qed.
 
-Require Import CoreFVs.
 
 Lemma forallb_conq:
   forall a (P1 P2 : a -> bool) xs,
@@ -552,6 +551,10 @@ Proof.
   * reflexivity.
   * simpl. f_equal; assumption.
 Qed.
+
+Require Import CoreFVs.
+Require Import Proofs.CoreFVs.
+Require Import Proofs.VarSetFSet.
 
 (* There is some worrying duplication/similarity with
 [WellScoped_extendVarSetList_fresh_between] *)
@@ -580,7 +583,8 @@ Proof.
     apply H.
     eapply disjointVarSet_subVarSet_l; only 1: apply H1.
     apply subVarSet_delVarSetList_both.
-    admit. (* Need lemma about exprFreeVars (App e s) *)
+    rewrite exprFreeVars_App.
+    set_b_iff; fsetdec.
   - reflexivity.
   - destruct_match; only 1: reflexivity.
     destruct (isJoinId v) eqn:?; only 1: reflexivity.
@@ -594,14 +598,19 @@ Proof.
       eapply disjointVarSet_subVarSet_l; only 1: apply H0.
       rewrite rev_app_distr. simpl.
       rewrite delVarSetList_cons.
-      apply subVarSet_delVarSetList_both.
-      admit.
+      apply subVarSet_delVarSetList_both. 
+      (* Why does this even work? And how can we rewrite under [delVarSetList]
+         as well, so that we can skip the previous command?
+       *)
+      rewrite exprFreeVars_Lam.
+      set_b_iff; fsetdec.
     + apply H.
       eapply disjointVarSet_subVarSet_l; only 1: apply H0.
       rewrite rev_app_distr. simpl.
       rewrite delVarSetList_cons.
       apply subVarSet_delVarSetList_both.
-      admit.
+      rewrite exprFreeVars_Lam.
+      set_b_iff; fsetdec.
   - destruct binds as [v rhs | pairs].
     + f_equal.
       ** unfold isJoinPointsValidPair_aux.
@@ -610,11 +619,13 @@ Proof.
          -- apply H.
             eapply disjointVarSet_subVarSet_l; only 1: apply H1.
             apply subVarSet_delVarSetList_both.
-            admit.
+            rewrite exprFreeVars_Let_NonRec.
+            set_b_iff; fsetdec.
          -- apply H.
             eapply disjointVarSet_subVarSet_l; only 1: apply H1.
             apply subVarSet_delVarSetList_both.
-            admit.
+            rewrite exprFreeVars_Let_NonRec.
+            set_b_iff; fsetdec.
       ** rewrite <- !updJPSs_singleton.
          rewrite <- !updJPSs_append.
          rewrite <- app_assoc.
@@ -623,7 +634,8 @@ Proof.
          rewrite rev_app_distr; simpl.
          rewrite delVarSetList_cons.
          apply subVarSet_delVarSetList_both.
-         admit.
+         rewrite exprFreeVars_Let_NonRec.
+         set_b_iff; fsetdec.
     + simpl.
       rewrite <- !updJPSs_append.
       rewrite <- app_assoc.
@@ -640,16 +652,30 @@ Proof.
             rewrite rev_app_distr; simpl.
             rewrite delVarSetList_app.
             apply subVarSet_delVarSetList_both.
-            admit.
+            rewrite exprFreeVars_Let_Rec.
+            pose proof (subVarSet_exprFreeVars_exprsFreeVars _ _ _ HIn).
+            rewrite delVarSetList_rev.
+            apply subVarSet_delVarSetList_both.
+            set_b_iff; fsetdec.
          -- apply H.
             eapply disjointVarSet_subVarSet_l; only 1: apply H1.
             rewrite rev_app_distr; simpl.
             rewrite delVarSetList_app.
             apply subVarSet_delVarSetList_both.
-            admit.
+            rewrite exprFreeVars_Let_Rec.
+            rewrite delVarSetList_rev.
+            pose proof (subVarSet_exprFreeVars_exprsFreeVars _ _ _ HIn).
+            apply subVarSet_delVarSetList_both.
+            set_b_iff; fsetdec.
       ** apply H0.
          eapply disjointVarSet_subVarSet_l; only 1: apply H1.
-         admit.
+         rewrite rev_app_distr; simpl.
+         rewrite delVarSetList_app.
+         apply subVarSet_delVarSetList_both.
+         rewrite exprFreeVars_Let_Rec.
+         rewrite delVarSetList_rev.
+         apply subVarSet_delVarSetList_both.
+         set_b_iff; fsetdec.
   - destruct (isJoinId bndr) eqn:?; only 1: reflexivity; simpl.
     f_equal.
     apply forallb_conq.
@@ -667,15 +693,22 @@ Proof.
     rewrite rev_app_distr; simpl.
     rewrite !delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
     apply subVarSet_delVarSetList_both.
-    admit.
+    rewrite exprFreeVars_Case.
+    match goal with HIn : List.In _ ?xs |- context [mapUnionVarSet ?f ?xs] =>
+      let H := fresh in
+      epose proof (mapUnionVarSet_In_subVarSet _ _ _ f HIn) as H ; simpl in H end.
+    rewrite delVarSetList_rev, <- delVarSetList_single, <- delVarSetList_app.
+    set_b_iff; fsetdec.
   - apply H. 
     eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     apply subVarSet_delVarSetList_both.
-    admit.
+    rewrite exprFreeVars_Cast.
+    set_b_iff; fsetdec.
   - apply H. 
     eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     apply subVarSet_delVarSetList_both.
-    admit.
+    rewrite exprFreeVars_Tick.
+    set_b_iff; fsetdec.
   - reflexivity.
   - reflexivity.
 Admitted.

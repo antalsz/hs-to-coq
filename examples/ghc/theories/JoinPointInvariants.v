@@ -753,7 +753,7 @@ Proof.
     set_b_iff; fsetdec.
   - reflexivity.
   - reflexivity.
-Admitted.
+Qed.
 
 Lemma isJoinPointsValid_fresh_updJPSs:
   forall (vs2 vs3 : list Var) n (e : CoreExpr) (jps : VarSet),
@@ -865,17 +865,102 @@ Proof.
   }
   rewrite H0. apply almostEqual_refl.
 Qed.
+Lemma Respects_StrongSubset_updJPS:
+  forall v P,
+  Respects_StrongSubset (fun vs : VarSet => P vs) ->
+  Respects_StrongSubset (fun vs : VarSet => P (updJPS vs v)).
+Proof.
+  intros.
+  unfold updJPS.
+  destruct_match; [apply Respects_StrongSubset_extendVarSet | apply Respects_StrongSubset_delVarSet ]; assumption.
+Qed.
 
+Lemma Respects_StrongSubset_updJPSs:
+  forall vs2 P,
+  Respects_StrongSubset (fun vs : VarSet => P vs) ->
+  Respects_StrongSubset (fun vs : VarSet => P (updJPSs vs vs2)).
+Proof.
+  intros.
+  induction vs2.
+  * apply H.
+  * simpl.
+    apply Respects_StrongSubset_updJPS with (P := fun vs => P (updJPSs vs vs2)).
+    apply IHvs2.
+Qed.
 
+Lemma Respects_StrongSubset_isJoinPointsValid_aux:
+  forall e,
+  (forall n,
+  Respects_StrongSubset (fun jps => isJoinPointsValid e n jps = true)
+  )
+  /\
+  (forall v,
+  Respects_StrongSubset (fun jps => isJoinRHS_aux v e jps = true)).
+Proof.
+  intros.
+  apply (core_induct e); intros;
+    (split; intro; simpl; [| try solve[ destruct_match; apply Respects_StrongSubset_const]]).
+  * destruct_match; only 2: apply Respects_StrongSubset_const.
+    apply Respects_StrongSubset_andb; only 1: apply Respects_StrongSubset_const.
+    apply Respects_StrongSubset_elemVarSet.
+  * apply Respects_StrongSubset_const.
+  * apply Respects_StrongSubset_andb; only 2: apply Respects_StrongSubset_const.
+    apply H.
+  * apply Respects_StrongSubset_const.
+  * destruct_match; try apply Respects_StrongSubset_const.
+    apply Respects_StrongSubset_andb; try apply Respects_StrongSubset_const.
+    destruct_match.
+    - apply Respects_StrongSubset_delVarSet with (P := fun jps => isJoinPointsValid e0 0 jps = true).
+      apply H.
+    - apply Respects_StrongSubset_delVarSet with (P := fun jps => isJoinRHS_aux (v0 - 1) e0 jps = true).
+      apply H.
+  * destruct binds as [v rhs | pairs].
+    - apply Respects_StrongSubset_andb.
+      + unfold isJoinPointsValidPair_aux.
+        destruct_match; only 2: apply Respects_StrongSubset_const.
+        destruct_match; apply H.
+      + apply Respects_StrongSubset_updJPS with (P := fun jps => isJoinPointsValid body 0 jps = true).
+        apply H0.
+    - repeat apply Respects_StrongSubset_andb; try apply Respects_StrongSubset_const.
+      + apply Respects_StrongSubset_forallb.
+        rewrite Forall_forall.
+        intros [v rhs] HIn.
+        specialize (H _ _ HIn).
+        apply Respects_StrongSubset_updJPSs with
+          (P := fun jps => isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux v rhs jps = true).
+        unfold isJoinPointsValidPair_aux.
+        destruct_match; only 2: apply Respects_StrongSubset_const.
+        destruct_match; apply H.
+      + apply Respects_StrongSubset_updJPSs with
+          (P := fun jps => isJoinPointsValid body 0 jps = true).
+        apply H0.
+   * repeat apply Respects_StrongSubset_andb; try apply Respects_StrongSubset_const.
+     apply Respects_StrongSubset_forallb.
+     rewrite Forall_forall.
+     intros [[dc pats] rhs] HIn.
+     specialize (H0 _ _ _ HIn).
+     repeat apply Respects_StrongSubset_andb; try apply Respects_StrongSubset_const.
+     apply Respects_StrongSubset_delVarSet with
+          (P := fun jps => isJoinPointsValid rhs 0 (delVarSetList jps pats) = true).
+     apply Respects_StrongSubset_delVarSetList with
+          (P := fun jps => isJoinPointsValid rhs 0 jps = true).
+     apply H0.
+   * apply H.
+   * apply H.
+   * apply Respects_StrongSubset_const.
+   * apply Respects_StrongSubset_const.
+Qed.
+      
 Instance Respects_StrongSubset_isJoinPointsValid e n :
   Respects_StrongSubset (fun jps => isJoinPointsValid e n jps = true).
-Proof.
-  admit.
-Admitted.
+Proof. apply Respects_StrongSubset_isJoinPointsValid_aux. Qed.
 
 Instance Respects_StrongSubset_isValidJoinPointsPair x e :
   Respects_StrongSubset (fun jps => isValidJoinPointsPair x e jps = true).
 Proof.
   unfold isValidJoinPointsPair.
-  destruct_match.
-Admitted.
+  destruct_match; try apply Respects_StrongSubset_const.
+  unfold isJoinRHS.
+  destruct_match; try apply Respects_StrongSubset_const;
+  apply Respects_StrongSubset_isJoinPointsValid_aux.
+Qed.

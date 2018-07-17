@@ -988,11 +988,71 @@ Lemma StrongSubset_delete_fresh :
   StrongSubset vs (delVarSet vs v).
 Admitted.
 
-Definition Respects_StrongSubset P :=
+Definition Respects_StrongSubset (P : VarSet -> Prop) : Prop :=
   forall (vs1 vs2 : VarSet),
   StrongSubset vs1 vs2 ->
   P vs1 -> P vs2.
 Existing Class Respects_StrongSubset.
+
+
+Lemma Respects_StrongSubset_const:
+  forall P, Respects_StrongSubset (fun _ => P).
+Proof. intros ?????. assumption. Qed.
+
+Lemma Respects_StrongSubset_andb:
+  forall P Q,
+    Respects_StrongSubset (fun x => P x = true) ->
+    Respects_StrongSubset (fun x => Q x = true) ->
+    Respects_StrongSubset (fun x => P x && Q x = true).
+Proof.
+  unfold Respects_StrongSubset in *.
+  intros ????????.
+  simpl_bool.
+  firstorder.
+Qed.
+
+Lemma Respects_StrongSubset_forallb:
+  forall a (xs : list a) P,
+    Forall (fun x => Respects_StrongSubset (fun vs => P vs x = true)) xs ->
+    Respects_StrongSubset (fun vs => forallb (P vs) xs = true).
+Proof.
+  unfold Respects_StrongSubset in *.
+  intros.
+  rewrite forallb_forall in *.
+  rewrite Forall_forall in *.
+  firstorder.
+Qed.
+
+
+Lemma Respects_StrongSubset_elemVarSet:
+  forall v,
+  Respects_StrongSubset (fun vs => elemVarSet v vs = true).
+Proof.
+  intros ????.
+  simpl_bool; intuition.
+  apply strongSubset_implies_subset in H.
+  set_b_iff; fsetdec.
+Qed.
+
+Lemma Respects_StrongSubset_delVarSet:
+  forall v P,
+  Respects_StrongSubset (fun vs : VarSet => P vs) ->
+  Respects_StrongSubset (fun vs : VarSet => P (delVarSet vs v)).
+Admitted.
+
+Lemma Respects_StrongSubset_delVarSetList:
+  forall vs2 P,
+  Respects_StrongSubset (fun vs : VarSet => P vs) ->
+  Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
+Admitted. (* This is tricky, because of rewriting under a binder :-( *)
+
+Lemma Respects_StrongSubset_extendVarSet:
+  forall v P,
+  Respects_StrongSubset (fun vs : VarSet => P vs) ->
+  Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
+Admitted.
+
+
 
 (* Is this weakening? *)
 Lemma weaken:

@@ -275,7 +275,7 @@ Qed.
 Lemma elemVarSet_mkVarSet_cons:
   forall v v' vs,
   elemVarSet v (mkVarSet (v' :: vs)) = false
-  <-> varUnique v <> varUnique v' /\ elemVarSet v (mkVarSet vs) = false.
+  <-> (v' == v) = false /\ elemVarSet v (mkVarSet vs) = false.
 Proof.
   intros.
   rewrite !mkVarSet_extendVarSetList.
@@ -303,6 +303,13 @@ Proof.
   apply remove_add.
   auto.
 Qed.
+
+Lemma elemVarSet_delVarSet: forall v1 fvs v2,
+  elemVarSet v1 (delVarSet fvs v2) = negb (v2 == v1) && elemVarSet v1 fvs.
+Proof.
+  intros.
+  set_b_iff.
+Admitted.
 
 (** ** [delVarSetList]  *)
 
@@ -356,17 +363,19 @@ Lemma delVarSetList_rev:
 Admitted.
 
 
-Lemma elemVarSet_delVarSet: forall v1 fvs v2,
-  elemVarSet v1 (delVarSet fvs v2) = true <-> 
-  (varUnique v1 <> varUnique v2 /\ elemVarSet v1 fvs = true).
+Lemma elemVarSet_delVarSetList_false_l:
+  forall v vs vs2,
+  elemVarSet v vs = false ->
+  elemVarSet v (delVarSetList vs vs2) = false.
 Proof.
   intros.
-  set_b_iff.
-  set_iff.
-  unfold Var_as_DT.eqb.
-  unfold_zeze.
-Admitted.
-
+  revert vs H; induction vs2; intros.
+  * rewrite delVarSetList_nil.
+    assumption.
+  * rewrite delVarSetList_cons.
+    apply IHvs2.
+    set_b_iff; fsetdec.
+Qed.
 
 (**************************************)
 

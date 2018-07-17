@@ -326,7 +326,6 @@ Qed.
 
 (* Nice rewirte rules for [exprFreeVars] *)
 
-
 Lemma exprFreeVars_App:
   forall e1 e2,
   exprFreeVars (App e1 e2) [=] unionVarSet (exprFreeVars e1) (exprFreeVars e2).

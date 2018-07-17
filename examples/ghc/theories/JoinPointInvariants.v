@@ -142,19 +142,34 @@ Qed.
 
 Lemma elemVarSet_updJPS_l:
   forall v jps v',
-  elemVarSet v jps  = true  ->
-  varUnique v <> varUnique v' ->
-  elemVarSet v (updJPS jps v') = true .
+  (v' GHC.Base.== v) = false ->
+  elemVarSet v (updJPS jps v') = elemVarSet v jps.
 Proof.
   intros.
   unfold updJPS.
   destruct_match.
   + rewrite elemVarSet_extendVarSet.
-    rewrite orb_true_iff.
-    intuition.
+    rewrite H.
+    reflexivity.
   + rewrite elemVarSet_delVarSet.
-    intuition.
+    rewrite H.
+    reflexivity.
 Qed.
+
+Lemma elemVarSet_updJPS_cong:
+  forall v jps1 jps2 v',
+  ((v' GHC.Base.== v) = false -> elemVarSet v jps1 = elemVarSet v jps2) ->
+  elemVarSet v (updJPS jps1 v') = elemVarSet v (updJPS jps2 v').
+Proof.
+  intros.
+  unfold updJPS.
+  destruct_match.
+  + rewrite !elemVarSet_extendVarSet.
+    destruct (v' GHC.Base.== v); intuition.
+  + rewrite !elemVarSet_delVarSet.
+    destruct (v' GHC.Base.== v); intuition.
+Qed.
+
 
 Lemma elemVarSet_updJPSs_l:
   forall v jps vs,
@@ -169,9 +184,8 @@ Proof.
     rewrite elemVarSet_mkVarSet_cons in H0.
     destruct H0.
     apply IHvs.
-    + apply elemVarSet_updJPS_l.
-      - assumption.
-      - assumption.
+    + rewrite elemVarSet_updJPS_l by assumption.
+      assumption.
     + assumption.
 Qed.
 
@@ -556,6 +570,7 @@ Require Import CoreFVs.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSetFSet.
 
+
 (* There is some worrying duplication/similarity with
 [WellScoped_extendVarSetList_fresh_between] *)
 Lemma isJoinPointsValid_fresh_updJPSs_aux:
@@ -577,7 +592,34 @@ Proof.
   - simpl.
     destruct_match; only 2: reflexivity.
     f_equal.
-    admit.
+    assert (isLocalVar v = true) by admit. (* ouch *)
+    rewrite updJPSs_append.
+    rewrite exprFreeVars_Var in H by assumption.
+    rewrite delVarSetList_rev in H.
+    clear -H.
+    induction vs3 using rev_ind.
+    + rewrite !updJPSs_nil.
+      rewrite delVarSetList_nil in H.
+      * revert jps; induction vs2; intros.
+        -- rewrite updJPSs_nil.
+           reflexivity.
+        -- rewrite updJPSs_cons.
+           rewrite disjointVarSet_mkVarSet_cons in H.
+           destruct H.
+           rewrite IHvs2 by assumption.
+           apply elemVarSet_updJPS_l.
+           apply H.
+    + rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil in H.
+      rewrite !updJPSs_append, !updJPSs_cons, !updJPSs_nil.
+      apply elemVarSet_updJPS_cong. intros Hne.
+      apply IHvs3.
+      rewrite disjointVarSet_mkVarSet in *.
+      eapply Forall_impl; only 2: eapply H. intros v2 ?.
+      cbv beta in H0.
+      rewrite delVarSet_elemVarSet_false in H0; only 1: assumption.
+      clear -Hne.
+      apply elemVarSet_delVarSetList_false_l.
+      apply Hne.
   - reflexivity.
   - f_equal.
     apply H.

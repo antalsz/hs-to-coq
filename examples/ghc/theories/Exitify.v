@@ -1054,7 +1054,14 @@ Section in_exitifyRec.
           apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
           apply elemVarSet_exprFreeVars_Var_false.
           rewrite elemVarSet_delVarSet in *.
-          intuition.
+          rewrite andb_true_iff in IH2. destruct IH2.
+          rewrite negb_true_iff in H.
+          unfold varUnique, Unique.mkUniqueGrimily.
+          contradict H.
+          unfold_zeze.
+          rewrite not_false_iff_true.
+          rewrite N.eqb_eq.
+          congruence.
         - constructor; only 2: constructor.
           change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
           rewrite WellScoped_extendVarSet_ae by (apply zap_ae).
@@ -1062,7 +1069,8 @@ Section in_exitifyRec.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           rewrite elemVarSet_delVarSet in *.
-          intuition.
+          rewrite andb_true_iff in IH2. destruct IH2.
+          assumption.
         - constructor; only 2: constructor.
           erewrite <- elemVarSet_ae by (apply zap_ae).
           assumption.

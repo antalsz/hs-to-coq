@@ -705,6 +705,13 @@ Axiom isLocalUnique_uniqAway:
   forall iss v,
   isLocalUnique (varUnique (uniqAway iss v)) = true.
 
+Axiom isLocalId_uniqAway:
+  forall iss v,
+  isLocalId (uniqAway iss v) = isLocalId v.
+
+Axiom isLocalVar_uniqAway:
+  forall iss v,
+  isLocalVar (uniqAway iss v) = isLocalVar v.
 
 Lemma elemVarSet_uniqAway:
   forall v iss vs,

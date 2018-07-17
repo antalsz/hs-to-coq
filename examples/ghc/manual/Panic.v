@@ -16,6 +16,9 @@ Parameter panicStr : forall {a} `{Default a}, String -> String -> a.
 Parameter panic : forall {a} `{Default a}, String -> a.
 Parameter sorry : forall {a} `{Default a}, String -> a.
 Parameter pgmError : forall {a} `{Default a}, String -> a.
-Parameter warnPprTrace :  forall {a}, bool -> String -> Integer -> String -> a -> a.
+
+Definition warnPprTrace {a} (b:bool) (msg : String) (i : Integer) (msg2: String) (x: a) : a
+  := if b then @pgmError a (Build_Default a x) msg else x.
+
 Parameter assertPanic :  forall {a} `{Default a}, String -> Integer -> a.
 Parameter assertPprPanic : forall {a} `{Default a}, String -> Integer -> String -> String -> a.

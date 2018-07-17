@@ -224,7 +224,7 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : 
   match e with
   | Mk_Var v => match isJoinId_maybe v with
     | None => true
-    | Some a => (a <=? n) && elemVarSet v jps
+    | Some a => isLocalVar v && (a <=? n) && elemVarSet v jps
     end
   | Lit l => true
   | App e1 e2 =>
@@ -309,7 +309,7 @@ Proof.
     destruct (PeanoNat.Nat.leb_spec j n), (PeanoNat.Nat.leb_spec j n').
     - assumption.
     - exfalso. lia.
-    - exfalso. simpl in *. congruence.
+    - exfalso. simpl_bool. destruct H0. congruence.
     - assumption.
   * (* App *)
     simpl_bool. destruct H2. split.
@@ -591,8 +591,8 @@ Proof.
     (split; intro; simpl; [| try solve[ destruct_match; reflexivity]] ).
   - simpl.
     destruct_match; only 2: reflexivity.
+    destruct (isLocalVar v) eqn:?; only 2: reflexivity.
     f_equal.
-    assert (isLocalVar v = true) by admit. (* ouch *)
     rewrite updJPSs_append.
     rewrite exprFreeVars_Var in H by assumption.
     rewrite delVarSetList_rev in H.

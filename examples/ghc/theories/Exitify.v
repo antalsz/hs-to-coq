@@ -2264,28 +2264,33 @@ Section in_exitifyRec.
     rewrite H; clear H.
     rewrite Nat.leb_refl. simpl.
     unfold jpsp', jps'.
-    (* There is again a lot of repetition to above *)
-    apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.
-    * rewrite updJPSs_joinId by apply all_exits_isJoinId.
-      apply elemVarSet_extendVarSetList_r.
-      apply elemVarSet_mkVarset_iff_In.
-      apply in_map.
-      assumption.
-    * apply elemVarSet_uniqAway.
-      unfold in_scope2.
-      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
-      apply subVarSet_extendVarSet.
-      apply subVarSet_extendVarSetList_l.
-      apply subVarSet_extendVarSetList_l.
-      apply subVarSet_extendVarSetList_r.
-      apply subVarSet_refl.
-    * apply elemVarSet_uniqAway.
-      unfold in_scope2.
-      rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
-      apply subVarSet_extendVarSet.
-      apply subVarSet_extendVarSetList_l.
-      apply subVarSet_extendVarSetList_r.
-      apply subVarSet_refl.
+    simpl_bool.
+    split.
+    - subst v.
+      rewrite isLocalVar_uniqAway.
+      reflexivity.
+    - (* There is again a lot of repetition to above *)
+      apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.
+      * rewrite updJPSs_joinId by apply all_exits_isJoinId.
+        apply elemVarSet_extendVarSetList_r.
+        apply elemVarSet_mkVarset_iff_In.
+        apply in_map.
+        assumption.
+      * apply elemVarSet_uniqAway.
+        unfold in_scope2.
+        rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+        apply subVarSet_extendVarSet.
+        apply subVarSet_extendVarSetList_l.
+        apply subVarSet_extendVarSetList_l.
+        apply subVarSet_extendVarSetList_r.
+        apply subVarSet_refl.
+      * apply elemVarSet_uniqAway.
+        unfold in_scope2.
+        rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
+        apply subVarSet_extendVarSet.
+        apply subVarSet_extendVarSetList_l.
+        apply subVarSet_extendVarSetList_r.
+        apply subVarSet_refl.
   Qed.
 
 

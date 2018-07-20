@@ -1045,16 +1045,39 @@ Lemma StrongSubset_delete_fresh :
   StrongSubset vs (delVarSet vs v).
 Admitted.
 
+(* Respects_StrongSubset *)
+
 Definition Respects_StrongSubset (P : VarSet -> Prop) : Prop :=
   forall (vs1 vs2 : VarSet),
   StrongSubset vs1 vs2 ->
   P vs1 -> P vs2.
 Existing Class Respects_StrongSubset.
 
+Require Import Coq.Classes.Morphisms.
+Global Instance Respects_StrongSubset_iff_morphism:
+  Proper (pointwise_relation VarSet iff ==> iff) Respects_StrongSubset.
+Proof.
+  intros ???.
+  split; intros ?????;
+  unfold pointwise_relation in H;
+  firstorder.
+Qed.
 
 Lemma Respects_StrongSubset_const:
   forall P, Respects_StrongSubset (fun _ => P).
 Proof. intros ?????. assumption. Qed.
+
+Lemma Respects_StrongSubset_and:
+  forall P Q,
+    Respects_StrongSubset P ->
+    Respects_StrongSubset Q ->
+    Respects_StrongSubset (fun x => P x /\ Q x).
+Proof.
+  unfold Respects_StrongSubset in *.
+  intros ????????.
+  firstorder.
+Qed.
+
 
 Lemma Respects_StrongSubset_andb:
   forall P Q,
@@ -1065,6 +1088,18 @@ Proof.
   unfold Respects_StrongSubset in *.
   intros ????????.
   simpl_bool.
+  firstorder.
+Qed.
+
+
+Lemma Respects_StrongSubset_forall:
+  forall a (xs : list a) P,
+    Forall (fun x => Respects_StrongSubset (fun vs => P vs x)) xs ->
+    Respects_StrongSubset (fun vs => Forall (P vs) xs).
+Proof.
+  unfold Respects_StrongSubset in *.
+  intros.
+  rewrite Forall_forall in *.
   firstorder.
 Qed.
 
@@ -1109,6 +1144,11 @@ Lemma Respects_StrongSubset_extendVarSet:
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
 Admitted.
 
+Lemma Respects_StrongSubset_extendVarSetList:
+  forall v P,
+  Respects_StrongSubset (fun vs : VarSet => P vs) ->
+  Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs v)).
+Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 
 (* Is this weakening? *)

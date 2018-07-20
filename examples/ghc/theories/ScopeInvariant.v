@@ -590,13 +590,55 @@ Qed.
 
 Instance Respects_StrongSubset_WellScopedVar v : Respects_StrongSubset (WellScopedVar v).
 Proof.
-  admit.
-Admitted.
+  intros ????.
+  unfold WellScopedVar in *.
+  destruct_match; only 2: apply I.
+  destruct_match; only 2: contradiction.
+  specialize (H v).
+  rewrite Heq0 in H.
+  destruct_match; only 2: contradiction.
+  eapply almostEqual_trans; eassumption.
+Qed.
 
 Instance Respects_StrongSubset_WellScoped e : Respects_StrongSubset (WellScoped e).
 Proof.
-  admit.
-Admitted.
+  apply (core_induct e); intros; simpl.
+  * apply Respects_StrongSubset_WellScopedVar.
+  * apply Respects_StrongSubset_const.
+  * apply Respects_StrongSubset_and; assumption.
+  * apply Respects_StrongSubset_and; try apply Respects_StrongSubset_const.
+    apply Respects_StrongSubset_extendVarSet.
+    assumption.
+  * apply Respects_StrongSubset_and.
+    - destruct_match.
+      + apply Respects_StrongSubset_and; try apply Respects_StrongSubset_const.
+        assumption.
+      + simpl.
+        repeat apply Respects_StrongSubset_and; try apply Respects_StrongSubset_const.
+        setoid_rewrite Forall'_Forall.
+        apply Respects_StrongSubset_forall.
+        rewrite Forall_forall.
+        intros [v rhs] HIn.
+        specialize (H _ _ HIn).
+        apply Respects_StrongSubset_extendVarSetList.
+        apply H.
+    - apply Respects_StrongSubset_extendVarSetList.
+      apply H0.
+   * repeat apply Respects_StrongSubset_and; try apply Respects_StrongSubset_const.
+     - apply H.
+     - setoid_rewrite Forall'_Forall.
+       apply Respects_StrongSubset_forall.
+       rewrite Forall_forall.
+       intros [[dc pats] rhs] HIn.
+       repeat apply Respects_StrongSubset_and; try apply Respects_StrongSubset_const.
+       specialize (H0 _ _ _ HIn).
+       apply Respects_StrongSubset_extendVarSetList.
+       apply H0.
+   * apply H.
+   * apply H.
+   * apply Respects_StrongSubset_const.
+   * apply Respects_StrongSubset_const.
+Qed.
 
 (** ** Lemmas about [GoodLocalVar] *)
 

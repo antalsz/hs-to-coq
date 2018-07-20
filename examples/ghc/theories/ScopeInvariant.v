@@ -351,12 +351,10 @@ Proof.
   unfold WellScopedVar in *.
   destruct_match; only 2: apply I.
   destruct_match; only 2: contradiction.
-  assert (lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v).
-  { admit.
-  }
-  rewrite H1, Heq0.
+  rewrite lookupVarSet_extendVarSetList_l by assumption.
+  rewrite Heq0.
   assumption.
-Admitted.
+Qed.
 
 Lemma WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,
@@ -367,12 +365,9 @@ Proof.
   intros.
   unfold WellScopedVar in *.
   destruct_match; only 2: apply I.
-  assert (lookupVarSet (extendVarSetList vs1 vs2) v = Some v).
-  { admit.
-  }
-  rewrite H1.
+  rewrite lookupVarSet_extendVarSetList_r_self by assumption.
   apply almostEqual_refl.
-Admitted.
+Qed.
 
 (* There are a number of variants of the freshness lemmas.
    The simplest one that implies all others is this, so lets

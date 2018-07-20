@@ -733,6 +733,20 @@ Proof.
   omega.
 Qed.
 
+Lemma lookupVarSet_extendVarSetList_l:
+  forall v vs1 vs2,
+  elemVarSet v (mkVarSet vs2) = false ->
+  lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v.
+Admitted.
+
+Lemma lookupVarSet_extendVarSetList_r_self:
+  forall v vs1 vs2,
+  List.In v vs2 ->
+  NoDup (map varUnique vs2) ->
+  lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
+Admitted.
+
+
 (** ** [uniqAway] *)
 
 Axiom isJoinId_maybe_uniqAway:

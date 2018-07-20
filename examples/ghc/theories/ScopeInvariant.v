@@ -642,22 +642,41 @@ Qed.
 
 (** ** Lemmas about [GoodLocalVar] *)
 
-Lemma GoodLocalVar_asJoinid :
-  forall v n, GoodLocalVar v -> GoodLocalVar (asJoinId v n).
-Admitted.
-
 Lemma GoodLocalVar_uniqAway:
   forall vss v, GoodLocalVar v -> GoodLocalVar (uniqAway vss v).
-Admitted.
+Proof.
+  intros.
+  unfold GoodLocalVar, GoodVar in *.
+  destruct H; destruct H.
+  rewrite isLocalVar_uniqAway.
+  rewrite isLocalUnique_uniqAway.
+  rewrite nameUnique_varName_uniqAway by congruence.
+  intuition congruence.
+Qed.
 
-Lemma GoodLocalVar_mkSysLocal:
-  forall s u ty, isLocalUnique u = true -> GoodLocalVar (mkSysLocal s u ty).
-Admitted.
+Lemma GoodLocalVar_asJoinId_mkSysLocal:
+  forall s u ty n,
+  isLocalUnique u = true ->
+  GoodLocalVar (asJoinId (mkSysLocal s u ty) n).
+Proof.
+  intros.
+  split; only 1: split.
+  * destruct u. symmetry. apply H.
+  * destruct u. reflexivity. 
+  * destruct u. reflexivity. 
+Qed.
+
 
 Lemma GoodLocalVar_almostEqual:
   forall v1 v2,
   GoodLocalVar v1 ->
   almostEqual v1 v2 ->
   GoodLocalVar v2.
-Admitted.
-
+Proof.
+  intros.
+  destruct H. destruct H.
+  induction H0.
+  * split; only 1: split; assumption.
+  * split; only 1: split; assumption.
+  * split; only 1: split; assumption.
+Qed.

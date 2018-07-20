@@ -790,6 +790,11 @@ Proof.
   unfold realUnique.
 Admitted.
 
+Axiom nameUnique_varName_uniqAway:
+  forall vss v,
+  Name.nameUnique (varName v) = varUnique v ->
+  Name.nameUnique (varName (uniqAway vss v)) = varUnique (uniqAway vss v).
+
 (** ** [lookupVarSet] *)
 
 Lemma lookupVarSet_elemVarSet : 

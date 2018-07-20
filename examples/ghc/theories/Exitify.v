@@ -913,8 +913,7 @@ Section in_exitifyRec.
       assumption.
     * constructor; only 2: apply Hfloats; simpl.
       apply GoodLocalVar_uniqAway.
-      apply GoodLocalVar_asJoinid.
-      apply GoodLocalVar_mkSysLocal.
+      apply GoodLocalVar_asJoinId_mkSysLocal.
       apply isLocalUnique_initExitJoinUnique.
   Qed.
 

@@ -97,18 +97,6 @@ Definition WellScopedProgram (pgm : CoreProgram) : Prop :=
 
 (** ** Lots of lemmas *)
 
-(** *** [almostEqual] *)
-
-Axiom WellScoped_extendVarSet_ae:
-  forall e vs v1 v2,
-  almostEqual v1 v2 ->
-  WellScoped e (extendVarSet vs v1) <-> WellScoped e (extendVarSet vs v2).
-
-Axiom WellScoped_extendVarSetList_ae:
-  forall e vs vs1 vs2,
-  Forall2 almostEqual vs1 vs2 ->
-  WellScoped e (extendVarSetList vs vs1) <-> WellScoped e (extendVarSetList vs vs2).
-
 
 (** *** Structural lemmas *)
 

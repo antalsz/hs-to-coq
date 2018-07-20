@@ -1003,7 +1003,7 @@ Section in_exitifyRec.
         rewrite <- delVarSetList_cons2.
         apply IHcaptured.
         rewrite app_assoc.
-        rewrite WellScoped_extendVarSetList_ae; only 1: apply HWSe.
+        erewrite Respects_StrongSubset_extendVarSetList_ae; only 1: apply HWSe.
         repeat apply Forall2_app.
         - apply Forall2_symmetric. intro. apply almostEqual_refl.
         - constructor. apply almostEqual_sym. apply zap_ae. constructor.
@@ -1063,7 +1063,7 @@ Section in_exitifyRec.
           congruence.
         - constructor; only 2: constructor.
           change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
-          rewrite WellScoped_extendVarSet_ae by (apply zap_ae).
+          rewrite Respects_StrongSubset_extendVarSet_ae by (apply zap_ae).
           apply WellScopedVar_extendVarSet.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).

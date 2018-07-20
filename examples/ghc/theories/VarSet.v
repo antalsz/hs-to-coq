@@ -986,57 +986,74 @@ Proof.
 Admitted.
 
 
+Lemma StrongSubset_extend_ae :
+  forall vs1 vs2 v1 v2,
+  StrongSubset vs1 vs2 ->
+  almostEqual v1 v2 ->
+  StrongSubset (extendVarSet vs1 v1) (extendVarSet vs2 v2).
+Proof.
+  intros.
+  unfold StrongSubset in *.
+  intro var.
+  destruct (v1 == var) eqn:EQv.
+  rewrite lookupVarSet_extendVarSet_eq; auto.  
+  rewrite lookupVarSet_extendVarSet_eq.
+  assumption.
+  apply almostEqual_eq in H0. eapply Eq_trans; try eassumption; try symmetry; assumption.
+  rewrite lookupVarSet_extendVarSet_neq; auto.
+  rewrite lookupVarSet_extendVarSet_neq; auto.
+  eapply H.
+  rewrite <- not_true_iff_false in EQv. contradict EQv.
+  apply almostEqual_eq in H0. eapply Eq_trans; try eassumption; try symmetry; assumption.
+  rewrite not_true_iff_false. assumption.
+Qed.
+
+
 Lemma StrongSubset_extend :
   forall vs1 vs2 v,
   StrongSubset vs1 vs2 ->
   StrongSubset (extendVarSet vs1 v) (extendVarSet vs2 v).
 Proof.
   intros.
-  unfold StrongSubset in *.
-  intro var.
-  destruct (v == var) eqn:EQv.
-  rewrite lookupVarSet_extendVarSet_eq; auto.  
-  rewrite lookupVarSet_extendVarSet_eq.
-  apply almostEqual_refl.
-  auto.
-  rewrite lookupVarSet_extendVarSet_neq; auto.
-  rewrite lookupVarSet_extendVarSet_neq; auto.
-  eapply H.
-  unfold CoreBndr in *.
-  unfold not. intro. rewrite EQv in H0. discriminate.
-  unfold CoreBndr in *.
-  unfold not. intro. rewrite EQv in H0. discriminate.
+  apply StrongSubset_extend_ae.
+  * assumption.
+  * apply almostEqual_refl.
 Qed.
 
+Lemma StrongSubset_extendVarSetList_ae :
+  forall l1 l2 vs1 vs2,
+  Forall2 almostEqual l1 l2 ->
+  StrongSubset vs1 vs2 ->
+  StrongSubset (extendVarSetList vs1 l1) (extendVarSetList vs2 l2).
+Proof.
+  intros.
+  revert vs1 vs2 H0. induction H; intros.
+  * apply H0.
+  * rewrite extendVarSetList_cons.
+    apply IHForall2.
+    apply StrongSubset_extend_ae; assumption.
+Qed.
+
+Lemma Forall2_diag:
+  forall a P (xs: list a),
+  Forall2 P xs xs <-> Forall (fun x => P x x) xs.
+Proof.
+  intros.
+  induction xs.
+  * split; intro; constructor.
+  * split; intro H; constructor; inversion H; intuition.
+Qed.
 
 Lemma StrongSubset_extendVarSetList :
   forall l vs1 vs2,
   StrongSubset vs1 vs2 ->
   StrongSubset (extendVarSetList vs1 l) (extendVarSetList vs2 l).
 Proof.
-  induction l; intros vs1 vs2 h.
-  repeat rewrite extendVarSetList_nil.
-  auto.
-  rewrite extendVarSetList_cons.
-  rewrite extendVarSetList_cons.
-  eapply IHl.
-  unfold StrongSubset.
-  intro var.
-  destruct (a GHC.Base.== var) eqn:Eq.
-  + rewrite lookupVarSet_extendVarSet_eq; auto.
-    rewrite lookupVarSet_extendVarSet_eq; auto.
-    eapply almostEqual_refl.
-  + rewrite lookupVarSet_extendVarSet_neq.
-    destruct (lookupVarSet vs1 var) eqn:IN; auto.
-    rewrite lookupVarSet_extendVarSet_neq.
-    unfold StrongSubset in h. 
-    specialize (h var). rewrite IN in h. auto.
-    intro h1;
-      rewrite h1 in Eq; discriminate.
-    intro h1;
-      rewrite h1 in Eq; discriminate.
+  intros.
+  apply StrongSubset_extendVarSetList_ae; only 2: assumption.
+  apply Forall2_diag.
+  rewrite Forall_forall. intros. apply almostEqual_refl.
 Qed.
-
 
 Lemma StrongSubset_delVarSet :
   forall vs1 vs2 v,
@@ -1170,3 +1187,32 @@ Lemma weakenb:
   StrongSubset vs1 vs2 ->
   P vs1 = true -> P vs2 = true.
 Proof. intros. unfold Respects_StrongSubset in R. eapply R; eassumption. Qed.
+
+Lemma Respects_StrongSubset_extendVarSet_ae:
+  forall {P : VarSet -> Prop} {R : Respects_StrongSubset P},
+  forall vs v1 v2,
+  almostEqual v1 v2 ->
+  P (extendVarSet vs v1) <-> P (extendVarSet vs v2).
+Proof.
+  intros.
+  split; apply R; (apply StrongSubset_extend_ae;
+    [ reflexivity | assumption + (apply almostEqual_sym; assumption) ]).
+Qed.
+
+
+Lemma Respects_StrongSubset_extendVarSetList_ae:
+  forall {P : VarSet -> Prop} {R : Respects_StrongSubset P},
+  forall vs vs1 vs2,
+  Forall2 almostEqual vs1 vs2 ->
+  P (extendVarSetList vs vs1) <-> P (extendVarSetList vs vs2).
+Proof.
+  split; apply R; apply StrongSubset_extendVarSetList_ae.
+  * assumption.
+  * reflexivity.
+  * clear -H.
+    induction H; constructor.
+    + apply almostEqual_sym; assumption.
+    + assumption.
+  * reflexivity.
+Qed.
+

@@ -5,6 +5,7 @@ Require Import CoreFVs.
 Require Import CoreUtils.
 
 Require Import Coq.Lists.List.
+Require Import Coq.Bool.Bool.
 Import ListNotations.
 
 Require Import Proofs.Base.
@@ -264,35 +265,78 @@ Qed.
 
 (** *** Relation to [exprFreeVars] *)
 
-(* This proof will be nicer if we have a naive calculation
-   of exprFreeVars, and first rewrite to that one.*)
+Require Import Proofs.VarSetFSet.
+
 Lemma WellScoped_subset:
   forall e vs,
     WellScoped e vs -> subVarSet (exprFreeVars e) vs = true.
 Proof.
   intro e.
-  unfold exprFreeVars, exprFVs, Base.op_z2218U__.
-  unfold FV.fvVarSet, Base.op_z2218U__,
-         FV.fvVarListVarSet, FV.filterFV, Base.const, andb.
-
   apply (core_induct e); intros.
   - unfold WellScoped, WellScopedVar in *.
     destruct (isLocalVar v) eqn:HisLocal.
     + destruct (lookupVarSet vs v) eqn:Hl; try contradiction.
-      unfold expr_fvs, FV.unitFV.
-      rewrite elemVarSet_emptyVarSet.
-      rewrite HisLocal.
-      unfold Tuple.snd.
-      eapply subVarSet_extendVarSet_l.
-      * apply subVarSet_emptyVarSet.
-      * eassumption.
-    + simpl. rewrite HisLocal.
-      unfold Tuple.snd.
+      rewrite exprFreeVars_Var by assumption.
+      rewrite subVarSet_unitVarSet.
+      eapply lookupVarSet_elemVarSet; eassumption.
+    + rewrite exprFreeVars_global_Var by assumption.
       apply subVarSet_emptyVarSet.
   - apply subVarSet_emptyVarSet.
-  - simpl.
-    admit.
-Admitted.
+  - simpl in H1.
+    rewrite exprFreeVars_App.
+    rewrite subVarSet_unionVarSet.
+    rewrite andb_true_iff.
+    intuition.
+  - simpl in H0.
+    destruct H0.
+    rewrite exprFreeVars_Lam.
+    apply H in H1.
+    set_b_iff. fsetdec.
+  - destruct binds as [v rhs | pairs].
+    + simpl in H1. decompose [and] H1; clear H1.
+      rewrite exprFreeVars_Let_NonRec.
+      apply H in H5.
+      apply H0 in H3.
+      rewrite extendVarSetList_cons, extendVarSetList_nil in H3.
+      set_b_iff. fsetdec.
+    + simpl in H1. decompose [and] H1; clear H1.
+      rewrite Forall'_Forall in H6.
+      rewrite exprFreeVars_Let_Rec.
+      apply H0 in H3; clear H0.
+      rewrite Core.bindersOf_Rec_cleanup in H3.
+      apply subVarSet_delVarSetList_extendVarSetList_dual.
+      rewrite subVarSet_unionVarSet, andb_true_iff; split.
+      * apply subVarSet_exprsFreeVars.
+        rewrite Forall_map, Forall_forall in *.
+        intros [v rhs] HIn. simpl in *.
+        apply (H _ _ HIn).
+        apply (H6 _ HIn).
+      * assumption.
+  - simpl in H1. decompose [and] H1; clear H1.
+    rewrite Forall'_Forall in H5.
+    rewrite exprFreeVars_Case.
+    rewrite subVarSet_unionVarSet, andb_true_iff; split.
+    * apply H; assumption.
+    * apply subVarSet_mapUnionVarSet.
+      rewrite Forall_forall in *.
+      intros [[dc pats] rhs] HIn.
+      specialize (H5 _ HIn). destruct H5. simpl in *.
+      (* Some reordering is needed here. This is a bit smelly,
+         maybe there should be a [rev] in [exprFreeVars_Case] already? *)
+      rewrite <- delVarSetList_rev.
+      rewrite rev_app_distr.
+      rewrite delVarSetList_app.
+      rewrite !delVarSetList_rev.
+      rewrite <- delVarSetList_app.
+      simpl.
+      apply subVarSet_delVarSetList_extendVarSetList_dual.
+      apply (H0 _ _ _ HIn).
+      assumption.
+  - rewrite exprFreeVars_Cast. apply H; assumption.
+  - rewrite exprFreeVars_Tick. apply H; assumption.
+  - apply subVarSet_emptyVarSet.
+  - apply subVarSet_emptyVarSet.
+Qed.
 
 
 (** *** Freshness *)
@@ -306,7 +350,7 @@ Axiom WellScopedVar_extendVarSetList_l:
 
 Axiom WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,
-  In v vs2 ->
+  List.In v vs2 ->
   NoDup (map varUnique vs2) ->
   WellScopedVar v (extendVarSetList vs1 vs2).
 

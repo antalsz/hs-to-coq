@@ -188,6 +188,19 @@ rewrite NG.
 auto.
 Qed.
 
+Lemma exprFreeVars_global_Var: forall v, 
+    isLocalVar v = false -> 
+    exprFreeVars (Mk_Var v) = emptyVarSet.
+Proof.
+intros v NG.
+unfold exprFreeVars, exprFVs, expr_fvs.
+unfold_FV.
+set_b_iff.
+rewrite NG.
+auto.
+Qed.
+
+
 Lemma exprFreeVars_mkLams_rev:
   forall vs e, exprFreeVars (mkLams (rev vs) e) = delVarSetList (exprFreeVars e) vs.
 Proof.
@@ -366,9 +379,24 @@ Lemma exprFreeVars_Tick:
   exprFreeVars (Tick t e) [=] exprFreeVars e.
 Admitted.
 
+Lemma exprFreeVars_Type:
+  forall t,
+  exprFreeVars (Type_ t) = emptyVarSet.
+Proof. intros. reflexivity. Qed.
+
+Lemma exprFreeVars_Coercion:
+  forall co,
+  exprFreeVars (Coercion co) = emptyVarSet.
+Proof. intros. reflexivity. Qed.
 
 Lemma subVarSet_exprFreeVars_exprsFreeVars:
   forall v rhs (pairs : list (CoreBndr * CoreExpr)) ,
   List.In (v, rhs) pairs ->
   subVarSet (exprFreeVars rhs) (exprsFreeVars (map snd pairs)) = true.
+Admitted.
+
+Lemma subVarSet_exprsFreeVars:
+  forall (es : list CoreExpr) vs,
+  Forall (fun e => subVarSet (exprFreeVars e) vs = true) es ->
+  subVarSet (exprsFreeVars es) vs = true.
 Admitted.

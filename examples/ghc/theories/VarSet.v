@@ -377,6 +377,13 @@ Proof.
     set_b_iff; fsetdec.
 Qed.
 
+Lemma delVarSetList_unionVarSet:
+  forall vs1 vs2 vs3,
+  delVarSetList (unionVarSet vs1 vs2) vs3 [=] 
+  unionVarSet (delVarSetList vs1 vs3) (delVarSetList vs2 vs3).
+Admitted.
+
+
 (**************************************)
 
 
@@ -421,7 +428,11 @@ Proof.
   unfold Var_as_DT.eqb.
   unfold_zeze.
 Admitted.
-  
+
+Lemma subVarSet_unitVarSet:
+  forall v vs,
+  subVarSet (unitVarSet v) vs = elemVarSet v vs.
+Admitted.
 
 Lemma elemVarSet_false_true:
   forall v1 fvs v2,
@@ -592,12 +603,35 @@ Proof.
   assumption.
 Qed.
 
+Lemma subVarSet_delVarSetList_extendVarSetList_dual:
+  forall jps isvs vs,
+  subVarSet jps (extendVarSetList isvs vs) = true ->
+  subVarSet (delVarSetList jps vs) isvs = true.
+Admitted.
 
 Lemma mapUnionVarSet_In_subVarSet:
   forall a (x : a) xs f,
   List.In x xs ->
   subVarSet (f x) (mapUnionVarSet f xs) = true.
 Admitted.
+
+Lemma subVarSet_mapUnionVarSet:
+  forall a (xs : list a) f vs,
+  Forall (fun x => subVarSet (f x) vs = true) xs ->
+  subVarSet (mapUnionVarSet f xs) vs = true.
+Admitted.
+
+
+Lemma subVarSet_unionVarSet:
+  forall vs1 vs2 vs3,
+  subVarSet (unionVarSet vs1 vs2) vs3 = subVarSet vs1 vs3 && subVarSet vs2 vs3.
+Proof.
+  intros.
+  apply eq_iff_eq_true.
+  rewrite andb_true_iff.
+  set_b_iff.
+Admitted.
+
 
 (** ** [mkVarSet]  *)
 

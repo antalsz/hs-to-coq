@@ -374,24 +374,177 @@ Qed.
    only do one induction:
 *)
 
+Lemma and_iff_compat_both:
+  forall A B C D : Prop,
+    A <-> C -> B <-> D ->
+    A /\ B <-> C /\ D.
+Proof. intros. intuition. Qed.
+
+Lemma Forall_iff:
+  forall a P Q (xs : list a),
+    Forall (fun x => P x <-> Q x) xs ->
+    Forall P xs <-> Forall Q xs.
+Proof. intros. rewrite !Forall_forall in *. firstorder. Qed.
+
+
 Lemma WellScoped_extendVarSetList_fresh_under:
   forall vs1 vs2 e vs,
   disjointVarSet (delVarSetList (exprFreeVars e) vs2) (mkVarSet vs1)  = true ->
   WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <->
   WellScoped e (extendVarSetList vs vs2).
-Admitted.
-(* Proof.
+Proof.
+ (* This proof is similar to isJoinPointsValid_fresh_updJPSs_aux
+    In particular, proving the assumtion [disjointVarSet ..] for all the inductive
+    cases is identical (although here we have more inductive cases than there.
+    Once could common it up with a deidcated induction rule. Or live with the duplication.
+  *)
   intros.
-  rewrite <- WellScoped_mkLams.
-  rewrite WellScoped_extendVarSetList_fresh.
-  rewrite -> WellScoped_mkLams.
-  reflexivity.
-  rewrite exprFreeVars_mkLams.
-  eapply disjointVarSet_subVarSet_l; only 1: eassumption.
-  apply subVarSet_delVarSetList.
-Qed.
- *)
+  rewrite <- delVarSetList_rev in H.
+  revert vs2 vs H.
+  apply (core_induct e); intros.
+  * simpl.
+    unfold WellScopedVar.
+    destruct_match; only 2: reflexivity.
+    enough (lookupVarSet (extendVarSetList (extendVarSetList vs vs1) vs2) v = 
+            lookupVarSet (extendVarSetList vs vs2) v) as Htmp
+      by (rewrite Htmp; reflexivity).
+    rewrite exprFreeVars_Var in H by assumption.
+    rewrite delVarSetList_rev in H.
+    clear -H.
+    (* duplication with isJoinPointsValid_fresh_updJPSs_aux here *)
+    induction vs2 using rev_ind.
+    + rewrite !extendVarSetList_nil.
+      rewrite delVarSetList_nil in H.
+      revert vs; induction vs1; intros.
+      - rewrite extendVarSetList_nil.
+        reflexivity.
+      - rewrite extendVarSetList_cons.
+        rewrite disjointVarSet_mkVarSet_cons in H.
+        destruct H.
+        rewrite IHvs1 by assumption.
+        apply lookupVarSet_extendVarSet_neq.
+        contradict H.
+        rewrite not_false_iff_true.
+        apply H.
+    + rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil in H.
+      rewrite !extendVarSetList_append, !extendVarSetList_cons, !extendVarSetList_nil.
+      destruct (x GHC.Base.== v) eqn:?.
+      -- rewrite !lookupVarSet_extendVarSet_eq by assumption.
+         reflexivity.
+      -- rewrite <- not_true_iff_false in Heqb.
+         rewrite !lookupVarSet_extendVarSet_neq by assumption.
+         apply IHvs2.
+         rewrite disjointVarSet_mkVarSet in *.
+         eapply Forall_impl; only 2: eapply H. intros v2 ?.
+         cbv beta in H0.
+         rewrite delVarSet_elemVarSet_false in H0; only 1: assumption.
+         clear -Heqb.
+         apply elemVarSet_delVarSetList_false_l.
+         rewrite not_true_iff_false in Heqb.
+         apply Heqb.
+  * reflexivity.
+  * simpl.
+    apply and_iff_compat_both.
+    - apply H.
+      eapply disjointVarSet_subVarSet_l; only 1: apply H1.
+      apply subVarSet_delVarSetList_both.
+      rewrite exprFreeVars_App.
+      set_b_iff; fsetdec.
+    - apply H0.
+      eapply disjointVarSet_subVarSet_l; only 1: apply H1.
+      apply subVarSet_delVarSetList_both.
+      rewrite exprFreeVars_App.
+      set_b_iff; fsetdec.
+  * simpl.
+    apply and_iff_compat_both; try reflexivity.
+    rewrite <- !extendVarSetList_singleton.
+    rewrite <- !extendVarSetList_append with (vs1 := vs2).
+    apply H.
+    rewrite exprFreeVars_Lam in H0.
+    rewrite rev_app_distr.
+    simpl.
+    rewrite delVarSetList_cons.
+    assumption.
+  * simpl.
+    apply and_iff_compat_both.
+    - destruct binds as [v rhs | pairs].
+      + simpl.
+        apply and_iff_compat_both; only 1: reflexivity.
+        apply H.
+        eapply disjointVarSet_subVarSet_l; only 1: apply H1.
+        apply subVarSet_delVarSetList_both.
+        rewrite exprFreeVars_Let_NonRec.
+        set_b_iff; fsetdec.
+      + simpl.
+        repeat apply and_iff_compat_both; try reflexivity.
+        rewrite !Forall'_Forall.
+        apply Forall_iff.
+        rewrite Forall_forall.
+        intros [v rhs] HIn.
+        rewrite <- !extendVarSetList_append with (vs1 := vs2).
+        apply (H _ _ HIn).
+        eapply disjointVarSet_subVarSet_l; only 1: apply H1.
+        rewrite rev_app_distr; simpl.
+        rewrite delVarSetList_app.
+        apply subVarSet_delVarSetList_both.
+        rewrite exprFreeVars_Let_Rec.
+        pose proof (subVarSet_exprFreeVars_exprsFreeVars _ _ _ HIn).
+        rewrite delVarSetList_rev.
+        apply subVarSet_delVarSetList_both.
+        set_b_iff; fsetdec.
+    - rewrite <- !extendVarSetList_append with (vs1 := vs2).
+      apply H0.
+      eapply disjointVarSet_subVarSet_l; only 1: apply H1; clear H1.
+      rewrite rev_app_distr, delVarSetList_app.
+      apply subVarSet_delVarSetList_both.
+      destruct binds as [v rhs | pairs].
+      -- rewrite exprFreeVars_Let_NonRec.
+         simpl.
+         rewrite delVarSetList_cons, delVarSetList_nil.
+         set_b_iff; fsetdec.
+      -- rewrite exprFreeVars_Let_Rec.
+         simpl. rewrite Core.bindersOf_Rec_cleanup.
+         rewrite delVarSetList_rev.
+         apply subVarSet_delVarSetList_both.
+         set_b_iff; fsetdec.
 
+  * simpl.
+    repeat apply and_iff_compat_both; try reflexivity.
+    - apply H.
+      eapply disjointVarSet_subVarSet_l; only 1: apply H1; clear H1.
+      apply subVarSet_delVarSetList_both.
+      rewrite exprFreeVars_Case.
+      set_b_iff; fsetdec.
+    - rewrite !Forall'_Forall.
+      apply Forall_iff.
+      rewrite Forall_forall.
+      intros [[dc pats] rhs] HIn; simpl.
+      repeat apply and_iff_compat_both; try reflexivity.
+      rewrite <- !extendVarSetList_append with (vs1 := vs2).
+      apply (H0 _ _ _ HIn).
+      eapply disjointVarSet_subVarSet_l; only 1: apply H1.
+      rewrite rev_app_distr; simpl.
+      rewrite !delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
+      apply subVarSet_delVarSetList_both.
+      rewrite exprFreeVars_Case.
+      match goal with HIn : List.In _ ?xs |- context [mapUnionVarSet ?f ?xs] =>
+        let H := fresh in
+        epose proof (mapUnionVarSet_In_subVarSet _ _ _ f HIn) as H ; simpl in H end.
+      rewrite delVarSetList_rev, <- delVarSetList_single, <- delVarSetList_app.
+      set_b_iff; fsetdec.
+  * apply H. 
+    eapply disjointVarSet_subVarSet_l; only 1: apply H0.
+    apply subVarSet_delVarSetList_both.
+    rewrite exprFreeVars_Cast.
+    set_b_iff; fsetdec.
+  * apply H. 
+    eapply disjointVarSet_subVarSet_l; only 1: apply H0.
+    apply subVarSet_delVarSetList_both.
+    rewrite exprFreeVars_Tick.
+    set_b_iff; fsetdec.
+  * reflexivity.
+  * reflexivity.
+Qed.
 
 Lemma WellScoped_extendVarSetList_fresh:
   forall vs e vs1,

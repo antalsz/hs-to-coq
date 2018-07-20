@@ -600,15 +600,15 @@ Proof.
     induction vs3 using rev_ind.
     + rewrite !updJPSs_nil.
       rewrite delVarSetList_nil in H.
-      * revert jps; induction vs2; intros.
-        -- rewrite updJPSs_nil.
-           reflexivity.
-        -- rewrite updJPSs_cons.
-           rewrite disjointVarSet_mkVarSet_cons in H.
-           destruct H.
-           rewrite IHvs2 by assumption.
-           apply elemVarSet_updJPS_l.
-           apply H.
+      revert jps; induction vs2; intros.
+       * rewrite updJPSs_nil.
+         reflexivity.
+       * rewrite updJPSs_cons.
+         rewrite disjointVarSet_mkVarSet_cons in H.
+         destruct H.
+         rewrite IHvs2 by assumption.
+         apply elemVarSet_updJPS_l.
+         apply H.
     + rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil in H.
       rewrite !updJPSs_append, !updJPSs_cons, !updJPSs_nil.
       apply elemVarSet_updJPS_cong. intros Hne.

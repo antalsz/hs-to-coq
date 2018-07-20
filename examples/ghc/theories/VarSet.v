@@ -210,6 +210,10 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma extendVarSetList_singleton:
+  forall vs v, extendVarSetList vs [v] = extendVarSet vs v.
+Proof. intros. reflexivity. Qed.
+
 
 Lemma extendVarSetList_append:
   forall s vs1 vs2,

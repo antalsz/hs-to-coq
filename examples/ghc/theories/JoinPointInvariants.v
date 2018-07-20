@@ -950,7 +950,7 @@ Proof.
    * apply Respects_StrongSubset_const.
    * apply Respects_StrongSubset_const.
 Qed.
-      
+
 Instance Respects_StrongSubset_isJoinPointsValid e n :
   Respects_StrongSubset (fun jps => isJoinPointsValid e n jps = true).
 Proof. apply Respects_StrongSubset_isJoinPointsValid_aux. Qed.

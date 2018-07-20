@@ -341,55 +341,49 @@ Qed.
 
 (** *** Freshness *)
 
-Axiom WellScopedVar_extendVarSetList_l:
+Lemma WellScopedVar_extendVarSetList_l:
   forall v vs1 vs2,
   WellScopedVar v vs1 ->
   elemVarSet v (mkVarSet vs2) = false ->
   WellScopedVar v (extendVarSetList vs1 vs2).
+Proof.
+  intros.
+  unfold WellScopedVar in *.
+  destruct_match; only 2: apply I.
+  destruct_match; only 2: contradiction.
+  assert (lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v).
+  { admit.
+  }
+  rewrite H1, Heq0.
+  assumption.
+Admitted.
 
-
-Axiom WellScopedVar_extendVarSetList_r:
+Lemma WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,
   List.In v vs2 ->
   NoDup (map varUnique vs2) ->
   WellScopedVar v (extendVarSetList vs1 vs2).
-
-
-Lemma WellScoped_extendVarSet_fresh:
-  forall v e vs,
-  elemVarSet v (exprFreeVars e) = false ->
-  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
 Proof.
   intros.
-  split.
-  intro h.
-  pose (K := WellScoped_subset e _ h). clearbody K.
-  set (fve := exprFreeVars e) in *.
-  
-  unfold_VarSet.
-
-  set (key := Unique.getWordKey (Unique.getUnique v)) in *.
-Admitted.  
-
-Axiom WellScoped_extendVarSetList_fresh:
-  forall vs e vs1,
-  disjointVarSet (exprFreeVars e) (mkVarSet vs) = true ->
-  WellScoped e (extendVarSetList vs1 vs) <-> WellScoped e vs1.
-
-Instance Respects_StrongSubset_WellScopedVar v : Respects_StrongSubset (WellScopedVar v).
-Proof.
-  admit.
+  unfold WellScopedVar in *.
+  destruct_match; only 2: apply I.
+  assert (lookupVarSet (extendVarSetList vs1 vs2) v = Some v).
+  { admit.
+  }
+  rewrite H1.
+  apply almostEqual_refl.
 Admitted.
 
-Instance Respects_StrongSubset_WellScoped e : Respects_StrongSubset (WellScoped e).
-Proof.
-  admit.
-Admitted.
+(* There are a number of variants of the freshness lemmas.
+   The simplest one that implies all others is this, so lets
+   only do one induction:
+*)
 
 Lemma WellScoped_extendVarSetList_fresh_under:
   forall vs1 vs2 e vs,
-  disjointVarSet (exprFreeVars e) (mkVarSet vs1)  = true ->
-  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <-> WellScoped e (extendVarSetList vs vs2).
+  disjointVarSet (delVarSetList (exprFreeVars e) vs2) (mkVarSet vs1)  = true ->
+  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <->
+  WellScoped e (extendVarSetList vs vs2).
 Admitted.
 (* Proof.
   intros.
@@ -403,11 +397,57 @@ Admitted.
 Qed.
  *)
 
+
+Lemma WellScoped_extendVarSetList_fresh:
+  forall vs e vs1,
+  disjointVarSet (exprFreeVars e) (mkVarSet vs) = true ->
+  WellScoped e (extendVarSetList vs1 vs) <->
+  WellScoped e vs1.
+Proof.
+  intros.
+  epose proof (WellScoped_extendVarSetList_fresh_under vs [] e vs1 _).
+  rewrite !extendVarSetList_nil in H0.
+  eassumption.
+  Unshelve.
+  rewrite delVarSetList_nil. assumption.
+Qed.
+
+Lemma WellScoped_extendVarSet_fresh:
+  forall v e vs,
+  elemVarSet v (exprFreeVars e) = false ->
+  WellScoped e (extendVarSet vs v) <-> WellScoped e vs.
+Proof.
+  intros.
+  epose proof (WellScoped_extendVarSetList_fresh [v] e vs _).
+  rewrite extendVarSetList_cons,extendVarSetList_nil in H0.
+  assumption.
+  Unshelve.
+  rewrite disjointVarSet_mkVarSet_cons, disjointVarSet_mkVarSet_nil.
+  intuition congruence.
+Qed.
+
 Lemma WellScoped_extendVarSetList_fresh_between:
   forall (vs1 vs2 vs3 : list Var) (e : CoreExpr) (vs : VarSet),
   disjointVarSet (delVarSetList (exprFreeVars e) vs3) (mkVarSet vs2) = true ->
   WellScoped e (extendVarSetList vs ((vs1 ++ vs2) ++ vs3)) <->
   WellScoped e (extendVarSetList vs (vs1 ++ vs3)).
+Proof.
+  intros.
+  rewrite <- app_assoc.
+  rewrite !extendVarSetList_append.
+  apply WellScoped_extendVarSetList_fresh_under.
+  assumption.
+Qed.
+  
+
+Instance Respects_StrongSubset_WellScopedVar v : Respects_StrongSubset (WellScopedVar v).
+Proof.
+  admit.
+Admitted.
+
+Instance Respects_StrongSubset_WellScoped e : Respects_StrongSubset (WellScoped e).
+Proof.
+  admit.
 Admitted.
 
 (** ** Lemmas about [GoodLocalVar] *)

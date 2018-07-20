@@ -1171,7 +1171,9 @@ Section in_exitifyRec.
       rewrite hs_coq_map in Hdisjoint.
       replace (map _ pairs) with fs in Hdisjoint by reflexivity.
       unfold isvsp in HWSe.
-      rewrite WellScoped_extendVarSetList_fresh_under in HWSe; auto.
+      rewrite WellScoped_extendVarSetList_fresh_under in HWSe; only 1: assumption.
+      eapply disjointVarSet_subVarSet_l; only 1: eassumption.
+      apply subVarSet_delVarSetList.
   Qed.
 
   Lemma go_all_WellScopedFloats captured e: 

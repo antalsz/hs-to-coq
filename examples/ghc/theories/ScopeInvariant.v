@@ -17,18 +17,38 @@ Require Import Proofs.VarSet.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Var.
 
-Import GHC.Base.ManualNotations.
-
-
+Import GHC.Base.Notations.
 
 Set Bullet Behavior "Strict Subproofs".
 
-(*
-This file describes an invariant of Core files that
- * all variables must be in scope
- * and be structurally almost equal to their binder
- * all local variables are indeed local variables
-   (both according to [IdDetail] and [isLocalUnique])
+(** * Core invariants related to variables and scope *)
+
+(** ** The invariants *)
+
+(**
+First we define invariants for [Var] that are independent of scope, namely:
+- It is a localVar iff the unique is local.
+- The [Unique] cached in the [Var] is the same as the [Unique] of the name
+  of the var.
+*)
+Definition GoodVar (v : Var) : Prop :=
+  isLocalVar v = isLocalUnique (varUnique v) /\
+  varUnique v = nameUnique (varName v).
+
+Definition GoodLocalVar (v : Var) : Prop :=
+  GoodVar v /\ isLocalVar v = true.
+
+
+(**
+
+Next we define when a variable occurrence is ok in a given scope.
+ * Global variables are always ok (not yet tracked).
+ * Local variables are ok if they are in scope, and
+   are almost the same as the binder; i.e., only the 
+   [idInfo] may vary
+
+We do not have to check [GoodVar] here; instead we check that
+for all binders.
 *)
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
@@ -39,18 +59,13 @@ Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
     end
   else True (* we do not track local variables yet *).
 
-(**
-This captures all invariants that we can state about a
-[Var] in isolation:
-- It is a localVar when the unique is local.
-- Its unique agrees with the unique of the name
-*)
-Definition GoodVar (v : Var) : Prop :=
-  isLocalVar v = isLocalUnique (varUnique v) /\
-  varUnique v = nameUnique (varName v).
 
-Definition GoodLocalVar (v : Var) : Prop :=
-  GoodVar v /\ isLocalVar v = true.
+(**
+
+Finally, we lift this to whole expressions, keeping track of the variables
+that are in [in_scope]. Remember that GHC allows shadowing!
+
+*)
 
 Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   match e with
@@ -89,16 +104,87 @@ Definition WellScopedAlt bndr (alt : CoreAlt) in_scope  :=
     let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
     WellScoped (snd alt) in_scope'.
 
-(** We can treat a [CoreProgram] as one big recursive group, it seems. *)
+(**
+
+A [CoreProgram] can be treated like one big recursive group, despite that it
+is a sequence of [Rec] and [NonRec] bindings.
+
+*)
 Definition WellScopedProgram (pgm : CoreProgram) : Prop :=
    NoDup (map varUnique (bindersOfBinds pgm)) /\
    Forall' (fun p => WellScoped (snd p) (mkVarSet (bindersOfBinds pgm))) (flattenBinds pgm).
 
 
-(** ** Lots of lemmas *)
+(** ** Lemmas *)
+
+
+(** *** Lemmas about [GoodLocalVar] *)
+
+Lemma GoodLocalVar_uniqAway:
+  forall vss v, GoodLocalVar v -> GoodLocalVar (uniqAway vss v).
+Proof.
+  intros.
+  unfold GoodLocalVar, GoodVar in *.
+  destruct H; destruct H.
+  rewrite isLocalVar_uniqAway.
+  rewrite isLocalUnique_uniqAway.
+  rewrite nameUnique_varName_uniqAway by congruence.
+  intuition congruence.
+Qed.
+
+Lemma GoodLocalVar_asJoinId_mkSysLocal:
+  forall s u ty n,
+  isLocalUnique u = true ->
+  GoodLocalVar (asJoinId (mkSysLocal s u ty) n).
+Proof.
+  intros.
+  split; only 1: split.
+  * destruct u. symmetry. apply H.
+  * destruct u. reflexivity. 
+  * destruct u. reflexivity. 
+Qed.
+
+
+Lemma GoodLocalVar_almostEqual:
+  forall v1 v2,
+  GoodLocalVar v1 ->
+  almostEqual v1 v2 ->
+  GoodLocalVar v2.
+Proof.
+  intros.
+  destruct H. destruct H.
+  induction H0.
+  * split; only 1: split; assumption.
+  * split; only 1: split; assumption.
+  * split; only 1: split; assumption.
+Qed.
 
 
 (** *** Structural lemmas *)
+
+Lemma WellScopedVar_extendVarSet:
+  forall v vs,
+  WellScopedVar v (extendVarSet vs v).
+Proof.
+  intros.
+  unfold WellScopedVar.
+  rewrite lookupVarSet_extendVarSet_self.
+  destruct_match.
+  * apply almostEqual_refl.
+  * trivial.
+Qed.
+
+
+Lemma WellScoped_varToCoreExpr:
+  forall v isvs,
+  WellScopedVar v isvs -> WellScoped (varToCoreExpr v) isvs.
+Proof.
+  intros.
+  destruct v; simpl; try trivial.
+  unfold varToCoreExpr; simpl.
+  destruct_match; simpl; try trivial.
+Qed.
+
 
 Lemma WellScoped_Lam:
   forall v e isvs,
@@ -120,16 +206,6 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma WellScoped_varToCoreExpr:
-  forall v isvs,
-  WellScopedVar v isvs -> WellScoped (varToCoreExpr v) isvs.
-Proof.
-  intros.
-  destruct v; simpl; try trivial.
-  unfold varToCoreExpr; simpl.
-  destruct_match; simpl; try trivial.
-Qed.
-
 Lemma WellScoped_mkVarApps:
   forall e vs isvs,
   WellScoped e isvs -> 
@@ -147,18 +223,6 @@ Proof.
     simpl.
     split; try assumption.
     apply WellScoped_varToCoreExpr; assumption.
-Qed.
-
-Lemma WellScopedVar_extendVarSet:
-  forall v vs,
-  WellScopedVar v (extendVarSet vs v).
-Proof.
-  intros.
-  unfold WellScopedVar.
-  rewrite lookupVarSet_extendVarSet_self.
-  destruct_match.
-  * apply almostEqual_refl.
-  * trivial.
 Qed.
 
 Lemma WellScoped_MkLetRec: forall pairs body isvs,
@@ -184,7 +248,7 @@ Proof.
   split; intro; repeat split; try constructor; intuition.
 Qed.
 
-(** *** StrongSubset *)
+(** *** Lemmas related to [StrongSubset] *)
 
 Lemma WellScopedVar_StrongSubset : forall e vs1 vs2, 
     WellScopedVar e vs1 -> StrongSubset vs1 vs2 -> WellScopedVar e vs2.
@@ -574,7 +638,9 @@ Proof.
   apply WellScoped_extendVarSetList_fresh_under.
   assumption.
 Qed.
-  
+
+(** *** The invariants respect [StrongSubset] *)
+
 
 Instance Respects_StrongSubset_WellScopedVar v : Respects_StrongSubset (WellScopedVar v).
 Proof.
@@ -626,45 +692,4 @@ Proof.
    * apply H.
    * apply Respects_StrongSubset_const.
    * apply Respects_StrongSubset_const.
-Qed.
-
-(** ** Lemmas about [GoodLocalVar] *)
-
-Lemma GoodLocalVar_uniqAway:
-  forall vss v, GoodLocalVar v -> GoodLocalVar (uniqAway vss v).
-Proof.
-  intros.
-  unfold GoodLocalVar, GoodVar in *.
-  destruct H; destruct H.
-  rewrite isLocalVar_uniqAway.
-  rewrite isLocalUnique_uniqAway.
-  rewrite nameUnique_varName_uniqAway by congruence.
-  intuition congruence.
-Qed.
-
-Lemma GoodLocalVar_asJoinId_mkSysLocal:
-  forall s u ty n,
-  isLocalUnique u = true ->
-  GoodLocalVar (asJoinId (mkSysLocal s u ty) n).
-Proof.
-  intros.
-  split; only 1: split.
-  * destruct u. symmetry. apply H.
-  * destruct u. reflexivity. 
-  * destruct u. reflexivity. 
-Qed.
-
-
-Lemma GoodLocalVar_almostEqual:
-  forall v1 v2,
-  GoodLocalVar v1 ->
-  almostEqual v1 v2 ->
-  GoodLocalVar v2.
-Proof.
-  intros.
-  destruct H. destruct H.
-  induction H0.
-  * split; only 1: split; assumption.
-  * split; only 1: split; assumption.
-  * split; only 1: split; assumption.
 Qed.

@@ -26,7 +26,11 @@ Notation "a =? b" := (Nat.eqb a b).
 Notation "a <=? b" := (Nat.leb a b).
 Notation "a <? b" := (Nat.ltb a b).
 
-(*
+(** * Join point invariants *)
+
+(**
+The following is taken from the GHC source code:
+
 Note [Invariants on join points]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Join points must follow these invariants:
@@ -49,37 +53,43 @@ Join points must follow these invariants:
      in Note [The polymorphism rule of join points]).
 *)
 
-(* We can check 1, 2, 3.
+(** 
+
+We can check 1, 2, 3.
 
 We will be able to check 2a when we translate more of IdInfo.
 
 We will be able to check 4 when we translate types.
 
-Additionally, we have the invariant:
+Additionally, we found these invariant:
 
  * The join arity must be non-negative.
  * A lambda-, case- or pattern-bound variable is not a join point
 *)
 
+(** ** [updJPS] and [updJPSs] *)
 
-Definition isJoinPointsValidPair_aux
-  isJoinPointsValid isJoinRHS_aux
-  (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
-    match isJoinId_maybe v with
-    | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
-    | Some a => 
-      if (a =? 0) (* Uh, all for the termination checker *)
-      then isJoinPointsValid rhs 0 jps (* tail-call position *)
-      else isJoinRHS_aux a rhs jps                   (* tail-call position *)
-    end.
+(**
+As we go under a binder [x], we either have to add it to the set of valid
+join points, or remove it from there, depending on whether [x] is a join point:
+*)
 
 Definition updJPS jps v :=
    if isJoinId v
    then extendVarSet jps v
    else delVarSet    jps v.
 
+(**
+We also have to do this for lists:
+*)
+
 Definition updJPSs jps vs :=
   fold_left updJPS vs jps.
+
+(**
+These two functions behave very similar to [extendVarSet] and [delVarset], and we
+have a number of simiar lemmas:
+**)
 
 Lemma updJPSs_nil:
   forall jps, updJPSs jps [] = jps.
@@ -219,6 +229,42 @@ Proof.
     assumption.
 Qed.
 
+(** ** The definition of the invariants *)
+
+(**
+In this module, we define the invariant as a boolean predicate, using [Fixpoint].
+
+Ideally, we would define these funtions
+
+ * [isJoinPointsValid] for expressions (with an accumulator to count the number
+   of arguments this expression is applied to).
+ * [isJoinRHS] for the right-hand sides of join points (to strip off the correct
+   number of [Lam] constructors)
+ * [isJoinPointsValidPair] for when a pair (binder + definition) is valid, which
+   builds on the two aboe.
+
+Unfortunately, requirements from Coq’s termination checker make things a bit
+more complicated…
+
+We first define [isJoinPointsValidPair_aux], which is [isJoinPointsValidPair]
+abstracted over the other two.
+*)
+
+Definition isJoinPointsValidPair_aux
+  isJoinPointsValid isJoinRHS_aux
+  (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
+    match isJoinId_maybe v with
+    | None => isJoinPointsValid rhs 0 emptyVarSet  (* Non-tail-call position *)
+    | Some a => 
+      if (a =? 0) (* Uh, all for the termination checker *)
+      then isJoinPointsValid rhs 0 jps            (* tail-call position *)
+      else isJoinRHS_aux a rhs jps                (* tail-call position *)
+    end.
+
+(** See below for why we have the [a=0] case here. *)
+
+
+(** Now the other two functions: *)
 
 Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : bool :=
   match e with
@@ -267,18 +313,25 @@ with isJoinRHS_aux (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} 
     | _ => false
     end.
 
-(* I had to do two things to make this pass the termination checker that I would
-   have done differently otherwise:
-    - isJoinRHS is structured so that *always* destructs the expression,
-      and calls isJoinPointsValid on the subexpression.
-      This requires some duplication, namely checking the case a=0 in 
-      isJoinPointsValidPair.
-      Normally, I would count down a, and if a=0, call isJoinPointsValid on rhs,
-      which is more natural.
-    - isJoinPointsValidPair does not actually recurse, so it cannot be one
-      of the top-level recursive functions. Instead, it is a local let and
-      I repeat the defininition later to give it a name.
+(**
+The definition of [isJoinRHS_aux] is not what we want: Ideally, in the [Some] case in
+[isJoinPointsValidPair_aux] we’d simply call [isJoinRHS], and if the join arity is actually
+[0], then [isJoinRHS] callse [isJoinPointsValid] directly. But then the argument would not
+decrease going from [isJoinRHS] to [isJoinPointsValid], and the termination checker would
+not be happy. So we have to write [isJoinRHS_aux] in a way that it *always* destructs its
+argument.
 *)
+
+(**
+Convenience definitions, including the [isJoinRHS] we would have liked to write.
+*)
+
+
+Definition isJoinRHS rhs a jps :=
+      if (a =? 0)
+      then isJoinPointsValid rhs 0 jps
+      else isJoinRHS_aux a rhs jps.
+
 
 Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
   fun '(dc,pats,rhs) jps =>
@@ -288,41 +341,9 @@ Definition isjoinPointsAlt : CoreAlt -> VarSet -> bool :=
 
 Definition isJoinPointsValidPair := isJoinPointsValidPair_aux isJoinPointsValid isJoinRHS_aux.
 
-(* Top-level binders are never join-points *)
-Definition isJoinPointsValidProgram (pgm : CoreProgram)  :=
-  Forall (fun '(v,e) =>
-    isJoinId v = false /\
-    isJoinPointsValid e 0 emptyVarSet = true) (flattenBinds pgm).
-
-Lemma isJoinPointsValid_more_args:
-  forall e n n' jps,
-  n <= n' ->
-  isJoinPointsValid e n jps = true ->
-  isJoinPointsValid e n' jps = true.
-Proof.
-  intros.
-  revert n n' jps H H0. apply (core_induct e);
-    intros; simpl in *;
-    try assumption.
-  * (* Var *)
-    destruct_match; only 2: reflexivity.
-    destruct (PeanoNat.Nat.leb_spec j n), (PeanoNat.Nat.leb_spec j n').
-    - assumption.
-    - exfalso. lia.
-    - exfalso. simpl_bool. destruct H0. congruence.
-    - assumption.
-  * (* App *)
-    simpl_bool. destruct H2. split.
-    - refine (H _ _ _ _ H2). lia.
-    - assumption.
-Qed.
-
-(* Conjuction of [isJoinId] and [isJoinPointsValidPair] *)
-
-Definition isJoinRHS rhs a jps :=
-      if (a =? 0)
-      then isJoinPointsValid rhs 0 jps
-      else isJoinRHS_aux a rhs jps.
+(**
+Conjuction of [isJoinId] and [isJoinPointsValidPair]
+*)
 
 Definition isValidJoinPointsPair
   (v : CoreBndr) (rhs : CoreExpr) (jps : VarSet) : bool :=
@@ -331,6 +352,16 @@ Definition isValidJoinPointsPair
     | Some a => isJoinRHS rhs a jps
     end.
 
+
+
+(** Join-point validity of whole programs *)
+
+Definition isJoinPointsValidProgram (pgm : CoreProgram)  :=
+  Forall (fun '(v,e) =>
+    isJoinId v = false /\
+    isJoinPointsValid e 0 emptyVarSet = true) (flattenBinds pgm).
+
+(** ** Lemmas *)
 
 Lemma isJoinPointsValidPair_isJoinPoints_isJoinRHS:
   forall v rhs jps a,
@@ -392,6 +423,7 @@ Proof.
   rewrite isJoinId_eq.
   destruct_match; congruence.
 Qed.
+
 
 Lemma Forall_isValidJoinPointsPair_forallb_isJoinId_isJoinPointsValidPair:
   forall pairs jps,
@@ -554,6 +586,35 @@ Proof.
   destruct pairs; try reflexivity.
 Qed.
 
+
+(**
+There may be more arguments passed to the expression.
+*)
+
+Lemma isJoinPointsValid_more_args:
+  forall e n n' jps,
+  n <= n' ->
+  isJoinPointsValid e n jps = true ->
+  isJoinPointsValid e n' jps = true.
+Proof.
+  intros.
+  revert n n' jps H H0. apply (core_induct e);
+    intros; simpl in *;
+    try assumption.
+  * (* Var *)
+    destruct_match; only 2: reflexivity.
+    destruct (PeanoNat.Nat.leb_spec j n), (PeanoNat.Nat.leb_spec j n').
+    - assumption.
+    - exfalso. lia.
+    - exfalso. simpl_bool. destruct H0. congruence.
+    - assumption.
+  * (* App *)
+    simpl_bool. destruct H2. split.
+    - refine (H _ _ _ _ H2). lia.
+    - assumption.
+Qed.
+
+(** ** Lemmas about freshness *)
 
 Lemma forallb_conq:
   forall a (P1 P2 : a -> bool) xs,
@@ -779,6 +840,8 @@ Proof.
   assumption.
 Qed.
 
+(** ** Lemmas about [StrongSubset] *)
+
 Lemma StrongSubset_updJPS:
   forall (v : Var) (vs1 vs2 : VarSet),
   StrongSubset vs1 vs2 ->
@@ -865,6 +928,10 @@ Proof.
   }
   rewrite H0. apply almostEqual_refl.
 Qed.
+
+
+(** ** Lemmas about [Respects_StrongSubset] *)
+
 Lemma Respects_StrongSubset_updJPS:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->

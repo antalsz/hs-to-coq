@@ -14,6 +14,7 @@ Exitify.v
 # CoreSubstInvariants.v
 StateLogic.v
 GhcTactics.v
+GhcUtils.v
 Forall.v
 Core.v
 CoreFVs.v

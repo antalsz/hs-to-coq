@@ -27,32 +27,32 @@ Require Import Proofs.GhcTactics.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
 Require Import Proofs.Unique.
+Require Import Proofs.GhcUtils.
 
 Set Bullet Behavior "Strict Subproofs".
 
-
 Close Scope Z_scope.
 
-Lemma Forall_and:
-  forall {a} (P Q : a -> Prop) xs,
-  (Forall P xs /\ Forall Q xs) <->  Forall (fun x =>  P x /\ Q x) xs.
-Proof.
-  intros.
-  rewrite !Forall_forall in *.
-  firstorder.
-Qed.
+(** * Proofs about the Exitification pass *)
 
-Lemma Forall_app:
-  forall {a} (P : a -> Prop) xs ys,
-  Forall P (xs ++ ys) <->  Forall P xs /\ Forall P ys.
-Proof.
-  intros.
-  rewrite !Forall_forall in *.
-  setoid_rewrite in_app_iff.
-  firstorder.
-Qed.
+(**
+In this module, we prove that the exitification pass preserves the various
+invariants of Core. But first we need to do some yak-shaving to deal
+with the kind of definitions that we get out of hs-to-coq here.
+*)
 
-(* A domain predicate for [go] *)
+
+
+(** ** A domain predicate for [go] *)
+
+(**
+The local function [go] of [exitifyRec] is defined via [deferredFix]. Unfortunately, it
+is not defined everywhere, but only on certain well-formed terms. Because it calls
+[error] (i.e. [default]) in the other cases, it is not possibly to prove termination 
+using [deferredFix_eq_on] on all input, but we need to restrict accordingly.
+
+The following predicate describes expressions on which [go] does not call [error]:
+*)
 
 Inductive GoDom : CoreExpr -> Prop :=
   | GoDom_Var  v: GoDom (Mk_Var v)
@@ -71,12 +71,12 @@ Inductive GoDom : CoreExpr -> Prop :=
     GoDom (Let (NonRec v rhs) e)
   | GoDom_LetRec_Join pairs e:
     Forall (fun p => GoDom_JoinPair (fst p) (snd p)) pairs ->
-    pairs <> []  ->
+    pairs <> []  -> (* because [go] uses [head] *)
     GoDom e ->
     GoDom (Let (Rec pairs) e)
   | GoDom_LetRec pairs e:
     Forall (fun p => GoDom_Pair (fst p) (snd p)) pairs ->
-    pairs <> []  ->
+    pairs <> [] -> (* because [go] uses [head] *)
     GoDom e ->
     GoDom (Let (Rec pairs) e)
   | GoDom_Case scrut bndr ty alts:
@@ -97,6 +97,7 @@ Inductive GoDom : CoreExpr -> Prop :=
     isJoinId_maybe v = Some (length params) ->
     GoDom rhs ->
     GoDom_JoinPair v (mkLams params rhs)
+    (* This is crucial: Every join point has enough lambdas *)
  with GoDom_Pair : CoreBndr -> CoreExpr -> Prop :=
   | GoDom_NotJoin v rhs :
     isJoinId_maybe v = None ->
@@ -138,6 +139,13 @@ Proof.
     eexists (_ :: _).
     reflexivity.
 Qed.
+
+(** The predicate is actually a corollary of being join-point valid.
+
+So we could just use [isJoinPointsValid e n jps = true] instead of [GoDom], but that
+would add the complexity of the following proof to other proofs in this module.
+*)
+
 
 Program Fixpoint isJoinPointsValid_GoDom
   e n jps { measure e (CoreLT) } :
@@ -242,23 +250,35 @@ Proof.
   constructor; assumption.
 Qed.
 
+(** * Working within [exitifyRec] *)
 
+(**
+A large part of this module deals with what happens “inside” [exitifyRec]. So instead
+of passing the arguments to [exitifyRec] around everywhere, we use a section to “enter
+this context”:
+*)
 
-(* This section reflects the context of the local definition of exitifyRec *)
 Section in_exitifyRec.
 
+  (* For better proof paralellism, see 
+     https://coq.inria.fr/refman/proof-engine/proof-handling.html#coq:opt.default-proof-using-expression
+   *)
   Set Default Proof Using "Type".
 
-  (* Parameters of exitifyRec *)
+  (** These are (almost) the parameters of [exitifyRec] *)
   Variable in_scope : InScopeSet.
   Variable pairs : list (CoreBndr * CoreExpr).
-  (* The actual parameter passed *)
+  (** almost, because [exitifyRec] is actually called with the following
+      in-scope-set, but we need access to the underlying [in_scope] in our proofs.
+  *)
   Definition in_scope2 := extendInScopeSetList in_scope (map fst pairs).
 
-  (* Parameters and assumptions of the proof *)
+  (** Not a parameter of [exitifyRec], but when doing the
+      proofs about join-point-validity, we need to know which join points are
+      in scope outside the [Rec] *)
   Variable jps : VarSet.
 
-  (* Giving names to the local functions of exitifyRec.
+  (** Now we give  names to the local functions of [exitifyRec].
      See http://www.joachim-breitner.de/blog/738-Verifying_local_definitions_in_Coq
      for more on that idiom.
    *)
@@ -296,35 +316,44 @@ Section in_exitifyRec.
   Definition pairs' := fst pairs'_exits.
   Definition exits := snd pairs'_exits.
 
-  (* Some useful definitions *)
-  
-  (* The names of the functions bound in this letrec *)
+  (** Some useful definitions *)
+
+  (** The names of the functions bound in this letrec *)
   Definition fs := map fst pairs.
 
-  (* [in_scope] and [in_scope2] should only be mentioned as concrete arguments
-     to functions, but ideally quickly rewritten to these. *)
-  (* The outermost scope *)
+  (** The parameters  [in_scope] and [in_scope2] are of type [InScopeSet],
+      but the only interesting thing about an [InScopeSet] is its [VarSet].
+      So here are the corresponding [VarSet]s. We generally want to phrase
+      all the lemmas and proofs in terms of these:
+   *)
+
+  (** The outermost scope *)
   Definition isvs := getInScopeVars in_scope.
-  (* The let-scope, before *)
+  (** The let-scope, before exitification *)
   Definition isvsp := extendVarSetList isvs fs .
-  (* The outermost scope, including exits *)
+  (** The outermost scope, including the exit join points we produce *)
   Definition isvs' := extendVarSetList isvs (map fst exits).
-  (* The let-scope, after *)
+  (** The let-scope, after exitification *)
   Definition isvsp' := extendVarSetList isvs' fs.
 
-  (* The let-scope, before *)
+  (** Corresponding definitions for the join points in scope *)
+  (** The let-scope, before exitification *)
   Definition jpsp := updJPSs jps fs .
-  (* The outermost scope, including exits *)
+  (** The outermost scope, including the exit join points we produce *)
   Definition jps' := updJPSs jps (map fst exits).
-  (* The let-scope, after *)
+  (** The let-scope, after exitification *)
   Definition jpsp' := updJPSs jps' fs.
 
+  (** The join point set passed above needs to be a subset of the
+      the set of variables in scope.
+  *)
   Variable jps_subset_isvs:
     subVarSet jps isvs = true.
 
 
-  (** Termination of [go] and a suitable induction lemma *)
+  (** ** Termination of [go] and a suitable induction lemma *)
 
+  (** The functorial of the fixpoint of [go] *)
   Definition go_f := ltac:(
     let rhs := eval cbv delta [go] in go in
     lazymatch rhs with
@@ -333,7 +362,8 @@ Section in_exitifyRec.
     end).
 
 
-  (* Termination of [go] *)
+  (* The termination proofs for [go], using [deferredFix_eq_on] and producing
+     an unrolling lemma for [go]. *)
   Lemma go_eq :
      forall captured e,
      GoDom e ->
@@ -442,11 +472,10 @@ Section in_exitifyRec.
            specialize (Hpairs _ HIn).
            simpl in Hpairs.
            inversion Hpairs. subst. rename H0 into HiNJ. rename H2 into Hrhs. rename H into Heq2.
-           
 
            expand_pairs.
            erewrite idJoinArity_join by eassumption.
-           
+
            pose proof (collectNAnnBndrs_mkLams_collectNBinders _ _ _ Heq2) as H.
            destruct H as [Heq1 Heq3].
            subst.
@@ -494,6 +523,25 @@ Section in_exitifyRec.
     rewrite deAnnotate_freeVars.
     assumption.
   Qed.
+
+  (**
+  We are always only ever going to run [go] on expressions
+  that are well-scoped and in the domain of [go].
+  When we do induction in such a case, we have to prove that these predicate
+  holds for the arguments of recursive calls of [go]. This would clutter these
+  proofs, so we separate the concerns by creating an induction principle that
+
+   * is constraint to well-scoped expressions in the domain of [go]
+   * follows the structure of [go] (rather than the structure of terms or
+     the predicates)
+   * in each inductive case, provides also the well-scopedness of subexpressions.
+
+  Writing out this rule would be tedious and error-prone, so we use the trick explained in
+  http://www.joachim-breitner.de/blog/740-Proof_reuse_in_Coq_using_existential_variables
+  to not actually write out the inductive cases, but let Coq infer them.
+
+  Of course [Check go_in] and the end of this can be used to read the theorem in full.
+  *)
 
   Lemma go_ind_aux:
     forall (P : _ -> _ -> _ -> Prop),
@@ -622,7 +670,7 @@ Section in_exitifyRec.
           rewrite !map_map in HNoDup.
 
           rewrite forM_map.
-          
+
           assert (IHpairs_eq :
             exists pairs'',
             pairs' = map (fun '(MkJoinRHS j params body _) => (j, mkLams params body)) pairs'')
@@ -630,7 +678,7 @@ Section in_exitifyRec.
           destruct IHpairs_eq.
           subst pairs'.
           rename x into pairs'.
-          
+
           rewrite Forall_map in HWSpairs.
           rewrite map_map in HWSpairs.
           rewrite map_ext with (g := jrhs_v) in HWSpairs
@@ -638,7 +686,7 @@ Section in_exitifyRec.
           rewrite map_map in HWSe.
           rewrite map_ext with (g := jrhs_v) in HWSe
             by (intro a; destruct a; reflexivity).
-            
+
           assert (IHpairs : forall j params join_body HisJoin
             (HIn : In (MkJoinRHS j params join_body HisJoin) pairs'),
             P (captured ++ map jrhs_v pairs' ++ params) join_body
@@ -786,19 +834,22 @@ Section in_exitifyRec.
               let x' := uncurryN n x in
               uconstr:(uc x')
   end.
+
+  (** This is the general induction principle *)
   Definition go_ind P
     := ltac:(let x := uncurryN 6 (proj2_sig (go_ind_aux P)) in exact x).
   Opaque go_ind go_ind_aux.
 
-  (* Actually, we can simplify P to only take captured and e *)
+  (** We can specialize it to a [P] that only takes [captured] and [e]. *)
   Definition go_ind' P := go_ind (fun captured e r => P captured e).
 
-  (** ** Scope validity *)
+  (** ** Scope validity of [exitifyRec] *)
 
   (** This predicate describes when a list of non-recursive bindings
       is ok to wrap around the [Let (Rec [pairs] body)] pair.
 
-      (Maybe this could be abstracted over isvs and moved to [ScopeInvariants])
+      It is a pre-condition for the scope-validity of a bunch
+      of non-recursive bindings when all the binds are independent.
   *)
   Definition WellScopedFloats floats :=
     (* All added bindings are fresh with regard to the environment *)
@@ -810,11 +861,11 @@ Section in_exitifyRec.
     (* All are good local variables *)
     Forall (fun 'p => GoodLocalVar (fst p)) floats.
 
-  (* Here we do the actual wrapping *)
   Lemma mkLets_WellScoped:
     forall exits' e,
-    (* The body is well-scoped in the extended environment *)
+    (* If the body is well-scoped in the extended environment *)
     WellScoped e (extendVarSetList isvs (map fst exits')) ->
+    (* And this is a suitable set of bindings. *)
     WellScopedFloats exits' ->
     (* Then wrapping these bindings around [e] is well-scoped *)
     WellScoped (mkLets (map (fun '(v,rhs) => NonRec v rhs) exits') e) isvs.
@@ -868,7 +919,7 @@ Section in_exitifyRec.
         + assumption.
   Qed.
 
-  (* the [addExit] function ensures that the new exit floats are well-scoped
+  (** the [addExit] function ensures that the new exit floats are well-scoped
      where we are going to put them.
    *)
   Lemma addExit_all_WellScopedFloats:
@@ -918,9 +969,9 @@ Section in_exitifyRec.
   Qed.
 
 
-  (** in [go_exit], we [pick] variables to abstract over and [zap] them.
+  (** In [go_exit], we [pick] variables to abstract over and [zap] them.
       That is somewhat involved, ([pick] is weird mix between a left-fold
-      and a right fold) so extract their definitions to the top level
+      and a right fold), so extract their definitions to the top level
       and state lemmas about them.
    *)
   Definition zap := ltac:(
@@ -960,29 +1011,6 @@ Section in_exitifyRec.
       rewrite !fst_pick_list. simpl. destruct_match; simpl.
       + rewrite IHxs. reflexivity. 
       + rewrite IHxs. reflexivity. 
-  Qed.
-
-  Lemma Forall2_symmetric:
-    forall {a} (P : a -> a -> Prop) xs,
-    (forall x, P x x) -> Forall2 P xs xs.
-  Proof.
-    intros.
-    induction xs.
-    * constructor.
-    * constructor; auto.
-  Qed.
-
-  Lemma Forall2_impl_Forall_r:
-    forall {a b} (P : a -> b -> Prop) (Q : b -> Prop)  xs ys,
-    Forall2 P xs ys ->
-    (forall x y, P x y -> Q y) ->
-    Forall Q ys.
-  Proof.
-    intros.
-    induction H.
-    * constructor.
-    * constructor; intuition.
-      eapply H0; eassumption.
   Qed.
  
   Lemma WellScoped_picked_aux:
@@ -1028,7 +1056,7 @@ Section in_exitifyRec.
     auto.
   Qed.
 
-  (* This following lemma verifies the bugfix of #15110 *)
+  (** This lemma verifies the bugfix of #15110 *)
   Lemma WellScopedVar_picked_aux:
     forall vsis captured fvs,
     Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
@@ -1110,6 +1138,8 @@ Section in_exitifyRec.
       - apply IHForall.
   Qed.
 
+  (** We first show that all exit join points floated by [go_exit] are well-scoped,
+      then we lift it to [go]. *)
   Lemma go_exit_all_WellScopedFloats captured e : 
     Forall GoodLocalVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
@@ -1252,15 +1282,19 @@ Section in_exitifyRec.
     * apply StateInvariant_return.
   Qed.
 
-  (* Clearly we expect the input pairs be well-scoped *)
+  (** More assumptions for this section:
+     Clearly the [pairs] that we get need to be well-scoped and join-point valid. *)
   Variable pairs_WS :
     Forall (fun p => WellScoped (snd p) isvsp) pairs.
   Variable pairs_GLV:
     Forall (fun p : Var * Expr CoreBndr => GoodLocalVar (fst p)) pairs.
   Variable pairs_VJPP:
     Forall (fun p : Var * Expr CoreBndr => isValidJoinPointsPair (fst p) (snd p) jpsp = true) pairs.
+  Variable pairs_NoDup:
+    NoDup (map varUnique fs).
 
 
+  (** [exists] is produced by running [go], so now we know that this is well-scoped. *)
   Lemma all_exits_WellScoped:
     WellScopedFloats exits.
   Proof using Type pairs_WS pairs_VJPP.
@@ -1293,17 +1327,8 @@ Section in_exitifyRec.
       + apply pairs_WS.
     * repeat split; constructor.
   Qed.
-
-  Definition sublistOf {a} (xs ys : list a) := incl ys xs.
-
-  Lemma sublistOf_cons {a} x (xs ys : list a):
-    sublistOf ys (x :: xs) <-> (In x ys /\ sublistOf ys xs).
-  Proof.
-    intros.
-    unfold sublistOf, incl.
-    intuition.
-    destruct H; subst; auto.
-  Qed.
+  
+  (** some corollaries of the fact that the [exits] are well-scoped *)
 
   Lemma disjoint_isvs_exits:
      disjointVarSet isvs (mkVarSet (map fst exits)) = true.
@@ -1312,6 +1337,9 @@ Section in_exitifyRec.
     rewrite Forall_map. simpl.
     apply all_exits_WellScoped.
   Qed.
+
+  (** In particular, that we can move expressions from the original scope
+  to the one extended with the [exits] in scope.*)
 
   Lemma isvs_to_isvs':
      StrongSubset isvs isvs'.
@@ -1346,6 +1374,21 @@ Section in_exitifyRec.
     apply StrongSubset_extendVarSetList.
     apply isvsp_to_isvsp'_extended.
   Qed.
+
+  (**
+  Now we du the [addExit], [go_Exit], [go] dance again, but this
+  time we prove that the resulting code in [pairs'] is well-scoped.
+
+  Here is a pretty tough trick: How do we know that the result of any call
+  to [addExit] is in scope in the final program? We need to know that any call to
+  [addExit] produces a variable that is part of the *final* state.
+
+  We do so by using the [RevStateInvariant], which threads an invariant through
+  from the back! The invariant we use is [subListOf exits], essentially saying
+  “Assume that all variables written in this state monad are part of [exits].”
+  Then, in the proof about [addExit], we learn that this particular variable
+  also needs to be in [exits].
+  *)
 
   Lemma addExit_all_WellScopedVar:
     forall captured ja e,
@@ -1393,12 +1436,6 @@ Section in_exitifyRec.
       apply subVarSet_extendVarSetList_r.
       apply subVarSet_refl.
   Qed.
-
-  (* No we go through [go] again and see that pairs' is well-scoped.
-     We start assuming that the result of the computation is a subset of exits'
-     for which we already know [WellScopedFloats]. By going backwards,
-     we will recover that [mkExit] produces a name of this set.
-  *)
 
   Lemma go_exit_res_WellScoped captured e : 
     let orig := extendVarSetList isvsp captured in
@@ -1658,6 +1695,7 @@ Section in_exitifyRec.
       intro. auto.
   Qed.
 
+  (** The names of the functions in [pairs] are actually unchanged. *)
   Lemma map_fst_pairs':
     map (@fst CoreBndr (Expr CoreBndr)) pairs' = fs.
   Proof.
@@ -1686,19 +1724,19 @@ Section in_exitifyRec.
       apply IHl.
   Qed.
 
+  (** Too many names for the same types around, and [rewrite] gets confused. *)
   Lemma map_fst_pairs'':
     map (@fst Var (Expr CoreBndr)) pairs' = fs.
   Proof. exact map_fst_pairs'. Qed.
 
-  (** Main well-scopedness theorem:
+  (** Finally, the main well-scopedness theorem for [exitifyRec]:
       If the input is well-scoped, then so is the output of [exitifyRec].*)
   Theorem exitifyRec_WellScoped:
     forall body,
-    NoDup (map varUnique fs) ->
     WellScoped body isvsp ->
     WellScoped (mkLets (exitifyRec (extendInScopeSetList in_scope fs) pairs) body) isvs.
-  Proof using Type pairs_GLV pairs_WS pairs_VJPP.
-    intros ? HNoDup HWSbody.
+  Proof using Type pairs_GLV pairs_WS pairs_VJPP pairs_NoDup.
+    intros ? HWSbody.
     cbv beta delta [exitifyRec].
     zeta_with go_exit.
     zeta_with recursive_calls.
@@ -1721,55 +1759,21 @@ Section in_exitifyRec.
       repeat apply conj.
       + rewrite <- Forall_map in pairs_GLV.
         apply pairs_GLV.
-      + assumption.
+      + apply pairs_NoDup.
       + rewrite Forall'_Forall in *.
         apply pairs'_WS.
       + apply (weaken isvsp_to_isvsp').
-        assumption.
+        apply HWSbody.
     * apply all_exits_WellScoped.
   Qed.
 
   (** ** Join point validity *)
-
-
-  (** When is the result of [mkExitLets] valid? *)
   
-  Lemma mkLets_JPI:
-    forall floats e jps',
-    (* All added bindings are fresh with regard to the environment *)
-    disjointVarSet jps' (mkVarSet (map fst floats)) = true ->
-    (* The body is valid in the extended environment *)
-    isJoinPointsValid e 0 (updJPSs jps' (map fst floats)) = true ->
-    (* Each thing is valid in its environment *)
-    forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps') floats = true ->
-    isJoinPointsValid (mkLets (map (fun '(v,rhs) => NonRec v rhs) floats) e) 0 jps' = true.
-  Proof.
-    intros ???.
-    revert e.
-    induction floats as [|[v rhs] floats] using rev_ind; intros jps' Hdisjoint Hbase Hpairs.
-    * simpl. unfold Base.id. assumption.
-    * simpl in *; fold isJoinPointsValidPair in *.
-      rewrite forallb_app in Hpairs.
-      rewrite map_append, disjointVarSet_mkVarSet_append in Hdisjoint.
-      simpl_bool.
-      destruct Hpairs as [Hpairs Hpair].
-      destruct Hdisjoint as [Hdisjoint _].
-      simpl in Hpair. rewrite andb_true_r in Hpair.
-      rewrite map_append, mkLets_append. simpl.
-      rewrite mkLets_cons, mkLets_nil.
-      apply IHfloats.
-      - apply Hdisjoint.
-      - simpl. fold isJoinPointsValidPair.
-        simpl_bool. split.
-        + apply isValidJoinPointsPair_isJoinPointsValidPair.
-          refine (weakenb (StrongSubset_updJPSs_fresh _ _ _) _).
-          -- apply Hdisjoint.
-          -- assumption.
-        + rewrite map_append in Hbase. simpl in Hbase.
-          rewrite updJPSs_append, updJPSs_cons, updJPSs_nil in Hbase. 
-          apply Hbase.
-      - assumption.
-  Qed.
+  (** We now prove join point validity. The overall structure is very similar to the above proof:
+      We go through [go] with [StateInvariant], to learn stuff about [exists], then we
+      go through again wiht [RevStateInvariant], to learn stuff about [pairs'].
+      For both of these we look at [addExit], [go_exit], [go].
+  *)
 
   Lemma addExit_all_joinIds:
     forall jps' captured ja e,
@@ -1859,30 +1863,6 @@ Section in_exitifyRec.
     assumption.
   Qed.
 
-  Lemma existsb_morgan:
-    forall a p (xs : list a),
-    existsb p xs = negb (forallb (fun x => negb (p x)) xs).
-  Proof.
-    intros.
-    induction xs.
-    * simpl. intuition congruence.
-    * simpl. rewrite IHxs, negb_andb, negb_involutive.
-      reflexivity.
-  Qed.
-
-  (* TODO: Remove this *)
-  Lemma existsb_false_iff_forallb:
-    forall a p (xs : list a),
-    existsb p xs = false <-> forallb (fun x => negb (p x)) xs = true.
-  Proof.
-    intros.
-    induction xs.
-    * simpl. intuition congruence.
-    * simpl. rewrite orb_false_iff, andb_true_iff, negb_true_iff, IHxs.
-      reflexivity.
-  Qed.
-  
-
 
   Lemma go_exit_all_ValidJoinPairs captured e : 
     WellScoped e (extendVarSetList isvsp captured) ->
@@ -1947,8 +1927,14 @@ Section in_exitifyRec.
       - apply Hno_capture_jp.
   Qed.
 
-  (* Now we need to do induction on go over a well-scoped _and_ join-point-valid term.
-     And actually we need that twice. So hence I define a new induction principle, based on the old one, to be used twice.
+  (**
+     Now we need to do induction on [go] applied to an expression that is both
+     well-scoped _and_ a join-point-valid term. And we actually do that twice.
+
+     So as before, we separate this concern out into its own induction rule, using
+     the same trick as before. Note, though, that we can actually build 
+     on top of the already defined [go_ind], so we only extend it here,
+     but do not duplicate everything.
   *)
   
   Lemma go_ind2_aux:
@@ -2126,6 +2112,8 @@ Section in_exitifyRec.
     * apply StateInvariant_return.
   Qed.
 
+  (** We find that all [exits] are valid join point pairs.
+  *)
 
   Lemma all_exits_ValidJoinPairs:
     forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) exits = true.
@@ -2169,6 +2157,9 @@ Section in_exitifyRec.
         apply H.
     * repeat split; constructor.
   Qed.
+
+  (** And as before, we have a bunch of corollaries. *)
+
 
   Lemma all_exits_isJoinId:
     forallb isJoinId (map fst exits) = true.
@@ -2228,8 +2219,7 @@ Section in_exitifyRec.
   Qed.
 
 
-  (* Again, we go through [go] again and see that pairs' is join-point valid.
-  *)
+  (** Now the second pass, ensuring that [pairs'] is join-point valid. *)
 
   Lemma addExit_isJoinPointsValid:
     forall captured ja e,
@@ -2581,8 +2571,47 @@ Section in_exitifyRec.
       intro. auto.
   Qed.
 
+  (** To combine the two, we need to know when the result
+  of [mkLets] is join-point valid? *)
 
-  (** Main result *)
+  Lemma mkLets_JPI:
+    forall floats e jps',
+    (* All added bindings are fresh with regard to the environment *)
+    disjointVarSet jps' (mkVarSet (map fst floats)) = true ->
+    (* The body is valid in the extended environment *)
+    isJoinPointsValid e 0 (updJPSs jps' (map fst floats)) = true ->
+    (* Each thing is valid in its environment *)
+    forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps') floats = true ->
+    isJoinPointsValid (mkLets (map (fun '(v,rhs) => NonRec v rhs) floats) e) 0 jps' = true.
+  Proof.
+    intros ???.
+    revert e.
+    induction floats as [|[v rhs] floats] using rev_ind; intros jps' Hdisjoint Hbase Hpairs.
+    * simpl. unfold Base.id. assumption.
+    * simpl in *; fold isJoinPointsValidPair in *.
+      rewrite forallb_app in Hpairs.
+      rewrite map_append, disjointVarSet_mkVarSet_append in Hdisjoint.
+      simpl_bool.
+      destruct Hpairs as [Hpairs Hpair].
+      destruct Hdisjoint as [Hdisjoint _].
+      simpl in Hpair. rewrite andb_true_r in Hpair.
+      rewrite map_append, mkLets_append. simpl.
+      rewrite mkLets_cons, mkLets_nil.
+      apply IHfloats.
+      - apply Hdisjoint.
+      - simpl. fold isJoinPointsValidPair.
+        simpl_bool. split.
+        + apply isValidJoinPointsPair_isJoinPointsValidPair.
+          refine (weakenb (StrongSubset_updJPSs_fresh _ _ _) _).
+          -- apply Hdisjoint.
+          -- assumption.
+        + rewrite map_append in Hbase. simpl in Hbase.
+          rewrite updJPSs_append, updJPSs_cons, updJPSs_nil in Hbase. 
+          apply Hbase.
+      - assumption.
+  Qed.
+
+  (** And finally we can put it all together *)
 
   Theorem exitifyRec_JPI:
     forall body n,
@@ -2639,12 +2668,12 @@ Section in_exitifyRec.
     * apply all_exits_ValidJoinPairs.
   Qed.
 
-
 End in_exitifyRec.
 
-(* This combines the main lemmas about [exitifyRec].
-   Also, introduce an equality for fst_pairs for easier application.
-   Also, group all assumptions in one big Forall.
+(** This concludes the proofs about [exitifyRec]. We can sum up all the above 
+    in a single lemma.
+    I also introduces an equality for fst_pairs for easier application.
+    I also groups all assumptions about [pairs] in one big Forall.
 *)
 Lemma exitifyRec_WellScoped_JPI:
   forall (in_scope : InScopeSet) (pairs : list (CoreBndr * CoreExpr)) fst_pairs n jps,
@@ -2683,6 +2712,15 @@ Proof.
     * assumption.
 Qed.
 
+(** ** Verification of [go] in [exitifyProgram] *)
+
+(** For the rest of the module, we deal with well-scopedness and join-point-validity
+    simultaneously. We need always both anyways, because the join-point-validity
+    implies that the expression in is in the domain of 
+
+    We extract the local [go] from [exitifyProgram], and use induction
+    to show that it preserves both invariants.
+*)
 
 Definition top_go := ltac:(
   let rhs := eval cbv beta delta [exitifyProgram] in (exitifyProgram []) in
@@ -2728,9 +2766,15 @@ Ltac solve_subVarSet :=
   first [ assumption
         | apply subVarSet_emptyVarSet
         ].
-  
 
-Program Fixpoint top_go_WellScoped
+(**
+Nothing really interesting is happening here, just lots oftaking the
+conjunction between the invariants apart and combining them again, and 
+lots of shifting around [VarSet]s and [InScopeSets], and eventually a call to
+[exififyRec]. This really should be simpler.
+*)
+
+Program Fixpoint top_go_WellScoped_JPI
   e in_scope n jps {measure e (CoreLT)} :
   WellScoped e (getInScopeVars in_scope)->
   isJoinPointsValid e n jps = true ->
@@ -2739,7 +2783,7 @@ Program Fixpoint top_go_WellScoped
   isJoinPointsValid (top_go in_scope e) n jps = true
   := _.
 Next Obligation.
-  rename top_go_WellScoped into IH.
+  rename top_go_WellScoped_JPI into IH.
   rename H into HWS.
   rename H0 into HJPV.
   rename H1 into Hsubset.
@@ -3041,6 +3085,10 @@ Proof.
   reflexivity.
 Qed.
 
+(** ** Verification of [exitifyProgram] *)
+
+(** At last, the final result. *)
+
 Theorem exitifyProgram_WellScoped_JPV:
   forall pgm,
   WellScopedProgram pgm ->
@@ -3112,12 +3160,12 @@ Proof.
       destruct HJPVrhs as [HisJoinId HJPVrhs].
       simpl in *.
       split; only 2: split.
-      -- eapply top_go_WellScoped.
+      -- eapply top_go_WellScoped_JPI.
          ** apply HWSrhs.
          ** apply HJPVrhs.
          ** apply subVarSet_emptyVarSet.
       -- assumption.
-      -- eapply top_go_WellScoped.
+      -- eapply top_go_WellScoped_JPI.
          ** apply HWSrhs.
          ** apply HJPVrhs.
          ** apply subVarSet_emptyVarSet.
@@ -3132,12 +3180,12 @@ Proof.
       destruct HJPV as [HisJoinId HJPVrhs].
       simpl in *.
       split; only 2: split.
-      -- eapply top_go_WellScoped.
+      -- eapply top_go_WellScoped_JPI.
          ** apply HWS.
          ** apply HJPVrhs.
          ** apply subVarSet_emptyVarSet.
       -- assumption.
-      -- eapply top_go_WellScoped.
+      -- eapply top_go_WellScoped_JPI.
          ** apply HWS.
          ** apply HJPVrhs.
          ** apply subVarSet_emptyVarSet.

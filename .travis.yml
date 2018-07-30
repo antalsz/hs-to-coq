@@ -65,11 +65,7 @@ jobs:
 
   - stage: Tests and Examples
 
-  # It would be super-nice to give proper names to all these jobs,
-  # but GitHub does not support that at the moment:
-  # https://github.com/travis-ci/travis-ci/issues/5898
-
-  # Tests and base tests
+    name: tests and base tests
     script:
       - eval $(opam config env)
       - stack --no-terminal --install-ghc install
@@ -77,8 +73,8 @@ jobs:
       - make -j2 -C base
       - make -j2 -C examples/base-tests
 
-  # Containers (theory)
-  - script:
+  - name: Containers (theory)
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -j2 -C base
@@ -86,8 +82,8 @@ jobs:
       - make -j2 -C examples/containers/lib
       - make -j2 -C examples/containers/theories
 
-  # Containers (extraction)
-  - script:
+  - name: Containers (extraction)
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -j2 -C base
@@ -96,8 +92,8 @@ jobs:
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
       - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
 
-  # Other examples
-  - script:
+  - name: Other examples
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -j2 -C base
@@ -111,8 +107,8 @@ jobs:
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
 
-  # GHC (including transformers)
-  - script:
+  - name: GHC (including transformers)
+    script:
       - eval $(opam config env)
       - make -j2 -C base
       - make -j2 -C base-thy
@@ -123,8 +119,8 @@ jobs:
       - make -j2 -C examples/ghc/theories
       - make -j2 -C examples/core-semantics
 
-  # Checking translation: base
-  - script:
+  - name: Translating base (ensures convenience copy is up-to-date)
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -C examples/base-src clean
@@ -134,8 +130,8 @@ jobs:
       - git status
       - git diff-index --cached --quiet HEAD -- base
 
-  # Checking translation: containers
-  - script:
+  - name: Translating containers (ensures convenience copy is up-to-date)
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -C examples/containers clean
@@ -145,8 +141,8 @@ jobs:
       - git status
       - git diff-index --cached --quiet HEAD -- examples/containers/lib/
 
-  # Checking translation: transformers
-  - script:
+  - name: Translating transformers (ensures convenience copy is up-to-date)
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -C examples/transformers clean
@@ -156,8 +152,8 @@ jobs:
       - git status
       - git diff-index --cached --quiet HEAD -- examples/transformers/lib/
 
-  # Checking translation: GHC
-  - script:
+  - name: Translating GHC (ensures convenience copy is up-to-date)
+    script:
       - stack --no-terminal --install-ghc install
       - eval $(opam config env)
       - make -C examples/ghc clean

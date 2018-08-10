@@ -33,7 +33,6 @@ MODULES = \
   Data/IntSet/InternalWord \
   Data/IntMap/Internal \
   Data/Map/Internal \
-  Data/Map/Strict \
   IntSetValidity \
 
 HS_SPEC_MODULES = \

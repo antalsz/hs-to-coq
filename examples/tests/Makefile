@@ -30,6 +30,7 @@ PASS = \
   RenameModule \
   Mutrec \
   GADT \
+  Underscore_Module \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

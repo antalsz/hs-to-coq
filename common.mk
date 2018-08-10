@@ -6,7 +6,7 @@ else
 ifeq ($(HS_TO_COQ_COVERAGE),True)
 	CABAL_OPTS = --enable-coverage
 endif
-TOP := $(dir $(lastword $(MAKEFILE_LIST)))
+TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 HS_TO_COQ = cabal new-run --project-file=$(TOP)/cabal.project  -v0 $(CABAL_OPTS) exe:hs-to-coq --
 endif
 

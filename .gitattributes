@@ -1,2 +1,5 @@
 base/ linguist-generated=true
 examples/ linguist-documentation=false
+examples/containers/lib/ linguist-generated=true
+examples/ghc/lib/ linguist-generated=true
+examples/transformers/lib/ linguist-generated=true

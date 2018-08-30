@@ -1,3 +1,5 @@
+data kinds Data.Functor.Product.Product (Type -> Type), (Type -> Type)
+
 add Data.Monoid Instance Unpeel_Product a : Unpeel (Product a) a :=
 	 Build_Unpeel _ _ getProduct Mk_Product.
 
@@ -5,7 +7,4 @@ order Data.Monoid.Eq___Product Data.Monoid.Ord__Product
 
 order Unpeel_Product Data.Monoid.Functor__Product Data.Monoid.Applicative__Product Data.Monoid.Monad__Product
 
-skip Data.Monoid.Monoid__Product
 
-skip Data.Monoid.Read__Product
-skip Data.Monoid.Show__Product

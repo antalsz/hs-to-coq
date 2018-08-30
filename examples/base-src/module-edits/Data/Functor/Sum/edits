@@ -1,1 +1,1 @@
-data kinds Data.Functor.Sum.Sum (Type -> Type)
+data kinds Data.Functor.Sum.Sum (Type -> Type),(Type -> Type)

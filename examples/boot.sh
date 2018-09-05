@@ -13,10 +13,12 @@ cd $(dirname $0)
 
 CLEAN=YES
 COQ=YES
+COQ_TEST=YES
 COQ_VERSION=8.8
 
-function clean () { if [ "$CLEAN" = "YES" ]; then "$@"; fi }
-function coq ()   { if [ "$COQ"   = "YES" ]; then "$@"; fi }
+function clean ()    { if [ "$CLEAN"    = "YES" ]; then "$@"; fi }
+function coq ()      { if [ "$COQ"      = "YES" ]; then "$@"; fi }
+function coq-test () { if [ "$COQ_TEST" = "YES" ]; then "$@"; fi }
 
 while [ -n "$1" ]
 do
@@ -28,6 +30,19 @@ do
  then
    echo "Skipping running Coq"
    COQ=NO
+   COQ_TEST=NO
+ elif [ "$1" = "quick" ]
+ then
+   echo "Skipping cleaning and tests"
+   CLEAN=NO
+   COQ_TEST=NO
+ elif [ "$1" = "help" ]
+ then
+   echo "Possible options:"
+   echo "  - noclean: Don't clean"
+   echo "  - nocoq:   Don't run Coq"
+   echo "  - quick:   Don't clean or run tests"
+   echo "  - help:    Print this help message"
  else
    echo "Unknown option $1"
    exit 1
@@ -73,7 +88,7 @@ clean make -C ghc clean
 make -C base-src vfiles
 coq make -C ../base
 coq make -C ../base-thy
-coq make -C base-tests
+coq-test make -C base-tests
 
 make -C containers vfiles
 coq make -C containers coq

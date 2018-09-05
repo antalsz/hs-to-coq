@@ -418,4 +418,4 @@ data LocalModule = LocalModule Ident [Sentence]
 -- TODO: Move this?
 data Signature = Signature { sigType   :: Term
                            , sigFixity :: Maybe (Associativity, Level) }
-               deriving (Eq, Ord, Show, Read)
+               deriving (Eq, Ord, Show, Read, Typeable, Data)

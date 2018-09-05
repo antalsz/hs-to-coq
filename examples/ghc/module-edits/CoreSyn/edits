@@ -32,8 +32,6 @@ skip Core.tickishCanSplit
 skip Core.tickishCounts
 skip Core.tickishIsCode
 skip Core.tickishContains
-skip Core.tickishScopesLike
-skip Core.tickishFloatable
 
 # record selector, no place to add default
 skip Core.uf_tmpl

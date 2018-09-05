@@ -57,6 +57,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
+  definition      { TokWord    "definition"     }
   termination     { TokWord    "termination"    }
   'deferred'      { TokWord    "deferred"       }
   'corecursive'   { TokWord    "corecursive"    }
@@ -69,6 +70,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   add             { TokWord    "add"            }
   scope           { TokWord    "scope"          }
   constructor     { TokWord    "constructor"    }
+  simple          { TokWord    "simple"         }
   fun             { TokWord    "fun"            }
   fix             { TokWord    "fix"            }
   cofix           { TokWord    "cofix"          }
@@ -233,28 +235,30 @@ Scope :: { Ident }
   | type    { "type" } -- This is so common, we have to special-case it
 
 Edit :: { Edit }
-  : type synonym Word ':->' Word                     { TypeSynonymTypeEdit   $3 $5                            }
-  | data type arguments Qualid DataTypeArguments     { DataTypeArgumentsEdit $4 $5                            }
-  | redefine CoqDefinition                           { RedefinitionEdit      $2                               }
-  | add Word CoqDefinition                           { AddEdit               (mkModuleName (T.unpack $2)) $3  }
-  | skip Qualid                                      { SkipEdit              $2                               }
-  | skip method Qualid Word                          { SkipMethodEdit        $3 $4                            }
-  | skip module Word                                 { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
-  | import module Word                               { ImportModuleEdit      (mkModuleName (T.unpack $3))     }
-  | manual notation Word                             { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
-  | termination Qualid TerminationArgument           { TerminationEdit       $2 $3                            }
-  | obligations Qualid Word                          { ObligationsEdit       $2 $3 }
-  | rename Renaming                                  { RenameEdit            (fst $2) (snd $2)                }
-  | axiomatize module Word                           { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
-  | add scope Scope for ScopePlace Qualid            { AdditionalScopeEdit   $5 $6 $3                         }
-  | order Some(Qualid)                               { OrderEdit             $2                               }
-  | class kinds Qualid SepBy1(Term,',')              { ClassKindEdit         $3 $4                            }
-  | data  kinds Qualid SepBy1(Term,',')              { DataKindEdit          $3 $4                            }
-  | coinductive Qualid                               { CoinductiveEdit       $2                               }
-  | rewrite Rewrite                                  { RewriteEdit           $2                               }
-  | rename module Word Word                          { RenameModuleEdit      (mkModuleName (T.unpack $3))
-                                                                             (mkModuleName (T.unpack $4))     }
-  | 'in' Qualid Edit                                 { InEdit                $2 $3                            }
+  : type synonym Word ':->' Word                     { TypeSynonymTypeEdit      $3 $5                            }
+  | data type arguments Qualid DataTypeArguments     { DataTypeArgumentsEdit    $4 $5                            }
+  | redefine CoqDefinition                           { RedefinitionEdit         $2                               }
+  | add Word CoqDefinition                           { AddEdit                  (mkModuleName (T.unpack $2)) $3  }
+  | skip Qualid                                      { SkipEdit                 $2                               }
+  | skip method Qualid Word                          { SkipMethodEdit           $3 $4                            }
+  | skip module Word                                 { SkipModuleEdit           (mkModuleName (T.unpack $3))     }
+  | import module Word                               { ImportModuleEdit         (mkModuleName (T.unpack $3))     }
+  | manual notation Word                             { HasManualNotationEdit    (mkModuleName (T.unpack $3))     }
+  | termination Qualid TerminationArgument           { TerminationEdit          $2 $3                            }
+  | obligations Qualid Word                          { ObligationsEdit          $2 $3 }
+  | rename Renaming                                  { RenameEdit               (fst $2) (snd $2)                }
+  | axiomatize module Word                           { AxiomatizeModuleEdit     (mkModuleName (T.unpack $3))     }
+  | axiomatize definition Qualid                     { AxiomatizeDefinitionEdit $3                               }
+  | add scope Scope for ScopePlace Qualid            { AdditionalScopeEdit      $5 $6 $3                         }
+  | order Some(Qualid)                               { OrderEdit                $2                               }
+  | class kinds Qualid SepBy1(Term,',')              { ClassKindEdit            $3 $4                            }
+  | data  kinds Qualid SepBy1(Term,',')              { DataKindEdit             $3 $4                            }
+  | coinductive Qualid                               { CoinductiveEdit          $2                               }
+  | rewrite Rewrite                                  { RewriteEdit              $2                               }
+  | rename module Word Word                          { RenameModuleEdit         (mkModuleName (T.unpack $3))
+                                                                                (mkModuleName (T.unpack $4))     }
+  | 'in' Qualid Edit                                 { InEdit                   $2 $3                            }
+  | simple class Qualid                              { SimpleClassEdit          $3                               }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }

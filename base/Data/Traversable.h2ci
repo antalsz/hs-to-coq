@@ -1,3 +1,5 @@
+superclassCount:
+  Data.Traversable.Traversable: '2'
 defaultMethods:
   Data.Traversable.Traversable: fromList [(Qualified "Data.Traversable" "mapM",Qualid
     (Qualified "Data.Traversable" "traverse")),(Qualified "Data.Traversable" "sequence",Qualid
@@ -7,6 +9,8 @@ defaultMethods:
     Explicit (Ident (Bare "f")) :| []) (App (Qualid (Qualified "GHC.Base" "op_z2218U__"))
     (PosArg (Qualid (Qualified "Data.Traversable" "sequenceA")) :| [PosArg (App (Qualid
     (Qualified "GHC.Base" "fmap")) (PosArg (Qualid (Bare "f")) :| []))])))]
+classTypes:
+  Data.Traversable.Traversable: fromList []
 classDefns:
   Data.Traversable.Traversable: ClassDefinition (Qualified "Data.Traversable" "Traversable")
     [Inferred Explicit (Ident (Bare "t")),Generalized Implicit (App (Qualid (Qualified

@@ -1,3 +1,13 @@
+superclassCount:
+  Data.Functor.Classes.Eq2: '0'
+  Data.Functor.Classes.Ord1: '1'
+  Data.Functor.Classes.Eq1: '0'
+  Data.Functor.Classes.Ord2: '1'
+classTypes:
+  Data.Functor.Classes.Eq2: fromList []
+  Data.Functor.Classes.Ord1: fromList []
+  Data.Functor.Classes.Eq1: fromList []
+  Data.Functor.Classes.Ord2: fromList []
 classDefns:
   Data.Functor.Classes.Eq2: ClassDefinition (Qualified "Data.Functor.Classes" "Eq2")
     [Inferred Explicit (Ident (Bare "f"))] Nothing [(Qualified "Data.Functor.Classes"

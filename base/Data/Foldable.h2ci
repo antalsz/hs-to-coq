@@ -1,3 +1,5 @@
+superclassCount:
+  Data.Foldable.Foldable: '0'
 defaultMethods:
   Data.Foldable.Foldable: ! 'fromList [(Qualified "Data.Foldable" "elem",App (Qualid
     (Qualified "GHC.Base" "op_z2218U__")) (PosArg (Qualid (Qualified "Data.Foldable"
@@ -106,6 +108,8 @@ defaultMethods:
     (Ident (Bare "c")) :| [Inferred Explicit (Ident (Bare "n"))]) (App (App (App (Qualid
     (Qualified "Data.Foldable" "foldr")) (PosArg (Qualid (Bare "c")) :| [])) (PosArg
     (Qualid (Bare "n")) :| [])) (PosArg (Qualid (Bare "t")) :| []))))) :| [])))]'
+classTypes:
+  Data.Foldable.Foldable: fromList []
 classDefns:
   Data.Foldable.Foldable: ClassDefinition (Qualified "Data.Foldable" "Foldable") [Inferred
     Explicit (Ident (Bare "t"))] Nothing [(Qualified "Data.Foldable" "fold",Forall

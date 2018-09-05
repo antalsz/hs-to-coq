@@ -7,7 +7,7 @@
              TypeApplications
   #-}
 
-module HsToCoq.ConvertHaskell.Monad (
+module HsToCoq.ConvertHaskell.Monad (GlobalEnv(..),
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
   HasEdits,
@@ -60,7 +60,7 @@ import HsToCoq.ConvertHaskell.TypeInfo
 
 data GlobalEnv = GlobalEnv
     { _globalEnvEdits :: Edits
-    }
+    } deriving Show
 
 data ModuleEnv = ModuleEnv
     { _moduleEnvEdits         :: Edits

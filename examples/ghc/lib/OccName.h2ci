@@ -1,3 +1,7 @@
+superclassCount:
+  OccName.HasOccName: '0'
+classTypes:
+  OccName.HasOccName: fromList []
 constructors:
   OccName.NameSpace: ! '[Qualified "OccName" "VarName",Qualified "OccName" "DataName",Qualified
     "OccName" "TvName",Qualified "OccName" "TcClsName"]'

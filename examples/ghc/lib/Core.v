@@ -6606,6 +6606,22 @@ Definition tickishScoped {id} : Tickish id -> TickishScoping :=
     | SourceNote _ _ => SoftScope
     end.
 
+Definition tickishScopesLike {id} : Tickish id -> TickishScoping -> bool :=
+  fun t scope =>
+    let like :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | NoScope, _ => true
+        | _, NoScope => false
+        | SoftScope, _ => true
+        | _, SoftScope => false
+        | CostCentreScope, _ => true
+        end in
+    like (tickishScoped t) scope.
+
+Definition tickishFloatable {id} : Tickish id -> bool :=
+  fun t => andb (tickishScopesLike t SoftScope) (negb (tickishCounts t)).
+
 Definition tidyPatSynIds : (Id -> Id) -> PatSyn -> PatSyn :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -7887,7 +7903,7 @@ Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
      TyConBinder TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison
      cons deAnnotate' deTagExpr else false getCoreRule getCoreRuleInfo getUnfolding
      getUnfoldingInfo if list lubArgUse nat negb nil op_zt__ option orb pair
-     size_AnnExpr' snd then true tt unit BasicTypes.Activation
+     size_AnnExpr' snd then tickishCounts true tt unit BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
      BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity

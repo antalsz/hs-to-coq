@@ -76,6 +76,8 @@ CORE_MODULES = \
   CallArity \
   CoreArity \
   CoreTidy \
+  TrieMap \
+	CSE
 
 NOTRANSLATE = \
   Constructors \

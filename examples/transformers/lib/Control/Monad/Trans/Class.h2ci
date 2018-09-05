@@ -1,3 +1,7 @@
+superclassCount:
+  Control.Monad.Trans.Class.MonadTrans: '0'
+classTypes:
+  Control.Monad.Trans.Class.MonadTrans: fromList []
 classDefns:
   Control.Monad.Trans.Class.MonadTrans: ClassDefinition (Qualified "Control.Monad.Trans.Class"
     "MonadTrans") [Inferred Explicit (Ident (Bare "t"))] Nothing [(Qualified "Control.Monad.Trans.Class"

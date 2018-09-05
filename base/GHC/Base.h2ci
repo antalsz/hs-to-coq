@@ -1,3 +1,9 @@
+superclassCount:
+  GHC.Base.Monoid: '1'
+  GHC.Base.Functor: '0'
+  GHC.Base.Applicative: '1'
+  GHC.Base.Semigroup: '0'
+  GHC.Base.Monad: '2'
 defaultMethods:
   GHC.Base.Monoid: fromList [(Qualified "GHC.Base" "mappend",Qualid (Qualified "GHC.Base"
     "op_zlzlzgzg__")),(Qualified "GHC.Base" "mconcat",App (App (Qualid (Qualified
@@ -40,6 +46,12 @@ defaultMethods:
     (Qualified "GHC.Base" "op_zgzgze__")) (PosArg (Qualid (Bare "m")) :| [PosArg (Fun
     (Inferred Explicit (Ident (Bare "arg_0__")) :| []) (Qualid (Bare "k")))]))),(Qualified
     "GHC.Base" "return_",Qualid (Qualified "GHC.Base" "pure"))]
+classTypes:
+  GHC.Base.Monoid: fromList []
+  GHC.Base.Functor: fromList []
+  GHC.Base.Applicative: fromList []
+  GHC.Base.Semigroup: fromList []
+  GHC.Base.Monad: fromList []
 constructors:
   GHC.Base.NonEmpty: ! '[Qualified "GHC.Base" "NEcons"]'
 constructorFields:

@@ -91,9 +91,8 @@ redefine Definition CoreUtils.isDivOp : unit -> bool := GHC.Err.default.
 redefine Definition CoreUtils.mkTick : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) :=
   fun t orig => orig.
 redefine Definition CoreUtils.tickHNFArgs : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) := fun t orig => orig.
-# redefine Definition CoreUtils.stripTicksE {b} : ((Core.Tickish Core.Var) -> bool) -> ((Core.Expr b) -> (Core.Expr b)) :=
-#  fun p e => e.
 
+# Redefined in the midamble because they use complex syntax
 skip CoreUtils.stripTicksE
 skip CoreUtils.stripTicksT
 

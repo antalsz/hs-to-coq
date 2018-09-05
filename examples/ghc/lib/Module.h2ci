@@ -1,3 +1,9 @@
+superclassCount:
+  Module.HasModule: '0'
+  Module.ContainsModule: '0'
+classTypes:
+  Module.HasModule: fromList []
+  Module.ContainsModule: fromList []
 constructors:
   Module.IndefUnitId: ! '[Qualified "Module" "Mk_IndefUnitId"]'
   Module.InstalledUnitId: ! '[Qualified "Module" "Mk_InstalledUnitId"]'

@@ -1,8 +1,12 @@
+superclassCount:
+  Name.NamedThing: '0'
 defaultMethods:
   Name.NamedThing: fromList [(Qualified "Name" "getOccName",Fun (Inferred Explicit
     (Ident (Bare "n")) :| []) (App (Qualid (Qualified "Name" "nameOccName")) (PosArg
     (Parens (App (Qualid (Qualified "Name" "getName")) (PosArg (Qualid (Bare "n"))
     :| []))) :| [])))]
+classTypes:
+  Name.NamedThing: fromList []
 constructors:
   Name.NameSort: ! '[Qualified "Name" "External",Qualified "Name" "WiredIn",Qualified
     "Name" "Internal",Qualified "Name" "System"]'

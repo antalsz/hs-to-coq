@@ -1,13 +1,19 @@
-{-# LANGUAGE RecordWildCards, LambdaCase, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables, MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards, LambdaCase, ViewPatterns, FlexibleContexts, OverloadedStrings, OverloadedLists, ScopedTypeVariables, MultiParamTypeClasses #-}
 
-module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences) where
+module HsToCoq.ConvertHaskell.Declarations.Class (ClassBody(..), convertClassDecl, getImplicitBindersForClassMember, classSentences, directClassSentences, cpsClassSentences, convertAssociatedType, convertAssociatedTypeDefault) where
 
-import Control.Lens
+import Control.Lens hiding (rewrite)
 
+import Data.Bifunctor
 import Data.Traversable
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe
 
 import Control.Monad
+
+import Data.Generics
+
+import qualified Data.Text as T
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -19,6 +25,7 @@ import Class
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.Rewrite
 import HsToCoq.Util.FVs
 
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -59,6 +66,39 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
                                  _ -> False) bs
 getImplicits _ = []
 
+convertAssociatedType :: ConversionMonad r m => [Qualid] -> FamilyDecl GhcRn -> m (Qualid, Term)
+convertAssociatedType classArgs FamilyDecl{..} = do
+  case fdInfo of
+    OpenTypeFamily     -> pure ()
+    DataFamily         -> convUnsupported "associated data types"
+    ClosedTypeFamily _ -> convUnsupported "associated closed type families"
+  -- Skipping 'fdFixity'
+  unless (null fdInjectivityAnn) $ convUnsupported "injective associated type families"
+  
+  name   <- var TypeNS $ unLoc fdLName
+  args   <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit fdTyVars
+  -- Could losen this in future?
+  unless (classArgs == foldMap (toListOf binderIdents) args) $
+    convUnsupported "associated type families with argument lists that differ from the class's"
+  storeExplicitMethodArguments name args
+  
+  result <- case unLoc fdResultSig of
+    NoSig                            -> pure $ Sort Type
+    KindSig   k                      -> convertLType k
+    TyVarSig (L _ (UserTyVar _))     -> pure $ Sort Type -- Maybe not a thing inside type classes?
+    TyVarSig (L _ (KindedTyVar _ k)) -> convertLType k   -- Maybe not a thing inside type classes?
+  
+  pure (name, result)
+
+convertAssociatedTypeDefault :: ConversionMonad r m => [Qualid] -> TyFamDefltEqn GhcRn -> m (Qualid, Term)
+convertAssociatedTypeDefault classArgs FamEqn{..} = do
+  args <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats
+  unless (classArgs == foldMap (toListOf binderIdents) args) $
+    convUnsupported "associated type family defaults with argument lists that differ from the class's"
+  (,) <$> var TypeNS (unLoc feqn_tycon)
+      <*> convertLType feqn_rhs
+  -- Skipping feqn_fixity
+    
 convertClassDecl :: ConversionMonad r m
                  => LHsContext GhcRn                      -- ^@tcdCtxt@    Context
                  -> Located GHC.Name                      -- ^@tcdLName@   name of the class
@@ -70,21 +110,34 @@ convertClassDecl :: ConversionMonad r m
                  -> [LTyFamDefltEqn GhcRn]                -- ^@tcdATDefs@  associated types defaults
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
-  unless (null       fds)          $ convUnsupported "functional dependencies"
-  unless (null       types)        $ convUnsupported "associated types"
-  unless (null       typeDefaults) $ convUnsupported "default associated type definitions"
+  unless (null fds) $ convUnsupported "functional dependencies"
 
   name <- var TypeNS hsName
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
+  storeSuperclassCount name . sum <=< for ctx $ \case
+    Generalized _ (termHead -> Just super) -> maybe 1 (+ 1) <$> lookupSuperclassCount super
+    _                                      -> pure 1
 
   args <- convertLHsTyVarBndrs Coq.Explicit ltvs
   kinds <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.classKinds.at name)
   let args' = zipWith go args kinds
        where go (Inferred exp name) (Just t) = Typed Ungeneralizable exp (name NE.:| []) t
              go a _ = a
+  
+  let argNames = foldMap (toListOf binderIdents) args
 
-
-  (all_sigs :: M.Map Qualid Signature) <- convertLSigs lsigs
+  type_sigs  <- M.fromList . map (second $ Signature ?? Nothing)
+                  <$> traverse (convertAssociatedType argNames . unLoc) types
+  value_sigs <- convertLSigs lsigs
+  storeClassTypes name $ M.keysSet type_sigs
+  
+  hideTypeArgs <- for (M.keys type_sigs) $ \meth -> do
+    count <- maybe 0 length <$> lookupExplicitMethodArguments meth
+    let vars = map (\i -> T.pack $ "subst" ++ show i ++ "__") [1..count]
+    pure $ Rewrite { patternVars = vars
+                   , lhs         = Qualid meth `appList` map (PosArg . Var) vars
+                   , rhs         = Qualid meth }
+  let all_sigs = everywhere (mkT $ rewrite hideTypeArgs) <$> (type_sigs <> value_sigs)
 
   -- implement the class part of "skip method"
   skippedMethodsS <- view (edits.skippedMethods)
@@ -93,24 +146,26 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   -- ugh! doesnt work for operators
   -- memberSigs.at name ?= sigs
-
-  defs <- fmap M.fromList $ for (bagToList defaults) $
-          convertTypedModuleBinding Nothing . unLoc >=> \case
-            Just (ConvertedDefinitionBinding cd) -> do
---                typeArgs <- getImplicitBindersForClassMember name convDefName
-                -- We have a tough time handling recursion (including mutual
-                -- recursion) here because of name overloading
-                pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
-            Just (ConvertedPatternBinding    _ _)                     ->
-                convUnsupported "pattern bindings in class declarations"
-            Nothing                                                   ->
-                convUnsupported $ "skipping a type class method in " ++ show name
+  
+  type_defs  <- M.fromList <$> traverse (convertAssociatedTypeDefault argNames . unLoc) typeDefaults
+  value_defs <- fmap M.fromList $ for (bagToList defaults) $
+                convertTypedModuleBinding Nothing . unLoc >=> \case
+                  Just (ConvertedDefinitionBinding cd) -> do
+--                      typeArgs <- getImplicitBindersForClassMember name convDefName
+                      -- We have a tough time handling recursion (including mutual
+                      -- recursion) here because of name overloading
+                      pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
+                  Just (ConvertedPatternBinding    _ _)                     ->
+                      convUnsupported "pattern bindings in class declarations"
+                  Nothing                                                   ->
+                      convUnsupported $ "skipping a type class method in " ++ show name
+  let defs = type_defs <> value_defs
   unless (null defs) $ storeDefaultMethods name defs
 
 --  liftIO (traceIO (show name))
 --  liftIO (traceIO (show defs))
 
-  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (bimap id sigType <$> M.toList sigs))
+  let classDefn = (ClassDefinition name (args' ++ ctx) Nothing (second sigType <$> M.toList sigs))
 
   storeClassDefn name classDefn
 
@@ -118,28 +173,54 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
 
   pure $ ClassBody classDefn nots
 
-classSentences :: ClassBody -> [Sentence]
-classSentences (ClassBody (ClassDefinition name args ty methods) nots) =
-    [ RecordSentence dict_record
-    , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
-    , ExistingClassSentence name
-    ] ++
-    [ DefinitionSentence $
-        DefinitionDef Global n
-            [Typed Generalizable Implicit [Ident "g"] (app_args (Qualid name))]
-            (Just ty)
-            (App2 "g" Underscore (app_args (Qualid n')))
-    | (n, ty) <- methods
-    , let n' = qualidExtendBase "__" n
-    ] ++
-    map NotationSentence nots
+directClassSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
+directClassSentences (ClassBody clsDef@(ClassDefinition name args _ _) nots) = do
+  supers <- fromMaybe 0      <$> lookupSuperclassCount name
+  types  <- fromMaybe mempty <$> lookupClassTypes      name
+  let argCount = length $ filter ((== Explicit) . view binderExplicitness) args
+  pure $  ClassSentence clsDef
+       :  map NotationSentence nots
+       ++ map (\ty -> ArgumentsSentence . Arguments Nothing ty
+                   .  map (\ie -> ArgumentSpec ie UnderscoreName Nothing)
+                   $ replicate argCount ArgExplicit ++ replicate (1+supers) ArgMaximal)
+              (S.toList types)
+
+cpsClassSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
+cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
+  let wholeClassSentences =
+        [ RecordSentence dict_record
+        , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
+        , ExistingClassSentence name ]
+
+      notations = map NotationSentence nots
+  
+  methods <- traverse (fmap DefinitionSentence . uncurry method_def) methods
+
+  pure $ wholeClassSentences ++ methods ++ notations
   where
     dict_name = qualidExtendBase "__Dict" name
     dict_build = qualidExtendBase "__Dict_Build" name
     dict_methods = [ (qualidExtendBase "__" name, ty) | (name, ty) <- methods ]
     dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
+    
+    class_ty = Forall [ "r" ] $ (app_args dict_name `Arrow` "r") `Arrow` "r"
+    
     -- The dictionary needs all explicit (type) arguments,
     -- but none of the implicit (constraint) arguments
     inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
-    app_args f = foldl App1 f (map Qualid (foldMap (toListOf binderIdents) inst_args))
-    class_ty = Forall [ "r" ] $ (app_args (Qualid dict_name)  `Arrow` "r") `Arrow` "r"
+    app_args f = foldl App1 (Qualid f) (map Qualid (foldMap (toListOf binderIdents) inst_args))
+    
+    method_def meth ty = do
+      explicitArgs <- fromMaybe [] <$> lookupExplicitMethodArguments meth
+      pure $ DefinitionDef
+               Global
+               meth
+               (explicitArgs ++ [Typed Generalizable Implicit [Ident "g"] $ app_args name])
+               (Just ty)
+               (App2 "g" Underscore . app_args $ qualidExtendBase "__" meth)
+
+classSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
+classSentences cls@(ClassBody (ClassDefinition name _ _ _) _) =
+  view (edits.simpleClasses.contains name) >>= \case
+    True  -> directClassSentences cls
+    False -> cpsClassSentences    cls

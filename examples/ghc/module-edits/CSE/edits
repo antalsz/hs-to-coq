@@ -1,0 +1,25 @@
+rename type  Var.Id            = Core.Var
+rename value Type.tyConAppArgs = Core.tyConAppArgs
+
+# Types currently don't exist
+skip CoreSubst.substTy
+rewrite forall s c, CoreSubst.substTy s c = tt
+
+# Coercions currently don't exist
+skip CoreSubst.substCo
+rewrite forall s c, CoreSubst.substCo s c = tt
+
+# termination CSE.cseExpr   deferred
+# termination CSE.cseBind   deferred
+# termination CSE.cse_bind  deferred
+# termination CSE.tryForCSE deferred
+# termination CSE.cseCase   deferred
+
+axiomatize definition CSE.cseExpr
+axiomatize definition CSE.cseBind
+axiomatize definition CSE.cse_bind
+axiomatize definition CSE.tryForCSE
+axiomatize definition CSE.cseCase
+
+# OK?
+rewrite forall x, Core.tyConAppArgs x = nil

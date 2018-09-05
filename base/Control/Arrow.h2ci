@@ -1,3 +1,10 @@
+superclassCount:
+  Control.Arrow.Arrow: '1'
+  Control.Arrow.ArrowApply: '2'
+  Control.Arrow.ArrowChoice: '2'
+  Control.Arrow.ArrowZero: '2'
+  Control.Arrow.ArrowPlus: '3'
+  Control.Arrow.ArrowLoop: '2'
 defaultMethods:
   Control.Arrow.Arrow: fromList [(Qualified "Control.Arrow" "first",Parens (Fun (Inferred
     Explicit (Ident (Bare "arg_0__")) :| []) (App (Qualid (Qualified "Control.Arrow"
@@ -61,6 +68,13 @@ defaultMethods:
     "right_",Parens (Fun (Inferred Explicit (Ident (Bare "arg_0__")) :| []) (App (Qualid
     (Qualified "Control.Arrow" "op_zpzpzp__")) (PosArg (Qualid (Qualified "Control.Category"
     "id")) :| [PosArg (Qualid (Bare "arg_0__"))]))))]
+classTypes:
+  Control.Arrow.Arrow: fromList []
+  Control.Arrow.ArrowApply: fromList []
+  Control.Arrow.ArrowChoice: fromList []
+  Control.Arrow.ArrowZero: fromList []
+  Control.Arrow.ArrowPlus: fromList []
+  Control.Arrow.ArrowLoop: fromList []
 constructors:
   Control.Arrow.Kleisli: ! '[Qualified "Control.Arrow" "Mk_Kleisli"]'
   Control.Arrow.ArrowMonad: ! '[Qualified "Control.Arrow" "Mk_ArrowMonad"]'

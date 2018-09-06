@@ -1,3 +1,5 @@
+superclassCount:
+  Data.Bifoldable.Bifoldable: '0'
 defaultMethods:
   Data.Bifoldable.Bifoldable: fromList [(Qualified "Data.Bifoldable" "bifold",App
     (App (Qualid (Qualified "Data.Bifoldable" "bifoldMap")) (PosArg (Qualid (Qualified
@@ -33,6 +35,8 @@ defaultMethods:
     (Qualified "Coq.Program.Basics" "compose")) (PosArg (Qualid (Qualified "Data.SemigroupInternal"
     "Mk_Endo")) :| [PosArg (Qualid (Bare "g"))]))) :| [])) (PosArg (Qualid (Bare "t"))
     :| []))) :| [])) (PosArg (Qualid (Bare "z")) :| [])))]
+classTypes:
+  Data.Bifoldable.Bifoldable: fromList []
 classDefns:
   Data.Bifoldable.Bifoldable: ClassDefinition (Qualified "Data.Bifoldable" "Bifoldable")
     [Inferred Explicit (Ident (Bare "p"))] Nothing [(Qualified "Data.Bifoldable" "bifold",Forall

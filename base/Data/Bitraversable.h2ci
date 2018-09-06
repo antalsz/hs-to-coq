@@ -1,9 +1,13 @@
+superclassCount:
+  Data.Bitraversable.Bitraversable: '2'
 defaultMethods:
   Data.Bitraversable.Bitraversable: fromList [(Qualified "Data.Bitraversable" "bitraverse",Fun
     (Inferred Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g"))])
     (App (Qualid (Qualified "GHC.Base" "op_z2218U__")) (PosArg (Qualid (Qualified
     "Data.Bitraversable" "bisequenceA")) :| [PosArg (App (App (Qualid (Qualified "Data.Bifunctor"
     "bimap")) (PosArg (Qualid (Bare "f")) :| [])) (PosArg (Qualid (Bare "g")) :| []))])))]
+classTypes:
+  Data.Bitraversable.Bitraversable: fromList []
 classDefns:
   Data.Bitraversable.Bitraversable: ClassDefinition (Qualified "Data.Bitraversable"
     "Bitraversable") [Inferred Explicit (Ident (Bare "t")),Generalized Implicit (App

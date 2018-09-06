@@ -1,0 +1,36 @@
+axiomatize module TrieMap
+simple class TrieMap.TrieMap
+
+rename type Var.Id = Core.Var
+
+rename value TrieMap.LooseTypeMap = TrieMap.Mk_LooseTypeMap
+rename value TrieMap.TypeMap      = TrieMap.Mk_TypeMap
+rename value TrieMap.CoercionMap  = TrieMap.Mk_CoercionMap
+rename value TrieMap.CoercionMapX = TrieMap.Mk_CoercionMapX
+rename value TrieMap.CoreMap      = TrieMap.Mk_CoreMap
+
+redefine Inductive TrieMap.ListMap (m : Type -> Type) (a : Type) : Type := LIST_MAP.
+redefine Inductive TrieMap.GenMap  (m : Type -> Type) (a : Type) : Type := GEN_MAP.
+redefine Inductive TrieMap.TypeMapX (a : Type) : Type := TYPE_MAP_X.
+redefine Inductive TrieMap.CoreMapX (a : Type) : Type := CORE_MAP_X.
+
+# There are two of these thanks to renaming types/coercions; we replace it in
+# the midamble
+skip TrieMap.Eq___DeBruijn__unit
+
+# These have types that mention `Key` before `TrieMap` in their contexts.
+# Eventually we might need a more general solution to this, but for now, the
+# axiomatized instances are in the midamble.
+skip TrieMap.TrieMap__GenMap
+skip TrieMap.xtG
+skip TrieMap.lkG
+
+# Skipping until `TyCoRep.TyLit` is a thing
+skip TrieMap.lkTyLit
+skip TrieMap.xtTyLit
+
+# Using a type class in the argument list makes things hard
+#
+# redefine Inductive TrieMap.GenMap m `{(TrieMap m)} a : Type := EmptyMap     : GenMap m a
+#                                                             |  SingletonMap : (Key m) -> (a -> (GenMap m a))
+#                                                             |  MultiMap     : (m a) -> (GenMap m a).

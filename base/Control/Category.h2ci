@@ -1,3 +1,7 @@
+superclassCount:
+  Control.Category.Category: '0'
+classTypes:
+  Control.Category.Category: fromList []
 classDefns:
   Control.Category.Category: ClassDefinition (Qualified "Control.Category" "Category")
     [Typed Ungeneralizable Explicit (Ident (Bare "cat") :| []) (Arrow (Qualid (Bare

@@ -92,7 +92,10 @@ convertHsGroup mod HsGroup{..} = do
                                   then ProgramSentence (DefinitionSentence def) obl
                                   else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
-                   ) (\_ _ -> convUnsupported "top-level pattern bindings")
+                   )
+                   (\_ _ -> convUnsupported "top-level pattern bindings")
+                   (\ax ty -> pure (Just ax, [typedAxiom ax ty]))
+        
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
         let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
 

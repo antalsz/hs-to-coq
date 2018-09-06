@@ -903,7 +903,7 @@ Definition WellScoped_Subst  (s : Subst) (vs:VarSet) :=
       (match lookupVarEnv subst_env var with
 
         | Some expr => 
-
+          
              WellScoped expr (getInScopeVars in_scope_set)
 
         | None => True
@@ -1805,7 +1805,7 @@ Proof.
        auto.
 Qed.
 
-Lemma substExpr : forall e s vs in_scope_set env u0 u1, 
+Lemma substExpr_ok : forall e s vs in_scope_set env u0 u1, 
     WellScoped_Subst (Mk_Subst in_scope_set env u0 u1) vs -> 
     WellScoped e vs -> 
     WellScoped (substExpr s (Mk_Subst in_scope_set env u0 u1) e) 

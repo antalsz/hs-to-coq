@@ -7,6 +7,7 @@ module HsToCoq.Coq.Gallina.Util (
   pattern BName,
   mkInfix,
   maybeForall,
+  maybeFun,
   pattern IfBool, pattern IfCase,
   pattern LetFix, pattern LetCofix,
   collectArgs,
@@ -80,6 +81,12 @@ maybeForall = maybe id Forall . nonEmpty . toList
 {-# INLINABLE  maybeForall #-}
 {-# SPECIALIZE maybeForall :: [Binder]        -> Term -> Term #-}
 {-# SPECIALIZE maybeForall :: NonEmpty Binder -> Term -> Term #-}
+
+maybeFun :: Foldable f => f Binder -> Term -> Term
+maybeFun = maybe id Fun . nonEmpty . toList
+{-# INLINABLE  maybeFun #-}
+{-# SPECIALIZE maybeFun :: [Binder]        -> Term -> Term #-}
+{-# SPECIALIZE maybeFun :: NonEmpty Binder -> Term -> Term #-}
 
 -- Two possible desugarings of if-then-else
 pattern IfBool :: IfStyle -> Term -> Term -> Term -> Term
@@ -157,7 +164,7 @@ binderIdents :: Traversal' Binder Qualid
 binderIdents = binderNames._Ident
 {-# INLINEABLE binderIdents #-}
 
-binderExplicitness :: Traversal' Binder Explicitness
+binderExplicitness :: Lens' Binder Explicitness
 binderExplicitness f (Inferred        ei name)     = f ei <&> \ei' -> Inferred        ei' name
 binderExplicitness f (Typed       gen ei names ty) = f ei <&> \ei' -> Typed       gen ei' names ty
 binderExplicitness f (Generalized     ei       ty) = f ei <&> \ei' -> Generalized     ei'       ty

@@ -155,31 +155,31 @@ singletonDeclarationGroup (ConvFailure _ sen)      = DeclarationGroup []    []  
 
 --------------------------------------------------------------------------------
 
-convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
+convertDeclarationGroup :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 convertDeclarationGroup DeclarationGroup{..} =
     (dgFailures ++) <$>
     case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
   (Just inds, Nothing, Nothing, Nothing) ->
-    Right [InductiveSentence $ Inductive inds []]
+    pure [InductiveSentence $ Inductive inds []]
 
   (Nothing, Just coinds, Nothing, Nothing) ->
-    Right [InductiveSentence $ CoInductive coinds []]
+    pure [InductiveSentence $ CoInductive coinds []]
 
   (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing) ->
-    Right [DefinitionSentence $ DefinitionDef Global name args oty def]
+    pure [DefinitionSentence $ DefinitionDef Global name args oty def]
 
   (Just inds, Nothing, Just syns, Nothing) ->
-    Right $  foldMap recSynType syns
-          ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
+    pure $  foldMap recSynType syns
+         ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
   (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
-    Right $ classSentences classDef
+    classSentences classDef
 
   (Nothing, Nothing, Nothing, Nothing) ->
-    Right []
+    pure []
 
   (_, _, _, _) ->
-    Left "too much mutual recursion"
+    convUnsupported "too much mutual recursion"
 
   where
     synName = qualidExtendBase "__raw"
@@ -358,8 +358,7 @@ groupTyClDecls decls = do
 
 convertModuleTyClDecls :: ConversionMonad r m
                        => [TyClDecl GhcRn] -> m [Sentence]
-convertModuleTyClDecls =  fork [ either convUnsupported pure
-                                 . foldTraverse convertDeclarationGroup
+convertModuleTyClDecls =  fork [ foldTraverse convertDeclarationGroup
                                , foldTraverse generateGroupArgumentSpecifiers
                                , foldTraverse generateGroupDefaultInstances
                                , foldTraverse generateGroupRecordAccessors

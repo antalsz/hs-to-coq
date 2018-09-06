@@ -1,3 +1,9 @@
+superclassCount:
+  DynFlags.HasDynFlags: '0'
+  DynFlags.ContainsDynFlags: '0'
+classTypes:
+  DynFlags.HasDynFlags: fromList []
+  DynFlags.ContainsDynFlags: fromList []
 constructors:
   DynFlags.IgnorePackageFlag: ! '[Qualified "DynFlags" "IgnorePackage"]'
   DynFlags.PackageArg: ! '[Qualified "DynFlags" "Mk_PackageArg",Qualified "DynFlags"

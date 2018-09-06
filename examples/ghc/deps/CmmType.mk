@@ -1,1 +1,1 @@
-lib/CmmType.v: 
+lib/CmmType.v: ../../base/GHC/Base.h2ci

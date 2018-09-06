@@ -336,6 +336,25 @@ Local Definition Applicative__Compose_pure {inst_f} {inst_g}
    : forall {a}, a -> (Compose inst_f inst_g) a :=
   fun {a} => fun x => Mk_Compose (GHC.Base.pure (GHC.Base.pure x)).
 
+Local Definition Applicative__Compose_op_zlztzg__ {inst_f} {inst_g}
+  `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
+   : forall {a} {b},
+     (Compose inst_f inst_g) (a -> b) ->
+     (Compose inst_f inst_g) a -> (Compose inst_f inst_g) b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | Mk_Compose f, Mk_Compose x => Mk_Compose (GHC.Base.liftA2 _GHC.Base.<*>_ f x)
+      end.
+
+Local Definition Applicative__Compose_op_ztzg__ {inst_f} {inst_g}
+  `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
+   : forall {a} {b},
+     (Compose inst_f inst_g) a ->
+     (Compose inst_f inst_g) b -> (Compose inst_f inst_g) b :=
+  fun {a} {b} =>
+    fun a1 a2 => Applicative__Compose_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
+
 Local Definition Applicative__Compose_liftA2 {inst_f} {inst_g}
   `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
    : forall {a} {b} {c},
@@ -348,26 +367,6 @@ Local Definition Applicative__Compose_liftA2 {inst_f} {inst_g}
       | f, Mk_Compose x, Mk_Compose y =>
           Mk_Compose (GHC.Base.liftA2 (GHC.Base.liftA2 f) x y)
       end.
-
-Local Definition Applicative__Compose_op_zlztzg__ {inst_f} {inst_g}
-  `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
-   : forall {a} {b},
-     (Compose inst_f inst_g) (a -> b) ->
-     (Compose inst_f inst_g) a -> (Compose inst_f inst_g) b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ =>
-      match arg_0__, arg_1__ with
-      | Mk_Compose f, Mk_Compose x =>
-          Mk_Compose (GHC.Base.liftA2 _GHC.Base.<*>_ f x)
-      end.
-
-Local Definition Applicative__Compose_op_ztzg__ {inst_f} {inst_g}
-  `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
-   : forall {a} {b},
-     (Compose inst_f inst_g) a ->
-     (Compose inst_f inst_g) b -> (Compose inst_f inst_g) b :=
-  fun {a} {b} =>
-    fun a1 a2 => Applicative__Compose_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
 Program Instance Applicative__Compose {f} {g} `{GHC.Base.Applicative f}
   `{GHC.Base.Applicative g}

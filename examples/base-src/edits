@@ -12,7 +12,7 @@ skip module GHC.Integer
 skip module GHC.Unicode
 skip module GHC.Show
 skip module Data.Data
-skip module Data.Functor.Util
+
 
 ## Not yet translated or manually implemented
 skip module GHC.Int
@@ -39,8 +39,6 @@ skip GHC.Real.RealFrac
 skip GHC.Float.RealFloat
 skip Foreign.Storable.Storable
 skip Control.Monad.Fix.MonadFix
-skip Data.Bitraversable.Bitraversable
-skip Data.Bifoldable.Bifoldable
 skip GHC.Base.Alternative
 skip GHC.Base.MonadPlus
 skip Control.DeepSeq.NFData
@@ -188,3 +186,4 @@ rename value Data.Functor.Utils.StateR       = Data.Functor.Utils.Mk_StateR
 rename value Data.Functor.Utils.StateL       = Data.Functor.Utils.Mk_StateL
 rename value Data.Functor.Utils.Min          = Data.Functor.Utils.Mk_Min
 rename value Data.Functor.Utils.Max          = Data.Functor.Utils.Mk_Max
+rename value Data.Functor.Compose.Compose    = Data.Functor.Compose.Mk_Compose

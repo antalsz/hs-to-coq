@@ -13,13 +13,17 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Program.Basics.
+Require Data.Bifoldable.
 Require Data.Bifunctor.
+Require Data.Bitraversable.
 Require Data.Foldable.
+Require Data.Functor.
 Require Import Data.Functor.Classes.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require GHC.Base.
 Require GHC.Num.
+Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -335,9 +339,70 @@ Program Instance Bifunctor__Constant : Data.Bifunctor.Bifunctor Constant :=
          Data.Bifunctor.first__ := fun {a} {b} {c} => Bifunctor__Constant_first ;
          Data.Bifunctor.second__ := fun {b} {c} {a} => Bifunctor__Constant_second |}.
 
-(* Skipping instance Bifoldable__Constant of class Bifoldable *)
+Local Definition Bifoldable__Constant_bifoldMap
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monoid m}, (a -> m) -> (b -> m) -> Constant a b -> m :=
+  fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, _, Mk_Constant a => f a
+      end.
 
-(* Skipping instance Bitraversable__Constant of class Bitraversable *)
+Local Definition Bifoldable__Constant_bifoldl
+   : forall {c} {a} {b},
+     (c -> a -> c) -> (c -> b -> c) -> c -> Constant a b -> c :=
+  fun {c} {a} {b} =>
+    fun f g z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Bifoldable__Constant_bifoldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                       (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                        GHC.Base.flip f))
+                                       (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                        (Data.SemigroupInternal.Mk_Endo GHC.Base.∘ GHC.Base.flip g)) t)) z.
+
+Local Definition Bifoldable__Constant_bifoldr
+   : forall {a} {c} {b},
+     (a -> c -> c) -> (b -> c -> c) -> c -> Constant a b -> c :=
+  fun {a} {c} {b} =>
+    fun f g z t =>
+      Data.SemigroupInternal.appEndo (Bifoldable__Constant_bifoldMap
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f)
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
+
+Local Definition Bifoldable__Constant_bifold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Constant m m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    Bifoldable__Constant_bifoldMap GHC.Base.id GHC.Base.id.
+
+Program Instance Bifoldable__Constant : Data.Bifoldable.Bifoldable Constant :=
+  fun _ k =>
+    k {| Data.Bifoldable.bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Bifoldable__Constant_bifold ;
+         Data.Bifoldable.bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+           Bifoldable__Constant_bifoldMap ;
+         Data.Bifoldable.bifoldl__ := fun {c} {a} {b} => Bifoldable__Constant_bifoldl ;
+         Data.Bifoldable.bifoldr__ := fun {a} {c} {b} => Bifoldable__Constant_bifoldr |}.
+
+Local Definition Bitraversable__Constant_bitraverse
+   : forall {f} {a} {c} {b} {d},
+     forall `{GHC.Base.Applicative f},
+     (a -> f c) -> (b -> f d) -> Constant a b -> f (Constant c d) :=
+  fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, _, Mk_Constant a => Mk_Constant Data.Functor.<$> f a
+      end.
+
+Program Instance Bitraversable__Constant
+   : Data.Bitraversable.Bitraversable Constant :=
+  fun _ k =>
+    k {| Data.Bitraversable.bitraverse__ := fun {f}
+         {a}
+         {c}
+         {b}
+         {d}
+         `{GHC.Base.Applicative f} =>
+           Bitraversable__Constant_bitraverse |}.
 
 (* Skipping instance Ord__Constant *)
 
@@ -345,12 +410,15 @@ Program Instance Bifunctor__Constant : Data.Bifunctor.Bifunctor Constant :=
 
 (* External variables:
      Eq2 Ord2 Type bool comparison liftCompare2__ liftEq2__ list true
-     Coq.Program.Basics.compose Data.Bifunctor.Bifunctor Data.Bifunctor.bimap__
-     Data.Bifunctor.first__ Data.Bifunctor.second__ Data.Foldable.Foldable
-     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
-     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
-     Data.Foldable.sum__ Data.Foldable.toList__ Data.SemigroupInternal.Mk_Dual
+     Coq.Program.Basics.compose Data.Bifoldable.Bifoldable
+     Data.Bifoldable.bifoldMap__ Data.Bifoldable.bifold__ Data.Bifoldable.bifoldl__
+     Data.Bifoldable.bifoldr__ Data.Bifunctor.Bifunctor Data.Bifunctor.bimap__
+     Data.Bifunctor.first__ Data.Bifunctor.second__ Data.Bitraversable.Bitraversable
+     Data.Bitraversable.bitraverse__ Data.Foldable.Foldable Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Dual
      Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
      Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct

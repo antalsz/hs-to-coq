@@ -56,6 +56,11 @@ MODULES = \
   Data/Bifunctor \
   Data/List/NonEmpty \
   Data/Semigroup \
+  Data/Functor/Compose \
+  Data/Functor/Product \
+  Data/Functor/Sum \
+  Data/Bifoldable \
+  Data/Bitraversable \
 
 RENAMED = \
   Data/SemigroupInternal \

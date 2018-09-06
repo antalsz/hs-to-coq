@@ -13,7 +13,9 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Program.Basics.
+Require Data.Bifoldable.
 Require Data.Bifunctor.
+Require Data.Bitraversable.
 Require Data.Foldable.
 Require Data.Functor.
 Require Data.Maybe.
@@ -969,9 +971,69 @@ Program Instance Bifunctor__Arg : Data.Bifunctor.Bifunctor Arg :=
          Data.Bifunctor.first__ := fun {a} {b} {c} => Bifunctor__Arg_first ;
          Data.Bifunctor.second__ := fun {b} {c} {a} => Bifunctor__Arg_second |}.
 
-(* Skipping instance Bifoldable__Arg of class Bifoldable *)
+Local Definition Bifoldable__Arg_bifoldMap
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monoid m}, (a -> m) -> (b -> m) -> Arg a b -> m :=
+  fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, g, Mk_Arg a b => f a GHC.Base.<<>> g b
+      end.
 
-(* Skipping instance Bitraversable__Arg of class Bitraversable *)
+Local Definition Bifoldable__Arg_bifoldl
+   : forall {c} {a} {b}, (c -> a -> c) -> (c -> b -> c) -> c -> Arg a b -> c :=
+  fun {c} {a} {b} =>
+    fun f g z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Bifoldable__Arg_bifoldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                  (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                   GHC.Base.flip f)) (Data.SemigroupInternal.Mk_Dual
+                                                                                      GHC.Base.∘
+                                                                                      (Data.SemigroupInternal.Mk_Endo
+                                                                                       GHC.Base.∘
+                                                                                       GHC.Base.flip g)) t)) z.
+
+Local Definition Bifoldable__Arg_bifoldr
+   : forall {a} {c} {b}, (a -> c -> c) -> (b -> c -> c) -> c -> Arg a b -> c :=
+  fun {a} {c} {b} =>
+    fun f g z t =>
+      Data.SemigroupInternal.appEndo (Bifoldable__Arg_bifoldMap
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo f)
+                                      (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
+
+Local Definition Bifoldable__Arg_bifold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Arg m m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    Bifoldable__Arg_bifoldMap GHC.Base.id GHC.Base.id.
+
+Program Instance Bifoldable__Arg : Data.Bifoldable.Bifoldable Arg :=
+  fun _ k =>
+    k {| Data.Bifoldable.bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Bifoldable__Arg_bifold ;
+         Data.Bifoldable.bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+           Bifoldable__Arg_bifoldMap ;
+         Data.Bifoldable.bifoldl__ := fun {c} {a} {b} => Bifoldable__Arg_bifoldl ;
+         Data.Bifoldable.bifoldr__ := fun {a} {c} {b} => Bifoldable__Arg_bifoldr |}.
+
+Local Definition Bitraversable__Arg_bitraverse
+   : forall {f} {a} {c} {b} {d},
+     forall `{GHC.Base.Applicative f},
+     (a -> f c) -> (b -> f d) -> Arg a b -> f (Arg c d) :=
+  fun {f} {a} {c} {b} {d} `{GHC.Base.Applicative f} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, g, Mk_Arg a b => (Mk_Arg Data.Functor.<$> f a) GHC.Base.<*> g b
+      end.
+
+Program Instance Bitraversable__Arg : Data.Bitraversable.Bitraversable Arg :=
+  fun _ k =>
+    k {| Data.Bitraversable.bitraverse__ := fun {f}
+         {a}
+         {c}
+         {b}
+         {d}
+         `{GHC.Base.Applicative f} =>
+           Bitraversable__Arg_bitraverse |}.
 
 (* Translating `instance Enum__Max' failed: OOPS! Cannot find information for
    class Qualified "GHC.Enum" "Enum" unsupported *)
@@ -1755,18 +1817,21 @@ Definition diff {m} `{GHC.Base.Semigroup m}
 
 (* External variables:
      None Some bool comparison false list negb option true Coq.Program.Basics.compose
-     Data.Bifunctor.Bifunctor Data.Bifunctor.bimap__ Data.Bifunctor.first__
-     Data.Bifunctor.second__ Data.Foldable.Foldable Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Maybe.maybe
-     Data.SemigroupInternal.Endo Data.SemigroupInternal.Mk_Dual
-     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Bifoldable.Bifoldable Data.Bifoldable.bifoldMap__ Data.Bifoldable.bifold__
+     Data.Bifoldable.bifoldl__ Data.Bifoldable.bifoldr__ Data.Bifunctor.Bifunctor
+     Data.Bifunctor.bimap__ Data.Bifunctor.first__ Data.Bifunctor.second__
+     Data.Bitraversable.Bitraversable Data.Bitraversable.bitraverse__
+     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Functor.op_zlzdzg__ Data.Maybe.maybe Data.SemigroupInternal.Endo
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.build'
      GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap

@@ -1,0 +1,13 @@
+skip Data.Bifoldable.Bifoldable__K1
+
+# needs alternative
+skip Data.Bifoldable.biasum
+skip Data.Bifoldable.bimsum
+
+# partial
+skip Data.Bifoldable.bifoldl1
+skip Data.Bifoldable.bifoldr1
+skip Data.Bifoldable.bimaximumBy
+skip Data.Bifoldable.biminimumBy
+skip Data.Bifoldable.bimaximum
+skip Data.Bifoldable.biminimum

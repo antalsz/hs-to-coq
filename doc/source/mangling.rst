@@ -1,18 +1,19 @@
-================================
-Translating Haskell to Coq names
-================================
+========================
+Identifiers and Notation
+========================
 
 Most Haskell names can be reused as Coq names (fully qualified). However, due
-to differences in parsing and keywords, `hs-to-coq` 
+to differences in parsing and keywords, `hs-to-coq` must sometimes modify the
+generated identifiers.
 
 Coq keywords
 ------------
 
 The following Coq keywords are automatically translated with an extra ``_``
-following them.::
+following them::
 
-     Set Type Prop fun fix forall return mod match as cons pair nil for is
-	  with left right exists
+     Set Type Prop fun fix forall return mod match as 
+     cons pair nil for is with left right exists
 
 
 Operators
@@ -21,7 +22,7 @@ Operators
 Coq does not allow the definition of identifiers composed with punctuation.
 
 To name these identifiers, `hs-to-coq` uses GHC's `z-encoding
-https://ghc.haskell.org/trac/ghc/wiki/Commentary/Compiler/SymbolNames`_ 
+<https://ghc.haskell.org/trac/ghc/wiki/Commentary/Compiler/SymbolNames>`_ 
 to give textual names to operators. These textual operator names are preceded by
 ``op_`` and followed by two underscores.
 

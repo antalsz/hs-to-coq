@@ -17,9 +17,22 @@ they are not translatable, or they are out-of-scope, or for other reasons.
 
    skip <qualified name>
 
+Skips any definition. The qualified name should be the Coq name produced by
+qualifying and mangling the original Haskell name.
+
 .. code-block:: shell
 
    skip method <typeclass> <method name>
+
+Remove a method from a type class. For example `base-src/edits` includes the
+line
+
+.. code-block:: shell
+
+   skip method GHC.Base.Monad fail
+
+to remove the partial `fail` method from the monad type class. 
+
 
 .. code-block:: shell
 

@@ -89,7 +89,7 @@ Then, compile all of the examples with
     $ ./boot.sh
 
 The flag `noclean` will recompile everything without first deleting the old
-versions. 
+versions.
 
 .. code-block:: shell
 
@@ -99,7 +99,7 @@ The flag `quick` is like the above but doesn't run the tests.
 
 .. code-block:: shell
 
-    $ ./boot.sh noclean
+    $ ./boot.sh quick
 
 
 

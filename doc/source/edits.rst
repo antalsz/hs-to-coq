@@ -2,16 +2,16 @@
 Edit Files
 ==========
 
-The edit files contain declarations that control the output of `hs-to-coq` on
+The edit files contain declarations that control the output of ``hs-to-coq`` on
 various Haskell files.
 
-[TODO: Figure out the right domain for these declarations.]
+.. todo:: Figure out the right domain for these declarations.
 
 Skipping Haskell
 ----------------
 
-Sometimes, `hs-to-coq` should ignore various Haskell declarations, because
-they are not translatable, or they are out-of-scope, or for other reasons. 
+Sometimes, ``hs-to-coq`` should ignore various Haskell declarations, because
+they are not translatable, or they are out-of-scope, or for other reasons.
 
 .. code-block:: shell
 

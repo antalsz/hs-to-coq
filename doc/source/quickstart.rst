@@ -2,47 +2,47 @@
 Quickstart
 ==========
 
-The easiest way to see how to use `hs-to-coq` is to look at the Makefiles in
-the `examples` subdirectory.
+The easiest way to see how to use ``hs-to-coq`` is to look at the Makefiles in
+the ``examples`` subdirectory.
 
 Translating a single Haskell file
 ---------------------------------
 
-Run `hs-to-coq` on a single Haskell module (called `Main.hs`) with the
+You can run `hs-to-coq` on a single Haskell module (called `Main.hs`) with the
 following command.
-
 
 .. code-block:: shell
 
-     $ stack exec hs-to-coq -e <edits> Main.hs --iface-dir <base-dir> -o .
+     $ stack exec hs-to-coq -e hs-to-coq/base/edits Main.hs --iface-dir hs-to-coq/base -o .
 
-.. option:: -e <editfile> 
+Adjust the paths to the ``hs-to-coq`` repository accordingly.
 
-The `-e` command line argument tells `hs-to-coq` to use edits from the
-specified edit file. In almost every case, you'll want to start with `edits
-<https://github.com/antalsz/hs-to-coq/blob/master/base/edits>`_, the edit file
-distributed with the base library. (You can provide multiple edit files by
-repeating this flag.)
+.. option:: -e <editfile>
+
+The ``-e`` command line argument tells ``hs-to-coq`` to use edits from the
+specified edit file, and can be used multiple times.
+In almost every case, you'll want to include ``-e hs-to-coq/base/edits``, the
+edit file distributed with the base library.
 
 .. option:: --iface-dir <dir>
 
-The `--iface-dir` command line argument tells `hs-to-coq` where to find the
-interface files for the translated files in the `base` library. These
+The ``--iface-dir`` command line argument tells ``hs-to-coq`` where to find the
+interface files for the translated files in the ``base`` library. These
 interface files contain extra information about the base library produced
 during translation.
 
 
 .. option:: -o <dir>
 
-The `-o` argument specifies the output directory for the generated `.v` files.
+The ``-o`` argument specifies the output directory for the generated ``.v`` files.
 In this case, it is the current directory.
 
 
-An example translated in this way 
+An example translated in this way
 is `simple
 <https://github.com/antalsz/hs-to-coq/blob/master/examples/simple>`_. Check
-out the `Makefile` in the `examples/simple` subdirectory to see how
-`hs-to-coq` is invoked with these arguments.
+out the ``Makefile`` in the ``examples/simple`` subdirectory to see how
+``hs-to-coq`` is invoked with these arguments.
 
 Local Edit files
 ----------------
@@ -51,22 +51,22 @@ Often, a particular file will require its own set of edits. These edits can be
 provided with additional uses of the ``-e <editfile>`` command line argument.
 
 An example that uses a local edit file is `intervals <https://github.com/antalsz/hs-to-coq/tree/master/examples/intervals>`_,
-as described in Joachim Breitner's 
+as described in Joachim Breitner's
 `blog post <https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it>`_.
 
-Any number of edit files may be provided to `hs-to-coq`.
+Any number of edit files may be provided to ``hs-to-coq``.
 
 Additional Coq definitions
 --------------------------
 
-Sometimes an `hs-to-coq` translation requires the addition of Coq definitions to the output.
-These definitions can be specified via the `preamble` and `midamble`
+Sometimes an ``hs-to-coq`` translation requires the addition of Coq definitions to the output.
+These definitions can be specified via the ``preamble`` and ``midamble``
 arguments.
 
 .. option:: -p <preamble-file>
 
 Inserts the Coq definitions from the specified file at
-the beginning of the output. 
+the beginning of the output.
 
 For example, the `rle
 <https://github.com/antalsz/hs-to-coq/blob/master/examples/rle>`_ example uses
@@ -78,15 +78,15 @@ Inserts the Coq definitions from the specified file in the output after the
 type definitions but before any of the translated code or instance
 declarations.
 
-Only one preamble and one midamble can be provided to `hs-to-coq`.
+Only one preamble and one midamble can be provided to ``hs-to-coq``.
 
 Proofs
 ------
 
-Once you have translated your module with `hs-to-coq`, you will want to 
-prove stuff about it.  However, if your module includes definitions from 
-`base`, you need to set up a `_CoqProject` file so that `coq` can find 
-all of the necessary definitions. 
+Once you have translated your module with ``hs-to-coq``, you will want to
+prove stuff about it.  However, if your module includes definitions from
+``base``, you need to set up a ``_CoqProject`` file so that ``coq`` can find
+all of the necessary definitions.
 
 The Makefile in the rle_ example demonstrates
 how this file can be constructed automatically.
@@ -102,18 +102,18 @@ Larger examples include
 <https://github.com/antalsz/hs-to-coq/tree/master/examples/containers>`_  and
 `transformers <https://github.com/antalsz/hs-to-coq/tree/master/examples/transformers>`_.
 
-These examples use a `Makefile` to translate each module in the library
-individually, using edit files, preambles and midambles specific to each 
+These examples use a ``Makefile`` to translate each module in the library
+individually, using edit files, preambles and midambles specific to each
 module. It also includes the addition of manually written Coq files to the
-library. 
+library.
 
 For this scale of project, we recommend starting with one of the Makefiles
 above and editing it to suit your application.
 
-Avoiding `base`
----------------
+Avoiding ``base``
+-----------------
 
-`hs-to-coq` is designed to automatically use definitions from the `base`
+``hs-to-coq`` is designed to automatically use definitions from the ``base``
 library. However, it is sometimes possible to translate small examples so that
 they are self contained, and only require definitions from Coq's standard
 library.

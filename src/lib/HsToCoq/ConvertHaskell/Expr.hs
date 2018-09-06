@@ -814,28 +814,35 @@ convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
-convertTypedBinding convHsTy FunBind{..}   = runMaybeT $ do
+convertTypedBinding convHsTy FunBind{..}   = do
     name <- var ExprNS (unLoc fun_id)
 
-    -- Skip it?
-    guard . not =<< view (edits.skipped.contains name)
-
-    let (tvs, coqTy) =
-          -- The @forall@ed arguments need to be brought into scope
-          let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-              peelForall ty                = ([], ty)
-          in maybe ([], Nothing) (second Just . peelForall) convHsTy
-
-    defn <-
-      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-      then case unLoc $ mg_alts fun_matches of
-             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
-             _ -> convUnsupported "malformed multi-match variable definitions"
-      else uncurry Fun <$> convertFunction fun_matches
-
-    addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
-
-    pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
+    -- Skip it?  Axiomatize it?
+    isSkipped     <- view $ edits.skipped.contains name
+    isAxiomatized <- view $ edits.axiomatizedDefinitions.contains name
+    if | isSkipped     ->
+         pure Nothing
+       | isAxiomatized ->
+         maybe (convUnsupported "axiomatizing definitions without type signatures")
+               (pure . Just . ConvertedAxiomBinding name)
+               convHsTy
+       | otherwise -> do
+         let (tvs, coqTy) =
+               -- The @forall@ed arguments need to be brought into scope
+               let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+                   peelForall ty                = ([], ty)
+               in maybe ([], Nothing) (second Just . peelForall) convHsTy
+      
+         defn <-
+           if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+           then case unLoc $ mg_alts fun_matches of
+                  [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+                  _ -> convUnsupported "malformed multi-match variable definitions"
+           else uncurry Fun <$> convertFunction fun_matches
+      
+         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
+      
+         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
 wfFix :: TerminationArgument -> FixBody -> Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
@@ -950,6 +957,7 @@ addRecursion eBindings = do
   pure . flip map eBindings $ \case
     Left  e                               -> Left  e
     Right cpb@ConvertedPatternBinding{}   -> Right cpb
+    Right cab@ConvertedAxiomBinding{}     -> Right cab
     Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
       Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
@@ -996,10 +1004,12 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
     convertTypedBindings (map unLoc . bagToList $ mut_group) sigs pure Nothing
   let convDefs = concat convDefss
 
-  let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
-                                         [Equation [MultPattern [pat]] body]
-  let toLet ConvertedDefinition{..} = Let _convDefName _convDefArgs _convDefType _convDefBody
-  (foldr (withConvertedBinding toLet matchLet) ?? convDefs) <$> body
+  let matchLet pat term body = pure $ Coq.Match [MatchItem term Nothing Nothing] Nothing
+                                                [Equation [MultPattern [pat]] body]
+      toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
+      noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
+      
+  (foldrM (withConvertedBinding toLet matchLet noLetAx) ?? convDefs) =<< body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"

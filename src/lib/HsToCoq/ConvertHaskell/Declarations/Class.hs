@@ -157,6 +157,8 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                       pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
                   Just (ConvertedPatternBinding    _ _)                     ->
                       convUnsupported "pattern bindings in class declarations"
+                  Just (ConvertedAxiomBinding      _ _)                     ->
+                      convUnsupported "axiom bindings in class declarations"
                   Nothing                                                   ->
                       convUnsupported $ "skipping a type class method in " ++ show name
   let defs = type_defs <> value_defs

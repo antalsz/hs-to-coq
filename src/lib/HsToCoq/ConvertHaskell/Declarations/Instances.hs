@@ -222,6 +222,8 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                      -- recursion) here because of name overloading
               ConvertedPatternBinding {}
                   -> convUnsupported "pattern bindings in instances"
+              ConvertedAxiomBinding {}
+                  -> convUnsupported "axiom bindings in instances"
           
         (Nothing, Just assoc, _) ->
           pure (meth, subst allLocalNames assoc)

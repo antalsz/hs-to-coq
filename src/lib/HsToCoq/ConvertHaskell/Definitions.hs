@@ -29,11 +29,13 @@ makeLenses ''ConvertedDefinition
 
 data ConvertedBinding = ConvertedDefinitionBinding ConvertedDefinition
                       | ConvertedPatternBinding    Pattern Term
+                      | ConvertedAxiomBinding      Qualid Term
                       deriving (Eq, Ord, Show, Read)
 
-withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> ConvertedBinding -> a
-withConvertedBinding  withDef _withPat (ConvertedDefinitionBinding cdef)    = withDef cdef
-withConvertedBinding _withDef  withPat (ConvertedPatternBinding    pat def) = withPat pat def
+withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> (Qualid -> Term -> a) -> ConvertedBinding -> a
+withConvertedBinding  withDef _withPat _withAx (ConvertedDefinitionBinding cdef)    = withDef cdef
+withConvertedBinding _withDef  withPat _withAx (ConvertedPatternBinding    pat def) = withPat pat def
+withConvertedBinding _withDef _withPat  withAx (ConvertedAxiomBinding      ax  ty)  = withAx  ax  ty
 
 decomposeFixpoint :: Term -> Maybe (Qualid, Binders, Term)
 decomposeFixpoint (Fix (FixOne (FixBody name binders _ _ body)))

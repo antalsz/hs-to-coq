@@ -693,10 +693,10 @@ buildMatch _ [(pats,mkRhs)] failure
 buildMatch scruts eqns failure = do
     -- Pass the failure
     eqns' <- forM eqns $ \(pat,mkRhs) -> (pat,) <$> mkRhs failure
-    isComplete <- isCompleteMultiPattern (map fst eqns')
+    is_complete <- isCompleteMultiPattern (map fst eqns')
     pure $ Coq.Match scruts Nothing $
       [ Equation [pats] rhs | (pats, rhs) <- eqns' ] ++
-      [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | not isComplete ]
+      [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | not is_complete ]
     -- Only add a catch-all clause if the the patterns can fail
 
 
@@ -1004,8 +1004,12 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
     convertTypedBindings (map unLoc . bagToList $ mut_group) sigs pure Nothing
   let convDefs = concat convDefss
 
-  let matchLet pat term body = pure $ Coq.Match [MatchItem term Nothing Nothing] Nothing
-                                                [Equation [MultPattern [pat]] body]
+  let matchLet pat term body = do
+        is_complete <- isCompleteMultiPattern [MultPattern [pat]]
+        pure $ Coq.Match [MatchItem term Nothing Nothing] Nothing $
+            [ Equation [MultPattern [pat]] body] ++
+            [ Equation [MultPattern [UnderscorePat]] patternFailure | not is_complete ]
+
       toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
       noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
       

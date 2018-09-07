@@ -34,7 +34,6 @@ To build ``hs-to-coq``
 
 
 
-
 Coq Requirements
 ----------------
 

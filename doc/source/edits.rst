@@ -13,17 +13,74 @@ Skipping Haskell
 Sometimes, ``hs-to-coq`` should ignore various Haskell declarations, because
 they are not translatable, or they are out-of-scope, or for other reasons.
 
-.. code-block:: shell
+``skip``
+^^^^^^^^
 
-   skip <qualified name>
+Format:
+  | **skip** *qualified_name*
 
-.. code-block:: shell
+Effect:
+  During translation, ignore the declaration of the function, value, type, class or
+  instance with the given *qualified_name*.
 
-   skip method <typeclass> <method name>
+  This does not affect the translation of *uses* of the given name. This means
+  that you can use other methods, e.g. a preamble. to make it available.
 
-.. code-block:: shell
+  The *qualified name* is the Coq name with module prefix: Reserved names have
+  an underscore appended and renames have been applied.
 
-   skip module <qualified module name>
+  Skipping a type class also causes its instances to be skipped.
+
+  Type class instances do not have names in Haskell, and ``hs-to-coq``
+  generates a suitable name.  You might want to first attempt the translation
+  and check the output for the precise name.
+
+
+Examples:
+   .. code-block:: shell
+
+     skip Data.Function.fix_ # Note the mangled name!
+     skip GHC.Base.String
+     skip GHC.Real.Fractional
+     skip Data.Monoid.Show__Last # an instance
+
+``skip method``
+^^^^^^^^^^^^^^^
+
+Format:
+  | **skip** **method** *qualified_class* *method*
+
+Effect:
+  Omit the given method from the its class declaration, and also from all
+  instances.
+
+Examples:
+   .. code-block:: shell
+
+     skip method GHC.Base.Monad fail
+``skip module``
+^^^^^^^^^^^^^^^
+
+Format:
+  | **skip** **module** *module*
+
+Effect:
+  Do not generate an ``Require`` statemnt for *module*.
+
+  This is mostly useful during development: ``hs-to-coq`` automatically requires
+  the modules of all names it encounters, in the beginning of the resulting file.
+  If there are names from modules that you do not intent to translate, Coq will
+  already abort there. It is more convenient to have it fail when the name is actually
+  encountered, to then decide how to fix it (e.g. using ``skip``, ``rename`` or ``rewrite``).
+
+  In the end, all mentions of names in the give module ought to be gone, in
+  which case ``hs-to-coq`` would not generate an ``Require`` statement anyways.
+  So in complete formalizations, this edit should not be needed.
+
+Examples:
+   .. code-block:: shell
+
+     skip module GHC.Show
 
 
 Adding Coq Definitions

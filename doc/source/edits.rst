@@ -13,19 +13,43 @@ Skipping Haskell
 Sometimes, ``hs-to-coq`` should ignore various Haskell declarations, because
 they are not translatable, or they are out-of-scope, or for other reasons.
 
+
+Format:     
+   skip `<qualified name>`
+
+Example:    
+
+.. code :: shell
+
+  skip GHC.List.head
+
+Purpose:    
+  Skips any definition. The qualified name should be the Coq name produced by
+  qualifying and mangling the original Haskell name.
+
+------------------------------------------
+
+Format:
+   skip method `<typeclass>` `<method name>`
+
+Example:
+
 .. code-block:: shell
 
-   skip <qualified name>
+   skip method GHC.Base.Monad fail
 
-Skips any definition. The qualified name should be the Coq name produced by
-qualifying and mangling the original Haskell name.
+Purpose: 
+  Remove a method from a type class. This edit applies to both the
+  definition of the class and to all instances.
+
+
+------------------------------------------
+
 
 .. code-block:: shell
 
    skip method <typeclass> <method name>
 
-Remove a method from a type class. For example `base-src/edits` includes the
-line
 
 .. code-block:: shell
 

@@ -13,8 +13,8 @@ Skipping Haskell
 Sometimes, ``hs-to-coq`` should ignore various Haskell declarations, because
 they are not translatable, or they are out-of-scope, or for other reasons.
 
-``skip``
-^^^^^^^^
+``skip`` – skip a function, type, class or instance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Format:
   | **skip** *qualified_name*
@@ -44,8 +44,8 @@ Examples:
      skip GHC.Real.Fractional
      skip Data.Monoid.Show__Last # an instance
 
-``skip method``
-^^^^^^^^^^^^^^^
+``skip method`` – skip a method
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Format:
   | **skip** **method** *qualified_class* *method*
@@ -58,8 +58,9 @@ Examples:
    .. code-block:: shell
 
      skip method GHC.Base.Monad fail
-``skip module``
-^^^^^^^^^^^^^^^
+
+``skip module`` – skip a module import
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Format:
   | **skip** **module** *module*

@@ -40,6 +40,7 @@ TODO_PASS  = \
   TypeAnnotations \
   StrictPair \
   MutrecInst \
+  LetPattern \
 
 
 

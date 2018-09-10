@@ -280,22 +280,31 @@ Examples:
 
  .. code-block:: shell
 
-
-
-
 Extra information
 -----------------
 
-``type kinds`` - Declare kinds of type arguments to Inductive datatypes
+``data kinds`` - Declare kinds of type arguments to Inductive datatypes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Format:
-  | **type kinds** *qualified_name* *Coq_types*
+  | **data kinds** *qualified_name* *Coq_types*
 
 Effect:
 
+  Haskell programmers rarely include kinds signatures on inductive
+  datatypes. This usually isn't a problem, but for higher-order parameters, or
+  phantoms (don't appear in the datatype definition), the edit file needs to
+  include this information because Coq cannot figure it out.
+
 Examples:
   .. code-block:: shell
+
+     # Coq parser needs parens
+     data kinds Control.Applicative.WrappedArrow (Type -> (Type -> Type)) 
+
+     # multiple kinds are comma separated
+     data kinds Data.Functor.Reverse.Reverse (Type -> Type),Type   
+     data kinds Data.Functor.Constant.Constant Type,Type
 
 
 ``class kinds`` - Declare kinds of type arguments to Type classes
@@ -306,12 +315,16 @@ Format:
 
 Effect:
 
+   Annotate the types of type arguments to type classes (when 
+	Coq cannot figure it out).
+
 Examples:
   .. code-block:: shell
 
+      class kinds Control.Arrow.Arrow (Type -> (Type -> Type))
 
-``add scope`` - 
-^^^^^^^^^^^^^^^^
+``add scope`` - deprecated
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Format:
   | **add scope** *scope* **for** *place* *qualified_name*
@@ -325,46 +338,95 @@ Examples:
 ``manual notation`` -
 ^^^^^^^^^^^^^^^^^^^^^
 
-
 Format:
-  | manual notation *name*
+  | **manual notation** *name*
 
 Effect:
+  See the `notation <mangling.html>`_ page for more information about 
+  how ``hs-to-coq`` uses notation.
+
+Examples:
+  .. code-block:: shell
+
+     manual notation GHC.Base
+
+Termination edits
+-----------------
+
+``coinductive`` - use a coinductive instead of an inductive datatype
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+  | **coinductive** *qualified_name*
+
+Effect:
+
+Examples:
+
+``termination`` - hints for termination proofs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+  | **termination** *qualified_name* *termarg*
+
+Effect:
+
+If the qualified name is not structurally recursive, termarg can be one of 
+  - **deferred**
+  - **corecursive**
+  - { **struct** *qualified_name* }
+  - { **measure** *id* ... } 
+  - { **wf** *id* *qualified_name* }
 
 Examples:
   .. code-block:: shell
 
 
-Termination edits
------------------
-
-termination <qualified name> <termarg>
-
-coinductive <qualified name>
+Other edits
+-----------
 
 
-If qualid is not structurally recursive, termarg can be one of 
-  - deferred 
-  - corecursive
-  - { struct qualid }
-  - { measure id ... } 
-  - { wf id qualid }
+``order`` - reorder output
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Order
------
+Format:
+  | **order** *qualified_name* ...
 
-order <qualified name> ...
+Effect:
+  ``hs-to-coq`` topologically sorts definitions so that they appear in
+  dependency order. However, this sorting is not always possible --- type
+  classes introduce implicit dependencies that are invisible to
+  ``hs-to-coq``. This edit inserts a new ordering constraint into the
+  topological sort so that the output definitions appear in the correct order.
 
-For example, 
+Examples:
+  .. code-block:: shell
 
     order GHC.Base.Functor__arrow GHC.Base.Applicative__arrow_op_ztzg__ GHC.Base.Applicative__arrow GHC.Base.Monad__arrow_return_ GHC.Base.Monad__arrow GHC.Base.Alternative__arrow GHC.Base.MonadPlus__arrow
 
-Axiomatization
---------------
+``axiomatize`` - provide axioms for all definitions in a module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-axiomatize <modulename>
+Format:
+  | **axiomatize** *module*
 
-Localizing edits
-----------------
+Effect:
+  Don't translate the module. Instead, provide axioms for all definitions.
 
-in <qualified name> <edit>
+
+Localizing edits - restrict scope of edit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+ | **in** *qualified_name* *edit*
+
+Effect:
+   Restrict the scope of an edit so that it only applies inside a particular
+	definition. 
+
+Examples:
+  .. code-block:: shell
+
+     in SrcLoc.Ord__RealSrcLoc_op_zl__ rewrite forall, SrcLoc.Ord__RealSrcLoc_compare = GHC.Base.compare
+     in Util.exactLog2 termination pow2 deferred
+  

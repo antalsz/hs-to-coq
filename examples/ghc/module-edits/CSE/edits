@@ -9,17 +9,30 @@ rewrite forall s c, CoreSubst.substTy s c = tt
 skip CoreSubst.substCo
 rewrite forall s c, CoreSubst.substCo s c = tt
 
-# termination CSE.cseExpr   deferred
-# termination CSE.cseBind   deferred
-# termination CSE.cse_bind  deferred
-# termination CSE.tryForCSE deferred
-# termination CSE.cseCase   deferred
+in CSE.cseExpr rename value CSE.cseBind   = cseBind_rec
+in CSE.cseExpr rename value CSE.cse_bind  = cse_bind_rec
+in CSE.cseExpr rename value CSE.tryForCSE = tryForCSE_rec
+in CSE.cseExpr rename value CSE.cseCase   = cseCase_rec
 
-axiomatize definition CSE.cseExpr
-axiomatize definition CSE.cseBind
-axiomatize definition CSE.cse_bind
-axiomatize definition CSE.tryForCSE
-axiomatize definition CSE.cseCase
+in CSE.cseBind rename value CSE.cseExpr   = cseExpr_rec
+in CSE.cseBind rename value CSE.cse_bind  = cse_bind_rec
+in CSE.cseBind rename value CSE.tryForCSE = tryForCSE_rec
+in CSE.cseBind rename value CSE.cseCase   = cseCase_rec
+
+in CSE.cse_bind rename value CSE.cseExpr   = cseExpr_rec
+in CSE.cse_bind rename value CSE.cseBind   = cseBind_rec
+in CSE.cse_bind rename value CSE.tryForCSE = tryForCSE_rec
+in CSE.cse_bind rename value CSE.cseCase   = cseCase_rec
+
+in CSE.tryForCSE rename value CSE.cseExpr   = cseExpr_rec
+in CSE.tryForCSE rename value CSE.cseBind   = cseBind_rec
+in CSE.tryForCSE rename value CSE.cse_bind  = cse_bind_rec
+in CSE.tryForCSE rename value CSE.cseCase   = cseCase_rec
+
+in CSE.cseCase rename value CSE.cseExpr   = cseExpr_rec
+in CSE.cseCase rename value CSE.cseBind   = cseBind_rec
+in CSE.cseCase rename value CSE.cse_bind  = cse_bind_rec
+in CSE.cseCase rename value CSE.tryForCSE = tryForCSE_rec
 
 # OK?
 rewrite forall x, Core.tyConAppArgs x = nil

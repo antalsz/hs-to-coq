@@ -20,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = u'hs-to-coq'
-copyright = u'2018, Stephanie Weirich'
-author = u'Stephanie Weirich'
+copyright = u'2018, Stephanie Weirich, Joachim Breitner'
+author = u'Stephanie Weirich, Joachim Breitner'
 
 # The short X.Y version
 version = u''
@@ -78,7 +78,8 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'default'
+html_theme = "sphinx_rtd_theme"
+html_theme_path = ["_themes", ]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

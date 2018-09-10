@@ -31,6 +31,7 @@ PASS = \
   Mutrec \
   GADT \
   Underscore_Module \
+  LetPattern \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

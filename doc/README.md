@@ -10,11 +10,12 @@ Need [sphinx](http://www.sphinx-doc.org/en/master/) to build
 
 ## Build
 
-Run 
+Run
 
+    git submodule update --init
     make html
 
-output is in 
+output is in
 
     build/html/index.html
 

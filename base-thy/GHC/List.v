@@ -117,6 +117,23 @@ match goal with
 end.
 
 
+Lemma flat_map_unpack_cons_f:
+  forall (A B C : Type) (f : A -> B -> C ) (xs : list (A * B)),
+   flat_map (fun '(x,y) => [f x y]) xs = map (fun '(x,y) => f x y) xs.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. repeat expand_pairs. simpl.
+    f_equal. apply IHxs.
+Qed.
+
+
+(* ---------------------------------- zip ----------------------------- *)
+
+
+(** [zip] and [unzip] *)
+
 Lemma snd_unzip:
   forall a b (xs : list (a * b)),
   snd (List.unzip xs) = map snd xs.
@@ -149,13 +166,127 @@ Proof.
   * simpl. repeat expand_pairs. simpl. f_equal. apply IHxs.
 Qed.
 
-Lemma flat_map_unpack_cons_f:
-  forall (A B C : Type) (f : A -> B -> C ) (xs : list (A * B)),
-   flat_map (fun '(x,y) => [f x y]) xs = map (fun '(x,y) => f x y) xs.
+
+Lemma unzip_zip : forall A B l (la : list A)( lb : list B),
+          List.unzip l = (la,lb) ->
+          l = List.zip la lb.
 Proof.
-  intros.
-  induction xs.
-  * reflexivity.
-  * simpl. repeat expand_pairs. simpl.
-    f_equal. apply IHxs.
+  induction l; intros; simpl. 
+  - inversion H; simpl; auto.
+  - destruct a as [a b].
+    simpl in H.
+    destruct (List.unzip l) as [as_ bs].
+    inversion H. subst.
+    simpl.
+    erewrite IHl.
+    eauto.
+    eauto.
+Qed.
+
+Lemma unzip_equal_length : 
+  forall A B l (al:list A) (bl:list B), 
+    List.unzip l = (al,bl) -> length al = length bl.
+Proof.                           
+  induction l. intros; simpl in *. inversion H. auto.
+  intros; simpl in *.
+  destruct a as [a b].
+  destruct (List.unzip l) eqn:UL.
+  inversion H. subst.
+  simpl.
+  f_equal.
+  eauto.
+Qed.
+
+ 
+Lemma length_zip : forall {a}{b} (xs : list a) (ys :list b), 
+             length xs = length ys ->
+             length xs = length (List.zip xs ys).
+Proof.
+  induction xs; intros; destruct ys; simpl in *; try discriminate.
+  auto.
+  inversion H.
+  erewrite IHxs; eauto.
+Qed.
+
+
+
+Lemma map_fst_zip : forall A B  (l2:list B) (l1 : list A), 
+    length l2 = length l1 -> List.map fst (List.zip l2 l1) = l2.
+  intros A B l2. 
+  induction l2; intros; simpl in *. auto.
+  destruct l1; simpl in *.
+  inversion H.
+  f_equal. 
+  apply IHl2.
+  inversion H.
+  auto.
+Qed.  
+
+
+Lemma map_snd_zip : forall A B  (l1:list B) (l2 : list A), 
+    length l1 = length l2 -> List.map snd (List.zip l1 l2) = l2.
+Proof.
+  intros A B l1. 
+  induction l1; intros; destruct l2; simpl in *; auto.
+  inversion H.
+  f_equal. 
+  apply IHl1.
+  inversion H.
+  auto.
+Qed.  
+
+
+
+Lemma In_zip_fst : forall {A B} {x:A}{y:B} {xs}{ys}{C}(zs: list C),
+             In (x,y) (List.zip xs ys) ->
+             length ys = length zs ->
+             exists z, In (x,z) (List.zip xs zs).
+Proof.
+  induction xs; intros; destruct ys; destruct zs; 
+    simpl in *; inversion H0; clear H0; try contradiction.
+  - destruct H. inversion H; subst. eauto.
+    edestruct IHxs; eauto.
+Qed.
+
+Lemma In_zip_snd : forall {A B} {x:A}{y:B} {xs}{ys}{C}(zs: list C),
+             In (x,y) (List.zip xs ys) ->
+             length xs = length zs ->
+             exists z, In (z,y) (List.zip zs ys).
+Proof.
+  induction xs; intros; destruct ys; destruct zs; 
+    simpl in *; inversion H0; clear H0; try contradiction.
+  - destruct H. inversion H; subst. eauto.
+    edestruct IHxs; eauto.
+Qed.
+
+
+Lemma In_zip_swap : forall {A B} {x:A}{y:B} {xs}{ys},
+      In (x,y) (List.zip xs ys) -> In (y,x) (List.zip ys xs).
+Proof.
+  induction xs; intros; destruct ys; 
+    simpl in *; inversion H; try contradiction.
+  - inversion H0; subst. eauto.
+  - right. eapply IHxs; eauto.
+Qed.
+
+
+Lemma In_zip_map : 
+  forall {A B : Type} {f : A -> B} {x:A}{y:B}{xs},
+       In (x,y) (List.zip xs (map f xs)) -> y = f x.
+Proof.
+  induction xs; intros; 
+    simpl in *; inversion H; try contradiction.
+  - inversion H0; subst. eauto.
+  - eapply IHxs; eauto.
+Qed.
+
+Lemma In_zip : forall {a} {b} (x:a) (y:b) xs ys, 
+    In (x,y) (List.zip xs ys) -> In x xs /\ In y ys.
+Proof.
+  induction xs;
+  intros; destruct ys; simpl in H; try contradiction.
+  destruct H as [h0 | h1].
+  - inversion h0; subst.
+    split; econstructor; eauto.
+  - simpl. edestruct IHxs; eauto.
 Qed.

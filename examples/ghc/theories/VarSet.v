@@ -8,6 +8,7 @@ Import GHC.Base.ManualNotations.
 
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
+Require Import Proofs.Data.Foldable.
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -18,11 +19,15 @@ Import ListNotations.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
 Require Import Proofs.Var.
-Require Import Proofs.Base.
+
 (* Require Import Proofs.ContainerAxioms.
    Require Import IntSetProofs.  *)
 
 Require Import Proofs.VarSetFSet.
+
+
+Require Import Coq.Classes.RelationClasses.
+
 
 Open Scope Z_scope.
 
@@ -654,6 +659,9 @@ Proof.
   (* Need theory about IntMap. *)
 Admitted. 
 
+
+
+
 (** ** [disjointVarSet]  *)
 
 
@@ -684,116 +692,6 @@ Axiom disjointVarSet_subVarSet_l:
   subVarSet vs1 vs2 = true ->
   disjointVarSet vs1 vs3 = true.
 
-(** ** [InScopeSet] *)
-
-Lemma getInScopeVars_extendInScopeSet:
-  forall iss v,
-  getInScopeVars (extendInScopeSet iss v) = extendVarSet (getInScopeVars iss) v.
-Proof.
-  intros.
-  unfold getInScopeVars.
-  unfold extendInScopeSet.
-  destruct iss.
-  reflexivity.
-Qed.
-
-Lemma getInScopeVars_extendInScopeSetList:
-  forall iss vs,
-  getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
-Proof.
-  intros.
-  unfold getInScopeVars.
-  unfold extendInScopeSetList.
-  set_b_iff.
-  destruct iss.
-  unfold_Foldable_foldl'.
-  unfold_Foldable_foldl.
-  f_equal.
-Qed.
-
-
-Lemma extendInScopeSetList_cons : forall v vs in_scope_set,
-           (extendInScopeSetList in_scope_set (v :: vs) = 
-            (extendInScopeSetList (extendInScopeSet in_scope_set v) vs)).
-Proof.
-  unfold extendInScopeSetList.
-  destruct in_scope_set.
-  unfold_Foldable_foldl.
-  simpl.
-  f_equal.
-  unfold Pos.to_nat.
-  unfold Pos.iter_op.
-  omega.
-Qed.
-
-Lemma extendInScopeSetList_nil : forall in_scope_set,
-           extendInScopeSetList in_scope_set nil = in_scope_set.
-Proof.
-  unfold extendInScopeSetList.
-  destruct in_scope_set.
-  unfold_Foldable_foldl.
-  simpl.
-  f_equal.
-  omega.
-Qed.
-
-Lemma lookupVarSet_extendVarSetList_l:
-  forall v vs1 vs2,
-  elemVarSet v (mkVarSet vs2) = false ->
-  lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v.
-Admitted.
-
-Lemma lookupVarSet_extendVarSetList_r_self:
-  forall v vs1 vs2,
-  List.In v vs2 ->
-  NoDup (map varUnique vs2) ->
-  lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
-Admitted.
-
-
-(** ** [uniqAway] *)
-
-Axiom isJoinId_maybe_uniqAway:
-  forall s v, 
-  isJoinId_maybe (uniqAway s v) = isJoinId_maybe v.
-
-(* See discussion of [isLocalUnique] in [Proofs.Unique] *)
-Axiom isLocalUnique_uniqAway:
-  forall iss v,
-  isLocalUnique (varUnique (uniqAway iss v)) = true.
-
-Axiom isLocalId_uniqAway:
-  forall iss v,
-  isLocalId (uniqAway iss v) = isLocalId v.
-
-Axiom isLocalVar_uniqAway:
-  forall iss v,
-  isLocalVar (uniqAway iss v) = isLocalVar v.
-
-Lemma elemVarSet_uniqAway:
-  forall v iss vs,
-  subVarSet vs (getInScopeVars iss) = true ->
-  elemVarSet (uniqAway iss v) vs = false.
-Proof.
-  intros.
-  safe_unfold_VarSet.
-  destruct vs.
-  destruct iss.
-  destruct v0.
-  destruct u.
-  destruct u0.
-  simpl in *.
-  unfold uniqAway.
-  unfold elemInScopeSet.
-  unfold elemVarSet.
-  unfold uniqAway'.
-  unfold realUnique.
-Admitted.
-
-Axiom nameUnique_varName_uniqAway:
-  forall vss v,
-  Name.nameUnique (varName v) = varUnique v ->
-  Name.nameUnique (varName (uniqAway vss v)) = varUnique (uniqAway vss v).
 
 (** ** [lookupVarSet] *)
 
@@ -810,11 +708,25 @@ Lemma elemVarSet_lookupVarSet :
 Admitted.
 
 
-
 Lemma lookupVarSet_extendVarSet_self:
   forall v vs,
   lookupVarSet (extendVarSet vs v) v = Some v.
 Admitted.
+
+
+Lemma lookupVarSet_extendVarSetList_l:
+  forall v vs1 vs2,
+  elemVarSet v (mkVarSet vs2) = false ->
+  lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v.
+Admitted.
+
+Lemma lookupVarSet_extendVarSetList_r_self:
+  forall v vs1 vs2,
+  List.In v vs2 ->
+  NoDup (map varUnique vs2) ->
+  lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
+Admitted.
+
 
 (** ** Compatibility with [GHC.Base.==] *)
 
@@ -843,20 +755,6 @@ Axiom lookupVarSet_delVarSet_neq :
       not (v1 GHC.Base.== v2 = true) ->
       lookupVarSet (delVarSet vs v1) v2 = lookupVarSet vs v2.
 
-
-(*
-Lemma lookupVarSet_eq :
-  forall v1 v2 vs var,
-    (v1 GHC.Base.== v2) = true ->
-    lookupVarSet vs v1 = Some var ->
-    lookupVarSet vs v2 = Some var. 
-Proof.
-  intros.
-  unfold lookupVarSet in *.
-  unfold UniqSet.lookupUniqSet in *. destruct vs. 
-  unfold UniqFM.lookupUFM in *. destruct u.
-Admitted.
-*)
 
 Axiom lookupVarSet_eq :
   forall v1 v2 vs,
@@ -919,7 +817,10 @@ Definition StrongSubset (vs1 : VarSet) (vs2: VarSet) :=
            | None => True 
          end.
 
-Require Import Coq.Classes.RelationClasses.
+
+Notation "s1 {<=} s2" := (StrongSubset s1 s2) (at level 70, no associativity).
+Notation "s1 {=} s2" := (StrongSubset s1 s2 /\ StrongSubset s2 s1) (at level 70, no associativity).
+
 
 Axiom StrongSubset_refl : forall vs, 
     StrongSubset vs vs.
@@ -1216,3 +1117,114 @@ Proof.
   * reflexivity.
 Qed.
 
+
+
+(* We could axiomatize these in terms of In, but that would not be strong 
+   enough. As lookup is keyed on the uniques only, we need to specify 
+   list membership via Var's == only. *)
+
+Lemma lookupVarSet_extendVarSetList_self:
+  forall (vars:list Var) v vs,
+    Foldable.elem v vars = true -> 
+    lookupVarSet (extendVarSetList vs vars) v = Some v.
+Admitted.
+
+Lemma lookupVarSet_extendVarSetList_false:
+  forall (vars:list Var) v vs,
+    not (Foldable.elem v vars = true) -> 
+    lookupVarSet (extendVarSetList vs vars) v = lookupVarSet vs v.
+Admitted.
+
+
+(* A list of variables is fresh for a given varset when 
+   any variable with a unique found in the list is not found 
+   in the set. i.e. this is list membership using GHC.Base.==
+   for vars. 
+*)
+
+Definition freshList (vars: list Var) (vs :VarSet) :=
+  (forall (v:Var), Foldable.elem v vars = true -> 
+              lookupVarSet vs v = None).
+
+Lemma freshList_nil : forall v,  freshList nil v.
+Proof.
+  unfold freshList. intros v v0 H. inversion H.
+Qed.
+
+Lemma freshList_cons : forall (x:Var) l (v:VarSet),  
+    lookupVarSet v x= None /\ freshList l v <-> freshList (x :: l) v.
+Proof.
+  unfold freshList. intros. 
+  split. 
+  + intros [? ?] ? ?.
+    rewrite elem_cons in H1.
+    destruct (orb_prop _ _ H1) as [EQ|IN].
+    rewrite lookupVarSet_eq with (v2 := x); auto.
+    eauto.
+  + intros. split.
+    eapply H. 
+    rewrite elem_cons.
+    eapply orb_true_intro.
+    left. eapply Base.Eq_refl.
+    intros.
+    eapply H.
+    rewrite elem_cons.
+    eapply orb_true_intro.
+    right. auto.
+Qed.
+
+
+Lemma freshList_app :
+  forall v l1 l2, freshList (l1 ++ l2) v <-> freshList l1 v /\ freshList l2 v.
+Proof.
+  intros.
+  induction l1; simpl.
+  split.
+  intros. split. apply freshList_nil. auto.
+  tauto.
+  split.
+  + intros.
+    rewrite <- freshList_cons in *. tauto. 
+  + intros.
+    rewrite <- freshList_cons in *. tauto.
+Qed.
+    
+Lemma StrongSubset_extendVarSet_fresh : 
+  forall vs var, lookupVarSet vs var = None ->
+            StrongSubset vs (extendVarSet vs var).
+Admitted.
+
+Lemma StrongSubset_extendVarSetList_fresh : 
+  forall vs vars, freshList vars vs ->
+             StrongSubset vs (extendVarSetList vs vars).
+Admitted.
+
+Lemma filterVarSet_extendVarSet : 
+  forall f v vs,
+    filterVarSet f (extendVarSet vs v) = 
+    if (f v) then extendVarSet (filterVarSet f vs) v 
+    else (filterVarSet f vs).
+Proof.  
+Admitted.
+
+Lemma lookupVarSet_filterVarSet_true : forall f v vs,
+  f v = true ->
+  lookupVarSet (filterVarSet f vs) v = lookupVarSet vs v.
+Proof.
+  intros.
+Admitted.
+
+Lemma lookupVarSet_filterVarSet_false : forall f v vs,
+  f v = false ->
+  lookupVarSet (filterVarSet f vs) v = None.
+Proof.
+  intros.
+Admitted.
+
+
+Lemma StrongSubset_filterVarSet : 
+  forall f1 f2 vs,
+  (forall v, f1 v = true -> f2 v = true) ->
+  filterVarSet f1 vs {<=} filterVarSet f2 vs.
+Proof.  
+Admitted.

@@ -4,16 +4,18 @@ Import GHC.Base.ManualNotations.
 
 Require Import Core.
 Require Import CoreSubst.
-
 Require Import Coq.Lists.List.
 
+Require Import Proofs.GHC.Base.
+Require Import Proofs.GHC.List.
+Require Import Proofs.Data.Foldable.
+Require Import Proofs.Data.Traversable. 
+
 Require Import Proofs.GhcTactics.
-Require Import Proofs.Base.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
-
-(* Require Import Proofs.VarSetFSet. *)
 Require Import Proofs.VarSet.
+Require Import Proofs.VarEnv.
 Require Import Proofs.Var.
 Require Import Proofs.ScopeInvariant.
 
@@ -25,22 +27,11 @@ Opaque GHC.Err.default.
 Open Scope nat_scope.
 Set Bullet Behavior "Strict Subproofs".
 
-Hint Constructors NoDup.
 
-(* Actually from Coq.Program.Tactics. *)
-Ltac destruct_one_pair :=
- match goal with
-   | [H : (_ /\ _) |- _] => destruct H
-   | [H : prod _ _ |- _] => destruct H
- end.
+(** [VarSet] *)
+Axiom ValidVarSet_invariant: forall vs, ValidVarSet vs.
 
-
-Lemma StateL_surjective_pairing : forall {s} {a} (x: Utils.StateL s a), 
-    x = Utils.Mk_StateL (Utils.runStateL x).
-Proof.
-  intros. destruct x. simpl.
-  auto.
-Qed.
+(* ---------------------------- *)
 
 
 Lemma Forall_app : forall {A} {p} {l1 l2 : list A}, 
@@ -51,688 +42,22 @@ Proof.
   inversion H. subst.  eapply Forall_cons; eauto.
 Qed.
 
-
-
-
-
-(** [mapAccumL] instance for lists *)
-
-(*
--- |The 'mapAccumL' function behaves like a combination of 'fmap'
--- and 'foldl'; it applies a function to each element of a structure,
--- passing an accumulating parameter from left to right, and returning
--- a final value of this accumulator together with the new structure.
-mapAccumL :: Traversable t => (a -> b -> (a, c)) -> a -> t b -> (a, t c)
-mapAccumL f s t = runStateL (traverse (StateL . flip f) t) s *)
-
-(* 
-mapAccumL               :: (a -> b -> (a, c)) -> a -> [b] -> (a, [c])
-mapAccumL f s []        =  (s, [])
-mapAccumL f s (x:xs)    =  (s'',y:ys)
-                           where (s', y ) = f s x
-                                 (s'',ys) = mapAccumL f s' xs
-*)
-
-
-
-
-Lemma mapAccumL_nil : forall a b c  (f : a -> b -> (a * c)) (s : a), 
-   Traversable.mapAccumL f s nil = (s, nil).
-Proof.
-  intros a b c f s.
-  unfold Traversable.mapAccumL.
-  unfold Traversable.traverse,Traversable.Traversable__list, 
-         Traversable.traverse__ , 
-         Traversable.Traversable__list_traverse.
-  simpl.
-  auto.
-Qed.
-
-Lemma mapAccumL_cons : forall a b c x (xs : list b) (f : a -> b -> (a * c)) (s : a), 
-   Traversable.mapAccumL f s (cons x xs) = 
-   let '(s',y) := f s x in
-   let '(s'',ys) := Traversable.mapAccumL f s' xs in
-   (s'', cons y ys).
-Proof.
-  intros a b c x xs f s.
-  unfold Traversable.mapAccumL.
-  unfold Traversable.traverse,Traversable.Traversable__list, 
-         Traversable.traverse__ , 
-         Traversable.Traversable__list_traverse.
-  rewrite Base.hs_coq_foldr_base.
-  unfold op_z2218U__.
-  simpl.
-  unfold Utils.runStateL,liftA2, liftA2__, 
-  Utils.Applicative__StateL,Utils.Applicative__StateL_liftA2,
-  pure,pure__,Utils.Applicative__StateL_pure in *.
-  destruct (fold_right
-        (fun (x0 : b) (ys : Utils.StateL a (list c)) =>
-         match ys with
-         | Utils.Mk_StateL ky =>
-             Utils.Mk_StateL
-               (fun s0 : a =>
-                let
-                '(s', x1) := flip f x0 s0 in
-                 let '(s'', y) := ky s' in (s'', x1 :: y))
-         end) (Utils.Mk_StateL (fun s0 : a => (s0, nil))) xs) eqn:EQ.
-  unfold flip.
-  auto.
-Qed.
-
-Lemma elem_nil : forall {A} `{Eq_ A}  (x:A),  
-  Foldable.elem x nil = false.
-Proof.
-  intros.
-  reflexivity.
-Qed.
-
-Lemma elem_cons : 
-  forall {A} `{Eq_ A} (v:A) (x:A) (l:list A),  
-    Foldable.elem v (x :: l) = (v == x) || Foldable.elem v l.
-Proof.
-  intros.
-  unfold Foldable.elem.
-  unfold Foldable.any.
-  unfold compose, SemigroupInternal.getAny, Foldable.foldMap.
-  unfold Foldable.Foldable__list,Foldable.foldMap__,
-  SemigroupInternal.Semigroup__Any,SemigroupInternal.Monoid__Any.
-  unfold Foldable.Foldable__list_foldMap. 
-  unfold Foldable.Foldable__list_foldr, mappend, mempty.
-  simpl.
-  f_equal.
-Qed.
-
-
-Lemma Foldable_any_app : forall {A} `{Eq_ A} (v:A) (l1 l2:list A),
-      Foldable.any (fun y : A => v == y) (l1 ++ l2) =
-      Foldable.any (fun y : A => v == y) l1
-      || Foldable.any (fun y : A => v == y) l2.
-Proof.
-  intros.
-  unfold Foldable.any.
-  unfold compose, Foldable.foldMap.
-  unfold Foldable.Foldable__list,Foldable.foldMap__,
-         Foldable.Foldable__list_foldMap,
-         Foldable.Foldable__list_foldr. 
-  simpl.
-  induction l1.
-  + simpl. auto.
-  + simpl.
-    rewrite <- orb_assoc.
-    f_equal.
-    unfold SemigroupInternal.getAny.
-    auto.
-Qed.
-
-Lemma Foldable_elem_app : forall {A}`{Eq_ A} (v:A) (l1 l2:list A),  
-    Foldable.elem v (l1 ++ l2) = Foldable.elem v l1 || Foldable.elem v l2.
-Proof.
-  intros. apply Foldable_any_app.
-Qed.
-
-(** [zip] and [unzip] *)
-
-Lemma unzip_zip : forall A B l (la : list A)( lb : list B),
-          List.unzip l = (la,lb) ->
-          l = List.zip la lb.
-Proof.
-  induction l; intros; simpl. 
-  - inversion H; simpl; auto.
-  - destruct a as [a b].
-    simpl in H.
-    destruct (List.unzip l) as [as_ bs].
-    inversion H. subst.
-    simpl.
-    erewrite IHl.
-    eauto.
-    eauto.
-Qed.
-
-Lemma unzip_equal_length : 
-  forall A B l (al:list A) (bl:list B), 
-    List.unzip l = (al,bl) -> length al = length bl.
-Proof.                           
-  induction l. intros; simpl in *. inversion H. auto.
-  intros; simpl in *.
-  destruct a as [a b].
-  destruct (List.unzip l) eqn:UL.
-  inversion H. subst.
-  simpl.
-  f_equal.
-  eauto.
-Qed.
-
- 
-Lemma length_zip : forall {a}{b} (xs : list a) (ys :list b), 
-             length xs = length ys ->
-             length xs = length (List.zip xs ys).
-Proof.
-  induction xs; intros; destruct ys; simpl in *; try discriminate.
-  auto.
-  inversion H.
-  erewrite IHxs; eauto.
-Qed.
-
-
-
-Lemma map_fst_zip : forall A B  (l2:list B) (l1 : list A), 
-    length l2 = length l1 -> List.map fst (List.zip l2 l1) = l2.
-  intros A B l2. 
-  induction l2; intros; simpl in *. auto.
-  destruct l1; simpl in *.
-  inversion H.
-  f_equal. 
-  apply IHl2.
-  inversion H.
-  auto.
-Qed.  
-
 (* SCW: this one seems a bit specialized. replace with the more 
    general analogue to the above? *)
-Lemma map_snd_zip : 
+Lemma map_snd_zip' : 
   forall {a}{b}{c} (f:b -> c) (xs : list a) ys , 
     length xs = length ys ->
     (map (fun ps => f (snd ps)) (List.zip xs ys)) =
     (map f ys).
 Proof.
-  induction xs; intros; destruct ys; simpl in H; inversion H.
-  - simpl. auto.
-  - simpl. rewrite IHxs. auto. auto.
-Qed.
-
-
-Lemma In_zip_fst : forall {A B} {x:A}{y:B} {xs}{ys}{C}(zs: list C),
-             In (x,y) (List.zip xs ys) ->
-             length ys = length zs ->
-             exists z, In (x,z) (List.zip xs zs).
-Proof.
-  induction xs; intros; destruct ys; destruct zs; 
-    simpl in *; inversion H0; clear H0; try contradiction.
-  - destruct H. inversion H; subst. eauto.
-    edestruct IHxs; eauto.
-Qed.
-
-Lemma In_zip_snd : forall {A B} {x:A}{y:B} {xs}{ys}{C}(zs: list C),
-             In (x,y) (List.zip xs ys) ->
-             length xs = length zs ->
-             exists z, In (z,y) (List.zip zs ys).
-Proof.
-  induction xs; intros; destruct ys; destruct zs; 
-    simpl in *; inversion H0; clear H0; try contradiction.
-  - destruct H. inversion H; subst. eauto.
-    edestruct IHxs; eauto.
-Qed.
-
-
-Lemma In_zip_swap : forall {A B} {x:A}{y:B} {xs}{ys},
-      In (x,y) (List.zip xs ys) -> In (y,x) (List.zip ys xs).
-Proof.
-  induction xs; intros; destruct ys; 
-    simpl in *; inversion H; try contradiction.
-  - inversion H0; subst. eauto.
-  - right. eapply IHxs; eauto.
-Qed.
-
-
-Lemma In_zip_map : 
-  forall {A B : Type} {f : A -> B} {x:A}{y:B}{xs},
-       In (x,y) (List.zip xs (map f xs)) -> y = f x.
-Proof.
-  induction xs; intros; 
-    simpl in *; inversion H; try contradiction.
-  - inversion H0; subst. eauto.
-  - eapply IHxs; eauto.
-Qed.
-
-Lemma In_zip : forall {a} {b} (x:a) (y:b) xs ys, 
-    In (x,y) (List.zip xs ys) -> In x xs /\ In y ys.
-Proof.
-  induction xs;
-  intros; destruct ys; simpl in H; try contradiction.
-  destruct H as [h0 | h1].
-  - inversion h0; subst.
-    split; econstructor; eauto.
-  - simpl. edestruct IHxs; eauto.
-Qed.
-
-
-
-
-(* ---------------------------- *)
-
-(** [uniqAway] axiomatization *)
-
-(* If uniqAway returns a variable with the same unique, 
-   it returns the same variable. *)      
-Axiom uniqAway_eq_same : forall v in_scope_set,
-    (uniqAway in_scope_set v == v) = true ->
-    (uniqAway in_scope_set v = v).
-
-(* The variable returned by uniqAway is fresh. *)
-Axiom uniqAway_lookupVarSet_fresh : forall v in_scope_set,
-    lookupVarSet (getInScopeVars in_scope_set) (uniqAway in_scope_set v) = None.
-
-(* ... and also a local var *)
-Axiom uniqAway_isLocalVar : forall v in_scope_set,
-    GoodLocalVar v ->
-    GoodLocalVar (uniqAway in_scope_set v).
-
-
-(* ---------------------------- *)
-
-(* Local Vars include localIds as well as type/coercion vars *)
-
-Lemma isLocalId_isLocalVar : 
-  forall var, isLocalVar var = false -> isLocalId var = false.
-Proof.
-  intros var.
-  unfold isLocalVar.
-  unfold isGlobalId.
-  unfold isLocalId. 
-  destruct var.
-  simpl. tauto.
-  tauto.
-  destruct i; simpl; tauto.
-Qed.
-
-Lemma isLocalVar_isLocalId : 
-  forall var, isLocalId var = true -> isLocalVar var = true.
-Proof.
-  intros var.
-  unfold isLocalVar.
-  unfold isGlobalId.
-  unfold isLocalId. 
-  destruct var.
-  simpl. tauto.
-  tauto.
-  destruct i; simpl; tauto.
-Qed.
-
-Lemma varUnique_iff :
-  forall v1 v2,
-    v1 == v2 = true <-> varUnique v1 = varUnique v2.
-Proof.
   intros.
-  unfold_zeze.
-  unfold varUnique.
-  set (n1 := realUnique v1).
-  set (n2 := realUnique v2).
-  rewrite N.eqb_eq.
-  unfold Unique.mkUniqueGrimily in *.
-  intuition congruence.
+  pose (M := @map_map (a * b) _ _ snd f).
+  simpl in M.
+  rewrite <- M.
+  rewrite map_snd_zip. auto. auto.
 Qed.
 
-(* ---------------------------- *)
-
-    
-(** [VarSet] *)
-
-Axiom ValidVarSet_invariant: forall vs, ValidVarSet vs.
-
-Notation "s1 {<=} s2" := (StrongSubset s1 s2) (at level 70, no associativity).
-Notation "s1 {=} s2" := (StrongSubset s1 s2 /\ StrongSubset s2 s1) (at level 70, no associativity).
-
-(* We could axiomatize these in terms of In, but that would not be strong 
-   enough. As lookup is keyed on the uniques only, we need to specify 
-   list membership via Var's == only. *)
-
-Lemma lookupVarSet_extendVarSetList_self:
-  forall (vars:list Var) v vs,
-    Foldable.elem v vars = true -> 
-    lookupVarSet (extendVarSetList vs vars) v = Some v.
-Admitted.
-
-Lemma lookupVarSet_extendVarSetList_false:
-  forall (vars:list Var) v vs,
-    not (Foldable.elem v vars = true) -> 
-    lookupVarSet (extendVarSetList vs vars) v = lookupVarSet vs v.
-Admitted.
-
-
-(* A list of variables is fresh for a given varset when 
-   any variable with a unique found in the list is not found 
-   in the set. i.e. this is list membership using GHC.Base.==
-   for vars. 
-*)
-
-Definition freshList (vars: list Var) (vs :VarSet) :=
-  (forall (v:Var), Foldable.elem v vars = true -> 
-              lookupVarSet vs v = None).
-
-Lemma freshList_nil : forall v,  freshList nil v.
-Proof.
-  unfold freshList. intros v v0 H. inversion H.
-Qed.
-
-Lemma freshList_cons : forall (x:Var) l (v:VarSet),  
-    lookupVarSet v x= None /\ freshList l v <-> freshList (x :: l) v.
-Proof.
-  unfold freshList. intros. 
-  split. 
-  + intros [? ?] ? ?.
-    rewrite elem_cons in H1.
-    destruct (orb_prop _ _ H1) as [EQ|IN].
-    rewrite lookupVarSet_eq with (v2 := x); auto.
-    eauto.
-  + intros. split.
-    eapply H. 
-    rewrite elem_cons.
-    eapply orb_true_intro.
-    left. eapply Base.Eq_refl.
-    intros.
-    eapply H.
-    rewrite elem_cons.
-    eapply orb_true_intro.
-    right. auto.
-Qed.
-
-
-Lemma freshList_app :
-  forall v l1 l2, freshList (l1 ++ l2) v <-> freshList l1 v /\ freshList l2 v.
-Proof.
-  intros.
-  induction l1; simpl.
-  split.
-  intros. split. apply freshList_nil. auto.
-  tauto.
-  split.
-  + intros.
-    rewrite <- freshList_cons in *. tauto. 
-  + intros.
-    rewrite <- freshList_cons in *. tauto.
-Qed.
-    
-Lemma StrongSubset_extendVarSet_fresh : 
-  forall vs var, lookupVarSet vs var = None ->
-            StrongSubset vs (extendVarSet vs var).
-Admitted.
-
-Lemma StrongSubset_extendVarSetList_fresh : 
-  forall vs vars, freshList vars vs ->
-             StrongSubset vs (extendVarSetList vs vars).
-Admitted.
-
-Lemma filterVarSet_extendVarSet : 
-  forall f v vs,
-    filterVarSet f (extendVarSet vs v) = 
-    if (f v) then extendVarSet (filterVarSet f vs) v 
-    else (filterVarSet f vs).
-Proof.  
-Admitted.
-
-Lemma lookupVarSet_filterVarSet_true : forall f v vs,
-  f v = true ->
-  lookupVarSet (filterVarSet f vs) v = lookupVarSet vs v.
-Proof.
-  intros.
-Admitted.
-
-Lemma lookupVarSet_filterVarSet_false : forall f v vs,
-  f v = false ->
-  lookupVarSet (filterVarSet f vs) v = None.
-Proof.
-  intros.
-Admitted.
-
-
-Lemma StrongSubset_filterVarSet : 
-  forall f1 f2 vs,
-  (forall v, f1 v = true -> f2 v = true) ->
-  filterVarSet f1 vs {<=} filterVarSet f2 vs.
-Proof.  
-Admitted.
-
-
-
-(** [VarEnv] *)
-
-Axiom lookupVarEnv_elemVarEnv_true :
-  forall A v (vs : VarEnv A),
-   elemVarEnv v vs = true <-> (exists a, lookupVarEnv vs v = Some a).
-
-Axiom lookupVarEnv_elemVarEnv_false :
-  forall A v (vs : VarEnv A),
-   elemVarEnv v vs = false <-> (lookupVarEnv vs v = None).
-
-
-Axiom lookupVarEnv_eq :
-  forall A v1 v2 (vs : VarEnv A),
-    (v1 == v2) = true ->
-    lookupVarEnv vs v1 = lookupVarEnv vs v2.
-
-Axiom elemVarEnv_eq :
-  forall A v1 v2 (vs : VarEnv A),
-    (v1 == v2) = true ->
-    elemVarEnv v1 vs = elemVarEnv v2 vs.
-
-
-Axiom lookupVarEnv_extendVarEnv_eq :
-  forall A v1 v2 (vs : VarEnv A) val, 
-    v1 == v2 = true ->
-    lookupVarEnv (extendVarEnv vs v1 val) v2 = Some val.
-
-Axiom lookupVarEnv_extendVarEnv_neq :
-  forall A v1 v2 (vs : VarEnv A) val, 
-    v1 == v2 <> true ->
-    lookupVarEnv (extendVarEnv vs v1 val) v2 = lookupVarEnv vs v2.
-
-Axiom elemVarEnv_extendVarEnv_eq :
-  forall A v1 v2 (vs : VarEnv A) val, 
-    v1 == v2 = true ->
-    elemVarEnv v2 (extendVarEnv vs v1 val) = true.
-
-Axiom elemVarEnv_extendVarEnv_neq :
-  forall A v1 v2 (vs : VarEnv A) val, 
-    v1 == v2 <> true ->
-    elemVarEnv v2 (extendVarEnv vs v1 val) = elemVarEnv v2 vs.
-
-
-Axiom elemVarEnv_delVarEnv_eq :
-  forall A v1 v2 (vs : VarEnv A), 
-    v1 == v2 = true ->
-    elemVarEnv v2 (delVarEnv vs v1) = false.
-
-Axiom elemVarEnv_delVarEnv_neq :
-  forall A v1 v2 (env: VarEnv A), (v1 == v2) = false -> 
-               elemVarEnv v2 (delVarEnv env v1) = elemVarEnv v2 env.
-
-
-Axiom lookupVarEnv_delVarEnv_eq :
-  forall A v1 v2 (vs : VarEnv A), 
-    v1 == v2 = true ->
-    lookupVarEnv (delVarEnv vs v1) v2 = None.
-
-Axiom lookupVarEnv_delVarEnv_neq :
-  forall A v1 v2 (vs : VarEnv A), 
-    v1 == v2 <> true ->
-    lookupVarEnv (delVarEnv vs v1) v2 = lookupVarEnv vs v2.
-
-
-(** [minusDom] **)
-
-(* To be able to specify the property of a wellformed substitution, 
-   we need to define the operation of taking a variable set and 
-   removing all of the vars that are part of the domain of the 
-   substitution. *)
-
-
-Definition minusDom {a} (vs : VarSet) (e : VarEnv a) : VarSet :=
-  filterVarSet (fun v => negb (elemVarEnv v e)) vs.
-
-
-Ltac specialize_all var := 
-  repeat 
-    match goal with 
-    | [ H : forall var:Var, _ |- _ ] => specialize (H var)
-    end.
-
-(* After a case split on whether a var is present in a minusDom'ed env, 
-   rewrite a use of minusDom appropriately. *)
-Ltac rewrite_minusDom_true := 
-  match goal with 
-  | [ H : elemVarEnv ?var ?init_env = true |- 
-      context [ lookupVarSet 
-                  (minusDom ?s ?init_env) ?var ] ] =>  
-    unfold minusDom;
-    repeat rewrite lookupVarSet_filterVarSet_false with 
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); try rewrite H; auto 
-  | [ H : elemVarEnv ?var ?init_env = true, 
-          H2: context [ lookupVarSet 
-                          (minusDom ?s ?init_env) ?var ] |- _ ] =>  
-    unfold minusDom in H2;
-    rewrite lookupVarSet_filterVarSet_false with
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2; 
-    try rewrite H; auto 
-                                                                    
-  end.
-
-Ltac rewrite_minusDom_false := 
-  match goal with 
-  | [ H : elemVarEnv ?var ?init_env  = false |- 
-      context [ lookupVarSet 
-                  (minusDom ?s ?init_env) ?var ] ] =>  
-    unfold minusDom;
-    repeat rewrite lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); 
-    try rewrite H; auto 
-  | [ H : elemVarEnv ?var ?init_env = false, 
-          H2: context [ lookupVarSet 
-                          (minusDom ?s ?init_env) ?var ] |- _ ] =>  
-    unfold minusDom in H2;
-    rewrite lookupVarSet_filterVarSet_true with 
-        (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2 ; 
-    try rewrite H; auto  
-  end.
-
-
-Lemma StrongSubset_minusDom {a} : forall vs1 vs2 (e: VarEnv a), 
-    vs1 {<=} vs2 ->
-    minusDom vs1 e {<=} minusDom vs2 e.
-Proof.
-  intros. 
-  unfold StrongSubset in *.
-  intros var.
-  destruct (elemVarEnv var e) eqn:IN_ENV.
-  + rewrite_minusDom_true. 
-  + rewrite_minusDom_false.
-    eapply H.
-Qed.
-
-
-Lemma lookupVarSet_minusDom_1 :
-  forall a (env : VarEnv a) vs v,
-    lookupVarEnv env v = None -> 
-    lookupVarSet (minusDom vs env) v = lookupVarSet vs v.
-Proof.
-  intros.
-  rewrite <- lookupVarEnv_elemVarEnv_false in H.
-  unfold minusDom.
-  rewrite lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 env))).
-  auto.
-  rewrite H. simpl. auto.
-Qed.
-
-
-
-Lemma lookup_minusDom_inDom : forall a vs (env:VarEnv a) v',
-    elemVarEnv v' env = true ->
-    lookupVarSet (minusDom vs env) v' = None.
-Proof.
-  intros.
-  rewrite_minusDom_true.
-Qed. 
-
-
-Lemma minusDom_extend : 
-  forall a vs (env : VarEnv a) v,
-    minusDom (extendVarSet vs v) (delVarEnv env v) {<=} 
-    extendVarSet (minusDom vs env) v.
-Proof.
-  intros.
-  unfold StrongSubset.
-  intros var.
-  destruct (elemVarEnv var (delVarEnv env v)) eqn:IN.
-  rewrite_minusDom_true.
-  rewrite_minusDom_false.
-  destruct (v == var) eqn:EQ.
-  rewrite lookupVarSet_extendVarSet_eq;auto.
-  rewrite lookupVarSet_extendVarSet_eq; auto.
-  eapply almostEqual_refl; auto.
-  rewrite lookupVarSet_extendVarSet_neq; auto.
-  destruct (lookupVarSet vs var) eqn:IN2; auto.
-  rewrite lookupVarSet_extendVarSet_neq; auto.
-  rewrite lookupVarSet_filterVarSet_true; try rewrite IN; auto.
-  rewrite IN2.
-  apply almostEqual_refl; auto.
-  rewrite elemVarEnv_delVarEnv_neq in IN; auto.
-  rewrite IN. auto.
-  intro h. rewrite h in EQ. discriminate.
-  intro h. rewrite h in EQ. discriminate.
-Qed.
-
-
-Lemma lookup_minusDom_extend : forall a vs (env:VarEnv a) v v' e,
-    v ==  v' <> true ->
-    lookupVarSet (minusDom (extendVarSet vs v) (extendVarEnv env v e)) v' =
-    lookupVarSet (minusDom vs env) v'.
-Proof.
-  intros.
-  destruct (elemVarEnv v' env) eqn:Eenv; auto.
-  + (* v' is in dom of env. so cannot be looked up. *)
-    unfold minusDom.
-    rewrite 2 lookupVarSet_filterVarSet_false; auto.  
-    rewrite Eenv. simpl. auto.
-    rewrite elemVarEnv_extendVarEnv_neq.
-    rewrite Eenv. simpl. auto.
-    auto.
-  + unfold minusDom.
-    rewrite 2 lookupVarSet_filterVarSet_true; auto.  
-    rewrite lookupVarSet_extendVarSet_neq; auto.
-    auto.
-    rewrite Eenv. simpl. auto.
-    rewrite elemVarEnv_extendVarEnv_neq.
-    rewrite Eenv. simpl. auto.
-    auto.
-Qed.
-
-Lemma StrongSubset_minusDom_left {a} : forall vs (e: VarEnv a), 
-    minusDom vs e {<=} vs.
-Proof.
-  intros.
-  unfold StrongSubset. intro var.
-  destruct (elemVarEnv var e) eqn:EL.
-  rewrite_minusDom_true.
-  rewrite_minusDom_false.
-  destruct lookupVarSet.
-  eapply almostEqual_refl.
-  auto.
-Qed.
-
-Lemma StrongSubset_minusDom_extend_extend : forall vs v e (env: IdSubstEnv),
-           minusDom (extendVarSet vs v) (extendVarEnv env v e) {<=} minusDom vs env.
-Proof.
-  intros.
-  intro var.
-  destruct (var == v) eqn:EQ.
-  rewrite lookupVarSet_eq with (v2 := v); auto.
-  unfold minusDom.
-  rewrite lookupVarSet_filterVarSet_false. 
-  auto.
-  rewrite elemVarEnv_extendVarEnv_eq.
-  simpl. auto.
-  rewrite Base.Eq_refl. auto.
-  rewrite lookup_minusDom_extend.
-  destruct (lookupVarSet (minusDom vs env) var).
-  eapply almostEqual_refl. auto.
-  intro h.
-  rewrite Base.Eq_sym in h.
-  rewrite h in EQ.
-  discriminate.
-Qed.
-
-
-
+   
 (* ---------------------------------------------------------------- *)
 
 (** [subst_expr] simplification lemmas *)
@@ -937,32 +262,11 @@ Qed.
 
 (* ---------------------------------------- *)
 
-Lemma In_varUnique_elem : forall a l, 
-    In (varUnique a) (map varUnique l) <-> 
-    Foldable.elem a l = true.
-Proof.
-  intros.
-  induction l.
-  - simpl. rewrite elem_nil.
-    split; intro. contradiction. discriminate.
-  - rewrite elem_cons.
-    rewrite orb_true_iff.
-    split.
-    intro h. inversion h.
-    left. 
-    rewrite varUnique_iff in *.
-    auto.
-    right. tauto.
-    intro h.
-    rewrite <- IHl in h.
-    simpl.
-    destruct h.
-    left. rewrite varUnique_iff in *. auto.
-    right. auto.
-Qed.
 
 Definition Disjoint {a}`{Eq_ a} (l1 l2 : list a) :=
   Forall (fun x => ~ (In x l2)) l1. 
+
+Hint Constructors NoDup.
 
 Lemma NoDup_app : forall (l1 l2 : list Var), 
     NoDup (map varUnique l1) ->
@@ -984,10 +288,20 @@ Qed.
 
 (* ---------------------------------------- *)
 
+
+(* Actually from Coq.Program.Tactics. *)
+Ltac destruct_one_pair :=
+ match goal with
+   | [H : (_ /\ _) |- _] => destruct H
+   | [H : prod _ _ |- _] => destruct H
+ end.
+
+(* Variants for CoreSubst. *)
 Ltac destruct_one_id var2 :=
-      match goal with [ H : exists var2:Id, _ |- _ ] =>
-         destruct H as [var2 ?]; repeat destruct_one_pair 
-      end.
+  match goal with [ H : exists var2:Id, _ |- _ ] =>
+    destruct H as [var2 ?]; 
+    repeat destruct_one_pair 
+  end.
 Ltac destruct_one_expr val1 :=
   match goal with 
     [ H : exists v : CoreExpr, _ |- _ ] =>
@@ -1912,7 +1226,7 @@ Proof.
       ++ destruct_SubstExtends.
          rewrite <- Forall.Forall_map with (f := fst) in *; auto.
          rewrite map_fst_zip in *; auto.
-         rewrite map_snd_zip; auto.
+         rewrite map_snd_zip'; auto.
          rewrite map_length.
          rewrite <- H. eapply EQL.
      ++ destruct_SubstExtends.
@@ -1923,7 +1237,7 @@ Proof.
         rewrite <- map_map with (g := fun p => subst_expr & "substBind" subst' p)
                                (f := snd).
 *)
-        rewrite map_snd_zip.
+        rewrite map_snd_zip'.
         rewrite map_length.
         unfold CoreBndr,CoreExpr in *.
         congruence.
@@ -1936,7 +1250,7 @@ Proof.
          destruct x as [bndr' rhs'].
          simpl.
 
-         rewrite map_snd_zip in H1; auto.
+         rewrite map_snd_zip' in H1; auto.
          set (rhss' := map (subst_expr &"substBind" subst') rhss) in *.
          unfold CoreBndr in *.
          assert (L: length rhss = length rhss').
@@ -1984,7 +1298,7 @@ Proof.
          rewrite map_fst_zip in GLV.
          auto.
          auto.
-         rewrite map_snd_zip.
+         rewrite map_snd_zip'.
          rewrite map_length.
          rewrite L1. rewrite <- L.
         auto.
@@ -1999,7 +1313,7 @@ Proof.
          rewrite getInScopeVars_extendInScopeSetList.
          eauto.
          unfold CoreBndr, CoreExpr in *.
-         rewrite map_snd_zip.
+         rewrite map_snd_zip'.
          rewrite map_length.
          rewrite <- H.
          eauto.

@@ -21,6 +21,7 @@ CoreFVs.v
 Base.v
 VarSetFSet.v
 VarSet.v
+VarEnv.v
 Unique.v
 ContainerAxioms.v
 Var.v

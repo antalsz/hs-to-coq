@@ -26,6 +26,7 @@ Require Import Proofs.CoreFVs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarEnv.
 Require Import Proofs.Unique.
 Require Import Proofs.GhcUtils.
 

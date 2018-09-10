@@ -8,7 +8,8 @@ Require Import GHC.Base.
 Import GHC.Base.ManualNotations.
 
 Require Import Proofs.GHC.Base.
-
+Require Import Proofs.Data.Foldable.
+Require Import Proofs.Data.Traversable.
 Require Import Proofs.Unique.
 
 Ltac unfold_zeze :=
@@ -36,7 +37,7 @@ Qed.
 
 (* Equal vars have equal keys *)
 Lemma eq_unique : forall (v1 v2: Var), 
-    (v1 GHC.Base.== v2) = true <->
+    (v1 == v2) = true <->
     Unique.getWordKey (Unique.getUnique v1) = 
     Unique.getWordKey (Unique.getUnique v2). 
 Proof.
@@ -48,6 +49,49 @@ Proof.
   destruct v1; destruct v2; simpl;
   apply N.eqb_eq.
 Qed.
+
+(** ** [varUnique] *)
+
+
+Lemma varUnique_iff :
+  forall v1 v2,
+    v1 == v2 = true <-> varUnique v1 = varUnique v2.
+Proof.
+  intros.
+  unfold_zeze.
+  unfold varUnique.
+  set (n1 := realUnique v1).
+  set (n2 := realUnique v2).
+  rewrite N.eqb_eq.
+  unfold Unique.mkUniqueGrimily in *.
+  intuition congruence.
+Qed.
+
+
+Lemma In_varUnique_elem : forall a l, 
+    In (varUnique a) (map varUnique l) <-> 
+    Foldable.elem a l = true.
+Proof.
+  intros.
+  induction l.
+  - simpl. rewrite elem_nil.
+    split; intro. contradiction. discriminate.
+  - rewrite elem_cons.
+    rewrite orb_true_iff.
+    split.
+    intro h. inversion h.
+    left. 
+    rewrite varUnique_iff in *.
+    auto.
+    right. tauto.
+    intro h.
+    rewrite <- IHl in h.
+    simpl.
+    destruct h.
+    left. rewrite varUnique_iff in *. auto.
+    right. auto.
+Qed.
+
 
 Instance EqLaws_Var : EqLaws Var := {}.
 Proof.
@@ -113,6 +157,13 @@ Module Var_as_DT <: BooleanDecidableType <: DecidableType.
  Definition eq_trans := eq_equiv.(@Equivalence_Transitive _ _).
 
 End Var_as_DT.
+
+Lemma realUnique_eq: forall v v',
+    (realUnique v =? realUnique v')%N = Var_as_DT.eqb v v'.
+Proof.
+  intros.
+  unfold Var_as_DT.eqb. cbn. reflexivity.
+Qed.
 
 
 (** ** [almostEqual] *)
@@ -213,9 +264,35 @@ Axiom isJoinId_maybe_asJoinId:
   forall v a,
   isJoinId_maybe (asJoinId v a) = Some a.
 
-Lemma realUnique_eq: forall v v',
-    (realUnique v =? realUnique v')%N = Var_as_DT.eqb v v'.
+
+(** ** [isLocalId] and [isLocalVar] *)
+
+
+(* Local Vars include localIds as well as type/coercion vars *)
+
+Lemma isLocalId_isLocalVar : 
+  forall var, isLocalVar var = false -> isLocalId var = false.
 Proof.
-  intros.
-  unfold Var_as_DT.eqb. cbn. reflexivity.
+  intros var.
+  unfold isLocalVar.
+  unfold isGlobalId.
+  unfold isLocalId. 
+  destruct var.
+  simpl. tauto.
+  tauto.
+  destruct i; simpl; tauto.
 Qed.
+
+Lemma isLocalVar_isLocalId : 
+  forall var, isLocalId var = true -> isLocalVar var = true.
+Proof.
+  intros var.
+  unfold isLocalVar.
+  unfold isGlobalId.
+  unfold isLocalId. 
+  destruct var.
+  simpl. tauto.
+  tauto.
+  destruct i; simpl; tauto.
+Qed.
+

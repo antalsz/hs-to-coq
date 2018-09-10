@@ -108,7 +108,7 @@ upper bits... and we hope we can make do with less details. For our proofs, it w
 to axiomatize what we need:
 
  * A predicate that distinguishes the uniques used for (module)-local variables, [isLocalUnique]
- * An axiom stating that [uniqAway] always generates local uniques; that axiom lives in [VarSet.v].
+ * An axiom stating that [uniqAway] always generates local uniques; that axiom lives in [VarEnv.v].
 
 But in order to prove our invariants for concrete Core terms as dumped from GHC, we
 need the [isLocalUnique] function to compute. So hence it is a definition.

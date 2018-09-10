@@ -2,6 +2,7 @@
 -Q ../base/ ""
 ./Data/Either.v
 ./Data/Foldable.v
+./Data/Traversable.v
 ./Data/Functor/Classes.v
 ./Data/OldList.v
 ./Data/Ord.v

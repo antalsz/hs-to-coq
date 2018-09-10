@@ -14,6 +14,7 @@ Require Import Proofs.Forall.
 Require Import Proofs.Unique.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarEnv.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Var.
 
@@ -37,6 +38,13 @@ Definition GoodVar (v : Var) : Prop :=
 
 Definition GoodLocalVar (v : Var) : Prop :=
   GoodVar v /\ isLocalVar v = true.
+
+
+(* uniqAway produces a local var *)
+Axiom uniqAway_isLocalVar : forall v in_scope_set,
+    GoodLocalVar v ->
+    GoodLocalVar (uniqAway in_scope_set v).
+
 
 
 (**

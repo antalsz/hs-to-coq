@@ -4,17 +4,24 @@ skip module ErrUtils
 skip module OccurAnal
 skip module CoreSeq
 
+# we need to import this module to make the 
+# type synonym notation available.
+import module Core
+import module GHC.Base
+
+#
+# cannot translate because we don't have 
+# unfolding information
+#
+skip CoreSubst.substUnfolding
+skip CoreSubst.substUnfoldingSC
+
 rename type Var.Id    = Core.Var
 rename type Var.TyVar = Core.Var
 rename type VarSet.DVarSet = DVarSet
 
 # Ugh. notation for type abbreviations.
 rewrite forall , Id.maybeModifyIdInfo = maybeModifyIdInfo 
-
-###################################################
-# TODO: seq
-#
-in CoreSubst.substUnfolding rewrite forall x y, GHC.Prim.seq x y = y
 
 ###################################################
 #
@@ -50,8 +57,7 @@ redefine Definition CoreSubst.mkEmptySubst : Core.InScopeSet -> Subst :=
   fun in_scope =>
     Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
-skip CoreSubst.substTyVarBndr
-add CoreSubst Definition CoreSubst.substTyVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) :=
+redefine Definition CoreSubst.substTyVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) :=
   fun s v => pair s v.
 
 redefine Definition CoreSubst.zapSubstEnv : Subst -> Subst :=
@@ -134,8 +140,3 @@ in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSub
 in CoreSubst.substBind rewrite forall x rhss, GHC.Base.map (CoreSubst.subst_expr x subst') rhss = GHC.Base.map (fun ps => CoreSubst.subst_expr x subst' (snd ps)) pairs
 
 
-# skip CoreSubst.substRule
-# skip CoreSubst.substRulesForImportedIds
-
-# skip CoreSubst.substUnfolding
-# skip CoreSubst.substUnfoldingSC

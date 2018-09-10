@@ -11,8 +11,8 @@ Not yet released. Eventually `hs-to-coq` will be available on
 Development version
 -------------------
 
-You can compile `hs-to-coq` from scratch using GHC 8.4.1. The first step is to
-download the sources from github.
+The source code for the development version is available via github. This
+repository includes everything that you need.
  
 .. code-block:: shell
 
@@ -32,7 +32,7 @@ To build ``hs-to-coq``
 
    $ stack build
 
-
+To compile `hs-to-coq` from scratch, we recommend GHC 8.4.1.
 
 Coq Requirements
 ----------------

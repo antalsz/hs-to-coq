@@ -1,6 +1,14 @@
 Require Import Prelude.
 Require Import RLE.
 
+Require Import Proofs.GHC.Base.
+
+(* This example uses the following lemma from the Base library theory:
+
+     map_map 
+
+*)
+
 Lemma group_by_not_nil:
   forall f (xs : list E),
     ~ In nil (groupBy f xs).
@@ -40,6 +48,7 @@ Proof.
       + destruct (f a e); unfold concat in *; simpl in *; congruence.
 Qed.
 
+(*
 Lemma map_map:
   forall a b c (f : a -> b) (g : b -> c) (x : list a),
   map g (map f x) = map (g ∘ f) x.
@@ -49,6 +58,9 @@ Proof.
   * auto.
   * simpl. rewrite IHx. auto.
 Qed.
+
+*)
+
 
 Lemma in_map_hd_in_concat:
   forall (x : E) xs,

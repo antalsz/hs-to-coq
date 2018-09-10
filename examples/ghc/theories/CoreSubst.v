@@ -760,8 +760,8 @@ Proof.
     -- econstructor.
        intro h; inversion h.
        econstructor.
-    -- econstructor; eauto using
-       uniqAway_isLocalVar.
+    -- econstructor; eauto using GoodLocalVar_uniqAway.
+(*       uniqAway_isLocalVar. *)
     -- unfold freshList.
        intros v1 InV.
        rewrite elem_cons, orb_true_iff in InV.
@@ -839,7 +839,7 @@ Proof.
     repeat split.
     -- simpl. eauto.
     -- rewrite Forall.Forall_cons_iff.
-       split. eapply uniqAway_isLocalVar; auto.
+       split. eapply GoodLocalVar_uniqAway; auto.
        eauto.
     -- unfold freshList.
        intros v0 InV.
@@ -981,7 +981,7 @@ Proof. intros.
   destruct subst.
   inversion H0. clear H0. 
   subst.
-  eapply uniqAway_isLocalVar. 
+  eapply GoodLocalVar_uniqAway. 
   assumption.
 Qed.
 
@@ -1157,14 +1157,20 @@ Proof.
              rewrite isLocalVar_isLocalId in WSvar by assumption.
              destruct (lookupVarSet vs v); try contradiction.
              
-    -- (* TODO *)
+    --
+
+
+
+      unfold WellScoped, WellScopedVar in WSvar. 
+
+      (* TODO *)
        (* !!!!! This is a global id, so we don't substitute for it !!!!! *)
        (* Need to add an assumption that v is either a localId or 
           a globalId to the scope invariant.  
           (And add a restriction that global id's are not in the dom 
           of the substitution.) *)
 
-       unfold WellScoped, WellScopedVar in WSvar. 
+       
        admit.
 
   - unfold subst_expr. auto. 

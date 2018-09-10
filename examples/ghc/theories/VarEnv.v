@@ -6,8 +6,6 @@ Require Import Proofs.Data.Foldable.
 Require Import Id.
 Require Import Core.
 
-
-
 Require Import Proofs.Core.
 Require Import Proofs.Var.
 Require Import Proofs.Unique.
@@ -18,74 +16,7 @@ Import GHC.Base.ManualNotations.
 Set Bullet Behavior "Strict Subproofs".
 
 
-(** ** [InScopeSet] *)
-
-Lemma getInScopeVars_extendInScopeSet:
-  forall iss v,
-  getInScopeVars (extendInScopeSet iss v) = extendVarSet (getInScopeVars iss) v.
-Proof.
-  intros.
-  unfold getInScopeVars.
-  unfold extendInScopeSet.
-  destruct iss.
-  reflexivity.
-Qed.
-
-Lemma getInScopeVars_extendInScopeSetList:
-  forall iss vs,
-  getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
-Proof.
-  intros.
-  unfold getInScopeVars.
-  unfold extendInScopeSetList.
-  set_b_iff.
-  destruct iss.
-  unfold_Foldable_foldl'.
-  unfold_Foldable_foldl.
-  f_equal.
-Qed.
-
-
-Lemma extendInScopeSetList_cons : forall v vs in_scope_set,
-           (extendInScopeSetList in_scope_set (v :: vs) = 
-            (extendInScopeSetList (extendInScopeSet in_scope_set v) vs)).
-Proof.
-  unfold extendInScopeSetList.
-  destruct in_scope_set.
-  unfold_Foldable_foldl.
-  simpl.
-  f_equal.
-  unfold Pos.to_nat.
-  unfold Pos.iter_op.
-  omega.
-Qed.
-
-Lemma extendInScopeSetList_nil : forall in_scope_set,
-           extendInScopeSetList in_scope_set nil = in_scope_set.
-Proof.
-  unfold extendInScopeSetList.
-  destruct in_scope_set.
-  unfold_Foldable_foldl.
-  simpl.
-  f_equal.
-  omega.
-Qed.
-
-Lemma lookupVarSet_extendVarSetList_l:
-  forall v vs1 vs2,
-  elemVarSet v (mkVarSet vs2) = false ->
-  lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v.
-Admitted.
-
-Lemma lookupVarSet_extendVarSetList_r_self:
-  forall v vs1 vs2,
-  List.In v vs2 ->
-  NoDup (map varUnique vs2) ->
-  lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
-Admitted.
-
-
-(** ** [uniqAway] *)
+(** ** [uniqAway] axiomatization *)
 
 Axiom isJoinId_maybe_uniqAway:
   forall s v, 
@@ -104,49 +35,38 @@ Axiom isLocalVar_uniqAway:
   forall iss v,
   isLocalVar (uniqAway iss v) = isLocalVar v.
 
-Lemma elemVarSet_uniqAway:
-  forall v iss vs,
-  subVarSet vs (getInScopeVars iss) = true ->
-  elemVarSet (uniqAway iss v) vs = false.
-Proof.
-  intros.
-  safe_unfold_VarSet.
-  destruct vs.
-  destruct iss.
-  destruct v0.
-  destruct u.
-  destruct u0.
-  simpl in *.
-  unfold uniqAway.
-  unfold elemInScopeSet.
-  unfold elemVarSet.
-  unfold uniqAway'.
-  unfold realUnique.
-Admitted.
-
 Axiom nameUnique_varName_uniqAway:
   forall vss v,
   Name.nameUnique (varName v) = varUnique v ->
   Name.nameUnique (varName (uniqAway vss v)) = varUnique (uniqAway vss v).
 
 
-(** [uniqAway] axiomatization *)
-
 (* If uniqAway returns a variable with the same unique, 
    it returns the same variable. *)      
 Axiom uniqAway_eq_same : forall v in_scope_set,
     (uniqAway in_scope_set v == v) = true ->
     (uniqAway in_scope_set v = v).
-
+  
 (* The variable returned by uniqAway is fresh. *)
 Axiom uniqAway_lookupVarSet_fresh : forall v in_scope_set,
     lookupVarSet (getInScopeVars in_scope_set) (uniqAway in_scope_set v) = None.
 
+Lemma elemVarSet_uniqAway:
+  forall v iss vs,
+  subVarSet vs (getInScopeVars iss) = true ->
+  elemVarSet (uniqAway iss v) vs = false.
+Proof.
+  intros.
+  apply subVarSet_elemVarSet_false with (vs' := getInScopeVars iss). auto.
+  rewrite <- lookupVarSet_None_elemVarSet.
+  eapply uniqAway_lookupVarSet_fresh.  
+Qed.
 
 
 
+(** ** [VarEnv] axiomatization *)
 
-(** [VarEnv] *)
+(* Eventually replace these with container axioms. *)
 
 Axiom lookupVarEnv_elemVarEnv_true :
   forall A v (vs : VarEnv A),
@@ -392,4 +312,58 @@ Proof.
   rewrite Base.Eq_sym in h.
   rewrite h in EQ.
   discriminate.
+Qed.
+
+
+(** ** [InScopeSet] *)
+
+Lemma getInScopeVars_extendInScopeSet:
+  forall iss v,
+  getInScopeVars (extendInScopeSet iss v) = extendVarSet (getInScopeVars iss) v.
+Proof.
+  intros.
+  unfold getInScopeVars.
+  unfold extendInScopeSet.
+  destruct iss.
+  reflexivity.
+Qed.
+
+Lemma getInScopeVars_extendInScopeSetList:
+  forall iss vs,
+  getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
+Proof.
+  intros.
+  unfold getInScopeVars.
+  unfold extendInScopeSetList.
+  set_b_iff.
+  destruct iss.
+  unfold_Foldable_foldl'.
+  unfold_Foldable_foldl.
+  f_equal.
+Qed.
+
+
+Lemma extendInScopeSetList_cons : forall v vs in_scope_set,
+           (extendInScopeSetList in_scope_set (v :: vs) = 
+            (extendInScopeSetList (extendInScopeSet in_scope_set v) vs)).
+Proof.
+  unfold extendInScopeSetList.
+  destruct in_scope_set.
+  unfold_Foldable_foldl.
+  simpl.
+  f_equal.
+  unfold Pos.to_nat.
+  unfold Pos.iter_op.
+  omega.
+Qed.
+
+Lemma extendInScopeSetList_nil : forall in_scope_set,
+           extendInScopeSetList in_scope_set nil = in_scope_set.
+Proof.
+  unfold extendInScopeSetList.
+  destruct in_scope_set.
+  unfold_Foldable_foldl.
+  simpl.
+  f_equal.
+  omega.
 Qed.

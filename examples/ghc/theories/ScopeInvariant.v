@@ -40,11 +40,6 @@ Definition GoodLocalVar (v : Var) : Prop :=
   GoodVar v /\ isLocalVar v = true.
 
 
-(* uniqAway produces a local var *)
-Axiom uniqAway_isLocalVar : forall v in_scope_set,
-    GoodLocalVar v ->
-    GoodLocalVar (uniqAway in_scope_set v).
-
 
 
 (**
@@ -139,6 +134,14 @@ Proof.
   rewrite nameUnique_varName_uniqAway by congruence.
   intuition congruence.
 Qed.
+
+(* uniqAway produces a local var *)
+(*
+Axiom uniqAway_isLocalVar : forall v in_scope_set,
+    GoodLocalVar v ->
+    GoodLocalVar (uniqAway in_scope_set v).
+
+*)
 
 Lemma GoodLocalVar_asJoinId_mkSysLocal:
   forall s u ty n,

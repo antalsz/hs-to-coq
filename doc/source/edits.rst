@@ -8,7 +8,10 @@ various Haskell files.
 General format of edit files
 ----------------------------
 
-... usually one edit per line, with the exception of period-terminated multi-line edits ...
+... usually one edit per line, with the exception of period-terminated
+multi-line edits ...
+
+Make sure that your edit file ends with a newline.
 
 Qualified names
 ^^^^^^^^^^^^^^^
@@ -21,12 +24,15 @@ module).
 Reserved names have an underscore appended and renames (see below) have already
 been applied.
 
+More details about how ``hs-to-coq`` treats `identifiers <mangling.html>`_.
+
+
 Gallina expressions
 ^^^^^^^^^^^^^^^^^^^
 
 Some edits contain Gallina expressions (i.e. Coq code). The parser is pretty
 limited. In particular, it does not know anything about operator precedence or
-associativity, so add plenty of parenthesis!
+associativity, so add plenty of parentheses!
 
 Skipping Haskell
 ----------------
@@ -157,44 +163,176 @@ Examples:
 Renaming and Rewriting
 ----------------------
 
-rename type <qualified type name> = <qualified type name>
+``rename type`` - rename a type
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-remame value <qualified constructor> = <qualified name>
+Format:
+  | **rename type** *qualified_name* = *qualified_name*
 
-rename module <oldname> <newname>
+Effect: 
+  Change the name of a Haskell type, at both definition and use sites.
 
-rewrite forall <vars>, <expression> = <expression>
+Examples:
+   .. code-block:: shell
 
-redefine <Coq Definition>
+     rename type  GHC.Types.[]  = list
+     rename type  GHC.Natural.Natural = Coq.Numbers.BinNums.N
 
-type synonym <name> :-> <name>
 
-For example,
+``rename value`` - rename a value
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
+Format:
+  | **rename value** *qualified_name* = *qualified_name*
+
+Effect:
+  Change the name of a Haskell value (function, data constructor), at both
+  definition and use sites. Note: rewriting the definition of a name to a new 
+  module will not work.
+
+Examples:
+
+   .. code-block:: shell
+ 
+       rename value Data.Foldable.length = Coq.Lists.List.length     # use Coq primitive
+       rename value GHC.Base.++          = Coq.Init.Datatypes.app    # operators ok
+       rename value Data.Monoid.First    = Data.Monoid.Mk_First      # resolve punning
+
+``rename module`` - change a module name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+  | **rename module** *module* *module*
+
+Effect:
+  Change the name of a Haskell module, affecting the filename of the
+  generated Coq module.
+
+  NOTE: if two modules are renamed to the same name, they will be combined
+  into a single joint module, as long as they are processed during the same
+  execution of ``hs-to-coq``. This feature is useful to translate mutually
+  recursive modules. 
+
+Examples:
+
+ .. code-block:: shell
+ 
+     rename module Type MyType
+     rename module Data.Semigroup.Internal Data.SemigroupInternal
+
+
+``rewrite`` - replace Haskell subexpressions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+
+  | **rewrite** **forall** *vars*, *expression* = *expression*
+
+Effect:
+
+    Pattern matches a sub-expression and replaces it with the right-hand side
+	 after substituting all variables.
+
+Examples:
+
+ .. code-block:: shell
+
+    ## work around laziness
+    rewrite forall xs x, (GHC.List.zip xs (GHC.List.repeat x)) = (GHC.Base.map (fun y => pair y x) xs)
+    rewrite forall x, GHC.Magic.lazy x = x
+
+    ## replace with Coq library function
+    rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
+
+    ## skip debugging code
+    rewrite forall x, andb Util.debugIsOn x = false
+ 
+    ## create dummy strings to ignore particular definitions
+    ## note empty variable list
+    rewrite forall , Outputable.empty = (GHC.Base.hs_string__ "Outputable.empty")
+
+``redefine`` - update a generated Coq Definition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+  | **redefine** *Coq_definition*
+
+
+Effect:
+  Combines the **skip** and **add** edits.
+
+Examples:
+
+ .. code-block:: shell
+
+     redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
+  
+
+``type synonym`` - deprecated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Format:
+  | **type synonym** *name* **:->** *name*
+
+Effect:
+
+Examples:
+
+ .. code-block:: shell
+
 
 
 
 Extra information
 -----------------
 
-type  kinds <qualified name> <Coq types>
+``type kinds`` - Declare kinds of type arguments to Inductive datatypes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-class kinds <qualified name> <Coq types>
+Format:
+  | **type kinds** *qualified_name* *Coq_types*
 
-add scope <scope> for <place> <qualified name>
+Effect:
 
-manual notation <name>
-
-
-
+Examples:
+  .. code-block:: shell
 
 
-<Coq types> is a comma separated list of 
+``class kinds`` - Declare kinds of type arguments to Type classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For example, 
+Format:
+  | **class kinds** *qualified_name* *Coq_types*
 
-    class kinds GHC.Base.MonadPlus (Type -> Type)
+Effect:
+
+Examples:
+  .. code-block:: shell
+
+
+``add scope`` - 
+^^^^^^^^^^^^^^^^
+
+Format:
+  | **add scope** *scope* **for** *place* *qualified_name*
+
+Effect:
+
+Examples:
+  .. code-block:: shell
+
+
+``manual notation`` -
+^^^^^^^^^^^^^^^^^^^^^
+
+
+Format:
+  | manual notation *name*
+
+Effect:
+
+Examples:
+  .. code-block:: shell
 
 
 Termination edits

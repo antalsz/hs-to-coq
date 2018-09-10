@@ -3,7 +3,7 @@ Quickstart
 ==========
 
 The easiest way to see how to use ``hs-to-coq`` is to look at the Makefiles in
-the ``examples`` subdirectory.
+each of the subdirectories in the `examples <https://github.com/antalsz/hs-to-coq/tree/master/examples/>`_ subdirectory of the repository.
 
 Translating a single Haskell file
 ---------------------------------
@@ -15,7 +15,8 @@ following command.
 
      $ stack exec hs-to-coq -e hs-to-coq/base/edits Main.hs --iface-dir hs-to-coq/base -o .
 
-Adjust the paths to the ``hs-to-coq`` repository accordingly.
+Adjust the paths to the ``hs-to-coq`` repository accordingly. This invocation
+uses the following commandline options.
 
 .. option:: -e <editfile>
 
@@ -26,17 +27,16 @@ edit file distributed with the base library.
 
 .. option:: --iface-dir <dir>
 
-The ``--iface-dir`` command line argument tells ``hs-to-coq`` where to find the
-interface files for the translated files in the ``base`` library. These
-interface files contain extra information about the base library produced
-during translation.
+The ``--iface-dir`` command line argument tells ``hs-to-coq`` where to find
+the interface files for the translated files in the ``base`` library. These
+interface files contain extra information about produced during translation
+and are needed to translate any modules that use the ``base`` libraries.
 
 
 .. option:: -o <dir>
 
 The ``-o`` argument specifies the output directory for the generated ``.v`` files.
 In this case, it is the current directory.
-
 
 An example translated in this way
 is `simple
@@ -54,7 +54,7 @@ An example that uses a local edit file is `intervals <https://github.com/antalsz
 as described in Joachim Breitner's
 `blog post <https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it>`_.
 
-Any number of edit files may be provided to ``hs-to-coq``.
+Any number of edit files may be provided to ``hs-to-coq``. 
 
 Additional Coq definitions
 --------------------------

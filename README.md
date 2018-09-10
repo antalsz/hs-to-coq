@@ -6,6 +6,8 @@ as part of the [CoreSpec] component of the [DeepSpec] project.
 It it described in the CPP'18 paper [“Total Haskell is Reasonable Coq”](https://arxiv.org/abs/1711.09286) by
 Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weirich.
 
+[**Nascent documentation is available!**](https://hs-to-coq.readthedocs.io/en/latest/)
+
 # Requirements
 
 `hs-to-coq` uses GHC-8.4.1, Coq 8.8.1 and ssreflect.

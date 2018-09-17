@@ -69,8 +69,8 @@ jobs:
     script:
       - eval $(opam config env)
       - stack --no-terminal --install-ghc install
-      - make -j2 -C examples/tests
       - make -j2 -C base
+      - make -j2 -C examples/tests
       - make -j2 -C examples/base-tests
 
   - name: Containers (theory)

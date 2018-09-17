@@ -76,6 +76,8 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	 then echo -e "\033[1;31mfailed\033[0m (should pass)"; exit 1;  \
 	 else echo -e "\033[1;32mpassed\033[0m"; \
 	 fi
+	 cat $*.v
+     
 
 %.fail : %.v
 	@/bin/echo -n "$<: "

@@ -179,7 +179,7 @@ Proof.
   * destruct is; try congruence.
     destruct i.
     simpl in *.
-    assert (In Z (range o o0) o).
+    assert (In Z (range from to) from).
     - unfold range. intuition.
     - eapply Union_introl in H0.
       rewrite H in H0.
@@ -301,7 +301,7 @@ Proof.
   * simpl. rewrite Empty_set_zero. reflexivity.
   * destruct i2. simpl in *. intuition.
   * destruct i1. simpl in *. 
-    generalize (Union Z (range o o0) (semLIs is1)). intro. (* ugh *)
+    generalize (Union Z (range from to) (semLIs is1)). intro. (* ugh *)
     rewrite Union_commutative at 1. rewrite  Empty_set_zero. intuition.
   * simpl.
     unfold GHC.Base.op_zl__, Ord_Integer___, op_zl____ in *.

@@ -183,7 +183,7 @@ Proof.
   * destruct is; try congruence.
     destruct i.
     simpl in *.
-    assert (In Z (range o o0) o).
+    assert (In Z (range from to) from).
     - unfold range. intuition.
     - eapply Union_introl in H0.
       rewrite H in H0.

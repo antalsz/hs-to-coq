@@ -9,6 +9,7 @@ Import GHC.Base.ManualNotations.
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
 Require Import Proofs.Data.Foldable.
+Require Import Proofs.ContainerAxioms.
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -240,8 +241,42 @@ Qed.
 
 Lemma elemVarSet_unionVarSet:
   forall v vs1 vs2,
-  elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
-Admitted.
+    elemVarSet v (unionVarSet vs1 vs2) =
+    elemVarSet v vs1 || elemVarSet v vs2.
+Proof.
+  intros.
+  set_b_iff.
+  destruct vs1.
+  destruct vs2.
+  simpl.
+  unfold UniqFM.plusUFM.
+  destruct u.
+  destruct u0.
+  simpl.
+  symmetry.
+  destruct (IntMap.Internal.member
+              (realUnique v)
+              (IntMap.Internal.union i0 i)) eqn: Hu.
+  - rewrite member_lookup in Hu.
+    destruct Hu as [u Hu].
+    rewrite <- lookup_union in Hu.
+    apply orb_true_iff.
+    destruct Hu as [Hu | Hu].
+    + right.
+      rewrite member_lookup.
+      eauto.
+    +  destruct Hu as [? Hu].
+       left.
+       rewrite member_lookup.
+       eauto.
+  - rewrite non_member_lookup in Hu.
+    apply orb_false_iff.
+    split;
+      rewrite non_member_lookup;
+      rewrite <- lookup_union_None in Hu;
+      destruct Hu as [Hu1 Hu2];
+      assumption.
+Qed.
 
 Lemma elemVarSet_extendVarSetList_r:
   forall v vs1 vs2,

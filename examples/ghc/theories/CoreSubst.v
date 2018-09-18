@@ -934,7 +934,7 @@ Proof.
   { unfold isLocalId, isTyVar, isCoVar, GoodLocalVar, isLocalVar in *.
     destruct v; try discriminate.
     destruct_one_pair.
-    destruct i. simpl in *. discriminate. auto. }
+    destruct idScope. simpl in *. discriminate. auto. }
   eapply WellScoped_Subst_substIdBndr; eauto.
 Admitted.
 

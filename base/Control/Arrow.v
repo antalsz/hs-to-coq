@@ -26,7 +26,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive Kleisli (m : Type -> Type) a b : Type
-  := Mk_Kleisli : (a -> m b) -> Kleisli m a b.
+  := Mk_Kleisli (runKleisli : a -> m b) : Kleisli m a b.
 
 Inductive ArrowMonad (a : Type -> Type -> Type) b : Type
   := Mk_ArrowMonad : (a unit b) -> ArrowMonad a b.

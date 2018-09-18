@@ -26,7 +26,7 @@ skip Name.pprInternal
 skip Name.ppr_z_occ_name
 skip Name.pprExternal
 skip Name.pprName
-
+skip Name.Default__Name
 ## Eq_ instance defined in terms of Ord instance. Need to inline definition of
 ## 'compare' (i.e. cmpName) to resolve.
 

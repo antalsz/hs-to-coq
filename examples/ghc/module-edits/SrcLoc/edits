@@ -61,3 +61,5 @@ skip SrcLoc.isSubspanOf
 
 skip SrcLoc.Ord__SrcLoc
 skip SrcLoc.Ord__SrcSpan
+skip SrcLoc.Default__SrcSpan
+skip SrcLoc.Default__RealSrcSpan

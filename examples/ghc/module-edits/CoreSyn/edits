@@ -91,4 +91,11 @@ obligations Core.collectAnnBndrs solve_collectAnnArgsTicks
 
 rewrite forall x, Type.isCoercionTy_maybe x = None
 
-
+skip Core.Default__Class
+skip Core.Default__DataCon
+skip Core.Default__IdInfo
+skip Core.Default__CoreRule
+skip Core.Default__RnEnv2
+skip Core.Default__Var
+skip Core.Default__PatSyn
+skip Core.Default__RuleEnv

@@ -36,3 +36,6 @@ in CSE.cseCase rename value CSE.tryForCSE = tryForCSE_rec
 
 # OK?
 rewrite forall x, Core.tyConAppArgs x = nil
+
+
+skip CSE.Default__CSEnv

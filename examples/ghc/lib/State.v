@@ -17,7 +17,8 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Inductive State s a : Type := Mk_State : (s -> (a * s)%type) -> State s a.
+Inductive State s a : Type
+  := Mk_State (runState' : s -> (a * s)%type) : State s a.
 
 Arguments Mk_State {_} {_} _.
 

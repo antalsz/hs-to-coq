@@ -166,16 +166,18 @@ Inductive Option : Type
 Inductive OnOff a : Type := On : a -> OnOff a |  Off : a -> OnOff a.
 
 Inductive ModRenaming : Type
-  := Mk_ModRenaming
-   : bool -> list (Module.ModuleName * Module.ModuleName)%type -> ModRenaming.
+  := Mk_ModRenaming (modRenamingWithImplicit : bool) (modRenamings
+    : list (Module.ModuleName * Module.ModuleName)%type)
+   : ModRenaming.
 
 Inductive PackageFlag : Type
   := ExposePackage : GHC.Base.String -> PackageArg -> ModRenaming -> PackageFlag
   |  HidePackage : GHC.Base.String -> PackageFlag.
 
 Inductive LlvmTarget : Type
-  := Mk_LlvmTarget
-   : GHC.Base.String -> GHC.Base.String -> list GHC.Base.String -> LlvmTarget.
+  := Mk_LlvmTarget (lDataLayout : GHC.Base.String) (lCPU : GHC.Base.String)
+  (lAttributes : list GHC.Base.String)
+   : LlvmTarget.
 
 Definition LlvmTargets :=
   (list (GHC.Base.String * LlvmTarget)%type)%type.
@@ -376,9 +378,9 @@ Inductive FlushErr : Type := Mk_FlushErr.
 Inductive FlagSpec (flag : Type) : Type := Mk_FlagSpec.
 
 Inductive FilesToClean : Type
-  := Mk_FilesToClean
-   : (Data.Set.Internal.Set_ GHC.Base.String) ->
-     (Data.Set.Internal.Set_ GHC.Base.String) -> FilesToClean.
+  := Mk_FilesToClean (ftcGhcSession : (Data.Set.Internal.Set_ GHC.Base.String))
+  (ftcCurrentModule : (Data.Set.Internal.Set_ GHC.Base.String))
+   : FilesToClean.
 
 Inductive DynLibLoader : Type
   := Deployable : DynLibLoader
@@ -535,6 +537,13 @@ Instance Default__PkgConfRef : GHC.Err.Default PkgConfRef :=
 Instance Default__PackageDBFlag : GHC.Err.Default PackageDBFlag :=
   GHC.Err.Build_Default _ NoUserPackageDB.
 
+Instance Default__ModRenaming : GHC.Err.Default ModRenaming :=
+  GHC.Err.Build_Default _ (Mk_ModRenaming GHC.Err.default GHC.Err.default).
+
+Instance Default__LlvmTarget : GHC.Err.Default LlvmTarget :=
+  GHC.Err.Build_Default _ (Mk_LlvmTarget GHC.Err.default GHC.Err.default
+                         GHC.Err.default).
+
 Instance Default__LinkerInfo : GHC.Err.Default LinkerInfo :=
   GHC.Err.Build_Default _ UnknownLD.
 
@@ -552,6 +561,9 @@ Instance Default__GhcLink : GHC.Err.Default GhcLink :=
 
 Instance Default__GeneralFlag : GHC.Err.Default GeneralFlag :=
   GHC.Err.Build_Default _ Opt_DumpToFile.
+
+Instance Default__FilesToClean : GHC.Err.Default FilesToClean :=
+  GHC.Err.Build_Default _ (Mk_FilesToClean GHC.Err.default GHC.Err.default).
 
 Instance Default__DynLibLoader : GHC.Err.Default DynLibLoader :=
   GHC.Err.Build_Default _ Deployable.
@@ -1694,7 +1706,7 @@ Axiom emptyFilesToClean : FilesToClean.
 (* External variables:
      Type bool list op_zt__ option BinNums.N Data.Either.Either
      Data.Set.Internal.Set_ EnumSet.EnumSet GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
-     GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default GHC.Num.Integer
-     Module.ComponentId Module.Module Module.ModuleName Module.UnitId SrcLoc.Located
-     SrcLoc.SrcSpan
+     GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
+     GHC.Num.Integer Module.ComponentId Module.Module Module.ModuleName Module.UnitId
+     SrcLoc.Located SrcLoc.SrcSpan
 *)

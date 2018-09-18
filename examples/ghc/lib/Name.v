@@ -38,8 +38,9 @@ Inductive NameSort : Type
   |  System : NameSort.
 
 Inductive Name : Type
-  := Mk_Name
-   : NameSort -> OccName.OccName -> Unique.Unique -> SrcLoc.SrcSpan -> Name.
+  := Mk_Name (n_sort : NameSort) (n_occ : OccName.OccName) (n_uniq
+    : Unique.Unique) (n_loc : SrcLoc.SrcSpan)
+   : Name.
 
 Record NamedThing__Dict a := NamedThing__Dict_Build {
   getName__ : a -> Name ;

@@ -13,6 +13,7 @@ PASS = \
   SplitAt \
   PartialRecordSel \
   TypeClient \
+  TalkExample \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
@@ -47,7 +48,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@/bin/echo -n "$<: "
 	@if ! test -e $<; \
 	 then echo -e "\033[1;31mmissing\033[0m (should pass)"; exit 1;\
-	 elif ! $(TYPECHECK) $< >&/dev/null; \
+	 elif ! $(TYPECHECK) $<; \
 	 then echo -e "\033[1;31mfailed\033[0m (should pass)"; exit 1;  \
 	 else echo -e "\033[1;32mpassed\033[0m"; \
 	 fi

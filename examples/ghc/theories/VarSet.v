@@ -75,7 +75,9 @@ Lemma unionVarSet_union : forall x y, unionVarSet x y = union x y.
 
 Lemma minusVarSet_diff : forall x y, minusVarSet x y = diff x y.
   (* Why simply [reflexivity] does not work? *)
-  intros. destruct x; destruct u. destruct y; destruct u. reflexivity. Qed.
+  intros. destruct x; destruct getUniqSet'.
+  destruct y; destruct getUniqSet'.
+  reflexivity. Qed.
 
 Lemma filterVarSet_filter : forall f x, filterVarSet f x = filter f x.
   reflexivity. Qed.
@@ -114,7 +116,7 @@ Proof.
     unfold_Foldable_foldl.
     simpl.
     intro IHvl.
-    rewrite IHvl with (vs:= (UniqSet.Mk_UniqSet (UniqFM.delFromUFM u a))).
+    rewrite IHvl with (vs:= (UniqSet.Mk_UniqSet (UniqFM.delFromUFM getUniqSet' a))).
     auto.
 Qed.
 
@@ -740,7 +742,7 @@ Proof.
   unfold UniqSet.lookupUniqSet, UniqSet.addOneToUniqSet.
   destruct vs.
   unfold UniqFM.lookupUFM, UniqFM.addToUFM.
-  destruct u.
+  destruct getUniqSet'.
   unfold GHC.Base.op_zeze__, Eq___Var, Base.op_zeze____, 
   Core.Eq___Var_op_zeze__ in H.
 Admitted.
@@ -772,7 +774,7 @@ Admitted.
 Lemma filterVarSet_comp : forall f f' vs,
     filterVarSet f (filterVarSet f' vs) = filterVarSet (fun v => f v && f' v) vs.
 Proof.
-  intros. destruct vs; destruct u. simpl. do 2 f_equal.
+  intros. destruct vs; destruct getUniqSet'. simpl. do 2 f_equal.
 Admitted.
 
 (** ** Compatibility with [almostEqual] *)

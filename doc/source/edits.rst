@@ -8,8 +8,7 @@ various Haskell files.
 General format of edit files
 ----------------------------
 
-... usually one edit per line, with the exception of period-terminated
-multi-line edits ...
+Edit files are plain text files. Empty lines and lines starting with ``#`` are ignored. Otherwise, the files are consist of a sequence of *edits*. Most form of edits are exactly one line long, but some edits can span multiple lines, and must be terminated with a period.
 
 Make sure that your edit file ends with a newline.
 
@@ -24,7 +23,7 @@ module).
 Reserved names have an underscore appended and renames (see below) have already
 been applied.
 
-More details about how ``hs-to-coq`` treats `identifiers <mangling.html>`_.
+More details about how ``hs-to-coq`` treats see Section :ref:`mangling`.
 
 
 Gallina expressions
@@ -42,6 +41,10 @@ they are not translatable, or they are out-of-scope, or for other reasons.
 
 ``skip`` – skip a function, type, class or instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip, edit
+
 
 Format:
   | **skip** *qualified_name*
@@ -72,6 +75,9 @@ Examples:
 ``skip method`` – skip a method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+  single: skip method, edit
+
 Format:
   | **skip** **method** *qualified_class* *method*
 
@@ -86,6 +92,9 @@ Examples:
 
 ``skip module`` – skip a module import
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip module, edit
 
 Format:
   | **skip** **module** *module*
@@ -108,12 +117,36 @@ Examples:
 
      skip module GHC.Show
 
+``axiomatize`` -- provide axioms for all definitions in a module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: axiomatize, edit
+
+Format:
+  | **axiomatize** *module*
+
+Effect:
+  Do not translate the code of a module, but translates its types, type
+  classes, instances, and for all functions, create axioms fort their type.
+
+  This is useful if you want to work on a depending module, without dealing
+  with the present module.
+
+Examples:
+
+  .. code-block:: shell
+
+    axiomatize module TrieMap
 
 Adding Coq Commands
 -------------------
 
 ``add`` – inject a definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: add, edit
 
 Format:
   | **add** *module* *coq_definition*
@@ -143,6 +176,9 @@ Examples:
 ``import`` – inject an ``Import`` statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. index::
+  single: import, edit
+
 Format:
   | **import** **module** *module*
 
@@ -163,43 +199,55 @@ Examples:
 Renaming and Rewriting
 ----------------------
 
-``rename type`` - rename a type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``rename type`` -- rename a type
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: rename type, edit
 
 Format:
   | **rename type** *qualified_name* = *qualified_name*
 
-Effect: 
+Effect:
   Change the name of a Haskell type, at both definition and use sites.
 
 Examples:
    .. code-block:: shell
 
-     rename type  GHC.Types.[]  = list
-     rename type  GHC.Natural.Natural = Coq.Numbers.BinNums.N
+     rename type GHC.Types.[] = list
+     rename type GHC.Natural.Natural = Coq.Numbers.BinNums.N
 
 
-``rename value`` - rename a value
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``rename value`` -- rename a value
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: rename value, edit
 
 Format:
   | **rename value** *qualified_name* = *qualified_name*
 
 Effect:
   Change the name of a Haskell value (function, data constructor), at both
-  definition and use sites. Note: rewriting the definition of a name to a new 
-  module will not work.
+  definition and use sites.
+
+Note:
+  When renaming a name in its definition, you should not change the
+  module.
 
 Examples:
 
    .. code-block:: shell
- 
+
        rename value Data.Foldable.length = Coq.Lists.List.length     # use Coq primitive
        rename value GHC.Base.++          = Coq.Init.Datatypes.app    # operators ok
        rename value Data.Monoid.First    = Data.Monoid.Mk_First      # resolve punning
 
-``rename module`` - change a module name
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``rename module`` -- change a module name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: rename module, edit
 
 Format:
   | **rename module** *module* *module*
@@ -208,21 +256,25 @@ Effect:
   Change the name of a Haskell module, affecting the filename of the
   generated Coq module.
 
-  NOTE: if two modules are renamed to the same name, they will be combined
+Note:
+  If two modules are renamed to the same name, they will be combined
   into a single joint module, as long as they are processed during the same
   execution of ``hs-to-coq``. This feature is useful to translate mutually
-  recursive modules. 
+  recursive modules.
 
 Examples:
 
  .. code-block:: shell
- 
+
      rename module Type MyType
      rename module Data.Semigroup.Internal Data.SemigroupInternal
 
 
-``rewrite`` - replace Haskell subexpressions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``rewrite`` -- replace Haskell subexpressions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: rewrite, edit
 
 Format:
 
@@ -230,8 +282,12 @@ Format:
 
 Effect:
 
-    Pattern matches a sub-expression and replaces it with the right-hand side
-	 after substituting all variables.
+    Pattern-matches a sub-expression and replaces it with the right-hand side
+    after substituting all variables.
+
+    The pattern-matching is unhygienic: if you mention a variable ``x`` in the pattern
+    but not in the list of variables (*vars*), then the rewrite rule will only match
+    if there is actually is a variable named ``x``.
 
 Examples:
 
@@ -246,13 +302,16 @@ Examples:
 
     ## skip debugging code
     rewrite forall x, andb Util.debugIsOn x = false
- 
+
     ## create dummy strings to ignore particular definitions
     ## note empty variable list
     rewrite forall , Outputable.empty = (GHC.Base.hs_string__ "Outputable.empty")
 
-``redefine`` - update a generated Coq Definition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``redefine`` -- override a Coq definition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: redefine, edit
 
 Format:
   | **redefine** *Coq_definition*
@@ -266,25 +325,16 @@ Examples:
  .. code-block:: shell
 
      redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
-  
 
-``type synonym`` - deprecated
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Format:
-  | **type synonym** *name* **:->** *name*
-
-Effect:
-
-Examples:
-
- .. code-block:: shell
 
 Extra information
 -----------------
 
-``data kinds`` - Declare kinds of type arguments to Inductive datatypes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``data kinds`` -- Declare kinds of type arguments to Inductive datatypes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: data kinds, edit
 
 Format:
   | **data kinds** *qualified_name* *Coq_types*
@@ -293,68 +343,108 @@ Effect:
 
   Haskell programmers rarely include kinds signatures on inductive
   datatypes. This usually isn't a problem, but for higher-order parameters, or
-  phantoms (don't appear in the datatype definition), the edit file needs to
-  include this information because Coq cannot figure it out.
+  phantoms (which don't appear in the datatype definition), Coq does not
+  automatically infer the right types. In these cases,
+  the information can be included in an edit.
 
 Examples:
   .. code-block:: shell
 
      # Coq parser needs parens
-     data kinds Control.Applicative.WrappedArrow (Type -> (Type -> Type)) 
+     data kinds Control.Applicative.WrappedArrow (Type -> (Type -> Type))
 
      # multiple kinds are comma separated
-     data kinds Data.Functor.Reverse.Reverse (Type -> Type),Type   
+     data kinds Data.Functor.Reverse.Reverse (Type -> Type),Type
      data kinds Data.Functor.Constant.Constant Type,Type
 
 
-``class kinds`` - Declare kinds of type arguments to Type classes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``class kinds`` -- Declare kinds of type arguments to Type classes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: class kinds, edit
 
 Format:
   | **class kinds** *qualified_name* *Coq_types*
 
 Effect:
 
-   Annotate the types of type arguments to type classes (when 
-	Coq cannot figure it out).
+   Like ``data kinds``, but for classes.
 
 Examples:
   .. code-block:: shell
 
       class kinds Control.Arrow.Arrow (Type -> (Type -> Type))
 
-``add scope`` - deprecated
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``order`` -- reorder output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: order, edit
 
 Format:
-  | **add scope** *scope* **for** *place* *qualified_name*
+  | **order** *qualified_name* ...
 
 Effect:
+  ``hs-to-coq`` topologically sorts definitions so that they appear in
+  dependency order. However, this sorting is not always correct --- type
+  classes introduce implicit dependencies that are invisible to
+  ``hs-to-coq``. This edit adds a new ordering constraint into the
+  topological sort so that the output definitions appear in the order indicate
+  in this edit.
+
+  You can order more than two definitions at the same time:
+
+    .. code-block:: shell
+
+     order Foo.foo Foo.bar Foo.baz
+
+  is equivalent to
+
+    .. code-block:: shell
+
+     order Foo.foo Foo.bar
+     order Foo.bar Foo.baz
+
+
 
 Examples:
   .. code-block:: shell
 
+    order GHC.Base.Functor__arrow GHC.Base.Applicative__arrow_op_ztzg__ GHC.Base.Applicative__arrow GHC.Base.Monad__arrow_return_ GHC.Base.Monad__arrow GHC.Base.Alternative__arrow GHC.Base.MonadPlus__arrow
 
-``manual notation`` -
-^^^^^^^^^^^^^^^^^^^^^
+``manual notation`` -- Indicate presence of manual notation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: manual notation, edit
+
 
 Format:
   | **manual notation** *name*
 
 Effect:
-  See the `notation <mangling.html>`_ page for more information about 
-  how ``hs-to-coq`` uses notation.
+  If your preamble inludes custom notation (usually for operators), you need
+  to indicate this using this edit.
+  See Section :ref:`mangling` for more information about
+  how ``hs-to-coq`` implements custom notation.
 
 Examples:
   .. code-block:: shell
 
      manual notation GHC.Base
 
+
 Termination edits
 -----------------
 
-``coinductive`` - use a coinductive instead of an inductive datatype
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``coinductive`` -- use a coinductive instead of an inductive datatype
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: coinductive, edit
+
 
 Format:
   | **coinductive** *qualified_name*
@@ -363,70 +453,179 @@ Effect:
 
 Examples:
 
-``termination`` - hints for termination proofs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``termination`` -- hints for termination proofs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: termination, edit
 
 Format:
-  | **termination** *qualified_name* *termarg*
+  | **termination** *qualified_name* *termination_argument*
 
 Effect:
 
-If the qualified name is not structurally recursive, termarg can be one of 
-  - **deferred**
-  - **corecursive**
-  - { **struct** *qualified_name* }
-  - { **measure** *id* ... } 
-  - { **wf** *id* *qualified_name* }
+  By default, ``hs-to-coq`` translates recursive definitions using Coq’s
+  ``fix`` operator, which requires that the recursion is obviously structurally
+  recursive. This is not always the right choice, and a ``termination`` edit tells 
+  ``hs-to-coq`` to construct the recursive definition differently, where *termination_argument* is one of the following:
+
+  * .. index::
+       single: corecursive, termination argument
+
+    **corecursive**
+
+    This causes ``hs-to-coq`` to use ``cofix`` instead of ``fix``.
+
+  * .. index::
+       single: struct, termination argument
+
+    **{** **struct** *qualified_name* **}**
+
+    Coq’s ``fix`` operator usually determines the recusive argument
+    automatically, but also supports the user to specify it explicitly. This
+    *termination_argument* is just passed along to Coq’s ``fix``.
+
+  * .. index::
+       single: measure, termination argument
+       single: wf, termination argument
+
+    **{** **measure** *expr* **}**
+
+    **{** **measure** *expr* **(** *relation* **)** **}**
+
+    **{** **wf** *relation* *expr* **}**
+
+    With one of these forms for *termination_argument*, ``hs-to-coq`` uses
+    ``Program Fixpoint`` to declare the function, passing these termination arguments
+    along. See the documentation of ``Program Fixpoint`` for their precise meaning.
+
+    The *expr* is a Coq expression that mentions the parameters of the current
+    functions. These often have names generated by ``hs-to-coq`` -- look at the
+    generated Coq code to see what they are.
+
+    ``Program Fixpoint`` only supports top-level declaration. When these
+    termination edits are applied to local definitions, ``hs-to-coq`` therefore
+    uses the fixed-point operator ``wfFix1`` defined in ``GHC.Wf`` in our
+    ``base`` library.
+
+    A side effect of these edits is that the definition (or the enclosing
+    definition) is  defines using ``Program``, which leaves proof obligations
+    to the user. These should be discharged using the ``obligations`` edit (see
+    below).
+
+  * .. index::
+       single: deferred, termination argument
+
+    **deferred**
+
+    This causes ``hs-to-coq`` to use the axiom ``deferredFix`` from the module
+    ``GHC.DeferredFix`` to translate the recursive definition. This defers
+    the termination proof until the verification stage, where the axiom
+    ``deferredFix_eq_on`` is needed to learn anything about the recursive
+    function, and this axion requires an (extensional) termination proof.
+
+    See the file ``GHC/DeferredFix.v`` for more details.
+
 
 Examples:
+
   .. code-block:: shell
 
+    termination Memo.mkTrie corecursive
 
-Other edits
------------
+    termination Memo.lookupTrie { measure arg_1__ (Coq.NArith.BinNat.N.lt) }
+    obligations Memo.lookupTrie solve_lookupTrie
+
+    termination Data.Set.Internal.link {measure (Nat.add (set_size arg_1__) (set_size arg_2__))}
+    obligations Data.Set.Internal.link termination_by_omega
+
+    in Data.IntSet.Internal.foldlBits  termination go  {measure (Coq.NArith.BinNat.N.to_nat arg_0__)}
+    obligations Data.IntSet.Internal.foldlBits BitTerminationProofs.termination_foldl
 
 
-``order`` - reorder output
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+    termination QuickSort.quicksort deferred
 
-Format:
-  | **order** *qualified_name* ...
 
-Effect:
-  ``hs-to-coq`` topologically sorts definitions so that they appear in
-  dependency order. However, this sorting is not always possible --- type
-  classes introduce implicit dependencies that are invisible to
-  ``hs-to-coq``. This edit inserts a new ordering constraint into the
-  topological sort so that the output definitions appear in the correct order.
+``obligations`` -- Proof obligations in ``Program`` mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Examples:
-  .. code-block:: shell
-
-    order GHC.Base.Functor__arrow GHC.Base.Applicative__arrow_op_ztzg__ GHC.Base.Applicative__arrow GHC.Base.Monad__arrow_return_ GHC.Base.Monad__arrow GHC.Base.Alternative__arrow GHC.Base.MonadPlus__arrow
-
-``axiomatize`` - provide axioms for all definitions in a module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. index::
+   single: obligations, edit
 
 Format:
-  | **axiomatize** *module*
+  | **obligations** *qualified_name* *tactic*
 
 Effect:
-  Don't translate the module. Instead, provide axioms for all definitions.
+  The specified definition is now defined using ``Program``, and is followed by
+
+  .. code-block:: coq
+
+     Solve Obligations with (tactic).
+
+  with the specified tactic.
+
+  This is most commonly used with with the ``termination`` hint, but can be
+  useful on its own: For example, ``Program`` mode automatically applies or
+  unwraps sigma types, which may leave proof obligations.
+
+  The ``{ measure … }`` termination argument of the ``termination`` edit alwasy
+  causes the ``Program`` being used. If no ``obligations`` edit is specified, then
+  all obligations are solved with ``Admit Obligations.``.
 
 
-Localizing edits - restrict scope of edit
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Meta-edits
+----------
+
+Localizing edits - restrict scope of an edit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: in, edit
+
 
 Format:
  | **in** *qualified_name* *edit*
 
 Effect:
-   Restrict the scope of an edit so that it only applies inside a particular
-	definition. 
+
+  This is a meta-edit: The given edit is only applied during the translation of
+  the given definition. This is most useful to rename or rewrite only within
+  a specific function, or to give termination arguments to local functions.
+
+  While all edits are allowed, not all edits are useful when localized.
 
 Examples:
   .. code-block:: shell
 
      in SrcLoc.Ord__RealSrcLoc_op_zl__ rewrite forall, SrcLoc.Ord__RealSrcLoc_compare = GHC.Base.compare
      in Util.exactLog2 termination pow2 deferred
-  
+
+Deprecated edits
+----------------
+
+``add scope``
+^^^^^^^^^^^^^
+
+.. index::
+   single: add scope, edit
+
+
+Format:
+  | **add scope** *scope* **for** *place* *qualified_name*
+
+Effect:
+
+Examples:
+
+``type synonym``
+^^^^^^^^^^^^^^^^
+
+.. index::
+   single: type synonym, edit
+
+Format:
+  | **type synonym** *name* **:->** *name*
+
+Effect:
+
+Examples:

@@ -17,8 +17,8 @@ Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Import Data.Functor.Classes.
-Require Import Data.Functor.Identity.
+Require Data.Functor.Classes.
+Require Data.Functor.Identity.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require Data.Tuple.
@@ -32,7 +32,7 @@ Inductive WriterT (w : Type) (m : Type -> Type) a : Type
   := Mk_WriterT : m (a * w)%type -> WriterT w m a.
 
 Definition Writer w :=
-  (WriterT w Identity)%type.
+  (WriterT w Data.Functor.Identity.Identity)%type.
 
 Arguments Mk_WriterT {_} {_} {_} _.
 
@@ -62,22 +62,26 @@ Local Definition Monad__WriterT_tmp {inst_w} {inst_m} `{GHC.Base.Monoid
 (* Converted value declarations: *)
 
 Local Definition Eq1__WriterT_liftEq {inst_w} {inst_m} `{GHC.Base.Eq_ inst_w}
-  `{Eq1 inst_m}
+  `{Data.Functor.Classes.Eq1 inst_m}
    : forall {a} {b},
      (a -> b -> bool) ->
      (WriterT inst_w inst_m) a -> (WriterT inst_w inst_m) b -> bool :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_WriterT m1, Mk_WriterT m2 => liftEq (liftEq2 eq _GHC.Base.==_) m1 m2
+      | eq, Mk_WriterT m1, Mk_WriterT m2 =>
+          Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq2 eq _GHC.Base.==_) m1
+          m2
       end.
 
-Program Instance Eq1__WriterT {w} {m} `{GHC.Base.Eq_ w} `{Eq1 m}
-   : Eq1 (WriterT w m) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__WriterT_liftEq |}.
+Program Instance Eq1__WriterT {w} {m} `{GHC.Base.Eq_ w}
+  `{Data.Functor.Classes.Eq1 m}
+   : Data.Functor.Classes.Eq1 (WriterT w m) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__WriterT_liftEq |}.
 
 Local Definition Ord1__WriterT_liftCompare {inst_w} {inst_m} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m}
+  inst_w} `{Data.Functor.Classes.Ord1 inst_m}
    : forall {a} {b},
      (a -> b -> comparison) ->
      (WriterT inst_w inst_m) a -> (WriterT inst_w inst_m) b -> comparison :=
@@ -85,74 +89,80 @@ Local Definition Ord1__WriterT_liftCompare {inst_w} {inst_m} `{GHC.Base.Ord
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
       | comp, Mk_WriterT m1, Mk_WriterT m2 =>
-          liftCompare (liftCompare2 comp GHC.Base.compare) m1 m2
+          Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare2 comp
+                                            GHC.Base.compare) m1 m2
       end.
 
-Program Instance Ord1__WriterT {w} {m} `{GHC.Base.Ord w} `{Ord1 m}
-   : Ord1 (WriterT w m) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__WriterT_liftCompare |}.
+Program Instance Ord1__WriterT {w} {m} `{GHC.Base.Ord w}
+  `{Data.Functor.Classes.Ord1 m}
+   : Data.Functor.Classes.Ord1 (WriterT w m) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__WriterT_liftCompare |}.
 
 (* Skipping instance Read1__WriterT of class Read1 *)
 
 (* Skipping instance Show1__WriterT of class Show1 *)
 
 Local Definition Eq___WriterT_op_zeze__ {inst_w} {inst_m} {inst_a}
-  `{GHC.Base.Eq_ inst_w} `{Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
+  `{GHC.Base.Eq_ inst_w} `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
-  eq1.
+  Data.Functor.Classes.eq1.
 
 Local Definition Eq___WriterT_op_zsze__ {inst_w} {inst_m} {inst_a}
-  `{GHC.Base.Eq_ inst_w} `{Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
+  `{GHC.Base.Eq_ inst_w} `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
   fun x y => negb (Eq___WriterT_op_zeze__ x y).
 
-Program Instance Eq___WriterT {w} {m} {a} `{GHC.Base.Eq_ w} `{Eq1 m}
-  `{GHC.Base.Eq_ a}
+Program Instance Eq___WriterT {w} {m} {a} `{GHC.Base.Eq_ w}
+  `{Data.Functor.Classes.Eq1 m} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (WriterT w m a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___WriterT_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___WriterT_op_zsze__ |}.
 
 Local Definition Ord__WriterT_compare {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) ->
      (WriterT inst_w inst_m inst_a) -> comparison :=
-  compare1.
+  Data.Functor.Classes.compare1.
 
 Local Definition Ord__WriterT_op_zgze__ {inst_w} {inst_m} {inst_a}
-  `{GHC.Base.Ord inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  `{GHC.Base.Ord inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord
+  inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
   fun x y => Ord__WriterT_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__WriterT_op_zg__ {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
   fun x y => Ord__WriterT_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__WriterT_op_zlze__ {inst_w} {inst_m} {inst_a}
-  `{GHC.Base.Ord inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  `{GHC.Base.Ord inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord
+  inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
   fun x y => Ord__WriterT_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__WriterT_max {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) ->
      (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) :=
   fun x y => if Ord__WriterT_op_zlze__ x y : bool then y else x.
 
 Local Definition Ord__WriterT_min {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) ->
      (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) :=
   fun x y => if Ord__WriterT_op_zlze__ x y : bool then x else y.
 
 Local Definition Ord__WriterT_op_zl__ {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_w} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (WriterT inst_w inst_m inst_a) -> (WriterT inst_w inst_m inst_a) -> bool :=
   fun x y => Ord__WriterT_compare x y GHC.Base.== Lt.
 
-Program Instance Ord__WriterT {w} {m} {a} `{GHC.Base.Ord w} `{Ord1 m}
-  `{GHC.Base.Ord a}
+Program Instance Ord__WriterT {w} {m} {a} `{GHC.Base.Ord w}
+  `{Data.Functor.Classes.Ord1 m} `{GHC.Base.Ord a}
    : GHC.Base.Ord (WriterT w m a) :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__WriterT_op_zl__ ;
@@ -382,7 +392,9 @@ Definition mapWriterT {m} {a} {w} {n} {b} {w'}
 
 Definition mapWriter {a} {w} {b} {w'}
    : ((a * w)%type -> (b * w')%type) -> Writer w a -> Writer w' b :=
-  fun f => mapWriterT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
+  fun f =>
+    mapWriterT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
+                (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
 
 Local Definition Functor__WriterT_fmap {inst_m} {inst_w} `{(GHC.Base.Functor
    inst_m)}
@@ -486,7 +498,7 @@ Definition pass {m} {w} {a} `{(GHC.Base.Monad m)}
                 runWriterT m GHC.Base.>>= cont_0__).
 
 Definition runWriter {w} {a} : Writer w a -> (a * w)%type :=
-  runIdentity GHC.Base.∘ runWriterT.
+  Data.Functor.Identity.runIdentity GHC.Base.∘ runWriterT.
 
 Definition execWriter {w} {a} : Writer w a -> w :=
   fun m => Data.Tuple.snd (runWriter m).
@@ -499,10 +511,8 @@ Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
   fun w => writer (pair tt w).
 
 (* External variables:
-     Eq1 Gt Identity Lt Mk_Identity Monad__WriterT_tmp Ord1 Type bool compare1
-     comparison eq1 liftCompare liftCompare2 liftCompare__ liftEq liftEq2 liftEq__
-     list negb op_zt__ pair runIdentity tt unit Control.Monad.Fail.MonadFail
-     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Gt Lt Monad__WriterT_tmp Type bool comparison list negb op_zt__ pair tt unit
+     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
@@ -510,6 +520,12 @@ Definition tell {m} {w} `{(GHC.Base.Monad m)} : w -> WriterT w m unit :=
      Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length
      Data.Foldable.length__ Data.Foldable.null Data.Foldable.null__
      Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1
+     Data.Functor.Classes.eq1 Data.Functor.Classes.liftCompare
+     Data.Functor.Classes.liftCompare2 Data.Functor.Classes.liftCompare__
+     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq2
+     Data.Functor.Classes.liftEq__ Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
      Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
      Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
      Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual

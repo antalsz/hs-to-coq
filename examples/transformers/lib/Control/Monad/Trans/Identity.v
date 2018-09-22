@@ -18,7 +18,7 @@ Require Control.Monad.Trans.Class.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Functor.
-Require Import Data.Functor.Classes.
+Require Data.Functor.Classes.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require GHC.Base.
@@ -38,89 +38,99 @@ Definition runIdentityT {f : Type -> Type} {a} (arg_0__ : IdentityT f a) :=
   runIdentityT.
 (* Converted value declarations: *)
 
-Local Definition Eq1__IdentityT_liftEq {inst_f} `{(Eq1 inst_f)}
+Local Definition Eq1__IdentityT_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
+   inst_f)}
    : forall {a} {b},
      (a -> b -> bool) -> (IdentityT inst_f) a -> (IdentityT inst_f) b -> bool :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_IdentityT x, Mk_IdentityT y => liftEq eq x y
+      | eq, Mk_IdentityT x, Mk_IdentityT y => Data.Functor.Classes.liftEq eq x y
       end.
 
-Program Instance Eq1__IdentityT {f} `{(Eq1 f)} : Eq1 (IdentityT f) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__IdentityT_liftEq |}.
+Program Instance Eq1__IdentityT {f} `{(Data.Functor.Classes.Eq1 f)}
+   : Data.Functor.Classes.Eq1 (IdentityT f) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__IdentityT_liftEq |}.
 
-Local Definition Ord1__IdentityT_liftCompare {inst_f} `{(Ord1 inst_f)}
+Local Definition Ord1__IdentityT_liftCompare {inst_f}
+  `{(Data.Functor.Classes.Ord1 inst_f)}
    : forall {a} {b},
      (a -> b -> comparison) ->
      (IdentityT inst_f) a -> (IdentityT inst_f) b -> comparison :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_IdentityT x, Mk_IdentityT y => liftCompare comp x y
+      | comp, Mk_IdentityT x, Mk_IdentityT y =>
+          Data.Functor.Classes.liftCompare comp x y
       end.
 
-Program Instance Ord1__IdentityT {f} `{(Ord1 f)} : Ord1 (IdentityT f) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__IdentityT_liftCompare |}.
+Program Instance Ord1__IdentityT {f} `{(Data.Functor.Classes.Ord1 f)}
+   : Data.Functor.Classes.Ord1 (IdentityT f) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__IdentityT_liftCompare |}.
 
 (* Skipping instance Read1__IdentityT of class Read1 *)
 
 (* Skipping instance Show1__IdentityT of class Show1 *)
 
-Local Definition Eq___IdentityT_op_zeze__ {inst_f} {inst_a} `{Eq1 inst_f}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___IdentityT_op_zeze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
-  eq1.
+  Data.Functor.Classes.eq1.
 
-Local Definition Eq___IdentityT_op_zsze__ {inst_f} {inst_a} `{Eq1 inst_f}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___IdentityT_op_zsze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
   fun x y => negb (Eq___IdentityT_op_zeze__ x y).
 
-Program Instance Eq___IdentityT {f} {a} `{Eq1 f} `{GHC.Base.Eq_ a}
+Program Instance Eq___IdentityT {f} {a} `{Data.Functor.Classes.Eq1 f}
+  `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (IdentityT f a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___IdentityT_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___IdentityT_op_zsze__ |}.
 
-Local Definition Ord__IdentityT_compare {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_compare {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> comparison :=
-  compare1.
+  Data.Functor.Classes.compare1.
 
-Local Definition Ord__IdentityT_op_zgze__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_op_zgze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
   fun x y => Ord__IdentityT_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__IdentityT_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_op_zg__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
   fun x y => Ord__IdentityT_compare x y GHC.Base.== Gt.
 
-Local Definition Ord__IdentityT_op_zlze__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_op_zlze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
   fun x y => Ord__IdentityT_compare x y GHC.Base./= Gt.
 
-Local Definition Ord__IdentityT_max {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_max {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) ->
      (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
   fun x y => if Ord__IdentityT_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__IdentityT_min {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_min {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) ->
      (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) :=
   fun x y => if Ord__IdentityT_op_zlze__ x y : bool then x else y.
 
-Local Definition Ord__IdentityT_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__IdentityT_op_zl__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (IdentityT inst_f inst_a) -> (IdentityT inst_f inst_a) -> bool :=
   fun x y => Ord__IdentityT_compare x y GHC.Base.== Lt.
 
-Program Instance Ord__IdentityT {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
+Program Instance Ord__IdentityT {f} {a} `{Data.Functor.Classes.Ord1 f}
+  `{GHC.Base.Ord a}
    : GHC.Base.Ord (IdentityT f a) :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__IdentityT_op_zl__ ;
@@ -396,17 +406,20 @@ Program Instance Traversable__IdentityT {f} `{(Data.Traversable.Traversable f)}
            Traversable__IdentityT_traverse |}.
 
 (* External variables:
-     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
-     liftEq liftEq__ list negb Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
-     Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
-     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
-     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
-     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl
-     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length
-     Data.Foldable.length__ Data.Foldable.null Data.Foldable.null__
-     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
-     Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Product
+     Gt Lt Type bool comparison list negb Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
+     Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length Data.Foldable.length__
+     Data.Foldable.null Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
+     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1
+     Data.Functor.Classes.eq1 Data.Functor.Classes.liftCompare
+     Data.Functor.Classes.liftCompare__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq__ Data.SemigroupInternal.Mk_Product
      Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.getProduct
      Data.SemigroupInternal.getSum Data.Traversable.Traversable
      Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__

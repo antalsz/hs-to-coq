@@ -19,8 +19,8 @@ Require Coq.Program.Basics.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
-Require Import Data.Functor.Classes.
-Require Import Data.Functor.Identity.
+Require Data.Functor.Classes.
+Require Data.Functor.Identity.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require GHC.Base.
@@ -35,28 +35,31 @@ Inductive ExceptT e m a : Type
   := Mk_ExceptT : (m (Data.Either.Either e a)) -> ExceptT e m a.
 
 Definition Except e :=
-  (ExceptT e Identity)%type.
+  (ExceptT e Data.Functor.Identity.Identity)%type.
 
 Arguments Mk_ExceptT {_} {_} {_} _.
 (* Converted value declarations: *)
 
 Local Definition Eq1__ExceptT_liftEq {inst_e} {inst_m} `{GHC.Base.Eq_ inst_e}
-  `{Eq1 inst_m}
+  `{Data.Functor.Classes.Eq1 inst_m}
    : forall {a} {b},
      (a -> b -> bool) ->
      (ExceptT inst_e inst_m) a -> (ExceptT inst_e inst_m) b -> bool :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_ExceptT x, Mk_ExceptT y => (@liftEq inst_m _ _ _ (liftEq eq)) x y
+      | eq, Mk_ExceptT x, Mk_ExceptT y =>
+          (@Data.Functor.Classes.liftEq inst_m _ _ _ (Data.Functor.Classes.liftEq eq)) x y
       end.
 
-Program Instance Eq1__ExceptT {e} {m} `{GHC.Base.Eq_ e} `{Eq1 m}
-   : Eq1 (ExceptT e m) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__ExceptT_liftEq |}.
+Program Instance Eq1__ExceptT {e} {m} `{GHC.Base.Eq_ e}
+  `{Data.Functor.Classes.Eq1 m}
+   : Data.Functor.Classes.Eq1 (ExceptT e m) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__ExceptT_liftEq |}.
 
 Local Definition Ord1__ExceptT_liftCompare {inst_e} {inst_m} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m}
+  inst_e} `{Data.Functor.Classes.Ord1 inst_m}
    : forall {a} {b},
      (a -> b -> comparison) ->
      (ExceptT inst_e inst_m) a -> (ExceptT inst_e inst_m) b -> comparison :=
@@ -64,74 +67,80 @@ Local Definition Ord1__ExceptT_liftCompare {inst_e} {inst_m} `{GHC.Base.Ord
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
       | comp, Mk_ExceptT x, Mk_ExceptT y =>
-          (@liftCompare inst_m _ _ _ _ (liftCompare comp)) x y
+          (@Data.Functor.Classes.liftCompare inst_m _ _ _ _
+           (Data.Functor.Classes.liftCompare comp)) x y
       end.
 
-Program Instance Ord1__ExceptT {e} {m} `{GHC.Base.Ord e} `{Ord1 m}
-   : Ord1 (ExceptT e m) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__ExceptT_liftCompare |}.
+Program Instance Ord1__ExceptT {e} {m} `{GHC.Base.Ord e}
+  `{Data.Functor.Classes.Ord1 m}
+   : Data.Functor.Classes.Ord1 (ExceptT e m) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__ExceptT_liftCompare |}.
 
 (* Skipping instance Read1__ExceptT of class Read1 *)
 
 (* Skipping instance Show1__ExceptT of class Show1 *)
 
 Local Definition Eq___ExceptT_op_zeze__ {inst_e} {inst_m} {inst_a}
-  `{GHC.Base.Eq_ inst_e} `{Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
+  `{GHC.Base.Eq_ inst_e} `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
-  eq1.
+  Data.Functor.Classes.eq1.
 
 Local Definition Eq___ExceptT_op_zsze__ {inst_e} {inst_m} {inst_a}
-  `{GHC.Base.Eq_ inst_e} `{Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
+  `{GHC.Base.Eq_ inst_e} `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
   fun x y => negb (Eq___ExceptT_op_zeze__ x y).
 
-Program Instance Eq___ExceptT {e} {m} {a} `{GHC.Base.Eq_ e} `{Eq1 m}
-  `{GHC.Base.Eq_ a}
+Program Instance Eq___ExceptT {e} {m} {a} `{GHC.Base.Eq_ e}
+  `{Data.Functor.Classes.Eq1 m} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (ExceptT e m a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___ExceptT_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___ExceptT_op_zsze__ |}.
 
 Local Definition Ord__ExceptT_compare {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) ->
      (ExceptT inst_e inst_m inst_a) -> comparison :=
-  compare1.
+  Data.Functor.Classes.compare1.
 
 Local Definition Ord__ExceptT_op_zgze__ {inst_e} {inst_m} {inst_a}
-  `{GHC.Base.Ord inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  `{GHC.Base.Ord inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord
+  inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
   fun x y => Ord__ExceptT_compare x y GHC.Base./= Lt.
 
 Local Definition Ord__ExceptT_op_zg__ {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
   fun x y => Ord__ExceptT_compare x y GHC.Base.== Gt.
 
 Local Definition Ord__ExceptT_op_zlze__ {inst_e} {inst_m} {inst_a}
-  `{GHC.Base.Ord inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  `{GHC.Base.Ord inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord
+  inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
   fun x y => Ord__ExceptT_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__ExceptT_max {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) ->
      (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) :=
   fun x y => if Ord__ExceptT_op_zlze__ x y : bool then y else x.
 
 Local Definition Ord__ExceptT_min {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) ->
      (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) :=
   fun x y => if Ord__ExceptT_op_zlze__ x y : bool then x else y.
 
 Local Definition Ord__ExceptT_op_zl__ {inst_e} {inst_m} {inst_a} `{GHC.Base.Ord
-  inst_e} `{Ord1 inst_m} `{GHC.Base.Ord inst_a}
+  inst_e} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (ExceptT inst_e inst_m inst_a) -> (ExceptT inst_e inst_m inst_a) -> bool :=
   fun x y => Ord__ExceptT_compare x y GHC.Base.== Lt.
 
-Program Instance Ord__ExceptT {e} {m} {a} `{GHC.Base.Ord e} `{Ord1 m}
-  `{GHC.Base.Ord a}
+Program Instance Ord__ExceptT {e} {m} {a} `{GHC.Base.Ord e}
+  `{Data.Functor.Classes.Ord1 m} `{GHC.Base.Ord a}
    : GHC.Base.Ord (ExceptT e m a) :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__ExceptT_op_zl__ ;
@@ -330,10 +339,10 @@ Program Instance MonadTrans__ExceptT {e}
 (* Skipping instance MonadZip__ExceptT of class MonadZip *)
 
 Definition except {e} {a} : Data.Either.Either e a -> Except e a :=
-  fun m => Mk_ExceptT (Mk_Identity m).
+  fun m => Mk_ExceptT (Data.Functor.Identity.Mk_Identity m).
 
 Definition runExcept {e} {a} : Except e a -> Data.Either.Either e a :=
-  fun '(Mk_ExceptT m) => runIdentity m.
+  fun '(Mk_ExceptT m) => Data.Functor.Identity.runIdentity m.
 
 Definition runExceptT {e} {m} {a}
    : ExceptT e m a -> m (Data.Either.Either e a) :=
@@ -356,7 +365,9 @@ Definition withExcept {e} {e'} {a} : (e -> e') -> Except e a -> Except e' a :=
 Definition mapExcept {e} {a} {e'} {b}
    : (Data.Either.Either e a -> Data.Either.Either e' b) ->
      Except e a -> Except e' b :=
-  fun f => mapExceptT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
+  fun f =>
+    mapExceptT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
+                (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
 
 Definition liftPass {m} {w} {e} {a} `{(GHC.Base.Monad m)}
    : Control.Monad.Signatures.Pass w m (Data.Either.Either e a) ->
@@ -510,9 +521,8 @@ Definition throwE {m} {e} {a} `{(GHC.Base.Monad m)} : e -> ExceptT e m a :=
   Mk_ExceptT GHC.Base.∘ (GHC.Base.return_ GHC.Base.∘ Data.Either.Left).
 
 (* External variables:
-     Eq1 Gt Identity Lt Mk_Identity Ord1 bool compare1 comparison eq1 false
-     liftCompare liftCompare__ liftEq liftEq__ list negb pair runIdentity true
-     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Gt Lt bool comparison false list negb pair true Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose Data.Either.Either
@@ -521,7 +531,12 @@ Definition throwE {m} {e} {a} `{(GHC.Base.Monad m)} : e -> ExceptT e m a :=
      Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
      Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
      Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
-     Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Dual
+     Data.Functor.op_zlzdzg__ Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
+     Data.Functor.Classes.compare1 Data.Functor.Classes.eq1
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare__
+     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Functor.Identity.runIdentity Data.SemigroupInternal.Mk_Dual
      Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
      Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
      Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct

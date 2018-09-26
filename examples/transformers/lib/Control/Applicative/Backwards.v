@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Import Data.Functor.Classes.
+Require Data.Functor.Classes.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require GHC.Base.
@@ -33,89 +33,99 @@ Definition forwards {f : Type -> Type} {a : Type} (arg_0__ : Backwards f a) :=
   forwards.
 (* Converted value declarations: *)
 
-Local Definition Eq1__Backwards_liftEq {inst_f} `{(Eq1 inst_f)}
+Local Definition Eq1__Backwards_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
+   inst_f)}
    : forall {a} {b},
      (a -> b -> bool) -> (Backwards inst_f) a -> (Backwards inst_f) b -> bool :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_Backwards x, Mk_Backwards y => liftEq eq x y
+      | eq, Mk_Backwards x, Mk_Backwards y => Data.Functor.Classes.liftEq eq x y
       end.
 
-Program Instance Eq1__Backwards {f} `{(Eq1 f)} : Eq1 (Backwards f) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Backwards_liftEq |}.
+Program Instance Eq1__Backwards {f} `{(Data.Functor.Classes.Eq1 f)}
+   : Data.Functor.Classes.Eq1 (Backwards f) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Backwards_liftEq |}.
 
-Local Definition Ord1__Backwards_liftCompare {inst_f} `{(Ord1 inst_f)}
+Local Definition Ord1__Backwards_liftCompare {inst_f}
+  `{(Data.Functor.Classes.Ord1 inst_f)}
    : forall {a} {b},
      (a -> b -> comparison) ->
      (Backwards inst_f) a -> (Backwards inst_f) b -> comparison :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_Backwards x, Mk_Backwards y => liftCompare comp x y
+      | comp, Mk_Backwards x, Mk_Backwards y =>
+          Data.Functor.Classes.liftCompare comp x y
       end.
 
-Program Instance Ord1__Backwards {f} `{(Ord1 f)} : Ord1 (Backwards f) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Backwards_liftCompare |}.
+Program Instance Ord1__Backwards {f} `{(Data.Functor.Classes.Ord1 f)}
+   : Data.Functor.Classes.Ord1 (Backwards f) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__Backwards_liftCompare |}.
 
 (* Skipping instance Read1__Backwards of class Read1 *)
 
 (* Skipping instance Show1__Backwards of class Show1 *)
 
-Local Definition Eq___Backwards_op_zeze__ {inst_f} {inst_a} `{Eq1 inst_f}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___Backwards_op_zeze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
-  eq1.
+  Data.Functor.Classes.eq1.
 
-Local Definition Eq___Backwards_op_zsze__ {inst_f} {inst_a} `{Eq1 inst_f}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___Backwards_op_zsze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
   fun x y => negb (Eq___Backwards_op_zeze__ x y).
 
-Program Instance Eq___Backwards {f} {a} `{Eq1 f} `{GHC.Base.Eq_ a}
+Program Instance Eq___Backwards {f} {a} `{Data.Functor.Classes.Eq1 f}
+  `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Backwards f a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Backwards_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Backwards_op_zsze__ |}.
 
-Local Definition Ord__Backwards_compare {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_compare {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> comparison :=
-  compare1.
+  Data.Functor.Classes.compare1.
 
-Local Definition Ord__Backwards_op_zgze__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_op_zgze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
   fun x y => Ord__Backwards_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Backwards_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_op_zg__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
   fun x y => Ord__Backwards_compare x y GHC.Base.== Gt.
 
-Local Definition Ord__Backwards_op_zlze__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_op_zlze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
   fun x y => Ord__Backwards_compare x y GHC.Base./= Gt.
 
-Local Definition Ord__Backwards_max {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_max {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) ->
      (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) :=
   fun x y => if Ord__Backwards_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__Backwards_min {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_min {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) ->
      (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) :=
   fun x y => if Ord__Backwards_op_zlze__ x y : bool then x else y.
 
-Local Definition Ord__Backwards_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Backwards_op_zl__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Backwards inst_f inst_a) -> (Backwards inst_f inst_a) -> bool :=
   fun x y => Ord__Backwards_compare x y GHC.Base.== Lt.
 
-Program Instance Ord__Backwards {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
+Program Instance Ord__Backwards {f} {a} `{Data.Functor.Classes.Ord1 f}
+  `{GHC.Base.Ord a}
    : GHC.Base.Ord (Backwards f a) :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__Backwards_op_zl__ ;
@@ -335,24 +345,26 @@ Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
            Traversable__Backwards_traverse |}.
 
 (* External variables:
-     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
-     liftEq liftEq__ list negb Coq.Program.Basics.compose Data.Foldable.Foldable
-     Data.Foldable.foldMap Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length Data.Foldable.length__ Data.Foldable.null
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA Data.Traversable.sequenceA__
-     Data.Traversable.sequence__ Data.Traversable.traverse
-     Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.build' GHC.Base.compare__
-     GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__
-     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
-     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
+     Gt Lt Type bool comparison list negb Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length Data.Foldable.length__
+     Data.Foldable.null Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.Classes.Eq1
+     Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1 Data.Functor.Classes.eq1
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare__
+     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq__
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.Traversable Data.Traversable.mapM__ Data.Traversable.sequenceA
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
      GHC.Base.op_zlztzg____ GHC.Base.op_zlztztzg__ GHC.Base.op_zsze__
      GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
      GHC.Num.Int GHC.Num.Num

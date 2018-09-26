@@ -14,7 +14,7 @@ Require Coq.Program.Wf.
 
 Require Control.Monad.Fail.
 Require Control.Monad.Trans.Class.
-Require Import Data.Functor.Identity.
+Require Data.Functor.Identity.
 Require GHC.Base.
 Import GHC.Base.Notations.
 
@@ -24,7 +24,7 @@ Inductive ContT (r : Type) (m : Type -> Type) a : Type
   := Mk_ContT : ((a -> m r) -> m r) -> ContT r m a.
 
 Definition Cont r :=
-  (ContT r Identity)%type.
+  (ContT r Data.Functor.Identity.Identity)%type.
 
 Arguments Mk_ContT {_} {_} {_} _.
 
@@ -133,7 +133,11 @@ Definition callCC {a} {r} {m} {b}
     Mk_ContT (fun c => runContT (f (fun x => Mk_ContT (fun arg_0__ => c x))) c).
 
 Definition cont {a} {r} : ((a -> r) -> r) -> Cont r a :=
-  fun f => Mk_ContT (fun c => Mk_Identity (f (runIdentity GHC.Base.∘ c))).
+  fun f =>
+    Mk_ContT (fun c =>
+                Data.Functor.Identity.Mk_Identity (f (Data.Functor.Identity.runIdentity
+                                                      GHC.Base.∘
+                                                      c))).
 
 Definition evalContT {m} {r} `{(GHC.Base.Monad m)} : ContT r m r -> m r :=
   fun m => runContT m GHC.Base.return_.
@@ -150,10 +154,12 @@ Definition shiftT {m} {a} {r} `{(GHC.Base.Monad m)}
   fun f => Mk_ContT (evalContT GHC.Base.∘ f).
 
 Definition shift {a} {r} : ((a -> r) -> Cont r r) -> Cont r a :=
-  fun f => shiftT (f GHC.Base.∘ (fun arg_0__ => runIdentity GHC.Base.∘ arg_0__)).
+  fun f =>
+    shiftT (f GHC.Base.∘
+            (fun arg_0__ => Data.Functor.Identity.runIdentity GHC.Base.∘ arg_0__)).
 
 Definition evalCont {r} : Cont r r -> r :=
-  fun m => runIdentity (evalContT m).
+  fun m => Data.Functor.Identity.runIdentity (evalContT m).
 
 Definition liftLocal {m} {r'} {r} {a} `{(GHC.Base.Monad m)}
    : m r' ->
@@ -167,10 +173,15 @@ Definition mapContT {m} {r} {a} : (m r -> m r) -> ContT r m a -> ContT r m a :=
   fun f m => Mk_ContT (f GHC.Base.∘ runContT m).
 
 Definition mapCont {r} {a} : (r -> r) -> Cont r a -> Cont r a :=
-  fun f => mapContT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
+  fun f =>
+    mapContT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
+              (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
 
 Definition runCont {r} {a} : Cont r a -> (a -> r) -> r :=
-  fun m k => runIdentity (runContT m (Mk_Identity GHC.Base.∘ k)).
+  fun m k =>
+    Data.Functor.Identity.runIdentity (runContT m (Data.Functor.Identity.Mk_Identity
+                                                   GHC.Base.∘
+                                                   k)).
 
 Definition withContT {b} {m} {r} {a}
    : ((b -> m r) -> (a -> m r)) -> ContT r m a -> ContT r m b :=
@@ -179,14 +190,17 @@ Definition withContT {b} {m} {r} {a}
 Definition withCont {b} {r} {a}
    : ((b -> r) -> (a -> r)) -> Cont r a -> Cont r b :=
   fun f =>
-    withContT ((fun arg_0__ => Mk_Identity GHC.Base.∘ arg_0__) GHC.Base.∘
-               (f GHC.Base.∘ (fun arg_1__ => runIdentity GHC.Base.∘ arg_1__))).
+    withContT ((fun arg_0__ => Data.Functor.Identity.Mk_Identity GHC.Base.∘ arg_0__)
+               GHC.Base.∘
+               (f GHC.Base.∘
+                (fun arg_1__ => Data.Functor.Identity.runIdentity GHC.Base.∘ arg_1__))).
 
 (* External variables:
-     Identity Mk_Identity Type runIdentity Control.Monad.Fail.MonadFail
-     Control.Monad.Fail.fail Control.Monad.Fail.fail__
-     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift
-     Control.Monad.Trans.Class.lift__ GHC.Base.Applicative GHC.Base.Functor
+     Type Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Control.Monad.Fail.fail__ Control.Monad.Trans.Class.MonadTrans
+     Control.Monad.Trans.Class.lift Control.Monad.Trans.Class.lift__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Functor.Identity.runIdentity GHC.Base.Applicative GHC.Base.Functor
      GHC.Base.Monad GHC.Base.String GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
      GHC.Base.liftA2__ GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
      GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____

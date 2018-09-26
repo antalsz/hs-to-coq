@@ -13,7 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Control.Monad.Fail.
-Require Import Data.Functor.Classes.
+Require Data.Functor.Classes.
 Require GHC.Base.
 Import GHC.Base.Notations.
 
@@ -29,89 +29,98 @@ Definition getReverse {f : Type -> Type} {a : Type} (arg_0__ : Reverse f a) :=
   getReverse.
 (* Converted value declarations: *)
 
-Local Definition Eq1__Reverse_liftEq {inst_f} `{(Eq1 inst_f)}
+Local Definition Eq1__Reverse_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
+   inst_f)}
    : forall {a} {b},
      (a -> b -> bool) -> (Reverse inst_f) a -> (Reverse inst_f) b -> bool :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_Reverse x, Mk_Reverse y => liftEq eq x y
+      | eq, Mk_Reverse x, Mk_Reverse y => Data.Functor.Classes.liftEq eq x y
       end.
 
-Program Instance Eq1__Reverse {f} `{(Eq1 f)} : Eq1 (Reverse f) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Reverse_liftEq |}.
+Program Instance Eq1__Reverse {f} `{(Data.Functor.Classes.Eq1 f)}
+   : Data.Functor.Classes.Eq1 (Reverse f) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Reverse_liftEq |}.
 
-Local Definition Ord1__Reverse_liftCompare {inst_f} `{(Ord1 inst_f)}
+Local Definition Ord1__Reverse_liftCompare {inst_f} `{(Data.Functor.Classes.Ord1
+   inst_f)}
    : forall {a} {b},
      (a -> b -> comparison) ->
      (Reverse inst_f) a -> (Reverse inst_f) b -> comparison :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_Reverse x, Mk_Reverse y => liftCompare comp x y
+      | comp, Mk_Reverse x, Mk_Reverse y => Data.Functor.Classes.liftCompare comp x y
       end.
 
-Program Instance Ord1__Reverse {f} `{(Ord1 f)} : Ord1 (Reverse f) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Reverse_liftCompare |}.
+Program Instance Ord1__Reverse {f} `{(Data.Functor.Classes.Ord1 f)}
+   : Data.Functor.Classes.Ord1 (Reverse f) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__Reverse_liftCompare |}.
 
 (* Skipping instance Read1__Reverse of class Read1 *)
 
 (* Skipping instance Show1__Reverse of class Show1 *)
 
-Local Definition Eq___Reverse_op_zeze__ {inst_f} {inst_a} `{Eq1 inst_f}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___Reverse_op_zeze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
-  eq1.
+  Data.Functor.Classes.eq1.
 
-Local Definition Eq___Reverse_op_zsze__ {inst_f} {inst_a} `{Eq1 inst_f}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___Reverse_op_zsze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_f} `{GHC.Base.Eq_ inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
   fun x y => negb (Eq___Reverse_op_zeze__ x y).
 
-Program Instance Eq___Reverse {f} {a} `{Eq1 f} `{GHC.Base.Eq_ a}
+Program Instance Eq___Reverse {f} {a} `{Data.Functor.Classes.Eq1 f}
+  `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Reverse f a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___Reverse_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Reverse_op_zsze__ |}.
 
-Local Definition Ord__Reverse_compare {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_compare {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> comparison :=
-  compare1.
+  Data.Functor.Classes.compare1.
 
-Local Definition Ord__Reverse_op_zgze__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_op_zgze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
   fun x y => Ord__Reverse_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__Reverse_op_zg__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_op_zg__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
   fun x y => Ord__Reverse_compare x y GHC.Base.== Gt.
 
-Local Definition Ord__Reverse_op_zlze__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_op_zlze__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
   fun x y => Ord__Reverse_compare x y GHC.Base./= Gt.
 
-Local Definition Ord__Reverse_max {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_max {inst_f} {inst_a} `{Data.Functor.Classes.Ord1
+  inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) ->
      (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) :=
   fun x y => if Ord__Reverse_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__Reverse_min {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_min {inst_f} {inst_a} `{Data.Functor.Classes.Ord1
+  inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) ->
      (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) :=
   fun x y => if Ord__Reverse_op_zlze__ x y : bool then x else y.
 
-Local Definition Ord__Reverse_op_zl__ {inst_f} {inst_a} `{Ord1 inst_f}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__Reverse_op_zl__ {inst_f} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
    : (Reverse inst_f inst_a) -> (Reverse inst_f inst_a) -> bool :=
   fun x y => Ord__Reverse_compare x y GHC.Base.== Lt.
 
-Program Instance Ord__Reverse {f} {a} `{Ord1 f} `{GHC.Base.Ord a}
+Program Instance Ord__Reverse {f} {a} `{Data.Functor.Classes.Ord1 f}
+  `{GHC.Base.Ord a}
    : GHC.Base.Ord (Reverse f a) :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__Reverse_op_zl__ ;
@@ -224,15 +233,17 @@ Program Instance MonadFail__Reverse {m} `{(Control.Monad.Fail.MonadFail m)}
 (* Skipping instance Traversable__Reverse *)
 
 (* External variables:
-     Eq1 Gt Lt Ord1 Type bool compare1 comparison eq1 liftCompare liftCompare__
-     liftEq liftEq__ negb Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
-     Control.Monad.Fail.fail__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Ord GHC.Base.String GHC.Base.compare__ GHC.Base.const
-     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.max__
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zgzg____
-     GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____ GHC.Base.op_zl____
-     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
+     Gt Lt Type bool comparison negb Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__ Data.Functor.Classes.Eq1
+     Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1 Data.Functor.Classes.eq1
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare__
+     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq__ GHC.Base.Applicative
+     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
+     GHC.Base.liftA2__ GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____
+     GHC.Base.op_zl____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
      GHC.Base.op_zlztzg__ GHC.Base.op_zlztzg____ GHC.Base.op_zsze__
      GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
      GHC.Base.return___

@@ -1,7 +1,6 @@
-import module GHC.Base
 skip Control.Monad.Trans.RWST.Lazy.runRWST
 redefine Definition Control.Monad.Trans.RWS.Lazy.Monad__RWST_op_zgzgze__ {inst_w} {inst_m} {inst_r} {inst_s}
-  `{_:Data.Monoid.Monoid inst_w} `{_:GHC.Base.Monad inst_m}
+  `{_: GHC.Base.Monoid inst_w} `{_:GHC.Base.Monad inst_m}
    : forall {a} {b},
      ((RWST inst_r inst_w inst_s inst_m a) ->
      ((a -> (RWST inst_r inst_w inst_s inst_m b)) ->

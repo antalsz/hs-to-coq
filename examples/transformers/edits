@@ -1,7 +1,3 @@
-import module Data.Functor.Classes
-import module Data.Functor.Identity
-import module Data.Monoid
-
 ## still need to redefine this 
 skip Control.Monad.Signatures.Catch
 skip Control.Monad.Trans.Identity.liftCatch

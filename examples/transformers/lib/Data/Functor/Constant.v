@@ -18,7 +18,7 @@ Require Data.Bifunctor.
 Require Data.Bitraversable.
 Require Data.Foldable.
 Require Data.Functor.
-Require Import Data.Functor.Classes.
+Require Data.Functor.Classes.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require GHC.Base.
@@ -62,8 +62,10 @@ Local Definition Eq2__Constant_liftEq2
       | eq, _, Mk_Constant x, Mk_Constant y => eq x y
       end.
 
-Program Instance Eq2__Constant : Eq2 Constant :=
-  fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Constant_liftEq2 |}.
+Program Instance Eq2__Constant : Data.Functor.Classes.Eq2 Constant :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
+           Eq2__Constant_liftEq2 |}.
 
 Local Definition Ord2__Constant_liftCompare2
    : forall {a} {b} {c} {d},
@@ -75,9 +77,10 @@ Local Definition Ord2__Constant_liftCompare2
       | comp, _, Mk_Constant x, Mk_Constant y => comp x y
       end.
 
-Program Instance Ord2__Constant : Ord2 Constant :=
+Program Instance Ord2__Constant : Data.Functor.Classes.Ord2 Constant :=
   fun _ k =>
-    k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Constant_liftCompare2 |}.
+    k {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
+           Ord2__Constant_liftCompare2 |}.
 
 (* Translating `instance Read2__Constant' failed: OOPS! Cannot find information
    for class Qualified "Data.Functor.Classes" "Read2" unsupported *)
@@ -409,21 +412,23 @@ Program Instance Bitraversable__Constant
 (* Skipping instance Eq___Constant *)
 
 (* External variables:
-     Eq2 Ord2 Type bool comparison liftCompare2__ liftEq2__ list true
-     Coq.Program.Basics.compose Data.Bifoldable.Bifoldable
-     Data.Bifoldable.bifoldMap__ Data.Bifoldable.bifold__ Data.Bifoldable.bifoldl__
-     Data.Bifoldable.bifoldr__ Data.Bifunctor.Bifunctor Data.Bifunctor.bimap__
-     Data.Bifunctor.first__ Data.Bifunctor.second__ Data.Bitraversable.Bitraversable
-     Data.Bitraversable.bitraverse__ Data.Foldable.Foldable Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.SemigroupInternal.Mk_Dual
-     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Type bool comparison list true Coq.Program.Basics.compose
+     Data.Bifoldable.Bifoldable Data.Bifoldable.bifoldMap__ Data.Bifoldable.bifold__
+     Data.Bifoldable.bifoldl__ Data.Bifoldable.bifoldr__ Data.Bifunctor.Bifunctor
+     Data.Bifunctor.bimap__ Data.Bifunctor.first__ Data.Bifunctor.second__
+     Data.Bitraversable.Bitraversable Data.Bitraversable.bitraverse__
+     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Functor.op_zlzdzg__ Data.Functor.Classes.Eq2 Data.Functor.Classes.Ord2
+     Data.Functor.Classes.liftCompare2__ Data.Functor.Classes.liftEq2__
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.build' GHC.Base.const GHC.Base.flip
      GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr GHC.Base.id GHC.Base.liftA2__

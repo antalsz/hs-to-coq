@@ -21,8 +21,6 @@ PASS = \
   PolyInstance3 \
   Bits \
   BitsRewrite \
-  Records \
-  RecordConstruction \
   PatternGuard \
   Guard2 \
   Notations \
@@ -52,7 +50,7 @@ VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
 COQFLAGS  = ""
 
 # typecheck *quietly*
-TYPECHECK=coqc -Q ../../base "" 1>/dev/null
+TYPECHECK=coqc 1>/dev/null
 
 main:
 	# Call ourselves with -k, so that we see all test outputs,

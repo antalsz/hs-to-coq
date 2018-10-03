@@ -13,6 +13,8 @@ PASS = \
   SplitAt \
   PartialRecordSel \
   TypeClient \
+  Records \
+  RecordConstruction \
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

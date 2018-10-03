@@ -20,7 +20,7 @@ Require Coq.Program.Basics.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
-Require Import Data.Functor.Classes.
+Require Data.Functor.Classes.
 Require Data.Maybe.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
@@ -56,87 +56,98 @@ Local Definition Monad_tmp {inst_m} `{(GHC.Base.Monad inst_m)}
 
 (* Converted value declarations: *)
 
-Local Definition Eq1__MaybeT_liftEq {inst_m} `{(Eq1 inst_m)}
+Local Definition Eq1__MaybeT_liftEq {inst_m} `{(Data.Functor.Classes.Eq1
+   inst_m)}
    : forall {a} {b},
      (a -> b -> bool) -> (MaybeT inst_m) a -> (MaybeT inst_m) b -> bool :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | eq, Mk_MaybeT x, Mk_MaybeT y => liftEq (liftEq eq) x y
+      | eq, Mk_MaybeT x, Mk_MaybeT y =>
+          Data.Functor.Classes.liftEq (Data.Functor.Classes.liftEq eq) x y
       end.
 
-Program Instance Eq1__MaybeT {m} `{(Eq1 m)} : Eq1 (MaybeT m) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__MaybeT_liftEq |}.
+Program Instance Eq1__MaybeT {m} `{(Data.Functor.Classes.Eq1 m)}
+   : Data.Functor.Classes.Eq1 (MaybeT m) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__MaybeT_liftEq |}.
 
-Local Definition Ord1__MaybeT_liftCompare {inst_m} `{(Ord1 inst_m)}
+Local Definition Ord1__MaybeT_liftCompare {inst_m} `{(Data.Functor.Classes.Ord1
+   inst_m)}
    : forall {a} {b},
      (a -> b -> comparison) ->
      (MaybeT inst_m) a -> (MaybeT inst_m) b -> comparison :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | comp, Mk_MaybeT x, Mk_MaybeT y => liftCompare (liftCompare comp) x y
+      | comp, Mk_MaybeT x, Mk_MaybeT y =>
+          Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare comp) x y
       end.
 
-Program Instance Ord1__MaybeT {m} `{(Ord1 m)} : Ord1 (MaybeT m) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__MaybeT_liftCompare |}.
+Program Instance Ord1__MaybeT {m} `{(Data.Functor.Classes.Ord1 m)}
+   : Data.Functor.Classes.Ord1 (MaybeT m) :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+           Ord1__MaybeT_liftCompare |}.
 
 (* Skipping instance Read1__MaybeT of class Read1 *)
 
 (* Skipping instance Show1__MaybeT of class Show1 *)
 
-Local Definition Eq___MaybeT_op_zeze__ {inst_m} {inst_a} `{Eq1 inst_m}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___MaybeT_op_zeze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
-  eq1.
+  Data.Functor.Classes.eq1.
 
-Local Definition Eq___MaybeT_op_zsze__ {inst_m} {inst_a} `{Eq1 inst_m}
-  `{GHC.Base.Eq_ inst_a}
+Local Definition Eq___MaybeT_op_zsze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Eq1 inst_m} `{GHC.Base.Eq_ inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
   fun x y => negb (Eq___MaybeT_op_zeze__ x y).
 
-Program Instance Eq___MaybeT {m} {a} `{Eq1 m} `{GHC.Base.Eq_ a}
+Program Instance Eq___MaybeT {m} {a} `{Data.Functor.Classes.Eq1 m}
+  `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (MaybeT m a) :=
   fun _ k =>
     k {| GHC.Base.op_zeze____ := Eq___MaybeT_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___MaybeT_op_zsze__ |}.
 
-Local Definition Ord__MaybeT_compare {inst_m} {inst_a} `{Ord1 inst_m}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__MaybeT_compare {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> comparison :=
-  compare1.
+  Data.Functor.Classes.compare1.
 
-Local Definition Ord__MaybeT_op_zgze__ {inst_m} {inst_a} `{Ord1 inst_m}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__MaybeT_op_zgze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
   fun x y => Ord__MaybeT_compare x y GHC.Base./= Lt.
 
-Local Definition Ord__MaybeT_op_zg__ {inst_m} {inst_a} `{Ord1 inst_m}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__MaybeT_op_zg__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
   fun x y => Ord__MaybeT_compare x y GHC.Base.== Gt.
 
-Local Definition Ord__MaybeT_op_zlze__ {inst_m} {inst_a} `{Ord1 inst_m}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__MaybeT_op_zlze__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
   fun x y => Ord__MaybeT_compare x y GHC.Base./= Gt.
 
-Local Definition Ord__MaybeT_max {inst_m} {inst_a} `{Ord1 inst_m} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__MaybeT_max {inst_m} {inst_a} `{Data.Functor.Classes.Ord1
+  inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
   fun x y => if Ord__MaybeT_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__MaybeT_min {inst_m} {inst_a} `{Ord1 inst_m} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__MaybeT_min {inst_m} {inst_a} `{Data.Functor.Classes.Ord1
+  inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) :=
   fun x y => if Ord__MaybeT_op_zlze__ x y : bool then x else y.
 
-Local Definition Ord__MaybeT_op_zl__ {inst_m} {inst_a} `{Ord1 inst_m}
-  `{GHC.Base.Ord inst_a}
+Local Definition Ord__MaybeT_op_zl__ {inst_m} {inst_a}
+  `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
    : (MaybeT inst_m inst_a) -> (MaybeT inst_m inst_a) -> bool :=
   fun x y => Ord__MaybeT_compare x y GHC.Base.== Lt.
 
-Program Instance Ord__MaybeT {m} {a} `{Ord1 m} `{GHC.Base.Ord a}
+Program Instance Ord__MaybeT {m} {a} `{Data.Functor.Classes.Ord1 m}
+  `{GHC.Base.Ord a}
    : GHC.Base.Ord (MaybeT m a) :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__MaybeT_op_zl__ ;
@@ -451,8 +462,7 @@ Definition maybeToExceptT {m} {e} {a} `{(GHC.Base.Functor m)}
     end.
 
 (* External variables:
-     Eq1 Gt Lt Monad_tmp None Ord1 Some bool compare1 comparison eq1 false
-     liftCompare liftCompare__ liftEq liftEq__ list negb option pair true
+     Gt Lt Monad_tmp None Some bool comparison false list negb option pair true
      Control.Monad.Fail.MonadFail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
@@ -463,12 +473,16 @@ Definition maybeToExceptT {m} {e} {a} `{(GHC.Base.Functor m)}
      Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
      Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
      Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
-     Data.Functor.op_zlzdzg__ Data.Maybe.maybe Data.SemigroupInternal.Mk_Dual
-     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
-     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
-     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
-     Data.SemigroupInternal.getSum Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Functor.op_zlzdzg__ Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
+     Data.Functor.Classes.compare1 Data.Functor.Classes.eq1
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare__
+     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq__ Data.Maybe.maybe
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
      GHC.Base.String GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.flip

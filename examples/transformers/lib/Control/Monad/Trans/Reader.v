@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
-Require Import Data.Functor.Identity.
+Require Data.Functor.Identity.
 Require GHC.Base.
 Import GHC.Base.Notations.
 
@@ -25,7 +25,7 @@ Inductive ReaderT (r : Type) (m : Type -> Type) a : Type
   := Mk_ReaderT (runReaderT : r -> m a) : ReaderT r m a.
 
 Definition Reader r :=
-  (ReaderT r Identity)%type.
+  (ReaderT r Data.Functor.Identity.Identity)%type.
 
 Arguments Mk_ReaderT {_} {_} {_} _.
 
@@ -99,7 +99,9 @@ Definition mapReaderT {m} {a} {n} {b} {r}
   fun f m => Mk_ReaderT (f GHC.Base.∘ runReaderT m).
 
 Definition mapReader {a} {b} {r} : (a -> b) -> Reader r a -> Reader r b :=
-  fun f => mapReaderT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
+  fun f =>
+    mapReaderT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
+                (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
 
 Local Definition Functor__ReaderT_fmap {inst_m} {inst_r} `{(GHC.Base.Functor
    inst_m)}
@@ -179,7 +181,7 @@ Definition reader {m} {r} {a} `{(GHC.Base.Monad m)}
   fun f => Mk_ReaderT (GHC.Base.return_ GHC.Base.∘ f).
 
 Definition runReader {r} {a} : Reader r a -> r -> a :=
-  fun m => runIdentity GHC.Base.∘ runReaderT m.
+  fun m => Data.Functor.Identity.runIdentity GHC.Base.∘ runReaderT m.
 
 Definition withReaderT {r'} {r} {m} {a}
    : (r' -> r) -> ReaderT r m a -> ReaderT r' m a :=
@@ -192,10 +194,11 @@ Definition local {r} {m} {a} : (r -> r) -> ReaderT r m a -> ReaderT r m a :=
   withReaderT.
 
 (* External variables:
-     Identity Mk_Identity Type runIdentity Control.Monad.Fail.MonadFail
-     Control.Monad.Fail.fail Control.Monad.Fail.fail__
-     Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
-     Control.Monad.Trans.Class.lift Control.Monad.Trans.Class.lift__
+     Type Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
+     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift
+     Control.Monad.Trans.Class.lift__ Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
      GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.String
      GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__
      GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__

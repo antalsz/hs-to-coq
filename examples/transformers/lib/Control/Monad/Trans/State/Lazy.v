@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Control.Monad.Fail.
 Require Control.Monad.Signatures.
 Require Control.Monad.Trans.Class.
-Require Import Data.Functor.Identity.
+Require Data.Functor.Identity.
 Require Data.Tuple.
 Require GHC.Base.
 Import GHC.Base.Notations.
@@ -26,7 +26,7 @@ Inductive StateT s m a : Type
   := Mk_StateT (runStateT : s -> m (a * s)%type) : StateT s m a.
 
 Definition State s :=
-  (StateT s Identity)%type.
+  (StateT s Data.Functor.Identity.Identity)%type.
 
 Arguments Mk_StateT {_} {_} {_} _.
 
@@ -220,10 +220,12 @@ Definition mapStateT {m} {a} {s} {n} {b}
 
 Definition mapState {a} {s} {b}
    : ((a * s)%type -> (b * s)%type) -> State s a -> State s b :=
-  fun f => mapStateT (Mk_Identity GHC.Base.∘ (f GHC.Base.∘ runIdentity)).
+  fun f =>
+    mapStateT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
+               (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
 
 Definition runState {s} {a} : State s a -> s -> (a * s)%type :=
-  fun m => runIdentity GHC.Base.∘ runStateT m.
+  fun m => Data.Functor.Identity.runIdentity GHC.Base.∘ runStateT m.
 
 Definition execState {s} {a} : State s a -> s -> s :=
   fun m s => Data.Tuple.snd (runState m s).
@@ -258,11 +260,12 @@ Definition withState {s} {a} : (s -> s) -> State s a -> State s a :=
   withStateT.
 
 (* External variables:
-     Identity Mk_Identity op_zt__ pair runIdentity tt unit
-     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
-     Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
-     Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
-     Control.Monad.Trans.Class.lift__ Data.Tuple.fst Data.Tuple.snd
+     op_zt__ pair tt unit Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
+     Control.Monad.Signatures.Listen Control.Monad.Signatures.Pass
+     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Functor.Identity.runIdentity Data.Tuple.fst Data.Tuple.snd
      GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.String
      GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__
      GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__

@@ -18,9 +18,9 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Last a : Type := Mk_Last : option a -> Last a.
+Inductive Last a : Type := Mk_Last (getLast : option a) : Last a.
 
-Inductive First a : Type := Mk_First : option a -> First a.
+Inductive First a : Type := Mk_First (getFirst : option a) : First a.
 
 Arguments Mk_Last {_} _.
 

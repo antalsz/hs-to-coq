@@ -13,7 +13,10 @@ PASS = \
   SplitAt \
   PartialRecordSel \
   TypeClient \
+  Records \
+  RecordConstruction \
   TalkExample \
+
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

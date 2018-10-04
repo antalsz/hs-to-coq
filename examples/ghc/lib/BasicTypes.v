@@ -58,7 +58,8 @@ Inductive SourceText : Type
   |  NoSourceText : SourceText.
 
 Inductive StringLiteral : Type
-  := Mk_StringLiteral : SourceText -> FastString.FastString -> StringLiteral.
+  := Mk_StringLiteral (sl_st : SourceText) (sl_fs : FastString.FastString)
+   : StringLiteral.
 
 Inductive WarningTxt : Type
   := Mk_WarningTxt
@@ -94,7 +95,8 @@ Inductive OverlapMode : Type
   |  Incoherent : SourceText -> OverlapMode.
 
 Inductive OverlapFlag : Type
-  := Mk_OverlapFlag : OverlapMode -> bool -> OverlapFlag.
+  := Mk_OverlapFlag (overlapMode : OverlapMode) (isSafeOverlap : bool)
+   : OverlapFlag.
 
 Inductive Origin : Type := FromSource : Origin |  Generated : Origin.
 
@@ -122,7 +124,8 @@ Definition InterestingCxt :=
   bool%type.
 
 Inductive IntegralLit : Type
-  := IL : SourceText -> bool -> GHC.Num.Integer -> IntegralLit.
+  := IL (il_text : SourceText) (il_neg : bool) (il_value : GHC.Num.Integer)
+   : IntegralLit.
 
 Inductive IntWithInf : Type
   := Int : GHC.Num.Int -> IntWithInf
@@ -132,10 +135,13 @@ Definition InsideLam :=
   bool%type.
 
 Inductive OccInfo : Type
-  := ManyOccs : TailCallInfo -> OccInfo
+  := ManyOccs (occ_tail : TailCallInfo) : OccInfo
   |  IAmDead : OccInfo
-  |  OneOcc : InsideLam -> OneBranch -> InterestingCxt -> TailCallInfo -> OccInfo
-  |  IAmALoopBreaker : RulesOnly -> TailCallInfo -> OccInfo.
+  |  OneOcc (occ_in_lam : InsideLam) (occ_one_br : OneBranch) (occ_int_cxt
+    : InterestingCxt) (occ_tail : TailCallInfo)
+   : OccInfo
+  |  IAmALoopBreaker (occ_rules_only : RulesOnly) (occ_tail : TailCallInfo)
+   : OccInfo.
 
 Inductive InlineSpec : Type
   := Inline : InlineSpec
@@ -148,7 +154,8 @@ Inductive FunctionOrData : Type
   |  IsData : FunctionOrData.
 
 Inductive FractionalLit : Type
-  := FL : SourceText -> bool -> GHC.Real.Rational -> FractionalLit.
+  := FL (fl_text : SourceText) (fl_neg : bool) (fl_value : GHC.Real.Rational)
+   : FractionalLit.
 
 Inductive FixityDirection : Type
   := InfixL : FixityDirection
@@ -158,7 +165,7 @@ Inductive FixityDirection : Type
 Inductive Fixity : Type
   := Mk_Fixity : SourceText -> GHC.Num.Int -> FixityDirection -> Fixity.
 
-Inductive EP a : Type := Mk_EP : a -> a -> EP a.
+Inductive EP a : Type := Mk_EP (fromEP : a) (toEP : a) : EP a.
 
 Inductive DerivStrategy : Type
   := StockStrategy : DerivStrategy
@@ -194,9 +201,9 @@ Inductive Activation : Type
   |  ActiveAfter : SourceText -> PhaseNum -> Activation.
 
 Inductive InlinePragma : Type
-  := Mk_InlinePragma
-   : SourceText ->
-     InlineSpec -> option Arity -> Activation -> RuleMatchInfo -> InlinePragma.
+  := Mk_InlinePragma (inl_src : SourceText) (inl_inline : InlineSpec) (inl_sat
+    : option Arity) (inl_act : Activation) (inl_rule : RuleMatchInfo)
+   : InlinePragma.
 
 Arguments Mk_EP {_} _ _.
 
@@ -225,6 +232,9 @@ Instance Default__SpliceExplicitFlag : GHC.Err.Default SpliceExplicitFlag :=
 Instance Default__SourceText : GHC.Err.Default SourceText :=
   GHC.Err.Build_Default _ NoSourceText.
 
+Instance Default__StringLiteral : GHC.Err.Default StringLiteral :=
+  GHC.Err.Build_Default _ (Mk_StringLiteral GHC.Err.default GHC.Err.default).
+
 Instance Default__RuleMatchInfo : GHC.Err.Default RuleMatchInfo :=
   GHC.Err.Build_Default _ ConLike.
 
@@ -246,17 +256,23 @@ Instance Default__LeftOrRight : GHC.Err.Default LeftOrRight :=
 Instance Default__TailCallInfo : GHC.Err.Default TailCallInfo :=
   GHC.Err.Build_Default _ NoTailCallInfo.
 
+Instance Default__IntegralLit : GHC.Err.Default IntegralLit :=
+  GHC.Err.Build_Default _ (IL GHC.Err.default GHC.Err.default GHC.Err.default).
+
 Instance Default__IntWithInf : GHC.Err.Default IntWithInf :=
   GHC.Err.Build_Default _ Infinity.
 
 Instance Default__OccInfo : GHC.Err.Default OccInfo :=
-  GHC.Err.Build_Default _ IAmDead.
+  GHC.Err.Build_Default _ (ManyOccs GHC.Err.default).
 
 Instance Default__InlineSpec : GHC.Err.Default InlineSpec :=
   GHC.Err.Build_Default _ Inline.
 
 Instance Default__FunctionOrData : GHC.Err.Default FunctionOrData :=
   GHC.Err.Build_Default _ IsFunction.
+
+Instance Default__FractionalLit : GHC.Err.Default FractionalLit :=
+  GHC.Err.Build_Default _ (FL GHC.Err.default GHC.Err.default GHC.Err.default).
 
 Instance Default__FixityDirection : GHC.Err.Default FixityDirection :=
   GHC.Err.Build_Default _ InfixL.
@@ -1624,7 +1640,7 @@ Definition zapFragileOcc : OccInfo -> OccInfo :=
      GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
      GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
      GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
-     GHC.Err.Build_Default GHC.Err.Default GHC.Err.error GHC.Num.Int GHC.Num.Integer
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.default GHC.Err.error GHC.Num.Int
+     GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.seq
      GHC.Real.Rational Panic.someSDoc SrcLoc.Located
 *)

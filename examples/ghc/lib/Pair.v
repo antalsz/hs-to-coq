@@ -25,7 +25,7 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Pair a : Type := Mk_Pair : a -> a -> Pair a.
+Inductive Pair a : Type := Mk_Pair (pFst : a) (pSnd : a) : Pair a.
 
 Arguments Mk_Pair {_} _ _.
 

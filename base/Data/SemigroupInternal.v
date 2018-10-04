@@ -30,19 +30,19 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Sum a : Type := Mk_Sum : a -> Sum a.
+Inductive Sum a : Type := Mk_Sum (getSum : a) : Sum a.
 
-Inductive Product a : Type := Mk_Product : a -> Product a.
+Inductive Product a : Type := Mk_Product (getProduct : a) : Product a.
 
-Inductive Endo a : Type := Mk_Endo : (a -> a) -> Endo a.
+Inductive Endo a : Type := Mk_Endo (appEndo : a -> a) : Endo a.
 
-Inductive Dual a : Type := Mk_Dual : a -> Dual a.
+Inductive Dual a : Type := Mk_Dual (getDual : a) : Dual a.
 
-Inductive Any : Type := Mk_Any : bool -> Any.
+Inductive Any : Type := Mk_Any (getAny : bool) : Any.
 
-Inductive Alt (f : Type -> Type) a : Type := Mk_Alt : f a -> Alt f a.
+Inductive Alt (f : Type -> Type) a : Type := Mk_Alt (getAlt : f a) : Alt f a.
 
-Inductive All : Type := Mk_All : bool -> All.
+Inductive All : Type := Mk_All (getAll : bool) : All.
 
 Arguments Mk_Sum {_} _.
 
@@ -53,6 +53,12 @@ Arguments Mk_Endo {_} _.
 Arguments Mk_Dual {_} _.
 
 Arguments Mk_Alt {_} {_} _.
+
+Instance Default__Any : GHC.Err.Default Any :=
+  GHC.Err.Build_Default _ (Mk_Any GHC.Err.default).
+
+Instance Default__All : GHC.Err.Default All :=
+  GHC.Err.Build_Default _ (Mk_All GHC.Err.default).
 
 Definition getSum {a} (arg_0__ : Sum a) :=
   let 'Mk_Sum getSum := arg_0__ in
@@ -1025,8 +1031,8 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
      GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zlztzg__
      GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
      GHC.Base.op_ztzg__ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
-     GHC.Base.return_ GHC.Base.return___ GHC.Err.errorWithoutStackTrace GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Build_Unpeel
-     GHC.Prim.TYPE GHC.Prim.Unpeel GHC.Prim.coerce GHC.Real.Integral
-     GHC.Types.LiftedRep
+     GHC.Base.return_ GHC.Base.return___ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.default GHC.Err.errorWithoutStackTrace GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.Build_Unpeel GHC.Prim.TYPE
+     GHC.Prim.Unpeel GHC.Prim.coerce GHC.Real.Integral GHC.Types.LiftedRep
 *)

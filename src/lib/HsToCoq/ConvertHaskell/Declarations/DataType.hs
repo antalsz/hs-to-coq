@@ -63,18 +63,22 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
   params <- maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
   args   <- traverse convertLType $ hsConDeclArgTys details
 
-  fieldInfo <- case details of
+  case details of
     RecCon (L _ fields) ->
-      fmap RecordFields $
-      traverse (var ExprNS) $
-      map (selectorFieldOcc . unLoc) $
-      concatMap (cd_fld_names . unLoc) fields
+      do
+       let qualids =  traverse (var ExprNS) $
+                      map (selectorFieldOcc . unLoc) $
+                      concatMap (cd_fld_names . unLoc) fields
+       fieldInfo <- fmap RecordFields qualids
+       storeConstructorFields con fieldInfo
+       qualids <- qualids
+       let namedBinders = fmap (\(x,y) -> Typed Ungeneralizable Explicit ( Ident x  NE.:| [] ) y) $ zip qualids args
+       pure [(con, params ++ namedBinders , Just . maybeForall extraArgs $ foldr Arrow curType [])]
     _ ->
-      pure . NonRecordFields $ length args
-
-  storeConstructorFields con fieldInfo
-
-  pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
+     do
+      fieldInfo <- pure . NonRecordFields $ length args
+      storeConstructorFields con fieldInfo
+      pure [(con, params , Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
 convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames

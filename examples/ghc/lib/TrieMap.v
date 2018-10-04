@@ -17,6 +17,7 @@ Require Data.IntMap.Internal.
 Require Data.Map.Internal.
 Require FastString.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require Literal.
 Require Name.
@@ -31,9 +32,9 @@ Definition XT a :=
 Inductive TypeMapX (a : Type) : Type := TYPE_MAP_X.
 
 Inductive TyLitMap a : Type
-  := TLM
-   : Data.Map.Internal.Map GHC.Num.Integer a ->
-     Data.Map.Internal.Map FastString.FastString a -> TyLitMap a.
+  := TLM (tlm_number : Data.Map.Internal.Map GHC.Num.Integer a) (tlm_string
+    : Data.Map.Internal.Map FastString.FastString a)
+   : TyLitMap a.
 
 Class TrieMap m := {
   Key : Type ;
@@ -48,7 +49,8 @@ Arguments Key _ {_}.
 Definition TickishMap :=
   (Data.Map.Internal.Map (Core.Tickish Core.Var))%type.
 
-Inductive MaybeMap m a : Type := MM : option a -> m a -> MaybeMap m a.
+Inductive MaybeMap m a : Type
+  := MM (mm_nothing : option a) (mm_just : m a) : MaybeMap m a.
 
 Definition LiteralMap :=
   (Data.Map.Internal.Map Literal.Literal)%type.
@@ -84,12 +86,14 @@ Inductive CoercionMap a : Type
 Definition BoundVarMap :=
   Data.IntMap.Internal.IntMap%type.
 
-Inductive VarMap a : Type := VM : BoundVarMap a -> Core.DVarEnv a -> VarMap a.
+Inductive VarMap a : Type
+  := VM (vm_bvar : BoundVarMap a) (vm_fvar : Core.DVarEnv a) : VarMap a.
 
 Definition BoundVar :=
   nat%type.
 
-Inductive CmEnv : Type := CME : BoundVar -> Core.VarEnv BoundVar -> CmEnv.
+Inductive CmEnv : Type
+  := CME (cme_next : BoundVar) (cme_env : Core.VarEnv BoundVar) : CmEnv.
 
 Inductive DeBruijn a : Type := D : CmEnv -> a -> DeBruijn a.
 
@@ -97,9 +101,9 @@ Definition BndrMap :=
   TypeMapG%type.
 
 Inductive AltMap a : Type
-  := AM
-   : CoreMapG a ->
-     NameEnv.DNameEnv (CoreMapG a) -> LiteralMap (CoreMapG a) -> AltMap a.
+  := AM (am_deflt : CoreMapG a) (am_data : NameEnv.DNameEnv (CoreMapG a)) (am_lit
+    : LiteralMap (CoreMapG a))
+   : AltMap a.
 
 Arguments TLM {_} _ _.
 
@@ -120,6 +124,9 @@ Arguments VM {_} _ _.
 Arguments D {_} _ _.
 
 Arguments AM {_} _ _ _.
+
+Instance Default__CmEnv : GHC.Err.Default CmEnv :=
+  GHC.Err.Build_Default _ (CME GHC.Err.default GHC.Err.default).
 
 Definition tlm_number {a} (arg_0__ : TyLitMap a) :=
   let 'TLM tlm_number _ := arg_0__ in
@@ -463,5 +470,6 @@ Axiom xtDFreeVar : forall {a},
      Key Type list nat option unit Core.CoreAlt Core.CoreExpr Core.DVarEnv
      Core.Tickish Core.Var Core.VarEnv Data.IntMap.Internal.IntMap
      Data.Map.Internal.Map FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Num.Integer Literal.Literal Name.NamedThing NameEnv.DNameEnv UniqDFM.UniqDFM
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.default GHC.Num.Integer
+     Literal.Literal Name.NamedThing NameEnv.DNameEnv UniqDFM.UniqDFM
 *)

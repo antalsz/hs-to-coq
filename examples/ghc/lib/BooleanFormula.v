@@ -44,7 +44,9 @@ where "'LBooleanFormula'" := (GHC.Base.Synonym LBooleanFormula__raw (fun a_ =>
                                                   (SrcLoc.Located (BooleanFormula a_))%type)).
 
 Inductive Clause a : Type
-  := Mk_Clause : UniqSet.UniqSet a -> list (BooleanFormula a) -> Clause a.
+  := Mk_Clause (clauseAtoms : UniqSet.UniqSet a) (clauseExprs
+    : list (BooleanFormula a))
+   : Clause a.
 
 Arguments Var {_} _.
 

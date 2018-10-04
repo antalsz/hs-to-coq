@@ -40,8 +40,9 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive WhenMatched f x y z : Type
-  := Mk_WhenMatched
-   : (Data.IntSet.Internal.Key -> x -> y -> f (option z)) -> WhenMatched f x y z.
+  := Mk_WhenMatched (matchedKey
+    : Data.IntSet.Internal.Key -> x -> y -> f (option z))
+   : WhenMatched f x y z.
 
 Definition SimpleWhenMatched :=
   (WhenMatched Data.Functor.Identity.Identity)%type.
@@ -77,9 +78,9 @@ Inductive View a : Type
   := Mk_View : Data.IntSet.Internal.Key -> a -> (IntMap a) -> View a.
 
 Inductive WhenMissing f x y : Type
-  := Mk_WhenMissing
-   : (IntMap x -> f (IntMap y)) ->
-     (Data.IntSet.Internal.Key -> x -> f (option y)) -> WhenMissing f x y.
+  := Mk_WhenMissing (missingSubtree : IntMap x -> f (IntMap y)) (missingKey
+    : Data.IntSet.Internal.Key -> x -> f (option y))
+   : WhenMissing f x y.
 
 Definition SimpleWhenMissing :=
   (WhenMissing Data.Functor.Identity.Identity)%type.

@@ -43,7 +43,8 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive WhenMatched f k x y z : Type
-  := Mk_WhenMatched : (k -> x -> y -> f (option z)) -> WhenMatched f k x y z.
+  := Mk_WhenMatched (matchedKey : k -> x -> y -> f (option z))
+   : WhenMatched f k x y z.
 
 Inductive TraceResult a : Type
   := Mk_TraceResult : (option a) -> unit -> TraceResult a.
@@ -66,8 +67,9 @@ Inductive MaxView k a : Type := Mk_MaxView : k -> a -> (Map k a) -> MaxView k a.
 Inductive MinView k a : Type := Mk_MinView : k -> a -> (Map k a) -> MinView k a.
 
 Inductive WhenMissing f k x y : Type
-  := Mk_WhenMissing
-   : (Map k x -> f (Map k y)) -> (k -> x -> f (option y)) -> WhenMissing f k x y.
+  := Mk_WhenMissing (missingSubtree : Map k x -> f (Map k y)) (missingKey
+    : k -> x -> f (option y))
+   : WhenMissing f k x y.
 
 Definition SimpleWhenMissing :=
   (WhenMissing Data.Functor.Identity.Identity)%type.

@@ -145,7 +145,7 @@ Module Var_as_DT <: BooleanDecidableType <: DecidableType.
   unfold eq, eqb.
   unfold_zeze.
   destruct x eqn:X; destruct y eqn:Y;  simpl.
-  all: destruct (N.eqb n0 n2) eqn:EQ ; [left; auto | right; auto].
+  all: destruct (N.eqb realUnique realUnique0) eqn:EQ ; [left; auto | right; auto].
   Defined.
 
   Lemma eqb_eq : forall x y, eqb x y = true <-> eq x y.
@@ -225,7 +225,7 @@ Lemma isJoinId_eq : forall v,
 Proof.
   unfold isJoinId.
   induction v; auto.
-  now destruct i0.
+  now destruct id_details.
 Qed.
 
 Lemma isJoinId_ae: forall v1 v2,
@@ -243,7 +243,7 @@ Lemma isJoinId_isJoinId_maybe: forall v,
 Proof.
   unfold isJoinId.
   induction v; simpl; intros; auto; try discriminate.
-  now destruct i0.
+  now destruct id_details.
 Qed.
 
 Lemma idJoinArity_join: forall v a,
@@ -251,7 +251,7 @@ Lemma idJoinArity_join: forall v a,
 Proof.
   unfold isJoinId, isJoinId_maybe, idJoinArity.
   induction v; simpl; intros; auto; try discriminate.
-  destruct i0; simpl; try discriminate.
+  destruct id_details; simpl; try discriminate.
   now inversion H.
 Qed.
 
@@ -280,7 +280,7 @@ Proof.
   destruct var.
   simpl. tauto.
   tauto.
-  destruct i; simpl; tauto.
+  destruct idScope; simpl; tauto.
 Qed.
 
 Lemma isLocalVar_isLocalId : 
@@ -293,6 +293,6 @@ Proof.
   destruct var.
   simpl. tauto.
   tauto.
-  destruct i; simpl; tauto.
+  destruct idScope; simpl; tauto.
 Qed.
 

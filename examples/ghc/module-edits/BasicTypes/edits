@@ -45,3 +45,5 @@ redefine Definition BasicTypes.Arity     := nat.
 
 
 skip BasicTypes.pprAlternative
+skip BasicTypes.Default__OverlapFlag
+skip BasicTypes.Default__InlinePragma

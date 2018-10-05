@@ -20,8 +20,8 @@
 # -- Project information -----------------------------------------------------
 
 project = u'hs-to-coq'
-copyright = u'2018, Stephanie Weirich, Joachim Breitner'
-author = u'Stephanie Weirich, Joachim Breitner'
+copyright = u'2018, Stephanie Weirich, Joachim Breitner, Antal Spector-Zabusky'
+author = u'Stephanie Weirich, Joachim Breitner, Antal Spector-Zabusky'
 
 # The short X.Y version
 version = u''

@@ -30,7 +30,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive Constant (a : Type) (b : Type) : Type
-  := Mk_Constant : a -> Constant a b.
+  := Mk_Constant (getConstant : a) : Constant a b.
 
 Arguments Mk_Constant {_} {_} _.
 

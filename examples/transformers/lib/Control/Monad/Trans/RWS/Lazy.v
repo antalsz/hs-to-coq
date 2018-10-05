@@ -23,7 +23,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive RWST r w s m a : Type
-  := Mk_RWST : (r -> s -> m (a * s * w)%type) -> RWST r w s m a.
+  := Mk_RWST (runRWST : r -> s -> m (a * s * w)%type) : RWST r w s m a.
 
 Definition RWS r w s :=
   (RWST r w s Data.Functor.Identity.Identity)%type.

@@ -24,7 +24,7 @@ Inductive UniqSupply : Type
   := MkSplitUniqSupply : BinNums.N -> UniqSupply -> UniqSupply -> UniqSupply.
 
 Inductive UniqSM result : Type
-  := USM : (UniqSupply -> (result * UniqSupply)%type) -> UniqSM result.
+  := USM (unUSM : UniqSupply -> (result * UniqSupply)%type) : UniqSM result.
 
 Record MonadUnique__Dict m := MonadUnique__Dict_Build {
   getUniqueM__ : m Unique.Unique ;

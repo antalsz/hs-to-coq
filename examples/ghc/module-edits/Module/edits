@@ -123,3 +123,12 @@ redefine Definition Module.integerUnitId : UnitId := default.
 in Module.Ord__Module_op_zl__          rename value GHC.Base.compare = GHC.Base.compare
 in Module.Ord__InstalledModule_op_zl__ rename value GHC.Base.compare = GHC.Base.compare
 in Module.Ord__IndefModule_op_zl__     rename value GHC.Base.compare = GHC.Base.compare
+
+skip Module.Default__InstalledModule
+skip Module.Default__IndefUnitId 
+skip Module.Default__Module 
+skip Module.Default__IndefModule 
+skip Module.Default__NDModule 
+skip Module.Default__InstalledUnitId 
+skip Module.Default__DefUnitId
+skip Module.Default__ModLocation

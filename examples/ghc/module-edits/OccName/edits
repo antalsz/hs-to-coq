@@ -41,3 +41,4 @@ skip OccName.pprNonVarNameSpace
 skip OccName.pprNameSpaceBrief
 skip OccName.pprOccName
 skip OccName.pprOccEnv
+skip OccName.Default__OccName

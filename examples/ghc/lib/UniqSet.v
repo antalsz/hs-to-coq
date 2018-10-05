@@ -21,7 +21,8 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Inductive UniqSet a : Type := Mk_UniqSet : UniqFM.UniqFM a -> UniqSet a.
+Inductive UniqSet a : Type
+  := Mk_UniqSet (getUniqSet' : UniqFM.UniqFM a) : UniqSet a.
 
 Arguments Mk_UniqSet {_} _.
 

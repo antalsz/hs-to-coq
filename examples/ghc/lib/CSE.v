@@ -31,9 +31,9 @@ Require Util.
 (* Converted type declarations: *)
 
 Inductive CSEnv : Type
-  := CS
-   : CoreSubst.Subst ->
-     TrieMap.CoreMap Core.OutExpr -> TrieMap.CoreMap Core.OutExpr -> CSEnv.
+  := CS (cs_subst : CoreSubst.Subst) (cs_map : TrieMap.CoreMap Core.OutExpr)
+  (cs_rec_map : TrieMap.CoreMap Core.OutExpr)
+   : CSEnv.
 
 Definition cs_map (arg_0__ : CSEnv) :=
   let 'CS _ cs_map _ := arg_0__ in

@@ -15,7 +15,11 @@ import Control.Lens
 import Control.Arrow ((&&&))
 import Data.Bifunctor
 import Data.Foldable
+import HsToCoq.Util.Foldable
 import Data.Traversable
+import HsToCoq.Util.Traversable
+import Data.Bitraversable
+import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
@@ -31,6 +35,7 @@ import Control.Monad.Writer
 
 import HsToCoq.Util.Containers
 
+import           Data.Set        (Set)
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -947,6 +952,44 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                    pure Nothing
          MaybeT $ convertSingleBinding ty defn
 
+-- ALMOST a 'ConvertedDefinition', but it's guaranteed to have arguments.
+data RecDef = RecDef { rdName :: !Qualid
+                     , rdArgs :: !Binders
+                     , rdType :: !(Maybe Term)
+                     , rdBody :: !Term }
+            deriving (Eq, Ord, Show, Read)
+
+rdToFixBody :: RecDef -> FixBody
+rdToFixBody RecDef{..} = FixBody rdName rdArgs Nothing Nothing rdBody
+
+rdToLet :: RecDef -> Term -> Term
+rdToLet RecDef{..} = Let rdName (toList rdArgs) Nothing rdBody
+
+splitInlinesWith :: Foldable f => Set Qualid -> f RecDef -> Maybe (Map Qualid RecDef, NonEmpty RecDef)
+splitInlinesWith inlines =
+  bitraverse (pure . fold) nonEmpty .: mapPartitionEithers $ \rd@RecDef{..} ->
+    if rdName `elem` inlines
+    then Left $ M.singleton rdName rd
+    else Right rd
+
+data RecType = Standalone | Mutual deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+mutualRecursionInlining :: ConversionMonad r m => NonEmpty RecDef -> m (Map Qualid (RecType, RecDef))
+mutualRecursionInlining mutGroup = do
+  inlines      <- view $ edits.inlinedMutuals
+  (lets, recs) <- splitInlinesWith inlines mutGroup
+                    & maybe (convUnsupported "inlining every function in a mutually-recursive group") pure
+  
+  let rdFVs     = getFreeVars . rdBody
+      inlineRec = rdToLet . (lets M.!)
+  
+  recMap <- forFold recs $ \rd -> do
+    inlinedDeps <- for (topoSortEnvironmentWith rdFVs $ M.restrictKeys lets (rdFVs rd)) $ \case
+                     solo :| []  -> pure solo
+                     _    :| _:_ -> convUnsupported "recursion amongst inlined mutually-recursive functions"
+    pure $ M.singleton (rdName rd) (Mutual, rd{rdBody = foldr inlineRec (rdBody rd) inlinedDeps})
+  pure $ ((Standalone,) <$> lets) <> recMap
+
 addRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
 addRecursion eBindings = do
   fixedBindings <-  M.fromList . fmap (view convDefName &&& id) . foldMap toList
@@ -967,28 +1010,52 @@ addRecursion eBindings = do
     fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
       bodies <- for cds $ \case
         ConvertedDefinition{_convDefBody = Fun args body, ..} ->
-          pure $ FixBody _convDefName (_convDefArgs <++ args) Nothing Nothing body
+          pure $ RecDef { rdName = _convDefName
+                        , rdArgs = _convDefArgs <++ args
+                        , rdType = maybeForall _convDefArgs <$> _convDefType
+                        , rdBody = body }
         _ ->
-          convUnsupported "mutual recursion through non-lambda values"
+          convUnsupported "recursion through non-lambda values"
       
-      for cds $ \ConvertedDefinition{..} -> do
-        fixedBody <- view (edits.termination.at _convDefName) >>= \case
-          -- TODO: Support non-structural mutual recursion
-          --
-          -- When we do the preceding, we will probably need to check the
-          -- termination status for every name in the mutually recursive block
-          Just order -> case bodies of
-            body1  :| []                -> pure $ wfFix order body1
-            _body1 :| _body2 : _bodies' -> convUnsupported "non-structural mutual recursion"
-          Nothing -> pure . Fix $ case bodies of
-            body1 :| []              -> FixOne  body1
-            body1 :| body2 : bodies' -> FixMany body1 (body2 :| bodies') _convDefName
+      nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
+      
+      let getInfo = fmap $ rdName &&& rdType
+      
+      (fixFor, recInfos, extraDefs) <- case (nonstructural, bodies) of
+        (Just order, body1 :| []) ->
+          pure (const . wfFix order $ rdToFixBody body1, getInfo bodies, [])
         
-        pure $ ConvertedDefinition
-                 { _convDefName = _convDefName
-                 , _convDefArgs = commonArgs
-                 , _convDefType = maybeForall _convDefArgs <$> _convDefType
-                 , _convDefBody = fixedBody }
+        (Just _, _ :| _ : _) ->
+          convUnsupported "non-structural mutual recursion"
+        
+        (Nothing, body1 :| []) ->
+          pure (const . Fix . FixOne $ rdToFixBody body1, getInfo bodies, [])
+        
+        (Nothing, _ :| _ : _) -> do
+          mutRecInfo   <- mutualRecursionInlining bodies
+          let (recs', lets) = flip mapPartitionEithers cds $ \cd ->
+                case M.lookup (cd^.convDefName) mutRecInfo of
+                  Just (Standalone, _)  -> Right $ cd & convDefArgs %~ (commonArgs ++)
+                  Just (Mutual,     rd) -> Left rd
+                  Nothing               -> error "INTERNAL ERROR: lost track of mutually-recursive function"
+              recs = fromMaybe (error "INTERNAL ERROR: \
+                                      \all mutually-recursive functions in this group vanished!")
+                   $ nonEmpty recs'
+          
+          let fixFor = case recs of
+                body1 :| []              ->
+                  const . Fix . FixOne $ rdToFixBody body1
+                body1 :| body2 : bodies' ->
+                  Fix . FixMany (rdToFixBody body1) (rdToFixBody <$> (body2 :| bodies'))
+          
+          pure (fixFor, getInfo recs, lets)
+          
+      let recDefs = recInfos <&> \(name,mty) ->
+            ConvertedDefinition { _convDefName = name
+                                , _convDefArgs = commonArgs
+                                , _convDefType = mty
+                                , _convDefBody = fixFor name }
+      pure $ recDefs ++> extraDefs
 
 --------------------------------------------------------------------------------
 

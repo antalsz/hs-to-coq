@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, rewrites, obligations, renamedModules, inEdits, simpleClasses,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, inEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -79,8 +79,9 @@ data Edit = TypeSynonymTypeEdit      Ident Ident
           | RewriteEdit              Rewrite
           | CoinductiveEdit          Qualid
           | RenameModuleEdit         ModuleName ModuleName
-          | InEdit                   Qualid Edit
           | SimpleClassEdit          Qualid
+          | InlineMutualEdit         Qualid
+          | InEdit                   Qualid Edit
           deriving (Eq, Ord, Show)
 
 data HsNamespace = ExprNS | TypeNS
@@ -118,8 +119,9 @@ data Edits = Edits { _typeSynonymTypes       :: !(Map Ident Ident)
                    , _obligations            :: !(Map Qualid Tactics)
                    , _coinductiveTypes       :: !(Set Qualid)
                    , _renamedModules         :: !(Map ModuleName ModuleName)
-                   , _inEdits                :: !(Map Qualid Edits)
                    , _simpleClasses          :: !(Set Qualid)
+                   , _inlinedMutuals         :: !(Set Qualid)
+                   , _inEdits                :: !(Map Qualid Edits)
                    }
            deriving (Eq, Ord, Show)
 makeLenses ''Edits
@@ -137,12 +139,12 @@ useProgram name edits = or
 
 
 instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 trm1 rdf1 add1 skp1 smth1 smod1 imod1 axm1 axd1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1 coi1 rm1 ie1 sce1)
-       (Edits tst2 dta2 trm2 rdf2 add2 skp2 smth2 smod2 imod2 axm2 axd2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2 coi2 rm2 ie2 sce2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (imod1 <> imod2) (axm1 <> axm2) (axd1 <> axd2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2) (coi1 <> coi2) (rm1 <> rm2) (unionWith (<>) ie1 ie2) (sce1 <> sce2)
+  (<>) (Edits tst1 dta1 trm1 rdf1 add1 skp1 smth1 smod1 imod1 axm1 axd1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1 coi1 rm1 sce1 ims1 ie1)
+       (Edits tst2 dta2 trm2 rdf2 add2 skp2 smth2 smod2 imod2 axm2 axd2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2 coi2 rm2 sce2 ims2 ie2) =
+    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (imod1 <> imod2) (axm1 <> axm2) (axd1 <> axd2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2) (coi1 <> coi2) (rm1 <> rm2) (sce1 <> sce2) (ims1 <> ims2) (unionWith (<>) ie1 ie2)
 
 instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
+  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
   mappend = (<>)
 
 -- Module-local'
@@ -179,11 +181,12 @@ descDuplEdit = \case
   ObligationsEdit          what _       -> duplicateQ_for  "obligation kinds"                     what
   CoinductiveEdit          ty           -> duplicateQ_for  "coinductive data types"               ty
   RenameModuleEdit         m1 _         -> duplicate_for   "renamed module"                       (moduleNameString m1)
-  AddEdit                  _ _          -> error "Add edits are never duplicate"
-  RewriteEdit              _            -> error "Rewrites are never duplicate"
-  OrderEdit                _            -> error "Order edits are never duplicate"
-  InEdit                   _ _          -> error "In Edits are never duplicate"
+  AddEdit                  _ _          -> error "Add edits are never duplicates"
+  RewriteEdit              _            -> error "Rewrites are never duplicates"
+  OrderEdit                _            -> error "Order edits are never duplicates"
   SimpleClassEdit          cls          -> duplicateQ_for  "simple class requests"                cls
+  InlineMutualEdit         fun          -> duplicateQ_for  "inlined mutually recursive functions" fun
+  InEdit                   _ _          -> error "In Edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
                                     SPValue       -> "value"
@@ -215,8 +218,9 @@ addEdit e = case e of
   AddEdit                  mod def          -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
   OrderEdit                idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit              rewrite          -> return . (rewrites %~ (rewrite:))
-  InEdit                   qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
   SimpleClassEdit          cls              -> addFresh e simpleClasses                          cls          ()
+  InlineMutualEdit         fun              -> addFresh e inlinedMutuals                         fun          ()
+  InEdit                   qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
 
 
 defName :: CoqDefinition -> Qualid

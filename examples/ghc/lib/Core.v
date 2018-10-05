@@ -154,8 +154,11 @@ Inductive UnfoldingSource : Type
   |  InlineCompulsory : UnfoldingSource.
 
 Inductive UnfoldingGuidance : Type
-  := UnfWhen : BasicTypes.Arity -> bool -> bool -> UnfoldingGuidance
-  |  UnfIfGoodArgs : list nat -> nat -> nat -> UnfoldingGuidance
+  := UnfWhen (ug_arity : BasicTypes.Arity) (ug_unsat_ok : bool) (ug_boring_ok
+    : bool)
+   : UnfoldingGuidance
+  |  UnfIfGoodArgs (ug_args : list nat) (ug_size : nat) (ug_res : nat)
+   : UnfoldingGuidance
   |  UnfNever : UnfoldingGuidance.
 
 Inductive Unfolding : Type := Mk_Unfolding.
@@ -202,10 +205,12 @@ Inductive TickishPlacement : Type
   |  PlaceCostCentre : TickishPlacement.
 
 Inductive Tickish id : Type
-  := ProfNote : unit -> bool -> bool -> Tickish id
-  |  HpcTick : Module.Module -> nat -> Tickish id
-  |  Breakpoint : nat -> list id -> Tickish id
-  |  SourceNote : SrcLoc.RealSrcSpan -> GHC.Base.String -> Tickish id.
+  := ProfNote (profNoteCC : unit) (profNoteCount : bool) (profNoteScope : bool)
+   : Tickish id
+  |  HpcTick (tickModule : Module.Module) (tickId : nat) : Tickish id
+  |  Breakpoint (breakpointId : nat) (breakpointFVs : list id) : Tickish id
+  |  SourceNote (sourceSpan : SrcLoc.RealSrcSpan) (sourceName : GHC.Base.String)
+   : Tickish id.
 
 Definition TickBoxId :=
   nat%type.
@@ -278,9 +283,11 @@ Inductive LevityInfo : Type
   := NoLevityInfo : LevityInfo
   |  NeverLevityPolymorphic : LevityInfo.
 
-Inductive KillFlags : Type := Mk_KillFlags : bool -> bool -> bool -> KillFlags.
+Inductive KillFlags : Type
+  := Mk_KillFlags (kf_abs : bool) (kf_used_once : bool) (kf_called_once : bool)
+   : KillFlags.
 
-Inductive JointDmd s u : Type := JD : s -> u -> JointDmd s u.
+Inductive JointDmd s u : Type := JD (sd : s) (ud : u) : JointDmd s u.
 
 Inductive IsOrphan : Type
   := Mk_IsOrphan : IsOrphan
@@ -452,111 +459,92 @@ Inductive AlgTyConFlav : Type
   |  ClassTyCon : Class -> TyConRepName -> AlgTyConFlav
   |  DataFamInstTyCon : (list unit) -> TyCon -> list unit -> AlgTyConFlav
 with Class : Type
-  := Mk_Class
-   : TyCon ->
-     Name.Name ->
-     Unique.Unique -> list TyVar -> list (FunDep TyVar) -> ClassBody -> Class
+  := Mk_Class (classTyCon : TyCon) (className : Name.Name) (classKey
+    : Unique.Unique) (classTyVars : list TyVar) (classFunDeps
+    : list (FunDep TyVar)) (classBody : ClassBody)
+   : Class
 with ClassBody : Type
   := AbstractClass : ClassBody
-  |  ConcreteClass
-   : list unit ->
-     list Id -> list ClassATItem -> list ClassOpItem -> ClassMinimalDef -> ClassBody
+  |  ConcreteClass (classSCThetaStuff : list unit) (classSCSels : list Id)
+  (classATStuff : list ClassATItem) (classOpStuff : list ClassOpItem)
+  (classMinimalDefStuff : ClassMinimalDef)
+   : ClassBody
 with ClassATItem : Type
   := ATI : TyCon -> (option (unit * SrcLoc.SrcSpan)%type) -> ClassATItem
 with TyCon : Type
-  := FunTyCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder -> unit -> unit -> BasicTypes.Arity -> TyConRepName -> TyCon
-  |  AlgTyCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder ->
-     list TyVar ->
-     unit ->
-     unit ->
-     BasicTypes.Arity ->
-     list unit ->
-     option unit ->
-     bool ->
-     list unit -> AlgTyConRhs -> FieldLabel.FieldLabelEnv -> AlgTyConFlav -> TyCon
-  |  SynonymTyCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder ->
-     list TyVar ->
-     unit -> unit -> BasicTypes.Arity -> list unit -> unit -> bool -> bool -> TyCon
-  |  FamilyTyCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder ->
-     list TyVar ->
-     unit ->
-     unit ->
-     BasicTypes.Arity ->
-     option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon
-  |  PrimTyCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder ->
-     unit ->
-     unit -> BasicTypes.Arity -> list unit -> bool -> option TyConRepName -> TyCon
-  |  PromotedDataCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder ->
-     unit ->
-     unit ->
-     BasicTypes.Arity ->
-     list unit -> DataCon -> TyConRepName -> RuntimeRepInfo -> TyCon
-  |  TcTyCon
-   : Unique.Unique ->
-     Name.Name ->
-     list TyConBinder ->
-     list TyVar ->
-     unit ->
-     unit ->
-     BasicTypes.Arity -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon
+  := FunTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
+    : list TyConBinder) (tyConResKind : unit) (tyConKind : unit) (tyConArity
+    : BasicTypes.Arity) (tcRepName : TyConRepName)
+   : TyCon
+  |  AlgTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
+    : list TyConBinder) (tyConTyVars : list TyVar) (tyConResKind : unit) (tyConKind
+    : unit) (tyConArity : BasicTypes.Arity) (tcRoles : list unit) (tyConCType
+    : option unit) (algTcGadtSyntax : bool) (algTcStupidTheta : list unit)
+  (algTcRhs : AlgTyConRhs) (algTcFields : FieldLabel.FieldLabelEnv) (algTcParent
+    : AlgTyConFlav)
+   : TyCon
+  |  SynonymTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
+  (tyConBinders : list TyConBinder) (tyConTyVars : list TyVar) (tyConResKind
+    : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity) (tcRoles
+    : list unit) (synTcRhs : unit) (synIsTau : bool) (synIsFamFree : bool)
+   : TyCon
+  |  FamilyTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
+  (tyConBinders : list TyConBinder) (tyConTyVars : list TyVar) (tyConResKind
+    : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity) (famTcResVar
+    : option Name.Name) (famTcFlav : FamTyConFlav) (famTcParent : option Class)
+  (famTcInj : Injectivity)
+   : TyCon
+  |  PrimTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
+    : list TyConBinder) (tyConResKind : unit) (tyConKind : unit) (tyConArity
+    : BasicTypes.Arity) (tcRoles : list unit) (isUnlifted : bool) (primRepName
+    : option TyConRepName)
+   : TyCon
+  |  PromotedDataCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
+  (tyConBinders : list TyConBinder) (tyConResKind : unit) (tyConKind : unit)
+  (tyConArity : BasicTypes.Arity) (tcRoles : list unit) (dataCon : DataCon)
+  (tcRepName : TyConRepName) (promDcRepInfo : RuntimeRepInfo)
+   : TyCon
+  |  TcTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
+    : list TyConBinder) (tyConTyVars : list TyVar) (tyConResKind : unit) (tyConKind
+    : unit) (tyConArity : BasicTypes.Arity) (tcTyConScopedTyVars
+    : list (Name.Name * TyVar)%type) (tcTyConFlavour : TyConFlavour)
+   : TyCon
 with AlgTyConRhs : Type
   := AbstractTyCon : AlgTyConRhs
-  |  DataTyCon : list DataCon -> bool -> AlgTyConRhs
-  |  TupleTyCon : DataCon -> BasicTypes.TupleSort -> AlgTyConRhs
-  |  SumTyCon : list DataCon -> AlgTyConRhs
-  |  NewTyCon
-   : DataCon -> unit -> (list TyVar * unit)%type -> list unit -> AlgTyConRhs
+  |  DataTyCon (data_cons : list DataCon) (is_enum : bool) : AlgTyConRhs
+  |  TupleTyCon (data_con : DataCon) (tup_sort : BasicTypes.TupleSort)
+   : AlgTyConRhs
+  |  SumTyCon (data_cons : list DataCon) : AlgTyConRhs
+  |  NewTyCon (data_con : DataCon) (nt_rhs : unit) (nt_etad_rhs
+    : (list TyVar * unit)%type) (nt_co : list unit)
+   : AlgTyConRhs
 with DataCon : Type
-  := MkData
-   : Name.Name ->
-     Unique.Unique ->
-     BasicTypes.ConTag ->
-     bool ->
-     list TyVar ->
-     list TyVar ->
-     list TyVarBinder ->
-     list EqSpec ->
-     unit ->
-     unit ->
-     list unit ->
-     unit ->
-     list HsSrcBang ->
-     list FieldLabel.FieldLabel ->
-     Id ->
-     DataConRep ->
-     BasicTypes.Arity ->
-     BasicTypes.Arity -> TyCon -> unit -> bool -> TyCon -> DataCon
+  := MkData (dcName : Name.Name) (dcUnique : Unique.Unique) (dcTag
+    : BasicTypes.ConTag) (dcVanilla : bool) (dcUnivTyVars : list TyVar) (dcExTyVars
+    : list TyVar) (dcUserTyVarBinders : list TyVarBinder) (dcEqSpec : list EqSpec)
+  (dcOtherTheta : unit) (dcStupidTheta : unit) (dcOrigArgTys : list unit)
+  (dcOrigResTy : unit) (dcSrcBangs : list HsSrcBang) (dcFields
+    : list FieldLabel.FieldLabel) (dcWorkId : Id) (dcRep : DataConRep) (dcRepArity
+    : BasicTypes.Arity) (dcSourceArity : BasicTypes.Arity) (dcRepTyCon : TyCon)
+  (dcRepType : unit) (dcInfix : bool) (dcPromoted : TyCon)
+   : DataCon
 with DataConRep : Type
   := NoDataConRep : DataConRep
-  |  DCR
-   : Id ->
-     unit -> list unit -> list StrictnessMark -> list HsImplBang -> DataConRep
+  |  DCR (dcr_wrap_id : Id) (dcr_boxer : unit) (dcr_arg_tys : list unit)
+  (dcr_stricts : list StrictnessMark) (dcr_bangs : list HsImplBang)
+   : DataConRep
 with Var : Type
-  := Mk_TyVar : Name.Name -> BinNums.N -> unit -> Var
-  |  Mk_TcTyVar : Name.Name -> BinNums.N -> unit -> unit -> Var
-  |  Mk_Id
-   : Name.Name -> BinNums.N -> unit -> IdScope -> IdDetails -> IdInfo -> Var
+  := Mk_TyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
+   : Var
+  |  Mk_TcTyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
+  (tc_tv_details : unit)
+   : Var
+  |  Mk_Id (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
+  (idScope : IdScope) (id_details : IdDetails) (id_info : IdInfo)
+   : Var
 with IdDetails : Type
   := VanillaId : IdDetails
-  |  RecSelId : RecSelParent -> bool -> IdDetails
+  |  RecSelId (sel_tycon : RecSelParent) (sel_naughty : bool) : IdDetails
   |  DataConWorkId : DataCon -> IdDetails
   |  DataConWrapId : DataCon -> IdDetails
   |  ClassOpId : Class -> IdDetails
@@ -570,26 +558,19 @@ with RecSelParent : Type
   := RecSelData : TyCon -> RecSelParent
   |  RecSelPatSyn : PatSyn -> RecSelParent
 with PatSyn : Type
-  := MkPatSyn
-   : Name.Name ->
-     Unique.Unique ->
-     list unit ->
-     BasicTypes.Arity ->
-     bool ->
-     list FieldLabel.FieldLabel ->
-     list TyVarBinder ->
-     unit ->
-     list TyVarBinder ->
-     unit -> unit -> (Id * bool)%type -> option (Id * bool)%type -> PatSyn
+  := MkPatSyn (psName : Name.Name) (psUnique : Unique.Unique) (psArgs : list unit)
+  (psArity : BasicTypes.Arity) (psInfix : bool) (psFieldLabels
+    : list FieldLabel.FieldLabel) (psUnivTyVars : list TyVarBinder) (psReqTheta
+    : unit) (psExTyVars : list TyVarBinder) (psProvTheta : unit) (psResultTy
+    : unit) (psMatcher : (Id * bool)%type) (psBuilder : option (Id * bool)%type)
+   : PatSyn
 with IdInfo : Type
-  := Mk_IdInfo
-   : ArityInfo ->
-     RuleInfo ->
-     Unfolding ->
-     CafInfo ->
-     BasicTypes.OneShotInfo ->
-     BasicTypes.InlinePragma ->
-     BasicTypes.OccInfo -> StrictSig -> Demand -> ArityInfo -> LevityInfo -> IdInfo
+  := Mk_IdInfo (arityInfo : ArityInfo) (ruleInfo : RuleInfo) (unfoldingInfo
+    : Unfolding) (cafInfo : CafInfo) (oneShotInfo : BasicTypes.OneShotInfo)
+  (inlinePragInfo : BasicTypes.InlinePragma) (occInfo : BasicTypes.OccInfo)
+  (strictnessInfo : StrictSig) (demandInfo : Demand) (callArityInfo : ArityInfo)
+  (levityInfo : LevityInfo)
+   : IdInfo
 with RuleInfo : Type := Mk_RuleInfo : list CoreRuleInfo -> DVarSet -> RuleInfo
 with EqSpec : Type := Mk_EqSpec : TyVar -> unit -> EqSpec
 where "'TyVar'" := (GHC.Base.Synonym TyVar__raw Var%type)
@@ -835,24 +816,24 @@ Definition RuleFun :=
    InScopeEnv -> Id -> list CoreExpr -> option CoreExpr)%type.
 
 Inductive CoreRule : Type
-  := Rule
-   : BasicTypes.RuleName ->
-     BasicTypes.Activation ->
-     Name.Name ->
-     list (option Name.Name) ->
-     list CoreBndr ->
-     list CoreExpr ->
-     CoreExpr -> bool -> Module.Module -> IsOrphan -> bool -> CoreRule
-  |  BuiltinRule : BasicTypes.RuleName -> Name.Name -> nat -> RuleFun -> CoreRule.
+  := Rule (ru_name : BasicTypes.RuleName) (ru_act : BasicTypes.Activation) (ru_fn
+    : Name.Name) (ru_rough : list (option Name.Name)) (ru_bndrs : list CoreBndr)
+  (ru_args : list CoreExpr) (ru_rhs : CoreExpr) (ru_auto : bool) (ru_origin
+    : Module.Module) (ru_orphan : IsOrphan) (ru_local : bool)
+   : CoreRule
+  |  BuiltinRule (ru_name : BasicTypes.RuleName) (ru_fn : Name.Name) (ru_nargs
+    : nat) (ru_try : RuleFun)
+   : CoreRule.
 
 Definition RuleBase :=
   (NameEnv.NameEnv (list CoreRule))%type.
 
 Inductive RuleEnv : Type
-  := Mk_RuleEnv : RuleBase -> Module.ModuleSet -> RuleEnv.
+  := Mk_RuleEnv (re_base : RuleBase) (re_visible_orphs : Module.ModuleSet)
+   : RuleEnv.
 
 Inductive RnEnv2 : Type
-  := RV2 : VarEnv Var -> VarEnv Var -> InScopeSet -> RnEnv2.
+  := RV2 (envL : VarEnv Var) (envR : VarEnv Var) (in_scope : InScopeSet) : RnEnv2.
 
 Arguments TvBndr {_} {_} _ _.
 
@@ -934,7 +915,8 @@ Instance Default__UnfoldingSource : GHC.Err.Default UnfoldingSource :=
   GHC.Err.Build_Default _ InlineRhs.
 
 Instance Default__UnfoldingGuidance : GHC.Err.Default UnfoldingGuidance :=
-  GHC.Err.Build_Default _ UnfNever.
+  GHC.Err.Build_Default _ (UnfWhen GHC.Err.default GHC.Err.default
+                         GHC.Err.default).
 
 Instance Default__TypeShape : GHC.Err.Default TypeShape :=
   GHC.Err.Build_Default _ TsUnk.
@@ -968,6 +950,10 @@ Instance Default__RuntimeRepInfo : GHC.Err.Default RuntimeRepInfo :=
 
 Instance Default__LevityInfo : GHC.Err.Default LevityInfo :=
   GHC.Err.Build_Default _ NoLevityInfo.
+
+Instance Default__KillFlags : GHC.Err.Default KillFlags :=
+  GHC.Err.Build_Default _ (Mk_KillFlags GHC.Err.default GHC.Err.default
+                         GHC.Err.default).
 
 Instance Default__IsOrphan : GHC.Err.Default IsOrphan :=
   GHC.Err.Build_Default _ Mk_IsOrphan.
@@ -1012,6 +998,11 @@ Instance Default__TyConBndrVis : GHC.Err.Default TyConBndrVis :=
 
 Instance Default__ClassBody : GHC.Err.Default ClassBody :=
   GHC.Err.Build_Default _ AbstractClass.
+
+Instance Default__TyCon : GHC.Err.Default TyCon :=
+  GHC.Err.Build_Default _ (FunTyCon GHC.Err.default GHC.Err.default
+                         GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default
+                         GHC.Err.default).
 
 Instance Default__AlgTyConRhs : GHC.Err.Default AlgTyConRhs :=
   GHC.Err.Build_Default _ AbstractTyCon.

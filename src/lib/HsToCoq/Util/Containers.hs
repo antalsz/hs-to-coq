@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module HsToCoq.Util.Containers (
   setMapMaybe,
   setMapMaybeM,
@@ -5,7 +7,15 @@ module HsToCoq.Util.Containers (
   connectedComponents,
   stronglyConnCompNE, connectedComponentsNE,
   stronglyConnComp', connectedComponents',
+  transitiveClosure, transitiveClosureBy,
+  reachableFrom,
+  Reflexivity(..),
   ) where
+
+import Control.Arrow
+import HsToCoq.Util.Monad
+import Control.Monad.State
+import Data.Foldable
 
 import Data.List.NonEmpty (NonEmpty(..))
 
@@ -56,3 +66,22 @@ stronglyConnComp' = simple_sccs stronglyConnComp
 
 connectedComponents' :: Ord vertex => [(vertex, [vertex])] -> [NonEmpty vertex]
 connectedComponents' = simple_sccs connectedComponents
+
+data Reflexivity = Irreflexive | Reflexive deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+reachableFrom :: Ord a => Reflexivity -> Map a (Set a) -> a -> Set a
+reachableFrom refl adjacencies v0 = execState (go v0) initial where
+  go v = for_ (M.findWithDefault mempty v adjacencies) $ \v' ->
+           unlessM (gets (v' `elem`)) $ modify (S.insert v') *> go v'
+  
+  initial = case refl of
+    Irreflexive -> S.empty
+    Reflexive   -> S.singleton v0
+
+transitiveClosure :: Ord a => Reflexivity -> Map a (Set a) -> Map a (Set a)
+transitiveClosure refl adjacencies =
+  M.fromSet (reachableFrom refl adjacencies) $ M.keysSet adjacencies <> fold adjacencies
+
+transitiveClosureBy :: (Foldable f, Ord a) => Reflexivity -> (a -> Set a) -> f a -> Map a (Set a)
+transitiveClosureBy refl neighbors =
+  transitiveClosure refl . M.fromList . map (id &&& neighbors) . toList

@@ -29,6 +29,7 @@ Require Lists.List.
 Require NameSet.
 Require UniqSet.
 Require Unique.
+Require Util.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -56,8 +57,8 @@ Parameter freeVarsBind1 : Core.CoreBind ->
      DVarSet -> (CoreBindWithFVs * DVarSet)%type.
 
 (*
-NOTE (freeVars): if you try to use a termination edit for freeVars instead of 
-the rewrite of unzipAndMap in the edit file, we need to add a type
+NOTE (freeVars): if you try to use a termination edit for freeVars 
+you may need to add a type
 annotation to fv_alt for the freeVars function to type check. 
 The required annotation is 
    fv_alt : Alt CoreBndr -> (VarSet.DVarSet * CoreAltWithFVs)
@@ -171,7 +172,7 @@ Definition freeVars : Core.CoreExpr -> CoreExprWithFVs :=
                    fun '(pair (pair con args) rhs) =>
                      let rhs2 := go rhs in
                      pair (delBindersFV args (freeVarsOf rhs2)) (pair (pair con args) rhs2) in
-                 let 'pair alts_fvs_s alts2 := GHC.List.unzip (Lists.List.map fv_alt alts) in
+                 let 'pair alts_fvs_s alts2 := Util.mapAndUnzip fv_alt alts in
                  let alts_fvs := unionFVss alts_fvs_s in
                  let scrut2 := go scrut in
                  pair (unionFVs (unionFVs (delBinderFV bndr alts_fvs) (freeVarsOf scrut2))
@@ -422,4 +423,5 @@ Definition vectsFreeVars : list Core.CoreVect -> Core.VarSet :=
      FV.unionsFV FV.unitFV GHC.Base.fmap GHC.Base.map GHC.Base.op_z2218U__
      GHC.List.unzip GHC.List.zip Lists.List.map NameSet.NameSet NameSet.emptyNameSet
      NameSet.unionNameSet UniqSet.delOneFromUniqSet_Directly Unique.getUnique
+     Util.mapAndUnzip
 *)

@@ -13,6 +13,8 @@ HANDMOD = \
   ListSetOps \
   Digraph \
   PrelNames \
+  CSE_NestedRecursion
+    # Used by CSE
 #  CallArity \
 #  TysWiredIn \
 

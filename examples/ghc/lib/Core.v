@@ -4895,8 +4895,9 @@ Definition bothStr : StrDmd -> StrDmd -> StrDmd :=
            | SProd _, HyperStr => HyperStr
            | SProd s1, HeadStr => SProd s1
            | SProd s1, SProd s2 =>
-               if Util.equalLength s1 s2 then mkSProd (GHC.List.zipWith bothArgStr s1 s2) else
-                  HyperStr
+               if Util.equalLength s1 s2 : bool
+               then mkSProd (GHC.List.zipWith bothArgStr s1 s2) else
+               HyperStr
            | SProd _, SCall _ => HyperStr
            end.
 
@@ -5379,8 +5380,9 @@ Definition lubStr : StrDmd -> StrDmd -> StrDmd :=
            | SProd sx, HyperStr => SProd sx
            | SProd _, HeadStr => HeadStr
            | SProd s1, SProd s2 =>
-               if Util.equalLength s1 s2 then mkSProd (GHC.List.zipWith lubArgStr s1 s2) else
-                  HeadStr
+               if Util.equalLength s1 s2 : bool
+               then mkSProd (GHC.List.zipWith lubArgStr s1 s2) else
+               HeadStr
            | SProd _, SCall _ => HeadStr
            | HeadStr, _ => HeadStr
            end.
@@ -7098,6 +7100,87 @@ Definition isUsedOnce : Demand -> bool :=
 Definition useTop : ArgUse :=
   Mk_Use Many Used.
 
+Definition zap_usg : KillFlags -> UseDmd -> UseDmd :=
+  fix zap_usg arg_0__ arg_1__
+        := let zap_musg arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | kfs, Abs => if kf_abs kfs : bool then useTop else Abs
+             | kfs, Mk_Use c u =>
+                 if kf_used_once kfs : bool then Mk_Use Many (zap_usg kfs u) else
+                 Mk_Use c (zap_usg kfs u)
+             end in
+           match arg_0__, arg_1__ with
+           | kfs, UCall c u =>
+               if kf_called_once kfs : bool then UCall Many (zap_usg kfs u) else
+               UCall c (zap_usg kfs u)
+           | _, _ =>
+               match arg_0__, arg_1__ with
+               | kfs, UProd us => UProd (GHC.Base.map (zap_musg kfs) us)
+               | _, u => u
+               end
+           end.
+
+Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, Abs => if kf_abs kfs : bool then useTop else Abs
+    | kfs, Mk_Use c u =>
+        if kf_used_once kfs : bool then Mk_Use Many (zap_usg kfs u) else
+        Mk_Use c (zap_usg kfs u)
+    end.
+
+Definition kill_usage : KillFlags -> Demand -> Demand :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | kfs, JD s u => JD s (zap_musg kfs u)
+    end.
+
+Definition zapUsageDemand : Demand -> Demand :=
+  kill_usage (Mk_KillFlags true true true).
+
+Definition zapUsageInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+             callArityInfo_9__ levityInfo_10__ := info in
+          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
+                    (zapUsageDemand (demandInfo info)) callArityInfo_9__ levityInfo_10__).
+
+Definition zapUsedOnceDemand : Demand -> Demand :=
+  kill_usage (Mk_KillFlags false true false).
+
+Definition zapUsedOnceSig : StrictSig -> StrictSig :=
+  fun '(Mk_StrictSig (Mk_DmdType env ds r)) =>
+    Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
+
+Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
+  fun info =>
+    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+             callArityInfo_9__ levityInfo_10__ := info in
+          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ (zapUsedOnceSig (strictnessInfo
+                                                                                    info)) (zapUsedOnceDemand
+                     (demandInfo info)) callArityInfo_9__ levityInfo_10__).
+
+Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
+  fun dflags dmd =>
+    match killFlags dflags with
+    | Some kfs => kill_usage kfs dmd
+    | _ => dmd
+    end.
+
+Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
+        match killFlags dflags with
+        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
+        | _ => sig
+        end
+    end.
+
 Definition topDmd : Demand :=
   JD Lazy useTop.
 
@@ -7807,94 +7890,13 @@ Definition mkClassTyCon
     mkAlgTyCon name binders tt roles None nil rhs (ClassTyCon clas tc_rep_name)
     false.
 
-Definition zap_usg : KillFlags -> UseDmd -> UseDmd :=
-  fix zap_usg arg_0__ arg_1__
-        := let zap_musg arg_0__ arg_1__ :=
-             match arg_0__, arg_1__ with
-             | kfs, Abs => if kf_abs kfs then useTop else Abs
-             | kfs, Mk_Use c u =>
-                 if kf_used_once kfs then Mk_Use Many (zap_usg kfs u) else Mk_Use c (zap_usg kfs
-                                                                                             u)
-             end in
-           match arg_0__, arg_1__ with
-           | kfs, UCall c u =>
-               if kf_called_once kfs then UCall Many (zap_usg kfs u) else UCall c (zap_usg kfs
-                                                                                           u)
-           | _, _ =>
-               match arg_0__, arg_1__ with
-               | kfs, UProd us => UProd (GHC.Base.map (zap_musg kfs) us)
-               | _, u => u
-               end
-           end.
-
-Definition zap_musg : KillFlags -> ArgUse -> ArgUse :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | kfs, Abs => if kf_abs kfs then useTop else Abs
-    | kfs, Mk_Use c u =>
-        if kf_used_once kfs then Mk_Use Many (zap_usg kfs u) else Mk_Use c (zap_usg kfs
-                                                                                    u)
-    end.
-
-Definition kill_usage : KillFlags -> Demand -> Demand :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | kfs, JD s u => JD s (zap_musg kfs u)
-    end.
-
-Definition zapUsageDemand : Demand -> Demand :=
-  kill_usage (Mk_KillFlags true true true).
-
-Definition zapUsageInfo : IdInfo -> option IdInfo :=
-  fun info =>
-    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-             callArityInfo_9__ levityInfo_10__ := info in
-          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__
-                    (zapUsageDemand (demandInfo info)) callArityInfo_9__ levityInfo_10__).
-
-Definition zapUsedOnceDemand : Demand -> Demand :=
-  kill_usage (Mk_KillFlags false true false).
-
-Definition zapUsedOnceSig : StrictSig -> StrictSig :=
-  fun '(Mk_StrictSig (Mk_DmdType env ds r)) =>
-    Mk_StrictSig (Mk_DmdType env (GHC.Base.map zapUsedOnceDemand ds) r).
-
-Definition zapUsedOnceInfo : IdInfo -> option IdInfo :=
-  fun info =>
-    Some (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-             callArityInfo_9__ levityInfo_10__ := info in
-          Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-                    oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ (zapUsedOnceSig (strictnessInfo
-                                                                                    info)) (zapUsedOnceDemand
-                     (demandInfo info)) callArityInfo_9__ levityInfo_10__).
-
-Definition killUsageDemand : DynFlags.DynFlags -> Demand -> Demand :=
-  fun dflags dmd =>
-    match killFlags dflags with
-    | Some kfs => kill_usage kfs dmd
-    | _ => dmd
-    end.
-
-Definition killUsageSig : DynFlags.DynFlags -> StrictSig -> StrictSig :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | dflags, (Mk_StrictSig (Mk_DmdType env ds r) as sig) =>
-        match killFlags dflags with
-        | Some kfs => Mk_StrictSig (Mk_DmdType env (GHC.Base.map (kill_usage kfs) ds) r)
-        | _ => sig
-        end
-    end.
-
 (* External variables:
      Alt AnnAlt AnnExpr Arg ArgStr ArgUse Bool.Sumbool.sumbool_of_bool BootUnfolding
      ClassOpItem CoreRuleInfo DVarSet Eq Gt Id Lt NoUnfolding None OtherCon Some
      TyConBinder TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison
-     cons deAnnotate' deTagExpr else false getCoreRule getCoreRuleInfo getUnfolding
-     getUnfoldingInfo if list lubArgUse nat negb nil op_zt__ option orb pair
-     size_AnnExpr' snd then tickishCounts true tt unit BasicTypes.Activation
+     cons deAnnotate' deTagExpr false getCoreRule getCoreRuleInfo getUnfolding
+     getUnfoldingInfo list lubArgUse nat negb nil op_zt__ option orb pair
+     size_AnnExpr' snd tickishCounts true tt unit BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
      BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity

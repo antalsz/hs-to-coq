@@ -12,13 +12,16 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Zip.
 Require Coq.Program.Basics.
 Require Data.Foldable.
 Require Data.Functor.Classes.
 Require Data.SemigroupInternal.
 Require Data.Traversable.
+Require Data.Tuple.
 Require GHC.Base.
 Require GHC.Num.
+Require GHC.Tuple.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -411,8 +414,43 @@ Program Instance Monad__Product {f} {g} `{GHC.Base.Monad f} `{GHC.Base.Monad g}
 
 (* Skipping instance MonadFix__Product of class MonadFix *)
 
-(* Translating `instance MonadZip__Product' failed: OOPS! Cannot find
-   information for class Qualified "Control.Monad.Zip" "MonadZip" unsupported *)
+Local Definition MonadZip__Product_mzipWith {inst_f} {inst_g}
+  `{Control.Monad.Zip.MonadZip inst_f} `{Control.Monad.Zip.MonadZip inst_g}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (Product inst_f inst_g) a ->
+     (Product inst_f inst_g) b -> (Product inst_f inst_g) c :=
+  fun {a} {b} {c} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, Pair x1 y1, Pair x2 y2 =>
+          Pair (Control.Monad.Zip.mzipWith f x1 x2) (Control.Monad.Zip.mzipWith f y1 y2)
+      end.
+
+Local Definition MonadZip__Product_mzip {inst_f} {inst_g}
+  `{Control.Monad.Zip.MonadZip inst_f} `{Control.Monad.Zip.MonadZip inst_g}
+   : forall {a} {b},
+     (Product inst_f inst_g) a ->
+     (Product inst_f inst_g) b -> (Product inst_f inst_g) (a * b)%type :=
+  fun {a} {b} => MonadZip__Product_mzipWith GHC.Tuple.pair2.
+
+Local Definition MonadZip__Product_munzip {inst_f} {inst_g}
+  `{Control.Monad.Zip.MonadZip inst_f} `{Control.Monad.Zip.MonadZip inst_g}
+   : forall {a} {b},
+     (Product inst_f inst_g) (a * b)%type ->
+     ((Product inst_f inst_g) a * (Product inst_f inst_g) b)%type :=
+  fun {a} {b} =>
+    fun mab =>
+      pair (GHC.Base.liftM Data.Tuple.fst mab) (GHC.Base.liftM Data.Tuple.snd mab).
+
+Program Instance MonadZip__Product {f} {g} `{Control.Monad.Zip.MonadZip f}
+  `{Control.Monad.Zip.MonadZip g}
+   : Control.Monad.Zip.MonadZip (Product f g) :=
+  fun _ k =>
+    k {| Control.Monad.Zip.munzip__ := fun {a} {b} => MonadZip__Product_munzip ;
+         Control.Monad.Zip.mzip__ := fun {a} {b} => MonadZip__Product_mzip ;
+         Control.Monad.Zip.mzipWith__ := fun {a} {b} {c} =>
+           MonadZip__Product_mzipWith |}.
 
 (* Skipping instance Generic1__Product__5 of class Generic1 *)
 
@@ -421,7 +459,9 @@ Program Instance Monad__Product {f} {g} `{GHC.Base.Monad f} `{GHC.Base.Monad g}
 (* Skipping instance Data__Product of class Data *)
 
 (* External variables:
-     Gt Lt Type andb bool comparison false list negb true Coq.Program.Basics.compose
+     Gt Lt Type andb bool comparison false list negb op_zt__ pair true
+     Control.Monad.Zip.MonadZip Control.Monad.Zip.munzip__ Control.Monad.Zip.mzipWith
+     Control.Monad.Zip.mzipWith__ Control.Monad.Zip.mzip__ Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
      Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
      Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
@@ -436,15 +476,16 @@ Program Instance Monad__Product {f} {g} `{GHC.Base.Monad f} `{GHC.Base.Monad g}
      Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
      Data.Traversable.Traversable Data.Traversable.mapM__
      Data.Traversable.sequenceA__ Data.Traversable.sequence__
-     Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
-     GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2 GHC.Base.liftA2__ GHC.Base.mappend
-     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
-     GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__ GHC.Base.op_zgzgze____
-     GHC.Base.op_zl____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze____
-     GHC.Base.op_zlztzg__ GHC.Base.op_zlztzg____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
-     GHC.Base.return___ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
+     Data.Traversable.traverse Data.Traversable.traverse__ Data.Tuple.fst
+     Data.Tuple.snd GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.Monoid GHC.Base.Ord GHC.Base.build' GHC.Base.compare__ GHC.Base.const
+     GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2
+     GHC.Base.liftA2__ GHC.Base.liftM GHC.Base.mappend GHC.Base.max__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg____
+     GHC.Base.op_zgze____ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zgzgze____ GHC.Base.op_zl____ GHC.Base.op_zlzd__
+     GHC.Base.op_zlzd____ GHC.Base.op_zlze____ GHC.Base.op_zlztzg__
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return___
+     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Tuple.pair2
 *)

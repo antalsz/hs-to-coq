@@ -580,8 +580,6 @@ Local Definition Monad__option_op_zgzgze__
       | None, _ => None
       end.
 
-(* Skipping instance Monad__NonEmpty *)
-
 Local Definition Monad__list_op_zgzgze__
    : forall {a} {b}, list a -> (a -> list b) -> list b :=
   fun {a} {b} =>
@@ -750,7 +748,8 @@ Local Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
 
 (* Skipping instance Semigroup__IO *)
 
-(* Skipping instance Applicative__NonEmpty *)
+Local Definition Applicative__NonEmpty_pure : forall {a}, a -> NonEmpty a :=
+  fun {a} => fun a => NEcons a nil.
 
 (* Skipping instance Alternative__option of class Alternative *)
 
@@ -1235,6 +1234,55 @@ Program Instance Monad__arrow {r} : Monad (GHC.Prim.arrow r) :=
     k {| op_zgzg____ := fun {a} {b} => Monad__arrow_op_zgzg__ ;
          op_zgzgze____ := fun {a} {b} => Monad__arrow_op_zgzgze__ ;
          return___ := fun {a} => Monad__arrow_return_ |}.
+
+Local Definition Monad__NonEmpty_op_zgzgze__
+   : forall {a} {b}, NonEmpty a -> (a -> NonEmpty b) -> NonEmpty b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | NEcons a as_, f =>
+          let toList := fun '(NEcons c cs) => cons c cs in
+          let bs' := as_ >>= (toList ∘ f) in
+          let 'NEcons b bs := f a in
+          NEcons b (Coq.Init.Datatypes.app bs bs')
+      end.
+
+Local Definition Applicative__NonEmpty_liftA2 {a} {b} {c}
+   : (a -> b -> c) -> NonEmpty a -> NonEmpty b -> NonEmpty c :=
+  fun f m1 m2 =>
+    Monad__NonEmpty_op_zgzgze__ m1 (fun x1 =>
+                                   Monad__NonEmpty_op_zgzgze__ m2 (fun x2 =>
+                                                                  Applicative__NonEmpty_pure (f x1 x2))).
+
+Local Definition Applicative__NonEmpty_op_zlztzg__ {a} {b}
+   : NonEmpty (a -> b) -> NonEmpty a -> NonEmpty b :=
+  fun m1 m2 =>
+    Monad__NonEmpty_op_zgzgze__ m1 (fun x1 =>
+                                   Monad__NonEmpty_op_zgzgze__ m2 (fun x2 => Applicative__NonEmpty_pure (x1 x2))).
+
+Local Definition Applicative__NonEmpty_op_ztzg__
+   : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
+  fun {a} {b} => fun a1 a2 => Applicative__NonEmpty_op_zlztzg__ (id <$ a1) a2.
+
+Program Instance Applicative__NonEmpty : Applicative NonEmpty :=
+  fun _ k =>
+    k {| liftA2__ := fun {a} {b} {c} => Applicative__NonEmpty_liftA2 ;
+         op_zlztzg____ := fun {a} {b} => Applicative__NonEmpty_op_zlztzg__ ;
+         op_ztzg____ := fun {a} {b} => Applicative__NonEmpty_op_ztzg__ ;
+         pure__ := fun {a} => Applicative__NonEmpty_pure |}.
+
+Local Definition Monad__NonEmpty_return_ : forall {a}, a -> NonEmpty a :=
+  fun {a} => pure.
+
+Local Definition Monad__NonEmpty_op_zgzg__
+   : forall {a} {b}, NonEmpty a -> NonEmpty b -> NonEmpty b :=
+  fun {a} {b} => fun m k => Monad__NonEmpty_op_zgzgze__ m (fun arg_0__ => k).
+
+Program Instance Monad__NonEmpty : Monad NonEmpty :=
+  fun _ k =>
+    k {| op_zgzg____ := fun {a} {b} => Monad__NonEmpty_op_zgzg__ ;
+         op_zgzgze____ := fun {a} {b} => Monad__NonEmpty_op_zgzgze__ ;
+         return___ := fun {a} => Monad__NonEmpty_return_ |}.
 
 Definition op_zd__ {a} {b} : (a -> b) -> a -> b :=
   fun f x => f x.

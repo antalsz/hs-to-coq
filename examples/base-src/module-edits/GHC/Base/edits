@@ -43,9 +43,20 @@ skip GHC.Base.Monoid__op_zt____op_zt____op_zt____op_zt____87
 
 # (<) on NonEmpty calls Ord__NonEmpty_compare on the list component
 skip GHC.Base.Ord__NonEmpty
-# Applicative on NonEmpty defined in terms of ap, which needs Monad NonEmpty
-skip GHC.Base.Applicative__NonEmpty
-skip GHC.Base.Monad__NonEmpty
+
+# Applicative on NonEmpty defined in terms of ap and liftM2, 
+# which needs Monad NonEmpty
+redefine Local Definition GHC.Base.Applicative__NonEmpty_op_zlztzg__ {a} {b} : 
+  (GHC.Base.NonEmpty (a -> b)) -> ((GHC.Base.NonEmpty a) -> (GHC.Base.NonEmpty b)) :=
+  fun m1 m2 => GHC.Base.Monad__NonEmpty_op_zgzgze__ m1 
+    (fun x1 => GHC.Base.Monad__NonEmpty_op_zgzgze__ m2 
+    (fun x2 => GHC.Base.Applicative__NonEmpty_pure (x1 x2))).
+redefine Local Definition GHC.Base.Applicative__NonEmpty_liftA2 {a} {b} {c} :
+     (a -> (b -> c)) -> 
+	  ((GHC.Base.NonEmpty a) -> ((GHC.Base.NonEmpty b) -> (GHC.Base.NonEmpty c))) :=
+  fun f m1 m2 => GHC.Base.Monad__NonEmpty_op_zgzgze__ m1
+      (fun x1 => GHC.Base.Monad__NonEmpty_op_zgzgze__ m2 
+      (fun x2 => GHC.Base.Applicative__NonEmpty_pure (f x1 x2))).
 
 # no unboxed types, redefined in midamble
 skip GHC.Base.unsafeChr

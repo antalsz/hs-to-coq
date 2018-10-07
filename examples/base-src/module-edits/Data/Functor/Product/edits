@@ -7,4 +7,3 @@ order Data.Monoid.Eq___Product Data.Monoid.Ord__Product
 
 order Unpeel_Product Data.Monoid.Functor__Product Data.Monoid.Applicative__Product Data.Monoid.Monad__Product
 
-

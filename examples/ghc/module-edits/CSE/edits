@@ -9,30 +9,12 @@ rewrite forall s c, CoreSubst.substTy s c = tt
 skip CoreSubst.substCo
 rewrite forall s c, CoreSubst.substCo s c = tt
 
-in CSE.cseExpr rename value CSE.cseBind   = cseBind_rec
-in CSE.cseExpr rename value CSE.cse_bind  = cse_bind_rec
-in CSE.cseExpr rename value CSE.tryForCSE = tryForCSE_rec
-in CSE.cseExpr rename value CSE.cseCase   = cseCase_rec
+inline mutual CSE.cse_bind
+inline mutual CSE.tryForCSE
+inline mutual CSE.cseCase
 
-in CSE.cseBind rename value CSE.cseExpr   = cseExpr_rec
-in CSE.cseBind rename value CSE.cse_bind  = cse_bind_rec
-in CSE.cseBind rename value CSE.tryForCSE = tryForCSE_rec
-in CSE.cseBind rename value CSE.cseCase   = cseCase_rec
-
-in CSE.cse_bind rename value CSE.cseExpr   = cseExpr_rec
-in CSE.cse_bind rename value CSE.cseBind   = cseBind_rec
-in CSE.cse_bind rename value CSE.tryForCSE = tryForCSE_rec
-in CSE.cse_bind rename value CSE.cseCase   = cseCase_rec
-
-in CSE.tryForCSE rename value CSE.cseExpr   = cseExpr_rec
-in CSE.tryForCSE rename value CSE.cseBind   = cseBind_rec
-in CSE.tryForCSE rename value CSE.cse_bind  = cse_bind_rec
-in CSE.tryForCSE rename value CSE.cseCase   = cseCase_rec
-
-in CSE.cseCase rename value CSE.cseExpr   = cseExpr_rec
-in CSE.cseCase rename value CSE.cseBind   = cseBind_rec
-in CSE.cseCase rename value CSE.cse_bind  = cse_bind_rec
-in CSE.cseCase rename value CSE.tryForCSE = tryForCSE_rec
+# Justified by CSE_NestedRecursion.zipMapAccumL_is_mapAccumL_zip
+in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.List.zip xs1 xs2) = CSE_NestedRecursion.zipMapAccumL f s xs1 xs2
 
 # OK?
 rewrite forall x, Core.tyConAppArgs x = nil

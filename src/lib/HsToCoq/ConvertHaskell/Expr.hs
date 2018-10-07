@@ -17,7 +17,6 @@ import Data.Bifunctor
 import Data.Foldable
 import HsToCoq.Util.Foldable
 import Data.Traversable
-import HsToCoq.Util.Traversable
 import Data.Bitraversable
 import HsToCoq.Util.Function
 import Data.Maybe
@@ -980,14 +979,20 @@ mutualRecursionInlining mutGroup = do
   (lets, recs) <- splitInlinesWith inlines mutGroup
                     & maybe (convUnsupported "inlining every function in a mutually-recursive group") pure
   
-  let rdFVs     = getFreeVars . rdBody
-      inlineRec = rdToLet . (lets M.!)
+  let rdFVs   = getFreeVars . rdBody
+      letUses = rdFVs <$> lets
+      letDeps = transitiveClosure Reflexive letUses
+
+  orderedLets <- for (topoSortEnvironmentWith id letUses) $ \case
+    solo :| []  -> pure solo
+    _    :| _:_ -> convUnsupported "recursion amongst inlined mutually-recursive functions"
   
-  recMap <- forFold recs $ \rd -> do
-    inlinedDeps <- for (topoSortEnvironmentWith rdFVs $ M.restrictKeys lets (rdFVs rd)) $ \case
-                     solo :| []  -> pure solo
-                     _    :| _:_ -> convUnsupported "recursion amongst inlined mutually-recursive functions"
-    pure $ M.singleton (rdName rd) (Mutual, rd{rdBody = foldr inlineRec (rdBody rd) inlinedDeps})
+  let recMap = flip foldMap recs $ \rd ->
+        let neededLets  = foldMap (M.findWithDefault mempty ?? letDeps) $ rdFVs rd
+            inlinedDeps = filter (`elem` neededLets) orderedLets
+        in M.singleton (rdName rd)
+                       (Mutual, rd{rdBody = foldr (rdToLet . (lets M.!)) (rdBody rd) inlinedDeps})
+  
   pure $ ((Standalone,) <$> lets) <> recMap
 
 addRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
@@ -1032,7 +1037,7 @@ addRecursion eBindings = do
           pure (const . Fix . FixOne $ rdToFixBody body1, getInfo bodies, [])
         
         (Nothing, _ :| _ : _) -> do
-          mutRecInfo   <- mutualRecursionInlining bodies
+          mutRecInfo <- mutualRecursionInlining bodies
           let (recs', lets) = flip mapPartitionEithers cds $ \cd ->
                 case M.lookup (cd^.convDefName) mutRecInfo of
                   Just (Standalone, _)  -> Right $ cd & convDefArgs %~ (commonArgs ++)

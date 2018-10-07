@@ -121,7 +121,13 @@ Definition tidyTickish
 Definition tidyBind
    : Core.TidyEnv -> Core.CoreBind -> (Core.TidyEnv * Core.CoreBind)%type :=
   fix tidyExpr arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
+        := let tidyAlt arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | env, pair (pair con vs) rhs =>
+                 tidyBndrs env vs =:
+                 (fun '(pair env' vs) => pair (pair con vs) (tidyExpr env' rhs))
+             end in
+           match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
            | env, Core.Type_ ty => Core.Type_ (tt)
            | env, Core.Coercion co => Core.Coercion (tt)
@@ -134,11 +140,7 @@ Definition tidyBind
            | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map ((fun env x =>
-                                                                      let 'pair (pair con vs) rhs := x in
-                                                                      let 'pair env' vs := tidyBndrs env vs in
-                                                                      pair (pair con vs) (tidyExpr env' rhs)) env')
-                                                     alts))
+                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind arg_0__ arg_1__
@@ -155,7 +157,13 @@ Definition tidyBind
 
 Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
   fix tidyExpr arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
+        := let tidyAlt arg_0__ arg_1__ :=
+             match arg_0__, arg_1__ with
+             | env, pair (pair con vs) rhs =>
+                 tidyBndrs env vs =:
+                 (fun '(pair env' vs) => pair (pair con vs) (tidyExpr env' rhs))
+             end in
+           match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
            | env, Core.Type_ ty => Core.Type_ (tt)
            | env, Core.Coercion co => Core.Coercion (tt)
@@ -168,11 +176,7 @@ Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
            | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map ((fun env x =>
-                                                                      let 'pair (pair con vs) rhs := x in
-                                                                      let 'pair env' vs := tidyBndrs env vs in
-                                                                      pair (pair con vs) (tidyExpr env' rhs)) env')
-                                                     alts))
+                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind arg_0__ arg_1__

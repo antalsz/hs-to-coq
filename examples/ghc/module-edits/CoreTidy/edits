@@ -8,18 +8,17 @@ skip CoreTidy.tidyRule
 skip CoreTidy.tidyRules
 
 #
-# mutual recursion (!!!)
+# mutual recursion 
 #
-# HACK around lack of mutual recursion -- inline the definition of CoreTidy.tidyAlt where it is used
+# inline the definition of CoreTidy.tidyAlt where it is used
 # so that Coq can tell that this is a structural recursion
 #
-in CoreTidy.tidyExpr rewrite forall, CoreTidy.tidyAlt = fun env x => match x with | (pair (pair con vs) rhs) => match (tidyBndrs env vs) with | (pair env' vs) => pair (pair con vs) (tidyExpr env' rhs) end end
-
+inline mutual CoreTidy.tidyAlt
 
 # 
 # make tidyBind/tidyExpr more structural by fusing maps
 #
-in CoreTidy.tidyBind rewrite forall env' prs, GHC.Base.map (CoreTidy.tidyExpr env') (GHC.Base.map Data.Tuple.snd prs) = GHC.Base.map (fun x => CoreTidy.tidyExpr env' (snd x)) prs
+in CoreTidy.tidyBind rewrite forall rec prs, GHC.Base.map rec (GHC.Base.map Data.Tuple.snd prs) = GHC.Base.map (fun x => rec (snd x)) prs
 
 #
 # crazy knot tying: this is ok because tidyLetBndr doesn't actually use its first argument.

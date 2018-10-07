@@ -204,8 +204,8 @@ Require Import Coq.Strings.String.
 Require Import Coq.Strings.Ascii.
 
 Extract Inductive string => "Prelude.String" ["[]" "(:)"].
-Extract Inductive ascii  => "Prelude.Char" ["HString.asciiToChar"]
-  "HString.foldChar".
+Extract Inductive ascii  => "Prelude.Char" ["ExtractedString.asciiToChar"]
+  "ExtractedString.foldChar".
 
 Extract Inlined Constant ascii_of_nat => "Data.Char.chr".
 Extract Inlined Constant nat_of_ascii => "Data.Char.ord".

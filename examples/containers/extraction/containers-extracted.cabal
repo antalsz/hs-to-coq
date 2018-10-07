@@ -56,7 +56,6 @@ library
   exposed-modules: Num
   exposed-modules: PeanoNat
   -- exposed-modules: Plus
-  exposed-modules: Popcount
   exposed-modules: Prim
   exposed-modules: PtrEquality
   exposed-modules: QArith_base

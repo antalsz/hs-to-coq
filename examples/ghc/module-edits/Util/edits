@@ -118,3 +118,18 @@ skip Util.sharedGlobalM
 
 ## needs tail
 skip Util.splitLongestPrefix
+
+
+redefine Definition Util.mapAndUnzip {a} {b} {c}
+           (f : a -> (b * c)) : ((list a) -> ((list b) * (list c))) :=
+  fix mapAndUnzip y
+    := match y with
+       | nil => pair nil nil
+       | cons x xs =>
+         match mapAndUnzip xs with    
+         | pair rs1 rs2 => match f x with
+                          | pair r1 r2 =>
+                            pair (cons r1 rs1) (cons r2 rs2)
+                          end
+         end
+       end.

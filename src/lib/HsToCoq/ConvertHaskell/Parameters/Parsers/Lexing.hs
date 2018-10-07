@@ -5,7 +5,7 @@
 module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- * Lexing and tokens
   Token(..), tokenDescription,
-  token, token', tokens,
+  token, token',
   -- * Character categories
   isHSpace, isVSpace, isDigit, isWordInit, isWord, isOperator, isOpen, isClose,
   -- * Component parsers
@@ -23,7 +23,6 @@ import Prelude hiding (Num())
 
 import Data.Foldable
 import Data.Bifunctor (second)
-import Data.Monoid
 import HsToCoq.Util.Foldable
 import HsToCoq.Util.Functor
 import Control.Applicative
@@ -169,8 +168,3 @@ token' = asum $
 
 token :: MonadNewlinesParse m => m Token
 token = untilJustM token'
-
-tokens :: MonadNewlinesParse m => m [Token]
-tokens = do
-  tok <- token
-  (tok :) <$> if tok == TokEOF then pure [] else tokens

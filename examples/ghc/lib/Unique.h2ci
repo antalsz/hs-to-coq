@@ -1,0 +1,14 @@
+superclassCount:
+  Unique.Uniquable: '0'
+classTypes:
+  Unique.Uniquable: fromList []
+constructors:
+  Unique.Unique: ! '[Qualified "Unique" "MkUnique"]'
+constructorFields:
+  Unique.MkUnique: NonRecordFields 1
+classDefns:
+  Unique.Uniquable: ClassDefinition (Qualified "Unique" "Uniquable") [Inferred Explicit
+    (Ident (Bare "a"))] Nothing [(Qualified "Unique" "getUnique",Arrow (Qualid (Bare
+    "a")) (Qualid (Qualified "Unique" "Unique")))]
+constructorTypes:
+  Unique.MkUnique: Qualified "Unique" "Unique"

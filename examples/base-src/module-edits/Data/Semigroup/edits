@@ -1,33 +1,33 @@
 rename value Data.Semigroup.option = Data.Semigroup.destruct_option
 
-## all instances in this file for stimes are partial
-skip method Data.Semigroup.Semigroup stimes
-## Default method refers to other methods. Just define in midamble.
-skip method Data.Semigroup.Semigroup sconcat
+add Data.Semigroup Instance Unpeel_Option a : GHC.Prim.Unpeel (Option a) (option a) :=
+      GHC.Prim.Build_Unpeel _ _ getOption Mk_Option.
+add Data.Semigroup Instance Unpeel_WrappedMonoid a : GHC.Prim.Unpeel (WrappedMonoid a) a :=
+      GHC.Prim.Build_Unpeel _ _ unwrapMonoid WrapMonoid.
+add Data.Semigroup Instance Unpeel_Last a : GHC.Prim.Unpeel (Last a) a :=
+      GHC.Prim.Build_Unpeel _ _ getLast Mk_Last.
+add Data.Semigroup Instance Unpeel_First a : GHC.Prim.Unpeel (First a) a :=
+      GHC.Prim.Build_Unpeel _ _ getFirst Mk_First.
+add Data.Semigroup Instance Unpeel_Max a : GHC.Prim.Unpeel (Max a) a :=
+      GHC.Prim.Build_Unpeel _ _ getMax Mk_Max.
+add Data.Semigroup Instance Unpeel_Min a : GHC.Prim.Unpeel (Min a) a :=
+      GHC.Prim.Build_Unpeel _ _ getMin Mk_Min.
 
-# needs stimes
-skip Data.Semigroup.mtimesDefault 
 
 # partial (and type inference can't handle it, and termination is tricky)
 skip Data.Semigroup.stimesMonoid
 
 # needs stimesMonoid, Alternative
-skip Data.Semigroup.Semigroup__Alt 
+skip Data.Semigroup.Semigroup__Alt
+skip Data.Semigroup.MonadPlus__Option
 
 # looping
 skip Data.Semigroup.cycle1
 
 skip Data.Semigroup.stimesIdempotent
-skip Data.Semigroup.stimesIdempotentMonoid 
+skip Data.Semigroup.stimesIdempotentMonoid
 
-
-
-## Cannot make instances for two different types with the same name
-## in the same module. (We don't mangle enough)
-## not sure why we can skip one of the two instances with each name
-## these are defined in the midamble
-skip Data.Semigroup.Semigroup__First
-skip Data.Semigroup.Semigroup__Last
+skip Data.Semigroup.mtimesDefault
 
 # Picks wrong methods in methods
 skip Data.Semigroup.Ord__Arg
@@ -53,35 +53,35 @@ skip Data.Semigroup.Semigroup__op_zt__
 
 # https://github.com/antalsz/hs-to-coq/issues/51
 # doing these by hand
-redefine Local Definition Data.Semigroup.Semigroup__Endo_op_zlzg__ {a} : 
+redefine Local Definition Data.Semigroup.Semigroup__Endo_op_zlzlzgzg__ {a} : 
 			(Data.Monoid.Endo a) -> ((Data.Monoid.Endo a) -> (Data.Monoid.Endo a)) :=
   GHC.Prim.coerce (@GHC.Base.op_z2218U__ a a a).
-redefine Local Definition Data.Semigroup.Semigroup__Sum_op_zlzg__ {inst_a} `{_: GHC.Num.Num inst_a}
+redefine Local Definition Data.Semigroup.Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{_: GHC.Num.Num inst_a}
     : (Data.Monoid.Sum inst_a) -> ((Data.Monoid.Sum inst_a) -> ((Data.Monoid.Sum
       inst_a))) :=
   GHC.Prim.coerce (@GHC.Num.op_zp__ inst_a _).
-redefine Local Definition Data.Semigroup.Semigroup__Product_op_zlzg__ {inst_a} `{_:GHC.Num.Num inst_a}
+redefine Local Definition Data.Semigroup.Semigroup__Product_op_zlzlzgzg__ {inst_a} `{_:GHC.Num.Num inst_a}
     : (Data.Monoid.Product inst_a) -> 
 	 ((Data.Monoid.Product inst_a) -> (Data.Monoid.Product inst_a)) :=
   GHC.Prim.coerce (@GHC.Num.op_zm__ inst_a _).
 
-redefine Local Definition Data.Semigroup.Semigroup__Const_op_zlzg__ {inst_a} {inst_b} `{_:Semigroup  inst_a} : 
+redefine Local Definition Data.Semigroup.Semigroup__Const_op_zlzlzgzg__ {inst_a} {inst_b} `{_:GHC.Base.Semigroup  inst_a} : 
   (Data.Functor.Const.Const inst_a inst_b) -> 
   ((Data.Functor.Const.Const inst_a inst_b) -> 
    (Data.Functor.Const.Const inst_a inst_b)) :=
-  GHC.Prim.coerce (@op_zlzg__ inst_a _).
+  GHC.Prim.coerce (@GHC.Base.op_zlzlzgzg__ inst_a _).
 
-redefine Local Definition Data.Semigroup.Semigroup__Min_op_zlzg__ {inst_a} `{_:GHC.Base.Ord inst_a} : (Min inst_a) -> ((Min inst_a) -> (Min inst_a)) :=
+redefine Local Definition Data.Semigroup.Semigroup__Min_op_zlzlzgzg__ {inst_a} `{_:GHC.Base.Ord inst_a} : (Min inst_a) -> ((Min inst_a) -> (Min inst_a)) :=
   GHC.Prim.coerce (@GHC.Base.min inst_a _ _).
 
-redefine Local Definition Data.Semigroup.Semigroup__Max_op_zlzg__ {inst_a} `{_:GHC.Base.Ord inst_a} : (Max inst_a) -> ((Max inst_a) -> (Max inst_a)) :=
+redefine Local Definition Data.Semigroup.Semigroup__Max_op_zlzlzgzg__ {inst_a} `{_:GHC.Base.Ord inst_a} : (Max inst_a) -> ((Max inst_a) -> (Max inst_a)) :=
   GHC.Prim.coerce (@GHC.Base.max inst_a _ _).
 
-redefine Local Definition Data.Semigroup.Semigroup__WrappedMonoid_op_zlzg__ {inst_m} `{_:GHC.Base.Monoid inst_m} : (WrappedMonoid inst_m) -> ((WrappedMonoid inst_m) -> (WrappedMonoid inst_m)) :=
-  GHC.Prim.coerce (@GHC.Base.mappend inst_m _).
+redefine Local Definition Data.Semigroup.Semigroup__WrappedMonoid_op_zlzlzgzg__ {inst_m} `{_:GHC.Base.Monoid inst_m} : (WrappedMonoid inst_m) -> ((WrappedMonoid inst_m) -> (WrappedMonoid inst_m)) :=
+  GHC.Prim.coerce (@GHC.Base.mappend inst_m _ _).
 
-redefine Local Definition Data.Semigroup.Semigroup__Option_op_zlzg__ {inst_a} `{_: Semigroup inst_a}
+redefine Local Definition Data.Semigroup.Semigroup__Option_op_zlzlzgzg__ {inst_a} `{_: GHC.Base.Semigroup inst_a}
     : (Option inst_a) -> ((Option inst_a) -> (Option inst_a)) :=
-  GHC.Prim.coerce (@op_zlzg__ (option inst_a) _).
+  GHC.Prim.coerce (@GHC.Base.op_zlzlzgzg__ (option inst_a) _).
 
 

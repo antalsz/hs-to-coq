@@ -22,3 +22,6 @@ skip CmmType.Ord__Width
 ## recursive instance definition! replace when we can parse
 redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.
 # fix cat arg_261__ arg_262__ := match arg_261__ , arg_262__ with | GcPtrCat , GcPtrCat => true | BitsCat , BitsCat => true | FloatCat , FloatCat => true| VecCat a1 a2 , VecCat b1 b2 => (andb ((GHC.Base.op_zeze__ a1 b1)) ((cat a2 b2))) | _ , _ => false end.
+
+# needs nat type classes
+skip CmmType.vecElemType

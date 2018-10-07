@@ -1,0 +1,4 @@
+#
+# TODO: Can't derived Coercible (a -> b) (a -> c) from Coercible b c
+#
+skip Data.Functor.Utils.hash_compose

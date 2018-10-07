@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Coq.Init.Datatypes.
 Require FastString.
 Require GHC.Base.
-Require GHC.Num.
+Require GHC.Err.
 Require Maybes.
 Require Module.
 Require OccName.
@@ -38,8 +38,9 @@ Inductive NameSort : Type
   |  System : NameSort.
 
 Inductive Name : Type
-  := Mk_Name
-   : NameSort -> OccName.OccName -> GHC.Num.Int -> SrcLoc.SrcSpan -> Name.
+  := Mk_Name (n_sort : NameSort) (n_occ : OccName.OccName) (n_uniq
+    : Unique.Unique) (n_loc : SrcLoc.SrcSpan)
+   : Name.
 
 Record NamedThing__Dict a := NamedThing__Dict_Build {
   getName__ : a -> Name ;
@@ -56,26 +57,27 @@ Definition getName `{g : NamedThing a} : a -> Name :=
 Definition getOccName `{g : NamedThing a} : a -> OccName.OccName :=
   g _ (getOccName__ a).
 
+Instance Default__BuiltInSyntax : GHC.Err.Default BuiltInSyntax :=
+  GHC.Err.Build_Default _ Mk_BuiltInSyntax.
+
+Instance Default__NameSort : GHC.Err.Default NameSort :=
+  GHC.Err.Build_Default _ Internal.
+
 Definition n_loc (arg_0__ : Name) :=
   let 'Mk_Name _ _ _ n_loc := arg_0__ in
   n_loc.
 
-Definition n_occ (arg_1__ : Name) :=
-  let 'Mk_Name _ n_occ _ _ := arg_1__ in
+Definition n_occ (arg_0__ : Name) :=
+  let 'Mk_Name _ n_occ _ _ := arg_0__ in
   n_occ.
 
-Definition n_sort (arg_2__ : Name) :=
-  let 'Mk_Name n_sort _ _ _ := arg_2__ in
+Definition n_sort (arg_0__ : Name) :=
+  let 'Mk_Name n_sort _ _ _ := arg_0__ in
   n_sort.
 
-Definition n_uniq (arg_3__ : Name) :=
-  let 'Mk_Name _ _ n_uniq _ := arg_3__ in
+Definition n_uniq (arg_0__ : Name) :=
+  let 'Mk_Name _ _ n_uniq _ := arg_0__ in
   n_uniq.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 (* BUG: record selctors are not fully qualified. *)
@@ -84,69 +86,40 @@ Import Module.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default_NameSort : Default NameSort := Build_Default _ System.
-Instance Default_Name : Default Name := Build_Default _ (Mk_Name default default default default).
-
+Instance Default__Name : Default Name := Build_Default _ (Mk_Name default default default default).
 
 Instance Unique_Name : Unique.Uniquable Name := {}.
 Admitted.
 
 (* Converted value declarations: *)
 
-(* Translating `instance Outputable.Outputable Name.NameSort' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
-
-(* Translating `instance Control.DeepSeq.NFData Name.Name' failed: OOPS! Cannot
-   find information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
-
-(* Translating `instance Control.DeepSeq.NFData Name.NameSort' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
-
-(* Translating `instance OccName.HasOccName Name.Name' failed: OOPS! Cannot find
-   information for class Qualified "OccName" "HasOccName" unsupported *)
-
-(* Translating `instance Unique.Uniquable Name.Name' failed: OOPS! Cannot find
-   information for class Qualified "Unique" "Uniquable" unsupported *)
-
 Local Definition NamedThing__Name_getName : Name -> Name :=
   fun n => n.
 
-(* Translating `instance Data.Data.Data Name.Name' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+Local Definition NamedThing__GenLocated_getName {inst_e} {inst_l} `{NamedThing
+  inst_e}
+   : (SrcLoc.GenLocated inst_l inst_e) -> Name :=
+  getName GHC.Base.∘ SrcLoc.unLoc.
 
-(* Translating `instance Binary.Binary Name.Name' failed: using a record pattern
-   for the unknown constructor `UserData' unsupported *)
+(* Skipping instance NFData__Name of class NFData *)
 
-(* Translating `instance Outputable.Outputable Name.Name' failed: OOPS! Cannot
-   find information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Data__Name of class Data *)
 
-(* Translating `instance Outputable.OutputableBndr Name.Name' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "OutputableBndr"
-   unsupported *)
+(* Skipping instance Binary__Name of class Binary *)
+
+(* Skipping instance Outputable__Name of class Outputable *)
+
+(* Skipping instance OutputableBndr__Name of class OutputableBndr *)
+
+(* Skipping instance Outputable__NameSort of class Outputable *)
+
+(* Skipping instance NFData__NameSort of class NFData *)
 
 Definition cmpName : Name -> Name -> comparison :=
-  fun n1 n2 => GHC.Base.compare (n_uniq n1) (n_uniq n2).
+  fun n1 n2 => Unique.nonDetCmpUnique (n_uniq n1) (n_uniq n2).
 
 Local Definition Ord__Name_compare : Name -> Name -> comparison :=
   fun a b => cmpName a b.
-
-Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
-  fun a b =>
-    match (Ord__Name_compare a b) with
-    | Lt => false
-    | Eq => false
-    | Gt => true
-    end.
-
-Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
-  fun a b =>
-    match (Ord__Name_compare a b) with
-    | Lt => false
-    | Eq => true
-    | Gt => true
-    end.
 
 Local Definition Ord__Name_op_zl__ : Name -> Name -> bool :=
   fun a b =>
@@ -170,6 +143,22 @@ Local Definition Ord__Name_max : Name -> Name -> Name :=
 Local Definition Ord__Name_min : Name -> Name -> Name :=
   fun x y => if Ord__Name_op_zlze__ x y : bool then x else y.
 
+Local Definition Ord__Name_op_zg__ : Name -> Name -> bool :=
+  fun a b =>
+    match (Ord__Name_compare a b) with
+    | Lt => false
+    | Eq => false
+    | Gt => true
+    end.
+
+Local Definition Ord__Name_op_zgze__ : Name -> Name -> bool :=
+  fun a b =>
+    match (Ord__Name_compare a b) with
+    | Lt => false
+    | Eq => true
+    | Gt => true
+    end.
+
 Local Definition Eq___Name_op_zeze__ : Name -> Name -> bool :=
   fun a b => match cmpName a b with | Eq => true | _ => false end.
 
@@ -192,7 +181,7 @@ Program Instance Ord__Name : GHC.Base.Ord Name :=
          GHC.Base.min__ := Ord__Name_min |}.
 
 Definition getOccFS {a} `{NamedThing a} : a -> FastString.FastString :=
-  occNameFS GHC.Base.∘ getOccName.
+  OccName.occNameFS GHC.Base.∘ getOccName.
 
 Definition getOccString {a} `{NamedThing a} : a -> GHC.Base.String :=
   OccName.occNameString GHC.Base.∘ getOccName.
@@ -230,15 +219,13 @@ Definition isWiredInName : Name -> bool :=
     end.
 
 Definition localiseName : Name -> Name :=
-  fun n =>
-    let 'Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ := n in
+  fun '(Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__) =>
     Mk_Name Internal n_occ_1__ n_uniq_2__ n_loc_3__.
 
 Definition mkClonedInternalName : Unique.Unique -> Name -> Name :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | uniq, Mk_Name _ occ _ loc =>
-        Mk_Name missingValue missingValue missingValue missingValue
+    | uniq, Mk_Name _ occ _ loc => Mk_Name Internal occ uniq loc
     end.
 
 Definition mkDerivedInternalName
@@ -246,25 +233,24 @@ Definition mkDerivedInternalName
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | derive_occ, uniq, Mk_Name _ occ _ loc =>
-        Mk_Name missingValue missingValue missingValue missingValue
+        Mk_Name Internal (derive_occ occ) uniq loc
     end.
 
 Definition mkExternalName
    : Unique.Unique ->
      Module.Module -> OccName.OccName -> SrcLoc.SrcSpan -> Name :=
-  fun uniq mod_ occ loc =>
-    Mk_Name missingValue missingValue missingValue missingValue.
+  fun uniq mod_ occ loc => Mk_Name (External mod_) occ uniq loc.
 
 Definition mkInternalName
    : Unique.Unique -> OccName.OccName -> SrcLoc.SrcSpan -> Name :=
-  fun uniq occ loc => Mk_Name missingValue missingValue missingValue missingValue.
+  fun uniq occ loc => Mk_Name Internal occ uniq loc.
 
 Definition mkFCallName : Unique.Unique -> GHC.Base.String -> Name :=
   fun uniq str => mkInternalName uniq (OccName.mkVarOcc str) SrcLoc.noSrcSpan.
 
 Definition mkSystemNameAt
    : Unique.Unique -> OccName.OccName -> SrcLoc.SrcSpan -> Name :=
-  fun uniq occ loc => Mk_Name missingValue missingValue missingValue missingValue.
+  fun uniq occ loc => Mk_Name System occ uniq loc.
 
 Definition mkSystemName : Unique.Unique -> OccName.OccName -> Name :=
   fun uniq occ => mkSystemNameAt uniq occ SrcLoc.noSrcSpan.
@@ -273,7 +259,18 @@ Definition mkSystemVarName : Unique.Unique -> FastString.FastString -> Name :=
   fun uniq fs => mkSystemName uniq (OccName.mkVarOccFS fs).
 
 Definition mkSysTvName : Unique.Unique -> FastString.FastString -> Name :=
-  fun uniq fs => mkSystemName uniq (OccName.mkOccNameFS OccName.tvName fs).
+  fun uniq fs => mkSystemName uniq (OccName.mkTyVarOccFS fs).
+
+Definition nameIsHomePackage : Module.Module -> Name -> bool :=
+  fun this_mod =>
+    let this_pkg := Module.moduleUnitId this_mod in
+    fun nm =>
+      match n_sort nm with
+      | External nm_mod => Module.moduleUnitId nm_mod GHC.Base.== this_pkg
+      | WiredIn nm_mod _ _ => Module.moduleUnitId nm_mod GHC.Base.== this_pkg
+      | Internal => true
+      | System => false
+      end.
 
 Definition nameModule_maybe : Name -> option Module.Module :=
   fun arg_0__ =>
@@ -295,22 +292,23 @@ Definition nameIsLocalOrFrom : Module.Module -> Name -> bool :=
 
 Definition nameIsHomePackageImport : Module.Module -> Name -> bool :=
   fun this_mod =>
-    let this_pkg := moduleUnitId this_mod in
+    let this_pkg := Module.moduleUnitId this_mod in
     fun nm =>
       match nameModule_maybe nm with
       | None => false
       | Some nm_mod =>
-          andb (nm_mod GHC.Base./= this_mod) (moduleUnitId nm_mod GHC.Base.== this_pkg)
+          andb (nm_mod GHC.Base./= this_mod) (Module.moduleUnitId nm_mod GHC.Base.==
+                this_pkg)
       end.
 
 Definition nameIsFromExternalPackage : Module.UnitId -> Name -> bool :=
   fun this_pkg name =>
     match nameModule_maybe name with
     | Some mod_ =>
-        if andb (moduleUnitId mod_ GHC.Base./= this_pkg) (negb
+        if andb (Module.moduleUnitId mod_ GHC.Base./= this_pkg) (negb
                  (Module.isInteractiveModule mod_)) : bool
-        then true
-        else false
+        then true else
+        false
     | _ => false
     end.
 
@@ -323,11 +321,9 @@ Definition mkLocalisedOccName
      Name -> OccName.OccName :=
   fun this_mod mk_occ name =>
     let origin :=
-      if nameIsLocalOrFrom this_mod name : bool
-      then None
-      else Some ((Module.moduleNameColons GHC.Base.∘
-                  (moduleName GHC.Base.∘ nameModule)) GHC.Base.$
-                 name) in
+      if nameIsLocalOrFrom this_mod name : bool then None else
+      Some ((Module.moduleNameColons GHC.Base.∘
+             (Module.moduleName GHC.Base.∘ nameModule)) name) in
     mk_occ origin (nameOccName name).
 
 Definition isVarName : Name -> bool :=
@@ -344,6 +340,23 @@ Definition isTyConName : Name -> bool :=
 
 Definition isDataConName : Name -> bool :=
   fun name => OccName.isDataOcc (nameOccName name).
+
+Local Definition HasOccName__Name_occName : Name -> OccName.OccName :=
+  nameOccName.
+
+Program Instance HasOccName__Name : OccName.HasOccName Name :=
+  fun _ k => k {| OccName.occName__ := HasOccName__Name_occName |}.
+
+Local Definition NamedThing__GenLocated_getOccName {inst_e} {inst_l}
+  `{NamedThing inst_e}
+   : (SrcLoc.GenLocated inst_l inst_e) -> OccName.OccName :=
+  fun n => nameOccName (NamedThing__GenLocated_getName n).
+
+Program Instance NamedThing__GenLocated {e} {l} `{NamedThing e}
+   : NamedThing (SrcLoc.GenLocated l e) :=
+  fun _ k =>
+    k {| getName__ := NamedThing__GenLocated_getName ;
+         getOccName__ := NamedThing__GenLocated_getOccName |}.
 
 Local Definition NamedThing__Name_getOccName : Name -> OccName.OccName :=
   fun n => nameOccName (NamedThing__Name_getName n).
@@ -363,8 +376,7 @@ Definition nameSortStableString : NameSort -> GHC.Base.String :=
     end.
 
 Definition nameStableString : Name -> GHC.Base.String :=
-  fun arg_0__ =>
-    let 'Mk_Name n_sort n_occ n_uniq n_loc := arg_0__ in
+  fun '(Mk_Name n_sort n_occ n_uniq n_loc) =>
     Coq.Init.Datatypes.app (nameSortStableString n_sort) (Coq.Init.Datatypes.app
                             (GHC.Base.hs_string__ "$") (OccName.occNameString n_occ)).
 
@@ -381,7 +393,13 @@ Definition getSrcSpan {a} `{NamedThing a} : a -> SrcLoc.SrcSpan :=
   nameSrcSpan GHC.Base.∘ getName.
 
 Definition nameUnique : Name -> Unique.Unique :=
-  fun name => Unique.mkUniqueGrimily (n_uniq name).
+  fun name => n_uniq name.
+
+Local Definition Uniquable__Name_getUnique : Name -> Unique.Unique :=
+  nameUnique.
+
+Program Instance Uniquable__Name : Unique.Uniquable Name :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__Name_getUnique |}.
 
 Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
   fun name loc =>
@@ -391,7 +409,7 @@ Definition setNameLoc : Name -> SrcLoc.SrcSpan -> Name :=
 Definition setNameUnique : Name -> Unique.Unique -> Name :=
   fun name uniq =>
     let 'Mk_Name n_sort_0__ n_occ_1__ n_uniq_2__ n_loc_3__ := name in
-    Mk_Name n_sort_0__ n_occ_1__ (Unique.getKey uniq) n_loc_3__.
+    Mk_Name n_sort_0__ n_occ_1__ uniq n_loc_3__.
 
 Definition stableNameCmp : Name -> Name -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -426,16 +444,20 @@ Definition tidyNameOcc : Name -> OccName.OccName -> Name :=
         Mk_Name n_sort_9__ occ n_uniq_11__ n_loc_12__
     end.
 
-(* Unbound variables:
-     Eq Gt Lt None Some andb bool comparison default false moduleName moduleUnitId
-     negb occNameFS option orb true unit Coq.Init.Datatypes.app FastString.FastString
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Num.Int Maybes.orElse
-     Module.Module Module.UnitId Module.isInteractiveModule Module.moduleNameColons
-     Module.moduleStableString Module.stableModuleCmp OccName.OccName
+(* External variables:
+     Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
+     Coq.Init.Datatypes.app FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
+     GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.max__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     Maybes.orElse Module.Module Module.UnitId Module.isInteractiveModule
+     Module.moduleName Module.moduleNameColons Module.moduleStableString
+     Module.moduleUnitId Module.stableModuleCmp OccName.HasOccName OccName.OccName
      OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc OccName.isValOcc
-     OccName.isVarOcc OccName.mkOccNameFS OccName.mkVarOcc OccName.mkVarOccFS
-     OccName.occNameString OccName.tvName Panic.panic SrcLoc.SrcLoc SrcLoc.SrcSpan
-     SrcLoc.noSrcSpan SrcLoc.srcSpanStart Unique.Unique Unique.getKey
-     Unique.mkUniqueGrimily Util.thenCmp
+     OccName.isVarOcc OccName.mkTyVarOccFS OccName.mkVarOcc OccName.mkVarOccFS
+     OccName.occNameFS OccName.occNameString OccName.occName__ Panic.panic
+     SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan SrcLoc.noSrcSpan
+     SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Uniquable Unique.Unique
+     Unique.getUnique__ Unique.nonDetCmpUnique Util.thenCmp
 *)

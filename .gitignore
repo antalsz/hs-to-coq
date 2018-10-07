@@ -1,3 +1,6 @@
+# hs-to-coq
+.ghc-tmp
+
 # Stack
 .stack-work
 
@@ -13,6 +16,7 @@ cabal.project.local
 *.glob
 .*.aux
 *.v.d
+.coqdeps.d
 Makefile.coq.conf
 Makefile.bak
 Makefile.conf
@@ -21,13 +25,20 @@ Makefile.conf
 # Haskell
 *.o
 *.hi
+*.o-boot
+*.hi-boot
+*.tix
+*.prof
 
 # emacs autosaves
 \#*
 .\#*
 
 # Scratch work files
-Test*
-test*
 Example.hs
 example.v
+
+# links to ghc
+ghc-8.0.2
+ghc-8.4.1
+ghc-head

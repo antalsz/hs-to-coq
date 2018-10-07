@@ -1,17 +1,4 @@
-# This is the simple Travis configuration, which is intended for use
-# on applications which do not require cross-platform and
-# multiple-GHC-version support. For more information and other
-# options, see:
-#
-# https://docs.haskellstack.org/en/stable/travis_ci/
-#
-# Copy these contents into the root directory of your Github project in a file
-# named .travis.yml
-
-# Use new container infrastructure to enable caching
 sudo: false
-
-# Do not choose a language; we provide our own build tools.
 language: generic
 
 # Travis slack notification
@@ -26,9 +13,14 @@ notifications:
      - secure: B38DsPEJPcxRoTwDS4JHks2bi+ViZkTwI6sB/5R+xKXSz4ZEU9chrQ15mXS/NVwdEaQZLNjuIKdxj1LgKAr9gelXZMDLS9lv/bzajx6SRq8x6MZxlYcd7e5ej+xZSmo8R+2ivMLB23iSBtZDi98aTulplbmXb2Qdh5WznShrGRftdtyO7Aqf5xZOy3Q3+0ji7qAXQpWB4sDLJr4Iu2Fjkvj5fBkq9dLHmkK08AR1xyo3kswNx4pssPbfiAiuk3zJY9h+iPGOCj8F3rfVlGdVOGXnF6Qa12rmEVmxCoQ66JNf97ESAp92+lqB84bpNuxLdfn+XZZLQOLZCIRZxm/noJYlQgYs9LPUA5RZ014ryR2B+ThiX/Cgod6toNDVN/vl/lg9QqyQoo+jZbloy/Ot3Z74eFNaVY8vDUkuPpkdSo7bkKDdzQcojmjLXKCT47hnIImD5AclzAv5WnYJd+387XEf2nD3F2RBwi++m2smE+CI66GZ0rizRZKMHIzWUJoEunQY2xRnFqo0XU+jYz50guIdu7h6X5sw2TfilbWLPigaWM03JYwbp4hrB4hqbkEeYaDA4ygqnyePo7oMQMmv57fwwcpvYN2yO6kgun0npSmBg0sWYFkrwQsxT3sI9mTljbhgXtuk0SRDOdXrOvlK1/fRqiq76o6RZ16cE8JN7eQ=
 
 # Caching so the next build will be fast too
+before_cache:
+  - rm -rf $HOME/.opam/log
 cache:
+  timeout: 600
   directories:
   - $HOME/.stack
+  - .stack-work
+  - examples/containers/extraction/.stack-work
   - $HOME/ghc
   - $HOME/.opam
 
@@ -47,51 +39,127 @@ before_install:
  - mkdir -p ~/.local/bin
  - export PATH=$HOME/.local/bin:$PATH
  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
- # Skip this for now, I can't seem to get this to work with the caching
- # Get GHC
- # - mkdir -p ~/ghc
- # - '[[ -n $(find ~/ghc -prune -empty) ]] && (cd ~/ghc; travis_retry curl https://codeload.github.com/ghc/ghc/tar.gz/ghc-8.0.2-release | tar xz --strip-components 1)'
- # Install COQ
- - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
- - opam repo add coq-released http://coq.inria.fr/opam/released || true
- - opam list -i coq.8.7.2 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.7.2 ocamlfind.1.7.3-1 ; }
- - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
- - eval $(opam config env)
 
-install:
- # Build dependencies
- - stack --no-terminal --install-ghc test --only-dependencies
- # dependencies of the containers code that we translate
- - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
+jobs:
+  include:
+  # This builds Coq, the dependencies of hs-to-coq and hs-to-coq itself,
+  # and puts them in the cache.
+  # One could break it down, but that is only useful if the steps together
+  # take longer than 50 minutes. Otherwise it just takes precious minutes
+  # to load the cache
+  - stage: Install dependencies, build hs-to-coq
+    install:
+      # Coq
+      - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
+      - opam repo add coq-released http://coq.inria.fr/opam/released || true
+      - opam list -i coq.8.8.1 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.8.1 ocamlfind.1.7.3-1 ; }
+      - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
 
-script:
- - stack --no-terminal --install-ghc install
- # Run test suite
- - make -C examples/tests
- # Build Coq’ified base (generated sources are in the repo)
- - make -C base
- # Build base theory
- - make -C base-thy
- # Run examples that use base:
- - make -C examples/base-tests
- - make -C examples/successors
- - make -C examples/compiler
- - make -C examples/rle
- - make -C examples/bag
- - make -C examples/quicksort
- - make -C examples/intervals
- - make -C examples/containers clean
- - make -C examples/containers
- - make -C examples/containers/theories
+      # Dependencies
+      - stack --no-terminal --install-ghc test --only-dependencies
+      - stack --no-terminal --install-ghc install QuickCheck HUnit test-framework test-framework-hunit test-framework-quickcheck2
 
-# Test extraction
- - make -C examples/containers/extraction/src
- - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
- - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
+    script:
+      # hs-to-coq
+      - stack --no-terminal --install-ghc install
 
- # disabled 2018-07-24 due to too big of a fall-out, and the
- # focus is somewhere on containers right now
- #- make -C examples/ghc/lib
+  - stage: Tests and Examples
 
- # This requires a configured check-out of GHC, so lets not do that on travis
- # - make -C examples/ghc
+    name: tests and base tests
+    script:
+      - eval $(opam config env)
+      - stack --no-terminal --install-ghc install
+      - make -j2 -C base
+      - make -j2 -C examples/tests
+      - make -j2 -C examples/base-tests
+
+  - name: Containers (theory)
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/containers/lib
+      - make -j2 -C examples/containers/theories
+
+  - name: Containers (extraction)
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C examples/containers/lib
+      - make -j2 -C examples/containers/extraction/extracted-src/
+      - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc test)
+      - ( cd examples/containers/extraction ; stack --no-terminal --install-ghc bench)
+
+  - name: Other examples
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/successors
+      - make -j2 -C examples/compiler
+      - make -j2 -C examples/rle
+      - make -j2 -C examples/bag
+      - make -j2 -C examples/quicksort
+      - make -j2 -C examples/dlist
+      - make -j2 -C examples/intervals
+      - make -j2 -C examples/coinduction
+
+  - name: GHC (including transformers)
+    script:
+      - eval $(opam config env)
+      - make -j2 -C base
+      - make -j2 -C base-thy
+      - make -j2 -C examples/containers
+      - make -j2 -C examples/transformers
+      - make -j2 -C examples/containers/theories
+      - make -j2 -C examples/ghc/lib
+      - make -j2 -C examples/ghc/theories
+      - make -j2 -C examples/core-semantics
+
+  - name: Translating base (ensures convenience copy is up-to-date)
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -C examples/base-src clean
+      - make -C examples/base-src vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add base
+      - git status
+      - git diff-index --cached --quiet HEAD -- base
+
+  - name: Translating containers (ensures convenience copy is up-to-date)
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -C examples/containers clean
+      - make -C examples/containers vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/containers/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/containers/lib/
+
+  - name: Translating transformers (ensures convenience copy is up-to-date)
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -C examples/transformers clean
+      - make -C examples/transformers vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/transformers/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/transformers/lib/
+
+  - name: Translating GHC (ensures convenience copy is up-to-date)
+    script:
+      - stack --no-terminal --install-ghc install
+      - eval $(opam config env)
+      - make -C examples/ghc clean
+      - make -C examples/ghc vfiles
+      # Check that the files in git are identical to the generated ones
+      - git add examples/ghc/lib
+      - git status
+      - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
+

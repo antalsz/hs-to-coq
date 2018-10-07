@@ -1,0 +1,23 @@
+rename type  Var.Id            = Core.Var
+rename value Type.tyConAppArgs = Core.tyConAppArgs
+
+# Types currently don't exist
+skip CoreSubst.substTy
+rewrite forall s c, CoreSubst.substTy s c = tt
+
+# Coercions currently don't exist
+skip CoreSubst.substCo
+rewrite forall s c, CoreSubst.substCo s c = tt
+
+inline mutual CSE.cse_bind
+inline mutual CSE.tryForCSE
+inline mutual CSE.cseCase
+
+# Justified by CSE_NestedRecursion.zipMapAccumL_is_mapAccumL_zip
+in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.List.zip xs1 xs2) = CSE_NestedRecursion.zipMapAccumL f s xs1 xs2
+
+# OK?
+rewrite forall x, Core.tyConAppArgs x = nil
+
+
+skip CSE.Default__CSEnv

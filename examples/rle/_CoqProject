@@ -1,4 +1,5 @@
 -Q ../../base/ ""
+-Q ../../base-thy/ Proofs
 -Q . ""
 RLE.v
 Proofs.v

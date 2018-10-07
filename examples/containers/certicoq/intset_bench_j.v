@@ -1,9 +1,10 @@
-(* Test file for Certicoq by Olivier Belanger *)
+ (* Test file for Certicoq by Olivier Belanger *)
 (* UNCOMMENT THESE FOR INTERACTIVE *)
-(* Add LoadPath "base".
- Add LoadPath "lib".  *)
+ Add LoadPath "base".
+ Add LoadPath "lib". 
+
 Require Import Data.IntSet.Internal.
-Require Import  BinInt.
+Require Import  BinNat.
 Require Import  Coq.Numbers.BinNums.
 Import Coq.Lists.List.
 Open Scope list_scope. 
@@ -45,9 +46,11 @@ with apply' {A B} (n:nat) (f:A -> B) (a:A) :=
 
 Definition size := 4096.
 
-Definition elems := generateList Z.succ BinInt.Z.geb 0%Z (BinInt.Z.of_nat size) size.
-Definition elems_even := generateList (fun x => Z.succ (Z.succ x))  BinInt.Z.geb 0%Z (BinInt.Z.of_nat size) size.
-Definition elems_odd := generateList (fun x => Z.succ (Z.succ x))  BinInt.Z.geb 1%Z (BinInt.Z.of_nat size) size.
+Definition geb (x: N) (y:N): bool := BinNat.N.leb y x.
+
+Definition elems := generateList N.succ geb 0%N (N.of_nat size) size.
+Definition elems_even := generateList (fun x => N.succ (N.succ x))  geb 0%N (N.of_nat size) size.
+Definition elems_odd := generateList (fun x => N.succ (N.succ x))  geb 1%N (N.of_nat size) size.
 
 
 Definition s := fromList elems.
@@ -62,24 +65,23 @@ Definition bench_bool (f:Key -> IntSet -> bool) (l:list Key) (s:IntSet) :=
 
 Definition b_member (_:unit) := apply 0 (bench_bool member elems) s.
 
-
-
-
-Definition b_filter (_:unit) := negb (equal (Internal.empty) (apply 0 (Internal.filter Z.even) s)).
+Definition b_filter (_:unit) := negb (equal (Internal.empty) (apply 0 (Internal.filter N.even) s)).
 
 Definition b_insert (_:unit) :=
-  negb (equal (Internal.empty) (apply 0 (fold_left (fun s a => Internal.insert a s) elems) Internal.empty)).
+  equal s (apply 0 (fold_left (fun s a => Internal.insert a s) elems) Internal.empty).
 
 Definition b_partition (_:unit) :=
-  negb (equal (fst (apply 0 (Internal.partition (fun k => Z.eqb (Z.modulo k 2) 0)%Z) s)) empty).
+  let (s_even', s_odd') := (apply 0 (Internal.partition (fun k => N.eqb (N.modulo k 2) 0)%N) s) in
+  andb (equal s_even s_even') (equal s_odd s_odd').
+
   
 
 Definition b_map (_:unit) :=
-  negb (equal (apply 0 (Internal.map (fun k => k + 1)%Z) s) empty).
+  negb (equal (apply 0 (Internal.map (fun k => k + 1)%N) s_even) s_even).
 
 
 Definition b_fold (_:unit) :=
-  negb (Nat.eqb (length (apply 0 (Internal.fold (fun k l => k::l) nil) s))  0).
+  Nat.eqb (length (apply 0 (Internal.fold (fun k l => k::l) nil) s)) size.
 
 
 Definition b_delete (_:unit) :=
@@ -87,23 +89,25 @@ Definition b_delete (_:unit) :=
 
 
 Definition b_unions (_:unit) :=
-  negb (equal (apply 0 Internal.unions (s_even::s_odd::nil)) empty).
+  equal (apply 0 Internal.unions (s_even::s_odd::nil)) s.
 
 Definition b_union (_:unit) :=
-  negb (equal (apply 0 (Internal.union s_even) s_odd) empty).
+ (equal (apply 0 (Internal.union s_even) s_odd) s).
 
 
 Definition b_difference (_ : unit) :=
-  negb (equal (apply 0 (Internal.difference s) s_even) empty).
+ equal (apply 0 (Internal.difference s) s_even) s_odd.
+
 
 Definition b_fromList (_: unit) :=
   negb (equal (apply 0 (Internal.fromList) elems) empty).
 
+
 Definition b_disjoint_false (_:unit) :=
-  bool_eq (apply 0 (Internal.disjoint s) s_even) false.
+  Bool.eqb (apply 0 (Internal.disjoint s) s_even) false.
 
 Definition b_disjoint_true (_:unit) :=
-  bool_eq (apply 0 (Internal.disjoint s_odd) s_even) true.
+  Bool.eqb (apply 0 (Internal.disjoint s_odd) s_even) true.
 
 
 Definition b_intersection_false (_:unit) :=
@@ -117,31 +121,31 @@ Definition no_b (a:unit) :=
   apply 0 (fun (a:unit) => false) a.
 
 
-Definition bench_list :=  no_b::b_member::b_insert::b_filter::no_b::b_partition::b_map::b_fold::b_delete::b_fromList::no_b::nil.  (* b_unions::b_union::nil b_difference::b_fromList:: nil. *)
+
+
+Definition bench_list :=  b_member::b_insert::b_filter::b_partition::b_map::b_fold::b_delete::b_fromList::nil. 
  
-(* does not compile *)
+(* this takes a LOT of time if you don't remove the proof terms before eta-expansion *)
 Definition bench_list2 := b_unions::b_union::b_difference::b_intersection_true::b_intersection_false::b_disjoint_false::b_disjoint_true::nil.
 
 
+
 Definition main := 
-  apply 0 (List.map (fun f => f tt )) bench_list.
+  apply 0 (List.map (fun f => f tt )) (bench_list ++ bench_list2).
 
 
-Definition main_fail := 
-  List.map (fun f => f tt ) bench_list.
-
- Extraction "intset_test" main.
 
 
 Require Import Arith.
-Add LoadPath "../plugin" as CertiCoq.Plugin.
-Require Import CertiCoq.Plugin.CertiCoq.
+
+
 Require Import Coq.Logic.JMeq.
 Require Import Coq.Program.Wf.
-
-
-
-
-                     
  
+Add LoadPath "../plugin" as CertiCoq.Plugin.
+Require Import CertiCoq.Plugin.CertiCoq.
+
 CertiCoq Compile main.
+
+
+

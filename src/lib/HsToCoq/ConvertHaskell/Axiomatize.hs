@@ -26,7 +26,7 @@ translationFailedComment what exn = CommentSentence . Comment $ translationFaile
 
 typedAxiom :: Qualid -> Term -> Sentence
 typedAxiom name term =
-    AssumptionSentence (Assumption Axiom (UnparenthesizedAssums [name] term))
+    AssumptionSentence (Assumption Axiom (Assums [name] term))
 
 bottomType :: Term
 bottomType = Forall [Typed Ungeneralizable Coq.Implicit [Ident (Bare "A")] $ Sort Type] (Var "A")

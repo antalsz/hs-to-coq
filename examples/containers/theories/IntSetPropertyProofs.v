@@ -5,7 +5,8 @@
 Set Warnings "-notation-overridden".
 
 (* SSReflect *)
-From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
+From Coq Require Import ssreflect ssrbool ssrfun.
+From mathcomp Require Import ssrnat seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Sortedness *)
@@ -17,7 +18,7 @@ Require Import GHC.List      Proofs.GHC.List.
 Require Import GHC.Enum      Proofs.GHC.Enum.
 Require Import Data.Foldable Proofs.Data.Foldable.
 Require Import Data.OldList  Proofs.Data.OldList.
-Require Import Data.Bits.
+Require Import Data.Bits     Proofs.Data.Bits.Popcount.
 
 (* Quickcheck *)
 Require Import Test.QuickCheck.Property.
@@ -25,7 +26,6 @@ Require Import Test.QuickCheck.Property.
 
 (* IntSet library *)
 Require Import Data.IntSet.Internal.
-Require Import Popcount.
 
 (* IntSet proofs *)
 Require Import IntSetProperties.
@@ -326,7 +326,9 @@ Qed.
 Theorem thm_LeftRight : toProp prop_LeftRight.
 Proof.
   rewrite /prop_LeftRight /= => -[p m l r | // | // ] WFs; move: (WFs) => /WF_Bin_children [WFl WFr].
-  move: (WFs) => /valid_maskRespected /= /andP [mask_l mask_r]; move: mask_l mask_r.
+  move: (WFs) => /valid_maskRespected /=.
+  move => /andP [mask_l mask_r]. move: mask_r.
+  move => /andP [mask_r _]. move: mask_l mask_r.
   rewrite !Foldable_and_all !Foldable_all_ssreflect !flat_map_cons_f /zero /elems /toList.
   move=> /allP /= mask_l /allP /= mask_r.
   apply/andP; split; apply/allP => /= b /mapP [] /= x x_in {b}->; apply/Eq_eq.
@@ -512,7 +514,7 @@ Proof.
     }
     move=> /(Ord_gt_not_lt _ _)/negbTE ->.
     
-    rewrite /unions !hs_coq_foldl_list /= !(union_eq empty) /=.
+    rewrite /unions !hs_coq_foldl'_list /= !(union_eq empty) /=.
     apply/andP; split.
     + apply null_list_none => -[x y] /in_flat_map [kl [/elemP IN_kl /in_flat_map [kr [/elemP IN_kr IN_xy]]]].
       move: IN_kl IN_kr; rewrite !toList_member // => IN_kl IN_kr.

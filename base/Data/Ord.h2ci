@@ -1,0 +1,6 @@
+constructors:
+  Data.Ord.Down: ! '[Qualified "Data.Ord" "Mk_Down"]'
+constructorFields:
+  Data.Ord.Mk_Down: NonRecordFields 1
+constructorTypes:
+  Data.Ord.Mk_Down: Qualified "Data.Ord" "Down"

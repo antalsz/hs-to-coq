@@ -1,0 +1,81 @@
+superclassCount:
+  Module.HasModule: '0'
+  Module.ContainsModule: '0'
+classTypes:
+  Module.HasModule: fromList []
+  Module.ContainsModule: fromList []
+constructors:
+  Module.IndefUnitId: ! '[Qualified "Module" "Mk_IndefUnitId"]'
+  Module.InstalledUnitId: ! '[Qualified "Module" "Mk_InstalledUnitId"]'
+  Module.DefUnitId: ! '[Qualified "Module" "Mk_DefUnitId"]'
+  Module.InstalledModuleEnv: ! '[Qualified "Module" "Mk_InstalledModuleEnv"]'
+  Module.Module: ! '[Qualified "Module" "Mk_Module"]'
+  Module.ComponentId: ! '[Qualified "Module" "Mk_ComponentId"]'
+  Module.ModuleName: ! '[Qualified "Module" "Mk_ModuleName"]'
+  Module.NDModule: ! '[Qualified "Module" "Mk_NDModule"]'
+  Module.UnitId: ! '[Qualified "Module" "IndefiniteUnitId",Qualified "Module" "DefiniteUnitId"]'
+  Module.ModLocation: ! '[Qualified "Module" "Mk_ModLocation"]'
+  Module.ModuleEnv: ! '[Qualified "Module" "Mk_ModuleEnv"]'
+  Module.IndefModule: ! '[Qualified "Module" "Mk_IndefModule"]'
+  Module.InstalledModule: ! '[Qualified "Module" "Mk_InstalledModule"]'
+constructorFields:
+  Module.DefiniteUnitId: NonRecordFields 1
+  Module.Mk_ComponentId: NonRecordFields 1
+  Module.Mk_InstalledModuleEnv: NonRecordFields 1
+  Module.Mk_ModuleEnv: NonRecordFields 1
+  Module.Mk_ModuleName: NonRecordFields 1
+  Module.Mk_IndefUnitId: RecordFields [Qualified "Module" "indefUnitIdFS",Qualified
+    "Module" "indefUnitIdKey",Qualified "Module" "indefUnitIdComponentId",Qualified
+    "Module" "indefUnitIdInsts",Qualified "Module" "indefUnitIdFreeHoles"]
+  Module.Mk_InstalledUnitId: RecordFields [Qualified "Module" "installedUnitIdFS"]
+  Module.Mk_IndefModule: RecordFields [Qualified "Module" "indefModuleUnitId",Qualified
+    "Module" "indefModuleName"]
+  Module.Mk_InstalledModule: RecordFields [Qualified "Module" "installedModuleUnitId",Qualified
+    "Module" "installedModuleName"]
+  Module.Mk_Module: RecordFields [Qualified "Module" "moduleUnitId",Qualified "Module"
+    "moduleName"]
+  Module.Mk_NDModule: RecordFields [Qualified "Module" "unNDModule"]
+  Module.IndefiniteUnitId: NonRecordFields 1
+  Module.Mk_ModLocation: RecordFields [Qualified "Module" "ml_hs_file",Qualified "Module"
+    "ml_hi_file",Qualified "Module" "ml_obj_file"]
+  Module.Mk_DefUnitId: RecordFields [Qualified "Module" "unDefUnitId"]
+recordFieldTypes:
+  Module.indefUnitIdInsts: Qualified "Module" "IndefUnitId"
+  Module.unNDModule: Qualified "Module" "NDModule"
+  Module.moduleUnitId: Qualified "Module" "Module"
+  Module.indefUnitIdComponentId: Qualified "Module" "IndefUnitId"
+  Module.indefUnitIdKey: Qualified "Module" "IndefUnitId"
+  Module.unDefUnitId: Qualified "Module" "DefUnitId"
+  Module.indefUnitIdFreeHoles: Qualified "Module" "IndefUnitId"
+  Module.moduleName: Qualified "Module" "Module"
+  Module.ml_obj_file: Qualified "Module" "ModLocation"
+  Module.installedUnitIdFS: Qualified "Module" "InstalledUnitId"
+  Module.ml_hi_file: Qualified "Module" "ModLocation"
+  Module.indefUnitIdFS: Qualified "Module" "IndefUnitId"
+  Module.indefModuleUnitId: Qualified "Module" "IndefModule"
+  Module.installedModuleUnitId: Qualified "Module" "InstalledModule"
+  Module.ml_hs_file: Qualified "Module" "ModLocation"
+  Module.indefModuleName: Qualified "Module" "IndefModule"
+  Module.installedModuleName: Qualified "Module" "InstalledModule"
+classDefns:
+  Module.HasModule: ClassDefinition (Qualified "Module" "HasModule") [Inferred Explicit
+    (Ident (Bare "m"))] Nothing [(Qualified "Module" "getModule",App (Qualid (Bare
+    "m")) (PosArg (Qualid (Qualified "Module" "Module")) :| []))]
+  Module.ContainsModule: ClassDefinition (Qualified "Module" "ContainsModule") [Inferred
+    Explicit (Ident (Bare "t"))] Nothing [(Qualified "Module" "extractModule",Arrow
+    (Qualid (Bare "t")) (Qualid (Qualified "Module" "Module")))]
+constructorTypes:
+  Module.DefiniteUnitId: Qualified "Module" "UnitId"
+  Module.Mk_ComponentId: Qualified "Module" "ComponentId"
+  Module.Mk_InstalledModuleEnv: Qualified "Module" "InstalledModuleEnv"
+  Module.Mk_ModuleEnv: Qualified "Module" "ModuleEnv"
+  Module.Mk_ModuleName: Qualified "Module" "ModuleName"
+  Module.Mk_IndefUnitId: Qualified "Module" "IndefUnitId"
+  Module.Mk_InstalledUnitId: Qualified "Module" "InstalledUnitId"
+  Module.Mk_IndefModule: Qualified "Module" "IndefModule"
+  Module.Mk_InstalledModule: Qualified "Module" "InstalledModule"
+  Module.Mk_Module: Qualified "Module" "Module"
+  Module.Mk_NDModule: Qualified "Module" "NDModule"
+  Module.IndefiniteUnitId: Qualified "Module" "UnitId"
+  Module.Mk_ModLocation: Qualified "Module" "ModLocation"
+  Module.Mk_DefUnitId: Qualified "Module" "DefUnitId"

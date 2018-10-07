@@ -1,57 +1,75 @@
-{-# LANGUAGE RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleContexts, MultiWayIf, OverloadedLists #-}
 
 module HsToCoq.ConvertHaskell.Definitions (
-  ConvertedDefinition(..),
+  ConvertedDefinition(..), convDefName, convDefArgs, convDefType, convDefBody,
   ConvertedBinding(..), withConvertedBinding,
   toProgramFixpointSentence
   ) where
 
+import Control.Lens hiding ((<|))
 import HsToCoq.Coq.Gallina
 
 import Data.List.NonEmpty (NonEmpty(..), (<|), toList)
+import HsToCoq.Util.List
 
 import Data.Bifunctor
 import HsToCoq.ConvertHaskell.Monad
 
 --------------------------------------------------------------------------------
 
-data ConvertedDefinition = ConvertedDefinition { convDefName  :: !Qualid
-                                               , convDefArgs  :: ![Binder]
-                                               , convDefType  :: !(Maybe Term)
-                                               , convDefBody  :: !Term
+data ConvertedDefinition = ConvertedDefinition { _convDefName :: !Qualid
+                                               , _convDefArgs :: ![Binder]
+                                               , _convDefType :: !(Maybe Term)
+                                               , _convDefBody :: !Term
                                                }
                          deriving (Eq, Ord, Show, Read)
+makeLenses ''ConvertedDefinition
 
 --------------------------------------------------------------------------------
 
 data ConvertedBinding = ConvertedDefinitionBinding ConvertedDefinition
                       | ConvertedPatternBinding    Pattern Term
+                      | ConvertedAxiomBinding      Qualid Term
                       deriving (Eq, Ord, Show, Read)
 
-withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> ConvertedBinding -> a
-withConvertedBinding  withDef _withPat (ConvertedDefinitionBinding cdef)    = withDef cdef
-withConvertedBinding _withDef  withPat (ConvertedPatternBinding    pat def) = withPat pat def
+withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> (Qualid -> Term -> a) -> ConvertedBinding -> a
+withConvertedBinding  withDef _withPat _withAx (ConvertedDefinitionBinding cdef)    = withDef cdef
+withConvertedBinding _withDef  withPat _withAx (ConvertedPatternBinding    pat def) = withPat pat def
+withConvertedBinding _withDef _withPat  withAx (ConvertedAxiomBinding      ax  ty)  = withAx  ax  ty
+
+decomposeFixpoint :: Term -> Maybe (Qualid, Binders, Term)
+decomposeFixpoint (Fix (FixOne (FixBody name binders _ _ body)))
+    = Just (name, binders, body)
+-- This undoes what wfFix does
+-- This is a bit of code smell; I should refactor this that the termination
+-- argument is part of the “Gallina” AST, and the concrete representation
+-- is created by the pretty-printer
+decomposeFixpoint (App _wfFix [PosArg _rel, PosArg _measure, PosArg _underscore, PosArg (Fun binders body)])
+    | (b:bs, Inferred Explicit (Ident name)) <- unsnocNEL binders
+    = Just (name, b :| bs, body)
+decomposeFixpoint _
+    = Nothing
 
 toProgramFixpointSentence ::
-    ConversionMonad m =>
+    ConversionMonad r m =>
     ConvertedDefinition -> Order -> Maybe Tactics -> m Sentence
 toProgramFixpointSentence (ConvertedDefinition{..}) order tac
-    | Nothing <- convDefType
+    | Nothing <- _convDefType
     = editFailure "cannot \"termination\" a definition without a type signature"
-    | Just ty <- convDefType
-    , Fix (FixOne (FixBody name binders _ _ body)) <- convDefBody
-    = if | name /= convDefName
+    | Just ty <- _convDefType
+    , Just (name, binders, body) <- decomposeFixpoint _convDefBody
+    = if | name /= _convDefName
          -> editFailure "internal name and external name disagree?"
          | otherwise
          -> do
             (binders', ty') <- moveTyToArgs binders ty
             pure $ ProgramSentence
-                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' convDefArgs) (Just order) (Just ty') body] []))
+                (FixpointSentence (Fixpoint [FixBody name (foldr (<|) binders' _convDefArgs) (Just order) (Just ty') body] []))
                 tac
     | otherwise
     = editFailure "cannot \"termination\" a definition that is not a recursive function"
   where
-    moveTyToArgs :: ConversionMonad m => NonEmpty Binder -> Term -> m (NonEmpty Binder, Term)
+    moveTyToArgs :: ConversionMonad r m => NonEmpty Binder -> Term -> m (NonEmpty Binder, Term)
         -- Base case
     moveTyToArgs' [] ty = pure ([], ty)
 

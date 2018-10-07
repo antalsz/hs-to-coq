@@ -1,0 +1,17 @@
+superclassCount:
+  Control.Category.Category: '0'
+classTypes:
+  Control.Category.Category: fromList []
+classDefns:
+  Control.Category.Category: ClassDefinition (Qualified "Control.Category" "Category")
+    [Typed Ungeneralizable Explicit (Ident (Bare "cat") :| []) (Arrow (Qualid (Bare
+    "Type")) (Arrow (Qualid (Bare "Type")) (Qualid (Bare "Type"))))] Nothing [(Qualified
+    "Control.Category" "id",Forall (Inferred Implicit (Ident (Bare "a")) :| []) (App
+    (App (Qualid (Bare "cat")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg (Qualid
+    (Bare "a")) :| []))),(Qualified "Control.Category" "op_z2218U__",Forall (Inferred
+    Implicit (Ident (Bare "b")) :| [Inferred Implicit (Ident (Bare "c")),Inferred
+    Implicit (Ident (Bare "a"))]) (Arrow (App (App (Qualid (Bare "cat")) (PosArg (Qualid
+    (Bare "b")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (Arrow (App (App (Qualid
+    (Bare "cat")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg (Qualid (Bare "b"))
+    :| [])) (App (App (Qualid (Bare "cat")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg
+    (Qualid (Bare "c")) :| [])))))]

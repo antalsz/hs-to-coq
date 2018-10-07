@@ -1,55 +1,17 @@
-(* Record selectors *)
-Import IdInfo.
-Import IdInfo2.
-Import Core.
+Parameter lookupDataCon : Core.DataConId -> Core.DataCon.
+Parameter lookupClass   : Core.ClassId -> Core.Class.
 
-Parameter hasNoBinding : Var.Id -> bool.
+(* Make this default so that we can reason about either case. *)
+Import GHC.Err.
+Definition isStateHackType : unit -> bool := GHC.Err.default.
 
-Parameter isDictId : Var.Id -> bool.
+(* The real definition looks like this, but we don't have the type information
+   around:
+  fun ty =>
+    if DynFlags.hasNoStateHack DynFlags.unsafeGlobalDynFlags : bool then false else
+    match Type.tyConAppTyCon_maybe ty with
+    | Some tycon => tycon GHC.Base.== TysPrim.statePrimTyCon
+    | _ => false
+    end. *)
 
-Parameter isStrictId : Var.Id -> bool.
 
-Parameter idRepArity : Var.Id -> BasicTypes.RepArity.
-
-Parameter isClassOpId_maybe : Var.Id -> option Class.Class.
-
-Parameter isDataConId_maybe : Var.Id -> option DataCon.DataCon.
-
-Parameter isDataConWorkId : Var.Id -> bool.
-
-Parameter isDataConWorkId_maybe : Var.Id -> option DataCon.DataCon.
-
-Parameter isEvVar : Var -> bool.
-
-Parameter isFCallId : Var.Id -> bool.
-
-Parameter isFCallId_maybe : Var.Id -> option unit.
-
-Parameter isPrimOpId : Var.Id -> bool.
-
-Parameter isPrimOpId_maybe : Var.Id -> option unit.
-
-Parameter mkExportedVanillaId : Name.Name -> unit -> Var.Id.
-
-Parameter mkVanillaGlobalWithInfo : Name.Name -> unit -> IdInfo.IdInfo -> Var.Id.
-
-Parameter mkVanillaGlobal : Name.Name -> Core.Type_ -> Var.Id.
-
-Parameter mkLocalCoVar : Name.Name -> Core.Type_ -> CoVar.
-
-Parameter mkLocalIdOrCoVarWithInfo
-    : Name.Name -> Core.Type_ -> IdInfo.IdInfo -> Var.Id.
-
-Parameter mkLocalIdWithInfo : Name.Name -> Core.Type_  -> IdInfo.IdInfo -> Var.Id.
-
-Parameter mkLocalId : Name.Name -> Core.Type_  -> Var.Id.
-
-Parameter mkSysLocal
-    : FastString.FastString -> Unique.Unique -> Core.Type_ -> Var.Id.
-
-Parameter mkLocalIdOrCoVar : Name.Name -> Core.Type_ -> Var.Id.
-
-(* zipwith enumFrom !!! *)
-Parameter mkTemplateLocalsNum : GHC.Num.Int -> list Core.Type_ -> list Var.Id.
-
-Parameter setIdType : Var.Id -> Core.Type_ -> Var.Id.

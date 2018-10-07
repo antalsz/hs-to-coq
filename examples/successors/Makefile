@@ -1,10 +1,4 @@
-HAVE_STACK := $(shell command -v stack 2> /dev/null)
-ifdef HAVE_STACK
-HS_TO_COQ = stack exec hs-to-coq --
-else
-HS_TO_COQ = cabal new-run -v0 exe:hs-to-coq --
-endif
-SHELL = bash
+include ../../common.mk
 
 # Edit this
 GENMODS = Control.Applicative.Successors
@@ -20,7 +14,7 @@ VFILES   = $(VFILES_GEN) $(VFILES_MAN)
 all: coq
 
 $(VFILES_GEN): %.v : %.hs edits  ../../base/edits
-	$(HS_TO_COQ) -e edits -e ../../base/edits $< -o .
+	$(HS_TO_COQ) -e edits -e ../../base/edits --iface-dir ../../base $< -o .
 
 _CoqProject : Makefile
 	> $@

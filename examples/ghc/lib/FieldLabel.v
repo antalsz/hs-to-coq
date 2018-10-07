@@ -15,7 +15,7 @@ Require Coq.Program.Wf.
 Require Coq.Init.Datatypes.
 Require Coq.Program.Basics.
 Require Data.Foldable.
-Require Data.Monoid.
+Require Data.SemigroupInternal.
 Require Data.Traversable.
 Require FastString.
 Require FastStringEnv.
@@ -32,13 +32,15 @@ Definition FieldLabelString :=
   FastString.FastString%type.
 
 Inductive FieldLbl a : Type
-  := Mk_FieldLabel : FieldLabelString -> bool -> a -> FieldLbl a.
+  := Mk_FieldLabel (flLabel : FieldLabelString) (flIsOverloaded : bool)
+  (flSelector : a)
+   : FieldLbl a.
 
 Definition FieldLabel :=
   (FieldLbl Name.Name)%type.
 
 Definition FieldLabelEnv :=
-  (FastStringEnv.FastStringEnv FieldLabel)%type.
+  (FastStringEnv.DFastStringEnv FieldLabel)%type.
 
 Arguments Mk_FieldLabel {_} _ _ _.
 
@@ -46,22 +48,48 @@ Definition flIsOverloaded {a} (arg_0__ : FieldLbl a) :=
   let 'Mk_FieldLabel _ flIsOverloaded _ := arg_0__ in
   flIsOverloaded.
 
-Definition flLabel {a} (arg_1__ : FieldLbl a) :=
-  let 'Mk_FieldLabel flLabel _ _ := arg_1__ in
+Definition flLabel {a} (arg_0__ : FieldLbl a) :=
+  let 'Mk_FieldLabel flLabel _ _ := arg_0__ in
   flLabel.
 
-Definition flSelector {a} (arg_2__ : FieldLbl a) :=
-  let 'Mk_FieldLabel _ _ flSelector := arg_2__ in
+Definition flSelector {a} (arg_0__ : FieldLbl a) :=
+  let 'Mk_FieldLabel _ _ flSelector := arg_0__ in
   flSelector.
 (* Converted value declarations: *)
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find
-   information for class Qualified "Outputable" "Outputable" unsupported *)
+(* Skipping instance Outputable__FieldLbl of class Outputable *)
 
-(* Translating `instance forall {a}, forall `{Binary.Binary a}, Binary.Binary
-   (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find information for class
-   Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__FieldLbl of class Binary *)
+
+Local Definition Foldable__FieldLbl_null : forall {a}, FieldLbl a -> bool :=
+  fun {a} => fun '(Mk_FieldLabel _ _ _) => false.
+
+Local Definition Foldable__FieldLbl_foldr
+   : forall {a} {b}, (a -> b -> b) -> b -> FieldLbl a -> b :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ arg_2__ =>
+      match arg_0__, arg_1__, arg_2__ with
+      | f, z, Mk_FieldLabel a1 a2 a3 => f a3 z
+      end.
+
+Local Definition Foldable__FieldLbl_toList : forall {a}, FieldLbl a -> list a :=
+  fun {a} =>
+    fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__FieldLbl_foldr c n t)).
+
+Local Definition Foldable__FieldLbl_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> FieldLbl a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__FieldLbl_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__FieldLbl_length
+   : forall {a}, FieldLbl a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__FieldLbl_foldl' (fun arg_0__ arg_1__ =>
+                                 match arg_0__, arg_1__ with
+                                 | c, _ => c GHC.Num.+ #1
+                                 end) #0.
 
 Local Definition Foldable__FieldLbl_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> FieldLbl a -> m :=
@@ -74,102 +102,38 @@ Local Definition Foldable__FieldLbl_foldMap
 Local Definition Foldable__FieldLbl_foldl
    : forall {b} {a}, (b -> a -> b) -> b -> FieldLbl a -> b :=
   fun {b} {a} =>
-    fun arg_19__ arg_20__ arg_21__ =>
-      match arg_19__, arg_20__, arg_21__ with
-      | f, z, t =>
-          Data.Monoid.appEndo (Data.Monoid.getDual (Foldable__FieldLbl_foldMap
-                                                    (Coq.Program.Basics.compose Data.Monoid.Mk_Dual
-                                                                                (Coq.Program.Basics.compose
-                                                                                 Data.Monoid.Mk_Endo (GHC.Base.flip f)))
-                                                    t)) z
-      end.
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Foldable__FieldLbl_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                   (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                    GHC.Base.flip f)) t)) z.
 
 Local Definition Foldable__FieldLbl_foldr'
    : forall {a} {b}, (a -> b -> b) -> b -> FieldLbl a -> b :=
   fun {a} {b} =>
-    fun arg_9__ arg_10__ arg_11__ =>
-      match arg_9__, arg_10__, arg_11__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_12__ arg_13__ arg_14__ =>
-              match arg_12__, arg_13__, arg_14__ with
-              | k, x, z => _GHC.Base.$!_ k (f x z)
-              end in
-          Foldable__FieldLbl_foldl f' GHC.Base.id xs z0
-      end.
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__FieldLbl_foldl f' GHC.Base.id xs z0.
 
 Local Definition Foldable__FieldLbl_product
    : forall {a}, forall `{GHC.Num.Num a}, FieldLbl a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getProduct (Foldable__FieldLbl_foldMap
-                                Data.Monoid.Mk_Product).
+    Coq.Program.Basics.compose Data.SemigroupInternal.getProduct
+                               (Foldable__FieldLbl_foldMap Data.SemigroupInternal.Mk_Product).
 
 Local Definition Foldable__FieldLbl_sum
    : forall {a}, forall `{GHC.Num.Num a}, FieldLbl a -> a :=
   fun {a} `{GHC.Num.Num a} =>
-    Data.Foldable.hash_compose Data.Monoid.getSum (Foldable__FieldLbl_foldMap
-                                Data.Monoid.Mk_Sum).
+    Coq.Program.Basics.compose Data.SemigroupInternal.getSum
+                               (Foldable__FieldLbl_foldMap Data.SemigroupInternal.Mk_Sum).
 
 Local Definition Foldable__FieldLbl_fold
    : forall {m}, forall `{GHC.Base.Monoid m}, FieldLbl m -> m :=
   fun {m} `{GHC.Base.Monoid m} => Foldable__FieldLbl_foldMap GHC.Base.id.
 
-Local Definition Foldable__FieldLbl_elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> FieldLbl a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    Coq.Program.Basics.compose (fun arg_69__ =>
-                                  let 'p := arg_69__ in
-                                  Coq.Program.Basics.compose Data.Monoid.getAny (Foldable__FieldLbl_foldMap
-                                                              (Coq.Program.Basics.compose Data.Monoid.Mk_Any p)))
-                               _GHC.Base.==_.
-
-Local Definition Foldable__FieldLbl_foldr
-   : forall {a} {b}, (a -> b -> b) -> b -> FieldLbl a -> b :=
-  fun {a} {b} =>
-    fun arg_0__ arg_1__ arg_2__ =>
-      match arg_0__, arg_1__, arg_2__ with
-      | f, z, Mk_FieldLabel a1 a2 a3 => f a3 z
-      end.
-
-Local Definition Foldable__FieldLbl_null : forall {a}, FieldLbl a -> bool :=
-  fun {a} => Foldable__FieldLbl_foldr (fun arg_61__ arg_62__ => false) true.
-
-Local Definition Foldable__FieldLbl_toList : forall {a}, FieldLbl a -> list a :=
-  fun {a} =>
-    fun arg_54__ =>
-      let 't := arg_54__ in
-      GHC.Base.build (fun _ arg_55__ arg_56__ =>
-                        match arg_55__, arg_56__ with
-                        | c, n => Foldable__FieldLbl_foldr c n t
-                        end).
-
-Local Definition Foldable__FieldLbl_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> FieldLbl a -> b :=
-  fun {b} {a} =>
-    fun arg_24__ arg_25__ arg_26__ =>
-      match arg_24__, arg_25__, arg_26__ with
-      | f, z0, xs =>
-          let f' :=
-            fun arg_27__ arg_28__ arg_29__ =>
-              match arg_27__, arg_28__, arg_29__ with
-              | x, k, z => _GHC.Base.$!_ k (f z x)
-              end in
-          Foldable__FieldLbl_foldr f' GHC.Base.id xs z0
-      end.
-
-Local Definition Foldable__FieldLbl_length
-   : forall {a}, FieldLbl a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__FieldLbl_foldl' (fun arg_64__ arg_65__ =>
-                                 match arg_64__, arg_65__ with
-                                 | c, _ => _GHC.Num.+_ c #1
-                                 end) #0.
-
 Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} =>
-           Foldable__FieldLbl_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
            Foldable__FieldLbl_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__FieldLbl_foldMap ;
@@ -184,6 +148,15 @@ Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl :=
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__FieldLbl_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__FieldLbl_toList |}.
 
+Local Definition Functor__FieldLbl_op_zlzd__
+   : forall {a} {b}, a -> FieldLbl b -> FieldLbl a :=
+  fun {a} {b} =>
+    fun arg_0__ arg_1__ =>
+      match arg_0__, arg_1__ with
+      | z, Mk_FieldLabel a1 a2 a3 =>
+          Mk_FieldLabel ((fun b1 => b1) a1) ((fun b2 => b2) a2) ((fun b3 => z) a3)
+      end.
+
 Local Definition Functor__FieldLbl_fmap
    : forall {a} {b}, (a -> b) -> FieldLbl a -> FieldLbl b :=
   fun {a} {b} =>
@@ -193,14 +166,10 @@ Local Definition Functor__FieldLbl_fmap
           Mk_FieldLabel ((fun b1 => b1) a1) ((fun b2 => b2) a2) (f a3)
       end.
 
-Local Definition Functor__FieldLbl_op_zlzd__
-   : forall {a} {b}, a -> FieldLbl b -> FieldLbl a :=
-  fun {a} {b} => fun x => Functor__FieldLbl_fmap (GHC.Base.const x).
-
 Program Instance Functor__FieldLbl : GHC.Base.Functor FieldLbl :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__FieldLbl_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__FieldLbl_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__FieldLbl_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__FieldLbl_op_zlzd__ |}.
 
 Local Definition Traversable__FieldLbl_traverse
    : forall {f} {a} {b},
@@ -212,6 +181,11 @@ Local Definition Traversable__FieldLbl_traverse
           GHC.Base.fmap (fun b3 => Mk_FieldLabel a1 a2 b3) (f a3)
       end.
 
+Local Definition Traversable__FieldLbl_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m}, (a -> m b) -> FieldLbl a -> m (FieldLbl b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__FieldLbl_traverse.
+
 Local Definition Traversable__FieldLbl_sequenceA
    : forall {f} {a},
      forall `{GHC.Base.Applicative f}, FieldLbl (f a) -> f (FieldLbl a) :=
@@ -222,11 +196,6 @@ Local Definition Traversable__FieldLbl_sequence
    : forall {m} {a},
      forall `{GHC.Base.Monad m}, FieldLbl (m a) -> m (FieldLbl a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__FieldLbl_sequenceA.
-
-Local Definition Traversable__FieldLbl_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m}, (a -> m b) -> FieldLbl a -> m (FieldLbl b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__FieldLbl_traverse.
 
 Program Instance Traversable__FieldLbl
    : Data.Traversable.Traversable FieldLbl :=
@@ -250,7 +219,7 @@ Local Definition Eq___FieldLbl_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
 
 Local Definition Eq___FieldLbl_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : FieldLbl inst_a -> FieldLbl inst_a -> bool :=
-  fun a b => negb (Eq___FieldLbl_op_zeze__ a b).
+  fun x y => negb (Eq___FieldLbl_op_zeze__ x y).
 
 Program Instance Eq___FieldLbl {a} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (FieldLbl a) :=
@@ -258,9 +227,7 @@ Program Instance Eq___FieldLbl {a} `{GHC.Base.Eq_ a}
     k {| GHC.Base.op_zeze____ := Eq___FieldLbl_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___FieldLbl_op_zsze__ |}.
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (FieldLabel.FieldLbl a)' failed: OOPS! Cannot find information for class
-   Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Data__FieldLbl of class Data *)
 
 Definition mkFieldLabelOccs
    : FieldLabelString -> OccName.OccName -> bool -> FieldLbl OccName.OccName :=
@@ -270,21 +237,27 @@ Definition mkFieldLabelOccs
                               (FastString.unpackFS lbl) (Coq.Init.Datatypes.app (GHC.Base.hs_string__ ":")
                                                                                 (OccName.occNameString dc))) in
     let sel_occ :=
-      if is_overloaded : bool
-      then OccName.mkRecFldSelOcc str
-      else OccName.mkVarOccFS lbl in
+      if is_overloaded : bool then OccName.mkRecFldSelOcc str else
+      OccName.mkVarOccFS lbl in
     Mk_FieldLabel lbl is_overloaded sel_occ.
 
-(* Unbound variables:
-     andb bool false list negb true Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.hash_compose Data.Monoid.Mk_Any
-     Data.Monoid.Mk_Dual Data.Monoid.Mk_Endo Data.Monoid.Mk_Product
-     Data.Monoid.Mk_Sum Data.Monoid.appEndo Data.Monoid.getAny Data.Monoid.getDual
-     Data.Monoid.getProduct Data.Monoid.getSum Data.Traversable.Traversable
-     FastString.FastString FastString.unpackFS FastStringEnv.FastStringEnv
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.build GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.id GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ Name.Name OccName.OccName
+(* External variables:
+     andb bool false list negb Coq.Init.Datatypes.app Coq.Program.Basics.compose
+     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
+     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
+     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
+     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse__ FastString.FastString FastString.unpackFS
+     FastStringEnv.DFastStringEnv GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.build' GHC.Base.flip GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zlzd____ GHC.Base.op_zsze____ GHC.Num.Int
+     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__ Name.Name OccName.OccName
      OccName.mkRecFldSelOcc OccName.mkVarOccFS OccName.occNameString
 *)

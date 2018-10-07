@@ -14,13 +14,14 @@ Require Coq.Program.Wf.
 
 Require Import Core.
 
+
+
+
 (* Converted imports: *)
 
 Require Core.
 Require Data.Tuple.
 Require GHC.Base.
-Require Var.
-Require VarSet.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -30,18 +31,17 @@ Definition InterestingVarFun :=
 
 Definition FV :=
   (InterestingVarFun ->
-   VarSet.VarSet ->
-   (list Core.Var * VarSet.VarSet)%type ->
-   (list Core.Var * VarSet.VarSet)%type)%type.
+   Core.VarSet ->
+   (list Core.Var * Core.VarSet)%type -> (list Core.Var * Core.VarSet)%type)%type.
 (* Converted value declarations: *)
 
 Definition delFV : Core.Var -> FV -> FV :=
   fun var fv fv_cand in_scope acc =>
-    fv fv_cand (VarSet.extendVarSet in_scope var) acc.
+    fv fv_cand (Core.extendVarSet in_scope var) acc.
 
-Definition delFVs : VarSet.VarSet -> FV -> FV :=
+Definition delFVs : Core.VarSet -> FV -> FV :=
   fun vars fv fv_cand in_scope acc =>
-    fv fv_cand (VarSet.unionVarSet in_scope vars) acc.
+    fv fv_cand (Core.unionVarSet in_scope vars) acc.
 
 Definition emptyFV : FV :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -53,26 +53,24 @@ Definition filterFV : InterestingVarFun -> FV -> FV :=
   fun fv_cand2 fv fv_cand1 in_scope acc =>
     fv (fun v => andb (fv_cand1 v) (fv_cand2 v)) in_scope acc.
 
-Definition fvVarListVarSet : FV -> (list Core.Var * VarSet.VarSet)%type :=
-  fun fv =>
-    fv (GHC.Base.const true) VarSet.emptyVarSet (pair nil VarSet.emptyVarSet).
+Definition fvVarListVarSet : FV -> (list Core.Var * Core.VarSet)%type :=
+  fun fv => fv (GHC.Base.const true) Core.emptyVarSet (pair nil Core.emptyVarSet).
 
-Definition fvVarSet : FV -> VarSet.VarSet :=
+Definition fvVarSet : FV -> Core.VarSet :=
   Data.Tuple.snd GHC.Base.∘ fvVarListVarSet.
 
 Definition fvVarList : FV -> list Core.Var :=
   Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
 
-Definition fvDVarSet : FV -> VarSet.DVarSet :=
-  VarSet.mkDVarSet GHC.Base.∘ (Data.Tuple.fst GHC.Base.∘ fvVarListVarSet).
+Definition fvDVarSet : FV -> DVarSet :=
+  Core.mkDVarSet GHC.Base.∘ (Data.Tuple.fst GHC.Base.∘ fvVarListVarSet).
 
 Definition mapUnionFV {a} : (a -> FV) -> list a -> FV :=
   fix mapUnionFV arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
            | _f, nil, _fv_cand, _in_scope, acc => acc
            | f, cons a as_, fv_cand, in_scope, acc =>
-               mapUnionFV f as_ fv_cand in_scope GHC.Base.$!
-               (f a fv_cand in_scope GHC.Base.$! acc)
+               mapUnionFV f as_ fv_cand in_scope (f a fv_cand in_scope acc)
            end.
 
 Definition unionsFV : list FV -> FV :=
@@ -80,27 +78,25 @@ Definition unionsFV : list FV -> FV :=
 
 Definition unionFV : FV -> FV -> FV :=
   fun fv1 fv2 fv_cand in_scope acc =>
-    fv1 fv_cand in_scope GHC.Base.$! (fv2 fv_cand in_scope GHC.Base.$! acc).
+    fv1 fv_cand in_scope (fv2 fv_cand in_scope acc).
 
-Definition unitFV : Var.Id -> FV :=
+Definition unitFV : Core.Var -> FV :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | var, fv_cand, in_scope, (pair have haveSet as acc) =>
-        if VarSet.elemVarSet var in_scope : bool
-        then acc
-        else if VarSet.elemVarSet var haveSet : bool
-             then acc
-             else if fv_cand var : bool
-                  then pair (cons var have) (VarSet.extendVarSet haveSet var)
-                  else acc
+        if Core.elemVarSet var in_scope : bool then acc else
+        if Core.elemVarSet var haveSet : bool then acc else
+        if fv_cand var : bool
+        then pair (cons var have) (Core.extendVarSet haveSet var) else
+        acc
     end.
 
 Definition mkFVs : list Core.Var -> FV :=
   fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.
 
-(* Unbound variables:
-     andb bool cons list nil op_zt__ pair true Core.Var Data.Tuple.fst Data.Tuple.snd
-     GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__ GHC.Base.op_zdzn__ Var.Id
-     VarSet.DVarSet VarSet.VarSet VarSet.elemVarSet VarSet.emptyVarSet
-     VarSet.extendVarSet VarSet.mkDVarSet VarSet.unionVarSet
+(* External variables:
+     DVarSet andb bool cons list nil op_zt__ pair true Core.Var Core.VarSet
+     Core.elemVarSet Core.emptyVarSet Core.extendVarSet Core.mkDVarSet
+     Core.unionVarSet Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id
+     GHC.Base.op_z2218U__
 *)

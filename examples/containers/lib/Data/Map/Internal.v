@@ -24,9 +24,9 @@ Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.
+Require Data.Functor.Classes.
 Require Data.Functor.Identity.
 Require Data.Maybe.
-Require Data.Semigroup.
 Require Data.Set.Internal.
 Require Data.Traversable.
 Require GHC.Base.
@@ -37,14 +37,14 @@ Require GHC.Prim.
 Require Nat.
 Require Utils.Containers.Internal.PtrEquality.
 Import Data.Functor.Notations.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
 Inductive WhenMatched f k x y z : Type
-  := Mk_WhenMatched : (k -> x -> y -> f (option z)) -> WhenMatched f k x y z.
+  := Mk_WhenMatched (matchedKey : k -> x -> y -> f (option z))
+   : WhenMatched f k x y z.
 
 Inductive TraceResult a : Type
   := Mk_TraceResult : (option a) -> unit -> TraceResult a.
@@ -67,8 +67,9 @@ Inductive MaxView k a : Type := Mk_MaxView : k -> a -> (Map k a) -> MaxView k a.
 Inductive MinView k a : Type := Mk_MinView : k -> a -> (Map k a) -> MinView k a.
 
 Inductive WhenMissing f k x y : Type
-  := Mk_WhenMissing
-   : (Map k x -> f (Map k y)) -> (k -> x -> f (option y)) -> WhenMissing f k x y.
+  := Mk_WhenMissing (missingSubtree : Map k x -> f (Map k y)) (missingKey
+    : k -> x -> f (option y))
+   : WhenMissing f k x y.
 
 Definition SimpleWhenMissing :=
   (WhenMissing Data.Functor.Identity.Identity)%type.
@@ -105,22 +106,20 @@ Arguments AltAdj {_} {_} _.
 
 Arguments AltSame {_} {_}.
 
+Instance Default__AreWeStrict : GHC.Err.Default AreWeStrict :=
+  GHC.Err.Build_Default _ Strict.
+
 Definition matchedKey {f} {k} {x} {y} {z} (arg_0__ : WhenMatched f k x y z) :=
   let 'Mk_WhenMatched matchedKey := arg_0__ in
   matchedKey.
 
-Definition missingKey {f} {k} {x} {y} (arg_1__ : WhenMissing f k x y) :=
-  let 'Mk_WhenMissing _ missingKey := arg_1__ in
+Definition missingKey {f} {k} {x} {y} (arg_0__ : WhenMissing f k x y) :=
+  let 'Mk_WhenMissing _ missingKey := arg_0__ in
   missingKey.
 
-Definition missingSubtree {f} {k} {x} {y} (arg_2__ : WhenMissing f k x y) :=
-  let 'Mk_WhenMissing missingSubtree _ := arg_2__ in
+Definition missingSubtree {f} {k} {x} {y} (arg_0__ : WhenMissing f k x y) :=
+  let 'Mk_WhenMissing missingSubtree _ := arg_0__ in
   missingSubtree.
-
-(* The Haskell code containes partial or untranslateable code, which needs the
-   following *)
-
-Axiom missingValue : forall {a}, a.
 (* Midamble *)
 
 Require Omega.
@@ -156,10 +155,11 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
 
 (* Converted value declarations: *)
 
-(* Translating `instance forall {k} {a}, forall `{Data.Data.Data k}
-   `{Data.Data.Data a} `{GHC.Base.Ord k}, Data.Data.Data (Data.Map.Internal.Map k
-   a)' failed: OOPS! Cannot find information for class Qualified "Data.Data" "Data"
-   unsupported *)
+(* Skipping instance Category__WhenMatched *)
+
+(* Skipping instance Applicative__WhenMatched *)
+
+(* Skipping instance Monad__WhenMatched *)
 
 (* Skipping instance Category__WhenMissing *)
 
@@ -167,69 +167,23 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
 
 (* Skipping instance Monad__WhenMissing *)
 
-(* Skipping instance Category__WhenMatched *)
+(* Skipping instance Data__Map of class Data *)
 
-(* Skipping instance Applicative__WhenMatched *)
-
-(* Skipping instance Monad__WhenMatched *)
-
-(* Translating `instance forall {k} {v}, forall `{(GHC.Base.Ord k)},
-   GHC.Exts.IsList (Data.Map.Internal.Map k v)' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Exts" "IsList" unsupported *)
-
-(* Translating `instance Data.Functor.Classes.Eq2 Data.Map.Internal.Map' failed:
-   OOPS! Cannot find information for class Qualified "Data.Functor.Classes" "Eq2"
-   unsupported *)
+(* Skipping instance IsList__Map of class IsList *)
 
 (* Skipping instance Eq1__Map *)
 
-(* Translating `instance Data.Functor.Classes.Ord2 Data.Map.Internal.Map'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Ord2" unsupported *)
-
 (* Skipping instance Ord1__Map *)
 
-(* Translating `instance Data.Functor.Classes.Show2 Data.Map.Internal.Map'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Show2" unsupported *)
+(* Translating `instance Show2__Map' failed: OOPS! Cannot find information for
+   class Qualified "Data.Functor.Classes" "Show2" unsupported *)
 
-(* Translating `instance forall {k}, forall `{GHC.Show.Show k},
-   Data.Functor.Classes.Show1 (Data.Map.Internal.Map k)' failed: OOPS! Cannot find
-   information for class Qualified "Data.Functor.Classes" "Show1" unsupported *)
+(* Skipping instance Show1__Map of class Show1 *)
 
-(* Translating `instance forall {k}, forall `{GHC.Base.Ord k} `{GHC.Read.Read
-   k}, Data.Functor.Classes.Read1 (Data.Map.Internal.Map k)' failed: OOPS! Cannot
-   find information for class Qualified "Data.Functor.Classes" "Read1"
-   unsupported *)
+(* Skipping instance Read1__Map of class Read1 *)
 
 Local Definition Functor__Map_op_zlzd__ {k : Type} {a : Type} {b : Type} :=
   (@functor__Map_op_zlzd__ k a b).
-
-Local Definition Foldable__Map_elem {inst_k}
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> (Map inst_k) a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | _, Tip => false
-                 | x, Bin _ _ v l r => orb (x GHC.Base.== v) (orb (go x l) (go x r))
-                 end in
-    go.
-
-Local Definition Foldable__Map_fold {inst_k}
-   : forall {m}, forall `{GHC.Base.Monoid m}, (Map inst_k) m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    let fix go arg_0__
-              := match arg_0__ with
-                 | Tip => GHC.Base.mempty
-                 | Bin num_1__ _ v _ _ =>
-                     if num_1__ GHC.Base.== #1 : bool
-                     then v
-                     else match arg_0__ with
-                          | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend v (go r))
-                          | _ => GHC.Err.patternFailure
-                          end
-                 end in
-    go.
 
 Local Definition Foldable__Map_foldMap {inst_k}
    : forall {m} {a},
@@ -240,28 +194,34 @@ Local Definition Foldable__Map_foldMap {inst_k}
                 := match arg_0__ with
                    | Tip => GHC.Base.mempty
                    | Bin num_1__ _ v _ _ =>
-                       if num_1__ GHC.Base.== #1 : bool
-                       then f v
-                       else match arg_0__ with
-                            | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f v) (go r))
-                            | _ => GHC.Err.patternFailure
-                            end
+                       if num_1__ GHC.Base.== #1 : bool then f v else
+                       match arg_0__ with
+                       | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f v) (go r))
+                       | _ => GHC.Err.patternFailure
+                       end
                    end in
       go t.
 
-(* Translating `instance forall {k} {a}, forall `{Control.DeepSeq.NFData k}
-   `{Control.DeepSeq.NFData a}, Control.DeepSeq.NFData (Data.Map.Internal.Map k a)'
-   failed: OOPS! Cannot find information for class Qualified "Control.DeepSeq"
-   "NFData" unsupported *)
+Local Definition Foldable__Map_fold {inst_k}
+   : forall {m}, forall `{GHC.Base.Monoid m}, (Map inst_k) m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Tip => GHC.Base.mempty
+                 | Bin num_1__ _ v _ _ =>
+                     if num_1__ GHC.Base.== #1 : bool then v else
+                     match arg_0__ with
+                     | Bin _ _ v l r => GHC.Base.mappend (go l) (GHC.Base.mappend v (go r))
+                     | _ => GHC.Err.patternFailure
+                     end
+                 end in
+    go.
 
-(* Translating `instance forall {k} {e}, forall `{GHC.Base.Ord k}
-   `{GHC.Read.Read k} `{GHC.Read.Read e}, GHC.Read.Read (Data.Map.Internal.Map k
-   e)' failed: OOPS! Cannot find information for class Qualified "GHC.Read" "Read"
-   unsupported *)
+(* Skipping instance NFData__Map of class NFData *)
 
-(* Translating `instance forall {k} {a}, forall `{GHC.Show.Show k}
-   `{GHC.Show.Show a}, GHC.Show.Show (Data.Map.Internal.Map k a)' failed: OOPS!
-   Cannot find information for class Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance Read__Map of class Read *)
+
+(* Skipping instance Show__Map of class Show *)
 
 Definition adjustWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a) -> k -> Map k a -> Map k a :=
@@ -298,7 +258,8 @@ Definition delta : GHC.Num.Int :=
 
 Definition dropMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
    : WhenMissing f k x y :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing (GHC.Base.const (GHC.Base.pure Tip)) (fun arg_0__ arg_1__ =>
+                    GHC.Base.pure None).
 
 Definition empty {k} {a} : Map k a :=
   Tip.
@@ -306,14 +267,6 @@ Definition empty {k} {a} : Map k a :=
 Local Definition Monoid__Map_mempty {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) :=
   empty.
-
-Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
-   : (k -> x -> f bool) -> WhenMissing f k x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
-   : (k -> x -> bool) -> WhenMissing f k x x :=
-  fun f => Mk_WhenMissing missingValue missingValue.
 
 Definition findWithDefault {k} {a} `{GHC.Base.Ord k} : a -> k -> Map k a -> a :=
   let fix go arg_0__ arg_1__ arg_2__
@@ -335,12 +288,11 @@ Definition foldMapWithKey {m} {k} {a} `{GHC.Base.Monoid m}
               := match arg_0__ with
                  | Tip => GHC.Base.mempty
                  | Bin num_1__ k v _ _ =>
-                     if num_1__ GHC.Base.== #1 : bool
-                     then f k v
-                     else match arg_0__ with
-                          | Bin _ k v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k v) (go r))
-                          | _ => GHC.Err.patternFailure
-                          end
+                     if num_1__ GHC.Base.== #1 : bool then f k v else
+                     match arg_0__ with
+                     | Bin _ k v l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k v) (go r))
+                     | _ => GHC.Err.patternFailure
+                     end
                  end in
     go.
 
@@ -366,17 +318,17 @@ Definition foldl' {a} {b} {k} : (a -> b -> a) -> a -> Map k b -> a :=
                  end in
     go z.
 
-Local Definition Foldable__Map_sum {inst_k}
-   : forall {a}, forall `{GHC.Num.Num a}, (Map inst_k) a -> a :=
-  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
+Local Definition Foldable__Map_foldl' {inst_k}
+   : forall {b} {a}, (b -> a -> b) -> b -> (Map inst_k) a -> b :=
+  fun {b} {a} => foldl'.
 
 Local Definition Foldable__Map_product {inst_k}
    : forall {a}, forall `{GHC.Num.Num a}, (Map inst_k) a -> a :=
   fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ #1.
 
-Local Definition Foldable__Map_foldl' {inst_k}
-   : forall {b} {a}, (b -> a -> b) -> b -> (Map inst_k) a -> b :=
-  fun {b} {a} => foldl'.
+Local Definition Foldable__Map_sum {inst_k}
+   : forall {a}, forall `{GHC.Num.Num a}, (Map inst_k) a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
 
 Definition foldlWithKey {a} {k} {b} : (a -> k -> b -> a) -> a -> Map k b -> a :=
   fun f z =>
@@ -457,6 +409,15 @@ Definition toAscList {k} {a} : Map k a -> list (k * a)%type :=
 Definition toList {k} {a} : Map k a -> list (k * a)%type :=
   toAscList.
 
+Local Definition Ord2__Map_liftCompare2
+   : forall {a} {b} {c} {d},
+     (a -> b -> comparison) ->
+     (c -> d -> comparison) -> Map a c -> Map b d -> comparison :=
+  fun {a} {b} {c} {d} =>
+    fun cmpk cmpv m n =>
+      Data.Functor.Classes.liftCompare (Data.Functor.Classes.liftCompare2 cmpk cmpv)
+      (toList m) (toList n).
+
 Definition assocs {k} {a} : Map k a -> list (k * a)%type :=
   fun m => toAscList m.
 
@@ -465,25 +426,15 @@ Local Definition Ord__Map_compare {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> comparison :=
   fun m1 m2 => GHC.Base.compare (toAscList m1) (toAscList m2).
 
-Local Definition Ord__Map_op_zg__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
-  `{GHC.Base.Ord inst_v}
-   : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Map_compare x y) Gt.
-
-Local Definition Ord__Map_op_zgze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
-  `{GHC.Base.Ord inst_v}
-   : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Map_compare x y) Lt.
-
 Local Definition Ord__Map_op_zl__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Map_compare x y) Lt.
+  fun x y => Ord__Map_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Map_op_zlze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Map_compare x y) Gt.
+  fun x y => Ord__Map_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Map_max {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
@@ -494,6 +445,16 @@ Local Definition Ord__Map_min {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
   `{GHC.Base.Ord inst_v}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
   fun x y => if Ord__Map_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Map_op_zg__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+  `{GHC.Base.Ord inst_v}
+   : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
+  fun x y => Ord__Map_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__Map_op_zgze__ {inst_k} {inst_v} `{GHC.Base.Ord inst_k}
+  `{GHC.Base.Ord inst_v}
+   : (Map inst_k inst_v) -> (Map inst_k inst_v) -> bool :=
+  fun x y => Ord__Map_compare x y GHC.Base./= Lt.
 
 Definition foldrFB {k} {a} {b} : (k -> a -> b -> b) -> b -> Map k a -> b :=
   foldrWithKey.
@@ -522,10 +483,6 @@ Definition keysSet {k} {a} : Map k a -> Data.Set.Internal.Set_ k :=
            | Tip => Data.Set.Internal.Tip
            | Bin sz kx _ l r => Data.Set.Internal.Bin sz kx (keysSet l) (keysSet r)
            end.
-
-Definition lmapWhenMissing {b} {a} {f} {k} {x}
-   : (b -> a) -> WhenMissing f k a x -> WhenMissing f k b x :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
 
 Definition lookup {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> option a :=
   let fix go arg_0__ arg_1__
@@ -577,17 +534,15 @@ Definition lookupGT {k} {v} `{GHC.Base.Ord k}
             := match arg_0__, arg_1__, arg_2__, arg_3__ with
                | _, kx', x', Tip => Some (pair kx' x')
                | k, kx', x', Bin _ kx x l r =>
-                   if k GHC.Base.< kx : bool
-                   then goJust k kx x l
-                   else goJust k kx' x' r
+                   if k GHC.Base.< kx : bool then goJust k kx x l else
+                   goJust k kx' x' r
                end in
   let fix goNothing arg_8__ arg_9__
             := match arg_8__, arg_9__ with
                | _, Tip => None
                | k, Bin _ kx x l r =>
-                   if k GHC.Base.< kx : bool
-                   then goJust k kx x l
-                   else goNothing k r
+                   if k GHC.Base.< kx : bool then goJust k kx x l else
+                   goNothing k r
                end in
   goNothing.
 
@@ -621,17 +576,15 @@ Definition lookupLT {k} {v} `{GHC.Base.Ord k}
             := match arg_0__, arg_1__, arg_2__, arg_3__ with
                | _, kx', x', Tip => Some (pair kx' x')
                | k, kx', x', Bin _ kx x l r =>
-                   if k GHC.Base.<= kx : bool
-                   then goJust k kx' x' l
-                   else goJust k kx x r
+                   if k GHC.Base.<= kx : bool then goJust k kx' x' l else
+                   goJust k kx x r
                end in
   let fix goNothing arg_8__ arg_9__
             := match arg_8__, arg_9__ with
                | _, Tip => None
                | k, Bin _ kx x l r =>
-                   if k GHC.Base.<= kx : bool
-                   then goNothing k l
-                   else goJust k kx x r
+                   if k GHC.Base.<= kx : bool then goNothing k l else
+                   goJust k kx x r
                end in
   goNothing.
 
@@ -646,7 +599,7 @@ Definition lookupMax {k} {a} : Map k a -> option (k * a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ k x _ r => Some GHC.Base.$! lookupMaxSure k x r
+    | Bin _ k x _ r => Some (lookupMaxSure k x r)
     end.
 
 Definition lookupMinSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
@@ -660,7 +613,7 @@ Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ k x l _ => Some GHC.Base.$! lookupMinSure k x l
+    | Bin _ k x l _ => Some (lookupMinSure k x l)
     end.
 
 Definition map {a} {b} {k} : (a -> b) -> Map k a -> Map k b :=
@@ -678,8 +631,14 @@ Local Definition Functor__Map_fmap {inst_k}
 
 Program Instance Functor__Map {k} : GHC.Base.Functor (Map k) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ |}.
+
+Definition lmapWhenMissing {b} {a} {f} {k} {x}
+   : (b -> a) -> WhenMissing f k a x -> WhenMissing f k b x :=
+  fun f t =>
+    Mk_WhenMissing (fun m => missingSubtree t (GHC.Base.fmap f m)) (fun k x =>
+                      missingKey t k (f x)).
 
 Definition mapAccumL {a} {k} {b} {c}
    : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
@@ -719,7 +678,9 @@ Definition mapAccumRWithKey {a} {k} {b} {c}
 
 Definition mapGentlyWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMissing f k x a -> WhenMissing f k x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m => GHC.Base.fmap f Data.Functor.<$> missingSubtree t m)
+                   (fun k x => GHC.Base.fmap f Data.Functor.<$> missingKey t k x).
 
 Definition mapKeysMonotonic {k1} {k2} {a}
    : (k1 -> k2) -> Map k1 a -> Map k2 a :=
@@ -730,21 +691,12 @@ Definition mapKeysMonotonic {k1} {k2} {a}
                Bin sz (f k) x (mapKeysMonotonic f l) (mapKeysMonotonic f r)
            end.
 
-Definition mapMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> option y) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition mapMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> y) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
 Definition mapWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f k x y a -> WhenMatched f k x y b :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | f, Mk_WhenMatched g =>
-        Mk_WhenMatched GHC.Base.$
-        (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
+        Mk_WhenMatched (fun k x y => GHC.Base.fmap (GHC.Base.fmap f) (g k x y))
     end.
 
 Local Definition Functor__WhenMatched_fmap {inst_f} {inst_k} {inst_x} {inst_y}
@@ -761,18 +713,22 @@ Local Definition Functor__WhenMatched_op_zlzd__ {inst_f} {inst_k} {inst_x}
      a ->
      (WhenMatched inst_f inst_k inst_x inst_y) b ->
      (WhenMatched inst_f inst_k inst_x inst_y) a :=
-  fun {a} {b} => fun x => Functor__WhenMatched_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__WhenMatched_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__WhenMatched {f} {k} {x} {y} `{GHC.Base.Functor f}
    : GHC.Base.Functor (WhenMatched f k x y) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ |}.
 
 Definition mapWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : (a -> b) -> WhenMissing f k x a -> WhenMissing f k x b :=
-  fun f t => Mk_WhenMissing missingValue missingValue.
+  fun f t =>
+    Mk_WhenMissing (fun m =>
+                      missingSubtree t m GHC.Base.>>= (fun m' => GHC.Base.pure (GHC.Base.fmap f m')))
+                   (fun k x =>
+                      missingKey t k x GHC.Base.>>= (fun q => (GHC.Base.pure (GHC.Base.fmap f q)))).
 
 Local Definition Functor__WhenMissing_fmap {inst_f} {inst_k} {inst_x}
   `{GHC.Base.Applicative inst_f} `{GHC.Base.Monad inst_f}
@@ -786,14 +742,14 @@ Local Definition Functor__WhenMissing_op_zlzd__ {inst_f} {inst_k} {inst_x}
    : forall {a} {b},
      a ->
      (WhenMissing inst_f inst_k inst_x) b -> (WhenMissing inst_f inst_k inst_x) a :=
-  fun {a} {b} => fun x => Functor__WhenMissing_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__WhenMissing_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__WhenMissing {f} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : GHC.Base.Functor (WhenMissing f k x) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ |}.
 
 Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
   fix mapWithKey arg_0__ arg_1__
@@ -801,6 +757,12 @@ Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
            | _, Tip => Tip
            | f, Bin sx kx x l r => Bin sx kx (f kx x) (mapWithKey f l) (mapWithKey f r)
            end.
+
+Definition mapMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> y) -> WhenMissing f k x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapWithKey f m)) (fun k x =>
+                      GHC.Base.pure (Some (f k x))).
 
 Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   let fix go arg_0__ arg_1__
@@ -816,7 +778,7 @@ Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   go.
 
 Definition notMember {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
-  fun k m => negb GHC.Base.$ member k m.
+  fun k m => negb (member k m).
 
 Definition null {k} {a} : Map k a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ _ => false end.
@@ -827,7 +789,10 @@ Local Definition Foldable__Map_null {inst_k}
 
 Definition preserveMissing {f} {k} {x} `{GHC.Base.Applicative f}
    : WhenMissing f k x x :=
-  Mk_WhenMissing missingValue missingValue.
+  Mk_WhenMissing GHC.Base.pure (fun arg_0__ arg_1__ =>
+                    match arg_0__, arg_1__ with
+                    | _, v => GHC.Base.pure (Some v)
+                    end).
 
 Definition ratio : GHC.Num.Int :=
   #2.
@@ -838,11 +803,11 @@ Definition runWhenMatched {f} {k} {x} {y} {z}
 
 Definition contramapSecondWhenMatched {b} {a} {f} {k} {x} {z}
    : (b -> a) -> WhenMatched f k x a z -> WhenMatched f k x b z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k x (f y)).
+  fun f t => Mk_WhenMatched (fun k x y => runWhenMatched t k x (f y)).
 
 Definition contramapFirstWhenMatched {b} {a} {f} {k} {y} {z}
    : (b -> a) -> WhenMatched f k a y z -> WhenMatched f k b y z :=
-  fun f t => Mk_WhenMatched GHC.Base.$ (fun k x y => runWhenMatched t k (f x) y).
+  fun f t => Mk_WhenMatched (fun k x y => runWhenMatched t k (f x) y).
 
 Definition runWhenMissing {f} {k} {x} {y}
    : WhenMissing f k x y -> k -> x -> f (option y) :=
@@ -872,7 +837,7 @@ Definition lookupIndex {k} {a} `{GHC.Base.Ord k}
                  match GHC.Base.compare k kx with
                  | Lt => go idx k l
                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) k r
-                 | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
+                 | Eq => Some (idx GHC.Num.+ size l)
                  end
              end in
   go #0.
@@ -907,9 +872,10 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
             Bin #3 rlk rlx (Bin #1 k x Tip Tip) (Bin #1 rk rx Tip Tip)
         | Bin rs rk rx (Bin rls rlk rlx rll rlr as rl) (Bin rrs _ _ _ _ as rr) =>
             if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-            then Bin (#1 GHC.Num.+ rs) rk rx (Bin (#1 GHC.Num.+ rls) k x Tip rl) rr
-            else Bin (#1 GHC.Num.+ rs) rlk rlx (Bin (#1 GHC.Num.+ size rll) k x Tip rll)
-                 (Bin ((#1 GHC.Num.+ rrs) GHC.Num.+ size rlr) rk rx rlr rr)
+            then Bin (#1 GHC.Num.+ rs) rk rx (Bin (#1 GHC.Num.+ rls) k x Tip rl) rr else
+            Bin (#1 GHC.Num.+ rs) rlk rlx (Bin (#1 GHC.Num.+ size rll) k x Tip rll) (Bin
+                                                                                     ((#1 GHC.Num.+ rrs) GHC.Num.+
+                                                                                      size rlr) rk rx rlr rr)
         end
     | Bin ls _ _ _ _ =>
         match r with
@@ -922,18 +888,17 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin ((#1 GHC.Num.+ ls)
                                                                            GHC.Num.+
-                                                                           rls) k x l rl) rr
-                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin ((#1 GHC.Num.+ ls)
-                                                                             GHC.Num.+
-                                                                             size rll) k x l rll) (Bin ((#1 GHC.Num.+
-                                                                                                         rrs) GHC.Num.+
-                                                                                                        size rlr) rk rx
-                                                                                                   rlr rr)
+                                                                           rls) k x l rl) rr else
+                     Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin ((#1 GHC.Num.+ ls) GHC.Num.+
+                                                                        size rll) k x l rll) (Bin ((#1 GHC.Num.+ rrs)
+                                                                                                   GHC.Num.+
+                                                                                                   size rlr) rk rx rlr
+                                                                                              rr)
                  | _ =>
                      let 'pair _ _ := scrut_10__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceR")
-                 end
-            else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
+                 end else
+            Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
         end
     end.
 
@@ -968,9 +933,7 @@ Definition minViewWithKey {k} {a}
     match arg_0__ with
     | Tip => None
     | Bin _ k x l r =>
-        Some GHC.Base.$
-        (let 'Mk_MinView km xm t := minViewSure k x l r in
-         pair (pair km xm) t)
+        Some (let 'Mk_MinView km xm t := minViewSure k x l r in pair (pair km xm) t)
     end.
 
 Definition minView {k} {a} : Map k a -> option (a * Map k a)%type :=
@@ -1012,9 +975,9 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
         | Bin _ lk lx (Bin _ _ _ _ _ as ll) Tip => Bin #3 lk lx ll (Bin #1 k x Tip Tip)
         | Bin ls lk lx (Bin lls _ _ _ _ as ll) (Bin lrs lrk lrx lrl lrr as lr) =>
             if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-            then Bin (#1 GHC.Num.+ ls) lk lx ll (Bin (#1 GHC.Num.+ lrs) k x lr Tip)
-            else Bin (#1 GHC.Num.+ ls) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl)
-                                                lk lx ll lrl) (Bin (#1 GHC.Num.+ size lrr) k x lrr Tip)
+            then Bin (#1 GHC.Num.+ ls) lk lx ll (Bin (#1 GHC.Num.+ lrs) k x lr Tip) else
+            Bin (#1 GHC.Num.+ ls) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl) lk lx
+                                           ll lrl) (Bin (#1 GHC.Num.+ size lrr) k x lrr Tip)
         end
     | Bin rs _ _ _ _ =>
         match l with
@@ -1027,19 +990,17 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                      if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
                                                                               GHC.Num.+
-                                                                              lrs) k x lr r)
-                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin ((#1 GHC.Num.+ lls)
-                                                                             GHC.Num.+
-                                                                             size lrl) lk lx ll lrl) (Bin ((#1 GHC.Num.+
-                                                                                                            rs)
-                                                                                                           GHC.Num.+
-                                                                                                           size lrr) k x
-                                                                                                      lrr r)
+                                                                              lrs) k x lr r) else
+                     Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+
+                                                                        size lrl) lk lx ll lrl) (Bin ((#1 GHC.Num.+ rs)
+                                                                                                      GHC.Num.+
+                                                                                                      size lrr) k x lrr
+                                                                                                 r)
                  | _ =>
                      let 'pair _ _ := scrut_10__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceL")
-                 end
-            else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
+                 end else
+            Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
         end
     end.
 
@@ -1060,21 +1021,19 @@ Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
                | orig, kx, x, (Bin sz ky y l r as t) =>
                    match GHC.Base.compare kx ky with
                    | Lt =>
-                       let 'l' := go orig kx x l in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool
-                       then t
-                       else balanceL ky y l' r
+                       let l' := go orig kx x l in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
+                       balanceL ky y l' r
                    | Gt =>
-                       let 'r' := go orig kx x r in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool
-                       then t
-                       else balanceR ky y l r'
+                       let r' := go orig kx x r in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
+                       balanceR ky y l r'
                    | Eq =>
                        if andb (Utils.Containers.Internal.PtrEquality.ptrEq x y) (GHC.Prim.seq orig
                                                                                                (Utils.Containers.Internal.PtrEquality.ptrEq
                                                                                                 orig ky)) : bool
-                       then t
-                       else Bin sz (orig) x l r
+                       then t else
+                       Bin sz (orig) x l r
                    end
                end in
     go kx0 kx0.
@@ -1091,12 +1050,10 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare kx ky with
                    | Lt =>
                        let 'pair found l' := go f kx x l in
-                       let 't' := balanceL ky y l' r in
-                       (pair found t')
+                       let t' := balanceL ky y l' r in (pair found t')
                    | Gt =>
                        let 'pair found r' := go f kx x r in
-                       let 't' := balanceR ky y l r' in
-                       (pair found t')
+                       let t' := balanceR ky y l r' in (pair found t')
                    | Eq => (pair (Some y) (Bin sy kx (f kx x y) l r))
                    end
                end in
@@ -1118,15 +1075,13 @@ Definition insertR {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
                | orig, kx, x, (Bin _ ky y l r as t) =>
                    match GHC.Base.compare kx ky with
                    | Lt =>
-                       let 'l' := go orig kx x l in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool
-                       then t
-                       else balanceL ky y l' r
+                       let l' := go orig kx x l in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
+                       balanceL ky y l' r
                    | Gt =>
-                       let 'r' := go orig kx x r in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool
-                       then t
-                       else balanceR ky y l r'
+                       let r' := go orig kx x r in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
+                       balanceR ky y l r'
                    | Eq => t
                    end
                end in
@@ -1172,7 +1127,7 @@ Definition fromListWithKey {k} {a} `{GHC.Base.Ord k}
         match arg_0__, arg_1__ with
         | t, pair k x => insertWithKey f k x t
         end in
-    Data.Foldable.foldl ins empty xs.
+    Data.Foldable.foldl' ins empty xs.
 
 Definition fromListWith {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> list (k * a)%type -> Map k a :=
@@ -1228,10 +1183,10 @@ Program Fixpoint link {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
                       | kx, x, l, Tip => insertMax kx x l
                       | kx, x, (Bin sizeL ky y ly ry as l), (Bin sizeR kz z lz rz as r) =>
                           if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
-                          then balanceL kz z (link kx x l lz) rz
-                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
-                               then balanceR ky y ly (link kx x ry r)
-                               else bin kx x l r
+                          then balanceL kz z (link kx x l lz) rz else
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                          then balanceR ky y ly (link kx x ry r) else
+                          bin kx x l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -1240,9 +1195,8 @@ Definition dropWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ kx x l r =>
-               if p kx : bool
-               then dropWhileAntitone p r
-               else link kx x (dropWhileAntitone p l) r
+               if p kx : bool then dropWhileAntitone p r else
+               link kx x (dropWhileAntitone p l) r
            end.
 
 Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
@@ -1257,13 +1211,13 @@ Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
                                           | s, (cons x' xs' as xs) =>
                                               if s GHC.Base.== #1 : bool
                                               then let 'pair kx x := x' in
-                                                   (pair (Bin #1 kx x Tip Tip) xs')
-                                              else match create (Data.Bits.shiftR s #1) xs with
-                                                   | (pair _ nil as res) => res
-                                                   | pair l (cons (pair ky y) ys) =>
-                                                       let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
-                                                       (pair (link ky y l r) zs)
-                                                   end
+                                                   (pair (Bin #1 kx x Tip Tip) xs') else
+                                              match create (Data.Bits.shiftR s #1) xs with
+                                              | (pair _ nil as res) => res
+                                              | pair l (cons (pair ky y) ys) =>
+                                                  let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
+                                                  (pair (link ky y l r) zs)
+                                              end
                                           end) in
         let go :=
           GHC.DeferredFix.deferredFix3 (fun go arg_15__ arg_16__ arg_17__ =>
@@ -1271,8 +1225,7 @@ Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
                                           | _, t, nil => t
                                           | s, l, cons (pair kx x) xs =>
                                               let 'pair r ys := create s xs in
-                                              let 't' := link kx x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link kx x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
@@ -1284,9 +1237,8 @@ Definition fromAscList {k} {a} `{GHC.Base.Eq_ k}
               := match arg_0__, arg_1__ with
                  | z, nil => cons z nil
                  | (pair kz _ as z), cons (pair kx xx as x) xs' =>
-                     if kx GHC.Base.== kz : bool
-                     then combineEq' (pair kx xx) xs'
-                     else cons z (combineEq' x xs')
+                     if kx GHC.Base.== kz : bool then combineEq' (pair kx xx) xs' else
+                     cons z (combineEq' x xs')
                  end in
     let combineEq :=
       fun xs' =>
@@ -1305,8 +1257,8 @@ Definition fromAscListWithKey {k} {a} `{GHC.Base.Eq_ k}
                  | z, nil => cons z nil
                  | (pair kz zz as z), cons (pair kx xx as x) xs' =>
                      if kx GHC.Base.== kz : bool
-                     then let yy := f kx xx zz in combineEq' (pair kx yy) xs'
-                     else cons z (combineEq' x xs')
+                     then let yy := f kx xx zz in combineEq' (pair kx yy) xs' else
+                     cons z (combineEq' x xs')
                  end in
     let combineEq :=
       fun arg_7__ arg_8__ =>
@@ -1340,13 +1292,13 @@ Definition fromDistinctDescList {k} {a} : list (k * a)%type -> Map k a :=
                                           | s, (cons x' xs' as xs) =>
                                               if s GHC.Base.== #1 : bool
                                               then let 'pair kx x := x' in
-                                                   (pair (Bin #1 kx x Tip Tip) xs')
-                                              else match create (Data.Bits.shiftR s #1) xs with
-                                                   | (pair _ nil as res) => res
-                                                   | pair r (cons (pair ky y) ys) =>
-                                                       let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
-                                                       (pair (link ky y l r) zs)
-                                                   end
+                                                   (pair (Bin #1 kx x Tip Tip) xs') else
+                                              match create (Data.Bits.shiftR s #1) xs with
+                                              | (pair _ nil as res) => res
+                                              | pair r (cons (pair ky y) ys) =>
+                                                  let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
+                                                  (pair (link ky y l r) zs)
+                                              end
                                           end) in
         let go :=
           GHC.DeferredFix.deferredFix3 (fun go arg_15__ arg_16__ arg_17__ =>
@@ -1354,8 +1306,7 @@ Definition fromDistinctDescList {k} {a} : list (k * a)%type -> Map k a :=
                                           | _, t, nil => t
                                           | s, r, cons (pair kx x) xs =>
                                               let 'pair l ys := create s xs in
-                                              let 't' := link kx x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link kx x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
@@ -1367,9 +1318,8 @@ Definition fromDescList {k} {a} `{GHC.Base.Eq_ k}
               := match arg_0__, arg_1__ with
                  | z, nil => cons z nil
                  | (pair kz _ as z), cons (pair kx xx as x) xs' =>
-                     if kx GHC.Base.== kz : bool
-                     then combineEq' (pair kx xx) xs'
-                     else cons z (combineEq' x xs')
+                     if kx GHC.Base.== kz : bool then combineEq' (pair kx xx) xs' else
+                     cons z (combineEq' x xs')
                  end in
     let combineEq :=
       fun xs' =>
@@ -1388,8 +1338,8 @@ Definition fromDescListWithKey {k} {a} `{GHC.Base.Eq_ k}
                  | z, nil => cons z nil
                  | (pair kz zz as z), cons (pair kx xx as x) xs' =>
                      if kx GHC.Base.== kz : bool
-                     then let yy := f kx xx zz in combineEq' (pair kx yy) xs'
-                     else cons z (combineEq' x xs')
+                     then let yy := f kx xx zz in combineEq' (pair kx yy) xs' else
+                     cons z (combineEq' x xs')
                  end in
     let combineEq :=
       fun arg_7__ arg_8__ =>
@@ -1424,7 +1374,7 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
                 match arg_2__, arg_3__ with
                 | t, pair k x => insert k x t
                 end in
-            Data.Foldable.foldl ins t0 xs in
+            Data.Foldable.foldl' ins t0 xs in
         let not_ordered :=
           fun arg_7__ arg_8__ =>
             match arg_7__, arg_8__ with
@@ -1439,19 +1389,17 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
                                               if s GHC.Base.== #1 : bool
                                               then let 'pair kx x := xp in
                                                    if not_ordered kx xss : bool
-                                                   then pair (pair (Bin #1 kx x Tip Tip) nil) xss
-                                                   else pair (pair (Bin #1 kx x Tip Tip) xss) nil
-                                              else match create (Data.Bits.shiftR s #1) xs with
-                                                   | (pair (pair _ nil) _ as res) => res
-                                                   | pair (pair l (cons (pair ky y) nil)) zs =>
-                                                       pair (pair (insertMax ky y l) nil) zs
-                                                   | pair (pair l (cons (pair ky y) yss as ys)) _ =>
-                                                       if not_ordered ky yss : bool
-                                                       then pair (pair l nil) ys
-                                                       else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1)
-                                                                                          yss in
-                                                            pair (pair (link ky y l r) zs) ws
-                                                   end
+                                                   then pair (pair (Bin #1 kx x Tip Tip) nil) xss else
+                                                   pair (pair (Bin #1 kx x Tip Tip) xss) nil else
+                                              match create (Data.Bits.shiftR s #1) xs with
+                                              | (pair (pair _ nil) _ as res) => res
+                                              | pair (pair l (cons (pair ky y) nil)) zs =>
+                                                  pair (pair (insertMax ky y l) nil) zs
+                                              | pair (pair l (cons (pair ky y) yss as ys)) _ =>
+                                                  if not_ordered ky yss : bool then pair (pair l nil) ys else
+                                                  let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1) yss in
+                                                  pair (pair (link ky y l r) zs) ws
+                                              end
                                           end) in
         let go :=
           GHC.DeferredFix.deferredFix3 (fun go arg_28__ arg_29__ arg_30__ =>
@@ -1459,17 +1407,14 @@ Definition fromList {k} {a} `{GHC.Base.Ord k} : list (k * a)%type -> Map k a :=
                                           | _, t, nil => t
                                           | _, t, cons (pair kx x) nil => insertMax kx x t
                                           | s, l, (cons (pair kx x) xss as xs) =>
-                                              if not_ordered kx xss : bool
-                                              then fromList' l xs
-                                              else match create s xss with
-                                                   | pair (pair r ys) nil =>
-                                                       go (Data.Bits.shiftL s #1) (link kx x l r) ys
-                                                   | pair (pair r _) ys => fromList' (link kx x l r) ys
-                                                   end
+                                              if not_ordered kx xss : bool then fromList' l xs else
+                                              match create s xss with
+                                              | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link kx x l r) ys
+                                              | pair (pair r _) ys => fromList' (link kx x l r) ys
+                                              end
                                           end) in
-        if not_ordered kx0 xs0 : bool
-        then fromList' (Bin #1 kx0 x0 Tip Tip) xs0
-        else go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
+        if not_ordered kx0 xs0 : bool then fromList' (Bin #1 kx0 x0 Tip Tip) xs0 else
+        go (#1 : GHC.Num.Int) (Bin #1 kx0 x0 Tip Tip) xs0
     end.
 
 Definition mapKeys {k2} {k1} {a} `{GHC.Base.Ord k2}
@@ -1484,11 +1429,9 @@ Definition spanAntitone {k} {a}
               := match arg_0__, arg_1__ with
                  | _, Tip => pair Tip Tip
                  | p, Bin _ kx x l r =>
-                     if p kx : bool
-                     then let 'pair u v := go p r in
-                          pair (link kx x l u) v
-                     else let 'pair u v := go p l in
-                          pair u (link kx x v r)
+                     if p kx : bool then let 'pair u v := go p r in pair (link kx x l u) v else
+                     let 'pair u v := go p l in
+                     pair u (link kx x v r)
                  end in
     id (go p0 m).
 
@@ -1505,7 +1448,7 @@ Definition split {k} {a} `{GHC.Base.Ord k}
                      | Eq => (pair l r)
                      end
                  end in
-    id GHC.Base.$ go k0 t0.
+    id (go k0 t0).
 
 Definition splitLookup {k} {a} `{GHC.Base.Ord k}
    : k -> Map k a -> (Map k a * option a * Map k a)%type :=
@@ -1519,12 +1462,10 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare k kx with
                    | Lt =>
                        let 'Mk_StrictTriple lt z gt := go k l in
-                       let 'gt' := link kx x gt r in
-                       Mk_StrictTriple lt z gt'
+                       let gt' := link kx x gt r in Mk_StrictTriple lt z gt'
                    | Gt =>
                        let 'Mk_StrictTriple lt z gt := go k r in
-                       let 'lt' := link kx x l lt in
-                       Mk_StrictTriple lt' z gt
+                       let lt' := link kx x l lt in Mk_StrictTriple lt' z gt
                    | Eq => Mk_StrictTriple l (Some x) r
                    end
                end in
@@ -1557,12 +1498,10 @@ Definition splitMember {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare k kx with
                    | Lt =>
                        let 'Mk_StrictTriple lt z gt := go k l in
-                       let 'gt' := link kx x gt r in
-                       Mk_StrictTriple lt z gt'
+                       let gt' := link kx x gt r in Mk_StrictTriple lt z gt'
                    | Gt =>
                        let 'Mk_StrictTriple lt z gt := go k r in
-                       let 'lt' := link kx x l lt in
-                       Mk_StrictTriple lt' z gt
+                       let lt' := link kx x l lt in Mk_StrictTriple lt' z gt
                    | Eq => Mk_StrictTriple l true r
                    end
                end in
@@ -1574,9 +1513,8 @@ Definition takeWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ kx x l r =>
-               if p kx : bool
-               then link kx x l (takeWhileAntitone p r)
-               else takeWhileAntitone p l
+               if p kx : bool then link kx x l (takeWhileAntitone p r) else
+               takeWhileAntitone p l
            end.
 
 Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
@@ -1588,33 +1526,34 @@ Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
            | Tip, t2 => t2
            | (Bin _ k1 x1 l1 r1 as t1), t2 =>
                let 'pair l2 r2 := split k1 t2 in
-               let 'r1r2 := union r1 r2 in
-               let 'l1l2 := union l1 l2 in
+               let r1r2 := union r1 r2 in
+               let l1l2 := union l1 l2 in
                if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                        (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
-               then t1
-               else link k1 x1 l1l2 r1r2
+               then t1 else
+               link k1 x1 l1l2 r1r2
            end.
 
-Definition unions {k} {a} `{GHC.Base.Ord k} : list (Map k a) -> Map k a :=
-  fun ts => Data.Foldable.foldl union empty ts.
+Definition unions {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
+   : f (Map k a) -> Map k a :=
+  fun ts => Data.Foldable.foldl' union empty ts.
 
 Local Definition Monoid__Map_mconcat {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : list (Map inst_k inst_v) -> (Map inst_k inst_v) :=
   unions.
 
-Local Definition Semigroup__Map_op_zlzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
+Local Definition Semigroup__Map_op_zlzlzgzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
    inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
   union.
 
 Program Instance Semigroup__Map {k} {v} `{(GHC.Base.Ord k)}
-   : Data.Semigroup.Semigroup (Map k v) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Map_op_zlzg__ |}.
+   : GHC.Base.Semigroup (Map k v) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Map_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Map_mappend {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__Map {k} {v} `{(GHC.Base.Ord k)}
    : GHC.Base.Monoid (Map k v) :=
@@ -1633,17 +1572,17 @@ Definition unionWith {k} {a} `{GHC.Base.Ord k}
            | _f, Tip, t2 => t2
            | f, Bin _ k1 x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
-               let 'r1r2 := unionWith f r1 r2 in
-               let 'l1l2 := unionWith f l1 l2 in
+               let r1r2 := unionWith f r1 r2 in
+               let l1l2 := unionWith f l1 l2 in
                match mb with
                | None => link k1 x1 l1l2 r1r2
                | Some x2 => link k1 (f x1 x2) l1l2 r1r2
                end
            end.
 
-Definition unionsWith {k} {a} `{GHC.Base.Ord k}
-   : (a -> a -> a) -> list (Map k a) -> Map k a :=
-  fun f ts => Data.Foldable.foldl (unionWith f) empty ts.
+Definition unionsWith {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
+   : (a -> a -> a) -> f (Map k a) -> Map k a :=
+  fun f ts => Data.Foldable.foldl' (unionWith f) empty ts.
 
 Definition unionWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> Map k a -> Map k a -> Map k a :=
@@ -1655,8 +1594,8 @@ Definition unionWithKey {k} {a} `{GHC.Base.Ord k}
            | _f, Tip, t2 => t2
            | f, Bin _ k1 x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
-               let 'r1r2 := unionWithKey f r1 r2 in
-               let 'l1l2 := unionWithKey f l1 l2 in
+               let r1r2 := unionWithKey f r1 r2 in
+               let l1l2 := unionWithKey f l1 l2 in
                match mb with
                | None => link k1 x1 l1l2 r1r2
                | Some x2 => link k1 (f k1 x1 x2) l1l2 r1r2
@@ -1679,9 +1618,7 @@ Definition maxViewWithKey {k} {a}
     match arg_0__ with
     | Tip => None
     | Bin _ k x l r =>
-        Some GHC.Base.$
-        (let 'Mk_MaxView km xm t := maxViewSure k x l r in
-         pair (pair km xm) t)
+        Some (let 'Mk_MaxView km xm t := maxViewSure k x l r in pair (pair km xm) t)
     end.
 
 Definition maxView {k} {a} : Map k a -> option (a * Map k a)%type :=
@@ -1699,9 +1636,9 @@ Definition glue {k} {a} : Map k a -> Map k a -> Map k a :=
     | (Bin sl kl xl ll lr as l), (Bin sr kr xr rl rr as r) =>
         if sl GHC.Base.> sr : bool
         then let 'Mk_MaxView km m l' := maxViewSure kl xl ll lr in
-             balanceR km m l' r
-        else let 'Mk_MinView km m r' := minViewSure kr xr rl rr in
-             balanceL km m l r'
+             balanceR km m l' r else
+        let 'Mk_MinView km m r' := minViewSure kr xr rl rr in
+        balanceL km m l r'
     end.
 
 Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
@@ -1712,15 +1649,13 @@ Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
              | k, (Bin _ kx x l r as t) =>
                  match GHC.Base.compare k kx with
                  | Lt =>
-                     let 'l' := go k l in
-                     if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool
-                     then t
-                     else balanceR kx x l' r
+                     let l' := go k l in
+                     if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
+                     balanceR kx x l' r
                  | Gt =>
-                     let 'r' := go k r in
-                     if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool
-                     then t
-                     else balanceL kx x l r'
+                     let r' := go k r in
+                     if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
+                     balanceL kx x l r'
                  | Eq => glue l r
                  end
              end in
@@ -1733,10 +1668,10 @@ Program Fixpoint link2 {k} {a} (arg_0__ : Map k a) (arg_1__ : Map k a)
                       | l, Tip => l
                       | (Bin sizeL kx x lx rx as l), (Bin sizeR ky y ly ry as r) =>
                           if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
-                          then balanceL ky y (link2 l ly) ry
-                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
-                               then balanceR kx x lx (link2 rx r)
-                               else glue l r
+                          then balanceL ky y (link2 l ly) ry else
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                          then balanceR kx x lx (link2 rx r) else
+                          glue l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -1745,14 +1680,14 @@ Definition filterWithKey {k} {a} : (k -> a -> bool) -> Map k a -> Map k a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, (Bin _ kx x l r as t) =>
-               let 'pr := filterWithKey p r in
-               let 'pl := filterWithKey p l in
+               let pr := filterWithKey p r in
+               let pl := filterWithKey p l in
                if p kx x : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
                             (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
                     then t
-                    else link kx x pl pr
-               else link2 pl pr
+                    else link kx x pl pr else
+               link2 pl pr
            end.
 
 Definition filter {a} {k} : (a -> bool) -> Map k a -> Map k a :=
@@ -1761,6 +1696,12 @@ Definition filter {a} {k} : (a -> bool) -> Map k a -> Map k a :=
                      match arg_0__, arg_1__ with
                      | _, x => p x
                      end) m.
+
+Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
+   : (k -> x -> bool) -> WhenMissing f k x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (filterWithKey f m)) (fun k x =>
+                      GHC.Base.pure (if f k x : bool then Some x else None)).
 
 Definition filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f}
    : (k -> a -> f bool) -> Map k a -> f (Map k a) :=
@@ -1774,12 +1715,18 @@ Definition filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f}
                    | true, pl, pr =>
                        if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
                                (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
-                       then t
-                       else link kx x pl pr
+                       then t else
+                       link kx x pl pr
                    | false, pl, pr => link2 pl pr
                    end in
                GHC.Base.liftA3 combine (p kx x) (filterWithKeyA p l) (filterWithKeyA p r)
            end.
+
+Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
+   : (k -> x -> f bool) -> WhenMissing f k x x :=
+  fun f =>
+    Mk_WhenMissing (fun m => filterWithKeyA f m) (fun k x =>
+                      boolITE None (Some x) Data.Functor.<$> f k x).
 
 Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
    : Map k a -> Map k b -> Map k a :=
@@ -1789,14 +1736,14 @@ Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
            | _, Tip => Tip
            | (Bin _ k x l1 r1 as t1), t2 =>
                let 'pair (pair l2 mb) r2 := splitMember k t2 in
-               let 'l1l2 := intersection l1 l2 in
-               let 'r1r2 := intersection r1 r2 in
+               let l1l2 := intersection l1 l2 in
+               let r1r2 := intersection r1 r2 in
                if mb : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
                     then t1
-                    else link k x l1l2 r1r2
-               else link2 l1l2 r1r2
+                    else link k x l1l2 r1r2 else
+               link2 l1l2 r1r2
            end.
 
 Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
@@ -1807,8 +1754,8 @@ Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
            | _f, _, Tip => Tip
            | f, Bin _ k x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k t2 in
-               let 'l1l2 := intersectionWith f l1 l2 in
-               let 'r1r2 := intersectionWith f r1 r2 in
+               let l1l2 := intersectionWith f l1 l2 in
+               let r1r2 := intersectionWith f r1 r2 in
                match mb with
                | Some x2 => link k (f x1 x2) l1l2 r1r2
                | None => link2 l1l2 r1r2
@@ -1823,8 +1770,8 @@ Definition intersectionWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
            | _f, _, Tip => Tip
            | f, Bin _ k x1 l1 r1, t2 =>
                let 'pair (pair l2 mb) r2 := splitLookup k t2 in
-               let 'l1l2 := intersectionWithKey f l1 l2 in
-               let 'r1r2 := intersectionWithKey f r1 r2 in
+               let l1l2 := intersectionWithKey f l1 l2 in
+               let r1r2 := intersectionWithKey f r1 r2 in
                match mb with
                | Some x2 => link k (f k x1 x2) l1l2 r1r2
                | None => link2 l1l2 r1r2
@@ -1845,7 +1792,7 @@ Definition mapEitherWithKey {k} {a} {b} {c}
                      | Data.Either.Right z => pair (link2 l1 r1) (link kx z l2 r2)
                      end
                  end in
-    id GHC.Base.$ go f0 t0.
+    id (go f0 t0).
 
 Definition mapEither {a} {b} {c} {k}
    : (a -> Data.Either.Either b c) -> Map k a -> (Map k b * Map k c)%type :=
@@ -1874,6 +1821,12 @@ Definition mapMaybe {a} {b} {k} : (a -> option b) -> Map k a -> Map k b :=
                        | _, x => f x
                        end).
 
+Definition mapMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> option y) -> WhenMissing f k x y :=
+  fun f =>
+    Mk_WhenMissing (fun m => GHC.Base.pure (mapMaybeWithKey f m)) (fun k x =>
+                      GHC.Base.pure (f k x)).
+
 Definition mergeA {f} {k} {a} {c} {b} `{GHC.Base.Applicative f} `{GHC.Base.Ord
   k}
    : WhenMissing f k a c ->
@@ -1888,8 +1841,8 @@ Definition mergeA {f} {k} {a} {c} {b} `{GHC.Base.Applicative f} `{GHC.Base.Ord
                      | Tip, t2 => g2t t2
                      | Bin _ kx x1 l1 r1, t2 =>
                          let 'pair (pair l2 mx2) r2 := splitLookup kx t2 in
-                         let 'r1r2 := go r1 r2 in
-                         let 'l1l2 := go l1 l2 in
+                         let r1r2 := go r1 r2 in
+                         let l1l2 := go l1 l2 in
                          match mx2 with
                          | None =>
                              GHC.Base.liftA3 (fun l' mx' r' => Data.Maybe.maybe link2 (link kx) mx' l' r')
@@ -1906,7 +1859,7 @@ Definition merge {k} {a} {c} {b} `{GHC.Base.Ord k}
    : SimpleWhenMissing k a c ->
      SimpleWhenMissing k b c ->
      SimpleWhenMatched k a b c -> Map k a -> Map k b -> Map k c :=
-  fun g1 g2 f m1 m2 => runIdentity GHC.Base.$ mergeA g1 g2 f m1 m2.
+  fun g1 g2 f m1 m2 => Data.Functor.Identity.runIdentity (mergeA g1 g2 f m1 m2).
 
 Definition mergeWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
    : (k -> a -> b -> option c) ->
@@ -1951,14 +1904,13 @@ Definition partitionWithKey {k} {a}
                      then pair (if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1 l)
                                         (Utils.Containers.Internal.PtrEquality.ptrEq r1 r) : bool
                                 then t
-                                else link kx x l1 r1) (link2 l2 r2)
-                     else pair (link2 l1 r1) (if andb (Utils.Containers.Internal.PtrEquality.ptrEq l2
-                                                                                                   l)
-                                                      (Utils.Containers.Internal.PtrEquality.ptrEq r2 r) : bool
-                                then t
-                                else link kx x l2 r2)
+                                else link kx x l1 r1) (link2 l2 r2) else
+                     pair (link2 l1 r1) (if andb (Utils.Containers.Internal.PtrEquality.ptrEq l2 l)
+                                                 (Utils.Containers.Internal.PtrEquality.ptrEq r2 r) : bool
+                           then t
+                           else link kx x l2 r2)
                  end in
-    id GHC.Base.$ go p0 t0.
+    id (go p0 t0).
 
 Definition partition {a} {k}
    : (a -> bool) -> Map k a -> (Map k a * Map k a)%type :=
@@ -1976,14 +1928,14 @@ Definition restrictKeys {k} {a} `{GHC.Base.Ord k}
            | _, Data.Set.Internal.Tip => Tip
            | (Bin _ k x l1 r1 as m), s =>
                let 'pair (pair l2 b) r2 := Data.Set.Internal.splitMember k s in
-               let 'l1l2 := restrictKeys l1 l2 in
-               let 'r1r2 := restrictKeys r1 r2 in
+               let l1l2 := restrictKeys l1 l2 in
+               let r1r2 := restrictKeys r1 r2 in
                if b : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
                     then m
-                    else link k x l1l2 r1r2
-               else link2 l1l2 r1r2
+                    else link k x l1l2 r1r2 else
+               link2 l1l2 r1r2
            end.
 
 Definition traverseMaybeWithKey {f} {k} {a} {b} `{GHC.Base.Applicative f}
@@ -2004,6 +1956,10 @@ Definition traverseMaybeWithKey {f} {k} {a} {b} `{GHC.Base.Applicative f}
                end in
   go.
 
+Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> f (option y)) -> WhenMissing f k x y :=
+  fun f => Mk_WhenMissing (traverseMaybeWithKey f) f.
+
 Definition withoutKeys {k} {a} `{GHC.Base.Ord k}
    : Map k a -> Data.Set.Internal.Set_ k -> Map k a :=
   fix withoutKeys arg_0__ arg_1__
@@ -2012,12 +1968,12 @@ Definition withoutKeys {k} {a} `{GHC.Base.Ord k}
            | m, Data.Set.Internal.Tip => m
            | m, Data.Set.Internal.Bin _ k ls rs =>
                let 'pair (pair lm b) rm := splitMember k m in
-               let 'rm' := withoutKeys rm rs in
-               let 'lm' := withoutKeys lm ls in
+               let rm' := withoutKeys rm rs in
+               let lm' := withoutKeys lm ls in
                if andb (negb b) (andb (Utils.Containers.Internal.PtrEquality.ptrEq lm' lm)
                                       (Utils.Containers.Internal.PtrEquality.ptrEq rm' rm)) : bool
-               then m
-               else link2 lm' rm'
+               then m else
+               link2 lm' rm'
            end.
 
 Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
@@ -2032,16 +1988,14 @@ Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
                    match GHC.Base.compare k kx with
                    | Lt =>
                        let 'pair found l' := go f k l in
-                       let 't' := balanceR kx x l' r in
-                       (pair found t')
+                       let t' := balanceR kx x l' r in (pair found t')
                    | Gt =>
                        let 'pair found r' := go f k r in
-                       let 't' := balanceL kx x l r' in
-                       (pair found t')
+                       let t' := balanceL kx x l r' in (pair found t')
                    | Eq =>
                        match f kx x with
                        | Some x' => (pair (Some x') (Bin sx kx x' l r))
-                       | None => let 'glued := glue l r in (pair (Some x) glued)
+                       | None => let glued := glue l r in (pair (Some x) glued)
                        end
                    end
                end in
@@ -2103,34 +2057,34 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
                    | None => AltSame
                    | Some x =>
                        match strict with
-                       | Lazy => AltBigger GHC.Base.$ singleton k x
-                       | Strict => GHC.Prim.seq x (AltBigger GHC.Base.$ singleton k x)
+                       | Lazy => AltBigger (singleton k x)
+                       | Strict => GHC.Prim.seq x (AltBigger (singleton k x))
                        end
                    end
                | k, f, Bin sx kx x l r =>
                    match GHC.Base.compare k kx with
                    | Lt =>
                        match go k f l with
-                       | AltSmaller l' => AltSmaller GHC.Base.$ balanceR kx x l' r
-                       | AltBigger l' => AltBigger GHC.Base.$ balanceL kx x l' r
-                       | AltAdj l' => AltAdj GHC.Base.$ Bin sx kx x l' r
+                       | AltSmaller l' => AltSmaller (balanceR kx x l' r)
+                       | AltBigger l' => AltBigger (balanceL kx x l' r)
+                       | AltAdj l' => AltAdj (Bin sx kx x l' r)
                        | AltSame => AltSame
                        end
                    | Gt =>
                        match go k f r with
-                       | AltSmaller r' => AltSmaller GHC.Base.$ balanceL kx x l r'
-                       | AltBigger r' => AltBigger GHC.Base.$ balanceR kx x l r'
-                       | AltAdj r' => AltAdj GHC.Base.$ Bin sx kx x l r'
+                       | AltSmaller r' => AltSmaller (balanceL kx x l r')
+                       | AltBigger r' => AltBigger (balanceR kx x l r')
+                       | AltAdj r' => AltAdj (Bin sx kx x l r')
                        | AltSame => AltSame
                        end
                    | Eq =>
                        match f (Some x) with
                        | Some x' =>
                            match strict with
-                           | Lazy => AltAdj GHC.Base.$ Bin sx kx x' l r
-                           | Strict => GHC.Prim.seq x' (AltAdj GHC.Base.$ Bin sx kx x' l r)
+                           | Lazy => AltAdj (Bin sx kx x' l r)
+                           | Strict => GHC.Prim.seq x' (AltAdj (Bin sx kx x' l r))
                            end
-                       | None => AltSmaller GHC.Base.$ glue l r
+                       | None => AltSmaller (glue l r)
                        end
                    end
                end in
@@ -2146,35 +2100,32 @@ Definition atKeyIdentity {k} {a} `{GHC.Base.Ord k}
      (option a -> Data.Functor.Identity.Identity (option a)) ->
      Map k a -> Data.Functor.Identity.Identity (Map k a) :=
   fun k f t =>
-    Data.Functor.Identity.Mk_Identity GHC.Base.$
-    atKeyPlain Lazy k (GHC.Prim.coerce f) t.
+    Data.Functor.Identity.Mk_Identity (atKeyPlain Lazy k (GHC.Prim.coerce f) t).
 
 Definition drop {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | i, m =>
-        if i GHC.Base.>= size m : bool
-        then Tip
-        else match arg_0__, arg_1__ with
-             | i0, m0 =>
-                 let fix go arg_2__ arg_3__
-                           := match arg_2__, arg_3__ with
-                              | i, m =>
-                                  if i GHC.Base.<= #0 : bool
-                                  then m
-                                  else match arg_2__, arg_3__ with
-                                       | _, Tip => Tip
-                                       | i, Bin _ kx x l r =>
-                                           let sizeL := size l in
-                                           match GHC.Base.compare i sizeL with
-                                           | Lt => link kx x (go i l) r
-                                           | Gt => go ((i GHC.Num.- sizeL) GHC.Num.- #1) r
-                                           | Eq => insertMin kx x r
-                                           end
-                                       end
-                              end in
-                 go i0 m0
-             end
+        if i GHC.Base.>= size m : bool then Tip else
+        match arg_0__, arg_1__ with
+        | i0, m0 =>
+            let fix go arg_2__ arg_3__
+                      := match arg_2__, arg_3__ with
+                         | i, m =>
+                             if i GHC.Base.<= #0 : bool then m else
+                             match arg_2__, arg_3__ with
+                             | _, Tip => Tip
+                             | i, Bin _ kx x l r =>
+                                 let sizeL := size l in
+                                 match GHC.Base.compare i sizeL with
+                                 | Lt => link kx x (go i l) r
+                                 | Gt => go ((i GHC.Num.- sizeL) GHC.Num.- #1) r
+                                 | Eq => insertMin kx x r
+                                 end
+                             end
+                         end in
+            go i0 m0
+        end
     end.
 
 Definition splitAt {k} {a}
@@ -2183,24 +2134,22 @@ Definition splitAt {k} {a}
     let fix go arg_0__ arg_1__
               := match arg_0__, arg_1__ with
                  | i, m =>
-                     if i GHC.Base.<= #0 : bool
-                     then pair Tip m
-                     else match arg_0__, arg_1__ with
-                          | _, Tip => pair Tip Tip
-                          | i, Bin _ kx x l r =>
-                              let sizeL := size l in
-                              match GHC.Base.compare i sizeL with
-                              | Lt => let 'pair ll lr := go i l in pair ll (link kx x lr r)
-                              | Gt =>
-                                  let 'pair rl rr := go ((i GHC.Num.- sizeL) GHC.Num.- #1) r in
-                                  pair (link kx x l rl) rr
-                              | Eq => pair l (insertMin kx x r)
-                              end
-                          end
+                     if i GHC.Base.<= #0 : bool then pair Tip m else
+                     match arg_0__, arg_1__ with
+                     | _, Tip => pair Tip Tip
+                     | i, Bin _ kx x l r =>
+                         let sizeL := size l in
+                         match GHC.Base.compare i sizeL with
+                         | Lt => let 'pair ll lr := go i l in pair ll (link kx x lr r)
+                         | Gt =>
+                             let 'pair rl rr := go ((i GHC.Num.- sizeL) GHC.Num.- #1) r in
+                             pair (link kx x l rl) rr
+                         | Eq => pair l (insertMin kx x r)
+                         end
+                     end
                  end in
-    if i0 GHC.Base.>= size m0 : bool
-    then pair m0 Tip
-    else id GHC.Base.$ go i0 m0.
+    if i0 GHC.Base.>= size m0 : bool then pair m0 Tip else
+    id (go i0 m0).
 
 Definition isProperSubmapOfBy {k} {a} {b} `{GHC.Base.Ord k}
    : (a -> b -> bool) -> Map k a -> Map k b -> bool :=
@@ -2222,28 +2171,26 @@ Definition take {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | i, m =>
-        if i GHC.Base.>= size m : bool
-        then m
-        else match arg_0__, arg_1__ with
-             | i0, m0 =>
-                 let fix go arg_2__ arg_3__
-                           := match arg_2__, arg_3__ with
-                              | i, _ =>
-                                  if i GHC.Base.<= #0 : bool
-                                  then Tip
-                                  else match arg_2__, arg_3__ with
-                                       | _, Tip => Tip
-                                       | i, Bin _ kx x l r =>
-                                           let sizeL := size l in
-                                           match GHC.Base.compare i sizeL with
-                                           | Lt => go i l
-                                           | Gt => link kx x l (go ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
-                                           | Eq => l
-                                           end
-                                       end
-                              end in
-                 go i0 m0
-             end
+        if i GHC.Base.>= size m : bool then m else
+        match arg_0__, arg_1__ with
+        | i0, m0 =>
+            let fix go arg_2__ arg_3__
+                      := match arg_2__, arg_3__ with
+                         | i, _ =>
+                             if i GHC.Base.<= #0 : bool then Tip else
+                             match arg_2__, arg_3__ with
+                             | _, Tip => Tip
+                             | i, Bin _ kx x l r =>
+                                 let sizeL := size l in
+                                 match GHC.Base.compare i sizeL with
+                                 | Lt => go i l
+                                 | Gt => link kx x l (go ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
+                                 | Eq => l
+                                 end
+                             end
+                         end in
+            go i0 m0
+        end
     end.
 
 Definition deleteAt {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
@@ -2267,11 +2214,10 @@ Definition difference {k} {a} {b} `{GHC.Base.Ord k}
            | t1, Tip => t1
            | t1, Bin _ k _ l2 r2 =>
                let 'pair l1 r1 := split k t1 in
-               let 'r1r2 := difference r1 r2 in
-               let 'l1l2 := difference l1 l2 in
-               if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool
-               then t1
-               else link2 l1l2 r1r2
+               let r1r2 := difference r1 r2 in
+               let l1l2 := difference l1 l2 in
+               if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool then t1 else
+               link2 l1l2 r1r2
            end.
 
 Definition op_zrzr__ {k} {a} {b} `{GHC.Base.Ord k}
@@ -2308,9 +2254,10 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
             Bin #3 rlk rlx (Bin #1 k x Tip Tip) (Bin #1 rk rx Tip Tip)
         | Bin rs rk rx (Bin rls rlk rlx rll rlr as rl) (Bin rrs _ _ _ _ as rr) =>
             if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-            then Bin (#1 GHC.Num.+ rs) rk rx (Bin (#1 GHC.Num.+ rls) k x Tip rl) rr
-            else Bin (#1 GHC.Num.+ rs) rlk rlx (Bin (#1 GHC.Num.+ size rll) k x Tip rll)
-                 (Bin ((#1 GHC.Num.+ rrs) GHC.Num.+ size rlr) rk rx rlr rr)
+            then Bin (#1 GHC.Num.+ rs) rk rx (Bin (#1 GHC.Num.+ rls) k x Tip rl) rr else
+            Bin (#1 GHC.Num.+ rs) rlk rlx (Bin (#1 GHC.Num.+ size rll) k x Tip rll) (Bin
+                                                                                     ((#1 GHC.Num.+ rrs) GHC.Num.+
+                                                                                      size rlr) rk rx rlr rr)
         end
     | Bin ls lk lx ll lr =>
         match r with
@@ -2322,9 +2269,9 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
             | pair (Bin _ _ _ _ _) Tip => Bin #3 lk lx ll (Bin #1 k x Tip Tip)
             | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
                 if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-                then Bin (#1 GHC.Num.+ ls) lk lx ll (Bin (#1 GHC.Num.+ lrs) k x lr Tip)
-                else Bin (#1 GHC.Num.+ ls) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl)
-                                                    lk lx ll lrl) (Bin (#1 GHC.Num.+ size lrr) k x lrr Tip)
+                then Bin (#1 GHC.Num.+ ls) lk lx ll (Bin (#1 GHC.Num.+ lrs) k x lr Tip) else
+                Bin (#1 GHC.Num.+ ls) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl) lk lx
+                                               ll lrl) (Bin (#1 GHC.Num.+ size lrr) k x lrr Tip)
             end
         | Bin rs rk rx rl rr =>
             if rs GHC.Base.> (delta GHC.Num.* ls) : bool
@@ -2334,39 +2281,34 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin ((#1 GHC.Num.+ ls)
                                                                            GHC.Num.+
-                                                                           rls) k x l rl) rr
-                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin ((#1 GHC.Num.+ ls)
-                                                                             GHC.Num.+
-                                                                             size rll) k x l rll) (Bin ((#1 GHC.Num.+
-                                                                                                         rrs) GHC.Num.+
-                                                                                                        size rlr) rk rx
-                                                                                                   rlr rr)
+                                                                           rls) k x l rl) rr else
+                     Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlk rlx (Bin ((#1 GHC.Num.+ ls) GHC.Num.+
+                                                                        size rll) k x l rll) (Bin ((#1 GHC.Num.+ rrs)
+                                                                                                   GHC.Num.+
+                                                                                                   size rlr) rk rx rlr
+                                                                                              rr)
                  | _ =>
                      let 'pair _ _ := scrut_24__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
-                 end
-            else if ls GHC.Base.> (delta GHC.Num.* rs) : bool
-                 then let scrut_17__ := pair ll lr in
-                      match scrut_17__ with
-                      | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
-                          if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-                          then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
-                                                                                   GHC.Num.+
-                                                                                   lrs) k x lr r)
-                          else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin ((#1 GHC.Num.+ lls)
-                                                                                  GHC.Num.+
-                                                                                  size lrl) lk lx ll lrl) (Bin ((#1
-                                                                                                                 GHC.Num.+
-                                                                                                                 rs)
-                                                                                                                GHC.Num.+
-                                                                                                                size
-                                                                                                                lrr) k x
-                                                                                                           lrr r)
-                      | _ =>
-                          let 'pair _ _ := scrut_17__ in
-                          GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
-                      end
-                 else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
+                 end else
+            if ls GHC.Base.> (delta GHC.Num.* rs) : bool
+            then let scrut_17__ := pair ll lr in
+                 match scrut_17__ with
+                 | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
+                     if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
+                     then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
+                                                                              GHC.Num.+
+                                                                              lrs) k x lr r) else
+                     Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrk lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+
+                                                                        size lrl) lk lx ll lrl) (Bin ((#1 GHC.Num.+ rs)
+                                                                                                      GHC.Num.+
+                                                                                                      size lrr) k x lrr
+                                                                                                 r)
+                 | _ =>
+                     let 'pair _ _ := scrut_17__ in
+                     GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
+                 end else
+            Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
         end
     end.
 
@@ -2396,8 +2338,8 @@ Local Definition Foldable__Map_length {inst_k}
 
 Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Map_elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Map_fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__Map_fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__Map_foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__Map_foldl ;
@@ -2409,6 +2351,24 @@ Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
          Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
          Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
          Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
+
+Local Definition Eq2__Map_liftEq2
+   : forall {a} {b} {c} {d},
+     (a -> b -> bool) -> (c -> d -> bool) -> Map a c -> Map b d -> bool :=
+  fun {a} {b} {c} {d} =>
+    fun eqk eqv m n =>
+      andb (size m GHC.Base.== size n) (Data.Functor.Classes.liftEq
+            (Data.Functor.Classes.liftEq2 eqk eqv) (toList m) (toList n)).
+
+Program Instance Eq2__Map : Data.Functor.Classes.Eq2 Map :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
+           Eq2__Map_liftEq2 |}.
+
+Program Instance Ord2__Map : Data.Functor.Classes.Ord2 Map :=
+  fun _ k =>
+    k {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
+           Ord2__Map_liftCompare2 |}.
 
 Local Definition Eq___Map_op_zeze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
   `{GHC.Base.Eq_ inst_a}
@@ -2438,14 +2398,6 @@ Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
          GHC.Base.max__ := Ord__Map_max ;
          GHC.Base.min__ := Ord__Map_min |}.
 
-Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> f (option y)) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
-Definition traverseMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
-   : (k -> x -> f y) -> WhenMissing f k x y :=
-  fun f => Mk_WhenMissing missingValue missingValue.
-
 Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
    : (k -> a -> t b) -> Map k a -> t (Map k b) :=
   fun f =>
@@ -2454,14 +2406,19 @@ Definition traverseWithKey {t} {k} {a} {b} `{GHC.Base.Applicative t}
                  | Tip => GHC.Base.pure Tip
                  | Bin num_1__ k v _ _ =>
                      if num_1__ GHC.Base.== #1 : bool
-                     then (fun v' => Bin #1 k v' Tip Tip) Data.Functor.<$> f k v
-                     else match arg_0__ with
-                          | Bin s k v l r =>
-                              GHC.Base.liftA3 (GHC.Base.flip (Bin s k)) (go l) (f k v) (go r)
-                          | _ => GHC.Err.patternFailure
-                          end
+                     then (fun v' => Bin #1 k v' Tip Tip) Data.Functor.<$> f k v else
+                     match arg_0__ with
+                     | Bin s k v l r =>
+                         GHC.Base.liftA3 (GHC.Base.flip (Bin s k)) (go l) (f k v) (go r)
+                     | _ => GHC.Err.patternFailure
+                     end
                  end in
     go.
+
+Definition traverseMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
+   : (k -> x -> f y) -> WhenMissing f k x y :=
+  fun f =>
+    Mk_WhenMissing (traverseWithKey f) (fun k x => Some Data.Functor.<$> f k x).
 
 Local Definition Traversable__Map_traverse {inst_k}
    : forall {f} {a} {b},
@@ -2469,6 +2426,12 @@ Local Definition Traversable__Map_traverse {inst_k}
      (a -> f b) -> (Map inst_k) a -> f ((Map inst_k) b) :=
   fun {f} {a} {b} `{GHC.Base.Applicative f} =>
     fun f => traverseWithKey (fun arg_0__ => f).
+
+Local Definition Traversable__Map_mapM {inst_k}
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> (Map inst_k) a -> m ((Map inst_k) b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Map_traverse.
 
 Local Definition Traversable__Map_sequenceA {inst_k}
    : forall {f} {a},
@@ -2479,12 +2442,6 @@ Local Definition Traversable__Map_sequence {inst_k}
    : forall {m} {a},
      forall `{GHC.Base.Monad m}, (Map inst_k) (m a) -> m ((Map inst_k) a) :=
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Map_sequenceA.
-
-Local Definition Traversable__Map_mapM {inst_k}
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> (Map inst_k) a -> m ((Map inst_k) b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__Map_traverse.
 
 Program Instance Traversable__Map {k} : Data.Traversable.Traversable (Map k) :=
   fun _ k =>
@@ -2499,28 +2456,26 @@ Program Instance Traversable__Map {k} : Data.Traversable.Traversable (Map k) :=
 
 Definition zipWithAMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> f z) -> WhenMatched f k x y z :=
-  fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => Some Data.Functor.<$> f k x y).
+  fun f => Mk_WhenMatched (fun k x y => Some Data.Functor.<$> f k x y).
 
 Definition zipWithMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> z) -> WhenMatched f k x y z :=
   fun f =>
-    Mk_WhenMatched GHC.Base.$
-    (fun k x y => (GHC.Base.pure GHC.Base.∘ Some) GHC.Base.$ f k x y).
+    Mk_WhenMatched (fun k x y => (GHC.Base.pure GHC.Base.∘ Some) (f k x y)).
 
 Definition zipWithMaybeAMatched {k} {x} {y} {f} {z}
    : (k -> x -> y -> f (option z)) -> WhenMatched f k x y z :=
-  fun f => Mk_WhenMatched GHC.Base.$ (fun k x y => f k x y).
+  fun f => Mk_WhenMatched (fun k x y => f k x y).
 
 Definition mapGentlyWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMatched f k x y a -> WhenMatched f k x y b :=
   fun f t =>
-    zipWithMaybeAMatched GHC.Base.$
-    (fun k x y => GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
+    zipWithMaybeAMatched (fun k x y =>
+                            GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
 
 Definition zipWithMaybeMatched {f} {k} {x} {y} {z} `{GHC.Base.Applicative f}
    : (k -> x -> y -> option z) -> WhenMatched f k x y z :=
-  fun f =>
-    Mk_WhenMatched GHC.Base.$ (fun k x y => GHC.Base.pure GHC.Base.$ f k x y).
+  fun f => Mk_WhenMatched (fun k x y => GHC.Base.pure (f k x y)).
 
 Module Notations.
 Notation "'_Data.Map.Internal.!?_'" := (op_znz3fU__).
@@ -2529,22 +2484,36 @@ Notation "'_Data.Map.Internal.\\_'" := (op_zrzr__).
 Infix "Data.Map.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb bool comparison cons
-     false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option orb pair
-     prod runIdentity true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either
-     Data.Either.Left Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldl
-     Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Maybe.maybe Data.Semigroup.Semigroup
-     Data.Semigroup.op_zlzg__ Data.Set.Internal.Bin Data.Set.Internal.Set_
-     Data.Set.Internal.Tip Data.Set.Internal.splitMember Data.Traversable.Traversable
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
-     GHC.Base.Monoid GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip
-     GHC.Base.fmap GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mempty
-     GHC.Base.op_z2218U__ GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__
-     GHC.Base.op_zsze__ GHC.Base.pure GHC.DeferredFix.deferredFix2
-     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.Err.patternFailure GHC.Num.Int
-     GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
+     false functor__Map_op_zlzd__ id list map_size negb nil op_zt__ option pair prod
+     true unit Data.Bits.shiftL Data.Bits.shiftR Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl' Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
+     Data.Functor.Classes.Eq2 Data.Functor.Classes.Ord2
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare2
+     Data.Functor.Classes.liftCompare2__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq2 Data.Functor.Classes.liftEq2__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Functor.Identity.runIdentity Data.Maybe.maybe Data.Set.Internal.Bin
+     Data.Set.Internal.Set_ Data.Set.Internal.Tip Data.Set.Internal.splitMember
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.id GHC.Base.liftA3 GHC.Base.mappend GHC.Base.mappend__ GHC.Base.max__
+     GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlzd____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.pure
+     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num
+     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
      GHC.Prim.coerce GHC.Prim.seq Nat.add Utils.Containers.Internal.PtrEquality.ptrEq
 *)

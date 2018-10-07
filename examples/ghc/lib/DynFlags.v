@@ -12,9 +12,13 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinNums.
 Require Data.Either.
+Require Data.Set.Internal.
+Require EnumSet.
 Require GHC.Base.
 Require GHC.Char.
+Require GHC.Err.
 Require GHC.Num.
 Require Module.
 Require SrcLoc.
@@ -56,7 +60,6 @@ Inductive WarningFlag : Type
   |  Opt_WarnUnusedMatches : WarningFlag
   |  Opt_WarnUnusedTypePatterns : WarningFlag
   |  Opt_WarnUnusedForalls : WarningFlag
-  |  Opt_WarnContextQuantification : WarningFlag
   |  Opt_WarnWarningsDeprecations : WarningFlag
   |  Opt_WarnDeprecatedFlags : WarningFlag
   |  Opt_WarnAMP : WarningFlag
@@ -92,11 +95,18 @@ Inductive WarningFlag : Type
   |  Opt_WarnNonCanonicalMonadFailInstances : WarningFlag
   |  Opt_WarnNonCanonicalMonoidInstances : WarningFlag
   |  Opt_WarnMissingPatternSynonymSignatures : WarningFlag
-  |  Opt_WarnUnrecognisedWarningFlags : WarningFlag.
+  |  Opt_WarnUnrecognisedWarningFlags : WarningFlag
+  |  Opt_WarnSimplifiableClassConstraints : WarningFlag
+  |  Opt_WarnCPPUndef : WarningFlag
+  |  Opt_WarnUnbangedStrictPatterns : WarningFlag
+  |  Opt_WarnMissingHomeModules : WarningFlag
+  |  Opt_WarnPartialFields : WarningFlag
+  |  Opt_WarnMissingExportList : WarningFlag.
 
 Inductive WarnReason : Type
   := NoReason : WarnReason
-  |  Reason : WarningFlag -> WarnReason.
+  |  Reason : WarningFlag -> WarnReason
+  |  ErrReason : (option WarningFlag) -> WarnReason.
 
 Definition TurnOnFlag :=
   bool%type.
@@ -112,9 +122,6 @@ Inductive SseVersion : Type
   |  SSE4 : SseVersion
   |  SSE42 : SseVersion.
 
-Definition SigOf :=
-  (Module.ModuleNameEnv Module.Module)%type.
-
 Inductive Settings : Type := Mk_Settings.
 
 Inductive SafeHaskellMode : Type
@@ -125,6 +132,8 @@ Inductive SafeHaskellMode : Type
 
 Inductive RtsOptsEnabled : Type
   := RtsOptsNone : RtsOptsEnabled
+  |  RtsOptsIgnore : RtsOptsEnabled
+  |  RtsOptsIgnoreAll : RtsOptsEnabled
   |  RtsOptsSafeOnly : RtsOptsEnabled
   |  RtsOptsAll : RtsOptsEnabled.
 
@@ -140,9 +149,15 @@ Inductive PkgConfRef : Type
   |  UserPkgConf : PkgConfRef
   |  PkgConfFile : GHC.Base.String -> PkgConfRef.
 
+Inductive PackageDBFlag : Type
+  := PackageDB : PkgConfRef -> PackageDBFlag
+  |  NoUserPackageDB : PackageDBFlag
+  |  NoGlobalPackageDB : PackageDBFlag
+  |  ClearPackageDBs : PackageDBFlag.
+
 Inductive PackageArg : Type
   := Mk_PackageArg : GHC.Base.String -> PackageArg
-  |  UnitIdArg : GHC.Base.String -> PackageArg.
+  |  UnitIdArg : Module.UnitId -> PackageArg.
 
 Inductive Option : Type
   := FileOption : GHC.Base.String -> GHC.Base.String -> Option
@@ -151,16 +166,26 @@ Inductive Option : Type
 Inductive OnOff a : Type := On : a -> OnOff a |  Off : a -> OnOff a.
 
 Inductive ModRenaming : Type
-  := Mk_ModRenaming
-   : bool -> list (Module.ModuleName * Module.ModuleName)%type -> ModRenaming.
+  := Mk_ModRenaming (modRenamingWithImplicit : bool) (modRenamings
+    : list (Module.ModuleName * Module.ModuleName)%type)
+   : ModRenaming.
 
 Inductive PackageFlag : Type
   := ExposePackage : GHC.Base.String -> PackageArg -> ModRenaming -> PackageFlag
   |  HidePackage : GHC.Base.String -> PackageFlag.
 
+Inductive LlvmTarget : Type
+  := Mk_LlvmTarget (lDataLayout : GHC.Base.String) (lCPU : GHC.Base.String)
+  (lAttributes : list GHC.Base.String)
+   : LlvmTarget.
+
+Definition LlvmTargets :=
+  (list (GHC.Base.String * LlvmTarget)%type)%type.
+
 Inductive LinkerInfo : Type
   := GnuLD : list Option -> LinkerInfo
   |  GnuGold : list Option -> LinkerInfo
+  |  LlvmLLD : list Option -> LinkerInfo
   |  DarwinLD : list Option -> LinkerInfo
   |  SolarisLD : list Option -> LinkerInfo
   |  AixLD : list Option -> LinkerInfo
@@ -200,8 +225,10 @@ Inductive GeneralFlag : Type
   |  Opt_DoAsmLinting : GeneralFlag
   |  Opt_DoAnnotationLinting : GeneralFlag
   |  Opt_NoLlvmMangler : GeneralFlag
+  |  Opt_FastLlvm : GeneralFlag
   |  Opt_WarnIsError : GeneralFlag
   |  Opt_ShowWarnGroups : GeneralFlag
+  |  Opt_HideSourcePaths : GeneralFlag
   |  Opt_PrintExplicitForalls : GeneralFlag
   |  Opt_PrintExplicitKinds : GeneralFlag
   |  Opt_PrintExplicitCoercions : GeneralFlag
@@ -212,6 +239,7 @@ Inductive GeneralFlag : Type
   |  Opt_PrintPotentialInstances : GeneralFlag
   |  Opt_PrintTypecheckerElaboration : GeneralFlag
   |  Opt_CallArity : GeneralFlag
+  |  Opt_Exitification : GeneralFlag
   |  Opt_Strictness : GeneralFlag
   |  Opt_LateDmdAnal : GeneralFlag
   |  Opt_KillAbsence : GeneralFlag
@@ -223,12 +251,15 @@ Inductive GeneralFlag : Type
   |  Opt_CrossModuleSpecialise : GeneralFlag
   |  Opt_StaticArgumentTransformation : GeneralFlag
   |  Opt_CSE : GeneralFlag
+  |  Opt_StgCSE : GeneralFlag
   |  Opt_LiberateCase : GeneralFlag
   |  Opt_SpecConstr : GeneralFlag
+  |  Opt_SpecConstrKeen : GeneralFlag
   |  Opt_DoLambdaEtaExpansion : GeneralFlag
   |  Opt_IgnoreAsserts : GeneralFlag
   |  Opt_DoEtaReduction : GeneralFlag
   |  Opt_CaseMerge : GeneralFlag
+  |  Opt_CaseFolding : GeneralFlag
   |  Opt_UnboxStrictFields : GeneralFlag
   |  Opt_UnboxSmallStrictFields : GeneralFlag
   |  Opt_DictsCheap : GeneralFlag
@@ -240,6 +271,7 @@ Inductive GeneralFlag : Type
   |  Opt_PedanticBottoms : GeneralFlag
   |  Opt_LlvmTBAA : GeneralFlag
   |  Opt_LlvmPassVectorsInRegisters : GeneralFlag
+  |  Opt_LlvmFillUndefWithGarbage : GeneralFlag
   |  Opt_IrrefutableTuples : GeneralFlag
   |  Opt_CmmSink : GeneralFlag
   |  Opt_CmmElimCommonBlocks : GeneralFlag
@@ -250,6 +282,10 @@ Inductive GeneralFlag : Type
   |  Opt_Loopification : GeneralFlag
   |  Opt_CprAnal : GeneralFlag
   |  Opt_WorkerWrapper : GeneralFlag
+  |  Opt_SolveConstantDicts : GeneralFlag
+  |  Opt_AlignmentSanitisation : GeneralFlag
+  |  Opt_CatchBottoms : GeneralFlag
+  |  Opt_SimplPreInlining : GeneralFlag
   |  Opt_IgnoreInterfacePragmas : GeneralFlag
   |  Opt_OmitInterfacePragmas : GeneralFlag
   |  Opt_ExposeAllUnfoldings : GeneralFlag
@@ -258,6 +294,8 @@ Inductive GeneralFlag : Type
   |  Opt_ProfCountEntries : GeneralFlag
   |  Opt_Pp : GeneralFlag
   |  Opt_ForceRecomp : GeneralFlag
+  |  Opt_IgnoreOptimChanges : GeneralFlag
+  |  Opt_IgnoreHpcChanges : GeneralFlag
   |  Opt_ExcessPrecision : GeneralFlag
   |  Opt_EagerBlackHoling : GeneralFlag
   |  Opt_NoHsMain : GeneralFlag
@@ -280,11 +318,14 @@ Inductive GeneralFlag : Type
   |  Opt_IgnoreDotGhci : GeneralFlag
   |  Opt_GhciSandbox : GeneralFlag
   |  Opt_GhciHistory : GeneralFlag
+  |  Opt_LocalGhciHistory : GeneralFlag
   |  Opt_HelpfulErrors : GeneralFlag
   |  Opt_DeferTypeErrors : GeneralFlag
   |  Opt_DeferTypedHoles : GeneralFlag
   |  Opt_DeferOutOfScopeVariables : GeneralFlag
   |  Opt_PIC : GeneralFlag
+  |  Opt_PIE : GeneralFlag
+  |  Opt_PICExecutable : GeneralFlag
   |  Opt_SccProfilingOn : GeneralFlag
   |  Opt_Ticky : GeneralFlag
   |  Opt_Ticky_Allocd : GeneralFlag
@@ -295,12 +336,15 @@ Inductive GeneralFlag : Type
   |  Opt_Hpc : GeneralFlag
   |  Opt_FlatCache : GeneralFlag
   |  Opt_ExternalInterpreter : GeneralFlag
-  |  Opt_VersionMacros : GeneralFlag
   |  Opt_OptimalApplicativeDo : GeneralFlag
-  |  Opt_SimplPreInlining : GeneralFlag
+  |  Opt_VersionMacros : GeneralFlag
+  |  Opt_WholeArchiveHsLibs : GeneralFlag
   |  Opt_ErrorSpans : GeneralFlag
+  |  Opt_DiagnosticsShowCaret : GeneralFlag
   |  Opt_PprCaseAsLet : GeneralFlag
   |  Opt_PprShowTicks : GeneralFlag
+  |  Opt_ShowHoleConstraints : GeneralFlag
+  |  Opt_ShowLoadedModules : GeneralFlag
   |  Opt_SuppressCoercions : GeneralFlag
   |  Opt_SuppressVarKinds : GeneralFlag
   |  Opt_SuppressModulePrefixes : GeneralFlag
@@ -309,6 +353,8 @@ Inductive GeneralFlag : Type
   |  Opt_SuppressUnfoldings : GeneralFlag
   |  Opt_SuppressTypeSignatures : GeneralFlag
   |  Opt_SuppressUniques : GeneralFlag
+  |  Opt_SuppressStgFreeVars : GeneralFlag
+  |  Opt_SuppressTicks : GeneralFlag
   |  Opt_AutoLinkPackages : GeneralFlag
   |  Opt_ImplicitImportQualified : GeneralFlag
   |  Opt_KeepHiDiffs : GeneralFlag
@@ -317,15 +363,24 @@ Inductive GeneralFlag : Type
   |  Opt_KeepTmpFiles : GeneralFlag
   |  Opt_KeepRawTokenStream : GeneralFlag
   |  Opt_KeepLlvmFiles : GeneralFlag
+  |  Opt_KeepHiFiles : GeneralFlag
+  |  Opt_KeepOFiles : GeneralFlag
   |  Opt_BuildDynamicToo : GeneralFlag
   |  Opt_DistrustAllPackages : GeneralFlag
-  |  Opt_PackageTrust : GeneralFlag.
+  |  Opt_PackageTrust : GeneralFlag
+  |  Opt_G_NoStateHack : GeneralFlag
+  |  Opt_G_NoOptCoercion : GeneralFlag.
 
 Inductive FlushOut : Type := Mk_FlushOut.
 
 Inductive FlushErr : Type := Mk_FlushErr.
 
 Inductive FlagSpec (flag : Type) : Type := Mk_FlagSpec.
+
+Inductive FilesToClean : Type
+  := Mk_FilesToClean (ftcGhcSession : (Data.Set.Internal.Set_ GHC.Base.String))
+  (ftcCurrentModule : (Data.Set.Internal.Set_ GHC.Base.String))
+   : FilesToClean.
 
 Inductive DynLibLoader : Type
   := Deployable : DynLibLoader
@@ -346,13 +401,16 @@ Definition getDynFlags `{g : HasDynFlags m} : m DynFlags :=
 
 Inductive DumpFlag : Type
   := Opt_D_dump_cmm : DumpFlag
+  |  Opt_D_dump_cmm_from_stg : DumpFlag
   |  Opt_D_dump_cmm_raw : DumpFlag
+  |  Opt_D_dump_cmm_verbose : DumpFlag
   |  Opt_D_dump_cmm_cfg : DumpFlag
   |  Opt_D_dump_cmm_cbe : DumpFlag
   |  Opt_D_dump_cmm_switch : DumpFlag
   |  Opt_D_dump_cmm_proc : DumpFlag
-  |  Opt_D_dump_cmm_sink : DumpFlag
   |  Opt_D_dump_cmm_sp : DumpFlag
+  |  Opt_D_dump_cmm_sink : DumpFlag
+  |  Opt_D_dump_cmm_caf : DumpFlag
   |  Opt_D_dump_cmm_procmap : DumpFlag
   |  Opt_D_dump_cmm_split : DumpFlag
   |  Opt_D_dump_cmm_info : DumpFlag
@@ -376,16 +434,21 @@ Inductive DumpFlag : Type
   |  Opt_D_dump_simpl_trace : DumpFlag
   |  Opt_D_dump_occur_anal : DumpFlag
   |  Opt_D_dump_parsed : DumpFlag
+  |  Opt_D_dump_parsed_ast : DumpFlag
   |  Opt_D_dump_rn : DumpFlag
+  |  Opt_D_dump_rn_ast : DumpFlag
+  |  Opt_D_dump_shape : DumpFlag
   |  Opt_D_dump_simpl : DumpFlag
   |  Opt_D_dump_simpl_iterations : DumpFlag
   |  Opt_D_dump_spec : DumpFlag
   |  Opt_D_dump_prep : DumpFlag
   |  Opt_D_dump_stg : DumpFlag
   |  Opt_D_dump_call_arity : DumpFlag
+  |  Opt_D_dump_exitify : DumpFlag
   |  Opt_D_dump_stranal : DumpFlag
   |  Opt_D_dump_str_signatures : DumpFlag
   |  Opt_D_dump_tc : DumpFlag
+  |  Opt_D_dump_tc_ast : DumpFlag
   |  Opt_D_dump_types : DumpFlag
   |  Opt_D_dump_rules : DumpFlag
   |  Opt_D_dump_cse : DumpFlag
@@ -396,6 +459,7 @@ Inductive DumpFlag : Type
   |  Opt_D_dump_simpl_stats : DumpFlag
   |  Opt_D_dump_cs_trace : DumpFlag
   |  Opt_D_dump_tc_trace : DumpFlag
+  |  Opt_D_dump_ec_trace : DumpFlag
   |  Opt_D_dump_if_trace : DumpFlag
   |  Opt_D_dump_vt_trace : DumpFlag
   |  Opt_D_dump_splices : DumpFlag
@@ -410,13 +474,17 @@ Inductive DumpFlag : Type
   |  Opt_D_dump_hi_diffs : DumpFlag
   |  Opt_D_dump_mod_cycles : DumpFlag
   |  Opt_D_dump_mod_map : DumpFlag
+  |  Opt_D_dump_timings : DumpFlag
   |  Opt_D_dump_view_pattern_commoning : DumpFlag
   |  Opt_D_verbose_core2core : DumpFlag
-  |  Opt_D_dump_debug : DumpFlag.
+  |  Opt_D_dump_debug : DumpFlag
+  |  Opt_D_dump_json : DumpFlag
+  |  Opt_D_ppr_debug : DumpFlag
+  |  Opt_D_no_debug_output : DumpFlag.
 
 Inductive Deprecation : Type
-  := Deprecated : Deprecation
-  |  NotDeprecated : Deprecation.
+  := NotDeprecated : Deprecation
+  |  Deprecated : Deprecation.
 
 Record ContainsDynFlags__Dict t := ContainsDynFlags__Dict_Build {
   extractDynFlags__ : t -> DynFlags }.
@@ -436,23 +504,115 @@ Inductive CompilerInfo : Type
   |  AppleClang51 : CompilerInfo
   |  UnknownCC : CompilerInfo.
 
+Inductive BmiVersion : Type := BMI1 : BmiVersion |  BMI2 : BmiVersion.
+
 Arguments On {_} _.
 
 Arguments Off {_} _.
 
-Definition modRenamingWithImplicit (arg_0__ : ModRenaming) :=
-  let 'Mk_ModRenaming modRenamingWithImplicit _ := arg_0__ in
-  modRenamingWithImplicit.
+Instance Default__Way : GHC.Err.Default Way :=
+  GHC.Err.Build_Default _ WayThreaded.
 
-Definition modRenamings (arg_1__ : ModRenaming) :=
-  let 'Mk_ModRenaming _ modRenamings := arg_1__ in
-  modRenamings.
+Instance Default__WarningFlag : GHC.Err.Default WarningFlag :=
+  GHC.Err.Build_Default _ Opt_WarnDuplicateExports.
+
+Instance Default__WarnReason : GHC.Err.Default WarnReason :=
+  GHC.Err.Build_Default _ NoReason.
+
+Instance Default__SseVersion : GHC.Err.Default SseVersion :=
+  GHC.Err.Build_Default _ SSE1.
+
+Instance Default__SafeHaskellMode : GHC.Err.Default SafeHaskellMode :=
+  GHC.Err.Build_Default _ Sf_None.
+
+Instance Default__RtsOptsEnabled : GHC.Err.Default RtsOptsEnabled :=
+  GHC.Err.Build_Default _ RtsOptsNone.
+
+Instance Default__ProfAuto : GHC.Err.Default ProfAuto :=
+  GHC.Err.Build_Default _ NoProfAuto.
+
+Instance Default__PkgConfRef : GHC.Err.Default PkgConfRef :=
+  GHC.Err.Build_Default _ GlobalPkgConf.
+
+Instance Default__PackageDBFlag : GHC.Err.Default PackageDBFlag :=
+  GHC.Err.Build_Default _ NoUserPackageDB.
+
+Instance Default__ModRenaming : GHC.Err.Default ModRenaming :=
+  GHC.Err.Build_Default _ (Mk_ModRenaming GHC.Err.default GHC.Err.default).
+
+Instance Default__LlvmTarget : GHC.Err.Default LlvmTarget :=
+  GHC.Err.Build_Default _ (Mk_LlvmTarget GHC.Err.default GHC.Err.default
+                         GHC.Err.default).
+
+Instance Default__LinkerInfo : GHC.Err.Default LinkerInfo :=
+  GHC.Err.Build_Default _ UnknownLD.
+
+Instance Default__Language : GHC.Err.Default Language :=
+  GHC.Err.Build_Default _ Haskell98.
+
+Instance Default__HscTarget : GHC.Err.Default HscTarget :=
+  GHC.Err.Build_Default _ HscC.
+
+Instance Default__GhcMode : GHC.Err.Default GhcMode :=
+  GHC.Err.Build_Default _ CompManager.
+
+Instance Default__GhcLink : GHC.Err.Default GhcLink :=
+  GHC.Err.Build_Default _ NoLink.
+
+Instance Default__GeneralFlag : GHC.Err.Default GeneralFlag :=
+  GHC.Err.Build_Default _ Opt_DumpToFile.
+
+Instance Default__FilesToClean : GHC.Err.Default FilesToClean :=
+  GHC.Err.Build_Default _ (Mk_FilesToClean GHC.Err.default GHC.Err.default).
+
+Instance Default__DynLibLoader : GHC.Err.Default DynLibLoader :=
+  GHC.Err.Build_Default _ Deployable.
+
+Instance Default__DumpFlag : GHC.Err.Default DumpFlag :=
+  GHC.Err.Build_Default _ Opt_D_dump_cmm.
+
+Instance Default__Deprecation : GHC.Err.Default Deprecation :=
+  GHC.Err.Build_Default _ NotDeprecated.
+
+Instance Default__CompilerInfo : GHC.Err.Default CompilerInfo :=
+  GHC.Err.Build_Default _ GCC.
+
+Instance Default__BmiVersion : GHC.Err.Default BmiVersion :=
+  GHC.Err.Build_Default _ BMI1.
 (* Midamble *)
 
 Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.String :=
   Prim.Build_Unpeel _ _ (fun x => match x with | IgnorePackage y => y end) IgnorePackage.
 
 (* Converted value declarations: *)
+
+(* Skipping instance HasDynFlags__WriterT *)
+
+(* Skipping instance HasDynFlags__ReaderT *)
+
+(* Skipping instance HasDynFlags__MaybeT *)
+
+(* Skipping instance HasDynFlags__ExceptT *)
+
+(* Skipping instance Outputable__OnOff of class Outputable *)
+
+(* Skipping instance Outputable__PackageFlag of class Outputable *)
+
+(* Skipping instance Outputable__ModRenaming of class Outputable *)
+
+(* Skipping instance Outputable__PackageArg of class Outputable *)
+
+(* Skipping instance Outputable__GhcMode of class Outputable *)
+
+(* Skipping instance Show__SafeHaskellMode of class Show *)
+
+(* Skipping instance Outputable__SafeHaskellMode of class Outputable *)
+
+(* Skipping instance Outputable__Language of class Outputable *)
+
+(* Skipping instance Outputable__WarnReason of class Outputable *)
+
+(* Skipping instance ToJson__WarnReason of class ToJson *)
 
 Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo := {}.
 Proof.
@@ -462,7 +622,33 @@ Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo := {}.
 Proof.
 Admitted.
 
+Instance Eq___BmiVersion : GHC.Base.Eq_ BmiVersion := {}.
+Proof.
+Admitted.
+
+Instance Ord__BmiVersion : GHC.Base.Ord BmiVersion := {}.
+Proof.
+Admitted.
+
+(* Skipping instance Ord__SseVersion *)
+
 Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion := {}.
+Proof.
+Admitted.
+
+Instance Eq___PackageDBFlag : GHC.Base.Eq_ PackageDBFlag := {}.
+Proof.
+Admitted.
+
+Instance Eq___PkgConfRef : GHC.Base.Eq_ PkgConfRef := {}.
+Proof.
+Admitted.
+
+Instance Eq___Deprecation : GHC.Base.Eq_ Deprecation := {}.
+Proof.
+Admitted.
+
+Instance Ord__Deprecation : GHC.Base.Ord Deprecation := {}.
 Proof.
 Admitted.
 
@@ -470,9 +656,23 @@ Instance Eq___Option : GHC.Base.Eq_ Option := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__OnOff of class Show *)
+
+Instance Eq___OnOff
+   : forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (OnOff a) :=
+  {}.
+Proof.
+Admitted.
+
+(* Skipping instance Show__Way of class Show *)
+
+(* Skipping instance Ord__Way *)
+
 Instance Eq___Way : GHC.Base.Eq_ Way := {}.
 Proof.
 Admitted.
+
+(* Skipping instance Show__RtsOptsEnabled of class Show *)
 
 Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader := {}.
 Proof.
@@ -490,6 +690,8 @@ Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__PackageArg of class Show *)
+
 Instance Eq___PackageArg : GHC.Base.Eq_ PackageArg := {}.
 Proof.
 Admitted.
@@ -498,6 +700,8 @@ Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming := {}.
 Proof.
 Admitted.
 
+(* Skipping instance Show__GhcLink of class Show *)
+
 Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink := {}.
 Proof.
 Admitted.
@@ -505,6 +709,8 @@ Admitted.
 Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode := {}.
 Proof.
 Admitted.
+
+(* Skipping instance Show__HscTarget of class Show *)
 
 Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget := {}.
 Proof.
@@ -518,7 +724,31 @@ Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode := {}.
 Proof.
 Admitted.
 
-Axiom getSigOf : DynFlags -> Module.ModuleName -> option Module.Module.
+(* Skipping instance Show__Language of class Show *)
+
+Instance Eq___Language : GHC.Base.Eq_ Language := {}.
+Proof.
+Admitted.
+
+(* Skipping instance Show__WarnReason of class Show *)
+
+(* Skipping instance Show__WarningFlag of class Show *)
+
+(* Skipping instance Eq___WarningFlag *)
+
+(* Skipping instance Show__GeneralFlag of class Show *)
+
+(* Skipping instance Eq___GeneralFlag *)
+
+(* Skipping instance Show__DumpFlag of class Show *)
+
+(* Skipping instance Eq___DumpFlag *)
+
+Axiom optimisationFlags : EnumSet.EnumSet GeneralFlag.
+
+Axiom isBmi2Enabled : DynFlags -> bool.
+
+Axiom isBmiEnabled : DynFlags -> bool.
 
 Axiom isSse2Enabled : DynFlags -> bool.
 
@@ -551,7 +781,7 @@ Axiom flagsForCompletion : bool -> list GHC.Base.String.
 
 Axiom allNonDeprecatedFlags : list GHC.Base.String.
 
-Axiom allFlagsDeps : bool -> list GHC.Base.String.
+(* allFlagsDeps skipped *)
 
 (* flagsAllDeps skipped *)
 
@@ -625,6 +855,12 @@ Axiom pgm_windres : DynFlags -> GHC.Base.String.
 
 Axiom pgm_libtool : DynFlags -> GHC.Base.String.
 
+Axiom pgm_lcc : DynFlags -> (GHC.Base.String * list Option)%type.
+
+Axiom pgm_ar : DynFlags -> GHC.Base.String.
+
+Axiom pgm_ranlib : DynFlags -> GHC.Base.String.
+
 Axiom pgm_lo : DynFlags -> (GHC.Base.String * list Option)%type.
 
 Axiom pgm_lc : DynFlags -> (GHC.Base.String * list Option)%type.
@@ -638,6 +874,8 @@ Axiom opt_F : DynFlags -> list GHC.Base.String.
 Axiom opt_a : DynFlags -> list GHC.Base.String.
 
 Axiom opt_windres : DynFlags -> list GHC.Base.String.
+
+Axiom opt_lcc : DynFlags -> list GHC.Base.String.
 
 Axiom opt_lo : DynFlags -> list GHC.Base.String.
 
@@ -663,6 +901,8 @@ Axiom isOneShot : GhcMode -> bool.
 
 Axiom isNoLink : GhcLink -> bool.
 
+Axiom packageFlagsChanged : DynFlags -> DynFlags -> bool.
+
 (* setUnsafeGlobalDynFlags skipped *)
 
 Axiom unsafeGlobalDynFlags : DynFlags.
@@ -671,13 +911,17 @@ Axiom unsafeGlobalDynFlags : DynFlags.
 
 Axiom defaultGlobalDynFlags : DynFlags.
 
-Axiom defaultDynFlags : Settings -> DynFlags.
+Axiom defaultDynFlags : Settings -> LlvmTargets -> DynFlags.
 
 (* defaultHscTarget skipped *)
 
 (* defaultObjectTarget skipped *)
 
 Axiom mkTablesNextToCode : bool -> bool.
+
+Axiom shouldUseColor : DynFlags -> bool.
+
+Axiom positionIndependent : DynFlags -> bool.
 
 Axiom allowed_combination : list Way -> bool.
 
@@ -721,7 +965,17 @@ Axiom interpreterProfiled : DynFlags -> bool.
 
 (* interpreterDynamic skipped *)
 
+(* defaultLogOutput skipped *)
+
 (* defaultFatalMessager skipped *)
+
+Axiom setJsonLogAction : DynFlags -> DynFlags.
+
+(* jsonLogOutput skipped *)
+
+(* jsonLogAction skipped *)
+
+(* jsonLogFinaliser skipped *)
 
 (* defaultLogAction skipped *)
 
@@ -768,6 +1022,14 @@ Axiom unsafeFlags : list (GHC.Base.String * (DynFlags -> SrcLoc.SrcSpan) *
 (* flattenExtensionFlags skipped *)
 
 (* languageExtensions skipped *)
+
+Axiom hasPprDebug : DynFlags -> bool.
+
+Axiom hasNoDebugOutput : DynFlags -> bool.
+
+Axiom hasNoStateHack : DynFlags -> bool.
+
+Axiom hasNoOptCoercion : DynFlags -> bool.
 
 (* dopt skipped *)
 
@@ -823,6 +1085,16 @@ Axiom gopt_set : DynFlags -> GeneralFlag -> DynFlags.
 
 (* wopt_unset skipped *)
 
+Axiom wopt_fatal : WarningFlag -> DynFlags -> bool.
+
+(* setFatalWarningFlag skipped *)
+
+Axiom wopt_set_fatal : DynFlags -> WarningFlag -> DynFlags.
+
+(* unSetFatalWarningFlag skipped *)
+
+Axiom wopt_unset_fatal : DynFlags -> WarningFlag -> DynFlags.
+
 (* xopt skipped *)
 
 (* dynFlagDependencies skipped *)
@@ -875,9 +1147,21 @@ Axiom setDynOutputFile : option GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom setOutputHi : option GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom setSigOf : GHC.Base.String -> DynFlags -> DynFlags.
+Axiom canonicalizeHomeModule : DynFlags -> Module.ModuleName -> Module.Module.
 
-Axiom parseSigOf : GHC.Base.String -> SigOf.
+Axiom thisPackage : DynFlags -> Module.UnitId.
+
+Axiom thisComponentId : DynFlags -> Module.ComponentId.
+
+Axiom thisUnitIdInsts : DynFlags ->
+                        list (Module.ModuleName * Module.Module)%type.
+
+Axiom setUnitIdInsts : GHC.Base.String -> DynFlags -> DynFlags.
+
+Axiom parseUnitIdInsts : GHC.Base.String ->
+                         list (Module.ModuleName * Module.Module)%type.
+
+Axiom setComponentId : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom addPluginModuleName : GHC.Base.String -> DynFlags -> DynFlags.
 
@@ -907,6 +1191,8 @@ Axiom addDepSuffix : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom addCmdlineFramework : GHC.Base.String -> DynFlags -> DynFlags.
 
+Axiom addGhcVersionFile : GHC.Base.String -> DynFlags -> DynFlags.
+
 Axiom addHaddockOpts : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom addGhciScript : GHC.Base.String -> DynFlags -> DynFlags.
@@ -914,6 +1200,10 @@ Axiom addGhciScript : GHC.Base.String -> DynFlags -> DynFlags.
 Axiom setInteractivePrint : GHC.Base.String -> DynFlags -> DynFlags.
 
 Axiom showOpt : Option -> GHC.Base.String.
+
+(* setLogAction skipped *)
+
+(* putLogMsg skipped *)
 
 (* make_ord_flag skipped *)
 
@@ -1008,7 +1298,7 @@ Axiom deprecatedForExtension : GHC.Base.String -> TurnOnFlag -> GHC.Base.String.
 
 (* default_PIC skipped *)
 
-Axiom optLevelFlags : list (list GHC.Num.Int * GeneralFlag)%type.
+Axiom optLevelFlags : list (list BinNums.N * GeneralFlag)%type.
 
 Axiom smallestGroups : WarningFlag -> list GHC.Base.String.
 
@@ -1118,14 +1408,15 @@ Axiom alterSettings : (Settings -> Settings) -> DynFlags -> DynFlags.
 
 Axiom exposePackage' : GHC.Base.String -> DynFlags -> DynFlags.
 
-Axiom parsePackageFlag : GHC.Base.String ->
-                         (GHC.Base.String -> PackageArg) -> GHC.Base.String -> PackageFlag.
+(* parsePackageFlag skipped *)
 
-(* parseModuleName skipped *)
+(* parsePackageArg skipped *)
+
+(* parseUnitIdArg skipped *)
 
 (* setUnitId skipped *)
 
-Axiom checkOptLevel : GHC.Num.Int ->
+Axiom checkOptLevel : BinNums.N ->
                       DynFlags -> Data.Either.Either GHC.Base.String DynFlags.
 
 Axiom addLdInputs : Option -> DynFlags -> DynFlags.
@@ -1136,255 +1427,257 @@ Axiom split_marker : GHC.Char.Char.
 
 Axiom can_split : bool.
 
-Axiom cONTROL_GROUP_CONST_291 : DynFlags -> GHC.Num.Int.
+Axiom cONTROL_GROUP_CONST_291 : DynFlags -> BinNums.N.
 
-Axiom sTD_HDR_SIZE : DynFlags -> GHC.Num.Int.
+Axiom sTD_HDR_SIZE : DynFlags -> BinNums.N.
 
-Axiom pROF_HDR_SIZE : DynFlags -> GHC.Num.Int.
+Axiom pROF_HDR_SIZE : DynFlags -> BinNums.N.
 
-Axiom bLOCK_SIZE_W : DynFlags -> GHC.Num.Int.
+Axiom bLOCK_SIZE_W : DynFlags -> BinNums.N.
 
-Axiom bLOCK_SIZE : DynFlags -> GHC.Num.Int.
+Axiom bLOCK_SIZE : DynFlags -> BinNums.N.
 
-Axiom bLOCKS_PER_MBLOCK : DynFlags -> GHC.Num.Int.
+Axiom bLOCKS_PER_MBLOCK : DynFlags -> BinNums.N.
 
-Axiom tICKY_BIN_COUNT : DynFlags -> GHC.Num.Int.
+Axiom tICKY_BIN_COUNT : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR2 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR3 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR4 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR5 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR6 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR7 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR7 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR8 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR8 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR9 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR9 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rR10 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rR10 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rF1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rF2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF2 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rF3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF3 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rF4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF4 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rF5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF5 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rF6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rF6 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rD1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rD2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD2 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rD3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD3 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rD4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD4 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rD5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD5 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rD6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rD6 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rXMM1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rXMM2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM2 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rXMM3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM3 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rXMM4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM4 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rXMM5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM5 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rXMM6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rXMM6 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rYMM1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rYMM2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM2 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rYMM3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM3 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rYMM4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM4 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rYMM5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM5 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rYMM6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rYMM6 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rZMM1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rZMM2 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM2 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rZMM3 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM3 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rZMM4 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM4 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rZMM5 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM5 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rZMM6 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rZMM6 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rL1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rL1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rSp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rSp : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rSpLim : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rSpLim : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rHp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rHp : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rHpLim : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rHpLim : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rCCCS : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rCCCS : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rCurrentTSO : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rCurrentTSO : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rCurrentNursery : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rCurrentNursery : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgRegTable_rHpAlloc : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgRegTable_rHpAlloc : DynFlags -> BinNums.N.
 
-Axiom oFFSET_stgEagerBlackholeInfo : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_stgEagerBlackholeInfo : DynFlags -> BinNums.N.
 
-Axiom oFFSET_stgGCEnter1 : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_stgGCEnter1 : DynFlags -> BinNums.N.
 
-Axiom oFFSET_stgGCFun : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_stgGCFun : DynFlags -> BinNums.N.
 
-Axiom oFFSET_Capability_r : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_Capability_r : DynFlags -> BinNums.N.
 
-Axiom oFFSET_bdescr_start : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_start : DynFlags -> BinNums.N.
 
-Axiom oFFSET_bdescr_free : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_free : DynFlags -> BinNums.N.
 
-Axiom oFFSET_bdescr_blocks : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_blocks : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_CostCentreStack : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_bdescr_flags : DynFlags -> BinNums.N.
 
-Axiom oFFSET_CostCentreStack_mem_alloc : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_CostCentreStack : DynFlags -> BinNums.N.
 
-Axiom oFFSET_CostCentreStack_scc_count : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_CostCentreStack_mem_alloc : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgHeader_ccs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_CostCentreStack_scc_count : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgHeader_ldvw : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgHeader_ccs : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_StgSMPThunkHeader : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgHeader_ldvw : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgEntCounter_allocs : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgSMPThunkHeader : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgEntCounter_allocd : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_allocs : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgEntCounter_registeredp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_allocd : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgEntCounter_link : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_registeredp : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgEntCounter_entry_count : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_link : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_StgUpdateFrame_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgEntCounter_entry_count : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_StgMutArrPtrs_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgUpdateFrame_NoHdr : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgMutArrPtrs_ptrs : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgMutArrPtrs_NoHdr : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgMutArrPtrs_size : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgMutArrPtrs_ptrs : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_StgSmallMutArrPtrs_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgMutArrPtrs_size : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgSmallMutArrPtrs_ptrs : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgSmallMutArrPtrs_NoHdr : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_StgArrBytes_NoHdr : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgSmallMutArrPtrs_ptrs : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgArrBytes_bytes : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgArrBytes_NoHdr : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgTSO_alloc_limit : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgArrBytes_bytes : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgTSO_cccs : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgTSO_alloc_limit : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgTSO_stackobj : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgTSO_cccs : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgStack_sp : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgTSO_stackobj : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgStack_stack : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgStack_sp : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgUpdateFrame_updatee : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgStack_stack : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgFunInfoExtraFwd_arity : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgUpdateFrame_updatee : DynFlags -> BinNums.N.
 
-Axiom sIZEOF_StgFunInfoExtraRev : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgFunInfoExtraFwd_arity : DynFlags -> BinNums.N.
 
-Axiom oFFSET_StgFunInfoExtraRev_arity : DynFlags -> GHC.Num.Int.
+Axiom sIZEOF_StgFunInfoExtraRev : DynFlags -> BinNums.N.
 
-Axiom mAX_SPEC_SELECTEE_SIZE : DynFlags -> GHC.Num.Int.
+Axiom oFFSET_StgFunInfoExtraRev_arity : DynFlags -> BinNums.N.
 
-Axiom mAX_SPEC_AP_SIZE : DynFlags -> GHC.Num.Int.
+Axiom mAX_SPEC_SELECTEE_SIZE : DynFlags -> BinNums.N.
 
-Axiom mIN_PAYLOAD_SIZE : DynFlags -> GHC.Num.Int.
+Axiom mAX_SPEC_AP_SIZE : DynFlags -> BinNums.N.
 
-Axiom mIN_INTLIKE : DynFlags -> GHC.Num.Int.
+Axiom mIN_PAYLOAD_SIZE : DynFlags -> BinNums.N.
 
-Axiom mAX_INTLIKE : DynFlags -> GHC.Num.Int.
+Axiom mIN_INTLIKE : DynFlags -> BinNums.N.
 
-Axiom mIN_CHARLIKE : DynFlags -> GHC.Num.Int.
+Axiom mAX_INTLIKE : DynFlags -> BinNums.N.
 
-Axiom mAX_CHARLIKE : DynFlags -> GHC.Num.Int.
+Axiom mIN_CHARLIKE : DynFlags -> BinNums.N.
 
-Axiom mUT_ARR_PTRS_CARD_BITS : DynFlags -> GHC.Num.Int.
+Axiom mAX_CHARLIKE : DynFlags -> BinNums.N.
 
-Axiom mAX_Vanilla_REG : DynFlags -> GHC.Num.Int.
+Axiom mUT_ARR_PTRS_CARD_BITS : DynFlags -> BinNums.N.
 
-Axiom mAX_Float_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Vanilla_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Double_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Float_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Long_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Double_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_XMM_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Long_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Real_Vanilla_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_XMM_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Real_Float_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Vanilla_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Real_Double_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Float_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Real_XMM_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Double_REG : DynFlags -> BinNums.N.
 
-Axiom mAX_Real_Long_REG : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_XMM_REG : DynFlags -> BinNums.N.
 
-Axiom rESERVED_C_STACK_BYTES : DynFlags -> GHC.Num.Int.
+Axiom mAX_Real_Long_REG : DynFlags -> BinNums.N.
 
-Axiom rESERVED_STACK_WORDS : DynFlags -> GHC.Num.Int.
+Axiom rESERVED_C_STACK_BYTES : DynFlags -> BinNums.N.
 
-Axiom aP_STACK_SPLIM : DynFlags -> GHC.Num.Int.
+Axiom rESERVED_STACK_WORDS : DynFlags -> BinNums.N.
 
-Axiom wORD_SIZE_IN_BITS : DynFlags -> GHC.Num.Int.
+Axiom aP_STACK_SPLIM : DynFlags -> BinNums.N.
 
-Axiom wORD_SIZE : DynFlags -> GHC.Num.Int.
+Axiom wORD_SIZE_IN_BITS : DynFlags -> BinNums.N.
 
-Axiom dOUBLE_SIZE : DynFlags -> GHC.Num.Int.
+Axiom wORD_SIZE : DynFlags -> BinNums.N.
 
-Axiom cINT_SIZE : DynFlags -> GHC.Num.Int.
+Axiom dOUBLE_SIZE : DynFlags -> BinNums.N.
 
-Axiom cLONG_SIZE : DynFlags -> GHC.Num.Int.
+Axiom cINT_SIZE : DynFlags -> BinNums.N.
 
-Axiom cLONG_LONG_SIZE : DynFlags -> GHC.Num.Int.
+Axiom cLONG_SIZE : DynFlags -> BinNums.N.
 
-Axiom bITMAP_BITS_SHIFT : DynFlags -> GHC.Num.Int.
+Axiom cLONG_LONG_SIZE : DynFlags -> BinNums.N.
 
-Axiom mAX_PTR_TAG : DynFlags -> GHC.Num.Int.
+Axiom bITMAP_BITS_SHIFT : DynFlags -> BinNums.N.
 
-Axiom tAG_MASK : DynFlags -> GHC.Num.Int.
+Axiom mAX_PTR_TAG : DynFlags -> BinNums.N.
 
-Axiom tAG_BITS : DynFlags -> GHC.Num.Int.
+Axiom tAG_MASK : DynFlags -> BinNums.N.
+
+Axiom tAG_BITS : DynFlags -> BinNums.N.
 
 Axiom wORDS_BIGENDIAN : DynFlags -> bool.
 
 Axiom dYNAMIC_BY_DEFAULT : DynFlags -> bool.
 
-Axiom lDV_SHIFT : DynFlags -> GHC.Num.Int.
+Axiom lDV_SHIFT : DynFlags -> BinNums.N.
 
 Axiom iLDV_CREATE_MASK : DynFlags -> GHC.Num.Integer.
 
@@ -1408,8 +1701,12 @@ Axiom isAvx512pfEnabled : DynFlags -> bool.
 
 Axiom decodeSize : GHC.Base.String -> GHC.Num.Integer.
 
-(* Unbound variables:
-     Type bool list op_zt__ option Data.Either.Either GHC.Base.Eq_ GHC.Base.String
-     GHC.Char.Char GHC.Num.Int GHC.Num.Integer Module.Module Module.ModuleName
-     Module.ModuleNameEnv SrcLoc.Located SrcLoc.SrcSpan
+Axiom emptyFilesToClean : FilesToClean.
+
+(* External variables:
+     Type bool list op_zt__ option BinNums.N Data.Either.Either
+     Data.Set.Internal.Set_ EnumSet.EnumSet GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
+     GHC.Char.Char GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
+     GHC.Num.Integer Module.ComponentId Module.Module Module.ModuleName Module.UnitId
+     SrcLoc.Located SrcLoc.SrcSpan
 *)

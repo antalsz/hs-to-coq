@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require Control.Monad.Trans.Maybe.
 Require Data.Maybe.
 Require GHC.Base.
 Import GHC.Base.Notations.
@@ -50,12 +51,16 @@ Local Definition Functor__MaybeErr_fmap {inst_err}
 
 Local Definition Functor__MaybeErr_op_zlzd__ {inst_err}
    : forall {a} {b}, a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) a :=
-  fun {a} {b} => fun x => Functor__MaybeErr_fmap (GHC.Base.const x).
+  fun {a} {b} => Functor__MaybeErr_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__MaybeErr {err} : GHC.Base.Functor (MaybeErr err) :=
   fun _ k =>
-    k {| GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeErr_op_zlzd__ ;
-         GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeErr_fmap |}.
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeErr_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeErr_op_zlzd__ |}.
+
+Local Definition Applicative__MaybeErr_pure {inst_err}
+   : forall {a}, a -> (MaybeErr inst_err) a :=
+  fun {a} => Succeeded.
 
 Local Definition Applicative__MaybeErr_op_zlztzg__ {inst_err}
    : forall {a} {b},
@@ -75,25 +80,26 @@ Local Definition Applicative__MaybeErr_op_ztzg__ {inst_err}
    : forall {a} {b},
      (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
   fun {a} {b} =>
-    fun x y =>
-      Applicative__MaybeErr_op_zlztzg__ (GHC.Base.fmap (GHC.Base.const GHC.Base.id) x)
-                                        y.
+    fun a1 a2 => Applicative__MaybeErr_op_zlztzg__ (GHC.Base.id GHC.Base.<$ a1) a2.
 
-Local Definition Applicative__MaybeErr_pure {inst_err}
-   : forall {a}, a -> (MaybeErr inst_err) a :=
-  fun {a} => Succeeded.
+Local Definition Applicative__MaybeErr_liftA2 {inst_err}
+   : forall {a} {b} {c},
+     (a -> b -> c) ->
+     (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) c :=
+  fun {a} {b} {c} =>
+    fun f x => Applicative__MaybeErr_op_zlztzg__ (GHC.Base.fmap f x).
 
 Program Instance Applicative__MaybeErr {err}
    : GHC.Base.Applicative (MaybeErr err) :=
   fun _ k =>
-    k {| GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
+    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeErr_liftA2 ;
          GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeErr_op_zlztzg__ ;
+         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
          GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
 
-Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
-   : forall {a} {b},
-     (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
-  fun {a} {b} => _GHC.Base.*>_.
+Local Definition Monad__MaybeErr_return_ {inst_err}
+   : forall {a}, a -> (MaybeErr inst_err) a :=
+  fun {a} => GHC.Base.pure.
 
 Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err}
    : forall {a} {b},
@@ -106,9 +112,10 @@ Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err}
       | Failed e, _ => Failed e
       end.
 
-Local Definition Monad__MaybeErr_return_ {inst_err}
-   : forall {a}, a -> (MaybeErr inst_err) a :=
-  fun {a} => GHC.Base.pure.
+Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
+   : forall {a} {b},
+     (MaybeErr inst_err) a -> (MaybeErr inst_err) b -> (MaybeErr inst_err) b :=
+  fun {a} {b} => fun m k => Monad__MaybeErr_op_zgzgze__ m (fun arg_0__ => k).
 
 Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
   fun _ k =>
@@ -122,6 +129,10 @@ Definition failME {err} {val} : err -> MaybeErr err val :=
 Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
   fun arg_0__ => match arg_0__ with | Succeeded _ => true | Failed _ => false end.
 
+Definition liftMaybeT {m} {a} `{GHC.Base.Monad m}
+   : m a -> Control.Monad.Trans.Maybe.MaybeT m a :=
+  fun act => Control.Monad.Trans.Maybe.Mk_MaybeT (GHC.Base.liftM Some act).
+
 Definition orElse {a} : option a -> a -> a :=
   GHC.Base.flip Data.Maybe.fromMaybe.
 
@@ -133,9 +144,13 @@ Definition whenIsJust {m} {a} `{GHC.Base.Monad m}
     | None, _ => GHC.Base.return_ tt
     end.
 
-(* Unbound variables:
-     None Some bool false option true tt unit Data.Maybe.fromMaybe
-     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.const
-     GHC.Base.flip GHC.Base.fmap GHC.Base.id GHC.Base.op_ztzg__ GHC.Base.pure
-     GHC.Base.return_
+(* External variables:
+     None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT
+     Control.Monad.Trans.Maybe.Mk_MaybeT Data.Maybe.fromMaybe GHC.Base.Applicative
+     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
+     GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze____
+     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
+     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
+     GHC.Base.return___
 *)

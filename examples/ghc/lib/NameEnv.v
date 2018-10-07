@@ -16,7 +16,6 @@ Require GHC.Base.
 Require Name.
 Require UniqDFM.
 Require UniqFM.
-Require Unique.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -79,9 +78,6 @@ Definition extendNameEnv_C {a}
 Definition filterNameEnv {elt} : (elt -> bool) -> NameEnv elt -> NameEnv elt :=
   fun x y => UniqFM.filterUFM x y.
 
-Definition foldNameEnv {a} {b} : (a -> b -> b) -> b -> NameEnv a -> b :=
-  fun a b c => UniqFM.foldUFM a b c.
-
 Definition isEmptyNameEnv {a} : NameEnv a -> bool :=
   UniqFM.isNullUFM.
 
@@ -104,9 +100,6 @@ Definition mkNameEnv {a} : list (Name.Name * a)%type -> NameEnv a :=
 Definition nameEnvElts {a} : NameEnv a -> list a :=
   fun x => UniqFM.eltsUFM x.
 
-Definition nameEnvUniqueElts {a} : NameEnv a -> list (Unique.Unique * a)%type :=
-  fun x => UniqFM.ufmToList x.
-
 Definition plusNameEnv {a} : NameEnv a -> NameEnv a -> NameEnv a :=
   fun x y => UniqFM.plusUFM x y.
 
@@ -117,7 +110,7 @@ Definition plusNameEnv_C {a}
 Definition unitNameEnv {a} : Name.Name -> a -> NameEnv a :=
   fun x y => UniqFM.unitUFM x y.
 
-(* Unbound variables:
+(* External variables:
      bool false list op_zt__ option orb GHC.Base.op_z2218U__ Name.Name
      UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.lookupUDFM
      UniqDFM.mapUDFM UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C
@@ -125,5 +118,5 @@ Definition unitNameEnv {a} : Name.Name -> a -> NameEnv a :=
      UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM
      UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.intersectUFM
      UniqFM.isNullUFM UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM
-     UniqFM.plusUFM_C UniqFM.ufmToList UniqFM.unitUFM Unique.Unique
+     UniqFM.plusUFM_C UniqFM.unitUFM
 *)

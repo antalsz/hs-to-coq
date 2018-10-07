@@ -1,0 +1,9 @@
+constructors:
+  UniqDFM.TaggedVal: ! '[Qualified "UniqDFM" "Mk_TaggedVal"]'
+  UniqDFM.UniqDFM: ! '[Qualified "UniqDFM" "UDFM"]'
+constructorFields:
+  UniqDFM.Mk_TaggedVal: NonRecordFields 2
+  UniqDFM.UDFM: NonRecordFields 2
+constructorTypes:
+  UniqDFM.Mk_TaggedVal: Qualified "UniqDFM" "TaggedVal"
+  UniqDFM.UDFM: Qualified "UniqDFM" "UniqDFM"

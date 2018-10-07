@@ -12,7 +12,7 @@ Require Import Data.Semigroup.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-From mathcomp Require Import ssreflect ssrbool ssrfun.
+From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Properties of basic functions *)
@@ -287,7 +287,7 @@ Proof.
   split; rewrite /op_zeze__ /op_zsze__ /Eq___option /op_zeze____ /op_zsze____.
   - case=> [?|] //=; apply Eq_refl.
   - repeat case=> [?|] //=; apply Eq_sym.
-  - repeat case=> [?|] //=; apply Eq_trans.
+  - do 3 case=> [?|] //=; apply Eq_trans. (* COQ8.8: Why not `repeat'? *)
   - repeat case=> [?|] //=. rewrite negb_involutive. reflexivity.
 Qed.
 
@@ -303,13 +303,13 @@ Qed.
 (* -------------------------------------------------------------------- *)
 
 Class SemigroupLaws (t : Type) `{ Semigroup t } `{ EqLaws t } :=
-  { semigroup_assoc    : forall (x y z : t), (x <> (y <> z) == ((x <> y) <> z)) = true;
+  { semigroup_assoc    : forall (x y z : t), ((x <<>> (y <<>> z)) == ((x <<>> y) <<>> z)) = true;
   }.
 
 Class MonoidLaws (t : Type) `{ Monoid t } `{SemigroupLaws t} `{ EqLaws t } :=
   { monoid_left_id  : forall x, (mappend mempty x == x) = true;
     monoid_right_id : forall x, (mappend x mempty == x) = true;
-    monoid_semigroup : forall x y, (mappend x y == (x <> y)) = true;
+    monoid_semigroup : forall x y, (mappend x y == (x <<>> y)) = true;
     monoid_mconcat  : forall x, (mconcat x == foldr mappend mempty x) = true
   }.
 
@@ -328,6 +328,8 @@ Class ApplicativeLaws (t : Type -> Type) `{!Functor t, !Applicative t, !FunctorL
      (pure f <*> pure x) = (pure (f x));
    applicative_interchange : forall a b (u : t (a -> b)) (y : a),
      (u <*> pure y) = ((pure (fun x => x y)) <*> u);
+   applicative_liftA2 : forall a b c (f : a -> b -> c) (x : t a) (y : t b),
+     liftA2 f x y = (fmap f x <*> y);
    applicative_fmap : forall a b (f : a -> b) (x : t a),
      fmap f x = (pure f <*> x)
      (* free theorem *)
@@ -342,20 +344,23 @@ Class MonadLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !Func
     monad_applicative_ap : forall A B (f : t (A -> B)) (x: t A), (f <*> x) = ap f x
   }.
 
+(* We dropped Alternative
 Class MonadPlusLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !Alternative t, !MonadPlus t, !FunctorLaws t, !ApplicativeLaws t, !MonadLaws t} :=
   { mzero_left : forall A B (f : A -> t B), (mzero >>= f)  =  mzero;
     mzero_right: forall A B (v : t A), (v >> mzero)   =  (mzero : t B);
     mplus_associative : forall A (f g h : t A),
           mplus f (mplus g h) = mplus (mplus f g) h;
   }.
+*)
+
 
 (* --------------------- Semigroup and Monoid ----------------------- *)
 
 Instance instance_SemigroupLaws_unit : SemigroupLaws unit.
 Proof.
   split;
-    unfold op_zlzg__, Semigroup__unit, op_zlzg____,
-         Semigroup.Semigroup__unit_op_zlzg__.
+    unfold op_zlzlzgzg__, Semigroup__unit, op_zlzlzgzg____,
+         Base.Semigroup__unit_op_zlzlzgzg__.
   - intros. auto.
 Qed.
 
@@ -363,9 +368,9 @@ Qed.
 Instance instance_MonoidLaws_unit : MonoidLaws unit.
 Proof.
   split;
-    unfold op_zlzg__, Semigroup__unit, op_zlzg____,
-         Semigroup.Semigroup__unit_op_zlzg__;
-    unfold mappend, mempty, mconcat, Monoid__unit, mappend__, empty__, mconcat__,
+    unfold op_zlzlzgzg__, Semigroup__unit, op_zlzlzgzg____,
+         Base.Semigroup__unit_op_zlzlzgzg__;
+    unfold mappend, mempty, mconcat, Monoid__unit, mappend__,  mconcat__,
          Base.Monoid__unit_mappend,
          Base.Monoid__unit_mempty,
          Base.Monoid__unit_mconcat.
@@ -378,16 +383,16 @@ Qed.
 Instance instance_SemigroupLaws_comparison : SemigroupLaws comparison.
 Proof.
   split;
-    unfold op_zlzg__, Semigroup__comparison, op_zlzg____,
-      Semigroup.Semigroup__comparison_op_zlzg__.
+    unfold op_zlzlzgzg__, Semigroup__comparison, op_zlzlzgzg____,
+      Base.Semigroup__comparison_op_zlzlzgzg__.
   - intros. destruct x; destruct y; apply Eq_refl.
 Qed.
 
 Instance instance_MonoidLaws_comparison : MonoidLaws comparison.
 Proof.
   split;
-    unfold op_zlzg__, Semigroup__comparison, op_zlzg____,
-      Semigroup.Semigroup__comparison_op_zlzg__;
+    unfold op_zlzlzgzg__, Semigroup__comparison, op_zlzlzgzg____,
+      Base.Semigroup__comparison_op_zlzlzgzg__;
     repeat unfold mappend, mempty, mconcat, instance_Monoid_comparison,
       Base.Monoid__comparison_mappend,
       Base.Monoid__comparison_mempty,
@@ -401,8 +406,8 @@ Qed.
 Instance instance_SemigroupLaws_option {a} `{ SemigroupLaws a } : SemigroupLaws (option a).
 Proof.
   split;
-    unfold op_zlzg__, Semigroup__option, op_zlzg____,
-      Semigroup.Semigroup__option_op_zlzg__.
+    unfold op_zlzlzgzg__, Semigroup__option, op_zlzlzgzg____,
+      Base.Semigroup__option_op_zlzlzgzg__.
   - intros x y z.
     destruct x; destruct y; destruct z; try apply Eq_refl.
     unfold op_zeze__, Eq___option, op_zeze____, Base.Eq___option_op_zeze__.
@@ -416,8 +421,6 @@ Proof.
   - destruct x; apply Eq_refl.
   - intros x y.
     destruct x; destruct y; try reflexivity; try apply Eq_refl.
-    unfold op_zeze__, Eq___option, op_zeze____, Base.Eq___option_op_zeze__.
-    apply monoid_semigroup.
   - induction x; simpl. auto.
     destruct a0; apply Eq_refl.
 Qed.
@@ -425,8 +428,8 @@ Qed.
 Instance instance_SemigroupLaws_list {a} `{ EqLaws a } : SemigroupLaws (list a).
 Proof.
   split; 
-    unfold op_zlzg__, Semigroup__list, op_zlzg____,
-      Semigroup.Semigroup__list_op_zlzg__.
+    unfold op_zlzlzgzg__, Semigroup__list, op_zlzlzgzg____,
+      Base.Semigroup__list_op_zlzlzgzg__.
   - intros. apply Eq_reflI. apply app_assoc.
 Qed.
 
@@ -483,6 +486,7 @@ Proof.
   - intros. destruct u; destruct v; destruct w; auto.
   - intros. auto.
   - intros. destruct u; auto.
+  - intros. destruct x, y; reflexivity.
   - reflexivity.
 Qed.
 
@@ -490,10 +494,12 @@ Instance instance_ApplicativeLaws_list : ApplicativeLaws list.
 Proof.
   split;
     repeat (unfold
-      op_zlztzg__,
+      op_zlztzg__, liftA2, fmap,
       pure, Applicative__list,
       Base.Applicative__list_pure,
       Base.Applicative__list_op_zlztzg__,
+      Functor__list,
+      Base.Applicative__list_liftA2,
       Base.Functor__list_fmap; simpl).
   - intros. induction v; simpl; auto.
     simpl in IHv. rewrite IHv. auto.
@@ -514,6 +520,8 @@ Proof.
     auto.
   - intros. auto.
   - intros. rewrite app_nil_r. auto.
+  - intros. rewrite !flat_map_concat_map !hs_coq_map List.map_map.
+    reflexivity.
   - by move=> *; rewrite flat_map_cons_f app_nil_r.
 Qed.
 
@@ -565,3 +573,74 @@ Proof.
 Qed.
 
 (* -------------------------------------------------------------------- *)
+
+(* These are the RULES from the GHC/Base.hs source file. *)
+
+(* RULES
+"fold/build"    forall k z (g::forall b. (a->b->b) -> b -> b) .
+                foldr k z (build g) = g k z
+
+"foldr/augment" forall k z xs (g::forall b. (a->b->b) -> b -> b) .
+                foldr k z (augment g xs) = g k (foldr k z xs)
+
+"foldr/id"                        foldr (:) [] = \x  -> x
+"foldr/app"     [1] forall ys. foldr (:) ys = \xs -> xs ++ ys
+        -- Only activate this from phase 1, because that's
+        -- when we disable the rule that expands (++) into foldr
+
+-- The foldr/cons rule looks nice, but it can give disastrously
+-- bloated code when commpiling
+--      array (a,b) [(1,2), (2,2), (3,2), ...very long list... ]
+-- i.e. when there are very very long literal lists
+-- So I've disabled it for now. We could have special cases
+-- for short lists, I suppose.
+-- "foldr/cons" forall k z x xs. foldr k z (x:xs) = k x (foldr k z xs)
+
+"foldr/single"  forall k z x. foldr k z [x] = k x z
+"foldr/nil"     forall k z.   foldr k z []  = z
+
+"foldr/cons/build" forall k z x (g::forall b. (a->b->b) -> b -> b) .
+                           foldr k z (x:build g) = k x (g k z)
+
+"augment/build" forall (g::forall b. (a->b->b) -> b -> b)
+                       (h::forall b. (a->b->b) -> b -> b) .
+                       augment g (build h) = build (\c n -> g c (h c n))
+"augment/nil"   forall (g::forall b. (a->b->b) -> b -> b) .
+                        augment g [] = build g
+ *)
+
+Lemma fold_build : forall {a}{b} k (z:b) (g: forall{b}, (a -> b -> b) -> b -> b), 
+    foldr k z (build (fun {b} => g)) = g k z.
+Proof.
+(* Parametericity *)
+Admitted.
+
+
+Lemma fold_id : forall A, foldr cons nil = (id : list A -> list A).
+Proof.
+  intro A.
+  apply functional_extensionality.
+  induction x.
+  simpl. auto.
+  simpl. f_equal. auto.
+Qed.
+
+Lemma foldr_single : forall A B k (z:B) (x:A), foldr k z (x :: nil) = k x z.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+Lemma foldr_nil : forall A B k (z:B), foldr k z (@nil A) = z.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+
+Lemma foldr_cons_build: forall {a} k (z:a) x (g:forall {b}, (a->b->b) -> b -> b),
+                           foldr k z (x::build (fun {b} => g)) = k x (g k z).
+Proof.
+  intros.
+  simpl. f_equal.
+  apply fold_build.
+Qed.
+

@@ -1,59 +1,101 @@
+#
+# This would be better if we had a rewrite for types
+#
+redefine Inductive Core.Unfolding : Type := Mk_Unfolding.
+
+rewrite forall , Core.BootUnfolding = getUnfolding Core.BootUnfolding
+rewrite forall , Core.OtherCon      = fun x => getUnfolding (Core.OtherCon x)
+rewrite forall , Core.NoUnfolding   = getUnfolding Core.NoUnfolding
+
+redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
+  fun arg_0__ =>
+    match Core.getUnfoldingInfo arg_0__ with
+    | Core.NoUnfolding => false
+    | Core.BootUnfolding => false
+    | _ => true
+    end.
+
+redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
+  fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.BootUnfolding => true | _ => false end.
+
+redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
+  fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.OtherCon cons_ => cons_ | _ => nil end.
+
+
+
 skip module CostCentre
+rename type CostCentre.CostCentre = unit
 
-redefine Inductive CoreSyn.Tickish (id : Type) : Type := Mk_Tickish_Dummy.
-redefine Local Definition CoreSyn.Eq___Tickish_op_zeze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
-    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => true.
-redefine Local Definition CoreSyn.Eq___Tickish_op_zsze__ {inst_id} `{_:GHC.Base.Eq_ inst_id}
-    : (Tickish inst_id) -> ((Tickish inst_id) -> bool) := fun x y => false.
-skip CoreSyn.mkNoCount
-skip CoreSyn.mkNoScope
-skip CoreSyn.tickishCanSplit
-skip CoreSyn.tickishCounts
-skip CoreSyn.tickishIsCode
-skip CoreSyn.tickishContains
-skip CoreSyn.tickishScopesLike
-skip CoreSyn.tickishFloatable
+skip Core.mkNoCount
+skip Core.mkNoScope
+skip Core.tickishCanSplit
+skip Core.tickishCounts
+skip Core.tickishIsCode
+skip Core.tickishContains
 
+# record selector, no place to add default
+skip Core.uf_tmpl
+skip Core.unfoldingTemplate
+skip Core.ru_rhs
 
+order Core.Eq___DataCon Core.Eq___AltCon_op_zeze__ Core.Eq___AltCon Core.Ord__AltCon
+order Core.Eq___Tickish Core.Ord__Tickish
 
-order CoreSyn.Eq___AltCon CoreSyn.Ord__AltCon
-order CoreSyn.Eq___Tickish CoreSyn.Ord__Tickish
-
-redefine Definition CoreSyn.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
+redefine Definition Core.chooseOrphanAnchor (local_names : list Name.Name) : IsOrphan :=
     match  GHC.Base.map Name.nameOccName local_names with
     | cons hd tl => NotOrphan (Data.Foldable.foldr GHC.Base.min hd tl)
     | nil => Mk_IsOrphan
     end.
 
-# uses Outputtable.empty in panicStr
+# uses Outputable.empty in panicStr
 # in midamble
-skip CoreSyn.exprToType
+skip Core.exprToType
 
 # piResultTy is in module Type
 # in midamble
-skip CoreSyn.applyTypeToArg
+skip Core.applyTypeToArg
 
 
 # needs GHC.Types.Double & other types ( GHC.Types.Float, GHC.Int.Int64)
-skip CoreSyn.mkDoubleLitDouble
-skip CoreSyn.mkFloatLitFloat
-skip CoreSyn.mkInt64LitInt64
+skip Core.mkDoubleLitDouble
+skip Core.mkFloatLitFloat
+skip Core.mkInt64LitInt64
 
 # needs Literal.mkMachInt
-skip CoreSyn.mkIntLit
-skip CoreSyn.mkIntLitInt
-# Literal.mlMachWord64, Literal.mkMachWOrd
-skip CoreSyn.mkWord64LitWord64
-skip CoreSyn.mkWordLit
-skip CoreSyn.mkWordLitWord
+skip Core.mkIntLit
+skip Core.mkIntLitInt
+# needs Literal.mlMachWord64, Literal.mkMachWOrd
+skip Core.mkWord64LitWord64
+skip Core.mkWordLit
+skip Core.mkWordLitWord
 
+# ANTALSZ
 # in midamble (due to mutual recursion)
-skip CoreSyn.deAnnotate'
-skip CoreSyn.collectAnnArgs
-skip CoreSyn.deTagExpr
+skip Core.deAnnotate'
+skip Core.collectAnnArgs
+skip Core.deTagExpr
 
-termination go in CoreSyn.collectAnnArgsTicks deferred
-termination collect in CoreSyn.collectAnnBndrs deferred
+# needs a default constraint, as well as a termination argument
+# in midamble
+skip Core.collectNAnnBndrs
+# in Core.collectNAnnBndrs    termination collect { measure (arg_0__)   }
+# obligations Core.collectNAnnBndrs admit
 
-rename value Type.isCoercionTy_maybe = TyCoRep.Type_isCoercionTy_maybe
-rename value Coercion.mkCoVarCo      = TyCoRep.mkCoVarCo
+
+in Core.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd arg_0__)) }
+obligations Core.collectAnnArgsTicks solve_collectAnnArgsTicks
+in Core.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
+obligations Core.collectAnnBndrs solve_collectAnnArgsTicks
+
+# skip Core.mkTyArg
+
+rewrite forall x, Type.isCoercionTy_maybe x = None
+
+skip Core.Default__Class
+skip Core.Default__DataCon
+skip Core.Default__IdInfo
+skip Core.Default__CoreRule
+skip Core.Default__RnEnv2
+skip Core.Default__Var
+skip Core.Default__PatSyn
+skip Core.Default__RuleEnv

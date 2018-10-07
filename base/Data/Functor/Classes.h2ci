@@ -1,0 +1,48 @@
+superclassCount:
+  Data.Functor.Classes.Eq2: '0'
+  Data.Functor.Classes.Ord1: '1'
+  Data.Functor.Classes.Eq1: '0'
+  Data.Functor.Classes.Ord2: '1'
+classTypes:
+  Data.Functor.Classes.Eq2: fromList []
+  Data.Functor.Classes.Ord1: fromList []
+  Data.Functor.Classes.Eq1: fromList []
+  Data.Functor.Classes.Ord2: fromList []
+classDefns:
+  Data.Functor.Classes.Eq2: ClassDefinition (Qualified "Data.Functor.Classes" "Eq2")
+    [Inferred Explicit (Ident (Bare "f"))] Nothing [(Qualified "Data.Functor.Classes"
+    "liftEq2",Forall (Inferred Implicit (Ident (Bare "a")) :| [Inferred Implicit (Ident
+    (Bare "b")),Inferred Implicit (Ident (Bare "c")),Inferred Implicit (Ident (Bare
+    "d"))]) (Arrow (Parens (Arrow (Qualid (Bare "a")) (Arrow (Qualid (Bare "b")) (Qualid
+    (Bare "bool"))))) (Arrow (Parens (Arrow (Qualid (Bare "c")) (Arrow (Qualid (Bare
+    "d")) (Qualid (Bare "bool"))))) (Arrow (App (App (Qualid (Bare "f")) (PosArg (Qualid
+    (Bare "a")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (Arrow (App (App (Qualid
+    (Bare "f")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "d")) :|
+    [])) (Qualid (Bare "bool")))))))]
+  Data.Functor.Classes.Ord1: ClassDefinition (Qualified "Data.Functor.Classes" "Ord1")
+    [Inferred Explicit (Ident (Bare "f")),Generalized Implicit (Parens (App (Qualid
+    (Qualified "Data.Functor.Classes" "Eq1")) (PosArg (Qualid (Bare "f")) :| [])))]
+    Nothing [(Qualified "Data.Functor.Classes" "liftCompare",Forall (Inferred Implicit
+    (Ident (Bare "a")) :| [Inferred Implicit (Ident (Bare "b"))]) (Arrow (Parens (Arrow
+    (Qualid (Bare "a")) (Arrow (Qualid (Bare "b")) (Qualid (Bare "comparison")))))
+    (Arrow (App (Qualid (Bare "f")) (PosArg (Qualid (Bare "a")) :| [])) (Arrow (App
+    (Qualid (Bare "f")) (PosArg (Qualid (Bare "b")) :| [])) (Qualid (Bare "comparison"))))))]
+  Data.Functor.Classes.Eq1: ClassDefinition (Qualified "Data.Functor.Classes" "Eq1")
+    [Inferred Explicit (Ident (Bare "f"))] Nothing [(Qualified "Data.Functor.Classes"
+    "liftEq",Forall (Inferred Implicit (Ident (Bare "a")) :| [Inferred Implicit (Ident
+    (Bare "b"))]) (Arrow (Parens (Arrow (Qualid (Bare "a")) (Arrow (Qualid (Bare "b"))
+    (Qualid (Bare "bool"))))) (Arrow (App (Qualid (Bare "f")) (PosArg (Qualid (Bare
+    "a")) :| [])) (Arrow (App (Qualid (Bare "f")) (PosArg (Qualid (Bare "b")) :| []))
+    (Qualid (Bare "bool"))))))]
+  Data.Functor.Classes.Ord2: ClassDefinition (Qualified "Data.Functor.Classes" "Ord2")
+    [Inferred Explicit (Ident (Bare "f")),Generalized Implicit (Parens (App (Qualid
+    (Qualified "Data.Functor.Classes" "Eq2")) (PosArg (Qualid (Bare "f")) :| [])))]
+    Nothing [(Qualified "Data.Functor.Classes" "liftCompare2",Forall (Inferred Implicit
+    (Ident (Bare "a")) :| [Inferred Implicit (Ident (Bare "b")),Inferred Implicit
+    (Ident (Bare "c")),Inferred Implicit (Ident (Bare "d"))]) (Arrow (Parens (Arrow
+    (Qualid (Bare "a")) (Arrow (Qualid (Bare "b")) (Qualid (Bare "comparison")))))
+    (Arrow (Parens (Arrow (Qualid (Bare "c")) (Arrow (Qualid (Bare "d")) (Qualid (Bare
+    "comparison"))))) (Arrow (App (App (Qualid (Bare "f")) (PosArg (Qualid (Bare "a"))
+    :| [])) (PosArg (Qualid (Bare "c")) :| [])) (Arrow (App (App (Qualid (Bare "f"))
+    (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "d")) :| [])) (Qualid
+    (Bare "comparison")))))))]

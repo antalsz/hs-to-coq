@@ -1,0 +1,39 @@
+constructors:
+  Data.SemigroupInternal.Endo: ! '[Qualified "Data.SemigroupInternal" "Mk_Endo"]'
+  Data.SemigroupInternal.Alt: ! '[Qualified "Data.SemigroupInternal" "Mk_Alt"]'
+  Data.SemigroupInternal.Product: ! '[Qualified "Data.SemigroupInternal" "Mk_Product"]'
+  Data.SemigroupInternal.Sum: ! '[Qualified "Data.SemigroupInternal" "Mk_Sum"]'
+  Data.SemigroupInternal.Any: ! '[Qualified "Data.SemigroupInternal" "Mk_Any"]'
+  Data.SemigroupInternal.All: ! '[Qualified "Data.SemigroupInternal" "Mk_All"]'
+  Data.SemigroupInternal.Dual: ! '[Qualified "Data.SemigroupInternal" "Mk_Dual"]'
+constructorFields:
+  Data.SemigroupInternal.Mk_Dual: RecordFields [Qualified "Data.SemigroupInternal"
+    "getDual"]
+  Data.SemigroupInternal.Mk_All: RecordFields [Qualified "Data.SemigroupInternal"
+    "getAll"]
+  Data.SemigroupInternal.Mk_Any: RecordFields [Qualified "Data.SemigroupInternal"
+    "getAny"]
+  Data.SemigroupInternal.Mk_Endo: RecordFields [Qualified "Data.SemigroupInternal"
+    "appEndo"]
+  Data.SemigroupInternal.Mk_Alt: RecordFields [Qualified "Data.SemigroupInternal"
+    "getAlt"]
+  Data.SemigroupInternal.Mk_Product: RecordFields [Qualified "Data.SemigroupInternal"
+    "getProduct"]
+  Data.SemigroupInternal.Mk_Sum: RecordFields [Qualified "Data.SemigroupInternal"
+    "getSum"]
+recordFieldTypes:
+  Data.SemigroupInternal.getAny: Qualified "Data.SemigroupInternal" "Any"
+  Data.SemigroupInternal.getAll: Qualified "Data.SemigroupInternal" "All"
+  Data.SemigroupInternal.appEndo: Qualified "Data.SemigroupInternal" "Endo"
+  Data.SemigroupInternal.getProduct: Qualified "Data.SemigroupInternal" "Product"
+  Data.SemigroupInternal.getSum: Qualified "Data.SemigroupInternal" "Sum"
+  Data.SemigroupInternal.getAlt: Qualified "Data.SemigroupInternal" "Alt"
+  Data.SemigroupInternal.getDual: Qualified "Data.SemigroupInternal" "Dual"
+constructorTypes:
+  Data.SemigroupInternal.Mk_Dual: Qualified "Data.SemigroupInternal" "Dual"
+  Data.SemigroupInternal.Mk_All: Qualified "Data.SemigroupInternal" "All"
+  Data.SemigroupInternal.Mk_Any: Qualified "Data.SemigroupInternal" "Any"
+  Data.SemigroupInternal.Mk_Endo: Qualified "Data.SemigroupInternal" "Endo"
+  Data.SemigroupInternal.Mk_Alt: Qualified "Data.SemigroupInternal" "Alt"
+  Data.SemigroupInternal.Mk_Product: Qualified "Data.SemigroupInternal" "Product"
+  Data.SemigroupInternal.Mk_Sum: Qualified "Data.SemigroupInternal" "Sum"

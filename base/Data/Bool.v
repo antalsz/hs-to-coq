@@ -25,6 +25,6 @@ Definition bool {a} : a -> a -> bool -> a :=
     | _, t, true => t
     end.
 
-(* Unbound variables:
+(* External variables:
      bool false true
 *)

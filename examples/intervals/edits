@@ -1,6 +1,6 @@
-rename value Intervals.Intervals = ival
+rename value Intervals.Intervals = Intervals.ival
 rename type GHC.Int.Int64 = GHC.Num.Int
 
-termination go in Intervals.union deferred
-termination go in Intervals.intersect deferred
-termination go in Intervals.subtract deferred
+in Intervals.union     termination go deferred
+in Intervals.intersect termination go deferred
+in Intervals.subtract  termination go deferred

@@ -1,0 +1,9 @@
+constructors:
+  Control.Monad.Trans.Reader.ReaderT: ! '[Qualified "Control.Monad.Trans.Reader" "Mk_ReaderT"]'
+constructorFields:
+  Control.Monad.Trans.Reader.Mk_ReaderT: RecordFields [Qualified "Control.Monad.Trans.Reader"
+    "runReaderT"]
+recordFieldTypes:
+  Control.Monad.Trans.Reader.runReaderT: Qualified "Control.Monad.Trans.Reader" "ReaderT"
+constructorTypes:
+  Control.Monad.Trans.Reader.Mk_ReaderT: Qualified "Control.Monad.Trans.Reader" "ReaderT"

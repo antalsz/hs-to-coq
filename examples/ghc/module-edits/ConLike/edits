@@ -11,9 +11,12 @@ skip ConLike.conLikeFieldType
 # Needs DataCon2 and PatSyn2
 skip ConLike.conLikeImplBangs
 
+# Needs stuff in DataCon
+skip ConLike.conLikeIsInfix
+
+skip ConLike.conLikeFieldLabels 
+skip ConLike.conLikesWithFields
+
 # in Core
 skip ConLike.conLikeExTyVars
-skip Core.conLikExTyVars
 
-skip module Var
-skip module Core

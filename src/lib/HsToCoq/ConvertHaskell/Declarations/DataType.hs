@@ -3,9 +3,7 @@
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.DataType (
-  convertDataDecl, convertDataDefn,
-  Constructor, convertConDecl, convertConLName,
-  addAdditionalConstructorScope, rewriteDataTypeArguments
+  convertDataDecl,
   ) where
 
 import Control.Lens
@@ -27,6 +25,7 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Type
@@ -39,21 +38,21 @@ type Constructor = (Qualid, [Binder], Maybe Term)
 
 --------------------------------------------------------------------------------
 
-addAdditionalConstructorScope :: ConversionMonad m => Constructor -> m Constructor
+addAdditionalConstructorScope :: ConversionMonad r m => Constructor -> m Constructor
 addAdditionalConstructorScope ctor@(_, _, Nothing) =
   pure ctor
 addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
-  use (edits.additionalScopes.at (SPConstructor,name)) <&> \case
+  view (edits.additionalScopes.at (SPConstructor,name)) <&> \case
     Just scope -> (name, bs, Just $ resTy `InScope` scope)
     Nothing    -> ctor
 
 --------------------------------------------------------------------------------
 
-convertConLName :: ConversionMonad m => Located GHC.Name -> m Qualid
+convertConLName :: ConversionMonad r m => Located GHC.Name -> m Qualid
 convertConLName (L _ hsCon) = var ExprNS hsCon
 
-convertConDecl :: ConversionMonad m
-               => Term -> [Binder] -> ConDecl GHC.Name -> m [Constructor]
+convertConDecl :: ConversionMonad r m
+               => Term -> [Binder] -> ConDecl GhcRn -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
 
@@ -64,15 +63,22 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
   params <- maybe (pure []) (convertLHsTyVarBndrs Coq.Implicit . hsq_explicit) mlqvs
   args   <- traverse convertLType $ hsConDeclArgTys details
 
-  fieldInfo <- case details of
+  case details of
     RecCon (L _ fields) ->
-      fmap (RecordFields . map Bare) . traverse freeVar
-        $ concatMap (map (unLoc . rdrNameFieldOcc . unLoc) . cd_fld_names . unLoc) fields
+      do
+       let qualids =  traverse (var ExprNS) $
+                      map (selectorFieldOcc . unLoc) $
+                      concatMap (cd_fld_names . unLoc) fields
+       fieldInfo <- fmap RecordFields qualids
+       storeConstructorFields con fieldInfo
+       qualids <- qualids
+       let namedBinders = fmap (\(x,y) -> Typed Ungeneralizable Explicit ( Ident x  NE.:| [] ) y) $ zip qualids args
+       pure [(con, params ++ namedBinders , Just . maybeForall extraArgs $ foldr Arrow curType [])]
     _ ->
-      pure . NonRecordFields $ length args
-  constructorFields . at con ?= fieldInfo
-
-  pure [(con, params, Just . maybeForall extraArgs $ foldr Arrow curType args)]
+     do
+      fieldInfo <- pure . NonRecordFields $ length args
+      storeConstructorFields con fieldInfo
+      pure [(con, params , Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
 convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   cons  <- traverse convertConLName lnames
@@ -81,7 +87,7 @@ convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
 
 --------------------------------------------------------------------------------
 
-rewriteDataTypeArguments :: ConversionMonad m => DataTypeArguments -> [Binder] -> m ([Binder], [Binder])
+rewriteDataTypeArguments :: ConversionMonad r m => DataTypeArguments -> [Binder] -> m ([Binder], [Binder])
 rewriteDataTypeArguments dta bs = do
   let dtaEditFailure what =
         editFailure $ what ++ " when adjusting data type parameters and indices"
@@ -101,7 +107,6 @@ rewriteDataTypeArguments dta bs = do
          Inferred   Coq.Implicit _   -> Left extraImplicit
          Typed    _ Coq.Implicit _ _ -> Left extraImplicit
 
-         BindLet     _ _ _ -> Left complexBinding
          Generalized _ _   -> Left complexBinding
 
   let editIdents  = S.fromList $ dta^.dtParameters <> dta^.dtIndices
@@ -125,8 +130,8 @@ rewriteDataTypeArguments dta bs = do
 
 --------------------------------------------------------------------------------
 
-convertDataDefn :: ConversionMonad m
-                => Term -> [Binder] -> HsDataDefn GHC.Name
+convertDataDefn :: ConversionMonad r m
+                => Term -> [Binder] -> HsDataDefn GhcRn
                 -> m (Term, [Constructor])
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
   unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
@@ -134,22 +139,23 @@ convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs)
       <*> (traverse addAdditionalConstructorScope =<<
            foldTraverse (convertConDecl curType extraArgs . unLoc) cons)
 
-convertDataDecl :: ConversionMonad m
-                => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> HsDataDefn GHC.Name
+convertDataDecl :: ConversionMonad r m
+                => Located GHC.Name -> [LHsTyVarBndr GhcRn] -> HsDataDefn GhcRn
                 -> m IndBody
 convertDataDecl name tvs defn = do
   coqName   <- var TypeNS $ unLoc name
 
-  kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> use (edits.dataKinds.at coqName)
+  kinds     <- (++ repeat Nothing) . map Just . maybe [] NE.toList <$> view (edits.dataKinds.at coqName)
   let cvtName tv = Ident <$> var TypeNS (unLoc tv)
-  let  go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
+  let  go :: ConversionMonad r m => LHsTyVarBndr GhcRn -> Maybe Term -> m Binder
+       go (L _ (UserTyVar name))     (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
        go (L _ (UserTyVar name))     Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n
        go (L _ (KindedTyVar name _)) (Just t) = cvtName name >>= \n -> return $ Typed Ungeneralizable Coq.Explicit (n NE.:| []) t
        go (L _ (KindedTyVar name _)) Nothing  = cvtName name >>= \n -> return $ Inferred Coq.Explicit n  -- dunno if this could happen
   rawParams <- zipWithM go tvs kinds
 
   (params, indices) <-
-    use (edits . dataTypeArguments . at coqName) >>= \case
+    view (edits . dataTypeArguments . at coqName) >>= \case
       Just dta -> rewriteDataTypeArguments dta rawParams
       Nothing  -> pure (rawParams, [])
   let conIndices = indices & mapped.binderExplicitness .~ Coq.Implicit
@@ -159,12 +165,12 @@ convertDataDecl name tvs defn = do
                      <$> convertDataDefn curType conIndices defn
 
   let conNames = [con | (con,_,_) <- cons]
-  constructors . at coqName ?= conNames
+  storeConstructors coqName conNames
   for_ conNames $ \con -> do
-    constructorTypes . at con ?= coqName
-    use (constructorFields . at con) >>= \case
+    storeConstructorType con coqName
+    lookupConstructorFields con >>= \case
       Just (RecordFields fields) ->
-        for_ fields $ \field -> recordFieldTypes . at field ?= coqName
+        for_ fields $ \field -> storeRecordFieldType field coqName
       _ ->
         pure ()
 

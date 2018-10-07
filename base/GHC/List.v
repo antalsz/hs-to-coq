@@ -97,10 +97,9 @@ Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
         := match arg_0__, arg_1__ with
            | _, (nil as xs) => pair xs xs
            | p, (cons x xs' as xs) =>
-               if p x : bool
-               then pair nil xs
-               else let 'pair ys zs := break p xs' in
-                    pair (cons x ys) zs
+               if p x : bool then pair nil xs else
+               let 'pair ys zs := break p xs' in
+               pair (cons x ys) zs
            end.
 
 Definition concat {a} : list (list a) -> list a :=
@@ -128,9 +127,8 @@ Definition filter {a} : (a -> bool) -> list a -> list a :=
         := match arg_0__, arg_1__ with
            | _pred, nil => nil
            | pred, cons x xs =>
-               if pred x : bool
-               then cons x (filter pred xs)
-               else filter pred xs
+               if pred x : bool then cons x (filter pred xs) else
+               filter pred xs
            end.
 
 Definition filterFB {a} {b} : (a -> b -> b) -> (a -> bool) -> a -> b -> b :=
@@ -187,9 +185,8 @@ Definition lookup {a} {b} `{(GHC.Base.Eq_ a)}
         := match arg_0__, arg_1__ with
            | _key, nil => None
            | key, cons (pair x y) xys =>
-               if key GHC.Base.== x : bool
-               then Some y
-               else lookup key xys
+               if key GHC.Base.== x : bool then Some y else
+               lookup key xys
            end.
 
 Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
@@ -251,13 +248,11 @@ Definition scanl' {b} {a} : (b -> a -> b) -> b -> list a -> list b :=
 
 Definition scanlFB {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
-  fun f c =>
-    fun b g => GHC.Base.oneShot (fun x => let b' := f x b in c b' (g b')).
+  fun f c => fun b g => (fun x => let b' := f x b in c b' (g b')).
 
 Definition scanlFB' {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
-  fun f c =>
-    fun b g => GHC.Base.oneShot (fun x => let 'b' := f x b in c b' (g b')).
+  fun f c => fun b g => (fun x => let b' := f x b in c b' (g b')).
 
 Definition scanrFB {a} {b} {c}
    : (a -> b -> b) -> (b -> c -> c) -> a -> (b * c)%type -> (b * c)%type :=
@@ -272,10 +267,8 @@ Definition span {a} : (a -> bool) -> list a -> (list a * list a)%type :=
         := match arg_0__, arg_1__ with
            | _, (nil as xs) => pair xs xs
            | p, (cons x xs' as xs) =>
-               if p x : bool
-               then let 'pair ys zs := span p xs' in
-                    pair (cons x ys) zs
-               else pair nil xs
+               if p x : bool then let 'pair ys zs := span p xs' in pair (cons x ys) zs else
+               pair nil xs
            end.
 
 Definition strictUncurryScanr {a} {b} {c}
@@ -290,9 +283,8 @@ Definition takeFB {a} {b}
   fun c n x xs =>
     fun m =>
       let 'num_0__ := m in
-      if num_0__ GHC.Base.== #1 : bool
-      then c x n
-      else c x (xs (m GHC.Num.- #1)).
+      if num_0__ GHC.Base.== #1 : bool then c x n else
+      c x (xs (m GHC.Num.- #1)).
 
 Definition takeWhile {a} : (a -> bool) -> list a -> list a :=
   fix takeWhile arg_0__ arg_1__
@@ -347,29 +339,33 @@ Definition zipFB {a} {b} {c} {d}
   fun c => fun x y r => c (pair x y) r.
 
 Definition zipWith {a} {b} {c} : (a -> b -> c) -> list a -> list b -> list c :=
-  fix zipWith arg_0__ arg_1__ arg_2__
-        := match arg_0__, arg_1__, arg_2__ with
-           | _f, nil, _bs => nil
-           | _f, _as, nil => nil
-           | f, cons a as_, cons b bs => cons (f a b) (zipWith f as_ bs)
-           end.
+  fun f =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | nil, _ => nil
+                 | _, nil => nil
+                 | cons x xs, cons y ys => cons (f x y) (go xs ys)
+                 end in
+    go.
 
 Definition zipWith3 {a} {b} {c} {d}
    : (a -> b -> c -> d) -> list a -> list b -> list c -> list d :=
-  fix zipWith3 arg_0__ arg_1__ arg_2__ arg_3__
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | z, cons a as_, cons b bs, cons c cs => cons (z a b c) (zipWith3 z as_ bs cs)
-           | _, _, _, _ => nil
-           end.
+  fun z =>
+    let fix go arg_0__ arg_1__ arg_2__
+              := match arg_0__, arg_1__, arg_2__ with
+                 | cons a as_, cons b bs, cons c cs => cons (z a b c) (go as_ bs cs)
+                 | _, _, _ => nil
+                 end in
+    go.
 
 Definition zipWithFB {a} {b} {c} {d} {e}
    : (a -> b -> c) -> (d -> e -> a) -> d -> e -> b -> c :=
   fun c f => fun x y r => c (f x y) r.
 
-(* Unbound variables:
+(* External variables:
      None Some andb bool cons false list nil op_zt__ option orb pair true
      Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
-     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.oneShot GHC.Base.op_zeze__
-     GHC.Base.op_zsze__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Num.op_zt__
+     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     GHC.Num.op_zt__
 *)

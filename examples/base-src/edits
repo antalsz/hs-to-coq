@@ -1,3 +1,6 @@
+# Avoid module name puns, as it confuses Coq’s code extraction
+rename module Data.Semigroup.Internal Data.SemigroupInternal
+
 skip module GHC.Arr
 skip module GHC.Generics
 skip module GHC.Types
@@ -7,27 +10,51 @@ skip module GHC.Magic
 skip module GHC.IO
 skip module GHC.Integer
 skip module GHC.Unicode
-
+skip module GHC.Show
 skip module Data.Data
 
-# manual versions
-# skip module GHC.Num
-# skip module GHC.Char
-# skip module GHC.Real
-# skip module Data.Proxy
-# skip module GHC.Enum
-# skip module Data.Bits
-# skip module Data.Type.Equality
-# skip module GHC.Prim
-# skip module GHC.Tuple
-# skip module Data.Functor.Const
-# skip module Data.IntMap
-# skip module Data.IntMap.Base
-# skip module Data.IntSet.Base
+
+## Not yet translated or manually implemented
+skip module GHC.Int
+skip module GHC.Word
+skip module GHC.Integer.Type
+
+## Classes that are generally not interesting
+# or where we don’t want any interfaces translated
+# automatically
+skip Data.Data.Data
+skip GHC.Show.Show
+skip GHC.Read.Read
+skip GHC.Generics.Generic
+skip GHC.Generics.Generic1
+skip GHC.Exception.Exception
+skip GHC.Arr.Ix
+skip Data.Bits.Bits
+skip Data.Bits.FiniteBits
+skip GHC.Float.Floating
+skip GHC.Real.Fractional
+skip GHC.Real.Integral
+skip GHC.Real.Real
+skip GHC.Real.RealFrac
+skip GHC.Float.RealFloat
+skip Foreign.Storable.Storable
+skip Control.Monad.Fix.MonadFix
+skip GHC.Base.Alternative
+skip GHC.Base.MonadPlus
+skip Control.DeepSeq.NFData
+skip Data.Functor.Classes.Show1
+skip Data.Functor.Classes.Read1
+skip GHC.Exts.IsList
+
+rename type GHC.IO.FilePath = GHC.Base.String
 
 # Work around the fact that build is higher rank, so the generator
 # expects a non-implicit type argument.
 rewrite forall g, (GHC.Base.build g) = GHC.Base.build' (fun _ => g)
+
+# Much prettier
+rewrite forall f x, (f GHC.Base.$ x) = f x
+rewrite forall f x, (f GHC.Base.$! x) = f x
 
 rename type  GHC.Tuple.() = unit
 rename value GHC.Tuple.() = tt
@@ -56,8 +83,11 @@ rename value GHC.List.concatMap  = Coq.Lists.List.flat_map
 rename value GHC.List.foldl      = GHC.Base.foldl
 rename value GHC.List.foldl'     = GHC.Base.foldl'
 
-rename value GHC.Magic.oneShot   = GHC.Base.oneShot
+# rename value GHC.Magic.oneShot   = GHC.Base.oneShot
 rewrite forall x, GHC.Magic.lazy x = x
+#rewrite forall x y, GHC.Prim.seq x y = y
+rewrite forall x y, Data.Functor.Utils.hash_compose x y = Coq.Program.Basics.compose x y
+rewrite forall x, GHC.Magic.oneShot x = x
 
 rename type GHC.Types.Ordering = comparison
 rename value GHC.Types.EQ = Eq
@@ -75,18 +105,18 @@ rename type  GHC.Classes.Eq = GHC.Base.Eq_
 rename value GHC.Classes.== = GHC.Base.op_zeze__
 rename value GHC.Classes./= = GHC.Base.op_zsze__
 
-rename type  GHC.Classes.Ord = GHC.Base.Ord
-rename value GHC.Classes.<   = GHC.Base.<
-rename value GHC.Classes.<=  = GHC.Base.<=
-rename value GHC.Classes.>   = GHC.Base.>
-rename value GHC.Classes.>=  = GHC.Base.>=
-rename value GHC.Classes.max = GHC.Base.max
-rename value GHC.Classes.min = GHC.Base.min
+rename type  GHC.Classes.Ord     = GHC.Base.Ord
+rename value GHC.Classes.<       = GHC.Base.<
+rename value GHC.Classes.<=      = GHC.Base.<=
+rename value GHC.Classes.>       = GHC.Base.>
+rename value GHC.Classes.>=      = GHC.Base.>=
+rename value GHC.Classes.max     = GHC.Base.max
+rename value GHC.Classes.min     = GHC.Base.min
 rename value GHC.Classes.compare = GHC.Base.compare
 
-rename type  GHC.Types.Bool  = bool
-rename value GHC.Types.True  = true
-rename value GHC.Types.False = false
+rename type  GHC.Types.Bool    = bool
+rename value GHC.Types.True    = true
+rename value GHC.Types.False   = false
 rename value GHC.Classes.not   = negb
 rename value GHC.Classes.||    = orb
 rename value GHC.Classes.&&    = andb
@@ -95,19 +125,19 @@ rename type  GHC.Base.Maybe   = option
 rename value GHC.Base.Just    = Some
 rename value GHC.Base.Nothing = None
 
-rename value GHC.Err.errorWithoutStackTrace = GHC.Base.errorWithoutStackTrace
-
 skip method GHC.Base.Monad fail
 skip method GHC.Enum.Enum enumFromThen
 skip method GHC.Enum.Enum enumFromThenTo
-skip method Data.Semigroup.Semigroup stimes  
-skip method Data.Semigroup.Semigroup sconcat
+skip method GHC.Base.Semigroup stimes
+skip method GHC.Base.Semigroup sconcat
+
 
 # deprecated
 skip method Data.Bits.Bits bitSize
 
 # default definition cannot be used
 skip method GHC.Base.Applicative op_zlzt__
+skip method Data.Foldable.Foldable elem
 
 # partial methods
 skip method Data.Foldable.Foldable foldl1
@@ -118,35 +148,42 @@ skip method Data.Foldable.Foldable minimum
 
 # We do not create notation for constructors yet
 # (but it would not be hard)
-rename value Data.List.NonEmpty.:| = Data.List.NonEmpty.NEcons
+rename value GHC.Base.:| = GHC.Base.NEcons
 
+# Avoid clashing with Coq’s <> notation
+rename value GHC.Base.<> = GHC.Base.<<>>
 
 # Punned constructors
-rename value Control.Arrow.ArrowMonad       = Control.Arrow.Mk_ArrowMonad
-rename value Control.Arrow.Kleisli          = Control.Arrow.Mk_Kleisli
-rename value Data.Foldable.Max              = Data.Foldable.Mk_Max
-rename value Data.Foldable.Min              = Data.Foldable.Mk_Min
-rename value Data.Functor.Const.Const       = Data.Functor.Const.Mk_Const
-rename value Data.Functor.Identity.Identity = Data.Functor.Identity.Mk_Identity
-rename value Data.Monoid.All                = Data.Monoid.Mk_All
-rename value Data.Monoid.Alt                = Data.Monoid.Mk_Alt
-rename value Data.Monoid.Any                = Data.Monoid.Mk_Any
-rename value Data.Monoid.Dual               = Data.Monoid.Mk_Dual
-rename value Data.Monoid.Endo               = Data.Monoid.Mk_Endo
-rename value Data.Monoid.First              = Data.Monoid.Mk_First
-rename value Data.Monoid.Last               = Data.Monoid.Mk_Last
-rename value Data.Monoid.Product            = Data.Monoid.Mk_Product
-rename value Data.Monoid.Sum                = Data.Monoid.Mk_Sum
-rename value Data.OldList.SnocBuilder       = Data.OldList.Mk_SnocBuilder
-rename value Data.Ord.Down                  = Data.Ord.Mk_Down
-rename value Data.Proxy.KProxy              = Data.Proxy.Mk_KProxy
-rename value Data.Proxy.Proxy               = Data.Proxy.Mk_Proxy
-rename value Data.Semigroup.Arg             = Data.Semigroup.Mk_Arg
-rename value Data.Semigroup.First           = Data.Semigroup.Mk_First
-rename value Data.Semigroup.Last            = Data.Semigroup.Mk_Last
-rename value Data.Semigroup.Max             = Data.Semigroup.Mk_Max
-rename value Data.Semigroup.Min             = Data.Semigroup.Mk_Min
-rename value Data.Semigroup.Option          = Data.Semigroup.Mk_Option
-rename value Data.Traversable.Id            = Data.Traversable.Mk_Id
-rename value Data.Traversable.StateL        = Data.Traversable.Mk_StateL
-rename value Data.Traversable.StateR        = Data.Traversable.Mk_StateR
+rename value Control.Arrow.ArrowMonad        = Control.Arrow.Mk_ArrowMonad
+rename value Control.Arrow.Kleisli           = Control.Arrow.Mk_Kleisli
+rename value Data.Foldable.Max               = Data.Foldable.Mk_Max
+rename value Data.Foldable.Min               = Data.Foldable.Mk_Min
+rename value Data.Functor.Const.Const        = Data.Functor.Const.Mk_Const
+rename value Data.Functor.Identity.Identity  = Data.Functor.Identity.Mk_Identity
+rename value Data.Semigroup.Internal.All     = Data.SemigroupInternal.Mk_All
+rename value Data.Semigroup.Internal.Alt     = Data.SemigroupInternal.Mk_Alt
+rename value Data.Semigroup.Internal.Any     = Data.SemigroupInternal.Mk_Any
+rename value Data.Semigroup.Internal.Dual    = Data.SemigroupInternal.Mk_Dual
+rename value Data.Semigroup.Internal.Endo    = Data.SemigroupInternal.Mk_Endo
+rename value Data.Semigroup.Internal.Product = Data.SemigroupInternal.Mk_Product
+rename value Data.Semigroup.Internal.Sum     = Data.SemigroupInternal.Mk_Sum
+rename value Data.Monoid.First               = Data.Monoid.Mk_First
+rename value Data.Monoid.Last                = Data.Monoid.Mk_Last
+rename value Data.OldList.SnocBuilder        = Data.OldList.Mk_SnocBuilder
+rename value Data.Ord.Down                   = Data.Ord.Mk_Down
+rename value Data.Proxy.KProxy               = Data.Proxy.Mk_KProxy
+rename value Data.Proxy.Proxy                = Data.Proxy.Mk_Proxy
+rename value Data.Semigroup.Arg              = Data.Semigroup.Mk_Arg
+rename value Data.Semigroup.First            = Data.Semigroup.Mk_First
+rename value Data.Semigroup.Last             = Data.Semigroup.Mk_Last
+rename value Data.Semigroup.Max              = Data.Semigroup.Mk_Max
+rename value Data.Semigroup.Min              = Data.Semigroup.Mk_Min
+rename value Data.Semigroup.Option           = Data.Semigroup.Mk_Option
+rename value Data.Traversable.Id             = Data.Traversable.Mk_Id
+rename value Data.Traversable.StateL         = Data.Traversable.Mk_StateL
+rename value Data.Traversable.StateR         = Data.Traversable.Mk_StateR
+rename value Data.Functor.Utils.StateR       = Data.Functor.Utils.Mk_StateR
+rename value Data.Functor.Utils.StateL       = Data.Functor.Utils.Mk_StateL
+rename value Data.Functor.Utils.Min          = Data.Functor.Utils.Mk_Min
+rename value Data.Functor.Utils.Max          = Data.Functor.Utils.Mk_Max
+rename value Data.Functor.Compose.Compose    = Data.Functor.Compose.Mk_Compose

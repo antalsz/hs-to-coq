@@ -1,9 +1,7 @@
-* TODO (hs-to-coq):
-  axiomize instances
-  Alt instances in Data.Monoid
-
 
 * Generated modules, what are we skipping in them and why?
+  [ This list is incomplete and gets out of date quickly. However, I'm 
+    leaving it here as some of it is correct and useful. ]
 
   GHC/List
     - five skipped function (take,drop,replicate, scanr, splitAt)
@@ -11,24 +9,19 @@
 	  these are defined in prelude.v
     - one skipped is concatMap, mapped to Coq's flat_map (should we do this?)
 	- rest are all partial functions
-  Data/Tuple
-    - nothing skipped
+
   Data/Maybe
     - fromJust (partial)
   Data/Function
     - fix_ is partial
-	- `on` uses (.*.) as a variable name
-  Data/Ord
-    - cannot derive Eq instance for Down, so instance added to "midamble"
-  Data/Functor
-    - nothing skipped
+
   Data/Monoid
-	- Product/Sum Monoid instances trigger scoped ty var issue
-	- issue with Alt instances & extra var generalized
-	- skip Alternative instance
 	- read/show instances
-  Control/Monad
+
+Control/Monad
     - three partial functions
+	- two functions need alternative
+	
   Data/OldList
     - 4 partial functions
 	- 9 not obviously total functions
@@ -43,10 +36,7 @@
 	- issue with type inference
   Data/Void
     - skip 5 instances for classes we don't support (Show, Read, Data)
-  Data/List
-    - empty module
-  Data/Bool
-    - none
+
   GHC/Base
     - FAM instances for types with variables
 	- prelude types and functions replaced with Coq versions
@@ -59,7 +49,8 @@
     - IO instance
 
   Data/Foldable
-    - Heavy use of Data.Coerce as type class instances
+    - need Alternative/MonadPlus
+	- partial functions
 
   Data/Functor/Identity
     - hash_compose, a helper function for Coercible type class
@@ -88,18 +79,11 @@
   Data/BiFunctor
     - skip GHC.Generics instances
 
-  Data/List/NonEmpty
-  
-  Data/Semigroup
-
 * What stops these modules from being generated?
 
 - Data/Type/Equality
   functional dependencies
 
-- Data/Functor/Const
-  Bug in monoid instance --- inst_m type variable vs. m in body of
-  instance declaration.
 
 - GHC/Char
 - GHC/Num
@@ -118,8 +102,6 @@
 - GHC/Enum
   Lots of primitive types.
 
-
-- Prelude
 
 ------------------------------------------------------------------------------
 
@@ -252,6 +234,7 @@ Text.Printf
 
 GHC.Constants
 Control.Monad.Instances
+Data.Kind  -- completely ignored
 
 - Modules that wrap GHC language features not
   found in Coq.
@@ -297,9 +280,9 @@ X Control.Applicative
 X Control.Arrow
 X Control.Category
 X Control.Monad
-Data.Bifoldable
+X Data.Bifoldable
 X Data.Bifunctor
-Data.Bitraversable
+X Data.Bitraversable
 X Data.Bits
 X Data.Bool
 X Data.Char
@@ -311,13 +294,12 @@ X Data.Foldable
 X Data.Function
 X Data.Functor
 X Data.Functor.Classes
-Data.Functor.Compose
+X Data.Functor.Compose
 X Data.Functor.Const
 X Data.Functor.Identity
-Data.Functor.Product
-Data.Functor.Sum
+X Data.Functor.Product
+X Data.Functor.Sum
 Data.Int
-Data.Kind  -- completely ignored
 X Data.List
 X Data.List.NonEmpty -- partial functions aren't really partial, :| constructor
 X Data.Maybe

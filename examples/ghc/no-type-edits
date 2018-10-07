@@ -1,0 +1,158 @@
+skip module TyCoRep
+skip module Coercion
+skip module CoAxiom
+skip module Type
+skip module Unify
+skip module TcType
+skip module TysWiredIn
+skip module RepType
+
+####################################################
+
+rename type GHC.Num.Int = nat
+
+rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
+rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
+rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x
+rewrite forall x, GHC.List.drop x        = Coq.Lists.List.skipn x
+
+
+####################################################
+## Glueing together the Core
+####################################################
+
+#
+# This must stay in sync with the Makefile
+#
+rename module Class   Core
+rename module TyCon   Core
+rename module DataCon Core
+rename module Var     Core
+rename module IdInfo  Core
+rename module PatSyn  Core
+rename module VarSet  Core
+rename module VarEnv  Core
+rename module CoreSyn Core
+rename module Demand  Core
+
+
+
+
+#
+# Punned constructor values (in Core)
+#
+rename value DataCon.HsSrcBang  = Core.Mk_HsSrcBang
+rename value DataCon.EqSpec     = Core.Mk_EqSpec
+rename value Class.Class        = Core.Mk_Class
+rename value Var.Id             = Core.Mk_Id
+rename value Var.TyVar          = Core.Mk_TyVar
+rename value Var.TcTyVar        = Core.Mk_TcTyVar
+rename value IdInfo.IdInfo      = Core.Mk_IdInfo
+rename value IdInfo.DFunId      = Core.Mk_DFunId
+rename value IdInfo.JoinId      = Core.Mk_JoinId
+rename value CoreSyn.Var        = Core.Mk_Var
+rename value CoreSyn.IsOrphan   = Core.Mk_IsOrphan
+rename value CoreSyn.RuleEnv    = Core.Mk_RuleEnv
+rename value Demand.ExnStr      = Core.Mk_ExnStr
+rename value Demand.Str         = Core.Mk_Str
+rename value Demand.Use         = Core.Mk_Use
+rename value Demand.DmdType     = Core.Mk_DmdType
+rename value Demand.StrictSig   = Core.Mk_StrictSig
+rename value Demand.KillFlags   = Core.Mk_KillFlags
+
+## Other punning
+
+rename value CoreFVs.FVAnn    = CoreFVs.Mk_FVAnn
+rename value CoreSubst.Subst  = CoreSubst.Mk_Subst
+
+
+###############################################################################
+#  Pruning the AST
+###############################################################################
+
+rename type PrimOp.PrimOp           = unit
+rename type ForeignCall.ForeignCall = unit
+rename type ForeignCall.CType       = unit
+
+# type used in DataCon
+rename type MkId.DataConBoxer = unit
+
+# could make this unit too
+redefine Inductive TyCon.RuntimeRepInfo : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+
+###############################################################################
+# IdInfo  --- edit out unfoldingIndo, ruleInfo, demandInfo, strictnessInfo 
+# and Id
+###############################################################################
+
+## CallStack 
+rewrite forall x, Core.idInfo x = @Core.idInfo tt x
+
+#
+# IdInfo
+#
+
+rewrite forall x, Core.setUnfoldingInfo  x = x
+rewrite forall x dmd, Core.setUnfoldingInfo  x dmd = x
+
+# rewrite forall x, Core.ruleInfoFreeVars x = FV.emptyFVs
+
+#
+# Id 
+#
+rewrite forall arg y, Id.setIdUnfolding arg y = arg
+
+#
+# No unfolding / rules in IdInfo
+#
+rewrite forall x, Core.unfoldInfo x = tt
+rewrite forall x, CoreSyn.isEvaldUnfolding x = false
+rewrite forall x, Core.isStableUnfolding x = false
+
+
+###############################################################################
+# bruttaly skip all type info
+###############################################################################
+
+
+rename type TcType.TcTyVarDetails = unit
+rename type TyCoRep.Coercion      = unit
+rename type TyCoRep.Type_         = unit
+rename type TyCoRep.ThetaType     = unit
+rename type TyCoRep.TyBinder      = unit
+rename type TyCoRep.TyThing       = unit
+rename type TyCoRep.Kind          = unit
+rename type TyCoRep.PredType      = unit
+
+rename type TyCoRep.TvSubstEnv    = unit
+rename type TyCoRep.CvSubstEnv    = unit
+rename type TyCoRep.TCvSubst      = unit
+
+rename type CoAxiom.CoAxiom            = list
+rename type CoAxiom.Branched           = unit
+rename type CoAxiom.Unbranched         = unit
+rename type CoAxiom.BuiltInSynFamily   = unit
+rename type CoAxiom.Role               = unit
+rename value CoAxiom.Representational  = tt
+rename value CoAxiom.Nominal           = tt
+rename value TysWiredIn.liftedTypeKind = tt
+rename value TysWiredIn.constraintKind = tt
+
+## Could make these unit too.
+redefine Inductive CoAxiom.CoAxiomRule      : Type := CoAxiom.Mk_CoAxiomRule_Dummy.
+redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamily_Dummy.
+
+## rewrite things that are unit to tt
+
+rewrite forall x, TyCoRep.mkTyVarTy x = tt
+rewrite forall v, Coercion.mkCoVarCo v = tt
+rewrite forall rhs, CoreUtils.exprType rhs = tt
+rewrite forall x, Id.idType x = tt
+rewrite forall x, Core.sel_tycon x = tt
+rewrite forall env x,  TyCoRep.tidyType env x = tt
+rewrite forall env co, TyCoRep.tidyCo env co = tt
+
+## 
+
+rewrite forall x, TyCoRep.isCoercionType x = false
+rewrite forall var,    Core.isTyCoVar var = false

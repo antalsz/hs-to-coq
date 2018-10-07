@@ -2,8 +2,10 @@
    as FastStrings. For right now, just accumulate the interface that we need
    from other files. *)
 
+Require GHC.List.
 Require Import GHC.Base.
 Require Import GHC.Err.
+Require Import Coq.Numbers.BinNums.
 
 Definition FastString := String.
 
@@ -18,14 +20,18 @@ Admitted.
 
 Definition fsLit (s : String) : FastString := s.
 
-Parameter uniqueOfFS : FastString -> GHC.Num.Int.
+Definition concatFS : list FastString -> FastString := GHC.List.concat.
+
+Parameter uniqueOfFS : FastString -> BinNums.N.
 
 Parameter unpackFS : FastString -> GHC.Base.String.
+
+Parameter appendFS : FastString -> FastString -> FastString.
 
 Definition LitString := String.
 Definition sLit (s : String) : LitString := s.
 
 Definition mkFastString (s : String) : FastString := s.
 
-Parameter hashByteString : FastString -> GHC.Num.Int.
+Parameter hashByteString : FastString -> nat.
 Parameter fastStringToByteString : FastString -> GHC.Base.String.

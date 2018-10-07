@@ -1,2 +1,2 @@
-termination go in SplitAt.splitAt { measure (length arg_0__) }
+in SplitAt.splitAt termination go { measure (length arg_0__) }
 obligations SplitAt.splitAt solve_splitAt

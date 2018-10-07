@@ -42,13 +42,13 @@ Notation "'_∘_'" := (op_z2218U__).
 Infix "∘" := (_∘_) (left associativity, at level 40).
 (* Converted value declarations: *)
 
-Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
-  fun {a} => GHC.Base.id.
-
 Local Definition Category__arrow_op_z2218U__
    : forall {b} {c} {a},
      GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
   fun {b} {c} {a} => _GHC.Base.∘_.
+
+Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
+  fun {a} => GHC.Base.id.
 
 Program Instance Category__arrow : Category GHC.Prim.arrow :=
   fun _ k =>
@@ -56,6 +56,8 @@ Program Instance Category__arrow : Category GHC.Prim.arrow :=
          op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
 
 (* Skipping instance Category__op_ZCz7eUZC__ *)
+
+(* Skipping instance Category__op_ZCz7eUz7eUZC__ *)
 
 (* Skipping instance Category__Coercion *)
 
@@ -84,6 +86,6 @@ Notation "'_Control.Category.<<<_'" := (op_zlzlzl__).
 Infix "Control.Category.<<<" := (_<<<_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Type GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
 *)

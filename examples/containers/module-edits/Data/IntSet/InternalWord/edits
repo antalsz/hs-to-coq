@@ -1,0 +1,96 @@
+# We want to variants, to this is a copy
+rename module Data.IntSet.Internal Data.IntSet.InternalWord
+
+#
+# Represent element type using Coq's infinite-bit N type
+#
+rename type GHC.Types.Int = IntWord.Int
+rename type GHC.Num.Word  = IntWord.Word
+
+### Termination hints ###
+
+# These are typical that they recurse left or right
+termination Data.IntSet.InternalWord.union        {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.InternalWord.union        termination_by_omega
+termination Data.IntSet.InternalWord.difference   {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.InternalWord.difference   termination_by_omega
+termination Data.IntSet.InternalWord.intersection {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.InternalWord.intersection termination_by_omega
+termination Data.IntSet.InternalWord.disjoint     {measure ((size_nat arg_0__) + (size_nat arg_1__))}
+obligations Data.IntSet.InternalWord.disjoint     termination_by_omega
+
+# local termination via the bit mask
+in Data.IntSet.InternalWord.foldlBits  termination go  {measure (IntWord.wordTonat arg_0__)}
+# obligations Data.IntSet.InternalWord.foldlBits BitTerminationProofs.termination_foldl
+obligations Data.IntSet.InternalWord.foldlBits admit
+in Data.IntSet.InternalWord.foldl'Bits termination go  {measure (IntWord.wordTonat arg_0__)}
+# obligations Data.IntSet.InternalWord.foldl'Bits BitTerminationProofs.termination_foldl
+obligations Data.IntSet.InternalWord.foldl'Bits admit
+in Data.IntSet.InternalWord.foldrBits  termination go {measure (IntWord.wordTonat arg_0__)}
+# obligations Data.IntSet.InternalWord.foldrBits BitTerminationProofs.termination_foldl
+obligations Data.IntSet.InternalWord.foldrBits admit
+in Data.IntSet.InternalWord.foldr'Bits termination go  {measure (IntWord.wordTonat arg_0__)}
+# obligations Data.IntSet.InternalWord.foldr'Bits BitTerminationProofs.termination_foldl
+obligations Data.IntSet.InternalWord.foldr'Bits admit
+
+
+### Rewrites and replacements ###
+
+rename value Utils.Containers.Internal.BitUtil.shiftLL = IntWord.shiftLWord
+rename value Utils.Containers.Internal.BitUtil.shiftRL = IntWord.shiftRWord
+rename value Utils.Containers.Internal.BitUtil.highestBitMask = IntWord.highestBitMask
+rename value Utils.Containers.Internal.BitUtil.bitcount = IntWord.bitcount
+
+## undo the toplevel rename
+rename value Utils.Containers.Internal.BitUtil.lowestBitMask = Data.IntSet.InternalWord.lowestBitMask
+
+redefine Definition Data.IntSet.InternalWord.intFromNat := IntWord.intFromWord.
+redefine Definition Data.IntSet.InternalWord.natFromInt := IntWord.wordFromInt.
+
+# indexOfTheOnlyBit uses pointers and ugly stuff
+redefine Definition Data.IntSet.InternalWord.indexOfTheOnlyBit := IntWord.indexOfTheOnlyBit.
+
+redefine Definition Data.IntSet.InternalWord.suffixBitMask : IntWord.Int := GHC.Num.fromInteger 63.
+
+# This code is dead for well-formed input. Giving an explicit value
+# not only get rids of error, but also helps with type class resolution
+#rewrite forall, GHC.Err.error "minView Nil"  = pair GHC.Err.default Nil
+#rewrite forall, GHC.Err.error "maxView Nil"  = pair GHC.Err.default Nil
+
+
+### SKIPPED ###
+
+# partial functions that we don't want to translate
+skip Data.IntSet.InternalWord.findMax
+skip Data.IntSet.InternalWord.findMin
+skip Data.IntSet.InternalWord.deleteFindMax
+skip Data.IntSet.InternalWord.deleteFindMin
+
+# Show stuff
+skip Data.IntSet.InternalWord.showsBars
+skip Data.IntSet.InternalWord.showsBitMap
+skip Data.IntSet.InternalWord.showBitMap
+skip Data.IntSet.InternalWord.showsTreeHang
+skip Data.IntSet.InternalWord.showTreeWith
+skip Data.IntSet.InternalWord.showBin
+skip Data.IntSet.InternalWord.showWide
+skip Data.IntSet.InternalWord.withBar
+skip Data.IntSet.InternalWord.withEmpty
+skip Data.IntSet.InternalWord.showsTree
+skip Data.IntSet.InternalWord.showTree
+skip Data.IntSet.InternalWord.node
+
+# Data stuff
+skip Data.IntSet.InternalWord.fromListConstr
+skip Data.IntSet.InternalWord.intSetDataType
+
+# mutual recursion 
+skip Data.IntSet.InternalWord.fromDistinctAscList
+skip Data.IntSet.InternalWord.fromAscList
+
+
+### Type class ordering information ###
+
+order Data.IntSet.InternalWord.Semigroup__IntSet Data.IntSet.InternalWord.Monoid__IntSet_mappend
+
+

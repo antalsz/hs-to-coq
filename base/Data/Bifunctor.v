@@ -292,7 +292,7 @@ Program Instance Bifunctor__Const : Bifunctor Data.Functor.Const.Const :=
 
 (* Skipping instance Bifunctor__K1 *)
 
-(* Unbound variables:
+(* External variables:
      pair Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Functor.Const.Const Data.Functor.Const.Mk_Const GHC.Base.id
      GHC.Tuple.pair_type GHC.Tuple.quad_type GHC.Tuple.quint_type GHC.Tuple.sept_type

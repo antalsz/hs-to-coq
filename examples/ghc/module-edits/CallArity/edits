@@ -1,8 +1,37 @@
-# axiomatize module CallArity
+rename type Var.Id = Core.Var
 
 ## specialize generic method to (->) constructor
 ## to make type inference easier
 rename value Control.Arrow.first = arrow_first
-rename value Control.Arrow.first = arrow_second
+rename value Control.Arrow.second = arrow_second
 
 rewrite forall x y, Data.Foldable.minimum (cons x y) = Data.Foldable.foldr GHC.Base.min x y
+
+# rewrite forall x, Id.idStrictness x = Core.botSig
+
+#
+# This is actually the only function that we need from the CoreArity module
+# We parameterize it here because it needs type information to work correctly
+#
+rewrite forall x, CoreArity.typeArity = CallArity.typeArity
+
+
+# ANTALSZ: example of mutual recursion
+in CallArity.callArityAnal rewrite forall, CallArity.callArityBind = CallArity.callArityBind1
+
+
+# ANTALSZ: even if we get mutrec working for callArityAnal, 
+# we will still have this issue
+# if we try to use structural recursion for fix_
+# Error: Anomaly "Evar ?X650 was not declared."
+# Please report at http://coq.inria.fr/bugs/.
+# skip CallArity.callArityBind
+# I've tracked it down to the recursive call fix_ ann_binds'
+#
+#
+in CallArity.callArityBind termination fix_ deferred
+
+
+
+
+

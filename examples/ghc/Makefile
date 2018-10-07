@@ -1,14 +1,4 @@
-HAVE_STACK := $(shell command -v stack 2> /dev/null)
-ifdef HAVE_STACK
-HS_TO_COQ = stack exec hs-to-coq --
-else
-HS_TO_COQ = cabal new-run -v0 exe:hs-to-coq --
-endif
-SHELL = bash
-
-ifeq (,$(wildcard ghc))
-$(error Please create a symlink ghc (see README.md))
-endif
+include ../../common.mk
 
 OUT=lib
 
@@ -20,23 +10,24 @@ OUT=lib
 HANDMOD = \
   FastString \
   Panic \
-  Util \
   ListSetOps \
   Digraph \
-  IdInfo \
-  IdInfo2 \
-  Class \
-  DataCon \
-  PatSyn \
-  Core \
-  TyCoRep \
   PrelNames \
-  TysWiredIn \
-  CallArity \
+  CSE_NestedRecursion
+    # Used by CSE
+#  CallArity \
+#  TysWiredIn \
+
+
+# generated from drop-in/
+DROPIN = \
+
 
 # Generated modules
 # generated directly from ghc/compiler/*/
+# These are general purpose utility modules
 MODULES = \
+  Util \
   Maybes \
   MonadUtils \
   Pair \
@@ -45,6 +36,7 @@ MODULES = \
   Unique \
   UniqSupply \
   UniqFM \
+  EnumSet \
   CmmType \
   BooleanFormula \
   UniqSet \
@@ -57,113 +49,194 @@ MODULES = \
   Module \
   OrdList \
   OccName \
-  Name \
-  NameEnv \
-  NameSet \
-  FieldLabel \
-  Constants \
+  State \
+
+## 
+CORESYN = \
+   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand \
+
+## 
+CONSTRUCTORS = \
+
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
-  Var \
-  VarSet \
-  VarEnv \
-  ConLike \
-  FV \
-  TyCon \
-  Literal \
-  CoreSyn \
+  Constants \
+  Id \
   UnVarGraph \
-  Demand \
   CoreSubst \
   CoreUtils \
-  CoAxiom \
-  Id \
+  Name \
+  NameEnv \
+  NameSet \
+  FV \
+  Literal \
+  FieldLabel \
+  ConLike \
   CoreFVs \
+  Exitify \
+  CallArity \
   CoreArity \
+  CoreTidy \
+  TrieMap \
+	CSE
+
+NOTRANSLATE = \
+  Constructors \
+  CoreType \
+  IdInfo2 \
+  TyCoRep \
+
+CORETYPE = \
+  TyCoRep \
+  Coercion \
+  CoAxiom \
+  Type \
 
 
-VFILES_GEN = $(addprefix $(OUT)/,$(addsuffix .v,$(MODULES)))
-VFILES_MAN = $(addprefix $(OUT)/,$(addsuffix .v,$(HANDMOD)))
-VFILES_CORE = $(addprefix $(OUT)/,$(addsuffix .v,$(CORE_MODULES)))
+# These modules translate, but do not compile, at the moment and
+# should not be processed by coq
+BROKEN_MODULES = \
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_CORE)
 
-all: $(OUT)/edits $(OUT)/README.md $(VFILES) coq
 
-$(OUT):
+VFILES_GEN       = $(addsuffix .v,$(MODULES))
+VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
+VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
+VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
+VFILES_CONSTR    = Constructors.v
+VFILES_CORESYN   = Core.v
+
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN)
+
+OUTFILES_GEN       = $(addprefix $(OUT)/,$(VFILES_GEN))
+OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
+OUTFILES_CORE      = $(addprefix $(OUT)/,$(VFILES_CORE))
+OUTFILES_DROPIN    = $(addprefix $(OUT)/,$(VFILES_DROPIN))
+OUTFILES_CORETYPE  = $(addprefix $(OUT)/,$(VFILES_CORETYPE))
+OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
+OUTFILES_CORESYN   = $(addprefix $(OUT)/,$(VFILES_CORESYN))
+
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN)
+
+all: vfiles coq
+
+vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES)
+
+core: $(OUT)/README.md coq
+
+# This target is also used as a dependecy to ensure that $(OUT) exists.
+$(OUT)/README.md:
 	mkdir -p $(OUT)
+	mkdir -p deps
+	> $@
+	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
 
-$(OUT)/_CoqProject: $(OUT) Makefile
+$(OUT)/edits:
+	mkdir -p $(OUT)
+	ln -fs ../edits $(OUT)/edits
+
+$(OUT)/_CoqProject: $(OUT)/README.md Makefile
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../../../base ""' >> $@
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
-	echo $(addsuffix .v,$(HANDMOD)) >> $@
-	echo $(addsuffix .v,$(MODULES)) >> $@
-	echo $(addsuffix .v,$(CORE_MODULES)) >> $@
+	echo '-Q ../../transformers/lib  ""' >> $@
+	echo $(filter-out $(addsuffix .v,$(BROKEN_MODULES)), $(VFILES)) >> $@
 
-$(OUT)/Makefile: $(OUT) $(OUT)/_CoqProject $(VFILES)
+$(OUT)/Makefile: $(OUT)/README.md $(OUT)/_CoqProject $(OUTFILES) Makefile
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
 
-$(OUT)/edits: $(OUT)
-	ln -fs ../edits $(OUT)/edits
-
-$(OUT)/README.md:
-	> $@
-	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
-
-coq: $(OUT)/Makefile $(VFILES)
+coq: $(OUT)/Makefile $(OUTFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)
 
 
+HS_TO_COQ_GHC_OPTS=\
+     --ghc-tree ghc \
+     -i gen-files \
+     -I gen-files \
+     -I ghc/includes \
+     -I ghc/compiler \
+     --ghc -DSTAGE=2 \
+     --ghc -package=ghc-boot-th \
+     --ghc -XNoImplicitPrelude \
+     -e ../../base/edits \
+     -e ../containers/edits \
+     -e ../transformers/edits \
+     --iface-dir ../../base \
+     --iface-dir ../containers/lib \
+     --iface-dir ../transformers/lib \
+     --iface-dir $(OUT) \
+     --dependency-dir deps \
+     -e edits \
+     -N \
+
+
+-include deps/*.mk
+
+%.h2ci: %.v
+	test -e $@
+
 .SECONDEXPANSION:
-$(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
+$(OUTFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-                     --ghc-tree ghc \
-                     -I ghc/includes \
-                     -I ghc/compiler \
-                     -I ghc/compiler/stage2 \
-                     -I ghc/compiler/stage2/build \
-                     --ghc -DSTAGE=2 \
-                     --ghc -package=ghc-boot-th \
-                     -e ../../base/edits \
-                     -e ../containers/edits \
-                     -e edits \
-                     -N \
+		     $(HS_TO_COQ_GHC_OPTS) \
                      -o $(OUT) \
-		     ghc/compiler/*/$*.hs
+		     $(word 1,$(wildcard ghc-head/$*.hs ghc/compiler/*/$*.hs))
 	test -e $@
-# We added the `test` because `hs-to-coq` doesn't return an error
 
-
-$(VFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits core-edits
+$(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits no-type-edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
-                     --ghc-tree ghc \
-                     -I ghc/includes \
-                     -I ghc/compiler \
-                     -I ghc/compiler/stage2 \
-                     -I ghc/compiler/stage2/build \
-                     --ghc -DSTAGE=2 \
-                     --ghc -package=ghc-boot-th \
-                     -e ../../base/edits \
-                     -e ../containers/edits \
-                     -e edits \
+		     $(HS_TO_COQ_GHC_OPTS) \
+                     -e no-type-edits \
+                     -o $(OUT) \
+		     $(word 1,$(wildcard ghc-head/$*.hs ghc/compiler/*/$*.hs))
+	test -e $@
+
+CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))
+CORESYN_MID = $(wildcard $(addprefix module-edits/, $(addsuffix /midamble.v, $(CORESYN))))
+
+$(OUTFILES_CORESYN) : edits no-type-edits $(CORESYN_PRE) manual/ConIds.v $(CORESYN_MID) $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
+	cat manual/ConIds.v $(CORESYN_PRE) > CoreSyn_preamble.v
+	cat $(CORESYN_MID) > CoreSyn_midamble.v
+	$(HS_TO_COQ) $(HS_TO_COQ_GHC_OPTS) \
+                -p CoreSyn_preamble.v \
+                --midamble CoreSyn_midamble.v \
+	             $(addprefix -e , $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))) \
+                -e no-type-edits \
+                -o $(OUT) \
+		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CORESYN)))
+	test -e $@
+	rm -f CoreSyn_preamble.v CoreSyn_midamble.v
+
+$(OUTFILES_CONSTR) : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
+	$(HS_TO_COQ) -e module-edits/Constructors/edits \
+	                  -p module-edits/Constructors/preamble.v \
+	                  --midamble module-edits/Constructors/midamble.v \
+		     $(HS_TO_COQ_GHC_OPTS) \
+                     -e no-type-edits \
+                     -o $(OUT) \
+		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CONSTRUCTORS)))
+	test -e $@
+
+
+$(OUTFILES_CORETYPE) : edits core-edits module-edits/CoreType/preamble.v  module-edits/CoreType/midamble.v module-edits/CoreType/edits
+	$(HS_TO_COQ) -e module-edits/CoreType/edits \
+	                  -p module-edits/CoreType/preamble.v \
+	                  --midamble module-edits/CoreType/midamble.v \
+		     $(HS_TO_COQ_GHC_OPTS) \
                      -e core-edits \
-                     -N \
                      -o $(OUT) \
-		     ghc/compiler/*/$*.hs
+		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CORETYPE)))
 	test -e $@
 
-
-
-$(VFILES_MAN): $(OUT)/%.v : manual/%.v
+$(OUTFILES_MAN): $(OUT)/%.v : manual/%.v
 	mkdir -p "$$(dirname $(OUT)/$*.v)"
 	rm -f $@
 	lndir ../manual $(OUT)/
@@ -171,3 +244,6 @@ $(VFILES_MAN): $(OUT)/%.v : manual/%.v
 clean:
 	rm -rf $(OUT)
 	rm -f *.aux *.log
+
+cleancore:
+	rm -rf $(OUTFILES_CORE) 

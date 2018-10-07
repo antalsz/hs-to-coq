@@ -5,4 +5,4 @@ module TypeClient where
 import Type
 
 g :: Int
-g = f 3
+g = Type.id 3

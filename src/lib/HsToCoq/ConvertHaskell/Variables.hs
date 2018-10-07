@@ -2,8 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Variables (
   -- * Generate variable names
-  var', var,
-  unQualifyLocal,
+  var,
   recordField, bareName,
   freeVar', freeVar,
   -- * Avoiding reserved words/names
@@ -14,14 +13,18 @@ import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Maybe
+import Data.List
+import qualified Data.Set as S
 import qualified Data.Text as T
 
 import Control.Monad
 
-import GHC hiding (Name)
+import GHC (GhcMonad,AmbiguousFieldOcc(..),GhcRn)
+--import GHC hiding (Name)
 import qualified GHC
 import Outputable (OutputableBndr)
-import Name hiding (Name)
+import Name(occNameString, nameOccName, nameModule_maybe)
+-- import Name hiding (Name)
 
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
@@ -46,7 +49,7 @@ escapeReservedNames :: Ident -> Ident
 escapeReservedNames x =
   fromMaybe x . getFirst $
     foldMap (First . flip tryEscapeReservedWord x)
-            (T.words "Set Type Prop fun fix forall return mod match as cons pair nil for is with left right")
+            (T.words "Set Type Prop fun fix forall return mod match as cons pair nil for is with left right exists")
     <> if | T.all (== '.') x  -> pure $ T.map (const '∘') x
           | T.all (== '∘') x  -> pure $ "⟨" <> x <> "⟩"
 -- these type operators aren't parsed by the renaming file
@@ -68,32 +71,51 @@ freeVar = fmap freeVar' . ghcPpr
 -- Does not qualify with the module, does not look it up in renamings
 -- (useful for locally bound names)
 bareName :: GHC.Name -> Ident
-bareName = toPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+bareName = toPrefix . escapeReservedNames . specialForms .  T.pack . occNameString . nameOccName
 
 localName :: GHC.Name -> Ident
-localName = toLocalPrefix . escapeReservedNames . T.pack . occNameString . nameOccName
+localName = toLocalPrefix . escapeReservedNames . specialForms . T.pack . occNameString . nameOccName
 
-var' :: ConversionMonad m => HsNamespace -> Ident -> m Qualid
-var' ns x = use $ renamed ns (Bare x) . non (Bare (escapeReservedNames x))
+specialForms :: Ident -> Ident
+-- "$sel:rd:Mulw" to "rd"
+specialForms name | "$sel:" `T.isPrefixOf` name = T.takeWhile (/= ':') $ T.drop 5 name
+                  | otherwise                   = name
 
-unQualifyLocal :: ConversionMonad m => Qualid -> m Qualid
-unQualifyLocal qi = do
-  thisModM <- fmap moduleNameText <$> use currentModule
-  case qi of
-    -- Something in this module
-    (Qualified m b) | Just m == thisModM -> pure (Bare b)
-    -- Something bare (built-in or local) or external
-    _                                    -> pure qi
-
-
-var :: ConversionMonad m => HsNamespace -> GHC.Name -> m Qualid
-var ns name = do
-    renamed_qid <- use (renamed ns qid . non qid)
-    pure renamed_qid
+-- convert to a Qid but don't lookup renamings
+toQid :: ConversionMonad r m => GHC.Name -> m Qualid
+toQid name = case nameModM of
+    Just m  -> pure (Qualified (moduleNameText m) (bareName name))
+    Nothing -> pure (Bare (localName name))
   where
-    nameModM = moduleNameText . moduleName <$> nameModule_maybe name
+    nameModM = moduleName <$> nameModule_maybe name
 
-    qid | Just m <- nameModM = Qualified m (bareName name)
-        | otherwise          = Bare        (localName name)
-recordField :: (ConversionMonad m, HasOccName name, OutputableBndr name) => name -> m Qualid
-recordField = var' ExprNS <=< ghcPpr -- TODO Check module part?
+rename :: ConversionMonad r m => HsNamespace -> Qualid -> m Qualid
+rename ns = go S.empty
+  where
+    go seen qid | qid `S.member` seen =
+        fail $ "Cyclic renamings " ++ intercalate ", " (map show (S.toList seen))
+    go seen qid = view (edits . renamed ns qid) >>= \case
+        Nothing ->   return qid
+            -- A self rename is also fine, it signals stopping.
+        Just qid' | qid' == qid -> return qid
+        Just qid' -> go (S.insert qid seen) qid'
+
+renameModule :: ConversionMonad r m => Qualid -> m Qualid     
+renameModule (Qualified mod ident) = do
+  let m = mkModuleName (T.unpack mod)
+  rm <- view (edits.renamedModules.at m . non m)
+  pure (Qualified (moduleNameText rm) ident)
+renameModule qid = pure qid
+
+
+var :: ConversionMonad r m => HsNamespace -> GHC.Name -> m Qualid
+var ns name = do
+    qid <- toQid name
+    qid1 <- rename ns qid
+    renameModule qid1
+
+
+
+recordField :: (ConversionMonad r m) => AmbiguousFieldOcc GhcRn -> m Qualid
+recordField (Unambiguous _ sel) = var ExprNS sel
+recordField (Ambiguous _ _)     = error "Cannot handle ambiguous record field names"

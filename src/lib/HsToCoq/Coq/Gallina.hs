@@ -24,6 +24,7 @@ module HsToCoq.Coq.Gallina (
   -- $Terms
   Term(..),
   Arg(..),
+  IfStyle(..),
   Binders,
   Generalizability(..),
   Explicitness(..),
@@ -32,9 +33,7 @@ module HsToCoq.Coq.Gallina (
   Qualid(..),
   Sort(..),
   FixBodies(..),
-  CofixBodies(..),
   FixBody(..),
-  CofixBody(..),
   Order(..),
   MatchItem(..),
   DepRetType(..),
@@ -130,26 +129,23 @@ type Op          = Text
 data Term = Forall Binders Term                                                                -- ^@forall /binders/, /term/@
           | Fun Binders Term                                                                   -- ^@fun /binders/ => /term/@
           | Fix FixBodies                                                                      -- ^@fix /fix_bodies/@
-          | Cofix CofixBodies                                                                  -- ^@cofix /cofix_bodies/@
-          | Let Qualid [Binder] (Maybe Term) Term Term                                          -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
+          | Cofix FixBodies                                                                    -- ^@cofix /cofix_bodies/@
+          | Let Qualid [Binder] (Maybe Term) Term Term                                         -- ^@let /ident/ [/binders/] [: /term/] := /term/ in /term/@
           | LetTuple [Name] (Maybe DepRetType) Term Term                                       -- ^@let ( [/name/ , … , /name/] ) [/dep_ret_type/] := /term/ in /term/@
           | LetTick Pattern Term Term                                                          -- ^@let ' /pattern/ := /term/ in /term/@
-          | LetTickDep Pattern (Maybe (Qualid, [Pattern])) Term ReturnType Term                -- ^@let ' /pattern/ [in /qualid/ [/pattern/ … /pattern/]] := /term/ /return_type/ in /term/@
-          | If Term (Maybe DepRetType) Term Term                                               -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
+          | If IfStyle Term (Maybe DepRetType) Term Term                                       -- ^@if /term/ [/dep_ret_type/] then /term/ else /term/@
           | HasType Term Term                                                                  -- ^@/term/ : /term/@
           | CheckType Term Term                                                                -- ^@/term/ <: /term/@
           | ToSupportType Term                                                                 -- ^@/term/ :>@
           | Arrow Term Term                                                                    -- ^@/term/ -> /term/@
           | App Term (NonEmpty Arg)                                                            -- ^@/term/ /arg/ … /arg/@
           | ExplicitApp Qualid [Term]                                                          -- ^@\@ /qualid/ [/term/ … /term/]@
-          | Infix Term Qualid Term                                                             -- ^@/term/ /op/ /term/@ – extra. The qualid must be of the form op_...__
           | InScope Term Ident                                                                 -- ^@/term/ % /ident/@
           | Match (NonEmpty MatchItem) (Maybe ReturnType) [Equation]                           -- ^@match /match_item/ , … , /match_item/ [/return_type/] with [[|] /equation/ | … | /equation/] end@
           | Qualid Qualid                                                                      -- ^@/qualid/@
           | RawQualid Qualid                                                                   -- ^@/qualid/@ like Qualid, but never printed with notation
           | Sort Sort                                                                          -- ^@/sort/@
           | Num Num                                                                            -- ^@/num/@
-          | PolyNum Num                                                                        -- ^@# /num/@ – extra (for polymorphic number literals)
           | String Text                                                                        -- ^@/string/@ – extra (holds the value, not the source text)
           | HsString Text                                                                      -- ^@& /string/@ – extra (for Haskell string literals)
           | HsChar Char                                                                        -- ^@&# /string/@ – extra (for Haskell character literals; /string/ is a single ASCII character)
@@ -161,6 +157,9 @@ data Term = Forall Binders Term                                                 
 
 infixr 7 `Arrow`
 infixl 8 `App`
+
+data IfStyle = SymmetricIf | LinearIf -- LinearIf is used for guards, to avoid adding indentation
+          deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/arg/ ::=@
 data Arg = PosArg Term                                                                         -- ^@/term/@
@@ -183,7 +182,6 @@ data Explicitness = Explicit                                                    
 -- |@/binder/ ::=@ – the @/explicitness/@ is extra
 data Binder = Inferred Explicitness Name                                                       -- ^@/name/@ or @{ /name/ }@
             | Typed Generalizability Explicitness (NonEmpty Name) Term                         -- ^@/generalizability/@ @( /name/ … /name/ : /term/ )@ or @/generalizability/@ @{ /name/ … /name/ : /term/ }@
-            | BindLet Name (Maybe Term) Term                                                   -- ^@( /name/ [: /term/] := /term/ )@
             | Generalized Explicitness Term                                                    -- ^@` ( /term/ )@ or @` { /term/ }@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
@@ -208,18 +206,9 @@ data FixBodies = FixOne FixBody                                                 
                | FixMany FixBody (NonEmpty FixBody) Qualid                                     -- ^@/fix_body/ with /fix_body/ with … with /fix_body/ for /ident/@
                deriving (Eq, Ord, Show, Read, Typeable, Data)
 
--- |@/cofix_bodies/ ::=@
-data CofixBodies = CofixOne CofixBody                                                          -- ^@/cofix_body/@
-                 | CofixMany CofixBody (NonEmpty CofixBody) Qualid                             -- ^@/cofix_body/ with /cofix_body/ with … with /cofix_body/ for /ident/@
-                 deriving (Eq, Ord, Show, Read, Typeable, Data)
-
 -- |@/fix_body/ ::=@
 data FixBody = FixBody Qualid Binders (Maybe Order) (Maybe Term) Term                     -- ^@/ident/ /binders/ [/order/] [: /term/] := /term/@
              deriving (Eq, Ord, Show, Read, Typeable, Data)
-
--- |@/cofix_body/ ::=@
-data CofixBody = CofixBody Qualid Binders (Maybe Term) Term                                    -- ^@/ident/ /binders/ [: /term/] := /term/@
-               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/annotation/ ::=@
 data Order = StructOrder Qualid                                                                -- ^@{ struct /ident/ }@
@@ -310,8 +299,7 @@ data AssumptionKeyword = Axiom                                                  
                        deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/assums/ ::=@
-data Assums = UnparenthesizedAssums (NonEmpty Qualid) Term                                     -- ^@/ident/ … /ident/ : /term/@
-            | ParenthesizedAssums (NonEmpty (NonEmpty Qualid, Term))                           -- ^@( /ident/ … /ident/ : /term ) … ( /ident/ … /ident/ : /term)@
+data Assums = Assums (NonEmpty Qualid) Term                                     -- ^@/ident/ … /ident/ : /term/@
             deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@[Local] ::=@ – not a part of the grammar /per se/, but a common fragment
@@ -335,7 +323,7 @@ data IndBody = IndBody Qualid [Binder] Term [(Qualid, [Binder], Maybe Term)]    
 
 -- |@/fixpoint/ ::=@
 data Fixpoint = Fixpoint   (NonEmpty FixBody)   [NotationBinding]                              -- ^@Fixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
-              | CoFixpoint (NonEmpty CofixBody) [NotationBinding]                              -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
+              | CoFixpoint (NonEmpty FixBody) [NotationBinding]                                -- ^@CoFixpoint /fix_body/ with … with /fix_body/ [where /notation_binding/ and … and /notation_binding/] .@
               deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/assertion/ ::=@
@@ -430,4 +418,4 @@ data LocalModule = LocalModule Ident [Sentence]
 -- TODO: Move this?
 data Signature = Signature { sigType   :: Term
                            , sigFixity :: Maybe (Associativity, Level) }
-               deriving (Eq, Ord, Show, Read)
+               deriving (Eq, Ord, Show, Read, Typeable, Data)

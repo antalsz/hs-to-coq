@@ -1,5 +1,3 @@
 *.hi
 *.o
-extraction/src/*.hs
-extraction/src/*.hi
-extraction/src/*.o
+extraction/extracted-src/*.hs

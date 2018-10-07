@@ -1,0 +1,6 @@
+-Q . ""
+-R ../../../base ""
+
+Data/Functor/Constant.v Data/Functor/Reverse.v Control/Applicative/Backwards.v Control/Applicative/Lift.v Control/Monad/Trans/Class.v Control/Monad/Signatures.v Control/Monad/Trans/Identity.v Control/Monad/Trans/Reader.v Control/Monad/Trans/Writer/Lazy.v Control/Monad/Trans/State/Lazy.v Control/Monad/Trans/Cont.v Control/Monad/Trans/Except.v Control/Monad/Trans/Maybe.v Control/Monad/Trans/RWS/Lazy.v
+
+

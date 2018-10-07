@@ -1,6 +1,7 @@
 # just to access type info
-# skip Literal.literalType
-# skip Literal.absentLiteralOf
+skip Literal.literalType
+rewrite forall x, Literal.literalType x = tt
+skip Literal.absentLiteralOf
 
 ## declared as a parameter in the midamble.
 # is a list of specific prelude names
@@ -23,6 +24,18 @@ skip Literal.narrow32IntLit
 skip Literal.narrow32WordLit
 skip Literal.narrow8IntLit
 skip Literal.narrow8WordLit
+
+skip Literal.inInt64Range 
+skip Literal.mkMachInt64 
+skip Literal.inWord64Range
+skip Literal.mkMachWord64 
+skip Literal.mkMachInt64Wrap
+skip Literal.mkMachIntWrap
+skip Literal.mkMachWord64Wrap 
+skip Literal.mkMachWordWrap
+skip Literal.mapLitValue
+
+
 
 # ppr
 skip Literal.pprIntegerVal

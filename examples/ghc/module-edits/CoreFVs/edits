@@ -1,20 +1,97 @@
-skip module Coercion
-skip module Type
 skip module	FamInstEnv
 
-rename value CoreFVs.FVAnn = CoreFVs.Mk_FVAnn
-
-
 # notation
+rename type Var.Id          = Core.Var
+rename type Var.TyVar       = Core.Var
+rename type VarSet.DVarSet  = DVarSet
 rename type CoreSyn.AnnExpr = AnnExpr
-rename type CoreSyn.AnnAlt = AnnAlt
+rename type CoreSyn.AnnAlt  = AnnAlt
 
+
+## 
+# NEEDED by Exitify
+# CoreFVs.CoreExprWithFVs CoreFVs.freeVars
+# CoreFVs.freeVarsOf
+#
+# NEEDED from Id
+# Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
+#
+
+rewrite forall id, Id.realIdUnfolding id = Core.NoUnfolding
+
+in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
+
+
+#
+# TODO: we don't try to translate the orphNames functions
+#
 skip CoreFVs.orphNamesOfFamInst  # needs FamInstEnv
-
-skip CoreFVs.tickish_fvs
-
-## mutual recursion /
-skip CoreFVs.exprOrphNames
+skip CoreFVs.orphNamesOfCoCon
+skip CoreFVs.orphNamesOfCoAxBranch
+skip CoreFVs.orphNamesOfType
+skip CoreFVs.orphNamesOfProv
+skip CoreFVs.orphNamesOfCoAxBranches
+skip CoreFVs.orphNamesOfTypes
+skip CoreFVs.orphNamesOfAxiom
+skip CoreFVs.orphNamesOfCos
+skip CoreFVs.orphNamesOfTyCon
 skip CoreFVs.orphNamesOfCo
-skip CoreFVs.freeVars
-skip CoreFVs.expr_fvs
+
+## TODO: nonstructural mutual recursion 
+
+skip CoreFVs.exprOrphNames
+skip CoreFVs.exprsOrphNames
+
+rewrite forall ty, CoreFVs.orphNamesOfType ty = NameSet.emptyNameSet
+rewrite forall co, CoreFVs.orphNamesOfCo   co = NameSet.emptyNameSet
+
+in CoreFVs.exprOrphNames rewrite forall, go_alt = fun x => match x with | pair (pair _ _) r => go r end 
+in CoreFVs.exprOrphNames skip go_alt
+
+#
+# These edits are due to the fact that Id's are missing information (Rules, Unfoldings and Types info)
+# We assume that the missing information does not contain any free variables
+#
+#
+redefine Definition CoreFVs.idRuleFVs      : Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
+redefine Definition CoreFVs.idUnfoldingFVs : Id  -> FV.FV := fun id  => FV.emptyFV.
+
+rewrite forall co,   TyCoRep.tyCoFVsOfCo co          = FV.emptyFV
+rewrite forall ty,   TyCoRep.tyCoFVsOfType ty        = FV.emptyFV
+rewrite forall b_ty, TyCoRep.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
+rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
+
+
+
+#
+# expr_fvs
+#
+# This set of mutually-recursive functions is heavily edited to make it past Coq's 
+# structural termination checker. (It is also no-longer mutually recursive).
+#
+# first, we get rid of parts of the structure that we do not need
+#
+rewrite forall id, CoreFVs.bndrRuleAndUnfoldingFVs id = FV.emptyFV
+skip CoreFVs.stableUnfoldFVs
+#
+# Then we unfuse some recursive calls so that Coq can see that they are structural
+#
+in CoreFVs.expr_fvs rewrite forall bndr rhs, CoreFVs.rhs_fvs (pair bndr rhs) = FV.unionFV (CoreFVs.expr_fvs rhs) FV.emptyFV
+in CoreFVs.expr_fvs rewrite forall alts,  (FV.mapUnionFV alt_fvs alts)  = FV.unionsFV (Lists.List.map alt_fvs alts)
+in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) = FV.unionsFV (Lists.List.map (fun x => match x with | pair bndr rhs => CoreFVs.expr_fvs rhs end) pairs)
+
+#
+# freeVars
+#
+# magic rewrite to make CoreFVs.freeVars to be structurally recursive (modulo freeVarsBind)
+in CoreFVs.freeVars rewrite forall fv_alt alts, Util.mapAndUnzip fv_alt alts = GHC.List.unzip (Lists.List.map fv_alt alts)
+
+#
+# ANTALSZ: mutual recursion still needs to be addressed
+# NOW: mutual recursion through non-lambda values unsupported
+in CoreFVs.freeVars rewrite forall, CoreFVs.freeVarsBind = CoreFVs.freeVarsBind1
+
+
+
+

@@ -1,6 +1,6 @@
 -Q . ""
 -R ../../../base ""
-Utils/Containers/Internal/PtrEquality.v CTZ.v Popcount.v BitTerminationProofs.v Test/QuickCheck/Property.v Test/QuickCheck/Arbitrary.v Test/QuickCheck/Gen.v
-Data/Set/Internal.v Utils/Containers/Internal/BitUtil.v Data/IntSet/Internal.v Data/IntMap/Internal.v Data/Map/Internal.v IntSetValidity.v
+Utils/Containers/Internal/PtrEquality.v CTZ.v BitTerminationProofs.v Test/QuickCheck/Property.v Test/QuickCheck/Arbitrary.v Test/QuickCheck/Gen.v IntWord.v
+Data/Set/Internal.v Utils/Containers/Internal/BitUtil.v Data/IntSet/Internal.v Data/IntSet/InternalWord.v Data/IntMap/Internal.v Data/Map/Internal.v IntSetValidity.v
 
 

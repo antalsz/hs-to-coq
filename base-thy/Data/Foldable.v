@@ -4,7 +4,7 @@ Require Import Data.Foldable.
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
 
-Require Import mathcomp.ssreflect.ssreflect.
+From Coq Require Import ssreflect.
 Set Bullet Behavior "Strict Subproofs".
 
 (* -------------------------------------------------------------------- *)
@@ -49,6 +49,106 @@ Theorem hs_coq_foldl_list {A B} (f : B -> A -> B) (z : B) (l : list A) :
   foldl f z l = Coq.Lists.List.fold_left f l z.
 Proof. apply hs_coq_foldl_base. Qed.
 
+Theorem hs_coq_foldl'_list {A B} (f : B -> A -> B) (z : B) (l : list A) :
+  foldl' f z l = Coq.Lists.List.fold_left f l z.
+Proof. apply hs_coq_foldl_base. Qed.
+
 Theorem hs_coq_foldl_list' {A B} (f : B -> A -> B) (z : B) (l : list A) :
   Data.Foldable.Foldable__list_foldl f z l = Coq.Lists.List.fold_left f l z.
 Proof. apply hs_coq_foldl_list. Qed.
+
+
+(* -------------------------------------------------------------------- *)
+(*  Theory about foldable for lists *)
+
+Ltac unfold_Foldable_foldr :=
+  unfold Foldable.foldr,
+  Foldable.foldr__,
+  Foldable.Foldable__list,
+  Foldable.Foldable__list_foldr.
+
+
+Ltac unfold_Foldable_foldl' :=
+  unfold Foldable.foldl',  Foldable.Foldable__list, 
+  Foldable.foldl'__, Foldable.Foldable__list_foldl', Base.foldl'.
+
+Ltac unfold_Foldable_foldl :=
+  unfold Foldable.foldl,  Foldable.Foldable__list, 
+  Foldable.foldl__, Foldable.Foldable__list_foldl, Base.foldl.
+
+
+Lemma Foldable_foldr_app : forall a b (f:a -> b -> b) (s:b) 
+                              (vs1 : list a) (vs2: list a),
+    Foldable.foldr f s (vs1 ++ vs2) =
+    Foldable.foldr f (Foldable.foldr f s vs2) vs1.
+Proof.
+  intros.
+  unfold_Foldable_foldr.
+  rewrite hs_coq_foldr_base.
+  rewrite fold_right_app.
+  auto.
+Qed.
+
+Lemma Foldable_foldl'_app : forall a b (f:b -> a -> b) (s:b) 
+                              (vs1 : list a) (vs2: list a),
+    Foldable.foldl' f s (vs1 ++ vs2) =
+    Foldable.foldl' f (Foldable.foldl' f s vs1) vs2.
+Proof.
+  unfold_Foldable_foldl'.
+  intros.
+  repeat rewrite <- List_foldl_foldr.
+  rewrite fold_left_app.
+  auto.
+Qed.
+
+
+Lemma elem_nil : forall {A} `{Eq_ A}  (x:A),  
+  Foldable.elem x nil = false.
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma elem_cons : 
+  forall {A} `{Eq_ A} (v:A) (x:A) (l:list A),  
+    Foldable.elem v (x :: l) = (v == x) || Foldable.elem v l.
+Proof.
+  intros.
+  unfold Foldable.elem.
+  unfold Foldable.any.
+  unfold compose, SemigroupInternal.getAny, Foldable.foldMap.
+  unfold Foldable.Foldable__list,Foldable.foldMap__,
+  SemigroupInternal.Semigroup__Any,SemigroupInternal.Monoid__Any.
+  unfold Foldable.Foldable__list_foldMap. 
+  unfold Foldable.Foldable__list_foldr, mappend, mempty.
+  simpl.
+  f_equal.
+Qed.
+
+
+Lemma Foldable_any_app : forall {A} `{Eq_ A} (v:A) (l1 l2:list A),
+      Foldable.any (fun y : A => v == y) (l1 ++ l2) =
+      Foldable.any (fun y : A => v == y) l1
+      || Foldable.any (fun y : A => v == y) l2.
+Proof.
+  intros.
+  unfold Foldable.any.
+  unfold compose, Foldable.foldMap.
+  unfold Foldable.Foldable__list,Foldable.foldMap__,
+         Foldable.Foldable__list_foldMap,
+         Foldable.Foldable__list_foldr. 
+  simpl.
+  induction l1.
+  + simpl. auto.
+  + simpl.
+    rewrite <- orb_assoc.
+    f_equal.
+    unfold SemigroupInternal.getAny.
+    auto.
+Qed.
+
+Lemma Foldable_elem_app : forall {A}`{Eq_ A} (v:A) (l1 l2:list A),  
+    Foldable.elem v (l1 ++ l2) = Foldable.elem v l1 || Foldable.elem v l2.
+Proof.
+  intros. apply Foldable_any_app.
+Qed.

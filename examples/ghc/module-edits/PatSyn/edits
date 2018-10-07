@@ -1,8 +1,9 @@
-axiomatize module PatSyn
+# pretty printing
+skip Core.pprPatSynType
 
-skip PatSyn.pprPatSynType
+# no type information
+skip Core.patSynInstArgTys
+skip Core.patSynInstResTy 
 
-# in Core
-skip Core.patSynExTyVars
+order Core.Uniquable__PatSyn Core.Eq___PatSyn_op_zeze__ Core.Eq___PatSyn_op_zsze__
 
-skip module Var

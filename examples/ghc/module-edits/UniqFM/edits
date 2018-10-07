@@ -2,18 +2,21 @@ skip UniqFM.pprUniqFM
 skip UniqFM.pluralUFM
 skip UniqFM.pprUFM
 
+# Needs Data.IntMap.Internal.mergeA
+skip UniqFM.equalKeysUFM
+
+# pick result type, GHC.Num.Int or N or nat?
+rename type GHC.Num.Int = nat
+in UniqFM.sizeUFM rewrite forall ,  Data.IntMap.Internal.size m = BinNat.N.to_nat (Data.IntMap.Internal.size m)
+
 skip module Compiler.Hoopl.Dataflow
-
-skip module Data.IntMap
-
 # requires Hoopl
 skip UniqFM.joinUFM
 
 # These instances need the corresponding stuff in IntMap.
-# order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
-skip UniqFM.Functor__UniqFM
-skip UniqFM.Foldable__UniqFM
-skip UniqFM.Traversable__UniqFM
+order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
+order UniqFM.Semigroup__UniqFM UniqFM.Monoid__UniqFM_mappend
+order UniqFM.Semigroup__UniqFM UniqFM.Monoid__UniqFM_mconcat
 
 add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => match x with | UFM y => y end) UFM.
@@ -21,4 +24,4 @@ add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMa
 rename value Unique.getKey = Unique.getWordKey
 
 skip module Coq.ZArith.BinInt.Z
-redefine Definition UniqFM.sizeUFM {elt} : (UniqFM.UniqFM elt) -> GHC.Num.Int := fun um => match um with | UFM m => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size m) end.
+

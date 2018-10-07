@@ -43,6 +43,6 @@ Program Instance MonadFail__list : MonadFail list :=
 
 (* Skipping instance MonadFail__IO *)
 
-(* Unbound variables:
+(* External variables:
      None Type list nil option GHC.Base.Monad GHC.Base.String
 *)

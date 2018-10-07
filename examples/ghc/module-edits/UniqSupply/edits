@@ -10,3 +10,5 @@ skip  UniqSupply.mkSplitUniqSupply
 
 order UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM_op_zgzg__
 order UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM_return_
+
+rename type GHC.Num.Int = BinNums.N

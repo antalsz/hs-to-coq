@@ -1,0 +1,110 @@
+## still need to redefine this 
+skip Control.Monad.Signatures.Catch
+skip Control.Monad.Trans.Identity.liftCatch
+skip Control.Monad.Trans.Reader.liftCatch
+skip Control.Monad.Trans.Writer.Lazy.liftCatch
+skip Control.Monad.Trans.State.Lazy.liftCatch
+skip Control.Monad.Trans.Accum.liftCatch
+skip Control.Monad.Trans.Cont.liftCatch
+skip Control.Monad.Trans.RWS.Lazy.liftCatch
+skip Contol.Monad.Trans.Maybe.liftCatch
+
+# TODO
+skip Control.Monad.Zip.MonadZip
+skip Control.Monad.IO.Class.MonadIO
+
+## need Foldable instance, which requires mutual recursion
+skip Data.Functor.Reverse.Traversable__Reverse
+
+## In midamble
+redefine Definition Control.Monad.Trans.Writer.Lazy.Monad__WriterT_op_zgzgze__ {inst_w} {inst_m} `{_:GHC.Base.Monoid inst_w} `{_:GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     ((WriterT inst_w inst_m a) ->
+     ((a -> (WriterT inst_w inst_m b)) -> (WriterT inst_w inst_m b))) := fun {a}{b} =>  Monad__WriterT_tmp.
+
+skip Control.Monad.Trans.Accum.runAccumT
+redefine Definition Control.Monad.Trans.Accum.Monad__AccumT_op_zgzgze__ {inst_w} {inst_m} `{_:GHC.Base.Monoid
+  inst_w} `{_:GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     ((AccumT inst_w inst_m a) ->
+     ((a -> (AccumT inst_w inst_m b)) -> (AccumT inst_w inst_m b))) := fun {a}{b} =>  Monad__AccumT_tmp.
+
+
+
+data kinds Control.Monad.Trans.Identity.IdentityT (Type -> Type) 
+data kinds Control.Monad.Trans.Reader.ReaderT Type,(Type -> Type)
+data kinds Control.Monad.Trans.Cont.ContT Type,(Type -> Type)
+data kinds Control.Monad.Trans.Writer.Lazy.WriterT Type,(Type -> Type)
+data kinds Data.Functor.Constant.Constant Type,Type
+data kinds Data.Functor.Reverse.Reverse (Type -> Type),Type
+data kinds Control.Applicative.Backwards.Backwards (Type->Type),Type
+
+
+## punning
+rename value Data.Functor.Constant.Constant = Data.Functor.Constant.Mk_Constant
+rename value Data.Functor.Reverse.Reverse = Data.Functor.Reverse.Mk_Reverse
+rename value Control.Applicative.Backwards.Backwards = Control.Applicative.Backwards.Mk_Backwards
+rename value Control.Applicative.Lift.Lift = Control.Applicative.Lift.Mk_Lift
+rename value Control.Monad.Trans.Identity.IdentityT =  Control.Monad.Trans.Identity.Mk_IdentityT
+rename value Control.Monad.Trans.Reader.ReaderT =  Control.Monad.Trans.Reader.Mk_ReaderT
+rename value Control.Monad.Trans.Accum.AccumT =  Control.Monad.Trans.Accum.Mk_AccumT
+rename value Control.Monad.Trans.Cont.ContT =  Control.Monad.Trans.Cont.Mk_ContT
+rename value Control.Monad.Trans.Except.ExceptT =  Control.Monad.Trans.Except.Mk_ExceptT
+rename value Control.Monad.Trans.Maybe.MaybeT =  Control.Monad.Trans.Maybe.Mk_MaybeT
+
+rename value Control.Monad.Trans.Writer.Lazy.WriterT = Control.Monad.Trans.Writer.Lazy.Mk_WriterT
+rename value Control.Monad.Trans.State.Lazy.StateT = Control.Monad.Trans.State.Lazy.Mk_StateT
+rename value Control.Monad.Trans.RWS.Lazy.RWST = Control.Monad.Trans.RWS.Lazy.Mk_RWST
+rename value Control.Monad.Trans.Select.SelectT = Control.Monad.Trans.Select.Mk_SelectT
+
+
+order Control.Monad.Trans.Identity.Functor__IdentityT Control.Monad.Trans.Identity.Applicative__IdentityT_op_ztzg__  Control.Monad.Trans.Identity.Applicative__IdentityT Control.Monad.Trans.Identity.Monad__IdentityT_op_zgzg__ Control.Monad.Trans.Identity.Monad__IdentityT_return_ Control.Monad.Trans.Identity.Monad__IdentityT Control.Monad.Trans.Identity.Traversable__IdentityT
+
+order Data.Functor.Reverse.Functor__Reverse Data.Functor.Reverse.Applicative__Reverse Data.Functor.Reverse.Monad__Reverse_op_zgzg__ Data.Functor.Reverse.Monad__Reverse_return_ Data.Functor.Reverse.Monad__Reverse Data.Functor.Reverse.Traversable__Reverse 
+
+order Control.Monad.Trans.Accum.Functor__AccumT  Control.Monad.Trans.Accum.Applicative__AccumT_op_ztzg__ Control.Monad.Trans.Accum.Applicative__AccumT Control.Monad.Trans.Accum.Monad__AccumT_op_zgzg__ Control.Monad.Trans.Accum.Monad__AccumT_return_ Control.Monad.Trans.Accum.Monad__AccumT Control.Monad.Trans.Accum.Traversable__AccumT
+
+
+order Control.Monad.Trans.Except.runExceptT Control.Monad.Trans.Except.Functor__ExceptT  Control.Monad.Trans.Except.Applicative__ExceptT_pure Control.Monad.Trans.Except.Applicative__ExceptT_op_ztzg__ Control.Monad.Trans.Except.Applicative__ExceptT Control.Monad.Trans.Except.Monad__ExceptT_op_zgzg__ Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ Control.Monad.Trans.Except.Monad__ExceptT_return_ Control.Monad.Trans.Except.Monad__ExceptT Control.Monad.Trans.Except.Traversable__ExceptT 
+
+order Control.Monad.Trans.Maybe.runMaybeT Control.Monad.Trans.Maybe.Functor__MaybeT  Control.Monad.Trans.Maybe.Applicative__MaybeT_pure Control.Monad.Trans.Maybe.Applicative__MaybeT_op_ztzg__ Control.Monad.Trans.Maybe.Applicative__MaybeT Control.Monad.Trans.Maybe.Monad__MaybeT_op_zgzg__ Control.Monad.Trans.Maybe.Monad__MaybeT_op_zgzgze__ Control.Monad.Trans.Maybe.Monad__MaybeT_return_ Control.Monad.Trans.Maybe.Monad__MaybeT Control.Monad.Trans.Maybe.Traversable__MaybeT 
+
+
+order Control.Monad.Trans.Reader.Functor__ReaderT Control.Monad.Trans.Reader.Applicative__ReaderT_op_ztzg__ Control.Monad.Trans.Reader.Applicative__ReaderT Control.Monad.Trans.Reader.Monad__ReaderT_op_zgzg__ Control.Monad.Trans.Reader.Monad__ReaderT_return_ Control.Monad.Trans.Reader.Monad__ReaderT Control.Monad.Trans.Reader.Traversable__ReaderT
+
+order Control.Monad.Trans.Writer.Lazy.Functor__WriterT Control.Monad.Trans.Writer.Lazy.Applicative__WriterT_pure Control.Monad.Trans.Writer.Lazy.Applicative__WriterT_op_ztzg__ Control.Monad.Trans.Writer.Lazy.Applicative__WriterT Control.Monad.Trans.Writer.Lazy.Monad__WriterT_op_zgzg__ Control.Monad.Trans.Writer.Lazy.Monad__WriterT_return_ Control.Monad.Trans.Writer.Lazy.Monad__WriterT Control.Monad.Trans.Writer.Lazy.Traversable__WriterT
+
+order Control.Monad.Trans.Select.MonadTrans__SelectT Control.Monad.Trans.Select.Functor__SelectT Control.Monad.Trans.Select.Applicative__SelectT_pure Control.Monad.Trans.Select.Applicative__SelectT_op_ztzg__ Control.Monad.Trans.Select.Applicative__SelectT_op_ztzg__ Control.Monad.Trans.Select.Applicative__SelectT Control.Monad.Trans.Select.Monad__SelectT_op_zgzg__ Control.Monad.Trans.Select.Monad__SelectT_return_ Control.Monad.Trans.Select.Monad__SelectT Control.Monad.Trans.Select.Traversable__SelectT
+
+
+
+
+# These are all instances of the same issue. The Applicative *> operator is defined
+# in terms of >>= in this library
+#
+redefine Definition Control.Monad.Trans.State.Lazy.Applicative__StateT_op_ztzg__ {inst_m} {inst_s}
+  `{_ : GHC.Base.Functor inst_m} `{_ :GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     (StateT inst_s inst_m a) ->
+     ((StateT inst_s inst_m b) -> (StateT inst_s inst_m b)) :=
+  fun {a} {b} => fun m k => Control.Monad.Trans.State.Lazy.Applicative__StateT_op_zlztzg__ (Control.Monad.Trans.State.Lazy.Applicative__StateT_op_zlztzg__ (Applicative__StateT_pure (fun x y => x)) k) m.
+
+
+redefine Definition Control.Monad.Trans.Cont.Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
+   : forall {a} {b},
+     (ContT inst_s inst_m a) ->
+     ((ContT inst_s inst_m b) -> (ContT inst_s inst_m b)) :=
+  fun {a} {b} => fun m k => Control.Monad.Trans.Cont.Applicative__ContT_op_zlztzg__ (Control.Monad.Trans.Cont.Applicative__ContT_op_zlztzg__ (Applicative__ContT_pure (fun x y => x)) k) m.
+
+redefine Definition Control.Monad.Trans.Except.Applicative__ExceptT_op_ztzg__ {inst_m} {inst_s} `{_ : GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     (ExceptT inst_s inst_m a) ->
+     ((ExceptT inst_s inst_m b) -> (ExceptT inst_s inst_m b)) :=
+  fun {a} {b} => fun m k => Control.Monad.Trans.Except.Applicative__ExceptT_op_zlztzg__ (Control.Monad.Trans.Except.Applicative__ExceptT_op_zlztzg__ (Applicative__ExceptT_pure (fun x y => x)) k) m.
+
+redefine Definition Control.Monad.Trans.Select.Applicative__SelectT_op_ztzg__ {inst_m} {inst_s} `{_ : GHC.Base.Monad inst_m}
+   : forall {a} {b},
+     (SelectT inst_s inst_m a) ->
+     ((SelectT inst_s inst_m b) -> (SelectT inst_s inst_m b)) :=
+  fun {a} {b} => fun m k => Control.Monad.Trans.Select.Applicative__SelectT_op_zlztzg__ (Control.Monad.Trans.Select.Applicative__SelectT_op_zlztzg__ (Applicative__SelectT_pure (fun x y => x)) k) m.
+

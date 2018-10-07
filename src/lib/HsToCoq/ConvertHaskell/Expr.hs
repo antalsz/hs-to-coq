@@ -4,30 +4,25 @@
              ViewPatterns, MultiWayIf  #-}
 
 module HsToCoq.ConvertHaskell.Expr (
-  -- * Expressions
-  convertExpr, convertLExpr,
-  -- * Bindings
-  convertLocalBinds,
-  -- ** Generic
-  convertTypedBindings, convertTypedModuleBindings, convertTypedBinding,
-  -- * Functions, matches, and guards
-  -- ** Functions
-  convertFunction,
-  -- ** Matches
-  convertMatchGroup, convertMatch,
-  -- ** `do' blocks and similar
-  convertDoBlock, convertListComprehension,
-  convertPatternBinding,
+  convertTypedModuleBinding,
+  convertMethodBinding,
+  convertTypedModuleBindings,
+  hsBindName,
   ) where
 
 import Control.Lens
 
+import Control.Arrow ((&&&))
 import Data.Bifunctor
+import Data.Foldable
+import HsToCoq.Util.Foldable
 import Data.Traversable
+import Data.Bitraversable
+import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
-import Data.List.NonEmpty (nonEmpty, NonEmpty)
+import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
 import qualified HsToCoq.Util.List as NEL ((|>))
 import Data.Text (Text)
@@ -37,6 +32,9 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Except
 import Control.Monad.Writer
 
+import HsToCoq.Util.Containers
+
+import           Data.Set        (Set)
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -58,6 +56,7 @@ import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
@@ -68,12 +67,15 @@ import HsToCoq.ConvertHaskell.Sigs
 
 --------------------------------------------------------------------------------
 
-convertExpr :: ConversionMonad m => HsExpr GHC.Name -> m Term
-convertExpr hsExpr = do
-  rws <- use (edits.rewrites)
-  Coq.rewrite rws <$> convertExpr' hsExpr
+rewriteExpr :: ConversionMonad r m => Term -> m Term
+rewriteExpr tm = do
+  rws <- view (edits.rewrites)
+  return $ Coq.rewrite rws tm
 
-convertExpr' :: ConversionMonad m => HsExpr GHC.Name -> m Term
+convertExpr :: LocalConvMonad r m => HsExpr GhcRn -> m Term
+convertExpr hsExpr = convertExpr' hsExpr >>= rewriteExpr
+
+convertExpr' :: forall r m. LocalConvMonad r m => HsExpr GhcRn -> m Term
 convertExpr' (HsVar (L _ x)) =
   Qualid <$> var ExprNS x
 
@@ -81,9 +83,9 @@ convertExpr' (HsUnboundVar x) =
   Var <$> freeVar (unboundVarOcc x)
 
 convertExpr' (HsRecFld fld) =
-  Qualid <$> recordField (rdrNameAmbiguousFieldOcc fld)
+  Qualid <$> recordField fld
 
-convertExpr' (HsOverLabel _) =
+convertExpr' HsOverLabel{} =
   convUnsupported "overloaded labels"
 
 convertExpr' (HsIPVar _) =
@@ -91,7 +93,8 @@ convertExpr' (HsIPVar _) =
 
 convertExpr' (HsOverLit OverLit{..}) =
   case ol_val of
-    HsIntegral   _src int -> PolyNum <$> convertInteger "integer literals" int
+    HsIntegral   intl ->
+        App1 "GHC.Num.fromInteger" . Num <$> convertInteger "integer literals" (il_value intl)
     HsFractional fr  -> convertFractional fr
     HsIsString   _src str -> pure $ convertFastString str
 
@@ -101,20 +104,20 @@ convertExpr' (HsLit lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literals"
     GHC.HsString _ fs      -> pure $ convertFastString fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literals"
-    HsInt        _ int     -> Num <$> convertInteger "`Integer' literals" int
+    HsInt        _ intl    -> Num <$> convertInteger "`Integer' literals" (il_value intl)
     HsIntPrim    _ int     -> Num <$> convertInteger "`Integer' literals" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literals"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literals"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literals"
     HsInteger    _ int _ty -> Num <$> convertInteger "`Integer' literals" int
-    HsRat        _ _       -> convUnsupported "`Rational' literals"
-    HsFloatPrim  _         -> convUnsupported "`Float#' literals"
-    HsDoublePrim _         -> convUnsupported "`Double#' literals"
+    HsRat        _ _ _     -> convUnsupported "`Rational' literals"
+    HsFloatPrim  _ _       -> convUnsupported "`Float#' literals"
+    HsDoublePrim _ _       -> convUnsupported "`Double#' literals"
 
 convertExpr' (HsLam mg) =
   uncurry Fun <$> convertFunction mg
 
-convertExpr' (HsLamCase PlaceHolder mg) =
+convertExpr' (HsLamCase mg) =
   uncurry Fun <$> convertFunction mg
 
 convertExpr' (HsApp e1 e2) =
@@ -134,14 +137,12 @@ convertExpr' (OpApp el eop _fixity er) =
       op <- var ExprNS hsOp
       l  <- convertLExpr el
       r  <- convertLExpr er
-      pure $ if
-        | qualidIsOp op -> Infix l op r
-        | otherwise     -> App2 (Qualid op) l r
+      pure $ App2 (Qualid op) l r
     _ ->
       convUnsupported "non-variable infix operators"
 
 convertExpr' (NegApp e1 _) =
-  App1 <$> pure "GHC.Num.negate" <*> convertLExpr e1
+  App1 <$> (pure "GHC.Num.negate" >>= rewriteExpr) <*> convertLExpr e1
 
 convertExpr' (HsPar e) =
   Parens <$> convertLExpr e
@@ -169,7 +170,7 @@ convertExpr' (HsCase e mg) = do
 
 convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
-  then ifThenElse <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
+  then ifThenElse <*> pure SymmetricIf <*> convertLExpr c <*> convertLExpr t <*> convertLExpr f
   else convUnsupported "overloaded if-then-else"
 
 convertExpr' (HsMultiIf PlaceHolder lgrhsList) =
@@ -213,7 +214,7 @@ convertExpr' (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
   con <- var ExprNS hsCon
 
-  use (constructorFields . at con) >>= \case
+  lookupConstructorFields con >>= \case
     Just (RecordFields conFields) -> do
       let defaultVal field | isJust rec_dotdot = Qualid field
                            | otherwise         = missingValue
@@ -238,7 +239,7 @@ convertExpr' (RecordCon (L _ hsCon) PlaceHolder conExpr HsRecFields{..}) = do
 
 convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceHolder) = do
   updates <- fmap M.fromList . for fields $ \(L _ HsRecField{..}) -> do
-               field <- recordField . rdrNameAmbiguousFieldOcc $ unLoc hsRecFieldLbl
+               field <- recordField $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
   let updFields       = M.keys updates
@@ -249,35 +250,34 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                      ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
                      (fs,   f') -> "s " ++ intercalate ", " (map quote fs) ++ ", and " ++ quote f'
 
-  recType <- S.minView . S.fromList <$> traverse (\field -> use $ recordFieldTypes . at field) updFields >>= \case
+  recType <- S.minView . S.fromList <$> traverse (\field -> lookupRecordFieldType field) updFields >>= \case
                Just (Just recType, []) -> pure recType
-               Just (Nothing,      []) -> convUnsupported $ "invalid record upate with " ++ prettyUpdFields "non-record-field"
+               Just (Nothing,      []) -> convUnsupported $ "invalid record update with " ++ prettyUpdFields "non-record-field"
                _                       -> convUnsupported $ "invalid mixed-data-type record updates with " ++ prettyUpdFields "the given field"
 
-  ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< use (constructors . at recType)
+  ctors :: [Qualid]  <- maybe (convUnsupported "invalid unknown record type") pure =<< lookupConstructors recType
 
   let loc  = mkGeneralLocated "generated"
       toHs = freshInternalName . T.unpack
 
-  let partialUpdateError con = do
+  let partialUpdateError :: Qualid -> m (Match GhcRn (Located (HsExpr GhcRn)))
+      partialUpdateError con = do
         hsCon   <- toHs (qualidToIdent con)
-        hsError <- freshInternalName "error" -- TODO RENAMER this shouldn't be fresh
+        hsError <- toHs "GHC.Err.error"
         pure $ GHC.Match
-          { m_fixity = NonFunBindMatch
+          { m_ctxt = LambdaExpr
           , m_pats   = [ loc . ConPatIn (loc hsCon)
                              . RecCon $ HsRecFields { rec_flds = []
                                                     , rec_dotdot = Nothing } ]
-          , m_type   = Nothing
           , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
-                                              -- TODO: A special variable which is special-cased to desugar to `missingValue`?
                                               HsApp (loc . HsVar . loc $ hsError)
-                                                    (loc . HsLit . GHC.HsString "" $ fsLit "Partial record update") ]
+                                                    (loc . HsLit . GHC.HsString (SourceText "") $ fsLit "Partial record update") ]
                              , grhssLocalBinds = loc EmptyLocalBinds } }
 
   matches <- for ctors $ \con ->
-    use (constructorFields . at con) >>= \case
+    lookupConstructorFields con >>= \case
       Just (RecordFields fields) | all (`elem` fields) $ M.keysSet updates -> do
-        let addFieldOcc :: HsRecField' GHC.Name arg -> HsRecField GHC.Name arg
+        let addFieldOcc :: HsRecField' GHC.Name arg -> HsRecField GhcRn arg
             addFieldOcc field@HsRecField{hsRecFieldLbl = L s lbl} =
               let rdrLbl     = mkOrig <$> nameModule <*> nameOccName $ lbl
               in field{hsRecFieldLbl = L s $ FieldOcc (L s rdrLbl) lbl}
@@ -295,9 +295,8 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                          $ M.findWithDefault (Just . loc . HsVar $ loc hsFieldVar) field updates )
 
         hsCon <- toHs (qualidToIdent con)
-        pure GHC.Match { m_fixity = NonFunBindMatch
+        pure GHC.Match { m_ctxt   = LambdaExpr
                        , m_pats   = [ loc . ConPatIn (loc hsCon) $ RecCon fieldPats ]
-                       , m_type   = Nothing
                        , m_grhss  = GRHSs { grhssGRHSs = [ loc . GRHS [] . loc $
                                                            RecordCon (loc hsCon)
                                                                      PlaceHolder
@@ -334,10 +333,10 @@ convertExpr' (ArithSeq _postTc _overloadedLists info) =
   --
   -- Only `'..'` doesn't work for some reason.
   case info of
-    From       low           -> App1 "enumFrom"       <$> convertLExpr low
-    FromThen   low next      -> App2 "enumFromThen"   <$> convertLExpr low <*> convertLExpr next
-    FromTo     low      high -> App2 "enumFromTo"     <$> convertLExpr low                       <*> convertLExpr high
-    FromThenTo low next high -> App3 "enumFromThenTo" <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
+    From       low           -> App1 "GHC.Enum.enumFrom"       <$> convertLExpr low
+    FromThen   low next      -> App2 "GHC.Enum.enumFromThen"   <$> convertLExpr low <*> convertLExpr next
+    FromTo     low      high -> App2 "GHC.Enum.enumFromTo"     <$> convertLExpr low                       <*> convertLExpr high
+    FromThenTo low next high -> App3 "GHC.Enum.enumFromThenTo" <$> convertLExpr low <*> convertLExpr next <*> convertLExpr high
 
 convertExpr' (PArrSeq _ _) =
   convUnsupported "parallel array arithmetic sequences"
@@ -363,7 +362,7 @@ convertExpr' (HsSpliceE _) =
 convertExpr' (HsProc _ _) =
   convUnsupported "`proc' expressions"
 
-convertExpr' (HsStatic _) =
+convertExpr' HsStatic{} =
   convUnsupported "static pointers"
 
 convertExpr' (HsArrApp _ _ _ _ _) =
@@ -396,14 +395,20 @@ convertExpr' (ELazyPat _) =
 convertExpr' (HsWrap _ _) =
   convUnsupported "`HsWrap' constructor"
 
+convertExpr' (HsConLikeOut{}) =
+  convUnsupported "`HsConLikeOut' constructor"
+
+convertExpr' (ExplicitSum{}) =
+  convUnsupported "`ExplicitSum' constructor"
+
 --------------------------------------------------------------------------------
 
 -- Module-local
-convert_section :: ConversionMonad m => Maybe (LHsExpr GHC.Name) -> LHsExpr GHC.Name -> Maybe (LHsExpr GHC.Name) -> m Term
+convert_section :: LocalConvMonad r m => Maybe (LHsExpr GhcRn) -> LHsExpr GhcRn -> Maybe (LHsExpr GhcRn) -> m Term
 convert_section  ml opE mr = do
   let -- We need this type signature, and I think it's because @let@ isn't being
       -- generalized.
-      hs :: ConversionMonad m => Qualid -> m (HsExpr GHC.Name)
+      hs :: ConversionMonad r m => Qualid -> m (HsExpr GhcRn)
       hs  = fmap (HsVar . mkGeneralLocated "generated") . freshInternalName . T.unpack . qualidToIdent
       coq = Inferred Coq.Explicit . Ident
 
@@ -416,12 +421,12 @@ convert_section  ml opE mr = do
 
 --------------------------------------------------------------------------------
 
-convertLExpr :: ConversionMonad m => LHsExpr GHC.Name -> m Term
+convertLExpr :: LocalConvMonad r m => LHsExpr GhcRn -> m Term
 convertLExpr = convertExpr . unLoc
 
 --------------------------------------------------------------------------------
 
-convertFunction :: ConversionMonad m => MatchGroup GHC.Name (LHsExpr GHC.Name) -> m (Binders, Term)
+convertFunction :: LocalConvMonad r m => MatchGroup GhcRn (LHsExpr GhcRn) -> m (Binders, Term)
 convertFunction mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
 convertFunction mg = do
   let n_args = matchGroupArity mg
@@ -432,14 +437,13 @@ convertFunction mg = do
  where
    err = convUnsupported "convertFunction: Empty argument list"
 
-isTrivialMatch :: MatchGroup GHC.Name (LHsExpr GHC.Name) -> Maybe (Match GHC.Name (LHsExpr GHC.Name))
+isTrivialMatch :: MatchGroup GhcRn (LHsExpr GhcRn) -> Maybe (Match GhcRn (LHsExpr GhcRn))
 isTrivialMatch (MG (L _ [L _ alt]) _ _ _) = trivMatch alt where
 
-  trivMatch :: Match GHC.Name (LHsExpr GHC.Name) ->
-    Maybe (Match GHC.Name (LHsExpr GHC.Name))
+  trivMatch :: Match GhcRn (LHsExpr GhcRn) -> Maybe (Match GhcRn (LHsExpr GhcRn))
   trivMatch alt = if all trivPat (m_pats alt) then Just alt else Nothing
 
-  trivPat :: LPat GHC.Name -> Bool
+  trivPat :: LPat GhcRn -> Bool
   trivPat (L _ (GHC.WildPat _)) = False
   trivPat (L _ (GHC.VarPat _))  = True
   trivPat (L _ (GHC.BangPat p)) = trivPat p
@@ -448,8 +452,8 @@ isTrivialMatch (MG (L _ [L _ alt]) _ _ _) = trivMatch alt where
   trivPat _                     = False
 isTrivialMatch _ = Nothing
 
-convTrivialMatch ::  ConversionMonad m =>
-  Match GHC.Name (LHsExpr GHC.Name) ->  m (Binders, Term)
+convTrivialMatch ::  LocalConvMonad r m =>
+  Match GhcRn (LHsExpr GhcRn) ->  m (Binders, Term)
 convTrivialMatch alt = do
   (MultPattern pats, _, rhs) <- convertMatch alt
   names <- mapM patToName pats
@@ -458,14 +462,14 @@ convTrivialMatch alt = do
   return (argBinders, body)
 
 
-patToName :: ConversionMonad m => Pattern -> m Name
+patToName :: ConversionMonad r m => Pattern -> m Name
 patToName UnderscorePat    = return UnderscoreName
 patToName (QualidPat qid)  = return $ Ident qid
 patToName _                = convUnsupported "patToArg: not a trivial pat"
 
 --------------------------------------------------------------------------------
 
-isTrueLExpr :: GhcMonad m => LHsExpr GHC.Name -> m Bool
+isTrueLExpr :: GhcMonad m => LHsExpr GhcRn -> m Bool
 isTrueLExpr (L _ (HsVar x))         = ((||) <$> (== "otherwise") <*> (== "True")) <$> ghcPpr x
 isTrueLExpr (L _ (HsTick _ e))      = isTrueLExpr e
 isTrueLExpr (L _ (HsBinTick _ _ e)) = isTrueLExpr e
@@ -475,8 +479,8 @@ isTrueLExpr _                       = pure False
 --------------------------------------------------------------------------------
 
 -- TODO: Unify `buildTrivial` and `buildNontrivial`?
-convertPatternBinding :: ConversionMonad m
-                      => LPat GHC.Name -> LHsExpr GHC.Name
+convertPatternBinding :: LocalConvMonad r m
+                      => LPat GhcRn -> LHsExpr GhcRn
                       -> (Term -> (Term -> Term) -> m a)
                       -> (Term -> Qualid -> (Term -> Term -> Term) -> m a)
                       -> Term
@@ -501,7 +505,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
             | SoleConstructor <- nontrivial = []
             | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
           guarded tm | null guards = tm
-                     | otherwise   = ib (foldr1 (App2 "andb") guards) tm fallback
+                     | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
 
       buildNontrivial exp cont $ \body rest ->
         Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
@@ -509,7 +513,7 @@ convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
                    Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
           body
 
-convertDoBlock :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
+convertDoBlock :: LocalConvMonad r m => [ExprLStmt GhcRn] -> m Term
 convertDoBlock allStmts = do
     case fmap unLoc <$> unsnoc allStmts of
       Just (stmts, lastStmt -> Just e) -> foldMap (Endo . toExpr . unLoc) stmts `appEndo` convertLExpr e
@@ -520,29 +524,31 @@ convertDoBlock allStmts = do
     lastStmt (LastStmt e _ _)   = Just e
     lastStmt _                  = Nothing
 
-    toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
+    toExpr x rest = toExpr' x rest >>= rewriteExpr
+
+    toExpr' (BodyStmt e _bind _guard _PlaceHolder) rest =
       monThen <$> convertLExpr e <*> rest
 
-    toExpr (BindStmt pat exp _bind _fail PlaceHolder) rest =
+    toExpr' (BindStmt pat exp _bind _fail PlaceHolder) rest =
       convertPatternBinding
         pat exp
         (\exp' fun          -> monBind exp' . fun <$> rest)
         (\exp' cont letCont -> letCont (monBind exp' (Qualid cont)) <$> rest)
         (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
-    toExpr (LetStmt (L _ binds)) rest =
+    toExpr' (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
 
-    toExpr (RecStmt{}) _ =
+    toExpr' (RecStmt{}) _ =
       convUnsupported "`rec' statements in `do` blocks"
 
-    toExpr _ _ =
+    toExpr' _ _ =
       convUnsupported "impossibly fancy `do' block statements"
 
-    monBind e1 e2 = Infix e1 "GHC.Base.>>=" e2
-    monThen e1 e2 = Infix e1 "GHC.Base.>>"  e2
+    monBind e1 e2 = mkInfix e1 "GHC.Base.>>=" e2
+    monThen e1 e2 = mkInfix e1 "GHC.Base.>>"  e2
 
-convertListComprehension :: ConversionMonad m => [ExprLStmt GHC.Name] -> m Term
+convertListComprehension :: LocalConvMonad r m => [ExprLStmt GhcRn] -> m Term
 convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
   Just (stmts, LastStmt e _applicativeDoInfo _returnInfo) ->
     foldMap (Endo . toExpr . unLoc) stmts `appEndo`
@@ -555,7 +561,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
     toExpr (BodyStmt e _bind _guard _PlaceHolder) rest =
       isTrueLExpr e >>= \case
         True  -> rest
-        False -> ifThenElse <*> convertLExpr e
+        False -> ifThenElse <*> pure LinearIf
+                            <*> convertLExpr e
                             <*> rest
                             <*> pure (Var "nil")
 
@@ -604,7 +611,7 @@ isWildCoq _ = False
 -- as well as in convertMatch for the various guarded RHS, implements
 -- fall-though semantics, by binding each item to a jump point and passing
 -- the right failure jump target to the prevoius item.
-chainFallThroughs :: ConversionMonad m =>
+chainFallThroughs :: LocalConvMonad r m =>
     [Term -> m Term] -> -- The matches, in syntax order
     Term -> -- The final failure value
     m Term
@@ -627,9 +634,9 @@ chainFallThroughs cases failure = go (reverse cases) failure where
 -- * Group patterns that are mutually exclusive, and put them in match-with clauses.
 --   Add a catch-all case if that group is not complete already.
 -- * Chain these groups.
-convertMatchGroup :: ConversionMonad m =>
+convertMatchGroup :: LocalConvMonad r m =>
     NonEmpty Term ->
-    MatchGroup GHC.Name (LHsExpr GHC.Name) ->
+    MatchGroup GhcRn (LHsExpr GhcRn) ->
     m Term
 convertMatchGroup args (MG (L _ alts) _ _ _) = do
     convAlts <- mapM (convertMatch . unLoc) alts
@@ -643,7 +650,7 @@ convertMatchGroup args (MG (L _ alts) _ _ _) = do
 
 data HasGuard = HasGuard | HasNoGuard
 
-groupMatches :: forall m a. ConversionMonad m =>
+groupMatches :: forall r m a. ConversionMonad r m =>
     [(MultPattern, HasGuard, a)] -> m [[(MultPattern, a)]]
 groupMatches pats = map (map snd) . go <$> mapM summarize pats
   where
@@ -666,8 +673,8 @@ groupMatches pats = map (map snd) . go <$> mapM summarize pats
         gs                                 -> ((ps,x):[]) : gs
 
 
-convertMatch :: ConversionMonad m =>
-    Match GHC.Name (LHsExpr GHC.Name) -> -- the match
+convertMatch :: LocalConvMonad r m =>
+    Match GhcRn (LHsExpr GhcRn) -> -- the match
     m (MultPattern, HasGuard, Term -> m Term) -- the pattern, hasGuards, the right-hand side
 convertMatch GHC.Match{..} = do
   (pats, guards) <- runWriterT $
@@ -682,7 +689,7 @@ convertMatch GHC.Match{..} = do
 
   return (MultPattern pats, hg, rhs)
 
-buildMatch :: ConversionMonad m =>
+buildMatch :: ConversionMonad r m =>
     NonEmpty MatchItem -> [(MultPattern, Term -> m Term)] -> Term -> m Term
 -- This short-cuts wildcard matches (avoid introducing a match-with alltogether)
 buildMatch _ [(pats,mkRhs)] failure
@@ -690,10 +697,10 @@ buildMatch _ [(pats,mkRhs)] failure
 buildMatch scruts eqns failure = do
     -- Pass the failure
     eqns' <- forM eqns $ \(pat,mkRhs) -> (pat,) <$> mkRhs failure
-    isComplete <- isCompleteMultiPattern (map fst eqns')
+    is_complete <- isCompleteMultiPattern (map fst eqns')
     pure $ Coq.Match scruts Nothing $
       [ Equation [pats] rhs | (pats, rhs) <- eqns' ] ++
-      [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | not isComplete ]
+      [ Equation [MultPattern (UnderscorePat <$ scruts)] failure | not is_complete ]
     -- Only add a catch-all clause if the the patterns can fail
 
 
@@ -703,9 +710,9 @@ hasGuards :: GRHSs b e -> HasGuard
 hasGuards (GRHSs [ L _ (GRHS [] _) ] _) = HasNoGuard
 hasGuards _                             = HasGuard
 
-convertGRHS :: ConversionMonad m
+convertGRHS :: LocalConvMonad r m
             => [ConvertedGuard m]
-            -> GRHS GHC.Name (LHsExpr GHC.Name)
+            -> GRHS GhcRn (LHsExpr GhcRn)
             -> Term -- failure
             -> m Term
 convertGRHS extraGuards (GRHS gs rhs) failure = do
@@ -713,18 +720,18 @@ convertGRHS extraGuards (GRHS gs rhs) failure = do
     rhs <- convertLExpr rhs
     guardTerm convGuards rhs failure
 
-convertLGRHSList :: ConversionMonad m
+convertLGRHSList :: LocalConvMonad r m
                  => [ConvertedGuard m]
-                 -> [LGRHS GHC.Name (LHsExpr GHC.Name)]
+                 -> [LGRHS GhcRn (LHsExpr GhcRn)]
                  -> Term
                  -> m Term
 convertLGRHSList extraGuards lgrhs failure  = do
     let rhss = unLoc <$> lgrhs
     chainFallThroughs (convertGRHS extraGuards <$> rhss) failure
 
-convertGRHSs :: ConversionMonad m
+convertGRHSs :: LocalConvMonad r m
              => [ConvertedGuard m]
-             -> GRHSs GHC.Name (LHsExpr GHC.Name)
+             -> GRHSs GhcRn (LHsExpr GhcRn)
              -> Term
              -> m Term
 convertGRHSs extraGuards GRHSs{..} failure =
@@ -737,8 +744,7 @@ data ConvertedGuard m = OtherwiseGuard
                       | PatternGuard   Pattern Term
                       | LetGuard       (m Term -> m Term)
 
-convertGuard :: ConversionMonad m =>
-    [GuardLStmt GHC.Name] -> m [ConvertedGuard m]
+convertGuard :: LocalConvMonad r m => [GuardLStmt GhcRn] -> m [ConvertedGuard m]
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
@@ -768,7 +774,7 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
 
 
 -- Returns a function waiting for the "else case"
-guardTerm :: ConversionMonad m =>
+guardTerm :: LocalConvMonad r m =>
     [ConvertedGuard m] ->
     Term -> -- The guarded expression
     Term -> -- the failure expression
@@ -786,7 +792,7 @@ guardTerm gs rhs failure = go gs where
   go (BoolGuard "false" : _) = pure failure
 
   go (BoolGuard cond : gs) =
-    ifThenElse <*> pure cond <*> go gs <*> pure failure
+    ifThenElse <*> pure LinearIf <*> pure cond <*> go gs <*> pure failure
   -- if the pattern is exhaustive, don't include an otherwise case
   go (PatternGuard pat exp : gs) | isWildCoq pat = do
     guarded' <- go gs
@@ -802,58 +808,45 @@ guardTerm gs rhs failure = go gs where
 
 --------------------------------------------------------------------------------
 
-withCurrentDefinitionIfTopLevel :: ConversionMonad m => TopLevelFlag -> Qualid -> m a -> m a
-withCurrentDefinitionIfTopLevel TopLevel name  = withCurrentDefinition name
-withCurrentDefinitionIfTopLevel NotTopLevel _  = id
-
-convertTypedBinding :: ConversionMonad m => TopLevelFlag -> Maybe Term -> HsBind GHC.Name -> m (Maybe ConvertedBinding)
-convertTypedBinding _ _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
-convertTypedBinding _ _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
-convertTypedBinding _ _convHsTy AbsBindsSig{} = convUnsupported "[internal?] `AbsBindsSig'"
-convertTypedBinding _ _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
-convertTypedBinding _ _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
+-- Does not detect recursion/introduce `fix`
+convertTypedBinding :: LocalConvMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
+convertTypedBinding _convHsTy VarBind{}     = convUnsupported "[internal] `VarBind'"
+convertTypedBinding _convHsTy AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
+convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym bindings"
+convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
-convertTypedBinding toplvl convHsTy FunBind{..}   = runMaybeT $ do
-  name <- var ExprNS (unLoc fun_id)
+convertTypedBinding convHsTy FunBind{..}   = do
+    name <- var ExprNS (unLoc fun_id)
 
-  -- Skip it?
-  guard . not =<< use (edits.skipped.contains name)
-
-  withCurrentDefinitionIfTopLevel toplvl name $ do
-    let (tvs, coqTy) =
-          -- The @forall@ed arguments need to be brought into scope
-          let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-              peelForall ty                = ([], ty)
-          in maybe ([], Nothing) (second Just . peelForall) convHsTy
-
-    defn <-
-      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-      then case unLoc $ mg_alts fun_matches of
-             [L _ (GHC.Match _ [] mty grhss)] ->
-               maybe (pure id) (fmap (flip HasType) . convertLType) mty <*> convertGRHSs [] grhss patternFailure
-             _ ->
-               convUnsupported "malformed multi-match variable definitions"
-      else do
-        whichFix <- use currentDefinition >>= \case
-            Nothing -> pure $ Fix . FixOne
-            Just n -> do
-                use (edits.local_termination.at n.non M.empty.at (qualidBase name)) >>= \case
-                    Just order -> pure $ wfFix order
-                    Nothing    -> use (edits.termination.at n) >>= \case
-                        Just Deferred |  n == name -> pure $ wfFix Deferred
-                        _ -> pure $ Fix . FixOne
-        (argBinders, match) <- convertFunction fun_matches
-        pure $ let bodyVars = getFreeVars match
-               in if name `S.member` bodyVars
-                  then whichFix $ FixBody name argBinders Nothing Nothing match
-                  else Fun argBinders match
-
-    addScope <- maybe id (flip InScope) <$> use (edits.additionalScopes.at (SPValue, name))
-
-    pure . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
+    -- Skip it?  Axiomatize it?
+    isSkipped     <- view $ edits.skipped.contains name
+    isAxiomatized <- view $ edits.axiomatizedDefinitions.contains name
+    if | isSkipped     ->
+         pure Nothing
+       | isAxiomatized ->
+         maybe (convUnsupported "axiomatizing definitions without type signatures")
+               (pure . Just . ConvertedAxiomBinding name)
+               convHsTy
+       | otherwise -> do
+         let (tvs, coqTy) =
+               -- The @forall@ed arguments need to be brought into scope
+               let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+                   peelForall ty                = ([], ty)
+               in maybe ([], Nothing) (second Just . peelForall) convHsTy
+      
+         defn <-
+           if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+           then case unLoc $ mg_alts fun_matches of
+                  [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+                  _ -> convUnsupported "malformed multi-match variable definitions"
+           else uncurry Fun <$> convertFunction fun_matches
+      
+         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
+      
+         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
 wfFix :: TerminationArgument -> FixBody -> Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
@@ -877,44 +870,201 @@ wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
         MeasureOrder measure Nothing    -> ("Coq.Init.Peano.lt", measure)
         MeasureOrder measure (Just rel) -> (rel, measure)
         WFOrder rel arg                 -> (rel, Qualid arg)
+
+wfFix Corecursive fb = Cofix $ FixOne fb
 wfFix _ _ = error "wfFix: cannot handle annotations or types"
 
 --------------------------------------------------------------------------------
 
--- TODO mutual recursion :-(
-convertTypedModuleBindings :: ConversionMonad m
-                           => TopLevelFlag
-                           -> [(Maybe ModuleName, HsBind GHC.Name)]
+hsBindName :: ConversionMonad r m => HsBind GhcRn -> m Qualid
+hsBindName defn = case defn of
+    FunBind{fun_id = L _ hsName} -> var ExprNS hsName
+    _ -> convUnsupported "Non-function top level binding"
+
+
+-- This is where we switch from the global monad to the local monad
+convertTypedModuleBinding :: ConversionMonad r m => Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding)
+convertTypedModuleBinding ty defn = do
+    name <- hsBindName defn
+    withCurrentDefinition name $ convertTypedBinding ty defn
+
+convertTypedModuleBindings :: ConversionMonad r m
+                           => [HsBind GhcRn]
                            -> Map Qualid Signature
                            -> (ConvertedBinding -> m a)
-                           -> Maybe (HsBind GHC.Name -> GhcException -> m a)
+                           -> Maybe (HsBind GhcRn -> GhcException -> m a)
                            -> m [a]
-convertTypedModuleBindings toplvl defns sigs build mhandler =
-  fmap catMaybes . for defns $ \(mname, defn) ->
-    maybeWithCurrentModule mname $ runMaybeT $ do
-       let wrap = case mhandler of Just handler -> ghandle (\e ->  lift $ handler defn e)
-                                   Nothing      -> id
-       wrap $ do
+convertTypedModuleBindings = convertMultipleBindings convertTypedModuleBinding
+
+-- | A variant of convertTypedModuleBinding that ignores the name in the HsBind
+-- and uses the provided one instead
+--
+-- It also does not allow skipping,  and does not create fixpoints, does not support a type,
+-- and always returns a binding (or fails with convUnsupported)
+convertMethodBinding :: ConversionMonad r m => Qualid -> HsBind GhcRn -> m ConvertedBinding
+convertMethodBinding _name VarBind{}     = convUnsupported "[internal] `VarBind'"
+convertMethodBinding _name AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
+convertMethodBinding _name PatSynBind{}  = convUnsupported "pattern synonym bindings"
+convertMethodBinding _name PatBind{..}   = convUnsupported "pattern bind"
+convertMethodBinding name FunBind{..}    = withCurrentDefinition name $ do
+    defn <-
+      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+      then case unLoc $ mg_alts fun_matches of
+             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+             _ -> convUnsupported "malformed multi-match variable definitions"
+      else do
+        (argBinders, match) <- convertFunction fun_matches
+        pure $  Fun argBinders match
+    pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
+
+
+convertTypedBindings :: LocalConvMonad r m
+                     => [HsBind GhcRn] -> Map Qualid Signature
+                     -> (ConvertedBinding -> m a)
+                     -> Maybe (HsBind GhcRn -> GhcException -> m a)
+                     -> m [a]
+convertTypedBindings = convertMultipleBindings convertTypedBinding
+
+convertMultipleBindings :: ConversionMonad r m
+                        => (Maybe Term -> HsBind GhcRn -> m (Maybe ConvertedBinding))
+                        -> [HsBind GhcRn]
+                        -> Map Qualid Signature
+                        -> (ConvertedBinding -> m a)
+                        -> Maybe (HsBind GhcRn -> GhcException -> m a)
+                        -> m [a]
+convertMultipleBindings convertSingleBinding defns sigs build mhandler =
+  let (handler, wrap) = case mhandler of
+        Just handler -> ( uncurry handler
+                        , \defn -> ghandle $ pure . Left . (defn,))
+        Nothing      -> ( const $ throwProgramError "INTERNAL ERROR: \
+                                                    \convertMultipleBindings tried to both \
+                                                    \handle and ignore an exception"
+                            -- Safe because the only place `Left' is introduced
+                            -- is in the previous case branch
+                        , flip const )
+  in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \defn ->
+       runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
                    fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
                  _ ->
                    pure Nothing
-         conv_bind <- MaybeT (convertTypedBinding toplvl ty defn)
-         lift $ build conv_bind
+         MaybeT $ convertSingleBinding ty defn
 
-convertTypedBindings :: ConversionMonad m
-                     => TopLevelFlag
-                     -> [HsBind GHC.Name] -> Map Qualid Signature
-                     -> (ConvertedBinding -> m a)
-                     -> Maybe (HsBind GHC.Name -> GhcException -> m a)
-                     -> m [a]
-convertTypedBindings toplvl =
-  convertTypedModuleBindings toplvl . map (Nothing,)
+-- ALMOST a 'ConvertedDefinition', but it's guaranteed to have arguments.
+data RecDef = RecDef { rdName :: !Qualid
+                     , rdArgs :: !Binders
+                     , rdType :: !(Maybe Term)
+                     , rdBody :: !Term }
+            deriving (Eq, Ord, Show, Read)
+
+rdToFixBody :: RecDef -> FixBody
+rdToFixBody RecDef{..} = FixBody rdName rdArgs Nothing Nothing rdBody
+
+rdToLet :: RecDef -> Term -> Term
+rdToLet RecDef{..} = Let rdName (toList rdArgs) Nothing rdBody
+
+splitInlinesWith :: Foldable f => Set Qualid -> f RecDef -> Maybe (Map Qualid RecDef, NonEmpty RecDef)
+splitInlinesWith inlines =
+  bitraverse (pure . fold) nonEmpty .: mapPartitionEithers $ \rd@RecDef{..} ->
+    if rdName `elem` inlines
+    then Left $ M.singleton rdName rd
+    else Right rd
+
+data RecType = Standalone | Mutual deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+mutualRecursionInlining :: ConversionMonad r m => NonEmpty RecDef -> m (Map Qualid (RecType, RecDef))
+mutualRecursionInlining mutGroup = do
+  inlines      <- view $ edits.inlinedMutuals
+  (lets, recs) <- splitInlinesWith inlines mutGroup
+                    & maybe (convUnsupported "inlining every function in a mutually-recursive group") pure
+  
+  let rdFVs   = getFreeVars . rdBody
+      letUses = rdFVs <$> lets
+      letDeps = transitiveClosure Reflexive letUses
+
+  orderedLets <- for (topoSortEnvironmentWith id letUses) $ \case
+    solo :| []  -> pure solo
+    _    :| _:_ -> convUnsupported "recursion amongst inlined mutually-recursive functions"
+  
+  let recMap = flip foldMap recs $ \rd ->
+        let neededLets  = foldMap (M.findWithDefault mempty ?? letDeps) $ rdFVs rd
+            inlinedDeps = filter (`elem` neededLets) orderedLets
+        in M.singleton (rdName rd)
+                       (Mutual, rd{rdBody = foldr (rdToLet . (lets M.!)) (rdBody rd) inlinedDeps})
+  
+  pure $ ((Standalone,) <$> lets) <> recMap
+
+addRecursion :: ConversionMonad r m => [Either e ConvertedBinding] -> m [Either e ConvertedBinding]
+addRecursion eBindings = do
+  fixedBindings <-  M.fromList . fmap (view convDefName &&& id) . foldMap toList
+                <$> traverse fixConnComp (stronglyConnCompNE
+                      [ (cd, cd^.convDefName, S.toAscList . getFreeVars $ cd^.convDefBody)
+                      | Right (ConvertedDefinitionBinding cd) <- eBindings ])
+      
+  pure . flip map eBindings $ \case
+    Left  e                               -> Left  e
+    Right cpb@ConvertedPatternBinding{}   -> Right cpb
+    Right cab@ConvertedAxiomBinding{}     -> Right cab
+    Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
+      Just cd' -> Right $ ConvertedDefinitionBinding cd'
+      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
+  where
+    fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
+      pure $ cd :| []
+    fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
+      bodies <- for cds $ \case
+        ConvertedDefinition{_convDefBody = Fun args body, ..} ->
+          pure $ RecDef { rdName = _convDefName
+                        , rdArgs = _convDefArgs <++ args
+                        , rdType = maybeForall _convDefArgs <$> _convDefType
+                        , rdBody = body }
+        _ ->
+          convUnsupported "recursion through non-lambda values"
+      
+      nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
+      
+      let getInfo = fmap $ rdName &&& rdType
+      
+      (fixFor, recInfos, extraDefs) <- case (nonstructural, bodies) of
+        (Just order, body1 :| []) ->
+          pure (const . wfFix order $ rdToFixBody body1, getInfo bodies, [])
+        
+        (Just _, _ :| _ : _) ->
+          convUnsupported "non-structural mutual recursion"
+        
+        (Nothing, body1 :| []) ->
+          pure (const . Fix . FixOne $ rdToFixBody body1, getInfo bodies, [])
+        
+        (Nothing, _ :| _ : _) -> do
+          mutRecInfo <- mutualRecursionInlining bodies
+          let (recs', lets) = flip mapPartitionEithers cds $ \cd ->
+                case M.lookup (cd^.convDefName) mutRecInfo of
+                  Just (Standalone, _)  -> Right $ cd & convDefArgs %~ (commonArgs ++)
+                  Just (Mutual,     rd) -> Left rd
+                  Nothing               -> error "INTERNAL ERROR: lost track of mutually-recursive function"
+              recs = fromMaybe (error "INTERNAL ERROR: \
+                                      \all mutually-recursive functions in this group vanished!")
+                   $ nonEmpty recs'
+          
+          let fixFor = case recs of
+                body1 :| []              ->
+                  const . Fix . FixOne $ rdToFixBody body1
+                body1 :| body2 : bodies' ->
+                  Fix . FixMany (rdToFixBody body1) (rdToFixBody <$> (body2 :| bodies'))
+          
+          pure (fixFor, getInfo recs, lets)
+          
+      let recDefs = recInfos <&> \(name,mty) ->
+            ConvertedDefinition { _convDefName = name
+                                , _convDefArgs = commonArgs
+                                , _convDefType = mty
+                                , _convDefBody = fixFor name }
+      pure $ recDefs ++> extraDefs
 
 --------------------------------------------------------------------------------
 
-convertLocalBinds :: ConversionMonad m => HsLocalBinds GHC.Name -> m Term -> m Term
+convertLocalBinds :: LocalConvMonad r m => HsLocalBinds GhcRn -> m Term -> m Term
 convertLocalBinds (HsValBinds (ValBindsIn _ _)) _ =
   convUnsupported "Unexpected ValBindsIn in post-renamer AST"
 
@@ -923,25 +1073,30 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
   -- We are not actually using the rec_flag from GHC, because due to renamings
   -- or `redefinition` edits, maybe the group is no longer recursive.
   convDefss <- for recBinds $ \(_rec_flag, mut_group) ->
-    convertTypedBindings NotTopLevel (map unLoc . bagToList $ mut_group) sigs pure Nothing
+    convertTypedBindings (map unLoc . bagToList $ mut_group) sigs pure Nothing
   let convDefs = concat convDefss
 
-  let matchLet pat term body = Coq.Match [MatchItem term Nothing Nothing] Nothing
-                                         [Equation [MultPattern [pat]] body]
-  let toLet ConvertedDefinition{..} = Let convDefName convDefArgs convDefType convDefBody
-  (foldr (withConvertedBinding toLet matchLet) ?? convDefs) <$> body
+  let matchLet pat term body = do
+        is_complete <- isCompleteMultiPattern [MultPattern [pat]]
+        pure $ Coq.Match [MatchItem term Nothing Nothing] Nothing $
+            [ Equation [MultPattern [pat]] body] ++
+            [ Equation [MultPattern [UnderscorePat]] patternFailure | not is_complete ]
+
+      toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
+      noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
+      
+  (foldrM (withConvertedBinding toLet matchLet noLetAx) ?? convDefs) =<< body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"
 convertLocalBinds EmptyLocalBinds body =
   body
 
-
 --------------------------------------------------------------------------------
 
 -- Create `let x := rhs in genBody x`
 -- Unless the rhs is very small, in which case it creates `genBody rhs`
-bindIn :: ConversionMonad m => Text -> Term -> (Term -> m Term) -> m Term
+bindIn :: LocalConvMonad r m => Text -> Term -> (Term -> m Term) -> m Term
 bindIn _ rhs@(Qualid _) genBody = genBody rhs
 bindIn tmpl rhs genBody = do
   j <- genqid tmpl
@@ -959,15 +1114,10 @@ bindIn tmpl rhs genBody = do
 -- Let’s cross our fingers that we calculate all free variables properly.
 smartLet :: Qualid -> Term -> Term -> Term
 -- Move into the else branch
-smartLet ident rhs (IfBool c t e)
+smartLet ident rhs (If is c Nothing t e)
     | ident `S.notMember` getFreeVars c
     , ident `S.notMember` getFreeVars t
-    = IfBool c t (smartLet ident rhs e)
--- Move into the else branch
-smartLet ident rhs (IfCase c t e)
-    | ident `S.notMember` getFreeVars c
-    , ident `S.notMember` getFreeVars t
-    = IfCase c t (smartLet ident rhs e)
+    = If is c Nothing t (smartLet ident rhs e)
 -- Move into the scrutinee
 smartLet ident rhs
     (Coq.Match [MatchItem t Nothing Nothing] Nothing eqns)
@@ -978,10 +1128,10 @@ smartLet ident rhs
 -- variables is caught)
 smartLet ident rhs
     (Coq.Match scruts Nothing eqns)
-    | ident `S.notMember` getFreeVars (NoBinding scruts)
+    | ident `S.notMember` getFreeVars (fmap NoBinding scruts)
     , let intoEqns [] = Just []
           intoEqns [Equation pats body] = do
-            let bound = S.fromList $ definedBy pats
+            let bound = S.fromList $ foldMap definedBy pats
             guard $ ident `S.notMember` bound
             guard $ S.null $ bound `S.intersection` getFreeVars rhs
             return [Equation pats (smartLet ident rhs body)]
@@ -1002,9 +1152,14 @@ missingValue = "missingValue"
 -- | Program does not work nicely with if-then-else, so if we believe we are
 -- producing a term that ends up in a Program Fixpoint or Program Definition,
 -- then desguar if-then-else using case statements.
-ifThenElse :: ConversionMonad m => m (Term -> Term -> Term -> Term)
-ifThenElse =
-    use useProgramHere >>= \case
-        False -> pure $ IfBool
-        True ->  pure $ IfCase
-
+ifThenElse :: LocalConvMonad r m => m (IfStyle -> Term -> Term -> Term -> Term)
+ifThenElse = useProgramHere >>= \case
+    False -> pure $ evalConstScrut IfBool
+    True ->  pure $ evalConstScrut IfCase
+  where
+    -- Reduce `if true` and `if false`
+    evalConstScrut :: (IfStyle -> Term -> Term -> Term -> Term)
+                   -> (IfStyle -> Term -> Term -> Term -> Term)
+    evalConstScrut _ _ "true"  e _ = e
+    evalConstScrut _ _ "false" _ e = e
+    evalConstScrut ifComb is scrut e1 e2 = ifComb is scrut e1 e2

@@ -29,7 +29,6 @@ import Data.Text (Text)
 import qualified Control.Monad.Reader.Class as R
 import qualified Control.Monad.Writer.Class as W
 import qualified Control.Monad.Cont.Class   as C
-import qualified Control.Monad.Variables.Class as V
 
 import Control.Monad.Trans.Parse
 import Control.Monad.Parse.Class
@@ -50,7 +49,7 @@ newtype NewlinesParseT m a =
            , MonadFail, MonadFix, MonadIO
            , MonadParse, MonadState NewlineStatus, MonadError String
            , R.MonadReader r, W.MonadWriter w, C.MonadCont
-           , V.MonadVariables i d )
+           )
 
 instance MonadTrans NewlinesParseT where lift = NewlinesParseT #. (lift . lift)
 

@@ -1,0 +1,29 @@
+constructors:
+  Literal.Literal: ! '[Qualified "Literal" "MachChar",Qualified "Literal" "MachStr",Qualified
+    "Literal" "MachNullAddr",Qualified "Literal" "MachInt",Qualified "Literal" "MachInt64",Qualified
+    "Literal" "MachWord",Qualified "Literal" "MachWord64",Qualified "Literal" "MachFloat",Qualified
+    "Literal" "MachDouble",Qualified "Literal" "MachLabel",Qualified "Literal" "LitInteger"]'
+constructorFields:
+  Literal.MachStr: NonRecordFields 1
+  Literal.MachChar: NonRecordFields 1
+  Literal.MachFloat: NonRecordFields 1
+  Literal.MachInt: NonRecordFields 1
+  Literal.MachLabel: NonRecordFields 3
+  Literal.MachWord: NonRecordFields 1
+  Literal.MachDouble: NonRecordFields 1
+  Literal.MachNullAddr: NonRecordFields 0
+  Literal.LitInteger: NonRecordFields 2
+  Literal.MachInt64: NonRecordFields 1
+  Literal.MachWord64: NonRecordFields 1
+constructorTypes:
+  Literal.MachStr: Qualified "Literal" "Literal"
+  Literal.MachChar: Qualified "Literal" "Literal"
+  Literal.MachFloat: Qualified "Literal" "Literal"
+  Literal.MachInt: Qualified "Literal" "Literal"
+  Literal.MachLabel: Qualified "Literal" "Literal"
+  Literal.MachWord: Qualified "Literal" "Literal"
+  Literal.MachDouble: Qualified "Literal" "Literal"
+  Literal.MachNullAddr: Qualified "Literal" "Literal"
+  Literal.LitInteger: Qualified "Literal" "Literal"
+  Literal.MachInt64: Qualified "Literal" "Literal"
+  Literal.MachWord64: Qualified "Literal" "Literal"

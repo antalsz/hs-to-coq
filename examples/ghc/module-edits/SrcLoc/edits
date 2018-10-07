@@ -1,8 +1,8 @@
-redefine Local Definition SrcLoc.Eq___GenLocated_op_zsze__ {inst_l : Type} {inst_e : Type} `{H : GHC.Base.Eq_ inst_e} `{J : GHC.Base.Eq_ inst_l} : ((GenLocated inst_l inst_e) -> ((GenLocated inst_l inst_e) -> bool)) := fun a b => negb (SrcLoc.Eq___GenLocated_op_zeze__ a b).
-
-redefine Local Definition SrcLoc.Eq___SrcSpan_op_zsze__ : SrcSpan -> (SrcSpan -> bool) :=  fun arg_185__ arg_186__ =>  match arg_185__ , arg_186__ with | a , b => negb (SrcLoc.Eq___SrcSpan_op_zeze__ a b)  end.
-
-redefine Local Definition SrcLoc.Eq___RealSrcSpan_op_zsze__ : RealSrcSpan -> (RealSrcSpan -> bool) := fun arg_176__ arg_177__ =>  match arg_176__ , arg_177__ with | a , b => negb (SrcLoc.Eq___RealSrcSpan_op_zeze__ a b) end.
+# redefine Local Definition SrcLoc.Eq___GenLocated_op_zsze__ {inst_l : Type} {inst_e : Type} `{H : GHC.Base.Eq_ inst_e} `{J : GHC.Base.Eq_ inst_l} : ((GenLocated inst_l inst_e) -> ((GenLocated inst_l inst_e) -> bool)) := fun a b => negb (SrcLoc.Eq___GenLocated_op_zeze__ a b).
+# 
+# redefine Local Definition SrcLoc.Eq___SrcSpan_op_zsze__ : SrcSpan -> (SrcSpan -> bool) :=  fun arg_185__ arg_186__ =>  match arg_185__ , arg_186__ with | a , b => negb (SrcLoc.Eq___SrcSpan_op_zeze__ a b)  end.
+# 
+# redefine Local Definition SrcLoc.Eq___RealSrcSpan_op_zsze__ : RealSrcSpan -> (RealSrcSpan -> bool) := fun arg_176__ arg_177__ =>  match arg_176__ , arg_177__ with | a , b => negb (SrcLoc.Eq___RealSrcSpan_op_zeze__ a b) end.
 
 
 # orderings
@@ -11,9 +11,11 @@ order SrcLoc.Eq___RealSrcLoc SrcLoc.Ord__RealSrcLoc_min SrcLoc.Ord__RealSrcLoc_m
 order SrcLoc.Ord__SrcSpan SrcLoc.rightmost SrcLoc.leftmost_smallest
 
 order SrcLoc.Eq___RealSrcSpan  SrcLoc.Eq___SrcSpan_op_zeze__ SrcLoc.Ord__RealSrcSpan SrcLoc.Ord__SrcSpan_op_zlze__ SrcLoc.Ord__SrcSpan_op_zl__ SrcLoc.Ord__SrcSpan_op_zgze__ SrcLoc.Ord__SrcSpan_op_zg__ SrcLoc.Ord__SrcSpan_compare
+order SrcLoc.Eq___RealSrcLoc  SrcLoc.Eq___SrcLoc_op_zeze__ SrcLoc.Ord__RealSrcLoc SrcLoc.Ord__SrcLoc_op_zlze__ SrcLoc.Ord__SrcLoc_op_zl__ SrcLoc.Ord__SrcLoc_op_zgze__ SrcLoc.Ord__SrcLoc_op_zg__ SrcLoc.Ord__SrcLoc_compare
 
 
 order SrcLoc.Eq___GenLocated SrcLoc.Ord__GenLocated
+order SrcLoc.Eq___SrcLoc SrcLoc.Ord__SrcLoc_compare SrcLoc.Ord__SrcLoc_op_zl__
 
 order SrcLoc.Functor__GenLocated SrcLoc.Foldable__GenLocated SrcLoc.Traversable__GenLocated
 
@@ -37,5 +39,27 @@ skip SrcLoc.combineSrcSpans
 skip SrcLoc.containsSpan
 skip SrcLoc.combineRealSrcSpans
 
-# The methods use Ord__GenLocated_compare instead of Base’s compare
+# The methods use their own compare instead of the polymorphic one
+#
+# skip SrcLoc.Ord__RealSrcLoc
+#
+redefine Definition SrcLoc.Ord__RealSrcLoc_op_zl__ := Ord__RealSrcLoc_op_zl.
+#
+# TODO: would like to use this edit instead, but it has no effect
+#
+in SrcLoc.Ord__RealSrcLoc_op_zl__ rewrite forall, SrcLoc.Ord__RealSrcLoc_compare = GHC.Base.compare
+
+# Same issue as above, not fixed
+#
 skip SrcLoc.Ord__GenLocated
+
+# knock-on effect
+skip SrcLoc.leftmost_largest
+skip SrcLoc.leftmost_smallest
+skip SrcLoc.rightmost
+skip SrcLoc.isSubspanOf
+
+skip SrcLoc.Ord__SrcLoc
+skip SrcLoc.Ord__SrcSpan
+skip SrcLoc.Default__SrcSpan
+skip SrcLoc.Default__RealSrcSpan

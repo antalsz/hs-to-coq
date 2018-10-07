@@ -13,29 +13,97 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Combined.
+Require Data.Foldable.
 Require Data.Function.
+Require Data.Tuple.
 Require FieldLabel.
 Require GHC.Base.
+Require GHC.List.
 Require Name.
+Require OccName.
+Require Panic.
 Require Unique.
-(* Require Var. *)
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Parameter PatSyn : Type.
-Import FieldLabel.
-Parameter patSynArity        : PatSyn -> BasicTypes.Arity.
-Parameter patSynFieldLabels  : PatSyn -> list FieldLabel.FieldLabel.
-Parameter patSynName         : PatSyn -> Name.Name.
+Inductive PatSyn : Type
+  := MkPatSyn
+   : Name.Name ->
+     Unique.Unique ->
+     list unit ->
+     BasicTypes.Arity ->
+     bool ->
+     list FieldLabel.FieldLabel ->
+     list Combined.TyVarBinder ->
+     unit ->
+     list Combined.TyVarBinder ->
+     unit ->
+     unit ->
+     (Combined.Var * bool)%type -> option (Combined.Var * bool)%type -> PatSyn.
 
+Definition psArgs (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ psArgs _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  psArgs.
 
+Definition psArity (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ psArity _ _ _ _ _ _ _ _ _ := arg_0__ in
+  psArity.
+
+Definition psBuilder (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ _ _ _ _ _ _ psBuilder := arg_0__ in
+  psBuilder.
+
+Definition psExTyVars (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ _ _ psExTyVars _ _ _ _ := arg_0__ in
+  psExTyVars.
+
+Definition psFieldLabels (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ psFieldLabels _ _ _ _ _ _ _ := arg_0__ in
+  psFieldLabels.
+
+Definition psInfix (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ psInfix _ _ _ _ _ _ _ _ := arg_0__ in
+  psInfix.
+
+Definition psMatcher (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ _ _ _ _ _ psMatcher _ := arg_0__ in
+  psMatcher.
+
+Definition psName (arg_0__ : PatSyn) :=
+  let 'MkPatSyn psName _ _ _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  psName.
+
+Definition psProvTheta (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ _ _ _ psProvTheta _ _ _ := arg_0__ in
+  psProvTheta.
+
+Definition psReqTheta (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ _ psReqTheta _ _ _ _ _ := arg_0__ in
+  psReqTheta.
+
+Definition psResultTy (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ _ _ _ _ psResultTy _ _ := arg_0__ in
+  psResultTy.
+
+Definition psUnique (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ psUnique _ _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  psUnique.
+
+Definition psUnivTyVars (arg_0__ : PatSyn) :=
+  let 'MkPatSyn _ _ _ _ _ _ psUnivTyVars _ _ _ _ _ _ := arg_0__ in
+  psUnivTyVars.
 (* Midamble *)
 
-Instance Unique_PatSyn : Unique.Uniquable PatSyn := {}.
-Admitted.
 
 (* Converted value declarations: *)
+
+Local Definition Uniquable__PatSyn_getUnique : PatSyn -> Unique.Unique :=
+  psUnique.
+
+Program Instance Uniquable__PatSyn : Unique.Uniquable PatSyn :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__PatSyn_getUnique |}.
 
 Local Definition Eq___PatSyn_op_zeze__ : PatSyn -> PatSyn -> bool :=
   Data.Function.on _GHC.Base.==_ Unique.getUnique.
@@ -43,97 +111,131 @@ Local Definition Eq___PatSyn_op_zeze__ : PatSyn -> PatSyn -> bool :=
 Local Definition Eq___PatSyn_op_zsze__ : PatSyn -> PatSyn -> bool :=
   Data.Function.on _GHC.Base./=_ Unique.getUnique.
 
-Program Instance Eq___PatSyn : GHC.Base.Eq_ PatSyn := fun _ k =>
-    k {|GHC.Base.op_zeze____ := Eq___PatSyn_op_zeze__ ;
-      GHC.Base.op_zsze____ := Eq___PatSyn_op_zsze__ |}.
+Program Instance Eq___PatSyn : GHC.Base.Eq_ PatSyn :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___PatSyn_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___PatSyn_op_zsze__ |}.
 
-Local Definition Ord__PatSyn_compare : PatSyn -> PatSyn -> comparison :=
-  Data.Function.on GHC.Base.compare Unique.getUnique.
+(* Skipping instance Outputable__PatSyn of class Outputable *)
 
-Local Definition Ord__PatSyn_op_zg__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.>_ Unique.getUnique.
+(* Skipping instance OutputableBndr__PatSyn of class OutputableBndr *)
 
-Local Definition Ord__PatSyn_op_zgze__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.>=_ Unique.getUnique.
+(* Skipping instance Data__PatSyn of class Data *)
 
-Local Definition Ord__PatSyn_op_zl__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.<_ Unique.getUnique.
+Definition mkPatSyn
+   : Name.Name ->
+     bool ->
+     (list Combined.TyVarBinder * unit)%type ->
+     (list Combined.TyVarBinder * unit)%type ->
+     list unit ->
+     unit ->
+     (Combined.Var * bool)%type ->
+     option (Combined.Var * bool)%type -> list FieldLabel.FieldLabel -> PatSyn :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ arg_5__ arg_6__ arg_7__ arg_8__ =>
+    match arg_0__
+        , arg_1__
+        , arg_2__
+        , arg_3__
+        , arg_4__
+        , arg_5__
+        , arg_6__
+        , arg_7__
+        , arg_8__ with
+    | name
+    , declared_infix
+    , pair univ_tvs req_theta
+    , pair ex_tvs prov_theta
+    , orig_args
+    , orig_res_ty
+    , matcher
+    , builder
+    , field_labels =>
+        MkPatSyn name (Unique.getUnique name) orig_args (Data.Foldable.length orig_args)
+                 declared_infix field_labels univ_tvs req_theta ex_tvs prov_theta orig_res_ty
+                 matcher builder
+    end.
 
-Local Definition Ord__PatSyn_op_zlze__ : PatSyn -> PatSyn -> bool :=
-  Data.Function.on _GHC.Base.<=_ Unique.getUnique.
+Definition patSynArgs : PatSyn -> list unit :=
+  psArgs.
 
-Local Definition Ord__PatSyn_min : PatSyn -> PatSyn -> PatSyn :=
-  fun x y => if Ord__PatSyn_op_zlze__ x y : bool then x else y.
+Definition patSynArity : PatSyn -> BasicTypes.Arity :=
+  psArity.
 
-Local Definition Ord__PatSyn_max : PatSyn -> PatSyn -> PatSyn :=
-  fun x y => if Ord__PatSyn_op_zlze__ x y : bool then y else x.
+Definition patSynBuilder : PatSyn -> option (Combined.Var * bool)%type :=
+  psBuilder.
 
-Program Instance Ord__PatSyn : GHC.Base.Ord PatSyn := fun _ k =>
-    k {|GHC.Base.op_zl____ := Ord__PatSyn_op_zl__ ;
-      GHC.Base.op_zlze____ := Ord__PatSyn_op_zlze__ ;
-      GHC.Base.op_zg____ := Ord__PatSyn_op_zg__ ;
-      GHC.Base.op_zgze____ := Ord__PatSyn_op_zgze__ ;
-      GHC.Base.compare__ := Ord__PatSyn_compare ;
-      GHC.Base.max__ := Ord__PatSyn_max ;
-      GHC.Base.min__ := Ord__PatSyn_min |}.
+Definition patSynExTyVarBinders : PatSyn -> list Combined.TyVarBinder :=
+  psExTyVars.
 
-(* Translating `instance Unique.Uniquable PatSyn.PatSyn' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
+Definition patSynExTyVars : PatSyn -> list Combined.Var :=
+  fun ps => Combined.binderVars (psExTyVars ps).
 
-(* Translating `instance Name.NamedThing PatSyn.PatSyn' failed: OOPS! Cannot
-   find information for class Qualified "Name" "NamedThing" unsupported *)
+Definition patSynFieldLabels : PatSyn -> list FieldLabel.FieldLabel :=
+  psFieldLabels.
 
-(* Translating `instance Outputable.Outputable PatSyn.PatSyn' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+Definition patSynFieldType : PatSyn -> FieldLabel.FieldLabelString -> unit :=
+  fun ps label =>
+    match Data.Foldable.find ((fun arg_0__ => arg_0__ GHC.Base.== label) GHC.Base.∘
+                              (FieldLabel.flLabel GHC.Base.∘ Data.Tuple.fst)) (GHC.List.zip (psFieldLabels ps)
+                                                                                            (psArgs ps)) with
+    | Some (pair _ ty) => ty
+    | None =>
+        Panic.panicStr (GHC.Base.hs_string__ "dataConFieldType") (GHC.Base.mappend
+                                                                  (Panic.noString ps) (Panic.noString label))
+    end.
 
-(* Translating `instance Outputable.OutputableBndr PatSyn.PatSyn' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "OutputableBndr"
-   unsupported *)
+Definition patSynIsInfix : PatSyn -> bool :=
+  psInfix.
 
-(* Translating `instance Data.Data.Data PatSyn.PatSyn' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+Definition patSynMatcher : PatSyn -> (Combined.Var * bool)%type :=
+  psMatcher.
 
-(*
-Axiom mkPatSyn : forall {A : Type}, A.
+Definition patSynName : PatSyn -> Name.Name :=
+  psName.
 
-Axiom patSynName : forall {A : Type}, A.
+Local Definition NamedThing__PatSyn_getName : PatSyn -> Name.Name :=
+  patSynName.
 
-Axiom patSynIsInfix : forall {A : Type}, A.
+Local Definition NamedThing__PatSyn_getOccName : PatSyn -> OccName.OccName :=
+  fun n => Name.nameOccName (NamedThing__PatSyn_getName n).
 
-Axiom patSynArity : forall {A : Type}, A.
+Program Instance NamedThing__PatSyn : Name.NamedThing PatSyn :=
+  fun _ k =>
+    k {| Name.getName__ := NamedThing__PatSyn_getName ;
+         Name.getOccName__ := NamedThing__PatSyn_getOccName |}.
 
-Axiom patSynArgs : forall {A : Type}, A.
+Definition patSynSig
+   : PatSyn ->
+     (list Combined.Var * unit * list Combined.Var * unit * list unit * unit)%type :=
+  fun '(MkPatSyn _ _ arg_tys _ _ _ univ_tvs req ex_tvs prov res_ty _ _) =>
+    pair (pair (pair (pair (pair (Combined.binderVars univ_tvs) req)
+                           (Combined.binderVars ex_tvs)) prov) arg_tys) res_ty.
 
-Axiom patSynFieldLabels : forall {A : Type}, A.
+Definition patSynUnivTyVarBinders : PatSyn -> list Combined.TyVarBinder :=
+  psUnivTyVars.
 
-Axiom patSynFieldType : forall {A : Type}, A.
+Definition tidyPatSynIds : (Combined.Var -> Combined.Var) -> PatSyn -> PatSyn :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | tidy_fn, (MkPatSyn _ _ _ _ _ _ _ _ _ _ _ matcher builder as ps) =>
+        let tidy_pr := fun '(pair id dummy) => pair (tidy_fn id) dummy in
+        let 'MkPatSyn psName_5__ psUnique_6__ psArgs_7__ psArity_8__ psInfix_9__
+           psFieldLabels_10__ psUnivTyVars_11__ psReqTheta_12__ psExTyVars_13__
+           psProvTheta_14__ psResultTy_15__ psMatcher_16__ psBuilder_17__ := ps in
+        MkPatSyn psName_5__ psUnique_6__ psArgs_7__ psArity_8__ psInfix_9__
+                 psFieldLabels_10__ psUnivTyVars_11__ psReqTheta_12__ psExTyVars_13__
+                 psProvTheta_14__ psResultTy_15__ (tidy_pr matcher) (GHC.Base.fmap tidy_pr
+                  builder)
+    end.
 
-Axiom patSynUnivTyBinders : forall {A : Type}, A.
-
-Axiom patSynExTyVars : forall {A : Type}, A.
-
-Axiom patSynExTyBinders : forall {A : Type}, A.
-
-Axiom patSynSig : forall {A : Type}, A.
-
-Axiom patSynMatcher : forall {A : Type}, A.
-
-Axiom patSynBuilder : forall {A : Type}, A.
-
-Axiom tidyPatSynIds : forall {A : Type}, A.
-
-Axiom patSynInstArgTys : forall {A : Type}, A.
-
-Axiom patSynInstResTy : forall {A : Type}, A.
-
-Axiom pprPatSynType : forall {A : Type}, A.
-*)
-
-(* Unbound variables:
-     bool comparison list op_zt__ option BasicTypes.Arity Data.Function.on
-     FieldLabel.FieldLabel GHC.Base.Eq_ GHC.Base.Ord GHC.Base.compare
-     GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.Base.op_zlze__ GHC.Base.op_zsze__ Name.Name TyCoRep.ThetaType
-     TyCoRep.TyBinder TyCoRep.Type_ Unique.Unique Unique.getUnique Var.Id Var.TyVar
+(* External variables:
+     None Some bool list op_zt__ option pair unit BasicTypes.Arity
+     Combined.TyVarBinder Combined.Var Combined.binderVars Data.Foldable.find
+     Data.Foldable.length Data.Function.on Data.Tuple.fst FieldLabel.FieldLabel
+     FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.fmap
+     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.List.zip Name.Name Name.NamedThing
+     Name.getName__ Name.getOccName__ Name.nameOccName OccName.OccName Panic.noString
+     Panic.panicStr Unique.Uniquable Unique.Unique Unique.getUnique
+     Unique.getUnique__
 *)

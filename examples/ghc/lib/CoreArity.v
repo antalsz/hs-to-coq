@@ -15,57 +15,60 @@ Require Coq.Program.Wf.
 Require BasicTypes.
 Require Core.
 Require CoreSubst.
-Require CoreSyn.
 Require CoreUtils.
-Require Demand.
 Require DynFlags.
-Require GHC.Num.
-Require Var.
-Require VarEnv.
+Require GHC.Err.
 
 (* Converted type declarations: *)
 
 Inductive EtaInfo : Type
   := EtaVar : Core.Var -> EtaInfo
-  |  EtaCo : Core.Coercion -> EtaInfo.
+  |  EtaCo : unit -> EtaInfo.
 
 Definition CheapFun :=
-  (CoreSyn.CoreExpr -> option Core.Type_ -> bool)%type.
+  (Core.CoreExpr -> option unit -> bool)%type.
 
 Inductive ArityType : Type
   := ATop : list BasicTypes.OneShotInfo -> ArityType
   |  ABot : BasicTypes.Arity -> ArityType.
 
-Inductive ArityEnv : Type := AE : CheapFun -> bool -> ArityEnv.
+Inductive ArityEnv : Type
+  := AE (ae_cheap_fn : CheapFun) (ae_ped_bot : bool) : ArityEnv.
+
+Instance Default__ArityEnv : GHC.Err.Default ArityEnv :=
+  GHC.Err.Build_Default _ (AE GHC.Err.default GHC.Err.default).
 
 Definition ae_cheap_fn (arg_0__ : ArityEnv) :=
   let 'AE ae_cheap_fn _ := arg_0__ in
   ae_cheap_fn.
 
-Definition ae_ped_bot (arg_1__ : ArityEnv) :=
-  let 'AE _ ae_ped_bot := arg_1__ in
+Definition ae_ped_bot (arg_0__ : ArityEnv) :=
+  let 'AE _ ae_ped_bot := arg_0__ in
   ae_ped_bot.
 (* Converted value declarations: *)
 
-Axiom manifestArity : CoreSyn.CoreExpr -> BasicTypes.Arity.
+(* Skipping instance Outputable__EtaInfo of class Outputable *)
 
-Axiom exprArity : CoreSyn.CoreExpr -> BasicTypes.Arity.
+(* Skipping instance Outputable__ArityType of class Outputable *)
+
+Axiom manifestArity : Core.CoreExpr -> BasicTypes.Arity.
+
+Axiom joinRhsArity : Core.CoreExpr -> BasicTypes.JoinArity.
+
+Axiom exprArity : Core.CoreExpr -> BasicTypes.Arity.
 
 Axiom findRhsArity : DynFlags.DynFlags ->
-                     Var.Id -> CoreSyn.CoreExpr -> BasicTypes.Arity -> BasicTypes.Arity.
-
-Axiom rhsEtaExpandArity : DynFlags.DynFlags ->
-                          CoreUtils.CheapAppFun -> CoreSyn.CoreExpr -> BasicTypes.Arity.
+                     Core.Var -> Core.CoreExpr -> BasicTypes.Arity -> (BasicTypes.Arity * bool)%type.
 
 Axiom exprEtaExpandArity : DynFlags.DynFlags ->
-                           CoreSyn.CoreExpr -> BasicTypes.Arity.
+                           Core.CoreExpr -> BasicTypes.Arity.
 
-Axiom exprBotStrictness_maybe : CoreSyn.CoreExpr ->
-                                option (BasicTypes.Arity * Demand.StrictSig)%type.
+Axiom exprBotStrictness_maybe : Core.CoreExpr ->
+                                option (BasicTypes.Arity * Core.StrictSig)%type.
 
-Axiom arityType : ArityEnv -> CoreSyn.CoreExpr -> ArityType.
+Axiom arityType : ArityEnv -> Core.CoreExpr -> ArityType.
 
-Axiom typeArity : Core.Type_ -> list BasicTypes.OneShotInfo.
+Axiom typeArity : unit -> list BasicTypes.OneShotInfo.
 
 Axiom vanillaArityType : ArityType.
 
@@ -73,7 +76,7 @@ Axiom getBotArity : ArityType -> option BasicTypes.Arity.
 
 Axiom mk_cheap_fn : DynFlags.DynFlags -> CoreUtils.CheapAppFun -> CheapFun.
 
-Axiom arityLam : Var.Id -> ArityType -> ArityType.
+Axiom arityLam : Core.Var -> ArityType -> ArityType.
 
 Axiom arityApp : ArityType -> bool -> ArityType.
 
@@ -81,30 +84,37 @@ Axiom floatIn : bool -> ArityType -> ArityType.
 
 Axiom andArityType : ArityType -> ArityType -> ArityType.
 
-Axiom etaExpand : BasicTypes.Arity -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
-
-Axiom etaInfoApp : CoreSubst.Subst ->
-                   CoreSyn.CoreExpr -> list EtaInfo -> CoreSyn.CoreExpr.
-
-Axiom pushCoercion : Core.Coercion -> list EtaInfo -> list EtaInfo.
-
-Axiom etaInfoAbs : list EtaInfo -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom etaExpand : BasicTypes.Arity -> Core.CoreExpr -> Core.CoreExpr.
 
 Axiom mkEtaWW : BasicTypes.Arity ->
-                CoreSyn.CoreExpr ->
-                VarEnv.InScopeSet -> Core.Type_ -> (VarEnv.InScopeSet * list EtaInfo)%type.
+                Core.CoreExpr ->
+                Core.InScopeSet -> unit -> (Core.InScopeSet * list EtaInfo)%type.
 
-Axiom subst_expr : CoreSubst.Subst -> CoreSyn.CoreExpr -> CoreSyn.CoreExpr.
+Axiom etaInfoApp : CoreSubst.Subst ->
+                   Core.CoreExpr -> list EtaInfo -> Core.CoreExpr.
 
-Axiom subst_bind : CoreSubst.Subst ->
-                   CoreSyn.CoreBind -> (CoreSubst.Subst * CoreSyn.CoreBind)%type.
+Axiom pushCoercion : unit -> list EtaInfo -> list EtaInfo.
 
-Axiom freshEtaVar : GHC.Num.Int ->
-                    TyCoRep.TCvSubst -> Core.Type_ -> (TyCoRep.TCvSubst * Core.Var)%type.
+Axiom etaInfoAbs : list EtaInfo -> Core.CoreExpr -> Core.CoreExpr.
 
-(* Unbound variables:
-     bool list op_zt__ option BasicTypes.Arity BasicTypes.OneShotInfo Core.Coercion
-     Core.Type_ Core.Var CoreSubst.Subst CoreSyn.CoreBind CoreSyn.CoreExpr
-     CoreUtils.CheapAppFun Demand.StrictSig DynFlags.DynFlags GHC.Num.Int
-     TyCoRep.TCvSubst Var.Id VarEnv.InScopeSet
+Axiom etaInfoAppTy : unit -> list EtaInfo -> unit.
+
+Axiom subst_expr : CoreSubst.Subst -> Core.CoreExpr -> Core.CoreExpr.
+
+Axiom etaExpandToJoinPoint : BasicTypes.JoinArity ->
+                             Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
+
+Axiom etaExpandToJoinPointRule : BasicTypes.JoinArity ->
+                                 Core.CoreRule -> Core.CoreRule.
+
+Axiom etaBodyForJoinPoint : nat ->
+                            Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
+
+Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Var)%type.
+
+(* External variables:
+     bool list nat op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity
+     BasicTypes.OneShotInfo Core.CoreBndr Core.CoreExpr Core.CoreRule Core.InScopeSet
+     Core.StrictSig Core.Var CoreSubst.Subst CoreUtils.CheapAppFun DynFlags.DynFlags
+     GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
 *)

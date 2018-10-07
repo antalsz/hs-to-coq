@@ -2,13 +2,19 @@ skip module GHC.Types
 
 # partial
 
-skip method Foldable foldl1
-skip method Foldable foldr1
-skip method Foldable maximum
-skip method Foldable minimum
-
 skip Data.Foldable.minimumBy
 skip Data.Foldable.maximumBy
+
+# The default implementation of elem is hard to translate
+# (it recurses through the non-method any)
+# So we remove the method and make the default method simply code
+add Data.Foldable Definition Data.Foldable.elem {f} `{(Foldable f)} {a} `{(GHC.Base.Eq_ a)} :
+  a -> ((f a) -> bool) :=
+  fun x xs => Data.Foldable.any (fun y => x GHC.Base.== y) xs.
+
+# Needs Alternative
+skip Data.Foldable.asum
+skip Data.Foldable.msum
 
 redefine Local Definition Data.Foldable.Foldable__pair_type_elem {inst_a}
     {a} {H : GHC.Base.Eq_ a} : (a -> (((GHC.Tuple.pair_type inst_a) a) -> bool))
@@ -19,7 +25,15 @@ redefine Local Definition Data.Foldable.Foldable__Either_elem {inst_a}
 redefine Local Definition Data.Foldable.Foldable__option_elem
     {a} {H : GHC.Base.Eq_ a} : (a -> ((option a) -> bool))
     := default_elem Data.Foldable.Foldable__option_foldMap.
+redefine Local Definition Data.Foldable.Foldable__NonEmpty_elem
+    {a} {H : GHC.Base.Eq_ a} : (a -> ((GHC.Base.NonEmpty a) -> bool))
+    := default_elem Data.Foldable.Foldable__NonEmpty_foldMap.
 
+# Coq’s type class inference does not find the right instance
+# Why?
+redefine Definition Data.Foldable.concat {t} {a} `{(Foldable t)} : (t (list a)) -> (list a) :=
+  fun xs =>
+    GHC.Base.build' (fun _ => (fun c n => foldr (fun x y => @foldr _ Foldable__list _ _  c y x) n xs)).
 
 skip Data.Foldable.Foldable__First
 skip Data.Foldable.Foldable__Last

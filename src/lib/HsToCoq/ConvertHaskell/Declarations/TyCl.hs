@@ -1,9 +1,11 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
-             FlexibleContexts, ScopedTypeVariables #-}
+             FlexibleContexts, ScopedTypeVariables,
+             MultiParamTypeClasses
+             #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
-  convertTyClDecls, convertModuleTyClDecls,
+  convertModuleTyClDecls,
   -- * Convert single declarations
   ConvertedDeclaration(..), convDeclName,
   convertTyClDecl,
@@ -24,7 +26,6 @@ import Data.Bifunctor
 import Data.Foldable
 import Data.Traversable
 import HsToCoq.Util.Traversable
-import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 
@@ -33,18 +34,19 @@ import Control.Monad
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
-import HsToCoq.Util.Containers
+-- import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
-import qualified GHC
 
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 
 import Data.Generics hiding (Fixity(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Axiomatize
@@ -56,40 +58,41 @@ import Exception
 
 --------------------------------------------------------------------------------
 
-data ConvertedDeclaration = ConvData  IndBody
+data ConvertedDeclaration = ConvData  Bool IndBody
                           | ConvSyn   SynBody
                           | ConvClass ClassBody
                           | ConvFailure Qualid Sentence
                           deriving (Eq, Ord, Show, Read)
 
-instance FreeVars ConvertedDeclaration where
-  freeVars (ConvData    ind)   = freeVars ind
-  freeVars (ConvSyn     syn)   = freeVars syn
-  freeVars (ConvClass   cls)   = freeVars cls
-  freeVars (ConvFailure _ sen) = freeVars (NoBinding sen)
+instance HasBV Qualid ConvertedDeclaration where
+  bvOf (ConvData  _ ind)   = bvOf ind
+  bvOf (ConvSyn     syn)   = bvOf syn
+  bvOf (ConvClass   cls)   = bvOf cls
+  bvOf (ConvFailure _ sen) = bvOf sen
 
 convDeclName :: ConvertedDeclaration -> Qualid
-convDeclName (ConvData  (IndBody                    tyName  _ _ _))    = tyName
-convDeclName (ConvSyn   (SynBody                    synName _ _ _))    = synName
-convDeclName (ConvClass (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
+convDeclName (ConvData _ (IndBody                    tyName  _ _ _))    = tyName
+convDeclName (ConvSyn    (SynBody                    synName _ _ _))    = synName
+convDeclName (ConvClass  (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
 convDeclName (ConvFailure n _)                                         = n
 
-failTyClDecl :: ConversionMonad m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
+failTyClDecl :: ConversionMonad r m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
 failTyClDecl name e = pure $ Just $
     ConvFailure name $ translationFailedComment (qualidBase name) e
 
-convertTyClDecl :: ConversionMonad m => TyClDecl GHC.Name -> m (Maybe ConvertedDeclaration)
+convertTyClDecl :: ConversionMonad r m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
-  ghandle (failTyClDecl coqName) $ do
-    use (edits.skipped.contains coqName) >>= \case
+  withCurrentDefinition coqName $ ghandle (failTyClDecl coqName) $ do
+    let isCoind = view (edits.coinductiveTypes.contains coqName)
+    view (edits.skipped.contains coqName) >>= \case
       True  -> pure Nothing
-      False -> use (edits.redefinitions.at coqName) >>= fmap Just . \case
+      False -> view (edits.redefinitions.at coqName) >>= fmap Just . \case
         Nothing -> case decl of
           FamDecl{}     -> convUnsupported "type/data families"
-          SynDecl{..}   -> ConvSyn   <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
-          DataDecl{..}  -> ConvData  <$> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
-          ClassDecl{..} -> ConvClass <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+          SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
+          DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+          ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
         Just redef -> do
           case (decl, redef) of
@@ -100,7 +103,8 @@ convertTyClDecl decl = do
 
             (DataDecl{}, CoqInductiveDef ind) ->
               case ind of
-                Inductive   (body :| [])  []    -> pure $ ConvData body
+                Inductive   (body :| [])  []    -> pure $ ConvData False body
+                CoInductive (body :| [])  []    -> pure $ ConvData True body
                 Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
                 Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
                 CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
@@ -126,51 +130,56 @@ convertTyClDecl decl = do
 
 --------------------------------------------------------------------------------
 
-data DeclarationGroup = DeclarationGroup { dgInductives :: [IndBody]
-                                         , dgSynonyms   :: [SynBody]
-                                         , dgClasses    :: [ClassBody]
-                                         , dgFailures   :: [Sentence]}
+data DeclarationGroup = DeclarationGroup { dgInductives   :: [IndBody]
+                                         , dgCoInductives :: [IndBody]
+                                         , dgSynonyms     :: [SynBody]
+                                         , dgClasses      :: [ClassBody]
+                                         , dgFailures     :: [Sentence]}
                       deriving (Eq, Ord, Show, Read)
 
 instance Semigroup DeclarationGroup where
-  DeclarationGroup ind1 syn1 cls1 fail1 <> DeclarationGroup ind2 syn2 cls2 fail2 =
-    DeclarationGroup (ind1 <> ind2) (syn1 <> syn2) (cls1 <> cls2) (fail1 <> fail2)
+  DeclarationGroup ind1 coi1 syn1 cls1 fail1 <>
+   DeclarationGroup ind2 coi2 syn2 cls2 fail2 =
+    DeclarationGroup (ind1 <> ind2) (coi1 <> coi2) (syn1 <> syn2) (cls1 <> cls2) (fail1 <> fail2)
 
 instance Monoid DeclarationGroup where
-  mempty  = DeclarationGroup [] [] [] []
+  mempty  = DeclarationGroup [] [] [] [] []
   mappend = (<>)
 
 singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
-singletonDeclarationGroup (ConvData  ind)     = DeclarationGroup [ind] []    []    []
-singletonDeclarationGroup (ConvSyn   syn)     = DeclarationGroup []    [syn] []    []
-singletonDeclarationGroup (ConvClass cls)     = DeclarationGroup []    []    [cls] []
-singletonDeclarationGroup (ConvFailure _ sen) = DeclarationGroup []    []    []    [sen]
+singletonDeclarationGroup (ConvData False ind)     = DeclarationGroup [ind] []    []    []    []
+singletonDeclarationGroup (ConvData True  coi)     = DeclarationGroup []    [coi] []    []    []
+singletonDeclarationGroup (ConvSyn   syn)          = DeclarationGroup []    []    [syn] []    []
+singletonDeclarationGroup (ConvClass cls)          = DeclarationGroup []    []    []    [cls] []
+singletonDeclarationGroup (ConvFailure _ sen)      = DeclarationGroup []    []    []    []    [sen]
 
 --------------------------------------------------------------------------------
 
-convertDeclarationGroup :: DeclarationGroup -> Either String [Sentence]
+convertDeclarationGroup :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 convertDeclarationGroup DeclarationGroup{..} =
     (dgFailures ++) <$>
-    case (nonEmpty dgInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
-  (Just inds, Nothing, Nothing) ->
-    Right [InductiveSentence $ Inductive inds []]
+    case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
+  (Just inds, Nothing, Nothing, Nothing) ->
+    pure [InductiveSentence $ Inductive inds []]
 
-  (Nothing, Just (SynBody name args oty def :| []), Nothing) ->
-    Right [DefinitionSentence $ DefinitionDef Global name args oty def]
+  (Nothing, Just coinds, Nothing, Nothing) ->
+    pure [InductiveSentence $ CoInductive coinds []]
 
-  (Just inds, Just syns, Nothing) ->
-    Right $  foldMap recSynType syns
-          ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
+  (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing) ->
+    pure [DefinitionSentence $ DefinitionDef Global name args oty def]
 
-  (Nothing, Nothing, Just (classDef :| [])) ->
-    Right $ classSentences classDef
+  (Just inds, Nothing, Just syns, Nothing) ->
+    pure $  foldMap recSynType syns
+         ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
 
-  (Nothing, Just (_ :| _ : _), Nothing)           -> Left "mutually-recursive type synonyms"
-  (Nothing, Nothing,           Just (_ :| _ : _)) -> Left "mutually-recursive type classes"
-  (Just _,  Nothing,           Just _)            -> Left "mutually-recursive type classes and data types"
-  (Nothing, Just _,            Just _)            -> Left "mutually-recursive type classes and type synonyms"
-  (Just _,  Just _,            Just _)            -> Left "mutually-recursive type classes, data types, and type synonyms"
-  (Nothing, Nothing,           Nothing)           -> Right []
+  (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
+    classSentences classDef
+
+  (Nothing, Nothing, Nothing, Nothing) ->
+    pure []
+
+  (_, _, _, _) ->
+    convUnsupported "too much mutual recursion"
 
   where
     synName = qualidExtendBase "__raw"
@@ -218,12 +227,12 @@ convertDeclarationGroup DeclarationGroup{..} =
 -- edits).
 -- TODO: GADTs.
 -- TODO: Keep the argument specifiers with the data types.
-generateArgumentSpecifiers :: ConversionMonad m => IndBody -> m [Arguments]
+generateArgumentSpecifiers :: ConversionMonad r m => IndBody -> m [Arguments]
 generateArgumentSpecifiers (IndBody _ params _resTy cons)
   | null params = pure []
   | otherwise   = catMaybes <$> traverse setImplicits cons
   where
-    setImplicits (con,_,_) = use (constructorFields.at con) >>= \case
+    setImplicits (con,_,_) = lookupConstructorFields con >>= \case
         -- Ignore cons we do not know anythings about
         -- (e.g. because they are skipped or redefined)
         Nothing -> pure Nothing
@@ -239,22 +248,46 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
 
     underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
 
-generateGroupArgumentSpecifiers :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupArgumentSpecifiers :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
                                 . foldTraverse generateArgumentSpecifiers
-                                . dgInductives
+                                . (\x -> dgInductives x ++ dgCoInductives x)
 
 --------------------------------------------------------------------------------
 
-generateRecordAccessors :: ConversionMonad m => IndBody -> m [Definition]
+generateDefaultInstance :: ConversionMonad r m => IndBody -> m [Sentence]
+generateDefaultInstance (IndBody tyName _ _ cons)
+    | Just (con, bndrs, _) <- find suitableCon cons
+        -- Instance Default_TupleSort : GHC.Err.Default TupleSort :=
+        --  GHC.Err.Build_Default _ BoxedTuple.
+    = view (edits.skipped.contains inst_name) >>= \case
+        True -> pure []
+        False -> pure $ pure $ InstanceSentence $
+            InstanceTerm inst_name []
+                     (App1 "GHC.Err.Default" (Qualid tyName))
+                     (App2 "GHC.Err.Build_Default" Underscore (foldl (\acc _ -> (App1 acc "GHC.Err.default")) (Qualid con) bndrs))
+                     Nothing
+  where
+    inst_name = qualidMapBase ("Default__" <>) tyName
+
+    suitableCon (_, _bndrs, Just ty) = ty == Qualid tyName
+    suitableCon _ = False
+generateDefaultInstance _ = pure []
+
+generateGroupDefaultInstances :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
+generateGroupDefaultInstances = foldTraverse generateDefaultInstance . dgInductives
+
+generateRecordAccessors :: ConversionMonad r m => IndBody -> m [Definition]
 generateRecordAccessors (IndBody tyName params resTy cons) = do
   let conNames = view _1 <$> cons
 
-  let restrict = M.filterWithKey $ \k _ -> k `elem` conNames
-  allFields <- uses (constructorFields.to restrict.folded._RecordFields) S.fromList
-  for (S.toAscList allFields) $ \(field :: Qualid) -> do
+  allFields <- catMaybes <$> mapM lookupConstructorFields conNames
+  let recordFields = concat [ fields | RecordFields fields <- allFields ]
+  let nubedFields = S.toAscList $ S.fromList recordFields
+  filteredFields <- filterM (\field -> not <$> view (edits.skipped.contains field)) nubedFields
+  for filteredFields $ \(field :: Qualid) -> withCurrentDefinition field $ do
     equations <- for conNames $ \con -> do
-      (args, hasField) <- use (constructorFields.at con) >>= \case
+      (args, hasField) <- lookupConstructorFields con >>= \case
         Just (NonRecordFields count) ->
           pure (replicate count UnderscorePat, False)
         Just (RecordFields conFields0) ->
@@ -297,35 +330,38 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
     pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
       Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing equations
 
-generateGroupRecordAccessors :: ConversionMonad m => DeclarationGroup -> m [Sentence]
+generateGroupRecordAccessors :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupRecordAccessors = fmap (fmap DefinitionSentence)
                              . foldTraverse generateRecordAccessors
                              . dgInductives
 
 --------------------------------------------------------------------------------
 
-groupTyClDecls :: ConversionMonad m
-               => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [DeclarationGroup]
+groupTyClDecls :: ConversionMonad r m
+               => [TyClDecl GhcRn] -> m [DeclarationGroup]
 groupTyClDecls decls = do
-  bodies <- traverse (maybeWithCurrentModule .*^ convertTyClDecl) decls <&>
+  bodies <- traverse convertTyClDecl decls <&>
               M.fromList . map (convDeclName &&& id) . catMaybes
 
-  -- Might be overgenerous
-  ctypes <- use constructorTypes
+  -- We need to do this here, becaues topoSortEnvironment expects
+  -- a pure function as the first argument
+  bodies_fvars <- for bodies $ \decl -> do
+        let vars = getFreeVars' decl
+        -- This is very crude; querying all free variables as if
+        -- they are constructor names:
+        -- ctypes <- setMapMaybeM lookupConstructorType vars
+        -- With interface loading, this is too crude.
+        return $ vars -- <> ctypes
 
-  pure . map (foldMap $ singletonDeclarationGroup . (bodies M.!))
-       . flip topoSortEnvironmentWith bodies
-       $ \decl -> let vars = getFreeVars decl
-                  in vars <> setMapMaybe (M.lookup ?? ctypes) vars
+  pure $ map (foldMap $ singletonDeclarationGroup . (bodies M.!))
+       $ topoSortEnvironmentWith id bodies_fvars
 
-convertModuleTyClDecls :: ConversionMonad m
-                       => [(Maybe ModuleName, TyClDecl GHC.Name)] -> m [Sentence]
-convertModuleTyClDecls =   forkM3 (either convUnsupported pure
-                                    . foldTraverse convertDeclarationGroup)
-                                  (foldTraverse generateGroupArgumentSpecifiers)
-                                  (foldTraverse generateGroupRecordAccessors)
+convertModuleTyClDecls :: ConversionMonad r m
+                       => [TyClDecl GhcRn] -> m [Sentence]
+convertModuleTyClDecls =  fork [ foldTraverse convertDeclarationGroup
+                               , foldTraverse generateGroupArgumentSpecifiers
+                               , foldTraverse generateGroupDefaultInstances
+                               , foldTraverse generateGroupRecordAccessors
+                               ]
                        <=< groupTyClDecls
-  where forkM3 l m r i = (<>) <$> ((<>) <$> l i <*> m i) <*> r i
-
-convertTyClDecls :: ConversionMonad m => [TyClDecl GHC.Name] -> m [Sentence]
-convertTyClDecls = convertModuleTyClDecls . map (Nothing,)
+  where fork fns x = mconcat <$> sequence (map ($x) fns)

@@ -9,7 +9,7 @@ Require Data.Foldable.
 Require Data.Monoid.
 Require Import Proofs.Data.Foldable.
 
-From mathcomp Require Import ssreflect ssrfun ssrbool.
+From Coq Require Import ssreflect ssrfun ssrbool.
 Set Bullet Behavior "Strict Subproofs".
 
 (***** null *****)
@@ -146,12 +146,12 @@ Proof.
           /Data.Foldable.foldMap /Foldable.Foldable__list /Foldable.foldMap__
           /= /Data.Foldable.Foldable__list_foldMap
           /Data.Foldable.Foldable__list_foldr /=
-          /Base.mempty /Monoid.Monoid__Any /Base.mempty__
-          /Monoid.Monoid__Any_mempty
-          /Foldable.hash_compose /Base.op_z2218U__.
+          /Base.mempty /SemigroupInternal.Monoid__Any /Base.mempty__
+          /SemigroupInternal.Monoid__Any_mempty
+          /Base.op_z2218U__.
   rewrite -(orbF (any p l)); move: false => b.
   elim: l => [|x l IH] //=.
-  rewrite -orbA -IH /Foldable.hash_compose /compose /=.
+  rewrite -orbA -IH /compose /=.
   by case: (GHC.Base.foldr _ _ _); case: (p x).
 Qed.
 

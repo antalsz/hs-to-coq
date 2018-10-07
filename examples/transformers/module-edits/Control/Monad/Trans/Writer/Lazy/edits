@@ -1,0 +1,12 @@
+order Control.Monad.Trans.Writer.Lazy.Functor__WriterT      Control.Monad.Trans.Writer.Lazy.Applicative__WriterT_liftA2
+order Control.Monad.Trans.Writer.Lazy.Functor__WriterT      Control.Monad.Trans.Writer.Lazy.Traversable__WriterT
+order Control.Monad.Trans.Writer.Lazy.Applicative__WriterT  Control.Monad.Trans.Writer.Lazy.Monad__WriterT_return_
+order Control.Monad.Trans.Writer.Lazy.MonadTrans__WriterT   Control.Monad.Trans.Writer.Lazy.MonadFail__WriterT_fail
+order Control.Monad.Trans.Writer.Lazy.Monad__WriterT        Control.Monad.Trans.Writer.Lazy.MonadFail__WriterT_fail
+
+# hs-to-coq fails to translate the Applicative instance, because it thinks
+# that <*> is mutually recursive with liftA2
+
+# Therefore, lets override its heuristic here.
+in Control.Monad.Trans.Writer.Lazy.Applicative__WriterT_op_zlztzg__ rename value GHC.Base.liftA2 = GHC.Base.liftA2
+

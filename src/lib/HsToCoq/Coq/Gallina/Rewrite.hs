@@ -71,6 +71,7 @@ match patVars lhs term = execWriterT (go lhs term)
 
     go' :: Term -> Term -> WriterT (M.Map Qualid Term) Maybe ()
     go' (String s1) (String s2) = guard (s1 == s2)
+    go' (Num n1) (Num n2)       = guard (n1 == n2)
     go' (Qualid qid@(Bare v)) t | isPatVar v = do
         tell (M.singleton qid t)
         return ()

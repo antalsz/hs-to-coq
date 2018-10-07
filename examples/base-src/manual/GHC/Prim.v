@@ -1,6 +1,12 @@
+Require Import GHC.Types.
+
 Definition arrow  := (fun (x y :Type) => x -> y).
 
 Definition seq {A} {B} (a : A) (b:B) := b.
+
+(* Coq has no levity polymorphism, so map everything to Type *)
+Definition TYPE (_ : RuntimeRep) := Type.
+
 
 (* Unpeel class: A directed form of Coercible, where a is the newtype type,
    and b the base type *)
@@ -18,6 +24,16 @@ Instance Unpeel_arrow
   { unpeel f x := unpeel (f (repeel x))
   ; repeel f x := repeel (f (unpeel x))
   }.
+
+Instance Unpeel_pair
+  a b c d
+  `{Unpeel a b}
+  `{Unpeel c d}
+  : Unpeel (a * c) (b * d) :=
+  { unpeel '(x,y) := (unpeel x, unpeel y)
+  ; repeel '(x,y) := (repeel x, repeel y)
+  }.
+
 
 Require Coq.Lists.List.
 Instance Unpeel_list a b

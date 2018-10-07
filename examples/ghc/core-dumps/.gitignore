@@ -1,0 +1,3 @@
+*.v
+Makefile.coq
+_CoqProject

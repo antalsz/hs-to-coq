@@ -1,6 +1,6 @@
 # break the cycle with TyThing
 # we may need to axiomatize these two functions in a separate module.
-rename type TyCoRep.TyThing = unit
+rename type CoreType.TyThing = unit
 skip Name.mkWiredInName
 skip Name.wiredInNameTyThing_maybe
 
@@ -18,6 +18,7 @@ skip Name.pprNameDefnLoc
 skip Name.pprDefinedAt
 skip Name.pprInfixName
 skip Name.pprModulePrefix
+skip Name.pprUnique
 skip Name.ppr_occ_name
 skip Name.ppr_underscore_unique
 skip Name.pprSystem
@@ -25,7 +26,7 @@ skip Name.pprInternal
 skip Name.ppr_z_occ_name
 skip Name.pprExternal
 skip Name.pprName
-
+skip Name.Default__Name
 ## Eq_ instance defined in terms of Ord instance. Need to inline definition of
 ## 'compare' (i.e. cmpName) to resolve.
 

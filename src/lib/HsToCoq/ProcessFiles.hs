@@ -22,7 +22,7 @@ import HsToCoq.Util.GHC.Deriving
 data ProcessingMode = Recursive | NonRecursive
                     deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
-processFiles :: ConversionMonad m => ProcessingMode -> [FilePath] -> m (Maybe [TypecheckedModule])
+processFiles :: GlobalMonad r m => ProcessingMode -> [FilePath] -> m (Maybe [TypecheckedModule])
 processFiles mode files = do
   initForDeriving
   traverse_ (addTarget <=< (guessTarget ?? Nothing)) files
@@ -37,7 +37,7 @@ processFiles mode files = do
           pure . filterM $ fmap (`S.member` filePaths) . moduleFile
       traverse (addDerivedInstances <=< typecheckModule <=< parseModule)
         =<< skipModulesBy ms_mod_name
-        =<< filterModules
+        =<< filterModules . mgModSummaries
         =<< getModuleGraph
     Failed ->
       pure Nothing

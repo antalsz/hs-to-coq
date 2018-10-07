@@ -52,12 +52,15 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
   manual          { TokWord    "manual"         }
+  import          { TokWord    "import"         }
   notation        { TokWord    "notation"       }
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
+  definition      { TokWord    "definition"     }
   termination     { TokWord    "termination"    }
   'deferred'      { TokWord    "deferred"       }
+  'corecursive'   { TokWord    "corecursive"    }
   obligations     { TokWord    "obligations"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
@@ -67,6 +70,10 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   add             { TokWord    "add"            }
   scope           { TokWord    "scope"          }
   constructor     { TokWord    "constructor"    }
+  simple          { TokWord    "simple"         }
+  inline          { TokWord    "inline"         }
+  mutual          { TokWord    "mutual"         }
+  as              { TokWord    "as"             }
   fun             { TokWord    "fun"            }
   fix             { TokWord    "fix"            }
   cofix           { TokWord    "cofix"          }
@@ -78,6 +85,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   for             { TokWord    "for"            }
   where           { TokWord    "where"          }
   and             { TokWord    "and"            }
+  coinductive     { TokWord    "coinductive"    }
   'measure'       { TokWord    "measure"        }
   'wf'            { TokWord    "wf"             }
   'Inductive'     { TokWord    "Inductive"      }
@@ -229,25 +237,32 @@ Scope :: { Ident }
   : Word    { $1     }
   | type    { "type" } -- This is so common, we have to special-case it
 
-Edit :: { Edit }
-  : type synonym Word ':->' Word                     { TypeSynonymTypeEdit   $3 $5                            }
-  | data type arguments Qualid DataTypeArguments     { DataTypeArgumentsEdit $4 $5                            }
-  | redefine CoqDefinition                           { RedefinitionEdit      $2                               }
-  | add Word CoqDefinition                           { AddEdit               (mkModuleName (T.unpack $2)) $3  }
-  | skip Qualid                                      { SkipEdit              $2                               }
-  | skip method Qualid Word                          { SkipMethodEdit        $3 $4                            }
-  | skip module Word                                 { SkipModuleEdit        (mkModuleName (T.unpack $3))     }
-  | manual notation Word                             { HasManualNotationEdit (mkModuleName (T.unpack $3))     }
-  | termination Qualid TerminationArgument           { TerminationEdit       $2 Nothing $3                    }
-  | termination Word 'in' Qualid TerminationArgument { TerminationEdit       $4 (Just $2) $5                  }
-  | obligations Qualid Word                          { ObligationsEdit       $2 $3 }
-  | rename Renaming                                  { RenameEdit            (fst $2) (snd $2)                }
-  | axiomatize module Word                           { AxiomatizeModuleEdit  (mkModuleName (T.unpack $3))     }
-  | add scope Scope for ScopePlace Qualid            { AdditionalScopeEdit   $5 $6 $3                         }
-  | order Some(Qualid)                               { OrderEdit             $2                               }
-  | class kinds Qualid SepBy1(Term,',')              { ClassKindEdit         $3 $4                            }
-  | data  kinds Qualid SepBy1(Term,',')              { DataKindEdit          $3 $4                            }
-  | rewrite Rewrite                                  { RewriteEdit           $2                               }
+Edit ::                                          { Edit }
+  : type synonym Word ':->' Word                 { TypeSynonymTypeEdit      $3 $5                            }
+  | data type arguments Qualid DataTypeArguments { DataTypeArgumentsEdit    $4 $5                            }
+  | redefine CoqDefinition                       { RedefinitionEdit         $2                               }
+  | add Word CoqDefinition                       { AddEdit                  (mkModuleName (T.unpack $2)) $3  }
+  | skip Qualid                                  { SkipEdit                 $2                               }
+  | skip method Qualid Word                      { SkipMethodEdit           $3 $4                            }
+  | skip module Word                             { SkipModuleEdit           (mkModuleName (T.unpack $3))     }
+  | import module Word                           { ImportModuleEdit         (mkModuleName (T.unpack $3))     }
+  | manual notation Word                         { HasManualNotationEdit    (mkModuleName (T.unpack $3))     }
+  | termination Qualid TerminationArgument       { TerminationEdit          $2 $3                            }
+  | obligations Qualid Word                      { ObligationsEdit          $2 $3 }
+  | rename Renaming                              { RenameEdit               (fst $2) (snd $2)                }
+  | axiomatize module Word                       { AxiomatizeModuleEdit     (mkModuleName (T.unpack $3))     }
+  | axiomatize definition Qualid                 { AxiomatizeDefinitionEdit $3                               }
+  | add scope Scope for ScopePlace Qualid        { AdditionalScopeEdit      $5 $6 $3                         }
+  | order Some(Qualid)                           { OrderEdit                $2                               }
+  | class kinds Qualid SepBy1(Term,',')          { ClassKindEdit            $3 $4                            }
+  | data  kinds Qualid SepBy1(Term,',')          { DataKindEdit             $3 $4                            }
+  | coinductive Qualid                           { CoinductiveEdit          $2                               }
+  | rewrite Rewrite                              { RewriteEdit              $2                               }
+  | rename module Word Word                      { RenameModuleEdit         (mkModuleName (T.unpack $3))
+                                                                            (mkModuleName (T.unpack $4))     }
+  | simple class Qualid                          { SimpleClassEdit          $3                               }
+  | inline mutual Qualid                         { InlineMutualEdit         $3                               }
+  | 'in' Qualid Edit                             { InEdit                   $2 $3                            }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -256,11 +271,11 @@ Edits :: { [Edit] }
 -- Gallina
 --------------------------------------------------------------------------------
 
--- TODO: parse operator names à la _*_
+-- TODO: parse operator names a la _*_
 -- TODO: *sometimes* parse () and [] (Haskell) (fixed?)
 -- TODO: split qualified and unqualified names
 
--- Wrap all references to Coq parsing with `Coq(…)` at the top level in order to
+-- Wrap all references to Coq parsing with `Coq(...)` at the top level in order to
 -- ignore newlines inside them
 Coq(p)
   : EnterCoqParsing p ExitCoqParsing    { $2 }
@@ -287,12 +302,12 @@ Term :: { Term }
 LargeTerm :: { Term }
   : fun   Binders '=>' Term    { Fun $2 $4 }
   | fix   FixBodies            { Fix   $2 }
-  | cofix CofixBodies          { Cofix $2 }
+  | cofix FixBodies            { Cofix $2 }
   | forall Binders ',' Term    { Forall $2 $4 }
   | 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' Term
 	 { Let $2 $3  $4 $6 $8 }
   | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
-  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else Infix $1 $2 $3 }
+  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
 
 App :: { Term }
   :     Atom Some(Arg)     { App $1 $2 }
@@ -330,14 +345,8 @@ GenFixBodies(body)
 FixBodies :: { FixBodies }
   : GenFixBodies(FixBody)    { either FixOne (uncurry3 FixMany) $1 }
 
-CofixBodies :: { CofixBodies }
-  : GenFixBodies(CofixBody)    { either CofixOne (uncurry3 CofixMany) $1 }
-
 FixBody :: { FixBody }
   : Qualid FixBinders Optional(TypeAnnotation) ':=' Term    { uncurry (FixBody $1) $2 $3 $5 }
-
-CofixBody :: { CofixBody }
-  : Qualid Binders Optional(TypeAnnotation) ':=' Term    { CofixBody $1 $2 $3 $5 }
 
 -- There is an ambiguity between @{implicitVar : ty}@ and @{struct x}@.  Our
 -- options are either (a) use right-recursion and incur stack space blowup, or
@@ -359,11 +368,7 @@ BinderName :: { Name }
 ExplicitBinderGuts :: { Binder }
   : BinderName                                        { Inferred Explicit $1 }
   | BinderName Some(BinderName) TypeAnnotation        { Typed Ungeneralizable Explicit ($1 <| $2) $3 }
-  | BinderName BinderColonEq                          { BindLet $1 Nothing $2 }
-  | BinderName TypeAnnotation Optional(BinderColonEq)
-      { case $3 of
-          Just def -> BindLet $1 (Just $2) def
-          Nothing  -> Typed Ungeneralizable Explicit ($1 :| []) $2 }
+  | BinderName TypeAnnotation                         { Typed Ungeneralizable Explicit ($1 :| []) $2 }
 
 BinderColonEq
   : ':=' Term    { $2 }
@@ -373,7 +378,7 @@ ImplicitBinderGuts :: { Binder }
   | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
 
 GeneralizableBinderGuts :: { Explicitness -> Binder }
-  : Atom                            { \ei -> Generalized ei $1 }
+  : '(' Term ')'                    { \ei -> Generalized ei $2 }
   | Some(BinderName) TypeAnnotation { \ei -> Typed Generalizable ei $1 $2 }
 
 Binder :: { Binder }
@@ -442,8 +447,8 @@ Definition :: { Definition }
   |          'Let'        Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
 
 Fixpoint :: { Fixpoint }
-  : 'Fixpoint'   MutualDefinitions(FixBody)      { uncurry Fixpoint   $2 }
-  | 'CoFixpoint' MutualDefinitions(CofixBody)    { uncurry CoFixpoint $2 }
+  : 'Fixpoint'   MutualDefinitions(FixBody)    { uncurry Fixpoint   $2 }
+  | 'CoFixpoint' MutualDefinitions(FixBody)    { uncurry CoFixpoint $2 }
 
 Order :: { Order }
   : '{' struct Qualid '}'                          { StructOrder $3 }
@@ -451,8 +456,9 @@ Order :: { Order }
   | '{' 'wf' Atom Qualid '}'                       { WFOrder $3 $4 }
 
 TerminationArgument :: { TerminationArgument }
-  : 'deferred' { Deferred }
-  | Order      { WellFounded $1 }
+  : 'deferred'    { Deferred }
+  | 'corecursive' { Corecursive }
+  | Order         { WellFounded $1 }
 
 Instance :: { InstanceDefinition }
   : 'Instance' Qualid Many(Binder) TypeAnnotation ':=' '{' SepBy(FieldDefinition, ';')  '}'

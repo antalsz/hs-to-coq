@@ -36,6 +36,14 @@ Notation "'_<$>_'" := (op_zlzdzg__).
 
 Infix "<$>" := (_<$>_) (at level 99).
 
+Definition op_zlzazg__ {f} {a} {b} `{GHC.Base.Functor f}
+   : f a -> (a -> b) -> f b :=
+  fun as_ f => f <$> as_.
+
+Notation "'_<&>_'" := (op_zlzazg__).
+
+Infix "<&>" := (_<&>_) (at level 99).
+
 Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=
   fun x => tt GHC.Base.<$ x.
 
@@ -44,8 +52,10 @@ Notation "'_Data.Functor.$>_'" := (op_zdzg__).
 Infix "Data.Functor.$>" := (_$>_) (at level 99).
 Notation "'_Data.Functor.<$>_'" := (op_zlzdzg__).
 Infix "Data.Functor.<$>" := (_<$>_) (at level 99).
+Notation "'_Data.Functor.<&>_'" := (op_zlzazg__).
+Infix "Data.Functor.<&>" := (_<&>_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      tt unit GHC.Base.Functor GHC.Base.flip GHC.Base.fmap GHC.Base.op_zlzd__
 *)

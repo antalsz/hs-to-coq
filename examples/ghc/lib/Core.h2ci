@@ -1,0 +1,710 @@
+constructors:
+  Core.TyConBndrVis: ! '[Qualified "Core" "NamedTCB",Qualified "Core" "AnonTCB"]'
+  Core.PatSyn: ! '[Qualified "Core" "MkPatSyn"]'
+  Core.PrimRep: ! '[Qualified "Core" "VoidRep",Qualified "Core" "LiftedRep",Qualified
+    "Core" "UnliftedRep",Qualified "Core" "IntRep",Qualified "Core" "WordRep",Qualified
+    "Core" "Int64Rep",Qualified "Core" "Word64Rep",Qualified "Core" "AddrRep",Qualified
+    "Core" "FloatRep",Qualified "Core" "DoubleRep",Qualified "Core" "VecRep"]'
+  Core.EqSpec: ! '[Qualified "Core" "Mk_EqSpec"]'
+  Core.RecSelParent: ! '[Qualified "Core" "RecSelData",Qualified "Core" "RecSelPatSyn"]'
+  Core.RecTcChecker: ! '[Qualified "Core" "RC"]'
+  Core.SrcStrictness: ! '[Qualified "Core" "SrcLazy",Qualified "Core" "SrcStrict",Qualified
+    "Core" "NoSrcStrict"]'
+  Core.CafInfo: ! '[Qualified "Core" "MayHaveCafRefs",Qualified "Core" "NoCafRefs"]'
+  Core.SrcUnpackedness: ! '[Qualified "Core" "SrcUnpack",Qualified "Core" "SrcNoUnpack",Qualified
+    "Core" "NoSrcUnpack"]'
+  Core.DataCon: ! '[Qualified "Core" "MkData"]'
+  Core.UnfoldingSource: ! '[Qualified "Core" "InlineRhs",Qualified "Core" "InlineStable",Qualified
+    "Core" "InlineCompulsory"]'
+  Core.TypeShape: ! '[Qualified "Core" "TsFun",Qualified "Core" "TsProd",Qualified
+    "Core" "TsUnk"]'
+  Core.CoreVect: ! '[Qualified "Core" "Vect",Qualified "Core" "NoVect",Qualified "Core"
+    "VectType",Qualified "Core" "VectClass",Qualified "Core" "VectInst"]'
+  Core.AnnBind: ! '[Qualified "Core" "AnnNonRec",Qualified "Core" "AnnRec"]'
+  Core.ExportFlag: ! '[Qualified "Core" "NotExported",Qualified "Core" "Exported"]'
+  Core.FamTyConFlav: ! '[Qualified "Core" "DataFamilyTyCon",Qualified "Core" "OpenSynFamilyTyCon",Qualified
+    "Core" "ClosedSynFamilyTyCon",Qualified "Core" "AbstractClosedSynFamilyTyCon",Qualified
+    "Core" "BuiltInSynFamTyCon"]'
+  Core.StrDmd: ! '[Qualified "Core" "HyperStr",Qualified "Core" "SCall",Qualified
+    "Core" "SProd",Qualified "Core" "HeadStr"]'
+  Core.IsOrphan: ! '[Qualified "Core" "Mk_IsOrphan",Qualified "Core" "NotOrphan"]'
+  Core.CPRResult: ! '[Qualified "Core" "NoCPR",Qualified "Core" "RetProd",Qualified
+    "Core" "RetSum"]'
+  Core.ArgFlag: ! '[Qualified "Core" "Required",Qualified "Core" "Specified",Qualified
+    "Core" "Inferred"]'
+  Core.DmdType: ! '[Qualified "Core" "Mk_DmdType"]'
+  Core.KillFlags: ! '[Qualified "Core" "Mk_KillFlags"]'
+  Core.Var: ! '[Qualified "Core" "Mk_TyVar",Qualified "Core" "Mk_TcTyVar",Qualified
+    "Core" "Mk_Id"]'
+  Core.StrictnessMark: ! '[Qualified "Core" "MarkedStrict",Qualified "Core" "NotMarkedStrict"]'
+  Core.DataConRep: ! '[Qualified "Core" "NoDataConRep",Qualified "Core" "DCR"]'
+  Core.RuntimeRepInfo: ! '[Qualified "Core" "NoRRI",Qualified "Core" "RuntimeRep",Qualified
+    "Core" "VecCount",Qualified "Core" "VecElem"]'
+  Core.ExnStr: ! '[Qualified "Core" "VanStr",Qualified "Core" "Mk_ExnStr"]'
+  Core.ClassBody: ! '[Qualified "Core" "AbstractClass",Qualified "Core" "ConcreteClass"]'
+  Core.TickishPlacement: ! '[Qualified "Core" "PlaceRuntime",Qualified "Core" "PlaceNonLam",Qualified
+    "Core" "PlaceCostCentre"]'
+  Core.TaggedBndr: ! '[Qualified "Core" "TB"]'
+  Core.Class: ! '[Qualified "Core" "Mk_Class"]'
+  Core.StrictSig: ! '[Qualified "Core" "Mk_StrictSig"]'
+  Core.RuleEnv: ! '[Qualified "Core" "Mk_RuleEnv"]'
+  Core.AltCon: ! '[Qualified "Core" "DataAlt",Qualified "Core" "LitAlt",Qualified
+    "Core" "DEFAULT"]'
+  Core.JointDmd: ! '[Qualified "Core" "JD"]'
+  Core.RnEnv2: ! '[Qualified "Core" "RV2"]'
+  Core.Injectivity: ! '[Qualified "Core" "NotInjective",Qualified "Core" "Injective"]'
+  Core.Termination: ! '[Qualified "Core" "Diverges",Qualified "Core" "ThrowsExn",Qualified
+    "Core" "Dunno"]'
+  Core.AnnExpr': ! '[Qualified "Core" "AnnVar",Qualified "Core" "AnnLit",Qualified
+    "Core" "AnnLam",Qualified "Core" "AnnApp",Qualified "Core" "AnnCase",Qualified
+    "Core" "AnnLet",Qualified "Core" "AnnCast",Qualified "Core" "AnnTick",Qualified
+    "Core" "AnnType",Qualified "Core" "AnnCoercion"]'
+  Core.Bind: ! '[Qualified "Core" "NonRec",Qualified "Core" "Rec"]'
+  Core.HsImplBang: ! '[Qualified "Core" "HsLazy",Qualified "Core" "HsStrict",Qualified
+    "Core" "HsUnpack"]'
+  Core.TyConFlavour: ! '[Qualified "Core" "ClassFlavour",Qualified "Core" "TupleFlavour",Qualified
+    "Core" "SumFlavour",Qualified "Core" "DataTypeFlavour",Qualified "Core" "NewtypeFlavour",Qualified
+    "Core" "AbstractTypeFlavour",Qualified "Core" "DataFamilyFlavour",Qualified "Core"
+    "OpenTypeFamilyFlavour",Qualified "Core" "ClosedTypeFamilyFlavour",Qualified "Core"
+    "TypeSynonymFlavour",Qualified "Core" "BuiltInTypeFlavour",Qualified "Core" "PromotedDataConFlavour"]'
+  Core.TyVarBndr: ! '[Qualified "Core" "TvBndr"]'
+  Core.Expr: ! '[Qualified "Core" "Mk_Var",Qualified "Core" "Lit",Qualified "Core"
+    "App",Qualified "Core" "Lam",Qualified "Core" "Let",Qualified "Core" "Case",Qualified
+    "Core" "Cast",Qualified "Core" "Tick",Qualified "Core" "Type_",Qualified "Core"
+    "Coercion"]'
+  Core.TyCon: ! '[Qualified "Core" "FunTyCon",Qualified "Core" "AlgTyCon",Qualified
+    "Core" "SynonymTyCon",Qualified "Core" "FamilyTyCon",Qualified "Core" "PrimTyCon",Qualified
+    "Core" "PromotedDataCon",Qualified "Core" "TcTyCon"]'
+  Core.IdScope: ! '[Qualified "Core" "GlobalId",Qualified "Core" "LocalId"]'
+  Core.TickBoxOp: ! '[Qualified "Core" "TickBox"]'
+  Core.Tickish: ! '[Qualified "Core" "ProfNote",Qualified "Core" "HpcTick",Qualified
+    "Core" "Breakpoint",Qualified "Core" "SourceNote"]'
+  Core.IdDetails: ! '[Qualified "Core" "VanillaId",Qualified "Core" "RecSelId",Qualified
+    "Core" "DataConWorkId",Qualified "Core" "DataConWrapId",Qualified "Core" "ClassOpId",Qualified
+    "Core" "PrimOpId",Qualified "Core" "FCallId",Qualified "Core" "TickBoxOpId",Qualified
+    "Core" "Mk_DFunId",Qualified "Core" "CoVarId",Qualified "Core" "Mk_JoinId"]'
+  Core.InScopeSet: ! '[Qualified "Core" "InScope"]'
+  Core.PrimElemRep: ! '[Qualified "Core" "Int8ElemRep",Qualified "Core" "Int16ElemRep",Qualified
+    "Core" "Int32ElemRep",Qualified "Core" "Int64ElemRep",Qualified "Core" "Word8ElemRep",Qualified
+    "Core" "Word16ElemRep",Qualified "Core" "Word32ElemRep",Qualified "Core" "Word64ElemRep",Qualified
+    "Core" "FloatElemRep",Qualified "Core" "DoubleElemRep"]'
+  Core.AlgTyConFlav: ! '[Qualified "Core" "VanillaAlgTyCon",Qualified "Core" "UnboxedAlgTyCon",Qualified
+    "Core" "ClassTyCon",Qualified "Core" "DataFamInstTyCon"]'
+  Core.TickishScoping: ! '[Qualified "Core" "NoScope",Qualified "Core" "SoftScope",Qualified
+    "Core" "CostCentreScope"]'
+  Core.Str: ! '[Qualified "Core" "Lazy",Qualified "Core" "Mk_Str"]'
+  Core.LevityInfo: ! '[Qualified "Core" "NoLevityInfo",Qualified "Core" "NeverLevityPolymorphic"]'
+  Core.CoreRule: ! '[Qualified "Core" "Rule",Qualified "Core" "BuiltinRule"]'
+  Core.ClassATItem: ! '[Qualified "Core" "ATI"]'
+  Core.UseDmd: ! '[Qualified "Core" "UCall",Qualified "Core" "UProd",Qualified "Core"
+    "UHead",Qualified "Core" "Used"]'
+  Core.HsSrcBang: ! '[Qualified "Core" "Mk_HsSrcBang"]'
+  Core.Count: ! '[Qualified "Core" "One",Qualified "Core" "Many"]'
+  Core.IdInfo: ! '[Qualified "Core" "Mk_IdInfo"]'
+  Core.Use: ! '[Qualified "Core" "Abs",Qualified "Core" "Mk_Use"]'
+  Core.UnfoldingGuidance: ! '[Qualified "Core" "UnfWhen",Qualified "Core" "UnfIfGoodArgs",Qualified
+    "Core" "UnfNever"]'
+  Core.AlgTyConRhs: ! '[Qualified "Core" "AbstractTyCon",Qualified "Core" "DataTyCon",Qualified
+    "Core" "TupleTyCon",Qualified "Core" "SumTyCon",Qualified "Core" "NewTyCon"]'
+constructorFields:
+  Core.FamilyTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core"
+    "tyConName",Qualified "Core" "tyConBinders",Qualified "Core" "tyConTyVars",Qualified
+    "Core" "tyConResKind",Qualified "Core" "tyConKind",Qualified "Core" "tyConArity",Qualified
+    "Core" "famTcResVar",Qualified "Core" "famTcFlav",Qualified "Core" "famTcParent",Qualified
+    "Core" "famTcInj"]
+  Core.HsUnpack: NonRecordFields 1
+  Core.SrcNoUnpack: NonRecordFields 0
+  Core.Word32ElemRep: NonRecordFields 0
+  Core.OpenSynFamilyTyCon: NonRecordFields 0
+  Core.ConcreteClass: RecordFields [Qualified "Core" "classSCThetaStuff",Qualified
+    "Core" "classSCSels",Qualified "Core" "classATStuff",Qualified "Core" "classOpStuff",Qualified
+    "Core" "classMinimalDefStuff"]
+  Core.AnnCoercion: NonRecordFields 1
+  Core.LiftedRep: NonRecordFields 0
+  Core.ClosedTypeFamilyFlavour: NonRecordFields 0
+  Core.ClassTyCon: NonRecordFields 2
+  Core.App: NonRecordFields 2
+  Core.PrimTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core" "tyConName",Qualified
+    "Core" "tyConBinders",Qualified "Core" "tyConResKind",Qualified "Core" "tyConKind",Qualified
+    "Core" "tyConArity",Qualified "Core" "tcRoles",Qualified "Core" "isUnlifted",Qualified
+    "Core" "primRepName"]
+  Core.DataFamilyTyCon: NonRecordFields 1
+  Core.TickBoxOpId: NonRecordFields 1
+  Core.DoubleRep: NonRecordFields 0
+  Core.Mk_Use: NonRecordFields 2
+  Core.UnboxedAlgTyCon: NonRecordFields 1
+  Core.TsFun: NonRecordFields 1
+  Core.UnliftedRep: NonRecordFields 0
+  Core.FunTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core" "tyConName",Qualified
+    "Core" "tyConBinders",Qualified "Core" "tyConResKind",Qualified "Core" "tyConKind",Qualified
+    "Core" "tyConArity",Qualified "Core" "tcRepName"]
+  Core.Mk_HsSrcBang: NonRecordFields 3
+  Core.CostCentreScope: NonRecordFields 0
+  Core.RetProd: NonRecordFields 0
+  Core.VectClass: NonRecordFields 1
+  Core.MarkedStrict: NonRecordFields 0
+  Core.TupleTyCon: RecordFields [Qualified "Core" "data_con",Qualified "Core" "tup_sort"]
+  Core.UnfNever: NonRecordFields 0
+  Core.NotOrphan: NonRecordFields 1
+  Core.Int64ElemRep: NonRecordFields 0
+  Core.AbstractTyCon: NonRecordFields 0
+  Core.Mk_Class: RecordFields [Qualified "Core" "classTyCon",Qualified "Core" "className",Qualified
+    "Core" "classKey",Qualified "Core" "classTyVars",Qualified "Core" "classFunDeps",Qualified
+    "Core" "classBody"]
+  Core.Word16ElemRep: NonRecordFields 0
+  Core.Type_: NonRecordFields 1
+  Core.Mk_StrictSig: NonRecordFields 1
+  Core.NoCafRefs: NonRecordFields 0
+  Core.AbstractClosedSynFamilyTyCon: NonRecordFields 0
+  Core.TvBndr: NonRecordFields 2
+  Core.InlineRhs: NonRecordFields 0
+  Core.Abs: NonRecordFields 0
+  Core.NotInjective: NonRecordFields 0
+  Core.TcTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core" "tyConName",Qualified
+    "Core" "tyConBinders",Qualified "Core" "tyConTyVars",Qualified "Core" "tyConResKind",Qualified
+    "Core" "tyConKind",Qualified "Core" "tyConArity",Qualified "Core" "tcTyConScopedTyVars",Qualified
+    "Core" "tcTyConFlavour"]
+  Core.BuiltInSynFamTyCon: NonRecordFields 1
+  Core.SrcUnpack: NonRecordFields 0
+  Core.LitAlt: NonRecordFields 1
+  Core.Word8ElemRep: NonRecordFields 0
+  Core.AnnApp: NonRecordFields 2
+  Core.NoSrcStrict: NonRecordFields 0
+  Core.NoRRI: NonRecordFields 0
+  Core.PromotedDataConFlavour: NonRecordFields 0
+  Core.Inferred: NonRecordFields 0
+  Core.Injective: NonRecordFields 1
+  Core.HsLazy: NonRecordFields 0
+  Core.AlgTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core" "tyConName",Qualified
+    "Core" "tyConBinders",Qualified "Core" "tyConTyVars",Qualified "Core" "tyConResKind",Qualified
+    "Core" "tyConKind",Qualified "Core" "tyConArity",Qualified "Core" "tcRoles",Qualified
+    "Core" "tyConCType",Qualified "Core" "algTcGadtSyntax",Qualified "Core" "algTcStupidTheta",Qualified
+    "Core" "algTcRhs",Qualified "Core" "algTcFields",Qualified "Core" "algTcParent"]
+  Core.Diverges: NonRecordFields 0
+  Core.AnnRec: NonRecordFields 1
+  Core.Cast: NonRecordFields 2
+  Core.SourceNote: RecordFields [Qualified "Core" "sourceSpan",Qualified "Core" "sourceName"]
+  Core.AbstractTypeFlavour: NonRecordFields 0
+  Core.Int8ElemRep: NonRecordFields 0
+  Core.Exported: NonRecordFields 0
+  Core.DCR: RecordFields [Qualified "Core" "dcr_wrap_id",Qualified "Core" "dcr_boxer",Qualified
+    "Core" "dcr_arg_tys",Qualified "Core" "dcr_stricts",Qualified "Core" "dcr_bangs"]
+  Core.RecSelData: NonRecordFields 1
+  Core.SynonymTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core"
+    "tyConName",Qualified "Core" "tyConBinders",Qualified "Core" "tyConTyVars",Qualified
+    "Core" "tyConResKind",Qualified "Core" "tyConKind",Qualified "Core" "tyConArity",Qualified
+    "Core" "tcRoles",Qualified "Core" "synTcRhs",Qualified "Core" "synIsTau",Qualified
+    "Core" "synIsFamFree"]
+  Core.FloatElemRep: NonRecordFields 0
+  Core.MkData: RecordFields [Qualified "Core" "dcName",Qualified "Core" "dcUnique",Qualified
+    "Core" "dcTag",Qualified "Core" "dcVanilla",Qualified "Core" "dcUnivTyVars",Qualified
+    "Core" "dcExTyVars",Qualified "Core" "dcUserTyVarBinders",Qualified "Core" "dcEqSpec",Qualified
+    "Core" "dcOtherTheta",Qualified "Core" "dcStupidTheta",Qualified "Core" "dcOrigArgTys",Qualified
+    "Core" "dcOrigResTy",Qualified "Core" "dcSrcBangs",Qualified "Core" "dcFields",Qualified
+    "Core" "dcWorkId",Qualified "Core" "dcRep",Qualified "Core" "dcRepArity",Qualified
+    "Core" "dcSourceArity",Qualified "Core" "dcRepTyCon",Qualified "Core" "dcRepType",Qualified
+    "Core" "dcInfix",Qualified "Core" "dcPromoted"]
+  Core.DataConWorkId: NonRecordFields 1
+  Core.InlineCompulsory: NonRecordFields 0
+  Core.HpcTick: RecordFields [Qualified "Core" "tickModule",Qualified "Core" "tickId"]
+  Core.RV2: RecordFields [Qualified "Core" "envL",Qualified "Core" "envR",Qualified
+    "Core" "in_scope"]
+  Core.Rule: RecordFields [Qualified "Core" "ru_name",Qualified "Core" "ru_act",Qualified
+    "Core" "ru_fn",Qualified "Core" "ru_rough",Qualified "Core" "ru_bndrs",Qualified
+    "Core" "ru_args",Qualified "Core" "ru_rhs",Qualified "Core" "ru_auto",Qualified
+    "Core" "ru_origin",Qualified "Core" "ru_orphan",Qualified "Core" "ru_local"]
+  Core.JD: RecordFields [Qualified "Core" "sd",Qualified "Core" "ud"]
+  Core.ThrowsExn: NonRecordFields 0
+  Core.Mk_TcTyVar: RecordFields [Qualified "Core" "varName",Qualified "Core" "realUnique",Qualified
+    "Core" "varType",Qualified "Core" "tc_tv_details"]
+  Core.Lazy: NonRecordFields 0
+  Core.Dunno: NonRecordFields 1
+  Core.RecSelId: RecordFields [Qualified "Core" "sel_tycon",Qualified "Core" "sel_naughty"]
+  Core.VoidRep: NonRecordFields 0
+  Core.ClassFlavour: NonRecordFields 0
+  Core.DoubleElemRep: NonRecordFields 0
+  Core.DataFamilyFlavour: NonRecordFields 0
+  Core.NewTyCon: RecordFields [Qualified "Core" "data_con",Qualified "Core" "nt_rhs",Qualified
+    "Core" "nt_etad_rhs",Qualified "Core" "nt_co"]
+  Core.Breakpoint: RecordFields [Qualified "Core" "breakpointId",Qualified "Core"
+    "breakpointFVs"]
+  Core.AnonTCB: NonRecordFields 0
+  Core.TypeSynonymFlavour: NonRecordFields 0
+  Core.Mk_Var: NonRecordFields 1
+  Core.Rec: NonRecordFields 1
+  Core.CoVarId: NonRecordFields 0
+  Core.SumTyCon: RecordFields [Qualified "Core" "data_cons"]
+  Core.AnnTick: NonRecordFields 2
+  Core.VectType: NonRecordFields 3
+  Core.ATI: NonRecordFields 2
+  Core.AddrRep: NonRecordFields 0
+  Core.NoDataConRep: NonRecordFields 0
+  Core.SrcLazy: NonRecordFields 0
+  Core.IntRep: NonRecordFields 0
+  Core.Mk_KillFlags: RecordFields [Qualified "Core" "kf_abs",Qualified "Core" "kf_used_once",Qualified
+    "Core" "kf_called_once"]
+  Core.AnnVar: NonRecordFields 1
+  Core.Case: NonRecordFields 4
+  Core.Mk_DmdType: NonRecordFields 3
+  Core.SCall: NonRecordFields 1
+  Core.RC: NonRecordFields 2
+  Core.MayHaveCafRefs: NonRecordFields 0
+  Core.NewtypeFlavour: NonRecordFields 0
+  Core.AnnLam: NonRecordFields 2
+  Core.UnfWhen: RecordFields [Qualified "Core" "ug_arity",Qualified "Core" "ug_unsat_ok",Qualified
+    "Core" "ug_boring_ok"]
+  Core.AnnType: NonRecordFields 1
+  Core.Mk_IsOrphan: NonRecordFields 0
+  Core.FCallId: NonRecordFields 1
+  Core.NoSrcUnpack: NonRecordFields 0
+  Core.Required: NonRecordFields 0
+  Core.WordRep: NonRecordFields 0
+  Core.VecElem: NonRecordFields 1
+  Core.NeverLevityPolymorphic: NonRecordFields 0
+  Core.Lit: NonRecordFields 1
+  Core.SrcStrict: NonRecordFields 0
+  Core.Mk_TyVar: RecordFields [Qualified "Core" "varName",Qualified "Core" "realUnique",Qualified
+    "Core" "varType"]
+  Core.DataAlt: NonRecordFields 1
+  Core.SProd: NonRecordFields 1
+  Core.AnnNonRec: NonRecordFields 2
+  Core.Specified: NonRecordFields 0
+  Core.Int16ElemRep: NonRecordFields 0
+  Core.Mk_IdInfo: RecordFields [Qualified "Core" "arityInfo",Qualified "Core" "ruleInfo",Qualified
+    "Core" "unfoldingInfo",Qualified "Core" "cafInfo",Qualified "Core" "oneShotInfo",Qualified
+    "Core" "inlinePragInfo",Qualified "Core" "occInfo",Qualified "Core" "strictnessInfo",Qualified
+    "Core" "demandInfo",Qualified "Core" "callArityInfo",Qualified "Core" "levityInfo"]
+  Core.Mk_RuleEnv: RecordFields [Qualified "Core" "re_base",Qualified "Core" "re_visible_orphs"]
+  Core.NotMarkedStrict: NonRecordFields 0
+  Core.Word64ElemRep: NonRecordFields 0
+  Core.OpenTypeFamilyFlavour: NonRecordFields 0
+  Core.TsUnk: NonRecordFields 0
+  Core.DataTyCon: RecordFields [Qualified "Core" "data_cons",Qualified "Core" "is_enum"]
+  Core.PlaceRuntime: NonRecordFields 0
+  Core.Used: NonRecordFields 0
+  Core.MkPatSyn: RecordFields [Qualified "Core" "psName",Qualified "Core" "psUnique",Qualified
+    "Core" "psArgs",Qualified "Core" "psArity",Qualified "Core" "psInfix",Qualified
+    "Core" "psFieldLabels",Qualified "Core" "psUnivTyVars",Qualified "Core" "psReqTheta",Qualified
+    "Core" "psExTyVars",Qualified "Core" "psProvTheta",Qualified "Core" "psResultTy",Qualified
+    "Core" "psMatcher",Qualified "Core" "psBuilder"]
+  Core.FloatRep: NonRecordFields 0
+  Core.RecSelPatSyn: NonRecordFields 1
+  Core.Mk_ExnStr: NonRecordFields 0
+  Core.UCall: NonRecordFields 2
+  Core.ClosedSynFamilyTyCon: NonRecordFields 1
+  Core.VecRep: NonRecordFields 2
+  Core.BuiltinRule: RecordFields [Qualified "Core" "ru_name",Qualified "Core" "ru_fn",Qualified
+    "Core" "ru_nargs",Qualified "Core" "ru_try"]
+  Core.TickBox: NonRecordFields 2
+  Core.Lam: NonRecordFields 2
+  Core.PromotedDataCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core"
+    "tyConName",Qualified "Core" "tyConBinders",Qualified "Core" "tyConResKind",Qualified
+    "Core" "tyConKind",Qualified "Core" "tyConArity",Qualified "Core" "tcRoles",Qualified
+    "Core" "dataCon",Qualified "Core" "tcRepName",Qualified "Core" "promDcRepInfo"]
+  Core.NoCPR: NonRecordFields 0
+  Core.HsStrict: NonRecordFields 0
+  Core.NotExported: NonRecordFields 0
+  Core.RetSum: NonRecordFields 1
+  Core.AnnLit: NonRecordFields 1
+  Core.Coercion: NonRecordFields 1
+  Core.Mk_EqSpec: NonRecordFields 2
+  Core.LocalId: NonRecordFields 1
+  Core.Tick: NonRecordFields 2
+  Core.HeadStr: NonRecordFields 0
+  Core.DataTypeFlavour: NonRecordFields 0
+  Core.Let: NonRecordFields 2
+  Core.InScope: NonRecordFields 2
+  Core.Mk_DFunId: NonRecordFields 1
+  Core.AnnCase: NonRecordFields 4
+  Core.DataFamInstTyCon: NonRecordFields 3
+  Core.UHead: NonRecordFields 0
+  Core.TupleFlavour: NonRecordFields 1
+  Core.NoVect: NonRecordFields 1
+  Core.AbstractClass: NonRecordFields 0
+  Core.GlobalId: NonRecordFields 0
+  Core.Int64Rep: NonRecordFields 0
+  Core.SumFlavour: NonRecordFields 0
+  Core.UnfIfGoodArgs: RecordFields [Qualified "Core" "ug_args",Qualified "Core" "ug_size",Qualified
+    "Core" "ug_res"]
+  Core.Mk_JoinId: NonRecordFields 1
+  Core.TsProd: NonRecordFields 1
+  Core.NamedTCB: NonRecordFields 1
+  Core.TB: NonRecordFields 2
+  Core.DEFAULT: NonRecordFields 0
+  Core.VecCount: NonRecordFields 1
+  Core.PlaceCostCentre: NonRecordFields 0
+  Core.ProfNote: RecordFields [Qualified "Core" "profNoteCC",Qualified "Core" "profNoteCount",Qualified
+    "Core" "profNoteScope"]
+  Core.NoScope: NonRecordFields 0
+  Core.NonRec: NonRecordFields 2
+  Core.DataConWrapId: NonRecordFields 1
+  Core.HyperStr: NonRecordFields 0
+  Core.Many: NonRecordFields 0
+  Core.Word64Rep: NonRecordFields 0
+  Core.RuntimeRep: NonRecordFields 1
+  Core.VanStr: NonRecordFields 0
+  Core.ClassOpId: NonRecordFields 1
+  Core.InlineStable: NonRecordFields 0
+  Core.UProd: NonRecordFields 1
+  Core.VectInst: NonRecordFields 1
+  Core.AnnLet: NonRecordFields 2
+  Core.AnnCast: NonRecordFields 2
+  Core.NoLevityInfo: NonRecordFields 0
+  Core.VanillaId: NonRecordFields 0
+  Core.VanillaAlgTyCon: NonRecordFields 1
+  Core.Mk_Str: NonRecordFields 2
+  Core.Vect: NonRecordFields 2
+  Core.One: NonRecordFields 0
+  Core.Mk_Id: RecordFields [Qualified "Core" "varName",Qualified "Core" "realUnique",Qualified
+    "Core" "varType",Qualified "Core" "idScope",Qualified "Core" "id_details",Qualified
+    "Core" "id_info"]
+  Core.BuiltInTypeFlavour: NonRecordFields 0
+  Core.PlaceNonLam: NonRecordFields 0
+  Core.PrimOpId: NonRecordFields 1
+  Core.SoftScope: NonRecordFields 0
+  Core.Int32ElemRep: NonRecordFields 0
+recordFieldTypes:
+  Core.ru_nargs: Qualified "Core" "CoreRule"
+  Core.classTyCon: Qualified "Core" "Class"
+  Core.ug_boring_ok: Qualified "Core" "UnfoldingGuidance"
+  Core.envL: Qualified "Core" "RnEnv2"
+  Core.classKey: Qualified "Core" "Class"
+  Core.arityInfo: Qualified "Core" "IdInfo"
+  Core.algTcParent: Qualified "Core" "TyCon"
+  Core.ru_rhs: Qualified "Core" "CoreRule"
+  Core.nt_co: Qualified "Core" "AlgTyConRhs"
+  Core.sourceSpan: Qualified "Core" "Tickish"
+  Core.ru_bndrs: Qualified "Core" "CoreRule"
+  Core.ud: Qualified "Core" "JointDmd"
+  Core.dcExTyVars: Qualified "Core" "DataCon"
+  Core.occInfo: Qualified "Core" "IdInfo"
+  Core.realUnique: Qualified "Core" "Var"
+  Core.demandInfo: Qualified "Core" "IdInfo"
+  Core.sel_tycon: Qualified "Core" "IdDetails"
+  Core.dataCon: Qualified "Core" "TyCon"
+  Core.algTcGadtSyntax: Qualified "Core" "TyCon"
+  Core.psBuilder: Qualified "Core" "PatSyn"
+  Core.cafInfo: Qualified "Core" "IdInfo"
+  Core.kf_abs: Qualified "Core" "KillFlags"
+  Core.ru_orphan: Qualified "Core" "CoreRule"
+  Core.dcr_stricts: Qualified "Core" "DataConRep"
+  Core.tc_tv_details: Qualified "Core" "Var"
+  Core.dcRepTyCon: Qualified "Core" "DataCon"
+  Core.dcInfix: Qualified "Core" "DataCon"
+  Core.re_visible_orphs: Qualified "Core" "RuleEnv"
+  Core.psMatcher: Qualified "Core" "PatSyn"
+  Core.ru_try: Qualified "Core" "CoreRule"
+  Core.ru_args: Qualified "Core" "CoreRule"
+  Core.ru_auto: Qualified "Core" "CoreRule"
+  Core.tickModule: Qualified "Core" "Tickish"
+  Core.sd: Qualified "Core" "JointDmd"
+  Core.psResultTy: Qualified "Core" "PatSyn"
+  Core.isUnlifted: Qualified "Core" "TyCon"
+  Core.ruleInfo: Qualified "Core" "IdInfo"
+  Core.psUnique: Qualified "Core" "PatSyn"
+  Core.dcRep: Qualified "Core" "DataCon"
+  Core.dcName: Qualified "Core" "DataCon"
+  Core.classSCThetaStuff: Qualified "Core" "ClassBody"
+  Core.famTcFlav: Qualified "Core" "TyCon"
+  Core.breakpointFVs: Qualified "Core" "Tickish"
+  Core.classMinimalDefStuff: Qualified "Core" "ClassBody"
+  Core.dcUnivTyVars: Qualified "Core" "DataCon"
+  Core.profNoteCount: Qualified "Core" "Tickish"
+  Core.tyConName: Qualified "Core" "TyCon"
+  Core.tickId: Qualified "Core" "Tickish"
+  Core.sel_naughty: Qualified "Core" "IdDetails"
+  Core.dcPromoted: Qualified "Core" "DataCon"
+  Core.tcTyConScopedTyVars: Qualified "Core" "TyCon"
+  Core.re_base: Qualified "Core" "RuleEnv"
+  Core.classTyVars: Qualified "Core" "Class"
+  Core.kf_used_once: Qualified "Core" "KillFlags"
+  Core.classBody: Qualified "Core" "Class"
+  Core.data_cons: Qualified "Core" "AlgTyConRhs"
+  Core.dcFields: Qualified "Core" "DataCon"
+  Core.dcEqSpec: Qualified "Core" "DataCon"
+  Core.ru_act: Qualified "Core" "CoreRule"
+  Core.strictnessInfo: Qualified "Core" "IdInfo"
+  Core.breakpointId: Qualified "Core" "Tickish"
+  Core.dcr_bangs: Qualified "Core" "DataConRep"
+  Core.profNoteCC: Qualified "Core" "Tickish"
+  Core.tyConResKind: Qualified "Core" "TyCon"
+  Core.inlinePragInfo: Qualified "Core" "IdInfo"
+  Core.dcWorkId: Qualified "Core" "DataCon"
+  Core.psInfix: Qualified "Core" "PatSyn"
+  Core.classOpStuff: Qualified "Core" "ClassBody"
+  Core.psProvTheta: Qualified "Core" "PatSyn"
+  Core.nt_rhs: Qualified "Core" "AlgTyConRhs"
+  Core.psArity: Qualified "Core" "PatSyn"
+  Core.psArgs: Qualified "Core" "PatSyn"
+  Core.ru_origin: Qualified "Core" "CoreRule"
+  Core.dcStupidTheta: Qualified "Core" "DataCon"
+  Core.classATStuff: Qualified "Core" "ClassBody"
+  Core.famTcParent: Qualified "Core" "TyCon"
+  Core.classFunDeps: Qualified "Core" "Class"
+  Core.kf_called_once: Qualified "Core" "KillFlags"
+  Core.psReqTheta: Qualified "Core" "PatSyn"
+  Core.profNoteScope: Qualified "Core" "Tickish"
+  Core.ug_res: Qualified "Core" "UnfoldingGuidance"
+  Core.className: Qualified "Core" "Class"
+  Core.sourceName: Qualified "Core" "Tickish"
+  Core.tyConBinders: Qualified "Core" "TyCon"
+  Core.ug_arity: Qualified "Core" "UnfoldingGuidance"
+  Core.ug_args: Qualified "Core" "UnfoldingGuidance"
+  Core.synTcRhs: Qualified "Core" "TyCon"
+  Core.in_scope: Qualified "Core" "RnEnv2"
+  Core.varName: Qualified "Core" "Var"
+  Core.oneShotInfo: Qualified "Core" "IdInfo"
+  Core.nt_etad_rhs: Qualified "Core" "AlgTyConRhs"
+  Core.ru_name: Qualified "Core" "CoreRule"
+  Core.ru_rough: Qualified "Core" "CoreRule"
+  Core.envR: Qualified "Core" "RnEnv2"
+  Core.classSCSels: Qualified "Core" "ClassBody"
+  Core.idScope: Qualified "Core" "Var"
+  Core.dcRepArity: Qualified "Core" "DataCon"
+  Core.tcRepName: Qualified "Core" "TyCon"
+  Core.dcOtherTheta: Qualified "Core" "DataCon"
+  Core.tyConKind: Qualified "Core" "TyCon"
+  Core.dcr_arg_tys: Qualified "Core" "DataConRep"
+  Core.tcRoles: Qualified "Core" "TyCon"
+  Core.ug_size: Qualified "Core" "UnfoldingGuidance"
+  Core.tyConArity: Qualified "Core" "TyCon"
+  Core.ru_fn: Qualified "Core" "CoreRule"
+  Core.dcRepType: Qualified "Core" "DataCon"
+  Core.famTcInj: Qualified "Core" "TyCon"
+  Core.synIsFamFree: Qualified "Core" "TyCon"
+  Core.id_details: Qualified "Core" "Var"
+  Core.dcr_boxer: Qualified "Core" "DataConRep"
+  Core.dcOrigResTy: Qualified "Core" "DataCon"
+  Core.psExTyVars: Qualified "Core" "PatSyn"
+  Core.varType: Qualified "Core" "Var"
+  Core.dcTag: Qualified "Core" "DataCon"
+  Core.levityInfo: Qualified "Core" "IdInfo"
+  Core.dcSourceArity: Qualified "Core" "DataCon"
+  Core.tcTyConFlavour: Qualified "Core" "TyCon"
+  Core.ru_local: Qualified "Core" "CoreRule"
+  Core.data_con: Qualified "Core" "AlgTyConRhs"
+  Core.is_enum: Qualified "Core" "AlgTyConRhs"
+  Core.synIsTau: Qualified "Core" "TyCon"
+  Core.primRepName: Qualified "Core" "TyCon"
+  Core.algTcStupidTheta: Qualified "Core" "TyCon"
+  Core.promDcRepInfo: Qualified "Core" "TyCon"
+  Core.dcOrigArgTys: Qualified "Core" "DataCon"
+  Core.dcVanilla: Qualified "Core" "DataCon"
+  Core.ug_unsat_ok: Qualified "Core" "UnfoldingGuidance"
+  Core.callArityInfo: Qualified "Core" "IdInfo"
+  Core.dcUserTyVarBinders: Qualified "Core" "DataCon"
+  Core.tup_sort: Qualified "Core" "AlgTyConRhs"
+  Core.tyConUnique: Qualified "Core" "TyCon"
+  Core.famTcResVar: Qualified "Core" "TyCon"
+  Core.dcSrcBangs: Qualified "Core" "DataCon"
+  Core.unfoldingInfo: Qualified "Core" "IdInfo"
+  Core.algTcFields: Qualified "Core" "TyCon"
+  Core.id_info: Qualified "Core" "Var"
+  Core.dcUnique: Qualified "Core" "DataCon"
+  Core.tyConTyVars: Qualified "Core" "TyCon"
+  Core.psFieldLabels: Qualified "Core" "PatSyn"
+  Core.psUnivTyVars: Qualified "Core" "PatSyn"
+  Core.psName: Qualified "Core" "PatSyn"
+  Core.algTcRhs: Qualified "Core" "TyCon"
+  Core.tyConCType: Qualified "Core" "TyCon"
+  Core.dcr_wrap_id: Qualified "Core" "DataConRep"
+constructorTypes:
+  Core.FamilyTyCon: Qualified "Core" "TyCon"
+  Core.HsUnpack: Qualified "Core" "HsImplBang"
+  Core.SrcNoUnpack: Qualified "Core" "SrcUnpackedness"
+  Core.Word32ElemRep: Qualified "Core" "PrimElemRep"
+  Core.OpenSynFamilyTyCon: Qualified "Core" "FamTyConFlav"
+  Core.ConcreteClass: Qualified "Core" "ClassBody"
+  Core.AnnCoercion: Qualified "Core" "AnnExpr'"
+  Core.LiftedRep: Qualified "Core" "PrimRep"
+  Core.ClosedTypeFamilyFlavour: Qualified "Core" "TyConFlavour"
+  Core.ClassTyCon: Qualified "Core" "AlgTyConFlav"
+  Core.App: Qualified "Core" "Expr"
+  Core.PrimTyCon: Qualified "Core" "TyCon"
+  Core.DataFamilyTyCon: Qualified "Core" "FamTyConFlav"
+  Core.TickBoxOpId: Qualified "Core" "IdDetails"
+  Core.DoubleRep: Qualified "Core" "PrimRep"
+  Core.Mk_Use: Qualified "Core" "Use"
+  Core.UnboxedAlgTyCon: Qualified "Core" "AlgTyConFlav"
+  Core.TsFun: Qualified "Core" "TypeShape"
+  Core.UnliftedRep: Qualified "Core" "PrimRep"
+  Core.FunTyCon: Qualified "Core" "TyCon"
+  Core.Mk_HsSrcBang: Qualified "Core" "HsSrcBang"
+  Core.CostCentreScope: Qualified "Core" "TickishScoping"
+  Core.RetProd: Qualified "Core" "CPRResult"
+  Core.VectClass: Qualified "Core" "CoreVect"
+  Core.MarkedStrict: Qualified "Core" "StrictnessMark"
+  Core.TupleTyCon: Qualified "Core" "AlgTyConRhs"
+  Core.UnfNever: Qualified "Core" "UnfoldingGuidance"
+  Core.NotOrphan: Qualified "Core" "IsOrphan"
+  Core.Int64ElemRep: Qualified "Core" "PrimElemRep"
+  Core.AbstractTyCon: Qualified "Core" "AlgTyConRhs"
+  Core.Mk_Class: Qualified "Core" "Class"
+  Core.Word16ElemRep: Qualified "Core" "PrimElemRep"
+  Core.Type_: Qualified "Core" "Expr"
+  Core.Mk_StrictSig: Qualified "Core" "StrictSig"
+  Core.NoCafRefs: Qualified "Core" "CafInfo"
+  Core.AbstractClosedSynFamilyTyCon: Qualified "Core" "FamTyConFlav"
+  Core.TvBndr: Qualified "Core" "TyVarBndr"
+  Core.InlineRhs: Qualified "Core" "UnfoldingSource"
+  Core.Abs: Qualified "Core" "Use"
+  Core.NotInjective: Qualified "Core" "Injectivity"
+  Core.TcTyCon: Qualified "Core" "TyCon"
+  Core.BuiltInSynFamTyCon: Qualified "Core" "FamTyConFlav"
+  Core.SrcUnpack: Qualified "Core" "SrcUnpackedness"
+  Core.LitAlt: Qualified "Core" "AltCon"
+  Core.Word8ElemRep: Qualified "Core" "PrimElemRep"
+  Core.AnnApp: Qualified "Core" "AnnExpr'"
+  Core.NoSrcStrict: Qualified "Core" "SrcStrictness"
+  Core.NoRRI: Qualified "Core" "RuntimeRepInfo"
+  Core.PromotedDataConFlavour: Qualified "Core" "TyConFlavour"
+  Core.Inferred: Qualified "Core" "ArgFlag"
+  Core.Injective: Qualified "Core" "Injectivity"
+  Core.HsLazy: Qualified "Core" "HsImplBang"
+  Core.AlgTyCon: Qualified "Core" "TyCon"
+  Core.Diverges: Qualified "Core" "Termination"
+  Core.AnnRec: Qualified "Core" "AnnBind"
+  Core.Cast: Qualified "Core" "Expr"
+  Core.SourceNote: Qualified "Core" "Tickish"
+  Core.AbstractTypeFlavour: Qualified "Core" "TyConFlavour"
+  Core.Int8ElemRep: Qualified "Core" "PrimElemRep"
+  Core.Exported: Qualified "Core" "ExportFlag"
+  Core.DCR: Qualified "Core" "DataConRep"
+  Core.RecSelData: Qualified "Core" "RecSelParent"
+  Core.SynonymTyCon: Qualified "Core" "TyCon"
+  Core.FloatElemRep: Qualified "Core" "PrimElemRep"
+  Core.MkData: Qualified "Core" "DataCon"
+  Core.DataConWorkId: Qualified "Core" "IdDetails"
+  Core.InlineCompulsory: Qualified "Core" "UnfoldingSource"
+  Core.HpcTick: Qualified "Core" "Tickish"
+  Core.RV2: Qualified "Core" "RnEnv2"
+  Core.Rule: Qualified "Core" "CoreRule"
+  Core.JD: Qualified "Core" "JointDmd"
+  Core.ThrowsExn: Qualified "Core" "Termination"
+  Core.Mk_TcTyVar: Qualified "Core" "Var"
+  Core.Lazy: Qualified "Core" "Str"
+  Core.Dunno: Qualified "Core" "Termination"
+  Core.RecSelId: Qualified "Core" "IdDetails"
+  Core.VoidRep: Qualified "Core" "PrimRep"
+  Core.ClassFlavour: Qualified "Core" "TyConFlavour"
+  Core.DoubleElemRep: Qualified "Core" "PrimElemRep"
+  Core.DataFamilyFlavour: Qualified "Core" "TyConFlavour"
+  Core.NewTyCon: Qualified "Core" "AlgTyConRhs"
+  Core.Breakpoint: Qualified "Core" "Tickish"
+  Core.AnonTCB: Qualified "Core" "TyConBndrVis"
+  Core.TypeSynonymFlavour: Qualified "Core" "TyConFlavour"
+  Core.Mk_Var: Qualified "Core" "Expr"
+  Core.Rec: Qualified "Core" "Bind"
+  Core.CoVarId: Qualified "Core" "IdDetails"
+  Core.SumTyCon: Qualified "Core" "AlgTyConRhs"
+  Core.AnnTick: Qualified "Core" "AnnExpr'"
+  Core.VectType: Qualified "Core" "CoreVect"
+  Core.ATI: Qualified "Core" "ClassATItem"
+  Core.AddrRep: Qualified "Core" "PrimRep"
+  Core.NoDataConRep: Qualified "Core" "DataConRep"
+  Core.SrcLazy: Qualified "Core" "SrcStrictness"
+  Core.IntRep: Qualified "Core" "PrimRep"
+  Core.Mk_KillFlags: Qualified "Core" "KillFlags"
+  Core.AnnVar: Qualified "Core" "AnnExpr'"
+  Core.Case: Qualified "Core" "Expr"
+  Core.Mk_DmdType: Qualified "Core" "DmdType"
+  Core.SCall: Qualified "Core" "StrDmd"
+  Core.RC: Qualified "Core" "RecTcChecker"
+  Core.MayHaveCafRefs: Qualified "Core" "CafInfo"
+  Core.NewtypeFlavour: Qualified "Core" "TyConFlavour"
+  Core.AnnLam: Qualified "Core" "AnnExpr'"
+  Core.UnfWhen: Qualified "Core" "UnfoldingGuidance"
+  Core.AnnType: Qualified "Core" "AnnExpr'"
+  Core.Mk_IsOrphan: Qualified "Core" "IsOrphan"
+  Core.FCallId: Qualified "Core" "IdDetails"
+  Core.NoSrcUnpack: Qualified "Core" "SrcUnpackedness"
+  Core.Required: Qualified "Core" "ArgFlag"
+  Core.WordRep: Qualified "Core" "PrimRep"
+  Core.VecElem: Qualified "Core" "RuntimeRepInfo"
+  Core.NeverLevityPolymorphic: Qualified "Core" "LevityInfo"
+  Core.Lit: Qualified "Core" "Expr"
+  Core.SrcStrict: Qualified "Core" "SrcStrictness"
+  Core.Mk_TyVar: Qualified "Core" "Var"
+  Core.DataAlt: Qualified "Core" "AltCon"
+  Core.SProd: Qualified "Core" "StrDmd"
+  Core.AnnNonRec: Qualified "Core" "AnnBind"
+  Core.Specified: Qualified "Core" "ArgFlag"
+  Core.Int16ElemRep: Qualified "Core" "PrimElemRep"
+  Core.Mk_IdInfo: Qualified "Core" "IdInfo"
+  Core.Mk_RuleEnv: Qualified "Core" "RuleEnv"
+  Core.NotMarkedStrict: Qualified "Core" "StrictnessMark"
+  Core.Word64ElemRep: Qualified "Core" "PrimElemRep"
+  Core.OpenTypeFamilyFlavour: Qualified "Core" "TyConFlavour"
+  Core.TsUnk: Qualified "Core" "TypeShape"
+  Core.DataTyCon: Qualified "Core" "AlgTyConRhs"
+  Core.PlaceRuntime: Qualified "Core" "TickishPlacement"
+  Core.Used: Qualified "Core" "UseDmd"
+  Core.MkPatSyn: Qualified "Core" "PatSyn"
+  Core.FloatRep: Qualified "Core" "PrimRep"
+  Core.RecSelPatSyn: Qualified "Core" "RecSelParent"
+  Core.Mk_ExnStr: Qualified "Core" "ExnStr"
+  Core.UCall: Qualified "Core" "UseDmd"
+  Core.ClosedSynFamilyTyCon: Qualified "Core" "FamTyConFlav"
+  Core.VecRep: Qualified "Core" "PrimRep"
+  Core.BuiltinRule: Qualified "Core" "CoreRule"
+  Core.TickBox: Qualified "Core" "TickBoxOp"
+  Core.Lam: Qualified "Core" "Expr"
+  Core.PromotedDataCon: Qualified "Core" "TyCon"
+  Core.NoCPR: Qualified "Core" "CPRResult"
+  Core.HsStrict: Qualified "Core" "HsImplBang"
+  Core.NotExported: Qualified "Core" "ExportFlag"
+  Core.RetSum: Qualified "Core" "CPRResult"
+  Core.AnnLit: Qualified "Core" "AnnExpr'"
+  Core.Coercion: Qualified "Core" "Expr"
+  Core.Mk_EqSpec: Qualified "Core" "EqSpec"
+  Core.LocalId: Qualified "Core" "IdScope"
+  Core.Tick: Qualified "Core" "Expr"
+  Core.HeadStr: Qualified "Core" "StrDmd"
+  Core.DataTypeFlavour: Qualified "Core" "TyConFlavour"
+  Core.Let: Qualified "Core" "Expr"
+  Core.InScope: Qualified "Core" "InScopeSet"
+  Core.Mk_DFunId: Qualified "Core" "IdDetails"
+  Core.AnnCase: Qualified "Core" "AnnExpr'"
+  Core.DataFamInstTyCon: Qualified "Core" "AlgTyConFlav"
+  Core.UHead: Qualified "Core" "UseDmd"
+  Core.TupleFlavour: Qualified "Core" "TyConFlavour"
+  Core.NoVect: Qualified "Core" "CoreVect"
+  Core.AbstractClass: Qualified "Core" "ClassBody"
+  Core.GlobalId: Qualified "Core" "IdScope"
+  Core.Int64Rep: Qualified "Core" "PrimRep"
+  Core.SumFlavour: Qualified "Core" "TyConFlavour"
+  Core.UnfIfGoodArgs: Qualified "Core" "UnfoldingGuidance"
+  Core.Mk_JoinId: Qualified "Core" "IdDetails"
+  Core.TsProd: Qualified "Core" "TypeShape"
+  Core.NamedTCB: Qualified "Core" "TyConBndrVis"
+  Core.TB: Qualified "Core" "TaggedBndr"
+  Core.DEFAULT: Qualified "Core" "AltCon"
+  Core.VecCount: Qualified "Core" "RuntimeRepInfo"
+  Core.PlaceCostCentre: Qualified "Core" "TickishPlacement"
+  Core.ProfNote: Qualified "Core" "Tickish"
+  Core.NoScope: Qualified "Core" "TickishScoping"
+  Core.NonRec: Qualified "Core" "Bind"
+  Core.DataConWrapId: Qualified "Core" "IdDetails"
+  Core.HyperStr: Qualified "Core" "StrDmd"
+  Core.Many: Qualified "Core" "Count"
+  Core.Word64Rep: Qualified "Core" "PrimRep"
+  Core.RuntimeRep: Qualified "Core" "RuntimeRepInfo"
+  Core.VanStr: Qualified "Core" "ExnStr"
+  Core.ClassOpId: Qualified "Core" "IdDetails"
+  Core.InlineStable: Qualified "Core" "UnfoldingSource"
+  Core.UProd: Qualified "Core" "UseDmd"
+  Core.VectInst: Qualified "Core" "CoreVect"
+  Core.AnnLet: Qualified "Core" "AnnExpr'"
+  Core.AnnCast: Qualified "Core" "AnnExpr'"
+  Core.NoLevityInfo: Qualified "Core" "LevityInfo"
+  Core.VanillaId: Qualified "Core" "IdDetails"
+  Core.VanillaAlgTyCon: Qualified "Core" "AlgTyConFlav"
+  Core.Mk_Str: Qualified "Core" "Str"
+  Core.Vect: Qualified "Core" "CoreVect"
+  Core.One: Qualified "Core" "Count"
+  Core.Mk_Id: Qualified "Core" "Var"
+  Core.BuiltInTypeFlavour: Qualified "Core" "TyConFlavour"
+  Core.PlaceNonLam: Qualified "Core" "TickishPlacement"
+  Core.PrimOpId: Qualified "Core" "IdDetails"
+  Core.SoftScope: Qualified "Core" "TickishScoping"
+  Core.Int32ElemRep: Qualified "Core" "PrimElemRep"

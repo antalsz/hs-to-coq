@@ -1,51 +1,57 @@
-# axiomatize module DataCon
-
-# redefine Inductive DataCon.HsImplBang : Type := .
-# redefine Inductive DataCon.EqSpec     : Type := .
-# redefine Inductive DataCon.DataConRep : Type := .
-# redefine Inductive DataCon.DataCon    : Type := .
 
 # no Word8
-skip DataCon.dataConIdentity
+skip Core.dataConIdentity
 
 # skipped fcns as a result of eliminating type information
-# skip DataCon.dataConRepArgTys
 # generally these fcns return units so are easy to replace
-#not skipping b/c we axiomatized this module
-# skip DataCon.buildAlgTyCon
-# skip DataCon.classDataCon
-# skip DataCon.dataFieldType
-# skip DataCon.dataConImplicitTyThings
-# skip DataCon.dataConInstOrigArgTys
-# skip DataCon.dataConOrigTyCon
-# skip DataCon.dataConInstArgTys
-# skip DataCon.splitDataProductType_maybe
-# skip DataCon.dataConRepRepArity
-# skip DataCon.specialPromotedDc
-# skip DataCon.eqSpecPreds
-# skip DataCon.dataConTheta
+
+skip Core.dataConRepArgTys
+skip Core.buildAlgTyCon
+skip Core.classDataCon
+skip Core.dataFieldType
+skip Core.dataConImplicitTyThings
+skip Core.dataConInstOrigArgTys
+skip Core.dataConOrigTyCon
+skip Core.dataConInstArgTys
+skip Core.splitDataProductType_maybe
+skip Core.dataConRepRepArity
+skip Core.specialPromotedDc
+skip Core.eqSpecPreds
+skip Core.dataConTheta
+
 
 # still refer to TyCoRep
-# skip DataCon.dataConCanotMatch
-# skip DataCon.dataConExTyBinders
-# skip DataCon.dataConExTyVars
-# skip DataCon.dataConFieldLabels
-# skip DataCon.dataConFieldType
-# skip DataCon.dataConOrigArgTys
-# skip DataCon.dataConOrigResTy
-
-#skip module CoAxiom
-#skip module Coercion
-#skip module ForeignCall
-#skip module ListSetOps
-#skip module TyCoRep
-#skip module TyCon
-#skip module Type
-#skip module TysWiredIn
-#skip module Unify
-
-skip module Var
-
-# in Core
-skip Core.dataConWorkId
+skip Core.dataConExTyBinders
 skip Core.dataConExTyVars
+skip Core.dataConFieldType
+skip Core.dataConOrigArgTys
+skip Core.dataConOrigResTy
+skip Core.dataConInstSig
+skip Core.dataConCannotMatch
+
+skip Core.buildSynTyCon
+skip Core.dataConRepStrictness
+skip Core.dataConSig
+skip Core.dataConUserType
+skip Core.eqHsBang
+
+skip Core.mkDataCon
+skip Core.isLegacyPromotableDataCon
+skip Core.isLegacyPromotableTyCon
+skip Core.dataConEqSpec
+skip Core.substEqSpec 
+
+
+# uses enumFrom, coinductively
+## Can locally add a length argument to freshNames, and then pass it in 
+## in the call to mkCleanAnonTyConBinders
+skip Core.freshNames
+skip Core.mkCleanAnonTyConBinders
+
+#
+# Outputable.$$
+rewrite forall x y, x Outputable.$$ y = x
+rewrite forall x, Type.mkInvForAllTys x y = tt
+
+
+order Core.Uniquable__DataCon Core.Eq___DataCon_op_zsze__ Core.Eq___DataCon_op_zeze__

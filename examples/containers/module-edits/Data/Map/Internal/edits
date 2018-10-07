@@ -14,11 +14,15 @@ skip Data.Map.Internal.differenceWith
 redefine Local Definition Data.Map.Internal.Functor__Map_op_zlzd__ 
 			{k:Type}{a:Type}{b:Type}:= @functor__Map_op_zlzd__ k a b.
 
+order Data.Map.Internal.Eq1__Map Data.Map.Internal.Ord1__Map
+order Data.Map.Internal.Eq2__Map Data.Map.Internal.Ord2__Map
 order Data.Map.Internal.Eq___Map Data.Map.Internal.Ord__Map
 order Data.Map.Internal.Semigroup__Map Data.Map.Internal.Monoid__Map_mappend 
 
 order Data.Map.Internal.Functor__WhenMissing  Data.Map.Internal.Applicative__WhenMissing Data.Map.Internal.Monad__WhenMissing_op_zgzg__ Data.Map.Internal.Monad__WhenMissing_return_
 order Data.Map.Internal.Functor__WhenMatched  Data.Map.Internal.Applicative__WhenMatched Data.Map.Internal.Monad__WhenMatched_op_zgzg__ Data.Map.Internal.Monad__WhenMatched_return_
+
+order Data.Map.Internal.Functor__Map Data.Map.Internal.lmapWhenMissing
 
 # TODOs
 skip Data.Map.Internal.Eq1__Map
@@ -49,12 +53,12 @@ obligations Data.Map.Internal.link termination_by_omega
 termination Data.Map.Internal.link2 {measure (Nat.add (map_size arg_0__) (map_size arg_1__))}
 obligations Data.Map.Internal.link2 termination_by_omega
 
-termination create in Data.Map.Internal.fromDistinctAscList deferred
-termination go     in Data.Map.Internal.fromDistinctAscList deferred
-termination create in Data.Map.Internal.fromDistinctDescList deferred
-termination go     in Data.Map.Internal.fromDistinctDescList deferred
-termination create in Data.Map.Internal.fromList deferred
-termination go     in Data.Map.Internal.fromList deferred
+in Data.Map.Internal.fromDistinctAscList  termination create deferred
+in Data.Map.Internal.fromDistinctAscList  termination go     deferred
+in Data.Map.Internal.fromDistinctDescList termination create deferred
+in Data.Map.Internal.fromDistinctDescList termination go     deferred
+in Data.Map.Internal.fromList             termination create deferred
+in Data.Map.Internal.fromList             termination go     deferred
 
 rename value Data.Map.Internal.WhenMatched = Data.Map.Internal.Mk_WhenMatched
 rename value Data.Map.Internal.TraceResult = Data.Map.Internal.Mk_TraceResult

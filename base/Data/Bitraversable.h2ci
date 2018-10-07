@@ -1,0 +1,27 @@
+superclassCount:
+  Data.Bitraversable.Bitraversable: '2'
+defaultMethods:
+  Data.Bitraversable.Bitraversable: fromList [(Qualified "Data.Bitraversable" "bitraverse",Fun
+    (Inferred Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g"))])
+    (App (Qualid (Qualified "GHC.Base" "op_z2218U__")) (PosArg (Qualid (Qualified
+    "Data.Bitraversable" "bisequenceA")) :| [PosArg (App (App (Qualid (Qualified "Data.Bifunctor"
+    "bimap")) (PosArg (Qualid (Bare "f")) :| [])) (PosArg (Qualid (Bare "g")) :| []))])))]
+classTypes:
+  Data.Bitraversable.Bitraversable: fromList []
+classDefns:
+  Data.Bitraversable.Bitraversable: ClassDefinition (Qualified "Data.Bitraversable"
+    "Bitraversable") [Inferred Explicit (Ident (Bare "t")),Generalized Implicit (App
+    (Qualid (Qualified "Data.Bifunctor" "Bifunctor")) (PosArg (Qualid (Bare "t"))
+    :| [])),Generalized Implicit (App (Qualid (Qualified "Data.Bifoldable" "Bifoldable"))
+    (PosArg (Qualid (Bare "t")) :| []))] Nothing [(Qualified "Data.Bitraversable"
+    "bitraverse",Forall (Inferred Implicit (Ident (Bare "f")) :| [Inferred Implicit
+    (Ident (Bare "a")),Inferred Implicit (Ident (Bare "c")),Inferred Implicit (Ident
+    (Bare "b")),Inferred Implicit (Ident (Bare "d"))]) (Forall (Generalized Implicit
+    (App (Qualid (Qualified "GHC.Base" "Applicative")) (PosArg (Qualid (Bare "f"))
+    :| [])) :| []) (Arrow (Parens (Arrow (Qualid (Bare "a")) (App (Qualid (Bare "f"))
+    (PosArg (Qualid (Bare "c")) :| [])))) (Arrow (Parens (Arrow (Qualid (Bare "b"))
+    (App (Qualid (Bare "f")) (PosArg (Qualid (Bare "d")) :| [])))) (Arrow (App (App
+    (Qualid (Bare "t")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg (Qualid (Bare
+    "b")) :| [])) (App (Qualid (Bare "f")) (PosArg (Parens (App (App (Qualid (Bare
+    "t")) (PosArg (Qualid (Bare "c")) :| [])) (PosArg (Qualid (Bare "d")) :| [])))
+    :| [])))))))]

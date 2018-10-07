@@ -1,0 +1,30 @@
+constructors:
+  SrcLoc.GenLocated: ! '[Qualified "SrcLoc" "L"]'
+  SrcLoc.RealSrcLoc: ! '[Qualified "SrcLoc" "ASrcLoc"]'
+  SrcLoc.SrcSpan: ! '[Qualified "SrcLoc" "ARealSrcSpan",Qualified "SrcLoc" "UnhelpfulSpan"]'
+  SrcLoc.SrcLoc: ! '[Qualified "SrcLoc" "ARealSrcLoc",Qualified "SrcLoc" "UnhelpfulLoc"]'
+  SrcLoc.RealSrcSpan: ! '[Qualified "SrcLoc" "RealSrcSpan''"]'
+constructorFields:
+  SrcLoc.UnhelpfulSpan: NonRecordFields 1
+  SrcLoc.ARealSrcLoc: NonRecordFields 1
+  SrcLoc.ARealSrcSpan: NonRecordFields 1
+  SrcLoc.UnhelpfulLoc: NonRecordFields 1
+  SrcLoc.ASrcLoc: NonRecordFields 3
+  SrcLoc.RealSrcSpan': RecordFields [Qualified "SrcLoc" "srcSpanFile",Qualified "SrcLoc"
+    "srcSpanSLine",Qualified "SrcLoc" "srcSpanSCol",Qualified "SrcLoc" "srcSpanELine",Qualified
+    "SrcLoc" "srcSpanECol"]
+  SrcLoc.L: NonRecordFields 2
+recordFieldTypes:
+  SrcLoc.srcSpanFile: Qualified "SrcLoc" "RealSrcSpan"
+  SrcLoc.srcSpanSLine: Qualified "SrcLoc" "RealSrcSpan"
+  SrcLoc.srcSpanELine: Qualified "SrcLoc" "RealSrcSpan"
+  SrcLoc.srcSpanECol: Qualified "SrcLoc" "RealSrcSpan"
+  SrcLoc.srcSpanSCol: Qualified "SrcLoc" "RealSrcSpan"
+constructorTypes:
+  SrcLoc.UnhelpfulSpan: Qualified "SrcLoc" "SrcSpan"
+  SrcLoc.ARealSrcLoc: Qualified "SrcLoc" "SrcLoc"
+  SrcLoc.ARealSrcSpan: Qualified "SrcLoc" "SrcSpan"
+  SrcLoc.UnhelpfulLoc: Qualified "SrcLoc" "SrcLoc"
+  SrcLoc.ASrcLoc: Qualified "SrcLoc" "RealSrcLoc"
+  SrcLoc.RealSrcSpan': Qualified "SrcLoc" "RealSrcSpan"
+  SrcLoc.L: Qualified "SrcLoc" "GenLocated"

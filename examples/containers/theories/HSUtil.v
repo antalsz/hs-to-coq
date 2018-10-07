@@ -5,7 +5,8 @@
 Set Warnings "-notation-overridden".
 
 (* SSReflect *)
-From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
+From Coq Require Import ssreflect ssrbool ssrfun.
+From mathcomp Require Import ssrnat seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Permutations *)
@@ -280,11 +281,11 @@ Qed.
 Theorem Foldable_list_all {A} :
   all =2 @GHC.List.all A.
 Proof.
-  rewrite /all /hash_compose /compose /foldMap /Foldable__list /=
+  rewrite /all /compose /foldMap /Foldable__list /=
           /Data.Foldable.Foldable__list_foldMap /Data.Foldable.Foldable__list_foldr /=.
   move=> p; elim=> [|x xs IH] //=.
   rewrite -IH.
-  rewrite {1}/mappend /Data.Monoid.Monoid__All /=.
+  rewrite {1}/mappend /Data.SemigroupInternal.Monoid__All /=.
   case: (GHC.Base.foldr _ _ _) => //=.
 Qed.
 
@@ -303,11 +304,11 @@ Proof. by move=> *; rewrite Foldable_all_forallb. Qed.
 Theorem Foldable_list_any {A} :
   Data.Foldable.any =2 @GHC.List.any A.
 Proof.
-  rewrite /Data.Foldable.any /hash_compose /compose /foldMap /Foldable__list /=
+  rewrite /Data.Foldable.any /compose /foldMap /Foldable__list /=
           /Data.Foldable.Foldable__list_foldMap /Data.Foldable.Foldable__list_foldr /=.
   move=> p; elim=> [|x xs IH] //=.
   rewrite -IH.
-  rewrite {1}/mappend /Data.Monoid.Monoid__Any /=.
+  rewrite {1}/mappend /Data.SemigroupInternal.Monoid__Any /=.
   case: (GHC.Base.foldr _ _ _) => //=.
 Qed.
 

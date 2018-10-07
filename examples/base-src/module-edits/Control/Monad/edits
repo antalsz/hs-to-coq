@@ -1,6 +1,10 @@
 # partial
 skip Control.Monad.forever
 
+# Needs alternative
+skip Control.Monad.guard
+skip Control.Monad.mfilter
+
 # Bug in Coq, please report, also partial
 skip Control.Monad.replicateM
 skip Control.Monad.replicateM_

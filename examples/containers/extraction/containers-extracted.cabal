@@ -17,9 +17,9 @@ library
   exposed-modules:     ExtractedNumbers
   exposed-modules:     ExtractedString
 
--- the following are extracted and in src/, this list
+-- the following are extracted and in extracted-src/, this list
 -- needs to be manually maintained, e.g. with
--- find src/ -name \*.hs -printf "  exposed-modules: %f\n"|sed -e s/.hs//|sort
+-- find extracted-src/ -name \*.hs -printf "  exposed-modules: %f\n"|sed -e s/.hs//|sort
   exposed-modules: Ascii
   exposed-modules: Base
   exposed-modules: Basics
@@ -36,12 +36,13 @@ library
   exposed-modules: Const
   exposed-modules: CTZ
   exposed-modules: Datatypes
+  exposed-modules: Decimal
+  exposed-modules: DeferredFix
   exposed-modules: Either
   exposed-modules: Enum
   exposed-modules: Err
   exposed-modules: Fin
   exposed-modules: Foldable
-  exposed-modules: Functor
   exposed-modules: Identity
   exposed-modules: Internal
   exposed-modules: Internal0
@@ -52,10 +53,7 @@ library
   exposed-modules: Monoid
   exposed-modules: Nat
   exposed-modules: Ndigits
-  exposed-modules: NonEmpty
   exposed-modules: Num
-  exposed-modules: OldList
-  exposed-modules: Ord
   exposed-modules: PeanoNat
   -- exposed-modules: Plus
   exposed-modules: Popcount
@@ -64,11 +62,10 @@ library
   exposed-modules: QArith_base
   exposed-modules: Real
   exposed-modules: Ring_theory
-  exposed-modules: Semigroup
+  exposed-modules: SemigroupInternal
   exposed-modules: Specif
   exposed-modules: String
   exposed-modules: Sumbool
-  exposed-modules: Traversable
   exposed-modules: Tuple
   exposed-modules: Tuple0
   exposed-modules: Vector
@@ -85,8 +82,8 @@ library
                        base >=4.9 && <5
   build-depends:       deepseq
   build-depends:       random
-  hs-source-dirs:      .
   hs-source-dirs:      src
+  hs-source-dirs:      extracted-src
   default-language:    Haskell2010
 
 
@@ -102,7 +99,7 @@ benchmark bench-native-set
   hs-source-dirs:      .
   build-depends:       base >=4.9 && <5
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -116,7 +113,7 @@ benchmark bench-native-intset
   build-depends:       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       deepseq >= 1.1.0.0 && < 1.5
-  build-depends:       criterion  >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -131,7 +128,7 @@ benchmark bench-extracted-set
   build-depends:       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -145,7 +142,7 @@ benchmark bench-extracted-intset
   build-depends:       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
-  build-depends:       criterion >= 0.4.0 && < 1.3
+  build-depends:       criterion
   build-depends:       containers  == 0.5.11.0
   build-depends:       QuickCheck >= 2.9.2
   build-depends:       random
@@ -176,6 +173,7 @@ test-suite tests-set
 test-suite tests-intset
   type: exitcode-stdio-1.0
   main-is:             IntSetProperties.hs
+  other-modules:       IntSetValidity
   hs-source-dirs:      .
   build-depends:       QuickCheck >= 2.9.2,
                        base >=4.9 && <5

@@ -1,0 +1,9 @@
+constructors:
+  Control.Monad.Trans.Cont.ContT: ! '[Qualified "Control.Monad.Trans.Cont" "Mk_ContT"]'
+constructorFields:
+  Control.Monad.Trans.Cont.Mk_ContT: RecordFields [Qualified "Control.Monad.Trans.Cont"
+    "runContT"]
+recordFieldTypes:
+  Control.Monad.Trans.Cont.runContT: Qualified "Control.Monad.Trans.Cont" "ContT"
+constructorTypes:
+  Control.Monad.Trans.Cont.Mk_ContT: Qualified "Control.Monad.Trans.Cont" "ContT"

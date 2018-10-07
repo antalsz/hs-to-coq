@@ -1,0 +1,5 @@
+# Needs alternative
+skip Data.Functor.Reverse.MonadPlus__Reverse
+
+# Makes wrong decisions about methods names (could be fixed using rewrites)
+skip Data.Functor.Reverse.Foldable__Reverse

@@ -16,10 +16,11 @@ Require Coq.Init.Datatypes.
 Require Data.Foldable.
 Require FastString.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
-Require Module.
 Require UniqFM.
 Require UniqSet.
+Require Unique.
 Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -38,7 +39,8 @@ Inductive NameSpace : Type
   |  TcClsName : NameSpace.
 
 Inductive OccName : Type
-  := Mk_OccName : NameSpace -> FastString.FastString -> OccName.
+  := Mk_OccName (occNameSpace : NameSpace) (occNameFS : FastString.FastString)
+   : OccName.
 
 Definition OccSet :=
   (UniqSet.UniqSet OccName)%type.
@@ -56,12 +58,15 @@ Definition occName `{g : HasOccName name} : name -> OccName :=
 
 Arguments A {_} _.
 
+Instance Default__NameSpace : GHC.Err.Default NameSpace :=
+  GHC.Err.Build_Default _ VarName.
+
 Definition occNameFS (arg_0__ : OccName) :=
   let 'Mk_OccName _ occNameFS := arg_0__ in
   occNameFS.
 
-Definition occNameSpace (arg_1__ : OccName) :=
-  let 'Mk_OccName occNameSpace _ := arg_1__ in
+Definition occNameSpace (arg_0__ : OccName) :=
+  let 'Mk_OccName occNameSpace _ := arg_0__ in
   occNameSpace.
 (* Midamble *)
 
@@ -127,13 +132,11 @@ Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default_NameSpace : Default NameSpace := Build_Default _ VarName.
-Instance Default_OccName : Default OccName := Build_Default _ (Mk_OccName default default).
+Instance Default__OccName : Default OccName := Build_Default _ (Mk_OccName default default).
 
 (* Converted value declarations: *)
 
-(* Translating `instance Data.Data.Data OccName.OccName' failed: OOPS! Cannot
-   find information for class Qualified "Data.Data" "Data" unsupported *)
+(* Skipping instance Outputable__OccEnv of class Outputable *)
 
 Local Definition HasOccName__OccName_occName : OccName -> OccName :=
   GHC.Base.id.
@@ -141,56 +144,53 @@ Local Definition HasOccName__OccName_occName : OccName -> OccName :=
 Program Instance HasOccName__OccName : HasOccName OccName :=
   fun _ k => k {| occName__ := HasOccName__OccName_occName |}.
 
-(* Translating `instance Control.DeepSeq.NFData OccName.OccName' failed: OOPS!
-   Cannot find information for class Qualified "Control.DeepSeq" "NFData"
-   unsupported *)
+(* Skipping instance Data__OccName of class Data *)
 
-(* Translating `instance Outputable.Outputable OccName.OccName' failed: OOPS!
-   Cannot find information for class Qualified "Outputable" "Outputable"
-   unsupported *)
+(* Skipping instance NFData__OccName of class NFData *)
 
-(* Translating `instance Outputable.OutputableBndr OccName.OccName' failed:
-   OOPS! Cannot find information for class Qualified "Outputable" "OutputableBndr"
-   unsupported *)
+(* Skipping instance Outputable__OccName of class Outputable *)
 
-(* Translating `instance Unique.Uniquable OccName.OccName' failed: OOPS! Cannot
-   find information for class Qualified "Unique" "Uniquable" unsupported *)
+(* Skipping instance OutputableBndr__OccName of class OutputableBndr *)
 
-(* Translating `instance forall {a}, forall `{Outputable.Outputable a},
-   Outputable.Outputable (OccName.OccEnv a)' failed: OOPS! Cannot find information
-   for class Qualified "Outputable" "Outputable" unsupported *)
+Local Definition Uniquable__OccName_getUnique : OccName -> Unique.Unique :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_OccName VarName fs => Unique.mkVarOccUnique fs
+    | Mk_OccName DataName fs => Unique.mkDataOccUnique fs
+    | Mk_OccName TvName fs => Unique.mkTvOccUnique fs
+    | Mk_OccName TcClsName fs => Unique.mkTcOccUnique fs
+    end.
 
-(* Translating `instance Binary.Binary OccName.NameSpace' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+Program Instance Uniquable__OccName : Unique.Uniquable OccName :=
+  fun _ k => k {| Unique.getUnique__ := Uniquable__OccName_getUnique |}.
 
-(* Translating `instance Binary.Binary OccName.OccName' failed: OOPS! Cannot
-   find information for class Qualified "Binary" "Binary" unsupported *)
+(* Skipping instance Binary__OccName of class Binary *)
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a}, Data.Data.Data
-   (OccName.OccEnv a)' failed: OOPS! Cannot find information for class Qualified
-   "Data.Data" "Data" unsupported *)
+(* Skipping instance Binary__NameSpace of class Binary *)
+
+(* Skipping instance Data__OccEnv of class Data *)
 
 Local Definition Ord__NameSpace_compare
    : NameSpace -> NameSpace -> comparison :=
   compare_Namespace.
 
-Local Definition Ord__NameSpace_op_zg__ :=
-  NameSpace_op_zg__.
-
 Local Definition Ord__NameSpace_op_zgze__ :=
   NameSpace_op_zgze__.
 
-Local Definition Ord__NameSpace_op_zl__ :=
-  NameSpace_op_zl__.
+Local Definition Ord__NameSpace_op_zg__ :=
+  NameSpace_op_zg__.
 
 Local Definition Ord__NameSpace_op_zlze__ :=
   NameSpace_op_zlze__.
 
+Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
+  fun x y => if Ord__NameSpace_op_zlze__ x y : bool then y else x.
+
 Local Definition Ord__NameSpace_min : NameSpace -> NameSpace -> NameSpace :=
   fun x y => if Ord__NameSpace_op_zlze__ x y : bool then x else y.
 
-Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
-  fun x y => if Ord__NameSpace_op_zlze__ x y : bool then y else x.
+Local Definition Ord__NameSpace_op_zl__ :=
+  NameSpace_op_zl__.
 
 Local Definition Eq___NameSpace_op_zeze__ : NameSpace -> NameSpace -> bool :=
   fun arg_0__ arg_1__ =>
@@ -203,7 +203,7 @@ Local Definition Eq___NameSpace_op_zeze__ : NameSpace -> NameSpace -> bool :=
     end.
 
 Local Definition Eq___NameSpace_op_zsze__ : NameSpace -> NameSpace -> bool :=
-  fun a b => negb (Eq___NameSpace_op_zeze__ a b).
+  fun x y => negb (Eq___NameSpace_op_zeze__ x y).
 
 Program Instance Eq___NameSpace : GHC.Base.Eq_ NameSpace :=
   fun _ k =>
@@ -242,23 +242,23 @@ Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
         Util.thenCmp (GHC.Base.compare s1 s2) (GHC.Base.compare sp1 sp2)
     end.
 
-Local Definition Ord__OccName_op_zg__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__OccName_compare x y) Gt.
-
-Local Definition Ord__OccName_op_zgze__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__OccName_compare x y) Lt.
-
 Local Definition Ord__OccName_op_zl__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__OccName_compare x y) Lt.
+  fun x y => Ord__OccName_compare x y GHC.Base.== Lt.
 
 Local Definition Ord__OccName_op_zlze__ : OccName -> OccName -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__OccName_compare x y) Gt.
+  fun x y => Ord__OccName_compare x y GHC.Base./= Gt.
 
 Local Definition Ord__OccName_max : OccName -> OccName -> OccName :=
   fun x y => if Ord__OccName_op_zlze__ x y : bool then y else x.
 
 Local Definition Ord__OccName_min : OccName -> OccName -> OccName :=
   fun x y => if Ord__OccName_op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__OccName_op_zg__ : OccName -> OccName -> bool :=
+  fun x y => Ord__OccName_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__OccName_op_zgze__ : OccName -> OccName -> bool :=
+  fun x y => Ord__OccName_compare x y GHC.Base./= Lt.
 
 Program Instance Ord__OccName : GHC.Base.Ord OccName :=
   fun _ k =>
@@ -274,8 +274,21 @@ Definition alterOccEnv {elt}
    : (option elt -> option elt) -> OccEnv elt -> OccName -> OccEnv elt :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | fn, A y, k => A GHC.Base.$ UniqFM.alterUFM fn y k
+    | fn, A y, k => A (UniqFM.alterUFM fn y k)
     end.
+
+Definition avoidClashesOccEnv : TidyOccEnv -> list OccName -> TidyOccEnv :=
+  fun env occs =>
+    let fix go arg_0__ arg_1__ arg_2__
+              := match arg_0__, arg_1__, arg_2__ with
+                 | env, _, nil => env
+                 | env, seenOnce, cons (Mk_OccName _ fs) occs =>
+                     if UniqFM.elemUFM fs env : bool then go env seenOnce occs else
+                     if UniqFM.elemUFM fs seenOnce : bool
+                     then go (UniqFM.addToUFM env fs #1) seenOnce occs else
+                     go env (UniqFM.addToUFM seenOnce fs tt) occs
+                 end in
+    go env UniqFM.emptyUFM occs.
 
 Definition clsName : NameSpace :=
   TcClsName.
@@ -286,13 +299,13 @@ Definition dataName : NameSpace :=
 Definition delFromOccEnv {a} : OccEnv a -> OccName -> OccEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | A x, y => A GHC.Base.$ UniqFM.delFromUFM x y
+    | A x, y => A (UniqFM.delFromUFM x y)
     end.
 
 Definition delListFromOccEnv {a} : OccEnv a -> list OccName -> OccEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | A x, y => A GHC.Base.$ UniqFM.delListFromUFM x y
+    | A x, y => A (UniqFM.delListFromUFM x y)
     end.
 
 Definition demoteNameSpace : NameSpace -> option NameSpace :=
@@ -305,10 +318,9 @@ Definition demoteNameSpace : NameSpace -> option NameSpace :=
     end.
 
 Definition demoteOccName : OccName -> option OccName :=
-  fun arg_0__ =>
-    let 'Mk_OccName space name := arg_0__ in
+  fun '(Mk_OccName space name) =>
     demoteNameSpace space GHC.Base.>>=
-    (fun space' => GHC.Base.return_ GHC.Base.$ Mk_OccName space' name).
+    (fun space' => GHC.Base.return_ (Mk_OccName space' name)).
 
 Definition elemOccEnv {a} : OccName -> OccEnv a -> bool :=
   fun arg_0__ arg_1__ =>
@@ -331,28 +343,28 @@ Definition emptyTidyOccEnv : TidyOccEnv :=
 Definition extendOccEnv {a} : OccEnv a -> OccName -> a -> OccEnv a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | A x, y, z => A GHC.Base.$ UniqFM.addToUFM x y z
+    | A x, y, z => A (UniqFM.addToUFM x y z)
     end.
 
 Definition extendOccEnvList {a}
    : OccEnv a -> list (OccName * a)%type -> OccEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | A x, l => A GHC.Base.$ UniqFM.addListToUFM x l
+    | A x, l => A (UniqFM.addListToUFM x l)
     end.
 
 Definition extendOccEnv_Acc {a} {b}
    : (a -> b -> b) -> (a -> b) -> OccEnv b -> OccName -> a -> OccEnv b :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-    | f, g, A x, y, z => A GHC.Base.$ UniqFM.addToUFM_Acc f g x y z
+    | f, g, A x, y, z => A (UniqFM.addToUFM_Acc f g x y z)
     end.
 
 Definition extendOccEnv_C {a}
    : (a -> a -> a) -> OccEnv a -> OccName -> a -> OccEnv a :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | f, A x, y, z => A GHC.Base.$ UniqFM.addToUFM_C f x y z
+    | f, A x, y, z => A (UniqFM.addToUFM_C f x y z)
     end.
 
 Definition extendOccSet : OccSet -> OccName -> OccSet :=
@@ -364,7 +376,7 @@ Definition extendOccSetList : OccSet -> list OccName -> OccSet :=
 Definition filterOccEnv {elt} : (elt -> bool) -> OccEnv elt -> OccEnv elt :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | x, A y => A GHC.Base.$ UniqFM.filterUFM x y
+    | x, A y => A (UniqFM.filterUFM x y)
     end.
 
 Definition filterOccSet : (OccName -> bool) -> OccSet -> OccSet :=
@@ -375,9 +387,6 @@ Definition foldOccEnv {a} {b} : (a -> b -> b) -> b -> OccEnv a -> b :=
     match arg_0__, arg_1__, arg_2__ with
     | a, b, A c => UniqFM.foldUFM a b c
     end.
-
-Definition foldOccSet {b} : (OccName -> b -> b) -> b -> OccSet -> b :=
-  UniqSet.foldUniqSet.
 
 Definition initTidyOccEnv : list OccName -> TidyOccEnv :=
   let add :=
@@ -466,7 +475,7 @@ Definition lookupOccEnv {a} : OccEnv a -> OccName -> option a :=
 Definition mapOccEnv {a} {b} : (a -> b) -> OccEnv a -> OccEnv b :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | f, A x => A GHC.Base.$ UniqFM.mapUFM f x
+    | f, A x => A (UniqFM.mapUFM f x)
     end.
 
 Definition minusOccSet : OccSet -> OccSet -> OccSet :=
@@ -475,32 +484,19 @@ Definition minusOccSet : OccSet -> OccSet -> OccSet :=
 Definition mkDFunOcc : GHC.Base.String -> bool -> OccSet -> OccName :=
   fun info_str is_boot set =>
     let prefix :=
-      if is_boot : bool
-      then GHC.Base.hs_string__ "$fx"
-      else GHC.Base.hs_string__ "$f" in
+      if is_boot : bool then GHC.Base.hs_string__ "$fx" else
+      GHC.Base.hs_string__ "$f" in
     chooseUniqueOcc VarName (Coq.Init.Datatypes.app prefix info_str) set.
 
-Definition mkModPrefix : Module.Module -> GHC.Base.String :=
-  fun mod_ =>
-    let mn := Module.moduleNameString (moduleName mod_) in
-    let pk := Module.unitIdString (moduleUnitId mod_) in
-    Coq.Init.Datatypes.app pk (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "_")
-                                                      mn).
-
 Definition mkOccEnv {a} : list (OccName * a)%type -> OccEnv a :=
-  fun l => A GHC.Base.$ UniqFM.listToUFM l.
+  fun l => A (UniqFM.listToUFM l).
 
 Definition mkOccEnv_C {a}
    : (a -> a -> a) -> list (OccName * a)%type -> OccEnv a :=
-  fun comb l => A GHC.Base.$ UniqFM.addListToUFM_C comb UniqFM.emptyUFM l.
+  fun comb l => A (UniqFM.addListToUFM_C comb UniqFM.emptyUFM l).
 
 Definition mkOccName : NameSpace -> GHC.Base.String -> OccName :=
   fun occ_sp str => Mk_OccName occ_sp (FastString.mkFastString str).
-
-Definition mk_deriv
-   : NameSpace -> GHC.Base.String -> GHC.Base.String -> OccName :=
-  fun occ_sp sys_prefix str =>
-    mkOccName occ_sp (Coq.Init.Datatypes.app sys_prefix str).
 
 Definition mkDataOcc : GHC.Base.String -> OccName :=
   mkOccName dataName.
@@ -511,37 +507,28 @@ Definition mkClsOcc : GHC.Base.String -> OccName :=
 Definition mkOccNameFS : NameSpace -> FastString.FastString -> OccName :=
   fun occ_sp fs => Mk_OccName occ_sp fs.
 
-Definition mkDataOccFS : FastString.FastString -> OccName :=
-  mkOccNameFS dataName.
-
-Definition mkClsOccFS : FastString.FastString -> OccName :=
-  mkOccNameFS clsName.
-
-Definition mkOccSet : list OccName -> OccSet :=
-  UniqSet.mkUniqSet.
-
-Definition occEnvElts {a} : OccEnv a -> list a :=
-  fun arg_0__ => let 'A x := arg_0__ in UniqFM.eltsUFM x.
-
-Definition occNameString : OccName -> GHC.Base.String :=
-  fun arg_0__ => let 'Mk_OccName _ s := arg_0__ in FastString.unpackFS s.
+Definition mk_deriv
+   : NameSpace ->
+     FastString.FastString -> list FastString.FastString -> OccName :=
+  fun occ_sp sys_prefix str =>
+    mkOccNameFS occ_sp (FastString.concatFS (cons sys_prefix str)).
 
 Definition mk_simple_deriv
-   : NameSpace -> GHC.Base.String -> OccName -> OccName :=
-  fun sp px occ => mk_deriv sp px (occNameString occ).
+   : NameSpace -> FastString.FastString -> OccName -> OccName :=
+  fun sp px occ => mk_deriv sp px (cons (occNameFS occ) nil).
 
 Definition mkClassDataConOcc : OccName -> OccName :=
   mk_simple_deriv dataName (GHC.Base.hs_string__ "C:").
 
 Definition mk_simple_deriv_with
    : NameSpace ->
-     GHC.Base.String -> option GHC.Base.String -> OccName -> OccName :=
+     FastString.FastString -> option GHC.Base.String -> OccName -> OccName :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | sp, px, None, occ => mk_deriv sp px (occNameString occ)
+    | sp, px, None, occ => mk_deriv sp px (cons (occNameFS occ) nil)
     | sp, px, Some with_, occ =>
-        mk_deriv sp (Coq.Init.Datatypes.app px (Coq.Init.Datatypes.app with_
-                                                                       (GHC.Base.hs_string__ "_"))) (occNameString occ)
+        mk_deriv sp px (cons (FastString.fsLit with_) (cons (FastString.fsLit
+                                                             (GHC.Base.hs_string__ "_")) (cons (occNameFS occ) nil)))
     end.
 
 Definition mkPDataDataConOcc : option GHC.Base.String -> OccName -> OccName :=
@@ -553,8 +540,30 @@ Definition mkPDatasDataConOcc : option GHC.Base.String -> OccName -> OccName :=
 Definition mkVectDataConOcc : option GHC.Base.String -> OccName -> OccName :=
   mk_simple_deriv_with dataName (GHC.Base.hs_string__ "VD:").
 
-Definition occSetElts : OccSet -> list OccName :=
-  UniqSet.uniqSetToList.
+Definition mkDataOccFS : FastString.FastString -> OccName :=
+  mkOccNameFS dataName.
+
+Definition mkClsOccFS : FastString.FastString -> OccName :=
+  mkOccNameFS clsName.
+
+Definition mkOccSet : list OccName -> OccSet :=
+  UniqSet.mkUniqSet.
+
+Definition occEnvElts {a} : OccEnv a -> list a :=
+  fun '(A x) => UniqFM.eltsUFM x.
+
+Definition occNameString : OccName -> GHC.Base.String :=
+  fun '(Mk_OccName _ s) => FastString.unpackFS s.
+
+Definition mkDataTOcc : OccName -> OccSet -> OccName :=
+  fun occ =>
+    chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$t")
+                                                    (occNameString occ)).
+
+Definition mkDataCOcc : OccName -> OccSet -> OccName :=
+  fun occ =>
+    chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$c")
+                                                    (occNameString occ)).
 
 Definition otherNameSpace : NameSpace -> NameSpace :=
   fun arg_0__ =>
@@ -571,14 +580,14 @@ Definition nameSpacesRelated : NameSpace -> NameSpace -> bool :=
 Definition plusOccEnv {a} : OccEnv a -> OccEnv a -> OccEnv a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | A x, A y => A GHC.Base.$ UniqFM.plusUFM x y
+    | A x, A y => A (UniqFM.plusUFM x y)
     end.
 
 Definition plusOccEnv_C {a}
    : (a -> a -> a) -> OccEnv a -> OccEnv a -> OccEnv a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | f, A x, A y => A GHC.Base.$ UniqFM.plusUFM_C f x y
+    | f, A x, A y => A (UniqFM.plusUFM_C f x y)
     end.
 
 Definition setOccNameSpace : NameSpace -> OccName -> OccName :=
@@ -599,9 +608,6 @@ Definition tcName : NameSpace :=
 Definition mkTcOccFS : FastString.FastString -> OccName :=
   mkOccNameFS tcName.
 
-Definition mkTcOcc : GHC.Base.String -> OccName :=
-  mkOccName tcName.
-
 Definition mkPDataTyConOcc : option GHC.Base.String -> OccName -> OccName :=
   mk_simple_deriv_with tcName (GHC.Base.hs_string__ "VP:").
 
@@ -614,28 +620,22 @@ Definition mkPReprTyConOcc : option GHC.Base.String -> OccName -> OccName :=
 Definition mkVectTyConOcc : option GHC.Base.String -> OccName -> OccName :=
   mk_simple_deriv_with tcName (GHC.Base.hs_string__ "V:").
 
+Definition mkTcOcc : GHC.Base.String -> OccName :=
+  mkOccName tcName.
+
 Definition mkNewTyCoOcc : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "N:").
 
 Definition mkInstTyTcOcc : GHC.Base.String -> OccSet -> OccName :=
-  fun str set =>
+  fun str =>
     chooseUniqueOcc tcName (cons (GHC.Char.hs_char__ "R") (cons (GHC.Char.hs_char__
-                                                                 ":") str)) set.
+                                                                 ":") str)).
 
 Definition mkInstTyCoOcc : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "D:").
 
-Definition mkGenRCo : OccName -> OccName :=
-  mk_simple_deriv tcName (GHC.Base.hs_string__ "CoRep_").
-
 Definition mkGenR : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "Rep_").
-
-Definition mkGenD : Module.Module -> OccName -> OccName :=
-  fun mod_ =>
-    mk_simple_deriv tcName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "D1_")
-                                                   (Coq.Init.Datatypes.app (mkModPrefix mod_) (GHC.Base.hs_string__
-                                                                            "_"))).
 
 Definition mkGen1R : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "Rep1_").
@@ -649,11 +649,11 @@ Definition tvName : NameSpace :=
 Definition mkTyVarOccFS : FastString.FastString -> OccName :=
   fun fs => mkOccNameFS tvName fs.
 
-Definition mkTyVarOcc : GHC.Base.String -> OccName :=
-  mkOccName tvName.
-
 Definition mkRepEqOcc : OccName -> OccName :=
   mk_simple_deriv tvName (GHC.Base.hs_string__ "$r").
+
+Definition mkTyVarOcc : GHC.Base.String -> OccName :=
+  mkOccName tvName.
 
 Definition unionManyOccSets : list OccSet -> OccSet :=
   UniqSet.unionManyUniqSets.
@@ -662,7 +662,7 @@ Definition unionOccSets : OccSet -> OccSet -> OccSet :=
   UniqSet.unionUniqSets.
 
 Definition unitOccEnv {a} : OccName -> a -> OccEnv a :=
-  fun x y => A GHC.Base.$ UniqFM.unitUFM x y.
+  fun x y => A (UniqFM.unitUFM x y).
 
 Definition unitOccSet : OccName -> OccSet :=
   UniqSet.unitUniqSet.
@@ -673,11 +673,9 @@ Definition varName : NameSpace :=
 Definition mkVarOccFS : FastString.FastString -> OccName :=
   fun fs => mkOccNameFS varName fs.
 
-Definition mkVarOcc : GHC.Base.String -> OccName :=
-  fun s => mkOccName varName s.
-
 Definition mkRecFldSelOcc : GHC.Base.String -> OccName :=
-  mk_deriv varName (GHC.Base.hs_string__ "$sel").
+  fun s =>
+    mk_deriv varName (GHC.Base.hs_string__ "$sel") (cons (FastString.fsLit s) nil).
 
 Definition mkSpecOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$s").
@@ -696,6 +694,9 @@ Definition mkVectIsoOcc : option GHC.Base.String -> OccName -> OccName :=
 
 Definition mkVectOcc : option GHC.Base.String -> OccName -> OccName :=
   mk_simple_deriv_with varName (GHC.Base.hs_string__ "$v").
+
+Definition mkVarOcc : GHC.Base.String -> OccName :=
+  fun s => mkOccName varName s.
 
 Definition mkMethodOcc : OccName -> OccName :=
   fun arg_0__ =>
@@ -722,17 +723,11 @@ Definition mkDictOcc : OccName -> OccName :=
 Definition mkDefaultMethodOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$dm").
 
-Definition mkDataTOcc : OccName -> OccName :=
-  mk_simple_deriv varName (GHC.Base.hs_string__ "$t").
-
 Definition mkDataConWrapperOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$W").
 
 Definition mkDataConWorkerOcc : OccName -> OccName :=
   fun datacon_occ => setOccNameSpace varName datacon_occ.
-
-Definition mkDataCOcc : OccName -> OccName :=
-  mk_simple_deriv varName (GHC.Base.hs_string__ "$c").
 
 Definition mkCon2TagOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$con2tag_").
@@ -746,28 +741,31 @@ Definition mkBuilderOcc : OccName -> OccName :=
 Definition mkTyConRepOcc : OccName -> OccName :=
   fun occ =>
     let prefix :=
-      if isDataOcc occ : bool
-      then GHC.Base.hs_string__ "$tc'"
-      else GHC.Base.hs_string__ "$tc" in
+      if isDataOcc occ : bool then GHC.Base.hs_string__ "$tc'" else
+      GHC.Base.hs_string__ "$tc" in
     mk_simple_deriv varName prefix occ.
 
-(* Unbound variables:
+(* External variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
      NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
-     comparison cons false list moduleName moduleUnitId negb op_zt__ option orb true
+     comparison cons false list negb nil op_zt__ option orb true tt
      Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
-     FastString.mkFastString FastString.unpackFS GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.id GHC.Base.op_zd__ GHC.Base.op_zeze__
-     GHC.Base.op_zgzgze__ GHC.Base.op_zsze__ GHC.Base.return_ GHC.Num.Int
-     GHC.Num.fromInteger Module.Module Module.moduleNameString Module.unitIdString
-     UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM
-     UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM
-     UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM UniqFM.emptyUFM
-     UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM
-     UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
-     UniqSet.emptyUniqSet UniqSet.filterUniqSet UniqSet.foldUniqSet
+     FastString.concatFS FastString.fsLit FastString.mkFastString FastString.unpackFS
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
+     GHC.Base.id GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zl____ GHC.Base.op_zlze____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Base.return_ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Num.Int GHC.Num.fromInteger UniqFM.UniqFM UniqFM.addListToUFM
+     UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C
+     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM
+     UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.listToUFM
+     UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
+     UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
+     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
      UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet UniqSet.minusUniqSet
      UniqSet.mkUniqSet UniqSet.unionManyUniqSets UniqSet.unionUniqSets
-     UniqSet.uniqSetToList UniqSet.unitUniqSet Util.thenCmp
+     UniqSet.unitUniqSet Unique.Uniquable Unique.Unique Unique.getUnique__
+     Unique.mkDataOccUnique Unique.mkTcOccUnique Unique.mkTvOccUnique
+     Unique.mkVarOccUnique Util.thenCmp
 *)

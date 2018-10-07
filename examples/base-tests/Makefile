@@ -1,11 +1,4 @@
-SHELL = bash
-
-HAVE_STACK := $(shell command -v stack 2> /dev/null)
-ifdef HAVE_STACK
-HS_TO_COQ = stack exec hs-to-coq --
-else
-HS_TO_COQ = cabal new-run -v0 exe:hs-to-coq --
-endif
+include ../../common.mk
 
 # tests that should pass
 PASS = \
@@ -19,12 +12,17 @@ PASS = \
   Pair \
   SplitAt \
   PartialRecordSel \
+  TypeClient \
+  Records \
+  RecordConstruction \
+  TalkExample \
+
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \
+  Deriv2 \
   Arrow \
   EqList \
-  TypeClient \
   PaperExamples \
 
 MODULES = $(PASS) $(TODO_PASS)
@@ -53,7 +51,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@/bin/echo -n "$<: "
 	@if ! test -e $<; \
 	 then echo -e "\033[1;31mmissing\033[0m (should pass)"; exit 1;\
-	 elif ! $(TYPECHECK) $< >&/dev/null; \
+	 elif ! $(TYPECHECK) $<; \
 	 then echo -e "\033[1;31mfailed\033[0m (should pass)"; exit 1;  \
 	 else echo -e "\033[1;32mpassed\033[0m"; \
 	 fi
@@ -76,7 +74,10 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi; \
 	if [ -e $*/midamble.v ]; then M_ARG="-m $*/midamble.v"; else M_ARG=; fi; \
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -e ../../base/edits -o . $${P_ARG} $${M_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} \
+	    -e ../../base/edits \
+	    --iface-dir ../../base/ \
+	    -o . $${P_ARG} $${M_ARG} $*.hs 1>/dev/null
 
 # We always want to re-build the .v files, to test the current build of hs-to-coq
 FORCE:

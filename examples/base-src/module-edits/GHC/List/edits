@@ -18,8 +18,10 @@ skip GHC.List.badHead
 skip GHC.List.unsafeTake
 skip GHC.List.repeat
 skip GHC.List.until
-skip GHC.List.iterate
 skip GHC.List.cycle
+skip GHC.List.iterate
+skip GHC.List.iterate'
+skip GHC.List.iterate'FB
 skip GHC.List.repeatFB  # doesn't terminate
 skip GHC.List.iterateFB # doesn't terminate
 skip GHC.List.!!

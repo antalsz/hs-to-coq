@@ -52,29 +52,29 @@ Qed.
 
 Axiom bottom_ne_cons : forall A (x : A) xs, (x :: xs) <> patternFailure.
 
+(* COQ8.8 ok? *)
 Lemma stack_replace : forall e s s' i j, exec e (s' ++ i :: s) <> patternFailure ->
                                     exec e (s' ++ j :: s) <> patternFailure.
 Proof.
   induction e; intros; simpl in *; auto.
   - destruct s'; simpl; apply bottom_ne_cons.
   - destruct a.
-    replace  (i0 :: s' ++ j :: s) with
-    ((i0 :: s') ++ j :: s); auto.
-    apply IHe with (i:=i); auto.
-  - destruct s'. simpl in *. destruct s. contradiction.
-    match goal with
-      | [ H:_  |- exec ?e ?s <> patternFailure] => rewrite <- (app_nil_l s)
-    end.
-    eapply IHe.
-    simpl. eauto.
-    simpl in *.
-    destruct s'. simpl in *.
-    match goal with
-      | [ H:_  |- exec ?e ?s <> patternFailure] => rewrite <- (app_nil_l s)
-    end.
-    eapply IHe.
-    simpl. eauto.
-    simpl in *.
+    + replace  (i0 :: s' ++ j :: s) with ((i0 :: s') ++ j :: s); auto.
+      apply IHe with (i:=i); auto.
+    + destruct s'. simpl in *. destruct s. contradiction.
+      match goal with
+        | [ H:_  |- exec ?e ?s <> patternFailure] => rewrite <- (app_nil_l s)
+      end.
+      eapply IHe.
+      simpl. eauto.
+      simpl in *.
+      destruct s'. simpl in *.
+      match goal with
+        | [ H:_  |- exec ?e ?s <> patternFailure] => rewrite <- (app_nil_l s)
+      end.
+      eapply IHe.
+      simpl. eauto.
+      simpl in *.
 Admitted.
 
 Lemma stack_extend : forall e s i, exec e s <> patternFailure ->
@@ -84,7 +84,8 @@ Proof.
   simpl.
   simpl in H.
   apply bottom_ne_cons.
-  - destruct a. simpl in *.
+  destruct a.
+  - simpl in *.
     apply IHe.
     eapply stack_replace with (s' := nil). simpl. eauto.
   - simpl. destruct s. contradiction.

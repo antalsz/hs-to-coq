@@ -24,11 +24,14 @@ Require Export Coq.Lists.List.
 Require Export Bool.Bool.
 
 (* Int and Integer types *)
+Require NArith.
+Require Import ZArith.
 Require Export GHC.Num.
 
 (* Char type *)
 Require Export GHC.Char.
-
+Definition unsafeChr := Z.to_N.
+Definition ord := Z.of_N.
 
 (* Strings *)
 Require Coq.Strings.String.
@@ -78,10 +81,6 @@ Arguments List.app {_} _ _.
 
 Definition Synonym {A : Type} (_uniq : Type) (x : A) : A := x.
 Arguments Synonym {A}%type _uniq%type x%type.
-
-(****************************************************)
-
-Axiom errorWithoutStackTrace : forall {A : Type}, String -> A.
 
 
 (*********** built in classes Eq & Ord **********************)
@@ -392,7 +391,7 @@ Definition build' : forall {a}, (forall {b}, (a -> b -> b) -> b -> b) -> list a 
 
 (********************************************************************)
 
-Definition oneShot {a} (x:a) := x.
+(* Definition oneShot {a} (x:a) := x. *)
 
 (** Qualified notation for the notation defined here **)
 

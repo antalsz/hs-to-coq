@@ -3,11 +3,10 @@
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Literals (
-  convertInteger, convertString, convertFastString, convertFractional
+  convertInteger, convertFastString, convertFractional
   ) where
 
 import Prelude hiding (Num)
-import qualified Data.Text as T
 import Control.Monad.IO.Class
 import HsToCoq.Util.GHC.FastString
 import HsToCoq.Coq.Gallina
@@ -25,11 +24,8 @@ convertInteger what int | int >= 0  = pure $ fromInteger int
 convertFastString :: FastString -> Term
 convertFastString = HsString . fsToText
 
-convertString :: String -> Term
-convertString = HsString . T.pack
-
 convertFractional :: MonadIO f =>  FractionalLit -> f Term
-convertFractional (FL _ fl_v) = do
+convertFractional (FL _ _ fl_v) = do
    let fr = Var "fromRational"
    let qn = App2 (Var "Q.Qmake") (Num (fromInteger (numerator fl_v)))
                                  (Num (fromInteger (denominator fl_v)))

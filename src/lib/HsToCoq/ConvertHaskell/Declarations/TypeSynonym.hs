@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, MultiParamTypeClasses #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TypeSynonym (SynBody(..), convertSynDecl) where
 
@@ -15,6 +15,7 @@ import qualified Data.Set as S
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
@@ -26,11 +27,12 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 data SynBody = SynBody Qualid [Binder] (Maybe Term) Term
              deriving (Eq, Ord, Read, Show)
 
-instance FreeVars SynBody where
-  freeVars (SynBody _name args oty def) = binding' args $ freeVars oty *> freeVars def
+instance HasBV Qualid SynBody where
+  bvOf (SynBody name args oty def) =
+    binder name <> bindsNothing (foldScopes bvOf args $ fvOf oty <> fvOf def)
 
-convertSynDecl :: ConversionMonad m
-               => Located GHC.Name -> [LHsTyVarBndr GHC.Name] -> LHsType GHC.Name
+convertSynDecl :: ConversionMonad r m
+               => Located GHC.Name -> [LHsTyVarBndr GhcRn] -> LHsType GhcRn
                -> m SynBody
 convertSynDecl name args def  = do
   coqName <- freeVar $ unLoc name
@@ -39,7 +41,7 @@ convertSynDecl name args def  = do
   let (params', rhs') = etaContract params rhs
   SynBody <$> var TypeNS (unLoc name)
           <*> pure params'
-          <*> use (edits.typeSynonymTypes . at coqName . to (fmap Var))
+          <*> view (edits.typeSynonymTypes . at coqName . to (fmap Var))
           <*> pure (rhs' `InScope` "type")
 
 -- Eta-contracting type synonyms allows Coq’s instance resolution mechanism

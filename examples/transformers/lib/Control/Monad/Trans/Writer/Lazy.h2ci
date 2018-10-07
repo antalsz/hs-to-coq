@@ -1,0 +1,12 @@
+constructors:
+  Control.Monad.Trans.Writer.Lazy.WriterT: ! '[Qualified "Control.Monad.Trans.Writer.Lazy"
+    "Mk_WriterT"]'
+constructorFields:
+  Control.Monad.Trans.Writer.Lazy.Mk_WriterT: RecordFields [Qualified "Control.Monad.Trans.Writer.Lazy"
+    "runWriterT"]
+recordFieldTypes:
+  Control.Monad.Trans.Writer.Lazy.runWriterT: Qualified "Control.Monad.Trans.Writer.Lazy"
+    "WriterT"
+constructorTypes:
+  Control.Monad.Trans.Writer.Lazy.Mk_WriterT: Qualified "Control.Monad.Trans.Writer.Lazy"
+    "WriterT"

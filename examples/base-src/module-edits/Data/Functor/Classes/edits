@@ -1,3 +1,39 @@
+order Data.Functor.Classes.Eq2__pair_type Data.Functor.Classes.Ord2__pair_type
+order Data.Functor.Classes.Ord2__pair_type Data.Functor.Classes.Ord1__pair_type_liftCompare
+order Data.Functor.Classes.Eq1__pair_type Data.Functor.Classes.Ord1__pair_type
+
+order Data.Functor.Classes.Eq2__Either Data.Functor.Classes.Ord2__Either
+order Data.Functor.Classes.Ord2__Either Data.Functor.Classes.Ord1__Either_liftCompare
+order Data.Functor.Classes.Eq1__Either Data.Functor.Classes.Ord1__Either
+
+order Data.Functor.Classes.Eq2__Const Data.Functor.Classes.Ord2__Const
+order Data.Functor.Classes.Ord2__Const Data.Functor.Classes.Ord1__Const_liftCompare
+order Data.Functor.Classes.Eq1__Const Data.Functor.Classes.Ord1__Const
+
+order Data.Functor.Classes.Eq2__option Data.Functor.Classes.Ord2__option
+order Data.Functor.Classes.Ord2__option Data.Functor.Classes.Ord1__option_liftCompare
+order Data.Functor.Classes.Eq1__option Data.Functor.Classes.Ord1__option
+
+order Data.Functor.Classes.Eq2__list Data.Functor.Classes.Ord2__list
+order Data.Functor.Classes.Ord2__list Data.Functor.Classes.Ord1__list_liftCompare
+order Data.Functor.Classes.Eq1__list Data.Functor.Classes.Ord1__list
+
+order Data.Functor.Classes.Ord1__list Data.Functor.Classes.Ord1__NonEmpty_liftCompare
+
+order Data.Functor.Classes.Eq2__NonEmpty Data.Functor.Classes.Ord2__NonEmpty
+order Data.Functor.Classes.Ord2__NonEmpty Data.Functor.Classes.Ord1__NonEmpty_liftCompare
+order Data.Functor.Classes.Eq1__NonEmpty Data.Functor.Classes.Ord1__NonEmpty
+
+order Data.Functor.Classes.Eq2__Identity Data.Functor.Classes.Ord2__Identity
+order Data.Functor.Classes.Ord2__Identity Data.Functor.Classes.Ord1__Identity_liftCompare
+order Data.Functor.Classes.Eq1__Identity Data.Functor.Classes.Ord1__Identity
+
+order Data.Functor.Classes.Eq2__Proxy Data.Functor.Classes.Ord2__Proxy
+order Data.Functor.Classes.Ord2__Proxy Data.Functor.Classes.Ord1__Proxy_liftCompare
+order Data.Functor.Classes.Eq1__Proxy Data.Functor.Classes.Ord1__Proxy
+
+
+
 skip Data.Functor.Classes.Read1
 skip Data.Functor.Classes.Show1
 skip Data.Functor.Classes.Read2
@@ -12,6 +48,15 @@ skip Data.Functor.Classes.readsUnaryWith
 skip Data.Functor.Classes.readsBinaryWith
 skip Data.Functor.Classes.readsBinary1
 skip Data.Functor.Classes.readsPrec2
+skip Data.Functor.Classes.liftReadList2Default
+skip Data.Functor.Classes.liftReadListDefault
+skip Data.Functor.Classes.liftReadListPrec2Default
+skip Data.Functor.Classes.liftReadListPrecDefault
+skip Data.Functor.Classes.readBinaryWith
+skip Data.Functor.Classes.readData
+skip Data.Functor.Classes.readPrec1
+skip Data.Functor.Classes.readPrec2
+skip Data.Functor.Classes.readUnaryWith
 
 
 skip Data.Functor.Classes.showsPrec1

@@ -60,5 +60,4 @@ Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
 
 (* Default values *)
 Require Import GHC.Err.
-Instance Default_NameSpace : Default NameSpace := Build_Default _ VarName.
-Instance Default_OccName : Default OccName := Build_Default _ (Mk_OccName default default).
+Instance Default__OccName : Default OccName := Build_Default _ (Mk_OccName default default).

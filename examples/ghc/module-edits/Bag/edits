@@ -1,7 +1,3 @@
-# Needs Data.Traversable.mapAccumL
-skip Bag.mapAccumBagL
+rename type GHC.Num.Int = nat
 
-skip Bag.Data__Bag
-skip Bag.Outputable__Bag
-
-skip Bag.Foldable__Bag # still produces Admitted
+in Bag.lengthBag rewrite forall xs, Data.Foldable.length xs = BinInt.Z.to_nat (Data.Foldable.length xs) 

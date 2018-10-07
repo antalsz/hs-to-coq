@@ -1,0 +1,16 @@
+constructors:
+  Util.Direction: ! '[Qualified "Util" "Forwards",Qualified "Util" "Backwards"]'
+  Util.OverridingBool: ! '[Qualified "Util" "Auto",Qualified "Util" "Always",Qualified
+    "Util" "Never"]'
+constructorFields:
+  Util.Forwards: NonRecordFields 0
+  Util.Backwards: NonRecordFields 0
+  Util.Auto: NonRecordFields 0
+  Util.Never: NonRecordFields 0
+  Util.Always: NonRecordFields 0
+constructorTypes:
+  Util.Forwards: Qualified "Util" "Direction"
+  Util.Backwards: Qualified "Util" "Direction"
+  Util.Auto: Qualified "Util" "OverridingBool"
+  Util.Never: Qualified "Util" "OverridingBool"
+  Util.Always: Qualified "Util" "OverridingBool"

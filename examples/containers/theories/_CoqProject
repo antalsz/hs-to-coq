@@ -8,6 +8,7 @@ OrdTheories.v
 SetProofs.v
 MapProofs.v
 IntSetProofs.v
+IntSetWordProofs.v
 RevNatSlowProofs.v
 OrdTactic.v
 ../hs-spec/IntSetProperties.v
@@ -19,3 +20,7 @@ IntSetPropertyProofs.v
 BitUtils.v
 DyadicIntervals.v
 Set.v
+IntMapProofs.v
+
+
+

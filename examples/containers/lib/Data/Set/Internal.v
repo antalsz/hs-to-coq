@@ -19,7 +19,6 @@ Require Data.Bits.
 Require Data.Either.
 Require Data.Foldable.
 Require Data.Functor.Classes.
-Require Data.Semigroup.
 Require GHC.Base.
 Require GHC.DeferredFix.
 Require GHC.Err.
@@ -27,7 +26,6 @@ Require GHC.Num.
 Require GHC.Tuple.
 Require Nat.
 Require Utils.Containers.Internal.PtrEquality.
-Import Data.Semigroup.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -40,7 +38,7 @@ Inductive Set_ a : Type
   := Bin : Size -> a -> (Set_ a) -> (Set_ a) -> Set_ a
   |  Tip : Set_ a.
 
-Inductive MergeSet a : Type := Mk_MergeSet : Set_ a -> MergeSet a.
+Inductive MergeSet a : Type := Mk_MergeSet (getMergeSet : Set_ a) : MergeSet a.
 
 Arguments Bin {_} _ _ _ _.
 
@@ -74,32 +72,6 @@ Instance MergeSetDefault {a} : Default (MergeSet a) :=
 
 (* Converted value declarations: *)
 
-Local Definition Foldable__Set__elem
-   : forall {a}, forall `{GHC.Base.Eq_ a}, a -> Set_ a -> bool :=
-  fun {a} `{GHC.Base.Eq_ a} =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | _, Tip => false
-                 | x, Bin _ y l r => orb (x GHC.Base.== y) (orb (go x l) (go x r))
-                 end in
-    go.
-
-Local Definition Foldable__Set__fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, Set_ m -> m :=
-  fun {m} `{GHC.Base.Monoid m} =>
-    let fix go arg_0__
-              := match arg_0__ with
-                 | Tip => GHC.Base.mempty
-                 | Bin num_1__ k _ _ =>
-                     if num_1__ GHC.Base.== #1 : bool
-                     then k
-                     else match arg_0__ with
-                          | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend k (go r))
-                          | _ => GHC.Err.patternFailure
-                          end
-                 end in
-    go.
-
 Local Definition Foldable__Set__foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> Set_ a -> m :=
   fun {m} {a} `{GHC.Base.Monoid m} =>
@@ -108,38 +80,40 @@ Local Definition Foldable__Set__foldMap
                 := match arg_0__ with
                    | Tip => GHC.Base.mempty
                    | Bin num_1__ k _ _ =>
-                       if num_1__ GHC.Base.== #1 : bool
-                       then f k
-                       else match arg_0__ with
-                            | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k) (go r))
-                            | _ => GHC.Err.patternFailure
-                            end
+                       if num_1__ GHC.Base.== #1 : bool then f k else
+                       match arg_0__ with
+                       | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend (f k) (go r))
+                       | _ => GHC.Err.patternFailure
+                       end
                    end in
       go t.
 
-(* Translating `instance forall {a}, forall `{Data.Data.Data a} `{GHC.Base.Ord
-   a}, Data.Data.Data (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find
-   information for class Qualified "Data.Data" "Data" unsupported *)
+Local Definition Foldable__Set__fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, Set_ m -> m :=
+  fun {m} `{GHC.Base.Monoid m} =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Tip => GHC.Base.mempty
+                 | Bin num_1__ k _ _ =>
+                     if num_1__ GHC.Base.== #1 : bool then k else
+                     match arg_0__ with
+                     | Bin _ k l r => GHC.Base.mappend (go l) (GHC.Base.mappend k (go r))
+                     | _ => GHC.Err.patternFailure
+                     end
+                 end in
+    go.
 
-(* Translating `instance forall {a}, forall `{(GHC.Base.Ord a)}, GHC.Exts.IsList
-   (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Exts" "IsList" unsupported *)
+(* Skipping instance Data__Set_ of class Data *)
 
-(* Translating `instance forall {a}, forall `{GHC.Show.Show a}, GHC.Show.Show
-   (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find information for class
-   Qualified "GHC.Show" "Show" unsupported *)
+(* Skipping instance IsList__Set_ of class IsList *)
 
-(* Translating `instance Data.Functor.Classes.Show1 Data.Set.Internal.Set_'
-   failed: OOPS! Cannot find information for class Qualified "Data.Functor.Classes"
-   "Show1" unsupported *)
+(* Skipping instance Show__Set_ of class Show *)
 
-(* Translating `instance forall {a}, forall `{GHC.Read.Read a} `{GHC.Base.Ord
-   a}, GHC.Read.Read (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Read" "Read" unsupported *)
+(* Skipping instance Show1__Set_ of class Show1 *)
 
-(* Translating `instance forall {a}, forall `{Control.DeepSeq.NFData a},
-   Control.DeepSeq.NFData (Data.Set.Internal.Set_ a)' failed: OOPS! Cannot find
-   information for class Qualified "Control.DeepSeq" "NFData" unsupported *)
+(* Skipping instance Read__Set_ of class Read *)
+
+(* Skipping instance NFData__Set_ of class NFData *)
 
 Definition combineEq {a} `{GHC.Base.Eq_ a} : list a -> list a :=
   fun arg_0__ =>
@@ -150,9 +124,8 @@ Definition combineEq {a} `{GHC.Base.Eq_ a} : list a -> list a :=
                   := match arg_1__, arg_2__ with
                      | z, nil => cons z nil
                      | z, cons y ys =>
-                         if z GHC.Base.== y : bool
-                         then combineEq' z ys
-                         else cons z (combineEq' y ys)
+                         if z GHC.Base.== y : bool then combineEq' z ys else
+                         cons z (combineEq' y ys)
                      end in
         combineEq' x xs
     end.
@@ -163,12 +136,12 @@ Definition delta : GHC.Num.Int :=
 Definition empty {a} : Set_ a :=
   Tip.
 
-Local Definition Monoid__MergeSet_mempty {inst_a} : (MergeSet inst_a) :=
-  Mk_MergeSet empty.
-
 Local Definition Monoid__Set__mempty {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) :=
   empty.
+
+Local Definition Monoid__MergeSet_mempty {inst_a} : (MergeSet inst_a) :=
+  Mk_MergeSet empty.
 
 Definition foldl {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
   fun f z =>
@@ -198,17 +171,17 @@ Definition foldl' {a} {b} : (a -> b -> a) -> a -> Set_ b -> a :=
                  end in
     go z.
 
-Local Definition Foldable__Set__sum
-   : forall {a}, forall `{GHC.Num.Num a}, Set_ a -> a :=
-  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
+Local Definition Foldable__Set__foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> Set_ a -> b :=
+  fun {b} {a} => foldl'.
 
 Local Definition Foldable__Set__product
    : forall {a}, forall `{GHC.Num.Num a}, Set_ a -> a :=
   fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.*_ #1.
 
-Local Definition Foldable__Set__foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> Set_ a -> b :=
-  fun {b} {a} => foldl'.
+Local Definition Foldable__Set__sum
+   : forall {a}, forall `{GHC.Num.Num a}, Set_ a -> a :=
+  fun {a} `{GHC.Num.Num a} => foldl' _GHC.Num.+_ #0.
 
 Definition foldr {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   fun f z =>
@@ -243,21 +216,13 @@ Local Definition Ord__Set__compare {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> comparison :=
   fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
 
-Local Definition Ord__Set__op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
-   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Set__compare x y) Gt.
-
-Local Definition Ord__Set__op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
-   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Set__compare x y) Lt.
-
 Local Definition Ord__Set__op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base.==_ (Ord__Set__compare x y) Lt.
+  fun x y => Ord__Set__compare x y GHC.Base.== Lt.
 
 Local Definition Ord__Set__op_zlze__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
-  fun x y => _GHC.Base./=_ (Ord__Set__compare x y) Gt.
+  fun x y => Ord__Set__compare x y GHC.Base./= Gt.
 
 Local Definition Ord__Set__max {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
@@ -266,6 +231,14 @@ Local Definition Ord__Set__max {inst_a} `{GHC.Base.Ord inst_a}
 Local Definition Ord__Set__min {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
   fun x y => if Ord__Set__op_zlze__ x y : bool then x else y.
+
+Local Definition Ord__Set__op_zg__ {inst_a} `{GHC.Base.Ord inst_a}
+   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
+  fun x y => Ord__Set__compare x y GHC.Base.== Gt.
+
+Local Definition Ord__Set__op_zgze__ {inst_a} `{GHC.Base.Ord inst_a}
+   : (Set_ inst_a) -> (Set_ inst_a) -> bool :=
+  fun x y => Ord__Set__compare x y GHC.Base./= Lt.
 
 Definition fold {a} {b} : (a -> b -> b) -> b -> Set_ a -> b :=
   foldr.
@@ -315,17 +288,15 @@ Definition lookupGT {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
             := match arg_0__, arg_1__, arg_2__ with
                | _, best, Tip => Some best
                | x, best, Bin _ y l r =>
-                   if x GHC.Base.< y : bool
-                   then goJust x y l
-                   else goJust x best r
+                   if x GHC.Base.< y : bool then goJust x y l else
+                   goJust x best r
                end in
   let fix goNothing arg_7__ arg_8__
             := match arg_7__, arg_8__ with
                | _, Tip => None
                | x, Bin _ y l r =>
-                   if x GHC.Base.< y : bool
-                   then goJust x y l
-                   else goNothing x r
+                   if x GHC.Base.< y : bool then goJust x y l else
+                   goNothing x r
                end in
   goNothing.
 
@@ -357,17 +328,15 @@ Definition lookupLT {a} `{GHC.Base.Ord a} : a -> Set_ a -> option a :=
             := match arg_0__, arg_1__, arg_2__ with
                | _, best, Tip => Some best
                | x, best, Bin _ y l r =>
-                   if x GHC.Base.<= y : bool
-                   then goJust x best l
-                   else goJust x y r
+                   if x GHC.Base.<= y : bool then goJust x best l else
+                   goJust x y r
                end in
   let fix goNothing arg_7__ arg_8__
             := match arg_7__, arg_8__ with
                | _, Tip => None
                | x, Bin _ y l r =>
-                   if x GHC.Base.<= y : bool
-                   then goNothing x l
-                   else goJust x y r
+                   if x GHC.Base.<= y : bool then goNothing x l else
+                   goJust x y r
                end in
   goNothing.
 
@@ -382,7 +351,7 @@ Definition lookupMax {a} : Set_ a -> option a :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x _ r => Some GHC.Base.$! lookupMaxSure x r
+    | Bin _ x _ r => Some (lookupMaxSure x r)
     end.
 
 Definition lookupMinSure {a} : a -> Set_ a -> a :=
@@ -396,7 +365,7 @@ Definition lookupMin {a} : Set_ a -> option a :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x l _ => Some GHC.Base.$! lookupMinSure x l
+    | Bin _ x l _ => Some (lookupMinSure x l)
     end.
 
 Definition mapMonotonic {a} {b} : (a -> b) -> Set_ a -> Set_ b :=
@@ -420,7 +389,7 @@ Definition member {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
   go.
 
 Definition notMember {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
-  fun a t => negb GHC.Base.$ member a t.
+  fun a t => negb (member a t).
 
 Definition null {a} : Set_ a -> bool :=
   fun arg_0__ => match arg_0__ with | Tip => true | Bin _ _ _ _ => false end.
@@ -463,9 +432,8 @@ Definition validsize {a} : Set_ a -> bool :=
                  | Bin sz _ l r =>
                      match pair (realsize l) (realsize r) with
                      | pair (Some n) (Some m) =>
-                         if ((n GHC.Num.+ m) GHC.Num.+ #1) GHC.Base.== sz : bool
-                         then Some sz
-                         else None
+                         if ((n GHC.Num.+ m) GHC.Num.+ #1) GHC.Base.== sz : bool then Some sz else
+                         None
                      | _ => None
                      end
                  end in
@@ -482,7 +450,7 @@ Definition lookupIndex {a} `{GHC.Base.Ord a}
                  match GHC.Base.compare x kx with
                  | Lt => go idx x l
                  | Gt => go ((idx GHC.Num.+ size l) GHC.Num.+ #1) x r
-                 | Eq => Some GHC.Base.$! (idx GHC.Num.+ size l)
+                 | Eq => Some (idx GHC.Num.+ size l)
                  end
              end in
   go #0.
@@ -518,11 +486,11 @@ Definition balanceR {a} : a -> Set_ a -> Set_ a -> Set_ a :=
             Bin #3 rlx (Bin #1 x Tip Tip) (Bin #1 rx Tip Tip)
         | Bin rs rx (Bin rls rlx rll rlr as rl) (Bin rrs _ _ _ as rr) =>
             if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
-            then Bin (#1 GHC.Num.+ rs) rx (Bin (#1 GHC.Num.+ rls) x Tip rl) rr
-            else Bin (#1 GHC.Num.+ rs) rlx (Bin (#1 GHC.Num.+ size rll) x Tip rll) (Bin ((#1
-                                                                                          GHC.Num.+
-                                                                                          rrs) GHC.Num.+
-                                                                                         size rlr) rx rlr rr)
+            then Bin (#1 GHC.Num.+ rs) rx (Bin (#1 GHC.Num.+ rls) x Tip rl) rr else
+            Bin (#1 GHC.Num.+ rs) rlx (Bin (#1 GHC.Num.+ size rll) x Tip rll) (Bin ((#1
+                                                                                     GHC.Num.+
+                                                                                     rrs) GHC.Num.+
+                                                                                    size rlr) rx rlr rr)
         end
     | Bin ls _ _ _ =>
         match r with
@@ -534,16 +502,16 @@ Definition balanceR {a} : a -> Set_ a -> Set_ a -> Set_ a :=
                  | pair (Bin rls rlx rll rlr) (Bin rrs _ _ _) =>
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rx (Bin ((#1 GHC.Num.+ ls) GHC.Num.+
-                                                                        rls) x l rl) rr
-                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlx (Bin ((#1 GHC.Num.+ ls) GHC.Num.+
-                                                                         size rll) x l rll) (Bin ((#1 GHC.Num.+ rrs)
-                                                                                                  GHC.Num.+
-                                                                                                  size rlr) rx rlr rr)
+                                                                        rls) x l rl) rr else
+                     Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rlx (Bin ((#1 GHC.Num.+ ls) GHC.Num.+
+                                                                    size rll) x l rll) (Bin ((#1 GHC.Num.+ rrs)
+                                                                                             GHC.Num.+
+                                                                                             size rlr) rx rlr rr)
                  | _ =>
                      let 'pair _ _ := scrut_10__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceR")
-                 end
-            else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) x l r
+                 end else
+            Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) x l r
         end
     end.
 
@@ -576,7 +544,7 @@ Definition minView {a} : Set_ a -> option (a * Set_ a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x l r => Some GHC.Base.$! (id GHC.Base.$ minViewSure x l r)
+    | Bin _ x l r => Some (id (minViewSure x l r))
     end.
 
 Definition balanceL {a} : a -> Set_ a -> Set_ a -> Set_ a :=
@@ -591,9 +559,9 @@ Definition balanceL {a} : a -> Set_ a -> Set_ a -> Set_ a :=
         | Bin _ lx (Bin _ _ _ _ as ll) Tip => Bin #3 lx ll (Bin #1 x Tip Tip)
         | Bin ls lx (Bin lls _ _ _ as ll) (Bin lrs lrx lrl lrr as lr) =>
             if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
-            then Bin (#1 GHC.Num.+ ls) lx ll (Bin (#1 GHC.Num.+ lrs) x lr Tip)
-            else Bin (#1 GHC.Num.+ ls) lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl) lx
-                                            ll lrl) (Bin (#1 GHC.Num.+ size lrr) x lrr Tip)
+            then Bin (#1 GHC.Num.+ ls) lx ll (Bin (#1 GHC.Num.+ lrs) x lr Tip) else
+            Bin (#1 GHC.Num.+ ls) lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+ size lrl) lx ll
+                                       lrl) (Bin (#1 GHC.Num.+ size lrr) x lrr Tip)
         end
     | Bin rs _ _ _ =>
         match l with
@@ -606,16 +574,16 @@ Definition balanceL {a} : a -> Set_ a -> Set_ a -> Set_ a :=
                      if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lx ll (Bin ((#1 GHC.Num.+ rs)
                                                                            GHC.Num.+
-                                                                           lrs) x lr r)
-                     else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+
-                                                                         size lrl) lx ll lrl) (Bin ((#1 GHC.Num.+ rs)
-                                                                                                    GHC.Num.+
-                                                                                                    size lrr) x lrr r)
+                                                                           lrs) x lr r) else
+                     Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lrx (Bin ((#1 GHC.Num.+ lls) GHC.Num.+
+                                                                    size lrl) lx ll lrl) (Bin ((#1 GHC.Num.+ rs)
+                                                                                               GHC.Num.+
+                                                                                               size lrr) x lrr r)
                  | _ =>
                      let 'pair _ _ := scrut_10__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceL")
-                 end
-            else Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) x l r
+                 end else
+            Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) x l r
         end
     end.
 
@@ -636,19 +604,16 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                | orig, x, (Bin sz y l r as t) =>
                    match GHC.Base.compare x y with
                    | Lt =>
-                       let 'l' := go orig x l in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool
-                       then t
-                       else balanceL y l' r
+                       let l' := go orig x l in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
+                       balanceL y l' r
                    | Gt =>
-                       let 'r' := go orig x r in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool
-                       then t
-                       else balanceR y l r'
+                       let r' := go orig x r in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
+                       balanceR y l r'
                    | Eq =>
-                       if (Utils.Containers.Internal.PtrEquality.ptrEq orig y) : bool
-                       then t
-                       else Bin sz (orig) l r
+                       if (Utils.Containers.Internal.PtrEquality.ptrEq orig y) : bool then t else
+                       Bin sz (orig) l r
                    end
                end in
     go x0 x0.
@@ -669,15 +634,13 @@ Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                | orig, x, (Bin _ y l r as t) =>
                    match GHC.Base.compare x y with
                    | Lt =>
-                       let 'l' := go orig x l in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool
-                       then t
-                       else balanceL y l' r
+                       let l' := go orig x l in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
+                       balanceL y l' r
                    | Gt =>
-                       let 'r' := go orig x r in
-                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool
-                       then t
-                       else balanceR y l r'
+                       let r' := go orig x r in
+                       if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
+                       balanceR y l r'
                    | Eq => t
                    end
                end in
@@ -690,10 +653,10 @@ Program Fixpoint link {a} (arg_0__ : a) (arg_1__ : Set_ a) (arg_2__ : Set_ a)
                       | x, l, Tip => insertMax x l
                       | x, (Bin sizeL y ly ry as l), (Bin sizeR z lz rz as r) =>
                           if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
-                          then balanceL z (link x l lz) rz
-                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
-                               then balanceR y ly (link x ry r)
-                               else bin x l r
+                          then balanceL z (link x l lz) rz else
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                          then balanceR y ly (link x ry r) else
+                          bin x l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -702,9 +665,8 @@ Definition dropWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ x l r =>
-               if p x : bool
-               then dropWhileAntitone p r
-               else link x (dropWhileAntitone p l) r
+               if p x : bool then dropWhileAntitone p r else
+               link x (dropWhileAntitone p l) r
            end.
 
 Definition fromDistinctAscList {a} : list a -> Set_ a :=
@@ -717,14 +679,13 @@ Definition fromDistinctAscList {a} : list a -> Set_ a :=
                                           match arg_1__, arg_2__ with
                                           | _, nil => (pair Tip nil)
                                           | s, (cons x xs' as xs) =>
-                                              if s GHC.Base.== #1 : bool
-                                              then (pair (Bin #1 x Tip Tip) xs')
-                                              else match create (Data.Bits.shiftR s #1) xs with
-                                                   | (pair _ nil as res) => res
-                                                   | pair l (cons y ys) =>
-                                                       let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
-                                                       (pair (link y l r) zs)
-                                                   end
+                                              if s GHC.Base.== #1 : bool then (pair (Bin #1 x Tip Tip) xs') else
+                                              match create (Data.Bits.shiftR s #1) xs with
+                                              | (pair _ nil as res) => res
+                                              | pair l (cons y ys) =>
+                                                  let 'pair r zs := create (Data.Bits.shiftR s #1) ys in
+                                                  (pair (link y l r) zs)
+                                              end
                                           end) in
         let go :=
           GHC.DeferredFix.deferredFix3 (fun go arg_13__ arg_14__ arg_15__ =>
@@ -732,8 +693,7 @@ Definition fromDistinctAscList {a} : list a -> Set_ a :=
                                           | _, t, nil => t
                                           | s, l, cons x xs =>
                                               let 'pair r ys := create s xs in
-                                              let 't' := link x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
@@ -751,14 +711,13 @@ Definition fromDistinctDescList {a} : list a -> Set_ a :=
                                           match arg_1__, arg_2__ with
                                           | _, nil => (pair Tip nil)
                                           | s, (cons x xs' as xs) =>
-                                              if s GHC.Base.== #1 : bool
-                                              then (pair (Bin #1 x Tip Tip) xs')
-                                              else match create (Data.Bits.shiftR s #1) xs with
-                                                   | (pair _ nil as res) => res
-                                                   | pair r (cons y ys) =>
-                                                       let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
-                                                       (pair (link y l r) zs)
-                                                   end
+                                              if s GHC.Base.== #1 : bool then (pair (Bin #1 x Tip Tip) xs') else
+                                              match create (Data.Bits.shiftR s #1) xs with
+                                              | (pair _ nil as res) => res
+                                              | pair r (cons y ys) =>
+                                                  let 'pair l zs := create (Data.Bits.shiftR s #1) ys in
+                                                  (pair (link y l r) zs)
+                                              end
                                           end) in
         let go :=
           GHC.DeferredFix.deferredFix3 (fun go arg_13__ arg_14__ arg_15__ =>
@@ -766,8 +725,7 @@ Definition fromDistinctDescList {a} : list a -> Set_ a :=
                                           | _, t, nil => t
                                           | s, r, cons x xs =>
                                               let 'pair l ys := create s xs in
-                                              let 't' := link x l r in
-                                              go (Data.Bits.shiftL s #1) t' ys
+                                              let t' := link x l r in go (Data.Bits.shiftL s #1) t' ys
                                           end) in
         go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
@@ -783,7 +741,7 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
     | cons x0 xs0 =>
         let fromList' :=
           fun t0 xs =>
-            let ins := fun t x => insert x t in Data.Foldable.foldl ins t0 xs in
+            let ins := fun t x => insert x t in Data.Foldable.foldl' ins t0 xs in
         let not_ordered :=
           fun arg_4__ arg_5__ =>
             match arg_4__, arg_5__ with
@@ -798,17 +756,15 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
                                               if s GHC.Base.== #1 : bool
                                               then if not_ordered x xss : bool
                                                    then pair (pair (Bin #1 x Tip Tip) nil) xss
-                                                   else pair (pair (Bin #1 x Tip Tip) xss) nil
-                                              else match create (Data.Bits.shiftR s #1) xs with
-                                                   | (pair (pair _ nil) _ as res) => res
-                                                   | pair (pair l (cons y nil)) zs => pair (pair (insertMax y l) nil) zs
-                                                   | pair (pair l (cons y yss as ys)) _ =>
-                                                       if not_ordered y yss : bool
-                                                       then pair (pair l nil) ys
-                                                       else let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1)
-                                                                                          yss in
-                                                            pair (pair (link y l r) zs) ws
-                                                   end
+                                                   else pair (pair (Bin #1 x Tip Tip) xss) nil else
+                                              match create (Data.Bits.shiftR s #1) xs with
+                                              | (pair (pair _ nil) _ as res) => res
+                                              | pair (pair l (cons y nil)) zs => pair (pair (insertMax y l) nil) zs
+                                              | pair (pair l (cons y yss as ys)) _ =>
+                                                  if not_ordered y yss : bool then pair (pair l nil) ys else
+                                                  let 'pair (pair r zs) ws := create (Data.Bits.shiftR s #1) yss in
+                                                  pair (pair (link y l r) zs) ws
+                                              end
                                           end) in
         let go :=
           GHC.DeferredFix.deferredFix3 (fun go arg_22__ arg_23__ arg_24__ =>
@@ -816,16 +772,14 @@ Definition fromList {a} `{GHC.Base.Ord a} : list a -> Set_ a :=
                                           | _, t, nil => t
                                           | _, t, cons x nil => insertMax x t
                                           | s, l, (cons x xss as xs) =>
-                                              if not_ordered x xss : bool
-                                              then fromList' l xs
-                                              else match create s xss with
-                                                   | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link x l r) ys
-                                                   | pair (pair r _) ys => fromList' (link x l r) ys
-                                                   end
+                                              if not_ordered x xss : bool then fromList' l xs else
+                                              match create s xss with
+                                              | pair (pair r ys) nil => go (Data.Bits.shiftL s #1) (link x l r) ys
+                                              | pair (pair r _) ys => fromList' (link x l r) ys
+                                              end
                                           end) in
-        if not_ordered x0 xs0 : bool
-        then fromList' (Bin #1 x0 Tip Tip) xs0
-        else go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
+        if not_ordered x0 xs0 : bool then fromList' (Bin #1 x0 Tip Tip) xs0 else
+        go (#1 : GHC.Num.Int) (Bin #1 x0 Tip Tip) xs0
     end.
 
 Definition map {b} {a} `{GHC.Base.Ord b} : (a -> b) -> Set_ a -> Set_ b :=
@@ -837,11 +791,9 @@ Definition spanAntitone {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
               := match arg_0__, arg_1__ with
                  | _, Tip => pair Tip Tip
                  | p, Bin _ x l r =>
-                     if p x : bool
-                     then let 'pair u v := go p r in
-                          pair (link x l u) v
-                     else let 'pair u v := go p l in
-                          pair u (link x v r)
+                     if p x : bool then let 'pair u v := go p r in pair (link x l u) v else
+                     let 'pair u v := go p l in
+                     pair u (link x v r)
                  end in
     id (go p0 m).
 
@@ -854,12 +806,10 @@ Definition splitMember {a} `{GHC.Base.Ord a}
                match GHC.Base.compare x y with
                | Lt =>
                    let 'pair (pair lt found) gt := splitMember x l in
-                   let 'gt' := link y gt r in
-                   pair (pair lt found) gt'
+                   let gt' := link y gt r in pair (pair lt found) gt'
                | Gt =>
                    let 'pair (pair lt found) gt := splitMember x r in
-                   let 'lt' := link y l lt in
-                   pair (pair lt' found) gt
+                   let lt' := link y l lt in pair (pair lt' found) gt
                | Eq => pair (pair l true) r
                end
            end.
@@ -899,53 +849,62 @@ Definition splitS {a} `{GHC.Base.Ord a}
 
 Definition split {a} `{GHC.Base.Ord a}
    : a -> Set_ a -> (Set_ a * Set_ a)%type :=
-  fun x t => id GHC.Base.$ splitS x t.
+  fun x t => id (splitS x t).
 
 Definition takeWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
   fix takeWhileAntitone arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ x l r =>
-               if p x : bool
-               then link x l (takeWhileAntitone p r)
-               else takeWhileAntitone p l
+               if p x : bool then link x l (takeWhileAntitone p r) else
+               takeWhileAntitone p l
            end.
 
 Definition union {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
   fix union arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | t1, Tip => t1
-           | t1, Bin _ x Tip Tip => insertR x t1
-           | Bin _ x Tip Tip, t2 => insert x t2
-           | Tip, t2 => t2
-           | (Bin _ x l1 r1 as t1), t2 =>
-               let 'pair l2 r2 := splitS x t2 in
-               let 'r1r2 := union r1 r2 in
-               let 'l1l2 := union l1 l2 in
-               if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
-                       (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
-               then t1
-               else link x l1l2 r1r2
+           | t1, Bin num_2__ x _ _ =>
+               if num_2__ GHC.Base.== #1 : bool then insertR x t1 else
+               let j_11__ :=
+                 match arg_0__, arg_1__ with
+                 | Tip, t2 => t2
+                 | (Bin _ x l1 r1 as t1), t2 =>
+                     let 'pair l2 r2 := splitS x t2 in
+                     let r1r2 := union r1 r2 in
+                     let l1l2 := union l1 l2 in
+                     if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
+                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
+                     then t1 else
+                     link x l1l2 r1r2
+                 end in
+               match arg_0__, arg_1__ with
+               | Bin num_3__ x _ _, t2 =>
+                   if num_3__ GHC.Base.== #1 : bool then insert x t2 else
+                   j_11__
+               | _, _ => j_11__
+               end
            end.
 
-Definition unions {a} `{GHC.Base.Ord a} : list (Set_ a) -> Set_ a :=
-  Data.Foldable.foldl union empty.
+Definition unions {f} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord a}
+   : f (Set_ a) -> Set_ a :=
+  Data.Foldable.foldl' union empty.
 
 Local Definition Monoid__Set__mconcat {inst_a} `{GHC.Base.Ord inst_a}
    : list (Set_ inst_a) -> (Set_ inst_a) :=
   unions.
 
-Local Definition Semigroup__Set__op_zlzg__ {inst_a} `{GHC.Base.Ord inst_a}
+Local Definition Semigroup__Set__op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
   union.
 
 Program Instance Semigroup__Set_ {a} `{GHC.Base.Ord a}
-   : Data.Semigroup.Semigroup (Set_ a) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__Set__op_zlzg__ |}.
+   : GHC.Base.Semigroup (Set_ a) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Set__op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Set__mappend {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Program Instance Monoid__Set_ {a} `{GHC.Base.Ord a}
    : GHC.Base.Monoid (Set_ a) :=
@@ -968,7 +927,7 @@ Definition maxView {a} : Set_ a -> option (a * Set_ a)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Tip => None
-    | Bin _ x l r => Some GHC.Base.$! (id GHC.Base.$ maxViewSure x l r)
+    | Bin _ x l r => Some (id (maxViewSure x l r))
     end.
 
 Definition glue {a} : Set_ a -> Set_ a -> Set_ a :=
@@ -979,9 +938,9 @@ Definition glue {a} : Set_ a -> Set_ a -> Set_ a :=
     | (Bin sl xl ll lr as l), (Bin sr xr rl rr as r) =>
         if sl GHC.Base.> sr : bool
         then let 'pair m l' := maxViewSure xl ll lr in
-             balanceR m l' r
-        else let 'pair m r' := minViewSure xr rl rr in
-             balanceL m l r'
+             balanceR m l' r else
+        let 'pair m r' := minViewSure xr rl rr in
+        balanceL m l r'
     end.
 
 Definition powerSet {a} : Set_ a -> Set_ (Set_ a) :=
@@ -999,15 +958,13 @@ Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
              | x, (Bin _ y l r as t) =>
                  match GHC.Base.compare x y with
                  | Lt =>
-                     let 'l' := go x l in
-                     if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool
-                     then t
-                     else balanceR y l' r
+                     let l' := go x l in
+                     if Utils.Containers.Internal.PtrEquality.ptrEq l' l : bool then t else
+                     balanceR y l' r
                  | Gt =>
-                     let 'r' := go x r in
-                     if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool
-                     then t
-                     else balanceL y l r'
+                     let r' := go x r in
+                     if Utils.Containers.Internal.PtrEquality.ptrEq r' r : bool then t else
+                     balanceL y l r'
                  | Eq => glue l r
                  end
              end in
@@ -1020,10 +977,10 @@ Program Fixpoint merge {a} (arg_0__ : Set_ a) (arg_1__ : Set_ a)
                       | l, Tip => l
                       | (Bin sizeL x lx rx as l), (Bin sizeR y ly ry as r) =>
                           if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
-                          then balanceL y (merge l ly) ry
-                          else if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
-                               then balanceR x lx (merge rx r)
-                               else glue l r
+                          then balanceL y (merge l ly) ry else
+                          if Bool.Sumbool.sumbool_of_bool ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
+                          then balanceR x lx (merge rx r) else
+                          glue l r
                       end.
 Solve Obligations with (termination_by_omega).
 
@@ -1037,14 +994,14 @@ Definition filter {a} : (a -> bool) -> Set_ a -> Set_ a :=
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, (Bin _ x l r as t) =>
-               let 'r' := filter p r in
-               let 'l' := filter p l in
+               let r' := filter p r in
+               let l' := filter p l in
                if p x : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l l')
                             (Utils.Containers.Internal.PtrEquality.ptrEq r r') : bool
                     then t
-                    else link x l' r'
-               else merge l' r'
+                    else link x l' r' else
+               merge l' r'
            end.
 
 Definition intersection {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
@@ -1054,14 +1011,14 @@ Definition intersection {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
            | _, Tip => Tip
            | (Bin _ x l1 r1 as t1), t2 =>
                let 'pair (pair l2 b) r2 := splitMember x t2 in
-               let 'l1l2 := intersection l1 l2 in
-               let 'r1r2 := intersection r1 r2 in
+               let l1l2 := intersection l1 l2 in
+               let r1r2 := intersection r1 r2 in
                if b : bool
                then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
                             (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
                     then t1
-                    else link x l1l2 r1r2
-               else merge l1l2 r1r2
+                    else link x l1l2 r1r2 else
+               merge l1l2 r1r2
            end.
 
 Definition partition {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
@@ -1075,29 +1032,28 @@ Definition partition {a} : (a -> bool) -> Set_ a -> (Set_ a * Set_ a)%type :=
                      then pair (if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1 l)
                                         (Utils.Containers.Internal.PtrEquality.ptrEq r1 r) : bool
                                 then t
-                                else link x l1 r1) (merge l2 r2)
-                     else pair (merge l1 r1) (if andb (Utils.Containers.Internal.PtrEquality.ptrEq l2
-                                                                                                   l)
-                                                      (Utils.Containers.Internal.PtrEquality.ptrEq r2 r) : bool
-                                then t
-                                else link x l2 r2)
+                                else link x l1 r1) (merge l2 r2) else
+                     pair (merge l1 r1) (if andb (Utils.Containers.Internal.PtrEquality.ptrEq l2 l)
+                                                 (Utils.Containers.Internal.PtrEquality.ptrEq r2 r) : bool
+                           then t
+                           else link x l2 r2)
                  end in
-    id GHC.Base.$ go p0 t0.
+    id (go p0 t0).
 
-Local Definition Semigroup__MergeSet_op_zlzg__ {inst_a}
+Local Definition Semigroup__MergeSet_op_zlzlzgzg__ {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_MergeSet xs, Mk_MergeSet ys => Mk_MergeSet (merge xs ys)
     end.
 
-Program Instance Semigroup__MergeSet {a}
-   : Data.Semigroup.Semigroup (MergeSet a) :=
-  fun _ k => k {| Data.Semigroup.op_zlzg____ := Semigroup__MergeSet_op_zlzg__ |}.
+Program Instance Semigroup__MergeSet {a} : GHC.Base.Semigroup (MergeSet a) :=
+  fun _ k =>
+    k {| GHC.Base.op_zlzlzgzg____ := Semigroup__MergeSet_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__MergeSet_mappend {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
-  _Data.Semigroup.<>_.
+  _GHC.Base.<<>>_.
 
 Local Definition Monoid__MergeSet_mconcat {inst_a}
    : list (MergeSet inst_a) -> (MergeSet inst_a) :=
@@ -1107,28 +1063,26 @@ Definition drop {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | i, m =>
-        if i GHC.Base.>= size m : bool
-        then Tip
-        else match arg_0__, arg_1__ with
-             | i0, m0 =>
-                 let fix go arg_2__ arg_3__
-                           := match arg_2__, arg_3__ with
-                              | i, m =>
-                                  if i GHC.Base.<= #0 : bool
-                                  then m
-                                  else match arg_2__, arg_3__ with
-                                       | _, Tip => Tip
-                                       | i, Bin _ x l r =>
-                                           let sizeL := size l in
-                                           match GHC.Base.compare i sizeL with
-                                           | Lt => link x (go i l) r
-                                           | Gt => go ((i GHC.Num.- sizeL) GHC.Num.- #1) r
-                                           | Eq => insertMin x r
-                                           end
-                                       end
-                              end in
-                 go i0 m0
-             end
+        if i GHC.Base.>= size m : bool then Tip else
+        match arg_0__, arg_1__ with
+        | i0, m0 =>
+            let fix go arg_2__ arg_3__
+                      := match arg_2__, arg_3__ with
+                         | i, m =>
+                             if i GHC.Base.<= #0 : bool then m else
+                             match arg_2__, arg_3__ with
+                             | _, Tip => Tip
+                             | i, Bin _ x l r =>
+                                 let sizeL := size l in
+                                 match GHC.Base.compare i sizeL with
+                                 | Lt => link x (go i l) r
+                                 | Gt => go ((i GHC.Num.- sizeL) GHC.Num.- #1) r
+                                 | Eq => insertMin x r
+                                 end
+                             end
+                         end in
+            go i0 m0
+        end
     end.
 
 Definition splitAt {a} : GHC.Num.Int -> Set_ a -> (Set_ a * Set_ a)%type :=
@@ -1136,24 +1090,22 @@ Definition splitAt {a} : GHC.Num.Int -> Set_ a -> (Set_ a * Set_ a)%type :=
     let fix go arg_0__ arg_1__
               := match arg_0__, arg_1__ with
                  | i, m =>
-                     if i GHC.Base.<= #0 : bool
-                     then pair Tip m
-                     else match arg_0__, arg_1__ with
-                          | _, Tip => pair Tip Tip
-                          | i, Bin _ x l r =>
-                              let sizeL := size l in
-                              match GHC.Base.compare i sizeL with
-                              | Lt => let 'pair ll lr := go i l in pair ll (link x lr r)
-                              | Gt =>
-                                  let 'pair rl rr := go ((i GHC.Num.- sizeL) GHC.Num.- #1) r in
-                                  pair (link x l rl) rr
-                              | Eq => pair l (insertMin x r)
-                              end
-                          end
+                     if i GHC.Base.<= #0 : bool then pair Tip m else
+                     match arg_0__, arg_1__ with
+                     | _, Tip => pair Tip Tip
+                     | i, Bin _ x l r =>
+                         let sizeL := size l in
+                         match GHC.Base.compare i sizeL with
+                         | Lt => let 'pair ll lr := go i l in pair ll (link x lr r)
+                         | Gt =>
+                             let 'pair rl rr := go ((i GHC.Num.- sizeL) GHC.Num.- #1) r in
+                             pair (link x l rl) rr
+                         | Eq => pair l (insertMin x r)
+                         end
+                     end
                  end in
-    if i0 GHC.Base.>= size m0 : bool
-    then pair m0 Tip
-    else id GHC.Base.$ go i0 m0.
+    if i0 GHC.Base.>= size m0 : bool then pair m0 Tip else
+    id (go i0 m0).
 
 Definition isSubsetOf {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
   fun t1 t2 => andb (size t1 GHC.Base.<= size t2) (isSubsetOfX t1 t2).
@@ -1165,28 +1117,26 @@ Definition take {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | i, m =>
-        if i GHC.Base.>= size m : bool
-        then m
-        else match arg_0__, arg_1__ with
-             | i0, m0 =>
-                 let fix go arg_2__ arg_3__
-                           := match arg_2__, arg_3__ with
-                              | i, _ =>
-                                  if i GHC.Base.<= #0 : bool
-                                  then Tip
-                                  else match arg_2__, arg_3__ with
-                                       | _, Tip => Tip
-                                       | i, Bin _ x l r =>
-                                           let sizeL := size l in
-                                           match GHC.Base.compare i sizeL with
-                                           | Lt => go i l
-                                           | Gt => link x l (go ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
-                                           | Eq => l
-                                           end
-                                       end
-                              end in
-                 go i0 m0
-             end
+        if i GHC.Base.>= size m : bool then m else
+        match arg_0__, arg_1__ with
+        | i0, m0 =>
+            let fix go arg_2__ arg_3__
+                      := match arg_2__, arg_3__ with
+                         | i, _ =>
+                             if i GHC.Base.<= #0 : bool then Tip else
+                             match arg_2__, arg_3__ with
+                             | _, Tip => Tip
+                             | i, Bin _ x l r =>
+                                 let sizeL := size l in
+                                 match GHC.Base.compare i sizeL with
+                                 | Lt => go i l
+                                 | Gt => link x l (go ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
+                                 | Eq => l
+                                 end
+                             end
+                         end in
+            go i0 m0
+        end
     end.
 
 Definition difference {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
@@ -1196,11 +1146,10 @@ Definition difference {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
            | t1, Tip => t1
            | t1, Bin _ x l2 r2 =>
                let 'pair l1 r1 := split x t1 in
-               let 'r1r2 := difference r1 r2 in
-               let 'l1l2 := difference l1 l2 in
-               if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool
-               then t1
-               else merge l1l2 r1r2
+               let r1r2 := difference r1 r2 in
+               let l1l2 := difference l1 l2 in
+               if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool then t1 else
+               merge l1l2 r1r2
            end.
 
 Definition op_zrzr__ {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
@@ -1255,8 +1204,8 @@ Local Definition Foldable__Set__length : forall {a}, Set_ a -> GHC.Num.Int :=
 
 Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ :=
   fun _ k =>
-    k {| Data.Foldable.elem__ := fun {a} `{GHC.Base.Eq_ a} => Foldable__Set__elem ;
-         Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} => Foldable__Set__fold ;
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__Set__fold ;
          Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
            Foldable__Set__foldMap ;
          Data.Foldable.foldl__ := fun {b} {a} => Foldable__Set__foldl ;
@@ -1277,29 +1226,35 @@ Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) :=
 
 Definition cartesianProduct {a} {b} : Set_ a -> Set_ b -> Set_ (a * b)%type :=
   fun as_ bs =>
-    getMergeSet GHC.Base.$
-    Data.Foldable.foldMap (fun a =>
-                             Mk_MergeSet GHC.Base.$ mapMonotonic (GHC.Tuple.pair2 a) bs) as_.
+    getMergeSet (Data.Foldable.foldMap (fun a =>
+                                          Mk_MergeSet (mapMonotonic (GHC.Tuple.pair2 a) bs)) as_).
 
 Module Notations.
 Notation "'_Data.Set.Internal.\\_'" := (op_zrzr__).
 Infix "Data.Set.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
-(* Unbound variables:
+(* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some andb bool comparison cons false
      id list negb nil op_zt__ option orb pair prod set_size true Data.Bits.shiftL
      Data.Bits.shiftR Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldl
-     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
-     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftEq
-     Data.Semigroup.Semigroup Data.Semigroup.op_zlzg__ GHC.Base.Eq_ GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.foldr
-     GHC.Base.map GHC.Base.mappend GHC.Base.mempty GHC.Base.op_z2218U__
-     GHC.Base.op_zd__ GHC.Base.op_zdzn__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlze__ GHC.Base.op_zsze__
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl' Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.Classes.Eq1
+     Data.Functor.Classes.Ord1 Data.Functor.Classes.liftCompare
+     Data.Functor.Classes.liftCompare__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq__ GHC.Base.Eq_ GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.Semigroup GHC.Base.compare GHC.Base.compare__ GHC.Base.const
+     GHC.Base.flip GHC.Base.foldr GHC.Base.map GHC.Base.mappend GHC.Base.mappend__
+     GHC.Base.max__ GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__
+     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3
+     GHC.Err.error GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
      GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Tuple.pair2 Nat.add
      Utils.Containers.Internal.PtrEquality.ptrEq
 *)

@@ -12,9 +12,8 @@ Stability   : experimental
 
 module HsToCoq.Coq.Pretty (
   renderGallina,
+  showP,
   Gallina(..),
-  renderIdent, renderAccessIdent, renderNum, renderString, renderOp,
-  renderLocality, renderFullLocality,
   ) where
 
 import Prelude hiding (Num)
@@ -24,6 +23,7 @@ import HsToCoq.Util.Function
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Set as S
 
 import Data.List.NonEmpty (NonEmpty(), (<|), nonEmpty)
 
@@ -32,6 +32,7 @@ import Data.Data (Data(..))
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina.Orphans ()
 import HsToCoq.PrettyPrint
 
@@ -140,6 +141,9 @@ maybeParen False = id
 class Gallina a where
   renderGallina' :: Int -> a -> Doc
 
+showP :: Gallina a => a -> String
+showP = T.unpack . displayTStrict . renderOneLine . renderGallina
+
 renderGallina :: Gallina a => a -> Doc
 renderGallina = renderGallina' 0
 
@@ -236,14 +240,27 @@ instance Gallina Term where
   renderGallina' p (Forall vars body) = maybeParen (p > forallPrec) $
     group $ "forall" <+> render_args V vars <> "," <!> renderGallina body
 
+  -- Special case: Fun followed by a case with one pattern can use refutable syntax
+  renderGallina' p (Fun vars (Match scruts Nothing [Equation mps body]))
+    | check (toList vars) (toList scruts)
+    , Just pats <- mapM (\mp -> do {MultPattern [pat] <- pure mp; pure pat}) mps
+    = maybeParen (p > funPrec) $
+      group $ "fun" <+> hcat (fmap (("'"<>) . parens . renderGallina) pats)
+                    <+> nest 2 ("=>" <!> renderGallina' funPrec body)
+    where fvs = getFreeVars body
+          check (Inferred Explicit (Ident name) : vars) (MatchItem (Qualid v) Nothing Nothing:ss)
+              = v `S.notMember` fvs  && name == v  && check vars ss
+          check [] [] = True
+          check _ _ = False
+
   renderGallina' p (Fun vars body) = maybeParen (p > funPrec) $
     group $ "fun" <+> render_args V vars <+> nest 2 ("=>" <!> renderGallina' funPrec body)
 
   renderGallina' p (Fix fbs) = group $ maybeParen (p > fixPrec) $
     "fix" <+> renderGallina fbs
 
-  renderGallina' p (Cofix cbs) = group $ maybeParen (p > fixPrec) $
-    "cofix" <+> renderGallina cbs
+  renderGallina' p (Cofix fbs) = group $ maybeParen (p > fixPrec) $
+    "cofix" <+> renderGallina fbs
 
   -- the following are pattern synonyms and need to preceed the general Let case.
   renderGallina' p (LetFix def body) = group $ maybeParen (p > letPrec) $
@@ -270,17 +287,15 @@ instance Gallina Term where
                                <+> nest 2 (":=" <!> renderGallina val))
     <+> "in" <!> align (renderGallina body)
 
-  renderGallina' p (LetTickDep pat oin val rty body) = group $ maybeParen (p > letPrec) $
-        "let" <+> align (group $   "'" <> align (renderGallina pat)
-                               <>  render_in_annot oin
-                               <+> nest 2 (":=" <!> renderGallina val
-                                                <>  render_rtype  rty))
-    <+> "in" <!> align (renderGallina body)
-
-  renderGallina' p (If c odrty t f) = maybeParen (p > ifPrec) $
+  renderGallina' p (If SymmetricIf c odrty t f) = maybeParen (p > ifPrec) $
         "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
     <!> "then" <+> align (renderGallina t)
     <!> "else" <+> align (renderGallina f)
+
+  renderGallina' p (If LinearIf c odrty t f) = maybeParen (p > ifPrec) $ align $
+    group ( "if"   <+> align (renderGallina c <> render_opt_rtype odrty)
+        <!> "then" <+> align (renderGallina t) <+> "else")
+    <!> align (renderGallina f)
 
   renderGallina' p (HasType tm ty) = maybeParen (p > castPrec) $
     renderGallina' (castPrec + 1) tm <+> ":" <+> renderGallina' castPrec ty
@@ -294,13 +309,13 @@ instance Gallina Term where
   renderGallina' p (Arrow ty1 ty2) = maybeParen (p > arrowPrec) $ group $
     renderGallina' (arrowPrec + 1) ty1 <+> "->" <!> renderGallina' arrowPrec ty2
 
-  renderGallina' p (App f args) =  maybeParen (p > appPrec) $
-    renderGallina' appPrec f </> align (render_args' (appPrec + 1) H args)
+  -- Special notation for GHC.Num.fromInteger
+  renderGallina' _ (App1 "GHC.Num.fromInteger" (Num num)) =
+    char '#' <> renderNum num
 
-  renderGallina' _p (ExplicitApp qid args) = parensN $
-    "@" <> renderGallina qid <> softlineIf args <> render_args' (appPrec + 1) H args
-
-  renderGallina' p (Infix l op r)  =
+  -- Special notation for somehting that looks like an operator an
+  -- is applied to two arguments
+  renderGallina' p (App2 (Qualid op) l r) | qualidIsOp op =
     case lookup op precTable of
       Just (n, LeftAssociativity)  ->
         maybeParen (n < p) $ group $
@@ -314,6 +329,12 @@ instance Gallina Term where
       Nothing                      ->
         maybeParen (p > defaultOpPrec) $ group $
            renderGallina' (defaultOpPrec + 1) l </> renderQOp op <!> renderGallina' (defaultOpPrec + 1) r
+
+  renderGallina' p (App f args) =  maybeParen (p > appPrec) $
+    renderGallina' appPrec f </> align (render_args' (appPrec + 1) H args)
+
+  renderGallina' _p (ExplicitApp qid args) = parensN $
+    "@" <> renderGallina qid <> softlineIf args <> render_args' (appPrec + 1) H args
 
   renderGallina' p (InScope tm scope) = maybeParen (p > scopePrec) $
     renderGallina' scopePrec tm <> "%" <> renderIdent scope
@@ -345,9 +366,6 @@ instance Gallina Term where
 
   renderGallina' _ (Num num) =
     renderNum num
-
-  renderGallina' _ (PolyNum num) =
-    char '#' <> renderNum num
 
   renderGallina' _ (String str) =
     renderString str
@@ -399,8 +417,6 @@ instance Gallina Binder where
     binder_decoration Ungeneralizable ex False $ renderGallina name
   renderGallina' _ (Typed gen ex names ty) =
     binder_decoration gen ex True $ render_args_ty H names ty
-  renderGallina' _ (BindLet name oty val) =
-    hang 2 . parensN $ renderGallina name <> render_opt_type oty </> ":=" <+> align (renderGallina val)
   renderGallina' _ (Generalized ex ty)  =
     binder_decoration Generalizable ex True $ renderGallina ty
 
@@ -423,23 +439,12 @@ instance Gallina FixBodies where
   renderGallina' p (FixMany fb fbs var) =
     spacedSepPre "with" (align . renderGallina' p <$> fb <| fbs) </> "for" <+> renderGallina var
 
-instance Gallina CofixBodies where
-  renderGallina' p (CofixOne cb) =
-    renderGallina' p cb
-  renderGallina' p (CofixMany cb cbs var) =
-    spacedSepPre "with" (align . renderGallina' p <$> cb <| cbs) </> "for" <+> renderGallina var
-
 instance Gallina FixBody where
   renderGallina' _ (FixBody f args oannot oty def) =
     hang 2 $
       renderGallina f </> align (    fillSep (renderGallina <$> args)
                                 </?> (renderGallina <$> oannot))
                       <>  render_opt_type oty <!> ":=" <+> align (renderGallina def)
-
-instance Gallina CofixBody where
-  renderGallina' _ (CofixBody f args oty def) =
-    renderGallina f </> render_args_oty H args oty
-                    </> ":=" <+> align (renderGallina def)
 
 instance Gallina MatchItem where
   renderGallina' _ (MatchItem scrutinee oas oin) =
@@ -541,9 +546,7 @@ instance Gallina AssumptionKeyword where
   renderGallina' _ Hypotheses = "Hypotheses"
 
 instance Gallina Assums where
-  renderGallina' _ = \case
-    UnparenthesizedAssums ids ty -> renderAss ids ty
-    ParenthesizedAssums   groups -> group . vsep $ parensN . align . uncurry renderAss <$> groups
+  renderGallina' _ (Assums ids ty) = renderAss ids ty
     where
       renderAss ids ty = fillSep (renderGallina <$> ids) <> nest 2 (render_type ty)
 

@@ -1,0 +1,11 @@
+constructors:
+  CSE.CSEnv: ! '[Qualified "CSE" "CS"]'
+constructorFields:
+  CSE.CS: RecordFields [Qualified "CSE" "cs_subst",Qualified "CSE" "cs_map",Qualified
+    "CSE" "cs_rec_map"]
+recordFieldTypes:
+  CSE.cs_subst: Qualified "CSE" "CSEnv"
+  CSE.cs_map: Qualified "CSE" "CSEnv"
+  CSE.cs_rec_map: Qualified "CSE" "CSEnv"
+constructorTypes:
+  CSE.CS: Qualified "CSE" "CSEnv"

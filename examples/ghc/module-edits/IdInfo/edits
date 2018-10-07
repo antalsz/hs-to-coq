@@ -1,0 +1,47 @@
+###################################
+#
+#   We have parameterized a new type "CoreRuleInfo" that is isomorphic to the 
+#   "CoreRule" type.
+#   That way we break the dependence of IdInfo on core expressions. 
+#   (We do the same thing for Unfolding, but those edits are in the CoreSyn file.)
+#   This would be better if we had a rewrite type edit
+# 
+redefine Inductive Core.RuleInfo : Type := Mk_RuleInfo : (list Core.CoreRuleInfo) -> (Core.DVarSet -> RuleInfo).
+
+rename value IdInfo.RuleInfo = Core.Mk_RuleInfo
+
+redefine Definition Core.ruleInfoRules : Core.RuleInfo -> (list Core.CoreRule) :=
+  fun x => match x with |(Mk_RuleInfo rules _) => Coq.Lists.List.map getCoreRule rules end.
+
+redefine Definition Core.setRuleInfoHead : Name.Name -> (Core.RuleInfo -> Core.RuleInfo) :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | fn, Mk_RuleInfo rules fvs =>
+        Mk_RuleInfo (Coq.Lists.List.map getCoreRuleInfo (Coq.Lists.List.map (Core.setRuleIdName fn) (Coq.Lists.List.map getCoreRule rules))) fvs
+    end.
+
+##################################
+
+# needs a default for RecSelParent *before* one can be 
+# provided in the midamble
+skip Core.sel_tycon
+skip Core.df_con
+
+## needs Type.resultIdLevPoly
+skip Core.setLevityInfoWithType
+## needs IdInfo.levityInfo
+skip Core.isNeverLevPolyIdInfo  
+
+## Printing
+
+skip Core.pprArityInfo
+skip Core.pprCafInfo
+skip Core.pprIdDetails
+skip Core.pprStrictness
+skip Core.ppArityInfo
+skip Core.ppCafInfo 
+
+## Ordering
+
+order Core.Eq___CafInfo Core.Ord__CafInfo
+order Core.Eq___TyCon Core.Eq___RecSelParent_op_zeze__

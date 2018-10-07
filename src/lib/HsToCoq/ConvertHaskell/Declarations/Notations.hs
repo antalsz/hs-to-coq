@@ -9,7 +9,6 @@ import Data.Bifunctor
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
-import Data.Monoid
 import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina

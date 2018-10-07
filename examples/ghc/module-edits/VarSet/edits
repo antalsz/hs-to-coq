@@ -1,10 +1,18 @@
-skip VarSet.fixVarSet
-skip VarSet.transCloDVarSet
-skip VarSet.transCloVarSet
 
-# needs UniqSet.partitionUniqSet
-skip VarSet.partitionVarSet
+# These functions are only terminating when 
+# given monotonic arguments.
+#
+termination       Core.fixVarSet       deferred
+in Core.transCloDVarSet termination go deferred
+in Core.transCloVarSet  termination go deferred
 
 # Outputtable
-skip VarSet.pluralVarSet
-skip VarSet.pprVarSet
+skip Core.pluralVarSet
+skip Core.pprVarSet
+
+
+# unused in GHC, and could require additional Uniquable constraints
+skip Core.mapVarSet
+
+skip Core.partitionVarSet
+

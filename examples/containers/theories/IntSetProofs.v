@@ -3,106 +3,6 @@
 This module contains a formalization of Haskell's Data.IntSet which implements a set of
 integers as a patricia trie.
 
-** Status
-
-This is the annotated export list of IntSet. The first column says:
-
- V verified
- F verified according to the FMapInterface specification
- P skipped, because of partiality
- S skipped, for other reasons
- N nothing to be done
-
-    -- * Set type
- V    IntSet(..), Key -- instance Eq,Show
- N  , Prefix, Mask, BitMap
-
-    -- * Operators
- F  , (\\)
-
-    -- * Query
- F  , null
- F  , size
- F  , member
- V  , notMember
-    , lookupLT
-    , lookupGT
-    , lookupLE
-    , lookupGE
- F  , isSubsetOf
- V  , isProperSubsetOf
- V  , disjoint
-
-    -- * Construction
- F  , empty
- F  , singleton
- F  , insert
- F  , delete
-
-    -- * Combine
- F  , union
-    , unions
- F  , difference
- F  , intersection
-
-    -- * Filter
- F  , filter
- F  , partition
-    , split
-    , splitMember
-    , splitRoot
-
-    -- * Map
-    , map
-
-    -- * Folds
- V  , foldr
- F  , foldl
-    -- ** Strict folds
- V  , foldr'
- V  , foldl'
-    -- ** Legacy folds
- V  , fold
-
-    -- * Min\/Max
- P  , findMin
- P  , findMax
-    , deleteMin
-    , deleteMax
- P  , deleteFindMin
- P  , deleteFindMax
-    , maxView
-    , minView
-
-    -- * Conversion
-
-    -- ** List
- F  , elems
- F  , toList
- V  , fromList
-
-    -- ** Ordered list
- V  , toAscList
- V  , toDescList
-    , fromAscList
-    , fromDistinctAscList
-
-    -- * Debugging
- S  , showTree
- S  , showTreeWith
-
-    -- * Internals
- V  , match
- V  , suffixBitMask
- V  , prefixBitMask
- V  , bitmapOf
- V  , zero
-
-Additionall stuff:
- 
- * valid: (from the test suite): correctness (but not completeness of)
- * Eq IntSet: Lawfulness.
-
 *)
 
 Require Import Omega.
@@ -184,10 +84,10 @@ Definition oro {a} : option a -> option a -> option a :=
     | None => y
     end.
 
-(** ** IntMap-specific operations
+(** ** IntSet-specific operations
 
-These definitions and lemmas are used to link some concepts from the IntMap
-implementation to the range sets above.
+These definitions and lemmas are used to link some concepts from the IntSet
+implementation to the dyadic intervals in [DyadicIntervals]
 *)
 
 Require Import GHC.Base.
@@ -199,7 +99,7 @@ Import Data.Bits.Notations.
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
 Require Import CTZ.
-Require Import Popcount.
+Require Import Proofs.Data.Bits.Popcount.
 Local Open Scope N_scope.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -336,6 +236,16 @@ Proof.
   rewrite !N.ones_equiv.
   rewrite N.pow_succ_r by nonneg.
   Nomega.
+Qed.
+
+Lemma bitmapOf_sub_1:
+  forall x, safeSubN (bitmapOf x) 1 = bitmapOf x - 1.
+Proof.
+  intros.
+  apply safeSubN_sub.
+  unfold bitmapOf. rewrite bitmapOfSuffix_pow.
+  pose proof (N_pow_pos_nonneg 2 (suffixOf x)).
+  lia.
 Qed.
 
 (** *** Operation: [rMask]
@@ -2487,6 +2397,18 @@ Proof.
     congruence.
 Qed.
 
+(** *** Verification of [empty] *)
+
+Lemma empty_Sem (f : N -> bool) : Sem empty f <-> forall i, f i = false.
+Proof.
+  split.
+  - now inversion 1; intros; subst.
+  - now constructor.
+Qed.
+
+Lemma empty_WF : WF empty.
+Proof. now exists (fun _ => false); constructor. Qed.
+Hint Resolve empty_WF.
 
 (** *** Verification of [singleton] *)
 
@@ -2991,6 +2913,69 @@ Proof.
   destruct H, H0.
   eexists. apply union_Sem; eassumption.
 Qed.
+
+Local Ltac union_Sem_reasoning :=
+  repeat intros [? ?];
+  repeat match goal with
+         | SEMs : Sem ?s ?fs, SEMt : Sem ?t ?ft |- context[union ?s ?t] =>
+           match goal with
+           | _ : Sem (union s t) _ |- _ => fail 1
+           |                          _ => specialize (union_Sem s fs t ft SEMs SEMt) as ?
+           end
+         end;
+  eapply Sem_unique; try eassumption;
+  intros; simpl.
+
+Lemma union_assoc (s1 s2 s3 : IntSet) :
+  WF s1 ->
+  WF s2 ->
+  WF s3 ->
+  union s1 (union s2 s3) = union (union s1 s2) s3.
+Proof. now union_Sem_reasoning; rewrite orb_assoc. Qed.
+
+Lemma union_comm (s1 s2 : IntSet) :
+  WF s1 ->
+  WF s2 ->
+  union s1 s2 = union s2 s1.
+Proof. now union_Sem_reasoning; rewrite orb_comm. Qed.
+
+(** *** Verification of [unions] *)
+
+Require Import Proofs.Data.Foldable. 
+
+Lemma Forall_rev:
+  forall A P (l : list A), Forall P (rev l) <-> Forall P l.
+Proof.
+  intros.
+  rewrite !Forall_forall.
+  setoid_rewrite <- in_rev.
+  reflexivity.
+Qed.
+
+Lemma unions_Sem (ss : list IntSet) :
+  Forall WF ss ->
+  Sem (unions ss) (fun i => existsb (member i) ss).
+Proof.
+  unfold unions; rewrite hs_coq_foldl'_list, <-fold_left_rev_right.
+  remember (rev ss) as rss eqn:def_rss.
+  replace ss with (rev rss) by now subst; apply rev_involutive.
+  clear def_rss.
+  rewrite Forall_rev.
+  induction rss as [|s rss IH]; simpl; intros WFrss'.
+  - now constructor.
+  - inversion WFrss' as [|s_ rss_ WFs WFrss]; subst s_ rss_.
+    eapply Sem_change_f; [|intros; rewrite existsb_app; simpl; rewrite orb_false_r; reflexivity].
+    apply union_Sem.
+    + now apply IH.
+    + destruct WFs as [f SEM].
+      apply Sem_change_f with f; trivial.
+      now intros; apply member_Sem.
+Qed.
+
+Lemma unions_WF (ss : list IntSet) :
+  Forall WF ss ->
+  WF (unions ss).
+Proof. now eexists; apply unions_Sem. Qed.
 
 (** *** Verification of [intersection] *)
 
@@ -3822,7 +3807,7 @@ Proof.
         rewrite prefixOf_rPrefix in H3 by assumption.
         lia.
       }
-      rewrite Htmp; clear Htmp.
+      rewrite bitmapOf_sub_1; rewrite Htmp; clear Htmp.
       eapply HX.
       + eapply Desc0_Sem.
         eapply tip_Desc0; try eassumption; try reflexivity.
@@ -4109,7 +4094,7 @@ Proof.
         rewrite bitmapOfSuffix_pow.
         reflexivity.
       }
-      rewrite Htmp.
+      rewrite bitmapOf_sub_1, Htmp.
       assert (prefixOf x = rPrefix r). {
         subst.
         unfold Prefix, Nat in *.
@@ -4415,12 +4400,12 @@ Proof.
     unfold indexOfTheOnlyBit.
     rewrite N.log2_pow2 by Nomega.
     rewrite N_log2_ctz by isBitMask.
-    unfold WIDTH.
-    rewrite !N.add_sub_assoc. reflexivity.
-    unfold WIDTH; Nomega.
     assert (N_ctz (revNatSafe bm) < WIDTH)%N by isBitMask.
-    unfold WIDTH in *; lia.
-    simpl. lia.
+    unfold WIDTH in *.
+    replace (safeSubN (Z.to_N 64) (Z.to_N 1)) with (64 - 1)%N by reflexivity.
+    rewrite safeSubN_sub by lia.
+    rewrite !N.add_sub_assoc by lia.
+    reflexivity.
   * rewrite lxor_lowestBitMask by isBitMask.
     rewrite clearbit_revNat by isBitMask.
     rewrite revNat_revNat by isBitMask.
@@ -5098,17 +5083,6 @@ Qed.
 
 (** *** Verification of [fromList] *)
 
-Require Import Proofs.Data.Foldable. 
-
-Lemma Forall_rev:
-  forall A P (l : list A), Forall P (rev l) <-> Forall P l.
-Proof.
-  intros.
-  rewrite !Forall_forall.
-  setoid_rewrite <- in_rev.
-  reflexivity.
-Qed.
-
 Lemma fromList_Sem:
   forall l,
   exists f,
@@ -5116,7 +5090,7 @@ Lemma fromList_Sem:
 Proof.
   intros l.
   unfold fromList.
-  rewrite hs_coq_foldl_list.
+  rewrite hs_coq_foldl'_list.
   (* Rewrite to use fold_right instead of fold_left *)
   enough (forall l,
     exists f : N -> bool,
@@ -5589,13 +5563,28 @@ Proof.
     intuition try congruence.
 Qed.
 
+(** *** Verification of [map] *)
+
+Lemma map_Sem: forall g s f1,
+  Sem s f1 -> Sem (map g s) (fun i => existsb (fun j => g j =? i) (toList s)).
+Proof.
+  intros.
+  unfold map.
+  change (Sem (fromList (List.map g (toList s))) (fun i : N => existsb (fun j : Key => g j =? i) (toList s))).
+  destruct (fromList_Sem (List.map g (toList s))) as [f [HSem Hf]].
+  eapply Sem_change_f; only 1: eassumption.
+  intro i.
+  apply eq_iff_eq_true.
+  rewrite Hf.
+  rewrite existsb_exists, in_map_iff.
+  split; intros [x Hx]; exists x; try rewrite N.eqb_eq in *; intuition.
+Qed.
+
 (** *** Verification of [valid] *)
 
 (** The [valid] function is used in the test suite to detect whether
-   functions return valid trees. It should be equivalent to our [WF].
-   
-   For now it is not complete (see https://github.com/haskell/containers/issues/522)
-   and even with that fixed we might have a problem due to too wide types.
+   functions return valid trees. It should be equivalent to our [WF],
+   but we cannot fully prove that as long as we use arbitrary width numbers.
 *)
 
 Require Import IntSetValidity.
@@ -5656,9 +5645,7 @@ Proof.
     match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
     match goal with [ |- _ = match ?x with _ => _ end ] => destruct x end.
     reflexivity.
-    match goal with [ |- match ?x with _ => _ end = _ ] => destruct x eqn:? end.
-    match goal with [ H : match ?x with _ => _ end = _ |- _] => destruct x eqn:? end.
-    congruence.
+    reflexivity.
 Qed.
 
 Lemma valid_commonPrefix: forall s, WF s -> commonPrefix s = true.
@@ -5667,13 +5654,13 @@ Proof.
   destruct H as [f HSem].
   destruct HSem.
   * reflexivity.
-  * destruct HD.
+  * induction HD.
     - reflexivity.
-    - unfold commonPrefix.
+    - cbv fix beta delta [commonPrefix]. fold commonPrefix.
       unfoldMethods.
+      rewrite IHHD1, IHHD2. rewrite andb_true_r.
       set (s := Bin p msk s1 s2).
       assert (Desc s r f) by (eapply DescBin; eassumption).
-      
       replace elems with toList by reflexivity.
       rewrite Foldable_all_forallb.
       rewrite forallb_forall.
@@ -5682,7 +5669,6 @@ Proof.
       eapply Desc_inside in Hi; try eassumption.
       rewrite N.eqb_eq.
       symmetry.
-      apply N.lxor_eq_0_iff.
       subst p.
       clear - Hi.
       destruct r as [p b].
@@ -5708,11 +5694,9 @@ Proof.
   destruct H as [f HSem].
   destruct HSem.
   * reflexivity.
-  * destruct HD.
+  * induction HD.
     - reflexivity.
-    - unfold maskRespected.
-      unfoldMethods.
-      replace elems with toList by reflexivity.
+    - simpl.
       rewrite !Foldable_all_forallb.
       rewrite andb_true_iff; split.
       + rewrite forallb_forall.
@@ -5725,7 +5709,9 @@ Proof.
         apply testbit_halfRange_true_false; try assumption.
         eapply inRange_isSubrange_true; [|eassumption]; isSubrange_true.
         inRange_false; fail.
-      + rewrite forallb_forall.
+      + rewrite IHHD1, IHHD2.
+        rewrite andb_true_r.
+        rewrite forallb_forall.
         intros i Hi.
         rewrite <- toList_In in Hi by (eapply DescSem; eassumption).
         eapply Desc_inside in Hi; try eassumption.
@@ -5781,8 +5767,9 @@ Qed.
 (** ** [IntSet]s with [WF] *)
 
 Definition WFIntSet : Type := {s : IntSet | WF s}.
-Definition pack   : forall s : IntSet, WF s -> WFIntSet := exist _.
-Definition unpack : WFIntSet                -> IntSet   := @proj1_sig _ _.
+Definition pack      : forall s : IntSet, WF s -> WFIntSet      := exist _.
+Definition unpack    : WFIntSet                -> IntSet        := @proj1_sig _ _.
+Definition unpack_WF : forall s : WFIntSet,       WF (unpack s) := @proj2_sig _ _.
 
 (** ** Type classes *)
 
@@ -5924,10 +5911,88 @@ Proof.
       order (list N).
 Qed.
 
+(** *** Verification of [Semigroup] *)
+
+Instance Semigroup_WFIntSet : Semigroup WFIntSet := fun _ k => k
+  {| op_zlzlzgzg____ := fun s1 s2 => pack (unpack s1 <<>> unpack s2)
+                                      (union_WF _ _ (unpack_WF s1) (unpack_WF s2)) |}.
+
+Instance SemigroupLaws_WFIntSet : SemigroupLaws WFIntSet.
+Proof.
+  constructor; intros [s1 [f1 SEM1]] [s2 [f2 SEM2]] [s3 [f3 SEM3]].
+  unfold_WFIntSet_Eq; fold_is_true; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+  repeat match goal with
+         | SEMs : Sem ?s ?fs, SEMt : Sem ?t ?ft |- context[?s <<>> ?t] =>
+           match goal with
+           | _ : Sem (s <> t)    _ |- _ => fail 1
+           | _ : Sem (union s t) _ |- _ => fail 1
+           |                          _ => specialize (union_Sem s fs t ft SEMs SEMt) as ?
+           end
+         end.
+  eapply Sem_unique; try eassumption.
+  now intros i; simpl; rewrite orb_assoc.
+Qed.
+
+(** *** Verification of [Monoid] *)
+
+Require Import Data.Monoid.
+
+Lemma WFIntSet_unpack_mconcat_WF (ss : list WFIntSet) :
+  WF (mconcat (GHC.Base.map unpack ss)).
+Proof.
+  apply unions_WF, Forall_forall; intros s; rewrite in_map_iff.
+  intros [? [? ?]]; subst; apply unpack_WF.
+Qed.
+
+Instance Monoid_WFIntSet : Monoid WFIntSet := fun _ k => k
+  {| mempty__  := pack mempty empty_WF
+   ; mappend__ := _<<>>_
+   ; mconcat__ := fun ss => pack (mconcat (GHC.Base.map unpack ss)) (WFIntSet_unpack_mconcat_WF ss) |}.
+
+Local Ltac WFIntSet_Eq_eq := unfold_WFIntSet_Eq; fold_is_true; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+
+Lemma MonoidLaws_WFIntSet_mconcat_swing (ss : list WFIntSet) (s' z : IntSet) :
+  WF s' ->
+  WF z  ->
+  fold_left union (List.map unpack ss) (union z s') = union s' (fold_left union (List.map unpack ss) z).
+Proof.
+  generalize dependent z; generalize dependent s'; induction ss as [|s ss IH]; simpl; intros s' z WFs' WFz.
+  - now rewrite union_comm.
+  - assert (WF (unpack s))                               as WFs by apply unpack_WF.
+    assert (WF (union z s'))                             as WFzs' by now apply union_WF.
+    assert (WF (fold_left union (List.map unpack ss) z)) as WFssz. {
+      clear - WFz.
+      rewrite <-fold_left_rev_right, <-hs_coq_map, <-map_rev.
+      induction (rev ss) as [|s rss IH]; simpl; trivial.
+      apply union_WF; [apply IH | apply unpack_WF].
+    }
+    rewrite !IH, !union_assoc; trivial.
+    now rewrite (union_comm s').
+    (* TODO: This Qed takes 40 seconds on my machine for some reason?! —ASZ *)
+Qed.
+
+Instance MonoidLaws_WFIntSet : MonoidLaws WFIntSet.
+Proof.
+  constructor.
+  - intros [s WFs]; WFIntSet_Eq_eq. 
+    now destruct s.
+  - intros [s WFs]; WFIntSet_Eq_eq. 
+    now destruct s.
+  - intros [s1 WF1] [s2 WF2]; WFIntSet_Eq_eq. 
+    reflexivity.
+  - intros ss; WFIntSet_Eq_eq. 
+    unfold mconcat, Monoid__IntSet, Data.IntSet.Internal.Monoid__IntSet_mconcat; simpl.
+    unfold unions; rewrite hs_coq_foldl'_list, hs_coq_foldr_base, hs_coq_map.
+    induction ss as [|s ss IH]; simpl.
+    + reflexivity.
+    + rewrite MonoidLaws_WFIntSet_mconcat_swing, IH; auto using unpack_WF.
+Qed.
+
 (** ** Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FSetInterface.
 Require Import Coq.Structures.OrderedTypeEx.
+Require Import SortedUtil.
 
 Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
   Module E := N_as_OT.
@@ -6670,8 +6735,6 @@ Module IntSetFSet <: WSfun(N_as_OT) <: WS <: Sfun(N_as_OT) <: S.
     eapply toList_In, in_rev; [eassumption|].
     now fold Key; rewrite DESC; left.
   Qed.
-  
-  Require Import SortedUtil.
   
   Lemma max_elt_2 (s : t) (x y : elt) : max_elt s = Some x -> In y s -> ~ E.lt x y.
   Proof.

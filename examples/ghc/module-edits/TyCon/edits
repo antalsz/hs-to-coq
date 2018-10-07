@@ -1,50 +1,61 @@
+# need a type edit -- should return an N instead of a nat
+#
+skip Core.primRepSizeB
 
-skip module Type
-skip module TysPrim
-skip module TyCoRep
+rewrite forall x, andb Util.debugIsOn x = false
 
-skip TyCon.tyConATs
+## need default DataCon for record selector, but cannot add it now
+skip Core.dataCon
+skip Core.data_con
+
+## Cannot add necessary default before partial record selector
+skip Core.algTcParent
+skip Core.promDcRepInfo
+
+
+skip Core.mkTyConKind
+rewrite forall x y, Core.mkTyConKind x y = tt
+
+skip Core.kindTyConKeys
+skip Core.isKindTyCon
+
+
+## need name of class
+skip Core.okParent
+
+## Needs DataCon.dataConExTyVars
+skip Core.isDataProductTyCon_maybe
+skip Core.isDataSumTyCon_maybe 
+skip Core.isProductTyCon 
+skip Core.isPromotedTupleTyCon
+
+skip Core.isInjectiveTyCon
+skip Core.isGenerativeTyCon
+skip Core.tyConInjectivityInfo 
+
+skip Core.tyConATs
 skip module ForeignCall
 
 # Needs ClassSpec
-skip TyCon.tyConAssoc_maybe
-
-#### specific to TyCon
-skip Core.TyConRepName
-skip Core.Injectivity
-skip Core.RuntimeRepInfo
-skip Core.TyCon
-skip Core.AlgTyConFlav
-
-order TyCon.Ord__TyCon_compare TyCon.Eq___TyCon_op_zeze__ TyCon.Eq___TyCon_op_zsze__ TyCon.Eq___TyCon TyCon.Ord__TyCon
-
-redefine Local Definition TyCon.Eq___TyCon_op_zeze__ : Core.TyCon -> (Core.TyCon -> bool) :=
-  fun a b =>
-    match Ord__TyCon_compare a b with
-      | Eq => true
-      | _ => false
-    end.
-redefine Local Definition TyCon.Eq___TyCon_op_zsze__ : Core.TyCon -> (Core.TyCon -> bool) :=
-  fun a b =>
-    let scrut_0__ := Ord__TyCon_compare a b in
-    match scrut_0__ with
-      | Eq => false
-      | _ => true
-    end.
-
-order TyCon.Eq___PrimElemRep TyCon.Eq___PrimRep_op_zeze__
+# skip Core.tyConAssoc_maybe
+# skip Core.isTyConAssoc
 
 ## can't use Applicative ((->)A)
-skip TyCon.isLiftedTypeKindTyConName
+skip Core.isLiftedTypeKindTyConName
 
-redefine Definition TyCon.tyConAssoc_maybe : Core.TyCon -> (option ClassSpec.Class)  :=
-  fun x => match x with
-        | FamilyTyCon _ _ _ _ _ _ _ _ _ mb_cls _ => mb_cls
-        | _ => None
-        end.
+skip Core.tyConRuntimeRepInfo
+skip Core.tyConSkolem
 
-# in preamble
-skip TyCon.isTyConAssoc
-skip TyCon.makeTyConAbstract
-skip TyCon.mkClassTyCon
-skip TyCon.fieldsOfAlgTcRhs
+
+
+redefine Local Definition Core.Eq___TyConFlavour_op_zeze__
+   : TyConFlavour -> (TyConFlavour -> bool) := fun a b => false.
+
+
+order Core.Uniquable__TyCon_getUnique Core.Uniquable__TyCon Core.Ord__TyCon_compare Core.Eq___TyCon_op_zeze__ Core.Eq___TyCon_op_zsze__ Core.Eq___TyCon Core.Ord__TyCon
+
+order Core.Uniquable__TyCon Core.Eq___TyCon_op_zeze__ Core.Eq___TyCon_op_zsze__
+order Core.Eq___PrimElemRep Core.Eq___PrimRep_op_zeze__
+
+
+

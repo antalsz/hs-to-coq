@@ -1,17 +1,19 @@
 axiomatize module DynFlags
 
+rename type GHC.Num.Int = BinNums.N
 
 
+skip module Config
 skip module CmdLineParser
-skip module Control.Monad.Trans.Class
-skip module Control.Monad.Trans.Except
-skip module Control.Monad.Trans.Maybe
-skip module Control.Monad.Trans.Reader
-skip module Control.Monad.Trans.Writer.Lazy
+# skip module Control.Monad.Trans.Class
+# skip module Control.Monad.Trans.Except
+# skip module Control.Monad.Trans.Maybe
+# skip module Control.Monad.Trans.Reader
+# skip module Control.Monad.Trans.Writer.Lazy
 skip module Control.Monad.IO.Class
 skip module Control.Monad.IO
-skip module Data.IntSet.Base
-skip module Data.Map.Base
+# skip module Data.IntSet.Base
+# skip module Data.Map.Base
 # skip module Data.Set.Base
 skip module Deriving
 skip module ErrUtils
@@ -19,6 +21,8 @@ skip module ErrUtils
 skip module GHC.IORef
 skip module GHC.IO.Handle
 skip module GHC.IO.Handle.Types
+skip module GHC.IO.Handle.FD
+skip module GHC.IO.Unsafe
 skip module Text.ParserCombinators
 skip module Text.ParserCombinators.ReadP
 skip module GHC.LanguageExtensions.Type
@@ -43,6 +47,8 @@ skip DynFlags.DynFlagMaker
 skip DynFlags.DynP
 skip DynFlags.LogAction
 
+# needs monadtrans instances for these types
+# plus a lot of type annotations 
 skip DynFlags.HasDynFlags__ReaderT
 skip DynFlags.HasDynFlags__MaybeT
 skip DynFlags.HasDynFlags__WriterT
@@ -163,6 +169,18 @@ skip DynFlags.updM
 skip DynFlags.setTmpDir
 skip DynFlags.parseModuleName
 skip DynFlags.setUnitId
+skip DynFlags.modRenamingWithImplicit
+skip DynFlags.modRenamings
+skip DynFlags.lAttributes
+skip DynFlags.lCPU
+skip DynFlags.lDataLayout
+skip DynFlags.ftcCurrentModule
+skip DynFlags.ftcGhcSession
+skip DynFlags.getLogAction
+skip DynFlags.getLogFinaliser
+
+skip DynFlags.LogFinaliser
+skip DynFlags.LogOutput
 
 
 # CmdLineParser
@@ -176,7 +194,7 @@ skip DynFlags.intSuffix
 skip DynFlags.sepArg
 skip DynFlags.hasArg
 skip DynFlags.noArg
-
+skip DynFlags.allFlagsDeps
 
 # Language Extension
 skip DynFlags.xopt_unset
@@ -198,6 +216,18 @@ skip DynFlags.depFlagSpec'
 skip DynFlags.unusedBindsFlags
 skip DynFlags.glasgowExtsFlags
 skip DynFlags.rtsIsProfiled
+skip DynFlags.defaultLogOutput
+skip DynFlags.jsonLogOutput
+skip DynFlags.jsonLogAction
+skip DynFlags.jsonLogFinaliser
+skip DynFlags.setLogAction
+skip DynFlags.putLogMsg
+skip DynFlags.setFatalWarningFlag
+skip DynFlags.unSetFatalWarningFlag
+skip DynFlags.parsePackageFlag
+skip DynFlags.parsePackageArg
+skip DynFlags.parseUnitIdArg
+
 
 
 
@@ -211,3 +241,6 @@ skip DynFlags.Eq___DumpFlag
 order instance DynFlags.Eq___Option DynFlags.Eq___LinkerInfo_op_zeze__
 
 order instance DynFlags.Eq___PackageArg DynFlags.Eq___ModRenaming DynFlags.Eq___PackageFlag_op_zeze__
+
+order DynFlags.Eq___BmiVersion  DynFlags.Ord__BmiVersion
+order DynFlags.Eq___Deprecation DynFlags.Ord__Deprecation

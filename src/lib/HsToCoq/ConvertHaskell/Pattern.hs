@@ -3,7 +3,7 @@
 module HsToCoq.ConvertHaskell.Pattern (
   convertPat,  convertLPat,
   -- * Utility
-  Refutability(..), refutability, refutabilityMult, isRefutable, isConstructor, isSoleConstructor,
+  Refutability(..), refutability, isRefutable, isConstructor, isSoleConstructor,
 
   PatternSummary(..), patternSummary, multPatternSummary,
   isUnderscoreMultPattern,
@@ -15,17 +15,17 @@ import Control.Lens hiding ((<|))
 
 import Data.Maybe
 import Data.Traversable
-import Data.List.NonEmpty ((<|), toList)
+import Data.List.NonEmpty (toList)
 import qualified Data.Text as T
 
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
-import Control.Monad.State
 
 import qualified Data.Map.Strict as M
 
 import GHC hiding (Name, HsChar, HsString)
 import qualified GHC
+import BasicTypes (IntegralLit(..))
 import HsToCoq.Util.GHC.FastString
 
 import HsToCoq.Util.GHC
@@ -34,13 +34,14 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
+import HsToCoq.ConvertHaskell.TypeInfo
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: (ConversionMonad m, MonadWriter [Term] m) => Pat GHC.Name -> m Pattern
+convertPat :: (LocalConvMonad r m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -87,13 +88,13 @@ convertPat (ConPatIn (L _ hsCon) conVariety) = do
             convUnsupported $  "using a record pattern for the "
                             ++ what ++ " constructor `" ++ T.unpack hsConStr ++ "'"
 
-      in use (constructorFields . at con) >>= \case
+      in lookupConstructorFields con >>= \case
            Just (RecordFields conFields) -> do
              let defaultPat field | isJust rec_dotdot = QualidPat field
                                   | otherwise         = UnderscorePat
 
-             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc (L _ hsField) _)) hsPat pun)) -> do
-                           field <- recordField hsField
+             patterns <- fmap M.fromList . for rec_flds $ \(L _ (HsRecField (L _ (FieldOcc _ hsField)) hsPat pun)) -> do
+                           field <- var ExprNS hsField
                            pat   <- if pun
                                     then pure $ Coq.VarPat (qualidBase field)
                                     else convertLPat hsPat
@@ -128,19 +129,19 @@ convertPat (LitPat lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literal patterns"
     GHC.HsString _ fs      -> pure . StringPat $ fsToText fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literal patterns"
-    HsInt        _ int     -> convertIntegerPat "`Integer' literal patterns" int
+    HsInt        _ intl    -> convertIntegerPat "`Integer' literal patterns" (il_value intl)
     HsIntPrim    _ int     -> convertIntegerPat "`Integer' literal patterns" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literal patterns"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literal patterns"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literal patterns"
     HsInteger    _ int _ty -> convertIntegerPat "`Integer' literal patterns" int
-    HsRat        _ _       -> convUnsupported "`Rational' literal patterns"
-    HsFloatPrim  _         -> convUnsupported "`Float#' literal patterns"
-    HsDoublePrim _         -> convUnsupported "`Double#' literal patterns"
+    HsRat        _ _ _     -> convUnsupported "`Rational' literal patterns"
+    HsFloatPrim  _ _       -> convUnsupported "`Float#' literal patterns"
+    HsDoublePrim _ _       -> convUnsupported "`Double#' literal patterns"
 
 convertPat (NPat (L _ OverLit{..}) _negate _eq PlaceHolder) = -- And strings
   case ol_val of
-    HsIntegral   _src int -> convertIntegerPat "integer literal patterns" int
+    HsIntegral   intl     -> convertIntegerPat "integer literal patterns" (il_value intl)
     HsFractional _        -> convUnsupported "fractional literal patterns"
     HsIsString   _src str -> pure . StringPat $ fsToText str
 
@@ -156,30 +157,30 @@ convertPat (SigPatOut _ _) =
 convertPat (CoPat _ _ _) =
   convUnsupported "coercion patterns"
 
+convertPat SumPat{} =
+  convUnsupported "sum type patterns"
+
 --------------------------------------------------------------------------------
 
-convertLPat :: (ConversionMonad m, MonadWriter [Term] m) => LPat GHC.Name -> m Pattern
+convertLPat :: (LocalConvMonad r m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
 convertLPat = convertPat . unLoc
 
 --------------------------------------------------------------------------------
 
-convertIntegerPat :: (ConversionMonad m, MonadWriter [Term] m)
+convertIntegerPat :: (LocalConvMonad r m, MonadWriter [Term] m)
                   => String -> Integer -> m Pattern
 convertIntegerPat what hsInt = do
   var <- gensym "num"
   int <- convertInteger what hsInt
-  Coq.VarPat var <$ tell ([Infix (Var var) "GHC.Base.==" (PolyNum int)] :: [Term])
-
-isConstructor :: MonadState ConversionState m => Qualid -> m Bool
-isConstructor con = isJust <$> (use $ constructorTypes . at con)
+  Coq.VarPat var <$ tell ([mkInfix (Var var) "GHC.Base.==" (App1 "GHC.Num.fromInteger" (Num int))] :: [Term])
 
 -- Nothing:    Not a constructor
 -- Just True:  Sole constructor
 -- Just False: One of many constructors
-isSoleConstructor :: ConversionMonad m => Qualid -> m (Maybe Bool)
+isSoleConstructor :: ConversionMonad r m => Qualid -> m (Maybe Bool)
 isSoleConstructor con = runMaybeT $ do
-  ty    <- MaybeT . use $ constructorTypes . at con
-  ctors <-          use $ constructors     . at ty
+  ty    <- MaybeT $ lookupConstructorType con
+  ctors <-          lookupConstructors ty
   pure $ length (fromMaybe [] ctors) == 1
 
 data Refutability = Trivial (Maybe Qualid) -- Variables (with `Just`), underscore (with `Nothing`)
@@ -192,18 +193,14 @@ isRefutable Refutable = True
 isRefutable _ = False
 
 -- Module-local
-constructor_refutability :: ConversionMonad m => Qualid -> [Pattern] -> m Refutability
+constructor_refutability :: ConversionMonad r m => Qualid -> [Pattern] -> m Refutability
 constructor_refutability con args =
   isSoleConstructor con >>= \case
     Nothing    -> pure Refutable -- Error
     Just True  -> maximum . (SoleConstructor :) <$> traverse refutability args
     Just False -> pure Refutable
 
-refutabilityMult :: ConversionMonad m => MultPattern -> m Refutability
-refutabilityMult (MultPattern pats) =
-    maximum . (SoleConstructor <|) <$> traverse refutability pats
-
-refutability :: ConversionMonad m => Pattern -> m Refutability
+refutability :: ConversionMonad r m => Pattern -> m Refutability
 refutability (ArgsPat con args)         = constructor_refutability con args
 refutability (ExplicitArgsPat con args) = constructor_refutability con (toList args)
 refutability (InfixPat arg1 con arg2)   = constructor_refutability (Bare con) [arg1,arg2]
@@ -226,7 +223,7 @@ refutability (OrPats _)                 = pure Refutable -- TODO: Handle or-patt
 data PatternSummary = OtherSummary | ConApp Qualid [PatternSummary]
   deriving Show
 
-patternSummary :: MonadState ConversionState m => Pattern -> m PatternSummary
+patternSummary :: TypeInfoMonad m => Pattern -> m PatternSummary
 patternSummary (ArgsPat con args)         = ConApp con <$> mapM patternSummary args
 patternSummary (ExplicitArgsPat con args) = ConApp con <$> mapM patternSummary (toList args)
 patternSummary (InfixPat _ _ _)           = pure OtherSummary
@@ -240,7 +237,7 @@ patternSummary (NumPat _)                 = pure OtherSummary
 patternSummary (StringPat _)              = pure OtherSummary
 patternSummary (OrPats _)                 = pure OtherSummary
 
-multPatternSummary :: MonadState ConversionState m => MultPattern -> m [PatternSummary]
+multPatternSummary :: TypeInfoMonad m => MultPattern -> m [PatternSummary]
 multPatternSummary (MultPattern pats) = mapM patternSummary (toList pats)
 
 mutExcls :: [PatternSummary] -> [PatternSummary] -> Bool
@@ -258,8 +255,7 @@ mutExcl _ _ = False
 type Missing = [PatternSummary]
 type Missings = [Missing]
 
-isCompleteMultiPattern :: forall m. MonadState ConversionState m =>
-    [MultPattern] -> m Bool
+isCompleteMultiPattern :: forall m. TypeInfoMonad m => [MultPattern] -> m Bool
 isCompleteMultiPattern [] = pure True -- Maybe an empty data type?
 isCompleteMultiPattern mpats = null <$> goGroup mpats
   where
@@ -291,8 +287,8 @@ isCompleteMultiPattern mpats = null <$> goGroup mpats
     -- The pattern applies only partially. Split the input and recurse.
     go OtherSummary p@(ConApp con _) =
         fromMaybe [] <$> runMaybeT (do
-           ty    <- MaybeT . use $ constructorTypes . at con
-           ctors <- MaybeT . use $ constructors     . at ty
+           ty    <- MaybeT $ lookupConstructorType con
+           ctors <- MaybeT $ lookupConstructors ty
            -- Re-run the process with a separate Missing for each constructor
            lift $ concat <$> mapM (\ctor -> go (ConApp ctor []) p) ctors
         )

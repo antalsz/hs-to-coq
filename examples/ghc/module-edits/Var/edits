@@ -1,26 +1,26 @@
-# This file drastically prunes the information stored with variables
-# No types or IdInfo at all!
+# Override the Core-edit back to
+in Core.Var rename type GHC.Num.Int = BinNums.N
 
-skip module TcType
-skip module Type
+redefine Definition Core.tcTyVarDetails : TyVar -> unit := fun x => tt.
 
-skip Core.ExportFlag
-skip Core.Var
-
-skip TyVar
-skip CoVar
-
-
-# skip Var.idInfo
-# skip Var.idDetails
-# skip Var.isCoVar
-# skip Var.isNonCoVarId
-# skip Var.tcTyVarDetails
-# skip Var.mkCoVar
-# skip Var.isTyCoVar
-
-redefine Definition Var.tcTyVarDetails : TyVar -> unit := fun x => tt.
+# record selector, can't add Default fast enough
+skip Core.dcr_wrap_id
+skip Core.id_info
 
 # ppr
-skip Var.ppr_id_scope
-skip Var.ppr_debug
+skip Core.ppr_id_scope
+skip Core.ppr_debug
+
+order Core.Uniquable__Var Core.alterDVarEnv Core.alterVarEnv Core.delDVarEnv Core.delVarEnv Core.delDVarEnvList Core.delVarEnvList Core.delDVarSet Core.delVarSet Core.delDVarSetList Core.delVarSetList Core.delVarEnv_Directly Core.delVarSetByKey Core.elemDVarEnv Core.elemVarEnv Core.elemDVarSet Core.elemVarSet
+ 
+
+order Core.Uniquable__Var Core.extendDVarEnv Core.extendVarEnv Core.extendDVarEnvList Core.extendVarEnvList Core.extendDVarEnv_C Core.extendVarEnv_C Core.extendVarSet Core.extendDVarSet Core.extendDVarSetList Core.extendVarSetList 
+
+order Core.Uniquable__Var Core.extendVarEnv_Acc Core.extendVarEnv_C Core.extendVarEnv_Directly Core.extendVarSet 
+
+order Core.Uniquable__Var Core.lookupDVarEnv Core.lookupVarEnv Core.lookupVarEnv_Directly Core.lookupVarEnv_NF Core.lookupVarSet Core.lookupVarSetByName Core.lookupVarSet_Directly Core.lookupWithDefaultVarEnv
+
+order Core.Uniquable__Var Core.mkDVarEnv Core.mkVarEnv Core.mkDVarSet Core.mkVarSet Core.uniqAway'
+
+order Core.Uniquable__Var Core.unitDVarEnv Core.unitVarEnv Core.unitDVarSet Core.unitVarSet
+

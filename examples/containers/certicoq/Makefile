@@ -6,7 +6,7 @@ libs:
 	(cd base; make)
 	(cd lib; make)
 
-Top.main.c: libs
+intset_bench_j.main.c: libs
 	coqc -R lib "" -R base "" intset_bench_j.v
 
 a.out: intset_bench_j.main.c  gc.c main.c

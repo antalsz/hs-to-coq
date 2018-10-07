@@ -1,0 +1,6 @@
+constructors:
+  CoreSubst.Subst: ! '[Qualified "CoreSubst" "Mk_Subst"]'
+constructorFields:
+  CoreSubst.Mk_Subst: NonRecordFields 4
+constructorTypes:
+  CoreSubst.Mk_Subst: Qualified "CoreSubst" "Subst"

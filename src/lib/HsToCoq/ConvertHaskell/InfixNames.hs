@@ -3,9 +3,8 @@
 module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable,
   infixToPrefix, toPrefix, toLocalPrefix,
-  infixToCoq, toCoqName,
+  infixToCoq,
   identIsOp, identToOp,
-  canonicalName,
   splitModule -- a bit out of place here. oh well.
   ) where
 
@@ -13,7 +12,6 @@ import Control.Lens
 
 import Control.Applicative
 import Data.Semigroup (Semigroup(..))
-import Data.Maybe
 import Data.Char
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -63,21 +61,21 @@ infixToCoq op = case splitModule op of
     Nothing     -> infixToCoq_ op
 
 splitModule :: Ident -> Maybe (ModuleIdent, AccessIdent)
-splitModule = either (const Nothing) Just . parse qualid "" where
+splitModule = fmap fixup . either (const Nothing) Just . parse qualid "" where
   qualid = do
-    let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '\''))
+    let modFrag = T.cons <$> upper <*> (T.pack <$> many (alphaNum <|> char '_' <|> char '\''))
     mod <- T.intercalate "." <$> many1 (try (modFrag <* char '.'))
     base <- T.pack <$> some anyChar -- since we're assuming we get a valid name
     pure $ (mod, base)
 
-toCoqName :: Op -> Ident
-toCoqName x | identIsVariable x = x
-            | otherwise         = infixToCoq x
-
-canonicalName :: Op -> Ident
-canonicalName x
-  | identIsVariable x = x
-  | otherwise         = infixToCoq . fromMaybe x $ T.stripPrefix "_" =<< T.stripSuffix "_" x
+  -- When we have a module name that ends in .Z or .N then that should be
+  -- considered part of the name of the function. This is a hack to make the
+  -- common case of working with names like Coq.ZArith.BinInt.Z.eqb more convenient,
+  -- without solving the problem of handling non-filesystem-modules in general
+  fixup (mod, name)
+    | ".Z" `T.isSuffixOf` mod = (T.take (T.length mod - 2) mod, "Z." <> name)
+    | ".N" `T.isSuffixOf` mod = (T.take (T.length mod - 2) mod, "N." <> name)
+    | otherwise               = (mod, name)
 
 identIsOp :: Ident -> Bool
 identIsOp t = "op_" `T.isPrefixOf` t && "__" `T.isSuffixOf` t

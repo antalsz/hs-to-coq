@@ -188,7 +188,7 @@ Definition removeDups {a} (cmp : a -> a -> comparison) (l : list a)
               | (cons x _ as dups) => pair (cons dups dups_so_far) x
               end in
         let y : list (list a) := equivClasses cmp xs in
-        match (Data.Traversable.mapAccumR collect_dups nil y)  with
+        match (Data.OldList.mapAccumR collect_dups nil y)  with
         | pair dups xs' => pair xs' dups
         end
     end.

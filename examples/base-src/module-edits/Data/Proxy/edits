@@ -1,2 +1,7 @@
 data kinds Data.Proxy.Proxy Type
 data kinds Data.Proxy.KProxy Type
+
+order Data.Proxy.Functor__Proxy Data.Proxy.Applicative__Proxy_liftA2
+
+# Needs Alternative
+skip Data.Proxy.MonadPlus__Proxy

@@ -16,6 +16,8 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Coq.Lists.List.
+Require GHC.Base.
+Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
@@ -39,7 +41,7 @@ Definition isNothing {a} : option a -> bool :=
   fun arg_0__ => match arg_0__ with | None => true | _ => false end.
 
 Definition listToMaybe {a} : list a -> option a :=
-  fun arg_0__ => match arg_0__ with | nil => None | cons a _ => Some a end.
+  GHC.Base.foldr (GHC.Base.const GHC.Base.∘ Some) None.
 
 Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
   fix mapMaybe arg_0__ arg_1__
@@ -67,6 +69,7 @@ Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
 Definition maybeToList {a} : option a -> list a :=
   fun arg_0__ => match arg_0__ with | None => nil | Some x => cons x nil end.
 
-(* Unbound variables:
+(* External variables:
      None Some bool cons false list nil option true Coq.Lists.List.flat_map
+     GHC.Base.const GHC.Base.foldr GHC.Base.op_z2218U__
 *)

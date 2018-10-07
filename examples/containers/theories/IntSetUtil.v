@@ -5,7 +5,8 @@
 Set Warnings "-notation-overridden".
 
 (* SSReflect *)
-From mathcomp Require Import ssreflect ssrbool ssrnat ssrfun seq eqtype.
+From Coq Require Import ssreflect ssrbool ssrfun.
+From mathcomp Require Import ssrnat seq eqtype.
 Set Bullet Behavior "Strict Subproofs".
 
 (* Sortedness *)
@@ -14,12 +15,11 @@ Require Import Coq.Sorting.Sorted.
 (* Basic Haskell libraries *)
 Require Import GHC.Base      Proofs.GHC.Base.
 Require Import Data.Foldable Proofs.Data.Foldable.
-Require Import Data.Bits.
+Require Import Data.Bits     Proofs.Data.Bits.Popcount.
 
 (* IntSet library *)
 Require Import Data.IntSet.Internal.
 Require Import Utils.Containers.Internal.BitUtil.
-Require Import Popcount.
 
 (* IntSet proofs *)
 Require Import DyadicIntervals.
@@ -60,10 +60,6 @@ Qed.
 
 (******************************************************************************)
 (** Well-formedness (WF) theorems **)
-
-Theorem empty_WF : WF empty.
-Proof. by exists xpred0; constructor. Qed.
-Hint Resolve empty_WF.
 
 Theorem WF_Bin_children (p : Prefix) (m : Mask) (l r : IntSet) :
   WF (Bin p m l r) -> WF l /\ WF r.
@@ -304,7 +300,7 @@ Theorem unions_member (ss : list IntSet) :
   forall k, member k (unions ss) = any (member k) ss.
 Proof.
   move=> WF_ss k.
-  rewrite /unions hs_coq_foldl_list Foldable_any_ssreflect.
+  rewrite /unions hs_coq_foldl'_list Foldable_any_ssreflect.
   rewrite -(orFb (has _ _)); change false with (member k empty); have: (WF empty) by [].
   elim: ss empty WF_ss => [|s ss IH] z WF_sss WF_z //=;
     [by rewrite orbF | inversion WF_sss as [|s' ss' WF_s WF_ss]; subst s' ss'].

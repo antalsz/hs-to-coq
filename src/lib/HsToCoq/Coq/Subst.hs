@@ -18,7 +18,6 @@ import Data.Maybe
 import qualified Data.Map.Strict as M
 
 import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
 
 ----------------------------------------------------------------------------------------------------
 
@@ -34,7 +33,6 @@ class Subst t where
 instance Subst Binder where
   subst _f b@(Inferred _ex _x)    = b
   subst f (Typed gen ex xs ty) = Typed gen ex xs (subst f ty)
-  subst f (BindLet x oty val)  = BindLet x (subst f oty) (subst f val)
   subst f (Generalized ex ty)  = Generalized ex (subst f ty)
 
 instance Subst MatchItem where
@@ -94,8 +92,7 @@ instance Subst Assumption where
     -- The @kwd@ part is pro forma – there are no free variables there
 
 instance Subst Assums where
-  subst f (UnparenthesizedAssums xs ty) = UnparenthesizedAssums xs (subst f ty)
-  subst _f (ParenthesizedAssums _xsTys)   = error "subst"
+  subst f (Assums xs ty) = Assums xs (subst f ty)
 
 instance Subst Definition where
   subst f (LetDef x args oty def) =
@@ -151,15 +148,8 @@ instance Subst FixBodies where
     subst f (FixOne b)        = FixOne  (subst f b)
     subst f (FixMany b neb x) = FixMany (subst f b) (subst f neb) x
 
-instance Subst CofixBodies where
-    subst f (CofixOne b)        = CofixOne  (subst f b)
-    subst f (CofixMany b neb x) = CofixMany (subst f b) (subst f neb) x
-
 instance Subst FixBody where
     subst f (FixBody n bs ma mt t) = FixBody n (subst f bs) (subst f ma) (subst f mt) (subst f t)
-
-instance Subst CofixBody where
-    subst f (CofixBody n bs mt t) = CofixBody n (subst f bs) (subst f mt) (subst f t)
 
 instance Subst Arg where
    subst f (PosArg t) = PosArg (subst f t)
@@ -189,9 +179,7 @@ instance Subst Term where
 
   subst f  (LetTick pat def body) = LetTick (subst f pat) (subst f def) (subst f body)
 
-  subst f  (LetTickDep pat oin def ret body) = LetTickDep (subst f pat) (subst f oin) (subst f def) (subst f ret) (subst f body)
-
-  subst f  (If c oret t fa) = If (subst f c) (subst f oret) (subst f t) (subst f fa)
+  subst f  (If is c oret t fa) = If is (subst f c) (subst f oret) (subst f t) (subst f fa)
 
   subst f  (HasType tm ty) = HasType (subst f tm) (subst f ty)
 
@@ -205,16 +193,6 @@ instance Subst Term where
 
   subst f  (ExplicitApp qid xs) = ExplicitApp qid (subst f  xs)
 
-  subst f  (Infix l qid r)
-    | Just t <- M.lookup qid f
-    , Qualid qid' <- t
-    , qualidIsOp qid'
-    = Infix (subst f l) qid' (subst f r)
-    | Just t <- M.lookup qid f
-    = App t [PosArg (subst f l), PosArg (subst f r)]
-    | otherwise
-    = Infix (subst f l) qid (subst f  r)
-
   subst f  (InScope t scope) =  InScope (subst f  t) scope
     -- The scope is a different sort of identifier, not a term-level variable.
 
@@ -227,8 +205,6 @@ instance Subst Term where
   subst _f x@(Sort _sort) = x
 
   subst _f x@(Num _num) = x
-
-  subst _f x@(PolyNum _num) = x
 
   subst _f x@(String _str) = x
 

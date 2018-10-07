@@ -1,0 +1,8 @@
+constructors:
+  Data.Either.Either: ! '[Qualified "Data.Either" "Left",Qualified "Data.Either" "Right"]'
+constructorFields:
+  Data.Either.Left: NonRecordFields 1
+  Data.Either.Right: NonRecordFields 1
+constructorTypes:
+  Data.Either.Left: Qualified "Data.Either" "Either"
+  Data.Either.Right: Qualified "Data.Either" "Either"

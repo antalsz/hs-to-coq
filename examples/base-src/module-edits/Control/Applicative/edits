@@ -9,6 +9,8 @@ add Control.Applicative Instance Unpeel_WrappedMonad {m} {a} : GHC.Prim.Unpeel (
 add Control.Applicative Instance Unpeel_WrappedArrow {a}{b}{c} : GHC.Prim.Unpeel (Control.Applicative.WrappedArrow a b c) (a b c) :=
   GHC.Prim.Build_Unpeel _ _ Control.Applicative.unwrapArrow Control.Applicative.WrapArrow.
 
+# Needs Alternative
+skip Control.Applicative.optional
 
 skip Control.Applicative.ZipList
 skip Control.Applicative.Applicative__ZipList

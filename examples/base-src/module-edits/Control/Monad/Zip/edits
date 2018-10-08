@@ -1,0 +1,5 @@
+skip Control.Monad.Zip.MonadZip__U1
+skip Control.Monad.Zip.MonadZip__Par1
+skip Control.Monad.Zip.MonadZip__Rec1
+skip Control.Monad.Zip.MonadZip__M1
+skip Control.Monad.Zip.MonadZip__op_ZCztZC__

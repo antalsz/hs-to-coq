@@ -572,6 +572,175 @@ Effect:
   causes the ``Program`` being used. If no ``obligations`` edit is specified, then
   all obligations are solved with ``Admit Obligations.``.
 
+Mutual recursion edits
+----------------------
+
+``inline mutual`` -- Move mutually-recursive functions into ``let``\-bindings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: inline mutual, edit
+
+Format:
+  | **inline mutual** *qualified_name*
+
+Effect:
+  The specified definition must be part of a mutually recursive set of
+  definitions.  Instead of being defined as another mutual fixpoint, it will be
+  inlined into each of the other mutual fixpoints that needs it with a
+  ``let``\-binding; additionally, a top-level Coq definition is generated for
+  each ``let``\-bound function that simply calls into the predefined recursive
+  functions.
+
+  This facility is useful when translating groups of mutually recursive
+  functions that contain "preprocessing" or "postprocessing" functions, where
+  the group is otherwise structurally recursive.  These functions are not
+  "truly" mutual recursive, as they just hand along values of the type being
+  recursed, and so if Coq could only see through them, everything would work
+  fine.  And indeed, as ``let``\-bindings, Coq can see through them.
+
+  As an example, consider the following pair of mutually recursive data types,
+  which represent a ``Forest`` of nonempty ``Tree``\s. Each ``Branch`` of a
+  ``Tree`` holds an extra boolean flag, which we can extract with ``isOK``.  In
+  Haskell:
+
+  .. code-block:: haskell
+
+     data Forest a = Empty
+                   | WithTree (Tree a) (Forest a)
+     
+     data Tree a = Branch Bool a (Forest a)
+
+     isOK :: Tree a -> Bool
+     isOK (Branch ok _ _) = ok
+
+  And in cleaned-up Coq:
+
+  .. code-block:: coq
+
+     Inductive Forest a : Type
+       := Empty    : Forest a
+       |  WithTree : Tree a -> Forest a -> Forest a
+     with Tree a : Type
+       := Branch : bool -> a -> Forest a -> Tree a.
+      
+     Arguments Empty    {_}.
+     Arguments WithTree {_} _ _.
+     Arguments Branch   {_} _ _ _.
+     
+     Definition isOK {a} : Tree a -> bool :=
+       fun '(Branch ok _ _) => ok.
+
+  Now we can define a pair of mapping functions that only apply a function
+  inside subtrees where the boolean flag is true.  The Haskell code is simple:
+
+  .. code-block:: haskell
+
+     mapForest :: (a -> a) -> Forest a -> Forest a
+     mapForest f Empty           = Empty
+     mapForest f (WithTree t ts) = WithTree (mapTree f t) (mapForest f ts)
+
+     mapTree :: (a -> a) -> Tree a -> Tree a
+     mapTree f t | isOK t    = mapOKTree f t
+                 | otherwise = t
+
+     mapOKTree :: (a -> a) -> Tree a -> Tree a
+     mapOKTree f (Branch ok x ts) = Branch ok (f x) (mapForest f ts)
+
+  However, the (cleaned-up) Coq translation fails:
+
+  .. code-block:: coq
+
+     Fail Fixpoint mapForest {a} (f : a -> a) (ts0 : Forest a) {struct ts0} : Forest a :=
+       match ts0 with
+       | Empty         => Empty
+       | WithTree t ts => WithTree (mapTree f t) (mapForest f ts)
+       end
+     with mapTree {a} (f : a -> a) (t : Tree a) {struct t} : Tree a :=
+       if isOK t
+       then mapOKTree f t
+       else t
+     with mapOKTree {a} (f : a -> a) (t : Tree a) {struct t} : Tree a :=
+       match t with
+       | Branch ok x ts => Branch ok (f x) (mapForest f ts)
+       end.
+
+  The issue is that ``mapTree`` calls ``mapOKTree`` on the *same* term, and not
+  a subterm.  But this just a preprocessing/postprocessing split – there's
+  nothing *actually* recursive going on.
+
+  But with
+
+  .. code-block:: shell
+
+     inline mutual mapOKTree
+
+  we instead get working Coq code (again, cleaned up):
+
+  .. code-block:: coq
+
+     Fixpoint mapForest {a} (f : a -> a) (ts0 : Forest a) {struct ts0} : Forest a :=
+       match ts0 with
+       | Empty         => Empty
+       | WithTree t ts => WithTree (mapTree f t) (mapForest f ts)
+       end
+     with mapTree {a} (f : a -> a) (t : Tree a) {struct t} : Tree a :=
+       let mapOKTree {a} (f : a -> a) (t : Tree a) : Tree a :=
+             match t with
+             | Branch ok x ts => Branch ok (f x) (mapForest f ts)
+             end in
+       if isOK t
+       then mapOKTree f t
+       else t.
+      
+     Definition mapOKTree {a} (f : a -> a) (t : Tree a) : Tree a :=
+       match t with
+       | Branch ok x ts => Branch ok (f x) (mapForest f ts)
+       end.
+
+  This is the idea.  However, to be completely fair, we never produce
+  ``Fixpoint`` commands; both in the failing case and in the successful case, we
+  generate ``fix`` terms.  In this example, this looks like (reindented)
+
+  .. code-block:: coq
+
+     Definition mapForest {a} : (a -> a) -> Forest a -> Forest a :=
+       fix mapTree f t :=
+         let mapOKTree arg_0__ arg_1__ :=
+               match arg_0__, arg_1__ with
+               | f, Branch ok x ts => Branch ok (f x) (mapForest f ts)
+               end in
+         if isOK t : bool
+         then mapOKTree f t
+         else t
+       with mapForest arg_0__ arg_1__ :=
+         match arg_0__, arg_1__ with
+         | f, Empty => Empty
+         | f, WithTree t ts => WithTree (mapTree f t) (mapForest f ts)
+         end
+       for mapForest.
+      
+     Definition mapOKTree {a} : (a -> a) -> Tree a -> Tree a :=
+       fun arg_0__ arg_1__ =>
+         match arg_0__, arg_1__ with
+         | f, Branch ok x ts => Branch ok (f x) (mapForest f ts)
+         end.
+      
+     Definition mapTree {a} : (a -> a) -> Tree a -> Tree a :=
+       fix mapTree f t :=
+         let mapOKTree arg_0__ arg_1__ :=
+               match arg_0__, arg_1__ with
+               | f, Branch ok x ts => Branch ok (f x) (mapForest f ts)
+               end in
+         if isOK t : bool
+         then mapOKTree f t
+         else t
+       with mapForest arg_0__ arg_1__ :=
+         match arg_0__, arg_1__ with
+         | f, Empty => Empty
+         | f, WithTree t ts => WithTree (mapTree f t) (mapForest f ts)
+         end
+       for mapTree.
 
 Meta-edits
 ----------

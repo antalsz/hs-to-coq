@@ -257,7 +257,7 @@ generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)
 
 generateDefaultInstance :: ConversionMonad r m => IndBody -> m [Sentence]
 generateDefaultInstance (IndBody tyName _ _ cons)
-    | Just (con, _, _) <- find suitableCon cons
+    | Just (con, bndrs, _) <- find suitableCon cons
         -- Instance Default_TupleSort : GHC.Err.Default TupleSort :=
         --  GHC.Err.Build_Default _ BoxedTuple.
     = view (edits.skipped.contains inst_name) >>= \case
@@ -265,7 +265,7 @@ generateDefaultInstance (IndBody tyName _ _ cons)
         False -> pure $ pure $ InstanceSentence $
             InstanceTerm inst_name []
                      (App1 "GHC.Err.Default" (Qualid tyName))
-                     (App2 "GHC.Err.Build_Default" Underscore (Qualid con))
+                     (App2 "GHC.Err.Build_Default" Underscore (foldl (\acc _ -> (App1 acc "GHC.Err.default")) (Qualid con) bndrs))
                      Nothing
   where
     inst_name = qualidMapBase ("Default__" <>) tyName

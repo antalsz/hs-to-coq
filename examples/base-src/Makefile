@@ -61,6 +61,7 @@ MODULES = \
   Data/Functor/Sum \
   Data/Bifoldable \
   Data/Bitraversable \
+  Control/Monad/Zip 
 
 RENAMED = \
   Data/SemigroupInternal \

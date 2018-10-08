@@ -330,13 +330,13 @@ Definition makeRelativeTo
    : GHC.Base.String -> GHC.Base.String -> GHC.Base.String :=
   fun this that => this.
 
-Definition mapAndUnzip {a} {b} {c}
-   : (a -> (b * c)%type) -> list a -> (list b * list c)%type :=
-  fix mapAndUnzip arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | _, nil => pair nil nil
-           | f, cons x xs =>
-               let 'pair rs1 rs2 := mapAndUnzip f xs in
+Definition mapAndUnzip {a} {b} {c} (f : a -> b * c)
+   : list a -> list b * list c :=
+  fix mapAndUnzip y
+        := match y with
+           | nil => pair nil nil
+           | cons x xs =>
+               let 'pair rs1 rs2 := mapAndUnzip xs in
                let 'pair r1 r2 := f x in
                pair (cons r1 rs1) (cons r2 rs2)
            end.

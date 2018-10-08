@@ -26,9 +26,10 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive RealSrcSpan : Type
-  := RealSrcSpan'
-   : FastString.FastString ->
-     GHC.Num.Int -> GHC.Num.Int -> GHC.Num.Int -> GHC.Num.Int -> RealSrcSpan.
+  := RealSrcSpan' (srcSpanFile : FastString.FastString) (srcSpanSLine
+    : GHC.Num.Int) (srcSpanSCol : GHC.Num.Int) (srcSpanELine : GHC.Num.Int)
+  (srcSpanECol : GHC.Num.Int)
+   : RealSrcSpan.
 
 Inductive SrcSpan : Type
   := ARealSrcSpan : RealSrcSpan -> SrcSpan

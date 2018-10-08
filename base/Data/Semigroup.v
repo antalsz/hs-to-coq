@@ -30,17 +30,18 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive WrappedMonoid m : Type := WrapMonoid : m -> WrappedMonoid m.
+Inductive WrappedMonoid m : Type
+  := WrapMonoid (unwrapMonoid : m) : WrappedMonoid m.
 
-Inductive Option a : Type := Mk_Option : option a -> Option a.
+Inductive Option a : Type := Mk_Option (getOption : option a) : Option a.
 
-Inductive Min a : Type := Mk_Min : a -> Min a.
+Inductive Min a : Type := Mk_Min (getMin : a) : Min a.
 
-Inductive Max a : Type := Mk_Max : a -> Max a.
+Inductive Max a : Type := Mk_Max (getMax : a) : Max a.
 
-Inductive Last a : Type := Mk_Last : a -> Last a.
+Inductive Last a : Type := Mk_Last (getLast : a) : Last a.
 
-Inductive First a : Type := Mk_First : a -> First a.
+Inductive First a : Type := Mk_First (getFirst : a) : First a.
 
 Inductive Arg a b : Type := Mk_Arg : a -> b -> Arg a b.
 

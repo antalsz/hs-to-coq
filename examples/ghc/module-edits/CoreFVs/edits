@@ -1,3 +1,5 @@
+import module Id
+
 skip module	FamInstEnv
 
 # notation
@@ -24,6 +26,7 @@ in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs 
 
 #
 # TODO: we don't try to translate the orphNames functions
+# not quite there yet.
 #
 skip CoreFVs.orphNamesOfFamInst  # needs FamInstEnv
 skip CoreFVs.orphNamesOfCoCon
@@ -38,15 +41,16 @@ skip CoreFVs.orphNamesOfTyCon
 skip CoreFVs.orphNamesOfCo
 
 ## TODO: nonstructural mutual recursion 
-
 skip CoreFVs.exprOrphNames
 skip CoreFVs.exprsOrphNames
 
 rewrite forall ty, CoreFVs.orphNamesOfType ty = NameSet.emptyNameSet
 rewrite forall co, CoreFVs.orphNamesOfCo   co = NameSet.emptyNameSet
 
-in CoreFVs.exprOrphNames rewrite forall, go_alt = fun x => match x with | pair (pair _ _) r => go r end 
-in CoreFVs.exprOrphNames skip go_alt
+in CoreFVs.exprOrphNames inline mutual go_alt
+
+# in CoreFVs.exprOrphNames rewrite forall, go_alt = fun x => match x with | pair (pair _ _) r => go r end 
+# in CoreFVs.exprOrphNames skip go_alt
 
 #
 # These edits are due to the fact that Id's are missing information (Rules, Unfoldings and Types info)
@@ -81,11 +85,6 @@ in CoreFVs.expr_fvs rewrite forall bndr rhs, CoreFVs.rhs_fvs (pair bndr rhs) = F
 in CoreFVs.expr_fvs rewrite forall alts,  (FV.mapUnionFV alt_fvs alts)  = FV.unionsFV (Lists.List.map alt_fvs alts)
 in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) = FV.unionsFV (Lists.List.map (fun x => match x with | pair bndr rhs => CoreFVs.expr_fvs rhs end) pairs)
 
-#
-# freeVars
-#
-# magic rewrite to make CoreFVs.freeVars to be structurally recursive (modulo freeVarsBind)
-in CoreFVs.freeVars rewrite forall fv_alt alts, Util.mapAndUnzip fv_alt alts = GHC.List.unzip (Lists.List.map fv_alt alts)
 
 #
 # ANTALSZ: mutual recursion still needs to be addressed

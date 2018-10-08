@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require CSE_NestedRecursion.
 Require Core.
 Require CoreFVs.
 Require CoreSubst.
@@ -23,7 +24,6 @@ Require Data.Tuple.
 Require Datatypes.
 Require GHC.Base.
 Require GHC.Err.
-Require GHC.List.
 Require Id.
 Require TrieMap.
 Require Util.
@@ -31,9 +31,9 @@ Require Util.
 (* Converted type declarations: *)
 
 Inductive CSEnv : Type
-  := CS
-   : CoreSubst.Subst ->
-     TrieMap.CoreMap Core.OutExpr -> TrieMap.CoreMap Core.OutExpr -> CSEnv.
+  := CS (cs_subst : CoreSubst.Subst) (cs_map : TrieMap.CoreMap Core.OutExpr)
+  (cs_rec_map : TrieMap.CoreMap Core.OutExpr)
+   : CSEnv.
 
 Definition cs_map (arg_0__ : CSEnv) :=
   let 'CS _ cs_map _ := arg_0__ in
@@ -48,11 +48,7 @@ Definition cs_subst (arg_0__ : CSEnv) :=
   cs_subst.
 (* Midamble *)
 
-Axiom cseExpr_rec   : CSEnv -> Core.InExpr -> Core.OutExpr.
-Axiom cseBind_rec   : BasicTypes.TopLevelFlag -> CSEnv -> Core.CoreBind -> CSEnv * Core.CoreBind.
-Axiom cse_bind_rec  : BasicTypes.TopLevelFlag -> CSEnv -> Core.InId * Core.InExpr -> Core.OutId -> CSEnv * (Core.OutId * Core.OutExpr).
-Axiom tryForCSE_rec : CSEnv -> Core.InExpr -> Core.OutExpr.
-Axiom cseCase_rec   : CSEnv -> Core.InExpr -> Core.InId -> Core.InType -> list Core.InAlt -> Core.OutExpr.
+Require CSE_NestedRecursion.
 
 (* default = emptyCSEnv *)
 Instance Default__CSEnv : GHC.Err.Default CSEnv := {| GHC.Err.default := CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap |}.
@@ -129,16 +125,6 @@ Definition lookupCSEnv : CSEnv -> Core.OutExpr -> option Core.OutExpr :=
     | CS _ csmap _, expr => TrieMap.lookupCoreMap csmap expr
     end.
 
-Definition tryForCSE : CSEnv -> Core.InExpr -> Core.OutExpr :=
-  fun env expr =>
-    let expr' := cseExpr_rec env expr in
-    let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
-    let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
-    match lookupCSEnv env expr'' with
-    | Some e => CoreUtils.mkTicks ticks e
-    | _ => expr'
-    end.
-
 Definition lookupCSRecEnv
    : CSEnv -> Core.OutId -> Core.OutExpr -> option Core.OutExpr :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -153,33 +139,6 @@ Definition lookupSubst : CSEnv -> Core.Var -> Core.OutExpr :=
         CoreSubst.lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "CSE.lookupSubst"))
         sub x
     end.
-
-Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
-  fix cseExpr arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | env, Core.Type_ t => Core.Type_ (tt)
-           | env, Core.Coercion c => Core.Coercion (tt)
-           | _, Core.Lit lit => Core.Lit lit
-           | env, Core.Mk_Var v => lookupSubst env v
-           | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE_rec env a)
-           | env, Core.Tick t e => Core.Tick t (cseExpr env e)
-           | env, Core.Cast e co => Core.Cast (tryForCSE_rec env e) (tt)
-           | env, Core.Lam b e =>
-               let 'pair env' b' := addBinder env b in
-               Core.Lam b' (cseExpr env' e)
-           | env, Core.Let bind e =>
-               let 'pair env' bind' := cseBind_rec BasicTypes.NotTopLevel env bind in
-               Core.Let bind' (cseExpr env' e)
-           | env, Core.Case e bndr ty alts => cseCase_rec env e bndr ty alts
-           end.
-
-Definition cseOneExpr : Core.InExpr -> Core.OutExpr :=
-  fun e =>
-    let env :=
-      let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := emptyCSEnv in
-      CS (CoreSubst.mkEmptySubst (Core.mkInScopeSet (CoreFVs.exprFreeVars e)))
-         cs_map_1__ cs_rec_map_2__ in
-    cseExpr env e.
 
 Definition noCSE : Core.InId -> bool :=
   fun id =>
@@ -202,20 +161,251 @@ Definition addBinding
     if use_subst : bool then pair (extendCSSubst env in_id rhs') out_id else
     pair (extendCSEnv env rhs' id_expr') zapped_id.
 
-Definition cse_bind
+Definition cseBind
    : BasicTypes.TopLevelFlag ->
-     CSEnv ->
-     (Core.InId * Core.InExpr)%type ->
-     Core.OutId -> (CSEnv * (Core.OutId * Core.OutExpr)%type)%type :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | toplevel, env, pair in_id in_rhs, out_id =>
-        let out_rhs := tryForCSE_rec env in_rhs in
-        let 'pair env' out_id' := addBinding env in_id out_id out_rhs in
-        if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
-                 in_rhs) : bool
-        then pair env' (pair out_id in_rhs) else
-        pair env' (pair out_id' out_rhs)
+     CSEnv -> Core.CoreBind -> (CSEnv * Core.CoreBind)%type :=
+  fix cseExpr arg_0__ arg_1__
+        := let tryForCSE env expr :=
+             let expr' := cseExpr env expr in
+             let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
+             let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+             match lookupCSEnv env expr'' with
+             | Some e => CoreUtils.mkTicks ticks e
+             | _ => expr'
+             end in
+           let cseCase env scrut bndr ty alts :=
+             let bndr1 := Id.zapIdOccInfo bndr in
+             let 'pair env1 bndr2 := addBinder env bndr1 in
+             let scrut1 := tryForCSE env scrut in
+             let 'pair alt_env bndr3 := addBinding env1 bndr bndr2 scrut1 in
+             let con_target : Core.OutExpr := lookupSubst alt_env bndr in
+             let arg_tys : list Core.OutType := nil in
+             let cse_alt :=
+               fun arg_5__ =>
+                 let j_8__ :=
+                   let 'pair (pair con args) rhs := arg_5__ in
+                   let 'pair env' args' := addBinders alt_env args in
+                   pair (pair con args') (tryForCSE env' rhs) in
+                 match arg_5__ with
+                 | pair (pair (Core.DataAlt con) args) rhs =>
+                     let 'pair env' args' := addBinders alt_env args in
+                     let con_expr := CoreUtils.mkAltExpr (Core.DataAlt con) args' arg_tys in
+                     let new_env := extendCSEnv env' con_expr con_target in
+                     if negb (Data.Foldable.null args) : bool
+                     then pair (pair (Core.DataAlt con) args') (tryForCSE new_env rhs) else
+                     j_8__
+                 | _ => j_8__
+                 end in
+             let ty' := tt in
+             Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
+           match arg_0__, arg_1__ with
+           | env, Core.Type_ t => Core.Type_ (tt)
+           | env, Core.Coercion c => Core.Coercion (tt)
+           | _, Core.Lit lit => Core.Lit lit
+           | env, Core.Mk_Var v => lookupSubst env v
+           | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
+           | env, Core.Tick t e => Core.Tick t (cseExpr env e)
+           | env, Core.Cast e co => Core.Cast (tryForCSE env e) (tt)
+           | env, Core.Lam b e =>
+               let 'pair env' b' := addBinder env b in
+               Core.Lam b' (cseExpr env' e)
+           | env, Core.Let bind e =>
+               let 'pair env' bind' := cseBind BasicTypes.NotTopLevel env bind in
+               Core.Let bind' (cseExpr env' e)
+           | env, Core.Case e bndr ty alts => cseCase env e bndr ty alts
+           end with cseBind arg_0__ arg_1__ arg_2__
+                      := let tryForCSE env expr :=
+                           let expr' := cseExpr env expr in
+                           let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
+                           let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+                           match lookupCSEnv env expr'' with
+                           | Some e => CoreUtils.mkTicks ticks e
+                           | _ => expr'
+                           end in
+                         let cse_bind arg_0__ arg_1__ arg_2__ arg_3__ :=
+                           match arg_0__, arg_1__, arg_2__, arg_3__ with
+                           | toplevel, env, pair in_id in_rhs, out_id =>
+                               let out_rhs := tryForCSE env in_rhs in
+                               let 'pair env' out_id' := addBinding env in_id out_id out_rhs in
+                               if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
+                                        in_rhs) : bool
+                               then pair env' (pair out_id in_rhs) else
+                               pair env' (pair out_id' out_rhs)
+                           end in
+                         match arg_0__, arg_1__, arg_2__ with
+                         | toplevel, env, Core.NonRec b e =>
+                             let 'pair env1 b1 := addBinder env b in
+                             let 'pair env2 (pair b2 e2) := cse_bind toplevel env1 (pair b e) b1 in
+                             pair env2 (Core.NonRec b2 e2)
+                         | _, env, Core.Rec (cons (pair in_id rhs) nil) =>
+                             match addRecBinders env (cons in_id nil) with
+                             | pair env1 (cons out_id nil) =>
+                                 let rhs' := cseExpr env1 rhs in
+                                 let rhs'' := CoreUtils.stripTicksE Core.tickishFloatable rhs' in
+                                 let ticks := CoreUtils.stripTicksT Core.tickishFloatable rhs' in
+                                 let id_expr' := Core.varToCoreExpr out_id in
+                                 let zapped_id := Id.zapIdUsageInfo out_id in
+                                 if noCSE in_id : bool
+                                 then pair env1 (Core.Rec (cons (pair out_id rhs') nil)) else
+                                 match lookupCSRecEnv env out_id rhs'' with
+                                 | Some previous =>
+                                     let previous' := CoreUtils.mkTicks ticks previous in
+                                     pair (extendCSSubst env1 in_id previous') (Core.NonRec out_id previous')
+                                 | _ =>
+                                     pair (extendCSRecEnv env1 out_id rhs'' id_expr') (Core.Rec (cons (pair zapped_id
+                                                                                                            rhs') nil))
+                                 end
+                             | _ => GHC.Err.patternFailure
+                             end
+                         | _, _, _ =>
+                             match arg_0__, arg_1__, arg_2__ with
+                             | toplevel, env, Core.Rec pairs =>
+                                 let do_one :=
+                                   fun arg_3__ arg_4__ =>
+                                     match arg_3__, arg_4__ with
+                                     | env, pair pr b1 => cse_bind toplevel env pr b1
+                                     end in
+                                 let 'pair env1 bndrs1 := addRecBinders env (GHC.Base.map Data.Tuple.fst
+                                                                             pairs) in
+                                 let 'pair env2 pairs' := CSE_NestedRecursion.zipMapAccumL do_one env1 pairs
+                                                                                           bndrs1 in
+                                 pair env2 (Core.Rec pairs')
+                             | _, _, _ => GHC.Err.patternFailure
+                             end
+                         end for cseBind.
+
+Definition cseProgram : Core.CoreProgram -> Core.CoreProgram :=
+  fun binds =>
+    Data.Tuple.snd (Data.Traversable.mapAccumL (cseBind BasicTypes.TopLevel)
+                    emptyCSEnv binds).
+
+Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
+  fix cseExpr arg_0__ arg_1__
+        := let tryForCSE env expr :=
+             let expr' := cseExpr env expr in
+             let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
+             let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+             match lookupCSEnv env expr'' with
+             | Some e => CoreUtils.mkTicks ticks e
+             | _ => expr'
+             end in
+           let cseCase env scrut bndr ty alts :=
+             let bndr1 := Id.zapIdOccInfo bndr in
+             let 'pair env1 bndr2 := addBinder env bndr1 in
+             let scrut1 := tryForCSE env scrut in
+             let 'pair alt_env bndr3 := addBinding env1 bndr bndr2 scrut1 in
+             let con_target : Core.OutExpr := lookupSubst alt_env bndr in
+             let arg_tys : list Core.OutType := nil in
+             let cse_alt :=
+               fun arg_5__ =>
+                 let j_8__ :=
+                   let 'pair (pair con args) rhs := arg_5__ in
+                   let 'pair env' args' := addBinders alt_env args in
+                   pair (pair con args') (tryForCSE env' rhs) in
+                 match arg_5__ with
+                 | pair (pair (Core.DataAlt con) args) rhs =>
+                     let 'pair env' args' := addBinders alt_env args in
+                     let con_expr := CoreUtils.mkAltExpr (Core.DataAlt con) args' arg_tys in
+                     let new_env := extendCSEnv env' con_expr con_target in
+                     if negb (Data.Foldable.null args) : bool
+                     then pair (pair (Core.DataAlt con) args') (tryForCSE new_env rhs) else
+                     j_8__
+                 | _ => j_8__
+                 end in
+             let ty' := tt in
+             Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
+           match arg_0__, arg_1__ with
+           | env, Core.Type_ t => Core.Type_ (tt)
+           | env, Core.Coercion c => Core.Coercion (tt)
+           | _, Core.Lit lit => Core.Lit lit
+           | env, Core.Mk_Var v => lookupSubst env v
+           | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
+           | env, Core.Tick t e => Core.Tick t (cseExpr env e)
+           | env, Core.Cast e co => Core.Cast (tryForCSE env e) (tt)
+           | env, Core.Lam b e =>
+               let 'pair env' b' := addBinder env b in
+               Core.Lam b' (cseExpr env' e)
+           | env, Core.Let bind e =>
+               let 'pair env' bind' := cseBind BasicTypes.NotTopLevel env bind in
+               Core.Let bind' (cseExpr env' e)
+           | env, Core.Case e bndr ty alts => cseCase env e bndr ty alts
+           end with cseBind arg_0__ arg_1__ arg_2__
+                      := let tryForCSE env expr :=
+                           let expr' := cseExpr env expr in
+                           let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
+                           let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+                           match lookupCSEnv env expr'' with
+                           | Some e => CoreUtils.mkTicks ticks e
+                           | _ => expr'
+                           end in
+                         let cse_bind arg_0__ arg_1__ arg_2__ arg_3__ :=
+                           match arg_0__, arg_1__, arg_2__, arg_3__ with
+                           | toplevel, env, pair in_id in_rhs, out_id =>
+                               let out_rhs := tryForCSE env in_rhs in
+                               let 'pair env' out_id' := addBinding env in_id out_id out_rhs in
+                               if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
+                                        in_rhs) : bool
+                               then pair env' (pair out_id in_rhs) else
+                               pair env' (pair out_id' out_rhs)
+                           end in
+                         match arg_0__, arg_1__, arg_2__ with
+                         | toplevel, env, Core.NonRec b e =>
+                             let 'pair env1 b1 := addBinder env b in
+                             let 'pair env2 (pair b2 e2) := cse_bind toplevel env1 (pair b e) b1 in
+                             pair env2 (Core.NonRec b2 e2)
+                         | _, env, Core.Rec (cons (pair in_id rhs) nil) =>
+                             match addRecBinders env (cons in_id nil) with
+                             | pair env1 (cons out_id nil) =>
+                                 let rhs' := cseExpr env1 rhs in
+                                 let rhs'' := CoreUtils.stripTicksE Core.tickishFloatable rhs' in
+                                 let ticks := CoreUtils.stripTicksT Core.tickishFloatable rhs' in
+                                 let id_expr' := Core.varToCoreExpr out_id in
+                                 let zapped_id := Id.zapIdUsageInfo out_id in
+                                 if noCSE in_id : bool
+                                 then pair env1 (Core.Rec (cons (pair out_id rhs') nil)) else
+                                 match lookupCSRecEnv env out_id rhs'' with
+                                 | Some previous =>
+                                     let previous' := CoreUtils.mkTicks ticks previous in
+                                     pair (extendCSSubst env1 in_id previous') (Core.NonRec out_id previous')
+                                 | _ =>
+                                     pair (extendCSRecEnv env1 out_id rhs'' id_expr') (Core.Rec (cons (pair zapped_id
+                                                                                                            rhs') nil))
+                                 end
+                             | _ => GHC.Err.patternFailure
+                             end
+                         | _, _, _ =>
+                             match arg_0__, arg_1__, arg_2__ with
+                             | toplevel, env, Core.Rec pairs =>
+                                 let do_one :=
+                                   fun arg_3__ arg_4__ =>
+                                     match arg_3__, arg_4__ with
+                                     | env, pair pr b1 => cse_bind toplevel env pr b1
+                                     end in
+                                 let 'pair env1 bndrs1 := addRecBinders env (GHC.Base.map Data.Tuple.fst
+                                                                             pairs) in
+                                 let 'pair env2 pairs' := CSE_NestedRecursion.zipMapAccumL do_one env1 pairs
+                                                                                           bndrs1 in
+                                 pair env2 (Core.Rec pairs')
+                             | _, _, _ => GHC.Err.patternFailure
+                             end
+                         end for cseExpr.
+
+Definition cseOneExpr : Core.InExpr -> Core.OutExpr :=
+  fun e =>
+    let env :=
+      let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := emptyCSEnv in
+      CS (CoreSubst.mkEmptySubst (Core.mkInScopeSet (CoreFVs.exprFreeVars e)))
+         cs_map_1__ cs_rec_map_2__ in
+    cseExpr env e.
+
+Definition tryForCSE : CSEnv -> Core.InExpr -> Core.OutExpr :=
+  fun env expr =>
+    let expr' := cseExpr env expr in
+    let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
+    let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+    match lookupCSEnv env expr'' with
+    | Some e => CoreUtils.mkTicks ticks e
+    | _ => expr'
     end.
 
 Definition cseCase
@@ -224,7 +414,7 @@ Definition cseCase
   fun env scrut bndr ty alts =>
     let bndr1 := Id.zapIdOccInfo bndr in
     let 'pair env1 bndr2 := addBinder env bndr1 in
-    let scrut1 := tryForCSE_rec env scrut in
+    let scrut1 := tryForCSE env scrut in
     let 'pair alt_env bndr3 := addBinding env1 bndr bndr2 scrut1 in
     let con_target : Core.OutExpr := lookupSubst alt_env bndr in
     let arg_tys : list Core.OutType := nil in
@@ -233,77 +423,42 @@ Definition cseCase
         let j_8__ :=
           let 'pair (pair con args) rhs := arg_5__ in
           let 'pair env' args' := addBinders alt_env args in
-          pair (pair con args') (tryForCSE_rec env' rhs) in
+          pair (pair con args') (tryForCSE env' rhs) in
         match arg_5__ with
         | pair (pair (Core.DataAlt con) args) rhs =>
             let 'pair env' args' := addBinders alt_env args in
             let con_expr := CoreUtils.mkAltExpr (Core.DataAlt con) args' arg_tys in
             let new_env := extendCSEnv env' con_expr con_target in
             if negb (Data.Foldable.null args) : bool
-            then pair (pair (Core.DataAlt con) args') (tryForCSE_rec new_env rhs) else
+            then pair (pair (Core.DataAlt con) args') (tryForCSE new_env rhs) else
             j_8__
         | _ => j_8__
         end in
     let ty' := tt in
     Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)).
 
-Definition cseBind
+Definition cse_bind
    : BasicTypes.TopLevelFlag ->
-     CSEnv -> Core.CoreBind -> (CSEnv * Core.CoreBind)%type :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | toplevel, env, Core.NonRec b e =>
-        let 'pair env1 b1 := addBinder env b in
-        let 'pair env2 (pair b2 e2) := cse_bind_rec toplevel env1 (pair b e) b1 in
-        pair env2 (Core.NonRec b2 e2)
-    | _, env, Core.Rec (cons (pair in_id rhs) nil) =>
-        match addRecBinders env (cons in_id nil) with
-        | pair env1 (cons out_id nil) =>
-            let rhs' := cseExpr_rec env1 rhs in
-            let rhs'' := CoreUtils.stripTicksE Core.tickishFloatable rhs' in
-            let ticks := CoreUtils.stripTicksT Core.tickishFloatable rhs' in
-            let id_expr' := Core.varToCoreExpr out_id in
-            let zapped_id := Id.zapIdUsageInfo out_id in
-            if noCSE in_id : bool
-            then pair env1 (Core.Rec (cons (pair out_id rhs') nil)) else
-            match lookupCSRecEnv env out_id rhs'' with
-            | Some previous =>
-                let previous' := CoreUtils.mkTicks ticks previous in
-                pair (extendCSSubst env1 in_id previous') (Core.NonRec out_id previous')
-            | _ =>
-                pair (extendCSRecEnv env1 out_id rhs'' id_expr') (Core.Rec (cons (pair zapped_id
-                                                                                       rhs') nil))
-            end
-        | _ => GHC.Err.patternFailure
-        end
-    | _, _, _ =>
-        match arg_0__, arg_1__, arg_2__ with
-        | toplevel, env, Core.Rec pairs =>
-            let do_one :=
-              fun arg_3__ arg_4__ =>
-                match arg_3__, arg_4__ with
-                | env, pair pr b1 => cse_bind_rec toplevel env pr b1
-                end in
-            let 'pair env1 bndrs1 := addRecBinders env (GHC.Base.map Data.Tuple.fst
-                                                        pairs) in
-            let 'pair env2 pairs' := Data.Traversable.mapAccumL do_one env1 (GHC.List.zip
-                                                                             pairs bndrs1) in
-            pair env2 (Core.Rec pairs')
-        | _, _, _ => GHC.Err.patternFailure
-        end
+     CSEnv ->
+     (Core.InId * Core.InExpr)%type ->
+     Core.OutId -> (CSEnv * (Core.OutId * Core.OutExpr)%type)%type :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | toplevel, env, pair in_id in_rhs, out_id =>
+        let out_rhs := tryForCSE env in_rhs in
+        let 'pair env' out_id' := addBinding env in_id out_id out_rhs in
+        if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
+                 in_rhs) : bool
+        then pair env' (pair out_id in_rhs) else
+        pair env' (pair out_id' out_rhs)
     end.
 
-Definition cseProgram : Core.CoreProgram -> Core.CoreProgram :=
-  fun binds =>
-    Data.Tuple.snd (Data.Traversable.mapAccumL (cseBind BasicTypes.TopLevel)
-                    emptyCSEnv binds).
-
 (* External variables:
-     Some andb bool cons cseBind_rec cseCase_rec cseExpr_rec cse_bind_rec false list
-     negb nil op_zt__ option orb pair true tryForCSE_rec tt BasicTypes.NotTopLevel
-     BasicTypes.TopLevel BasicTypes.TopLevelFlag BasicTypes.inlinePragmaSpec
-     BasicTypes.isAlwaysActive BasicTypes.isAnyInlinePragma BasicTypes.isTopLevel
-     BasicTypes.noUserInlineSpec Core.App Core.Case Core.Cast Core.Coercion
+     Some andb bool cons false list negb nil op_zt__ option orb pair true tt
+     BasicTypes.NotTopLevel BasicTypes.TopLevel BasicTypes.TopLevelFlag
+     BasicTypes.inlinePragmaSpec BasicTypes.isAlwaysActive
+     BasicTypes.isAnyInlinePragma BasicTypes.isTopLevel BasicTypes.noUserInlineSpec
+     CSE_NestedRecursion.zipMapAccumL Core.App Core.Case Core.Cast Core.Coercion
      Core.CoreBind Core.CoreExpr Core.CoreProgram Core.DEFAULT Core.DataAlt
      Core.InAlt Core.InExpr Core.InId Core.InType Core.InVar Core.Lam Core.Let
      Core.Lit Core.Mk_Var Core.NonRec Core.OutExpr Core.OutId Core.OutType Core.Rec
@@ -315,8 +470,7 @@ Definition cseProgram : Core.CoreProgram -> Core.CoreProgram :=
      CoreUtils.exprIsTickedString CoreUtils.mkAltExpr CoreUtils.mkTicks
      CoreUtils.stripTicksE CoreUtils.stripTicksT Data.Foldable.all Data.Foldable.null
      Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd Datatypes.id
-     GHC.Base.map GHC.Err.patternFailure GHC.List.zip Id.idInlineActivation
-     Id.idInlinePragma Id.isDeadBinder Id.isJoinId Id.zapIdOccInfo Id.zapIdUsageInfo
-     TrieMap.CoreMap TrieMap.emptyCoreMap TrieMap.extendCoreMap TrieMap.lookupCoreMap
-     Util.filterOut
+     GHC.Base.map GHC.Err.patternFailure Id.idInlineActivation Id.idInlinePragma
+     Id.isDeadBinder Id.isJoinId Id.zapIdOccInfo Id.zapIdUsageInfo TrieMap.CoreMap
+     TrieMap.emptyCoreMap TrieMap.extendCoreMap TrieMap.lookupCoreMap Util.filterOut
 *)

@@ -97,6 +97,7 @@ Theorem Denotes_reify {A} (dxs : DList A) (lxs : list A) :
   Denotes dxs lxs -> reify dxs = lxs.
 Proof.
   move=>H. destruct dxs. rewrite /reify /=.
+  rename fromDList into l.
   replace l with (fromDList (MkDList l)).
   replace lxs with (lxs ++ []).
   by apply fromDList_Denotes.

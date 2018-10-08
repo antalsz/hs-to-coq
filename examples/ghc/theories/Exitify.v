@@ -29,6 +29,7 @@ Require Import Proofs.VarSet.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Unique.
 Require Import Proofs.GhcUtils.
+Require Import Proofs.Util.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -779,6 +780,7 @@ Section in_exitifyRec.
         rename c into v.
 
         do 2 expand_pairs. simpl.
+        rewrite map_unzip.
         rewrite snd_unzip, !map_map.
         rewrite forM_map.
 

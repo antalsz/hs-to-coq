@@ -15,6 +15,7 @@ library
   exposed-modules:     ExtractedSet
   exposed-modules:     ExtractedIntSet
   exposed-modules:     ExtractedNumbers
+  exposed-modules:     ExtractedString
 
 -- the following are extracted and in extracted-src/, this list
 -- needs to be manually maintained, e.g. with
@@ -54,7 +55,7 @@ library
   exposed-modules: Ndigits
   exposed-modules: Num
   exposed-modules: PeanoNat
-  exposed-modules: Plus
+  -- exposed-modules: Plus
   exposed-modules: Prim
   exposed-modules: PtrEquality
   exposed-modules: QArith_base
@@ -77,7 +78,7 @@ library
   exposed-modules: Zeven
 
   build-depends:       QuickCheck >= 2.9.2,
-                       base ==4.11.*
+                       base >=4.9 && <5
   build-depends:       deepseq
   build-depends:       random
   hs-source-dirs:      src
@@ -95,7 +96,7 @@ benchmark bench-native-set
   ghc-options: -O2
   main-is:             BenchNativeSet.hs
   hs-source-dirs:      .
-  build-depends:       base ==4.11.*
+  build-depends:       base >=4.9 && <5
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
   build-depends:       criterion
   build-depends:       containers == 0.5.11.0
@@ -108,7 +109,7 @@ benchmark bench-native-intset
   ghc-options:         -O2
   main-is:             BenchNativeIntSet.hs
   hs-source-dirs:      .
-  build-depends:       base ==4.11.*
+  build-depends:       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       deepseq >= 1.1.0.0 && < 1.5
   build-depends:       criterion
@@ -123,7 +124,7 @@ benchmark bench-extracted-set
   ghc-options:         -O2
   main-is:             BenchSet.hs
   hs-source-dirs:      .
-  build-depends:       base ==4.11.*
+  build-depends:       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
   build-depends:       criterion
@@ -137,7 +138,7 @@ benchmark bench-extracted-intset
   ghc-options:         -O2
   main-is:             BenchIntSet.hs
   hs-source-dirs:      .
-  build-depends:       base ==4.11.*
+  build-depends:       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       deepseq  >= 1.1.0.0 && < 1.5
   build-depends:       criterion
@@ -154,8 +155,8 @@ test-suite tests-set
   type: exitcode-stdio-1.0
   main-is:             SetProperties.hs
   hs-source-dirs:      .
-  build-depends:       base ==4.11.*
-  build-depends:       QuickCheck >= 2.9.2
+  build-depends:       QuickCheck >= 2.9.2,
+                       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       transformers
   build-depends:       HUnit
@@ -173,8 +174,8 @@ test-suite tests-intset
   main-is:             IntSetProperties.hs
   other-modules:       IntSetValidity
   hs-source-dirs:      .
-  build-depends:       base ==4.11.*
-  build-depends:       QuickCheck >= 2.9.2
+  build-depends:       QuickCheck >= 2.9.2,
+                       base >=4.9 && <5
   build-depends:       containers-extracted
   build-depends:       transformers
   build-depends:       HUnit

@@ -39,7 +39,8 @@ Inductive NameSpace : Type
   |  TcClsName : NameSpace.
 
 Inductive OccName : Type
-  := Mk_OccName : NameSpace -> FastString.FastString -> OccName.
+  := Mk_OccName (occNameSpace : NameSpace) (occNameFS : FastString.FastString)
+   : OccName.
 
 Definition OccSet :=
   (UniqSet.UniqSet OccName)%type.

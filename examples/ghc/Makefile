@@ -13,6 +13,8 @@ HANDMOD = \
   ListSetOps \
   Digraph \
   PrelNames \
+  CSE_NestedRecursion
+    # Used by CSE
 #  CallArity \
 #  TysWiredIn \
 
@@ -77,7 +79,8 @@ CORE_MODULES = \
   CoreArity \
   CoreTidy \
   TrieMap \
-	CSE
+  CSE 
+
 
 NOTRANSLATE = \
   Constructors \

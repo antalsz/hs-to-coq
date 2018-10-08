@@ -69,11 +69,20 @@ skip Core.mkWord64LitWord64
 skip Core.mkWordLit
 skip Core.mkWordLitWord
 
+## Core.deTagExpr mutual recursion
+inline mutual Core.deTagAlt
+inline mutual Core.deTagBind
+
 # ANTALSZ
 # in midamble (due to mutual recursion)
+
+## This doesn't work yet because of differing type variables
+# inline mutual Core.deAnnotate
+# inline mutual Core.deAnnAlt
 skip Core.deAnnotate'
+
+
 skip Core.collectAnnArgs
-skip Core.deTagExpr
 
 # needs a default constraint, as well as a termination argument
 # in midamble

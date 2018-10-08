@@ -6,6 +6,7 @@
 -Q ../../containers/lib ""
 -Q ../../containers/theories ""
 -arg -w -arg -masking-absolute-name
+Util.v
 ScopeInvariant.v
 JoinPointInvariants.v
 # JoinPointInvariantsInductive.v

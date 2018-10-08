@@ -2,7 +2,7 @@ skip module PprCore
 skip module Data.ByteString
 skip module ErrUtils
 skip module OccurAnal
-skip module CoreSeq
+
 
 # we need to import this module to make the 
 # type synonym notation available.

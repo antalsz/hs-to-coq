@@ -140,6 +140,7 @@ Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
 (* ANTALSZ: Here are some examples of mutual recursion that I've unwound 
    by hand. We would like to generate these instead. *)
 
+
 Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
   let deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
        fun arg_0__ =>  match arg_0__ with | pair _ e => deAnnotate' e end in
@@ -171,7 +172,7 @@ Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr 
         Let (deAnnBind bind) (deAnnotate body)
       | AnnCase scrut v t alts => Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt
                                                                            alts)
-    end.
+    end. 
 
 (* ANTALSZ: Here is another example *)
 
@@ -185,41 +186,6 @@ Definition collectAnnArgs {b}{a} :
   AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
   fun expr => collectAnnArgs_go (snd expr) (fst expr) nil.
 
-
-Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
-  let deTagAlt {t} : TaggedAlt t -> CoreAlt :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | pair (pair con bndrs) rhs =>
-        pair (pair con (let cont_1__ arg_2__ :=
-                            match arg_2__ with
-                            | TB b _ => cons b nil
-                            end in
-                        Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs)
-    end in
-  let deTagBind {t} : TaggedBind t -> CoreBind :=
-      fun arg_0__ =>
-        match arg_0__ with
-        | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
-        | Rec prs => Rec (let cont_2__ arg_3__ :=
-                             match arg_3__ with
-                             | pair (TB b _) rhs => cons (pair b (deTagExpr rhs)) nil
-                             end in
-                         Coq.Lists.List.flat_map cont_2__ prs)
-        end
-  in match arg_0__ with
-     | Mk_Var v => Mk_Var v
-     | Lit l => Lit l
-     | Type_ ty => Type_ ty
-     | Coercion co => Coercion co
-     | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
-     | Lam (TB b _) e => Lam b (deTagExpr e)
-     | Let bind body => Let (deTagBind bind) (deTagExpr body)
-     | Case e (TB b _) ty alts => Case (deTagExpr e) b ty (GHC.Base.map deTagAlt
-                                                                       alts)
-     | Tick t e => Tick t (deTagExpr e)
-     | Cast e co => Cast (deTagExpr e) co
-     end.
 
 Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
            : nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=

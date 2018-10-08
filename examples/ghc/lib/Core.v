@@ -2557,6 +2557,7 @@ Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
 (* ANTALSZ: Here are some examples of mutual recursion that I've unwound 
    by hand. We would like to generate these instead. *)
 
+
 Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
   let deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
        fun arg_0__ =>  match arg_0__ with | pair _ e => deAnnotate' e end in
@@ -2588,7 +2589,7 @@ Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr 
         Let (deAnnBind bind) (deAnnotate body)
       | AnnCase scrut v t alts => Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt
                                                                            alts)
-    end.
+    end. 
 
 (* ANTALSZ: Here is another example *)
 
@@ -2602,41 +2603,6 @@ Definition collectAnnArgs {b}{a} :
   AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
   fun expr => collectAnnArgs_go (snd expr) (fst expr) nil.
 
-
-Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr :=
-  let deTagAlt {t} : TaggedAlt t -> CoreAlt :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | pair (pair con bndrs) rhs =>
-        pair (pair con (let cont_1__ arg_2__ :=
-                            match arg_2__ with
-                            | TB b _ => cons b nil
-                            end in
-                        Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs)
-    end in
-  let deTagBind {t} : TaggedBind t -> CoreBind :=
-      fun arg_0__ =>
-        match arg_0__ with
-        | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
-        | Rec prs => Rec (let cont_2__ arg_3__ :=
-                             match arg_3__ with
-                             | pair (TB b _) rhs => cons (pair b (deTagExpr rhs)) nil
-                             end in
-                         Coq.Lists.List.flat_map cont_2__ prs)
-        end
-  in match arg_0__ with
-     | Mk_Var v => Mk_Var v
-     | Lit l => Lit l
-     | Type_ ty => Type_ ty
-     | Coercion co => Coercion co
-     | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
-     | Lam (TB b _) e => Lam b (deTagExpr e)
-     | Let bind body => Let (deTagBind bind) (deTagExpr body)
-     | Case e (TB b _) ty alts => Case (deTagExpr e) b ty (GHC.Base.map deTagAlt
-                                                                       alts)
-     | Tick t e => Tick t (deTagExpr e)
-     | Cast e co => Cast (deTagExpr e) co
-     end.
 
 Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
            : nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
@@ -4281,10 +4247,34 @@ Definition deAnnBind {b} {annot} : AnnBind b annot -> Bind b :=
 Definition deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
   fun '(pair (pair con args) rhs) => pair (pair con args) (deAnnotate rhs).
 
-Definition deTagAlt {t} : TaggedAlt t -> CoreAlt :=
-  fun '(pair (pair con bndrs) rhs) =>
-    pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
-                Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs).
+Definition deTagExpr {t} : TaggedExpr t -> CoreExpr :=
+  fix deTagExpr arg_0__
+        := let deTagBind arg_0__ :=
+             match arg_0__ with
+             | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
+             | Rec prs =>
+                 Rec (let cont_2__ arg_3__ :=
+                        let 'pair (TB b _) rhs := arg_3__ in
+                        cons (pair b (deTagExpr rhs)) nil in
+                      Coq.Lists.List.flat_map cont_2__ prs)
+             end in
+           let deTagAlt arg_0__ :=
+             let 'pair (pair con bndrs) rhs := arg_0__ in
+             pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
+                         Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs) in
+           match arg_0__ with
+           | Mk_Var v => Mk_Var v
+           | Lit l => Lit l
+           | Type_ ty => Type_ ty
+           | Coercion co => Coercion co
+           | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
+           | Lam (TB b _) e => Lam b (deTagExpr e)
+           | Let bind body => Let (deTagBind bind) (deTagExpr body)
+           | Case e (TB b _) ty alts =>
+               Case (deTagExpr e) b ty (GHC.Base.map deTagAlt alts)
+           | Tick t e => Tick t (deTagExpr e)
+           | Cast e co => Cast (deTagExpr e) co
+           end.
 
 Definition deTagBind {t} : TaggedBind t -> CoreBind :=
   fun arg_0__ =>
@@ -4296,6 +4286,11 @@ Definition deTagBind {t} : TaggedBind t -> CoreBind :=
                cons (pair b (deTagExpr rhs)) nil in
              Coq.Lists.List.flat_map cont_2__ prs)
     end.
+
+Definition deTagAlt {t} : TaggedAlt t -> CoreAlt :=
+  fun '(pair (pair con bndrs) rhs) =>
+    pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
+                Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs).
 
 Definition disjointDVarSet : DVarSet -> DVarSet -> bool :=
   fun s1 s2 => UniqDFM.disjointUDFM s1 s2.
@@ -7894,16 +7889,16 @@ Definition mkClassTyCon
      Alt AnnAlt AnnExpr Arg ArgStr ArgUse Bool.Sumbool.sumbool_of_bool BootUnfolding
      ClassOpItem CoreRuleInfo DVarSet Eq Gt Id Lt NoUnfolding None OtherCon Some
      TyConBinder TyVar TyVarBinder Type andb app bool bothArgUse bothUse comparison
-     cons deAnnotate' deTagExpr false getCoreRule getCoreRuleInfo getUnfolding
-     getUnfoldingInfo list lubArgUse nat negb nil op_zt__ option orb pair
-     size_AnnExpr' snd tickishCounts true tt unit BasicTypes.Activation
-     BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
-     BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
-     BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity
-     BasicTypes.ManyOccs BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo
-     BasicTypes.OccInfo BasicTypes.OneOcc BasicTypes.OneShotInfo
-     BasicTypes.OneShotLam BasicTypes.RuleName BasicTypes.SourceText
-     BasicTypes.TupleSort BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
+     cons deAnnotate' false getCoreRule getCoreRuleInfo getUnfolding getUnfoldingInfo
+     list lubArgUse nat negb nil op_zt__ option orb pair size_AnnExpr' snd
+     tickishCounts true tt unit BasicTypes.Activation BasicTypes.AlwaysActive
+     BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ
+     BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker BasicTypes.IAmDead
+     BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.ManyOccs
+     BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo BasicTypes.OccInfo
+     BasicTypes.OneOcc BasicTypes.OneShotInfo BasicTypes.OneShotLam
+     BasicTypes.RuleName BasicTypes.SourceText BasicTypes.TupleSort
+     BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
      BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
      BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
      BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app

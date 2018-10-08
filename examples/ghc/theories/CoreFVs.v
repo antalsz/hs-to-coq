@@ -15,6 +15,7 @@ Require Import Proofs.Base.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
 Require Import Proofs.GHC.List.
+Require Import Proofs.Util.
 
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
@@ -235,6 +236,7 @@ Proof.
   - simpl. unfold mkLams. rewrite hs_coq_foldr_list. reflexivity.
 Qed.
 
+ 
 (** Working with [freeVars] *)
 
 Lemma deAnnotate_freeVars:
@@ -273,8 +275,12 @@ Proof.
                    (fun '(con, args, rhs) =>
                       (delBindersFV args (freeVarsOf (freeVars rhs)),
                        (con, args, freeVars rhs))) alts)) eqn:Hl.
-    simpl. destruct (freeVars scrut) eqn:Hfv. simpl in H; rewrite H. f_equal.
-    generalize dependent l0. generalize dependent l. induction alts; intros.
+    simpl. destruct (freeVars scrut) eqn:Hfv.
+    destruct Util.mapAndUnzip eqn:Hmu. simpl.
+    rewrite map_unzip in Hmu.
+    simpl in H; rewrite H. f_equal.
+    rewrite Hl in Hmu. inversion Hmu. subst.
+    generalize dependent l1. generalize dependent l2. induction alts; intros.
     + simpl in Hl. inversion Hl; subst. reflexivity.
     + destruct a0 as [[x y] z]. simpl in Hl.
       destruct (List.unzip

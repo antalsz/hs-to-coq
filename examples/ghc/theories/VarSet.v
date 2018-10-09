@@ -248,8 +248,8 @@ Lemma elemVarSet_unionVarSet:
 Proof.
   intros.
   set_b_iff.
-  destruct vs1.
-  destruct vs2.
+  destruct vs1 as [u].
+  destruct vs2 as [u0].
   simpl.
   unfold UniqFM.plusUFM.
   destruct u.
@@ -305,7 +305,7 @@ Proof.
   unfold In, elemVarSet, UniqSet.elementOfUniqSet,
   UniqFM.elemUFM.
   simpl.
-  destruct (UniqSet.mkUniqSet (v :: vs)) eqn:Hus.
+  destruct (UniqSet.mkUniqSet (v :: vs)) as [u] eqn:Hus.
   destruct u.
   
 Admitted.
@@ -343,7 +343,7 @@ Proof.
   - rewrite eq_unique in Heq.
     simpl in *.
     rewrite Heq.
-    destruct (mkVarSet (v2 :: vs)) eqn:Hv.
+    destruct (mkVarSet (v2 :: vs)) as [u] eqn:Hv.
     destruct u.
 
     admit.

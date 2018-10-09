@@ -217,6 +217,13 @@ Effect:
   dependency calculations inside ``hs-to-coq`` might go wrong – but this is not
   always critical.)
 
+  Our Coq parser is dramatically incomplete, and you may need to pick a simpler
+  syntactic representation of terms to get them to parse correctly.  One example
+  is that the terms to either side of a function arrow must be either single
+  names or surrounded by parentheses; for example, ``F -> G`` will parse
+  correctly, as will ``(F X) -> (G Y)``, but ``F X -> G Y`` will come out as
+  ``F X _->_ G Y``.
+
   This is a multi-line edit and needs to be terminated by a period (as is
   natural when writing a *coq_definition*).
 

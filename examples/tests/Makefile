@@ -30,6 +30,8 @@ PASS = \
   GADT \
   Underscore_Module \
   LetPattern \
+	AxiomatizeModule \
+	RedefineAddAxiom
 
 # tests that *should* pass but currently fail
 TODO_PASS  = \

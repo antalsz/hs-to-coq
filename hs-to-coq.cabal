@@ -32,6 +32,7 @@ library
                      , HsToCoq.Util.GHC.Monad
                      , HsToCoq.Util.GHC.Deriving
                      , HsToCoq.Util.Coerce
+                     , HsToCoq.Util.Generics
                      , HsToCoq.Util.Function
                      , HsToCoq.Util.Functor
                      , HsToCoq.Util.Foldable
@@ -92,11 +93,11 @@ library
 
   build-tools:         happy == 1.19.*
 
-  other-extensions:    TupleSections, LambdaCase, MultiWayIf, RecordWildCards, TypeApplications, OverloadedStrings
+  other-extensions:    TypeOperators, TupleSections, LambdaCase, MultiWayIf, EmptyCase, RecordWildCards, TypeApplications, ScopedTypeVariables, OverloadedStrings
                      , RankNTypes, ConstraintKinds
-                     , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts
+                     , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, InstanceSigs
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances
-                     , DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
+                     , DeriveGeneric, DeriveDataTypeable, StandaloneDeriving, GeneralizedNewtypeDeriving
                      , PatternSynonyms, ViewPatterns
                      , TemplateHaskell
                      , CPP

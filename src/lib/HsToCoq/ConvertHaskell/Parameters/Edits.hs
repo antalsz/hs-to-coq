@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes, DeriveGeneric #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
   Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, inEdits,
@@ -15,6 +15,8 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
 import Prelude hiding (tail)
 
 import Control.Lens
+
+import HsToCoq.Util.Generics
 
 import Control.Monad
 import Control.Monad.Except
@@ -123,7 +125,9 @@ data Edits = Edits { _typeSynonymTypes       :: !(Map Ident Ident)
                    , _inlinedMutuals         :: !(Set Qualid)
                    , _inEdits                :: !(Map Qualid Edits)
                    }
-           deriving (Eq, Ord, Show)
+           deriving (Eq, Ord, Show, Generic)
+instance Semigroup Edits where (<>)   = (%<>)
+instance Monoid    Edits where mempty = gmempty
 makeLenses ''Edits
 
 -- Derived edits
@@ -136,16 +140,6 @@ useProgram name edits = or
   where
    isWellFounded (WellFounded {}) = True
    isWellFounded _ = False
-
-
-instance Semigroup Edits where
-  (<>) (Edits tst1 dta1 trm1 rdf1 add1 skp1 smth1 smod1 imod1 axm1 axd1 hmn1 ads1 ord1 rnm1 clk1 dk1 rws1 obl1 coi1 rm1 sce1 ims1 ie1)
-       (Edits tst2 dta2 trm2 rdf2 add2 skp2 smth2 smod2 imod2 axm2 axd2 hmn2 ads2 ord2 rnm2 clk2 dk2 rws2 obl2 coi2 rm2 sce2 ims2 ie2) =
-    Edits (tst1 <> tst2) (dta1 <> dta2) (trm1 <> trm2) (rdf1 <> rdf2) (add1 <> add2) (skp1 <> skp2) (smth1 <> smth2) (smod1 <> smod2) (imod1 <> imod2) (axm1 <> axm2) (axd1 <> axd2) (hmn1 <> hmn2) (ads1 <> ads2) (ord1 <> ord2) (rnm1 <> rnm2) (clk1 <> clk2) (dk1 <> dk2) (rws1 <> rws2) (obl1 <> obl2) (coi1 <> coi2) (rm1 <> rm2) (sce1 <> sce2) (ims1 <> ims2) (unionWith (<>) ie1 ie2)
-
-instance Monoid Edits where
-  mempty  = Edits mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty mempty
-  mappend = (<>)
 
 -- Module-local'
 duplicate_for' :: String -> (a -> String) -> a -> String

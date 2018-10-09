@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
              OverloadedLists, OverloadedStrings,
              FlexibleContexts, ScopedTypeVariables,
-             MultiParamTypeClasses
+             MultiParamTypeClasses,
+             DeriveGeneric
              #-}
 
 module HsToCoq.ConvertHaskell.Declarations.TyCl (
@@ -20,6 +21,8 @@ module HsToCoq.ConvertHaskell.Declarations.TyCl (
   ) where
 
 import Control.Lens
+
+import HsToCoq.Util.Generics
 
 import Data.Semigroup (Semigroup(..))
 import Data.Bifunctor
@@ -43,7 +46,7 @@ import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Util.FVs
 
-import Data.Generics hiding (Fixity(..))
+import Data.Generics hiding (Generic, Fixity(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -135,16 +138,9 @@ data DeclarationGroup = DeclarationGroup { dgInductives   :: [IndBody]
                                          , dgSynonyms     :: [SynBody]
                                          , dgClasses      :: [ClassBody]
                                          , dgFailures     :: [Sentence]}
-                      deriving (Eq, Ord, Show, Read)
-
-instance Semigroup DeclarationGroup where
-  DeclarationGroup ind1 coi1 syn1 cls1 fail1 <>
-   DeclarationGroup ind2 coi2 syn2 cls2 fail2 =
-    DeclarationGroup (ind1 <> ind2) (coi1 <> coi2) (syn1 <> syn2) (cls1 <> cls2) (fail1 <> fail2)
-
-instance Monoid DeclarationGroup where
-  mempty  = DeclarationGroup [] [] [] [] []
-  mappend = (<>)
+                      deriving (Eq, Ord, Show, Read, Generic)
+instance Semigroup DeclarationGroup where (<>)   = (%<>)
+instance Monoid    DeclarationGroup where mempty = gmempty
 
 singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
 singletonDeclarationGroup (ConvData False ind)     = DeclarationGroup [ind] []    []    []    []

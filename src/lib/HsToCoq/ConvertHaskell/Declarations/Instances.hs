@@ -291,12 +291,13 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                  let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
                  
                  pure $ ProgramSentence (InstanceSentence instTerm) Nothing
-        Just (CoqInstanceDef x) -> pure $ InstanceSentence x
-        Just redef -> editFailure $ ("cannot redefine an Instance Definition to be " ++) $
-          case redef of CoqDefinitionDef _ -> "a Definition"
-                        CoqFixpointDef   _ -> "a Fixpoint"
-                        CoqInductiveDef  _ -> "an Inductive"
-                        CoqInstanceDef   _ -> "an Instance Definition"
+        Just def ->
+          definitionSentence def <$ case def of
+            CoqInductiveDef        _ -> editFailure "cannot redefine an instance definition into an Inductive"
+            CoqDefinitionDef       _ -> editFailure "cannot redefine an instance definition into a Definition"
+            CoqFixpointDef         _ -> editFailure "cannot redefine an instance definition into a Fixpoint"
+            CoqInstanceDef         _ -> pure ()
+            CoqAxiomDef            _ -> editFailure "cannot redefine an instance definition into an Axiom"
    
       pure $ methodSentences ++ [instance_sentence]
 

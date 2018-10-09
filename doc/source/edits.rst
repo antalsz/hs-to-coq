@@ -162,7 +162,8 @@ Effect:
   This takes the name of a value-level definition and, when translating it,
   translates only the type and generates an axiom with that type.
 
-  See also ``axiomatize module``.
+  See also ``axiomatize module``, and also ``redefine Axiom`` for type-level
+  axiomatization.
 
 Examples:
 
@@ -209,13 +210,12 @@ Format:
   | **add** *module* *coq_definition*
 
 Effect:
-  Add a Coq definition to *module*. The
-  definition can be a ``Definition``, an ``Instance``, an ``Inductive`` or a
-  ``Fixpoint``.
+  Add a Coq definition to *module*. The definition can be a ``Definition``, a ``Fixpoint``, an
+  ``Inductive``, an ``Instance``, or an ``Axiom``.
 
-  That the name in the definition should be fully qualified. (If it is not,
-  some dependency calculations inside ``hs-to-coq`` might go wrong – not always
-  critical.)
+  The name in the definition should be fully qualified. (If it is not, some
+  dependency calculations inside ``hs-to-coq`` might go wrong – but this is not
+  always critical.)
 
   This is a multi-line edit and needs to be terminated by a period (as is
   natural when writing a *coq_definition*).
@@ -376,6 +376,10 @@ Format:
 
 Effect:
   Combines the **skip** and **add** edits.
+
+  You can use ``redefine Axiom ...`` to replace a type-level definition with an
+  axiom; for value-level definitions, please use ``axiomatize definition``
+  instead.
 
 Examples:
 

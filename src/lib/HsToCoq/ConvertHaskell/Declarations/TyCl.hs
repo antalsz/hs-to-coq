@@ -61,23 +61,26 @@ import Exception
 
 --------------------------------------------------------------------------------
 
-data ConvertedDeclaration = ConvData  Bool IndBody
-                          | ConvSyn   SynBody
-                          | ConvClass ClassBody
+data ConvertedDeclaration = ConvData    Bool IndBody
+                          | ConvSyn     SynBody
+                          | ConvClass   ClassBody
+                          | ConvAxiom   (Qualid,Term)
                           | ConvFailure Qualid Sentence
                           deriving (Eq, Ord, Show, Read)
 
 instance HasBV Qualid ConvertedDeclaration where
-  bvOf (ConvData  _ ind)   = bvOf ind
-  bvOf (ConvSyn     syn)   = bvOf syn
-  bvOf (ConvClass   cls)   = bvOf cls
+  bvOf (ConvData    _ ind) = bvOf ind
+  bvOf (ConvSyn       syn) = bvOf syn
+  bvOf (ConvClass     cls) = bvOf cls
+  bvOf (ConvAxiom     axm) = bvOf $ uncurry typedAxiom axm
   bvOf (ConvFailure _ sen) = bvOf sen
 
 convDeclName :: ConvertedDeclaration -> Qualid
-convDeclName (ConvData _ (IndBody                    tyName  _ _ _))    = tyName
-convDeclName (ConvSyn    (SynBody                    synName _ _ _))    = synName
-convDeclName (ConvClass  (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
-convDeclName (ConvFailure n _)                                         = n
+convDeclName (ConvData    _ (IndBody                    tyName  _ _ _))    = tyName
+convDeclName (ConvSyn       (SynBody                    synName _ _ _))    = synName
+convDeclName (ConvClass     (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
+convDeclName (ConvAxiom     (axName, _))                                   = axName
+convDeclName (ConvFailure n _)                                             = n
 
 failTyClDecl :: ConversionMonad r m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
 failTyClDecl name e = pure $ Just $
@@ -99,6 +102,9 @@ convertTyClDecl decl = do
 
         Just redef -> do
           case (decl, redef) of
+            (_,          CoqAxiomDef axm) ->
+              pure $ ConvAxiom axm
+
             (SynDecl{},  CoqDefinitionDef def) ->
               pure . ConvSyn $ case def of
                 DefinitionDef _ name args oty body -> SynBody name args oty body
@@ -128,7 +134,8 @@ convertTyClDecl decl = do
                            CoqDefinitionDef       _ -> "a Definition"
                            CoqFixpointDef         _ -> "a Fixpoint"
                            CoqInductiveDef        _ -> "an Inductive"
-                           CoqInstanceDef         _ -> "an Instance Definition"
+                           CoqInstanceDef         _ -> "an Instance"
+                           CoqAxiomDef            _ -> "an Axiom"
               in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
 
 --------------------------------------------------------------------------------
@@ -137,45 +144,49 @@ data DeclarationGroup = DeclarationGroup { dgInductives   :: [IndBody]
                                          , dgCoInductives :: [IndBody]
                                          , dgSynonyms     :: [SynBody]
                                          , dgClasses      :: [ClassBody]
-                                         , dgFailures     :: [Sentence]}
+                                         , dgAxioms       :: [(Qualid,Term)]
+                                         , dgFailures     :: [Sentence] }
                       deriving (Eq, Ord, Show, Read, Generic)
 instance Semigroup DeclarationGroup where (<>)   = (%<>)
 instance Monoid    DeclarationGroup where mempty = gmempty
 
 singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
-singletonDeclarationGroup (ConvData False ind)     = DeclarationGroup [ind] []    []    []    []
-singletonDeclarationGroup (ConvData True  coi)     = DeclarationGroup []    [coi] []    []    []
-singletonDeclarationGroup (ConvSyn   syn)          = DeclarationGroup []    []    [syn] []    []
-singletonDeclarationGroup (ConvClass cls)          = DeclarationGroup []    []    []    [cls] []
-singletonDeclarationGroup (ConvFailure _ sen)      = DeclarationGroup []    []    []    []    [sen]
+singletonDeclarationGroup (ConvData     False ind) = DeclarationGroup [ind] []    []    []    []    []
+singletonDeclarationGroup (ConvData     True  coi) = DeclarationGroup []    [coi] []    []    []    []
+singletonDeclarationGroup (ConvSyn            syn) = DeclarationGroup []    []    [syn] []    []    []
+singletonDeclarationGroup (ConvClass          cls) = DeclarationGroup []    []    []    [cls] []    []
+singletonDeclarationGroup (ConvAxiom          axm) = DeclarationGroup []    []    []    []    [axm] []
+singletonDeclarationGroup (ConvFailure _      sen) = DeclarationGroup []    []    []    []    []    [sen]
 
 --------------------------------------------------------------------------------
 
 convertDeclarationGroup :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 convertDeclarationGroup DeclarationGroup{..} =
-    (dgFailures ++) <$>
-    case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
-  (Just inds, Nothing, Nothing, Nothing) ->
-    pure [InductiveSentence $ Inductive inds []]
-
-  (Nothing, Just coinds, Nothing, Nothing) ->
-    pure [InductiveSentence $ CoInductive coinds []]
-
-  (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing) ->
-    pure [DefinitionSentence $ DefinitionDef Global name args oty def]
-
-  (Just inds, Nothing, Just syns, Nothing) ->
-    pure $  foldMap recSynType syns
-         ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
-
-  (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
-    classSentences classDef
-
-  (Nothing, Nothing, Nothing, Nothing) ->
-    pure []
-
-  (_, _, _, _) ->
-    convUnsupported "too much mutual recursion"
+  (dgFailures ++) <$> case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses, nonEmpty dgAxioms) of
+    (Nothing, Nothing, Nothing, Nothing, Just [axm]) ->
+      pure [uncurry typedAxiom axm]
+    
+    (Just inds, Nothing, Nothing, Nothing, Nothing) ->
+      pure [InductiveSentence $ Inductive inds []]
+    
+    (Nothing, Just coinds, Nothing, Nothing, Nothing) ->
+      pure [InductiveSentence $ CoInductive coinds []]
+    
+    (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing, Nothing) ->
+      pure [DefinitionSentence $ DefinitionDef Global name args oty def]
+    
+    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
+      pure $  foldMap recSynType syns
+           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
+    
+    (Nothing, Nothing, Nothing, Just (classDef :| []), Nothing) ->
+      classSentences classDef
+    
+    (Nothing, Nothing, Nothing, Nothing, Nothing) ->
+      pure []
+    
+    (_, _, _, _, _) ->
+      convUnsupported "too much mutual recursion"
 
   where
     synName = qualidExtendBase "__raw"

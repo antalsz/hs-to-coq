@@ -37,6 +37,7 @@ import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Sigs
@@ -115,6 +116,15 @@ convertHsGroup HsGroup{..} = do
   pure ConvertedModuleDeclarations{..}
   where
     -- TODO: factor this out?
+    axiomatizeBinding :: ConversionMonad r m => HsBind GhcRn -> GhcException -> m (Maybe Qualid, [Sentence])
+    axiomatizeBinding FunBind{..} exn = do
+      name <- var ExprNS (unLoc fun_id)
+      pure (Just name, [translationFailedComment (qualidBase name) exn, axiom name])
+    axiomatizeBinding _ exn =
+      pure (Nothing, [CommentSentence $ Comment $
+        "While translating non-function binding: " <> T.pack (show exn)])
+    
+    -- TODO: factor this out?
     applyRedefines :: ConversionMonad r m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
     applyRedefines (name, sentences) =
       view (edits.redefinitions.at name) >>= ((name,) <$>) . \case
@@ -124,6 +134,7 @@ convertHsGroup HsGroup{..} = do
             CoqDefinitionDef _ -> pure ()
             CoqFixpointDef   _ -> pure ()
             CoqInstanceDef   _ -> editFailure "cannot redefine a value definition into an Instance"
+            CoqAxiomDef      _ -> pure ()
         Nothing ->
           pure sentences
 

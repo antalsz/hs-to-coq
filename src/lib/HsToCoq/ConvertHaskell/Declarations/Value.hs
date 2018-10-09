@@ -52,6 +52,7 @@ convertValDecls mdecls = do
                           CoqDefinitionDef       _ -> pure ()
                           CoqFixpointDef         _ -> pure ()
                           CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
+                          CoqAxiomDef            _ -> pure ()
                       | Just (WellFounded order) <- t  -- turn into Program Fixpoint
                       ->  pure <$> toProgramFixpointSentence cdef order obl
                       | otherwise                   -- no edit

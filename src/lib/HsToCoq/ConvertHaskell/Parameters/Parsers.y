@@ -99,6 +99,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
+  'Axiom'         { TokWord    "Axiom"          }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   ':'             { TokOp      ":"              }
@@ -226,6 +227,7 @@ CoqDefinitionRaw :: { CoqDefinition }
   | Definition      { CoqDefinitionDef      $1 }
   | Fixpoint        { CoqFixpointDef        $1 }
   | Instance        { CoqInstanceDef        $1 }
+  | Axiom           { CoqAxiomDef           $1 }
 
 CoqDefinition :: { CoqDefinition }
   : Coq(CoqDefinitionRaw) '.' { $1 }
@@ -470,6 +472,9 @@ Instance :: { InstanceDefinition }
 
 FieldDefinition :: { (Qualid,Term) }
   : Qualid ':=' Term  { ($1 , $3) }
+
+Axiom :: { (Qualid, Term) }
+  : 'Axiom' Qualid TypeAnnotation    { ($2, $3) }
 
 --------------------------------------------------------------------------------
 -- Haskell code

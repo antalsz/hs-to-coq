@@ -33,6 +33,7 @@ import HsToCoq.Util.GHC.Module
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite (Rewrite(..), Rewrites)
+import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
@@ -45,13 +46,15 @@ data CoqDefinition = CoqDefinitionDef      Definition
                    | CoqFixpointDef        Fixpoint
                    | CoqInductiveDef       Inductive
                    | CoqInstanceDef        InstanceDefinition
+                   | CoqAxiomDef           (Qualid, Term) -- Curry?  Uncurry?  A new type?
                    deriving (Eq, Ord, Show, Read)
 
 definitionSentence :: CoqDefinition -> Sentence
-definitionSentence (CoqDefinitionDef      def) = DefinitionSentence       def
-definitionSentence (CoqFixpointDef        fix) = FixpointSentence         fix
-definitionSentence (CoqInductiveDef       ind) = InductiveSentence        ind
-definitionSentence (CoqInstanceDef        ind) = InstanceSentence         ind
+definitionSentence (CoqDefinitionDef      def) = DefinitionSentence def
+definitionSentence (CoqFixpointDef        fix) = FixpointSentence   fix
+definitionSentence (CoqInductiveDef       ind) = InductiveSentence  ind
+definitionSentence (CoqInstanceDef        ind) = InstanceSentence   ind
+definitionSentence (CoqAxiomDef           axm) = uncurry typedAxiom axm
 
 -- Add more as needed
 data ScopePlace = SPValue | SPConstructor
@@ -222,14 +225,15 @@ addEdit e = case e of
 
 
 defName :: CoqDefinition -> Qualid
-defName (CoqDefinitionDef (DefinitionDef _ x _ _ _))                  = x
-defName (CoqDefinitionDef (LetDef          x _ _ _))                  = x
+defName (CoqDefinitionDef (DefinitionDef _ x _ _ _))                = x
+defName (CoqDefinitionDef (LetDef          x _ _ _))                = x
 defName (CoqFixpointDef   (Fixpoint    (FixBody x _ _ _ _ :| _) _)) = x
 defName (CoqFixpointDef   (CoFixpoint  (FixBody x _ _ _ _ :| _) _)) = x
 defName (CoqInductiveDef  (Inductive   (IndBody x _ _ _   :| _) _)) = x
 defName (CoqInductiveDef  (CoInductive (IndBody x _ _ _   :| _) _)) = x
-defName (CoqInstanceDef   (InstanceDefinition x _ _ _ _))             = x
-defName (CoqInstanceDef   (InstanceTerm       x _ _ _ _))             = x
+defName (CoqInstanceDef   (InstanceDefinition x _ _ _ _))           = x
+defName (CoqInstanceDef   (InstanceTerm       x _ _ _ _))           = x
+defName (CoqAxiomDef      (x, _))                                   = x
 
 buildEdits :: Foldable f => f Edit -> Either String Edits
 buildEdits = foldM (flip addEdit) mempty

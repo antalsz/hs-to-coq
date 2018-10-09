@@ -96,6 +96,16 @@ Proof.
   unfold not. intros m h; rewrite h in m; auto.
 Qed.
 
+Lemma eq_getWordKey : forall (x y : Unique) ,  
+    (getWordKey x) == (getWordKey y) = true -> x = y.
+Proof. 
+  intros x y EQ.
+  rewrite <- unique_word in EQ.
+  apply (ssrbool.elimT (@Base.Eq_eq _ _ _ _ _ _)) in EQ.
+  auto.
+Qed.
+
+
 (**
 
 ** Local uniques

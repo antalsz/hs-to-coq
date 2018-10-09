@@ -90,6 +90,12 @@ Axiom lookup_difference_not_in_snd:
     lookup key i' = None ->
     lookup key (difference i i') = lookup key i.
 
+Axiom lookup_partition :
+  forall (key : Internal.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
+    lookup key i = Some y ->
+    (left, right) = partition f i -> 
+    lookup key left = Some y \/ lookup key right = Some y.    
+
 (*
 This is a QuickChick setup to test the above axioms
 (as bugs easily lurk there).

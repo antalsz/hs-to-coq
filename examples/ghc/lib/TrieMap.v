@@ -292,7 +292,8 @@ Axiom deBruijnize : forall {a}, a -> DeBruijn a.
 
 Axiom deMaybe : forall {m} {a}, forall `{TrieMap m}, option (m a) -> m a.
 
-Axiom deleteTM : forall {m} {a}, forall `{TrieMap m}, Key m -> m a -> m a.
+Definition deleteTM {m} {a} `{TrieMap m} : Key m -> m a -> m a :=
+  fun k m => alterTM k (fun arg_0__ => None) m.
 
 Axiom emptyCME : CmEnv.
 
@@ -344,7 +345,8 @@ Axiom foldTyLit : forall {a} {b}, (a -> b -> b) -> TyLitMap a -> b -> b.
 
 Axiom foldTypeMap : forall {a} {b}, (a -> b -> b) -> b -> TypeMap a -> b.
 
-Axiom insertTM : forall {m} {a}, forall `{TrieMap m}, Key m -> a -> m a -> m a.
+Definition insertTM {m} {a} `{TrieMap m} : Key m -> a -> m a -> m a :=
+  fun k v m => alterTM k (fun arg_0__ => Some v) m.
 
 Axiom lkA : forall {a}, CmEnv -> Core.CoreAlt -> AltMap a -> option a.
 
@@ -459,7 +461,7 @@ Axiom xtTickish : forall {a},
 Axiom xtVar : forall {a}, CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a.
 
 (* External variables:
-     Key Type list nat option unit Core.CoreAlt Core.CoreExpr Core.DVarEnv
+     Key None Some Type list nat option unit Core.CoreAlt Core.CoreExpr Core.DVarEnv
      Core.Tickish Core.Var Core.VarEnv Data.IntMap.Internal.IntMap
      Data.Map.Internal.Map FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
      GHC.Err.Build_Default GHC.Err.Default GHC.Err.default GHC.Num.Integer

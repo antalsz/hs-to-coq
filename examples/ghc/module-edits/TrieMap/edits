@@ -1,5 +1,8 @@
 axiomatize module TrieMap
 simple class TrieMap.TrieMap
+  # Can't use the CPSed class because the associated types need to escape the continuation
+unaxiomatize definition TrieMap.insertTM
+unaxiomatize definition TrieMap.deleteTM
 
 rename type Var.Id = Core.Var
 

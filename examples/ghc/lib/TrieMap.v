@@ -288,62 +288,123 @@ Instance TrieMap__UniqDFM : TrieMap UniqDFM.UniqDFM := {}.
 Proof.
 Admitted.
 
-Axiom insertTM : forall {m} {a}, forall `{TrieMap m}, Key m -> a -> m a -> m a.
+Axiom deBruijnize : forall {a}, a -> DeBruijn a.
+
+Axiom deMaybe : forall {m} {a}, forall `{TrieMap m}, option (m a) -> m a.
 
 Axiom deleteTM : forall {m} {a}, forall `{TrieMap m}, Key m -> m a -> m a.
 
-Axiom lkC : forall {a}, DeBruijn unit -> CoercionMapX a -> option a.
+Axiom emptyCME : CmEnv.
 
-Axiom lkT : forall {a}, DeBruijn unit -> TypeMapX a -> option a.
+Axiom emptyCoreMap : forall {a}, CoreMap a.
 
-Axiom lkE : forall {a}, DeBruijn Core.CoreExpr -> CoreMapX a -> option a.
+Axiom emptyE : forall {a}, CoreMapX a.
 
-Axiom lkVar : forall {a}, CmEnv -> Core.Var -> VarMap a -> option a.
+Axiom emptyLiteralMap : forall {a}, LiteralMap a.
 
-(* lkTyLit skipped *)
+Axiom emptyT : forall {a}, TypeMapX a.
 
-Axiom lkA : forall {a}, CmEnv -> Core.CoreAlt -> AltMap a -> option a.
+Axiom emptyTyLitMap : forall {a}, TyLitMap a.
 
-Axiom xtC : forall {a},
-            DeBruijn unit -> XT a -> CoercionMapX a -> CoercionMapX a.
+Axiom emptyTypeMap : forall {a}, TypeMap a.
 
-Axiom xtT : forall {a}, DeBruijn unit -> XT a -> TypeMapX a -> TypeMapX a.
+Axiom extendCME : CmEnv -> Core.Var -> CmEnv.
 
-Axiom xtE : forall {a},
-            DeBruijn Core.CoreExpr -> XT a -> CoreMapX a -> CoreMapX a.
+Axiom extendCMEs : CmEnv -> list Core.Var -> CmEnv.
 
-Axiom xtBndr : forall {a}, CmEnv -> Core.Var -> XT a -> BndrMap a -> BndrMap a.
+Axiom extendCoreMap : forall {a}, CoreMap a -> Core.CoreExpr -> a -> CoreMap a.
+
+Axiom extendTypeMap : forall {a}, TypeMap a -> unit -> a -> TypeMap a.
 
 Axiom extendTypeMapWithScope : forall {a},
                                TypeMap a -> CmEnv -> unit -> a -> TypeMap a.
 
-Axiom xtTT : forall {a}, DeBruijn unit -> XT a -> TypeMap a -> TypeMap a.
+Axiom fdA : forall {a} {b}, (a -> b -> b) -> AltMap a -> b -> b.
 
-Axiom xtA : forall {a}, CmEnv -> Core.CoreAlt -> XT a -> AltMap a -> AltMap a.
+Axiom fdE : forall {a} {b}, (a -> b -> b) -> CoreMapX a -> b -> b.
 
-(* xtG skipped *)
+Axiom fdG : forall {m} {a} {b},
+            forall `{TrieMap m}, (a -> b -> b) -> GenMap m a -> b -> b.
+
+Axiom fdList : forall {m} {a} {b},
+               forall `{TrieMap m}, (a -> b -> b) -> ListMap m a -> b -> b.
+
+Axiom fdMaybe : forall {m} {a} {b},
+                forall `{TrieMap m}, (a -> b -> b) -> MaybeMap m a -> b -> b.
+
+Axiom fdT : forall {a} {b}, (a -> b -> b) -> TypeMapX a -> b -> b.
+
+Axiom fdVar : forall {a} {b}, (a -> b -> b) -> VarMap a -> b -> b.
+
+Axiom foldCoreMap : forall {a} {b}, (a -> b -> b) -> b -> CoreMap a -> b.
+
+Axiom foldMaybe : forall {a} {b}, (a -> b -> b) -> option a -> b -> b.
+
+Axiom foldTyLit : forall {a} {b}, (a -> b -> b) -> TyLitMap a -> b -> b.
+
+Axiom foldTypeMap : forall {a} {b}, (a -> b -> b) -> b -> TypeMap a -> b.
+
+Axiom insertTM : forall {m} {a}, forall `{TrieMap m}, Key m -> a -> m a -> m a.
+
+Axiom lkA : forall {a}, CmEnv -> Core.CoreAlt -> AltMap a -> option a.
+
+Axiom lkBndr : forall {a}, CmEnv -> Core.Var -> BndrMap a -> option a.
+
+Axiom lkC : forall {a}, DeBruijn unit -> CoercionMapX a -> option a.
+
+Axiom lkDFreeVar : forall {a}, Core.Var -> Core.DVarEnv a -> option a.
+
+Axiom lkDNamed : forall {n} {a},
+                 forall `{Name.NamedThing n}, n -> NameEnv.DNameEnv a -> option a.
+
+Axiom lkE : forall {a}, DeBruijn Core.CoreExpr -> CoreMapX a -> option a.
 
 Axiom lkList : forall {m} {k} {a},
                forall `{TrieMap m},
                (forall {b}, k -> m b -> option b) -> list k -> ListMap m a -> option a.
 
+Axiom lkLit : forall {a}, Literal.Literal -> LiteralMap a -> option a.
+
 Axiom lkMaybe : forall {k} {m} {a},
                 (forall {b}, k -> m b -> option b) -> option k -> MaybeMap m a -> option a.
 
-Axiom op_zgzizg__ : forall {a} {b} {c}, (a -> b) -> (b -> c) -> a -> c.
+Axiom lkT : forall {a}, DeBruijn unit -> TypeMapX a -> option a.
 
-Axiom xtVar : forall {a}, CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a.
+Axiom lkTT : forall {a}, DeBruijn unit -> TypeMap a -> option a.
 
-(* xtTyLit skipped *)
+Axiom lkTickish : forall {a}, Core.Tickish Core.Var -> TickishMap a -> option a.
 
-Axiom xtList : forall {m} {k} {a},
-               forall `{TrieMap m},
-               (forall {b}, k -> XT b -> m b -> m b) ->
-               list k -> XT a -> ListMap m a -> ListMap m a.
+Axiom lkVar : forall {a}, CmEnv -> Core.Var -> VarMap a -> option a.
 
-Axiom xtMaybe : forall {k} {m} {a},
-                (forall {b}, k -> XT b -> m b -> m b) ->
-                option k -> XT a -> MaybeMap m a -> MaybeMap m a.
+Axiom lookupCME : CmEnv -> Core.Var -> option BoundVar.
+
+Axiom lookupCoreMap : forall {a}, CoreMap a -> Core.CoreExpr -> option a.
+
+Axiom lookupTypeMap : forall {a}, TypeMap a -> unit -> option a.
+
+Axiom lookupTypeMapWithScope : forall {a},
+                               TypeMap a -> CmEnv -> unit -> option a.
+
+Axiom mapA : forall {a} {b}, (a -> b) -> AltMap a -> AltMap b.
+
+Axiom mapE : forall {a} {b}, (a -> b) -> CoreMapX a -> CoreMapX b.
+
+Axiom mapG : forall {m} {a} {b},
+             forall `{TrieMap m}, (a -> b) -> GenMap m a -> GenMap m b.
+
+Axiom mapList : forall {m} {a} {b},
+                forall `{TrieMap m}, (a -> b) -> ListMap m a -> ListMap m b.
+
+Axiom mapMb : forall {m} {a} {b},
+              forall `{TrieMap m}, (a -> b) -> MaybeMap m a -> MaybeMap m b.
+
+Axiom mapT : forall {a} {b}, (a -> b) -> TypeMapX a -> TypeMapX b.
+
+Axiom mapTyLit : forall {a} {b}, (a -> b) -> TyLitMap a -> TyLitMap b.
+
+Axiom mapVar : forall {a} {b}, (a -> b) -> VarMap a -> VarMap b.
+
+Axiom mkDeBruijnContext : list Core.Var -> CmEnv.
 
 Axiom op_zbzg__ : forall {a} {b}, a -> (a -> b) -> b.
 
@@ -352,119 +413,50 @@ Axiom op_zbzgzg__ : forall {m2} {a} {m1},
                     (XT (m2 a) -> m1 (m2 a) -> m1 (m2 a)) ->
                     (m2 a -> m2 a) -> m1 (m2 a) -> m1 (m2 a).
 
-Axiom deMaybe : forall {m} {a}, forall `{TrieMap m}, option (m a) -> m a.
+Axiom op_zgzizg__ : forall {a} {b} {c}, (a -> b) -> (b -> c) -> a -> c.
 
-Axiom xtInt : forall {a},
-              nat -> XT a -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap a.
+Axiom trieMapView : unit -> option unit.
 
-Axiom mapMb : forall {m} {a} {b},
-              forall `{TrieMap m}, (a -> b) -> MaybeMap m a -> MaybeMap m b.
+Axiom xtA : forall {a}, CmEnv -> Core.CoreAlt -> XT a -> AltMap a -> AltMap a.
 
-Axiom fdMaybe : forall {m} {a} {b},
-                forall `{TrieMap m}, (a -> b -> b) -> MaybeMap m a -> b -> b.
+Axiom xtBndr : forall {a}, CmEnv -> Core.Var -> XT a -> BndrMap a -> BndrMap a.
 
-Axiom mapList : forall {m} {a} {b},
-                forall `{TrieMap m}, (a -> b) -> ListMap m a -> ListMap m b.
+Axiom xtC : forall {a},
+            DeBruijn unit -> XT a -> CoercionMapX a -> CoercionMapX a.
 
-Axiom fdList : forall {m} {a} {b},
-               forall `{TrieMap m}, (a -> b -> b) -> ListMap m a -> b -> b.
-
-Axiom fdT : forall {a} {b}, (a -> b -> b) -> TypeMapX a -> b -> b.
-
-Axiom foldMaybe : forall {a} {b}, (a -> b -> b) -> option a -> b -> b.
-
-Axiom lkDNamed : forall {n} {a},
-                 forall `{Name.NamedThing n}, n -> NameEnv.DNameEnv a -> option a.
+Axiom xtDFreeVar : forall {a},
+                   Core.Var -> XT a -> Core.DVarEnv a -> Core.DVarEnv a.
 
 Axiom xtDNamed : forall {n} {a},
                  forall `{Name.NamedThing n},
                  n -> XT a -> NameEnv.DNameEnv a -> NameEnv.DNameEnv a.
 
-Axiom emptyE : forall {a}, CoreMapX a.
+Axiom xtE : forall {a},
+            DeBruijn Core.CoreExpr -> XT a -> CoreMapX a -> CoreMapX a.
 
-Axiom emptyLiteralMap : forall {a}, LiteralMap a.
+Axiom xtInt : forall {a},
+              nat -> XT a -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap a.
 
-Axiom lkLit : forall {a}, Literal.Literal -> LiteralMap a -> option a.
+Axiom xtList : forall {m} {k} {a},
+               forall `{TrieMap m},
+               (forall {b}, k -> XT b -> m b -> m b) ->
+               list k -> XT a -> ListMap m a -> ListMap m a.
 
 Axiom xtLit : forall {a},
               Literal.Literal -> XT a -> LiteralMap a -> LiteralMap a.
 
-Axiom lkBndr : forall {a}, CmEnv -> Core.Var -> BndrMap a -> option a.
+Axiom xtMaybe : forall {k} {m} {a},
+                (forall {b}, k -> XT b -> m b -> m b) ->
+                option k -> XT a -> MaybeMap m a -> MaybeMap m a.
 
-Axiom lookupTypeMapWithScope : forall {a},
-                               TypeMap a -> CmEnv -> unit -> option a.
+Axiom xtT : forall {a}, DeBruijn unit -> XT a -> TypeMapX a -> TypeMapX a.
 
-Axiom lkTT : forall {a}, DeBruijn unit -> TypeMap a -> option a.
-
-(* lkG skipped *)
-
-Axiom mapG : forall {m} {a} {b},
-             forall `{TrieMap m}, (a -> b) -> GenMap m a -> GenMap m b.
-
-Axiom fdG : forall {m} {a} {b},
-            forall `{TrieMap m}, (a -> b -> b) -> GenMap m a -> b -> b.
-
-Axiom mapE : forall {a} {b}, (a -> b) -> CoreMapX a -> CoreMapX b.
-
-Axiom lookupCoreMap : forall {a}, CoreMap a -> Core.CoreExpr -> option a.
-
-Axiom extendCoreMap : forall {a}, CoreMap a -> Core.CoreExpr -> a -> CoreMap a.
-
-Axiom foldCoreMap : forall {a} {b}, (a -> b -> b) -> b -> CoreMap a -> b.
-
-Axiom emptyCoreMap : forall {a}, CoreMap a.
-
-Axiom fdE : forall {a} {b}, (a -> b -> b) -> CoreMapX a -> b -> b.
-
-Axiom lkTickish : forall {a}, Core.Tickish Core.Var -> TickishMap a -> option a.
+Axiom xtTT : forall {a}, DeBruijn unit -> XT a -> TypeMap a -> TypeMap a.
 
 Axiom xtTickish : forall {a},
                   Core.Tickish Core.Var -> XT a -> TickishMap a -> TickishMap a.
 
-Axiom mapA : forall {a} {b}, (a -> b) -> AltMap a -> AltMap b.
-
-Axiom fdA : forall {a} {b}, (a -> b -> b) -> AltMap a -> b -> b.
-
-Axiom trieMapView : unit -> option unit.
-
-Axiom emptyT : forall {a}, TypeMapX a.
-
-Axiom mapT : forall {a} {b}, (a -> b) -> TypeMapX a -> TypeMapX b.
-
-Axiom emptyTyLitMap : forall {a}, TyLitMap a.
-
-Axiom mapTyLit : forall {a} {b}, (a -> b) -> TyLitMap a -> TyLitMap b.
-
-Axiom foldTyLit : forall {a} {b}, (a -> b -> b) -> TyLitMap a -> b -> b.
-
-Axiom foldTypeMap : forall {a} {b}, (a -> b -> b) -> b -> TypeMap a -> b.
-
-Axiom emptyTypeMap : forall {a}, TypeMap a.
-
-Axiom lookupTypeMap : forall {a}, TypeMap a -> unit -> option a.
-
-Axiom extendTypeMap : forall {a}, TypeMap a -> unit -> a -> TypeMap a.
-
-Axiom mkDeBruijnContext : list Core.Var -> CmEnv.
-
-Axiom deBruijnize : forall {a}, a -> DeBruijn a.
-
-Axiom emptyCME : CmEnv.
-
-Axiom extendCMEs : CmEnv -> list Core.Var -> CmEnv.
-
-Axiom extendCME : CmEnv -> Core.Var -> CmEnv.
-
-Axiom lookupCME : CmEnv -> Core.Var -> option BoundVar.
-
-Axiom mapVar : forall {a} {b}, (a -> b) -> VarMap a -> VarMap b.
-
-Axiom fdVar : forall {a} {b}, (a -> b -> b) -> VarMap a -> b -> b.
-
-Axiom lkDFreeVar : forall {a}, Core.Var -> Core.DVarEnv a -> option a.
-
-Axiom xtDFreeVar : forall {a},
-                   Core.Var -> XT a -> Core.DVarEnv a -> Core.DVarEnv a.
+Axiom xtVar : forall {a}, CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a.
 
 (* External variables:
      Key Type list nat option unit Core.CoreAlt Core.CoreExpr Core.DVarEnv

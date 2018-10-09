@@ -18,6 +18,7 @@ import Data.Foldable
 import HsToCoq.Util.Foldable
 import Data.Traversable
 import Data.Bitraversable
+import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.List (intercalate)
@@ -64,6 +65,7 @@ import HsToCoq.ConvertHaskell.Literals
 import HsToCoq.ConvertHaskell.Type
 import HsToCoq.ConvertHaskell.Pattern
 import HsToCoq.ConvertHaskell.Sigs
+import HsToCoq.ConvertHaskell.Axiomatize
 
 --------------------------------------------------------------------------------
 
@@ -816,37 +818,41 @@ convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym b
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
+  
+  whenM (view currentModuleAxiomatized) $
+    convUnsupported "pattern bindings in axiomatized modules"
+  
   (pat, guards) <- runWriterT $ convertLPat pat_lhs
   Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding convHsTy FunBind{..}   = do
     name <- var ExprNS (unLoc fun_id)
-
+    
     -- Skip it?  Axiomatize it?
-    isSkipped     <- view $ edits.skipped.contains name
-    isAxiomatized <- view $ edits.axiomatizedDefinitions.contains name
-    if | isSkipped     ->
-         pure Nothing
-       | isAxiomatized ->
-         maybe (convUnsupported "axiomatizing definitions without type signatures")
-               (pure . Just . ConvertedAxiomBinding name)
-               convHsTy
-       | otherwise -> do
-         let (tvs, coqTy) =
-               -- The @forall@ed arguments need to be brought into scope
-               let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
-                   peelForall ty                = ([], ty)
-               in maybe ([], Nothing) (second Just . peelForall) convHsTy
-      
-         defn <-
-           if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-           then case unLoc $ mg_alts fun_matches of
-                  [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
-                  _ -> convUnsupported "malformed multi-match variable definitions"
-           else uncurry Fun <$> convertFunction fun_matches
-      
-         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
-      
-         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
+    definitionTask name >>= \case
+      SkipIt ->
+        pure Nothing
+      AxiomatizeIt axMode ->
+        let missingType = case axMode of
+              SpecificAxiomatize -> convUnsupported "axiomatizing definitions without type signatures"
+              GeneralAxiomatize  -> pure bottomType
+        in Just . ConvertedAxiomBinding name <$> maybe missingType pure convHsTy
+      TranslateIt -> do
+        let (tvs, coqTy) =
+              -- The @forall@ed arguments need to be brought into scope
+              let peelForall (Forall tvs body) = first (NEL.toList tvs ++) $ peelForall body
+                  peelForall ty                = ([], ty)
+              in maybe ([], Nothing) (second Just . peelForall) convHsTy
+
+        defn <-
+          if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+          then case unLoc $ mg_alts fun_matches of
+                 [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+                 _ -> convUnsupported "malformed multi-match variable definitions"
+          else uncurry Fun <$> convertFunction fun_matches
+        
+        addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
+        
+        pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
 wfFix :: TerminationArgument -> FixBody -> Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)

@@ -5,10 +5,7 @@
              FlexibleContexts #-}
 
 module HsToCoq.ConvertHaskell.Declarations.Instances (
-  -- * Top-level entry point
-  convertClsInstDecls,
-  -- * Axiomatizing equivalents
-  axiomatizeClsInstDecls,
+  convertClsInstDecls
 ) where
 
 import Control.Lens
@@ -129,7 +126,7 @@ data InstanceInfo = InstanceInfo { instanceName       :: !Qualid
                                  , instanceHead       :: !Term
                                  , instanceClass      :: !Qualid
                                  }
-                  deriving (Eq, Ord)
+                  deriving (Eq, Ord, Show, Read)
 
 convertClsInstDeclInfo :: ConversionMonad r m => ClsInstDecl GhcRn -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
@@ -142,15 +139,13 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
-unlessSkipped :: ConversionMonad r m => InstanceInfo -> m [Sentence] -> m [Sentence]
-unlessSkipped (InstanceInfo{..}) act = do
+unlessSkippedClass :: ConversionMonad r m => InstanceInfo -> m [Sentence] -> m [Sentence]
+unlessSkippedClass InstanceInfo{..} act = do
   view (edits.skipped.contains instanceClass) >>= \case
-    True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName <> " of class " <> qualidBase instanceClass)) ]
-    False -> do
-      view (edits.skipped.contains instanceName) >>= \case
-        True -> pure [ CommentSentence (Comment ("Skipping instance " <> qualidBase instanceName)) ]
-        False -> act
-        
+    True  -> pure [CommentSentence . Comment $
+                     "Skipping instance " <> qualidBase instanceName <>
+                     " of class " <> qualidBase instanceClass]
+    False -> act
 
 bindToMap :: ConversionMonad r m => [HsBindLR GhcRn GhcRn] -> m (M.Map Qualid (HsBind GhcRn))
 bindToMap binds = fmap M.fromList $ forM binds $ \hs_bind -> do
@@ -167,154 +162,148 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
   ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
 
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
-  unlessSkipped ii $ ghandle err_handler $ do
-    cid_binds_map <- bindToMap (map unLoc $ bagToList cid_binds)
-    cid_types_map <- clsInstFamiliesToMap cid_tyfam_insts
-
-    let (binds, classTy) = decomposeForall instanceHead
-
-    -- decomposeClassTy can fail, so run it in the monad so that
-    -- failure will be caught and cause the instance to be skipped
-    (className, instTy) <- decomposeClassTy classTy
-
-    -- Get the methods of this class (this should already exclude skipped ones)
-    (classMethods, classArgs) <- do
-      classDef <- lookupClassDefn className
-      case classDef of
-        (Just (ClassDefinition _ args _ sigs)) -> pure $ (map fst sigs, args)
-        _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
+  unlessSkippedClass ii . ghandle err_handler $ definitionTask instanceName >>= \case
+    SkipIt ->
+      pure [CommentSentence . Comment $ "Skipping instance " <> qualidBase instanceName]
     
-    -- Associated types for this class
-    classTypes <- fromMaybe mempty <$> lookupClassTypes className
-    
-    classDefaults <- fromMaybe M.empty <$> lookupDefaultMethods className
-
-    let localNameFor :: Qualid -> Qualid
-        localNameFor meth = qualidMapBase (<> ("_" <> qualidBase meth)) instanceName
-    
-    -- In the translation of meth1, we want all _other_ methods to be renamed
-    -- to the concrete methods of the current instance (because type class methods
-    -- usually refer to each other).
-    -- We don’t do this for the current method (because type class methods are usually
-    -- not recursive.)
-    -- This is a heuristic, and the user can override it using `rewrite` rules.
-    let envFor :: Qualid -> r -> r
-        envFor meth = appEndo $ foldMap Endo
-          [ edits.renamings.at (NamespacedIdent ns m) ?~ localNameFor m
-          | m <- classMethods
-          , m /= meth
-          , let ns = if m `elem` classTypes then TypeNS else ExprNS]
-    
-    let allLocalNames = M.fromList $  [ (m, Qualid (localNameFor m)) | m <- classMethods ]
-    
-    -- For each method, look for
-    --  * explicit definitions
-    --  * default definitions
-    -- in that order
-    cdefs <- forM classMethods $ \meth ->
-      case (M.lookup meth cid_binds_map, M.lookup meth cid_types_map, M.lookup meth classDefaults) of
-        (Just bind, _, _) ->
-          fmap (\(_,body) -> (meth,body)) . local (envFor meth) $
-            convertMethodBinding (localNameFor meth) bind >>= \case
-              ConvertedDefinitionBinding cd
-                  -> pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
-                     -- We have a tough time handling recursion (including mutual
-                     -- recursion) here because of name overloading
-              ConvertedPatternBinding {}
-                  -> convUnsupported "pattern bindings in instances"
-              ConvertedAxiomBinding {}
-                  -> convUnsupported "axiom bindings in instances"
-          
-        (Nothing, Just assoc, _) ->
-          pure (meth, subst allLocalNames assoc)
-        
-        (Nothing, Nothing, Just term) ->
-          let extraSubst
-                | meth `elem` classTypes =
-                  let names = foldMap (^..binderIdents) . filter ((== Explicit) . view binderExplicitness)
-                  in M.fromList $ zip (names classArgs) [instTy]
-                | otherwise =
-                  mempty
-          in -- In the body of the default definition, make methods names
-             -- refer to their local version
-            pure (meth, subst (allLocalNames <> extraSubst) term)
-        
-        (Nothing, Nothing, Nothing) ->
-            convUnsupported $ "Method " <> showP meth <> " has no definition and no default definition"
-
-    -- Turn definitions into sentences
-    let quantify :: Qualid -> Term -> m Term
-        quantify meth body =
-            do typeArgs <- getImplicitBindersForClassMember className meth
-               case (NE.nonEmpty typeArgs) of
-                   Nothing -> return body
-                   Just args -> return $ Fun args body
-
-    methodSentences <- forM cdefs $ \(meth, body) -> do
-        let v' = localNameFor meth
-        -- implement redefinitions of methods
-        view (edits.redefinitions.at v') >>= \case
-            Just redef -> pure (definitionSentence redef)
-            Nothing    -> do
-              (params, mty) <- makeInstanceMethodTy className binds instTy meth
-              qbody <- quantify meth body
-              pure . DefinitionSentence $ DefinitionDef Local
-                                                        v'
-                                                        (subst allLocalNames <$> params)
-                                                        (subst allLocalNames <$> mty)
-                                                        qbody
-
-    instance_sentence <- view (edits.redefinitions.at instanceName) >>= \case
-      Nothing ->
-        let instHeadTy = appList (Qualid className) [PosArg instTy]
-        in view (edits.simpleClasses.contains className) >>= \case
-             True  -> do
-               methods <- traverse (\m -> (m,) <$> quantify m (Qualid $ localNameFor m)) classMethods
-               pure $ ProgramSentence
-                 (InstanceSentence $ InstanceDefinition instanceName binds instHeadTy methods Nothing)
-                 Nothing
-             False -> do
-               -- Assemble the actual record
-               instRHS <- fmap Record $ forM classMethods $ \m -> do
-                            method_body <- quantify m $ Qualid (localNameFor m)
-                            return (qualidMapBase (<> "__") m, method_body)
-               let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
-                                  (App1 (Var "k") instRHS)
-               let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
-               
-               pure $ ProgramSentence (InstanceSentence instTerm) Nothing
-      Just (CoqInstanceDef x) -> pure $ InstanceSentence x
-      Just redef -> editFailure $ ("cannot redefine an Instance Definition to be " ++) $
-        case redef of CoqDefinitionDef _ -> "a Definition"
-                      CoqFixpointDef   _ -> "a Fixpoint"
-                      CoqInductiveDef  _ -> "an Inductive"
-                      CoqInstanceDef   _ -> "an Instance Definition"
-
-    pure $ methodSentences ++ [instance_sentence]
-
-
-
-axiomatizeClsInstDecl :: ConversionMonad r m
-                      => ClsInstDecl GhcRn        -- Haskell instance we are converting
-                      -> m [Sentence]
-axiomatizeClsInstDecl cid@ClsInstDecl{..} = do
-  ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
-  unlessSkipped ii $ do
+    AxiomatizeIt axMode ->
       lookupClassDefn instanceClass >>= \case
         Just (ClassDefinition _ _ _ methods) ->
           pure $ [ InstanceSentence $ InstanceDefinition instanceName [] instanceHead []
                                     $ if null methods then Nothing else Just $ ProofAdmitted "" ]
+        Nothing -> case axMode of
+          GeneralAxiomatize  -> pure []
+          SpecificAxiomatize -> convUnsupported $ "Cannot find information for class " ++ show instanceClass
+    
+    TranslateIt -> do
+      cid_binds_map <- bindToMap (map unLoc $ bagToList cid_binds)
+      cid_types_map <- clsInstFamiliesToMap cid_tyfam_insts
+   
+      let (binds, classTy) = decomposeForall instanceHead
+   
+      -- decomposeClassTy can fail, so run it in the monad so that
+      -- failure will be caught and cause the instance to be skipped
+      (className, instTy) <- decomposeClassTy classTy
+   
+      -- Get the methods of this class (this should already exclude skipped ones)
+      (classMethods, classArgs) <- do
+        classDef <- lookupClassDefn className
+        case classDef of
+          (Just (ClassDefinition _ args _ sigs)) -> pure $ (map fst sigs, args)
+          _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
+      
+      -- Associated types for this class
+      classTypes <- fromMaybe mempty <$> lookupClassTypes className
+      
+      classDefaults <- fromMaybe M.empty <$> lookupDefaultMethods className
+   
+      let localNameFor :: Qualid -> Qualid
+          localNameFor meth = qualidMapBase (<> ("_" <> qualidBase meth)) instanceName
+      
+      -- In the translation of meth1, we want all _other_ methods to be renamed
+      -- to the concrete methods of the current instance (because type class methods
+      -- usually refer to each other).
+      -- We don’t do this for the current method (because type class methods are usually
+      -- not recursive.)
+      -- This is a heuristic, and the user can override it using `rewrite` rules.
+      let envFor :: Qualid -> r -> r
+          envFor meth = appEndo $ foldMap Endo
+            [ edits.renamings.at (NamespacedIdent ns m) ?~ localNameFor m
+            | m <- classMethods
+            , m /= meth
+            , let ns = if m `elem` classTypes then TypeNS else ExprNS]
+      
+      let allLocalNames = M.fromList $  [ (m, Qualid (localNameFor m)) | m <- classMethods ]
+      
+      -- For each method, look for
+      --  * explicit definitions
+      --  * default definitions
+      -- in that order
+      cdefs <- forM classMethods $ \meth ->
+        case (M.lookup meth cid_binds_map, M.lookup meth cid_types_map, M.lookup meth classDefaults) of
+          (Just bind, _, _) ->
+            fmap (\(_,body) -> (meth,body)) . local (envFor meth) $
+              convertMethodBinding (localNameFor meth) bind >>= \case
+                ConvertedDefinitionBinding cd
+                    -> pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
+                       -- We have a tough time handling recursion (including mutual
+                       -- recursion) here because of name overloading
+                ConvertedPatternBinding {}
+                    -> convUnsupported "pattern bindings in instances"
+                ConvertedAxiomBinding {}
+                    -> convUnsupported "axiom bindings in instances"
+            
+          (Nothing, Just assoc, _) ->
+            pure (meth, subst allLocalNames assoc)
+          
+          (Nothing, Nothing, Just term) ->
+            let extraSubst
+                  | meth `elem` classTypes =
+                    let names = foldMap (^..binderIdents) . filter ((== Explicit) . view binderExplicitness)
+                    in M.fromList $ zip (names classArgs) [instTy]
+                  | otherwise =
+                    mempty
+            in -- In the body of the default definition, make methods names
+               -- refer to their local version
+              pure (meth, subst (allLocalNames <> extraSubst) term)
+          
+          (Nothing, Nothing, Nothing) ->
+              convUnsupported $ "Method " <> showP meth <> " has no definition and no default definition"
+   
+      -- Turn definitions into sentences
+      let quantify :: Qualid -> Term -> m Term
+          quantify meth body =
+              do typeArgs <- getImplicitBindersForClassMember className meth
+                 case (NE.nonEmpty typeArgs) of
+                     Nothing -> return body
+                     Just args -> return $ Fun args body
+   
+      methodSentences <- forM cdefs $ \(meth, body) -> do
+          let v' = localNameFor meth
+          -- implement redefinitions of methods
+          view (edits.redefinitions.at v') >>= \case
+              Just redef -> pure (definitionSentence redef)
+              Nothing    -> do
+                (params, mty) <- makeInstanceMethodTy className binds instTy meth
+                qbody <- quantify meth body
+                pure . DefinitionSentence $ DefinitionDef Local
+                                                          v'
+                                                          (subst allLocalNames <$> params)
+                                                          (subst allLocalNames <$> mty)
+                                                          qbody
+   
+      instance_sentence <- view (edits.redefinitions.at instanceName) >>= \case
         Nothing ->
-          -- convUnsupported ("OOPS! Cannot find information for class " ++ show instanceClass)
-          pure []
+          let instHeadTy = appList (Qualid className) [PosArg instTy]
+          in view (edits.simpleClasses.contains className) >>= \case
+               True  -> do
+                 methods <- traverse (\m -> (m,) <$> quantify m (Qualid $ localNameFor m)) classMethods
+                 pure $ ProgramSentence
+                   (InstanceSentence $ InstanceDefinition instanceName binds instHeadTy methods Nothing)
+                   Nothing
+               False -> do
+                 -- Assemble the actual record
+                 instRHS <- fmap Record $ forM classMethods $ \m -> do
+                              method_body <- quantify m $ Qualid (localNameFor m)
+                              return (qualidMapBase (<> "__") m, method_body)
+                 let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
+                                    (App1 (Var "k") instRHS)
+                 let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
+                 
+                 pure $ ProgramSentence (InstanceSentence instTerm) Nothing
+        Just (CoqInstanceDef x) -> pure $ InstanceSentence x
+        Just redef -> editFailure $ ("cannot redefine an Instance Definition to be " ++) $
+          case redef of CoqDefinitionDef _ -> "a Definition"
+                        CoqFixpointDef   _ -> "a Fixpoint"
+                        CoqInductiveDef  _ -> "an Inductive"
+                        CoqInstanceDef   _ -> "an Instance Definition"
+   
+      pure $ methodSentences ++ [instance_sentence]
 
 --------------------------------------------------------------------------------
 
-convertClsInstDecls, axiomatizeClsInstDecls :: forall r m. ConversionMonad r m =>
-    [ClsInstDecl GhcRn] -> m [Sentence]
+convertClsInstDecls :: ConversionMonad r m => [ClsInstDecl GhcRn] -> m [Sentence]
 convertClsInstDecls = foldTraverse convertClsInstDecl
-axiomatizeClsInstDecls = foldTraverse axiomatizeClsInstDecl
-
 
 -- lookup the type of the class member
 -- add extra quantifiers from the class & instance definitions

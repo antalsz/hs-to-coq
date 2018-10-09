@@ -12,7 +12,6 @@ module HsToCoq.ConvertHaskell.Module (
 
 import Control.Lens
 
-import Data.Traversable
 import Data.Foldable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..))
@@ -38,7 +37,6 @@ import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
-import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Sigs
@@ -58,18 +56,23 @@ data ConvertedModuleDeclarations =
                               }
   deriving (Eq, Ord, Show, Data)
 
-convertHsGroup :: ConversionMonad r m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations
-convertHsGroup mod HsGroup{..} = do
-  convertedTyClDecls <- convertModuleTyClDecls
-                     .  map unLoc
-                     $  concatMap group_tyclds hs_tyclds
+convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDeclarations
+convertHsGroup HsGroup{..} = do
+  mod                 <- view currentModule
+  isModuleAxiomatized <- view $ edits.axiomatizedModules.contains mod
+  let catchIfAxiomatizing | isModuleAxiomatized = const
+                          | otherwise           = gcatch
+  
+  convertedTyClDecls  <- convertModuleTyClDecls
+                      .  map unLoc
+                      $  concatMap group_tyclds hs_tyclds
                           -- Ignore roles
   convertedValDecls  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
     case hs_valds of
       ValBindsIn{} ->
         convUnsupported "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
-        sigs  <- convertLSigs lsigs
+        sigs  <- convertLSigs lsigs `catchIfAxiomatizing` const @_ @SomeException (pure M.empty)
         defns <- (convertTypedModuleBindings
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
@@ -105,61 +108,24 @@ convertHsGroup mod HsGroup{..} = do
 
         pure $ unnamedSentences ++ ordered
 
-  convertedClsInstDecls <- convertClsInstDecls
-    [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
+  convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp]
 
   convertedAddedDecls <- view (edits.additions.at mod.non [])
 
   pure ConvertedModuleDeclarations{..}
-
-  where axiomatizeBinding :: ConversionMonad r m => HsBind GhcRn -> GhcException -> m (Maybe Qualid, [Sentence])
-        axiomatizeBinding FunBind{..} exn = do
-          name <- var ExprNS (unLoc fun_id)
-          pure (Just name, [translationFailedComment (qualidBase name) exn, axiom name])
-        axiomatizeBinding _ exn =
-          pure (Nothing, [CommentSentence $ Comment $
-            "While translating non-function binding: " <> T.pack (show exn)])
-
-        applyRedefines :: ConversionMonad r m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
-        applyRedefines (name, sentences)
-            = view (edits.redefinitions.at name) >>= ((name,) <$>) . \case
-                Just def ->
-                     [definitionSentence def] <$ case def of
-                      CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
-                      CoqDefinitionDef       _ -> pure ()
-                      CoqFixpointDef         _ -> pure ()
-                      CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                Nothing -> pure sentences
-
-axiomatizeHsGroup :: ConversionMonad r m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations
-axiomatizeHsGroup mod HsGroup{..} = do
-  convertedTyClDecls <- convertModuleTyClDecls
-                     .  map unLoc
-                     $  concatMap group_tyclds hs_tyclds
-                          -- Ignore roles
-  convertedValDecls  <-
-    case hs_valds of
-      ValBindsIn{} ->
-        convUnsupported "pre-renaming `ValBindsIn' construct post renaming"
-      ValBindsOut binds lsigs -> do
-        sigs  <- convertLSigs lsigs `gcatch` const @_ @SomeException (pure M.empty)
-        for (map unLoc $ concatMap (bagToList . snd) binds) $ \case
-          FunBind{..} -> do
-            name <- var ExprNS (unLoc fun_id)
-            view (edits.skipped.contains name) >>= \case
-                True -> pure (CommentSentence . Comment $ qualidBase name <> " skipped")
-                False -> pure . typedAxiom name $ sigs^.at name.to (fmap sigType).non bottomType
-          _ ->
-            convUnsupported "non-type, non-class, non-value definitions in axiomatized modules"
-  
-  convertedClsInstDecls <- axiomatizeClsInstDecls
-            [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp ]
-
-  convertedAddedDecls <- view (edits.additions.at mod.non [])
-
-  pure ConvertedModuleDeclarations{..}
-
---------------------------------------------------------------------------------
+  where
+    -- TODO: factor this out?
+    applyRedefines :: ConversionMonad r m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
+    applyRedefines (name, sentences) =
+      view (edits.redefinitions.at name) >>= ((name,) <$>) . \case
+        Just def ->
+          [definitionSentence def] <$ case def of
+            CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
+            CoqDefinitionDef _ -> pure ()
+            CoqFixpointDef   _ -> pure ()
+            CoqInstanceDef   _ -> editFailure "cannot redefine a value definition into an Instance"
+        Nothing ->
+          pure sentences
 
 --------------------------------------------------------------------------------
 
@@ -173,12 +139,8 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
-
-convert_module_with_requires_via :: GlobalMonad r m
-                                 => (forall r m. ConversionMonad r m => ModuleName -> HsGroup GhcRn -> m ConvertedModuleDeclarations)
-                                 -> ModuleName -> HsGroup GhcRn ->
-                                 m (ConvertedModule, [ModuleName])
-convert_module_with_requires_via convGroup convModNameOrig group = do
+convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
+convertModule convModNameOrig group = do
   convModName <- view (edits.renamedModules.at convModNameOrig . non convModNameOrig)
   withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
@@ -186,7 +148,7 @@ convert_module_with_requires_via convGroup convModNameOrig group = do
                                 , convertedClsInstDecls = convModClsInstDecls
                                 , convertedAddedDecls   = convModAddedDecls
                                 }
-      <- convGroup convModName group
+      <- convertHsGroup group
 
     let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
     let freeVars = toList $ foldMap getFreeVars' allSentences
@@ -218,33 +180,16 @@ convert_module_with_requires_via convGroup convModNameOrig group = do
             ]
     pure (ConvertedModule{..}, modules)
 
--- Module-local
-convert_module_with_requires :: GlobalMonad r m
-                             => ModuleName -> HsGroup GhcRn ->
-                             m (ConvertedModule, [ModuleName])
-convert_module_with_requires = convert_module_with_requires_via convertHsGroup
-
--- Module-local
-axiomatize_module_with_requires :: GlobalMonad r m
-                             => ModuleName -> HsGroup GhcRn ->
-                             m (ConvertedModule, [ModuleName])
-axiomatize_module_with_requires = convert_module_with_requires_via axiomatizeHsGroup
-
--- NOT THE SAME as `traverse $ uncurry convertModule`!  Produces connected
--- components and can axiomatize individual modules as per edits
+-- NOT THE SAME as `traverse $ uncurry convertModule`!  Handles module
+-- renaming/merging and produces connected components.
 convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
-  sources' <- forM sources $ \(mod_orig, hs_group) -> do
-      mod_final <- view (edits.renamedModules.at mod_orig . non mod_orig)
-      return (mod_final, hs_group)
+  sources' <- sources & each._1 %%~ \mod_orig ->
+                view (edits.renamedModules.at mod_orig.non mod_orig)
   let merged = M.toList $ M.fromListWith appendGroups sources'
 
-  let convThisMod (mod,src) = view (edits.axiomatizedModules.contains mod) >>= \case
-                                True  -> axiomatize_module_with_requires mod src
-                                False -> convert_module_with_requires    mod src
-  mods <- traverse convThisMod merged
-  pure $
-    stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
+  mods <- traverse (uncurry convertModule) merged
+  pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
 moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do

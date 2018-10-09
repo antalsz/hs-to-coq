@@ -93,7 +93,7 @@ library
 
   build-tools:         happy == 1.19.*
 
-  other-extensions:    TypeOperators, TupleSections, LambdaCase, MultiWayIf, EmptyCase, RecordWildCards, TypeApplications, ScopedTypeVariables, OverloadedStrings
+  other-extensions:    TypeOperators, TupleSections, LambdaCase, MultiWayIf, EmptyCase, RecordWildCards, TypeApplications, ScopedTypeVariables, OverloadedLists, OverloadedStrings
                      , RankNTypes, ConstraintKinds
                      , MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, InstanceSigs
                      , TypeSynonymInstances, FlexibleInstances, UndecidableInstances

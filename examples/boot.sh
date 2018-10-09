@@ -20,35 +20,59 @@ function clean ()    { if [ "$CLEAN"    = "YES" ]; then "$@"; fi }
 function coq ()      { if [ "$COQ"      = "YES" ]; then "$@"; fi }
 function coq-test () { if [ "$COQ_TEST" = "YES" ]; then "$@"; fi }
 
-while [ -n "$1" ]
-do
- if [ "$1" = "noclean" ]
- then
-   echo "Skipping cleaning"
-   CLEAN=NO
- elif [ "$1" = "nocoq" ]
- then
-   echo "Skipping running Coq"
-   COQ=NO
-   COQ_TEST=NO
- elif [ "$1" = "quick" ]
- then
-   echo "Skipping cleaning and tests"
-   CLEAN=NO
-   COQ_TEST=NO
- elif [ "$1" = "help" ]
- then
-   echo "Possible options:"
-   echo "  - noclean: Don't clean"
-   echo "  - nocoq:   Don't run Coq"
-   echo "  - quick:   Don't clean or run tests"
-   echo "  - help:    Print this help message"
- else
-   echo "Unknown option $1"
-   exit 1
- fi
- shift
-done
+function usage () {
+    echo "Usage: $0 [OPTION]"
+    echo
+    echo "Possible options:"
+    echo "  - full:    Clean, run Coq, and run tests [default]"
+    echo "  - noclean: Don't clean"
+    echo "  - nocoq:   Don't run Coq"
+    echo "  - quick:   Don't clean or run tests"
+    echo "  - help:    Print this help message"
+}
+
+case $# in
+  0)
+    OPTION='full'
+    ;;
+  1)
+    OPTION=$1
+    ;;
+  *)
+    echo "Too many arguments"
+    echo
+    usage
+    exit 1
+esac
+
+case $OPTION in
+  full)
+    echo "Doing everything"
+    ;;
+  noclean)
+    echo "Skipping cleaning"
+    CLEAN=NO
+    ;;
+  nocoq)
+    echo "Skipping running Coq"
+    COQ=NO
+    COQ_TEST=NO
+    ;;
+  quick)
+    echo "Skipping cleaning and tests"
+    CLEAN=NO
+    COQ_TEST=NO
+    ;;
+  help|--help|-h)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown option $1"
+    echo
+    usage
+    exit 1
+esac
 
 function check_coq_version() {
   if ! which coqc >/dev/null

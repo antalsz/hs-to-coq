@@ -9,6 +9,7 @@ Import GHC.Base.ManualNotations.
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
 Require Import Proofs.Data.Foldable.
+Require Import Proofs.ContainerAxioms.
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -242,13 +243,137 @@ Qed.
 
 Lemma elemVarSet_unionVarSet:
   forall v vs1 vs2,
-  elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
+    elemVarSet v (unionVarSet vs1 vs2) =
+    elemVarSet v vs1 || elemVarSet v vs2.
+Proof.
+  intros.
+  set_b_iff.
+  destruct vs1 as [u].
+  destruct vs2 as [u0].
+  simpl.
+  unfold UniqFM.plusUFM.
+  destruct u.
+  destruct u0.
+  simpl.
+  symmetry.
+  destruct (IntMap.Internal.member
+              (realUnique v)
+              (IntMap.Internal.union i0 i)) eqn: Hu.
+  - rewrite member_lookup in Hu.
+    destruct Hu as [u Hu].
+    rewrite <- lookup_union in Hu.
+    apply orb_true_iff.
+    destruct Hu as [Hu | Hu].
+    + right.
+      rewrite member_lookup.
+      eauto.
+    +  destruct Hu as [? Hu].
+       left.
+       rewrite member_lookup.
+       eauto.
+  - rewrite non_member_lookup in Hu.
+    apply orb_false_iff.
+    split;
+      rewrite non_member_lookup;
+      rewrite <- lookup_union_None in Hu;
+      destruct Hu as [Hu1 Hu2];
+      assumption.
+Qed.
+
+Lemma  In_hd_cons: forall v vs,
+  In v (UniqSet.mkUniqSet (v :: vs)).
+Proof.
+  intros v vs.
+Abort.
+    
+Lemma hd_VarSet_subset: forall v vs,
+  UniqSet.mkUniqSet [v]
+  [<=] UniqSet.mkUniqSet (v :: vs).
+Proof.
+  intros v vs.
+  apply subset_2.
+  unfold subset.
+  apply subset_mem_1.
+  intros a Hm.
+  rewrite <- mem_iff.
+  rewrite <- mem_iff in Hm.
+  apply singleton_iff in Hm.
+  rewrite singleton_iff in Hm.
+  eapply In_eq_iff in Hm.
+  rewrite Hm.
+  clear Hm.
+  unfold In, elemVarSet, UniqSet.elementOfUniqSet,
+  UniqFM.elemUFM.
+  simpl.
+  destruct (UniqSet.mkUniqSet (v :: vs)) as [u] eqn:Hus.
+  destruct u.
+  
 Admitted.
+  
+Lemma elemVarSet_cons_hd:
+   forall v1 v2 vs, (v1 == v2) = true ->
+  (elemVarSet v1 (mkVarSet (v2 :: vs))) = true.
+Proof.
+  intros.
+  set_b_iff.
+  unfold mkVarSet.
+  eapply in_subset with (s1:= mkVarSet [v2]).
+  - apply singleton_iff.
+    unfold Var_as_DT.eqb.
+    rewrite Eq_sym.
+    assumption.
+  - unfold mkVarSet.
+    simpl.
+Admitted.
+  
+  
+Lemma elemVarSet_cons: forall v1 v2 vs,
+  (elemVarSet v1 (mkVarSet (v2 :: vs))) =
+  (v1 == v2) ||  (negb (v1 == v2) && elemVarSet v1 (mkVarSet vs)).
+Proof.
+  intros.
+  unfold_VarSet.
+  simpl.
+  unfold mkVarSet.
+  unfold UniqSet.mkUniqSet.
+  unfold elemVarSet.
+  unfold UniqSet.elementOfUniqSet.
+  unfold UniqFM.elemUFM.
+  destruct (v1 == v2) eqn:Heq; simpl.
+  - rewrite eq_unique in Heq.
+    simpl in *.
+    rewrite Heq.
+    destruct (mkVarSet (v2 :: vs)) as [u] eqn:Hv.
+    destruct u.
+
+    admit.
+  - admit.
+Admitted.
+  
 
 Lemma elemVarSet_extendVarSetList_r:
-  forall v vs1 vs2,
-  elemVarSet v (mkVarSet vs2) = true ->
-  elemVarSet v (extendVarSetList vs1 vs2) = true.
+  forall v s vs,
+  elemVarSet v (mkVarSet vs) = true ->
+  elemVarSet v (extendVarSetList s vs) = true.
+Proof.
+  intros.
+  induction vs.
+  - inversion H.
+  - rewrite elemVarSet_cons in H.
+    rewrite orb_true_iff in H.
+    destruct H as [H | H].
+    + clear IHvs. admit.
+    + 
+    revert H IHvs.
+    set_b_iff.
+    set (f:= fun x y => add y x).
+    intros H IHvs.
+    inversion H.
+    unfold In.
+    unfold elemVarSet, UniqSet.elementOfUniqSet.
+    unfold UniqFM.elemUFM.
+    simpl.    
+
 Admitted.
 
 

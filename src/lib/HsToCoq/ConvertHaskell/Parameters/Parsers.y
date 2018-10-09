@@ -58,6 +58,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   kinds           { TokWord    "kinds"          }
   axiomatize      { TokWord    "axiomatize"     }
   definition      { TokWord    "definition"     }
+  unaxiomatize    { TokWord    "unaxiomatize"   }
   termination     { TokWord    "termination"    }
   'deferred'      { TokWord    "deferred"       }
   'corecursive'   { TokWord    "corecursive"    }
@@ -248,10 +249,11 @@ Edit ::                                          { Edit }
   | import module Word                           { ImportModuleEdit         (mkModuleName (T.unpack $3))     }
   | manual notation Word                         { HasManualNotationEdit    (mkModuleName (T.unpack $3))     }
   | termination Qualid TerminationArgument       { TerminationEdit          $2 $3                            }
-  | obligations Qualid Word                      { ObligationsEdit          $2 $3 }
+  | obligations Qualid Word                      { ObligationsEdit          $2 $3                            }
   | rename Renaming                              { RenameEdit               (fst $2) (snd $2)                }
   | axiomatize module Word                       { AxiomatizeModuleEdit     (mkModuleName (T.unpack $3))     }
   | axiomatize definition Qualid                 { AxiomatizeDefinitionEdit $3                               }
+  | unaxiomatize definition Qualid               { UnaxiomatizeDefinitionEdit     $3                         }
   | add scope Scope for ScopePlace Qualid        { AdditionalScopeEdit      $5 $6 $3                         }
   | order Some(Qualid)                           { OrderEdit                $2                               }
   | class kinds Qualid SepBy1(Term,',')          { ClassKindEdit            $3 $4                            }

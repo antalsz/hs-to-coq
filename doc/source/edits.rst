@@ -117,27 +117,84 @@ Examples:
 
      skip module GHC.Show
 
-``axiomatize`` -- provide axioms for all definitions in a module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``axiomatize module`` -- replace all definitions in a module with axioms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. index::
-  single: axiomatize, edit
+  single: axiomatize module, edit
 
 Format:
-  | **axiomatize** *module*
+  | **axiomatize** **module** *module*
 
 Effect:
-  Do not translate the code of a module, but translates its types, type
-  classes, instances, and for all functions, create axioms fort their type.
+  Replaces all definitions in a module with axioms.
 
-  This is useful if you want to work on a depending module, without dealing
-  with the present module.
+  This translates type and type class definitions, and then produces axioms for
+  variable bindings and type class instances which have the translated types.
+  Any types that are ``redefine``\d are correctly redefined; any bindings or
+  instances that are ``skip``\ped don't have axioms generated.  If you want to
+  override the axiomatization for a single definition and actually translate it,
+  you can use the ``unaxiomatize definition`` edit.
+
+  The ``axiomatize module`` edit is useful if you want to stub out a dependency
+  of a module you are actually interested in.
+
+  See also ``axiomatize definition``.
 
 Examples:
 
   .. code-block:: shell
 
     axiomatize module TrieMap
+
+``axiomatize definition`` -- replace a value definition with an axiom
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: axiomatize definition, edit
+
+Format:
+  | **axiomatize** **definition** *qualified_name*
+
+Effect:
+  Replaces a single definition with an axiom.
+
+  This takes the name of a value-level definition and, when translating it,
+  translates only the type and generates an axiom with that type.
+
+  See also ``axiomatize module``.
+
+Examples:
+
+  .. code-block:: shell
+
+     axiomatize definition GHC.Prim.primitiveFunction
+
+``unaxiomatize definition`` -- override whole-module axiomatization on a case-by-case basis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: unaxiomatize definition, edit
+
+Format:
+  | **unaxiomatize** **definition** *qualified_name*
+
+Effect:
+  Translates a single definition, ``axiomatize module`` notwithstanding.
+
+  If the module containing the given value-level definition is being
+  axiomatized, then this definition will be translated in the usual way.
+
+  If a definition is both ``unaxiomatize``\d and ``skip``\ped, then it will
+  simply be skipped.  But please don't do this :-)
+
+Examples:
+
+  .. code-block:: shell
+
+     axiomatize module TrieMap
+     unaxiomatize definition TrieMap.insertTM
+     unaxiomatize definition TrieMap.deleteTM
 
 Adding Coq Commands
 -------------------

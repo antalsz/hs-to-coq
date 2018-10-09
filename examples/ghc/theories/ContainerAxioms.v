@@ -80,6 +80,15 @@ Axiom lookup_union :
     (lookup key m1 = Some val \/ (lookup key m1 = None /\ lookup key m2 = Some val)) <->
     lookup key (union m1 m2) = Some val.
 
+Axiom lookup_union_None:
+  forall (A : Type)
+    (key : Internal.Key)
+    (m1 m2 : Internal.IntMap A),
+    IntMap.Internal.lookup key m1 = None /\
+    IntMap.Internal.lookup key m2 = None <->
+    IntMap.Internal.lookup key
+             (IntMap.Internal.union m1 m2) = None.
+
 Axiom lookup_difference_in_snd:
   forall (key : Internal.Key) (b : Type) (i i': IntMap b) (y:b),
     lookup key i' = Some y -> 
@@ -90,11 +99,29 @@ Axiom lookup_difference_not_in_snd:
     lookup key i' = None ->
     lookup key (difference i i') = lookup key i.
 
+
 Axiom lookup_partition :
   forall (key : Internal.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
     lookup key i = Some y ->
     (left, right) = partition f i -> 
     lookup key left = Some y \/ lookup key right = Some y.    
+
+
+Axiom member_lookup :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i : Internal.IntMap A),
+   (IntMap.Internal.member key i = true) =
+   (exists val, IntMap.Internal.lookup key i = Some val).
+
+Axiom non_member_lookup :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i : Internal.IntMap A),
+   (IntMap.Internal.member key i = false) =
+   (IntMap.Internal.lookup key i = None).
+
+
 
 (*
 This is a QuickChick setup to test the above axioms

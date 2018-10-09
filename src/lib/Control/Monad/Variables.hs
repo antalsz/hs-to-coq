@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Control.Monad.Variables (
   -- * The 'Variables' monad
@@ -10,6 +11,8 @@ module Control.Monad.Variables (
   occurrence, occurrences,
   isBound, areBound,
   ) where
+
+import HsToCoq.Util.Generics
 
 import HsToCoq.Util.Monad
 import Control.Monad.Reader
@@ -22,21 +25,18 @@ import Data.Set (Set)
 import qualified Data.Set as S
 
 -- | Set of free variables
-newtype FVs i = FVs
-    { getFVs :: Set i }
+newtype FVs i = FVs { getFVs :: Set i } deriving (Eq, Ord, Show, Read, Generic)
+instance Ord i => Semigroup (FVs i) where (<>)   = (%<>)
+instance Ord i => Monoid    (FVs i) where mempty = gmempty
 
 -- | An object capable of binding something has
 -- a set of variables
-data BVs i = BVs
-    { getBVars :: Set i -- Variables bound by this binder
-    , getBFVs  :: Set i -- Free variables of this object
-    }
-
-instance Ord i => Semigroup (FVs i) where
-    FVs fvs1 <> FVs fvs2 = Fvs (fvs1 <> fvs2)
-
-instance Ord i => Semigroup (BVs i) where
-    BVs bv1 fvs1 <> BVs bv2 fvs2 = BVs (bv1 <> bv2) (fvs1 <> fvs2)
+data BVs i = BVs { getBVars :: Set i -- Variables bound by this binder
+                 , getBFVs  :: Set i -- Free variables of this object
+                 }
+           deriving (Eq, Ord, Show, Read, Generic)
+instance Ord i => Semigroup (BVs i) where (<>)   = (%<>)
+instance Ord i => Monoid    (BVs i) where mempty = gmempty
 
 scopesOver :: BVs i -> FVs i -> FVs i
 scopesOver (BVs bvs fvs1 fvs2) = fvs1 <> (fvs2 `S.difference` bvs1)

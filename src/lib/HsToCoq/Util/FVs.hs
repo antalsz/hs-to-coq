@@ -1,34 +1,28 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module HsToCoq.Util.FVs where
+
+import HsToCoq.Util.Generics
 
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Foldable
 
 -- | Set of free variables
-newtype FVs i = FVs
-    { getFVs :: Set i }
+newtype FVs i = FVs { getFVs :: Set i } deriving (Eq, Ord, Show, Read, Generic)
+instance Ord i => Semigroup (FVs i) where (<>)   = (%<>)
+instance Ord i => Monoid    (FVs i) where mempty = gmempty
 
 -- | An object capable of binding something has
 -- a set of variables
-data BVs i = BVs
-    { getBVars :: Set i -- Variables bound by this binder
-    , getBFVs  :: Set i -- Free variables of this object
-    }
-
-instance Ord i => Semigroup (FVs i) where
-    FVs fvs1 <> FVs fvs2 = FVs (fvs1 <> fvs2)
-
-instance Ord i => Semigroup (BVs i) where
-    BVs bv1 fvs1 <> BVs bv2 fvs2 = BVs (bv1 <> bv2) (fvs1 <> fvs2)
-
-instance Ord i => Monoid (FVs i) where
-    mempty = FVs mempty
-
-instance Ord i => Monoid (BVs i) where
-    mempty = BVs mempty mempty
+data BVs i = BVs { getBVars :: Set i -- Variables bound by this binder
+                 , getBFVs  :: Set i -- Free variables of this object
+                 }
+           deriving (Eq, Ord, Show, Read, Generic)
+instance Ord i => Semigroup (BVs i) where (<>)   = (%<>)
+instance Ord i => Monoid    (BVs i) where mempty = gmempty
 
 binder :: i -> BVs i
 binder x = BVs (S.singleton x) S.empty

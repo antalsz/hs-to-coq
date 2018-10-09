@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
-             OverloadedLists, OverloadedStrings,
+             OverloadedLists, OverloadedStrings, ScopedTypeVariables,
              RankNTypes, ConstraintKinds, FlexibleContexts,
              TemplateHaskell, MultiParamTypeClasses,
              FunctionalDependencies,
@@ -7,15 +7,19 @@
              TypeApplications
   #-}
 
-module HsToCoq.ConvertHaskell.Monad (GlobalEnv(..),
+module HsToCoq.ConvertHaskell.Monad (
+  -- * Environments
+  GlobalEnv(..), ModuleEnv(..), LocalEnv(..),
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
-  HasEdits,
+  HasEdits(..), HasCurrentModule(..), HasCurrentDefinition(..),
   runGlobalMonad,
   withCurrentModule,
   withCurrentDefinition,
-  -- * Types
-  edits, currentDefinition, currentModule,
+  -- * Convenience views
+  currentModuleAxiomatized,
+  -- * Testing skippedness/axiomness
+  definitionTask, TranslationTask(..), AxiomatizationMode(..),
   -- * Operations
   fresh, gensym, genqid,
   useProgramHere, renamed,
@@ -30,10 +34,13 @@ import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
 import qualified Data.Text as T
-import Control.Monad.Trans.Counter
+import HsToCoq.Util.Monad
 
+import Control.Monad.Trans.Counter
 import Control.Monad.State
 import Control.Monad.Reader
+
+import Data.Set (Set)
 
 import GHC
 
@@ -77,6 +84,33 @@ makeFields ''GlobalEnv
 makeFields ''ModuleEnv
 makeFields ''LocalEnv
 
+currentModuleAxiomatized :: (HasEdits s Edits, HasCurrentModule s ModuleName) => Getter  s Bool
+currentModuleAxiomatized = to $ \s -> s^.edits.axiomatizedModules.contains (s^.currentModule)
+
+data AxiomatizationMode = SpecificAxiomatize | GeneralAxiomatize
+                        deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+data TranslationTask = SkipIt
+                     | AxiomatizeIt AxiomatizationMode
+                     | TranslateIt
+                     deriving (Eq, Ord, Show, Read)
+
+-- |Should this definition be skipped, axiomatized, or translated?
+-- `HasEdits`, and `HasCurrentModule`, but that hardly seems necessary.
+definitionTask :: forall s m. (MonadReader s m, HasEdits s Edits, HasCurrentModule s ModuleName)
+               => Qualid -> m TranslationTask
+definitionTask name =
+  let isIn :: Lens' Edits (Set Qualid) -> m Bool
+      isIn field = view $ edits.field.contains name
+  in ifM (isIn skipped)
+       (pure SkipIt)
+       (ifM (view currentModuleAxiomatized)
+          (ifM (isIn unaxiomatizedDefinitions)
+             (pure TranslateIt)
+             (pure $ AxiomatizeIt GeneralAxiomatize))
+          (ifM (isIn axiomatizedDefinitions)
+             (pure $ AxiomatizeIt SpecificAxiomatize)
+             (pure TranslateIt)))
 
 -- The constraint aliases, for the three levels of scoping
 -- Note that they are subconstraints of each other, so you can call a

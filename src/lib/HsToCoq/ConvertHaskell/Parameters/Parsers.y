@@ -41,7 +41,11 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %monad { NewlinesParse }
 %lexer { (=<< token) } { TokEOF }
 
+-- Please maintain the format of this list; the token definitions and the
+-- dividing comments of the form `-- Tokens: $CATEGORY` are used to generate an
+-- Emacs major mode with syntax highlighting.
 %token
+  -- Tokens: Edits
   value           { TokWord    "value"          }
   type            { TokWord    "type"           }
   data            { TokWord    "data"           }
@@ -62,6 +66,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   termination     { TokWord    "termination"    }
   'deferred'      { TokWord    "deferred"       }
   'corecursive'   { TokWord    "corecursive"    }
+  coinductive     { TokWord    "coinductive"    }
   obligations     { TokWord    "obligations"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
@@ -74,6 +79,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   simple          { TokWord    "simple"         }
   inline          { TokWord    "inline"         }
   mutual          { TokWord    "mutual"         }
+  '='             { TokOp      "="              }
+  ':->'           { TokOp      ":->"            }
+  -- Tokens: Coq terms
   as              { TokWord    "as"             }
   fun             { TokWord    "fun"            }
   fix             { TokWord    "fix"            }
@@ -86,9 +94,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   for             { TokWord    "for"            }
   where           { TokWord    "where"          }
   and             { TokWord    "and"            }
-  coinductive     { TokWord    "coinductive"    }
   'measure'       { TokWord    "measure"        }
   'wf'            { TokWord    "wf"             }
+  -- Tokens: Coq commands
   'Inductive'     { TokWord    "Inductive"      }
   'CoInductive'   { TokWord    "CoInductive"    }
   'Definition'    { TokWord    "Definition"     }
@@ -100,8 +108,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
   'Axiom'         { TokWord    "Axiom"          }
-  '='             { TokOp      "="              }
-  ':->'           { TokOp      ":->"            }
+  -- Tokens: Coq punctuation
   ':'             { TokOp      ":"              }
   '=>'            { TokOp      "=>"             }
   ':='            { TokOp      ":="             }
@@ -112,6 +119,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
   ';'             { TokOp      ";"              }
+  -- Tokens: General
   '('             { TokOpen    '('              }
   ')'             { TokClose   ')'              }
   '{'             { TokOpen    '{'              }
@@ -122,6 +130,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   Op              { TokOp      $$               }
   Num             { TokNat     $$               }
   StringLit       { TokString  $$               }
+-- Tokens: End
 
 %nonassoc GenFixBodyOne
 %nonassoc with

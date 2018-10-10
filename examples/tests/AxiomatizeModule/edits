@@ -1,0 +1,6 @@
+axiomatize module AxiomatizeModule
+unaxiomatize definition AxiomatizeModule.kind
+unaxiomatize definition AxiomatizeModule.saccharine
+
+# We don't include GHC
+skip AxiomatizeModule.Default__Sweet

@@ -108,6 +108,9 @@ clean make -C core-semantics clean
 clean make -C base-src clean
 clean make -C transformers clean
 clean make -C ghc clean
+clean make -C ../emacs clean
+
+make -C ../emacs
 
 make -C base-src vfiles
 coq make -C ../base

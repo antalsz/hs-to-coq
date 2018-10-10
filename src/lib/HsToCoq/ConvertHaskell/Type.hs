@@ -52,12 +52,12 @@ convertType (HsAppTy ty1 ty2) =
 -- bank on never seeing any infix type things.
 convertType (HsAppsTy tys) =
   let assertPrefix (L _ (HsAppPrefix lty)) = convertLType lty
-      assertPrefix (L _ (HsAppInfix _))    = convUnsupported "infix types in type application lists"
+      assertPrefix (L _ (HsAppInfix _))    = convUnsupported' "infix types in type application lists"
   in traverse assertPrefix tys >>= \case
        tyFun:tyArgs ->
          pure $ appList tyFun $ map PosArg tyArgs
        [] ->
-         convUnsupported "empty lists of type applications"
+         convUnsupported' "empty lists of type applications"
 
 convertType (HsFunTy ty1 ty2) =
   Arrow <$> convertLType ty1 <*> convertLType ty2
@@ -66,13 +66,13 @@ convertType (HsListTy ty) =
   App1 (Var "list") <$> convertLType ty
 
 convertType (HsPArrTy _ty) =
-  convUnsupported "parallel arrays (`[:a:]')"
+  convUnsupported' "parallel arrays (`[:a:]')"
 
 convertType (HsTupleTy tupTy tys) = do
   case tupTy of
     HsUnboxedTuple           -> pure () -- TODO: Mark converted unboxed tuples specially?
     HsBoxedTuple             -> pure ()
-    HsConstraintTuple        -> convUnsupported "constraint tuples"
+    HsConstraintTuple        -> convUnsupported' "constraint tuples"
     HsBoxedOrConstraintTuple -> pure () -- Sure, it's boxed, why not
   case tys of
     []   -> pure $ Var "unit"
@@ -89,16 +89,16 @@ convertType (HsIParamTy (L _ (HsIPName ip)) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
     then pure $ "GHC.Stack.CallStack"
-    else convUnsupported "implicit parameter constraints"
+    else convUnsupported' "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =
-  convUnsupported "type equality" -- FIXME
+  convUnsupported' "type equality" -- FIXME
 
 convertType (HsKindSig ty k) =
   HasType <$> convertLType ty <*> convertLType k
 
 convertType (HsSpliceTy _ _) =
-  convUnsupported "Template Haskell type splices"
+  convUnsupported' "Template Haskell type splices"
 
 convertType (HsDocTy ty _doc) =
   convertLType ty
@@ -107,10 +107,10 @@ convertType (HsBangTy _bang ty) =
   convertLType ty -- Strictness annotations are ignored
 
 convertType (HsRecTy _fields) =
-  convUnsupported "record types" -- FIXME
+  convUnsupported' "record types" -- FIXME
 
 convertType (HsCoreTy _) =
-  convUnsupported "[internal] embedded core types"
+  convUnsupported' "[internal] embedded core types"
 
 convertType (HsExplicitListTy _ _ tys) =
   foldr (App2 $ Var "cons") (Var "nil") <$> traverse convertLType tys
@@ -123,14 +123,14 @@ convertType (HsExplicitTupleTy _PlaceHolders tys) =
 
 convertType (HsTyLit lit) =
   case lit of
-    HsNumTy _src int -> Num <$> convertInteger "type-level integers" int
+    HsNumTy _src int -> either convUnsupported' (pure . Num) $ convertInteger "type-level integers" int
     HsStrTy _src str -> pure $ convertFastString str
 
 convertType (HsWildCardTy _) =
-  convUnsupported "wildcards"
+  convUnsupported' "wildcards"
 
 convertType (HsSumTy _) =
-  convUnsupported "sum types"
+  convUnsupported' "sum types"
 
 --------------------------------------------------------------------------------
 
@@ -147,4 +147,4 @@ convertLHsSigType (HsIB itvs lty _) =
 convertLHsSigWcType :: ConversionMonad r m => LHsSigWcType GhcRn -> m Term
 convertLHsSigWcType (HsWC wcs hsib)
   | null wcs  = convertLHsSigType hsib
-  | otherwise = convUnsupported "type wildcards"
+  | otherwise = convUnsupported' "type wildcards"

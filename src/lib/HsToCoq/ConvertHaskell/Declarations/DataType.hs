@@ -54,7 +54,7 @@ convertConLName (L _ hsCon) = var ExprNS hsCon
 convertConDecl :: ConversionMonad r m
                => Term -> [Binder] -> ConDecl GhcRn -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
-  unless (maybe True (null . unLoc) mlcxt) $ convUnsupported "constructor contexts"
+  unless (maybe True (null . unLoc) mlcxt) $ convUnsupported' "constructor contexts"
 
   con <- convertConLName lname
 
@@ -134,7 +134,7 @@ convertDataDefn :: ConversionMonad r m
                 => Term -> [Binder] -> HsDataDefn GhcRn
                 -> m (Term, [Constructor])
 convertDataDefn curType extraArgs (HsDataDefn _nd lcxt _ctype ksig cons _derivs) = do
-  unless (null $ unLoc lcxt) $ convUnsupported "data type contexts"
+  unless (null $ unLoc lcxt) $ convUnsupported' "data type contexts"
   (,) <$> maybe (pure $ Sort Type) convertLType ksig
       <*> (traverse addAdditionalConstructorScope =<<
            foldTraverse (convertConDecl curType extraArgs . unLoc) cons)

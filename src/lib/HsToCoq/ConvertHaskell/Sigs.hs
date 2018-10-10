@@ -74,10 +74,10 @@ collectSigs sigs = do
 
 collectSigsWithErrors :: ConversionMonad r m => [Sig GhcRn] -> m (Map GHC.Name HsSignature)
 collectSigsWithErrors =
-  either convUnsupported (M.traverseWithKey multiplesError) . collectSigs
+  either convUnsupported' (M.traverseWithKey multiplesError) . collectSigs
   where multiplesError name (Left err) = do
           nameStr <- T.unpack <$> ghcPpr name
-          convUnsupported $ err ++ " for `" ++ nameStr ++ "'"
+          convUnsupported' $ err ++ " for `" ++ nameStr ++ "'"
         multiplesError _ (Right sig) =
           pure sig
 

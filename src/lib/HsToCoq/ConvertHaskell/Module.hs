@@ -72,7 +72,7 @@ convertHsGroup HsGroup{..} = do
   convertedValDecls  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
     case hs_valds of
       ValBindsIn{} ->
-        convUnsupported "pre-renaming `ValBindsIn' construct post renaming"
+        convUnsupported' "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
         sigs  <- convertLSigs lsigs `catchIfAxiomatizing` const @_ @SomeException (pure M.empty)
         defns <- (convertTypedModuleBindings
@@ -98,7 +98,7 @@ convertHsGroup HsGroup{..} = do
                                   else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
-                   (\_ _ -> convUnsupported "top-level pattern bindings")
+                   (\_ _ -> convUnsupported' "top-level pattern bindings")
                    (\ax ty -> pure (Just ax, [typedAxiom ax ty]))
         
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]

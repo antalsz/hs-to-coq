@@ -183,7 +183,7 @@ convertDeclarationGroup DeclarationGroup{..} =
       pure []
     
     (_, _, _, _, _) ->
-      convUnsupported "too much mutual recursion"
+      convUnsupported' "too much mutual recursion" -- TODO: better error reporting on names
 
   where
     synName = qualidExtendBase "__raw"

@@ -26,7 +26,7 @@ module HsToCoq.ConvertHaskell.Monad (
   fresh, gensym, genqid,
   useProgramHere, renamed,
   -- * Errors
-  throwProgramError, convUnsupported, editFailure,
+  throwProgramError, convUnsupported, convUnsupported', convUnsupportedIn, editFailure,
   -- * Modules
   skipModules, skipModulesBy
   ) where
@@ -50,6 +50,7 @@ import Exception
 import Panic
 
 import HsToCoq.Coq.Gallina (Qualid, Qualid(..), Ident)
+import HsToCoq.Coq.Pretty
 import HsToCoq.Util.GHC.Module (moduleNameText)
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -210,8 +211,21 @@ genqid name = Bare <$> gensym name
 throwProgramError :: MonadIO m => String -> m a
 throwProgramError = liftIO . throwGhcExceptionIO . ProgramError
 
-convUnsupported :: MonadIO m => String -> m a
-convUnsupported what = throwProgramError $ what ++ " unsupported"
+convUnsupportedIn :: MonadIO m => String -> String -> String -> m a
+convUnsupportedIn what category which =
+  throwProgramError $ what ++ " unsupported [in " ++ category ++ " " ++ which ++ "]"
+
+-- Module-local
+conv_unsupported_within :: (MonadIO m, MonadReader r m)
+                        => String -> Getter r a -> (a -> String) -> String -> m err
+conv_unsupported_within category whichL whichShow what =
+  convUnsupportedIn what category =<< view (whichL.to whichShow)
+
+convUnsupported' :: ConversionMonad r m => String -> m a
+convUnsupported' = conv_unsupported_within "module" currentModule moduleNameString
+
+convUnsupported :: LocalConvMonad r m => String -> m a
+convUnsupported = conv_unsupported_within "definition" currentDefinition showP
 
 editFailure :: MonadIO m => String -> m a
 editFailure what = throwProgramError $ "Could not apply edit: " ++ what

@@ -171,7 +171,7 @@ convertIntegerPat :: (LocalConvMonad r m, MonadWriter [Term] m)
                   => String -> Integer -> m Pattern
 convertIntegerPat what hsInt = do
   var <- gensym "num"
-  int <- convertInteger what hsInt
+  int <- either convUnsupported pure $ convertInteger what hsInt
   Coq.VarPat var <$ tell ([mkInfix (Var var) "GHC.Base.==" (App1 "GHC.Num.fromInteger" (Num int))] :: [Term])
 
 -- Nothing:    Not a constructor

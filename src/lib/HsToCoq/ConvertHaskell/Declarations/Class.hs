@@ -19,13 +19,16 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 import GHC hiding (Name)
+import HsToCoq.Util.GHC
 import qualified GHC
+import Outputable (Outputable())
 import Bag
 import Class
 
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite
+import HsToCoq.Coq.Pretty
 import HsToCoq.Util.FVs
 
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -66,20 +69,28 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
                                  _ -> False) bs
 getImplicits _ = []
 
+-- Module-local
+convUnsupportedIn_lname :: (GhcMonad m, Outputable nm) => String -> String -> GenLocated l nm -> m a
+convUnsupportedIn_lname what whatFam lname = do
+  name <- T.unpack <$> ghcPpr (unLoc lname)
+  convUnsupportedIn what whatFam name
+
 convertAssociatedType :: ConversionMonad r m => [Qualid] -> FamilyDecl GhcRn -> m (Qualid, Term)
 convertAssociatedType classArgs FamilyDecl{..} = do
+  let badAssociation what whatFam = convUnsupportedIn_lname what whatFam fdLName
+        
   case fdInfo of
     OpenTypeFamily     -> pure ()
-    DataFamily         -> convUnsupported "associated data types"
-    ClosedTypeFamily _ -> convUnsupported "associated closed type families"
+    DataFamily         -> badAssociation "associated data types"           "data family"
+    ClosedTypeFamily _ -> badAssociation "associated closed type families" "closed type family "
   -- Skipping 'fdFixity'
-  unless (null fdInjectivityAnn) $ convUnsupported "injective associated type families"
+  unless (null fdInjectivityAnn) $ badAssociation "injective associated type families" "associated type"
   
   name   <- var TypeNS $ unLoc fdLName
   args   <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit fdTyVars
   -- Could losen this in future?
   unless (classArgs == foldMap (toListOf binderIdents) args) $
-    convUnsupported "associated type families with argument lists that differ from the class's"
+    badAssociation "associated type families with argument lists that differ from the class's" "associated type"
   storeExplicitMethodArguments name args
   
   result <- case unLoc fdResultSig of
@@ -94,7 +105,9 @@ convertAssociatedTypeDefault :: ConversionMonad r m => [Qualid] -> TyFamDefltEqn
 convertAssociatedTypeDefault classArgs FamEqn{..} = do
   args <- convertLHsTyVarBndrs Coq.Explicit $ hsq_explicit feqn_pats
   unless (classArgs == foldMap (toListOf binderIdents) args) $
-    convUnsupported "associated type family defaults with argument lists that differ from the class's"
+    convUnsupportedIn_lname "associated type family defaults with argument lists that differ from the class's"
+                            "associated type equation"
+                            feqn_tycon
   (,) <$> var TypeNS (unLoc feqn_tycon)
       <*> convertLType feqn_rhs
   -- Skipping feqn_fixity
@@ -110,9 +123,11 @@ convertClassDecl :: ConversionMonad r m
                  -> [LTyFamDefltEqn GhcRn]                -- ^@tcdATDefs@  associated types defaults
                  -> m ClassBody
 convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefaults = do
-  unless (null fds) $ convUnsupported "functional dependencies"
-
   name <- var TypeNS hsName
+  
+  let convUnsupportedHere what = convUnsupportedIn what "type class" (showP name)
+  unless (null fds) $ convUnsupportedHere "functional dependencies"
+
   ctx  <- traverse (fmap (Generalized Coq.Implicit) . convertLType) hsCtx
   storeSuperclassCount name . sum <=< for ctx $ \case
     Generalized _ (termHead -> Just super) -> maybe 1 (+ 1) <$> lookupSuperclassCount super
@@ -156,11 +171,11 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                       -- recursion) here because of name overloading
                       pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
                   Just (ConvertedPatternBinding    _ _)                     ->
-                      convUnsupported "pattern bindings in class declarations"
+                      convUnsupportedHere "pattern bindings in class declarations"
                   Just (ConvertedAxiomBinding      _ _)                     ->
-                      convUnsupported "axiom bindings in class declarations"
+                      convUnsupportedHere "axiom bindings in class declarations"
                   Nothing                                                   ->
-                      convUnsupported $ "skipping a type class method in " ++ show name
+                      convUnsupportedHere "skipping a type class method"
   let defs = type_defs <> value_defs
   unless (null defs) $ storeDefaultMethods name defs
 

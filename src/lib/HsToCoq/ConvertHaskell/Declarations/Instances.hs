@@ -131,15 +131,19 @@ convertClsInstDeclInfo :: ConversionMonad r m => ClsInstDecl GhcRn -> m Instance
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
   instanceHead  <- convertLHsSigType cid_poly_ty
-  instanceClass <- maybe (convUnsupported "strangely-formed instance heads") pure $
-                    termHead instanceHead
+  instanceClass <- termHead instanceHead
+                     & maybe (convUnsupportedIn "strangely-formed instance heads"
+                                                "type class instance"
+                                                (showP instanceName))
+                             pure
+                    
 
   pure InstanceInfo{..}
 
 --------------------------------------------------------------------------------
 
 no_class_error :: MonadIO m => Qualid -> String -> m a
-no_class_error cls extra = throwProgramError $  "Cannot find information for the class " ++ quote_qualid cls
+no_class_error cls extra = throwProgramError $  "Could not find information for the class " ++ quote_qualid cls
                                              ++ if null extra then [] else ' ':extra
 
 no_class_instance_error :: MonadIO m => Qualid -> Qualid -> m a
@@ -175,7 +179,8 @@ clsInstFamiliesToMap assocTys =
 convertClsInstDecl :: forall r m. ConversionMonad r m => ClsInstDecl GhcRn -> m [Sentence]
 convertClsInstDecl cid@ClsInstDecl{..} = do
   ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
-
+  let convUnsupportedHere what = convUnsupportedIn what "type class instance" (showP instanceName)
+  
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
   unlessSkippedClass ii . handleIfPermissive err_handler $ definitionTask instanceName >>= \case
     SkipIt ->
@@ -198,7 +203,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
    
       -- decomposeClassTy can fail, so run it in the monad so that
       -- failure will be caught and cause the instance to be skipped
-      (className, instTy) <- decomposeClassTy classTy
+      (className, instTy) <- either convUnsupportedHere pure $ decomposeClassTy classTy
    
       -- Get the methods of this class (this should already exclude skipped ones)
       (classMethods, classArgs) <- lookupClassDefn className >>= \case
@@ -242,9 +247,9 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                        -- We have a tough time handling recursion (including mutual
                        -- recursion) here because of name overloading
                 ConvertedPatternBinding {}
-                    -> convUnsupported "pattern bindings in instances"
+                    -> convUnsupportedHere "pattern bindings in instances"
                 ConvertedAxiomBinding {}
-                    -> convUnsupported "axiom bindings in instances"
+                    -> convUnsupportedHere "axiom bindings in instances"
             
           (Nothing, Just assoc, _) ->
             pure (meth, subst allLocalNames assoc)
@@ -372,10 +377,9 @@ makeInstanceMethodTy className params instTy memberName = do
 -- from "instance C ty where" access C and ty
 -- TODO: multiparameter type classes   "instance C t1 t2 where"
 --       instances with contexts       "instance C a => C (Maybe a) where"
-decomposeClassTy :: ConversionMonad r m => Term -> m (Qualid, Term)
-decomposeClassTy ty = case ty of
-   App1 (Qualid cn) a -> pure (cn, a)
-   _ -> convUnsupported ("type class instance head `" ++ showP ty ++ "'")
+decomposeClassTy :: Term -> Either String (Qualid, Term)
+decomposeClassTy (App1 (Qualid cn) a) = Right (cn, a)
+decomposeClassTy ty                   =  Left $ "type class instance head `" ++ showP ty ++ "'"
 
 decomposeForall :: Term -> ([Binder], Term)
 decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty)

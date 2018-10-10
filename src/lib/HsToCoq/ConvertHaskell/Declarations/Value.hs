@@ -67,7 +67,7 @@ convertValDecls mdecls = do
                               else DefinitionSentence def ] ++
                             [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                 )
-                (\_ _ -> convUnsupported "top-level pattern bindings")
+                (\_ _ -> convUnsupported' "top-level pattern bindings")
                 (\ax ty -> pure (ax, [typedAxiom ax ty]))
 
   -- TODO: Mutual recursion

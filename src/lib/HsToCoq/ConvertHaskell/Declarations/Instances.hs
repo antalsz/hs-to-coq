@@ -51,7 +51,7 @@ convertInstanceName n = do
     coqType <- convertLType n
     qual <- Qualified . moduleNameText <$> view currentModule
     case skip coqType of
-        Left err -> convUnsupported $ "Cannot derive instance name from " ++ show coqType ++ ": " ++ err
+        Left err -> throwProgramError $ "Cannot derive instance name from `" ++ showP coqType ++ "': " ++ err
         Right name -> return $ qual name
   where
     -- Skip type vaiables and constraints
@@ -138,6 +138,22 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
 
 --------------------------------------------------------------------------------
 
+no_class_error :: MonadIO m => Qualid -> String -> m a
+no_class_error cls extra = throwProgramError $  "Cannot find information for the class " ++ quote_qualid cls
+                                             ++ if null extra then [] else ' ':extra
+
+no_class_instance_error :: MonadIO m => Qualid -> Qualid -> m a
+no_class_instance_error cls inst = no_class_error cls $ "when defining the instance " ++ quote_qualid inst
+
+no_class_method_error :: MonadIO m => Qualid -> Qualid -> m a
+no_class_method_error cls meth = no_class_error cls $ "when defining the method " ++ quote_qualid meth
+
+
+quote_qualid :: Qualid -> String
+quote_qualid qid = "`" ++ showP qid ++ "'"
+
+--------------------------------------------------------------------------------
+
 unlessSkippedClass :: ConversionMonad r m => InstanceInfo -> m [Sentence] -> m [Sentence]
 unlessSkippedClass InstanceInfo{..} act = do
   view (edits.skipped.contains instanceClass) >>= \case
@@ -172,7 +188,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                                     $ if null methods then Nothing else Just $ ProofAdmitted "" ]
         Nothing -> case axMode of
           GeneralAxiomatize  -> pure []
-          SpecificAxiomatize -> convUnsupported $ "Cannot find information for class " ++ show instanceClass
+          SpecificAxiomatize -> no_class_instance_error instanceClass instanceName
     
     TranslateIt -> do
       cid_binds_map <- bindToMap (map unLoc $ bagToList cid_binds)
@@ -185,11 +201,9 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
       (className, instTy) <- decomposeClassTy classTy
    
       -- Get the methods of this class (this should already exclude skipped ones)
-      (classMethods, classArgs) <- do
-        classDef <- lookupClassDefn className
-        case classDef of
-          (Just (ClassDefinition _ args _ sigs)) -> pure $ (map fst sigs, args)
-          _ -> convUnsupported ("OOPS! Cannot find information for class " ++ show className)
+      (classMethods, classArgs) <- lookupClassDefn className >>= \case
+        Just (ClassDefinition _ args _ sigs) -> pure $ (map fst sigs, args)
+        _ -> no_class_instance_error className instanceName
       
       -- Associated types for this class
       classTypes <- fromMaybe mempty <$> lookupClassTypes className
@@ -247,7 +261,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
               pure (meth, subst (allLocalNames <> extraSubst) term)
           
           (Nothing, Nothing, Nothing) ->
-              convUnsupported $ "Method " <> showP meth <> " has no definition and no default definition"
+              throwProgramError $ "The method `" <> showP meth <> "' has no definition and no default definition"
    
       -- Turn definitions into sentences
       let quantify :: Qualid -> Term -> m Term
@@ -309,9 +323,8 @@ convertClsInstDecls = foldTraverse convertClsInstDecl
 -- add extra quantifiers from the class & instance definitions
 makeInstanceMethodTy :: ConversionMonad r m => Qualid -> [Binder] -> Term -> Qualid -> m ([Binder], Maybe Term)
 makeInstanceMethodTy className params instTy memberName = do
-  classDef <- lookupClassDefn className
-  case classDef of
-    (Just (ClassDefinition _ (b:_) _ sigs)) | [var] <- toListOf binderIdents b ->
+  lookupClassDefn className >>= \case
+    Just (ClassDefinition _ (b:_) _ sigs) | [var] <- toListOf binderIdents b ->
       case lookup memberName sigs of
         Just sigType ->
           -- GOAL: Consider
@@ -352,8 +365,9 @@ makeInstanceMethodTy className params instTy memberName = do
               instSigType = subst (M.singleton var $ subst instSubst instTy) sigType
           in pure $ (instBnds, Just $ instSigType)
         Nothing ->
-          convUnsupported ("Cannot find sig for " ++ showP memberName)
-    _ -> convUnsupported ("OOPS! Cannot find information for class " ++ showP className)
+          throwProgramError $ "Cannot find signature for " ++ quote_qualid memberName
+    _ ->
+      no_class_method_error className memberName
 
 -- from "instance C ty where" access C and ty
 -- TODO: multiparameter type classes   "instance C t1 t2 where"
@@ -361,8 +375,8 @@ makeInstanceMethodTy className params instTy memberName = do
 decomposeClassTy :: ConversionMonad r m => Term -> m (Qualid, Term)
 decomposeClassTy ty = case ty of
    App1 (Qualid cn) a -> pure (cn, a)
-   _ -> convUnsupported ("type class instance head:" ++ show ty)
+   _ -> convUnsupported ("type class instance head `" ++ showP ty ++ "'")
 
 decomposeForall :: Term -> ([Binder], Term)
 decomposeForall (Forall bnds ty) = first (NE.toList bnds ++) (decomposeForall ty)
-decomposeForall t = ([], t)
+decomposeForall t                = ([], t)

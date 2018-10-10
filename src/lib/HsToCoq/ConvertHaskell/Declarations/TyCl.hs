@@ -37,7 +37,6 @@ import Control.Monad
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
--- import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
 
@@ -56,8 +55,6 @@ import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
-
-import Exception
 
 --------------------------------------------------------------------------------
 
@@ -89,7 +86,7 @@ failTyClDecl name e = pure $ Just $
 convertTyClDecl :: ConversionMonad r m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
-  withCurrentDefinition coqName $ ghandle (failTyClDecl coqName) $ do
+  withCurrentDefinition coqName $ handleIfPermissive (failTyClDecl coqName) $ do
     let isCoind = view (edits.coinductiveTypes.contains coqName)
     view (edits.skipped.contains coqName) >>= \case
       True  -> pure Nothing

@@ -10,8 +10,6 @@
 module HsToCoq.ConvertHaskell.Monad (
   -- * Environments
   GlobalEnv(..), ModuleEnv(..), LocalEnv(..),
-  -- * Types
-  Leniency(..),
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
   HasEdits(..), HasLeniency(..), HasCurrentModule(..), HasCurrentDefinition(..),
@@ -20,6 +18,8 @@ module HsToCoq.ConvertHaskell.Monad (
   withCurrentDefinition,
   -- * Convenience views
   currentModuleAxiomatized,
+  -- * Leniency
+  Leniency(..), whenPermissive, handleIfPermissive,
   -- * Testing skippedness/axiomness
   definitionTask, TranslationTask(..), AxiomatizationMode(..),
   -- * Operations
@@ -31,7 +31,7 @@ module HsToCoq.ConvertHaskell.Monad (
   skipModules, skipModulesBy
   ) where
 
-import Control.Lens
+import Control.Lens hiding (Strict)
 
 import Data.Semigroup (Semigroup(..))
 import Data.Text (Text)
@@ -45,6 +45,7 @@ import Control.Monad.Reader
 import Data.Set (Set)
 
 import GHC
+import Exception
 
 import Panic
 
@@ -229,3 +230,16 @@ useProgramHere = do
 renamed :: HsNamespace -> Qualid -> Lens' Edits (Maybe Qualid)
 renamed ns x = renamings.at (NamespacedIdent ns x)
 {-# INLINABLE renamed #-}
+
+whenPermissive :: (MonadReader r m, HasLeniency r Leniency) => a -> m (Maybe a)
+whenPermissive x =
+  view leniency <&> \case
+    Permissive -> Just x
+    Strict     -> Nothing
+
+handleIfPermissive :: (ExceptionMonad m, MonadReader r m, HasLeniency r Leniency, Exception e)
+                   => (e -> m a) -> m a -> m a
+handleIfPermissive onError act =
+  view leniency >>= \case
+    Permissive -> ghandle onError act
+    Strict     -> act

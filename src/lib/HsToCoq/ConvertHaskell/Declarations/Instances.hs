@@ -26,7 +26,6 @@ import qualified Data.Map.Strict as M
 
 import GHC hiding (Name)
 import Bag
-import HsToCoq.Util.GHC.Exception
 import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
@@ -162,7 +161,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
   ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
 
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
-  unlessSkippedClass ii . ghandle err_handler $ definitionTask instanceName >>= \case
+  unlessSkippedClass ii . handleIfPermissive err_handler $ definitionTask instanceName >>= \case
     SkipIt ->
       pure [CommentSentence . Comment $ "Skipping instance " <> qualidBase instanceName]
     

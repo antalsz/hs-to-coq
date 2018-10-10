@@ -23,7 +23,7 @@ module HsToCoq.CLI (
   prettyPrint, hPrettyPrint
   ) where
 
-import Control.Lens hiding (Strict, (<.>)) -- hiding (Strict(..), (<.>))
+import Control.Lens hiding (Strict, (<.>))
 
 import Data.Foldable
 import Data.List (intersperse, isSuffixOf)

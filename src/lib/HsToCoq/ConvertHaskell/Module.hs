@@ -10,7 +10,7 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModuleDeclarations(..), convertHsGroup,
 ) where
 
-import Control.Lens hiding (Strict)
+import Control.Lens
 
 import Data.Foldable
 import Data.Maybe
@@ -63,15 +63,12 @@ convertHsGroup HsGroup{..} = do
   isModuleAxiomatized <- view $ edits.axiomatizedModules.contains mod
   let catchIfAxiomatizing | isModuleAxiomatized = const
                           | otherwise           = gcatch
+  handler             <- whenPermissive axiomatizeBinding
   
-  handler <- view leniency <&> \case
-               Permissive -> Just axiomatizeBinding
-               Strict     -> Nothing
-  
-  convertedTyClDecls  <- convertModuleTyClDecls
-                      .  map unLoc
-                      $  concatMap group_tyclds hs_tyclds
-                          -- Ignore roles
+  convertedTyClDecls <- convertModuleTyClDecls
+                     .  map unLoc
+                     $  concatMap group_tyclds hs_tyclds
+                         -- Ignore roles
   convertedValDecls  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
     case hs_valds of
       ValBindsIn{} ->

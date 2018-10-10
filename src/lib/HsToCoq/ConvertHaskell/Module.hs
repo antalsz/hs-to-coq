@@ -10,7 +10,7 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModuleDeclarations(..), convertHsGroup,
 ) where
 
-import Control.Lens
+import Control.Lens hiding (Strict)
 
 import Data.Foldable
 import Data.Maybe
@@ -64,6 +64,10 @@ convertHsGroup HsGroup{..} = do
   let catchIfAxiomatizing | isModuleAxiomatized = const
                           | otherwise           = gcatch
   
+  handler <- view leniency <&> \case
+               Permissive -> Just axiomatizeBinding
+               Strict     -> Nothing
+  
   convertedTyClDecls  <- convertModuleTyClDecls
                       .  map unLoc
                       $  concatMap group_tyclds hs_tyclds
@@ -78,7 +82,7 @@ convertHsGroup HsGroup{..} = do
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
                    ??
-                   (Just axiomatizeBinding))
+                   handler)
               $  withConvertedBinding
                    (\cdef@ConvertedDefinition{_convDefName = name} -> ((Just name,) <$>) $ withCurrentDefinition name $ do
                        t  <- view (edits.termination.at name)

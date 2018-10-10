@@ -10,9 +10,11 @@
 module HsToCoq.ConvertHaskell.Monad (
   -- * Environments
   GlobalEnv(..), ModuleEnv(..), LocalEnv(..),
+  -- * Types
+  Leniency(..),
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
-  HasEdits(..), HasCurrentModule(..), HasCurrentDefinition(..),
+  HasEdits(..), HasLeniency(..), HasCurrentModule(..), HasCurrentDefinition(..),
   runGlobalMonad,
   withCurrentModule,
   withCurrentDefinition,
@@ -52,6 +54,12 @@ import HsToCoq.Util.GHC.Module (moduleNameText)
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.TypeInfo
 
+--------------------------------------------------------------------------------
+
+-- |How to handle translation errors
+data Leniency = Permissive -- ^Try to recover by e.g. introducing an axiom
+              | Strict     -- ^Blow up
+              deriving (Eq, Ord, Enum, Bounded, Show, Read)              
 
 --------------------------------------------------------------------------------
 
@@ -66,18 +74,21 @@ import HsToCoq.ConvertHaskell.TypeInfo
 
 
 data GlobalEnv = GlobalEnv
-    { _globalEnvEdits :: Edits
+    { _globalEnvEdits    :: !Edits
+    , _globalEnvLeniency :: !Leniency
     } deriving Show
 
 data ModuleEnv = ModuleEnv
-    { _moduleEnvEdits         :: Edits
-    , _moduleEnvCurrentModule :: ModuleName
+    { _moduleEnvEdits         :: !Edits
+    , _moduleEnvLeniency      :: !Leniency
+    , _moduleEnvCurrentModule :: !ModuleName
     }
 
 data LocalEnv = LocalEnv
-    { _localEnvEdits             :: Edits
-    , _localEnvCurrentModule     :: ModuleName
-    , _localEnvCurrentDefinition :: Qualid
+    { _localEnvEdits             :: !Edits
+    , _localEnvLeniency          :: !Leniency
+    , _localEnvCurrentModule     :: !ModuleName
+    , _localEnvCurrentDefinition :: !Qualid
     }
 
 makeFields ''GlobalEnv
@@ -127,6 +138,7 @@ type GlobalMonad r m =
         , TypeInfoMonad m
         , MonadReader r m
         , HasEdits r Edits
+        , HasLeniency r Leniency
         )
 
 -- | The global monad, used for top-level bindings.
@@ -145,12 +157,13 @@ type LocalConvMonad r m =
 
 runGlobalMonad :: (GhcMonad m, Monad m) =>
     Edits ->
+    Leniency ->
     TypeInfoConfig ->
     (forall r m. GlobalMonad r m => m a) ->
     m a
-runGlobalMonad initEdits paths act =
+runGlobalMonad initEdits leniency paths act =
     runTypeInfoMonad paths $
-    runReaderT ?? GlobalEnv{_globalEnvEdits = initEdits} $
+    runReaderT ?? GlobalEnv{_globalEnvEdits = initEdits, _globalEnvLeniency = leniency} $
     act
 
 withCurrentModule :: GlobalMonad r m =>
@@ -158,10 +171,12 @@ withCurrentModule :: GlobalMonad r m =>
     (forall r m. ConversionMonad r m => m a) ->
     m a
 withCurrentModule newModule act = do
-    _edits <- view edits
+    _edits    <- view edits
+    _leniency <- view leniency
     isProcessedModule (moduleNameText newModule) -- Start collecting the interface
     runReaderT act $ ModuleEnv
         { _moduleEnvEdits         = _edits
+        , _moduleEnvLeniency      = _leniency
         , _moduleEnvCurrentModule = newModule
         }
 
@@ -173,10 +188,12 @@ withCurrentDefinition newDef act = do
     global_edits <- view edits
     local_edits <- view (edits.inEdits.at newDef.non mempty)
     let edits_in_scope = local_edits <> global_edits
-
+    
+    _leniency      <- view leniency
     _currentModule <- view currentModule
     withCounterT $ runReaderT act $ LocalEnv
         { _localEnvEdits             = edits_in_scope
+        , _localEnvLeniency          = _leniency
         , _localEnvCurrentModule     = _currentModule
         , _localEnvCurrentDefinition = newDef
         }

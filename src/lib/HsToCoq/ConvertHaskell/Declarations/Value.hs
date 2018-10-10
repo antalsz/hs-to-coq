@@ -2,7 +2,7 @@
 
 module HsToCoq.ConvertHaskell.Declarations.Value (convertValDecls) where
 
-import Control.Lens
+import Control.Lens hiding (Strict)
 
 import Data.Bitraversable
 import Data.Maybe
@@ -31,6 +31,10 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 convertValDecls :: ConversionMonad r m => [HsDecl GhcRn] -> m [Sentence]
 convertValDecls mdecls = do
+  handler <- view leniency <&> \case
+               Permissive -> Just axiomatizeBinding
+               Strict     -> Nothing
+  
   -- TODO: Don't even convert the signatures for `skipped' things here
   (defns, sigs) <- bitraverse pure convertSigs
                 .  partitionEithers
@@ -39,7 +43,7 @@ convertValDecls mdecls = do
                      (SigD sig) -> Just $ Right sig
                      _          -> Nothing
 
-  bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? Just axiomatizeBinding))
+  bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? handler))
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{_convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
                    r <- view (edits.redefinitions.at name)

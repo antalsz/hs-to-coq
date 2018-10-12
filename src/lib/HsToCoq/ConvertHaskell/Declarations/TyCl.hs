@@ -142,7 +142,7 @@ convertTyClDecl decl = do
         translateIt coqName
       AxiomatizeIt GeneralAxiomatize ->
         -- If we're axiomatizing the MODULE, then we still want to translate
-        -- definitions.
+        -- type-level definitions.
         translateIt coqName
   where
     translateIt :: LocalConvMonad r m => Qualid -> m (Maybe ConvertedDeclaration)

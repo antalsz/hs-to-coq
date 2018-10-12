@@ -329,10 +329,10 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
 
 
 convertExpr' (ExprWithTySig e sigWcTy) =
-  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
+  HasType <$> convertLExpr e <*> convertLHsSigWcType PreserveUnusedTyVars sigWcTy
 
 convertExpr' (ExprWithTySigOut e sigWcTy) =
-  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
+  HasType <$> convertLExpr e <*> convertLHsSigWcType PreserveUnusedTyVars sigWcTy
 
 convertExpr' (ArithSeq _postTc _overloadedLists info) =
   -- TODO: Special-case infinite lists?

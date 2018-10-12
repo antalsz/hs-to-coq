@@ -83,8 +83,8 @@ Program Instance Ord__Proxy {s} : GHC.Base.Ord (Proxy s) :=
 
 (* Skipping instance Show__Proxy of class Show *)
 
-(* Translating `instance Enum__Proxy' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Proxy' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance `Data.Proxy.Enum__Proxy' *)
 
 (* Skipping instance Ix__Proxy of class Ix *)
 
@@ -172,8 +172,9 @@ Program Instance Monad__Proxy : GHC.Base.Monad Proxy :=
 
 (* Skipping instance Read__Proxy of class Read *)
 
-(* Translating `instance Bounded__Proxy' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Proxy' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Proxy.Bounded__Proxy' *)
 
 Definition asProxyTypeOf {a} {proxy} : a -> proxy a -> a :=
   GHC.Base.const.

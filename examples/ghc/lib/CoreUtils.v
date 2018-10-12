@@ -181,7 +181,8 @@ Definition exprIsDupable : DynFlags.DynFlags -> Core.CoreExpr -> bool :=
 
 Axiom eqExpr : forall {A : Type}, A.
 
-(* Translating `eqExpr' failed: non-structural mutual recursion unsupported *)
+(* Translating `eqExpr' failed: non-structural mutual recursion unsupported [in
+   module CoreUtils] *)
 
 Definition eqTickish
    : Core.RnEnv2 -> Core.Tickish Core.Var -> Core.Tickish Core.Var -> bool :=
@@ -231,7 +232,7 @@ Definition exprIsBottom : Core.CoreExpr -> bool :=
 Axiom exprIsCheapX : forall {A : Type}, A.
 
 (* Translating `exprIsCheapX' failed: non-structural mutual recursion
-   unsupported *)
+   unsupported [in module CoreUtils] *)
 
 Definition exprIsHNFlike
    : (Core.Var -> bool) -> (Core.Unfolding -> bool) -> Core.CoreExpr -> bool :=

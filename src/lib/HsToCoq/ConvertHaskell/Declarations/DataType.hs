@@ -11,6 +11,7 @@ import Control.Lens
 import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
+import Data.Traversable
 import HsToCoq.Util.Traversable
 
 import qualified Data.Set        as S
@@ -48,15 +49,12 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 
 --------------------------------------------------------------------------------
 
-convertConLName :: ConversionMonad r m => Located GHC.Name -> m Qualid
-convertConLName (L _ hsCon) = var ExprNS hsCon
-
 convertConDecl :: ConversionMonad r m
                => Term -> [Binder] -> ConDecl GhcRn -> m [Constructor]
 convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported' "constructor contexts"
 
-  con <- convertConLName lname
+  con <- var ExprNS $ unLoc lname
 
   -- Only the explicit tyvars are available before renaming, so they're all we
   -- need to consider
@@ -81,9 +79,11 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
       pure [(con, params , Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
 convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
-  cons  <- traverse convertConLName lnames
-  conTy <- maybeForall extraArgs <$> convertLHsSigType sigTy
-  pure $ map (, [], Just conTy) cons
+  for lnames $ \(L _ hsName) -> do
+    conName <- var ExprNS hsName
+    utvm    <- unusedTyVarModeFor conName
+    conTy   <- maybeForall extraArgs <$> convertLHsSigType utvm sigTy
+    pure (conName, [], Just conTy)
 
 --------------------------------------------------------------------------------
 

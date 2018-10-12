@@ -139,8 +139,8 @@ Program Instance Monoid__Down {a} `{GHC.Base.Monoid a}
          GHC.Base.mconcat__ := Monoid__Down_mconcat ;
          GHC.Base.mempty__ := Monoid__Down_mempty |}.
 
-(* Translating `instance Num__Down' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Down' failed: Could not find information for the
+   class `GHC.Num.Num' when defining the instance `Data.Ord.Num__Down' *)
 
 (* Skipping instance Read__Down of class Read *)
 

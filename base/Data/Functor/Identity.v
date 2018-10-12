@@ -194,8 +194,9 @@ Local Definition Ord__Identity_op_zl__ {inst_a} `{GHC.Base.Ord inst_a}
    : Identity inst_a -> Identity inst_a -> bool :=
   GHC.Prim.coerce _GHC.Base.<_.
 
-(* Translating `instance Num__Identity' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Identity' failed: Could not find information for
+   the class `GHC.Num.Num' when defining the instance
+   `Data.Functor.Identity.Num__Identity' *)
 
 Local Definition Monoid__Identity_mempty {inst_a} `{GHC.Base.Monoid inst_a}
    : Identity inst_a :=
@@ -265,11 +266,13 @@ Program Instance Ord__Identity {a} `{GHC.Base.Ord a}
          GHC.Base.max__ := Ord__Identity_max ;
          GHC.Base.min__ := Ord__Identity_min |}.
 
-(* Translating `instance Enum__Identity' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Identity' failed: Could not find information for
+   the class `GHC.Enum.Enum' when defining the instance
+   `Data.Functor.Identity.Enum__Identity' *)
 
-(* Translating `instance Bounded__Identity' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Identity' failed: Could not find information
+   for the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Functor.Identity.Bounded__Identity' *)
 
 (* Skipping instance Bits__Identity of class Bits *)
 

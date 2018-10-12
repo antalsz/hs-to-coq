@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase,
              OverloadedStrings,
-             FlexibleContexts #-}
+             FlexibleContexts,
+             GeneralizedNewtypeDeriving #-}
 
 module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBndrs, convertLHsSigType, convertLHsSigWcType) where
 
@@ -16,6 +17,7 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsTypes
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -139,12 +141,19 @@ convertLType = convertType . unLoc
 
 --------------------------------------------------------------------------------
 
-convertLHsSigType :: ConversionMonad r m => LHsSigType GhcRn -> m Term
-convertLHsSigType (HsIB itvs lty _) =
-  maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
-              <*> convertLType lty
+convertLHsSigType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term
+convertLHsSigType utvm (HsIB hs_itvs hs_lty _) = do
+  coq_itvs <- traverse (var TypeNS) hs_itvs
+  coq_ty   <- convertLType hs_lty
+  
+  let coq_binders = Inferred Coq.Implicit . Ident <$> case utvm of
+        PreserveUnusedTyVars -> coq_itvs
+        DeleteUnusedTyVars   -> let fvs = getFreeVars coq_ty
+                                in filter (`elem` fvs) coq_itvs
+  
+  pure $ maybeForall coq_binders coq_ty
 
-convertLHsSigWcType :: ConversionMonad r m => LHsSigWcType GhcRn -> m Term
-convertLHsSigWcType (HsWC wcs hsib)
-  | null wcs  = convertLHsSigType hsib
+convertLHsSigWcType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigWcType GhcRn -> m Term
+convertLHsSigWcType utvm (HsWC wcs hsib)
+  | null wcs  = convertLHsSigType utvm hsib
   | otherwise = convUnsupported' "type wildcards"

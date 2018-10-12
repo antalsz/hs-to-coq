@@ -129,8 +129,8 @@ convertTyClDecl decl = do
                          CoqInstanceDef   _ -> "an Instance"
                          CoqAxiomDef      _ -> "an Axiom"
             in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
-        
-      AxiomatizeIt _ ->
+      
+      AxiomatizeIt SpecificAxiomatize ->
         let (what, whats) = case decl of
                               FamDecl{}   -> ("type/data family", "type/data families")
                               SynDecl{}   -> ("type synonym",     "type synonyms")
@@ -139,12 +139,20 @@ convertTyClDecl decl = do
         in convUnsupportedIn ("axiomatizing " ++ whats ++ " (without `redefine Axiom')") what (showP coqName)
       
       TranslateIt ->
-        let isCoind = view (edits.coinductiveTypes.contains coqName)
-        in Just <$> case decl of
-             FamDecl{}     -> convUnsupported "type/data families"
-             SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
-             DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
-             ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
+        translateIt coqName
+      AxiomatizeIt GeneralAxiomatize ->
+        -- If we're axiomatizing the MODULE, then we still want to translate
+        -- definitions.
+        translateIt coqName
+  where
+    translateIt :: LocalConvMonad r m => Qualid -> m (Maybe ConvertedDeclaration)
+    translateIt coqName =
+      let isCoind = view (edits.coinductiveTypes.contains coqName)
+      in Just <$> case decl of
+           FamDecl{}     -> convUnsupported "type/data families"
+           SynDecl{..}   -> ConvSyn              <$> convertSynDecl           tcdLName (hsq_explicit tcdTyVars) tcdRhs
+           DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl          tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+           ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
 --------------------------------------------------------------------------------
 

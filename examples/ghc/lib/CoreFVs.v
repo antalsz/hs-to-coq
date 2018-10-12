@@ -109,7 +109,8 @@ Definition stableUnfoldingVars : Core.Unfolding -> option Core.VarSet :=
   fun unf => GHC.Base.fmap FV.fvVarSet (stableUnfoldingFVs unf).
 
 (* Translating `stableUnfoldingFVs' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   CoreFVs.stableUnfoldingFVs] *)
 
 Definition tickish_fvs : Core.Tickish Core.Var -> FV.FV :=
   fun arg_0__ =>

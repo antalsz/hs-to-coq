@@ -17,7 +17,7 @@ module HsToCoq.ConvertHaskell.Monad (
   withCurrentModule,
   withCurrentDefinition,
   -- * Convenience views
-  currentModuleAxiomatized,
+  currentModuleAxiomatized, UnusedTyVarMode(..), unusedTyVarModeFor,
   -- * Leniency
   Leniency(..), whenPermissive, handleIfPermissive,
   -- * Testing skippedness/axiomness
@@ -129,6 +129,14 @@ definitionTask name =
              (ifM (isIn axiomatizedDefinitions)
                 (pure $ AxiomatizeIt SpecificAxiomatize)
                 (pure TranslateIt)))
+
+data UnusedTyVarMode = PreserveUnusedTyVars | DeleteUnusedTyVars
+                     deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+unusedTyVarModeFor :: (MonadReader r m, HasEdits r Edits) => Qualid -> m UnusedTyVarMode
+unusedTyVarModeFor qid = view (edits.deleteUnusedTypeVariables.contains qid) <&> \case
+                           True  -> DeleteUnusedTyVars
+                           False -> PreserveUnusedTyVars
 
 -- The constraint aliases, for the three levels of scoping
 -- Note that they are subconstraints of each other, so you can call a

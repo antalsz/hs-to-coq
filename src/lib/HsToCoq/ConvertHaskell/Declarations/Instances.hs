@@ -130,7 +130,8 @@ data InstanceInfo = InstanceInfo { instanceName       :: !Qualid
 convertClsInstDeclInfo :: ConversionMonad r m => ClsInstDecl GhcRn -> m InstanceInfo
 convertClsInstDeclInfo ClsInstDecl{..} = do
   instanceName  <- convertInstanceName $ hsib_body cid_poly_ty
-  instanceHead  <- convertLHsSigType cid_poly_ty
+  utvm          <- unusedTyVarModeFor instanceName
+  instanceHead  <- convertLHsSigType utvm cid_poly_ty
   instanceClass <- termHead instanceHead
                      & maybe (convUnsupportedIn "strangely-formed instance heads"
                                                 "type class instance"

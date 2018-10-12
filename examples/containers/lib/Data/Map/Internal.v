@@ -175,8 +175,9 @@ Fixpoint functor__Map_op_zlzd__ {inst_k} {a} {b} (f: a) (m:(Map inst_k) b):
 
 (* Skipping instance Ord1__Map *)
 
-(* Translating `instance Show2__Map' failed: OOPS! Cannot find information for
-   class Qualified "Data.Functor.Classes" "Show2" unsupported *)
+(* Translating `instance Show2__Map' failed: Could not find information for the
+   class `Data.Functor.Classes.Show2' when defining the instance
+   `Data.Map.Internal.Show2__Map' *)
 
 (* Skipping instance Show1__Map of class Show1 *)
 

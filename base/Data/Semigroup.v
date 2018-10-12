@@ -425,11 +425,12 @@ Program Instance Monoid__WrappedMonoid {m} `{GHC.Base.Monoid m}
          GHC.Base.mconcat__ := Monoid__WrappedMonoid_mconcat ;
          GHC.Base.mempty__ := Monoid__WrappedMonoid_mempty |}.
 
-(* Translating `instance Enum__WrappedMonoid' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__WrappedMonoid' failed: Could not find information
+   for the class `GHC.Enum.Enum' when defining the instance
+   `Data.Semigroup.Enum__WrappedMonoid' *)
 
-(* Translating `instance Enum__Last' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Last' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance `Data.Semigroup.Enum__Last' *)
 
 Local Definition Semigroup__Last_op_zlzlzgzg__ {inst_a}
    : (Last inst_a) -> (Last inst_a) -> (Last inst_a) :=
@@ -611,8 +612,8 @@ Program Instance Monad__Last : GHC.Base.Monad Last :=
 
 (* Skipping instance MonadFix__Last of class MonadFix *)
 
-(* Translating `instance Enum__First' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__First' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance `Data.Semigroup.Enum__First' *)
 
 Local Definition Semigroup__First_op_zlzlzgzg__ {inst_a}
    : (First inst_a) -> (First inst_a) -> (First inst_a) :=
@@ -1036,8 +1037,8 @@ Program Instance Bitraversable__Arg : Data.Bitraversable.Bitraversable Arg :=
          `{GHC.Base.Applicative f} =>
            Bitraversable__Arg_bitraverse |}.
 
-(* Translating `instance Enum__Max' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Max' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance `Data.Semigroup.Enum__Max' *)
 
 Local Definition Semigroup__Max_op_zlzlzgzg__ {inst_a} `{_
    : GHC.Base.Ord inst_a}
@@ -1221,11 +1222,11 @@ Program Instance Monad__Max : GHC.Base.Monad Max :=
 
 (* Skipping instance MonadFix__Max of class MonadFix *)
 
-(* Translating `instance Num__Max' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Max' failed: Could not find information for the
+   class `GHC.Num.Num' when defining the instance `Data.Semigroup.Num__Max' *)
 
-(* Translating `instance Enum__Min' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Min' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance `Data.Semigroup.Enum__Min' *)
 
 Local Definition Semigroup__Min_op_zlzlzgzg__ {inst_a} `{_
    : GHC.Base.Ord inst_a}
@@ -1409,8 +1410,8 @@ Program Instance Monad__Min : GHC.Base.Monad Min :=
 
 (* Skipping instance MonadFix__Min of class MonadFix *)
 
-(* Translating `instance Num__Min' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Min' failed: Could not find information for the
+   class `GHC.Num.Num' when defining the instance `Data.Semigroup.Num__Min' *)
 
 (* Skipping instance Generic1__TYPE__Option__LiftedRep of class Generic1 *)
 
@@ -1537,8 +1538,9 @@ Program Instance Ord__WrappedMonoid {m} `{GHC.Base.Ord m}
          GHC.Base.max__ := Ord__WrappedMonoid_max ;
          GHC.Base.min__ := Ord__WrappedMonoid_min |}.
 
-(* Translating `instance Bounded__WrappedMonoid' failed: OOPS! Cannot find
-   information for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__WrappedMonoid' failed: Could not find
+   information for the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Semigroup.Bounded__WrappedMonoid' *)
 
 (* Skipping instance Generic1__TYPE__Last__LiftedRep of class Generic1 *)
 
@@ -1601,8 +1603,9 @@ Program Instance Ord__Last {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Last a) :=
          GHC.Base.max__ := Ord__Last_max ;
          GHC.Base.min__ := Ord__Last_min |}.
 
-(* Translating `instance Bounded__Last' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Last' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Semigroup.Bounded__Last' *)
 
 (* Skipping instance Generic1__TYPE__First__LiftedRep of class Generic1 *)
 
@@ -1665,8 +1668,9 @@ Program Instance Ord__First {a} `{GHC.Base.Ord a} : GHC.Base.Ord (First a) :=
          GHC.Base.max__ := Ord__First_max ;
          GHC.Base.min__ := Ord__First_min |}.
 
-(* Translating `instance Bounded__First' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__First' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Semigroup.Bounded__First' *)
 
 (* Skipping instance Generic1__TYPE__Arg__LiftedRep of class Generic1 *)
 
@@ -1739,8 +1743,9 @@ Program Instance Ord__Max {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Max a) :=
          GHC.Base.max__ := Ord__Max_max ;
          GHC.Base.min__ := Ord__Max_min |}.
 
-(* Translating `instance Bounded__Max' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Max' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Semigroup.Bounded__Max' *)
 
 (* Skipping instance Generic1__TYPE__Min__LiftedRep of class Generic1 *)
 
@@ -1803,8 +1808,9 @@ Program Instance Ord__Min {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Min a) :=
          GHC.Base.max__ := Ord__Min_max ;
          GHC.Base.min__ := Ord__Min_min |}.
 
-(* Translating `instance Bounded__Min' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Min' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Semigroup.Bounded__Min' *)
 
 Definition destruct_option {b} {a} : b -> (a -> b) -> Option a -> b :=
   fun arg_0__ arg_1__ arg_2__ =>

@@ -48,8 +48,6 @@ collectSigs sigs = do
       | null wcs  -> asTypes lnames hsib
       | otherwise -> throwError "type wildcards found"
     (ClassOpSig False lnames sigTy) -> asTypes lnames sigTy
-    --(FixSig           (FixitySig lnames fixity))                                 -> asFixities lnames fixity
-
     (ClassOpSig True _ _) -> mempty -- Ignore default methods signatures
     (FixSig _)            -> mempty
     (InlineSig   _ _)     -> mempty
@@ -58,11 +56,8 @@ collectSigs sigs = do
     (MinimalSig  _ _)     -> mempty
     (SCCFunSig{})         -> mempty
     (CompleteMatchSig{})  -> mempty
-
---    (_, ClassOpSig True _ _) -> throwError "typeclass-based generic default method signatures"
     (PatSynSig  _ _)      -> throwError "pattern synonym signatures"
     (IdSig      _)        -> throwError "generated-code signatures"
-
 
   pure $ flip M.mapWithKey multimap $ \_key info@(_,_) -> case info of
          ([ty],  [fixity])  -> Right $ HsSignature ty (Just fixity)
@@ -81,12 +76,16 @@ collectSigsWithErrors =
         multiplesError _ (Right sig) =
           pure sig
 
-convertSignature :: ConversionMonad r m => HsSignature -> m Signature
-convertSignature (HsSignature sigTy _hsFix) = do
-  Signature <$> convertLHsSigType sigTy <*> pure Nothing
+convertSignature :: ConversionMonad r m => UnusedTyVarMode -> HsSignature -> m Signature
+convertSignature utvm (HsSignature sigTy _hsFix) = do
+  Signature <$> convertLHsSigType utvm sigTy <*> pure Nothing
 
 convertSignatures :: ConversionMonad r m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
-convertSignatures = fmap M.fromList . traverse (\(r,hs) -> (,) <$> var ExprNS r <*> convertSignature hs) . M.toList
+convertSignatures = fmap M.fromList . traverse conv . M.toList where
+  conv (hsName, hsSig) = do
+    coqName <- var ExprNS hsName
+    utvm    <- unusedTyVarModeFor coqName
+    (coqName,) <$> convertSignature utvm hsSig
 
 convertSigs :: ConversionMonad r m => [Sig GhcRn] -> m (Map Qualid Signature)
 convertSigs = convertSignatures <=< collectSigsWithErrors

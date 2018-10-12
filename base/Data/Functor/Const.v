@@ -187,87 +187,82 @@ Program Instance Applicative__Const {m} `{GHC.Base.Monoid m}
 
 (* Skipping instance Real__Const of class Real *)
 
-Local Definition Ord__Const_min {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_min {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition Ord__Const_max {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_max {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Const_compare {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_compare {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition Ord__Const_op_zgze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_op_zgze__ {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Const_op_zg__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_op_zg__ {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.>_.
 
-Local Definition Ord__Const_op_zlze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_op_zlze__ {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Ord__Const_op_zl__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Ord
-  inst_a}
+Local Definition Ord__Const_op_zl__ {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.<_.
 
-(* Translating `instance Num__Const' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Const' failed: Could not find information for the
+   class `GHC.Num.Num' when defining the instance
+   `Data.Functor.Const.Num__Const' *)
 
-Local Definition Monoid__Const_mempty {inst_a} {inst_k} {inst_b}
-  `{GHC.Base.Monoid inst_a}
+Local Definition Monoid__Const_mempty {inst_a} {inst_b} `{GHC.Base.Monoid
+  inst_a}
    : Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep :=
   GHC.Prim.coerce GHC.Base.mempty.
 
-Local Definition Monoid__Const_mconcat {inst_a} {inst_k} {inst_b}
-  `{GHC.Base.Monoid inst_a}
+Local Definition Monoid__Const_mconcat {inst_a} {inst_b} `{GHC.Base.Monoid
+  inst_a}
    : list (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.mconcat.
 
-Local Definition Monoid__Const_mappend {inst_a} {inst_k} {inst_b}
-  `{GHC.Base.Monoid inst_a}
+Local Definition Monoid__Const_mappend {inst_a} {inst_b} `{GHC.Base.Monoid
+  inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.mappend.
 
-Local Definition Semigroup__Const_op_zlzlzgzg__ {inst_a} {inst_k} {inst_b}
+Local Definition Semigroup__Const_op_zlzlzgzg__ {inst_a} {inst_b}
   `{GHC.Base.Semigroup inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce _GHC.Base.<<>>_.
 
-Instance Semigroup__Const {a} {b} `{GHC.Base.Semigroup a}
-   : GHC.Base.Semigroup (Const a b) :=
-  fun _ k => k (GHC.Base.Semigroup__Dict_Build _ Semigroup__Const_op_zlzlzgzg__).
+Program Instance Semigroup__Const {a} {b} `{GHC.Base.Semigroup a}
+   : GHC.Base.Semigroup (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Const_op_zlzlzgzg__ |}.
 
-Instance Monoid__Const {a} {b} `{GHC.Base.Monoid a}
-   : GHC.Base.Monoid (Const a b) :=
+Program Instance Monoid__Const {a} {b} `{GHC.Base.Monoid a}
+   : GHC.Base.Monoid (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   fun _ k =>
-    k (GHC.Base.Monoid__Dict_Build _ Monoid__Const_mappend Monoid__Const_mconcat
-                                   Monoid__Const_mempty).
+    k {| GHC.Base.mappend__ := Monoid__Const_mappend ;
+         GHC.Base.mconcat__ := Monoid__Const_mconcat ;
+         GHC.Base.mempty__ := Monoid__Const_mempty |}.
 
 (* Skipping instance Ix__Const of class Ix *)
 
@@ -283,33 +278,40 @@ Instance Monoid__Const {a} {b} `{GHC.Base.Monoid a}
 
 (* Skipping instance FiniteBits__Const of class FiniteBits *)
 
-Local Definition Eq___Const_op_zsze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Eq_
-  inst_a}
+Local Definition Eq___Const_op_zsze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
 
-Local Definition Eq___Const_op_zeze__ {inst_a} {inst_k} {inst_b} `{GHC.Base.Eq_
-  inst_a}
+Local Definition Eq___Const_op_zeze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
    : (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Const inst_a inst_b : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
 
-Instance Eq___Const {a} {b} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Const a b) :=
+Program Instance Eq___Const {a} {b} `{GHC.Base.Eq_ a}
+   : GHC.Base.Eq_ (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   fun _ k =>
-    k (GHC.Base.Eq___Dict_Build _ Eq___Const_op_zeze__ Eq___Const_op_zsze__).
+    k {| GHC.Base.op_zeze____ := Eq___Const_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
 
-Instance Ord__Const {a} {b} `{GHC.Base.Ord a} : GHC.Base.Ord (Const a b) :=
+Program Instance Ord__Const {a} {b} `{GHC.Base.Ord a}
+   : GHC.Base.Ord (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   fun _ k =>
-    k (GHC.Base.Ord__Dict_Build _ Ord__Const_op_zl__ Ord__Const_op_zlze__
-                                Ord__Const_op_zg__ Ord__Const_op_zgze__ Ord__Const_compare Ord__Const_max
-                                Ord__Const_min).
+    k {| GHC.Base.op_zl____ := Ord__Const_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Const_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Const_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Const_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Const_compare ;
+         GHC.Base.max__ := Ord__Const_max ;
+         GHC.Base.min__ := Ord__Const_min |}.
 
-(* Translating `instance Enum__Const' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Const' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance
+   `Data.Functor.Const.Enum__Const' *)
 
-(* Translating `instance Bounded__Const' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Const' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.Functor.Const.Bounded__Const' *)
 
 (* Skipping instance Bits__Const of class Bits *)
 
@@ -323,16 +325,17 @@ Instance Ord__Const {a} {b} `{GHC.Base.Ord a} : GHC.Base.Ord (Const a b) :=
      Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
      Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
      Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Eq___Dict_Build GHC.Base.Functor
-     GHC.Base.Monoid GHC.Base.Monoid__Dict_Build GHC.Base.Ord
-     GHC.Base.Ord__Dict_Build GHC.Base.Semigroup GHC.Base.Semigroup__Dict_Build
-     GHC.Base.build' GHC.Base.compare GHC.Base.const GHC.Base.flip GHC.Base.fmap__
-     GHC.Base.id GHC.Base.liftA2__ GHC.Base.mappend GHC.Base.max GHC.Base.mconcat
-     GHC.Base.mempty GHC.Base.min GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.Base.op_zlzd__
-     GHC.Base.op_zlzd____ GHC.Base.op_zlze__ GHC.Base.op_zlzlzgzg__
-     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_ztzg____ GHC.Base.pure__
-     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zp__
-     GHC.Prim.Build_Unpeel GHC.Prim.TYPE GHC.Prim.Unpeel GHC.Prim.coerce
-     GHC.Types.LiftedRep
+     GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Ord
+     GHC.Base.Semigroup GHC.Base.build' GHC.Base.compare GHC.Base.compare__
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__
+     GHC.Base.mappend GHC.Base.mappend__ GHC.Base.max GHC.Base.max__ GHC.Base.mconcat
+     GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__ GHC.Base.min GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zl__
+     GHC.Base.op_zl____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlze__
+     GHC.Base.op_zlze____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
+     GHC.Base.op_zlztzg____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Base.op_ztzg____ GHC.Base.pure__ GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zp__ GHC.Prim.Build_Unpeel GHC.Prim.TYPE GHC.Prim.Unpeel
+     GHC.Prim.coerce GHC.Types.LiftedRep
 *)

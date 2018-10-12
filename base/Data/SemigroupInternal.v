@@ -627,75 +627,84 @@ Program Instance Monad__Alt {f} `{GHC.Base.Monad f}
          GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Alt_op_zgzgze__ ;
          GHC.Base.return___ := fun {a} => Monad__Alt_return_ |}.
 
-(* Translating `instance Enum__Alt' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Enum" unsupported *)
+(* Translating `instance Enum__Alt' failed: Could not find information for the
+   class `GHC.Enum.Enum' when defining the instance
+   `Data.SemigroupInternal.Enum__Alt' *)
 
-(* Translating `instance Num__Alt' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Alt' failed: Could not find information for the
+   class `GHC.Num.Num' when defining the instance
+   `Data.SemigroupInternal.Num__Alt' *)
 
-Local Definition Ord__Alt_min {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
-                                                                         inst_a)}
+Local Definition Ord__Alt_min {inst_f} {inst_a} `{GHC.Base.Ord (inst_f inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.min.
 
-Local Definition Ord__Alt_max {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
-                                                                         inst_a)}
+Local Definition Ord__Alt_max {inst_f} {inst_a} `{GHC.Base.Ord (inst_f inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   GHC.Prim.coerce GHC.Base.max.
 
-Local Definition Ord__Alt_compare {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord
-  (inst_f inst_a)}
+Local Definition Ord__Alt_compare {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
+                                                                    inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> comparison :=
   GHC.Prim.coerce GHC.Base.compare.
 
-Local Definition Ord__Alt_op_zgze__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord
-  (inst_f inst_a)}
+Local Definition Ord__Alt_op_zgze__ {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
+                                                                      inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.>=_.
 
-Local Definition Ord__Alt_op_zg__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord
-  (inst_f inst_a)}
+Local Definition Ord__Alt_op_zg__ {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
+                                                                    inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.>_.
 
-Local Definition Ord__Alt_op_zlze__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord
-  (inst_f inst_a)}
+Local Definition Ord__Alt_op_zlze__ {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
+                                                                      inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.<=_.
 
-Local Definition Ord__Alt_op_zl__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Ord
-  (inst_f inst_a)}
+Local Definition Ord__Alt_op_zl__ {inst_f} {inst_a} `{GHC.Base.Ord (inst_f
+                                                                    inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.<_.
 
-Local Definition Eq___Alt_op_zsze__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Eq_
-  (inst_f inst_a)}
+Local Definition Eq___Alt_op_zsze__ {inst_f} {inst_a} `{GHC.Base.Eq_ (inst_f
+                                                                      inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
 
-Local Definition Eq___Alt_op_zeze__ {inst_k} {inst_f} {inst_a} `{GHC.Base.Eq_
-  (inst_f inst_a)}
+Local Definition Eq___Alt_op_zeze__ {inst_f} {inst_a} `{GHC.Base.Eq_ (inst_f
+                                                                      inst_a)}
    : (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) ->
      (Alt inst_f inst_a : GHC.Prim.TYPE GHC.Types.LiftedRep) -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
 
-Instance Eq___Alt {f} {a} `{GHC.Base.Eq_ (f a)} : GHC.Base.Eq_ (Alt f a) :=
-  fun _ k => k (GHC.Base.Eq___Dict_Build _ Eq___Alt_op_zeze__ Eq___Alt_op_zsze__).
-
-Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
+Program Instance Eq___Alt {f} {a} `{GHC.Base.Eq_ (f a)}
+   : GHC.Base.Eq_ (Alt f a : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
   fun _ k =>
-    k (GHC.Base.Ord__Dict_Build _ Ord__Alt_op_zl__ Ord__Alt_op_zlze__
-                                Ord__Alt_op_zg__ Ord__Alt_op_zgze__ Ord__Alt_compare Ord__Alt_max Ord__Alt_min).
+    k {| GHC.Base.op_zeze____ := Eq___Alt_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Alt_op_zsze__ |}.
+
+Program Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)}
+   : GHC.Base.Ord (Alt f a : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__Alt_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__Alt_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__Alt_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__Alt_op_zgze__ ;
+         GHC.Base.compare__ := Ord__Alt_compare ;
+         GHC.Base.max__ := Ord__Alt_max ;
+         GHC.Base.min__ := Ord__Alt_min |}.
 
 (* Skipping instance Show__Alt of class Show *)
 
@@ -705,15 +714,17 @@ Instance Ord__Alt {f} {a} `{GHC.Base.Ord (f a)} : GHC.Base.Ord (Alt f a) :=
 
 (* Skipping instance Generic__Alt of class Generic *)
 
-(* Translating `instance Num__Product' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Product' failed: Could not find information for
+   the class `GHC.Num.Num' when defining the instance
+   `Data.SemigroupInternal.Num__Product' *)
 
 (* Skipping instance Generic1__TYPE__Product__LiftedRep of class Generic1 *)
 
 (* Skipping instance Generic__Product of class Generic *)
 
-(* Translating `instance Bounded__Product' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Product' failed: Could not find information
+   for the class `GHC.Enum.Bounded' when defining the instance
+   `Data.SemigroupInternal.Bounded__Product' *)
 
 (* Skipping instance Show__Product of class Show *)
 
@@ -772,15 +783,17 @@ Program Instance Ord__Product {a} `{GHC.Base.Ord a}
          GHC.Base.max__ := Ord__Product_max ;
          GHC.Base.min__ := Ord__Product_min |}.
 
-(* Translating `instance Num__Sum' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__Sum' failed: Could not find information for the
+   class `GHC.Num.Num' when defining the instance
+   `Data.SemigroupInternal.Num__Sum' *)
 
 (* Skipping instance Generic1__TYPE__Sum__LiftedRep of class Generic1 *)
 
 (* Skipping instance Generic__Sum of class Generic *)
 
-(* Translating `instance Bounded__Sum' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Sum' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.SemigroupInternal.Bounded__Sum' *)
 
 (* Skipping instance Show__Sum of class Show *)
 
@@ -839,8 +852,9 @@ Program Instance Ord__Sum {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Sum a) :=
 
 (* Skipping instance Generic__Any of class Generic *)
 
-(* Translating `instance Bounded__Any' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Any' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.SemigroupInternal.Bounded__Any' *)
 
 (* Skipping instance Show__Any of class Show *)
 
@@ -890,8 +904,9 @@ Program Instance Ord__Any : GHC.Base.Ord Any :=
 
 (* Skipping instance Generic__All of class Generic *)
 
-(* Translating `instance Bounded__All' failed: OOPS! Cannot find information for
-   class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__All' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.SemigroupInternal.Bounded__All' *)
 
 (* Skipping instance Show__All of class Show *)
 
@@ -945,8 +960,9 @@ Program Instance Ord__All : GHC.Base.Ord All :=
 
 (* Skipping instance Generic__Dual of class Generic *)
 
-(* Translating `instance Bounded__Dual' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Enum" "Bounded" unsupported *)
+(* Translating `instance Bounded__Dual' failed: Could not find information for
+   the class `GHC.Enum.Bounded' when defining the instance
+   `Data.SemigroupInternal.Bounded__Dual' *)
 
 (* Skipping instance Show__Dual of class Show *)
 
@@ -1017,9 +1033,8 @@ Definition stimesIdempotentMonoid {b} {a} `{GHC.Real.Integral b}
 
 (* External variables:
      Eq Gt Lt Type andb bool comparison false list orb true
-     Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Eq_
-     GHC.Base.Eq___Dict_Build GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid
-     GHC.Base.Ord GHC.Base.Ord__Dict_Build GHC.Base.Semigroup GHC.Base.compare
+     Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
      GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr
      GHC.Base.id GHC.Base.liftA2 GHC.Base.liftA2__ GHC.Base.mappend__ GHC.Base.max
      GHC.Base.max__ GHC.Base.mconcat__ GHC.Base.mempty GHC.Base.mempty__ GHC.Base.min

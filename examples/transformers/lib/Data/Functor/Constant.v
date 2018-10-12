@@ -82,11 +82,13 @@ Program Instance Ord2__Constant : Data.Functor.Classes.Ord2 Constant :=
     k {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
            Ord2__Constant_liftCompare2 |}.
 
-(* Translating `instance Read2__Constant' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Read2" unsupported *)
+(* Translating `instance Read2__Constant' failed: Could not find information for
+   the class `Data.Functor.Classes.Read2' when defining the instance
+   `Data.Functor.Constant.Read2__Constant' *)
 
-(* Translating `instance Show2__Constant' failed: OOPS! Cannot find information
-   for class Qualified "Data.Functor.Classes" "Show2" unsupported *)
+(* Translating `instance Show2__Constant' failed: Could not find information for
+   the class `Data.Functor.Classes.Show2' when defining the instance
+   `Data.Functor.Constant.Show2__Constant' *)
 
 (* Skipping instance Eq1__Constant *)
 

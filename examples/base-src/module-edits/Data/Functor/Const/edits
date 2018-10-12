@@ -1,6 +1,7 @@
 add Data.Functor.Const Instance Unpeel_Const a b : GHC.Prim.Unpeel (Const a b) a := GHC.Prim.Build_Unpeel _ _ getConst Mk_Const.
 
 # Avoid wrong type variable names in argument to coerce
+# TODO: ScopedTypeVariables
 redefine Local Definition Data.Functor.Const.Applicative__Const_op_zlztzg__ {inst_m} `{(GHC.Base.Monoid inst_m)}
    : forall {a} {b}, (Const inst_m (a -> b)) -> ((Const inst_m a) -> (Const inst_m b)) :=
   fun {a} {b} => GHC.Prim.coerce (GHC.Base.mappend).
@@ -8,33 +9,7 @@ redefine Local Definition Data.Functor.Const.Applicative__Const_op_zlztzg__ {ins
 order Data.Functor.Const.Eq___Const Data.Functor.Const.Ord__Const
 order Data.Functor.Const.Semigroup__Const Data.Functor.Const.Monoid__Const
 
-# Lone {k} problem
-redefine Instance Data.Functor.Const.Semigroup__Const {a} {b} `{(GHC.Base.Semigroup a)}
-   : GHC.Base.Semigroup (Const a b) :=
-  fun _ k => k (GHC.Base.Semigroup__Dict_Build _
-	Data.Functor.Const.Semigroup__Const_op_zlzlzgzg__).
-
-redefine Instance Data.Functor.Const.Monoid__Const {a} {b} `{(GHC.Base.Monoid a)}
-   : GHC.Base.Monoid (Const a b) :=
-  fun _ k => k (GHC.Base.Monoid__Dict_Build _
-	Data.Functor.Const.Monoid__Const_mappend
-	Data.Functor.Const.Monoid__Const_mconcat
-	Data.Functor.Const.Monoid__Const_mempty).
-
-redefine Instance Data.Functor.Const.Eq___Const {a} {b} `{(GHC.Base.Eq_ a)}
-   : GHC.Base.Eq_ (Const a b) :=
-  fun _ k => k (GHC.Base.Eq___Dict_Build _
-    Data.Functor.Const.Eq___Const_op_zeze__
-    Data.Functor.Const.Eq___Const_op_zsze__).
-
-redefine Instance Data.Functor.Const.Ord__Const {a} {b} `{(GHC.Base.Ord a)}
-   : GHC.Base.Ord (Const a b) :=
-  fun _ k =>
-    k (GHC.Base.Ord__Dict_Build _
-	Data.Functor.Const.Ord__Const_op_zl__
-	Data.Functor.Const.Ord__Const_op_zlze__
-	Data.Functor.Const.Ord__Const_op_zg__
-	Data.Functor.Const.Ord__Const_op_zgze__
-	Data.Functor.Const.Ord__Const_compare
-	Data.Functor.Const.Ord__Const_max
-	Data.Functor.Const.Ord__Const_min).
+delete unused type variables Data.Functor.Const.Eq___Const
+delete unused type variables Data.Functor.Const.Ord__Const
+delete unused type variables Data.Functor.Const.Semigroup__Const
+delete unused type variables Data.Functor.Const.Monoid__Const

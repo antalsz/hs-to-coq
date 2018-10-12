@@ -3842,7 +3842,7 @@ Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
 Axiom canUnfold : forall {A : Type}, A.
 
 (* Translating `canUnfold' failed: using a record pattern for the unknown
-   constructor `CoreUnfolding' unsupported *)
+   constructor `CoreUnfolding' unsupported [in definition Core.canUnfold] *)
 
 Definition catchArgDmd : Demand :=
   JD (Mk_Str Mk_ExnStr (SCall HeadStr)) (Mk_Use One (UCall One Used)).
@@ -4410,7 +4410,8 @@ Definition expandSynTyCon_maybe {tyco}
 Axiom expandUnfolding_maybe : forall {A : Type}, A.
 
 (* Translating `expandUnfolding_maybe' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.expandUnfolding_maybe] *)
 
 Definition exprToCoercion_maybe : CoreExpr -> option unit :=
   fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
@@ -4617,7 +4618,7 @@ Definition isBuiltinRule : CoreRule -> bool :=
 Axiom isCheapUnfolding : forall {A : Type}, A.
 
 (* Translating `isCheapUnfolding' failed: using a record pattern for the unknown
-   constructor `CoreUnfolding' unsupported *)
+   constructor `CoreUnfolding' unsupported [in definition Core.isCheapUnfolding] *)
 
 Definition isClassTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -4654,12 +4655,14 @@ Definition isCoVar : Var -> bool :=
 Axiom isCompulsoryUnfolding : forall {A : Type}, A.
 
 (* Translating `isCompulsoryUnfolding' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.isCompulsoryUnfolding] *)
 
 Axiom isConLikeUnfolding : forall {A : Type}, A.
 
 (* Translating `isConLikeUnfolding' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.isConLikeUnfolding] *)
 
 Definition isDataFamFlav : FamTyConFlav -> bool :=
   fun arg_0__ => match arg_0__ with | DataFamilyTyCon _ => true | _ => false end.
@@ -4736,12 +4739,13 @@ Definition isEnumerationTyCon : TyCon -> bool :=
 Axiom isEvaldUnfolding : forall {A : Type}, A.
 
 (* Translating `isEvaldUnfolding' failed: using a record pattern for the unknown
-   constructor `CoreUnfolding' unsupported *)
+   constructor `CoreUnfolding' unsupported [in definition Core.isEvaldUnfolding] *)
 
 Axiom isExpandableUnfolding : forall {A : Type}, A.
 
 (* Translating `isExpandableUnfolding' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.isExpandableUnfolding] *)
 
 Definition isExportedId : Var -> bool :=
   fun arg_0__ =>
@@ -4768,7 +4772,8 @@ Definition isFamilyTyCon : TyCon -> bool :=
 Axiom isFragileUnfolding : forall {A : Type}, A.
 
 (* Translating `isFragileUnfolding' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.isFragileUnfolding] *)
 
 Definition isFunTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -5027,7 +5032,8 @@ Definition isStableSource : UnfoldingSource -> bool :=
 Axiom isStableUnfolding : forall {A : Type}, A.
 
 (* Translating `isStableUnfolding' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.isStableUnfolding] *)
 
 Definition isStrictDmd : Demand -> bool :=
   fun arg_0__ =>
@@ -5253,7 +5259,7 @@ Definition isWeakDmd : Demand -> bool :=
 Axiom isValueUnfolding : forall {A : Type}, A.
 
 (* Translating `isValueUnfolding' failed: using a record pattern for the unknown
-   constructor `CoreUnfolding' unsupported *)
+   constructor `CoreUnfolding' unsupported [in definition Core.isValueUnfolding] *)
 
 Definition isVanillaAlgTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -5472,7 +5478,8 @@ Definition mayHaveCafRefs : CafInfo -> bool :=
 Axiom maybeUnfoldingTemplate : forall {A : Type}, A.
 
 (* Translating `maybeUnfoldingTemplate' failed: using a record pattern for the
-   unknown constructor `CoreUnfolding' unsupported *)
+   unknown constructor `CoreUnfolding' unsupported [in definition
+   Core.maybeUnfoldingTemplate] *)
 
 Definition minusDVarEnv {a} {a'} : DVarEnv a -> DVarEnv a' -> DVarEnv a :=
   UniqDFM.minusUDFM.

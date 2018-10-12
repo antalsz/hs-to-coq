@@ -467,8 +467,9 @@ Local Definition Ord__IntWithInf_op_zl__ : IntWithInf -> IntWithInf -> bool :=
 
 (* Skipping instance Outputable__IntWithInf of class Outputable *)
 
-(* Translating `instance Num__IntWithInf' failed: OOPS! Cannot find information
-   for class Qualified "GHC.Num" "Num" unsupported *)
+(* Translating `instance Num__IntWithInf' failed: Could not find information for
+   the class `GHC.Num.Num' when defining the instance
+   `BasicTypes.Num__IntWithInf' *)
 
 Local Definition Eq___FractionalLit_op_zeze__
    : FractionalLit -> FractionalLit -> bool :=

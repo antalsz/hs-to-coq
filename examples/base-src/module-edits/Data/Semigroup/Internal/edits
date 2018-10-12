@@ -43,24 +43,9 @@ skip Data.SemigroupInternal.Semigroup__Alt
 skip Data.SemigroupInternal.Monoid__Alt
 skip Data.SemigroupInternal.MonadPlus__Alt
 
-# This removes a suprious {k}
-redefine Instance Data.SemigroupInternal.Eq___Alt {f} {a} `{(GHC.Base.Eq_ (f a))}
-   : GHC.Base.Eq_ (Alt f a) :=
-  fun _ k =>
-    k (GHC.Base.Eq___Dict_Build _
-         Data.SemigroupInternal.Eq___Alt_op_zeze__
-         Data.SemigroupInternal.Eq___Alt_op_zsze__).
-
-redefine Instance Data.SemigroupInternal.Ord__Alt {f} {a} `{(GHC.Base.Ord (f a))}
-   : GHC.Base.Ord (Alt f a) :=
-  fun _ k => k (GHC.Base.Ord__Dict_Build _
-     Data.SemigroupInternal.Ord__Alt_op_zl__
-     Data.SemigroupInternal.Ord__Alt_op_zlze__
-     Data.SemigroupInternal.Ord__Alt_op_zg__
-     Data.SemigroupInternal.Ord__Alt_op_zgze__
-     Data.SemigroupInternal.Ord__Alt_compare
-     Data.SemigroupInternal.Ord__Alt_max
-     Data.SemigroupInternal.Ord__Alt_min).
+# Deals with the phantom type parameter {k}
+delete unused type variables Data.SemigroupInternal.Eq___Alt
+delete unused type variables Data.SemigroupInternal.Ord__Alt
 
 # hs-to-coq uses the wrong type variable names in a type annotation to the argument of `coerce`
 redefine Local Definition Data.SemigroupInternal.Semigroup__Alt_op_zlzlzgzg__ {inst_f} {inst_a}

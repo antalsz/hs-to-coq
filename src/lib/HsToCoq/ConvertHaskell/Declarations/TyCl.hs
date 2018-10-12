@@ -43,6 +43,7 @@ import GHC hiding (Name, HsString)
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Coq.Pretty
 import HsToCoq.Util.FVs
 
 import Data.Generics hiding (Generic, Fixity(..))
@@ -86,54 +87,64 @@ failTyClDecl name e = pure $ Just $
 convertTyClDecl :: ConversionMonad r m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
-  withCurrentDefinition coqName $ handleIfPermissive (failTyClDecl coqName) $ do
-    let isCoind = view (edits.coinductiveTypes.contains coqName)
-    view (edits.skipped.contains coqName) >>= \case
-      True  -> pure Nothing
-      False -> view (edits.redefinitions.at coqName) >>= fmap Just . \case
-        Nothing -> case decl of
-          FamDecl{}     -> convUnsupported "type/data families"
-          SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
-          DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
-          ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
-
-        Just redef -> do
-          case (decl, redef) of
-            (_,          CoqAxiomDef axm) ->
-              pure $ ConvAxiom axm
-
-            (SynDecl{},  CoqDefinitionDef def) ->
-              pure . ConvSyn $ case def of
-                DefinitionDef _ name args oty body -> SynBody name args oty body
-                LetDef          name args oty body -> SynBody name args oty body
-
-            (DataDecl{}, CoqInductiveDef ind) ->
-              case ind of
-                Inductive   (body :| [])  []    -> pure $ ConvData False body
-                CoInductive (body :| [])  []    -> pure $ ConvData True body
-                Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
-                Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
-                CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
-
-            (FamDecl{}, _) ->
-              editFailure "cannot redefine type/data families"
-
-            (ClassDecl{}, _) ->
-              editFailure "cannot redefine type class declarations"
-
-            _ ->
-              let from = case decl of
-                           FamDecl{}   -> "a type/data family"
-                           SynDecl{}   -> "a type synonym"
-                           DataDecl{}  -> "a data type"
-                           ClassDecl{} -> "a type class"
-                  to   = case redef of
-                           CoqDefinitionDef       _ -> "a Definition"
-                           CoqFixpointDef         _ -> "a Fixpoint"
-                           CoqInductiveDef        _ -> "an Inductive"
-                           CoqInstanceDef         _ -> "an Instance"
-                           CoqAxiomDef            _ -> "an Axiom"
-              in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
+  withCurrentDefinition coqName $ handleIfPermissive (failTyClDecl coqName) $
+    definitionTask coqName >>= \case
+      SkipIt ->
+        pure Nothing
+      
+      RedefineIt redef ->
+        Just <$> case (decl, redef) of
+          (_,          CoqAxiomDef axm) ->
+            pure $ ConvAxiom axm
+          
+          (SynDecl{},  CoqDefinitionDef def) ->
+            pure . ConvSyn $ case def of
+              DefinitionDef _ name args oty body -> SynBody name args oty body
+              LetDef          name args oty body -> SynBody name args oty body
+          
+          (DataDecl{}, CoqInductiveDef ind) ->
+            case ind of
+              Inductive   (body :| [])  []    -> pure $ ConvData False body
+              CoInductive (body :| [])  []    -> pure $ ConvData True body
+              Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
+              Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
+              CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
+          
+          (FamDecl{}, _) ->
+            editFailure "cannot redefine type/data families"
+          
+          (ClassDecl{}, _) ->
+            editFailure "cannot redefine type class declarations"
+          
+          _ ->
+            let from = case decl of
+                         FamDecl{}   -> "a type/data family"
+                         SynDecl{}   -> "a type synonym"
+                         DataDecl{}  -> "a data type"
+                         ClassDecl{} -> "a type class"
+                to   = case redef of
+                         CoqDefinitionDef _ -> "a Definition"
+                         CoqFixpointDef   _ -> "a Fixpoint"
+                         CoqInductiveDef  _ -> "an Inductive"
+                         CoqInstanceDef   _ -> "an Instance"
+                         CoqAxiomDef      _ -> "an Axiom"
+            in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
+        
+      AxiomatizeIt _ ->
+        let (what, whats) = case decl of
+                              FamDecl{}   -> ("type/data family", "type/data families")
+                              SynDecl{}   -> ("type synonym",     "type synonyms")
+                              DataDecl{}  -> ("data type",        "data types")
+                              ClassDecl{} -> ("type class",       "type classes")
+        in convUnsupportedIn ("axiomatizing " ++ whats ++ " (without `redefine Axiom')") what (showP coqName)
+      
+      TranslateIt ->
+        let isCoind = view (edits.coinductiveTypes.contains coqName)
+        in Just <$> case decl of
+             FamDecl{}     -> convUnsupported "type/data families"
+             SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
+             DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+             ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
 --------------------------------------------------------------------------------
 

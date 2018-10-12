@@ -31,7 +31,7 @@ import HsToCoq.ConvertHaskell.Axiomatize
 
 convertValDecls :: ConversionMonad r m => [HsDecl GhcRn] -> m [Sentence]
 convertValDecls mdecls = do
-  -- TODO: Don't even convert the signatures for `skipped' things here
+  -- TODO: Don't even convert the signatures for `skipped' or `redefine'd things here
   (defns, sigs) <- bitraverse pure convertSigs
                 .  partitionEithers
                 .  flip mapMaybe mdecls $ \case
@@ -43,18 +43,10 @@ convertValDecls mdecls = do
   bindings <- (fmap M.fromList . (convertTypedModuleBindings defns sigs ?? handler))
            $  withConvertedBinding
                 (\cdef@ConvertedDefinition{_convDefName = name} -> ((name,) <$>) $ withCurrentDefinition name $ do
-                   r <- view (edits.redefinitions.at name)
                    obl <- view (edits.obligations.at name)
                    t <- view (edits.termination.at name)
                    useProgram <- useProgramHere
-                   if | Just def <- r               -- redefined
-                      -> [definitionSentence def] <$ case def of
-                          CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
-                          CoqDefinitionDef       _ -> pure ()
-                          CoqFixpointDef         _ -> pure ()
-                          CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                          CoqAxiomDef            _ -> pure ()
-                      | Just (WellFounded order) <- t  -- turn into Program Fixpoint
+                   if | Just (WellFounded order) <- t  -- turn into Program Fixpoint
                       ->  pure <$> toProgramFixpointSentence cdef order obl
                       | otherwise                   -- no edit
                       -> let def = DefinitionDef Global (cdef^.convDefName)
@@ -68,7 +60,13 @@ convertValDecls mdecls = do
                             [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                 )
                 (\_ _ -> convUnsupported' "top-level pattern bindings")
-                (\ax ty -> pure (ax, [typedAxiom ax ty]))
+                (\ax   ty  -> pure (ax, [typedAxiom ax ty]))
+                (\name def -> (name, [definitionSentence def]) <$ case def of
+                   CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
+                   CoqDefinitionDef       _ -> pure ()
+                   CoqFixpointDef         _ -> pure ()
+                   CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
+                   CoqAxiomDef            _ -> pure ())
 
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ fmap NoBinding <$> bindings

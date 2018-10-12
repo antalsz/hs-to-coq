@@ -186,6 +186,14 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
     SkipIt ->
       pure [CommentSentence . Comment $ "Skipping instance " <> qualidBase instanceName]
     
+    RedefineIt def ->
+      [definitionSentence def] <$ case def of
+        CoqInductiveDef        _ -> editFailure "cannot redefine an instance definition into an Inductive"
+        CoqDefinitionDef       _ -> editFailure "cannot redefine an instance definition into a Definition"
+        CoqFixpointDef         _ -> editFailure "cannot redefine an instance definition into a Fixpoint"
+        CoqInstanceDef         _ -> pure ()
+        CoqAxiomDef            _ -> editFailure "cannot redefine an instance definition into an Axiom"
+    
     AxiomatizeIt axMode ->
       lookupClassDefn instanceClass >>= \case
         Just (ClassDefinition _ _ _ methods) ->
@@ -233,27 +241,38 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
       
       let allLocalNames = M.fromList $  [ (m, Qualid (localNameFor m)) | m <- classMethods ]
       
+      let quantify meth body = (maybeFun ?? body) <$> getImplicitBindersForClassMember className meth
+      
       -- For each method, look for
       --  * explicit definitions
       --  * default definitions
       -- in that order
-      cdefs <- forM classMethods $ \meth ->
-        case (M.lookup meth cid_binds_map, M.lookup meth cid_types_map, M.lookup meth classDefaults) of
+      methodSentences <- forM classMethods $ \meth -> do
+        let localMeth = localNameFor meth
+        
+        -- TODO: Redefine
+        methBody <- case (M.lookup meth cid_binds_map, M.lookup meth cid_types_map, M.lookup meth classDefaults) of
           (Just bind, _, _) ->
-            fmap (\(_,body) -> (meth,body)) . local (envFor meth) $
-              convertMethodBinding (localNameFor meth) bind >>= \case
-                ConvertedDefinitionBinding cd
-                    -> pure (cd^.convDefName, maybe id Fun (NE.nonEmpty $ cd^.convDefArgs) $ cd^.convDefBody)
-                       -- We have a tough time handling recursion (including mutual
-                       -- recursion) here because of name overloading
-                ConvertedPatternBinding {}
-                    -> convUnsupportedHere "pattern bindings in instances"
-                ConvertedAxiomBinding {}
-                    -> convUnsupportedHere "axiom bindings in instances"
+            local (envFor meth) $ convertMethodBinding localMeth bind >>= \case
+              ConvertedDefinitionBinding cd ->
+                pure . Right $ maybeFun (cd^.convDefArgs) (cd^.convDefBody)
+                -- We have a tough time handling recursion (including mutual
+                -- recursion) here because of name overloading
+              ConvertedPatternBinding {} ->
+                convUnsupportedHere "pattern bindings in instances"
+              ConvertedAxiomBinding {} ->
+                convUnsupportedHere "axiom bindings in instances"
+              RedefinedBinding _ def ->
+                Left (definitionSentence def) <$ case def of
+                  CoqInductiveDef        _ -> editFailure "cannot redefine an instance method definition into an Inductive"
+                  CoqDefinitionDef       _ -> pure ()
+                  CoqFixpointDef         _ -> pure ()
+                  CoqInstanceDef         _ -> editFailure "cannot redefine an instance methoddefinition into an Instance"
+                  CoqAxiomDef            _ -> pure ()
             
           (Nothing, Just assoc, _) ->
-            pure (meth, subst allLocalNames assoc)
-          
+            pure . Right $ subst allLocalNames assoc
+           
           (Nothing, Nothing, Just term) ->
             let extraSubst
                   | meth `elem` classTypes =
@@ -263,60 +282,42 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                     mempty
             in -- In the body of the default definition, make methods names
                -- refer to their local version
-              pure (meth, subst (allLocalNames <> extraSubst) term)
-          
+              pure . Right $ subst (allLocalNames <> extraSubst) term
+           
           (Nothing, Nothing, Nothing) ->
-              throwProgramError $ "The method `" <> showP meth <> "' has no definition and no default definition"
+            throwProgramError $ "The method `" <> showP meth <> "' has no definition and no default definition"
+        
+        case methBody of
+          Left  renamed ->
+            pure renamed
+          Right body    -> do
+            -- We've converted the method, now sentenceify it
+            (params, mty) <- makeInstanceMethodTy className binds instTy meth
+            qbody         <- quantify meth body
+            pure . DefinitionSentence $ DefinitionDef Local
+                                                      localMeth
+                                                      (subst allLocalNames <$> params)
+                                                      (subst allLocalNames <$> mty)
+                                                      qbody
    
-      -- Turn definitions into sentences
-      let quantify :: Qualid -> Term -> m Term
-          quantify meth body =
-              do typeArgs <- getImplicitBindersForClassMember className meth
-                 case (NE.nonEmpty typeArgs) of
-                     Nothing -> return body
-                     Just args -> return $ Fun args body
-   
-      methodSentences <- forM cdefs $ \(meth, body) -> do
-          let v' = localNameFor meth
-          -- implement redefinitions of methods
-          view (edits.redefinitions.at v') >>= \case
-              Just redef -> pure (definitionSentence redef)
-              Nothing    -> do
-                (params, mty) <- makeInstanceMethodTy className binds instTy meth
-                qbody <- quantify meth body
-                pure . DefinitionSentence $ DefinitionDef Local
-                                                          v'
-                                                          (subst allLocalNames <$> params)
-                                                          (subst allLocalNames <$> mty)
-                                                          qbody
-   
-      instance_sentence <- view (edits.redefinitions.at instanceName) >>= \case
-        Nothing ->
-          let instHeadTy = appList (Qualid className) [PosArg instTy]
-          in view (edits.simpleClasses.contains className) >>= \case
-               True  -> do
-                 methods <- traverse (\m -> (m,) <$> quantify m (Qualid $ localNameFor m)) classMethods
-                 pure $ ProgramSentence
+      let instHeadTy = appList (Qualid className) [PosArg instTy]
+      instance_sentence <- view (edits.simpleClasses.contains className) >>= \case
+        True  -> do
+          methods <- traverse (\m -> (m,) <$> quantify m (Qualid $ localNameFor m)) classMethods
+          pure $ ProgramSentence
                    (InstanceSentence $ InstanceDefinition instanceName binds instHeadTy methods Nothing)
                    Nothing
-               False -> do
-                 -- Assemble the actual record
-                 instRHS <- fmap Record $ forM classMethods $ \m -> do
-                              method_body <- quantify m $ Qualid (localNameFor m)
-                              return (qualidMapBase (<> "__") m, method_body)
-                 let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
-                                    (App1 (Var "k") instRHS)
-                 let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
-                 
-                 pure $ ProgramSentence (InstanceSentence instTerm) Nothing
-        Just def ->
-          definitionSentence def <$ case def of
-            CoqInductiveDef        _ -> editFailure "cannot redefine an instance definition into an Inductive"
-            CoqDefinitionDef       _ -> editFailure "cannot redefine an instance definition into a Definition"
-            CoqFixpointDef         _ -> editFailure "cannot redefine an instance definition into a Fixpoint"
-            CoqInstanceDef         _ -> pure ()
-            CoqAxiomDef            _ -> editFailure "cannot redefine an instance definition into an Axiom"
-   
+        False -> do
+          -- Assemble the actual record
+          instRHS <- fmap Record $ forM classMethods $ \m -> do
+                       method_body <- quantify m $ Qualid (localNameFor m)
+                       return (qualidMapBase (<> "__") m, method_body)
+          let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
+                             (App1 (Var "k") instRHS)
+          let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
+          
+          pure $ ProgramSentence (InstanceSentence instTerm) Nothing
+      
       pure $ methodSentences ++ [instance_sentence]
 
 --------------------------------------------------------------------------------

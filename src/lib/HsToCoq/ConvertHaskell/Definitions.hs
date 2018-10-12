@@ -14,6 +14,7 @@ import HsToCoq.Util.List
 
 import Data.Bifunctor
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.Parameters.Edits
 
 --------------------------------------------------------------------------------
 
@@ -30,12 +31,18 @@ makeLenses ''ConvertedDefinition
 data ConvertedBinding = ConvertedDefinitionBinding ConvertedDefinition
                       | ConvertedPatternBinding    Pattern Term
                       | ConvertedAxiomBinding      Qualid Term
+                      | RedefinedBinding           Qualid CoqDefinition
                       deriving (Eq, Ord, Show, Read)
 
-withConvertedBinding :: (ConvertedDefinition -> a) -> (Pattern -> Term -> a) -> (Qualid -> Term -> a) -> ConvertedBinding -> a
-withConvertedBinding  withDef _withPat _withAx (ConvertedDefinitionBinding cdef)    = withDef cdef
-withConvertedBinding _withDef  withPat _withAx (ConvertedPatternBinding    pat def) = withPat pat def
-withConvertedBinding _withDef _withPat  withAx (ConvertedAxiomBinding      ax  ty)  = withAx  ax  ty
+withConvertedBinding :: (ConvertedDefinition -> a)
+                     -> (Pattern -> Term -> a)
+                     -> (Qualid -> Term -> a)
+                     -> (Qualid -> CoqDefinition -> a)
+                     -> ConvertedBinding -> a
+withConvertedBinding  withDef _withPat _withAxm _withRdf (ConvertedDefinitionBinding cdef)     = withDef cdef
+withConvertedBinding _withDef  withPat _withAxm _withRdf (ConvertedPatternBinding    pat  def) = withPat pat  def
+withConvertedBinding _withDef _withPat  withAxm _withRdf (ConvertedAxiomBinding      ax   ty)  = withAxm ax   ty
+withConvertedBinding _withDef _withPat _withAxm  withRdf (RedefinedBinding           name def) = withRdf name def
 
 decomposeFixpoint :: Term -> Maybe (Qualid, Binders, Term)
 decomposeFixpoint (Fix (FixOne (FixBody name binders _ _ body)))

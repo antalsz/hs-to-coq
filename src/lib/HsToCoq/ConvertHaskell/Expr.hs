@@ -841,11 +841,16 @@ convertTypedBinding convHsTy FunBind{..}   = do
     definitionTask name >>= \case
       SkipIt ->
         pure Nothing
+      
+      RedefineIt def ->
+        pure . Just $ RedefinedBinding name def
+      
       AxiomatizeIt axMode ->
         let missingType = case axMode of
               SpecificAxiomatize -> convUnsupported "axiomatizing definitions without type signatures"
               GeneralAxiomatize  -> pure bottomType
         in Just . ConvertedAxiomBinding name <$> maybe missingType pure convHsTy
+      
       TranslateIt -> do
         let (tvs, coqTy) =
               -- The @forall@ed arguments need to be brought into scope
@@ -915,24 +920,34 @@ convertTypedModuleBindings = convertMultipleBindings convertTypedModuleBinding
 -- | A variant of convertTypedModuleBinding that ignores the name in the HsBind
 -- and uses the provided one instead
 --
--- It also does not allow skipping,  and does not create fixpoints, does not support a type,
--- and always returns a binding (or fails with convUnsupported)
+-- It also does not allow skipping or axiomatization, does not create fixpoints,
+-- does not support a type, and always returns a binding (or fails with
+-- convUnsupported).
+--
+-- It does, however, support redefinition.
 convertMethodBinding :: ConversionMonad r m => Qualid -> HsBind GhcRn -> m ConvertedBinding
 convertMethodBinding name VarBind{}     = convUnsupportedIn "[internal] `VarBind'"     "method" (showP name)
 convertMethodBinding name AbsBinds{}    = convUnsupportedIn "[internal?] `AbsBinds'"   "method" (showP name)
 convertMethodBinding name PatSynBind{}  = convUnsupportedIn "pattern synonym bindings" "method" (showP name)
 convertMethodBinding name PatBind{..}   = convUnsupportedIn "pattern bindings"         "method" (showP name)
 convertMethodBinding name FunBind{..}   = withCurrentDefinition name $ do
-    defn <-
-      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-      then case unLoc $ mg_alts fun_matches of
-             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
-             _ -> convUnsupported "malformed multi-match variable definitions"
-      else do
-        (argBinders, match) <- convertFunction fun_matches
-        pure $  Fun argBinders match
-    pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
-
+  definitionTask name >>= \case
+    SkipIt ->
+      convUnsupported "skipping instance method definitions"
+    RedefineIt def ->
+      pure $ RedefinedBinding name def
+    AxiomatizeIt _ ->
+      convUnsupported "axiomatizing instance method definitions"
+    TranslateIt -> do
+      defn <-
+        if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+        then case unLoc $ mg_alts fun_matches of
+               [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+               _ -> convUnsupported "malformed multi-match variable definitions"
+        else do
+          (argBinders, match) <- convertFunction fun_matches
+          pure $  Fun argBinders match
+      pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
 
 convertTypedBindings :: LocalConvMonad r m
                      => [HsBind GhcRn] -> Map Qualid Signature
@@ -959,6 +974,8 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                             -- is in the previous case branch
                         , flip const )
   in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \defn ->
+       -- 'MaybeT' is responsible for handling the skipped definitions, and
+       -- nothing else
        runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
@@ -1021,12 +1038,11 @@ addRecursion eBindings = do
                       | Right (ConvertedDefinitionBinding cd) <- eBindings ])
       
   pure . flip map eBindings $ \case
-    Left  e                               -> Left  e
-    Right cpb@ConvertedPatternBinding{}   -> Right cpb
-    Right cab@ConvertedAxiomBinding{}     -> Right cab
     Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
-      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
+      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual recursion check"
+    untouched ->
+      untouched
   where
     fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
       pure $ cd :| []
@@ -1102,8 +1118,9 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
 
       toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
       noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
+      noLetRd _nm _sn _body = convUnsupported "redefining local bindings"
       
-  (foldrM (withConvertedBinding toLet matchLet noLetAx) ?? convDefs) =<< body
+  (foldrM (withConvertedBinding toLet matchLet noLetAx noLetRd) ?? convDefs) =<< body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"

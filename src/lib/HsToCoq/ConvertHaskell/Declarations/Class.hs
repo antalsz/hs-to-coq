@@ -174,8 +174,10 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                       convUnsupportedHere "pattern bindings in class declarations"
                   Just (ConvertedAxiomBinding      _ _)                     ->
                       convUnsupportedHere "axiom bindings in class declarations"
+                  Just (RedefinedBinding           _ _)                     ->
+                      convUnsupportedHere "redefining class method declarations"
                   Nothing                                                   ->
-                      convUnsupportedHere "skipping a type class method"
+                      convUnsupportedHere "skipping a type class method (use `skip method`)"
   let defs = type_defs <> value_defs
   unless (null defs) $ storeDefaultMethods name defs
 

@@ -104,6 +104,7 @@ data AxiomatizationMode = SpecificAxiomatize | GeneralAxiomatize
                         deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 data TranslationTask = SkipIt
+                     | RedefineIt   CoqDefinition
                      | AxiomatizeIt AxiomatizationMode
                      | TranslateIt
                      deriving (Eq, Ord, Show, Read)
@@ -117,13 +118,17 @@ definitionTask name =
       isIn field = view $ edits.field.contains name
   in ifM (isIn skipped)
        (pure SkipIt)
-       (ifM (view currentModuleAxiomatized)
-          (ifM (isIn unaxiomatizedDefinitions)
-             (pure TranslateIt)
-             (pure $ AxiomatizeIt GeneralAxiomatize))
-          (ifM (isIn axiomatizedDefinitions)
-             (pure $ AxiomatizeIt SpecificAxiomatize)
-             (pure TranslateIt)))
+       (view (edits.redefinitions.at name) >>= \case
+         Just def ->
+           pure $ RedefineIt def
+         Nothing  ->
+           ifM (view currentModuleAxiomatized)
+             (ifM (isIn unaxiomatizedDefinitions)
+                (pure TranslateIt)
+                (pure $ AxiomatizeIt GeneralAxiomatize))
+             (ifM (isIn axiomatizedDefinitions)
+                (pure $ AxiomatizeIt SpecificAxiomatize)
+                (pure TranslateIt)))
 
 -- The constraint aliases, for the three levels of scoping
 -- Note that they are subconstraints of each other, so you can call a

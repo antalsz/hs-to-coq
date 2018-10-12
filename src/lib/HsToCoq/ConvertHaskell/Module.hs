@@ -99,13 +99,18 @@ convertHsGroup HsGroup{..} = do
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
                    (\_ _ -> convUnsupported' "top-level pattern bindings")
-                   (\ax ty -> pure (Just ax, [typedAxiom ax ty]))
+                   (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))
+                   (\name def -> (Just name, [definitionSentence def]) <$ case def of
+                      CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
+                      CoqDefinitionDef       _ -> pure ()
+                      CoqFixpointDef         _ -> pure ()
+                      CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
+                      CoqAxiomDef            _ -> pure ())
         
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
         let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
 
-        defns' <- mapM applyRedefines namedSentences
-        let defnsMap = M.fromList defns'
+        let defnsMap = M.fromList namedSentences
         let ordered = foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
 
         pure $ unnamedSentences ++ ordered
@@ -124,20 +129,6 @@ convertHsGroup HsGroup{..} = do
     axiomatizeBinding _ exn =
       pure (Nothing, [CommentSentence $ Comment $
         "While translating non-function binding: " <> T.pack (show exn)])
-    
-    -- TODO: factor this out?
-    applyRedefines :: ConversionMonad r m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
-    applyRedefines (name, sentences) =
-      view (edits.redefinitions.at name) >>= ((name,) <$>) . \case
-        Just def ->
-          [definitionSentence def] <$ case def of
-            CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
-            CoqDefinitionDef _ -> pure ()
-            CoqFixpointDef   _ -> pure ()
-            CoqInstanceDef   _ -> editFailure "cannot redefine a value definition into an Instance"
-            CoqAxiomDef      _ -> pure ()
-        Nothing ->
-          pure sentences
 
 --------------------------------------------------------------------------------
 

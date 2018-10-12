@@ -80,6 +80,26 @@ declarations.
 
 Only one preamble and one midamble can be provided to ``hs-to-coq``.
 
+Strict vs. permissive translation
+---------------------------------
+
+What should ``hs-to-coq`` do when it can't translate a definition?  By default,
+it will throw an error and stop translating.  But you can make this behavior
+more permissive if you want.
+
+.. option:: --strict
+.. option:: -S
+
+The default option: any definition that can't be translated will stop the whole
+development process.
+
+.. option:: --permissive
+.. option:: -P
+
+In permissive mode, ``hs-to-coq`` will either attempt to axiomatize or skip
+failing definitions when possible.  This is particularly useful during
+development.
+
 Proofs
 ------
 

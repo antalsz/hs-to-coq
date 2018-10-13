@@ -70,7 +70,7 @@ getImplicits (Forall bs t) = if length bs == length imps then imps ++ getImplici
 getImplicits _ = []
 
 -- Module-local
-convUnsupportedIn_lname :: (GhcMonad m, Outputable nm) => String -> String -> GenLocated l nm -> m a
+convUnsupportedIn_lname :: (ConversionMonad r m, Outputable nm) => String -> String -> GenLocated l nm -> m a
 convUnsupportedIn_lname what whatFam lname = do
   name <- T.unpack <$> ghcPpr (unLoc lname)
   convUnsupportedIn what whatFam name

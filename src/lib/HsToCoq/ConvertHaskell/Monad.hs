@@ -26,7 +26,16 @@ module HsToCoq.ConvertHaskell.Monad (
   fresh, gensym, genqid,
   useProgramHere, renamed,
   -- * Errors
-  throwProgramError, convUnsupported, convUnsupported', convUnsupportedIn, editFailure,
+  -- ** Within a definition
+  convUnsupported,
+  -- ** Within a module
+  convUnsupported', convUnsupportedIn, convUnsupportedIns,
+  -- ** Anywhere
+  convUnsupportedIn', convUnsupportedIns',
+  -- ** Edits
+  editFailure,
+  -- ** General
+  throwProgramError,
   -- * Modules
   skipModules, skipModulesBy
   ) where
@@ -224,21 +233,34 @@ genqid name = Bare <$> gensym name
 throwProgramError :: MonadIO m => String -> m a
 throwProgramError = liftIO . throwGhcExceptionIO . ProgramError
 
-convUnsupportedIn :: MonadIO m => String -> String -> String -> m a
-convUnsupportedIn what category which =
-  throwProgramError $ what ++ " unsupported [in " ++ category ++ " " ++ which ++ "]"
+convUnsupportedIns' :: MonadIO m => String -> [(String, String)] -> m a
+convUnsupportedIns' what locs =
+  throwProgramError
+    $  what ++ " unsupported"
+    ++ if null locs
+       then ""
+       else " [" ++ unwords ["in " ++ category ++ " " ++ which | (category, which) <- locs] ++ "]"
 
--- Module-local
-conv_unsupported_within :: (MonadIO m, MonadReader r m)
-                        => String -> Getter r a -> (a -> String) -> String -> m err
-conv_unsupported_within category whichL whichShow what =
-  convUnsupportedIn what category =<< view (whichL.to whichShow)
+convUnsupportedIn' :: MonadIO m => String -> String -> String -> m a
+convUnsupportedIn' what category which =
+  convUnsupportedIns' what [(category, which)]
+
+convUnsupportedIns :: ConversionMonad r m => String -> [(String, String)] -> m a
+convUnsupportedIns what locs = do
+  mod <- ("module",) . moduleNameString <$> view currentModule
+  convUnsupportedIns' what $ locs ++ [mod]
+
+convUnsupportedIn :: ConversionMonad r m => String -> String -> String -> m a
+convUnsupportedIn what category which =
+  convUnsupportedIns what [(category, which)]
 
 convUnsupported' :: ConversionMonad r m => String -> m a
-convUnsupported' = conv_unsupported_within "module" currentModule moduleNameString
+convUnsupported' what =
+  convUnsupportedIns what []
 
 convUnsupported :: LocalConvMonad r m => String -> m a
-convUnsupported = conv_unsupported_within "definition" currentDefinition showP
+convUnsupported what =
+  convUnsupportedIn what "definition" . showP =<< view currentDefinition
 
 editFailure :: MonadIO m => String -> m a
 editFailure what = throwProgramError $ "Could not apply edit: " ++ what

@@ -1054,7 +1054,7 @@ addRecursion eBindings = do
                         , rdType = maybeForall _convDefArgs <$> _convDefType
                         , rdBody = body }
         cd ->
-          convUnsupportedIn "recursion through non-lambda value" "definition " (showP $ cd^.convDefName)
+          convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
       
       nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
       

@@ -12,7 +12,7 @@ Stability   : experimental
 
 module HsToCoq.Coq.Pretty (
   renderGallina,
-  showP,
+  showP, textP,
   Gallina(..),
   ) where
 
@@ -141,8 +141,11 @@ maybeParen False = id
 class Gallina a where
   renderGallina' :: Int -> a -> Doc
 
+textP :: Gallina a => a -> Text
+textP = displayTStrict . renderOneLine . renderGallina
+
 showP :: Gallina a => a -> String
-showP = T.unpack . displayTStrict . renderOneLine . renderGallina
+showP = T.unpack . textP
 
 renderGallina :: Gallina a => a -> Doc
 renderGallina = renderGallina' 0

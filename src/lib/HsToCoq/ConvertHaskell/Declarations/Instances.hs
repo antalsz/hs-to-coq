@@ -185,7 +185,8 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
   unlessSkippedClass ii . handleIfPermissive err_handler $ definitionTask instanceName >>= \case
     SkipIt ->
-      pure [CommentSentence . Comment $ "Skipping instance " <> qualidBase instanceName]
+      pure [CommentSentence . Comment $
+              "Skipping instance `" <> textP instanceName <> "' of class `" <> textP instanceClass <> "'"]
     
     RedefineIt def ->
       [definitionSentence def] <$ case def of

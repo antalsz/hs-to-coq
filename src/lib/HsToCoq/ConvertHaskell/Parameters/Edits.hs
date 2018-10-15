@@ -23,10 +23,12 @@ import Control.Monad.Except
 import Data.Semigroup
 import Data.List.NonEmpty (NonEmpty(..), toList, tail)
 import qualified Data.Text as T
-
-import Data.Map (Map, lookup, singleton, unionWith, member)
-import Data.Set (Set, singleton, union)
 import Data.Tuple
+
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as M
+import Data.Set (Set)
+import qualified Data.Set as S
 
 import HsToCoq.Util.GHC.Module
 
@@ -42,11 +44,11 @@ data DataTypeArguments = DataTypeArguments { _dtParameters :: ![Qualid]
                        deriving (Eq, Ord, Show, Read)
 makeLenses ''DataTypeArguments
 
-data CoqDefinition = CoqDefinitionDef      Definition
-                   | CoqFixpointDef        Fixpoint
-                   | CoqInductiveDef       Inductive
-                   | CoqInstanceDef        InstanceDefinition
-                   | CoqAxiomDef           (Qualid, Term) -- Curry?  Uncurry?  A new type?
+data CoqDefinition = CoqDefinitionDef Definition
+                   | CoqFixpointDef   Fixpoint
+                   | CoqInductiveDef  Inductive
+                   | CoqInstanceDef   InstanceDefinition
+                   | CoqAxiomDef      (Qualid, Term) -- Curry?  Uncurry?  A new type?
                    deriving (Eq, Ord, Show, Read)
 
 definitionSentence :: CoqDefinition -> Sentence
@@ -140,9 +142,9 @@ makeLenses ''Edits
 -- Derived edits
 useProgram :: Qualid -> Edits -> Bool
 useProgram name edits = or
-    [ any isWellFounded                      (Data.Map.lookup name (_termination edits))
-    , any (any isWellFounded . _termination) (Data.Map.lookup name (_inEdits edits))
-    , name `member`_obligations edits
+    [ any isWellFounded                      (M.lookup name (_termination edits))
+    , any (any isWellFounded . _termination) (M.lookup name (_inEdits edits))
+    , name `M.member`_obligations edits
     ]
   where
    isWellFounded (WellFounded {}) = True
@@ -180,10 +182,10 @@ descDuplEdit = \case
   RenameEdit                    hs _         -> duplicate_for   "renamings"                            (prettyNSIdent hs)
   ClassKindEdit                 cls _        -> duplicateQ_for  "class kinds"                          cls
   DataKindEdit                  dat _        -> duplicateQ_for  "data kinds"                           dat
-  DeleteUnusedTypeVariablesEdit qid          -> duplicateQ_for  "delete unused type variables"         qid
+  DeleteUnusedTypeVariablesEdit qid          -> duplicateQ_for  "unused type variables deletions"      qid
   ObligationsEdit               what _       -> duplicateQ_for  "obligation kinds"                     what
   CoinductiveEdit               ty           -> duplicateQ_for  "coinductive data types"               ty
-  RenameModuleEdit              m1 _         -> duplicate_for   "renamed module"                       (moduleNameString m1)
+  RenameModuleEdit              m1 _         -> duplicate_for   "renamed modules"                      (moduleNameString m1)
   AddEdit                       _ _          -> error "Add edits are never duplicates"
   RewriteEdit                   _            -> error "Rewrites are never duplicates"
   OrderEdit                     _            -> error "Order edits are never duplicates"
@@ -252,9 +254,10 @@ addFresh :: (MonadError String m, At map)
          -> IxValue map
          -> s
          -> m t
-addFresh edit lens key val = lens.at key %%~ \case
-      Just  _ -> throwError $ descDuplEdit edit
-      Nothing -> return $ Just val
+addFresh edit lens key val =
+  lens.at key %%~ \case
+    Just  _ -> throwError $ descDuplEdit edit
+    Nothing -> return $ Just val
 
 addEdge :: (Ord k, Ord v) => ASetter' s (Map k (Set v)) -> (k, v) -> s -> s
-addEdge lens (from, to) = lens %~ unionWith union (Data.Map.singleton from (Data.Set.singleton to))
+addEdge lens (from, to) = lens %~ M.unionWith S.union (M.singleton from (S.singleton to))

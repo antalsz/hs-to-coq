@@ -933,7 +933,7 @@ convertMethodBinding name PatBind{..}   = convUnsupportedIn "pattern bindings"  
 convertMethodBinding name FunBind{..}   = withCurrentDefinition name $ do
   definitionTask name >>= \case
     SkipIt ->
-      convUnsupported "skipping instance method definitions"
+      convUnsupported "skipping instance method definitions (without `skip method')"
     RedefineIt def ->
       pure $ RedefinedBinding name def
     AxiomatizeIt _ ->

@@ -144,7 +144,7 @@ data ConvertedModule =
 
 convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
 convertModule convModNameOrig group = do
-  convModName <- view (edits.renamedModules.at convModNameOrig . non convModNameOrig)
+  convModName <- view $ edits.renamedModules.at convModNameOrig . non convModNameOrig
   withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls

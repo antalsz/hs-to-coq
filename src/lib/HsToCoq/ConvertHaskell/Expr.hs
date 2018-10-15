@@ -23,7 +23,6 @@ import Data.Bitraversable
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
 import Data.Maybe
-import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -255,13 +254,10 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                field <- recordField $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
-  let updFields       = M.keys updates
+  let updFields = M.keys updates
       prettyUpdFields what =
         let quote f = "`" ++ T.unpack (qualidToIdent f) ++ "'"
-        in what ++ case assertUnsnoc updFields of
-                     ([],   f)  -> " "  ++ quote f
-                     ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
-                     (fs,   f') -> "s " ++ intercalate ", " (map quote fs) ++ ", and " ++ quote f'
+        in explainStrItems quote "no" "," "and" what (what ++ "s") updFields
 
   recType <- S.minView . S.fromList <$> traverse (\field -> lookupRecordFieldType field) updFields >>= \case
                Just (Just recType, []) -> pure recType
@@ -1065,7 +1061,8 @@ addRecursion eBindings = do
           pure (const . wfFix order $ rdToFixBody body1, getInfo bodies, [])
         
         (Just _, _ :| _ : _) ->
-          convUnsupported' "non-structural mutual recursion"
+          convUnsupportedIn "non-structural mutual recursion" "definitions"
+                            (explainStrItems (showP . rdName) "" "," "and" "" "" bodies)
         
         (Nothing, body1 :| []) ->
           pure (const . Fix . FixOne $ rdToFixBody body1, getInfo bodies, [])

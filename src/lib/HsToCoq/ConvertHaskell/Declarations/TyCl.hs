@@ -31,6 +31,7 @@ import Data.Traversable
 import HsToCoq.Util.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import HsToCoq.Util.List
 
 import Control.Arrow ((&&&))
 import Control.Monad
@@ -202,7 +203,21 @@ convertDeclarationGroup DeclarationGroup{..} =
       pure []
     
     (_, _, _, _, _) ->
-      convUnsupported' "too much mutual recursion" -- TODO: better error reporting on names
+      let indName (IndBody name _ _ _)                       = name
+          synName (SynBody name _ _ _)                       = name
+          clsName (ClassBody (ClassDefinition name _ _ _) _) = name
+          axmName (name, _)                                  = name
+          
+          explain :: String -> String -> (a -> Qualid) -> [a] -> Maybe (String, String)
+          explain _what _whats _name []  = Nothing
+          explain  what _whats  name [x] = Just (what,  showP $ name x)
+          explain _what  whats  name xs  = Just (whats, explainStrItems (showP . name) "" "," "and" "" "" xs)
+      in convUnsupportedIns "too much mutual recursion" $
+                            catMaybes [ explain "inductive type"   "inductive types"   indName dgInductives
+                                      , explain "coinductive type" "coinductive types" indName dgCoInductives
+                                      , explain "type synonym"     "type synonyms"     synName dgSynonyms
+                                      , explain "type class"       "type classes"      clsName dgClasses
+                                      , explain "type axiom"       "type axioms"       axmName dgAxioms ]
 
   where
     synName = qualidExtendBase "__raw"

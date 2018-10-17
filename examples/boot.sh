@@ -115,7 +115,7 @@ have sphinx-build && clean make -C ../doc   clean
 have ruby         && make -C ../emacs
 have sphinx-build && make -C ../doc html
 
-coq-test make -C test
+coq-test make -C tests
 
 make -C base-src vfiles
 coq make -C ../base

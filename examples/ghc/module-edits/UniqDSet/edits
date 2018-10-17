@@ -7,6 +7,6 @@ order UniqDSet.unionUniqDSets UniqDSet.unionManyUniqDSets
 # redefine to not use foldr1
 redefine Definition UniqDSet.unionManyUniqDSets {a} (xs : list (UniqDSet a)) : UniqDSet a :=
     match xs with
-      | nil => emptyUniqDSet
-      | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
+      | nil => UniqDSet.emptyUniqDSet
+      | cons set sets => Data.Foldable.foldr UniqDSet.unionUniqDSets set sets
     end.

@@ -20,8 +20,8 @@ in Data.IntMap.Internal.mergeWithKey' termination go        deferred
 order Data.IntMap.Internal.Eq___IntMap Data.IntMap.Internal.Ord__IntMap
 redefine Definition Data.IntMap.Internal.Functor__IntMap_op_zlzd__ {a}{b}:= @Data.IntMap.Internal.IntMap_op_zlzd__ a b.
 
+order Data.IntMap.Internal.Functor__IntMap Data.IntMap.Internal.mapWhenMissing
 order Data.IntMap.Internal.Functor__IntMap Data.IntMap.Internal.lmapWhenMissing
-
 
 #### These are TODOs:
 
@@ -99,6 +99,8 @@ skip Data.IntMap.Internal.fromListConstr
 skip Data.IntMap.Internal.intMapDataType
 
 order Data.IntMap.Internal.Semigroup__IntMap Data.IntMap.Internal.Monoid__IntMap_mappend
+order Data.IntMap.Internal.Functor__IntMap   Data.IntMap.Internal.Traversable__IntMap
+order Data.IntMap.Internal.Foldable__IntMap  Data.IntMap.Internal.Traversable__IntMap
 
 skip Data.IntMap.Internal.intFromNat
 rewrite forall x, Data.IntMap.Internal.intFromNat x = x

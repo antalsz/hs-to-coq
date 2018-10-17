@@ -55,6 +55,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
+  from            { TokWord    "from"           }
   manual          { TokWord    "manual"         }
   import          { TokWord    "import"         }
   notation        { TokWord    "notation"       }
@@ -258,6 +259,7 @@ Edit ::                                             { Edit }
   | redefine CoqDefinition                          { RedefinitionEdit              $2                                    }
   | add Word CoqDefinition                          { AddEdit                       (mkModuleNameT $2) $3                 }
   | skip Qualid                                     { SkipEdit                      $2                                    }
+  | skip class Qualid                               { SkipClassEdit                 $3                                    }
   | skip method Qualid Word                         { SkipMethodEdit                $3 $4                                 }
   | skip module Word                                { SkipModuleEdit                (mkModuleNameT $3)                    }
   | import module Word                              { ImportModuleEdit              (mkModuleNameT $3)                    }

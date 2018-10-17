@@ -161,11 +161,13 @@ quote_qualid qid = "`" ++ showP qid ++ "'"
 
 unlessSkippedClass :: ConversionMonad r m => InstanceInfo -> m [Sentence] -> m [Sentence]
 unlessSkippedClass InstanceInfo{..} act = do
-  view (edits.skipped.contains instanceClass) >>= \case
-    True  -> pure [CommentSentence . Comment $
-                     "Skipping instance " <> qualidBase instanceName <>
-                     " of class " <> qualidBase instanceClass]
-    False -> act
+  view (edits.skippedClasses.contains instanceClass) >>= \case
+    True ->
+      pure [CommentSentence . Comment $
+              "Skipping all instances of class `" <> textP instanceClass <> "', \
+              \including `" <> textP instanceName <> "'"]
+    False ->
+      act
 
 bindToMap :: ConversionMonad r m => [HsBindLR GhcRn GhcRn] -> m (M.Map Qualid (HsBind GhcRn))
 bindToMap binds = fmap M.fromList $ forM binds $ \hs_bind -> do

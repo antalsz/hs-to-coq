@@ -78,154 +78,79 @@ Ltac termination_by_omega :=
 
 (* Converted value declarations: *)
 
-(* Skipping instance IsList__IntSet of class IsList *)
-
-(* Skipping instance Data__IntSet of class Data *)
-
-(* Skipping instance Show__IntSet of class Show *)
-
-(* Skipping instance Read__IntSet of class Read *)
-
-(* Skipping instance NFData__IntSet of class NFData *)
-
-Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | _, _, l, Nil => l
-    | _, _, Nil, r => r
-    | p, m, l, r => Bin p m l r
+Definition tip : Prefix -> BitMap -> IntSet :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, num_2__ =>
+        if num_2__ GHC.Base.== #0 : bool then Nil else
+        match arg_0__, arg_1__ with
+        | kx, bm => Tip kx bm
+        end
     end.
 
-Definition bitmapOfSuffix : IntWord.Int -> BitMap :=
-  fun s => IntWord.shiftLWord #1 s.
+Definition suffixBitMask : IntWord.Int :=
+  #63.
 
-Definition empty : IntSet :=
-  Nil.
+Definition suffixOf : IntWord.Int -> IntWord.Int :=
+  fun x => x Data.Bits..&.(**) suffixBitMask.
 
-Local Definition Monoid__IntSet_mempty : IntSet :=
-  empty.
+Definition splitRoot : IntSet -> list IntSet :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Nil => nil
+    | (Tip _ _ as x) => cons x nil
+    | Bin _ m l r =>
+        if m GHC.Base.< #0 : bool then cons r (cons l nil) else
+        cons l (cons r nil)
+    end.
 
-Definition equal : IntSet -> IntSet -> bool :=
-  fix equal arg_0__ arg_1__
+Definition size : IntSet -> IntWord.Int :=
+  let fix go arg_0__ arg_1__
+            := match arg_0__, arg_1__ with
+               | acc, Bin _ _ l r => go (go acc l) r
+               | acc, Tip _ bm => acc GHC.Num.+ IntWord.bitcount #0 bm
+               | acc, Nil => acc
+               end in
+  go #0.
+
+Definition revNat : Nat -> Nat :=
+  fun x1 =>
+    let 'x2 := ((IntWord.shiftRWord x1 #1) Data.Bits..&.(**) #6148914691236517205)
+                 Data.Bits..|.(**)
+                 (IntWord.shiftLWord (x1 Data.Bits..&.(**) #6148914691236517205) #1) in
+    let 'x3 := ((IntWord.shiftRWord x2 #2) Data.Bits..&.(**) #3689348814741910323)
+                 Data.Bits..|.(**)
+                 (IntWord.shiftLWord (x2 Data.Bits..&.(**) #3689348814741910323) #2) in
+    let 'x4 := ((IntWord.shiftRWord x3 #4) Data.Bits..&.(**) #1085102592571150095)
+                 Data.Bits..|.(**)
+                 (IntWord.shiftLWord (x3 Data.Bits..&.(**) #1085102592571150095) #4) in
+    let 'x5 := ((IntWord.shiftRWord x4 #8) Data.Bits..&.(**) #71777214294589695)
+                 Data.Bits..|.(**)
+                 (IntWord.shiftLWord (x4 Data.Bits..&.(**) #71777214294589695) #8) in
+    let 'x6 := ((IntWord.shiftRWord x5 #16) Data.Bits..&.(**) #281470681808895)
+                 Data.Bits..|.(**)
+                 (IntWord.shiftLWord (x5 Data.Bits..&.(**) #281470681808895) #16) in
+    (IntWord.shiftRWord x6 #32) Data.Bits..|.(**) (IntWord.shiftLWord x6 #32).
+
+Definition prefixBitMask : IntWord.Int :=
+  Data.Bits.complement suffixBitMask.
+
+Definition prefixOf : IntWord.Int -> Prefix :=
+  fun x => x Data.Bits..&.(**) prefixBitMask.
+
+Definition null : IntSet -> bool :=
+  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
+
+Definition nequal : IntSet -> IntSet -> bool :=
+  fix nequal arg_0__ arg_1__
         := match arg_0__, arg_1__ with
            | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
-               andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
-                                                                         r2)))
-           | Tip kx1 bm1, Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (bm1 GHC.Base.== bm2)
-           | Nil, Nil => true
-           | _, _ => false
+               orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
+                                                                      r2)))
+           | Tip kx1 bm1, Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
+           | Nil, Nil => false
+           | _, _ => true
            end.
-
-Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
-  fun t1 t2 => equal t1 t2.
-
-Definition indexOfTheOnlyBit :=
-  IntWord.indexOfTheOnlyBit.
-
-Definition highestBitSet : Nat -> IntWord.Int :=
-  fun x => indexOfTheOnlyBit (IntWord.highestBitMask x).
-
-Definition unsafeFindMax : IntSet -> option Key :=
-  fix unsafeFindMax arg_0__
-        := match arg_0__ with
-           | Nil => None
-           | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
-           | Bin _ _ _ r => unsafeFindMax r
-           end.
-
-Definition intFromNat :=
-  IntWord.intFromWord.
-
-Definition maskW : Nat -> Nat -> Prefix :=
-  fun i m =>
-    intFromNat (i Data.Bits..&.(**)
-                (Data.Bits.xor (Data.Bits.complement (m GHC.Num.- #1)) m)).
-
-Definition lowestBitMask : Nat -> Nat :=
-  fun x => x Data.Bits..&.(**) GHC.Num.negate x.
-
-Definition lowestBitSet : Nat -> IntWord.Int :=
-  fun x => indexOfTheOnlyBit (lowestBitMask x).
-
-Definition unsafeFindMin : IntSet -> option Key :=
-  fix unsafeFindMin arg_0__
-        := match arg_0__ with
-           | Nil => None
-           | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
-           | Bin _ _ l _ => unsafeFindMin l
-           end.
-
-Program Definition foldlBits {a}
-           : IntWord.Int -> (a -> IntWord.Int -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
-                                   end
-                               end) in
-            go bitmap z.
-Admit Obligations.
-
-Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldlBits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' l) r
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
-      | _ => go z t
-      end.
-
-Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  foldl.
-
-Definition toDescList : IntSet -> list Key :=
-  foldl (GHC.Base.flip cons) nil.
-
-Program Definition foldl'Bits {a}
-           : IntWord.Int -> (a -> IntWord.Int -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
-                                   end
-                               end) in
-            go bitmap z.
-Admit Obligations.
-
-Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldl'Bits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' l) r
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
-      | _ => go z t
-      end.
 
 Definition natFromInt :=
   IntWord.wordFromInt.
@@ -235,6 +160,17 @@ Definition shorter : Mask -> Mask -> bool :=
 
 Definition zero : IntWord.Int -> Mask -> bool :=
   fun i m => ((natFromInt i) Data.Bits..&.(**) (natFromInt m)) GHC.Base.== #0.
+
+Definition lowestBitMask : Nat -> Nat :=
+  fun x => x Data.Bits..&.(**) GHC.Num.negate x.
+
+Definition intFromNat :=
+  IntWord.intFromWord.
+
+Definition maskW : Nat -> Nat -> Prefix :=
+  fun i m =>
+    intFromNat (i Data.Bits..&.(**)
+                (Data.Bits.xor (Data.Bits.complement (m GHC.Num.- #1)) m)).
 
 Definition mask : IntWord.Int -> Mask -> Prefix :=
   fun i m => maskW (natFromInt i) (natFromInt m).
@@ -318,6 +254,202 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
 
 Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
   fun t1 t2 => match subsetCmp t1 t2 with | Lt => true | _ => false end.
+
+Definition indexOfTheOnlyBit :=
+  IntWord.indexOfTheOnlyBit.
+
+Definition lowestBitSet : Nat -> IntWord.Int :=
+  fun x => indexOfTheOnlyBit (lowestBitMask x).
+
+Definition unsafeFindMin : IntSet -> option Key :=
+  fix unsafeFindMin arg_0__
+        := match arg_0__ with
+           | Nil => None
+           | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
+           | Bin _ _ l _ => unsafeFindMin l
+           end.
+
+Definition highestBitSet : Nat -> IntWord.Int :=
+  fun x => indexOfTheOnlyBit (IntWord.highestBitMask x).
+
+Definition unsafeFindMax : IntSet -> option Key :=
+  fix unsafeFindMax arg_0__
+        := match arg_0__ with
+           | Nil => None
+           | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
+           | Bin _ _ _ r => unsafeFindMax r
+           end.
+
+Program Definition foldrBits {a}
+           : IntWord.Int -> (IntWord.Int -> a -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
+                                                                          GHC.Num.-
+                                                                          bi)) acc)
+                                   end
+                               end) in
+            go (revNat bitmap) z.
+Admit Obligations.
+
+Program Definition foldr'Bits {a}
+           : IntWord.Int -> (IntWord.Int -> a -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
+                                                                          GHC.Num.-
+                                                                          bi)) acc)
+                                   end
+                               end) in
+            go (revNat bitmap) z.
+Admit Obligations.
+
+Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldr'Bits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' r) l
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
+      | _ => go z t
+      end.
+
+Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldrBits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' r) l
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
+      | _ => go z t
+      end.
+
+Definition foldrFB {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  foldr.
+
+Definition toAscList : IntSet -> list Key :=
+  foldr cons nil.
+
+Definition toList : IntSet -> list Key :=
+  toAscList.
+
+Program Definition foldlBits {a}
+           : IntWord.Int -> (a -> IntWord.Int -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
+                                   end
+                               end) in
+            go bitmap z.
+Admit Obligations.
+
+Program Definition foldl'Bits {a}
+           : IntWord.Int -> (a -> IntWord.Int -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
+                                   end
+                               end) in
+            go bitmap z.
+Admit Obligations.
+
+Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldl'Bits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' l) r
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
+      | _ => go z t
+      end.
+
+Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldlBits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' l) r
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
+      | _ => go z t
+      end.
+
+Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  foldl.
+
+Definition toDescList : IntSet -> list Key :=
+  foldl (GHC.Base.flip cons) nil.
+
+Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  foldr.
+
+Definition equal : IntSet -> IntSet -> bool :=
+  fix equal arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
+               andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
+                                                                         r2)))
+           | Tip kx1 bm1, Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (bm1 GHC.Base.== bm2)
+           | Nil, Nil => true
+           | _, _ => false
+           end.
+
+Definition empty : IntSet :=
+  Nil.
+
+Definition elems : IntSet -> list Key :=
+  toAscList.
 
 Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                           {measure (size_nat arg_0__ + size_nat arg_1__)} : bool
@@ -422,214 +554,11 @@ Solve Obligations with (termination_by_omega).
 Definition unions {f} `{Data.Foldable.Foldable f} : f IntSet -> IntSet :=
   fun xs => Data.Foldable.foldl' union empty xs.
 
-Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
-  unions.
-
-Local Definition Semigroup__IntSet_op_zlzlzgzg__ : IntSet -> IntSet -> IntSet :=
-  union.
-
-Program Instance Semigroup__IntSet : GHC.Base.Semigroup IntSet :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
-
-Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
-  _GHC.Base.<<>>_.
-
-Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
-         GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
-         GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
-
-Definition nequal : IntSet -> IntSet -> bool :=
-  fix nequal arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
-               orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
-                                                                      r2)))
-           | Tip kx1 bm1, Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
-           | Nil, Nil => false
-           | _, _ => true
-           end.
-
-Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
-  fun t1 t2 => nequal t1 t2.
-
-Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
-
-Definition null : IntSet -> bool :=
-  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
-
-Definition revNat : Nat -> Nat :=
-  fun x1 =>
-    let 'x2 := ((IntWord.shiftRWord x1 #1) Data.Bits..&.(**) #6148914691236517205)
-                 Data.Bits..|.(**)
-                 (IntWord.shiftLWord (x1 Data.Bits..&.(**) #6148914691236517205) #1) in
-    let 'x3 := ((IntWord.shiftRWord x2 #2) Data.Bits..&.(**) #3689348814741910323)
-                 Data.Bits..|.(**)
-                 (IntWord.shiftLWord (x2 Data.Bits..&.(**) #3689348814741910323) #2) in
-    let 'x4 := ((IntWord.shiftRWord x3 #4) Data.Bits..&.(**) #1085102592571150095)
-                 Data.Bits..|.(**)
-                 (IntWord.shiftLWord (x3 Data.Bits..&.(**) #1085102592571150095) #4) in
-    let 'x5 := ((IntWord.shiftRWord x4 #8) Data.Bits..&.(**) #71777214294589695)
-                 Data.Bits..|.(**)
-                 (IntWord.shiftLWord (x4 Data.Bits..&.(**) #71777214294589695) #8) in
-    let 'x6 := ((IntWord.shiftRWord x5 #16) Data.Bits..&.(**) #281470681808895)
-                 Data.Bits..|.(**)
-                 (IntWord.shiftLWord (x5 Data.Bits..&.(**) #281470681808895) #16) in
-    (IntWord.shiftRWord x6 #32) Data.Bits..|.(**) (IntWord.shiftLWord x6 #32).
-
-Program Definition foldrBits {a}
-           : IntWord.Int -> (IntWord.Int -> a -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
-                                                                          GHC.Num.-
-                                                                          bi)) acc)
-                                   end
-                               end) in
-            go (revNat bitmap) z.
-Admit Obligations.
-
-Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldrBits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' r) l
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
-      | _ => go z t
-      end.
-
-Definition foldrFB {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  foldr.
-
-Definition toAscList : IntSet -> list Key :=
-  foldr cons nil.
-
-Definition toList : IntSet -> list Key :=
-  toAscList.
-
-Definition elems : IntSet -> list Key :=
-  toAscList.
-
-Local Definition Ord__IntSet_compare : IntSet -> IntSet -> comparison :=
-  fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
-
-Local Definition Ord__IntSet_op_zl__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__IntSet_op_zlze__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__IntSet_max : IntSet -> IntSet -> IntSet :=
-  fun x y => if Ord__IntSet_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__IntSet_min : IntSet -> IntSet -> IntSet :=
-  fun x y => if Ord__IntSet_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__IntSet_op_zg__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__IntSet_op_zgze__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base./= Lt.
-
-Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__IntSet_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__IntSet_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__IntSet_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__IntSet_op_zgze__ ;
-         GHC.Base.compare__ := Ord__IntSet_compare ;
-         GHC.Base.max__ := Ord__IntSet_max ;
-         GHC.Base.min__ := Ord__IntSet_min |}.
-
-Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  foldr.
-
-Program Definition foldr'Bits {a}
-           : IntWord.Int -> (IntWord.Int -> a -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               IntWord.wordTonat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
-                                                                          GHC.Num.-
-                                                                          bi)) acc)
-                                   end
-                               end) in
-            go (revNat bitmap) z.
-Admit Obligations.
-
-Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldr'Bits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' r) l
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
-      | _ => go z t
-      end.
-
-Definition size : IntSet -> IntWord.Int :=
-  let fix go arg_0__ arg_1__
-            := match arg_0__, arg_1__ with
-               | acc, Bin _ _ l r => go (go acc l) r
-               | acc, Tip _ bm => acc GHC.Num.+ IntWord.bitcount #0 bm
-               | acc, Nil => acc
-               end in
-  go #0.
-
-Definition splitRoot : IntSet -> list IntSet :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Nil => nil
-    | (Tip _ _ as x) => cons x nil
-    | Bin _ m l r =>
-        if m GHC.Base.< #0 : bool then cons r (cons l nil) else
-        cons l (cons r nil)
-    end.
-
-Definition suffixBitMask : IntWord.Int :=
-  #63.
-
-Definition suffixOf : IntWord.Int -> IntWord.Int :=
-  fun x => x Data.Bits..&.(**) suffixBitMask.
+Definition bitmapOfSuffix : IntWord.Int -> BitMap :=
+  fun s => IntWord.shiftLWord #1 s.
 
 Definition bitmapOf : IntWord.Int -> BitMap :=
   fun x => bitmapOfSuffix (suffixOf x).
-
-Definition prefixBitMask : IntWord.Int :=
-  Data.Bits.complement suffixBitMask.
-
-Definition prefixOf : IntWord.Int -> Prefix :=
-  fun x => x Data.Bits..&.(**) prefixBitMask.
 
 Definition insert : Key -> IntSet -> IntSet :=
   fun x => insertBM (prefixOf x) (bitmapOf x).
@@ -785,16 +714,6 @@ Definition notMember : Key -> IntSet -> bool :=
 Definition singleton : Key -> IntSet :=
   fun x => Tip (prefixOf x) (bitmapOf x).
 
-Definition tip : Prefix -> BitMap -> IntSet :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, num_2__ =>
-        if num_2__ GHC.Base.== #0 : bool then Nil else
-        match arg_0__, arg_1__ with
-        | kx, bm => Tip kx bm
-        end
-    end.
-
 Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
   fun x t =>
     let fix go arg_0__ arg_1__
@@ -867,6 +786,14 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
                   let gt' := union gt l in pair (pair lt fnd) gt' else
         j_22__
     | _ => j_22__
+    end.
+
+Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | _, _, l, Nil => l
+    | _, _, Nil, r => r
+    | p, m, l, r => Bin p m l r
     end.
 
 Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
@@ -1063,6 +990,84 @@ Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
                  | Nil => (pair Nil Nil)
                  end in
     id (go predicate0 t0).
+
+(* Skipping all instances of class `Control.DeepSeq.NFData', including
+   `Data.IntSet.InternalWord.NFData__IntSet' *)
+
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.IntSet.InternalWord.Read__IntSet' *)
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.IntSet.InternalWord.Show__IntSet' *)
+
+Local Definition Ord__IntSet_compare : IntSet -> IntSet -> comparison :=
+  fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
+
+Local Definition Ord__IntSet_op_zl__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__IntSet_op_zlze__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__IntSet_op_zg__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__IntSet_op_zgze__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__IntSet_max : IntSet -> IntSet -> IntSet :=
+  fun x y => if Ord__IntSet_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__IntSet_min : IntSet -> IntSet -> IntSet :=
+  fun x y => if Ord__IntSet_op_zlze__ x y : bool then x else y.
+
+Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
+  fun t1 t2 => equal t1 t2.
+
+Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
+  fun t1 t2 => nequal t1 t2.
+
+Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
+
+Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__IntSet_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__IntSet_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__IntSet_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__IntSet_op_zgze__ ;
+         GHC.Base.compare__ := Ord__IntSet_compare ;
+         GHC.Base.max__ := Ord__IntSet_max ;
+         GHC.Base.min__ := Ord__IntSet_min |}.
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Data.IntSet.InternalWord.Data__IntSet' *)
+
+Local Definition Semigroup__IntSet_op_zlzlzgzg__ : IntSet -> IntSet -> IntSet :=
+  union.
+
+Program Instance Semigroup__IntSet : GHC.Base.Semigroup IntSet :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
+  unions.
+
+Local Definition Monoid__IntSet_mempty : IntSet :=
+  empty.
+
+Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
+         GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
+         GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
+
+(* Skipping all instances of class `GHC.Exts.IsList', including
+   `Data.IntSet.InternalWord.IsList__IntSet' *)
 
 Module Notations.
 Notation "'_Data.IntSet.InternalWord.\\_'" := (op_zrzr__).

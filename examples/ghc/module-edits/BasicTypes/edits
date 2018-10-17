@@ -26,17 +26,19 @@ skip BasicTypes.Ord__TyPrec
 ##########
 
 #
-order BasicTypes.Eq___FractionalLit BasicTypes.Ord__FractionalLit_compare BasicTypes.Ord__FractionalLit_min
+order BasicTypes.Eq___FractionalLit   BasicTypes.Ord__FractionalLit_compare  BasicTypes.Ord__FractionalLit_min
 order BasicTypes.Eq___FixityDirection BasicTypes.Eq___Fixity_op_zeze__
-order BasicTypes.Eq___IntWithInf BasicTypes.Ord__IntWithInf
-order BasicTypes.Eq___FunctionOrData BasicTypes.Ord__FunctionOrData
-order BasicTypes.Eq___OverlapMode BasicTypes.Eq___OverlapFlag_op_zeze__
-order BasicTypes.Eq___Activation BasicTypes.Eq___InlinePragma_op_zeze__
-order BasicTypes.Eq___InlineSpec BasicTypes.Eq___InlinePragma_op_zeze__
-order BasicTypes.Eq___SourceText BasicTypes.Eq___Activation_op_zeze__
-order BasicTypes.Eq___SourceText BasicTypes.Eq___WarningTxt_op_zeze__
-order BasicTypes.Eq___SourceText BasicTypes.Eq___OverlapMode_op_zeze__
-order BasicTypes.Eq___TailCallInfo BasicTypes.Eq___OccInfo_op_zeze__
+order BasicTypes.Eq___IntWithInf      BasicTypes.Ord__IntWithInf
+order BasicTypes.Eq___FunctionOrData  BasicTypes.Ord__FunctionOrData
+order BasicTypes.Eq___IntegralLit     BasicTypes.Ord__IntegralLit
+order BasicTypes.Eq___OverlapMode     BasicTypes.Eq___OverlapFlag_op_zeze__
+order BasicTypes.Eq___Activation      BasicTypes.Eq___InlinePragma_op_zeze__
+order BasicTypes.Eq___InlineSpec      BasicTypes.Eq___InlinePragma_op_zeze__
+order BasicTypes.Eq___SourceText      BasicTypes.Eq___Activation_op_zeze__
+order BasicTypes.Eq___SourceText      BasicTypes.Eq___WarningTxt_op_zeze__
+order BasicTypes.Eq___SourceText      BasicTypes.Eq___OverlapMode_op_zeze__
+order BasicTypes.Eq___TailCallInfo    BasicTypes.Eq___OccInfo_op_zeze__
+order BasicTypes.Eq___StringLiteral   BasicTypes.Eq___WarningTxt_op_zeze__
 
 redefine Definition BasicTypes.RepArity  := nat.
 redefine Definition BasicTypes.PhaseNum  := nat.

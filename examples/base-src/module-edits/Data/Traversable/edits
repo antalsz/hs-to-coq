@@ -12,6 +12,8 @@ skip Data.Traversable.foldMapDefault
 # skip Data.Traversable.mapAccumL
 # skip Data.Traversable.mapAccumR
 
+# Ordering
+order Data.Traversable.Traversable__list Data.Traversable.Traversable__NonEmpty_traverse
 
 # Generics & out of scope
 skip Data.Traversable.Traversable__Array

@@ -25,3 +25,5 @@ rename value Unique.getKey = Unique.getWordKey
 
 skip module Coq.ZArith.BinInt.Z
 
+order Unpeel_UniqFM UniqFM.Eq___UniqFM_op_zeze__
+order Unpeel_UniqFM UniqFM.Eq___UniqFM_op_zsze__

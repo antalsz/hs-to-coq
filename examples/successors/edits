@@ -1,1 +1,2 @@
 rename value Control.Applicative.Successors.Succs = Control.Applicative.Successors.succs
+order Control.Applicative.Successors.Functor__Succs Control.Applicative.Successors.Applicative__Succs_liftA2 Control.Applicative.Successors.Applicative__Succs Control.Applicative.Successors.Monad__Succs_return_

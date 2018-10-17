@@ -13,3 +13,8 @@ delete unused type variables Data.Functor.Const.Eq___Const
 delete unused type variables Data.Functor.Const.Ord__Const
 delete unused type variables Data.Functor.Const.Semigroup__Const
 delete unused type variables Data.Functor.Const.Monoid__Const
+
+order Unpeel_Const Data.Functor.Const.Eq___Const_op_zeze__
+order Unpeel_Const Data.Functor.Const.Eq___Const_op_zsze__
+
+order Data.Functor.Const.Functor__Const Data.Functor.Const.Applicative__Const_op_ztzg__

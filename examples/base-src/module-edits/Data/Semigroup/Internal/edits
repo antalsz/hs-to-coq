@@ -20,14 +20,41 @@ add Data.SemigroupInternal Instance Unpeel_Product a : GHC.Prim.Unpeel (Product 
 add Data.SemigroupInternal Instance Unpeel_Sum a : GHC.Prim.Unpeel (Sum a) a :=
 	 GHC.Prim.Build_Unpeel _ _ getSum Mk_Sum.
 
-order Unpeel_Any Data.SemigroupInternal.Eq___Any Data.SemigroupInternal.Ord__Any
-order Unpeel_All Data.SemigroupInternal.Eq___All Data.SemigroupInternal.Ord__All
-order Unpeel_Alt Data.SemigroupInternal.Eq___Alt Data.SemigroupInternal.Ord__Alt
-order Unpeel_Product Data.SemigroupInternal.Eq___Product Data.SemigroupInternal.Ord__Product
-order Unpeel_Sum Data.SemigroupInternal.Eq___Sum Data.SemigroupInternal.Ord__Sum
-order Unpeel_Dual Data.SemigroupInternal.Eq___Dual Data.SemigroupInternal.Ord__Dual
+order Unpeel_Any     Data.SemigroupInternal.Eq___Any_op_zeze__
+order Unpeel_Any     Data.SemigroupInternal.Eq___Any_op_zsze__
+order Unpeel_All     Data.SemigroupInternal.Eq___All_op_zeze__
+order Unpeel_All     Data.SemigroupInternal.Eq___All_op_zsze__
+order Unpeel_Alt     Data.SemigroupInternal.Eq___Alt_op_zeze__
+order Unpeel_Alt     Data.SemigroupInternal.Eq___Alt_op_zsze__
+order Unpeel_Product Data.SemigroupInternal.Eq___Product_op_zeze__
+order Unpeel_Product Data.SemigroupInternal.Eq___Product_op_zsze__
+order Unpeel_Sum     Data.SemigroupInternal.Eq___Sum_op_zeze__
+order Unpeel_Sum     Data.SemigroupInternal.Eq___Sum_op_zsze__
+order Unpeel_Dual    Data.SemigroupInternal.Eq___Dual_op_zeze__
+order Unpeel_Dual    Data.SemigroupInternal.Eq___Dual_op_zsze__
+order Unpeel_Endo    Data.SemigroupInternal.Semigroup__Endo_op_zlzlzgzg__
 
-order Data.SemigroupInternal.Semigroup__Alt Data.SemigroupInternal.Monoid__Alt_mappend
+order Data.SemigroupInternal.Eq___Any     Data.SemigroupInternal.Ord__Any
+order Data.SemigroupInternal.Eq___All     Data.SemigroupInternal.Ord__All
+order Data.SemigroupInternal.Eq___Alt     Data.SemigroupInternal.Ord__Alt
+order Data.SemigroupInternal.Eq___Product Data.SemigroupInternal.Ord__Product
+order Data.SemigroupInternal.Eq___Sum     Data.SemigroupInternal.Ord__Sum
+order Data.SemigroupInternal.Eq___Dual    Data.SemigroupInternal.Ord__Dual
+
+order Data.SemigroupInternal.Semigroup__Any     Data.SemigroupInternal.Monoid__Any_mappend
+order Data.SemigroupInternal.Semigroup__All     Data.SemigroupInternal.Monoid__All_mappend
+order Data.SemigroupInternal.Semigroup__Alt     Data.SemigroupInternal.Monoid__Alt_mappend
+order Data.SemigroupInternal.Semigroup__Product Data.SemigroupInternal.Monoid__Product_mappend
+order Data.SemigroupInternal.Semigroup__Sum     Data.SemigroupInternal.Monoid__Sum_mappend
+order Data.SemigroupInternal.Semigroup__Dual    Data.SemigroupInternal.Monoid__Dual_mappend
+order Data.SemigroupInternal.Semigroup__Endo    Data.SemigroupInternal.Monoid__Endo_mappend
+
+order Data.SemigroupInternal.Functor__Any                                                        Data.SemigroupInternal.Applicative__Any                                                   Data.SemigroupInternal.Monad__Any
+order Data.SemigroupInternal.Functor__All                                                        Data.SemigroupInternal.Applicative__All                                                   Data.SemigroupInternal.Monad__All
+order Data.SemigroupInternal.Functor__Alt                                                        Data.SemigroupInternal.Applicative__Alt                                                   Data.SemigroupInternal.Monad__Alt
+order Data.SemigroupInternal.Functor__Product Data.SemigroupInternal.Applicative__Product_liftA2 Data.SemigroupInternal.Applicative__Product Data.SemigroupInternal.Monad__Product_return_ Data.SemigroupInternal.Monad__Product
+order Data.SemigroupInternal.Functor__Sum     Data.SemigroupInternal.Applicative__Sum_liftA2     Data.SemigroupInternal.Applicative__Sum     Data.SemigroupInternal.Monad__Sum_return_     Data.SemigroupInternal.Monad__Sum
+order Data.SemigroupInternal.Functor__Dual    Data.SemigroupInternal.Applicative__Dual_liftA2    Data.SemigroupInternal.Applicative__Dual    Data.SemigroupInternal.Monad__Dual_return_    Data.SemigroupInternal.Monad__Dual
 
 skip Data.SemigroupInternal.Read__Any
 skip Data.SemigroupInternal.Read__All

@@ -57,87 +57,6 @@ Program Instance Uniquable__Word : Uniquable GHC.Num.Word :=
 
 (* Converted value declarations: *)
 
-Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
-  fun u => u.
-
-Program Instance Uniquable__Unique : Uniquable Unique :=
-  fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
-
-(* Skipping instance Outputable__Unique of class Outputable *)
-
-(* Skipping instance Show__Unique of class Show *)
-
-Definition eqUnique : Unique -> Unique -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique u1, MkUnique u2 => u1 GHC.Base.== u2
-    end.
-
-Local Definition Eq___Unique_op_zeze__ : Unique -> Unique -> bool :=
-  fun a b => eqUnique a b.
-
-Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
-  fun a b => negb (eqUnique a b).
-
-Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
-
-Definition getKey : Unique -> BinNums.N :=
-  fun '(MkUnique x) => x.
-
-Definition getWordKey : Unique -> GHC.Num.Word :=
-  getKey.
-
-Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
-  fun x k => getUnique x GHC.Base.== k.
-
-Definition incrUnique : Unique -> Unique :=
-  fun '(MkUnique i) => MkUnique (i GHC.Num.+ #1).
-
-Definition tyConRepNameUnique : Unique -> Unique :=
-  fun u => incrUnique u.
-
-Definition dataConWorkerUnique : Unique -> Unique :=
-  fun u => incrUnique u.
-
-Definition mkUniqueGrimily : BinNums.N -> Unique :=
-  MkUnique.
-
-Local Definition Uniquable__N_getUnique : BinNums.N -> Unique :=
-  fun i => mkUniqueGrimily i.
-
-Program Instance Uniquable__N : Uniquable BinNums.N :=
-  fun _ k => k {| getUnique__ := Uniquable__N_getUnique |}.
-
-Local Definition Uniquable__FastString_getUnique
-   : FastString.FastString -> Unique :=
-  fun fs => mkUniqueGrimily (FastString.uniqueOfFS fs).
-
-Program Instance Uniquable__FastString : Uniquable FastString.FastString :=
-  fun _ k => k {| getUnique__ := Uniquable__FastString_getUnique |}.
-
-Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique u1, MkUnique u2 =>
-        if u1 GHC.Base.== u2 : bool
-        then Eq
-        else if u1 GHC.Base.< u2 : bool
-             then Lt
-             else Gt
-    end.
-
-Definition stepUnique : Unique -> BinNums.N -> Unique :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | MkUnique i, n => MkUnique (i GHC.Num.+ n)
-    end.
-
-Definition dataConRepNameUnique : Unique -> Unique :=
-  fun u => stepUnique u #2.
-
 Definition uNIQUE_BITS : GHC.Num.Int :=
   #56.
 
@@ -151,10 +70,25 @@ Definition unpkUnique : Unique -> GHC.Char.Char * GHC.Num.Int :=
       GHC.Char.chr (Data.Bits.shiftR (Coq.ZArith.BinInt.Z.of_N u) uNIQUE_BITS) in
     pair tag i.
 
-Definition isValidKnownKeyUnique : Unique -> bool :=
-  fun u =>
-    let 'pair c x := unpkUnique u in
-    andb (GHC.Base.ord c GHC.Base.< #255) (x GHC.Base.<= (Data.Bits.shiftL #1 #22)).
+Definition stepUnique : Unique -> BinNums.N -> Unique :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | MkUnique i, n => MkUnique (i GHC.Num.+ n)
+    end.
+
+Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | MkUnique u1, MkUnique u2 =>
+        if u1 GHC.Base.== u2 : bool
+        then Eq
+        else if u1 GHC.Base.< u2 : bool
+             then Lt
+             else Gt
+    end.
+
+Definition mkUniqueGrimily : BinNums.N -> Unique :=
+  MkUnique.
 
 Definition mkUnique : GHC.Char.Char -> GHC.Num.Word -> Unique :=
   fun c i =>
@@ -225,17 +159,85 @@ Definition mkBuiltinUnique : BinNums.N -> Unique :=
 Definition mkAlphaTyVarUnique : BinNums.N -> Unique :=
   fun i => mkUnique (GHC.Char.hs_char__ "1") i.
 
+Definition isValidKnownKeyUnique : Unique -> bool :=
+  fun u =>
+    let 'pair c x := unpkUnique u in
+    andb (GHC.Base.ord c GHC.Base.< #255) (x GHC.Base.<= (Data.Bits.shiftL #1 #22)).
+
 Definition initTyVarUnique : Unique :=
   mkUnique (GHC.Char.hs_char__ "t") #0.
 
 Definition initExitJoinUnique : Unique :=
   mkUnique (GHC.Char.hs_char__ "s") #0.
 
+Definition incrUnique : Unique -> Unique :=
+  fun '(MkUnique i) => MkUnique (i GHC.Num.+ #1).
+
+Definition tyConRepNameUnique : Unique -> Unique :=
+  fun u => incrUnique u.
+
+Definition eqUnique : Unique -> Unique -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | MkUnique u1, MkUnique u2 => u1 GHC.Base.== u2
+    end.
+
+Local Definition Eq___Unique_op_zeze__ : Unique -> Unique -> bool :=
+  fun a b => eqUnique a b.
+
+Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
+  fun a b => negb (eqUnique a b).
+
+Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
+
+Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
+  fun x k => getUnique x GHC.Base.== k.
+
+Definition getKey : Unique -> BinNums.N :=
+  fun '(MkUnique x) => x.
+
 Definition deriveUnique : Unique -> BinNums.N -> Unique :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | MkUnique i, delta => mkUnique (GHC.Char.hs_char__ "X") (i GHC.Num.+ delta)
     end.
+
+Definition dataConWorkerUnique : Unique -> Unique :=
+  fun u => incrUnique u.
+
+Definition dataConRepNameUnique : Unique -> Unique :=
+  fun u => stepUnique u #2.
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Unique.Show__Unique' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Unique.Outputable__Unique' *)
+
+Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
+  fun u => u.
+
+Program Instance Uniquable__Unique : Uniquable Unique :=
+  fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
+
+Local Definition Uniquable__N_getUnique : BinNums.N -> Unique :=
+  fun i => mkUniqueGrimily i.
+
+Program Instance Uniquable__N : Uniquable BinNums.N :=
+  fun _ k => k {| getUnique__ := Uniquable__N_getUnique |}.
+
+Local Definition Uniquable__FastString_getUnique
+   : FastString.FastString -> Unique :=
+  fun fs => mkUniqueGrimily (FastString.uniqueOfFS fs).
+
+Program Instance Uniquable__FastString : Uniquable FastString.FastString :=
+  fun _ k => k {| getUnique__ := Uniquable__FastString_getUnique |}.
+
+Definition getWordKey : Unique -> GHC.Num.Word :=
+  getKey.
 
 (* External variables:
      Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity BinNat.N.of_nat

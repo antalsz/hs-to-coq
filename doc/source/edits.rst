@@ -50,18 +50,21 @@ Format:
   | **skip** *qualified_name*
 
 Effect:
-  During translation, ignore the declaration of the function, value, type, class or
-  instance with the given *qualified_name*.
+  During translation, ignore the declaration of the function, value, type, class
+  or instance with the given *qualified_name*.  The name must be the translated
+  Coq name, not the original Haskell name (if those differ).
 
   This does not affect the translation of *uses* of the given name. This means
-  that you can use other methods, e.g. a preamble. to make it available.
+  that you can use other methods, e.g. a preamble, to make it available.
 
+  To skip type classes, see ``skip class``; to skip type class methods, see
+  ``skip methods``.  They are not unified here because those effects are more
+  powerful.
 
-  Skipping a type class also causes its instances to be skipped.
-
-  Type class instances do not have names in Haskell, and ``hs-to-coq``
-  generates a suitable name.  You might want to first attempt the translation
-  and check the output for the precise name.
+  You can skip type class instances, but as they do not have names in Haskell,
+  you must use the name ``hs-to-coq`` generates for them.  The name generation
+  is systematic, but you might want to first attempt the translation and check
+  the output for the precise name.
 
 
 Examples:
@@ -71,6 +74,28 @@ Examples:
      skip GHC.Base.String
      skip GHC.Real.Fractional
      skip Data.Monoid.Show__Last # an instance
+
+``skip class`` – skip a type class and all its instances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip class edit
+
+Format:
+  | **skip** **class** *qualified_class*
+
+Effect:
+  
+  Omit the given type class and all its instances.
+
+  These skipped classes are not stored in the generated metadata, so you need to
+  include the ``skip class`` edits in all downstream modules.
+
+Examples:
+   .. code-block:: shell
+
+     skip class GHC.Base.Alternative
+     skip class Data.Data.Data
 
 ``skip method`` – skip a method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

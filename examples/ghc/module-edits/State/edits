@@ -1,0 +1,1 @@
+order State.Functor__State State.Applicative__State_liftA2 State.Applicative__State State.Monad__State_return_

@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, inEdits,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedClasses, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, inEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -78,6 +78,7 @@ data Edit = TypeSynonymTypeEdit           Ident Ident
           | RedefinitionEdit              CoqDefinition
           | AddEdit                       ModuleName CoqDefinition
           | SkipEdit                      Qualid
+          | SkipClassEdit                 Qualid
           | SkipMethodEdit                Qualid Ident
           | SkipModuleEdit                ModuleName
           | ImportModuleEdit              ModuleName
@@ -119,6 +120,7 @@ data Edits = Edits { _typeSynonymTypes          :: !(Map Ident Ident)
                    , _redefinitions             :: !(Map Qualid CoqDefinition)
                    , _additions                 :: !(Map ModuleName [Sentence])
                    , _skipped                   :: !(Set Qualid)
+                   , _skippedClasses            :: !(Set Qualid)
                    , _skippedMethods            :: !(Set (Qualid,Ident))
                    , _skippedModules            :: !(Set ModuleName)
                    , _importedModules           :: !(Set ModuleName)
@@ -177,7 +179,8 @@ descDuplEdit = \case
   TerminationEdit               what _       -> duplicateQ_for  "termination requests"                 what
   RedefinitionEdit              def          -> duplicateQ_for  "redefinitions"                        (defName def)
   SkipEdit                      what         -> duplicateQ_for  "skips"                                what
-  SkipMethodEdit                cls meth     -> duplicate_for   "skipped method requests"              (prettyClsMth cls meth)
+  SkipClassEdit                 cls          -> duplicateQ_for  "skipped class requests"               cls
+  SkipMethodEdit                cls meth     -> duplicate_for   "skipped method requests"              (prettyLocalName cls meth)
   SkipModuleEdit                mod          -> duplicate_for   "skipped module requests"              (moduleNameString mod)
   ImportModuleEdit              mod          -> duplicate_for   "imported module requests"             (moduleNameString mod)
   HasManualNotationEdit         what         -> duplicate_for   "has manual notation"                  (moduleNameString what)
@@ -204,35 +207,36 @@ descDuplEdit = \case
                                     SPConstructor -> "constructor"
                               in pplace ++ ' ' : T.unpack (qualidToIdent name)
 
-    prettyClsMth cls meth = T.unpack (qualidToIdent cls) <> "." <> T.unpack meth
+    prettyLocalName outer inner = T.unpack $ qualidToIdent outer <> "." <> inner
 
 addEdit :: MonadError String m => Edit -> Edits -> m Edits
 addEdit e = case e of
-  TypeSynonymTypeEdit           syn        res   -> addFresh e typeSynonymTypes                       syn          res
-  DataTypeArgumentsEdit         ty         args  -> addFresh e dataTypeArguments                      ty           args
-  TerminationEdit               what       ta    -> addFresh e termination                            what         ta
-  RedefinitionEdit              def              -> addFresh e redefinitions                          (defName def)   def
-  SkipEdit                      what             -> addFresh e skipped                                what         ()
-  SkipMethodEdit                cls meth         -> addFresh e skippedMethods                         (cls,meth)   ()
-  SkipModuleEdit                mod              -> addFresh e skippedModules                         mod          ()
-  ImportModuleEdit              mod              -> addFresh e importedModules                        mod          ()
-  HasManualNotationEdit         what             -> addFresh e hasManualNotation                      what         ()
-  AxiomatizeModuleEdit          mod              -> addFresh e axiomatizedModules                     mod          ()
-  AxiomatizeDefinitionEdit      what             -> addFresh e axiomatizedDefinitions                 what         ()
-  UnaxiomatizeDefinitionEdit    what             -> addFresh e unaxiomatizedDefinitions               what         ()
-  AdditionalScopeEdit           place name scope -> addFresh e additionalScopes                       (place,name) scope
-  RenameEdit                    hs to            -> addFresh e renamings                              hs           to
-  ObligationsEdit               what tac         -> addFresh e obligations                            what         tac
-  ClassKindEdit                 cls kinds        -> addFresh e classKinds                             cls          kinds
-  DataKindEdit                  cls kinds        -> addFresh e dataKinds                              cls          kinds
-  DeleteUnusedTypeVariablesEdit qid              -> addFresh e deleteUnusedTypeVariables              qid          ()
-  CoinductiveEdit               ty               -> addFresh e coinductiveTypes                       ty           ()
-  RenameModuleEdit              m1 m2            -> addFresh e renamedModules                         m1           m2
+  TypeSynonymTypeEdit           syn  res         -> addFresh e typeSynonymTypes                       syn           res
+  DataTypeArgumentsEdit         ty   args        -> addFresh e dataTypeArguments                      ty            args
+  TerminationEdit               what ta          -> addFresh e termination                            what          ta
+  RedefinitionEdit              def              -> addFresh e redefinitions                          (defName def) def
+  SkipEdit                      what             -> addFresh e skipped                                what          ()
+  SkipMethodEdit                cls meth         -> addFresh e skippedMethods                         (cls,meth)    ()
+  SkipModuleEdit                mod              -> addFresh e skippedModules                         mod           ()
+  SkipClassEdit                 cls              -> addFresh e skippedClasses                         cls           ()
+  ImportModuleEdit              mod              -> addFresh e importedModules                        mod           ()
+  HasManualNotationEdit         what             -> addFresh e hasManualNotation                      what          ()
+  AxiomatizeModuleEdit          mod              -> addFresh e axiomatizedModules                     mod           ()
+  AxiomatizeDefinitionEdit      what             -> addFresh e axiomatizedDefinitions                 what          ()
+  UnaxiomatizeDefinitionEdit    what             -> addFresh e unaxiomatizedDefinitions               what          ()
+  AdditionalScopeEdit           place name scope -> addFresh e additionalScopes                       (place,name)  scope
+  RenameEdit                    hs to            -> addFresh e renamings                              hs            to
+  ObligationsEdit               what tac         -> addFresh e obligations                            what          tac
+  ClassKindEdit                 cls kinds        -> addFresh e classKinds                             cls           kinds
+  DataKindEdit                  cls kinds        -> addFresh e dataKinds                              cls           kinds
+  DeleteUnusedTypeVariablesEdit qid              -> addFresh e deleteUnusedTypeVariables              qid           ()
+  CoinductiveEdit               ty               -> addFresh e coinductiveTypes                       ty            ()
+  RenameModuleEdit              m1 m2            -> addFresh e renamedModules                         m1            m2
+  SimpleClassEdit               cls              -> addFresh e simpleClasses                          cls           ()
+  InlineMutualEdit              fun              -> addFresh e inlinedMutuals                         fun           ()
   AddEdit                       mod def          -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
   OrderEdit                     idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                   rewrite          -> return . (rewrites %~ (rewrite:))
-  SimpleClassEdit               cls              -> addFresh e simpleClasses                          cls          ()
-  InlineMutualEdit              fun              -> addFresh e inlinedMutuals                         fun          ()
   InEdit                        qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
 
 
@@ -263,7 +267,7 @@ addFresh :: (MonadError String m, At map)
 addFresh edit lens key val =
   lens.at key %%~ \case
     Just  _ -> throwError $ descDuplEdit edit
-    Nothing -> return $ Just val
+    Nothing -> pure $ Just val
 
 addEdge :: (Ord k, Ord v) => ASetter' s (Map k (Set v)) -> (k, v) -> s -> s
 addEdge lens (from, to) = lens %~ M.unionWith S.union (M.singleton from (S.singleton to))

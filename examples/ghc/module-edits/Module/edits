@@ -58,9 +58,13 @@ skip Module.newUnitId
 skip Module.renameHoleUnitId'
 skip Module.renameHoleModule'
 
-order Module.Eq___InstalledUnitId Module.Ord__InstalledUnitId
-order Module.Ord__ModuleName Module.Ord__IndefModule_compare
-order Module.Eq___ModuleName Module.Eq___IndefModule_op_zeze__
+order Module.Eq___ModuleName      Module.Eq___IndefModule_op_zeze__
+order Module.Eq___ModuleName      Module.Eq___Module_op_zeze__
+order Module.Ord__ModuleName      Module.Ord__IndefModule_compare
+order Module.Ord__ModuleName      Module.Ord__Module_compare
+order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zeze__
+order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zsze__
+order Module.Eq___InstalledUnitId Module.Eq___InstalledModule_op_zeze__
 order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_compare
 order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_max
 order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_min
@@ -68,37 +72,37 @@ order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zg__
 order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zl__
 order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zgze__
 order Module.Ord__InstalledUnitId Module.Ord__DefUnitId_op_zlze__
-order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zeze__
-order Module.Eq___InstalledUnitId Module.Eq___DefUnitId_op_zsze__
-order Module.Eq___InstalledUnitId Module.Eq___InstalledModule_op_zeze__
 order Module.Ord__InstalledUnitId Module.Ord__InstalledModule_compare
-order Module.Ord__NDModule Module.delInstalledModuleEnv
-order Module.Ord__NDModule Module.delModuleEnv
-order Module.Ord__NDModule Module.delModuleEnvList
-order Module.Ord__NDModule Module.delModuleSet
-order Module.Ord__NDModule Module.elemModuleEnv
-order Module.Ord__NDModule Module.emptyInstalledModuleEnv
-order Module.Ord__NDModule Module.emptyModuleEnv
-order Module.Ord__NDModule Module.elemModuleSet
-order Module.Ord__NDModule Module.extendInstalledModuleEnv
-order Module.Ord__NDModule Module.extendModuleEnv
-order Module.Ord__NDModule Module.extendModuleSet
-order Module.Ord__NDModule Module.extendModuleEnvWith
-order Module.Ord__NDModule Module.extendModuleEnvList
-order Module.Ord__NDModule Module.extendModuleSetList
-order Module.Ord__NDModule Module.extendModuleEnvList_C
+order Module.Ord__NDModule        Module.delInstalledModuleEnv
+order Module.Ord__NDModule        Module.delModuleEnv
+order Module.Ord__NDModule        Module.delModuleEnvList
+order Module.Ord__NDModule        Module.delModuleSet
+order Module.Ord__NDModule        Module.elemModuleEnv
+order Module.Ord__NDModule        Module.emptyInstalledModuleEnv
+order Module.Ord__NDModule        Module.emptyModuleEnv
+order Module.Ord__NDModule        Module.elemModuleSet
+order Module.Ord__NDModule        Module.unionModuleSet
+order Module.Ord__NDModule        Module.extendInstalledModuleEnv
+order Module.Ord__NDModule        Module.extendModuleEnv
+order Module.Ord__NDModule        Module.extendModuleSet
+order Module.Ord__NDModule        Module.extendModuleEnvWith
+order Module.Ord__NDModule        Module.extendModuleEnvList
+order Module.Ord__NDModule        Module.extendModuleSetList
+order Module.Ord__NDModule        Module.extendModuleEnvList_C
+order Module.Ord__Module          Module.moduleSetElts
+order Module.Eq___InstalledModule Module.installedModuleEq
 order Module.Ord__InstalledModule Module.extendInstalledModuleEnv
 order Module.Ord__InstalledModule Module.delInstalledModuleEnv
+order Module.Ord__InstalledModule Module.lookupInstalledModuleEnv
+order Module.Eq___UnitId          Module.isHoleModule
+order Module.Eq___UnitId          Module.isInteractiveModule
+order Module.Eq___InstalledUnitId Module.Ord__InstalledUnitId
 order Module.Eq___InstalledUnitId Module.installedUnitIdEq
-order Module.Eq___InstalledModule Module.installedModuleEq
-order Module.Eq___UnitId Module.isHoleModule
-order Module.Eq___UnitId Module.isInteractiveModule
+order Module.Eq___InstalledModule Module.Ord__InstalledModule
 order Module.Ord__InstalledUnitId Module.Ord__InstalledModule_op_zl__
 order Module.Ord__InstalledUnitId Module.Ord__IndefModule_op_zl__
-
-# Loops during type inference.
-skip Module.Eq___ComponentId
-skip Module.Ord__ComponentId
+order Module.Eq___IndefUnitId     Module.Eq___IndefModule_op_zeze__
+order Module.Ord__IndefUnitId     Module.Ord__IndefModule_op_zl__
 
 order Module.Eq___Module    Module.Eq___NDModule_op_zsze__
 order Module.Eq___Module    Module.Eq___NDModule_op_zeze__
@@ -115,6 +119,12 @@ redefine Local Definition Module.Ord__ModuleName_compare :
    ModuleName -> (ModuleName -> comparison) := fun nm1 nm2 => Eq.
 redefine Local Definition Module.Ord__UnitId_compare :
    UnitId -> (UnitId -> comparison) := fun nm1 nm2 => Eq.
+
+add Module Instance Unpeel_ComponentId : GHC.Prim.Unpeel Module.ComponentId FastString.FastString :=
+  GHC.Prim.Build_Unpeel _ _ (fun cid => match cid with | Mk_ComponentId fs => fs end) Mk_ComponentId.
+
+order Unpeel_ComponentId Module.Eq___ComponentId_op_zeze__
+order Unpeel_ComponentId Module.Eq___ComponentId_op_zsze__
 
 # Uses Config.cIntegerLibraryType
 redefine Definition Module.integerUnitId : UnitId := default.

@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, RankNTypes, DeriveGeneric #-}
+{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
   Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, inEdits,
@@ -32,6 +32,9 @@ import qualified Data.Set as S
 
 import HsToCoq.Util.GHC.Module
 
+import HsToCoq.Util.FVs
+import HsToCoq.Coq.FreeVars ()
+
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite (Rewrite(..), Rewrites)
@@ -57,6 +60,9 @@ definitionSentence (CoqFixpointDef        fix) = FixpointSentence   fix
 definitionSentence (CoqInductiveDef       ind) = InductiveSentence  ind
 definitionSentence (CoqInstanceDef        ind) = InstanceSentence   ind
 definitionSentence (CoqAxiomDef           axm) = uncurry typedAxiom axm
+
+instance HasBV Qualid CoqDefinition where
+  bvOf = bvOf . definitionSentence
 
 -- Add more as needed
 data ScopePlace = SPValue | SPConstructor

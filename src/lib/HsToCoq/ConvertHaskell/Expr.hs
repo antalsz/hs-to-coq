@@ -56,6 +56,7 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 import HsToCoq.Coq.Pretty
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -1033,7 +1034,7 @@ addRecursion eBindings = do
                       [ (cd, cd^.convDefName, S.toAscList . getFreeVars $ cd^.convDefBody)
                       | Right (ConvertedDefinitionBinding cd) <- eBindings ])
       
-  pure . flip map eBindings $ \case
+  pure . topoSortByVariablesBy ErrOrVars M.empty . flip map eBindings $ \case
     Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
       Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual recursion check"

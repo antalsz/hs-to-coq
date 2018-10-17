@@ -41,6 +41,32 @@ Local Definition Uniquable__ConLike_getUnique : ConLike -> Unique.Unique :=
 Program Instance Uniquable__ConLike : Unique.Uniquable ConLike :=
   fun _ k => k {| Unique.getUnique__ := Uniquable__ConLike_getUnique |}.
 
+Definition eqConLike : ConLike -> ConLike -> bool :=
+  fun x y => Unique.getUnique x GHC.Base.== Unique.getUnique y.
+
+Definition conLikeName : ConLike -> Name.Name :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | RealDataCon data_con => Core.dataConName data_con
+    | PatSynCon pat_syn => Core.patSynName pat_syn
+    end.
+
+Definition conLikeArity : ConLike -> BasicTypes.Arity :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | RealDataCon data_con => Core.dataConSourceArity data_con
+    | PatSynCon pat_syn => Core.patSynArity pat_syn
+    end.
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `ConLike.Data__ConLike' *)
+
+(* Skipping all instances of class `Outputable.OutputableBndr', including
+   `ConLike.OutputableBndr__ConLike' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `ConLike.Outputable__ConLike' *)
+
 Local Definition NamedThing__ConLike_getName : ConLike -> Name.Name :=
   fun arg_0__ =>
     match arg_0__ with
@@ -55,29 +81,6 @@ Program Instance NamedThing__ConLike : Name.NamedThing ConLike :=
   fun _ k =>
     k {| Name.getName__ := NamedThing__ConLike_getName ;
          Name.getOccName__ := NamedThing__ConLike_getOccName |}.
-
-(* Skipping instance Outputable__ConLike of class Outputable *)
-
-(* Skipping instance OutputableBndr__ConLike of class OutputableBndr *)
-
-(* Skipping instance Data__ConLike of class Data *)
-
-Definition conLikeArity : ConLike -> BasicTypes.Arity :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon data_con => Core.dataConSourceArity data_con
-    | PatSynCon pat_syn => Core.patSynArity pat_syn
-    end.
-
-Definition conLikeName : ConLike -> Name.Name :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon data_con => Core.dataConName data_con
-    | PatSynCon pat_syn => Core.patSynName pat_syn
-    end.
-
-Definition eqConLike : ConLike -> ConLike -> bool :=
-  fun x y => Unique.getUnique x GHC.Base.== Unique.getUnique y.
 
 Local Definition Eq___ConLike_op_zeze__ : ConLike -> ConLike -> bool :=
   eqConLike.

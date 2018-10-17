@@ -20,3 +20,11 @@ skip Control.Applicative.Eq___ZipList
 skip Control.Applicative.Ord__ZipList
 
 # will also need to skip Ord/Eq_/Functor/Foldable when those type applications are supported
+
+# Order
+order Unpeel_WrappedMonad Control.Applicative.Monad__WrappedMonad_op_zgzg__
+order Unpeel_WrappedMonad Control.Applicative.Monad__WrappedMonad_op_zgzgze__
+order Unpeel_WrappedMonad Control.Applicative.Monad__WrappedMonad_op_return_
+
+order Control.Applicative.Functor__WrappedMonad Control.Applicative.Applicative__WrappedMonad_op_ztzg__ Control.Applicative.Applicative__WrappedMonad Control.Applicative.Monad__WrappedMonad
+order Control.Applicative.Functor__WrappedArrow Control.Applicative.Applicative__WrappedArrow_op_ztzg__

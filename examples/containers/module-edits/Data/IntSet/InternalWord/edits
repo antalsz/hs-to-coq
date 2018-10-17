@@ -91,6 +91,5 @@ skip Data.IntSet.InternalWord.fromAscList
 
 ### Type class ordering information ###
 
+order Data.IntSet.InternalWord.Eq___IntSet       Data.IntSet.InternalWord.Ord__IntSet
 order Data.IntSet.InternalWord.Semigroup__IntSet Data.IntSet.InternalWord.Monoid__IntSet_mappend
-
-

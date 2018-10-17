@@ -1,1 +1,3 @@
-order   Data.Either.Eq___Either Data.Either.Ord__Either
+order Data.Either.Eq___Either         Data.Either.Ord__Either
+order Data.Either.Functor__Either     Data.Either.Applicative__Either_op_zlztzg__
+order Data.Either.Applicative__Either Data.Either.Monad__Either_return_

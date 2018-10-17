@@ -3,14 +3,22 @@ add Data.Monoid Instance Unpeel_First a : GHC.Prim.Unpeel (First a) (option a) :
 add Data.Monoid Instance Unpeel_Last a : GHC.Prim.Unpeel (Last a) (option a) :=
 	 GHC.Prim.Build_Unpeel _ _ getLast Mk_Last.
 
+order Unpeel_Dual Data.Monoid.Eq___Dual_op_zeze__
+order Unpeel_Dual Data.Monoid.Eq___Dual_op_zsze__
 order Data.Monoid.Eq___Dual Data.Monoid.Ord__Dual
-order  Unpeel_Dual Data.Monoid.Functor__Dual Data.Monoid.Applicative__Dual Data.Monoid.Monad__Dual
+order Unpeel_Dual Data.Monoid.Functor__Dual Data.Monoid.Applicative__Dual Data.Monoid.Monad__Dual
 
+order Unpeel_Last Data.Monoid.Eq___Last_op_zeze__
+order Unpeel_Last Data.Monoid.Eq___Last_op_zsze__
 order Data.Monoid.Eq___Last Data.Monoid.Ord__Last
 order Unpeel_Last Data.Monoid.Functor__Last Data.Monoid.Applicative__Last Data.Monoid.Monad__Last
+order Data.Monoid.Semigroup__Last Data.Monoid.Monoid__Last_mappend
 
+order Unpeel_First Data.Monoid.Eq___First_op_zeze__
+order Unpeel_First Data.Monoid.Eq___First_op_zsze__
 order Data.Monoid.Eq___First Data.Monoid.Ord__First
 order Unpeel_First Data.Monoid.Functor__First Data.Monoid.Applicative__First Data.Monoid.Monad__First
+order Data.Monoid.Semigroup__First Data.Monoid.Monoid__First_mappend
 
 # Read and Show instances
 skip Data.Monoid.Read__Last

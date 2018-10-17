@@ -14,10 +14,12 @@ module HsToCoq.Coq.FreeVars (
   getFreeVars, getFreeVars', definedBy,
   NoBinding(..),
   -- * Utility methods
-  topoSortEnvironment, topoSortEnvironmentWith, topoSortSentences,
+  topoSortEnvironment, topoSortEnvironmentWith, topoSortByVariablesBy, topoSortByVariables,
   ) where
 
 import Prelude hiding (Num)
+
+import Control.Lens hiding ((<|))
 
 import Data.Foldable
 import HsToCoq.Util.Containers
@@ -28,7 +30,6 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-import Data.Maybe (fromMaybe)
 import GHC.TypeLits
 
 import HsToCoq.Coq.Gallina
@@ -335,30 +336,14 @@ topoSortEnvironmentWith fvs = stronglyConnComp' . M.toList
 topoSortEnvironment :: HasFV Qualid t => Map Qualid t -> [NonEmpty Qualid]
 topoSortEnvironment = topoSortEnvironmentWith getFreeVars
 
-type ExtraFreeVars = M.Map Qualid (S.Set Qualid)
+type ExtraFreeVars = Map Qualid (Set Qualid)
 
--- | Sort Sentences based on their free variables and the
--- extra edges provided. Tries to keep sentences in order otherwise.
-topoSortSentences :: ExtraFreeVars -> [Sentence] -> [Sentence]
-topoSortSentences extraFVs sentences = sorted
-  where
-    numSentences = zip [0..] sentences
-    canonMap = M.fromList [ (i,n) | (n,s) <- numSentences, i <- definedBy s]
+-- | Sort 'Sentence's or similar based on their free variables and the extra
+-- edges provided. Tries to keep sentences in order otherwise.
+topoSortByVariablesBy :: HasBV Qualid b => (a -> b) -> ExtraFreeVars -> [a] -> [a]
+topoSortByVariablesBy toBV extraFVs = stableTopoSortByPlus (definedBy . toBV)
+                                                           (getFreeVars' . toBV)
+                                                           (M.findWithDefault S.empty ?? extraFVs)
 
-    canon :: Qualid -> Maybe Int
-    canon i =  M.lookup i canonMap
-
-    extras :: Qualid -> S.Set Qualid
-    extras i = fromMaybe S.empty $ M.lookup i extraFVs
-
-    graph = reverse $
-        -- The reverse makes the sorting “stable” when there are edges missing
-        -- A bit of a hack, but hey.
-        [ (s, n, uses)
-        | (n,s) <- numSentences
-        , let BVs defined free = bvOf s
-        , let uses = toList $ setMapMaybe canon $ free <> foldMap extras defined
-        ]
-    sorted = foldMap toList $ stronglyConnCompNE graph
-
-
+topoSortByVariables :: HasBV Qualid a => ExtraFreeVars -> [a] -> [a]
+topoSortByVariables = topoSortByVariablesBy id

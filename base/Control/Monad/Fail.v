@@ -28,12 +28,8 @@ Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
   g _ (fail__ m).
 (* Converted value declarations: *)
 
-Local Definition MonadFail__option_fail
-   : forall {a}, GHC.Base.String -> option a :=
-  fun {a} => fun arg_0__ => None.
-
-Program Instance MonadFail__option : MonadFail option :=
-  fun _ k => k {| fail__ := fun {a} => MonadFail__option_fail |}.
+(* Skipping instance `Control.Monad.Fail.MonadFail__IO' of class
+   `Control.Monad.Fail.MonadFail' *)
 
 Local Definition MonadFail__list_fail : forall {a}, GHC.Base.String -> list a :=
   fun {a} => fun arg_0__ => nil.
@@ -41,7 +37,12 @@ Local Definition MonadFail__list_fail : forall {a}, GHC.Base.String -> list a :=
 Program Instance MonadFail__list : MonadFail list :=
   fun _ k => k {| fail__ := fun {a} => MonadFail__list_fail |}.
 
-(* Skipping instance MonadFail__IO *)
+Local Definition MonadFail__option_fail
+   : forall {a}, GHC.Base.String -> option a :=
+  fun {a} => fun arg_0__ => None.
+
+Program Instance MonadFail__option : MonadFail option :=
+  fun _ k => k {| fail__ := fun {a} => MonadFail__option_fail |}.
 
 (* External variables:
      None Type list nil option GHC.Base.Monad GHC.Base.String

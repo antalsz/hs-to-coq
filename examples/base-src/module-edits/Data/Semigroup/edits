@@ -40,12 +40,52 @@ skip Data.Semigroup.Monoid__Max
 
 ##################################
 
-order Data.Semigroup.Eq___Option Data.Semigroup.Ord__Option
+order Unpeel_Min Data.Semigroup.Eq___Min_op_zeze__
+order Unpeel_Min Data.Semigroup.Eq___Min_op_zsze__
+
+order Unpeel_Max Data.Semigroup.Eq___Max_op_zeze__
+order Unpeel_Max Data.Semigroup.Eq___Max_op_zsze__
+
+order Unpeel_First Data.Semigroup.Eq___First_op_zeze__
+order Unpeel_First Data.Semigroup.Eq___First_op_zsze__
+
+order Unpeel_Last Data.Semigroup.Eq___Last_op_zeze__
+order Unpeel_Last Data.Semigroup.Eq___Last_op_zsze__
+
+order Unpeel_Option Data.Semigroup.Eq___Option_op_zeze__
+order Unpeel_Option Data.Semigroup.Eq___Option_op_zsze__
+
+order Unpeel_WrappedMonoid Data.Semigroup.Eq___WrappedMonoid_op_zeze__
+order Unpeel_WrappedMonoid Data.Semigroup.Eq___WrappedMonoid_op_zsze__
+
+order Data.Semigroup.Eq___Max           Data.Semigroup.Ord__Max
+order Data.Semigroup.Eq___Min           Data.Semigroup.Ord__Min
+order Data.Semigroup.Eq___First         Data.Semigroup.Ord__First
+order Data.Semigroup.Eq___Last          Data.Semigroup.Ord__Last
+order Data.Semigroup.Eq___Option        Data.Semigroup.Ord__Option
 order Data.Semigroup.Eq___WrappedMonoid Data.Semigroup.Ord__WrappedMonoid
-order Data.Semigroup.Eq___First Data.Semigroup.Ord__First
-order Data.Semigroup.Eq___Last Data.Semigroup.Ord__Last
-order Data.Semigroup.Eq___Max Data.Semigroup.Ord__Max
-order Data.Semigroup.Eq___Min Data.Semigroup.Ord__Min
+
+order Data.Semigroup.Semigroup__WrappedMonoid Data.Semigroup.Monoid__WrappedMonoid_mappend
+order Data.Semigroup.Semigroup__Option        Data.Semigroup.Monoid__Option_mappend
+
+order Data.Semigroup.Functor__Max    Data.Semigroup.Applicative__Max    Data.Semigroup.Monad__Max_op_zgzg__
+order Data.Semigroup.Functor__Min    Data.Semigroup.Applicative__Min    Data.Semigroup.Monad__Min_op_zgzg__
+order Data.Semigroup.Functor__First  Data.Semigroup.Applicative__First  Data.Semigroup.Monad__First_op_zgzg__
+order Data.Semigroup.Functor__Last   Data.Semigroup.Applicative__Last   Data.Semigroup.Monad__Last_op_zgzg__
+order Data.Semigroup.Functor__Option Data.Semigroup.Applicative__Option Data.Semigroup.Monad__Option_op_zgzg__
+
+order Data.Semigroup.Foldable__Max    Data.Semigroup.Traversable__Max
+order Data.Semigroup.Foldable__Min    Data.Semigroup.Traversable__Min
+order Data.Semigroup.Foldable__First  Data.Semigroup.Traversable__First
+order Data.Semigroup.Foldable__Last   Data.Semigroup.Traversable__Last
+order Data.Semigroup.Foldable__Option Data.Semigroup.Traversable__Option
+
+order Data.Semigroup.Bifunctor__Arg  Data.Semigroup.Bitraversable__Arg
+order Data.Semigroup.Bifoldable__Arg Data.Semigroup.Bitraversable__Arg
+order Data.Semigroup.Functor__Arg    Data.Semigroup.Traversable__Arg
+order Data.Semigroup.Foldable__Arg   Data.Semigroup.Traversable__Arg
+
+order Data.Semigroup.Functor__Option Data.Semigroup.Traversable__Option
 
 # Instance names for nested products are created wrongly, so
 # Semigroup (,) and Semigroup (,,) clash

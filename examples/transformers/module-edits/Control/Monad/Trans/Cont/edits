@@ -1,0 +1,5 @@
+order Control.Monad.Trans.Cont.Functor__ContT          Control.Monad.Trans.Cont.Applicative__ContT_liftA2
+order Control.Monad.Trans.Cont.Applicative__ContT_pure Control.Monad.Trans.Cont.Applicative__ContT_op_ztzg__
+order Control.Monad.Trans.Cont.Applicative__ContT      Control.Monad.Trans.Cont.Monad__ContT_return_
+order Control.Monad.Trans.Cont.Monad__ContT            Control.Monad.Trans.Cont.MonadFail__ContT
+order Control.Monad.Trans.Cont.MonadTrans__ContT       Control.Monad.Trans.Cont.resetT

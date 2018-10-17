@@ -1,0 +1,3 @@
+order Pair.Semigroup__Pair Pair.Monoid__Pair_mappend
+order Pair.Functor__Pair   Pair.Traversable__Pair
+order Pair.Foldable__Pair  Pair.Traversable__Pair

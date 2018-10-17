@@ -77,7 +77,8 @@ rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 # first, we get rid of parts of the structure that we do not need
 #
 rewrite forall id, CoreFVs.bndrRuleAndUnfoldingFVs id = FV.emptyFV
-skip CoreFVs.stableUnfoldFVs
+skip CoreFVs.stableUnfoldingFVs
+skip CoreFVs.stableUnfoldingVars
 #
 # Then we unfuse some recursive calls so that Coq can see that they are structural
 #
@@ -90,7 +91,3 @@ in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) 
 # ANTALSZ: mutual recursion still needs to be addressed
 # NOW: mutual recursion through non-lambda values unsupported
 in CoreFVs.freeVars rewrite forall, CoreFVs.freeVarsBind = CoreFVs.freeVarsBind1
-
-
-
-

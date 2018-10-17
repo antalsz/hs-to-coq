@@ -1,3 +1,5 @@
-order Data.Functor.Identity.Foldable__Identity Data.Functor.Identity.Traversable__Identity
-order Data.Functor.Identity.Eq___Identity Data.Functor.Identity.Ord__Identity
-order Data.Functor.Identity.Semigroup__Identity Data.Functor.Identity.Monoid__Identity
+order Data.Functor.Identity.Foldable__Identity    Data.Functor.Identity.Traversable__Identity
+order Data.Functor.Identity.Eq___Identity         Data.Functor.Identity.Ord__Identity
+order Data.Functor.Identity.Semigroup__Identity   Data.Functor.Identity.Monoid__Identity
+order Data.Functor.Identity.Functor__Identity     Data.Functor.Identity.Applicative__Identity_op_ztzg__
+order Data.Functor.Identity.Applicative__Identity Data.Functor.Identity.Monad__Identity_return_

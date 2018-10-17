@@ -97,7 +97,8 @@ order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type GHC.Base.Monad
 
 order GHC.Base.Functor__pair_type GHC.Base.Applicative__pair_type_op_ztzg__
 
-order GHC.Base.Functor__NonEmpty GHC.Base.Applicative__NonEmpty GHC.Base.Monad__NonEmpty_return_ GHC.Base.Monad__NonEmpty_op_zgzg__ GHC.Base.Monad__NonEmpty
+order GHC.Base.Functor__NonEmpty GHC.Base.Applicative__NonEmpty_op_ztzg__ GHC.Base.Applicative__NonEmpty GHC.Base.Monad__NonEmpty_return_ GHC.Base.Monad__NonEmpty_op_zgzg__ GHC.Base.Monad__NonEmpty
+order GHC.Base.Monad__list GHC.Base.Monad__NonEmpty_op_zgzgze__
 
 order GHC.Base.Semigroup__list       GHC.Base.Monoid__list_mappend
 order GHC.Base.Semigroup__arrow      GHC.Base.Monoid__arrow_mappend

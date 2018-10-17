@@ -1,8 +1,14 @@
-# needs Eq2 and Ord2
-skip Data.Functor.Constant.Eq1__Constant
-skip Data.Functor.Constant.Ord1__Constant
+delete unused type variables Data.Functor.Constant.Eq___Constant
+delete unused type variables Data.Functor.Constant.Ord__Constant
 
-# For some reason we get a {inst_k} type parameter
-# even though the instances don't use this type variable
-skip Data.Functor.Constant.Eq___Constant
-skip Data.Functor.Constant.Ord__Constant
+order Data.Functor.Constant.Bifunctor__Constant  Data.Functor.Constant.Bitraversable__Constant
+order Data.Functor.Constant.Bifoldable__Constant Data.Functor.Constant.Bitraversable__Constant
+
+order Data.Functor.Constant.Semigroup__Constant Data.Functor.Constant.Monoid__Constant_mappend
+order Data.Functor.Constant.Functor__Constant   Data.Functor.Constant.Applicative__Constant_liftA2
+order Data.Functor.Constant.Functor__Constant   Data.Functor.Constant.Traversable__Constant
+order Data.Functor.Constant.Foldable__Constant  Data.Functor.Constant.Traversable__Constant
+order Data.Functor.Constant.Eq2__Constant       Data.Functor.Constant.Eq1__Constant_liftEq
+order Data.Functor.Constant.Ord2__Constant      Data.Functor.Constant.Ord1__Constant_liftCompare
+order Data.Functor.Constant.Eq1__Constant       Data.Functor.Constant.Ord1__Constant
+order Data.Functor.Constant.Eq2__Constant       Data.Functor.Constant.Ord2__Constant

@@ -144,7 +144,7 @@ data ConvertedModule =
 
 convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
 convertModule convModNameOrig group = do
-  convModName <- view (edits.renamedModules.at convModNameOrig . non convModNameOrig)
+  convModName <- view $ edits.renamedModules.at convModNameOrig . non convModNameOrig
   withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
@@ -197,7 +197,7 @@ convertModules sources = do
 moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do
   orders <- view $ edits.orders
-  let sorted = topoSortSentences orders $
+  let sorted = topoSortByVariables orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)

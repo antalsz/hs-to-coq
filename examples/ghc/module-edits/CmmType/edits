@@ -25,3 +25,6 @@ redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> b
 
 # needs nat type classes
 skip CmmType.vecElemType
+
+order CmmType.Eq___CmmCat CmmType.cmmEqType
+order CmmType.Eq___Width  CmmType.cmmEqType

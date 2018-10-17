@@ -114,11 +114,11 @@ argParser = ProgramArgs <$> optional (strOption       $  long    "output"
 
                         <*> asum [ flag' Strict       $  long    "strict"
                                                       <> short   'S'
-                                                      <> help    "Fail hard if a translation fails"
+                                                      <> help    "Fail hard if a definition can't be translated (default)"
                                  , flag' Permissive   $  long    "permissive"
                                                       <> short   'P'
-                                                      <> help    "Try to produce fallback definitions for failing translations (default)"
-                                 , pure  Permissive ]
+                                                      <> help    "Try to skip or produce fallback definitions for definitions that can't be translated"
+                                 , pure  Strict ]
 
                         <*> asum [ flag' Recursive    $  long    "recursive"
                                                       <> short   'R'

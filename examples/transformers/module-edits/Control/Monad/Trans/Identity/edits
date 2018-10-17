@@ -1,2 +1,7 @@
-order Control.Monad.Trans.Identity.Functor__IdentityT Control.Monad.Trans.Identity.Applicative__IdentityT_liftA2
-order Control.Monad.Trans.Identity.Monad__IdentityT Control.Monad.Trans.Identity.MonadFail__IdentityT
+order Control.Monad.Trans.Identity.Functor__IdentityT  Control.Monad.Trans.Identity.Applicative__IdentityT_liftA2
+order Control.Monad.Trans.Identity.Monad__IdentityT    Control.Monad.Trans.Identity.MonadFail__IdentityT
+order Control.Monad.Trans.Identity.Functor__IdentityT  Control.Monad.Trans.Identity.Traversable__IdentityT
+order Control.Monad.Trans.Identity.Foldable__IdentityT Control.Monad.Trans.Identity.Traversable__IdentityT
+order Control.Monad.Trans.Identity.Ord1__IdentityT     Control.Monad.Trans.Identity.Ord__IdentityT_compare
+order Control.Monad.Trans.Identity.Eq1__IdentityT      Control.Monad.Trans.Identity.Ord1__IdentityT
+order Control.Monad.Trans.Identity.Eq___IdentityT      Control.Monad.Trans.Identity.Ord__IdentityT

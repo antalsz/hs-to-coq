@@ -177,194 +177,81 @@ Local Definition BooleanFormula_foldr
 
 (* Converted value declarations: *)
 
-(* Skipping instance Outputable__BooleanFormula of class Outputable *)
+Definition mkVar {a} : a -> BooleanFormula a :=
+  Var.
 
-(* Skipping instance Binary__BooleanFormula of class Binary *)
+Definition mkTrue {a} : BooleanFormula a :=
+  And nil.
 
-Local Definition Traversable__BooleanFormula_traverse {f} {a} {b} `{_
-   : GHC.Base.Applicative f}
-   : (a -> f b) -> BooleanFormula a -> f (BooleanFormula b) :=
-  BooleanFormula_traverse.
+Definition mkOr {a} `{GHC.Base.Eq_ a}
+   : list (LBooleanFormula a) -> BooleanFormula a :=
+  let mkOr' :=
+    fun arg_0__ =>
+      match arg_0__ with
+      | cons x nil => SrcLoc.unLoc x
+      | xs => Or xs
+      end in
+  let fromOr :=
+    fun arg_4__ =>
+      match arg_4__ with
+      | SrcLoc.L _ (Or xs) => Some xs
+      | SrcLoc.L _ (And nil) => None
+      | x => Some (cons x nil)
+      end in
+  Data.Maybe.maybe mkTrue (mkOr' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
+  MonadUtils.concatMapM fromOr.
 
-Local Definition Traversable__BooleanFormula_sequenceA
-   : forall {f} {a},
-     forall `{GHC.Base.Applicative f},
-     BooleanFormula (f a) -> f (BooleanFormula a) :=
-  fun {f} {a} `{GHC.Base.Applicative f} =>
-    Traversable__BooleanFormula_traverse GHC.Base.id.
+Definition mkFalse {a} : BooleanFormula a :=
+  Or nil.
 
-Local Definition Traversable__BooleanFormula_sequence
-   : forall {m} {a},
-     forall `{GHC.Base.Monad m}, BooleanFormula (m a) -> m (BooleanFormula a) :=
-  fun {m} {a} `{GHC.Base.Monad m} => Traversable__BooleanFormula_sequenceA.
+Definition mkBool {a} : bool -> BooleanFormula a :=
+  fun arg_0__ => match arg_0__ with | false => mkFalse | true => mkTrue end.
 
-Local Definition Traversable__BooleanFormula_mapM
-   : forall {m} {a} {b},
-     forall `{GHC.Base.Monad m},
-     (a -> m b) -> BooleanFormula a -> m (BooleanFormula b) :=
-  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__BooleanFormula_traverse.
+Definition mkAnd {a} `{GHC.Base.Eq_ a}
+   : list (LBooleanFormula a) -> BooleanFormula a :=
+  let mkAnd' :=
+    fun arg_0__ =>
+      match arg_0__ with
+      | cons x nil => SrcLoc.unLoc x
+      | xs => And xs
+      end in
+  let fromAnd {a} : LBooleanFormula a -> option (list (LBooleanFormula a)) :=
+    fun arg_4__ =>
+      match arg_4__ with
+      | SrcLoc.L _ (And xs) => Some xs
+      | SrcLoc.L _ (Or nil) => None
+      | x => Some (cons x nil)
+      end in
+  Data.Maybe.maybe mkFalse (mkAnd' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
+  MonadUtils.concatMapM fromAnd.
 
-Fixpoint Foldable__BooleanFormula_null {a} (arg_0__ : BooleanFormula a) : bool
-           := match arg_0__ with
-              | Var _ => false
-              | And a1 =>
-                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
-              | Or a1 =>
-                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
-              | Parens a1 => Data.Foldable.all Foldable__BooleanFormula_null a1
-              end.
-
-Local Definition Foldable__BooleanFormula_foldr {a} {b}
-   : (a -> b -> b) -> b -> BooleanFormula a -> b :=
-  BooleanFormula_foldr.
-
-Local Definition Foldable__BooleanFormula_toList
-   : forall {a}, BooleanFormula a -> list a :=
-  fun {a} =>
-    fun t =>
-      GHC.Base.build' (fun _ => (fun c n => Foldable__BooleanFormula_foldr c n t)).
-
-Local Definition Foldable__BooleanFormula_foldl'
-   : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
-  fun {b} {a} =>
-    fun f z0 xs =>
-      let f' := fun x k z => k (f z x) in
-      Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0.
-
-Local Definition Foldable__BooleanFormula_length
-   : forall {a}, BooleanFormula a -> GHC.Num.Int :=
-  fun {a} =>
-    Foldable__BooleanFormula_foldl' (fun arg_0__ arg_1__ =>
-                                       match arg_0__, arg_1__ with
-                                       | c, _ => c GHC.Num.+ #1
-                                       end) #0.
-
-Local Definition Foldable__BooleanFormula_foldMap {m} {a} `{_
-   : GHC.Base.Monoid m}
-   : (a -> m) -> BooleanFormula a -> m :=
-  BooleanFormula_foldMap.
-
-Local Definition Foldable__BooleanFormula_foldl
-   : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
-  fun {b} {a} =>
-    fun f z t =>
-      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
-                                      (Foldable__BooleanFormula_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
-                                                                         (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
-                                                                          GHC.Base.flip f)) t)) z.
-
-Local Definition Foldable__BooleanFormula_foldr'
-   : forall {a} {b}, (a -> b -> b) -> b -> BooleanFormula a -> b :=
-  fun {a} {b} =>
-    fun f z0 xs =>
-      let f' := fun k x z => k (f x z) in
-      Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0.
-
-Local Definition Foldable__BooleanFormula_product
-   : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    Coq.Program.Basics.compose Data.SemigroupInternal.getProduct
-                               (Foldable__BooleanFormula_foldMap Data.SemigroupInternal.Mk_Product).
-
-Local Definition Foldable__BooleanFormula_sum
-   : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
-  fun {a} `{GHC.Num.Num a} =>
-    Coq.Program.Basics.compose Data.SemigroupInternal.getSum
-                               (Foldable__BooleanFormula_foldMap Data.SemigroupInternal.Mk_Sum).
-
-Local Definition Foldable__BooleanFormula_fold
-   : forall {m}, forall `{GHC.Base.Monoid m}, BooleanFormula m -> m :=
-  fun {m} `{GHC.Base.Monoid m} => Foldable__BooleanFormula_foldMap GHC.Base.id.
-
-Program Instance Foldable__BooleanFormula
-   : Data.Foldable.Foldable BooleanFormula :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__BooleanFormula_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__BooleanFormula_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__BooleanFormula_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__BooleanFormula_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__BooleanFormula_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__BooleanFormula_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__BooleanFormula_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__BooleanFormula_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__BooleanFormula_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__BooleanFormula_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__BooleanFormula_toList |}.
-
-Fixpoint Functor__BooleanFormula_op_zlzd__ {a} {b} (arg_0__ : a) (arg_1__
-                                             : BooleanFormula b) : BooleanFormula a
-           := match arg_0__, arg_1__ with
-              | z, Var a1 => Var ((fun b1 => z) a1)
-              | z, And a1 =>
-                  And (GHC.Base.fmap (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z)) a1)
-              | z, Or a1 =>
-                  Or (GHC.Base.fmap (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z)) a1)
-              | z, Parens a1 =>
-                  Parens (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z) a1)
-              end.
-
-Local Definition Functor__BooleanFormula_fmap {a} {b}
-   : (a -> b) -> BooleanFormula a -> BooleanFormula b :=
-  BooleanFormula_fmap.
-
-Program Instance Functor__BooleanFormula : GHC.Base.Functor BooleanFormula :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__BooleanFormula_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__BooleanFormula_op_zlzd__ |}.
-
-Program Instance Traversable__BooleanFormula
-   : Data.Traversable.Traversable BooleanFormula :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__BooleanFormula_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__BooleanFormula_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__BooleanFormula_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__BooleanFormula_traverse |}.
-
-(* Skipping instance Data__BooleanFormula of class Data *)
-
-Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
-   : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Var a1, Var b1 => ((a1 GHC.Base.== b1))
-    | And a1, And b1 => ((a1 GHC.Base.== b1))
-    | Or a1, Or b1 => ((a1 GHC.Base.== b1))
-    | Parens a1, Parens b1 => ((a1 GHC.Base.== b1))
-    | _, _ => false
-    end.
-
-Local Definition Eq___BooleanFormula_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
-   : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
-  fun x y => negb (Eq___BooleanFormula_op_zeze__ x y).
-
-Program Instance Eq___BooleanFormula {a} `{GHC.Base.Eq_ a}
-   : GHC.Base.Eq_ (BooleanFormula a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___BooleanFormula_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___BooleanFormula_op_zsze__ |}.
-
-Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
-  fix eval arg_0__ arg_1__
+Definition simplify {a} `{GHC.Base.Eq_ a}
+   : (a -> option bool) -> BooleanFormula a -> BooleanFormula a :=
+  fix simplify arg_0__ arg_1__
         := match arg_0__, arg_1__ with
-           | f, Var x => f x
-           | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-           | f, Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-           | f, Parens x => eval f (SrcLoc.unLoc x)
+           | f, Var a => match f a with | None => Var a | Some b => mkBool b end
+           | f, And xs =>
+               mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
+           | f, Or xs =>
+               mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
+           | f, Parens x => simplify f (SrcLoc.unLoc x)
            end.
 
-Definition extendClauseAtoms {a} `{Unique.Uniquable a}
-   : Clause a -> a -> Clause a :=
-  fun c x =>
-    let 'Mk_Clause clauseAtoms_0__ clauseExprs_1__ := c in
-    Mk_Clause (UniqSet.addOneToUniqSet (clauseAtoms c) x) clauseExprs_1__.
+Definition memberClauseAtoms {a} `{Unique.Uniquable a}
+   : a -> Clause a -> bool :=
+  fun x c => UniqSet.elementOfUniqSet x (clauseAtoms c).
+
+Definition isTrue {a} : BooleanFormula a -> bool :=
+  fun arg_0__ => match arg_0__ with | And nil => true | _ => false end.
+
+Definition isUnsatisfied {a} `{GHC.Base.Eq_ a}
+   : (a -> bool) -> BooleanFormula a -> option (BooleanFormula a) :=
+  fun f bf =>
+    let f' := fun x => if f x : bool then Some true else None in
+    let bf' := simplify f' bf in if isTrue bf' : bool then None else Some bf'.
+
+Definition isFalse {a} : BooleanFormula a -> bool :=
+  fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
 
 Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
   fix impliesAtom arg_0__ arg_1__
@@ -375,15 +262,11 @@ Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
            | Parens x, y => impliesAtom (SrcLoc.unLoc x) y
            end.
 
-Definition isFalse {a} : BooleanFormula a -> bool :=
-  fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
-
-Definition isTrue {a} : BooleanFormula a -> bool :=
-  fun arg_0__ => match arg_0__ with | And nil => true | _ => false end.
-
-Definition memberClauseAtoms {a} `{Unique.Uniquable a}
-   : a -> Clause a -> bool :=
-  fun x c => UniqSet.elementOfUniqSet x (clauseAtoms c).
+Definition extendClauseAtoms {a} `{Unique.Uniquable a}
+   : Clause a -> a -> Clause a :=
+  fun c x =>
+    let 'Mk_Clause clauseAtoms_0__ clauseExprs_1__ := c in
+    Mk_Clause (UniqSet.addOneToUniqSet (clauseAtoms c) x) clauseExprs_1__.
 
 Definition implies {a} `{Unique.Uniquable a}
    : BooleanFormula a -> BooleanFormula a -> bool :=
@@ -442,71 +325,191 @@ Definition implies {a} `{Unique.Uniquable a}
     go (Mk_Clause UniqSet.emptyUniqSet (cons e1 nil)) (Mk_Clause
                                                        UniqSet.emptyUniqSet (cons e2 nil)).
 
-Definition mkFalse {a} : BooleanFormula a :=
-  Or nil.
-
-Definition mkAnd {a} `{GHC.Base.Eq_ a}
-   : list (LBooleanFormula a) -> BooleanFormula a :=
-  let mkAnd' :=
-    fun arg_0__ =>
-      match arg_0__ with
-      | cons x nil => SrcLoc.unLoc x
-      | xs => And xs
-      end in
-  let fromAnd {a} : LBooleanFormula a -> option (list (LBooleanFormula a)) :=
-    fun arg_4__ =>
-      match arg_4__ with
-      | SrcLoc.L _ (And xs) => Some xs
-      | SrcLoc.L _ (Or nil) => None
-      | x => Some (cons x nil)
-      end in
-  Data.Maybe.maybe mkFalse (mkAnd' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
-  MonadUtils.concatMapM fromAnd.
-
-Definition mkTrue {a} : BooleanFormula a :=
-  And nil.
-
-Definition mkOr {a} `{GHC.Base.Eq_ a}
-   : list (LBooleanFormula a) -> BooleanFormula a :=
-  let mkOr' :=
-    fun arg_0__ =>
-      match arg_0__ with
-      | cons x nil => SrcLoc.unLoc x
-      | xs => Or xs
-      end in
-  let fromOr :=
-    fun arg_4__ =>
-      match arg_4__ with
-      | SrcLoc.L _ (Or xs) => Some xs
-      | SrcLoc.L _ (And nil) => None
-      | x => Some (cons x nil)
-      end in
-  Data.Maybe.maybe mkTrue (mkOr' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
-  MonadUtils.concatMapM fromOr.
-
-Definition mkBool {a} : bool -> BooleanFormula a :=
-  fun arg_0__ => match arg_0__ with | false => mkFalse | true => mkTrue end.
-
-Definition simplify {a} `{GHC.Base.Eq_ a}
-   : (a -> option bool) -> BooleanFormula a -> BooleanFormula a :=
-  fix simplify arg_0__ arg_1__
+Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
+  fix eval arg_0__ arg_1__
         := match arg_0__, arg_1__ with
-           | f, Var a => match f a with | None => Var a | Some b => mkBool b end
-           | f, And xs =>
-               mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
-           | f, Or xs =>
-               mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
-           | f, Parens x => simplify f (SrcLoc.unLoc x)
+           | f, Var x => f x
+           | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+           | f, Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+           | f, Parens x => eval f (SrcLoc.unLoc x)
            end.
 
-Definition isUnsatisfied {a} `{GHC.Base.Eq_ a}
-   : (a -> bool) -> BooleanFormula a -> option (BooleanFormula a) :=
-  fun f bf =>
-    let f' := fun x => if f x : bool then Some true else None in
-    let bf' := simplify f' bf in if isTrue bf' : bool then None else Some bf'.
+Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Var a1, Var b1 => ((a1 GHC.Base.== b1))
+    | And a1, And b1 => ((a1 GHC.Base.== b1))
+    | Or a1, Or b1 => ((a1 GHC.Base.== b1))
+    | Parens a1, Parens b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
+    end.
 
-Definition mkVar {a} : a -> BooleanFormula a :=
-  Var.
+Local Definition Eq___BooleanFormula_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
+   : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=
+  fun x y => negb (Eq___BooleanFormula_op_zeze__ x y).
+
+Program Instance Eq___BooleanFormula {a} `{GHC.Base.Eq_ a}
+   : GHC.Base.Eq_ (BooleanFormula a) :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___BooleanFormula_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___BooleanFormula_op_zsze__ |}.
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `BooleanFormula.Data__BooleanFormula' *)
+
+Local Definition Functor__BooleanFormula_fmap {a} {b}
+   : (a -> b) -> BooleanFormula a -> BooleanFormula b :=
+  BooleanFormula_fmap.
+
+Fixpoint Functor__BooleanFormula_op_zlzd__ {a} {b} (arg_0__ : a) (arg_1__
+                                             : BooleanFormula b) : BooleanFormula a
+           := match arg_0__, arg_1__ with
+              | z, Var a1 => Var ((fun b1 => z) a1)
+              | z, And a1 =>
+                  And (GHC.Base.fmap (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z)) a1)
+              | z, Or a1 =>
+                  Or (GHC.Base.fmap (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z)) a1)
+              | z, Parens a1 =>
+                  Parens (GHC.Base.fmap (Functor__BooleanFormula_op_zlzd__ z) a1)
+              end.
+
+Program Instance Functor__BooleanFormula : GHC.Base.Functor BooleanFormula :=
+  fun _ k =>
+    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__BooleanFormula_fmap ;
+         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__BooleanFormula_op_zlzd__ |}.
+
+Local Definition Foldable__BooleanFormula_foldMap {m} {a} `{_
+   : GHC.Base.Monoid m}
+   : (a -> m) -> BooleanFormula a -> m :=
+  BooleanFormula_foldMap.
+
+Local Definition Foldable__BooleanFormula_fold
+   : forall {m}, forall `{GHC.Base.Monoid m}, BooleanFormula m -> m :=
+  fun {m} `{GHC.Base.Monoid m} => Foldable__BooleanFormula_foldMap GHC.Base.id.
+
+Local Definition Foldable__BooleanFormula_foldl
+   : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
+  fun {b} {a} =>
+    fun f z t =>
+      Data.SemigroupInternal.appEndo (Data.SemigroupInternal.getDual
+                                      (Foldable__BooleanFormula_foldMap (Data.SemigroupInternal.Mk_Dual GHC.Base.∘
+                                                                         (Data.SemigroupInternal.Mk_Endo GHC.Base.∘
+                                                                          GHC.Base.flip f)) t)) z.
+
+Local Definition Foldable__BooleanFormula_foldr {a} {b}
+   : (a -> b -> b) -> b -> BooleanFormula a -> b :=
+  BooleanFormula_foldr.
+
+Local Definition Foldable__BooleanFormula_foldl'
+   : forall {b} {a}, (b -> a -> b) -> b -> BooleanFormula a -> b :=
+  fun {b} {a} =>
+    fun f z0 xs =>
+      let f' := fun x k z => k (f z x) in
+      Foldable__BooleanFormula_foldr f' GHC.Base.id xs z0.
+
+Local Definition Foldable__BooleanFormula_foldr'
+   : forall {a} {b}, (a -> b -> b) -> b -> BooleanFormula a -> b :=
+  fun {a} {b} =>
+    fun f z0 xs =>
+      let f' := fun k x z => k (f x z) in
+      Foldable__BooleanFormula_foldl f' GHC.Base.id xs z0.
+
+Local Definition Foldable__BooleanFormula_length
+   : forall {a}, BooleanFormula a -> GHC.Num.Int :=
+  fun {a} =>
+    Foldable__BooleanFormula_foldl' (fun arg_0__ arg_1__ =>
+                                       match arg_0__, arg_1__ with
+                                       | c, _ => c GHC.Num.+ #1
+                                       end) #0.
+
+Fixpoint Foldable__BooleanFormula_null {a} (arg_0__ : BooleanFormula a) : bool
+           := match arg_0__ with
+              | Var _ => false
+              | And a1 =>
+                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
+              | Or a1 =>
+                  Data.Foldable.all (Data.Foldable.all Foldable__BooleanFormula_null) a1
+              | Parens a1 => Data.Foldable.all Foldable__BooleanFormula_null a1
+              end.
+
+Local Definition Foldable__BooleanFormula_product
+   : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Coq.Program.Basics.compose Data.SemigroupInternal.getProduct
+                               (Foldable__BooleanFormula_foldMap Data.SemigroupInternal.Mk_Product).
+
+Local Definition Foldable__BooleanFormula_sum
+   : forall {a}, forall `{GHC.Num.Num a}, BooleanFormula a -> a :=
+  fun {a} `{GHC.Num.Num a} =>
+    Coq.Program.Basics.compose Data.SemigroupInternal.getSum
+                               (Foldable__BooleanFormula_foldMap Data.SemigroupInternal.Mk_Sum).
+
+Local Definition Foldable__BooleanFormula_toList
+   : forall {a}, BooleanFormula a -> list a :=
+  fun {a} =>
+    fun t =>
+      GHC.Base.build' (fun _ => (fun c n => Foldable__BooleanFormula_foldr c n t)).
+
+Program Instance Foldable__BooleanFormula
+   : Data.Foldable.Foldable BooleanFormula :=
+  fun _ k =>
+    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+           Foldable__BooleanFormula_fold ;
+         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+           Foldable__BooleanFormula_foldMap ;
+         Data.Foldable.foldl__ := fun {b} {a} => Foldable__BooleanFormula_foldl ;
+         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__BooleanFormula_foldl' ;
+         Data.Foldable.foldr__ := fun {a} {b} => Foldable__BooleanFormula_foldr ;
+         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__BooleanFormula_foldr' ;
+         Data.Foldable.length__ := fun {a} => Foldable__BooleanFormula_length ;
+         Data.Foldable.null__ := fun {a} => Foldable__BooleanFormula_null ;
+         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+           Foldable__BooleanFormula_product ;
+         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} =>
+           Foldable__BooleanFormula_sum ;
+         Data.Foldable.toList__ := fun {a} => Foldable__BooleanFormula_toList |}.
+
+Local Definition Traversable__BooleanFormula_traverse {f} {a} {b} `{_
+   : GHC.Base.Applicative f}
+   : (a -> f b) -> BooleanFormula a -> f (BooleanFormula b) :=
+  BooleanFormula_traverse.
+
+Local Definition Traversable__BooleanFormula_mapM
+   : forall {m} {a} {b},
+     forall `{GHC.Base.Monad m},
+     (a -> m b) -> BooleanFormula a -> m (BooleanFormula b) :=
+  fun {m} {a} {b} `{GHC.Base.Monad m} => Traversable__BooleanFormula_traverse.
+
+Local Definition Traversable__BooleanFormula_sequenceA
+   : forall {f} {a},
+     forall `{GHC.Base.Applicative f},
+     BooleanFormula (f a) -> f (BooleanFormula a) :=
+  fun {f} {a} `{GHC.Base.Applicative f} =>
+    Traversable__BooleanFormula_traverse GHC.Base.id.
+
+Local Definition Traversable__BooleanFormula_sequence
+   : forall {m} {a},
+     forall `{GHC.Base.Monad m}, BooleanFormula (m a) -> m (BooleanFormula a) :=
+  fun {m} {a} `{GHC.Base.Monad m} => Traversable__BooleanFormula_sequenceA.
+
+Program Instance Traversable__BooleanFormula
+   : Data.Traversable.Traversable BooleanFormula :=
+  fun _ k =>
+    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+           Traversable__BooleanFormula_mapM ;
+         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+           Traversable__BooleanFormula_sequence ;
+         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+           Traversable__BooleanFormula_sequenceA ;
+         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+           Traversable__BooleanFormula_traverse |}.
+
+(* Skipping all instances of class `Binary.Binary', including
+   `BooleanFormula.Binary__BooleanFormula' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `BooleanFormula.Outputable__BooleanFormula' *)
 
 (* External variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr

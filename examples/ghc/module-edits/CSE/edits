@@ -13,8 +13,8 @@ inline mutual CSE.cse_bind
 inline mutual CSE.tryForCSE
 inline mutual CSE.cseCase
 
-# Justified by CSE_NestedRecursion.zipMapAccumL_is_mapAccumL_zip
-in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.List.zip xs1 xs2) = CSE_NestedRecursion.zipMapAccumL f s xs1 xs2
+# Justified by NestedRecursionHelpers.zipMapAccumL_is_mapAccumL_zip
+in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.List.zip xs1 xs2) = NestedRecursionHelpers.zipMapAccumL f s xs1 xs2
 
 # OK?
 rewrite forall x, Core.tyConAppArgs x = nil

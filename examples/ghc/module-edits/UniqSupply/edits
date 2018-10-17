@@ -1,7 +1,7 @@
 skip module GHC.IO.Unsafe
 skip module GHC.Types
 
-order UniqSupply.Functor__UniqSM UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM
+order UniqSupply.Functor__UniqSM UniqSupply.Applicative__UniqSM_liftA2 UniqSupply.Applicative__UniqSM UniqSupply.Monad__UniqSM
 
 # uses IO Monad
 # problemmatic for SimplCore.hs and CorePrep.hs

@@ -23,7 +23,6 @@ import Data.Bitraversable
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
 import Data.Maybe
-import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -57,6 +56,7 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
 import HsToCoq.Coq.Pretty
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
@@ -255,13 +255,10 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                field <- recordField $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
-  let updFields       = M.keys updates
+  let updFields = M.keys updates
       prettyUpdFields what =
         let quote f = "`" ++ T.unpack (qualidToIdent f) ++ "'"
-        in what ++ case assertUnsnoc updFields of
-                     ([],   f)  -> " "  ++ quote f
-                     ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
-                     (fs,   f') -> "s " ++ intercalate ", " (map quote fs) ++ ", and " ++ quote f'
+        in explainStrItems quote "no" "," "and" what (what ++ "s") updFields
 
   recType <- S.minView . S.fromList <$> traverse (\field -> lookupRecordFieldType field) updFields >>= \case
                Just (Just recType, []) -> pure recType
@@ -933,7 +930,7 @@ convertMethodBinding name PatBind{..}   = convUnsupportedIn "pattern bindings"  
 convertMethodBinding name FunBind{..}   = withCurrentDefinition name $ do
   definitionTask name >>= \case
     SkipIt ->
-      convUnsupported "skipping instance method definitions"
+      convUnsupported "skipping instance method definitions (without `skip method')"
     RedefineIt def ->
       pure $ RedefinedBinding name def
     AxiomatizeIt _ ->
@@ -1037,7 +1034,7 @@ addRecursion eBindings = do
                       [ (cd, cd^.convDefName, S.toAscList . getFreeVars $ cd^.convDefBody)
                       | Right (ConvertedDefinitionBinding cd) <- eBindings ])
       
-  pure . flip map eBindings $ \case
+  pure . topoSortByVariablesBy ErrOrVars M.empty . flip map eBindings $ \case
     Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
       Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual recursion check"
@@ -1054,7 +1051,7 @@ addRecursion eBindings = do
                         , rdType = maybeForall _convDefArgs <$> _convDefType
                         , rdBody = body }
         cd ->
-          convUnsupportedIn "recursion through non-lambda value" "definition " (showP $ cd^.convDefName)
+          convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
       
       nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
       
@@ -1065,7 +1062,8 @@ addRecursion eBindings = do
           pure (const . wfFix order $ rdToFixBody body1, getInfo bodies, [])
         
         (Just _, _ :| _ : _) ->
-          convUnsupported' "non-structural mutual recursion"
+          convUnsupportedIn "non-structural mutual recursion" "definitions"
+                            (explainStrItems (showP . rdName) "" "," "and" "" "" bodies)
         
         (Nothing, body1 :| []) ->
           pure (const . Fix . FixOne $ rdToFixBody body1, getInfo bodies, [])

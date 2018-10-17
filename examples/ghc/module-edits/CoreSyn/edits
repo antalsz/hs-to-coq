@@ -1,7 +1,7 @@
 #
 # This would be better if we had a rewrite for types
 #
-redefine Inductive Core.Unfolding : Type := Mk_Unfolding.
+redefine Axiom Core.Unfolding : Type.
 
 rewrite forall , Core.BootUnfolding = getUnfolding Core.BootUnfolding
 rewrite forall , Core.OtherCon      = fun x => getUnfolding (Core.OtherCon x)
@@ -15,13 +15,68 @@ redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
     | _ => true
     end.
 
-redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
-  fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.BootUnfolding => true | _ => false end.
+# Avoiding record patterns for `Core.Unfolding`.  We need a much better story
+# for this.  Some or all of the skipped definitions can also be refactored to
+# use `Core.getUnfoldingInfo'.
+
+skip Core.maybeUnfoldingTemplate
 
 redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
-  fun arg_0__ => match Core.getUnfoldingInfo arg_0__ with | Core.OtherCon cons_ => cons_ | _ => nil end.
+  fun u => match Core.getUnfoldingInfo u with
+           | Core.OtherCon conses => conses
+           | _                    => nil
+           end.
 
+skip Core.isValueUnfolding
 
+redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool :=
+  fun u => match Core.getUnfoldingInfo u with
+           | Core.OtherCon _ =>
+               true
+           | Core.CoreUnfolding _uf_tmpl _uf_src _uf_is_top
+                                uf_is_value
+                                _uf_is_conlike _uf_is_work_free _uf_expandable _uf_guidance =>
+               uf_is_value
+           | _ =>
+               false
+           end.
+
+redefine Definition Core.isConLikeUnfolding : Core.Unfolding -> bool :=
+  fun u => match Core.getUnfoldingInfo u with
+           | Core.OtherCon _ =>
+               true
+           | Core.CoreUnfolding _uf_tmpl _uf_src _uf_is_top _uf_is_value
+                                uf_is_conlike _uf_is_work_free _uf_expandable _uf_guidance =>
+               uf_is_conlike
+           | _ =>
+               false
+           end.
+
+skip Core.isCheapUnfolding
+
+skip Core.isExpandableUnfolding
+
+skip Core.expandUnfolding_maybe
+
+skip Core.isCompulsoryUnfolding
+
+skip Core.isStableUnfolding
+
+# skip Core.hasSomeUnfolding
+
+redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
+  fun u => match Core.getUnfoldingInfo u with
+           | Core.BootUnfolding => true
+           | _                  => false
+           end.
+
+redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
+  fun u => match Core.getUnfoldingInfo u with
+           | Core.CoreUnfolding _ _ _ _ _ _ _ _ | DFunUnfolding _ _ _ => true
+           | _                                                        => false
+           end.
+
+skip Core.canUnfold
 
 skip module CostCentre
 rename type CostCentre.CostCentre = unit

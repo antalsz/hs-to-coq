@@ -25,41 +25,15 @@ Import GHC.Num.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-Definition commonPrefix : Data.IntSet.Internal.IntSet -> bool :=
-  fix commonPrefix t
-        := let sharedPrefix
-            : Data.IntSet.Internal.Prefix -> Coq.Numbers.BinNums.N -> bool :=
-             fun p a => p GHC.Base.== (p Data.Bits..&.(**) a) in
-           match t with
-           | Data.IntSet.Internal.Nil => true
-           | Data.IntSet.Internal.Tip _ _ => true
-           | (Data.IntSet.Internal.Bin p _ l r as b) =>
-               andb (Data.Foldable.all (sharedPrefix p) (Data.IntSet.Internal.elems b)) (andb
-                     (commonPrefix l) (commonPrefix r))
-           end.
+Definition validTipPrefix : Data.IntSet.Internal.Prefix -> bool :=
+  fun p => (#63 Data.Bits..&.(**) p) GHC.Base.== #0.
 
-Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
-  fix maskPowerOfTwo t
+Definition tipsValid : Data.IntSet.Internal.IntSet -> bool :=
+  fix tipsValid t
         := match t with
            | Data.IntSet.Internal.Nil => true
-           | Data.IntSet.Internal.Tip _ _ => true
-           | Data.IntSet.Internal.Bin _ m l r =>
-               andb (Utils.Containers.Internal.BitUtil.bitcount #0 (m) GHC.Base.== #1) (andb
-                     (maskPowerOfTwo l) (maskPowerOfTwo r))
-           end.
-
-Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
-  fix maskRespected t
-        := match t with
-           | Data.IntSet.Internal.Nil => true
-           | Data.IntSet.Internal.Tip _ _ => true
-           | Data.IntSet.Internal.Bin _ binMask l r =>
-               andb (Data.Foldable.all (fun x => Data.IntSet.Internal.zero x binMask)
-                     (Data.IntSet.Internal.elems l)) (andb (Data.Foldable.all (fun x =>
-                                                                                 negb (Data.IntSet.Internal.zero x
-                                                                                       binMask))
-                                                            (Data.IntSet.Internal.elems r)) (andb (maskRespected l)
-                                                                                                  (maskRespected r)))
+           | (Data.IntSet.Internal.Tip p b as tip) => validTipPrefix p
+           | Data.IntSet.Internal.Bin _ _ l r => andb (tipsValid l) (tipsValid r)
            end.
 
 Definition nilNeverChildOfBin : Data.IntSet.Internal.IntSet -> bool :=
@@ -76,15 +50,41 @@ Definition nilNeverChildOfBin : Data.IntSet.Internal.IntSet -> bool :=
     | Data.IntSet.Internal.Bin _ _ l r => andb (noNilInSet l) (noNilInSet r)
     end.
 
-Definition validTipPrefix : Data.IntSet.Internal.Prefix -> bool :=
-  fun p => (#63 Data.Bits..&.(**) p) GHC.Base.== #0.
-
-Definition tipsValid : Data.IntSet.Internal.IntSet -> bool :=
-  fix tipsValid t
+Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
+  fix maskRespected t
         := match t with
            | Data.IntSet.Internal.Nil => true
-           | (Data.IntSet.Internal.Tip p b as tip) => validTipPrefix p
-           | Data.IntSet.Internal.Bin _ _ l r => andb (tipsValid l) (tipsValid r)
+           | Data.IntSet.Internal.Tip _ _ => true
+           | Data.IntSet.Internal.Bin _ binMask l r =>
+               andb (Data.Foldable.all (fun x => Data.IntSet.Internal.zero x binMask)
+                     (Data.IntSet.Internal.elems l)) (andb (Data.Foldable.all (fun x =>
+                                                                                 negb (Data.IntSet.Internal.zero x
+                                                                                       binMask))
+                                                            (Data.IntSet.Internal.elems r)) (andb (maskRespected l)
+                                                                                                  (maskRespected r)))
+           end.
+
+Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
+  fix maskPowerOfTwo t
+        := match t with
+           | Data.IntSet.Internal.Nil => true
+           | Data.IntSet.Internal.Tip _ _ => true
+           | Data.IntSet.Internal.Bin _ m l r =>
+               andb (Utils.Containers.Internal.BitUtil.bitcount #0 (m) GHC.Base.== #1) (andb
+                     (maskPowerOfTwo l) (maskPowerOfTwo r))
+           end.
+
+Definition commonPrefix : Data.IntSet.Internal.IntSet -> bool :=
+  fix commonPrefix t
+        := let sharedPrefix
+            : Data.IntSet.Internal.Prefix -> Coq.Numbers.BinNums.N -> bool :=
+             fun p a => p GHC.Base.== (p Data.Bits..&.(**) a) in
+           match t with
+           | Data.IntSet.Internal.Nil => true
+           | Data.IntSet.Internal.Tip _ _ => true
+           | (Data.IntSet.Internal.Bin p _ l r as b) =>
+               andb (Data.Foldable.all (sharedPrefix p) (Data.IntSet.Internal.elems b)) (andb
+                     (commonPrefix l) (commonPrefix r))
            end.
 
 Definition valid : Data.IntSet.Internal.IntSet -> bool :=

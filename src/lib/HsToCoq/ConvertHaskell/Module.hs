@@ -197,7 +197,7 @@ convertModules sources = do
 moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
 moduleDeclarations ConvertedModule{..} = do
   orders <- view $ edits.orders
-  let sorted = topoSortSentences orders $
+  let sorted = topoSortByVariables orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)

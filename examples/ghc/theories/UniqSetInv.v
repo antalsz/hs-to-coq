@@ -463,12 +463,6 @@ Definition nonDetFoldUniqSet_Directly {elt} {a} `{Unique.Uniquable elt} `{Unique
 Definition nonDetKeysUniqSet {elt} `{Unique.Uniquable elt} : UniqSet elt -> list Unique.Unique :=
   UniqFM.nonDetKeysUFM GHC.Base.∘ getUniqSet'.
 
-Ltac expand_pairs :=
-  match goal with
-    |- context[let (_,_) := ?e in _] =>
-    rewrite (surjective_pairing e)
-  end.
-
 Program Definition partitionUniqSet {a} `{Unique.Uniquable a}
    : (a -> bool) -> UniqSet a -> (UniqSet a * UniqSet a)%type :=
   fun arg_0__ arg_1__ =>
@@ -477,49 +471,20 @@ Program Definition partitionUniqSet {a} `{Unique.Uniquable a}
     end.
 Next Obligation.
   unfold UniqInv in *.
-  intros x' y'.
-  specialize (wildcard' x' y').
-  intros Hl.
+  intros x' y' Hl.
   apply wildcard'.
-  clear wildcard'.
-  unfold lookupUFM, partitionUFM in *.
-  unfold getWordKey in *.
-  unfold getKey in *.
-  destruct x as [m'].
-  destruct s as [m].  
-  destruct (getUnique x') as [x''] in *.
-  revert Heq_anonymous.
-  expand_pairs.
-  intros Heq_anonymous.
-  inversion Heq_anonymous as [[H1 H2]].
-  clear H2.
-  clear Heq_anonymous.
-admit.
-Admitted.
-Next Obligation.
-  unfold UniqInv in *.
-  intros x' y'.
-  unfold lookupUFM, partitionUFM in *.
   destruct x as [m'].
   destruct s as [m].
-  unfold getWordKey in *.
-  unfold getKey in *.
-  intros Hl.
-  specialize (wildcard' x' y').
-  destruct (getUnique x') as [x''] in *.
-  destruct (getUnique y') as [y''] in *.  
+  eapply lookup_partition; eauto.
+Defined.
+Next Obligation.
+  unfold UniqInv in *.
+  intros x' y' Hl.
   apply wildcard'.
-  clear wildcard'.
-  revert Heq_anonymous. 
-  expand_pairs.
-  intros Heq_anonymous.
-  symmetry in Hl.
-  rewrite Hl.
-  clear Hl.
-  inversion Heq_anonymous as [[H1 H2]].
-  clear Heq_anonymous H1 H2.
-  rename arg_0__ into P.
-Admitted.
+  destruct y as [m'].
+  destruct s as [m].  
+  eapply lookup_partition; eauto.
+Defined.
 
 Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.Uniquable b}
    : UniqSet a -> UniqFM.UniqFM b -> UniqSet a :=
@@ -529,9 +494,10 @@ Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.U
     end.
 Next Obligation.
   unfold UniqInv in *.
-  intros x y.
+  intros x' y'.
   unfold lookupUFM, intersectUFM in *.
-  destruct s. destruct arg_1__.
+  destruct s.
+  destruct arg_1__.
   intro h.
   rewrite <- lookup_intersection in h. destruct h.
   eauto.

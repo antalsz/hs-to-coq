@@ -80,6 +80,13 @@ Axiom lookup_union :
     (lookup key m1 = Some val \/ (lookup key m1 = None /\ lookup key m2 = Some val)) <->
     lookup key (union m1 m2) = Some val.
 
+Axiom lookup_partition :
+  forall (A:Type) key (val:A) (m m': IntMap A) (P: A -> bool), 
+    ((m' = fst (partition P m) \/
+      m' = snd (partition P m)) /\
+     lookup key m' = Some val) <->
+    lookup key m  = Some val.
+
 Axiom lookup_union_None:
   forall (A : Type)
     (key : Internal.Key)

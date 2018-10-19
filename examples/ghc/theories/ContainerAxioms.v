@@ -1,10 +1,12 @@
 (* When these things get proven, they ought to move to [containers] *)
 
+From Coq Require Import ssreflect ssrfun ssrbool.
+
 Require Import GHC.Base.
 Require Import Data.IntMap.Internal.
 
 Axiom member_eq : forall A k k' (i : IntMap.Internal.IntMap A),
-    k == k' = true ->
+    k == k' ->
     IntMap.Internal.member k i = IntMap.Internal.member k' i.
 
 Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
@@ -30,7 +32,7 @@ Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
 
 Axiom difference_Tip_member:
   forall A (i : Internal.IntMap A) (n : Internal.Key),
-    (IntMap.Internal.member n i) = true ->
+    (IntMap.Internal.member n i) ->
     forall x:A,
       IntMap.Internal.difference
         (IntMap.Internal.Tip n x) i = Internal.Nil.
@@ -44,7 +46,7 @@ Axiom difference_Tip_non_member:
         IntMap.Internal.Tip n x.
 
 Axiom null_empty : forall A,
-    (@IntMap.Internal.null A IntMap.Internal.empty) = true.
+    (@IntMap.Internal.null A IntMap.Internal.empty).
 
 Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
     IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
@@ -111,7 +113,7 @@ Axiom member_lookup :
    forall (A : Type)
      (key : Internal.Key) 
      (i : Internal.IntMap A),
-   (IntMap.Internal.member key i = true) =
+   (is_true (IntMap.Internal.member key i)) =
    (exists val, IntMap.Internal.lookup key i = Some val).
 
 Axiom non_member_lookup :
@@ -121,7 +123,14 @@ Axiom non_member_lookup :
    (IntMap.Internal.member key i = false) =
    (IntMap.Internal.lookup key i = None).
 
-
+(* This is a pretty strong property about the representation of 
+   IntMaps. I hope that it is true. *)
+Axiom delete_commute :
+  forall (A : Type)
+    (kx ky : Internal.Key) 
+    (i : Internal.IntMap A),
+  IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
+  IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
 
 (*
 This is a QuickChick setup to test the above axioms

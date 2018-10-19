@@ -11,8 +11,6 @@ Require Import Proofs.Var.
 Require Import Proofs.Unique.
 Require Import Proofs.VarSet.
 
-Import GHC.Base.ManualNotations.
-
 Set Bullet Behavior "Strict Subproofs".
 
 
@@ -249,8 +247,8 @@ Proof.
   apply almostEqual_refl; auto.
   rewrite elemVarEnv_delVarEnv_neq in IN; auto.
   rewrite IN. auto.
-  intro h. rewrite h in EQ. discriminate.
-  intro h. rewrite h in EQ. discriminate.
+  intro h. rewrite EQ in h. auto. 
+  intro h. rewrite EQ in h. auto.
 Qed.
 
 
@@ -333,6 +331,7 @@ Lemma getInScopeVars_extendInScopeSetList:
   getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
 Proof.
   intros.
+  rewrite -> extendVarSetList_foldl'.
   unfold getInScopeVars.
   unfold extendInScopeSetList.
   set_b_iff.

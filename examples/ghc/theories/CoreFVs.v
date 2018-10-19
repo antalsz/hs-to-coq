@@ -46,14 +46,15 @@ Proof.
   inversion H; subst. inversion H; subst.
   assert (extendVarSetList emptyVarSet [] = emptyVarSet).
   { rewrite <- mkVarSet_extendVarSetList. reflexivity. }
-  specialize (H0 (Base.const true) emptyVarSet emptyVarSet [] H2).
+Admitted.
+(*  specialize (H0 (Base.const true) emptyVarSet emptyVarSet [] H2).
   specialize (H1 (Base.const true) (extendVarSet emptyVarSet x) emptyVarSet [] H2).
   destruct H0; destruct H1.
   rewrite hs_coq_tuple_snd. rewrite H3.
   rewrite hs_coq_tuple_snd. rewrite H4.
   unfold_VarSet_to_IntMap.
   (* Seems true. *)
-Admitted.
+Admitted. *)
 
 Lemma addBndr_WF : forall fv bndr,
     WF_fv fv ->

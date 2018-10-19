@@ -297,9 +297,9 @@ Proof.
       rewrite lookupVarSet_extendVarSet_neq.
       auto.
       intro h;
-      rewrite h in Eq; discriminate.
+      rewrite Eq in h; discriminate.
       intro h;
-      rewrite h in Eq; discriminate.
+      rewrite Eq in h; discriminate.
   - destruct H1 as [[GLV WE] Wb].
      split; only 1: split; eauto.
      eapply H0; eauto.
@@ -368,6 +368,7 @@ Proof.
       apply H0 in H3; clear H0.
       rewrite Core.bindersOf_Rec_cleanup in H3.
       apply subVarSet_delVarSetList_extendVarSetList_dual.
+      unfold is_true.
       rewrite subVarSet_unionVarSet, andb_true_iff; split.
       * apply subVarSet_exprsFreeVars.
         rewrite Forall_map, Forall_forall in *.
@@ -482,6 +483,7 @@ Proof.
       - rewrite extendVarSetList_nil.
         reflexivity.
       - rewrite extendVarSetList_cons.
+        rewrite -> fold_is_true in H.
         rewrite disjointVarSet_mkVarSet_cons in H.
         destruct H.
         rewrite IHvs1 by assumption.
@@ -497,12 +499,14 @@ Proof.
       -- rewrite <- not_true_iff_false in Heqb.
          rewrite !lookupVarSet_extendVarSet_neq by assumption.
          apply IHvs2.
+         rewrite fold_is_true in *.
          rewrite disjointVarSet_mkVarSet in *.
          eapply Forall_impl; only 2: eapply H. intros v2 ?.
          cbv beta in H0.
          rewrite delVarSet_elemVarSet_false in H0; only 1: assumption.
          clear -Heqb.
          apply elemVarSet_delVarSetList_false_l.
+         unfold is_true in Heqb.
          rewrite not_true_iff_false in Heqb.
          apply Heqb.
   * reflexivity.
@@ -590,9 +594,10 @@ Proof.
       rewrite !delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
       apply subVarSet_delVarSetList_both.
       rewrite exprFreeVars_Case.
+      unfold is_true.
       match goal with HIn : List.In _ ?xs |- context [mapUnionVarSet ?f ?xs] =>
         let H := fresh in
-        epose proof (mapUnionVarSet_In_subVarSet _ _ _ f HIn) as H ; simpl in H end.
+        epose proof (mapUnionVarSet_In_subVarSet f HIn) as H ; simpl in H end.
       rewrite delVarSetList_rev, <- delVarSetList_single, <- delVarSetList_app.
       set_b_iff; fsetdec.
   * apply H. 
@@ -633,6 +638,7 @@ Proof.
   rewrite extendVarSetList_cons,extendVarSetList_nil in H0.
   assumption.
   Unshelve.
+  rewrite fold_is_true in *.
   rewrite disjointVarSet_mkVarSet_cons, disjointVarSet_mkVarSet_nil.
   intuition congruence.
 Qed.

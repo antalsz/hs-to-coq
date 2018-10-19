@@ -1,10 +1,16 @@
-axiomatize module TrieMap
-simple class TrieMap.TrieMap
-  # Can't use the CPSed class because the associated types need to escape the continuation
-unaxiomatize definition TrieMap.insertTM
-unaxiomatize definition TrieMap.deleteTM
-
+################################################################################
+## Global GHC renamings
 rename type Var.Id = Core.Var
+
+################################################################################
+## The TrieMap class
+
+simple class TrieMap.TrieMap
+  # Can't use the CPSed class because the associated types need to escape the
+  # continuation
+
+################################################################################
+## Renaming constructors
 
 rename value TrieMap.LooseTypeMap = TrieMap.Mk_LooseTypeMap
 rename value TrieMap.TypeMap      = TrieMap.Mk_TypeMap
@@ -12,10 +18,16 @@ rename value TrieMap.CoercionMap  = TrieMap.Mk_CoercionMap
 rename value TrieMap.CoercionMapX = TrieMap.Mk_CoercionMapX
 rename value TrieMap.CoreMap      = TrieMap.Mk_CoreMap
 
-redefine Inductive TrieMap.ListMap (m : Type -> Type) (a : Type) : Type := LIST_MAP.
-redefine Inductive TrieMap.GenMap  (m : Type -> Type) (a : Type) : Type := GEN_MAP.
-redefine Inductive TrieMap.TypeMapX (a : Type) : Type := TYPE_MAP_X.
-redefine Inductive TrieMap.CoreMapX (a : Type) : Type := CORE_MAP_X.
+################################################################################
+## Types we can't handle
+
+redefine Axiom TrieMap.ListMap  : forall (m : Type -> Type) (a : Type), Type.
+redefine Axiom TrieMap.GenMap   : forall (m : Type -> Type) (a : Type), Type.
+redefine Axiom TrieMap.TypeMapX : forall                    (a : Type), Type.
+redefine Axiom TrieMap.CoreMapX : forall                    (a : Type), Type.
+
+################################################################################
+## Skipped values
 
 # There are two of these thanks to renaming types/coercions; we replace it in
 # the midamble
@@ -32,8 +44,108 @@ skip TrieMap.lkG
 skip TrieMap.lkTyLit
 skip TrieMap.xtTyLit
 
-# Using a type class in the argument list makes things hard
-#
-# redefine Inductive TrieMap.GenMap m `{(TrieMap m)} a : Type := EmptyMap     : GenMap m a
-#                                                             |  SingletonMap : (Key m) -> (a -> (GenMap m a))
-#                                                             |  MultiMap     : (m a) -> (GenMap m a).
+################################################################################
+################################################################################
+################################################################################
+
+# ################################################################################
+# ## Global GHC renamings
+# rename type Var.Id = Core.Var
+
+# ################################################################################
+# ## The TrieMap class
+
+# simple class TrieMap.TrieMap
+#   # Can't use the CPSed class because the associated types need to escape the
+#   # continuation
+
+# ################################################################################
+# ## Renaming constructors
+
+# rename value TrieMap.LooseTypeMap = TrieMap.Mk_LooseTypeMap
+# rename value TrieMap.TypeMap      = TrieMap.Mk_TypeMap
+# rename value TrieMap.CoercionMap  = TrieMap.Mk_CoercionMap
+# rename value TrieMap.CoercionMapX = TrieMap.Mk_CoercionMapX
+# rename value TrieMap.CoreMap      = TrieMap.Mk_CoreMap
+
+# ################################################################################
+# ## Types we can't handle
+
+# redefine Axiom TrieMap.ListMap  : forall (m : Type -> Type) (a : Type), Type.
+# redefine Axiom TrieMap.GenMap   : forall (m : Type -> Type) (a : Type), Type.
+# redefine Axiom TrieMap.TypeMapX : forall                    (a : Type), Type.
+# redefine Axiom TrieMap.CoreMapX : forall                    (a : Type), Type.
+
+# ################################################################################
+# ## Skipped values
+
+# # There are two of these thanks to renaming types/coercions; we replace it in
+# # the midamble
+# skip TrieMap.Eq___DeBruijn__unit
+
+# # These have types that mention `Key` before `TrieMap` in their contexts.
+# # Eventually we might need a more general solution to this, but for now, the
+# # axiomatized instances are in the midamble.
+# skip TrieMap.TrieMap__GenMap
+# skip TrieMap.xtG
+# skip TrieMap.lkG
+
+# # Skipping until `TyCoRep.TyLit` is a thing
+# skip TrieMap.lkTyLit
+# skip TrieMap.xtTyLit
+
+################################################################################
+#   
+# unaxiomatize definition TrieMap.insertTM
+# unaxiomatize definition TrieMap.deleteTM
+
+# unaxiomatize definition TrieMap.>.>
+# unaxiomatize definition TrieMap.|>
+# unaxiomatize definition TrieMap.|>>
+# unaxiomatize definition TrieMap.deMaybe
+
+# unaxiomatize definition TrieMap.TrieMap__IntMap
+# unaxiomatize definition TrieMap.xtInt
+# # TODO: Autounaxiomatize instance methods
+# unaxiomatize definition TrieMap.TrieMap__IntMap_alterTM
+# unaxiomatize definition TrieMap.TrieMap__IntMap_emptyTM
+# unaxiomatize definition TrieMap.TrieMap__IntMap_foldTM
+# unaxiomatize definition TrieMap.TrieMap__IntMap_lookupTM
+# unaxiomatize definition TrieMap.TrieMap__IntMap_mapTM
+
+# unaxiomatize definition TrieMap.TrieMap__Map
+# # TODO: Autounaxiomatize instance methods
+# unaxiomatize definition TrieMap.TrieMap__Map_alterTM
+# unaxiomatize definition TrieMap.TrieMap__Map_emptyTM
+# unaxiomatize definition TrieMap.TrieMap__Map_foldTM
+# unaxiomatize definition TrieMap.TrieMap__Map_lookupTM
+# unaxiomatize definition TrieMap.TrieMap__Map_mapTM
+
+# unaxiomatize definition TrieMap.TrieMap__UniqDFM
+# # TODO: Autounaxiomatize instance methods
+# unaxiomatize definition TrieMap.TrieMap__UniqDFM_alterTM
+# unaxiomatize definition TrieMap.TrieMap__UniqDFM_emptyTM
+# unaxiomatize definition TrieMap.TrieMap__UniqDFM_foldTM
+# unaxiomatize definition TrieMap.TrieMap__UniqDFM_lookupTM
+# unaxiomatize definition TrieMap.TrieMap__UniqDFM_mapTM
+
+# unaxiomatize definition TrieMap.TrieMap__MaybeMap
+# unaxiomatize definition TrieMap.mapMb
+# unaxiomatize definition TrieMap.lkMaybe
+# unaxiomatize definition TrieMap.xtMaybe
+# unaxiomatize definition TrieMap.fdMaybe
+# # TODO: Autounaxiomatize instance methods
+# unaxiomatize definition TrieMap.TrieMap__MaybeMap_alterTM
+# unaxiomatize definition TrieMap.TrieMap__MaybeMap_emptyTM
+# unaxiomatize definition TrieMap.TrieMap__MaybeMap_foldTM
+# unaxiomatize definition TrieMap.TrieMap__MaybeMap_lookupTM
+# unaxiomatize definition TrieMap.TrieMap__MaybeMap_mapTM
+
+# unaxiomatize definition TrieMap.foldMaybe
+
+# unaxiomatize definition TrieMap.lkDNamed
+# unaxiomatize definition TrieMap.xtDNamed
+
+# unaxiomatize definition TrieMap.emptyLiteralMap
+# unaxiomatize definition TrieMap.lkLit
+# unaxiomatize definition TrieMap.xtLit

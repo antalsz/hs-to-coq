@@ -31,3 +31,6 @@ UniqSetInv.v
 CoreSubst.v
 
 CoreSemantics.v
+
+TrieMap.v
+# CSE.v

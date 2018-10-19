@@ -23,13 +23,15 @@ Require Literal.
 Require Name.
 Require NameEnv.
 Require UniqDFM.
+Require Unique.
+Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
 Definition XT a :=
   (option a -> option a)%type.
 
-Inductive TypeMapX (a : Type) : Type := TYPE_MAP_X.
+Axiom TypeMapX : forall (a : Type), Type.
 
 Inductive TyLitMap a : Type
   := TLM (tlm_number : Data.Map.Internal.Map GHC.Num.Integer a) (tlm_string
@@ -55,9 +57,9 @@ Inductive MaybeMap m a : Type
 Definition LiteralMap :=
   (Data.Map.Internal.Map Literal.Literal)%type.
 
-Inductive ListMap (m : Type -> Type) (a : Type) : Type := LIST_MAP.
+Axiom ListMap : forall (m : Type -> Type) (a : Type), Type.
 
-Inductive GenMap (m : Type -> Type) (a : Type) : Type := GEN_MAP.
+Axiom GenMap : forall (m : Type -> Type) (a : Type), Type.
 
 Definition TypeMapG :=
   (GenMap TypeMapX)%type.
@@ -67,7 +69,7 @@ Inductive LooseTypeMap a : Type
 
 Inductive TypeMap a : Type := Mk_TypeMap : (TypeMapG (TypeMapG a)) -> TypeMap a.
 
-Inductive CoreMapX (a : Type) : Type := CORE_MAP_X.
+Axiom CoreMapX : forall (a : Type), Type.
 
 Definition CoreMapG :=
   (GenMap CoreMapX)%type.
@@ -202,27 +204,26 @@ Axiom xtTT : forall {a}, DeBruijn unit -> XT a -> TypeMap a -> TypeMap a.
 
 Axiom xtT : forall {a}, DeBruijn unit -> XT a -> TypeMapX a -> TypeMapX a.
 
-Axiom xtMaybe : forall {k} {m} {a},
-                (forall {b}, k -> XT b -> m b -> m b) ->
-                option k -> XT a -> MaybeMap m a -> MaybeMap m a.
-
-Axiom xtLit : forall {a},
-              Literal.Literal -> XT a -> LiteralMap a -> LiteralMap a.
+Definition xtLit {a}
+   : Literal.Literal -> XT a -> LiteralMap a -> LiteralMap a :=
+  alterTM.
 
 Axiom xtList : forall {m} {k} {a},
                forall `{TrieMap m},
                (forall {b}, k -> XT b -> m b -> m b) ->
                list k -> XT a -> ListMap m a -> ListMap m a.
 
-Axiom xtInt : forall {a},
-              nat -> XT a -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap a.
+Definition xtInt {a}
+   : nat ->
+     XT a -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap a :=
+  fun k f m => Data.IntMap.Internal.alter f k m.
 
 Axiom xtE : forall {a},
             DeBruijn Core.CoreExpr -> XT a -> CoreMapX a -> CoreMapX a.
 
-Axiom xtDNamed : forall {n} {a},
-                 forall `{Name.NamedThing n},
-                 n -> XT a -> NameEnv.DNameEnv a -> NameEnv.DNameEnv a.
+Definition xtDNamed {n} {a} `{Name.NamedThing n}
+   : n -> XT a -> NameEnv.DNameEnv a -> NameEnv.DNameEnv a :=
+  fun tc f m => NameEnv.alterDNameEnv f m (Name.getName tc).
 
 Axiom xtDFreeVar : forall {a},
                    Core.Var -> XT a -> Core.DVarEnv a -> Core.DVarEnv a.
@@ -236,14 +237,32 @@ Axiom xtA : forall {a}, CmEnv -> Core.CoreAlt -> XT a -> AltMap a -> AltMap a.
 
 Axiom trieMapView : unit -> option unit.
 
-Axiom op_zgzizg__ : forall {a} {b} {c}, (a -> b) -> (b -> c) -> a -> c.
+Definition op_zgzizg__ {a} {b} {c} : (a -> b) -> (b -> c) -> a -> c :=
+  fun f g x => g (f x).
 
-Axiom op_zbzgzg__ : forall {m2} {a} {m1},
-                    forall `{TrieMap m2},
-                    (XT (m2 a) -> m1 (m2 a) -> m1 (m2 a)) ->
-                    (m2 a -> m2 a) -> m1 (m2 a) -> m1 (m2 a).
+Notation "'_>.>_'" := (op_zgzizg__).
 
-Axiom op_zbzg__ : forall {a} {b}, a -> (a -> b) -> b.
+Infix ">.>" := (_>.>_) (at level 99).
+
+Definition op_zbzg__ {a} {b} : a -> (a -> b) -> b :=
+  fun x f => f x.
+
+Notation "'_|>_'" := (op_zbzg__).
+
+Infix "|>" := (_|>_) (at level 99).
+
+Definition xtMaybe {k} {m} {a}
+   : (forall {b}, k -> XT b -> m b -> m b) ->
+     option k -> XT a -> MaybeMap m a -> MaybeMap m a :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | _, None, f, m =>
+        let 'MM mm_nothing_4__ mm_just_5__ := m in
+        MM (f (mm_nothing m)) mm_just_5__
+    | tr, Some x, f, m =>
+        let 'MM mm_nothing_9__ mm_just_10__ := m in
+        MM mm_nothing_9__ (mm_just m |> tr x f)
+    end.
 
 Axiom mkDeBruijnContext : list Core.Var -> CmEnv.
 
@@ -253,8 +272,12 @@ Axiom mapTyLit : forall {a} {b}, (a -> b) -> TyLitMap a -> TyLitMap b.
 
 Axiom mapT : forall {a} {b}, (a -> b) -> TypeMapX a -> TypeMapX b.
 
-Axiom mapMb : forall {m} {a} {b},
-              forall `{TrieMap m}, (a -> b) -> MaybeMap m a -> MaybeMap m b.
+Definition mapMb {m} {a} {b} `{TrieMap m}
+   : (a -> b) -> MaybeMap m a -> MaybeMap m b :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, MM mn mj => MM (GHC.Base.fmap f mn) (mapTM f mj)
+    end.
 
 Axiom mapList : forall {m} {a} {b},
                 forall `{TrieMap m}, (a -> b) -> ListMap m a -> ListMap m b.
@@ -283,10 +306,16 @@ Axiom lkTT : forall {a}, DeBruijn unit -> TypeMap a -> option a.
 
 Axiom lkT : forall {a}, DeBruijn unit -> TypeMapX a -> option a.
 
-Axiom lkMaybe : forall {k} {m} {a},
-                (forall {b}, k -> m b -> option b) -> option k -> MaybeMap m a -> option a.
+Definition lkMaybe {k} {m} {a}
+   : (forall {b}, k -> m b -> option b) -> option k -> MaybeMap m a -> option a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, None => mm_nothing
+    | lk, Some x => mm_just >.> lk x
+    end.
 
-Axiom lkLit : forall {a}, Literal.Literal -> LiteralMap a -> option a.
+Definition lkLit {a} : Literal.Literal -> LiteralMap a -> option a :=
+  lookupTM.
 
 Axiom lkList : forall {m} {k} {a},
                forall `{TrieMap m},
@@ -294,8 +323,9 @@ Axiom lkList : forall {m} {k} {a},
 
 Axiom lkE : forall {a}, DeBruijn Core.CoreExpr -> CoreMapX a -> option a.
 
-Axiom lkDNamed : forall {n} {a},
-                 forall `{Name.NamedThing n}, n -> NameEnv.DNameEnv a -> option a.
+Definition lkDNamed {n} {a} `{Name.NamedThing n}
+   : n -> NameEnv.DNameEnv a -> option a :=
+  fun n env => NameEnv.lookupDNameEnv env (Name.getName n).
 
 Axiom lkDFreeVar : forall {a}, Core.Var -> Core.DVarEnv a -> option a.
 
@@ -312,7 +342,12 @@ Axiom foldTypeMap : forall {a} {b}, (a -> b -> b) -> b -> TypeMap a -> b.
 
 Axiom foldTyLit : forall {a} {b}, (a -> b -> b) -> TyLitMap a -> b -> b.
 
-Axiom foldMaybe : forall {a} {b}, (a -> b -> b) -> option a -> b -> b.
+Definition foldMaybe {a} {b} : (a -> b -> b) -> option a -> b -> b :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | _, None, b => b
+    | k, Some a, b => k a b
+    end.
 
 Axiom foldCoreMap : forall {a} {b}, (a -> b -> b) -> b -> CoreMap a -> b.
 
@@ -320,8 +355,9 @@ Axiom fdVar : forall {a} {b}, (a -> b -> b) -> VarMap a -> b -> b.
 
 Axiom fdT : forall {a} {b}, (a -> b -> b) -> TypeMapX a -> b -> b.
 
-Axiom fdMaybe : forall {m} {a} {b},
-                forall `{TrieMap m}, (a -> b -> b) -> MaybeMap m a -> b -> b.
+Definition fdMaybe {m} {a} {b} `{TrieMap m}
+   : (a -> b -> b) -> MaybeMap m a -> b -> b :=
+  fun k m => foldMaybe k (mm_nothing m) GHC.Base.∘ foldTM k (mm_just m).
 
 Axiom fdList : forall {m} {a} {b},
                forall `{TrieMap m}, (a -> b -> b) -> ListMap m a -> b -> b.
@@ -350,7 +386,8 @@ Axiom emptyTyLitMap : forall {a}, TyLitMap a.
 
 Axiom emptyT : forall {a}, TypeMapX a.
 
-Axiom emptyLiteralMap : forall {a}, LiteralMap a.
+Definition emptyLiteralMap {a} : LiteralMap a :=
+  emptyTM.
 
 Axiom emptyE : forall {a}, CoreMapX a.
 
@@ -361,29 +398,159 @@ Axiom emptyCME : CmEnv.
 Definition deleteTM {m} {a} `{TrieMap m} : Key m -> m a -> m a :=
   fun k m => alterTM k (fun arg_0__ => None) m.
 
-Axiom deMaybe : forall {m} {a}, forall `{TrieMap m}, option (m a) -> m a.
+Definition deMaybe {m} {a} `{TrieMap m} : option (m a) -> m a :=
+  fun arg_0__ => match arg_0__ with | None => emptyTM | Some m => m end.
+
+Definition op_zbzgzg__ {m2} {a} {m1} `{TrieMap m2}
+   : (XT (m2 a) -> m1 (m2 a) -> m1 (m2 a)) ->
+     (m2 a -> m2 a) -> m1 (m2 a) -> m1 (m2 a) :=
+  fun f g => f (Some GHC.Base.∘ (g GHC.Base.∘ deMaybe)).
+
+Notation "'_|>>_'" := (op_zbzgzg__).
+
+Infix "|>>" := (_|>>_) (at level 99).
 
 Axiom deBruijnize : forall {a}, a -> DeBruijn a.
 
-Instance TrieMap__UniqDFM : TrieMap UniqDFM.UniqDFM := {}.
-Proof.
-Admitted.
+Local Definition TrieMap__UniqDFM_Key : Type :=
+  Unique.Unique.
 
-Instance TrieMap__Map
-   : forall {k}, forall `{GHC.Base.Ord k}, TrieMap (Data.Map.Internal.Map k) :=
-  {}.
-Proof.
-Admitted.
+Local Definition TrieMap__UniqDFM_alterTM
+   : forall {b},
+     TrieMap__UniqDFM_Key -> XT b -> UniqDFM.UniqDFM b -> UniqDFM.UniqDFM b :=
+  fun {b} => fun k f m => UniqDFM.alterUDFM f m k.
 
-Instance TrieMap__IntMap : TrieMap Data.IntMap.Internal.IntMap := {}.
-Proof.
-Admitted.
+Local Definition TrieMap__UniqDFM_emptyTM : forall {a}, UniqDFM.UniqDFM a :=
+  fun {a} => UniqDFM.emptyUDFM.
 
-Instance TrieMap__MaybeMap
-   : forall {m}, forall `{TrieMap m}, TrieMap (MaybeMap m) :=
-  {}.
-Proof.
-Admitted.
+Local Definition TrieMap__UniqDFM_foldTM
+   : forall {a} {b}, (a -> b -> b) -> UniqDFM.UniqDFM a -> b -> b :=
+  fun {a} {b} => fun k m z => UniqDFM.foldUDFM k z m.
+
+Local Definition TrieMap__UniqDFM_lookupTM
+   : forall {b}, TrieMap__UniqDFM_Key -> UniqDFM.UniqDFM b -> option b :=
+  fun {b} => fun k m => UniqDFM.lookupUDFM m k.
+
+Local Definition TrieMap__UniqDFM_mapTM
+   : forall {a} {b}, (a -> b) -> UniqDFM.UniqDFM a -> UniqDFM.UniqDFM b :=
+  fun {a} {b} => fun f m => UniqDFM.mapUDFM f m.
+
+Program Instance TrieMap__UniqDFM : TrieMap UniqDFM.UniqDFM :=
+  {
+  Key := TrieMap__UniqDFM_Key ;
+  alterTM := fun {b} => TrieMap__UniqDFM_alterTM ;
+  emptyTM := fun {a} => TrieMap__UniqDFM_emptyTM ;
+  foldTM := fun {a} {b} => TrieMap__UniqDFM_foldTM ;
+  lookupTM := fun {b} => TrieMap__UniqDFM_lookupTM ;
+  mapTM := fun {a} {b} => TrieMap__UniqDFM_mapTM }.
+
+Local Definition TrieMap__Map_Key {inst_k} `{GHC.Base.Ord inst_k} : Type :=
+  k.
+
+Local Definition TrieMap__Map_alterTM {inst_k} `{GHC.Base.Ord inst_k}
+   : forall {b},
+     TrieMap__Map_Key ->
+     XT b -> (Data.Map.Internal.Map inst_k) b -> (Data.Map.Internal.Map inst_k) b :=
+  fun {b} => fun k f m => Data.Map.Internal.alter f k m.
+
+Local Definition TrieMap__Map_emptyTM {inst_k} `{GHC.Base.Ord inst_k}
+   : forall {a}, (Data.Map.Internal.Map inst_k) a :=
+  fun {a} => Data.Map.Internal.empty.
+
+Local Definition TrieMap__Map_foldTM {inst_k} `{GHC.Base.Ord inst_k}
+   : forall {a} {b},
+     (a -> b -> b) -> (Data.Map.Internal.Map inst_k) a -> b -> b :=
+  fun {a} {b} => fun k m z => Data.Map.Internal.foldr k z m.
+
+Local Definition TrieMap__Map_lookupTM {inst_k} `{GHC.Base.Ord inst_k}
+   : forall {b},
+     TrieMap__Map_Key -> (Data.Map.Internal.Map inst_k) b -> option b :=
+  fun {b} => Data.Map.Internal.lookup.
+
+Local Definition TrieMap__Map_mapTM {inst_k} `{GHC.Base.Ord inst_k}
+   : forall {a} {b},
+     (a -> b) ->
+     (Data.Map.Internal.Map inst_k) a -> (Data.Map.Internal.Map inst_k) b :=
+  fun {a} {b} => fun f m => Data.Map.Internal.map f m.
+
+Program Instance TrieMap__Map {k} `{GHC.Base.Ord k}
+   : TrieMap (Data.Map.Internal.Map k) :=
+  {
+  Key := TrieMap__Map_Key ;
+  alterTM := fun {b} => TrieMap__Map_alterTM ;
+  emptyTM := fun {a} => TrieMap__Map_emptyTM ;
+  foldTM := fun {a} {b} => TrieMap__Map_foldTM ;
+  lookupTM := fun {b} => TrieMap__Map_lookupTM ;
+  mapTM := fun {a} {b} => TrieMap__Map_mapTM }.
+
+Local Definition TrieMap__IntMap_Key : Type :=
+  nat.
+
+Local Definition TrieMap__IntMap_alterTM
+   : forall {b},
+     TrieMap__IntMap_Key ->
+     XT b -> Data.IntMap.Internal.IntMap b -> Data.IntMap.Internal.IntMap b :=
+  fun {b} => xtInt.
+
+Local Definition TrieMap__IntMap_emptyTM
+   : forall {a}, Data.IntMap.Internal.IntMap a :=
+  fun {a} => Data.IntMap.Internal.empty.
+
+Local Definition TrieMap__IntMap_foldTM
+   : forall {a} {b}, (a -> b -> b) -> Data.IntMap.Internal.IntMap a -> b -> b :=
+  fun {a} {b} => fun k m z => Data.IntMap.Internal.foldr k z m.
+
+Local Definition TrieMap__IntMap_lookupTM
+   : forall {b},
+     TrieMap__IntMap_Key -> Data.IntMap.Internal.IntMap b -> option b :=
+  fun {b} => fun k m => Data.IntMap.Internal.lookup k m.
+
+Local Definition TrieMap__IntMap_mapTM
+   : forall {a} {b},
+     (a -> b) -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap b :=
+  fun {a} {b} => fun f m => Data.IntMap.Internal.map f m.
+
+Program Instance TrieMap__IntMap : TrieMap Data.IntMap.Internal.IntMap :=
+  {
+  Key := TrieMap__IntMap_Key ;
+  alterTM := fun {b} => TrieMap__IntMap_alterTM ;
+  emptyTM := fun {a} => TrieMap__IntMap_emptyTM ;
+  foldTM := fun {a} {b} => TrieMap__IntMap_foldTM ;
+  lookupTM := fun {b} => TrieMap__IntMap_lookupTM ;
+  mapTM := fun {a} {b} => TrieMap__IntMap_mapTM }.
+
+Local Definition TrieMap__MaybeMap_Key {inst_m} `{TrieMap inst_m} : Type :=
+  option (TrieMap__MaybeMap_Key m).
+
+Local Definition TrieMap__MaybeMap_alterTM {inst_m} `{TrieMap inst_m}
+   : forall {b},
+     TrieMap__MaybeMap_Key -> XT b -> (MaybeMap inst_m) b -> (MaybeMap inst_m) b :=
+  fun {b} => xtMaybe alterTM.
+
+Local Definition TrieMap__MaybeMap_emptyTM {inst_m} `{TrieMap inst_m}
+   : forall {a}, (MaybeMap inst_m) a :=
+  fun {a} => MM None emptyTM.
+
+Local Definition TrieMap__MaybeMap_foldTM {inst_m} `{TrieMap inst_m}
+   : forall {a} {b}, (a -> b -> b) -> (MaybeMap inst_m) a -> b -> b :=
+  fun {a} {b} => fdMaybe.
+
+Local Definition TrieMap__MaybeMap_lookupTM {inst_m} `{TrieMap inst_m}
+   : forall {b}, TrieMap__MaybeMap_Key -> (MaybeMap inst_m) b -> option b :=
+  fun {b} => lkMaybe lookupTM.
+
+Local Definition TrieMap__MaybeMap_mapTM {inst_m} `{TrieMap inst_m}
+   : forall {a} {b}, (a -> b) -> (MaybeMap inst_m) a -> (MaybeMap inst_m) b :=
+  fun {a} {b} => mapMb.
+
+Program Instance TrieMap__MaybeMap {m} `{TrieMap m} : TrieMap (MaybeMap m) :=
+  {
+  Key := TrieMap__MaybeMap_Key ;
+  alterTM := fun {b} => TrieMap__MaybeMap_alterTM ;
+  emptyTM := fun {a} => TrieMap__MaybeMap_emptyTM ;
+  foldTM := fun {a} {b} => TrieMap__MaybeMap_foldTM ;
+  lookupTM := fun {b} => TrieMap__MaybeMap_lookupTM ;
+  mapTM := fun {a} {b} => TrieMap__MaybeMap_mapTM }.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `TrieMap.Outputable__ListMap' *)
@@ -464,10 +631,27 @@ Instance TrieMap__CoreMap : TrieMap CoreMap := {}.
 Proof.
 Admitted.
 
+Module Notations.
+Notation "'_TrieMap.>.>_'" := (op_zgzizg__).
+Infix "TrieMap.>.>" := (_>.>_) (at level 99).
+Notation "'_TrieMap.|>_'" := (op_zbzg__).
+Infix "TrieMap.|>" := (_|>_) (at level 99).
+Notation "'_TrieMap.|>>_'" := (op_zbzgzg__).
+Infix "TrieMap.|>>" := (_|>>_) (at level 99).
+End Notations.
+
 (* External variables:
-     Key None Some Type list nat option unit Core.CoreAlt Core.CoreExpr Core.DVarEnv
-     Core.Tickish Core.Var Core.VarEnv Data.IntMap.Internal.IntMap
-     Data.Map.Internal.Map FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
+     Key None Some TrieMap__MaybeMap_Key Type k list nat option unit Core.CoreAlt
+     Core.CoreExpr Core.DVarEnv Core.Tickish Core.Var Core.VarEnv
+     Data.IntMap.Internal.IntMap Data.IntMap.Internal.alter
+     Data.IntMap.Internal.empty Data.IntMap.Internal.foldr
+     Data.IntMap.Internal.lookup Data.IntMap.Internal.map Data.Map.Internal.Map
+     Data.Map.Internal.alter Data.Map.Internal.empty Data.Map.Internal.foldr
+     Data.Map.Internal.lookup Data.Map.Internal.map FastString.FastString
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.fmap GHC.Base.op_z2218U__
      GHC.Err.Build_Default GHC.Err.Default GHC.Err.default GHC.Num.Integer
-     Literal.Literal Name.NamedThing NameEnv.DNameEnv UniqDFM.UniqDFM
+     Literal.Literal Name.NamedThing Name.getName NameEnv.DNameEnv
+     NameEnv.alterDNameEnv NameEnv.lookupDNameEnv UniqDFM.UniqDFM UniqDFM.alterUDFM
+     UniqDFM.emptyUDFM UniqDFM.foldUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM
+     Unique.Unique
 *)

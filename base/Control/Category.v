@@ -42,24 +42,13 @@ Notation "'_∘_'" := (op_z2218U__).
 Infix "∘" := (_∘_) (left associativity, at level 40).
 (* Converted value declarations: *)
 
-Local Definition Category__arrow_op_z2218U__
-   : forall {b} {c} {a},
-     GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
-  fun {b} {c} {a} => _GHC.Base.∘_.
+Definition op_zlzlzl__ {cat} {b} {c} {a} `{Category cat}
+   : cat b c -> cat a b -> cat a c :=
+  _∘_.
 
-Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
-  fun {a} => GHC.Base.id.
+Notation "'_<<<_'" := (op_zlzlzl__).
 
-Program Instance Category__arrow : Category GHC.Prim.arrow :=
-  fun _ k =>
-    k {| id__ := fun {a} => Category__arrow_id ;
-         op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
-
-(* Skipping instance Category__op_ZCz7eUZC__ *)
-
-(* Skipping instance Category__op_ZCz7eUz7eUZC__ *)
-
-(* Skipping instance Category__Coercion *)
+Infix "<<<" := (_<<<_) (at level 99).
 
 Definition op_zgzgzg__ {cat} {a} {b} {c} `{Category cat}
    : cat a b -> cat b c -> cat a c :=
@@ -69,21 +58,35 @@ Notation "'_>>>_'" := (op_zgzgzg__).
 
 Infix ">>>" := (_>>>_) (at level 99).
 
-Definition op_zlzlzl__ {cat} {b} {c} {a} `{Category cat}
-   : cat b c -> cat a b -> cat a c :=
-  _∘_.
+(* Skipping instance `Control.Category.Category__Coercion' of class
+   `Control.Category.Category' *)
 
-Notation "'_<<<_'" := (op_zlzlzl__).
+(* Skipping instance `Control.Category.Category__op_ZCz7eUz7eUZC__' of class
+   `Control.Category.Category' *)
 
-Infix "<<<" := (_<<<_) (at level 99).
+(* Skipping instance `Control.Category.Category__op_ZCz7eUZC__' of class
+   `Control.Category.Category' *)
+
+Local Definition Category__arrow_id : forall {a}, GHC.Prim.arrow a a :=
+  fun {a} => GHC.Base.id.
+
+Local Definition Category__arrow_op_z2218U__
+   : forall {b} {c} {a},
+     GHC.Prim.arrow b c -> GHC.Prim.arrow a b -> GHC.Prim.arrow a c :=
+  fun {b} {c} {a} => _GHC.Base.∘_.
+
+Program Instance Category__arrow : Category GHC.Prim.arrow :=
+  fun _ k =>
+    k {| id__ := fun {a} => Category__arrow_id ;
+         op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
 
 Module Notations.
 Notation "'_Control.Category.∘_'" := (op_z2218U__).
 Infix "Control.Category.∘" := (_∘_) (left associativity, at level 40).
-Notation "'_Control.Category.>>>_'" := (op_zgzgzg__).
-Infix "Control.Category.>>>" := (_>>>_) (at level 99).
 Notation "'_Control.Category.<<<_'" := (op_zlzlzl__).
 Infix "Control.Category.<<<" := (_<<<_) (at level 99).
+Notation "'_Control.Category.>>>_'" := (op_zgzgzg__).
+Infix "Control.Category.>>>" := (_>>>_) (at level 99).
 End Notations.
 
 (* External variables:

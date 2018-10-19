@@ -5,6 +5,8 @@ order UniqDFM.Functor__UniqDFM UniqDFM.Foldable__UniqDFM UniqDFM.Traversable__Un
 order UniqDFM.Semigroup__UniqDFM UniqDFM.Monoid__UniqDFM_mappend
 order UniqDFM.Semigroup__UniqDFM UniqDFM.Monoid__UniqDFM_mconcat
 
+order UniqDFM.Functor__TaggedVal UniqDFM.mapUDFM
+
 skip UniqDFM.Functor__UniqDFM
 
 # sizes are nats

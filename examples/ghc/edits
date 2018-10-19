@@ -74,14 +74,14 @@ rewrite forall x y,       x Outputable.$$ y = Panic.someSDoc
 rewrite forall v str num msg, Outputable.warnPprTrace b str num msg v = v
 rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
 
-# Skip serialization-related instances
-skip Outputable.Outputable
-skip Outputable.OutputableBndr
-skip Json.ToJson
-skip Binary.Binary
-# and other non-interesting classes
-skip GHC.PackageDb.BinaryStringRep
-skip GHC.PackageDb.DbUnitIdModuleRep
+# Skip serialization-related classes…
+skip class Outputable.Outputable
+skip class Outputable.OutputableBndr
+skip class Json.ToJson
+skip class Binary.Binary
+# …and other non-interesting classes
+skip class GHC.PackageDb.BinaryStringRep
+skip class GHC.PackageDb.DbUnitIdModuleRep
 
 # Punned
 rename value BasicTypes.EP   = BasicTypes.Mk_EP

@@ -10,6 +10,8 @@ module HsToCoq.ConvertHaskell.Expr (
   hsBindName,
   ) where
 
+import Prelude hiding (Num())
+
 import Control.Lens
 
 import Control.Arrow ((&&&))
@@ -21,7 +23,6 @@ import Data.Bitraversable
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
 import Data.Maybe
-import Data.List (intercalate)
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -55,6 +56,8 @@ import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Util.FVs
+import HsToCoq.Coq.Pretty
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.TypeInfo
@@ -73,6 +76,15 @@ rewriteExpr :: ConversionMonad r m => Term -> m Term
 rewriteExpr tm = do
   rws <- view (edits.rewrites)
   return $ Coq.rewrite rws tm
+
+-- Module-local
+il_integer :: IntegralLit -> Integer
+il_integer IL{..} = (if il_neg then negate else id) il_value
+
+-- Module-local
+convert_int_literal :: LocalConvMonad r m => String -> Integer -> m Term
+convert_int_literal what = either convUnsupported (pure . Num)
+                         . convertInteger (what ++ " literals")
 
 convertExpr :: LocalConvMonad r m => HsExpr GhcRn -> m Term
 convertExpr hsExpr = convertExpr' hsExpr >>= rewriteExpr
@@ -95,9 +107,8 @@ convertExpr' (HsIPVar _) =
 
 convertExpr' (HsOverLit OverLit{..}) =
   case ol_val of
-    HsIntegral   intl ->
-        App1 "GHC.Num.fromInteger" . Num <$> convertInteger "integer literals" (il_value intl)
-    HsFractional fr  -> convertFractional fr
+    HsIntegral   intl     -> App1 "GHC.Num.fromInteger" <$> convert_int_literal "integer" (il_integer intl)
+    HsFractional fr       -> convertFractional fr
     HsIsString   _src str -> pure $ convertFastString str
 
 convertExpr' (HsLit lit) =
@@ -106,12 +117,12 @@ convertExpr' (HsLit lit) =
     HsCharPrim   _ _       -> convUnsupported "`Char#' literals"
     GHC.HsString _ fs      -> pure $ convertFastString fs
     HsStringPrim _ _       -> convUnsupported "`Addr#' literals"
-    HsInt        _ intl    -> Num <$> convertInteger "`Integer' literals" (il_value intl)
-    HsIntPrim    _ int     -> Num <$> convertInteger "`Integer' literals" int
+    HsInt        _ intl    -> convert_int_literal "`Int'" (il_integer intl)
+    HsIntPrim    _ int     -> convert_int_literal "`IntPrim'" int
     HsWordPrim   _ _       -> convUnsupported "`Word#' literals"
     HsInt64Prim  _ _       -> convUnsupported "`Int64#' literals"
     HsWord64Prim _ _       -> convUnsupported "`Word64#' literals"
-    HsInteger    _ int _ty -> Num <$> convertInteger "`Integer' literals" int
+    HsInteger    _ int _ty -> convert_int_literal "`Integer'" int
     HsRat        _ _ _     -> convUnsupported "`Rational' literals"
     HsFloatPrim  _ _       -> convUnsupported "`Float#' literals"
     HsDoublePrim _ _       -> convUnsupported "`Double#' literals"
@@ -244,13 +255,10 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
                field <- recordField $ unLoc hsRecFieldLbl
                pure (field, if hsRecPun then Nothing else Just hsRecFieldArg)
 
-  let updFields       = M.keys updates
+  let updFields = M.keys updates
       prettyUpdFields what =
         let quote f = "`" ++ T.unpack (qualidToIdent f) ++ "'"
-        in what ++ case assertUnsnoc updFields of
-                     ([],   f)  -> " "  ++ quote f
-                     ([f1], f2) -> "s " ++ quote f1                        ++ " and "  ++ quote f2
-                     (fs,   f') -> "s " ++ intercalate ", " (map quote fs) ++ ", and " ++ quote f'
+        in explainStrItems quote "no" "," "and" what (what ++ "s") updFields
 
   recType <- S.minView . S.fromList <$> traverse (\field -> lookupRecordFieldType field) updFields >>= \case
                Just (Just recType, []) -> pure recType
@@ -318,10 +326,10 @@ convertExpr' (RecordUpd recVal fields PlaceHolder PlaceHolder PlaceHolder PlaceH
 
 
 convertExpr' (ExprWithTySig e sigWcTy) =
-  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
+  HasType <$> convertLExpr e <*> convertLHsSigWcType PreserveUnusedTyVars sigWcTy
 
 convertExpr' (ExprWithTySigOut e sigWcTy) =
-  HasType <$> convertLExpr e <*> convertLHsSigWcType sigWcTy
+  HasType <$> convertLExpr e <*> convertLHsSigWcType PreserveUnusedTyVars sigWcTy
 
 convertExpr' (ArithSeq _postTc _overloadedLists info) =
   -- TODO: Special-case infinite lists?
@@ -463,10 +471,9 @@ convTrivialMatch alt = do
   body <- rhs patternFailure
   return (argBinders, body)
 
-
-patToName :: ConversionMonad r m => Pattern -> m Name
-patToName UnderscorePat    = return UnderscoreName
-patToName (QualidPat qid)  = return $ Ident qid
+patToName :: LocalConvMonad r m => Pattern -> m Name
+patToName UnderscorePat    = pure UnderscoreName
+patToName (QualidPat qid)  = pure $ Ident qid
 patToName _                = convUnsupported "patToArg: not a trivial pat"
 
 --------------------------------------------------------------------------------
@@ -831,11 +838,16 @@ convertTypedBinding convHsTy FunBind{..}   = do
     definitionTask name >>= \case
       SkipIt ->
         pure Nothing
+      
+      RedefineIt def ->
+        pure . Just $ RedefinedBinding name def
+      
       AxiomatizeIt axMode ->
         let missingType = case axMode of
               SpecificAxiomatize -> convUnsupported "axiomatizing definitions without type signatures"
               GeneralAxiomatize  -> pure bottomType
         in Just . ConvertedAxiomBinding name <$> maybe missingType pure convHsTy
+      
       TranslateIt -> do
         let (tvs, coqTy) =
               -- The @forall@ed arguments need to be brought into scope
@@ -885,7 +897,7 @@ wfFix _ _ = error "wfFix: cannot handle annotations or types"
 hsBindName :: ConversionMonad r m => HsBind GhcRn -> m Qualid
 hsBindName defn = case defn of
     FunBind{fun_id = L _ hsName} -> var ExprNS hsName
-    _ -> convUnsupported "Non-function top level binding"
+    _ -> convUnsupported' "non-function top level bindings"
 
 
 -- This is where we switch from the global monad to the local monad
@@ -905,24 +917,34 @@ convertTypedModuleBindings = convertMultipleBindings convertTypedModuleBinding
 -- | A variant of convertTypedModuleBinding that ignores the name in the HsBind
 -- and uses the provided one instead
 --
--- It also does not allow skipping,  and does not create fixpoints, does not support a type,
--- and always returns a binding (or fails with convUnsupported)
+-- It also does not allow skipping or axiomatization, does not create fixpoints,
+-- does not support a type, and always returns a binding (or fails with
+-- convUnsupported).
+--
+-- It does, however, support redefinition.
 convertMethodBinding :: ConversionMonad r m => Qualid -> HsBind GhcRn -> m ConvertedBinding
-convertMethodBinding _name VarBind{}     = convUnsupported "[internal] `VarBind'"
-convertMethodBinding _name AbsBinds{}    = convUnsupported "[internal?] `AbsBinds'"
-convertMethodBinding _name PatSynBind{}  = convUnsupported "pattern synonym bindings"
-convertMethodBinding _name PatBind{..}   = convUnsupported "pattern bind"
-convertMethodBinding name FunBind{..}    = withCurrentDefinition name $ do
-    defn <-
-      if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-      then case unLoc $ mg_alts fun_matches of
-             [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
-             _ -> convUnsupported "malformed multi-match variable definitions"
-      else do
-        (argBinders, match) <- convertFunction fun_matches
-        pure $  Fun argBinders match
-    pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
-
+convertMethodBinding name VarBind{}     = convUnsupportedIn "[internal] `VarBind'"     "method" (showP name)
+convertMethodBinding name AbsBinds{}    = convUnsupportedIn "[internal?] `AbsBinds'"   "method" (showP name)
+convertMethodBinding name PatSynBind{}  = convUnsupportedIn "pattern synonym bindings" "method" (showP name)
+convertMethodBinding name PatBind{..}   = convUnsupportedIn "pattern bindings"         "method" (showP name)
+convertMethodBinding name FunBind{..}   = withCurrentDefinition name $ do
+  definitionTask name >>= \case
+    SkipIt ->
+      convUnsupported "skipping instance method definitions (without `skip method')"
+    RedefineIt def ->
+      pure $ RedefinedBinding name def
+    AxiomatizeIt _ ->
+      convUnsupported "axiomatizing instance method definitions"
+    TranslateIt -> do
+      defn <-
+        if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+        then case unLoc $ mg_alts fun_matches of
+               [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+               _ -> convUnsupported "malformed multi-match variable definitions"
+        else do
+          (argBinders, match) <- convertFunction fun_matches
+          pure $  Fun argBinders match
+      pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
 
 convertTypedBindings :: LocalConvMonad r m
                      => [HsBind GhcRn] -> Map Qualid Signature
@@ -949,6 +971,8 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                             -- is in the previous case branch
                         , flip const )
   in traverse (either handler build) <=< addRecursion <=< fmap catMaybes . for defns $ \defn ->
+       -- 'MaybeT' is responsible for handling the skipped definitions, and
+       -- nothing else
        runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
@@ -981,9 +1005,11 @@ data RecType = Standalone | Mutual deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 mutualRecursionInlining :: ConversionMonad r m => NonEmpty RecDef -> m (Map Qualid (RecType, RecDef))
 mutualRecursionInlining mutGroup = do
+  -- TODO: Names of recursive functions in inlining errors
+  
   inlines      <- view $ edits.inlinedMutuals
   (lets, recs) <- splitInlinesWith inlines mutGroup
-                    & maybe (convUnsupported "inlining every function in a mutually-recursive group") pure
+                    & maybe (editFailure "can't inline every function in a mutually-recursive group") pure
   
   let rdFVs   = getFreeVars . rdBody
       letUses = rdFVs <$> lets
@@ -991,7 +1017,7 @@ mutualRecursionInlining mutGroup = do
 
   orderedLets <- for (topoSortEnvironmentWith id letUses) $ \case
     solo :| []  -> pure solo
-    _    :| _:_ -> convUnsupported "recursion amongst inlined mutually-recursive functions"
+    _    :| _:_ -> editFailure "recursion forbidden amongst inlined mutually-recursive functions"
   
   let recMap = flip foldMap recs $ \rd ->
         let neededLets  = foldMap (M.findWithDefault mempty ?? letDeps) $ rdFVs rd
@@ -1008,13 +1034,12 @@ addRecursion eBindings = do
                       [ (cd, cd^.convDefName, S.toAscList . getFreeVars $ cd^.convDefBody)
                       | Right (ConvertedDefinitionBinding cd) <- eBindings ])
       
-  pure . flip map eBindings $ \case
-    Left  e                               -> Left  e
-    Right cpb@ConvertedPatternBinding{}   -> Right cpb
-    Right cab@ConvertedAxiomBinding{}     -> Right cab
+  pure . topoSortByVariablesBy ErrOrVars M.empty . flip map eBindings $ \case
     Right (ConvertedDefinitionBinding cd) -> case M.lookup (cd^.convDefName) fixedBindings of
       Just cd' -> Right $ ConvertedDefinitionBinding cd'
-      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual fixpoint check"
+      Nothing  -> error "INTERNAL ERROR: lost track of converted definition during mutual recursion check"
+    untouched ->
+      untouched
   where
     fixConnComp (cd :| []) | cd^.convDefName `notElem` getFreeVars (cd^.convDefBody) =
       pure $ cd :| []
@@ -1025,8 +1050,8 @@ addRecursion eBindings = do
                         , rdArgs = _convDefArgs <++ args
                         , rdType = maybeForall _convDefArgs <$> _convDefType
                         , rdBody = body }
-        _ ->
-          convUnsupported "recursion through non-lambda values"
+        cd ->
+          convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
       
       nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
       
@@ -1037,7 +1062,8 @@ addRecursion eBindings = do
           pure (const . wfFix order $ rdToFixBody body1, getInfo bodies, [])
         
         (Just _, _ :| _ : _) ->
-          convUnsupported "non-structural mutual recursion"
+          convUnsupportedIn "non-structural mutual recursion" "definitions"
+                            (explainStrItems (showP . rdName) "" "," "and" "" "" bodies)
         
         (Nothing, body1 :| []) ->
           pure (const . Fix . FixOne $ rdToFixBody body1, getInfo bodies, [])
@@ -1090,8 +1116,9 @@ convertLocalBinds (HsValBinds (ValBindsOut recBinds lsigs)) body = do
 
       toLet ConvertedDefinition{..} = pure . Let _convDefName _convDefArgs _convDefType _convDefBody
       noLetAx ax _ty _body = convUnsupported $ "local axiom `" ++ T.unpack (qualidToIdent ax) ++ "' unsupported"
+      noLetRd _nm _sn _body = convUnsupported "redefining local bindings"
       
-  (foldrM (withConvertedBinding toLet matchLet noLetAx) ?? convDefs) =<< body
+  (foldrM (withConvertedBinding toLet matchLet noLetAx noLetRd) ?? convDefs) =<< body
 
 convertLocalBinds (HsIPBinds _) _ =
   convUnsupported "local implicit parameter bindings"

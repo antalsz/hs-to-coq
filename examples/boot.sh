@@ -2,19 +2,20 @@
 
 set -e
 
-if [ -z "$NO_BUILD_HS_TO_COQ" ] && which stack >/dev/null
-then
-  echo "Rebuilding the tool"
-  stack build
-fi
-
 cd $(dirname $0)
 
+if [ -z "$NO_BUILD_HS_TO_COQ" ] && which stack >/dev/null
+then
+  echo "Rebuilding the tool if necessary"
+  stack build
+fi
 
 CLEAN=YES
 COQ=YES
 COQ_TEST=YES
 COQ_VERSION=8.8
+
+function have () { command -v "$1" >/dev/null 2>&1 ; }
 
 function clean ()    { if [ "$CLEAN"    = "YES" ]; then "$@"; fi }
 function coq ()      { if [ "$COQ"      = "YES" ]; then "$@"; fi }
@@ -108,6 +109,13 @@ clean make -C core-semantics clean
 clean make -C base-src clean
 clean make -C transformers clean
 clean make -C ghc clean
+have ruby         && clean make -C ../emacs clean
+have sphinx-build && clean make -C ../doc   clean
+
+have ruby         && make -C ../emacs
+have sphinx-build && make -C ../doc html
+
+coq-test make -C tests
 
 make -C base-src vfiles
 coq make -C ../base

@@ -1,6 +1,4 @@
-{-# LANGUAGE TupleSections, LambdaCase, RecordWildCards,
-             OverloadedLists, OverloadedStrings,
-             FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Literals (
   convertInteger, convertFastString, convertFractional
@@ -11,15 +9,13 @@ import Control.Monad.IO.Class
 import HsToCoq.Util.GHC.FastString
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
-import HsToCoq.ConvertHaskell.Monad
 
 import BasicTypes
 import Data.Ratio (numerator, denominator)
 
-
-convertInteger :: MonadIO f => String -> Integer -> f Num
-convertInteger what int | int >= 0  = pure $ fromInteger int
-                        | otherwise = convUnsupported $ "negative " ++ what
+convertInteger :: String -> Integer -> Either String Num
+convertInteger what int | int >= 0  = Right $ fromInteger int
+                        | otherwise = Left  $ "negative " ++ what
 
 convertFastString :: FastString -> Term
 convertFastString = HsString . fsToText

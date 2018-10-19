@@ -20,3 +20,4 @@ skip ConLike.conLikesWithFields
 # in Core
 skip ConLike.conLikeExTyVars
 
+order ConLike.Uniquable__ConLike ConLike.eqConLike

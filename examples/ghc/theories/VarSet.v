@@ -1226,6 +1226,7 @@ Proof.
     reflexivity.
 Qed.
 
+
 Lemma elemVarSet_delVarSetList_false_l:
   forall v vs vs2,
   elemVarSet v vs = false ->
@@ -2002,19 +2003,33 @@ Qed.
 Lemma StrongSubset_extendVarSet_fresh : 
   forall vs var, lookupVarSet vs var = None ->
             StrongSubset vs (extendVarSet vs var).
-Admitted.
+Proof.
+  apply StrongSubset_extend_fresh.
+Qed.
 
 Lemma StrongSubset_extendVarSetList_fresh : 
   forall vs vars, freshList vars vs ->
              StrongSubset vs (extendVarSetList vs vars).
-Admitted.
+Proof.
+  intros.
+  apply StrongSubset_extendList_fresh.
+  apply disjointVarSet_mkVarSet.
+  induction vars; auto.
+  apply freshList_cons in H as [H1 H2].
+  apply Forall_cons; auto.
+  apply lookupVarSet_None_elemVarSet.
+  assumption.
+Qed.
 
 Lemma filterVarSet_extendVarSet : 
   forall f v vs,
     filterVarSet f (extendVarSet vs v) = 
     if (f v) then extendVarSet (filterVarSet f vs) v 
     else (filterVarSet f vs).
-Proof.  
+Proof.
+  intros.
+  set_b_iff.
+  destruct (f v) eqn:Hfv.
 Admitted.
 
 Lemma lookupVarSet_filterVarSet_true : forall f v vs,

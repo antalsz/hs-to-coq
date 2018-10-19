@@ -16,6 +16,12 @@ redefine Local Definition Control.Monad.Trans.Maybe.Applicative__MaybeT_op_ztzg_
      (MaybeT inst_m a) -> ((MaybeT inst_m b) -> (MaybeT inst_m b)) :=
   fun {a} {b} => fun m k => Monad_tmp m (fun arg_0__ => k).
 
+order Control.Monad.Trans.Maybe.Functor__MaybeT  Control.Monad.Trans.Maybe.Traversable__MaybeT
+order Control.Monad.Trans.Maybe.Foldable__MaybeT Control.Monad.Trans.Maybe.Traversable__MaybeT
+order Control.Monad.Trans.Maybe.Ord1__MaybeT     Control.Monad.Trans.Maybe.Ord__MaybeT_compare
+order Control.Monad.Trans.Maybe.Eq1__MaybeT      Control.Monad.Trans.Maybe.Ord1__MaybeT
+order Control.Monad.Trans.Maybe.Eq___MaybeT      Control.Monad.Trans.Maybe.Ord__MaybeT
+
 # Not sure why I need all these order constriants
 order Control.Monad.Trans.Maybe.Applicative__MaybeT  Control.Monad.Trans.Maybe.Monad__MaybeT_return_
 order Control.Monad.Trans.Maybe.runMaybeT Control.Monad.Trans.Maybe.Monad__MaybeT_op_zgzgze__ Control.Monad.Trans.Maybe.Monad__MaybeT_op_zgzg__

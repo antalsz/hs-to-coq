@@ -1,6 +1,10 @@
 add Data.Ord Instance Unpeel_Down a : GHC.Prim.Unpeel (Down a) a :=
       GHC.Prim.Build_Unpeel _ _ (fun d => match d with | Mk_Down x => x end) Mk_Down.
 
-order Data.Ord.Eq___Down Data.Ord.Ord__Down
-order Data.Ord.Semigroup__Down Data.Ord.Monoid__Down
+order Unpeel_Down Data.Ord.Eq___Down_op_zeze__
+order Unpeel_Down Data.Ord.Eq___Down_op_zsze__
 
+order Data.Ord.Eq___Down         Data.Ord.Ord__Down
+order Data.Ord.Semigroup__Down   Data.Ord.Monoid__Down
+order Data.Ord.Functor__Down     Data.Ord.Applicative__Down_liftA2
+order Data.Ord.Applicative__Down Data.Ord.Monad__Down_return_

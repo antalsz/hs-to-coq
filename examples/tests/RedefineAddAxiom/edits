@@ -1,0 +1,7 @@
+redefine Axiom RedefineAddAxiom.Fix : forall (f : Type -> Type) (a : Type), Type.
+
+axiomatize definition RedefineAddAxiom.unroll
+redefine Axiom RedefineAddAxiom.roll : forall {f} {a}, (f (Fix f a)) -> (Fix f a).
+
+# Not the best test that this actually *happens*...
+add RedefineAddAxiom Axiom RedefineAddAxiom.surprise : forall {a}, a.

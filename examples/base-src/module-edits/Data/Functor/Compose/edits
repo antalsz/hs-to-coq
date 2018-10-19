@@ -2,6 +2,10 @@ in Data.Functor.Compose.Applicative__Compose_op_zlztzg__ rewrite forall , Data.F
 
 data kinds Data.Functor.Compose.Compose (Type -> Type), (Type -> Type), Type
 
+order Data.Functor.Compose.Functor__Compose Data.Functor.Compose.Applicative__Compose_op_ztzg__
 
+order Data.Functor.Compose.Functor__Compose  Data.Functor.Compose.Traversable__Compose
+order Data.Functor.Compose.Foldable__Compose Data.Functor.Compose.Traversable__Compose
 
-
+order Data.Functor.Compose.Eq1__Compose Data.Functor.Compose.Ord1__Compose Data.Functor.Compose.Ord__Compose_compare
+order Data.Functor.Compose.Eq___Compose Data.Functor.Compose.Ord__Compose

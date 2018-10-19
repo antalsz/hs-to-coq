@@ -6,3 +6,13 @@ redefine Definition Control.Monad.Trans.RWS.Lazy.Monad__RWST_op_zgzgze__ {inst_w
      ((a -> (RWST inst_r inst_w inst_s inst_m b)) ->
      (RWST inst_r inst_w inst_s inst_m b))) :=
 	  fun {a}{b} =>  Monad__RWST_tmp.
+
+order Control.Monad.Trans.RWS.Lazy.Functor__RWST     Control.Monad.Trans.RWS.Lazy.Applicative__RWST_liftA2
+order Control.Monad.Trans.RWS.Lazy.Functor__RWST     Control.Monad.Trans.RWS.Lazy.Traversable__RWST
+order Control.Monad.Trans.RWS.Lazy.Foldable__RWST    Control.Monad.Trans.RWS.Lazy.Traversable__RWST
+order Control.Monad.Trans.RWS.Lazy.Applicative__RWST Control.Monad.Trans.RWS.Lazy.Monad__RWST_return_
+order Control.Monad.Trans.RWS.Lazy.MonadTrans__RWST  Control.Monad.Trans.RWS.Lazy.MonadFail__RWST_fail
+order Control.Monad.Trans.RWS.Lazy.Monad__RWST       Control.Monad.Trans.RWS.Lazy.MonadFail__RWST_fail
+order Control.Monad.Trans.RWS.Lazy.Ord1__RWST        Control.Monad.Trans.RWS.Lazy.Ord__RWST_compare
+order Control.Monad.Trans.RWS.Lazy.Eq1__RWST         Control.Monad.Trans.RWS.Lazy.Ord1__RWST
+order Control.Monad.Trans.RWS.Lazy.Eq___RWST         Control.Monad.Trans.RWS.Lazy.Ord__RWST

@@ -82,6 +82,21 @@ Axiom lookup_union :
     (lookup key m1 = Some val \/ (lookup key m1 = None /\ lookup key m2 = Some val)) <->
     lookup key (union m1 m2) = Some val.
 
+Axiom lookup_partition :
+  forall (A:Type) key (val:A) (m m': IntMap A) (P: A -> bool), 
+    ((m' = fst (partition P m) \/
+      m' = snd (partition P m)) /\
+     lookup key m' = Some val) <->
+    lookup key m  = Some val.
+
+(*
+Axiom lookup_partition :
+  forall (key : Internal.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
+    lookup key i = Some y ->
+    (left, right) = partition f i -> 
+    lookup key left = Some y \/ lookup key right = Some y.    
+*)
+
 Axiom lookup_union_None:
   forall (A : Type)
     (key : Internal.Key)
@@ -102,11 +117,6 @@ Axiom lookup_difference_not_in_snd:
     lookup key (difference i i') = lookup key i.
 
 
-Axiom lookup_partition :
-  forall (key : Internal.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
-    lookup key i = Some y ->
-    (left, right) = partition f i -> 
-    lookup key left = Some y \/ lookup key right = Some y.    
 
 
 Axiom member_lookup :

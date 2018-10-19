@@ -3,3 +3,6 @@ skip OrdList.lastOL
 
 order OrdList.Semigroup__OrdList OrdList.Monoid__OrdList_mappend
 order OrdList.Semigroup__OrdList OrdList.Monoid__OrdList_mconcat
+
+order OrdList.Functor__OrdList  OrdList.Traversable__OrdList
+order OrdList.Foldable__OrdList OrdList.Traversable__OrdList

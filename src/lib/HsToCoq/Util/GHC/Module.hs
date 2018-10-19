@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module HsToCoq.Util.GHC.Module (module Module, moduleNameText) where
+module HsToCoq.Util.GHC.Module (module Module, moduleNameText, mkModuleNameT) where
 
 import Module
 
@@ -13,3 +13,6 @@ instance Show ModuleName where
 
 moduleNameText :: ModuleName -> Text
 moduleNameText = T.pack . moduleNameString
+
+mkModuleNameT :: Text -> ModuleName
+mkModuleNameT = mkModuleName . T.unpack

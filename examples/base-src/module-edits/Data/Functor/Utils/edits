@@ -2,3 +2,8 @@
 # TODO: Can't derived Coercible (a -> b) (a -> c) from Coercible b c
 #
 skip Data.Functor.Utils.hash_compose
+
+order Data.Functor.Utils.Semigroup__Max  Data.Functor.Utils.Monoid__Max_mappend
+order Data.Functor.Utils.Semigroup__Min  Data.Functor.Utils.Monoid__Min_mappend
+order Data.Functor.Utils.Functor__StateL Data.Functor.Utils.Applicative__StateL_op_ztzg__
+order Data.Functor.Utils.Functor__StateR Data.Functor.Utils.Applicative__StateR_op_ztzg__

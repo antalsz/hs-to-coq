@@ -1,5 +1,8 @@
-# Needs alternative
-skip Data.Functor.Reverse.MonadPlus__Reverse
+# Can't use rename because we get a cyclic renaming error
+in Data.Functor.Reverse.Foldable__Reverse_foldr rewrite forall, Data.Functor.Reverse.Foldable__Reverse_foldl = Data.Foldable.foldl
+in Data.Functor.Reverse.Foldable__Reverse_foldl rewrite forall, Data.Functor.Reverse.Foldable__Reverse_foldr = Data.Foldable.foldr
 
-# Makes wrong decisions about methods names (could be fixed using rewrites)
-skip Data.Functor.Reverse.Foldable__Reverse
+order Data.Functor.Reverse.Monad__Reverse   Data.Functor.Reverse.MonadFail__Reverse
+order Data.Functor.Reverse.Functor__Reverse Data.Functor.Reverse.Applicative__Reverse_liftA2
+order Data.Functor.Reverse.Eq1__Reverse     Data.Functor.Reverse.Ord1__Reverse               Data.Functor.Reverse.Ord__Reverse_compare
+order Data.Functor.Reverse.Eq___Reverse     Data.Functor.Reverse.Ord__Reverse

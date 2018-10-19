@@ -22,34 +22,15 @@ Import GHC.Base.Notations.
 (* No type declarations to convert. *)
 (* Converted value declarations: *)
 
-Definition catMaybes {a} : list (option a) -> list a :=
-  fun ls =>
-    let cont_0__ arg_1__ :=
-      match arg_1__ with
-      | Some x => cons x nil
-      | _ => nil
-      end in
-    Coq.Lists.List.flat_map cont_0__ ls.
+Definition maybeToList {a} : option a -> list a :=
+  fun arg_0__ => match arg_0__ with | None => nil | Some x => cons x nil end.
 
-Definition fromMaybe {a} : a -> option a -> a :=
-  fun d x => match x with | None => d | Some v => v end.
-
-Definition isJust {a} : option a -> bool :=
-  fun arg_0__ => match arg_0__ with | None => false | _ => true end.
-
-Definition isNothing {a} : option a -> bool :=
-  fun arg_0__ => match arg_0__ with | None => true | _ => false end.
-
-Definition listToMaybe {a} : list a -> option a :=
-  GHC.Base.foldr (GHC.Base.const GHC.Base.∘ Some) None.
-
-Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
-  fix mapMaybe arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | _, nil => nil
-           | f, cons x xs =>
-               let rs := mapMaybe f xs in match f x with | None => rs | Some r => cons r rs end
-           end.
+Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | n, _, None => n
+    | _, f, Some x => f x
+    end.
 
 Definition mapMaybeFB {b} {r} {a}
    : (b -> r -> r) -> (a -> option b) -> a -> r -> r :=
@@ -59,15 +40,34 @@ Definition mapMaybeFB {b} {r} {a}
     | Some r => cons_ r next
     end.
 
-Definition maybe {b} {a} : b -> (a -> b) -> option a -> b :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | n, _, None => n
-    | _, f, Some x => f x
-    end.
+Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
+  fix mapMaybe arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | _, nil => nil
+           | f, cons x xs =>
+               let rs := mapMaybe f xs in match f x with | None => rs | Some r => cons r rs end
+           end.
 
-Definition maybeToList {a} : option a -> list a :=
-  fun arg_0__ => match arg_0__ with | None => nil | Some x => cons x nil end.
+Definition listToMaybe {a} : list a -> option a :=
+  GHC.Base.foldr (GHC.Base.const GHC.Base.∘ Some) None.
+
+Definition isNothing {a} : option a -> bool :=
+  fun arg_0__ => match arg_0__ with | None => true | _ => false end.
+
+Definition isJust {a} : option a -> bool :=
+  fun arg_0__ => match arg_0__ with | None => false | _ => true end.
+
+Definition fromMaybe {a} : a -> option a -> a :=
+  fun d x => match x with | None => d | Some v => v end.
+
+Definition catMaybes {a} : list (option a) -> list a :=
+  fun ls =>
+    let cont_0__ arg_1__ :=
+      match arg_1__ with
+      | Some x => cons x nil
+      | _ => nil
+      end in
+    Coq.Lists.List.flat_map cont_0__ ls.
 
 (* External variables:
      None Some bool cons false list nil option true Coq.Lists.List.flat_map

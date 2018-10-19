@@ -13,7 +13,7 @@ import Control.Lens
 import Data.Semigroup (Semigroup(..))
 import Data.Monoid hiding ((<>))
 import Data.Maybe
-import Data.List
+import HsToCoq.Util.List
 import qualified Data.Set as S
 import qualified Data.Text as T
 
@@ -30,6 +30,7 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Module
 
 import HsToCoq.Coq.Gallina
+import HsToCoq.Coq.Pretty
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
 import HsToCoq.ConvertHaskell.InfixNames
@@ -93,7 +94,7 @@ rename :: ConversionMonad r m => HsNamespace -> Qualid -> m Qualid
 rename ns = go S.empty
   where
     go seen qid | qid `S.member` seen =
-        fail $ "Cyclic renamings " ++ intercalate ", " (map show (S.toList seen))
+        fail $ explainStrItems showP "no" "," "and" "Cyclic renaming" "Cyclic renamings" seen
     go seen qid = view (edits . renamed ns qid) >>= \case
         Nothing ->   return qid
             -- A self rename is also fine, it signals stopping.

@@ -1,1 +1,10 @@
 data kinds Data.Functor.Sum.Sum (Type -> Type),(Type -> Type)
+
+order Data.Functor.Sum.Eq___Sum Data.Functor.Sum.Ord__Sum
+
+order Data.Functor.Sum.Functor__Sum Data.Functor.Sum.Applicative__Sum_op_ztzg__ Data.Functor.Sum.Applicative__Sum Data.Functor.Sum.Monad__Sum_return_ Data.Functor.Sum.Monad__Sum
+
+order Data.Functor.Sum.Functor__Sum  Data.Functor.Sum.Traversable__Sum
+order Data.Functor.Sum.Foldable__Sum Data.Functor.Sum.Traversable__Sum
+
+order Data.Functor.Sum.Eq1__Sum Data.Functor.Sum.Ord1__Sum Data.Functor.Sum.Ord__Sum_compare

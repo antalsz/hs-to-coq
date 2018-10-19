@@ -35,38 +35,34 @@ Definition runReaderT {r : Type} {m : Type -> Type} {a} (arg_0__
   runReaderT.
 (* Converted value declarations: *)
 
-Local Definition Applicative__ReaderT_op_zlztzg__ {inst_m} {inst_r}
-  `{(GHC.Base.Applicative inst_m)}
-   : forall {a} {b},
-     (ReaderT inst_r inst_m) (a -> b) ->
-     (ReaderT inst_r inst_m) a -> (ReaderT inst_r inst_m) b :=
-  fun {a} {b} =>
-    fun f v => Mk_ReaderT (fun r => runReaderT f r GHC.Base.<*> runReaderT v r).
+Definition withReaderT {r'} {r} {m} {a}
+   : (r' -> r) -> ReaderT r m a -> ReaderT r' m a :=
+  fun f m => Mk_ReaderT (runReaderT m GHC.Base.∘ f).
 
-(* Skipping instance Alternative__ReaderT of class Alternative *)
+Definition withReader {r'} {r} {a} : (r' -> r) -> Reader r a -> Reader r' a :=
+  withReaderT.
 
-Local Definition Monad__ReaderT_op_zgzgze__ {inst_m} {inst_r} `{(GHC.Base.Monad
-   inst_m)}
-   : forall {a} {b},
-     (ReaderT inst_r inst_m) a ->
-     (a -> (ReaderT inst_r inst_m) b) -> (ReaderT inst_r inst_m) b :=
-  fun {a} {b} =>
-    fun m k =>
-      Mk_ReaderT (fun r => runReaderT m r GHC.Base.>>= (fun a => runReaderT (k a) r)).
+Definition runReader {r} {a} : Reader r a -> r -> a :=
+  fun m => Data.Functor.Identity.runIdentity GHC.Base.∘ runReaderT m.
 
-(* Skipping instance MonadPlus__ReaderT of class MonadPlus *)
-
-(* Skipping instance MonadFix__ReaderT of class MonadFix *)
-
-(* Skipping instance MonadIO__ReaderT of class MonadIO *)
-
-(* Skipping instance MonadZip__ReaderT of class MonadZip *)
-
-Definition ask {m} {r} `{(GHC.Base.Monad m)} : ReaderT r m r :=
-  Mk_ReaderT GHC.Base.return_.
-
-Definition asks {m} {r} {a} `{(GHC.Base.Monad m)} : (r -> a) -> ReaderT r m a :=
+Definition reader {m} {r} {a} `{(GHC.Base.Monad m)}
+   : (r -> a) -> ReaderT r m a :=
   fun f => Mk_ReaderT (GHC.Base.return_ GHC.Base.∘ f).
+
+Definition mapReaderT {m} {a} {n} {b} {r}
+   : (m a -> n b) -> ReaderT r m a -> ReaderT r n b :=
+  fun f m => Mk_ReaderT (f GHC.Base.∘ runReaderT m).
+
+Definition mapReader {a} {b} {r} : (a -> b) -> Reader r a -> Reader r b :=
+  fun f =>
+    mapReaderT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
+                (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
+
+Definition local {r} {m} {a} : (r -> r) -> ReaderT r m a -> ReaderT r m a :=
+  withReaderT.
+
+Definition liftReaderT {m} {a} {r} : m a -> ReaderT r m a :=
+  fun m => Mk_ReaderT (GHC.Base.const m).
 
 Definition liftCallCC {m} {a} {b} {r}
    : Control.Monad.Signatures.CallCC m a b ->
@@ -76,8 +72,17 @@ Definition liftCallCC {m} {a} {b} {r}
                   callCC (fun c =>
                             runReaderT (f (Mk_ReaderT GHC.Base.∘ (GHC.Base.const GHC.Base.∘ c))) r)).
 
-Definition liftReaderT {m} {a} {r} : m a -> ReaderT r m a :=
-  fun m => Mk_ReaderT (GHC.Base.const m).
+Definition asks {m} {r} {a} `{(GHC.Base.Monad m)} : (r -> a) -> ReaderT r m a :=
+  fun f => Mk_ReaderT (GHC.Base.return_ GHC.Base.∘ f).
+
+Definition ask {m} {r} `{(GHC.Base.Monad m)} : ReaderT r m r :=
+  Mk_ReaderT GHC.Base.return_.
+
+(* Skipping all instances of class `Control.Monad.Zip.MonadZip', including
+   `Control.Monad.Trans.Reader.MonadZip__ReaderT' *)
+
+(* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
+   `Control.Monad.Trans.Reader.MonadIO__ReaderT' *)
 
 Local Definition MonadTrans__ReaderT_lift {inst_r}
    : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> (ReaderT inst_r) m a :=
@@ -89,19 +94,19 @@ Program Instance MonadTrans__ReaderT {r}
     k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
            MonadTrans__ReaderT_lift |}.
 
-Local Definition Applicative__ReaderT_pure {inst_m} {inst_r}
+(* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
+   `Control.Monad.Trans.Reader.MonadFix__ReaderT' *)
+
+(* Skipping all instances of class `GHC.Base.MonadPlus', including
+   `Control.Monad.Trans.Reader.MonadPlus__ReaderT' *)
+
+Local Definition Applicative__ReaderT_op_zlztzg__ {inst_m} {inst_r}
   `{(GHC.Base.Applicative inst_m)}
-   : forall {a}, a -> (ReaderT inst_r inst_m) a :=
-  fun {a} => liftReaderT GHC.Base.∘ GHC.Base.pure.
-
-Definition mapReaderT {m} {a} {n} {b} {r}
-   : (m a -> n b) -> ReaderT r m a -> ReaderT r n b :=
-  fun f m => Mk_ReaderT (f GHC.Base.∘ runReaderT m).
-
-Definition mapReader {a} {b} {r} : (a -> b) -> Reader r a -> Reader r b :=
-  fun f =>
-    mapReaderT (Data.Functor.Identity.Mk_Identity GHC.Base.∘
-                (f GHC.Base.∘ Data.Functor.Identity.runIdentity)).
+   : forall {a} {b},
+     (ReaderT inst_r inst_m) (a -> b) ->
+     (ReaderT inst_r inst_m) a -> (ReaderT inst_r inst_m) b :=
+  fun {a} {b} =>
+    fun f v => Mk_ReaderT (fun r => runReaderT f r GHC.Base.<*> runReaderT v r).
 
 Local Definition Functor__ReaderT_fmap {inst_m} {inst_r} `{(GHC.Base.Functor
    inst_m)}
@@ -138,6 +143,11 @@ Local Definition Applicative__ReaderT_op_ztzg__ {inst_m} {inst_r}
   fun {a} {b} =>
     fun u v => Mk_ReaderT (fun r => runReaderT u r GHC.Base.*> runReaderT v r).
 
+Local Definition Applicative__ReaderT_pure {inst_m} {inst_r}
+  `{(GHC.Base.Applicative inst_m)}
+   : forall {a}, a -> (ReaderT inst_r inst_m) a :=
+  fun {a} => liftReaderT GHC.Base.∘ GHC.Base.pure.
+
 Program Instance Applicative__ReaderT {m} {r} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (ReaderT r m) :=
   fun _ k =>
@@ -152,6 +162,15 @@ Local Definition Monad__ReaderT_op_zgzg__ {inst_m} {inst_r} `{(GHC.Base.Monad
      (ReaderT inst_r inst_m) a ->
      (ReaderT inst_r inst_m) b -> (ReaderT inst_r inst_m) b :=
   fun {a} {b} => _GHC.Base.*>_.
+
+Local Definition Monad__ReaderT_op_zgzgze__ {inst_m} {inst_r} `{(GHC.Base.Monad
+   inst_m)}
+   : forall {a} {b},
+     (ReaderT inst_r inst_m) a ->
+     (a -> (ReaderT inst_r inst_m) b) -> (ReaderT inst_r inst_m) b :=
+  fun {a} {b} =>
+    fun m k =>
+      Mk_ReaderT (fun r => runReaderT m r GHC.Base.>>= (fun a => runReaderT (k a) r)).
 
 Local Definition Monad__ReaderT_return_ {inst_m} {inst_r} `{(GHC.Base.Monad
    inst_m)}
@@ -176,22 +195,8 @@ Program Instance MonadFail__ReaderT {m} {r} `{(Control.Monad.Fail.MonadFail m)}
   fun _ k =>
     k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ReaderT_fail |}.
 
-Definition reader {m} {r} {a} `{(GHC.Base.Monad m)}
-   : (r -> a) -> ReaderT r m a :=
-  fun f => Mk_ReaderT (GHC.Base.return_ GHC.Base.∘ f).
-
-Definition runReader {r} {a} : Reader r a -> r -> a :=
-  fun m => Data.Functor.Identity.runIdentity GHC.Base.∘ runReaderT m.
-
-Definition withReaderT {r'} {r} {m} {a}
-   : (r' -> r) -> ReaderT r m a -> ReaderT r' m a :=
-  fun f m => Mk_ReaderT (runReaderT m GHC.Base.∘ f).
-
-Definition withReader {r'} {r} {a} : (r' -> r) -> Reader r a -> Reader r' a :=
-  withReaderT.
-
-Definition local {r} {m} {a} : (r -> r) -> ReaderT r m a -> ReaderT r m a :=
-  withReaderT.
+(* Skipping all instances of class `GHC.Base.Alternative', including
+   `Control.Monad.Trans.Reader.Alternative__ReaderT' *)
 
 (* External variables:
      Type Control.Monad.Fail.MonadFail Control.Monad.Fail.fail

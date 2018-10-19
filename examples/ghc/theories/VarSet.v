@@ -475,28 +475,63 @@ Qed.
 
 Lemma delVarSetList_cons2:
   forall e a vs, delVarSetList e (a :: vs) = delVarSet (delVarSetList e vs) a.
+Proof.
+  induction vs.
+  - unfold delVarSetList, UniqSet.delListFromUniqSet.
+    destruct e.
+    reflexivity.
+  -  unfold delVarSetList, UniqSet.delListFromUniqSet in *.
+     destruct e.
+  
 Admitted.
+
 
 Lemma delVarSetList_app:
   forall e vs vs', delVarSetList e (vs ++ vs') = delVarSetList (delVarSetList e vs) vs'.
 Proof.
-  induction vs'.
+  intros e vs vs'.
+  revert vs.
+  induction vs'; intros.
   - rewrite app_nil_r.
     unfold delVarSetList, UniqSet.delListFromUniqSet.
     destruct e; reflexivity.
-  - intros.
-    unfold delVarSetList, UniqSet.delListFromUniqSet; destruct e.
-    unfold UniqFM.delListFromUFM.
+  - replace (vs ++ a :: vs') with ((vs ++ [a]) ++ vs').
+    + rewrite IHvs'. clear IHvs'.
+      rewrite delVarSetList_cons.
+      f_equal.
+      
+      unfold delVarSetList,
+      UniqSet.delListFromUniqSet.
+      destruct e.
+      unfold delVarSet, UniqSet.delOneFromUniqSet.
+      f_equal.
+      unfold UniqFM.delListFromUFM.
+      unfold_Foldable_foldl.
+      rewrite fold_right_app.
 Admitted.
-(*
-    repeat rewrite hs_coq_foldl_list. rewrite fold_left_app. reflexivity.
-Qed. *)
 
 
 Lemma delVarSetList_rev:
   forall vs1 vs2,
-  delVarSetList vs1 (rev vs2) = delVarSetList vs1 vs2.
-Admitted.
+    delVarSetList vs1 (rev vs2) = delVarSetList vs1 vs2.
+Proof.
+  intros vs1 vs2.
+  revert vs1.
+  induction vs2; try reflexivity.
+  intros.
+  simpl.
+  rewrite delVarSetList_app.
+  rewrite delVarSetList_single.
+  rewrite delVarSetList_cons2.
+  rewrite IHvs2.
+  reflexivity.
+Qed.
+
+
+(*
+    repeat rewrite hs_coq_foldl_list. rewrite fold_left_app. reflexivity.
+Qed. *)
+
 
 
 Lemma elemVarSet_delVarSetList_false_l:
@@ -661,6 +696,11 @@ Lemma subVarSet_extendVarSetList:
   forall vs1 vs2 vs3,
   subVarSet vs1 vs2 = true ->
   subVarSet vs1 (extendVarSetList vs2 vs3) = true.
+Proof.
+  intros.
+  set_b_iff.
+  unfold_Foldable_foldl'.
+  simpl.
 Admitted.
 
 Lemma subVarSet_extendVarSet_l:
@@ -1319,19 +1359,33 @@ Qed.
 Lemma StrongSubset_extendVarSet_fresh : 
   forall vs var, lookupVarSet vs var = None ->
             StrongSubset vs (extendVarSet vs var).
-Admitted.
+Proof.
+  apply StrongSubset_extend_fresh.
+Qed.
 
 Lemma StrongSubset_extendVarSetList_fresh : 
   forall vs vars, freshList vars vs ->
              StrongSubset vs (extendVarSetList vs vars).
-Admitted.
+Proof.
+  intros.
+  apply StrongSubset_extendList_fresh.
+  apply disjointVarSet_mkVarSet.
+  induction vars; auto.
+  apply freshList_cons in H as [H1 H2].
+  apply Forall_cons; auto.
+  apply lookupVarSet_None_elemVarSet.
+  assumption.
+Qed.
 
 Lemma filterVarSet_extendVarSet : 
   forall f v vs,
     filterVarSet f (extendVarSet vs v) = 
     if (f v) then extendVarSet (filterVarSet f vs) v 
     else (filterVarSet f vs).
-Proof.  
+Proof.
+  intros.
+  set_b_iff.
+  destruct (f v) eqn:Hfv.
 Admitted.
 
 Lemma lookupVarSet_filterVarSet_true : forall f v vs,

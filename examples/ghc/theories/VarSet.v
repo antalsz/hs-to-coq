@@ -1039,6 +1039,33 @@ Proof.
   - done.
 Qed.
 
+Lemma extendVarSetList_same : forall v vars vs1 vs2,
+  Foldable.elem v vars ->
+  lookupVarSet (extendVarSetList  vs1 vars) v =   lookupVarSet (extendVarSetList vs2 vars) v.
+Proof.
+  induction vars.
+  - move=> vs1 vs2 F. inversion F.
+  - move=> vs1 vs2.
+    rewrite elem_cons.
+    hs_simpl.
+    move=> /orE.
+    elim=>H.
+    destruct (Foldable.elem v vars) eqn:h. eauto.
+    rewrite lookupVarSet_extendVarSetList_false.
+    rewrite lookupVarSet_extendVarSetList_false.
+    rewrite lookupVarSet_extendVarSet_eq.
+    rewrite lookupVarSet_extendVarSet_eq.
+    auto.
+    rewrite Eq_sym. auto.
+    rewrite Eq_sym. auto.
+    move => h0. 
+    rewrite h in h0. done.
+    move => h0. 
+    rewrite h in h0. done.
+    auto.
+Qed.
+
+
 Lemma lookupVarSet_extendVarSetList_l:
   forall v vs1 vs2,
   elemVarSet v (mkVarSet vs2) = false ->
@@ -1083,30 +1110,9 @@ Lemma lookupVarSet_extendVarSetList_r_self:
   NoDup (map varUnique vs2) ->
   lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
 Proof.
-  move => v vs1 vs2.
-  move: vs1.
-  induction vs2; move=> vs1.
-  - move => IN.
-    inversion IN.
-  - move => IN ND.
-    simpl in ND.
-    inversion ND.
-    hs_simpl.
-    inversion IN; subst; hs_simpl; 
-      rewrite lookupVarSet_extendVarSetList_false; auto.
-    + rewrite lookupVarSet_extendVarSet_self.
-      auto.
-    + rewrite <- In_varUnique_elem.
-      auto.
-    + eapply in_map with (f:= varUnique) in H3.
-      assert (~ a == v).
-      { 
-        rewrite varUnique_iff.
-        move => h.
-        rewrite h in H1.
-        done.
-      }
-Admitted.
+  move=> v vs1 vs2.
+  apply lookupVarSet_extendVarSetList_self_in.
+Qed.
 
 
 (** ** [mkVarSet]  *)

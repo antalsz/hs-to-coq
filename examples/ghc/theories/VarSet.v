@@ -129,8 +129,8 @@ Proof.
 Qed.
 
 Ltac rewrite_extendVarSetList := 
-  unfold extendVarSetList, UniqSet.addListToUniqSet;
-  replace UniqSet.addOneToUniqSet with (fun x y => add y x) by auto.
+  unfold extendVarSetList, UniqSet.addListToUniqSet in *;
+  replace UniqSet.addOneToUniqSet with (fun x y => add y x) in * by auto.
 
 (* This tactic rewrites the boolean functions into the 
    set properties to make them more suitable for fsetdec. *)
@@ -284,6 +284,7 @@ Lemma  In_hd_cons: forall v vs,
   In v (UniqSet.mkUniqSet (v :: vs)).
 Proof.
   intros v vs.
+  
 Abort.
     
 Lemma hd_VarSet_subset: forall v vs,
@@ -645,7 +646,7 @@ Lemma subVarSet_extendVarSetList_l:
   subVarSet vs1 (extendVarSetList vs2 vs) = true.
 Proof.
   intros vs1 vs2 vs.
-  generalize vs2. clear vs2.
+  generalize dependent vs2.
   induction vs.
   - intro vs2. rewrite extendVarSetList_nil. auto.
   - intro vs2. intro h. 
@@ -659,15 +660,19 @@ Lemma subVarSet_extendVarSetList_r:
   subVarSet vs1 (mkVarSet vs) = true ->
   subVarSet vs1 (extendVarSetList vs2 vs) = true.
 Proof.
-  intros vs. 
-  induction vs; intros vs1 vs2.
+  intros vs.
+  induction vs; intros vs1 vs2 H.
   - set_b_iff.
     unfold_Foldable_foldl'.
     simpl.
     fsetdec.
-  - intro h. 
-    rewrite mkVarSet_extendVarSetList in h.
-    rewrite extendVarSetList_cons in *.
+  - rewrite extendVarSetList_cons.
+    apply IHvs.
+    rewrite mkVarSet_extendVarSetList in *.
+    rewrite extendVarSetList_cons in H.
+    assert (Ha: subVarSet (extendVarSet vs1 a)
+               (extendVarSetList
+                (extendVarSet emptyVarSet a) vs) = true). 
 Admitted.
     
 
@@ -698,17 +703,46 @@ Lemma subVarSet_extendVarSetList:
   subVarSet vs1 (extendVarSetList vs2 vs3) = true.
 Proof.
   intros.
-  set_b_iff.
-  unfold_Foldable_foldl'.
-  simpl.
-Admitted.
+  generalize dependent vs2.
+  induction vs3; intros vs2 H.
+  - set_b_iff.
+    fsetdec.
+  - rewrite extendVarSetList_cons.
+    rewrite IHvs3; auto.
+    set_b_iff.
+    apply MP.subset_add_2.
+    assumption.
+Qed.
+
+Lemma lookupVarSet_In:
+  forall vs v, (exists v', lookupVarSet vs v = Some v') <-> In v vs.
+Proof.
+  unfold lookupVarSet, UniqSet.lookupUniqSet,
+    UniqFM.lookupUFM, Unique.getWordKey, Unique.getKey.
+  intros.
+  destruct vs.
+  destruct getUniqSet'.
+  destruct (Unique.getUnique v) as [n] eqn:Hv.
+  unfold In, elemVarSet, UniqSet.elementOfUniqSet,
+  UniqFM.elemUFM, Unique.getKey, Unique.getWordKey,
+  Unique.getKey.
+  rewrite Hv.
+  rewrite member_lookup.
+  reflexivity.
+Qed.  
 
 Lemma subVarSet_extendVarSet_l:
   forall vs1 vs2 v v',
   subVarSet vs1 vs2 = true ->
   lookupVarSet vs2 v = Some v' ->
   subVarSet (extendVarSet vs1 v) vs2 = true.
-Admitted.
+Proof.
+  intros.
+  set_b_iff.
+  apply MP.subset_add_3; try assumption.
+  apply lookupVarSet_In.
+  eauto.
+Qed.
 
 Lemma subVarSet_delVarSet:
   forall vs1 v,
@@ -779,11 +813,46 @@ Proof.
   assumption.
 Qed.
 
+Lemma extendVarSetList_extendVarSet_iff: forall s v vs,
+    extendVarSetList (extendVarSet s v) vs =
+    extendVarSet (extendVarSetList s vs) v.
+Proof.
+  intros.
+  generalize dependent v.
+  generalize dependent s.
+  induction vs; intros.
+  - rewrite !extendVarSetList_nil.
+    reflexivity.
+  - rewrite !extendVarSetList_cons.
+    rewrite IHvs.
+    
+    set_b_iff.
+    (*
+    pose proof (fold_add ).
+    unfold_Foldable_foldl'.
+    rewrite <- fold_spec_right. in H. H.
+    *)
+Abort.
+
+
+
 Lemma subVarSet_delVarSetList_extendVarSetList_dual:
   forall jps isvs vs,
   subVarSet jps (extendVarSetList isvs vs) = true ->
   subVarSet (delVarSetList jps vs) isvs = true.
-Admitted.
+Proof.
+  intros.
+  revert jps isvs H.
+  induction vs; intros.
+  - rewrite !delVarSetList_nil.
+    rewrite !extendVarSetList_nil in H.
+    assumption.
+  - rewrite !delVarSetList_cons.
+    apply IHvs.
+    rewrite !extendVarSetList_cons in H.
+ Admitted.
+
+
 
 Lemma mapUnionVarSet_In_subVarSet:
   forall a (x : a) xs f,
@@ -806,7 +875,10 @@ Proof.
   apply eq_iff_eq_true.
   rewrite andb_true_iff.
   set_b_iff.
-Admitted.
+  split; intro H.
+  - split; fsetdec.
+  - destruct H; fsetdec.
+Qed.
 
 
 (** ** [mkVarSet]  *)
@@ -1220,24 +1292,32 @@ Lemma Respects_StrongSubset_delVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSet vs v)).
+Proof.
+  intros.
 Admitted.
 
 Lemma Respects_StrongSubset_delVarSetList:
   forall vs2 P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
+Proof.
+  
 Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 Lemma Respects_StrongSubset_extendVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
+Proof.
+  
 Admitted.
 
 Lemma Respects_StrongSubset_extendVarSetList:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs v)).
+Proof.
+  
 Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 

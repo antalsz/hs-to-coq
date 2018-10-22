@@ -935,35 +935,101 @@ Axiom disjointVarSet_subVarSet_l:
 (** ** [lookupVarSet] *)
 
 Lemma lookupVarSet_elemVarSet : 
-  forall v1 v2 vs, lookupVarSet vs v1 = Some v2 -> elemVarSet v1 vs = true.
-Admitted.
+  forall v1 v2 vs, lookupVarSet vs v1 = Some v2 ->
+              elemVarSet v1 vs = true.
+Proof.
+  intros.
+  set_b_iff.
+  apply lookupVarSet_In.
+  eauto.
+Qed.
 
 Lemma lookupVarSet_None_elemVarSet: 
   forall v1 vs, lookupVarSet vs v1 = None <-> elemVarSet v1 vs = false.
-Admitted.
+Proof.
+  intros.
+  set_b_iff.
+  split; intro H.
+  - intro H'.
+    apply lookupVarSet_In in H' as [x H'].
+    rewrite H in H'.
+    inversion H'.
+  -  destruct (lookupVarSet vs v1) eqn:Hl; auto.
+     contradict H.
+     apply lookupVarSet_In.
+     eauto.
+Qed.
 
 Lemma elemVarSet_lookupVarSet :
-  forall v1 vs, elemVarSet v1 vs = true -> exists v2, lookupVarSet vs v1 = Some v2.
-Admitted.
+  forall v1 vs, elemVarSet v1 vs = true ->
+           exists v2, lookupVarSet vs v1 = Some v2.
+Proof.
+  intros.
+  set_b_iff.
+  apply lookupVarSet_In.
+  assumption.
+Qed.
 
 
 Lemma lookupVarSet_extendVarSet_self:
   forall v vs,
   lookupVarSet (extendVarSet vs v) v = Some v.
-Admitted.
+Proof.
+  intros.
+  unfold_VarSet_to_IntMap.
+  apply lookup_insert.
+Qed.
 
 
 Lemma lookupVarSet_extendVarSetList_l:
   forall v vs1 vs2,
   elemVarSet v (mkVarSet vs2) = false ->
   lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v.
-Admitted.
+Proof.
+  intros.
+  generalize dependent vs1.
+  induction vs2; intros.
+  - rewrite extendVarSetList_nil.  reflexivity.
+  - rewrite extendVarSetList_cons.
+    rewrite elemVarSet_mkVarSet_cons in H.
+    destruct H as [H1 H2].
+    specialize (IHvs2 H2). clear H2.
+    rewrite IHvs2. clear IHvs2.
+    set_b_iff.
+    unfold_VarSet_to_IntMap.
+    apply (lookup_insert_neq).
+    rewrite <- realUnique_eq in H1.
+    rewrite N.eqb_neq in H1.
+    auto.
+Qed.
 
 Lemma lookupVarSet_extendVarSetList_r_self:
   forall v vs1 vs2,
   List.In v vs2 ->
   NoDup (map varUnique vs2) ->
   lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
+Proof.
+  intros.
+  generalize dependent vs1.
+  induction vs2; intros.
+  - inversion H. 
+  - inversion H0.
+    subst.
+    rewrite extendVarSetList_cons.
+    destruct H as [H|H]. 
+    + subst.
+      clear IHvs2 H0.
+      rewrite lookupVarSet_extendVarSetList_l.
+      * apply lookupVarSet_extendVarSet_self.
+      * apply lookupVarSet_None_elemVarSet.
+        destruct (lookupVarSet (mkVarSet vs2) v) eqn:Hd; auto.
+        contradict H3.
+        apply in_map.
+        apply lookupVarSet_elemVarSet in Hd.
+        unfold_VarSet.
+        unfold Unique.getWordKey, Unique.getKey in *.
+        destruct (Unique.getUnique v) eqn: Hv.
+        inversion Hv.        
 Admitted.
 
 

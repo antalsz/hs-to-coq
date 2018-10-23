@@ -957,6 +957,7 @@ Section in_exitifyRec.
     * constructor; only 2: apply Hfloats; simpl.
       rewrite <- map_map.
       rewrite <- elemVarSet_mkVarset_iff_In.
+      unfold is_true.
       rewrite not_true_iff_false.
       apply elemVarSet_uniqAway.
       rewrite getInScopeVars_extendInScopeSet, !getInScopeVars_extendInScopeSetList.
@@ -1089,6 +1090,7 @@ Section in_exitifyRec.
           unfold varUnique, Unique.mkUniqueGrimily.
           contradict H.
           unfold_zeze.
+          unfold Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__.
           rewrite not_false_iff_true.
           rewrite N.eqb_eq.
           congruence.
@@ -1336,6 +1338,7 @@ Section in_exitifyRec.
   Lemma disjoint_isvs_exits:
      disjointVarSet isvs (mkVarSet (map fst exits)) = true.
   Proof using Type pairs_WS pairs_VJPP.
+    rewrite fold_is_true in *.
     rewrite disjointVarSet_mkVarSet.
     rewrite Forall_map. simpl.
     apply all_exits_WellScoped.
@@ -2593,7 +2596,9 @@ Section in_exitifyRec.
     * simpl. unfold Base.id. assumption.
     * simpl in *; fold isJoinPointsValidPair in *.
       rewrite forallb_app in Hpairs.
+      rewrite fold_is_true in *.
       rewrite map_append, disjointVarSet_mkVarSet_append in Hdisjoint.
+      unfold is_true in *.
       simpl_bool.
       destruct Hpairs as [Hpairs Hpair].
       destruct Hdisjoint as [Hdisjoint _].

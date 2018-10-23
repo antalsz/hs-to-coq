@@ -1533,6 +1533,16 @@ Lemma subVarSet_delVarSetList_extendVarSetList_dual:
   forall jps isvs vs,
   subVarSet jps (extendVarSetList isvs vs)  ->
   subVarSet (delVarSetList jps vs) isvs .
+Proof.
+  intros.
+  revert jps isvs H.
+  induction vs; intros.
+  - rewrite !delVarSetList_nil.
+    rewrite !extendVarSetList_nil in H.
+    assumption.
+  - rewrite !delVarSetList_cons.
+    apply IHvs.
+    rewrite !extendVarSetList_cons in H.
 Admitted.
 
 Lemma mapUnionVarSet_In_subVarSet:
@@ -1556,7 +1566,10 @@ Proof.
   apply eq_iff_eq_true.
   rewrite andb_true_iff.
   set_b_iff.
-Admitted.
+  split; intro H.
+  - split; fsetdec.
+  - destruct H; fsetdec.
+Qed.
 
 
 

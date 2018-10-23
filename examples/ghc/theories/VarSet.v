@@ -1042,30 +1042,28 @@ Lemma lookupVarSet_extendVarSetList_r_self:
   List.In v vs2 ->
   NoDup (map varUnique vs2) ->
   lookupVarSet (extendVarSetList vs1 vs2) v = Some v.
-Proof.
-  move => v vs1 vs2.
-  move: vs1.
-  induction vs2; move=> vs1.
-  - move => IN.
-    inversion IN.
-  - move => IN ND.
-    simpl in ND.
-    inversion ND.
-    hs_simpl.
-    inversion IN; subst; hs_simpl; 
-      rewrite lookupVarSet_extendVarSetList_false; auto.
-    + rewrite lookupVarSet_extendVarSet_self.
-      auto.
-    + rewrite <- In_varUnique_elem.
-      auto.
-    + eapply in_map with (f:= varUnique) in H3.
-      assert (~ a == v).
-      { 
-        rewrite varUnique_iff.
-        move => h.
-        rewrite h in H1.
-        done.
-      }
+Proof.   
+  intros.
+  generalize dependent vs1.
+  induction vs2; intros.
+  - inversion H. 
+  - inversion H0.
+    subst.
+    rewrite extendVarSetList_cons.
+    destruct H as [H|H]. 
+    + subst.
+      clear IHvs2 H0.
+      rewrite lookupVarSet_extendVarSetList_l.
+      * apply lookupVarSet_extendVarSet_self.
+      * apply lookupVarSet_None_elemVarSet.
+        destruct (lookupVarSet (mkVarSet vs2) v) eqn:Hd; auto.
+        contradict H3.
+        apply in_map.
+        apply lookupVarSet_elemVarSet in Hd.
+        unfold_VarSet.
+        unfold Unique.getWordKey, Unique.getKey in *.
+        destruct (Unique.getUnique v) eqn: Hv.
+        inversion Hv. 
 Admitted.
 
 

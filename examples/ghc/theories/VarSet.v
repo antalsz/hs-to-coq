@@ -2087,9 +2087,12 @@ Lemma filterVarSet_extendVarSet :
     else (filterVarSet f vs).
 Proof.
   intros.
-  set_b_iff.
-  destruct (f v) eqn:Hfv.
-Admitted.
+  unfold_VarSet_to_IntMap.
+  do 2 f_equal.
+  rewrite filter_insert.
+  destruct (f v) eqn:Hfv; auto.
+Qed.
+
 
 Lemma lookupVarSet_filterVarSet_true : forall f v vs,
   f v = true ->

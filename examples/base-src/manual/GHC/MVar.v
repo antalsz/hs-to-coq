@@ -8,22 +8,7 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
-Inductive Freer (E : Type -> Type) (R : Type) :=
-| Ret (r : R)
-| Vis (X : Type) (e : E X) (k : X -> Freer E R).
-
-Arguments Ret {_} {_}.
-Arguments Vis {_} {_} {_}.
-
-Fixpoint bind {E X Y} (a : Freer E X) (f : X -> Freer E Y) : Freer E Y :=
-  match a with
-  | Ret x => f x
-  | Vis e k => Vis e (fun x => bind (k x) f)
-  end.
-
-Definition ret {E X} (a : X) : Freer E X := Ret a.
-
-Definition vis {E X} (m: E X) : Freer E X := Vis m (fun x => Ret x).
+Require Import GHC.IO.
 
 Inductive MVar a :=
 | MkMV (v : a).

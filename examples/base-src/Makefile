@@ -23,6 +23,7 @@ HANDMOD = \
   GHC/Err \
   GHC/Nat \
   GHC/Unicode \
+  GHC/IO \
   GHC/MVar \
   Prelude\
 
@@ -62,7 +63,7 @@ MODULES = \
   Data/Functor/Sum \
   Data/Bifoldable \
   Data/Bitraversable \
-  Control/Monad/Zip
+  Control/Monad/Zip \
   Control/Concurrent/MVar \
 
 RENAMED = \

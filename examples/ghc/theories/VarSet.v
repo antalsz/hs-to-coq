@@ -1580,41 +1580,8 @@ Proof.
       eapply remove_s_m with (x:= a) (y:=a) in h;
         [|fsetdec].
       apply remove_equal in Hd'.
-      apply equal_sym in Hd'.
-      apply subset_equal in Hd'.
-      assert (Hs: remove a (add a
-                   (extendVarSetList empty vs))
-                    [<=] (extendVarSetList empty vs)).
-      [|fsetdec].
-      
-      apply remove_
-        Search  (remove _ _) (_ [=]_).
-      apply remove_s_m with (x:= a) (y:=a) in h;
-        [|fsetdec].
-      assert (Hs: remove a (add a
-                                (extendVarSetList empty vs))
-                         [<=] (extendVarSetList empty vs)).
-      { apply subset_equal.
-        apply remove_add.
-        assumption. }
-      pose proof (Subset_trans h Hs).
-      
-      rewrite remove_add in h.
-      Check remove.
-      assert (Hvs2: In a (extendVarSetList vs2 vs)).
-      * clear -Hd.
-        eapply MP.in_subset.
-        apply Hd. clear Hd a.
-        apply extendVarSetList_subset.
-        fsetdec.
-      * pose proof (subset_equal
-                     (equal_sym (add_equal Hvs2))).
-        eapply (Subset_trans); [apply IHvs| apply H].
-        pose proof (subset_equal (add_equal Hd)).
-        fsetdec.
-      admit.
-Admitted.
-    
+      fsetdec.
+Qed.    
 
 Lemma subVarSet_delVarSet:
   forall vs1 v,
@@ -1767,8 +1734,10 @@ Axiom disjointVarSet_subVarSet_l:
 Lemma filterVarSet_comp : forall f f' vs,
     filterVarSet f (filterVarSet f' vs) = filterVarSet (fun v => f v && f' v) vs.
 Proof.
-  intros. destruct vs; destruct getUniqSet'. simpl. do 2 f_equal.
-Admitted.
+  intros.
+  destruct vs; destruct getUniqSet'. simpl. do 2 f_equal.
+  apply filter_comp.
+Qed.
 
 (** ** Compatibility with [almostEqual] *)
 

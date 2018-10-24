@@ -8,6 +8,7 @@ Arguments Ret {_} {_}.
 Arguments Vis {_} {_} {_}.
 
 Set Implicit Arguments.
+Set Contextual Implicit.
 
 Section IO.
 
@@ -25,13 +26,15 @@ Section IO.
   Definition vis (m: E X) : Freer E X := Vis m (fun x => Ret x).
 
   Definition mask_ (x : Freer E X) : Freer E X := x.
+  
+  Definition mask (f : (Freer E X -> Freer E X) -> Freer E Y) : Freer E Y :=
+    f (fun x => x).
 
   Definition onException (x : Freer E X) (y : Freer E Y) : Freer E X := x.
 
-End IO.
+  Definition evaluate : X -> Freer E X := ret.
 
-Arguments ret {_} {_}.
-Arguments vis {_} {_}.
+End IO.
 
 Section IOMonad.
 
@@ -66,7 +69,7 @@ Section IOMonad.
       fun xs ys => Applicative__IO_op_zlztzg__ (Functor__IO_op_zlzd__ (fun x => x) xs) ys.
 
   Local Definition Applicative__IO_pure : forall {a}, a -> Freer E a :=
-    fun {a} => ret.
+    fun {a} => @ret E a.
 
   Program Instance Applicative__IO : Applicative (Freer E) :=
     fun _ k =>

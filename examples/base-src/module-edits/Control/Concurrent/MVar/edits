@@ -2,6 +2,8 @@ skip module Control.Exception.Base
 skip module GHC.Weak
 
 rename type GHC.Types.IO = GHC.MVar.IO
+rename value Control.Exception.Base.onException = GHC.IO.onException
+rename value GHC.IO.evaluate = GHC.MVar.evaluate
 
 skip Control.Concurrent.MVar.addMVarFinalizer
 skip Control.Concurrent.MVar.mkWeakMVar

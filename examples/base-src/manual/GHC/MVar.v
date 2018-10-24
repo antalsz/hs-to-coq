@@ -51,3 +51,9 @@ Definition tryPutMVar {a} (m : MVar a) (v : a) : IO bool := vis (TryPutMV m v).
 Definition isEmptyMVar {a} (m : MVar a) : IO bool := vis (IsEmptyMV m).
 
 (** TODO: [addMVarFinalizer] (does not seem important for now). *)
+
+Instance functor_io : GHC.Base.Functor IO := @Functor__IO MemEff.
+Instance applicative_io : GHC.Base.Applicative IO := @Applicative__IO MemEff.
+Instance monad_io : GHC.Base.Monad IO := @Monad__IO MemEff.
+
+Definition evaluate {a} : a -> IO a := @GHC.IO.evaluate MemEff a.

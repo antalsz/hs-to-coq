@@ -1,0 +1,7 @@
+skip module Control.Exception.Base
+skip module GHC.Weak
+
+rename type GHC.Types.IO = GHC.MVar.IO
+
+skip Control.Concurrent.MVar.addMVarFinalizer
+skip Control.Concurrent.MVar.mkWeakMVar

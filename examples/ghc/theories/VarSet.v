@@ -262,6 +262,23 @@ Hint Rewrite mkVarSet_extendVarSetList : hs_simpl.
 
 (** ** [lookupVarSet] and [elemVarSet] correspondence *)
 
+Lemma lookupVarSet_In:
+  forall vs v, (exists v', lookupVarSet vs v = Some v') <-> In v vs.
+Proof.
+  unfold lookupVarSet, UniqSet.lookupUniqSet,
+    UniqFM.lookupUFM, Unique.getWordKey, Unique.getKey.
+  intros.
+  destruct vs.
+  destruct getUniqSet'.
+  destruct (Unique.getUnique v) as [n] eqn:Hv.
+  unfold In, elemVarSet, UniqSet.elementOfUniqSet,
+  UniqFM.elemUFM, Unique.getKey, Unique.getWordKey,
+  Unique.getKey.
+  rewrite Hv.
+  rewrite <- member_lookup.
+  reflexivity.
+Qed.
+
 Lemma lookupVarSet_elemVarSet : 
   forall v1 v2 vs, lookupVarSet vs v1 = Some v2 -> elemVarSet v1 vs.
 Proof.
@@ -1501,14 +1518,32 @@ Lemma subVarSet_extendVarSet_l:
   lookupVarSet vs2 v = Some v' ->
   subVarSet (extendVarSet vs1 v) vs2 .
 Proof.
-  intros vs1 vs2 v v'.
-  intros s1 lu.
-  apply lookupVarSet_elemVarSet in lu.
+  intros.
   set_b_iff.
-  rewrite <- (add_equal lu).
-  fsetdec.
+  apply MP.subset_add_3; try assumption.
+  apply lookupVarSet_In.
+  eauto.
 Qed.
 
+Lemma extendVarSet_subset: forall v1 v2 x,
+  v1 [<=] v2 ->
+  extendVarSet v1 x [<=] extendVarSet v2 x.
+Proof.
+  intros.
+  set_b_iff.
+  fsetdec.
+Qed.
+  
+Lemma extendVarSetList_subset: forall x y vs,
+  x [<=] y ->
+  extendVarSetList x vs [<=] extendVarSetList y vs.
+Proof.
+  intros.
+  induction vs; hs_simpl; [assumption|].
+  do 2 rewrite extendVarSetList_extendVarSet_iff.
+  apply extendVarSet_subset.
+  assumption.
+Qed.
 
 Lemma subVarSet_extendVarSetList_r:
   forall vs vs1 vs2,
@@ -1524,8 +1559,82 @@ Proof.
   - intro h.     
     autorewrite with hs_simpl in *.
     rewrite -> extendVarSetList_extendVarSet_iff in *.
-    specialize (IHvs vs1 vs2).
-    set_b_iff.
+    destruct (mem a (extendVarSetList empty vs)) eqn:Hd;
+    [|destruct (mem a vs1) eqn:Hd'].
+    + specialize (IHvs vs1 vs2). 
+      set_b_iff.
+      assert (Hvs2: In a (extendVarSetList vs2 vs)).
+      * clear -Hd.
+        eapply MP.in_subset.
+        apply Hd. clear Hd a.
+        apply extendVarSetList_subset.
+        fsetdec.
+      * pose proof (subset_equal
+                     (equal_sym (add_equal Hvs2))).
+        eapply (Subset_trans); [apply IHvs| apply H].
+        pose proof (subset_equal (add_equal Hd)).
+        fsetdec.
+    + specialize (IHvs (remove a vs1) vs2). 
+      set_b_iff.
+      apply remove_s_m with (x:= a) (y:=a) in h;
+        [|fsetdec].
+      assert (Hs: remove a (add a
+                                (extendVarSetList empty vs))
+                         [<=] (extendVarSetList empty vs)).
+      { apply subset_equal.
+        apply remove_add.
+        assumption. }
+        specialize (IHvs (Subset_trans h Hs)).
+      apply add_s_m with (x:= a) (y:=a) in IHvs;
+        [|fsetdec].
+      assert (Hs': vs1 [<=] add a (remove a vs1)).
+      { apply subset_equal.
+        apply equal_sym.
+        apply add_remove.
+        assumption. }
+      eapply Subset_trans.
+      apply Hs'.
+      assumption.
+    + specialize (IHvs vs1 vs2). 
+      set_b_iff.
+      apply subset_add_2.
+      apply IHvs.
+      eapply remove_s_m with (x:= a) (y:=a) in h;
+        [|fsetdec].
+      apply remove_equal in Hd'.
+      apply equal_sym in Hd'.
+      apply subset_equal in Hd'.
+      assert (Hs: remove a (add a
+                   (extendVarSetList empty vs))
+                    [<=] (extendVarSetList empty vs)).
+      [|fsetdec].
+      
+      apply remove_
+        Search  (remove _ _) (_ [=]_).
+      apply remove_s_m with (x:= a) (y:=a) in h;
+        [|fsetdec].
+      assert (Hs: remove a (add a
+                                (extendVarSetList empty vs))
+                         [<=] (extendVarSetList empty vs)).
+      { apply subset_equal.
+        apply remove_add.
+        assumption. }
+      pose proof (Subset_trans h Hs).
+      
+      rewrite remove_add in h.
+      Check remove.
+      assert (Hvs2: In a (extendVarSetList vs2 vs)).
+      * clear -Hd.
+        eapply MP.in_subset.
+        apply Hd. clear Hd a.
+        apply extendVarSetList_subset.
+        fsetdec.
+      * pose proof (subset_equal
+                     (equal_sym (add_equal Hvs2))).
+        eapply (Subset_trans); [apply IHvs| apply H].
+        pose proof (subset_equal (add_equal Hd)).
+        fsetdec.
+      admit.
 Admitted.
     
 
@@ -1601,6 +1710,16 @@ Lemma subVarSet_delVarSetList_extendVarSetList_dual:
   forall jps isvs vs,
   subVarSet jps (extendVarSetList isvs vs)  ->
   subVarSet (delVarSetList jps vs) isvs .
+Proof.
+  intros.
+  revert jps isvs H.
+  induction vs; intros.
+  - rewrite !delVarSetList_nil.
+    rewrite !extendVarSetList_nil in H.
+    assumption.
+  - rewrite !delVarSetList_cons.
+    apply IHvs.
+    rewrite !extendVarSetList_cons in H.
 Admitted.
 
 Lemma mapUnionVarSet_In_subVarSet:
@@ -1624,7 +1743,10 @@ Proof.
   apply eq_iff_eq_true.
   rewrite andb_true_iff.
   set_b_iff.
-Admitted.
+  split; intro H.
+  - split; fsetdec.
+  - destruct H; fsetdec.
+Qed.
 
 
 
@@ -2096,9 +2218,12 @@ Lemma filterVarSet_extendVarSet :
     else (filterVarSet f vs).
 Proof.
   intros.
-  set_b_iff.
-  destruct (f v) eqn:Hfv.
-Admitted.
+  unfold_VarSet_to_IntMap.
+  do 2 f_equal.
+  rewrite filter_insert.
+  destruct (f v) eqn:Hfv; auto.
+Qed.
+
 
 Lemma lookupVarSet_filterVarSet_true : forall f v vs,
   f v = true ->
@@ -2119,5 +2244,9 @@ Lemma StrongSubset_filterVarSet :
   forall f1 f2 vs,
   (forall v, f1 v = true  -> f2 v = true) ->
   filterVarSet f1 vs {<=} filterVarSet f2 vs.
-Proof.  
+Proof.
+  intros.
+  induction vs.
+
+  
 Admitted.

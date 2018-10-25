@@ -52,6 +52,12 @@ Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
     IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
     IntMap.Internal.filter (fun v => f v && f' v) i.
 
+Axiom filter_insert: forall A f key (v:A) i,
+  IntMap.Internal.filter f (IntMap.Internal.insert key v i) =
+  (if (f v)
+   then IntMap.Internal.insert key v (IntMap.Internal.filter f i)
+   else IntMap.Internal.filter f i).
+
 Axiom lookup_insert : forall A key (val:A) i, 
     IntMap.Internal.lookup key (IntMap.Internal.insert key val i) = Some val.
 
@@ -116,9 +122,6 @@ Axiom lookup_difference_not_in_snd:
     lookup key i' = None ->
     lookup key (difference i i') = lookup key i.
 
-
-
-
 Axiom member_lookup :
    forall (A : Type)
      (key : Internal.Key) 
@@ -141,6 +144,9 @@ Axiom delete_commute :
     (i : Internal.IntMap A),
   IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
   IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
+
+
+
 
 (*
 This is a QuickChick setup to test the above axioms

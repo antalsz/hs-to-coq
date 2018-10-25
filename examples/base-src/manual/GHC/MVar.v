@@ -10,23 +10,34 @@ Require Coq.Program.Wf.
 
 Require Import GHC.IO.
 
-Inductive MVar a :=
-| MkMV (v : a).
+Class Encodable A :=
+  { encode : A -> nat;
+    decode : nat -> option A }.
 
-Arguments MkMV {_}.
+Instance encodable_for_all : forall A : Type, Encodable A.
+Proof.
+  intros. constructor.
+  - exact (fun _ => 0).
+  - exact (fun _ => None).
+Qed.
+
+Inductive MVar (A : Type) `{Encodable A} :=
+| MkMV (loc : nat).
+
+Arguments MkMV {_} {_}.
 
 (** Atomic primitives. *)
 Inductive MemEff: Type -> Type :=
-| NewMV {a} : MemEff (MVar a)
-| TakeMV {a} : MVar a -> MemEff a
-| ReadMV {a} : MVar a -> MemEff a
-| PutMV {a} : MVar a -> a -> MemEff unit
-| TryTakeMV {a} : MVar a -> MemEff (option a)
-| TryReadMV {a} : MVar a -> MemEff (option a)
-| TryPutMV {a} : MVar a -> a -> MemEff bool
-| IsEmptyMV {a} : MVar a -> MemEff bool.
+| NewMV {A} : MemEff (MVar A)
+| TakeMV {A} : MVar A -> MemEff A
+| ReadMV {A} : MVar A -> MemEff A
+| PutMV {A} : MVar A -> A -> MemEff unit
+| TryTakeMV {A} : MVar A -> MemEff (option A)
+| TryReadMV {A} : MVar A -> MemEff (option A)
+| TryPutMV {A} : MVar A -> A -> MemEff bool
+| IsEmptyMV {A} : MVar A -> MemEff bool.
 
-Definition IO := Freer MemEff.
+Definition IO : Type -> Type := Freer MemEff.
 
 (** TODO: the [Eq] instance of [MVar] *)
 

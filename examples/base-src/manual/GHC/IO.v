@@ -1,6 +1,6 @@
 Require Import GHC.Base.
 
-Inductive Freer (E : Type -> Type) (R : Type) :=
+Inductive Freer (E : Type -> Type) (R : Type) : Type :=
 | Ret (r : R)
 | Vis (X : Type) (e : E X) (k : X -> Freer E R).
 
@@ -95,3 +95,4 @@ Section IOMonad.
            op_zgzgze____ := fun {a} {b} => Monad__IO_op_zgzgze__ ;
            return___ := fun {a} => Monad__IO_return_ |}.
 End IOMonad.
+

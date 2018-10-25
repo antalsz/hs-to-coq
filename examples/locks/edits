@@ -1,0 +1,1 @@
+rename type GHC.Types.IO = GHC.MVar.IO

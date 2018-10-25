@@ -9,20 +9,21 @@ Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
 Require Import GHC.IO.
+Require Import GHC.Num.
 
 Class Encodable A :=
-  { encode : A -> nat;
-    decode : nat -> option A }.
+  { encode : A -> Word;
+    decode : Word -> option A }.
 
 Instance encodable_for_all : forall A : Type, Encodable A.
 Proof.
   intros. constructor.
-  - exact (fun _ => 0).
+  - exact (fun _ => #0).
   - exact (fun _ => None).
 Qed.
 
 Inductive MVar (A : Type) `{Encodable A} :=
-| MkMV (loc : nat).
+| MkMV (loc : Word).
 
 Arguments MkMV {_} {_}.
 

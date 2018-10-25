@@ -1027,7 +1027,8 @@ Qed.
 Lemma lookupVarSet_extendVarSetList_self_exists:
   forall (vars:list Var) v vs,
     (Foldable.elem v vars) -> 
-    exists v', lookupVarSet (extendVarSetList vs vars) v = Some v' /\ v == v'.
+    exists v', lookupVarSet (extendVarSetList vs vars) v = Some v' 
+          /\ v == v'.
 Proof.
   move=> vars v vs E. 
   move: (lookupVarSet_extendVarSetList_self vs E) => h0.
@@ -1039,9 +1040,30 @@ Proof.
   - done.
 Qed.
 
+(*
+Lemma lookupVarSet_extendVarSetList_self_exists_in:
+  forall (vars:list Var) v vs,
+    (Foldable.elem v vars) -> 
+    exists v', lookupVarSet (extendVarSetList vs vars) v = Some v' 
+          /\ v == v'
+          /\ List.In v' vars.
+Proof.
+  move=> vars v vs E. 
+  move: (lookupVarSet_extendVarSetList_self vs E) => h0.
+  unfold op_zeze__, Eq___option,op_zeze____ , Base.Eq___option_op_zeze__ in h0.
+  destruct (lookupVarSet (extendVarSetList vs vars) v) eqn:h1.
+  - exists v0. split; auto.
+    rewrite Eq_sym.
+    auto.
+  - done.
+Qed.
+*)
+
+
 Lemma extendVarSetList_same : forall v vars vs1 vs2,
   Foldable.elem v vars ->
-  lookupVarSet (extendVarSetList  vs1 vars) v =   lookupVarSet (extendVarSetList vs2 vars) v.
+  lookupVarSet (extendVarSetList  vs1 vars) v = 
+  lookupVarSet (extendVarSetList vs2 vars)  v.
 Proof.
   induction vars.
   - move=> vs1 vs2 F. inversion F.

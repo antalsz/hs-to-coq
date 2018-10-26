@@ -32,7 +32,7 @@ Next Obligation.
     remember (max_loc0 + 1) as max_loc1. right.
     exact (k (MkMV max_loc1),
            {| max_loc := max_loc1;
-              content := fun n => if (n =? max_loc0) then None else content0 n
+              content := fun n => if (n =? max_loc1) then None else content0 n
            |}).
   - destruct m.
     destruct (content h loc).
@@ -122,22 +122,29 @@ Proof.
   intro p. apply deadlock_unsafe'.
 Qed.
 
+Definition pre       := heap -> Prop.
+Definition post      := heap -> Prop.
+
 Definition rely      := heap -> heap -> Prop.
 Definition guarantee := heap -> heap -> Prop.
 
-Reserved Notation "h ⊨ {{ R }} p {{ G }}" (at level 42).
+Reserved Notation "h ⊨ {{ P }} [[ R ]] p [[ G ]] {{ Q }}" (at level 42).
 
-Inductive rg_prog (h : heap) (R : rely)
-          (p : prog) (G : guarantee) : Prop :=
+Inductive rg_prog (h : heap) (P: pre) (R : rely)
+          (p : prog) (G : guarantee) (Q : post): Prop :=
 | RgFinished : 
     (forall h',
         R h  h' ->
-        interp p h' = inl Finished /\ G h' h') ->
-    h ⊨ {{ R }} p {{ G }}
+        P h' ->
+        interp p h' = inl Finished /\ G h' h' /\ Q h') ->
+    h ⊨ {{ P }} [[ R ]] p [[ G ]] {{ Q }}
 | RgStep :
     ( forall h' h'' p',
         R h  h'  ->
+        P h' ->
         interp p h' = inr (p', h'') ->
-        h'' ⊨ {{ R }} p' {{ G }} /\ G h' h'') ->
-    h  ⊨ {{ R }} p  {{ G }}
-where "h ⊨ {{ R }} p {{ G }}" := (rg_prog h R p G).
+        exists P', P' h'' /\
+              h'' ⊨ {{ P' }} [[ R ]] p' [[ G ]] {{ Q }} /\
+              G h' h'') ->
+    h  ⊨ {{ P }} [[ R ]] p  [[ G ]] {{ Q }}
+where "h ⊨ {{ P }} [[ R ]] p [[ G ]] {{ Q }}" := (rg_prog h P R p G Q).

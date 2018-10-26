@@ -5,7 +5,7 @@ Require Import Proofs.Control.Concurrency.Interp.
 
 Require Import Locks.
 
-Require Import Psatz.
+Require Import Psatz Logic.FunctionalExtensionality.
 
 Axiom decode_encode_word : forall (w : Word),
     decode (encode w) = Some w.
@@ -33,6 +33,59 @@ Theorem deadlock_prog_unsafe : ~ safe_single_prog deadlock.
 Proof.
   apply deadlock_unsafe. apply deadlock_prog_deadlock.
 Qed.
+
+Ltac forward_rg :=
+  let h := fresh "h" in
+  let h' := fresh "h" in
+  let p := fresh "p" in
+  let HR := fresh "HR" in
+  let HP := fresh "HP" in
+  apply RgStep;
+  intros h h' p HR HP.
+
+Theorem example_prog_spec : forall h,
+    let max_loc' := max_loc h + 1 in
+    let h' :=
+        {| max_loc := max_loc';
+           content := fun n => if n =? max_loc' then None else content h n |} in
+    h ⊨ {{ fun _ => True }} [[ fun h1 h2 => h1 = h2 ]] example [[ fun _ _ => True ]] {{ fun h => h = h' }}.
+Proof.
+  intros.
+
+  forward_rg.
+  simpl. destruct h0. inversion 1.
+  exists (fun h => h =
+           {|
+             max_loc := max_loc + 1;
+             content := fun n : Word => if n =? max_loc + 1 then None else content n |}).
+  intuition.
+
+  forward_rg.
+  subst. simpl.
+  rewrite N.eqb_refl. inversion 1.
+  exists (fun h => h =
+           {|
+             max_loc := max_loc + 1;
+             content := fun n : Word =>
+                          if n =? max_loc + 1
+                          then Some (encode 42)
+                          else if n =? max_loc + 1 then None else content n |}).
+  intuition.
+
+  forward_rg.
+  subst. simpl.
+  rewrite N.eqb_refl, decode_encode_word. inversion 1.
+  exists (fun h => h = h').
+  intuition.
+  unfold h', max_loc'. simpl. f_equal.
+  apply functional_extensionality; intros.
+  destruct (x =? max_loc + 1); reflexivity.
+
+  apply RgFinished.
+  intros; subst. simpl. intuition.
+Qed.
+
+(** The rest is going to break! *)
 
 Require Import ZArith.
 
@@ -80,15 +133,6 @@ Ltac use_rely Hb :=
   destruct_match; try discriminate;
   try (rewrite decode_encode_int in Hb);
   try rewrite <- Hb; destruct_match; inversion 1.
-
-Ltac forward_rg :=
-  let h := fresh "h" in
-  let h' := fresh "h" in
-  let p := fresh "p" in
-  let Hb := fresh "Hb" in
-  let HG := fresh "HG" in
-  apply RgStep;
-  intros h h' p Hb.
 
 Lemma inv_t1 : forall h bloc cloc (bal : Int),
     let bm := MkMV bloc in

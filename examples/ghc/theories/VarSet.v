@@ -248,6 +248,7 @@ Proof.
   reflexivity.
 Qed.
 
+
 Hint Rewrite mkVarSet_extendVarSetList : hs_simpl.
 
 
@@ -640,6 +641,7 @@ Lemma  In_hd_cons: forall v vs,
   In v (UniqSet.mkUniqSet (v :: vs)).
 Proof.
   intros v vs.
+  
 Abort.
     
 Lemma hd_VarSet_subset: forall v vs,
@@ -1443,7 +1445,7 @@ Lemma subVarSet_extendVarSetList_l:
   subVarSet vs1 (extendVarSetList vs2 vs) .
 Proof.
   intros vs1 vs2 vs.
-  generalize vs2. clear vs2.
+  generalize dependent vs2.
   induction vs.
   - intro vs2. rewrite extendVarSetList_nil. auto.
   - intro vs2. intro h. 
@@ -1453,6 +1455,7 @@ Proof.
 Qed.
 
 
+    
 
 Lemma subVarSet_extendVarSet_both:
   forall vs1 vs2 v,
@@ -1481,6 +1484,7 @@ Lemma subVarSet_extendVarSetList:
   subVarSet vs1 vs2  ->
   subVarSet vs1 (extendVarSetList vs2 vs3) .
 Proof.
+
   induction vs3; autorewrite with hs_simpl.
   - auto.
   - intro h. 
@@ -1682,6 +1686,9 @@ Proof.
   assumption.
 Qed.
 
+
+
+
 Lemma subVarSet_delVarSetList_extendVarSetList_dual:
   forall jps isvs vs,
   subVarSet jps (extendVarSetList isvs vs)  ->
@@ -1756,7 +1763,6 @@ Axiom disjointVarSet_subVarSet_l:
   disjointVarSet vs2 vs3  ->
   subVarSet vs1 vs2  ->
   disjointVarSet vs1 vs3 .
-
 
 
 
@@ -2045,24 +2051,32 @@ Lemma Respects_StrongSubset_delVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSet vs v)).
+Proof.
+  intros.
 Admitted.
 
 Lemma Respects_StrongSubset_delVarSetList:
   forall vs2 P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
+Proof.
+  
 Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 Lemma Respects_StrongSubset_extendVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
+Proof.
+  
 Admitted.
 
 Lemma Respects_StrongSubset_extendVarSetList:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs v)).
+Proof.
+  
 Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 

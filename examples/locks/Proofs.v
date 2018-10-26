@@ -96,8 +96,6 @@ Proof.
   rewrite <- H4. simpl. rewrite N.eqb_refl. reflexivity.
 Qed.
 
-(** The rest is going to break! *)
-
 Require Import ZArith.
 
 Open Scope Z_scope.
@@ -158,35 +156,70 @@ Proof.
   forward_rg.
   destruct HP as [bal [HP1 HP2] ].
   rewrite HP1 in HR.
-  use_rely HR.
-  exists (fun h => h = h1). split; [reflexivity |].
+  simpl. destruct h0 as [max_loc0 content0]. simpl.
+  unfold access_heap in HP1. simpl in HP1.
+  destruct (content0 bloc); [| discriminate].
+  rewrite HP1. inversion 1.
+  exists (fun h => content h bloc = None).
+  split.
+  simpl. rewrite N.eqb_refl. reflexivity.
   split_g.
   
   forward_rg.
-  use_rely Hb0.
+  simpl. rewrite HP.
+  destruct h0 as [max_loc1 content1]. inversion 1.
+  exists (inv_t1 bloc).
+  split.
+  unfold inv_t1.
+  exists (bal + 5000). unfold access_heap. simpl.
+  rewrite N.eqb_refl. rewrite decode_encode_int. intuition.
   split_g.
 
   forward_rg.
-  use_rely Hb1.
+  simpl. unfold inv_t1, access_heap in HP0.
+  destruct HP0 as [bal1 [HP3 HP4] ]. 
+  destruct (content h0 bloc); [| discriminate].
+  rewrite HP3. destruct h0 as [max_loc2 content2]. inversion 1.
+  exists (fun h => content h bloc = None).
+  split.
+  simpl. rewrite N.eqb_refl. reflexivity.
   split_g.
 
   forward_rg.
-  use_rely Hb2.
+  simpl. rewrite HP0.
+  destruct h0 as [max_loc3 content3]. inversion 1.
+  exists (inv_t1 bloc).
+  split.
+  unfold inv_t1.
+  exists (bal1 + 1000). unfold access_heap. simpl.
+  rewrite N.eqb_refl. rewrite decode_encode_int. intuition.
   split_g.
 
   forward_rg.
-  use_rely Hb3.
+  simpl. unfold inv_t1, access_heap in HP5.
+  destruct HP5 as [bal2 [HP5 HP6] ]. 
+  destruct (content h0 bloc); [| discriminate].
+  rewrite HP5. destruct h0 as [max_loc4 content4]. inversion 1.
+  exists (fun h => content h bloc = None).
+  split.
+  simpl. rewrite N.eqb_refl. reflexivity.
   split_g.
 
   forward_rg.
-  use_rely Hb4.
+  simpl. rewrite HP7.
+  destruct h0 as [max_loc5 content5]. inversion 1.
+  exists (inv_t1 bloc).
+  split.
+  unfold inv_t1.
+  exists (bal2 * 2). unfold access_heap. simpl.
+  rewrite N.eqb_refl. rewrite decode_encode_int. intuition.
   split_g.
 
   eapply RgFinished. simpl.
   intros. intuition.
-  unfold Int in H17.
-  rewrite <- H17 in H20. unfold access_heap in H20.
-  simpl in H20. rewrite N.eqb_refl in H20.
-  rewrite decode_encode_int in H20. inversion H20.
+  unfold Int in H15.
+  rewrite <- H15 in H19. unfold access_heap in H19.
+  simpl in H19. rewrite N.eqb_refl, decode_encode_int in H19.
+  inversion H19.
   lia.
 Qed.

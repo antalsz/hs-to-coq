@@ -2,7 +2,7 @@ include ../../common.mk
 
 # Edit this
 GENMODS = Locks
-MANMODS =
+MANMODS = Proofs
 
 # Abstract stuff
 

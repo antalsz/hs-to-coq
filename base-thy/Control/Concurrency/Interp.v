@@ -35,8 +35,8 @@ Next Obligation.
               content := fun n => if (n =? max_loc0) then None else content0 n
            |}).
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
-    + destruct (@decode A _ w) eqn:Hdecode.
+    destruct (content h loc).
+    + destruct (@decode A _ w).
       * right. destruct h.
         exact (k a,
                {| max_loc := max_loc0;
@@ -45,13 +45,13 @@ Next Obligation.
       * left. exact Unexpected.
     + left. exact Blocked.
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
-    + destruct (@decode A _ w) eqn:Hdecode.
+    destruct (content h loc).
+    + destruct (@decode A _ w).
       * right. exact (k a, h).
       * left. exact Unexpected.
     + left. exact Blocked.
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
+    destruct (content h loc).
     + left. exact Blocked.
     + right. destruct h.
       exact (k tt,
@@ -59,8 +59,8 @@ Next Obligation.
                 content := fun n => if n =? loc then (Some (encode a))  else content0 n
              |}).
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
-    + destruct (@decode A _ w) eqn:Hdecode.
+    destruct (content h loc).
+    + destruct (@decode A _ w).
       * right. destruct h.
         exact (k (Some a),
                {| max_loc := max_loc0;
@@ -69,13 +69,13 @@ Next Obligation.
       * left. exact Unexpected.
     + right. exact (k None, h).
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
-    + destruct (@decode A _ w) eqn:Hdecode.
+    destruct (content h loc).
+    + destruct (@decode A _ w).
       * right. exact (k (Some a), h).
       * left. exact Unexpected.
     + right. exact (k None, h).
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
+    destruct (content h loc).
     + right. exact (k false, h).
     + right. destruct h.
       exact (k true,
@@ -83,7 +83,7 @@ Next Obligation.
                 content := fun n => if n =? loc then (Some (encode a))  else content0 n
              |}).
   - destruct m.
-    destruct (content h loc) eqn:Hcontent.
+    destruct (content h loc).
     + right. exact (k false, h).
     + right. exact (k true, h).
 Defined.
@@ -121,3 +121,23 @@ Lemma deadlock_unsafe : forall p,
 Proof.
   intro p. apply deadlock_unsafe'.
 Qed.
+
+Definition rely      := heap -> heap -> Prop.
+Definition guarantee := heap -> heap -> Prop.
+
+Reserved Notation "h ⊨ {{ R }} p {{ G }}" (at level 42).
+
+Inductive rg_prog (h : heap) (R : rely)
+          (p : prog) (G : guarantee) : Prop :=
+| RgFinished : 
+    (forall h',
+        R h  h' ->
+        interp p h' = inl Finished /\ G h' h') ->
+    h ⊨ {{ R }} p {{ G }}
+| RgStep :
+    ( forall h' h'' p',
+        R h  h'  ->
+        interp p h' = inr (p', h'') ->
+        h'' ⊨ {{ R }} p' {{ G }} /\ G h' h'') ->
+    h  ⊨ {{ R }} p  {{ G }}
+where "h ⊨ {{ R }} p {{ G }}" := (rg_prog h R p G).

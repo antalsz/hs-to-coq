@@ -145,6 +145,9 @@ Axiom delete_commute :
   IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
   IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
 
+Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
+    k == k'->
+    IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
 
 
 

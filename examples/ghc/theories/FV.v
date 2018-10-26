@@ -12,6 +12,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 
 Require Import GHC.Base.
+Require Import Proofs.GHC.Base.
 Import GHC.Base.ManualNotations.
 
 

@@ -527,10 +527,40 @@ Proof.
 Qed.
 
 
+Axiom lookupVarSet_extendVarSetList_self_exists_in:
+  forall (vars:list Var) v vs,
+    (Foldable.elem v vars) -> 
+    exists v', lookupVarSet (extendVarSetList vs vars) v = Some v' 
+          /\ v == v'
+          /\ List.In v' vars.
 
-  
+Lemma lookupVarSet_extendVarSetList_same :
+  forall (vars1 vars1' vars2:list Var) v vs vs',
+    (Foldable.elem v vars2) -> 
+    lookupVarSet (extendVarSetList vs (vars1 ++ vars2)) v = 
+    lookupVarSet (extendVarSetList vs' (vars1' ++ vars2)) v.
+Proof.  
+  intros.
+  hs_simpl.
+  eapply extendVarSetList_same; eauto.
+Qed.
 
-
+Lemma lookupVarSet_extendVarSetList_self_most_recent:
+  forall (vars1 vars2:list Var) v vs,
+    (Foldable.elem v vars2) -> 
+    exists v', lookupVarSet (extendVarSetList vs (vars1 ++ vars2)) v = Some v' 
+          /\ v == v'
+          /\ List.In v' vars2.
+Proof.
+  induction vars1.
+  - intros. simpl.
+    eapply lookupVarSet_extendVarSetList_self_exists_in.
+    auto.
+  - move=> vars2 v vs ELEM.
+    move: (IHvars1 vars2 v (extendVarSet vs a) ELEM) => [v' [h0 h1]].
+    exists v'. split; auto.
+Qed.
+    
 Lemma SubstExtends_trans : forall s2 s1 s3 vars1 vars2 vars1' vars2', 
     Disjoint (map varUnique vars1') (map varUnique vars2') ->
     SubstExtends s1 vars1 s2 vars1' -> SubstExtends s2 vars2 s3 vars2'-> 
@@ -583,17 +613,42 @@ Proof.
 
      intros var.
      unfold StrongSubset in *. 
+     unfold VarEnvExtends in *.
      specialize_all var.
 
-     (* Only care about vars NOT present in fin_env *)
+     (* Only care about vars NOT present in fin_env, others are trivial *)
      destruct (elemVarEnv var fin_env) eqn:ELEM. rewrite_minusDom_true.
      rewrite_minusDom_false.
      rewrite_minusDom_false.
 
-     (* Is var in the mid-env *) 
+     rewrite -> lookupVarEnv_elemVarEnv_false in ELEM.
+     rewrite -> ELEM in *.
+
+     (* Is var in the mid-env? *) 
      destruct (elemVarEnv var mid_env) eqn: ELEM2.
      + rewrite_minusDom_true.
 
+       rewrite -> lookupVarEnv_elemVarEnv_true in ELEM2.
+       destruct ELEM2 as [c k0].
+       rewrite -> k0 in VEmf.
+       rewrite -> andb_true_iff in VEmf.
+       move: VEmf => [H7 H14].
+
+       have E12: (Foldable.elem var (vars1 ++ vars2)).
+       { rewrite Foldable_elem_app. rewrite H7. rewrite orb_true_r. auto. }
+
+       move: (lookupVarSet_extendVarSetList_self_most_recent  
+                vars1 vars2 var (getInScopeVars init_scope) H7) => [v0 [h0 [h1 h2]]].
+       rewrite h0.
+       move: (lookupVarSet_extendVarSetList_self_exists_in
+                _ _ (getInScopeVars mid_scope) H7) => [v1 [h3 [h4 h5]]].
+       rewrite h3 in H6.
+      
+       destruct ( lookupVarSet (getInScopeVars fin_scope) var ); try contradiction.
+
+       eapply almostEqual_trans. 2:{ eauto. }
+       admit.
+(*
        (* var is a binder in mid env that is NOT present in 
           the final env. 
 
@@ -648,7 +703,7 @@ Proof.
          destruct (lookupVarSet (extendVarSetList (getInScopeVars mid_scope) vars2') var). eauto. contradiction.
        } clear H5.
        
-       admit.
+       admit. *)
        
 (*       rewrite extendVarSetList_same with vs2 :=  in Ev3.
        rewrite -> lookupVarEnv_elemVarEnv_true in ELEM2.
@@ -687,11 +742,8 @@ Proof.
        (* var is not in mid or final env, so cannot be in vars1 or vars2 *)
        have: (Foldable.elem var (vars1 ++ vars2) = false).
        {
-         rewrite -> lookupVarEnv_elemVarEnv_false in ELEM.
          rewrite -> lookupVarEnv_elemVarEnv_false in ELEM2.
-         unfold VarEnvExtends in *. specialize_all var.
-         rewrite ELEM in k.
-         rewrite ELEM in VEmf. rewrite ELEM2 in VEim.
+         rewrite ELEM2 in VEim.
 
          apply not_true_is_false.
          move => h.
@@ -834,8 +886,8 @@ Proof.
        rewrite ELEM. auto.
        rewrite -> lookupVarSet_extendVarSetList_false; auto.
        rewrite -> lookupVarSet_extendVarSetList_false; auto.
-       intro h. rewrite -> h in ELEM. discriminate.
-       intro h. rewrite -> h in ELEM. discriminate. 
+       rewrite ELEM => //.
+       rewrite ELEM => //.
 Qed.
 
 

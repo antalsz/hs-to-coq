@@ -5,10 +5,6 @@
 
    This library shows that those instances are lawful.
 
-   Furthermore, this file defines a rewriting database hs_simpl and 
-   associated tactic (hs_simpl) for simplifying Haskell expressions
-   and unfolding type class applications.
-
  *)
 
 Require Import GHC.Base.
@@ -24,6 +20,19 @@ Set Bullet Behavior "Strict Subproofs".
 Require Coq.Lists.List.
 Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Classes.Morphisms.
+
+
+(* ** hs_simpl tactic *) 
+
+(*
+   Furthermore, this file defines a rewriting database hs_simpl and 
+   associated tactic (hs_simpl) for simplifying Haskell expressions
+   and unfolding type class applications.
+*)
+
+Ltac hs_simpl := autorewrite with hs_simpl.
+
+Tactic Notation "hs_simpl" "in" hyp(h) := autorewrite with hs_simpl in h.
 
 
 (** ** [Lists] *)

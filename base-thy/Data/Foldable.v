@@ -220,7 +220,7 @@ Proof.
     auto.
 Qed.
 
-Hint Rewrite Foldable_any_nil Foldable_any_cons Foldable_any_app : hs_simpl.
+Hint Rewrite @Foldable_any_nil @Foldable_any_cons @Foldable_any_app : hs_simpl.
 
 Lemma elem_nil : forall {A} `{Eq_ A}  (x:A),  
   Foldable.elem x nil = false.
@@ -243,7 +243,7 @@ Proof.
   intros. apply Foldable_any_app.
 Qed.
 
-Hint Rewrite elem_nil elem_cons Foldable_elem_app : hs_simpl.
+Hint Rewrite @elem_nil @elem_cons @Foldable_elem_app : hs_simpl.
 
 
 

@@ -34,6 +34,12 @@ Proof.
   apply deadlock_unsafe. apply deadlock_prog_deadlock.
 Qed.
 
+Definition access_heap { A } (h : heap) (loc : GHC.Num.Word) : option A :=
+  match content h loc with
+  | Some w => decode w
+  | None => None
+  end.
+
 Ltac forward_rg :=
   let h := fresh "h" in
   let h' := fresh "h" in
@@ -44,45 +50,50 @@ Ltac forward_rg :=
   intros h h' p HR HP.
 
 Theorem example_prog_spec : forall h,
-    let max_loc' := max_loc h + 1 in
+    let mloc := max_loc h + 1 in
     let h' :=
-        {| max_loc := max_loc';
-           content := fun n => if n =? max_loc' then None else content h n |} in
-    h ⊨ {{ fun _ => True }} [[ fun h1 h2 => h1 = h2 ]] example [[ fun _ _ => True ]] {{ fun h => h = h' }}.
+        {| max_loc := mloc;
+           content := fun n => if n =? mloc then None else content h n |} in
+    h ⊨
+      {{ fun _ => True }}
+      [[ fun h1 h2 =>
+           max_loc h1 = max_loc h2 /\
+           content h1 mloc = content h2 mloc ]]
+      example
+      [[ fun _ _ => True ]]
+      {{ fun h =>
+           content h mloc = content h' mloc }}.
 Proof.
-  intros.
+  intros. subst mloc.
 
   forward_rg.
-  simpl. destruct h0. inversion 1.
-  exists (fun h => h =
-           {|
-             max_loc := max_loc + 1;
-             content := fun n : Word => if n =? max_loc + 1 then None else content n |}).
+  destruct HR as [HR1 HR2].
+  simpl. destruct h0 as [max_loc0 content0].
+  simpl in HR1. inversion 1.
+  exists (fun h => content h (max_loc0 + 1) = None).
   intuition.
+  simpl. rewrite N.eqb_refl. reflexivity.
 
   forward_rg.
-  subst. simpl.
-  rewrite N.eqb_refl. inversion 1.
-  exists (fun h => h =
-           {|
-             max_loc := max_loc + 1;
-             content := fun n : Word =>
-                          if n =? max_loc + 1
-                          then Some (encode 42)
-                          else if n =? max_loc + 1 then None else content n |}).
+  subst. simpl. destruct HR as [HR3 HR4].
+  rewrite <- HR4. simpl. rewrite N.eqb_refl.
+  destruct h0 as [max_loc1 content1]. simpl in HR3. inversion 1.
+  exists (fun h => content h max_loc1 = Some (encode 42)).
   intuition.
+  subst. simpl. rewrite N.eqb_refl. reflexivity.
 
   forward_rg.
-  subst. simpl.
-  rewrite N.eqb_refl, decode_encode_word. inversion 1.
-  exists (fun h => h = h').
+  subst. simpl. destruct HR as [HR5 HR6].
+  rewrite <- HR6. simpl. rewrite N.eqb_refl, decode_encode_word.
+  destruct h0 as [max_loc2 content2]. simpl in HR5. inversion 1.
+  exists (fun h => content h max_loc2 = content h' max_loc2).
   intuition.
-  unfold h', max_loc'. simpl. f_equal.
-  apply functional_extensionality; intros.
-  destruct (x =? max_loc + 1); reflexivity.
+  unfold h'. simpl.
+  rewrite HR5, N.eqb_refl. reflexivity.
 
   apply RgFinished.
   intros; subst. simpl. intuition.
+  rewrite <- H4. simpl. rewrite N.eqb_refl. reflexivity.
 Qed.
 
 (** The rest is going to break! *)
@@ -93,12 +104,6 @@ Open Scope Z_scope.
 
 Axiom decode_encode_int : forall (w : Int),
     decode (encode w) = Some w.
-
-Definition access_heap { A } (h : heap) (loc : GHC.Num.Word) : option A :=
-  match content h loc with
-  | Some w => decode w
-  | None => None
-  end.
 
 Definition R1 bloc : rely :=
   fun h1 h2 =>
@@ -134,19 +139,27 @@ Ltac use_rely Hb :=
   try (rewrite decode_encode_int in Hb);
   try rewrite <- Hb; destruct_match; inversion 1.
 
-Lemma inv_t1 : forall h bloc cloc (bal : Int),
+Definition inv_t1 bloc : pre :=
+  fun h => exists bal : Int, access_heap h bloc = Some bal /\ bal >= 1000.
+
+Lemma t1_spec : forall h bloc cloc,
     let bm := MkMV bloc in
     let cm := MkMV cloc in
-    access_heap h bloc = Some bal ->
-    bal >= 1000 ->
-    h ⊨ {{ R1 bloc }} (t1 bm cm) {{ G1 bloc }}.
+    h ⊨
+      {{ inv_t1 bloc }}
+      [[ R1 bloc ]]
+      (t1 bm cm)
+      [[ G1 bloc ]]
+      {{ inv_t1 bloc }}.
 Proof.
   intros.
-  unfold R1, G1.
+  unfold R1, G1, inv_t1.
   
   forward_rg.
-  rewrite H in Hb.
-  use_rely Hb.
+  destruct HP as [bal [HP1 HP2] ].
+  rewrite HP1 in HR.
+  use_rely HR.
+  exists (fun h => h = h1). split; [reflexivity |].
   split_g.
   
   forward_rg.

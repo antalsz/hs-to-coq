@@ -5,7 +5,7 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModule(..),
   convertModules,
   -- ** Extract all the declarations from a module
-  moduleDeclarations,
+  ModuleDeclarations(..), moduleDeclarations,
   -- * Convert declaration groups
   ConvertedModuleDeclarations(..), convertHsGroup,
 ) where
@@ -194,7 +194,11 @@ convertModules sources = do
   mods <- traverse (uncurry convertModule) merged
   pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
-moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
+data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sentence]
+                                             , moduleValueDeclarations :: ![Sentence] }
+                        deriving (Eq, Ord, Show, Read, Data)
+
+moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ModuleDeclarations
 moduleDeclarations ConvertedModule{..} = do
   orders <- view $ edits.orders
   let sorted = topoSortByVariables orders $
@@ -202,8 +206,9 @@ moduleDeclarations ConvertedModule{..} = do
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
   imported_modules <- view $ edits.importedModules
-  return $ deQualifyLocalNames (convModName `S.insert` imported_modules)
-         $ (convModTyClDecls ++ ax_decls, sorted ++ not_decls)
+  pure . deQualifyLocalNames (convModName `S.insert` imported_modules)
+       $ ModuleDeclarations { moduleTypeDeclarations  = convModTyClDecls ++ ax_decls
+                            , moduleValueDeclarations = sorted           ++ not_decls }
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.

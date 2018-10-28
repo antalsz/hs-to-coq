@@ -37,6 +37,15 @@ Axiom isLocalVar_uniqAway:
   forall iss v,
   isLocalVar (uniqAway iss v) = isLocalVar v.
 
+Axiom isId_uniqAway:
+  forall iss v,
+    isId (uniqAway iss v) = isId v.
+
+Axiom isCoVar_uniqAway:
+  forall iss v,
+    isCoVar (uniqAway iss v) = isCoVar v.
+
+
 Axiom nameUnique_varName_uniqAway:
   forall vss v,
   Name.nameUnique (varName v) = varUnique v ->

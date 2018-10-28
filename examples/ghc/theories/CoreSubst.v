@@ -33,11 +33,6 @@ Opaque GHC.Err.default.
 Open Scope nat_scope.
 Set Bullet Behavior "Strict Subproofs".
 
-
-(* VarEnv lemmas *)
-
-
-
 (* ---------------------------- *)
 
 (* General purpose lemmas. *)
@@ -533,32 +528,6 @@ Proof.
   repeat split; eauto.
 Qed.
 
-Lemma lookupVarSet_extendVarSetList_same :
-  forall (vars1 vars1' vars2:list Var) v vs vs',
-    (Foldable.elem v vars2) -> 
-    lookupVarSet (extendVarSetList vs (vars1 ++ vars2)) v = 
-    lookupVarSet (extendVarSetList vs' (vars1' ++ vars2)) v.
-Proof.  
-  intros.
-  hs_simpl.
-  eapply extendVarSetList_same; eauto.
-Qed.
-
-Lemma lookupVarSet_extendVarSetList_self_most_recent:
-  forall (vars1 vars2:list Var) v vs,
-    (Foldable.elem v vars2) -> 
-    exists v', lookupVarSet (extendVarSetList vs (vars1 ++ vars2)) v = Some v' 
-          /\ v == v'
-          /\ List.In v' vars2.
-Proof.
-  induction vars1.
-  - intros. simpl.
-    move: (lookupVarSet_extendVarSetList_self_exists_in vs H) => [v' []]*.
-    eauto.
-  - move=> vars2 v vs ELEM.
-    move: (IHvars1 vars2 v (extendVarSet vs a) ELEM) => [v' [h0 h1]].
-    exists v'. split; auto.
-Qed.
     
 Lemma SubstExtends_trans : forall s2 s1 s3 vars1 vars2 vars1' vars2', 
     Disjoint (map varUnique vars1') (map varUnique vars2') ->
@@ -957,20 +926,28 @@ Lemma WellScoped_Subst_substBndr : forall subst subst' bndr' v vs,
 Proof. 
   intros.
   unfold substBndr in SB.
-  (* !!!!! TODO !!!!! *)
-  (* When v is a tyvar or covar then the definition of substBndr is bogus
-     and the invariants don't hold. *)
+  simpl in *.
   destruct (isTyVar v) eqn:IsTyVar. 
-  { inversion SB; subst; clear SB. admit. }
+  { inversion SB; subst; clear SB. 
+    inversion H. 
+    inversion H1.
+    destruct H4 as (a & b & c).
+    destruct bndr'; simpl in *; try done.
+   }
   destruct (isCoVar v) eqn:IsCoVar.
-  { inversion SB; subst; clear SB. admit. }
+  { inversion SB; subst; clear SB.
+    inversion H. inversion H1. 
+    destruct H4 as (a & b & c).
+    destruct bndr'; simpl in *; try done.
+    rewrite IsCoVar in c. done.
+  }
   assert (ISL : isLocalId v = true).
-  { unfold isLocalId, isTyVar, isCoVar, GoodLocalVar, isLocalVar in *.
-    destruct v; try discriminate.
-    destruct_one_pair.
-    destruct idScope. simpl in *. discriminate. auto. }
+  { inversion H. inversion H1. destruct H4.
+    destruct v; unfold isLocalId, isLocalVar in *; simpl in *; try done.
+    destruct idScope. done. done.
+  }
   eapply WellScoped_Subst_substIdBndr; eauto.
-Admitted.
+Qed.
 
 Lemma WellScoped_substBndr : forall s in_scope_set env subst' bndr' body v vs u u0,
   forall (IH : forall (in_scope_set : InScopeSet) (env : IdSubstEnv) u u0,
@@ -1160,7 +1137,19 @@ Lemma substExpr_ok : forall e s vs in_scope_set env u0 u1,
 Proof.
   intros e.
   apply (core_induct e); unfold substExpr.
-  - unfold subst_expr. intros v s vs in_scope_set env u0 u1 WSsubst WSvar.
+  all: try solve [intros;
+                  hs_simpl; 
+                  unfold WellScoped; simpl; fold WellScoped;
+                  try match goal with 
+                    [ H2 : WellScoped ?e ?vs |- _ ] =>            
+                    unfold WellScoped in H2; simpl; fold WellScoped in H2;
+                    try destruct H2
+                  end; 
+                  eauto].
+
+  - (* Var case *)
+    unfold subst_expr. 
+    intros v s vs in_scope_set env u0 u1 WSsubst WSvar.
     unfold lookupIdSubst. 
     simpl in WSsubst. 
     destruct WSsubst as [ss vv] . specialize (vv v).         
@@ -1182,27 +1171,22 @@ Proof.
              rewrite -> Base.Eq_sym. auto.
           ++ (* This case is impossible. *)
              unfold WellScoped, WellScopedVar in WSvar.
+             rewrite -> isLocalVar_isLocalId in WSvar by assumption.
+             destruct (lookupVarSet vs v) eqn:h; try contradiction.
              unfold lookupInScope in HIS. destruct in_scope_set.
-             unfold Subset in ss. unfold In in ss.
-(*              unfold StrongSubset in ss. *)
+             unfold Subset, In in ss.
              specialize (ss v). simpl in ss.
+
              rewrite -> lookupVarSet_None_elemVarSet in HIS.
              rewrite -> HIS in ss.
-             eapply lookupVarSet_minusDom_1 in HLookup; eauto.
-             rewrite -> isLocalVar_isLocalId in WSvar by assumption.
-             destruct (lookupVarSet vs v); try contradiction.
+             rewrite elemVarSet_minusDom_1 in ss; try done.
              assert (false = true).
              apply ss.
-             admit.
-             (* doable. *)
+             rewrite fold_is_true.
+             eapply lookupVarSet_elemVarSet.
+             eauto.
              done.
-          --
-
-
-
-      unfold WellScoped, WellScopedVar in WSvar. 
-
-      (* TODO *)
+   -- (* TODO *)
        (* !!!!! This is a global id, so we don't substitute for it !!!!! *)
        (* Need to add an assumption that v is either a localId or 
           a globalId to the scope invariant.  
@@ -1212,14 +1196,7 @@ Proof.
        
        admit.
 
-  - unfold subst_expr. auto. 
-  - intros. 
-    rewrite -> subst_expr_App.
-    unfold WellScoped; simpl; fold WellScoped.
-    unfold WellScoped in H2; simpl; fold WellScoped in H2. destruct H2.
-    split; eauto.
-  - intros.
-    rewrite -> subst_expr_Lam.
+  - intros. hs_simpl.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *; fold WellScoped in *.
     destruct H1 as [GLV H1].
@@ -1228,8 +1205,7 @@ Proof.
     -- eapply WellScoped_substBndr; eauto.
   - destruct binds.
     + intros body He0 Hbody s vs in_scope_set env u u0 WSS WSL.
-      rewrite -> subst_expr_Let.
-      rewrite -> substBind_NonRec.
+      hs_simpl.
       destruct substBndr as [subst' bndr'] eqn:SB.
      
       unfold WellScoped in *. fold WellScoped in *.
@@ -1238,13 +1214,12 @@ Proof.
       split; only 1: split; eauto.
       -- eapply GoodLocalVar_substBndr; eauto.
       -- unfold bindersOf in *.
-         rewrite -> extendVarSetList_cons in *.
-         rewrite -> extendVarSetList_nil  in *.
+         hs_simpl.
+         hs_simpl in WSb.
          eapply WellScoped_substBndr; eauto.
 
     + intros body IHrhs IHbody s vs in_scope_set env u u0 WSvs WSe.
-      rewrite -> subst_expr_Let.
-      rewrite -> substBind_Rec. 
+      hs_simpl.
       destruct WSe as [[GLV [ND FF]] WSB].
       
       unfold bindersOf in WSB.
@@ -1277,11 +1252,6 @@ Proof.
      ++ destruct_SubstExtends.
         unfold CoreBndr,CoreExpr in *.
         rewrite -> map_fst_zip in *; auto. 
-
-(*
-        rewrite <- map_map with (g := fun p => subst_expr & "substBind" subst' p)
-                               (f := snd).
-*)
         rewrite -> map_snd_zip'.
         rewrite -> map_length.
         unfold CoreBndr,CoreExpr in *.
@@ -1368,7 +1338,7 @@ Proof.
          auto.
          auto.
   - intros.
-    rewrite -> subst_expr_Case.
+    hs_simpl.
     destruct substBndr as [subst' bndr'] eqn:SB.
     unfold WellScoped in *. fold WellScoped in *.
     repeat destruct_one_pair.
@@ -1409,22 +1379,7 @@ Proof.
     eapply StrongSubset_extendVarSetList.
     eauto.
   - intros.
-    rewrite -> subst_expr_Cast.
-    unfold WellScoped in *. fold WellScoped in *.
-    eauto.
-
-  - intros.
-    rewrite -> subst_expr_Tick.
+    hs_simpl.
     unfold WellScoped in *. fold WellScoped in *.
     eapply H; eauto.
-
-  - intros.
-    unfold subst_expr.
-    unfold WellScoped in *. fold WellScoped in *.
-    auto.
-
-  - intros.
-    unfold subst_expr.
-    unfold WellScoped in *. fold WellScoped in *.
-    auto.
 Admitted.

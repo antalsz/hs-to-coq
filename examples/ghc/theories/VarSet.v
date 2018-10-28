@@ -2264,4 +2264,33 @@ Axiom Subset_extend
      : forall (vs1 vs2 : VarSet) (v : Var),
        vs1 [<=] vs2 -> extendVarSet vs1 v [<=] extendVarSet vs2 v.
 
+(*
+Lemma lookupVarSet_extendVarSetList_same :
+  forall (vars1 vars1' vars2:list Var) v vs vs',
+    (Foldable.elem v vars2) -> 
+    lookupVarSet (extendVarSetList vs (vars1 ++ vars2)) v = 
+    lookupVarSet (extendVarSetList vs' (vars1' ++ vars2)) v.
+Proof.  
+  intros.
+  hs_simpl.
+  eapply extendVarSetList_same; eauto.
+Qed.
 
+Lemma lookupVarSet_extendVarSetList_self_most_recent:
+  forall (vars1 vars2:list Var) v vs,
+    (Foldable.elem v vars2) -> 
+    exists v', lookupVarSet (extendVarSetList vs (vars1 ++ vars2)) v = Some v' 
+          /\ v == v'
+          /\ List.In v' vars2.
+Proof.
+  induction vars1.
+  - intros. simpl.
+    move: (lookupVarSet_extendVarSetList_self_exists_in vs H) => [v' []]*.
+    eauto.
+  - move=> vars2 v vs ELEM.
+    move: (IHvars1 vars2 v (extendVarSet vs a) ELEM) => [v' [h0 h1]].
+    exists v'. split; auto.
+Qed.
+
+
+*)

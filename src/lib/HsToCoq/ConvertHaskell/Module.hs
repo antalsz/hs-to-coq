@@ -25,6 +25,7 @@ import qualified Data.Map as M
 
 import qualified Data.Text as T
 
+import HsToCoq.Util.FVs
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -37,6 +38,7 @@ import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Expr
@@ -198,10 +200,29 @@ data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sent
                                              , moduleValueDeclarations :: ![Sentence] }
                         deriving (Eq, Ord, Show, Read, Data)
 
+-- newtype AugerBV = AugerBV (Qualid -> [Qualid])
+-- newtype AugBV a = AugBV a
+
+-- instance (HasBV Qualid a, Given AugerBV) => HasBV Qualid (AugBV a) where
+--   bvOf (AugBV x) = bvOf x & bfvs %~ foldMap (\x -> x : runAugerBV given x)
+
+-- instance (HasBV Qualid a, Given AugerBV) => HasBV Qualid (AugBV a) where
+--   bvOf (AugBV x) = bvOf x & bfvs %~ foldMap (\x -> x : runAugerBV given x)
+
 moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ModuleDeclarations
 moduleDeclarations ConvertedModule{..} = do
+  let thisModule = moduleNameText convModName
+      localInfixNames qid | maybe True (== thisModule) $ qualidModule qid
+                          , Just op <- identToOp $ qualidBase qid
+                            = S.fromList $ Bare <$> [op, infixToPrefix op]
+                          | otherwise
+                            = S.empty
+      addLocalInfixNames (BVs bvs fvs) = BVs bvs $ fvs <> foldMap localInfixNames fvs
+      -- Make sure that @f = … op_zpzp__ …@ depends on @++@ and @_++_@ as well
+      -- as @op_zpzp__@.
+      
   orders <- view $ edits.orders
-  let sorted = topoSortByVariables orders $
+  let sorted = topoSortByVariablesBy (addLocalInfixNames . bvOf) orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
@@ -251,5 +272,3 @@ qualifiedNotations mod decls = do
     extra :: Bool -> [Sentence]
     extra True  = [ ModuleSentence (ModuleImport Export ["ManualNotations"]) ]
     extra False = []
-
-

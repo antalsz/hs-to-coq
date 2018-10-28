@@ -22,7 +22,9 @@ import Prelude hiding (Num)
 import Control.Lens hiding ((<|))
 
 import Data.Foldable
+import HsToCoq.Util.List
 import HsToCoq.Util.Containers
+
 import HsToCoq.Util.FVs
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
@@ -117,21 +119,21 @@ instance HasBV Qualid (Qualid, [Pattern]) where
   bvOf (con, pats) = fvOf' con <> foldMap bvOf pats
 
 instance HasBV Qualid Sentence where
-  bvOf (AssumptionSentence    assum)      = bvOf assum
-  bvOf (DefinitionSentence    def)        = bvOf def
-  bvOf (InductiveSentence     ind)        = bvOf ind
-  bvOf (FixpointSentence      fix)        = bvOf fix
-  bvOf (ProgramSentence       sen _)      = bvOf sen
-  bvOf (AssertionSentence     assert _pf) = bvOf assert
+  bvOf (AssumptionSentence    assum)      = bvOf   assum
+  bvOf (DefinitionSentence    def)        = bvOf   def
+  bvOf (InductiveSentence     ind)        = bvOf   ind
+  bvOf (FixpointSentence      fix)        = bvOf   fix
+  bvOf (ProgramSentence       sen _)      = bvOf   sen
+  bvOf (AssertionSentence     assert _pf) = bvOf   assert
   bvOf (ModuleSentence        _mod)       = mempty
-  bvOf (ClassSentence         cls)        = bvOf cls
-  bvOf (ExistingClassSentence name)       = fvOf' name
-  bvOf (RecordSentence        rcd)        = bvOf rcd
-  bvOf (InstanceSentence      ins)        = bvOf ins
-  bvOf (NotationSentence      not)        = fvOf' not
-  bvOf (LocalModuleSentence   lmd)        = bvOf lmd
+  bvOf (ClassSentence         cls)        = bvOf   cls
+  bvOf (ExistingClassSentence name)       = fvOf'  name
+  bvOf (RecordSentence        rcd)        = bvOf   rcd
+  bvOf (InstanceSentence      ins)        = bvOf   ins
+  bvOf (NotationSentence      not)        = bvOf   not
+  bvOf (LocalModuleSentence   lmd)        = bvOf   lmd
   bvOf (ArgumentsSentence     _arg)       = mempty
-  bvOf (CommentSentence       com)        = fvOf' com
+  bvOf (CommentSentence       com)        = fvOf'  com
 
 instance HasBV Qualid Assumption where
   bvOf (Assumption _kwd assumptions) = bvOf assumptions
@@ -146,12 +148,12 @@ instance HasBV Qualid Definition where
     = binder x <> bindsNothing (foldScopes bvOf args $ fvOf oty <> fvOf def)
 
 instance HasBV Qualid Inductive where
-  bvOf (Inductive   ibs nots) = scopesMutually bvOf ibs `telescope` fvOf' nots
-  bvOf (CoInductive cbs nots) = scopesMutually bvOf cbs `telescope` fvOf' nots
+  bvOf (Inductive   ibs nots) = scopesMutually id $ (bvOf <$> ibs) ++> (bvOf <$> nots)
+  bvOf (CoInductive cbs nots) = scopesMutually id $ (bvOf <$> cbs) ++> (bvOf <$> nots)
 
 instance HasBV Qualid Fixpoint where
-  bvOf (Fixpoint   fbs nots) = scopesMutually bvOf fbs `telescope` fvOf' nots
-  bvOf (CoFixpoint cbs nots) = scopesMutually bvOf cbs `telescope` fvOf' nots
+  bvOf (Fixpoint   fbs nots) =  scopesMutually id $ (bvOf <$> fbs) ++> (bvOf <$> nots)
+  bvOf (CoFixpoint cbs nots) =  scopesMutually id $ (bvOf <$> cbs) ++> (bvOf <$> nots)
 
 instance HasBV Qualid Assertion where
   bvOf (Assertion _kwd name args ty) =
@@ -178,6 +180,13 @@ instance HasBV Qualid InstanceDefinition where
     binder inst <>
     bindsNothing (foldScopes bvOf params $ fvOf cl <> fvOf term)
 
+instance HasBV Qualid Notation where
+  bvOf (ReservedNotationIdent _)     = mempty
+  bvOf (NotationBinding nb)          = bvOf nb
+  bvOf (InfixDefinition op defn _ _) = binder (Bare op) <> fvOf' defn
+
+instance HasBV Qualid NotationBinding where
+  bvOf (NotationIdentBinding op def) = binder (Bare op) <> fvOf' def
 
 instance HasBV Qualid LocalModule where
   bvOf (LocalModule _name sentences) = foldTelescope bvOf sentences
@@ -286,7 +295,6 @@ instance HasFV Qualid Locality where
   fvOf Global = mempty
   fvOf Local  = mempty
 
-
 instance HasFV Qualid AssertionKeyword where
   fvOf Theorem     = mempty
   fvOf Lemma       = mempty
@@ -296,16 +304,6 @@ instance HasFV Qualid AssertionKeyword where
   fvOf Proposition = mempty
   fvOf Definition  = mempty
   fvOf Example     = mempty
-
-instance HasFV Qualid Notation where
-  -- Notations are not bindings sites, because our AST always refers to the
-  -- Qualid corresponding to the notation)
-  fvOf (ReservedNotationIdent _)    = mempty
-  fvOf (NotationBinding nb)         = fvOf nb
-  fvOf (InfixDefinition _ defn _ _) = fvOf defn
-
-instance HasFV Qualid NotationBinding where
-  fvOf (NotationIdentBinding _ def) = fvOf def
 
 instance HasFV Qualid t => HasFV Qualid (Maybe t) where
   fvOf = foldMap fvOf

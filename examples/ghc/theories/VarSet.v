@@ -27,6 +27,7 @@ Require Import Proofs.VarSetFSet.
 Open Scope Z_scope.
 
 
+
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -36,9 +37,64 @@ Set Bullet Behavior "Strict Subproofs".
 Lemma fold_is_true : forall b, b = true <-> is_true b.
 Proof. intros. unfold is_true. reflexivity. Qed.
 
+(* Move to base *)
+
+Ltac unfold_zeze :=
+  repeat unfold op_zeze__, op_zeze____, 
+  Eq___option, Base.Eq___option_op_zeze__,
+  Eq_Int___, 
+  Eq_Integer___, 
+  Eq_Word___, 
+  Eq_Char___, 
+  Eq_bool___, 
+  Eq_unit___ , 
+  Eq_comparison___, 
+  Eq_pair___ , 
+  Eq_list, 
+  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__.
+
+Lemma simpl_option_some_eq a `{Eq_ a} (x y :a) :
+  (Some x == Some y) = (x == y).
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+Lemma simpl_option_none_eq a `{Eq_ a} :
+  ((None : option a) == None) = true.
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
 
 
+Lemma simpl_list_cons_eq a `{Eq_ a} (x y :a) xs ys :
+  (cons x xs) == (cons y ys) = (x == y) && (xs == ys).
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
 
+Lemma simpl_list_nil_eq a `{Eq_ a} :
+  (nil : list a) == nil = true.
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq 
+             @simpl_list_cons_eq @simpl_list_nil_eq : hs_simpl.
+
+Lemma var_eq_realUnique v1 v2 : 
+  (v1 == v2) = (realUnique v1 == realUnique v2).
+Proof.
+  repeat unfold op_zeze__, op_zeze____,Core.Eq___Var_op_zeze__,Core.Eq___Var.
+  auto.
+Qed.
 
 
 
@@ -332,19 +388,6 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma simpl_option_eq a `{Eq_ a} (x y :a) :
-  Some x == Some y = (x == y).
-Proof.  
-    repeat unfold_zeze;
-           unfold Eq___option,
-           Base.Eq___option_op_zeze__,
-           op_zeze____.
-    auto.
-Qed.
-
-
-
-Hint Rewrite @simpl_option_eq : hs_simpl.
 
 (*
 Ltac unfold_zeze_option := 
@@ -365,7 +408,6 @@ Proof.
   destruct (lookupVarSet x v2) eqn:LX;
   destruct (lookupVarSet y v2) eqn:LY;
   hs_simpl.
-
   - apply ValidVarSet_Axiom in LX.
     apply ValidVarSet_Axiom in LY.
     eapply Eq_trans.
@@ -612,19 +654,6 @@ Lemma elemVarSet_emptyVarSet : forall v, (elemVarSet v emptyVarSet) = false.
   fsetdec.
 Qed.
 
-Lemma dbool : forall b, is_true b \/ not (is_true b).
-Proof.
-  destruct b; auto.
-Qed.
-
-Axiom member_union :
-   forall (A : Type)
-     (key : Internal.Key) 
-     (i i0 : Internal.IntMap A),
-   (IntMap.Internal.member key (IntMap.Internal.union i i0)) = 
-   (IntMap.Internal.member key i0 || IntMap.Internal.member key i).
-
-
 Lemma elemVarSet_unionVarSet:
   forall v vs1 vs2,
     elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
@@ -719,17 +748,19 @@ Proof.
   auto.
 Qed.
 
+
 Lemma elemVarSet_extendVarSet:
   forall v vs v',
   elemVarSet v (extendVarSet vs v') = (v' == v) || elemVarSet v vs.
 Proof.
   intros.
-  unfold_zeze.
-  replace (realUnique v' =? realUnique v)%N with 
+  rewrite var_eq_realUnique.
+  replace (realUnique v' == realUnique v)%N with 
       (F.eqb v' v). 
 
   eapply F.add_b.
   unfold F.eqb.
+  cbn.
   destruct F.eq_dec.
   - unfold Var_as_DT.eq in e.
     rewrite <- realUnique_eq in e; auto.
@@ -937,19 +968,6 @@ Proof.
 Qed.
 
 
-Ltac unfold_zeze :=
-  repeat unfold op_zeze__, op_zeze____, 
-  Eq___option, Base.Eq___option_op_zeze__,
-  Eq_Int___, 
-  Eq_Integer___, 
-  Eq_Word___, 
-  Eq_Char___, 
-  Eq_bool___, 
-  Eq_unit___ , 
-  Eq_comparison___, 
-  Eq_pair___ , 
-  Eq_list, 
-  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__.
 
 
 Instance Foldable_proper : forall {a}`{EqLaws a},  
@@ -2240,3 +2258,10 @@ Proof.
 
   
 Admitted.
+
+
+Axiom Subset_extend
+     : forall (vs1 vs2 : VarSet) (v : Var),
+       vs1 [<=] vs2 -> extendVarSet vs1 v [<=] extendVarSet vs2 v.
+
+

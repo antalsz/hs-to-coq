@@ -25,6 +25,7 @@ Inductive Either a b : Type
 Arguments Left {_} {_} _.
 
 Arguments Right {_} {_} _.
+
 (* Converted value declarations: *)
 
 Definition rights {a} {b} : list (Either a b) -> list b :=

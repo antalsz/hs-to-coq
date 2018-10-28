@@ -78,6 +78,7 @@ Definition n_sort (arg_0__ : Name) :=
 Definition n_uniq (arg_0__ : Name) :=
   let 'Mk_Name _ _ n_uniq _ := arg_0__ in
   n_uniq.
+
 (* Midamble *)
 
 (* BUG: record selctors are not fully qualified. *)

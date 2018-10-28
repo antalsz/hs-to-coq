@@ -45,6 +45,7 @@ Definition mzip `{g : MonadZip m}
 Definition mzipWith `{g : MonadZip m}
    : forall {a} {b} {c}, (a -> b -> c) -> m a -> m b -> m c :=
   g _ (mzipWith__ m).
+
 (* Converted value declarations: *)
 
 (* Skipping instance `Control.Monad.Zip.MonadZip__op_ZCztZC__' of class

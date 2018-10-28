@@ -25,6 +25,7 @@ Arguments Mk_State {_} {_} _.
 Definition runState' {s} {a} (arg_0__ : State s a) :=
   let 'Mk_State runState' := arg_0__ in
   runState'.
+
 (* Converted value declarations: *)
 
 Definition runState {s} {a} : State s a -> s -> (a * s)%type :=

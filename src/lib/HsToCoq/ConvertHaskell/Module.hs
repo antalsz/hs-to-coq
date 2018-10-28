@@ -200,15 +200,6 @@ data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sent
                                              , moduleValueDeclarations :: ![Sentence] }
                         deriving (Eq, Ord, Show, Read, Data)
 
--- newtype AugerBV = AugerBV (Qualid -> [Qualid])
--- newtype AugBV a = AugBV a
-
--- instance (HasBV Qualid a, Given AugerBV) => HasBV Qualid (AugBV a) where
---   bvOf (AugBV x) = bvOf x & bfvs %~ foldMap (\x -> x : runAugerBV given x)
-
--- instance (HasBV Qualid a, Given AugerBV) => HasBV Qualid (AugBV a) where
---   bvOf (AugBV x) = bvOf x & bfvs %~ foldMap (\x -> x : runAugerBV given x)
-
 moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ModuleDeclarations
 moduleDeclarations ConvertedModule{..} = do
   let thisModule = moduleNameText convModName
@@ -217,12 +208,27 @@ moduleDeclarations ConvertedModule{..} = do
                             = S.fromList $ Bare <$> [op, infixToPrefix op]
                           | otherwise
                             = S.empty
-      addLocalInfixNames (BVs bvs fvs) = BVs bvs $ fvs <> foldMap localInfixNames fvs
-      -- Make sure that @f = … op_zpzp__ …@ depends on @++@ and @_++_@ as well
-      -- as @op_zpzp__@.
+      addLocalInfixNamesExcept del (BVs bvs fvs) =
+        BVs bvs $ fvs <> (foldMap localInfixNames fvs S.\\ del)
+      
+      unused = S.singleton . Bare
+      
+      unusedNotations (NotationSentence (NotationBinding (NotationIdentBinding op _))) =
+        unused op <> foldMap unused (prefixOpToInfix op)
+      unusedNotations (NotationSentence (InfixDefinition op _ _ _)) =
+        unused op
+      unusedNotations _ =
+        mempty
+
+      bvWithInfix = addLocalInfixNamesExcept <$> unusedNotations <*> bvOf
+  -- Make sure that @f = … op_zpzp__ …@ depends on @++@ and @_++_@ as well
+  -- as @op_zpzp__@.  But don't produce cycles by depending on yourself.
+  -- This feels like a hack, and like we could use the 'RawQualid'
+  -- constructor, but we don't have the right module information in 'bvOf'
+  -- to do this properly.
       
   orders <- view $ edits.orders
-  let sorted = topoSortByVariablesBy (addLocalInfixNames . bvOf) orders $
+  let sorted = topoSortByVariablesBy bvWithInfix orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)

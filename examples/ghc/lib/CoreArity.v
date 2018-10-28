@@ -45,6 +45,7 @@ Definition ae_cheap_fn (arg_0__ : ArityEnv) :=
 Definition ae_ped_bot (arg_0__ : ArityEnv) :=
   let 'AE _ ae_ped_bot := arg_0__ in
   ae_ped_bot.
+
 (* Converted value declarations: *)
 
 Axiom vanillaArityType : ArityType.

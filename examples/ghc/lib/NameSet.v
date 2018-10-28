@@ -41,6 +41,7 @@ Definition DefUse :=
 
 Definition DefUses :=
   (list DefUse)%type.
+
 (* Converted value declarations: *)
 
 Definition usesOnly : Uses -> DefUses :=

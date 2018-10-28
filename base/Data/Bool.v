@@ -16,6 +16,7 @@ Require Coq.Program.Wf.
 (* No imports to convert. *)
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition bool {a} : a -> a -> bool -> a :=

@@ -54,6 +54,7 @@ Instance Default__OverridingBool : GHC.Err.Default OverridingBool :=
 
 Instance Default__Direction : GHC.Err.Default Direction :=
   GHC.Err.Build_Default _ Forwards.
+
 (* Midamble *)
 
 Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc}

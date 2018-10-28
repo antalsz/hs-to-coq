@@ -87,6 +87,7 @@ Definition getAlt {f : Type -> Type} {a} (arg_0__ : Alt f a) :=
 Definition getAll (arg_0__ : All) :=
   let 'Mk_All getAll := arg_0__ in
   getAll.
+
 (* Midamble *)
 
 Instance Unpeel_Alt (f:Type->Type) a : GHC.Prim.Unpeel (Alt f a) (f a) :=

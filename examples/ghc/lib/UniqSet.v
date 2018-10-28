@@ -29,6 +29,7 @@ Arguments Mk_UniqSet {_} _.
 Definition getUniqSet' {a} (arg_0__ : UniqSet a) :=
   let 'Mk_UniqSet getUniqSet' := arg_0__ in
   getUniqSet'.
+
 (* Converted value declarations: *)
 
 Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=

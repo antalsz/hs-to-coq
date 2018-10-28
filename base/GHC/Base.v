@@ -136,6 +136,7 @@ Notation "'_>>=_'" := (op_zgzgze__).
 Infix ">>=" := (_>>=_) (at level 99).
 
 Arguments NEcons {_} _ _.
+
 (* Midamble *)
 
 (* This includes everything that should be defined in GHC/Base.hs, but cannot

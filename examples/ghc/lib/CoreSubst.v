@@ -42,6 +42,7 @@ Definition IdSubstEnv :=
 
 Inductive Subst : Type
   := Mk_Subst : InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
+
 (* Midamble *)
 
 Instance Default_Subst : GHC.Err.Default Subst :=

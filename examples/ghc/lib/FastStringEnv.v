@@ -23,6 +23,7 @@ Definition FastStringEnv :=
 
 Definition DFastStringEnv :=
   UniqDFM.UniqDFM%type.
+
 (* Converted value declarations: *)
 
 Definition unitFsEnv {a} : FastString.FastString -> a -> FastStringEnv a :=

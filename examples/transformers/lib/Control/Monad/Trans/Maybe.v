@@ -40,6 +40,7 @@ Arguments Mk_MaybeT {_} {_} _.
 Definition runMaybeT {m} {a} (arg_0__ : MaybeT m a) :=
   let 'Mk_MaybeT runMaybeT := arg_0__ in
   runMaybeT.
+
 (* Midamble *)
 
 Local Definition Monad_tmp {inst_m} `{(GHC.Base.Monad inst_m)}

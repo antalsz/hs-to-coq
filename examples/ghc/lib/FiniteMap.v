@@ -17,6 +17,7 @@ Require Data.Map.Internal.
 Require GHC.Base.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition insertListWith {key} {elt} `{GHC.Base.Ord key}

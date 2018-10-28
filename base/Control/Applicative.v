@@ -41,6 +41,7 @@ Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_0__
     : WrappedArrow a b c) :=
   let 'WrapArrow unwrapArrow := arg_0__ in
   unwrapArrow.
+
 (* Converted value declarations: *)
 
 (* Skipping all instances of class `GHC.Generics.Generic', including

@@ -20,6 +20,7 @@ Require GHC.Base.
 Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition maybeToList {a} : option a -> list a :=

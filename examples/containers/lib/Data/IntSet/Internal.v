@@ -62,6 +62,7 @@ Instance Default__IntSet : GHC.Err.Default IntSet :=
   GHC.Err.Build_Default _ Nil.
 
 Instance Default__Stack : GHC.Err.Default Stack := GHC.Err.Build_Default _ Nada.
+
 (* Midamble *)
 
 (** Additional definitions for termination proof *)

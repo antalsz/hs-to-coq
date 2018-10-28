@@ -50,6 +50,7 @@ Definition getMin {a} (arg_0__ : Min a) :=
 Definition getMax {a} (arg_0__ : Max a) :=
   let 'Mk_Max getMax := arg_0__ in
   getMax.
+
 (* Midamble *)
 
 (* We should be able to automatically generate these *)

@@ -38,6 +38,7 @@ Arguments Mk_Constant {_} {_} _.
 Definition getConstant {a : Type} {b : Type} (arg_0__ : Constant a b) :=
   let 'Mk_Constant getConstant := arg_0__ in
   getConstant.
+
 (* Midamble *)
 
 Require Import GHC.Prim.

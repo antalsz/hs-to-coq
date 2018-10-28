@@ -3,6 +3,7 @@
 module HsToCoq.ConvertHaskell.InfixNames (
   identIsVariable,
   infixToPrefix, toPrefix, toLocalPrefix,
+  prefixOpToInfix,
   infixToCoq,
   identIsOp, identToOp,
   splitModule -- a bit out of place here. oh well.
@@ -11,6 +12,7 @@ module HsToCoq.ConvertHaskell.InfixNames (
 import Control.Lens
 
 import Control.Applicative
+import Control.Monad
 import Data.Semigroup (Semigroup(..))
 import Data.Char
 import Data.Text (Text)
@@ -49,6 +51,11 @@ toLocalPrefix :: Ident -> Ident
 toLocalPrefix x | identIsVariable x = x
                 | otherwise         = "l" <> infixToCoq x
 
+prefixOpToInfix :: Ident -> Maybe Op
+prefixOpToInfix px = do
+  x <- T.stripSuffix "_" =<< T.stripPrefix "_" px
+  guard . not $ identIsVariable x
+  pure x
 
 -- An operator's defined name in Coq (hidden by a notation)
 infixToCoq_ :: Op -> Ident

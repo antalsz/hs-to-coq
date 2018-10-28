@@ -50,6 +50,7 @@ Import GHC.Num.Notations.
 Import Test.QuickCheck.Property.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition toSet

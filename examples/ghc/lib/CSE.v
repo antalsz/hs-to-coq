@@ -46,6 +46,7 @@ Definition cs_rec_map (arg_0__ : CSEnv) :=
 Definition cs_subst (arg_0__ : CSEnv) :=
   let 'CS cs_subst _ _ := arg_0__ in
   cs_subst.
+
 (* Midamble *)
 
 Require NestedRecursionHelpers.

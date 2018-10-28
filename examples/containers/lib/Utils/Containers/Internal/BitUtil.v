@@ -31,4 +31,5 @@ Definition bitcount : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N -> Coq.Numb
 (* No imports to convert. *)
 
 (* No type declarations to convert. *)
+
 (* No value declarations to convert. *)

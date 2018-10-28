@@ -28,6 +28,7 @@ Arguments Mk_Identity {_} _.
 Definition runIdentity {a} (arg_0__ : Identity a) :=
   let 'Mk_Identity runIdentity := arg_0__ in
   runIdentity.
+
 (* Midamble *)
 
 Instance Unpeel_Identity a : Prim.Unpeel (Identity a) a :=

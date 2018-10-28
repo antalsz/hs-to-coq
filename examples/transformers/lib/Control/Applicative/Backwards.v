@@ -31,6 +31,7 @@ Arguments Mk_Backwards {_} {_} _.
 Definition forwards {f : Type -> Type} {a : Type} (arg_0__ : Backwards f a) :=
   let 'Mk_Backwards forwards := arg_0__ in
   forwards.
+
 (* Converted value declarations: *)
 
 Local Definition Traversable__Backwards_traverse {inst_f}

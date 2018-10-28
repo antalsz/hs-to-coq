@@ -16,6 +16,7 @@ Require Coq.Program.Wf.
 (* No imports to convert. *)
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition swap {a} {b} : (a * b)%type -> (b * a)%type :=

@@ -89,6 +89,7 @@ Definition sum `{g : Foldable t}
 
 Definition toList `{g : Foldable t} : forall {a}, t a -> list a :=
   g _ (toList__ t).
+
 (* Midamble *)
 
 Definition default_foldable {f:Type -> Type}

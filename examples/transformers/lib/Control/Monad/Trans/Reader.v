@@ -33,6 +33,7 @@ Definition runReaderT {r : Type} {m : Type -> Type} {a} (arg_0__
     : ReaderT r m a) :=
   let 'Mk_ReaderT runReaderT := arg_0__ in
   runReaderT.
+
 (* Converted value declarations: *)
 
 Definition withReaderT {r'} {r} {m} {a}

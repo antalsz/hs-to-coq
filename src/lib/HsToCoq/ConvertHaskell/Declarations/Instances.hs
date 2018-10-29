@@ -169,15 +169,15 @@ unlessSkippedClass InstanceInfo{..} act = do
     False ->
       act
 
-bindToMap :: ConversionMonad r m => [HsBindLR GhcRn GhcRn] -> m (M.Map Qualid (HsBind GhcRn))
-bindToMap binds = fmap M.fromList $ forM binds $ \hs_bind -> do
+bindsToMap :: ConversionMonad r m => [HsBindLR GhcRn GhcRn] -> m (M.Map Qualid (HsBind GhcRn))
+bindsToMap binds = fmap M.fromList $ forM binds $ \hs_bind -> do
     name <- hsBindName hs_bind
     return (name, hs_bind)
 
-clsInstFamiliesToMap :: ConversionMonad r m => [LTyFamInstDecl GhcRn] -> m (M.Map Qualid Term)
+clsInstFamiliesToMap :: ConversionMonad r m => [LTyFamInstDecl GhcRn] -> m (M.Map Qualid (HsType GhcRn))
 clsInstFamiliesToMap assocTys =
   fmap M.fromList . for assocTys $ \(L _ (TyFamInstDecl (HsIB {hsib_body = FamEqn{..}}))) ->
-    (,) <$> var TypeNS (unLoc feqn_tycon) <*> convertLType feqn_rhs
+    (, unLoc feqn_rhs) <$> var TypeNS (unLoc feqn_tycon)
 
 -- Module-local
 data Conv_Method = CM_Renamed            Sentence
@@ -216,7 +216,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
           SpecificAxiomatize -> no_class_instance_error instanceClass instanceName
     
     TranslateIt -> do
-      cid_binds_map <- bindToMap (map unLoc $ bagToList cid_binds)
+      cid_binds_map <- bindsToMap (map unLoc $ bagToList cid_binds)
       cid_types_map <- clsInstFamiliesToMap cid_tyfam_insts
    
       let (binds, classTy) = decomposeForall instanceHead
@@ -282,7 +282,8 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                   CoqAxiomDef            _ -> pure ()
             
           (Nothing, Just assoc, _) ->
-            pure . CM_Defined CL_Type $ subst allLocalNames assoc
+            CM_Defined CL_Type <$> local (envFor meth) (convertType assoc)
+            -- TODO: Permit rewriting or renaming or similar here
            
           (Nothing, Nothing, Just term) ->
             let extraSubst

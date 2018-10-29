@@ -515,11 +515,14 @@ Notation "'_|>>_'" := (op_zbzgzg__).
 
 Infix "|>>" := (_|>>_) (at level 99).
 
+Instance TrieMap__TypeMapG : TrieMap TypeMapG := TrieMap__GenMap.
+
 Definition xtTT {a} : DeBruijn unit -> XT a -> TypeMap a -> TypeMap a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | D env ty, f, Mk_TypeMap m =>
-        Mk_TypeMap (m |> (xtG (D env tt) |>> xtG (D env ty) f))
+        Mk_TypeMap (m |>
+                    (xtG (m := TypeMapX) (D env tt) |>> xtG (m := TypeMapX) (D env ty) f))
     end.
 
 Local Definition TrieMap__TypeMap_alterTM
@@ -540,7 +543,9 @@ Local Definition TrieMap__TypeMap_foldTM
 Definition lkTT {a} : DeBruijn unit -> TypeMap a -> option a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | D env ty, Mk_TypeMap m => lkG (D env tt) m GHC.Base.>>= lkG (D env ty)
+    | D env ty, Mk_TypeMap m =>
+        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env tt) m) (lkG (m
+                                                                                      := TypeMapX) (D env ty))
     end.
 
 Local Definition TrieMap__TypeMap_lookupTM
@@ -575,7 +580,7 @@ Local Definition TrieMap__CoreMap_alterTM
   fun {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | k, f, Mk_CoreMap m => Mk_CoreMap (alterTM (deBruijnize k) f m)
+      | k, f, Mk_CoreMap m => Mk_CoreMap (alterTM (m := CoreMapG) (deBruijnize k) f m)
       end.
 
 Local Definition TrieMap__CoreMap_emptyTM : forall {a}, CoreMap a :=
@@ -594,7 +599,7 @@ Local Definition TrieMap__CoreMap_lookupTM
   fun {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | k, Mk_CoreMap m => lookupTM (deBruijnize k) m
+      | k, Mk_CoreMap m => lookupTM (m := CoreMapG) (deBruijnize k) m
       end.
 
 Local Definition TrieMap__CoreMap_mapTM
@@ -628,7 +633,7 @@ Definition xtVar {a} : CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a :=
     match lookupCME env v with
     | Some bv =>
         let 'VM vm_bvar_5__ vm_fvar_6__ := m in
-        VM (vm_bvar m |> alterTM bv f) vm_fvar_6__
+        VM (vm_bvar m |> alterTM (m := BoundVarMap) bv f) vm_fvar_6__
     | _ =>
         let 'VM vm_bvar_0__ vm_fvar_1__ := m in
         VM vm_bvar_0__ (vm_fvar m |> xtDFreeVar v f)
@@ -642,7 +647,7 @@ Definition lkMaybe {k} {m} {a}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | _, None => mm_nothing
-    | lk, Some x => mm_just >.> lk x
+    | lk, Some x => mm_just >.> lk _ x
     end.
 
 Definition lkLit {a} : Literal.Literal -> LiteralMap a -> option a :=
@@ -708,10 +713,8 @@ Definition fdMaybe {m} {a} {b} `{TrieMap m}
    : (a -> b -> b) -> MaybeMap m a -> b -> b :=
   fun k m => foldMaybe k (mm_nothing m) GHC.Base.∘ foldTM k (mm_just m).
 
-Definition fdList {m} {a} {b} `{TrieMap m}
-   : (a -> b -> b) -> ListMap m a -> b -> b :=
-  fix fdList k m
-        := foldMaybe k (lm_nil m) GHC.Base.∘ foldTM (fdList k) (lm_cons m).
+Axiom fdList : forall {m} {a} {b},
+               forall `{TrieMap m}, (a -> b -> b) -> ListMap m a -> b -> b.
 
 Definition fdA {a} {b} : (a -> b -> b) -> AltMap a -> b -> b :=
   fun k m =>
@@ -719,7 +722,7 @@ Definition fdA {a} {b} : (a -> b -> b) -> AltMap a -> b -> b :=
     (foldTM (foldTM k) (am_data m) GHC.Base.∘ foldTM (foldTM k) (am_lit m)).
 
 Definition extendTypeMap {a} : TypeMap a -> unit -> a -> TypeMap a :=
-  fun m t v => alterTM t (GHC.Base.const (Some v)) m.
+  fun m t v => alterTM (m := TypeMap) t (GHC.Base.const (Some v)) m.
 
 Definition extendCoreMap {a} : CoreMap a -> Core.CoreExpr -> a -> CoreMap a :=
   fun m e v => alterTM e (fun arg_0__ => Some v) m.
@@ -756,14 +759,16 @@ Definition xtA {a} : CmEnv -> Core.CoreAlt -> XT a -> AltMap a -> AltMap a :=
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | env, pair (pair Core.DEFAULT _) rhs, f, m =>
         let 'AM am_deflt_4__ am_data_5__ am_lit_6__ := m in
-        AM (am_deflt m |> xtG (D env rhs) f) am_data_5__ am_lit_6__
+        AM (am_deflt m |> xtG (m := CoreMapX) (D env rhs) f) am_data_5__ am_lit_6__
     | env, pair (pair (Core.LitAlt l) _) rhs, f, m =>
         let 'AM am_deflt_10__ am_data_11__ am_lit_12__ := m in
-        AM am_deflt_10__ am_data_11__ (am_lit m |> (xtLit l |>> xtG (D env rhs) f))
+        AM am_deflt_10__ am_data_11__ (am_lit m |>
+            (xtLit (a := CoreMapG a) l |>> xtG (m := CoreMapX) (D env rhs) f))
     | env, pair (pair (Core.DataAlt d) bs) rhs, f, m =>
         let 'AM am_deflt_16__ am_data_17__ am_lit_18__ := m in
         AM am_deflt_16__ (am_data m |>
-            (xtDNamed d |>> xtG (D (extendCMEs env bs) rhs) f)) am_lit_18__
+            (xtDNamed (a := CoreMapG a) d |>>
+             xtG (m := CoreMapX) (D (extendCMEs env bs) rhs) f)) am_lit_18__
     end.
 
 Definition extendTypeMapWithScope {a}
@@ -771,12 +776,12 @@ Definition extendTypeMapWithScope {a}
   fun m cm t v => xtTT (D cm t) (GHC.Base.const (Some v)) m.
 
 Local Definition TrieMap__MaybeMap_Key {m} `{TrieMap m} : Type :=
-  option (TrieMap__MaybeMap_Key m).
+  option (Key m).
 
 Local Definition TrieMap__MaybeMap_alterTM {inst_m} `{TrieMap inst_m}
    : forall {b},
      TrieMap__MaybeMap_Key -> XT b -> (MaybeMap inst_m) b -> (MaybeMap inst_m) b :=
-  fun {b} => xtMaybe alterTM.
+  fun {b} => xtMaybe (fun {b} => alterTM).
 
 Local Definition TrieMap__MaybeMap_emptyTM {inst_m} `{TrieMap inst_m}
    : forall {a}, (MaybeMap inst_m) a :=
@@ -788,7 +793,7 @@ Local Definition TrieMap__MaybeMap_foldTM {inst_m} `{TrieMap inst_m}
 
 Local Definition TrieMap__MaybeMap_lookupTM {inst_m} `{TrieMap inst_m}
    : forall {b}, TrieMap__MaybeMap_Key -> (MaybeMap inst_m) b -> option b :=
-  fun {b} => lkMaybe lookupTM.
+  fun {b} => lkMaybe (fun {b} => lookupTM).
 
 Local Definition TrieMap__MaybeMap_mapTM {inst_m} `{TrieMap inst_m}
    : forall {a} {b}, (a -> b) -> (MaybeMap inst_m) a -> (MaybeMap inst_m) b :=
@@ -807,12 +812,12 @@ Program Instance TrieMap__MaybeMap {m} `{TrieMap m} : TrieMap (MaybeMap m) :=
    `TrieMap.Outputable__ListMap' *)
 
 Local Definition TrieMap__ListMap_Key {m} `{TrieMap m} : Type :=
-  list (TrieMap__ListMap_Key m).
+  list (Key m).
 
 Local Definition TrieMap__ListMap_alterTM {inst_m} `{TrieMap inst_m}
    : forall {b},
      TrieMap__ListMap_Key -> XT b -> (ListMap inst_m) b -> (ListMap inst_m) b :=
-  fun {b} => xtList alterTM.
+  fun {b} => xtList (fun {b} => alterTM).
 
 Axiom TrieMap__ListMap_emptyTM : forall {m} {a} `{TrieMap m}, ListMap m a.
 
@@ -822,7 +827,7 @@ Local Definition TrieMap__ListMap_foldTM {inst_m} `{TrieMap inst_m}
 
 Local Definition TrieMap__ListMap_lookupTM {inst_m} `{TrieMap inst_m}
    : forall {b}, TrieMap__ListMap_Key -> (ListMap inst_m) b -> option b :=
-  fun {b} => lkList lookupTM.
+  fun {b} => lkList (fun {b} => lookupTM).
 
 Local Definition TrieMap__ListMap_mapTM {inst_m} `{TrieMap inst_m}
    : forall {a} {b}, (a -> b) -> (ListMap inst_m) a -> (ListMap inst_m) b :=
@@ -840,47 +845,24 @@ Program Instance TrieMap__ListMap {m} `{TrieMap m} : TrieMap (ListMap m) :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `TrieMap.Outputable__GenMap' *)
 
-Local Definition TrieMap__TyLitMap_Key : Type :=
-  TyCoRep.TyLit.
+Instance TrieMap__TyLitMap : TrieMap TyLitMap := {}.
+Proof.
+Admitted.
 
-Local Definition TrieMap__TyLitMap_alterTM
-   : forall {b}, TrieMap__TyLitMap_Key -> XT b -> TyLitMap b -> TyLitMap b :=
-  fun {b} => xtTyLit.
-
-Local Definition TrieMap__TyLitMap_emptyTM : forall {a}, TyLitMap a :=
-  fun {a} => emptyTyLitMap.
-
-Local Definition TrieMap__TyLitMap_foldTM
-   : forall {a} {b}, (a -> b -> b) -> TyLitMap a -> b -> b :=
-  fun {a} {b} => foldTyLit.
-
-Local Definition TrieMap__TyLitMap_lookupTM
-   : forall {b}, TrieMap__TyLitMap_Key -> TyLitMap b -> option b :=
-  fun {b} => lkTyLit.
-
-Local Definition TrieMap__TyLitMap_mapTM
-   : forall {a} {b}, (a -> b) -> TyLitMap a -> TyLitMap b :=
-  fun {a} {b} => mapTyLit.
-
-Program Instance TrieMap__TyLitMap : TrieMap TyLitMap :=
-  {
-  Key := TrieMap__TyLitMap_Key ;
-  alterTM := fun {b} => TrieMap__TyLitMap_alterTM ;
-  emptyTM := fun {a} => TrieMap__TyLitMap_emptyTM ;
-  foldTM := fun {a} {b} => TrieMap__TyLitMap_foldTM ;
-  lookupTM := fun {b} => TrieMap__TyLitMap_lookupTM ;
-  mapTM := fun {a} {b} => TrieMap__TyLitMap_mapTM }.
-
-Local Definition Eq___DeBruijn__list_op_zeze__ {inst_a} `{GHC.Base.Eq_ (DeBruijn
-                                                                        inst_a)}
-   : (DeBruijn (list inst_a)) -> (DeBruijn (list inst_a)) -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | D _ nil, D _ nil => true
-    | D env (cons x xs), D env' (cons x' xs') =>
-        andb (D env x GHC.Base.== D env' x') (D env xs GHC.Base.== D env' xs')
-    | _, _ => false
-    end.
+Definition Eq___DeBruijn__list_op_zeze__ {a} `{GHC.Base.Eq_ (DeBruijn a)}
+  (dbl_xs dbl_ys : DeBruijn (list a))
+   : bool :=
+  match dbl_xs, dbl_ys with
+  | D env_xs xs0, D env_ys ys0 =>
+      let fix equal xs ys
+                := match xs, ys with
+                   | nil, nil => true
+                   | cons x xs', cons y ys' =>
+                       andb (D env_xs x GHC.Base.== D env_ys y) (equal xs' ys')
+                   | _, _ => false
+                   end in
+      equal xs0 ys0
+  end.
 
 Local Definition Eq___DeBruijn__list_op_zsze__ {inst_a} `{GHC.Base.Eq_ (DeBruijn
                                                                         inst_a)}
@@ -944,7 +926,8 @@ Local Definition TrieMap__LooseTypeMap_alterTM
   fun {b} =>
     fun arg_0__ arg_1__ arg_2__ =>
       match arg_0__, arg_1__, arg_2__ with
-      | k, f, Mk_LooseTypeMap m => Mk_LooseTypeMap (alterTM (deBruijnize k) f m)
+      | k, f, Mk_LooseTypeMap m =>
+          Mk_LooseTypeMap (alterTM (m := TypeMapG) (deBruijnize k) f m)
       end.
 
 Local Definition TrieMap__LooseTypeMap_emptyTM : forall {a}, LooseTypeMap a :=
@@ -963,7 +946,7 @@ Local Definition TrieMap__LooseTypeMap_lookupTM
   fun {b} =>
     fun arg_0__ arg_1__ =>
       match arg_0__, arg_1__ with
-      | k, Mk_LooseTypeMap m => lookupTM (deBruijnize k) m
+      | k, Mk_LooseTypeMap m => lookupTM (m := TypeMapG) (deBruijnize k) m
       end.
 
 Local Definition TrieMap__LooseTypeMap_mapTM
@@ -1025,6 +1008,8 @@ Program Instance TrieMap__CoercionMapX : TrieMap CoercionMapX :=
 
 Local Definition TrieMap__CoercionMap_Key : Type :=
   unit.
+
+Instance TrieMap__CoercionMapG : TrieMap CoercionMapG := TrieMap__GenMap.
 
 Local Definition TrieMap__CoercionMap_alterTM
    : forall {b},
@@ -1115,9 +1100,8 @@ Infix "TrieMap.|>>" := (_|>>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Build_TrieMap Key None Some TrieMap__ListMap_Key TrieMap__MaybeMap_Key Type andb
-     bool cons false list lkTyLit lm_cons lm_nil negb nil option pair true tt unit
-     xtTyLit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt
+     Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
+     tt unit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt
      Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
      Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv
      Core.lookupVarEnv Core.varType Data.Foldable.foldl Data.IntMap.Internal.IntMap
@@ -1130,7 +1114,7 @@ End Notations.
      GHC.Base.op_zgzgze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
      GHC.Err.default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zp__
      Literal.Literal Name.NamedThing Name.getName NameEnv.DNameEnv
-     NameEnv.alterDNameEnv NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv TyCoRep.TyLit
+     NameEnv.alterDNameEnv NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv
      UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.foldUDFM
      UniqDFM.lookupUDFM UniqDFM.mapUDFM Unique.Unique
 *)

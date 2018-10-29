@@ -27,6 +27,7 @@ Require SrcLoc.
 Require UniqFM.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition tidyVarOcc : Core.TidyEnv -> Core.Var -> Core.Var :=

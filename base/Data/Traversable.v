@@ -59,6 +59,7 @@ Definition traverse `{g : Traversable t}
    : forall {f} {a} {b},
      forall `{GHC.Base.Applicative f}, (a -> f b) -> t a -> f (t b) :=
   g _ (traverse__ t).
+
 (* Converted value declarations: *)
 
 Definition mapAccumR {t} {a} {b} {c} `{Traversable t}

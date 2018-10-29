@@ -44,6 +44,7 @@ Import GHC.Num.Notations.
 
 Definition CheapAppFun :=
   (Core.Var -> BasicTypes.Arity -> bool)%type.
+
 (* Midamble *)
 
 (* Record selector *)

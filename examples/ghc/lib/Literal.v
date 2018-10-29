@@ -48,6 +48,7 @@ Inductive Literal : Type
 
 Instance Default__Literal : GHC.Err.Default Literal :=
   GHC.Err.Build_Default _ MachNullAddr.
+
 (* Midamble *)
 
 

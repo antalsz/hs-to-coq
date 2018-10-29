@@ -33,6 +33,7 @@ Definition FV :=
   (InterestingVarFun ->
    Core.VarSet ->
    (list Core.Var * Core.VarSet)%type -> (list Core.Var * Core.VarSet)%type)%type.
+
 (* Converted value declarations: *)
 
 Definition unitFV : Core.Var -> FV :=

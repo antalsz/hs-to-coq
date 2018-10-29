@@ -35,6 +35,7 @@ Definition getCompose {f : Type -> Type} {g : Type -> Type} {a : Type} (arg_0__
     : Compose f g a) :=
   let 'Mk_Compose getCompose := arg_0__ in
   getCompose.
+
 (* Converted value declarations: *)
 
 (* Skipping all instances of class `Data.Data.Data', including

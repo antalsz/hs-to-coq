@@ -69,12 +69,15 @@ foldScopes :: (Ord i, Foldable f) => (a -> BVs i) -> f a -> FVs i -> FVs i
 foldScopes f xs x = foldr (\x -> (f x `scopesOver`)) x xs
 
 class HasBV i a where
-    bvOf :: a -> BVs i
+  bvOf :: a -> BVs i
 
 class HasFV i a where
-    fvOf :: a -> FVs i
-    default fvOf :: HasBV i a => a -> FVs i
-    fvOf = forgetBinders . bvOf
+  fvOf :: a -> FVs i
+  default fvOf :: HasBV i a => a -> FVs i
+  fvOf = forgetBinders . bvOf
+
+instance HasBV i (BVs i) where
+  bvOf = id
 
 -- | Convenient functions for things that don’t bind variables, but occur
 -- as subterms in binders

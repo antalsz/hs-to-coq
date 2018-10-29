@@ -23,6 +23,7 @@ Inductive EnumSet (a : Type) : Type
   := Mk_EnumSet : Data.IntSet.Internal.IntSet -> EnumSet a.
 
 Arguments Mk_EnumSet {_} _.
+
 (* Midamble *)
 
 Require Coq.ZArith.BinInt.

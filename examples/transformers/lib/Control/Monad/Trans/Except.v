@@ -38,6 +38,7 @@ Definition Except e :=
   (ExceptT e Data.Functor.Identity.Identity)%type.
 
 Arguments Mk_ExceptT {_} {_} {_} _.
+
 (* Converted value declarations: *)
 
 Definition throwE {m} {e} {a} `{(GHC.Base.Monad m)} : e -> ExceptT e m a :=

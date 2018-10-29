@@ -69,6 +69,7 @@ Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition zipWithFB {a} {b} {c} {d} {e}

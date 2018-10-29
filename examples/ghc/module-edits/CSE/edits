@@ -19,5 +19,4 @@ in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.L
 # OK?
 rewrite forall x, Core.tyConAppArgs x = nil
 
-
 skip CSE.Default__CSEnv

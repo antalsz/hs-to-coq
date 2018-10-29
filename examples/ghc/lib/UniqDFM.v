@@ -38,6 +38,7 @@ Inductive UniqDFM ele : Type
 Arguments Mk_TaggedVal {_} _ _.
 
 Arguments UDFM {_} _ _.
+
 (* Converted value declarations: *)
 
 Definition unitUDFM {key} {elt} `{Unique.Uniquable key}

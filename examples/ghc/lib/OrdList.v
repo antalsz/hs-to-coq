@@ -45,6 +45,7 @@ Arguments Cons {_} _ _.
 Arguments Snoc {_} _ _.
 
 Arguments Two {_} _ _.
+
 (* Converted value declarations: *)
 
 Definition unitOL {a} : a -> OrdList a :=

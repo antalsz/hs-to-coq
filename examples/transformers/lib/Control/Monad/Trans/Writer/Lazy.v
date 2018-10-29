@@ -40,6 +40,7 @@ Definition runWriterT {w : Type} {m : Type -> Type} {a} (arg_0__
     : WriterT w m a) :=
   let 'Mk_WriterT runWriterT := arg_0__ in
   runWriterT.
+
 (* Midamble *)
 
 Import Notations.

@@ -46,7 +46,7 @@ data ClassBody = ClassBody ClassDefinition [Notation]
                deriving (Eq, Ord, Read, Show)
 
 instance HasBV Qualid ClassBody where
-  bvOf (ClassBody cls nots) = bvOf cls <> fvOf' nots
+  bvOf (ClassBody cls nots) = bvOf cls `telescope` foldMap bvOf nots
 
 -- lookup the signature of a class member and return the list of its
 -- implicit binders

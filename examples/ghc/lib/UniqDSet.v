@@ -21,6 +21,7 @@ Require Unique.
 
 Definition UniqDSet :=
   UniqDFM.UniqDFM%type.
+
 (* Converted value declarations: *)
 
 Definition unitUniqDSet {a} `{Unique.Uniquable a} : a -> UniqDSet a :=

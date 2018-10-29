@@ -28,6 +28,7 @@ Inductive KProxy (t : Type) : Type := Mk_KProxy : KProxy t.
 Arguments Mk_Proxy {_}.
 
 Arguments Mk_KProxy {_}.
+
 (* Converted value declarations: *)
 
 Definition asProxyTypeOf {a} {proxy} : a -> proxy a -> a :=

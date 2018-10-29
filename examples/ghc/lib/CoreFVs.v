@@ -48,6 +48,7 @@ Definition CoreBindWithFVs :=
 
 Definition CoreAltWithFVs :=
   (AnnAlt Core.Var FVAnn)%type.
+
 (* Midamble *)
 
 

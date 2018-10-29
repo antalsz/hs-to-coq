@@ -22,6 +22,7 @@ Definition Listen w m a :=
 
 Definition CallCC m a b :=
   (((a -> m b) -> m a) -> m a)%type.
+
 (* No value declarations to convert. *)
 
 (* External variables:

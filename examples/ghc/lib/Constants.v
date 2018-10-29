@@ -20,6 +20,7 @@ Require GHC.Num.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition wORD64_SIZE : nat :=

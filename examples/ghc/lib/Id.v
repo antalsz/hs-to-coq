@@ -37,6 +37,7 @@ Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
+
 (* Midamble *)
 
 Parameter lookupDataCon : Core.DataConId -> Core.DataCon.

@@ -65,6 +65,7 @@ Definition clauseAtoms {a} (arg_0__ : Clause a) :=
 Definition clauseExprs {a} (arg_0__ : Clause a) :=
   let 'Mk_Clause _ clauseExprs := arg_0__ in
   clauseExprs.
+
 (* Midamble *)
 
 Import GHC.Err.
@@ -513,19 +514,18 @@ Program Instance Traversable__BooleanFormula
 
 (* External variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
-     BooleanFormula_traverse LBooleanFormula None Some bool cons false list negb nil
-     option true Coq.Init.Datatypes.app Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.all Data.Foldable.any
-     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
-     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
-     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
-     Data.Foldable.sum__ Data.Foldable.toList__ Data.Maybe.maybe Data.OldList.nub
-     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
-     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
-     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
-     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable Data.Traversable.mapM__
-     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     BooleanFormula_traverse None Some bool cons false list negb nil option true
+     Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
+     Data.Foldable.all Data.Foldable.any Data.Foldable.foldMap__ Data.Foldable.fold__
+     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
+     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
+     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
+     Data.Maybe.maybe Data.OldList.nub Data.SemigroupInternal.Mk_Dual
+     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build' GHC.Base.flip
      GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__

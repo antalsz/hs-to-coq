@@ -19,6 +19,7 @@ Require GHC.Base.
 Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition void {f} {a} `{GHC.Base.Functor f} : f a -> f unit :=

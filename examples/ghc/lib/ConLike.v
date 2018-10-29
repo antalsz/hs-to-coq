@@ -25,6 +25,7 @@ Import GHC.Base.Notations.
 Inductive ConLike : Type
   := RealDataCon : Core.DataCon -> ConLike
   |  PatSynCon : Core.PatSyn -> ConLike.
+
 (* Midamble *)
 
 

@@ -32,6 +32,7 @@ Inductive SnocBuilder a : Type
   := Mk_SnocBuilder : GHC.Num.Word -> list a -> list a -> SnocBuilder a.
 
 Arguments Mk_SnocBuilder {_} _ _ _.
+
 (* Midamble *)
 
 Fixpoint ascending {a0} (arg_48__: a0 -> a0 -> comparison) (a:a0) (as_:list a0 -> list a0) (bs: list a0)

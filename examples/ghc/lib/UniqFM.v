@@ -27,6 +27,7 @@ Inductive UniqFM ele : Type
   := UFM : (Data.IntMap.Internal.IntMap ele) -> UniqFM ele.
 
 Arguments UFM {_} _.
+
 (* Midamble *)
 
 Require GHC.Err.

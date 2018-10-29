@@ -31,6 +31,7 @@ Arguments Mk_ContT {_} {_} {_} _.
 Definition runContT {r : Type} {m : Type -> Type} {a} (arg_0__ : ContT r m a) :=
   let 'Mk_ContT runContT := arg_0__ in
   runContT.
+
 (* Converted value declarations: *)
 
 Definition withContT {b} {m} {r} {a}

@@ -40,6 +40,7 @@ Definition op_z2218U__ `{g : Category cat}
 Notation "'_∘_'" := (op_z2218U__).
 
 Infix "∘" := (_∘_) (left associativity, at level 40).
+
 (* Converted value declarations: *)
 
 Definition op_zlzlzl__ {cat} {b} {c} {a} `{Category cat}

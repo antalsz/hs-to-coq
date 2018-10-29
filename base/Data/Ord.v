@@ -21,6 +21,7 @@ Import GHC.Base.Notations.
 Inductive Down a : Type := Mk_Down : a -> Down a.
 
 Arguments Mk_Down {_} _.
+
 (* Converted value declarations: *)
 
 Definition comparing {a} {b} `{(GHC.Base.Ord a)}

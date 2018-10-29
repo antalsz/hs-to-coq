@@ -68,6 +68,7 @@ Definition occNameFS (arg_0__ : OccName) :=
 Definition occNameSpace (arg_0__ : OccName) :=
   let 'Mk_OccName occNameSpace _ := arg_0__ in
   occNameSpace.
+
 (* Midamble *)
 
 (* records field accesses are not fully qualified. *)

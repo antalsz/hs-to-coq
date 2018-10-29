@@ -40,6 +40,7 @@ Definition first `{g : Bifunctor p}
 Definition second `{g : Bifunctor p}
    : forall {b} {c} {a}, (b -> c) -> p a b -> p a c :=
   g _ (second__ p).
+
 (* Converted value declarations: *)
 
 (* Skipping instance `Data.Bifunctor.Bifunctor__K1' of class

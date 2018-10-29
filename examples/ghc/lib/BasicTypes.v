@@ -422,6 +422,7 @@ Definition inl_sat (arg_0__ : InlinePragma) :=
 Definition inl_src (arg_0__ : InlinePragma) :=
   let 'Mk_InlinePragma inl_src _ _ _ _ := arg_0__ in
   inl_src.
+
 (* Midamble *)
 
 Require GHC.Err.

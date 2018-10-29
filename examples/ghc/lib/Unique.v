@@ -43,6 +43,7 @@ Existing Class Uniquable.
 
 Definition getUnique `{g : Uniquable a} : a -> Unique :=
   g _ (getUnique__ a).
+
 (* Midamble *)
 
 

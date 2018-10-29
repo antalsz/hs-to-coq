@@ -43,6 +43,7 @@ Definition bitraverse `{g : Bitraversable t}
      forall `{GHC.Base.Applicative f},
      (a -> f c) -> (b -> f d) -> t a b -> f (t c d) :=
   g _ (bitraverse__ t).
+
 (* Converted value declarations: *)
 
 Definition bisequence {t} {f} {a} {b} `{Bitraversable t} `{GHC.Base.Applicative

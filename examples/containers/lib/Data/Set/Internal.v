@@ -49,6 +49,7 @@ Arguments Mk_MergeSet {_} _.
 Definition getMergeSet {a} (arg_0__ : MergeSet a) :=
   let 'Mk_MergeSet getMergeSet := arg_0__ in
   getMergeSet.
+
 (* Midamble *)
 
 Require Omega.

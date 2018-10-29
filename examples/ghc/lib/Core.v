@@ -2300,6 +2300,7 @@ Definition envR (arg_0__ : RnEnv2) :=
 Definition in_scope (arg_0__ : RnEnv2) :=
   let 'RV2 _ _ in_scope := arg_0__ in
   in_scope.
+
 (* Midamble *)
 
 (*  IdInfo: midamble *)
@@ -7947,9 +7948,8 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
          GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
 (* External variables:
-     Alt AnnAlt AnnExpr Arg ArgStr ArgUse Bool.Sumbool.sumbool_of_bool BootUnfolding
-     ClassOpItem CoreRuleInfo CoreUnfolding DFunUnfolding DVarSet Eq Gt Id Lt
-     NoUnfolding None OtherCon Some TyConBinder TyVar TyVarBinder Type andb app bool
+     Bool.Sumbool.sumbool_of_bool BootUnfolding CoreRuleInfo CoreUnfolding
+     DFunUnfolding Eq Gt Lt NoUnfolding None OtherCon Some Type andb app bool
      bothArgUse bothUse comparison cons deAnnotate' false getCoreRule getCoreRuleInfo
      getUnfolding getUnfoldingInfo list lubArgUse nat negb nil op_zt__ option orb
      pair size_AnnExpr' snd tickishCounts true tt unit BasicTypes.Activation

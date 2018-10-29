@@ -36,6 +36,7 @@ Definition pFst {a} (arg_0__ : Pair a) :=
 Definition pSnd {a} (arg_0__ : Pair a) :=
   let 'Mk_Pair _ pSnd := arg_0__ in
   pSnd.
+
 (* Converted value declarations: *)
 
 Definition unPair {a} : Pair a -> (a * a)%type :=

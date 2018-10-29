@@ -35,6 +35,7 @@ Import GHC.Num.Notations.
 
 Definition CallArityRes :=
   (UnVarGraph.UnVarGraph * Core.VarEnv BasicTypes.Arity)%type%type.
+
 (* Midamble *)
 
 (* We parameterize this because we don't have type information *)

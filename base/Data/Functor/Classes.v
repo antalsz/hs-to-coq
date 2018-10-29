@@ -76,6 +76,7 @@ Existing Class Ord1.
 Definition liftCompare `{g : Ord1 f}
    : forall {a} {b}, (a -> b -> comparison) -> f a -> f b -> comparison :=
   g _ (liftCompare__ f).
+
 (* Converted value declarations: *)
 
 Definition eq2 {f} {a} {b} `{Eq2 f} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b}

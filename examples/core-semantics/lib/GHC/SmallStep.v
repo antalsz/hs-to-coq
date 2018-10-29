@@ -66,6 +66,7 @@ Arguments Error {_} _.
 Arguments Done {_}.
 
 Arguments Mk_Step {_} _.
+
 (* Midamble *)
 
 Instance Default_Step {a} : GHC.Err.Default (Step a) :=

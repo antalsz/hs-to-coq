@@ -579,6 +579,7 @@ Instance Default__CompilerInfo : GHC.Err.Default CompilerInfo :=
 
 Instance Default__BmiVersion : GHC.Err.Default BmiVersion :=
   GHC.Err.Build_Default _ BMI1.
+
 (* Midamble *)
 
 Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.String :=

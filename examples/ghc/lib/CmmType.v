@@ -56,6 +56,7 @@ Instance Default__ForeignHint : GHC.Err.Default ForeignHint :=
 
 Instance Default__CmmCat : GHC.Err.Default CmmCat :=
   GHC.Err.Build_Default _ GcPtrCat.
+
 (* Midamble *)
 
 Require Import GHC.Nat.

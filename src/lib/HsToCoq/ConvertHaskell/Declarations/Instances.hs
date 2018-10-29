@@ -278,7 +278,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                   CoqInductiveDef        _ -> editFailure "cannot redefine an instance method definition into an Inductive"
                   CoqDefinitionDef       _ -> pure ()
                   CoqFixpointDef         _ -> pure ()
-                  CoqInstanceDef         _ -> editFailure "cannot redefine an instance methoddefinition into an Instance"
+                  CoqInstanceDef         _ -> editFailure "cannot redefine an instance method definition into an Instance"
                   CoqAxiomDef            _ -> pure ()
             
           (Nothing, Just assoc, _) ->

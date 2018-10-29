@@ -27,7 +27,6 @@ Require Import Proofs.VarSetFSet.
 Open Scope Z_scope.
 
 
-
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -1601,7 +1600,9 @@ Proof.
         [|fsetdec].
       apply remove_equal in Hd'.
       fsetdec.
-Qed.    
+Qed.
+
+    
 
 Lemma subVarSet_delVarSet:
   forall vs1 v,

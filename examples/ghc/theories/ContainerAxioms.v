@@ -11,8 +11,14 @@ Axiom member_eq : forall A k k' (i : IntMap.Internal.IntMap A),
 
 Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
 IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
-  (k == k')
-  || IntMap.Internal.member k i.
+  (k == k') || IntMap.Internal.member k i.
+
+Axiom member_union :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i i0 : Internal.IntMap A),
+   (IntMap.Internal.member key (IntMap.Internal.union i i0)) = 
+   (IntMap.Internal.member key i0 || IntMap.Internal.member key i).
 
 Axiom union_nil_l : forall A (i : IntMap.Internal.IntMap A),
     IntMap.Internal.union IntMap.Internal.Nil i = i.
@@ -33,16 +39,13 @@ Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
 Axiom difference_Tip_member:
   forall A (i : Internal.IntMap A) (n : Internal.Key),
     (IntMap.Internal.member n i) ->
-    forall x:A,
-      IntMap.Internal.difference
+    forall x:A, IntMap.Internal.difference
         (IntMap.Internal.Tip n x) i = Internal.Nil.
 
 Axiom difference_Tip_non_member: 
     forall A (i : Internal.IntMap A) (n : Internal.Key),
       (IntMap.Internal.member n i) = false ->
-      forall x : A,
-        IntMap.Internal.difference
-          (IntMap.Internal.Tip n x) i =
+      forall x : A, IntMap.Internal.difference (IntMap.Internal.Tip n x) i =
         IntMap.Internal.Tip n x.
 
 Axiom null_empty : forall A,
@@ -145,6 +148,9 @@ Axiom delete_commute :
   IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
   IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
 
+Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
+    k == k'->
+    IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
 
 
 

@@ -27,29 +27,75 @@ Require Import Proofs.VarSetFSet.
 Open Scope Z_scope.
 
 
+
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 Set Bullet Behavior "Strict Subproofs".
 
-Ltac hs_simpl := autorewrite with hs_simpl.
-
-Tactic Notation "hs_simpl" "in" hyp(h) := autorewrite with hs_simpl in h.
-
+(* Stephanie's hack. *)
 Lemma fold_is_true : forall b, b = true <-> is_true b.
 Proof. intros. unfold is_true. reflexivity. Qed.
 
+(* Move to base *)
 
-Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
-    k == k'->
-    IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
+Ltac unfold_zeze :=
+  repeat unfold op_zeze__, op_zeze____, 
+  Eq___option, Base.Eq___option_op_zeze__,
+  Eq_Int___, 
+  Eq_Integer___, 
+  Eq_Word___, 
+  Eq_Char___, 
+  Eq_bool___, 
+  Eq_unit___ , 
+  Eq_comparison___, 
+  Eq_pair___ , 
+  Eq_list, 
+  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__.
 
-Axiom delete_commute :
-  forall (A : Type)
-    (kx ky : Internal.Key) 
-    (i : Internal.IntMap A),
-  IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
-  IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
+Lemma simpl_option_some_eq a `{Eq_ a} (x y :a) :
+  (Some x == Some y) = (x == y).
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+Lemma simpl_option_none_eq a `{Eq_ a} :
+  ((None : option a) == None) = true.
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+
+Lemma simpl_list_cons_eq a `{Eq_ a} (x y :a) xs ys :
+  (cons x xs) == (cons y ys) = (x == y) && (xs == ys).
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Lemma simpl_list_nil_eq a `{Eq_ a} :
+  (nil : list a) == nil = true.
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq 
+             @simpl_list_cons_eq @simpl_list_nil_eq : hs_simpl.
+
+Lemma var_eq_realUnique v1 v2 : 
+  (v1 == v2) = (realUnique v1 == realUnique v2).
+Proof.
+  repeat unfold op_zeze__, op_zeze____,Core.Eq___Var_op_zeze__,Core.Eq___Var.
+  auto.
+Qed.
+
 
 
 (* I would love to be able to use rewriting instead of this 
@@ -91,6 +137,7 @@ Proof.
   rewrite Eq_sym.
   auto.
 Defined. 
+
 
 Add Parametric Relation {a}`{H: EqLaws a} : a 
   (fun x y => x == y) 
@@ -257,6 +304,7 @@ Proof.
   reflexivity.
 Qed.
 
+
 Hint Rewrite mkVarSet_extendVarSetList : hs_simpl.
 
 
@@ -340,10 +388,12 @@ Proof.
   reflexivity.
 Qed.
 
+
+(*
 Ltac unfold_zeze_option := 
     repeat unfold_zeze;
            unfold Eq___option,
-           Base.Eq___option_op_zeze__.
+           Base.Eq___option_op_zeze__. *)
 
 Instance lookupVarSet_m : 
   Proper (Equal ==> (fun x y => x == y) ==> (fun x y => x == y)) lookupVarSet.
@@ -357,7 +407,7 @@ Proof.
   repeat rewrite -> mem_iff in h2.
   destruct (lookupVarSet x v2) eqn:LX;
   destruct (lookupVarSet y v2) eqn:LY;
-  unfold_zeze_option.
+  hs_simpl.
   - apply ValidVarSet_Axiom in LX.
     apply ValidVarSet_Axiom in LY.
     eapply Eq_trans.
@@ -604,19 +654,6 @@ Lemma elemVarSet_emptyVarSet : forall v, (elemVarSet v emptyVarSet) = false.
   fsetdec.
 Qed.
 
-Lemma dbool : forall b, is_true b \/ not (is_true b).
-Proof.
-  destruct b; auto.
-Qed.
-
-Axiom member_union :
-   forall (A : Type)
-     (key : Internal.Key) 
-     (i i0 : Internal.IntMap A),
-   (IntMap.Internal.member key (IntMap.Internal.union i i0)) = 
-   (IntMap.Internal.member key i0 || IntMap.Internal.member key i).
-
-
 Lemma elemVarSet_unionVarSet:
   forall v vs1 vs2,
     elemVarSet v (unionVarSet vs1 vs2) = elemVarSet v vs1 || elemVarSet v vs2.
@@ -633,6 +670,7 @@ Lemma  In_hd_cons: forall v vs,
   In v (UniqSet.mkUniqSet (v :: vs)).
 Proof.
   intros v vs.
+  
 Abort.
     
 Lemma hd_VarSet_subset: forall v vs,
@@ -710,16 +748,19 @@ Proof.
   auto.
 Qed.
 
+
 Lemma elemVarSet_extendVarSet:
   forall v vs v',
   elemVarSet v (extendVarSet vs v') = (v' == v) || elemVarSet v vs.
 Proof.
   intros.
-  unfold_zeze.
-  replace (realUnique v' =? realUnique v)%N with 
-      (F.eqb v' v).
+  rewrite var_eq_realUnique.
+  replace (realUnique v' == realUnique v)%N with 
+      (F.eqb v' v). 
+
   eapply F.add_b.
   unfold F.eqb.
+  cbn.
   destruct F.eq_dec.
   - unfold Var_as_DT.eq in e.
     rewrite <- realUnique_eq in e; auto.
@@ -742,7 +783,6 @@ Proof.
   + intros vs0. hs_simpl.
     rewrite IHvs'.
     hs_simpl.
-    rewrite elem_cons.
     rewrite Eq_sym.
     ssrbool.bool_congr.
     reflexivity.
@@ -774,13 +814,11 @@ Proof.
   induction l.
   - intros x vs.
     hs_simpl.
-    rewrite elem_nil.
     intuition.
     inversion H0.
   - intros x vs.
-    autorewrite with hs_simpl.
+    hs_simpl.
     rewrite IHl.
-    rewrite elem_cons.
     set_b_iff.
     rewrite add_iff.
     unfold Var_as_DT.eqb.
@@ -795,13 +833,11 @@ Lemma delVarSetList_iff : forall l x vs,
 Proof.
   induction l.
   - intros x vs. 
-    autorewrite with hs_simpl.
-    rewrite elem_nil.
+    hs_simpl.
     intuition.
   - intros x vs.
-    autorewrite with hs_simpl.
+    hs_simpl.
     rewrite IHl.
-    rewrite elem_cons.
     rewrite delVarSet_remove. rewrite remove_iff.
     unfold Var_as_DT.eqb.
     rewrite Eq_sym.
@@ -918,39 +954,20 @@ Qed.
 
 Lemma lookupVarSet_extendVarSetList_false:
   forall (vars:list Var) v vs,
-    not (Foldable.elem v vars ) -> 
+    ~~ (Foldable.elem v vars ) -> 
     lookupVarSet (extendVarSetList vs vars) v = lookupVarSet vs v.
 Proof.
-  elim=> v vs.
-  - rewrite elem_nil.
-    move => _.
+  elim=> [|x xs IH] //.   (* // is try done. *)
+  - move => v vs.
     hs_simpl.
-    done.
-  - move => IH v0 vs0.
-    hs_simpl.
-    rewrite elem_cons.
-    rewrite orE.
-    intuition.
-    rewrite IH.
-    rewrite lookupVarSet_extendVarSet_neq; try done.
-    intro h. apply H0. symmetry. done.
-    done.
+    rewrite negb_or.     (* de morgan law to push ~~ in *)
+    move => /andP [h1 h2]. (* split && into two hypotheses *)
+    rewrite IH //.
+    rewrite lookupVarSet_extendVarSet_neq //.
+    rewrite Eq_sym. by apply /negP.
 Qed.
 
 
-Ltac unfold_zeze :=
-  repeat unfold op_zeze__, op_zeze____, 
-  Eq___option, Base.Eq___option_op_zeze__,
-  Eq_Int___, 
-  Eq_Integer___, 
-  Eq_Word___, 
-  Eq_Char___, 
-  Eq_bool___, 
-  Eq_unit___ , 
-  Eq_comparison___, 
-  Eq_pair___ , 
-  Eq_list, 
-  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__.
 
 
 Instance Foldable_proper : forall {a}`{EqLaws a},  
@@ -969,8 +986,7 @@ Proof.
     simpl.
     done.
     move => a1 l.
-    rewrite elem_cons.
-    rewrite elem_cons.
+    hs_simpl.
     move/andP => [h0 h1].
     rewrite (eq_replace_l a0 Hx).
     rewrite (eq_replace_r x2 h0).
@@ -995,11 +1011,9 @@ Proof.
     inversion ND. subst.
     inversion H; subst.
     + rewrite lookupVarSet_extendVarSetList_false.
-      hs_simpl.
-      done.
-      move => F.
-      rewrite <- In_varUnique_elem in F.
-      done.
+      by hs_simpl.
+      apply /negP.
+      by rewrite -In_varUnique_elem.
     + eauto. 
 Qed.      
 
@@ -1027,14 +1041,10 @@ Proof.
     + rewrite (lookupVarSet_eq _ H).
       rewrite lookupVarSet_extendVarSetList_false.
       rewrite lookupVarSet_extendVarSet_self.
-      (** Still don't have a good way to simplify == *)
-      unfold op_zeze__, Eq___option, op_zeze____, Base.Eq___option_op_zeze__ .
+      hs_simpl.
       symmetry. done.
-      intro h.
-      unfold is_true in h.
       setoid_rewrite H in Hv.
-      rewrite Hv in h.
-      done.
+      rewrite Hv. done.
     + move=> h.
       apply IHvars.
       auto.
@@ -1044,7 +1054,8 @@ Qed.
 Lemma lookupVarSet_extendVarSetList_self_exists:
   forall (vars:list Var) v vs,
     (Foldable.elem v vars) -> 
-    exists v', lookupVarSet (extendVarSetList vs vars) v = Some v' /\ v == v'.
+    exists v', lookupVarSet (extendVarSetList vs vars) v = Some v' 
+          /\ v == v'.
 Proof.
   move=> vars v vs E. 
   move: (lookupVarSet_extendVarSetList_self vs E) => h0.
@@ -1056,68 +1067,75 @@ Proof.
   - done.
 Qed.
 
-Lemma extendVarSetList_same : forall v vars vs1 vs2,
-  Foldable.elem v vars ->
-  lookupVarSet (extendVarSetList  vs1 vars) v =   lookupVarSet (extendVarSetList vs2 vars) v.
+
+Lemma lookupVarSet_extendVarSetList_self_exists_in:
+  forall (vars:list Var) v vs,
+    (Foldable.elem v vars) -> 
+    exists v', and3 (lookupVarSet (extendVarSetList vs vars) v = Some v')
+               (v == v')
+               (List.In v' vars).
 Proof.
-  induction vars.
-  - move=> vs1 vs2 F. inversion F.
-  - move=> vs1 vs2.
-    rewrite elem_cons.
-    hs_simpl.
-    move=> /orE.
-    elim=>H.
-    destruct (Foldable.elem v vars) eqn:h. eauto.
-    rewrite lookupVarSet_extendVarSetList_false.
-    rewrite lookupVarSet_extendVarSetList_false.
-    rewrite lookupVarSet_extendVarSet_eq.
-    rewrite lookupVarSet_extendVarSet_eq.
-    auto.
-    rewrite Eq_sym. auto.
-    rewrite Eq_sym. auto.
-    move => h0. 
-    rewrite h in h0. done.
-    move => h0. 
-    rewrite h in h0. done.
-    auto.
+  elim => // a vars IH.       (* Do induction on first var, 
+                                then trivially discharge goal. *)
+                          (* Then introduce names for list components *)
+  move=> v vs.
+  hs_simpl.
+
+  move => /orP [h1 | h1].  (* case analysis on boolean || *)
+
+  case IN: (Foldable.elem v vars). 
+
+  all: try ( unfold is_true in * ; match goal with 
+      [ H : Foldable.elem ?v ?vars = true |- _ ] =>
+        move: (IH v (extendVarSet vs a) H) => [v'[]]* ;
+        exists v'; split; eauto using in_cons
+     end ).
+
+   + rewrite lookupVarSet_extendVarSetList_false ; try by rewrite IN.
+     exists a. split; eauto.
+       rewrite lookupVarSet_extendVarSet_eq //. 
+       symmetry => //.
+       eapply in_eq.
 Qed.
 
 
-Lemma lookupVarSet_extendVarSetList_l:
-  forall v vs1 vs2,
-  elemVarSet v (mkVarSet vs2) = false ->
+
+Lemma extendVarSetList_same v vars : forall vs1 vs2 ,
+  Foldable.elem v vars ->
+  lookupVarSet (extendVarSetList  vs1 vars) v = 
+  lookupVarSet (extendVarSetList vs2 vars)  v.
+Proof.
+  elim: vars => // a vars IHvars. 
+  - move => vs1 vs2.
+    hs_simpl.  
+    move=> /orP [h1|h2].
+    + case h: (Foldable.elem v vars); eauto.
+      (* ! rewrites one or more times. *)
+      rewrite !lookupVarSet_extendVarSetList_false; try (rewrite h; done).
+      rewrite !lookupVarSet_extendVarSet_eq // ; symmetry ; done.
+    + auto.
+Qed.
+
+
+Lemma lookupVarSet_extendVarSetList_l
+  v vs1 vs2 :
+  ~~ elemVarSet v (mkVarSet vs2) ->
   lookupVarSet (extendVarSetList vs1 vs2) v = lookupVarSet vs1 v.
 Proof.
-  intros v vs1 vs2.
   hs_simpl.
-  generalize emptyVarSet.
-  generalize vs1.
-  induction vs2.
-  - intros.  
-    hs_simpl.
-    auto.
-  - intros vs0 v0.
+  elim: vs2 vs1 => [|a vars IH] vs1 //.
+  - 
     rewrite elem_cons. (* why does hs_simpl not do this?? *)
     hs_simpl.
-    intro h.
-   
-    apply orb_false_elim in h.
-    destruct h as [h0 h3].
-    apply orb_false_elim in h0.
-    destruct h0 as [h1 h2].
 
-    rewrite lookupVarSet_extendVarSetList_false.
-    rewrite lookupVarSet_extendVarSet_neq.
-    reflexivity.
+    rewrite orbF.  (* F comes last and it is false *)
+    rewrite negb_orb => /andP [? ?].
 
-    move => h4.
-    rewrite Eq_sym in h4.
-    rewrite h1 in h4.
-    done.
+    rewrite lookupVarSet_extendVarSetList_false //.
+    rewrite lookupVarSet_extendVarSet_neq //.
 
-    move => h4.
-    rewrite h2 in h4.
-    done. 
+    apply /negP.       (* update lookupVarSet_extendVarSet_neq *)
+    rewrite Eq_sym //. 
 Qed.
     
 
@@ -1147,22 +1165,22 @@ Proof.
     done.
   - hs_simpl.
     simpl map.
+    rewrite orbF.
     split.
-    + rewrite orE => h.
-      destruct h as [h0|h1].
-      rewrite <- In_varUnique_elem in h0.
-      done.
-      done.
+    + move /orP.        
+      rewrite -> varUnique_iff.
+      rewrite -In_varUnique_elem //. 
+      move => [h1|h2] //.
+      rewrite h1.
+      apply in_eq.
+      apply in_cons => //.
     + move => h.
-      rewrite elem_cons. 
-      repeat rewrite orE. left.
+      apply /orP.
       inversion h.
       ++ left.
-         rewrite varUnique_iff.
-         done.
+         rewrite varUnique_iff //.
       ++ right.
-         rewrite -> In_varUnique_elem in H.
-         done.
+         apply In_varUnique_elem => //.
 Qed.
 
 (** ** [delVarSet]  *)
@@ -1445,7 +1463,7 @@ Lemma subVarSet_extendVarSetList_l:
   subVarSet vs1 (extendVarSetList vs2 vs) .
 Proof.
   intros vs1 vs2 vs.
-  generalize vs2. clear vs2.
+  generalize dependent vs2.
   induction vs.
   - intro vs2. rewrite extendVarSetList_nil. auto.
   - intro vs2. intro h. 
@@ -1455,6 +1473,7 @@ Proof.
 Qed.
 
 
+    
 
 Lemma subVarSet_extendVarSet_both:
   forall vs1 vs2 v,
@@ -1483,6 +1502,7 @@ Lemma subVarSet_extendVarSetList:
   subVarSet vs1 vs2  ->
   subVarSet vs1 (extendVarSetList vs2 vs3) .
 Proof.
+
   induction vs3; autorewrite with hs_simpl.
   - auto.
   - intro h. 
@@ -1651,6 +1671,9 @@ Proof.
   assumption.
 Qed.
 
+
+
+
 Lemma subVarSet_delVarSetList_extendVarSetList_dual:
   forall jps isvs vs,
   subVarSet jps (extendVarSetList isvs vs)  ->
@@ -1725,7 +1748,6 @@ Axiom disjointVarSet_subVarSet_l:
   disjointVarSet vs2 vs3  ->
   subVarSet vs1 vs2  ->
   disjointVarSet vs1 vs3 .
-
 
 
 
@@ -2016,24 +2038,32 @@ Lemma Respects_StrongSubset_delVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSet vs v)).
+Proof.
+  intros.
 Admitted.
 
 Lemma Respects_StrongSubset_delVarSetList:
   forall vs2 P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
+Proof.
+  
 Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 Lemma Respects_StrongSubset_extendVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
+Proof.
+  
 Admitted.
 
 Lemma Respects_StrongSubset_extendVarSetList:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs v)).
+Proof.
+  
 Admitted. (* This is tricky, because of rewriting under a binder :-( *)
 
 
@@ -2197,3 +2227,10 @@ Proof.
 
   
 Admitted.
+
+
+Axiom Subset_extend
+     : forall (vs1 vs2 : VarSet) (v : Var),
+       vs1 [<=] vs2 -> extendVarSet vs1 v [<=] extendVarSet vs2 v.
+
+

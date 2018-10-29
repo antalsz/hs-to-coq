@@ -1,8 +1,0 @@
--Q . ""
--R ../../../base ""
--Q ../../../base-thy  Proofs
--Q ../../containers/lib   ""
--Q ../../transformers/lib  ""
--Q ../../ghc/lib  ""
-
-GHC/SmallStep.v

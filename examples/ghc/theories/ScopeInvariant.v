@@ -415,9 +415,11 @@ Proof.
   unfold WellScopedVar in *.
   destruct_match; only 2: apply I.
   destruct_match; only 2: contradiction.
-  rewrite lookupVarSet_extendVarSetList_l by assumption.
+  rewrite lookupVarSet_extendVarSetList_l. 
   rewrite Heq0.
   assumption.
+  rewrite H0. 
+  auto.
 Qed.
 
 Lemma WellScopedVar_extendVarSetList_r:

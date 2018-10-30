@@ -368,6 +368,7 @@ Section in_exitifyRec.
      an unrolling lemma for [go]. *)
   Lemma go_eq :
      forall captured e,
+     Forall GoodVar captured ->
      GoDom e ->
      go captured (freeVars e) = go_f go captured (freeVars e).
   Proof.
@@ -381,7 +382,7 @@ Section in_exitifyRec.
     * reflexivity.
     * apply Inverse_Image.wf_inverse_image.
       apply CoreLT_wf.
-    * clear captured e H.
+    * clear captured e H H0.
       intros g h [captured ann_e] HP Hgh.
 
       simpl. cbv beta delta [go_f].
@@ -550,6 +551,7 @@ Section in_exitifyRec.
     { IHs : Prop | 
     IHs ->
     forall e captured,
+    Forall GoodVar captured ->
     GoDom e ->
     WellScoped e (extendVarSetList isvsp captured) ->
     P captured e (go captured (freeVars e))
@@ -566,7 +568,7 @@ Section in_exitifyRec.
     pose proof IHs as IH6. eapply proj1 in IH6. eapply proj2 in IHs.
     rename IHs into IH7.
     refine (well_founded_ind CoreLT_wf _ _).
-    intros e IH captured HGoDom HWS.
+    intros e IH captured Hcapt HGoDom HWS.
 
     rewrite go_eq.
     cbv beta delta [go_f]. (* No [zeta]! *)
@@ -580,7 +582,7 @@ Section in_exitifyRec.
       clearbody j_40__; cleardefs.
       destruct (disjointVarSet fvs recursive_calls) eqn:Hdisjoint; try apply Hnext.
       clear IH Hnext HGoDom.
-      revert e captured fvs HWS Hdisjoint.
+      revert e captured Hcapt fvs HWS Hdisjoint.
       refine IH1.
     }
 
@@ -613,6 +615,12 @@ Section in_exitifyRec.
             assert (IHrhs : P x y (go x (freeVars y) )) end. {
              apply IH.
              ** Core_termination.
+             ** rewrite Forall_app. split; auto.
+                inversion HWS. inversion H.
+                rewrite WellScoped_mkLams in H4.
+                unfold GoodLocalVar in H4. destruct H4 as [h0 ?].
+                eapply Forall_impl; try apply h0.
+                simpl. intuition.
              ** assumption.
              ** rewrite extendVarSetList_append.
                 simpl in HWS.
@@ -622,12 +630,17 @@ Section in_exitifyRec.
           assert (IHe : P (captured ++ [j]) e (go (captured ++ [j]) (freeVars e))). {
              apply IH.
              ** Core_termination.
-             ** assumption.
+             ** rewrite Forall_app. split. auto.
+                rewrite Forall_cons_iff. split; auto.
+                inversion HWS.
+                inversion H.
+                unfold GoodLocalVar in H3. intuition.
+             ** assumption. 
              ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                 apply HWS.
           } 
           clear IH H2 H0.
-          revert captured j params rhs e HisJoin HWS IHrhs IHe.
+          revert captured j params rhs e Hcapt HisJoin HWS IHrhs IHe.
           refine IH3.
         + inversion H1. subst. clear H1.
           rename v into x.
@@ -637,15 +650,19 @@ Section in_exitifyRec.
              assert (IHe : P x y (go x (freeVars y))) end. {
             apply IH.
             ** Core_termination.
+            ** rewrite Forall_app, Forall_cons_iff.
+               split; auto.
+               split; auto.
+               inversion HWS. inversion H. unfold GoodLocalVar in H1. intuition.
             ** assumption.
             ** simpl.
                rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                apply HWS.
           }
           clear IH H2.
-          revert captured x rhs e HnotJoin HWS IHe.
+          revert captured x rhs e HnotJoin Hcapt HWS IHe.
           refine IH2.
-        + clear IH1 IH2 IH3 IH4 IH6 IH7.
+        + clear IH1 IH2 IH3 IH7.
           rename pairs0 into pairs'.
 
           expand_pairs. simpl.
@@ -698,14 +715,43 @@ Section in_exitifyRec.
             apply IH.
             ** eapply in_map with (f := (fun '(MkJoinRHS j params body _) => (j, mkLams params body))) in HIn.
                Core_termination.
-            ** rewrite Forall_map in H1.
-               rewrite Forall_forall in H1.
-               specialize (H1 _ HIn).
-               simpl in H1.
-               dependent destruction H1.
+            ** (* H1 : Forall (fun p : CoreBndr * CoreExpr => GoDom_JoinPair (fst p) (snd p))
+                  (map (fun '{| jrhs_v := j; jrhs_params := params; jrhs_rhs := body |} => (j, mkLams params body)) pairs')   *)
+              match goal with [ H1 : 
+                                  Forall (fun p : CoreBndr * CoreExpr => GoDom_JoinPair (fst p) (snd p))
+                                         (map (fun '{| jrhs_v := j; jrhs_params := params; jrhs_rhs := body |} => 
+                                                 (j, mkLams params body)) pairs') |- _ ] =>
+               rewrite Forall_map in H1;
+               rewrite Forall_forall in H1;
+               specialize (H1 _ HIn);
+               simpl in H1;
+               dependent destruction H1 end.
                rewrite mkLams_inj in x by congruence.
                destruct x; subst.
-               assumption.
+               rewrite Forall_app; split; auto.
+               rewrite Forall_app; split.
+               ++ rewrite Forall_map.
+                  rewrite Forall_map in HGLV.
+                  eapply Forall_impl; try apply HGLV.
+                  intros a x. destruct a.  simpl in x. simpl.
+                  unfold GoodLocalVar in x. intuition.
+               ++ (* Forall GoodVar params *)
+                 rewrite Forall_forall in HWSpairs.
+                 specialize (HWSpairs _ HIn).
+                 simpl in HWSpairs.
+                 rewrite WellScoped_mkLams in HWSpairs.
+                 destruct HWSpairs as [h0 ?].
+                 eapply Forall_impl; try eapply h0.
+                 intros a h. unfold GoodLocalVar in h. intuition.
+            ** (* GoDom rhs *) 
+              rewrite Forall_forall in H1.
+              eapply in_map in HIn.
+              specialize (H1 _ HIn). simpl in H1.
+              inversion H1.
+              rewrite mkLams_inj in H; auto. destruct H; subst.
+              auto.
+              rewrite HIsJoin in H0.
+              inversion H0. auto.
             ** rewrite !extendVarSetList_append.
                apply WellScoped_mkLams.
                rewrite Forall_forall in HWSpairs.
@@ -716,12 +762,18 @@ Section in_exitifyRec.
           { 
             apply IH.
             ** Core_termination.
+            ** rewrite Forall_app; split; auto.
+               rewrite Forall_map.
+               rewrite Forall_map in HGLV.
+               eapply Forall_impl; try eapply HGLV.
+               intro a. destruct a. simpl.
+               unfold GoodLocalVar. intuition.
             ** assumption.
             ** rewrite !extendVarSetList_append.
                apply HWSe.
           }
           clear IH H1 H2 H3.
-          revert pairs' e captured HGLV HNoDup HWSpairs HWSe IHpairs IHe.
+          revert pairs' e captured Hcapt HGLV HNoDup HWSpairs HWSe IHpairs IHe.
           refine IH5.
         + expand_pairs. simpl.
           rename pairs0 into pairs'.
@@ -741,7 +793,7 @@ Section in_exitifyRec.
           }
           clear Heq_isJoinId.
 
-          clear IH1 IH2 IH3 IH5 IH6 IH7.
+          clear IH1 IH2 IH3 IH5 IH7.
 
           (* Destruct well-scopedness assumption *)
           destruct HWS as [[HGLV [HNoDup HWSpairs]] HWSe].
@@ -767,12 +819,17 @@ Section in_exitifyRec.
             assert (IHe : P x y (go x (freeVars y) )) end. {
             apply IH.
             ** Core_termination.
+            ** rewrite Forall_app. split; auto.
+               rewrite Forall_map.
+               eapply Forall_impl; try eapply HGLV.
+               intros [bndr ?] WS. simpl in *.
+               unfold GoodLocalVar in WS. intuition.
             ** assumption.
             ** rewrite !extendVarSetList_append.
                apply HWSe.
           }
           clear IH H1 H2 H3.
-          revert pairs' e captured HGLV HNoDup HWSpairs HWSe IHe Hno_join.
+          revert pairs' e captured Hcapt HGLV HNoDup HWSpairs HWSe IHe Hno_join.
           refine IH4.
       * (* Case [Case] *)
         clear IH1 IH2 IH3 IH4 IH5.
@@ -796,6 +853,14 @@ Section in_exitifyRec.
           intros.
           apply IH.
           ** Core_termination.
+          ** rewrite Forall_app; split; auto.
+             rewrite Forall_cons_iff.
+             specialize (HWSalts _ HIn).
+             simpl in HWSalts.
+             unfold GoodLocalVar in *.
+             intuition.
+             eapply Forall_impl; try eapply H1. simpl.
+             intros a [h0 ?].  auto.
           ** rewrite Forall_forall in HGoDom_alts.
              specialize (HGoDom_alts _ HIn).
              apply HGoDom_alts.
@@ -806,15 +871,16 @@ Section in_exitifyRec.
         clear IH Hnext HGoDom_alts.
         rename l into alts.
         destruct u.
-        revert e v alts captured HWSscrut HGLVv HWSalts IHalts.
+        revert e v alts captured Hcapt HWSscrut HGLVv HWSalts IHalts.
         refine IH6.
     }
 
     subst j_22__.
     clear IH HGoDom.
-    revert e captured HWS.
+    revert e captured Hcapt HWS.
     refine IH7.
   * assumption.
+  * assumption. 
   Defined. (* important! *)
 
   (* We now uncurry the induction hypotheses
@@ -1063,6 +1129,7 @@ Section in_exitifyRec.
   (** This lemma verifies the bugfix of #15110 *)
   Lemma WellScopedVar_picked_aux:
     forall vsis captured fvs,
+    Forall GoodVar captured ->
     Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
            (snd (fold_right pick (fvs, []) captured)) /\
     Forall (fun v => elemVarSet v fvs = true)
@@ -1078,6 +1145,7 @@ Section in_exitifyRec.
       + rewrite snd_pick_list.
         specialize (IHcaptured (delVarSet fvs x)).
         destruct IHcaptured as [IH1 IH2].
+        rewrite Forall_app in H. destruct H. auto.
         split; apply Forall_app; split.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
@@ -1086,9 +1154,9 @@ Section in_exitifyRec.
           apply elemVarSet_exprFreeVars_Var_false.
           rewrite elemVarSet_delVarSet in *.
           rewrite andb_true_iff in IH2. destruct IH2.
-          rewrite negb_true_iff in H.
+          rewrite negb_true_iff in H0.
           unfold varUnique, Unique.mkUniqueGrimily.
-          contradict H.
+          contradict H0.
           unfold_zeze.
           unfold Eq___Var, op_zeze____, Core.Eq___Var_op_zeze__.
           rewrite not_false_iff_true.
@@ -1098,6 +1166,14 @@ Section in_exitifyRec.
           change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
           rewrite Respects_StrongSubset_extendVarSet_ae by (apply zap_ae).
           apply WellScopedVar_extendVarSet.
+          rewrite Forall_app in H. destruct H as [h0 h1]. inversion h1.
+Lemma GoodVar_zap : forall x, GoodVar x -> GoodVar (zap x).
+Proof.
+  unfold GoodVar.
+  intros x h. destruct h as (h0 & h1 & h2 & h3).
+  unfold zap. destruct (isId x) eqn:IsId; simpl.
+Admitted.  
+          eauto using GoodVar_zap.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           rewrite elemVarSet_delVarSet in *.
@@ -1108,6 +1184,7 @@ Section in_exitifyRec.
           assumption.
        + specialize (IHcaptured fvs).
          destruct IHcaptured as [IH1 IH2].
+         rewrite Forall_app in H. destruct H as [h0 h1]. auto.
          split.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
@@ -1122,9 +1199,11 @@ Section in_exitifyRec.
 
   Lemma WellScopedVar_picked:
     forall vsis captured fvs,
+    Forall GoodVar captured ->
     Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
            (snd (fold_right pick (fvs, []) captured)).
-  Proof. intros. apply WellScopedVar_picked_aux. Qed.
+  Proof. intros. apply WellScopedVar_picked_aux.  auto.
+  Qed.
 
   Lemma Forall_picked:
     forall P captured fvs,
@@ -1211,6 +1290,7 @@ Section in_exitifyRec.
   Qed.
 
   Lemma go_all_WellScopedFloats captured e: 
+    Forall GoodVar captured ->
     GoDom e ->
     WellScoped e (extendVarSetList isvsp captured) ->
     Forall GoodLocalVar captured ->
@@ -1327,6 +1407,8 @@ Section in_exitifyRec.
       simpl in pairs_WS.
       rewrite WellScoped_mkLams in pairs_WS.
       apply go_all_WellScopedFloats.
+      + eapply Forall_impl; try apply pairs_WS.
+        intros a h. unfold GoodLocalVar in h. intuition.
       + assumption.
       + apply pairs_WS.
       + apply pairs_WS.
@@ -1398,6 +1480,7 @@ Section in_exitifyRec.
 
   Lemma addExit_all_WellScopedVar:
     forall captured ja e,
+    Forall GoodVar captured ->
     let after := extendVarSetList isvsp' captured in
     RevStateInvariant (sublistOf exits) 
          (addExit (extendInScopeSetList in_scope2 captured) ja e)
@@ -1423,7 +1506,11 @@ Section in_exitifyRec.
     split; only 1: assumption.
     subst after.
     apply WellScopedVar_extendVarSetList_l; only 1: apply WellScopedVar_extendVarSetList_l.
-    * apply WellScopedVar_extendVarSetList_r; only 1: assumption.
+    * apply WellScopedVar_extendVarSetList_r; only 2: assumption.
+      destruct all_exits_WellScoped as [h0 [h1 [h2 h3]]].
+      rewrite Forall_map.
+      eapply Forall_impl. 2:{ apply h3. }
+      intros [x y]. simpl. unfold GoodLocalVar. intuition.
       rewrite map_map.
       apply all_exits_WellScoped.
     * apply elemVarSet_uniqAway.
@@ -1446,13 +1533,15 @@ Section in_exitifyRec.
   Lemma go_exit_res_WellScoped captured e : 
     let orig := extendVarSetList isvsp captured in
     let after := extendVarSetList isvsp' captured in
+    Forall GoodVar captured ->
     WellScoped e orig ->
     disjointVarSet (exprFreeVars e) recursive_calls = true ->
     RevStateInvariant (sublistOf exits) (go_exit captured e (exprFreeVars e)) (fun e' => WellScoped e' after).
   Proof using Type pairs_WS pairs_VJPP.
-    intros ?? HWSe Hdisjoint.
+    intros ??? HWSe Hdisjoint.
 
-    set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => WellScoped e' after)).
+    set (P := fun x => RevStateInvariant (sublistOf exits) x 
+                                      (fun e' => WellScoped e' after)).
     change (P (go_exit captured e (exprFreeVars e))).
 
     cbv beta delta [go_exit]. (* No [zeta]! *)
@@ -1496,6 +1585,7 @@ Section in_exitifyRec.
     subst P. cleardefs. 
     unfold recursive_calls in Hdisjoint.
     eapply RevStateInvariant_bind; only 1: apply addExit_all_WellScopedVar.
+    auto.
     intro v.
     apply RevStateInvariant_return.
     intro HWSv.
@@ -1508,19 +1598,22 @@ Section in_exitifyRec.
     * subst zap0. fold zap. fold pick. simpl.
       rewrite Foldable.hs_coq_foldr_list.
       apply WellScopedVar_picked.
+      auto.
   Qed.
 
   Lemma go_res_WellScoped captured e: 
     let orig := extendVarSetList isvsp captured in
     let after := extendVarSetList isvsp' captured in
+    Forall GoodVar captured ->
     GoDom e ->
     WellScoped e orig ->
     RevStateInvariant (sublistOf exits) (go captured (freeVars e)) (fun e' => WellScoped e' after).
   Proof using Type pairs_WS pairs_VJPP.
     revert e captured.
-    apply (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r (fun e' => WellScoped e' (extendVarSetList isvsp' captured))));
+    apply (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r 
+         (fun e' => WellScoped e' (extendVarSetList isvsp' captured))));
       intros; set (after := extendVarSetList isvsp' captured).
-    * apply go_exit_res_WellScoped; assumption.
+    * apply go_exit_res_WellScoped; try assumption.
     * eapply RevStateInvariant_bind.
       - apply IHe.
       - intro e'; apply RevStateInvariant_return; intro He'.
@@ -1683,6 +1776,12 @@ Section in_exitifyRec.
       rewrite collectNAnnBndrs_freeVars_mkLams.
       eapply RevStateInvariant_bind.
       ++ apply go_res_WellScoped.
+         ** rewrite Forall_forall in pairs_WS.
+            specialize (pairs_WS _ HIn).
+            simpl in pairs_WS.
+            rewrite WellScoped_mkLams in pairs_WS.
+            eapply Forall_impl; try apply pairs_WS.
+            intros a h. unfold GoodLocalVar in h. apply h.
          ** assumption.
          ** apply WellScoped_mkLams.
             rewrite Forall_forall in pairs_WS.
@@ -1948,6 +2047,7 @@ Section in_exitifyRec.
     { IHs : Prop | 
     IHs ->
     forall e captured,
+    Forall GoodVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
     isJoinPointsValid e 0 (updJPSs jpsp captured) = true ->
     P captured e (go captured (freeVars e))
@@ -1963,17 +2063,17 @@ Section in_exitifyRec.
     pose proof IHs as IH5. eapply proj1 in IH5. eapply proj2 in IHs.
     pose proof IHs as IH6. eapply proj1 in IH6. eapply proj2 in IHs.
     rename IHs into IH7.
-    intros ????.
+    intros ?????.
     assert (GoDom e) by (eapply isJoinPointsValid_GoDom; eassumption).
-    revert e captured H1 H H0.
+    revert e captured H H2 H0 H1.
     refine (go_ind (fun captured e r => impl (isJoinPointsValid e 0 (updJPSs jpsp captured) = true) (P captured e r)) _ _ _ _ _ _ _);
       intros; intro HIJPV.
-    * revert e captured fvs HWS Hdisjoint HIJPV.
+    * revert e captured fvs Hcapt HWS Hdisjoint HIJPV.
       eapply IH1.
     * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
       fold isJoinPointsValidPair in HIJPVrhs.
       lapply IHe; only 1: (clear IHe; intro IHe).
-      + revert captured x rhs e HnotJoin HWS HIJPVrhs HIJPVe IHe.
+      + revert captured x rhs e HnotJoin Hcapt HWS HIJPVrhs HIJPVe IHe.
         eapply IH2.
       + rewrite updJPSs_append.
         rewrite updJPSs_cons.
@@ -1984,7 +2084,7 @@ Section in_exitifyRec.
       fold isJoinPointsValidPair in HIJPVrhs.
       lapply IHe; only 1: (clear IHe; intro IHe).
       lapply IHrhs; only 1: (clear IHrhs; intro IHrhs).
-      + revert captured j params rhs e HisJoin HWS HIJPVrhs HIJPVe IHrhs IHe.
+      + revert captured j params rhs e Hcapt HisJoin HWS HIJPVrhs HIJPVe IHrhs IHe.
         eapply IH3.
       + rewrite updJPSs_append.
         eapply isJoinPointsValidPair_isJoinPoints_isJoinRHS in HIJPVrhs; try eassumption.
@@ -2005,7 +2105,7 @@ Section in_exitifyRec.
           by (destruct pairs'0; simpl in HnotNull; congruence).
         clear HnotNull. rename  HnotNull' into  HnotNull.
         clear HjoinOrNotJoin.
-        revert pairs'0 e captured HGLV HNoDup HWSpairs HWSe HnotNull Hno_join HIJPVrhs HIJPVe IHe.
+        revert pairs'0 e captured Hcapt HGLV HNoDup HWSpairs HWSe HnotNull Hno_join HIJPVrhs HIJPVe IHe.
         eapply IH4.
       + rewrite updJPSs_append.
         assumption.
@@ -2038,7 +2138,7 @@ Section in_exitifyRec.
         clear HnotNull HjoinOrNotJoin.
         rename  HnotNull' into  HnotNull.
         clear IHpairs. rename H into IHpairs.
-        revert pairs'0 e captured HGLV HNoDup HWSpairs HWSe HnotNull HIJPVrhs HIJPVe IHpairs IHe.
+        revert pairs'0 e captured Hcapt HGLV HNoDup HWSpairs HWSe HnotNull HIJPVrhs HIJPVe IHpairs IHe.
         eapply IH5.
       + rewrite updJPSs_append.
         rewrite map_map in HIJPVe.
@@ -2063,10 +2163,10 @@ Section in_exitifyRec.
         rewrite updJPS_not_joinId by assumption.
         assumption.
       + clear IHalts. rename H into IHalts.
-        revert e v alts captured HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
+        revert e v alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
         eapply IH6.
     * clear IH1 IH2 IH4 IH5 IH6.
-      revert e captured HWS HIJPV.
+      revert e captured Hcapt HWS HIJPV.
       eapply IH7.
   Defined.
 
@@ -2076,6 +2176,7 @@ Section in_exitifyRec.
 
 
   Lemma go_all_ValidJoinPairs captured e: 
+    Forall GoodVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
     isJoinPointsValid e 0 (updJPSs jpsp captured) = true ->
     StateInvariant (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)
@@ -2151,6 +2252,8 @@ Section in_exitifyRec.
       simpl in HWS_pairs.
       rewrite WellScoped_mkLams in HWS_pairs.
       apply go_all_ValidJoinPairs.
+      + eapply Forall_impl; try apply HWS_pairs.
+        intros a h. unfold GoodLocalVar in h. apply h.
       + apply HWS_pairs.
       + simpl.
         rewrite Forall_forall in pairs_VJPP.
@@ -2363,6 +2466,7 @@ Section in_exitifyRec.
   Lemma go_res_isJoinPointsValid captured e: 
     let orig := updJPSs jpsp captured in
     let after := updJPSs jpsp' captured in
+    Forall GoodVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
     isJoinPointsValid e 0 orig = true ->
     RevStateInvariant (sublistOf exits) (go captured (freeVars e))
@@ -2561,6 +2665,12 @@ Section in_exitifyRec.
       rewrite collectNAnnBndrs_freeVars_mkLams.
       eapply RevStateInvariant_bind.
       ++ apply go_res_isJoinPointsValid.
+         ** rewrite Forall_forall in pairs_WS.
+            specialize (pairs_WS _ HIn).
+            simpl in pairs_WS. 
+            rewrite WellScoped_mkLams in pairs_WS.
+            eapply Forall_impl; try apply pairs_WS.
+            intros a h. unfold GoodLocalVar in h. apply h.
          ** apply WellScoped_mkLams.
             rewrite Forall_forall in pairs_WS.
             apply (pairs_WS _ HIn).

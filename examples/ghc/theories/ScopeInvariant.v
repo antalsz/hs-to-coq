@@ -25,6 +25,12 @@ Import GHC.Base.Notations.
 
 Set Bullet Behavior "Strict Subproofs".
 
+Lemma contrapositive : forall (A B:Prop), (A -> B) -> (~ B) -> (~ A).
+Proof.
+  intros.
+  intro h. apply H in h. apply H0. auto.
+Qed.
+
 (** * Core invariants related to variables and scope *)
 
 (** ** The invariants *)
@@ -57,18 +63,15 @@ Next we define when a variable occurrence is ok in a given scope.
    are almost the same as the binder; i.e., only the 
    [idInfo] may vary
 
-We do not have to check [GoodVar] here; instead we check that
-for all binders.
 *)
 
 Definition WellScopedVar (v : Var) (in_scope : VarSet) : Prop :=
   if isLocalVar v then
    match lookupVarSet in_scope v with
     | None => False
-    | Some v' => almostEqual v v'
+    | Some v' => almostEqual v v' /\ GoodVar v
     end
-  else True (* we do not track global variables yet *).
-
+  else GoodVar v (* we do not track global variables yet *).
 
 (**
 
@@ -177,13 +180,14 @@ Qed.
 
 Lemma WellScopedVar_extendVarSet:
   forall v vs,
+  GoodVar v ->
   WellScopedVar v (extendVarSet vs v).
 Proof.
   intros.
   unfold WellScopedVar.
   rewrite lookupVarSet_extendVarSet_self.
   destruct_match.
-  * apply almostEqual_refl.
+  * split. apply almostEqual_refl. trivial.
   * trivial.
 Qed.
 
@@ -272,6 +276,7 @@ Proof.
   specialize (SS v).
   destruct (lookupVarSet vs1 v); try contradiction.
   destruct (lookupVarSet vs2 v) eqn:LV2; try contradiction.
+  intuition.
   eapply almostEqual_trans with (v2 := v0); auto.
 Qed.
 
@@ -345,7 +350,7 @@ Proof.
       rewrite subVarSet_unitVarSet.
       eapply lookupVarSet_elemVarSet; eassumption.
     + rewrite -> exprFreeVars_global_Var by assumption.
-      apply subVarSet_emptyVarSet.
+      apply subVarSet_emptyVarSet. 
   - apply subVarSet_emptyVarSet.
   - simpl in H1.
     rewrite exprFreeVars_App.
@@ -415,7 +420,7 @@ Lemma WellScopedVar_extendVarSetList_l:
 Proof.
   intros.
   unfold WellScopedVar in *.
-  destruct_match; only 2: apply I.
+  destruct_match; only 2: assumption.
   destruct_match; only 2: contradiction.
   rewrite lookupVarSet_extendVarSetList_l. 
   rewrite Heq0.
@@ -426,15 +431,20 @@ Qed.
 
 Lemma WellScopedVar_extendVarSetList_r:
   forall v vs1 vs2,
+  Forall GoodVar vs2 ->
   List.In v vs2 ->
   NoDup (map varUnique vs2) ->
   WellScopedVar v (extendVarSetList vs1 vs2).
 Proof.
   intros.
   unfold WellScopedVar in *.
-  destruct_match; only 2: apply I.
+  assert (Gv: GoodVar v). 
+   { rewrite -> Forall_forall in *. auto. }
+  destruct_match.
   rewrite -> lookupVarSet_extendVarSetList_r_self by assumption.
+  intuition.
   apply almostEqual_refl.
+  assumption.
 Qed.
 
 (* There are a number of variants of the freshness lemmas.
@@ -667,11 +677,12 @@ Instance Respects_StrongSubset_WellScopedVar v : Respects_StrongSubset (WellScop
 Proof.
   intros ????.
   unfold WellScopedVar in *.
-  destruct_match; only 2: apply I.
+  destruct_match; only 2: assumption.
   destruct_match; only 2: contradiction.
   specialize (H v).
   rewrite Heq0 in H.
   destruct_match; only 2: contradiction.
+  intuition.
   eapply almostEqual_trans; eassumption.
 Qed.
 

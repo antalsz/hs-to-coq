@@ -695,7 +695,12 @@ Proof.
         unfold GoodLocalVar in H4. intuition.
        }
        rewrite -> lookupVarSet_extendVarSetList_self_in; auto.
+       split.
        eapply almostEqual_refl; auto.
+       rewrite -> Forall_forall in H4.
+       specialize (H4 _ H10).
+       unfold GoodLocalVar in H4.
+       apply H4.
     ++ destruct_one_expr val1. 
        rewrite -> H8 in H2. subst.
        eapply WellScoped_StrongSubset with 
@@ -902,10 +907,17 @@ Proof.
        destruct (v == var) eqn:Eq_vvar.
        - rewrite -> lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
-         destruct_match; only 2: apply I.
+         destruct_match.
          rewrite -> getInScopeVars_extendInScopeSet.
          rewrite -> lookupVarSet_extendVarSet_self.
+         split.
          eapply almostEqual_refl.
+         eapply GoodLocalVar_uniqAway in H.
+         unfold GoodLocalVar in H.
+         eapply H.
+         eapply GoodLocalVar_uniqAway in H.
+         unfold GoodLocalVar in H.
+         eapply H.
        - rewrite -> lookupVarEnv_extendVarEnv_neq; auto.
          specialize (LVi var).
          destruct lookupVarEnv eqn:LU.
@@ -1153,48 +1165,45 @@ Proof.
     unfold lookupIdSubst. 
     simpl in WSsubst. 
     destruct WSsubst as [ss vv] . specialize (vv v).         
+    destruct in_scope_set as [inscope ?]. simpl in *.
+
+    unfold WellScoped,WellScopedVar in WSvar.
     destruct (isLocalId v) eqn:HLocal; simpl.
     -- destruct (lookupVarEnv env v) eqn:HLookup. 
         + tauto.
-        + destruct (lookupInScope in_scope_set v) eqn:HIS.
-          ++ unfold WellScoped, WellScopedVar in *.
-             rewrite -> isLocalVar_isLocalId in WSvar by assumption.
-             destruct (isLocalVar v0) eqn:iLV; only 2: apply I.
-             destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
-             unfold lookupInScope in HIS. destruct in_scope_set. simpl.
-             move: (@ValidVarSet_Axiom v2)=> VV.
+        + unfold Subset, In in ss.
+          specialize (ss v). 
+          rewrite elemVarSet_minusDom_1 in ss ; try done.
+          apply isLocalVar_isLocalId in HLocal. 
+          rewrite HLocal in WSvar.
+          destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
+          apply lookupVarSet_elemVarSet in LVS. unfold is_true in LVS.
+          specialize (ss LVS).
+          apply elemVarSet_lookupVarSet in ss.
+          move: ss  => [v2 h].
+          rewrite h.
+          unfold WellScoped, WellScopedVar.          
+          case Lv2: (isLocalVar v2).
+          ++ move: WSvar => [ae gv].
+             move: (@ValidVarSet_Axiom inscope)=> VV.             
              unfold ValidVarSet in VV.
-             specialize (VV _ _ HIS).
-             rewrite -> lookupVarSet_eq with (v2 := v).
-             rewrite -> HIS.
+             specialize (VV _ _ h).
+             rewrite -> lookupVarSet_eq with (v2 := v). 
+             2: { rewrite -> Base.Eq_sym. auto. }      
+             rewrite h.
+             split.
              eapply Var.almostEqual_refl; auto.
-             rewrite -> Base.Eq_sym. auto.
-          ++ (* This case is impossible. *)
-             unfold WellScoped, WellScopedVar in WSvar.
-             rewrite -> isLocalVar_isLocalId in WSvar by assumption.
-             destruct (lookupVarSet vs v) eqn:h; try contradiction.
-             unfold lookupInScope in HIS. destruct in_scope_set.
-             unfold Subset, In in ss.
-             specialize (ss v). simpl in ss.
-
-             rewrite -> lookupVarSet_None_elemVarSet in HIS.
-             rewrite -> HIS in ss.
-             rewrite elemVarSet_minusDom_1 in ss; try done.
-             assert (false = true).
-             apply ss.
-             rewrite fold_is_true.
-             eapply lookupVarSet_elemVarSet.
-             eauto.
-             done.
-   -- (* TODO *)
-       (* !!!!! This is a global id, so we don't substitute for it !!!!! *)
-       (* Need to add an assumption that v is either a localId or 
-          a globalId to the scope invariant.  
-          (And add a restriction that global id's are not in the dom 
-          of the substitution.) *)
-
-       
-       admit.
+             (* Need to know inscope vars are Good *)
+             admit.
+          ++ admit. (* Need to know inscope vars are Good *)
+   -- (* Impossible case *)
+      unfold WellScopedVar.
+      destruct (isLocalVar v) eqn:h; try auto.
+      destruct (lookupVarSet vs v) eqn:h0; try contradiction.
+      unfold GoodVar in WSvar.
+      destruct WSvar as [ ? [? [? [h1 ?]]]].
+      destruct v; simpl in *; try done.
+      destruct idScope; try done.
 
   - intros. hs_simpl.
     destruct substBndr as [subst' bndr'] eqn:SB.

@@ -179,6 +179,7 @@ Definition indefModuleUnitId (arg_0__ : IndefModule) :=
 Definition unNDModule (arg_0__ : NDModule) :=
   let 'Mk_NDModule unNDModule := arg_0__ in
   unNDModule.
+
 (* Midamble *)
 
 Require Import GHC.Err.

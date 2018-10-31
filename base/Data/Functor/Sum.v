@@ -33,6 +33,7 @@ Inductive Sum (f : Type -> Type) (g : Type -> Type) a : Type
 Arguments InL {_} {_} {_} _.
 
 Arguments InR {_} {_} {_} _.
+
 (* Converted value declarations: *)
 
 (* Skipping all instances of class `Data.Data.Data', including

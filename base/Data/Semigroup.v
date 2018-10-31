@@ -88,6 +88,7 @@ Definition getLast {a} (arg_0__ : Last a) :=
 Definition getFirst {a} (arg_0__ : First a) :=
   let 'Mk_First getFirst := arg_0__ in
   getFirst.
+
 (* Midamble *)
 
 Require Data.List.NonEmpty.

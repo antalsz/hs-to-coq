@@ -26,6 +26,7 @@ Existing Class MonadFail.
 
 Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
   g _ (fail__ m).
+
 (* Converted value declarations: *)
 
 (* Skipping instance `Control.Monad.Fail.MonadFail__IO' of class

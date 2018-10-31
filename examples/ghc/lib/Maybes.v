@@ -26,6 +26,7 @@ Inductive MaybeErr err val : Type
 Arguments Succeeded {_} {_} _.
 
 Arguments Failed {_} {_} _.
+
 (* Midamble *)
 
 Require GHC.Err.

@@ -171,6 +171,7 @@ Arguments Mk_ArrowMonad {_} {_} _.
 Definition runKleisli {m : Type -> Type} {a} {b} (arg_0__ : Kleisli m a b) :=
   let 'Mk_Kleisli runKleisli := arg_0__ in
   runKleisli.
+
 (* Converted value declarations: *)
 
 Definition returnA {a} {b} `{Arrow a} : a b b :=

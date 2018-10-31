@@ -23,6 +23,7 @@ Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition validTipPrefix : Data.IntSet.Internal.Prefix -> bool :=

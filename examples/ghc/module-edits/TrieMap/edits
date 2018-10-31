@@ -1,10 +1,16 @@
-axiomatize module TrieMap
-simple class TrieMap.TrieMap
-  # Can't use the CPSed class because the associated types need to escape the continuation
-unaxiomatize definition TrieMap.insertTM
-unaxiomatize definition TrieMap.deleteTM
-
+################################################################################
+## Global GHC renamings
 rename type Var.Id = Core.Var
+
+################################################################################
+## The TrieMap class
+
+simple class TrieMap.TrieMap
+  # Can't use the CPSed class because the associated types need to escape the
+  # continuation
+
+################################################################################
+## Renaming constructors
 
 rename value TrieMap.LooseTypeMap = TrieMap.Mk_LooseTypeMap
 rename value TrieMap.TypeMap      = TrieMap.Mk_TypeMap
@@ -12,28 +18,187 @@ rename value TrieMap.CoercionMap  = TrieMap.Mk_CoercionMap
 rename value TrieMap.CoercionMapX = TrieMap.Mk_CoercionMapX
 rename value TrieMap.CoreMap      = TrieMap.Mk_CoreMap
 
-redefine Inductive TrieMap.ListMap (m : Type -> Type) (a : Type) : Type := LIST_MAP.
-redefine Inductive TrieMap.GenMap  (m : Type -> Type) (a : Type) : Type := GEN_MAP.
-redefine Inductive TrieMap.TypeMapX (a : Type) : Type := TYPE_MAP_X.
-redefine Inductive TrieMap.CoreMapX (a : Type) : Type := CORE_MAP_X.
+################################################################################
+## Ordering constraints and type class resolution
+order TrieMap.TrieMap__Map            TrieMap.xtTickish
+order TrieMap.TrieMap__IntMap         TrieMap.mapVar
+order TrieMap.TrieMap__UniqDFM        TrieMap.mapVar
+order TrieMap.TrieMap__TypeMapX       TrieMap.xtBndr
+order TrieMap.TrieMap__CoreMapX       TrieMap.mapA
+order TrieMap.TrieMap__GenMap         TrieMap.mapA
+order TrieMap.Eq___DeBruijn__CoreExpr TrieMap.mapA
+order TrieMap.TrieMap__TypeMap        TrieMap.lookupTypeMap
+order TrieMap.TrieMap__CoreMap        TrieMap.lookupCoreMap
+
+# Why do I need to specify explicit type class instances for Coq?
+in TrieMap.xtTickish                      rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TickishMap)
+in TrieMap.lkTickish                      rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.TickishMap)
+in TrieMap.xtLit                          rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.LiteralMap)
+in TrieMap.lkLit                          rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.LiteralMap)
+in TrieMap.xtVar                          rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.BoundVarMap)
+in TrieMap.lkVar                          rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.BoundVarMap)
+in TrieMap.lkTT                           rewrite forall, GHC.Base.op_zgzgze__ = GHC.Base.op_zgzgze__ (m := option)
+in TrieMap.lkTT                           rewrite forall, TrieMap.lkG          = TrieMap.lkG          (m := TrieMap.TypeMapX)
+in TrieMap.xtTT                           rewrite forall, TrieMap.xtG          = TrieMap.xtG          (m := TrieMap.TypeMapX)
+in TrieMap.xtA                            rewrite forall, TrieMap.xtG          = TrieMap.xtG          (m := TrieMap.CoreMapX)
+in TrieMap.xtA                            rewrite forall, TrieMap.xtLit        = TrieMap.xtLit        (a := TrieMap.CoreMapG a)
+in TrieMap.xtA                            rewrite forall, TrieMap.xtDNamed     = TrieMap.xtDNamed     (a := TrieMap.CoreMapG a)
+in TrieMap.TrieMap__CoreMap_alterTM       rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.CoreMapG)
+in TrieMap.TrieMap__CoreMap_lookupTM      rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.CoreMapG)
+in TrieMap.TrieMap__LooseTypeMap_alterTM  rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TypeMapG)
+in TrieMap.TrieMap__LooseTypeMap_lookupTM rewrite forall, TrieMap.lookupTM     = TrieMap.lookupTM     (m := TrieMap.TypeMapG)
+in TrieMap.extendTypeMap                  rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TypeMap)
+
+# Why do I need to `add` redundant instances that should be computable?
+
+add TrieMap Instance TrieMap.TrieMap__CoreMapG     : TrieMap.TrieMap TrieMap.CoreMapG     := TrieMap.TrieMap__GenMap.
+add TrieMap Instance TrieMap.TrieMap__TypeMapG     : TrieMap.TrieMap TrieMap.TypeMapG     := TrieMap.TrieMap__GenMap.
+add TrieMap Instance TrieMap.TrieMap__CoercionMapG : TrieMap.TrieMap TrieMap.CoercionMapG := TrieMap.TrieMap__GenMap.
+
+order TrieMap.TrieMap__CoreMapX     TrieMap.TrieMap__CoreMapG
+order TrieMap.TrieMap__TypeMapX     TrieMap.TrieMap__TypeMapG
+order TrieMap.TrieMap__CoercionMapX TrieMap.TrieMap__CoercionMapG
+
+order TrieMap.TrieMap__CoreMapG     TrieMap.mapA
+order TrieMap.TrieMap__TypeMapG     TrieMap.lkTT
+order TrieMap.TrieMap__TypeMapG     TrieMap.xtTT
+order TrieMap.TrieMap__CoercionMapG TrieMap.TrieMap__CoercionMap_alterTM
+
+# Alternative approach:
+# in TrieMap.mapA rewrite forall, TrieMap.mapTM f = TrieMap.mapTM (TrieMap := TrieMap.TrieMap__GenMap) f
+
+################################################################################
+## Higher-rank types
+
+in TrieMap.xtMaybe rewrite forall, tr = tr _
+in TrieMap.lkMaybe rewrite forall, lk = lk _
+
+in TrieMap.TrieMap__MaybeMap_alterTM  rewrite forall, TrieMap.alterTM  = (fun {b} => TrieMap.alterTM)
+in TrieMap.TrieMap__MaybeMap_lookupTM rewrite forall, TrieMap.lookupTM = (fun {b} => TrieMap.lookupTM)
+
+in TrieMap.TrieMap__ListMap_alterTM  rewrite forall, TrieMap.alterTM  = (fun {b} => TrieMap.alterTM)
+in TrieMap.TrieMap__ListMap_lookupTM rewrite forall, TrieMap.lookupTM = (fun {b} => TrieMap.lookupTM)
+
+################################################################################
+## Instances that require complicated handling (TODO)
+
+# These two are mutually recursive, and the former has a local fixpoint that
+# recurses into the being-defined equality instance.  They may need to be
+# hand-written.
+axiomatize definition TrieMap.Eq___DeBruijn__CoreExpr
+axiomatize definition TrieMap.Eq___DeBruijn__CoreAlt
+
+# This both recurses through itself and doesn't expose that, and is naturally
+# recursive on a subterm of its arguments, not the whole thing.
+redefine Definition TrieMap.Eq___DeBruijn__list_op_zeze__
+                      {a} `{(GHC.Base.Eq_ (TrieMap.DeBruijn a))}
+                      (dbl_xs dbl_ys : TrieMap.DeBruijn (list a)) : bool :=
+           match dbl_xs , dbl_ys with
+           | TrieMap.D env_xs xs0 , TrieMap.D env_ys ys0 =>
+             let equal := fix equal xs ys :=
+                   match xs , ys with
+                   | nil        , nil        => true
+                   | cons x xs' , cons y ys' => andb ((TrieMap.D env_xs x) GHC.Base.== (TrieMap.D env_ys y))
+                                                     (equal xs' ys')
+                   | _          , _          => false
+                   end
+             in equal xs0 ys0
+           end.
+
+################################################################################
+## Types we can't handle
+
+redefine Axiom TrieMap.ListMap  : forall (m : Type -> Type) (a : Type), Type.
+redefine Axiom TrieMap.GenMap   : forall (m : Type -> Type) (a : Type), Type.
+redefine Axiom TrieMap.TypeMapX : forall                    (a : Type), Type.
+redefine Axiom TrieMap.CoreMapX : forall                    (a : Type), Type.
+
+################################################################################
+## Values of/pertaining to types we can't handle
+
+# ListMap
+axiomatize definition TrieMap.mapList
+axiomatize definition TrieMap.xtList
+axiomatize definition TrieMap.lkList
+axiomatize definition TrieMap.fdList
+redefine Axiom TrieMap.TrieMap__ListMap_emptyTM :
+           forall {m} {a} `{(TrieMap.TrieMap m)}, TrieMap.ListMap m a.
+  # We can't use `axiomatize definition` because the type signature isn't
+  # available.
+
+# GenMap
+add TrieMap Axiom TrieMap.GenMap__EmptyMap : forall {m} {a}, GenMap m a.
+  # An axiomatized version of the `EmptyMap` constructor
+axiomatize definition TrieMap.mapG
+axiomatize definition TrieMap.fdG
+# We can't use `axiomatize definition` below because the order of `TrieMap` and
+# `Key` in the type signature is swapped.  Eventually we'll need a more general
+# solution to this.
+redefine Axiom TrieMap.xtG :
+           forall {m} {a} `{(TrieMap.TrieMap m)} `{(GHC.Base.Eq_ (TrieMap.Key m))},
+           (TrieMap.Key m) -> ((TrieMap.XT a) -> ((TrieMap.GenMap m a) -> (TrieMap.GenMap m a))).
+redefine Axiom TrieMap.lkG :
+           forall {m} {a}  `{(TrieMap.TrieMap m)} `{(GHC.Base.Eq_ (TrieMap.Key m))},
+           (TrieMap.Key m) -> ((TrieMap.GenMap m a) -> (option a)).
+# Again, solves the parameter order problem, the solution is just uglier.  It
+# also solves something about the `Key` type, but i'm not 100% sure what, tbh.
+redefine Instance TrieMap.TrieMap__GenMap {m} `{(TrieMap.TrieMap m)} `{(GHC.Base.Eq_ (TrieMap.Key m))}
+    : TrieMap.TrieMap (TrieMap.GenMap m) :=
+  Build_TrieMap (TrieMap.GenMap m)
+                (TrieMap.Key m)
+                (fun {b}     => TrieMap.xtG)
+                (fun {a}     => TrieMap.GenMap__EmptyMap)
+                (fun {a} {b} => TrieMap.fdG)
+                (fun {a}     => TrieMap.lkG)
+                (fun {a} {b} => TrieMap.mapG).
+
+# TypeMapX
+axiomatize definition TrieMap.emptyT
+axiomatize definition TrieMap.mapT
+axiomatize definition TrieMap.xtT
+axiomatize definition TrieMap.lkT
+axiomatize definition TrieMap.fdT
+
+# CoreMapX
+axiomatize definition TrieMap.emptyE
+axiomatize definition TrieMap.mapE
+axiomatize definition TrieMap.xtE
+axiomatize definition TrieMap.lkE
+axiomatize definition TrieMap.fdE
+
+# Type
+axiomatize definition TrieMap.trieMapView
+
+# TyCoRep.TyLit
+axiomatize definition TrieMap.TrieMap__TyLitMap
+
+################################################################################
+## Other values we can't handle
+
+# I think these are both used in the definition of `instance TrieMap AltMap` and
+# relies on it.  Maybe handleable, but I don't care right now.
+axiomatize definition TrieMap.lkA
+axiomatize definition TrieMap.lkBndr
+
+################################################################################
+## Skipped values
 
 # There are two of these thanks to renaming types/coercions; we replace it in
 # the midamble
 skip TrieMap.Eq___DeBruijn__unit
 
-# These have types that mention `Key` before `TrieMap` in their contexts.
-# Eventually we might need a more general solution to this, but for now, the
-# axiomatized instances are in the midamble.
-skip TrieMap.TrieMap__GenMap
-skip TrieMap.xtG
-skip TrieMap.lkG
-
 # Skipping until `TyCoRep.TyLit` is a thing
 skip TrieMap.lkTyLit
 skip TrieMap.xtTyLit
 
-# Using a type class in the argument list makes things hard
-#
-# redefine Inductive TrieMap.GenMap m `{(TrieMap m)} a : Type := EmptyMap     : GenMap m a
-#                                                             |  SingletonMap : (Key m) -> (a -> (GenMap m a))
-#                                                             |  MultiMap     : (m a) -> (GenMap m a).
+################################################################################
+## Interop and base types
+
+# We need `Int` to be the same as for `IntMap`, which is transitively the same
+# as for `IntSet`.
+rename type GHC.Num.Int = Data.IntSet.Internal.Key
+
+################################################################################
+## Ignoring types and coercions
+rewrite forall co, Coercion.coercionType co = tt
+rewrite forall ty, Type.typeKind         ty = tt

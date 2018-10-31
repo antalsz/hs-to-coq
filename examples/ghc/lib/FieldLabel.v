@@ -55,6 +55,7 @@ Definition flLabel {a} (arg_0__ : FieldLbl a) :=
 Definition flSelector {a} (arg_0__ : FieldLbl a) :=
   let 'Mk_FieldLabel _ _ flSelector := arg_0__ in
   flSelector.
+
 (* Converted value declarations: *)
 
 Definition mkFieldLabelOccs

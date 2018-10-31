@@ -71,6 +71,7 @@ Definition srcSpanSCol (arg_0__ : RealSrcSpan) :=
 Definition srcSpanSLine (arg_0__ : RealSrcSpan) :=
   let 'RealSrcSpan' _ srcSpanSLine _ _ _ := arg_0__ in
   srcSpanSLine.
+
 (* Midamble *)
 
 (* Default values *)

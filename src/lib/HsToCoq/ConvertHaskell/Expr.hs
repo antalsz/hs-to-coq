@@ -147,10 +147,11 @@ convertExpr' (HsAppTypeOut _ _) =
 convertExpr' (OpApp el eop _fixity er) =
   case eop of
     L _ (HsVar (L _ hsOp)) -> do
-      op <- var ExprNS hsOp
-      l  <- convertLExpr el
-      r  <- convertLExpr er
-      pure $ App2 (Qualid op) l r
+      op  <- var ExprNS hsOp
+      op' <- rewriteExpr $ Qualid op
+      l   <- convertLExpr el
+      r   <- convertLExpr er
+      pure $ App2 op' l r
     _ ->
       convUnsupported "non-variable infix operators"
 

@@ -27,6 +27,7 @@ Existing Class MonadTrans.
 Definition lift `{g : MonadTrans t}
    : forall {m} {a}, forall `{(GHC.Base.Monad m)}, m a -> t m a :=
   g _ (lift__ t).
+
 (* No value declarations to convert. *)
 
 (* External variables:

@@ -31,6 +31,7 @@ Inductive Product (f : Type -> Type) (g : Type -> Type) a : Type
   := Pair : (f a) -> (g a) -> Product f g a.
 
 Arguments Pair {_} {_} {_} _ _.
+
 (* Converted value declarations: *)
 
 (* Skipping all instances of class `Data.Data.Data', including

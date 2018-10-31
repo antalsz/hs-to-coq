@@ -31,6 +31,7 @@ Arguments Mk_Reverse {_} {_} _.
 Definition getReverse {f : Type -> Type} {a : Type} (arg_0__ : Reverse f a) :=
   let 'Mk_Reverse getReverse := arg_0__ in
   getReverse.
+
 (* Converted value declarations: *)
 
 (* Skipping instance `Data.Functor.Reverse.Traversable__Reverse' of class

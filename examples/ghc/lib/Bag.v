@@ -44,6 +44,7 @@ Arguments UnitBag {_} _.
 Arguments TwoBags {_} _ _.
 
 Arguments ListBag {_} _.
+
 (* Midamble *)
 
 Require ZArith.BinInt.

@@ -33,6 +33,7 @@ Arguments Mk_StateT {_} {_} {_} _.
 Definition runStateT {s} {m} {a} (arg_0__ : StateT s m a) :=
   let 'Mk_StateT runStateT := arg_0__ in
   runStateT.
+
 (* Converted value declarations: *)
 
 Definition withStateT {s} {m} {a} : (s -> s) -> StateT s m a -> StateT s m a :=

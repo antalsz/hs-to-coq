@@ -33,6 +33,7 @@ Arguments Mk_RWST {_} {_} {_} {_} {_} _.
 Definition runRWST {r} {w} {s} {m} {a} (arg_0__ : RWST r w s m a) :=
   let 'Mk_RWST runRWST := arg_0__ in
   runRWST.
+
 (* Midamble *)
 
 Local Definition Monad__RWST_tmp {inst_w} {inst_m} {inst_r} {inst_s}

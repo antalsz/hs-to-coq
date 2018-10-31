@@ -120,6 +120,7 @@ Definition missingKey {f} {k} {x} {y} (arg_0__ : WhenMissing f k x y) :=
 Definition missingSubtree {f} {k} {x} {y} (arg_0__ : WhenMissing f k x y) :=
   let 'Mk_WhenMissing missingSubtree _ := arg_0__ in
   missingSubtree.
+
 (* Midamble *)
 
 Require Omega.

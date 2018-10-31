@@ -36,6 +36,7 @@ Arguments Mk_IdentityT {_} {_} _.
 Definition runIdentityT {f : Type -> Type} {a} (arg_0__ : IdentityT f a) :=
   let 'Mk_IdentityT runIdentityT := arg_0__ in
   runIdentityT.
+
 (* Converted value declarations: *)
 
 Definition mapIdentityT {m} {a} {n} {b}

@@ -5,7 +5,7 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModule(..),
   convertModules,
   -- ** Extract all the declarations from a module
-  moduleDeclarations,
+  ModuleDeclarations(..), moduleDeclarations,
   -- * Convert declaration groups
   ConvertedModuleDeclarations(..), convertHsGroup,
 ) where
@@ -25,6 +25,7 @@ import qualified Data.Map as M
 
 import qualified Data.Text as T
 
+import HsToCoq.Util.FVs
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -37,6 +38,7 @@ import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.InfixNames
 import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Expr
@@ -194,16 +196,46 @@ convertModules sources = do
   mods <- traverse (uncurry convertModule) merged
   pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
-moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
+data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sentence]
+                                             , moduleValueDeclarations :: ![Sentence] }
+                        deriving (Eq, Ord, Show, Read, Data)
+
+moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ModuleDeclarations
 moduleDeclarations ConvertedModule{..} = do
+  let thisModule = moduleNameText convModName
+      localInfixNames qid | maybe True (== thisModule) $ qualidModule qid
+                          , Just op <- identToOp $ qualidBase qid
+                            = S.fromList $ Bare <$> [op, infixToPrefix op]
+                          | otherwise
+                            = S.empty
+      addLocalInfixNamesExcept del (BVs bvs fvs) =
+        BVs bvs $ fvs <> (foldMap localInfixNames fvs S.\\ del)
+      
+      unused = S.singleton . Bare
+      
+      unusedNotations (NotationSentence (NotationBinding (NotationIdentBinding op _))) =
+        unused op <> foldMap unused (prefixOpToInfix op)
+      unusedNotations (NotationSentence (InfixDefinition op _ _ _)) =
+        unused op
+      unusedNotations _ =
+        mempty
+
+      bvWithInfix = addLocalInfixNamesExcept <$> unusedNotations <*> bvOf
+  -- Make sure that @f = … op_zpzp__ …@ depends on @++@ and @_++_@ as well
+  -- as @op_zpzp__@.  But don't produce cycles by depending on yourself.
+  -- This feels like a hack, and like we could use the 'RawQualid'
+  -- constructor, but we don't have the right module information in 'bvOf'
+  -- to do this properly.
+      
   orders <- view $ edits.orders
-  let sorted = topoSortByVariables orders $
+  let sorted = topoSortByVariablesBy bvWithInfix orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
   imported_modules <- view $ edits.importedModules
-  return $ deQualifyLocalNames (convModName `S.insert` imported_modules)
-         $ (convModTyClDecls ++ ax_decls, sorted ++ not_decls)
+  pure . deQualifyLocalNames (convModName `S.insert` imported_modules)
+       $ ModuleDeclarations { moduleTypeDeclarations  = convModTyClDecls ++ ax_decls
+                            , moduleValueDeclarations = sorted           ++ not_decls }
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.
@@ -246,5 +278,3 @@ qualifiedNotations mod decls = do
     extra :: Bool -> [Sentence]
     extra True  = [ ModuleSentence (ModuleImport Export ["ManualNotations"]) ]
     extra False = []
-
-

@@ -18,6 +18,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive Void : Type :=.
+
 (* Converted value declarations: *)
 
 Definition absurd {a} : Void -> a :=

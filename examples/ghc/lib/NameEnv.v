@@ -25,6 +25,7 @@ Definition NameEnv :=
 
 Definition DNameEnv :=
   UniqDFM.UniqDFM%type.
+
 (* Converted value declarations: *)
 
 Definition unitNameEnv {a} : Name.Name -> a -> NameEnv a :=

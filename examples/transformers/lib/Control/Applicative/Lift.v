@@ -36,6 +36,7 @@ Definition Errors e :=
 Arguments Pure {_} {_} _.
 
 Arguments Other {_} {_} _.
+
 (* Converted value declarations: *)
 
 Definition unLift {f} {a} `{(GHC.Base.Applicative f)} : Lift f a -> f a :=

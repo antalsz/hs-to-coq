@@ -40,6 +40,7 @@ Arguments Mk_Const {_} {_} _.
 Definition getConst {a} {b} (arg_0__ : Const a b) :=
   let 'Mk_Const getConst := arg_0__ in
   getConst.
+
 (* Converted value declarations: *)
 
 (* Skipping all instances of class `Data.Bits.Bits', including

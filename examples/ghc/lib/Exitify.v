@@ -35,6 +35,7 @@ Import GHC.Base.Notations.
 
 Definition ExitifyM :=
   (State.State (list (Core.JoinId * Core.CoreExpr)%type))%type.
+
 (* Converted value declarations: *)
 
 Definition mkExitJoinId

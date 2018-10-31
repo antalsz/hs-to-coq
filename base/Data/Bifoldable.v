@@ -55,6 +55,7 @@ Definition bifoldl `{g : Bifoldable p}
 Definition bifoldr `{g : Bifoldable p}
    : forall {a} {c} {b}, (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> c :=
   g _ (bifoldr__ p).
+
 (* Converted value declarations: *)
 
 Definition bitraverse_ {t} {f} {a} {c} {b} {d} `{Bifoldable t}

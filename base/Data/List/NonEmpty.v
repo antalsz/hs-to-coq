@@ -25,6 +25,7 @@ Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
+
 (* Midamble *)
 
 Definition NonEmpty_foldr1 {a} (f : a -> a -> a) (x: GHC.Base.NonEmpty a) : a :=

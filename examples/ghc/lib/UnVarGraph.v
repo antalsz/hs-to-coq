@@ -34,6 +34,7 @@ Inductive Gen : Type
   |  CG : UnVarSet -> Gen.
 
 Inductive UnVarGraph : Type := Mk_UnVarGraph : (Bag.Bag Gen) -> UnVarGraph.
+
 (* Midamble *)
 
 Instance Default_UnVarSet : GHC.Err.Default UnVarSet :=

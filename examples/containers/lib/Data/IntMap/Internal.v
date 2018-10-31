@@ -114,6 +114,7 @@ Definition missingKey {f} {x} {y} (arg_0__ : WhenMissing f x y) :=
 Definition missingSubtree {f} {x} {y} (arg_0__ : WhenMissing f x y) :=
   let 'Mk_WhenMissing missingSubtree _ := arg_0__ in
   missingSubtree.
+
 (* Midamble *)
 
 Require GHC.Err.

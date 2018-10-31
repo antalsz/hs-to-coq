@@ -319,25 +319,26 @@ printConvertedModule :: GlobalMonad r m
                      -> ConvertedModule
                      -> m ()
 printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
-  (convModDecls1, convModDecls2) <- moduleDeclarations cmod
+  ModuleDeclarations{..} <- moduleDeclarations cmod
+  
+  let fvs = toList . getFVs $ foldScopes bvOf (moduleTypeDeclarations ++ moduleValueDeclarations) mempty
+      
+      printUnbound out =
+        unless (null fvs) $ do
+          hPrettyPrint out $
+            line <> "(*" <+> hang 2
+              ("External variables:" <!> fillSep (map (text . qualidToIdent) fvs))
+            <!> "*)" <> line
+          hFlush out
 
-  let printUnbound out = do
-          let fvs = toList $ getFVs $ foldScopes bvOf (convModDecls1 ++ convModDecls2) mempty
-          unless (null fvs) $ do
-              hPrettyPrint out $
-                line <> "(*" <+> hang 2
-                  ("External variables:" <!> fillSep (map (text . qualidToIdent) fvs))
-                <!> "*)" <> line
-              hFlush out
-
-      part1 out = liftIO $ do
-          printThe out "imports"            mempty convModImports <* gap out
-          printThe out "type declarations"  line   convModDecls1  <* hFlush out
-      part2 out = liftIO $ do
-          printThe out "value declarations" line   convModDecls2  <* hFlush out
+      printImportsTypes out = liftIO $ do
+          printThe out "imports"            mempty convModImports          <* gap out
+          printThe out "type declarations"  line   moduleTypeDeclarations  <* gap out
+      printValues out = liftIO $ do
+          printThe out "value declarations" line   moduleValueDeclarations <* hFlush out
           printUnbound out
 
-  withModulePrinter convModName part1 part2
+  withModulePrinter convModName printImportsTypes printValues
  where
   gap out = hPutStrLn out "" >> hFlush out
 

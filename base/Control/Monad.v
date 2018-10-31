@@ -26,6 +26,7 @@ Import Data.Functor.Notations.
 Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)}

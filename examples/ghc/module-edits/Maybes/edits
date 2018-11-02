@@ -23,3 +23,7 @@ redefine Local Definition Maybes.Applicative__MaybeErr_op_zlztzg__ {inst_err} :
                        | Succeeded f => match mx with
 							  | Succeeded x => Succeeded (f x) | Failed e => Failed e end
                        | Failed e => Failed e end.
+
+order Maybes.Eq___MaybeErr         Maybes.Ord__MaybeErr
+order Maybes.Functor__MaybeErr     Maybes.Applicative__MaybeErr_op_zlztzg__
+order Maybes.Applicative__MaybeErr Maybes.Monad__MaybeErr_return_

@@ -14,7 +14,7 @@ module HsToCoq.CLI (
   WithModulePrinter,
   -- * CLI configuration, parameters, etc.
   Config(..),
-  outputFile, preambleFile, midambleFile, editsFiles, processingMode,
+  outputFile, preambleFile, midambleFile, editsFiles, leniency, processingMode,
   modulesFiles, modulesRoot, directInputFiles, ifaceDirs,
   processArgs,
   ProgramArgs(..),
@@ -23,7 +23,7 @@ module HsToCoq.CLI (
   prettyPrint, hPrettyPrint
   ) where
 
-import Control.Lens hiding ((<.>))
+import Control.Lens hiding (Strict, (<.>))
 
 import Data.Foldable
 import Data.List (intersperse, isSuffixOf)
@@ -73,20 +73,21 @@ hPrettyPrint h = liftIO . displayIO h . renderPretty 0.67 120
 prettyPrint :: MonadIO m => Doc -> m ()
 prettyPrint = hPrettyPrint stdout
 
-data ProgramArgs = ProgramArgs { outputFileArg        :: Maybe FilePath
-                               , preambleFileArg      :: Maybe FilePath
-                               , midambleFileArg      :: Maybe FilePath
-                               , editsFilesArgs       :: [FilePath]
-                               , processingModeArg    :: ProcessingMode
-                               , modulesFilesArgs     :: [FilePath]
-                               , modulesRootArg       :: Maybe FilePath
-                               , ifaceDirsArgs        :: [FilePath]
-                               , dependencyDirArg     :: Maybe FilePath
-                               , importDirsArgs       :: [FilePath]
-                               , includeDirsArgs      :: [FilePath]
-                               , ghcTreeDirsArgs      :: [FilePath]
-                               , ghcOptionsArgs       :: [String]
-                               , directInputFilesArgs :: [FilePath]
+data ProgramArgs = ProgramArgs { outputFileArg          :: !(Maybe FilePath)
+                               , preambleFileArg        :: !(Maybe FilePath)
+                               , midambleFileArg        :: !(Maybe FilePath)
+                               , editsFilesArgs         :: ![FilePath]
+                               , translationLeniencyArg :: !Leniency
+                               , processingModeArg      :: !ProcessingMode
+                               , modulesFilesArgs       :: ![FilePath]
+                               , modulesRootArg         :: !(Maybe FilePath)
+                               , ifaceDirsArgs          :: ![FilePath]
+                               , dependencyDirArg       :: !(Maybe FilePath)
+                               , importDirsArgs         :: ![FilePath]
+                               , includeDirsArgs        :: ![FilePath]
+                               , ghcTreeDirsArgs        :: ![FilePath]
+                               , ghcOptionsArgs         :: ![String]
+                               , directInputFilesArgs   :: ![FilePath]
                                }
                  deriving (Eq, Ord, Show, Read)
 
@@ -110,6 +111,14 @@ argParser = ProgramArgs <$> optional (strOption       $  long    "output"
                                                       <> short   'e'
                                                       <> metavar "FILE"
                                                       <> help    "File with extra Haskell -> Coq edits")
+
+                        <*> asum [ flag' Strict       $  long    "strict"
+                                                      <> short   'S'
+                                                      <> help    "Fail hard if a definition can't be translated (default)"
+                                 , flag' Permissive   $  long    "permissive"
+                                                      <> short   'P'
+                                                      <> help    "Try to skip or produce fallback definitions for definitions that can't be translated"
+                                 , pure  Strict ]
 
                         <*> asum [ flag' Recursive    $  long    "recursive"
                                                       <> short   'R'
@@ -162,16 +171,17 @@ argParserInfo :: ParserInfo ProgramArgs
 argParserInfo = info (helper <*> argParser) $  fullDesc
                                             <> progDesc "Convert Haskell source files to Coq"
 
-data Config = Config { _outputFile       :: !(Maybe FilePath)
-                     , _preambleFile     :: !(Maybe FilePath)
-                     , _midambleFile     :: !(Maybe FilePath)
-                     , _editsFiles       :: ![FilePath]
-                     , _processingMode   :: !ProcessingMode
-                     , _modulesFiles     :: ![FilePath]
-                     , _modulesRoot      :: !(Maybe FilePath)
-                     , _directInputFiles :: ![FilePath]
-                     , _ifaceDirs        :: ![FilePath]
-                     , _dependencyDir    :: !(Maybe FilePath)
+data Config = Config { _outputFile          :: !(Maybe FilePath)
+                     , _preambleFile        :: !(Maybe FilePath)
+                     , _midambleFile        :: !(Maybe FilePath)
+                     , _editsFiles          :: ![FilePath]
+                     , _translationLeniency :: !Leniency
+                     , _processingMode      :: !ProcessingMode
+                     , _modulesFiles        :: ![FilePath]
+                     , _modulesRoot         :: !(Maybe FilePath)
+                     , _directInputFiles    :: ![FilePath]
+                     , _ifaceDirs           :: ![FilePath]
+                     , _dependencyDir       :: !(Maybe FilePath)
                      }
             deriving (Eq, Ord, Show, Read)
 makeLenses ''Config
@@ -202,18 +212,19 @@ processArgs = do
 
   void $ setSessionDynFlags dflags
 
-  pure $ Config { _outputFile       = if outputFileArg == Just "-"
-                                      then Nothing
-                                      else outputFileArg
-                , _preambleFile     = preambleFileArg
-                , _midambleFile     = midambleFileArg
-                , _editsFiles       = editsFilesArgs
-                , _processingMode   = processingModeArg
-                , _modulesFiles     = modulesFilesArgs
-                , _modulesRoot      = modulesRootArg
-                , _directInputFiles = directInputFilesArgs
-                , _ifaceDirs        = ifaceDirsArgs
-                , _dependencyDir    = dependencyDirArg
+  pure $ Config { _outputFile          = if outputFileArg == Just "-"
+                                         then Nothing
+                                         else outputFileArg
+                , _preambleFile        = preambleFileArg
+                , _midambleFile        = midambleFileArg
+                , _editsFiles          = editsFilesArgs
+                , _translationLeniency = translationLeniencyArg
+                , _processingMode      = processingModeArg
+                , _modulesFiles        = modulesFilesArgs
+                , _modulesRoot         = modulesRootArg
+                , _directInputFiles    = directInputFilesArgs
+                , _ifaceDirs           = ifaceDirsArgs
+                , _dependencyDir       = dependencyDirArg
                 }
 
 parseModulesFiles :: (MonadIO m, MonadError String m)
@@ -246,7 +257,7 @@ processFilesMain process = do
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
             Right res -> either die pure $ builder res
 
-  edits      <- parseConfigFiles editsFiles     buildEdits     parseEditList
+  edits <- parseConfigFiles editsFiles buildEdits parseEditList
 
   inputFiles <- either (liftIO . die) pure <=< runExceptT $
                   (++) <$> parseModulesFiles (conf^.modulesRoot.non "") (conf^.modulesFiles)
@@ -300,7 +311,7 @@ processFilesMain process = do
               liftIO $ hPutStrLn hOut $ path ++ ": " ++ unwords deps
 
 
-  runGlobalMonad edits (conf^.ifaceDirs) $
+  runGlobalMonad edits (conf^.translationLeniency) (conf^.ifaceDirs) $
     traverse_ (process withModulePrinter) =<< processFiles (conf^.processingMode) inputFiles
 
 printConvertedModule :: GlobalMonad r m
@@ -308,25 +319,26 @@ printConvertedModule :: GlobalMonad r m
                      -> ConvertedModule
                      -> m ()
 printConvertedModule withModulePrinter cmod@ConvertedModule{..} = do
-  (convModDecls1, convModDecls2) <- moduleDeclarations cmod
+  ModuleDeclarations{..} <- moduleDeclarations cmod
+  
+  let fvs = toList . getFVs $ foldScopes bvOf (moduleTypeDeclarations ++ moduleValueDeclarations) mempty
+      
+      printUnbound out =
+        unless (null fvs) $ do
+          hPrettyPrint out $
+            line <> "(*" <+> hang 2
+              ("External variables:" <!> fillSep (map (text . qualidToIdent) fvs))
+            <!> "*)" <> line
+          hFlush out
 
-  let printUnbound out = do
-          let fvs = toList $ getFVs $ foldScopes bvOf (convModDecls1 ++ convModDecls2) mempty
-          unless (null fvs) $ do
-              hPrettyPrint out $
-                line <> "(*" <+> hang 2
-                  ("External variables:" <!> fillSep (map (text . qualidToIdent) fvs))
-                <!> "*)" <> line
-              hFlush out
-
-      part1 out = liftIO $ do
-          printThe out "imports"            mempty convModImports <* gap out
-          printThe out "type declarations"  line   convModDecls1  <* hFlush out
-      part2 out = liftIO $ do
-          printThe out "value declarations" line   convModDecls2  <* hFlush out
+      printImportsTypes out = liftIO $ do
+          printThe out "imports"            mempty convModImports          <* gap out
+          printThe out "type declarations"  line   moduleTypeDeclarations  <* gap out
+      printValues out = liftIO $ do
+          printThe out "value declarations" line   moduleValueDeclarations <* hFlush out
           printUnbound out
 
-  withModulePrinter convModName part1 part2
+  withModulePrinter convModName printImportsTypes printValues
  where
   gap out = hPutStrLn out "" >> hFlush out
 
@@ -350,3 +362,4 @@ convertAndPrintModules p = printConvertedModules p <=< convertModules <=< traver
         | Just (hs_group, _, _, _) <- tm_renamed_source tcm = pure (mod, hs_group)
         | otherwise = throwProgramError $  "Renamer failed for `" ++ moduleNameString mod ++ "'"
       where mod = ms_mod_name . pm_mod_summary $ tm_parsed_module tcm
+

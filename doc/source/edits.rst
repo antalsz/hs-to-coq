@@ -50,18 +50,21 @@ Format:
   | **skip** *qualified_name*
 
 Effect:
-  During translation, ignore the declaration of the function, value, type, class or
-  instance with the given *qualified_name*.
+  During translation, ignore the declaration of the function, value, type, class
+  or instance with the given *qualified_name*.  The name must be the translated
+  Coq name, not the original Haskell name (if those differ).
 
   This does not affect the translation of *uses* of the given name. This means
-  that you can use other methods, e.g. a preamble. to make it available.
+  that you can use other methods, e.g. a preamble, to make it available.
 
+  To skip type classes, see ``skip class``; to skip type class methods, see
+  ``skip methods``.  They are not unified here because those effects are more
+  powerful.
 
-  Skipping a type class also causes its instances to be skipped.
-
-  Type class instances do not have names in Haskell, and ``hs-to-coq``
-  generates a suitable name.  You might want to first attempt the translation
-  and check the output for the precise name.
+  You can skip type class instances, but as they do not have names in Haskell,
+  you must use the name ``hs-to-coq`` generates for them.  The name generation
+  is systematic, but you might want to first attempt the translation and check
+  the output for the precise name.
 
 
 Examples:
@@ -71,6 +74,28 @@ Examples:
      skip GHC.Base.String
      skip GHC.Real.Fractional
      skip Data.Monoid.Show__Last # an instance
+
+``skip class`` – skip a type class and all its instances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip class edit
+
+Format:
+  | **skip** **class** *qualified_class*
+
+Effect:
+  
+  Omit the given type class and all its instances.
+
+  These skipped classes are not stored in the generated metadata, so you need to
+  include the ``skip class`` edits in all downstream modules.
+
+Examples:
+   .. code-block:: shell
+
+     skip class GHC.Base.Alternative
+     skip class Data.Data.Data
 
 ``skip method`` – skip a method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,7 +187,8 @@ Effect:
   This takes the name of a value-level definition and, when translating it,
   translates only the type and generates an axiom with that type.
 
-  See also ``axiomatize module``.
+  See also ``axiomatize module``, and also ``redefine Axiom`` for type-level
+  axiomatization.
 
 Examples:
 
@@ -209,13 +235,19 @@ Format:
   | **add** *module* *coq_definition*
 
 Effect:
-  Add a Coq definition to *module*. The
-  definition can be a ``Definition``, an ``Instance``, an ``Inductive`` or a
-  ``Fixpoint``.
+  Add a Coq definition to *module*. The definition can be a ``Definition``, a ``Fixpoint``, an
+  ``Inductive``, an ``Instance``, or an ``Axiom``.
 
-  That the name in the definition should be fully qualified. (If it is not,
-  some dependency calculations inside ``hs-to-coq`` might go wrong – not always
-  critical.)
+  The name in the definition should be fully qualified. (If it is not, some
+  dependency calculations inside ``hs-to-coq`` might go wrong – but this is not
+  always critical.)
+
+  Our Coq parser is dramatically incomplete, and you may need to pick a simpler
+  syntactic representation of terms to get them to parse correctly.  One example
+  is that the terms to either side of a function arrow must be either single
+  names or surrounded by parentheses; for example, ``F -> G`` will parse
+  correctly, as will ``(F X) -> (G Y)``, but ``F X -> G Y`` will come out as
+  ``F X _->_ G Y``.
 
   This is a multi-line edit and needs to be terminated by a period (as is
   natural when writing a *coq_definition*).
@@ -377,6 +409,10 @@ Format:
 Effect:
   Combines the **skip** and **add** edits.
 
+  You can use ``redefine Axiom ...`` to replace a type-level definition with an
+  axiom; for value-level definitions, please use ``axiomatize definition``
+  instead.
+
 Examples:
 
  .. code-block:: shell
@@ -398,24 +434,23 @@ Format:
 
 Effect:
 
-  Haskell programmers rarely include kinds signatures on inductive
-  datatypes. This usually isn't a problem, but for higher-order parameters, or
-  phantoms (which don't appear in the datatype definition), Coq does not
-  automatically infer the right types. In these cases,
-  the information can be included in an edit.
+  Haskell programmers rarely include kind signatures on inductive
+  datatypes. This usually isn't a problem, but for higher-order parameters, some
+  phantom type parameters, or poly-kinded type parameters, Coq does not
+  necessarily automatically infer the right types. In these cases, the
+  information can be included in an edit.
 
 Examples:
   .. code-block:: shell
 
-     # Coq parser needs parens
+     # The edit file's Coq parser needs parentheses
      data kinds Control.Applicative.WrappedArrow (Type -> (Type -> Type))
 
-     # multiple kinds are comma separated
-     data kinds Data.Functor.Reverse.Reverse (Type -> Type),Type
-     data kinds Data.Functor.Constant.Constant Type,Type
+     # Multiple kinds are separated with commas
+     data kinds Data.Functor.Reverse.Reverse   (Type -> Type), Type
+     data kinds Data.Functor.Constant.Constant Type,           Type
 
-
-``class kinds`` -- Declare kinds of type arguments to Type classes
+``class kinds`` -- Declare kinds of type arguments to type classes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. index::
@@ -432,6 +467,78 @@ Examples:
   .. code-block:: shell
 
       class kinds Control.Arrow.Arrow (Type -> (Type -> Type))
+
+``delete unused type variables`` -- Remove unused type variables from a declaration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: delete unused type variables, edit
+
+Format:
+  | **delete unused type variables** *qualified_name*
+
+Effect:
+
+  Don't translate binders for any type variables that aren't visibly used in the
+  specified definition.
+
+  An explanation: sometimes, poly-kinded Haskell data types have extra invisible
+  type parameters.  For instance, in ``Data.Functor.Const``, we have the
+  type
+  
+  .. code-block:: haskell
+  
+     newtype Const a b = Const { getConst :: a }
+  
+  which is secretly
+  
+  .. code-block:: haskell
+  
+     newtype Const {k} (a :: Type) (b :: k) = Const { getConst :: a }
+  
+  Often, such as here, this doesn't show up in the translated Coq code; we get
+
+  .. code-block:: coq
+  
+     Inductive Const a b : Type := Mk_Const (getConst : a) : Const a b.
+
+  (And, as in Haskell 2010, ``b`` is inferred to have kind ``Type``.)  Sometimes
+  it does, in which case we can fix it using ``data kinds``.  But either way, we
+  still introduce spurious kind variables in the translation sometimes.  For
+  example, the derived ``Eq`` instance for ``Const`` is translated to
+  
+  .. code-block:: coq
+  
+     Program Instance Eq___Const {a} {k} {b} `{GHC.Base.Eq_ a}
+        : GHC.Base.Eq_ (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
+       fun _ k =>
+         k {| GHC.Base.op_zeze____ := Eq___Const_op_zeze__ ;
+              GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
+  
+  The implicit argument ``{k}`` isn't useful in the Coq code, and causes a
+  type-checking failure when its type cannot be determined.  We can avoid this
+  with
+
+  .. code-block:: shell
+  
+     delete unused type variables Data.Functor.Const.Eq___Const
+
+  which will drop the ``{k}`` and leave the definition with just the ``{a}`` and
+  ``{b}`` it needs:
+
+  .. code-block:: coq
+  
+     Program Instance Eq___Const {a} {b} `{GHC.Base.Eq_ a}
+        : GHC.Base.Eq_ (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
+       fun _ k =>
+         k {| GHC.Base.op_zeze____ := Eq___Const_op_zeze__ ;
+              GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
+
+Examples:
+  
+  .. code-block:: shell
+
+     delete unused type variables Data.Functor.Const.Eq___Const
 
 
 ``order`` -- reorder output

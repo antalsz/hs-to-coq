@@ -1,6 +1,5 @@
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE MultiParamTypeClasses, DefaultSignatures, FlexibleInstances,
+             GeneralizedNewtypeDeriving, DeriveTraversable, DeriveGeneric, DeriveDataTypeable #-}
 
 module HsToCoq.Util.FVs where
 
@@ -9,6 +8,18 @@ import HsToCoq.Util.Generics
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Foldable
+
+-- For instances
+import Control.Lens
+import Data.Bifoldable
+import Data.Bitraversable
+import Control.Applicative
+import Control.Monad
+import Control.Monad.Fix
+import Control.Monad.Error.Class
+import Data.Data (Data)
+
+--------------------------------------------------------------------------------
 
 -- | Set of free variables
 newtype FVs i = FVs { getFVs :: Set i } deriving (Eq, Ord, Show, Read, Generic)
@@ -58,16 +69,52 @@ foldScopes :: (Ord i, Foldable f) => (a -> BVs i) -> f a -> FVs i -> FVs i
 foldScopes f xs x = foldr (\x -> (f x `scopesOver`)) x xs
 
 class HasBV i a where
-    bvOf :: a -> BVs i
+  bvOf :: a -> BVs i
 
 class HasFV i a where
-    fvOf :: a -> FVs i
-    default fvOf :: HasBV i a => a -> FVs i
-    fvOf = forgetBinders . bvOf
+  fvOf :: a -> FVs i
+  default fvOf :: HasBV i a => a -> FVs i
+  fvOf = forgetBinders . bvOf
+
+instance HasBV i (BVs i) where
+  bvOf = id
 
 -- | Convenient functions for things that don’t bind variables, but occur
 -- as subterms in binders
 fvOf' :: HasFV i a => a -> BVs i
 fvOf' x = bindsNothing (fvOf x)
 
+--------------------------------------------------------------------------------
 
+-- |Wraps 'HasBV' and 'HasFV' for the 'Right' values, and reports that the left
+-- values contain nothing.
+newtype ErrOrVars e a = ErrOrVars { getErrOrVars :: Either e a }
+                      deriving ( -- Stock
+                                 Eq, Ord, Show, Read
+                                 -- Generics
+                               , Data, Generic
+                                 -- Iterating
+                               , Foldable, Traversable
+                               , Bifoldable
+                                 -- Functor, monad, etc.
+                               , Functor, Applicative, Monad
+                               , Bifunctor
+                               , Alternative, MonadPlus
+                               , MonadFix
+                               , MonadError e )
+
+instance Bitraversable ErrOrVars where
+  bitraverse l r (ErrOrVars e) = ErrOrVars <$> bitraverse l r e
+  {-# INLINE bitraverse #-}
+
+instance Swapped ErrOrVars where
+  swapped = iso swap swap
+    where swap (ErrOrVars e) = ErrOrVars (either Right Left e)
+          {-# INLINE swap #-}
+  {-# INLINE swapped #-}
+
+instance HasBV i a => HasBV i (ErrOrVars e a) where
+  bvOf = either (const $ BVs S.empty S.empty) bvOf . getErrOrVars
+
+instance HasFV i a => HasFV i (ErrOrVars e a) where
+  fvOf = either (const $ FVs S.empty) fvOf . getErrOrVars

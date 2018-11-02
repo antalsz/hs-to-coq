@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
-Require CSE_NestedRecursion.
 Require Core.
 Require CoreFVs.
 Require CoreSubst.
@@ -25,6 +24,7 @@ Require Datatypes.
 Require GHC.Base.
 Require GHC.Err.
 Require Id.
+Require NestedRecursionHelpers.
 Require TrieMap.
 Require Util.
 
@@ -46,34 +46,66 @@ Definition cs_rec_map (arg_0__ : CSEnv) :=
 Definition cs_subst (arg_0__ : CSEnv) :=
   let 'CS cs_subst _ _ := arg_0__ in
   cs_subst.
+
 (* Midamble *)
 
-Require CSE_NestedRecursion.
+Require NestedRecursionHelpers.
 
 (* default = emptyCSEnv *)
 Instance Default__CSEnv : GHC.Err.Default CSEnv := {| GHC.Err.default := CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap |}.
 
 (* Converted value declarations: *)
 
-Definition addBinder : CSEnv -> Core.Var -> (CSEnv * Core.Var)%type :=
-  fun cse v =>
-    let 'pair sub' v' := CoreSubst.substBndr (cs_subst cse) v in
-    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-          CS sub' cs_map_2__ cs_rec_map_3__) v'.
+Definition noCSE : Core.InId -> bool :=
+  fun id =>
+    orb (andb (negb (BasicTypes.isAlwaysActive (Id.idInlineActivation id))) (negb
+               (BasicTypes.noUserInlineSpec (BasicTypes.inlinePragmaSpec (Id.idInlinePragma
+                                                                          id))))) (orb (BasicTypes.isAnyInlinePragma
+                                                                                        (Id.idInlinePragma id))
+                                                                                       (Id.isJoinId id)).
 
-Definition addBinders
-   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
-  fun cse vs =>
-    let 'pair sub' vs' := CoreSubst.substBndrs (cs_subst cse) vs in
-    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
+Definition lookupSubst : CSEnv -> Core.Var -> Core.OutExpr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | CS sub _ _, x =>
+        CoreSubst.lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "CSE.lookupSubst"))
+        sub x
+    end.
 
-Definition addRecBinders
-   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
-  fun cse vs =>
-    let 'pair sub' vs' := CoreSubst.substRecBndrs (cs_subst cse) vs in
-    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
+Definition lookupCSRecEnv
+   : CSEnv -> Core.OutId -> Core.OutExpr -> option Core.OutExpr :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | CS _ _ csmap, bndr, expr => TrieMap.lookupCoreMap csmap (Core.Lam bndr expr)
+    end.
+
+Definition lookupCSEnv : CSEnv -> Core.OutExpr -> option Core.OutExpr :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | CS _ csmap _, expr => TrieMap.lookupCoreMap csmap expr
+    end.
+
+Definition extendCSSubst : CSEnv -> Core.Var -> Core.CoreExpr -> CSEnv :=
+  fun cse x rhs =>
+    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
+    CS (CoreSubst.extendSubst (cs_subst cse) x rhs) cs_map_1__ cs_rec_map_2__.
+
+Definition extendCSRecEnv
+   : CSEnv -> Core.OutId -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
+  fun cse bndr expr triv_expr =>
+    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
+    CS cs_subst_0__ cs_map_1__ (TrieMap.extendCoreMap (cs_rec_map cse) (Core.Lam
+                                                                        bndr expr) triv_expr).
+
+Definition extendCSEnv : CSEnv -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
+  fun cse expr triv_expr =>
+    let sexpr := CoreUtils.stripTicksE Core.tickishFloatable expr in
+    let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+    CS cs_subst_1__ (TrieMap.extendCoreMap (cs_map cse) sexpr triv_expr)
+       cs_rec_map_3__.
+
+Definition emptyCSEnv : CSEnv :=
+  CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap.
 
 Definition csEnvSubst : CSEnv -> CoreSubst.Subst :=
   cs_subst.
@@ -97,56 +129,12 @@ Definition combineAlts : CSEnv -> list Core.InAlt -> list Core.InAlt :=
     | _, _ => j_2__
     end.
 
-Definition emptyCSEnv : CSEnv :=
-  CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap.
-
-Definition extendCSEnv : CSEnv -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
-  fun cse expr triv_expr =>
-    let sexpr := CoreUtils.stripTicksE Core.tickishFloatable expr in
-    let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-    CS cs_subst_1__ (TrieMap.extendCoreMap (cs_map cse) sexpr triv_expr)
-       cs_rec_map_3__.
-
-Definition extendCSRecEnv
-   : CSEnv -> Core.OutId -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
-  fun cse bndr expr triv_expr =>
-    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
-    CS cs_subst_0__ cs_map_1__ (TrieMap.extendCoreMap (cs_rec_map cse) (Core.Lam
-                                                                        bndr expr) triv_expr).
-
-Definition extendCSSubst : CSEnv -> Core.Var -> Core.CoreExpr -> CSEnv :=
-  fun cse x rhs =>
-    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
-    CS (CoreSubst.extendSubst (cs_subst cse) x rhs) cs_map_1__ cs_rec_map_2__.
-
-Definition lookupCSEnv : CSEnv -> Core.OutExpr -> option Core.OutExpr :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | CS _ csmap _, expr => TrieMap.lookupCoreMap csmap expr
-    end.
-
-Definition lookupCSRecEnv
-   : CSEnv -> Core.OutId -> Core.OutExpr -> option Core.OutExpr :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | CS _ _ csmap, bndr, expr => TrieMap.lookupCoreMap csmap (Core.Lam bndr expr)
-    end.
-
-Definition lookupSubst : CSEnv -> Core.Var -> Core.OutExpr :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | CS sub _ _, x =>
-        CoreSubst.lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "CSE.lookupSubst"))
-        sub x
-    end.
-
-Definition noCSE : Core.InId -> bool :=
-  fun id =>
-    orb (andb (negb (BasicTypes.isAlwaysActive (Id.idInlineActivation id))) (negb
-               (BasicTypes.noUserInlineSpec (BasicTypes.inlinePragmaSpec (Id.idInlinePragma
-                                                                          id))))) (orb (BasicTypes.isAnyInlinePragma
-                                                                                        (Id.idInlinePragma id))
-                                                                                       (Id.isJoinId id)).
+Definition addRecBinders
+   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
+  fun cse vs =>
+    let 'pair sub' vs' := CoreSubst.substRecBndrs (cs_subst cse) vs in
+    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
 
 Definition addBinding
    : CSEnv ->
@@ -160,6 +148,19 @@ Definition addBinding
     if noCSE in_id : bool then pair env out_id else
     if use_subst : bool then pair (extendCSSubst env in_id rhs') out_id else
     pair (extendCSEnv env rhs' id_expr') zapped_id.
+
+Definition addBinders
+   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
+  fun cse vs =>
+    let 'pair sub' vs' := CoreSubst.substBndrs (cs_subst cse) vs in
+    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+          CS sub' cs_map_2__ cs_rec_map_3__) vs'.
+
+Definition addBinder : CSEnv -> Core.Var -> (CSEnv * Core.Var)%type :=
+  fun cse v =>
+    let 'pair sub' v' := CoreSubst.substBndr (cs_subst cse) v in
+    pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
+          CS sub' cs_map_2__ cs_rec_map_3__) v'.
 
 Definition cseBind
    : BasicTypes.TopLevelFlag ->
@@ -267,8 +268,8 @@ Definition cseBind
                                      end in
                                  let 'pair env1 bndrs1 := addRecBinders env (GHC.Base.map Data.Tuple.fst
                                                                              pairs) in
-                                 let 'pair env2 pairs' := CSE_NestedRecursion.zipMapAccumL do_one env1 pairs
-                                                                                           bndrs1 in
+                                 let 'pair env2 pairs' := NestedRecursionHelpers.zipMapAccumL do_one env1 pairs
+                                                                                              bndrs1 in
                                  pair env2 (Core.Rec pairs')
                              | _, _, _ => GHC.Err.patternFailure
                              end
@@ -383,8 +384,8 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                                      end in
                                  let 'pair env1 bndrs1 := addRecBinders env (GHC.Base.map Data.Tuple.fst
                                                                              pairs) in
-                                 let 'pair env2 pairs' := CSE_NestedRecursion.zipMapAccumL do_one env1 pairs
-                                                                                           bndrs1 in
+                                 let 'pair env2 pairs' := NestedRecursionHelpers.zipMapAccumL do_one env1 pairs
+                                                                                              bndrs1 in
                                  pair env2 (Core.Rec pairs')
                              | _, _, _ => GHC.Err.patternFailure
                              end
@@ -458,19 +459,20 @@ Definition cse_bind
      BasicTypes.NotTopLevel BasicTypes.TopLevel BasicTypes.TopLevelFlag
      BasicTypes.inlinePragmaSpec BasicTypes.isAlwaysActive
      BasicTypes.isAnyInlinePragma BasicTypes.isTopLevel BasicTypes.noUserInlineSpec
-     CSE_NestedRecursion.zipMapAccumL Core.App Core.Case Core.Cast Core.Coercion
-     Core.CoreBind Core.CoreExpr Core.CoreProgram Core.DEFAULT Core.DataAlt
-     Core.InAlt Core.InExpr Core.InId Core.InType Core.InVar Core.Lam Core.Let
-     Core.Lit Core.Mk_Var Core.NonRec Core.OutExpr Core.OutId Core.OutType Core.Rec
-     Core.Tick Core.Type_ Core.Var Core.elemInScopeSet Core.isId Core.mkInScopeSet
-     Core.tickishFloatable Core.varToCoreExpr CoreFVs.exprFreeVars CoreSubst.Subst
-     CoreSubst.emptySubst CoreSubst.extendSubst CoreSubst.lookupIdSubst
-     CoreSubst.mkEmptySubst CoreSubst.substBndr CoreSubst.substBndrs
-     CoreSubst.substInScope CoreSubst.substRecBndrs CoreUtils.eqExpr
-     CoreUtils.exprIsTickedString CoreUtils.mkAltExpr CoreUtils.mkTicks
-     CoreUtils.stripTicksE CoreUtils.stripTicksT Data.Foldable.all Data.Foldable.null
+     Core.App Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr
+     Core.CoreProgram Core.DEFAULT Core.DataAlt Core.InAlt Core.InExpr Core.InId
+     Core.InType Core.InVar Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec
+     Core.OutExpr Core.OutId Core.OutType Core.Rec Core.Tick Core.Type_ Core.Var
+     Core.elemInScopeSet Core.isId Core.mkInScopeSet Core.tickishFloatable
+     Core.varToCoreExpr CoreFVs.exprFreeVars CoreSubst.Subst CoreSubst.emptySubst
+     CoreSubst.extendSubst CoreSubst.lookupIdSubst CoreSubst.mkEmptySubst
+     CoreSubst.substBndr CoreSubst.substBndrs CoreSubst.substInScope
+     CoreSubst.substRecBndrs CoreUtils.eqExpr CoreUtils.exprIsTickedString
+     CoreUtils.mkAltExpr CoreUtils.mkTicks CoreUtils.stripTicksE
+     CoreUtils.stripTicksT Data.Foldable.all Data.Foldable.null
      Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd Datatypes.id
      GHC.Base.map GHC.Err.patternFailure Id.idInlineActivation Id.idInlinePragma
-     Id.isDeadBinder Id.isJoinId Id.zapIdOccInfo Id.zapIdUsageInfo TrieMap.CoreMap
-     TrieMap.emptyCoreMap TrieMap.extendCoreMap TrieMap.lookupCoreMap Util.filterOut
+     Id.isDeadBinder Id.isJoinId Id.zapIdOccInfo Id.zapIdUsageInfo
+     NestedRecursionHelpers.zipMapAccumL TrieMap.CoreMap TrieMap.emptyCoreMap
+     TrieMap.extendCoreMap TrieMap.lookupCoreMap Util.filterOut
 *)

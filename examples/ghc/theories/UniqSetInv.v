@@ -472,16 +472,21 @@ Program Definition partitionUniqSet {a} `{Unique.Uniquable a}
     | p, existT _ s _ => let '(x,y):= (UniqFM.partitionUFM p s) in (existT _ x _, existT _ y _)
     end.
 Next Obligation.
-  
   unfold UniqInv in *.
   intros x' y' Hl.
-  unfold lookupUFM, partitionUFM in *.
-  destruct x.
-  destruct s.
-admit.
-Admitted.
+  apply wildcard'.
+  destruct x as [m'].
+  destruct s as [m].
+  eapply lookup_partition; eauto.
+Defined.
 Next Obligation.
-Admitted.
+  unfold UniqInv in *.
+  intros x' y' Hl.
+  apply wildcard'.
+  destruct y as [m'].
+  destruct s as [m].  
+  eapply lookup_partition; eauto.
+Defined.
 
 Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.Uniquable b}
    : UniqSet a -> UniqFM.UniqFM b -> UniqSet a :=
@@ -491,9 +496,10 @@ Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.U
     end.
 Next Obligation.
   unfold UniqInv in *.
-  intros x y.
+  intros x' y'.
   unfold lookupUFM, intersectUFM in *.
-  destruct s. destruct arg_1__.
+  destruct s.
+  destruct arg_1__.
   intro h.
   rewrite <- lookup_intersection in h. destruct h.
   eauto.

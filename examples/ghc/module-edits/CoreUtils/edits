@@ -70,10 +70,29 @@ skip CoreUtils.refineDefaultAlt
 in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Type.eqTypeX env t1 t2 = true
 in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Type.eqCoercionX env t1 t2 = true
 in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Core.rnBndrs2 env t1 t2 = env
-in CoreUtils.eqExpr termination go deferred
-in CoreUtils.eqExpr termination go_alt deferred
+in CoreUtils.eqExpr inline mutual go_alt
 
-in CoreUtils.exprIsCheapX termination go deferred
+# This really needs some sort of `add let type` edit
+#
+#     add let type CoreUtil.eqExpr go_alt : Core.RnEnv2 -> (Core.CoreAlt -> (Core.CoreAlt -> bool))
+#
+# See issue #110.
+in CoreUtils.eqExpr rewrite forall, go (Core.mkRnEnv2 in_scope) e1 e2 = let _go_alt : Core.RnEnv2 -> (Core.CoreAlt -> (Core.CoreAlt -> bool)) := go_alt in go (Core.mkRnEnv2 in_scope) e1 e2
+
+# Justified by `NestedRecursionHelpers.all2Map_is_all2_map_map` plus changing
+#
+#     let '(xs,ys) := unzip xys in … ys …
+#
+# to
+#
+#     … (map snd xys) …
+in CoreUtils.eqExpr rewrite forall p, Util.all2 p rs1 rs2 = NestedRecursionHelpers.all2Map p snd snd ps1 ps2
+
+# Justified by `NestedRecursionHelpers.all2` plus `map id =1 id`.  Could also
+# work with a better version of `Util.all2`; see issue #109.
+in CoreUtils.eqExpr rewrite forall p, Util.all2 p a1 a2 = NestedRecursionHelpers.all2Map p id id a1 a2
+
+in CoreUtils.exprIsCheapX inline mutual ok
 
 #
 # TODO: translate PrelNames

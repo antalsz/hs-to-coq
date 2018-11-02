@@ -30,20 +30,22 @@ PASS = \
   GADT \
   Underscore_Module \
   LetPattern \
+	AxiomatizeModule \
+	RedefineAddAxiom
 
 # tests that *should* pass but currently fail
-TODO_PASS  = \
-  TopBind \
+TODO_PASS = \
   InstVar \
   Existential \
   TypeAnnotations \
   StrictPair \
-  MutrecInst \
+  MutrecInst
 
+# tests that *should* pass but currently don't even translate
+TODO_TRANSLATE = \
+  TopBind
 
-
-
-MODULES = $(PASS) $(TODO_PASS)
+MODULES = $(PASS) $(TODO_PASS) $(TODO_TRANSLATE)
 
 VFILES    = $(addsuffix .v,$(MODULES)) Renamed.v
 VOFILES   = $(patsubst %.v,%.vo,$(VFILES))
@@ -57,14 +59,26 @@ main:
 	# even if some fail
 	$(MAKE) -k all
 
-all:  $(VFILES) pass todo_pass
+all:  $(VFILES) pass todo_pass todo_translate
 
 pass: $(addsuffix .pass,$(PASS))
+	@echo
 	@echo -------- END PASS ------------
+	@echo
 
 todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@echo
 	@echo "Any names printed without errors should be moved from TODO_PASS to PASS"
+	@echo -------- END FAIL ------------
+	@echo
+	@echo "(Errors are expected from now on)"
+	@echo
+
+todo_translate: $(foreach f, $(TODO_TRANSLATE), $(f).fail_translate)
+	@echo
+	@echo "Any names that fail should be moved from TODO_TRANSLATE to TODO_PASS"
+	@echo "Any names that pass should be moved from TODO_TRANSLATE to PASS"
+	@echo -------- END UNTRANSLATABLE ------------
 
 %.pass : %.v
 	@/bin/echo -n "$<: "
@@ -74,7 +88,6 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	 then echo -e "\033[1;31mfailed\033[0m (should pass)"; exit 1;  \
 	 else echo -e "\033[1;32mpassed\033[0m"; \
 	 fi
-     
 
 %.fail : %.v
 	@/bin/echo -n "$<: "
@@ -82,6 +95,15 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	 then echo -e "\033[1;31mmissing\033[0m"; \
 	 elif ! $(TYPECHECK) $< >&/dev/null; \
 	 then echo -e "\033[1;31mfailed\033[0m"; \
+	 else echo -e "\033[1;32mpassed\033[0m (unexpected)"; exit 1; \
+	 fi
+
+%.fail_translate : %.v
+	@/bin/echo -n "$<: "
+	@if ! test -e $<; \
+	 then echo -e "\033[1;31mmissing\033[0m"; \
+	 elif ! $(TYPECHECK) $< >&/dev/null; \
+	 then echo -e "\033[1;33mfailed\033[0m (unexpected)"; exit 1;\
 	 else echo -e "\033[1;32mpassed\033[0m (unexpected)"; exit 1; \
 	 fi
 
@@ -93,7 +115,7 @@ todo_pass: $(foreach f,$(TODO_PASS),$(f).fail)
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -N -e renamings -o . $${P_ARG} $*.hs 1>/dev/null
+	$(HS_TO_COQ) $${E_ARG} -N -e renamings -o . $${P_ARG} $*.hs 1>/dev/null || true
 
 Renamed.v: RenameMe.hs RenameMe.hs-boot RenameMeToo.hs RenameMe/edits
 	@rm -f Renamed.v

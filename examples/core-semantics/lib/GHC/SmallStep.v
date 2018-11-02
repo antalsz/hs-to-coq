@@ -66,6 +66,7 @@ Arguments Error {_} _.
 Arguments Done {_}.
 
 Arguments Mk_Step {_} _.
+
 (* Midamble *)
 
 Instance Default_Step {a} : GHC.Err.Default (Step a) :=
@@ -94,50 +95,17 @@ Definition step_measure (conf : Conf) : nat :=
 (* ----------- ----------------------------------- --------------- *)
 (* Converted value declarations: *)
 
-(* Skipping instance Outputable__StackElem of class Outputable *)
+Definition valueToExpr : Value -> Core.CoreExpr :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | DataConApp dc args => Core.mkConApp dc args
+    | LitVal l => Core.Lit l
+    | LamVal v e => Core.Lam v e
+    | CoercionVal co => Core.Coercion co
+    end.
 
-Definition addToHeap : Core.Var -> Core.CoreExpr -> Heap -> Heap :=
-  fun v e heap =>
-    cons (pair v e) (GHC.List.filter ((fun arg_0__ => arg_0__ GHC.Base./= v)
-                                      GHC.Base.∘
-                                      Data.Tuple.fst) heap).
-
-Definition addManyToHeap
-   : list Core.Var -> list Core.CoreExpr -> Heap -> Heap :=
-  fun vs es =>
-    Data.Foldable.foldr _GHC.Base.∘_ GHC.Base.id (GHC.List.zipWith addToHeap vs es).
-
-Definition etaExpandDCWorker : Core.DataCon -> Core.CoreExpr :=
-  fun dc =>
-    let params :=
-      GHC.List.zipWith (fun n t =>
-                          Id.mkSysLocalOrCoVar (FastString.fsLit (GHC.Base.hs_string__ "eta"))
-                          (Unique.mkBuiltinUnique n) t) nil (nil) in
-    Core.mkLams params (Core.mkConApp dc (GHC.Base.map Core.Mk_Var params)).
-
-Definition exprIsTrivial' : Core.CoreExpr -> bool :=
-  fix exprIsTrivial' arg_0__
-        := let j_2__ :=
-             match arg_0__ with
-             | Core.Cast e _ => exprIsTrivial' e
-             | Core.Mk_Var _ => true
-             | Core.Lit _ => true
-             | Core.Coercion _ => true
-             | _ => false
-             end in
-           match arg_0__ with
-           | Core.Tick _ e => exprIsTrivial' e
-           | Core.App e a => if Core.isTypeArg a : bool then exprIsTrivial' e else j_2__
-           | Core.Lam v e => if negb (Core.isId v) : bool then exprIsTrivial' e else j_2__
-           | _ => j_2__
-           end.
-
-Definition in_scope : Heap -> Core.InScopeSet :=
-  Core.mkInScopeSet GHC.Base.∘
-  (Core.mkVarSet GHC.Base.∘ GHC.Base.map Data.Tuple.fst).
-
-Definition initConf : Core.CoreExpr -> Conf :=
-  fun e => pair (pair nil e) nil.
+Definition lookupHeap : Core.Var -> Heap -> option Core.CoreExpr :=
+  GHC.List.lookup.
 
 Definition isDataConApp
    : Core.CoreExpr -> option (Core.DataCon * list Core.CoreArg)%type :=
@@ -160,6 +128,30 @@ Definition isDataConApp
                | _, _ => j_4__
                end in
   go nil.
+
+Definition initConf : Core.CoreExpr -> Conf :=
+  fun e => pair (pair nil e) nil.
+
+Definition in_scope : Heap -> Core.InScopeSet :=
+  Core.mkInScopeSet GHC.Base.∘
+  (Core.mkVarSet GHC.Base.∘ GHC.Base.map Data.Tuple.fst).
+
+Definition exprIsTrivial' : Core.CoreExpr -> bool :=
+  fix exprIsTrivial' arg_0__
+        := let j_2__ :=
+             match arg_0__ with
+             | Core.Cast e _ => exprIsTrivial' e
+             | Core.Mk_Var _ => true
+             | Core.Lit _ => true
+             | Core.Coercion _ => true
+             | _ => false
+             end in
+           match arg_0__ with
+           | Core.Tick _ e => exprIsTrivial' e
+           | Core.App e a => if Core.isTypeArg a : bool then exprIsTrivial' e else j_2__
+           | Core.Lam v e => if negb (Core.isId v) : bool then exprIsTrivial' e else j_2__
+           | _ => j_2__
+           end.
 
 Definition isValue_maybe : Core.CoreExpr -> option Value :=
   fix isValue_maybe arg_0__
@@ -188,17 +180,24 @@ Definition isValue_maybe : Core.CoreExpr -> option Value :=
 Definition isValue : Core.CoreExpr -> bool :=
   fun e => Data.Maybe.isJust (isValue_maybe e).
 
-Definition lookupHeap : Core.Var -> Heap -> option Core.CoreExpr :=
-  GHC.List.lookup.
+Definition etaExpandDCWorker : Core.DataCon -> Core.CoreExpr :=
+  fun dc =>
+    let params :=
+      GHC.List.zipWith (fun n t =>
+                          Id.mkSysLocalOrCoVar (FastString.fsLit (GHC.Base.hs_string__ "eta"))
+                          (Unique.mkBuiltinUnique n) t) nil (nil) in
+    Core.mkLams params (Core.mkConApp dc (GHC.Base.map Core.Mk_Var params)).
 
-Definition valueToExpr : Value -> Core.CoreExpr :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | DataConApp dc args => Core.mkConApp dc args
-    | LitVal l => Core.Lit l
-    | LamVal v e => Core.Lam v e
-    | CoercionVal co => Core.Coercion co
-    end.
+Definition addToHeap : Core.Var -> Core.CoreExpr -> Heap -> Heap :=
+  fun v e heap =>
+    cons (pair v e) (GHC.List.filter ((fun arg_0__ => arg_0__ GHC.Base./= v)
+                                      GHC.Base.∘
+                                      Data.Tuple.fst) heap).
+
+Definition addManyToHeap
+   : list Core.Var -> list Core.CoreExpr -> Heap -> Heap :=
+  fun vs es =>
+    Data.Foldable.foldr _GHC.Base.∘_ GHC.Base.id (GHC.List.zipWith addToHeap vs es).
 
 Definition valStep : (Heap * Value * Stack)%type -> Step Conf :=
   fun arg_0__ =>
@@ -357,6 +356,9 @@ Program Fixpoint step (arg_0__ : Conf) {measure (step_measure arg_0__)} : Step
                       | _ => j_25__
                       end.
 Solve Obligations with (solve_step_obligations).
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `GHC.SmallStep.Outputable__StackElem' *)
 
 (* External variables:
      Bool.Sumbool.sumbool_of_bool None Some bool cons false list negb nil op_zt__

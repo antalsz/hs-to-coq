@@ -45,17 +45,32 @@ Definition ae_cheap_fn (arg_0__ : ArityEnv) :=
 Definition ae_ped_bot (arg_0__ : ArityEnv) :=
   let 'AE _ ae_ped_bot := arg_0__ in
   ae_ped_bot.
+
 (* Converted value declarations: *)
 
-(* Skipping instance Outputable__EtaInfo of class Outputable *)
+Axiom vanillaArityType : ArityType.
 
-(* Skipping instance Outputable__ArityType of class Outputable *)
+Axiom typeArity : unit -> list BasicTypes.OneShotInfo.
+
+Axiom subst_expr : CoreSubst.Subst -> Core.CoreExpr -> Core.CoreExpr.
+
+Axiom pushCoercion : unit -> list EtaInfo -> list EtaInfo.
+
+Axiom mk_cheap_fn : DynFlags.DynFlags -> CoreUtils.CheapAppFun -> CheapFun.
+
+Axiom mkEtaWW : BasicTypes.Arity ->
+                Core.CoreExpr ->
+                Core.InScopeSet -> unit -> (Core.InScopeSet * list EtaInfo)%type.
 
 Axiom manifestArity : Core.CoreExpr -> BasicTypes.Arity.
 
 Axiom joinRhsArity : Core.CoreExpr -> BasicTypes.JoinArity.
 
-Axiom exprArity : Core.CoreExpr -> BasicTypes.Arity.
+Axiom getBotArity : ArityType -> option BasicTypes.Arity.
+
+Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Var)%type.
+
+Axiom floatIn : bool -> ArityType -> ArityType.
 
 Axiom findRhsArity : DynFlags.DynFlags ->
                      Core.Var -> Core.CoreExpr -> BasicTypes.Arity -> (BasicTypes.Arity * bool)%type.
@@ -66,51 +81,39 @@ Axiom exprEtaExpandArity : DynFlags.DynFlags ->
 Axiom exprBotStrictness_maybe : Core.CoreExpr ->
                                 option (BasicTypes.Arity * Core.StrictSig)%type.
 
+Axiom exprArity : Core.CoreExpr -> BasicTypes.Arity.
+
+Axiom etaInfoAppTy : unit -> list EtaInfo -> unit.
+
+Axiom etaInfoApp : CoreSubst.Subst ->
+                   Core.CoreExpr -> list EtaInfo -> Core.CoreExpr.
+
+Axiom etaInfoAbs : list EtaInfo -> Core.CoreExpr -> Core.CoreExpr.
+
+Axiom etaExpandToJoinPointRule : BasicTypes.JoinArity ->
+                                 Core.CoreRule -> Core.CoreRule.
+
+Axiom etaExpandToJoinPoint : BasicTypes.JoinArity ->
+                             Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
+
+Axiom etaExpand : BasicTypes.Arity -> Core.CoreExpr -> Core.CoreExpr.
+
+Axiom etaBodyForJoinPoint : nat ->
+                            Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
+
 Axiom arityType : ArityEnv -> Core.CoreExpr -> ArityType.
-
-Axiom typeArity : unit -> list BasicTypes.OneShotInfo.
-
-Axiom vanillaArityType : ArityType.
-
-Axiom getBotArity : ArityType -> option BasicTypes.Arity.
-
-Axiom mk_cheap_fn : DynFlags.DynFlags -> CoreUtils.CheapAppFun -> CheapFun.
 
 Axiom arityLam : Core.Var -> ArityType -> ArityType.
 
 Axiom arityApp : ArityType -> bool -> ArityType.
 
-Axiom floatIn : bool -> ArityType -> ArityType.
-
 Axiom andArityType : ArityType -> ArityType -> ArityType.
 
-Axiom etaExpand : BasicTypes.Arity -> Core.CoreExpr -> Core.CoreExpr.
+(* Skipping all instances of class `Outputable.Outputable', including
+   `CoreArity.Outputable__ArityType' *)
 
-Axiom mkEtaWW : BasicTypes.Arity ->
-                Core.CoreExpr ->
-                Core.InScopeSet -> unit -> (Core.InScopeSet * list EtaInfo)%type.
-
-Axiom etaInfoApp : CoreSubst.Subst ->
-                   Core.CoreExpr -> list EtaInfo -> Core.CoreExpr.
-
-Axiom pushCoercion : unit -> list EtaInfo -> list EtaInfo.
-
-Axiom etaInfoAbs : list EtaInfo -> Core.CoreExpr -> Core.CoreExpr.
-
-Axiom etaInfoAppTy : unit -> list EtaInfo -> unit.
-
-Axiom subst_expr : CoreSubst.Subst -> Core.CoreExpr -> Core.CoreExpr.
-
-Axiom etaExpandToJoinPoint : BasicTypes.JoinArity ->
-                             Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
-
-Axiom etaExpandToJoinPointRule : BasicTypes.JoinArity ->
-                                 Core.CoreRule -> Core.CoreRule.
-
-Axiom etaBodyForJoinPoint : nat ->
-                            Core.CoreExpr -> (list Core.CoreBndr * Core.CoreExpr)%type.
-
-Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Var)%type.
+(* Skipping all instances of class `Outputable.Outputable', including
+   `CoreArity.Outputable__EtaInfo' *)
 
 (* External variables:
      bool list nat op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity

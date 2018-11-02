@@ -132,7 +132,7 @@ skip CoreSubst.cloneTyVarBndr
 #
 # These two require recursive knot tying
 #
-in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = substIdBndr x (GHC.Err.error Panic.someSDoc)
+in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = CoreSubst.substIdBndr x (GHC.Err.error Panic.someSDoc)
 in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id (GHC.Err.error Panic.someSDoc)
 #
 # Pairs are awful!!

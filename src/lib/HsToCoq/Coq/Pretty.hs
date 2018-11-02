@@ -12,7 +12,7 @@ Stability   : experimental
 
 module HsToCoq.Coq.Pretty (
   renderGallina,
-  showP,
+  showP, textP,
   Gallina(..),
   ) where
 
@@ -141,8 +141,11 @@ maybeParen False = id
 class Gallina a where
   renderGallina' :: Int -> a -> Doc
 
+textP :: Gallina a => a -> Text
+textP = displayTStrict . renderOneLine . renderGallina
+
 showP :: Gallina a => a -> String
-showP = T.unpack . displayTStrict . renderOneLine . renderGallina
+showP = T.unpack . textP
 
 renderGallina :: Gallina a => a -> Doc
 renderGallina = renderGallina' 0
@@ -331,7 +334,12 @@ instance Gallina Term where
            renderGallina' (defaultOpPrec + 1) l </> renderQOp op <!> renderGallina' (defaultOpPrec + 1) r
 
   renderGallina' p (App f args) =  maybeParen (p > appPrec) $
-    renderGallina' appPrec f </> align (render_args' (appPrec + 1) H args)
+    let -- If we're providing a named argument, it turns out we can't use a
+        -- notation, so we avoid doing that for operator names in that case.
+        renderedFunction
+          | Qualid qf <- f, any (\case NamedArg _ _ -> True ; _ -> False) args = renderGallina' appPrec qf
+          | otherwise                                                          = renderGallina' appPrec f
+    in renderedFunction </> align (render_args' (appPrec + 1) H args)
 
   renderGallina' _p (ExplicitApp qid args) = parensN $
     "@" <> renderGallina qid <> softlineIf args <> render_args' (appPrec + 1) H args

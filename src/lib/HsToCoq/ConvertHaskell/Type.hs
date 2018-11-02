@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase,
              OverloadedStrings,
-             FlexibleContexts #-}
+             FlexibleContexts,
+             GeneralizedNewtypeDeriving #-}
 
 module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBndrs, convertLHsSigType, convertLHsSigWcType) where
 
@@ -16,6 +17,7 @@ import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.HsTypes
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.FreeVars
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
@@ -52,12 +54,12 @@ convertType (HsAppTy ty1 ty2) =
 -- bank on never seeing any infix type things.
 convertType (HsAppsTy tys) =
   let assertPrefix (L _ (HsAppPrefix lty)) = convertLType lty
-      assertPrefix (L _ (HsAppInfix _))    = convUnsupported "infix types in type application lists"
+      assertPrefix (L _ (HsAppInfix _))    = convUnsupported' "infix types in type application lists"
   in traverse assertPrefix tys >>= \case
        tyFun:tyArgs ->
          pure $ appList tyFun $ map PosArg tyArgs
        [] ->
-         convUnsupported "empty lists of type applications"
+         convUnsupported' "empty lists of type applications"
 
 convertType (HsFunTy ty1 ty2) =
   Arrow <$> convertLType ty1 <*> convertLType ty2
@@ -66,13 +68,13 @@ convertType (HsListTy ty) =
   App1 (Var "list") <$> convertLType ty
 
 convertType (HsPArrTy _ty) =
-  convUnsupported "parallel arrays (`[:a:]')"
+  convUnsupported' "parallel arrays (`[:a:]')"
 
 convertType (HsTupleTy tupTy tys) = do
   case tupTy of
     HsUnboxedTuple           -> pure () -- TODO: Mark converted unboxed tuples specially?
     HsBoxedTuple             -> pure ()
-    HsConstraintTuple        -> convUnsupported "constraint tuples"
+    HsConstraintTuple        -> convUnsupported' "constraint tuples"
     HsBoxedOrConstraintTuple -> pure () -- Sure, it's boxed, why not
   case tys of
     []   -> pure $ Var "unit"
@@ -89,16 +91,16 @@ convertType (HsIParamTy (L _ (HsIPName ip)) lty) = do
   isTyCallStack <- maybe (pure False) (fmap (== "CallStack") . ghcPpr) $ viewLHsTyVar lty
   if isTyCallStack && ip == fsLit "callStack"
     then pure $ "GHC.Stack.CallStack"
-    else convUnsupported "implicit parameter constraints"
+    else convUnsupported' "implicit parameter constraints"
 
 convertType (HsEqTy _ty1 _ty2) =
-  convUnsupported "type equality" -- FIXME
+  convUnsupported' "type equality" -- FIXME
 
 convertType (HsKindSig ty k) =
   HasType <$> convertLType ty <*> convertLType k
 
 convertType (HsSpliceTy _ _) =
-  convUnsupported "Template Haskell type splices"
+  convUnsupported' "Template Haskell type splices"
 
 convertType (HsDocTy ty _doc) =
   convertLType ty
@@ -107,10 +109,10 @@ convertType (HsBangTy _bang ty) =
   convertLType ty -- Strictness annotations are ignored
 
 convertType (HsRecTy _fields) =
-  convUnsupported "record types" -- FIXME
+  convUnsupported' "record types" -- FIXME
 
 convertType (HsCoreTy _) =
-  convUnsupported "[internal] embedded core types"
+  convUnsupported' "[internal] embedded core types"
 
 convertType (HsExplicitListTy _ _ tys) =
   foldr (App2 $ Var "cons") (Var "nil") <$> traverse convertLType tys
@@ -123,14 +125,14 @@ convertType (HsExplicitTupleTy _PlaceHolders tys) =
 
 convertType (HsTyLit lit) =
   case lit of
-    HsNumTy _src int -> Num <$> convertInteger "type-level integers" int
+    HsNumTy _src int -> either convUnsupported' (pure . Num) $ convertInteger "type-level integers" int
     HsStrTy _src str -> pure $ convertFastString str
 
 convertType (HsWildCardTy _) =
-  convUnsupported "wildcards"
+  convUnsupported' "wildcards"
 
 convertType (HsSumTy _) =
-  convUnsupported "sum types"
+  convUnsupported' "sum types"
 
 --------------------------------------------------------------------------------
 
@@ -139,12 +141,19 @@ convertLType = convertType . unLoc
 
 --------------------------------------------------------------------------------
 
-convertLHsSigType :: ConversionMonad r m => LHsSigType GhcRn -> m Term
-convertLHsSigType (HsIB itvs lty _) =
-  maybeForall <$> (map (Inferred Coq.Implicit . Ident) <$> traverse (var TypeNS) itvs)
-              <*> convertLType lty
+convertLHsSigType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term
+convertLHsSigType utvm (HsIB hs_itvs hs_lty _) = do
+  coq_itvs <- traverse (var TypeNS) hs_itvs
+  coq_ty   <- convertLType hs_lty
+  
+  let coq_binders = Inferred Coq.Implicit . Ident <$> case utvm of
+        PreserveUnusedTyVars -> coq_itvs
+        DeleteUnusedTyVars   -> let fvs = getFreeVars coq_ty
+                                in filter (`elem` fvs) coq_itvs
+  
+  pure $ maybeForall coq_binders coq_ty
 
-convertLHsSigWcType :: ConversionMonad r m => LHsSigWcType GhcRn -> m Term
-convertLHsSigWcType (HsWC wcs hsib)
-  | null wcs  = convertLHsSigType hsib
-  | otherwise = convUnsupported "type wildcards"
+convertLHsSigWcType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigWcType GhcRn -> m Term
+convertLHsSigWcType utvm (HsWC wcs hsib)
+  | null wcs  = convertLHsSigType utvm hsib
+  | otherwise = convUnsupported' "type wildcards"

@@ -19,6 +19,12 @@ redefine Definition Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ {inst_
                            | Data.Either.Right x => runExceptT (k x)
                            end)).
 
+order Control.Monad.Trans.Except.Functor__ExceptT  Control.Monad.Trans.Except.Traversable__ExceptT
+order Control.Monad.Trans.Except.Foldable__ExceptT Control.Monad.Trans.Except.Traversable__ExceptT
+order Control.Monad.Trans.Except.Ord1__ExceptT     Control.Monad.Trans.Except.Ord__ExceptT_compare
+order Control.Monad.Trans.Except.Eq1__ExceptT      Control.Monad.Trans.Except.Ord1__ExceptT
+order Control.Monad.Trans.Except.Eq___ExceptT      Control.Monad.Trans.Except.Ord__ExceptT
+
 # Not sure why I need all these order constriants
 order Control.Monad.Trans.Except.Applicative__ExceptT  Control.Monad.Trans.Except.Monad__ExceptT_return_
 order Control.Monad.Trans.Except.runExceptT Control.Monad.Trans.Except.Monad__ExceptT_op_zgzgze__ Control.Monad.Trans.Except.Monad__ExceptT_op_zgzg__

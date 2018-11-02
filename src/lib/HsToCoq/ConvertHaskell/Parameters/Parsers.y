@@ -21,7 +21,7 @@ import Control.Monad.Except
 import Control.Monad.State
 import Control.Monad.Parse
 
-import GHC (mkModuleName)
+import HsToCoq.Util.GHC.Module (ModuleName(), mkModuleNameT)
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -41,7 +41,11 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %monad { NewlinesParse }
 %lexer { (=<< token) } { TokEOF }
 
+-- Please maintain the format of this list; the token definitions and the
+-- dividing comments of the form `-- Tokens: $CATEGORY` are used to generate an
+-- Emacs major mode with syntax highlighting.
 %token
+  -- Tokens: Edits
   value           { TokWord    "value"          }
   type            { TokWord    "type"           }
   data            { TokWord    "data"           }
@@ -51,17 +55,22 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
+  from            { TokWord    "from"           }
   manual          { TokWord    "manual"         }
   import          { TokWord    "import"         }
   notation        { TokWord    "notation"       }
   class           { TokWord    "class"          }
   kinds           { TokWord    "kinds"          }
+  delete          { TokWord    "delete"         }
+  unused          { TokWord    "unused"         }
+  variables       { TokWord    "variables"      }
   axiomatize      { TokWord    "axiomatize"     }
   definition      { TokWord    "definition"     }
   unaxiomatize    { TokWord    "unaxiomatize"   }
   termination     { TokWord    "termination"    }
   'deferred'      { TokWord    "deferred"       }
   'corecursive'   { TokWord    "corecursive"    }
+  coinductive     { TokWord    "coinductive"    }
   obligations     { TokWord    "obligations"    }
   method          { TokWord    "method"         }
   rename          { TokWord    "rename"         }
@@ -74,6 +83,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   simple          { TokWord    "simple"         }
   inline          { TokWord    "inline"         }
   mutual          { TokWord    "mutual"         }
+  '='             { TokOp      "="              }
+  ':->'           { TokOp      ":->"            }
+  -- Tokens: Coq terms
   as              { TokWord    "as"             }
   fun             { TokWord    "fun"            }
   fix             { TokWord    "fix"            }
@@ -86,9 +98,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   for             { TokWord    "for"            }
   where           { TokWord    "where"          }
   and             { TokWord    "and"            }
-  coinductive     { TokWord    "coinductive"    }
   'measure'       { TokWord    "measure"        }
   'wf'            { TokWord    "wf"             }
+  -- Tokens: Coq commands
   'Inductive'     { TokWord    "Inductive"      }
   'CoInductive'   { TokWord    "CoInductive"    }
   'Definition'    { TokWord    "Definition"     }
@@ -99,8 +111,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'Fixpoint'      { TokWord    "Fixpoint"       }
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
-  '='             { TokOp      "="              }
-  ':->'           { TokOp      ":->"            }
+  'Axiom'         { TokWord    "Axiom"          }
+  -- Tokens: Coq punctuation
   ':'             { TokOp      ":"              }
   '=>'            { TokOp      "=>"             }
   ':='            { TokOp      ":="             }
@@ -111,6 +123,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
   ';'             { TokOp      ";"              }
+  -- Tokens: General
   '('             { TokOpen    '('              }
   ')'             { TokClose   ')'              }
   '{'             { TokOpen    '{'              }
@@ -121,6 +134,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   Op              { TokOp      $$               }
   Num             { TokNat     $$               }
   StringLit       { TokString  $$               }
+-- Tokens: End
 
 %nonassoc GenFixBodyOne
 %nonassoc with
@@ -222,10 +236,11 @@ DataTypeArguments :: { DataTypeArguments }
   | {- empty -}                                                 { DataTypeArguments [] [] }
 
 CoqDefinitionRaw :: { CoqDefinition }
-  : Inductive       { CoqInductiveDef       $1 }
-  | Definition      { CoqDefinitionDef      $1 }
-  | Fixpoint        { CoqFixpointDef        $1 }
-  | Instance        { CoqInstanceDef        $1 }
+  : Inductive       { CoqInductiveDef  $1 }
+  | Definition      { CoqDefinitionDef $1 }
+  | Fixpoint        { CoqFixpointDef   $1 }
+  | Instance        { CoqInstanceDef   $1 }
+  | Axiom           { CoqAxiomDef      $1 }
 
 CoqDefinition :: { CoqDefinition }
   : Coq(CoqDefinitionRaw) '.' { $1 }
@@ -238,33 +253,34 @@ Scope :: { Ident }
   : Word    { $1     }
   | type    { "type" } -- This is so common, we have to special-case it
 
-Edit ::                                          { Edit }
-  : type synonym Word ':->' Word                 { TypeSynonymTypeEdit      $3 $5                            }
-  | data type arguments Qualid DataTypeArguments { DataTypeArgumentsEdit    $4 $5                            }
-  | redefine CoqDefinition                       { RedefinitionEdit         $2                               }
-  | add Word CoqDefinition                       { AddEdit                  (mkModuleName (T.unpack $2)) $3  }
-  | skip Qualid                                  { SkipEdit                 $2                               }
-  | skip method Qualid Word                      { SkipMethodEdit           $3 $4                            }
-  | skip module Word                             { SkipModuleEdit           (mkModuleName (T.unpack $3))     }
-  | import module Word                           { ImportModuleEdit         (mkModuleName (T.unpack $3))     }
-  | manual notation Word                         { HasManualNotationEdit    (mkModuleName (T.unpack $3))     }
-  | termination Qualid TerminationArgument       { TerminationEdit          $2 $3                            }
-  | obligations Qualid Word                      { ObligationsEdit          $2 $3                            }
-  | rename Renaming                              { RenameEdit               (fst $2) (snd $2)                }
-  | axiomatize module Word                       { AxiomatizeModuleEdit     (mkModuleName (T.unpack $3))     }
-  | axiomatize definition Qualid                 { AxiomatizeDefinitionEdit $3                               }
-  | unaxiomatize definition Qualid               { UnaxiomatizeDefinitionEdit     $3                         }
-  | add scope Scope for ScopePlace Qualid        { AdditionalScopeEdit      $5 $6 $3                         }
-  | order Some(Qualid)                           { OrderEdit                $2                               }
-  | class kinds Qualid SepBy1(Term,',')          { ClassKindEdit            $3 $4                            }
-  | data  kinds Qualid SepBy1(Term,',')          { DataKindEdit             $3 $4                            }
-  | coinductive Qualid                           { CoinductiveEdit          $2                               }
-  | rewrite Rewrite                              { RewriteEdit              $2                               }
-  | rename module Word Word                      { RenameModuleEdit         (mkModuleName (T.unpack $3))
-                                                                            (mkModuleName (T.unpack $4))     }
-  | simple class Qualid                          { SimpleClassEdit          $3                               }
-  | inline mutual Qualid                         { InlineMutualEdit         $3                               }
-  | 'in' Qualid Edit                             { InEdit                   $2 $3                            }
+Edit ::                                             { Edit }
+  : type synonym Word ':->' Word                    { TypeSynonymTypeEdit           $3 $5                                 }
+  | data type arguments Qualid DataTypeArguments    { DataTypeArgumentsEdit         $4 $5                                 }
+  | redefine CoqDefinition                          { RedefinitionEdit              $2                                    }
+  | add Word CoqDefinition                          { AddEdit                       (mkModuleNameT $2) $3                 }
+  | skip Qualid                                     { SkipEdit                      $2                                    }
+  | skip class Qualid                               { SkipClassEdit                 $3                                    }
+  | skip method Qualid Word                         { SkipMethodEdit                $3 $4                                 }
+  | skip module Word                                { SkipModuleEdit                (mkModuleNameT $3)                    }
+  | import module Word                              { ImportModuleEdit              (mkModuleNameT $3)                    }
+  | manual notation Word                            { HasManualNotationEdit         (mkModuleNameT $3)                    }
+  | termination Qualid TerminationArgument          { TerminationEdit               $2 $3                                 }
+  | obligations Qualid Word                         { ObligationsEdit               $2 $3                                 }
+  | rename Renaming                                 { RenameEdit                    (fst $2) (snd $2)                     }
+  | axiomatize module Word                          { AxiomatizeModuleEdit          (mkModuleNameT $3)                    }
+  | axiomatize definition Qualid                    { AxiomatizeDefinitionEdit      $3                                    }
+  | unaxiomatize definition Qualid                  { UnaxiomatizeDefinitionEdit    $3                                    }
+  | add scope Scope for ScopePlace Qualid           { AdditionalScopeEdit           $5 $6 $3                              }
+  | order Some(Qualid)                              { OrderEdit                     $2                                    }
+  | class kinds Qualid SepBy1(Term,',')             { ClassKindEdit                 $3 $4                                 }
+  | data  kinds Qualid SepBy1(Term,',')             { DataKindEdit                  $3 $4                                 }
+  | delete unused type variables Qualid             { DeleteUnusedTypeVariablesEdit $5                                    }
+  | coinductive Qualid                              { CoinductiveEdit               $2                                    }
+  | rewrite Rewrite                                 { RewriteEdit                   $2                                    }
+  | rename module Word Word                         { RenameModuleEdit              (mkModuleNameT $3) (mkModuleNameT $4) }
+  | simple class Qualid                             { SimpleClassEdit               $3                                    }
+  | inline mutual Qualid                            { InlineMutualEdit              $3                                    }
+  | 'in' Qualid Edit                                { InEdit                        $2 $3                                 }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -470,6 +486,9 @@ Instance :: { InstanceDefinition }
 
 FieldDefinition :: { (Qualid,Term) }
   : Qualid ':=' Term  { ($1 , $3) }
+
+Axiom :: { (Qualid, Term) }
+  : 'Axiom' Qualid TypeAnnotation    { ($2, $3) }
 
 --------------------------------------------------------------------------------
 -- Haskell code

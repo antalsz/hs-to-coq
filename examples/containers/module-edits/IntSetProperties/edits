@@ -21,6 +21,9 @@ skip Test.QuickCheck.Arbitrary.Arbitrary
 rename value GHC.Real.^ = Coq.NArith.BinNat.N.pow
 rename value enumFromTo = GHC.Enum.enumFromTo
 
+# We define this class ourselves
+skip class Test.QuickCheck.Arbitrary.Arbitrary
+
 skip IntSetProperties.prop_Ordered         # fromAscList
 skip IntSetProperties.prop_bitcount        # local fixpoint
 skip IntSetProperties.prop_findMax         # findMax

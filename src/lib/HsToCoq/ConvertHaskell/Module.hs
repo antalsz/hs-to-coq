@@ -5,7 +5,7 @@ module HsToCoq.ConvertHaskell.Module (
   ConvertedModule(..),
   convertModules,
   -- ** Extract all the declarations from a module
-  moduleDeclarations,
+  ModuleDeclarations(..), moduleDeclarations,
   -- * Convert declaration groups
   ConvertedModuleDeclarations(..), convertHsGroup,
 ) where
@@ -25,6 +25,7 @@ import qualified Data.Map as M
 
 import qualified Data.Text as T
 
+import HsToCoq.Util.FVs
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
@@ -37,6 +38,8 @@ import Data.Data (Data(..))
 
 import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Monad
+import HsToCoq.ConvertHaskell.InfixNames
+import HsToCoq.ConvertHaskell.Variables
 import HsToCoq.ConvertHaskell.Definitions
 import HsToCoq.ConvertHaskell.Expr
 import HsToCoq.ConvertHaskell.Sigs
@@ -62,22 +65,23 @@ convertHsGroup HsGroup{..} = do
   isModuleAxiomatized <- view $ edits.axiomatizedModules.contains mod
   let catchIfAxiomatizing | isModuleAxiomatized = const
                           | otherwise           = gcatch
+  handler             <- whenPermissive axiomatizeBinding
   
-  convertedTyClDecls  <- convertModuleTyClDecls
-                      .  map unLoc
-                      $  concatMap group_tyclds hs_tyclds
-                          -- Ignore roles
+  convertedTyClDecls <- convertModuleTyClDecls
+                     .  map unLoc
+                     $  concatMap group_tyclds hs_tyclds
+                         -- Ignore roles
   convertedValDecls  <- -- TODO RENAMER merge with convertLocalBinds / convertModuleValDecls
     case hs_valds of
       ValBindsIn{} ->
-        convUnsupported "pre-renaming `ValBindsIn' construct post renaming"
+        convUnsupported' "pre-renaming `ValBindsIn' construct post renaming"
       ValBindsOut binds lsigs -> do
         sigs  <- convertLSigs lsigs `catchIfAxiomatizing` const @_ @SomeException (pure M.empty)
         defns <- (convertTypedModuleBindings
                    (map unLoc $ concatMap (bagToList . snd) binds)
                    sigs
                    ??
-                   (Just axiomatizeBinding))
+                   handler)
               $  withConvertedBinding
                    (\cdef@ConvertedDefinition{_convDefName = name} -> ((Just name,) <$>) $ withCurrentDefinition name $ do
                        t  <- view (edits.termination.at name)
@@ -96,14 +100,19 @@ convertHsGroup HsGroup{..} = do
                                   else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
-                   (\_ _ -> convUnsupported "top-level pattern bindings")
-                   (\ax ty -> pure (Just ax, [typedAxiom ax ty]))
+                   (\_ _ -> convUnsupported' "top-level pattern bindings")
+                   (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))
+                   (\name def -> (Just name, [definitionSentence def]) <$ case def of
+                      CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
+                      CoqDefinitionDef       _ -> pure ()
+                      CoqFixpointDef         _ -> pure ()
+                      CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
+                      CoqAxiomDef            _ -> pure ())
         
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
         let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
 
-        defns' <- mapM applyRedefines namedSentences
-        let defnsMap = M.fromList defns'
+        let defnsMap = M.fromList namedSentences
         let ordered = foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
 
         pure $ unnamedSentences ++ ordered
@@ -115,17 +124,13 @@ convertHsGroup HsGroup{..} = do
   pure ConvertedModuleDeclarations{..}
   where
     -- TODO: factor this out?
-    applyRedefines :: ConversionMonad r m => (Qualid, [Sentence]) -> m (Qualid, [Sentence])
-    applyRedefines (name, sentences) =
-      view (edits.redefinitions.at name) >>= ((name,) <$>) . \case
-        Just def ->
-          [definitionSentence def] <$ case def of
-            CoqInductiveDef  _ -> editFailure "cannot redefine a value definition into an Inductive"
-            CoqDefinitionDef _ -> pure ()
-            CoqFixpointDef   _ -> pure ()
-            CoqInstanceDef   _ -> editFailure "cannot redefine a value definition into an Instance"
-        Nothing ->
-          pure sentences
+    axiomatizeBinding :: ConversionMonad r m => HsBind GhcRn -> GhcException -> m (Maybe Qualid, [Sentence])
+    axiomatizeBinding FunBind{..} exn = do
+      name <- var ExprNS (unLoc fun_id)
+      pure (Just name, [translationFailedComment (qualidBase name) exn, axiom name])
+    axiomatizeBinding _ exn =
+      pure (Nothing, [CommentSentence $ Comment $
+        "While translating non-function binding: " <> T.pack (show exn)])
 
 --------------------------------------------------------------------------------
 
@@ -141,7 +146,7 @@ data ConvertedModule =
 
 convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
 convertModule convModNameOrig group = do
-  convModName <- view (edits.renamedModules.at convModNameOrig . non convModNameOrig)
+  convModName <- view $ edits.renamedModules.at convModNameOrig . non convModNameOrig
   withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
@@ -191,16 +196,46 @@ convertModules sources = do
   mods <- traverse (uncurry convertModule) merged
   pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
 
-moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ([Sentence], [Sentence])
+data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sentence]
+                                             , moduleValueDeclarations :: ![Sentence] }
+                        deriving (Eq, Ord, Show, Read, Data)
+
+moduleDeclarations :: GlobalMonad r m => ConvertedModule -> m ModuleDeclarations
 moduleDeclarations ConvertedModule{..} = do
+  let thisModule = moduleNameText convModName
+      localInfixNames qid | maybe True (== thisModule) $ qualidModule qid
+                          , Just op <- identToOp $ qualidBase qid
+                            = S.fromList $ Bare <$> [op, infixToPrefix op]
+                          | otherwise
+                            = S.empty
+      addLocalInfixNamesExcept del (BVs bvs fvs) =
+        BVs bvs $ fvs <> (foldMap localInfixNames fvs S.\\ del)
+      
+      unused = S.singleton . Bare
+      
+      unusedNotations (NotationSentence (NotationBinding (NotationIdentBinding op _))) =
+        unused op <> foldMap unused (prefixOpToInfix op)
+      unusedNotations (NotationSentence (InfixDefinition op _ _ _)) =
+        unused op
+      unusedNotations _ =
+        mempty
+
+      bvWithInfix = addLocalInfixNamesExcept <$> unusedNotations <*> bvOf
+  -- Make sure that @f = … op_zpzp__ …@ depends on @++@ and @_++_@ as well
+  -- as @op_zpzp__@.  But don't produce cycles by depending on yourself.
+  -- This feels like a hack, and like we could use the 'RawQualid'
+  -- constructor, but we don't have the right module information in 'bvOf'
+  -- to do this properly.
+      
   orders <- view $ edits.orders
-  let sorted = topoSortSentences orders $
+  let sorted = topoSortByVariablesBy bvWithInfix orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sorted
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
   imported_modules <- view $ edits.importedModules
-  return $ deQualifyLocalNames (convModName `S.insert` imported_modules)
-         $ (convModTyClDecls ++ ax_decls, sorted ++ not_decls)
+  pure . deQualifyLocalNames (convModName `S.insert` imported_modules)
+       $ ModuleDeclarations { moduleTypeDeclarations  = convModTyClDecls ++ ax_decls
+                            , moduleValueDeclarations = sorted           ++ not_decls }
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.
@@ -243,5 +278,3 @@ qualifiedNotations mod decls = do
     extra :: Bool -> [Sentence]
     extra True  = [ ModuleSentence (ModuleImport Export ["ManualNotations"]) ]
     extra False = []
-
-

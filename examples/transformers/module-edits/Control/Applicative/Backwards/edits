@@ -1,0 +1,4 @@
+order Control.Applicative.Backwards.Functor__Backwards  Control.Applicative.Backwards.Traversable__Backwards
+order Control.Applicative.Backwards.Foldable__Backwards Control.Applicative.Backwards.Traversable__Backwards
+order Control.Applicative.Backwards.Eq1__Backwards      Control.Applicative.Backwards.Ord1__Backwards        Control.Applicative.Backwards.Ord__Backwards_compare
+order Control.Applicative.Backwards.Eq___Backwards      Control.Applicative.Backwards.Ord__Backwards

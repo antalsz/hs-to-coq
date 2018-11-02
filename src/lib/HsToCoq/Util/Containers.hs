@@ -1,23 +1,36 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module HsToCoq.Util.Containers (
+  -- * Sets
   setMapMaybe,
   setMapMaybeM,
+  -- * Maps
   invertMap,
+  -- * Graphs
+  -- ** Connected components
   connectedComponents,
   stronglyConnCompNE, connectedComponentsNE,
   stronglyConnComp', connectedComponents',
+  -- ** Topological sort
+  stableTopoSortBy, stableTopoSortByPlus,
+  -- ** Transitive closure and reachability
   transitiveClosure, transitiveClosureBy,
   reachableFrom,
   Reflexivity(..),
   ) where
 
+import Control.Lens
+
 import Control.Arrow
 import HsToCoq.Util.Monad
 import Control.Monad.State
+import Control.Monad.RWS
 import Data.Foldable
 
 import Data.List.NonEmpty (NonEmpty(..))
+
+import qualified Data.IntSet as IS
 
 import           Data.Set (Set)
 import qualified Data.Set as S
@@ -66,6 +79,50 @@ stronglyConnComp' = simple_sccs stronglyConnComp
 
 connectedComponents' :: Ord vertex => [(vertex, [vertex])] -> [NonEmpty vertex]
 connectedComponents' = simple_sccs connectedComponents
+
+-- |Implements a relatively stable topological sort.  Given
+--
+-- > stableTopoSortBy names dependencies objs = sorted
+--
+-- Then @sorted@ is a permutation of @objs@ such that, for any object @obj@ in
+-- @objs@, all objects named by @dependencies obj@ precede it.  The names of an
+-- object are given by @names obj@.  This algorithm is best-effort if there are
+-- cycles.  See also 'stableTopoSortByPlus'.
+--
+-- This algorithm was inspired by pshub's answer to grimner's Stack Overflow
+-- question "Stable topological sort"
+-- <https://stackoverflow.com/a/11236027/237428>.  However, it doesn't implement
+-- the full priority queue solution.
+stableTopoSortBy :: (Foldable f1, Foldable f2, Foldable f3, Ord k)
+                 => (a -> f1 k) -- ^ The names of each object
+                 -> (a -> f2 k) -- ^ The dependencies of each object (they will /precede/ it)
+                 -> f3 a        -- ^ The objects to sort
+                 -> [a]
+stableTopoSortBy names dependencies objs =
+  (`appEndo` []) . snd $ execRWS (traverse_ visit $ M.keysSet objsById) () IS.empty
+  where
+    objsById  = M.fromList $ zip [0..] (toList objs)
+    idsByName = M.fromList $ [ (name, oid)
+                             | (oid, obj) <- M.assocs objsById
+                             , name <- toList $ names obj ]
+    
+    visit oid = unlessM (use $ contains oid) $ do
+                  contains oid .= True
+                  let obj = objsById M.! oid
+                  traverse_ (traverse_ visit . (M.lookup ?? idsByName)) $ dependencies obj
+                  tell . Endo $ (obj :)
+
+-- |Like 'stableTopoSortBy', but includes extra by-name dependencies.  Given
+--
+-- > stableTopoSortByPlus names dependencies extraDependencies objs = sorted
+--
+-- Then if an object @obj@ has the name @n@, it also must be preceded by every
+-- element of @extraDependencies n@.
+stableTopoSortByPlus :: (Foldable f1, Foldable f2, Foldable f3, Foldable f4, Ord k)
+                     => (a -> f1 k) -> (a -> f2 k) -> (k -> f3 k) -> f4 a -> [a]
+stableTopoSortByPlus names dependencies extraDependencies =
+  stableTopoSortBy names $ \obj ->
+    toList (dependencies obj) ++ foldMap (toList . extraDependencies) (names obj)
 
 data Reflexivity = Irreflexive | Reflexive deriving (Eq, Ord, Enum, Bounded, Show, Read)
 

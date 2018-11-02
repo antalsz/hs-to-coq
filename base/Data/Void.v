@@ -18,46 +18,14 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive Void : Type :=.
+
 (* Converted value declarations: *)
 
-(* Skipping instance Ix__Void of class Ix *)
+Definition absurd {a} : Void -> a :=
+  fun a => match a with end.
 
-(* Skipping instance Exception__Void of class Exception *)
-
-Local Definition Semigroup__Void_op_zlzlzgzg__ : Void -> Void -> Void :=
-  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | a, _ => a end.
-
-Program Instance Semigroup__Void : GHC.Base.Semigroup Void :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Void_op_zlzlzgzg__ |}.
-
-(* Skipping instance Show__Void of class Show *)
-
-(* Skipping instance Read__Void of class Read *)
-
-Local Definition Ord__Void_compare : Void -> Void -> comparison :=
-  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => Eq end.
-
-Local Definition Ord__Void_op_zgze__ : Void -> Void -> bool :=
-  fun x y => Ord__Void_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
-  fun x y => Ord__Void_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__Void_op_zlze__ : Void -> Void -> bool :=
-  fun x y => Ord__Void_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__Void_max : Void -> Void -> Void :=
-  fun x y => if Ord__Void_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__Void_min : Void -> Void -> Void :=
-  fun x y => if Ord__Void_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__Void_op_zl__ : Void -> Void -> bool :=
-  fun x y => Ord__Void_compare x y GHC.Base.== Lt.
-
-(* Skipping instance Generic__Void of class Generic *)
-
-(* Skipping instance Data__Void of class Data *)
+Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
+  GHC.Base.fmap absurd.
 
 Local Definition Eq___Void_op_zeze__ : Void -> Void -> bool :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => true end.
@@ -70,6 +38,33 @@ Program Instance Eq___Void : GHC.Base.Eq_ Void :=
     k {| GHC.Base.op_zeze____ := Eq___Void_op_zeze__ ;
          GHC.Base.op_zsze____ := Eq___Void_op_zsze__ |}.
 
+(* Skipping all instances of class `Data.Data.Data', including
+   `Data.Void.Data__Void' *)
+
+(* Skipping all instances of class `GHC.Generics.Generic', including
+   `Data.Void.Generic__Void' *)
+
+Local Definition Ord__Void_compare : Void -> Void -> comparison :=
+  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, z => Eq end.
+
+Local Definition Ord__Void_op_zl__ : Void -> Void -> bool :=
+  fun x y => Ord__Void_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__Void_op_zlze__ : Void -> Void -> bool :=
+  fun x y => Ord__Void_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__Void_op_zg__ : Void -> Void -> bool :=
+  fun x y => Ord__Void_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__Void_op_zgze__ : Void -> Void -> bool :=
+  fun x y => Ord__Void_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__Void_max : Void -> Void -> Void :=
+  fun x y => if Ord__Void_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__Void_min : Void -> Void -> Void :=
+  fun x y => if Ord__Void_op_zlze__ x y : bool then x else y.
+
 Program Instance Ord__Void : GHC.Base.Ord Void :=
   fun _ k =>
     k {| GHC.Base.op_zl____ := Ord__Void_op_zl__ ;
@@ -80,11 +75,23 @@ Program Instance Ord__Void : GHC.Base.Ord Void :=
          GHC.Base.max__ := Ord__Void_max ;
          GHC.Base.min__ := Ord__Void_min |}.
 
-Definition absurd {a} : Void -> a :=
-  fun a => match a with end.
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.Void.Read__Void' *)
 
-Definition vacuous {f} {a} `{GHC.Base.Functor f} : f Void -> f a :=
-  GHC.Base.fmap absurd.
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.Void.Show__Void' *)
+
+Local Definition Semigroup__Void_op_zlzlzgzg__ : Void -> Void -> Void :=
+  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | a, _ => a end.
+
+Program Instance Semigroup__Void : GHC.Base.Semigroup Void :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Void_op_zlzlzgzg__ |}.
+
+(* Skipping all instances of class `GHC.Exception.Exception', including
+   `Data.Void.Exception__Void' *)
+
+(* Skipping all instances of class `GHC.Arr.Ix', including
+   `Data.Void.Ix__Void' *)
 
 (* External variables:
      Eq Gt Lt bool comparison negb true GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Ord

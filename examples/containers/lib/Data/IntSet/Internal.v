@@ -62,6 +62,7 @@ Instance Default__IntSet : GHC.Err.Default IntSet :=
   GHC.Err.Build_Default _ Nil.
 
 Instance Default__Stack : GHC.Err.Default Stack := GHC.Err.Build_Default _ Nada.
+
 (* Midamble *)
 
 (** Additional definitions for termination proof *)
@@ -85,184 +86,47 @@ Require Import Coq.NArith.NArith.
 
 (* Converted value declarations: *)
 
-(* Skipping instance IsList__IntSet of class IsList *)
+Definition zero : Coq.Numbers.BinNums.N -> Mask -> bool :=
+  fun i m => ((i) Data.Bits..&.(**) (m)) GHC.Base.== #0.
 
-(* Skipping instance Data__IntSet of class Data *)
-
-(* Skipping instance Show__IntSet of class Show *)
-
-(* Skipping instance Read__IntSet of class Read *)
-
-(* Skipping instance NFData__IntSet of class NFData *)
-
-Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | _, _, l, Nil => l
-    | _, _, Nil, r => r
-    | p, m, l, r => Bin p m l r
+Definition tip : Prefix -> BitMap -> IntSet :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, num_2__ =>
+        if num_2__ GHC.Base.== #0 : bool then Nil else
+        match arg_0__, arg_1__ with
+        | kx, bm => Tip kx bm
+        end
     end.
 
-Definition bitmapOfSuffix : Coq.Numbers.BinNums.N -> BitMap :=
-  fun s => Utils.Containers.Internal.BitUtil.shiftLL #1 s.
+Definition suffixBitMask :=
+  Coq.NArith.BinNat.N.ones 6.
 
-Definition branchMask : Prefix -> Prefix -> Mask :=
-  fun p1 p2 =>
-    Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 (Coq.NArith.BinNat.N.lxor p1
-                                                                                  p2)).
+Definition suffixOf : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N :=
+  fun x => x Data.Bits..&.(**) suffixBitMask.
 
-Definition empty : IntSet :=
-  Nil.
+Definition splitRoot : IntSet -> list IntSet :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Nil => nil
+    | (Tip _ _ as x) => cons x nil
+    | Bin _ m l r =>
+        if m GHC.Base.< #0 : bool then cons r (cons l nil) else
+        cons l (cons r nil)
+    end.
 
-Local Definition Monoid__IntSet_mempty : IntSet :=
-  empty.
+Definition size : IntSet -> Coq.Numbers.BinNums.N :=
+  let fix go arg_0__ arg_1__
+            := match arg_0__, arg_1__ with
+               | acc, Bin _ _ l r => go (go acc l) r
+               | acc, Tip _ bm =>
+                   acc GHC.Num.+ Utils.Containers.Internal.BitUtil.bitcount #0 bm
+               | acc, Nil => acc
+               end in
+  go #0.
 
-Definition equal : IntSet -> IntSet -> bool :=
-  fix equal arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
-               andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
-                                                                         r2)))
-           | Tip kx1 bm1, Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (bm1 GHC.Base.== bm2)
-           | Nil, Nil => true
-           | _, _ => false
-           end.
-
-Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
-  fun t1 t2 => equal t1 t2.
-
-Definition indexOfTheOnlyBit :=
-  fun x => Coq.NArith.BinNat.N.log2 x.
-
-Definition lowestBitSet : Nat -> Coq.Numbers.BinNums.N :=
-  fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.lowestBitMask x).
-
-Definition unsafeFindMin : IntSet -> option Key :=
-  fix unsafeFindMin arg_0__
-        := match arg_0__ with
-           | Nil => None
-           | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
-           | Bin _ _ l _ => unsafeFindMin l
-           end.
-
-Definition highestBitSet : Nat -> Coq.Numbers.BinNums.N :=
-  fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
-
-Definition unsafeFindMax : IntSet -> option Key :=
-  fix unsafeFindMax arg_0__
-        := match arg_0__ with
-           | Nil => None
-           | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
-           | Bin _ _ _ r => unsafeFindMax r
-           end.
-
-Program Definition foldlBits {a}
-           : Coq.Numbers.BinNums.N ->
-             (a -> Coq.Numbers.BinNums.N -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
-                                   end
-                               end) in
-            go bitmap z.
-Solve Obligations with (BitTerminationProofs.termination_foldl).
-
-Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldlBits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' l) r
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
-      | _ => go z t
-      end.
-
-Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  foldl.
-
-Definition toDescList : IntSet -> list Key :=
-  foldl (GHC.Base.flip cons) nil.
-
-Program Definition foldl'Bits {a}
-           : Coq.Numbers.BinNums.N ->
-             (a -> Coq.Numbers.BinNums.N -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
-                                   end
-                               end) in
-            go bitmap z.
-Solve Obligations with (BitTerminationProofs.termination_foldl).
-
-Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldl'Bits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' l) r
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
-      | _ => go z t
-      end.
-
-Definition maskW : Nat -> Nat -> Prefix :=
-  fun i m => Coq.NArith.BinNat.N.ldiff i (2 * m - 1 % N).
-
-Definition mask : Coq.Numbers.BinNums.N -> Mask -> Prefix :=
-  fun i m => maskW (i) (m).
-
-Definition match_ : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base.== p.
-
-Definition nomatch : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
-  fun i p m => (mask i m) GHC.Base./= p.
-
-Definition nequal : IntSet -> IntSet -> bool :=
-  fix nequal arg_0__ arg_1__
-        := match arg_0__, arg_1__ with
-           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
-               orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
-                                                                      r2)))
-           | Tip kx1 bm1, Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
-           | Nil, Nil => false
-           | _, _ => true
-           end.
-
-Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
-  fun t1 t2 => nequal t1 t2.
-
-Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
-
-Definition null : IntSet -> bool :=
-  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
+Definition shorter : Mask -> Mask -> bool :=
+  fun m1 m2 => (m1) GHC.Base.> (m2).
 
 Definition revNat : Nat -> Nat :=
   fun x1 =>
@@ -289,260 +153,34 @@ Definition revNat : Nat -> Nat :=
     (Utils.Containers.Internal.BitUtil.shiftRL x6 #32) Data.Bits..|.(**)
     (Utils.Containers.Internal.BitUtil.shiftLL x6 #32).
 
-Definition revNatSafe n :=
-  Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
-
-Program Definition foldrBits {a}
-           : Coq.Numbers.BinNums.N ->
-             (Coq.Numbers.BinNums.N -> a -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
-                                                                          GHC.Num.-
-                                                                          bi)) acc)
-                                   end
-                               end) in
-            go (revNatSafe bitmap) z.
-Solve Obligations with (BitTerminationProofs.termination_foldl).
-
-Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldrBits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' r) l
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
-      | _ => go z t
-      end.
-
-Definition foldrFB {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  foldr.
-
-Definition toAscList : IntSet -> list Key :=
-  foldr cons nil.
-
-Definition toList : IntSet -> list Key :=
-  toAscList.
-
-Definition elems : IntSet -> list Key :=
-  toAscList.
-
-Local Definition Ord__IntSet_compare : IntSet -> IntSet -> comparison :=
-  fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
-
-Local Definition Ord__IntSet_op_zl__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__IntSet_op_zlze__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__IntSet_max : IntSet -> IntSet -> IntSet :=
-  fun x y => if Ord__IntSet_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__IntSet_min : IntSet -> IntSet -> IntSet :=
-  fun x y => if Ord__IntSet_op_zlze__ x y : bool then x else y.
-
-Local Definition Ord__IntSet_op_zg__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__IntSet_op_zgze__ : IntSet -> IntSet -> bool :=
-  fun x y => Ord__IntSet_compare x y GHC.Base./= Lt.
-
-Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__IntSet_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__IntSet_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__IntSet_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__IntSet_op_zgze__ ;
-         GHC.Base.compare__ := Ord__IntSet_compare ;
-         GHC.Base.max__ := Ord__IntSet_max ;
-         GHC.Base.min__ := Ord__IntSet_min |}.
-
-Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  foldr.
-
-Program Definition foldr'Bits {a}
-           : Coq.Numbers.BinNums.N ->
-             (Coq.Numbers.BinNums.N -> a -> a) -> a -> Nat -> a :=
-          fun prefix f z bitmap =>
-            let go :=
-              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
-                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
-                               match arg_0__, arg_1__ with
-                               | num_2__, acc =>
-                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
-                                   match arg_0__, arg_1__ with
-                                   | bm, acc =>
-                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
-                                       let bi := indexOfTheOnlyBit bitmask in
-                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
-                                                                          GHC.Num.-
-                                                                          bi)) acc)
-                                   end
-                               end) in
-            go (revNatSafe bitmap) z.
-Solve Obligations with (BitTerminationProofs.termination_foldl).
-
-Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
-  fun f z =>
-    let fix go arg_0__ arg_1__
-              := match arg_0__, arg_1__ with
-                 | z', Nil => z'
-                 | z', Tip kx bm => foldr'Bits kx f z' bm
-                 | z', Bin _ _ l r => go (go z' r) l
-                 end in
-    fun t =>
-      match t with
-      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
-      | _ => go z t
-      end.
-
-Definition shorter : Mask -> Mask -> bool :=
-  fun m1 m2 => (m1) GHC.Base.> (m2).
-
-Definition size : IntSet -> Coq.Numbers.BinNums.N :=
-  let fix go arg_0__ arg_1__
-            := match arg_0__, arg_1__ with
-               | acc, Bin _ _ l r => go (go acc l) r
-               | acc, Tip _ bm =>
-                   acc GHC.Num.+ Utils.Containers.Internal.BitUtil.bitcount #0 bm
-               | acc, Nil => acc
-               end in
-  go #0.
-
-Definition splitRoot : IntSet -> list IntSet :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Nil => nil
-    | (Tip _ _ as x) => cons x nil
-    | Bin _ m l r =>
-        if m GHC.Base.< #0 : bool then cons r (cons l nil) else
-        cons l (cons r nil)
-    end.
-
-Definition suffixBitMask :=
-  Coq.NArith.BinNat.N.ones 6.
-
-Definition suffixOf : Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N :=
-  fun x => x Data.Bits..&.(**) suffixBitMask.
-
-Definition bitmapOf : Coq.Numbers.BinNums.N -> BitMap :=
-  fun x => bitmapOfSuffix (suffixOf x).
-
 Definition prefixOf : Coq.Numbers.BinNums.N -> Prefix :=
   fun x => Coq.NArith.BinNat.N.ldiff x suffixBitMask.
 
-Definition singleton : Key -> IntSet :=
-  fun x => Tip (prefixOf x) (bitmapOf x).
+Definition null : IntSet -> bool :=
+  fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
-Definition tip : Prefix -> BitMap -> IntSet :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | _, num_2__ =>
-        if num_2__ GHC.Base.== #0 : bool then Nil else
-        match arg_0__, arg_1__ with
-        | kx, bm => Tip kx bm
-        end
-    end.
-
-Definition filter : (Key -> bool) -> IntSet -> IntSet :=
-  fix filter predicate t
-        := let bitPred :=
-             fun kx bm bi =>
-               if predicate (kx GHC.Num.+ bi) : bool
-               then bm Data.Bits..|.(**) bitmapOfSuffix bi else
-               bm in
-           match t with
-           | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
-           | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
-           | Nil => Nil
+Definition nequal : IntSet -> IntSet -> bool :=
+  fix nequal arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
+               orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
+                                                                      r2)))
+           | Tip kx1 bm1, Tip kx2 bm2 => orb (kx1 GHC.Base./= kx2) (bm1 GHC.Base./= bm2)
+           | Nil, Nil => false
+           | _, _ => true
            end.
 
-Definition maxView : IntSet -> option (Key * IntSet)%type :=
-  fun t =>
-    let fix go arg_0__
-              := match arg_0__ with
-                 | Bin p m l r => let 'pair result r' := go r in pair result (bin p m l r')
-                 | Tip kx bm =>
-                     let 'bi := highestBitSet bm in
-                     pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
-                                                                    bitmapOfSuffix bi)))
-                 | Nil => pair (0 % N) Nil
-                 end in
-    let j_12__ := Some (go t) in
-    match t with
-    | Nil => None
-    | Bin p m l r =>
-        if m GHC.Base.< #0 : bool
-        then let 'pair result l' := go l in
-             Some (pair result (bin p m l' r)) else
-        j_12__
-    | _ => j_12__
-    end.
+Definition maskW : Nat -> Nat -> Prefix :=
+  fun i m => Coq.NArith.BinNat.N.ldiff i (2 * m - 1 % N).
 
-Definition deleteMax : IntSet -> IntSet :=
-  Data.Maybe.maybe Nil Data.Tuple.snd GHC.Base.∘ maxView.
+Definition mask : Coq.Numbers.BinNums.N -> Mask -> Prefix :=
+  fun i m => maskW (i) (m).
 
-Definition minView : IntSet -> option (Key * IntSet)%type :=
-  fun t =>
-    let fix go arg_0__
-              := match arg_0__ with
-                 | Bin p m l r => let 'pair result l' := go l in pair result (bin p m l' r)
-                 | Tip kx bm =>
-                     let 'bi := lowestBitSet bm in
-                     pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
-                                                                    bitmapOfSuffix bi)))
-                 | Nil => pair (0 % N) Nil
-                 end in
-    let j_12__ := Some (go t) in
-    match t with
-    | Nil => None
-    | Bin p m l r =>
-        if m GHC.Base.< #0 : bool
-        then let 'pair result r' := go r in
-             Some (pair result (bin p m l r')) else
-        j_12__
-    | _ => j_12__
-    end.
+Definition match_ : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base.== p.
 
-Definition deleteMin : IntSet -> IntSet :=
-  Data.Maybe.maybe Nil Data.Tuple.snd GHC.Base.∘ minView.
-
-Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
-  fun predicate0 t0 =>
-    let fix go predicate t
-              := let bitPred :=
-                   fun kx bm bi =>
-                     if predicate (kx GHC.Num.+ bi) : bool
-                     then bm Data.Bits..|.(**) bitmapOfSuffix bi else
-                     bm in
-                 match t with
-                 | Bin p m l r =>
-                     let 'pair r1 r2 := go predicate r in
-                     let 'pair l1 l2 := go predicate l in
-                     pair (bin p m l1 r1) (bin p m l2 r2)
-                 | Tip kx bm =>
-                     let bm1 := foldl'Bits #0 (bitPred kx) #0 bm in
-                     pair (tip kx bm1) (tip kx (Data.Bits.xor bm bm1))
-                 | Nil => (pair Nil Nil)
-                 end in
-    id (go predicate0 t0).
-
-Definition zero : Coq.Numbers.BinNums.N -> Mask -> bool :=
-  fun i m => ((i) Data.Bits..&.(**) (m)) GHC.Base.== #0.
+Definition nomatch : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
+  fun i p m => (mask i m) GHC.Base./= p.
 
 Definition subsetCmp : IntSet -> IntSet -> comparison :=
   fix subsetCmp arg_0__ arg_1__
@@ -589,9 +227,6 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
                end
            end.
 
-Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
-  fun t1 t2 => match subsetCmp t1 t2 with | Lt => true | _ => false end.
-
 Definition isSubsetOf : IntSet -> IntSet -> bool :=
   fix isSubsetOf arg_0__ arg_1__
         := match arg_0__, arg_1__ with
@@ -617,6 +252,212 @@ Definition isSubsetOf : IntSet -> IntSet -> bool :=
                | Nil, _ => true
                end
            end.
+
+Definition isProperSubsetOf : IntSet -> IntSet -> bool :=
+  fun t1 t2 => match subsetCmp t1 t2 with | Lt => true | _ => false end.
+
+Definition indexOfTheOnlyBit :=
+  fun x => Coq.NArith.BinNat.N.log2 x.
+
+Definition lowestBitSet : Nat -> Coq.Numbers.BinNums.N :=
+  fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.lowestBitMask x).
+
+Definition unsafeFindMin : IntSet -> option Key :=
+  fix unsafeFindMin arg_0__
+        := match arg_0__ with
+           | Nil => None
+           | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
+           | Bin _ _ l _ => unsafeFindMin l
+           end.
+
+Definition highestBitSet : Nat -> Coq.Numbers.BinNums.N :=
+  fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
+
+Definition unsafeFindMax : IntSet -> option Key :=
+  fix unsafeFindMax arg_0__
+        := match arg_0__ with
+           | Nil => None
+           | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
+           | Bin _ _ _ r => unsafeFindMax r
+           end.
+
+Definition revNatSafe n :=
+  Coq.NArith.BinNat.N.modulo (revNat n) (Coq.NArith.BinNat.N.pow 2 64).
+
+Program Definition foldrBits {a}
+           : Coq.Numbers.BinNums.N ->
+             (Coq.Numbers.BinNums.N -> a -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
+                                                                          GHC.Num.-
+                                                                          bi)) acc)
+                                   end
+                               end) in
+            go (revNatSafe bitmap) z.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
+
+Program Definition foldr'Bits {a}
+           : Coq.Numbers.BinNums.N ->
+             (Coq.Numbers.BinNums.N -> a -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) ((f ((prefix GHC.Num.+ (#64 GHC.Num.- #1))
+                                                                          GHC.Num.-
+                                                                          bi)) acc)
+                                   end
+                               end) in
+            go (revNatSafe bitmap) z.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
+
+Definition foldr' {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldr'Bits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' r) l
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
+      | _ => go z t
+      end.
+
+Definition foldr {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldrBits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' r) l
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z l) r else go (go z r) l
+      | _ => go z t
+      end.
+
+Definition foldrFB {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  foldr.
+
+Definition toAscList : IntSet -> list Key :=
+  foldr cons nil.
+
+Definition toList : IntSet -> list Key :=
+  toAscList.
+
+Program Definition foldlBits {a}
+           : Coq.Numbers.BinNums.N ->
+             (a -> Coq.Numbers.BinNums.N -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
+                                   end
+                               end) in
+            go bitmap z.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
+
+Program Definition foldl'Bits {a}
+           : Coq.Numbers.BinNums.N ->
+             (a -> Coq.Numbers.BinNums.N -> a) -> a -> Nat -> a :=
+          fun prefix f z bitmap =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               Coq.NArith.BinNat.N.to_nat arg_0__) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | num_2__, acc =>
+                                   if Bool.Sumbool.sumbool_of_bool (num_2__ GHC.Base.== #0) then acc else
+                                   match arg_0__, arg_1__ with
+                                   | bm, acc =>
+                                       let bitmask := Utils.Containers.Internal.BitUtil.lowestBitMask bm in
+                                       let bi := indexOfTheOnlyBit bitmask in
+                                       go (Data.Bits.xor bm bitmask) (f acc (prefix GHC.Num.+ bi))
+                                   end
+                               end) in
+            go bitmap z.
+Solve Obligations with (BitTerminationProofs.termination_foldl).
+
+Definition foldl' {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldl'Bits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' l) r
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
+      | _ => go z t
+      end.
+
+Definition foldl {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  fun f z =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | z', Nil => z'
+                 | z', Tip kx bm => foldlBits kx f z' bm
+                 | z', Bin _ _ l r => go (go z' l) r
+                 end in
+    fun t =>
+      match t with
+      | Bin _ m l r => if m GHC.Base.< #0 : bool then go (go z r) l else go (go z l) r
+      | _ => go z t
+      end.
+
+Definition foldlFB {a} : (a -> Key -> a) -> a -> IntSet -> a :=
+  foldl.
+
+Definition toDescList : IntSet -> list Key :=
+  foldl (GHC.Base.flip cons) nil.
+
+Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
+  foldr.
+
+Definition equal : IntSet -> IntSet -> bool :=
+  fix equal arg_0__ arg_1__
+        := match arg_0__, arg_1__ with
+           | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
+               andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
+                                                                         r2)))
+           | Tip kx1 bm1, Tip kx2 bm2 => andb (kx1 GHC.Base.== kx2) (bm1 GHC.Base.== bm2)
+           | Nil, Nil => true
+           | _, _ => false
+           end.
+
+Definition empty : IntSet :=
+  Nil.
+
+Definition elems : IntSet -> list Key :=
+  toAscList.
 
 Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                           {measure (size_nat arg_0__ + size_nat arg_1__)} : bool
@@ -668,6 +509,11 @@ Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
                       end.
 Solve Obligations with (termination_by_omega).
 
+Definition branchMask : Prefix -> Prefix -> Mask :=
+  fun p1 p2 =>
+    Coq.NArith.BinNat.N.pow 2 (Coq.NArith.BinNat.N.log2 (Coq.NArith.BinNat.N.lxor p1
+                                                                                  p2)).
+
 Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
   fun p1 t1 p2 t2 =>
     let m := branchMask p1 p2 in
@@ -685,15 +531,6 @@ Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
                link kx (Tip kx bm) kx' t
            | kx, bm, Nil => Tip kx bm
            end.
-
-Definition insert : Key -> IntSet -> IntSet :=
-  fun x => insertBM (prefixOf x) (bitmapOf x).
-
-Definition fromList : list Key -> IntSet :=
-  fun xs => let ins := fun t x => insert x t in Data.Foldable.foldl' ins empty xs.
-
-Definition map : (Key -> Key) -> IntSet -> IntSet :=
-  fun f => fromList GHC.Base.∘ (GHC.Base.map f GHC.Base.∘ toList).
 
 Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) {measure (size_nat
                         arg_0__ +
@@ -725,23 +562,20 @@ Solve Obligations with (termination_by_omega).
 Definition unions {f} `{Data.Foldable.Foldable f} : f IntSet -> IntSet :=
   fun xs => Data.Foldable.foldl' union empty xs.
 
-Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
-  unions.
+Definition bitmapOfSuffix : Coq.Numbers.BinNums.N -> BitMap :=
+  fun s => Utils.Containers.Internal.BitUtil.shiftLL #1 s.
 
-Local Definition Semigroup__IntSet_op_zlzlzgzg__ : IntSet -> IntSet -> IntSet :=
-  union.
+Definition bitmapOf : Coq.Numbers.BinNums.N -> BitMap :=
+  fun x => bitmapOfSuffix (suffixOf x).
 
-Program Instance Semigroup__IntSet : GHC.Base.Semigroup IntSet :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
+Definition insert : Key -> IntSet -> IntSet :=
+  fun x => insertBM (prefixOf x) (bitmapOf x).
 
-Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
-  _GHC.Base.<<>>_.
+Definition fromList : list Key -> IntSet :=
+  fun xs => let ins := fun t x => insert x t in Data.Foldable.foldl' ins empty xs.
 
-Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
-         GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
-         GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
+Definition map : (Key -> Key) -> IntSet -> IntSet :=
+  fun f => fromList GHC.Base.∘ (GHC.Base.map f GHC.Base.∘ toList).
 
 Definition lookupGE : Key -> IntSet -> option Key :=
   fun x t =>
@@ -893,6 +727,9 @@ Definition member : Key -> IntSet -> bool :=
 Definition notMember : Key -> IntSet -> bool :=
   fun k => negb GHC.Base.∘ member k.
 
+Definition singleton : Key -> IntSet :=
+  fun x => Tip (prefixOf x) (bitmapOf x).
+
 Definition split : Key -> IntSet -> (IntSet * IntSet)%type :=
   fun x t =>
     let fix go arg_0__ arg_1__
@@ -973,6 +810,14 @@ Definition splitMember : Key -> IntSet -> (IntSet * bool * IntSet)%type :=
     | _ => j_22__
     end.
 
+Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | _, _, l, Nil => l
+    | _, _, Nil, r => r
+    | p, m, l, r => Bin p m l r
+    end.
+
 Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
   fix deleteBM arg_0__ arg_1__ arg_2__
         := match arg_0__, arg_1__, arg_2__ with
@@ -1035,6 +880,19 @@ Notation "'_\\_'" := (op_zrzr__).
 
 Infix "\\" := (_\\_) (at level 99).
 
+Definition filter : (Key -> bool) -> IntSet -> IntSet :=
+  fix filter predicate t
+        := let bitPred :=
+             fun kx bm bi =>
+               if predicate (kx GHC.Num.+ bi) : bool
+               then bm Data.Bits..|.(**) bitmapOfSuffix bi else
+               bm in
+           match t with
+           | Bin p m l r => bin p m (filter predicate l) (filter predicate r)
+           | Tip kx bm => tip kx (foldl'Bits #0 (bitPred kx) #0 bm)
+           | Nil => Nil
+           end.
+
 Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
                               {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
                    := match arg_0__, arg_1__ with
@@ -1084,6 +942,154 @@ Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
                       | Nil, _ => Nil
                       end.
 Solve Obligations with (termination_by_omega).
+
+Definition maxView : IntSet -> option (Key * IntSet)%type :=
+  fun t =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Bin p m l r => let 'pair result r' := go r in pair result (bin p m l r')
+                 | Tip kx bm =>
+                     let 'bi := highestBitSet bm in
+                     pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
+                                                                    bitmapOfSuffix bi)))
+                 | Nil => pair (0 % N) Nil
+                 end in
+    let j_12__ := Some (go t) in
+    match t with
+    | Nil => None
+    | Bin p m l r =>
+        if m GHC.Base.< #0 : bool
+        then let 'pair result l' := go l in
+             Some (pair result (bin p m l' r)) else
+        j_12__
+    | _ => j_12__
+    end.
+
+Definition deleteMax : IntSet -> IntSet :=
+  Data.Maybe.maybe Nil Data.Tuple.snd GHC.Base.∘ maxView.
+
+Definition minView : IntSet -> option (Key * IntSet)%type :=
+  fun t =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | Bin p m l r => let 'pair result l' := go l in pair result (bin p m l' r)
+                 | Tip kx bm =>
+                     let 'bi := lowestBitSet bm in
+                     pair (kx GHC.Num.+ bi) (tip kx (Data.Bits.xor bm (bm Data.Bits..&.(**)
+                                                                    bitmapOfSuffix bi)))
+                 | Nil => pair (0 % N) Nil
+                 end in
+    let j_12__ := Some (go t) in
+    match t with
+    | Nil => None
+    | Bin p m l r =>
+        if m GHC.Base.< #0 : bool
+        then let 'pair result r' := go r in
+             Some (pair result (bin p m l r')) else
+        j_12__
+    | _ => j_12__
+    end.
+
+Definition deleteMin : IntSet -> IntSet :=
+  Data.Maybe.maybe Nil Data.Tuple.snd GHC.Base.∘ minView.
+
+Definition partition : (Key -> bool) -> IntSet -> (IntSet * IntSet)%type :=
+  fun predicate0 t0 =>
+    let fix go predicate t
+              := let bitPred :=
+                   fun kx bm bi =>
+                     if predicate (kx GHC.Num.+ bi) : bool
+                     then bm Data.Bits..|.(**) bitmapOfSuffix bi else
+                     bm in
+                 match t with
+                 | Bin p m l r =>
+                     let 'pair r1 r2 := go predicate r in
+                     let 'pair l1 l2 := go predicate l in
+                     pair (bin p m l1 r1) (bin p m l2 r2)
+                 | Tip kx bm =>
+                     let bm1 := foldl'Bits #0 (bitPred kx) #0 bm in
+                     pair (tip kx bm1) (tip kx (Data.Bits.xor bm bm1))
+                 | Nil => (pair Nil Nil)
+                 end in
+    id (go predicate0 t0).
+
+(* Skipping all instances of class `Control.DeepSeq.NFData', including
+   `Data.IntSet.Internal.NFData__IntSet' *)
+
+(* Skipping all instances of class `GHC.Read.Read', including
+   `Data.IntSet.Internal.Read__IntSet' *)
+
+(* Skipping all instances of class `GHC.Show.Show', including
+   `Data.IntSet.Internal.Show__IntSet' *)
+
+Local Definition Ord__IntSet_compare : IntSet -> IntSet -> comparison :=
+  fun s1 s2 => GHC.Base.compare (toAscList s1) (toAscList s2).
+
+Local Definition Ord__IntSet_op_zl__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base.== Lt.
+
+Local Definition Ord__IntSet_op_zlze__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base./= Gt.
+
+Local Definition Ord__IntSet_op_zg__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base.== Gt.
+
+Local Definition Ord__IntSet_op_zgze__ : IntSet -> IntSet -> bool :=
+  fun x y => Ord__IntSet_compare x y GHC.Base./= Lt.
+
+Local Definition Ord__IntSet_max : IntSet -> IntSet -> IntSet :=
+  fun x y => if Ord__IntSet_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__IntSet_min : IntSet -> IntSet -> IntSet :=
+  fun x y => if Ord__IntSet_op_zlze__ x y : bool then x else y.
+
+Local Definition Eq___IntSet_op_zeze__ : IntSet -> IntSet -> bool :=
+  fun t1 t2 => equal t1 t2.
+
+Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
+  fun t1 t2 => nequal t1 t2.
+
+Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
+  fun _ k =>
+    k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
+         GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
+
+Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
+  fun _ k =>
+    k {| GHC.Base.op_zl____ := Ord__IntSet_op_zl__ ;
+         GHC.Base.op_zlze____ := Ord__IntSet_op_zlze__ ;
+         GHC.Base.op_zg____ := Ord__IntSet_op_zg__ ;
+         GHC.Base.op_zgze____ := Ord__IntSet_op_zgze__ ;
+         GHC.Base.compare__ := Ord__IntSet_compare ;
+         GHC.Base.max__ := Ord__IntSet_max ;
+         GHC.Base.min__ := Ord__IntSet_min |}.
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Data.IntSet.Internal.Data__IntSet' *)
+
+Local Definition Semigroup__IntSet_op_zlzlzgzg__ : IntSet -> IntSet -> IntSet :=
+  union.
+
+Program Instance Semigroup__IntSet : GHC.Base.Semigroup IntSet :=
+  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
+  _GHC.Base.<<>>_.
+
+Local Definition Monoid__IntSet_mconcat : list IntSet -> IntSet :=
+  unions.
+
+Local Definition Monoid__IntSet_mempty : IntSet :=
+  empty.
+
+Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
+  fun _ k =>
+    k {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
+         GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
+         GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
+
+(* Skipping all instances of class `GHC.Exts.IsList', including
+   `Data.IntSet.Internal.IsList__IntSet' *)
 
 Module Notations.
 Notation "'_Data.IntSet.Internal.\\_'" := (op_zrzr__).

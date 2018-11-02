@@ -14,13 +14,17 @@ module HsToCoq.Coq.FreeVars (
   getFreeVars, getFreeVars', definedBy,
   NoBinding(..),
   -- * Utility methods
-  topoSortEnvironment, topoSortEnvironmentWith, topoSortSentences,
+  topoSortEnvironment, topoSortEnvironmentWith, topoSortByVariablesBy, topoSortByVariables,
   ) where
 
 import Prelude hiding (Num)
 
+import Control.Lens hiding ((<|))
+
 import Data.Foldable
+import HsToCoq.Util.List
 import HsToCoq.Util.Containers
+
 import HsToCoq.Util.FVs
 
 import Data.List.NonEmpty (NonEmpty(), (<|))
@@ -28,7 +32,6 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
-import Data.Maybe (fromMaybe)
 import GHC.TypeLits
 
 import HsToCoq.Coq.Gallina
@@ -116,21 +119,21 @@ instance HasBV Qualid (Qualid, [Pattern]) where
   bvOf (con, pats) = fvOf' con <> foldMap bvOf pats
 
 instance HasBV Qualid Sentence where
-  bvOf (AssumptionSentence    assum)      = bvOf assum
-  bvOf (DefinitionSentence    def)        = bvOf def
-  bvOf (InductiveSentence     ind)        = bvOf ind
-  bvOf (FixpointSentence      fix)        = bvOf fix
-  bvOf (ProgramSentence       sen _)      = bvOf sen
-  bvOf (AssertionSentence     assert _pf) = bvOf assert
+  bvOf (AssumptionSentence    assum)      = bvOf   assum
+  bvOf (DefinitionSentence    def)        = bvOf   def
+  bvOf (InductiveSentence     ind)        = bvOf   ind
+  bvOf (FixpointSentence      fix)        = bvOf   fix
+  bvOf (ProgramSentence       sen _)      = bvOf   sen
+  bvOf (AssertionSentence     assert _pf) = bvOf   assert
   bvOf (ModuleSentence        _mod)       = mempty
-  bvOf (ClassSentence         cls)        = bvOf cls
-  bvOf (ExistingClassSentence name)       = fvOf' name
-  bvOf (RecordSentence        rcd)        = bvOf rcd
-  bvOf (InstanceSentence      ins)        = bvOf ins
-  bvOf (NotationSentence      not)        = fvOf' not
-  bvOf (LocalModuleSentence   lmd)        = bvOf lmd
+  bvOf (ClassSentence         cls)        = bvOf   cls
+  bvOf (ExistingClassSentence name)       = fvOf'  name
+  bvOf (RecordSentence        rcd)        = bvOf   rcd
+  bvOf (InstanceSentence      ins)        = bvOf   ins
+  bvOf (NotationSentence      not)        = bvOf   not
+  bvOf (LocalModuleSentence   lmd)        = bvOf   lmd
   bvOf (ArgumentsSentence     _arg)       = mempty
-  bvOf (CommentSentence       com)        = fvOf' com
+  bvOf (CommentSentence       com)        = fvOf'  com
 
 instance HasBV Qualid Assumption where
   bvOf (Assumption _kwd assumptions) = bvOf assumptions
@@ -145,12 +148,12 @@ instance HasBV Qualid Definition where
     = binder x <> bindsNothing (foldScopes bvOf args $ fvOf oty <> fvOf def)
 
 instance HasBV Qualid Inductive where
-  bvOf (Inductive   ibs nots) = scopesMutually bvOf ibs `telescope` fvOf' nots
-  bvOf (CoInductive cbs nots) = scopesMutually bvOf cbs `telescope` fvOf' nots
+  bvOf (Inductive   ibs nots) = scopesMutually id $ (bvOf <$> ibs) ++> (bvOf <$> nots)
+  bvOf (CoInductive cbs nots) = scopesMutually id $ (bvOf <$> cbs) ++> (bvOf <$> nots)
 
 instance HasBV Qualid Fixpoint where
-  bvOf (Fixpoint   fbs nots) = scopesMutually bvOf fbs `telescope` fvOf' nots
-  bvOf (CoFixpoint cbs nots) = scopesMutually bvOf cbs `telescope` fvOf' nots
+  bvOf (Fixpoint   fbs nots) =  scopesMutually id $ (bvOf <$> fbs) ++> (bvOf <$> nots)
+  bvOf (CoFixpoint cbs nots) =  scopesMutually id $ (bvOf <$> cbs) ++> (bvOf <$> nots)
 
 instance HasBV Qualid Assertion where
   bvOf (Assertion _kwd name args ty) =
@@ -177,6 +180,13 @@ instance HasBV Qualid InstanceDefinition where
     binder inst <>
     bindsNothing (foldScopes bvOf params $ fvOf cl <> fvOf term)
 
+instance HasBV Qualid Notation where
+  bvOf (ReservedNotationIdent _)     = mempty
+  bvOf (NotationBinding nb)          = bvOf nb
+  bvOf (InfixDefinition op defn _ _) = binder (Bare op) <> fvOf' defn
+
+instance HasBV Qualid NotationBinding where
+  bvOf (NotationIdentBinding op def) = binder (Bare op) <> fvOf' def
 
 instance HasBV Qualid LocalModule where
   bvOf (LocalModule _name sentences) = foldTelescope bvOf sentences
@@ -285,7 +295,6 @@ instance HasFV Qualid Locality where
   fvOf Global = mempty
   fvOf Local  = mempty
 
-
 instance HasFV Qualid AssertionKeyword where
   fvOf Theorem     = mempty
   fvOf Lemma       = mempty
@@ -295,16 +304,6 @@ instance HasFV Qualid AssertionKeyword where
   fvOf Proposition = mempty
   fvOf Definition  = mempty
   fvOf Example     = mempty
-
-instance HasFV Qualid Notation where
-  -- Notations are not bindings sites, because our AST always refers to the
-  -- Qualid corresponding to the notation)
-  fvOf (ReservedNotationIdent _)    = mempty
-  fvOf (NotationBinding nb)         = fvOf nb
-  fvOf (InfixDefinition _ defn _ _) = fvOf defn
-
-instance HasFV Qualid NotationBinding where
-  fvOf (NotationIdentBinding _ def) = fvOf def
 
 instance HasFV Qualid t => HasFV Qualid (Maybe t) where
   fvOf = foldMap fvOf
@@ -335,30 +334,14 @@ topoSortEnvironmentWith fvs = stronglyConnComp' . M.toList
 topoSortEnvironment :: HasFV Qualid t => Map Qualid t -> [NonEmpty Qualid]
 topoSortEnvironment = topoSortEnvironmentWith getFreeVars
 
-type ExtraFreeVars = M.Map Qualid (S.Set Qualid)
+type ExtraFreeVars = Map Qualid (Set Qualid)
 
--- | Sort Sentences based on their free variables and the
--- extra edges provided. Tries to keep sentences in order otherwise.
-topoSortSentences :: ExtraFreeVars -> [Sentence] -> [Sentence]
-topoSortSentences extraFVs sentences = sorted
-  where
-    numSentences = zip [0..] sentences
-    canonMap = M.fromList [ (i,n) | (n,s) <- numSentences, i <- definedBy s]
+-- | Sort 'Sentence's or similar based on their free variables and the extra
+-- edges provided. Tries to keep sentences in order otherwise.
+topoSortByVariablesBy :: HasBV Qualid b => (a -> b) -> ExtraFreeVars -> [a] -> [a]
+topoSortByVariablesBy toBV extraFVs = stableTopoSortByPlus (definedBy . toBV)
+                                                           (getFreeVars' . toBV)
+                                                           (M.findWithDefault S.empty ?? extraFVs)
 
-    canon :: Qualid -> Maybe Int
-    canon i =  M.lookup i canonMap
-
-    extras :: Qualid -> S.Set Qualid
-    extras i = fromMaybe S.empty $ M.lookup i extraFVs
-
-    graph = reverse $
-        -- The reverse makes the sorting “stable” when there are edges missing
-        -- A bit of a hack, but hey.
-        [ (s, n, uses)
-        | (n,s) <- numSentences
-        , let BVs defined free = bvOf s
-        , let uses = toList $ setMapMaybe canon $ free <> foldMap extras defined
-        ]
-    sorted = foldMap toList $ stronglyConnCompNE graph
-
-
+topoSortByVariables :: HasBV Qualid a => ExtraFreeVars -> [a] -> [a]
+topoSortByVariables = topoSortByVariablesBy id

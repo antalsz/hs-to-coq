@@ -22,29 +22,36 @@ skip module GHC.Integer.Type
 ## Classes that are generally not interesting
 # or where we don’t want any interfaces translated
 # automatically
-skip Data.Data.Data
-skip GHC.Show.Show
-skip GHC.Read.Read
-skip GHC.Generics.Generic
-skip GHC.Generics.Generic1
-skip GHC.Exception.Exception
-skip GHC.Arr.Ix
-skip Data.Bits.Bits
-skip Data.Bits.FiniteBits
-skip GHC.Float.Floating
-skip GHC.Real.Fractional
-skip GHC.Real.Integral
-skip GHC.Real.Real
-skip GHC.Real.RealFrac
-skip GHC.Float.RealFloat
-skip Foreign.Storable.Storable
-skip Control.Monad.Fix.MonadFix
-skip GHC.Base.Alternative
-skip GHC.Base.MonadPlus
-skip Control.DeepSeq.NFData
-skip Data.Functor.Classes.Show1
-skip Data.Functor.Classes.Read1
-skip GHC.Exts.IsList
+skip class Data.Data.Data
+skip class GHC.Show.Show
+skip class GHC.Read.Read
+skip class GHC.Generics.Generic
+skip class GHC.Generics.Generic1
+skip class GHC.Exception.Exception
+skip class GHC.Arr.Ix
+skip class Data.Bits.Bits
+skip class Data.Bits.FiniteBits
+skip class GHC.Float.Floating
+skip class GHC.Real.Fractional
+skip class GHC.Real.Integral
+skip class GHC.Real.Real
+skip class GHC.Real.RealFrac
+skip class GHC.Float.RealFloat
+skip class Foreign.Storable.Storable
+skip class Control.Monad.Fix.MonadFix
+skip class GHC.Base.Alternative
+skip class GHC.Base.MonadPlus
+skip class Control.DeepSeq.NFData
+skip class Data.Functor.Classes.Show1
+skip class Data.Functor.Classes.Read1
+skip class Data.Functor.Classes.Read2
+skip class Data.Functor.Classes.Show2
+skip class GHC.Exts.IsList
+
+## Classes that we define manually -- we need a better story for this.
+skip class GHC.Num.Num
+skip class GHC.Enum.Bounded
+skip class GHC.Enum.Enum
 
 rename type GHC.IO.FilePath = GHC.Base.String
 
@@ -130,7 +137,6 @@ skip method GHC.Enum.Enum enumFromThen
 skip method GHC.Enum.Enum enumFromThenTo
 skip method GHC.Base.Semigroup stimes
 skip method GHC.Base.Semigroup sconcat
-
 
 # deprecated
 skip method Data.Bits.Bits bitSize

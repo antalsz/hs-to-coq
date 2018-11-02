@@ -10,7 +10,9 @@ module HsToCoq.Util.List (
   insertSorted, insertSortedBy,
   -- * Nonempty lists
   unconsNEL, unsnocNEL, (|:), (|>), snocNEL,
-  (<++), (++>)
+  (<++), (++>),
+  -- * English
+  explainItems, explainStrItems
 ) where
 
 import Control.Lens hiding (uncons, unsnoc, (<|), (|>))
@@ -27,6 +29,9 @@ import Data.Maybe
 import Data.Tuple
 
 import Data.List.NonEmpty (NonEmpty(..), (<|))
+
+import Data.Text (Text)
+import qualified Data.Text as T
 
 unconsNEL :: NonEmpty a -> (a, [a])
 unconsNEL (x :| xs) = (x, xs)
@@ -105,3 +110,24 @@ splitCommonPrefixOf l ss =
 
 splitCommonPrefix :: (Traversable t, Eq a) => t [a] -> ([a], t [a])
 splitCommonPrefix = splitCommonPrefixOf id
+
+-- TODO: Differentiate arguments somehow
+explainItems :: Foldable f => (a -> Text) -> Text -> Text -> Text -> Text -> Text -> f a -> Text
+explainItems disp no sep conj item items stuff =
+  case unsnoc $ disp <$> toList stuff of
+    Nothing                    -> no <+> items
+    Just ([], thing)           -> item <+> thing
+    Just ([thing1], thing2)    -> items <+> thing1 <+> conj <+> thing2
+    Just (things,   lastThing) -> items <+> T.intercalate (sep <> space) things <> sep <+> conj <+> lastThing
+  where
+    s1 <+> s2 | T.null s1 = s2
+              | T.null s2 = s1
+              | otherwise = s1 <> space <> s2
+    infixr 5 <+>
+    
+    space = T.singleton ' '
+
+-- TODO: Differentiate arguments somehow
+explainStrItems :: Foldable f => (a -> String) -> String -> String -> String -> String -> String -> f a -> String
+explainStrItems disp no sep conj item items =
+  T.unpack . explainItems (T.pack . disp) (T.pack no) (T.pack sep) (T.pack conj) (T.pack item) (T.pack items)

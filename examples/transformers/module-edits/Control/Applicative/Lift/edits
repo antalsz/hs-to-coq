@@ -1,0 +1,5 @@
+order Control.Applicative.Lift.Functor__Lift  Control.Applicative.Lift.Applicative__Lift_liftA2
+order Control.Applicative.Lift.Functor__Lift  Control.Applicative.Lift.Traversable__Lift
+order Control.Applicative.Lift.Foldable__Lift Control.Applicative.Lift.Traversable__Lift
+order Control.Applicative.Lift.Eq1__Lift      Control.Applicative.Lift.Ord1__Lift               Control.Applicative.Lift.Ord__Lift_compare
+order Control.Applicative.Lift.Eq___Lift      Control.Applicative.Lift.Ord__Lift

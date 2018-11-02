@@ -31,19 +31,20 @@ import Data.Traversable
 import HsToCoq.Util.Traversable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import HsToCoq.Util.List
 
 import Control.Arrow ((&&&))
 import Control.Monad
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
--- import HsToCoq.Util.Containers
 
 import GHC hiding (Name, HsString)
 
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
+import HsToCoq.Coq.Pretty
 import HsToCoq.Util.FVs
 
 import Data.Generics hiding (Generic, Fixity(..))
@@ -57,27 +58,28 @@ import HsToCoq.ConvertHaskell.Declarations.TypeSynonym
 import HsToCoq.ConvertHaskell.Declarations.DataType
 import HsToCoq.ConvertHaskell.Declarations.Class
 
-import Exception
-
 --------------------------------------------------------------------------------
 
-data ConvertedDeclaration = ConvData  Bool IndBody
-                          | ConvSyn   SynBody
-                          | ConvClass ClassBody
+data ConvertedDeclaration = ConvData    Bool IndBody
+                          | ConvSyn     SynBody
+                          | ConvClass   ClassBody
+                          | ConvAxiom   (Qualid,Term)
                           | ConvFailure Qualid Sentence
                           deriving (Eq, Ord, Show, Read)
 
 instance HasBV Qualid ConvertedDeclaration where
-  bvOf (ConvData  _ ind)   = bvOf ind
-  bvOf (ConvSyn     syn)   = bvOf syn
-  bvOf (ConvClass   cls)   = bvOf cls
+  bvOf (ConvData    _ ind) = bvOf ind
+  bvOf (ConvSyn       syn) = bvOf syn
+  bvOf (ConvClass     cls) = bvOf cls
+  bvOf (ConvAxiom     axm) = bvOf $ uncurry typedAxiom axm
   bvOf (ConvFailure _ sen) = bvOf sen
 
 convDeclName :: ConvertedDeclaration -> Qualid
-convDeclName (ConvData _ (IndBody                    tyName  _ _ _))    = tyName
-convDeclName (ConvSyn    (SynBody                    synName _ _ _))    = synName
-convDeclName (ConvClass  (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
-convDeclName (ConvFailure n _)                                         = n
+convDeclName (ConvData    _ (IndBody                    tyName  _ _ _))    = tyName
+convDeclName (ConvSyn       (SynBody                    synName _ _ _))    = synName
+convDeclName (ConvClass     (ClassBody (ClassDefinition clsName _ _ _) _)) = clsName
+convDeclName (ConvAxiom     (axName, _))                                   = axName
+convDeclName (ConvFailure n _)                                             = n
 
 failTyClDecl :: ConversionMonad r m => Qualid -> GhcException -> m (Maybe ConvertedDeclaration)
 failTyClDecl name e = pure $ Just $
@@ -86,50 +88,78 @@ failTyClDecl name e = pure $ Just $
 convertTyClDecl :: ConversionMonad r m => TyClDecl GhcRn -> m (Maybe ConvertedDeclaration)
 convertTyClDecl decl = do
   coqName <- var TypeNS . unLoc $ tyClDeclLName decl
-  withCurrentDefinition coqName $ ghandle (failTyClDecl coqName) $ do
-    let isCoind = view (edits.coinductiveTypes.contains coqName)
-    view (edits.skipped.contains coqName) >>= \case
-      True  -> pure Nothing
-      False -> view (edits.redefinitions.at coqName) >>= fmap Just . \case
-        Nothing -> case decl of
-          FamDecl{}     -> convUnsupported "type/data families"
-          SynDecl{..}   -> ConvSyn              <$> convertSynDecl   tcdLName (hsq_explicit tcdTyVars) tcdRhs
-          DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl  tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
-          ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt  tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
-
-        Just redef -> do
-          case (decl, redef) of
-            (SynDecl{},  CoqDefinitionDef def) ->
-              pure . ConvSyn $ case def of
-                DefinitionDef _ name args oty body -> SynBody name args oty body
-                LetDef          name args oty body -> SynBody name args oty body
-
-            (DataDecl{}, CoqInductiveDef ind) ->
-              case ind of
-                Inductive   (body :| [])  []    -> pure $ ConvData False body
-                CoInductive (body :| [])  []    -> pure $ ConvData True body
-                Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
-                Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
-                CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
-
-            (FamDecl{}, _) ->
-              editFailure "cannot redefine type/data families"
-
-            (ClassDecl{}, _) ->
-              editFailure "cannot redefine type class declarations"
-
-            _ ->
-              let from = case decl of
-                           FamDecl{}   -> "a type/data family"
-                           SynDecl{}   -> "a type synonym"
-                           DataDecl{}  -> "a data type"
-                           ClassDecl{} -> "a type class"
-                  to   = case redef of
-                           CoqDefinitionDef       _ -> "a Definition"
-                           CoqFixpointDef         _ -> "a Fixpoint"
-                           CoqInductiveDef        _ -> "an Inductive"
-                           CoqInstanceDef         _ -> "an Instance Definition"
-              in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
+  withCurrentDefinition coqName $ handleIfPermissive (failTyClDecl coqName) $
+    view (edits.skippedClasses.contains coqName) >>= \case
+      True | isClassDecl decl -> pure Nothing
+           | otherwise        -> convUnsupported "skipping non-type classes with `skip class`"
+      
+      False -> 
+        definitionTask coqName >>= \case
+          SkipIt
+            | isClassDecl decl -> convUnsupported "skipping type class declarations (without `skip class')"
+            | otherwise        -> pure Nothing
+          
+          RedefineIt redef ->
+            Just <$> case (decl, redef) of
+              (_,          CoqAxiomDef axm) ->
+                pure $ ConvAxiom axm
+              
+              (SynDecl{},  CoqDefinitionDef def) ->
+                pure . ConvSyn $ case def of
+                  DefinitionDef _ name args oty body -> SynBody name args oty body
+                  LetDef          name args oty body -> SynBody name args oty body
+              
+              (DataDecl{}, CoqInductiveDef ind) ->
+                case ind of
+                  Inductive   (body :| [])  []    -> pure $ ConvData False body
+                  CoInductive (body :| [])  []    -> pure $ ConvData True body
+                  Inductive   (_    :| _:_) _     -> editFailure $ "cannot redefine data type to mutually-recursive types"
+                  Inductive   _             (_:_) -> editFailure $ "cannot redefine data type to include notations"
+                  CoInductive _             _     -> editFailure $ "cannot redefine data type to be coinductive"
+              
+              (FamDecl{}, _) ->
+                editFailure "cannot redefine type/data families"
+              
+              (ClassDecl{}, _) ->
+                editFailure "cannot redefine type class declarations"
+              
+              _ ->
+                let from = case decl of
+                             FamDecl{}   -> "a type/data family"
+                             SynDecl{}   -> "a type synonym"
+                             DataDecl{}  -> "a data type"
+                             ClassDecl{} -> "a type class"
+                    to   = case redef of
+                             CoqDefinitionDef _ -> "a Definition"
+                             CoqFixpointDef   _ -> "a Fixpoint"
+                             CoqInductiveDef  _ -> "an Inductive"
+                             CoqInstanceDef   _ -> "an Instance"
+                             CoqAxiomDef      _ -> "an Axiom"
+                in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
+          
+          AxiomatizeIt SpecificAxiomatize ->
+            let (what, whats) = case decl of
+                                  FamDecl{}   -> ("type/data family", "type/data families")
+                                  SynDecl{}   -> ("type synonym",     "type synonyms")
+                                  DataDecl{}  -> ("data type",        "data types")
+                                  ClassDecl{} -> ("type class",       "type classes")
+            in convUnsupportedIn ("axiomatizing " ++ whats ++ " (without `redefine Axiom')") what (showP coqName)
+          
+          TranslateIt ->
+            translateIt coqName
+          AxiomatizeIt GeneralAxiomatize ->
+            -- If we're axiomatizing the MODULE, then we still want to translate
+            -- type-level definitions.
+            translateIt coqName
+  where
+    translateIt :: LocalConvMonad r m => Qualid -> m (Maybe ConvertedDeclaration)
+    translateIt coqName =
+      let isCoind = view (edits.coinductiveTypes.contains coqName)
+      in Just <$> case decl of
+           FamDecl{}     -> convUnsupported "type/data families"
+           SynDecl{..}   -> ConvSyn              <$> convertSynDecl           tcdLName (hsq_explicit tcdTyVars) tcdRhs
+           DataDecl{..}  -> ConvData <$> isCoind <*> convertDataDecl          tcdLName (hsq_explicit tcdTyVars) tcdDataDefn
+           ClassDecl{..} -> ConvClass            <$> convertClassDecl tcdCtxt tcdLName (hsq_explicit tcdTyVars) tcdFDs tcdSigs tcdMeths tcdATs tcdATDefs
 
 --------------------------------------------------------------------------------
 
@@ -137,45 +167,63 @@ data DeclarationGroup = DeclarationGroup { dgInductives   :: [IndBody]
                                          , dgCoInductives :: [IndBody]
                                          , dgSynonyms     :: [SynBody]
                                          , dgClasses      :: [ClassBody]
-                                         , dgFailures     :: [Sentence]}
+                                         , dgAxioms       :: [(Qualid,Term)]
+                                         , dgFailures     :: [Sentence] }
                       deriving (Eq, Ord, Show, Read, Generic)
 instance Semigroup DeclarationGroup where (<>)   = (%<>)
 instance Monoid    DeclarationGroup where mempty = gmempty
 
 singletonDeclarationGroup :: ConvertedDeclaration -> DeclarationGroup
-singletonDeclarationGroup (ConvData False ind)     = DeclarationGroup [ind] []    []    []    []
-singletonDeclarationGroup (ConvData True  coi)     = DeclarationGroup []    [coi] []    []    []
-singletonDeclarationGroup (ConvSyn   syn)          = DeclarationGroup []    []    [syn] []    []
-singletonDeclarationGroup (ConvClass cls)          = DeclarationGroup []    []    []    [cls] []
-singletonDeclarationGroup (ConvFailure _ sen)      = DeclarationGroup []    []    []    []    [sen]
+singletonDeclarationGroup (ConvData     False ind) = DeclarationGroup [ind] []    []    []    []    []
+singletonDeclarationGroup (ConvData     True  coi) = DeclarationGroup []    [coi] []    []    []    []
+singletonDeclarationGroup (ConvSyn            syn) = DeclarationGroup []    []    [syn] []    []    []
+singletonDeclarationGroup (ConvClass          cls) = DeclarationGroup []    []    []    [cls] []    []
+singletonDeclarationGroup (ConvAxiom          axm) = DeclarationGroup []    []    []    []    [axm] []
+singletonDeclarationGroup (ConvFailure _      sen) = DeclarationGroup []    []    []    []    []    [sen]
 
 --------------------------------------------------------------------------------
 
 convertDeclarationGroup :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 convertDeclarationGroup DeclarationGroup{..} =
-    (dgFailures ++) <$>
-    case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses) of
-  (Just inds, Nothing, Nothing, Nothing) ->
-    pure [InductiveSentence $ Inductive inds []]
-
-  (Nothing, Just coinds, Nothing, Nothing) ->
-    pure [InductiveSentence $ CoInductive coinds []]
-
-  (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing) ->
-    pure [DefinitionSentence $ DefinitionDef Global name args oty def]
-
-  (Just inds, Nothing, Just syns, Nothing) ->
-    pure $  foldMap recSynType syns
-         ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
-
-  (Nothing, Nothing, Nothing, Just (classDef :| [])) ->
-    classSentences classDef
-
-  (Nothing, Nothing, Nothing, Nothing) ->
-    pure []
-
-  (_, _, _, _) ->
-    convUnsupported "too much mutual recursion"
+  (dgFailures ++) <$> case (nonEmpty dgInductives, nonEmpty dgCoInductives, nonEmpty dgSynonyms, nonEmpty dgClasses, nonEmpty dgAxioms) of
+    (Nothing, Nothing, Nothing, Nothing, Just [axm]) ->
+      pure [uncurry typedAxiom axm]
+    
+    (Just inds, Nothing, Nothing, Nothing, Nothing) ->
+      pure [InductiveSentence $ Inductive inds []]
+    
+    (Nothing, Just coinds, Nothing, Nothing, Nothing) ->
+      pure [InductiveSentence $ CoInductive coinds []]
+    
+    (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing, Nothing) ->
+      pure [DefinitionSentence $ DefinitionDef Global name args oty def]
+    
+    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
+      pure $  foldMap recSynType syns
+           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
+    
+    (Nothing, Nothing, Nothing, Just (classDef :| []), Nothing) ->
+      classSentences classDef
+    
+    (Nothing, Nothing, Nothing, Nothing, Nothing) ->
+      pure []
+    
+    (_, _, _, _, _) ->
+      let indName (IndBody name _ _ _)                       = name
+          synName (SynBody name _ _ _)                       = name
+          clsName (ClassBody (ClassDefinition name _ _ _) _) = name
+          axmName (name, _)                                  = name
+          
+          explain :: String -> String -> (a -> Qualid) -> [a] -> Maybe (String, String)
+          explain _what _whats _name []  = Nothing
+          explain  what _whats  name [x] = Just (what,  showP $ name x)
+          explain _what  whats  name xs  = Just (whats, explainStrItems (showP . name) "" "," "and" "" "" xs)
+      in convUnsupportedIns "too much mutual recursion" $
+                            catMaybes [ explain "inductive type"   "inductive types"   indName dgInductives
+                                      , explain "coinductive type" "coinductive types" indName dgCoInductives
+                                      , explain "type synonym"     "type synonyms"     synName dgSynonyms
+                                      , explain "type class"       "type classes"      clsName dgClasses
+                                      , explain "type axiom"       "type axioms"       axmName dgAxioms ]
 
   where
     synName = qualidExtendBase "__raw"

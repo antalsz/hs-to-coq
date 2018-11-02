@@ -35,6 +35,7 @@ Import GHC.Num.Notations.
 
 Definition CallArityRes :=
   (UnVarGraph.UnVarGraph * Core.VarEnv BasicTypes.Arity)%type%type.
+
 (* Midamble *)
 
 (* We parameterize this because we don't have type information *)
@@ -60,54 +61,27 @@ Parameter callArityBind1
 
 (* Converted value declarations: *)
 
-Definition addCrossCoCalls
-   : UnVarGraph.UnVarSet -> UnVarGraph.UnVarSet -> CallArityRes -> CallArityRes :=
-  fun set1 set2 =>
-    arrow_first (fun arg_0__ =>
-                   UnVarGraph.unionUnVarGraph (UnVarGraph.completeBipartiteGraph set1 set2)
-                                              arg_0__).
+Definition unitArityRes : Core.Var -> BasicTypes.Arity -> CallArityRes :=
+  fun v arity => pair UnVarGraph.emptyUnVarGraph (Core.unitVarEnv v arity).
 
-Definition calledWith : CallArityRes -> Core.Var -> UnVarGraph.UnVarSet :=
+Definition trimArity : Core.Var -> BasicTypes.Arity -> BasicTypes.Arity :=
+  fun v a =>
+    let 'pair demands result_info := Core.splitStrictSig (Id.idStrictness v) in
+    let max_arity_by_strsig :=
+      if Core.isBotRes result_info : bool then Coq.Lists.List.length demands else
+      a in
+    let max_arity_by_type := Coq.Lists.List.length (typeArity (tt)) in
+    Data.Foldable.foldr GHC.Base.min a (cons max_arity_by_type (cons
+                                              max_arity_by_strsig nil)).
+
+Definition resDel : Core.Var -> CallArityRes -> CallArityRes :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | pair g _, v => UnVarGraph.neighbors g v
+    | v, pair g ae => pair (UnVarGraph.delNode g v) (Core.delVarEnv ae v)
     end.
 
-Definition domRes : CallArityRes -> UnVarGraph.UnVarSet :=
-  fun '(pair _ ae) => UnVarGraph.varEnvDom ae.
-
-Definition calledMultipleTimes : CallArityRes -> CallArityRes :=
-  fun res =>
-    arrow_first (GHC.Base.const (UnVarGraph.completeGraph (domRes res))) res.
-
-Definition emptyArityRes : CallArityRes :=
-  pair UnVarGraph.emptyUnVarGraph Core.emptyVarEnv.
-
-Definition isInteresting : Core.Var -> bool :=
-  fun v => negb (Data.Foldable.null (typeArity (tt))).
-
-Definition interestingBinds : Core.CoreBind -> list Core.Var :=
-  GHC.List.filter isInteresting GHC.Base.∘ Core.bindersOf.
-
-Definition addInterestingBinds : Core.VarSet -> Core.CoreBind -> Core.VarSet :=
-  fun int bind =>
-    Core.extendVarSetList (Core.delVarSetList int (Core.bindersOf bind))
-                          (interestingBinds bind).
-
-Definition boringBinds : Core.CoreBind -> Core.VarSet :=
-  Core.mkVarSet GHC.Base.∘
-  (GHC.List.filter (negb GHC.Base.∘ isInteresting) GHC.Base.∘ Core.bindersOf).
-
-Definition lookupCallArityRes
-   : CallArityRes -> Core.Var -> (BasicTypes.Arity * bool)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | pair g ae, v =>
-        match Core.lookupVarEnv ae v with
-        | Some a => pair a (negb (UnVarGraph.elemUnVarSet v (UnVarGraph.neighbors g v)))
-        | None => pair #0 false
-        end
-    end.
+Definition resDelList : list Core.Var -> CallArityRes -> CallArityRes :=
+  fun vs ae => Data.Foldable.foldr resDel ae vs.
 
 Definition lubArityEnv
    : Core.VarEnv BasicTypes.Arity ->
@@ -121,8 +95,41 @@ Definition lubRes : CallArityRes -> CallArityRes -> CallArityRes :=
         pair (UnVarGraph.unionUnVarGraph g1 g2) (lubArityEnv ae1 ae2)
     end.
 
+Definition lookupCallArityRes
+   : CallArityRes -> Core.Var -> (BasicTypes.Arity * bool)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | pair g ae, v =>
+        match Core.lookupVarEnv ae v with
+        | Some a => pair a (negb (UnVarGraph.elemUnVarSet v (UnVarGraph.neighbors g v)))
+        | None => pair #0 false
+        end
+    end.
+
+Definition isInteresting : Core.Var -> bool :=
+  fun v => negb (Data.Foldable.null (typeArity (tt))).
+
+Definition interestingBinds : Core.CoreBind -> list Core.Var :=
+  GHC.List.filter isInteresting GHC.Base.∘ Core.bindersOf.
+
+Definition emptyArityRes : CallArityRes :=
+  pair UnVarGraph.emptyUnVarGraph Core.emptyVarEnv.
+
 Definition lubRess : list CallArityRes -> CallArityRes :=
   Data.Foldable.foldl lubRes emptyArityRes.
+
+Definition domRes : CallArityRes -> UnVarGraph.UnVarSet :=
+  fun '(pair _ ae) => UnVarGraph.varEnvDom ae.
+
+Definition calledWith : CallArityRes -> Core.Var -> UnVarGraph.UnVarSet :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | pair g _, v => UnVarGraph.neighbors g v
+    end.
+
+Definition calledMultipleTimes : CallArityRes -> CallArityRes :=
+  fun res =>
+    arrow_first (GHC.Base.const (UnVarGraph.completeGraph (domRes res))) res.
 
 Definition callArityRecEnv
    : bool ->
@@ -154,30 +161,24 @@ Definition callArityRecEnv
       ae_combined in
     ae_new.
 
+Definition boringBinds : Core.CoreBind -> Core.VarSet :=
+  Core.mkVarSet GHC.Base.∘
+  (GHC.List.filter (negb GHC.Base.∘ isInteresting) GHC.Base.∘ Core.bindersOf).
+
+Definition addInterestingBinds : Core.VarSet -> Core.CoreBind -> Core.VarSet :=
+  fun int bind =>
+    Core.extendVarSetList (Core.delVarSetList int (Core.bindersOf bind))
+                          (interestingBinds bind).
+
+Definition addCrossCoCalls
+   : UnVarGraph.UnVarSet -> UnVarGraph.UnVarSet -> CallArityRes -> CallArityRes :=
+  fun set1 set2 =>
+    arrow_first (fun arg_0__ =>
+                   UnVarGraph.unionUnVarGraph (UnVarGraph.completeBipartiteGraph set1 set2)
+                                              arg_0__).
+
 Definition both : CallArityRes -> CallArityRes -> CallArityRes :=
   fun r1 r2 => addCrossCoCalls (domRes r1) (domRes r2) (lubRes r1 r2).
-
-Definition resDel : Core.Var -> CallArityRes -> CallArityRes :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | v, pair g ae => pair (UnVarGraph.delNode g v) (Core.delVarEnv ae v)
-    end.
-
-Definition resDelList : list Core.Var -> CallArityRes -> CallArityRes :=
-  fun vs ae => Data.Foldable.foldr resDel ae vs.
-
-Definition trimArity : Core.Var -> BasicTypes.Arity -> BasicTypes.Arity :=
-  fun v a =>
-    let 'pair demands result_info := Core.splitStrictSig (Id.idStrictness v) in
-    let max_arity_by_strsig :=
-      if Core.isBotRes result_info : bool then Coq.Lists.List.length demands else
-      a in
-    let max_arity_by_type := Coq.Lists.List.length (typeArity (tt)) in
-    Data.Foldable.foldr GHC.Base.min a (cons max_arity_by_type (cons
-                                              max_arity_by_strsig nil)).
-
-Definition unitArityRes : Core.Var -> BasicTypes.Arity -> CallArityRes :=
-  fun v arity => pair UnVarGraph.emptyUnVarGraph (Core.unitVarEnv v arity).
 
 Definition callArityAnal
    : BasicTypes.Arity ->

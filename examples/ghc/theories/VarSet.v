@@ -1,3 +1,6 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
 From Coq Require Import ssreflect ssrfun ssrbool.
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -1390,16 +1393,6 @@ Proof.
   fsetdec.
 Qed.
 
-(*
-Lemma elemVarSet_unitVarSet: forall v1 v2,
-  (elemVarSet v1 (unitVarSet v2) ) <-> (varUnique v1 = varUnique v2).
-Proof.
-  intros v1 v2.
-  set_b_iff.
-  rewrite singleton_iff.
-  unfold Var_as_DT.eqb.
-  unfold_zeze.
-Admitted. *)
 
 Lemma false_is_not_true :
   forall b, b = false <-> b <> true.

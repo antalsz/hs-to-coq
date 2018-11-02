@@ -1,3 +1,7 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
+
 From mathcomp.ssreflect
 Require Import ssreflect ssrnat prime ssrbool eqtype.
 
@@ -385,39 +389,3 @@ Qed.
 
 
 
-
-
-Lemma elemVarSet_minusDom_1
-     : forall (a : Type) (env : VarEnv a) (vs : VarSet) (v : Var),
-       lookupVarEnv env v = None ->
-       elemVarSet v (minusDom vs env) = elemVarSet v vs.
-Admitted.
-
-Lemma elemVarSet_minusDom_inDom
-     : forall (a : Type) (vs : VarSet) (env : VarEnv a) (v' : Var),
-       elemVarEnv v' env -> ~~ (elemVarSet v' (minusDom vs env)).
-Admitted.
-
-Lemma Subset_minusDom {a} : forall vs1 vs2 (e: VarEnv a), 
-    vs1 [<=] vs2 ->
-    minusDom vs1 e [<=] minusDom vs2 e.
-Proof.
-  intros. 
-  unfold Subset,List.In in *.
-  intros var.
-Admitted.
-
-
-Lemma elemVarSet_minusDom_elemVarEnv : forall a vs (env:VarEnv a) v,
-    elemVarEnv v env ->
-    elemVarSet v (minusDom vs env) = false.
-Proof.
-  intros.
-Admitted.
-
-Lemma elemVarSet_minusDom_elemVarEnv_false : forall a vs (env:VarEnv a) v,
-    elemVarEnv v env = false ->
-    elemVarSet v (minusDom vs env) = elemVarSet v vs.
-Proof.
-  intros.
-Admitted.

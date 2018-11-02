@@ -193,8 +193,6 @@ Proof.
 Qed.
 
 
-
-
 (** *** Structural lemmas *)
 
 Lemma WellScopedVar_extendVarSet:

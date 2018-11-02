@@ -1,16 +1,24 @@
 (* When these things get proven, they ought to move to [containers] *)
 
+From Coq Require Import ssreflect ssrfun ssrbool.
+
 Require Import GHC.Base.
 Require Import Data.IntMap.Internal.
 
 Axiom member_eq : forall A k k' (i : IntMap.Internal.IntMap A),
-    k == k' = true ->
+    k == k' ->
     IntMap.Internal.member k i = IntMap.Internal.member k' i.
 
 Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
 IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
-  (k == k')
-  || IntMap.Internal.member k i.
+  (k == k') || IntMap.Internal.member k i.
+
+Axiom member_union :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i i0 : Internal.IntMap A),
+   (IntMap.Internal.member key (IntMap.Internal.union i i0)) = 
+   (IntMap.Internal.member key i0 || IntMap.Internal.member key i).
 
 Axiom union_nil_l : forall A (i : IntMap.Internal.IntMap A),
     IntMap.Internal.union IntMap.Internal.Nil i = i.
@@ -30,25 +38,28 @@ Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
 
 Axiom difference_Tip_member:
   forall A (i : Internal.IntMap A) (n : Internal.Key),
-    (IntMap.Internal.member n i) = true ->
-    forall x:A,
-      IntMap.Internal.difference
+    (IntMap.Internal.member n i) ->
+    forall x:A, IntMap.Internal.difference
         (IntMap.Internal.Tip n x) i = Internal.Nil.
 
 Axiom difference_Tip_non_member: 
     forall A (i : Internal.IntMap A) (n : Internal.Key),
       (IntMap.Internal.member n i) = false ->
-      forall x : A,
-        IntMap.Internal.difference
-          (IntMap.Internal.Tip n x) i =
+      forall x : A, IntMap.Internal.difference (IntMap.Internal.Tip n x) i =
         IntMap.Internal.Tip n x.
 
 Axiom null_empty : forall A,
-    (@IntMap.Internal.null A IntMap.Internal.empty) = true.
+    (@IntMap.Internal.null A IntMap.Internal.empty).
 
 Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
     IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
     IntMap.Internal.filter (fun v => f v && f' v) i.
+
+Axiom filter_insert: forall A f key (v:A) i,
+  IntMap.Internal.filter f (IntMap.Internal.insert key v i) =
+  (if (f v)
+   then IntMap.Internal.insert key v (IntMap.Internal.filter f i)
+   else IntMap.Internal.filter f i).
 
 Axiom lookup_insert : forall A key (val:A) i, 
     IntMap.Internal.lookup key (IntMap.Internal.insert key val i) = Some val.
@@ -87,6 +98,14 @@ Axiom lookup_partition :
      lookup key m' = Some val) <->
     lookup key m  = Some val.
 
+(*
+Axiom lookup_partition :
+  forall (key : Internal.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
+    lookup key i = Some y ->
+    (left, right) = partition f i -> 
+    lookup key left = Some y \/ lookup key right = Some y.    
+*)
+
 Axiom lookup_union_None:
   forall (A : Type)
     (key : Internal.Key)
@@ -106,19 +125,11 @@ Axiom lookup_difference_not_in_snd:
     lookup key i' = None ->
     lookup key (difference i i') = lookup key i.
 
-
-Axiom lookup_partition :
-  forall (key : Internal.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
-    lookup key i = Some y ->
-    (left, right) = partition f i -> 
-    lookup key left = Some y \/ lookup key right = Some y.    
-
-
 Axiom member_lookup :
    forall (A : Type)
      (key : Internal.Key) 
      (i : Internal.IntMap A),
-   (IntMap.Internal.member key i = true) =
+   (is_true (IntMap.Internal.member key i)) =
    (exists val, IntMap.Internal.lookup key i = Some val).
 
 Axiom non_member_lookup :
@@ -127,6 +138,19 @@ Axiom non_member_lookup :
      (i : Internal.IntMap A),
    (IntMap.Internal.member key i = false) =
    (IntMap.Internal.lookup key i = None).
+
+(* This is a pretty strong property about the representation of 
+   IntMaps. I hope that it is true. *)
+Axiom delete_commute :
+  forall (A : Type)
+    (kx ky : Internal.Key) 
+    (i : Internal.IntMap A),
+  IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
+  IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
+
+Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
+    k == k'->
+    IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
 
 
 

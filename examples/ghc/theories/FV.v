@@ -1,3 +1,6 @@
+From mathcomp.ssreflect
+Require Import ssreflect ssrnat prime ssrbool eqtype.
+
 Require Import Core.
 Require Import FV.
 Require Import Proofs.ContainerAxioms.
@@ -9,20 +12,76 @@ Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 
 Require Import GHC.Base.
+Require Import Proofs.GHC.Base.
 Import GHC.Base.ManualNotations.
 
+
+
 Set Bullet Behavior "Strict Subproofs".
+
+Axiom filterEmpty : forall f, 
+    filterVarSet f emptyVarSet [=] emptyVarSet.
+Axiom minusEmpty : forall vs, 
+    minusVarSet emptyVarSet vs [=] emptyVarSet.
+Axiom unionEmpty_l : forall vs,
+    unionVarSet emptyVarSet vs [=] vs.
+Axiom unionEmpty_r : forall vs,
+    unionVarSet vs emptyVarSet [=] vs.
+Axiom unionSingle_l : forall x s,
+    unionVarSet (unitVarSet x) s [=] extendVarSet s x.
+Axiom unionSingle_r : forall x s,
+    unionVarSet s (unitVarSet x) [=] extendVarSet s x.
+
+
+Hint Rewrite filterEmpty minusEmpty unionEmpty_l unionEmpty_r 
+     unionSingle_l unionSingle_r :
+  hs_simpl.
+
+(* conditional rewrites *)
+Axiom filterSingletonTrue : forall f x,
+  f x = true -> 
+  filterVarSet f (unitVarSet x) [=] unitVarSet x.
+Axiom filterSingletonFalse : forall f x,
+  f x = false -> 
+  filterVarSet f (unitVarSet x) [=] emptyVarSet.
+Axiom elemVarSet_minusVarSetTrue : forall x s,
+  elemVarSet x s = true -> 
+  minusVarSet (unitVarSet x) s [=] emptyVarSet.
+Axiom elemVarSet_minusVarSetFalse : forall x s,
+  elemVarSet x s = false -> 
+  minusVarSet (unitVarSet x) s [=] unitVarSet x.
+
+(*
+Ltac set_simpl :=
+  repeat 
+  (autorewrite with simpl_VarSet;
+  try match goal with 
+    | [ H : elemVarSet ?x ?s = true |- context[minusVarSet (unitVarSet ?x) ?s] ] =>
+      try rewrite elemVarSet_minusVarSetTrue; try apply H
+    | [ H : elemVarSet ?x ?s = true |- context[extendVarSet ?s ?x] ] =>
+      try rewrite elemVarSet_minusVarSetTrue; try apply H
+
+    | [ H : elemVarSet ?x ?s = false |- context[minusVarSet (unitVarSet ?x) ?s] ] =>
+      try rewrite elemVarSet_minusVarSetFalse; try apply H
+    | [ H : ?f ?x = true |- context[filterVarSet ?f (unitVarSet ?x)] ] =>
+      try rewrite filterSingletonTrue; try apply H
+    | [ H : ?f ?x = false |- context[filterVarSet ?f (unitVarSet ?x)] ] =>
+      try rewrite filterSingletonFalse; try apply H
+  end). *)
+
+
 
 (** * Well-formedness of [FV]s. *)
 
 Reserved Notation "A ⊢ B" (at level 70, no associativity).
+
 Inductive Denotes : VarSet -> FV -> Prop :=
 | DenotesVarSet : forall vs fv,
     (forall f in_scope vs' l,
-        extendVarSetList emptyVarSet l = vs' ->
-        extendVarSetList emptyVarSet (fst (fv f in_scope (l, vs'))) =
+        extendVarSetList emptyVarSet l [=] vs' ->
+        extendVarSetList emptyVarSet (fst (fv f in_scope (l, vs'))) [=]
         snd (fv f in_scope (l, vs')) /\
-        snd (fv f in_scope (l, vs')) =
+        snd (fv f in_scope (l, vs')) [=]
         unionVarSet (minusVarSet (filterVarSet f vs) in_scope) vs') ->
     vs ⊢ fv
 where "A ⊢ B" := (Denotes A B).
@@ -50,13 +109,14 @@ Ltac destruct_match :=
 
 Theorem Denotes_fvVarSet : forall m fv f in_scope l vs,
     m ⊢ fv ->
-    extendVarSetList emptyVarSet l = vs ->
-    snd (fv f in_scope (l, vs)) =
+    extendVarSetList emptyVarSet l [=] vs ->
+    snd (fv f in_scope (l, vs)) [=]
     unionVarSet (minusVarSet (filterVarSet f m) in_scope) vs.
 Proof.
-  intros. inversion H.
-  specialize (H1 f in_scope vs l ); subst.
-  apply H1; reflexivity.
+  move => m fv f in_scope l vs [vs' fv' H0] H1.
+  specialize (H0 f in_scope vs l ); subst.
+  move: (H0 H1) => [h0 h1].
+  auto.
 Qed.
 
 Definition WF_fv (fv : FV) : Prop := exists vs, vs ⊢ fv.
@@ -66,45 +126,37 @@ Definition WF_fv (fv : FV) : Prop := exists vs, vs ⊢ fv.
     [VarSet]s, most of these theorems should be easily provable once
     we have some good theorems or tactics for [VarSet]s. *)
 
+       
+
+
+
 Lemma empty_FV_WF :
   WF_fv emptyFV.
 Proof.
   unfold WF_fv. exists emptyVarSet. constructor; intros; subst.
-  unfold_fv. rewrite difference_nil_l, <- mkVarSet_extendVarSetList.
-  unfold_fv. intuition. do 2 f_equal. symmetry. apply union_nil_r.
+  unfold emptyFV.
+  unfold fst, snd.
+  hs_simpl.
+  split; auto.
+  reflexivity.
 Qed.
 
-Lemma extendVarSetList_extendVarSet_iff: forall l x l',
-  extendVarSetList (extendVarSet l' x) l =
-  extendVarSet (extendVarSetList l' l) x.
-Proof.
-  induction l; intros x [l'].
-  - reflexivity.
-  - simpl.
-    repeat rewrite extendVarSetList_cons.
-    repeat rewrite IHl.
-    clear IHl.
-    unfold extendVarSetList,
-         UniqSet.addListToUniqSet,
-         UniqFM.addToUFM,
-         UniqSet.addOneToUniqSet, Foldable.foldl',
-         Foldable.Foldable__list, extendVarSet,
-         UniqSet.addOneToUniqSet, Foldable.foldl',
-         UniqFM.addToUFM.
-    simpl.
-    repeat destruct_match.
-    simpl.
-    unfold_VarSet.
-    subst.
-    admit.
-Admitted.
 
 Lemma unit_FV_WF :
   forall x, WF_fv (unitFV x).
 Proof.
-  intros. unfold WF_fv.
+  move=>x. unfold WF_fv.
   exists (unitVarSet x).
-  constructor; intros; subst. simpl.
+  constructor; intros; subst. 
+  unfold fst, snd.
+  unfold unitFV.
+  destruct elemVarSet eqn:E1.
+  destruct (f x) eqn:FX;
+  hs_simpl; split; auto.
+
+  destruct (elemVarSet x (extendVarSetList emptyVarSet l)) eqn:E2.
+Admitted.  
+(*
   destruct_match; simpl; intuition;
     rewrite <- mkVarSet_extendVarSetList.
   - unfold_fv.
@@ -124,7 +176,10 @@ Proof.
     apply extendVarSetList_extendVarSet_iff.
   - unfold_fv.
     destruct_match; unfold_fv.
-Admitted.
+    + do 2 f_equal.
+      destruct (f x).
+      rewrite difference_Tip_non_member.
+Admitted. *)
 
 Ltac unfold_WF :=
   repeat match goal with
@@ -176,8 +231,11 @@ Lemma map_union_FV_WF : forall A f (ls : list A),
 Proof.
   induction ls.
   - intros; unfold_WF. exists emptyVarSet. constructor; intros. simpl.
-    intuition. unfold_fv. unfold_VarSet_to_IntMap.
-    rewrite difference_nil_l, union_nil_r; reflexivity.
+    intuition. unfold_fv. 
+    destruct vs'. destruct getUniqSet'.
+    unfold unionVarSet. unfold UniqSet.unionUniqSets.
+    unfold UniqFM.plusUFM.
+    rewrite -> difference_nil_l. rewrite -> union_nil_r; reflexivity.
   - intros. simpl in H.
     assert (forall e : A, In e ls -> WF_fv (f e)). { intros. apply H. tauto. }
     apply IHls in H0.

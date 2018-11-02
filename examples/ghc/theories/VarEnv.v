@@ -1,3 +1,10 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
+
+From mathcomp.ssreflect
+Require Import ssreflect ssrnat prime ssrbool eqtype.
+
 Require Import Coq.Lists.List.
 
 Require Import GHC.Base.
@@ -10,8 +17,7 @@ Require Import Proofs.Core.
 Require Import Proofs.Var.
 Require Import Proofs.Unique.
 Require Import Proofs.VarSet.
-
-Import GHC.Base.ManualNotations.
+Require Import Proofs.VarSetFSet.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -34,6 +40,15 @@ Axiom isLocalId_uniqAway:
 Axiom isLocalVar_uniqAway:
   forall iss v,
   isLocalVar (uniqAway iss v) = isLocalVar v.
+
+Axiom isId_uniqAway:
+  forall iss v,
+    isId (uniqAway iss v) = isId v.
+
+Axiom isCoVar_uniqAway:
+  forall iss v,
+    isCoVar (uniqAway iss v) = isCoVar v.
+
 
 Axiom nameUnique_varName_uniqAway:
   forall vss v,
@@ -156,13 +171,13 @@ Ltac rewrite_minusDom_true :=
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
-    repeat rewrite lookupVarSet_filterVarSet_false with 
+    repeat rewrite -> lookupVarSet_filterVarSet_false with 
         (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); try rewrite H; auto 
   | [ H : elemVarEnv ?var ?init_env = true, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
-    rewrite lookupVarSet_filterVarSet_false with
+    rewrite -> lookupVarSet_filterVarSet_false with
         (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2; 
     try rewrite H; auto 
                                                                     
@@ -174,14 +189,14 @@ Ltac rewrite_minusDom_false :=
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
-    repeat rewrite lookupVarSet_filterVarSet_true
+    repeat rewrite -> lookupVarSet_filterVarSet_true
     with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); 
     try rewrite H; auto 
   | [ H : elemVarEnv ?var ?init_env = false, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
-    rewrite lookupVarSet_filterVarSet_true with 
+    rewrite -> lookupVarSet_filterVarSet_true with 
         (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2 ; 
     try rewrite H; auto  
   end.
@@ -209,7 +224,7 @@ Proof.
   intros.
   rewrite <- lookupVarEnv_elemVarEnv_false in H.
   unfold minusDom.
-  rewrite lookupVarSet_filterVarSet_true
+  rewrite -> lookupVarSet_filterVarSet_true
     with (f := (fun v0 : Var => negb (elemVarEnv v0 env))).
   auto.
   rewrite H. simpl. auto.
@@ -249,8 +264,8 @@ Proof.
   apply almostEqual_refl; auto.
   rewrite elemVarEnv_delVarEnv_neq in IN; auto.
   rewrite IN. auto.
-  intro h. rewrite h in EQ. discriminate.
-  intro h. rewrite h in EQ. discriminate.
+  intro h. rewrite EQ in h. auto. 
+  intro h. rewrite EQ in h. auto.
 Qed.
 
 
@@ -263,13 +278,15 @@ Proof.
   destruct (elemVarEnv v' env) eqn:Eenv; auto.
   + (* v' is in dom of env. so cannot be looked up. *)
     unfold minusDom.
-    rewrite 2 lookupVarSet_filterVarSet_false; auto.  
+    rewrite -> lookupVarSet_filterVarSet_false; auto.  
+    rewrite -> lookupVarSet_filterVarSet_false; auto.  
     rewrite Eenv. simpl. auto.
     rewrite elemVarEnv_extendVarEnv_neq.
     rewrite Eenv. simpl. auto.
     auto.
   + unfold minusDom.
-    rewrite 2 lookupVarSet_filterVarSet_true; auto.  
+    rewrite -> lookupVarSet_filterVarSet_true; auto.  
+    rewrite -> lookupVarSet_filterVarSet_true; auto.  
     rewrite lookupVarSet_extendVarSet_neq; auto.
     auto.
     rewrite Eenv. simpl. auto.
@@ -298,7 +315,7 @@ Proof.
   intros.
   intro var.
   destruct (var == v) eqn:EQ.
-  rewrite lookupVarSet_eq with (v2 := v); auto.
+  rewrite -> lookupVarSet_eq with (v2 := v); auto.
   unfold minusDom.
   rewrite lookupVarSet_filterVarSet_false. 
   auto.
@@ -333,6 +350,7 @@ Lemma getInScopeVars_extendInScopeSetList:
   getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
 Proof.
   intros.
+  rewrite -> extendVarSetList_foldl'.
   unfold getInScopeVars.
   unfold extendInScopeSetList.
   set_b_iff.
@@ -367,3 +385,7 @@ Proof.
   f_equal.
   omega.
 Qed.
+
+
+
+

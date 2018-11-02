@@ -45,7 +45,7 @@ Section Lemmas.
   Proof.
     intros Exy; specialize (Eq_trans y x z Exy).
     destruct (y == z) eqn:Eyz.
-    - intros H; rewrite H; auto.
+    - intros H; rewrite H; auto. apply Eq_refl.
     - destruct (x == z) eqn:Exz; auto.
       exfalso.
       rewrite Eq_sym in Exz.

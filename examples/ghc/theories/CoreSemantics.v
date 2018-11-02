@@ -1,3 +1,6 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
 From Coq Require Import Unicode.Utf8.
 
 From Coq      Require Import ssreflect ssrfun ssrbool.

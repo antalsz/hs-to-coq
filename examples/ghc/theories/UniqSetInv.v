@@ -479,6 +479,7 @@ Next Obligation.
   destruct s as [m].
   eapply lookup_partition; eauto.
 Defined.
+
 Next Obligation.
   unfold UniqInv in *.
   intros x' y' Hl.

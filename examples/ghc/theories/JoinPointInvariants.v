@@ -665,6 +665,7 @@ Proof.
        * rewrite updJPSs_nil.
          reflexivity.
        * rewrite updJPSs_cons.
+         rewrite fold_is_true in H.
          rewrite disjointVarSet_mkVarSet_cons in H.
          destruct H.
          rewrite IHvs2 by assumption.
@@ -674,6 +675,7 @@ Proof.
       rewrite !updJPSs_append, !updJPSs_cons, !updJPSs_nil.
       apply elemVarSet_updJPS_cong. intros Hne.
       apply IHvs3.
+      rewrite fold_is_true in *.
       rewrite disjointVarSet_mkVarSet in *.
       eapply Forall_impl; only 2: eapply H. intros v2 ?.
       cbv beta in H0.
@@ -797,9 +799,10 @@ Proof.
     rewrite !delVarSetList_app, delVarSetList_cons, delVarSetList_nil.
     apply subVarSet_delVarSetList_both.
     rewrite exprFreeVars_Case.
+    rewrite fold_is_true in *.
     match goal with HIn : List.In _ ?xs |- context [mapUnionVarSet ?f ?xs] =>
       let H := fresh in
-      epose proof (mapUnionVarSet_In_subVarSet _ _ _ f HIn) as H ; simpl in H end.
+      epose proof (mapUnionVarSet_In_subVarSet f HIn) as H ; simpl in H end.
     rewrite delVarSetList_rev, <- delVarSetList_single, <- delVarSetList_app.
     set_b_iff; fsetdec.
   - apply H. 
@@ -913,7 +916,8 @@ Proof.
   assert (lookupVarSet (updJPSs vs vs2) v = Some v0).
   { induction vs2 using rev_ind; intros.
     * apply Heq.
-    * rewrite disjointVarSet_mkVarSet_append, disjointVarSet_mkVarSet_cons in H.
+    * rewrite fold_is_true in *.
+      rewrite disjointVarSet_mkVarSet_append, disjointVarSet_mkVarSet_cons in H.
       destruct H. destruct H0.
       rewrite updJPSs_append, updJPSs_cons, updJPSs_nil.
       assert (x GHC.Base.== v = false).

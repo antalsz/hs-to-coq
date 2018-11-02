@@ -59,14 +59,13 @@ Proof. apply hs_coq_foldl_list. Qed.
 
 
 (* -------------------------------------------------------------------- *)
-(*  Theory about foldable for lists *)
+(** ** Theory about foldable for lists *)
 
 Ltac unfold_Foldable_foldr :=
   unfold Foldable.foldr,
   Foldable.foldr__,
   Foldable.Foldable__list,
   Foldable.Foldable__list_foldr.
-
 
 Ltac unfold_Foldable_foldl' :=
   unfold Foldable.foldl',  Foldable.Foldable__list, 
@@ -77,6 +76,22 @@ Ltac unfold_Foldable_foldl :=
   Foldable.foldl__, Foldable.Foldable__list_foldl, Base.foldl.
 
 
+Lemma Foldable_foldr_nil : forall a b (f: a -> b -> b) (s:b), 
+    Foldable.foldr f s nil = s.
+Proof.  
+  unfold_Foldable_foldr.
+  simpl.
+  auto.
+Qed.
+
+Lemma Foldable_foldr_cons : forall a b (f: a -> b -> b) (s:b) x xs, 
+    Foldable.foldr f s (x :: xs) = f x (Foldable.foldr f s xs).
+Proof.  
+  unfold_Foldable_foldr.
+  simpl.
+  auto.
+Qed.
+
 Lemma Foldable_foldr_app : forall a b (f:a -> b -> b) (s:b) 
                               (vs1 : list a) (vs2: list a),
     Foldable.foldr f s (vs1 ++ vs2) =
@@ -86,6 +101,52 @@ Proof.
   unfold_Foldable_foldr.
   rewrite hs_coq_foldr_base.
   rewrite fold_right_app.
+  auto.
+Qed.
+
+Lemma Foldable_foldl_nil : forall a b (f: b -> a -> b) (s:b), 
+    Foldable.foldl f s nil = s.
+Proof.
+  unfold_Foldable_foldl.  
+  simpl.
+  auto.
+Qed.
+
+Lemma Foldable_foldl_cons : forall a b (f: b -> a -> b) (s:b) x xs, 
+    Foldable.foldl f s (x :: xs) = (Foldable.foldl f (f s x) xs).
+Proof.
+  intros.
+  unfold_Foldable_foldl.
+  simpl.
+  auto.
+Qed.
+
+Lemma Foldable_foldl_app : forall a b (f:b -> a -> b) (s:b) 
+                              (vs1 : list a) (vs2: list a),
+    Foldable.foldl f s (vs1 ++ vs2) =
+    Foldable.foldl f (Foldable.foldl f s vs1) vs2.
+Proof.
+  unfold_Foldable_foldl.
+  intros.
+  repeat rewrite <- List_foldl_foldr.
+  rewrite fold_left_app.
+  auto.
+Qed.
+
+Lemma Foldable_foldl'_nil : forall a b (f: b -> a -> b) (s:b), 
+    Foldable.foldl' f s nil = s.
+Proof.
+  unfold_Foldable_foldl'.  
+  simpl.
+  auto.
+Qed.
+
+Lemma Foldable_foldl'_cons : forall a b (f: b -> a -> b) (s:b) x xs, 
+    Foldable.foldl' f s (x :: xs) = (Foldable.foldl' f (f s x) xs).
+Proof.
+  intros.
+  unfold_Foldable_foldl'.
+  simpl.
   auto.
 Qed.
 
@@ -102,29 +163,41 @@ Proof.
 Qed.
 
 
-Lemma elem_nil : forall {A} `{Eq_ A}  (x:A),  
-  Foldable.elem x nil = false.
-Proof.
-  intros.
-  reflexivity.
-Qed.
 
-Lemma elem_cons : 
-  forall {A} `{Eq_ A} (v:A) (x:A) (l:list A),  
-    Foldable.elem v (x :: l) = (v == x) || Foldable.elem v l.
-Proof.
+Hint Rewrite
+     Foldable_foldl'_nil Foldable_foldr_nil 
+     Foldable_foldl_nil
+
+     Foldable_foldl'_cons Foldable_foldr_cons 
+     Foldable_foldl_cons
+
+     Foldable_foldl'_app Foldable_foldr_app 
+     Foldable_foldl_app : hs_simpl.
+
+Lemma Foldable_any_nil : forall A (f : A -> bool), Foldable.any f nil = false. 
+Proof. 
   intros.
-  unfold Foldable.elem.
   unfold Foldable.any.
-  unfold compose, SemigroupInternal.getAny, Foldable.foldMap.
+  unfold compose, Foldable.foldMap.
   unfold Foldable.Foldable__list,Foldable.foldMap__,
-  SemigroupInternal.Semigroup__Any,SemigroupInternal.Monoid__Any.
-  unfold Foldable.Foldable__list_foldMap. 
-  unfold Foldable.Foldable__list_foldr, mappend, mempty.
+         Foldable.Foldable__list_foldMap,
+         Foldable.Foldable__list_foldr. 
   simpl.
-  f_equal.
+  auto.
 Qed.
 
+Lemma Foldable_any_cons : forall A x xs (f : A -> bool), 
+    Foldable.any f (x :: xs) = f x || Foldable.any f xs.
+Proof. 
+  intros.
+  unfold Foldable.any.
+  unfold compose, Foldable.foldMap.
+  unfold Foldable.Foldable__list,Foldable.foldMap__,
+         Foldable.Foldable__list_foldMap,
+         Foldable.Foldable__list_foldr. 
+  simpl.
+  auto.
+Qed.
 
 Lemma Foldable_any_app : forall {A} `{Eq_ A} (v:A) (l1 l2:list A),
       Foldable.any (fun y : A => v == y) (l1 ++ l2) =
@@ -147,8 +220,30 @@ Proof.
     auto.
 Qed.
 
+Hint Rewrite @Foldable_any_nil @Foldable_any_cons @Foldable_any_app : hs_simpl.
+
+Lemma elem_nil : forall {A} `{Eq_ A}  (x:A),  
+  Foldable.elem x nil = false.
+Proof.
+  intros.
+  reflexivity.
+Qed.
+
+Lemma elem_cons : 
+  forall {A} `{Eq_ A} (v:A) (x:A) (l:list A),  
+    Foldable.elem v (x :: l) = (v == x) || Foldable.elem v l.
+Proof.
+  intros.
+  apply Foldable_any_cons.
+Qed.
+
 Lemma Foldable_elem_app : forall {A}`{Eq_ A} (v:A) (l1 l2:list A),  
     Foldable.elem v (l1 ++ l2) = Foldable.elem v l1 || Foldable.elem v l2.
 Proof.
   intros. apply Foldable_any_app.
 Qed.
+
+Hint Rewrite @elem_nil @elem_cons @Foldable_elem_app : hs_simpl.
+
+
+

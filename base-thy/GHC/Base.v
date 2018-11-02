@@ -17,9 +17,26 @@ Set Bullet Behavior "Strict Subproofs".
 
 (* Properties of basic functions *)
 
-(* Haskell-Coq equivalence *)
-
 Require Coq.Lists.List.
+Require Import Coq.Classes.RelationClasses.
+Require Import Coq.Classes.Morphisms.
+
+
+(* ** hs_simpl tactic *) 
+
+(*
+   Furthermore, this file defines a rewriting database hs_simpl and 
+   associated tactic (hs_simpl) for simplifying Haskell expressions
+   and unfolding type class applications.
+*)
+
+Ltac hs_simpl := autorewrite with hs_simpl.
+
+Tactic Notation "hs_simpl" "in" hyp(h) := autorewrite with hs_simpl in h.
+
+
+(** ** [Lists] *)
+(* Haskell-Coq equivalence *)
 
 Theorem hs_coq_map : @map = @Coq.Lists.List.map.
 Proof.
@@ -44,6 +61,8 @@ Proof.
   intros. rewrite hs_coq_map. apply Coq.Lists.List.map_id.
 Qed.
 
+Hint Rewrite @map_id : hs_simpl.
+
 Lemma map_map:
   forall a b c (f : a -> b) (g : b -> c) (x : list a),
   map g (map f x) = map (g ∘ f) x.
@@ -62,6 +81,8 @@ Proof.
   repeat rewrite hs_coq_map.
   apply Coq.Lists.List.map_app.
 Qed.
+
+Hint Rewrite @map_append : hs_simpl.
 
 Lemma map_cong:
   forall a b (f g : a -> b) (x : list a),
@@ -150,6 +171,8 @@ Qed.
 
 (* -------------------------------------------------------------------- *)
 
+(** ** [Eq_] instances *)
+
 Class EqLaws (t : Type) `{Eq_ t} :=
   { Eq_refl  : reflexive  _==_;
     Eq_sym   : symmetric  _==_;
@@ -172,6 +195,91 @@ Proof. rewrite !Neq_inv -negb_andb; apply contra => /andP[]; apply Eq_trans. Qed
 Lemma Eq_reflI {t} `{EqLaws t} : forall x y, x = y -> x == y = true.
 Proof. intros. subst. apply Eq_refl. Qed.
 
+Instance Eq_Reflexive : forall {a} `{EqLaws a}, Reflexive (fun (x y:a) => x == y).
+Proof. intros. eapply Eq_refl. Qed.
+
+Instance Eq_Symmetric : forall {a} `{EqLaws a}, Symmetric (fun (x y:a) => x == y).
+Proof. move=> ?????. rewrite Eq_sym. done. Qed.
+
+Instance Eq_Transitive : forall {a} `{EqLaws a}, Transitive (fun (x y:a) => x == y).
+Proof. move=> ??????. apply Eq_trans. Qed.
+
+Instance Eq_Equivalence :  forall {a} `{EqLaws a}, Equivalence (fun (x y:a) => x == y).
+Proof. move=> ???. split; typeclasses eauto. Qed.  
+
+Instance Eq_is_true_m : forall {a} `{EqLaws a},
+    Proper ((fun (x y:a) => x == y) ==> (fun (x y:a) => x == y) ==> iff)
+           (fun (x y:a) => x == y).
+Proof.
+  move=> a EQ EL x1 x2 ex y1 y2 ey.
+  split.
+  intro h.
+  eapply Eq_trans.
+  rewrite Eq_sym in ex.
+  eauto.
+  eapply Eq_trans. eapply h. eauto.
+  intro h.
+  eapply Eq_trans.
+  eapply ex.
+  eapply Eq_trans.
+  eapply h.
+  rewrite Eq_sym.
+  eapply ey.
+Qed.
+
+(* MOVE to Base *)
+Instance Eq_m : forall {a}`{EqLaws a},
+  Proper ((fun (x y :a) => x == y) ==> (fun x y => x == y) ==> Logic.eq)
+  (_==_).
+Proof.
+  move=> a HE HE2 x1 x2 Hx y1 y2 Hy.
+  destruct (x1 == y1) eqn:E1; destruct (x2 == y2) eqn:E2; auto.
+  assert (x2 == y2).
+  { eapply Eq_trans.
+    rewrite Eq_sym.
+    eauto.
+    eapply Eq_trans. eauto. eauto. }
+  rewrite H in E2. inversion E2.
+  assert (x1 == y1).
+  { eapply Eq_trans.
+    eauto.
+    eapply Eq_trans. eauto.
+    rewrite Eq_sym. eauto.
+  } 
+  rewrite H in E1. inversion E1.
+Qed.
+
+
+Ltac unfold_zeze :=
+  repeat unfold op_zeze__, op_zeze____, 
+  Eq_Int___,
+  Eq_Integer___, 
+  Eq_Word___,
+  Eq_Char___,
+  Eq_bool___,
+  Eq_unit___ ,
+  Eq_comparison___,
+  Eq_pair___ ,
+  Eq_list,
+  Eq___NonEmpty,
+  Eq___option.
+
+Ltac unfold_zsze :=
+  repeat unfold op_zsze__, op_zsze____,
+  Eq_Int___,
+  Eq_Integer___, 
+  Eq_Word___,
+  Eq_Char___,
+  Eq_bool___,
+  Eq_unit___ ,
+  Eq_comparison___,
+  Eq_pair___ ,
+  Eq_list,
+  Eq___NonEmpty,
+  Eq___option.
+
+(** ** [EqExact] **)
+  
 Class EqExact (t : Type) `{EqLaws t} :=
   { Eq_eq : forall x y : t, reflect (x = y) (x == y) }.
 
@@ -195,7 +303,7 @@ Ltac EqLaws_from_reflect Eq_eq_t :=
 
 Theorem Eq_eq_Int (x y : Int) : reflect (x = y) (x == y).
 Proof.
-  unfold op_zeze__, Eq_Integer___, op_zeze____.
+  unfold_zeze.
   case H: (_ =? _)%Z; constructor.
   - by apply Z.eqb_eq.
   - by rewrite -Z.eqb_eq H.
@@ -214,7 +322,7 @@ Instance EqExact_Integer : EqExact Integer := EqExact_Int.
 
 Theorem Eq_eq_Word (x y : Word) : reflect (x = y) (x == y).
 Proof.
- unfold op_zeze__, Eq_Word___, op_zeze____, Eq_Char___.
+ unfold_zeze.
  case H: (_ =? _)%N; constructor.
  - by apply N.eqb_eq.
  - by rewrite -N.eqb_eq H.

@@ -86,6 +86,10 @@ Axiom delete_neq : forall key1 key2 b (i : IntMap b),
     key1 <> key2 ->
     lookup key1 (delete key2 i) = lookup key1 i.
 
+Axiom member_delete_neq : forall k1 k2 b (i: IntMap b), k1 <> k2 ->
+  IntMap.Internal.member k2 (IntMap.Internal.delete k1 i) =
+  IntMap.Internal.member k2 i.
+
 Axiom lookup_union :
   forall (A:Type) key (val:A) (m1 m2: IntMap A), 
     (lookup key m1 = Some val \/ (lookup key m1 = None /\ lookup key m2 = Some val)) <->

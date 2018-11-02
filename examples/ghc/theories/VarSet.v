@@ -23,9 +23,9 @@ Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
 Require Import Proofs.Var.
 Require Import Proofs.VarSetFSet.
+Require Import Proofs.Base.
 
 Open Scope Z_scope.
-
 
 
 Set Implicit Arguments.
@@ -97,69 +97,6 @@ Proof.
 Qed.
 
 
-
-(* I would love to be able to use rewriting instead of this 
-   lemma to do this. Why doesn't it work??? *)
-Lemma eq_replace_r : forall a (v1 v2 v3 : a) `{EqLaws a}, 
-    (v2 == v3) -> (v1 == v2) = (v1 == v3).
-Proof.
-  intros.
-  rewrite -> H1. (* why does the ssreflect rewriting tactic not work here. *)
-  reflexivity.
-Qed.
-
-Lemma eq_replace_l : forall a (v1 v2 v3 : a) `{EqLaws a}, 
-    (v2 == v3) -> (v2 == v1) = (v3 == v1).
-Proof.
-  intros.
-  eapply Eq_m.
-  eauto.
-  eapply Eq_refl.
-Qed.
-
-
-(* Some cargo culting here. I'm not sure if we need to do all of this.*)
-
-Local Lemma parametric_eq_trans : forall (a : Type) (H : Eq_ a),
-  EqLaws a -> Transitive (fun x y : a => x == y).
-Proof.
-  intros.
-  intros x y z.
-  pose (k := Eq_trans).
-  eapply k.
-Defined. 
-
-Local Lemma parametric_eq_sym : forall (a : Type) (H : Eq_ a),
-  EqLaws a -> Symmetric (fun x y : a => x == y).
-Proof.
-  intros.
-  intros x y.
-  rewrite Eq_sym.
-  auto.
-Defined. 
-
-
-Add Parametric Relation {a}`{H: EqLaws a} : a 
-  (fun x y => x == y) 
-    reflexivity proved by Eq_refl 
-    symmetry proved by (@parametric_eq_sym a _ H)
-    transitivity proved by (@parametric_eq_trans a _ H) as parametric_eq.
-
-Instance: RewriteRelation (fun x y => x == y).
-
-
-Lemma eqlist_Foldable_elem : forall a (s s' : list a) `{EqLaws a}, 
-      eqlistA (fun x y => x == y) s s' ->
-      (forall a, Foldable.elem a s = Foldable.elem a s').
-Proof.
-  intros a s s' EQ EQL. intro H. induction H.
-  intro x.
-  rewrite elem_nil. auto.
-  intro y. 
-  repeat rewrite -> elem_cons.
-  rewrite IHeqlistA.
-  erewrite eq_replace_r; eauto.
-Qed.
 
 
 Lemma memE : forall (s : t) (x : elt), mem x s <-> In x s.
@@ -988,8 +925,8 @@ Proof.
     move => a1 l.
     hs_simpl.
     move/andP => [h0 h1].
-    rewrite (eq_replace_l a0 Hx).
-    rewrite (eq_replace_r x2 h0).
+    rewrite (eq_replace_l _ _ _ Hx).
+    rewrite (eq_replace_r _ _ _ h0).
     ssrbool.bool_congr.
     eapply IHy1.
     unfold_zeze.
@@ -1066,6 +1003,77 @@ Proof.
     auto.
   - done.
 Qed.
+
+Inductive LastIn : Var -> list Var -> Prop :=
+  | LastIn_head: forall v1 vs, 
+      Foldable.elem v1 vs = false ->
+      LastIn v1 (v1 :: vs)
+  | LastIn_tail: forall v1 v2 vs,
+      LastIn v1 vs ->
+      LastIn v1 (v2 :: vs).
+
+Lemma LastIn_elem : forall v vs, 
+    LastIn v vs -> Foldable.elem v vs.
+Proof.
+  move => v vs h. 
+  induction h; hs_simpl; apply /orP. 
+  left. reflexivity.
+  right. assumption.
+Qed.  
+  
+Lemma LastIn_inj : forall v1 v2 vs, 
+    LastIn v1 vs -> v1 == v2 -> LastIn v2 vs -> v1 = v2.
+Proof.    
+  move=> v1 v2 vs h. induction h.
+  - move=> eq FI.
+    inversion FI. auto. 
+    subst. 
+    move: (LastIn_elem H2) => h.
+    rewrite -> HSUtil.elem_resp_eq with (a:= v2) in H; try done.
+    rewrite Eq_sym. done.
+  - move=> eq FI. inversion FI.
+    subst. 
+    move: (LastIn_elem h) => h0.
+    rewrite -> HSUtil.elem_resp_eq with (a:= v1) in H1; try done.
+    subst. eauto.
+Qed.
+
+
+
+Lemma lookupVarSet_extendVarSetList_self_exists_LastIn:
+  forall (vars:list Var) v vs,
+    (Foldable.elem v vars) -> 
+    exists v', and3 (lookupVarSet (extendVarSetList vs vars) v = Some v')
+               (v == v')
+               (LastIn v' vars).
+Proof.
+  elim => // a vars IH.       (* Do induction on first var, 
+                                then trivially discharge goal. *)
+                          (* Then introduce names for list components *)
+  move=> v vs.
+  hs_simpl.
+
+  move => /orP [h1 | h1].  (* case analysis on boolean || *)
+
+  case IN: (Foldable.elem v vars). 
+
+  + unfold is_true in *.
+    move: (IH v (extendVarSet vs a) IN) => [v' [p q r]].
+    exists v'; split; eauto.
+    eapply LastIn_tail. auto.
+  + rewrite lookupVarSet_extendVarSetList_false ; try by rewrite IN.
+    exists a. split; eauto.
+    rewrite lookupVarSet_extendVarSet_eq //. 
+    symmetry => //.
+    eapply LastIn_head.
+    rewrite <- (elem_eq vars _ _ h1).
+    done.
+  + unfold is_true in *.
+    move: (IH v (extendVarSet vs a) h1) => [v' [p q r]].
+    exists v'; split; eauto.
+    eapply LastIn_tail. auto.
+Qed.
+
 
 
 Lemma lookupVarSet_extendVarSetList_self_exists_in:

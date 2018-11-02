@@ -1,3 +1,6 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
 From mathcomp.ssreflect
 Require Import ssreflect ssrnat prime ssrbool eqtype.
 
@@ -174,6 +177,22 @@ Proof.
   * split; only 1: split; assumption.
   * split; only 1: split; assumption.
 Qed.
+
+Lemma GoodVar_almostEqual : 
+  forall v1 v2, 
+    GoodVar v1 -> almostEqual v1 v2 -> GoodVar v2.
+Proof.
+  move => v1 v2.
+  elim => h1 [h2 [h3 h4]]. 
+  move => h. inversion h. 
+  all: unfold GoodVar.
+  all: repeat split.
+  all: rewrite <- H in *.
+  all: simpl in *.
+  all: try done.
+Qed.
+
+
 
 
 (** *** Structural lemmas *)

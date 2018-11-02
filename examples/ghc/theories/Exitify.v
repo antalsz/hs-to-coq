@@ -37,11 +37,15 @@ Close Scope Z_scope.
 
 (** * Proofs about the Exitification pass *)
 
+
+
+
 (**
 In this module, we prove that the exitification pass preserves the various
 invariants of Core. But first we need to do some yak-shaving to deal
 with the kind of definitions that we get out of hs-to-coq here.
 *)
+
 
 
 
@@ -1062,6 +1066,15 @@ Section in_exitifyRec.
   Lemma zap_ae: forall x, almostEqual x (zap x).
   Proof. intro v; unfold zap; destruct v; simpl; constructor. Qed.
 
+  Lemma GoodVar_zap : forall x, GoodVar x -> GoodVar (zap x).
+  Proof.
+    intros x GVx.
+    eapply GoodVar_almostEqual; eauto.
+    eapply zap_ae. 
+  Qed.
+
+
+
   Lemma fst_pick_list:
     forall fvs vs xs,
     fst (fold_right pick (fvs,vs) xs) = fst (fold_right pick (fvs,[]) xs).
@@ -1167,12 +1180,6 @@ Section in_exitifyRec.
           rewrite Respects_StrongSubset_extendVarSet_ae by (apply zap_ae).
           apply WellScopedVar_extendVarSet.
           rewrite Forall_app in H. destruct H as [h0 h1]. inversion h1.
-Lemma GoodVar_zap : forall x, GoodVar x -> GoodVar (zap x).
-Proof.
-  unfold GoodVar.
-  intros x h. destruct h as (h0 & h1 & h2 & h3).
-  unfold zap. destruct (isId x) eqn:IsId; simpl.
-Admitted.  
           eauto using GoodVar_zap.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).

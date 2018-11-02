@@ -61,6 +61,8 @@ Proof.
   intros. rewrite hs_coq_map. apply Coq.Lists.List.map_id.
 Qed.
 
+Hint Rewrite @map_id : hs_simpl.
+
 Lemma map_map:
   forall a b c (f : a -> b) (g : b -> c) (x : list a),
   map g (map f x) = map (g ∘ f) x.
@@ -79,6 +81,8 @@ Proof.
   repeat rewrite hs_coq_map.
   apply Coq.Lists.List.map_app.
 Qed.
+
+Hint Rewrite @map_append : hs_simpl.
 
 Lemma map_cong:
   forall a b (f g : a -> b) (x : list a),

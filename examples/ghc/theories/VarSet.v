@@ -1725,26 +1725,87 @@ Qed.
 (** ** [disjointVarSet]  *)
 
 
-Axiom disjointVarSet_mkVarSet:
+Lemma disjointVarSet_mkVarSet:
   forall vs1 vs2,
   disjointVarSet vs1 (mkVarSet vs2)  <->
   Forall (fun v => elemVarSet v vs1 = false) vs2.
+Proof.
+  move => vs1 vs2.
+  elim: vs1 => [i].
+  unfold disjointVarSet, mkVarSet, elemVarSet.
+  simpl.
+  elim: i => [j].
+  simpl.
+  unfold UniqFM.disjointUFM, UniqSet.getUniqSet, 
+  UniqSet.mkUniqSet, UniqFM.elemUFM.
+  unfold UniqSet.addOneToUniqSet, UniqSet.emptyUniqSet in *.
+  unfold UniqFM.emptyUFM, UniqFM.addToUFM in *.
+Admitted.
 
-Axiom disjointVarSet_mkVarSet_nil:
+(*
+Lemma foldl'_simplify (a b c :Type) (f:c -> b) (g:b->c) (h:b -> a -> b)
+      (xb:b) (xs : list a):
+  (forall x, f (g x) = x) ->
+  Foldable.foldl' (fun x y => g (h (f x) y)) (g xb) xs = 
+  g (Foldable.foldl' h xb xs).
+Proof.  
+  move => eq.
+  induction xs.
+  hs_simpl. auto.
+  hs_simpl.
+  rewrite eq.
+*)
+
+Lemma UniqSet_Mk_UniqSet_eta :
+  forall a b (x : UniqSet.UniqSet a) (f : UniqSet.UniqSet a -> b), 
+    match x with
+    | UniqSet.Mk_UniqSet set => f (UniqSet.Mk_UniqSet set)
+    end = f x.
+Proof.            
+  move => a b [set] //.
+Qed.
+
+Axiom intersection_empty :
+  forall A B (i : IntMap.Internal.IntMap A) (j : IntMap.Internal.IntMap B),
+    (j = IntMap.Internal.empty) ->
+    IntMap.Internal.null (IntMap.Internal.intersection i j).
+
+
+
+Lemma disjointVarSet_mkVarSet_nil:
   forall vs,
-  disjointVarSet vs (mkVarSet []) .
+  disjointVarSet vs (mkVarSet []).
+Proof.
+  move => vs1.
+  elim: vs1 => [i].
+  unfold disjointVarSet, mkVarSet, elemVarSet.
+  simpl.
+  elim: i => [j].
+  simpl.
+  apply intersection_empty.
+  done.
+Qed.
 
-
-Axiom disjointVarSet_mkVarSet_cons:
+Lemma disjointVarSet_mkVarSet_cons:
   forall v vs1 vs2,
   disjointVarSet vs1 (mkVarSet (v :: vs2))  <->
   elemVarSet v vs1 = false /\ disjointVarSet vs1 (mkVarSet vs2) .
+Proof.
+Admitted.
 
-Axiom disjointVarSet_mkVarSet_append:
+Lemma disjointVarSet_mkVarSet_append:
   forall vs1 vs2 vs3,
   disjointVarSet vs1 (mkVarSet (vs2 ++ vs3))  <->
-  disjointVarSet vs1 (mkVarSet vs2)  /\ disjointVarSet vs1 (mkVarSet vs3) .
+  disjointVarSet vs1 (mkVarSet vs2)  /\ disjointVarSet vs1 (mkVarSet vs3).
+Proof.  
+  move=> vs1 vs2 vs3.
+  unfold mkVarSet.
+  unfold UniqSet.mkUniqSet.
+  hs_simpl.
+  unfold extendVarSetList, emptyVarSet.
+Admitted.  
 
+  
 
 Axiom disjointVarSet_subVarSet_l:
   forall vs1 vs2 vs3,
@@ -1811,13 +1872,30 @@ Notation "s1 {<=} s2" := (StrongSubset s1 s2) (at level 70, no associativity).
 Notation "s1 {=} s2" := (StrongSubset s1 s2 /\ StrongSubset s2 s1) (at level 70, no associativity).
 
 
-Axiom StrongSubset_refl : forall vs, 
+Lemma StrongSubset_refl : forall vs, 
     StrongSubset vs vs.
+Proof.
+  unfold StrongSubset.
+  move=> vs var.
+  elim h: (lookupVarSet vs var) => //.
+  eapply almostEqual_refl.
+Qed.
 
 Instance StrongSubset_Reflexive : Reflexive StrongSubset := StrongSubset_refl.
 
-Axiom StrongSubset_trans : forall vs1 vs2 vs3, 
+Lemma StrongSubset_trans : forall vs1 vs2 vs3, 
     StrongSubset vs1 vs2 -> StrongSubset vs2 vs3 -> StrongSubset vs1 vs3.
+Proof.
+  move => vs1 vs2 vs3 h1 h2 var.
+  specialize (h1 var).
+  specialize (h2 var).
+  move: h1 h2.
+  elim p1: (lookupVarSet vs1 var) => //;
+  elim p2: (lookupVarSet vs2 var) => //;
+  elim p3: (lookupVarSet vs3 var) => //.
+  eapply almostEqual_trans.
+Qed.
+
 
 Instance StrongSubset_Transitive : Transitive StrongSubset := StrongSubset_trans.
 
@@ -1861,6 +1939,25 @@ Proof.
   unfold CoreBndr in *. intro h. rewrite Base.Eq_sym in h. rewrite h in EQV. discriminate.
 Qed.
 
+Lemma elemNegbDisjoint : forall vs vs2, 
+    disjointVarSet vs (mkVarSet vs2) ->
+    forall v, Foldable.elem v vs2 -> negb (elemVarSet v vs).
+Proof.
+  move=> vs.
+  elim => [|x xs IHxs].
+  - move => ? v. hs_simpl. done.
+  - rewrite disjointVarSet_mkVarSet_cons.
+    move => [h1 h2] v.
+    hs_simpl.
+    move => /orP [h3|h3].
+    erewrite (@elemVarSet_eq x v) in h1.
+    rewrite h1. done.
+    symmetry. done.
+    apply IHxs; try done.
+Qed.
+
+
+
 Lemma StrongSubset_extendList_fresh :
   forall vs vs2,
   disjointVarSet vs (mkVarSet vs2)  ->
@@ -1870,10 +1967,15 @@ Proof.
   unfold StrongSubset.
   intros v.
   destruct_match; try trivial.
-  destruct_match.
-  * admit.
-  * admit.
-Admitted.
+  case in2: (Foldable.elem v vs2).  
+  * eapply elemNegbDisjoint in in2; eauto.
+    eapply lookupVarSet_elemVarSet in Heq; eauto. 
+    erewrite Heq in in2. done.
+  * rewrite lookupVarSet_extendVarSetList_false; try done.
+    rewrite Heq.
+    eapply almostEqual_refl.
+    rewrite in2. done.
+Qed.
 
 
 Lemma StrongSubset_extend_ae :
@@ -1949,6 +2051,9 @@ Lemma StrongSubset_delVarSet :
   forall vs1 vs2 v,
   StrongSubset vs1 vs2 ->
   StrongSubset (delVarSet vs1 v) (delVarSet vs2 v).
+Proof.
+  move => vs1 vs2 v1 SS v2.
+  specialize (SS v2).
 Admitted.
 
 Lemma StrongSubset_delete_fresh :

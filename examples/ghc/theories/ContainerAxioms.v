@@ -156,6 +156,10 @@ Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
     k == k'->
     IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
 
+Axiom intersection_empty :
+  forall A B (i : IntMap.Internal.IntMap A) (j : IntMap.Internal.IntMap B),
+    (j = IntMap.Internal.empty) ->
+    IntMap.Internal.null (IntMap.Internal.intersection i j).
 
 
 (*

@@ -61,6 +61,9 @@ Axiom filter_insert: forall A f key (v:A) i,
    then IntMap.Internal.insert key v (IntMap.Internal.filter f i)
    else IntMap.Internal.filter f i).
 
+Axiom filter_true : forall (A:Type) (m:IntMap.Internal.IntMap A), 
+   IntMap.Internal.filter (const true) m = m.
+
 Axiom lookup_insert : forall A key (val:A) i, 
     IntMap.Internal.lookup key (IntMap.Internal.insert key val i) = Some val.
 

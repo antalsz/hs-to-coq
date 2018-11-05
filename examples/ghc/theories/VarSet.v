@@ -2509,3 +2509,39 @@ Proof.
   move => h. rewrite h.
   done.
 Qed.
+
+
+Lemma minusVarSet_emptyVarSet vs : 
+  minusVarSet vs emptyVarSet = vs.
+Proof.
+  unfold minusVarSet, emptyVarSet.
+  unfold UniqSet.minusUniqSet, UniqSet.emptyUniqSet.
+  elim: vs => [i].
+  elim: i => [m].
+  unfold UniqFM.minusUFM, UniqFM.emptyUFM.
+  f_equal.
+  f_equal.
+  unfold IntMap.Internal.empty.
+  rewrite difference_nil_r.
+  reflexivity.
+Qed.
+Hint Rewrite minusVarSet_emptyVarSet : hs_simpl.
+
+Lemma filterVarSet_constTrue vs : 
+  filterVarSet (const true) vs = vs.
+Proof. 
+  unfold filterVarSet.
+  elim: vs => [i].
+  elim: i => [m].
+  unfold UniqSet.filterUniqSet.
+  unfold UniqFM.filterUFM.
+  f_equal.
+  f_equal.
+  rewrite filter_true.
+  reflexivity.
+Qed.
+
+Hint Rewrite filterVarSet_constTrue : hs_simpl.
+
+Instance disjointVarSet_m : Proper (Equal ==> Equal ==> Logic.eq) disjointVarSet.
+Proof. admit. Admitted.

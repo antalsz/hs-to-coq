@@ -1,3 +1,8 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
+From Coq Require Import ssreflect ssrfun ssrbool.
+
 Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
@@ -25,6 +30,7 @@ Import VarSetFacts.
 Import VarSetProperties.
 Import VarSetFSet.Notin.
 
+Require Import Proofs.GHC.Base.
 Require GHC.Base.
 Import GHC.Base.ManualNotations.
 
@@ -33,35 +39,30 @@ Set Bullet Behavior "Strict Subproofs".
 (* TODO: fix mutual recursion. *)
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
+Lemma unionVarSet_sym vs1 vs2 : unionVarSet vs1 vs2 [=] unionVarSet vs2 vs1.
+Proof. set_b_iff. fsetdec. Qed.
+
 
 (** ** [FV] *)
 
-Lemma delVarSet_delFV: forall fv x,
-    WF_fv fv ->
-    delVarSet (FV.fvVarSet fv) x = FV.fvVarSet (FV.delFV x fv).
+Lemma addBndr_fv fv bndr vs :
+  Denotes vs fv -> 
+  Denotes (delVarSet vs bndr) (addBndr bndr fv).
 Proof.
-  intros. unfold WF_fv in H. destruct H as [vs H].
-  unfold FV.delFV, FV.fvVarSet, delVarSet, UniqSet.delOneFromUniqSet.
-  unfold Base.op_z2218U__, FV.fvVarListVarSet.
-  inversion H; subst. inversion H; subst.
-  assert (extendVarSetList emptyVarSet [] = emptyVarSet).
-  { rewrite <- mkVarSet_extendVarSetList. reflexivity. }
-Admitted.
-(*  specialize (H0 (Base.const true) emptyVarSet emptyVarSet [] H2).
-  specialize (H1 (Base.const true) (extendVarSet emptyVarSet x) emptyVarSet [] H2).
-  destruct H0; destruct H1.
-  rewrite hs_coq_tuple_snd. rewrite H3.
-  rewrite hs_coq_tuple_snd. rewrite H4.
-  unfold_VarSet_to_IntMap.
-  (* Seems true. *)
-Admitted. *)
+  move => h.
+  unfold addBndr, varTypeTyCoFVs.
+  rewrite union_empty_l. 
+  move: (delVarSet_delFV _ bndr _ h) => h1.
+  eauto.
+Qed.
 
 Lemma addBndr_WF : forall fv bndr,
     WF_fv fv ->
     WF_fv (addBndr bndr fv).
 Proof.
-  intros; unfold addBndr, varTypeTyCoFVs.
-  rewrite union_empty_l. apply del_FV_WF; auto.
+  move=> fv bndr [vs D].
+  eexists.
+  eauto using addBndr_fv.
 Qed.
 
 Lemma addBndrs_WF : forall fv bndrs,
@@ -105,7 +106,7 @@ Ltac unfold_FV :=
 
 Definition disjoint E F := inter E F [=] empty.
 
-
+(*
 Lemma pass_through_unitFV : forall f v vs1 have haveSet v0,
   disjoint vs1 haveSet ->
   ~ (In v haveSet) ->
@@ -140,9 +141,11 @@ Proof.
     admit. (* seems like solve_notin should work here. *)
     auto.
 Admitted.
-
+*)
 (** ** [expr_fvs] *)
 
+
+(*
 Lemma pass_through : forall e f v vs1 acc res1 res2,
     disjoint vs1 (snd acc) ->
     ~ (In v (snd acc)) ->
@@ -153,30 +156,27 @@ Lemma pass_through : forall e f v vs1 acc res1 res2,
 Proof.
   intros e f v vs1.
   apply (core_induct e); intros; unfold expr_fvs in *; simpl.
-  - subst. destruct acc. rewrite pass_through_unitFV. fsetdec.
-    simpl; auto. simpl; auto.
+  - (* subst. destruct acc. rewrite pass_through_unitFV. fsetdec.
+    simpl; auto. simpl; auto. *)
 Admitted.
-
+*)
   (** Basic properties of [exprFreeVars] *)
 
+(*
+   Mk_Var : Id -> Expr b
+  | Lit : Literal.Literal -> Expr b
+  | App : Expr b -> Arg b -> Expr b
+  | Lam : b -> Expr b -> Expr b
+  | Let : Bind b -> Expr b -> Expr b
+  | Case : Expr b -> b -> unit -> list (Alt b) -> Expr b
+  | Cast : Expr b -> unit -> Expr b
+  | Tick : Tickish Id -> Expr b -> Expr b
+  | Type_ : unit -> Expr b
+  | Coercion : unit -> Expr b
+  with Bind (b : Type) : Type :=  NonRec : b -> Expr b -> Bind b | Rec : list (b * Expr b) -> Bind b
+*)
 
-Lemma elemVarSet_exprFreeVars_Var_false: forall v' v,
-    varUnique v' <> varUnique v ->
-    elemVarSet v' (exprFreeVars (Mk_Var v)) = false.
-Proof.
-intros.
-unfold exprFreeVars, exprFVs, expr_fvs.
-unfold_FV.
-simpl.
-destruct (isLocalVar v).
-* simpl.
-  unfold varUnique in H.
-  unfold GHC.Base.op_zeze__, GHC.Base.Eq_Char___, GHC.Base.op_zeze____.
-  rewrite BinNat.N.eqb_neq.
-  contradict H.
-  congruence.
-* reflexivity.
-Qed.
+(* Nice rewrite rules for [exprFreeVars] *)
 
 Lemma exprFreeVars_Var: forall v, 
     isLocalVar v = true -> 
@@ -202,40 +202,154 @@ rewrite NG.
 auto.
 Qed.
 
+Lemma exprFreeVars_Lit : forall i, 
+    exprFreeVars (Lit i) = emptyVarSet.
+Proof.
+  intro. reflexivity.
+Qed.
+
+Hint Rewrite exprFreeVars_Lit : hs_simpl.
+
+Lemma exprFreeVars_App:
+  forall e1 e2,
+  exprFreeVars (App e1 e2) [=] unionVarSet (exprFreeVars e1) (exprFreeVars e2).
+Proof.
+  move=> e1 e2.
+  unfold exprFreeVars,  Base.op_z2218U__.
+  unfold exprFVs, Base.op_z2218U__ .
+  move: (expr_fvs_WF (App e1 e2)) => [vs0 D0].
+  move: (expr_fvs_WF e1) => [vs1 D1].
+  move: (expr_fvs_WF e2) => [vs2 D2].
+  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ D0)) => D3.
+  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ D1)) => D4.
+  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ D2)) => D5.
+  rewrite D3.
+  rewrite D4.
+  rewrite D5.
+  rewrite unionVarSet_filterVarSet.
+  
+  unfold expr_fvs in D0. fold expr_fvs in D0.
+  move: (unionVarSet_unionFV _ _ (expr_fvs e2) (expr_fvs e1) D2 D1) => D6.
+  move: (Denotes_inj1 _ _ _ D0 D6) => E.
+  rewrite -> unionVarSet_sym in E.
+  rewrite E.
+  reflexivity.
+Qed.
+
+Hint Rewrite exprFreeVars_App : hs_simpl.
+
 
 Lemma exprFreeVars_mkLams_rev:
-  forall vs e, exprFreeVars (mkLams (rev vs) e) = delVarSetList (exprFreeVars e) vs.
+  forall vs e, exprFreeVars (mkLams (rev vs) e) [=] delVarSetList (exprFreeVars e) vs.
 Proof.
   intros vs e. revert vs. apply rev_ind; intros.
   - unfold exprFreeVars, exprFVs, Base.op_z2218U__, mkLams.
+
     unfold Foldable.foldr, Foldable.Foldable__list. simpl.
     unfold delVarSetList, UniqSet.delListFromUniqSet.
     destruct (FV.fvVarSet (FV.filterFV isLocalVar (expr_fvs e))); reflexivity.
   - revert H; unfold exprFreeVars, exprFVs, Base.op_z2218U__, mkLams.
-    rewrite delVarSetList_app, delVarSetList_single.
+    rewrite delVarSetList_app. rewrite delVarSetList_single.
     rewrite rev_app_distr. repeat rewrite hs_coq_foldr_list.
     rewrite fold_right_app. intros H. rewrite <- H. simpl.
     unfold addBndr, varTypeTyCoFVs. rewrite union_empty_l.
-    rewrite delVarSet_delFV; [reflexivity |].
+    rewrite delVarSet_fvVarSet; [reflexivity |].
     apply filter_FV_WF. apply expr_fvs_WF.
 Qed.
 
 Lemma exprFreeVars_mkLams:
-  forall vs e, exprFreeVars (mkLams vs e) = delVarSetList (exprFreeVars e) (rev vs).
+  forall vs e, exprFreeVars (mkLams vs e) [=] delVarSetList (exprFreeVars e) (rev vs).
 Proof.
   intros. replace vs with (rev (rev vs)) at 1.
   - apply exprFreeVars_mkLams_rev.
   - apply rev_involutive.
 Qed.
 
+
+
 Lemma exprFreeVars_Lam:	
-  forall v e, exprFreeVars (Lam v e) = delVarSet (exprFreeVars e) v.
+  forall v e, exprFreeVars (Lam v e) [=] delVarSet (exprFreeVars e) v.
 Proof.
   intros v e.
   replace (Lam v e) with (mkLams (rev [v]) e).
   - rewrite <- delVarSetList_single. apply exprFreeVars_mkLams_rev.
   - simpl. unfold mkLams. rewrite hs_coq_foldr_list. reflexivity.
 Qed.
+
+
+Lemma exprFreeVars_Let_NonRec:
+  forall v rhs body,
+  exprFreeVars (Let (NonRec v rhs) body) [=]
+    unionVarSet (exprFreeVars rhs) (delVarSet (exprFreeVars body) v).
+Admitted.
+
+Lemma exprFreeVars_Let_Rec:
+  forall pairs body,
+  exprFreeVars (Let (Rec pairs) body) [=]
+    delVarSetList (unionVarSet (exprsFreeVars (map snd pairs)) (exprFreeVars body))  (map fst pairs).
+Admitted.
+
+Lemma exprFreeVars_Case:
+  forall scrut bndr ty alts,
+  exprFreeVars (Case scrut bndr ty alts) [=]
+    unionVarSet (exprFreeVars scrut) (mapUnionVarSet (fun '(dc,pats,rhs) => delVarSetList (exprFreeVars rhs) (pats ++ [bndr])) alts).
+Admitted.
+
+Lemma exprFreeVars_Cast:
+  forall e co,
+  exprFreeVars (Cast e co) [=] exprFreeVars e.
+Admitted.
+
+Lemma exprFreeVars_Tick:
+  forall e t,
+  exprFreeVars (Tick t e) [=] exprFreeVars e.
+Admitted.
+
+Lemma exprFreeVars_Type:
+  forall t,
+  exprFreeVars (Type_ t) = emptyVarSet.
+Proof. intros. reflexivity. Qed.
+
+Lemma exprFreeVars_Coercion:
+  forall co,
+  exprFreeVars (Coercion co) = emptyVarSet.
+Proof. intros. reflexivity. Qed.
+
+
+(* ---------------------------------------------------------- *)
+
+Lemma subVarSet_exprFreeVars_exprsFreeVars:
+  forall v rhs (pairs : list (CoreBndr * CoreExpr)) ,
+  List.In (v, rhs) pairs ->
+  subVarSet (exprFreeVars rhs) (exprsFreeVars (map snd pairs)) = true.
+Admitted.
+
+Lemma subVarSet_exprsFreeVars:
+  forall (es : list CoreExpr) vs,
+  Forall (fun e => subVarSet (exprFreeVars e) vs = true) es ->
+  subVarSet (exprsFreeVars es) vs = true.
+Admitted.
+
+
+Lemma elemVarSet_exprFreeVars_Var_false: forall v' v,
+    varUnique v' <> varUnique v ->
+    elemVarSet v' (exprFreeVars (Mk_Var v)) = false.
+Proof.
+intros.
+unfold exprFreeVars, exprFVs, expr_fvs.
+unfold_FV.
+simpl.
+destruct (isLocalVar v).
+* simpl.
+  unfold varUnique in H.
+  unfold GHC.Base.op_zeze__, GHC.Base.Eq_Char___, GHC.Base.op_zeze____.
+  rewrite BinNat.N.eqb_neq.
+  contradict H.
+  congruence.
+* reflexivity.
+Qed.
+
+
 
  
 (** Working with [freeVars] *)
@@ -343,67 +457,3 @@ Proof.
   auto.
 Qed.
 
-
-(* Nice rewirte rules for [exprFreeVars] *)
-
-Lemma exprFreeVars_App:
-  forall e1 e2,
-  exprFreeVars (App e1 e2) [=] unionVarSet (exprFreeVars e1) (exprFreeVars e2).
-Admitted.
-
-(*
-Lemma exprFreeVars_Lam:
-  forall v e,
-  exprFreeVars (Lam v e) [=] delVarSet (exprFreeVars e) v.
-Admitted.
-*)
-
-Lemma exprFreeVars_Let_NonRec:
-  forall v rhs body,
-  exprFreeVars (Let (NonRec v rhs) body) [=]
-    unionVarSet (exprFreeVars rhs) (delVarSet (exprFreeVars body) v).
-Admitted.
-
-Lemma exprFreeVars_Let_Rec:
-  forall pairs body,
-  exprFreeVars (Let (Rec pairs) body) [=]
-    delVarSetList (unionVarSet (exprsFreeVars (map snd pairs)) (exprFreeVars body))  (map fst pairs).
-Admitted.
-
-Lemma exprFreeVars_Case:
-  forall scrut bndr ty alts,
-  exprFreeVars (Case scrut bndr ty alts) [=]
-    unionVarSet (exprFreeVars scrut) (mapUnionVarSet (fun '(dc,pats,rhs) => delVarSetList (exprFreeVars rhs) (pats ++ [bndr])) alts).
-Admitted.
-
-Lemma exprFreeVars_Cast:
-  forall e co,
-  exprFreeVars (Cast e co) [=] exprFreeVars e.
-Admitted.
-
-Lemma exprFreeVars_Tick:
-  forall e t,
-  exprFreeVars (Tick t e) [=] exprFreeVars e.
-Admitted.
-
-Lemma exprFreeVars_Type:
-  forall t,
-  exprFreeVars (Type_ t) = emptyVarSet.
-Proof. intros. reflexivity. Qed.
-
-Lemma exprFreeVars_Coercion:
-  forall co,
-  exprFreeVars (Coercion co) = emptyVarSet.
-Proof. intros. reflexivity. Qed.
-
-Lemma subVarSet_exprFreeVars_exprsFreeVars:
-  forall v rhs (pairs : list (CoreBndr * CoreExpr)) ,
-  List.In (v, rhs) pairs ->
-  subVarSet (exprFreeVars rhs) (exprsFreeVars (map snd pairs)) = true.
-Admitted.
-
-Lemma subVarSet_exprsFreeVars:
-  forall (es : list CoreExpr) vs,
-  Forall (fun e => subVarSet (exprFreeVars e) vs = true) es ->
-  subVarSet (exprsFreeVars es) vs = true.
-Admitted.

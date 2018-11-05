@@ -558,7 +558,7 @@ Proof.
     rewrite <- !extendVarSetList_singleton.
     rewrite <- !extendVarSetList_append with (vs1 := vs2).
     apply H.
-    rewrite exprFreeVars_Lam in H0.
+    rewrite -> exprFreeVars_Lam in H0.
     rewrite rev_app_distr.
     simpl.
     rewrite delVarSetList_cons.

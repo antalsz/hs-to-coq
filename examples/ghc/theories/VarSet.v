@@ -1672,8 +1672,6 @@ Proof.
 Qed.
 
 
-
-
 Lemma subVarSet_delVarSetList_extendVarSetList_dual:
   forall jps isvs vs,
   subVarSet jps (extendVarSetList isvs vs)  ->
@@ -1697,8 +1695,33 @@ Qed.
 Lemma mapUnionVarSet_In_subVarSet:
   forall a (x : a) xs f,
   List.In x xs ->
-  subVarSet (f x) (mapUnionVarSet f xs) .
-Admitted.
+  subVarSet (f x) (mapUnionVarSet f xs).
+Proof.
+  intros a x xs f H.
+  generalize dependent x.
+  induction xs; intros x H.
+  - inversion H.
+  - 
+    inversion H as [H'|H'].
+    + unfold mapUnionVarSet.
+      unfold_Foldable_foldr.
+      subst.
+      simpl.
+      set_b_iff.
+      fsetdec.
+    + apply IHxs in H'.
+      clear H IHxs.
+      revert H'.
+      unfold mapUnionVarSet.
+      unfold_Foldable_foldr.
+      intros H'.
+      eapply subVarSet_trans.
+      apply H'.
+      clear H'.
+      set_b_iff.
+      simpl.
+      fsetdec.
+Qed.
 
 Lemma subVarSet_mapUnionVarSet:
   forall a (xs : list a) f vs,

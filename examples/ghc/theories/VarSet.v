@@ -1625,7 +1625,6 @@ Proof.
     fsetdec.
   - intros vs1. revert IHvl.
     hs_simpl.
-    simpl.
     intro IH. 
     rewrite -> IH with (vs1 := delVarSet vs1 a).
     set_b_iff.
@@ -1686,10 +1685,14 @@ Proof.
   - rewrite !delVarSetList_nil.
     rewrite !extendVarSetList_nil in H.
     assumption.
-  - rewrite !delVarSetList_cons.
-    apply IHvs.
-    rewrite !extendVarSetList_cons in H.
-Admitted.
+  - rewrite delVarSetList_cons2.
+    revert H.
+    hs_simpl.
+    intro H.
+    apply IHvs in H.
+    set_b_iff.
+    fsetdec.
+Qed.
 
 Lemma mapUnionVarSet_In_subVarSet:
   forall a (x : a) xs f,

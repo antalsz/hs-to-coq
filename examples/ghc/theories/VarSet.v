@@ -1726,7 +1726,9 @@ Qed.
 Lemma subVarSet_mapUnionVarSet:
   forall a (xs : list a) f vs,
   Forall (fun x => subVarSet (f x) vs ) xs ->
-  subVarSet (mapUnionVarSet f xs) vs .
+  subVarSet (mapUnionVarSet f xs) vs.
+Proof.
+  intros.
 Admitted.
 
 

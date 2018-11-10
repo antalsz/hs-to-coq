@@ -4859,8 +4859,9 @@ Proof.
     repeat match goal with |- context[?b = true] => fold (is_true b) end.
     rewrite <-(ssrbool.rwP ssrbool.andP), <-(ssrbool.rwP (Eq_eq _ _)).
     split; [intros EQ | intros [LIST EQ]]; rewrite EQ; trivial.
-    split; trivial; rewrite !WFSet_eq_size_length'.
-    rewrite Nat2Z.inj_iff; apply eqlist_length, EQ.
+    split; trivial. rewrite !WFSet_eq_size_length'.
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQ. apply Eq_refl.
+    apply Eq_refl.
   - intros a b; rewrite Ord_compare_Gt,Neq_inv,negb_false_iff.
     match goal with |- context[?b = true] => fold (is_true b) end.
     rewrite <-(ssrbool.rwP (Eq_eq _ _)).

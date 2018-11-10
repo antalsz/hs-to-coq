@@ -91,8 +91,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
   (* Everything else comes from our particular implementation *)
 
   (* Equality must be decidable, but doesn't necessarily need to be Coq
-     equality. For VarSets, that is actually case, so we can think about
-     making a signature that is stricter than this one. *)
+     equality. For VarSets, in fact, that is not the case. *)
 
   Definition equal  : t -> t -> bool := 
     fun x y : t => 
@@ -549,7 +548,6 @@ Export VarSetDecide.
 Module Notin.
 
 Module E := Var_as_DT.
-Import Var_as_DT.
 
 
 (* *********************************************************************** *)
@@ -755,6 +753,8 @@ Ltac solve_notin :=
 
 End Notin.
 
+(* --------------------------------------------------------- *)
+
 Require Import ssrbool.
 Instance Eq_VarSet : Eq_ VarSet :=
   fun _ k => k {|
@@ -781,7 +781,3 @@ Proof.
   - intros. cbn. destruct (VarSetFSet.eq_dec x y); reflexivity.
 Qed.
 
-(*
-Instance EqExact_VarSet : EqExact VarSet.
-Admitted.
-*)

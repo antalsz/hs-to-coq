@@ -1,3 +1,6 @@
+(** This file has been manually derived from UniqSet.hs, with modifications in support of 
+    the UniqSet invariant. *)
+
 (* Default settings (from HsToCoq.Coq.Preamble) *)
 
 Generalizable All Variables.
@@ -36,15 +39,6 @@ Require Import Proofs.Unique.
 
 
 (* Properties about Uniques that we need. *)
-
-Lemma eq_getWordKey : forall (x y : Unique) ,  
-    (getWordKey x) == (getWordKey y) = true -> x = y.
-Proof. 
-  intros x y EQ.
-  rewrite <- unique_word in EQ.
-  apply (ssrbool.elimT (@Base.Eq_eq _ _ _ _ _ _)) in EQ.
-  auto.
-Qed.
 
 Lemma lookup_delFromUFM:
   forall A (H: Uniquable A) z (s : UniqFM A) (x y: A),
@@ -168,8 +162,8 @@ Qed.
 
 (* -------------------------------------------------------------------- *)
 
-(** The invariant is that for any unique, the result that we get out has the same unique 
-    stored.
+(** The invariant is that for any unique, the result that we get out has 
+    the same unique stored.
 *)
 Polymorphic Definition UniqInv@{i} {a:Type@{i}} (fm : UniqFM.UniqFM a) `{Unique.Uniquable a} : Type@{i} :=
   forall (x:a)(y:a), 
@@ -180,10 +174,6 @@ Polymorphic Definition UniqSet@{i} (a:Type@{i}) `{Unique.Uniquable a} : Type@{i}
   sigT (fun fm => UniqInv fm).
 
 Local Notation Mk_UniqSet s:= (@existT _ _ s _).
-
-(*
-Arguments Mk_UniqSet {_} {_} _.
-*)
 
 Definition getUniqSet' {a}`{Uniquable a} (arg_0__ : UniqSet a) :=
   let 'existT _ getUniqSet' _ := arg_0__ in
@@ -202,39 +192,51 @@ Instance Unpeel_UniqSet ele
 
 (* Skipping instance Outputable__UniqSet of class Outputable *)
 
-(*
-Program Definition Monoid__UniqSet_mempty {inst_a} `{Unique.Uniquable inst_a} : 
-  UniqSet inst_a :=
+(* SCW: Monoid instances added by hand. *)
+
+Program Definition Monoid__UniqSet_mempty {inst_a} `{Uniquable inst_a} : UniqSet inst_a :=
   Mk_UniqSet GHC.Base.mempty.
-
-Program Definition Monoid__UniqSet_mconcat {inst_a}
-   : list (UniqSet inst_a) -> UniqSet inst_a :=
-  GHC.Prim.coerce GHC.Base.mconcat.
-
-Local Definition Monoid__UniqSet_mappend {inst_a}
-   : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
-  GHC.Prim.coerce GHC.Base.mappend.
 
 Program Definition Semigroup__UniqSet_op_zlzlzgzg__ {inst_a}`{Unique.Uniquable inst_a}
    : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
-  GHC.Prim.coerce _GHC.Base.<<>>_.
+  fun m1 m2 => Mk_UniqSet (plusUFM (getUniqSet' m1) (getUniqSet' m2)).
+Next Obligation.
+  destruct m1. destruct m2.
+  simpl.
+  unfold UniqInv in *. 
+  intros y1 y2 Hu.
+  unfold lookupUFM, plusUFM in *.
+  destruct x. destruct x0.
+  rewrite <- lookup_union in Hu.
+  destruct Hu as [Hl |[_ Hr]].
+  eauto.
+  eauto.
+Qed.
 
 Program Instance Semigroup__UniqSet {a}`{Unique.Uniquable a} : GHC.Base.Semigroup (UniqSet a) :=
   fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqSet_op_zlzlzgzg__ |}.
+
+Local Definition Monoid__UniqSet_mappend {inst_a}`{Unique.Uniquable inst_a}
+   : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
+  Semigroup__UniqSet_op_zlzlzgzg__ .
+
+Local Definition Monoid__UniqSet_mconcat {inst_a}`{Unique.Uniquable inst_a}
+  : list (UniqSet inst_a) -> UniqSet inst_a :=
+  GHC.Base.foldr Monoid__UniqSet_mappend Monoid__UniqSet_mempty.
 
 Program Instance Monoid__UniqSet {a}`{Unique.Uniquable a} : GHC.Base.Monoid (UniqSet a) :=
   fun _ k =>
     k {| GHC.Base.mappend__ := Monoid__UniqSet_mappend ;
          GHC.Base.mconcat__ := Monoid__UniqSet_mconcat ;
          GHC.Base.mempty__ := Monoid__UniqSet_mempty |}.
-*)
+
 (* Skipping instance Data__UniqSet of class Data *)
 
 Program Definition addOneToUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    |Mk_UniqSet set, x => Mk_UniqSet (UniqFM.addToUFM set x x) 
+    | Mk_UniqSet set, x => Mk_UniqSet (UniqFM.addToUFM set x x) 
     end.
 Next Obligation.
 unfold UniqInv in *.
@@ -477,6 +479,7 @@ Next Obligation.
   destruct s as [m].
   eapply lookup_partition; eauto.
 Defined.
+
 Next Obligation.
   unfold UniqInv in *.
   intros x' y' Hl.

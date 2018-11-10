@@ -1,3 +1,10 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
+
+From mathcomp.ssreflect
+Require Import ssreflect ssrnat prime ssrbool eqtype.
+
 Require Import Coq.Lists.List.
 
 Require Import GHC.Base.
@@ -10,8 +17,10 @@ Require Import Proofs.Core.
 Require Import Proofs.Var.
 Require Import Proofs.Unique.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarSetFSet.
 
-Import GHC.Base.ManualNotations.
+Require Import Proofs.GHC.Base.
+Require Import Proofs.ContainerAxioms.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -34,6 +43,15 @@ Axiom isLocalId_uniqAway:
 Axiom isLocalVar_uniqAway:
   forall iss v,
   isLocalVar (uniqAway iss v) = isLocalVar v.
+
+Axiom isId_uniqAway:
+  forall iss v,
+    isId (uniqAway iss v) = isId v.
+
+Axiom isCoVar_uniqAway:
+  forall iss v,
+    isCoVar (uniqAway iss v) = isCoVar v.
+
 
 Axiom nameUnique_varName_uniqAway:
   forall vss v,
@@ -68,67 +86,205 @@ Qed.
 
 (* Eventually replace these with container axioms. *)
 
-Axiom lookupVarEnv_elemVarEnv_true :
+Lemma lookupVarEnv_elemVarEnv_true :
   forall A v (vs : VarEnv A),
    elemVarEnv v vs = true <-> (exists a, lookupVarEnv vs v = Some a).
+Proof.
+  move=> A v vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM.
+  rewrite <- member_lookup. done.
+Qed.
 
-Axiom lookupVarEnv_elemVarEnv_false :
+Lemma lookupVarEnv_elemVarEnv_false :
   forall A v (vs : VarEnv A),
    elemVarEnv v vs = false <-> (lookupVarEnv vs v = None).
+Proof.
+  move=> A v vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM.
+  rewrite non_member_lookup.
+  done.
+Qed.
 
-
-Axiom lookupVarEnv_eq :
+Lemma lookupVarEnv_eq :
   forall A v1 v2 (vs : VarEnv A),
     (v1 == v2) = true ->
     lookupVarEnv vs v1 = lookupVarEnv vs v2.
+Proof.
+  move=> A v1 v2 vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM.
+  move=> h.
+  erewrite lookup_eq ; eauto.
+Qed.
 
-Axiom elemVarEnv_eq :
+Lemma elemVarEnv_eq :
   forall A v1 v2 (vs : VarEnv A),
     (v1 == v2) = true ->
     elemVarEnv v1 vs = elemVarEnv v2 vs.
+  move=> A v1 v2 vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM.
+  move=> h.
+  erewrite member_eq ; eauto.
+Qed.
 
 
-Axiom lookupVarEnv_extendVarEnv_eq :
+Lemma lookupVarEnv_extendVarEnv_eq :
   forall A v1 v2 (vs : VarEnv A) val, 
     v1 == v2 = true ->
     lookupVarEnv (extendVarEnv vs v1 val) v2 = Some val.
+Proof.
+  move=> A v1 v2 vs val.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM.
+  move=> h.
+  erewrite lookup_eq.
+  erewrite lookup_insert ; eauto.
+  rewrite -> fold_is_true  in h.
+  apply eq_unique in h.
+  rewrite h.
+  reflexivity.
+Qed.
 
-Axiom lookupVarEnv_extendVarEnv_neq :
+
+
+Lemma lookupVarEnv_extendVarEnv_neq :
   forall A v1 v2 (vs : VarEnv A) val, 
     v1 == v2 <> true ->
     lookupVarEnv (extendVarEnv vs v1 val) v2 = lookupVarEnv vs v2.
+Proof.
+  move=> A v1 v2 vs val.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM.
+  move=> h.
+  rewrite lookup_insert_neq //.
+  move => nh.
+  rewrite <- eq_unique in nh.
+  rewrite Eq_sym in nh.
+  done.
+Qed.
 
-Axiom elemVarEnv_extendVarEnv_eq :
+Lemma elemVarEnv_extendVarEnv_eq :
   forall A v1 v2 (vs : VarEnv A) val, 
     v1 == v2 = true ->
     elemVarEnv v2 (extendVarEnv vs v1 val) = true.
+Proof.
+  move=> A v1 v2 vs val.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM.
+  move=> h.
+  rewrite member_insert.
+  apply /orP.
+  left.
+  erewrite fold_is_true in h.
+  rewrite -> eq_unique in h.
+  rewrite h.
+  reflexivity.
+Qed.
 
-Axiom elemVarEnv_extendVarEnv_neq :
+Lemma elemVarEnv_extendVarEnv_neq :
   forall A v1 v2 (vs : VarEnv A) val, 
     v1 == v2 <> true ->
     elemVarEnv v2 (extendVarEnv vs v1 val) = elemVarEnv v2 vs.
+Proof.
+  move=> A v1 v2 vs val.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM.
+  move=> h.
+  rewrite member_insert.
+  elim M: (IntMap.Internal.member (Unique.getWordKey (Unique.getUnique v2)) i).
+  rewrite orbT. done.
+  rewrite orbF.
+  apply /Eq_eq.
+  move => h0.
+  rewrite <- eq_unique in h0.
+  rewrite Eq_sym in h0.
+  done.
+Qed.  
 
 
-Axiom elemVarEnv_delVarEnv_eq :
+
+Lemma elemVarEnv_delVarEnv_eq :
   forall A v1 v2 (vs : VarEnv A), 
     v1 == v2 = true ->
     elemVarEnv v2 (delVarEnv vs v1) = false.
+Proof.
+  move=> A v1 v2 vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv, delVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM, UniqFM.delFromUFM.
+  move => h.
+  rewrite -> fold_is_true in h.
+  rewrite -> eq_unique in h.
+  rewrite h.
+  rewrite non_member_lookup.
+  apply delete_eq.
+Qed.
 
-Axiom elemVarEnv_delVarEnv_neq :
+
+Lemma elemVarEnv_delVarEnv_neq :
   forall A v1 v2 (env: VarEnv A), (v1 == v2) = false -> 
                elemVarEnv v2 (delVarEnv env v1) = elemVarEnv v2 env.
+Proof.
+  move=> A v1 v2 vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv, delVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM, UniqFM.delFromUFM.
+  move => h.
+  set k1 := (Unique.getWordKey (Unique.getUnique v1)).
+  set k2 := (Unique.getWordKey (Unique.getUnique v2)).
+  assert (k1 <> k2).
+   { move => h1. subst k1. subst k2.
+     rewrite <- eq_unique in h1.
+     rewrite h1 in h.
+     done. }
+   apply member_delete_neq.
+   auto.
+Qed.
 
-
-Axiom lookupVarEnv_delVarEnv_eq :
+Lemma lookupVarEnv_delVarEnv_eq :
   forall A v1 v2 (vs : VarEnv A), 
     v1 == v2 = true ->
     lookupVarEnv (delVarEnv vs v1) v2 = None.
+Proof. 
+  move=> A v1 v2 vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv, delVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM, UniqFM.delFromUFM.
+  move => h.
+  erewrite fold_is_true in h.
+  erewrite eq_unique in h.
+  rewrite h.
+  apply delete_eq.
+Qed.
 
-Axiom lookupVarEnv_delVarEnv_neq :
+Lemma lookupVarEnv_delVarEnv_neq :
   forall A v1 v2 (vs : VarEnv A), 
     v1 == v2 <> true ->
     lookupVarEnv (delVarEnv vs v1) v2 = lookupVarEnv vs v2.
-
+Proof.
+  move=> A v1 v2 vs.
+  elim: vs => [i].
+  unfold elemVarEnv, lookupVarEnv, extendVarEnv, delVarEnv.
+  unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM, UniqFM.delFromUFM.
+  move => h.
+  apply delete_neq.
+  move => h0.
+  erewrite <- eq_unique in h0.
+  rewrite Eq_sym in h0.
+  rewrite h0 in h.
+  done.
+Qed.
 
 (** [minusDom] **)
 
@@ -156,13 +312,13 @@ Ltac rewrite_minusDom_true :=
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
-    repeat rewrite lookupVarSet_filterVarSet_false with 
+    repeat rewrite -> lookupVarSet_filterVarSet_false with 
         (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); try rewrite H; auto 
   | [ H : elemVarEnv ?var ?init_env = true, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
-    rewrite lookupVarSet_filterVarSet_false with
+    rewrite -> lookupVarSet_filterVarSet_false with
         (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2; 
     try rewrite H; auto 
                                                                     
@@ -174,14 +330,14 @@ Ltac rewrite_minusDom_false :=
       context [ lookupVarSet 
                   (minusDom ?s ?init_env) ?var ] ] =>  
     unfold minusDom;
-    repeat rewrite lookupVarSet_filterVarSet_true
+    repeat rewrite -> lookupVarSet_filterVarSet_true
     with (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))); 
     try rewrite H; auto 
   | [ H : elemVarEnv ?var ?init_env = false, 
           H2: context [ lookupVarSet 
                           (minusDom ?s ?init_env) ?var ] |- _ ] =>  
     unfold minusDom in H2;
-    rewrite lookupVarSet_filterVarSet_true with 
+    rewrite -> lookupVarSet_filterVarSet_true with 
         (f := (fun v0 : Var => negb (elemVarEnv v0 init_env ))) in H2 ; 
     try rewrite H; auto  
   end.
@@ -209,7 +365,7 @@ Proof.
   intros.
   rewrite <- lookupVarEnv_elemVarEnv_false in H.
   unfold minusDom.
-  rewrite lookupVarSet_filterVarSet_true
+  rewrite -> lookupVarSet_filterVarSet_true
     with (f := (fun v0 : Var => negb (elemVarEnv v0 env))).
   auto.
   rewrite H. simpl. auto.
@@ -249,8 +405,8 @@ Proof.
   apply almostEqual_refl; auto.
   rewrite elemVarEnv_delVarEnv_neq in IN; auto.
   rewrite IN. auto.
-  intro h. rewrite h in EQ. discriminate.
-  intro h. rewrite h in EQ. discriminate.
+  intro h. rewrite EQ in h. auto. 
+  intro h. rewrite EQ in h. auto.
 Qed.
 
 
@@ -263,13 +419,15 @@ Proof.
   destruct (elemVarEnv v' env) eqn:Eenv; auto.
   + (* v' is in dom of env. so cannot be looked up. *)
     unfold minusDom.
-    rewrite 2 lookupVarSet_filterVarSet_false; auto.  
+    rewrite -> lookupVarSet_filterVarSet_false; auto.  
+    rewrite -> lookupVarSet_filterVarSet_false; auto.  
     rewrite Eenv. simpl. auto.
     rewrite elemVarEnv_extendVarEnv_neq.
     rewrite Eenv. simpl. auto.
     auto.
   + unfold minusDom.
-    rewrite 2 lookupVarSet_filterVarSet_true; auto.  
+    rewrite -> lookupVarSet_filterVarSet_true; auto.  
+    rewrite -> lookupVarSet_filterVarSet_true; auto.  
     rewrite lookupVarSet_extendVarSet_neq; auto.
     auto.
     rewrite Eenv. simpl. auto.
@@ -298,7 +456,7 @@ Proof.
   intros.
   intro var.
   destruct (var == v) eqn:EQ.
-  rewrite lookupVarSet_eq with (v2 := v); auto.
+  rewrite -> lookupVarSet_eq with (v2 := v); auto.
   unfold minusDom.
   rewrite lookupVarSet_filterVarSet_false. 
   auto.
@@ -333,6 +491,7 @@ Lemma getInScopeVars_extendInScopeSetList:
   getInScopeVars (extendInScopeSetList iss vs) = extendVarSetList (getInScopeVars iss) vs.
 Proof.
   intros.
+  rewrite -> extendVarSetList_foldl'.
   unfold getInScopeVars.
   unfold extendInScopeSetList.
   set_b_iff.
@@ -367,3 +526,7 @@ Proof.
   f_equal.
   omega.
 Qed.
+
+
+
+

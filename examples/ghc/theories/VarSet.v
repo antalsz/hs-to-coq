@@ -1728,8 +1728,24 @@ Lemma subVarSet_mapUnionVarSet:
   Forall (fun x => subVarSet (f x) vs ) xs ->
   subVarSet (mapUnionVarSet f xs) vs.
 Proof.
-  intros.
-Admitted.
+  intros a xs f vs H.
+  induction xs.
+  - unfold mapUnionVarSet.
+    unfold_Foldable_foldr.
+    simpl.
+    apply subVarSet_emptyVarSet.
+  - inversion H.
+    subst.
+    apply IHxs in H3.
+    clear IHxs.
+    revert H3.
+    unfold mapUnionVarSet.
+    unfold_Foldable_foldr.
+    intros H3.
+    set_b_iff.
+    simpl.
+    fsetdec.
+Qed.
 
 
 Lemma subVarSet_unionVarSet:
@@ -1895,11 +1911,27 @@ Proof.
   intros.
   unfold StrongSubset.
   intros v.
-  destruct_match; try trivial.
-  destruct_match.
-  * admit.
-  * admit.
-Admitted.
+  destruct (lookupVarSet vs v) as [v'|] eqn:Hl;
+    [|trivial].
+  rewrite lookupVarSet_extendVarSetList_l.
+  + rewrite Hl.
+    apply almostEqual_refl.
+  + apply /negP.
+    intros He.
+    apply disjointVarSet_mkVarSet in H.
+    apply lookupVarSet_elemVarSet in Hl.
+    induction H; [inversion He|].
+    destruct (x==v) eqn:Hx.
+    * eapply elemVarSet_eq in Hx.
+      rewrite <- Hx in Hl.
+      rewrite H in Hl.
+      inversion Hl.
+    * destruct (elemVarSet v (mkVarSet l)) eqn:H'; auto.
+      pose proof (conj Hx H') as Ha.
+      rewrite <- elemVarSet_mkVarSet_cons in Ha.
+      rewrite Ha in He.
+      inversion He.
+Qed.
 
 
 Lemma StrongSubset_extend_ae :

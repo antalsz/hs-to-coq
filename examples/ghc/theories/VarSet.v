@@ -2003,11 +2003,44 @@ Proof.
   rewrite Forall_forall. intros. apply almostEqual_refl.
 Qed.
 
-Lemma StrongSubset_delVarSet :
+Lemma lookupVarSet_delVarSet_None:
+  forall v vs, lookupVarSet (delVarSet vs v) v = None.
+Proof.
+  intros.
+  unfold lookupVarSet,
+  UniqSet.lookupUniqSet,
+  UniqFM.lookupUFM.
+  unfold delVarSet,
+  UniqSet.delOneFromUniqSet,
+  UniqFM.delFromUFM.
+  destruct vs.
+  destruct getUniqSet'.
+  simpl.
+  apply delete_eq.
+Qed.
+
+Lemma StrongSubset_delVarSet:
   forall vs1 vs2 v,
   StrongSubset vs1 vs2 ->
   StrongSubset (delVarSet vs1 v) (delVarSet vs2 v).
-Admitted.
+Proof.
+  intros.
+  unfold StrongSubset in *.
+  intro var.
+  specialize (H var).
+  destruct (v == var) eqn:EQv.
+  - rewrite Base.Eq_sym in EQv.
+    erewrite lookupVarSet_eq;
+      [|eassumption].
+    rewrite lookupVarSet_delVarSet_None.
+    trivial.
+  - rewrite lookupVarSet_delVarSet_neq;
+      [|rewrite EQv; auto].
+    destruct (lookupVarSet vs1 var) eqn:Hl; auto.
+    rewrite lookupVarSet_delVarSet_neq;
+      [|rewrite EQv; auto].
+    auto.
+Qed.
 
 Lemma StrongSubset_delete_fresh :
   forall vs v,

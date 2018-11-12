@@ -2046,7 +2046,21 @@ Lemma StrongSubset_delete_fresh :
   forall vs v,
   lookupVarSet vs v = None ->
   StrongSubset vs (delVarSet vs v).
-Admitted.
+Proof.
+  intros.
+  unfold StrongSubset in *.
+  intro var.
+  destruct (v == var) eqn:EQv.
+  - rewrite Base.Eq_sym in EQv.
+    erewrite lookupVarSet_eq;
+      [|eassumption].
+    rewrite H.
+    trivial.
+  - rewrite lookupVarSet_delVarSet_neq;
+      [|rewrite EQv; auto].
+    destruct (lookupVarSet vs var) eqn:Hl; auto.
+    apply almostEqual_refl.
+Qed.
 
 (* Respects_StrongSubset *)
 

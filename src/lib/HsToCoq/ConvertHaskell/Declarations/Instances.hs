@@ -328,8 +328,14 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
           instRHS <- fmap Record $ forM classMethods $ \m -> do
                        method_body <- quantify m $ Qualid (localNameFor m)
                        return (qualidMapBase (<> "__") m, method_body)
-          let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident "k")])
-                             (App1 (Var "k") instRHS)
+          -- TODO: Theis should probably be created with 'gensym'/'genqid', but then I
+          -- have to be within a 'LocalConvMonad' and then I have to think exactly about
+          -- what that means here.
+          let cont_name :: Qualid
+              cont_name = "k__"
+          -- cont_name <- genqid "k"
+          let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident cont_name)])
+                             (App1 (Qualid cont_name) instRHS)
           let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
           
           pure $ ProgramSentence (InstanceSentence instTerm) Nothing

@@ -2178,16 +2178,19 @@ Proof.
   unfold Respects_StrongSubset in H.  
   apply H in Hs; auto.
 Qed.
-  
-(* This is tricky, because of rewriting under a binder :-( *)
+
 
 Lemma Respects_StrongSubset_extendVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
 Proof.
-  
-Admitted.
+  intros v P H vs vs' Hs Hvs.
+  unfold Respects_StrongSubset in H.
+  apply StrongSubset_extend with (v:=v) in Hs.
+  unfold Respects_StrongSubset in H.
+  apply H in Hs; auto.
+Qed.
 
 Lemma Respects_StrongSubset_extendVarSetList:
   forall v P,

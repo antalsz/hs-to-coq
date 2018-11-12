@@ -2062,6 +2062,21 @@ Proof.
     apply almostEqual_refl.
 Qed.
 
+Lemma StrongSubset_delVarSetList:
+  forall vs1 vs2 vs,
+  StrongSubset vs1 vs2 ->
+  StrongSubset (delVarSetList vs1 vs) (delVarSetList vs2 vs).
+Proof.
+  intros vs1 vs2 vs.
+  generalize dependent vs2.
+  generalize dependent vs1.
+  induction vs;
+    intros vs1 vs2 H; hs_simpl;
+      [assumption|].
+  eapply StrongSubset_delVarSet in H.
+  eauto.
+Qed.
+
 (* Respects_StrongSubset *)
 
 Definition Respects_StrongSubset (P : VarSet -> Prop) : Prop :=
@@ -2159,8 +2174,11 @@ Lemma Respects_StrongSubset_delVarSetList:
   Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
 Proof.
   intros vs2 P H vs vs' Hs Hvs2.
+  apply StrongSubset_delVarSetList with (vs:=vs2) in Hs.
+  unfold Respects_StrongSubset in H.  
+  apply H in Hs; auto.
+Qed.
   
-Admitted.
 (* This is tricky, because of rewriting under a binder :-( *)
 
 Lemma Respects_StrongSubset_extendVarSet:

@@ -460,6 +460,15 @@ Proof.
     destruct tickish; unfold tickishFreeVars in *; hs_simpl;
       try (apply H; assumption).
     simpl in b.
+    rewrite -> subVarSet_unionVarSet, andb_true_iff; split.
+    eauto.
+    set_b_iff.
+    move=> x InX.
+    rewrite -> filter_iff in InX; try apply RespectsVar_isLocalVar.
+    move: InX => [i0 i1].
+    rewrite -> Forall_forall in b.    
+    rewrite -> extendVarSetList_iff in i0. 
+    destruct i0; try done.
     admit.
   - apply subVarSet_emptyVarSet.
   - apply subVarSet_emptyVarSet.

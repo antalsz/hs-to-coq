@@ -2158,8 +2158,10 @@ Lemma Respects_StrongSubset_delVarSetList:
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
 Proof.
+  intros vs2 P H vs vs' Hs Hvs2.
   
-Admitted. (* This is tricky, because of rewriting under a binder :-( *)
+Admitted.
+(* This is tricky, because of rewriting under a binder :-( *)
 
 Lemma Respects_StrongSubset_extendVarSet:
   forall v P,

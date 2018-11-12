@@ -145,9 +145,9 @@ Local Definition MonadTrans__WriterT_lift {inst_w} `{(GHC.Base.Monoid inst_w)}
 
 Program Instance MonadTrans__WriterT {w} `{(GHC.Base.Monoid w)}
    : Control.Monad.Trans.Class.MonadTrans (WriterT w) :=
-  fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-           MonadTrans__WriterT_lift |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__WriterT_lift |}.
 
 (* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
    `Control.Monad.Trans.Writer.Lazy.MonadFix__WriterT' *)
@@ -191,9 +191,9 @@ Local Definition Functor__WriterT_op_zlzd__ {inst_m} {inst_w}
 
 Program Instance Functor__WriterT {m} {w} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (WriterT w m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WriterT_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WriterT_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__WriterT_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WriterT_op_zlzd__ |}.
 
 Local Definition Applicative__WriterT_liftA2 {inst_w} {inst_m} `{GHC.Base.Monoid
   inst_w} `{GHC.Base.Applicative inst_m}
@@ -220,11 +220,11 @@ Local Definition Applicative__WriterT_op_ztzg__ {inst_w} {inst_m}
 Program Instance Applicative__WriterT {w} {m} `{GHC.Base.Monoid w}
   `{GHC.Base.Applicative m}
    : GHC.Base.Applicative (WriterT w m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__WriterT_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WriterT_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WriterT_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__WriterT_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__WriterT_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WriterT_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WriterT_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__WriterT_pure |}.
 
 Local Definition Monad__WriterT_op_zgzg__ {inst_w} {inst_m} `{GHC.Base.Monoid
   inst_w} `{GHC.Base.Monad inst_m}
@@ -240,10 +240,10 @@ Local Definition Monad__WriterT_return_ {inst_w} {inst_m} `{GHC.Base.Monoid
 
 Program Instance Monad__WriterT {w} {m} `{GHC.Base.Monoid w} `{GHC.Base.Monad m}
    : GHC.Base.Monad (WriterT w m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WriterT_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WriterT_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__WriterT_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WriterT_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WriterT_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__WriterT_return_ |}.
 
 Local Definition MonadFail__WriterT_fail {inst_w} {inst_m} `{GHC.Base.Monoid
   inst_w} `{Control.Monad.Fail.MonadFail inst_m}
@@ -253,8 +253,8 @@ Local Definition MonadFail__WriterT_fail {inst_w} {inst_m} `{GHC.Base.Monoid
 Program Instance MonadFail__WriterT {w} {m} `{GHC.Base.Monoid w}
   `{Control.Monad.Fail.MonadFail m}
    : Control.Monad.Fail.MonadFail (WriterT w m) :=
-  fun _ k =>
-    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__WriterT_fail |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__WriterT_fail |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Monad.Trans.Writer.Lazy.Alternative__WriterT' *)
@@ -371,34 +371,34 @@ Local Definition Foldable__WriterT_toList {inst_f} {inst_w}
 
 Program Instance Foldable__WriterT {f} {w} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (WriterT w f) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__WriterT_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__WriterT_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__WriterT_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__WriterT_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__WriterT_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__WriterT_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__WriterT_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__WriterT_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__WriterT_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__WriterT_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__WriterT_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__WriterT_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__WriterT_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__WriterT_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__WriterT_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__WriterT_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__WriterT_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__WriterT_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__WriterT_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__WriterT_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__WriterT_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__WriterT_toList |}.
 
 Program Instance Traversable__WriterT {f} {w} `{(Data.Traversable.Traversable
    f)}
    : Data.Traversable.Traversable (WriterT w f) :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__WriterT_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__WriterT_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__WriterT_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__WriterT_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__WriterT_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__WriterT_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__WriterT_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__WriterT_traverse |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Control.Monad.Trans.Writer.Lazy.Show__WriterT' *)
@@ -435,15 +435,15 @@ Local Definition Eq1__WriterT_liftEq {inst_w} {inst_m} `{GHC.Base.Eq_ inst_w}
 Program Instance Eq1__WriterT {w} {m} `{GHC.Base.Eq_ w}
   `{Data.Functor.Classes.Eq1 m}
    : Data.Functor.Classes.Eq1 (WriterT w m) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__WriterT_liftEq |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__WriterT_liftEq |}.
 
 Program Instance Ord1__WriterT {w} {m} `{GHC.Base.Ord w}
   `{Data.Functor.Classes.Ord1 m}
    : Data.Functor.Classes.Ord1 (WriterT w m) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-           Ord1__WriterT_liftCompare |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__WriterT_liftCompare |}.
 
 Local Definition Ord__WriterT_compare {inst_w} {inst_m} {inst_a} `{GHC.Base.Ord
   inst_w} `{Data.Functor.Classes.Ord1 inst_m} `{GHC.Base.Ord inst_a}
@@ -498,21 +498,21 @@ Local Definition Eq___WriterT_op_zsze__ {inst_w} {inst_m} {inst_a}
 Program Instance Eq___WriterT {w} {m} {a} `{GHC.Base.Eq_ w}
   `{Data.Functor.Classes.Eq1 m} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (WriterT w m a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___WriterT_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___WriterT_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___WriterT_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___WriterT_op_zsze__ |}.
 
 Program Instance Ord__WriterT {w} {m} {a} `{GHC.Base.Ord w}
   `{Data.Functor.Classes.Ord1 m} `{GHC.Base.Ord a}
    : GHC.Base.Ord (WriterT w m a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__WriterT_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__WriterT_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__WriterT_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__WriterT_op_zgze__ ;
-         GHC.Base.compare__ := Ord__WriterT_compare ;
-         GHC.Base.max__ := Ord__WriterT_max ;
-         GHC.Base.min__ := Ord__WriterT_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__WriterT_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__WriterT_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__WriterT_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__WriterT_op_zgze__ ;
+           GHC.Base.compare__ := Ord__WriterT_compare ;
+           GHC.Base.max__ := Ord__WriterT_max ;
+           GHC.Base.min__ := Ord__WriterT_min |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Show1', including
    `Control.Monad.Trans.Writer.Lazy.Show1__WriterT' *)

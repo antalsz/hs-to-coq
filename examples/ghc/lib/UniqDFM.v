@@ -126,9 +126,9 @@ Local Definition Functor__TaggedVal_op_zlzd__
   fun {a} {b} => Functor__TaggedVal_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__TaggedVal : GHC.Base.Functor TaggedVal :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__TaggedVal_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__TaggedVal_op_zlzd__ |}.
 
 Definition mapUDFM {elt1} {elt2}
    : (elt1 -> elt2) -> UniqDFM elt1 -> UniqDFM elt2 :=
@@ -404,9 +404,9 @@ Local Definition Eq___TaggedVal_op_zsze__ {inst_val} `{GHC.Base.Eq_ inst_val}
 
 Program Instance Eq___TaggedVal {val} `{GHC.Base.Eq_ val}
    : GHC.Base.Eq_ (TaggedVal val) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TaggedVal_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TaggedVal_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TaggedVal_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TaggedVal_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `UniqDFM.Outputable__UniqDFM' *)
@@ -416,7 +416,8 @@ Local Definition Semigroup__UniqDFM_op_zlzlzgzg__ {inst_a}
   plusUDFM.
 
 Program Instance Semigroup__UniqDFM {a} : GHC.Base.Semigroup (UniqDFM a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqDFM_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqDFM_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__UniqDFM_mappend {inst_a}
    : (UniqDFM inst_a) -> (UniqDFM inst_a) -> (UniqDFM inst_a) :=
@@ -430,10 +431,10 @@ Local Definition Monoid__UniqDFM_mconcat {inst_a}
   GHC.Base.foldr Monoid__UniqDFM_mappend Monoid__UniqDFM_mempty.
 
 Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
-         GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
-         GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__UniqDFM_mappend ;
+           GHC.Base.mconcat__ := Monoid__UniqDFM_mconcat ;
+           GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
 
 (* External variables:
      None Some andb bool cons false list nat negb nil op_zt__ option orb pair true

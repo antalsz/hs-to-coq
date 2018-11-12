@@ -26,16 +26,16 @@ Record Category__Dict (cat : Type -> Type -> Type) := Category__Dict_Build {
   op_z2218U____ : forall {b} {c} {a}, cat b c -> cat a b -> cat a c }.
 
 Definition Category (cat : Type -> Type -> Type) :=
-  forall r, (Category__Dict cat -> r) -> r.
+  forall r__, (Category__Dict cat -> r__) -> r__.
 
 Existing Class Category.
 
-Definition id `{g : Category cat} : forall {a}, cat a a :=
-  g _ (id__ cat).
+Definition id `{g__0__ : Category cat} : forall {a}, cat a a :=
+  g__0__ _ (id__ cat).
 
-Definition op_z2218U__ `{g : Category cat}
+Definition op_z2218U__ `{g__0__ : Category cat}
    : forall {b} {c} {a}, cat b c -> cat a b -> cat a c :=
-  g _ (op_z2218U____ cat).
+  g__0__ _ (op_z2218U____ cat).
 
 Notation "'_∘_'" := (op_z2218U__).
 
@@ -77,9 +77,9 @@ Local Definition Category__arrow_op_z2218U__
   fun {b} {c} {a} => _GHC.Base.∘_.
 
 Program Instance Category__arrow : Category GHC.Prim.arrow :=
-  fun _ k =>
-    k {| id__ := fun {a} => Category__arrow_id ;
-         op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
+  fun _ k__ =>
+    k__ {| id__ := fun {a} => Category__arrow_id ;
+           op_z2218U____ := fun {b} {c} {a} => Category__arrow_op_z2218U__ |}.
 
 Module Notations.
 Notation "'_Control.Category.∘_'" := (op_z2218U__).

@@ -871,9 +871,9 @@ Local Definition Eq___DeBruijn__list_op_zsze__ {inst_a} `{GHC.Base.Eq_ (DeBruijn
 
 Program Instance Eq___DeBruijn__list {a} `{GHC.Base.Eq_ (DeBruijn a)}
    : GHC.Base.Eq_ (DeBruijn (list a)) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___DeBruijn__list_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___DeBruijn__list_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___DeBruijn__list_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___DeBruijn__list_op_zsze__ |}.
 
 (* Skipping instance `TrieMap.Eq___DeBruijn__unit' of class `GHC.Base.Eq_' *)
 

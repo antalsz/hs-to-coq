@@ -267,9 +267,9 @@ Local Definition Eq___RealSrcLoc_op_zsze__ : RealSrcLoc -> RealSrcLoc -> bool :=
   fun x y => negb (Eq___RealSrcLoc_op_zeze__ x y).
 
 Program Instance Eq___RealSrcLoc : GHC.Base.Eq_ RealSrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___RealSrcLoc_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___RealSrcLoc_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___RealSrcLoc_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___RealSrcLoc_op_zsze__ |}.
 
 Definition Ord__RealSrcLoc_op_zl__ :=
   Ord__RealSrcLoc_op_zl.
@@ -314,22 +314,22 @@ Local Definition Eq___SrcLoc_op_zeze__ : SrcLoc -> SrcLoc -> bool :=
     end.
 
 Program Instance Ord__RealSrcLoc : GHC.Base.Ord RealSrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__RealSrcLoc_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__RealSrcLoc_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__RealSrcLoc_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__RealSrcLoc_op_zgze__ ;
-         GHC.Base.compare__ := Ord__RealSrcLoc_compare ;
-         GHC.Base.max__ := Ord__RealSrcLoc_max ;
-         GHC.Base.min__ := Ord__RealSrcLoc_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__RealSrcLoc_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__RealSrcLoc_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__RealSrcLoc_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__RealSrcLoc_op_zgze__ ;
+           GHC.Base.compare__ := Ord__RealSrcLoc_compare ;
+           GHC.Base.max__ := Ord__RealSrcLoc_max ;
+           GHC.Base.min__ := Ord__RealSrcLoc_min |}.
 
 Local Definition Eq___SrcLoc_op_zsze__ : SrcLoc -> SrcLoc -> bool :=
   fun x y => negb (Eq___SrcLoc_op_zeze__ x y).
 
 Program Instance Eq___SrcLoc : GHC.Base.Eq_ SrcLoc :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___SrcLoc_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___SrcLoc_op_zsze__ |}.
 
 (* Skipping instance `SrcLoc.Ord__SrcLoc' of class `GHC.Base.Ord' *)
 
@@ -351,9 +351,9 @@ Local Definition Eq___RealSrcSpan_op_zsze__
   fun x y => negb (Eq___RealSrcSpan_op_zeze__ x y).
 
 Program Instance Eq___RealSrcSpan : GHC.Base.Eq_ RealSrcSpan :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___RealSrcSpan_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___RealSrcSpan_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___RealSrcSpan_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___RealSrcSpan_op_zsze__ |}.
 
 Local Definition Eq___SrcSpan_op_zeze__ : SrcSpan -> SrcSpan -> bool :=
   fun arg_0__ arg_1__ =>
@@ -367,9 +367,9 @@ Local Definition Eq___SrcSpan_op_zsze__ : SrcSpan -> SrcSpan -> bool :=
   fun x y => negb (Eq___SrcSpan_op_zeze__ x y).
 
 Program Instance Eq___SrcSpan : GHC.Base.Eq_ SrcSpan :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SrcSpan_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SrcSpan_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___SrcSpan_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___SrcSpan_op_zsze__ |}.
 
 (* Skipping instance `SrcLoc.Ord__SrcSpan' of class `GHC.Base.Ord' *)
 
@@ -391,9 +391,9 @@ Local Definition Eq___GenLocated_op_zsze__ {inst_l} {inst_e} `{GHC.Base.Eq_
 
 Program Instance Eq___GenLocated {l} {e} `{GHC.Base.Eq_ l} `{GHC.Base.Eq_ e}
    : GHC.Base.Eq_ (GenLocated l e) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___GenLocated_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___GenLocated_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___GenLocated_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___GenLocated_op_zsze__ |}.
 
 (* Skipping instance `SrcLoc.Ord__GenLocated' of class `GHC.Base.Ord' *)
 
@@ -417,9 +417,9 @@ Local Definition Functor__GenLocated_op_zlzd__ {inst_l}
       end.
 
 Program Instance Functor__GenLocated {l} : GHC.Base.Functor (GenLocated l) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__GenLocated_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__GenLocated_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__GenLocated_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__GenLocated_op_zlzd__ |}.
 
 Local Definition Foldable__GenLocated_foldMap {inst_l}
    : forall {m} {a},
@@ -494,21 +494,21 @@ Local Definition Foldable__GenLocated_toList {inst_l}
 
 Program Instance Foldable__GenLocated {l}
    : Data.Foldable.Foldable (GenLocated l) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__GenLocated_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__GenLocated_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__GenLocated_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__GenLocated_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__GenLocated_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__GenLocated_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__GenLocated_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__GenLocated_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__GenLocated_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__GenLocated_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__GenLocated_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__GenLocated_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__GenLocated_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__GenLocated_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__GenLocated_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__GenLocated_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__GenLocated_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__GenLocated_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__GenLocated_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__GenLocated_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__GenLocated_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__GenLocated_toList |}.
 
 Local Definition Traversable__GenLocated_traverse {inst_l}
    : forall {f} {a} {b},
@@ -541,15 +541,15 @@ Local Definition Traversable__GenLocated_sequence {inst_l}
 
 Program Instance Traversable__GenLocated {l}
    : Data.Traversable.Traversable (GenLocated l) :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__GenLocated_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__GenLocated_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__GenLocated_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__GenLocated_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__GenLocated_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__GenLocated_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__GenLocated_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__GenLocated_traverse |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `SrcLoc.Show__RealSrcLoc' *)
@@ -597,14 +597,14 @@ Local Definition Ord__RealSrcSpan_min
   fun x y => if Ord__RealSrcSpan_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__RealSrcSpan : GHC.Base.Ord RealSrcSpan :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__RealSrcSpan_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__RealSrcSpan_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__RealSrcSpan_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__RealSrcSpan_op_zgze__ ;
-         GHC.Base.compare__ := Ord__RealSrcSpan_compare ;
-         GHC.Base.max__ := Ord__RealSrcSpan_max ;
-         GHC.Base.min__ := Ord__RealSrcSpan_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__RealSrcSpan_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__RealSrcSpan_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__RealSrcSpan_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__RealSrcSpan_op_zgze__ ;
+           GHC.Base.compare__ := Ord__RealSrcSpan_compare ;
+           GHC.Base.max__ := Ord__RealSrcSpan_max ;
+           GHC.Base.min__ := Ord__RealSrcSpan_min |}.
 
 (* Skipping all instances of class `Json.ToJson', including
    `SrcLoc.ToJson__RealSrcSpan' *)

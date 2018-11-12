@@ -160,9 +160,9 @@ Local Definition Functor__StateT_op_zlzd__ {inst_m} {inst_s} `{(GHC.Base.Functor
 
 Program Instance Functor__StateT {m} {s} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (StateT s m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateT_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateT_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateT_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateT_op_zlzd__ |}.
 
 Local Definition Applicative__StateT_liftA2 {inst_m} {inst_s} `{GHC.Base.Functor
   inst_m} `{GHC.Base.Monad inst_m}
@@ -190,11 +190,11 @@ Definition Applicative__StateT_op_ztzg__ {inst_m} {inst_s} `{_
 Program Instance Applicative__StateT {m} {s} `{GHC.Base.Functor m}
   `{GHC.Base.Monad m}
    : GHC.Base.Applicative (StateT s m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateT_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateT_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateT_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__StateT_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateT_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateT_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateT_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__StateT_pure |}.
 
 Local Definition Monad__StateT_return_ {inst_m} {inst_s} `{(GHC.Base.Monad
    inst_m)}
@@ -203,10 +203,10 @@ Local Definition Monad__StateT_return_ {inst_m} {inst_s} `{(GHC.Base.Monad
 
 Program Instance Monad__StateT {m} {s} `{(GHC.Base.Monad m)}
    : GHC.Base.Monad (StateT s m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__StateT_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__StateT_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__StateT_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__StateT_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__StateT_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__StateT_return_ |}.
 
 Definition modify' {m} {s} `{(GHC.Base.Monad m)}
    : (s -> s) -> StateT s m unit :=
@@ -241,9 +241,9 @@ Local Definition MonadTrans__StateT_lift {inst_s}
 
 Program Instance MonadTrans__StateT {s}
    : Control.Monad.Trans.Class.MonadTrans (StateT s) :=
-  fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-           MonadTrans__StateT_lift |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__StateT_lift |}.
 
 (* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
    `Control.Monad.Trans.State.Lazy.MonadFix__StateT' *)
@@ -258,8 +258,8 @@ Local Definition MonadFail__StateT_fail {inst_m} {inst_s}
 
 Program Instance MonadFail__StateT {m} {s} `{(Control.Monad.Fail.MonadFail m)}
    : Control.Monad.Fail.MonadFail (StateT s m) :=
-  fun _ k =>
-    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__StateT_fail |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__StateT_fail |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Monad.Trans.State.Lazy.Alternative__StateT' *)

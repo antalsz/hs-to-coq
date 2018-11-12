@@ -301,19 +301,19 @@ Local Definition Eq___Literal_op_zsze__ : Literal -> Literal -> bool :=
   fun a b => match cmpLit a b with | Eq => false | _ => true end.
 
 Program Instance Eq___Literal : GHC.Base.Eq_ Literal :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Literal_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Literal_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Literal_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Literal_op_zsze__ |}.
 
 Program Instance Ord__Literal : GHC.Base.Ord Literal :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Literal_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Literal_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Literal_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Literal_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Literal_compare ;
-         GHC.Base.max__ := Ord__Literal_max ;
-         GHC.Base.min__ := Ord__Literal_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Literal_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Literal_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Literal_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Literal_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Literal_compare ;
+           GHC.Base.max__ := Ord__Literal_max ;
+           GHC.Base.min__ := Ord__Literal_min |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Literal.Outputable__Literal' *)

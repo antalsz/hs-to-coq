@@ -30,21 +30,21 @@ Record MonadZip__Dict m := MonadZip__Dict_Build {
   mzipWith__ : forall {a} {b} {c}, (a -> b -> c) -> m a -> m b -> m c }.
 
 Definition MonadZip m `{GHC.Base.Monad m} :=
-  forall r, (MonadZip__Dict m -> r) -> r.
+  forall r__, (MonadZip__Dict m -> r__) -> r__.
 
 Existing Class MonadZip.
 
-Definition munzip `{g : MonadZip m}
+Definition munzip `{g__0__ : MonadZip m}
    : forall {a} {b}, m (a * b)%type -> (m a * m b)%type :=
-  g _ (munzip__ m).
+  g__0__ _ (munzip__ m).
 
-Definition mzip `{g : MonadZip m}
+Definition mzip `{g__0__ : MonadZip m}
    : forall {a} {b}, m a -> m b -> m (a * b)%type :=
-  g _ (mzip__ m).
+  g__0__ _ (mzip__ m).
 
-Definition mzipWith `{g : MonadZip m}
+Definition mzipWith `{g__0__ : MonadZip m}
    : forall {a} {b} {c}, (a -> b -> c) -> m a -> m b -> m c :=
-  g _ (mzipWith__ m).
+  g__0__ _ (mzipWith__ m).
 
 (* Converted value declarations: *)
 
@@ -83,10 +83,10 @@ Local Definition MonadZip__Proxy_mzip
   fun {a} {b} => MonadZip__Proxy_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__Proxy : MonadZip Data.Proxy.Proxy :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Proxy_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Proxy_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Proxy_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Proxy_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Proxy_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Proxy_mzipWith |}.
 
 Local Definition MonadZip__Alt_munzip {inst_f} `{MonadZip inst_f}
    : forall {a} {b},
@@ -119,10 +119,10 @@ Local Definition MonadZip__Alt_mzip {inst_f} `{MonadZip inst_f}
 
 Program Instance MonadZip__Alt {f} `{MonadZip f}
    : MonadZip (Data.SemigroupInternal.Alt f) :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Alt_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Alt_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Alt_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Alt_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Alt_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Alt_mzipWith |}.
 
 Local Definition MonadZip__Last_munzip
    : forall {a} {b},
@@ -144,10 +144,10 @@ Local Definition MonadZip__Last_mzip
   fun {a} {b} => MonadZip__Last_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__Last : MonadZip Data.Monoid.Last :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Last_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Last_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Last_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Last_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Last_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Last_mzipWith |}.
 
 Local Definition MonadZip__First_munzip
    : forall {a} {b},
@@ -169,10 +169,10 @@ Local Definition MonadZip__First_mzip
   fun {a} {b} => MonadZip__First_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__First : MonadZip Data.Monoid.First :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__First_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__First_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__First_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__First_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__First_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__First_mzipWith |}.
 
 Local Definition MonadZip__option_munzip
    : forall {a} {b}, option (a * b)%type -> (option a * option b)%type :=
@@ -189,10 +189,10 @@ Local Definition MonadZip__option_mzip
   fun {a} {b} => MonadZip__option_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__option : MonadZip option :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__option_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__option_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__option_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__option_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__option_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__option_mzipWith |}.
 
 Local Definition MonadZip__Product_munzip
    : forall {a} {b},
@@ -217,10 +217,10 @@ Local Definition MonadZip__Product_mzip
   fun {a} {b} => MonadZip__Product_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__Product : MonadZip Data.SemigroupInternal.Product :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Product_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Product_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Product_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Product_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Product_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Product_mzipWith |}.
 
 Local Definition MonadZip__Sum_munzip
    : forall {a} {b},
@@ -244,10 +244,10 @@ Local Definition MonadZip__Sum_mzip
   fun {a} {b} => MonadZip__Sum_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__Sum : MonadZip Data.SemigroupInternal.Sum :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Sum_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Sum_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Sum_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Sum_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Sum_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Sum_mzipWith |}.
 
 Local Definition MonadZip__Dual_munzip
    : forall {a} {b},
@@ -271,10 +271,10 @@ Local Definition MonadZip__Dual_mzip
   fun {a} {b} => MonadZip__Dual_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__Dual : MonadZip Data.SemigroupInternal.Dual :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Dual_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Dual_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Dual_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Dual_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Dual_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Dual_mzipWith |}.
 
 Local Definition MonadZip__Identity_munzip
    : forall {a} {b},
@@ -300,10 +300,10 @@ Local Definition MonadZip__Identity_mzip
   fun {a} {b} => MonadZip__Identity_mzipWith GHC.Tuple.pair2.
 
 Program Instance MonadZip__Identity : MonadZip Data.Functor.Identity.Identity :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__Identity_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__Identity_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__Identity_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__Identity_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__Identity_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__Identity_mzipWith |}.
 
 Local Definition MonadZip__NonEmpty_munzip
    : forall {a} {b},
@@ -323,10 +323,10 @@ Local Definition MonadZip__NonEmpty_mzipWith
   fun {a} {b} {c} => Data.List.NonEmpty.zipWith.
 
 Program Instance MonadZip__NonEmpty : MonadZip GHC.Base.NonEmpty :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__NonEmpty_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__NonEmpty_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__NonEmpty_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__NonEmpty_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__NonEmpty_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__NonEmpty_mzipWith |}.
 
 Local Definition MonadZip__list_munzip
    : forall {a} {b}, list (a * b)%type -> (list a * list b)%type :=
@@ -341,10 +341,10 @@ Local Definition MonadZip__list_mzipWith
   fun {a} {b} {c} => GHC.List.zipWith.
 
 Program Instance MonadZip__list : MonadZip list :=
-  fun _ k =>
-    k {| munzip__ := fun {a} {b} => MonadZip__list_munzip ;
-         mzip__ := fun {a} {b} => MonadZip__list_mzip ;
-         mzipWith__ := fun {a} {b} {c} => MonadZip__list_mzipWith |}.
+  fun _ k__ =>
+    k__ {| munzip__ := fun {a} {b} => MonadZip__list_munzip ;
+           mzip__ := fun {a} {b} => MonadZip__list_mzip ;
+           mzipWith__ := fun {a} {b} {c} => MonadZip__list_mzipWith |}.
 
 (* External variables:
      list op_zt__ option pair Data.Functor.Identity.Identity

@@ -106,9 +106,9 @@ Local Definition Functor__Product_op_zlzd__ {inst_f} {inst_g} `{GHC.Base.Functor
 Program Instance Functor__Product {f} {g} `{GHC.Base.Functor f}
   `{GHC.Base.Functor g}
    : GHC.Base.Functor (Product f g) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Product_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Product_op_zlzd__ |}.
 
 Local Definition Applicative__Product_op_ztzg__ {inst_f} {inst_g}
   `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
@@ -126,11 +126,11 @@ Local Definition Applicative__Product_pure {inst_f} {inst_g}
 Program Instance Applicative__Product {f} {g} `{GHC.Base.Applicative f}
   `{GHC.Base.Applicative g}
    : GHC.Base.Applicative (Product f g) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Product_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Product_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__Product_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Product_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Product_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Product_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Product_pure |}.
 
 Local Definition Monad__Product_return_ {inst_f} {inst_g} `{GHC.Base.Monad
   inst_f} `{GHC.Base.Monad inst_g}
@@ -139,10 +139,10 @@ Local Definition Monad__Product_return_ {inst_f} {inst_g} `{GHC.Base.Monad
 
 Program Instance Monad__Product {f} {g} `{GHC.Base.Monad f} `{GHC.Base.Monad g}
    : GHC.Base.Monad (Product f g) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Product_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Product_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__Product_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__Product_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
 
 Local Definition MonadZip__Product_munzip {inst_f} {inst_g}
   `{Control.Monad.Zip.MonadZip inst_f} `{Control.Monad.Zip.MonadZip inst_g}
@@ -176,11 +176,11 @@ Local Definition MonadZip__Product_mzip {inst_f} {inst_g}
 Program Instance MonadZip__Product {f} {g} `{Control.Monad.Zip.MonadZip f}
   `{Control.Monad.Zip.MonadZip g}
    : Control.Monad.Zip.MonadZip (Product f g) :=
-  fun _ k =>
-    k {| Control.Monad.Zip.munzip__ := fun {a} {b} => MonadZip__Product_munzip ;
-         Control.Monad.Zip.mzip__ := fun {a} {b} => MonadZip__Product_mzip ;
-         Control.Monad.Zip.mzipWith__ := fun {a} {b} {c} =>
-           MonadZip__Product_mzipWith |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Zip.munzip__ := fun {a} {b} => MonadZip__Product_munzip ;
+           Control.Monad.Zip.mzip__ := fun {a} {b} => MonadZip__Product_mzip ;
+           Control.Monad.Zip.mzipWith__ := fun {a} {b} {c} =>
+             MonadZip__Product_mzipWith |}.
 
 (* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
    `Data.Functor.Product.MonadFix__Product' *)
@@ -313,34 +313,34 @@ Local Definition Foldable__Product_toList {inst_f} {inst_g}
 Program Instance Foldable__Product {f} {g} `{Data.Foldable.Foldable f}
   `{Data.Foldable.Foldable g}
    : Data.Foldable.Foldable (Product f g) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Product_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Product_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Product_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Product_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Product_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Product_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Product_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Product_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__Product_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Product_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Product_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Product_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Product_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Product_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Product_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Product_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Product_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Product_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Product_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__Product_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Product_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Product_toList |}.
 
 Program Instance Traversable__Product {f} {g} `{Data.Traversable.Traversable f}
   `{Data.Traversable.Traversable g}
    : Data.Traversable.Traversable (Product f g) :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__Product_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__Product_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__Product_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__Product_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__Product_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__Product_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__Product_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__Product_traverse |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Functor.Product.Show__Product' *)
@@ -377,15 +377,15 @@ Local Definition Eq1__Product_liftEq {inst_f} {inst_g}
 Program Instance Eq1__Product {f} {g} `{Data.Functor.Classes.Eq1 f}
   `{Data.Functor.Classes.Eq1 g}
    : Data.Functor.Classes.Eq1 (Product f g) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Product_liftEq |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Product_liftEq |}.
 
 Program Instance Ord1__Product {f} {g} `{Data.Functor.Classes.Ord1 f}
   `{Data.Functor.Classes.Ord1 g}
    : Data.Functor.Classes.Ord1 (Product f g) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-           Ord1__Product_liftCompare |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Product_liftCompare |}.
 
 Local Definition Ord__Product_compare {inst_f} {inst_g} {inst_a}
   `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
@@ -447,21 +447,21 @@ Local Definition Eq___Product_op_zsze__ {inst_f} {inst_g} {inst_a}
 Program Instance Eq___Product {f} {g} {a} `{Data.Functor.Classes.Eq1 f}
   `{Data.Functor.Classes.Eq1 g} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Product f g a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Product_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Product_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Product_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Product_op_zsze__ |}.
 
 Program Instance Ord__Product {f} {g} {a} `{Data.Functor.Classes.Ord1 f}
   `{Data.Functor.Classes.Ord1 g} `{GHC.Base.Ord a}
    : GHC.Base.Ord (Product f g a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Product_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Product_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Product_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Product_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Product_compare ;
-         GHC.Base.max__ := Ord__Product_max ;
-         GHC.Base.min__ := Ord__Product_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Product_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Product_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Product_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Product_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Product_compare ;
+           GHC.Base.max__ := Ord__Product_max ;
+           GHC.Base.min__ := Ord__Product_min |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Show1', including
    `Data.Functor.Product.Show1__Product' *)

@@ -93,9 +93,9 @@ Local Definition Functor__Compose_op_zlzd__ {inst_f} {inst_g} `{GHC.Base.Functor
 Program Instance Functor__Compose {f} {g} `{GHC.Base.Functor f}
   `{GHC.Base.Functor g}
    : GHC.Base.Functor (Compose f g) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Compose_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Compose_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Compose_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Compose_op_zlzd__ |}.
 
 Local Definition Applicative__Compose_op_ztzg__ {inst_f} {inst_g}
   `{GHC.Base.Applicative inst_f} `{GHC.Base.Applicative inst_g}
@@ -113,11 +113,11 @@ Local Definition Applicative__Compose_pure {inst_f} {inst_g}
 Program Instance Applicative__Compose {f} {g} `{GHC.Base.Applicative f}
   `{GHC.Base.Applicative g}
    : GHC.Base.Applicative (Compose f g) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Compose_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Compose_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Compose_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__Compose_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Compose_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Compose_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Compose_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Compose_pure |}.
 
 Local Definition Traversable__Compose_traverse {inst_f} {inst_g}
   `{Data.Traversable.Traversable inst_f} `{Data.Traversable.Traversable inst_g}
@@ -240,34 +240,34 @@ Local Definition Foldable__Compose_toList {inst_f} {inst_g}
 Program Instance Foldable__Compose {f} {g} `{Data.Foldable.Foldable f}
   `{Data.Foldable.Foldable g}
    : Data.Foldable.Foldable (Compose f g) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Compose_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Compose_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Compose_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Compose_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Compose_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Compose_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Compose_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Compose_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__Compose_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Compose_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Compose_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Compose_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Compose_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Compose_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Compose_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Compose_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Compose_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Compose_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Compose_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__Compose_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Compose_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Compose_toList |}.
 
 Program Instance Traversable__Compose {f} {g} `{Data.Traversable.Traversable f}
   `{Data.Traversable.Traversable g}
    : Data.Traversable.Traversable (Compose f g) :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__Compose_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__Compose_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__Compose_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__Compose_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__Compose_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__Compose_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__Compose_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__Compose_traverse |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Functor.Compose.Show__Compose' *)
@@ -302,15 +302,15 @@ Local Definition Eq1__Compose_liftEq {inst_f} {inst_g}
 Program Instance Eq1__Compose {f} {g} `{Data.Functor.Classes.Eq1 f}
   `{Data.Functor.Classes.Eq1 g}
    : Data.Functor.Classes.Eq1 (Compose f g) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Compose_liftEq |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Compose_liftEq |}.
 
 Program Instance Ord1__Compose {f} {g} `{Data.Functor.Classes.Ord1 f}
   `{Data.Functor.Classes.Ord1 g}
    : Data.Functor.Classes.Ord1 (Compose f g) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-           Ord1__Compose_liftCompare |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Compose_liftCompare |}.
 
 Local Definition Ord__Compose_compare {inst_f} {inst_g} {inst_a}
   `{Data.Functor.Classes.Ord1 inst_f} `{Data.Functor.Classes.Ord1 inst_g}
@@ -372,21 +372,21 @@ Local Definition Eq___Compose_op_zsze__ {inst_f} {inst_g} {inst_a}
 Program Instance Eq___Compose {f} {g} {a} `{Data.Functor.Classes.Eq1 f}
   `{Data.Functor.Classes.Eq1 g} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Compose f g a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Compose_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Compose_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Compose_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Compose_op_zsze__ |}.
 
 Program Instance Ord__Compose {f} {g} {a} `{Data.Functor.Classes.Ord1 f}
   `{Data.Functor.Classes.Ord1 g} `{GHC.Base.Ord a}
    : GHC.Base.Ord (Compose f g a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Compose_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Compose_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Compose_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Compose_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Compose_compare ;
-         GHC.Base.max__ := Ord__Compose_max ;
-         GHC.Base.min__ := Ord__Compose_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Compose_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Compose_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Compose_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Compose_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Compose_compare ;
+           GHC.Base.max__ := Ord__Compose_max ;
+           GHC.Base.min__ := Ord__Compose_min |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Show1', including
    `Data.Functor.Compose.Show1__Compose' *)

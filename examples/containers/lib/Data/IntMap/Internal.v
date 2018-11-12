@@ -310,9 +310,9 @@ Definition Functor__IntMap_op_zlzd__ {a} {b} :=
   (@IntMap_op_zlzd__ a b).
 
 Program Instance Functor__IntMap : GHC.Base.Functor IntMap :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__IntMap_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__IntMap_op_zlzd__ |}.
 
 Definition mapWhenMissing {f} {a} {b} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
@@ -1744,19 +1744,19 @@ Local Definition Eq___IntMap_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
   fun t1 t2 => nequal t1 t2.
 
 Program Instance Eq___IntMap {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (IntMap a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___IntMap_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___IntMap_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___IntMap_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___IntMap_op_zsze__ |}.
 
 Program Instance Ord__IntMap {a} `{GHC.Base.Ord a} : GHC.Base.Ord (IntMap a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__IntMap_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__IntMap_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__IntMap_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__IntMap_op_zgze__ ;
-         GHC.Base.compare__ := Ord__IntMap_compare ;
-         GHC.Base.max__ := Ord__IntMap_max ;
-         GHC.Base.min__ := Ord__IntMap_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__IntMap_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__IntMap_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__IntMap_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__IntMap_op_zgze__ ;
+           GHC.Base.compare__ := Ord__IntMap_compare ;
+           GHC.Base.max__ := Ord__IntMap_max ;
+           GHC.Base.min__ := Ord__IntMap_min |}.
 
 (* Skipping instance `Data.IntMap.Internal.Eq1__IntMap' of class
    `Data.Functor.Classes.Eq1' *)
@@ -1848,39 +1848,40 @@ Local Definition Foldable__IntMap_toList : forall {a}, IntMap a -> list a :=
   fun {a} => elems.
 
 Program Instance Foldable__IntMap : Data.Foldable.Foldable IntMap :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__IntMap_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__IntMap_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__IntMap_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__IntMap_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__IntMap_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__IntMap_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__IntMap_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__IntMap_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__IntMap_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__IntMap_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__IntMap_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__IntMap_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__IntMap_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__IntMap_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__IntMap_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__IntMap_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__IntMap_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__IntMap_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__IntMap_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__IntMap_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__IntMap_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__IntMap_toList |}.
 
 Program Instance Traversable__IntMap : Data.Traversable.Traversable IntMap :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__IntMap_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__IntMap_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__IntMap_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__IntMap_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__IntMap_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__IntMap_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__IntMap_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__IntMap_traverse |}.
 
 Local Definition Semigroup__IntMap_op_zlzlzgzg__ {inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
   union.
 
 Program Instance Semigroup__IntMap {a} : GHC.Base.Semigroup (IntMap a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntMap_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntMap_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__IntMap_mappend {inst_a}
    : (IntMap inst_a) -> (IntMap inst_a) -> (IntMap inst_a) :=
@@ -1894,10 +1895,10 @@ Local Definition Monoid__IntMap_mempty {inst_a} : (IntMap inst_a) :=
   empty.
 
 Program Instance Monoid__IntMap {a} : GHC.Base.Monoid (IntMap a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__IntMap_mappend ;
-         GHC.Base.mconcat__ := Monoid__IntMap_mconcat ;
-         GHC.Base.mempty__ := Monoid__IntMap_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__IntMap_mappend ;
+           GHC.Base.mconcat__ := Monoid__IntMap_mconcat ;
+           GHC.Base.mempty__ := Monoid__IntMap_mempty |}.
 
 (* Skipping instance `Data.IntMap.Internal.Monad__WhenMissing' of class
    `GHC.Base.Monad' *)

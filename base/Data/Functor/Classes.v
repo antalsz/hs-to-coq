@@ -27,14 +27,14 @@ Record Eq2__Dict f := Eq2__Dict_Build {
   (a -> b -> bool) -> (c -> d -> bool) -> f a c -> f b d -> bool }.
 
 Definition Eq2 f :=
-  forall r, (Eq2__Dict f -> r) -> r.
+  forall r__, (Eq2__Dict f -> r__) -> r__.
 
 Existing Class Eq2.
 
-Definition liftEq2 `{g : Eq2 f}
+Definition liftEq2 `{g__0__ : Eq2 f}
    : forall {a} {b} {c} {d},
      (a -> b -> bool) -> (c -> d -> bool) -> f a c -> f b d -> bool :=
-  g _ (liftEq2__ f).
+  g__0__ _ (liftEq2__ f).
 
 Record Ord2__Dict f := Ord2__Dict_Build {
   liftCompare2__ : forall {a} {b} {c} {d},
@@ -42,40 +42,40 @@ Record Ord2__Dict f := Ord2__Dict_Build {
   (c -> d -> comparison) -> f a c -> f b d -> comparison }.
 
 Definition Ord2 f `{(Eq2 f)} :=
-  forall r, (Ord2__Dict f -> r) -> r.
+  forall r__, (Ord2__Dict f -> r__) -> r__.
 
 Existing Class Ord2.
 
-Definition liftCompare2 `{g : Ord2 f}
+Definition liftCompare2 `{g__0__ : Ord2 f}
    : forall {a} {b} {c} {d},
      (a -> b -> comparison) ->
      (c -> d -> comparison) -> f a c -> f b d -> comparison :=
-  g _ (liftCompare2__ f).
+  g__0__ _ (liftCompare2__ f).
 
 Record Eq1__Dict f := Eq1__Dict_Build {
   liftEq__ : forall {a} {b}, (a -> b -> bool) -> f a -> f b -> bool }.
 
 Definition Eq1 f :=
-  forall r, (Eq1__Dict f -> r) -> r.
+  forall r__, (Eq1__Dict f -> r__) -> r__.
 
 Existing Class Eq1.
 
-Definition liftEq `{g : Eq1 f}
+Definition liftEq `{g__0__ : Eq1 f}
    : forall {a} {b}, (a -> b -> bool) -> f a -> f b -> bool :=
-  g _ (liftEq__ f).
+  g__0__ _ (liftEq__ f).
 
 Record Ord1__Dict f := Ord1__Dict_Build {
   liftCompare__ : forall {a} {b},
   (a -> b -> comparison) -> f a -> f b -> comparison }.
 
 Definition Ord1 f `{(Eq1 f)} :=
-  forall r, (Ord1__Dict f -> r) -> r.
+  forall r__, (Ord1__Dict f -> r__) -> r__.
 
 Existing Class Ord1.
 
-Definition liftCompare `{g : Ord1 f}
+Definition liftCompare `{g__0__ : Ord1 f}
    : forall {a} {b}, (a -> b -> comparison) -> f a -> f b -> comparison :=
-  g _ (liftCompare__ f).
+  g__0__ _ (liftCompare__ f).
 
 (* Converted value declarations: *)
 
@@ -100,7 +100,7 @@ Local Definition Eq1__Proxy_liftEq
   fun {a} {b} => fun arg_0__ arg_1__ arg_2__ => true.
 
 Program Instance Eq1__Proxy : Eq1 Data.Proxy.Proxy :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Proxy_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__Proxy_liftEq |}.
 
 Local Definition Eq1__Identity_liftEq
    : forall {a} {b},
@@ -116,7 +116,7 @@ Local Definition Eq1__Identity_liftEq
       end.
 
 Program Instance Eq1__Identity : Eq1 Data.Functor.Identity.Identity :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Identity_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__Identity_liftEq |}.
 
 Local Definition Eq1__list_liftEq
    : forall {a} {b}, (a -> b -> bool) -> list a -> list b -> bool :=
@@ -130,7 +130,7 @@ Local Definition Eq1__list_liftEq
              end.
 
 Program Instance Eq1__list : Eq1 list :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__list_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__list_liftEq |}.
 
 Local Definition Eq1__NonEmpty_liftEq
    : forall {a} {b},
@@ -143,7 +143,7 @@ Local Definition Eq1__NonEmpty_liftEq
       end.
 
 Program Instance Eq1__NonEmpty : Eq1 GHC.Base.NonEmpty :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__NonEmpty_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__NonEmpty_liftEq |}.
 
 Local Definition Eq1__option_liftEq
    : forall {a} {b}, (a -> b -> bool) -> option a -> option b -> bool :=
@@ -157,7 +157,7 @@ Local Definition Eq1__option_liftEq
       end.
 
 Program Instance Eq1__option : Eq1 option :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__option_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__option_liftEq |}.
 
 Local Definition Ord1__Proxy_liftCompare
    : forall {a} {b},
@@ -166,7 +166,7 @@ Local Definition Ord1__Proxy_liftCompare
   fun {a} {b} => fun arg_0__ arg_1__ arg_2__ => Eq.
 
 Program Instance Ord1__Proxy : Ord1 Data.Proxy.Proxy :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Proxy_liftCompare |}.
+  fun _ k__ => k__ {| liftCompare__ := fun {a} {b} => Ord1__Proxy_liftCompare |}.
 
 Local Definition Ord1__Identity_liftCompare
    : forall {a} {b},
@@ -183,7 +183,8 @@ Local Definition Ord1__Identity_liftCompare
       end.
 
 Program Instance Ord1__Identity : Ord1 Data.Functor.Identity.Identity :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Identity_liftCompare |}.
+  fun _ k__ =>
+    k__ {| liftCompare__ := fun {a} {b} => Ord1__Identity_liftCompare |}.
 
 Local Definition Ord1__list_liftCompare
    : forall {a} {b}, (a -> b -> comparison) -> list a -> list b -> comparison :=
@@ -198,7 +199,7 @@ Local Definition Ord1__list_liftCompare
              end.
 
 Program Instance Ord1__list : Ord1 list :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__list_liftCompare |}.
+  fun _ k__ => k__ {| liftCompare__ := fun {a} {b} => Ord1__list_liftCompare |}.
 
 Local Definition Ord1__NonEmpty_liftCompare
    : forall {a} {b},
@@ -212,7 +213,8 @@ Local Definition Ord1__NonEmpty_liftCompare
       end.
 
 Program Instance Ord1__NonEmpty : Ord1 GHC.Base.NonEmpty :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__NonEmpty_liftCompare |}.
+  fun _ k__ =>
+    k__ {| liftCompare__ := fun {a} {b} => Ord1__NonEmpty_liftCompare |}.
 
 Local Definition Ord1__option_liftCompare
    : forall {a} {b},
@@ -227,7 +229,7 @@ Local Definition Ord1__option_liftCompare
       end.
 
 Program Instance Ord1__option : Ord1 option :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__option_liftCompare |}.
+  fun _ k__ => k__ {| liftCompare__ := fun {a} {b} => Ord1__option_liftCompare |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Read1', including
    `Data.Functor.Classes.Read1__Proxy' *)
@@ -271,7 +273,7 @@ Local Definition Eq2__Const_liftEq2
       end.
 
 Program Instance Eq2__Const : Eq2 Data.Functor.Const.Const :=
-  fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Const_liftEq2 |}.
+  fun _ k__ => k__ {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Const_liftEq2 |}.
 
 Local Definition Eq1__Const_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
    : forall {a} {b},
@@ -282,7 +284,7 @@ Local Definition Eq1__Const_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
 
 Program Instance Eq1__Const {a} `{(GHC.Base.Eq_ a)}
    : Eq1 (Data.Functor.Const.Const a) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Const_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__Const_liftEq |}.
 
 Local Definition Eq2__Either_liftEq2
    : forall {a} {b} {c} {d},
@@ -298,7 +300,7 @@ Local Definition Eq2__Either_liftEq2
       end.
 
 Program Instance Eq2__Either : Eq2 Data.Either.Either :=
-  fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Either_liftEq2 |}.
+  fun _ k__ => k__ {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__Either_liftEq2 |}.
 
 Local Definition Eq1__Either_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
    : forall {a} {b},
@@ -308,7 +310,7 @@ Local Definition Eq1__Either_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
 
 Program Instance Eq1__Either {a} `{(GHC.Base.Eq_ a)}
    : Eq1 (Data.Either.Either a) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__Either_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__Either_liftEq |}.
 
 Local Definition Eq2__pair_type_liftEq2
    : forall {a} {b} {c} {d},
@@ -322,7 +324,8 @@ Local Definition Eq2__pair_type_liftEq2
       end.
 
 Program Instance Eq2__pair_type : Eq2 GHC.Tuple.pair_type :=
-  fun _ k => k {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__pair_type_liftEq2 |}.
+  fun _ k__ =>
+    k__ {| liftEq2__ := fun {a} {b} {c} {d} => Eq2__pair_type_liftEq2 |}.
 
 Local Definition Eq1__pair_type_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
    : forall {a} {b},
@@ -332,7 +335,7 @@ Local Definition Eq1__pair_type_liftEq {inst_a} `{(GHC.Base.Eq_ inst_a)}
 
 Program Instance Eq1__pair_type {a} `{(GHC.Base.Eq_ a)}
    : Eq1 (GHC.Tuple.pair_type a) :=
-  fun _ k => k {| liftEq__ := fun {a} {b} => Eq1__pair_type_liftEq |}.
+  fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__pair_type_liftEq |}.
 
 Local Definition Ord2__Const_liftCompare2
    : forall {a} {b} {c} {d},
@@ -347,8 +350,8 @@ Local Definition Ord2__Const_liftCompare2
       end.
 
 Program Instance Ord2__Const : Ord2 Data.Functor.Const.Const :=
-  fun _ k =>
-    k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Const_liftCompare2 |}.
+  fun _ k__ =>
+    k__ {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Const_liftCompare2 |}.
 
 Local Definition Ord1__Const_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
    : forall {a} {b},
@@ -359,7 +362,7 @@ Local Definition Ord1__Const_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
 
 Program Instance Ord1__Const {a} `{(GHC.Base.Ord a)}
    : Ord1 (Data.Functor.Const.Const a) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Const_liftCompare |}.
+  fun _ k__ => k__ {| liftCompare__ := fun {a} {b} => Ord1__Const_liftCompare |}.
 
 Local Definition Ord2__Either_liftCompare2
    : forall {a} {b} {c} {d},
@@ -376,8 +379,8 @@ Local Definition Ord2__Either_liftCompare2
       end.
 
 Program Instance Ord2__Either : Ord2 Data.Either.Either :=
-  fun _ k =>
-    k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Either_liftCompare2 |}.
+  fun _ k__ =>
+    k__ {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__Either_liftCompare2 |}.
 
 Local Definition Ord1__Either_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
    : forall {a} {b},
@@ -387,7 +390,7 @@ Local Definition Ord1__Either_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
 
 Program Instance Ord1__Either {a} `{(GHC.Base.Ord a)}
    : Ord1 (Data.Either.Either a) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__Either_liftCompare |}.
+  fun _ k__ => k__ {| liftCompare__ := fun {a} {b} => Ord1__Either_liftCompare |}.
 
 Local Definition Ord2__pair_type_liftCompare2
    : forall {a} {b} {c} {d},
@@ -402,8 +405,8 @@ Local Definition Ord2__pair_type_liftCompare2
       end.
 
 Program Instance Ord2__pair_type : Ord2 GHC.Tuple.pair_type :=
-  fun _ k =>
-    k {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__pair_type_liftCompare2 |}.
+  fun _ k__ =>
+    k__ {| liftCompare2__ := fun {a} {b} {c} {d} => Ord2__pair_type_liftCompare2 |}.
 
 Local Definition Ord1__pair_type_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
    : forall {a} {b},
@@ -414,7 +417,8 @@ Local Definition Ord1__pair_type_liftCompare {inst_a} `{(GHC.Base.Ord inst_a)}
 
 Program Instance Ord1__pair_type {a} `{(GHC.Base.Ord a)}
    : Ord1 (GHC.Tuple.pair_type a) :=
-  fun _ k => k {| liftCompare__ := fun {a} {b} => Ord1__pair_type_liftCompare |}.
+  fun _ k__ =>
+    k__ {| liftCompare__ := fun {a} {b} => Ord1__pair_type_liftCompare |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Read1', including
    `Data.Functor.Classes.Read1__Const' *)

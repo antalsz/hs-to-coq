@@ -269,9 +269,9 @@ Local Definition Functor__Map_op_zlzd__ {k : Type} {a : Type} {b : Type} :=
   (@functor__Map_op_zlzd__ k a b).
 
 Program Instance Functor__Map {k} : GHC.Base.Functor (Map k) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Map_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Map_op_zlzd__ |}.
 
 Definition mapWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
@@ -2244,20 +2244,20 @@ Local Definition Foldable__Map_toList {inst_k}
   fun {a} => elems.
 
 Program Instance Foldable__Map {k} : Data.Foldable.Foldable (Map k) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Map_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Map_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Map_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Map_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Map_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Map_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Map_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Map_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Map_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Map_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Map_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Map_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Map_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Map_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Map_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Map_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Map_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Map_toList |}.
 
 Local Definition Traversable__Map_traverse {inst_k}
    : forall {f} {a} {b},
@@ -2283,15 +2283,15 @@ Local Definition Traversable__Map_sequence {inst_k}
   fun {m} {a} `{GHC.Base.Monad m} => Traversable__Map_sequenceA.
 
 Program Instance Traversable__Map {k} : Data.Traversable.Traversable (Map k) :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__Map_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__Map_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__Map_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__Map_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__Map_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__Map_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__Map_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__Map_traverse |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Read1', including
    `Data.Map.Internal.Read1__Map' *)
@@ -2323,14 +2323,14 @@ Local Definition Eq2__Map_liftEq2
             (Data.Functor.Classes.liftEq2 eqk eqv) (toList m) (toList n)).
 
 Program Instance Eq2__Map : Data.Functor.Classes.Eq2 Map :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
-           Eq2__Map_liftEq2 |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq2__ := fun {a} {b} {c} {d} =>
+             Eq2__Map_liftEq2 |}.
 
 Program Instance Ord2__Map : Data.Functor.Classes.Ord2 Map :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
-           Ord2__Map_liftCompare2 |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare2__ := fun {a} {b} {c} {d} =>
+             Ord2__Map_liftCompare2 |}.
 
 (* Skipping instance `Data.Map.Internal.Eq1__Map' of class
    `Data.Functor.Classes.Eq1' *)
@@ -2383,20 +2383,20 @@ Local Definition Eq___Map_op_zsze__ {inst_k} {inst_a} `{GHC.Base.Eq_ inst_k}
 
 Program Instance Eq___Map {k} {a} `{GHC.Base.Eq_ k} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Map k a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Map_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Map_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Map_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Map_op_zsze__ |}.
 
 Program Instance Ord__Map {k} {v} `{GHC.Base.Ord k} `{GHC.Base.Ord v}
    : GHC.Base.Ord (Map k v) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Map_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Map_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Map_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Map_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Map_compare ;
-         GHC.Base.max__ := Ord__Map_max ;
-         GHC.Base.min__ := Ord__Map_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Map_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Map_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Map_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Map_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Map_compare ;
+           GHC.Base.max__ := Ord__Map_max ;
+           GHC.Base.min__ := Ord__Map_min |}.
 
 (* Skipping all instances of class `GHC.Exts.IsList', including
    `Data.Map.Internal.IsList__Map' *)
@@ -2411,7 +2411,7 @@ Local Definition Semigroup__Map_op_zlzlzgzg__ {inst_k} {inst_v} `{(GHC.Base.Ord
 
 Program Instance Semigroup__Map {k} {v} `{(GHC.Base.Ord k)}
    : GHC.Base.Semigroup (Map k v) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Map_op_zlzlzgzg__ |}.
+  fun _ k__ => k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Map_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Map_mappend {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
    : (Map inst_k inst_v) -> (Map inst_k inst_v) -> (Map inst_k inst_v) :=
@@ -2427,10 +2427,10 @@ Local Definition Monoid__Map_mempty {inst_k} {inst_v} `{(GHC.Base.Ord inst_k)}
 
 Program Instance Monoid__Map {k} {v} `{(GHC.Base.Ord k)}
    : GHC.Base.Monoid (Map k v) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Map_mappend ;
-         GHC.Base.mconcat__ := Monoid__Map_mconcat ;
-         GHC.Base.mempty__ := Monoid__Map_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Map_mappend ;
+           GHC.Base.mconcat__ := Monoid__Map_mconcat ;
+           GHC.Base.mempty__ := Monoid__Map_mempty |}.
 
 (* Skipping instance `Data.Map.Internal.Monad__WhenMissing' of class
    `GHC.Base.Monad' *)
@@ -2458,9 +2458,9 @@ Local Definition Functor__WhenMissing_op_zlzd__ {inst_f} {inst_k} {inst_x}
 Program Instance Functor__WhenMissing {f} {k} {x} `{GHC.Base.Applicative f}
   `{GHC.Base.Monad f}
    : GHC.Base.Functor (WhenMissing f k x) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMissing_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMissing_op_zlzd__ |}.
 
 (* Skipping instance `Data.Map.Internal.Monad__WhenMatched' of class
    `GHC.Base.Monad' *)
@@ -2489,9 +2489,9 @@ Local Definition Functor__WhenMatched_op_zlzd__ {inst_f} {inst_k} {inst_x}
 
 Program Instance Functor__WhenMatched {f} {k} {x} {y} `{GHC.Base.Functor f}
    : GHC.Base.Functor (WhenMatched f k x y) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__WhenMatched_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WhenMatched_op_zlzd__ |}.
 
 Module Notations.
 Notation "'_Data.Map.Internal.!?_'" := (op_znz3fU__).

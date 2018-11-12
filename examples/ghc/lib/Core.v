@@ -2879,7 +2879,7 @@ Local Definition Uniquable__Var_getUnique : Var -> Unique.Unique :=
   varUnique.
 
 Program Instance Uniquable__Var : Unique.Uniquable Var :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
 
 Definition unitDVarEnv {a} : Var -> a -> DVarEnv a :=
   UniqDFM.unitUDFM.
@@ -4075,9 +4075,9 @@ Local Definition Eq___Count_op_zsze__ : Count -> Count -> bool :=
   fun x y => negb (Eq___Count_op_zeze__ x y).
 
 Program Instance Eq___Count : GHC.Base.Eq_ Count :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Count_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Count_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Count_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Count_op_zsze__ |}.
 
 Local Definition Eq___Use_op_zeze__ {inst_u} `{GHC.Base.Eq_ inst_u}
    : Use inst_u -> Use inst_u -> bool :=
@@ -4094,9 +4094,9 @@ Local Definition Eq___Use_op_zsze__ {inst_u} `{GHC.Base.Eq_ inst_u}
   fun x y => negb (Eq___Use_op_zeze__ x y).
 
 Program Instance Eq___Use {u} `{GHC.Base.Eq_ u} : GHC.Base.Eq_ (Use u) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Use_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Use_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Use_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Use_op_zsze__ |}.
 
 Local Definition Eq___UseDmd_op_zeze__ : UseDmd -> UseDmd -> bool :=
   fix UseDmd_eq x y
@@ -4113,9 +4113,9 @@ Local Definition Eq___UseDmd_op_zsze__ : UseDmd -> UseDmd -> bool :=
   fun x y => negb (Eq___UseDmd_op_zeze__ x y).
 
 Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___UseDmd_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___UseDmd_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___UseDmd_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___UseDmd_op_zsze__ |}.
 
 Definition mkUProd : list ArgUse -> UseDmd :=
   fun ux =>
@@ -5708,9 +5708,9 @@ Local Definition Eq___Var_op_zsze__ : Var -> Var -> bool :=
   fun x y => negb (Eq___Var_op_zeze__ x y).
 
 Program Instance Eq___Var : GHC.Base.Eq_ Var :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Var_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Var_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Var_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Var_op_zsze__ |}.
 
 Definition filterEqSpec : list EqSpec -> list TyVar -> list TyVar :=
   fun eq_spec =>
@@ -6954,9 +6954,9 @@ Local Definition Eq___ArgFlag_op_zsze__ : ArgFlag -> ArgFlag -> bool :=
   fun x y => negb (Eq___ArgFlag_op_zeze__ x y).
 
 Program Instance Eq___ArgFlag : GHC.Base.Eq_ ArgFlag :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___ArgFlag_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___ArgFlag_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___ArgFlag_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___ArgFlag_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__ArgFlag' *)
@@ -6968,7 +6968,7 @@ Local Definition HasOccName__Var_occName : Var -> OccName.OccName :=
   Name.nameOccName GHC.Base.∘ varName.
 
 Program Instance HasOccName__Var : OccName.HasOccName Var :=
-  fun _ k => k {| OccName.occName__ := HasOccName__Var_occName |}.
+  fun _ k__ => k__ {| OccName.occName__ := HasOccName__Var_occName |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__Var' *)
@@ -6995,14 +6995,14 @@ Local Definition Ord__Var_min : Var -> Var -> Var :=
   fun x y => if Ord__Var_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__Var : GHC.Base.Ord Var :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Var_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Var_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Var_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Var_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Var_compare ;
-         GHC.Base.max__ := Ord__Var_max ;
-         GHC.Base.min__ := Ord__Var_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Var_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Var_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Var_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Var_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Var_compare ;
+           GHC.Base.max__ := Ord__Var_max ;
+           GHC.Base.min__ := Ord__Var_min |}.
 
 Local Definition NamedThing__Var_getName : Var -> Name.Name :=
   varName.
@@ -7011,9 +7011,9 @@ Local Definition NamedThing__Var_getOccName : Var -> OccName.OccName :=
   fun n => Name.nameOccName (NamedThing__Var_getName n).
 
 Program Instance NamedThing__Var : Name.NamedThing Var :=
-  fun _ k =>
-    k {| Name.getName__ := NamedThing__Var_getName ;
-         Name.getOccName__ := NamedThing__Var_getOccName |}.
+  fun _ k__ =>
+    k__ {| Name.getName__ := NamedThing__Var_getName ;
+           Name.getOccName__ := NamedThing__Var_getOccName |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__Var' *)
@@ -7044,9 +7044,9 @@ Local Definition Eq___Injectivity_op_zsze__
   fun x y => negb (Eq___Injectivity_op_zeze__ x y).
 
 Program Instance Eq___Injectivity : GHC.Base.Eq_ Injectivity :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Injectivity_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Injectivity_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Injectivity_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Injectivity_op_zsze__ |}.
 
 Local Definition Eq___PrimElemRep_op_zeze__
    : PrimElemRep -> PrimElemRep -> bool :=
@@ -7070,9 +7070,9 @@ Local Definition Eq___PrimElemRep_op_zsze__
   fun x y => negb (Eq___PrimElemRep_op_zeze__ x y).
 
 Program Instance Eq___PrimElemRep : GHC.Base.Eq_ PrimElemRep :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___PrimElemRep_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___PrimElemRep_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___PrimElemRep_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___PrimElemRep_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__PrimElemRep' *)
@@ -7099,9 +7099,9 @@ Local Definition Eq___PrimRep_op_zsze__ : PrimRep -> PrimRep -> bool :=
   fun x y => negb (Eq___PrimRep_op_zeze__ x y).
 
 Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___PrimRep_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___PrimRep_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___PrimRep_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___PrimRep_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__PrimRep' *)
@@ -7115,9 +7115,9 @@ Local Definition Eq___TyConFlavour_op_zsze__
   fun x y => negb (Eq___TyConFlavour_op_zeze__ x y).
 
 Program Instance Eq___TyConFlavour : GHC.Base.Eq_ TyConFlavour :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TyConFlavour_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TyConFlavour_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TyConFlavour_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TyConFlavour_op_zsze__ |}.
 
 (* Skipping all instances of class `Binary.Binary', including
    `Core.Binary__TyConBndrVis' *)
@@ -7150,9 +7150,9 @@ Local Definition NamedThing__TyCon_getOccName : TyCon -> OccName.OccName :=
   fun n => Name.nameOccName (NamedThing__TyCon_getName n).
 
 Program Instance NamedThing__TyCon : Name.NamedThing TyCon :=
-  fun _ k =>
-    k {| Name.getName__ := NamedThing__TyCon_getName ;
-         Name.getOccName__ := NamedThing__TyCon_getOccName |}.
+  fun _ k__ =>
+    k__ {| Name.getName__ := NamedThing__TyCon_getName ;
+           Name.getOccName__ := NamedThing__TyCon_getOccName |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__TyCon' *)
@@ -7161,7 +7161,7 @@ Local Definition Uniquable__TyCon_getUnique : TyCon -> Unique.Unique :=
   fun tc => tyConUnique tc.
 
 Program Instance Uniquable__TyCon : Unique.Uniquable TyCon :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__TyCon_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__TyCon_getUnique |}.
 
 Local Definition Eq___TyCon_op_zeze__ : TyCon -> TyCon -> bool :=
   fun a b => Unique.getUnique a GHC.Base.== Unique.getUnique b.
@@ -7170,9 +7170,9 @@ Local Definition Eq___TyCon_op_zsze__ : TyCon -> TyCon -> bool :=
   fun a b => Unique.getUnique a GHC.Base./= Unique.getUnique b.
 
 Program Instance Eq___TyCon : GHC.Base.Eq_ TyCon :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TyCon_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TyCon_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__AlgTyConFlav' *)
@@ -7193,15 +7193,15 @@ Local Definition NamedThing__PatSyn_getOccName : PatSyn -> OccName.OccName :=
   fun n => Name.nameOccName (NamedThing__PatSyn_getName n).
 
 Program Instance NamedThing__PatSyn : Name.NamedThing PatSyn :=
-  fun _ k =>
-    k {| Name.getName__ := NamedThing__PatSyn_getName ;
-         Name.getOccName__ := NamedThing__PatSyn_getOccName |}.
+  fun _ k__ =>
+    k__ {| Name.getName__ := NamedThing__PatSyn_getName ;
+           Name.getOccName__ := NamedThing__PatSyn_getOccName |}.
 
 Local Definition Uniquable__PatSyn_getUnique : PatSyn -> Unique.Unique :=
   psUnique.
 
 Program Instance Uniquable__PatSyn : Unique.Uniquable PatSyn :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__PatSyn_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__PatSyn_getUnique |}.
 
 Local Definition Eq___PatSyn_op_zeze__ : PatSyn -> PatSyn -> bool :=
   Data.Function.on _GHC.Base.==_ Unique.getUnique.
@@ -7210,9 +7210,9 @@ Local Definition Eq___PatSyn_op_zsze__ : PatSyn -> PatSyn -> bool :=
   Data.Function.on _GHC.Base./=_ Unique.getUnique.
 
 Program Instance Eq___PatSyn : GHC.Base.Eq_ PatSyn :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___PatSyn_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___PatSyn_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___PatSyn_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___PatSyn_op_zsze__ |}.
 
 Local Definition Eq___RecSelParent_op_zeze__
    : RecSelParent -> RecSelParent -> bool :=
@@ -7228,9 +7228,9 @@ Local Definition Eq___RecSelParent_op_zsze__
   fun x y => negb (Eq___RecSelParent_op_zeze__ x y).
 
 Program Instance Eq___RecSelParent : GHC.Base.Eq_ RecSelParent :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___RecSelParent_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___RecSelParent_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___RecSelParent_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___RecSelParent_op_zsze__ |}.
 
 Local Definition Eq___CafInfo_op_zeze__ : CafInfo -> CafInfo -> bool :=
   fun arg_0__ arg_1__ =>
@@ -7244,9 +7244,9 @@ Local Definition Eq___CafInfo_op_zsze__ : CafInfo -> CafInfo -> bool :=
   fun x y => negb (Eq___CafInfo_op_zeze__ x y).
 
 Program Instance Eq___CafInfo : GHC.Base.Eq_ CafInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___CafInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___CafInfo_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___CafInfo_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___CafInfo_op_zsze__ |}.
 
 Local Definition Ord__CafInfo_op_zl__ : CafInfo -> CafInfo -> bool :=
   fun a b =>
@@ -7278,14 +7278,14 @@ Local Definition Ord__CafInfo_min : CafInfo -> CafInfo -> CafInfo :=
   fun x y => if Ord__CafInfo_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__CafInfo : GHC.Base.Ord CafInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__CafInfo_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__CafInfo_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__CafInfo_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__CafInfo_op_zgze__ ;
-         GHC.Base.compare__ := Ord__CafInfo_compare ;
-         GHC.Base.max__ := Ord__CafInfo_max ;
-         GHC.Base.min__ := Ord__CafInfo_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__CafInfo_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__CafInfo_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__CafInfo_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__CafInfo_op_zgze__ ;
+           GHC.Base.compare__ := Ord__CafInfo_compare ;
+           GHC.Base.max__ := Ord__CafInfo_max ;
+           GHC.Base.min__ := Ord__CafInfo_min |}.
 
 Local Definition Eq___LevityInfo_op_zeze__ : LevityInfo -> LevityInfo -> bool :=
   fun arg_0__ arg_1__ =>
@@ -7299,9 +7299,9 @@ Local Definition Eq___LevityInfo_op_zsze__ : LevityInfo -> LevityInfo -> bool :=
   fun x y => negb (Eq___LevityInfo_op_zeze__ x y).
 
 Program Instance Eq___LevityInfo : GHC.Base.Eq_ LevityInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___LevityInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___LevityInfo_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___LevityInfo_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___LevityInfo_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__RecSelParent' *)
@@ -7333,9 +7333,9 @@ Local Definition Eq___JointDmd_op_zsze__ {inst_s} {inst_u} `{GHC.Base.Eq_
 
 Program Instance Eq___JointDmd {s} {u} `{GHC.Base.Eq_ s} `{GHC.Base.Eq_ u}
    : GHC.Base.Eq_ (JointDmd s u) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___JointDmd_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___JointDmd_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___JointDmd_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___JointDmd_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__JointDmd' *)
@@ -7352,9 +7352,9 @@ Local Definition Eq___ExnStr_op_zsze__ : ExnStr -> ExnStr -> bool :=
   fun x y => negb (Eq___ExnStr_op_zeze__ x y).
 
 Program Instance Eq___ExnStr : GHC.Base.Eq_ ExnStr :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___ExnStr_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___ExnStr_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___ExnStr_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___ExnStr_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__ExnStr' *)
@@ -7374,9 +7374,9 @@ Local Definition Eq___Str_op_zsze__ {inst_s} `{GHC.Base.Eq_ inst_s}
   fun x y => negb (Eq___Str_op_zeze__ x y).
 
 Program Instance Eq___Str {s} `{GHC.Base.Eq_ s} : GHC.Base.Eq_ (Str s) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Str_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Str_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Str_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Str_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__Str' *)
@@ -7396,9 +7396,9 @@ Local Definition Eq___StrDmd_op_zsze__ : StrDmd -> StrDmd -> bool :=
   fun x y => negb (Eq___StrDmd_op_zeze__ x y).
 
 Program Instance Eq___StrDmd : GHC.Base.Eq_ StrDmd :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___StrDmd_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___StrDmd_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___StrDmd_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___StrDmd_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__StrDmd' *)
@@ -7428,9 +7428,9 @@ Local Definition Eq___Termination_op_zsze__ {inst_r} `{GHC.Base.Eq_ inst_r}
 
 Program Instance Eq___Termination {r} `{GHC.Base.Eq_ r}
    : GHC.Base.Eq_ (Termination r) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Termination_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Termination_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Termination_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Termination_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__Termination' *)
@@ -7448,9 +7448,9 @@ Local Definition Eq___CPRResult_op_zsze__ : CPRResult -> CPRResult -> bool :=
   fun x y => negb (Eq___CPRResult_op_zeze__ x y).
 
 Program Instance Eq___CPRResult : GHC.Base.Eq_ CPRResult :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___CPRResult_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___CPRResult_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___CPRResult_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___CPRResult_op_zsze__ |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__CPRResult' *)
@@ -7467,9 +7467,9 @@ Local Definition Eq___DmdType_op_zsze__ : DmdType -> DmdType -> bool :=
   fun x y => negb (Eq___DmdType_op_zeze__ x y).
 
 Program Instance Eq___DmdType : GHC.Base.Eq_ DmdType :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___DmdType_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___DmdType_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___DmdType_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___DmdType_op_zsze__ |}.
 
 Local Definition Eq___StrictSig_op_zeze__ : StrictSig -> StrictSig -> bool :=
   GHC.Prim.coerce _GHC.Base.==_.
@@ -7478,9 +7478,9 @@ Local Definition Eq___StrictSig_op_zsze__ : StrictSig -> StrictSig -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
 
 Program Instance Eq___StrictSig : GHC.Base.Eq_ StrictSig :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___StrictSig_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___StrictSig_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___StrictSig_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___StrictSig_op_zsze__ |}.
 
 (* Skipping all instances of class `Binary.Binary', including
    `Core.Binary__JointDmd' *)
@@ -7566,9 +7566,9 @@ Local Definition Eq___SrcStrictness_op_zsze__
   fun x y => negb (Eq___SrcStrictness_op_zeze__ x y).
 
 Program Instance Eq___SrcStrictness : GHC.Base.Eq_ SrcStrictness :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SrcStrictness_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SrcStrictness_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___SrcStrictness_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___SrcStrictness_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__SrcStrictness' *)
@@ -7588,9 +7588,9 @@ Local Definition Eq___SrcUnpackedness_op_zsze__
   fun x y => negb (Eq___SrcUnpackedness_op_zeze__ x y).
 
 Program Instance Eq___SrcUnpackedness : GHC.Base.Eq_ SrcUnpackedness :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SrcUnpackedness_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SrcUnpackedness_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___SrcUnpackedness_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___SrcUnpackedness_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__SrcUnpackedness' *)
@@ -7638,15 +7638,15 @@ Local Definition NamedThing__DataCon_getOccName : DataCon -> OccName.OccName :=
   fun n => Name.nameOccName (NamedThing__DataCon_getName n).
 
 Program Instance NamedThing__DataCon : Name.NamedThing DataCon :=
-  fun _ k =>
-    k {| Name.getName__ := NamedThing__DataCon_getName ;
-         Name.getOccName__ := NamedThing__DataCon_getOccName |}.
+  fun _ k__ =>
+    k__ {| Name.getName__ := NamedThing__DataCon_getName ;
+           Name.getOccName__ := NamedThing__DataCon_getOccName |}.
 
 Local Definition Uniquable__DataCon_getUnique : DataCon -> Unique.Unique :=
   dcUnique.
 
 Program Instance Uniquable__DataCon : Unique.Uniquable DataCon :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__DataCon_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__DataCon_getUnique |}.
 
 Local Definition Eq___DataCon_op_zsze__ : DataCon -> DataCon -> bool :=
   fun a b => Unique.getUnique a GHC.Base./= Unique.getUnique b.
@@ -7655,9 +7655,9 @@ Local Definition Eq___DataCon_op_zeze__ : DataCon -> DataCon -> bool :=
   fun a b => Unique.getUnique a GHC.Base.== Unique.getUnique b.
 
 Program Instance Eq___DataCon : GHC.Base.Eq_ DataCon :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___DataCon_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___DataCon_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___DataCon_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___DataCon_op_zsze__ |}.
 
 Local Definition Eq___AltCon_op_zeze__ : AltCon -> AltCon -> bool :=
   fun arg_0__ arg_1__ =>
@@ -7672,9 +7672,9 @@ Local Definition Eq___AltCon_op_zsze__ : AltCon -> AltCon -> bool :=
   fun x y => negb (Eq___AltCon_op_zeze__ x y).
 
 Program Instance Eq___AltCon : GHC.Base.Eq_ AltCon :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___AltCon_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___AltCon_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___AltCon_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___AltCon_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__AltCon' *)
@@ -7700,9 +7700,9 @@ Local Definition Eq___Tickish_op_zsze__ {inst_id} `{GHC.Base.Eq_ inst_id}
 
 Program Instance Eq___Tickish {id} `{GHC.Base.Eq_ id}
    : GHC.Base.Eq_ (Tickish id) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Tickish_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Tickish_op_zsze__ |}.
 
 Local Definition Ord__Tickish_compare {inst_id} `{GHC.Base.Ord inst_id}
    : Tickish inst_id -> Tickish inst_id -> comparison :=
@@ -7783,14 +7783,14 @@ Local Definition Ord__Tickish_min {inst_id} `{GHC.Base.Ord inst_id}
 
 Program Instance Ord__Tickish {id} `{GHC.Base.Ord id}
    : GHC.Base.Ord (Tickish id) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Tickish_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Tickish_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Tickish_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Tickish_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Tickish_compare ;
-         GHC.Base.max__ := Ord__Tickish_max ;
-         GHC.Base.min__ := Ord__Tickish_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Tickish_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Tickish_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Tickish_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Tickish_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Tickish_compare ;
+           GHC.Base.max__ := Ord__Tickish_max ;
+           GHC.Base.min__ := Ord__Tickish_min |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__Tickish' *)
@@ -7816,9 +7816,9 @@ Local Definition Eq___TickishScoping_op_zsze__
   fun x y => negb (Eq___TickishScoping_op_zeze__ x y).
 
 Program Instance Eq___TickishScoping : GHC.Base.Eq_ TickishScoping :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TickishScoping_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TickishScoping_op_zsze__ |}.
 
 Local Definition Eq___TickishPlacement_op_zeze__
    : TickishPlacement -> TickishPlacement -> bool :=
@@ -7835,9 +7835,9 @@ Local Definition Eq___TickishPlacement_op_zsze__
   fun x y => negb (Eq___TickishPlacement_op_zeze__ x y).
 
 Program Instance Eq___TickishPlacement : GHC.Base.Eq_ TickishPlacement :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TickishPlacement_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TickishPlacement_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TickishPlacement_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TickishPlacement_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__IsOrphan' *)
@@ -7859,9 +7859,9 @@ Local Definition Eq___UnfoldingGuidance_op_zsze__
   fun x y => negb (Eq___UnfoldingGuidance_op_zeze__ x y).
 
 Program Instance Eq___UnfoldingGuidance : GHC.Base.Eq_ UnfoldingGuidance :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___UnfoldingGuidance_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___UnfoldingGuidance_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__AltCon' *)
@@ -7898,14 +7898,14 @@ Local Definition Ord__AltCon_min : AltCon -> AltCon -> AltCon :=
   fun x y => if Ord__AltCon_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__AltCon : GHC.Base.Ord AltCon :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__AltCon_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__AltCon_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__AltCon_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__AltCon_op_zgze__ ;
-         GHC.Base.compare__ := Ord__AltCon_compare ;
-         GHC.Base.max__ := Ord__AltCon_max ;
-         GHC.Base.min__ := Ord__AltCon_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__AltCon_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__AltCon_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__AltCon_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__AltCon_op_zgze__ ;
+           GHC.Base.compare__ := Ord__AltCon_compare ;
+           GHC.Base.max__ := Ord__AltCon_max ;
+           GHC.Base.min__ := Ord__AltCon_min |}.
 
 (* Skipping all instances of class `Binary.Binary', including
    `Core.Binary__IsOrphan' *)
@@ -7926,15 +7926,15 @@ Local Definition NamedThing__Class_getOccName : Class -> OccName.OccName :=
   fun n => Name.nameOccName (NamedThing__Class_getName n).
 
 Program Instance NamedThing__Class : Name.NamedThing Class :=
-  fun _ k =>
-    k {| Name.getName__ := NamedThing__Class_getName ;
-         Name.getOccName__ := NamedThing__Class_getOccName |}.
+  fun _ k__ =>
+    k__ {| Name.getName__ := NamedThing__Class_getName ;
+           Name.getOccName__ := NamedThing__Class_getOccName |}.
 
 Local Definition Uniquable__Class_getUnique : Class -> Unique.Unique :=
   fun c => classKey c.
 
 Program Instance Uniquable__Class : Unique.Uniquable Class :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__Class_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__Class_getUnique |}.
 
 Local Definition Eq___Class_op_zeze__ : Class -> Class -> bool :=
   fun c1 c2 => classKey c1 GHC.Base.== classKey c2.
@@ -7943,9 +7943,9 @@ Local Definition Eq___Class_op_zsze__ : Class -> Class -> bool :=
   fun c1 c2 => classKey c1 GHC.Base./= classKey c2.
 
 Program Instance Eq___Class : GHC.Base.Eq_ Class :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
 (* External variables:
      Bool.Sumbool.sumbool_of_bool BootUnfolding CoreRuleInfo CoreUnfolding

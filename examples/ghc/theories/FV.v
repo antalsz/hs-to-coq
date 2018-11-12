@@ -18,7 +18,7 @@ Require Import GHC.Base.
 Require Import Proofs.GHC.Base.
 Import GHC.Base.ManualNotations.
 
-
+Require Import Coq.Classes.Morphisms.
 
 Set Bullet Behavior "Strict Subproofs".
 
@@ -28,11 +28,25 @@ Set Bullet Behavior "Strict Subproofs".
 (* A FV is well formed when it is denoted by some VarSet vs. *)
 
 
+
+Lemma RespectsVar_const_true : RespectsVar (const true).
+Proof. move => x1 x2 Eq. reflexivity. Qed.
+Hint Resolve RespectsVar_const_true.
+Lemma RespectsVar_andb f0 f: 
+  RespectsVar f0 -> RespectsVar f ->
+  RespectsVar (fun v : Var => f0 v && f v).
+Proof.
+  move => r1 r2 x1 x2 Eq.
+  erewrite r1; eauto. 
+  erewrite r2; eauto.
+Qed.
+
 Reserved Notation "A ⊢ B" (at level 70, no associativity).
 
 Inductive Denotes : VarSet -> FV -> Prop :=
 | DenotesVarSet : forall vs fv,
     (forall f in_scope vs' l,
+        RespectsVar f ->
         extendVarSetList emptyVarSet l [=] vs' ->
         extendVarSetList emptyVarSet (fst (fv f in_scope (l, vs'))) [=]
         snd (fv f in_scope (l, vs')) /\
@@ -44,13 +58,14 @@ where "A ⊢ B" := (Denotes A B).
 
 Theorem Denotes_fvVarSet : forall m fv f in_scope l vs,
     m ⊢ fv ->
+    RespectsVar f ->
     extendVarSetList emptyVarSet l [=] vs ->
     snd (fv f in_scope (l, vs)) [=]
     unionVarSet (minusVarSet (filterVarSet f m) in_scope) vs.
 Proof.
-  move => m fv f in_scope l vs [vs' fv' H0] H1.
-  specialize (H0 f in_scope vs l ); subst.
-  move: (H0 H1) => [h0 h1].
+  move => m fv f in_scope l vs [vs' fv' H0] H1 H2.
+  specialize (H0 f in_scope vs l H1 H2); subst.
+  move: H0 => [h0 h1].
   auto.
 Qed.
 
@@ -103,7 +118,7 @@ Proof.
     reflexivity.
   - elim In: (elemVarSet x vs') => //.    
     hs_simpl.
-    rewrite <- H.
+    rewrite <- H0.
     rewrite extendVarSetList_extendVarSet_iff.
     reflexivity.
   - rewrite filterSingletonTrue; try done.
@@ -130,23 +145,29 @@ Proof.
 Qed.
 
 Lemma filterVarSet_filterFV f vs x :
+  Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f ->
   Denotes vs x -> Denotes (filterVarSet f vs) (filterFV f x).
 Proof.
-  move => D.
-  constructor. move=> f0 in_scope vs' l h0.
+  move => p D.
+  constructor. move=> f0 in_scope vs' l h0 h1.
   inversion D.
   unfold filterFV.
-  specialize (H (fun v : Var => f0 v && f v) in_scope vs' l h0).
-  destruct H. intuition.
-  rewrite H2. rewrite <- filterVarSet_comp. reflexivity.
+  specialize (H (fun v : Var => f0 v && f v) in_scope vs' l ltac:(eauto using RespectsVar_andb)).
+  destruct H. auto. 
+  rewrite H.
+  rewrite H2.
+  rewrite <- filterVarSet_comp. 
+  split; reflexivity. 
 Qed.
 
+
 Lemma filter_FV_WF : forall f x,
+    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f ->
     WF_fv x -> WF_fv (filterFV f x).
 Proof.
   intros. unfold_WF.
   exists (filterVarSet f vs). 
-  eapply filterVarSet_filterFV. auto.
+  eapply filterVarSet_filterFV; auto.
 Qed.
 
 Lemma delVarSet_delFV vs v fv :
@@ -154,8 +175,8 @@ Lemma delVarSet_delFV vs v fv :
 Proof.
   move=> H. inversion H.
   constructor; intros. unfold delFV.
-  specialize (H0 f (extendVarSet in_scope v) vs' l H3).
-  destruct H0. intuition. rewrite H4.
+  specialize (H0 f (extendVarSet in_scope v) vs' l H3 H4).
+  destruct H0. intuition. rewrite H5.
   destruct (fv f (extendVarSet in_scope v)) as [l0 h0] eqn:h.
   simpl in *.
   apply union_equal_1.
@@ -170,12 +191,17 @@ Proof.
     move: h2 => /andP.
     move => [h3 h4].
     intuition.
-    erewrite filterVarSet_StrongSubset; eauto.
-    apply delVarSet_StrongSubset; auto.
+    rewrite elemVarSet_filterVarSet in h1 => //.
+    rewrite elemVarSet_filterVarSet => // .
+    apply /andP.
+    move: h1 => /andP [h1 h2].
+    rewrite elemVarSet_delVarSet.
+    split; auto.
+    apply /andP. split; auto.
   - move=> /andP [h1 h2].
     apply /andP.
 
-    rewrite elemVarSet_filterVarSet in h1.
+    rewrite elemVarSet_filterVarSet in h1 => //.
     move: h1 => /andP. move => [h3 h4].
     elim hf: (f x); rewrite hf in h3; try done; clear h3.
     rewrite elemVarSet_delVarSet in h4.
@@ -183,7 +209,7 @@ Proof.
     + rewrite ev in h4. done. 
     + rewrite ev in h4. 
       move: h4 => /andP. move => [h5 h6].
-      rewrite elemVarSet_filterVarSet.
+      rewrite elemVarSet_filterVarSet => //.
       rewrite elemVarSet_extendVarSet.
       rewrite hf.
       rewrite ev.
@@ -205,11 +231,11 @@ Lemma unionVarSet_unionFV vs vs' fv fv' :
 Proof.
   move=> H H1. inversion H. inversion H1. subst.
   constructor.
-  move=> f in_scope vs1 l h.
+  move=> f in_scope vs1 l h h0.
   unfold unionFV.
-  specialize (H0 f in_scope vs1 l h).  move: H0 => [h1 h2].
+  specialize (H0 f in_scope vs1 l h h0).  move: H0 => [h1 h2].
   remember (fv f in_scope (l, vs1)) as vs_mid.
-  specialize (H4 f in_scope (snd vs_mid) (fst vs_mid) h1); move: H4 => [h3 h4].
+  specialize (H4 f in_scope (snd vs_mid) (fst vs_mid) h h1); move: H4 => [h3 h4].
   replace vs_mid with (fst vs_mid, snd vs_mid); [| destruct vs_mid; reflexivity].
   intuition.
   remember (fv' f in_scope (fst vs_mid, snd vs_mid)) as vs_fin.
@@ -218,7 +244,9 @@ Proof.
   rewrite <- union_assoc.
   apply union_equal_1.
   rewrite -> unionVarSet_minusVarSet.
-  rewrite unionVarSet_filterVarSet.
+  rewrite unionVarSet_filterVarSet => //.
+  f_equiv.
+  apply filterVarSet_equal; try done.
   set_b_iff. rewrite union_sym.
   reflexivity. 
 Qed.
@@ -303,15 +331,15 @@ Lemma DenotesfvVarSet vs fv :
 Proof.
   move => [vs0 fv0 h1].
   unfold fvVarSet, op_z2218U__, fvVarListVarSet, Tuple.snd.
-  specialize (h1 (const true) emptyVarSet emptyVarSet nil).
+  specialize (h1 (const true) emptyVarSet emptyVarSet nil ltac:(eauto)). 
   destruct h1.
   rewrite extendVarSetList_nil.
   reflexivity.
   remember (fv0 (const true) emptyVarSet (nil, emptyVarSet)) as tup.
-   replace tup with (fst tup, snd tup); [| destruct tup; reflexivity].
-   rewrite H0.
-   hs_simpl.
-   reflexivity.
+  replace tup with (fst tup, snd tup); [| destruct tup; reflexivity].
+  rewrite H0.
+  hs_simpl.
+  reflexivity.
 Qed.
 
 Lemma fst_pair A B (x:A) (y:B) : fst (x,y) = x.
@@ -330,8 +358,8 @@ Proof.
   set in_scope := emptyVarSet.
   assert (h : extendVarSetList emptyVarSet nil [=] emptyVarSet).
   { rewrite <- mkVarSet_extendVarSetList. reflexivity. }
-  specialize (H (const true) in_scope emptyVarSet nil h).
-  specialize (H2 (const true) in_scope emptyVarSet nil h).
+  specialize (H (const true) in_scope emptyVarSet nil ltac:(auto) h).
+  specialize (H2 (const true) in_scope emptyVarSet nil ltac:(auto) h).
   move: H => [h3 h4].
   move: H2 => [h5 h6].
   remember (fv (const true) emptyVarSet (nil,emptyVarSet)) as tup1.
@@ -344,22 +372,6 @@ Proof.
   rewrite <- h6.
   reflexivity.
 Qed.
-
-Lemma exists_elems : forall vs, exists l, extendVarSetList emptyVarSet l [=] vs.
-Proof.
-  move => vs.
-  elim: vs => [i].
-  elim: i => [m].
-  exists (Foldable.toList m).
-  unfold Foldable.toList, Foldable.toList__ , Internal.Foldable__IntMap, Internal.Foldable__IntMap_toList. 
-  rewrite extendVarSetList_foldl'. 
-  unfold add, extendVarSet.
-  unfold emptyVarSet.
-  unfold UniqSet.addListToUniqSet, UniqSet.emptyUniqSet, UniqFM.emptyUFM.
-  unfold UniqSet.addOneToUniqSet.
-  unfold UniqFM.addToUFM.
-Abort.
-
 
 Lemma unionVarSet_same vs : unionVarSet vs vs [=] vs.
 Proof. set_b_iff. fsetdec. Qed.
@@ -377,37 +389,5 @@ Proof.
   rewrite h2.
   reflexivity.
 Qed.
-
-Lemma delVarSet_fvVarSet_exact: forall fv x,
-    WF_fv fv ->
-    delVarSet (fvVarSet fv) x = fvVarSet (delFV x fv).
-Proof.
-  move=> fv x [vs D].
-  unfold FV.delFV, FV.fvVarSet.
-  unfold Base.op_z2218U__, FV.fvVarListVarSet.
-
-  inversion D; subst.
-  assert (h : extendVarSetList emptyVarSet nil [=] emptyVarSet).
-  { rewrite <- mkVarSet_extendVarSetList. reflexivity. }
-  move: (H (const true) emptyVarSet emptyVarSet nil h) => [h0 h1].
-  remember (fv (const true) emptyVarSet (nil,emptyVarSet)) as tup1.
-  replace tup1 with (fst tup1, snd tup1); [| destruct tup1; reflexivity].
-  move: (H (const true) (extendVarSet emptyVarSet x) emptyVarSet nil h) => [h2 h3].
-  remember (fv (const true) (extendVarSet emptyVarSet x) (nil,emptyVarSet)) as tup2.
-  replace tup2 with (fst tup2, snd tup2); [| destruct tup2; reflexivity].
-  hs_simpl in h1.
-  hs_simpl in h3.
-  hs_simpl.
-  clear H. clear h.
-Admitted.
-(*  specialize (H0 (Base.const true) emptyVarSet emptyVarSet [] H2).
-  specialize (H1 (Base.const true) (extendVarSet emptyVarSet x) emptyVarSet [] H2).
-  destruct H0; destruct H1.
-  rewrite hs_coq_tuple_snd. rewrite H3.
-  rewrite hs_coq_tuple_snd. rewrite H4.
-  unfold_VarSet_to_IntMap.
-  (* Seems true. *)
-Admitted. *)
-
 
 (* --------------------------------------- *)

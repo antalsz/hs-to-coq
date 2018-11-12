@@ -210,6 +210,13 @@ Qed.
 
 Hint Rewrite exprFreeVars_Lit : hs_simpl.
 
+Lemma RespectsVar_isLocalVar : RespectsVar isLocalVar.
+Proof.
+  unfold RespectsVar, isLocalVar.
+  move=> x y Eq.
+Admitted.
+Hint Resolve RespectsVar_isLocalVar.
+
 Lemma exprFreeVars_App:
   forall e1 e2,
   exprFreeVars (App e1 e2) [=] unionVarSet (exprFreeVars e1) (exprFreeVars e2).
@@ -220,20 +227,19 @@ Proof.
   move: (expr_fvs_WF (App e1 e2)) => [vs0 D0].
   move: (expr_fvs_WF e1) => [vs1 D1].
   move: (expr_fvs_WF e2) => [vs2 D2].
-  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ D0)) => D3.
-  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ D1)) => D4.
-  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ D2)) => D5.
+  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ RespectsVar_isLocalVar D0)) => D3.
+  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ RespectsVar_isLocalVar D1)) => D4.
+  move: (DenotesfvVarSet _ _ (filterVarSet_filterFV isLocalVar _ _ RespectsVar_isLocalVar D2)) => D5.
   rewrite D3.
   rewrite D4.
   rewrite D5.
-  rewrite unionVarSet_filterVarSet.
+  rewrite unionVarSet_filterVarSet; try done.
   
   unfold expr_fvs in D0. fold expr_fvs in D0.
   move: (unionVarSet_unionFV _ _ (expr_fvs e2) (expr_fvs e1) D2 D1) => D6.
   move: (Denotes_inj1 _ _ _ D0 D6) => E.
   rewrite -> unionVarSet_sym in E.
-  rewrite E.
-  reflexivity.
+  apply (filterVarSet_equal RespectsVar_isLocalVar E).
 Qed.
 
 Hint Rewrite exprFreeVars_App : hs_simpl.
@@ -244,7 +250,6 @@ Lemma exprFreeVars_mkLams_rev:
 Proof.
   intros vs e. revert vs. apply rev_ind; intros.
   - unfold exprFreeVars, exprFVs, Base.op_z2218U__, mkLams.
-
     unfold Foldable.foldr, Foldable.Foldable__list. simpl.
     unfold delVarSetList, UniqSet.delListFromUniqSet.
     destruct (FV.fvVarSet (FV.filterFV isLocalVar (expr_fvs e))); reflexivity.
@@ -254,7 +259,9 @@ Proof.
     rewrite fold_right_app. intros H. rewrite <- H. simpl.
     unfold addBndr, varTypeTyCoFVs. rewrite union_empty_l.
     rewrite delVarSet_fvVarSet; [reflexivity |].
-    apply filter_FV_WF. apply expr_fvs_WF.
+    apply filter_FV_WF. 
+    apply RespectsVar_isLocalVar.
+    apply expr_fvs_WF.
 Qed.
 
 Lemma exprFreeVars_mkLams:
@@ -298,12 +305,61 @@ Admitted.
 Lemma exprFreeVars_Cast:
   forall e co,
   exprFreeVars (Cast e co) [=] exprFreeVars e.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+Definition tickishFreeVars := 
+fun arg_0__ : Tickish Var => match arg_0__ with
+                          | Breakpoint _ ids => mkVarSet ids
+                          | _ => emptyVarSet
+                          end.
+
+Require Import Coq.Classes.Morphisms.
+Instance Denotes_m : Proper (Equal ==> Logic.eq ==> iff) Denotes.
 Admitted.
+
+Lemma mkVarSet_mapUnionFV vs : 
+  Denotes (mkVarSet vs) (FV.mapUnionFV FV.unitFV vs). 
+Proof.
+  rewrite mkVarSet_extendVarSetList.
+  elim: vs => [|x xs IH].
+  - apply emptyVarSet_emptyFV.
+  - hs_simpl.
+    rewrite extendVarSetList_extendVarSet_iff.
+    move: (unionVarSet_unionFV _ _ _ _ ( unitVarSet_unitFV x) IH) => h.
+    hs_simpl in h.
+    assumption.
+Qed.
+
+Lemma Denotes_tickish co : 
+  Denotes (tickishFreeVars co) (tickish_fvs co).
+Proof.
+  elim C: co; simpl.
+  all: try (apply emptyVarSet_emptyFV).
+  unfold FV.mkFVs.
+  apply mkVarSet_mapUnionFV.
+Qed.
+
 
 Lemma exprFreeVars_Tick:
   forall e t,
-  exprFreeVars (Tick t e) [=] exprFreeVars e.
-Admitted.
+  exprFreeVars (Tick t e) [=] (unionVarSet (exprFreeVars e) (filterVarSet isLocalVar (tickishFreeVars t))).
+Proof. 
+  move=> e co.
+  unfold exprFreeVars, exprFVs, Base.op_z2218U__.  
+  unfold expr_fvs. fold expr_fvs.
+  move: (expr_fvs_WF e) => [vs D].
+  move: (filterVarSet_filterFV isLocalVar _ _ RespectsVar_isLocalVar D) => D1.
+  move: (DenotesfvVarSet _ _ D1) => D2.
+  rewrite D2.
+
+  move: (unionVarSet_unionFV _ _ _ _ D (Denotes_tickish co)) => D3.
+  move: (filterVarSet_filterFV isLocalVar _ _ RespectsVar_isLocalVar D3) => D4.
+  move: (DenotesfvVarSet _ _ D4) => D5.
+  rewrite D5.
+  rewrite <- unionVarSet_filterVarSet; try done.
+Qed.
 
 Lemma exprFreeVars_Type:
   forall t,
@@ -417,6 +473,7 @@ Proof.
   destruct (freeVars e); reflexivity.
 Qed.
 
+(* Used in Exitify *)
 Lemma freeVarsOf_freeVars:
   forall e,
   dVarSetToVarSet (freeVarsOf (freeVars e)) = exprFreeVars e.

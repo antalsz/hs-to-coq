@@ -51,6 +51,8 @@ Axiom difference_Tip_non_member:
 Axiom null_empty : forall A,
     (@IntMap.Internal.null A IntMap.Internal.empty).
 
+
+(* Do we need to know that f respects == for A ? *)
 Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
     IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
     IntMap.Internal.filter (fun v => f v && f' v) i.
@@ -60,6 +62,10 @@ Axiom filter_insert: forall A f key (v:A) i,
   (if (f v)
    then IntMap.Internal.insert key v (IntMap.Internal.filter f i)
    else IntMap.Internal.filter f i).
+
+Axiom lookup_filterWithKey : 
+  forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
+                       Internal.lookup key m = Some val.
 
 Axiom filter_true : forall (A:Type) (m:IntMap.Internal.IntMap A), 
    IntMap.Internal.filter (const true) m = m.
@@ -71,10 +77,6 @@ Axiom lookup_insert_neq :
   forall b key1 key2 (val:b) m, 
     key1 <> key2 ->
     Internal.lookup key1 (Internal.insert key2 val m) = Internal.lookup key1 m.
-
-Axiom lookup_filterWithKey : 
-  forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
-                       Internal.lookup key m = Some val.
 
 Axiom lookup_intersection :
   forall a b key (val1:a) m1 m2, 

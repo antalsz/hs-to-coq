@@ -2095,9 +2095,11 @@ Proof.
   firstorder.
 Qed.
 
+
 Lemma Respects_StrongSubset_const:
   forall P, Respects_StrongSubset (fun _ => P).
 Proof. intros ?????. assumption. Qed.
+
 
 Lemma Respects_StrongSubset_and:
   forall P Q,
@@ -2109,6 +2111,7 @@ Proof.
   intros ????????.
   firstorder.
 Qed.
+
 
 Lemma Respects_StrongSubset_andb:
   forall (P Q : VarSet -> bool),
@@ -2134,6 +2137,7 @@ Proof.
   firstorder.
 Qed.
 
+
 Lemma Respects_StrongSubset_forallb:
   forall a (xs : list a) P,
     Forall (fun x => Respects_StrongSubset (fun vs => P vs x = true)) xs ->
@@ -2157,6 +2161,7 @@ Proof.
   set_b_iff; fsetdec.
 Qed.
 
+
 Lemma Respects_StrongSubset_delVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
@@ -2167,6 +2172,7 @@ Proof.
   unfold Respects_StrongSubset in H.  
   apply H in Hs; auto.
 Qed.
+
 
 Lemma Respects_StrongSubset_delVarSetList:
   forall vs2 P,
@@ -2186,19 +2192,22 @@ Lemma Respects_StrongSubset_extendVarSet:
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
 Proof.
   intros v P H vs vs' Hs Hvs.
-  unfold Respects_StrongSubset in H.
   apply StrongSubset_extend with (v:=v) in Hs.
   unfold Respects_StrongSubset in H.
   apply H in Hs; auto.
 Qed.
 
+
 Lemma Respects_StrongSubset_extendVarSetList:
-  forall v P,
+  forall vs' P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
-  Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs v)).
+  Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs vs')).
 Proof.
-  
-Admitted. (* This is tricky, because of rewriting under a binder :-( *)
+  intros vs P H vs1 vs2 Hs Hvs1.
+  eapply StrongSubset_extendVarSetList with (l:=vs) in Hs.
+  unfold Respects_StrongSubset in H.
+  apply H in Hs; auto.
+Qed. 
 
 
 (* Is this weakening? *)

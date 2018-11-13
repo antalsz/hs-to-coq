@@ -2465,15 +2465,23 @@ Proof.
   apply H in Hs; auto.
 Qed. 
 
-Lemma StrongSubset_filterVarSet : 
+Lemma StrongSubset_filterVarSet: 
   forall f1 f2 vs,
+    RespectsVar f1 -> RespectsVar f2 ->
   (forall v, f1 v = true  -> f2 v = true) ->
   filterVarSet f1 vs {<=} filterVarSet f2 vs.
 Proof.
   intros.
-  induction vs.
-Admitted.
-
+  unfold StrongSubset.
+  intros var.
+  destruct (f1 var) eqn:Heq1.
+  - rewrite lookupVarSet_filterVarSet_true; auto.
+    destruct (lookupVarSet vs var) eqn:Hl; [|trivial].
+    rewrite lookupVarSet_filterVarSet_true; auto.
+    rewrite Hl.
+    apply almostEqual_refl.
+  - rewrite lookupVarSet_filterVarSet_false; auto.
+Qed.
 
 (* Is this weakening? *)
 Lemma weaken:

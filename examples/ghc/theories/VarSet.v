@@ -146,7 +146,6 @@ Add Parametric Relation {a}`{H: EqLaws a} : a
 
 Instance: RewriteRelation (fun x y => x == y).
 
-
 Lemma eqlist_Foldable_elem : forall a (s s' : list a) `{EqLaws a}, 
       eqlistA (fun x y => x == y) s s' ->
       (forall a, Foldable.elem a s = Foldable.elem a s').
@@ -2345,11 +2344,51 @@ Proof.
 Qed.
 
 
+
+Lemma compat_fun_Var_bool:
+  forall f : Var -> bool, compat_bool E.eq f.
+Proof.
+   unfold compat_bool.
+   unfold E.eq.
+   unfold Var_as_DT.eqb.    
+   intros f v1 v2 H.
+   inversion H as [H'].
+   eapply  lookupVarSet_eq with
+       (vs:=extendVarSet emptyVarSet v1) in H.
+   rewrite lookupVarSet_extendVarSet_eq in H.
+   - symmetry in H.
+     assert
+       (H'': exists v,
+        lookupVarSet (extendVarSet emptyVarSet v1) v2 =
+        Some v); eauto.
+     apply lookupVarSet_In in H''.
+     set_b_iff.
+Abort.
+
 Lemma lookupVarSet_filterVarSet_true : forall f v vs,
   f v = true ->
   lookupVarSet (filterVarSet f vs) v = lookupVarSet vs v.
 Proof.
   intros.
+  destruct (lookupVarSet (filterVarSet f vs) v) eqn:Hl.
+  - revert Hl.
+    unfold_VarSet_to_IntMap.
+    unfold IntMap.Internal.filter.
+    symmetry.
+    erewrite lookup_filterWithKey; eauto.
+  - apply lookupVarSet_None_elemVarSet in Hl.
+    symmetry.
+    apply lookupVarSet_None_elemVarSet.
+    set_b_iff.
+    intros Hin.
+    eapply filter_3 in Hin; eauto.
+    clear H Hl Hin v vs.
+    (* compat_bool E.eq f *)
+    unfold compat_bool.
+    intros v v' Heq.
+    unfold E.eq, E.eqb in Heq.
+    (* is this subgoal true? 
+       `forall f : Var -> bool, compat_bool E.eq f` *)
 Admitted.
 
 Lemma lookupVarSet_filterVarSet_false : forall f v vs,
@@ -2357,6 +2396,20 @@ Lemma lookupVarSet_filterVarSet_false : forall f v vs,
   lookupVarSet (filterVarSet f vs) v = None.
 Proof.
   intros.
+  unfold_VarSet_to_IntMap.
+  unfold IntMap.Internal.filter.
+(*  
+  apply lookupVarSet_None_elemVarSet.
+  safe_unfold_VarSet.
+  destruct (filterVarSet f vs) eqn:Hd.
+  destruct getUniqSet'.
+  revert Hd.
+
+  set_b_iff.
+  intros Hin.
+  eapply filter_1 in Hin.
+  *)
+  
 Admitted.
 
 

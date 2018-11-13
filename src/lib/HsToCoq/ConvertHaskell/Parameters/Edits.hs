@@ -5,6 +5,7 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
+  anAssertionVariety,
   ScopePlace(..),
   TerminationArgument(..),
   Rewrite(..), Rewrites,
@@ -52,14 +53,27 @@ data CoqDefinition = CoqDefinitionDef Definition
                    | CoqInductiveDef  Inductive
                    | CoqInstanceDef   InstanceDefinition
                    | CoqAxiomDef      (Qualid, Term) -- Curry?  Uncurry?  A new type?
+                   | CoqAssertionDef  (Assertion, Proof) -- Curry?  Uncurry?  A new type?
                    deriving (Eq, Ord, Show, Read)
 
 definitionSentence :: CoqDefinition -> Sentence
-definitionSentence (CoqDefinitionDef      def) = DefinitionSentence def
-definitionSentence (CoqFixpointDef        fix) = FixpointSentence   fix
-definitionSentence (CoqInductiveDef       ind) = InductiveSentence  ind
-definitionSentence (CoqInstanceDef        ind) = InstanceSentence   ind
-definitionSentence (CoqAxiomDef           axm) = uncurry typedAxiom axm
+definitionSentence (CoqDefinitionDef      def) = DefinitionSentence        def
+definitionSentence (CoqFixpointDef        fix) = FixpointSentence          fix
+definitionSentence (CoqInductiveDef       ind) = InductiveSentence         ind
+definitionSentence (CoqInstanceDef        ind) = InstanceSentence          ind
+definitionSentence (CoqAxiomDef           axm) = uncurry typedAxiom        axm
+definitionSentence (CoqAssertionDef       apf) = uncurry AssertionSentence apf
+
+anAssertionVariety :: (Assertion, Proof) -> String
+anAssertionVariety (Assertion kwd _ _ _, _) = case kwd of
+  Theorem     -> "a Theorem"
+  Lemma       -> "a Lemma"
+  Remark      -> "a Remark"
+  Fact        -> "a Fact"
+  Corollary   -> "a Corollary"
+  Proposition -> "a Proposition"
+  Definition  -> "a Definition"
+  Example     -> "an Example"
 
 instance HasBV Qualid CoqDefinition where
   bvOf = bvOf . definitionSentence
@@ -250,6 +264,7 @@ defName (CoqInductiveDef  (CoInductive (IndBody x _ _ _   :| _) _)) = x
 defName (CoqInstanceDef   (InstanceDefinition x _ _ _ _))           = x
 defName (CoqInstanceDef   (InstanceTerm       x _ _ _ _))           = x
 defName (CoqAxiomDef      (x, _))                                   = x
+defName (CoqAssertionDef  (Assertion _ x _ _, _))                   = x
 
 buildEdits :: Foldable f => f Edit -> Either String Edits
 buildEdits = foldM (flip addEdit) mempty

@@ -5,7 +5,7 @@
 module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- * Lexing and tokens
   Token(..), tokenDescription,
-  token, token',
+  token, token', proofBody,
   -- * Character categories
   isHSpace, isVSpace, isDigit, isWordInit, isWord, isOperator, isOpen, isClose,
   -- * Component parsers
@@ -16,13 +16,15 @@ module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- ** Whitespace and comments
   comment, space, newline,
   -- ** Atomic components
-  nat, uword, word, op, unit, nil
+  nat, uword, word, op, unit, nil,
+  -- ** Parse until a given string
+  parseUntilAny,
 ) where
 
 import Prelude hiding (Num())
 
 import Data.Foldable
-import Data.Bifunctor (second)
+import Data.Bifunctor (first, second)
 import HsToCoq.Util.Foldable
 import HsToCoq.Util.Functor
 import Control.Applicative
@@ -70,12 +72,12 @@ data Token = TokWord    Ident
            deriving (Eq, Ord, Show, Read)
 
 tokenDescription :: Token -> String
-tokenDescription (TokWord    w) = "word `"              ++ T.unpack w ++ "'"
-tokenDescription (TokNat     n) = "number `"            ++ show     n ++ "'"
-tokenDescription (TokOp      o) = "operator `"          ++ T.unpack o ++ "'"
-tokenDescription (TokOpen    o) = "opening delimeter `" ++ pure     o ++ "'"
-tokenDescription (TokClose   c) = "closing delimeter `" ++ pure     c ++ "'"
-tokenDescription (TokString  s) = "string literal `"    ++ T.unpack s ++ "'"
+tokenDescription (TokWord    w) = "word `"              ++ T.unpack   w ++ "'"
+tokenDescription (TokNat     n) = "number `"            ++ show       n ++ "'"
+tokenDescription (TokOp      o) = "operator `"          ++ T.unpack   o ++ "'"
+tokenDescription (TokOpen    o) = "opening delimeter `" ++ pure       o ++ "'"
+tokenDescription (TokClose   c) = "closing delimeter `" ++ pure       c ++ "'"
+tokenDescription (TokString  s) = "string literal `"    ++ T.unpack   s ++ "'"
 tokenDescription TokNewline     = "newline"
 tokenDescription TokEOF         = "end of file"
 
@@ -143,6 +145,23 @@ stringLit = do
     _ <- parseChar (is '"')
     return s
 
+parseUntilAny :: MonadParse m => [(Text, a)] -> m (Text, a)
+parseUntilAny stops = do
+  stopInit <- case T.transpose $ map fst stops of
+                []      -> empty
+                heads:_ -> pure $ \c -> T.any (is c) heads
+  
+  let parseCommand = T.foldr (\c -> (parseChar (is c) *>)) (pure ())
+      
+      terminator = asum [Left res <$ parseCommand stop | (stop, res) <- stops]
+      char       = Right <$> parseChar stopInit
+  
+  fix $ \loop -> do
+    text <- parseChars $ not . stopInit
+    (terminator <|> char) >>= \case
+      Left  res -> pure (text, res)
+      Right c'  -> first ((text <> T.singleton c') <>) <$> loop
+
 -- arguments from parseToken (from Control.Monad.Trans.Parse)
 -- parseToken :: MonadParse m => (Text -> a)  -> (Char -> Bool) -> (Char -> Bool) -> m a
 -- parseToken build isFirst isRest = ...
@@ -168,3 +187,11 @@ token' = asum $
 
 token :: MonadNewlinesParse m => m Token
 token = untilJustM token'
+
+proofBody :: MonadParse m => m Proof
+proofBody = do
+  (tactics, proofType) <-
+    parseUntilAny [ ("Qed",      ProofQed)
+                  , ("Defined",  ProofDefined)
+                  , ("Admitted", ProofAdmitted) ]
+  pure $ proofType tactics

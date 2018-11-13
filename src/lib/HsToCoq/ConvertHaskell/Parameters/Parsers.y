@@ -112,6 +112,14 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
   'Axiom'         { TokWord    "Axiom"          }
+  'Theorem'       { TokWord    "Theorem"        }
+  'Lemma'         { TokWord    "Lemma"          }
+  'Remark'        { TokWord    "Remark"         }
+  'Fact'          { TokWord    "Fact"           }
+  'Corollary'     { TokWord    "Corollary"      }
+  'Proposition'   { TokWord    "Proposition"    }
+  'Example'       { TokWord    "Example"        }
+  'Proof'         { TokWord    "Proof"          }
   -- Tokens: Coq punctuation
   ':'             { TokOp      ":"              }
   '=>'            { TokOp      "=>"             }
@@ -236,14 +244,15 @@ DataTypeArguments :: { DataTypeArguments }
   | {- empty -}                                                 { DataTypeArguments [] [] }
 
 CoqDefinitionRaw :: { CoqDefinition }
-  : Inductive       { CoqInductiveDef  $1 }
-  | Definition      { CoqDefinitionDef $1 }
-  | Fixpoint        { CoqFixpointDef   $1 }
-  | Instance        { CoqInstanceDef   $1 }
-  | Axiom           { CoqAxiomDef      $1 }
+  : Inductive                { CoqInductiveDef  $1 }
+  | Definition               { CoqDefinitionDef $1 }
+  | Fixpoint                 { CoqFixpointDef   $1 }
+  | Instance                 { CoqInstanceDef   $1 }
+  | Axiom                    { CoqAxiomDef      $1 }
+  | AssertionProof           { CoqAssertionDef  $1 }
 
 CoqDefinition :: { CoqDefinition }
-  : Coq(CoqDefinitionRaw) '.' { $1 }
+  : Coq(CoqDefinitionRaw) '.'    { $1 }
 
 ScopePlace :: { ScopePlace }
   : constructor    { SPConstructor }
@@ -253,7 +262,7 @@ Scope :: { Ident }
   : Word    { $1     }
   | type    { "type" } -- This is so common, we have to special-case it
 
-Edit ::                                             { Edit }
+Edit :: { Edit }
   : type synonym Word ':->' Word                    { TypeSynonymTypeEdit           $3 $5                                 }
   | data type arguments Qualid DataTypeArguments    { DataTypeArgumentsEdit         $4 $5                                 }
   | redefine CoqDefinition                          { RedefinitionEdit              $2                                    }
@@ -489,6 +498,25 @@ FieldDefinition :: { (Qualid,Term) }
 
 Axiom :: { (Qualid, Term) }
   : 'Axiom' Qualid TypeAnnotation    { ($2, $3) }
+
+-- We don't include 'Definition' -- it causes parsing conflicts, and really
+-- isn't necessary here.
+AssertionKeyword :: { AssertionKeyword }
+  : 'Theorem'     { Theorem     }
+  | 'Lemma'       { Lemma       }
+  | 'Fact'        { Fact        }
+  | 'Corollary'   { Corollary   }
+  | 'Proposition' { Proposition }
+  | 'Example'     { Example     }
+
+Assertion :: { Assertion }
+  : AssertionKeyword Qualid Many(Binder) TypeAnnotation    { Assertion $1 $2 $3 $4 }
+
+Proof :: { Proof }
+  : 'Proof' '.'    {% proofBody }
+
+AssertionProof :: { (Assertion, Proof) }
+  : Assertion '.' Proof    { ($1, $3) }
 
 --------------------------------------------------------------------------------
 -- Haskell code

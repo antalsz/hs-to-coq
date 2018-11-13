@@ -128,6 +128,14 @@ Proof.
 Qed.
 
 
+Lemma var_eq_realUnique v1 v2 : 
+  (v1 == v2) = (realUnique v1 == realUnique v2).
+Proof.
+  repeat unfold op_zeze__, op_zeze____,Core.Eq___Var_op_zeze__,Core.Eq___Var.
+  auto.
+Qed.
+
+
 
 (** ** A DecidableType structure based on  [GHC.Base.==]. *)
 

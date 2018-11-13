@@ -58,9 +58,12 @@ builtInDefaultMethods = fmap M.fromList $ M.fromList $
 {- compare x y = 
      if x == y then Eq else if x <= y then Lt else Gt -}
 
-        , "GHC.Base.compare" ~> Fun ["x","y"] 
-		        (IfBool SymmetricIf (App2 "GHC.Base.==" "x" "y") "Eq"
-   		        (IfBool SymmetricIf (App2 "GHC.Base.op_zlze__" "x" "y") "Lt" "Gt"))
+        , "GHC.Base.compare" ~> Fun ["x","y"]
+            (IfBool SymmetricIf (App2 "GHC.Base.==" "x" "y")
+              "Eq"
+              (IfBool SymmetricIf (App2 "GHC.Base.op_zlze__" "x" "y")
+                "Lt"
+                "Gt"))
    
 
 {-  x <= y  = compare x y /= GT

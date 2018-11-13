@@ -40,7 +40,7 @@ Local Definition Uniquable__ConLike_getUnique : ConLike -> Unique.Unique :=
     end.
 
 Program Instance Uniquable__ConLike : Unique.Uniquable ConLike :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__ConLike_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ConLike_getUnique |}.
 
 Definition eqConLike : ConLike -> ConLike -> bool :=
   fun x y => Unique.getUnique x GHC.Base.== Unique.getUnique y.
@@ -79,9 +79,9 @@ Local Definition NamedThing__ConLike_getOccName : ConLike -> OccName.OccName :=
   fun n => Name.nameOccName (NamedThing__ConLike_getName n).
 
 Program Instance NamedThing__ConLike : Name.NamedThing ConLike :=
-  fun _ k =>
-    k {| Name.getName__ := NamedThing__ConLike_getName ;
-         Name.getOccName__ := NamedThing__ConLike_getOccName |}.
+  fun _ k__ =>
+    k__ {| Name.getName__ := NamedThing__ConLike_getName ;
+           Name.getOccName__ := NamedThing__ConLike_getOccName |}.
 
 Local Definition Eq___ConLike_op_zeze__ : ConLike -> ConLike -> bool :=
   eqConLike.
@@ -90,9 +90,9 @@ Local Definition Eq___ConLike_op_zsze__ : ConLike -> ConLike -> bool :=
   fun x y => negb (Eq___ConLike_op_zeze__ x y).
 
 Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
 
 (* External variables:
      bool negb BasicTypes.Arity Core.DataCon Core.PatSyn Core.dataConName

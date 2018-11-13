@@ -37,12 +37,12 @@ Record Uniquable__Dict a := Uniquable__Dict_Build {
   getUnique__ : a -> Unique }.
 
 Definition Uniquable a :=
-  forall r, (Uniquable__Dict a -> r) -> r.
+  forall r__, (Uniquable__Dict a -> r__) -> r__.
 
 Existing Class Uniquable.
 
-Definition getUnique `{g : Uniquable a} : a -> Unique :=
-  g _ (getUnique__ a).
+Definition getUnique `{g__0__ : Uniquable a} : a -> Unique :=
+  g__0__ _ (getUnique__ a).
 
 (* Midamble *)
 
@@ -190,9 +190,9 @@ Local Definition Eq___Unique_op_zsze__ : Unique -> Unique -> bool :=
   fun a b => negb (eqUnique a b).
 
 Program Instance Eq___Unique : GHC.Base.Eq_ Unique :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Unique_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Unique_op_zsze__ |}.
 
 Definition hasKey {a} `{Uniquable a} : a -> Unique -> bool :=
   fun x k => getUnique x GHC.Base.== k.
@@ -222,20 +222,20 @@ Local Definition Uniquable__Unique_getUnique : Unique -> Unique :=
   fun u => u.
 
 Program Instance Uniquable__Unique : Uniquable Unique :=
-  fun _ k => k {| getUnique__ := Uniquable__Unique_getUnique |}.
+  fun _ k__ => k__ {| getUnique__ := Uniquable__Unique_getUnique |}.
 
 Local Definition Uniquable__N_getUnique : BinNums.N -> Unique :=
   fun i => mkUniqueGrimily i.
 
 Program Instance Uniquable__N : Uniquable BinNums.N :=
-  fun _ k => k {| getUnique__ := Uniquable__N_getUnique |}.
+  fun _ k__ => k__ {| getUnique__ := Uniquable__N_getUnique |}.
 
 Local Definition Uniquable__FastString_getUnique
    : FastString.FastString -> Unique :=
   fun fs => mkUniqueGrimily (FastString.uniqueOfFS fs).
 
 Program Instance Uniquable__FastString : Uniquable FastString.FastString :=
-  fun _ k => k {| getUnique__ := Uniquable__FastString_getUnique |}.
+  fun _ k__ => k__ {| getUnique__ := Uniquable__FastString_getUnique |}.
 
 Definition getWordKey : Unique -> GHC.Num.Word :=
   getKey.

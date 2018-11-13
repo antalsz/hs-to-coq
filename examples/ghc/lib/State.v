@@ -80,9 +80,9 @@ Local Definition Functor__State_op_zlzd__ {inst_s}
   fun {a} {b} => Functor__State_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__State {s} : GHC.Base.Functor (State s) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__State_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__State_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__State_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__State_op_zlzd__ |}.
 
 Local Definition Applicative__State_liftA2 {inst_s}
    : forall {a} {b} {c},
@@ -100,21 +100,21 @@ Local Definition Applicative__State_pure {inst_s}
   fun {a} => fun x => Mk_State (fun s => pair x s).
 
 Program Instance Applicative__State {s} : GHC.Base.Applicative (State s) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__State_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__State_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__State_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__State_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__State_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__State_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__State_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__State_pure |}.
 
 Local Definition Monad__State_return_ {inst_s}
    : forall {a}, a -> (State inst_s) a :=
   fun {a} => GHC.Base.pure.
 
 Program Instance Monad__State {s} : GHC.Base.Monad (State s) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__State_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__State_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__State_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__State_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__State_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__State_return_ |}.
 
 (* External variables:
      op_zt__ pair tt unit GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad

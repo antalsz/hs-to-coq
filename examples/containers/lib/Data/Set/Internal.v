@@ -479,8 +479,8 @@ Local Definition Semigroup__MergeSet_op_zlzlzgzg__ {inst_a}
     end.
 
 Program Instance Semigroup__MergeSet {a} : GHC.Base.Semigroup (MergeSet a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zlzlzgzg____ := Semigroup__MergeSet_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__MergeSet_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__MergeSet_mappend {inst_a}
    : (MergeSet inst_a) -> (MergeSet inst_a) -> (MergeSet inst_a) :=
@@ -558,26 +558,26 @@ Local Definition Foldable__Set__toList : forall {a}, Set_ a -> list a :=
   fun {a} => toList.
 
 Program Instance Foldable__Set_ : Data.Foldable.Foldable Set_ :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Set__fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Set__foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Set__foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Set__foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Set__foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Set__foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Set__length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Set__null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Set__fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Set__foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Set__foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Set__foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Set__foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Set__foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Set__length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Set__null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Set__sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Set__toList |}.
 
 Program Instance Monoid__MergeSet {a} : GHC.Base.Monoid (MergeSet a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__MergeSet_mappend ;
-         GHC.Base.mconcat__ := Monoid__MergeSet_mconcat ;
-         GHC.Base.mempty__ := Monoid__MergeSet_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__MergeSet_mappend ;
+           GHC.Base.mconcat__ := Monoid__MergeSet_mconcat ;
+           GHC.Base.mempty__ := Monoid__MergeSet_mempty |}.
 
 Definition cartesianProduct {a} {b} : Set_ a -> Set_ b -> Set_ (a * b)%type :=
   fun as_ bs =>
@@ -1140,13 +1140,13 @@ Local Definition Eq1__Set__liftEq
             (toList n)).
 
 Program Instance Eq1__Set_ : Data.Functor.Classes.Eq1 Set_ :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Set__liftEq |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Set__liftEq |}.
 
 Program Instance Ord1__Set_ : Data.Functor.Classes.Ord1 Set_ :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-           Ord1__Set__liftCompare |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Set__liftCompare |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Set.Internal.Show__Set_' *)
@@ -1189,19 +1189,19 @@ Local Definition Eq___Set__op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
   fun x y => negb (Eq___Set__op_zeze__ x y).
 
 Program Instance Eq___Set_ {a} `{GHC.Base.Eq_ a} : GHC.Base.Eq_ (Set_ a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Set__op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Set__op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Set__op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Set__op_zsze__ |}.
 
 Program Instance Ord__Set_ {a} `{GHC.Base.Ord a} : GHC.Base.Ord (Set_ a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Set__op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Set__op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Set__op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Set__op_zgze__ ;
-         GHC.Base.compare__ := Ord__Set__compare ;
-         GHC.Base.max__ := Ord__Set__max ;
-         GHC.Base.min__ := Ord__Set__min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Set__op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Set__op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Set__op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Set__op_zgze__ ;
+           GHC.Base.compare__ := Ord__Set__compare ;
+           GHC.Base.max__ := Ord__Set__max ;
+           GHC.Base.min__ := Ord__Set__min |}.
 
 (* Skipping all instances of class `GHC.Exts.IsList', including
    `Data.Set.Internal.IsList__Set_' *)
@@ -1215,7 +1215,8 @@ Local Definition Semigroup__Set__op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
 
 Program Instance Semigroup__Set_ {a} `{GHC.Base.Ord a}
    : GHC.Base.Semigroup (Set_ a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Set__op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Set__op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Set__mappend {inst_a} `{GHC.Base.Ord inst_a}
    : (Set_ inst_a) -> (Set_ inst_a) -> (Set_ inst_a) :=
@@ -1231,10 +1232,10 @@ Local Definition Monoid__Set__mempty {inst_a} `{GHC.Base.Ord inst_a}
 
 Program Instance Monoid__Set_ {a} `{GHC.Base.Ord a}
    : GHC.Base.Monoid (Set_ a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Set__mappend ;
-         GHC.Base.mconcat__ := Monoid__Set__mconcat ;
-         GHC.Base.mempty__ := Monoid__Set__mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Set__mappend ;
+           GHC.Base.mconcat__ := Monoid__Set__mconcat ;
+           GHC.Base.mempty__ := Monoid__Set__mempty |}.
 
 Module Notations.
 Notation "'_Data.Set.Internal.\\_'" := (op_zrzr__).

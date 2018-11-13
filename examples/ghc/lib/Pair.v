@@ -74,7 +74,8 @@ Local Definition Semigroup__Pair_op_zlzlzgzg__ {inst_a} `{GHC.Base.Semigroup
 
 Program Instance Semigroup__Pair {a} `{GHC.Base.Semigroup a}
    : GHC.Base.Semigroup (Pair a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Pair_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Pair_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Pair_mappend {inst_a} `{GHC.Base.Semigroup inst_a}
   `{GHC.Base.Monoid inst_a}
@@ -93,10 +94,10 @@ Local Definition Monoid__Pair_mconcat {inst_a} `{GHC.Base.Semigroup inst_a}
 
 Program Instance Monoid__Pair {a} `{GHC.Base.Semigroup a} `{GHC.Base.Monoid a}
    : GHC.Base.Monoid (Pair a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Pair_mappend ;
-         GHC.Base.mconcat__ := Monoid__Pair_mconcat ;
-         GHC.Base.mempty__ := Monoid__Pair_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Pair_mappend ;
+           GHC.Base.mconcat__ := Monoid__Pair_mconcat ;
+           GHC.Base.mempty__ := Monoid__Pair_mempty |}.
 
 Local Definition Traversable__Pair_traverse
    : forall {f} {a} {b},
@@ -187,20 +188,20 @@ Local Definition Foldable__Pair_toList : forall {a}, Pair a -> list a :=
     fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Pair_foldr c n t)).
 
 Program Instance Foldable__Pair : Data.Foldable.Foldable Pair :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Pair_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Pair_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Pair_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Pair_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Pair_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Pair_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Pair_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Pair_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Pair_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Pair_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Pair_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Pair_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Pair_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Pair_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Pair_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Pair_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Pair_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Pair_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Pair_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Pair_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Pair_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Pair_toList |}.
 
 Local Definition Functor__Pair_fmap
    : forall {a} {b}, (a -> b) -> Pair a -> Pair b :=
@@ -215,20 +216,20 @@ Local Definition Functor__Pair_op_zlzd__
   fun {a} {b} => Functor__Pair_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Pair : GHC.Base.Functor Pair :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Pair_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Pair_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Pair_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Pair_op_zlzd__ |}.
 
 Program Instance Traversable__Pair : Data.Traversable.Traversable Pair :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__Pair_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__Pair_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__Pair_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__Pair_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__Pair_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__Pair_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__Pair_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__Pair_traverse |}.
 
 Local Definition Applicative__Pair_op_zlztzg__
    : forall {a} {b}, Pair (a -> b) -> Pair a -> Pair b :=
@@ -251,11 +252,11 @@ Local Definition Applicative__Pair_pure : forall {a}, a -> Pair a :=
   fun {a} => fun x => Mk_Pair x x.
 
 Program Instance Applicative__Pair : GHC.Base.Applicative Pair :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Pair_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Pair_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Pair_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__Pair_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Pair_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Pair_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Pair_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Pair_pure |}.
 
 (* External variables:
      bool false list op_zt__ pair true Coq.Program.Basics.compose

@@ -79,7 +79,7 @@ Local Definition Semigroup__Max_op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
 
 Program Instance Semigroup__Max {a} `{GHC.Base.Ord a}
    : GHC.Base.Semigroup (Max a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Max_op_zlzlzgzg__ |}.
+  fun _ k__ => k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Max_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Max_mappend {inst_a} `{GHC.Base.Ord inst_a}
    : (Max inst_a) -> (Max inst_a) -> (Max inst_a) :=
@@ -94,10 +94,10 @@ Local Definition Monoid__Max_mconcat {inst_a} `{GHC.Base.Ord inst_a}
   GHC.Base.foldr Monoid__Max_mappend Monoid__Max_mempty.
 
 Program Instance Monoid__Max {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Max a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Max_mappend ;
-         GHC.Base.mconcat__ := Monoid__Max_mconcat ;
-         GHC.Base.mempty__ := Monoid__Max_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Max_mappend ;
+           GHC.Base.mconcat__ := Monoid__Max_mconcat ;
+           GHC.Base.mempty__ := Monoid__Max_mempty |}.
 
 Local Definition Semigroup__Min_op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
    : (Min inst_a) -> (Min inst_a) -> (Min inst_a) :=
@@ -112,7 +112,7 @@ Local Definition Semigroup__Min_op_zlzlzgzg__ {inst_a} `{GHC.Base.Ord inst_a}
 
 Program Instance Semigroup__Min {a} `{GHC.Base.Ord a}
    : GHC.Base.Semigroup (Min a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Min_op_zlzlzgzg__ |}.
+  fun _ k__ => k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Min_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Min_mappend {inst_a} `{GHC.Base.Ord inst_a}
    : (Min inst_a) -> (Min inst_a) -> (Min inst_a) :=
@@ -127,10 +127,10 @@ Local Definition Monoid__Min_mconcat {inst_a} `{GHC.Base.Ord inst_a}
   GHC.Base.foldr Monoid__Min_mappend Monoid__Min_mempty.
 
 Program Instance Monoid__Min {a} `{GHC.Base.Ord a} : GHC.Base.Monoid (Min a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Min_mappend ;
-         GHC.Base.mconcat__ := Monoid__Min_mconcat ;
-         GHC.Base.mempty__ := Monoid__Min_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Min_mappend ;
+           GHC.Base.mconcat__ := Monoid__Min_mconcat ;
+           GHC.Base.mempty__ := Monoid__Min_mempty |}.
 
 Local Definition Applicative__StateL_liftA2 {inst_s}
    : forall {a} {b} {c},
@@ -171,9 +171,9 @@ Local Definition Functor__StateL_op_zlzd__ {inst_s}
   fun {a} {b} => Functor__StateL_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__StateL {s} : GHC.Base.Functor (StateL s) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateL_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateL_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateL_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateL_op_zlzd__ |}.
 
 Local Definition Applicative__StateL_op_ztzg__ {inst_s}
    : forall {a} {b},
@@ -186,11 +186,11 @@ Local Definition Applicative__StateL_pure {inst_s}
   fun {a} => fun x => Mk_StateL (fun s => pair s x).
 
 Program Instance Applicative__StateL {s} : GHC.Base.Applicative (StateL s) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateL_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateL_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateL_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__StateL_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateL_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateL_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateL_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__StateL_pure |}.
 
 Local Definition Applicative__StateR_liftA2 {inst_s}
    : forall {a} {b} {c},
@@ -231,9 +231,9 @@ Local Definition Functor__StateR_op_zlzd__ {inst_s}
   fun {a} {b} => Functor__StateR_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__StateR {s} : GHC.Base.Functor (StateR s) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateR_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateR_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__StateR_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__StateR_op_zlzd__ |}.
 
 Local Definition Applicative__StateR_op_ztzg__ {inst_s}
    : forall {a} {b},
@@ -246,11 +246,11 @@ Local Definition Applicative__StateR_pure {inst_s}
   fun {a} => fun x => Mk_StateR (fun s => pair s x).
 
 Program Instance Applicative__StateR {s} : GHC.Base.Applicative (StateR s) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateR_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateR_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateR_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__StateR_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__StateR_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__StateR_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__StateR_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__StateR_pure |}.
 
 (* External variables:
      None Some bool list op_zt__ option pair GHC.Base.Applicative GHC.Base.Functor

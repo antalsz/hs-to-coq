@@ -206,6 +206,17 @@ directClassSentences (ClassBody clsDef@(ClassDefinition name args _ _) nots) = d
 
 cpsClassSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
 cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
+  -- TODO: These should probably be created with 'gensym'/'genqid', but then I
+  -- have to be within a 'LocalConvMonad' and then I have to think exactly about
+  -- what that means here.
+  let result_ty, cont_name :: Qualid
+      result_ty = "r__"
+      cont_name = "g__0__" -- Can't use `g__` because it could collide with a CPSed class method
+  -- result_ty <- genqid "r"
+  -- cont_name <- genqid "g"
+  let class_ty = Forall [ Inferred Explicit $ Ident result_ty ] $
+                   (app_args dict_name `Arrow` Qualid result_ty) `Arrow` Qualid result_ty
+  
   let wholeClassSentences =
         [ RecordSentence dict_record
         , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
@@ -213,7 +224,7 @@ cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
 
       notations = map NotationSentence nots
   
-  methods <- traverse (fmap DefinitionSentence . uncurry method_def) methods
+  methods <- traverse (fmap DefinitionSentence . uncurry (method_def cont_name)) methods
 
   pure $ wholeClassSentences ++ methods ++ notations
   where
@@ -222,21 +233,19 @@ cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
     dict_methods = [ (qualidExtendBase "__" name, ty) | (name, ty) <- methods ]
     dict_record  = RecordDefinition dict_name inst_args ty (Just dict_build) dict_methods
     
-    class_ty = Forall [ "r" ] $ (app_args dict_name `Arrow` "r") `Arrow` "r"
-    
     -- The dictionary needs all explicit (type) arguments,
     -- but none of the implicit (constraint) arguments
     inst_args = filter (\b -> b ^? binderExplicitness == Just Explicit) args
     app_args f = foldl App1 (Qualid f) (map Qualid (foldMap (toListOf binderIdents) inst_args))
     
-    method_def meth ty = do
+    method_def g meth ty = do
       explicitArgs <- fromMaybe [] <$> lookupExplicitMethodArguments meth
       pure $ DefinitionDef
                Global
                meth
-               (explicitArgs ++ [Typed Generalizable Implicit [Ident "g"] $ app_args name])
+               (explicitArgs ++ [Typed Generalizable Implicit [Ident g] $ app_args name])
                (Just ty)
-               (App2 "g" Underscore . app_args $ qualidExtendBase "__" meth)
+               (App2 (Qualid g) Underscore . app_args $ qualidExtendBase "__" meth)
 
 classSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
 classSentences cls@(ClassBody (ClassDefinition name _ _ _) _) =

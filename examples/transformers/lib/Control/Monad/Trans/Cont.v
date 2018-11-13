@@ -78,9 +78,9 @@ Local Definition MonadTrans__ContT_lift {inst_r}
 
 Program Instance MonadTrans__ContT {r}
    : Control.Monad.Trans.Class.MonadTrans (ContT r) :=
-  fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-           MonadTrans__ContT_lift |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__ContT_lift |}.
 
 Definition resetT {m} {r} {r'} `{(GHC.Base.Monad m)}
    : ContT r m r -> ContT r' m r :=
@@ -151,9 +151,9 @@ Local Definition Functor__ContT_op_zlzd__ {inst_r} {inst_m}
   fun {a} {b} => Functor__ContT_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__ContT {r} {m} : GHC.Base.Functor (ContT r m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ContT_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ContT_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__ContT_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ContT_op_zlzd__ |}.
 
 Local Definition Applicative__ContT_liftA2 {inst_r} {inst_m}
    : forall {a} {b} {c},
@@ -176,26 +176,26 @@ Definition Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
 
 Program Instance Applicative__ContT {r} {m}
    : GHC.Base.Applicative (ContT r m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ContT_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ContT_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ContT_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__ContT_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ContT_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ContT_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ContT_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__ContT_pure |}.
 
 Local Definition Monad__ContT_return_ {inst_r} {inst_m}
    : forall {a}, a -> (ContT inst_r inst_m) a :=
   fun {a} => GHC.Base.pure.
 
 Program Instance Monad__ContT {r} {m} : GHC.Base.Monad (ContT r m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__ContT_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__ContT_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__ContT_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__ContT_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__ContT_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__ContT_return_ |}.
 
 Program Instance MonadFail__ContT {m} {r} `{(Control.Monad.Fail.MonadFail m)}
    : Control.Monad.Fail.MonadFail (ContT r m) :=
-  fun _ k =>
-    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ContT_fail |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ContT_fail |}.
 
 (* External variables:
      Type Control.Monad.Fail.MonadFail Control.Monad.Fail.fail

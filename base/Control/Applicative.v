@@ -108,9 +108,9 @@ Local Definition Functor__WrappedMonad_op_zlzd__ {inst_m} `{GHC.Base.Monad
 
 Program Instance Functor__WrappedMonad {m} `{GHC.Base.Monad m}
    : GHC.Base.Functor (WrappedMonad m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedMonad_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedMonad_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedMonad_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedMonad_op_zlzd__ |}.
 
 Local Definition Applicative__WrappedMonad_op_ztzg__ {inst_m} `{GHC.Base.Monad
   inst_m}
@@ -127,18 +127,19 @@ Local Definition Applicative__WrappedMonad_pure {inst_m} `{GHC.Base.Monad
 
 Program Instance Applicative__WrappedMonad {m} `{GHC.Base.Monad m}
    : GHC.Base.Applicative (WrappedMonad m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__WrappedMonad_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__WrappedMonad_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} =>
+             Applicative__WrappedMonad_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WrappedMonad_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__WrappedMonad_pure |}.
 
 Program Instance Monad__WrappedMonad {m} `{GHC.Base.Monad m}
    : GHC.Base.Monad (WrappedMonad m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WrappedMonad_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WrappedMonad_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__WrappedMonad_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__WrappedMonad_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__WrappedMonad_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__WrappedMonad_return_ |}.
 
 (* Skipping all instances of class `GHC.Generics.Generic', including
    `Control.Applicative.Generic__WrappedArrow' *)
@@ -215,9 +216,9 @@ Local Definition Functor__WrappedArrow_op_zlzd__ {inst_a} {inst_b}
 
 Program Instance Functor__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
    : GHC.Base.Functor (WrappedArrow a b) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedArrow_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedArrow_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__WrappedArrow_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__WrappedArrow_op_zlzd__ |}.
 
 Local Definition Applicative__WrappedArrow_op_ztzg__ {inst_a} {inst_b}
   `{Control.Arrow.Arrow inst_a}
@@ -235,11 +236,12 @@ Local Definition Applicative__WrappedArrow_pure {inst_a} {inst_b}
 
 Program Instance Applicative__WrappedArrow {a} {b} `{Control.Arrow.Arrow a}
    : GHC.Base.Applicative (WrappedArrow a b) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__WrappedArrow_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__WrappedArrow_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} =>
+             Applicative__WrappedArrow_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__WrappedArrow_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__WrappedArrow_pure |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Applicative.Alternative__ZipList' *)

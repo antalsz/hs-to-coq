@@ -35,26 +35,26 @@ Record Bifoldable__Dict p := Bifoldable__Dict_Build {
   (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> c }.
 
 Definition Bifoldable p :=
-  forall r, (Bifoldable__Dict p -> r) -> r.
+  forall r__, (Bifoldable__Dict p -> r__) -> r__.
 
 Existing Class Bifoldable.
 
-Definition bifold `{g : Bifoldable p}
+Definition bifold `{g__0__ : Bifoldable p}
    : forall {m}, forall `{GHC.Base.Monoid m}, p m m -> m :=
-  g _ (bifold__ p).
+  g__0__ _ (bifold__ p).
 
-Definition bifoldMap `{g : Bifoldable p}
+Definition bifoldMap `{g__0__ : Bifoldable p}
    : forall {m} {a} {b},
      forall `{GHC.Base.Monoid m}, (a -> m) -> (b -> m) -> p a b -> m :=
-  g _ (bifoldMap__ p).
+  g__0__ _ (bifoldMap__ p).
 
-Definition bifoldl `{g : Bifoldable p}
+Definition bifoldl `{g__0__ : Bifoldable p}
    : forall {c} {a} {b}, (c -> a -> c) -> (c -> b -> c) -> c -> p a b -> c :=
-  g _ (bifoldl__ p).
+  g__0__ _ (bifoldl__ p).
 
-Definition bifoldr `{g : Bifoldable p}
+Definition bifoldr `{g__0__ : Bifoldable p}
    : forall {a} {c} {b}, (a -> c -> c) -> (b -> c -> c) -> c -> p a b -> c :=
-  g _ (bifoldr__ p).
+  g__0__ _ (bifoldr__ p).
 
 (* Converted value declarations: *)
 
@@ -225,12 +225,12 @@ Local Definition Bifoldable__Either_bifoldr
                                       (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
 
 Program Instance Bifoldable__Either : Bifoldable Data.Either.Either :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__Either_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__Either_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__Either_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__Either_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__Either_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__Either_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__Either_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__Either_bifoldr |}.
 
 Local Definition Bifoldable__sept_type_bifoldMap {inst_x} {inst_y} {inst_z}
   {inst_w} {inst_v}
@@ -282,12 +282,13 @@ Local Definition Bifoldable__sept_type_bifoldr {inst_x} {inst_y} {inst_z}
 
 Program Instance Bifoldable__sept_type {x} {y} {z} {w} {v}
    : Bifoldable (GHC.Tuple.sept_type x y z w v) :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__sept_type_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__sept_type_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__sept_type_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__sept_type_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__sept_type_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__sept_type_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__sept_type_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__sept_type_bifoldr |}.
 
 Local Definition Bifoldable__sext_type_bifoldMap {inst_x} {inst_y} {inst_z}
   {inst_w}
@@ -339,12 +340,13 @@ Local Definition Bifoldable__sext_type_bifoldr {inst_x} {inst_y} {inst_z}
 
 Program Instance Bifoldable__sext_type {x} {y} {z} {w}
    : Bifoldable (GHC.Tuple.sext_type x y z w) :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__sext_type_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__sext_type_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__sext_type_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__sext_type_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__sext_type_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__sext_type_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__sext_type_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__sext_type_bifoldr |}.
 
 Local Definition Bifoldable__quint_type_bifoldMap {inst_x} {inst_y} {inst_z}
    : forall {m} {a} {b},
@@ -388,12 +390,13 @@ Local Definition Bifoldable__quint_type_bifoldr {inst_x} {inst_y} {inst_z}
 
 Program Instance Bifoldable__quint_type {x} {y} {z}
    : Bifoldable (GHC.Tuple.quint_type x y z) :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__quint_type_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__quint_type_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__quint_type_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__quint_type_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__quint_type_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__quint_type_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__quint_type_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__quint_type_bifoldr |}.
 
 Local Definition Bifoldable__quad_type_bifoldMap {inst_x} {inst_y}
    : forall {m} {a} {b},
@@ -436,12 +439,13 @@ Local Definition Bifoldable__quad_type_bifoldr {inst_x} {inst_y}
 
 Program Instance Bifoldable__quad_type {x} {y}
    : Bifoldable (GHC.Tuple.quad_type x y) :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__quad_type_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__quad_type_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__quad_type_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__quad_type_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__quad_type_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__quad_type_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__quad_type_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__quad_type_bifoldr |}.
 
 Local Definition Bifoldable__triple_type_bifoldMap {inst_x}
    : forall {m} {a} {b},
@@ -484,13 +488,13 @@ Local Definition Bifoldable__triple_type_bifoldr {inst_x}
 
 Program Instance Bifoldable__triple_type {x}
    : Bifoldable (GHC.Tuple.triple_type x) :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Bifoldable__triple_type_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__triple_type_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__triple_type_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__triple_type_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__triple_type_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__triple_type_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__triple_type_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__triple_type_bifoldr |}.
 
 (* Skipping instance `Data.Bifoldable.Bifoldable__K1' of class
    `Data.Bifoldable.Bifoldable' *)
@@ -534,12 +538,12 @@ Local Definition Bifoldable__Const_bifoldr
                                       (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
 
 Program Instance Bifoldable__Const : Bifoldable Data.Functor.Const.Const :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__Const_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__Const_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__Const_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__Const_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__Const_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__Const_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__Const_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__Const_bifoldr |}.
 
 Local Definition Bifoldable__pair_type_bifoldMap
    : forall {m} {a} {b},
@@ -578,12 +582,13 @@ Local Definition Bifoldable__pair_type_bifoldr
                                       (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Endo g) t) z.
 
 Program Instance Bifoldable__pair_type : Bifoldable GHC.Tuple.pair_type :=
-  fun _ k =>
-    k {| bifold__ := fun {m} `{GHC.Base.Monoid m} => Bifoldable__pair_type_bifold ;
-         bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
-           Bifoldable__pair_type_bifoldMap ;
-         bifoldl__ := fun {c} {a} {b} => Bifoldable__pair_type_bifoldl ;
-         bifoldr__ := fun {a} {c} {b} => Bifoldable__pair_type_bifoldr |}.
+  fun _ k__ =>
+    k__ {| bifold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Bifoldable__pair_type_bifold ;
+           bifoldMap__ := fun {m} {a} {b} `{GHC.Base.Monoid m} =>
+             Bifoldable__pair_type_bifoldMap ;
+           bifoldl__ := fun {c} {a} {b} => Bifoldable__pair_type_bifoldl ;
+           bifoldr__ := fun {a} {c} {b} => Bifoldable__pair_type_bifoldr |}.
 
 (* External variables:
      None Some bool cons false list negb nil option pair true tt unit

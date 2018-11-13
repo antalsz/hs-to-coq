@@ -49,12 +49,12 @@ Record HasOccName__Dict name := HasOccName__Dict_Build {
   occName__ : name -> OccName }.
 
 Definition HasOccName name :=
-  forall r, (HasOccName__Dict name -> r) -> r.
+  forall r__, (HasOccName__Dict name -> r__) -> r__.
 
 Existing Class HasOccName.
 
-Definition occName `{g : HasOccName name} : name -> OccName :=
-  g _ (occName__ name).
+Definition occName `{g__0__ : HasOccName name} : name -> OccName :=
+  g__0__ _ (occName__ name).
 
 Arguments A {_} _.
 
@@ -212,9 +212,9 @@ Local Definition Eq___NameSpace_op_zsze__ : NameSpace -> NameSpace -> bool :=
   fun x y => negb (Eq___NameSpace_op_zeze__ x y).
 
 Program Instance Eq___NameSpace : GHC.Base.Eq_ NameSpace :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___NameSpace_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___NameSpace_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___NameSpace_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___NameSpace_op_zsze__ |}.
 
 Definition nameSpacesRelated : NameSpace -> NameSpace -> bool :=
   fun ns1 ns2 => orb (ns1 GHC.Base.== ns2) (otherNameSpace ns1 GHC.Base.== ns2).
@@ -653,14 +653,14 @@ Local Definition Ord__NameSpace_min : NameSpace -> NameSpace -> NameSpace :=
   fun x y => if Ord__NameSpace_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__NameSpace : GHC.Base.Ord NameSpace :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__NameSpace_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__NameSpace_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__NameSpace_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__NameSpace_op_zgze__ ;
-         GHC.Base.compare__ := Ord__NameSpace_compare ;
-         GHC.Base.max__ := Ord__NameSpace_max ;
-         GHC.Base.min__ := Ord__NameSpace_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__NameSpace_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__NameSpace_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__NameSpace_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__NameSpace_op_zgze__ ;
+           GHC.Base.compare__ := Ord__NameSpace_compare ;
+           GHC.Base.max__ := Ord__NameSpace_max ;
+           GHC.Base.min__ := Ord__NameSpace_min |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `OccName.Data__OccEnv' *)
@@ -681,7 +681,7 @@ Local Definition Uniquable__OccName_getUnique : OccName -> Unique.Unique :=
     end.
 
 Program Instance Uniquable__OccName : Unique.Uniquable OccName :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__OccName_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__OccName_getUnique |}.
 
 (* Skipping all instances of class `Outputable.OutputableBndr', including
    `OccName.OutputableBndr__OccName' *)
@@ -706,9 +706,9 @@ Local Definition Eq___OccName_op_zsze__ : OccName -> OccName -> bool :=
   fun x y => negb (Eq___OccName_op_zeze__ x y).
 
 Program Instance Eq___OccName : GHC.Base.Eq_ OccName :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___OccName_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___OccName_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___OccName_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___OccName_op_zsze__ |}.
 
 Local Definition Ord__OccName_compare : OccName -> OccName -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -736,20 +736,20 @@ Local Definition Ord__OccName_min : OccName -> OccName -> OccName :=
   fun x y => if Ord__OccName_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__OccName : GHC.Base.Ord OccName :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__OccName_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__OccName_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__OccName_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__OccName_op_zgze__ ;
-         GHC.Base.compare__ := Ord__OccName_compare ;
-         GHC.Base.max__ := Ord__OccName_max ;
-         GHC.Base.min__ := Ord__OccName_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__OccName_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__OccName_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__OccName_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__OccName_op_zgze__ ;
+           GHC.Base.compare__ := Ord__OccName_compare ;
+           GHC.Base.max__ := Ord__OccName_max ;
+           GHC.Base.min__ := Ord__OccName_min |}.
 
 Local Definition HasOccName__OccName_occName : OccName -> OccName :=
   GHC.Base.id.
 
 Program Instance HasOccName__OccName : HasOccName OccName :=
-  fun _ k => k {| occName__ := HasOccName__OccName_occName |}.
+  fun _ k__ => k__ {| occName__ := HasOccName__OccName_occName |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `OccName.Outputable__OccEnv' *)

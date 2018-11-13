@@ -151,21 +151,21 @@ Local Definition Foldable__Backwards_toList {inst_f} `{(Data.Foldable.Foldable
 
 Program Instance Foldable__Backwards {f} `{(Data.Foldable.Foldable f)}
    : Data.Foldable.Foldable (Backwards f) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Backwards_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Backwards_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Backwards_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Backwards_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Backwards_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Backwards_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Backwards_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Backwards_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__Backwards_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Backwards_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Backwards_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Backwards_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Backwards_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Backwards_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Backwards_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Backwards_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Backwards_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Backwards_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Backwards_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__Backwards_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Backwards_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Backwards_toList |}.
 
 Local Definition Functor__Backwards_fmap {inst_f} `{(GHC.Base.Functor inst_f)}
    : forall {a} {b}, (a -> b) -> (Backwards inst_f) a -> (Backwards inst_f) b :=
@@ -182,21 +182,21 @@ Local Definition Functor__Backwards_op_zlzd__ {inst_f} `{(GHC.Base.Functor
 
 Program Instance Functor__Backwards {f} `{(GHC.Base.Functor f)}
    : GHC.Base.Functor (Backwards f) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Backwards_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Backwards_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Backwards_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Backwards_op_zlzd__ |}.
 
 Program Instance Traversable__Backwards {f} `{(Data.Traversable.Traversable f)}
    : Data.Traversable.Traversable (Backwards f) :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__Backwards_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__Backwards_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__Backwards_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__Backwards_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__Backwards_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__Backwards_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__Backwards_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__Backwards_traverse |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Applicative.Backwards.Alternative__Backwards' *)
@@ -233,11 +233,11 @@ Local Definition Applicative__Backwards_pure {inst_f} `{(GHC.Base.Applicative
 
 Program Instance Applicative__Backwards {f} `{(GHC.Base.Applicative f)}
    : GHC.Base.Applicative (Backwards f) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Backwards_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__Backwards_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Backwards_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Backwards_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Backwards_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Backwards_pure |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Control.Applicative.Backwards.Show__Backwards' *)
@@ -269,14 +269,14 @@ Local Definition Eq1__Backwards_liftEq {inst_f} `{(Data.Functor.Classes.Eq1
 
 Program Instance Eq1__Backwards {f} `{(Data.Functor.Classes.Eq1 f)}
    : Data.Functor.Classes.Eq1 (Backwards f) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Backwards_liftEq |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftEq__ := fun {a} {b} => Eq1__Backwards_liftEq |}.
 
 Program Instance Ord1__Backwards {f} `{(Data.Functor.Classes.Ord1 f)}
    : Data.Functor.Classes.Ord1 (Backwards f) :=
-  fun _ k =>
-    k {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
-           Ord1__Backwards_liftCompare |}.
+  fun _ k__ =>
+    k__ {| Data.Functor.Classes.liftCompare__ := fun {a} {b} =>
+             Ord1__Backwards_liftCompare |}.
 
 Local Definition Ord__Backwards_compare {inst_f} {inst_a}
   `{Data.Functor.Classes.Ord1 inst_f} `{GHC.Base.Ord inst_a}
@@ -328,21 +328,21 @@ Local Definition Eq___Backwards_op_zsze__ {inst_f} {inst_a}
 Program Instance Eq___Backwards {f} {a} `{Data.Functor.Classes.Eq1 f}
   `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Backwards f a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Backwards_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Backwards_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Backwards_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Backwards_op_zsze__ |}.
 
 Program Instance Ord__Backwards {f} {a} `{Data.Functor.Classes.Ord1 f}
   `{GHC.Base.Ord a}
    : GHC.Base.Ord (Backwards f a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Backwards_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Backwards_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Backwards_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Backwards_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Backwards_compare ;
-         GHC.Base.max__ := Ord__Backwards_max ;
-         GHC.Base.min__ := Ord__Backwards_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Backwards_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Backwards_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Backwards_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Backwards_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Backwards_compare ;
+           GHC.Base.max__ := Ord__Backwards_max ;
+           GHC.Base.min__ := Ord__Backwards_min |}.
 
 (* Skipping all instances of class `Data.Functor.Classes.Show1', including
    `Control.Applicative.Backwards.Show1__Backwards' *)

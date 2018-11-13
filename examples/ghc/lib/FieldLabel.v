@@ -87,9 +87,9 @@ Local Definition Eq___FieldLbl_op_zsze__ {inst_a} `{GHC.Base.Eq_ inst_a}
 
 Program Instance Eq___FieldLbl {a} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (FieldLbl a) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___FieldLbl_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___FieldLbl_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___FieldLbl_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___FieldLbl_op_zsze__ |}.
 
 Local Definition Functor__FieldLbl_fmap
    : forall {a} {b}, (a -> b) -> FieldLbl a -> FieldLbl b :=
@@ -110,9 +110,9 @@ Local Definition Functor__FieldLbl_op_zlzd__
       end.
 
 Program Instance Functor__FieldLbl : GHC.Base.Functor FieldLbl :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__FieldLbl_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__FieldLbl_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__FieldLbl_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__FieldLbl_op_zlzd__ |}.
 
 Local Definition Foldable__FieldLbl_foldMap
    : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> FieldLbl a -> m :=
@@ -185,21 +185,21 @@ Local Definition Foldable__FieldLbl_toList : forall {a}, FieldLbl a -> list a :=
     fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__FieldLbl_foldr c n t)).
 
 Program Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__FieldLbl_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__FieldLbl_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__FieldLbl_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__FieldLbl_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__FieldLbl_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__FieldLbl_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__FieldLbl_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__FieldLbl_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__FieldLbl_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__FieldLbl_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__FieldLbl_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__FieldLbl_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__FieldLbl_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__FieldLbl_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__FieldLbl_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__FieldLbl_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__FieldLbl_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__FieldLbl_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__FieldLbl_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__FieldLbl_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__FieldLbl_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__FieldLbl_toList |}.
 
 Local Definition Traversable__FieldLbl_traverse
    : forall {f} {a} {b},
@@ -229,15 +229,15 @@ Local Definition Traversable__FieldLbl_sequence
 
 Program Instance Traversable__FieldLbl
    : Data.Traversable.Traversable FieldLbl :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__FieldLbl_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__FieldLbl_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__FieldLbl_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__FieldLbl_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__FieldLbl_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__FieldLbl_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__FieldLbl_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__FieldLbl_traverse |}.
 
 (* Skipping all instances of class `Binary.Binary', including
    `FieldLabel.Binary__FieldLbl' *)

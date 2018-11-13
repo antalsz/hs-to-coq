@@ -271,9 +271,9 @@ Local Definition Eq___CmmCat_op_zsze__ : CmmCat -> CmmCat -> bool :=
   fun x y => negb (Eq___CmmCat_op_zeze__ x y).
 
 Program Instance Eq___CmmCat : GHC.Base.Eq_ CmmCat :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___CmmCat_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___CmmCat_op_zsze__ |}.
 
 Local Definition Eq___Width_op_zeze__ : Width -> Width -> bool :=
   fun arg_0__ arg_1__ =>
@@ -293,9 +293,9 @@ Local Definition Eq___Width_op_zsze__ : Width -> Width -> bool :=
   fun x y => negb (Eq___Width_op_zeze__ x y).
 
 Program Instance Eq___Width : GHC.Base.Eq_ Width :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Width_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Width_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Width_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Width_op_zsze__ |}.
 
 Definition cmmEqType : CmmType -> CmmType -> bool :=
   fun arg_0__ arg_1__ =>
@@ -384,9 +384,9 @@ Local Definition Eq___ForeignHint_op_zsze__
   fun x y => negb (Eq___ForeignHint_op_zeze__ x y).
 
 Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___ForeignHint_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___ForeignHint_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___ForeignHint_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___ForeignHint_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `CmmType.Outputable__Width' *)

@@ -40,29 +40,29 @@ Record Arrow__Dict (a : Type -> Type -> Type) := Arrow__Dict_Build {
   second__ : forall {b} {c} {d}, a b c -> a (d * b)%type (d * c)%type }.
 
 Definition Arrow (a : Type -> Type -> Type) `{Control.Category.Category a} :=
-  forall r, (Arrow__Dict a -> r) -> r.
+  forall r__, (Arrow__Dict a -> r__) -> r__.
 
 Existing Class Arrow.
 
-Definition arr `{g : Arrow a} : forall {b} {c}, (b -> c) -> a b c :=
-  g _ (arr__ a).
+Definition arr `{g__0__ : Arrow a} : forall {b} {c}, (b -> c) -> a b c :=
+  g__0__ _ (arr__ a).
 
-Definition first `{g : Arrow a}
+Definition first `{g__0__ : Arrow a}
    : forall {b} {c} {d}, a b c -> a (b * d)%type (c * d)%type :=
-  g _ (first__ a).
+  g__0__ _ (first__ a).
 
-Definition op_zazaza__ `{g : Arrow a}
+Definition op_zazaza__ `{g__0__ : Arrow a}
    : forall {b} {c} {c'}, a b c -> a b c' -> a b (c * c')%type :=
-  g _ (op_zazaza____ a).
+  g__0__ _ (op_zazaza____ a).
 
-Definition op_ztztzt__ `{g : Arrow a}
+Definition op_ztztzt__ `{g__0__ : Arrow a}
    : forall {b} {c} {b'} {c'},
      a b c -> a b' c' -> a (b * b')%type (c * c')%type :=
-  g _ (op_ztztzt____ a).
+  g__0__ _ (op_ztztzt____ a).
 
-Definition second `{g : Arrow a}
+Definition second `{g__0__ : Arrow a}
    : forall {b} {c} {d}, a b c -> a (d * b)%type (d * c)%type :=
-  g _ (second__ a).
+  g__0__ _ (second__ a).
 
 Notation "'_&&&_'" := (op_zazaza__).
 
@@ -76,12 +76,13 @@ Record ArrowApply__Dict (a : Type -> Type -> Type) := ArrowApply__Dict_Build {
   app__ : forall {b} {c}, a (a b c * b)%type c }.
 
 Definition ArrowApply (a : Type -> Type -> Type) `{Arrow a} :=
-  forall r, (ArrowApply__Dict a -> r) -> r.
+  forall r__, (ArrowApply__Dict a -> r__) -> r__.
 
 Existing Class ArrowApply.
 
-Definition app `{g : ArrowApply a} : forall {b} {c}, a (a b c * b)%type c :=
-  g _ (app__ a).
+Definition app `{g__0__ : ArrowApply a}
+   : forall {b} {c}, a (a b c * b)%type c :=
+  g__0__ _ (app__ a).
 
 Record ArrowChoice__Dict a := ArrowChoice__Dict_Build {
   left___ : forall {b} {c} {d},
@@ -94,28 +95,28 @@ Record ArrowChoice__Dict a := ArrowChoice__Dict_Build {
   a b c -> a (Data.Either.Either d b) (Data.Either.Either d c) }.
 
 Definition ArrowChoice a `{Arrow a} :=
-  forall r, (ArrowChoice__Dict a -> r) -> r.
+  forall r__, (ArrowChoice__Dict a -> r__) -> r__.
 
 Existing Class ArrowChoice.
 
-Definition left_ `{g : ArrowChoice a}
+Definition left_ `{g__0__ : ArrowChoice a}
    : forall {b} {c} {d},
      a b c -> a (Data.Either.Either b d) (Data.Either.Either c d) :=
-  g _ (left___ a).
+  g__0__ _ (left___ a).
 
-Definition op_zbzbzb__ `{g : ArrowChoice a}
+Definition op_zbzbzb__ `{g__0__ : ArrowChoice a}
    : forall {b} {d} {c}, a b d -> a c d -> a (Data.Either.Either b c) d :=
-  g _ (op_zbzbzb____ a).
+  g__0__ _ (op_zbzbzb____ a).
 
-Definition op_zpzpzp__ `{g : ArrowChoice a}
+Definition op_zpzpzp__ `{g__0__ : ArrowChoice a}
    : forall {b} {c} {b'} {c'},
      a b c -> a b' c' -> a (Data.Either.Either b b') (Data.Either.Either c c') :=
-  g _ (op_zpzpzp____ a).
+  g__0__ _ (op_zpzpzp____ a).
 
-Definition right_ `{g : ArrowChoice a}
+Definition right_ `{g__0__ : ArrowChoice a}
    : forall {b} {c} {d},
      a b c -> a (Data.Either.Either d b) (Data.Either.Either d c) :=
-  g _ (right___ a).
+  g__0__ _ (right___ a).
 
 Notation "'_|||_'" := (op_zbzbzb__).
 
@@ -129,36 +130,36 @@ Record ArrowLoop__Dict a := ArrowLoop__Dict_Build {
   loop__ : forall {b} {d} {c}, a (b * d)%type (c * d)%type -> a b c }.
 
 Definition ArrowLoop a `{Arrow a} :=
-  forall r, (ArrowLoop__Dict a -> r) -> r.
+  forall r__, (ArrowLoop__Dict a -> r__) -> r__.
 
 Existing Class ArrowLoop.
 
-Definition loop `{g : ArrowLoop a}
+Definition loop `{g__0__ : ArrowLoop a}
    : forall {b} {d} {c}, a (b * d)%type (c * d)%type -> a b c :=
-  g _ (loop__ a).
+  g__0__ _ (loop__ a).
 
 Record ArrowZero__Dict (a : Type -> Type -> Type) := ArrowZero__Dict_Build {
   zeroArrow__ : forall {b} {c}, a b c }.
 
 Definition ArrowZero (a : Type -> Type -> Type) `{Arrow a} :=
-  forall r, (ArrowZero__Dict a -> r) -> r.
+  forall r__, (ArrowZero__Dict a -> r__) -> r__.
 
 Existing Class ArrowZero.
 
-Definition zeroArrow `{g : ArrowZero a} : forall {b} {c}, a b c :=
-  g _ (zeroArrow__ a).
+Definition zeroArrow `{g__0__ : ArrowZero a} : forall {b} {c}, a b c :=
+  g__0__ _ (zeroArrow__ a).
 
 Record ArrowPlus__Dict (a : Type -> Type -> Type) := ArrowPlus__Dict_Build {
   op_zlzpzg____ : forall {b} {c}, a b c -> a b c -> a b c }.
 
 Definition ArrowPlus (a : Type -> Type -> Type) `{ArrowZero a} :=
-  forall r, (ArrowPlus__Dict a -> r) -> r.
+  forall r__, (ArrowPlus__Dict a -> r__) -> r__.
 
 Existing Class ArrowPlus.
 
-Definition op_zlzpzg__ `{g : ArrowPlus a}
+Definition op_zlzpzg__ `{g__0__ : ArrowPlus a}
    : forall {b} {c}, a b c -> a b c -> a b c :=
-  g _ (op_zlzpzg____ a).
+  g__0__ _ (op_zlzpzg____ a).
 
 Notation "'_<+>_'" := (op_zlzpzg__).
 
@@ -244,12 +245,12 @@ Local Definition Arrow__arrow_second
     (fun arg_0__ => Arrow__arrow_op_ztztzt__ Control.Category.id arg_0__).
 
 Program Instance Arrow__arrow : Arrow GHC.Prim.arrow :=
-  fun _ k =>
-    k {| arr__ := fun {b} {c} => Arrow__arrow_arr ;
-         first__ := fun {b} {c} {d} => Arrow__arrow_first ;
-         op_zazaza____ := fun {b} {c} {c'} => Arrow__arrow_op_zazaza__ ;
-         op_ztztzt____ := fun {b} {c} {b'} {c'} => Arrow__arrow_op_ztztzt__ ;
-         second__ := fun {b} {c} {d} => Arrow__arrow_second |}.
+  fun _ k__ =>
+    k__ {| arr__ := fun {b} {c} => Arrow__arrow_arr ;
+           first__ := fun {b} {c} {d} => Arrow__arrow_first ;
+           op_zazaza____ := fun {b} {c} {c'} => Arrow__arrow_op_zazaza__ ;
+           op_ztztzt____ := fun {b} {c} {b'} {c'} => Arrow__arrow_op_ztztzt__ ;
+           second__ := fun {b} {c} {d} => Arrow__arrow_second |}.
 
 (* Skipping instance `Control.Arrow.Arrow__Kleisli' of class
    `Control.Arrow.Arrow' *)
@@ -277,7 +278,7 @@ Local Definition ArrowApply__arrow_app
   fun {b} {c} => fun '(pair f x) => f x.
 
 Program Instance ArrowApply__arrow : ArrowApply GHC.Prim.arrow :=
-  fun _ k => k {| app__ := fun {b} {c} => ArrowApply__arrow_app |}.
+  fun _ k__ => k__ {| app__ := fun {b} {c} => ArrowApply__arrow_app |}.
 
 (* Skipping all instances of class `GHC.Base.MonadPlus', including
    `Control.Arrow.MonadPlus__ArrowMonad' *)
@@ -305,9 +306,9 @@ Local Definition Functor__ArrowMonad_op_zlzd__ {inst_a} `{Arrow inst_a}
 
 Program Instance Functor__ArrowMonad {a} `{Arrow a}
    : GHC.Base.Functor (ArrowMonad a) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__ArrowMonad_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ArrowMonad_op_zlzd__ |}.
 
 (* Skipping instance `Control.Arrow.ArrowLoop__Kleisli' of class
    `Control.Arrow.ArrowLoop' *)

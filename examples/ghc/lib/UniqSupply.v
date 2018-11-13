@@ -32,18 +32,18 @@ Record MonadUnique__Dict m := MonadUnique__Dict_Build {
   getUniquesM__ : m (list Unique.Unique) }.
 
 Definition MonadUnique m `{GHC.Base.Monad m} :=
-  forall r, (MonadUnique__Dict m -> r) -> r.
+  forall r__, (MonadUnique__Dict m -> r__) -> r__.
 
 Existing Class MonadUnique.
 
-Definition getUniqueM `{g : MonadUnique m} : m Unique.Unique :=
-  g _ (getUniqueM__ m).
+Definition getUniqueM `{g__0__ : MonadUnique m} : m Unique.Unique :=
+  g__0__ _ (getUniqueM__ m).
 
-Definition getUniqueSupplyM `{g : MonadUnique m} : m UniqSupply :=
-  g _ (getUniqueSupplyM__ m).
+Definition getUniqueSupplyM `{g__0__ : MonadUnique m} : m UniqSupply :=
+  g__0__ _ (getUniqueSupplyM__ m).
 
-Definition getUniquesM `{g : MonadUnique m} : m (list Unique.Unique) :=
-  g _ (getUniquesM__ m).
+Definition getUniquesM `{g__0__ : MonadUnique m} : m (list Unique.Unique) :=
+  g__0__ _ (getUniquesM__ m).
 
 Arguments USM {_} _.
 
@@ -179,9 +179,9 @@ Local Definition Functor__UniqSM_op_zlzd__
   fun {a} {b} => Functor__UniqSM_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__UniqSM : GHC.Base.Functor UniqSM :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqSM_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqSM_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqSM_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqSM_op_zlzd__ |}.
 
 Local Definition Applicative__UniqSM_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> UniqSM a -> UniqSM b -> UniqSM c :=
@@ -196,11 +196,11 @@ Local Definition Applicative__UniqSM_pure : forall {a}, a -> UniqSM a :=
   fun {a} => returnUs.
 
 Program Instance Applicative__UniqSM : GHC.Base.Applicative UniqSM :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__UniqSM_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__UniqSM_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__UniqSM_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__UniqSM_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__UniqSM_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__UniqSM_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__UniqSM_pure |}.
 
 Local Definition Monad__UniqSM_op_zgzg__
    : forall {a} {b}, UniqSM a -> UniqSM b -> UniqSM b :=
@@ -214,10 +214,10 @@ Local Definition Monad__UniqSM_return_ : forall {a}, a -> UniqSM a :=
   fun {a} => GHC.Base.pure.
 
 Program Instance Monad__UniqSM : GHC.Base.Monad UniqSM :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__UniqSM_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__UniqSM_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__UniqSM_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__UniqSM_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__UniqSM_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__UniqSM_return_ |}.
 
 Local Definition MonadUnique__UniqSM_getUniqueM : UniqSM Unique.Unique :=
   getUniqueUs.
@@ -230,10 +230,10 @@ Local Definition MonadUnique__UniqSM_getUniquesM
   getUniquesUs.
 
 Program Instance MonadUnique__UniqSM : MonadUnique UniqSM :=
-  fun _ k =>
-    k {| getUniqueM__ := MonadUnique__UniqSM_getUniqueM ;
-         getUniqueSupplyM__ := MonadUnique__UniqSM_getUniqueSupplyM ;
-         getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
+  fun _ k__ =>
+    k__ {| getUniqueM__ := MonadUnique__UniqSM_getUniqueM ;
+           getUniqueSupplyM__ := MonadUnique__UniqSM_getUniqueSupplyM ;
+           getUniquesM__ := MonadUnique__UniqSM_getUniquesM |}.
 
 (* External variables:
      cons list nil op_zt__ pair BinNums.N GHC.Base.Applicative GHC.Base.Functor

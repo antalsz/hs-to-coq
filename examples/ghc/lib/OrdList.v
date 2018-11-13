@@ -211,21 +211,21 @@ Local Definition Foldable__OrdList_toList : forall {a}, OrdList a -> list a :=
     fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__OrdList_foldr c n t)).
 
 Program Instance Foldable__OrdList : Data.Foldable.Foldable OrdList :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__OrdList_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__OrdList_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__OrdList_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__OrdList_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__OrdList_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__OrdList_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__OrdList_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__OrdList_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
-           Foldable__OrdList_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__OrdList_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__OrdList_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__OrdList_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__OrdList_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__OrdList_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__OrdList_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__OrdList_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__OrdList_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__OrdList_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__OrdList_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} =>
+             Foldable__OrdList_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__OrdList_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__OrdList_toList |}.
 
 Local Definition Functor__OrdList_fmap
    : forall {a} {b}, (a -> b) -> OrdList a -> OrdList b :=
@@ -236,27 +236,28 @@ Local Definition Functor__OrdList_op_zlzd__
   fun {a} {b} => Functor__OrdList_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__OrdList : GHC.Base.Functor OrdList :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__OrdList_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__OrdList_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__OrdList_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__OrdList_op_zlzd__ |}.
 
 Program Instance Traversable__OrdList : Data.Traversable.Traversable OrdList :=
-  fun _ k =>
-    k {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
-           Traversable__OrdList_mapM ;
-         Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
-           Traversable__OrdList_sequence ;
-         Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
-           Traversable__OrdList_sequenceA ;
-         Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
-           Traversable__OrdList_traverse |}.
+  fun _ k__ =>
+    k__ {| Data.Traversable.mapM__ := fun {m} {a} {b} `{GHC.Base.Monad m} =>
+             Traversable__OrdList_mapM ;
+           Data.Traversable.sequence__ := fun {m} {a} `{GHC.Base.Monad m} =>
+             Traversable__OrdList_sequence ;
+           Data.Traversable.sequenceA__ := fun {f} {a} `{GHC.Base.Applicative f} =>
+             Traversable__OrdList_sequenceA ;
+           Data.Traversable.traverse__ := fun {f} {a} {b} `{GHC.Base.Applicative f} =>
+             Traversable__OrdList_traverse |}.
 
 Local Definition Semigroup__OrdList_op_zlzlzgzg__ {inst_a}
    : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
   appOL.
 
 Program Instance Semigroup__OrdList {a} : GHC.Base.Semigroup (OrdList a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__OrdList_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__OrdList_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__OrdList_mappend {inst_a}
    : (OrdList inst_a) -> (OrdList inst_a) -> (OrdList inst_a) :=
@@ -270,10 +271,10 @@ Local Definition Monoid__OrdList_mempty {inst_a} : (OrdList inst_a) :=
   nilOL.
 
 Program Instance Monoid__OrdList {a} : GHC.Base.Monoid (OrdList a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__OrdList_mappend ;
-         GHC.Base.mconcat__ := Monoid__OrdList_mconcat ;
-         GHC.Base.mempty__ := Monoid__OrdList_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__OrdList_mappend ;
+           GHC.Base.mconcat__ := Monoid__OrdList_mconcat ;
+           GHC.Base.mempty__ := Monoid__OrdList_mempty |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `OrdList.Outputable__OrdList' *)

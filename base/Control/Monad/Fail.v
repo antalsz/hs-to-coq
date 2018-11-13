@@ -20,12 +20,12 @@ Record MonadFail__Dict (m : Type -> Type) := MonadFail__Dict_Build {
   fail__ : forall {a}, GHC.Base.String -> m a }.
 
 Definition MonadFail (m : Type -> Type) `{GHC.Base.Monad m} :=
-  forall r, (MonadFail__Dict m -> r) -> r.
+  forall r__, (MonadFail__Dict m -> r__) -> r__.
 
 Existing Class MonadFail.
 
-Definition fail `{g : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
-  g _ (fail__ m).
+Definition fail `{g__0__ : MonadFail m} : forall {a}, GHC.Base.String -> m a :=
+  g__0__ _ (fail__ m).
 
 (* Converted value declarations: *)
 
@@ -36,14 +36,14 @@ Local Definition MonadFail__list_fail : forall {a}, GHC.Base.String -> list a :=
   fun {a} => fun arg_0__ => nil.
 
 Program Instance MonadFail__list : MonadFail list :=
-  fun _ k => k {| fail__ := fun {a} => MonadFail__list_fail |}.
+  fun _ k__ => k__ {| fail__ := fun {a} => MonadFail__list_fail |}.
 
 Local Definition MonadFail__option_fail
    : forall {a}, GHC.Base.String -> option a :=
   fun {a} => fun arg_0__ => None.
 
 Program Instance MonadFail__option : MonadFail option :=
-  fun _ k => k {| fail__ := fun {a} => MonadFail__option_fail |}.
+  fun _ k__ => k__ {| fail__ := fun {a} => MonadFail__option_fail |}.
 
 (* External variables:
      None Type list nil option GHC.Base.Monad GHC.Base.String

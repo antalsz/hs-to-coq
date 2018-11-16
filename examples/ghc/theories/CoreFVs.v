@@ -7,9 +7,6 @@ Require Import Coq.Classes.Morphisms.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 
-
-
-
 Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
@@ -656,18 +653,83 @@ Proof. intros. reflexivity. Qed.
 
 (* ---------------------------------------------------------- *)
 
+Lemma exprsFreeVars_nil : exprsFreeVars [] = emptyVarSet. 
+Proof.
+  unfold exprsFreeVars.
+  unfold Base.op_z2218U__.
+  unfold exprsFVs.
+  unfold FV.mapUnionFV.
+  unfold FV.fvVarSet.
+  unfold Base.op_z2218U__ .
+  unfold FV.fvVarListVarSet.
+  simpl.
+  reflexivity.
+Qed.
+Hint Rewrite exprsFreeVars_nil : hs_simpl.
+
+
+Lemma exprsFreeVars_cons x xs : exprsFreeVars (x :: xs) [=] 
+             unionVarSet (exprsFreeVars xs) (exprFreeVars x).
+Proof.
+  unfold exprsFreeVars.
+  unfold Base.op_z2218U__.
+  unfold exprsFVs.
+  rewrite mapUnionFV_cons.
+  unfold exprFreeVars.
+  unfold Base.op_z2218U__.
+  unfold exprFVs.
+  unfold Base.op_z2218U__.
+  move: (Denotes_fvVarSet x) => h0.
+  move: (filterVarSet_filterFV isLocalVar _ _ ltac:(eauto) h0) => h1.
+  set f2 := (fun x0 : CoreExpr => FV.filterFV isLocalVar (expr_fvs x0)).
+  set f1 := fun x => filterVarSet isLocalVar (FV.fvVarSet (expr_fvs x)).
+  have h2: Forall2 Denotes (map f1 xs) (map f2 xs). 
+  { elim xs. simpl. auto.
+    move=> a l IH. simpl.
+    econstructor; eauto.
+    unfold f1. unfold f2.
+    eapply filterVarSet_filterFV. auto.
+    eapply Denotes_fvVarSet.
+  }
+  move: (mapUnionVarSet_mapUnionFV _ xs f1 f2 h2) => h3.
+  move: (unionVarSet_unionFV _ _ _ _ h1 h3) => h4.
+  rewrite (DenotesfvVarSet _ _ h4).  
+  rewrite (DenotesfvVarSet _ _ h3).  
+  rewrite (DenotesfvVarSet _ _ h1).  
+  rewrite unionVarSet_sym.
+  reflexivity.
+Qed.
+Hint Rewrite exprsFreeVars_cons : hs_simpl.
+
+
 Lemma subVarSet_exprFreeVars_exprsFreeVars:
   forall v rhs (pairs : list (CoreBndr * CoreExpr)) ,
   List.In (v, rhs) pairs ->
   subVarSet (exprFreeVars rhs) (exprsFreeVars (map snd pairs)) = true.
-Admitted.
+Proof.
+  move => v rhs.
+  elim => [|[v0 rhs0] ps IH]; simpl. done.
+  hs_simpl. move => [eq|I]. 
+  inversion eq.
+  set_b_iff. fsetdec.
+  set_b_iff. 
+  specialize (IH I).
+  fsetdec.
+Qed.
 
 Lemma subVarSet_exprsFreeVars:
   forall (es : list CoreExpr) vs,
   Forall (fun e => subVarSet (exprFreeVars e) vs = true) es ->
   subVarSet (exprsFreeVars es) vs = true.
-Admitted.
-
+Proof.
+  move=> es vs.
+  elim.
+  - hs_simpl. 
+    set_b_iff. fsetdec.
+  - move=> x l S1 F1 S2. 
+    hs_simpl.
+    set_b_iff. fsetdec.
+Qed.
 
 Lemma elemVarSet_exprFreeVars_Var_false: forall v' v,
     varUnique v' <> varUnique v ->
@@ -759,6 +821,8 @@ Qed.
 Lemma freeVarsOf_freeVars:
   forall e,
   dVarSetToVarSet (freeVarsOf (freeVars e)) = exprFreeVars e.
+Proof.
+  move=> e.
 Admitted.
 
 Lemma collectNAnnBndrs_freeVars_mkLams:

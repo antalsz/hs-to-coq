@@ -1603,24 +1603,71 @@ Proof.
   - rewrite !delVarSetList_nil.
     rewrite !extendVarSetList_nil in H.
     assumption.
-  - rewrite !delVarSetList_cons.
-    apply IHvs.
-    rewrite !extendVarSetList_cons in H.
-Admitted.
+  - rewrite delVarSetList_cons2.
+    revert H.
+    hs_simpl.
+    intro H.
+    apply IHvs in H.
+    set_b_iff.
+    fsetdec.
+Qed.
 
-(* TODO: do we need RespectsVar f ? *)
+
 Lemma mapUnionVarSet_In_subVarSet:
   forall a (x : a) xs f,
   List.In x xs ->
   subVarSet (f x) (mapUnionVarSet f xs).
-Admitted.
+Proof.
+  intros a x xs f H.
+  generalize dependent x.
+  induction xs; intros x H.
+  - inversion H.
+  - 
+    inversion H as [H'|H'].
+    + unfold mapUnionVarSet.
+      unfold_Foldable_foldr.
+      subst.
+      simpl.
+      set_b_iff.
+      fsetdec.
+    + apply IHxs in H'.
+      clear H IHxs.
+      revert H'.
+      unfold mapUnionVarSet.
+      unfold_Foldable_foldr.
+      intros H'.
+      eapply subVarSet_trans.
+      apply H'.
+      clear H'.
+      set_b_iff.
+      simpl.
+      fsetdec.
+Qed.
 
-(* TODO: do we need RespectsVar f ? *)
+
 Lemma subVarSet_mapUnionVarSet:
   forall a (xs : list a) f vs,
   Forall (fun x => subVarSet (f x) vs ) xs ->
   subVarSet (mapUnionVarSet f xs) vs.
-Admitted.
+Proof.
+  intros a xs f vs H.
+  induction xs.
+  - unfold mapUnionVarSet.
+    unfold_Foldable_foldr.
+    simpl.
+    apply subVarSet_emptyVarSet.
+  - inversion H.
+    subst.
+    apply IHxs in H3.
+    clear IHxs.
+    revert H3.
+    unfold mapUnionVarSet.
+    unfold_Foldable_foldr.
+    intros H3.
+    set_b_iff.
+    simpl.
+    fsetdec.
+Qed.
 
 
 Lemma subVarSet_unionVarSet:
@@ -1841,7 +1888,19 @@ Lemma lookupVarSet_filterVarSet_true : forall f v vs,
   lookupVarSet (filterVarSet f vs) v = lookupVarSet vs v.
 Proof.
   intros.
-Admitted.
+  destruct (lookupVarSet (filterVarSet f vs) v) eqn:Hl.
+  - revert Hl.
+    unfold_VarSet_to_IntMap.
+    unfold IntMap.Internal.filter.
+    symmetry.
+    erewrite lookup_filterWithKey; eauto.
+  - apply lookupVarSet_None_elemVarSet in Hl.
+    symmetry.
+    apply lookupVarSet_None_elemVarSet.
+    set_b_iff.
+    intros Hin.
+    eapply filter_3 in Hin; eauto.
+Qed.
 
 Lemma lookupVarSet_filterVarSet_false : forall f v vs,
   RespectsVar f ->
@@ -1849,8 +1908,13 @@ Lemma lookupVarSet_filterVarSet_false : forall f v vs,
   lookupVarSet (filterVarSet f vs) v = None.
 Proof.
   intros.
-Admitted.
-
+  apply lookupVarSet_None_elemVarSet.
+  set_b_iff.
+  rewrite filter_iff; [|auto].
+  intros [H1 H2].
+  rewrite H0 in H2.
+  inversion H2.
+Qed.
 
 Lemma unionVarSet_filterVarSet f vs1 vs2 :
   RespectsVar f ->
@@ -2237,20 +2301,79 @@ Proof.
   rewrite Forall_forall. intros. apply almostEqual_refl.
 Qed.
 
+Lemma lookupVarSet_delVarSet_None:
+  forall v vs, lookupVarSet (delVarSet vs v) v = None.
+Proof.
+  intros.
+  unfold lookupVarSet,
+  UniqSet.lookupUniqSet,
+  UniqFM.lookupUFM.
+  unfold delVarSet,
+  UniqSet.delOneFromUniqSet,
+  UniqFM.delFromUFM.
+  destruct vs.
+  destruct getUniqSet'.
+  simpl.
+  apply delete_eq.
+Qed.
+
 Lemma StrongSubset_delVarSet :
   forall vs1 vs2 v,
   StrongSubset vs1 vs2 ->
   StrongSubset (delVarSet vs1 v) (delVarSet vs2 v).
 Proof.
-  move => vs1 vs2 v1 SS v2.
-  specialize (SS v2).
-Admitted.
+  intros.
+  unfold StrongSubset in *.
+  intro var.
+  specialize (H var).
+  destruct (v == var) eqn:EQv.
+  - rewrite Base.Eq_sym in EQv.
+    erewrite lookupVarSet_eq;
+      [|eassumption].
+    rewrite lookupVarSet_delVarSet_None.
+    trivial.
+  - rewrite lookupVarSet_delVarSet_neq;
+      [|rewrite EQv; auto].
+    destruct (lookupVarSet vs1 var) eqn:Hl; auto.
+    rewrite lookupVarSet_delVarSet_neq;
+      [|rewrite EQv; auto].
+    auto.
+Qed.
 
 Lemma StrongSubset_delete_fresh :
   forall vs v,
   lookupVarSet vs v = None ->
   StrongSubset vs (delVarSet vs v).
-Admitted.
+Proof.
+  intros.
+  unfold StrongSubset in *.
+  intro var.
+  destruct (v == var) eqn:EQv.
+  - rewrite Base.Eq_sym in EQv.
+    erewrite lookupVarSet_eq;
+      [|eassumption].
+    rewrite H.
+    trivial.
+  - rewrite lookupVarSet_delVarSet_neq;
+      [|rewrite EQv; auto].
+    destruct (lookupVarSet vs var) eqn:Hl; auto.
+    apply almostEqual_refl.
+Qed.
+
+Lemma StrongSubset_delVarSetList:
+  forall vs1 vs2 vs,
+  StrongSubset vs1 vs2 ->
+  StrongSubset (delVarSetList vs1 vs) (delVarSetList vs2 vs).
+Proof.
+  intros vs1 vs2 vs.
+  generalize dependent vs2.
+  generalize dependent vs1.
+  induction vs;
+    intros vs1 vs2 H; hs_simpl;
+      [assumption|].
+  eapply StrongSubset_delVarSet in H.
+  eauto.
+Qed.
 
 (* Respects_StrongSubset *)
 
@@ -2337,43 +2460,64 @@ Lemma Respects_StrongSubset_delVarSet:
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSet vs v)).
 Proof.
-  intros.
-Admitted.
+  intros v P H vs1 vs2 Hs Hvs1.
+  apply StrongSubset_delVarSet with (v:=v) in Hs.
+  unfold Respects_StrongSubset in H.  
+  apply H in Hs; auto.
+Qed.
 
 Lemma Respects_StrongSubset_delVarSetList:
   forall vs2 P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (delVarSetList vs vs2)).
 Proof.
-  
-Admitted. (* This is tricky, because of rewriting under a binder :-( *)
+  intros vs2 P H vs vs' Hs Hvs2.
+  apply StrongSubset_delVarSetList with (vs:=vs2) in Hs.
+  unfold Respects_StrongSubset in H.  
+  apply H in Hs; auto.
+Qed.
+
 
 Lemma Respects_StrongSubset_extendVarSet:
   forall v P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
   Respects_StrongSubset (fun vs : VarSet => P (extendVarSet vs v)).
 Proof.
-  
-Admitted.
+  intros v P H vs vs' Hs Hvs.
+  apply StrongSubset_extend with (v:=v) in Hs.
+  unfold Respects_StrongSubset in H.
+  apply H in Hs; auto.
+Qed.
+
 
 Lemma Respects_StrongSubset_extendVarSetList:
-  forall v P,
+  forall vs' P,
   Respects_StrongSubset (fun vs : VarSet => P vs) ->
-  Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs v)).
+  Respects_StrongSubset (fun vs : VarSet => P (extendVarSetList vs vs')).
 Proof.
-  
-Admitted. (* This is tricky, because of rewriting under a binder :-( *)
+  intros vs P H vs1 vs2 Hs Hvs1.
+  eapply StrongSubset_extendVarSetList with (l:=vs) in Hs.
+  unfold Respects_StrongSubset in H.
+  apply H in Hs; auto.
+Qed. 
 
-
-Lemma StrongSubset_filterVarSet : 
+Lemma StrongSubset_filterVarSet: 
   forall f1 f2 vs,
+    RespectsVar f1 -> RespectsVar f2 ->
   (forall v, f1 v = true  -> f2 v = true) ->
   filterVarSet f1 vs {<=} filterVarSet f2 vs.
 Proof.
   intros.
-  induction vs.
-Admitted.
-
+  unfold StrongSubset.
+  intros var.
+  destruct (f1 var) eqn:Heq1.
+  - rewrite lookupVarSet_filterVarSet_true; auto.
+    destruct (lookupVarSet vs var) eqn:Hl; [|trivial].
+    rewrite lookupVarSet_filterVarSet_true; auto.
+    rewrite Hl.
+    apply almostEqual_refl.
+  - rewrite lookupVarSet_filterVarSet_false; auto.
+Qed.
 
 (* Is this weakening? *)
 Lemma weaken:

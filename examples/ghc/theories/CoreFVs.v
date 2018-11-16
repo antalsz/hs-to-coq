@@ -3,6 +3,13 @@ Set Warnings "-notation-overridden".
 
 From Coq Require Import ssreflect ssrfun ssrbool.
 
+Require Import Coq.Classes.Morphisms.
+Require Import Coq.Logic.FunctionalExtensionality.
+
+
+
+
+
 Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
@@ -36,12 +43,96 @@ Import GHC.Base.ManualNotations.
 
 Set Bullet Behavior "Strict Subproofs".
 
+(* MOve to base *)
+
+Lemma foldr_map {a}{b}{c:Type} g (f: a -> c) (xs : list a) (b0 : b):
+ Foldable.foldr (Base.op_z2218U__ _ g f) b0 xs = 
+ Foldable.foldr g b0 (map f xs).
+Proof.
+  elim: xs => [|x xs IH].
+  - hs_simpl. auto.
+  - hs_simpl. unfold Base.op_z2218U__ in *.
+    rewrite map_cons.
+    hs_simpl. 
+    f_equal.
+    auto.
+Qed.
+
+
+
 (* TODO: fix mutual recursion. *)
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
 
-Lemma unionVarSet_sym vs1 vs2 : unionVarSet vs1 vs2 [=] unionVarSet vs2 vs1.
-Proof. set_b_iff. fsetdec. Qed.
 
+
+Lemma unionsVarSet_equal : forall vss1 vss2, Forall2 Equal vss1 vss2 ->
+  (Foldable.foldr unionVarSet emptyVarSet) vss1 [=]
+  (Foldable.foldr unionVarSet emptyVarSet) vss2.
+Proof.
+  move=>vss1 vss2.
+  elim.
+  hs_simpl. reflexivity.
+  move=> x y l l' Eq1 Eq2 IH.
+  hs_simpl.
+  f_equiv; auto.
+Qed.
+
+(* Definition mapUnionVarSet {A} f (ps : list A) :=
+  Foldable.foldr unionVarSet emptyVarSet (map f ps).
+*)
+
+Lemma mapUnionVarSet_mapUnionFV A (ps : list A) 
+      (f1 :  A -> VarSet) (f2 : A -> FV.FV) :
+  Forall2 Denotes (map f1 ps) (map f2 ps) ->
+  Denotes  (mapUnionVarSet f1 ps) (FV.mapUnionFV f2 ps).
+Proof.
+  elim: ps => [|p ps IH]; unfold mapUnionVarSet; simpl.
+  hs_simpl.
+  - move=>h. constructor; intros; subst.
+    unfold Tuple.fst, Tuple.snd.
+    hs_simpl.
+    split; auto.
+    reflexivity.
+  - hs_simpl.
+    move=>h. inversion h. subst.
+    unfold mapUnionVarSet in IH.
+    specialize (IH H4). clear H4.
+    move: (unionVarSet_unionFV _ _ _ _ H2 IH) => h0.
+    unfold FV.unionFV in h0.
+    auto.
+Qed.
+
+
+Lemma unionsFV_cons fv fvs : 
+  FV.unionsFV (fv :: fvs) = 
+  FV.unionFV (FV.unionsFV fvs) fv.
+Proof.
+  repeat unfold FV.unionsFV, FV.unionFV.
+  rewrite mapUnionFV_cons.
+  unfold FV.unionFV.
+  simpl.
+  reflexivity.
+Qed.
+
+
+Lemma unionsVarSet_unionsFV vss fvs: 
+   Forall2 Denotes vss fvs ->
+   Denotes (Foldable.foldr unionVarSet emptyVarSet vss) (FV.unionsFV fvs).
+Proof.
+  elim.
+  - hs_simpl. 
+    unfold FV.unionsFV, FV.mapUnionFV.
+    constructor; intros; subst.
+    unfold Tuple.fst, Tuple.snd.
+    hs_simpl.
+    split; auto.
+    reflexivity.
+  - move => vs fv vss1 fvs1 D1 D2 IH. 
+    hs_simpl. 
+    move: (unionVarSet_unionFV _ _ _ _ D1 IH) => h0.
+    rewrite unionsFV_cons.
+    auto.
+Qed.
 
 (** ** [FV] *)
 
@@ -63,6 +154,37 @@ Proof.
   move=> fv bndr [vs D].
   eexists.
   eauto using addBndr_fv.
+Qed.
+
+
+Lemma delVarSetList_commute :forall (bndrs:list Var) vs bndr,
+  Foldable.foldl delVarSet (delVarSet vs bndr) bndrs [=]
+  delVarSet (Foldable.foldl delVarSet vs bndrs) bndr.
+Proof.
+  elim => [|bndr' bndrs].
+  - move=> vs bndr. hs_simpl. reflexivity.
+  - move=> IH vs bndr.
+    hs_simpl.
+    rewrite delVarSet_commute.
+    eapply IH.
+Qed.
+
+
+Lemma addBndrs_fv fv bndrs vs :
+  Denotes vs fv -> 
+  Denotes (delVarSetList vs bndrs) (addBndrs bndrs fv).
+Proof.
+  move => h.
+  unfold addBndrs, varTypeTyCoFVs.
+  rewrite delVarSetList_foldl.
+  move: bndrs vs fv h.
+  elim => [|bndr bndrs].
+  - hs_simpl. auto.
+  - move=> Ih vs fv h.
+    hs_simpl.
+   rewrite delVarSetList_commute.
+   eapply addBndr_fv.
+   eauto.
 Qed.
 
 Lemma addBndrs_WF : forall fv bndrs,
@@ -106,75 +228,7 @@ Ltac unfold_FV :=
 
 Definition disjoint E F := inter E F [=] empty.
 
-(*
-Lemma pass_through_unitFV : forall f v vs1 have haveSet v0,
-  disjoint vs1 haveSet ->
-  ~ (In v haveSet) ->
-  Tuple.snd (FV.unitFV v0 f (add v vs1) (have, haveSet)) [=]
-  remove v (Tuple.snd (FV.unitFV v0 f vs1 (have, haveSet))).
-Proof. 
-  intros.
-  unfold FV.unitFV.
-  destruct (elemVarSet v0 (add v vs1)) eqn:HE.
-  destruct (elemVarSet v0 haveSet) eqn:HE1;
-    destruct (elemVarSet v0 vs1) eqn:HE2;
-    simpl;
-    set_b_iff;
-    try fsetdec.  
-  + rewrite remove_equal; fsetdec.
-  + rewrite remove_equal; fsetdec.
-  + rewrite remove_equal; fsetdec.
-  + destruct (f v0); simpl.
-    assert (Var_as_DT.eqb v v0 = true). fsetdec.
-    admit. (* variant of remove_add *)
-    rewrite remove_equal; fsetdec.
-  + set_b_iff.
-    destruct_notin.
-    destruct (elemVarSet v0 vs1) eqn:HE2;
-      set_b_iff; try contradiction.
-    rewrite remove_equal.
-    fsetdec.
-    destruct (elemVarSet v0 haveSet) eqn: HE1.
-    auto.
-    destruct (f v0); simpl.
-    set_b_iff.
-    admit. (* seems like solve_notin should work here. *)
-    auto.
-Admitted.
-*)
-(** ** [expr_fvs] *)
-
-
-(*
-Lemma pass_through : forall e f v vs1 acc res1 res2,
-    disjoint vs1 (snd acc) ->
-    ~ (In v (snd acc)) ->
-    expr_fvs e f (add v vs1) acc = res1 ->
-    expr_fvs e f vs1         acc = res2 ->
-    snd res1 [=] remove v (snd res2).
-
-Proof.
-  intros e f v vs1.
-  apply (core_induct e); intros; unfold expr_fvs in *; simpl.
-  - (* subst. destruct acc. rewrite pass_through_unitFV. fsetdec.
-    simpl; auto. simpl; auto. *)
-Admitted.
-*)
-  (** Basic properties of [exprFreeVars] *)
-
-(*
-   Mk_Var : Id -> Expr b
-  | Lit : Literal.Literal -> Expr b
-  | App : Expr b -> Arg b -> Expr b
-  | Lam : b -> Expr b -> Expr b
-  | Let : Bind b -> Expr b -> Expr b
-  | Case : Expr b -> b -> unit -> list (Alt b) -> Expr b
-  | Cast : Expr b -> unit -> Expr b
-  | Tick : Tickish Id -> Expr b -> Expr b
-  | Type_ : unit -> Expr b
-  | Coercion : unit -> Expr b
-  with Bind (b : Type) : Type :=  NonRec : b -> Expr b -> Bind b | Rec : list (b * Expr b) -> Bind b
-*)
+(** ** [exprFreeVars] *)
 
 (* Nice rewrite rules for [exprFreeVars] *)
 
@@ -283,24 +337,255 @@ Proof.
   - simpl. unfold mkLams. rewrite hs_coq_foldr_list. reflexivity.
 Qed.
 
+Hint Rewrite exprFreeVars_Lam : hs_simpl.
+
+(* If h0 : Denote vs fv, then specialize h0 and rewrite with the second version. *)
+Ltac denote h0 h5:=
+  inversion h0;
+  match goal with [H : forall (f : Var -> bool), _ |- _] =>
+     specialize (H (fun v0 : Var => Base.const true v0 && isLocalVar v0) emptyVarSet emptyVarSet nil ltac:(eauto));
+       hs_simpl in H;
+       move: (H ltac:(reflexivity)) => [_ h5]; clear H
+  end;
+  rewrite h5; clear h5.
+
 
 Lemma exprFreeVars_Let_NonRec:
   forall v rhs body,
   exprFreeVars (Let (NonRec v rhs) body) [=]
     unionVarSet (exprFreeVars rhs) (delVarSet (exprFreeVars body) v).
-Admitted.
+Proof.
+  move=> v rhs body.
+  unfold exprFreeVars.
+  unfold_FV.
+  unfold exprFVs.
+  unfold_FV.
+  unfold expr_fvs. fold expr_fvs.
+  rewrite union_empty_r.
+
+
+  move: (expr_fvs_WF body) => [vbody h1].
+  denote h1 h5.
+  move: (expr_fvs_WF rhs) => [vrhs h0].
+  denote h0 h5.
+  move: (addBndr_fv (expr_fvs body) v vbody h1) => h2.
+  move: (unionVarSet_unionFV _ _ _ _ h2 h0) => h3.
+  denote h3 h5.
+
+  rewrite <- unionVarSet_filterVarSet => //.
+  rewrite unionVarSet_sym.
+  rewrite filterVarSet_delVarSet => //.
+Qed.
+
+Lemma push_foldable (f : VarSet -> VarSet) b (xs : list VarSet) :
+  (forall x y, f (unionVarSet x y) [=] unionVarSet (f x) (f y)) ->
+  f (Foldable.foldr unionVarSet b xs) [=] 
+  Foldable.foldr unionVarSet (f b) (map f xs).
+Proof. 
+  elim: xs => [|x xs Ih].
+  hs_simpl. move=> h. reflexivity.
+  move=>h. hs_simpl.
+  rewrite h.
+  rewrite Ih => //.
+Qed.  
 
 Lemma exprFreeVars_Let_Rec:
   forall pairs body,
   exprFreeVars (Let (Rec pairs) body) [=]
-    delVarSetList (unionVarSet (exprsFreeVars (map snd pairs)) (exprFreeVars body))  (map fst pairs).
-Admitted.
+    delVarSetList 
+       (unionVarSet (exprsFreeVars (map snd pairs))
+                    (exprFreeVars body))
+          (map fst pairs).
+Proof.
+  move=> pairs body.
+  unfold exprFreeVars, exprsFreeVars.
+  unfold_FV.
+  unfold exprFVs, exprsFVs, exprFVs.
+  unfold_FV.
+  unfold expr_fvs. fold expr_fvs.
+  move: (expr_fvs_WF body) => [vbody h1].
+  denote h1 h5.
+  set (f:= (fun (x : CoreExpr) (fv_cand1 : FV.InterestingVarFun)
+                    (in_scope : VarSet) =>
+                  [eta expr_fvs x (fun v : Var => fv_cand1 v && isLocalVar v)
+                         in_scope])).
+  set f1 := fun rhs => filterVarSet isLocalVar (FV.fvVarSet (expr_fvs rhs)).
+  have h: Forall2 Denotes 
+              (map f1 (map snd pairs))
+              (map f (map snd pairs)).
+  { elim: (map snd pairs) => [|p ps].  simpl. 
+    eauto.
+    move=> h.
+    econstructor; eauto.
+    unfold f1. unfold f.
+    move: (expr_fvs_WF p) => [vsp h0].
+    econstructor.
+    move=> f0 in_scope vs' l Rf0 eql.
+    inversion h0.
+    have g: RespectsVar (fun v => f0 v && isLocalVar v). 
+    { apply RespectsVar_andb; eauto. }
+    specialize (H (fun v => f0 v && isLocalVar v) in_scope vs' l g eql).
+    move: H => [h2 h3].
+    rewrite h2. rewrite h3. split; try reflexivity.
+    f_equiv.
+    f_equiv.
+    rewrite filterVarSet_comp.
+    apply DenotesfvVarSet in h0.
+    apply filterVarSet_equal.
+    apply g.
+    symmetry.
+    done.
+  }
+
+  move : (mapUnionVarSet_mapUnionFV _ _ _ _ h) => h2.
+  inversion h2.
+  specialize (H (Base.const true) emptyVarSet
+                emptyVarSet nil ltac:(eauto)).
+  hs_simpl in H;
+       move: (H ltac:(reflexivity)) => [_ h5]; clear H.
+  rewrite h5.
+
+  have g0 : Forall2 Denotes 
+                 (map (fun rhs => (FV.fvVarSet (expr_fvs rhs))) (map snd pairs))
+                 (map (fun '(_, rhs) => expr_fvs rhs) pairs).
+  { 
+    clear h h2 H2 H3 h5.
+    elim: pairs => [|p ps].  simpl. 
+    eauto.
+    simpl.
+    move: p => [? rhs]. simpl.
+    move=> Ih.
+    econstructor; eauto.
+    move: (expr_fvs_WF rhs) => [vsr h0].
+    move: (DenotesfvVarSet _ _ h0) => h2. rewrite <- h2 in h0.  auto.
+    
+  }
+
+  move: (unionsVarSet_unionsFV _ _ g0) => h4.
+  move: (unionVarSet_unionFV _ _ _ _ h1 h4) => g5. 
+  move: (addBndrs_fv _ (Base.map Tuple.fst pairs) _ g5) => h6.
+  
+  denote h6 h7.
+
+  rewrite filterVarSet_delVarSetList.
+  f_equiv.
+
+  rewrite <- unionVarSet_filterVarSet.
+  rewrite unionVarSet_sym.
+  
+  f_equiv.
+  unfold mapUnionVarSet.
+
+
+  rewrite foldr_map.
+  unfold f1.
+  rewrite push_foldable.
+  f_equiv.
+  rewrite List.map_map.
+  f_equal.
+  move=> x y.
+  rewrite unionVarSet_filterVarSet.
+  reflexivity.
+  done.
+  done.
+  done.
+Qed.
+
+Lemma Denotes_fvVarSet e: Denotes (FV.fvVarSet (expr_fvs e)) (expr_fvs e).
+Proof. 
+  move: (expr_fvs_WF e) => [vs h].
+  move: (DenotesfvVarSet _ _ h) => eq.
+  rewrite eq.
+  auto.
+Qed.
 
 Lemma exprFreeVars_Case:
   forall scrut bndr ty alts,
   exprFreeVars (Case scrut bndr ty alts) [=]
     unionVarSet (exprFreeVars scrut) (mapUnionVarSet (fun '(dc,pats,rhs) => delVarSetList (exprFreeVars rhs) (pats ++ [bndr])) alts).
-Admitted.
+Proof. 
+  move=> scrut bndr ty alts.
+  unfold exprFreeVars.
+  unfold_FV.
+  unfold exprFVs.
+  unfold_FV.
+  unfold expr_fvs. fold expr_fvs.
+  move: (expr_fvs_WF scrut) => [vscrut h1].
+  denote h1 h5. subst.
+  set f := (fun v : Var => Base.const true v && isLocalVar v).
+  have Hf: RespectsVar f by eapply RespectsVar_andb; eauto.
+  
+  set (f2:= (fun (x : CoreExpr) (fv_cand1 : FV.InterestingVarFun)
+                    (in_scope : VarSet) =>
+                  [eta expr_fvs x (fun v : Var => fv_cand1 v && isLocalVar v)
+                         in_scope])).
+
+
+  set f1 := fun rhs pat => 
+              delVarSetList 
+                (FV.fvVarSet (expr_fvs rhs)) pat.
+
+  have k: forall rhs pat, filterVarSet [eta isLocalVar] (f1 rhs pat)
+                     [=] delVarSetList
+                     (filterVarSet f
+                                   (FV.fvVarSet (expr_fvs rhs))) pat.
+  { move => rhs pat.
+    unfold f1.
+    rewrite filterVarSet_delVarSetList => //.
+  } 
+  rewrite union_empty_r.
+
+  have h: Forall2 Denotes 
+                  (map (fun '(_, bndrs, rhs) => f1 rhs bndrs) alts)
+                  (map (fun '(_, bndrs, rhs) => addBndrs bndrs (expr_fvs rhs)) alts).
+  { 
+    elim: alts => [|alt alts IH].
+    - simpl. auto.
+    - simpl. move: alt => [[_ bndrs] rhs].
+      econstructor; eauto.
+      unfold f1.
+      move: (Denotes_fvVarSet rhs) => h.
+      move: (addBndrs_fv _ bndrs _ h) => h2.
+      auto.
+  }
+  move: (unionsVarSet_unionsFV _ _ h) => h2.
+  move: (addBndr_fv _ bndr _ h2) => h3. 
+  move: (unionVarSet_unionFV _ _ _ _ h3 h1) => h4.
+  denote h4 h6.
+
+  rewrite <- unionVarSet_filterVarSet => //.
+  rewrite unionVarSet_sym.
+  f_equiv.
+  rewrite filterVarSet_delVarSet => //.
+  rewrite push_foldable. 2:{  move=> x y. rewrite unionVarSet_filterVarSet; eauto.
+                              reflexivity. }
+  rewrite filterVarSet_emptyVarSet.
+  unfold mapUnionVarSet.
+  rewrite foldr_map.
+  move: (push_foldable (fun x => delVarSet x bndr)) => p.  
+  rewrite p. 2: {   move=> x y.
+  rewrite delVarSet_unionVarSet. reflexivity. }
+
+  rewrite List.map_map. rewrite List.map_map.
+  hs_simpl.
+
+  apply unionsVarSet_equal.
+  clear h h2 h3 h4 H0 H1.
+  elim: alts => [|[[x pat] rhs] alts IH].
+  simpl. auto.
+  simpl. 
+  econstructor; eauto.
+  
+  move: (Denotes_fvVarSet rhs) => h5.
+  denote h5 h6.
+
+  hs_simpl.
+  f_equiv.
+
+  unfold f1.
+
+  rewrite filterVarSet_delVarSetList => //.
+Qed.
 
 Lemma exprFreeVars_Cast:
   forall e co,
@@ -315,9 +600,6 @@ fun arg_0__ : Tickish Var => match arg_0__ with
                           | _ => emptyVarSet
                           end.
 
-Require Import Coq.Classes.Morphisms.
-Instance Denotes_m : Proper (Equal ==> Logic.eq ==> iff) Denotes.
-Admitted.
 
 Lemma mkVarSet_mapUnionFV vs : 
   Denotes (mkVarSet vs) (FV.mapUnionFV FV.unitFV vs). 

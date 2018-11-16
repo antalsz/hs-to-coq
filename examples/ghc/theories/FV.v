@@ -22,6 +22,13 @@ Require Import Coq.Classes.Morphisms.
 
 Set Bullet Behavior "Strict Subproofs".
 
+Lemma fst_pair A B (x:A) (y:B) : Tuple.fst (x,y) = x.
+Proof. simpl. reflexivity. Qed.
+Hint Rewrite fst_pair : hs_simpl.
+Lemma snd_pair A B (x:A) (y:B) : Tuple.snd (x,y) = y.
+Proof. simpl. reflexivity. Qed.
+Hint Rewrite snd_pair : hs_simpl.
+
 
 (** * Well-formedness of [FV]s. *)
 
@@ -49,8 +56,8 @@ Inductive Denotes : VarSet -> FV -> Prop :=
         RespectsVar f ->
         extendVarSetList emptyVarSet l [=] vs' ->
         extendVarSetList emptyVarSet (fst (fv f in_scope (l, vs'))) [=]
-        snd (fv f in_scope (l, vs')) /\
-        snd (fv f in_scope (l, vs')) [=]
+        Tuple.snd (fv f in_scope (l, vs')) /\
+        Tuple.snd (fv f in_scope (l, vs')) [=]
         unionVarSet (minusVarSet (filterVarSet f vs) in_scope) vs') ->
     vs ⊢ fv
 where "A ⊢ B" := (Denotes A B).
@@ -60,7 +67,7 @@ Theorem Denotes_fvVarSet : forall m fv f in_scope l vs,
     m ⊢ fv ->
     RespectsVar f ->
     extendVarSetList emptyVarSet l [=] vs ->
-    snd (fv f in_scope (l, vs)) [=]
+    Tuple.snd (fv f in_scope (l, vs)) [=]
     unionVarSet (minusVarSet (filterVarSet f m) in_scope) vs.
 Proof.
   move => m fv f in_scope l vs [vs' fv' H0] H1 H2.
@@ -68,6 +75,31 @@ Proof.
   move: H0 => [h0 h1].
   auto.
 Qed.
+
+
+Lemma Denotes_Equal vs1 vs2 f : vs1 [=] vs2 -> Denotes vs1 f -> Denotes vs2 f.
+Proof.
+  move => Eqx.
+  move=> h. inversion h. subst.
+  constructor.
+  move => f0 in_scope vs' l RV EX.
+  specialize (H f0 in_scope vs' l RV EX).
+  move: H => [h0 h1].
+  split. done.
+  rewrite h1.
+  f_equiv.
+  f_equiv.
+  apply filterVarSet_equal; eauto.
+Qed.
+
+Require Import Coq.Classes.Morphisms.
+Instance Denotes_m : Proper (Equal ==> Logic.eq ==> iff) Denotes.
+Proof.
+  move=> vs1 vs2 EqV f0 f EqF. rewrite EqF.
+  split; apply Denotes_Equal; try done.
+  symmetry. auto.
+Qed.
+
 
 Definition WF_fv (fv : FV) : Prop := exists vs, vs ⊢ fv.
       
@@ -88,7 +120,7 @@ Lemma emptyVarSet_emptyFV : Denotes emptyVarSet emptyFV.
 Proof.
   constructor; intros; subst.
   unfold emptyFV.
-  unfold fst, snd.
+  unfold Tuple.fst, Tuple.snd.
   hs_simpl.
   split; auto.
   reflexivity.
@@ -162,7 +194,7 @@ Qed.
 
 
 Lemma filter_FV_WF : forall f x,
-    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f ->
+    RespectsVar f ->
     WF_fv x -> WF_fv (filterFV f x).
 Proof.
   intros. unfold_WF.
@@ -235,10 +267,10 @@ Proof.
   unfold unionFV.
   specialize (H0 f in_scope vs1 l h h0).  move: H0 => [h1 h2].
   remember (fv f in_scope (l, vs1)) as vs_mid.
-  specialize (H4 f in_scope (snd vs_mid) (fst vs_mid) h h1); move: H4 => [h3 h4].
-  replace vs_mid with (fst vs_mid, snd vs_mid); [| destruct vs_mid; reflexivity].
+  specialize (H4 f in_scope (Tuple.snd vs_mid) (Tuple.fst vs_mid) h h1); move: H4 => [h3 h4].
+  replace vs_mid with (Tuple.fst vs_mid, Tuple.snd vs_mid); [| destruct vs_mid; reflexivity].
   intuition.
-  remember (fv' f in_scope (fst vs_mid, snd vs_mid)) as vs_fin.
+  remember (fv' f in_scope (Tuple.fst vs_mid, Tuple.snd vs_mid)) as vs_fin.
   rewrite h4.
   rewrite h2.
   rewrite <- union_assoc.
@@ -336,18 +368,12 @@ Proof.
   rewrite extendVarSetList_nil.
   reflexivity.
   remember (fv0 (const true) emptyVarSet (nil, emptyVarSet)) as tup.
-  replace tup with (fst tup, snd tup); [| destruct tup; reflexivity].
+  replace tup with (Tuple.fst tup, Tuple.snd tup); [| destruct tup; reflexivity].
   rewrite H0.
   hs_simpl.
   reflexivity.
 Qed.
 
-Lemma fst_pair A B (x:A) (y:B) : fst (x,y) = x.
-Proof. simpl. reflexivity. Qed.
-Hint Rewrite fst_pair : hs_simpl.
-Lemma snd_pair A B (x:A) (y:B) : snd (x,y) = y.
-Proof. simpl. reflexivity. Qed.
-Hint Rewrite snd_pair : hs_simpl.
 
 
 Lemma Denotes_inj1 vs1 vs2 fv : Denotes vs1 fv -> Denotes vs2 fv -> vs1 [=] vs2.
@@ -363,9 +389,9 @@ Proof.
   move: H => [h3 h4].
   move: H2 => [h5 h6].
   remember (fv (const true) emptyVarSet (nil,emptyVarSet)) as tup1.
-  replace tup1 with (fst tup1, snd tup1); [| destruct tup1; reflexivity].
+  replace tup1 with (Tuple.fst tup1, Tuple.snd tup1); [| destruct tup1; reflexivity].
   remember (fv (const true) emptyVarSet (nil,emptyVarSet)) as tup2.
-  replace tup2 with (fst tup2, snd tup2); [| destruct tup2; reflexivity].
+  replace tup2 with (Tuple.fst tup2, Tuple.snd tup2); [| destruct tup2; reflexivity].
   hs_simpl in h4.
   hs_simpl in h6.
   rewrite <- h4.

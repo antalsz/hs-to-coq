@@ -1100,6 +1100,11 @@ auto.
 Qed.
 
 
+Lemma delVarSet_emptyVarSet x :
+  delVarSet emptyVarSet x = emptyVarSet.
+Admitted.
+Hint Rewrite delVarSet_emptyVarSet : hs_simpl. 
+
 
 Lemma delVarSet_extendVarSet : 
   forall set v, 
@@ -1800,6 +1805,11 @@ Proof.
   auto.
 Qed.
 
+Lemma filterVarSet_iff (f1 f2 : Var -> bool) vs : 
+  (forall x, (f1 x) <-> (f2 x)) -> 
+  filterVarSet f1 vs [=] filterVarSet f2 vs.
+Admitted.
+
 Lemma filterVarSet_equal f vs1 vs2 :
   RespectsVar f -> 
   vs1 [=] vs2 ->
@@ -1853,8 +1863,34 @@ Proof.
   eauto.
 Qed.
 
+Lemma filterVarSet_delVarSet f vs v :
+  RespectsVar f ->
+  filterVarSet f (delVarSet vs v) [=]
+  delVarSet (filterVarSet f vs) v.
+Proof.
+  move=> Ff. unfold RespectsVar in Ff.
+  set_b_iff. 
+Admitted.
+
+
+Lemma filterVarSet_delVarSetList:
+  forall (f : Var -> bool)  (vars : list Var) (vs : VarSet),
+  RespectsVar f ->
+  filterVarSet f (delVarSetList  vs vars) [=] delVarSetList (filterVarSet f vs) vars.
+Proof.
+  induction vars.
+  - move=> vs h. hs_simpl. reflexivity.
+  - move=> vs h.  hs_simpl. 
+    rewrite IHvars; try done.
+    rewrite <- filterVarSet_delVarSet; try done.
+Qed.
+
 
 (** ** [unionVarSet] *)
+
+Lemma unionVarSet_sym vs1 vs2 : unionVarSet vs1 vs2 [=] unionVarSet vs2 vs1.
+Proof. set_b_iff. fsetdec. Qed.
+
 
 Lemma unionEmpty_l : forall vs,
     unionVarSet emptyVarSet vs [=] vs.

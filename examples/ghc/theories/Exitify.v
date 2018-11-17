@@ -4,8 +4,7 @@ Require Import Id.
 Require Import Exitify.
 Require Import Core.
 
-Require Import Proofs.GHC.Base.
-Require Import Proofs.GHC.List.
+Require Import Proofs.Prelude.
 
 Require Import Psatz.
 Require Import Coq.Lists.List.

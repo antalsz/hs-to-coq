@@ -12,6 +12,7 @@ Require Import Data.Semigroup.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
+Set Warnings "-notation-overridden".
 From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -227,7 +228,7 @@ Proof.
   eapply ey.
 Qed.
 
-(* MOVE to Base *)
+
 Instance Eq_m : forall {a}`{EqLaws a},
   Proper ((fun (x y :a) => x == y) ==> (fun x y => x == y) ==> Logic.eq)
   (_==_).
@@ -249,6 +250,58 @@ Proof.
   rewrite H in E1. inversion E1.
 Qed.
 
+(* I would love to be able to use rewriting instead of this 
+   lemma to do this. Why doesn't it work??? *)
+Lemma eq_replace_r : forall {a}`{EqLaws a}  (v1 v2 v3 : a),
+    (v2 == v3) -> (v1 == v2) = (v1 == v3).
+Proof.
+  intros.
+  rewrite -> H1. (* why does the ssreflect rewriting tactic not work here. *)
+  reflexivity.
+Qed.
+
+Lemma eq_replace_l : forall {a}`{EqLaws a} (v1 v2 v3 : a),
+    (v2 == v3) -> (v2 == v1) = (v3 == v1).
+Proof.
+  intros.
+  eapply Eq_m.
+  eauto.
+  eapply Eq_refl.
+Qed.
+
+
+(* Some cargo culting here. I'm not sure if we need to do all of this.*)
+
+Local Lemma parametric_eq_trans : forall (a : Type) (H : Eq_ a),
+  EqLaws a -> Transitive (fun x y : a => x == y).
+Proof.
+  intros.
+  intros x y z.
+  pose (k := Eq_trans).
+  eapply k.
+Defined. 
+
+Local Lemma parametric_eq_sym : forall (a : Type) (H : Eq_ a),
+  EqLaws a -> Symmetric (fun x y : a => x == y).
+Proof.
+  intros.
+  intros x y.
+  rewrite Eq_sym.
+  auto.
+Defined. 
+
+
+Add Parametric Relation {a}`{H: EqLaws a} : a 
+  (fun x y => x == y) 
+    reflexivity proved by Eq_refl 
+    symmetry proved by (@parametric_eq_sym a _ H)
+    transitivity proved by (@parametric_eq_trans a _ H) as parametric_eq.
+
+Instance: RewriteRelation (fun x y => x == y).
+
+
+(* --------------------------------------------------------------------- *)
+
 
 Ltac unfold_zeze :=
   repeat unfold op_zeze__, op_zeze____, 
@@ -256,13 +309,13 @@ Ltac unfold_zeze :=
   Eq_Integer___, 
   Eq_Word___,
   Eq_Char___,
-  Eq_bool___,
+  Eq_bool___, 
   Eq_unit___ ,
-  Eq_comparison___,
-  Eq_pair___ ,
-  Eq_list,
-  Eq___NonEmpty,
-  Eq___option.
+  Eq_comparison___, 
+  Eq_pair___ , 
+  Eq_list, 
+  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__,
+  Eq___option, Base.Eq___option_op_zeze__.
 
 Ltac unfold_zsze :=
   repeat unfold op_zsze__, op_zsze____,
@@ -277,6 +330,44 @@ Ltac unfold_zsze :=
   Eq_list,
   Eq___NonEmpty,
   Eq___option.
+
+
+Lemma simpl_option_some_eq a `{Eq_ a} (x y :a) :
+  (Some x == Some y) = (x == y).
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+Lemma simpl_option_none_eq a `{Eq_ a} :
+  ((None : option a) == None) = true.
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+
+Lemma simpl_list_cons_eq a `{Eq_ a} (x y :a) xs ys :
+  (cons x xs) == (cons y ys) = (x == y) && (xs == ys).
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Lemma simpl_list_nil_eq a `{Eq_ a} :
+  (nil : list a) == nil = true.
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq 
+             @simpl_list_cons_eq @simpl_list_nil_eq : hs_simpl.
+
 
 (** ** [EqExact] **)
   
@@ -407,6 +498,10 @@ Proof.
   - by rewrite E.
   - by contradict E; case: E.
 Qed.
+
+
+(* -------------------------------------------------------------------- *)
+
 
 (* -------------------------------------------------------------------- *)
 
@@ -716,13 +811,13 @@ Qed.
 "augment/nil"   forall (g::forall b. (a->b->b) -> b -> b) .
                         augment g [] = build g
  *)
-
+(*
 Lemma fold_build : forall {a}{b} k (z:b) (g: forall{b}, (a -> b -> b) -> b -> b), 
     foldr k z (build (fun {b} => g)) = g k z.
 Proof.
 (* Parametericity *)
 Admitted.
-
+*)
 
 Lemma fold_id : forall A, foldr cons nil = (id : list A -> list A).
 Proof.
@@ -743,7 +838,7 @@ Proof.
   intros. reflexivity.
 Qed.
 
-
+(*
 Lemma foldr_cons_build: forall {a} k (z:a) x (g:forall {b}, (a->b->b) -> b -> b),
                            foldr k z (x::build (fun {b} => g)) = k x (g k z).
 Proof.
@@ -751,4 +846,4 @@ Proof.
   simpl. f_equal.
   apply fold_build.
 Qed.
-
+*)

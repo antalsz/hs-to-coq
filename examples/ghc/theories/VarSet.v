@@ -12,9 +12,7 @@ Require Import SetoidList.
 
 Require Import GHC.Base.
 
-Require Import Proofs.GHC.Base.
-Require Import Proofs.GHC.List.
-Require Import Proofs.Data.Foldable.
+Require Import Proofs.Prelude.
 
 Require Import CoreFVs.
 Require Import Id.
@@ -75,94 +73,6 @@ Proof. move=>a. unfold is_true. rewrite negb_true_iff.
 split. move=>h. rewrite h. auto.
 apply not_true_is_false.
 Qed.
-
-
-(* Move to base *)
-
-Ltac unfold_zeze :=
-  repeat unfold op_zeze__, op_zeze____, 
-  Eq___option, Base.Eq___option_op_zeze__,
-  Eq_Int___, 
-  Eq_Integer___, 
-  Eq_Word___, 
-  Eq_Char___, 
-  Eq_bool___, 
-  Eq_unit___ , 
-  Eq_comparison___, 
-  Eq_pair___ , 
-  Eq_list, 
-  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__.
-
-
-
-
-Lemma simpl_option_some_eq a `{Eq_ a} (x y :a) :
-  (Some x == Some y) = (x == y).
-Proof.  
-    repeat unfold Eq___option, op_zeze__, op_zeze____, 
-           Base.Eq___option_op_zeze__, op_zeze____.
-    auto.
-Qed.
-
-Lemma simpl_option_none_eq a `{Eq_ a} :
-  ((None : option a) == None) = true.
-Proof.  
-    repeat unfold Eq___option, op_zeze__, op_zeze____, 
-           Base.Eq___option_op_zeze__, op_zeze____.
-    auto.
-Qed.
-
-
-Lemma simpl_list_cons_eq a `{Eq_ a} (x y :a) xs ys :
-  (cons x xs) == (cons y ys) = (x == y) && (xs == ys).
-Proof.  
-    unfold op_zeze__, op_zeze____, Eq_list.
-    simpl.
-    auto.
-Qed.
-
-Lemma simpl_list_nil_eq a `{Eq_ a} :
-  (nil : list a) == nil = true.
-Proof.  
-    unfold op_zeze__, op_zeze____, Eq_list.
-    simpl.
-    auto.
-Qed.
-
-Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq 
-             @simpl_list_cons_eq @simpl_list_nil_eq : hs_simpl.
-
-
-Instance Foldable_proper : forall {a}`{EqLaws a},  
-  Proper ((fun (x y:a) => x == y) ==> (fun (x y:list a) => x == y) ==> Logic.eq)
-         Foldable.elem.
-Proof.
-  intros a E1 E2 x1 x2 Hx.
-  move => y1. induction y1.
-  - unfold_zeze. move => y2 Hy.
-    destruct y2.
-    auto.
-    simpl in Hy.
-    done.
-  - case;
-    unfold_zeze;
-    simpl.
-    done.
-    move => a1 l.
-    hs_simpl.
-    move/andP => [h0 h1].
-    rewrite (eq_replace_l _ _ _ Hx).
-    rewrite (eq_replace_r _ _ _ h0).
-    ssrbool.bool_congr.
-    eapply IHy1.
-    unfold_zeze.
-    auto.
-Qed.
-
-
-
-Definition RespectsVar (f :Var -> bool) := Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
-
 
 
 (** ** Valid VarSets *)
@@ -1102,7 +1012,12 @@ Qed.
 
 Lemma delVarSet_emptyVarSet x :
   delVarSet emptyVarSet x = emptyVarSet.
-Admitted.
+Proof.
+  unfold delVarSet, emptyVarSet.
+  unfold  UniqSet.delOneFromUniqSet , UniqSet.emptyUniqSet.
+  unfold UniqFM.delFromUFM, UniqFM.emptyUFM.
+  f_equal.
+Qed.
 Hint Rewrite delVarSet_emptyVarSet : hs_simpl. 
 
 
@@ -1684,32 +1599,33 @@ Proof.
 Qed.
 
 
+Axiom null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.Internal.IntMap b), 
+  (forall a, IntMap.Internal.member a x1 <-> IntMap.Internal.member a y1) ->
+  (forall a, IntMap.Internal.member a x2 <-> IntMap.Internal.member a y2) ->
+  IntMap.Internal.null (IntMap.Internal.intersection x1 x2) = IntMap.Internal.null (IntMap.Internal.intersection y1 y2).
 
 
 (** ** [disjointVarSet]  *)
 
 Instance disjointVarSet_m : Proper (Equal ==> Equal ==> Logic.eq) disjointVarSet.
 Proof. 
-  move => x1 y1 Eq1 x2 y2 Eq2.
+  move => x1 y1.  
+  move: x1 => [x1]. move: y1=> [y1].
+  move: x1 => [x1]. move: y1=> [y1].
+  move=> Eq1 x2 y2. 
+  move: x2 => [x2]. move: y2=> [y2].
+  move: x2 => [x2]. move: y2=> [y2].
+  move=> Eq2.  
+  unfold disjointVarSet.
+  unfold UniqFM.disjointUFM.
+  unfold UniqSet.getUniqSet.
+  unfold UniqSet.getUniqSet'.
+  unfold Equal, In, elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM in Eq1.
+  unfold Equal, In, elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM in Eq2.
+  apply null_intersection_eq; eauto.
+  unfold elt in *.
 Admitted.
 
-
-Lemma disjointVarSet_mkVarSet:
-  forall vs1 vs2,
-  disjointVarSet vs1 (mkVarSet vs2)  <->
-  Forall (fun v => elemVarSet v vs1 = false) vs2.
-Proof.
-  move => vs1 vs2.
-  elim: vs1 => [i].
-  unfold disjointVarSet, mkVarSet, elemVarSet.
-  simpl.
-  elim: i => [j].
-  simpl.
-  unfold UniqFM.disjointUFM, UniqSet.getUniqSet, 
-  UniqSet.mkUniqSet, UniqFM.elemUFM.
-  unfold UniqSet.addOneToUniqSet, UniqSet.emptyUniqSet in *.
-  unfold UniqFM.emptyUFM, UniqFM.addToUFM in *.
-Admitted.
 
 (*
 Lemma foldl'_simplify (a b c :Type) (f:c -> b) (g:b->c) (h:b -> a -> b)
@@ -1735,25 +1651,42 @@ Proof.
 Qed.
 
 
-Lemma disjointVarSet_mkVarSet_nil:
+Lemma disjointVarSet_empytVarSet:
   forall vs,
-  disjointVarSet vs (mkVarSet []).
+  disjointVarSet vs emptyVarSet.
 Proof.
   move => vs1.
   elim: vs1 => [i].
-  unfold disjointVarSet, mkVarSet, elemVarSet.
+  unfold disjointVarSet, emptyVarSet, elemVarSet.
   simpl.
   elim: i => [j].
   simpl.
   apply intersection_empty.
   done.
 Qed.
+Hint Rewrite disjointVarSet_empytVarSet:hs_simpl.
+
+Lemma disjointVarSet_mkVarSet_nil:
+  forall vs,
+  disjointVarSet vs (mkVarSet []).
+Proof.
+  rewrite mkVarSet_extendVarSetList.
+  hs_simpl.
+  apply disjointVarSet_empytVarSet.
+Qed.
+
 
 Lemma disjointVarSet_mkVarSet_cons:
   forall v vs1 vs2,
   disjointVarSet vs1 (mkVarSet (v :: vs2))  <->
   elemVarSet v vs1 = false /\ disjointVarSet vs1 (mkVarSet vs2) .
 Proof.
+  move=> v vs1 vs2.
+  rewrite mkVarSet_extendVarSetList.
+  hs_simpl.
+  elim: vs2 => [|v2 vars IH].
+  hs_simpl.
+  
 Admitted.
 
 Lemma disjointVarSet_mkVarSet_append:
@@ -1767,6 +1700,22 @@ Proof.
   hs_simpl.
   unfold extendVarSetList, emptyVarSet.
 Admitted.  
+
+Lemma disjointVarSet_mkVarSet:
+  forall vs1 vs2,
+  disjointVarSet vs1 (mkVarSet vs2)  <->
+  Forall (fun v => elemVarSet v vs1 = false) vs2.
+Proof.
+  move => vs1 vs2.
+  elim: vs2 => [|v vars IH].
+  rewrite disjointVarSet_mkVarSet_nil. intuition.
+  rewrite disjointVarSet_mkVarSet_cons. rewrite IH.
+  intuition.
+  - inversion H1. auto.
+  - inversion H1. auto.
+Qed.
+
+
 
 Lemma disjointVarSet_subVarSet_l:
   forall vs1 vs2 vs3,

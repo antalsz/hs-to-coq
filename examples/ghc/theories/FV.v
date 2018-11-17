@@ -15,25 +15,17 @@ Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 
 Require Import GHC.Base.
-Require Import Proofs.GHC.Base.
+Require Import Proofs.Prelude.
 Import GHC.Base.ManualNotations.
 
 Require Import Coq.Classes.Morphisms.
 
 Set Bullet Behavior "Strict Subproofs".
 
-Lemma fst_pair A B (x:A) (y:B) : Tuple.fst (x,y) = x.
-Proof. simpl. reflexivity. Qed.
-Hint Rewrite fst_pair : hs_simpl.
-Lemma snd_pair A B (x:A) (y:B) : Tuple.snd (x,y) = y.
-Proof. simpl. reflexivity. Qed.
-Hint Rewrite snd_pair : hs_simpl.
-
 
 (** * Well-formedness of [FV]s. *)
 
 (* A FV is well formed when it is denoted by some VarSet vs. *)
-
 
 
 Lemma RespectsVar_const_true : RespectsVar (const true).
@@ -417,3 +409,58 @@ Proof.
 Qed.
 
 (* --------------------------------------- *)
+
+
+
+Lemma mapUnionVarSet_mapUnionFV A (ps : list A) 
+      (f1 :  A -> VarSet) (f2 : A -> FV.FV) :
+  Forall2 Denotes (map f1 ps) (map f2 ps) ->
+  Denotes  (mapUnionVarSet f1 ps) (FV.mapUnionFV f2 ps).
+Proof.
+  elim: ps => [|p ps IH]; unfold mapUnionVarSet; simpl.
+  hs_simpl.
+  - move=>h. constructor; intros; subst.
+    unfold Tuple.fst, Tuple.snd.
+    hs_simpl.
+    split; auto.
+    reflexivity.
+  - hs_simpl.
+    move=>h. inversion h. subst.
+    unfold mapUnionVarSet in IH.
+    specialize (IH H4). clear H4.
+    move: (unionVarSet_unionFV _ _ _ _ H2 IH) => h0.
+    unfold FV.unionFV in h0.
+    auto.
+Qed.
+
+
+Lemma unionsFV_cons fv fvs : 
+  FV.unionsFV (fv :: fvs) = 
+  FV.unionFV (FV.unionsFV fvs) fv.
+Proof.
+  repeat unfold FV.unionsFV, FV.unionFV.
+  rewrite mapUnionFV_cons.
+  unfold FV.unionFV.
+  simpl.
+  reflexivity.
+Qed.
+
+
+Lemma unionsVarSet_unionsFV vss fvs: 
+   Forall2 Denotes vss fvs ->
+   Denotes (Foldable.foldr unionVarSet emptyVarSet vss) (FV.unionsFV fvs).
+Proof.
+  elim.
+  - hs_simpl. 
+    unfold FV.unionsFV, FV.mapUnionFV.
+    constructor; intros; subst.
+    unfold Tuple.fst, Tuple.snd.
+    hs_simpl.
+    split; auto.
+    reflexivity.
+  - move => vs fv vss1 fvs1 D1 D2 IH. 
+    hs_simpl. 
+    move: (unionVarSet_unionFV _ _ _ _ D1 IH) => h0.
+    rewrite unionsFV_cons.
+    auto.
+Qed.

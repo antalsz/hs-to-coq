@@ -40,22 +40,6 @@ Import GHC.Base.ManualNotations.
 
 Set Bullet Behavior "Strict Subproofs".
 
-(* MOve to base *)
-
-Lemma foldr_map {a}{b}{c:Type} g (f: a -> c) (xs : list a) (b0 : b):
- Foldable.foldr (Base.op_z2218U__ _ g f) b0 xs = 
- Foldable.foldr g b0 (map f xs).
-Proof.
-  elim: xs => [|x xs IH].
-  - hs_simpl. auto.
-  - hs_simpl. unfold Base.op_z2218U__ in *.
-    rewrite map_cons.
-    hs_simpl. 
-    f_equal.
-    auto.
-Qed.
-
-
 
 (* TODO: fix mutual recursion. *)
 Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
@@ -466,15 +450,11 @@ Proof.
 
   rewrite filterVarSet_delVarSetList.
   f_equiv.
-
   rewrite <- unionVarSet_filterVarSet.
   rewrite unionVarSet_sym.
-  
   f_equiv.
   unfold mapUnionVarSet.
-
-
-  rewrite foldr_map.
+  rewrite Foldable_foldr_map.
   unfold f1.
   rewrite push_foldable.
   f_equiv.
@@ -558,7 +538,7 @@ Proof.
                               reflexivity. }
   rewrite filterVarSet_emptyVarSet.
   unfold mapUnionVarSet.
-  rewrite foldr_map.
+  rewrite Foldable_foldr_map.
   move: (push_foldable (fun x => delVarSet x bndr)) => p.  
   rewrite p. 2: {   move=> x y.
   rewrite delVarSet_unionVarSet. reflexivity. }

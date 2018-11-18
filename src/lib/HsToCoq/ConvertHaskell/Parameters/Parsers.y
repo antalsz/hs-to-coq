@@ -38,7 +38,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %tokentype { Token }
 %error     { unexpected }
 
-%monad { NewlinesParse }
+%monad { Lexing }
 %lexer { (=<< token) } { TokEOF }
 
 -- Please maintain the format of this list; the token definitions and the
@@ -142,6 +142,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   Op              { TokOp      $$               }
   Num             { TokNat     $$               }
   StringLit       { TokString  $$               }
+  Tactics         { TokTactics $$               }
+  ProofEnder      { TokPfEnd   $$               }
 -- Tokens: End
 
 %nonassoc GenFixBodyOne
@@ -512,11 +514,12 @@ AssertionKeyword :: { AssertionKeyword }
 Assertion :: { Assertion }
   : AssertionKeyword Qualid Many(Binder) TypeAnnotation    { Assertion $1 $2 $3 $4 }
 
-Proof :: { Proof }
-  : 'Proof' '.'    {% proofBody }
-
 AssertionProof :: { (Assertion, Proof) }
-  : Assertion '.' Proof    { ($1, $3) }
+  : Assertion '.' 'Proof' '.' RequestTactics Tactics ProofEnder     { ($1, proof $6 $7) }
+
+-- This production is just for side effects
+RequestTactics :: { () }
+  : {- empty -}    {% requestTactics }
 
 --------------------------------------------------------------------------------
 -- Haskell code
@@ -530,7 +533,7 @@ ifMaybe Nothing  _j  n = n
 uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
 uncurry3 f = \(a,b,c) -> f a b c
 
-unexpected :: Token -> NewlinesParse a
+unexpected :: MonadParse m => Token -> m a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid

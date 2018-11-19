@@ -2,7 +2,7 @@
 Set Warnings "-notation-overridden".
 
 From mathcomp.ssreflect
-Require Import ssreflect ssrnat prime ssrbool eqtype.
+Require Import ssreflect ssrnat prime ssrbool.
 
 Require Import Name.
 Require Import Id.
@@ -15,6 +15,8 @@ Require Import Coq.Bool.Bool.
 Import ListNotations.
 
 Require Import Proofs.GHC.Base.
+
+Require Import Proofs.Axioms.
 
 Require Import Proofs.Base.
 Require Import Proofs.GhcTactics.
@@ -469,10 +471,20 @@ Proof.
     rewrite -> Forall_forall in b.    
     rewrite -> extendVarSetList_iff in i0. 
     destruct i0; try done.
-    admit.
+    unfold In.
+    move: (elem_exists_in _ _ H0) => [y [Iny eqy]].
+    move: (b _ Iny) => WSy.
+    unfold WellScopedVar in WSy.
+
+    rewrite (RespectsVar_isLocalVar eqy) in i1.
+    rewrite i1 in WSy.
+    elim h: (lookupVarSet vs y) => [z|].
+    erewrite (elemVarSet_eq _ eqy); eauto.
+    eapply lookupVarSet_elemVarSet; eauto.
+    rewrite h in WSy. done.
   - apply subVarSet_emptyVarSet.
   - apply subVarSet_emptyVarSet.
-Admitted.
+Qed.
 
 
 (** *** Freshness *)
@@ -702,6 +714,12 @@ Proof.
        unfold tickishFreeVars in H0.
        elim LV: (isLocalVar x).
        -- rewrite (exprFreeVars_Var x LV).
+          eapply disjointVarSet_subVarSet_l.
+          eapply H0.
+          eapply subVarSet_delVarSetList_both.
+          set_b_iff.
+          rewrite singleton_equal_add.
+          eapply Subset_trans with (s' := (filter isLocalVar (mkVarSet breakpointFVs))). 2: { fsetdec.  }
           admit.
        -- rewrite (exprFreeVars_global_Var x LV).
           hs_simpl.

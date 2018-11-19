@@ -13,18 +13,12 @@ Require Import GHC.Base.
 Require Import Proofs.GHC.Base.
 Require Import Proofs.Data.Foldable.
 Require Import Proofs.Data.Traversable.
+
+Require Import Proofs.Axioms.
 Require Import Proofs.Unique.
 
 
-Definition RespectsVar (f :Var -> bool) :=
-    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
 
-Lemma RespectsVar_isLocalVar : RespectsVar isLocalVar.
-Proof.
-  unfold RespectsVar, isLocalVar.
-  move=> x y Eq.
-Admitted.
-Hint Resolve RespectsVar_isLocalVar.
 
 Ltac unfold_zeze := 
   repeat (GHC.Base.unfold_zeze; unfold Core.Eq___Var, Core.Eq___Var_op_zeze__).
@@ -278,15 +272,6 @@ Proof.
   destruct id_details; simpl; try discriminate.
   now inversion H.
 Qed.
-
-
-Axiom isJoinId_maybe_setIdOccInfo:
-  forall v occ_info, 
-  isJoinId_maybe (setIdOccInfo v occ_info) = isJoinId_maybe v.
-
-Axiom isJoinId_maybe_asJoinId:
-  forall v a,
-  isJoinId_maybe (asJoinId v a) = Some a.
 
 
 (** ** [isLocalId] and [isLocalVar] *)

@@ -166,6 +166,19 @@ Axiom intersection_empty :
     (j = IntMap.Internal.empty) ->
     IntMap.Internal.null (IntMap.Internal.intersection i j).
 
+Axiom null_intersection_non_member: forall b k (v : b)(i1 i2 : Internal.IntMap b),
+  IntMap.Internal.null
+    (IntMap.Internal.intersection i1 (IntMap.Internal.insert k v i2)) <->
+  IntMap.Internal.member k i1 = false /\
+  IntMap.Internal.null (IntMap.Internal.intersection i1 i2).
+
+Axiom disjoint_difference: forall  b (i1 i2 i3 : Internal.IntMap b),
+  IntMap.Internal.null (IntMap.Internal.intersection i2 i3) ->
+  IntMap.Internal.null (IntMap.Internal.difference i1 i2) ->
+  IntMap.Internal.null (IntMap.Internal.intersection i1 i3).
+
+
+
 
 (*
 This is a QuickChick setup to test the above axioms

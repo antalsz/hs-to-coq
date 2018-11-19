@@ -14,6 +14,7 @@ Require Import Coq.Program.Equality. (* for dependent destruction *)
  
 Require Import Coq.Logic.FunctionalExtensionality.
 
+Require Import Proofs.Axioms.
 Require Import Proofs.Base.
 Require Import Proofs.JoinPointInvariants.
 Require Import Proofs.ScopeInvariant.

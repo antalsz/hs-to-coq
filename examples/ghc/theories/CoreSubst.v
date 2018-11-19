@@ -19,6 +19,7 @@ Require Import Proofs.GHC.List.
 Require Import Proofs.Data.Foldable.
 Require Import Proofs.Data.Traversable. 
 
+Require Import Proofs.Axioms.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.

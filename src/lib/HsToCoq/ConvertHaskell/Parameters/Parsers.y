@@ -131,6 +131,8 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
   ';'             { TokOp      ";"              }
+  -- Tokens: Ltac punctuation
+  '||'            { TokOp      "||"             }
   -- Tokens: General
   '('             { TokOpen    '('              }
   ')'             { TokClose   ')'              }
@@ -276,7 +278,7 @@ Edit :: { Edit }
   | import module Word                              { ImportModuleEdit              (mkModuleNameT $3)                    }
   | manual notation Word                            { HasManualNotationEdit         (mkModuleNameT $3)                    }
   | termination Qualid TerminationArgument          { TerminationEdit               $2 $3                                 }
-  | obligations Qualid Word                         { ObligationsEdit               $2 $3                                 }
+  | obligations Qualid TrivialLtac                  { ObligationsEdit               $2 $3                                 }
   | rename Renaming                                 { RenameEdit                    (fst $2) (snd $2)                     }
   | axiomatize module Word                          { AxiomatizeModuleEdit          (mkModuleNameT $3)                    }
   | axiomatize definition Qualid                    { AxiomatizeDefinitionEdit      $3                                    }
@@ -521,6 +523,31 @@ AssertionProof :: { (Assertion, Proof) }
 -- This production is just for side effects
 RequestTactics :: { () }
   : {- empty -}    {% requestTactics }
+
+--------------------------------------------------------------------------------
+-- Trivial tactics
+--------------------------------------------------------------------------------
+
+TrivialLtac :: { Tactics }
+  : LtacCmd Many(And(LtacSep, LtacCmd))    { $1 <> T.concat (map (uncurry (<>)) $2) }
+
+LtacCmd :: { Tactics }
+  : LtacApp          { $1 }
+  | LtacAtom         { $1 }
+
+LtacApp :: { Tactics }
+  : LtacAtom Some(LtacAtom)    { $1 <> " " <> T.unwords (toList $2) }
+
+LtacAtom :: { Tactics }
+  : '(' TrivialLtac ')'    { "(" <> $2 <> ")"        }
+  | Qualid                 { qualidToIdent $1        }
+  | '@' Qualid             { "@" <> qualidToIdent $2 }
+  | Num                    { T.pack (show $1)        }
+  | '_'                    { "_"                     }
+
+LtacSep :: { Tactics }
+  : ';'     { "; "   }
+  | '||'    { " || " }
 
 --------------------------------------------------------------------------------
 -- Haskell code

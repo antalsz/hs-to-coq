@@ -515,7 +515,8 @@ Assertion :: { Assertion }
   : AssertionKeyword Qualid Many(Binder) TypeAnnotation    { Assertion $1 $2 $3 $4 }
 
 AssertionProof :: { (Assertion, Proof) }
-  : Assertion '.' 'Proof' '.' RequestTactics Tactics ProofEnder     { ($1, proof $6 $7) }
+  : Assertion '.' 'Proof' RequestTactics '.' Tactics ProofEnder     { ($1, proof $6 $7) }
+-- OK, I don't know why moving `RequestTactics` before the '.' works, but it does.  Lookahead?
 
 -- This production is just for side effects
 RequestTactics :: { () }

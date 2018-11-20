@@ -24,17 +24,20 @@ end
 #   Face(name) - will be parsed for highlighting with the given face
 #   :ignored   - lines in this section will be skipped
 #   :done      - terminates parsing
-CATEGORIES = { 'Edits'           => Keyword,
-               'Coq terms'       => Face('font-lock-type-face'),
-               'Coq commands'    => Face('font-lock-builtin-face'),
+CATEGORIES = { 'Edits'            => Keyword,
+               'Coq terms'        => Face('font-lock-type-face'),
+               'Coq commands'     => Face('font-lock-builtin-face'),
                
-               'Coq punctuation' => :ignored,
-               'General'         => :ignored,
+               'Coq punctuation'  => :ignored,
+               'Ltac punctuation' => :ignored,
+               'General'          => :ignored,
                
-               'End'             => :done }
+               'End'              => :done }
 
 CUSTOM_KEYWORDS = { Face('font-lock-keyword-face') =>
-                      ["^\\s-*\\<in\\>"] }
+                      ["^\\s-*\\<in\\>"],
+                    Face('font-lock-builtin-face') =>
+                      %w{Qed Defined Admitted}.map { |pe| "\\<#{pe}\\>" } }
 
 ################################################################################
 ## Output

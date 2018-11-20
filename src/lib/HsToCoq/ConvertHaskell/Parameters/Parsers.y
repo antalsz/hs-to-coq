@@ -517,8 +517,8 @@ Assertion :: { Assertion }
   : AssertionKeyword Qualid Many(Binder) TypeAnnotation    { Assertion $1 $2 $3 $4 }
 
 AssertionProof :: { (Assertion, Proof) }
-  : Assertion '.' 'Proof' RequestTactics '.' Tactics ProofEnder     { ($1, proof $6 $7) }
--- OK, I don't know why moving `RequestTactics` before the '.' works, but it does.  Lookahead?
+  : Assertion '.' 'Proof' RequestTactics '.'  Tactics ProofEnder     { ($1, proof (prechomp $6) $7) }
+-- OK, I don't know why putting `RequestTactics` before the `'.'` works, but it does.  Lookahead?
 
 -- This production is just for side effects
 RequestTactics :: { () }
@@ -566,4 +566,9 @@ unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid
 forceIdentToQualid x = fromMaybe (error $ "internal error: lexer produced a malformed qualid: " ++ show x) (identToQualid x)
+
+prechomp :: T.Text -> T.Text
+prechomp t = case T.stripPrefix "\n" t of
+               Just t' -> t'
+               Nothing -> t
 }

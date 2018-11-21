@@ -55,7 +55,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
-  from            { TokWord    "from"           }
   manual          { TokWord    "manual"         }
   import          { TokWord    "import"         }
   notation        { TokWord    "notation"       }
@@ -96,8 +95,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   struct          { TokWord    "struct"         }
   with            { TokWord    "with"           }
   for             { TokWord    "for"            }
-  where           { TokWord    "where"          }
-  and             { TokWord    "and"            }
   'measure'       { TokWord    "measure"        }
   'wf'            { TokWord    "wf"             }
   -- Tokens: Coq commands
@@ -128,7 +125,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '`'             { TokOp      "`"              }
   '.'             { TokOp      "."              }
   '|'             { TokOp      "|"              }
-  '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
   ';'             { TokOp      ";"              }
   -- Tokens: Ltac punctuation
@@ -341,7 +337,7 @@ LargeTerm :: { Term }
   | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
 
 App :: { Term }
-  :     Atom Some(Arg)     { App $1 $2 }
+  :     Atom Some(Arg)       { App $1 $2 }
   | '@' Qualid Many(Atom)    { ExplicitApp $2 $3 }
 
 Arg :: { Arg }
@@ -401,9 +397,6 @@ ExplicitBinderGuts :: { Binder }
   | BinderName Some(BinderName) TypeAnnotation        { Typed Ungeneralizable Explicit ($1 <| $2) $3 }
   | BinderName TypeAnnotation                         { Typed Ungeneralizable Explicit ($1 :| []) $2 }
 
-BinderColonEq
-  : ':=' Term    { $2 }
-
 ImplicitBinderGuts :: { Binder }
   : BinderName                         { Inferred Implicit $1 }
   | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
@@ -436,6 +429,7 @@ MultPattern :: { MultPattern }
 -- But can we do better?
 Pattern :: { Pattern }
   : Qualid Some(AtomicPattern) { ArgsPat $1 (NEL.toList $2) }
+  | Pattern as Qualid          { AsPat $1 $3 }
   | AtomicPattern              { $1 }
 
 AtomicPattern :: { Pattern }
@@ -508,6 +502,7 @@ Axiom :: { (Qualid, Term) }
 AssertionKeyword :: { AssertionKeyword }
   : 'Theorem'     { Theorem     }
   | 'Lemma'       { Lemma       }
+  | 'Remark'      { Remark      }
   | 'Fact'        { Fact        }
   | 'Corollary'   { Corollary   }
   | 'Proposition' { Proposition }

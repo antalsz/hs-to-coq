@@ -249,10 +249,10 @@ Effect:
   correctly, as will ``(F X) -> (G Y)``, but ``F X -> G Y`` will come out as
   ``F X _->_ G Y``.
 
-  When providing a ``Theorem`` – or a ``Lemma``, a ``Fact``, a ``Corollary``, a
-  ``Proposition``, or an ``Example`` – it must be immediately followed by
-  ``Proof.``, some unparsed text (newlines are permitted), and then the word
-  ``Qed``, ``Defined``, or ``Admitted``.
+  When providing a ``Theorem`` – or a ``Lemma``, a ``Remark``, a ``Fact``, a
+  ``Corollary``, a ``Proposition``, or an ``Example`` – it must be immediately
+  followed by ``Proof.``, some unparsed text (newlines are permitted), and then
+  the word ``Qed``, ``Defined``, or ``Admitted``.
 
   This is a multi-line edit and needs to be terminated by a period (as is
   natural when writing a *coq_definition*).

@@ -31,6 +31,9 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 }
 
+-- No conflicts allowed
+%expect 0
+
 %name      parseTerm         Term
 %name      parseSentence     Sentence
 %name      parseEditList     Edits
@@ -147,6 +150,10 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %nonassoc GenFixBodyOne
 %nonassoc with
 
+-- Get "f x + g y" to parse as "(f x) + (f y)"
+%nonassoc Op
+%nonassoc ManyR_prec
+
 %%
 
 --------------------------------------------------------------------------------
@@ -168,7 +175,7 @@ ManyR(p)
   | ManyR(p) p      { $2 : $1 }
 
 Many(p)
-  : ManyR(p)    { reverse $1 }
+  : ManyR(p) %prec ManyR_prec    { reverse $1 }
 
 Some(p)
   : p Many(p)    { $1 :| $2 }
@@ -319,25 +326,35 @@ Qualid :: { Qualid }
   : WordOrOp   { forceIdentToQualid $1 }
 
 QualOp :: { Qualid }
+  : Op   { forceIdentToQualid $1  }
+  | '='  { forceIdentToQualid "=" }
+
+EqlessQualOp :: { Qualid }
   : Op   { forceIdentToQualid $1 }
+
+EqlessTerm :: { Term }
+  : MediumTerm(EqlessQualOp, EqlessTerm)    { $1 }
+  | SmallTerm                               { $1 }
 
 Term :: { Term }
   : LargeTerm    { $1 }
-  | App          { $1 }
-  | Atom         { $1 }
+  | SmallTerm    { $1 }
 
 LargeTerm :: { Term }
-  : fun   Binders '=>' Term    { Fun $2 $4 }
-  | fix   FixBodies            { Fix   $2 }
-  | cofix FixBodies            { Cofix $2 }
-  | forall Binders ',' Term    { Forall $2 $4 }
-  | 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' Term
-	 { Let $2 $3  $4 $6 $8 }
-  | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
-  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
+  : fun   Binders '=>' Term     { Fun $2 $4 }
+  | fix   FixBodies             { Fix   $2 }
+  | cofix FixBodies             { Cofix $2 }
+  | forall Binders ',' Term     { Forall $2 $4 }
+  | MediumTerm(QualOp, Term)    { $1 }
 
-App :: { Term }
-  :     Atom Some(Arg)       { App $1 $2 }
+-- Lets us implement EqlessTerm
+MediumTerm(Binop, LetRHS) :: { Term }
+  : 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' LetRHS    { Let $2 $3 $4 $6 $8 }
+  | match SepBy1(MatchItem, ',') with Many(Equation) end                        { Match $2 Nothing $4 }
+  | SmallTerm Binop SmallTerm                                                   { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
+
+SmallTerm :: { Term }
+  : Atom Many(Arg)           { appList     $1 $2 } -- App or Atom
   | '@' Qualid Many(Atom)    { ExplicitApp $2 $3 }
 
 Arg :: { Arg }
@@ -439,7 +456,7 @@ AtomicPattern :: { Pattern }
   | '(' Pattern ')'         { $2 }
 
 Rewrite :: { Rewrite }
-  : forall Many(Word) ',' Term '=' Term  { Rewrite $2 $4 $6 }
+  : forall Many(Word) ',' EqlessTerm '=' Term    { Rewrite $2 $4 $6 }
 
 --------------------------------------------------------------------------------
 -- Vernacular

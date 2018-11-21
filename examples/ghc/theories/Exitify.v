@@ -4,8 +4,7 @@ Require Import Id.
 Require Import Exitify.
 Require Import Core.
 
-Require Import Proofs.GHC.Base.
-Require Import Proofs.GHC.List.
+Require Import Proofs.Prelude.
 
 Require Import Psatz.
 Require Import Coq.Lists.List.
@@ -3175,8 +3174,9 @@ Next Obligation.
     assumption.
   * (* Tick *)
     simpl in *.
+    destruct HWS as [HWS HWT].
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
-    assumption.
+    intuition.
   * (* Type *)
     intuition.
   * (* Coercion *)

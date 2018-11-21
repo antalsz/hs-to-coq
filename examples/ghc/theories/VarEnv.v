@@ -342,6 +342,14 @@ Ltac rewrite_minusDom_false :=
     try rewrite H; auto  
   end.
 
+Lemma RespectsVar_negbElemVarEnv A (e :VarEnv A) : 
+  RespectsVar (fun v0 : Var => ~~ elemVarEnv v0 e).
+Proof. 
+  move=> x1 x2 Eq.
+  f_equal.
+  erewrite elemVarEnv_eq; try done.
+Qed.
+Hint Resolve RespectsVar_negbElemVarEnv.
 
 Lemma StrongSubset_minusDom {a} : forall vs1 vs2 (e: VarEnv a), 
     vs1 {<=} vs2 ->
@@ -351,8 +359,8 @@ Proof.
   unfold StrongSubset in *.
   intros var.
   destruct (elemVarEnv var e) eqn:IN_ENV.
-  + rewrite_minusDom_true. 
-  + rewrite_minusDom_false.
+  + rewrite_minusDom_true; try done.
+  + rewrite_minusDom_false; try done.
     eapply H.
 Qed.
 
@@ -366,8 +374,7 @@ Proof.
   rewrite <- lookupVarEnv_elemVarEnv_false in H.
   unfold minusDom.
   rewrite -> lookupVarSet_filterVarSet_true
-    with (f := (fun v0 : Var => negb (elemVarEnv v0 env))).
-  auto.
+    with (f := (fun v0 : Var => negb (elemVarEnv v0 env))); try done.
   rewrite H. simpl. auto.
 Qed.
 
@@ -458,8 +465,7 @@ Proof.
   destruct (var == v) eqn:EQ.
   rewrite -> lookupVarSet_eq with (v2 := v); auto.
   unfold minusDom.
-  rewrite lookupVarSet_filterVarSet_false. 
-  auto.
+  rewrite lookupVarSet_filterVarSet_false; try done. 
   rewrite elemVarEnv_extendVarEnv_eq.
   simpl. auto.
   rewrite Base.Eq_refl. auto.

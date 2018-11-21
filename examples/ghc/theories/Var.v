@@ -4,7 +4,9 @@ Require Import Id.
 Require Import Core. (* For [Var] only *)
 Require Import Unique.
 
+Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Structures.Equalities.
+Require Import Coq.Classes.Morphisms.
 
 Require Import GHC.Base.
 
@@ -13,16 +15,16 @@ Require Import Proofs.Data.Foldable.
 Require Import Proofs.Data.Traversable.
 Require Import Proofs.Unique.
 
-(*
-Ltac unfold_zeze :=
-  unfold GHC.Base.op_zeze__, Core.Eq___Var, op_zeze____, 
-  Core.Eq___Var_op_zeze__, Eq_Char___;
-  unfold GHC.Base.op_zeze__, Nat.Eq_nat, op_zeze____.  
-Ltac unfold_zsze :=
-  unfold GHC.Base.op_zsze__, Core.Eq___Var, op_zsze____, 
-  Core.Eq___Var_op_zsze__, Eq_Char___;
-  unfold GHC.Base.op_zsze__, Nat.Eq_nat, op_zsze____.  
-*)
+
+Definition RespectsVar (f :Var -> bool) :=
+    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
+
+Lemma RespectsVar_isLocalVar : RespectsVar isLocalVar.
+Proof.
+  unfold RespectsVar, isLocalVar.
+  move=> x y Eq.
+Admitted.
+Hint Resolve RespectsVar_isLocalVar.
 
 Ltac unfold_zeze := 
   repeat (GHC.Base.unfold_zeze; unfold Core.Eq___Var, Core.Eq___Var_op_zeze__).
@@ -125,6 +127,14 @@ Proof.
     rewrite <- varUnique_iff in *.
     symmetry. auto.
     right. auto.
+Qed.
+
+
+Lemma var_eq_realUnique v1 v2 : 
+  (v1 == v2) = (realUnique v1 == realUnique v2).
+Proof.
+  repeat unfold op_zeze__, op_zeze____,Core.Eq___Var_op_zeze__,Core.Eq___Var.
+  auto.
 Qed.
 
 

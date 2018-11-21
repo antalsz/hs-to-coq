@@ -13,3 +13,4 @@
 ./GHC/List.v
 ./Termination.v
 ./Data/Bits/Popcount.v
+./Prelude.v

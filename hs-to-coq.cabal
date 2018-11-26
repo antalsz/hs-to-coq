@@ -46,6 +46,10 @@ library
                      , HsToCoq.Util.TempFiles
                      , HsToCoq.Util.Messages
                      , HsToCoq.Util.FVs
+                     , Control.Monad.Trans.Activatable.Internal
+                     , Control.Monad.Trans.Activatable
+                     , Control.Monad.Activatable.Class
+                     , Control.Monad.Activatable
                      , Control.Monad.Trans.Counter
                      , Control.Monad.DefinedIdents
                      , Control.Monad.Trans.Parse

@@ -3,11 +3,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
-  -- * Lexing and tokens
+  -- * Lexing
+  Lexing, runLexing, requestTactics,
+  -- * Tokens
   Token(..), tokenDescription,
-  token, token',
+  token, token', proofBody,
   -- * Character categories
   isHSpace, isVSpace, isDigit, isWordInit, isWord, isOperator, isOpen, isClose,
+  -- * Proofs
+  ProofEnder(..), proof, proofEnderName,
   -- * Component parsers
   -- ** Types
   NameCategory(..),
@@ -16,13 +20,15 @@ module HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing (
   -- ** Whitespace and comments
   comment, space, newline,
   -- ** Atomic components
-  nat, uword, word, op, unit, nil
+  nat, uword, word, op, unit, nil,
+  -- ** Parse until a given string
+  parseUntilAny,
 ) where
 
 import Prelude hiding (Num())
 
 import Data.Foldable
-import Data.Bifunctor (second)
+import Data.Bifunctor (first, second, bimap)
 import HsToCoq.Util.Foldable
 import HsToCoq.Util.Functor
 import Control.Applicative
@@ -30,6 +36,7 @@ import Control.Monad
 import HsToCoq.Util.Monad
 import Control.Monad.State
 import Control.Monad.Parse
+import Control.Monad.Activatable
 
 import Data.Char
 import HsToCoq.Util.Char
@@ -58,6 +65,18 @@ isOperator c =
 --------------------------------------------------------------------------------
 -- Tokens
 --------------------------------------------------------------------------------
+data ProofEnder = PEQed | PEDefined | PEAdmitted
+                deriving (Eq, Ord, Enum, Bounded, Show, Read)
+
+proofEnderName :: ProofEnder -> String
+proofEnderName PEQed      = "Qed"
+proofEnderName PEDefined  = "Defined"
+proofEnderName PEAdmitted = "Admitted"
+
+proof :: Tactics -> ProofEnder -> Proof
+proof tactics PEQed      = ProofQed      tactics
+proof tactics PEDefined  = ProofDefined  tactics
+proof tactics PEAdmitted = ProofAdmitted tactics
 
 data Token = TokWord    Ident
            | TokNat     Num
@@ -65,17 +84,21 @@ data Token = TokWord    Ident
            | TokOpen    Char
            | TokClose   Char
            | TokString  Text
+           | TokTactics Tactics
+           | TokPfEnd   ProofEnder
            | TokNewline
            | TokEOF
            deriving (Eq, Ord, Show, Read)
 
 tokenDescription :: Token -> String
-tokenDescription (TokWord    w) = "word `"              ++ T.unpack w ++ "'"
-tokenDescription (TokNat     n) = "number `"            ++ show     n ++ "'"
-tokenDescription (TokOp      o) = "operator `"          ++ T.unpack o ++ "'"
-tokenDescription (TokOpen    o) = "opening delimeter `" ++ pure     o ++ "'"
-tokenDescription (TokClose   c) = "closing delimeter `" ++ pure     c ++ "'"
-tokenDescription (TokString  s) = "string literal `"    ++ T.unpack s ++ "'"
+tokenDescription (TokWord    w) = "word `"              ++ T.unpack       w ++ "'"
+tokenDescription (TokNat     n) = "number `"            ++ show           n ++ "'"
+tokenDescription (TokOp      o) = "operator `"          ++ T.unpack       o ++ "'"
+tokenDescription (TokOpen    o) = "opening delimeter `" ++ pure           o ++ "'"
+tokenDescription (TokClose   c) = "closing delimeter `" ++ pure           c ++ "'"
+tokenDescription (TokString  s) = "string literal `"    ++ T.unpack       s ++ "'"
+tokenDescription (TokTactics t) = "tactics `"           ++ T.unpack       t ++ "'"
+tokenDescription (TokPfEnd   e) = "proof ender `"       ++ proofEnderName e ++ "'"
 tokenDescription TokNewline     = "newline"
 tokenDescription TokEOF         = "end of file"
 
@@ -143,6 +166,23 @@ stringLit = do
     _ <- parseChar (is '"')
     return s
 
+parseUntilAny :: MonadParse m => [(Text, a)] -> m (Text, a)
+parseUntilAny stops = do
+  stopInit <- case T.transpose $ map fst stops of
+                []      -> empty
+                heads:_ -> pure $ \c -> T.any (is c) heads
+  
+  let parseCommand = T.foldr (\c -> (parseChar (is c) *>)) (pure ())
+      
+      terminator = asum [Left res <$ parseCommand stop | (stop, res) <- stops]
+      char       = Right <$> parseChar stopInit
+  
+  fix $ \loop -> do
+    text <- parseChars $ not . stopInit
+    (terminator <|> char) >>= \case
+      Left  res -> pure (text, res)
+      Right c'  -> first ((text <> T.singleton c') <>) <$> loop
+
 -- arguments from parseToken (from Control.Monad.Trans.Parse)
 -- parseToken :: MonadParse m => (Text -> a)  -> (Char -> Bool) -> (Char -> Bool) -> m a
 -- parseToken build isFirst isRest = ...
@@ -166,5 +206,21 @@ token' = asum $
                      CatWord -> TokWord
                      CatSym  -> TokOp
 
-token :: MonadNewlinesParse m => m Token
-token = untilJustM token'
+token :: (MonadActivatable Token m, MonadNewlinesParse m) => m Token
+token = switching' (untilJustM token') (bimap TokTactics TokPfEnd <$> proofBody)
+
+proofBody :: MonadParse m => m (Tactics, ProofEnder)
+proofBody = do
+  parseUntilAny [ ("Qed",      PEQed)
+                , ("Defined",  PEDefined)
+                , ("Admitted", PEAdmitted) ]
+
+requestTactics :: (MonadActivatable Token m, MonadParse m) => m ()
+requestTactics = activateWith $ \case
+  DoubleActivation -> "already about to parse tactics"
+  EarlyActivation  -> "can't parse tactics again immediately after parsing tactics"
+
+type Lexing = ActivatableT Token NewlinesParse
+
+runLexing :: Lexing a -> Text -> Either String a
+runLexing = evalNewlinesParse . finalizeActivatableT (const "trailing post-tactics keyword not parsed")

@@ -130,11 +130,12 @@ convertTyClDecl decl = do
                              DataDecl{}  -> "a data type"
                              ClassDecl{} -> "a type class"
                     to   = case redef of
-                             CoqDefinitionDef _ -> "a Definition"
-                             CoqFixpointDef   _ -> "a Fixpoint"
-                             CoqInductiveDef  _ -> "an Inductive"
-                             CoqInstanceDef   _ -> "an Instance"
-                             CoqAxiomDef      _ -> "an Axiom"
+                             CoqDefinitionDef _   -> "a Definition"
+                             CoqFixpointDef   _   -> "a Fixpoint"
+                             CoqInductiveDef  _   -> "an Inductive"
+                             CoqInstanceDef   _   -> "an Instance"
+                             CoqAxiomDef      _   -> "an Axiom"
+                             CoqAssertionDef  apf -> anAssertionVariety apf
                 in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
           
           AxiomatizeIt SpecificAxiomatize ->

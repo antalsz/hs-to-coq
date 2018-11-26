@@ -1,5 +1,4 @@
-{-# LANGUAGE ConstraintKinds, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
-             FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds, GeneralizedNewtypeDeriving, FlexibleContexts #-}
 
 module Control.Monad.Trans.NewlinesParse (
   -- * The 'NewlinesParse' monad

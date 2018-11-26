@@ -47,7 +47,7 @@ import HsToCoq.Util.GHC.Exception
 import Module
 import CmdLineParser (Warn(..))
 
-import Control.Monad.Parse
+import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 import HsToCoq.ConvertHaskell.Parameters.Parsers
 
 import HsToCoq.Util.Monad
@@ -253,7 +253,7 @@ processFilesMain process = do
 
   let parseConfigFiles files builder parser =
         liftIO . forFold (conf^.files) $ \filename ->
-          (evalNewlinesParse parser <$> T.readFile filename) >>= \case
+          (runLexing parser <$> T.readFile filename) >>= \case
             Left  err -> die $ "Could not parse " ++ filename ++ ": " ++ err
             Right res -> either die pure $ builder res
 

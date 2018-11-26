@@ -28,6 +28,7 @@ Require Import IntSetProofs.
 
 (* ghc theory (incl. some that should move above. *)
 Require Import Proofs.Base.
+Require Import Proofs.Axioms.
 Require Import Proofs.ContainerAxioms.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
@@ -165,8 +166,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true.
   Proof.
-    move => [i]. move => [i'].
-    move: i => [j]. move: i' => [j'].
+    move => [[i]] [[i']].
     unfold subset,Subset in *.
     unfold In in *.
     unfold subVarSet, minusVarSet, isEmptyVarSet.
@@ -188,7 +188,8 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
-    move=>[m]. move: m => [i]. unfold Empty, In. simpl.
+    move=>[[i]]. unfold Empty, In. simpl.
+    move=> h.
   Admitted.
 
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.

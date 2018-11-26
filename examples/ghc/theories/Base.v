@@ -57,6 +57,10 @@ Proof.
    exists z. unfold List.In. split; auto. 
 Qed.
 
+Lemma list_in_elem {a} `{Base.EqLaws a} (x:a) xs: List.In x xs -> Foldable.elem x xs.
+Proof. elim: xs => [|y ys IH]. hs_simpl. auto.
+hs_simpl. simpl. intuition. subst. apply /orP. left. eapply Eq_refl.
+Qed.
 
 
 

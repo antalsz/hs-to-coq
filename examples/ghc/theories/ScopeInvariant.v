@@ -712,21 +712,24 @@ Proof.
        move=> x In.
        eapply WellScopedVar_extendVarSetList_fresh_under.
        unfold tickishFreeVars in H0.
+       eapply disjointVarSet_subVarSet_l.
+       eapply H0.
+       eapply subVarSet_delVarSetList_both.
        elim LV: (isLocalVar x).
        -- rewrite (exprFreeVars_Var x LV).
-          eapply disjointVarSet_subVarSet_l.
-          eapply H0.
-          eapply subVarSet_delVarSetList_both.
-          set_b_iff.
-          rewrite singleton_equal_add.
-          eapply Subset_trans with (s' := (filter isLocalVar (mkVarSet breakpointFVs))). 2: { fsetdec.  }
-          admit.
-       -- rewrite (exprFreeVars_global_Var x LV).
+          rewrite subVarSet_unitVarSet.
+          hs_simpl. apply /orP. right.
+          rewrite elemVarSet_filterVarSet => //.
+          apply /andP. split. auto.
           hs_simpl.
-          admit.
+          rewrite orbF.
+          apply list_in_elem.
+          auto.
+       -- rewrite (exprFreeVars_global_Var x LV).
+          apply subVarSet_emptyVarSet.
   * reflexivity.
   * reflexivity.
-Admitted.
+Qed.
 
 Lemma WellScoped_extendVarSetList_fresh:
   forall vs e vs1,

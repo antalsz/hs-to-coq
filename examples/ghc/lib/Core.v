@@ -2427,6 +2427,12 @@ Admitted.
 
 (* ------------- CoreSyn midamble.v ------------ *)
 
+Module ManualNotations.
+Notation "' Core.Id '" := (GHC.Base.Synonym Id__raw Var%type).
+Notation "' Core.DVarSet '" := (GHC.Base.Synonym DVarSet__raw (UniqDSet.UniqDSet Var)%type). 
+End ManualNotations.
+
+
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
 

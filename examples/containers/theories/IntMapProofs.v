@@ -567,6 +567,89 @@ Proof.
     eauto using Desc_unique_f.
 Qed.
 
+(** *** Verification of [nomatch] *)
+
+Lemma nomatch_spec:
+  forall i r,
+  (0 < rBits r)%N ->
+  IntMap.Internal.nomatch i (rPrefix r) (rMask r) =
+  negb (inRange i r).
+Proof.
+  intros.
+  destruct r as [p b]. simpl in *.
+  unfold nomatch, zero, inRange.
+  unfoldMethods.
+  unfold mask, IntSet.Internal.maskW.
+  f_equal.
+  rewrite eq_iff_eq_true.
+  rewrite !N.eqb_eq.
+  rewrite <- N.pow_succ_r  by Nomega.
+  replace (N.succ (b - 1)) with b by Nomega.
+  rewrite N.sub_1_r.
+  rewrite <- N.ones_equiv.
+  rewrite -> N.ldiff_ones_r by nonneg.
+  rewrite -> N_shiftl_inj by nonneg.
+  reflexivity.
+Qed.
+
+Lemma match_nomatch: forall x p ms,
+  match_ x p ms = negb (nomatch x p ms).
+Proof.
+  intros. unfold match_, nomatch. unfoldMethods.
+  rewrite negb_involutive.
+  reflexivity.
+Qed.
+
+
+(**
+The IntMap code has a repeating pattern consisting of calls to [nomatch] and [zero].
+The following two lemmas capture that pattern concisely.
+*)
+
+Lemma nomatch_zero:
+  forall {a} i r (P : a -> Prop) left right otherwise,
+  (0 < rBits r)%N ->
+  (inRange i r = false -> P otherwise) ->
+  (inRange i (halfRange r false) = true -> inRange i (halfRange r true) = false -> P left) ->
+  (inRange i (halfRange r false) = false -> inRange i (halfRange r true) = true -> P right) ->
+  P (if nomatch i (rPrefix r) (rMask r) then otherwise else 
+     if zero i (rMask r) then left else right).
+Proof.
+  intros.
+  rewrite nomatch_spec by auto.
+  rewrite if_negb.
+  destruct (inRange i r) eqn:?.
+  * rewrite zero_spec by auto. 
+    rewrite if_negb.
+    destruct (N.testbit i (rBits r - 1)) eqn:Hbit.
+    + apply H2.
+      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+    + apply H1.
+      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+  * apply H0; reflexivity.
+Qed.
+
+Lemma nomatch_zero_smaller:
+  forall {a} r1 r (P : a -> Prop) left right otherwise,
+  (rBits r1 < rBits r)%N ->
+  (rangeDisjoint r1 r = true -> P otherwise) ->
+  (isSubrange r1 (halfRange r false) = true  -> isSubrange r1 (halfRange r true) = false -> P left) ->
+  (isSubrange r1 (halfRange r false) = false -> isSubrange r1 (halfRange r true) = true -> P right) ->
+  P (if nomatch (rPrefix r1) (rPrefix r) (rMask r) then otherwise else 
+     if zero (rPrefix r1) (rMask r) then left else right).
+Proof.
+  intros ????????.
+  assert (rBits r1 <= rBits r)%N by Nomega.
+  assert (forall h, rBits r1 <= rBits (halfRange r h))%N
+    by (intros; rewrite rBits_halfRange; Nomega).
+  rewrite <- smaller_not_subrange_disjoint_iff; auto.
+  repeat rewrite <- smaller_inRange_iff_subRange by auto.
+  apply nomatch_zero.
+  Nomega.
+Qed.
+
 
 (** *** Verification of [equal] *)
 
@@ -607,7 +690,7 @@ Abort.
 Qed. *)
 
 
-(** *** Verification of [isSubsetOf] *)
+(** *** Verification of [isSubmapOf] *)
 
 Import GHC.Base.
 
@@ -869,6 +952,51 @@ Qed.
 *)
 Admitted.
 
+(** *** Verification of [lookup] *)
+
+
+Lemma lookup_Desc:
+ forall {a}{s : IntMap a}{r f i}, Desc s r f -> lookup i s = f i.
+Proof.
+ intros ????? HD.
+ induction HD; subst.
+ * simpl.
+   unfoldMethods.
+   rewrite H.
+   destruct (i =? k) eqn:Ei; simpl; auto.
+ * rewrite H4. clear H4.
+   simpl lookup.
+   rewrite IHHD1, IHHD2. clear IHHD1 IHHD2.
+
+   apply nomatch_zero; [auto|..]; intros.
+   + rewrite (Desc_outside HD1) by inRange_false.
+     rewrite (Desc_outside HD2) by inRange_false.
+     reflexivity.
+   + rewrite (Desc_outside HD2) by inRange_false.
+     rewrite oro_None_r. reflexivity.
+   + rewrite (Desc_outside HD1) by inRange_false.
+     rewrite oro_None_l. reflexivity.
+Qed.
+
+
+Lemma lookup_Desc0:
+  forall {a}{s:IntMap a} {r f i}, Desc0 s r f -> lookup i s = f i.
+Proof.
+  intros.
+  destruct H; simpl; auto.
+  rewrite Hf. 
+  eapply lookup_Desc; eauto.
+Abort.
+
+Lemma lookup_Sem:
+  forall {a}{s:IntMap a}{f i}, Sem s f -> lookup i s = f i.
+Proof.
+  intros.
+  destruct H.
+  * rewrite H. reflexivity.
+  * erewrite lookup_Desc; eauto.
+Qed.
+
 
 (** *** Verification of [member] *)
 
@@ -958,15 +1086,13 @@ Qed.
 Lemma empty_Sem {a} (f : N -> option a) : Sem empty f <-> forall i, f i = None.
 Proof.
   split.
-  - intro s. inversion s. 
-    + apply Eqdep.EqdepTheory.inj_pair2 in H.
-    subst. auto.
-    + intro i.
-    apply Eqdep.EqdepTheory.inj_pair2 in H1.
-    apply Eqdep.EqdepTheory.inj_pair2 in H2.
-    admit.
+  - intro s. 
+    apply null_Sem in s.
+    simpl in s. destruct s as [s _].
+    apply s.
+    auto.
   - now constructor.
-Admitted.
+Qed.
 
 Lemma empty_WF {a} : WF (empty : IntMap a).
 Proof. now exists (fun _ => None); constructor. Qed.
@@ -1097,6 +1223,9 @@ Proof.
   apply DescTip; try nonneg.
 Qed.
 
+Lemma rPrefix_singletonRange e : rPrefix (singletonRange e) = e.
+Proof. unfold rPrefix, singletonRange. rewrite N.shiftl_0_r. auto. Qed.
+Hint Rewrite rPrefix_singletonRange.
 
 Lemma insert_Desc a:
   forall e v r1,
@@ -1133,7 +1262,34 @@ Proof.
        eapply disjoint_commonRange; eauto.
        intro i. rewrite Hf. unfold oro.
        destruct (i =? e); simpl; auto.
-  + admit.
+  + simpl.
+    eapply nomatch_zero; auto.
+    ++ intro RF.
+       assert (h0: rangeDisjoint (singletonRange e) r0 = true). { 
+         unfold singletonRange, rangeDisjoint.
+         unfold isSubrange. simpl. rewrite N.shiftl_0_r.
+         rewrite RF.
+         rewrite andb_false_l.
+         rewrite orb_false_l.
+         admit.
+       }
+       eapply link_Desc with (f1 := fun i => if i =? e then Some v else None); eauto.
+       eapply DescTip; eauto. 
+       eapply DescBin; eauto.
+       rewrite rPrefix_singletonRange; auto.
+       eapply disjoint_commonRange; eauto.
+       intro i. rewrite Hf. unfold oro. destruct (i =? e); simpl; auto.
+    ++ intros R1 R2.
+       eapply DescBin with (f1 := fun i => if i =? e then Some v else s3 i); eauto.
+       admit.
+       admit.
+       admit.
+       admit.
+       admit.
+       intro i. rewrite Hf.
+       destruct (i =? e); simpl; auto.
+    ++ intros R1 R2.
+       admit.
 Admitted.
 
 
@@ -1192,20 +1348,6 @@ Definition restrictBitMapToRange r bm :=
            (N.lor (bitmapOf (N.lor p (N.lor msk (msk - 1))))
            (bitmapOf (N.lor p (N.lor msk (msk - 1))) - 1)%N).
 
-Lemma Desc0_subRange:
-  forall {a} {m : IntMap a} {r r' f}, Desc0 m r f -> isSubrange r r' = true -> Desc0 m r' f.
-Proof.
-  intros.
-  induction H.
-  * apply Desc0Nil; assumption.
-  * eapply Desc0NotNil; try eassumption.
-    isSubrange_true.
-Qed.
-
-Lemma Desc_inside:
- forall {a m r f i} {v:a}, Desc m r f -> f i = Some v -> inRange i r = true.
-Admitted.
-
 Lemma bin_Desc0:
   forall a (m1 : IntMap a) r1 f1 m2 r2 f2 p msk r f,
     Desc0 m1 r1 f1 ->
@@ -1252,7 +1394,7 @@ Next Obligation.
   destruct HD1.
   * (* m1 is a Tip *)
     subst.
-    erewrite member_Desc by eassumption.
+    erewrite IntSetProofs.member_Desc by eassumption.
     destruct (f2 k) eqn: Hf2.
     + eapply Desc0NotNil; try (apply isSubrange_refl); try (intro; reflexivity).
       eapply DescTip; try reflexivity.

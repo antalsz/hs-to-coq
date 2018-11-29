@@ -32,7 +32,8 @@ PASS = \
   LetPattern \
   AxiomatizeModule \
   RedefineAddAxiom \
-  AddTheorem
+  AddTheorem \
+  Typesyn
 
 # tests that *should* pass but currently fail
 TODO_PASS = \

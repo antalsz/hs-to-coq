@@ -1,7 +1,5 @@
 (*  IdInfo: preamble *)
 
-Require GHC.Nat.
-
 (*
 -- An 'IdInfo' gives /optional/ information about an 'Id'.  If
 -- present it never lies, but it may not be present, in which case there
@@ -36,15 +34,9 @@ data RuleInfo
   = RuleInfo
         [CoreRule]
         DVarSet         -- Locally-defined free vars of *both* LHS and RHS
-
-
 *)
 
-(* -------------------- *)
-
-Require GHC.Err.
-
-(* This is parameterized to break the dependence of IdInfo on CoreExpr. *)
-Parameter CoreRuleInfo  : Type.
+(* We don't have an edit to add new axiomatized *types*  ...*)
+Axiom CoreRuleInfo : Type.
 
 (* -------------------- *)

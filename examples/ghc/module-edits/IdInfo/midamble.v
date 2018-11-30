@@ -6,9 +6,6 @@ Require GHC.Err.
 (* There are two parts of IdInfo that cause trouble -- Rules & unfolding information. 
    Part of the issue is that types contain embedded CoreExpr's 
 *)
-(* We break the cyclic structure for the unfolding info here. The type "Unfolding" is parameterized 
-   in the midamble. *)
-
 
 Inductive UnfoldingInfo : Type
   := NoUnfolding : UnfoldingInfo
@@ -30,8 +27,10 @@ Inductive UnfoldingInfo : Type
 Parameter getUnfoldingInfo : Unfolding -> UnfoldingInfo.
 Parameter getUnfolding     : UnfoldingInfo -> Unfolding.
 
+
 Parameter getCoreRule : CoreRuleInfo -> CoreRule.
 Parameter getCoreRuleInfo : CoreRule -> CoreRuleInfo.
+
 
 (*****)
 

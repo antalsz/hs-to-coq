@@ -40,8 +40,6 @@ Parameter Ord_DataConId : Base.Ord DataConId. Existing Instance Ord_DataConId.
 Parameter Ord_TyConId   : Base.Ord TyConId.   Existing Instance Ord_TyConId.
 (*  IdInfo: preamble *)
 
-Require GHC.Nat.
-
 (*
 -- An 'IdInfo' gives /optional/ information about an 'Id'.  If
 -- present it never lies, but it may not be present, in which case there
@@ -76,16 +74,10 @@ data RuleInfo
   = RuleInfo
         [CoreRule]
         DVarSet         -- Locally-defined free vars of *both* LHS and RHS
-
-
 *)
 
-(* -------------------- *)
-
-Require GHC.Err.
-
-(* This is parameterized to break the dependence of IdInfo on CoreExpr. *)
-Parameter CoreRuleInfo  : Type.
+(* We don't have an edit to add new axiomatized *types*  ...*)
+Axiom CoreRuleInfo : Type.
 
 (* -------------------- *)
 
@@ -2321,9 +2313,6 @@ Require GHC.Err.
 (* There are two parts of IdInfo that cause trouble -- Rules & unfolding information. 
    Part of the issue is that types contain embedded CoreExpr's 
 *)
-(* We break the cyclic structure for the unfolding info here. The type "Unfolding" is parameterized 
-   in the midamble. *)
-
 
 Inductive UnfoldingInfo : Type
   := NoUnfolding : UnfoldingInfo
@@ -2345,8 +2334,10 @@ Inductive UnfoldingInfo : Type
 Parameter getUnfoldingInfo : Unfolding -> UnfoldingInfo.
 Parameter getUnfolding     : UnfoldingInfo -> Unfolding.
 
+
 Parameter getCoreRule : CoreRuleInfo -> CoreRule.
 Parameter getCoreRuleInfo : CoreRule -> CoreRuleInfo.
+
 
 (*****)
 

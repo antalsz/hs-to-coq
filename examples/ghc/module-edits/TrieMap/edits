@@ -198,7 +198,3 @@ skip TrieMap.xtTyLit
 # as for `IntSet`.
 rename type GHC.Num.Int = Data.IntSet.Internal.Key
 
-################################################################################
-## Ignoring types and coercions
-rewrite forall co, Coercion.coercionType co = tt
-rewrite forall ty, Type.typeKind         ty = tt

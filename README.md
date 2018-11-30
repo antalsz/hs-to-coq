@@ -6,7 +6,7 @@ as part of the [CoreSpec] component of the [DeepSpec] project.
 CPP'18 paper [“Total Haskell is Reasonable Coq”](https://arxiv.org/abs/1711.09286) by
 Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weirich.
 
-ICFP'18 paper ["Ready, set, verify! applying hs-to-coq to real-world Haskell code (experience report)"] by
+ICFP'18 paper ["Ready, set, verify! applying hs-to-coq to real-world Haskell code (experience report)"](https://dl.acm.org/citation.cfm?id=3236784) by
 Joachim Breitner, Antal Spector-Zabusky, Yao Li, Christine Rizkallah, John Wiegley, and Stephanie Weirich	
 
 

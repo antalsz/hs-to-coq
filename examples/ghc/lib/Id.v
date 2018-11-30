@@ -44,8 +44,8 @@ Parameter lookupDataCon : Core.DataConId -> Core.DataCon.
 Parameter lookupClass   : Core.ClassId -> Core.Class.
 
 (* Make this default so that we can reason about either case. *)
-Import GHC.Err.
-Definition isStateHackType : unit -> bool := GHC.Err.default.
+(* Import GHC.Err. *)
+(* Definition isStateHackType : unit -> bool := GHC.Err.default. *)
 
 (* The real definition looks like this, but we don't have the type information
    around:
@@ -65,11 +65,6 @@ Definition zapStableUnfolding : Core.Id -> Core.Id :=
 
 Definition stateHackOneShot : BasicTypes.OneShotInfo :=
   BasicTypes.OneShotLam.
-
-Definition typeOneShot : unit -> BasicTypes.OneShotInfo :=
-  fun ty =>
-    if isStateHackType ty : bool then stateHackOneShot else
-    BasicTypes.NoOneShotInfo.
 
 Definition setIdUnique : Core.Id -> Unique.Unique -> Core.Id :=
   Core.setVarUnique.
@@ -274,6 +269,13 @@ Definition transferPolyIdInfo
 Definition zapIdStrictness : Core.Id -> Core.Id :=
   fun id =>
     modifyIdInfo (fun arg_0__ => Core.setStrictnessInfo arg_0__ Core.nopSig) id.
+
+Axiom isStateHackType : unit -> bool.
+
+Definition typeOneShot : unit -> BasicTypes.OneShotInfo :=
+  fun ty =>
+    if isStateHackType ty : bool then stateHackOneShot else
+    BasicTypes.NoOneShotInfo.
 
 Definition isRecordSelector : Core.Id -> bool :=
   fun id =>
@@ -503,7 +505,7 @@ Definition idInlineActivation : Core.Id -> BasicTypes.Activation :=
   fun id => BasicTypes.inlinePragmaActivation (idInlinePragma id).
 
 Definition idHasRules : Core.Id -> bool :=
-  fun id => negb (Core.isEmptyRuleInfo (idSpecialisation id)).
+  fun id => negb (true).
 
 Definition idDemandInfo : Core.Id -> Core.Demand :=
   fun id => Core.demandInfo ((@Core.idInfo tt id)).
@@ -571,7 +573,7 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
     end.
 
 (* External variables:
-     None Some andb bool false isStateHackType list negb option orb pair true tt unit
+     None Some andb bool false list negb option orb pair true tt unit
      BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
      BasicTypes.JoinArity BasicTypes.NoOneShotInfo BasicTypes.OccInfo
      BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleMatchInfo
@@ -585,22 +587,21 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      Core.RecSelId Core.RecSelParent Core.RecSelPatSyn Core.RuleInfo Core.StrictSig
      Core.Unfolding Core.VanillaId Core.Var Core.arityInfo Core.cafInfo
      Core.callArityInfo Core.demandInfo Core.getUnfolding Core.idDetails Core.idInfo
-     Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig
-     Core.isEmptyRuleInfo Core.isId Core.isLocalId Core.isTyVar Core.isUnboxedSumCon
-     Core.isUnboxedTupleCon Core.lazySetIdInfo Core.mkExportedLocalVar
-     Core.mkGlobalVar Core.mkLocalVar Core.nopSig Core.occInfo Core.oneShotInfo
-     Core.ruleInfo Core.setArityInfo Core.setCafInfo Core.setCallArityInfo
-     Core.setDemandInfo Core.setIdDetails Core.setIdExported Core.setIdNotExported
-     Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo Core.setRuleInfo
-     Core.setStrictnessInfo Core.setVarName Core.setVarUnique Core.strictnessInfo
-     Core.unfoldingInfo Core.vanillaIdInfo Core.varName Core.varType Core.varUnique
-     Core.zapDemandInfo Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageInfo
-     Core.zapUsedOnceInfo Datatypes.id FastString.FastString GHC.Base.mappend
-     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Num.fromInteger GHC.Num.op_zp__
-     GHC.Prim.seq Maybes.orElse Module.Module Name.Name Name.getName
-     Name.isInternalName Name.localiseName Name.mkDerivedInternalName
-     Name.mkInternalName Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName
-     OccName.mkWorkerOcc Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     SrcLoc.SrcSpan UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Util.count
+     Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig Core.isId
+     Core.isLocalId Core.isTyVar Core.isUnboxedSumCon Core.isUnboxedTupleCon
+     Core.lazySetIdInfo Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar
+     Core.nopSig Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo
+     Core.setCafInfo Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails
+     Core.setIdExported Core.setIdNotExported Core.setInlinePragInfo Core.setOccInfo
+     Core.setOneShotInfo Core.setRuleInfo Core.setStrictnessInfo Core.setVarName
+     Core.setVarUnique Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo
+     Core.varName Core.varType Core.varUnique Core.zapDemandInfo Core.zapLamInfo
+     Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo Datatypes.id
+     FastString.FastString GHC.Base.mappend GHC.Base.op_zgzgze__ GHC.Base.return_
+     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse Module.Module
+     Name.Name Name.getName Name.isInternalName Name.localiseName
+     Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
+     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.panic
+     Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
+     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique Util.count
 *)

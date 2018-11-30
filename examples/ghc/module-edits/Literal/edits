@@ -1,6 +1,5 @@
 # just to access type info
 skip Literal.literalType
-rewrite forall x, Literal.literalType x = tt
 skip Literal.absentLiteralOf
 
 ## declared as a parameter in the midamble.

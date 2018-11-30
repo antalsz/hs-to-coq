@@ -2437,8 +2437,10 @@ Admitted.
 
 (* ------------- CoreSyn midamble.v ------------ *)
 
+(*
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
+*)
 
 Require Import Omega.
 
@@ -2509,38 +2511,6 @@ Fixpoint core_size {v} (e : Expr v) : nat :=
     | Type_ _  =>   0
     | Coercion _ => 0
     end.
-
-(*
-Fixpoint size_Expr {b} (e: Expr b) :=
-  let size_Alt  : Alt b -> nat :=
-      fun x => 
-        match x with 
-        | ((con, args), rhs) => size_Expr rhs
-        end in
-  let size_Bind  : Bind b -> nat :=
-      fun x => 
-        match x with 
-        | NonRec _ e => size_Expr e
-        | Rec grp => List.fold_left 
-                         (fun n y => 
-                            n + size_Expr (snd y)) grp 1
-        end in
-
-  match e with 
-  | Mk_Var _ => 1
-  | Lit _ => 1
-  | Lam _ bdy => 1 + size_Expr bdy
-  | App e1 e2 => 1 + size_Expr e1 + size_Expr e2
-  | Case e _ _ brs => 1 + size_Expr e + 
-                            List.fold_left (fun x y => x + size_Alt y) brs 1 
-  | Let _ e => 1 + size_Expr e
-  | Cast e _ => 1 + size_Expr e
-  | Tick _ e => 1 + size_Expr e
-  | Type_ _ => 1
-  | Coercion _ => 1
-  end.
-*)
-
 
 
 
@@ -2640,18 +2610,6 @@ Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
                                end in
             collect orig_n nil e.
 
-
-
-(*
-Definition exprToType : CoreExpr -> Core.Type_ :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | Type_ ty => ty
-      | _bad => GHC.Err.error (GHC.Base.hs_string__ "exprToType")
-    end.
-
-Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
-  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg). *)
 
 (* DEMAND midamble file *)
 
@@ -2773,6 +2731,9 @@ Fixpoint StrDmd_size (s1 : StrDmd): nat :=
 Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
+
+Definition zapFragileUnfolding : Unfolding -> Unfolding :=
+  fun unf => unf.
 
 Definition visibleDataCons : AlgTyConRhs -> list DataCon :=
   fun arg_0__ =>
@@ -3292,6 +3253,10 @@ Definition tickishPlace {id} : Tickish id -> TickishPlacement :=
     | SourceNote _ _ => PlaceNonLam
     end.
 
+Axiom tickishIsCode : forall {id}, Tickish id -> bool.
+
+Axiom tickishCounts : forall {id}, Tickish id -> bool.
+
 Definition tickishFloatable {id} : Tickish id -> bool :=
   fun t => andb (tickishScopesLike t SoftScope) (negb (tickishCounts t)).
 
@@ -3370,7 +3335,8 @@ Definition splitUseProdDmd : nat -> UseDmd -> option (list ArgUse) :=
     | n, UHead => Some (Coq.Lists.List.repeat Abs n)
     | n, UProd ds =>
         Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
-                            "ghc/compiler/basicTypes/Demand.hs") #645 (Panic.someSDoc) (Some ds)
+                            "ghc/compiler/basicTypes/Demand.hs") #645 (Datatypes.id (GHC.Base.hs_string__
+                                                                                     "splitUseProdDmd")) (Some ds)
     | _, UCall _ _ => None
     end.
 
@@ -3384,7 +3350,8 @@ Definition splitStrProdDmd : nat -> StrDmd -> option (list ArgStr) :=
     | n, HeadStr => Some (Coq.Lists.List.repeat strTop n)
     | n, SProd ds =>
         Panic.warnPprTrace (negb (Util.lengthIs ds n)) (GHC.Base.hs_string__
-                            "ghc/compiler/basicTypes/Demand.hs") #359 (Panic.someSDoc) (Some ds)
+                            "ghc/compiler/basicTypes/Demand.hs") #359 (Datatypes.id (GHC.Base.hs_string__
+                                                                                     "splitStrProdDmd")) (Some ds)
     | _, SCall _ => None
     end.
 
@@ -5198,9 +5165,6 @@ Definition isFragileUnfolding : Unfolding -> bool :=
     | CoreUnfolding _ _ _ _ _ _ _ _ | DFunUnfolding _ _ _ => true
     | _ => false
     end.
-
-Definition zapFragileUnfolding : Unfolding -> Unfolding :=
-  fun unf => if isFragileUnfolding unf : bool then noUnfolding else unf.
 
 Definition isFamilyTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -7961,7 +7925,7 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      DFunUnfolding Eq Gt Lt NoUnfolding None OtherCon Some Type andb app bool
      bothArgUse bothUse comparison cons deAnnotate' false getCoreRule getCoreRuleInfo
      getUnfolding getUnfoldingInfo list lubArgUse nat negb nil op_zt__ option orb
-     pair size_AnnExpr' snd tickishCounts true tt unit BasicTypes.Activation
+     pair size_AnnExpr' snd true tt unit BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
      BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity

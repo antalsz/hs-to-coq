@@ -1,11 +1,6 @@
-#
-# This would be better if we had a rewrite for types
-#
-redefine Axiom Core.Unfolding : Type.
+axiomatize definition Core.tickishCounts
+axiomatize definition Core.tickishIsCode
 
-rewrite forall , Core.BootUnfolding = getUnfolding Core.BootUnfolding
-rewrite forall , Core.OtherCon      = fun x => getUnfolding (Core.OtherCon x)
-rewrite forall , Core.NoUnfolding   = getUnfolding Core.NoUnfolding
 
 redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
   fun arg_0__ =>
@@ -62,7 +57,6 @@ skip Core.isCompulsoryUnfolding
 
 skip Core.isStableUnfolding
 
-# skip Core.hasSomeUnfolding
 
 redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
   fun u => match Core.getUnfoldingInfo u with
@@ -78,14 +72,13 @@ redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
 
 skip Core.canUnfold
 
-skip module CostCentre
-rename type CostCentre.CostCentre = unit
 
 skip Core.mkNoCount
 skip Core.mkNoScope
+
 skip Core.tickishCanSplit
-skip Core.tickishCounts
-skip Core.tickishIsCode
+# skip Core.tickishCounts
+# skip Core.tickishIsCode
 skip Core.tickishContains
 
 # record selector, no place to add default
@@ -150,11 +143,8 @@ in Core.collectAnnArgsTicks termination go      { measure (size_AnnExpr' (snd ar
 obligations Core.collectAnnArgsTicks solve_collectAnnArgsTicks
 
 in Core.collectAnnBndrs     termination collect { measure (size_AnnExpr' (snd arg_1__)) }
-# obligations Core.collectAnnBndrs solve_collectAnnArgsTicks
 
-# skip Core.mkTyArg
 
-rewrite forall x, Type.isCoercionTy_maybe x = None
 
 skip Core.Default__Class
 skip Core.Default__DataCon

@@ -1,5 +1,5 @@
 ####################################################
-#
+# these should be part of containers edit file
 ####################################################
 rename value Data.Set.fold = Data.Set.Internal.foldr
 rename value Data.Map.fold = Data.Map.Internal.foldr
@@ -7,20 +7,23 @@ rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
 rename value Data.IntMap.fold = Data.IntMap.Internal.foldr
 
 ####################################################
-# Now we are serious
+# Edits related to base
 ####################################################
 
-# rename type GHC.Num.Int = BinNums.N
+# general strategy for enumFrom
+rewrite forall n tys, enumFrom n = (GHC.Enum.enumFromTo n (GHC.List.length tys))  
 
-#
-# All GHC.Num.Int's should be N in this compiler (double check that that makes sense).
-#
+# workaround partial function
+rewrite forall x y, Data.Foldable.minimum (cons x y) = Data.Foldable.foldr GHC.Base.min x y
 
-# rewrite forall x , Data.Foldable.length x  = BinNat.N.of_nat (Coq.Lists.List.length x)
-# rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y (BinNat.N.to_nat x)
-# rewrite forall x  , GHC.List.take x        = Coq.Lists.List.firstn (BinNat.N.to_nat x)
-# rewrite forall x  , GHC.List.drop x        = Coq.Lists.List.skipn (BinNat.N.to_nat x)
+# specialize generic method to (->) constructor
+# to make type inference easier
+rename value Control.Arrow.first  = Control.Arrow.arrow_first
+rename value Control.Arrow.second = Control.Arrow.arrow_second
 
+####################################################
+# Now we are serious
+####################################################
 
 
 # Should skip these everywhere
@@ -73,6 +76,7 @@ rewrite forall x str msg, Outputable.pprTraceDebug str msg x = x
 rewrite forall x y,       x Outputable.$$ y = Panic.someSDoc
 rewrite forall v str num msg, Outputable.warnPprTrace b str num msg v = v
 rewrite forall s n d, Outputable.assertPprPanic s n d = GHC.Err.error d
+rewrite forall x y, x Outputable.$$ y = x
 
 # Skip serialization-related classes…
 skip class Outputable.Outputable

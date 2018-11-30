@@ -1,17 +1,9 @@
-
+# This module depends strongly on Type/Coercion/TyCoRep/TyCon
+# in order to determine the arity of some of the operations
+#
 
 axiomatize module CoreArity
 
-#
-# NEEDED by CallArity
-# CoreArity.typeArity
-
-#
-# This module depends strongly on Type/Coercion/TyCoRep/TyCon
-# in order to determine the arity of some of the operations
-
-# skip etaInfoAbs
 
 
-rewrite forall co,   Coercion.mkSymCo co = tt
-rewrite forall ty v, CoreSyn.applyTypeToArg ty v = v
+

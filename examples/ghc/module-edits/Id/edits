@@ -13,38 +13,7 @@
 # Id.mkSysLocalOrCoVar Id.typeOneShot
 ##############
 
-rewrite forall x, Core.pprIdDetails x = Panic.someSDoc
-
-
-## Rewrites due to skipped functions (here)
-
-# rewrite forall x,     Id.idType x = tt
-# rewrite forall arg y, Id.setIdUnfolding arg y = arg
-
-
-## Local rewrites 
-
-# rewrite forall dc, Core.isUnboxedTupleCon dc          =  Core.isUnboxedTupleCon (lookupDataCon dc)
-# rewrite forall dc, Core.isUnboxedSumCon dc            = Core.isUnboxedSumCon (lookupDataCon dc))
-
-# in Id.isClassOpId_maybe rewrite forall cls, Some cls     = Some (lookupClass cls)
-# in Id.isDataConId_maybe rewrite forall con, Some con     = Some (lookupDataCon con)
-# in Id.isDataConWorkId_maybe rewrite forall con, Some con = Some (lookupDataCon con)
-
-in Id.isJoinId_maybe rewrite forall str id x, Outputable.assertPprPanic str id x = None
-
-in Id.transferPolyIdInfo rewrite forall x y, Demand.increaseStrictSigArity x y = tt
-
-## enumFrom
-in Id.mkTemplateLocalsNum rewrite forall n tys, enumFrom n = (GHC.Enum.enumFromTo n (GHC.List.length tys))  
-
-##################################
-
-
-
-# TODO: add an edit for axiomatizing a single function 
-# isStateHackType is a Parameter in the midamble
-skip Id.isStateHackType
+axiomatize definition Id.isStateHackType
 
 # Missing parts of IdInfo
 skip Id.isNeverLevPolyId 
@@ -52,8 +21,6 @@ skip Id.zapFragileIdInfo
 skip Id.zapIdUsageEnvInfo
 
 skip Id.idCoreRules
-# skip Id.idStrictness   
-# skip Id.isBottomingId
 
 # Type/TyCoRep
 skip Id.isStrictId
@@ -65,21 +32,11 @@ skip Id.mkLocalCoVar
 # RepType
 skip Id.idFunRepArity
 
-# Demand
-
-# skip Id.idDemandInfo
-# skip Id.zapIdDemandInfo
-
-# CoreSyn (Unfolding)
-
-rewrite forall , Core.NoUnfolding = Core.getUnfolding Core.NoUnfolding
-
 skip Id.setCaseBndrEvald
 
 # Needs `GHC.Prim.seq`, used to evaluate the type information strictly
 # however, we are removing all type information so no need to do so.
 skip Id.setIdType
-# in Id.setIdType rewrite forall ty, GHC.Prim.seq (Type.seqType ty) = Datatypes.id
 
 # figure out GHC.Num.Int representation
 #

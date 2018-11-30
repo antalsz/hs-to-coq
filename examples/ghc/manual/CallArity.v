@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require BasicTypes.
+Require Control.Arrow.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Core.
@@ -46,10 +47,6 @@ Qed.
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes := 
 GHC.Err.Build_Default _ (GHC.Err.default, GHC.Err.default).
 
-Definition arrow_first {b}{c}{d} (f : (b -> c)) : (b * d)%type -> (c * d)%type :=
-  fun p => match p with (x,y)=> (f x, y) end.
-Definition arrow_second {b}{c}{d} (f : (b -> c)) : (d * b)%type -> (d * c)%type :=
-  fun p => match p with (x,y)=> (x, f y) end.
 
 (* ------------------------- mutual recursion hack -------------------- *)
 
@@ -129,7 +126,8 @@ Definition calledWith : CallArityRes -> Core.Var -> UnVarGraph.UnVarSet :=
 
 Definition calledMultipleTimes : CallArityRes -> CallArityRes :=
   fun res =>
-    arrow_first (GHC.Base.const (UnVarGraph.completeGraph (domRes res))) res.
+    Control.Arrow.arrow_first (GHC.Base.const (UnVarGraph.completeGraph (domRes
+                                                                         res))) res.
 
 Definition callArityRecEnv
    : bool ->
@@ -157,8 +155,8 @@ Definition callArityRecEnv
       then UnVarGraph.completeGraph (domRes ae_combined) else
       UnVarGraph.unionUnVarGraphs (GHC.Base.map cross_call ae_rhss) in
     let ae_new :=
-      arrow_first (fun arg_13__ => UnVarGraph.unionUnVarGraph cross_calls arg_13__)
-      ae_combined in
+      Control.Arrow.arrow_first (fun arg_13__ =>
+                                   UnVarGraph.unionUnVarGraph cross_calls arg_13__) ae_combined in
     ae_new.
 
 Definition boringBinds : Core.CoreBind -> Core.VarSet :=
@@ -173,9 +171,9 @@ Definition addInterestingBinds : Core.VarSet -> Core.CoreBind -> Core.VarSet :=
 Definition addCrossCoCalls
    : UnVarGraph.UnVarSet -> UnVarGraph.UnVarSet -> CallArityRes -> CallArityRes :=
   fun set1 set2 =>
-    arrow_first (fun arg_0__ =>
-                   UnVarGraph.unionUnVarGraph (UnVarGraph.completeBipartiteGraph set1 set2)
-                                              arg_0__).
+    Control.Arrow.arrow_first (fun arg_0__ =>
+                                 UnVarGraph.unionUnVarGraph (UnVarGraph.completeBipartiteGraph set1 set2)
+                                                            arg_0__).
 
 Definition both : CallArityRes -> CallArityRes -> CallArityRes :=
   fun r1 r2 => addCrossCoCalls (domRes r1) (domRes r2) (lubRes r1 r2).
@@ -191,7 +189,8 @@ Definition callArityAnal
                                       e in
                  pair ae (Core.Lam v e')
              | arity, int, Core.App e (Core.Type_ t) =>
-                 arrow_second (fun e => Core.App e (Core.Type_ t)) (callArityAnal arity int e)
+                 Control.Arrow.arrow_second (fun e => Core.App e (Core.Type_ t)) (callArityAnal
+                                                                                  arity int e)
              | arity, int, Core.App e1 e2 =>
                  let 'pair ae2 e2' := callArityAnal #0 int e2 in
                  let ae2' :=
@@ -231,16 +230,16 @@ Definition callArityAnal
            | _, _, (Core.Type_ _ as e) => pair emptyArityRes e
            | _, _, (Core.Coercion _ as e) => pair emptyArityRes e
            | arity, int, Core.Tick t e =>
-               arrow_second (Core.Tick t) (callArityAnal arity int e)
+               Control.Arrow.arrow_second (Core.Tick t) (callArityAnal arity int e)
            | arity, int, Core.Cast e co =>
-               arrow_second (fun e => Core.Cast e co) (callArityAnal arity int e)
+               Control.Arrow.arrow_second (fun e => Core.Cast e co) (callArityAnal arity int e)
            | arity, int, (Core.Mk_Var v as e) =>
                if Core.elemVarSet v int : bool then pair (unitArityRes v arity) e else
                pair emptyArityRes e
            | arity, int, Core.Lam v e =>
                if negb (Core.isId v) : bool
-               then arrow_second (Core.Lam v) (callArityAnal arity (Core.delVarSet int v)
-                                                             e) else
+               then Control.Arrow.arrow_second (Core.Lam v) (callArityAnal arity
+                                                                           (Core.delVarSet int v) e) else
                j_30__
            | _, _, _ => j_30__
            end.
@@ -368,16 +367,16 @@ Definition callArityAnalProgram
     binds'.
 
 (* External variables:
-     None Some andb arrow_first arrow_second bool callArityBind1 cons false list negb
-     nil op_zt__ option pair true tt typeArity BasicTypes.Arity
-     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.length Core.App
-     Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr Core.CoreProgram
-     Core.Id Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
-     Core.Type_ Core.Var Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv
-     Core.delVarSet Core.delVarSetList Core.elemVarSet Core.emptyVarEnv
-     Core.emptyVarSet Core.extendVarSetList Core.isBotRes Core.isExportedId Core.isId
-     Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet Core.plusVarEnv_C
-     Core.splitStrictSig Core.unitVarEnv CoreUtils.exprIsCheap
+     None Some andb bool callArityBind1 cons false list negb nil op_zt__ option pair
+     true tt typeArity BasicTypes.Arity Control.Arrow.arrow_first
+     Control.Arrow.arrow_second Coq.Init.Datatypes.app Coq.Lists.List.flat_map
+     Coq.Lists.List.length Core.App Core.Case Core.Cast Core.Coercion Core.CoreBind
+     Core.CoreExpr Core.CoreProgram Core.Id Core.Lam Core.Let Core.Lit Core.Mk_Var
+     Core.NonRec Core.Rec Core.Tick Core.Type_ Core.Var Core.VarEnv Core.VarSet
+     Core.bindersOf Core.delVarEnv Core.delVarSet Core.delVarSetList Core.elemVarSet
+     Core.emptyVarEnv Core.emptyVarSet Core.extendVarSetList Core.isBotRes
+     Core.isExportedId Core.isId Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet
+     Core.plusVarEnv_C Core.splitStrictSig Core.unitVarEnv CoreUtils.exprIsCheap
      CoreUtils.exprIsTrivial Data.Foldable.any Data.Foldable.foldl
      Data.Foldable.foldr Data.Foldable.null Data.Foldable.or Data.Tuple.fst
      Data.Tuple.snd DynFlags.DynFlags GHC.Base.const GHC.Base.map GHC.Base.min

@@ -1,72 +1,31 @@
-skip module PprCore
-skip module PrimOp
-skip module TysPrim
-skip module Platform
 
 
-## no type info
-rewrite forall x, Type.isUnliftedType x = false
-rewrite forall i c, Core.dataConCannotMatch i c = false
-skip CoreUtils.isEmptyTy
-rewrite forall x, CoreUtils.isEmptyTy x = false
-rewrite forall x, Type.resultIsLevPoly x = false
-rewrite forall x, Id.isNeverLevPolyId id = false
-rewrite forall x, Type.splitPiTy_maybe x = None
-rewrite forall x, Type.caseBinder x = x
-
-in Core.isExpandableApp termination all_pred_args { measure (n_val_args) }
-obligations Core.isExpandableApp admit
-
-in Core.isExprLevPoly rewrite forall , Type.isTypeLevPoly Base.op_z2218U__ Core.exprTyp = fun x => false
-
-rewrite forall x, Type.isFunTy x = false
-
-skip CoreUtils.rhsIsStatic
-
-
-skip CoreUtils.applyTypeToArgs
-skip CoreUtils.exprType
-skip CoreUtils.coreAltType
-skip CoreUtils.coreAltsType
-
-# mutual recursion
-# Translating `cheapEqExpr'' failed: mutual recursion through non-lambda values
-#   unsupported 
-# skip CoreUtils.cheapEqExpr'
-# skip CoreUtils.cheapEqExpr
-# redefine Definition CoreUtils.cheapEqExpr {b} : ((Core.Expr b) -> ((Core.Expr b) -> bool)) := GHC.Err.default.
+redefine Definition CoreUtils.isDivOp : unit -> bool := GHC.Err.default.
+redefine Definition CoreUtils.isExprLevPoly : Core.CoreExpr -> bool := GHC.Err.default.
+redefine Definition CoreUtils.isExpandableApp : CheapAppFun := GHC.Err.default.
+redefine Definition CoreUtils.isCheapApp : CheapAppFun := GHC.Err.default.
 redefine Definition CoreUtils.cheapEqExpr' {b} : ((Core.Expr b) -> bool) -> (((Core.Expr b) -> ((Core.Expr b) -> bool))) := GHC.Err.default.
 
-rewrite forall e1 e2, CoreUtils.cheapEqExpr' Core.tickishFloatable e1 e2 = GHC.Err.default
 
-rewrite forall subst knd,       TyCoRep.substTyUnchecked subst knd = tt
-rewrite forall subst tv new_tv, TyCoRep.extendTvSubstWithClone subst tv new_tv = subst
-rewrite forall subst ty,        TyCoRep.substTy subst ty = tt
+redefine Definition CoreUtils.isEmptyTy : unit -> bool := 
+  fun x => false.
+redefine Definition CoreUtils.mkCast : Core.CoreExpr -> (unit -> Core.CoreExpr) := 
+  fun c t => c.
+redefine Definition CoreUtils.mkTick : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) :=
+  fun t orig => orig.
+redefine Definition CoreUtils.tickHNFArgs : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) := 
+  fun t orig => orig.
 
-in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConRepStrictness con = nil
-in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConRepArgTys con = nil
-in CoreUtils.dataConInstPat rewrite forall con, DataCon.dataConExTyVars con = @nil unit
-in CoreUtils.dataConInstPat rewrite forall x y, TyCoRep.zipTvSubst x y = tt
-# in CoreUtils.dataConInstPat rewrite forall x y z, Data.Traversable.mapAccumL x y z = pair univ_subst nil
+###############################################################################
+## termination edits
 
-
-
-## 
-## needs more from DataCon
-
-skip CoreUtils.dataConInstPat
-skip CoreUtils.dataConRepFSInstPat
-skip CoreUtils.dataConRepInstPat
-skip CoreUtils.refineDefaultAlt
+termination CoreUtils.mergeAlts deferred
 
 
-##
-
-
-in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Type.eqTypeX env t1 t2 = true
-in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Type.eqCoercionX env t1 t2 = true
-in CoreUtils.eqExpr rewrite forall env t1 t2 ,  Core.rnBndrs2 env t1 t2 = env
-in CoreUtils.eqExpr inline mutual go_alt
+# Translating `cheapEqExpr'' failed: mutual recursion through non-lambda values unsupported 
+ 
+in CoreUtils.eqExpr       inline mutual go_alt
+in CoreUtils.exprIsCheapX inline mutual ok
 
 # This really needs some sort of `add let type` edit
 #
@@ -88,53 +47,43 @@ in CoreUtils.eqExpr rewrite forall p, Util.all2 p rs1 rs2 = NestedRecursionHelpe
 # work with a better version of `Util.all2`; see issue #109.
 in CoreUtils.eqExpr rewrite forall p, Util.all2 p a1 a2 = NestedRecursionHelpers.all2Map p id id a1 a2
 
-in CoreUtils.exprIsCheapX inline mutual ok
 
-#
-# TODO: translate PrelNames
-#
-in CoreUtils.exprIsHNFlike rewrite forall id, (Unique.hasKey id PrelNames.absentErrorIdKey) = false
+in CoreUtils.diffUnfold termination go { measure arg_14__ } 
+obligations CoreUtils.diffUnfold admit
+
+
+
+############################################################
+## skipped methods
+
+skip CoreUtils.rhsIsStatic
+skip CoreUtils.applyTypeToArgs
+skip CoreUtils.exprType
+skip CoreUtils.coreAltType
+skip CoreUtils.coreAltsType
+
+
+## needs more from DataCon
+skip CoreUtils.dataConInstPat
+skip CoreUtils.dataConRepFSInstPat
+skip CoreUtils.dataConRepInstPat
+skip CoreUtils.refineDefaultAlt
+
 
 # needs Core.dataConCannotMatch
 skip Core.filterAlts
 
-# axiomatize primops?
-redefine Definition CoreUtils.isDivOp : unit -> bool := GHC.Err.default.
-
-## no profiling
-
-redefine Definition CoreUtils.mkTick : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) :=
-  fun t orig => orig.
-redefine Definition CoreUtils.tickHNFArgs : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) := fun t orig => orig.
 
 # Redefined in the midamble because they use complex syntax
 skip CoreUtils.stripTicksE
 skip CoreUtils.stripTicksT
 
-redefine Definition CoreUtils.mkCast : Core.CoreExpr -> (unit -> Core.CoreExpr) := fun c t => c.
-
-
-
-redefine Definition CoreUtils.isExprLevPoly : Core.CoreExpr -> bool := GHC.Err.default.
-redefine Definition CoreUtils.isExpandableApp : CheapAppFun := GHC.Err.default.
-redefine Definition CoreUtils.isCheapApp : CheapAppFun := GHC.Err.default.
-
-
-
-
-rewrite forall env x y, Type.eqTypeX env x y = true
-rewrite forall env x y,  Coercion.eqCoercionX env x y = true
-
-in CoreUtils.diffUnfold termination go { measure arg_14__ } 
-obligations CoreUtils.diffUnfold admit
 
 skip CoreUtils.diffUnfold
 skip CoreUtils.diffIdInfo
 skip CoreUtils.diffExpr
 skip CoreUtils.diffBinds
 
-
-termination CoreUtils.mergeAlts deferred
 
 skip CoreUtils.combineIdenticalAlts
 skip CoreUtils.tryEtaReduce

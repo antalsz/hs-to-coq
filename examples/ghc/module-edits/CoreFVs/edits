@@ -1,9 +1,4 @@
-
-
-skip module	FamInstEnv
-
-
-## 
+# 
 # NEEDED by Exitify
 # CoreFVs.CoreExprWithFVs CoreFVs.freeVars
 # CoreFVs.freeVarsOf
@@ -12,9 +7,7 @@ skip module	FamInstEnv
 # Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
 #
 
-rewrite forall id, Id.realIdUnfolding id = Core.NoUnfolding
-
-in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
+# in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
 
 
 #
@@ -37,28 +30,16 @@ skip CoreFVs.orphNamesOfCo
 skip CoreFVs.exprOrphNames
 skip CoreFVs.exprsOrphNames
 
-rewrite forall ty, CoreFVs.orphNamesOfType ty = NameSet.emptyNameSet
-rewrite forall co, CoreFVs.orphNamesOfCo   co = NameSet.emptyNameSet
 
 in CoreFVs.exprOrphNames inline mutual go_alt
-
-# in CoreFVs.exprOrphNames rewrite forall, go_alt = fun x => match x with | pair (pair _ _) r => go r end 
-# in CoreFVs.exprOrphNames skip go_alt
 
 #
 # These edits are due to the fact that Id's are missing information (Rules, Unfoldings and Types info)
 # We assume that the missing information does not contain any free variables
 #
-#
-redefine Definition CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
-redefine Definition CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-
-rewrite forall co,   TyCoRep.tyCoFVsOfCo co          = FV.emptyFV
-rewrite forall ty,   TyCoRep.tyCoFVsOfType ty        = FV.emptyFV
-rewrite forall b_ty, TyCoRep.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
-rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
-
+# redefine Definition CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
+# redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
+# redefine Definition CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
 
 
 #
@@ -69,7 +50,6 @@ rewrite forall co,   TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 #
 # first, we get rid of parts of the structure that we do not need
 #
-rewrite forall id, CoreFVs.bndrRuleAndUnfoldingFVs id = FV.emptyFV
 skip CoreFVs.stableUnfoldingFVs
 skip CoreFVs.stableUnfoldingVars
 #

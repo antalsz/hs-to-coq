@@ -51,8 +51,7 @@ Definition CheapAppFun :=
 Require Import Pair.
 
 (* Notation for Alt *)
-
-Definition Alt b := prod (prod Core.AltCon (list b)) (Core.Expr b).
+(* Definition Alt b := prod (prod Core.AltCon (list b)) (Core.Expr b). *)
 
 (* Redefinition with correct recursion structure *)
 Require OrdList.
@@ -209,7 +208,7 @@ Definition locBind
       if b1 GHC.Base.== b2 : bool then Panic.someSDoc else
       GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc Panic.someSDoc)
                        Panic.someSDoc in
-    let addLoc := fun d => Panic.someSDoc in GHC.Base.map addLoc diffs.
+    let addLoc := fun d => d in GHC.Base.map addLoc diffs.
 
 Definition isWorkFreeApp : CheapAppFun :=
   fun fn n_val_args =>
@@ -245,6 +244,9 @@ Definition isExprLevPoly : Core.CoreExpr -> bool :=
 
 Definition isExpandableApp : CheapAppFun :=
   GHC.Err.default.
+
+Definition isEmptyTy : unit -> bool :=
+  fun x => false.
 
 Definition isDivOp : unit -> bool :=
   GHC.Err.default.
@@ -437,6 +439,7 @@ Definition exprIsBottom : Core.CoreExpr -> bool :=
                  | n, Core.Lam v e => if Core.isTyVar v : bool then go n e else j_3__
                  | _, _ => j_3__
                  end in
+    if isEmptyTy (tt) : bool then true else
     go #0 e.
 
 Definition exprIsBig {b} : Core.Expr b -> bool :=
@@ -606,7 +609,7 @@ Definition filterAlts {a}
 
 (* External variables:
      Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
-     pair snd true unit BasicTypes.Arity Coq.Init.Datatypes.app
+     pair snd true tt unit BasicTypes.Arity Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App Core.Breakpoint Core.Case
      Core.Cast Core.Coercion Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr
      Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataConWorkId Core.Expr Core.Id

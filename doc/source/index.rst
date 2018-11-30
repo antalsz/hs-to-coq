@@ -9,6 +9,7 @@ hs-to-coq
    quickstart
    edits
    mangling
+   interface
 
 
 Indices and tables

@@ -1,13 +1,6 @@
-import module Id
+
 
 skip module	FamInstEnv
-
-# notation
-rename type Var.Id          = Core.Var
-rename type Var.TyVar       = Core.Var
-rename type VarSet.DVarSet  = DVarSet
-rename type CoreSyn.AnnExpr = AnnExpr
-rename type CoreSyn.AnnAlt  = AnnAlt
 
 
 ## 
@@ -57,9 +50,9 @@ in CoreFVs.exprOrphNames inline mutual go_alt
 # We assume that the missing information does not contain any free variables
 #
 #
-redefine Definition CoreFVs.idRuleFVs      : Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
 redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
-redefine Definition CoreFVs.idUnfoldingFVs : Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
 
 rewrite forall co,   TyCoRep.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,   TyCoRep.tyCoFVsOfType ty        = FV.emptyFV

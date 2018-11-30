@@ -433,7 +433,7 @@ Section in_exitifyRec.
         inversion HPair; only 2: congruence. subst. rename H0 into HisJoinId. rename H2 into Hdom_rhs. rename H into Heq. clear HPair.
         assert (j = length params) by congruence. subst.
 
-        rewrite (surjective_pairing (collectNAnnBndrs (length params) s0)) in Heq1.
+        rewrite (surjective_pairing (collectNAnnBndrs (length params) p0)) in Heq1.
         dependent destruction Heq1.
         pose proof (collectNAnnBndrs_mkLams_collectNBinders _ _ _ Heq) as H.
         destruct H as [Heq1 Heq2].
@@ -442,7 +442,7 @@ Section in_exitifyRec.
         f_equal.
         ** apply Hgh; simpl.
            + assumption.
-           + destruct s0. simpl. rewrite <- Heq.
+           + destruct p0. simpl. rewrite <- Heq.
              Core_termination.
         ** extensionality join_body'.
            f_equal.
@@ -456,14 +456,14 @@ Section in_exitifyRec.
         f_equal.
         apply Hgh; simpl.
         + assumption.
-        + destruct s0. simpl.
+        + destruct p0. simpl.
           Core_termination.
 
       - rewrite flat_map_unpack_cons_f in *.
         inversion HP; subst; clear HP.
         2: { exfalso.
              destruct l; only 1: (apply H2; reflexivity).
-             destruct p.
+             destruct p. destruct p0.
              rewrite isJoinId_eq in Heq0. simpl in Heq0.
              inversion H1.
              inversion_clear H4. simpl in *. rewrite H6 in Heq0.
@@ -512,7 +512,7 @@ Section in_exitifyRec.
         inversion HP; subst; clear HP.
         1: { exfalso.
              destruct l; only 1: (apply H2; reflexivity).
-             destruct p.
+             destruct p0.
              rewrite isJoinId_eq in Heq0. simpl in Heq0.
              inversion H1.
              inversion_clear H4. simpl in *. rewrite H6 in Heq0.
@@ -1247,7 +1247,7 @@ Section in_exitifyRec.
       clearbody j_16__; cleardefs.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
     cleardefs.
@@ -1566,7 +1566,7 @@ Section in_exitifyRec.
       clearbody j_16__; cleardefs.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply Hreturn.
     }
     cleardefs.
@@ -1993,7 +1993,7 @@ Section in_exitifyRec.
       clearbody j_16__; cleardefs.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply StateInvariant_return.
     }
     cleardefs.
@@ -2428,7 +2428,7 @@ Section in_exitifyRec.
       clearbody j_16__; cleardefs.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
-      destruct (isJoinId s && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
+      destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
       apply Hreturn.
     }
     cleardefs.

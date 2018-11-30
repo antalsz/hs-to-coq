@@ -843,7 +843,8 @@ Proof.
          rewrite -> NC.
          rewrite -> Base.Eq_sym.
          auto.
-       ++ rewrite -> lookupVarEnv_delVarEnv_neq; auto.
+       ++ unfold Id in *.
+          rewrite -> lookupVarEnv_delVarEnv_neq; auto.
           destruct (lookupVarEnv env var).
           right. eexists. 
           split; eauto.
@@ -923,6 +924,7 @@ Proof.
        destruct (lookupVarEnv env var) eqn:LU.
        right. exists c. repeat split; auto.
        auto.
+       unfold Id in *.
        intro h. rewrite -> h in EQ. auto.
     -- eapply StrongSubset_trans; eauto.
        eapply StrongSubset_minusDom_extend_extend.
@@ -953,6 +955,7 @@ Proof.
          eapply StrongSubset_extendVarSet_fresh.
          eapply uniqAway_lookupVarSet_fresh.
          auto.
+         unfold Id in *.
          intro h. rewrite -> h in Eq_vvar. discriminate.
 Qed. 
 
@@ -1282,13 +1285,14 @@ Proof.
          rewrite -> map_fst_zip in *; auto.
          rewrite -> map_snd_zip'; auto.
          rewrite -> map_length.
+         unfold Id.
          rewrite <- H. eapply EQL.
      ++ destruct_SubstExtends.
         unfold CoreBndr,CoreExpr in *.
         rewrite -> map_fst_zip in *; auto. 
         rewrite -> map_snd_zip'.
         rewrite -> map_length.
-        unfold CoreBndr,CoreExpr in *.
+        unfold CoreBndr,CoreExpr,Id in *.
         congruence.
         unfold CoreBndr,CoreExpr in *.
         congruence.
@@ -1307,7 +1311,7 @@ Proof.
 
          assert (L1 : length bndrs' = length rhss' ).
          { 
-           destruct_SubstExtends. congruence.  
+           destruct_SubstExtends. unfold Id. congruence.  
          } 
          
          (* At this point we have 
@@ -1319,8 +1323,7 @@ Proof.
             (bndr,rhs) in (vars, rhss)
 
           *)
-
-         destruct (In_zip_snd rhss H1) as [rhs InR]; try congruence.
+         destruct (In_zip_snd rhss H1) as [rhs InR]; try (unfold Id in *; congruence).
          destruct (In_zip_fst vars InR) as [bndr InB]; try congruence.
          apply In_zip_swap in InB.
 
@@ -1361,7 +1364,7 @@ Proof.
          eapply IHbody;eauto.
          rewrite -> getInScopeVars_extendInScopeSetList.
          eauto.
-         unfold CoreBndr, CoreExpr in *.
+         unfold CoreBndr, CoreExpr, Id in *.
          rewrite -> map_snd_zip'.
          rewrite -> map_length.
          rewrite <- H.

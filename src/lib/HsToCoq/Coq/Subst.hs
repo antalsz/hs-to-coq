@@ -30,6 +30,14 @@ import HsToCoq.Coq.Gallina
 class Subst t where
   subst :: Map Qualid Term -> t -> t
 
+
+
+instance Subst IndBody where
+  subst f (IndBody tyName params indicesUnivers cons) =
+    IndBody tyName params indicesUnivers (map (substCon f) cons)
+       where substCon f (qid,binders, Nothing) = (qid, map (subst f) binders, Nothing)
+             substCon f (qid,binders, Just t)  = (qid, map (subst f) binders, Just (subst f t))
+
 instance Subst Binder where
   subst _f b@(Inferred _ex _x)    = b
   subst f (Typed gen ex xs ty) = Typed gen ex xs (subst f ty)

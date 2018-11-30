@@ -64,7 +64,7 @@ Parameter callArityBind1
 Definition unitArityRes : Core.Var -> BasicTypes.Arity -> CallArityRes :=
   fun v arity => pair UnVarGraph.emptyUnVarGraph (Core.unitVarEnv v arity).
 
-Definition trimArity : Core.Var -> BasicTypes.Arity -> BasicTypes.Arity :=
+Definition trimArity : Core.Id -> BasicTypes.Arity -> BasicTypes.Arity :=
   fun v a =>
     let 'pair demands result_info := Core.splitStrictSig (Id.idStrictness v) in
     let max_arity_by_strsig :=
@@ -289,9 +289,9 @@ Definition callArityBind
           (let cont_26__ arg_27__ := let 'pair i _ := arg_27__ in cons i nil in
            Coq.Lists.List.flat_map cont_26__ binds) in
         let fix_
-         : list (Core.Var * option (bool * BasicTypes.Arity * CallArityRes)%type *
+         : list (Core.Id * option (bool * BasicTypes.Arity * CallArityRes)%type *
                  Core.CoreExpr)%type ->
-           (CallArityRes * list (Core.Var * Core.CoreExpr)%type)%type :=
+           (CallArityRes * list (Core.Id * Core.CoreExpr)%type)%type :=
           GHC.DeferredFix.deferredFix1 (fun fix_ ann_binds =>
                                           let aes_old :=
                                             let cont_29__ arg_30__ :=
@@ -372,10 +372,10 @@ Definition callArityAnalProgram
      nil op_zt__ option pair true tt typeArity BasicTypes.Arity
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.length Core.App
      Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr Core.CoreProgram
-     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Type_
-     Core.Var Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv Core.delVarSet
-     Core.delVarSetList Core.elemVarSet Core.emptyVarEnv Core.emptyVarSet
-     Core.extendVarSetList Core.isBotRes Core.isExportedId Core.isId
+     Core.Id Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
+     Core.Type_ Core.Var Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv
+     Core.delVarSet Core.delVarSetList Core.elemVarSet Core.emptyVarEnv
+     Core.emptyVarSet Core.extendVarSetList Core.isBotRes Core.isExportedId Core.isId
      Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet Core.plusVarEnv_C
      Core.splitStrictSig Core.unitVarEnv CoreUtils.exprIsCheap
      CoreUtils.exprIsTrivial Data.Foldable.any Data.Foldable.foldl

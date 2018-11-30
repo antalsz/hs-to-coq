@@ -12,10 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-(* Require Panic.*)
-Require Import Id.
-Require Core.
-Import Core.ManualNotations.
+Require Panic.
 
 
 
@@ -32,6 +29,7 @@ Require Import GHC.Base.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
+Require Id.
 Require Name.
 Require Panic.
 Require UniqSupply.
@@ -70,7 +68,7 @@ Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
 Definition substInScope : Subst -> Core.InScopeSet :=
   fun '(Mk_Subst in_scope _ _ _) => in_scope.
 
-Definition substIdType : Subst -> Core.Var -> Core.Var :=
+Definition substIdType : Subst -> Core.Id -> Core.Id :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (Mk_Subst _ _ tv_env cv_env as subst), id =>
@@ -78,7 +76,7 @@ Definition substIdType : Subst -> Core.Var -> Core.Var :=
     end.
 
 Definition substIdInfo
-   : Subst -> Core.Var -> Core.IdInfo -> option Core.IdInfo :=
+   : Subst -> Core.Id -> Core.IdInfo -> option Core.IdInfo :=
   fun subst new_id info =>
     let old_unf := Core.unfoldingInfo info in
     let old_rules := Core.ruleInfo info in
@@ -87,7 +85,7 @@ Definition substIdInfo
     Some (Core.setRuleInfo info old_rules).
 
 Definition substIdBndr
-   : String -> Subst -> Subst -> Core.Var -> (Subst * Core.Var)%type :=
+   : String -> Subst -> Subst -> Core.Id -> (Subst * Core.Id)%type :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ =>
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | _doc, rec_subst, (Mk_Subst in_scope env tvs cvs as subst), old_id =>
@@ -96,7 +94,7 @@ Definition substIdBndr
         let id1 := Core.uniqAway in_scope old_id in
         let id2 := if no_type_change : bool then id1 else id1 in
         let mb_new_info := substIdInfo rec_subst id2 ((@Core.idInfo tt id2)) in
-        let new_id := maybeModifyIdInfo mb_new_info id2 in
+        let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
         let no_change := id1 == old_id in
         let new_env :=
           if no_change : bool then Core.delVarEnv env old_id else
@@ -105,7 +103,7 @@ Definition substIdBndr
     end.
 
 Definition substRecBndrs
-   : Subst -> list Core.Var -> (Subst * list Core.Var)%type :=
+   : Subst -> list Core.Id -> (Subst * list Core.Id)%type :=
   fun subst bndrs =>
     let 'pair new_subst new_bndrs := Data.Traversable.mapAccumL (substIdBndr
                                                                  (Datatypes.id (GHC.Base.hs_string__ "rec-bndr"))
@@ -134,7 +132,7 @@ Definition mkSubst : Core.InScopeSet -> unit -> unit -> IdSubstEnv -> Subst :=
 Definition mkEmptySubst : Core.InScopeSet -> Subst :=
   fun in_scope => Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
-Definition lookupIdSubst : String -> Subst -> Core.Var -> Core.CoreExpr :=
+Definition lookupIdSubst : String -> Subst -> Core.Id -> Core.CoreExpr :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | doc, Mk_Subst in_scope ids _ _, v =>
@@ -164,7 +162,7 @@ Definition substDVarSet : Subst -> Core.DVarSet -> Core.DVarSet :=
                                                                                Core.emptyVarSet) (Core.dVarSetElems
                                                          fvs))).
 
-Definition substIdOcc : Subst -> Core.Var -> Core.Var :=
+Definition substIdOcc : Subst -> Core.Id -> Core.Id :=
   fun subst v =>
     match lookupIdSubst (Datatypes.id (GHC.Base.hs_string__ "substIdOcc")) subst
             v with
@@ -173,7 +171,7 @@ Definition substIdOcc : Subst -> Core.Var -> Core.Var :=
     end.
 
 Definition substTickish
-   : Subst -> Core.Tickish Core.Var -> Core.Tickish Core.Var :=
+   : Subst -> Core.Tickish Core.Id -> Core.Tickish Core.Id :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | subst, Core.Breakpoint n ids =>
@@ -350,7 +348,7 @@ Definition extendInScopeList : Subst -> list Core.Var -> Subst :=
         (tt) (tt)
     end.
 
-Definition extendInScopeIds : Subst -> list Core.Var -> Subst :=
+Definition extendInScopeIds : Subst -> list Core.Id -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, vs =>
@@ -366,14 +364,14 @@ Definition extendInScope : Subst -> Core.Var -> Subst :=
     end.
 
 Definition extendIdSubstList
-   : Subst -> list (Core.Var * Core.CoreExpr)%type -> Subst :=
+   : Subst -> list (Core.Id * Core.CoreExpr)%type -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, prs =>
         Mk_Subst in_scope (Core.extendVarEnvList ids prs) tvs cvs
     end.
 
-Definition extendIdSubst : Subst -> Core.Var -> Core.CoreExpr -> Subst :=
+Definition extendIdSubst : Subst -> Core.Id -> Core.CoreExpr -> Subst :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | Mk_Subst in_scope ids tvs cvs, v, r =>
@@ -427,15 +425,15 @@ Definition deShadowBinds : Core.CoreProgram -> Core.CoreProgram :=
     Data.Tuple.snd (Data.Traversable.mapAccumL substBind emptySubst binds).
 
 Definition clone_id
-   : Subst ->
-     Subst -> (Core.Var * Unique.Unique)%type -> (Subst * Core.Var)%type :=
+   : Subst -> Subst -> (Core.Id * Unique.Unique)%type -> (Subst * Core.Id)%type :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | rec_subst, (Mk_Subst in_scope idvs tvs cvs as subst), pair old_id uniq =>
         let id1 := Core.setVarUnique old_id uniq in
         let id2 := substIdType subst id1 in
         let new_id :=
-          maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id))) id2 in
+          Id.maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id)))
+          id2 in
         let 'pair new_idvs new_cvs := (if Core.isCoVar old_id : bool
                                        then pair idvs cvs else
                                        pair (Core.extendVarEnv idvs old_id (Core.Mk_Var new_id)) cvs) in
@@ -445,7 +443,7 @@ Definition clone_id
 
 Definition cloneRecIdBndrs
    : Subst ->
-     UniqSupply.UniqSupply -> list Core.Var -> (Subst * list Core.Var)%type :=
+     UniqSupply.UniqSupply -> list Core.Id -> (Subst * list Core.Id)%type :=
   fun subst us ids =>
     let 'pair subst' ids' := Data.Traversable.mapAccumL (clone_id (GHC.Err.error
                                                                    Panic.someSDoc)) subst (GHC.List.zip ids
@@ -455,13 +453,13 @@ Definition cloneRecIdBndrs
 
 Definition cloneIdBndrs
    : Subst ->
-     UniqSupply.UniqSupply -> list Core.Var -> (Subst * list Core.Var)%type :=
+     UniqSupply.UniqSupply -> list Core.Id -> (Subst * list Core.Id)%type :=
   fun subst us ids =>
     Data.Traversable.mapAccumL (clone_id subst) subst (GHC.List.zip ids
                                                                     (UniqSupply.uniqsFromSupply us)).
 
 Definition cloneIdBndr
-   : Subst -> UniqSupply.UniqSupply -> Core.Var -> (Subst * Core.Var)%type :=
+   : Subst -> UniqSupply.UniqSupply -> Core.Id -> (Subst * Core.Id)%type :=
   fun subst us old_id =>
     clone_id subst subst (pair old_id (UniqSupply.uniqFromSupply us)).
 
@@ -491,22 +489,22 @@ Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
    `CoreSubst.Outputable__Subst' *)
 
 (* External variables:
-     None Some String andb bool cons false id list map mappend maybeModifyIdInfo negb
-     nil op_z2218U__ op_zeze__ op_zt__ option orb pair snd true tt unit Core.App
-     Core.Breakpoint Core.BuiltinRule Core.Case Core.Cast Core.Coercion Core.CoreArg
-     Core.CoreBind Core.CoreExpr Core.CoreProgram Core.CoreRule Core.DVarSet
-     Core.IdEnv Core.IdInfo Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_Var
-     Core.NonRec Core.Rec Core.Rule Core.Tick Core.Tickish Core.Type_ Core.Var
-     Core.VarSet Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
-     Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet
-     Core.extendInScopeSet Core.extendInScopeSetList Core.extendInScopeSetSet
-     Core.extendVarEnv Core.extendVarEnvList Core.idInfo Core.isCoVar
-     Core.isEmptyVarEnv Core.isId Core.isLocalId Core.isLocalVar Core.isTyVar
-     Core.lookupInScope Core.lookupVarEnv Core.mkDVarSet Core.ruleInfo
-     Core.setRuleInfo Core.setVarUnique Core.unfoldingInfo Core.uniqAway
-     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
-     Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
-     Datatypes.id GHC.Err.error GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
-     Name.Name Panic.panicStr Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
-     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
+     None Some String andb bool cons false id list map mappend negb nil op_z2218U__
+     op_zeze__ op_zt__ option orb pair snd true tt unit Core.App Core.Breakpoint
+     Core.BuiltinRule Core.Case Core.Cast Core.Coercion Core.CoreArg Core.CoreBind
+     Core.CoreExpr Core.CoreProgram Core.CoreRule Core.DVarSet Core.Id Core.IdEnv
+     Core.IdInfo Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec
+     Core.Rec Core.Rule Core.Tick Core.Tickish Core.Type_ Core.Var Core.VarSet
+     Core.dVarSetElems Core.delVarEnv Core.delVarEnvList Core.elemInScopeSet
+     Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet Core.extendInScopeSet
+     Core.extendInScopeSetList Core.extendInScopeSetSet Core.extendVarEnv
+     Core.extendVarEnvList Core.idInfo Core.isCoVar Core.isEmptyVarEnv Core.isId
+     Core.isLocalId Core.isLocalVar Core.isTyVar Core.lookupInScope Core.lookupVarEnv
+     Core.mkDVarSet Core.ruleInfo Core.setRuleInfo Core.setVarUnique
+     Core.unfoldingInfo Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr
+     CoreUtils.mkTick Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst
+     Data.Tuple.snd Datatypes.id GHC.Err.error GHC.List.unzip GHC.List.zip
+     GHC.Num.fromInteger Id.maybeModifyIdInfo Name.Name Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace UniqSupply.UniqSupply UniqSupply.uniqFromSupply
+     UniqSupply.uniqsFromSupply Unique.Unique
 *)

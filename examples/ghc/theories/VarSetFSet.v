@@ -147,7 +147,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     unfold elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM.
     erewrite member_eq with (k' := (Unique.getWordKey (Unique.getUnique y))). auto.
     rewrite -> eq_unique in Eq. 
-    eauto.
+    rewrite Eq.
     reflexivity.
   Qed.
 

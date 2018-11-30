@@ -31,17 +31,20 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive LBooleanFormula__raw : Type :=.
-
-Reserved Notation "'LBooleanFormula'".
-
 Inductive BooleanFormula a : Type
   := Var : a -> BooleanFormula a
-  |  And : list (LBooleanFormula a) -> BooleanFormula a
-  |  Or : list (LBooleanFormula a) -> BooleanFormula a
-  |  Parens : (LBooleanFormula a) -> BooleanFormula a
-where "'LBooleanFormula'" := (GHC.Base.Synonym LBooleanFormula__raw (fun a_ =>
-                                                  (SrcLoc.Located (BooleanFormula a_))%type)).
+  |  And
+   : list ((fun a_ => (SrcLoc.Located (BooleanFormula a_))%type) a) ->
+     BooleanFormula a
+  |  Or
+   : list ((fun a_ => (SrcLoc.Located (BooleanFormula a_))%type) a) ->
+     BooleanFormula a
+  |  Parens
+   : ((fun a_ => (SrcLoc.Located (BooleanFormula a_))%type) a) ->
+     BooleanFormula a.
+
+Definition LBooleanFormula :=
+  fun a_ => (SrcLoc.Located (BooleanFormula a_))%type.
 
 Inductive Clause a : Type
   := Mk_Clause (clauseAtoms : UniqSet.UniqSet a) (clauseExprs
@@ -527,11 +530,11 @@ Program Instance Traversable__BooleanFormula
      Data.SemigroupInternal.getSum Data.Traversable.Traversable
      Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
-     GHC.Base.Monad GHC.Base.Monoid GHC.Base.Synonym GHC.Base.build' GHC.Base.flip
-     GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd____
-     GHC.Base.op_zsze____ GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Num.Num
-     GHC.Num.fromInteger GHC.Num.op_zp__ MonadUtils.concatMapM SrcLoc.L
-     SrcLoc.Located SrcLoc.unLoc UniqSet.UniqSet UniqSet.addOneToUniqSet
-     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet Unique.Uniquable
+     GHC.Base.Monad GHC.Base.Monoid GHC.Base.build' GHC.Base.flip GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zlzd____ GHC.Base.op_zsze____
+     GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zp__ MonadUtils.concatMapM SrcLoc.L SrcLoc.Located SrcLoc.unLoc
+     UniqSet.UniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
+     UniqSet.emptyUniqSet Unique.Uniquable
 *)

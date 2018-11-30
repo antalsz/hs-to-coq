@@ -3,11 +3,8 @@ skip module Data.ByteString
 skip module ErrUtils
 skip module OccurAnal
 
-
-# we need to import this module to make the 
-# type synonym notation available.
-import module Core
 import module GHC.Base
+
 
 #
 # cannot translate because we don't have 
@@ -16,12 +13,7 @@ import module GHC.Base
 skip CoreSubst.substUnfolding
 skip CoreSubst.substUnfoldingSC
 
-rename type Var.Id    = Core.Var
-rename type Var.TyVar = Core.Var
-rename type VarSet.DVarSet = DVarSet
 
-# Ugh. notation for type abbreviations.
-rewrite forall , Id.maybeModifyIdInfo = maybeModifyIdInfo 
 
 ###################################################
 #
@@ -38,10 +30,6 @@ in CoreSubst.clone_id rewrite forall , Core.extendVarEnv cvs old_id tt = cvs
 
 in CoreSubst.cloneBndr rewrite forall , CoreSubst.cloneTyVarBndr subst v uniq = ( pair subst v )
 
-
-# rewrite forall v, Core.isCoVar v = false
-# rewrite forall v, Core.isTyVar v = false
-# rewrite forall v, Core.isId fv   = true
 
 rewrite forall x t, Id.setIdType x t = x
 
@@ -124,7 +112,9 @@ rewrite forall s x b, CoreSubst.substCoVarBndr s x b = b
 
 skip CoreSubst.cloneTyVarBndr
 
-
+#############################################################################
+#  Edits that just make the translation go through
+#############################################################################
 
 #
 ## Fixes for mutual recursion (subst_expr/substBind/substIdBndr)

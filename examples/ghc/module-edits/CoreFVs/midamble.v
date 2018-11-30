@@ -2,7 +2,7 @@
 
 (* Break mutual recursion *)
 Parameter freeVarsBind1 : Core.CoreBind ->
-     DVarSet -> (CoreBindWithFVs * DVarSet)%type.
+     Core.DVarSet -> (CoreBindWithFVs * Core.DVarSet)%type.
 
 (*
 NOTE (freeVars): if you try to use a termination edit for freeVars 

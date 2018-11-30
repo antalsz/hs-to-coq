@@ -37,7 +37,7 @@ Definition tidyVarOcc : Core.TidyEnv -> Core.Var -> Core.Var :=
     end.
 
 Definition tidyTickish
-   : Core.TidyEnv -> Core.Tickish Core.Var -> Core.Tickish Core.Var :=
+   : Core.TidyEnv -> Core.Tickish Core.Id -> Core.Tickish Core.Id :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | env, Core.Breakpoint ix ids =>
@@ -58,7 +58,7 @@ Definition tidyNameOcc : Core.TidyEnv -> Name.Name -> Name.Name :=
 Definition tidyLetBndr
    : Core.TidyEnv ->
      Core.TidyEnv ->
-     (Core.Var * Core.CoreExpr)%type -> (Core.TidyEnv * Core.Var)%type :=
+     (Core.Id * Core.CoreExpr)%type -> (Core.TidyEnv * Core.Var)%type :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | rec_tidy_env, (pair tidy_env var_env as env), pair id rhs =>
@@ -84,7 +84,7 @@ Definition tidyLetBndr
     end.
 
 Definition tidyIdBndr
-   : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
+   : Core.TidyEnv -> Core.Id -> (Core.TidyEnv * Core.Id)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | (pair tidy_env var_env as env), id =>
@@ -207,13 +207,13 @@ End Notations.
 
 (* External variables:
      None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
-     Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Lam
-     Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick Core.Tickish
-     Core.TidyEnv Core.Type_ Core.Var Core.demandInfo Core.evaldUnfolding
-     Core.extendVarEnv Core.idDetails Core.idInfo Core.inlinePragInfo
-     Core.isEvaldUnfolding Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding
-     Core.occInfo Core.oneShotInfo Core.setArityInfo Core.setDemandInfo
-     Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
+     Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id
+     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
+     Core.Tickish Core.TidyEnv Core.Type_ Core.Var Core.demandInfo
+     Core.evaldUnfolding Core.extendVarEnv Core.idDetails Core.idInfo
+     Core.inlinePragInfo Core.isEvaldUnfolding Core.lookupVarEnv Core.mkLocalVar
+     Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
+     Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
      Core.setStrictnessInfo Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo
      Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
      GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique

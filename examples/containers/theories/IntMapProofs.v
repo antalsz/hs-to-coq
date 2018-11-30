@@ -24,8 +24,7 @@ Set Bullet Behavior "Strict Subproofs".
 Axiom deferredFix2_eq : forall a b r `{Default r} (f : (a -> b -> r) -> (a -> b -> r)),
   deferredFix2 f = f (deferredFix2 f).
 
-Lemma reflect_iff P b : reflect P b -> P <-> b = true.
-Admitted.
+From Coq Require Import ssreflect.
 
 Lemma oro_None_r {a} (x:option a) : oro x None = x.
 Proof. destruct x; simpl; reflexivity. Qed.
@@ -116,9 +115,9 @@ Proof.
   intros.
   induction H.
   * eapply DescTip; try eassumption.
-    intro i. rewrite H0, H. reflexivity.
+    intro i. rewrite H0 H. reflexivity.
   * eapply DescBin; try eassumption.
-    intro i. rewrite H0, H7. reflexivity.
+    intro i. rewrite H0 H7. reflexivity.
 Qed.
 
 Lemma Sem_change_f:
@@ -128,7 +127,7 @@ Proof.
   intros.
   destruct H.
   * apply SemNil.
-    intro i. rewrite H0, H. reflexivity.
+    intro i. rewrite H0 H. reflexivity.
   * eapply DescSem. eapply Desc_change_f. eassumption.
     intro i. rewrite H0. reflexivity.
 Qed.
@@ -170,8 +169,8 @@ Proof.
    inversion Houtside.
    auto.
  * rewrite H4; clear H4.
-   rewrite IHHD1 by inRange_false.
-   rewrite IHHD2 by inRange_false.
+   rewrite IHHD1; last inRange_false.
+   rewrite IHHD2; last inRange_false.
    reflexivity.
 Qed.
 
@@ -180,8 +179,7 @@ Lemma Desc_inside:
 Proof.
  intros ?????? HD Hf.
  destruct (inRange i r) eqn:?; intuition.
- rewrite (Desc_outside HD) in Hf by assumption.
- congruence.
+ rewrite (Desc_outside HD) // in Hf.
 Qed.
 
 Lemma Desc0_outside:
@@ -190,8 +188,7 @@ Proof.
   intros.
   destruct H; auto.
   rewrite Hf.
-  rewrite (Desc_outside HD) by inRange_false.
-  reflexivity.
+  rewrite (Desc_outside HD) //; inRange_false.
 Qed.
 
 Lemma Desc0_subRange:
@@ -231,11 +228,11 @@ Proof.
   induction HD; subst.
   + intros r2 f2 HD2 i.
     inversion_Desc HD2. 
-    rewrite H, H5. 
+    rewrite H H5. 
     reflexivity.
   + intros r3 f3 HD3 i.
     inversion_Desc HD3.
-    rewrite H17, H4.
+    rewrite H17 H4.
     erewrite IHHD1 by eassumption.
     erewrite IHHD2 by eassumption.
     reflexivity.
@@ -265,20 +262,20 @@ Proof.
         eapply halves_disj; auto.
         assumption.
       }
-      rewrite H6 by assumption.
-      rewrite (Desc_outside H0) by inRange_false.
+      rewrite H6 //.
+      rewrite (Desc_outside H0); last inRange_false.
       rewrite oro_None_r. reflexivity.
     + assert (Hir2 : inRange i (halfRange r true) = true).
-      { rewrite halfRange_inRange_testbit in Hir1 by auto.
-        rewrite halfRange_inRange_testbit by auto.
+      { rewrite halfRange_inRange_testbit // in Hir1.
+        rewrite halfRange_inRange_testbit //.
         destruct (N.testbit _ _); simpl in *; congruence.
       }
-      rewrite H7 by assumption.
-      rewrite (Desc_outside H) by inRange_false.
-      rewrite oro_None_l. reflexivity.
-  * rewrite H8 by assumption.
-    rewrite (Desc_outside H) by inRange_false.
-    rewrite (Desc_outside H0) by inRange_false.
+      rewrite H7 //.
+      rewrite (Desc_outside H); last inRange_false.
+      rewrite oro_None_l //.
+  * rewrite H8 //.
+    rewrite (Desc_outside H) ; last inRange_false.
+    rewrite (Desc_outside H0) ; last inRange_false.
     reflexivity.
 Qed.
 
@@ -318,7 +315,8 @@ Proof.
       { destruct (Desc_some_f HD1_1) as [i [v Hi]].
         pose proof (Desc_inside HD1_1 Hi).
         specialize (H4 i).
-        rewrite (Desc_outside HD1_2) in H4 by inRange_false.
+        (* TODO: Why do we need Coq rewrite + by ? *)
+        rewrite -> (Desc_outside HD1_2) in H4 by inRange_false.
         rewrite oro_None_r in H4.
         rewrite <- H4 in Hi; clear H4.
         apply Hf in Hi; clear Hf.
@@ -332,7 +330,7 @@ Proof.
       { destruct (Desc_some_f HD1_2) as [i [v Hi]].
         pose proof (Desc_inside HD1_2 Hi).
         specialize (H4 i).
-        rewrite (Desc_outside HD1_1) in H4 by inRange_false.
+        rewrite -> (Desc_outside HD1_1) in H4 by inRange_false.
         rewrite oro_None_l in H4.
         rewrite <- H4 in Hi; clear H4.
         apply Hf in Hi; clear Hf.
@@ -359,12 +357,12 @@ Proof.
     + subst.
       destruct (N.eq_decidable k k0).
       ++ subst.
-         specialize (H k0). rewrite Hf, H1 in H.  
+         specialize (H k0). rewrite Hf H1 in H.  
          rewrite N.eqb_refl in H. inversion H.
          reflexivity.
-      ++ specialize (H k0). rewrite Hf, H1 in H.  
+      ++ specialize (H k0). rewrite Hf H1 in H.  
          rewrite N.eqb_refl in H.
-         edestruct N.eqb_neq as [h0 h1].
+         destruct (N.eqb_neq k k0) as [h0 h1].
          rewrite N.eqb_sym in H.
          rewrite (h1 H0)  in H. 
          inversion H.
@@ -460,34 +458,34 @@ Proof.
         intro i.
         specialize (H4 i). specialize (H10 i). specialize (Hf i).
         destruct (inRange i (halfRange r false)) eqn:?.
-        -- rewrite (Desc_outside HD1_2) in H4 by inRange_false.
+        -- rewrite -> (Desc_outside HD1_2) in H4 by inRange_false.
            rewrite oro_None_r in H4.
            rewrite <- H4; clear H4.
 
-           rewrite (Desc_outside HD3_2) in H10 by inRange_false.
+           rewrite -> (Desc_outside HD3_2) in H10 by inRange_false.
            rewrite oro_None_r in H10.
            rewrite <- H10; clear H10.
 
            assumption.
-        -- rewrite (Desc_outside HD1_1) by inRange_false.
-           rewrite (Desc_outside HD3_1) by inRange_false.
+        -- rewrite (Desc_outside HD1_1) ; last inRange_false.
+           rewrite (Desc_outside HD3_1) ; last inRange_false.
            reflexivity.
       }
       assert (IH_prem_2 : (forall i : N, f2 i = f3 i)). {
         intro i.
         specialize (H4 i). specialize (H10 i). specialize (Hf i).
         destruct (inRange i (halfRange r true)) eqn:?.
-        -- rewrite (Desc_outside HD1_1) in H4 by inRange_false.
+        -- rewrite -> (Desc_outside HD1_1) in H4 by inRange_false.
            rewrite oro_None_l in H4.
            rewrite <- H4; clear H4.
            
-           rewrite (Desc_outside HD3_1) in H10 by inRange_false.
+           rewrite -> (Desc_outside HD3_1) in H10 by inRange_false.
            rewrite oro_None_l in H10.
            rewrite <- H10; clear H10.
            
            assumption.
-        -- rewrite (Desc_outside HD1_2) by inRange_false.
-           rewrite (Desc_outside HD3_2) by inRange_false.
+        -- rewrite (Desc_outside HD1_2) ; last inRange_false.
+           rewrite (Desc_outside HD3_2) ; last inRange_false.
            reflexivity.
       }
       specialize (IHHD1_1 _ _ _ HD3_1 IH_prem_1).
@@ -534,7 +532,7 @@ Proof.
     apply Eqdep.EqdepTheory.inj_pair2 in H1.
     subst f2';
     try subst s1; try subst s2.
-  - now rewrite E1,E2.
+  - now rewrite E1 E2.
   - subst. 
     inversion D2.
   - subst. 
@@ -593,18 +591,16 @@ Lemma nomatch_zero:
      if zero i (rMask r) then left else right).
 Proof.
   intros.
-  rewrite nomatch_spec by auto.
+  rewrite nomatch_spec //.
   rewrite if_negb.
   destruct (inRange i r) eqn:?.
-  * rewrite zero_spec by auto. 
+  * rewrite zero_spec //.
     rewrite if_negb.
     destruct (N.testbit i (rBits r - 1)) eqn:Hbit.
     + apply H2.
-      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
-      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+      all: rewrite halfRange_inRange_testbit // Hbit //.
     + apply H1.
-      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
-      rewrite halfRange_inRange_testbit by auto. rewrite Hbit. reflexivity.
+      all: rewrite halfRange_inRange_testbit // Hbit //.
   * apply H0; reflexivity.
 Qed.
 
@@ -704,15 +700,15 @@ Proof.
    destruct (i =? k) eqn:Ei; simpl; auto.
  * rewrite H4. clear H4.
    simpl lookup.
-   rewrite IHHD1, IHHD2. clear IHHD1 IHHD2.
+   rewrite IHHD1 IHHD2. clear IHHD1 IHHD2.
 
    apply nomatch_zero; [auto|..]; intros.
-   + rewrite (Desc_outside HD1) by inRange_false.
-     rewrite (Desc_outside HD2) by inRange_false.
+   + rewrite (Desc_outside HD1) ; last inRange_false.
+     rewrite (Desc_outside HD2) ; last inRange_false.
      reflexivity.
-   + rewrite (Desc_outside HD2) by inRange_false.
+   + rewrite (Desc_outside HD2) ; last inRange_false.
      rewrite oro_None_r. reflexivity.
-   + rewrite (Desc_outside HD1) by inRange_false.
+   + rewrite (Desc_outside HD1) ; last inRange_false.
      rewrite oro_None_l. reflexivity.
 Qed.
 
@@ -792,7 +788,7 @@ Next Obligation.
     simpl; subst.
     unfoldMethods.
     destruct (k =? k0) eqn:h. 
-    + rewrite N.eqb_eq in h. subst.
+    + apply N.eqb_eq in h; subst.
       split.
       -- intros fh i v1 h0.
          rewrite H2 in h0.
@@ -814,8 +810,8 @@ Next Obligation.
       rewrite H2 in E.  rewrite H3 in E2.
       destruct (i1 =? k0) eqn:EQ0; try discriminate.
       destruct (i1 =? k) eqn:EQ1; try discriminate.
-      rewrite N.eqb_eq in EQ1.
-      rewrite N.eqb_eq in EQ0.
+      apply N.eqb_eq in EQ1.
+      apply N.eqb_eq in EQ0.
       subst.
       rewrite N.eqb_refl in h.
       discriminate.
@@ -848,15 +844,15 @@ Proof.
    - simpl. auto.
  * rewrite H4. clear H4.
    simpl member.
-   rewrite IHHD1, IHHD2. clear IHHD1 IHHD2.
+   rewrite IHHD1 IHHD2. clear IHHD1 IHHD2.
 
    apply nomatch_zero; [auto|..]; intros.
-   + rewrite (Desc_outside HD1) by inRange_false.
-     rewrite (Desc_outside HD2) by inRange_false.
+   + rewrite (Desc_outside HD1) ; last inRange_false.
+     rewrite (Desc_outside HD2) ; last inRange_false.
      reflexivity.
-   + rewrite (Desc_outside HD2) by inRange_false.
+   + rewrite (Desc_outside HD2) ; last inRange_false.
      rewrite oro_None_r. reflexivity.
-   + rewrite (Desc_outside HD1) by inRange_false.
+   + rewrite (Desc_outside HD1) ; last inRange_false.
      rewrite oro_None_l. reflexivity.
 Qed.
 
@@ -965,7 +961,7 @@ Lemma link_Desc:
 Proof.
   intros; subst.
   unfold link.
-  rewrite branchMask_spec.
+  rewrite -> branchMask_spec. (* Uses the fact that IntSet.Internal.branchMask = branchMask *)
   rewrite mask_spec.
   rewrite -> zero_spec by (apply commonRangeDisj_rBits_pos; eapply Desc_rNonneg; eassumption).
   rewrite if_negb.
@@ -1213,13 +1209,13 @@ Next Obligation.
     + eapply Desc0NotNil; try (apply isSubrange_refl); try (intro; reflexivity).
       eapply DescTip; try reflexivity.
       intro i.
-      rewrite Hf, H; clear Hf H.
+      rewrite Hf H; clear Hf H.
       destruct (N.eqb_spec i k).
       - subst. rewrite Hf2. reflexivity.
       - destruct (f2 i); reflexivity.
     + apply Desc0Nil.
       intro i.
-      rewrite Hf, H; clear Hf H.
+      rewrite Hf H; clear Hf H.
       destruct (N.eqb_spec i k).
       - subst. rewrite Hf2. reflexivity.
       - destruct (f2 i); reflexivity.
@@ -1234,7 +1230,7 @@ Next Obligation.
       subst.
       set (m := Bin (rPrefix r) (rMask r) m1 m2) in *.
       set (s := IntSet.Internal.Bin (rPrefix r2) (rMask r2) s1 s0) in *.
-      rewrite !shorter_spec by assumption.
+      rewrite -> !shorter_spec by assumption.
       destruct (N.ltb_spec (rBits r2) (rBits r)).
       ++ (* s2 is smaller than m1 *)
         apply nomatch_zero_smaller; try assumption; intros.

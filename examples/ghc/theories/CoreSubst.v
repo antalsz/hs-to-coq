@@ -413,25 +413,14 @@ Proof.
     rewrite -> Foldable_elem_app.
     rewrite -> orb_true_iff.
     tauto.
-  - rewrite -> H6.
-    rewrite -> Foldable_elem_app.
-    rewrite -> Foldable_elem_app.
-    rewrite -> H3. simpl.
-    rewrite -> andb_true_iff in *.
-    rewrite -> orb_true_iff in *.
-    tauto.
-  - rewrite -> H1.
-    rewrite -> Foldable_elem_app.
-    rewrite -> Foldable_elem_app.
-    rewrite -> andb_true_iff in *.
-    rewrite -> orb_true_iff in *.
-    rewrite -> orb_true_iff in *.
-    tauto.
-  - rewrite -> H3.    
-    repeat rewrite -> Foldable_elem_app.
-    repeat rewrite -> andb_true_iff in *.
-    repeat rewrite -> orb_true_iff in *.
-    tauto.
+  - rewrite H6. hs_simpl. rewrite H3 /=.
+    apply/orP; move/andP in H6. tauto.
+  - rewrite H1. hs_simpl.
+    move: H1 => /andP [-> ->].
+    by rewrite !orbT.
+    (* TODO: add orb/andb to hs_simpl *)
+  - rewrite H3. hs_simpl.
+    by move: H3 => /andP [-> ->].
 Qed.
 
 
@@ -583,8 +572,8 @@ Proof.
      case ELEM: (lookupVarEnv fin_env var) => [a|].
      rewrite lookup_minusDom_inDom; auto.
      rewrite lookupVarEnv_elemVarEnv_true. eauto.
-     rewrite lookupVarSet_minusDom_1; try done.
-     rewrite lookupVarSet_minusDom_1 in H6; try done.
+     rewrite lookupVarSet_minusDom_1 //.
+     rewrite lookupVarSet_minusDom_1 // in H6.
 
      rewrite -> ELEM in VEmf.
      rewrite -> ELEM in k.
@@ -592,63 +581,55 @@ Proof.
      (* Is var in the mid_env? *)
      case ELEM2: (lookupVarEnv mid_env var) => [c|].
      + rewrite ELEM2 in VEmf.
-       rewrite -> andb_true_iff in VEmf.
-       move: VEmf => [H7 H14].
+       move: VEmf => /andP [H7 H14].
        hs_simpl.
-       move: (lookupVarSet_extendVarSetList_self_exists_LastIn (extendVarSetList (getInScopeVars init_scope) vars1) H7) => [v' [p q r]].
-       rewrite p. 
+       move: (lookupVarSet_extendVarSetList_self_exists_LastIn (extendVarSetList (getInScopeVars init_scope) vars1) H7) => [v' [-> q r]].
        move: (lookupVarSet_extendVarSetList_self_exists_LastIn (getInScopeVars mid_scope) H7) => [v'2 [p2 q2 r2]].
        rewrite p2 in H6.
        case LF: (lookupVarSet (getInScopeVars fin_scope) var) => [a|] ;
-       rewrite LF in H6 ; try done.
+       rewrite LF // in H6.
        apply almostEqual_trans with (v2 := v'2); eauto.
        eapply LastIn_inj in r; eauto. subst.
        apply almostEqual_refl.
-       eapply Eq_trans.
-       rewrite Eq_sym. eauto. eauto.
-     +  rewrite lookupVarSet_minusDom_1 in H13; try done.
-        clear VEmf. 
+       eapply Eq_trans; first rewrite Eq_sym; eassumption.
+     +  clear VEmf H5.
+        rewrite lookupVarSet_minusDom_1 in H13; try done.
        rewrite ELEM2 in VEim.
-       clear H5.
        case InV2: (Foldable.elem var vars2); hs_simpl.
        ++ move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
-                   (extendVarSetList (getInScopeVars init_scope) vars1) InV2) => [v1 [p1 q1 r1]].
-          rewrite p1.
+                   (extendVarSetList (getInScopeVars init_scope) vars1) InV2) => [v1 [-> q1 r1]].
           move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
                   (getInScopeVars mid_scope) InV2) => [v2 [p2 q2 r2]].
           rewrite p2 in H6.
           destruct (lookupVarSet (getInScopeVars fin_scope) var) eqn:InF; try done.
           eapply LastIn_inj in r2; try eapply r1.
           subst. auto.
-          eapply Eq_trans. rewrite Eq_sym. eauto. eauto.
-       ++ rewrite lookupVarSet_extendVarSetList_false; auto.
-          rewrite lookupVarSet_extendVarSetList_false in H6; auto.
+          eapply Eq_trans; first rewrite Eq_sym; eassumption.
+       ++ have InV2': ~~ Foldable.elem var vars2 by rewrite InV2.
+          rewrite lookupVarSet_extendVarSetList_false //.
+          rewrite lookupVarSet_extendVarSetList_false // in H6.
           case InV1: (Foldable.elem var vars1); hs_simpl.
-          move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
+          ** move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
                    (getInScopeVars init_scope) InV1) => [v1 [p1 q1 r1]].
-          rewrite p1.
-          rewrite p1 in H13.
-          case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|]; 
-          rewrite InM1 in H13; try done.
-          rewrite InM1 in H6.
-          case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [c|]; 
-          rewrite InF1 in H6; try done.
-          eapply almostEqual_trans; eauto.
-          rewrite lookupVarSet_extendVarSetList_false; auto.
-          rewrite lookupVarSet_extendVarSetList_false in H13; auto.
-          case InI1: (lookupVarSet (getInScopeVars init_scope) var) => [a|];
-              try done.                                                                         rewrite InI1 in H13.
-          case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|];
-             rewrite InM1 in H13; try done.                                                                    
+            rewrite p1.
+            rewrite p1 in H13.
+            case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|]; 
+            rewrite InM1 in H13; try done.
+            rewrite InM1 in H6.
+            case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [c|]; 
+            rewrite InF1 in H6; try done.
+            eapply almostEqual_trans; eauto.
+          ** have InV1': ~~ Foldable.elem var vars1 by rewrite InV1.
+          rewrite lookupVarSet_extendVarSetList_false //.
+          rewrite lookupVarSet_extendVarSetList_false // in H13.
+          case InI1: (lookupVarSet (getInScopeVars init_scope) var) => [a|] //.
+          rewrite InI1 in H13.
+          case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|] //;
+             rewrite InM1 // in H13.
           rewrite InM1 in H6.         
-          case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [c|];
-             rewrite InF1 in H6; try done.                                                     
+          case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [c|] //;
+             rewrite InF1 // in H6.
           eapply almostEqual_trans; eauto.          
-
-          rewrite InV1. done.
-          rewrite InV1. done.
-          rewrite InV2. done.
-          rewrite InV2. done.
 Qed.
 
 Lemma Subset_VarEnvExtends : forall old_env vars new_env vars' vs1 vs2,
@@ -792,64 +773,44 @@ Proof.
     apply uniqAway_eq_same in NC.
     unfold WellScoped_Subst.
     repeat split.
+    all: try rewrite -getInScopeVars_extendInScopeSetList
+                      extendInScopeSetList_cons
+                      extendInScopeSetList_nil.
     -- econstructor.
-       intro h; inversion h.
+       inversion 1.
        econstructor.
     -- econstructor; eauto using GoodLocalVar_uniqAway.
 (*       uniqAway_isLocalVar. *)
-    -- unfold freshList.
-       intros v1 InV.
-       rewrite -> elem_cons in InV.
-       rewrite -> orE in InV.
-       destruct InV.
-       rewrite -> lookupVarSet_eq with (v2 := v);
-       rewrite <- NC; auto.
+    -- rewrite /freshList => v1.
+       hs_simpl.
+       rewrite orbF => InV.
+       rewrite (lookupVarSet_eq (v2 := v)) -NC //.
        apply uniqAway_lookupVarSet_fresh. 
-       rewrite elem_nil in H0. discriminate.
-    -- rewrite <- getInScopeVars_extendInScopeSetList.
-       rewrite -> extendInScopeSetList_cons.
-       rewrite -> extendInScopeSetList_nil.
-       eapply StrongSubset_refl.
-    -- rewrite <- getInScopeVars_extendInScopeSetList.
-       rewrite -> extendInScopeSetList_cons.
-       rewrite -> extendInScopeSetList_nil.
-       eapply StrongSubset_refl.
-    -- rewrite <- getInScopeVars_extendInScopeSetList.
-       rewrite -> extendInScopeSetList_cons.
-       rewrite -> extendInScopeSetList_nil.
-       rewrite -> getInScopeVars_extendInScopeSet.
+    -- apply StrongSubset_refl.
+    -- apply StrongSubset_refl.
+    -- rewrite getInScopeVars_extendInScopeSet.
        eapply StrongSubset_trans.
        eapply minusDom_extend.
-       rewrite -> getInScopeVars_extendInScopeSet.
-       rewrite -> NC.
+       rewrite getInScopeVars_extendInScopeSet NC.
        eapply StrongSubset_extend.
        eapply StrongSubset_minusDom_left.
-    -- unfold VarEnvExtends.
-       intro var. specialize_all var.
+    -- rewrite /VarEnvExtends => var.
+       specialize_all var.
        destruct (v == var) eqn:EQv.
        ++ (* The arbitrary var is the same as the binder
              which was sufficiently fresh. *)
-         pose (k := uniqAway_lookupVarSet_fresh v in_scope_set). clearbody k.
-         rewrite -> lookupVarEnv_delVarEnv_eq; auto.
+         move: (uniqAway_lookupVarSet_fresh v in_scope_set) => k.
+         rewrite lookupVarEnv_delVarEnv_eq //.
          destruct (lookupVarEnv env var) eqn:INSUBST; auto.
-         rewrite -> andb_true_iff. split.
-         rewrite -> elem_cons.
-         rewrite -> Base.Eq_sym.
-         rewrite -> orb_true_iff.
-         tauto.
-         rewrite -> elem_cons.
-         rewrite -> orb_true_iff.
-         left.
-         rewrite -> NC.
-         rewrite -> Base.Eq_sym.
-         auto.
+         hs_simpl.
+         rewrite !orbF.
+         by rewrite NC andbb Eq_sym.
        ++ unfold Id in *.
-          rewrite -> lookupVarEnv_delVarEnv_neq; auto.
+          rewrite lookupVarEnv_delVarEnv_neq; last by rewrite EQv.
           destruct (lookupVarEnv env var).
           right. eexists. 
           split; eauto.
           split; auto.
-          intros h. rewrite -> h in EQv. discriminate.
     -- simpl.
        rewrite -> getInScopeVars_extendInScopeSet.
        eapply StrongSubset_trans with (vs2 := extendVarSet (minusDom vs env) v).

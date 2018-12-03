@@ -273,7 +273,7 @@ Require Import Coq.Classes.Morphisms.
 From Coq Require Import ssreflect ssrfun ssrbool.
 
 
-Instance Foldable_proper : forall {a}`{EqLaws a},  
+Instance Foldable_elem_proper : forall {a}`{EqLaws a},  
   Proper ((fun (x y:a) => x GHC.Base.== y) ==> (fun (x y:list a) => x GHC.Base.== y) ==> Logic.eq)
          Foldable.elem.
 Proof.

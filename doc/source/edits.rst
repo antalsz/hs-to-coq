@@ -280,14 +280,16 @@ Effect:
   Inject a ``Import`` statement into the Coq code, which makes the definitions
   from the given module available unqualified.
 
-  ..todo::
+  When used to import the hs-to-coq base library, this makes the output look 
+  more like standard Haskell.  
 
-    When is this useful?
+  Note, however, that Coq's module system lacks the ``import ... hiding`` 
+  construct so all definitions from the module must be made available.
 
 Examples:
    .. code-block:: shell
 
-     import module Data.Monoid
+     import module Prelude
 
 
 Renaming and Rewriting

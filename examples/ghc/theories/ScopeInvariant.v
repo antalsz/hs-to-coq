@@ -722,7 +722,6 @@ Proof.
           rewrite elemVarSet_filterVarSet => //.
           apply /andP. split. auto.
           hs_simpl.
-          rewrite orbF.
           apply list_in_elem.
           auto.
        -- rewrite (exprFreeVars_global_Var x LV).

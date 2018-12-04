@@ -414,13 +414,13 @@ Proof.
     rewrite -> orb_true_iff.
     tauto.
   - rewrite H6. hs_simpl. rewrite H3 /=.
-    apply/orP; move/andP in H6. tauto.
+    move/andP in H6. tauto.
   - rewrite H1. hs_simpl.
     move: H1 => /andP [-> ->].
-    by rewrite !orbT.
-    (* TODO: add orb/andb to hs_simpl *)
+    tauto.
   - rewrite H3. hs_simpl.
-    by move: H3 => /andP [-> ->].
+    move: H3 => /andP [-> ->].
+    tauto.
 Qed.
 
 
@@ -783,7 +783,7 @@ Proof.
 (*       uniqAway_isLocalVar. *)
     -- rewrite /freshList => v1.
        hs_simpl.
-       rewrite orbF => InV.
+       move => InV.
        rewrite (lookupVarSet_eq (v2 := v)) -NC //.
        apply uniqAway_lookupVarSet_fresh. 
     -- apply StrongSubset_refl.
@@ -803,8 +803,7 @@ Proof.
          rewrite lookupVarEnv_delVarEnv_eq //.
          destruct (lookupVarEnv env var) eqn:INSUBST; auto.
          hs_simpl.
-         rewrite !orbF.
-         by rewrite NC andbb Eq_sym.
+         by rewrite NC Eq_sym.
        ++ unfold Id in *.
           rewrite lookupVarEnv_delVarEnv_neq; last by rewrite EQv.
           destruct (lookupVarEnv env var).

@@ -769,18 +769,15 @@ Lemma lookupVarSet_extendVarSetList_l
 Proof.
   hs_simpl.
   elim: vars vs => [|a vars IH] vs //.
-  - 
-    rewrite elem_cons. (* why does hs_simpl not do this?? *)
-    hs_simpl.
+  hs_simpl.
 
-    rewrite orbF.  (* F comes last and it is false *)
-    rewrite negb_orb => /andP [? ?].
+  rewrite negb_orb => /andP [? ?].
 
-    rewrite lookupVarSet_extendVarSetList_false //.
-    rewrite lookupVarSet_extendVarSet_neq //.
+  rewrite lookupVarSet_extendVarSetList_false //.
+  rewrite lookupVarSet_extendVarSet_neq //.
 
-    apply /negP.       (* update lookupVarSet_extendVarSet_neq *)
-    rewrite Eq_sym //. 
+  apply /negP.
+  rewrite Eq_sym //. 
 Qed.
 
 
@@ -975,7 +972,6 @@ Proof.
     done.
   - hs_simpl.
     simpl map.
-    rewrite orbF.
     split.
     + move /orP.        
       rewrite -> varUnique_iff.

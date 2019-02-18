@@ -1,6 +1,6 @@
 (**
 Utility definitions for well-founded recursion
-*)
+ *)
 
 Require Import Coq.Program.Wf.
 Require Import Coq.Wellfounded.Wellfounded.

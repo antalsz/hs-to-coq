@@ -1,7 +1,7 @@
 include ../../common.mk
 
 # Edit this
-GENMODS = Locks
+GENMODS = Locks IO Interp test
 MANMODS = Proofs
 
 # Abstract stuff
@@ -14,14 +14,14 @@ VFILES   = $(VFILES_GEN) $(VFILES_MAN)
 all: coq
 
 $(VFILES_GEN): %.v : %.hs edits  ../../base/edits
-	$(HS_TO_COQ) -e edits -e ../../base/edits $< -o .
+	$(HS_TO_COQ) -e edits -e ../../base/edits --iface-dir ../../base $< -o .
 
 _CoqProject : Makefile
 	> $@
 	echo '-Q .               ""'		>> $@
 	echo '-Q ../../base-thy/ Proofs' >> $@
 	echo '-Q ../../base/     ""'		>> $@
-	echo $(VFILES)										>> $@
+	echo $(VFILES) 										>> $@
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o $@

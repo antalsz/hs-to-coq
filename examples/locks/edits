@@ -1,1 +1,10 @@
 rename type GHC.Types.IO = GHC.MVar.IO
+rename value IO.MVar = IO.MkMVar
+rename value Interp.Heap = Interp.MkHeap
+data kinds IO.MVar Type
+data kinds Test.Foo Type, Type
+
+order IO.ret IO.Applicative__Freer_pure
+order IO.Functor__Freer IO.Applicative__Freer_op_zlztzg__
+order IO.Applicative__Freer IO.Monad__Freer_return_
+order IO.Monad__Freer IO.newMVar

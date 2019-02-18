@@ -24,6 +24,6 @@ t1 bal cost = do
 t2 :: MVar Int -> MVar Int -> IO ()
 t2 bal cost = do
   x <- readMVar bal
-  if (x >= 1000) then
-    do putMVar cost 100
-  else do putMVar cost 0
+  if x >= 1000 then
+    putMVar cost 100
+  else putMVar cost 0

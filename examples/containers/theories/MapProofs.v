@@ -1723,9 +1723,6 @@ Proof.
         -- f_solver.
 Qed.
 
-Print cons.
-Print fold_right.
-
 (*START - Following Set for now *)
 (* no disjoint*)
 
@@ -2351,13 +2348,12 @@ Qed.
 (*plan for equality
 1. a (k,v) pair is in toList iff sem m key = Some value (DONE)
 2. (corollary) if 2 maps have same sem, then their toList have the same elements
-3. toList is sorted
+3. toList is sorted (DONE)
 4. sorted lists are unique
 5  therefore, these are the same list*)
+
 (*This says that sem m key returns a Value iff that key, value pair appears in the 
 resulting toList of the map*)
-
-(*Lemma that states that the list given by toList m contains exactly all key value pairs in the map*)
 Lemma toList_sem :
   forall  `{EqLaws a}  m lb ub, Bounded m lb ub ->
   forall key value, sem m key = Some value <-> In key value (toList m).
@@ -2662,7 +2658,6 @@ Qed.
 Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
 
 
-
 (*TODO: PROVE LATER*)
 Axiom sem_equality: forall `{Eq_ a} `{EqLaws a} map1 map2 lb ub,
   Bounded map1 lb ub ->
@@ -2710,8 +2705,6 @@ Qed.
 (*End of ContainerAxioms*) 
 
 
-
-
 (* A few old proofs relating to keys/elems that can be rewritten to follow easily from
 analogous proofs about toList
 Lemma keys_bin:
@@ -2755,11 +2748,6 @@ Proof.
           { simpl. apply IHm2. assumption. }
    * simpl. simpl in H. discriminate H.
 Qed.
-
-
-
-
-
 
 Generalizable Variables a.
 Lemma elems_sem:

@@ -1056,7 +1056,6 @@ Lemma insert_Desc:
       (fun i => (if i == y then Some v else None) ||| sem s i).
 Proof.
   intros ????? HB HLB HUB.
-
   rewrite insert_insert'.
   induction HB; intros.
   * simpl.
@@ -1724,4 +1723,1066 @@ Proof.
         -- f_solver.
 Qed.
 
+Print cons.
+Print fold_right.
+
+(*START - Following Set for now *)
+(* no disjoint*)
+
+(* Note: a function to get the second value in a list of tuples. Later lemma prove that this
+is equivalent to folding over the second element explcitly *)
+Fixpoint second_value_in_tuple_list {a : Type} {b : Type} (l : list (a * b)) : list b :=
+  match l with
+  | nil => nil
+  | (x, y) :: tl => y :: second_value_in_tuple_list tl
+  end.
+(*A useful lemma that is used in the next two properties, concerning turning a map into a list*)
+Lemma foldr_with_assoc:
+  forall (m : Map e a) (l : list a),
+    foldr cons l m = foldr cons nil m ++ l. 
+Proof.
+  intros. generalize dependent l.  induction m; intros.
+  - simpl. rewrite IHm2. rewrite  IHm1. rewrite IHm1 with(l:=(a0 :: foldr cons nil m2)). 
+    rewrite <- app_assoc. reflexivity.
+  - simpl. reflexivity.
+Qed.
+(*States that folding two maps into lists can be done by folding each separately and appending or
+folding them together, using one as the base*)
+Lemma foldr_with_cons:
+  forall (m1 : Map e a)(m2 : Map e a),
+    foldr cons (foldr cons nil m2) m1 = foldr cons nil m1 ++  foldr cons nil m2.
+  Proof.
+  intros. generalize dependent m2. induction m1; intros.
+  - simpl. rewrite IHm1_2. rewrite foldr_with_assoc. rewrite foldr_with_assoc with(l:=(a0 :: foldr cons nil m1_2)).
+    rewrite <- app_assoc. reflexivity.
+  - simpl. reflexivity.
+Qed.
+(*Generalized lemma used to prove next property*)
+Lemma foldrWithKey_elem_equivalence_help:
+  forall (m : Map e a) (l : list a),
+  foldrWithKey(fun a b xs => b :: xs) l m = app (elems m) l.
+Proof.
+  intros. generalize dependent l. unfold elems. induction m; intros.
+  - simpl. rewrite IHm2. rewrite IHm1.  simpl. rewrite foldr_with_assoc with(l:=(a0 :: foldr cons nil m2)).
+    rewrite <- app_assoc. reflexivity.
+  - simpl. reflexivity.
+Qed.
+(*States that the elems (value list) of a map is equivalent to using foldrWithKey with
+the function (fun a b xs => b :: xs). Since elems is defined using foldR, this proves an 
+equivalence of foldR and foldrWithKey*)
+Lemma foldrWithKey_elem_equivalence:
+  forall (m : Map e a),
+  foldrWithKey(fun a b xs => b :: xs) nil m = elems m.
+Proof.
+  intros. rewrite <- app_nil_r.  apply foldrWithKey_elem_equivalence_help. Qed.
+
+(*This relates foldr and foldrWithKey in a more general way - that using foldr with a function f
+is the same as foldrWithKey when f is applied only to the value*)
+Lemma foldr_foldrWithKey_equiv:
+  forall {k : Type}(m : Map e a) (f : a -> k -> k)( n : k),
+  foldr f n m = foldrWithKey (fun a b xs => f b xs) n m.
+Proof.
+  intros. generalize dependent n. induction m; intros.
+  - simpl. rewrite IHm2. rewrite IHm1. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+(*This relates foldr and the fold_right function on lists, showing that they can be performed
+in any order*)
+Lemma fold_right_toList_go:
+  forall {k : Type} (f: a -> k -> k) (n : k) (m: Map e a) (xs : list a),
+  fold_right f n (foldr cons xs m) = foldr f (fold_right f n xs) m.  
+Proof.
+  intros. generalize dependent xs. induction m; intros.
+  - simpl. rewrite IHm1. simpl. rewrite IHm2. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+(*We want to relate foldr with toList. Since toList produces a list of (k, v) tuples, an analagous
+theorem as foldr_spec in SetProofs is not actually true. But we can use elems instead.*)
+Lemma foldr_spec:
+  forall {k} (f: a-> k -> k) (n : k) (m : Map e a),
+  foldr f n m = fold_right f n (elems m).
+Proof.
+  intros. unfold elems. erewrite fold_right_toList_go. simpl. reflexivity.
+Qed.
+(*Verificiation of foldr'*)
+Lemma foldr'_spec:
+  forall {k : Type} (f : a -> k -> k) (n : k) (m : Map e a),
+  foldr' f n m = foldr f n m.
+Proof. reflexivity. Qed.
+
+(*A more general version of the original foldrWithKey, takes in arbitrary function
+and can be used with toList, keys, and elems*)
+Lemma foldrWithKey_multiple_folds :
+  forall {k : Type} (m : Map e a) (l : list k) (f : e -> a -> k),
+  foldrWithKey (fun a b xs => f a b :: xs) l m = foldrWithKey (fun a b xs => f a b :: xs) nil m ++ l.
+Proof.
+  intros. generalize dependent l. induction m; intros.
+  - simpl. rewrite IHm1. rewrite IHm2.   
+    rewrite IHm1 with(l:=(f k0 a0 :: foldrWithKey (fun (a1 : e) (b : a) (xs : list k) => f a1 b :: xs) nil m2)).
+    rewrite <- app_assoc. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+(*This lemma, used in proving elems_to_list_second_lemma, is the foldrWithKey analogue of
+foldr_with_assoc*)
+Lemma foldrWithKey_toList :
+  forall (m : Map e a) (l : list (e *a)),
+  foldrWithKey (fun a b xs => (a,b) :: xs) l m = foldrWithKey (fun a b xs => (a,b) :: xs) nil m ++ l.
+Proof.
+  intros. apply foldrWithKey_multiple_folds. Qed.
+
+(*This lemma states that we can retrieve the second value from two appended lists either before
+or after appending them, with the same result*)
+Lemma second_value_app:
+  forall (k : Type)(s : Type) (l1 : list (s * k) )(l2 : list (s * k) ),
+    second_value_in_tuple_list (l1 ++ l2) = second_value_in_tuple_list l1 ++ 
+    second_value_in_tuple_list l2.
+Proof.
+  intros. generalize dependent l2. induction l1; intros.
+  - simpl. reflexivity.
+  - simpl. rewrite IHl1. destruct a0. reflexivity.
+Qed. 
+
+(*This short lemma states that we can disregard information about the head tuple of a list when
+retrieving its second element.*)
+Lemma second_value_cons:
+  forall (k : Type) (s : Type) (t1: k) (t2 : s) (l : list (k * s)),
+    second_value_in_tuple_list ((t1, t2) :: l) = t2 :: second_value_in_tuple_list l.
+Proof. 
+  intros. simpl. reflexivity.
+Qed.
+
+(*This lemma proves the equivalence between the two ways we can get the values of the map. Either
+we can foldrWithKey and explicitly retrive the second element (as in elem), or we can get the list
+of tuples from toList and then retrieve each of the second elements.*)
+Lemma elems_toList_second_lemma:
+  forall (m : Map e a) (l : list a), 
+    second_value_in_tuple_list (toList m) ++ l = foldrWithKey(fun a b xs => b :: xs) l m.
+Proof.
+  intros. generalize dependent l. induction m; intros.
+  - simpl. unfold toList. unfold toAscList. simpl. unfold toList in *. unfold toAscList in *.
+    rewrite <- IHm2. rewrite <- IHm1. rewrite foldrWithKey_toList. 
+    rewrite second_value_app. rewrite -> second_value_cons. rewrite <- app_assoc. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+(*A simple corollary of the previous lemma, it states more explicitly the relationship between elems
+and toList - we can get elems by taking the second elemen in each tuple in toList*)
+Corollary elems_toList_second: 
+  forall (m : Map e a),
+    second_value_in_tuple_list (toList m) = elems m.
+Proof.
+  intros. unfold elems. rewrite foldr_foldrWithKey_equiv. rewrite <- (elems_toList_second_lemma _ nil).
+  rewrite app_nil_r. reflexivity.
+Qed.
+
+Lemma elems_Bin:
+  forall sz key value (m1 m2 : Map e a),
+  elems (Bin sz key value m1 m2) = elems m1 ++ (value :: nil) ++ elems m2.
+Proof.
+  intros. 
+  unfold elems at 1. simpl. rewrite foldr_with_assoc with(l:=(value :: foldr cons nil m2)).
+  reflexivity.
+Qed.
+
+(*The following theorems are the axioms from ContainerAxioms*)
+
+(*A helpful lemma that allows us to use reflexivity to prove that x == x*)
+Lemma eq_coq_implies_haskell : forall {x : Type} { y : Type} `{Eq_ x} `{Eq_ y} `{EqLaws x} `{EqLaws y} x0 y0,
+   x0 = y0 -> _GHC.Base.==_  x0 y0 = true .
+Proof.
+  intros. subst. apply Lemmas.Eq_eq_refl. 
+Qed. 
+
+(*Simpler definition of lookup*)
+Fixpoint lookup' (key : e) (map : Map e a) : option a :=
+  match map with
+  | Tip => None
+  | Bin sz k1 v1 lt rt => match compare key k1 with
+                          | Eq => Some v1 
+                          | Lt => lookup' key lt 
+                          | Gt => lookup' key rt
+                          end
+ end.  
+
+(*Prove the two definitions are equivalent*)
+Lemma lookup_lookup'_equiv : forall  (key : e) (map : Map e a),
+    lookup key map = lookup' key map.
+Proof.
+  intros. induction map.
+  - simpl. destruct (compare key k); try (reflexivity); assumption.
+  - simpl. reflexivity.
+Qed.  
+
+(*This lemma says that if two keys are equal, then the result of member is the same when either is called*)
+Lemma member_eq: forall {a : Type} (n : e) (n' : e) (m : Map e a),
+  n == n' = true ->
+  member n m = member n' m.
+Proof.
+  intros. induction m.
+   - simpl. destruct (compare n k) eqn : E.
+    + rewrite Ord_compare_Eq in E.  
+      apply Lemmas.Eq_trans_l  with(z:=k) in H.
+      rewrite E in H. symmetry in H. rewrite <- Ord_compare_Eq in H.
+      rewrite H. reflexivity.
+    + rewrite Ord_compare_Lt in E. 
+      apply Lemmas.Eq_le_r with(z:=k) in H. rewrite E in H. 
+      symmetry in H. rewrite <- Ord_compare_Lt in H. 
+      rewrite H. assumption.
+    + rewrite Ord_compare_Gt in E. apply Lemmas.Eq_le_l with (z:=k) in H.
+      rewrite E in H. symmetry in H. rewrite <- Ord_compare_Gt in H.
+      rewrite H. assumption.
+  - simpl. reflexivity.
+Qed.
+
+(*If we insert a (key, value) in a map, then looking up the key gives the value*)
+Lemma lookup_insert : forall `{Eq_ a} `{EqLaws a} (key: e) (value : a) (map : Map e a) lb ub,
+  Bounded map lb ub ->
+  isLB lb key = true ->
+  isUB ub key = true ->
+  lookup' key (insert' key value map)  == Some value = true.
+Proof.
+  intros. pose proof (insert_Desc key value map lb ub) as H5. eapply H5 in H2. 
+  unfold Desc in H2. destruct H2 with(P:= fun (map1 : Map e a) => lookup' key map1 == Some value = true).
+  - intros. 
+  assert (sem s key = (if _GHC.Base.==_ key key then Some value else None) ||| sem map key). { apply H8. }
+  rewrite eq_coq_implies_haskell in H9. simpl in H9. eapply lookup_spec in H6. 
+  rewrite <- H6 in H9. apply eq_coq_implies_haskell. rewrite <- lookup_lookup'_equiv. assumption.
+  reflexivity.
+  - rewrite insert_insert'. reflexivity.
+  - assumption.
+  - assumption.
+Qed.
+
+(*If we lookup a key key1, the result is the same regardless of whether or not we have inserted key2 
+(a different key than key1)*)
+Lemma lookup_insert_neq : forall `{Eq_ a} `{EqLaws a} (key1: e) (key2: e) (value : a) (map : Map e a) lb ub,
+  Bounded map lb ub ->
+  isLB lb key2 = true ->
+  isUB ub key2 = true ->
+  key1 == key2 = false -> 
+  lookup' key1 (insert' key2 value map) = lookup' key1 map.
+Proof.
+  intros. pose proof (insert_Desc key2 value map lb ub) as H6. assert (A := H2). eapply H6 in H2. 
+  unfold Desc in H2. destruct H2 with(P:= fun (map1 : Map e a) => lookup' key1 map1 = lookup' key1 map).
+  - intros. assert (sem s key1 = (if _GHC.Base.==_ key1 key2 then Some value else None) ||| sem map key1).
+    { apply H9. } rewrite H5 in H10. simpl in H10. 
+  eapply lookup_spec in H7. rewrite <- H7 in H10. eapply lookup_spec in A. rewrite <- H10 in A.
+  rewrite <- lookup_lookup'_equiv. rewrite <- A. rewrite lookup_lookup'_equiv. reflexivity.
+  - rewrite insert_insert'. reflexivity.
+  - assumption.
+  - assumption.
+Qed.
+
+(*Similar to lookup_spec (but a bit more complicated because of the use of Props rather than booleans),
+this states that a key is in a map iff there exists some value such that sem key map returns that value*)
+Lemma member_spec:
+ forall {s lb ub i}, Bounded s lb ub -> member i s = true <-> exists v, sem s i = Some v.
+Proof.
+  intros. induction H.
+  - simpl. split. intros. discriminate H. intros. destruct H. discriminate H. 
+  - subst. simpl. destruct (compare i x) eqn: ?; split; intros.
+    + replace (i==x) with true by order_Bounds.
+      rewrite (sem_outside_above H) by order_Bounds.
+      simpl. exists v. reflexivity.
+    + reflexivity.
+    + replace (i==x) with false by order_Bounds.
+      rewrite (sem_outside_below H0) by order_Bounds.
+      simpl_options. apply IHBounded1 in H3. destruct H3. exists x0. assumption.
+    + assert (sem s2 i = None). { eapply sem_outside_below. apply H0. unfold isLB.
+      order_Bounds. }
+      rewrite H5 in H3. assert (i == x = false). { rewrite compare_Lt in Heqc.
+      apply lt_not_eq. assumption. } rewrite H6 in H3. simpl in H3. simpl_options. 
+      apply IHBounded1. destruct H3. exists x0. assumption. 
+    + replace (i==x) with false by order_Bounds.
+      rewrite (sem_outside_above H) by order_Bounds.
+      simpl. apply IHBounded2 in H3. destruct H3. exists x0. assumption.
+    + assert (sem s1 i = None). { eapply sem_outside_above. apply H. order_Bounds. }
+      rewrite H5 in H3. rewrite compare_Gt in Heqc. apply gt_not_eq in Heqc. rewrite Heqc in H3.
+      simpl_options. destruct H3. apply IHBounded2. exists x0. assumption.
+Qed.
+
+
+(*Probably in the standard library, but needed in the next proof*)
+Lemma contrapositive : forall (P : Prop) (Q: Prop),
+  (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros. intro. apply H in H1. contradiction.
+Qed. 
+
+(*States that if we check for key1 in the map in which we have inserted key2, then either
+key1 was already in the map, or key1 == key2*)
+Lemma member_insert: forall key1 key2 value map lb ub,
+  Bounded map lb ub ->
+  isLB lb key2 = true ->
+  isUB ub key2 = true ->
+  member key1 (insert' key2 value map) = (key1 == key2) || member key1 map.
+Proof.
+  intros. pose proof (insert_Desc key2 value map lb ub) as H5. assert (A := H). eapply H5 in H.
+  unfold Desc in H. 
+  destruct H with(P:= fun (map1 : Map e a) => member key1 map1 = (key1 == key2) || member key1 map).
+  - intros. assert(sem s key1 = (if _GHC.Base.==_ key1 key2 then Some value else None) ||| sem map key1).
+    { apply H4. } destruct (key1 == key2) eqn : ?. simpl in H6. 
+    eapply member_spec in H2. destruct H2. assert (member key1 s = true). { apply H7. exists value.
+    assumption. } rewrite H8. simpl. reflexivity. 
+    eapply member_spec in H2. destruct H2. simpl in H6. destruct (sem s key1) eqn : E.
+    + assert (member key1 s = true). { apply H7. exists a0. assumption. } 
+      eapply member_spec in A. destruct A. assert (member key1 map =true). {
+      apply H10. exists a0. symmetry in H6. assumption. }
+      rewrite H11. simpl. assumption.
+    + simpl. eapply member_spec in A. destruct A. assert (member key1 s = false). {
+      apply contrapositive in H2. destruct (member key1 s)  eqn : ?. contradiction.
+      reflexivity. intro. destruct H10. rewrite H10 in E. discriminate E. }
+      assert (member key1 map = false). { apply contrapositive in H8. 
+      destruct (member key1 map) eqn : ?. rewrite Heqb0 in H8. contradiction.
+      reflexivity. intro. destruct H11. rewrite H11 in H6. discriminate H6. }
+      rewrite H10. rewrite H11. reflexivity.
+  - rewrite insert_insert'. reflexivity.
+  - assumption.
+  - assumption.
+Qed.
+
+(*If we lookup a key that is deleted, we should get None*)
+Lemma delete_eq : forall key map lb ub,
+  Bounded map lb ub ->
+  lookup key (delete key map) = None.
+Proof.
+  intros. pose proof (delete_Desc key map lb ub) as H2. eapply H2 in H. unfold Desc in H.
+  destruct H with(P:= fun (map1 : Map e a) => lookup key map1 = None).
+  - intros. eapply lookup_spec in H0.
+    assert (sem s key = (if _GHC.Base.==_ key key then None else sem map key)). { apply H3. }
+    rewrite eq_coq_implies_haskell in H4. rewrite H4 in H0. assumption. reflexivity.
+  - reflexivity. 
+Qed.
+
+(*If we delete a key key2 and then lookup a different key key1, then it should be the same regardless of
+whether or not key2 was deleted.*)
+Lemma delete_neq : forall key1 key2 map lb ub,
+  Bounded map lb ub ->
+  key1 == key2 = false ->
+  lookup key1 (delete key2 map) = lookup key1 map.
+Proof.
+  intros. pose proof(delete_Desc key2 map lb ub) as H1. assert(A:= H). eapply H1 in H.
+  unfold Desc in H. destruct H with(P:= fun (map1 : Map e a) => lookup key1 map1 = lookup key1 map).
+  - intros. assert (sem s key1 = (if _GHC.Base.==_ key1 key2 then None else sem map key1)). { apply H4. }
+    rewrite H0 in H5. eapply lookup_spec in H2. eapply lookup_spec in A. rewrite H5 in H2.
+    rewrite <- H2 in A. symmetry. assumption.
+  - reflexivity.
+Qed. 
+
+(*Same as above but for member*)
+Lemma member_delete_neq: forall key1 key2 map lb ub,
+  Bounded map lb ub ->
+  key1 == key2 = false ->
+  member key2 (delete key1 map) = member key2 map.
+Proof.
+  intros. pose proof(delete_Desc key1 map lb ub) as H1. assert(A:=H). eapply H1 in H.
+  unfold Desc in H. destruct H with(P:= fun(map1 : Map e a) => member key2 map1 = member key2 map).
+  - intros. assert (sem s key2 = (if _GHC.Base.==_ key2 key1 then None else sem map key2)). { apply H4. }
+    rewrite Lemmas.Eq_neq_sym in H5. eapply member_spec in H2. eapply member_spec in A.
+    destruct (sem s key2)  eqn : ?.
+    + destruct A. assert (member key2 map = true). { apply H7. exists a0. symmetry. assumption. }
+      destruct H2. assert (member key2 s = true). { apply H9. exists a0. assumption. }
+      rewrite H8. rewrite H10. reflexivity.
+    + destruct A. destruct H2. apply contrapositive in H6. apply contrapositive in H2.
+      destruct (member key2 s) eqn : ?. contradiction. destruct (member key2 map) eqn : ?.
+      contradiction. reflexivity. intro. destruct H9. rewrite H9 in Heqo. discriminate Heqo.
+      intro. destruct H9. rewrite H9 in H5. discriminate H5.
+    + assumption.
+ - reflexivity.
+Qed.
+
+(*States that if a key is not in the map, then looking it up will give None, and vice versa.
+Note, in ContainerAxioms, this is defined with = rather than <->, but that introduced some
+difficulty in the proof *)
+Lemma non_member_lookup :
+  forall key map lb ub,
+  Bounded map lb ub ->
+  (member key map = false) <-> (lookup key map = None).
+Proof.
+  intros. assert(A:=H). eapply member_spec in H.  destruct (member key map) eqn : E.
+  - destruct H. apply H in E. destruct E. eapply lookup_spec in A. rewrite H1 in A.
+    rewrite A.  split; intros; discriminate H2. 
+  - split; intros. destruct H. apply contrapositive in H1. destruct (lookup key map) eqn :?.
+    + unfold not in H1. destruct H1. exists a0. eapply lookup_spec in A.
+      rewrite Heqo in A. symmetry. assumption.
+    + reflexivity. 
+    + intro. rewrite H2 in E. discriminate E.
+    + reflexivity.
+Qed.
+
+(*If two keys are equal (according to the Eq typeclass), then their values in 
+a map are equal*)
+Lemma lookup_eq : forall k k' (m : Map e a),
+    k == k' = true ->
+    lookup k m = lookup k' m.
+Proof.
+  intros. induction m.
+  - simpl. destruct (compare k k0) eqn : E.
+    + rewrite Ord_compare_Eq in E. apply Lemmas.Eq_trans_l with(z:=k0) in H .
+      rewrite E in H. symmetry in H. rewrite <- Ord_compare_Eq in H.
+      rewrite H. reflexivity.
+    + rewrite Ord_compare_Lt in E. apply Lemmas.Eq_le_r with (z:= k0) in H.
+      rewrite E in H. symmetry in H. rewrite <- Ord_compare_Lt in H.
+      rewrite H. assumption.
+    + rewrite Ord_compare_Gt in E. apply Lemmas.Eq_le_l with (z:=k0) in H.
+      rewrite E in H. symmetry in H. rewrite <- Ord_compare_Gt in H.
+      rewrite H. assumption.
+  - simpl. reflexivity.
+Qed.
+
+(*This follows almost immediately from member_spec*)
+Lemma member_lookup : 
+  forall key map lb ub,
+  Bounded map lb ub -> 
+  (member key map = true) <-> (exists value, lookup key map = Some value).
+Proof.
+  intros. assert(A:=H). eapply member_spec in A. eapply lookup_spec in H.
+  rewrite <- H in A. apply A.
+Qed. 
+
+(*verification of null*)
+Lemma null_empty: 
+    @null e a empty = true.
+Proof.
+  unfold null. simpl. reflexivity.
+Qed. 
+
+(*Second section of ContainerAxioms*)
+
+(*A key is a member of the union of two maps whenever it is a member of at least one of the maps*)
+Lemma member_union :
+  forall key map1 map2 lb ub,
+  Bounded map1 lb ub ->
+  Bounded map2 lb ub ->
+  member key (union map1 map2) = member key map2 || member key map1.
+Proof.
+  intros. pose proof(union_Desc map1 map2 lb ub) as H1. assert (A:=H).
+  eapply H1 in H. unfold Desc' in H. 
+  destruct H with(P:= fun (m : Map e a) => member key m = member key map2 || member key map1).
+  - intros. assert (sem s key = sem map1 key ||| sem map2 key). { apply H4. }
+    eapply member_spec in H2. eapply member_spec in A.
+    unfold oro in H5. destruct (sem map1 key) eqn : ?.
+    + assert (member key s = true). { apply H2. exists a0. assumption. }
+      assert (member key map1 = true). { apply A. exists a0. assumption. }
+      rewrite H6. rewrite H7. symmetry. rewrite orb_true_iff. right. reflexivity.
+    + destruct A. destruct H2. eapply member_spec in H0. destruct H0.
+      destruct (sem s key) eqn : ?.
+      * assert (member key s = true). { apply H8. exists a0. reflexivity. }
+        assert (member key map2 = true). { apply H9. exists a0. symmetry. assumption. }
+        rewrite H10. rewrite H11. simpl. reflexivity.
+      * apply  contrapositive in H6. apply contrapositive in H2. apply contrapositive in H0.
+        destruct (member key s). contradiction. destruct (member key map1). contradiction.
+        destruct (member key map2). contradiction. simpl. reflexivity.
+        intro. destruct H10. rewrite H10 in H5. discriminate H5.
+        intro. destruct H10. discriminate H10.
+        intro. destruct H10. rewrite H10 in Heqo. discriminate Heqo.
+  - reflexivity.
+  - assumption.
+Qed. 
+
+(*The union of a map with the empty map (in both directions) is itself*)
+Lemma union_nil_l : forall map ub lb,
+  Bounded map ub lb ->
+  union empty map = map.
+Proof.
+  intros.  induction H.
+  - reflexivity.
+  - simpl. destruct s1 eqn : ?. reflexivity.
+    destruct s2 eqn : ?. reflexivity.
+    unfold insertR. unfold singleton. simpl in H3.
+    rewrite H3. reflexivity.
+Qed.
+
+Lemma union_nil_r : forall map ub lb,
+  Bounded map ub lb ->
+  union map empty = map.
+Proof.
+  intros. induction H.
+  - simpl. reflexivity.
+  - simpl. destruct s1. reflexivity. destruct s2. reflexivity. reflexivity.
+Qed.
+
+(*Verification of empty - a map is empty iff for all keys, sem map key gives None*)
+Lemma empty_Spec: forall map lb ub,
+  Bounded map lb ub ->
+  (forall key, sem map key = None) <-> map = empty.
+Proof.
+  intros. split.
+  - intros. induction H.
+    + unfold empty. reflexivity. 
+    + assert (sem (Bin sz x v s1 s2) x = Some v). { simpl.
+      assert (sem s1 x = None). { eapply sem_outside_above. apply H.
+      order_Bounds. }
+      rewrite H6. simpl. rewrite Lemmas.Eq_eq_refl. simpl. reflexivity. }
+      assert (sem (Bin sz x v s1 s2) x = None). { apply H0. }
+      rewrite H7 in H6. discriminate H6.
+  - intros. rewrite H0. simpl. reflexivity.
+Qed.
+
+(*The difference between a map and itself is the empty map*)
+Lemma difference_self: forall map lb ub,
+  Bounded map lb ub ->
+  difference map map = empty.
+Proof.
+  intros. pose proof(difference_Desc map map lb ub) as H1. assert(A:=H). 
+  eapply H1 with(P:= fun(map1 : Map e a) => map1 = empty) in A .
+  - assumption.
+  - assumption.
+  - intros. assert ( forall i, sem s i = None). {
+    intros. assert (sem s i = diffo (sem map i) (sem map i)). { apply H4. }
+    unfold diffo in H5. destruct (sem map i) eqn : ?.
+    assumption. assumption. }
+    rewrite empty_Spec in H5. assumption. apply H0.
+Qed.
+
+(*The difference of a map with the empty map is itself*)
+Lemma difference_nil_r: forall `{Eq_ a} `{EqLaws a} (B : Type) map lb ub,
+  Bounded map lb ub ->
+  difference map (@empty e B) = map.
+Proof.
+  intros. inversion H2.
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+(*The difference of the empty map with any map is empty*)
+Lemma difference_nil_l: forall `{Eq_ a} `{EqLaws a} (B : Type) map lb ub (key : e),
+  Bounded map lb ub ->
+  difference (@empty e B) map = empty.
+Proof.
+  intros. inversion H2.
+  - simpl. reflexivity.
+  - simpl. unfold empty. reflexivity.
+Qed.
+
+(*Follows from sem_inside, says that if a key is in a map, it is between the bounds*)
+Lemma keys_inside_bounds : forall map key lb ub,
+  Bounded map lb ub ->
+  member key map = true ->
+  isLB lb key = true /\ isUB ub key = true .
+Proof.
+  intros. eapply member_spec in H0. destruct H0.
+  eapply sem_inside. apply H. apply H0. apply H.
+Qed.
+
+(*If a key is in a map, the difference of the singleton map containing only that key
+and the original map is empty*)
+Lemma difference_Tip_member: forall map (key :e) lb ub,
+  Bounded map lb ub ->
+  member key map = true ->
+  forall (value : a), difference (singleton key value) map = empty.
+Proof.
+  intros. assert (A:=H). induction H.
+  - discriminate H0.
+  - pose proof(difference_Desc (singleton key value) (Bin sz x v s1 s2) lb ub) as H6. 
+  eapply H6 with(P:=(fun map1 => map1 = empty)). eapply BoundedBin. apply BoundedTip.
+  apply BoundedTip. eapply keys_inside_bounds in H0. destruct H0.
+  apply H0. apply A. eapply keys_inside_bounds in H0. destruct H0. apply H7.
+  apply A. simpl. reflexivity. simpl. unfold balance_prop. simpl. omega. apply A.
+  intros.  eapply member_spec in H0. destruct H0.
+  assert (forall i : e, sem s i = None). {
+  intros i. assert (sem s i = diffo (sem (singleton key value) i) (sem (Bin sz x v s1 s2) i)). {
+  apply H10. } destruct (i == key) eqn : ?.
+  + simpl in H11. rewrite Heqb in H11. simpl in H11. 
+    assert (sem s1 i = sem s1 key). { apply sem_resp_eq. assumption. } 
+    assert (sem s2 i = sem s2 key). { apply sem_resp_eq. assumption. } 
+    assert ((i == x) = (key == x)). { eapply Lemmas.Eq_trans_l. assumption. }
+    rewrite H12 in H11. rewrite H14 in H11. rewrite H13 in H11. simpl in H0.
+    rewrite H0 in H11. simpl in H11. apply H11. 
+  + simpl in H11. rewrite Heqb in H11. simpl in H11. unfold diffo in H11. 
+    destruct (sem s1 i ||| SomeIf (_GHC.Base.==_ i x) v ||| sem s2 i) eqn : ?.
+    assumption. assumption. }
+    rewrite <- empty_Spec. apply H11. apply H7. apply A.
+Qed.
+(*A bunch of things that will help to prove equality between two maps. First, this is a function
+that sees whether the given key and value are in a map. Cannot use List.elems because the Haskell
+notion of equality is not strong enough*)
+Fixpoint In (key : e) (value : a) (l : list (e * a)) : Prop :=
+  match l with
+  | nil => False
+  | a :: tl => (let (x,y):= a in x == key = true /\ y = value) \/ In key value tl
+  end.
+
+(*Allows us to decompose toList*)
+Lemma toList_Bin:
+  forall sz key value (m1 m2 : Map e a),
+  toList (Bin sz key value m1 m2) = toList m1 ++ (key, value) :: nil ++ toList m2.
+Proof.
+  intros.
+  unfold toList at 1. unfold toAscList at 1. simpl.
+  rewrite foldrWithKey_toList. reflexivity.
+Qed. 
+
+(*Helper methods for logic: probably in the standard library*)
+Lemma or_assoc: forall b1 b2 b3,
+  (b1 \/ b2) \/ b3 <-> b1 \/ ( b2 \/ b3).
+Proof.
+  intros. split; intros.
+  - destruct H. destruct H. left. assumption. right. left. assumption. right.
+    right. assumption.
+  - destruct H. left. left. assumption. destruct H. left. right. assumption. right.
+    assumption.
+Qed.
+
+
+Lemma false_or: forall (P : Prop),
+  False \/ P <-> P.
+Proof.
+  intros. split; intros.
+  - destruct H. destruct H. apply H.
+  - right. apply H.
+Qed. 
+
+(*Key property of In for lists - if we append to 2 lists, an item is in the whole list
+iff it is in one of them*)
+Lemma elem_or : forall key value l1 l2,
+  In key value (l1 ++ l2) <-> In key value l1 \/ In key value l2.
+Proof.
+  intros. generalize dependent l2. induction l1.
+  - intros. simpl. split; intros.
+    + right. assumption.
+    + destruct H. destruct H. assumption.
+  - intros. simpl. rewrite IHl1. rewrite or_assoc. apply iff_refl.
+Qed.
+
+(*plan for equality
+1. a (k,v) pair is in toList iff sem m key = Some value (DONE)
+2. (corollary) if 2 maps have same sem, then their toList have the same elements
+3. toList is sorted
+4. sorted lists are unique
+5  therefore, these are the same list*)
+(*This says that sem m key returns a Value iff that key, value pair appears in the 
+resulting toList of the map*)
+
+(*Lemma that states that the list given by toList m contains exactly all key value pairs in the map*)
+Lemma toList_sem :
+  forall  `{EqLaws a}  m lb ub, Bounded m lb ub ->
+  forall key value, sem m key = Some value <-> In key value (toList m).
+Proof.
+  intros. generalize dependent value. induction H1.
+  - simpl. intros. split; intros. discriminate H1. destruct H1.
+  - intros. simpl. rewrite toList_Bin. rewrite elem_or. 
+    assert (((x, v) :: nil ++ toList s2) = (((x, v) :: nil) ++ toList s2)).
+    simpl. reflexivity. rewrite H5. rewrite elem_or. split; intros.
+      + destruct (sem s1 key) eqn : ?; simpl in H6.
+      * apply IHBounded1 in H6. left. apply H6. 
+      * destruct (key == x) eqn : ?; simpl in H6.
+        { right. left. simpl. left. apply Eq_Symmetric in Heqb.
+          split. apply Heqb. inversion H6. reflexivity. }
+        { apply IHBounded2 in H6. right. right. assumption. }
+     + destruct H6.
+      * apply IHBounded1 in H6. rewrite H6. simpl. reflexivity.
+      * destruct H6. simpl in H6. destruct H6. destruct H6.
+        assert (sem s1 key = None). { eapply sem_outside_above.
+        apply H1_. order_Bounds. }
+        rewrite H8. simpl. apply Eq_Symmetric in H6. rewrite H6. simpl.
+        rewrite H7. reflexivity. destruct H6. apply IHBounded2 in H6.
+        assert (H1_1:=H1_0). eapply sem_inside in H1_0. destruct H1_0.
+        assert (sem s1 key = None). { eapply sem_outside_above. apply H1_.
+        assert (isLB (Some x) key = true). { apply H7. }
+        order_Bounds. }
+        assert (key == x = false). { order_Bounds. }
+        rewrite H9. rewrite H10. simpl. assumption. apply H6.
+Qed.
+
+(** ** Verification of [toList] *)
+
+(*The next two lemmas say that every key in toList m is between the bounds of the map*)
+Lemma toList_lb : forall m lb ub,
+  Bounded m lb ub ->
+  Forall (fun (i : e * a) => let (x, _) := i in isLB lb x = true) (toList m).
+Proof.
+  intros. induction H.
+  - apply Forall_nil.
+  - rewrite toList_Bin. rewrite Forall_forall in *.
+    intros. simpl in H5. rewrite in_app_iff in *.
+    destruct H5.
+    + apply IHBounded1. assumption.
+    +  simpl in H5.  destruct H5. 
+      *  subst.  assumption. 
+      * apply IHBounded2 in H5. simpl in H5. rename x0 into x2. 
+        destruct x2. order_Bounds.
+Qed.
+
+Lemma toList_ub : forall m lb ub,
+  Bounded m lb ub ->
+  Forall (fun (i : e * a) => let (x, _) := i in isUB ub x = true) (toList m).
+Proof.
+  intros. induction H.
+  - apply Forall_nil.
+  - rewrite toList_Bin. rewrite Forall_forall in *. intros.
+    simpl in H5. rewrite in_app_iff in *. destruct H5.
+    + apply IHBounded1 in H5. destruct x0. order_Bounds.
+    + simpl in H5. destruct H5. subst. assumption. apply IHBounded2. assumption.
+Qed. 
+
+(*The list of the empty tree is empty*)
+Lemma toList_Tip: toList (@Tip e a) = nil.
+Proof. reflexivity. Qed.
+
+(*The list contains the left subtree, then the current value, then the right subtree
+(crucial in showing that the list is sorted)*)
+Lemma toList_bin:
+  forall key value n (m1 m2 : Map e a),
+  toList (Bin n key value m1 m2) = toList m1 ++ ((key, value) :: nil) ++ toList m2.
+Proof. intros. apply toList_Bin. Qed.
+
+(*The next two lemmas prove that the list from toList is in the same order even if we balance the tree. The
+proofs are very similar to setProofs, only 1 more case at the end*)
+Lemma toList_balanceR :
+  forall x y m1 m2 lb ub,
+  Bounded m1 lb (Some x) ->
+  Bounded m2 (Some x) ub ->
+  balance_prop (size m1) (size m2) \/
+  balance_prop_inserted (size m2 - 1) (size m1) /\ (1 <= size m2)%Z  \/
+  balance_prop (size m1 + 1) (size m2) ->
+  toList (balanceR x y m1 m2) = toList m1 ++ ((x,y) :: nil) ++ toList m2.
+Proof.
+  intros.
+  unfold balanceR.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: rewrite ?toList_Bin, <- ?app_assoc; try reflexivity.
+  simpl. rewrite <- app_assoc. assert (((x2, v1) :: toList s5) ++ (x1, v0) :: toList s0 ++ (x3, v2) :: toList s6
+  = (x2, v1) :: toList s5 ++ (x1, v0) :: toList s0 ++ (x3, v2) :: toList s6). simpl. reflexivity.
+  rewrite H20. reflexivity.
+Qed.
+
+Lemma toList_balanceL:
+  forall x y m1 m2 lb ub,
+  Bounded m1 lb (Some x) ->
+  Bounded m2 (Some x) ub  ->
+  balance_prop (size m1) (size m2) \/
+  balance_prop_inserted (size m1 - 1) (size m2) /\ (1 <= size m1)%Z \/
+  balance_prop (size m1) (size m2 + 1) ->
+  toList (balanceL x y m1 m2) = toList m1 ++ ((x, y) :: nil) ++ toList m2.
+Proof.
+  intros.
+  unfold balanceL.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: rewrite ?toList_Bin, <- ?app_assoc; try reflexivity.
+  - simpl. assert (toList s0 ++ (x3, v2) :: toList s6 ++ (x, y) :: toList s1 ++ (x0, v) :: toList s2
+  = (toList s0 ++ (x3, v2) :: toList s6) ++ (x, y) :: toList s1 ++ (x0, v) :: toList s2).
+    rewrite <- app_assoc. simpl. reflexivity. rewrite H20. reflexivity.
+  - simpl. assert (toList s0 ++ (x3, v2) :: toList s6 ++ (x, y) :: toList s1 ++ (x0, v) :: toList s2 =
+    (toList s0 ++ (x3, v2) :: toList s6) ++ (x, y) :: toList s1 ++ (x0, v) :: toList s2). 
+    rewrite <- app_assoc. simpl. reflexivity. rewrite H20. reflexivity.
+Qed.
+
+(*If we insertMax into a tree, that value is at the end of the list*)
+Lemma toList_insertMax:
+   forall x y m lb,
+   Bounded m lb (Some x) ->
+   toList (insertMax x y m) = toList m ++ (x,y) :: nil.
+Proof.
+  intros. remember (Some x) as ub'. generalize dependent x.
+  induction H; intros.
+  - simpl. reflexivity.
+  - simpl. subst. specialize(IHBounded2 x0 eq_refl). revert IHBounded2.
+    assert (isUB None x0 = true) by reflexivity. applyDesc insertMax_Desc.
+    intro. erewrite toList_balanceR. rewrite IHBounded2. rewrite toList_bin.
+    rewrite <- app_assoc. simpl. reflexivity. apply H. apply HB.
+    solve_size.
+Qed.
+
+(*If we insertMin into a tree, that value is at the beginning of the list*)
+Lemma toList_insertMin:
+   forall x y m ub,
+   Bounded m (Some x) ub ->
+   toList (insertMin x y m) = (x,y) :: nil ++ toList m.
+Proof.
+  intros. remember (Some x) as ub'. generalize dependent x.
+  induction H; intros.
+  - simpl. reflexivity.
+  - simpl. subst. specialize(IHBounded1 x0 eq_refl). revert IHBounded1.
+    assert (isLB None x0 = true) by reflexivity. applyDesc insertMin_Desc.
+    intro. erewrite toList_balanceL. rewrite IHBounded1. rewrite toList_bin.
+    simpl. reflexivity. apply HB. apply H0. solve_size.
+Qed.
+
+(*States that if we link 2 maps together, then the list is in the same order. These
+past few lemmas together mean that when balancing the tree, the list does not change*)
+Program Fixpoint toList_link (x : e) (y : a) (m1: Map e a)  (m2: Map e a)
+  {measure (map_size m1 + map_size m2)} :
+    forall lb ub,
+    Bounded m1 lb (Some x) ->
+    Bounded m2 (Some x) ub  ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    toList (link x y m1 m2) = toList m1 ++ (x,y) :: nil ++ toList m2 := _.
+Next Obligation.
+  intros.
+  rewrite link_eq. 
+  inversion H; subst; clear H;
+  inversion H0; subst; clear H0.
+  * reflexivity.
+  * erewrite toList_insertMin by solve_Bounded.
+    rewrite toList_Bin.
+    reflexivity.
+  * erewrite toList_insertMax by solve_Bounded.
+    rewrite toList_Bin.
+    reflexivity.
+  * destruct (Sumbool.sumbool_of_bool _);
+    only 2: destruct (Sumbool.sumbool_of_bool _);
+    rewrite ?Z.ltb_lt, ?Z.ltb_ge in *.
+    - erewrite toList_balanceL; only 3: solve_Precondition.
+      erewrite toList_link by solve_Precondition.
+      rewrite ?toList_Bin, <- ?app_assoc. reflexivity.
+      applyDesc link_Desc; eassumption.
+      applyDesc link_Desc; solve_size.
+    - erewrite toList_balanceR; only 2: solve_Precondition.
+      erewrite toList_link by solve_Precondition.
+      rewrite ?toList_Bin, <- ?app_assoc. reflexivity.
+      applyDesc link_Desc; eassumption.
+      applyDesc link_Desc; solve_size.
+    - rewrite ?toList_bin, ?toList_Bin, <- ?app_assoc.
+      unfold bin. rewrite toList_bin. rewrite toList_bin.
+      rewrite toList_bin. simpl. rewrite <- app_assoc. simpl.
+      reflexivity. 
+Qed.
+
+(** *** Sortedness of [toList] *)
+
+Require Import Coq.Sorting.Sorted.
+Close Scope Z.
+
+(*Maps are sorted only by keys*)
+Local Definition lt : e * a -> e * a -> Prop
+  := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in (e1 < e2) = true.
+
+(*Since some StronglySorted lemmas are defined by List.In, we show that List.In -> In
+The other direction does not hold because haskell equality does not imply Coq equality*)
+Lemma In_List_In_equiv: forall x y l,
+  List.In (x,y) l -> In x y l.
+Proof.
+  intros. induction l. 
+  - simpl. simpl in H. apply H.
+  - simpl. simpl in H. destruct H.
+    + destruct a0. inversion H. left. split. apply Lemmas.Eq_eq_refl. reflexivity.
+    + destruct a0. right. apply IHl. assumption.
+Qed.
+
+(* States that if two lists are sorted and all values in the first are smaller
+than all values in the second, then appending the two lists gives a sorted list. *)
+Lemma sorted_append:
+  forall (l1 : list (e * a)) (l2 : list (e * a)) (x : e),
+  StronglySorted lt l1 ->
+  StronglySorted lt l2 ->
+  (forall (y : e) (z : a), List.In (y, z) l1 -> (y < x) = true) ->
+  (forall y z, List.In (y, z) l2 -> (x <= y) = true) ->
+  StronglySorted lt (l1 ++ l2).
+Proof.
+
+  intros ??? Hsorted1 Hsorted2 Hlt Hge.
+  induction Hsorted1.
+  * apply Hsorted2.
+  * simpl. apply SSorted_cons.
+    + apply IHHsorted1.
+      intros y z Hy.
+      eapply Hlt.
+      right. apply Hy.
+    + rewrite Forall_forall.
+      intros z Hz.
+      rewrite in_app_iff in Hz.
+      destruct Hz.
+      - rewrite Forall_forall in H.
+        apply H; auto.
+      - destruct a0.  assert (e0 < x = true). eapply Hlt. left. reflexivity. 
+        
+        unfold lt. destruct z. apply Hge in H0. order e.
+Qed.
+
+(*Similar to List.elem, but does not require that a be in the Eq typeclass (because it doesn't actually
+matter; the a's are not ever compared)*)
+Fixpoint list_elem_tuple (x : e * a) (l : list (e * a)) :=
+  match l with
+  | nil => false
+  | h :: t => let (a, b) := h in let (x1, x2) := x in (a == x1) || list_elem_tuple x t
+  end.
+
+(*This states that if x is a lower bound for a list and the tuple i is in the list, then x is less than i.
+Note: this required a change from toList (using lt rather than < in the conclusion), though this 
+is needed because there is no definition of ordering on all tuples*)
+Lemma All_lt_elem:
+  forall x i xs,
+  Forall (lt x) xs ->
+  list_elem_tuple i xs = true ->
+  lt x i.
+Proof.
+  intros.
+  induction H.
+  * simpl in H0. inversion H0.
+  * simpl in *. destruct x0. destruct i.
+    rewrite orb_true_iff in H0.
+    destruct H0.
+    - unfold lt in *. destruct x. order e.
+    - intuition.
+Qed.
+
+(*toList is sorted by key*)
+Lemma to_List_sorted:
+  forall m lb ub,
+  Bounded m lb ub ->
+  StronglySorted lt (toList m).
+Proof.
+  intros. induction H.
+  - apply SSorted_nil.
+  - rewrite toList_bin. eapply sorted_append. assumption.
+    apply SSorted_cons. assumption. apply toList_lb in H0.
+    apply H0. apply toList_ub in H.  intros. 
+    rewrite Forall_forall in H.
+    remember (y,z) as t. 
+    apply H in H5. destruct t. inversion Heqt. rewrite <- H7. unfold isUB in H5. apply H5.
+    intros. simpl in H5. destruct H5.
+    + inversion H5. order e.
+    + apply toList_lb in H0. 
+      rewrite Forall_forall in H0. apply H0 in H5. order_Bounds.
+Qed. 
+
+(** ** Verification of [toAscList] *)
+
+Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
+
+
+
+(*TODO: PROVE LATER*)
+Axiom sem_equality: forall `{Eq_ a} `{EqLaws a} map1 map2 lb ub,
+  Bounded map1 lb ub ->
+  Bounded map2 lb ub ->
+  (forall key, sem map1 key = sem map2 key) -> map1 == map2 = true.
+
+
+
+Lemma difference_Tip_non_member: forall `{Eq_ a} `{EqLaws a} map (key :e) lb ub,
+  Bounded map lb ub ->
+  isUB ub key = true ->
+  isLB lb key = true ->
+  member key map = false ->
+  forall (value : a), difference (singleton key value) map == (singleton key value) = true.
+Proof.
+  intros. pose proof(difference_Desc (singleton key value) map lb ub) as H6. 
+  assert(A:=H). assert (Bounded (singleton key value) lb ub). { unfold singleton.
+  apply BoundedBin. apply BoundedTip. apply BoundedTip. assumption. assumption. simpl.
+  reflexivity. simpl. unfold balance_prop. omega. } 
+  eapply H6 with(P:=(fun map1 => map1 == singleton key value = true)). assumption.
+  assumption. intros.
+  simpl in H8.
+  pose proof(@member_spec map lb ub key) as H12. assert(A1:=A). apply H12 in A.
+  destruct A. apply contrapositive in H14. assert (sem map key = None). {
+  unfold not in H14. destruct (sem map key). destruct H14. exists a0. reflexivity.
+  reflexivity. }
+  assert (forall i, i == key = false -> sem s i = None). {
+  intros. assert (sem s i = diffo (SomeIf (_GHC.Base.==_ i key) value ||| None) (sem map i)). {
+  apply H11. } rewrite H16 in H17. simpl in H17. unfold diffo in H17. destruct (sem map i); assumption.
+  }
+  assert (sem s key = Some value). { 
+  assert (sem s key = diffo (SomeIf (_GHC.Base.==_ key key) value ||| None) (sem map key)). {
+  apply H11. } rewrite Eq_Reflexive in H17. simpl in H17. rewrite H15 in H17. simpl in H17.
+  assumption. }
+  assert (forall i, sem s i = SomeIf (i == key) value). {
+  intros. destruct (i == key) eqn : ?. { simpl. rewrite <- (sem_resp_eq s key).
+  assumption. apply Eq_Symmetric. apply Heqb. }
+  { simpl. apply H16 in Heqb. assumption. }
+  } applyDesc singleton_Desc. assert (forall i, sem s i = sem s0 i). {
+    intros. rewrite H18. rewrite Hsem. reflexivity. }
+    eapply sem_equality. apply H8. apply HB. apply H19. intro. rewrite H15 in H5.
+    discriminate H5. intros. apply H2.
+Qed.
+   
+(*End of ContainerAxioms*) 
+
+
+
+
+(* A few old proofs relating to keys/elems that can be rewritten to follow easily from
+analogous proofs about toList
+Lemma keys_bin:
+  forall sz key value (m1 m2 : Map e a),
+  keys (Bin sz key value m1 m2) = keys m1 ++ key :: nil ++ keys m2.
+Proof.
+  intros.
+  unfold keys at 1.  simpl.
+  rewrite foldrWithKey_multiple_folds. reflexivity.
+Qed. 
+
+
+Lemma elem_app:
+  forall {a} `{Eq_ a} (i : a) xs ys,
+  List.elem i (xs ++ ys) = List.elem i xs || List.elem i ys.
+Proof.
+  intros.
+  induction xs.
+  * reflexivity.
+  * simpl. rewrite IHxs. rewrite orb_assoc. reflexivity.
+Qed.
+
+Lemma keys_sem:
+  forall m key value, sem m key = Some value -> List.elem key (keys m) = true.
+Proof.
+  intros.
+  induction m.
+  * rewrite keys_bin.
+    simpl. rewrite elem_app.  rewrite orb_true_iff.
+    inversion H. unfold oro in H1.
+    destruct (sem m1 key) eqn : E. 
+    - inversion H1; subst. left.
+    apply IHm1. reflexivity.
+    - destruct (SomeIf(_GHC.Base.==_ key k) a0) eqn : E1.
+      + inversion H1; subst. right. unfold List.elem. 
+         destruct (_GHC.Base.==_ key k) eqn : E2. 
+          { simpl. reflexivity. }
+          { simpl. apply IHm2. inversion E1. }
+      + right. unfold List.elem.  destruct (_GHC.Base.==_ key k) eqn : E2. 
+          { simpl. reflexivity. }
+          { simpl. apply IHm2. assumption. }
+   * simpl. simpl in H. discriminate H.
+Qed.
+
+
+
+
+
+
+Generalizable Variables a.
+Lemma elems_sem:
+  forall `{Eq_ a} (m : Map e a) lb ub, Bounded m lb ub ->
+  forall key value, sem m key = Some value -> List.elem value (elems m) = true.
+Proof.
+  intros.
+  induction H0.
+  * simpl. simpl in H1. discriminate H1. 
+  * rewrite keys_bin.
+    simpl. rewrite elem_app. ewrite orb_true_iff.
+    inversion H0. unfold oro in H7.
+    destruct (sem s1 key) eqn : E. inversion H7; subst. left.
+    apply IHBounded1. reflexivity.
+    { destruct (SomeIf(_GHC.Base.==_ key x) v) eqn : E1.
+      { inversion H7; subst. unfold SomeIf in E1. 
+         destruct (_GHC.Base.==_ key x) eqn : E2.
+          {  right. unfold List.elem. rewrite E2.
+            simpl. reflexivity. }
+        discriminate E1. }
+     right. unfold List.elem. destruct (_GHC.Base.==_ key x) eqn: E2. simpl. 
+     reflexivity. simpl. apply IHBounded2. assumption. }
+Qed.*)
+
 End WF.
+

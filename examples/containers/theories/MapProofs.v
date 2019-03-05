@@ -3156,9 +3156,531 @@ Proof.
   intros. unfold partition. eapply partitionWithKey_spec. apply H. f_solver. apply H0.
 Qed.
 
+(** ** Verification of [take] *)
+(*This is exactly the same as SetProofs, since the take function works the exact same way*)
+Definition takeGo : Int -> Map e a -> Map e a.
+Proof.
+  let rhs := eval unfold take in (@take e a) in
+  match rhs with fun n s => if _ then _ else ?go _ _  => exact go end.
+Defined.
+
+Lemma take_neg: forall a n (l : list a), (n <= 0)%Z -> List.take n l = nil.
+Proof.
+  intros. destruct l; simpl; destruct (Z.leb_spec n 0); try lia; try reflexivity.
+Qed.
+
+Lemma take_all:
+  forall a n (xs : list a), (Z.of_nat (length xs) <= n)%Z -> List.take n xs = xs.
+Proof.
+  intros. revert n H.
+  induction xs; intros n Hall.
+  * simpl. destruct (Z.leb_spec n 0); reflexivity.
+  * simpl.
+    simpl length in Hall. rewrite Nat2Z.inj_succ, <- Z.add_1_l in Hall.
+    rewrite IHxs by lia.
+    destruct (Z.leb_spec n 0); [lia|reflexivity].
+Qed.
+
+Lemma take_app_cons:
+  forall a n (l1 : list a) (x : a) (l2 : list a),
+  List.take n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with
+    | Lt => List.take n l1
+    | Eq => l1
+    | Gt => l1 ++ (x :: nil) ++ List.take (n - Z.of_nat (length l1) - 1)%Z l2
+  end.
+Proof.
+  intros. revert n.
+  induction l1; intros n.
+  * simpl.
+    rewrite Z.sub_0_r.
+    destruct (Z.leb_spec n 0), (Z.compare_spec n 0)%Z; try reflexivity; lia.
+  * cbn -[Z.add Z.of_nat].
+    rewrite IHl1. clear IHl1.
+    rewrite Nat2Z.inj_succ, <- Z.add_1_l.
+    replace (n - (1 + Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    replace (n - 1 - (Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    destruct (Z.leb_spec n 0),
+             (Z.compare_spec (n - 1) (Z.of_nat (length l1)))%Z,
+             (Z.compare_spec n (1 + Z.of_nat (length l1)))%Z; try reflexivity; lia.
+Qed.
+
+Lemma takeGo_spec :
+  forall n map lb ub,
+  Bounded map lb ub ->
+  forall (P : Map e a -> Prop),
+  (forall m',
+    Bounded m' lb ub /\
+    toList m' = List.take n (toList map) ->
+    P m') ->
+  P (takeGo n map).
+Proof.
+  intros ???? HD. revert n.
+  induction HD; intros n.
+  * intros X HX; apply HX. split.
+    + simpl. destruct_match; solve_Bounded.
+    + simpl. do 2 destruct_match; reflexivity.
+  * simpl.
+    intros X HX; apply HX.
+    rewrite toList_Bin.
+    unfold op_zlze__ , Ord_Integer___, op_zlze____.
+    unfold compare , Ord_Integer___, compare__.
+    rewrite size_size.
+    apply IHHD1. intros s1' [HBs1' Hs1']. clear IHHD1.
+    apply IHHD2. intros s2' [HBs2' Hs2']. clear IHHD2.
+    destruct (Z.leb_spec n 0).
+    + rewrite take_neg by assumption. split.
+      - solve_Bounded.
+      - reflexivity.
+    + simpl app.
+      rewrite take_app_cons.
+      erewrite <- size_spec by eassumption.
+      destruct (Z.compare_spec n (size s1)).
+      - split.
+        ** eapply Bounded_relax_ub; eassumption.
+        ** reflexivity.
+      - split.
+        ** eapply Bounded_relax_ub; eassumption.
+        ** assumption.
+      - split.
+        ** applyDesc link_Desc.
+        ** erewrite toList_link by solve_Precondition.
+           rewrite Hs2'.
+           reflexivity.
+Qed.
+
+Lemma toList_take:
+  forall n map lb ub,
+  Bounded map lb ub ->
+  forall (P : Map e a -> Prop),
+  (forall m',
+    Bounded m' lb ub /\
+    toList m' = List.take n (toList map) ->
+    P m') ->
+  P (take n map).
+Proof.
+  intros. apply H0.
+  unfold take. fold takeGo.
+  unfold op_zgze__ , Ord_Integer___, op_zgze____.
+  rewrite size_size.
+  destruct (Z.leb_spec (size map) n).
+  * split; [assumption|].
+    rewrite take_all. reflexivity.
+    erewrite <- size_spec by eassumption.
+    assumption.
+  * eapply takeGo_spec; [solve_Precondition..|].
+    intros. assumption.
+Qed.
+
+(** ** Verification of [drop] *)
+
+Definition dropGo : Int -> Map e a -> Map e a.
+Proof.
+  let rhs := eval unfold drop in (@drop e a) in
+  match rhs with fun n s => if _ then _ else ?go _ _  => exact go end.
+Defined.
+
+Lemma drop_neg: forall a n (l : list a), (n <= 0)%Z -> List.drop n l = l.
+Proof.
+  intros. destruct l; simpl; destruct (Z.leb_spec n 0); try lia; try reflexivity.
+Qed.
+
+Lemma drop_all:
+  forall a n (xs : list a), (Z.of_nat (length xs) <= n)%Z -> List.drop n xs = nil.
+Proof.
+  intros. revert n H.
+  induction xs; intros n Hall.
+  * simpl. destruct (Z.leb_spec n 0); reflexivity.
+  * simpl.
+    simpl length in Hall. rewrite Nat2Z.inj_succ, <- Z.add_1_l in Hall.
+    rewrite IHxs by lia.
+    destruct (Z.leb_spec n 0); [lia|reflexivity].
+Qed.
+  
+Lemma drop_app_cons:
+  forall a n (l1 : list a) (x : a) (l2 : list a),
+  List.drop n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with
+    | Lt => List.drop n l1 ++ (x :: nil) ++ l2
+    | Eq => (x :: nil) ++ l2
+    | Gt => List.drop (n - Z.of_nat (length l1) - 1)%Z l2
+  end.
+Proof.
+  intros. revert n.
+  induction l1; intros n.
+  * simpl.
+    rewrite Z.sub_0_r.
+    destruct (Z.leb_spec n 0), (Z.compare_spec n 0)%Z; try reflexivity; lia.
+  * cbn -[Z.add Z.of_nat].
+    rewrite IHl1. clear IHl1.
+    rewrite Nat2Z.inj_succ, <- Z.add_1_l.
+    replace (n - (1 + Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    replace (n - 1 - (Z.of_nat (length l1)) - 1)%Z with (n - 2 - Z.of_nat (length l1))%Z by lia.
+    destruct (Z.leb_spec n 0),
+             (Z.compare_spec (n - 1) (Z.of_nat (length l1)))%Z,
+             (Z.compare_spec n (1 + Z.of_nat (length l1)))%Z; try reflexivity; lia.
+Qed.
 
 
+Lemma dropGo_spec :
+  forall n map lb ub,
+  Bounded map lb ub ->
+  forall (P : Map e a -> Prop),
+  (forall m',
+    Bounded m' lb ub /\
+    toList m' = List.drop n (toList map) ->
+    P m') ->
+  P (dropGo n map).
+Proof.
+  intros ???? HD. revert n.
+  induction HD; intros n.
+  * intros X HX; apply HX. split.
+    + simpl. destruct_match; solve_Bounded.
+    + simpl. do 2 destruct_match; reflexivity.
+  * simpl.
+    intros X HX; apply HX.
+    rewrite toList_Bin.
+    unfold op_zlze__ , Ord_Integer___, op_zlze____.
+    unfold compare , Ord_Integer___, compare__.
+    rewrite size_size.
+    apply IHHD1. intros s1' [HBs1' Hs1']. clear IHHD1.
+    apply IHHD2. intros s2' [HBs2' Hs2']. clear IHHD2.
+    destruct (Z.leb_spec n 0).
+    + rewrite drop_neg by assumption. split.
+      - solve_Bounded.
+      - rewrite toList_Bin.
+        reflexivity.
+    + simpl app.
+      rewrite drop_app_cons.
+      erewrite <- size_spec by eassumption.
+      destruct (Z.compare_spec n (size s1)).
+      - split.
+        ** applyDesc insertMin_Desc.
+        ** erewrite toList_insertMin  by solve_Precondition.
+           reflexivity.
+      - split.
+        ** applyDesc link_Desc.
+        ** erewrite toList_link by solve_Precondition.
+           rewrite Hs1'.
+           reflexivity.
+      - split.
+        ** eapply Bounded_relax_lb; eassumption.
+        ** assumption.
+Qed.
 
+Lemma toList_drop:
+  forall n map lb ub,
+  Bounded map lb ub ->
+  forall (P : Map e a -> Prop),
+  (forall m',
+    Bounded m' lb ub /\
+    toList m' = List.drop n (toList map) ->
+    P m') ->
+  P (drop n map).
+Proof.
+  intros. apply H0.
+  unfold drop. fold dropGo.
+  unfold op_zgze__ , Ord_Integer___, op_zgze____.
+  rewrite size_size.
+  destruct (Z.leb_spec (size map) n).
+  * split; [solve_Precondition|].
+    rewrite drop_all. reflexivity.
+    erewrite <- size_spec by eassumption.
+    assumption.
+  * eapply dropGo_spec; [solve_Precondition..|].
+    intros. assumption.
+Qed.
+
+(** ** Verification of [splitAt] *)
+
+Definition splitAtGo : Int -> Map e a -> (Map e a * Map e a).
+Proof.
+  let rhs := eval unfold splitAt in (@splitAt e a) in
+  match rhs with fun n s => if _ then _ else Datatypes.id (?go _ _)  => exact go end.
+Defined.
+
+Lemma splitAtGo_spec :
+  forall n s, splitAtGo n s = (takeGo n s, dropGo n s).
+Proof.
+  intros ??.
+  revert n.
+  induction s; intros n.
+  * simpl.
+    repeat destruct_match; try congruence.
+  * simpl. repeat destruct_match; reflexivity.
+Qed.
+
+End WF.
+(*Could not find [ordered], [valid], [validsize] or similar in Data.Map*)
+
+(** ** Verification of [map] *)
+
+(*Note: for map_spec, the definition we want is not provable:
+[(forall i v, sem m i = Some v <-> sem (mapWithKey f m) i = Some (f i v))]
+
+This is because of three problems
+1. Even if two keys k1 and k2 are equal (k1 == k2), this does not guarantee
+   that (f k = f k2).
+2. We cannot compare the results using Haskell equality because neither a not b
+   are required to be members of Eq.
+3. If f is not injective, then the (<-) is clearly not true (for example, 
+   suppose f = \x -> \y -> 1)
+
+This is not an issue in SetProofs because [Ord b] is a necessary condition for the input and the
+map function is defined very differently, leading to an entirely different specification.
+
+There are two solutions to this: 
+1. Require that if k == k1 and v == v1, then f k v = f k1 v1, which is not true in general
+2. Require that [a] and [b] be members of [Eq], which is also not true in general. We also must
+   require that k1 == k2 and v1 == v2 -> f k1 v1 == f k2 v2, which should be true in all cases, since
+   this is the definition of a pure function in Haskell.
+
+Both cases are proved below. We prove both cases because it could happen that Haskell equality agrees
+with Coq equality on the values but the values are not an instance of [Ord].
+
+*)
+
+(*Specification using Coq equality*)
+
+(*The same keys are in both maps*)
+Lemma map_none_spec:
+  forall {b} {a} {e} `{Eq_ e} `{Ord e} (f: e -> a -> b) (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  (forall i, sem m i = None <-> sem (mapWithKey f m) i = None).
+Proof.
+  intros. generalize dependent i. induction H2; intros; split; intros.
+  - reflexivity.
+  - reflexivity.
+  - simpl. simpl in H6. destruct (sem s1 i) eqn : ?. inversion H6. 
+    apply IHBounded1 in Heqo. rewrite Heqo. simpl. simpl in H6.
+    destruct (i == x) eqn : ?. inversion H6. simpl. simpl in H6.
+    apply IHBounded2. apply H6.
+  - simpl in H6. simpl. destruct (sem (mapWithKey f s1) i) eqn : ?. inversion H6.
+    apply IHBounded1 in Heqo. rewrite Heqo. simpl. destruct (i == x) eqn : ?. inversion H6.
+    simpl. simpl in H6. apply IHBounded2. apply H6.
+Qed. 
+
+(*Says that if we take any (key, value) pair in the map resulting from mapWithKey, then they
+come from a corresponding entry in the original map*)
+Lemma map_spec_reverse : 
+  forall {b} {a} {t}  `{Ord t} (H : EqLaws t) (f : t -> a -> b) (m : Map t a) lb ub,
+  Bounded m lb ub ->
+  (forall k k2 v v2, k == k2 = true -> v = v2 -> f k v = f k2 v2) ->
+  (forall i v, sem (mapWithKey f m) i = Some v -> exists value, sem m i = Some value /\ v = f i value).
+Proof.
+  intros. generalize dependent i. generalize dependent v. induction H2; intros.
+  - simpl in H4. inversion H4.
+  - simpl in H7. simpl. destruct ( sem (mapWithKey f s1) i ) eqn : ?. apply IHBounded1 in Heqo.
+    destruct Heqo. exists x0. destruct H8. rewrite H8. simpl. split. reflexivity. inversion H7; subst.
+    reflexivity. simpl in H7.  assert (sem s1 i = None). { erewrite map_none_spec. apply Heqo. apply H2_. }
+    rewrite H8. destruct (i == x) eqn : ?. simpl in H7. simpl. exists v. split. reflexivity. inversion H7. 
+    apply H3. apply Eq_Symmetric. apply Heqb0. reflexivity. simpl. inversion H7. apply IHBounded2.
+    assumption.
+Qed.
+
+(*If (k,v) is in the original map, then (k, f k v) is in the new map*)
+Lemma map_spec_coq:
+  forall {b} {a} {e} `{Ord e} (H: EqLaws e) (f : e -> a -> b) (m : Map e a) lb ub,
+  Bounded m lb ub ->
+  (forall k k2 v v2, k == k2 = true -> v = v2 -> f k v = f k2 v2) ->
+  (forall i v, sem m i = Some v -> sem (mapWithKey f m) i = Some (f i v)).
+Proof.
+  intros.  generalize dependent i. generalize dependent v. induction H2; intros.
+  - inversion H4.
+  - simpl. simpl in H7. destruct (sem s1 i) eqn : ?.
+    * apply IHBounded1 in Heqo. rewrite Heqo. simpl. inversion H7; subst; reflexivity.
+    * assert (sem (mapWithKey f s1) i = None). { erewrite <- map_none_spec. assumption. apply H2_. }
+      simpl in H7. rewrite H8. simpl. destruct (i == x) eqn : ?.
+      + simpl. simpl in H7. inversion H7; subst. erewrite H3. reflexivity. apply Eq_Symmetric.
+        apply Heqb0. reflexivity.
+      + simpl. apply IHBounded2. simpl in H7. assumption.
+Qed.
+
+(*If f is injective, then (k,v) is in the original map iff (k, f k v) is in the new map*)
+Lemma map_spec_coq_injective:
+  forall {b} {a} {e} `{Ord e} (H: EqLaws e) (f : e -> a -> b) (m : Map e a) lb ub,
+  Bounded m lb ub ->
+  (forall k k2 v v2, k == k2 = true -> v = v2 -> f k v = f k2 v2) ->
+  (forall k k2 v v2, f k v = f k2 v2 -> k == k2 = true /\ v = v2) ->
+  (forall i v, sem m i = Some v <-> sem (mapWithKey f m) i = Some (f i v)).
+Proof.
+  intros. split.
+  - intros. eapply map_spec_coq; eassumption.
+  - generalize dependent i. generalize dependent v. induction H2; intros.
+    + inversion H2.
+    + simpl in H8. simpl. destruct (sem (mapWithKey f s1) i) eqn : ?.
+      * assert (A:= Heqo). eapply map_spec_reverse in Heqo. destruct Heqo.
+        destruct H9. subst. inversion H8. rewrite H9. simpl.
+        apply H4 in H10. destruct H10. subst. reflexivity. assumption. apply H2_.
+        apply H3.
+      * rewrite <- map_none_spec in Heqo. rewrite Heqo. simpl. simpl in H8. destruct (i == x) eqn : ?.
+        -- simpl. simpl in H8. inversion H8. apply H4 in H10. destruct H10; subst; reflexivity.
+        -- simpl in H8. simpl. apply IHBounded2. assert (A:= H8). eapply map_spec_reverse in H8.
+           assumption. assumption. apply H2_0. assumption.
+        -- apply H2_.
+Qed.
+
+(*Specification using Haskell Equality. This requires several lemmas to replace the use
+of [subst] and [rewrite].*)
+
+(*Haskell equality version of [oro_Some_l]*)
+Lemma sem_haskell_eq_some : forall {a} {b} `{EqLaws a} `{EqLaws b} (a1: a) (m : Map a b) b1 o,
+  sem m a1 == Some b1 = true ->
+  (sem m a1 ||| o) == Some b1 = true.
+Proof.
+  intros. destruct (sem m a1) eqn : ?.
+  - simpl. assumption.
+  - inversion H3.
+Qed.
+
+(*Haskell equality version of [oro_None_l]*)
+Lemma sem_haskell_eq_none: forall {a} {b} `{EqLaws a} `{EqLaws b} (a1: a) (m : Map a b) o,
+  sem m a1 == None = true ->
+  (sem m a1 ||| o) == o = true.
+Proof.
+  intros. destruct (sem m a1) eqn : ?.
+  - inversion H3.
+  - simpl. apply Eq_Reflexive.
+Qed.
+
+Lemma oro_assoc : forall {a} (o1 o2 o3: option a),
+  (o1 ||| o2) ||| o3 = o1 ||| (o2 ||| o3).
+Proof.
+  intros. destruct o1. simpl. reflexivity. simpl. reflexivity.
+Qed.
+
+Lemma eq_coq_implies_haskell : forall {a} `{EqLaws a} (x y : a),
+  x = y -> x == y = true.
+Proof.
+  intros. subst. apply Eq_Reflexive.
+Qed.
+
+(*Haskell equality version of [map_none_spec] *)
+Lemma map_none_spec_haskell:
+  forall {b} {a} {e} `{Ord e} (H : EqLaws e) `{EqLaws a} `{EqLaws b} (f: e -> a -> b) (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  (forall i, sem m i == None = true <-> sem (mapWithKey f m) i == None = true).
+Proof.
+  intros. generalize dependent i. induction H6; intros; split; intros.
+  - simpl. apply Eq_Reflexive. 
+  - simpl. apply Eq_Reflexive. 
+  - simpl. simpl in H10. destruct (sem s1 i) eqn : ?. simpl in H10. inversion H10. simpl in H10.
+    destruct (i == x) eqn : ?. simpl in H10. inversion H10. simpl in H10. destruct (sem s2 i) eqn : ?.
+    inversion H10. apply eq_coq_implies_haskell in Heqo. apply eq_coq_implies_haskell in Heqo0.
+    apply IHBounded1 in Heqo. apply IHBounded2 in Heqo0. rewrite  oro_assoc. simpl.
+    apply (sem_haskell_eq_none _  _ (sem (mapWithKey f s2) i)) in Heqo.
+    eapply Eq_Transitive. apply Heqo. apply Heqo0.
+  - simpl. simpl in H10. destruct (sem (mapWithKey f s1) i) eqn : ?. inversion H10.
+    destruct (i == x) eqn : ?. inversion H10. destruct (sem (mapWithKey f s2) i) eqn : ?.
+    inversion H10. apply eq_coq_implies_haskell in Heqo. apply eq_coq_implies_haskell in Heqo0.
+    simpl. rewrite oro_assoc. simpl. apply IHBounded1 in Heqo. apply IHBounded2 in Heqo0.
+    apply (sem_haskell_eq_none  _ _  (sem s2 i)) in Heqo. eapply Eq_Transitive.
+    apply Heqo. apply Heqo0.
+Qed.
+
+(*Haskell equality version of [map_spec_reverse]*)
+Lemma map_spec_haskell_reverse : 
+  forall {b} {a} {t}  `{Ord t} (H : EqLaws t) `{EqLaws b} `{EqLaws a}
+   (f : t -> a -> b) (m : Map t a) lb ub,
+  Bounded m lb ub ->
+  (forall x1 x2 y1 y2, x1 == x2 = true -> y1 == y2 = true -> f x1 y1 == f x2 y2 = true) ->
+  (forall i v, sem (mapWithKey f m) i == Some v = true -> 
+    exists value, sem m i == Some value = true /\ v == f i value = true).
+Proof.
+  intros.
+  generalize dependent i. generalize dependent v. induction H6; intros.
+  - inversion H8.
+  - simpl in H11. simpl. destruct (sem (mapWithKey f s1) i) eqn : ?.
+    + assert ( _GHC.Base.==_ (sem (mapWithKey f s1) i) (Some b0) = true). { rewrite Heqo.
+      apply Eq_Reflexive. } apply IHBounded1 in H12. destruct H12. exists x0.
+      destruct H12. split. rewrite oro_assoc. apply sem_haskell_eq_some. 
+      apply H12. simpl in H11. rewrite simpl_option_some_eq in H11. eapply Eq_Transitive.
+      apply Eq_Symmetric. apply H11. apply H13.
+    + simpl in H11. apply eq_coq_implies_haskell in Heqo. rewrite <- map_none_spec_haskell in Heqo.
+      destruct (sem s1 i). inversion Heqo. simpl. destruct (i == x) eqn : ?. simpl in H11.
+      simpl. exists v. split. apply Eq_Reflexive. rewrite simpl_option_some_eq in H11. 
+      assert ((f x v) == (f i v) = true). { apply H7. apply Eq_Symmetric. apply Heqb0. 
+      apply Eq_Reflexive. } eapply Eq_Transitive. apply Eq_Symmetric. apply H11. apply H12.
+      simpl. simpl in H11. apply IHBounded2 in H11. apply H11. apply H1. apply H5. apply H3.
+      apply H6_.
+Qed. 
+
+(*A substitute for [rewrite]: If we know a1 == a3, and we have a1 == a2 in the goal, 
+we can prove a2 == a3 instead*)
+Lemma rewrite_eq_haskell : forall {a} `{EqLaws a} a1 a2 a3,
+  a1 == a2 = true -> (a1 == a3 = true <-> a2 == a3 = true).
+Proof.
+  intros; split; intros.
+  - eapply Eq_Transitive. apply Eq_Symmetric. apply H1. apply H2.
+  - eapply Eq_Transitive. apply H1. apply H2.
+Qed.
+
+(*Specification for mapWithKey using Haskell equality*)
+Lemma map_spec_haskell:
+  forall {b} {a} {e} `{Ord e} (H: EqLaws e) `{EqLaws b} `{EqLaws a} (f : e -> a -> b) (m : Map e a) lb ub,
+  Bounded m lb ub ->
+  (forall x1 x2 y1 y2, x1 == x2 = true -> y1 == y2 = true -> f x1 y1 == f x2 y2 = true) ->
+  (forall i v, sem m i == Some v = true -> sem (mapWithKey f m) i == Some (f i v) = true).
+Proof.
+  intros.  generalize dependent i. generalize dependent v. induction H6; intros.
+  - inversion H8.
+  - simpl. simpl in H11. destruct (sem s1 i) eqn : ?.
+    * apply eq_coq_implies_haskell in Heqo. apply IHBounded1 in Heqo. rewrite oro_assoc.
+      eapply sem_haskell_eq_some. simpl in H11. rewrite simpl_option_some_eq in H11.
+      assert (f i a0 == f i v0 = true). { apply H7. apply Eq_Reflexive. apply H11. }
+      eapply Eq_Transitive. apply Heqo. rewrite simpl_option_some_eq. apply H12.
+    * apply eq_coq_implies_haskell in Heqo. erewrite map_none_spec_haskell in Heqo.
+      rewrite oro_assoc. eapply (sem_haskell_eq_none i (mapWithKey f s1)
+      (SomeIf (_GHC.Base.==_ i x) (f x v) ||| sem (mapWithKey f s2) i)) in Heqo.
+      (*rewrite to make the goal simpler*)
+      assert (_GHC.Base.==_ (sem (mapWithKey f s1) i ||| 
+      (SomeIf (_GHC.Base.==_ i x) (f x v) ||| sem (mapWithKey f s2) i))
+      (Some (f i v0)) = true <-> ((SomeIf (_GHC.Base.==_ i x) (f x v) ||| 
+      sem (mapWithKey f s2) i) == Some (f i v0) = true)).
+      apply rewrite_eq_haskell. apply Heqo. rewrite H12. clear H12.
+      destruct (i == x) eqn : ?. simpl. simpl in H11. rewrite simpl_option_some_eq.
+      apply H7. apply Eq_Symmetric. apply Heqb0. rewrite simpl_option_some_eq in H11. apply H11.
+      simpl. apply IHBounded2. simpl in H11. apply H11. assumption. assumption. assumption.
+      apply H6_.
+Qed.
+
+(*Once again. if f is injective, we get a stronger claim*)
+Lemma map_spec_haskell_injective:
+  forall {b} {a} {e} `{Ord e} (H: EqLaws e) `{EqLaws b} `{EqLaws a} (f : e -> a -> b) (m : Map e a) lb ub,
+  Bounded m lb ub ->
+  (forall x1 x2 y1 y2, x1 == x2 = true -> y1 == y2 = true -> f x1 y1 == f x2 y2 = true) ->
+  (forall k k2 v v2, f k v == f k2 v2 = true -> k == k2 = true /\ v = v2) ->
+  (forall i v, sem m i == Some v = true <-> sem (mapWithKey f m) i == Some (f i v) = true).
+Proof.
+  intros. split.
+  - intros. eapply map_spec_haskell; eassumption.
+  - generalize dependent i. generalize dependent v. induction H6; intros.
+    + inversion H6.
+    + simpl in H12. simpl. destruct (sem (mapWithKey f s1) i) eqn : ?.
+      * assert (A:= Heqo). apply eq_coq_implies_haskell in Heqo. eapply map_spec_haskell_reverse in Heqo.
+        destruct Heqo. destruct H13. simpl in H12. 
+        apply eq_coq_implies_haskell in A. assert ( (sem (mapWithKey f s1) i) == (Some (f i v0)) = true).
+        { eapply Eq_Transitive. apply A. apply H12. } apply IHBounded1 in H15.
+         rewrite oro_assoc. eapply sem_haskell_eq_some. apply H15. assumption. assumption.
+        apply H5. apply H6_. assumption.
+      * apply eq_coq_implies_haskell in Heqo. rewrite <- map_none_spec_haskell in Heqo.
+        destruct (sem s1 i). inversion Heqo. simpl. simpl in H12. destruct (i== x) eqn : ?.
+        -- simpl. simpl in H12. apply H8 in H12. destruct H12; subst; apply Eq_Reflexive.
+        -- simpl. simpl in H12. apply IHBounded2. apply H12.
+        -- assumption.
+        -- apply H5.
+        -- assumption.
+        -- apply H6_.
+Qed.
+
+Lemma map_no_key_spec :  forall {e} {a} {b} `{Ord e} (f : a -> b) (m : Map e a),
+  Internal.map f m = mapWithKey (fun k v => f v) m.
+Proof.
+  intros. induction m.
+  - simpl. rewrite IHm1. rewrite IHm2. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+Section ContainerAxioms.
+Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 (*The following theorems are the axioms from ContainerAxioms and have no clear analogue in SetProofs*)
 
 (*Simpler definition of lookup*)
@@ -3240,14 +3762,14 @@ Proof.
   - assumption.
 Qed.
  
-
+ 
 (*States that if we check for key1 in the map in which we have inserted key2, then either
 key1 was already in the map, or key1 == key2*)
-Lemma member_insert: forall key1 key2 value map lb ub,
+Lemma member_insert: forall key1 key2 value (map: Map e a) lb ub,
   Bounded map lb ub ->
   isLB lb key2 = true ->
   isUB ub key2 = true ->
-  member key1 (insert' key2 value map) = (key1 == key2) || member key1 map.
+  member key1 (insert' key2 value map) = (key1 == key2) || member key1 map. 
 Proof.
   intros. pose proof (insert_Desc key2 value map lb ub) as H5. assert (A := H). eapply H5 in H.
   unfold Desc in H. 
@@ -3274,7 +3796,7 @@ Proof.
 Qed.
 
 (*If we lookup a key that is deleted, we should get None*)
-Lemma delete_eq : forall key map lb ub,
+Lemma delete_eq : forall key (map : Map e a) lb ub,
   Bounded map lb ub ->
   lookup key (delete key map) = None.
 Proof.
@@ -3288,7 +3810,7 @@ Qed.
 
 (*If we delete a key key2 and then lookup a different key key1, then it should be the same regardless of
 whether or not key2 was deleted.*)
-Lemma delete_neq : forall key1 key2 map lb ub,
+Lemma delete_neq : forall key1 key2 (map : Map e a) lb ub,
   Bounded map lb ub ->
   key1 == key2 = false ->
   lookup key1 (delete key2 map) = lookup key1 map.
@@ -3302,7 +3824,7 @@ Proof.
 Qed. 
 
 (*Same as above but for member*)
-Lemma member_delete_neq: forall key1 key2 map lb ub,
+Lemma member_delete_neq: forall key1 key2 (map: Map e a) lb ub,
   Bounded map lb ub ->
   key1 == key2 = false ->
   member key2 (delete key1 map) = member key2 map.
@@ -3325,7 +3847,7 @@ Qed.
 
 (*States that if a key is not in the map, then looking it up will give None, and vice versa. *)
 Lemma non_member_lookup :
-  forall key map lb ub,
+  forall key (map: Map e a) lb ub,
   Bounded map lb ub ->
   (member key map = false) <-> (lookup key map = None).
 Proof.
@@ -3362,7 +3884,7 @@ Qed.
 
 (*This follows almost immediately from member_spec*)
 Lemma member_lookup : 
-  forall key map lb ub,
+  forall key (map: Map e a) lb ub,
   Bounded map lb ub -> 
   (member key map = true) <-> (exists value, lookup key map = Some value).
 Proof.
@@ -3379,7 +3901,7 @@ Qed.
 
 (*A key is a member of the union of two maps whenever it is a member of at least one of the maps*)
 Lemma member_union :
-  forall key map1 map2 lb ub,
+  forall key (map1: Map e a) map2 lb ub,
   Bounded map1 lb ub ->
   Bounded map2 lb ub ->
   member key (union map1 map2) = member key map2 || member key map1.
@@ -3409,7 +3931,7 @@ Proof.
 Qed. 
 
 (*The union of a map with the empty map (in both directions) is itself*)
-Lemma union_nil_l : forall map ub lb,
+Lemma union_nil_l : forall (map: Map e a) ub lb,
   Bounded map ub lb ->
   union empty map = map.
 Proof.
@@ -3421,7 +3943,7 @@ Proof.
     rewrite H3. reflexivity.
 Qed.
 
-Lemma union_nil_r : forall map ub lb,
+Lemma union_nil_r : forall (map: Map e a) ub lb,
   Bounded map ub lb ->
   union map empty = map.
 Proof.
@@ -3431,7 +3953,7 @@ Proof.
 Qed.
 
 (*The difference between a map and itself is the empty map*)
-Lemma difference_self: forall map lb ub,
+Lemma difference_self: forall (map: Map e a) lb ub,
   Bounded map lb ub ->
   difference map map = empty.
 Proof.
@@ -3447,7 +3969,7 @@ Proof.
 Qed.
 
 (*The difference of a map with the empty map is itself*)
-Lemma difference_nil_r: forall `{Eq_ a} `{EqLaws a} (B : Type) map lb ub,
+Lemma difference_nil_r: forall `{Eq_ a} `{EqLaws a} (B : Type) (map: Map e a) lb ub,
   Bounded map lb ub ->
   difference map (@empty e B) = map.
 Proof.
@@ -3457,7 +3979,7 @@ Proof.
 Qed.
 
 (*The difference of the empty map with any map is empty*)
-Lemma difference_nil_l: forall `{Eq_ a} `{EqLaws a} (B : Type) map lb ub (key : e),
+Lemma difference_nil_l: forall `{Eq_ a} `{EqLaws a} (B : Type) (map: Map e a) lb ub (key : e),
   Bounded map lb ub ->
   difference (@empty e B) map = empty.
 Proof.
@@ -3467,7 +3989,7 @@ Proof.
 Qed.
 
 (*Follows from sem_inside, says that if a key is in a map, it is between the bounds*)
-Lemma keys_inside_bounds : forall map key lb ub,
+Lemma keys_inside_bounds : forall (map: Map e a) key lb ub,
   Bounded map lb ub ->
   member key map = true ->
   isLB lb key = true /\ isUB ub key = true .
@@ -3478,7 +4000,7 @@ Qed.
 
 (*If a key is in a map, the difference of the singleton map containing only that key
 and the original map is empty*)
-Lemma difference_Tip_member: forall map (key :e) lb ub,
+Lemma difference_Tip_member: forall (map: Map e a) (key :e) lb ub,
   Bounded map lb ub ->
   member key map = true ->
   forall (value : a), difference (singleton key value) map = empty.
@@ -3506,7 +4028,8 @@ Proof.
     rewrite <- sem_false_nil. assumption. apply A.
 Qed.
 
-Lemma difference_Tip_non_member: forall `{Eq_ a} `{EqLaws a} map (key :e) lb ub,
+(*Might have to put this back in WF
+Lemma difference_Tip_non_member: forall `{Eq_ a} `{EqLaws a} (map: Map e a) (key :e) lb ub,
   Bounded map lb ub ->
   isUB ub key = true ->
   isLB lb key = true ->
@@ -3540,10 +4063,7 @@ Proof.
     intros. rewrite H18. rewrite Hsem. reflexivity. }
     eapply strong_eq1. apply H8. apply HB. apply H19. intro. rewrite H15 in H5.
     discriminate H5. intros. apply H2.
-Qed.
-   
-(*End of ContainerAxioms*) 
+Qed.*)
+End ContainerAxioms.
 
-
-End WF.
 

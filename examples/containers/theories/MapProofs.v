@@ -395,6 +395,148 @@ Proof.
     intuition try (congruence || lia).
 Qed.
 
+(** The main point of the balancing condition: Logarithmic height (Same as SetProofs)*)
+
+Fixpoint height (s :Map e a) : Z := match s with
+  | Tip => 0%Z
+  | Bin _ _ _ s1 s2 => (1 + max (height s1) (height s2))%Z
+  end.
+
+Lemma height_nonneg:
+  forall m, (0 <= height m)%Z.
+Proof. induction m; cbn -[Z.add]; lia. Qed.
+
+Ltac postive_heights :=
+  repeat match goal with [ m : Map e a |- _ ] => pose_new (height_nonneg m) end.
+
+Lemma size_height_1:
+  forall {m lb ub},
+  Bounded m lb ub -> (size m = 1)%Z -> height m = 1%Z.
+Proof.
+  intros.
+  destruct H.
+  + inversion H0.
+  + destruct H, H1; cbn -[Z.add] in *; postive_sizes; try lia; try reflexivity.
+Qed.
+
+Lemma Bounded_size_bound : forall m lb ub,
+  Bounded m lb ub -> (4^(height m - 1) <= size m*3^(height m - 1))%Z.
+Proof.
+  intros ??? HB. induction HB.
+  * simpl. reflexivity.
+  * cbn -[Z.add].
+    postive_sizes.
+    postive_heights.
+    + unfold balance_prop, delta, fromInteger, Num_Integer__ in H2.
+      apply Z.max_case_strong; intro Hle.
+      - destruct (Z.leb_spec (size s1 + size s2) 1).
+         ** assert (size s1 = 0 \/ size s1 = 1)%Z as Hsmall by lia.
+            destruct Hsmall.
+            ++ rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               simpl Z.sub.
+               lia.
+            ++ assert (size s2 = 0)%Z by lia. 
+               rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               replace (height s1) with 1%Z in *
+                 by (symmetry; eapply size_height_1; eassumption).
+               simpl Z.sub.
+               lia.
+         ** destruct H2; only 1: lia.
+            assert (height s1 <> 0%Z)
+              by (destruct s1; cbn -[Z.add]; postive_heights; simpl size in *; try lia).
+            replace (((1 + height s1) - 1))%Z with (Z.succ (height s1 - 1)) by lia.
+            rewrite !Z.pow_succ_r by lia.
+            etransitivity; only 1: (apply Z.mul_le_mono_nonneg_l; [lia | eassumption]).
+            rewrite !Z.mul_assoc.
+            apply Z.mul_le_mono_nonneg_r; only 1: (apply Z.pow_nonneg; lia).
+            lia.
+      - destruct (Z.leb_spec (size s1 + size s2) 1).
+         ** assert (size s2 = 0 \/ size s2 = 1)%Z as Hsmall by lia.
+            destruct Hsmall.
+            ++ rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               simpl Z.sub.
+               lia.
+            ++ assert (size s1 = 0)%Z by lia. 
+               rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
+               replace (height s2) with 1%Z in *
+                 by (symmetry; eapply size_height_1; eassumption).
+               simpl Z.sub.
+               lia.
+         ** destruct H2; only 1: lia.
+            assert (height s1 <> 0%Z)
+              by (destruct s1; cbn -[Z.add]; postive_heights; simpl size in *; try lia).
+            replace (((1 + height s2) - 1))%Z with (Z.succ (height s2 - 1)) by lia.
+            rewrite !Z.pow_succ_r by lia.
+            etransitivity; only 1: (apply Z.mul_le_mono_nonneg_l; [lia | eassumption]).
+            rewrite !Z.mul_assoc.
+            apply Z.mul_le_mono_nonneg_r; only 1: (apply Z.pow_nonneg; lia).
+            lia.
+Qed.
+
+Lemma Z_log2_pow2:
+  forall y,
+  (0 <= y)%Z ->
+  (Z.log2 (y ^ 2) <= 2 * Z.log2 y + 1)%Z.
+Proof.
+  intros.
+  replace (y ^ 2)%Z with (y * y)%Z by lia.
+  etransitivity; only 1: (apply Z.log2_mul_above; assumption).
+  lia.
+Qed.
+
+Lemma Z_log2_pow3:
+  forall y,
+  (0 <= y)%Z ->
+  (Z.log2 (y ^ 3) <= 3 * Z.log2 y + 2)%Z.
+Proof.
+  intros.
+  replace (y ^ 3)%Z with (y^2 * y)%Z by lia.
+  assert (0 <= y^2)%Z by (apply Z.pow_nonneg; assumption).
+  etransitivity; only 1: (apply Z.log2_mul_above; assumption).
+  enough ((Z.log2 (y^2) <= 2 * Z.log2 y + 1)%Z) by lia.
+  apply Z_log2_pow2.
+  assumption.
+Qed.
+
+(* Frustratingly, concluding this lemma from the one above took more time
+   than proving that. *)
+Lemma Bounded_logarithmic_height : forall m lb ub,
+  Bounded m lb ub -> (height m <= 3 * Z.log2 (size m) + 3)%Z.
+Proof.
+  intros ??? HB.
+  pose proof (Bounded_size_bound m lb ub HB).
+  postive_heights.
+  postive_sizes.
+  assert (size m = 0 \/ 0 < size m)%Z by lia. destruct H2.
+  * apply (size_0_iff_tip HB) in H2.
+    subst. simpl. intro Htmp. inversion Htmp.
+  * clear H1.
+    enough (height m - 1 <= 3 * Z.log2 (size m) + 2)%Z by lia.
+    assert (0 < height m)%Z by (induction HB; cbn -[Z.add] in *; postive_heights; try lia).
+    assert (0 <= height m - 1)%Z by lia.
+    generalize  dependent (height m - 1)%Z; intros h ??.
+    generalize dependent (size m); intros sz ??.
+    clear dependent m. clear lb ub. clear dependent e.
+    assert (0 < 3 ^ h)%Z by (apply Z.pow_pos_nonneg; lia).
+    assert (0 < 4 ^ h)%Z by (apply Z.pow_pos_nonneg; lia).
+    assert (0 < sz ^ 3)%Z by (apply Z.pow_pos_nonneg; lia).
+
+    etransitivity; only 2: (apply Z_log2_pow3; lia).
+    apply Z.log2_le_pow2; only 1: assumption.
+
+    eapply Zmult_lt_0_le_reg_r. apply H0.
+    eapply Zmult_lt_0_le_reg_r. apply H0.
+    eapply Zmult_lt_0_le_reg_r. apply H0.
+    rewrite <- !Z.pow_mul_l.
+    simpl (2 * 3 * 3 * 3)%Z.
+    etransitivity. apply Z.pow_le_mono_l with (b := (4^3)%Z). lia.
+    rewrite <- Z.pow_mul_r by lia.
+    rewrite Z.mul_comm.
+    rewrite -> Z.pow_mul_r by lia.
+    etransitivity. apply Z.pow_le_mono_l. split. lia. eapply H.
+    lia.
+Qed.
+
 Lemma Bounded_change_ub:
   forall s lb ub ub',
   Bounded s lb (Some ub) ->
@@ -773,6 +915,24 @@ Proof.
   intuition.
 Qed.
 
+Lemma Desc_WF':
+  forall m sz f lb ub,
+  Desc m lb ub sz f -> WF m.
+Proof.
+  intros m sz f lb ub HD.
+  unfold WF.
+  (* Unfortunately, [apply HD] does not work unless we have [size s] and [sem s]
+     in the context. *)
+  assert (Bounded m lb ub /\ size m = size m /\ sem m = sem m) by (apply HD; auto).
+  intuition.
+  destruct ub; destruct lb.
+  - eapply Bounded_relax_lb; eauto;
+      eapply Bounded_relax_ub; eauto.
+  - eapply Bounded_relax_ub; eauto.
+  - eapply Bounded_relax_lb; eauto.
+  - auto.
+Qed.
+
 
 (** For every set in the context, try to see if [lia] knows it is empty. *)
 Ltac find_Tip :=
@@ -857,6 +1017,31 @@ Proof.
   all: try solve [solve_Desc].
 Qed.
 
+Lemma balanceL_noop :
+    forall x y s1 s2 lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    balance_prop (size s1) (size s2) ->
+    balanceL x y s1 s2 = Bin (1 + size s1 + size s2) x y s1 s2.
+Proof.
+  intros.
+
+  unfold balanceL.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: try reflexivity.
+Qed.
+
+
 (** *** Verification of [balanceR] *)
 
 Lemma balanceR_Desc:
@@ -883,6 +1068,30 @@ Proof.
   all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
   all: repeat find_Tip.
   all: try solve [solve_Desc].
+Qed.
+
+Lemma balanceR_noop :
+    forall x y s1 s2 lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    balance_prop (size s1) (size s2) ->
+    balanceR x y s1 s2 = Bin (1 + size s1 + size s2) x y s1 s2.
+Proof.
+  intros.
+
+  unfold balanceR.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: try reflexivity.
 Qed.
 
 (** *** Verification of [insertMax] *)
@@ -1013,6 +1222,55 @@ Proof.
       rewrite (sem_outside_above HB1) by order_Bounds.
       simpl_options.
       reflexivity.
+Qed.
+
+(** ** Verification of [member] *)
+
+Lemma member_spec:
+ forall {s lb ub i}, Bounded s lb ub -> member i s = true <-> exists v, sem s i = Some v.
+Proof.
+  intros. induction H.
+  - simpl. split. intros. discriminate H. intros. destruct H. discriminate H. 
+  - subst. simpl. destruct (compare i x) eqn: ?; split; intros.
+    + replace (i==x) with true by order_Bounds.
+      rewrite (sem_outside_above H) by order_Bounds.
+      simpl. exists v. reflexivity.
+    + reflexivity.
+    + replace (i==x) with false by order_Bounds.
+      rewrite (sem_outside_below H0) by order_Bounds.
+      simpl_options. apply IHBounded1 in H3. destruct H3. exists x0. assumption.
+    + assert (sem s2 i = None). { eapply sem_outside_below. apply H0. unfold isLB.
+      order_Bounds. }
+      rewrite H5 in H3. assert (i == x = false). { rewrite compare_Lt in Heqc.
+      apply lt_not_eq. assumption. } rewrite H6 in H3. simpl in H3. simpl_options. 
+      apply IHBounded1. destruct H3. exists x0. assumption. 
+    + replace (i==x) with false by order_Bounds.
+      rewrite (sem_outside_above H) by order_Bounds.
+      simpl. apply IHBounded2 in H3. destruct H3. exists x0. assumption.
+    + assert (sem s1 i = None). { eapply sem_outside_above. apply H. order_Bounds. }
+      rewrite H5 in H3. rewrite compare_Gt in Heqc. apply gt_not_eq in Heqc. rewrite Heqc in H3.
+      simpl_options. destruct H3. apply IHBounded2. exists x0. assumption.
+Qed.
+
+(** ** Verification of [notMember] *)
+
+Lemma contrapositive : forall (P : Prop) (Q: Prop),
+  (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros. intro. apply H in H1. contradiction.
+Qed.
+
+Lemma notMember_spec:
+ forall {s lb ub i}, Bounded s lb ub -> notMember i s = true <-> sem s i = None.
+Proof.
+  intros ???? HB.
+  unfold notMember, op_zd__. split; intros.
+  pose proof (@member_spec s lb ub i). apply H0 in HB. destruct HB. apply contrapositive in H2.
+  unfold not in H2. destruct (sem s i). destruct H2. exists a0. reflexivity. reflexivity.
+  rewrite negb_true_iff in H. intro. rewrite H3 in H. inversion H.
+  pose proof (@member_spec s lb ub i). apply H0 in HB. destruct HB. apply contrapositive in H1.
+  rewrite negb_true_iff. destruct (member i s). contradiction. reflexivity. intro.
+  destruct H3. rewrite H3 in H. inversion H.
 Qed.
 
 
@@ -1239,6 +1497,140 @@ Proof.
     split; [left; (split;reflexivity) | solve_Desc].
 Qed.
 
+(** ** Verification of [lookupMin] *)
+
+Lemma empty_no_elts : forall m,
+  (forall i, sem m i = None) <-> m = empty.
+Proof.
+  intros. split; intros.
+  destruct m. specialize (H e0). simpl in H. destruct (sem m1 e0); simpl in H.
+  inversion H. rewrite Eq_Reflexive in H. inversion H. reflexivity. rewrite H. reflexivity.
+Qed.
+
+Lemma lookupMin_in_bin: forall (m: Map e a),
+  m <> Tip -> forall k1 k2 v1 v2, lookupMinSure k1 v1 m = lookupMinSure k2 v2 m.
+Proof.
+  intros. destruct m; intros.
+  - simpl. reflexivity.
+  - contradiction.
+Qed. 
+
+Lemma lookupMax_in_bin: forall (m: Map e a),
+  m <> Tip -> forall k1 k2 v1 v2, lookupMaxSure k1 v1 m = lookupMaxSure k2 v2 m.
+Proof.
+  intros. destruct m; intros.
+  - simpl. reflexivity.
+  - contradiction.
+Qed. 
+ 
+
+Lemma lookupMinSure_Desc:
+  forall m x v0 lb ub,
+    Bounded m lb ub ->
+    let (y, v) := lookupMinSure x v0 m in
+    ((forall i, sem m i = None) /\ y = x /\ v = v0 \/
+      sem m y = Some v /\ (forall i v1, sem m i = Some v1 -> (y GHC.Base.<= i) = true)).
+Proof.
+  intros.  revert x v0. induction H; intros.
+  - left. simpl. intuition.
+  - destruct (lookupMinSure x0 v0 (Bin sz x v s1 s2)) eqn : ?. right. simpl.
+    specialize (IHBounded1 x0 v0). destruct (lookupMinSure x0 v0 s1) eqn : ?. destruct IHBounded1.
+    + destruct H5. destruct H6. assert (sem s1 e0 = None) by (apply H5). rewrite H8; simpl. subst.
+      simpl in Heqp. apply empty_no_elts in H5. subst. inversion Heqp. subst.
+      rewrite Eq_Reflexive. simpl. split. reflexivity. intros.
+      destruct (e0 == i) eqn : ?. order e. assert (i == e0 = false) by order e. rewrite H5 in H3.
+      simpl in H3. solve_Bounds.
+    + destruct H5. simpl in Heqp. assert (s1 <> Tip). { destruct s1. intro. discriminate H7.
+      simpl in H5. inversion H5. } 
+      eapply lookupMin_in_bin in H7. rewrite Heqp in H7. rewrite Heqp0 in H7. inversion H7; subst.
+      rewrite H5. simpl. split. reflexivity. intros.
+      destruct (sem s1 i) eqn : ?. simpl in H3. inversion H3; subst. 
+      apply H6 in Heqo. assumption.
+      simpl in H3. assert (_GHC.Base.<=_  e1 x = true) by solve_Bounds.
+      destruct (i == x) eqn : ?. order e. simpl in H3. solve_Bounds. 
+Qed. 
+
+Lemma lookupMin_Desc:
+  forall m lb ub,
+    Bounded m lb ub ->
+    match lookupMin m with 
+      | None => (forall i, sem m i = None)
+      | Some (y, v) => sem m y = Some v /\ (forall i v1, sem m i = Some v1 -> (y GHC.Base.<= i) = true)
+    end.
+Proof.
+  intros.
+  unfold lookupMin.
+  inversion H; subst; clear H.
+  * reflexivity.
+  * simpl.
+    pose proof (lookupMinSure_Desc s1 x v lb (Some x) H0). destruct (lookupMinSure x v s1) eqn : ?.
+    destruct H.
+    - destruct H; subst. apply empty_no_elts in H; subst. simpl. simpl in Heqp. inversion Heqp; subst.
+      rewrite Eq_Reflexive. simpl. split. reflexivity. intros. destruct (i == e0) eqn : ?.
+      order e. simpl in H. solve_Bounds.
+    - destruct H. rewrite H. simpl; split. reflexivity. intros. destruct (sem s1 i) eqn : ?.
+      apply H4 in Heqo. assumption. simpl in H6. destruct (i == x) eqn : ?.
+      solve_Bounds. simpl in H6. solve_Bounds.
+Qed. 
+
+
+(** ** Verification of [lookupMax] *)
+
+Lemma lookupMaxSure_Desc:
+  forall m x v0 lb ub,
+    Bounded m lb ub ->
+    let (y, v) := lookupMaxSure x v0 m in
+    ((forall i, sem m i = None) /\ y = x /\ v = v0 \/
+      sem m y = Some v /\ (forall i v1, sem m i = Some v1 -> (i GHC.Base.<= y) = true)).
+Proof.
+  intros.  revert x v0. induction H; intros.
+  - left. simpl. intuition.
+  - destruct (lookupMaxSure x0 v0 (Bin sz x v s1 s2)) eqn : ?. right. simpl.
+    specialize (IHBounded2 x0 v0). destruct (lookupMaxSure x0 v0 s2) eqn : ?. destruct IHBounded2.
+    + destruct H5. destruct H6. assert (sem s2 e0 = None) by (apply H5). rewrite H8; simpl. subst.
+      simpl in Heqp. apply empty_no_elts in H5. subst. inversion Heqp. subst.
+      rewrite Eq_Reflexive. simpl.  assert (sem s1 e0 = None). { eapply sem_outside_above.
+      apply H. unfold isUB. order e. } split. rewrite H3. reflexivity. intros.
+      destruct (e0 == i) eqn : ?. order e. assert (i == e0 = false) by order e. rewrite H6 in H5.
+      simpl in H5. rewrite oro_None_r in H5. rewrite oro_None_r in H5. solve_Bounds.
+    + destruct H5. simpl in Heqp. assert (s2 <> Tip). { destruct s2. intro. discriminate H7.
+      simpl in H5. inversion H5. } 
+      eapply lookupMax_in_bin in H7. rewrite Heqp in H7. rewrite Heqp0 in H7. inversion H7; subst.
+      rewrite H5. assert (sem s1 e1 = None). { eapply (sem_inside H0) in H5. destruct H5.
+      eapply sem_outside_above. apply H. solve_Bounds. } rewrite H3. simpl.
+      destruct (e1 == x) eqn : ?. solve_Bounds. simpl. split. reflexivity. intros.
+      destruct (sem s1 i) eqn : ?. solve_Bounds. simpl in H8. destruct (i == x) eqn : ?.
+      solve_Bounds. simpl in H8. apply H6 in H8. assumption.
+Qed. 
+
+Lemma lookupMax_Desc:
+  forall m lb ub,
+    Bounded m lb ub ->
+    match lookupMax m with 
+      | None => (forall i, sem m i = None)
+      | Some (y, v) => sem m y = Some v /\ (forall i v1, sem m i = Some v1 -> (i GHC.Base.<= y) = true)
+    end.
+Proof.
+  intros.
+  unfold lookupMax.
+  inversion H; subst; clear H.
+  * reflexivity.
+  * simpl.
+    pose proof (lookupMaxSure_Desc s2 x v (Some x) ub H1). destruct (lookupMaxSure x v s2) eqn : ?.
+    destruct H.
+    - destruct H; subst. apply empty_no_elts in H; subst. simpl. simpl in Heqp. inversion Heqp; subst.
+      rewrite Eq_Reflexive. simpl. split. assert (sem s1 e0 = None). { eapply sem_outside_above.
+      apply H0. solve_Bounds. } rewrite H. reflexivity.
+      intros. destruct (i == e0) eqn : ?.
+      order e. simpl in H. rewrite oro_None_r in H. rewrite oro_None_r in H. solve_Bounds.
+    - destruct H. rewrite H. simpl; split. assert (sem s1 e0 = None). { eapply sem_outside_above.
+      apply H0. apply (sem_inside H1) in H. solve_Bounds. } rewrite H6.
+      destruct (e0 == x) eqn : ?. solve_Bounds. simpl. reflexivity.
+      intros. destruct (sem s1 i) eqn : ?. solve_Bounds. simpl in H6. destruct (i == x) eqn : ?.
+      solve_Bounds. simpl in H6. eapply H4. apply H6.
+Qed.
+
+
 (** ** Verification of [minViewSure] *)
 
 Lemma minViewSure_Desc:
@@ -1292,6 +1684,87 @@ Proof.
     inversion Hview; subst; clear Hview.
     split; [left; (split;reflexivity) | solve_Desc].
 Qed.
+
+(** ** Verification of [maxView] *)
+
+Lemma maxViewWithKey_Desc:
+  forall m lb ub,
+    Bounded m lb ub ->
+    forall (P : option ((e * a) * Map e a) -> Prop),
+    (forall y r v,
+      (sem m y = Some v) /\
+      Desc r lb (Some y) (size m - 1) (fun i => if (i == y) then None else sem m i) ->
+      P (Some ((y, v), r))) ->
+    ((forall i, sem m i = None) -> P None) ->
+    P (maxViewWithKey m).
+Proof.
+  intros ??? HB P HSome HNone.
+  unfold maxViewWithKey.
+  inversion HB; subst.
+  * apply HNone. intro; reflexivity.
+  * unfold op_zdzn__, Datatypes.id, op_zd__.
+    eapply maxViewSure_Desc; only 1: eassumption.
+    intros.
+    apply HSome.
+    split.
+    - simpl. destruct H3. destruct H3. destruct H3. subst. rewrite Eq_Reflexive.
+      assert (sem s1 x = None). { eapply sem_outside_above. apply H. solve_Bounds. }
+      rewrite H3. simpl. reflexivity. rewrite H3. 
+      assert (sem s1 y = None). { eapply sem_outside_above. apply H. solve_Bounds. }
+      rewrite H6. simpl. destruct (y == x) eqn : ?. solve_Bounds. reflexivity. 
+    - applyDesc H3. solve_Desc.
+Qed.
+
+Lemma maxViewDesc:
+  forall m lb ub,
+  Bounded m lb ub ->
+  maxView m = match maxViewWithKey m with
+            |None => None
+            | Some ((x,y), m) => Some (y, m)
+            end.
+Proof.
+  intros. unfold maxView. reflexivity.
+Qed.
+
+(** ** Verification of [minView] *)
+
+Lemma minViewWithKey_Desc:
+  forall m lb ub,
+    Bounded m lb ub ->
+    forall (P : option ((e * a) * Map e a) -> Prop),
+    (forall y r v,
+      (sem m y = Some v) /\
+      Desc r (Some y) ub  (size m - 1) (fun i => if (i == y) then None else sem m i) ->
+      P (Some ((y, v), r))) ->
+    ((forall i, sem m i = None) -> P None) ->
+    P (minViewWithKey m).
+Proof.
+  intros ??? HB P HSome HNone.
+  unfold minViewWithKey.
+  inversion HB; subst.
+  * apply HNone. intro; reflexivity.
+  * unfold op_zdzn__, Datatypes.id, op_zd__.
+    eapply minViewSure_Desc; only 1: eassumption.
+    intros.
+    apply HSome.
+    split.
+    - simpl. destruct H3. destruct H3. destruct H3. subst. rewrite Eq_Reflexive.
+      assert (sem s1 x = None). { eapply sem_outside_above. apply H. solve_Bounds. }
+      rewrite H3. simpl. reflexivity. rewrite H3. simpl. reflexivity. 
+    - applyDesc H3. solve_Desc.
+Qed.
+
+Lemma minViewDesc:
+  forall m lb ub,
+  Bounded m lb ub ->
+  minView m = match minViewWithKey m with
+            |None => None
+            | Some ((x,y), m) => Some (y, m)
+            end.
+Proof.
+  intros. unfold minView. reflexivity.
+Qed.
+
 
 (** ** Verification of [glue] *)
 
@@ -1356,6 +1829,83 @@ Proof.
       * destruct (sem s2 x); cbn -[Z.add] in *; applyDesc balanceL_Desc; solve_Desc.
 Qed.
 
+(** ** Verification of [deleteMin] *)
+
+(** It is hard to phrase this without refering to [lookupMin] *)
+
+Lemma deleteMin_Desc :
+  forall m lb ub,
+  Bounded m lb ub ->
+  deleteMin m = match lookupMin m with | None => m
+                                       | Some (x, y) => delete x m end.
+Proof.
+  intros ??? HD.
+  induction HD.
+  * reflexivity.
+  * clear IHHD2.
+    cbn [deleteMin].
+    rewrite IHHD1; clear IHHD1.
+
+    destruct s1 eqn:?.
+    + replace (lookupMin (Bin sz x v (Bin s e0 a0 m1 m2) s2)) with (lookupMin (Bin s e0 a0 m1 m2)) by reflexivity.
+      rewrite <- Heqm in *. clear  s e0 a0 m1 m1 Heqm.
+
+      pose proof (lookupMin_Desc s1 lb (Some x) HD1) as Hlookup.
+      destruct (lookupMin s1) as [ex|].
+      - destruct ex. destruct Hlookup as [Hthere Hextrem].
+        simpl.
+        apply (sem_inside HD1) in Hthere. destruct Hthere.
+        replace (compare e0 x) with Lt by (symmetry; solve_Bounds).
+        ** destruct_ptrEq.
+           ++ rewrite Hpe. clear Hpe.
+              eapply balanceR_noop; try eassumption.
+           ++ reflexivity.
+       - rewrite H1.
+          eapply balanceR_noop; try eassumption.
+   + simpl.
+     replace (compare x x) with Eq by (symmetry; order e).
+     reflexivity.
+Qed.
+
+(** ** Verification of [deleteMax] *)
+
+(** It is hard to phrase this without refering to [lookupMax] *)
+
+Lemma deleteMax_Desc :
+  forall m lb ub,
+  Bounded m lb ub ->
+  deleteMax m = match lookupMax m with | None => m
+                                       | Some (x, y) => delete x m end.
+Proof.
+  intros ??? HD.
+  induction HD.
+  * reflexivity.
+  * clear IHHD1.
+    cbn [deleteMax].
+    rewrite IHHD2; clear IHHD2.
+
+    destruct s2 eqn:?.
+    + replace (lookupMax (Bin sz x v s1 (Bin s e0 a0 m1 m2))) with (lookupMax (Bin s e0 a0 m1 m2)) by reflexivity.
+      rewrite <- Heqm in *. clear s e0 a0 m1 m2 Heqm.
+
+      pose proof (lookupMax_Desc s2 (Some x) ub HD2) as Hlookup.
+      destruct (lookupMax s2) as [ex|].
+      - destruct ex. destruct Hlookup as [Hthere Hextrem].
+        simpl.
+        apply (sem_inside HD2) in Hthere. destruct Hthere.
+        replace (compare e0 x) with Gt by (symmetry; solve_Bounds).
+        ** destruct_ptrEq.
+           ++ rewrite Hpe. clear Hpe.
+              eapply balanceL_noop; try eassumption.
+           ++ reflexivity.
+       - rewrite H1.
+          eapply balanceL_noop; try eassumption.
+   + simpl.
+     replace (compare x x) with Eq by (symmetry; order e).
+     destruct s1; reflexivity.
+Qed.
+
+Search EqLaws.
 (** ** Verification of [split] *)
 
 Lemma split_Desc :
@@ -1469,6 +2019,56 @@ Proof.
         solve_Desc.
 Qed.
 
+(** ** Verification of [unions] *)
+
+(* This is a bit of a lazy specification, but goes a long way *)
+
+Lemma Forall_rev:
+  forall A P (l : list A), Forall P (rev l) <-> Forall P l.
+Proof. intros. rewrite !Forall_forall. setoid_rewrite <- in_rev. reflexivity. Qed.
+
+Lemma oro_assoc : forall {a} (o1 o2 o3: option a),
+  (o1 ||| o2) ||| o3 = o1 ||| (o2 ||| o3).
+Proof.
+  intros. destruct o1. simpl. reflexivity. simpl. reflexivity.
+Qed.
+
+Lemma oro_app: forall o l1 l2 i,
+  (fold_right (fun h t => sem h i ||| t) o (l1 ++ l2)) =
+  (fold_right (fun h t => sem h i ||| t) None l1) |||
+  (fold_right (fun h t => sem h i ||| t) o l2).
+Proof.
+  intros. generalize dependent o. generalize dependent l2. induction l1; intros.
+  - simpl. reflexivity.
+  - simpl. rewrite IHl1. rewrite oro_assoc. reflexivity.
+Qed.
+
+Require Proofs.Data.Foldable.
+
+Lemma unions_Desc:
+  forall ss lb ub,
+  Forall (fun s => Bounded s lb ub) ss ->
+  Desc' (unions ss) lb ub (fun i => fold_right (fun h t => sem h i ||| t) None ss).
+Proof.
+  intros.
+  unfold unions.
+  (* Switch to a fold right *)
+  rewrite Proofs.Data.Foldable.hs_coq_foldl'_list.
+  rewrite <- fold_left_rev_right.
+  rewrite <- (rev_involutive ss).
+  rewrite <- (rev_involutive ss), Forall_rev in H.
+  generalize dependent (rev ss). intros.
+  rewrite rev_involutive.
+
+  induction H.
+  * simpl. applyDesc empty_Desc. solve_Desc.
+  * simpl fold_right.
+    applyDesc IHForall.
+    applyDesc union_Desc.
+    solve_Desc.
+    intro i.
+    rewrite Hsem0, Hsem. rewrite oro_app. simpl. rewrite oro_None_r. reflexivity.
+Qed.
 (** ** Verification of [link2] *)
 
 (** This is called  [merge] for Set *)
@@ -1723,9 +2323,6 @@ Proof.
         -- f_solver.
 Qed.
 
-(*START - Following Set for now *)
-(* no disjoint*)
-
 (** ** Verification of [foldrWithKey] *)
 
 Lemma fold_right_toList_go:
@@ -1795,13 +2392,8 @@ Fixpoint In {e} {a} `{EqLaws e} (key : e) (value : a) (l : list (e * a)) : Prop 
   | nil => False
   | a :: tl => (let (x,y):= a in x == key = true /\ y = value) \/ In key value tl
   end.
-(*Helper methods for logic*)
 
-Lemma contrapositive : forall (P : Prop) (Q: Prop),
-  (P -> Q) -> (~Q -> ~P).
-Proof.
-  intros. intro. apply H in H1. contradiction.
-Qed.
+(*Helper methods for logic*)
 
 Lemma or_assoc: forall b1 b2 b3,
   (b1 \/ b2) \/ b3 <-> b1 \/ ( b2 \/ b3).
@@ -2708,35 +3300,7 @@ Proof.
     discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity. apply H2. apply H3.
 Qed.
 
-(** ** Verification of [member] *)
 
-(*Similar to lookup_spec (but a bit more complicated because of the use of Props rather than booleans),
-this states that a key is in a map iff there exists some value such that sem key map returns that value*)
-Lemma member_spec:
- forall {s lb ub i}, Bounded s lb ub -> member i s = true <-> exists v, sem s i = Some v.
-Proof.
-  intros. induction H.
-  - simpl. split. intros. discriminate H. intros. destruct H. discriminate H. 
-  - subst. simpl. destruct (compare i x) eqn: ?; split; intros.
-    + replace (i==x) with true by order_Bounds.
-      rewrite (sem_outside_above H) by order_Bounds.
-      simpl. exists v. reflexivity.
-    + reflexivity.
-    + replace (i==x) with false by order_Bounds.
-      rewrite (sem_outside_below H0) by order_Bounds.
-      simpl_options. apply IHBounded1 in H3. destruct H3. exists x0. assumption.
-    + assert (sem s2 i = None). { eapply sem_outside_below. apply H0. unfold isLB.
-      order_Bounds. }
-      rewrite H5 in H3. assert (i == x = false). { rewrite compare_Lt in Heqc.
-      apply lt_not_eq. assumption. } rewrite H6 in H3. simpl in H3. simpl_options. 
-      apply IHBounded1. destruct H3. exists x0. assumption. 
-    + replace (i==x) with false by order_Bounds.
-      rewrite (sem_outside_above H) by order_Bounds.
-      simpl. apply IHBounded2 in H3. destruct H3. exists x0. assumption.
-    + assert (sem s1 i = None). { eapply sem_outside_above. apply H. order_Bounds. }
-      rewrite H5 in H3. rewrite compare_Gt in Heqc. apply gt_not_eq in Heqc. rewrite Heqc in H3.
-      simpl_options. destruct H3. apply IHBounded2. exists x0. assumption.
-Qed.
 
 (** ** Verification of [splitLookup] *)
 
@@ -3408,6 +3972,7 @@ Proof.
   * simpl. repeat destruct_match; reflexivity.
 Qed.
 
+
 End WF.
 (*Could not find [ordered], [valid], [validsize] or similar in Data.Map*)
 
@@ -3541,11 +4106,6 @@ Proof.
   - simpl. apply Eq_Reflexive.
 Qed.
 
-Lemma oro_assoc : forall {a} (o1 o2 o3: option a),
-  (o1 ||| o2) ||| o3 = o1 ||| (o2 ||| o3).
-Proof.
-  intros. destruct o1. simpl. reflexivity. simpl. reflexivity.
-Qed.
 
 Lemma eq_coq_implies_haskell : forall {a} `{EqLaws a} (x y : a),
   x = y -> x == y = true.
@@ -3678,6 +4238,270 @@ Proof.
   - simpl. rewrite IHm1. rewrite IHm2. reflexivity.
   - simpl. reflexivity.
 Qed.
+
+
+(** ** [Maps]s with [WF] *)
+
+Definition WFMap  (e : Type) `{Ord e} (a: Type)  : Type := {m : Map e a | WF m}.
+Definition pack   {e : Type} {a} `{Ord e} : forall (m : Map e a), WF m -> WFMap e a  := exist _.
+Definition unpack {e : Type} {a} `{Ord e} : WFMap e a                  -> Map e a := @proj1_sig _ _.
+
+
+(** * Type classes *)
+
+(** Because a [Map e a] is only useful if it well-formed, we instantiate
+the law classes with a subset type. *)
+
+Require Import Proofs.GHC.Base.
+
+Section TypeClassLaws.
+Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
+
+(*First, we need lawful [Eq] and [Ord] instances for pairs and lists*)
+Global Instance EqLaws_Pair {a} {b} `{EqLaws a} `{EqLaws b} : EqLaws (a * b).
+Proof.
+  constructor.
+  - unfold "==". unfold Eq_pair___. unfold op_zeze____. unfold eq_pair. unfold ssrbool.reflexive.
+    intros. destruct x. unfold is_true. rewrite andb_true_iff. split; apply Eq_Reflexive.
+  - unfold "==". unfold Eq_pair___. unfold op_zeze____. unfold eq_pair. unfold ssrbool.symmetric.
+    intros. destruct x. destruct y. rewrite prop_bool. apply Eq_Tuple_Sym.
+  - unfold "==". unfold Eq_pair___. unfold op_zeze____. unfold eq_pair. unfold ssrbool.transitive.
+    intros. destruct x. destruct y. destruct z. unfold is_true in *.
+    rewrite andb_true_iff in H3. rewrite andb_true_iff in H4. destruct H3. destruct H4.
+    eapply Eq_Tuple_Trans. rewrite eq_tuple_prop. split. apply H3. apply H5. rewrite eq_tuple_prop.
+    split. apply H4. apply H6.
+  - intros. unfold "==", "/=". unfold Eq_pair___. unfold op_zeze____ , op_zsze____ .
+    destruct (eq_pair x y). reflexivity. reflexivity.
+Qed.
+
+Lemma eq_le : forall {a} `{OrdLaws a} (x y : a),
+  x == y = true -> x <= y = true.
+Proof.
+  intros.
+  order a0.
+Qed.
+
+(*If a and b are lawful members of [Ord], then so is a * b*)
+Instance OrdLaws_Pair {a} {b} `{OrdLaws a} `{OrdLaws b} : OrdLaws (a * b).
+Proof.
+  constructor.
+  - intros. destruct a1. destruct b0. unfold "<=", "==" in *. unfold Ord_pair___, Eq_pair___ in *.
+    unfold ord_default, op_zeze____  in *. simpl in *. rewrite andb_true_iff.  rewrite negb_true_iff in *. 
+    destruct (compare a2 a1) eqn : ?. destruct (compare b0 b1) eqn : ?.
+    rewrite compare_Eq in Heqc. rewrite compare_Eq in Heqc0. split.
+    apply Eq_Symmetric. apply Heqc. apply Eq_Symmetric. apply Heqc0.
+    inversion Heqc0. inversion H1. rewrite compare_Eq in Heqc. apply Eq_Symmetric in Heqc.
+    unfold is_true in Heqc. rewrite <- compare_Eq in Heqc. rewrite Heqc in H2.
+    inversion H0. apply Ord_compare_Gt in Heqc0. apply Ord_compare_Lt in Heqc0.
+    rewrite Heqc0 in H2. inversion H2. inversion H1. inversion H. rewrite Ord_compare_Gt in Heqc.
+    apply Ord_compare_Lt in Heqc. rewrite Heqc in H2. inversion H2.
+  - intros. destruct a1. destruct c. destruct b0. unfold "<=" in *. unfold Ord_pair___  in *.
+    unfold compare_pair in *. unfold ord_default in *. simpl in *. rewrite negb_true_iff in *.
+    repeat (try (destruct (compare a2 a1) eqn : ?); try (destruct (compare b2 b1) eqn : ?);
+    try (destruct (compare a3 a1) eqn : ?); try (destruct (compare b0 b1) eqn : ?);
+    try (destruct (compare a2 a3) eqn : ?); try (destruct (compare b2 b0) eqn : ?); 
+    try (order b); try (order a0)).
+  - intros. destruct a1. destruct b0. unfold "<=" in *. unfold Ord_pair___ in *. unfold compare_pair in *.
+    unfold ord_default. unfold ord_default in *. simpl. rewrite negb_true_iff. rewrite negb_true_iff.
+    destruct (compare a2 a1) eqn : ?. assert (compare a1 a2 = Eq) by (order a0). rewrite H1.
+    destruct (compare b0 b1) eqn : ?. left. reflexivity. right. assert (compare b1 b0 <> Lt) by (order b).
+    destruct (compare b1 b0). reflexivity. contradiction. reflexivity. left. reflexivity.
+    right. destruct (compare a1 a2) eqn : ?. order a0. order a0. reflexivity.
+    left. reflexivity.
+  - intros. unfold compare.   unfold "<=" in *. unfold Ord_pair___ in *. unfold compare_pair in *.
+    unfold ord_default. simpl. rewrite negb_false_iff. destruct a1. destruct b0. 
+    split; intros. destruct (compare a1 a2). rewrite H1. reflexivity. reflexivity. inversion H1.
+    destruct (compare a1 a2). destruct (compare b1 b0). inversion H1. reflexivity. inversion H1.
+    reflexivity. inversion H1.
+  - intros. unfold compare. unfold "==". unfold Ord_pair___ , Eq_pair___ . unfold compare_pair,op_zeze____ .
+    unfold ord_default, eq_pair. simpl. destruct a1. destruct b0. split; intros. destruct (compare a1 a2) eqn : ?.
+    inversion H. rewrite Ord_compare_Eq in Heqc. inversion H0. rewrite Ord_compare_Eq0 in H1. rewrite andb_true_iff.
+    split; assumption. inversion H1. inversion H1. rewrite andb_true_iff in H1. destruct H1.
+    inversion H. inversion H0. apply Ord_compare_Eq in H1. apply Ord_compare_Eq0 in H2. rewrite H1. assumption.
+  - intros. unfold compare. unfold Ord_pair___ , "<=". unfold compare_pair. unfold ord_default. simpl.
+    destruct a1. destruct b0. split; intros. rewrite negb_false_iff.  
+    destruct (compare a1 a2) eqn : ?. assert (compare a2 a1 = Eq) by (order a0). rewrite H2.
+    assert (compare b0 b1 = Lt) by (order b). rewrite H3. reflexivity. inversion H1. inversion H1.
+    assert (compare a2 a1 = Lt) by (order a0). rewrite H2. reflexivity.
+    rewrite negb_false_iff in H1. destruct (compare a2 a1) eqn : ?.
+    assert (compare a1 a2 = Eq) by (order a0). rewrite H2. destruct (compare b0 b1) eqn : ?.
+    inversion H1. order b. inversion H1. assert (compare a1 a2 = Gt) by (order a0). rewrite H2.
+    reflexivity. inversion H1.
+  - intros. unfold "<", "<=". unfold Ord_pair___.  unfold compare_pair; unfold ord_default; simpl.
+    rewrite negb_involutive. reflexivity.
+  - intros. unfold "<=", ">=". unfold Ord_pair___. unfold compare_pair; unfold ord_default; simpl.
+    reflexivity.
+  - intros. unfold ">", "<=". unfold Ord_pair___.  unfold compare_pair; unfold ord_default; simpl.
+    rewrite negb_involutive. reflexivity.
+Qed.
+
+
+(** ** Verification of [Eq] *)
+Global Program Instance Eq_Map_WF `{EqLaws a} : Eq_ (WFMap e a) := fun _ k => k
+  {| op_zeze____ := @op_zeze__ (Map e a) _
+   ; op_zsze____ := @op_zsze__ (Map e a) _
+  |}.
+
+Local Ltac unfold_WFMap_Eq :=
+  unfold "_==_", "_/=_", Eq_Map_WF, op_zeze____; simpl;
+  unfold "_==_", "_/=_", Eq___Map; simpl;
+  unfold Internal.Eq___Map_op_zeze__, Internal.Eq___Map_op_zsze__ ; simpl.
+
+Global Instance EqLaws_Map `{EqLaws a} : EqLaws (WFMap e a).
+Proof.
+  constructor.
+  - unfold_WFMap_Eq. unfold ssrbool.reflexive. intros. unfold is_true. rewrite andb_true_iff.
+    split. apply Eq_Reflexive. apply Eq_Reflexive.
+  - unfold_WFMap_Eq. unfold ssrbool.symmetric. intros. rewrite prop_bool. split; intros; rewrite andb_true_iff in *.
+    + destruct H1. split; apply Eq_Symmetric; assumption.
+    + destruct H1. split; apply Eq_Symmetric; assumption.
+  - unfold_WFMap_Eq. unfold ssrbool.transitive. intros. unfold is_true in *. rewrite andb_true_iff in *.
+    destruct H1. destruct H2. split. eapply Eq_Transitive. apply H1. apply H2. eapply Eq_Transitive.
+    apply H3. apply H4.
+  - intros. unfold_WFMap_Eq. unfold Internal.Eq___Map_op_zeze__. rewrite negb_involutive . reflexivity.
+Qed.
+
+(** ** Verification of [ord] *)
+Global Program Instance Ord_Map_WF `{OrdLaws a} : Ord (WFMap e a) := fun _ k => k
+  {| op_zlze____ := @op_zlze__ (Map e a) _ _
+   ; op_zgze____ := @op_zgze__ (Map e a) _ _
+   ; op_zl____ := @op_zl__ (Map e a) _ _
+   ; op_zg____ := @op_zg__ (Map e a) _ _
+   ; compare__ := @compare (Map e a) _ _
+   ; min__ := @min (Map e a) _ _
+   ; max__ := @max (Map e a) _ _
+  |}.
+Next Obligation.
+  destruct x. destruct x0. simpl.
+  unfold max. unfold Ord__Map. unfold max__. unfold Internal.Ord__Map_max.
+   destruct Internal.Ord__Map_op_zlze__; assumption.
+Qed.
+Next Obligation.
+  destruct x. destruct x0. simpl.
+  unfold min, Ord__Map, min__, Internal.Ord__Map_min.
+  destruct (Internal.Ord__Map_op_zlze__ _ _); assumption.
+Qed.
+
+
+Lemma compare_neq_gt_iff_le {t} `{OrdLaws t} (l1 l2 : t) :
+  (compare l1 l2 /= Gt = true) <-> (l1 <= l2) = true.
+Proof.
+  rewrite Neq_inv, negb_true_iff.
+  destruct (_ <= _) eqn:LE; simpl.
+  - split; trivial; intros _.
+    enough ((compare l1 l2 == Gt) = false <-> compare l1 l2 <> Gt) as OK.
+    + now apply OK; rewrite Ord_compare_Gt, LE.
+    + now rewrite (ssrbool.rwP (Eq_eq _ Gt)); unfold is_true; rewrite not_true_iff_false.
+  - now rewrite <-Ord_compare_Gt in LE; rewrite LE.
+Qed.
+
+Lemma WFMap_eq_size_length' (m : WFMap e a) :
+  Data.Map.Internal.size (proj1_sig m) = Z.of_nat (Datatypes.length (toAscList (proj1_sig m))).
+Proof.
+  destruct m as [m WFm]; unfold "==", Eq_Map_WF; simpl.
+  rewrite size_size; erewrite size_spec; trivial; exact WFm.
+Qed.
+
+Lemma WFMap_eq_size_length (m : WFMap e a) :
+  Data.Map.Internal.size (unpack m) = Z.of_nat (Datatypes.length (toAscList (unpack m))).
+Proof. apply WFMap_eq_size_length'. Qed.
+
+Local Ltac unfold_WFMap_Ord :=
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord_Map_WF; simpl;
+  unfold "_<=_", "_<_", "_>=_", "_>_", compare, Ord__Map; simpl;
+  unfold Data.Map.Internal.Ord__Map_op_zlze__, (*Data.Map.Internal.Ord_Map_op_zl__*)
+         Data.Map.Internal.Ord__Map_op_zgze__, (*Data.Map.Internal.Ord_Map__op_zg__*)
+         Data.Map.Internal.Ord__Map_compare; simpl.
+
+Local Ltac hideToAscList a :=
+  let la := fresh "l" a in
+  let EQ := fresh "EQ"  in
+  remember (toAscList (unpack a)) as la eqn:EQ; try clear a EQ.
+
+Global Instance OrdLaws_Map `{OrdLaws a} : OrdLaws (WFMap e a).
+Proof.
+  constructor; unfold_WFMap_Eq; unfold_WFMap_Ord.
+  - intros a0 b; rewrite !compare_neq_gt_iff_le => LEab LEba.
+    generalize (Ord_antisym _ _ LEab LEba) => EQab.
+    match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP ssrbool.andP); split; trivial.
+    rewrite !WFMap_eq_size_length'; rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQab.
+  - intros a0 b c; rewrite !compare_neq_gt_iff_le; order (list (e * a)).
+  - intros a0 b; rewrite !compare_neq_gt_iff_le; apply Ord_total.
+  - intros a0 b; rewrite Ord_compare_Lt,Neq_inv,negb_false_iff.
+    match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+    order (list (e * a)).
+  - intros a0 b; rewrite Ord_compare_Eq.
+    repeat match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP ssrbool.andP), <-(ssrbool.rwP (Eq_eq _ _)).
+    split; [intros EQ | intros [LIST EQ]]; rewrite EQ; trivial.
+    split; trivial. rewrite !WFMap_eq_size_length'.
+    rewrite Nat2Z.inj_iff; apply eqlist_length, EQ. apply Eq_refl.
+    apply Eq_refl.
+  - intros a0 b; rewrite Ord_compare_Gt,Neq_inv,negb_false_iff.
+    match goal with |- context[?b = true] => fold (is_true b) end.
+    rewrite <-(ssrbool.rwP (Eq_eq _ _)).
+    order (list (e * a)).
+  - intros. unfold Internal.Ord__Map_op_zl__, "/=". unfold Internal.Ord__Map_compare, 
+    Eq_comparison___. unfold op_zsze____ . rewrite negb_involutive. destruct (compare _ _) eqn : ?;
+    unfold eq_comparison; unfold proj1_sig in *; destruct a0; destruct b. 
+    assert (compare (toAscList x0) (toAscList x) = Eq) by (order (list (e * a))). rewrite H0.
+    reflexivity.  assert (compare (toAscList x0) (toAscList x) = Gt) by (order (list (e * a))).
+    rewrite H0. reflexivity. assert (compare (toAscList x0) (toAscList x) = Lt) by (order (list (e * a))).
+    rewrite H0. reflexivity.
+  - now intros a0 b; rewrite !Neq_inv,                  compare_flip; destruct (compare _ _).
+  - intros. unfold Internal.Ord__Map_op_zg__ , "/=". unfold Internal.Ord__Map_compare, Eq_comparison___.
+    unfold op_zsze____ . rewrite negb_involutive. reflexivity.
+Qed.
+
+(** ** Verification of [Semigroup] *)
+
+Ltac unfold_Monoid_Map :=
+  unfold mappend, mconcat, mempty, Monoid__Map, mappend__, mconcat__, mempty__,
+         Internal.Monoid__Map_mappend, Internal.Monoid__Map_mconcat, Internal.Monoid__Map_mempty,
+         op_zlzlzgzg__,  Semigroup__Map, op_zlzlzgzg____,
+         Internal.Semigroup__Map_op_zlzlzgzg__
+    in *.
+
+Global Program Instance Semigroup_WF : Semigroup (WFMap e a) := fun _ k => k
+  {| op_zlzlzgzg____  := @mappend (Map e a) _ _ |}.
+Next Obligation.
+  destruct x as [s1 HB1], x0 as [s2 HB2]. simpl.
+  unfold_Monoid_Map.
+  eapply union_Desc; try eassumption. intuition.
+Qed.
+
+(*I'm not sure why, but SemigroupLaws requires that (WFMap e a) be a member of [Eq], so we need
+the [EqLaws a] condition*)
+Global Instance SemigroupLaws_Map `{EqLaws a} : SemigroupLaws (WFMap e a).
+Proof.
+  constructor.
+  intros.
+  destruct x as [s1 HB1], y as [s2 HB2], z as [s3 HB3].
+  unfold op_zeze__, Eq_Map_WF, op_zeze____, proj1_sig.
+  unfold op_zlzlzgzg__, Semigroup_WF, op_zlzlzgzg____.
+  unfold mappend, Monoid__Map, mappend__.
+  unfold Internal.Monoid__Map_mappend.
+  unfold proj1_sig.
+  unfold op_zlzlzgzg__, Semigroup__Map, op_zlzlzgzg____.
+  unfold Internal.Semigroup__Map_op_zlzlzgzg__.
+  eapply (union_Desc s1 s2); try eassumption. intros s12 Hs12 _ Hsem12.
+  eapply (union_Desc s2 s3); try eassumption. intros s23 Hs23 _ Hsem23.
+  eapply (union_Desc s1 s23); try eassumption. intros s1_23 Hs1_23 _ Hsem1_23.
+  eapply (union_Desc s12 s3); try eassumption. intros s12_3 Hs12_3 _ Hsem12_3.
+  rewrite -> weak_equals_spec by eassumption.
+  intro i. rewrite Hsem12_3,Hsem1_23,Hsem23,Hsem12.
+  rewrite oro_assoc. apply Eq_Reflexive.
+Qed.
+
+(*Skipping Monoid for now - causes Coq to freeze*)
+
+
+End TypeClassLaws.
+
 
 Section ContainerAxioms.
 Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.

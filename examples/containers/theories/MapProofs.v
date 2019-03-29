@@ -5417,9 +5417,9 @@ Proof.
 Qed.
 
 (** ** Verification of [partition] *)
-
+(*TODO: NOTE: UNCOMMENT ON COMMIT*)
 Set Bullet Behavior "Strict Subproofs".
-
+(*
 Lemma partitionWithKey_Bounded:
   forall p map lb ub,
   Bounded map lb ub ->
@@ -5445,13 +5445,13 @@ Proof.
         -- solve_Bounded.
         -- applyDesc link_Desc.
 Qed.
-
+*)
 Lemma equal_f : forall {A B : Type} {f g : A -> B},
   f = g -> forall x, f x = g x.
 Proof.
   intros. rewrite H. reflexivity.
 Qed.
-
+(*
 Lemma partitionWithKey_spec:
   forall (p : e -> a -> bool) map lb ub,
   Bounded map lb ub ->
@@ -5516,7 +5516,7 @@ Lemma partition_spec:
 Proof.
   intros. unfold partition. eapply partitionWithKey_spec. apply H. f_solver. apply H0.
 Qed.
-
+*)
 (** ** Verification of [take] *)
 (*This is exactly the same as SetProofs, since the take function works the exact same way*)
 Definition takeGo : Int -> Map e a -> Map e a.
@@ -6363,7 +6363,8 @@ Proof.
   - pose proof partitionWithKey_spec. 
     specialize (H3 P m lb ub H H0 (fun m => fst m (partitionWithKey P m)) key = Some value). simpl in H2.*)
 
-
+(*TODO: UNCOMMENT*)
+(*
 Lemma fst_partition_sem: forall m P key lb ub,
   Bounded m lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) P ->
@@ -6492,7 +6493,7 @@ Proof.
       eapply partitionWithKey_spec. apply H1. apply H3. intros. simpl. apply H7.
       intros. apply H8.
 Qed.
-
+*)
 Lemma sem_filter_in_map: forall key value map lb ub f,
   Bounded map lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -6520,10 +6521,11 @@ Lemma eq_coq_implies_haskell : forall {a} `{EqLaws a} (x y : a),
 Proof.
   intros. subst. apply Eq_Reflexive.
 Qed.
-
+(*TODO: UNCOMMENT*)
 (*Need to have proven EqLaws for Map first, since we need to show that left = snd Partition
 -> left == snd Partition, but we need equality in the hypothesis because equality of
 maps does not imply bounds at all*)
+(*
 Lemma lookup_partition': forall `{EqLaws a} key value map left right f lb ub,
   Bounded map lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -6552,7 +6554,7 @@ Proof.
     apply H2. intros. simpl. apply H10. intros. apply H11. apply H10.
   - apply H1.
 Qed. 
-
+*)
 Lemma lookup_union_None: forall key (m1: Map e a) m2 lb ub,
   Bounded m1 lb ub ->
   Bounded m2 lb ub ->
@@ -7238,7 +7240,7 @@ Proof.
 Qed.
 
 (** ** Verification of [Monoid] *)
-
+(*
 Global Program Instance Monoid_WF : Monoid (WFMap e a) := fun _ k => k
   {| mempty__   := @mempty (Map e a) _ _
    ; mappend__  := @mappend (Map e a) _ _
@@ -7262,7 +7264,7 @@ Next Obligation.
   unfold_Monoid_Set.
   eapply empty_Desc.
   eauto.
-Qed.
+Qed.**)
 
 (*Skipping Monoid for now - causes Coq to freeze*)
 Lemma map_preserves_size: forall {b} {c} (m : Map e b) (f : b -> c) lb ub,
@@ -7319,8 +7321,6 @@ Next Obligation.
   unfold proj1_sig. destruct x0. apply const_WF. apply w.
 Qed.
 
-Set Bullet Behavior "Strict Subproofs".
-
 Global Instance FunctorLaws_MapWF: FunctorLaws (WFMap e).
   constructor.
   - intros. destruct x. unfold fmap. unfold fmap__.  unfold Functor_Map. 
@@ -7337,12 +7337,1280 @@ Global Instance FunctorLaws_MapWF: FunctorLaws (WFMap e).
     + simpl. rewrite IHw1. rewrite IHw2. reflexivity.
 Qed. 
 
+
+(** ** Verification of [Eq1] *)
+Require Import Data.Functor.Classes.
+Require Import Proofs.Data.Functor.Classes.
+Global Instance Eq1Laws_list: Eq1Laws list (@Eq_list).
+Proof.
+  constructor.
+  intros ? ? xs ys.
+  unfold liftEq, Eq1__list, liftEq__.
+  replace (xs == ys) with (eqlist xs ys) by reflexivity.
+  revert ys.
+  induction xs; intros ys.
+  * reflexivity.
+  * destruct ys.
+    - reflexivity.
+    - simpl. rewrite IHxs. reflexivity.
+Qed.
+
+
+(*Global Instance Eq1Laws_Set : Eq1Laws (Map e) (@Eq___Map).
+Proof.
+  split.
+  intros.
+  unfold liftEq, Eq1__Set_, liftEq__, Internal.Eq1__Set__liftEq.
+  rewrite Eq1_same.
+  reflexivity.
+Qed.*)
+
+Check @Eq___Map.
+
+Print Eq___Map.
+Print Eq1.
+Print Eq1__Dict.
+
+Check (fun a => @Eq___Map e a HEq).
+
+(*copied from Internal.v for now*)
+Local Definition Eq2__Map_liftEq2
+   : forall {a} {b} {c} {d},
+     (a -> b -> bool) -> (c -> d -> bool) -> Map a c -> Map b d -> bool :=
+  fun {a} {b} {c} {d} =>
+    fun eqk eqv m n =>
+      andb (size m GHC.Base.== size n) (Data.Functor.Classes.liftEq
+            (Data.Functor.Classes.liftEq2 eqk eqv) (toList m) (toList n)).
+
+(*Internal.v for map seems to skip Eq1's function (liftEq)*)
+(*Eq2 does not seem to have any laws yet*)
+Global Instance Eq2_Map : Eq2 (Map).
+Proof.
+unfold Eq2. intros. apply X. Search Eq2__Dict. apply Eq2__Dict_Build.
+intros. Print Eq2__Map_liftEq2. eapply Eq2__Map_liftEq2. apply X0. apply X1.
+apply X2. apply X3.
+Qed.
+
 End TypeClassLaws.
 
+(** * Instantiating the [FSetInterface] *)
 
-Section ContainerAxioms.
-Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+(*Temporary _ CHANGE THIS*)
+Require Import GHC.Base.
+Import Notations.
+Require Import GHC.Num.
+Import Notations.
+Require Import Proofs.GHC.Base.
 
-End ContainerAxioms.
+From Coq Require Import ssrbool ssreflect.
+Set Bullet Behavior "Strict Subproofs".
+
+Require Import OrderedType.
+Require Import OrdTactic.
+Require Import Tactics.
+
+Module OrdTheories(E: OrderedType).
+  Instance Eq_t : GHC.Base.Eq_ E.t :=
+    fun _ k => k {|
+                op_zeze____ := fun x y => E.eq_dec x y;
+                op_zsze____ := fun x y => negb (E.eq_dec x y);
+              |}.
+
+  Local Definition ot_compare (x y: E.t) : comparison :=
+    match E.compare x y with
+    | EQ _ => Eq
+    | LT _ => Lt
+    | GT _ => Gt
+    end.
+
+  Instance Ord_t : GHC.Base.Ord E.t := GHC.Base.ord_default ot_compare.
+
+  Module OrdFacts := OrderedTypeFacts(E).
+
+  Ltac rewrite_compare_e :=
+    rewrite /compare /Ord_t /ord_default /= /ot_compare.
+
+  Definition et := E.t.
+
+  Lemma elt_eqP { e1 e2 } : reflect (E.eq e1 e2) (e1 GHC.Base.== e2).
+  Proof.
+    rewrite /_GHC.Base.==_ /Eq_t /=.
+    destruct (E.eq_dec e1 e2); constructor; auto.
+  Qed.
+        
+  Lemma elt_ltP { e1 e2 } : reflect (E.lt e1 e2) (e1 GHC.Base.< e2).
+  Proof.
+    rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /ot_compare.
+    do 2 destruct_match=>//; constructor; auto.
+  Qed.
+
+  Lemma elt_leP { e1 e2 } : reflect (OrdFacts.TO.le e1 e2) (e1 GHC.Base.<= e2).
+  Proof.
+    rewrite /_GHC.Base.<=_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /ot_compare.
+    do 2 destruct_match=>//; constructor; auto;
+      rewrite /OrdFacts.TO.le /OrdFacts.TO.eq /OrdFacts.TO.lt;
+      intuition; OrdFacts.order.
+  Qed.
+
+  Lemma elt_gtP { e1 e2 } : reflect (E.lt e2 e1) (e1 GHC.Base.> e2).
+  Proof.
+    rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /ot_compare.
+    do 2 destruct_match=>//; constructor; auto.
+  Qed.
+
+  Lemma elt_geP { e1 e2 } : reflect (OrdFacts.TO.le e2 e1) (e1 GHC.Base.>= e2).
+  Proof.
+    rewrite /_GHC.Base.>=_ /Ord_t /ord_default /=.
+    rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /ot_compare.
+    do 2 destruct_match=>//; constructor; auto;
+      rewrite /OrdFacts.TO.le /OrdFacts.TO.eq /OrdFacts.TO.lt;
+      intuition; OrdFacts.order.
+  Qed.
+
+  Lemma elt_compare_ltP {e1 e2} :
+    reflect (E.lt e1 e2) (eq_comparison (compare e1 e2) Lt).
+  Proof.
+    rewrite_compare_e; destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_compare_lt'P {e1 e2} :
+    reflect (compare e1 e2 = Lt)
+            (eq_comparison (compare e1 e2) Lt).
+  Proof.
+    rewrite_compare_e.
+    destruct_match; constructor; auto;
+      move=>Hcontra; inversion Hcontra.
+  Qed.
+
+  Lemma elt_compare_gtP {e1 e2} :
+    reflect (E.lt e2 e1) (eq_comparison (compare e1 e2) Gt).
+  Proof.
+    rewrite_compare_e; destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_compare_gt'P {e1 e2} :
+    reflect (compare e1 e2 = Gt)
+            (eq_comparison (compare e1 e2) Gt).
+  Proof.
+    rewrite_compare_e.
+    destruct_match; constructor; auto;
+      move=>Hcontra; inversion Hcontra.
+  Qed.
+
+  Lemma elt_compare_eqP {e1 e2} :
+    reflect (E.eq e1 e2) (eq_comparison (compare e1 e2) Eq).
+  Proof.
+    rewrite_compare_e; destruct_match; constructor; auto.
+  Qed.
+
+  Lemma elt_compare_eq'P {e1 e2} :
+    reflect (compare e1 e2 = Eq)
+            (eq_comparison (compare e1 e2) Eq).
+  Proof.
+    rewrite_compare_e.
+    destruct_match; constructor; auto;
+      move=>Hcontra; inversion Hcontra.
+  Qed.
+
+  Hint Resolve elt_eqP.
+  Hint Resolve elt_ltP.
+  Hint Resolve elt_gtP.
+  Hint Resolve elt_leP.
+  Hint Resolve elt_geP.
+  Hint Resolve elt_compare_ltP.
+  Hint Resolve elt_compare_lt'P.
+  Hint Resolve elt_compare_gtP.
+  Hint Resolve elt_compare_gt'P.
+  Hint Resolve elt_compare_eqP.
+  Hint Resolve elt_compare_eq'P.
+
+  Lemma elt_eq : forall e1 e2, E.eq e1 e2 <-> e1 GHC.Base.== e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+  
+  Lemma elt_lt : forall e1 e2, E.lt e1 e2 <-> e1 GHC.Base.< e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_gt : forall e1 e2, E.lt e2 e1 <-> e1 GHC.Base.> e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_le : forall e1 e2, OrdFacts.TO.le e1 e2 <-> e1 GHC.Base.<= e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_ge : forall e1 e2, OrdFacts.TO.le e2 e1 <-> e1 GHC.Base.>= e2.
+  Proof. move=>e1 e2. apply rwP =>//. Qed.
+
+  Lemma elt_compare_lt: forall (e1 e2 : et),
+      E.lt e1 e2 <-> compare e1 e2 = Lt.
+  Proof.
+    move=>e1 e2.
+    apply rwP2 with (b:=eq_comparison (compare e1 e2) Lt) =>//.
+  Qed.
+
+  Lemma elt_compare_gt: forall (e1 e2 : et),
+      E.lt e2 e1 <-> compare e1 e2 = Gt.
+  Proof.
+    move=>e1 e2.
+    apply rwP2 with (b:=eq_comparison (compare e1 e2) Gt) =>//.
+  Qed.
+
+  Lemma elt_compare_eq: forall (e1 e2 : et),
+       E.eq e1 e2 <-> compare e1 e2 = Eq.
+  Proof.
+    move=>e1 e2.
+    apply rwP2 with (b:=eq_comparison (compare e1 e2) Eq) =>//.
+  Qed.
+
+  Hint Rewrite <- elt_eq : elt_compare.
+  Hint Rewrite <- elt_lt : elt_compare.
+  Hint Rewrite <- elt_gt : elt_compare.
+  Hint Rewrite <- elt_le : elt_compare.
+  Hint Rewrite <- elt_ge : elt_compare.
+  Hint Rewrite <- elt_compare_lt : elt_compare.
+  Hint Rewrite <- elt_compare_gt : elt_compare.
+  Hint Rewrite <- elt_compare_eq : elt_compare.
+
+  Instance EqLaws_elt : EqLaws et.
+  Proof.
+    constructor.
+    - rewrite /ssrbool.reflexive. intros.
+      apply /elt_eqP. auto.
+    - rewrite /ssrbool.symmetric. intros x y.
+      apply /elt_eqP. destruct_match; move: Heq; move /elt_eqP; auto.
+    - rewrite /ssrbool.transitive. intros y x z.
+      move /elt_eqP => H1 /elt_eqP H2. apply /elt_eqP; OrdFacts.order.
+    - intros x y. rewrite /_GHC.Base./=_ /Eq_t /=.
+      rewrite negb_involutive. apply /elt_eqP.
+      destruct_match; move: Heq; move /elt_eqP; auto.
+  Defined.
+
+  (** [rewrite -/is_true] does not work, so we use this: *)
+  Ltac rewrite_is_true :=
+      match goal with
+      | [ |- ?e = true -> _ ] => replace (e = true) with (is_true e) by reflexivity;
+                              autorewrite with elt_compare; move=>?
+      | [ |- ?e = true] => replace (e = true) with (is_true e) by reflexivity;
+                         autorewrite with elt_compare
+      end.
+
+  Instance OrdLaws_elt : OrdLaws et.
+  Proof.
+    constructor.
+    all: repeat match goal with
+                | [ |- _ -> _ ] => first [rewrite_is_true | intro]
+                end; try rewrite_is_true;
+      try OrdFacts.order.
+    Local Ltac solve_iff lem:=
+      autorewrite with elt_compare;
+      split; [intro; apply /lem; OrdFacts.order |
+              case /lem; OrdFacts.order].
+    all: try solve [autorewrite with elt_compare; split;
+                    [(intro; apply /elt_leP; OrdFacts.order) |
+                     (move /elt_leP; OrdFacts.order)]].
+    all: try solve [autorewrite with elt_compare; split;
+                    [(intro; apply /elt_eqP; OrdFacts.order) |
+                     (move /elt_eqP; OrdFacts.order)]].
+    all: try solve [apply /elt_leP; destruct_match; move: Heq;
+                    move /elt_leP; OrdFacts.order].
+    - destruct (OrdFacts.lt_total a b) as [|[|]];
+        (left + right); solve [rewrite_is_true; OrdFacts.order].
+  Defined.
+End OrdTheories.
+
+Module CompareTactics.
+Ltac destruct_compare :=
+  match goal with
+  | [ H :context[match (compare ?a ?b) with _ => _ end] |- _] =>
+    let Heq := fresh "Heq" in
+    destruct (compare a b) eqn:Heq=>//;
+    autorewrite with elt_compare in Heq
+  | [ |- context[match (compare ?a ?b) with _ => _ end]] =>
+    let Heq := fresh "Heq" in
+    destruct (compare a b) eqn:Heq=>//;
+    autorewrite with elt_compare in Heq
+  end.
+End CompareTactics.
+
+Require Import Coq.FSets.FMapInterface.
+Require Import Coq.Structures.Equalities.
+From Coq Require Import ssrbool ssreflect.
+
+Module MapFMap (E : OrderedType)
+ <: WSfun(E) <: WS <: Sfun(E) <: S.
+  Module E := E.
+
+  Include OrdTheories E.
+  Definition key := E.t.
+
+(*
+  Instance Eq_a : GHC.Base.Eq_ A.t :=
+    fun _ k => k {|
+                op_zeze____ := fun x y => A.eq_dec x y;
+                op_zsze____ := fun x y => negb (A.eq_dec x y);
+              |}.
+
+   Lemma elt_eqP_A { a1 a2 } : reflect (A.eq a1 a2) (a1 GHC.Base.== a2).
+  Proof.
+    rewrite /_GHC.Base.==_ /Eq_a /=.
+    destruct (A.eq_dec a1 a2); constructor; auto.
+  Qed.
+
+  Instance EqLaws_value : EqLaws A.t.
+  Proof.
+    constructor.
+    - rewrite /ssrbool.reflexive. intros.
+      apply /elt_eqP_A. assert (Equivalence A.eq). apply A.eq_equiv. destruct H.
+      apply Equivalence_Reflexive.
+    - rewrite /ssrbool.symmetric. intros x y.
+      apply /elt_eqP_A. destruct_match; move: Heq; move /elt_eqP_A; auto.
+      assert (Equivalence A.eq). apply A.eq_equiv. destruct H. intros.
+      apply Equivalence_Symmetric. assumption. intros.
+      assert (Equivalence A.eq). apply A.eq_equiv. destruct H. 
+      unfold Symmetric in Equivalence_Symmetric.
+      assert ({A.eq x y} + {~A.eq x y}). auto. destruct H.
+      apply Equivalence_Symmetric in e. contradiction. assumption.
+    - rewrite /ssrbool.transitive. intros y x z.
+      move /elt_eqP_A => H1 /elt_eqP_A H2. apply /elt_eqP_A.
+      assert (Equivalence A.eq). apply A.eq_equiv. destruct H. eapply Equivalence_Transitive.
+      apply H1. apply H2.
+    - intros x y. rewrite /_GHC.Base./=_ /Eq_t /=.
+      rewrite negb_involutive. apply /elt_eqP_A.
+      destruct_match; move: Heq; move /elt_eqP_A; auto.
+  Defined.*)
+
+  Lemma E_eq_zeze:
+    forall x y : key, E.eq x y <-> (x == y) = true.
+  Proof. apply elt_eq. Qed.
+
+  Lemma E_lt_zl:
+    forall x y : key, E.lt x y <-> (x < y) = true.
+  Proof. apply elt_lt. Qed.
+  
+  Lemma InA_Eeq_elem:
+    forall x xs,  
+    InA E.eq x xs <-> List.elem x xs = true.
+  Proof.
+    intros.
+    induction xs.
+    * simpl. split; intro; inversion H.
+    * simpl. rewrite InA_cons. rewrite orb_true_iff. rewrite IHxs. rewrite elt_eq. reflexivity.
+Qed.
+(*
+  Lemma compat_bool_Eeq_op_zeze:
+    forall f, compat_bool E.eq f ->
+    Proper ((fun i j : elt => i == j = true) ==> eq) f.
+  Proof.
+    intros.
+    intros i j Heq.
+    rewrite <- E_eq_zeze in Heq.
+    apply H. assumption.
+  Qed.*)
+
+  Definition WFMap (e: Type) :=
+  {m : Map key e | WF m}.
+  
+  Definition t: Type -> Type := WFMap.
+Section Types.
+
+  Variable elt : Type.
+
+
+  Program Definition empty: t elt := empty.
+  Next Obligation. constructor. Qed.
+
+  (*Definition elt := A.t.
+  Program Definition empty: forall (A: DecidableType) (elt: A.t) := empty.
+
+  Program Definition empty : t elt := empty.
+  Next Obligation. constructor. Defined.*)
+
+  Program Definition is_empty: t elt -> bool := null.
+
+  Program Definition add: key -> elt -> t elt -> t elt := insert.
+  Next Obligation. unfold proj1_sig. destruct x1. eapply insert_Desc.
+  - apply w.
+  - reflexivity.
+  - reflexivity.
+  - intros. apply H.
+  Defined.
+
+  Program Definition find: key -> t elt -> option elt := lookup.  
+
+  Program Definition remove: key -> t elt -> t elt := delete.
+  Next Obligation. destruct x0. simpl. eapply delete_Desc.
+  - apply w.
+  - intros. apply H.
+  Defined.
+  
+  Program Definition mem : key -> t elt -> bool := member.
+
+  Variable elt' elt'' : Type.
+
+  Program Definition map : (elt -> elt') -> t elt -> t elt' := Internal.map.
+  Next Obligation. destruct x0. simpl. apply map_preserves_WF. apply w. Defined.
+
+  (*TODO: Move*)
+  Lemma mapWithKey_pres_size: forall (m: Map key elt) (f: key -> elt -> elt') lb ub,
+  Bounded m lb ub ->
+  size m = size (mapWithKey f m).
+  Proof.
+  intros. inversion H; reflexivity.
+  Qed.
+  Lemma mapWithKey_pres_WF: forall (m: Map key elt) (f: key -> elt -> elt') lb ub,
+  Bounded m lb ub ->
+  Bounded (mapWithKey f m) lb ub.
+  Proof.
+    intros. induction H.
+    - simpl. constructor.
+    - simpl. apply BoundedBin; try(assumption); erewrite <- mapWithKey_pres_size; 
+      try(erewrite <- mapWithKey_pres_size).
+      + assumption.
+      + apply H0.
+      + apply H.
+      + assumption.
+      + apply H0.
+      + apply H.
+  Qed.
+  Program Definition mapi : (key -> elt -> elt') -> t elt -> t elt' := mapWithKey.
+  Next Obligation. destruct x0. simpl. apply mapWithKey_pres_WF. apply w. Defined.
+
+  Lemma wf_repeat_insert: forall (m1: Map key elt) (m2: Map key elt') l1 
+  (f: option elt -> option elt' -> option elt''),
+  WF (fold_right (fun (e : key * elt') t => let (k,v) := e in
+   match (f (sem m1 k) (sem m2 k)) with
+    |None => t
+    | Some x => insert k x t
+    end) Tip l1).
+  Proof.
+    intros. revert m1 m2 f. induction l1; intros.
+    - simpl. constructor.
+    - simpl. destruct a. destruct (f (sem m1 k) (sem m2 k)).
+      + eapply insert_Desc. apply IHl1. reflexivity. reflexivity. intros. apply H.
+      + apply IHl1.
+  Qed. 
+
+  Lemma wf_repeat_insert':forall (m1: Map key elt) (m2: Map key elt') l m 
+  (f: option elt -> option elt' -> option elt''),
+  WF m ->
+  WF (fold_right (fun (e: key * elt) t => let (k,v ) := e in 
+    match  (f (sem m1 k) (sem m2 k)) with
+    | None => t
+    | Some x => insert k x t
+    end) m l).
+  Proof. 
+    intros. revert m1 m2 m f H. induction l; intros.
+    - simpl. apply H.
+    - simpl. destruct a. destruct (f (sem m1 k) (sem m2 k)).
+      + eapply insert_Desc. apply IHl. apply H. reflexivity. reflexivity. intros.
+        apply H0.
+      + apply IHl. apply H.
+  Qed.
+
+  Lemma wf_map2: forall m1 m2 (f: option elt -> option elt' -> option elt''),
+  WF (fold_right (fun (e: key * elt) t => let (k,v ) := e in 
+    match  (f (sem m1 k) (sem m2 k)) with
+    | None => t
+    | Some x => insert k x t
+    end) (fold_right (fun (e : key * elt') t => let (k,v) := e in
+   match (f (sem m1 k) (sem m2 k)) with
+    |None => t
+    | Some x => insert k x t
+    end) Tip (toList m2))
+ (toList m1)).
+  Proof.
+    intros. eapply wf_repeat_insert'. eapply wf_repeat_insert. 
+  Qed.
+  (*Pretty bad implementation, see if better one*)
+  (*TODO: Ask what is going on in the pattern matchin*)
+  Program Definition map2 : (option elt -> option elt' -> option elt'') -> t elt -> t elt' -> t elt'' :=
+    fun f m1 m2 =>
+    fold_right (fun (e: key * elt) t => let (k,v ) := e in 
+    match  (f (sem m1 k) (sem m2 k)) with
+    | None => t
+    | Some x => insert k x t
+    end) (fold_right (fun (e : key * elt') t => let (k,v) := e in
+   match (f (sem m1 k) (sem m2 k)) with
+    |None => t
+    | Some x => insert k x t
+    end) Tip (toList m2))
+ (toList m1).
+  Next Obligation.
+  destruct m1. destruct m2. simpl.
+
+ Admitted.  
+
+
+  Program Definition elements : t elt -> list (key * elt) := toList.
+
+  Program Definition cardinal : t elt -> nat := map_size.
+
+  Definition foldlWithKey2 {a} := fun (f : key -> elt -> a -> a) (m : Map key elt) b => 
+  foldlWithKey (fun t k v => f k v t) b m.
+
+  Program Definition fold : forall (A : Type), (key -> elt -> A -> A) -> t elt -> A -> A := 
+   @foldlWithKey2.
+
+  Fixpoint cmp_list (l1 : list (key * elt)) l2 (f: elt -> elt -> bool) :=
+  match l1, l2 with
+  | nil, nil => true
+  | (k1, v1) :: xs, (k2, v2) :: ys => E.eq_dec k1 k2 && f v1 v2 && cmp_list xs ys f
+  | _, _ => false
+  end.
+  
+
+
+
+  Program Definition equal : (elt -> elt -> bool) -> t elt -> t elt -> bool :=
+  fun cmp m1 m2 => cmp_list (toList m1) (toList m2) cmp.
+
+Section Spec.
+
+Variable m m' m'' : t elt.
+Variable x y z: key.
+Variable e e' : elt.
+
+  Program Definition MapsTo: key -> elt -> t elt -> Prop :=
+  fun k v m => sem m k = Some v.
+
+  Definition In (k: key) (m : t elt) : Prop := exists e, MapsTo k e m.
+
+  Definition Empty m := forall (a : key)(e:elt) , ~ MapsTo a e m.
+
+  Definition eq_key (p p':key*elt) := E.eq (fst p) (fst p').
+
+  Definition eq_key_elt (p p':key*elt) :=
+          E.eq (fst p) (fst p') /\ (snd p) = (snd p').
+
+
+  
+  (*Theories*)
+
+  Lemma MapsTo_1: E.eq x y -> MapsTo x e m -> MapsTo y e m.
+  Proof.
+    intros. unfold MapsTo in *. erewrite sem_resp_eq. apply H0.  
+    epose proof elt_eqP. inversion H1. symmetry. apply H2.
+    apply E.eq_sym in H. contradiction.
+  Qed.
+
+  Lemma mem_1 :In x m -> mem x m = true.
+  Proof.
+    intros. destruct m.  unfold mem. unfold In in H. simpl.
+    unfold MapsTo in H. simpl in H. eapply member_spec. apply w. apply H.
+  Qed.
+
+  Lemma mem_2 :mem x m = true -> In x m.
+  Proof.
+    intros. destruct m. unfold mem in H. unfold In. unfold MapsTo. simpl in *.
+    eapply member_spec. apply w. apply H. 
+  Qed.
+
+  Lemma empty_1 : Empty empty.
+  Proof.
+    unfold Empty. intros. unfold MapsTo. simpl. intro contra. discriminate contra.
+  Qed.
+
+  Lemma is_empty_1: Empty m -> is_empty m = true.
+  Proof.
+    intros. destruct m. unfold Empty in H. unfold is_empty. unfold MapsTo in H. simpl in *.
+    assert (forall a, sem x0 a = None). intros. specialize (H a). destruct (sem x0 a) eqn : ?.
+    specialize (H e0). contradiction. reflexivity. rewrite null_empty_iff. 
+    rewrite <- empty_no_elts. apply H0.
+  Qed.
+
+  Lemma is_empty_2 :is_empty m = true -> Empty m.
+  Proof.
+    intros. destruct m. unfold is_empty in H. unfold Empty. unfold MapsTo. simpl in *.
+    intros. erewrite null_empty_iff in H. rewrite <- empty_no_elts in H.
+    specialize (H a). rewrite H. intro contra. discriminate contra.
+  Qed.
+  
+  Lemma elt_neq: ~E.eq x y <-> x == y = false.
+  Proof.
+    intros. split; intros.
+    - destruct (x == y) eqn : ?. apply elt_eq in Heqb. contradiction. reflexivity.
+    - intro. apply elt_eq in H0. rewrite H0 in H. inversion H.
+  Qed.
+
+  Lemma add_1 : E.eq x y -> MapsTo y e (add x e m).
+  Proof.
+    intros. destruct m. unfold MapsTo. unfold add. simpl. eapply insert_Desc.
+    - apply w.
+    - reflexivity.
+    - reflexivity.
+    - intros. specialize (H2 y). apply E.eq_sym in H. apply elt_eq in H. 
+      rewrite H in H2. simpl in H2. assumption.
+  Qed.
+
+  Lemma add_2 :~ E.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
+  Proof.
+    intros. destruct m. unfold MapsTo in *. unfold add. simpl in *. eapply insert_Desc.
+    - apply w.
+    - reflexivity.
+    - reflexivity.
+    - intros. specialize (H3 y). assert (EqLaws E.t). apply EqLaws_elt. destruct H4.
+      apply elt_neq in H. assert (y == x = false) by (order key). rewrite H4 in H3.
+       simpl in H3. rewrite H3.
+      assumption.
+  Qed.
+
+  Lemma insert_sem: forall (m : Map key elt) (k: key) v (i : key),
+  WF m ->
+  sem (insert k v m) i = SomeIf (i == k) v ||| sem m i.
+  Proof.
+    intros. eapply insert_Desc. 
+    - apply H.
+    - reflexivity.
+    - reflexivity.
+    - intros. specialize (H2 i). rewrite H2. reflexivity.
+  Qed.
+
+  Lemma add_3 :~ E.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
+  Proof.
+    intros. destruct m. unfold MapsTo in *. unfold add in H0. simpl in *.
+    rewrite insert_sem in H0.
+    - apply elt_neq in H. assert (y == x = false) by (order key). rewrite H1 in H0.
+      simpl in H0. assumption.
+    - assumption.
+  Qed.
+
+  Lemma delete_sem: forall (m: Map key elt) k i,
+  WF m ->
+  sem (delete k m) i = if i == k then None else sem m i.
+  Proof.
+    intros. eapply delete_Desc.
+    - apply H.
+    - intros. specialize (H2 i). rewrite H2. reflexivity.
+  Qed.
+
+  Lemma remove_1 : E.eq x y -> ~ In y (remove x m).
+  Proof.
+    intros. destruct m. unfold In. unfold MapsTo. unfold remove. simpl. intro.
+    destruct H0. rewrite delete_sem in H0. apply elt_eq in H. 
+    assert ( x == y = true) by (apply H). assert (y == x = true) by (order key).
+    rewrite H2 in H0. inversion H0.
+    apply w.
+  Qed. 
+
+  Lemma remove_2 : ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
+  Proof.
+    intros. unfold MapsTo in *. unfold remove. destruct m. simpl in *.
+    rewrite delete_sem. apply elt_neq in H.  assert (y == x = false) by (order key).
+    rewrite H1. assumption. assumption.
+  Qed.
+
+  Lemma remove_3 : MapsTo y e (remove x m) -> MapsTo y e m.
+  Proof.
+    intros. unfold MapsTo in *. destruct m. unfold remove in *. simpl in *.
+    rewrite delete_sem in H. destruct (y == x). inversion H. assumption. assumption.
+  Qed.
+
+  Lemma find_1 : MapsTo x e m -> find x m = Some e.
+  Proof.
+    intros. unfold MapsTo in *. unfold find. destruct m. simpl in *.
+    erewrite lookup_spec. apply H. apply w.
+  Qed.
+
+  Lemma find_2 : find x m = Some e -> MapsTo x e m.
+  Proof.
+    intros. unfold find in *. unfold MapsTo. destruct m. simpl in *.
+    erewrite lookup_spec in H. assumption. apply w.
+  Qed.
+
+  Lemma In_InA_equiv: forall l k v,
+    Top.In k v l <-> InA eq_key_elt (k, v) l.
+  Proof.
+    intros. induction l.
+    - simpl. split; intros.
+      + destruct H.
+      + inversion H.
+    - simpl. unfold eq_key_elt in *. split; intros.
+      + destruct a. destruct H.
+        * destruct H. apply InA_cons_hd. simpl. split.
+          apply elt_eq. assert (k == k0 = true) by (order key). apply H1. symmetry.
+          apply H0.
+        * apply InA_cons_tl. apply IHl. apply H.
+      + destruct a. inversion H; subst.
+        * simpl in H1. destruct H1. left. split. assert (k == k0 = true) by (apply elt_eq; apply H0).
+          order key. symmetry. apply H1. 
+        * right. apply IHl. apply H1.
+  Qed.
+(*TODO: Move this back and replace original (which had unneeded eqlaws a assumption)*)
+Lemma toList_sem_again :
+  forall (m: Map key elt) lb ub, Bounded m lb ub ->
+  forall key value, sem m key = Some value <-> Top.In key value (toList m).
+Proof.
+  intros. generalize dependent value. induction H.
+  - simpl. intros. split; intros. discriminate H. destruct H.
+  - intros. simpl. rewrite toList_Bin. rewrite elem_or. 
+    assert (((x, v) :: nil ++ toList s2) = (((x, v) :: nil) ++ toList s2)).
+    simpl. reflexivity. simpl.  split; intros.
+      + destruct (sem s1 key0) eqn : ?; simpl in H6.
+      * apply IHBounded1 in H6. left. apply H6. 
+      * destruct (key0 == x0) eqn : ?; simpl in H6.
+        { right. left. simpl. split. order key. inversion H6; subst; reflexivity. }
+        { apply IHBounded2 in H6. right. right. assumption. }
+     + destruct H6.
+      * apply IHBounded1 in H6. rewrite H6. simpl. reflexivity.
+      * destruct H6. destruct H6. 
+        assert (sem s1 key0 = None). { eapply sem_outside_above.
+        apply H. unfold isUB. order key. } 
+        rewrite H8. simpl. apply Eq_Symmetric in H6. rewrite H6. simpl.
+        rewrite H7. reflexivity. apply IHBounded2 in H6. 
+        assert (sem s1 key0 = None). { eapply sem_outside_above. apply H. unfold isUB.
+        apply (sem_inside H0 ) in H6. destruct H6. unfold isLB in H6. order key. }
+        rewrite H7. assert (key0 == x0 = false). { apply (sem_inside H0) in H6.
+        destruct H6. unfold isLB in H6. order key. } rewrite H8. simpl.
+        assumption.
+Qed.
+
+  Lemma elements_1 : 
+        MapsTo x e m -> InA eq_key_elt (x,e) (elements m).
+  Proof.
+    intros. destruct m. unfold elements. unfold MapsTo in H. simpl in *.
+    setoid_rewrite toList_sem_again in H. rewrite <- In_InA_equiv. apply H. apply w.
+  Qed.
+
+  Lemma elements_2:
+        InA eq_key_elt (x,e) (elements m) -> MapsTo x e m.
+  Proof.
+    intros. unfold MapsTo. unfold elements in *. destruct m. simpl in *.
+    eapply toList_sem_again.  apply w. rewrite In_InA_equiv. apply H.
+  Qed.
+
+  Import Coq.Sorting.Sorted.
+
+  Local Definition lt : key * elt -> key * elt -> Prop
+  := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in (e1 < e2) = true.
+
+  Lemma All_lt_elem:
+  forall x i xs,
+  Forall (lt x) xs ->
+  InA eq_key i xs->
+  lt x i.
+  Proof.
+    intros. unfold eq_key in H0.
+    induction H.
+    * inversion H0.
+    * destruct x0. destruct i. inversion H0; subst.
+      - simpl in H3. unfold lt. unfold lt in H. destruct x1.
+        assert (k0 == k1 = true) by (apply elt_eq; apply H3). order key.
+      - apply IHForall. apply H3.
+  Qed.
+
+
+  (*Unfortunately, we know that the list is sorted, which is much stronger than than there 
+    are no duplicates. We must prove one implies the other*)
+  Lemma sorted_no_dups: forall (l: list (key * elt)), 
+  StronglySorted lt l -> NoDupA (eq_key) l.
+  Proof.
+    intros. induction H.
+    - constructor.
+    - constructor. intro. pose proof All_lt_elem. specialize (H2 a a l H0 H1).
+      unfold lt in H2. destruct a. order key.
+      apply IHStronglySorted.
+  Qed.
+
+  Lemma elements_3w : NoDupA eq_key (elements m).
+  Proof.
+    intros. unfold elements. destruct m. simpl. apply sorted_no_dups.
+    eapply to_List_sorted. apply w.
+  Qed.
+
+  Lemma size_equiv: forall (m: Map key elt),
+  WF m ->
+  Internal.size m = Z.of_nat (map_size m).
+  Proof.
+    intros. induction H.
+    - simpl. reflexivity.
+    - simpl. rewrite Zpos_P_of_succ_nat. rewrite Nat2Z.inj_add.
+      rewrite <- IHBounded1. rewrite <- IHBounded2. rewrite size_size. omega.
+  Qed.
+
+  Lemma cardinal_1 : cardinal m = length (elements m).
+  Proof.
+    intros. unfold cardinal. unfold elements. destruct m. simpl.
+    assert (Z.of_nat (map_size x0) = Z.of_nat (length (toList x0))). { 
+    rewrite <- size_equiv. eapply size_spec. apply w. apply w. }
+    omega.
+  Qed.
+
+
+(*TODO: change later to foldRWithKey spec*)
+
+(*Lemma foldlWithKey_spec':
+  forall {a} (f: key -> elt -> a -> a) (n : a) (map: Map key elt),
+  foldlWithKey2 f map n = fold_right (fun (x : key * elt) t => let (a0, b0) := x in f a0 b0 t) n (toList map).
+Proof.
+  intros. unfold foldlWithKey2. revert n. revert f. induction map0; intros.
+  - simpl. rewrite IHmap0_1. rewrite IHmap0_2. rewrite toList_Bin. rewrite fold_right_app.
+    simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.*)
+
+Lemma foldlWithKey2_fold_left:
+    forall {a} (f: key -> elt -> a -> a) (n : a) (map: Map key elt),
+  foldlWithKey2 f map n = fold_left (fun t (x : key * elt) => let (a0, b0) := x in f a0 b0 t) (toList map) n.
+Proof.
+  intros. revert n. revert f. induction map0; intros.
+  - simpl. rewrite IHmap0_1. rewrite IHmap0_2. rewrite toList_Bin. rewrite fold_left_app.
+    simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+(*TODO: see - had to add _ for type in fold*)
+Lemma fold_1 :
+        forall (m: t elt) (A : Type) (i : A) (f : key -> elt -> A -> A),
+        fold _ f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
+Proof.
+  intros. destruct m0. unfold fold.  unfold elements. simpl.
+  rewrite foldlWithKey2_fold_left. unfold fst. unfold snd.  revert i. revert f.
+  induction w.
+  - simpl. reflexivity.
+  - intros. rewrite toList_Bin. simpl. rewrite fold_left_app. rewrite fold_left_app. simpl.
+    rewrite IHw1. rewrite IHw2. reflexivity.
+Qed.
+
+Definition Equal m m' := forall y, find y m = find y m'.
+
+Definition Equiv (eq_elt: elt -> elt -> Prop) m m' :=
+  (forall k, In k m <-> In k m') /\ (forall k e e', MapsTo k e m -> MapsTo k e' m' -> eq_elt e e').
+
+Definition Equivb (cmp: elt -> elt -> bool) := Equiv (Cmp cmp).
+
+Variable cmp: elt -> elt -> bool.
+
+(*Program Definition cmp : elt -> elt -> bool := _GHC.Base.==_ .*)
+
+(*Lemma cmp_list_eq: forall (l: list (key * elt)) l1, 
+  eqlist l l1 = true <-> cmp_list l l1 _GHC.Base.==_  = true.
+Proof.
+  intros. revert l1. induction l; intros; split; intros.
+  - destruct l1.
+    + simpl. reflexivity.
+    + simpl in H. inversion H.
+  - destruct l1.
+    + reflexivity.
+    + inversion H.
+  - destruct l1.
+    + inversion H.
+    + simpl in H. simpl. destruct a. destruct p. setoid_rewrite andb_true_iff in H.
+      destruct H. unfold "==" in H. unfold Eq_pair___ in H. unfold op_zeze____ in H.
+      unfold eq_pair in H. setoid_rewrite andb_true_iff in H. destruct H.
+      rewrite andb_true_iff. split. rewrite andb_true_iff. split. apply elt_eq. apply elt_eq. apply H.
+      apply H1. apply IHl. apply H0.
+  - destruct l1.
+    + simpl in H. destruct a. inversion H.
+    + simpl in H. destruct a. destruct p. setoid_rewrite andb_true_iff in H. destruct H.
+      setoid_rewrite andb_true_iff in H. destruct H. simpl. setoid_rewrite andb_true_iff.
+      split. unfold "==". unfold Eq_pair___. unfold op_zeze____. unfold eq_pair.
+      rewrite andb_true_iff. split. apply H. apply H1. apply IHl. apply H0.
+Qed.*)
+
+Lemma eq_key_elt_implies_key: forall k v l,
+  InA eq_key_elt (k,v) l ->
+  InA eq_key (k, v) l.
+Proof.
+  intros. generalize dependent k. generalize dependent v. induction l; intros.
+  - inversion H.
+  - inversion H; subst.
+    + constructor. unfold eq_key. simpl. unfold eq_key_elt in H1. destruct H1. simpl in H0.
+      apply H0.
+    + apply InA_cons_tl. apply IHl. apply H1.
+Qed. 
+(*Annoyingly, we cannot use the results about StronglySortedness from before, since they
+all deal with haskell equality and require EqLaws a. So we have to prove a similar, but
+not quite identical, claim*)
+Lemma strongly_sorted_cmp_unique: forall (xs ys : list (key * elt)) (cmp: elt -> elt -> bool),
+  StronglySorted lt xs ->
+  StronglySorted lt ys ->
+  (forall x, ((exists y, Top.In x y xs) <-> (exists z, Top.In x z ys)) /\
+   (forall y z, Top.In x y xs /\ Top.In x z ys -> cmp y z = true )) ->
+  cmp_list xs ys cmp = true.
+Proof.
+  intros. generalize dependent ys. generalize dependent cmp0. induction xs; intros.
+  - destruct ys. 
+    + reflexivity.
+    + destruct p. specialize (H1 k). destruct H1. destruct H1. simpl in H3.
+      assert (exists (e: elt), False). apply H3. exists e0. left. split. apply Eq_Reflexive. 
+      reflexivity. destruct H4. destruct H4.
+  - destruct ys.
+    + destruct a. specialize (H1 k). destruct H1. destruct H1. simpl in H1. 
+      assert (exists (e: elt), False). apply H1. exists e0. left. split. apply Eq_Reflexive.
+      reflexivity. destruct H4. destruct H4.
+    + simpl. destruct a. destruct p. rewrite andb_true_iff. split. 
+      * rewrite andb_true_iff. split.
+        -- inversion H; subst. inversion H0; subst. assert (A:=H1). specialize (H1 k). destruct H1.
+           destruct H1. assert (exists z : elt, Top.In k z ((k0, e1) :: ys)). apply H1.
+           simpl. exists e0. left. split. apply Eq_Reflexive. reflexivity. destruct H8.
+           simpl in H8. destruct H8. 
+           ++ destruct H8. apply elt_eq. apply Eq_Symmetric in H8. apply elt_eq in H8. apply H8.
+           ++ specialize (A k0). destruct A. destruct H9. assert (exists y : elt, Top.In k0 y ((k, e0) :: xs)).
+              apply H11. exists e1. simpl. left. split. apply Eq_Reflexive. reflexivity. destruct H12.
+              simpl in H12. destruct H12.
+              ** destruct H12. apply H12.
+              ** apply (All_lt_elem _ (k, x0) _) in H7. apply (All_lt_elem _ (k0, x1) _) in H5.
+                  unfold lt in H7. unfold lt in H5. order key.
+                  setoid_rewrite (In_InA_equiv xs k0 x1) in H12. setoid_rewrite In_InA_equiv in H8.
+                  unfold eq_key_elt in H8. apply eq_key_elt_implies_key. apply H12.
+                  apply eq_key_elt_implies_key. apply In_InA_equiv. apply H8.
+        -- assert (A:=H1). specialize (H1 k). specialize (A k0). destruct H1. destruct A.
+           destruct H1. destruct H3. assert (exists z : elt, Top.In k z ((k0, e1) :: ys)).
+           apply H1. exists e0. simpl. left. split. apply Eq_Reflexive. reflexivity.
+           destruct H7. assert (exists y : elt, Top.In k0 y ((k, e0) :: xs)). apply H6.
+           exists e1. simpl. left. split. apply Eq_Reflexive. reflexivity. destruct H8.
+           simpl in H7. simpl in H8. destruct H7. destruct H8.
+           destruct H7. destruct H8. subst. apply H4. split. simpl. left. split. order key.
+           reflexivity. simpl. left. split. apply Eq_Reflexive. reflexivity.
+            inversion H; subst. apply (All_lt_elem _ (k0, x1) _) in H12. unfold lt in H12.
+            order key. apply eq_key_elt_implies_key. apply In_InA_equiv. apply H8.
+            inversion H0; subst. apply (All_lt_elem _ (k, x0) _) in H12. simpl in H12.
+            destruct H8. order key. inversion H; subst. apply (All_lt_elem _ (k0, x1) _) in H14.
+            unfold lt in H14. order key. apply eq_key_elt_implies_key. apply In_InA_equiv.
+            apply H8. apply eq_key_elt_implies_key. apply In_InA_equiv. apply H7.
+      * inversion H; subst. inversion H0; subst. apply IHxs. apply H4. apply H6. intros.
+        split. 
+        -- assert (k == k0 = true). { assert (A:=H1). specialize (H1 k).
+              specialize (A k0). destruct H1. destruct H1. destruct A. destruct H8.
+              assert (exists z : elt, Top.In k z ((k0, e1) :: ys)). apply H1. exists e0.
+              simpl. left. split. apply Eq_Reflexive. reflexivity.
+              assert (exists y : elt, Top.In k0 y ((k, e0) :: xs)). apply H10. exists e1.
+              left. split. apply Eq_Reflexive. reflexivity. destruct H11. destruct H12.
+              simpl in H11. simpl in H12. destruct H11. order key. destruct H12. order key.
+              apply (All_lt_elem _ (k, x1) _ ) in H7. apply (All_lt_elem _ (k0, x2) _ ) in H5.
+              unfold lt in *. order key. apply  eq_key_elt_implies_key. apply In_InA_equiv.
+              apply H12. apply eq_key_elt_implies_key. apply In_InA_equiv. apply H11. }
+              split; intros. 
+           ++ assert (k < x0 = true). destruct H3. apply (All_lt_elem _ (x0, x1) _) in H5.
+              unfold lt in H5. assumption. apply eq_key_elt_implies_key. apply In_InA_equiv.
+              apply H3. 
+              assert (k0 < x0 = true) by (order key). 
+              specialize (H1 x0). destruct H1. destruct H1.
+              assert (exists z : elt, Top.In x0 z ((k0, e1) :: ys)). apply H1. destruct H3.
+              exists x1. simpl. right. assumption. destruct H12. simpl in H12.
+              destruct H12. order key. exists x1. assumption.
+            ++ assert (k0 < x0 = true). destruct H3. apply (All_lt_elem _ (x0, x1) _) in H7.
+                unfold lt in H7. assumption. apply eq_key_elt_implies_key. apply In_InA_equiv.
+                apply H3. assert (k < x0 = true ) by (order key).
+                specialize (H1 x0). destruct H1. destruct H1. 
+                assert (exists y : elt, Top.In x0 y ((k, e0) :: xs)). apply H11. destruct H3.
+                exists x1. simpl. right. assumption. destruct H12. simpl in H12. destruct H12.
+                order key. exists x1. assumption.
+          -- intros. specialize (H1 x0). destruct H1. apply H3. destruct H2. split.
+              ++ simpl. right. assumption.
+              ++ simpl. right. assumption.
+Qed. 
+
+
+Lemma equal_1 :Equivb cmp m m' -> equal cmp m m' = true.
+Proof. 
+  intros. unfold equal. unfold Equivb in H. unfold Equiv in H. unfold MapsTo in H.
+  unfold Cmp in H. unfold In in H. unfold MapsTo in H. destruct m. destruct m'.
+  simpl in *. apply strongly_sorted_cmp_unique. eapply to_List_sorted. apply w.
+  eapply to_List_sorted. apply w0. intros. split.
+  - setoid_rewrite <- toList_sem_again. destruct H. apply H. apply w. apply w0.
+  - intros. destruct H. destruct H0. eapply H1. rewrite toList_sem_again.
+    apply H0. apply w. rewrite toList_sem_again. apply H2. apply w0.
+Qed.
+
+Lemma eq_list_prop: forall (l: list (key * elt)) l' (cmp: elt -> elt -> bool),
+  StronglySorted lt l ->
+  StronglySorted lt l' ->
+  cmp_list l l' cmp = true ->
+  (forall k, (exists v, Top.In k v l) <-> (exists v, Top.In k v l')) /\ 
+  (forall k v v', Top.In k v l /\ Top.In k v' l' -> cmp v v' = true).
+Proof.
+  intros. generalize dependent l'. generalize dependent cmp0. induction l; intros.
+  - destruct l'.
+    + split; intros.
+      * simpl. reflexivity.
+      * simpl in H2. destruct H2. destruct H2.
+    + split; intros.
+      * inversion H1.
+      * simpl in H2. destruct H2. destruct H2.
+  - destruct l'.
+    + simpl in H1. destruct a. inversion H1.
+    + simpl in H1. destruct a. destruct p. setoid_rewrite andb_true_iff in H1. destruct H1.
+      setoid_rewrite andb_true_iff in H1. destruct H1. split; intros.
+      * split; intros.
+        -- destruct H4. simpl in H4. destruct H4. 
+           ++ destruct H4. subst. simpl. exists e1. left. split. assert (k == k0 = true). apply elt_eq.
+              apply elt_eq in H1. apply H1. order key. reflexivity.
+           ++ simpl. apply IHl in H2. destruct H2. assert ((exists v : elt, Top.In k1 v l')).
+              apply H2. exists x0. assumption. destruct H6. exists x1. right. assumption. inversion H; assumption.
+              inversion H0; assumption.
+        -- simpl in H4. destruct H4. destruct H4.
+           ++ destruct H4. subst. simpl. exists e0. left. split. assert (k == k0 = true). apply elt_eq.
+              apply elt_eq in H1. apply H1. order key. reflexivity.
+           ++ simpl. apply IHl in H2. destruct H2. 
+              assert (exists v : elt, Top.In k1 v l). apply H2. exists x0. assumption. destruct H6.
+              exists x1. right. assumption. inversion H; assumption. inversion H0; assumption.
+      * simpl in H4. destruct H4. destruct H4.
+         -- destruct H5.
+            ++ destruct H4. destruct H5. subst. apply H3.
+            ++ inversion H0; subst. apply (All_lt_elem _ (k1, v') _) in H9. unfold lt in H9.
+               assert (k == k0 = true). apply elt_eq. apply elt_eq in H1. assumption. order key.
+               apply eq_key_elt_implies_key. apply In_InA_equiv. apply H5.
+          -- inversion H; subst. apply (All_lt_elem _ (k1, v) _) in H9. unfold lt in H9. destruct H5.
+             ++ assert (k == k0 = true). apply elt_eq. apply elt_eq in H1. assumption. order key.
+             ++ inversion H0; subst. specialize (IHl H8 cmp0 l' H10 H2). destruct IHl.
+                eapply H7. split. apply H4. apply H5.
+             ++ apply eq_key_elt_implies_key. apply In_InA_equiv. assumption.
+Qed.
+
+   
+(*Going to need lemma that if lists are the same, then the elements are the same up to comparison*)
+Lemma equal_2: equal cmp m m' = true -> Equivb cmp m m'.
+Proof.
+  intros. unfold equal in H. unfold Equivb. unfold Cmp. unfold Equiv. unfold In. unfold MapsTo.
+  destruct m. destruct m'. simpl in *. apply eq_list_prop in H.
+  destruct H. split; intros.
+  - specialize (H k). setoid_rewrite toList_sem_again. apply H. apply w. apply w0.
+  - eapply H0. setoid_rewrite toList_sem_again in H1. setoid_rewrite toList_sem_again in H2. 
+    split. apply H1. apply H2. apply w0. apply w.
+  - eapply to_List_sorted. apply w.
+  - eapply to_List_sorted. apply w0.
+Qed.
+
+End Spec.
+End Types.
+Check equal_1.
+
+
+Parameter equal_1 :
+       forall (elt : Type@{Coq.FSets.FMapInterface.6}) (m m' : t elt) (cmp : forall (_ : elt) (_ : elt), bool)
+         (_ : Equivb elt cmp m m'), @eq bool (equal elt cmp m m') true.
+
+equal_1
+     : forall (elt : Type@{Top.2884}) (m m' : t elt) (_ : key) (_ : elt) (cmp : forall (_ : elt) (_ : elt), bool)
+         (_ : Equivb elt cmp m m'), @eq bool (equal elt cmp m m') true
+
+End MapFMap.
+(*
+destruct H0. setoid_rewrite toList_sem_again in H0.
+  intros. unfold equal. unfold Equivb in H. unfold Cmp in H. unfold Equiv in H. unfold cmp in H.
+  unfold MapsTo in H. unfold In in H. destruct m. destruct m'. simpl in *. unfold MapsTo in H.
+  simpl in H. unfold cmp. 
+  assert (x == x0 = true). { eapply weak_equals_spec. apply w. apply w0. intros.
+  destruct H. specialize (H i). specialize (H0 i). destruct H.
+  destruct (sem x i) eqn : ?. destruct H. exists e; reflexivity.
+  rewrite H. specialize (H0 e x1). rewrite simpl_option_some_eq.
+  apply H0. reflexivity. assumption. destruct (sem x0 i) eqn : ?.
+  destruct H1. exists e. reflexivity. inversion H1. apply Eq_Reflexive. }
+  unfold "==" in H0. unfold Eq___Map in H0. unfold op_zeze____ in H0.
+  unfold Internal.Eq___Map_op_zeze__ in H0. setoid_rewrite andb_true_iff in H0.
+  destruct H0.  unfold toList. unfold "==" in H1. unfold Eq_list in H1. unfold op_zeze____ in H1.
+  apply cmp_list_eq. apply H1.
+Qed.
+
+Lemma strongly_sorted_unique:
+  forall `{Eq_ a} `{EqLaws a} (xs ys : list (e * a)),
+  StronglySorted lt xs ->
+  StronglySorted lt ys ->
+  (forall x y, List.elem (x, y) xs = true <-> List.elem (x,y) ys = true) ->
+  eqlist xs ys = true.
+Proof.
+  intros. generalize dependent ys. induction xs; intros.
+  - simpl in H4. destruct ys. reflexivity. 
+    assert (forall x y, List.elem (x,y) (p :: ys) = false). { intros. specialize (H4 x y).
+   destruct H4. apply contrapositive in H5. destruct (List.elem (x, y) (p :: ys)). contradiction.
+    reflexivity. intro. discriminate H6. }
+    assert (List.elem p (p :: ys) = true). { simpl. rewrite orb_true_iff. left. destruct p.
+    apply Eq_Tuple_Refl. } destruct p. specialize (H5 e0 a0). rewrite H6 in H5. discriminate H5.
+  - destruct ys. 
+    + assert (forall x y, List.elem (x,y) (a0 :: xs) = false). { intros x y.
+      specialize (H4 x y). destruct H4. apply contrapositive in H4. destruct (List.elem (x, y) (a0 :: xs)).
+      contradiction. reflexivity. intro. simpl in H6. discriminate H6. }
+      destruct a0. assert (List.elem (e0, a0) ((e0, a0) :: xs) = true). { simpl. rewrite orb_true_iff.
+      left. apply Eq_Tuple_Refl. }
+      specialize (H5 e0 a0). rewrite H6 in H5. discriminate H5.
+    + simpl. rewrite andb_true_iff. inversion H2; subst. inversion H3; subst. split. 
+      assert (A:=H4). destruct a0. destruct p. specialize (H4 e0 a0). specialize (A e1 a1).
+      destruct H4. destruct A. 
+      assert (List.elem (e0, a0) ((e1, a1) :: ys) = true). { apply H4. simpl. rewrite orb_true_iff.
+      left. apply Eq_Tuple_Refl. }
+      assert (List.elem (e1, a1) ((e0, a0) :: xs) = true). { apply H11. simpl. rewrite orb_true_iff.
+      left. apply Eq_Tuple_Refl. }
+      rewrite Forall_lt in H8. rewrite Forall_lt in H10. simpl in H12. simpl in H13. 
+      rewrite orb_true_iff in *. destruct H12. destruct H13. apply H12. apply H12. 
+      destruct H13. apply Eq_Tuple_Sym. apply H13. apply H8 in H13. apply H10 in H12. 
+      unfold lt in H12. unfold lt in H13. order e. 
+      apply IHxs. assumption. assumption. intros. split; intros.
+      * assert (A1:=H4). specialize (H4 x y). destruct H4. rewrite Forall_lt in H8. rewrite Forall_lt in H10.
+        assert (A:=H5).  assert (List.elem (x,y) (a0 :: xs) = true). {
+        simpl. rewrite orb_true_iff. right. assumption. }
+        apply H4 in H11. simpl in H11.  rewrite orb_true_iff in H11. destruct H11.
+        { apply H8 in H5. destruct p. assert (List.elem (e0, a1) (a0 :: xs) = true). {
+          apply A1. simpl. rewrite orb_true_iff. left. apply Eq_Tuple_Refl. }
+          simpl in H12. rewrite orb_true_iff in H12. destruct H12.
+          { destruct a0. unfold lt in H5. rewrite eq_tuple_prop in H11. rewrite eq_tuple_prop in H12.
+            order e. }
+          { destruct a0. assert (List.elem (e1, a0) ((e0, a1) :: ys) = true). { apply A1.
+            simpl. rewrite orb_true_iff. left. apply Eq_Tuple_Refl. }
+           simpl in H13. rewrite orb_true_iff in H13. destruct H13.
+            { rewrite eq_tuple_prop in H11. rewrite eq_tuple_prop in H13.
+              apply H8 in A. apply H8 in H12. unfold lt in *. order e. }
+            { assert (A2:=H13). assert (A3:=H12). apply H10 in H13. apply H8 in H12.
+              unfold lt in *. order e. }
+            }
+          }
+          { apply H11. }
+          (*Basically the same proof - try to clean up*)
+        * assert (A1:=H4). specialize (H4 x y). destruct H4. rewrite Forall_lt in H8. rewrite Forall_lt in H10.
+        assert (A:=H5).  assert (List.elem (x,y) (p :: ys) = true). {
+        simpl. rewrite orb_true_iff. right. assumption. }
+        apply H6 in H11. simpl in H11.  rewrite orb_true_iff in H11. destruct H11.
+        { apply H10 in H5. destruct p. assert (List.elem (e0, a1) (a0 :: xs) = true). {
+          apply A1. simpl. rewrite orb_true_iff. left. apply Eq_Tuple_Refl. }
+          simpl in H12. rewrite orb_true_iff in H12. destruct H12.
+          { destruct a0. unfold lt in H5. rewrite eq_tuple_prop in H11. rewrite eq_tuple_prop in H12.
+            order e. }
+          { destruct a0. assert (List.elem (e1, a0) ((e0, a1) :: ys) = true). { apply A1.
+            simpl. rewrite orb_true_iff. left. apply Eq_Tuple_Refl. }
+           simpl in H13. rewrite orb_true_iff in H13. destruct H13.
+            { rewrite eq_tuple_prop in H11. rewrite eq_tuple_prop in H13.
+              apply H10 in A. apply H8 in H12. unfold lt in *. order e. }
+            { assert (A2:=H13). assert (A3:=H12). apply H10 in H13. apply H8 in H12.
+              unfold lt in *. order e. }
+            }
+          }
+          { apply H11. }
+Qed.
+
+Lemma equal_2 : forall m m', equal cmp m m' = true -> Equivb cmp m m'.
+Proof.
+  intros. unfold equal in H. unfold cmp in *. unfold Equivb. unfold Cmp.
+  unfold Equiv. destruct m. destruct m'. simpl in *. unfold MapsTo. simpl.
+  unfold In. unfold MapsTo. simpl. rewrite <- cmp_list_eq in H.
+  assert (toList x == toList x0 = true). unfold "==". unfold Eq_list.
+  unfold op_zeze____. apply H. assert (x == x0 = true). rewrite eq_toList.
+  apply H0. apply w. apply w0. erewrite weak_equals_spec in H1.
+  - split; intros.
+    + split; intros.
+      * destruct H2. specialize (H1 k). rewrite H2 in H1. destruct (sem x0 k) eqn : ?.
+        exists e. reflexivity. inversion H1.
+      * destruct H2. specialize (H1 k). rewrite H2 in H1. destruct (sem x k) eqn : ?.
+        exists e. reflexivity. inversion H1.
+    + specialize (H1 k). rewrite H2 in H1. rewrite H3 in H1. rewrite simpl_option_some_eq in H1.
+      apply H1.
+  - apply w.
+  - apply w0.
+Qed.*)
+End Elt.
+(*TODO:See about this - is elt supposed to be generic, if so doesn't that clash with 
+definition of MapsTo?*)
+Lemma map_1 :forall (elt elt' : Type) (m: t elt) (x : key) (e : elt) (f: elt -> elt'),
+  MapsTo _ x e m -> MapsTo _ x (f e) (map _ _ f m).
+Proof.
+  intros. unfold MapsTo in *. destruct m. simpl in *. rewrite map_no_key_spec.
+  eapply map_spec_coq. apply EqLaws_elt. apply w. intros. rewrite H1. reflexivity. assumption.
+Qed. 
+
+Lemma map_2: forall (elt elt' : Type) (m : t elt) (x : key) (f : elt -> elt'),
+  In _ x (map _ _ f m) -> In _ x m.
+Proof.
+  intros. unfold In in *. unfold MapsTo in *. destruct m. simpl in *. 
+  rewrite map_no_key_spec in H. destruct (sem x0 x) eqn : ?.
+  - exists e. reflexivity.
+  - destruct H. eapply map_none_spec in Heqo. setoid_rewrite H in Heqo. inversion Heqo.
+    apply w.
+Qed.
+
+Lemma mapWithKey_reverse: forall (elt elt' : Type) (m: Map key elt) (f: key -> elt -> elt'),
+  WF m ->
+  (forall i v, sem (mapWithKey f m) i = Some v -> exists i', E.eq i i' /\ exists value, sem m i' = Some value).
+Proof.
+  intros. generalize dependent f. revert i. revert v. induction H; intros.
+  - inversion H0.
+  - simpl. simpl in H5. destruct (sem (mapWithKey f s1) i) eqn : ?. inversion H5; subst.
+    apply IHBounded1 in Heqo. destruct Heqo. destruct H3. destruct H6. exists i. split. auto.
+    exists x1. assert (sem s1 i = Some x1). erewrite sem_resp_eq. apply H6. apply elt_eq. apply H3.
+    rewrite H7. reflexivity. eapply map_none_spec in Heqo.
+    simpl in H5. destruct (i == x) eqn : ?. simpl in H5. inversion H5. exists x.
+    split. apply elt_eq in Heqb. assumption. rewrite Eq_Reflexive. simpl. exists v.
+    assert (sem s1 x = None). erewrite sem_resp_eq. apply Heqo. order key. rewrite H6.
+    simpl. reflexivity. simpl in H5. exists i. split. auto. apply IHBounded2 in H5.
+    destruct H5. destruct H5. destruct H6. exists x1. rewrite Heqo. rewrite Heqb. simpl. 
+    erewrite sem_resp_eq. apply H6. apply elt_eq. assumption. apply H.
+Qed.
+
+Lemma mapi_1: forall (elt elt' : Type) (m: t elt) (x: key) (e: elt) (f: key -> elt -> elt'),
+  MapsTo _ x e m -> exists y, E.eq y x /\ MapsTo _ x (f y e) (mapi _ _ f m).
+Proof.
+  intros. unfold MapsTo in *. destruct m. simpl in *. induction w.
+  - inversion H.
+  - simpl. simpl in H. destruct (sem s1 x) eqn : ?. simpl in H; inversion H; subst.
+    apply IHw1 in H. destruct H. exists x1. destruct H. split. assumption. rewrite H2. simpl. reflexivity.
+    simpl in H. destruct (x == x0) eqn : ?. exists x0. split. apply elt_eq in Heqb. auto.
+    simpl in H. inversion H; subst. apply (map_none_spec f s1 lb (Some x0)) in Heqo. rewrite Heqo. simpl. reflexivity.
+    apply w1. simpl in H. apply IHw2 in H. destruct H. destruct H. exists x1. split.
+    auto. apply (map_none_spec f s1 lb (Some x0)) in Heqo. rewrite Heqo. simpl. apply H4. apply w1.
+Qed.
+
+Lemma mapi_2: forall (elt elt' : Type) (m: t elt) (x : key) (f: key -> elt -> elt'),
+  In _ x (mapi _ _ f m) -> In _ x m.
+Proof.
+  intros. unfold In in *. unfold MapsTo in *. destruct m. simpl in *. destruct H.
+  apply mapWithKey_reverse in H. destruct H. destruct H. destruct H0. exists x3.
+  erewrite sem_resp_eq. apply H0. apply elt_eq. apply H. apply w.
+Qed.
+(*TODO: Map2 things, once I figure out that pattern matching issue *)
+Lemma map2_1: forall (elt elt' elt'' : Type) (m : t elt) (m': t elt') (x: key)
+  (f: option elt -> option elt' -> option elt''),
+  In _ x m \/ In _ x m' -> find _ x (map2 _ _ _ f m m') = f (find _ x m) (find _ x m').
+Proof. Admitted.
+
+Lemma map2_2: forall (elt elt' elt'' : Type) (m: t elt) (m': t elt') (x: key) (f: option elt ->
+  option elt' -> option elt''),
+  In _ x (map2 _ _ _ f m m') -> In _ x m \/ In _ x m'.
+Proof. Admitted.
+
+Section Elt'.
+
+Variable elt: Type.
+
+Definition lt_key (p p': key * elt) := E.lt (fst p) (fst p').
+
+(*These two definitions of lt can only be proved equivalent by functional extensionality,
+so instead we prove that if sorted by 1, it is sorted by the other*)
+Lemma lt_lt_key_sort: forall (l: list (key * elt)),
+  StronglySorted (lt elt) l -> 
+  StronglySorted lt_key l.
+Proof.
+  intros. unfold lt in *. unfold lt_key. induction H; subst.
+  - constructor.
+  - constructor. apply IHStronglySorted. destruct a. simpl.
+    induction H0.
+    + constructor.
+    + constructor. destruct x. simpl. apply elt_lt in H0. apply H0.
+      apply IHForall. inversion H; subst. apply H4. inversion IHStronglySorted; subst.
+      apply H4.
+Qed.
+
+Lemma elements_3:  forall (m : t elt), sort lt_key (elements _ m).
+Proof.
+  intros. apply StronglySorted_Sorted. unfold elements. apply lt_lt_key_sort.
+  destruct m. simpl. eapply to_List_sorted. apply w.
+Qed.  
+End Elt'.
+Set Printing All.
+
+  
+  Program Definition is_empty (m : Map elt)
+
+End MapFMap.
+
+  (* Well-formedness *)
+  Definition t := {m : Map elt val | Bounded m None None}.
+
+  Program Definition empty: t:= empty.
+  Next Obligation. constructor. Defined.
+
+  
+
+  Definition Equal m m' := forall a : elt, In a s <-> In a s'.
+  Definition Subset s s' := forall a : elt, In a s -> In a s'.
+  Definition Empty s := forall a : elt, ~ In a s.
 
 

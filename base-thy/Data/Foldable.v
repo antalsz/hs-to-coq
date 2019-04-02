@@ -266,6 +266,16 @@ Qed.
 
 Hint Rewrite @elem_nil @elem_cons @Foldable_elem_app : hs_simpl.
 
+Lemma Foldable_length_nil {a} :
+  length (@nil a) = 0%Z.
+Proof. reflexivity. Qed.
+
+Lemma Foldable_length_cons {a} (x : a) (xs : list a) :
+  length (cons x xs) = Z.succ (length xs).
+Proof. by rewrite !hs_coq_length_list Zlength_cons. Qed.
+
+Hint Rewrite @Foldable_length_nil @Foldable_length_cons : hs_simpl.
+
 
 
 Import GHC.Base.ManualNotations.

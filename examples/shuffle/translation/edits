@@ -1,14 +1,14 @@
 ################################################################################
 # Shuffling
 
-termination Data.List.Shuffle.riffle        {measure ((length arg_0__) + (length arg_2__))}
+termination Data.List.Shuffle.riffle        {measure (length arg_0__ + length arg_2__)}
 termination Data.List.Shuffle.shuffleLength {measure (length arg_0__)}
 
 obligations Data.List.Shuffle.riffle        solve_riffle
 obligations Data.List.Shuffle.shuffleLength solve_shuffleLength @halve @length_halve
 
 add Data.List.Shuffle Theorem Data.List.Shuffle.length_halve {a} (zs : list a) :
-  match halve zs with
+  match Data.List.Shuffle.halve zs with
   | pair xs ys => (length xs = Nat.div2 (S (length zs))) /\
                   (length ys = Nat.div2 (length zs))
   end.

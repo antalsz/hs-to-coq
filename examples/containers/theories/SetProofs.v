@@ -13,6 +13,7 @@ Require Import SortedUtil.
 Require Import Coq.Classes.Morphisms. (* For [Proper] *)
 Set Bullet Behavior "Strict Subproofs".
 
+
 (** ** Tactics for pointer equality *)
 
 Ltac destruct_ptrEq := lazymatch goal with

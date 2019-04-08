@@ -1094,6 +1094,56 @@ Proof.
   all: try reflexivity.
 Qed.
 
+(** ** [Verification of [balance] *)
+Lemma balance_Desc:
+  forall x v s1 s2 lb ub,
+  Bounded s1 lb (Some x) ->
+  Bounded s2 (Some x) ub ->
+  isLB lb x = true ->
+  isUB ub x = true ->
+  balance_prop (size s1) (size s2)  \/
+  balance_prop_inserted (size s2 - 1) (size s1) /\ (1 <= size s2)%Z  \/
+  balance_prop (size s1 + 1) (size s2) \/ 
+  balance_prop_inserted (size s1 - 1) (size s2) /\ (1 <= size s1)%Z \/
+  balance_prop (size s1) (size s2 + 1) ->
+  Desc (balance x v s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i ||| SomeIf (i == x) v ||| sem s2 i).
+Proof.
+  intros. unfold balance.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: try solve [solve_Desc].
+Qed.
+
+Lemma balance_noop :
+    forall x y s1 s2 lb ub,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    isLB lb x = true ->
+    isUB ub x = true->
+    balance_prop (size s1) (size s2) ->
+    balance x y s1 s2 = Bin (1 + size s1 + size s2) x y s1 s2.
+Proof.
+  intros.
+
+  unfold balance.
+  unfold op_zg__, op_zl__, Ord_Integer___, op_zg____, op_zl____.
+
+  repeat lazymatch goal with [ H : Bounded ?s _ _ |- context [match ?s with _ => _ end] ] => inversion H; subst; clear H end;
+  repeat lazymatch goal with [ |- context [if (?x <? ?y)%Z then _ else _] ] => destruct (Z.ltb_spec x y) end;
+  rewrite ?size_Bin in *; simpl (size Tip) in *; simpl sem;
+  simpl isLB in *;
+  simpl isUB in *.
+  all: try solve [exfalso; lia_sizes]. (* Some are simply impossible *)
+  all: repeat find_Tip.
+  all: try reflexivity.
+Qed.
+
 (** *** Verification of [insertMax] *)
 
 Lemma insertMax_Desc:
@@ -2491,6 +2541,255 @@ Proof.
    + simpl.
      replace (compare x x) with Eq by (symmetry; order e).
      destruct s1; reflexivity.
+Qed.
+
+(** ** Verification of [adjustWithKey *)
+Require Import Coq.Classes.Morphisms. (* For [Proper] *)
+
+Lemma equal_f : forall {A B : Type} {f g : A -> B},
+  f = g -> forall x, f x = g x.
+Proof.
+  intros. rewrite H. reflexivity.
+Qed.
+
+(*TODO: Had to add assumption that f is proper*)
+Lemma adjustWithKey_Desc :
+  forall x f m lb ub,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc (adjustWithKey f x m) lb ub (size m) (fun i => if i == x then match (sem m x) with
+                                                                     | Some v => Some (f x v)
+                                                                     | None => None end else sem m i).
+Proof.
+  intros ????? HA HP. induction HA.
+  - simpl. solve_Desc.
+  - cbn -[Z.add]. destruct (compare x x0) eqn : ?.
+    + replace (x == x0) with true by solve_Bounds. simpl_options.
+      solve_Desc. f_solver. unfold respectful in HP. unfold Proper in HP.
+      assert (f x0 = f x). apply HP. order e. 
+      assert (f x0 v = f x v). apply equal_f. assumption. rewrite H4. reflexivity.
+    + applyDesc IHHA1; clear IHHA1 IHHA2. replace (x == x0) with false by solve_Bounds.
+      rewrite -> (sem_outside_below HA2) by solve_Bounds.
+      simpl_options. solve_Desc. 
+    + applyDesc IHHA2; clear IHHA1 IHHA2. replace (x == x0) with false by solve_Bounds.
+      rewrite -> (sem_outside_above HA1) by solve_Bounds. simpl_options.
+      solve_Desc.
+Qed.
+
+(** ** Verification of [adjust] *)
+Lemma adjust_spec: forall (m: Map e a) (f: a -> a) k,
+  adjust f k m = adjustWithKey (fun _ x => f x) k m.
+Proof. 
+  intros. unfold adjust. reflexivity.
+Qed.
+
+(** ** Verification of [updateWithKey] *)
+Lemma updateWithKey_Desc:
+  forall x f m lb ub,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc (updateWithKey f x m) lb ub (match sem m x with
+                                    | None => size m
+                                    | Some y => if isSome (f x y) then
+                                       size m else size m - 1
+                                      end) (fun i => if i == x then match (sem m x) with
+                                                                     | Some v => f x v
+                                                                     | None => None end else sem m i).
+Proof.
+intros ????? HB HP.
+  induction HB; intros; subst.
+  - simpl. solve_Desc.
+  - cbn -[Z.add].
+    destruct (compare x x0) eqn:Heq.
+    + assert (f x0 v = f x v). apply equal_f. apply HP. order e.
+      replace (x == x0) with true by solve_Bounds.
+      simpl_options. destruct (f x0 v) eqn : ?.
+      * solve_Desc. 
+        rewrite -> (sem_outside_above HB1) by solve_Bounds.
+        rewrite -> (sem_outside_below HB2) by solve_Bounds.
+        simpl_options. rewrite <- H1. reflexivity. 
+      * applyDesc glue_Desc. solve_Desc. 
+        rewrite -> (sem_outside_above HB1) by solve_Bounds.
+        rewrite -> (sem_outside_below HB2) by solve_Bounds.
+        simpl_options. rewrite <-H1. cbn -[Z.add]. rewrite Hsz. omega.
+    + applyDesc IHHB1. replace (x == x0) with false by solve_Bounds.
+      rewrite -> (sem_outside_below HB2) by solve_Bounds.
+      simpl_options. destruct (sem s1 x); cbn -[Z.add] in *; applyDesc balanceR_Desc.
+      destruct (f x a0) eqn : ?. simpl in Hsz. rewrite Hsz. left. assumption.
+      simpl in Hsz. rewrite Hsz. solve_size.
+      solve_Desc. rewrite Hsz0. destruct (f x a0); simpl in Hsz; rewrite Hsz;
+      cbn -[Z.add]. reflexivity. omega. solve_Desc.
+    + applyDesc IHHB2. replace (x == x0) with false by (order e). 
+      rewrite -> (sem_outside_above HB1) by solve_Bounds.
+      simpl_options. destruct (sem s2 x); cbn -[Z.add] in *; applyDesc balanceL_Desc.
+      destruct (f x a0) eqn : ?. simpl in Hsz. rewrite Hsz. left. assumption.
+      simpl in Hsz. rewrite Hsz. solve_size.
+      solve_Desc. rewrite Hsz0. destruct (f x a0); simpl in Hsz; rewrite Hsz; cbn -[Z.add]; omega.
+      solve_Desc.
+Qed.
+
+(** ** Verification of [update] *)
+Lemma update_spec: forall (m: Map e a) (f: a -> option a) k,
+  update f k m = updateWithKey (fun _ x => f x) k m.
+Proof. 
+  intros. unfold update. reflexivity.
+Qed.
+
+(** ** Verification of [updateLookupWithKey] *)
+Lemma updateLookupWithKey_lookup_f_true:
+  forall m lb ub f k v v1,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  sem m k = Some v ->
+  f k v = Some v1 ->
+  fst ((updateLookupWithKey f k m)) = Some v1.
+Proof.
+  intros. generalize dependent k. revert v v1. induction H; intros.
+  - inversion H1.
+  - simpl. simpl in H6. destruct (sem s1 k) eqn : ?.
+   + assert (compare k x = Lt) by (solve_Bounds). rewrite H8. 
+     rewrite (pair_fst_snd (updateLookupWithKey f k s1 )). simpl.
+     eapply IHBounded1. apply Heqo. inversion H6. apply H7.
+   + simpl in H6. destruct (k == x) eqn : ?.
+      * simpl in H6. assert (compare k x = Eq) by (order e).
+        rewrite H8. destruct (f x v) eqn : ?.
+        -- simpl. inversion H6; subst. rewrite <- Heqo0. rewrite <- H7.
+           apply equal_f. apply H0. order e.
+        -- simpl. inversion H6; subst. assert (f k v0 = f x v0). apply equal_f.
+           apply H0. order e. rewrite <- H4 in Heqo0. rewrite Heqo0 in H7.
+           inversion H7.
+      * simpl. destruct (sem s2 k) eqn : ?.
+        -- assert (compare k x = Gt) by (solve_Bounds). rewrite H8. 
+           rewrite (pair_fst_snd (updateLookupWithKey f k s2 )). simpl.
+           eapply IHBounded2. apply Heqo0. inversion H6; subst. apply H7.
+        -- inversion H6.
+Qed.
+
+Lemma updateLookupWithKey_lookup_f_false:
+  forall m lb ub f k v,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  sem m k = Some v ->
+  f k v = None ->
+  fst ((updateLookupWithKey f k m)) = Some v.
+Proof.
+  intros. generalize dependent v. revert k. induction H; intros.
+  - inversion H1.
+  - simpl in H6. simpl. destruct (sem s1 k) eqn : ?.
+    + assert (compare k x = Lt) by (solve_Bounds). rewrite H8.
+      rewrite (pair_fst_snd (updateLookupWithKey f k s1 )). simpl.
+      eapply IHBounded1. inversion H6; subst. apply Heqo. apply H7.
+    + simpl in H6. destruct (k == x) eqn : ?.
+      * simpl in H6. assert (compare k x = Eq) by (order e).
+        rewrite H8. destruct (f x v) eqn : ?.
+        -- simpl. inversion H6; subst.  assert (f k v0 = f x v0). apply equal_f.
+           apply H0. order e. rewrite H4 in H7. rewrite H7 in Heqo0. inversion Heqo0.
+        -- simpl. assumption.
+      * simpl in H6. assert (compare k x = Gt) by (solve_Bounds). rewrite H8. 
+           rewrite (pair_fst_snd (updateLookupWithKey f k s2 )). simpl.
+           eapply IHBounded2. apply H6. apply H7.
+Qed. 
+
+Lemma updateLookupWithKey_lookup_None:
+  forall m lb ub f k,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  sem m k = None ->
+  fst ((updateLookupWithKey f k m)) = None.
+Proof.
+  intros. generalize dependent k. induction H; intros.
+  - simpl. reflexivity.
+  - simpl in H6. simpl. destruct (sem s1 k) eqn : ?. inversion H6.
+    destruct (k == x) eqn : ?. inversion H6. destruct (sem s2 k) eqn : ?.
+    inversion H6.
+    destruct (compare k x) eqn : ?.
+    + order e.
+    + rewrite (pair_fst_snd (updateLookupWithKey f k s1 )). simpl. apply IHBounded1.
+      assumption.
+    + rewrite (pair_fst_snd (updateLookupWithKey f k s2 )). simpl. apply IHBounded2.
+      assumption.
+Qed.
+
+(*This makes the Desc incredibly easy*)
+Lemma updateWithKey_updateLookupWithKey: forall (m: Map e a) f k,
+  updateWithKey f k m = snd(updateLookupWithKey f k m).
+Proof.
+  intros m. induction m; intros.
+  - simpl. destruct (compare k0 k).
+    + destruct (f k a0); simpl; reflexivity. 
+    + rewrite (pair_fst_snd (updateLookupWithKey f k0 m1)). simpl.
+      rewrite IHm1. reflexivity.
+    + rewrite (pair_fst_snd (updateLookupWithKey f k0 m2)). simpl.
+      rewrite IHm2. reflexivity.
+  - simpl. reflexivity.
+Qed.  
+
+Lemma updateLookupWithKey_Desc: 
+  forall x f m lb ub,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc (snd(updateLookupWithKey f x m)) lb ub (match sem m x with
+                                    | None => size m
+                                    | Some y => if isSome (f x y) then
+                                       size m else size m - 1
+                                      end) (fun i => if i == x then match (sem m x) with
+                                                                     | Some v => f x v
+                                                                     | None => None end else sem m i).
+Proof.
+  intros. rewrite <- updateWithKey_updateLookupWithKey. apply updateWithKey_Desc; assumption.
+Qed.
+
+
+(** ** Verification of [alter] *)
+(*Note: the bounds assumptions are only needed in the insert case, but we can always expand the bounds
+  if needed*)
+Lemma alter_Desc:
+  forall m (f: option a -> option a) k lb ub,
+  Bounded m lb ub ->
+  isLB lb k = true ->
+  isUB ub k = true ->
+  Desc(alter f k m) lb ub (if (negb (isSome (sem m k)) && isSome (f None)) then (1 + size m)%Z
+  else if (isSome(sem m k) && negb (isSome (f (sem m k)))) then (size m - 1)%Z else size m)
+  (fun i => (if i == k then f (sem m k) else sem m i)).
+Proof.
+  intros ????? HB HL HU. induction HB.
+  - simpl. destruct (f None).
+    + applyDesc singleton_Desc. solve_Desc.
+    + solve_Desc.
+  - cbn -[Z.add]. destruct (compare k x) eqn : Heq.
+    + replace (k == x) with true by solve_Bounds. simpl_options.
+      destruct (f (Some v)) eqn : ?.
+      * solve_Desc. simpl. 
+        rewrite -> (sem_outside_above HB1) by (solve_Bounds). simpl_options.
+        rewrite Heqo. simpl. reflexivity. f_solver.
+        assert (sem s1 k = None). eapply sem_outside_above. eassumption.
+        solve_Bounds. rewrite H3 in Heqo1. simpl in Heqo1. rewrite Heqo1 in Heqo.
+        inversion Heqo. reflexivity.
+        assert (sem s1 k = None). eapply sem_outside_above. eassumption. solve_Bounds.
+        rewrite H3 in Heqo1. simpl in Heqo1. rewrite Heqo1 in Heqo. inversion Heqo.
+      * rewrite -> (sem_outside_above HB1) by (solve_Bounds).
+        rewrite -> (sem_outside_below HB2) by (solve_Bounds).
+        simpl_options. applyDesc glue_Desc. solve_Desc.
+        simpl. rewrite Heqo. simpl. solve_size.
+    + replace (k == x) with false by solve_Bounds. 
+      rewrite -> (sem_outside_below HB2) by (solve_Bounds).
+      simpl_options.
+      applyDesc IHHB1. applyDesc balance_Desc. destruct (sem s1 k). simpl in Hsz.
+      destruct (f (Some a0)); simpl in Hsz; solve_size. cbn -[Z.add] in *.
+      destruct (f None). cbn -[Z.add] in *. solve_size.
+      simpl in Hsz. solve_size. solve_Desc.
+      rewrite Hsz0. rewrite Hsz. destruct (sem s1 k); cbn -[Z.add].
+      destruct (f(Some a0)); cbn -[Z.add]; solve_size.
+      destruct (f(None)); cbn -[Z.add]; solve_size.
+    + replace (k == x) with false by (order e).
+      rewrite -> (sem_outside_above HB1) by (solve_Bounds). 
+      simpl_options.
+      applyDesc IHHB2. applyDesc balance_Desc. destruct (sem s2 k); cbn -[Z.add] in *.
+      destruct (f(Some a0)); cbn -[Z.add] in *; solve_size.
+      destruct (f(None)); cbn -[Z.add] in *; solve_size.
+      solve_Desc. rewrite Hsz0. rewrite Hsz. destruct (sem s2 k); cbn -[Z.add].
+      destruct (f(Some a0)); cbn -[Z.add]; solve_size.
+      destruct (f(None)); cbn -[Z.add]; solve_size.
 Qed.
 
 (** ** Verification of [split] *)
@@ -5962,8 +6261,6 @@ Proof.
     - applyDesc link2_Desc.
 Qed.
 
-Require Import Coq.Classes.Morphisms. (* For [Proper] *)
-
 Lemma filterWithKey_Desc:
   forall (P : e -> a -> bool) map lb ub,
   Bounded map lb ub ->
@@ -6034,11 +6331,7 @@ Proof.
         -- applyDesc link_Desc.
 Qed.
 *)
-Lemma equal_f : forall {A B : Type} {f g : A -> B},
-  f = g -> forall x, f x = g x.
-Proof.
-  intros. rewrite H. reflexivity.
-Qed.
+
 (*
 Lemma partitionWithKey_spec:
   forall (p : e -> a -> bool) map lb ub,

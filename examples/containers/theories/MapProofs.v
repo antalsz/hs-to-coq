@@ -2955,6 +2955,426 @@ Proof.
     intro i.
     rewrite Hsem0, Hsem. rewrite oro_app. simpl. rewrite oro_None_r. reflexivity.
 Qed.
+
+(** ** Verification of [insertWithR] *)
+Lemma insertWithR_Desc:
+  forall (f: a -> a -> a) y v s lb ub,
+  Bounded s lb ub ->
+  isLB lb y = true ->
+  isUB ub y = true ->
+  Desc (insertWithR f y v s) lb ub (if isSome (sem s y) then size s else (1 + size s)%Z)
+      (fun i => (if i == y then match (sem s y) with
+                                | None => Some v
+                                | Some x => Some (f x v)
+                                end  else None ||| sem s i )).
+Proof.
+  intros ?????? HB HLB HUB.
+  induction HB; intros.
+  * simpl.
+    applyDesc singleton_Desc; try eassumption; solve_Desc.
+  * subst; cbn -[Z.add].
+    destruct (compare y x) eqn:?.
+    + rewrite compare_Eq in *.
+      rewrite Heqc.
+      rewrite ?isSome_oro, ?isSome_Some, ?orb_true_r, ?orb_true_l.
+      solve_Desc.
+    + clear IHHB2.
+      applyDesc IHHB1.
+      rewrite (sem_outside_below HB2) by order_Bounds.
+      replace (y == x) with false by order_Bounds.
+      simpl_options. destruct (sem s1 y) eqn:?; simpl isSome in *; try lia;
+      applyDesc balanceL_Desc; solve_Desc.
+    + clear IHHB1.
+      applyDesc IHHB2.
+      rewrite (sem_outside_above HB1) by order_Bounds.
+      replace (y == x) with false by order_Bounds.
+      simpl_options. destruct (sem s2 y) eqn:?; simpl_options; try lia; applyDesc balanceR_Desc;
+      solve_Desc.
+Qed.
+
+(** ** Verification of [splitLookup] *)
+
+(* Rewrite to avoid local [go] and StrictTriple *)
+Fixpoint splitLookup' (k : e) (s : Map e a) : (Map e a * option a * Map e a) :=
+  match s with
+   | Tip => (Tip, None, Tip)
+   | Bin _ kx x l r => match GHC.Base.compare k kx with
+     | Lt => match splitLookup' k l with
+               | (lt, z, gt) => match link kx x gt r with
+                                              | gt' => (lt, z, gt')
+                                            end
+             end
+     | Gt => match splitLookup' k r with
+               | (lt, z, gt) => match link kx x l lt with
+                                              | lt' => (lt', z, gt)
+                                            end
+             end
+     | Eq => (l, Some x, r)
+    end
+ end.
+
+Lemma splitLookup_splitLookup' : forall x map, splitLookup x map  = splitLookup' x map.
+Proof.
+  intros.
+  unfold splitLookup.
+  induction map.
+  * simpl.
+    rewrite <- IHmap1. clear IHmap1.
+    rewrite <- IHmap2. clear IHmap2.
+    destruct (compare x k).
+    + reflexivity.
+    + destruct (_ x map1); reflexivity.
+    + destruct (_ x map2); reflexivity.
+  * reflexivity.
+Qed.
+
+Lemma splitLookup_Desc:
+  forall x s lb ub,
+  Bounded s lb ub ->
+  forall (P : Map e a * option a * Map e a -> Prop),
+  (forall s1 b s2,
+    Bounded s1 lb (Some x) ->
+    Bounded s2 (Some x) ub ->
+    b = sem s x ->
+    (forall i, sem s i =
+          (if i == x then sem s i
+           else  (sem s1 i ||| sem s2 i))) ->
+    P (s1, b, s2)) ->
+  P (splitLookup x s) : Prop.
+Proof.
+  intros ?? ?? HB.
+  rewrite splitLookup_splitLookup'.
+  induction HB.
+  Ltac solveThis ::= intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|try reflexivity |f_solver].
+  * solveThis.
+  * simpl.
+    destruct (compare x x0) eqn:?.
+    + solveThis.
+      replace (x == x0) with true by order_Bounds.
+      simpl_options.
+      assert (sem s1 x = None). { eapply sem_outside_above. apply HB1. solve_Bounds. }
+      rewrite H3. simpl. reflexivity.
+    + apply IHHB1.
+      intros s1_2 b s1_3 HB1_2 HB1_3 Hb Hsems1.
+      clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+      replace (x == x0) with false by order_Bounds.
+      rewrite (sem_outside_below HB2) by order_Bounds.
+      simpl_options. assumption.
+    + apply IHHB2.
+      intros s2_2 b s2_3 HB2_2 HB2_3 Hb Hsems2.
+      clear IHHB1 IHHB2.
+      applyDesc link_Desc.
+      solveThis.
+      replace (x == x0) with false by order_Bounds.
+      rewrite (sem_outside_above HB1) by order_Bounds.
+      simpl_options. assumption.
+Qed.
+
+
+(** ** Verification of [unionWith_Desc] *)
+Lemma unionWith_destruct :
+  forall (P : Map e a -> Prop),
+  forall s1 s2 f,
+  (s2 = Tip -> P s1) ->
+  (s1 = Tip -> P s2) ->
+  (forall sz2 x vx, (s2 = Bin sz2 x vx Tip Tip) -> P (insertWithR f x vx s1)) ->
+  (forall sz1 x vx, (s1 = Bin sz1 x vx Tip Tip) -> P (insertWith f x vx s2)) ->
+  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) -> 
+    P (
+      match splitLookup x s2 with
+      | (l2, mb, r2) =>
+      match unionWith f r1 r2 with
+      | r1r2 =>
+      match unionWith f l1 l2 with
+      | l1l2 => match mb with
+                |None => link x vx l1l2 r1r2
+                | Some y => link x (f vx y) l1l2 r1r2
+                end
+      end end end)) ->
+  P (unionWith f s1 s2).
+Proof.
+  intros P s1 s2 f HTipR HTipL HSingletonR HSingletonL HBins.
+  destruct s1, s2; simpl union;
+  try destruct s1_1, s1_2;
+  try destruct s2_1, s2_2;
+  first [ eapply HBins; reflexivity
+        | eapply HSingletonL; reflexivity
+        | eapply HSingletonR; reflexivity
+        | eapply HTipL; reflexivity
+        | eapply HTipR; reflexivity
+        | idtac
+        ].
+Qed. 
+
+Lemma unionWith_Desc :
+  forall s1 s2 lb ub f,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Desc' (unionWith f s1 s2) lb ub (fun i => match sem s1 i, sem s2 i with
+                                            |Some x, Some y => Some (f x y)
+                                            | Some x, _ => Some x
+                                            | _, Some y => Some y
+                                            | _, _ => None
+                                            end).
+Proof.
+intros ????? HB1 HB2.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  * apply unionWith_destruct; intros; subst; try congruence.
+    + solve_Desc.
+    + solve_Desc.
+    + inversion HB3; subst; clear HB3.
+      clear H4 H5.
+      (* We need to give [applyDesc] a hint about the bounds that we care about: *)
+      assert (Bounded Tip lb ub) by constructor.
+      applyDesc insertWithR_Desc.
+      solve_Desc.
+  * apply unionWith_destruct; intros; subst; try congruence.
+    + solve_Desc.
+    + inversion HB3; subst; clear HB3.
+      applyDesc insertWithR_Desc.
+      solve_Desc. f_solver.
+      assert (sem s1 x0 = sem s1 i). apply sem_resp_eq. order e. rewrite H1 in Hsem.
+      rewrite Heqo0 in Hsem. simpl in Hsem. symmetry. assumption.
+      assert (sem s1 x0 = sem s1 i) by (apply sem_resp_eq; order e). rewrite H1 in Hsem.
+      rewrite Heqo0 in Hsem. assert (x0 == x = true) by (order e). rewrite H3 in Hsem.
+      simpl in Hsem. symmetry. assumption.
+      assert (sem s2 i = sem s2 x0) by (apply sem_resp_eq; order e). 
+      rewrite <- H1 in Hsem. rewrite Heqo1 in Hsem. 
+      assert (sem s1 x0 = None). eapply sem_outside_above. eassumption. solve_Bounds.
+      rewrite H3 in Hsem. assert (x0 == x = false) by (order e). rewrite H4 in Hsem.
+      simpl in Hsem. symmetry. assumption.
+      assert (sem s1 x0 = None). erewrite sem_resp_eq. apply Heqo0. order e.
+      rewrite H1 in Hsem. assert (x0 == x = false) by (order e). rewrite H3 in Hsem.
+      simpl in Hsem. assert (sem s2 x0 = None). erewrite sem_resp_eq.
+      apply Heqo1. order e. rewrite H4 in Hsem. symmetry. assumption.
+      assert (sem s1 x0 = Some a0). erewrite sem_resp_eq. apply Heqo0. order e.
+      rewrite H1 in Hsem. simpl in Hsem. symmetry. assumption.
+      assert (sem s1 x0 = None). erewrite sem_resp_eq. apply Heqo0. order e.
+      rewrite H1 in Hsem. assert (x0 == x = true) by (order e). rewrite H3 in Hsem.
+      simpl in Hsem. symmetry. assumption.
+      assert (sem s1 x0 = None). erewrite sem_resp_eq. apply Heqo0. order e.
+      assert (x0 == x = false) by (order e). rewrite H1 in Hsem. rewrite H3 in Hsem.
+      simpl in Hsem. assert (sem s2 x0 = Some a0). erewrite sem_resp_eq. apply Heqo1.
+      order e. rewrite H4 in Hsem. symmetry. assumption.
+      destruct (sem s1 x0); simpl in Hsem. inversion Hsem. destruct (x0 == x); simpl in Hsem.
+      inversion Hsem. destruct (sem s2 x0); simpl in Hsem; inversion Hsem.
+    + inversion H3; subst; clear H3.
+      applyDesc insertWith_Desc. solve_Desc. f_solver;
+      assert (sem s3 x0 = sem s3 i) by (apply sem_resp_eq; order e); rewrite <- H1 in Heqo0;
+      rewrite Heqo0 in Hsem; symmetry; assumption.
+    + inversion H3; subst; clear H3.
+      eapply splitLookup_Desc; try eassumption.
+      intros.
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2. destruct b.
+      - applyDesc link_Desc. apply showDesc'. split. 
+        (*Not using solve_Desc because it was very slow*)
+        solve_Bounded. f_solver; rewrite H5 in Hsem0;
+        rewrite <- Hsem1; assumption.
+      - applyDesc link_Desc. apply showDesc'. split.
+        solve_Bounded. f_solver; rewrite H5 in Hsem0; rewrite <-Hsem1; assumption.
+Qed. 
+
+(** ** Verification of [insertWithKeyR] *)
+(*Need to add assumption that f is proper*)
+Lemma insertWithKeyR_Desc:
+  forall (f: e -> a -> a -> a) y v s lb ub,
+  Bounded s lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  isLB lb y = true ->
+  isUB ub y = true ->
+  Desc (insertWithKeyR f y v s) lb ub (if isSome (sem s y) then size s else (1 + size s)%Z)
+      (fun i => (if i == y then match (sem s y) with
+                                | None => Some v
+                                | Some x => Some (f i x v)
+                                end  else None ||| sem s i )).
+Proof.
+  intros ?????? HB HP HLB HUB.
+  induction HB; intros.
+  * simpl.
+    applyDesc singleton_Desc; try eassumption; solve_Desc.
+  * subst; cbn -[Z.add].
+    destruct (compare y x) eqn:?.
+    + rewrite compare_Eq in *.
+      rewrite Heqc.
+      rewrite ?isSome_oro, ?isSome_Some, ?orb_true_r, ?orb_true_l.
+      solve_Desc. f_solver. assert (f x v0 v = f i v0 v). apply equal_f.
+      apply equal_f. apply HP. order e. rewrite H1. reflexivity.
+    + clear IHHB2.
+      applyDesc IHHB1.
+      rewrite (sem_outside_below HB2) by order_Bounds.
+      replace (y == x) with false by order_Bounds.
+      simpl_options. destruct (sem s1 y) eqn:?; simpl isSome in *; try lia;
+      applyDesc balanceL_Desc; solve_Desc.
+    + clear IHHB1.
+      applyDesc IHHB2.
+      rewrite (sem_outside_above HB1) by order_Bounds.
+      replace (y == x) with false by order_Bounds.
+      simpl_options. destruct (sem s2 y) eqn:?; simpl_options; try lia; applyDesc balanceR_Desc;
+      solve_Desc.
+Qed.
+
+(** ** Verification of [unionWithKey] *)
+
+Lemma unionWithKey_destruct :
+  forall (P : Map e a -> Prop),
+  forall s1 s2 f,
+  (s2 = Tip -> P s1) ->
+  (s1 = Tip -> P s2) ->
+  (forall sz2 x vx, (s2 = Bin sz2 x vx Tip Tip) -> P (insertWithKeyR f x vx s1)) ->
+  (forall sz1 x vx, (s1 = Bin sz1 x vx Tip Tip) -> P (insertWithKey f x vx s2)) ->
+  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) -> 
+    P (
+      match splitLookup x s2 with
+      | (l2, mb, r2) =>
+      match unionWithKey f r1 r2 with
+      | r1r2 =>
+      match unionWithKey f l1 l2 with
+      | l1l2 => match mb with
+                |None => link x vx l1l2 r1r2
+                | Some y => link x (f x vx y) l1l2 r1r2
+                end
+      end end end)) ->
+  P (unionWithKey f s1 s2).
+Proof.
+  intros P s1 s2 f HTipR HTipL HSingletonR HSingletonL HBins.
+  destruct s1, s2; simpl union;
+  try destruct s1_1, s1_2;
+  try destruct s2_1, s2_2;
+  first [ eapply HBins; reflexivity
+        | eapply HSingletonL; reflexivity
+        | eapply HSingletonR; reflexivity
+        | eapply HTipL; reflexivity
+        | eapply HTipR; reflexivity
+        | idtac
+        ].
+Qed. 
+
+Lemma unionWithKey_Desc :
+  forall s1 s2 lb ub f,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc' (unionWithKey f s1 s2) lb ub (fun i => match sem s1 i, sem s2 i with
+                                            |Some x, Some y => Some (f i x y)
+                                            | Some x, _ => Some x
+                                            | _, Some y => Some y
+                                            | _, _ => None
+                                            end).
+Proof.
+intros ????? HB1 HB2 HP.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  * apply unionWithKey_destruct; intros; subst; try congruence.
+    + solve_Desc.
+    + solve_Desc.
+    + inversion HB3; subst; clear HB3.
+      clear H4 H5.
+      (* We need to give [applyDesc] a hint about the bounds that we care about: *)
+      assert (Bounded Tip lb ub) by constructor.
+      eapply insertWithKeyR_Desc. apply H. apply HP. assumption. assumption. intros.
+      solve_Desc.
+  * apply unionWithKey_destruct; intros; subst; try congruence.
+    + solve_Desc.
+    + inversion HB3; subst; clear HB3.
+      eapply insertWithKeyR_Desc. solve_Bounded. apply HP. assumption. assumption. intros.
+      solve_Desc. f_solver.
+      assert (sem s1 x0 = sem s1 i). apply sem_resp_eq. order e. rewrite H5 in H4.
+      rewrite Heqo0 in H4. simpl in H4. symmetry. assumption.
+      assert (sem s1 x0 = sem s1 i) by (apply sem_resp_eq; order e). rewrite H5 in H4.
+      rewrite Heqo0 in H4. assert (x0 == x = true) by (order e). rewrite H6 in H4.
+      simpl in H4. symmetry. assumption.
+      assert (sem s2 i = sem s2 x0) by (apply sem_resp_eq; order e). 
+      rewrite <- H5 in H4. rewrite Heqo1 in H4. 
+      assert (sem s1 x0 = None). eapply sem_outside_above. eassumption. solve_Bounds.
+      rewrite H6 in H4. assert (x0 == x = false) by (order e). rewrite H9 in H4.
+      simpl in H4. symmetry. assumption.
+      assert (sem s1 x0 = None). erewrite sem_resp_eq. apply Heqo0. order e.
+      rewrite H5 in H4. assert (x0 == x = false) by (order e). rewrite H6 in H4.
+      simpl in H4. assert (sem s2 x0 = None). erewrite sem_resp_eq.
+      apply Heqo1. order e. rewrite H9 in H4. symmetry. assumption.
+      assert (sem s1 x0 = Some a0). erewrite sem_resp_eq. apply Heqo0. order e.
+      rewrite H5 in H4. simpl in H4. symmetry. assumption.
+      assert (sem s1 x0 = None). erewrite sem_resp_eq. apply Heqo0. order e.
+      rewrite H5 in H4. assert (x0 == x = true) by (order e). rewrite H6 in H4.
+      simpl in H4. symmetry. assumption.
+      assert (sem s1 x0 = None). erewrite sem_resp_eq. apply Heqo0. order e.
+      assert (x0 == x = false) by (order e). rewrite H6 in H4. rewrite H5 in H4.
+      simpl in H4. assert (sem s2 x0 = Some a0). erewrite sem_resp_eq. apply Heqo1.
+      order e. rewrite H9 in H4. symmetry. assumption.
+      destruct (sem s1 x0); simpl in H4. inversion H4. destruct (x0 == x); simpl in H4.
+      inversion H4. destruct (sem s2 x0); simpl in H4; inversion H4.
+    + inversion H3; subst; clear H3.
+      applyDesc insertWithKey_Desc. solve_Desc. f_solver;
+      assert (sem s3 x0 = sem s3 i) by (apply sem_resp_eq; order e); rewrite <- H1 in Heqo0.
+      destruct (sem s3 x0). assert (f x0 vx a2 = f i vx a2). apply equal_f. apply equal_f.
+      apply HP. order e. rewrite H3 in Hsem. rewrite Heqo0 in Hsem. symmetry. assumption.
+      rewrite <- Hsem. assumption.
+      destruct (sem s3 x0). assert (f x0 vx a1 = f i vx a1). apply equal_f. apply equal_f.
+      apply HP. order e. rewrite H3 in Hsem. rewrite Heqo0 in Hsem. inversion Hsem.
+      rewrite Heqo0 in Hsem. inversion Hsem.
+      destruct (sem s3 x0). assert (f x0 vx a1 = f i vx a1). apply equal_f. apply equal_f.
+      apply HP. order e. rewrite H3 in Hsem. rewrite Heqo0 in Hsem. inversion Hsem.
+      rewrite Heqo0 in Hsem. inversion Hsem.
+    + inversion H3; subst; clear H3.
+      eapply splitLookup_Desc; try eassumption.
+      intros.
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2. destruct b.
+      - applyDesc link_Desc. apply showDesc'. split. 
+        (*Not using solve_Desc because it was very slow*)
+        solve_Bounded. f_solver.
+        assert (f x0 vx a0 = f i vx a0). apply equal_f. apply equal_f. apply HP. order e.
+        rewrite H4. reflexivity.
+        all : (rewrite H5 in Hsem0; rewrite <- Hsem1; assumption).
+      - applyDesc link_Desc. apply showDesc'. split.
+        solve_Bounded. f_solver; rewrite H5 in Hsem0; rewrite <-Hsem1; assumption.
+Qed. 
+
+(** ** Verification of [unionsWith] *)
+Lemma unionsWith_Desc:
+  forall ss f lb ub,
+  Forall (fun s => Bounded s lb ub) ss ->
+  Desc' (unionsWith f ss) lb ub (fun i => fold_left (fun t h => match t with
+                                                                 | Some y =>
+                                                                   match (sem h i) with
+                                                                    | Some x => Some (f y x)
+                                                                    | _ => t
+                                                                   end
+                                                                  | _ => (sem h i)
+                                                                  end) ss None).
+Proof.
+  intros.
+  unfold unionsWith.
+  (* Switch to a fold right *)
+  rewrite Proofs.Data.Foldable.hs_coq_foldl'_list.
+  rewrite <- fold_left_rev_right.
+  rewrite <- (rev_involutive ss).
+  rewrite <- (rev_involutive ss), Forall_rev in H.
+  generalize dependent (rev ss). intros.
+  rewrite rev_involutive.
+
+  induction H.
+  * simpl. applyDesc empty_Desc. solve_Desc. 
+  * simpl fold_right.
+    applyDesc IHForall.
+    applyDesc unionWith_Desc.
+    solve_Desc. 
+    intro i.
+    rewrite Hsem0, Hsem. simpl. rewrite fold_left_app. simpl. destruct (fold_left
+    (fun (t : option a) (h : Map e a) =>
+     match t with
+     | Some y => match sem h i with
+                 | Some x0 => Some (f  y x0)
+                 | None => t
+                 end
+     | None => sem h i
+     end) (rev l) None); destruct (sem x i ) eqn : ?; reflexivity.
+Qed. 
+
 (** ** Verification of [link2] *)
 
 (** This is called  [merge] for Set *)
@@ -3124,6 +3544,84 @@ Proof.
         solve_Desc.
     + solve_Desc.
 Qed.
+
+(** Verificataion of [intersectionWith] *)
+Lemma intersectionWith_Desc:
+  forall s1 s2 f lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Desc' (intersectionWith f s1 s2) lb ub
+        (fun i => match (sem s1 i), (sem s2 i) with
+                  | Some a, Some b => Some (f a b)
+                  | _, _ => None end).
+
+Proof.
+  intros ????? HB1 HB2.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  - simpl. solve_Desc.
+  - simpl.
+    destruct s3 eqn:Hs3.
+    + rewrite <- Hs3 in *.
+      clear Hs3 s e0 a0 m1 m2.
+      eapply splitLookup_Desc;
+        only 1: eassumption.
+      intros s4' b s5' HB1 HB2 Hb Hi.
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2.
+      destruct b.
+      applyDesc link_Desc. 
+      (*Also taking long see*)
+      apply showDesc'. split. solve_Bounded. f_solver; rewrite Hi in Hsem0; 
+      rewrite <- Hsem1; assumption.
+      applyDesc link2_Desc.
+      apply showDesc'. split. solve_Bounded. f_solver; rewrite Hi in Hsem0;
+      rewrite <-Hsem1; assumption.
+    + solve_Desc.
+Qed.
+
+(** ** Veritication of [intersectionWithKey] *)
+
+(*Had to add assumption that f is Proper*)
+
+Lemma intersectionWithKey_Desc:
+  forall s1 s2 f lb ub,
+  Bounded s1 lb ub ->
+  Bounded s2 lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc' (intersectionWithKey f s1 s2) lb ub
+        (fun i => match (sem s1 i), (sem s2 i) with
+                  | Some a, Some b => Some (f i a b)
+                  | _, _ => None end).
+
+Proof.
+  intros ????? HB1 HB2 HP.
+  revert s2 HB2.
+  induction HB1; intros s3 HB3.
+  - simpl. solve_Desc.
+  - simpl.
+    destruct s3 eqn:Hs3.
+    + rewrite <- Hs3 in *.
+      clear Hs3 s e0 a0 m1 m2.
+      eapply splitLookup_Desc;
+        only 1: eassumption.
+      intros s4' b s5' HB1 HB2 Hb Hi.
+      applyDesc IHHB1_1.
+      applyDesc IHHB1_2.
+      destruct b.
+      applyDesc link_Desc. 
+      (*Also taking long see*)
+      apply showDesc'. split. solve_Bounded. f_solver.
+      assert (f x v a0 = f i v a0). apply equal_f. apply equal_f. apply HP. order e.
+      rewrite H1. reflexivity.
+      all :( try (rewrite Hi in Hsem0; 
+      rewrite <- Hsem1; assumption)).
+      applyDesc link2_Desc.
+      apply showDesc'. split. solve_Bounded. f_solver; rewrite Hi in Hsem0;
+      rewrite <-Hsem1; assumption.
+    + solve_Desc.
+Qed.
+      
 
 (** ** Verification of [difference] *)
 
@@ -6005,88 +6503,6 @@ Proof.
     destruct (sem m1 i). destruct (sem m2 i). 
     rewrite simpl_option_some_eq in H5. rewrite H4 in H5. subst. reflexivity.
     discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity. apply H2. apply H3.
-Qed.
-
-
-
-(** ** Verification of [splitLookup] *)
-
-(* Rewrite to avoid local [go] and StrictTriple *)
-Fixpoint splitLookup' (k : e) (s : Map e a) : (Map e a * option a * Map e a) :=
-  match s with
-   | Tip => (Tip, None, Tip)
-   | Bin _ kx x l r => match GHC.Base.compare k kx with
-     | Lt => match splitLookup' k l with
-               | (lt, z, gt) => match link kx x gt r with
-                                              | gt' => (lt, z, gt')
-                                            end
-             end
-     | Gt => match splitLookup' k r with
-               | (lt, z, gt) => match link kx x l lt with
-                                              | lt' => (lt', z, gt)
-                                            end
-             end
-     | Eq => (l, Some x, r)
-    end
- end.
-
-Lemma splitLookup_splitLookup' : forall x map, splitLookup x map  = splitLookup' x map.
-Proof.
-  intros.
-  unfold splitLookup.
-  induction map.
-  * simpl.
-    rewrite <- IHmap1. clear IHmap1.
-    rewrite <- IHmap2. clear IHmap2.
-    destruct (compare x k).
-    + reflexivity.
-    + destruct (_ x map1); reflexivity.
-    + destruct (_ x map2); reflexivity.
-  * reflexivity.
-Qed.
-
-Lemma splitLookup_Desc:
-  forall x s lb ub,
-  Bounded s lb ub ->
-  forall (P : Map e a * option a * Map e a -> Prop),
-  (forall s1 b s2,
-    Bounded s1 lb (Some x) ->
-    Bounded s2 (Some x) ub ->
-    b = sem s x ->
-    (forall i, sem s i =
-          (if i == x then sem s i
-           else  (sem s1 i ||| sem s2 i))) ->
-    P (s1, b, s2)) ->
-  P (splitLookup x s) : Prop.
-Proof.
-  intros ?? ?? HB.
-  rewrite splitLookup_splitLookup'.
-  induction HB.
-  Ltac solveThis ::= intros X HX; apply HX; clear X HX; [solve_Bounded|solve_Bounded|try reflexivity |f_solver].
-  * solveThis.
-  * simpl.
-    destruct (compare x x0) eqn:?.
-    + solveThis.
-      replace (x == x0) with true by order_Bounds.
-      simpl_options.
-      assert (sem s1 x = None). { eapply sem_outside_above. apply HB1. solve_Bounds. }
-      rewrite H3. simpl. reflexivity.
-    + apply IHHB1.
-      intros s1_2 b s1_3 HB1_2 HB1_3 Hb Hsems1.
-      clear IHHB1 IHHB2.
-      applyDesc link_Desc.
-      solveThis.
-      replace (x == x0) with false by order_Bounds.
-      rewrite (sem_outside_below HB2) by order_Bounds.
-      simpl_options. assumption.
-    + apply IHHB2.
-      intros s2_2 b s2_3 HB2_2 HB2_3 Hb Hsems2.
-      clear IHHB1 IHHB2.
-      applyDesc link_Desc.
-      solveThis.
-      replace (x == x0) with false by order_Bounds.
-      rewrite (sem_outside_above HB1) by order_Bounds.
-      simpl_options. assumption.
 Qed.
 
 

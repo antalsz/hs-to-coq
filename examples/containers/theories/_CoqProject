@@ -6,6 +6,11 @@
 Tactics.v
 OrdTheories.v
 SetProofs.v
+./MapProofs/Bounds.v
+./MapProofs/Tactics.v
+./MapProofs/LookupProofs.v
+./MapProofs/InsertProofs.v
+./MapProofs/MaxMinProofs.v
 MapProofs.v
 IntSetProofs.v
 IntSetWordProofs.v

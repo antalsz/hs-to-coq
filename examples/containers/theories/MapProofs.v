@@ -7,7 +7,7 @@ Require Import OrdTactic.
 Require Import Psatz.
 Require Import Tactics.
 Set Bullet Behavior "Strict Subproofs".
-
+(*
 (** ** Tactics for pointer equality *)
 
 Ltac destruct_ptrEq := lazymatch goal with
@@ -2077,7 +2077,7 @@ Qed.
 Lemma insert_WF:
   forall y v s, WF s -> WF (insert y v s).
 Proof. intros. eapply Desc_WF. eapply insert_Desc; try reflexivity; try assumption. Qed.
-
+*)
 (** ** Verification of [maxViewSure] *)
 
 Lemma maxViewSure_Desc:
@@ -6716,10 +6716,12 @@ Lemma filter_Desc:
 Proof.
   intros. eapply filterWithKey_Desc. apply H. f_solver.
 Qed.
+Set Bullet Behavior "Strict Subproofs".
 
 (** ** Verification of [partition] *)
+
 (*TODO: NOTE: UNCOMMENT ON COMMIT*)
-Set Bullet Behavior "Strict Subproofs".
+
 (*
 Lemma partitionWithKey_Bounded:
   forall p map lb ub,

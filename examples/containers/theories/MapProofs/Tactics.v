@@ -251,3 +251,26 @@ Ltac solve_Desc e :=
  | |- ?P
  => fail "solve_Desc: Goal not a Desc or Desc' proposition: " P
  end.
+
+(** For every set in the context, try to see if [lia] knows it is empty. *)
+Ltac find_Tip :=
+  match goal with [ H : Bounded ?s _ _ |- _ ] =>
+    assert_new (size s = 0)%Z lia_sizes;
+    rewrite (size_0_iff_tip H) in *;
+    subst s;
+    inversion H;
+    clear H;
+    subst
+  end.
+
+Lemma equal_f : forall {A B : Type} {f g : A -> B},
+  f = g -> forall x, f x = g x.
+Proof.
+  intros. rewrite H. reflexivity.
+Qed.
+
+Lemma contrapositive : forall (P : Prop) (Q: Prop),
+  (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros. intro. apply H in H1. contradiction.
+Qed.

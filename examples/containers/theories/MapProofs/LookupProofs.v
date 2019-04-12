@@ -68,12 +68,6 @@ Qed.
 
 (** ** Verification of [notMember] *)
 
-Lemma contrapositive : forall (P : Prop) (Q: Prop),
-  (P -> Q) -> (~Q -> ~P).
-Proof.
-  intros. intro. apply H in H1. contradiction.
-Qed.
-
 Lemma notMember_spec:
  forall (s: Map e a) lb ub i, Bounded s lb ub -> notMember i s = true <-> sem s i = None.
 Proof.

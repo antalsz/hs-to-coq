@@ -7,7 +7,7 @@ Require Import OrdTactic.
 Require Import Psatz.
 Require Import Tactics.
 Set Bullet Behavior "Strict Subproofs".
-(*
+
 (** ** Tactics for pointer equality *)
 
 Ltac destruct_ptrEq := lazymatch goal with
@@ -2077,7 +2077,9 @@ Qed.
 Lemma insert_WF:
   forall y v s, WF s -> WF (insert y v s).
 Proof. intros. eapply Desc_WF. eapply insert_Desc; try reflexivity; try assumption. Qed.
-*)
+
+
+(*START OF MAXMINPROOFS *)
 (** ** Verification of [maxViewSure] *)
 
 Lemma maxViewSure_Desc:
@@ -2402,8 +2404,9 @@ Lemma minViewDesc:
 Proof.
   intros. unfold minView. reflexivity.
 Qed.
+(*END MAX/MIN*)
 
-
+(*START DELETE/UDPATE*)
 (** ** Verification of [glue] *)
 
 Lemma glue_Desc:
@@ -2791,7 +2794,9 @@ Proof.
       destruct (f(Some a0)); cbn -[Z.add]; solve_size.
       destruct (f(None)); cbn -[Z.add]; solve_size.
 Qed.
+(*END OF DELETE/UPDATE*)
 
+(*START OF UNION/INTERSECTION/DIFFERENCE*)
 (** ** Verification of [split] *)
 
 Lemma split_Desc :
@@ -3706,7 +3711,9 @@ Proof.
            f_solver.
         -- f_solver.
 Qed.
+(*END OF UNION?INTERSECTION/DIFFERENCE*)
 
+(*START OF TOLIST*)
 (** ** Verification of [foldrWithKey] *)
 
 Lemma fold_right_toList_go:
@@ -4367,6 +4374,8 @@ Proof.
     omega.
 Qed.
 
+(*END TOLIST*)
+(*START FROMLIST*)
 (** ** Verification of [fromDistinctAscList] *)
 
 Require Import GHC.DeferredFix.
@@ -4533,7 +4542,12 @@ Proof.
   lia.
 Qed.
 
+Require Import Coq.Sorting.Sorted.
 Require Import SortedUtil.
+
+(*Maps are sorted only by keys*)
+Local Definition lt : e * a -> e * a -> Prop
+  := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in ( _GHC.Base.<_ e1 e2) = true.
 
 Program Fixpoint fromDistinctAscList_create_Desc
   sz lb xs x {measure (Z.to_nat sz)} :
@@ -6189,6 +6203,10 @@ Proof.
         f_solver.
 Qed.
 
+(*END OF FROMLIST*)
+
+(*START OF EQ - GOING IN TOLIST*)
+
 
 (** ** Verification of [Eq] *)
 
@@ -6505,7 +6523,9 @@ Proof.
     discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity. apply H2. apply H3.
 Qed.
 
+(*END OF EQ IN TOLIST*)
 
+(*START OF SUBMAP FILTER PARTITION*)
 (** ** Verification of [submap] *)
 
 Lemma submap'_spec:
@@ -7067,6 +7087,10 @@ Proof.
     repeat destruct_match; try congruence.
   * simpl. repeat destruct_match; reflexivity.
 Qed.
+
+(*END OF SUBMPA FILTER PARTITION*)
+
+(*START OF CONTAINER AXIOMS*)
 
 (*The following theorems are the axioms from ContainerAxioms. Some are slightly modified, such as adding
   the condition that the function in filter respects equality and using Haskell equality on maps rather
@@ -8030,7 +8054,11 @@ Proof.
   rewrite null_empty_iff. eapply empty_no_elts. apply H4.
 Qed. 
 
+(*END OF CONTAINERAXIOMS*)
+
 End WF.
+
+(*START MAP*)
 
 (** ** Verification of [map] *)
 
@@ -8288,6 +8316,10 @@ Proof.
   - simpl. rewrite IHm1. rewrite IHm2. reflexivity.
   - simpl. reflexivity.
 Qed.
+
+(*END MAP*)
+
+(*START TYPECLASSES*)
 
 
 (** ** [Maps]s with [WF] *)
@@ -8676,6 +8708,8 @@ apply X2. apply X3.
 Qed.
 
 End TypeClassLaws.
+
+(*END TYPECLASS*)
 
 (** * Instantiating the [FSetInterface] *)
 

@@ -11,6 +11,14 @@ SetProofs.v
 ./MapProofs/LookupProofs.v
 ./MapProofs/InsertProofs.v
 ./MapProofs/MaxMinProofs.v
+./MapProofs/DeleteUpdateProofs.v
+./MapProofs/UnionIntersectDifferenceProofs.v
+./MapProofs/ToListProofs.v
+./MapProofs/FilterPartitionProofs.v
+./MapProofs/ContainerAxiomsProofs.v
+./MapProofs/MapFunctionProofs.v
+./MapProofs/TypeclassProofs.v
+./MapProofs/InterfaceProofs.v
 MapProofs.v
 IntSetProofs.v
 IntSetWordProofs.v

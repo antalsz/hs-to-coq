@@ -10,13 +10,21 @@ Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
 Require Import MapProofs.InsertProofs.
+Require Import MapProofs.ToListProofs.
+Require Import MapProofs.UnionIntersectDifferenceProofs.
+Require Import Coq.Sorting.Sorted.
+Require Import SortedUtil.
+Require Import Coq.Program.Tactics.
+Require Import GHC.DeferredFix.
+Require Import Coq.Wellfounded.Wellfounded.
+
 
 Section WF.
 Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 (** ** Verification of [fromDistinctAscList] *)
 
-Require Import GHC.DeferredFix.
+
 
 Definition fromDistinctAscList_create_f : (Int -> list (e * a) -> (Map e a) * list (e * a)) -> 
 (Int -> list (e * a) -> Map e a * list ( e * a)).
@@ -57,7 +65,7 @@ Proof.
   apply Z_div_lt; lia.
 Qed.
 
-Require Import Coq.Wellfounded.Wellfounded.
+
 
 Lemma fromDistinctAscList_create_eq:
   forall i xs, (1 <= i)%Z ->
@@ -181,12 +189,13 @@ Proof.
   lia.
 Qed.
 
-Require Import Coq.Sorting.Sorted.
-Require Import SortedUtil.
+
 
 (*Maps are sorted only by keys*)
 Local Definition lt : e * a -> e * a -> Prop
-  := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in (e1 < e2) = true.
+  := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in ( _GHC.Base.<_ e1 e2) = true.
+
+Local Obligation Tactic := try solve [program_simpl].
 
 (*TODO: FIGURE OUT WHY THIS IS NOT WORKING*)
 Program Fixpoint fromDistinctAscList_create_Desc
@@ -194,13 +203,13 @@ Program Fixpoint fromDistinctAscList_create_Desc
   (0 <= sz)%Z ->
   StronglySorted lt ((lb, x) :: xs) ->
   forall (P : (Map e a) * list (e * a) -> Prop),
-  ( forall (s : Map e a) (ys: list (e * a)),
+  (( forall (s : Map e a) (ys: list (e * a)),
     Bounded s (Some lb) (safeHd ys) ->
     xs = toList s ++ ys ->
     ys = nil \/ size s = (2*2^sz-1)%Z ->
     P (s, ys)
   ) ->
-  P (fromDistinctAscList_create (2^sz)%Z xs) := _.
+  P (fromDistinctAscList_create (2^sz)%Z xs)) := _.
 Next Obligation.
   intros ????? Hnonneg HSorted.  
   rename fromDistinctAscList_create_Desc into IH.
@@ -209,7 +218,7 @@ Next Obligation.
   unfold fromDistinctAscList_create_f.
   destruct xs.
   * intros X HX. apply HX. clear HX.
-    - solve_Bounded.
+    - solve_Bounded e.
     - reflexivity.
     - left. reflexivity.
   * repeat replace (#1) with 1%Z by reflexivity.
@@ -225,7 +234,7 @@ Next Obligation.
     
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
-      ++ solve_Bounded.
+      ++ solve_Bounded e.
       ++ rewrite toList_Bin, toList_Tip, app_nil_r. reflexivity.
       ++ right. rewrite size_Bin. lia.
     - assert (~ (sz = 0))%Z by (intro; subst; simpl in n; congruence).
@@ -242,7 +251,7 @@ Next Obligation.
         apply Z2Nat.inj_le.
         lia.
         lia.
-        lia.
+        lia. 
         replace (Z.to_nat 1) with 1 by reflexivity.
         lia.
       }
@@ -253,7 +262,7 @@ Next Obligation.
       ++ intros l ys HBounded_l Hlist_l Hsize_l.
          destruct ys.
          + intros X HX. apply HX. clear HX.
-           ** solve_Bounded.
+           ** solve_Bounded e.
            ** assumption.
            ** left; reflexivity.
          + simpl in HBounded_l. destruct p.
@@ -291,12 +300,12 @@ Next Obligation.
                 apply in_or_app. right. left. reflexivity.
               }
               intros X HX. apply HX. clear HX.
-              -- applyDesc link_Desc.
+              -- applyDesc e (@link_Desc e a).
               -- erewrite toList_link by eassumption.
                  rewrite Hlist_l. rewrite Hlist_r.
                  rewrite <- !app_assoc.  reflexivity.
               -- destruct Hsize_r; [left; assumption| right].
-                 applyDesc link_Desc.
+                 applyDesc e (@link_Desc e a).
                  replace (size l). replace (size r).
                  rewrite mul_pow_sub in * by lia.
                  lia.
@@ -347,7 +356,7 @@ Next Obligation.
   destruct xs.
   * replace (List.length nil) with 0%Z by reflexivity.
     rewrite Z.add_0_r.
-    solve_Desc.
+    solve_Desc e.
   * repeat replace (#1) with 1%Z by reflexivity.
     replace ((Bits.shiftL (2 ^ sz)%Z 1))%Z with (2 ^ (1 + sz))%Z.
     Focus 2.
@@ -372,7 +381,7 @@ Next Obligation.
         apply H4. 
         apply in_or_app. right. left. reflexivity.
       }      
-      applyDesc link_Desc.
+      applyDesc e (@link_Desc e a).
       eapply IH.
       + simpl. rewrite app_length. lia.
       + lia.
@@ -387,7 +396,7 @@ Next Obligation.
         rewrite Z.pow_add_r by lia.
         lia.
       + intros.
-        solve_Desc.
+        solve_Desc e.
         ** replace (size s2). replace (size s1). replace (size s).
            rewrite !List.hs_coq_list_length, !Zlength_correct.
            simpl length.
@@ -397,7 +406,7 @@ Next Obligation.
         ** simpl. 
            setoid_rewrite sem_list_app.
            setoid_rewrite <- toList_sem''; only 2: eassumption.
-           f_solver.
+           f_solver e.
 Qed.
 
 Lemma fromDistinctAscList_Desc:
@@ -412,7 +421,7 @@ Proof.
   fold fromDistinctAscList_go_f.
   fold fromDistinctAscList_go.
   destruct xs.
-  * solve_Desc.
+  * solve_Desc e.
   * replace (#1) with (2^0)%Z by reflexivity. destruct p.
     eapply fromDistinctAscList_go_Desc.
     + lia.
@@ -428,12 +437,12 @@ Proof.
         apply H0.
         left. reflexivity.
       }
-      solve_Bounded.
+      solve_Bounded e.
     + right. reflexivity.
     + intros.
       rewrite List.hs_coq_list_length, Zlength_cons in *.
-      rewrite size_Bin in *.
-      solve_Desc. simpl. f_solver.
+      rewrite size_Bin in H1.
+      solve_Desc e. simpl. f_solver e.
 Qed.
 
 (** ** Verification of [fromDistinctDescList] *)
@@ -582,7 +591,7 @@ Next Obligation.
   unfold fromDistinctDescList_create_f.
   destruct xs.
   * intros X HX. apply HX. clear HX.
-    - solve_Bounded.
+    - solve_Bounded e.
     - reflexivity.
     - left. reflexivity.
   * repeat replace (#1) with 1%Z by reflexivity.
@@ -599,7 +608,7 @@ Next Obligation.
     
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
-      ++ solve_Bounded. unfold gt in H3. unfold isUB. order e.
+      ++ solve_Bounded e. unfold gt in H3. unfold isUB. order e.
       ++ rewrite toList_Bin, toList_Tip, app_nil_r. reflexivity.
       ++ right. rewrite size_Bin. lia.
     - assert (~ (sz = 0))%Z by (intro; subst; simpl in n; congruence).
@@ -627,7 +636,7 @@ Next Obligation.
       ++ intros l ys HBounded_l Hlist_l Hsize_l.
          destruct ys.
          + intros X HX. apply HX. clear HX.
-           ** solve_Bounded.
+           ** solve_Bounded e.
            ** assumption.
            ** left; reflexivity.
          + simpl in HBounded_l. destruct p.
@@ -667,13 +676,13 @@ Next Obligation.
                 apply in_or_app. right. left. reflexivity.
               }
               intros X HX. apply HX. clear HX.
-              -- applyDesc link_Desc.
+              -- applyDesc e (@link_Desc e a).
               -- erewrite toList_link by eassumption.
                  rewrite Hlist_l. rewrite Hlist_r.
                  rewrite !rev_app_distr; simpl.
                  rewrite <- !app_assoc.  simpl. reflexivity.
               -- destruct Hsize_r; [left; assumption| right].
-                 applyDesc link_Desc.
+                 applyDesc e (@link_Desc e a).
                  replace (size l). replace (size r).
                  rewrite mul_pow_sub in * by lia.
                  lia.
@@ -697,10 +706,10 @@ Proof.
     rewrite (H5 _ _ (rev (toList s1))). rewrite sem_list_app.
     rewrite <- IHBounded1. repeat(erewrite <- toList_sem'').
     destruct (sem s1 x0) eqn : ?. simpl.
-    assert (sem s2 x0 = None). { eapply sem_outside_below. apply H0. solve_Bounds. }
-    rewrite H6. simpl. assert (x0 == x = false) by solve_Bounds. rewrite H7; reflexivity.
+    assert (sem s2 x0 = None). { eapply sem_outside_below. apply H0. solve_Bounds e. }
+    rewrite H6. simpl. assert (x0 == x = false) by solve_Bounds e. rewrite H7; reflexivity.
     simpl. destruct (x0 == x) eqn : ?. assert (sem s2 x0 = None). { eapply sem_outside_below.
-    apply H0. solve_Bounds. } rewrite H6. reflexivity. simpl. rewrite oro_None_r. reflexivity.
+    apply H0. solve_Bounds e. } rewrite H6. reflexivity. simpl. rewrite oro_None_r. reflexivity.
     apply H0. apply H.
 Qed.
 
@@ -720,7 +729,7 @@ Next Obligation.
   destruct xs.
   * replace (List.length nil) with 0%Z by reflexivity.
     rewrite Z.add_0_r.
-    solve_Desc.
+    solve_Desc e.
   * repeat replace (#1) with 1%Z by reflexivity.
     replace ((Bits.shiftL (2 ^ sz)%Z 1))%Z with (2 ^ (1 + sz))%Z.
     Focus 2.
@@ -745,7 +754,7 @@ Next Obligation.
         apply H4. 
         apply in_or_app. right. left. reflexivity.
       }      
-      applyDesc link_Desc.
+      applyDesc e (@link_Desc e a).
       eapply IH.
       + simpl. rewrite app_length. lia.
       + lia.
@@ -760,7 +769,7 @@ Next Obligation.
         rewrite Z.pow_add_r by lia.
         lia.
       + intros.
-        solve_Desc.
+        solve_Desc e.
         ** replace (size s2). replace (size s1). replace (size s).
            rewrite !List.hs_coq_list_length, !Zlength_correct.
            simpl length.
@@ -772,7 +781,7 @@ Next Obligation.
             setoid_rewrite (sem_list_rev s0 (safeHd ys) (Some e0) _ H3). intros. reflexivity. 
             setoid_rewrite H9.
             setoid_rewrite <- toList_sem''; only 2: eassumption.
-            f_solver.
+            f_solver e.
 Qed.
 
 
@@ -789,7 +798,7 @@ Proof.
   fold fromDistinctDescList_go_f.
   fold fromDistinctDescList_go.
   destruct xs.
-  * solve_Desc.
+  * solve_Desc e.
   * replace (#1) with (2^0)%Z by reflexivity. destruct p.
     eapply fromDistinctDescList_go_Desc.
     + lia.
@@ -806,12 +815,12 @@ Proof.
         apply H0.
         left. reflexivity.
       }
-      solve_Bounded.
+      solve_Bounded e.
     + right. reflexivity.
     + intros.
       rewrite List.hs_coq_list_length, Zlength_cons in *.
-      rewrite size_Bin in *.
-      solve_Desc. simpl. f_solver.
+      rewrite size_Bin in H1.
+      solve_Desc e. simpl. f_solver e.
 Qed.
 
 (** ** Verification of [combineEq] *)
@@ -1311,7 +1320,7 @@ Proof.
   eapply combineEq_spec; only 1: assumption; intros ys HSorted Helem.
   apply fromDistinctAscList_Desc; only 1: assumption.
   intros s HB Hsz Hf.
-  solve_Desc. intros. rewrite <- Helem. rewrite strongly_sorted_last_lt.
+  solve_Desc e. intros. rewrite <- Helem. rewrite strongly_sorted_last_lt.
   apply Hf. apply HSorted.
 Qed.
 
@@ -1327,7 +1336,7 @@ Proof.
   eapply combineEq_spec2;  only 1: assumption; intros ys HSorted Helem.
   apply fromDistinctDescList_Desc; only 1: assumption.
   intros s HB Hsz Hf.
-  solve_Desc. intros. rewrite <- Helem. rewrite strongly_sorted_last_gt.
+  solve_Desc e. intros. rewrite <- Helem. rewrite strongly_sorted_last_gt.
   apply Hf. apply HSorted.
 Qed.
 
@@ -1536,7 +1545,7 @@ Next Obligation.
   unfold fromList_create_f.
   destruct xs.
   * intros X HX. apply HX. clear HX.
-    - solve_Bounded.
+    - solve_Bounded e.
     - reflexivity.
     - reflexivity.
     - left. reflexivity.
@@ -1552,13 +1561,13 @@ Next Obligation.
 
     destruct (Z.eqb_spec (2^sz) 1); [ destruct_match | ].
     - intros X HX. apply HX; clear HX.
-      ++ solve_Bounded.
+      ++ solve_Bounded e.
       ++ reflexivity.
       ++ rewrite toList_Bin, toList_Tip, app_nil_r. reflexivity.
       ++ left. reflexivity.
     - intros X HX. apply HX; clear HX.
-      ++ destruct xs; simpl in Heq;  solve_Bounded. destruct p. unfold safeHd. unfold isUB. order e.
-      ++ destruct xs; simpl in *; solve_Bounds. destruct p. solve_Bounds.
+      ++ destruct xs; simpl in Heq;  solve_Bounded e. destruct p. unfold safeHd. unfold isUB. order e.
+      ++ destruct xs; simpl in *; solve_Bounds e. destruct p. solve_Bounds e.
       ++ rewrite toList_Bin, toList_Tip, !app_nil_r, !app_nil_l. reflexivity.
       ++ right. split. rewrite size_Bin. lia. reflexivity.
     - assert (~ (sz = 0))%Z by (intro; subst; simpl in n; congruence).
@@ -1586,25 +1595,25 @@ Next Obligation.
       ++ intros l ys zs HBounded_l HisUB_l Hlist_l Hsize_l.
          destruct ys.
          + intros X HX. apply HX. clear HX.
-           ** solve_Bounded.
+           ** solve_Bounded e.
            ** assumption.
            ** assumption.
            ** left; reflexivity.
          + simpl in HBounded_l.
            destruct Hsize_l as [? | [??]]; try congruence.
            subst. rewrite app_nil_r in Hlist_l. destruct p.
-           assert (isLB (Some lb) e1 = true) by solve_Bounds.
+           assert (isLB (Some lb) e1 = true) by solve_Bounds e.
            destruct ys; only 2: destruct_match.
            -- intros X HX. apply HX; clear HX.
               ** assert (isUB None e1 = true) by reflexivity.
-                 applyDesc insertMax_Desc.
+                 applyDesc e (@insertMax_Desc e a).
               ** reflexivity.
               ** erewrite toList_insertMax by eassumption.
                  rewrite app_nil_l, <- app_assoc.
                  assumption.
               ** left; reflexivity.
            -- intros X HX. apply HX; clear HX.
-              ** solve_Bounded.
+              ** solve_Bounded e.
               ** reflexivity.
               ** rewrite app_nil_l. simpl in Hlist_l.
                  assumption.
@@ -1616,15 +1625,15 @@ Next Obligation.
               ** simpl in Heq.
                  intros r zs zs' HBounded_r HisUB_r Hlist_r Hsize_r.
                  intros X HX. apply HX. clear HX.
-                 --- applyDesc link_Desc.
-                 --- solve_Bounds.
+                 --- applyDesc e (@link_Desc e a).
+                 --- solve_Bounds e.
                  --- erewrite toList_link by eassumption.
                      rewrite Hlist_l. rewrite Hlist_r.
                      rewrite <- !app_assoc.  reflexivity.
                  --- destruct Hsize_r; [left; assumption| right].
                      destruct H4.
                      split; only 2: assumption.
-                     applyDesc link_Desc.
+                     applyDesc e (@link_Desc e a).
                      replace (size l). rewrite H4.
                      rewrite mul_pow_sub in * by lia.
                      lia.
@@ -1667,12 +1676,12 @@ Proof.
   induction l.
   * intros.
     simpl.
-    solve_Desc.
+    solve_Desc e. reflexivity.
   * intros.
     simpl. destruct a0.
-    applyDesc insert_Desc.
-    applyDesc IHl.
-    solve_Desc. f_solver; rewrite sem_list_app in Heqo0.
+    applyDesc e (@insert_Desc e a).
+    applyDesc e IHl.
+    solve_Desc e. f_solver e; rewrite sem_list_app in Heqo0.
     + rewrite Heqo1 in Heqo0. inversion Heqo0. reflexivity.
     + rewrite Heqo1 in Heqo0. inversion Heqo0. reflexivity.
     + rewrite Heqo1 in Heqo0. simpl in Heqo0. rewrite Heqb in Heqo0. rewrite Hsem in Hsem0.
@@ -1699,10 +1708,10 @@ Proof.
     rewrite sem_list_app. simpl. rewrite sem_list_app. 
     rewrite IHBounded2. simpl. rewrite IHBounded1. repeat (erewrite <- toList_sem'').
     destruct (sem s2 i) eqn : ?. assert (sem s1 i = None). { eapply sem_outside_above.
-    apply H. unfold isUB. apply (sem_inside H0) in Heqo. destruct Heqo. order_Bounds. }
-    rewrite H5. simpl. assert (i == x = false) by solve_Bounds. rewrite H6. reflexivity.
+    apply H. unfold isUB. apply (sem_inside H0) in Heqo. destruct Heqo. order_Bounds e. }
+    rewrite H5. simpl. assert (i == x = false) by solve_Bounds e. rewrite H6. reflexivity.
     simpl. destruct (i == x) eqn : ?. assert (sem s1 i = None). { eapply sem_outside_above.
-    apply H. unfold isUB. order_Bounds. } rewrite H5. simpl. reflexivity. simpl.
+    apply H. unfold isUB. order_Bounds e. } rewrite H5. simpl. reflexivity. simpl.
     rewrite oro_None_r. reflexivity. apply H. apply H0.
 Qed.
 
@@ -1720,14 +1729,14 @@ Next Obligation.
   rewrite fromList_go_eq by (apply Z.pow_pos_nonneg; lia).
   unfold fromList_go_f.
   destruct xs as [ | ? [ | ?? ]].
-  * solve_Desc.
+  * solve_Desc e. intros. reflexivity.
   * destruct H1; try congruence.
     simpl safeHd in *. destruct p.
     assert (isUB None e0 = true) by reflexivity.
-    applyDesc insertMax_Desc.
-    solve_Desc. simpl.
+    applyDesc e (@insertMax_Desc e a).
+    solve_Desc e. simpl.
     (*setoid_rewrite elem_cons.*)
-    f_solver.
+    f_solver e.
   * destruct H1; try congruence.
     repeat replace (#1) with 1%Z by reflexivity.
     replace ((Bits.shiftL (2 ^ sz)%Z 1))%Z with (2 ^ (1 + sz))%Z.
@@ -1738,8 +1747,8 @@ Next Obligation.
       lia. destruct p.
     destruct_match.
     --  apply Bounded_relax_ub_None in H0. 
-        applyDesc fromList'_Desc.
-        solve_Desc.
+        applyDesc e fromList'_Desc.
+        solve_Desc e. assumption. 
     --  eapply fromList_create_Desc.
         - lia.
         - eassumption.
@@ -1747,7 +1756,7 @@ Next Obligation.
           subst.
           simpl safeHd in *.
 
-          applyDesc link_Desc.
+          applyDesc e (@link_Desc e a).
           destruct zs.
           ++  rewrite app_nil_r in H4.
               eapply IH.
@@ -1760,18 +1769,18 @@ Next Obligation.
                 lia.
               + intros.
                 rewrite H4.
-                solve_Desc. simpl.
+                solve_Desc e. simpl.
                 (*setoid_rewrite elem_cons.*)
                 setoid_rewrite sem_list_app. setoid_rewrite rev_app_distr.
                 setoid_rewrite sem_list_app. 
                 setoid_rewrite (sem_toList_reverse s0 _ _ _ H2). 
-                setoid_rewrite <- toList_sem''; only 2: eassumption. f_solver.
-                ** assert (sem s i = None). { eapply sem_outside_above. apply H0. solve_Bounds. }
-                   rewrite H9 in Hsem. simpl in Hsem. assert (i == e0 = false) by solve_Bounds.
+                setoid_rewrite <- toList_sem''; only 2: eassumption. f_solver e.
+                ** assert (sem s i = None). { eapply sem_outside_above. apply H0. solve_Bounds e. }
+                   rewrite H9 in Hsem. simpl in Hsem. assert (i == e0 = false) by solve_Bounds e.
                    rewrite H10 in Hsem. simpl in Hsem. rewrite Hsem in H8. inversion H8; reflexivity.
                 ** simpl in Heqo2. destruct( i == e0) eqn : ?. simpl in Hsem. 
                    assert (sem s i = None). { eapply sem_outside_above. apply H0.
-                   solve_Bounds. } rewrite H9 in Hsem. simpl in Hsem. rewrite Hsem in H8.
+                   solve_Bounds e. } rewrite H9 in Hsem. simpl in Hsem. rewrite Hsem in H8.
                   rewrite Heqo2 in H8. inversion H8; reflexivity.
                 ** inversion Heqo2.
                 ** simpl in Heqo2. destruct (i == e0) eqn : ?. inversion Heqo2.
@@ -1786,19 +1795,19 @@ Next Obligation.
             subst. rewrite app_nil_l in H4.
             rewrite H4.
             apply Bounded_relax_ub_None in HB.
-            applyDesc fromList'_Desc.
-            solve_Desc. simpl.
+            applyDesc e fromList'_Desc.
+            solve_Desc e. simpl.
             (*setoid_rewrite elem_cons.*)
             setoid_rewrite sem_list_app. setoid_rewrite rev_app_distr. simpl.
             setoid_rewrite sem_list_app. setoid_rewrite (sem_toList_reverse s0 _ _ _ H2). 
             setoid_rewrite <- toList_sem''; only 2: eassumption. simpl in Hsem0.
-            f_solver.
+            f_solver e.
             ** assert (sem s i = None). { eapply sem_outside_above. apply H0.
-              solve_Bounds. } rewrite H5 in Hsem. simpl in Hsem. 
-              assert (i == e0 = false) by solve_Bounds. rewrite H6 in Hsem. simpl in Hsem.
+              solve_Bounds e. } rewrite H5 in Hsem. simpl in Hsem. 
+              assert (i == e0 = false) by solve_Bounds e. rewrite H6 in Hsem. simpl in Hsem.
               rewrite Hsem in Hsem0. inversion Hsem0; reflexivity.
             **  assert (sem s i = None). { eapply sem_outside_above. apply H0.
-              solve_Bounds. } rewrite H5 in Hsem. simpl in Hsem. rewrite Hsem in Hsem0.
+              solve_Bounds e. } rewrite H5 in Hsem. simpl in Hsem. rewrite Hsem in Hsem0.
               inversion Hsem0; reflexivity.
             ** destruct (sem s i); simpl in Hsem; rewrite Hsem in Hsem0. inversion Hsem0.
                 destruct (i == e0); simpl in Hsem. inversion Hsem0. inversion Hsem0.
@@ -1813,8 +1822,8 @@ Proof.
   intros.
   cbv beta delta [fromList].
   destruct xs as [ | ? [|??] ].
-  * solve_Desc.
-  * destruct p. solve_Desc.
+  * solve_Desc e. reflexivity.
+  * destruct p. solve_Desc e. intros. simpl. destruct (i == e0); reflexivity. 
   * fold fromList'. destruct p.
     zeta_one.
     fold not_ordered.
@@ -1826,19 +1835,21 @@ Proof.
     fold fromList_go.
     zeta_one.
     destruct_match.
-    - applyDesc fromList'_Desc.
-      solve_Desc. simpl. setoid_rewrite sem_list_app. setoid_rewrite sem_list_app.
+    - applyDesc e fromList'_Desc.
+      solve_Desc e. simpl. setoid_rewrite sem_list_app. setoid_rewrite sem_list_app.
        simpl. destruct p0. simpl in Hsem. setoid_rewrite sem_list_app in Hsem. simpl in Hsem.
       (*setoid_rewrite elem_cons.*)
-      f_solver.
+      f_solver e.
     - repeat replace (#1) with (2^0)%Z by reflexivity.
       eapply fromList_go_Desc.
       + lia.
       + destruct p0. simpl in Heq. 
-        solve_Bounded.
+        solve_Bounded e.
       + right. reflexivity.
       + intros.
-        solve_Desc. simpl. setoid_rewrite sem_list_app. setoid_rewrite sem_list_app.
+        solve_Desc e. simpl. setoid_rewrite sem_list_app. setoid_rewrite sem_list_app.
         simpl. simpl in H1. setoid_rewrite sem_list_app in H1. simpl in H1.
-        f_solver.
+        f_solver e.
 Qed.
+
+End WF.

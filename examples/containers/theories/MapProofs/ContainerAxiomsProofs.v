@@ -382,16 +382,23 @@ Proof.
 Qed.
 
 (*If we insert a (key, value) in a map, then looking up the key gives the value. *)
-Lemma lookup_insert : forall `{Eq_ a} `{EqLaws a} (key: e) (value : a) (map : Map e a) lb ub,
+Lemma lookup_insert : forall (key: e) (value : a) (map : Map e a) lb ub,
   Bounded map lb ub ->
   isLB lb key = true ->
   isUB ub key = true ->
-  lookup key (insert key value map)  == Some value = true.
+  lookup key (insert key value map) = Some value.
 Proof.
   intros. applyDesc e (@insert_Desc e a). erewrite lookup_spec. specialize (Hsem key). 
-  rewrite Eq_Reflexive in Hsem. simpl in Hsem.
-  rewrite Hsem. apply Eq_Reflexive. apply HB.
+  rewrite Eq_Reflexive in Hsem. simpl in Hsem. assumption. apply HB.
 Qed. 
+
+(*A more general version that makes it explicit that the keys do not have to be bounded*)
+Lemma lookup_insert': forall key value (m: Map e a),
+  WF m ->
+  lookup key (insert key value m) = Some value.
+Proof.
+  intros. eapply lookup_insert. apply H. reflexivity. reflexivity. 
+Qed.
 
 (*If we lookup a key key1, the result is the same regardless of whether or not we have inserted key2 
 (a different key than key1). I had to  change the 4th hypothesis to Haskell equality*)
@@ -404,6 +411,14 @@ Lemma lookup_insert_neq : forall (key1: e) (key2: e) (value : a) (map : Map e a)
 Proof.
   intros. applyDesc e (@insert_Desc e a). specialize (Hsem key1). rewrite H2 in Hsem.
   simpl in Hsem. erewrite lookup_spec.  erewrite lookup_spec. apply Hsem. apply H. apply HB.
+Qed.
+
+Lemma lookup_insert_neq': forall key1 key2 value (m: Map e a),
+  WF m ->
+  key1 == key2 = false ->
+  lookup key1 (insert key2 value m) = lookup key1 m.
+Proof.
+  intros. eapply lookup_insert_neq. apply H. reflexivity. reflexivity. assumption.
 Qed.
  
 (*States that if we check for key1 in the map in which we have inserted key2, then either
@@ -424,6 +439,13 @@ Proof.
     assert (sem s key1 = None). { erewrite <- notMember_spec. unfold notMember. rewrite negb_true_iff.
     assumption. apply HB. } rewrite Hsem in H2. erewrite <- notMember_spec in H2.
     unfold notMember in H2. rewrite negb_true_iff in H2. symmetry. assumption. apply H.
+Qed. 
+
+Lemma member_insert': forall key1 key2 value (map: Map e a),
+  WF map ->
+  member key1 (insert key2 value map) = (key1 == key2) || member key1 map.
+Proof.
+  intros. eapply member_insert; try (eassumption); try(reflexivity).
 Qed. 
 
 (*If we lookup a key that is deleted, we should get None*)

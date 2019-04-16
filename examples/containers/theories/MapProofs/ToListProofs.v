@@ -9,6 +9,7 @@ Require Import Tactics.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
+Require Export MapProofs.PairTypeclass.
 
 Section WF.
 Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
@@ -157,36 +158,6 @@ Proof.
   - destruct l2. simpl. reflexivity. simpl. reflexivity.
   - destruct l2. simpl. rewrite app_nil_r. rewrite orb_false_r .
     reflexivity. simpl. rewrite IHl1. rewrite orb_assoc. simpl. reflexivity.
-Qed.
-
-(*It is often easier to prove iff rather than equality (for booleans). This lemma states that either can
-be proved *)
-Lemma prop_bool: forall (b1: bool) (b2: bool),
-  b1 = b2 <-> (b1 = true <-> b2 = true).
-Proof.
-  intros. split; intros.
-  - split; intros.
-    + subst. reflexivity.
-    + subst. reflexivity.
-  - destruct H. destruct b1. symmetry. apply H. reflexivity.
-    destruct b2. apply H0. reflexivity. reflexivity.
-Qed.
-
-(*Helper lemmas for working with equality of tuples. Because [toList_sem'] uses Haskell rather
-than Coq's equality, the equality comparisons get much more tedious*)
-Lemma eq_tuple_prop: forall {a} {b} `{Eq_ a} `{EqLaws a} `{Eq_ b} `{EqLaws b}
-  (x1 x2 : a) (y1 y2 : b),
-  (x1, y1) == (x2, y2) = true <-> x1 == x2 = true /\ y1 == y2 = true.
-Proof.
-  intros. unfold op_zeze__. unfold Eq_pair___. unfold op_zeze____. unfold eq_pair.
-  unfold op_zeze__. unfold op_zeze____. rewrite andb_true_iff. reflexivity.
-Qed.
-
-Lemma eq_tuple_eq: forall {a} {b} `{Eq_ a} `{EqLaws a} `{Eq_ b} `{EqLaws b}
-  (x1 x2 : a) (y1 y2 : b),
-  (x1, y1) == (x2, y2) = (x1 == x2) && (y1 == y2).
-Proof. 
-  intros. rewrite prop_bool. rewrite andb_true_iff. apply eq_tuple_prop.
 Qed.
 
 (*Weaker version of [toList_sem], using Haskell equality instead of Coq's. sem m key == Some value 
@@ -628,6 +599,7 @@ Proof.
   - simpl. reflexivity.
 Qed. 
 
+(*TODO: REPLACE WITH UPDATED SPEC FROM MAPFUNCTIONPROOFS*)
 (** This relates [foldlWithKey] and [toList]. *)
 Lemma foldlWithKey_spec:
   forall f (n : e * a) (m: Map e a),
@@ -708,34 +680,6 @@ Proof.
   - destruct ys. simpl in H0. discriminate H0. simpl in H0.
     simpl. rewrite (IHxs ys). reflexivity. apply andb_true_iff in H0.
     destruct H0. assumption.
-Qed.
-
-(*Since I could not find a Typeclass instance for (e * a) (assuming that e and a satsify EqLaws),
-The following 3 lemmas prove that equality on tuples is transitive, symmetric, and reflexive.
-TODO: Change to EqLaws for tuples*)
-
-
-Lemma Eq_Tuple_Trans: forall `{Eq_ a} `{EqLaws a} (x1 x2 x3 : e) (y1 y2 y3 : a),
-  (x1, y1) == (x2, y2) = true -> (x2, y2) == (x3, y3) = true -> (x1, y1) == (x3, y3) = true.
-Proof.
-  intros. unfold op_zeze__ in *. unfold Eq_pair___ in *. unfold op_zeze____ in *. unfold eq_pair in *.
-  rewrite andb_true_iff in *. destruct H2. destruct H3. split. eapply Eq_Transitive. apply H2. apply H3.
-  eapply Eq_Transitive. apply H4. apply H5.
-Qed.
-
-Lemma Eq_Tuple_Sym: forall `{Eq_ a} `{EqLaws a} (x1 x2 : e) (y1 y2 : a),
-  (x1, y1) == (x2, y2) = true <-> (x2, y2) == (x1, y1) = true.
-Proof.
-  intros. unfold op_zeze__ in *. unfold Eq_pair___  in *. unfold op_zeze____ in *. unfold eq_pair in *.
-  rewrite andb_true_iff in *. rewrite andb_true_iff in *. split; intros.
-  - destruct H2. split. apply Eq_Symmetric. apply H2. apply Eq_Symmetric. apply H3.
-  - destruct H2. split. apply Eq_Symmetric. apply H2. apply Eq_Symmetric. apply H3.
-Qed. 
-
-Lemma Eq_Tuple_Refl: forall `{Eq_ a} `{EqLaws a} (x :e) (y : a),
-  (x, y) == (x, y) = true.
-Proof.
-  intros. unfold_zeze. unfold eq_pair. rewrite andb_true_iff. split; apply Eq_Reflexive.
 Qed.
 
 (*Equal lists have the same elements in them*)

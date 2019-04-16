@@ -8,6 +8,7 @@ Require Import Psatz.
 Require Import Tactics.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
+Require Import Coq.Classes.Morphisms.
 
 Ltac order_Bounds e :=
   intros;
@@ -221,6 +222,7 @@ Ltac solve_Precondition e := lazymatch goal with
   | |- _ = _                  => solve_size
   | |- context [balance_prop] => solve_size
   | |- OrdLaws _              => assumption
+  | |- (Proper _ ) _              => assumption
   | |- ?H                     => fail "solve_Precondition does not recognize this goal: " H
   end.
 

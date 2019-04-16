@@ -474,7 +474,6 @@ Qed.
 Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
 
 (** ** Verification of [elems] *)
-(*Different than set because elems is toList for set*)
 
 Lemma fold_right_with_assoc:
   forall l1 l2,
@@ -513,6 +512,54 @@ Proof.
   - rewrite elems_Bin.  rewrite IHmap1. simpl. rewrite IHmap2. rewrite toList_bin. 
     rewrite fold_right_app. simpl. rewrite <- fold_right_with_assoc. reflexivity.
   - simpl. unfold elems. simpl. reflexivity.
+Qed.
+
+(** ** Verification of [keys] *)
+
+Lemma fold_right_with_assoc':
+  forall l1 l2,
+    fold_right (fun (x : e * a) acc => let (a,b) := x in a :: acc) l1 l2  = 
+  fold_right (fun (x : e * a) acc => let (a,b) := x in a :: acc) nil l2 ++ l1.
+Proof.
+  intros. generalize dependent l1. induction l2.
+  - intros. simpl. reflexivity.
+  - intros. simpl. destruct a0. rewrite IHl2. simpl. reflexivity.
+Qed. 
+
+Lemma foldrWithKey_const_append':
+  forall xs (map : Map e a),
+  foldrWithKey (fun x y t => x :: t) xs map = keys map ++ xs.
+Proof.
+  intros. generalize dependent xs. induction map; intros.
+  - unfold keys in *.  simpl. rewrite IHmap1. rewrite IHmap2. 
+    rewrite (IHmap1 (k :: foldrWithKey (fun (arg_0__ : e) (_ : a) (arg_2__ : list e) => arg_0__ :: arg_2__) nil map2) ).
+    rewrite <- app_assoc. reflexivity.
+  - simpl. reflexivity.
+Qed.
+
+Lemma keys_Bin:
+  forall sz key value (m1 m2 : Map e a),
+  keys (Bin sz key value m1 m2) = keys m1 ++ (key :: nil) ++ keys m2.
+Proof.
+  intros. 
+  unfold keys at 1. simpl. rewrite foldrWithKey_const_append'. rewrite foldrWithKey_const_append'. 
+  rewrite app_nil_r. reflexivity.
+Qed.
+
+Lemma keys_spec: forall map,
+  keys map = fold_right (fun (x : e * a) acc => let (a,b) := x in  a :: acc) nil (toList map).
+Proof.
+  intros. induction map.
+  - rewrite keys_Bin.  rewrite IHmap1. simpl. rewrite IHmap2. rewrite toList_bin. 
+    rewrite fold_right_app. simpl. rewrite <- fold_right_with_assoc'. reflexivity.
+  - simpl. unfold keys. simpl. reflexivity.
+Qed.
+
+(** ** Verification of [assocs] *)
+Lemma assocs_spec: forall (map: Map e a),
+  assocs map = toList map.
+Proof.
+  intros. unfold assocs. unfold toList. reflexivity.
 Qed.
 
 (** ** Verification of [toDescList] *)

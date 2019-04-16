@@ -778,3 +778,32 @@ Proof.
     rewrite <- Hsem. rewrite <- Hsem0. destruct (sem s i). reflexivity. destruct (i == (f x)); reflexivity.
 Qed.
 
+(** Vertification of [foldMapWithKey *)
+(*TODO: See if there is a better specification for this*)
+(*Note: This is defined here, not in toList proofs, because the specification given in the Haskell
+library description uses [mapWithKey]*)
+Lemma int_haskell_coq: forall (x y : Z),
+  x == y = true <-> x = y.
+Proof.
+  intros. pose proof Eq_eq_Int .  specialize (H x y). apply reflect_iff in H. symmetry. apply H.
+Qed.
+
+Lemma foldMapWithKey_spec: forall {e a c} `{OrdLaws e} `{MonoidLaws c} (f: e -> a -> c) (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  foldMapWithKey f m = Foldable.fold  (mapWithKey  f m).
+Proof.
+  intros. induction H9.
+  - simpl. unfold Foldable.fold. unfold Foldable__Map. unfold Foldable.fold__.
+    unfold Internal.Foldable__Map_fold. reflexivity.
+  - simpl. destruct (_GHC.Base.==_ sz 1%Z) eqn : ?.
+    + assert (sz = 1%Z). apply int_haskell_coq. assumption. subst. rewrite int_haskell_coq in Heqb.
+      assert (size s1 = 0%Z). lia_sizes. assert (size s2 = 0%Z) by lia_sizes. rewrite Heqb. rewrite Eq_Reflexive.
+      assert (s1 = Tip). eapply size_0_iff_tip. apply H9_. assumption. rewrite H15.
+      assert (s2 = Tip). eapply size_0_iff_tip. apply H9_0. assumption. rewrite H16.
+      simpl. unfold Foldable.fold. unfold Foldable__Map. unfold Foldable.fold__.
+    unfold Internal.Foldable__Map_fold. rewrite Eq_Reflexive. reflexivity.
+    + replace (_GHC.Base.==_ sz 1%Z ) with false. rewrite IHBounded1. rewrite IHBounded2.
+      unfold Foldable.fold. unfold Foldable__Map. unfold Foldable.fold__. simpl.
+      replace (_GHC.Base.==_ sz 1%Z) with false. reflexivity.
+Qed.
+

@@ -266,22 +266,22 @@ Variable e e' : elt.
   Lemma remove_1 : E.eq x y -> ~ In y (remove x m).
   Proof.
     intros. destruct m. unfold In. unfold MapsTo. unfold remove. simpl. intro.
-    destruct H0. rewrite delete_sem in H0. apply w. apply elt_eq in H. 
+    destruct H0. rewrite delete_sem in H0. apply elt_eq in H. 
     assert ( x == y = true) by (apply H). assert (y == x = true) by (order key).
-     rewrite H2 in H0. inversion H0.
+     rewrite H2 in H0. inversion H0. apply w.
   Qed. 
 
   Lemma remove_2 : ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
   Proof.
     intros. unfold MapsTo in *. unfold remove. destruct m. simpl in *. 
-    rewrite delete_sem. apply w. apply elt_neq in H.  assert (y == x = false) by (order key).
-    rewrite H1. assumption. 
+    rewrite delete_sem. apply elt_neq in H.  assert (y == x = false) by (order key).
+    rewrite H1. assumption. apply w. 
   Qed.
 
   Lemma remove_3 : MapsTo y e (remove x m) -> MapsTo y e m.
   Proof.
     intros. unfold MapsTo in *. destruct m. unfold remove in *. simpl in *.
-    rewrite delete_sem in H. apply w. destruct (y == x). inversion H. assumption. 
+    rewrite delete_sem in H.  destruct (y == x). inversion H. assumption. apply w.
   Qed.
 
   Lemma find_1 : MapsTo x e m -> find x m = Some e.
@@ -626,15 +626,16 @@ End Types.
 Lemma map_1 :forall (elt elt' : Type) (m: t elt) (x : key) (e : elt) (f: elt -> elt'),
   MapsTo _ x e m -> MapsTo _ x (f e) (map _ _ f m).
 Proof.
-  intros. unfold MapsTo in *. destruct m. simpl in *. rewrite map_no_key_spec.
-  eapply map_spec_coq. apply EqLaws_elt. apply w. intros. rewrite H1. reflexivity. assumption.
+  intros. unfold MapsTo in *. destruct m. simpl in *. eapply map_Desc.
+  apply w. intros. specialize (H2 x). rewrite H in H2. assumption. 
 Qed.
 
 Lemma map_2: forall (elt elt' : Type) (m : t elt) (x : key) (f : elt -> elt'),
   In _ x (map _ _ f m) -> In _ x m.
 Proof.
   intros. unfold In in *. unfold MapsTo in *. destruct m. simpl in *. 
-  rewrite map_no_key_spec in H. destruct (sem x0 x) eqn : ?.
+  rewrite map_mapWithKey_equiv in H.
+  destruct (sem x0 x) eqn : ?.
   - exists e. reflexivity.
   - destruct H. eapply map_none_spec in Heqo. setoid_rewrite H in Heqo. inversion Heqo.
     apply w.
@@ -717,11 +718,11 @@ Lemma map2_map_part_1_in : forall (elt elt' elt'' : Type)(m: Map key elt) (m': M
 Proof.
   intros. destruct H1. unfold map2_map_part1. erewrite map_spec_coq.
   - reflexivity.
-  - apply EqLaws_elt.
   - apply H.
-  - intros. assert (sem m k = sem m k2). { apply sem_resp_eq. assumption. }
-    assert (sem m' k = sem m' k2). { apply sem_resp_eq. assumption. }
-    rewrite H4. rewrite H5. reflexivity.
+  - unfold respectful. unfold Proper. intros. assert (sem m x1 = sem m y). {
+    apply sem_resp_eq. assumption. } 
+    assert (sem m' x1 = sem m' y). { apply sem_resp_eq. assumption. }
+    rewrite H3. rewrite H4. reflexivity.
   - apply H1.
 Qed. 
 
@@ -747,11 +748,10 @@ Lemma map2_map_part_2_in : forall (elt elt' elt'' : Type)(m: Map key elt) (m': M
 Proof.
   intros. destruct H1. unfold map2_map_part2. erewrite map_spec_coq.
   - reflexivity.
-  - apply EqLaws_elt.
   - apply H0.
-  - intros. assert (sem m k = sem m k2). { apply sem_resp_eq. assumption. }
-    assert (sem m' k = sem m' k2). { apply sem_resp_eq. assumption. }
-    rewrite H4. rewrite H5. reflexivity.
+  - intros. unfold respectful. unfold Proper. intros. assert (sem m x1 = sem m y). { apply sem_resp_eq. assumption. }
+    assert (sem m' x1 = sem m' y). { apply sem_resp_eq. assumption. }
+    rewrite H4. rewrite H3. reflexivity.
   - apply H1.
 Qed.
 
@@ -978,8 +978,8 @@ Proof.
   - simpl in H2. simpl. destruct (sem s1 x) eqn : ?.
     + assert (x < x0 = true). { apply (sem_inside H) in Heqo. destruct Heqo.
       unfold isUB in H9. assumption. }
-      inversion H2. rewrite IHBounded1. subst. reflexivity. subst.
-      destruct v. apply insert_WF. apply map2_fix_pres_wf. wf_bounds. assumption.
+      inversion H2. rewrite IHBounded1. subst. reflexivity. subst. reflexivity.
+      destruct v.  apply insert_WF. apply map2_fix_pres_wf. wf_bounds. assumption.
       apply map2_fix_pres_wf. wf_bounds. assumption. destruct v.
        erewrite sem_insert.
       assert (x == x0 = false) by (order key). rewrite H9. simpl.
@@ -987,7 +987,7 @@ Proof.
       eapply sem_outside_below. eassumption. unfold isLB. order key.
       apply map2_fix_pres_wf. wf_bounds. assumption. reflexivity. reflexivity.
       apply map2_fix_none. wf_bounds. assumption. assumption.
-      eapply sem_outside_below. eassumption. unfold isLB. order key. reflexivity.
+      eapply sem_outside_below. eassumption. unfold isLB. order key. 
     + simpl in H2. destruct (x == x0) eqn : ?.
       * simpl in H2. inversion H2. apply map2_fix_none. wf_bounds. apply map2_fix_pres_wf.
         wf_bounds. assumption. apply map2_fix_none. wf_bounds. assumption. assumption.

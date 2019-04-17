@@ -276,3 +276,27 @@ Lemma contrapositive : forall (P : Prop) (Q: Prop),
 Proof.
   intros. intro. apply H in H1. contradiction.
 Qed.
+
+
+(*TODO: PUT THIS IN BOUNDS*)
+(*Some lemmas and ltac to prove that any m such that Bounded m lb ub is well formed*)
+
+Lemma expand_bounds_l : forall {e} {a} `{OrdLaws e} (m: Map e a) lb x,
+  Bounded m lb x ->
+  Bounded m None x.
+Proof.
+  intros. induction H0.
+  - constructor.
+  - constructor; try (reflexivity); try (assumption).
+Qed.
+
+Lemma expand_bounds_r : forall {e a} `{OrdLaws e} (m: Map e a) ub x,
+  Bounded m x ub ->
+  Bounded m x None.
+Proof.
+  intros. induction H0.
+  - constructor.
+  - constructor; try (reflexivity); try (assumption).
+Qed.
+
+Ltac wf_bounds:= eapply expand_bounds_l; eapply expand_bounds_r; eassumption.

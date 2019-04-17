@@ -26,6 +26,7 @@ SetProofs.v
 ./MapProofs/MapFunctionProofs.v
 ./MapProofs/TypeclassProofs.v
 ./MapProofs/InterfaceProofs.v
+./MapProofs/ProofsWithSets.v
 MapProofs.v
 IntSetProofs.v
 IntSetWordProofs.v

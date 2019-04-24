@@ -533,4 +533,5 @@ Proof.
     + assert (goJustLE k x v s2 <> None). apply goJustLE_never_none. rewrite H5 in H7.
       contradiction.
 Qed.
+
 End WF.

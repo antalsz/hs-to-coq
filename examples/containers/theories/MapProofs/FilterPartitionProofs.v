@@ -17,7 +17,6 @@ Section WF.
 Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 (** ** Verification of [submap] *)
-
 Lemma submap'_spec:
   forall (m1: Map e a) (m2: Map e a) lb ub f,
   Bounded m1 lb ub ->
@@ -161,6 +160,29 @@ Lemma isSubmapOf_spec:
 Proof.
   intros. eapply isSubmapOfBy_spec. apply H0. apply H1.
 Qed.
+
+(** ** Verification of [isProperSubmapOfBy] *)
+Lemma isProperSubmapOfBy_spec:
+  forall (m1: Map e a) (m2: Map e a) lb ub f,
+  Bounded m1 lb ub ->
+  Bounded m2 lb ub ->
+    isProperSubmapOfBy f m1 m2 = true <-> isSubmapOfBy f m1 m2 = true /\ size m1 < size m2 = true.
+Proof.
+  intros. unfold isProperSubmapOfBy. unfold isSubmapOfBy. repeat (rewrite andb_true_iff in *). split; intros.
+   - destruct H1. split. split. order Int. assumption. order Int.
+   - destruct H1. destruct H1. split. order Int. apply H3.
+Qed.
+
+(** ** Veriticcation of [isProperSubmpaOf] *)
+Lemma isProperSubmapOf:
+  forall `{EqLaws a} (m1: Map e a) (m2: Map e a) lb ub,
+  Bounded m1 lb ub ->
+  Bounded m2 lb ub ->
+  isProperSubmapOf m1 m2 = true <-> isSubmapOf m1 m2 = true /\ size m1 < size m2 = true.
+Proof.
+  intros. unfold isProperSubmapOf. unfold isSubmapOf. eapply isProperSubmapOfBy_spec; eassumption.
+Qed.
+
 
 (** ** Verification of [filter] *)
 

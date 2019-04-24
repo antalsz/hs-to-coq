@@ -179,43 +179,38 @@ Qed.
 (*I don't think the {EqLaws a} assumption is strictly necessary, but it is difficult to remove, 
 since the proofs rely on theorems about toList and equality that would have to be re-proved
 without reference to EqLaws*)
+(*NOTE: it has been removed*)
 Lemma fold_left_proper: 
-  forall {e} {a} {b} `{OrdLaws e} `{EqLaws a} (f: b -> e * a -> b) x (l1 l2: list (e * a)),
-  eqlist l1 l2 = true ->
-  (forall p1 p2 y, p1 == p2 = true -> f y p1 = f y p2) ->
+  forall {e} {a} {b} `{OrdLaws e} (f: b -> e * a -> b) x (l1 l2: list (e * a)),
+  eqlist_key l1 l2  ->
+  (forall x1 x2 z y, x1 == x2 = true -> f y (x1, z) = f y (x2, z)) ->
   (fold_left f l1 x) = (fold_left f l2 x).
 Proof.
   intros. revert x. generalize dependent l2. induction l1; intros; destruct l2.
   - reflexivity.
-  - inversion H2.
-  - inversion H2.
-  - simpl. simpl in H2. 
-    assert (f x a0 = f x p). apply H3. order e. rewrite H4. apply IHl1. 
-    rewrite andb_true_iff in H2. destruct H2. assumption.
-Qed.
+  - inversion H0.
+  - inversion H0.
+  - simpl. simpl in H0. destruct a0. destruct p. destruct H0. destruct H2. subst.
+    assert (f x (e0, a1) = (f x (e1, a1))). apply H1. order e. rewrite H2.
+    apply IHl1. assumption.
+Qed. 
 
 (*The result we really need about fold: If we have maps that are equivalent sem-wise,
 then folding over them gives the same result (assuming the function is Proper)*)
 Lemma foldlWithKey_equiv_maps:
-  forall {e} {a} {b} `{OrdLaws e} `{EqLaws a} (f: b -> e -> a -> b) x (m1: Map e a) m2, 
+  forall {e} {a} {b} `{OrdLaws e} (f: b -> e -> a -> b) x (m1: Map e a) m2, 
   WF m1 ->
   WF m2 ->
-  (forall e1 e2 a1 a2 y, a1 == a2 = true -> e1 == e2 = true -> f y e1 a1 = f y e2 a2) ->
+  (forall (i j : e) y v, i == j = true -> f y i v = f y j v) ->
   (forall i, sem m1 i = sem m2 i) ->
   (foldlWithKey f x m1) = (foldlWithKey f x m2).
 Proof.
   intros. rewrite foldlWithKey_spec'. rewrite foldlWithKey_spec'.
-  assert (eqlist (toList m1) (toList m2) = true). { 
-  assert ((toList m1) == (toList m2) = true).
-  assert (m1 == m2 = true) by (eapply strong_eq1; eassumption).
-  unfold "==" in H6. unfold Eq___Map in H6. unfold op_zeze____ in H6.
-  unfold Internal.Eq___Map_op_zeze__ in H6. unfold toList. rewrite andb_true_iff in H6.
-  destruct H6. assumption. unfold "==" in H6. unfold Eq_list in H6. unfold op_zeze____ in H6.
-  apply H6. } apply fold_left_proper. apply H6. intros.
-  destruct p1. destruct p2. unfold "==" in H7. unfold Eq_pair___  in H7. 
-  unfold op_zeze____  in H7. unfold eq_pair in H7. rewrite andb_true_iff in H7. apply H4.
-  order a. order e.
-Qed. 
+  assert (eqlist_key (toList m1) (toList m2)). {
+  rewrite <- coq_equals_spec. apply H3. apply H0. apply H1. }
+  apply fold_left_proper. apply H4. intros. 
+  apply H2. order e.
+Qed.
 
 
 Require Import Coq.Sorting.Sorted.
@@ -241,18 +236,18 @@ Proof.
   apply in_app_or in H1. destruct H1. apply IHBounded1. assumption.  simpl in H1.
   destruct H1. solve_Bounds e. apply IHBounded2 in H1. solve_Bounds e.
 Qed.
-
+(*
 Lemma eq_list_equiv: forall {a} `{EqLaws a} (l1 l2 : list a),
   l1 == l2 = eqlist l1 l2.
 Proof.
   intros. unfold "==". unfold Eq_list. unfold op_zeze____. reflexivity.
 Qed.
-
+*)
 Set Bullet Behavior "Strict Subproofs".
 (*TODO: Also somewhere else*)
 (*If a list is sorted, sem_for_lists gives Some x on i iff (i,x) is in the list (the converse is
 not true unless the list has unique elements)*)
-Lemma sem_to_lists_elem: forall {e} {a} `{OrdLaws e} `{EqLaws a} (l: list (e * a)) i x,
+(*Lemma sem_to_lists_elem: forall {e} {a} `{OrdLaws e} `{EqLaws a} (l: list (e * a)) i x,
   StronglySorted ToListProofs.lt l ->
  (sem_for_lists l i == Some x) = true <-> List.elem (i, x) l = true.
 Proof. 
@@ -271,23 +266,37 @@ Proof.
         * inversion H2; subst. rewrite Forall_lt in H7. specialize (H7 i x). assert (A:=H3).
           apply H7 in H3. unfold ToListProofs.lt in H3. assert (i == e0 = false) by (order e).
           rewrite H4. rewrite  IHl. apply A. apply H6.
-Qed. 
+Qed. *)
+Lemma sem_to_lists_elem: forall {e} {a} `{OrdLaws e} (l: list (e * a)) i x,
+  StronglySorted ToListProofs.lt l ->
+ (sem_for_lists l i = Some x) <-> Key_In i x l.
+Proof. 
+  intros. induction H0; intros.
+  - simpl. split; intros. inversion H0. destruct H0.
+  - simpl. destruct a0. split; intros.
+    + destruct (i == e0) eqn : ?. inversion H2; subst. left. split. order e. reflexivity.
+      right. rewrite <- IHStronglySorted. apply H2.
+    + destruct H2.
+      * destruct H2. replace (i == e0) with (true) by (order e). subst. reflexivity.
+      * rewrite Forall_lt in H1. assert (A:=H2). apply H1 in H2. unfold ToListProofs.lt in H2.
+         replace (i == e0) with (false) by (order e). apply IHStronglySorted. assumption.
+Qed.
 
-Lemma fromDistinctAscList_toList: forall {e} {a} `{OrdLaws e} `{EqLaws a} (l: list (e * a)), 
+Lemma fromDistinctAscList_toList: forall {e} {a} `{OrdLaws e}(l: list (e * a)), 
   StronglySorted ToListProofs.lt l -> 
-  toList(fromDistinctAscList l) == l = true.
+  eqlist_key (toList(fromDistinctAscList l)) l .
 Proof.
   intros. apply strongly_sorted_unique.
-  - eapply to_List_sorted. eapply fromDistinctAscList_Desc. apply H2. intros. apply H3.
-  - apply H2.
-  - intros. eapply fromDistinctAscList_Desc. apply H2. intros.
+  - eapply to_List_sorted. eapply fromDistinctAscList_Desc. apply H0. intros. apply H1.
+  - apply H0.
+  - intros. eapply fromDistinctAscList_Desc. apply H0. intros.
     split; intros.
-    + rewrite <- toList_sem' in H6. destruct (sem s x) eqn : ?.
-      * apply sem_to_lists_elem. apply H2. rewrite H5 in Heqo. rewrite Heqo. assumption.
-      * inversion H6.
-      * apply H3.
-    + rewrite <- sem_to_lists_elem in H6. destruct (sem_for_lists l x) eqn : ?. specialize (H5 x).
-      rewrite <- toList_sem'. rewrite H5. rewrite Heqo. assumption. apply H3. inversion H6. apply H2.
+    + rewrite <- toList_sem in H4. destruct (sem s x) eqn : ?.
+      * apply sem_to_lists_elem. apply H0. rewrite H3 in Heqo. rewrite Heqo. assumption.
+      * inversion H4.
+      * apply H1.
+    + rewrite <- sem_to_lists_elem in H4. destruct (sem_for_lists l x) eqn : ?. specialize (H3 x).
+      rewrite <- toList_sem. rewrite H3. rewrite Heqo. assumption. apply H1. inversion H4. apply H0.
 Qed.
 
 Ltac unfold_pair := unfold "==" ; unfold Eq_pair___ ; unfold op_zeze____ ; unfold eq_pair. 
@@ -296,9 +305,10 @@ Ltac unfold_pair := unfold "==" ; unfold Eq_pair___ ; unfold op_zeze____ ; unfol
 (*Finally, the actual specification, which says that any element is found by computing f on the
 accumulated value (value resulting from folding f over all elements less than f) and the key itself.
 Again, I'm not sure if the {EqLaws a} assumption is strictly needed*)
-Lemma mapAccumL_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `{EqLaws a} (m: Map e a) (x : b) 
+(*Edit: removed `{EqLaws a} assumption*)
+Lemma mapAccumL_snd_Desc: forall {e} {a} {b : Type} {c : Type}  `{OrdLaws e} (m: Map e a) (x : b) 
   (f: b -> e -> a -> (b * c)) lb ub,
-  Proper ((fun (i j : e * a) => _GHC.Base.==_ i j = true) ==> eq) (fun x y => let (a,b) := x in f y a b) ->
+  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
   Desc (snd (mapAccumL f x m)) lb ub (size m) (
   fun i => match (sem m i) with
@@ -306,61 +316,52 @@ Lemma mapAccumL_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `{Eq
            | None => None
             end).
 Proof.
-  intros. revert x. induction H3; intros.
+  intros. 
+ revert x. induction H1; intros.
   - simpl. solve_Desc e.
   - simpl.  rewrite (surjective_pairing (mapAccumL f x0 s1 )).
     rewrite (surjective_pairing (f (fst (mapAccumL f x0 s1)) x v)).
     rewrite (surjective_pairing ( mapAccumL f (fst (f (fst (mapAccumL f x0 s1)) x v)) s2)).
-    simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. solve_Desc e. f_solver e.
-    + repeat(applyDesc e (@map_lt_Desc e a)). repeat (erewrite mapAccumL_fst).
-      * assert (forall i, sem s4 i = sem s3 i). {
+    simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. solve_Desc e.  f_solver e.
+    + repeat(applyDesc e (@map_lt_Desc e a)). repeat (erewrite mapAccumL_fst); try (eassumption).
+      assert (forall i, sem s4 i = sem s3 i). {
          intros. destruct (_GHC.Base.<_ i0 i) eqn : ?.
           - specialize (Hsem1 i0). rewrite Heqb0 in Hsem1. simpl in Hsem1.
             assert (i0 == x = false) by (solve_Bounds e). assert (sem s2 i0 = None). eapply sem_outside_below.
-            eassumption. solve_Bounds e. rewrite H7 in Hsem1. rewrite H5 in Hsem1. simpl in Hsem1. 
+            eassumption. solve_Bounds e. rewrite H5 in Hsem1. rewrite H3 in Hsem1. simpl in Hsem1. 
             repeat (rewrite oro_None_r in Hsem1). rewrite Hsem1. rewrite Hsem.
             rewrite Heqb0. reflexivity.
           - specialize (Hsem1 i0). specialize (Hsem i0). rewrite Hsem. rewrite Hsem1. rewrite Heqb0. 
             reflexivity. }
         assert ((foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s3) =
            (foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s4)). {
-            eapply foldlWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
-            assert (f y e1 a1 = f y e2 a2). { unfold respectful in H2. unfold Proper in H2.
-            remember (e1, a1). remember (e2, a2). assert (p == p0 = true). unfold_pair.
-            subst. rewrite andb_true_iff. split; assumption. apply H2 in H9. subst.
-            eapply equal_f in H9. apply H9. } rewrite H9. reflexivity.
-            intros. rewrite H5. reflexivity. }
-        rewrite H7. reflexivity.
-      * eassumption.
-      * eassumption.
-    + applyDesc e (@map_lt_Desc e a). repeat (erewrite mapAccumL_fst).
-      * assert (forall i, sem s1 i = sem s3 i). {
+            apply foldlWithKey_equiv_maps. wf_bounds. wf_bounds.
+            intros. 
+            assert (f y i0 v0 = f y j v0). { apply equal_f. apply H0 in H5. apply (equal_f H5). } 
+            rewrite H6. reflexivity. 
+            intros. rewrite H3. reflexivity. }
+        rewrite H5. reflexivity.
+    + applyDesc e (@map_lt_Desc e a). repeat (erewrite mapAccumL_fst); try (eassumption).
+      assert (forall i, sem s1 i = sem s3 i). {
         intros. destruct (_GHC.Base.<_ i0 i) eqn : ?.
         - specialize (Hsem i0). rewrite Heqb1 in Hsem. simpl in Hsem.
           assert (i0 == x = false) by (solve_Bounds e). assert (sem s2 i0 = None). eapply sem_outside_below.
-          eassumption. solve_Bounds e. rewrite H8 in Hsem. rewrite H7 in Hsem. simpl in Hsem. 
+          eassumption. solve_Bounds e. rewrite H6 in Hsem. rewrite H5 in Hsem. simpl in Hsem. 
           repeat (rewrite oro_None_r in Hsem). rewrite Hsem. reflexivity.
         - specialize (Hsem i0). rewrite Hsem.  rewrite Heqb1. eapply sem_outside_above. eassumption.
           solve_Bounds e. }  
         assert ((foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s1) =
            (foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s3)). {
-          eapply foldlWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
-          assert (f y e1 a1 = f y e2 a2). { unfold respectful in H2. unfold Proper in H2.
-          remember (e1, a1). remember (e2, a2). assert (p == p0 = true). unfold_pair.
-          subst. rewrite andb_true_iff. split; assumption. apply H2 in H10. subst.
-          eapply equal_f in H10. apply H10. } rewrite H10. reflexivity. 
-          intros. rewrite H7. reflexivity. }
-      rewrite H8. assert (forall z, f z x v = f z i v). { intros. unfold respectful in H2.
-        unfold Proper in H2. remember (x, v). remember (i,v).
-        assert (p == p0 = true). unfold_pair. subst. rewrite andb_true_iff. split. order e. order a.
-        apply H2 in H9. subst. eapply equal_f in H9. apply H9. }
-      rewrite H9. reflexivity.
-     * eassumption.
-     * eassumption.
+          apply foldlWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
+          assert (f y i0 v0 = f y j v0). { apply H0 in H6. apply equal_f. apply (equal_f H6). }
+          rewrite H7. reflexivity. 
+          intros. rewrite H5. reflexivity. }
+      rewrite H6. assert (forall z, f z x v = f z i v). { intros. apply equal_f. apply H0 in Heqb0.
+      symmetry. apply (equal_f Heqb0). }  rewrite H7. reflexivity.
     + (*This case is the complicated one that involves all sorts of results about fold, toList, and 
         fromDistinctAscList*)
     remember ((1 + size s1 + size s2)%Z) as sz. repeat (applyDesc e (@map_lt_Desc e a)).
-    repeat (erewrite mapAccumL_fst). repeat (rewrite foldlWithKey_spec').
+    repeat (erewrite mapAccumL_fst); try (eassumption). repeat (rewrite foldlWithKey_spec').
     assert
         ((fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) 
            (toList s3)
@@ -369,34 +370,33 @@ Proof.
                  v))) = fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) 
                   ((toList s1) ++ ((x, v) :: nil) ++ (toList s3)) x0). { simpl.
     rewrite fold_left_app. simpl. reflexivity. }
-    rewrite H5. clear H5. 
+    rewrite H3. clear H3. 
     assert ((fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0))
            (toList s1 ++ ((x, v) :: nil) ++ toList s3) x0) = 
     (fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) (toList s4) x0) ). {
       assert (StronglySorted ToListProofs.lt (toList s1 ++ ((x, v) :: nil) ++ toList s3)). {
         eapply sorted_append.
-        + eapply to_List_sorted. eassumption.
+        +  eapply to_List_sorted. eassumption.
         + simpl. apply SSorted_cons.
           * eapply to_List_sorted. eassumption.
-          * rewrite Forall_lt. intros. unfold ToListProofs.lt. rewrite <- toList_sem' in H5.
+          * rewrite Forall_lt. intros. unfold ToListProofs.lt. rewrite <- toList_sem in H3.
             destruct (sem s3 x1) eqn : ?.
             - solve_Bounds e.
-            - inversion H5.
+            - inversion H3.
             - eassumption.
-       + intros. assert (isUB (Some x) y = true). eapply toList_Bounds_UB. apply H3_. apply H5. solve_Bounds e.
-       + intros. simpl in H5. destruct H5.
-          * inversion H5; subst. order e.
-          * assert (isLB (Some x) y = true). eapply toList_Bounds_LB. apply HB1. apply H5. solve_Bounds e. }
+       + intros. assert (isUB (Some x) y = true). eapply toList_Bounds_UB. apply H1_. apply H3. solve_Bounds e.
+       + intros. simpl in H3. destruct H3.
+          * inversion H3; subst. order e.
+          * assert (isLB (Some x) y = true). eapply toList_Bounds_LB. apply HB1. apply H3. solve_Bounds e. }
       eapply fold_left_proper.
       - simpl. remember (fromDistinctAscList ((toList s1 ++ ((x, v) :: nil) ++ toList s3))) as m.
-        assert (toList m ==  (toList s1 ++ ((x, v) :: nil) ++ toList s3) = true). { rewrite Heqm.
-        eapply fromDistinctAscList_toList. apply H5. }
-        rewrite <- eq_list_equiv. eapply Eq_Transitive. apply Eq_Symmetric. apply H7.
-        unfold is_true. rewrite <-eq_toList. eapply strong_eq1.
-        + subst. eapply fromDistinctAscList_Desc. apply H5. intros. apply H8.
+        assert (eqlist_key (toList m) ((toList s1 ++ ((x, v) :: nil) ++ toList s3))). { rewrite Heqm.
+        eapply fromDistinctAscList_toList. apply H3. }
+        eapply eqlist_key_trans. apply eqlist_key_sym. apply H5. eapply coq_equals_spec.
+        + subst. eapply fromDistinctAscList_Desc. apply H3. intros. apply H6.
         + wf_bounds.
-        + intros. rewrite Hsem0. rewrite Heqm. eapply fromDistinctAscList_Desc. apply H5. intros.
-          rewrite H10. simpl. rewrite sem_list_app.
+        + intros. rewrite Hsem0. rewrite Heqm. eapply fromDistinctAscList_Desc. apply H3. intros.
+          rewrite H8. simpl. rewrite sem_list_app.
           destruct (i0 < i) eqn : ?.
           * erewrite <- toList_sem''. simpl. unfold SomeIf.  erewrite <- toList_sem''.
             rewrite Hsem. rewrite Heqb1. 
@@ -412,12 +412,11 @@ Proof.
                ++ erewrite <- toList_sem''. rewrite Hsem. rewrite Heqb1. reflexivity.
                   eassumption.
             -- eassumption.
-        + rewrite Heqm. apply fromDistinctAscList_Desc. apply H5. intros. apply H8.
-        + wf_bounds.
-      - intros. apply H2 in H7. destruct p1. destruct p2.
-        eapply equal_f in H7. rewrite H7. reflexivity. }
-    rewrite H5. reflexivity. apply HB2. apply H3_. apply HB1.
-Qed. 
+      - intros. assert (f y x1 z = f y x2 z). apply H0 in H5. eapply equal_f in H5. apply equal_f.
+        apply H5. rewrite H6. reflexivity. } 
+      rewrite H3. reflexivity.
+Qed.
+
 
 (** Verification of [mapAccumWithKey] *)
 
@@ -437,9 +436,9 @@ Proof.
   intros. rewrite mapAccumWithKey_mapAccumL. eapply mapAccumL_fst. apply H0.
 Qed.
 
-Lemma mapAccumWithKey_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `{EqLaws a} (m: Map e a) (x : b) 
+Lemma mapAccumWithKey_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
   (f: b -> e -> a -> (b * c)) lb ub,
-  Proper ((fun (i j : e * a) => _GHC.Base.==_ i j = true) ==> eq) (fun x y => let (a,b) := x in f y a b) ->
+  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
   Desc (snd (mapAccumWithKey f x m)) lb ub (size m) (
   fun i => match (sem m i) with
@@ -466,9 +465,8 @@ Proof.
   intros. rewrite mapAccum_mapAccumWithKey. eapply mapAccumWithKey_fst. apply H0.
 Qed.
 
-Lemma mapAccum_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `{EqLaws a} (m: Map e a) (x : b) 
+Lemma mapAccum_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
   (f: b -> a -> (b * c)) lb ub,
-  Proper ((fun (i j : a) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
   Desc (snd (mapAccum f x m)) lb ub (size m) (
   fun i => match (sem m i) with
@@ -477,9 +475,8 @@ Lemma mapAccum_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `{EqL
             end).
 Proof.
   intros. repeat(setoid_rewrite mapAccum_mapAccumWithKey). eapply (@mapAccumWithKey_snd_Desc e a).
-  all: try (assumption). unfold respectful. unfold Proper. unfold_pair. intros. destruct x0. destruct y.
-  apply H2. order a. 
-Qed.
+  all: try (assumption). unfold respectful. unfold Proper. intros. reflexivity.
+Qed. 
 
 (** Verification of [mapAccumRWithKey] *)
 (*This is the reverse of [mapAccumL] (fold right instead of left)*)
@@ -527,46 +524,36 @@ Proof.
   - reflexivity.
 Qed.
 
-
 Lemma fold_right_proper: 
-  forall {e} {a} {b} `{OrdLaws e} `{EqLaws a} (f: e * a -> b -> b) x (l1 l2: list (e * a)),
-  eqlist l1 l2 = true ->
-  (forall p1 p2 y, p1 == p2 = true -> f p1 y = f p2 y) ->
+  forall {e} {a} {b} `{OrdLaws e} (f: e * a -> b -> b) x (l1 l2: list (e * a)),
+  eqlist_key l1 l2 ->
+  (forall x1 x2 z y, x1 == x2 = true -> f (x1, z) y = f (x2, z) y) ->
   (fold_right f x l1) = (fold_right f x l2).
 Proof.
-  intros. revert x. generalize dependent l2. induction l1; intros; destruct l2.
-  - reflexivity.
-  - inversion H2.
-  - inversion H2.
-  - simpl. simpl in H2. specialize (IHl1 l2). rewrite andb_true_iff in H2.
-    destruct H2. rewrite IHl1. apply H3. assumption. assumption. 
-Qed. 
+  intros. revert x. generalize dependent l2. induction l1; intros; destruct l2;
+  try (reflexivity); try(inversion H0). simpl in H0. simpl. destruct a0.
+  destruct p. destruct H0. destruct H2. subst. 
+  rewrite (IHl1 l2). apply H1. order e. assumption.
+Qed.
 
-Lemma foldRWithKey_equiv_maps:
-  forall {e} {a} {b} `{OrdLaws e} `{EqLaws a} (f: e -> a -> b -> b) x (m1: Map e a) m2, 
+Lemma foldrWithKey_equiv_maps:
+  forall {e} {a} {b} `{OrdLaws e} (f: e -> a -> b -> b) x (m1: Map e a) m2, 
   WF m1 ->
   WF m2 ->
-  (forall e1 e2 a1 a2 y, a1 == a2 = true -> e1 == e2 = true -> f e1 a1 y = f e2 a2 y) ->
+  (forall (i j : e) y v, i == j = true -> f i y v = f j y v) ->
   (forall i, sem m1 i = sem m2 i) ->
   (foldrWithKey f x m1) = (foldrWithKey f x m2).
 Proof.
   intros. rewrite foldrWithKey_spec'. rewrite foldrWithKey_spec'.
-  assert (eqlist (toList m1) (toList m2) = true). { 
-  assert ((toList m1) == (toList m2) = true).
-  assert (m1 == m2 = true) by (eapply strong_eq1; eassumption).
-  unfold "==" in H6. unfold Eq___Map in H6. unfold op_zeze____ in H6.
-  unfold Internal.Eq___Map_op_zeze__ in H6. unfold toList. rewrite andb_true_iff in H6.
-  destruct H6. assumption. unfold "==" in H6. unfold Eq_list in H6. unfold op_zeze____ in H6.
-  apply H6. } apply fold_right_proper. apply H6. intros.
-  destruct p1. destruct p2. unfold "==" in H7. unfold Eq_pair___  in H7. 
-  unfold op_zeze____  in H7. unfold eq_pair in H7. rewrite andb_true_iff in H7.
-  apply H4. 
-  order a. order e.
+  assert (eqlist_key (toList m1) (toList m2)). {
+  rewrite <- coq_equals_spec. apply H3. apply H0. apply H1. }
+  apply fold_right_proper. apply H4. apply H2.
 Qed. 
 
-Lemma mapAccumRWithKey_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `{EqLaws a} (m: Map e a) (x : b) 
+
+Lemma mapAccumRWithKey_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
   (f: b -> e -> a -> (b * c)) lb ub,
-  Proper ((fun (i j : e * a) => _GHC.Base.==_ i j = true) ==> eq) (fun x y => let (a,b) := x in f y a b) ->
+  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
   Desc (snd (mapAccumRWithKey f x m)) lb ub (size m) (
   fun i => match (sem m i) with
@@ -574,7 +561,7 @@ Lemma mapAccumRWithKey_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} `
            | None => None
             end).
 Proof.
-  intros. revert x. induction H3; intros.
+  intros. revert x. induction H1; intros.
   - simpl. solve_Desc e.
   - simpl.  rewrite (surjective_pairing (mapAccumRWithKey f x0 s2 )).
     rewrite (surjective_pairing (f (fst (mapAccumRWithKey f x0 s2)) x v)).
@@ -592,7 +579,7 @@ Proof.
         fold_right (fun (x1 : e * a) (t : b) => let (a1, b0) := x1 in fst (f t a1 b0)) 
          x0 ((toList s3) ++ ((x, v) :: nil) ++ (toList s2))). { simpl. rewrite fold_right_app.
          simpl. reflexivity. }
-    rewrite H5. clear H5. 
+    rewrite H3. clear H3. 
     assert ((fold_right (fun  (x1 : e * a) (t : b) => let (a1, b0) := x1 in fst (f t a1 b0)) x0
            (toList s3 ++ ((x, v) :: nil) ++ toList s2)) = 
     (fold_right (fun(x1 : e * a)  (t : b)  => let (a1, b0) := x1 in fst (f t a1 b0)) x0 (toList s4)) ). {
@@ -601,25 +588,24 @@ Proof.
         + eapply to_List_sorted. eassumption.
         + simpl. apply SSorted_cons.
           * eapply to_List_sorted. eassumption.
-          * rewrite Forall_lt. intros. unfold ToListProofs.lt. rewrite <- toList_sem' in H5.
+          * rewrite Forall_lt. intros. unfold ToListProofs.lt. rewrite <- toList_sem in H3.
             destruct (sem s2 x1) eqn : ?.
             - solve_Bounds e.
-            - inversion H5.
+            - inversion H3.
             - eassumption.
-       + intros. assert (isUB (Some x) y = true). eapply toList_Bounds_UB. apply HB1. apply H5. solve_Bounds e.
-       + intros. simpl in H5. destruct H5.
-          * inversion H5; subst. order e.
-          * assert (isLB (Some x) y = true). eapply toList_Bounds_LB. apply H3_0. apply H5. solve_Bounds e. }
+       + intros. assert (isUB (Some x) y = true). eapply toList_Bounds_UB. apply HB1. apply H3. solve_Bounds e.
+       + intros. simpl in H3. destruct H3.
+          * inversion H3; subst. order e.
+          * assert (isLB (Some x) y = true). eapply toList_Bounds_LB. apply H1_0. apply H3. solve_Bounds e. }
       eapply fold_right_proper.
       - simpl. remember (fromDistinctAscList ((toList s3 ++ ((x, v) :: nil) ++ toList s2))) as m.
-        assert (toList m ==  (toList s3 ++ ((x, v) :: nil) ++ toList s2) = true). { rewrite Heqm.
-        eapply fromDistinctAscList_toList. apply H5. }
-        rewrite <- eq_list_equiv. eapply Eq_Transitive. apply Eq_Symmetric. apply H7.
-        unfold is_true. rewrite <-eq_toList. eapply strong_eq1.
-        + subst. eapply fromDistinctAscList_Desc. apply H5. intros. apply H8.
+        assert (eqlist_key (toList m)  (toList s3 ++ ((x, v) :: nil) ++ toList s2)). { rewrite Heqm.
+        eapply fromDistinctAscList_toList. apply H3. } eapply eqlist_key_trans. apply eqlist_key_sym.
+        apply H5. eapply coq_equals_spec.
+        + subst. eapply fromDistinctAscList_Desc. apply H3. intros. apply H6.
         + wf_bounds.
-        + intros. rewrite Hsem1. rewrite Heqm. eapply fromDistinctAscList_Desc. apply H5. intros.
-          rewrite H10. simpl. rewrite sem_list_app.
+        + intros. rewrite Hsem1. rewrite Heqm. eapply fromDistinctAscList_Desc. apply H3. intros.
+          rewrite H8. simpl. rewrite sem_list_app.
           destruct (i0 > i) eqn : ?.
           * erewrite <- toList_sem''. simpl. unfold SomeIf.  erewrite <- toList_sem''.
             rewrite Hsem. rewrite Heqb0. 
@@ -634,54 +620,42 @@ Proof.
                 ++ erewrite <- toList_sem''. eapply sem_outside_below. eassumption. solve_Bounds e.
                    eassumption.
             -- eassumption.
-        + rewrite Heqm. apply fromDistinctAscList_Desc. apply H5. intros. apply H8.
-        + wf_bounds.
-      - intros. apply H2 in H7. destruct p1. destruct p2. 
-        eapply equal_f in H7. rewrite H7. reflexivity. }
-    rewrite H5. reflexivity. apply HB2. apply H3_0. apply HB1.
+      - intros. assert (f y x1 z = f y x2 z). apply equal_f. apply H0 in H5. apply (equal_f H5).
+        rewrite H6. reflexivity. }
+     rewrite H3. reflexivity. all: try(eassumption).
     + repeat(applyDesc e (@map_gt_Desc e a)). repeat (erewrite mapAccumRWithKey_fst).
       * assert (forall i, sem s2 i = sem s3 i). {
          intros. destruct (_GHC.Base.>_ i0 i) eqn : ?.
           - specialize (Hsem i0). rewrite Heqb1 in Hsem. simpl in Hsem.
             rewrite Hsem. assert (sem s1 i0 = None). eapply sem_outside_above. eassumption.
-            solve_Bounds e. rewrite H7. simpl. assert (i0 == x = false) by (order e). rewrite H8.
+            solve_Bounds e. rewrite H5. simpl. assert (i0 == x = false) by (order e). rewrite H6.
             reflexivity.
           - specialize (Hsem i0).  rewrite Hsem. rewrite Heqb1. eapply sem_outside_below. eassumption.
             solve_Bounds e. } 
         assert ((foldrWithKey (fun  (k : e) (v0 : a) (t : b) => fst (f t k v0)) x0 s2) =
            (foldrWithKey (fun (k : e) (v0 : a) (t : b)  => fst (f t k v0)) x0 s3)). {
-            eapply foldRWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
-            assert (f y e1 a1 = f y e2 a2). { unfold respectful in H2. unfold Proper in H2.
-            remember (e1, a1). remember (e2, a2). assert (p == p0 = true). unfold_pair.
-            subst. rewrite andb_true_iff. split; assumption. apply H2 in H10. subst.
-            eapply equal_f in H10. apply H10. } rewrite H10. reflexivity.
-            intros. rewrite H7. reflexivity. }
-        rewrite H8.
-        assert (forall z,  f z x v = f z i v).  { intros.
-        remember (x,v). remember (i,v). assert (p == p0 = true). unfold_pair. subst.
-        rewrite andb_true_iff. split. order e. order a. apply H2 in H9. subst. eapply equal_f in H9.
-        apply H9. } rewrite H9. reflexivity.
+            eapply foldrWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
+            assert (f v0 i0 y = f v0 j y). apply equal_f. apply H0 in H6. apply (equal_f H6).
+            rewrite H7. reflexivity. intros. rewrite H5. reflexivity. }
+        rewrite H6.
+        assert (forall z,  f z x v = f z i v).  { intros. apply equal_f. apply H0 in Heqb0.
+        symmetry. apply (equal_f Heqb0). } rewrite H7. reflexivity.
       * eassumption.
       * eassumption.
     + repeat(applyDesc e (@map_gt_Desc e a)). repeat (erewrite mapAccumRWithKey_fst).
       * assert (forall i, sem s4 i = sem s3 i). {
         intros.  destruct (_GHC.Base.>_ i0 i) eqn : ?.
         - rewrite Hsem. rewrite Hsem0. simpl. rewrite Heqb1. assert (sem s1 i0 = None). eapply sem_outside_above.
-          eassumption. solve_Bounds e. rewrite H5. simpl. 
-          assert (i0 == x = false) by (solve_Bounds e). rewrite H7. reflexivity.
+          eassumption. solve_Bounds e. rewrite H3. simpl. 
+          assert (i0 == x = false) by (solve_Bounds e). rewrite H5. reflexivity.
         - rewrite Hsem0. rewrite Hsem. rewrite Heqb1. reflexivity. }
         assert ((foldrWithKey (fun (k : e) (v0 : a)(t : b)  => fst (f t k v0)) x0 s3) =
            (foldrWithKey (fun (k : e) (v0 : a)(t : b)  => fst (f t k v0)) x0 s4)). {
-          eapply foldRWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
-          assert (f y e1 a1 = f y e2 a2). { unfold respectful in H2. unfold Proper in H2.
-          remember (e1, a1). remember (e2, a2). assert (p == p0 = true). unfold_pair.
-          subst. rewrite andb_true_iff. split; assumption. apply H2 in H9. subst.
-          eapply equal_f in H9. apply H9. } rewrite H9. reflexivity. 
-          intros. rewrite H5. reflexivity. }
-      rewrite H7. reflexivity. 
+          eapply foldrWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
+          assert (f v0 i0 y = f v0 j y). apply equal_f. apply H0 in H5. apply (equal_f H5). rewrite H6.
+          reflexivity. intros. rewrite H3. reflexivity. } rewrite H5. reflexivity.
      * eassumption.
      * eassumption.
-    
 Qed. 
 
 (** Vertification of [mapKeys] *)
@@ -782,5 +756,312 @@ Proof.
     + replace (_GHC.Base.==_ sz 1%Z ) with false. rewrite IHBounded1. rewrite IHBounded2.
       unfold Foldable.fold. unfold Foldable__Map. unfold Foldable.fold__. simpl.
       replace (_GHC.Base.==_ sz 1%Z) with false. reflexivity.
+Qed.
+
+(** ** Verification of [mapMaybeWithKey] *)
+Lemma mapMaybeWithKey_Desc: forall {e a b} `{OrdLaws e} (f: e -> a -> option b) (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc' (mapMaybeWithKey f m) lb ub (fun i => match (sem m i ) with 
+                                              | Some y => f i y
+                                              | _ => None
+                                              end).
+Proof.
+  intros. induction H0.
+  - simpl. solve_Desc e. intros. reflexivity.
+  - simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. destruct (f x v) eqn : ?.
+    + eapply link_Desc; try (eassumption); try (reflexivity). intros. solve_Desc e. f_solver e.
+      rewrite <- Heqo2. rewrite <- Heqo. apply equal_f. apply H1. order e.
+      rewrite <- Heqo2. rewrite <- Heqo. apply equal_f. apply H1. order e.
+    + eapply link2_Desc; try (eassumption); try(reflexivity). intros. solve_Desc e. f_solver e.
+      rewrite <- Heqo2. rewrite <- Heqo. apply equal_f. apply H1. order e.
+Qed.
+
+(** ** Verification of [mapMaybe] *)
+Lemma mapMaybe_Desc: forall {e a b} `{OrdLaws e} (f: a -> option b) (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  Desc' (mapMaybe f m) lb ub (fun i => match (sem m i ) with 
+                                              | Some y => f y
+                                              | _ => None
+                                              end).
+Proof.
+  intros. unfold mapMaybe. eapply mapMaybeWithKey_Desc. apply H0.
+  unfold respectful. unfold Proper. intros. reflexivity.
+Qed. 
+
+
+Lemma Either_eq_left: forall {a b} (x y: a), 
+  x = y <-> (@Data.Either.Left a b) x = Data.Either.Left y.
+Proof.
+  intros. split; intros.
+  - subst. reflexivity.
+  - inversion H. reflexivity.
+Qed.
+
+Lemma Either_eq_right: forall {a b} (x y: b), 
+  x = y <-> (@Data.Either.Right a b) x = Data.Either.Right y.
+Proof.
+  intros. split; intros.
+  - subst. reflexivity.
+  - inversion H. reflexivity.
+Qed.
+
+(** ** Verification of [mapEitherWithKey *)
+Lemma mapEitherWithKey_Desc: forall {e a b c} `{OrdLaws e} (f: e -> a -> Data.Either.Either  b c)
+  (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+  Desc' (fst(mapEitherWithKey f m)) lb ub (fun i => match (sem m i) with
+                                                    | Some y => match f i y with
+                                                                | Data.Either.Left z => Some z
+                                                                | _ => None
+                                                                end
+                                                    | None => None
+                                                     end) /\
+  Desc' (snd(mapEitherWithKey f m)) lb ub (fun i => match (sem m i) with
+                                                    | Some y => match f i y with
+                                                                | Data.Either.Right z => Some z
+                                                                | _ => None
+                                                                end
+                                                    | None => None
+                                                     end) 
+.
+Proof.
+  intros. induction H0.
+  - simpl. split; solve_Desc e; intros; reflexivity. 
+  - split; simpl;  rewrite (surjective_pairing (mapEitherWithKey f s2));
+    rewrite (surjective_pairing (mapEitherWithKey f s1)); applyDesc e IHBounded1;
+    applyDesc e IHBounded2; destruct (f x v) eqn : ?; applyDesc e IHBounded1; applyDesc e IHBounded2.
+    + eapply link_Desc; try(eassumption); try (reflexivity). intros. 
+      eapply link2_Desc; try(eassumption); try(reflexivity). intros. solve_Desc e. f_solver e. 
+       * assert (b1 = b2). rewrite (@Either_eq_left b c). rewrite <- Heqe1. rewrite <- Heqe0.
+         apply equal_f. apply H1. order e. subst. reflexivity.
+       * assert (Either.Right c0 = Either.Left b1). rewrite <- Heqe1. rewrite <- Heqe0.
+         apply equal_f. apply H1. order e. inversion H3.
+   + eapply link_Desc; try (eassumption); try(reflexivity). intros.
+     eapply link2_Desc; try(eassumption); try(reflexivity). intros. solve_Desc e. f_solver e.
+     * assert (Either.Right c0 = Either.Left b0). rewrite <- Heqe0. rewrite <- Heqe1. apply equal_f.
+       apply H1. order e. inversion H11.
+   + eapply link_Desc; try (eassumption); try(reflexivity). intros.
+     eapply link2_Desc; try(eassumption); try (reflexivity). intros. solve_Desc e. f_solver e.
+      * assert (Either.Right c0 = Either.Left b0). rewrite <- Heqe0. rewrite <- Heqe1. apply equal_f.
+        apply H1. order e. inversion H11.
+   + eapply link2_Desc; try (eassumption); try(reflexivity). intros.
+     eapply link_Desc; try(eassumption); try (reflexivity). intros. solve_Desc e. f_solver e.
+      * assert (Either.Left b0 = Either.Right c1). rewrite <- Heqe0. rewrite <- Heqe1. apply equal_f.
+         apply H1. order e. inversion H3.
+      * assert (c1 = c2). rewrite (@Either_eq_right b c). rewrite <- Heqe1. rewrite <- Heqe0.
+        apply equal_f. apply H1. order e. subst. reflexivity.
+Qed. 
+
+(** ** Verification of [mapEither] *)
+Lemma mapEither_Desc: forall {e a b c} `{OrdLaws e} (f: a -> Data.Either.Either  b c)
+  (m: Map e a) lb ub,
+  Bounded m lb ub ->
+  Desc' (fst(mapEither f m)) lb ub (fun i => match (sem m i) with
+                                                    | Some y => match f y with
+                                                                | Data.Either.Left z => Some z
+                                                                | _ => None
+                                                                end
+                                                    | None => None
+                                                     end) /\
+  Desc' (snd(mapEither f m)) lb ub (fun i => match (sem m i) with
+                                                    | Some y => match f y with
+                                                                | Data.Either.Right z => Some z
+                                                                | _ => None
+                                                                end
+                                                    | None => None
+                                                     end).
+Proof.
+  intros. unfold mapEither. eapply mapEitherWithKey_Desc. apply H0. unfold Proper. unfold respectful.
+  intros. reflexivity.
+Qed.
+
+(** ** Verification of [splitRoot] *)
+
+(*This function can only produce lists of size 0 or 3*)
+Lemma splitRoot_Desc: forall { e a} `{OrdLaws e} (m: Map e a) lb ub,
+  Bounded m lb ub -> 
+  match (splitRoot m) with
+  | nil => m = Tip
+  | l :: m1 :: r :: nil =>
+      match m1 with
+      | Tip => False
+      | Bin sz k v lt rt =>
+        Desc' l lb (Some k) (fun i => if (i < k) then sem m i else None) /\
+        Desc m1 lb ub 1%Z (fun i => if i == k then Some v else None) /\
+        Desc' r (Some k) ub (fun i => if i > k then sem m i else None)
+      end
+  | _ => False
+  end.
+Proof.
+  intros. inversion H0; subst. 
+  - simpl. reflexivity.
+  - simpl. split. solve_Desc e. f_solver e.
+    split. applyDesc e (@singleton_Desc e a). solve_Desc e. solve_Desc e. f_solver e.
+Qed. 
+
+(** ** Verification of [findIndex] *)
+(*This function calls error when the key is not in the map, so we will prove a spec only for the cases
+when the key is in the map*)
+(*This is also highly nontrivial to prove. Specifying the function itself is not very easy, 
+but I settled on proving the specification that the number returned for an element within the map
+is equal to the length of the list of all of the elements less than the given element. Once again,
+because sem does not play too well with length, we make heavy use of [toList] and related lemmas,
+as well as [fromDistinctAscList]. We also need several helper lemmas*)
+
+
+(*A rather obvious statement (that should be moved to Bounds) that states that if we have
+a Bounded map, we can expand the bounds to make the bounds less strict*)
+Definition larger_bound {e} `{OrdLaws e} (b1: @bound e) (b2: @bound e) :=
+  match b1, b2 with
+  |Some x, Some y => x <= y
+  | None, _ => false
+  |_, _ => true
+  end.
+Definition smaller_bound {e} `{OrdLaws e} (b1: @bound e) (b2: @bound e) :=
+  match b1, b2 with
+  |Some x, Some y => x >= y
+  |None, Some y => false
+  |None, None => true
+  |Some x, None => true
+  end.
+
+Lemma expand_bounds: forall {e a} `{OrdLaws e} (m: Map e a) lb ub lb' ub',
+  Bounded m lb ub ->
+  larger_bound ub ub' = true ->
+  smaller_bound lb lb' = true ->
+  Bounded m lb' ub'.
+Proof.
+  intros. revert H1. revert H2. revert lb' ub'. induction H0; intros.
+  - constructor.
+  - constructor. apply IHBounded1. assumption. simpl. order e.
+    apply IHBounded2. simpl. order e. assumption. unfold isLB. destruct lb'.
+    destruct lb. simpl in H4. unfold isLB in H0. order e.
+     simpl in H4.  inversion H4. reflexivity. unfold isUB. destruct ub'.
+    destruct ub. simpl in H5. unfold isUB in H1. order e. simpl in H5. inversion H5.
+    reflexivity. assumption. assumption.
+Qed.
+
+(*Copy and paste from the Haskell code. The use of an inner recursive function called with
+and argument of 0 in findIndex means that the induction hypothesis is not enough, we need
+a proof about what happens when it is called with a value other than 0*)
+Definition findIndex_go {e a}  `{OrdLaws e} :=
+(fix go (arg_0__ : Int) (arg_1__ : e) (arg_2__ : Map e a) {struct arg_2__} : Int :=
+   match arg_2__ with
+   | Bin _ kx _ l r =>
+       match compare arg_1__ kx with
+       | Eq => _GHC.Num.+_ arg_0__ (Internal.size l)
+       | Lt => go arg_0__ arg_1__ l
+       | Gt => go (_GHC.Num.+_ (_GHC.Num.+_ arg_0__ (Internal.size l)) #1) arg_1__ r
+       end
+   | Tip => Err.error &"Map.findIndex: element is not in the map"
+   end) .
+
+Lemma findIndex_go_plus: forall {e a} `{OrdLaws e} (x: e) sz (k: e) (v : a) n (l r: Map e a) lb ub,
+  Bounded (Bin sz k v l r) lb ub ->
+  (exists v, sem r x = Some v) ->
+  findIndex_go n x (Bin sz k v l r) = (size l) + 1%Z + findIndex_go n x r.
+Proof.
+  intros. simpl. assert (compare x k = Gt). inversion H0; subst. destruct H1. solve_Bounds e.
+  rewrite H2. clear H2. assert (Bounded r None None). inversion H0; subst; wf_bounds.
+  clear H0. clear lb ub. revert l. revert H1. revert n. induction H2; intros.
+  - destruct H1. inversion H0.
+  - simpl. destruct (compare x x0) eqn : ?.
+    + lia_sizes.
+    + apply IHBounded1. simpl in H4. assert (x == x0 = false) by (order e).
+      assert (sem s2 x = None). eapply sem_outside_below. eassumption. solve_Bounds e.
+      rewrite H6 in H4. rewrite H5 in H4. simpl in H4. repeat (rewrite oro_None_r in H4).
+      apply H4.
+    + rewrite <- IHBounded2. assert ((n + Internal.size l + 1 + Internal.size s1 + 1)%Z 
+      =(n + Internal.size s1 + 1 + Internal.size l + 1)%Z). lia_sizes. rewrite H5. reflexivity.
+      simpl in H4. assert (sem s1 x = None). eapply sem_outside_above. eassumption. solve_Bounds e.
+      assert (x == x0 = false) by (order e). rewrite H6 in H4. rewrite H5 in H4. simpl in H4. apply H4.
+Qed.
+
+Lemma find_index_go_equiv:
+  forall {e a} `{OrdLaws e} (m: Map e a) (x: e),
+  findIndex x m = findIndex_go #0 x m.
+Proof.
+  intros. unfold findIndex. unfold findIndex_go. reflexivity.
+Qed.
+
+(*The actual specification*)
+Lemma findIndex_spec: forall {e a} `{OrdLaws e} (m: Map e a) lb ub k,
+  Bounded m lb ub ->
+  (exists v, sem m k = Some v) ->
+  findIndex k m = Z.of_nat(length (toList (map_lt m k))).
+Proof.
+  intros. induction H0.
+  - simpl. destruct H1. inversion H0.
+  - simpl in H1. eapply map_lt_Desc. constructor; try (eassumption); try(reflexivity). intros.
+    destruct (compare k x) eqn : ?.
+    + unfold findIndex; rewrite Heqc. 
+      assert (forall i, sem s i = sem s1 i). { intros. rewrite H7. simpl.
+      destruct (i < k) eqn : ?. destruct (sem s1 i). reflexivity. simpl. 
+      assert (i == x = false) by (order e). rewrite H8. simpl. 
+      assert (sem s2 i = None). eapply sem_outside_below. eassumption. solve_Bounds e.
+      assumption. symmetry. eapply sem_outside_above. eassumption. solve_Bounds e. }
+      erewrite <- size_spec. assert (size s1 = size s). apply (size_sem _ _ lb ub).
+      eapply expand_bounds. apply H0_. destruct ub. simpl.
+      solve_Bounds e. reflexivity. unfold smaller_bound. destruct lb. order e. reflexivity.
+      apply H5. intros. rewrite H8. reflexivity. simpl. rewrite size_size. assumption. apply H5.
+    + unfold findIndex in *; rewrite Heqc. rewrite  IHBounded1. applyDesc e (@map_lt_Desc e a).
+      assert (eqlist_key (toList s0) (toList s)). eapply coq_equals_spec. 
+      assert (Bounded s0 lb ub). eapply expand_bounds. eassumption. unfold larger_bound.
+      destruct ub. unfold isUB in H2. order e. reflexivity. destruct lb. simpl. order e.
+      reflexivity. apply H8. apply H5. intros. rewrite Hsem. rewrite H7. 
+      destruct (i < k) eqn : ?. simpl. assert (i == x = false) by (solve_Bounds e).
+      rewrite H8. assert (sem s2 i = None). eapply sem_outside_below. eassumption. solve_Bounds e.
+      rewrite H9. simpl. repeat(rewrite oro_None_r). reflexivity. reflexivity. 
+      erewrite eqlist_key_length. reflexivity. apply H8. assert (k == x = false) by (order e).
+      rewrite H8 in H1. assert (sem s2 k = None). eapply sem_outside_below. eassumption. solve_Bounds e.
+      rewrite H9 in H1. simpl in H1. repeat(rewrite oro_None_r in H1). apply H1.
+    + rewrite find_index_go_equiv in *. erewrite findIndex_go_plus.
+      rewrite IHBounded2. simpl. 
+      applyDesc e (@map_lt_Desc e a). simpl in H7.
+      assert (forall i, sem s i = sem s1 i ||| SomeIf(i == x) v ||| sem s0 i). { intros.
+      rewrite H7. rewrite Hsem.
+      destruct (compare i x) eqn : ?.
+      + assert (i < k = true) by (order e). rewrite H8. reflexivity.
+      + assert (i < k = true) by (order e). rewrite H8. reflexivity.
+      + assert (sem s1 i = None). eapply sem_outside_above. eassumption. solve_Bounds e.
+        rewrite H8. simpl. assert (i == x = false) by (order e). rewrite H9. simpl. reflexivity. }
+      remember ((toList s1) ++ (x,v) :: nil ++ (toList s0)) as l. remember (fromDistinctAscList(l)) as m.
+       assert (StronglySorted ToListProofs.lt l). { rewrite Heql.
+        eapply sorted_append.
+        + eapply to_List_sorted. eassumption.
+        + simpl. apply SSorted_cons.
+          * eapply to_List_sorted. eassumption.
+          * rewrite Forall_lt. intros. unfold ToListProofs.lt. rewrite <- toList_sem in H9.
+            destruct (sem s0 x0) eqn : ?.
+            - solve_Bounds e.
+            - inversion H9.
+            - eassumption.
+       + intros. assert (isUB (Some x) y = true). eapply toList_Bounds_UB. apply H0_. apply H9. solve_Bounds e.
+       + intros. simpl in H9. destruct H9.
+          * inversion H9; subst. order e.
+          * assert (isLB (Some x) y = true). eapply toList_Bounds_LB. apply HB. apply H9. solve_Bounds e. }
+        assert (eqlist_key (toList m)  l). { rewrite Heqm.
+        eapply fromDistinctAscList_toList. apply H9. }
+        apply eqlist_key_length in H10.
+        assert (forall i, sem m i = sem s i). { intros. rewrite Heqm. eapply fromDistinctAscList_Desc.
+        apply H9. intros. rewrite Heql in H13. setoid_rewrite sem_list_app in H13.
+        setoid_rewrite <- toList_sem'' in H13. rewrite H13. rewrite H8.
+        simpl. erewrite <- toList_sem''. unfold SomeIf.
+        destruct (sem s1 i). reflexivity. simpl. destruct (i == x). reflexivity. simpl.
+        reflexivity. eassumption. eassumption. }
+        rewrite Heql in H10. rewrite app_length in H10.
+        assert (size s = size m). eapply size_sem. wf_bounds. rewrite Heqm.
+        eapply fromDistinctAscList_Desc. apply H9. intros. assumption. intros. rewrite H11. reflexivity. 
+        erewrite size_spec in H12. erewrite size_spec in H12. rewrite H12.
+        rewrite H10. simpl. erewrite size_spec. lia_sizes. eassumption. rewrite Heqm.
+        eapply fromDistinctAscList_Desc. apply H9. intros. apply H13. eassumption.
+        assert (sem s1 k = None). eapply sem_outside_above. eassumption. solve_Bounds e.
+        assert (k == x = false) by (order e). rewrite H8 in H1. rewrite H9 in H1. simpl in H1.
+        apply H1. constructor; try (eassumption).
+        assert (sem s1 k = None). eapply sem_outside_above. eassumption. solve_Bounds e.
+        assert (k == x = false) by (order e). rewrite H8 in H1. rewrite H9 in H1. simpl in H1.
+        apply H1. 
 Qed.
 

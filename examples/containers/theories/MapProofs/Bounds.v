@@ -1093,7 +1093,7 @@ Proof.
   all: try reflexivity.
 Qed.
 
-(** ** [Verification of [balance] *)
+(** ** Verification of [balance] *)
 Lemma balance_Desc:
   forall x v s1 s2 lb ub,
   Bounded s1 lb (Some x) ->

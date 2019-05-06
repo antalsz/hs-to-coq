@@ -1,0 +1,3 @@
+rename type GHC.Word.Word32 = nat
+
+class kinds Socket.Recursive (Type -> Type)

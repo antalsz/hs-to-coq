@@ -3,6 +3,7 @@ Require Import GHC.Base.
 Require Export GHC.Char.
 Require Import GHC.Real.
 Require Import GHC.Num.
+Require Import GHC.Unicode.
 
 Set Implicit Arguments.
 Generalizable All Variables.
@@ -55,18 +56,18 @@ Definition isLetter : Char -> bool := (fun arg_1__ =>
     end)).
 
 (* Made this total by adding error value. *)
+
 Definition digitToInt : Char -> Int := (fun arg_0__ =>
     (match arg_0__ with
-      | c => (let dec := ord c - ord &#"0"
-             in (let hexl := ord c - ord &#"a"
-                in (let hexu := ord c - ord &#"A"
-                   in (if (((fromIntegral dec : Word)) <=? #9)
+      | c => (let dec : Z := ord c - ord &#"0"
+             in (let hexl : Z := ord c - ord &#"a"
+                in (let hexu : Z := ord c - ord &#"A"
+                   in (if (((fromIntegral dec : Rational)) <= #9)
                       then dec
-                      else (if (((fromIntegral hexl : Word)) <=? #5)
+                      else (if (((fromIntegral hexl : Rational)) <= #5)
                            then hexl + #10
-                           else (if (((fromIntegral hexu : Word)) <=? #5)
+                           else (if (((fromIntegral hexu : Rational)) <= #5)
                                 then hexu + #10
                                 else #256))))))
     end)).
-
 (* No type class instance declarations to convert. *)

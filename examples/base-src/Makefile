@@ -15,6 +15,7 @@ HANDMOD = \
   GHC/DeferredFix \
   GHC/DeferredFixImpl \
   GHC/Num \
+  Data/Char \
   GHC/Char \
   GHC/Real \
   GHC/Enum \
@@ -64,7 +65,7 @@ MODULES = \
   Data/Functor/Sum \
   Data/Bifoldable \
   Data/Bitraversable \
-  Control/Monad/Zip 
+  Control/Monad/Zip
 
 RENAMED = \
   Data/SemigroupInternal \
@@ -142,7 +143,7 @@ $(VFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard
 		     base/$*.hs
 	test -e $@
 
-# This is renamed, which confuses Make, so hence the special rule 
+# This is renamed, which confuses Make, so hence the special rule
 $(OUT)/Data/SemigroupInternal.v : $(wildcard module-edits/Data/Semigroup/Internal/preamble.v) $(wildcard module-edits/Data/Semigroup/Internal/midamble.v)  $(wildcard module-edits/Data/Semigroup/Internal/edits) edits
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/Data/Semigroup/Internal/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/Data/Semigroup/Internal/preamble.v)) \

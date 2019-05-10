@@ -3,12 +3,20 @@
              FlexibleContexts,
              GeneralizedNewtypeDeriving #-}
 
-module HsToCoq.ConvertHaskell.Type (convertType, convertLType, convertLHsTyVarBndrs, convertLHsSigType, convertLHsSigWcType) where
+module HsToCoq.ConvertHaskell.Type
+  (convertType,
+   convertLType,
+   convertLHsTyVarBndrs,
+   convertLHsSigType,
+   convertLHsSigTypeWithExcls,
+   convertLHsSigWcType)
+where
 
 import Control.Lens
 
 import Data.Traversable
 import Data.List.NonEmpty (nonEmpty)
+import Data.List ((\\))
 
 import GHC hiding (Name)
 import HsToCoq.Util.GHC.FastString
@@ -141,17 +149,21 @@ convertLType = convertType . unLoc
 
 --------------------------------------------------------------------------------
 
-convertLHsSigType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term
-convertLHsSigType utvm (HsIB hs_itvs hs_lty _) = do
+convertLHsSigTypeWithExcls :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> [Qualid] -> m Term
+convertLHsSigTypeWithExcls utvm (HsIB hs_itvs hs_lty _) excls = do
   coq_itvs <- traverse (var TypeNS) hs_itvs
   coq_ty   <- convertLType hs_lty
-  
-  let coq_binders = Inferred Coq.Implicit . Ident <$> case utvm of
+
+  let coq_tyVars = case utvm of
         PreserveUnusedTyVars -> coq_itvs
         DeleteUnusedTyVars   -> let fvs = getFreeVars coq_ty
                                 in filter (`elem` fvs) coq_itvs
-  
+  let coq_binders = Inferred Coq.Implicit . Ident <$> coq_tyVars \\ excls
+
   pure $ maybeForall coq_binders coq_ty
+
+convertLHsSigType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigType GhcRn -> m Term
+convertLHsSigType utvm sigTy = convertLHsSigTypeWithExcls utvm sigTy []
 
 convertLHsSigWcType :: ConversionMonad r m => UnusedTyVarMode -> LHsSigWcType GhcRn -> m Term
 convertLHsSigWcType utvm (HsWC wcs hsib)

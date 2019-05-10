@@ -12,6 +12,7 @@ import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
 import Data.Traversable
+import Data.Maybe
 import HsToCoq.Util.Traversable
 
 import qualified Data.Set        as S
@@ -78,11 +79,13 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
       storeConstructorFields con fieldInfo
       pure [(con, params , Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
-convertConDecl _curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
+convertConDecl curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
   for lnames $ \(L _ hsName) -> do
-    conName <- var ExprNS hsName
-    utvm    <- unusedTyVarModeFor conName
-    conTy   <- maybeForall extraArgs <$> convertLHsSigType utvm sigTy
+    conName         <- var ExprNS hsName
+    utvm            <- unusedTyVarModeFor conName
+    (_, curTypArgs) <- collectArgs curType
+    conTy           <- maybeForall extraArgs <$> convertLHsSigTypeWithExcls utvm sigTy
+                       (mapMaybe termHead curTypArgs)
     pure (conName, [], Just conTy)
 
 --------------------------------------------------------------------------------

@@ -44,7 +44,7 @@ instance Encodable (MVar a) where
 
 data MVar a = MVar Int
 
-data MemEff :: (* -> *) -> * -> * where
+data MemEff m :: * -> * where
   NewMV     :: MemEff m (m a)
   TakeMV    :: Encodable a => m a -> MemEff m a
   ReadMV    :: Encodable a => m a -> MemEff m a

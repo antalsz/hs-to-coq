@@ -1,7 +1,7 @@
 include ../../common.mk
 
 # Edit this
-GENMODS = Locks IO Interp test
+GENMODS = Locks IO Interp Concurrency
 MANMODS = Proofs
 
 # Abstract stuff

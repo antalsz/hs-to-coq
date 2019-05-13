@@ -52,7 +52,7 @@ Class TrieMap m := {
 Arguments Key _ {_}.
 
 Definition TickishMap :=
-  (Data.Map.Internal.Map (Core.Tickish Core.Var))%type.
+  (Data.Map.Internal.Map (Core.Tickish Core.Id))%type.
 
 Inductive MaybeMap m a : Type
   := MM (mm_nothing : option a) (mm_just : m a) : MaybeMap m a.
@@ -225,7 +225,7 @@ Program Instance TrieMap__Map {k} `{GHC.Base.Ord k}
   mapTM := fun {a} {b} => TrieMap__Map_mapTM }.
 
 Definition xtTickish {a}
-   : Core.Tickish Core.Var -> XT a -> TickishMap a -> TickishMap a :=
+   : Core.Tickish Core.Id -> XT a -> TickishMap a -> TickishMap a :=
   alterTM (m := TickishMap).
 
 Axiom xtT : forall {a}, DeBruijn unit -> XT a -> TypeMapX a -> TypeMapX a.
@@ -639,7 +639,7 @@ Definition xtVar {a} : CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a :=
         VM vm_bvar_0__ (vm_fvar m |> xtDFreeVar v f)
     end.
 
-Definition lkTickish {a} : Core.Tickish Core.Var -> TickishMap a -> option a :=
+Definition lkTickish {a} : Core.Tickish Core.Id -> TickishMap a -> option a :=
   lookupTM (m := TickishMap).
 
 Definition lkMaybe {k} {m} {a}
@@ -1102,7 +1102,7 @@ End Notations.
 (* External variables:
      Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
      tt unit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt
-     Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
+     Core.Id Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
      Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv
      Core.lookupVarEnv Core.varType Data.Foldable.foldl Data.IntMap.Internal.IntMap
      Data.IntMap.Internal.alter Data.IntMap.Internal.empty Data.IntMap.Internal.foldr

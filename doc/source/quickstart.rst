@@ -108,11 +108,9 @@ prove stuff about it.  However, if your module includes definitions from
 ``base``, you need to set up a ``_CoqProject`` file so that ``coq`` can find
 all of the necessary definitions.
 
-The Makefile in the rle_ example demonstrates
-how this file can be constructed automatically.
-
-[TODO: move map_map to base theory]
-
+The Makefile in the rle_ example demonstrates how this file can be constructed
+automatically. The proofs in this example use a lemma called ``map_map`` from
+the base library.
 
 Translating a multi-file project
 --------------------------------
@@ -135,11 +133,10 @@ Avoiding ``base``
 
 ``hs-to-coq`` is designed to automatically use definitions from the ``base``
 library. However, it is sometimes possible to translate small examples so that
-they are self contained, and only require definitions from Coq's standard
+they are self contained and only require definitions from Coq's standard
 library.
 
 An example project that takes this approach is:
 https://github.com/mit-plv/riscv-coq
 
-[TODO: make a general `base-free` edit file that connects as much of the
-Haskell Prelude to the Coq standard library.]
+

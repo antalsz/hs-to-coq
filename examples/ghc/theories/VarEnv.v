@@ -13,6 +13,9 @@ Require Import Proofs.Data.Foldable.
 Require Import Id.
 Require Import Core.
 
+Require Import Proofs.Axioms.
+Require Import Proofs.ContainerAxioms.
+
 Require Import Proofs.Core.
 Require Import Proofs.Var.
 Require Import Proofs.Unique.
@@ -20,54 +23,9 @@ Require Import Proofs.VarSet.
 Require Import Proofs.VarSetFSet.
 
 Require Import Proofs.GHC.Base.
-Require Import Proofs.ContainerAxioms.
 
 Set Bullet Behavior "Strict Subproofs".
 
-
-(** ** [uniqAway] axiomatization *)
-
-Axiom isJoinId_maybe_uniqAway:
-  forall s v, 
-  isJoinId_maybe (uniqAway s v) = isJoinId_maybe v.
-
-(* See discussion of [isLocalUnique] in [Proofs.Unique] *)
-Axiom isLocalUnique_uniqAway:
-  forall iss v,
-  isLocalUnique (varUnique (uniqAway iss v)) = true.
-
-Axiom isLocalId_uniqAway:
-  forall iss v,
-  isLocalId (uniqAway iss v) = isLocalId v.
-
-Axiom isLocalVar_uniqAway:
-  forall iss v,
-  isLocalVar (uniqAway iss v) = isLocalVar v.
-
-Axiom isId_uniqAway:
-  forall iss v,
-    isId (uniqAway iss v) = isId v.
-
-Axiom isCoVar_uniqAway:
-  forall iss v,
-    isCoVar (uniqAway iss v) = isCoVar v.
-
-
-Axiom nameUnique_varName_uniqAway:
-  forall vss v,
-  Name.nameUnique (varName v) = varUnique v ->
-  Name.nameUnique (varName (uniqAway vss v)) = varUnique (uniqAway vss v).
-
-
-(* If uniqAway returns a variable with the same unique, 
-   it returns the same variable. *)      
-Axiom uniqAway_eq_same : forall v in_scope_set,
-    (uniqAway in_scope_set v == v) = true ->
-    (uniqAway in_scope_set v = v).
-  
-(* The variable returned by uniqAway is fresh. *)
-Axiom uniqAway_lookupVarSet_fresh : forall v in_scope_set,
-    lookupVarSet (getInScopeVars in_scope_set) (uniqAway in_scope_set v) = None.
 
 Lemma elemVarSet_uniqAway:
   forall v iss vs,

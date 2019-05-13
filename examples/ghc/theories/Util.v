@@ -6,6 +6,8 @@ Require GHC.List.
 Require GHC.Base.
 Import GHC.Base.ManualNotations.
 
+
+
 Lemma map_unzip : forall (a b c : Type)( f : a -> b * c) xs, 
   Util.mapAndUnzip f xs = List.unzip (map f xs).
 Proof.

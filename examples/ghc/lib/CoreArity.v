@@ -68,12 +68,12 @@ Axiom joinRhsArity : Core.CoreExpr -> BasicTypes.JoinArity.
 
 Axiom getBotArity : ArityType -> option BasicTypes.Arity.
 
-Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Var)%type.
+Axiom freshEtaId : nat -> unit -> unit -> (unit * Core.Id)%type.
 
 Axiom floatIn : bool -> ArityType -> ArityType.
 
 Axiom findRhsArity : DynFlags.DynFlags ->
-                     Core.Var -> Core.CoreExpr -> BasicTypes.Arity -> (BasicTypes.Arity * bool)%type.
+                     Core.Id -> Core.CoreExpr -> BasicTypes.Arity -> (BasicTypes.Arity * bool)%type.
 
 Axiom exprEtaExpandArity : DynFlags.DynFlags ->
                            Core.CoreExpr -> BasicTypes.Arity.
@@ -103,7 +103,7 @@ Axiom etaBodyForJoinPoint : nat ->
 
 Axiom arityType : ArityEnv -> Core.CoreExpr -> ArityType.
 
-Axiom arityLam : Core.Var -> ArityType -> ArityType.
+Axiom arityLam : Core.Id -> ArityType -> ArityType.
 
 Axiom arityApp : ArityType -> bool -> ArityType.
 
@@ -117,7 +117,7 @@ Axiom andArityType : ArityType -> ArityType -> ArityType.
 
 (* External variables:
      bool list nat op_zt__ option unit BasicTypes.Arity BasicTypes.JoinArity
-     BasicTypes.OneShotInfo Core.CoreBndr Core.CoreExpr Core.CoreRule Core.InScopeSet
-     Core.StrictSig Core.Var CoreSubst.Subst CoreUtils.CheapAppFun DynFlags.DynFlags
-     GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
+     BasicTypes.OneShotInfo Core.CoreBndr Core.CoreExpr Core.CoreRule Core.Id
+     Core.InScopeSet Core.StrictSig Core.Var CoreSubst.Subst CoreUtils.CheapAppFun
+     DynFlags.DynFlags GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
 *)

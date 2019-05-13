@@ -2,8 +2,8 @@ Parameter lookupDataCon : Core.DataConId -> Core.DataCon.
 Parameter lookupClass   : Core.ClassId -> Core.Class.
 
 (* Make this default so that we can reason about either case. *)
-Import GHC.Err.
-Definition isStateHackType : unit -> bool := GHC.Err.default.
+(* Import GHC.Err. *)
+(* Definition isStateHackType : unit -> bool := GHC.Err.default. *)
 
 (* The real definition looks like this, but we don't have the type information
    around:

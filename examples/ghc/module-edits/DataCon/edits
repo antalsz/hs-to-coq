@@ -48,10 +48,6 @@ skip Core.substEqSpec
 skip Core.freshNames
 skip Core.mkCleanAnonTyConBinders
 
-#
-# Outputable.$$
-rewrite forall x y, x Outputable.$$ y = x
-rewrite forall x, Type.mkInvForAllTys x y = tt
 
 
 order Core.Uniquable__DataCon Core.Eq___DataCon_op_zsze__ Core.Eq___DataCon_op_zeze__

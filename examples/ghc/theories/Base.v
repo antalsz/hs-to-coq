@@ -45,6 +45,23 @@ Proof.
 Qed.
 
 
+Lemma elem_exists_in {a}`{Eq_ a} (x:a) (xs : list a) :  Foldable.elem x xs -> exists y, List.In y xs /\ (x == y).
+Proof. 
+   elim: xs => [|y ys IH].
+   hs_simpl. done.
+   hs_simpl.
+   move => /orP.
+   move => [h1| h2].
+   exists y. unfold List.In. split; auto. 
+   move: (IH h2) => [z [Inz eqz]].
+   exists z. unfold List.In. split; auto. 
+Qed.
+
+Lemma list_in_elem {a} `{Base.EqLaws a} (x:a) xs: List.In x xs -> Foldable.elem x xs.
+Proof. elim: xs => [|y ys IH]. hs_simpl. auto.
+hs_simpl. simpl. intuition. subst. apply /orP. left. eapply Eq_refl.
+Qed.
+
 
 
 Lemma forallb_imp:

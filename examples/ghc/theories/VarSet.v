@@ -19,6 +19,7 @@ Require Import Id.
 Require Import Core.
 Require UniqFM.
 
+Require Import Proofs.Axioms.
 Require Import Proofs.ContainerAxioms.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
@@ -33,6 +34,8 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 Set Bullet Behavior "Strict Subproofs".
+
+
 
 (* Stephanie's hack. *)
 Lemma fold_is_true : forall b, b = true <-> b.
@@ -75,15 +78,6 @@ apply not_true_is_false.
 Qed.
 
 
-(** ** Valid VarSets *)
-
-(* This property is an invariant of the VarSet/UniqFM type. We may want to either 
-   axiomatize it or add it to a sigma type in one of the definitions. *)
-
-Definition ValidVarSet (vs : VarSet) : Prop :=
-  forall v1 v2, lookupVarSet vs v1 = Some v2 -> (v1 == v2).
-
-Axiom ValidVarSet_Axiom : forall vs, ValidVarSet vs.
 
 (** ** NOTE: VarSets and equality *)
 
@@ -775,18 +769,15 @@ Lemma lookupVarSet_extendVarSetList_l
 Proof.
   hs_simpl.
   elim: vars vs => [|a vars IH] vs //.
-  - 
-    rewrite elem_cons. (* why does hs_simpl not do this?? *)
-    hs_simpl.
+  hs_simpl.
 
-    rewrite orbF.  (* F comes last and it is false *)
-    rewrite negb_orb => /andP [? ?].
+  rewrite negb_orb => /andP [? ?].
 
-    rewrite lookupVarSet_extendVarSetList_false //.
-    rewrite lookupVarSet_extendVarSet_neq //.
+  rewrite lookupVarSet_extendVarSetList_false //.
+  rewrite lookupVarSet_extendVarSet_neq //.
 
-    apply /negP.       (* update lookupVarSet_extendVarSet_neq *)
-    rewrite Eq_sym //. 
+  apply /negP.
+  rewrite Eq_sym //. 
 Qed.
 
 
@@ -981,7 +972,6 @@ Proof.
     done.
   - hs_simpl.
     simpl map.
-    rewrite orbF.
     split.
     + move /orP.        
       rewrite -> varUnique_iff.
@@ -1610,20 +1600,27 @@ Axiom null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.Internal.IntMap b),
 Instance disjointVarSet_m : Proper (Equal ==> Equal ==> Logic.eq) disjointVarSet.
 Proof. 
   move => x1 y1.  
+  move: (@ValidVarSet_Axiom x1).
+  move: (@ValidVarSet_Axiom y1).
   move: x1 => [x1]. move: y1=> [y1].
   move: x1 => [x1]. move: y1=> [y1].
-  move=> Eq1 x2 y2. 
+  move=> vx1 vy1 Eq1.
+  move=> x2 y2. 
+  move: (@ValidVarSet_Axiom x2).   move: (@ValidVarSet_Axiom y2).
   move: x2 => [x2]. move: y2=> [y2].
   move: x2 => [x2]. move: y2=> [y2].
-  move=> Eq2.  
-  unfold disjointVarSet.
-  unfold UniqFM.disjointUFM.
-  unfold UniqSet.getUniqSet.
-  unfold UniqSet.getUniqSet'.
+  move=> vx2 vy2 Eq2.  
+
+  unfold ValidVarSet, disjointVarSet,
+         UniqFM.disjointUFM,
+         UniqSet.getUniqSet, 
+         UniqSet.getUniqSet' in *.
+  unfold lookupVarSet, UniqSet.lookupUniqSet,UniqFM.lookupUFM in *.
   unfold Equal, In, elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM in Eq1.
   unfold Equal, In, elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM in Eq2.
   apply null_intersection_eq; eauto.
-  unfold elt in *.
+  move=> k1.  
+  split. move=> Ink1.
 Admitted.
 
 
@@ -1675,6 +1672,18 @@ Proof.
   apply disjointVarSet_empytVarSet.
 Qed.
 
+Lemma disjointVarSet_extendVarSet vs1 var vs2 : 
+  disjointVarSet vs1 (extendVarSet vs2 var) <->
+  elemVarSet var vs1 = false /\ disjointVarSet vs1 vs2.
+Proof.
+  move: vs1 vs2 => [[i1]] [[i2]].
+  unfold disjointVarSet, elemVarSet, extendVarSet.
+  unfold UniqSet.getUniqSet,UniqSet.getUniqSet',
+         UniqSet.elementOfUniqSet, UniqSet.addOneToUniqSet.
+  unfold UniqFM.disjointUFM, UniqFM.elemUFM, UniqFM.addToUFM.
+  set k:=  (Unique.getWordKey (Unique.getUnique var)).
+  apply null_intersection_non_member.
+Qed.
 
 Lemma disjointVarSet_mkVarSet_cons:
   forall v vs1 vs2,
@@ -1684,22 +1693,33 @@ Proof.
   move=> v vs1 vs2.
   rewrite mkVarSet_extendVarSetList.
   hs_simpl.
-  elim: vs2 => [|v2 vars IH].
-  hs_simpl.
-  
-Admitted.
+  rewrite extendVarSetList_extendVarSet_iff.
+  rewrite disjointVarSet_extendVarSet.
+  tauto.
+Qed.
 
+      
 Lemma disjointVarSet_mkVarSet_append:
   forall vs1 vs2 vs3,
   disjointVarSet vs1 (mkVarSet (vs2 ++ vs3))  <->
   disjointVarSet vs1 (mkVarSet vs2)  /\ disjointVarSet vs1 (mkVarSet vs3).
 Proof.  
   move=> vs1 vs2 vs3.
-  unfold mkVarSet.
-  unfold UniqSet.mkUniqSet.
+  rewrite mkVarSet_extendVarSetList.
   hs_simpl.
-  unfold extendVarSetList, emptyVarSet.
-Admitted.  
+  elim: vs3 => [|var vars IH]; hs_simpl.
+  + rewrite mkVarSet_extendVarSetList.
+    intuition.
+  + rewrite disjointVarSet_mkVarSet_cons.
+    rewrite and_comm.
+    rewrite and_assoc.
+    rewrite -> and_comm in IH.
+    rewrite <- IH.
+    rewrite extendVarSetList_extendVarSet_iff.
+    rewrite disjointVarSet_extendVarSet.
+    tauto.
+Qed. 
+
 
 Lemma disjointVarSet_mkVarSet:
   forall vs1 vs2,
@@ -1716,13 +1736,19 @@ Proof.
 Qed.
 
 
-
 Lemma disjointVarSet_subVarSet_l:
   forall vs1 vs2 vs3,
   disjointVarSet vs2 vs3  ->
   subVarSet vs1 vs2  ->
   disjointVarSet vs1 vs3 .
-Admitted.
+Proof.
+  move=> [[i1]][[i2]][[i3]].
+  unfold disjointVarSet, subVarSet, isEmptyVarSet,minusVarSet.
+  unfold UniqSet.getUniqSet,UniqSet.getUniqSet',
+  UniqSet.isEmptyUniqSet, UniqSet.minusUniqSet.
+  unfold UniqFM.disjointUFM, UniqFM.isNullUFM, UniqFM.minusUFM.
+  apply disjoint_difference.
+Qed.
 
 
 (** ** [filterVarSet] *)

@@ -1,15 +1,6 @@
-rename type Var.Id = Core.Var
 
-## specialize generic method to (->) constructor
-## to make type inference easier
-rename value Control.Arrow.first = arrow_first
-rename value Control.Arrow.second = arrow_second
 
-rewrite forall x y, Data.Foldable.minimum (cons x y) = Data.Foldable.foldr GHC.Base.min x y
 
-# rewrite forall x, Id.idStrictness x = Core.botSig
-
-#
 # This is actually the only function that we need from the CoreArity module
 # We parameterize it here because it needs type information to work correctly
 #

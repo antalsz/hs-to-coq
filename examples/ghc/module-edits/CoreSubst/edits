@@ -1,77 +1,40 @@
-skip module PprCore
-skip module Data.ByteString
-skip module ErrUtils
-skip module OccurAnal
-
-
-# we need to import this module to make the 
-# type synonym notation available.
-import module Core
 import module GHC.Base
 
-#
-# cannot translate because we don't have 
-# unfolding information
-#
+
+redefine Definition CoreSubst.substTyVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) := fun s v => pair s v.
+redefine Definition CoreSubst.substCoVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) := fun s v => pair s v.
+redefine Definition CoreSubst.extendCvSubst  : Subst -> (Core.CoVar -> (unit -> Subst)) := fun s v t => s.
+redefine Definition CoreSubst.extendTvSubst  : Subst -> (Core.TyVar -> (unit -> Subst)) := fun s v t => s.
+redefine Definition CoreSubst.extendTvSubstList  : Subst -> (list (Core.TyVar * unit) -> Subst) := fun s vs => s.
+redefine Definition CoreSubst.getTCvSubst : Subst -> unit := fun s => tt.
+redefine Definition CoreSubst.substCo : Subst -> (unit -> unit) := fun s c => tt.
+redefine Definition CoreSubst.substTy : Subst -> (unit -> unit) := fun s t => tt.
+redefine Definition CoreSubst.substSpec : Subst -> (Core.Id -> (Core.RuleInfo -> Core.RuleInfo)) := fun s x r => r.
+redefine Definition CoreSubst.lookupTCvSubst : Subst -> (Core.TyVar -> unit) := fun s v => tt.
+redefine Definition CoreSubst.cloneTyVarBndr : Subst -> (Core.TyVar -> (Unique.Unique -> (Subst * Core.TyVar))) := fun s v u => (pair s v).
+
+
+# cannot translate because we don't have unfolding information
+
 skip CoreSubst.substUnfolding
 skip CoreSubst.substUnfoldingSC
 
-rename type Var.Id    = Core.Var
-rename type Var.TyVar = Core.Var
-rename type VarSet.DVarSet = DVarSet
+# Remove the type env and coercion environment components of the substitution
 
-# Ugh. notation for type abbreviations.
-rewrite forall , Id.maybeModifyIdInfo = maybeModifyIdInfo 
+rewrite forall in_scope id_env tenv cenv, CoreSubst.Mk_Subst in_scope id_env tenv cenv = CoreSubst.Mk_Subst in_scope id_env tt tt
+
 
 ###################################################
 #
-# These edits get rid of all of the substitutions for tyvars and covars
-#
-#
+# These (awful) edits handle the environment management for coercion and type variables.
+# Note that they don't list any variables after the forall. These are triggered exactly 
+# by the variable names that appear in the input file. 
+
 in CoreSubst.delBndr rewrite forall , Core.delVarEnv cvs v = cvs
 in CoreSubst.delBndr rewrite forall , Core.delVarEnv tvs v = tvs
 
-in CoreSubst.substBndr rewrite forall , CoreSubst.substTyVarBndr subst bndr = ( pair subst bndr )
-in CoreSubst.substBndr rewrite forall , CoreSubst.substCoVarBndr subst bndr = ( pair subst bndr )
-
 in CoreSubst.clone_id rewrite forall , Core.extendVarEnv cvs old_id tt = cvs
 
-in CoreSubst.cloneBndr rewrite forall , CoreSubst.cloneTyVarBndr subst v uniq = ( pair subst v )
-
-
-# rewrite forall v, Core.isCoVar v = false
-# rewrite forall v, Core.isTyVar v = false
-# rewrite forall v, Core.isId fv   = true
-
-rewrite forall x t, Id.setIdType x t = x
-
-rewrite forall s x m , TyCoRep.tyCoFVsOfType s x m  = id
-
-#
-# These are easier to redefine than to rewrite
-#
-redefine Definition CoreSubst.emptySubst : Subst :=
-  Mk_Subst Core.emptyInScopeSet Core.emptyVarEnv tt tt.
-
-redefine Definition CoreSubst.mkEmptySubst : Core.InScopeSet -> Subst :=
-  fun in_scope =>
-    Mk_Subst in_scope Core.emptyVarEnv tt tt.
-
-redefine Definition CoreSubst.substTyVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) :=
-  fun s v => pair s v.
-
-redefine Definition CoreSubst.zapSubstEnv : Subst -> Subst :=
-  fun x => match x with | (Mk_Subst in_scope _ _ _) =>
-    Mk_Subst in_scope Core.emptyVarEnv tt tt end.
-
-
-# In midamble, hard to redefine and hard to rewrite
-#
-skip CoreSubst.mkOpenSubst
-
-#
-# Yuck! 
-#
 in CoreSubst.delBndrs rewrite forall, (Core.delVarEnvList tvs vs) = tt
 in CoreSubst.delBndrs rewrite forall, (Core.delVarEnvList cvs vs) = tt
 
@@ -86,45 +49,14 @@ in CoreSubst.isEmptySubst rewrite forall, (Core.isEmptyVarEnv cv_env) = true
 
 in CoreSubst.substIdBndr rewrite forall, Core.isEmptyVarEnv tvs = true 
 in CoreSubst.substIdBndr rewrite forall, Core.isEmptyVarEnv cvs = true
-in CoreSubst.substIdBndr rewrite forall x, TyCoRep.noFreeVarsOfType x = true
-
-in CoreSubst.substIdInfo rewrite forall x, Core.isEmptyRuleInfo x = true
-in CoreSubst.substIdInfo rewrite forall x, Core.isFragileUnfolding x = false
 
 in CoreSubst.substIdType rewrite forall, Core.isEmptyVarEnv tv_env = true
 in CoreSubst.substIdType rewrite forall, Core.isEmptyVarEnv cv_env = true
-in CoreSubst.substIdType rewrite forall old_ty, TyCoRep.noFreeVarsOfType old_ty = true
-
-skip CoreSubst.extendCvSubst
-rewrite forall s v t, CoreSubst.extendCvSubst s v t = s
-
-skip CoreSubst.extendTvSubst
-rewrite forall s v t, CoreSubst.extendTvSubst s v t = s
-
-skip CoreSubst.extendTvSubstList
-rewrite forall s vs, CoreSubst.extendTvSubstList s vs = s
-
-skip CoreSubst.getTCvSubst
-rewrite forall s, CoreSubst.getTCvSubst s = tt
-
-skip CoreSubst.substCo
-rewrite forall s c, CoreSubst.substCo s c = tt
-
-skip CoreSubst.substTy
-rewrite forall s c, CoreSubst.substTy s c = tt
-
-skip CoreSubst.lookupTCvSubst
-rewrite forall s v, CoreSubst.lookupTCvSubst s c = tt
-
-skip CoreSubst.substSpec
-rewrite forall s x id, CoreSubst.substSpec s x id = id
-
-skip CoreSubst.substCoVarBndr
-rewrite forall s x b, CoreSubst.substCoVarBndr s x b = b
-
-skip CoreSubst.cloneTyVarBndr
 
 
+#############################################################################
+#  Edits that just make the translation go through
+#############################################################################
 
 #
 ## Fixes for mutual recursion (subst_expr/substBind/substIdBndr)

@@ -43,7 +43,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition CheapAppFun :=
-  (Core.Var -> BasicTypes.Arity -> bool)%type.
+  (Core.Id -> BasicTypes.Arity -> bool)%type.
 
 (* Midamble *)
 
@@ -51,8 +51,7 @@ Definition CheapAppFun :=
 Require Import Pair.
 
 (* Notation for Alt *)
-
-Definition Alt b := prod (prod Core.AltCon (list b)) (Core.Expr b).
+(* Definition Alt b := prod (prod Core.AltCon (list b)) (Core.Expr b). *)
 
 (* Redefinition with correct recursion structure *)
 Require OrdList.
@@ -127,8 +126,8 @@ Definition tickHNFArgs
   fun t orig => orig.
 
 Definition stripTicksTopT {b}
-   : (Core.Tickish Core.Var -> bool) ->
-     Core.Expr b -> list (Core.Tickish Core.Var) :=
+   : (Core.Tickish Core.Id -> bool) ->
+     Core.Expr b -> list (Core.Tickish Core.Id) :=
   fun p =>
     let fix go arg_0__ arg_1__
               := let j_2__ := match arg_0__, arg_1__ with | ts, _ => ts end in
@@ -139,7 +138,7 @@ Definition stripTicksTopT {b}
     go nil.
 
 Definition stripTicksTopE {b}
-   : (Core.Tickish Core.Var -> bool) -> Core.Expr b -> Core.Expr b :=
+   : (Core.Tickish Core.Id -> bool) -> Core.Expr b -> Core.Expr b :=
   fun p =>
     let fix go arg_0__
               := let j_1__ := let 'other := arg_0__ in other in
@@ -150,8 +149,8 @@ Definition stripTicksTopE {b}
     go.
 
 Definition stripTicksTop {b}
-   : (Core.Tickish Core.Var -> bool) ->
-     Core.Expr b -> (list (Core.Tickish Core.Var) * Core.Expr b)%type :=
+   : (Core.Tickish Core.Id -> bool) ->
+     Core.Expr b -> (list (Core.Tickish Core.Id) * Core.Expr b)%type :=
   fun p =>
     let fix go arg_0__ arg_1__
               := let j_3__ :=
@@ -168,7 +167,7 @@ Definition mkTick : Core.Tickish Core.Var -> Core.CoreExpr -> Core.CoreExpr :=
   fun t orig => orig.
 
 Definition mkTicks
-   : list (Core.Tickish Core.Var) -> Core.CoreExpr -> Core.CoreExpr :=
+   : list (Core.Tickish Core.Id) -> Core.CoreExpr -> Core.CoreExpr :=
   fun ticks expr => Data.Foldable.foldr mkTick expr ticks.
 
 Definition mkCast : Core.CoreExpr -> unit -> Core.CoreExpr :=
@@ -209,7 +208,7 @@ Definition locBind
       if b1 GHC.Base.== b2 : bool then Panic.someSDoc else
       GHC.Base.mappend (GHC.Base.mappend Panic.someSDoc Panic.someSDoc)
                        Panic.someSDoc in
-    let addLoc := fun d => Panic.someSDoc in GHC.Base.map addLoc diffs.
+    let addLoc := fun d => d in GHC.Base.map addLoc diffs.
 
 Definition isWorkFreeApp : CheapAppFun :=
   fun fn n_val_args =>
@@ -246,6 +245,9 @@ Definition isExprLevPoly : Core.CoreExpr -> bool :=
 Definition isExpandableApp : CheapAppFun :=
   GHC.Err.default.
 
+Definition isEmptyTy : unit -> bool :=
+  fun x => false.
+
 Definition isDivOp : unit -> bool :=
   GHC.Err.default.
 
@@ -259,7 +261,7 @@ Definition isDefaultAlt {a} {b} : (Core.AltCon * a * b)%type -> bool :=
 Definition isCheapApp : CheapAppFun :=
   GHC.Err.default.
 
-Definition getIdFromTrivialExpr_maybe : Core.CoreExpr -> option Core.Var :=
+Definition getIdFromTrivialExpr_maybe : Core.CoreExpr -> option Core.Id :=
   fun e =>
     let fix go arg_0__
               := match arg_0__ with
@@ -272,7 +274,7 @@ Definition getIdFromTrivialExpr_maybe : Core.CoreExpr -> option Core.Var :=
                  end in
     go e.
 
-Definition getIdFromTrivialExpr : Core.CoreExpr -> Core.Var :=
+Definition getIdFromTrivialExpr : Core.CoreExpr -> Core.Id :=
   fun e =>
     Data.Maybe.fromMaybe (Panic.panicStr (GHC.Base.hs_string__
                                           "getIdFromTrivialExpr") (Panic.someSDoc)) (getIdFromTrivialExpr_maybe e).
@@ -374,7 +376,7 @@ Definition exprIsHNF : Core.CoreExpr -> bool :=
   exprIsHNFlike Id.isDataConWorkId Core.isEvaldUnfolding.
 
 Definition mkTickNoHNF
-   : Core.Tickish Core.Var -> Core.CoreExpr -> Core.CoreExpr :=
+   : Core.Tickish Core.Id -> Core.CoreExpr -> Core.CoreExpr :=
   fun t e => if exprIsHNF e : bool then tickHNFArgs t e else mkTick t e.
 
 Definition exprIsConLike : Core.CoreExpr -> bool :=
@@ -437,6 +439,7 @@ Definition exprIsBottom : Core.CoreExpr -> bool :=
                  | n, Core.Lam v e => if Core.isTyVar v : bool then go n e else j_3__
                  | _, _ => j_3__
                  end in
+    if isEmptyTy (tt) : bool then true else
     go #0 e.
 
 Definition exprIsBig {b} : Core.Expr b -> bool :=
@@ -454,7 +457,7 @@ Definition exprIsBig {b} : Core.Expr b -> bool :=
            end.
 
 Definition eqTickish
-   : Core.RnEnv2 -> Core.Tickish Core.Var -> Core.Tickish Core.Var -> bool :=
+   : Core.RnEnv2 -> Core.Tickish Core.Id -> Core.Tickish Core.Id -> bool :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | env, Core.Breakpoint lid lids, Core.Breakpoint rid rids =>
@@ -556,7 +559,7 @@ Definition cheapEqExpr' {b}
 Definition cheapEqExpr {b} : Core.Expr b -> Core.Expr b -> bool :=
   cheapEqExpr' (GHC.Base.const false).
 
-Definition altsAreExhaustive {b} : list (Alt b) -> bool :=
+Definition altsAreExhaustive {b} : list (Core.Alt b) -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | nil => false
@@ -605,11 +608,11 @@ Definition filterAlts {a}
     pair imposs_deflt_cons (addDefault trimmed_alts maybe_deflt).
 
 (* External variables:
-     Alt Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option
-     orb pair snd true unit BasicTypes.Arity Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Core.AltCon Core.App Core.Breakpoint Core.Case Core.Cast
-     Core.Coercion Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr
-     Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataConWorkId Core.Expr
+     Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
+     pair snd true tt unit BasicTypes.Arity Coq.Init.Datatypes.app
+     Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App Core.Breakpoint Core.Case
+     Core.Cast Core.Coercion Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr
+     Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataConWorkId Core.Expr Core.Id
      Core.InScopeSet Core.Lam Core.Let Core.Lit Core.LitAlt Core.Mk_Var Core.NonRec
      Core.PlaceCostCentre Core.Rec Core.RnEnv2 Core.Tick Core.Tickish Core.TyCon
      Core.Type_ Core.Unfolding Core.Var Core.cmpAlt Core.cmpAltCon

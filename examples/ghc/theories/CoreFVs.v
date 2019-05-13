@@ -19,6 +19,7 @@ Require Import Proofs.Data.Tuple.
 Require Import Coq.Lists.List.
 Import ListNotations.
 
+Require Import Proofs.Axioms.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Base.
 Require Import Proofs.CoreInduct.
@@ -244,13 +245,6 @@ Proof.
 Qed.
 
 Hint Rewrite exprFreeVars_Lit : hs_simpl.
-
-Lemma RespectsVar_isLocalVar : RespectsVar isLocalVar.
-Proof.
-  unfold RespectsVar, isLocalVar.
-  move=> x y Eq.
-Admitted.
-Hint Resolve RespectsVar_isLocalVar.
 
 Lemma exprFreeVars_App:
   forall e1 e2,
@@ -797,13 +791,6 @@ Proof.
   destruct (freeVars e); reflexivity.
 Qed.
 
-(* Used in Exitify *)
-Lemma freeVarsOf_freeVars:
-  forall e,
-  dVarSetToVarSet (freeVarsOf (freeVars e)) = exprFreeVars e.
-Proof.
-  move=> e.
-Admitted.
 
 Lemma collectNAnnBndrs_freeVars_mkLams:
   forall vs rhs,

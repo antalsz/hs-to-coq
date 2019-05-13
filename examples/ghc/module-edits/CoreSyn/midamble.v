@@ -1,7 +1,9 @@
 (* ------------- CoreSyn midamble.v ------------ *)
 
+(*
 Parameter tickishCounts : forall {id}, Tickish id -> bool.
 Parameter tickishIsCode : forall {id}, Tickish id -> bool.
+*)
 
 Require Import Omega.
 
@@ -72,38 +74,6 @@ Fixpoint core_size {v} (e : Expr v) : nat :=
     | Type_ _  =>   0
     | Coercion _ => 0
     end.
-
-(*
-Fixpoint size_Expr {b} (e: Expr b) :=
-  let size_Alt  : Alt b -> nat :=
-      fun x => 
-        match x with 
-        | ((con, args), rhs) => size_Expr rhs
-        end in
-  let size_Bind  : Bind b -> nat :=
-      fun x => 
-        match x with 
-        | NonRec _ e => size_Expr e
-        | Rec grp => List.fold_left 
-                         (fun n y => 
-                            n + size_Expr (snd y)) grp 1
-        end in
-
-  match e with 
-  | Mk_Var _ => 1
-  | Lit _ => 1
-  | Lam _ bdy => 1 + size_Expr bdy
-  | App e1 e2 => 1 + size_Expr e1 + size_Expr e2
-  | Case e _ _ brs => 1 + size_Expr e + 
-                            List.fold_left (fun x y => x + size_Alt y) brs 1 
-  | Let _ e => 1 + size_Expr e
-  | Cast e _ => 1 + size_Expr e
-  | Tick _ e => 1 + size_Expr e
-  | Type_ _ => 1
-  | Coercion _ => 1
-  end.
-*)
-
 
 
 
@@ -203,16 +173,4 @@ Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
                                end in
             collect orig_n nil e.
 
-
-
-(*
-Definition exprToType : CoreExpr -> Core.Type_ :=
-  fun arg_0__ =>
-    match arg_0__ with
-      | Type_ ty => ty
-      | _bad => GHC.Err.error (GHC.Base.hs_string__ "exprToType")
-    end.
-
-Definition applyTypeToArg : Core.Type_ -> (CoreExpr -> Core.Type_) :=
-  fun fun_ty arg => TyCoRep.piResultTy fun_ty (exprToType arg). *)
 

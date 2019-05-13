@@ -1,3 +1,8 @@
+(* Disable notation conflict warnings *)
+Set Warnings "-notation-overridden".
+
+From Coq Require Import ssreflect ssrfun ssrbool.
+
 Require Import GHC.Base.
 Import GHC.Base.ManualNotations.
 Require Import Core.
@@ -23,6 +28,7 @@ Require Import IntSetProofs.
 
 (* ghc theory (incl. some that should move above. *)
 Require Import Proofs.Base.
+Require Import Proofs.Axioms.
 Require Import Proofs.ContainerAxioms.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
@@ -58,7 +64,6 @@ Set Bullet Behavior "Strict Subproofs".
     Also the fsetdec reasoning uses "Prop" based statement of facts instead of
     operational "bool" based reasoning. This interface captures the
     relationship between those two statements, but it still can be tricky.
-
     Regardless, we are using the "weak" signature for this module as it
     doesn't require an ordering on elements.  *)
 
@@ -88,37 +93,9 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Definition eq : t -> t -> Prop := Equal.
 
-  (* Everything else comes from our particular implementation *)
-
-  (* Equality must be decidable, but doesn't necessarily need to be Coq
-     equality. For VarSets, in fact, that is not the case. *)
-
-  Definition equal  : t -> t -> bool := 
-    fun x y : t => 
-      match x with
-      | UniqSet.Mk_UniqSet u =>
-        match y with
-        | UniqSet.Mk_UniqSet u0 =>
-          match u with
-          | UniqFM.UFM i =>
-            match u0 with
-            | UniqFM.UFM i0 => _GHC.Base.==_ i i0
-            end
-          end
-        end
-      end.
-
-  Definition eq_dec : forall s s' : t,  {eq s s'} + {~ eq s s'}.
-  Admitted.
-
   Definition empty : t := emptyVarSet.
 
   Definition is_empty : t -> bool := isEmptyVarSet.
-
-  Definition lt (s s' : Var) := GHC.Base.compare s s' = Lt.
-
-  Definition min_elt : t -> option elt := GHC.Err.default.
-  Definition max_elt : t -> option elt := GHC.Err.default.
 
   Definition mem : elt -> t -> bool := elemVarSet.
 
@@ -130,25 +107,13 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Definition union := unionVarSet.
 
-  Definition inter := intersectVarSet.
-
-  Definition diff : t -> t -> t := 
-    fun x y : t =>
-      match x with
-      | UniqSet.Mk_UniqSet u =>
-        match y with
-        | UniqSet.Mk_UniqSet u0 =>
-          match u with
-          | UniqFM.UFM i =>
-            match u0 with
-            | UniqFM.UFM i0 =>
-              UniqSet.Mk_UniqSet (UniqFM.UFM (IntMap.Internal.difference i i0))
-            end
-          end
-        end
-      end.
+  Definition diff := minusVarSet.
 
   Definition subset := subVarSet.
+
+  Definition exists_ := anyVarSet.
+
+   (* available but unused. *)
 
   Definition fold (A : Type) (f : elt -> A -> A) (ws : VarSet) (x : A) : A.
     destruct ws.
@@ -157,17 +122,12 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Definition for_all := allVarSet.
 
-  Definition exists_ := anyVarSet.
-
   Definition filter  := filterVarSet.
-
-  Definition partition : (elt -> bool) -> t -> t * t := GHC.Err.default.
 
   Definition cardinal := sizeVarSet.
 
-  Definition elements : t -> list elt := GHC.Err.default.
+  Definition inter := intersectVarSet.
 
-  Definition choose : t -> option elt := GHC.Err.default.
 
   (* PROOFS *)
 
@@ -180,7 +140,16 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
   Lemma In_1 :
     forall (s : t) (x y : elt), E.eq x y -> In x s -> In y s.
   Proof. 
-  Admitted.
+    unfold E.eq, E.eqb, In.
+    move => [u].
+    move: u => [i].
+    move=> x y Eq.
+    unfold elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM.
+    erewrite member_eq with (k' := (Unique.getWordKey (Unique.getUnique y))). auto.
+    rewrite -> eq_unique in Eq. 
+    rewrite Eq.
+    reflexivity.
+  Qed.
 
   Lemma eq_refl : forall s : t, eq s s.
   Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.
@@ -193,28 +162,26 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     forall s s' s'' : t, eq s s' -> eq s' s'' -> eq s s''.
   Proof.
     destruct s; destruct s'; destruct s''; simpl.
-    unfold eq, Equal. intros ???. rewrite H, H0. reflexivity.
+    unfold eq, Equal. intros ???. rewrite H. rewrite H0. reflexivity.
   Qed.
-
-  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true.
-  Proof.
-    intros.
-  Admitted.
-
-
-  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
-  Proof.
-  Admitted.
 
   Lemma subset_1 : forall s s' : t, Subset s s' -> subset s s' = true.
   Proof.
-    intros.
+    move => [[i]] [[i']].
     unfold subset,Subset in *.
+    unfold In in *.
+    unfold subVarSet, minusVarSet, isEmptyVarSet.
+    simpl.
   Admitted.
 
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.
   Proof.
-    intros.
+    move => [i]. move => [i'].
+    move: i => [j]. move: i' => [j'].
+    unfold subset,Subset in *.
+    unfold In in *.
+    unfold subVarSet, minusVarSet, isEmptyVarSet.
+    simpl.
   Admitted.
 
   Lemma empty_1 : Empty empty.
@@ -222,7 +189,8 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
 
   Lemma is_empty_1 : forall s : t, Empty s -> is_empty s = true.
   Proof.
-    intros. unfold Empty, In, is_empty in *.
+    move=>[[i]]. unfold Empty, In. simpl.
+    move=> h.
   Admitted.
 
   Lemma is_empty_2 : forall s : t, is_empty s = true -> Empty s.
@@ -351,19 +319,6 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     * simpl. rewrite IHxs. reflexivity.
   Qed.
 
-  Lemma fold_1 :
-    forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
-    fold A f s i =
-    fold_left (fun (a : A) (e : elt) => f e a) (elements s) i.
-  Proof.
-    intros.
-    simpl.
-  Admitted.
-
-  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
-  Proof.
-    intros.
-  Admitted.
 
   Lemma filter_1 :
     forall (s : t) (x : elt) (f : elt -> bool),
@@ -386,37 +341,6 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     intros s x P Heq Hin HP.
   Admitted.
 
-  Lemma partition_1 :
-    forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s).
-  Proof.
-    intros.
-    destruct s.
-    unfold Equal, partition; simpl.
-  Admitted.
-
-  Lemma partition_2 :
-    forall (s : t) (f : elt -> bool),
-    compat_bool E.eq f ->
-    Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s).
-  Proof.
-    intros.
-    destruct s.
-    unfold Equal, partition; simpl.
-  Admitted.
-
-  Lemma elements_1 :
-    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s).
-  Proof.
-    intros.
-  Admitted.
-
-  Lemma elements_2 :
-    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s.
-  Proof.
-    intros.
-  Admitted.
-  
 
   Lemma for_all_1 :
     forall (s : t) (f : elt -> bool),
@@ -452,6 +376,113 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
   Proof.
     intros.
     unfold Exists, exists_ in *.
+  Admitted.
+
+
+  (* Not needed after this line ---------------------- *)
+
+  (* Everything else comes from our particular implementation *)
+
+  Definition lt (s s' : Var) := GHC.Base.compare s s' = Lt.
+
+  (* Equality must be decidable, but doesn't necessarily need to be Coq
+     equality. For VarSets, in fact, that is not the case. 
+     
+     However, GHC does not include an equality instance for VarSets, 
+     so we don't actually need to define this. 
+   *)
+
+  Definition equal  : t -> t -> bool := 
+    fun x y : t => 
+      match x with
+      | UniqSet.Mk_UniqSet u =>
+        match y with
+        | UniqSet.Mk_UniqSet u0 =>
+          match u with
+          | UniqFM.UFM i =>
+            match u0 with
+            | UniqFM.UFM i0 => _GHC.Base.==_ i i0
+            end
+          end
+        end
+      end.
+
+  (* These operations are part of the FSet interface but are not 
+     supported by GHC VarSets. *)
+
+  Definition min_elt : t -> option elt := GHC.Err.default.
+  Definition max_elt : t -> option elt := GHC.Err.default.
+
+
+  Definition partition : (elt -> bool) -> t -> t * t := GHC.Err.default.
+
+  Definition elements : t -> list elt := GHC.Err.default.
+
+  Definition choose : t -> option elt := GHC.Err.default.
+
+
+
+  Definition eq_dec : forall s s' : t,  {eq s s'} + {~ eq s s'}.
+  Admitted.
+
+
+
+  Lemma equal_1 : forall s s' : t, Equal s s' -> equal s s' = true.
+  Proof.
+    intros.
+    unfold Equal, equal in *.
+    unfold In in *.
+  Admitted.
+
+
+  Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
+  Proof.
+  Admitted.
+
+  Lemma fold_1 :
+    forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
+    fold A f s i =
+    fold_left (fun (a : A) (e : elt) => f e a) (elements s) i.
+  Proof.
+    intros.
+    simpl.
+  Admitted.
+
+
+  Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
+  Proof.
+    intros.
+  Admitted.
+
+  Lemma partition_1 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool E.eq f -> Equal (fst (partition f s)) (filter f s).
+  Proof.
+    intros.
+    destruct s.
+    unfold Equal, partition; simpl.
+  Admitted.
+
+  Lemma partition_2 :
+    forall (s : t) (f : elt -> bool),
+    compat_bool E.eq f ->
+    Equal (snd (partition f s)) (filter (fun x : elt => negb (f x)) s).
+  Proof.
+    intros.
+    destruct s.
+    unfold Equal, partition; simpl.
+  Admitted.
+
+  Lemma elements_1 :
+    forall (s : t) (x : elt), In x s -> InA E.eq x (elements s).
+  Proof.
+    intros.
+  Admitted.
+
+  Lemma elements_2 :
+    forall (s : t) (x : elt), InA E.eq x (elements s) -> In x s.
+  Proof.
+    intros.
   Admitted.
 
   Lemma choose_1 :
@@ -755,7 +786,10 @@ End Notin.
 
 (* --------------------------------------------------------- *)
 
-Require Import ssrbool.
+(* Do we actually need this ??? It is never used in the code.  Why not the 
+   more extensional definition of equality between VarSets? *)
+
+(*
 Instance Eq_VarSet : Eq_ VarSet :=
   fun _ k => k {|
               op_zeze____ := VarSetFSet.eq_dec;
@@ -780,4 +814,110 @@ Proof.
     contradiction.
   - intros. cbn. destruct (VarSetFSet.eq_dec x y); reflexivity.
 Qed.
+*)
+
+
+(* -------------------------------------------------------- *)
+
+(* Bridge definitions *)
+
+Lemma InE : forall (s : t) (x : elt), elemVarSet x s <-> In x s.
+Proof. intros. unfold is_true. rewrite <- mem_iff. reflexivity. Qed.
+
+
+Lemma SubsetE : forall (s s' : t), subVarSet s s' <->  s [<=] s'.
+Proof. intros. unfold is_true. rewrite <- subset_iff. reflexivity. Qed.
+
+Lemma EmptyE: forall s, isEmptyVarSet s <-> Empty s.
+Proof. intros. unfold is_true. split.
+       apply is_empty_2. apply is_empty_1. Qed.
+
+(* Note: ForallE and ExistsE require a condition on the predicate *)
+
+(* These lemmas relate the GHC VarSet operations to more general 
+   operations on finite sets. *)
+
+Lemma emptyVarSet_empty : emptyVarSet = empty.
+  reflexivity. Qed.
+
+(* need to swap argument order (should we use flip instead ??) *) 
+Lemma delVarSet_remove : forall x s, delVarSet s x = remove x s.
+  reflexivity. Qed.
+
+Lemma extendVarSet_add : forall x s, extendVarSet s x = add x s.
+  reflexivity. Qed.
+
+Lemma unitVarSet_singleton : unitVarSet = singleton.
+  reflexivity. Qed.
+
+Lemma unionVarSet_union : unionVarSet = union.
+  reflexivity. Qed.
+
+Lemma minusVarSet_diff : minusVarSet = diff.
+  reflexivity. Qed.
+
+Lemma filterVarSet_filter : filterVarSet = filter.
+  reflexivity. Qed.
+
+(* This tactic rewrites the boolean functions into the 
+   set properties to make them suitable for fsetdec. *)
+
+Ltac set_b_iff :=
+  repeat
+   progress
+
+    rewrite <- not_mem_iff in *
+  || rewrite <- mem_iff in *
+  || rewrite <- subset_iff in *
+  || rewrite <- is_empty_iff in *
+
+  || rewrite -> InE in *
+  || rewrite -> SubsetE in *
+  || rewrite -> EmptyE in *
+
+  || rewrite -> emptyVarSet_empty in *
+  || rewrite -> delVarSet_remove in *
+  || rewrite -> extendVarSet_add in *
+  || rewrite -> unionVarSet_union in *
+  || rewrite -> minusVarSet_diff in *
+  || rewrite -> filterVarSet_filter in *
+  || rewrite -> unitVarSet_singleton in *.
+
+(** ** VarSet operations from FSetInterface are Proper *)
+
+(* Restating these instances helps type class resolution during rewriting.  *)
+
+
+Instance delVarSet_m :
+  Proper (Equal ==> (fun x y => x == y) ==> Equal) delVarSet.
+Proof. 
+  move => x1 y1 Eq1 x2 y2 Eq2.
+  set_b_iff.
+  eapply remove_m; eauto.
+Qed.
+
+Instance extendVarSet_m : 
+  Proper (Equal ==> (fun x y => x == y) ==> Equal) extendVarSet.
+Proof.
+  move => x1 y1 Eq1 x2 y2 Eq2.
+  set_b_iff.
+  eapply add_m; eauto.
+Qed.
+
+Instance unionVarSet_m : 
+  Proper (Equal ==> Equal ==> Equal) unionVarSet.
+Proof.
+  move => x1 y1 Eq1 x2 y2 Eq2.
+  set_b_iff.
+  eapply union_m; eauto.
+Qed.
+
+Instance minusVarSet_m : 
+  Proper (Equal ==> Equal ==> Equal) minusVarSet.
+Proof.
+  move => x1 y1 Eq1 x2 y2 Eq2.
+  set_b_iff.
+  eapply diff_m; eauto.
+Qed.
+
 

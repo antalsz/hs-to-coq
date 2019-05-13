@@ -225,7 +225,8 @@ Local Definition Semigroup__UniqSet_op_zlzlzgzg__ {inst_a}
   GHC.Prim.coerce _GHC.Base.<<>>_.
 
 Program Instance Semigroup__UniqSet {a} : GHC.Base.Semigroup (UniqSet a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqSet_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqSet_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__UniqSet_mappend {inst_a}
    : UniqSet inst_a -> UniqSet inst_a -> UniqSet inst_a :=
@@ -239,10 +240,10 @@ Local Definition Monoid__UniqSet_mempty {inst_a} : UniqSet inst_a :=
   Mk_UniqSet GHC.Base.mempty.
 
 Program Instance Monoid__UniqSet {a} : GHC.Base.Monoid (UniqSet a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__UniqSet_mappend ;
-         GHC.Base.mconcat__ := Monoid__UniqSet_mconcat ;
-         GHC.Base.mempty__ := Monoid__UniqSet_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__UniqSet_mappend ;
+           GHC.Base.mconcat__ := Monoid__UniqSet_mconcat ;
+           GHC.Base.mempty__ := Monoid__UniqSet_mempty |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `UniqSet.Outputable__UniqSet' *)

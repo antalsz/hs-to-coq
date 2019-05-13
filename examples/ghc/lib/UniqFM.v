@@ -407,9 +407,9 @@ Local Definition Eq___UniqFM_op_zsze__ {inst_ele} `{GHC.Base.Eq_ inst_ele}
 
 Program Instance Eq___UniqFM {ele} `{GHC.Base.Eq_ ele}
    : GHC.Base.Eq_ (UniqFM ele) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___UniqFM_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___UniqFM_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___UniqFM_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___UniqFM_op_zsze__ |}.
 
 Local Definition Functor__UniqFM_fmap
    : forall {a} {b}, (a -> b) -> UniqFM a -> UniqFM b :=
@@ -420,9 +420,9 @@ Local Definition Functor__UniqFM_op_zlzd__
   fun {a} {b} => GHC.Prim.coerce _GHC.Base.<$_.
 
 Program Instance Functor__UniqFM : GHC.Base.Functor UniqFM :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqFM_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqFM_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__UniqFM_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__UniqFM_op_zlzd__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `UniqFM.Outputable__UniqFM' *)
@@ -432,7 +432,8 @@ Local Definition Semigroup__UniqFM_op_zlzlzgzg__ {inst_a}
   plusUFM.
 
 Program Instance Semigroup__UniqFM {a} : GHC.Base.Semigroup (UniqFM a) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqFM_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__UniqFM_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__UniqFM_mappend {inst_a}
    : (UniqFM inst_a) -> (UniqFM inst_a) -> (UniqFM inst_a) :=
@@ -446,10 +447,10 @@ Local Definition Monoid__UniqFM_mconcat {inst_a}
   GHC.Base.foldr Monoid__UniqFM_mappend Monoid__UniqFM_mempty.
 
 Program Instance Monoid__UniqFM {a} : GHC.Base.Monoid (UniqFM a) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__UniqFM_mappend ;
-         GHC.Base.mconcat__ := Monoid__UniqFM_mconcat ;
-         GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__UniqFM_mappend ;
+           GHC.Base.mconcat__ := Monoid__UniqFM_mconcat ;
+           GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
 
 (* External variables:
      Some andb bool false list nat op_zt__ option orb pair true unit BinNat.N.to_nat

@@ -236,7 +236,7 @@ Format:
 
 Effect:
   Add a Coq definition to *module*. The definition can be a ``Definition``, a ``Fixpoint``, an
-  ``Inductive``, an ``Instance``, or an ``Axiom``.
+  ``Inductive``, an ``Instance``, an ``Axiom``, or a ``Theorem`` (with a ``Proof``).
 
   The name in the definition should be fully qualified. (If it is not, some
   dependency calculations inside ``hs-to-coq`` might go wrong – but this is not
@@ -248,6 +248,11 @@ Effect:
   names or surrounded by parentheses; for example, ``F -> G`` will parse
   correctly, as will ``(F X) -> (G Y)``, but ``F X -> G Y`` will come out as
   ``F X _->_ G Y``.
+
+  When providing a ``Theorem`` – or a ``Lemma``, a ``Remark``, a ``Fact``, a
+  ``Corollary``, a ``Proposition``, or an ``Example`` – it must be immediately
+  followed by ``Proof.``, some unparsed text (newlines are permitted), and then
+  the word ``Qed``, ``Defined``, or ``Admitted``.
 
   This is a multi-line edit and needs to be terminated by a period (as is
   natural when writing a *coq_definition*).
@@ -275,14 +280,16 @@ Effect:
   Inject a ``Import`` statement into the Coq code, which makes the definitions
   from the given module available unqualified.
 
-  ..todo::
+  When used to import the hs-to-coq base library, this makes the output look 
+  more like standard Haskell.  
 
-    When is this useful?
+  Note, however, that Coq's module system lacks the ``import ... hiding`` 
+  construct so all definitions from the module must be made available.
 
 Examples:
    .. code-block:: shell
 
-     import module Data.Monoid
+     import module Prelude
 
 
 Renaming and Rewriting
@@ -732,9 +739,13 @@ Effect:
   useful on its own: For example, ``Program`` mode automatically applies or
   unwraps sigma types, which may leave proof obligations.
 
-  The ``{ measure … }`` termination argument of the ``termination`` edit alwasy
-  causes the ``Program`` being used. If no ``obligations`` edit is specified, then
+  The ``{ measure … }`` termination argument of the ``termination`` edit always
+  causes ``Program`` to be used. If no ``obligations`` edit is specified, then
   all obligations are solved with ``Admit Obligations.``.
+
+  The ``tactic`` is drawn from a very simple subset of Ltac, featuring
+  identifiers, identifiers with ``@``, application, numbers, underscore, ``;``,
+  and ``||``.  Anything richer should go in the preamble or midamble.
 
 Mutual recursion edits
 ----------------------

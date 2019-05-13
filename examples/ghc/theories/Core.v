@@ -119,6 +119,7 @@ Lemma collectNAnnBndrs_mkLams_collectNBinders:
   fst (collectNAnnBndrs (length params) a) = params /\
   deAnnotate (snd (collectNAnnBndrs (length params) a)) = rhs.
 Proof.
+  unfold Id in *.
   intros.
   unfold collectNAnnBndrs.
   match goal with |- fst (?f' _ _ _) = _ /\ _ => set (f := f') end.
@@ -128,19 +129,20 @@ Proof.
   * revert r a H. induction params; intros.
     + simpl. rewrite hs_coq_reverse. rewrite app_nil_r. reflexivity.
     + replace (mkLams _ _ ) with (Lam a (mkLams params rhs)) in H by reflexivity.
-      destruct a0, a0; simpl in H; try destruct p; try congruence.
+      destruct a0, a0; simpl in H; try destruct p0; try congruence.
+      unfold Id in *.
       dependent destruction H.
       simpl.
-      rewrite (IHparams (v :: r) _ x).
+      rewrite (IHparams (i :: r) _ x).
       simpl.
       rewrite <- app_assoc.
       reflexivity.
   * revert r a H. induction params; intros.
     + simpl. rewrite <- H. reflexivity.
     + replace (mkLams _ _ ) with (Lam a (mkLams params rhs)) in H by reflexivity.
-      destruct a0, a0; simpl in H; try destruct p; try congruence.
+      destruct a0, a0; simpl in H; try destruct p0; try congruence.
       dependent destruction H.
-      apply (IHparams (v :: r) _ x).
+      apply (IHparams (i :: r) _ x).
 Qed.
 
 
@@ -232,7 +234,7 @@ Proof.
       auto.
   + destruct e.
     destruct a0; try contradiction.
-    destruct s.
+    destruct p.
     simpl in *.
     solve_error_sub.
     simpl in *.

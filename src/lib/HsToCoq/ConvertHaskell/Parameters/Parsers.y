@@ -31,6 +31,9 @@ import HsToCoq.ConvertHaskell.Parameters.Edits
 import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 }
 
+-- No conflicts allowed
+%expect 0
+
 %name      parseTerm         Term
 %name      parseSentence     Sentence
 %name      parseEditList     Edits
@@ -38,7 +41,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
 %tokentype { Token }
 %error     { unexpected }
 
-%monad { NewlinesParse }
+%monad { Lexing }
 %lexer { (=<< token) } { TokEOF }
 
 -- Please maintain the format of this list; the token definitions and the
@@ -55,7 +58,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   indices         { TokWord    "indices"        }
   redefine        { TokWord    "redefine"       }
   skip            { TokWord    "skip"           }
-  from            { TokWord    "from"           }
   manual          { TokWord    "manual"         }
   import          { TokWord    "import"         }
   notation        { TokWord    "notation"       }
@@ -96,8 +98,6 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   struct          { TokWord    "struct"         }
   with            { TokWord    "with"           }
   for             { TokWord    "for"            }
-  where           { TokWord    "where"          }
-  and             { TokWord    "and"            }
   'measure'       { TokWord    "measure"        }
   'wf'            { TokWord    "wf"             }
   -- Tokens: Coq commands
@@ -112,6 +112,14 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   'CoFixpoint'    { TokWord    "CoFixpoint"     }
   'Local'         { TokWord    "Local"          }
   'Axiom'         { TokWord    "Axiom"          }
+  'Theorem'       { TokWord    "Theorem"        }
+  'Lemma'         { TokWord    "Lemma"          }
+  'Remark'        { TokWord    "Remark"         }
+  'Fact'          { TokWord    "Fact"           }
+  'Corollary'     { TokWord    "Corollary"      }
+  'Proposition'   { TokWord    "Proposition"    }
+  'Example'       { TokWord    "Example"        }
+  'Proof'         { TokWord    "Proof"          }
   -- Tokens: Coq punctuation
   ':'             { TokOp      ":"              }
   '=>'            { TokOp      "=>"             }
@@ -120,9 +128,10 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   '`'             { TokOp      "`"              }
   '.'             { TokOp      "."              }
   '|'             { TokOp      "|"              }
-  '\''            { TokOp      "'"              }
   ','             { TokOp      ","              }
   ';'             { TokOp      ";"              }
+  -- Tokens: Ltac punctuation
+  '||'            { TokOp      "||"             }
   -- Tokens: General
   '('             { TokOpen    '('              }
   ')'             { TokClose   ')'              }
@@ -134,10 +143,16 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   Op              { TokOp      $$               }
   Num             { TokNat     $$               }
   StringLit       { TokString  $$               }
+  Tactics         { TokTactics $$               }
+  ProofEnder      { TokPfEnd   $$               }
 -- Tokens: End
 
 %nonassoc GenFixBodyOne
 %nonassoc with
+
+-- Get "f x + g y" to parse as "(f x) + (f y)"
+%nonassoc Op
+%nonassoc ManyR_prec
 
 %%
 
@@ -160,7 +175,7 @@ ManyR(p)
   | ManyR(p) p      { $2 : $1 }
 
 Many(p)
-  : ManyR(p)    { reverse $1 }
+  : ManyR(p) %prec ManyR_prec    { reverse $1 }
 
 Some(p)
   : p Many(p)    { $1 :| $2 }
@@ -236,14 +251,15 @@ DataTypeArguments :: { DataTypeArguments }
   | {- empty -}                                                 { DataTypeArguments [] [] }
 
 CoqDefinitionRaw :: { CoqDefinition }
-  : Inductive       { CoqInductiveDef  $1 }
-  | Definition      { CoqDefinitionDef $1 }
-  | Fixpoint        { CoqFixpointDef   $1 }
-  | Instance        { CoqInstanceDef   $1 }
-  | Axiom           { CoqAxiomDef      $1 }
+  : Inductive                { CoqInductiveDef  $1 }
+  | Definition               { CoqDefinitionDef $1 }
+  | Fixpoint                 { CoqFixpointDef   $1 }
+  | Instance                 { CoqInstanceDef   $1 }
+  | Axiom                    { CoqAxiomDef      $1 }
+  | AssertionProof           { CoqAssertionDef  $1 }
 
 CoqDefinition :: { CoqDefinition }
-  : Coq(CoqDefinitionRaw) '.' { $1 }
+  : Coq(CoqDefinitionRaw) '.'    { $1 }
 
 ScopePlace :: { ScopePlace }
   : constructor    { SPConstructor }
@@ -253,7 +269,7 @@ Scope :: { Ident }
   : Word    { $1     }
   | type    { "type" } -- This is so common, we have to special-case it
 
-Edit ::                                             { Edit }
+Edit :: { Edit }
   : type synonym Word ':->' Word                    { TypeSynonymTypeEdit           $3 $5                                 }
   | data type arguments Qualid DataTypeArguments    { DataTypeArgumentsEdit         $4 $5                                 }
   | redefine CoqDefinition                          { RedefinitionEdit              $2                                    }
@@ -265,7 +281,7 @@ Edit ::                                             { Edit }
   | import module Word                              { ImportModuleEdit              (mkModuleNameT $3)                    }
   | manual notation Word                            { HasManualNotationEdit         (mkModuleNameT $3)                    }
   | termination Qualid TerminationArgument          { TerminationEdit               $2 $3                                 }
-  | obligations Qualid Word                         { ObligationsEdit               $2 $3                                 }
+  | obligations Qualid TrivialLtac                  { ObligationsEdit               $2 $3                                 }
   | rename Renaming                                 { RenameEdit                    (fst $2) (snd $2)                     }
   | axiomatize module Word                          { AxiomatizeModuleEdit          (mkModuleNameT $3)                    }
   | axiomatize definition Qualid                    { AxiomatizeDefinitionEdit      $3                                    }
@@ -310,25 +326,35 @@ Qualid :: { Qualid }
   : WordOrOp   { forceIdentToQualid $1 }
 
 QualOp :: { Qualid }
+  : Op   { forceIdentToQualid $1  }
+  | '='  { forceIdentToQualid "=" }
+
+EqlessQualOp :: { Qualid }
   : Op   { forceIdentToQualid $1 }
+
+EqlessTerm :: { Term }
+  : MediumTerm(EqlessQualOp, EqlessTerm)    { $1 }
+  | SmallTerm                               { $1 }
 
 Term :: { Term }
   : LargeTerm    { $1 }
-  | App          { $1 }
-  | Atom         { $1 }
+  | SmallTerm    { $1 }
 
 LargeTerm :: { Term }
-  : fun   Binders '=>' Term    { Fun $2 $4 }
-  | fix   FixBodies            { Fix   $2 }
-  | cofix FixBodies            { Cofix $2 }
-  | forall Binders ',' Term    { Forall $2 $4 }
-  | 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' Term
-	 { Let $2 $3  $4 $6 $8 }
-  | match SepBy1(MatchItem, ',') with Many(Equation) end { Match $2 Nothing $4 }
-  | Atom QualOp Atom           { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
+  : fun   Binders '=>' Term     { Fun $2 $4 }
+  | fix   FixBodies             { Fix   $2 }
+  | cofix FixBodies             { Cofix $2 }
+  | forall Binders ',' Term     { Forall $2 $4 }
+  | MediumTerm(QualOp, Term)    { $1 }
 
-App :: { Term }
-  :     Atom Some(Arg)     { App $1 $2 }
+-- Lets us implement EqlessTerm
+MediumTerm(Binop, LetRHS) :: { Term }
+  : 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' LetRHS    { Let $2 $3 $4 $6 $8 }
+  | match SepBy1(MatchItem, ',') with Many(Equation) end                        { Match $2 Nothing $4 }
+  | SmallTerm Binop SmallTerm                                                   { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
+
+SmallTerm :: { Term }
+  : Atom Many(Arg)           { appList     $1 $2 } -- App or Atom
   | '@' Qualid Many(Atom)    { ExplicitApp $2 $3 }
 
 Arg :: { Arg }
@@ -388,9 +414,6 @@ ExplicitBinderGuts :: { Binder }
   | BinderName Some(BinderName) TypeAnnotation        { Typed Ungeneralizable Explicit ($1 <| $2) $3 }
   | BinderName TypeAnnotation                         { Typed Ungeneralizable Explicit ($1 :| []) $2 }
 
-BinderColonEq
-  : ':=' Term    { $2 }
-
 ImplicitBinderGuts :: { Binder }
   : BinderName                         { Inferred Implicit $1 }
   | Some(BinderName) TypeAnnotation    { Typed Ungeneralizable Implicit $1 $2 }
@@ -423,6 +446,7 @@ MultPattern :: { MultPattern }
 -- But can we do better?
 Pattern :: { Pattern }
   : Qualid Some(AtomicPattern) { ArgsPat $1 (NEL.toList $2) }
+  | Pattern as Qualid          { AsPat $1 $3 }
   | AtomicPattern              { $1 }
 
 AtomicPattern :: { Pattern }
@@ -432,7 +456,7 @@ AtomicPattern :: { Pattern }
   | '(' Pattern ')'         { $2 }
 
 Rewrite :: { Rewrite }
-  : forall Many(Word) ',' Term '=' Term  { Rewrite $2 $4 $6 }
+  : forall Many(Word) ',' EqlessTerm '=' Term    { Rewrite $2 $4 $6 }
 
 --------------------------------------------------------------------------------
 -- Vernacular
@@ -490,6 +514,53 @@ FieldDefinition :: { (Qualid,Term) }
 Axiom :: { (Qualid, Term) }
   : 'Axiom' Qualid TypeAnnotation    { ($2, $3) }
 
+-- We don't include 'Definition' -- it causes parsing conflicts, and really
+-- isn't necessary here.
+AssertionKeyword :: { AssertionKeyword }
+  : 'Theorem'     { Theorem     }
+  | 'Lemma'       { Lemma       }
+  | 'Remark'      { Remark      }
+  | 'Fact'        { Fact        }
+  | 'Corollary'   { Corollary   }
+  | 'Proposition' { Proposition }
+  | 'Example'     { Example     }
+
+Assertion :: { Assertion }
+  : AssertionKeyword Qualid Many(Binder) TypeAnnotation    { Assertion $1 $2 $3 $4 }
+
+AssertionProof :: { (Assertion, Proof) }
+  : Assertion '.' 'Proof' RequestTactics '.'  Tactics ProofEnder     { ($1, proof (prechomp $6) $7) }
+-- OK, I don't know why putting `RequestTactics` before the `'.'` works, but it does.  Lookahead?
+
+-- This production is just for side effects
+RequestTactics :: { () }
+  : {- empty -}    {% requestTactics }
+
+--------------------------------------------------------------------------------
+-- Trivial tactics
+--------------------------------------------------------------------------------
+
+TrivialLtac :: { Tactics }
+  : LtacCmd Many(And(LtacSep, LtacCmd))    { $1 <> T.concat (map (uncurry (<>)) $2) }
+
+LtacCmd :: { Tactics }
+  : LtacApp          { $1 }
+  | LtacAtom         { $1 }
+
+LtacApp :: { Tactics }
+  : LtacAtom Some(LtacAtom)    { $1 <> " " <> T.unwords (toList $2) }
+
+LtacAtom :: { Tactics }
+  : '(' TrivialLtac ')'    { "(" <> $2 <> ")"        }
+  | Qualid                 { qualidToIdent $1        }
+  | '@' Qualid             { "@" <> qualidToIdent $2 }
+  | Num                    { T.pack (show $1)        }
+  | '_'                    { "_"                     }
+
+LtacSep :: { Tactics }
+  : ';'     { "; "   }
+  | '||'    { " || " }
+
 --------------------------------------------------------------------------------
 -- Haskell code
 --------------------------------------------------------------------------------
@@ -502,9 +573,14 @@ ifMaybe Nothing  _j  n = n
 uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
 uncurry3 f = \(a,b,c) -> f a b c
 
-unexpected :: Token -> NewlinesParse a
+unexpected :: MonadParse m => Token -> m a
 unexpected tok = throwError $ "unexpected " ++ tokenDescription tok
 
 forceIdentToQualid :: Ident -> Qualid
-forceIdentToQualid x = fromMaybe (error $ "internal error: lexer produced a malfored qualid: " ++ show x) (identToQualid x)
+forceIdentToQualid x = fromMaybe (error $ "internal error: lexer produced a malformed qualid: " ++ show x) (identToQualid x)
+
+prechomp :: T.Text -> T.Text
+prechomp t = case T.stripPrefix "\n" t of
+               Just t' -> t'
+               Nothing -> t
 }

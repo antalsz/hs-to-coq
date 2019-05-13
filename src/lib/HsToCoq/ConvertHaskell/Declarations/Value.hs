@@ -62,11 +62,12 @@ convertValDecls mdecls = do
                 (\_ _ -> convUnsupported' "top-level pattern bindings")
                 (\ax   ty  -> pure (ax, [typedAxiom ax ty]))
                 (\name def -> (name, [definitionSentence def]) <$ case def of
-                   CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
-                   CoqDefinitionDef       _ -> pure ()
-                   CoqFixpointDef         _ -> pure ()
-                   CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                   CoqAxiomDef            _ -> pure ())
+                   CoqInductiveDef        _   -> editFailure   "cannot redefine a value definition into an Inductive"
+                   CoqDefinitionDef       _   -> pure ()
+                   CoqFixpointDef         _   -> pure ()
+                   CoqInstanceDef         _   -> editFailure   "cannot redefine a value definition into an Instance"
+                   CoqAxiomDef            _   -> pure ()
+                   CoqAssertionDef        apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf)
 
   -- TODO: Mutual recursion
   pure . foldMap (foldMap (bindings M.!)) . topoSortEnvironment $ fmap NoBinding <$> bindings

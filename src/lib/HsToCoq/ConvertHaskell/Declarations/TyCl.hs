@@ -41,10 +41,12 @@ import qualified Data.Map.Strict as M
 
 import GHC hiding (Name, HsString)
 
+
 import HsToCoq.Coq.Gallina      as Coq
 import HsToCoq.Coq.Gallina.Util as Coq
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Coq.Pretty
+import HsToCoq.Coq.Subst        
 import HsToCoq.Util.FVs
 
 import Data.Generics hiding (Generic, Fixity(..))
@@ -130,11 +132,12 @@ convertTyClDecl decl = do
                              DataDecl{}  -> "a data type"
                              ClassDecl{} -> "a type class"
                     to   = case redef of
-                             CoqDefinitionDef _ -> "a Definition"
-                             CoqFixpointDef   _ -> "a Fixpoint"
-                             CoqInductiveDef  _ -> "an Inductive"
-                             CoqInstanceDef   _ -> "an Instance"
-                             CoqAxiomDef      _ -> "an Axiom"
+                             CoqDefinitionDef _   -> "a Definition"
+                             CoqFixpointDef   _   -> "a Fixpoint"
+                             CoqInductiveDef  _   -> "an Inductive"
+                             CoqInstanceDef   _   -> "an Instance"
+                             CoqAxiomDef      _   -> "an Axiom"
+                             CoqAssertionDef  apf -> anAssertionVariety apf
                 in editFailure $ "cannot redefine " ++ from ++ " to be " ++ to
           
           AxiomatizeIt SpecificAxiomatize ->
@@ -198,9 +201,16 @@ convertDeclarationGroup DeclarationGroup{..} =
     (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing, Nothing) ->
       pure [DefinitionSentence $ DefinitionDef Global name args oty def]
     
-    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
+{-    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
       pure $  foldMap recSynType syns
-           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)]
+           ++ [InductiveSentence $ Inductive inds (orderRecSynDefs $ recSynDefs inds syns)] -}
+
+    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
+      let synDefs  = recSynDefs inds syns
+          synDefs' = expandAllDefs synDefs
+      in pure $  [InductiveSentence $ Inductive (subst synDefs' inds) []]
+              ++ (orderRecSynDefs $ synDefs)
+
     
     (Nothing, Nothing, Nothing, Just (classDef :| []), Nothing) ->
       classSentences classDef
@@ -226,6 +236,35 @@ convertDeclarationGroup DeclarationGroup{..} =
                                       , explain "type axiom"       "type axioms"       axmName dgAxioms ]
 
   where
+    expandAllDefs :: M.Map Qualid Term -> M.Map Qualid Term
+    expandAllDefs map =
+       let map' = M.map (subst map) map
+       in if map == map' then map' else expandAllDefs map'
+
+    indParams (IndBody _ params _ _) = S.fromList $ foldMap (toListOf binderIdents) params
+
+    -- FIXME use real substitution
+    avoidParams params = until (`S.notMember` params) (qualidExtendBase "_")
+
+    recSynMapping :: S.Set Qualid -> SynBody -> (Qualid, Term)
+    recSynMapping params (SynBody name args oty def) =
+      
+      let mkFun    = maybe id Fun . nonEmpty
+          withType = maybe id (flip HasType)
+          
+      in (name, everywhere (mkT $ avoidParams params) .
+                                    mkFun args $ withType oty def)
+
+    recSynDefs :: NonEmpty IndBody -> NonEmpty SynBody -> M.Map Qualid Term
+    recSynDefs inds = M.fromList . toList . fmap (recSynMapping $ foldMap indParams inds)
+
+    
+    orderRecSynDefs synDefs =
+      [ DefinitionSentence $ DefinitionDef Global syn [] Nothing $ synDefs M.! syn
+      | syn <- foldMap toList $ topoSortEnvironment synDefs ]
+
+
+{-    
     synName = qualidExtendBase "__raw"
 
     recSynType :: SynBody -> [Sentence] -- Otherwise GHC infers a type containing @~@.
@@ -235,8 +274,6 @@ convertDeclarationGroup DeclarationGroup{..} =
 
     indParams (IndBody _ params _ _) = S.fromList $ foldMap (toListOf binderIdents) params
 
-    -- FIXME use real substitution
-    avoidParams params = until (`S.notMember` params) (qualidExtendBase "_")
 
     recSynMapping params (SynBody name args oty def) =
       let mkFun    = maybe id Fun . nonEmpty
@@ -250,7 +287,7 @@ convertDeclarationGroup DeclarationGroup{..} =
 
     orderRecSynDefs synDefs =
       [ NotationIdentBinding (qualidBase syn) $ synDefs M.! syn
-      | syn <- foldMap toList $ topoSortEnvironment synDefs ]
+      | syn <- foldMap toList $ topoSortEnvironment synDefs ] -}
 
 --------------------------------------------------------------------------------
 

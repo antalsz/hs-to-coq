@@ -47,15 +47,15 @@ Record NamedThing__Dict a := NamedThing__Dict_Build {
   getOccName__ : a -> OccName.OccName }.
 
 Definition NamedThing a :=
-  forall r, (NamedThing__Dict a -> r) -> r.
+  forall r__, (NamedThing__Dict a -> r__) -> r__.
 
 Existing Class NamedThing.
 
-Definition getName `{g : NamedThing a} : a -> Name :=
-  g _ (getName__ a).
+Definition getName `{g__0__ : NamedThing a} : a -> Name :=
+  g__0__ _ (getName__ a).
 
-Definition getOccName `{g : NamedThing a} : a -> OccName.OccName :=
-  g _ (getOccName__ a).
+Definition getOccName `{g__0__ : NamedThing a} : a -> OccName.OccName :=
+  g__0__ _ (getOccName__ a).
 
 Instance Default__BuiltInSyntax : GHC.Err.Default BuiltInSyntax :=
   GHC.Err.Build_Default _ Mk_BuiltInSyntax.
@@ -352,7 +352,7 @@ Local Definition Uniquable__Name_getUnique : Name -> Unique.Unique :=
   nameUnique.
 
 Program Instance Uniquable__Name : Unique.Uniquable Name :=
-  fun _ k => k {| Unique.getUnique__ := Uniquable__Name_getUnique |}.
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__Name_getUnique |}.
 
 Local Definition Ord__Name_compare : Name -> Name -> comparison :=
   fun a b => cmpName a b.
@@ -402,25 +402,25 @@ Local Definition Eq___Name_op_zsze__ : Name -> Name -> bool :=
   fun a b => match cmpName a b with | Eq => false | _ => true end.
 
 Program Instance Eq___Name : GHC.Base.Eq_ Name :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Name_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Name_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Name_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Name_op_zsze__ |}.
 
 Program Instance Ord__Name : GHC.Base.Ord Name :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Name_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Name_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Name_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Name_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Name_compare ;
-         GHC.Base.max__ := Ord__Name_max ;
-         GHC.Base.min__ := Ord__Name_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Name_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Name_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Name_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Name_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Name_compare ;
+           GHC.Base.max__ := Ord__Name_max ;
+           GHC.Base.min__ := Ord__Name_min |}.
 
 Local Definition HasOccName__Name_occName : Name -> OccName.OccName :=
   nameOccName.
 
 Program Instance HasOccName__Name : OccName.HasOccName Name :=
-  fun _ k => k {| OccName.occName__ := HasOccName__Name_occName |}.
+  fun _ k__ => k__ {| OccName.occName__ := HasOccName__Name_occName |}.
 
 (* Skipping all instances of class `Control.DeepSeq.NFData', including
    `Name.NFData__Name' *)
@@ -437,9 +437,9 @@ Local Definition NamedThing__GenLocated_getOccName {inst_e} {inst_l}
 
 Program Instance NamedThing__GenLocated {e} {l} `{NamedThing e}
    : NamedThing (SrcLoc.GenLocated l e) :=
-  fun _ k =>
-    k {| getName__ := NamedThing__GenLocated_getName ;
-         getOccName__ := NamedThing__GenLocated_getOccName |}.
+  fun _ k__ =>
+    k__ {| getName__ := NamedThing__GenLocated_getName ;
+           getOccName__ := NamedThing__GenLocated_getOccName |}.
 
 Local Definition NamedThing__Name_getName : Name -> Name :=
   fun n => n.
@@ -448,9 +448,9 @@ Local Definition NamedThing__Name_getOccName : Name -> OccName.OccName :=
   fun n => nameOccName (NamedThing__Name_getName n).
 
 Program Instance NamedThing__Name : NamedThing Name :=
-  fun _ k =>
-    k {| getName__ := NamedThing__Name_getName ;
-         getOccName__ := NamedThing__Name_getOccName |}.
+  fun _ k__ =>
+    k__ {| getName__ := NamedThing__Name_getName ;
+           getOccName__ := NamedThing__Name_getOccName |}.
 
 (* External variables:
      Eq Gt Lt None Some andb bool comparison default false negb option orb true unit

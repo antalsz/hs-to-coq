@@ -5,64 +5,41 @@ From Coq Require Import ssreflect ssrfun ssrbool.
 Require Import GHC.Base.
 Require Import Data.IntMap.Internal.
 
+Require Import Proofs.Prelude.
+
+
+Section FMapInterface. 
+
+Variable A : Type.
+Variable eqA : `{Eq_ A}.
+Variable eqlA : `{EqLaws A}.
+Variable e e' : A.
+Variable x y : Internal.Key.
+Variable m   : Internal.IntMap A.
+
+Parameter MapsTo_1 : (x == y) -> Internal.lookup x m = Some e -> Internal.lookup y m = Some e.
+
+Parameter mem_1 : (exists e, Internal.lookup x m = Some e) -> Internal.member x m = true.
+Parameter mem_2 : Internal.member x m = true -> exists e, Internal.lookup x m = Some e.
+
+Parameter empty_1 : Internal.member x (Internal.empty : Internal.IntMap A) <> true.
+
+Parameter is_empty_1 : (forall x, Internal.member x m <> true) -> Internal.null m = true.
+Parameter is_empty_2 : Internal.null m = true -> Internal.member x m <> true.
+
+Parameter add_1 : x == y -> Internal.lookup y (Internal.insert x e m) = Some e.
+Parameter add_2 : (x <> y) -> Internal.lookup y m = Some e -> Internal.lookup y (Internal.insert x e' m) = Some e.
+Parameter add_3 : (x <> y) -> Internal.lookup y (Internal.insert x e' m) = Some e -> Internal.lookup y m = Some e.
+
+Parameter remove_1 : x == y -> ~ (exists e, Internal.lookup y (Internal.delete x m) = Some e).
+Parameter remove_2 : (x <> y) -> Internal.lookup y m = Some e -> Internal.lookup y (Internal.delete x m) = Some e.
+Parameter remove_3 : Internal.lookup y (Internal.delete x m) = Some e -> Internal.lookup y m = Some e.
+
+End FMapInterface.
+
 Axiom member_eq : forall A k k' (i : IntMap.Internal.IntMap A),
     k == k' ->
     IntMap.Internal.member k i = IntMap.Internal.member k' i.
-
-Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
-IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
-  (k == k') || IntMap.Internal.member k i.
-
-Axiom member_union :
-   forall (A : Type)
-     (key : Internal.Key) 
-     (i i0 : Internal.IntMap A),
-   (IntMap.Internal.member key (IntMap.Internal.union i i0)) = 
-   (IntMap.Internal.member key i0 || IntMap.Internal.member key i).
-
-Axiom union_nil_l : forall A (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.union IntMap.Internal.Nil i = i.
-
-Axiom union_nil_r : forall A (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.union i IntMap.Internal.Nil = i.
-
-Axiom difference_self : forall A (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.difference i i = IntMap.Internal.empty.
-
-Axiom difference_nil_r : forall A B (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.difference i (@IntMap.Internal.Nil B) = i.
-
-Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.difference (@IntMap.Internal.Nil B) i = 
-    (@IntMap.Internal.Nil B).
-
-Axiom difference_Tip_member:
-  forall A (i : Internal.IntMap A) (n : Internal.Key),
-    (IntMap.Internal.member n i) ->
-    forall x:A, IntMap.Internal.difference
-        (IntMap.Internal.Tip n x) i = Internal.Nil.
-
-Axiom difference_Tip_non_member: 
-    forall A (i : Internal.IntMap A) (n : Internal.Key),
-      (IntMap.Internal.member n i) = false ->
-      forall x : A, IntMap.Internal.difference (IntMap.Internal.Tip n x) i =
-        IntMap.Internal.Tip n x.
-
-Axiom null_empty : forall A,
-    (@IntMap.Internal.null A IntMap.Internal.empty).
-
-Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
-    IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
-    IntMap.Internal.filter (fun v => f v && f' v) i.
-
-Axiom filter_insert: forall A f key (v:A) i,
-  IntMap.Internal.filter f (IntMap.Internal.insert key v i) =
-  (if (f v)
-   then IntMap.Internal.insert key v (IntMap.Internal.filter f i)
-   else IntMap.Internal.filter f i).
-
-Axiom filter_true : forall (A:Type) (m:IntMap.Internal.IntMap A), 
-   IntMap.Internal.filter (const true) m = m.
 
 Axiom lookup_insert : forall A key (val:A) i, 
     IntMap.Internal.lookup key (IntMap.Internal.insert key val i) = Some val.
@@ -72,15 +49,10 @@ Axiom lookup_insert_neq :
     key1 <> key2 ->
     Internal.lookup key1 (Internal.insert key2 val m) = Internal.lookup key1 m.
 
-Axiom lookup_filterWithKey : 
-  forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
-                       Internal.lookup key m = Some val.
+Axiom member_insert : forall A k k' v (i : IntMap.Internal.IntMap A),
+IntMap.Internal.member k (IntMap.Internal.insert k' v i) =
+  (k == k') || IntMap.Internal.member k i.
 
-Axiom lookup_intersection :
-  forall a b key (val1:a) m1 m2, 
-    Internal.lookup key m1 = Some val1 /\
-    (exists (val2:b), Internal.lookup key m2 = Some val2) <-> 
-    Internal.lookup key (Internal.intersection m1 m2) = Some val1.
 
 Axiom delete_eq : forall key b (i : IntMap b),
   lookup key (delete key i) = None.
@@ -92,6 +64,97 @@ Axiom delete_neq : forall key1 key2 b (i : IntMap b),
 Axiom member_delete_neq : forall k1 k2 b (i: IntMap b), k1 <> k2 ->
   IntMap.Internal.member k2 (IntMap.Internal.delete k1 i) =
   IntMap.Internal.member k2 i.
+
+Axiom non_member_lookup :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i : Internal.IntMap A),
+   (IntMap.Internal.member key i = false) =
+   (IntMap.Internal.lookup key i = None).
+
+Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
+    k == k'->
+    IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
+
+Axiom member_lookup :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i : Internal.IntMap A),
+   (is_true (IntMap.Internal.member key i)) =
+   (exists val, IntMap.Internal.lookup key i = Some val).
+
+Axiom null_empty : forall A,
+    (@IntMap.Internal.null A IntMap.Internal.empty).
+
+
+
+(* ------------------------------------------------------- *)
+
+Axiom member_union :
+   forall (A : Type)
+     (key : Internal.Key) 
+     (i i0 : Internal.IntMap A),
+   (IntMap.Internal.member key (IntMap.Internal.union i i0)) = 
+   (IntMap.Internal.member key i0 || IntMap.Internal.member key i).
+(*
+Axiom union_nil_l : forall A (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.union IntMap.Internal.Nil i = i.
+
+Axiom union_nil_r : forall A (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.union i IntMap.Internal.Nil = i.
+*)
+(*
+Axiom difference_self : forall A (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.difference i i = IntMap.Internal.empty.
+*)
+
+Axiom difference_nil_r : forall A B (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.difference i (@IntMap.Internal.Nil B) = i.
+
+Axiom difference_nil_l : forall B A (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.difference (@IntMap.Internal.Nil B) i = 
+    (@IntMap.Internal.Nil B).
+(*
+Axiom difference_Tip_member:
+  forall A (i : Internal.IntMap A) (n : Internal.Key),
+    (IntMap.Internal.member n i) ->
+    forall x:A, IntMap.Internal.difference
+        (IntMap.Internal.Tip n x) i = Internal.Nil.
+
+Axiom difference_Tip_non_member: 
+    forall A (i : Internal.IntMap A) (n : Internal.Key),
+      (IntMap.Internal.member n i) = false ->
+      forall x : A, IntMap.Internal.difference (IntMap.Internal.Tip n x) i =
+        IntMap.Internal.Tip n x.
+*)
+
+(* Do we need to know that f respects == for A ? *)
+Axiom filter_comp : forall A f f' (i : IntMap.Internal.IntMap A),
+    IntMap.Internal.filter f (IntMap.Internal.filter f' i) =
+    IntMap.Internal.filter (fun v => f v && f' v) i.
+
+(*
+Axiom filter_insert: forall A f key (v:A) i,
+  IntMap.Internal.filter f (IntMap.Internal.insert key v i) =
+  (if (f v)
+   then IntMap.Internal.insert key v (IntMap.Internal.filter f i)
+   else IntMap.Internal.filter f i).
+*)
+
+Axiom lookup_filterWithKey : 
+  forall b key (val:b) m f, Internal.lookup key (Internal.filterWithKey f m) = Some val ->
+                       Internal.lookup key m = Some val.
+
+Axiom filter_true : forall (A:Type) (m:IntMap.Internal.IntMap A), 
+   IntMap.Internal.filter (const true) m = m.
+
+
+Axiom lookup_intersection :
+  forall a b key (val1:a) m1 m2, 
+    Internal.lookup key m1 = Some val1 /\
+    (exists (val2:b), Internal.lookup key m2 = Some val2) <-> 
+    Internal.lookup key (Internal.intersection m1 m2) = Some val1.
+
 
 Axiom lookup_union :
   forall (A:Type) key (val:A) (m1 m2: IntMap A), 
@@ -112,7 +175,7 @@ Axiom lookup_partition :
     (left, right) = partition f i -> 
     lookup key left = Some y \/ lookup key right = Some y.    
 *)
-
+(*
 Axiom lookup_union_None:
   forall (A : Type)
     (key : Internal.Key)
@@ -121,6 +184,7 @@ Axiom lookup_union_None:
     IntMap.Internal.lookup key m2 = None <->
     IntMap.Internal.lookup key
              (IntMap.Internal.union m1 m2) = None.
+*)
 
 Axiom lookup_difference_in_snd:
   forall (key : Internal.Key) (b : Type) (i i': IntMap b) (y:b),
@@ -132,19 +196,6 @@ Axiom lookup_difference_not_in_snd:
     lookup key i' = None ->
     lookup key (difference i i') = lookup key i.
 
-Axiom member_lookup :
-   forall (A : Type)
-     (key : Internal.Key) 
-     (i : Internal.IntMap A),
-   (is_true (IntMap.Internal.member key i)) =
-   (exists val, IntMap.Internal.lookup key i = Some val).
-
-Axiom non_member_lookup :
-   forall (A : Type)
-     (key : Internal.Key) 
-     (i : Internal.IntMap A),
-   (IntMap.Internal.member key i = false) =
-   (IntMap.Internal.lookup key i = None).
 
 (* This is a pretty strong property about the representation of 
    IntMaps. I hope that it is true. *)
@@ -155,14 +206,23 @@ Axiom delete_commute :
   IntMap.Internal.delete ky (IntMap.Internal.delete kx i) =
   IntMap.Internal.delete kx (IntMap.Internal.delete ky i).
 
-Axiom lookup_eq : forall A k k' (i : IntMap.Internal.IntMap A),
-    k == k'->
-    IntMap.Internal.lookup k i = IntMap.Internal.lookup k' i.
-
 Axiom intersection_empty :
   forall A B (i : IntMap.Internal.IntMap A) (j : IntMap.Internal.IntMap B),
     (j = IntMap.Internal.empty) ->
     IntMap.Internal.null (IntMap.Internal.intersection i j).
+
+Axiom null_intersection_non_member: forall b k (v : b)(i1 i2 : Internal.IntMap b),
+  IntMap.Internal.null
+    (IntMap.Internal.intersection i1 (IntMap.Internal.insert k v i2)) <->
+  IntMap.Internal.member k i1 = false /\
+  IntMap.Internal.null (IntMap.Internal.intersection i1 i2).
+
+Axiom disjoint_difference: forall  b (i1 i2 i3 : Internal.IntMap b),
+  IntMap.Internal.null (IntMap.Internal.intersection i2 i3) ->
+  IntMap.Internal.null (IntMap.Internal.difference i1 i2) ->
+  IntMap.Internal.null (IntMap.Internal.intersection i1 i3).
+
+
 
 
 (*

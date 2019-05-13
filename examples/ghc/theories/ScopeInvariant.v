@@ -2,7 +2,7 @@
 Set Warnings "-notation-overridden".
 
 From mathcomp.ssreflect
-Require Import ssreflect ssrnat prime ssrbool eqtype.
+Require Import ssreflect ssrnat prime ssrbool.
 
 Require Import Name.
 Require Import Id.
@@ -13,6 +13,10 @@ Require Import CoreUtils.
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
 Import ListNotations.
+
+Require Import Proofs.GHC.Base.
+
+Require Import Proofs.Axioms.
 
 Require Import Proofs.Base.
 Require Import Proofs.GhcTactics.
@@ -33,6 +37,19 @@ Proof.
   intros.
   intro h. apply H in h. apply H0. auto.
 Qed.
+
+Lemma and_iff_compat_both:
+  forall A B C D : Prop,
+    A <-> C -> B <-> D ->
+    A /\ B <-> C /\ D.
+Proof. intros. intuition. Qed.
+
+Lemma Forall_iff:
+  forall a P Q (xs : list a),
+    Forall (fun x => P x <-> Q x) xs ->
+    Forall P xs <-> Forall Q xs.
+Proof. intros. rewrite -> !Forall_forall in *. firstorder. Qed.
+
 
 (** * Core invariants related to variables and scope *)
 
@@ -83,6 +100,13 @@ that are in [in_scope]. Remember that GHC allows shadowing!
 
 *)
 
+Definition WellScopedTickish (x : Tickish Var)(in_scope : VarSet) : Prop :=
+  match x with
+  | Breakpoint _ ids => Forall (fun e => WellScopedVar e in_scope) ids
+  | _ => True
+  end.
+
+
 Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
   match e with
   | Mk_Var v => WellScopedVar v in_scope
@@ -100,7 +124,7 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
       let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
       WellScoped (snd alt) in_scope') alts
   | Cast e _ =>   WellScoped e in_scope
-  | Tick _ e =>   WellScoped e in_scope
+  | Tick t e =>   WellScoped e in_scope /\ WellScopedTickish t in_scope
   | Type_ _  =>   True
   | Coercion _ => True
   end
@@ -297,6 +321,17 @@ Proof.
   eapply almostEqual_trans with (v2 := v0); auto.
 Qed.
 
+Lemma WellScopedTickish_StrongSubset : forall e vs1 vs2, 
+    WellScopedTickish e vs1 -> StrongSubset vs1 vs2 -> WellScopedTickish e vs2.
+Proof.
+  move => e vs1 vs2 WS SS.
+  unfold WellScopedTickish, StrongSubset in *.
+  destruct_match; try done.
+  eapply Forall_impl; eauto.
+  move=> a h. eapply WellScopedVar_StrongSubset; eauto. simpl in h.
+  auto.
+Qed.
+
 Lemma WellScoped_StrongSubset : forall e vs1 vs2, 
     WellScoped e vs1 -> StrongSubset vs1 vs2 -> WellScoped e vs2.
 Proof.
@@ -338,8 +373,7 @@ Proof.
      simpl in *.
      eauto using StrongSubset_extendVarSetList.
      eauto using StrongSubset_extendVarSetList.
-  - destruct H1 as [W1 [W2 W3]].
-    split; only 2: split; eauto.
+  - destruct H1 as [W1 [W2 W3]].    split; only 2: split; eauto.
      rewrite -> Forall'_Forall in *.
      rewrite -> Forall_forall in *.
      intros h IN. destruct h as [[dc pats] rhs].
@@ -348,6 +382,8 @@ Proof.
      simpl in *.
      destruct W3 as [GLV WS].
      eauto using StrongSubset_extendVarSetList.
+  - move: H0 => [? ?].
+    eauto using WellScopedTickish_StrongSubset.
 Qed.
 
 (** *** Relation to [exprFreeVars] *)
@@ -421,7 +457,31 @@ Proof.
       apply (H0 _ _ _ HIn).
       assumption.
   - rewrite exprFreeVars_Cast. apply H; assumption.
-  - rewrite exprFreeVars_Tick. apply H; assumption.
+  - rewrite exprFreeVars_Tick. 
+    simpl in H0. move: H0 => [a b].
+    destruct tickish; unfold tickishFreeVars in *; hs_simpl;
+      try (apply H; assumption).
+    simpl in b.
+    rewrite -> subVarSet_unionVarSet, andb_true_iff; split.
+    eauto.
+    set_b_iff.
+    move=> x InX.
+    rewrite -> filter_iff in InX; try apply RespectsVar_isLocalVar.
+    move: InX => [i0 i1].
+    rewrite -> Forall_forall in b.    
+    rewrite -> extendVarSetList_iff in i0. 
+    destruct i0; try done.
+    unfold In.
+    move: (elem_exists_in _ _ H0) => [y [Iny eqy]].
+    move: (b _ Iny) => WSy.
+    unfold WellScopedVar in WSy.
+
+    rewrite (RespectsVar_isLocalVar eqy) in i1.
+    rewrite i1 in WSy.
+    elim h: (lookupVarSet vs y) => [z|].
+    erewrite (elemVarSet_eq _ eqy); eauto.
+    eapply lookupVarSet_elemVarSet; eauto.
+    rewrite h in WSy. done.
   - apply subVarSet_emptyVarSet.
   - apply subVarSet_emptyVarSet.
 Qed.
@@ -458,46 +518,20 @@ Proof.
   assert (Gv: GoodVar v). 
    { rewrite -> Forall_forall in *. auto. }
   destruct_match.
-  rewrite -> lookupVarSet_extendVarSetList_r_self by assumption.
+  rewrite -> lookupVarSet_extendVarSetList_self_in by assumption.
   intuition.
   apply almostEqual_refl.
   assumption.
 Qed.
 
-(* There are a number of variants of the freshness lemmas.
-   The simplest one that implies all others is this, so lets
-   only do one induction:
-*)
 
-Lemma and_iff_compat_both:
-  forall A B C D : Prop,
-    A <-> C -> B <-> D ->
-    A /\ B <-> C /\ D.
-Proof. intros. intuition. Qed.
-
-Lemma Forall_iff:
-  forall a P Q (xs : list a),
-    Forall (fun x => P x <-> Q x) xs ->
-    Forall P xs <-> Forall Q xs.
-Proof. intros. rewrite -> !Forall_forall in *. firstorder. Qed.
-
-
-Lemma WellScoped_extendVarSetList_fresh_under:
-  forall vs1 vs2 e vs,
-  disjointVarSet (delVarSetList (exprFreeVars e) vs2) (mkVarSet vs1)  = true ->
-  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <->
-  WellScoped e (extendVarSetList vs vs2).
+Lemma WellScopedVar_extendVarSetList_fresh_under v vs vs1 vs2 :
+  disjointVarSet (delVarSetList (exprFreeVars (Mk_Var v)) (rev vs2))
+                 (mkVarSet vs1) = true ->
+  WellScopedVar v (extendVarSetList (extendVarSetList vs vs1) vs2) <->
+  WellScopedVar v (extendVarSetList vs vs2).
 Proof.
- (* This proof is similar to isJoinPointsValid_fresh_updJPSs_aux
-    In particular, proving the assumtion [disjointVarSet ..] for all the inductive
-    cases is identical (although here we have more inductive cases than there.
-    Once could common it up with a deidcated induction rule. Or live with the duplication.
-  *)
-  intros.
-  rewrite <- delVarSetList_rev in H.
-  revert vs2 vs H.
-  apply (core_induct e); intros.
-  * simpl.
+    intro H.
     unfold WellScopedVar.
     destruct_match; only 2: reflexivity.
     enough (lookupVarSet (extendVarSetList (extendVarSetList vs vs1) vs2) v = 
@@ -540,6 +574,33 @@ Proof.
          unfold is_true in Heqb.
          rewrite -> not_true_iff_false in Heqb.
          apply Heqb.
+Qed.
+
+
+(* There are a number of variants of the freshness lemmas.
+   The simplest one that implies all others is this, so lets
+   only do one induction:
+*)
+
+
+
+Lemma WellScoped_extendVarSetList_fresh_under:
+  forall vs1 vs2 e vs,
+  disjointVarSet (delVarSetList (exprFreeVars e) vs2) (mkVarSet vs1)  = true ->
+  WellScoped e (extendVarSetList (extendVarSetList vs vs1) vs2) <->
+  WellScoped e (extendVarSetList vs vs2).
+Proof.
+ (* This proof is similar to isJoinPointsValid_fresh_updJPSs_aux
+    In particular, proving the assumtion [disjointVarSet ..] for all the inductive
+    cases is identical (although here we have more inductive cases than there.
+    Once could common it up with a deidcated induction rule. Or live with the duplication.
+  *)
+  intros.
+  rewrite <- delVarSetList_rev in H.
+  revert vs2 vs H.
+  apply (core_induct e); intros.
+  * simpl.
+    eapply WellScopedVar_extendVarSetList_fresh_under; eauto.
   * reflexivity.
   * simpl.
     apply and_iff_compat_both.
@@ -636,11 +697,35 @@ Proof.
     apply subVarSet_delVarSetList_both.
     rewrite exprFreeVars_Cast.
     set_b_iff; fsetdec.
-  * apply H. 
-    eapply disjointVarSet_subVarSet_l; only 1: apply H0.
-    apply subVarSet_delVarSetList_both.
-    rewrite exprFreeVars_Tick.
-    set_b_iff; fsetdec.
+  * simpl.
+    eapply and_iff_compat_both.
+    ++ apply H. 
+       eapply disjointVarSet_subVarSet_l; only 1: apply H0.
+       apply subVarSet_delVarSetList_both.
+       rewrite exprFreeVars_Tick.
+       set_b_iff; fsetdec. 
+    ++ destruct tickish; try done.
+       simpl. 
+       rewrite -> exprFreeVars_Tick in H0.
+       apply Forall_iff.
+       rewrite Forall_forall.
+       move=> x In.
+       eapply WellScopedVar_extendVarSetList_fresh_under.
+       unfold tickishFreeVars in H0.
+       eapply disjointVarSet_subVarSet_l.
+       eapply H0.
+       eapply subVarSet_delVarSetList_both.
+       elim LV: (isLocalVar x).
+       -- rewrite (exprFreeVars_Var x LV).
+          rewrite subVarSet_unitVarSet.
+          hs_simpl. apply /orP. right.
+          rewrite elemVarSet_filterVarSet => //.
+          apply /andP. split. auto.
+          hs_simpl.
+          apply list_in_elem.
+          auto.
+       -- rewrite (exprFreeVars_global_Var x LV).
+          apply subVarSet_emptyVarSet.
   * reflexivity.
   * reflexivity.
 Qed.
@@ -703,6 +788,17 @@ Proof.
   eapply almostEqual_trans; eassumption.
 Qed.
 
+Instance Respects_StrongSubset_WellScopedTickish v : Respects_StrongSubset (WellScopedTickish v).
+Proof.
+  intros ????.
+  unfold WellScopedTickish in *.
+  destruct v; try done.
+  rewrite -> Forall_forall in *.
+  move=> x In.
+  move: (H0 x In) => h.
+  eapply Respects_StrongSubset_WellScopedVar; eauto.
+Qed.
+
 Instance Respects_StrongSubset_WellScoped e : Respects_StrongSubset (WellScoped e).
 Proof.
   apply (core_induct e); intros; simpl.
@@ -738,7 +834,12 @@ Proof.
        apply Respects_StrongSubset_extendVarSetList.
        apply H0.
    * apply H.
-   * apply H.
+   * unfold Respects_StrongSubset. 
+     move=> vs1 vs2 SS.
+     move=> [WSE WST].
+     split.
+     eauto.
+     eapply Respects_StrongSubset_WellScopedTickish; eauto.     
    * apply Respects_StrongSubset_const.
    * apply Respects_StrongSubset_const.
 Qed.

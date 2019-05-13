@@ -91,9 +91,9 @@ Local Definition MonadTrans__ReaderT_lift {inst_r}
 
 Program Instance MonadTrans__ReaderT {r}
    : Control.Monad.Trans.Class.MonadTrans (ReaderT r) :=
-  fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-           MonadTrans__ReaderT_lift |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__ReaderT_lift |}.
 
 (* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
    `Control.Monad.Trans.Reader.MonadFix__ReaderT' *)
@@ -123,9 +123,9 @@ Local Definition Functor__ReaderT_op_zlzd__ {inst_m} {inst_r}
 
 Program Instance Functor__ReaderT {m} {r} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (ReaderT r m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__ReaderT_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ReaderT_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__ReaderT_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__ReaderT_op_zlzd__ |}.
 
 Local Definition Applicative__ReaderT_liftA2 {inst_m} {inst_r}
   `{(GHC.Base.Applicative inst_m)}
@@ -151,11 +151,11 @@ Local Definition Applicative__ReaderT_pure {inst_m} {inst_r}
 
 Program Instance Applicative__ReaderT {m} {r} `{(GHC.Base.Applicative m)}
    : GHC.Base.Applicative (ReaderT r m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ReaderT_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ReaderT_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ReaderT_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__ReaderT_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__ReaderT_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__ReaderT_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__ReaderT_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__ReaderT_pure |}.
 
 Local Definition Monad__ReaderT_op_zgzg__ {inst_m} {inst_r} `{(GHC.Base.Monad
    inst_m)}
@@ -180,10 +180,10 @@ Local Definition Monad__ReaderT_return_ {inst_m} {inst_r} `{(GHC.Base.Monad
 
 Program Instance Monad__ReaderT {m} {r} `{(GHC.Base.Monad m)}
    : GHC.Base.Monad (ReaderT r m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__ReaderT_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__ReaderT_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__ReaderT_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__ReaderT_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__ReaderT_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__ReaderT_return_ |}.
 
 Local Definition MonadFail__ReaderT_fail {inst_m} {inst_r}
   `{(Control.Monad.Fail.MonadFail inst_m)}
@@ -193,8 +193,8 @@ Local Definition MonadFail__ReaderT_fail {inst_m} {inst_r}
 
 Program Instance MonadFail__ReaderT {m} {r} `{(Control.Monad.Fail.MonadFail m)}
    : Control.Monad.Fail.MonadFail (ReaderT r m) :=
-  fun _ k =>
-    k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ReaderT_fail |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ReaderT_fail |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Monad.Trans.Reader.Alternative__ReaderT' *)

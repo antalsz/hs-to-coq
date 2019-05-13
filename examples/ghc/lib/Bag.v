@@ -494,20 +494,20 @@ Local Definition Foldable__Bag_toList : forall {a}, Bag a -> list a :=
     fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Bag_foldr c n t)).
 
 Program Instance Foldable__Bag : Data.Foldable.Foldable Bag :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Bag_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Bag_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Bag_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Bag_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Bag_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Bag_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Bag_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Bag_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Bag_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Bag_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Bag_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Bag_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Bag_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Bag_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Bag_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Bag_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Bag_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Bag_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Bag_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Bag_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Bag_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Bag_toList |}.
 
 Local Definition Functor__Bag_fmap
    : forall {a} {b}, (a -> b) -> Bag a -> Bag b :=
@@ -517,9 +517,9 @@ Local Definition Functor__Bag_op_zlzd__ : forall {a} {b}, a -> Bag b -> Bag a :=
   fun {a} {b} => Functor__Bag_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Bag : GHC.Base.Functor Bag :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Bag_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Bag_op_zlzd__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Bag.Data__Bag' *)

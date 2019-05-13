@@ -934,9 +934,9 @@ Local Definition Eq___LeftOrRight_op_zsze__
   fun x y => negb (Eq___LeftOrRight_op_zeze__ x y).
 
 Program Instance Eq___LeftOrRight : GHC.Base.Eq_ LeftOrRight :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___LeftOrRight_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___LeftOrRight_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___LeftOrRight_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___LeftOrRight_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__LeftOrRight' *)
@@ -955,9 +955,9 @@ Local Definition Eq___OneShotInfo_op_zsze__
   fun x y => negb (Eq___OneShotInfo_op_zeze__ x y).
 
 Program Instance Eq___OneShotInfo : GHC.Base.Eq_ OneShotInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___OneShotInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___OneShotInfo_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___OneShotInfo_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___OneShotInfo_op_zsze__ |}.
 
 Local Definition Eq___FunctionOrData_op_zeze__
    : FunctionOrData -> FunctionOrData -> bool :=
@@ -973,9 +973,9 @@ Local Definition Eq___FunctionOrData_op_zsze__
   fun x y => negb (Eq___FunctionOrData_op_zeze__ x y).
 
 Program Instance Eq___FunctionOrData : GHC.Base.Eq_ FunctionOrData :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___FunctionOrData_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___FunctionOrData_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___FunctionOrData_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___FunctionOrData_op_zsze__ |}.
 
 Local Definition Ord__FunctionOrData_op_zl__
    : FunctionOrData -> FunctionOrData -> bool :=
@@ -1014,14 +1014,14 @@ Local Definition Ord__FunctionOrData_min
   fun x y => if Ord__FunctionOrData_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__FunctionOrData : GHC.Base.Ord FunctionOrData :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__FunctionOrData_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__FunctionOrData_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__FunctionOrData_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__FunctionOrData_op_zgze__ ;
-         GHC.Base.compare__ := Ord__FunctionOrData_compare ;
-         GHC.Base.max__ := Ord__FunctionOrData_max ;
-         GHC.Base.min__ := Ord__FunctionOrData_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__FunctionOrData_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__FunctionOrData_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__FunctionOrData_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__FunctionOrData_op_zgze__ ;
+           GHC.Base.compare__ := Ord__FunctionOrData_compare ;
+           GHC.Base.max__ := Ord__FunctionOrData_max ;
+           GHC.Base.min__ := Ord__FunctionOrData_min |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__FunctionOrData' *)
@@ -1041,9 +1041,9 @@ Local Definition Eq___FixityDirection_op_zsze__
   fun x y => negb (Eq___FixityDirection_op_zeze__ x y).
 
 Program Instance Eq___FixityDirection : GHC.Base.Eq_ FixityDirection :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___FixityDirection_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___FixityDirection_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___FixityDirection_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___FixityDirection_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__FixityDirection' *)
@@ -1065,9 +1065,9 @@ Local Definition Eq___LexicalFixity_op_zsze__
   fun x y => negb (Eq___LexicalFixity_op_zeze__ x y).
 
 Program Instance Eq___LexicalFixity : GHC.Base.Eq_ LexicalFixity :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___LexicalFixity_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___LexicalFixity_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___LexicalFixity_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___LexicalFixity_op_zsze__ |}.
 
 Local Definition Eq___Boxity_op_zeze__ : Boxity -> Boxity -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1081,9 +1081,9 @@ Local Definition Eq___Boxity_op_zsze__ : Boxity -> Boxity -> bool :=
   fun x y => negb (Eq___Boxity_op_zeze__ x y).
 
 Program Instance Eq___Boxity : GHC.Base.Eq_ Boxity :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Boxity_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Boxity_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Boxity_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Boxity_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__Boxity' *)
@@ -1100,9 +1100,9 @@ Local Definition Eq___RecFlag_op_zsze__ : RecFlag -> RecFlag -> bool :=
   fun x y => negb (Eq___RecFlag_op_zeze__ x y).
 
 Program Instance Eq___RecFlag : GHC.Base.Eq_ RecFlag :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___RecFlag_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___RecFlag_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___RecFlag_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___RecFlag_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__RecFlag' *)
@@ -1119,9 +1119,9 @@ Local Definition Eq___Origin_op_zsze__ : Origin -> Origin -> bool :=
   fun x y => negb (Eq___Origin_op_zeze__ x y).
 
 Program Instance Eq___Origin : GHC.Base.Eq_ Origin :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Origin_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Origin_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Origin_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Origin_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__Origin' *)
@@ -1141,9 +1141,9 @@ Local Definition Eq___DerivStrategy_op_zsze__
   fun x y => negb (Eq___DerivStrategy_op_zeze__ x y).
 
 Program Instance Eq___DerivStrategy : GHC.Base.Eq_ DerivStrategy :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___DerivStrategy_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___DerivStrategy_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___DerivStrategy_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___DerivStrategy_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__DerivStrategy' *)
@@ -1161,9 +1161,9 @@ Local Definition Eq___TupleSort_op_zsze__ : TupleSort -> TupleSort -> bool :=
   fun x y => negb (Eq___TupleSort_op_zeze__ x y).
 
 Program Instance Eq___TupleSort : GHC.Base.Eq_ TupleSort :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TupleSort_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TupleSort_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TupleSort_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TupleSort_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__TupleSort' *)
@@ -1182,9 +1182,9 @@ Local Definition Eq___TailCallInfo_op_zsze__
   fun x y => negb (Eq___TailCallInfo_op_zeze__ x y).
 
 Program Instance Eq___TailCallInfo : GHC.Base.Eq_ TailCallInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___TailCallInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___TailCallInfo_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TailCallInfo_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TailCallInfo_op_zsze__ |}.
 
 Local Definition Eq___OccInfo_op_zeze__ : OccInfo -> OccInfo -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1203,9 +1203,9 @@ Local Definition Eq___OccInfo_op_zsze__ : OccInfo -> OccInfo -> bool :=
   fun x y => negb (Eq___OccInfo_op_zeze__ x y).
 
 Program Instance Eq___OccInfo : GHC.Base.Eq_ OccInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___OccInfo_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___OccInfo_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___OccInfo_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__SourceText' *)
@@ -1225,9 +1225,9 @@ Local Definition Eq___SourceText_op_zsze__ : SourceText -> SourceText -> bool :=
   fun x y => negb (Eq___SourceText_op_zeze__ x y).
 
 Program Instance Eq___SourceText : GHC.Base.Eq_ SourceText :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___SourceText_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___SourceText_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___SourceText_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___SourceText_op_zsze__ |}.
 
 Local Definition Eq___OverlapMode_op_zeze__
    : OverlapMode -> OverlapMode -> bool :=
@@ -1246,9 +1246,9 @@ Local Definition Eq___OverlapMode_op_zsze__
   fun x y => negb (Eq___OverlapMode_op_zeze__ x y).
 
 Program Instance Eq___OverlapMode : GHC.Base.Eq_ OverlapMode :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___OverlapMode_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___OverlapMode_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___OverlapMode_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___OverlapMode_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__OverlapMode' *)
@@ -1266,9 +1266,9 @@ Local Definition Eq___OverlapFlag_op_zsze__
   fun x y => negb (Eq___OverlapFlag_op_zeze__ x y).
 
 Program Instance Eq___OverlapFlag : GHC.Base.Eq_ OverlapFlag :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___OverlapFlag_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___OverlapFlag_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___OverlapFlag_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___OverlapFlag_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__OverlapFlag' *)
@@ -1291,9 +1291,9 @@ Local Definition Eq___StringLiteral_op_zsze__
   fun x y => negb (Eq___StringLiteral_op_zeze__ x y).
 
 Program Instance Eq___StringLiteral : GHC.Base.Eq_ StringLiteral :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___StringLiteral_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___StringLiteral_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___StringLiteral_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___StringLiteral_op_zsze__ |}.
 
 Local Definition Eq___WarningTxt_op_zeze__ : WarningTxt -> WarningTxt -> bool :=
   fun arg_0__ arg_1__ =>
@@ -1309,9 +1309,9 @@ Local Definition Eq___WarningTxt_op_zsze__ : WarningTxt -> WarningTxt -> bool :=
   fun x y => negb (Eq___WarningTxt_op_zeze__ x y).
 
 Program Instance Eq___WarningTxt : GHC.Base.Eq_ WarningTxt :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___WarningTxt_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___WarningTxt_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__WarningTxt' *)
@@ -1332,9 +1332,9 @@ Local Definition Eq___Activation_op_zsze__ : Activation -> Activation -> bool :=
   fun x y => negb (Eq___Activation_op_zeze__ x y).
 
 Program Instance Eq___Activation : GHC.Base.Eq_ Activation :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Activation_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Activation_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Activation_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__Activation' *)
@@ -1353,9 +1353,9 @@ Local Definition Eq___RuleMatchInfo_op_zsze__
   fun x y => negb (Eq___RuleMatchInfo_op_zeze__ x y).
 
 Program Instance Eq___RuleMatchInfo : GHC.Base.Eq_ RuleMatchInfo :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___RuleMatchInfo_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___RuleMatchInfo_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___RuleMatchInfo_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___RuleMatchInfo_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__RuleMatchInfo' *)
@@ -1377,9 +1377,9 @@ Local Definition Eq___InlineSpec_op_zsze__ : InlineSpec -> InlineSpec -> bool :=
   fun x y => negb (Eq___InlineSpec_op_zeze__ x y).
 
 Program Instance Eq___InlineSpec : GHC.Base.Eq_ InlineSpec :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___InlineSpec_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___InlineSpec_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___InlineSpec_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___InlineSpec_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__InlineSpec' *)
@@ -1402,9 +1402,9 @@ Local Definition Eq___InlinePragma_op_zsze__
   fun x y => negb (Eq___InlinePragma_op_zeze__ x y).
 
 Program Instance Eq___InlinePragma : GHC.Base.Eq_ InlinePragma :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___InlinePragma_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___InlinePragma_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__InlinePragma' *)
@@ -1433,9 +1433,9 @@ Local Definition Eq___IntWithInf_op_zsze__ : IntWithInf -> IntWithInf -> bool :=
   fun x y => negb (Eq___IntWithInf_op_zeze__ x y).
 
 Program Instance Eq___IntWithInf : GHC.Base.Eq_ IntWithInf :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___IntWithInf_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___IntWithInf_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___IntWithInf_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___IntWithInf_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `BasicTypes.Data__SpliceExplicitFlag' *)
@@ -1509,9 +1509,9 @@ Local Definition Eq___Fixity_op_zsze__ : Fixity -> Fixity -> bool :=
   fun x y => negb (Eq___Fixity_op_zeze__ x y).
 
 Program Instance Eq___Fixity : GHC.Base.Eq_ Fixity :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Fixity_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Fixity_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__Fixity' *)
@@ -1577,19 +1577,19 @@ Local Definition Eq___IntegralLit_op_zsze__
   fun x y => negb (Eq___IntegralLit_op_zeze__ x y).
 
 Program Instance Eq___IntegralLit : GHC.Base.Eq_ IntegralLit :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___IntegralLit_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___IntegralLit_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___IntegralLit_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___IntegralLit_op_zsze__ |}.
 
 Program Instance Ord__IntegralLit : GHC.Base.Ord IntegralLit :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__IntegralLit_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__IntegralLit_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__IntegralLit_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__IntegralLit_op_zgze__ ;
-         GHC.Base.compare__ := Ord__IntegralLit_compare ;
-         GHC.Base.max__ := Ord__IntegralLit_max ;
-         GHC.Base.min__ := Ord__IntegralLit_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__IntegralLit_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__IntegralLit_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__IntegralLit_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__IntegralLit_op_zgze__ ;
+           GHC.Base.compare__ := Ord__IntegralLit_compare ;
+           GHC.Base.max__ := Ord__IntegralLit_max ;
+           GHC.Base.min__ := Ord__IntegralLit_min |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `BasicTypes.Outputable__FractionalLit' *)
@@ -1603,9 +1603,9 @@ Local Definition Eq___FractionalLit_op_zsze__
   fun x y => negb (Eq___FractionalLit_op_zeze__ x y).
 
 Program Instance Eq___FractionalLit : GHC.Base.Eq_ FractionalLit :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___FractionalLit_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___FractionalLit_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___FractionalLit_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___FractionalLit_op_zsze__ |}.
 
 Local Definition Ord__FractionalLit_compare
    : FractionalLit -> FractionalLit -> comparison :=
@@ -1636,14 +1636,14 @@ Local Definition Ord__FractionalLit_min
   fun x y => if Ord__FractionalLit_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__FractionalLit : GHC.Base.Ord FractionalLit :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__FractionalLit_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__FractionalLit_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__FractionalLit_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__FractionalLit_op_zgze__ ;
-         GHC.Base.compare__ := Ord__FractionalLit_compare ;
-         GHC.Base.max__ := Ord__FractionalLit_max ;
-         GHC.Base.min__ := Ord__FractionalLit_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__FractionalLit_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__FractionalLit_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__FractionalLit_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__FractionalLit_op_zgze__ ;
+           GHC.Base.compare__ := Ord__FractionalLit_compare ;
+           GHC.Base.max__ := Ord__FractionalLit_max ;
+           GHC.Base.min__ := Ord__FractionalLit_min |}.
 
 (* Skipping all instances of class `GHC.Num.Num', including
    `BasicTypes.Num__IntWithInf' *)
@@ -1680,14 +1680,14 @@ Local Definition Ord__IntWithInf_min : IntWithInf -> IntWithInf -> IntWithInf :=
   fun x y => if Ord__IntWithInf_op_zlze__ x y : bool then x else y.
 
 Program Instance Ord__IntWithInf : GHC.Base.Ord IntWithInf :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__IntWithInf_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__IntWithInf_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__IntWithInf_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__IntWithInf_op_zgze__ ;
-         GHC.Base.compare__ := Ord__IntWithInf_compare ;
-         GHC.Base.max__ := Ord__IntWithInf_max ;
-         GHC.Base.min__ := Ord__IntWithInf_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__IntWithInf_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__IntWithInf_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__IntWithInf_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__IntWithInf_op_zgze__ ;
+           GHC.Base.compare__ := Ord__IntWithInf_compare ;
+           GHC.Base.max__ := Ord__IntWithInf_max ;
+           GHC.Base.min__ := Ord__IntWithInf_min |}.
 
 (* External variables:
      Eq Gt Lt None Some andb bool comparison cons false list nat negb op_zt__ option

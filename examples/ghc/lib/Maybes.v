@@ -92,9 +92,9 @@ Local Definition Functor__MaybeErr_op_zlzd__ {inst_err}
   fun {a} {b} => Functor__MaybeErr_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__MaybeErr {err} : GHC.Base.Functor (MaybeErr err) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeErr_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeErr_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__MaybeErr_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__MaybeErr_op_zlzd__ |}.
 
 Local Definition Applicative__MaybeErr_op_zlztzg__ {inst_err}
    : forall {a} {b},
@@ -129,21 +129,21 @@ Local Definition Applicative__MaybeErr_pure {inst_err}
 
 Program Instance Applicative__MaybeErr {err}
    : GHC.Base.Applicative (MaybeErr err) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeErr_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeErr_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__MaybeErr_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__MaybeErr_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__MaybeErr_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__MaybeErr_pure |}.
 
 Local Definition Monad__MaybeErr_return_ {inst_err}
    : forall {a}, a -> (MaybeErr inst_err) a :=
   fun {a} => GHC.Base.pure.
 
 Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeErr_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeErr_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__MaybeErr_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__MaybeErr_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__MaybeErr_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__MaybeErr_return_ |}.
 
 (* External variables:
      None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT

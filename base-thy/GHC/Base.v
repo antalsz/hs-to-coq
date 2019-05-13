@@ -12,6 +12,7 @@ Require Import Data.Semigroup.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
+Set Warnings "-notation-overridden".
 From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
 
@@ -54,6 +55,36 @@ Theorem hs_coq_foldl_base {A B} (f : B -> A -> B) (z : B) (l : list A) :
   foldl f z l = Coq.Lists.List.fold_left f l z.
 Proof. by rewrite /foldl; move: z; elim: l => //=. Qed.
 
+(* ---------- foldr ------------------------------ *)
+
+Lemma foldr_initial : forall A (x : list A), foldr (_::_) nil x = x.
+Proof. induction x. simpl. auto. simpl. rewrite IHx. auto.
+Qed.
+
+Hint Rewrite @foldr_initial : hs_simpl.
+
+Lemma foldr_single : forall A B k (z:B) (x:A), foldr k z (x :: nil) = k x z.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+Lemma foldr_nil : forall A B k (z:B), foldr k z (@nil A) = z.
+Proof. 
+  intros. reflexivity.
+Qed.
+
+Hint Rewrite @foldr_initial @foldr_single @foldr_nil : hs_simpl.
+
+(* ---------- append ------------------------------ *)
+
+(* Because we map Haskell's append to Coq's ++ directly. All of the 
+   Coq theorems are automatically available. However, we make these
+   automatically available to hs_simpl. *)
+
+Hint Rewrite @app_nil_r @app_length : hs_simpl.
+
+(* ---------- map ------------------------------ *)
+
 Lemma map_id:
   forall a (x : list a),
   map id x = x.
@@ -94,14 +125,6 @@ Proof.
   auto.
 Qed.
 
-Lemma flat_map_concat_map : forall A B (f : A -> list B) l,
-    flat_map f l = concat (map f l).
-Proof.
-  intros.
-  rewrite hs_coq_map.
-  apply Coq.Lists.List.flat_map_concat_map.
-Qed.
-
 Lemma concat_map : forall A B (f : A -> B) l,
     map f (concat l) = concat (map (map f) l).
   intros.
@@ -109,10 +132,16 @@ Lemma concat_map : forall A B (f : A -> B) l,
   apply Coq.Lists.List.concat_map.
 Qed.
 
-Lemma foldr_initial : forall A (x : list A), foldr (_::_) nil x = x.
-Proof. induction x. simpl. auto. simpl. rewrite IHx. auto.
-Qed.
 
+(* ---------------- flat map ----------------------- *)
+
+Lemma flat_map_concat_map : forall A B (f : A -> list B) l,
+    flat_map f l = concat (map f l).
+Proof.
+  intros.
+  rewrite hs_coq_map.
+  apply Coq.Lists.List.flat_map_concat_map.
+Qed.
 
 
 Lemma flat_map_app : forall A B (f : A -> list B) xs ys,
@@ -227,7 +256,7 @@ Proof.
   eapply ey.
 Qed.
 
-(* MOVE to Base *)
+
 Instance Eq_m : forall {a}`{EqLaws a},
   Proper ((fun (x y :a) => x == y) ==> (fun x y => x == y) ==> Logic.eq)
   (_==_).
@@ -249,6 +278,58 @@ Proof.
   rewrite H in E1. inversion E1.
 Qed.
 
+(* I would love to be able to use rewriting instead of this 
+   lemma to do this. Why doesn't it work??? *)
+Lemma eq_replace_r : forall {a}`{EqLaws a}  (v1 v2 v3 : a),
+    (v2 == v3) -> (v1 == v2) = (v1 == v3).
+Proof.
+  intros.
+  rewrite -> H1. (* why does the ssreflect rewriting tactic not work here. *)
+  reflexivity.
+Qed.
+
+Lemma eq_replace_l : forall {a}`{EqLaws a} (v1 v2 v3 : a),
+    (v2 == v3) -> (v2 == v1) = (v3 == v1).
+Proof.
+  intros.
+  eapply Eq_m.
+  eauto.
+  eapply Eq_refl.
+Qed.
+
+
+(* Some cargo culting here. I'm not sure if we need to do all of this.*)
+
+Local Lemma parametric_eq_trans : forall (a : Type) (H : Eq_ a),
+  EqLaws a -> Transitive (fun x y : a => x == y).
+Proof.
+  intros.
+  intros x y z.
+  pose (k := Eq_trans).
+  eapply k.
+Defined. 
+
+Local Lemma parametric_eq_sym : forall (a : Type) (H : Eq_ a),
+  EqLaws a -> Symmetric (fun x y : a => x == y).
+Proof.
+  intros.
+  intros x y.
+  rewrite Eq_sym.
+  auto.
+Defined. 
+
+
+Add Parametric Relation {a}`{H: EqLaws a} : a 
+  (fun x y => x == y) 
+    reflexivity proved by Eq_refl 
+    symmetry proved by (@parametric_eq_sym a _ H)
+    transitivity proved by (@parametric_eq_trans a _ H) as parametric_eq.
+
+Instance: RewriteRelation (fun x y => x == y).
+
+
+(* --------------------------------------------------------------------- *)
+
 
 Ltac unfold_zeze :=
   repeat unfold op_zeze__, op_zeze____, 
@@ -256,13 +337,13 @@ Ltac unfold_zeze :=
   Eq_Integer___, 
   Eq_Word___,
   Eq_Char___,
-  Eq_bool___,
+  Eq_bool___, 
   Eq_unit___ ,
-  Eq_comparison___,
-  Eq_pair___ ,
-  Eq_list,
-  Eq___NonEmpty,
-  Eq___option.
+  Eq_comparison___, 
+  Eq_pair___ , 
+  Eq_list, 
+  Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__,
+  Eq___option, Base.Eq___option_op_zeze__.
 
 Ltac unfold_zsze :=
   repeat unfold op_zsze__, op_zsze____,
@@ -277,6 +358,44 @@ Ltac unfold_zsze :=
   Eq_list,
   Eq___NonEmpty,
   Eq___option.
+
+
+Lemma simpl_option_some_eq a `{Eq_ a} (x y :a) :
+  (Some x == Some y) = (x == y).
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+Lemma simpl_option_none_eq a `{Eq_ a} :
+  ((None : option a) == None) = true.
+Proof.  
+    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+           Base.Eq___option_op_zeze__, op_zeze____.
+    auto.
+Qed.
+
+
+Lemma simpl_list_cons_eq a `{Eq_ a} (x y :a) xs ys :
+  (cons x xs) == (cons y ys) = (x == y) && (xs == ys).
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Lemma simpl_list_nil_eq a `{Eq_ a} :
+  (nil : list a) == nil = true.
+Proof.  
+    unfold op_zeze__, op_zeze____, Eq_list.
+    simpl.
+    auto.
+Qed.
+
+Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq 
+             @simpl_list_cons_eq @simpl_list_nil_eq : hs_simpl.
+
 
 (** ** [EqExact] **)
   
@@ -407,6 +526,10 @@ Proof.
   - by rewrite E.
   - by contradict E; case: E.
 Qed.
+
+
+(* -------------------------------------------------------------------- *)
+
 
 (* -------------------------------------------------------------------- *)
 
@@ -680,75 +803,17 @@ Proof.
     auto.
 Qed.
 
-(* -------------------------------------------------------------------- *)
+(* ------------------------------- boolean simplification ----------------------------- *)
 
-(* These are the RULES from the GHC/Base.hs source file. *)
+(* The base edits file maps boolean operations to Coq's andb, orb, negb.
 
-(* RULES
-"fold/build"    forall k z (g::forall b. (a->b->b) -> b -> b) .
-                foldr k z (build g) = g k z
+   We add some of the more common rewrites to the hs_simpl tactic so that they do not 
+   need to be applied by hand.
 
-"foldr/augment" forall k z xs (g::forall b. (a->b->b) -> b -> b) .
-                foldr k z (augment g xs) = g k (foldr k z xs)
-
-"foldr/id"                        foldr (:) [] = \x  -> x
-"foldr/app"     [1] forall ys. foldr (:) ys = \xs -> xs ++ ys
-        -- Only activate this from phase 1, because that's
-        -- when we disable the rule that expands (++) into foldr
-
--- The foldr/cons rule looks nice, but it can give disastrously
--- bloated code when commpiling
---      array (a,b) [(1,2), (2,2), (3,2), ...very long list... ]
--- i.e. when there are very very long literal lists
--- So I've disabled it for now. We could have special cases
--- for short lists, I suppose.
--- "foldr/cons" forall k z x xs. foldr k z (x:xs) = k x (foldr k z xs)
-
-"foldr/single"  forall k z x. foldr k z [x] = k x z
-"foldr/nil"     forall k z.   foldr k z []  = z
-
-"foldr/cons/build" forall k z x (g::forall b. (a->b->b) -> b -> b) .
-                           foldr k z (x:build g) = k x (g k z)
-
-"augment/build" forall (g::forall b. (a->b->b) -> b -> b)
-                       (h::forall b. (a->b->b) -> b -> b) .
-                       augment g (build h) = build (\c n -> g c (h c n))
-"augment/nil"   forall (g::forall b. (a->b->b) -> b -> b) .
-                        augment g [] = build g
  *)
 
-Lemma fold_build : forall {a}{b} k (z:b) (g: forall{b}, (a -> b -> b) -> b -> b), 
-    foldr k z (build (fun {b} => g)) = g k z.
-Proof.
-(* Parametericity *)
-Admitted.
+Hint Rewrite andb_diag andb_false_r andb_true_r andb_false_l andb_true_l : hs_simpl.
+Hint Rewrite orb_diag orb_false_r orb_true_r orb_false_l orb_true_l : hs_simpl.
+Hint Rewrite negb_involutive : hs_simpl.
 
-
-Lemma fold_id : forall A, foldr cons nil = (id : list A -> list A).
-Proof.
-  intro A.
-  apply functional_extensionality.
-  induction x.
-  simpl. auto.
-  simpl. f_equal. auto.
-Qed.
-
-Lemma foldr_single : forall A B k (z:B) (x:A), foldr k z (x :: nil) = k x z.
-Proof. 
-  intros. reflexivity.
-Qed.
-
-Lemma foldr_nil : forall A B k (z:B), foldr k z (@nil A) = z.
-Proof. 
-  intros. reflexivity.
-Qed.
-
-
-Lemma foldr_cons_build: forall {a} k (z:a) x (g:forall {b}, (a->b->b) -> b -> b),
-                           foldr k z (x::build (fun {b} => g)) = k x (g k z).
-Proof.
-  intros.
-  simpl. f_equal.
-  apply fold_build.
-Qed.
-
+Hint Rewrite andb_true_iff orb_true_iff negb_true_iff negb_false_iff : hs_simpl.

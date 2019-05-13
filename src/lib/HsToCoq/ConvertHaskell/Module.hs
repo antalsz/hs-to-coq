@@ -103,12 +103,12 @@ convertHsGroup HsGroup{..} = do
                    (\_ _ -> convUnsupported' "top-level pattern bindings")
                    (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))
                    (\name def -> (Just name, [definitionSentence def]) <$ case def of
-                      CoqInductiveDef        _ -> editFailure "cannot redefine a value definition into an Inductive"
-                      CoqDefinitionDef       _ -> pure ()
-                      CoqFixpointDef         _ -> pure ()
-                      CoqInstanceDef         _ -> editFailure "cannot redefine a value definition into an Instance"
-                      CoqAxiomDef            _ -> pure ())
-        
+                      CoqInductiveDef        _   -> editFailure   "cannot redefine a value definition into an Inductive"
+                      CoqDefinitionDef       _   -> pure ()
+                      CoqFixpointDef         _   -> pure ()
+                      CoqInstanceDef         _   -> editFailure   "cannot redefine a value definition into an Instance"
+                      CoqAxiomDef            _   -> pure ()
+                      CoqAssertionDef        apf -> editFailure $ "cannot redefine a value definition into " ++ anAssertionVariety apf)
         let unnamedSentences = concat [ sentences | (Nothing, sentences) <- defns ]
         let namedSentences   = [ (name, sentences) | (Just name, sentences) <- defns ]
 

@@ -1,3 +1,4 @@
+(* NOTE THIS FILE IS NOT USED. Delete? *)
 
 Require Import Id.
 Require Import Core.
@@ -120,13 +121,13 @@ Inductive JoinPointsValid : CoreExpr -> Z -> VarSet -> Prop :=
 Scheme JPV_mut := Induction for JoinPointsValid Sort Prop
 with GJR_mut := Induction for GoodJoinRHS Sort Prop.
 
-Axiom isJoinId_eq : forall v,
+Axiom isJoinId_eq : forall v,  (* in unused code *)
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
 
-Axiom delVarList_singleton: forall jps v,
+Axiom delVarList_singleton: forall jps v, (* in unused code *)
   delVarSetList jps (v :: nil) = delVarSet jps v.
 
-Axiom extendVarList_singleton: forall jps v,
+Axiom extendVarList_singleton: forall jps v, (* in unused code *)
   extendVarSetList jps (v :: nil) = extendVarSet jps v.
 
 Lemma bindersOf_cleanup:

@@ -392,12 +392,12 @@ Record HasDynFlags__Dict m := HasDynFlags__Dict_Build {
   getDynFlags__ : m DynFlags }.
 
 Definition HasDynFlags m :=
-  forall r, (HasDynFlags__Dict m -> r) -> r.
+  forall r__, (HasDynFlags__Dict m -> r__) -> r__.
 
 Existing Class HasDynFlags.
 
-Definition getDynFlags `{g : HasDynFlags m} : m DynFlags :=
-  g _ (getDynFlags__ m).
+Definition getDynFlags `{g__0__ : HasDynFlags m} : m DynFlags :=
+  g__0__ _ (getDynFlags__ m).
 
 Inductive DumpFlag : Type
   := Opt_D_dump_cmm : DumpFlag
@@ -490,12 +490,12 @@ Record ContainsDynFlags__Dict t := ContainsDynFlags__Dict_Build {
   extractDynFlags__ : t -> DynFlags }.
 
 Definition ContainsDynFlags t :=
-  forall r, (ContainsDynFlags__Dict t -> r) -> r.
+  forall r__, (ContainsDynFlags__Dict t -> r__) -> r__.
 
 Existing Class ContainsDynFlags.
 
-Definition extractDynFlags `{g : ContainsDynFlags t} : t -> DynFlags :=
-  g _ (extractDynFlags__ t).
+Definition extractDynFlags `{g__0__ : ContainsDynFlags t} : t -> DynFlags :=
+  g__0__ _ (extractDynFlags__ t).
 
 Inductive CompilerInfo : Type
   := GCC : CompilerInfo

@@ -1029,19 +1029,19 @@ Local Definition Eq___IntSet_op_zsze__ : IntSet -> IntSet -> bool :=
   fun t1 t2 => nequal t1 t2.
 
 Program Instance Eq___IntSet : GHC.Base.Eq_ IntSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___IntSet_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___IntSet_op_zsze__ |}.
 
 Program Instance Ord__IntSet : GHC.Base.Ord IntSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__IntSet_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__IntSet_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__IntSet_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__IntSet_op_zgze__ ;
-         GHC.Base.compare__ := Ord__IntSet_compare ;
-         GHC.Base.max__ := Ord__IntSet_max ;
-         GHC.Base.min__ := Ord__IntSet_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__IntSet_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__IntSet_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__IntSet_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__IntSet_op_zgze__ ;
+           GHC.Base.compare__ := Ord__IntSet_compare ;
+           GHC.Base.max__ := Ord__IntSet_max ;
+           GHC.Base.min__ := Ord__IntSet_min |}.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Data.IntSet.InternalWord.Data__IntSet' *)
@@ -1050,7 +1050,8 @@ Local Definition Semigroup__IntSet_op_zlzlzgzg__ : IntSet -> IntSet -> IntSet :=
   union.
 
 Program Instance Semigroup__IntSet : GHC.Base.Semigroup IntSet :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__IntSet_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__IntSet_mappend : IntSet -> IntSet -> IntSet :=
   _GHC.Base.<<>>_.
@@ -1062,10 +1063,10 @@ Local Definition Monoid__IntSet_mempty : IntSet :=
   empty.
 
 Program Instance Monoid__IntSet : GHC.Base.Monoid IntSet :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
-         GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
-         GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__IntSet_mappend ;
+           GHC.Base.mconcat__ := Monoid__IntSet_mconcat ;
+           GHC.Base.mempty__ := Monoid__IntSet_mempty |}.
 
 (* Skipping all instances of class `GHC.Exts.IsList', including
    `Data.IntSet.InternalWord.IsList__IntSet' *)

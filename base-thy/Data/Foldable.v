@@ -3,6 +3,9 @@ Require Import Data.Foldable.
 
 Require Import Proofs.GHC.Base.
 Require Import Proofs.GHC.List.
+Require Import Coq.Classes.RelationClasses.
+
+Set Warnings "-notation-overridden".
 
 From Coq Require Import ssreflect.
 Set Bullet Behavior "Strict Subproofs".
@@ -104,6 +107,7 @@ Proof.
   auto.
 Qed.
 
+
 Lemma Foldable_foldl_nil : forall a b (f: b -> a -> b) (s:b), 
     Foldable.foldl f s nil = s.
 Proof.
@@ -173,6 +177,23 @@ Hint Rewrite
 
      Foldable_foldl'_app Foldable_foldr_app 
      Foldable_foldl_app : hs_simpl.
+
+
+
+Lemma Foldable_foldr_map {a}{b}{c:Type} g (f: a -> c) (xs : list a) (b0 : b):
+ Foldable.foldr (g ∘ f) b0 xs = 
+ Foldable.foldr g b0 (List.map f xs).
+Proof.
+  elim: xs => [|x xs IH].
+  - hs_simpl. auto.
+  - hs_simpl. unfold Base.op_z2218U__ in *.
+    rewrite map_cons.
+    hs_simpl. 
+    f_equal.
+    auto.
+Qed.
+
+
 
 Lemma Foldable_any_nil : forall A (f : A -> bool), Foldable.any f nil = false. 
 Proof. 
@@ -245,5 +266,59 @@ Qed.
 
 Hint Rewrite @elem_nil @elem_cons @Foldable_elem_app : hs_simpl.
 
+Lemma Foldable_length_nil {a} :
+  length (@nil a) = 0%Z.
+Proof. reflexivity. Qed.
+
+Lemma Foldable_length_cons {a} (x : a) (xs : list a) :
+  length (cons x xs) = Z.succ (length xs).
+Proof. by rewrite !hs_coq_length_list Zlength_cons. Qed.
+
+Hint Rewrite @Foldable_length_nil @Foldable_length_cons : hs_simpl.
 
 
+
+Import GHC.Base.ManualNotations.
+Require Import Coq.Classes.Morphisms.
+From Coq Require Import ssreflect ssrfun ssrbool.
+
+
+Instance Foldable_elem_proper : forall {a}`{EqLaws a},  
+  Proper ((fun (x y:a) => x GHC.Base.== y) ==> (fun (x y:list a) => x GHC.Base.== y) ==> Logic.eq)
+         Foldable.elem.
+Proof.
+  intros a E1 E2 x1 x2 Hx.
+  move => y1. induction y1.
+  - unfold_zeze. move => y2 Hy.
+    destruct y2.
+    auto.
+    simpl in Hy.
+    done.
+  - case;
+    unfold_zeze;
+    simpl.
+    done.
+    move => a1 l.
+    hs_simpl.
+    move/andP => [h0 h1].
+    rewrite (eq_replace_l _ _ _ Hx).
+    rewrite (eq_replace_r _ _ _ h0).
+    ssrbool.bool_congr.
+    eapply IHy1.
+    unfold_zeze.
+    auto.
+Qed.
+
+
+
+
+Lemma elem_eq : forall {A:Type}`{EqLaws A} (xs : list A) (a b : A),
+    a == b -> Foldable.elem a xs = Foldable.elem b xs.
+Proof.
+  move => A ??.
+  elim => // x xs IH.
+  move => a b h.
+  hs_simpl.
+  rewrite (IH _ _ h).
+  erewrite eq_replace_l; eauto.
+Qed.

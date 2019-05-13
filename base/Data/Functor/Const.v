@@ -67,9 +67,9 @@ Local Definition Eq___Const_op_zsze__ {inst_a} {inst_b} `{GHC.Base.Eq_ inst_a}
 
 Program Instance Eq___Const {a} {b} `{GHC.Base.Eq_ a}
    : GHC.Base.Eq_ (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___Const_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___Const_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___Const_op_zsze__ |}.
 
 (* Skipping all instances of class `Data.Bits.FiniteBits', including
    `Data.Functor.Const.FiniteBits__Const' *)
@@ -101,7 +101,8 @@ Local Definition Semigroup__Const_op_zlzlzgzg__ {inst_a} {inst_b}
 
 Program Instance Semigroup__Const {a} {b} `{GHC.Base.Semigroup a}
    : GHC.Base.Semigroup (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
-  fun _ k => k {| GHC.Base.op_zlzlzgzg____ := Semigroup__Const_op_zlzlzgzg__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zlzlzgzg____ := Semigroup__Const_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Const_mappend {inst_a} {inst_b} `{GHC.Base.Monoid
   inst_a}
@@ -123,10 +124,10 @@ Local Definition Monoid__Const_mempty {inst_a} {inst_b} `{GHC.Base.Monoid
 
 Program Instance Monoid__Const {a} {b} `{GHC.Base.Monoid a}
    : GHC.Base.Monoid (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
-  fun _ k =>
-    k {| GHC.Base.mappend__ := Monoid__Const_mappend ;
-         GHC.Base.mconcat__ := Monoid__Const_mconcat ;
-         GHC.Base.mempty__ := Monoid__Const_mempty |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.mappend__ := Monoid__Const_mappend ;
+           GHC.Base.mconcat__ := Monoid__Const_mconcat ;
+           GHC.Base.mempty__ := Monoid__Const_mempty |}.
 
 (* Skipping all instances of class `GHC.Num.Num', including
    `Data.Functor.Const.Num__Const' *)
@@ -170,14 +171,14 @@ Local Definition Ord__Const_min {inst_a} {inst_b} `{GHC.Base.Ord inst_a}
 
 Program Instance Ord__Const {a} {b} `{GHC.Base.Ord a}
    : GHC.Base.Ord (Const a b : GHC.Prim.TYPE GHC.Types.LiftedRep) :=
-  fun _ k =>
-    k {| GHC.Base.op_zl____ := Ord__Const_op_zl__ ;
-         GHC.Base.op_zlze____ := Ord__Const_op_zlze__ ;
-         GHC.Base.op_zg____ := Ord__Const_op_zg__ ;
-         GHC.Base.op_zgze____ := Ord__Const_op_zgze__ ;
-         GHC.Base.compare__ := Ord__Const_compare ;
-         GHC.Base.max__ := Ord__Const_max ;
-         GHC.Base.min__ := Ord__Const_min |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__Const_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__Const_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__Const_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__Const_op_zgze__ ;
+           GHC.Base.compare__ := Ord__Const_compare ;
+           GHC.Base.max__ := Ord__Const_max ;
+           GHC.Base.min__ := Ord__Const_min |}.
 
 (* Skipping all instances of class `GHC.Real.Real', including
    `Data.Functor.Const.Real__Const' *)
@@ -218,9 +219,9 @@ Local Definition Functor__Const_op_zlzd__ {inst_m}
   fun {a} {b} => Functor__Const_fmap GHC.Base.∘ GHC.Base.const.
 
 Program Instance Functor__Const {m} : GHC.Base.Functor (Const m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__Const_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Const_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__Const_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__Const_op_zlzd__ |}.
 
 Local Definition Applicative__Const_op_ztzg__ {inst_m} `{GHC.Base.Monoid inst_m}
    : forall {a} {b}, (Const inst_m) a -> (Const inst_m) b -> (Const inst_m) b :=
@@ -233,11 +234,11 @@ Local Definition Applicative__Const_pure {inst_m} `{GHC.Base.Monoid inst_m}
 
 Program Instance Applicative__Const {m} `{GHC.Base.Monoid m}
    : GHC.Base.Applicative (Const m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Const_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Const_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Const_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__Const_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__Const_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__Const_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__Const_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__Const_pure |}.
 
 Local Definition Foldable__Const_foldMap {inst_m}
    : forall {m} {a},
@@ -306,20 +307,20 @@ Local Definition Foldable__Const_toList {inst_m}
     fun t => GHC.Base.build' (fun _ => (fun c n => Foldable__Const_foldr c n t)).
 
 Program Instance Foldable__Const {m} : Data.Foldable.Foldable (Const m) :=
-  fun _ k =>
-    k {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
-           Foldable__Const_fold ;
-         Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
-           Foldable__Const_foldMap ;
-         Data.Foldable.foldl__ := fun {b} {a} => Foldable__Const_foldl ;
-         Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Const_foldl' ;
-         Data.Foldable.foldr__ := fun {a} {b} => Foldable__Const_foldr ;
-         Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Const_foldr' ;
-         Data.Foldable.length__ := fun {a} => Foldable__Const_length ;
-         Data.Foldable.null__ := fun {a} => Foldable__Const_null ;
-         Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Const_product ;
-         Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Const_sum ;
-         Data.Foldable.toList__ := fun {a} => Foldable__Const_toList |}.
+  fun _ k__ =>
+    k__ {| Data.Foldable.fold__ := fun {m} `{GHC.Base.Monoid m} =>
+             Foldable__Const_fold ;
+           Data.Foldable.foldMap__ := fun {m} {a} `{GHC.Base.Monoid m} =>
+             Foldable__Const_foldMap ;
+           Data.Foldable.foldl__ := fun {b} {a} => Foldable__Const_foldl ;
+           Data.Foldable.foldl'__ := fun {b} {a} => Foldable__Const_foldl' ;
+           Data.Foldable.foldr__ := fun {a} {b} => Foldable__Const_foldr ;
+           Data.Foldable.foldr'__ := fun {a} {b} => Foldable__Const_foldr' ;
+           Data.Foldable.length__ := fun {a} => Foldable__Const_length ;
+           Data.Foldable.null__ := fun {a} => Foldable__Const_null ;
+           Data.Foldable.product__ := fun {a} `{GHC.Num.Num a} => Foldable__Const_product ;
+           Data.Foldable.sum__ := fun {a} `{GHC.Num.Num a} => Foldable__Const_sum ;
+           Data.Foldable.toList__ := fun {a} => Foldable__Const_toList |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Functor.Const.Show__Const' *)

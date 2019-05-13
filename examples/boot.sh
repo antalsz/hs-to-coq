@@ -2,20 +2,13 @@
 
 set -e
 
-cd $(dirname $0)
-
-if [ -z "$NO_BUILD_HS_TO_COQ" ] && which stack >/dev/null
-then
-  echo "Rebuilding the tool if necessary"
-  stack build
-fi
+################################################################################
+## Arguments and configuring what does/doesn't get done
 
 CLEAN=YES
 COQ=YES
 COQ_TEST=YES
 COQ_VERSION=8.8
-
-function have () { command -v "$1" >/dev/null 2>&1 ; }
 
 function clean ()    { if [ "$CLEAN"    = "YES" ]; then "$@"; fi }
 function coq ()      { if [ "$COQ"      = "YES" ]; then "$@"; fi }
@@ -74,6 +67,19 @@ case $OPTION in
     usage
     exit 1
 esac
+
+################################################################################
+## Rebuild what's requested
+
+cd $(dirname $0)
+
+if [ -z "$NO_BUILD_HS_TO_COQ" ] && which stack >/dev/null
+then
+  echo "Rebuilding the tool if necessary"
+  stack build
+fi
+
+function have () { command -v "$1" >/dev/null 2>&1 ; }
 
 function check_coq_version() {
   if ! which coqc >/dev/null

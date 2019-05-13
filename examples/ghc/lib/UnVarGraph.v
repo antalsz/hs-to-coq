@@ -153,9 +153,9 @@ Local Definition Eq___UnVarSet_op_zsze__ : UnVarSet -> UnVarSet -> bool :=
   GHC.Prim.coerce _GHC.Base./=_.
 
 Program Instance Eq___UnVarSet : GHC.Base.Eq_ UnVarSet :=
-  fun _ k =>
-    k {| GHC.Base.op_zeze____ := Eq___UnVarSet_op_zeze__ ;
-         GHC.Base.op_zsze____ := Eq___UnVarSet_op_zsze__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___UnVarSet_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___UnVarSet_op_zsze__ |}.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `UnVarGraph.Outputable__UnVarSet' *)

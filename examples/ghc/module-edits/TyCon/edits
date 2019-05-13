@@ -2,8 +2,6 @@
 #
 skip Core.primRepSizeB
 
-rewrite forall x, andb Util.debugIsOn x = false
-
 ## need default DataCon for record selector, but cannot add it now
 skip Core.dataCon
 skip Core.data_con
@@ -14,8 +12,6 @@ skip Core.promDcRepInfo
 
 
 skip Core.mkTyConKind
-rewrite forall x y, Core.mkTyConKind x y = tt
-
 skip Core.kindTyConKeys
 skip Core.isKindTyCon
 
@@ -34,7 +30,6 @@ skip Core.isGenerativeTyCon
 skip Core.tyConInjectivityInfo 
 
 skip Core.tyConATs
-skip module ForeignCall
 
 # Needs ClassSpec
 # skip Core.tyConAssoc_maybe

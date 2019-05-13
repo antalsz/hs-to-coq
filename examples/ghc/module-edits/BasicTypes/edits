@@ -18,7 +18,7 @@ skip BasicTypes.pprOneShotInfo
 # Unnecessary partial record accessors
 #skip BasicTypes.occ_tail
 
-# Eq implemented via ORd
+# Eq implemented via Ord
 skip BasicTypes.Eq___TyPrec
 skip BasicTypes.Ord__TyPrec
 

@@ -631,7 +631,7 @@ instance Gallina Proof where
     ProofDefined  body -> renderProof "Defined"  body
     ProofAdmitted body -> renderProof "Admitted" body
     where
-      renderProof end body = "Proof." <!> indent 2 (string body) <!> end <> "."
+      renderProof end body = "Proof." <!> string body <!> end <> "."
 
 instance Gallina ImportExport where
   renderGallina' _ Import = "Import"

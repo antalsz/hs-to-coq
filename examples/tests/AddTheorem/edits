@@ -1,0 +1,11 @@
+termination AddTheorem.oddPositions {measure (length xs)}
+obligations AddTheorem.oddPositions Coq.Program.Tactics.program_simpl; solve_oddPositions @behead_shrinks
+
+add AddTheorem Theorem AddTheorem.behead_shrinks {a} (xs : list a) :
+  (xs <> nil) ->
+  ((length (behead xs)) < (length xs)).
+Proof.
+  destruct xs; simpl; [easy | intros _; apply le_n].
+Qed.
+
+order AddTheorem.behead_shrinks AddTheorem.oddPositions

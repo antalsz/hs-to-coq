@@ -248,9 +248,9 @@ Local Definition MonadTrans__RWST_lift {inst_w} {inst_r} {inst_s}
 
 Program Instance MonadTrans__RWST {w} {r} {s} `{(GHC.Base.Monoid w)}
    : Control.Monad.Trans.Class.MonadTrans (RWST r w s) :=
-  fun _ k =>
-    k {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
-           MonadTrans__RWST_lift |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Trans.Class.lift__ := fun {m} {a} `{(GHC.Base.Monad m)} =>
+             MonadTrans__RWST_lift |}.
 
 (* Skipping all instances of class `Control.Monad.Fix.MonadFix', including
    `Control.Monad.Trans.RWS.Lazy.MonadFix__RWST' *)
@@ -313,9 +313,9 @@ Local Definition Functor__RWST_op_zlzd__ {inst_m} {inst_r} {inst_w} {inst_s}
 
 Program Instance Functor__RWST {m} {r} {w} {s} `{(GHC.Base.Functor m)}
    : GHC.Base.Functor (RWST r w s m) :=
-  fun _ k =>
-    k {| GHC.Base.fmap__ := fun {a} {b} => Functor__RWST_fmap ;
-         GHC.Base.op_zlzd____ := fun {a} {b} => Functor__RWST_op_zlzd__ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.fmap__ := fun {a} {b} => Functor__RWST_fmap ;
+           GHC.Base.op_zlzd____ := fun {a} {b} => Functor__RWST_op_zlzd__ |}.
 
 Local Definition Applicative__RWST_liftA2 {inst_w} {inst_m} {inst_r} {inst_s}
   `{GHC.Base.Monoid inst_w} `{GHC.Base.Functor inst_m} `{GHC.Base.Monad inst_m}
@@ -346,11 +346,11 @@ Local Definition Applicative__RWST_pure {inst_w} {inst_m} {inst_r} {inst_s}
 Program Instance Applicative__RWST {w} {m} {r} {s} `{GHC.Base.Monoid w}
   `{GHC.Base.Functor m} `{GHC.Base.Monad m}
    : GHC.Base.Applicative (RWST r w s m) :=
-  fun _ k =>
-    k {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__RWST_liftA2 ;
-         GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__RWST_op_zlztzg__ ;
-         GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__RWST_op_ztzg__ ;
-         GHC.Base.pure__ := fun {a} => Applicative__RWST_pure |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.liftA2__ := fun {a} {b} {c} => Applicative__RWST_liftA2 ;
+           GHC.Base.op_zlztzg____ := fun {a} {b} => Applicative__RWST_op_zlztzg__ ;
+           GHC.Base.op_ztzg____ := fun {a} {b} => Applicative__RWST_op_ztzg__ ;
+           GHC.Base.pure__ := fun {a} => Applicative__RWST_pure |}.
 
 Local Definition Monad__RWST_return_ {inst_w} {inst_m} {inst_r} {inst_s}
   `{GHC.Base.Monoid inst_w} `{GHC.Base.Monad inst_m}
@@ -360,10 +360,10 @@ Local Definition Monad__RWST_return_ {inst_w} {inst_m} {inst_r} {inst_s}
 Program Instance Monad__RWST {w} {m} {r} {s} `{GHC.Base.Monoid w}
   `{GHC.Base.Monad m}
    : GHC.Base.Monad (RWST r w s m) :=
-  fun _ k =>
-    k {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__RWST_op_zgzg__ ;
-         GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__RWST_op_zgzgze__ ;
-         GHC.Base.return___ := fun {a} => Monad__RWST_return_ |}.
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zgzg____ := fun {a} {b} => Monad__RWST_op_zgzg__ ;
+           GHC.Base.op_zgzgze____ := fun {a} {b} => Monad__RWST_op_zgzgze__ ;
+           GHC.Base.return___ := fun {a} => Monad__RWST_return_ |}.
 
 Local Definition MonadFail__RWST_fail {inst_w} {inst_m} {inst_r} {inst_s}
   `{GHC.Base.Monoid inst_w} `{Control.Monad.Fail.MonadFail inst_m}
@@ -374,7 +374,8 @@ Local Definition MonadFail__RWST_fail {inst_w} {inst_m} {inst_r} {inst_s}
 Program Instance MonadFail__RWST {w} {m} {r} {s} `{GHC.Base.Monoid w}
   `{Control.Monad.Fail.MonadFail m}
    : Control.Monad.Fail.MonadFail (RWST r w s m) :=
-  fun _ k => k {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__RWST_fail |}.
+  fun _ k__ =>
+    k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__RWST_fail |}.
 
 (* Skipping all instances of class `GHC.Base.Alternative', including
    `Control.Monad.Trans.RWS.Lazy.Alternative__RWST' *)

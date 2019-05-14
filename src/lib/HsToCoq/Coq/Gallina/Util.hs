@@ -240,4 +240,3 @@ collectArgs (Parens t)    = collectArgs t
 collectArgs (InScope t _) = collectArgs t
 collectArgs (HasType t _) = collectArgs t
 collectArgs t             = fail $ "collectArgs: " ++ show t
-

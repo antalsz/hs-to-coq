@@ -313,7 +313,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
   | null params = pure []
   | otherwise   = catMaybes <$> traverse setImplicits cons
   where
-    setImplicits (con,_,_) = lookupConstructorFields con >>= \case
+    setImplicits (con,binders,_) = lookupConstructorFields con >>= \case
         -- Ignore cons we do not know anythings about
         -- (e.g. because they are skipped or redefined)
         Nothing -> pure Nothing
@@ -323,11 +323,16 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
 
           pure . Just . Arguments Nothing con
                    $  replicate paramCount (underscoreArg ArgMaximal)
+                   ++ map (underscoreArg . binderArgumentSpecifiers) binders
                    ++ replicate fieldCount (underscoreArg ArgExplicit)
 
     paramCount = length params
 
     underscoreArg eim = ArgumentSpec eim UnderscoreName Nothing
+
+    binderArgumentSpecifiers binder = case binder ^. binderExplicitness of
+      Explicit -> ArgExplicit
+      Implicit -> ArgMaximal
 
 generateGroupArgumentSpecifiers :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupArgumentSpecifiers = fmap (fmap ArgumentsSentence)

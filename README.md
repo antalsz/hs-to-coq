@@ -82,7 +82,7 @@ containing custom directives to ensure correctness of generated code
 with the following directive:
 
 ```
-remame value Foo.SomeType = Foo.MkSomeType
+rename value Foo.SomeType = Foo.MkSomeType
 ```
 
 

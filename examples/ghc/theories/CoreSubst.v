@@ -1130,7 +1130,52 @@ Proof.
     ++ simpl. rewrite -> extendVarSetList_cons.
        auto.
 Qed.
-
+  
+Lemma lookupIdSubst_ok s v subst vs :
+  WellScoped_Subst subst      vs ->
+  WellScoped       (Mk_Var v) vs ->
+  WellScoped (lookupIdSubst s subst v) (getSubstInScopeVars subst).
+Proof.
+  case: subst => [in_scope_set env [] []].
+  rewrite /lookupIdSubst => WSsubst WSvar.
+  simpl in WSsubst.
+  destruct WSsubst as [ss vv] . specialize (vv v).         
+  destruct in_scope_set as [inscope ?]. simpl in *.
+  unfold WellScoped,WellScopedVar in WSvar.
+  destruct (isLocalId v) eqn:HLocal; simpl.
+  -- destruct (lookupVarEnv env v) eqn:HLookup.
+      + tauto.
+      + unfold StrongSubset in ss.
+        specialize (ss v).
+        rewrite lookupVarSet_minusDom_1 in ss ; try done.
+        apply isLocalVar_isLocalId in HLocal.
+        rewrite HLocal in WSvar.
+        destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
+        destruct (lookupVarSet inscope v) eqn:LI; try contradiction.
+        move: WSvar  => [v2 h].
+        unfold WellScoped, WellScopedVar.
+        case Lv2: (isLocalVar v1).
+        ++ move: (@ValidVarSet_Axiom inscope) => VV.
+           unfold ValidVarSet in VV.
+           specialize (VV _ _ LI).
+           rewrite -> lookupVarSet_eq with (v2 := v).
+           2: { rewrite -> Base.Eq_sym. auto. }
+           rewrite LI.
+           split.
+           eapply Var.almostEqual_refl; auto.
+           eapply GoodVar_almostEqual; eauto.
+           eapply almostEqual_trans; eauto.
+        ++ eapply GoodVar_almostEqual; eauto.
+           eapply almostEqual_trans; eauto.
+ -- (* Impossible case *)
+    unfold WellScopedVar.
+    destruct (isLocalVar v) eqn:h; try auto.
+    destruct (lookupVarSet vs v) eqn:h0; try contradiction.
+    unfold GoodVar in WSvar.
+    destruct WSvar as [ ? [? [? [h1 ?]]]].
+    destruct v; simpl in *; try done.
+    destruct idScope; try done.
+Qed.
 
 Lemma substExpr_ok : forall e s vs in_scope_set env u0 u1, 
     WellScoped_Subst (Mk_Subst in_scope_set env u0 u1) vs -> 
@@ -1152,46 +1197,8 @@ Proof.
 
   - (* Var case *)
     unfold subst_expr. 
-    intros v s vs in_scope_set env u0 u1 WSsubst WSvar.
-    unfold lookupIdSubst. 
-    simpl in WSsubst. 
-    destruct WSsubst as [ss vv] . specialize (vv v).         
-    destruct in_scope_set as [inscope ?]. simpl in *.
-
-    unfold WellScoped,WellScopedVar in WSvar.
-    destruct (isLocalId v) eqn:HLocal; simpl.
-    -- destruct (lookupVarEnv env v) eqn:HLookup. 
-        + tauto.
-        + unfold StrongSubset in ss.
-          specialize (ss v). 
-          rewrite lookupVarSet_minusDom_1 in ss ; try done.
-          apply isLocalVar_isLocalId in HLocal. 
-          rewrite HLocal in WSvar.
-          destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
-          destruct (lookupVarSet inscope v) eqn:LI; try contradiction.
-          move: WSvar  => [v2 h].
-          unfold WellScoped, WellScopedVar.          
-          case Lv2: (isLocalVar v1).
-          ++ move: (@ValidVarSet_Axiom inscope) => VV.             
-             unfold ValidVarSet in VV.
-             specialize (VV _ _ LI).
-             rewrite -> lookupVarSet_eq with (v2 := v). 
-             2: { rewrite -> Base.Eq_sym. auto. }      
-             rewrite LI.
-             split.
-             eapply Var.almostEqual_refl; auto.
-             eapply GoodVar_almostEqual; eauto.
-             eapply almostEqual_trans; eauto.
-          ++ eapply GoodVar_almostEqual; eauto.
-             eapply almostEqual_trans; eauto.
-   -- (* Impossible case *)
-      unfold WellScopedVar.
-      destruct (isLocalVar v) eqn:h; try auto.
-      destruct (lookupVarSet vs v) eqn:h0; try contradiction.
-      unfold GoodVar in WSvar.
-      destruct WSvar as [ ? [? [? [h1 ?]]]].
-      destruct v; simpl in *; try done.
-      destruct idScope; try done.
+    intros.
+    eapply lookupIdSubst_ok; eassumption.
 
   - intros. hs_simpl.
     destruct substBndr as [subst' bndr'] eqn:SB.

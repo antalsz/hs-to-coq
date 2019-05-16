@@ -34,4 +34,4 @@ CoreSubst.v
 CoreSemantics.v
 
 TrieMap.v
-# CSE.v
+CSE.v

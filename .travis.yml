@@ -50,7 +50,7 @@ jobs:
   - stage: Install dependencies, build hs-to-coq
     install:
       # Coq
-      - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 --compiler=system -n -y; fi
+      - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
       - opam list -i coq.8.8.1 || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.8.1 ocamlfind.1.7.3-1 ; }
       - opam list -i coq-mathcomp-ssreflect || opam install -y coq-mathcomp-ssreflect
@@ -163,4 +163,3 @@ jobs:
       - git add examples/ghc/lib
       - git status
       - git diff-index --cached --quiet HEAD -- examples/ghc/lib/
-

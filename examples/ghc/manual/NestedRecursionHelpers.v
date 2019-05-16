@@ -2,16 +2,25 @@
 (* Useful for development *)
 Add LoadPath "../../../base".
 Add LoadPath "../lib".
+Add LoadPath "../../containers/lib".
+Add LoadPath "../../transformers/lib".
 *)
 
 Require Import GHC.Base. Import GHC.Base.Notations.
+Require Import GHC.Num.  Import GHC.Num.Notations.
+Require Import GHC.Err.
 Require Import GHC.List.
 Require Import Util.
 Require Import Data.Traversable.
 Require Import Data.Functor.Utils.
 
+Require Import Core.
+Require Import Panic.
+
 From Coq Require Import ssreflect.
 Set Bullet Behavior "Strict Subproofs".
+
+Generalizable All Variables.
 
 (******************************************************************************)
 (** Ltac **)
@@ -97,6 +106,44 @@ Proof.
   case: (foldr _ _ _) => [result] /=.
   by rewrite /flip /= app_f.
 Qed.
+
+(* `collectNBinders_k n e (fun bs e' => …) = let '(bs,e') := collectNBinders n e in …`,
+   or both functions panicked (see `collectNBinders_k_is_collectNBinders`).
+
+   We need this for use in `CSE.cseBind` so Coq can see that the recursive call
+   under join points is terminating. *)
+Definition collectNBinders_k `{Default r} {b}
+                             (orig_n : nat) (orig_expr : Expr b)
+                             (k : list b -> Expr b -> r) :=
+  let fix go n bs expr {struct expr} :=
+      match n , bs , expr with
+      | 0 , _ , _       => k (reverse bs) expr
+      | _ , _ , Lam b e => go (n - 1) (cons b bs) e
+      | _ , _ , _       => panicStr &"collectNBinders_k" someSDoc
+      end
+  in go orig_n nil orig_expr.
+
+Theorem collectNBinders_k_is_collectNBinders `{Default r} {b} (orig_n : nat) (orig_expr : Expr b)
+        (k : list b -> Expr b -> r) :
+  (collectNBinders_k orig_n orig_expr k = let '(out_bs, out_expr) := collectNBinders orig_n orig_expr in
+                                          k out_bs out_expr)
+  \/
+  (panicked (collectNBinders_k orig_n orig_expr k) /\ panicked (collectNBinders orig_n orig_expr)).
+Proof.
+  rewrite /collectNBinders_k; set go_k := fix go _ _ (e : Expr b) {struct e} := _.
+  rewrite /collectNBinders;   set go   := fix go _ _ (e : Expr b) {struct e} := _.
+
+  elim: orig_expr orig_n nil => 
+    [ v | lit
+    | e1 IH1 e2 IH2 | v e IH
+    | bind body IH | scrut IHscrut bndr [] alts
+    | e IH [] | tickish e IH
+    | [] | [] ]
+    [| n]
+    bs;
+    try by [right; split; econstructor | left].
+  move: IH => /(_ (S n - 1) (v :: bs)) /= [-> | IH]; by [left | right].
+Qed.  
 
 (******************************************************************************)
 (** CoreUtils **)

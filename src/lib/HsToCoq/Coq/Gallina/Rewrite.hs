@@ -33,8 +33,6 @@ import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
 
-import Debug.Trace
-
 data Rewrite = Rewrite
     { patternVars :: [Ident]
     , lhs :: Term

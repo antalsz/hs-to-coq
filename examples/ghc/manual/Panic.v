@@ -22,3 +22,8 @@ Definition warnPprTrace {a} (b:bool) (msg : String) (i : Integer) (msg2: String)
 
 Parameter assertPanic :  forall {a} `{Default a}, String -> Integer -> a.
 Parameter assertPprPanic : forall {a} `{Default a}, String -> Integer -> String -> String -> a.
+
+(* TODO: Where should this live?  I currently need it pre-theories. —ASZ *)
+Inductive panicked {a} : a -> Prop :=
+| PlainPanic `{Default a} {s}     : panicked (panic s)
+| StrPanic   `{Default a} {s} {d} : panicked (panicStr s d).

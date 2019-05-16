@@ -13,3 +13,12 @@
 	path = doc/_themes/sphinx_rtd_theme
 	url = https://github.com/rtfd/sphinx_rtd_theme
 	ignore = dirty
+[submodule "functional-shuffle"]
+	path = examples/shuffle/functional-shuffle
+	url = https://github.com/antalsz/functional-shuffle
+[submodule "MonadRandom"]
+	path = examples/shuffle/MonadRandom
+	url = https://github.com/byorgey/MonadRandom.git
+[submodule "random"]
+	path = examples/shuffle/random
+	url = https://github.com/haskell/random.git

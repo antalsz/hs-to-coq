@@ -16,6 +16,9 @@ inline mutual CSE.cseCase
 # Justified by NestedRecursionHelpers.zipMapAccumL_is_mapAccumL_zip
 in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.List.zip xs1 xs2) = NestedRecursionHelpers.zipMapAccumL f s xs1 xs2
 
+# Justified by NestedRecursionHelpers.collectNBinders_k
+in CSE.cse_bind rewrite forall arity in_rhs params in_body k, match Core.collectNBinders arity in_rhs with | pair params in_body => k end = NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body => k)
+
 # OK?
 rewrite forall x, Core.tyConAppArgs x = nil
 

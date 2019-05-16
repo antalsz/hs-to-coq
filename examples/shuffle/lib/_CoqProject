@@ -1,0 +1,9 @@
+-Q .                      ""
+-R ../../../base          ""
+-Q ../../containers/lib   ""
+-Q ../../transformers/lib ""
+./System/Random.v
+./Data/List/Shuffle.v
+./Control/Monad/Random.v
+./Control/Monad/Random/Lazy.v
+./Control/Monad/Random/Class.v

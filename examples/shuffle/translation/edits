@@ -1,0 +1,156 @@
+################################################################################
+# Shuffling
+
+termination Data.List.Shuffle.riffle        {measure (length arg_0__ + length arg_2__)}
+termination Data.List.Shuffle.shuffleLength {measure (length arg_0__)}
+
+obligations Data.List.Shuffle.riffle        solve_riffle
+obligations Data.List.Shuffle.shuffleLength solve_shuffleLength @halve @length_halve
+
+add Data.List.Shuffle Theorem Data.List.Shuffle.length_halve {a} (zs : list a) :
+  match Data.List.Shuffle.halve zs with
+  | pair xs ys => (length xs = Nat.div2 (S (length zs))) /\
+                  (length ys = Nat.div2 (length zs))
+  end.
+Proof.
+  induction zs as [|z zs IHzs]; simpl; try easy.
+  destruct (halve zs) as [xs ys]; simpl.
+  destruct IHzs as [IHxs IHys].
+  split.
+  - f_equal; apply IHys.
+  - now rewrite IHxs; simpl.
+Qed.
+
+order Data.List.Shuffle.length_halve Data.List.Shuffle.shuffleLength
+
+################################################################################
+# MonadRandom
+
+# Kind inference
+class kinds Control.Monad.Random.Class.MonadInterleave (Type -> Type)
+
+# Functional dependencies
+skip class Control.Monad.Random.Class.MonadSplit
+
+# Multi-parameter type classes
+skip module Control.Monad.Trans.Random.Lazy
+
+# Unsupported monads/monad transformers
+skip Control.Monad.Random.Class.MonadRandom__ErrorT
+skip Control.Monad.Random.Class.MonadInterleave__ErrorT
+skip Control.Monad.Random.Class.MonadRandom__ListT
+skip Control.Monad.Random.Class.MonadInterleave__ListT
+skip Control.Monad.Random.Class.MonadRandom__IO
+
+# Unsupported monad transformers that we need to give a unique name so we can
+# effectively skip
+skip module Control.Monad.Trans.Writer.Strict
+rename type Control.Monad.Trans.Writer.Strict.WriterT = Control.Monad.Trans.Writer.Strict.Strict_WriterT
+skip Control.Monad.Random.Class.MonadRandom__Strict_WriterT
+skip Control.Monad.Random.Class.MonadInterleave__Strict_WriterT
+
+skip module Control.Monad.Trans.State.Strict
+rename type Control.Monad.Trans.State.Strict.StateT = Control.Monad.Trans.State.Strict.Strict_StateT
+skip Control.Monad.Random.Class.MonadRandom__Strict_StateT
+skip Control.Monad.Random.Class.MonadInterleave__Strict_StateT
+
+skip module Control.Monad.Trans.RWS.Strict
+rename type Control.Monad.Trans.RWS.Strict.RWST = Control.Monad.Trans.RWS.Strict.Strict_RWST
+skip Control.Monad.Random.Class.MonadRandom__Strict_RWST
+skip Control.Monad.Random.Class.MonadInterleave__Strict_RWST
+
+# Functions we don't care about
+skip Control.Monad.Random.Class.fromListMay
+skip Control.Monad.Random.Class.weightedMay
+skip Control.Monad.Random.Class.uniformMay
+skip Control.Monad.Random.Class.fromList
+skip Control.Monad.Random.Class.weighted
+skip Control.Monad.Random.Class.uniform
+
+################################################################################
+# random
+
+# The random integer generation function that I don't feel like verifying
+axiomatize definition System.Random.randomIvalInteger
+
+# The `Integer` type
+rename type GHC.Integer.Type.Integer = GHC.Num.Integer
+
+# Expand the definition of `randomBounded` to refer to the appropriate
+# `randomR`.
+in System.Random.Random__Word_random rewrite forall, System.Random.randomBounded = System.Random.Random__Word_randomR (pair GHC.Enum.minBound GHC.Enum.maxBound)
+in System.Random.Random__Int_random  rewrite forall, System.Random.randomBounded = System.Random.Random__Int_randomR  (pair GHC.Enum.minBound GHC.Enum.maxBound)
+
+# Uses `IO`
+skip method System.Random.Random randomIO
+skip method System.Random.Random randomRIO
+skip        System.Random.mkStdRNG
+skip        System.Random.getStdRandom
+skip        System.Random.getStdGen
+skip        System.Random.setStdGen
+skip        System.Random.newStdGen
+skip        System.Random.theStdGen
+
+# Creates infinite lists
+skip method System.Random.Random randoms
+skip method System.Random.Random randomRs
+skip        System.Random.buildRandoms
+
+# Uses `Int32`
+skip System.Random.StdGen
+skip System.Random.mkStdGen32
+skip System.Random.int32Count
+
+# Uses other fixed-size words
+skip System.Random.Random__Word8
+skip System.Random.Random__Word16
+skip System.Random.Random__Word32
+skip System.Random.Random__Word64
+skip System.Random.Random__Int8
+skip System.Random.Random__Int16
+skip System.Random.Random__Int32
+skip System.Random.Random__Int64
+
+# Uses `Float` or `Double` or similar
+skip System.Random.randomRFloating
+skip System.Random.randomIvalDouble
+skip System.Random.randomFrac
+skip System.Random.Random__Float
+skip System.Random.Random__Double
+
+# Uses `Char`
+skip System.Random.Random__Char
+
+# Uses `StdGen`
+skip System.Random.createStdGen
+skip System.Random.stdSplit
+skip System.Random.stdNext
+skip System.Random.mkStdGen
+skip System.Random.stdFromString
+skip System.Random.RandomGen__StdGen
+
+# Uses time types
+skip System.Random.getTime
+
+# Uses foreign types
+skip System.Random.Random__CChar
+skip System.Random.Random__CSChar
+skip System.Random.Random__CUChar
+skip System.Random.Random__CShort
+skip System.Random.Random__CUShort
+skip System.Random.Random__CInt
+skip System.Random.Random__CUInt
+skip System.Random.Random__CLong
+skip System.Random.Random__CULong
+skip System.Random.Random__CPtrdiff
+skip System.Random.Random__CSize
+skip System.Random.Random__CWchar
+skip System.Random.Random__CSigAtomic
+skip System.Random.Random__CLLong
+skip System.Random.Random__CULLong
+skip System.Random.Random__CIntPtr
+skip System.Random.Random__CUIntPtr
+skip System.Random.Random__CIntMax
+skip System.Random.Random__CUIntMax
+skip System.Random.Random__CFloat
+skip System.Random.Random__CDouble

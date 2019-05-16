@@ -79,7 +79,7 @@ CORE_MODULES = \
   CoreArity \
   CoreTidy \
   TrieMap \
-#  CSE 
+  CSE 
 
 
 NOTRANSLATE = \

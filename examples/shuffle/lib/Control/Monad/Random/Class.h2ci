@@ -1,0 +1,37 @@
+superclassCount:
+  Control.Monad.Random.Class.MonadInterleave: '4'
+  Control.Monad.Random.Class.MonadRandom: '3'
+classTypes:
+  Control.Monad.Random.Class.MonadInterleave: fromList []
+  Control.Monad.Random.Class.MonadRandom: fromList []
+classDefns:
+  Control.Monad.Random.Class.MonadInterleave: ClassDefinition (Qualified "Control.Monad.Random.Class"
+    "MonadInterleave") [Typed Ungeneralizable Explicit (Ident (Bare "m") :| []) (Arrow
+    (Qualid (Bare "Type")) (Qualid (Bare "Type"))),Generalized Implicit (App (Qualid
+    (Qualified "Control.Monad.Random.Class" "MonadRandom")) (PosArg (Qualid (Bare
+    "m")) :| []))] Nothing [(Qualified "Control.Monad.Random.Class" "interleave",Forall
+    (Inferred Implicit (Ident (Bare "a")) :| []) (Arrow (App (Qualid (Bare "m")) (PosArg
+    (Qualid (Bare "a")) :| [])) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "a"))
+    :| []))))]
+  Control.Monad.Random.Class.MonadRandom: ClassDefinition (Qualified "Control.Monad.Random.Class"
+    "MonadRandom") [Inferred Explicit (Ident (Bare "m")),Generalized Implicit (Parens
+    (App (Qualid (Qualified "GHC.Base" "Monad")) (PosArg (Qualid (Bare "m")) :| [])))]
+    Nothing [(Qualified "Control.Monad.Random.Class" "getRandom",Forall (Inferred
+    Implicit (Ident (Bare "a")) :| []) (Forall (Generalized Implicit (Parens (App
+    (Qualid (Qualified "System.Random" "Random")) (PosArg (Qualid (Bare "a")) :| [])))
+    :| []) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "a")) :| [])))),(Qualified
+    "Control.Monad.Random.Class" "getRandomR",Forall (Inferred Implicit (Ident (Bare
+    "a")) :| []) (Forall (Generalized Implicit (Parens (App (Qualid (Qualified "System.Random"
+    "Random")) (PosArg (Qualid (Bare "a")) :| []))) :| []) (Arrow (InScope (App (Qualid
+    (Bare "op_zt__")) (PosArg (Qualid (Bare "a")) :| [PosArg (Qualid (Bare "a"))]))
+    "type") (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "a")) :| []))))),(Qualified
+    "Control.Monad.Random.Class" "getRandomRs",Forall (Inferred Implicit (Ident (Bare
+    "a")) :| []) (Forall (Generalized Implicit (Parens (App (Qualid (Qualified "System.Random"
+    "Random")) (PosArg (Qualid (Bare "a")) :| []))) :| []) (Arrow (InScope (App (Qualid
+    (Bare "op_zt__")) (PosArg (Qualid (Bare "a")) :| [PosArg (Qualid (Bare "a"))]))
+    "type") (App (Qualid (Bare "m")) (PosArg (App (Qualid (Bare "list")) (PosArg (Qualid
+    (Bare "a")) :| [])) :| []))))),(Qualified "Control.Monad.Random.Class" "getRandoms",Forall
+    (Inferred Implicit (Ident (Bare "a")) :| []) (Forall (Generalized Implicit (Parens
+    (App (Qualid (Qualified "System.Random" "Random")) (PosArg (Qualid (Bare "a"))
+    :| []))) :| []) (App (Qualid (Bare "m")) (PosArg (App (Qualid (Bare "list")) (PosArg
+    (Qualid (Bare "a")) :| [])) :| []))))]

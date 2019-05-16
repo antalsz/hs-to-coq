@@ -86,6 +86,7 @@ convertConDecl curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
     (_, curTypArgs) <- collectArgs curType
     conTy           <- maybeForall extraArgs <$> convertLHsSigTypeWithExcls utvm sigTy
                        (mapMaybe termHead curTypArgs)
+    storeConstructorFields conName $ NonRecordFields 0   -- This is a hack
     pure (conName, [], Just conTy)
 
 --------------------------------------------------------------------------------

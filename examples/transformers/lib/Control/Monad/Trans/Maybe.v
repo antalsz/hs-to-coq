@@ -33,7 +33,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive MaybeT m a : Type
-  := Mk_MaybeT (runMaybeT : m (option a)) : MaybeT m a.
+  := | Mk_MaybeT (runMaybeT : m (option a)) : MaybeT m a.
 
 Arguments Mk_MaybeT {_} {_} _.
 

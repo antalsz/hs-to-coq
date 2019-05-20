@@ -20,7 +20,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive EnumSet (a : Type) : Type
-  := Mk_EnumSet : Data.IntSet.Internal.IntSet -> EnumSet a.
+  := | Mk_EnumSet : Data.IntSet.Internal.IntSet -> EnumSet a.
 
 Arguments Mk_EnumSet {_} _.
 

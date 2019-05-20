@@ -20,7 +20,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive MaybeErr err val : Type
-  := Succeeded : val -> MaybeErr err val
+  := | Succeeded : val -> MaybeErr err val
   |  Failed : err -> MaybeErr err val.
 
 Arguments Succeeded {_} {_} _.

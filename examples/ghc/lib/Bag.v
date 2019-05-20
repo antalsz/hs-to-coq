@@ -32,7 +32,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive Bag a : Type
-  := EmptyBag : Bag a
+  := | EmptyBag : Bag a
   |  UnitBag : a -> Bag a
   |  TwoBags : (Bag a) -> (Bag a) -> Bag a
   |  ListBag : list a -> Bag a.

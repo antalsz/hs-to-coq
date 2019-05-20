@@ -44,7 +44,7 @@ Definition IdSubstEnv :=
   (Core.IdEnv Core.CoreExpr)%type.
 
 Inductive Subst : Type
-  := Mk_Subst : Core.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
+  := | Mk_Subst : Core.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
 
 (* Midamble *)
 

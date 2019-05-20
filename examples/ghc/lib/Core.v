@@ -141,12 +141,12 @@ Definition VarEnv :=
   UniqFM.UniqFM%type.
 
 Inductive UnfoldingSource : Type
-  := InlineRhs : UnfoldingSource
+  := | InlineRhs : UnfoldingSource
   |  InlineStable : UnfoldingSource
   |  InlineCompulsory : UnfoldingSource.
 
 Inductive UnfoldingGuidance : Type
-  := UnfWhen (ug_arity : BasicTypes.Arity) (ug_unsat_ok : bool) (ug_boring_ok
+  := | UnfWhen (ug_arity : BasicTypes.Arity) (ug_unsat_ok : bool) (ug_boring_ok
     : bool)
    : UnfoldingGuidance
   |  UnfIfGoodArgs (ug_args : list nat) (ug_size : nat) (ug_res : nat)
@@ -156,7 +156,7 @@ Inductive UnfoldingGuidance : Type
 Axiom Unfolding : Type.
 
 Inductive TypeShape : Type
-  := TsFun : TypeShape -> TypeShape
+  := | TsFun : TypeShape -> TypeShape
   |  TsProd : list TypeShape -> TypeShape
   |  TsUnk : TypeShape.
 
@@ -164,13 +164,13 @@ Definition TyVarEnv :=
   VarEnv%type.
 
 Inductive TyVarBndr tyvar argf : Type
-  := TvBndr : tyvar -> argf -> TyVarBndr tyvar argf.
+  := | TvBndr : tyvar -> argf -> TyVarBndr tyvar argf.
 
 Definition TyConRepName :=
   Name.Name%type.
 
 Inductive TyConFlavour : Type
-  := ClassFlavour : TyConFlavour
+  := | ClassFlavour : TyConFlavour
   |  TupleFlavour : BasicTypes.Boxity -> TyConFlavour
   |  SumFlavour : TyConFlavour
   |  DataTypeFlavour : TyConFlavour
@@ -187,17 +187,17 @@ Definition TyCoVarEnv :=
   VarEnv%type.
 
 Inductive TickishScoping : Type
-  := NoScope : TickishScoping
+  := | NoScope : TickishScoping
   |  SoftScope : TickishScoping
   |  CostCentreScope : TickishScoping.
 
 Inductive TickishPlacement : Type
-  := PlaceRuntime : TickishPlacement
+  := | PlaceRuntime : TickishPlacement
   |  PlaceNonLam : TickishPlacement
   |  PlaceCostCentre : TickishPlacement.
 
 Inductive Tickish id : Type
-  := ProfNote (profNoteCC : unit) (profNoteCount : bool) (profNoteScope : bool)
+  := | ProfNote (profNoteCC : unit) (profNoteCount : bool) (profNoteScope : bool)
    : Tickish id
   |  HpcTick (tickModule : Module.Module) (tickId : nat) : Tickish id
   |  Breakpoint (breakpointId : nat) (breakpointFVs : list id) : Tickish id
@@ -207,32 +207,33 @@ Inductive Tickish id : Type
 Definition TickBoxId :=
   nat%type.
 
-Inductive TickBoxOp : Type := TickBox : Module.Module -> TickBoxId -> TickBoxOp.
+Inductive TickBoxOp : Type
+  := | TickBox : Module.Module -> TickBoxId -> TickBoxOp.
 
 Inductive Termination r : Type
-  := Diverges : Termination r
+  := | Diverges : Termination r
   |  ThrowsExn : Termination r
   |  Dunno : r -> Termination r.
 
 Inductive StrictnessMark : Type
-  := MarkedStrict : StrictnessMark
+  := | MarkedStrict : StrictnessMark
   |  NotMarkedStrict : StrictnessMark.
 
 Inductive SrcUnpackedness : Type
-  := SrcUnpack : SrcUnpackedness
+  := | SrcUnpack : SrcUnpackedness
   |  SrcNoUnpack : SrcUnpackedness
   |  NoSrcUnpack : SrcUnpackedness.
 
 Inductive SrcStrictness : Type
-  := SrcLazy : SrcStrictness
+  := | SrcLazy : SrcStrictness
   |  SrcStrict : SrcStrictness
   |  NoSrcStrict : SrcStrictness.
 
 Inductive RecTcChecker : Type
-  := RC : nat -> (NameEnv.NameEnv nat) -> RecTcChecker.
+  := | RC : nat -> (NameEnv.NameEnv nat) -> RecTcChecker.
 
 Inductive PrimElemRep : Type
-  := Int8ElemRep : PrimElemRep
+  := | Int8ElemRep : PrimElemRep
   |  Int16ElemRep : PrimElemRep
   |  Int32ElemRep : PrimElemRep
   |  Int64ElemRep : PrimElemRep
@@ -244,7 +245,7 @@ Inductive PrimElemRep : Type
   |  DoubleElemRep : PrimElemRep.
 
 Inductive PrimRep : Type
-  := VoidRep : PrimRep
+  := | VoidRep : PrimRep
   |  LiftedRep : PrimRep
   |  UnliftedRep : PrimRep
   |  IntRep : PrimRep
@@ -257,7 +258,7 @@ Inductive PrimRep : Type
   |  VecRep : nat -> PrimElemRep -> PrimRep.
 
 Inductive RuntimeRepInfo : Type
-  := NoRRI : RuntimeRepInfo
+  := | NoRRI : RuntimeRepInfo
   |  RuntimeRep : (list unit -> list PrimRep) -> RuntimeRepInfo
   |  VecCount : nat -> RuntimeRepInfo
   |  VecElem : PrimElemRep -> RuntimeRepInfo.
@@ -272,24 +273,24 @@ Definition OutCoercion :=
   unit%type.
 
 Inductive LevityInfo : Type
-  := NoLevityInfo : LevityInfo
+  := | NoLevityInfo : LevityInfo
   |  NeverLevityPolymorphic : LevityInfo.
 
 Inductive KillFlags : Type
-  := Mk_KillFlags (kf_abs : bool) (kf_used_once : bool) (kf_called_once : bool)
+  := | Mk_KillFlags (kf_abs : bool) (kf_used_once : bool) (kf_called_once : bool)
    : KillFlags.
 
-Inductive JointDmd s u : Type := JD (sd : s) (ud : u) : JointDmd s u.
+Inductive JointDmd s u : Type := | JD (sd : s) (ud : u) : JointDmd s u.
 
 Inductive IsOrphan : Type
-  := Mk_IsOrphan : IsOrphan
+  := | Mk_IsOrphan : IsOrphan
   |  NotOrphan : OccName.OccName -> IsOrphan.
 
 Definition InlinePragInfo :=
   BasicTypes.InlinePragma%type.
 
 Inductive Injectivity : Type
-  := NotInjective : Injectivity
+  := | NotInjective : Injectivity
   |  Injective : list bool -> Injectivity.
 
 Definition InType :=
@@ -305,11 +306,11 @@ Definition IdEnv :=
   VarEnv%type.
 
 Inductive HsSrcBang : Type
-  := Mk_HsSrcBang
+  := | Mk_HsSrcBang
    : BasicTypes.SourceText -> SrcUnpackedness -> SrcStrictness -> HsSrcBang.
 
 Inductive HsImplBang : Type
-  := HsLazy : HsImplBang
+  := | HsLazy : HsImplBang
   |  HsStrict : HsImplBang
   |  HsUnpack : (option unit) -> HsImplBang.
 
@@ -317,23 +318,23 @@ Definition FunDep a :=
   (list a * list a)%type%type.
 
 Inductive FamTyConFlav : Type
-  := DataFamilyTyCon : TyConRepName -> FamTyConFlav
+  := | DataFamilyTyCon : TyConRepName -> FamTyConFlav
   |  OpenSynFamilyTyCon : FamTyConFlav
   |  ClosedSynFamilyTyCon : (option (list unit)) -> FamTyConFlav
   |  AbstractClosedSynFamilyTyCon : FamTyConFlav
   |  BuiltInSynFamTyCon : unit -> FamTyConFlav.
 
 Inductive ExportFlag : Type
-  := NotExported : ExportFlag
+  := | NotExported : ExportFlag
   |  Exported : ExportFlag.
 
 Inductive IdScope : Type
-  := GlobalId : IdScope
+  := | GlobalId : IdScope
   |  LocalId : ExportFlag -> IdScope.
 
-Inductive ExnStr : Type := VanStr : ExnStr |  Mk_ExnStr : ExnStr.
+Inductive ExnStr : Type := | VanStr : ExnStr |  Mk_ExnStr : ExnStr.
 
-Inductive Str s : Type := Lazy : Str s |  Mk_Str : ExnStr -> s -> Str s.
+Inductive Str s : Type := | Lazy : Str s |  Mk_Str : ExnStr -> s -> Str s.
 
 Definition DefMethInfo :=
   (option (Name.Name * BasicTypes.DefMethSpec unit)%type)%type.
@@ -347,9 +348,9 @@ Definition DTyVarEnv :=
 Definition DIdEnv :=
   DVarEnv%type.
 
-Inductive Count : Type := One : Count |  Many : Count.
+Inductive Count : Type := | One : Count |  Many : Count.
 
-Inductive Use u : Type := Abs : Use u |  Mk_Use : Count -> u -> Use u.
+Inductive Use u : Type := | Abs : Use u |  Mk_Use : Count -> u -> Use u.
 
 Definition DmdShell :=
   (JointDmd (Str unit) (Use unit))%type.
@@ -360,10 +361,10 @@ Definition CoVarEnv :=
 Definition ClassMinimalDef :=
   (BooleanFormula.BooleanFormula Name.Name)%type.
 
-Inductive CafInfo : Type := MayHaveCafRefs : CafInfo |  NoCafRefs : CafInfo.
+Inductive CafInfo : Type := | MayHaveCafRefs : CafInfo |  NoCafRefs : CafInfo.
 
 Inductive CPRResult : Type
-  := NoCPR : CPRResult
+  := | NoCPR : CPRResult
   |  RetProd : CPRResult
   |  RetSum : BasicTypes.ConTag -> CPRResult.
 
@@ -374,7 +375,7 @@ Definition ArityInfo :=
   BasicTypes.Arity%type.
 
 Inductive UseDmd : Type
-  := UCall : Count -> UseDmd -> UseDmd
+  := | UCall : Count -> UseDmd -> UseDmd
   |  UProd : list (Use UseDmd)%type -> UseDmd
   |  UHead : UseDmd
   |  Used : UseDmd.
@@ -383,7 +384,7 @@ Definition ArgUse :=
   (Use UseDmd)%type.
 
 Inductive StrDmd : Type
-  := HyperStr : StrDmd
+  := | HyperStr : StrDmd
   |  SCall : StrDmd -> StrDmd
   |  SProd : list (Str StrDmd)%type -> StrDmd
   |  HeadStr : StrDmd.
@@ -401,45 +402,46 @@ Definition BothDmdArg :=
   (DmdEnv * Termination unit)%type%type.
 
 Inductive DmdType : Type
-  := Mk_DmdType : DmdEnv -> list Demand -> DmdResult -> DmdType.
+  := | Mk_DmdType : DmdEnv -> list Demand -> DmdResult -> DmdType.
 
-Inductive StrictSig : Type := Mk_StrictSig : DmdType -> StrictSig.
+Inductive StrictSig : Type := | Mk_StrictSig : DmdType -> StrictSig.
 
 Definition CleanDemand :=
   (JointDmd StrDmd UseDmd)%type.
 
 Inductive ArgFlag : Type
-  := Required : ArgFlag
+  := | Required : ArgFlag
   |  Specified : ArgFlag
   |  Inferred : ArgFlag.
 
 Inductive TyConBndrVis : Type
-  := NamedTCB : ArgFlag -> TyConBndrVis
+  := | NamedTCB : ArgFlag -> TyConBndrVis
   |  AnonTCB : TyConBndrVis.
 
 Inductive AlgTyConFlav : Type
-  := VanillaAlgTyCon : TyConRepName -> AlgTyConFlav
+  := | VanillaAlgTyCon : TyConRepName -> AlgTyConFlav
   |  UnboxedAlgTyCon : (option TyConRepName) -> AlgTyConFlav
   |  ClassTyCon : Class -> TyConRepName -> AlgTyConFlav
   |  DataFamInstTyCon : (list unit) -> TyCon -> list unit -> AlgTyConFlav
 with Class : Type
-  := Mk_Class (classTyCon : TyCon) (className : Name.Name) (classKey
+  := | Mk_Class (classTyCon : TyCon) (className : Name.Name) (classKey
     : Unique.Unique) (classTyVars : list Var%type) (classFunDeps
     : list (FunDep Var%type)) (classBody : ClassBody)
    : Class
 with ClassBody : Type
-  := AbstractClass : ClassBody
+  := | AbstractClass : ClassBody
   |  ConcreteClass (classSCThetaStuff : list unit) (classSCSels : list Var%type)
   (classATStuff : list ClassATItem) (classOpStuff
     : list (Var%type * DefMethInfo)%type%type) (classMinimalDefStuff
     : ClassMinimalDef)
    : ClassBody
 with ClassATItem : Type
-  := ATI : TyCon -> (option (unit * SrcLoc.SrcSpan)%type) -> ClassATItem
+  := | ATI : TyCon -> (option (unit * SrcLoc.SrcSpan)%type) -> ClassATItem
 with TyCon : Type
-  := FunTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
-    : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConResKind : unit) (tyConKind
-    : unit) (tyConArity : BasicTypes.Arity) (tcRepName : TyConRepName)
+  := | FunTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
+  (tyConBinders : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConResKind
+    : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity) (tcRepName
+    : TyConRepName)
    : TyCon
   |  AlgTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
     : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConTyVars : list Var%type)
@@ -478,7 +480,7 @@ with TyCon : Type
     : TyConFlavour)
    : TyCon
 with AlgTyConRhs : Type
-  := AbstractTyCon : AlgTyConRhs
+  := | AbstractTyCon : AlgTyConRhs
   |  DataTyCon (data_cons : list DataCon) (is_enum : bool) : AlgTyConRhs
   |  TupleTyCon (data_con : DataCon) (tup_sort : BasicTypes.TupleSort)
    : AlgTyConRhs
@@ -487,7 +489,7 @@ with AlgTyConRhs : Type
     : (list Var%type * unit)%type) (nt_co : list unit)
    : AlgTyConRhs
 with DataCon : Type
-  := MkData (dcName : Name.Name) (dcUnique : Unique.Unique) (dcTag
+  := | MkData (dcName : Name.Name) (dcUnique : Unique.Unique) (dcTag
     : BasicTypes.ConTag) (dcVanilla : bool) (dcUnivTyVars : list Var%type)
   (dcExTyVars : list Var%type) (dcUserTyVarBinders
     : list (TyVarBndr Var%type ArgFlag)%type) (dcEqSpec : list EqSpec)
@@ -498,12 +500,12 @@ with DataCon : Type
     : TyCon) (dcRepType : unit) (dcInfix : bool) (dcPromoted : TyCon)
    : DataCon
 with DataConRep : Type
-  := NoDataConRep : DataConRep
+  := | NoDataConRep : DataConRep
   |  DCR (dcr_wrap_id : Var%type) (dcr_boxer : unit) (dcr_arg_tys : list unit)
   (dcr_stricts : list StrictnessMark) (dcr_bangs : list HsImplBang)
    : DataConRep
 with Var : Type
-  := Mk_TyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
+  := | Mk_TyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
    : Var
   |  Mk_TcTyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
   (tc_tv_details : unit)
@@ -512,7 +514,7 @@ with Var : Type
   (idScope : IdScope) (id_details : IdDetails) (id_info : IdInfo)
    : Var
 with IdDetails : Type
-  := VanillaId : IdDetails
+  := | VanillaId : IdDetails
   |  RecSelId (sel_tycon : RecSelParent) (sel_naughty : bool) : IdDetails
   |  DataConWorkId : DataCon -> IdDetails
   |  DataConWrapId : DataCon -> IdDetails
@@ -524,11 +526,11 @@ with IdDetails : Type
   |  CoVarId : IdDetails
   |  Mk_JoinId : BasicTypes.JoinArity -> IdDetails
 with RecSelParent : Type
-  := RecSelData : TyCon -> RecSelParent
+  := | RecSelData : TyCon -> RecSelParent
   |  RecSelPatSyn : PatSyn -> RecSelParent
 with PatSyn : Type
-  := MkPatSyn (psName : Name.Name) (psUnique : Unique.Unique) (psArgs : list unit)
-  (psArity : BasicTypes.Arity) (psInfix : bool) (psFieldLabels
+  := | MkPatSyn (psName : Name.Name) (psUnique : Unique.Unique) (psArgs
+    : list unit) (psArity : BasicTypes.Arity) (psInfix : bool) (psFieldLabels
     : list FieldLabel.FieldLabel) (psUnivTyVars
     : list (TyVarBndr Var%type ArgFlag)%type) (psReqTheta : unit) (psExTyVars
     : list (TyVarBndr Var%type ArgFlag)%type) (psProvTheta : unit) (psResultTy
@@ -536,15 +538,15 @@ with PatSyn : Type
     : option (Var%type * bool)%type)
    : PatSyn
 with IdInfo : Type
-  := Mk_IdInfo (arityInfo : ArityInfo) (ruleInfo : RuleInfo) (unfoldingInfo
+  := | Mk_IdInfo (arityInfo : ArityInfo) (ruleInfo : RuleInfo) (unfoldingInfo
     : Unfolding) (cafInfo : CafInfo) (oneShotInfo : BasicTypes.OneShotInfo)
   (inlinePragInfo : BasicTypes.InlinePragma) (occInfo : BasicTypes.OccInfo)
   (strictnessInfo : StrictSig) (demandInfo : Demand) (callArityInfo : ArityInfo)
   (levityInfo : LevityInfo)
    : IdInfo
 with RuleInfo : Type
-  := Mk_RuleInfo : list CoreRuleInfo -> (UniqDSet.UniqDSet Var)%type -> RuleInfo
-with EqSpec : Type := Mk_EqSpec : Var%type -> unit -> EqSpec.
+  := | Mk_RuleInfo : list CoreRuleInfo -> (UniqDSet.UniqDSet Var)%type -> RuleInfo
+with EqSpec : Type := | Mk_EqSpec : Var%type -> unit -> EqSpec.
 
 Definition TyVar :=
   Var%type.
@@ -573,7 +575,7 @@ Definition InBndr :=
 Definition OutBndr :=
   CoreBndr%type.
 
-Inductive TaggedBndr t : Type := TB : CoreBndr -> t -> TaggedBndr t.
+Inductive TaggedBndr t : Type := | TB : CoreBndr -> t -> TaggedBndr t.
 
 Definition CoVar :=
   Id%type.
@@ -660,12 +662,12 @@ Definition OutTyVar :=
   TyVar%type.
 
 Inductive AltCon : Type
-  := DataAlt : DataCon -> AltCon
+  := | DataAlt : DataCon -> AltCon
   |  LitAlt : Literal.Literal -> AltCon
   |  DEFAULT : AltCon.
 
 Inductive Expr b : Type
-  := Mk_Var : Id -> Expr b
+  := | Mk_Var : Id -> Expr b
   |  Lit : Literal.Literal -> Expr b
   |  App : (Expr b) -> (Expr%type b) -> Expr b
   |  Lam : b -> (Expr b) -> Expr b
@@ -679,7 +681,7 @@ Inductive Expr b : Type
   |  Type_ : unit -> Expr b
   |  Coercion : unit -> Expr b
 with Bind b : Type
-  := NonRec : b -> (Expr b) -> Bind b
+  := | NonRec : b -> (Expr b) -> Bind b
   |  Rec : list (b * (Expr b))%type -> Bind b.
 
 Definition Arg :=
@@ -728,7 +730,7 @@ Definition CoreExpr :=
   (Expr CoreBndr)%type.
 
 Inductive CoreVect : Type
-  := Vect : Id -> CoreExpr -> CoreVect
+  := | Vect : Id -> CoreExpr -> CoreVect
   |  NoVect : Id -> CoreVect
   |  VectType : bool -> TyCon -> (option TyCon) -> CoreVect
   |  VectClass : TyCon -> CoreVect
@@ -747,7 +749,7 @@ Definition TaggedAlt t :=
   (Alt (TaggedBndr t))%type.
 
 Inductive AnnExpr' bndr annot : Type
-  := AnnVar : Id -> AnnExpr' bndr annot
+  := | AnnVar : Id -> AnnExpr' bndr annot
   |  AnnLit : Literal.Literal -> AnnExpr' bndr annot
   |  AnnLam
    : bndr ->
@@ -783,7 +785,7 @@ Inductive AnnExpr' bndr annot : Type
   |  AnnType : unit -> AnnExpr' bndr annot
   |  AnnCoercion : unit -> AnnExpr' bndr annot
 with AnnBind bndr annot : Type
-  := AnnNonRec
+  := | AnnNonRec
    : bndr ->
      ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr annot) ->
      AnnBind bndr annot
@@ -808,7 +810,7 @@ Definition TypeVar :=
 Definition VarSet :=
   (UniqSet.UniqSet Var)%type.
 
-Inductive InScopeSet : Type := InScope : VarSet -> nat -> InScopeSet.
+Inductive InScopeSet : Type := | InScope : VarSet -> nat -> InScopeSet.
 
 Definition InScopeEnv :=
   (InScopeSet * IdUnfoldingFun)%type%type.
@@ -818,10 +820,10 @@ Definition RuleFun :=
    InScopeEnv -> Id -> list CoreExpr -> option CoreExpr)%type.
 
 Inductive CoreRule : Type
-  := Rule (ru_name : BasicTypes.RuleName) (ru_act : BasicTypes.Activation) (ru_fn
-    : Name.Name) (ru_rough : list (option Name.Name)) (ru_bndrs : list CoreBndr)
-  (ru_args : list CoreExpr) (ru_rhs : CoreExpr) (ru_auto : bool) (ru_origin
-    : Module.Module) (ru_orphan : IsOrphan) (ru_local : bool)
+  := | Rule (ru_name : BasicTypes.RuleName) (ru_act : BasicTypes.Activation)
+  (ru_fn : Name.Name) (ru_rough : list (option Name.Name)) (ru_bndrs
+    : list CoreBndr) (ru_args : list CoreExpr) (ru_rhs : CoreExpr) (ru_auto : bool)
+  (ru_origin : Module.Module) (ru_orphan : IsOrphan) (ru_local : bool)
    : CoreRule
   |  BuiltinRule (ru_name : BasicTypes.RuleName) (ru_fn : Name.Name) (ru_nargs
     : nat) (ru_try : RuleFun)
@@ -831,11 +833,12 @@ Definition RuleBase :=
   (NameEnv.NameEnv (list CoreRule))%type.
 
 Inductive RuleEnv : Type
-  := Mk_RuleEnv (re_base : RuleBase) (re_visible_orphs : Module.ModuleSet)
+  := | Mk_RuleEnv (re_base : RuleBase) (re_visible_orphs : Module.ModuleSet)
    : RuleEnv.
 
 Inductive RnEnv2 : Type
-  := RV2 (envL : VarEnv Var) (envR : VarEnv Var) (in_scope : InScopeSet) : RnEnv2.
+  := | RV2 (envL : VarEnv Var) (envR : VarEnv Var) (in_scope : InScopeSet)
+   : RnEnv2.
 
 Arguments TvBndr {_} {_} _ _.
 

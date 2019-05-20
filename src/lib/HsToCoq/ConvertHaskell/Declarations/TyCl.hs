@@ -320,7 +320,7 @@ generateArgumentSpecifiers (IndBody _ params _resTy cons)
         Just fields -> do
           let bindersInTm = concatMap collectBinders tm
           let fieldCount = case fields of NonRecordFields count -> count
-                                          RecordFields conFields -> length conFields
+                                          _                     -> 0
 
           pure . Just . Arguments Nothing con
                    $  replicate paramCount (underscoreArg ArgMaximal)

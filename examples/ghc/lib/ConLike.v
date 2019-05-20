@@ -23,7 +23,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive ConLike : Type
-  := RealDataCon : Core.DataCon -> ConLike
+  := | RealDataCon : Core.DataCon -> ConLike
   |  PatSynCon : Core.PatSyn -> ConLike.
 
 (* Midamble *)

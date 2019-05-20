@@ -27,7 +27,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive OrdList a : Type
-  := None : OrdList a
+  := | None : OrdList a
   |  One : a -> OrdList a
   |  Many : list a -> OrdList a
   |  Cons : a -> (OrdList a) -> OrdList a

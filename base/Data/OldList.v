@@ -29,7 +29,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive SnocBuilder a : Type
-  := Mk_SnocBuilder : GHC.Num.Word -> list a -> list a -> SnocBuilder a.
+  := | Mk_SnocBuilder : GHC.Num.Word -> list a -> list a -> SnocBuilder a.
 
 Arguments Mk_SnocBuilder {_} _ _ _.
 

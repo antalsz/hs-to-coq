@@ -21,7 +21,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive ContT (r : Type) (m : Type -> Type) a : Type
-  := Mk_ContT (runContT : (a -> m r) -> m r) : ContT r m a.
+  := | Mk_ContT (runContT : (a -> m r) -> m r) : ContT r m a.
 
 Definition Cont r :=
   (ContT r Data.Functor.Identity.Identity)%type.

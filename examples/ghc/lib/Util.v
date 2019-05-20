@@ -40,14 +40,14 @@ Definition Suffix :=
   GHC.Base.String%type.
 
 Inductive OverridingBool : Type
-  := Auto : OverridingBool
+  := | Auto : OverridingBool
   |  Always : OverridingBool
   |  Never : OverridingBool.
 
 Definition HasDebugCallStack :=
   unit.
 
-Inductive Direction : Type := Forwards : Direction |  Backwards : Direction.
+Inductive Direction : Type := | Forwards : Direction |  Backwards : Direction.
 
 Instance Default__OverridingBool : GHC.Err.Default OverridingBool :=
   GHC.Err.Build_Default _ Auto.

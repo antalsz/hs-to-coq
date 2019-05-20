@@ -34,7 +34,7 @@ Notation "'_<<>>_'" := (op_zlzlzgzg__).
 
 Infix "<<>>" := (_<<>>_) (at level 99).
 
-Inductive NonEmpty a : Type := NEcons : a -> list a -> NonEmpty a.
+Inductive NonEmpty a : Type := | NEcons : a -> list a -> NonEmpty a.
 
 Record Monoid__Dict a := Monoid__Dict_Build {
   mappend__ : a -> a -> a ;

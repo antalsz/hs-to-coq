@@ -31,7 +31,7 @@ Require Util.
 (* Converted type declarations: *)
 
 Inductive CSEnv : Type
-  := CS (cs_subst : CoreSubst.Subst) (cs_map : TrieMap.CoreMap Core.OutExpr)
+  := | CS (cs_subst : CoreSubst.Subst) (cs_map : TrieMap.CoreMap Core.OutExpr)
   (cs_rec_map : TrieMap.CoreMap Core.OutExpr)
    : CSEnv.
 
@@ -231,16 +231,7 @@ Definition cseBind
                                if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
                                         in_rhs) : bool
                                then pair env' (pair out_id in_rhs) else
-                               match Id.isJoinId_maybe in_id with
-                               | Some arity =>
-                                   NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body =>
-                                                                               let 'pair env' params' := addBinders env
-                                                                                                           params in
-                                                                               let out_body := tryForCSE env' in_body in
-                                                                               pair env (pair out_id (Core.mkLams
-                                                                                               params' out_body)))
-                               | _ => pair env' (pair out_id' out_rhs)
-                               end
+                               pair env' (pair out_id' out_rhs)
                            end in
                          match arg_0__, arg_1__, arg_2__ with
                          | toplevel, env, Core.NonRec b e =>
@@ -356,16 +347,7 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                                if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
                                         in_rhs) : bool
                                then pair env' (pair out_id in_rhs) else
-                               match Id.isJoinId_maybe in_id with
-                               | Some arity =>
-                                   NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body =>
-                                                                               let 'pair env' params' := addBinders env
-                                                                                                           params in
-                                                                               let out_body := tryForCSE env' in_body in
-                                                                               pair env (pair out_id (Core.mkLams
-                                                                                               params' out_body)))
-                               | _ => pair env' (pair out_id' out_rhs)
-                               end
+                               pair env' (pair out_id' out_rhs)
                            end in
                          match arg_0__, arg_1__, arg_2__ with
                          | toplevel, env, Core.NonRec b e =>
@@ -469,14 +451,7 @@ Definition cse_bind
         if andb (BasicTypes.isTopLevel toplevel) (CoreUtils.exprIsTickedString
                  in_rhs) : bool
         then pair env' (pair out_id in_rhs) else
-        match Id.isJoinId_maybe in_id with
-        | Some arity =>
-            NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body =>
-                                                        let 'pair env' params' := addBinders env params in
-                                                        let out_body := tryForCSE env' in_body in
-                                                        pair env (pair out_id (Core.mkLams params' out_body)))
-        | _ => pair env' (pair out_id' out_rhs)
-        end
+        pair env' (pair out_id' out_rhs)
     end.
 
 (* External variables:
@@ -488,17 +463,16 @@ Definition cse_bind
      Core.CoreProgram Core.DEFAULT Core.DataAlt Core.InAlt Core.InExpr Core.InId
      Core.InType Core.InVar Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec
      Core.OutExpr Core.OutId Core.OutType Core.Rec Core.Tick Core.Type_ Core.Var
-     Core.elemInScopeSet Core.isId Core.mkInScopeSet Core.mkLams
-     Core.tickishFloatable Core.varToCoreExpr CoreFVs.exprFreeVars CoreSubst.Subst
-     CoreSubst.emptySubst CoreSubst.extendSubst CoreSubst.lookupIdSubst
-     CoreSubst.mkEmptySubst CoreSubst.substBndr CoreSubst.substBndrs
-     CoreSubst.substInScope CoreSubst.substRecBndrs CoreUtils.eqExpr
-     CoreUtils.exprIsTickedString CoreUtils.mkAltExpr CoreUtils.mkTicks
-     CoreUtils.stripTicksE CoreUtils.stripTicksT Data.Foldable.all Data.Foldable.null
+     Core.elemInScopeSet Core.isId Core.mkInScopeSet Core.tickishFloatable
+     Core.varToCoreExpr CoreFVs.exprFreeVars CoreSubst.Subst CoreSubst.emptySubst
+     CoreSubst.extendSubst CoreSubst.lookupIdSubst CoreSubst.mkEmptySubst
+     CoreSubst.substBndr CoreSubst.substBndrs CoreSubst.substInScope
+     CoreSubst.substRecBndrs CoreUtils.eqExpr CoreUtils.exprIsTickedString
+     CoreUtils.mkAltExpr CoreUtils.mkTicks CoreUtils.stripTicksE
+     CoreUtils.stripTicksT Data.Foldable.all Data.Foldable.null
      Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd Datatypes.id
      GHC.Base.map GHC.Err.patternFailure Id.idInlineActivation Id.idInlinePragma
-     Id.isDeadBinder Id.isJoinId Id.isJoinId_maybe Id.zapIdOccInfo Id.zapIdUsageInfo
-     NestedRecursionHelpers.collectNBinders_k NestedRecursionHelpers.zipMapAccumL
-     TrieMap.CoreMap TrieMap.emptyCoreMap TrieMap.extendCoreMap TrieMap.lookupCoreMap
-     Util.filterOut
+     Id.isDeadBinder Id.isJoinId Id.zapIdOccInfo Id.zapIdUsageInfo
+     NestedRecursionHelpers.zipMapAccumL TrieMap.CoreMap TrieMap.emptyCoreMap
+     TrieMap.extendCoreMap TrieMap.lookupCoreMap Util.filterOut
 *)

@@ -33,7 +33,7 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Const a b : Type := Mk_Const (getConst : a) : Const a b.
+Inductive Const a b : Type := | Mk_Const (getConst : a) : Const a b.
 
 Arguments Mk_Const {_} {_} _.
 

@@ -24,7 +24,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive UniqFM ele : Type
-  := UFM : (Data.IntMap.Internal.IntMap ele) -> UniqFM ele.
+  := | UFM : (Data.IntMap.Internal.IntMap ele) -> UniqFM ele.
 
 Arguments UFM {_} _.
 

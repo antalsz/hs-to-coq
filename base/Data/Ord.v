@@ -18,7 +18,7 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Down a : Type := Mk_Down : a -> Down a.
+Inductive Down a : Type := | Mk_Down : a -> Down a.
 
 Arguments Mk_Down {_} _.
 

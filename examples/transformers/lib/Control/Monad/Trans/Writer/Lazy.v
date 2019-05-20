@@ -29,7 +29,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive WriterT (w : Type) (m : Type -> Type) a : Type
-  := Mk_WriterT (runWriterT : m (a * w)%type) : WriterT w m a.
+  := | Mk_WriterT (runWriterT : m (a * w)%type) : WriterT w m a.
 
 Definition Writer w :=
   (WriterT w Data.Functor.Identity.Identity)%type.

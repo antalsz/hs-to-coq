@@ -28,17 +28,17 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive BuiltInSyntax : Type
-  := Mk_BuiltInSyntax : BuiltInSyntax
+  := | Mk_BuiltInSyntax : BuiltInSyntax
   |  UserSyntax : BuiltInSyntax.
 
 Inductive NameSort : Type
-  := External : Module.Module -> NameSort
+  := | External : Module.Module -> NameSort
   |  WiredIn : Module.Module -> unit -> BuiltInSyntax -> NameSort
   |  Internal : NameSort
   |  System : NameSort.
 
 Inductive Name : Type
-  := Mk_Name (n_sort : NameSort) (n_occ : OccName.OccName) (n_uniq
+  := | Mk_Name (n_sort : NameSort) (n_occ : OccName.OccName) (n_uniq
     : Unique.Unique) (n_loc : SrcLoc.SrcSpan)
    : Name.
 

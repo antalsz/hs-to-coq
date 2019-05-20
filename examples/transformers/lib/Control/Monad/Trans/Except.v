@@ -32,7 +32,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive ExceptT e m a : Type
-  := Mk_ExceptT : (m (Data.Either.Either e a)) -> ExceptT e m a.
+  := | Mk_ExceptT : (m (Data.Either.Either e a)) -> ExceptT e m a.
 
 Definition Except e :=
   (ExceptT e Data.Functor.Identity.Identity)%type.

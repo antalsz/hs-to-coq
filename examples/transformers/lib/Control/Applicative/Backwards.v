@@ -24,7 +24,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive Backwards (f : Type -> Type) (a : Type) : Type
-  := Mk_Backwards (forwards : f a) : Backwards f a.
+  := | Mk_Backwards (forwards : f a) : Backwards f a.
 
 Arguments Mk_Backwards {_} {_} _.
 

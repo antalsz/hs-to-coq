@@ -33,7 +33,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive Literal : Type
-  := MachChar : GHC.Char.Char -> Literal
+  := | MachChar : GHC.Char.Char -> Literal
   |  MachStr : GHC.Base.String -> Literal
   |  MachNullAddr : Literal
   |  MachInt : GHC.Num.Integer -> Literal

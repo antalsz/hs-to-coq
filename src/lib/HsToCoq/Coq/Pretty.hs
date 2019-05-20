@@ -591,7 +591,7 @@ instance Gallina IndBody where
                        <!> renderCons cons
     where
       renderCons []         = ":="
-      renderCons (con:cons) = align $ foldl' (<!>) (renderCon ":=" con) (renderCon "| " <$> cons)
+      renderCons (con:cons) = align $ foldl' (<!>) (renderCon ":= |" con) (renderCon "| " <$> cons)
 
       renderCon delim (cname, cargs, coty) =
         delim <+> renderGallina cname <> spaceIf cargs <> render_args_oty H cargs coty

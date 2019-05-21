@@ -141,58 +141,96 @@ Proof.
 
   - admit.
 
-  - move=> /= [WSe WST]; split.
-    + eapply IH; eassumption.
-    + red. case: tickish WST => //= breakpointId breakpointFVs.
-      apply Forall_impl=> v WSV.
+  - move=> /= [WSe WST]; split; first by apply (IH vars).
+    red. case: tickish WST => //= breakpointId breakpointFVs.
+    apply Forall_impl => v WSV.
+    (* I'm not convinced this is _true_ *)
+(*
+    evar (s : String).
+    move: (lookupIdSubst_ok s v _ vars WSsubst WSV) => /=.
+    case local_v: (isLocalId v) => //=.
+    case LVE: (lookupVarEnv id_env v) => [e'|].
+    + 
+
+    rewrite /getSubstInScopeVars.
+    simpl.
+
+
+    have ->: lookupIdSubst s _ v = Mk_Var v by admit.
+    simpl.
+    done.
+    
+    
+    move=> /= [WSe WST]; split; first by apply (IH vars).
+    red. case: tickish WST => //= breakpointId breakpointFVs.
+    apply Forall_impl => v.
+    rewrite /WellScopedVar.
+    case local_v: isLocalVar => //.
+    case LVS: (lookupVarSet vars _) => [v'|//] [ae GV].
+    case LVS': (lookupVarSet _ _) => [v''|]; first split=> //.
+    
+    (* Th1: lookupVarSet vars v = Some v' ->
+            lookupVarSet (getInScopeVars in_scope v) = Some v'' ->
+            almostEqual v' v'' *)
+    
+    admit.
+
+    (* Th2: lookupVarSet vars v = Some v' ->
+            exists v'', lookupVarSet (getInScopeVars in_scope v) = Some v'' *)
+
+    lookupIdSubst_ok?
+    
+    
+    
+    move: WSV.
+    rewrite /WellScopedVar.
+    case local: (isLocalVar v) => //.
+    case LVS: (lookupVarSet vars v) => [v'|//] [ae GV].
+    move: (WSsubst) => [/(_ v)SS /(_ v)WS]; move: SS WS.
+    
+    case LVE: (lookupVarEnv id_env v) => [e'|].
+    * (* EXTRACT *)
+      have ->: lookupVarSet (minusDom vars id_env) v = None by admit.
+      move=> _ WSe'.
       
-      move: WSV.
-      rewrite /WellScopedVar.
-      case local: (isLocalVar v) => //.
-      case LVS: (lookupVarSet vars v) => [v'|//] [ae GV].
-      move: (WSsubst) => [/(_ v)SS /(_ v)WS]; move: SS WS.
+      rewrite /WellScoped in WSe'.
+    
+    
+      evar (s : String).
+      move: (lookupIdSubst_ok s v _ _ WSsubst WSV) => /=.
       
-      case LVE: (lookupVarEnv id_env v) => [e'|].
-      * (* EXTRACT *)
-        have ->: lookupVarSet (minusDom vars id_env) v = None by admit.
-        move=> _ WSe'.
-        
-        rewrite /WellScoped in 
-
-
-        evar (s : String).
-        move: (lookupIdSubst_ok s v _ _ WSsubst WSV) => /=.
-        
-        case ILI: (isLocalId v) => /=.
-        -- rewrite LVE.
-           move=> WSe''.
-           (* FUCK *)
-        -- by rewrite /WellScopedVar local.
-
-        simpl.
-        rewrite isLocalVar_isLocalId.
-        lapply H; last by (do 2 red); rewrite local LVS; split.
-
-        move: lookupIdSubst
-
-
-                lookupIdSubst_ok
-
-      * rewrite lookupVarSet_minusDom_1 // LVS.
-        case: (lookupVarSet _ _) => [v''|//] ae' _; split=> //.
-        eauto using almostEqual_trans.
-        
-        case LVS': (lookupVarSet (minusDom vars id_env) v) => [v''|//].
-        -- admit.
-        -- 
-
+      case ILI: (isLocalId v) => /=.
+      -- rewrite LVE.
+         move=> WSe''.
+         (* FUCK *)
+      -- by rewrite /WellScopedVar local.
+    
+      simpl.
+      rewrite isLocalVar_isLocalId.
+      lapply H; last by (do 2 red); rewrite local LVS; split.
+    
+      move: lookupIdSubst
+    
+    
+              lookupIdSubst_ok
+    
+    * rewrite lookupVarSet_minusDom_1 // LVS.
+      case: (lookupVarSet _ _) => [v''|//] ae' _; split=> //.
+      eauto using almostEqual_trans.
       
+      case LVS': (lookupVarSet (minusDom vars id_env) v) => [v''|//].
+      -- admit.
+      -- 
+    
+    
+    
+    apply (WellScopedVar_StrongSubset _ _ _ WSV).
+    
+    move=> var.
+    case LSV: (lookupVarSet _ _) => [v'|//].
+*)
 
-      apply (WellScopedVar_StrongSubset _ _ _ WSV).
-      
-      move=> var.
-      case LSV: (lookupVarSet _ _) => [v'|//].
-      
+Admitted.
       
 
 (* Definition WS_cseExpr_cseBind vars env toplevel e b : *)

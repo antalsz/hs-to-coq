@@ -36,14 +36,6 @@ Opaque GHC.Base.hs_string__.
 
 (* Well-scoped *)
 
-(* Lemma lookupIdSubst_ok (vars : VarSet) (doc : String) (csubst : Subst) (v : Id) : *)
-(*   WellScoped_Subst csubst vars -> *)
-(*   exists v', lookupIdSubst doc csubst v = Mk_Var v'. *)
-(* Proof. *)
-(*   case: csubst => [in_scope ids [] []] /= [SUBSET VARS]. *)
-(*   case locality_v: (isLocalId v) => /=; last by exists v. *)
-(*   case lookup_v: (lookupVarEnv ids v) => [e |]. *)
-
 Theorem foldr_id {A B} (a : A) (bs : list B) : foldr (fun _ => id) a bs = a.
 Proof. by elim: bs. Qed.
 
@@ -70,22 +62,30 @@ Abort.
 Lemma mkTicks_id ticks e : mkTicks ticks e = e.
 Proof. apply foldr_id. Qed.
 
+Lemma WellScoped_Subst_implies_StrongSubset subst vars :
+  WellScoped_Subst subst vars ->
+  vars {<=} getSubstInScopeVars subst.
+Proof.
+  case: subst => [in_scope id_env [] []] /= [SS lookup_WS].
+  move=> var; move /(_ var) in lookup_WS.
+  case LVS:  (lookupVarSet _ _) => [v|//].
+  move: (SS var).
+  case LVS': (lookupVarSet _ _) => [v'|].
+  - case LVS'': (lookupVarSet _ _) => [v''|//].
+    apply almostEqual_trans.
+    admit.
+  
+  - case LVS'': (lookupVarSet _ _) => [v''|] _.
+    + admit.
+    + 
+Abort.
+
 (* vars = set of variables in scope AFTER `cs_subst` is applied *)
 Record WellScopedCSEnv (env : CSEnv) (vars : VarSet) : Prop :=
  IsWellScopedCSEnv
    { ws_subst   : WellScoped_Subst (cs_subst env) vars
    ; ws_map     : const True (cs_map env)
    ; ws_rec_map : const True (cs_rec_map env) }.
-
-(* Lemma WS_addBinder vars env v : *)
-(*   WellScopedVar v vars -> *)
-(*   WellScopedCSEnv env vars -> *)
-(*   WellScopedVar (addBinder env v).2 vars. *)
-(* Proof. *)
-(*   case: env => [cs_subst cs_map cs_rec_map] /=. *)
-(*   rewrite /addBinder /=. *)
-(*   move=> WSV [ws_subst ws_map ws_rec_map]. *)
-(* Abort. *)
 
 (* We really ought to be able to automate these things *)
 Lemma cseExpr_App env f a :
@@ -133,7 +133,67 @@ Proof.
       move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]].
     + constructor=> //; rewrite /cs_subst //.
 
-  - 
+  - admit.
+
+  - admit.
+
+  - admit.
+
+  - admit.
+
+  - move=> /= [WSe WST]; split.
+    + eapply IH; eassumption.
+    + red. case: tickish WST => //= breakpointId breakpointFVs.
+      apply Forall_impl=> v WSV.
+      
+      move: WSV.
+      rewrite /WellScopedVar.
+      case local: (isLocalVar v) => //.
+      case LVS: (lookupVarSet vars v) => [v'|//] [ae GV].
+      move: (WSsubst) => [/(_ v)SS /(_ v)WS]; move: SS WS.
+      
+      case LVE: (lookupVarEnv id_env v) => [e'|].
+      * (* EXTRACT *)
+        have ->: lookupVarSet (minusDom vars id_env) v = None by admit.
+        move=> _ WSe'.
+        
+        rewrite /WellScoped in 
+
+
+        evar (s : String).
+        move: (lookupIdSubst_ok s v _ _ WSsubst WSV) => /=.
+        
+        case ILI: (isLocalId v) => /=.
+        -- rewrite LVE.
+           move=> WSe''.
+           (* FUCK *)
+        -- by rewrite /WellScopedVar local.
+
+        simpl.
+        rewrite isLocalVar_isLocalId.
+        lapply H; last by (do 2 red); rewrite local LVS; split.
+
+        move: lookupIdSubst
+
+
+                lookupIdSubst_ok
+
+      * rewrite lookupVarSet_minusDom_1 // LVS.
+        case: (lookupVarSet _ _) => [v''|//] ae' _; split=> //.
+        eauto using almostEqual_trans.
+        
+        case LVS': (lookupVarSet (minusDom vars id_env) v) => [v''|//].
+        -- admit.
+        -- 
+
+      
+
+      apply (WellScopedVar_StrongSubset _ _ _ WSV).
+      
+      move=> var.
+      case LSV: (lookupVarSet _ _) => [v'|//].
+      
+      
 
 (* Definition WS_cseExpr_cseBind vars env toplevel e b : *)
 (*   WellScoped     e vars -> *)

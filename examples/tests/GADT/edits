@@ -1,3 +1,6 @@
+rename type GHC.Types.* = Type
+rename type GHC.Bool = bool
+
 data type arguments GADT.MaybeO  (indices: ex t)
 data kinds GADT.MaybeO Type, Type
 

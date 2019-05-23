@@ -31,7 +31,7 @@ Require Util.
 (* Converted type declarations: *)
 
 Inductive CSEnv : Type
-  := CS (cs_subst : CoreSubst.Subst) (cs_map : TrieMap.CoreMap Core.OutExpr)
+  := | CS (cs_subst : CoreSubst.Subst) (cs_map : TrieMap.CoreMap Core.OutExpr)
   (cs_rec_map : TrieMap.CoreMap Core.OutExpr)
    : CSEnv.
 

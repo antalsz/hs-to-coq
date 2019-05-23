@@ -23,7 +23,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive StateT s m a : Type
-  := Mk_StateT (runStateT : s -> m (a * s)%type) : StateT s m a.
+  := | Mk_StateT (runStateT : s -> m (a * s)%type) : StateT s m a.
 
 Definition State s :=
   (StateT s Data.Functor.Identity.Identity)%type.

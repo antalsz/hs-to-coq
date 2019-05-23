@@ -21,7 +21,7 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Identity a : Type := Mk_Identity (runIdentity : a) : Identity a.
+Inductive Identity a : Type := | Mk_Identity (runIdentity : a) : Identity a.
 
 Arguments Mk_Identity {_} _.
 

@@ -26,7 +26,7 @@ Require SrcLoc.
 (* Converted type declarations: *)
 
 Inductive Way : Type
-  := WayCustom : GHC.Base.String -> Way
+  := | WayCustom : GHC.Base.String -> Way
   |  WayThreaded : Way
   |  WayDebug : Way
   |  WayProf : Way
@@ -34,7 +34,7 @@ Inductive Way : Type
   |  WayDyn : Way.
 
 Inductive WarningFlag : Type
-  := Opt_WarnDuplicateExports : WarningFlag
+  := | Opt_WarnDuplicateExports : WarningFlag
   |  Opt_WarnDuplicateConstraints : WarningFlag
   |  Opt_WarnRedundantConstraints : WarningFlag
   |  Opt_WarnHiShadows : WarningFlag
@@ -104,7 +104,7 @@ Inductive WarningFlag : Type
   |  Opt_WarnMissingExportList : WarningFlag.
 
 Inductive WarnReason : Type
-  := NoReason : WarnReason
+  := | NoReason : WarnReason
   |  Reason : WarningFlag -> WarnReason
   |  ErrReason : (option WarningFlag) -> WarnReason.
 
@@ -112,70 +112,70 @@ Definition TurnOnFlag :=
   bool%type.
 
 Inductive TrustFlag : Type
-  := TrustPackage : GHC.Base.String -> TrustFlag
+  := | TrustPackage : GHC.Base.String -> TrustFlag
   |  DistrustPackage : GHC.Base.String -> TrustFlag.
 
 Inductive SseVersion : Type
-  := SSE1 : SseVersion
+  := | SSE1 : SseVersion
   |  SSE2 : SseVersion
   |  SSE3 : SseVersion
   |  SSE4 : SseVersion
   |  SSE42 : SseVersion.
 
-Inductive Settings : Type := Mk_Settings.
+Inductive Settings : Type := | Mk_Settings.
 
 Inductive SafeHaskellMode : Type
-  := Sf_None : SafeHaskellMode
+  := | Sf_None : SafeHaskellMode
   |  Sf_Unsafe : SafeHaskellMode
   |  Sf_Trustworthy : SafeHaskellMode
   |  Sf_Safe : SafeHaskellMode.
 
 Inductive RtsOptsEnabled : Type
-  := RtsOptsNone : RtsOptsEnabled
+  := | RtsOptsNone : RtsOptsEnabled
   |  RtsOptsIgnore : RtsOptsEnabled
   |  RtsOptsIgnoreAll : RtsOptsEnabled
   |  RtsOptsSafeOnly : RtsOptsEnabled
   |  RtsOptsAll : RtsOptsEnabled.
 
 Inductive ProfAuto : Type
-  := NoProfAuto : ProfAuto
+  := | NoProfAuto : ProfAuto
   |  ProfAutoAll : ProfAuto
   |  ProfAutoTop : ProfAuto
   |  ProfAutoExports : ProfAuto
   |  ProfAutoCalls : ProfAuto.
 
 Inductive PkgConfRef : Type
-  := GlobalPkgConf : PkgConfRef
+  := | GlobalPkgConf : PkgConfRef
   |  UserPkgConf : PkgConfRef
   |  PkgConfFile : GHC.Base.String -> PkgConfRef.
 
 Inductive PackageDBFlag : Type
-  := PackageDB : PkgConfRef -> PackageDBFlag
+  := | PackageDB : PkgConfRef -> PackageDBFlag
   |  NoUserPackageDB : PackageDBFlag
   |  NoGlobalPackageDB : PackageDBFlag
   |  ClearPackageDBs : PackageDBFlag.
 
 Inductive PackageArg : Type
-  := Mk_PackageArg : GHC.Base.String -> PackageArg
+  := | Mk_PackageArg : GHC.Base.String -> PackageArg
   |  UnitIdArg : Module.UnitId -> PackageArg.
 
 Inductive Option : Type
-  := FileOption : GHC.Base.String -> GHC.Base.String -> Option
+  := | FileOption : GHC.Base.String -> GHC.Base.String -> Option
   |  Mk_Option : GHC.Base.String -> Option.
 
-Inductive OnOff a : Type := On : a -> OnOff a |  Off : a -> OnOff a.
+Inductive OnOff a : Type := | On : a -> OnOff a |  Off : a -> OnOff a.
 
 Inductive ModRenaming : Type
-  := Mk_ModRenaming (modRenamingWithImplicit : bool) (modRenamings
+  := | Mk_ModRenaming (modRenamingWithImplicit : bool) (modRenamings
     : list (Module.ModuleName * Module.ModuleName)%type)
    : ModRenaming.
 
 Inductive PackageFlag : Type
-  := ExposePackage : GHC.Base.String -> PackageArg -> ModRenaming -> PackageFlag
+  := | ExposePackage : GHC.Base.String -> PackageArg -> ModRenaming -> PackageFlag
   |  HidePackage : GHC.Base.String -> PackageFlag.
 
 Inductive LlvmTarget : Type
-  := Mk_LlvmTarget (lDataLayout : GHC.Base.String) (lCPU : GHC.Base.String)
+  := | Mk_LlvmTarget (lDataLayout : GHC.Base.String) (lCPU : GHC.Base.String)
   (lAttributes : list GHC.Base.String)
    : LlvmTarget.
 
@@ -183,7 +183,7 @@ Definition LlvmTargets :=
   (list (GHC.Base.String * LlvmTarget)%type)%type.
 
 Inductive LinkerInfo : Type
-  := GnuLD : list Option -> LinkerInfo
+  := | GnuLD : list Option -> LinkerInfo
   |  GnuGold : list Option -> LinkerInfo
   |  LlvmLLD : list Option -> LinkerInfo
   |  DarwinLD : list Option -> LinkerInfo
@@ -191,32 +191,32 @@ Inductive LinkerInfo : Type
   |  AixLD : list Option -> LinkerInfo
   |  UnknownLD : LinkerInfo.
 
-Inductive Language : Type := Haskell98 : Language |  Haskell2010 : Language.
+Inductive Language : Type := | Haskell98 : Language |  Haskell2010 : Language.
 
 Inductive IgnorePackageFlag : Type
-  := IgnorePackage : GHC.Base.String -> IgnorePackageFlag.
+  := | IgnorePackage : GHC.Base.String -> IgnorePackageFlag.
 
 Inductive HscTarget : Type
-  := HscC : HscTarget
+  := | HscC : HscTarget
   |  HscAsm : HscTarget
   |  HscLlvm : HscTarget
   |  HscInterpreted : HscTarget
   |  HscNothing : HscTarget.
 
 Inductive GhcMode : Type
-  := CompManager : GhcMode
+  := | CompManager : GhcMode
   |  OneShot : GhcMode
   |  MkDepend : GhcMode.
 
 Inductive GhcLink : Type
-  := NoLink : GhcLink
+  := | NoLink : GhcLink
   |  LinkBinary : GhcLink
   |  LinkInMemory : GhcLink
   |  LinkDynLib : GhcLink
   |  LinkStaticLib : GhcLink.
 
 Inductive GeneralFlag : Type
-  := Opt_DumpToFile : GeneralFlag
+  := | Opt_DumpToFile : GeneralFlag
   |  Opt_D_faststring_stats : GeneralFlag
   |  Opt_D_dump_minimal_imports : GeneralFlag
   |  Opt_DoCoreLinting : GeneralFlag
@@ -371,22 +371,22 @@ Inductive GeneralFlag : Type
   |  Opt_G_NoStateHack : GeneralFlag
   |  Opt_G_NoOptCoercion : GeneralFlag.
 
-Inductive FlushOut : Type := Mk_FlushOut.
+Inductive FlushOut : Type := | Mk_FlushOut.
 
-Inductive FlushErr : Type := Mk_FlushErr.
+Inductive FlushErr : Type := | Mk_FlushErr.
 
-Inductive FlagSpec (flag : Type) : Type := Mk_FlagSpec.
+Inductive FlagSpec (flag : Type) : Type := | Mk_FlagSpec.
 
 Inductive FilesToClean : Type
-  := Mk_FilesToClean (ftcGhcSession : (Data.Set.Internal.Set_ GHC.Base.String))
+  := | Mk_FilesToClean (ftcGhcSession : (Data.Set.Internal.Set_ GHC.Base.String))
   (ftcCurrentModule : (Data.Set.Internal.Set_ GHC.Base.String))
    : FilesToClean.
 
 Inductive DynLibLoader : Type
-  := Deployable : DynLibLoader
+  := | Deployable : DynLibLoader
   |  SystemDependent : DynLibLoader.
 
-Inductive DynFlags : Type := Mk_DynFlags.
+Inductive DynFlags : Type := | Mk_DynFlags.
 
 Record HasDynFlags__Dict m := HasDynFlags__Dict_Build {
   getDynFlags__ : m DynFlags }.
@@ -400,7 +400,7 @@ Definition getDynFlags `{g__0__ : HasDynFlags m} : m DynFlags :=
   g__0__ _ (getDynFlags__ m).
 
 Inductive DumpFlag : Type
-  := Opt_D_dump_cmm : DumpFlag
+  := | Opt_D_dump_cmm : DumpFlag
   |  Opt_D_dump_cmm_from_stg : DumpFlag
   |  Opt_D_dump_cmm_raw : DumpFlag
   |  Opt_D_dump_cmm_verbose : DumpFlag
@@ -483,7 +483,7 @@ Inductive DumpFlag : Type
   |  Opt_D_no_debug_output : DumpFlag.
 
 Inductive Deprecation : Type
-  := NotDeprecated : Deprecation
+  := | NotDeprecated : Deprecation
   |  Deprecated : Deprecation.
 
 Record ContainsDynFlags__Dict t := ContainsDynFlags__Dict_Build {
@@ -498,13 +498,13 @@ Definition extractDynFlags `{g__0__ : ContainsDynFlags t} : t -> DynFlags :=
   g__0__ _ (extractDynFlags__ t).
 
 Inductive CompilerInfo : Type
-  := GCC : CompilerInfo
+  := | GCC : CompilerInfo
   |  Clang : CompilerInfo
   |  AppleClang : CompilerInfo
   |  AppleClang51 : CompilerInfo
   |  UnknownCC : CompilerInfo.
 
-Inductive BmiVersion : Type := BMI1 : BmiVersion |  BMI2 : BmiVersion.
+Inductive BmiVersion : Type := | BMI1 : BmiVersion |  BMI2 : BmiVersion.
 
 Arguments On {_} _.
 

@@ -30,16 +30,16 @@ Import GHC.Num.Notations.
 Definition TidyOccEnv :=
   (UniqFM.UniqFM GHC.Num.Int)%type.
 
-Inductive OccEnv a : Type := A : (UniqFM.UniqFM a) -> OccEnv a.
+Inductive OccEnv a : Type := | A : (UniqFM.UniqFM a) -> OccEnv a.
 
 Inductive NameSpace : Type
-  := VarName : NameSpace
+  := | VarName : NameSpace
   |  DataName : NameSpace
   |  TvName : NameSpace
   |  TcClsName : NameSpace.
 
 Inductive OccName : Type
-  := Mk_OccName (occNameSpace : NameSpace) (occNameFS : FastString.FastString)
+  := | Mk_OccName (occNameSpace : NameSpace) (occNameFS : FastString.FastString)
    : OccName.
 
 Definition OccSet :=

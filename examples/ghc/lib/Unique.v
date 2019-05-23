@@ -31,7 +31,7 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Unique : Type := MkUnique : BinNums.N -> Unique.
+Inductive Unique : Type := | MkUnique : BinNums.N -> Unique.
 
 Record Uniquable__Dict a := Uniquable__Dict_Build {
   getUnique__ : a -> Unique }.

@@ -41,49 +41,49 @@ Definition ModuleNameEnv :=
   UniqFM.UniqFM%type.
 
 Inductive ModuleName : Type
-  := Mk_ModuleName : FastString.FastString -> ModuleName.
+  := | Mk_ModuleName : FastString.FastString -> ModuleName.
 
 Inductive ModLocation : Type
-  := Mk_ModLocation (ml_hs_file : option GHC.Base.String) (ml_hi_file
+  := | Mk_ModLocation (ml_hs_file : option GHC.Base.String) (ml_hi_file
     : GHC.Base.String) (ml_obj_file : GHC.Base.String)
    : ModLocation.
 
 Inductive InstalledUnitId : Type
-  := Mk_InstalledUnitId (installedUnitIdFS : FastString.FastString)
+  := | Mk_InstalledUnitId (installedUnitIdFS : FastString.FastString)
    : InstalledUnitId.
 
 Inductive InstalledModule : Type
-  := Mk_InstalledModule (installedModuleUnitId : InstalledUnitId)
+  := | Mk_InstalledModule (installedModuleUnitId : InstalledUnitId)
   (installedModuleName : ModuleName)
    : InstalledModule.
 
 Inductive InstalledModuleEnv elt : Type
-  := Mk_InstalledModuleEnv
+  := | Mk_InstalledModuleEnv
    : (Data.Map.Internal.Map InstalledModule elt) -> InstalledModuleEnv elt.
 
 Inductive DefUnitId : Type
-  := Mk_DefUnitId (unDefUnitId : InstalledUnitId) : DefUnitId.
+  := | Mk_DefUnitId (unDefUnitId : InstalledUnitId) : DefUnitId.
 
 Definition DModuleNameEnv :=
   UniqDFM.UniqDFM%type.
 
 Inductive ComponentId : Type
-  := Mk_ComponentId : FastString.FastString -> ComponentId.
+  := | Mk_ComponentId : FastString.FastString -> ComponentId.
 
 Inductive IndefUnitId : Type
-  := Mk_IndefUnitId (indefUnitIdFS : FastString.FastString) (indefUnitIdKey
+  := | Mk_IndefUnitId (indefUnitIdFS : FastString.FastString) (indefUnitIdKey
     : Unique.Unique) (indefUnitIdComponentId : ComponentId) (indefUnitIdInsts
     : list (ModuleName * Module)%type) (indefUnitIdFreeHoles
     : UniqDSet.UniqDSet ModuleName)
    : IndefUnitId
 with Module : Type
-  := Mk_Module (moduleUnitId : UnitId) (moduleName : ModuleName) : Module
+  := | Mk_Module (moduleUnitId : UnitId) (moduleName : ModuleName) : Module
 with UnitId : Type
-  := IndefiniteUnitId : IndefUnitId -> UnitId
+  := | IndefiniteUnitId : IndefUnitId -> UnitId
   |  DefiniteUnitId : DefUnitId -> UnitId.
 
 Inductive IndefModule : Type
-  := Mk_IndefModule (indefModuleUnitId : IndefUnitId) (indefModuleName
+  := | Mk_IndefModule (indefModuleUnitId : IndefUnitId) (indefModuleName
     : ModuleName)
    : IndefModule.
 
@@ -109,10 +109,10 @@ Existing Class HasModule.
 Definition getModule `{g__0__ : HasModule m} : m Module :=
   g__0__ _ (getModule__ m).
 
-Inductive NDModule : Type := Mk_NDModule (unNDModule : Module) : NDModule.
+Inductive NDModule : Type := | Mk_NDModule (unNDModule : Module) : NDModule.
 
 Inductive ModuleEnv elt : Type
-  := Mk_ModuleEnv : (Data.Map.Internal.Map NDModule elt) -> ModuleEnv elt.
+  := | Mk_ModuleEnv : (Data.Map.Internal.Map NDModule elt) -> ModuleEnv elt.
 
 Definition ModuleSet :=
   (Data.Set.Internal.Set_ NDModule)%type.

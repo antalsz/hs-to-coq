@@ -32,7 +32,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive BooleanFormula a : Type
-  := Var : a -> BooleanFormula a
+  := | Var : a -> BooleanFormula a
   |  And
    : list ((fun a_ => (SrcLoc.Located (BooleanFormula a_))%type) a) ->
      BooleanFormula a
@@ -47,7 +47,7 @@ Definition LBooleanFormula :=
   fun a_ => (SrcLoc.Located (BooleanFormula a_))%type.
 
 Inductive Clause a : Type
-  := Mk_Clause (clauseAtoms : UniqSet.UniqSet a) (clauseExprs
+  := | Mk_Clause (clauseAtoms : UniqSet.UniqSet a) (clauseExprs
     : list (BooleanFormula a))
    : Clause a.
 

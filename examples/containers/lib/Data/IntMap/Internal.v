@@ -40,7 +40,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive WhenMatched f x y z : Type
-  := Mk_WhenMatched (matchedKey
+  := | Mk_WhenMatched (matchedKey
     : Data.IntSet.Internal.Key -> x -> y -> f (option z))
    : WhenMatched f x y z.
 
@@ -63,22 +63,22 @@ Definition IntSetBitMap :=
   GHC.Num.Word%type.
 
 Inductive IntMap a : Type
-  := Bin : Prefix -> Mask -> (IntMap a) -> (IntMap a) -> IntMap a
+  := | Bin : Prefix -> Mask -> (IntMap a) -> (IntMap a) -> IntMap a
   |  Tip : Data.IntSet.Internal.Key -> a -> IntMap a
   |  Nil : IntMap a.
 
 Inductive SplitLookup a : Type
-  := Mk_SplitLookup : (IntMap a) -> (option a) -> (IntMap a) -> SplitLookup a.
+  := | Mk_SplitLookup : (IntMap a) -> (option a) -> (IntMap a) -> SplitLookup a.
 
 Inductive Stack a : Type
-  := Push : Prefix -> (IntMap a) -> (Stack a) -> Stack a
+  := | Push : Prefix -> (IntMap a) -> (Stack a) -> Stack a
   |  Nada : Stack a.
 
 Inductive View a : Type
-  := Mk_View : Data.IntSet.Internal.Key -> a -> (IntMap a) -> View a.
+  := | Mk_View : Data.IntSet.Internal.Key -> a -> (IntMap a) -> View a.
 
 Inductive WhenMissing f x y : Type
-  := Mk_WhenMissing (missingSubtree : IntMap x -> f (IntMap y)) (missingKey
+  := | Mk_WhenMissing (missingSubtree : IntMap x -> f (IntMap y)) (missingKey
     : Data.IntSet.Internal.Key -> x -> f (option y))
    : WhenMissing f x y.
 

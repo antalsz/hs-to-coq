@@ -24,7 +24,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive Width : Type
-  := W8 : Width
+  := | W8 : Width
   |  W16 : Width
   |  W32 : Width
   |  W64 : Width
@@ -37,17 +37,17 @@ Definition Length :=
   GHC.Num.Int%type.
 
 Inductive ForeignHint : Type
-  := NoHint : ForeignHint
+  := | NoHint : ForeignHint
   |  AddrHint : ForeignHint
   |  SignedHint : ForeignHint.
 
 Inductive CmmCat : Type
-  := GcPtrCat : CmmCat
+  := | GcPtrCat : CmmCat
   |  BitsCat : CmmCat
   |  FloatCat : CmmCat
   |  VecCat : Length -> CmmCat -> CmmCat.
 
-Inductive CmmType : Type := Mk_CmmType : CmmCat -> Width -> CmmType.
+Inductive CmmType : Type := | Mk_CmmType : CmmCat -> Width -> CmmType.
 
 Instance Default__Width : GHC.Err.Default Width := GHC.Err.Build_Default _ W8.
 

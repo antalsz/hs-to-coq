@@ -48,12 +48,12 @@ Definition BitMap :=
   IntWord.Word%type.
 
 Inductive IntSet : Type
-  := Bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet
+  := | Bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet
   |  Tip : Prefix -> BitMap -> IntSet
   |  Nil : IntSet.
 
 Inductive Stack : Type
-  := Push : Prefix -> IntSet -> Stack -> Stack
+  := | Push : Prefix -> IntSet -> Stack -> Stack
   |  Nada : Stack.
 
 Instance Default__IntSet : GHC.Err.Default IntSet :=

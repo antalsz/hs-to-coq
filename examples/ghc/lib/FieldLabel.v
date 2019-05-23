@@ -32,7 +32,7 @@ Definition FieldLabelString :=
   FastString.FastString%type.
 
 Inductive FieldLbl a : Type
-  := Mk_FieldLabel (flLabel : FieldLabelString) (flIsOverloaded : bool)
+  := | Mk_FieldLabel (flLabel : FieldLabelString) (flIsOverloaded : bool)
   (flSelector : a)
    : FieldLbl a.
 

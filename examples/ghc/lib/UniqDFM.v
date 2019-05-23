@@ -29,10 +29,10 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive TaggedVal val : Type
-  := Mk_TaggedVal : val -> GHC.Num.Int -> TaggedVal val.
+  := | Mk_TaggedVal : val -> GHC.Num.Int -> TaggedVal val.
 
 Inductive UniqDFM ele : Type
-  := UDFM
+  := | UDFM
    : (Data.IntMap.Internal.IntMap (TaggedVal ele)) -> GHC.Num.Int -> UniqDFM ele.
 
 Arguments Mk_TaggedVal {_} _ _.

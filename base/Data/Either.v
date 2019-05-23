@@ -19,7 +19,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive Either a b : Type
-  := Left : a -> Either a b
+  := | Left : a -> Either a b
   |  Right : b -> Either a b.
 
 Arguments Left {_} {_} _.

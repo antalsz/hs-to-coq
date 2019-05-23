@@ -22,7 +22,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive ReaderT (r : Type) (m : Type -> Type) a : Type
-  := Mk_ReaderT (runReaderT : r -> m a) : ReaderT r m a.
+  := | Mk_ReaderT (runReaderT : r -> m a) : ReaderT r m a.
 
 Definition Reader r :=
   (ReaderT r Data.Functor.Identity.Identity)%type.

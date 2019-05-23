@@ -24,7 +24,7 @@ Import GHC.Base.Notations.
 (* Converted type declarations: *)
 
 Inductive Reverse (f : Type -> Type) (a : Type) : Type
-  := Mk_Reverse (getReverse : f a) : Reverse f a.
+  := | Mk_Reverse (getReverse : f a) : Reverse f a.
 
 Arguments Mk_Reverse {_} {_} _.
 

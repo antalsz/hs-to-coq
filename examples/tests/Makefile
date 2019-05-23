@@ -32,12 +32,12 @@ PASS = \
   LetPattern \
   AxiomatizeModule \
   RedefineAddAxiom \
-  AddTheorem 
+  AddTheorem \
+  Existential
 
 # tests that *should* pass but currently fail
 TODO_PASS = \
   InstVar \
-  Existential \
   TypeAnnotations \
   StrictPair \
   MutrecInst
@@ -112,7 +112,7 @@ todo_translate: $(foreach f, $(TODO_TRANSLATE), $(f).fail_translate)
 	@coqc -Q . "" $*.v
 
 .SECONDEXPANSION:
-%.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v) %.hs 
+%.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v) %.hs
 	@rm -f $*.v
 	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
 	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\

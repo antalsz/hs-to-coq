@@ -35,10 +35,11 @@ Definition Size :=
   GHC.Num.Int%type.
 
 Inductive Set_ a : Type
-  := Bin : Size -> a -> (Set_ a) -> (Set_ a) -> Set_ a
+  := | Bin : Size -> a -> (Set_ a) -> (Set_ a) -> Set_ a
   |  Tip : Set_ a.
 
-Inductive MergeSet a : Type := Mk_MergeSet (getMergeSet : Set_ a) : MergeSet a.
+Inductive MergeSet a : Type
+  := | Mk_MergeSet (getMergeSet : Set_ a) : MergeSet a.
 
 Arguments Bin {_} _ _ _ _.
 

@@ -11,6 +11,7 @@ module HsToCoq.Coq.Gallina.Util (
   pattern IfBool, pattern IfCase,
   pattern LetFix, pattern LetCofix,
   collectArgs,
+  collectBinders,
 
   -- * Manipulating 'Term's
   termHead,
@@ -241,3 +242,8 @@ collectArgs (InScope t _) = collectArgs t
 collectArgs (HasType t _) = collectArgs t
 collectArgs t             = fail $ "collectArgs: " ++ show t
 
+-- assuming that the term is in prenex normal form
+collectBinders :: Term -> [Binder]
+collectBinders (Forall bs t) = do
+  toList bs ++ collectBinders t
+collectBinders _ = []

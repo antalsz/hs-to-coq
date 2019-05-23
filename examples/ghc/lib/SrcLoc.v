@@ -26,23 +26,24 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive RealSrcSpan : Type
-  := RealSrcSpan' (srcSpanFile : FastString.FastString) (srcSpanSLine
+  := | RealSrcSpan' (srcSpanFile : FastString.FastString) (srcSpanSLine
     : GHC.Num.Int) (srcSpanSCol : GHC.Num.Int) (srcSpanELine : GHC.Num.Int)
   (srcSpanECol : GHC.Num.Int)
    : RealSrcSpan.
 
 Inductive SrcSpan : Type
-  := ARealSrcSpan : RealSrcSpan -> SrcSpan
+  := | ARealSrcSpan : RealSrcSpan -> SrcSpan
   |  UnhelpfulSpan : FastString.FastString -> SrcSpan.
 
 Inductive RealSrcLoc : Type
-  := ASrcLoc : FastString.FastString -> GHC.Num.Int -> GHC.Num.Int -> RealSrcLoc.
+  := | ASrcLoc
+   : FastString.FastString -> GHC.Num.Int -> GHC.Num.Int -> RealSrcLoc.
 
 Inductive SrcLoc : Type
-  := ARealSrcLoc : RealSrcLoc -> SrcLoc
+  := | ARealSrcLoc : RealSrcLoc -> SrcLoc
   |  UnhelpfulLoc : FastString.FastString -> SrcLoc.
 
-Inductive GenLocated l e : Type := L : l -> e -> GenLocated l e.
+Inductive GenLocated l e : Type := | L : l -> e -> GenLocated l e.
 
 Definition Located :=
   (GenLocated SrcSpan)%type.

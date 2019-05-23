@@ -27,7 +27,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Inductive Compose (f : Type -> Type) (g : Type -> Type) (a : Type) : Type
-  := Mk_Compose (getCompose : f (g a)) : Compose f g a.
+  := | Mk_Compose (getCompose : f (g a)) : Compose f g a.
 
 Arguments Mk_Compose {_} {_} {_} _.
 

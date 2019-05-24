@@ -351,7 +351,11 @@ LargeTerm :: { Term }
 MediumTerm(Binop, LetRHS) :: { Term }
   : 'let' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term 'in' LetRHS    { Let $2 $3 $4 $6 $8 }
   | match SepBy1(MatchItem, ',') with Many(Equation) end                        { Match $2 Nothing $4 }
-  | SmallTerm Binop SmallTerm                                                   { if $2 == "->" then Arrow $1 $3 else mkInfix $1 $2 $3 }
+  | SmallTerm BinopRHS(Binop)                                                   { $2 $1 }
+
+BinopRHS(Binop) :: { Term -> Term }
+  : ':'   SmallTerm    { \lhs -> HasType lhs $2 }
+  | Binop SmallTerm    { if $2 == "->" then \lhs -> Arrow lhs $2 else \lhs -> mkInfix lhs $1 $2 }
 
 SmallTerm :: { Term }
   : Atom Many(Arg)           { appList     $1 $2 } -- App or Atom

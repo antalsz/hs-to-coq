@@ -76,7 +76,7 @@ Definition stripTicksE {b} (p : Core.Tickish Core.Var -> bool) (expr : Core.Expr
               | Core.NonRec b e => Core.NonRec b (go e)
               | Core.Rec bs     => let fix map_go_b arg__ := match arg__ with
                                          | nil           => nil
-                                         | cons (b,e) xs => cons (b, go e) xs
+                                         | cons (b,e) xs => cons (b, go e) (map_go_b xs)
                                        end
                                    in Core.Rec (map_go_b bs)
             end

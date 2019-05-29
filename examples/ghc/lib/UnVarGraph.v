@@ -167,10 +167,10 @@ Program Instance Eq___UnVarSet : GHC.Base.Eq_ UnVarSet :=
    `UnVarGraph.Outputable__UnVarGraph' *)
 
 (* External variables:
-     andb bool cons list negb nil Bag.Bag Bag.bagToList Bag.emptyBag Bag.filterBag
-     Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app Core.Var Core.VarEnv
-     Data.Foldable.concatMap Data.Foldable.foldl' Data.Foldable.foldr
-     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
+     andb bool cons list negb nil op_zmzg__ Bag.Bag Bag.bagToList Bag.emptyBag
+     Bag.filterBag Bag.mapBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app
+     Core.Var Core.VarEnv Data.Foldable.concatMap Data.Foldable.foldl'
+     Data.Foldable.foldr Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
      Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
      Data.IntSet.Internal.member Data.IntSet.Internal.null Data.IntSet.Internal.union
      GHC.Base.Eq_ GHC.Base.map GHC.Base.op_zeze__ GHC.Base.op_zeze____

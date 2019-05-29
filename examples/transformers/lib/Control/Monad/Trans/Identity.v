@@ -416,7 +416,7 @@ Program Instance Ord__IdentityT {f} {a} `{Data.Functor.Classes.Ord1 f}
    `Control.Monad.Trans.Identity.Read1__IdentityT' *)
 
 (* External variables:
-     Gt Lt Type bool comparison list negb Control.Monad.Fail.MonadFail
+     Gt Lt Type bool comparison list negb op_zmzg__ Control.Monad.Fail.MonadFail
      Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose

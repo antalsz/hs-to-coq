@@ -395,21 +395,21 @@ Program Instance Ord__Compose {f} {g} {a} `{Data.Functor.Classes.Ord1 f}
    `Data.Functor.Compose.Read1__Compose' *)
 
 (* External variables:
-     Gt Lt Type bool comparison false list negb true Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Functor.Classes.Eq1
-     Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1 Data.Functor.Classes.eq1
-     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare__
-     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq__
-     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
-     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
-     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
-     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable Data.Traversable.mapM__
-     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Gt Lt Type bool comparison false list negb op_zmzg__ true
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
+     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1
+     Data.Functor.Classes.eq1 Data.Functor.Classes.liftCompare
+     Data.Functor.Classes.liftCompare__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq__ Data.SemigroupInternal.Mk_Dual
+     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse Data.Traversable.traverse__ GHC.Base.Applicative
      GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord
      GHC.Base.build' GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap

@@ -21,11 +21,11 @@ Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
-Record Category__Dict (cat : Type -> Type -> Type) := Category__Dict_Build {
+Record Category__Dict (cat : Type -> (Type -> Type)) := Category__Dict_Build {
   id__ : forall {a}, cat a a ;
   op_z2218U____ : forall {b} {c} {a}, cat b c -> cat a b -> cat a c }.
 
-Definition Category (cat : Type -> Type -> Type) :=
+Definition Category (cat : Type -> (Type -> Type)) :=
   forall r__, (Category__Dict cat -> r__) -> r__.
 
 Existing Class Category.
@@ -91,5 +91,5 @@ Infix "Control.Category.>>>" := (_>>>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Type GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
+     Type op_zmzg__ GHC.Base.id GHC.Base.op_z2218U__ GHC.Prim.arrow
 *)

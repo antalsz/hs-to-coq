@@ -988,14 +988,14 @@ Local Definition Monad__NonEmpty_op_zgzgze__
       end.
 
 Local Definition Applicative__NonEmpty_liftA2 {a} {b} {c}
-   : (a -> b -> c) -> NonEmpty a -> NonEmpty b -> NonEmpty c :=
+   : (a -> (b -> c)) -> (NonEmpty a -> (NonEmpty b -> NonEmpty c)) :=
   fun f m1 m2 =>
     Monad__NonEmpty_op_zgzgze__ m1 (fun x1 =>
                                    Monad__NonEmpty_op_zgzgze__ m2 (fun x2 =>
                                                                   Applicative__NonEmpty_pure (f x1 x2))).
 
 Local Definition Applicative__NonEmpty_op_zlztzg__ {a} {b}
-   : NonEmpty (a -> b) -> NonEmpty a -> NonEmpty b :=
+   : NonEmpty (a -> b) -> (NonEmpty a -> NonEmpty b) :=
   fun m1 m2 =>
     Monad__NonEmpty_op_zgzgze__ m1 (fun x1 =>
                                    Monad__NonEmpty_op_zgzgze__ m2 (fun x2 => Applicative__NonEmpty_pure (x1 x2))).
@@ -1366,7 +1366,7 @@ End Notations.
 (* External variables:
      Eq Eq_ Gt Lt None Ord Some String Type andb bool compare compare__ comparison
      cons false list max__ min__ negb nil op_zeze__ op_zeze____ op_zg____ op_zgze____
-     op_zl__ op_zl____ op_zlze____ op_zsze____ option pair true tt unit
+     op_zl__ op_zl____ op_zlze____ op_zmzg__ op_zsze____ option pair true tt unit
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.map GHC.Prim.arrow
      GHC.Tuple.pair_type
 *)

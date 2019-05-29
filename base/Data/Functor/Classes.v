@@ -119,7 +119,7 @@ Program Instance Eq1__Identity : Eq1 Data.Functor.Identity.Identity :=
   fun _ k__ => k__ {| liftEq__ := fun {a} {b} => Eq1__Identity_liftEq |}.
 
 Local Definition Eq1__list_liftEq
-   : forall {a} {b}, (a -> b -> bool) -> list a -> list b -> bool :=
+   : forall {a} {b}, (a -> (b -> bool)) -> (list a -> (list b -> bool)) :=
   fun {a} {b} =>
     fix liftEq arg_69__ arg_70__ arg_71__
           := match arg_69__, arg_70__, arg_71__ with
@@ -187,7 +187,8 @@ Program Instance Ord1__Identity : Ord1 Data.Functor.Identity.Identity :=
     k__ {| liftCompare__ := fun {a} {b} => Ord1__Identity_liftCompare |}.
 
 Local Definition Ord1__list_liftCompare
-   : forall {a} {b}, (a -> b -> comparison) -> list a -> list b -> comparison :=
+   : forall {a} {b},
+     (a -> (b -> comparison)) -> (list a -> (list b -> comparison)) :=
   fun {a} {b} =>
     fix liftCompare arg_69__ arg_70__ arg_71__
           := match arg_69__, arg_70__, arg_71__ with
@@ -457,10 +458,10 @@ Program Instance Ord1__pair_type {a} `{(GHC.Base.Ord a)}
    `Data.Functor.Classes.Show2__pair_type' *)
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false list option pair true
-     Data.Either.Either Data.Either.Left Data.Either.Right Data.Functor.Const.Const
-     Data.Functor.Const.Mk_Const Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Proxy.Proxy GHC.Base.Eq_ GHC.Base.NEcons
-     GHC.Base.NonEmpty GHC.Base.Ord GHC.Base.compare GHC.Base.mappend
-     GHC.Base.op_zeze__ GHC.Tuple.pair_type
+     Eq Gt Lt None Some andb bool comparison cons false list op_zmzg__ option pair
+     true Data.Either.Either Data.Either.Left Data.Either.Right
+     Data.Functor.Const.Const Data.Functor.Const.Mk_Const
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Proxy.Proxy GHC.Base.Eq_ GHC.Base.NEcons GHC.Base.NonEmpty GHC.Base.Ord
+     GHC.Base.compare GHC.Base.mappend GHC.Base.op_zeze__ GHC.Tuple.pair_type
 *)

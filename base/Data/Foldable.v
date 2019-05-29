@@ -188,7 +188,7 @@ Definition any {t} {a} `{Foldable t} : (a -> bool) -> t a -> bool :=
     Coq.Program.Basics.compose Data.SemigroupInternal.getAny (foldMap
                                 (Coq.Program.Basics.compose Data.SemigroupInternal.Mk_Any p)).
 
-Definition elem {f} `{Foldable f} {a} `{GHC.Base.Eq_ a} : a -> f a -> bool :=
+Definition elem {f} `{Foldable f} {a} `{GHC.Base.Eq_ a} : a -> (f a -> bool) :=
   fun x xs => any (fun y => x GHC.Base.== y) xs.
 
 Definition notElem {t} {a} `{Foldable t} `{GHC.Base.Eq_ a} : a -> t a -> bool :=
@@ -957,7 +957,7 @@ Program Instance Foldable__option : Foldable option :=
            toList__ := fun {a} => Foldable__option_toList |}.
 
 (* External variables:
-     None Some bool cons false list negb nil option pair true tt unit
+     None Some bool cons false list negb nil op_zmzg__ option pair true tt unit
      Coq.Program.Basics.compose Data.Either.Either Data.Either.Left Data.Either.Right
      Data.Either.isLeft Data.Maybe.maybe Data.Monoid.Mk_First Data.Monoid.getFirst
      Data.Proxy.Proxy Data.SemigroupInternal.Dual Data.SemigroupInternal.Mk_All

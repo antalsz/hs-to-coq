@@ -46,5 +46,5 @@ Program Instance MonadFail__option : MonadFail option :=
   fun _ k__ => k__ {| fail__ := fun {a} => MonadFail__option_fail |}.
 
 (* External variables:
-     None Type list nil option GHC.Base.Monad GHC.Base.String
+     None Type list nil op_zmzg__ option GHC.Base.Monad GHC.Base.String
 *)

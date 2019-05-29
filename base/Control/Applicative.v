@@ -26,7 +26,7 @@ Import GHC.Base.Notations.
 Inductive WrappedMonad (m : Type -> Type) a : Type
   := | WrapMonad (unwrapMonad : m a) : WrappedMonad m a.
 
-Inductive WrappedArrow (a : Type -> Type -> Type) b c : Type
+Inductive WrappedArrow (a : Type -> (Type -> Type)) b c : Type
   := | WrapArrow (unwrapArrow : a b c) : WrappedArrow a b c.
 
 Arguments WrapMonad {_} {_} _.
@@ -37,7 +37,7 @@ Definition unwrapMonad {m : Type -> Type} {a} (arg_0__ : WrappedMonad m a) :=
   let 'WrapMonad unwrapMonad := arg_0__ in
   unwrapMonad.
 
-Definition unwrapArrow {a : Type -> Type -> Type} {b} {c} (arg_0__
+Definition unwrapArrow {a : Type -> (Type -> Type)} {b} {c} (arg_0__
     : WrappedArrow a b c) :=
   let 'WrapArrow unwrapArrow := arg_0__ in
   unwrapArrow.
@@ -254,7 +254,7 @@ Instance Unpeel_WrappedArrow {a} {b} {c}
   GHC.Prim.Build_Unpeel _ _ unwrapArrow WrapArrow.
 
 (* External variables:
-     Type Control.Arrow.Arrow Control.Arrow.arr Control.Arrow.op_zazaza__
+     Type op_zmzg__ Control.Arrow.Arrow Control.Arrow.arr Control.Arrow.op_zazaza__
      Control.Category.op_zgzgzg__ Data.Tuple.uncurry GHC.Base.Applicative
      GHC.Base.Functor GHC.Base.Monad GHC.Base.ap GHC.Base.const GHC.Base.fmap__
      GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM GHC.Base.liftM2

@@ -34,7 +34,7 @@ Definition zipWithM_ {m} {a} {b} {c} `{(GHC.Base.Applicative m)}
   fun f xs ys => Data.Foldable.sequenceA_ (GHC.List.zipWith f xs ys).
 
 Definition zipWithM {m} {a} {b} {c} `{_ : GHC.Base.Applicative m}
-   : (a -> b -> m c) -> list a -> list b -> m (list c) :=
+   : (a -> (b -> m c)) -> (list a -> (list b -> m (list c))) :=
   fun f xs ys =>
     (@Data.Traversable.sequenceA _ _ _ _ m _ _ _ (GHC.List.zipWith f xs ys)).
 
@@ -98,10 +98,10 @@ Infix "Control.Monad.<=<" := (_<=<_) (at level 99).
 End Notations.
 
 (* External variables:
-     bool cons list nil op_zt__ tt unit Data.Foldable.Foldable Data.Foldable.foldlM
-     Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__ Data.Traversable.sequenceA
-     Data.Traversable.traverse GHC.Base.Applicative GHC.Base.Monad GHC.Base.flip
-     GHC.Base.foldr GHC.Base.id GHC.Base.liftA2 GHC.Base.op_zgzg__
-     GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_ GHC.List.unzip
-     GHC.List.zipWith GHC.Prim.seq
+     bool cons list nil op_zmzg__ op_zt__ tt unit Data.Foldable.Foldable
+     Data.Foldable.foldlM Data.Foldable.sequenceA_ Data.Functor.op_zlzdzg__
+     Data.Traversable.sequenceA Data.Traversable.traverse GHC.Base.Applicative
+     GHC.Base.Monad GHC.Base.flip GHC.Base.foldr GHC.Base.id GHC.Base.liftA2
+     GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.pure GHC.Base.return_
+     GHC.List.unzip GHC.List.zipWith GHC.Prim.seq
 *)

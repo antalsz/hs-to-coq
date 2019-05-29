@@ -203,7 +203,8 @@ Local Definition Applicative__Const_liftA2 {inst_m} `{GHC.Base.Monoid inst_m}
 
 Local Definition Applicative__Const_op_zlztzg__ {inst_m} `{GHC.Base.Monoid
   inst_m}
-   : forall {a} {b}, Const inst_m (a -> b) -> Const inst_m a -> Const inst_m b :=
+   : forall {a} {b},
+     Const inst_m (a -> b) -> (Const inst_m a -> Const inst_m b) :=
   fun {a} {b} => GHC.Prim.coerce GHC.Base.mappend.
 
 Local Definition Functor__Const_fmap {inst_m}
@@ -329,7 +330,7 @@ Program Instance Foldable__Const {m} : Data.Foldable.Foldable (Const m) :=
    `Data.Functor.Const.Read__Const' *)
 
 (* External variables:
-     bool comparison false list true Coq.Program.Basics.compose
+     bool comparison false list op_zmzg__ true Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
      Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
      Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__

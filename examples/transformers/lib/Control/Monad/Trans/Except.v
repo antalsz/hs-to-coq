@@ -142,7 +142,7 @@ Definition Monad__ExceptT_op_zgzgze__ {inst_m} {inst_e} `{_
    : GHC.Base.Monad inst_m}
    : forall {a} {b},
      ExceptT inst_e inst_m a ->
-     (a -> ExceptT inst_e inst_m b) -> ExceptT inst_e inst_m b :=
+     ((a -> ExceptT inst_e inst_m b) -> ExceptT inst_e inst_m b) :=
   fun {a} {b} =>
     fun m k =>
       Mk_ExceptT (runExceptT m GHC.Base.>>=
@@ -219,7 +219,8 @@ Local Definition Applicative__ExceptT_pure {inst_m} {inst_e} `{GHC.Base.Functor
 Definition Applicative__ExceptT_op_ztzg__ {inst_m} {inst_s} `{_
    : GHC.Base.Monad inst_m}
    : forall {a} {b},
-     ExceptT inst_s inst_m a -> ExceptT inst_s inst_m b -> ExceptT inst_s inst_m b :=
+     ExceptT inst_s inst_m a ->
+     (ExceptT inst_s inst_m b -> ExceptT inst_s inst_m b) :=
   fun {a} {b} =>
     fun m k =>
       Applicative__ExceptT_op_zlztzg__ (Applicative__ExceptT_op_zlztzg__
@@ -531,8 +532,8 @@ Program Instance Ord__ExceptT {e} {m} {a} `{GHC.Base.Ord e}
    `Control.Monad.Trans.Except.Read1__ExceptT' *)
 
 (* External variables:
-     Gt Lt bool comparison false list negb pair true Control.Monad.Fail.MonadFail
-     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Gt Lt bool comparison false list negb op_zmzg__ pair true
+     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose Data.Either.Either

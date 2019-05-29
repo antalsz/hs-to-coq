@@ -470,7 +470,7 @@ Program Instance Ord__Product {f} {g} {a} `{Data.Functor.Classes.Ord1 f}
    `Data.Functor.Product.Read1__Product' *)
 
 (* External variables:
-     Gt Lt Type andb bool comparison false list negb op_zt__ pair true
+     Gt Lt Type andb bool comparison false list negb op_zmzg__ op_zt__ pair true
      Control.Monad.Zip.MonadZip Control.Monad.Zip.munzip__ Control.Monad.Zip.mzipWith
      Control.Monad.Zip.mzipWith__ Control.Monad.Zip.mzip__ Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__

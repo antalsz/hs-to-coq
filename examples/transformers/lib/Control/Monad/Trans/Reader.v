@@ -200,7 +200,7 @@ Program Instance MonadFail__ReaderT {m} {r} `{(Control.Monad.Fail.MonadFail m)}
    `Control.Monad.Trans.Reader.Alternative__ReaderT' *)
 
 (* External variables:
-     Type Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Type op_zmzg__ Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
      Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
      Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift
      Control.Monad.Trans.Class.lift__ Data.Functor.Identity.Identity

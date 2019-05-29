@@ -91,7 +91,7 @@ Definition nonDetCmpUnique : Unique -> Unique -> comparison :=
 Definition mkUniqueGrimily : BinNums.N -> Unique :=
   MkUnique.
 
-Definition mkUnique : GHC.Char.Char -> GHC.Num.Word -> Unique :=
+Definition mkUnique : GHC.Char.Char -> (GHC.Num.Word -> Unique) :=
   fun c i =>
     let bits := Coq.ZArith.BinInt.Z.land (Coq.ZArith.BinInt.Z.of_N i) uniqueMask in
     let tag := Data.Bits.shiftL (GHC.Base.ord c) uNIQUE_BITS in
@@ -241,8 +241,8 @@ Definition getWordKey : Unique -> GHC.Num.Word :=
   getKey.
 
 (* External variables:
-     Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity BinNat.N.of_nat
-     BinNums.N Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lor
+     Eq Gt Lt andb bool comparison negb op_zmzg__ op_zt__ pair BasicTypes.Arity
+     BinNat.N.of_nat BinNums.N Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lor
      Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.to_N Data.Bits.shiftL
      Data.Bits.shiftR FastString.FastString FastString.uniqueOfFS GHC.Base.Eq_
      GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zl__ GHC.Base.op_zlze__

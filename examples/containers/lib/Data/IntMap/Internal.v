@@ -1933,21 +1933,22 @@ End Notations.
 
 (* External variables:
      Eq Gt IntMap_op_zlzd__ Lt N None Some andb bool comparison cons false id list
-     negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.ldiff
-     Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones Coq.Numbers.BinNums.N
-     Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
-     Data.Bits.xor Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl' Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
-     Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key
-     Data.IntSet.Internal.Nil Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf
-     Data.IntSet.Internal.mask Data.IntSet.Internal.member
-     Data.IntSet.Internal.singleton Data.IntSet.Internal.suffixBitMask
-     Data.IntSet.Internal.zero Data.Maybe.maybe Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     negb nil op_zmzg__ op_zt__ op_zv__ option orb pair true
+     Coq.NArith.BinNat.N.ldiff Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones
+     Coq.Numbers.BinNums.N Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl' Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
+     Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
+     Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
+     Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
+     Data.IntSet.Internal.member Data.IntSet.Internal.singleton
+     Data.IntSet.Internal.suffixBitMask Data.IntSet.Internal.zero Data.Maybe.maybe
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.String
      GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__

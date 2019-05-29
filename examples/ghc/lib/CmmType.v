@@ -264,7 +264,7 @@ Definition f64 : CmmType :=
 Definition vec2f64 : CmmType :=
   vec #2 f64.
 
-Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> CmmCat -> bool :=
+Local Definition Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) :=
   fun x y => true.
 
 Local Definition Eq___CmmCat_op_zsze__ : CmmCat -> CmmCat -> bool :=
@@ -398,7 +398,7 @@ Program Instance Eq___ForeignHint : GHC.Base.Eq_ ForeignHint :=
    `CmmType.Outputable__CmmType' *)
 
 (* External variables:
-     andb bool false negb true DynFlags.DynFlags DynFlags.wORD_SIZE
+     andb bool false negb op_zmzg__ true DynFlags.DynFlags DynFlags.wORD_SIZE
      FastString.LitString FastString.sLit GHC.Base.Eq_ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
      GHC.Num.Int GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zt__ Panic.panic

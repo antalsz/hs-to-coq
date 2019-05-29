@@ -372,7 +372,7 @@ Definition plusModuleEnv {a} : ModuleEnv a -> ModuleEnv a -> ModuleEnv a :=
     end.
 
 Local Definition Ord__ModuleName_compare
-   : ModuleName -> ModuleName -> comparison :=
+   : ModuleName -> (ModuleName -> comparison) :=
   fun nm1 nm2 => Eq.
 
 Local Definition Ord__ModuleName_op_zlze__ : ModuleName -> ModuleName -> bool :=
@@ -403,7 +403,7 @@ Program Instance Ord__ModuleName : GHC.Base.Ord ModuleName :=
            GHC.Base.max__ := Ord__ModuleName_max ;
            GHC.Base.min__ := Ord__ModuleName_min |}.
 
-Local Definition Ord__UnitId_compare : UnitId -> UnitId -> comparison :=
+Local Definition Ord__UnitId_compare : UnitId -> (UnitId -> comparison) :=
   fun nm1 nm2 => Eq.
 
 Local Definition Ord__UnitId_op_zlze__ : UnitId -> UnitId -> bool :=
@@ -1254,15 +1254,16 @@ Program Instance Uniquable__Module : Unique.Uniquable Module :=
    `Module.Outputable__IndefModule' *)
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option
-     pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map Data.Foldable.foldl'
-     Data.Map.Internal.Map Data.Map.Internal.delete Data.Map.Internal.empty
-     Data.Map.Internal.filterWithKey Data.Map.Internal.findWithDefault
-     Data.Map.Internal.fromList Data.Map.Internal.insert Data.Map.Internal.insertWith
-     Data.Map.Internal.keys Data.Map.Internal.lookup Data.Map.Internal.mapWithKey
-     Data.Map.Internal.member Data.Map.Internal.null Data.Map.Internal.singleton
-     Data.Map.Internal.toList Data.Map.Internal.union Data.Map.Internal.unionWith
-     Data.OldList.sort Data.OldList.sortBy Data.Ord.comparing Data.Set.Internal.Set_
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zmzg__
+     op_zt__ option pair true Coq.Init.Datatypes.app Coq.Lists.List.flat_map
+     Data.Foldable.foldl' Data.Map.Internal.Map Data.Map.Internal.delete
+     Data.Map.Internal.empty Data.Map.Internal.filterWithKey
+     Data.Map.Internal.findWithDefault Data.Map.Internal.fromList
+     Data.Map.Internal.insert Data.Map.Internal.insertWith Data.Map.Internal.keys
+     Data.Map.Internal.lookup Data.Map.Internal.mapWithKey Data.Map.Internal.member
+     Data.Map.Internal.null Data.Map.Internal.singleton Data.Map.Internal.toList
+     Data.Map.Internal.union Data.Map.Internal.unionWith Data.OldList.sort
+     Data.OldList.sortBy Data.Ord.comparing Data.Set.Internal.Set_
      Data.Set.Internal.delete Data.Set.Internal.difference Data.Set.Internal.empty
      Data.Set.Internal.fromList Data.Set.Internal.insert
      Data.Set.Internal.intersection Data.Set.Internal.member

@@ -342,7 +342,7 @@ Program Instance Ord__Reverse {f} {a} `{Data.Functor.Classes.Ord1 f}
    `Data.Functor.Reverse.Read1__Reverse' *)
 
 (* External variables:
-     Gt Lt Type bool comparison list negb Control.Monad.Fail.MonadFail
+     Gt Lt Type bool comparison list negb op_zmzg__ Control.Monad.Fail.MonadFail
      Control.Monad.Fail.fail Control.Monad.Fail.fail__ Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
      Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__

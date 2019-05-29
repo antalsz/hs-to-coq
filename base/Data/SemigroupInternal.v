@@ -821,7 +821,7 @@ Instance Unpeel_Endo a : GHC.Prim.Unpeel (Endo a) (a -> a) :=
   GHC.Prim.Build_Unpeel _ _ appEndo Mk_Endo.
 
 Local Definition Semigroup__Endo_op_zlzlzgzg__ {inst_a}
-   : Endo inst_a -> Endo inst_a -> Endo inst_a :=
+   : Endo inst_a -> (Endo inst_a -> Endo inst_a) :=
   GHC.Prim.coerce Coq.Program.Basics.compose.
 
 Program Instance Semigroup__Endo {a} : GHC.Base.Semigroup (Endo a) :=
@@ -940,7 +940,7 @@ Program Instance Monad__Sum : GHC.Base.Monad Sum :=
            GHC.Base.return___ := fun {a} => Monad__Sum_return_ |}.
 
 Local Definition Semigroup__Sum_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
-   : Sum inst_a -> Sum inst_a -> Sum inst_a :=
+   : Sum inst_a -> (Sum inst_a -> Sum inst_a) :=
   GHC.Prim.coerce _GHC.Num.+_.
 
 Program Instance Semigroup__Sum {a} `{GHC.Num.Num a}
@@ -1020,7 +1020,7 @@ Program Instance Monad__Product : GHC.Base.Monad Product :=
            GHC.Base.return___ := fun {a} => Monad__Product_return_ |}.
 
 Local Definition Semigroup__Product_op_zlzlzgzg__ {inst_a} `{GHC.Num.Num inst_a}
-   : Product inst_a -> Product inst_a -> Product inst_a :=
+   : Product inst_a -> (Product inst_a -> Product inst_a) :=
   GHC.Prim.coerce _GHC.Num.*_.
 
 Program Instance Semigroup__Product {a} `{GHC.Num.Num a}
@@ -1054,7 +1054,7 @@ Program Instance Monoid__Product {a} `{GHC.Num.Num a}
    `GHC.Base.Semigroup' *)
 
 (* External variables:
-     Eq Gt Lt Type andb bool comparison false list orb true
+     Eq Gt Lt Type andb bool comparison false list op_zmzg__ orb true
      Coq.Program.Basics.compose GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.compare
      GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr

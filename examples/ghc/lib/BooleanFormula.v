@@ -363,7 +363,7 @@ Program Instance Eq___BooleanFormula {a} `{GHC.Base.Eq_ a}
    `BooleanFormula.Data__BooleanFormula' *)
 
 Local Definition Functor__BooleanFormula_fmap {a} {b}
-   : (a -> b) -> BooleanFormula a -> BooleanFormula b :=
+   : (a -> b) -> (BooleanFormula a -> BooleanFormula b) :=
   BooleanFormula_fmap.
 
 Fixpoint Functor__BooleanFormula_op_zlzd__ {a} {b} (arg_0__ : a) (arg_1__
@@ -385,7 +385,7 @@ Program Instance Functor__BooleanFormula : GHC.Base.Functor BooleanFormula :=
 
 Local Definition Foldable__BooleanFormula_foldMap {m} {a} `{_
    : GHC.Base.Monoid m}
-   : (a -> m) -> BooleanFormula a -> m :=
+   : (a -> m) -> (BooleanFormula a -> m) :=
   BooleanFormula_foldMap.
 
 Local Definition Foldable__BooleanFormula_fold
@@ -402,7 +402,7 @@ Local Definition Foldable__BooleanFormula_foldl
                                                                           GHC.Base.flip f)) t)) z.
 
 Local Definition Foldable__BooleanFormula_foldr {a} {b}
-   : (a -> b -> b) -> b -> BooleanFormula a -> b :=
+   : (a -> (b -> b)) -> (b -> (BooleanFormula a -> b)) :=
   BooleanFormula_foldr.
 
 Local Definition Foldable__BooleanFormula_foldl'
@@ -476,7 +476,7 @@ Program Instance Foldable__BooleanFormula
 
 Local Definition Traversable__BooleanFormula_traverse {f} {a} {b} `{_
    : GHC.Base.Applicative f}
-   : (a -> f b) -> BooleanFormula a -> f (BooleanFormula b) :=
+   : (a -> f b) -> (BooleanFormula a -> f (BooleanFormula b)) :=
   BooleanFormula_traverse.
 
 Local Definition Traversable__BooleanFormula_mapM
@@ -517,8 +517,8 @@ Program Instance Traversable__BooleanFormula
 
 (* External variables:
      BooleanFormula_fmap BooleanFormula_foldMap BooleanFormula_foldr
-     BooleanFormula_traverse None Some bool cons false list negb nil option true
-     Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
+     BooleanFormula_traverse None Some bool cons false list negb nil op_zmzg__ option
+     true Coq.Init.Datatypes.app Coq.Program.Basics.compose Data.Foldable.Foldable
      Data.Foldable.all Data.Foldable.any Data.Foldable.foldMap__ Data.Foldable.fold__
      Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
      Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__

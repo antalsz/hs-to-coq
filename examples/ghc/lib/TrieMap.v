@@ -246,7 +246,7 @@ Definition xtInt {a}
   fun k f m => Data.IntMap.Internal.alter f k m.
 
 Axiom xtG : forall {m} {a} `{TrieMap m} `{GHC.Base.Eq_ (Key m)},
-            Key m -> XT a -> GenMap m a -> GenMap m a.
+            Key m -> (XT a -> (GenMap m a -> GenMap m a)).
 
 Axiom xtE : forall {a},
             DeBruijn Core.CoreExpr -> XT a -> CoreMapX a -> CoreMapX a.
@@ -442,7 +442,7 @@ Axiom fdG : forall {m} {a} {b},
             forall `{TrieMap m}, (a -> b -> b) -> GenMap m a -> b -> b.
 
 Axiom lkG : forall {m} {a} `{TrieMap m} `{GHC.Base.Eq_ (Key m)},
-            Key m -> GenMap m a -> option a.
+            Key m -> (GenMap m a -> option a).
 
 Instance TrieMap__GenMap {m} `{TrieMap m} `{GHC.Base.Eq_ (Key m)}
    : TrieMap (GenMap m) :=
@@ -1101,12 +1101,13 @@ Infix "TrieMap.|>>" := (_|>>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
-     tt unit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt
-     Core.Id Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
-     Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv
-     Core.lookupVarEnv Core.varType Data.Foldable.foldl Data.IntMap.Internal.IntMap
-     Data.IntMap.Internal.alter Data.IntMap.Internal.empty Data.IntMap.Internal.foldr
+     Build_TrieMap Key None Some Type andb bool cons false list negb op_zmzg__ option
+     pair true tt unit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv
+     Core.DataAlt Core.Id Core.LitAlt Core.Tickish Core.Var Core.VarEnv
+     Core.alterDVarEnv Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv
+     Core.lookupDVarEnv Core.lookupVarEnv Core.varType Data.Foldable.foldl
+     Data.IntMap.Internal.IntMap Data.IntMap.Internal.alter
+     Data.IntMap.Internal.empty Data.IntMap.Internal.foldr
      Data.IntMap.Internal.lookup Data.IntMap.Internal.map Data.IntSet.Internal.Key
      Data.Map.Internal.Map Data.Map.Internal.alter Data.Map.Internal.empty
      Data.Map.Internal.foldr Data.Map.Internal.lookup Data.Map.Internal.map

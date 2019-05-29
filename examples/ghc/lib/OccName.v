@@ -643,7 +643,7 @@ Local Definition Ord__NameSpace_op_zgze__ :=
   NameSpace_op_zgze__.
 
 Local Definition Ord__NameSpace_compare
-   : NameSpace -> NameSpace -> comparison :=
+   : NameSpace -> (NameSpace -> comparison) :=
   compare_Namespace.
 
 Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
@@ -757,7 +757,7 @@ Program Instance HasOccName__OccName : HasOccName OccName :=
 (* External variables:
      Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
      NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
-     comparison cons false list negb nil op_zt__ option orb true tt
+     comparison cons false list negb nil op_zmzg__ op_zt__ option orb true tt
      Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
      FastString.concatFS FastString.fsLit FastString.mkFastString FastString.unpackFS
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__

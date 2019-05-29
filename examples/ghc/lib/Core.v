@@ -545,7 +545,8 @@ with IdInfo : Type
   (levityInfo : LevityInfo)
    : IdInfo
 with RuleInfo : Type
-  := | Mk_RuleInfo : list CoreRuleInfo -> (UniqDSet.UniqDSet Var)%type -> RuleInfo
+  := | Mk_RuleInfo
+   : list CoreRuleInfo -> ((UniqDSet.UniqDSet Var)%type -> RuleInfo)
 with EqSpec : Type := | Mk_EqSpec : Var%type -> unit -> EqSpec.
 
 Definition TyVar :=
@@ -3469,7 +3470,7 @@ Definition setRuleIdName : Name.Name -> CoreRule -> CoreRule :=
         BuiltinRule ru_name_11__ nm ru_nargs_13__ ru_try_14__
     end.
 
-Definition setRuleInfoHead : Name.Name -> RuleInfo -> RuleInfo :=
+Definition setRuleInfoHead : Name.Name -> (RuleInfo -> RuleInfo) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | fn, Mk_RuleInfo rules fvs =>
@@ -4069,7 +4070,7 @@ Program Instance Eq___Use {u} `{GHC.Base.Eq_ u} : GHC.Base.Eq_ (Use u) :=
     k__ {| GHC.Base.op_zeze____ := Eq___Use_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___Use_op_zsze__ |}.
 
-Local Definition Eq___UseDmd_op_zeze__ : UseDmd -> UseDmd -> bool :=
+Local Definition Eq___UseDmd_op_zeze__ : UseDmd -> (UseDmd -> bool) :=
   fix UseDmd_eq x y
         := let eq' : GHC.Base.Eq_ UseDmd := GHC.Base.eq_default UseDmd_eq in
            match x, y with
@@ -7074,7 +7075,7 @@ Program Instance Eq___PrimRep : GHC.Base.Eq_ PrimRep :=
    `Core.Show__PrimRep' *)
 
 Local Definition Eq___TyConFlavour_op_zeze__
-   : TyConFlavour -> TyConFlavour -> bool :=
+   : TyConFlavour -> (TyConFlavour -> bool) :=
   fun a b => false.
 
 Local Definition Eq___TyConFlavour_op_zsze__
@@ -7348,7 +7349,7 @@ Program Instance Eq___Str {s} `{GHC.Base.Eq_ s} : GHC.Base.Eq_ (Str s) :=
 (* Skipping all instances of class `GHC.Show.Show', including
    `Core.Show__Str' *)
 
-Local Definition Eq___StrDmd_op_zeze__ : StrDmd -> StrDmd -> bool :=
+Local Definition Eq___StrDmd_op_zeze__ : StrDmd -> (StrDmd -> bool) :=
   fix StrDmd_eq x y
         := let eq' : GHC.Base.Eq_ StrDmd := GHC.Base.eq_default StrDmd_eq in
            match x, y with
@@ -7918,8 +7919,8 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      Bool.Sumbool.sumbool_of_bool BootUnfolding CoreRuleInfo CoreUnfolding
      DFunUnfolding Eq Gt Lt NoUnfolding None OtherCon Some Type andb app bool
      bothArgUse bothUse comparison cons deAnnotate' false getCoreRule getCoreRuleInfo
-     getUnfolding getUnfoldingInfo list lubArgUse nat negb nil op_zt__ option orb
-     pair size_AnnExpr' snd true tt unit BasicTypes.Activation
+     getUnfolding getUnfoldingInfo list lubArgUse nat negb nil op_zmzg__ op_zt__
+     option orb pair size_AnnExpr' snd true tt unit BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
      BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity

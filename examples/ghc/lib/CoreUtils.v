@@ -122,7 +122,7 @@ Definition trimConArgs
     end.
 
 Definition tickHNFArgs
-   : Core.Tickish Core.Var -> Core.CoreExpr -> Core.CoreExpr :=
+   : Core.Tickish Core.Var -> (Core.CoreExpr -> Core.CoreExpr) :=
   fun t orig => orig.
 
 Definition stripTicksTopT {b}
@@ -163,14 +163,14 @@ Definition stripTicksTop {b}
                  end in
     go nil.
 
-Definition mkTick : Core.Tickish Core.Var -> Core.CoreExpr -> Core.CoreExpr :=
+Definition mkTick : Core.Tickish Core.Var -> (Core.CoreExpr -> Core.CoreExpr) :=
   fun t orig => orig.
 
 Definition mkTicks
    : list (Core.Tickish Core.Id) -> Core.CoreExpr -> Core.CoreExpr :=
   fun ticks expr => Data.Foldable.foldr mkTick expr ticks.
 
-Definition mkCast : Core.CoreExpr -> unit -> Core.CoreExpr :=
+Definition mkCast : Core.CoreExpr -> (unit -> Core.CoreExpr) :=
   fun c t => c.
 
 Definition mkAltExpr
@@ -509,7 +509,8 @@ Definition eqExpr : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr -> bool :=
         | env, pair (pair c1 bs1) e1, pair (pair c2 bs2) e2 =>
             andb (c1 GHC.Base.== c2) (go (env) e1 e2)
         end in
-    let _go_alt : Core.RnEnv2 -> Core.CoreAlt -> Core.CoreAlt -> bool := go_alt in
+    let _go_alt : Core.RnEnv2 -> (Core.CoreAlt -> (Core.CoreAlt -> bool)) :=
+      go_alt in
     go (Core.mkRnEnv2 in_scope) e1 e2.
 
 Definition dupAppSize : nat :=
@@ -553,7 +554,7 @@ Definition collectMakeStaticArgs
     end.
 
 Definition cheapEqExpr' {b}
-   : (Core.Expr b -> bool) -> Core.Expr b -> Core.Expr b -> bool :=
+   : (Core.Expr b -> bool) -> (Core.Expr b -> (Core.Expr b -> bool)) :=
   GHC.Err.default.
 
 Definition cheapEqExpr {b} : Core.Expr b -> Core.Expr b -> bool :=
@@ -608,8 +609,8 @@ Definition filterAlts {a}
     pair imposs_deflt_cons (addDefault trimmed_alts maybe_deflt).
 
 (* External variables:
-     Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
-     pair snd true tt unit BasicTypes.Arity Coq.Init.Datatypes.app
+     Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zmzg__ op_zt__
+     option orb pair snd true tt unit BasicTypes.Arity Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App Core.Breakpoint Core.Case
      Core.Cast Core.Coercion Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr
      Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataConWorkId Core.Expr Core.Id

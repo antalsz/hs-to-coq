@@ -351,7 +351,7 @@ Program Instance Ord__Backwards {f} {a} `{Data.Functor.Classes.Ord1 f}
    `Control.Applicative.Backwards.Read1__Backwards' *)
 
 (* External variables:
-     Gt Lt Type bool comparison list negb Coq.Program.Basics.compose
+     Gt Lt Type bool comparison list negb op_zmzg__ Coq.Program.Basics.compose
      Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
      Data.Foldable.fold__ Data.Foldable.foldl Data.Foldable.foldl'__
      Data.Foldable.foldl__ Data.Foldable.foldr Data.Foldable.foldr'__

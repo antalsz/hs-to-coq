@@ -180,7 +180,7 @@ Local Definition Applicative__MaybeT_pure {inst_m} `{GHC.Base.Functor inst_m}
   fun {a} => Mk_MaybeT GHC.Base.∘ (GHC.Base.return_ GHC.Base.∘ Some).
 
 Local Definition Applicative__MaybeT_op_ztzg__ {inst_m} `{GHC.Base.Monad inst_m}
-   : forall {a} {b}, MaybeT inst_m a -> MaybeT inst_m b -> MaybeT inst_m b :=
+   : forall {a} {b}, MaybeT inst_m a -> (MaybeT inst_m b -> MaybeT inst_m b) :=
   fun {a} {b} => fun m k => Monad_tmp m (fun arg_0__ => k).
 
 Program Instance Applicative__MaybeT {m} `{GHC.Base.Functor m} `{GHC.Base.Monad
@@ -472,8 +472,8 @@ Program Instance Ord__MaybeT {m} {a} `{Data.Functor.Classes.Ord1 m}
    `Control.Monad.Trans.Maybe.Read1__MaybeT' *)
 
 (* External variables:
-     Gt Lt Monad_tmp None Some bool comparison false list negb option pair true
-     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail__
+     Gt Lt Monad_tmp None Some bool comparison false list negb op_zmzg__ option pair
+     true Control.Monad.Fail.MonadFail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
      Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Control.Monad.Trans.Except.ExceptT

@@ -28,10 +28,10 @@ Import GHC.Base.Notations.
 Inductive Kleisli (m : Type -> Type) a b : Type
   := | Mk_Kleisli (runKleisli : a -> m b) : Kleisli m a b.
 
-Inductive ArrowMonad (a : Type -> Type -> Type) b : Type
+Inductive ArrowMonad (a : Type -> (Type -> Type)) b : Type
   := | Mk_ArrowMonad : (a unit b) -> ArrowMonad a b.
 
-Record Arrow__Dict (a : Type -> Type -> Type) := Arrow__Dict_Build {
+Record Arrow__Dict (a : Type -> (Type -> Type)) := Arrow__Dict_Build {
   arr__ : forall {b} {c}, (b -> c) -> a b c ;
   first__ : forall {b} {c} {d}, a b c -> a (b * d)%type (c * d)%type ;
   op_zazaza____ : forall {b} {c} {c'}, a b c -> a b c' -> a b (c * c')%type ;
@@ -39,7 +39,7 @@ Record Arrow__Dict (a : Type -> Type -> Type) := Arrow__Dict_Build {
   a b c -> a b' c' -> a (b * b')%type (c * c')%type ;
   second__ : forall {b} {c} {d}, a b c -> a (d * b)%type (d * c)%type }.
 
-Definition Arrow (a : Type -> Type -> Type) `{Control.Category.Category a} :=
+Definition Arrow (a : Type -> (Type -> Type)) `{Control.Category.Category a} :=
   forall r__, (Arrow__Dict a -> r__) -> r__.
 
 Existing Class Arrow.
@@ -72,10 +72,10 @@ Notation "'_***_'" := (op_ztztzt__).
 
 Infix "***" := (_***_) (at level 99).
 
-Record ArrowApply__Dict (a : Type -> Type -> Type) := ArrowApply__Dict_Build {
+Record ArrowApply__Dict (a : Type -> (Type -> Type)) := ArrowApply__Dict_Build {
   app__ : forall {b} {c}, a (a b c * b)%type c }.
 
-Definition ArrowApply (a : Type -> Type -> Type) `{Arrow a} :=
+Definition ArrowApply (a : Type -> (Type -> Type)) `{Arrow a} :=
   forall r__, (ArrowApply__Dict a -> r__) -> r__.
 
 Existing Class ArrowApply.
@@ -138,10 +138,10 @@ Definition loop `{g__0__ : ArrowLoop a}
    : forall {b} {d} {c}, a (b * d)%type (c * d)%type -> a b c :=
   g__0__ _ (loop__ a).
 
-Record ArrowZero__Dict (a : Type -> Type -> Type) := ArrowZero__Dict_Build {
+Record ArrowZero__Dict (a : Type -> (Type -> Type)) := ArrowZero__Dict_Build {
   zeroArrow__ : forall {b} {c}, a b c }.
 
-Definition ArrowZero (a : Type -> Type -> Type) `{Arrow a} :=
+Definition ArrowZero (a : Type -> (Type -> Type)) `{Arrow a} :=
   forall r__, (ArrowZero__Dict a -> r__) -> r__.
 
 Existing Class ArrowZero.
@@ -149,10 +149,10 @@ Existing Class ArrowZero.
 Definition zeroArrow `{g__0__ : ArrowZero a} : forall {b} {c}, a b c :=
   g__0__ _ (zeroArrow__ a).
 
-Record ArrowPlus__Dict (a : Type -> Type -> Type) := ArrowPlus__Dict_Build {
+Record ArrowPlus__Dict (a : Type -> (Type -> Type)) := ArrowPlus__Dict_Build {
   op_zlzpzg____ : forall {b} {c}, a b c -> a b c -> a b c }.
 
-Definition ArrowPlus (a : Type -> Type -> Type) `{ArrowZero a} :=
+Definition ArrowPlus (a : Type -> (Type -> Type)) `{ArrowZero a} :=
   forall r__, (ArrowPlus__Dict a -> r__) -> r__.
 
 Existing Class ArrowPlus.
@@ -355,7 +355,7 @@ Infix "Control.Arrow.^>>" := (_^>>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Type op_zt__ pair unit Control.Category.Category Control.Category.id
+     Type op_zmzg__ op_zt__ pair unit Control.Category.Category Control.Category.id
      Control.Category.op_zgzgzg__ Control.Category.op_zlzlzl__ Data.Either.Either
      GHC.Base.Functor GHC.Base.const GHC.Base.fmap__ GHC.Base.op_z2218U__
      GHC.Base.op_zlzd____ GHC.Prim.arrow

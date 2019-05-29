@@ -262,8 +262,8 @@ Definition Monad__RWST_op_zgzgze__ {inst_w} {inst_m} {inst_r} {inst_s} `{_
    : GHC.Base.Monoid inst_w} `{_ : GHC.Base.Monad inst_m}
    : forall {a} {b},
      RWST inst_r inst_w inst_s inst_m a ->
-     (a -> RWST inst_r inst_w inst_s inst_m b) ->
-     RWST inst_r inst_w inst_s inst_m b :=
+     ((a -> RWST inst_r inst_w inst_s inst_m b) ->
+      RWST inst_r inst_w inst_s inst_m b) :=
   fun {a} {b} => Monad__RWST_tmp.
 
 Local Definition Monad__RWST_op_zgzg__ {inst_w} {inst_m} {inst_r} {inst_s}
@@ -381,7 +381,7 @@ Program Instance MonadFail__RWST {w} {m} {r} {s} `{GHC.Base.Monoid w}
    `Control.Monad.Trans.RWS.Lazy.Alternative__RWST' *)
 
 (* External variables:
-     Monad__RWST_tmp op_zt__ pair tt unit Control.Monad.Fail.MonadFail
+     Monad__RWST_tmp op_zmzg__ op_zt__ pair tt unit Control.Monad.Fail.MonadFail
      Control.Monad.Fail.fail Control.Monad.Fail.fail__
      Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift__ Data.Functor.Identity.Identity

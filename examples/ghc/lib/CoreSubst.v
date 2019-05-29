@@ -65,13 +65,13 @@ Definition mkOpenSubst
 Definition zapSubstEnv : Subst -> Subst :=
   fun '(Mk_Subst in_scope _ _ _) => Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
-Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
+Definition substTyVarBndr : Subst -> (Core.Var -> Subst * Core.Var) :=
   fun s v => pair s v.
 
-Definition substTy : Subst -> unit -> unit :=
+Definition substTy : Subst -> (unit -> unit) :=
   fun s t => tt.
 
-Definition substSpec : Subst -> Core.Id -> Core.RuleInfo -> Core.RuleInfo :=
+Definition substSpec : Subst -> (Core.Id -> (Core.RuleInfo -> Core.RuleInfo)) :=
   fun s x r => r.
 
 Definition substInScope : Subst -> Core.InScopeSet :=
@@ -119,10 +119,10 @@ Definition substRecBndrs
                                                                  (GHC.Err.error Panic.someSDoc)) subst bndrs in
     pair new_subst new_bndrs.
 
-Definition substCoVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
+Definition substCoVarBndr : Subst -> (Core.Var -> Subst * Core.Var) :=
   fun s v => pair s v.
 
-Definition substCo : Subst -> unit -> unit :=
+Definition substCo : Subst -> (unit -> unit) :=
   fun s c => tt.
 
 Definition substBndr : Subst -> Core.Var -> (Subst * Core.Var)%type :=
@@ -156,7 +156,7 @@ Definition mkOpenSubst
 Definition mkEmptySubst : Core.InScopeSet -> Subst :=
   fun in_scope => Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
-Definition lookupTCvSubst : Subst -> Core.TyVar -> unit :=
+Definition lookupTCvSubst : Subst -> (Core.TyVar -> unit) :=
   fun s v => tt.
 
 Definition lookupIdSubst : String -> Subst -> Core.Id -> Core.CoreExpr :=
@@ -374,10 +374,10 @@ Definition substExprSC : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
 Definition getTCvSubst : Subst -> unit :=
   fun s => tt.
 
-Definition extendTvSubstList : Subst -> list (Core.TyVar * unit) -> Subst :=
+Definition extendTvSubstList : Subst -> (list (Core.TyVar * unit) -> Subst) :=
   fun s vs => s.
 
-Definition extendTvSubst : Subst -> Core.TyVar -> unit -> Subst :=
+Definition extendTvSubst : Subst -> (Core.TyVar -> (unit -> Subst)) :=
   fun s v t => s.
 
 Definition extendInScopeList : Subst -> list Core.Var -> Subst :=
@@ -418,7 +418,7 @@ Definition extendIdSubst : Subst -> Core.Id -> Core.CoreExpr -> Subst :=
         Mk_Subst in_scope (Core.extendVarEnv ids v r) tt tt
     end.
 
-Definition extendCvSubst : Subst -> Core.CoVar -> unit -> Subst :=
+Definition extendCvSubst : Subst -> (Core.CoVar -> (unit -> Subst)) :=
   fun s v t => s.
 
 Definition extendSubst : Subst -> Core.Var -> Core.CoreArg -> Subst :=
@@ -484,7 +484,7 @@ Definition clone_id
     end.
 
 Definition cloneTyVarBndr
-   : Subst -> Core.TyVar -> Unique.Unique -> Subst * Core.TyVar :=
+   : Subst -> (Core.TyVar -> (Unique.Unique -> Subst * Core.TyVar)) :=
   fun s v u => pair s v.
 
 Definition cloneRecIdBndrs
@@ -536,7 +536,7 @@ Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
 
 (* External variables:
      None Some String andb bool cons const false list map mappend negb nil
-     op_z2218U__ op_zeze__ op_zt__ option orb pair snd true tt unit
+     op_z2218U__ op_zeze__ op_zmzg__ op_zt__ option orb pair snd true tt unit
      Coq.Lists.List.flat_map Core.App Core.Breakpoint Core.BuiltinRule Core.Case
      Core.Cast Core.CoVar Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr
      Core.CoreProgram Core.CoreRule Core.DVarSet Core.Id Core.IdEnv Core.IdInfo

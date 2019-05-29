@@ -294,10 +294,10 @@ Local Definition Ord__Literal_max : Literal -> Literal -> Literal :=
 Local Definition Ord__Literal_min : Literal -> Literal -> Literal :=
   fun x y => if Ord__Literal_op_zlze__ x y : bool then x else y.
 
-Local Definition Eq___Literal_op_zeze__ : Literal -> Literal -> bool :=
+Local Definition Eq___Literal_op_zeze__ : Literal -> (Literal -> bool) :=
   fun a b => match cmpLit a b with | Eq => true | _ => false end.
 
-Local Definition Eq___Literal_op_zsze__ : Literal -> Literal -> bool :=
+Local Definition Eq___Literal_op_zsze__ : Literal -> (Literal -> bool) :=
   fun a b => match cmpLit a b with | Eq => false | _ => true end.
 
 Program Instance Eq___Literal : GHC.Base.Eq_ Literal :=
@@ -322,7 +322,7 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
    `Literal.Binary__Literal' *)
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison false nat option true unit
+     Eq Gt Lt None Some andb bool comparison false nat op_zmzg__ option true unit
      BasicTypes.FunctionOrData Data.Maybe.isJust DynFlags.DynFlags
      DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT
      FastString.FastString FastString.fastStringToByteString FastString.mkFastString

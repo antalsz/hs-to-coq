@@ -79,7 +79,7 @@ Local Definition Monad__MaybeErr_op_zgzg__ {inst_err}
   fun {a} {b} => fun m k => Monad__MaybeErr_op_zgzgze__ m (fun arg_0__ => k).
 
 Local Definition Functor__MaybeErr_fmap {inst_err}
-   : forall {a} {b}, (a -> b) -> MaybeErr inst_err a -> MaybeErr inst_err b :=
+   : forall {a} {b}, (a -> b) -> (MaybeErr inst_err a -> MaybeErr inst_err b) :=
   fun {a} {b} =>
     fun f x =>
       match x with
@@ -98,7 +98,7 @@ Program Instance Functor__MaybeErr {err} : GHC.Base.Functor (MaybeErr err) :=
 
 Local Definition Applicative__MaybeErr_op_zlztzg__ {inst_err}
    : forall {a} {b},
-     MaybeErr inst_err (a -> b) -> MaybeErr inst_err a -> MaybeErr inst_err b :=
+     MaybeErr inst_err (a -> b) -> (MaybeErr inst_err a -> MaybeErr inst_err b) :=
   fun {a} {b} =>
     fun mf mx =>
       match mf with
@@ -146,12 +146,12 @@ Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
            GHC.Base.return___ := fun {a} => Monad__MaybeErr_return_ |}.
 
 (* External variables:
-     None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT
-     Control.Monad.Trans.Maybe.Mk_MaybeT Data.Maybe.fromMaybe GHC.Base.Applicative
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
-     GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze____
-     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
-     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
-     GHC.Base.return___
+     None Some bool false op_zmzg__ option true tt unit
+     Control.Monad.Trans.Maybe.MaybeT Control.Monad.Trans.Maybe.Mk_MaybeT
+     Data.Maybe.fromMaybe GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
+     GHC.Base.liftA2__ GHC.Base.liftM GHC.Base.op_z2218U__ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____
+     GHC.Base.op_zlztzg____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return_ GHC.Base.return___
 *)

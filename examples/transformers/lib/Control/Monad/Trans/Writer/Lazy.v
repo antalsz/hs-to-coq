@@ -159,7 +159,7 @@ Definition Monad__WriterT_op_zgzgze__ {inst_w} {inst_m} `{_
    : GHC.Base.Monoid inst_w} `{_ : GHC.Base.Monad inst_m}
    : forall {a} {b},
      WriterT inst_w inst_m a ->
-     (a -> WriterT inst_w inst_m b) -> WriterT inst_w inst_m b :=
+     ((a -> WriterT inst_w inst_m b) -> WriterT inst_w inst_m b) :=
   fun {a} {b} => Monad__WriterT_tmp.
 
 Local Definition Applicative__WriterT_op_zlztzg__ {inst_w} {inst_m}
@@ -521,27 +521,27 @@ Program Instance Ord__WriterT {w} {m} {a} `{GHC.Base.Ord w}
    `Control.Monad.Trans.Writer.Lazy.Read1__WriterT' *)
 
 (* External variables:
-     Gt Lt Monad__WriterT_tmp Type bool comparison list negb op_zt__ pair tt unit
-     Control.Monad.Fail.MonadFail Control.Monad.Fail.fail Control.Monad.Fail.fail__
-     Control.Monad.Signatures.CallCC Control.Monad.Trans.Class.MonadTrans
-     Control.Monad.Trans.Class.lift__ Coq.Program.Basics.compose
-     Data.Foldable.Foldable Data.Foldable.foldMap Data.Foldable.foldMap__
-     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length
-     Data.Foldable.length__ Data.Foldable.null Data.Foldable.null__
-     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
-     Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1 Data.Functor.Classes.compare1
-     Data.Functor.Classes.eq1 Data.Functor.Classes.liftCompare
-     Data.Functor.Classes.liftCompare2 Data.Functor.Classes.liftCompare__
-     Data.Functor.Classes.liftEq Data.Functor.Classes.liftEq2
-     Data.Functor.Classes.liftEq__ Data.Functor.Identity.Identity
-     Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
-     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
-     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
-     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
-     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable Data.Traversable.mapM__
-     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Gt Lt Monad__WriterT_tmp Type bool comparison list negb op_zmzg__ op_zt__ pair
+     tt unit Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
+     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
+     Coq.Program.Basics.compose Data.Foldable.Foldable Data.Foldable.foldMap
+     Data.Foldable.foldMap__ Data.Foldable.fold__ Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length Data.Foldable.length__ Data.Foldable.null
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.Functor.Classes.Eq1 Data.Functor.Classes.Ord1
+     Data.Functor.Classes.compare1 Data.Functor.Classes.eq1
+     Data.Functor.Classes.liftCompare Data.Functor.Classes.liftCompare2
+     Data.Functor.Classes.liftCompare__ Data.Functor.Classes.liftEq
+     Data.Functor.Classes.liftEq2 Data.Functor.Classes.liftEq__
+     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
+     Data.Functor.Identity.runIdentity Data.SemigroupInternal.Mk_Dual
+     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse Data.Traversable.traverse__ Data.Tuple.fst
      Data.Tuple.snd GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monad
      GHC.Base.Monoid GHC.Base.Ord GHC.Base.String GHC.Base.build' GHC.Base.compare

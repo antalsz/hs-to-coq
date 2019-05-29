@@ -783,7 +783,7 @@ Program Instance Traversable__Min : Data.Traversable.Traversable Min :=
 
 Local Definition Semigroup__Min_op_zlzlzgzg__ {inst_a} `{_
    : GHC.Base.Ord inst_a}
-   : Min inst_a -> Min inst_a -> Min inst_a :=
+   : Min inst_a -> (Min inst_a -> Min inst_a) :=
   GHC.Prim.coerce (@GHC.Base.min inst_a _ _).
 
 Program Instance Semigroup__Min {a} `{GHC.Base.Ord a}
@@ -972,7 +972,7 @@ Program Instance Traversable__Max : Data.Traversable.Traversable Max :=
 
 Local Definition Semigroup__Max_op_zlzlzgzg__ {inst_a} `{_
    : GHC.Base.Ord inst_a}
-   : Max inst_a -> Max inst_a -> Max inst_a :=
+   : Max inst_a -> (Max inst_a -> Max inst_a) :=
   GHC.Prim.coerce (@GHC.Base.max inst_a _ _).
 
 Program Instance Semigroup__Max {a} `{GHC.Base.Ord a}
@@ -1599,7 +1599,7 @@ Program Instance Semigroup__Last {a} : GHC.Base.Semigroup (Last a) :=
 
 Local Definition Semigroup__WrappedMonoid_op_zlzlzgzg__ {inst_m} `{_
    : GHC.Base.Monoid inst_m}
-   : WrappedMonoid inst_m -> WrappedMonoid inst_m -> WrappedMonoid inst_m :=
+   : WrappedMonoid inst_m -> (WrappedMonoid inst_m -> WrappedMonoid inst_m) :=
   GHC.Prim.coerce (@GHC.Base.mappend inst_m _ _).
 
 Program Instance Semigroup__WrappedMonoid {m} `{GHC.Base.Monoid m}
@@ -1630,7 +1630,7 @@ Program Instance Monoid__WrappedMonoid {m} `{GHC.Base.Monoid m}
 
 Local Definition Semigroup__Option_op_zlzlzgzg__ {inst_a} `{_
    : GHC.Base.Semigroup inst_a}
-   : Option inst_a -> Option inst_a -> Option inst_a :=
+   : Option inst_a -> (Option inst_a -> Option inst_a) :=
   GHC.Prim.coerce (@GHC.Base.op_zlzlzgzg__ (option inst_a) _).
 
 Program Instance Semigroup__Option {a} `{GHC.Base.Semigroup a}
@@ -1862,22 +1862,22 @@ Program Instance Monad__Option : GHC.Base.Monad Option :=
            GHC.Base.return___ := fun {a} => Monad__Option_return_ |}.
 
 (* External variables:
-     None Some bool comparison false list negb option true Coq.Program.Basics.compose
-     Data.Bifoldable.Bifoldable Data.Bifoldable.bifoldMap__ Data.Bifoldable.bifold__
-     Data.Bifoldable.bifoldl__ Data.Bifoldable.bifoldr__ Data.Bifunctor.Bifunctor
-     Data.Bifunctor.bimap__ Data.Bifunctor.first__ Data.Bifunctor.second__
-     Data.Bitraversable.Bitraversable Data.Bitraversable.bitraverse__
-     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl'__ Data.Foldable.foldl__ Data.Foldable.foldr'__
-     Data.Foldable.foldr__ Data.Foldable.length__ Data.Foldable.null__
-     Data.Foldable.product__ Data.Foldable.sum__ Data.Foldable.toList__
-     Data.Functor.op_zlzdzg__ Data.Maybe.maybe Data.SemigroupInternal.Endo
-     Data.SemigroupInternal.Mk_Dual Data.SemigroupInternal.Mk_Endo
-     Data.SemigroupInternal.Mk_Product Data.SemigroupInternal.Mk_Sum
-     Data.SemigroupInternal.appEndo Data.SemigroupInternal.getDual
-     Data.SemigroupInternal.getProduct Data.SemigroupInternal.getSum
-     Data.Traversable.Traversable Data.Traversable.mapM__
-     Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     None Some bool comparison false list negb op_zmzg__ option true
+     Coq.Program.Basics.compose Data.Bifoldable.Bifoldable
+     Data.Bifoldable.bifoldMap__ Data.Bifoldable.bifold__ Data.Bifoldable.bifoldl__
+     Data.Bifoldable.bifoldr__ Data.Bifunctor.Bifunctor Data.Bifunctor.bimap__
+     Data.Bifunctor.first__ Data.Bifunctor.second__ Data.Bitraversable.Bitraversable
+     Data.Bitraversable.bitraverse__ Data.Foldable.Foldable Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl'__ Data.Foldable.foldl__
+     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
+     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
+     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Maybe.maybe
+     Data.SemigroupInternal.Endo Data.SemigroupInternal.Mk_Dual
+     Data.SemigroupInternal.Mk_Endo Data.SemigroupInternal.Mk_Product
+     Data.SemigroupInternal.Mk_Sum Data.SemigroupInternal.appEndo
+     Data.SemigroupInternal.getDual Data.SemigroupInternal.getProduct
+     Data.SemigroupInternal.getSum Data.Traversable.Traversable
+     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.build'
      GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.flip GHC.Base.fmap

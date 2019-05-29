@@ -181,7 +181,7 @@ Local Definition Applicative__StateT_pure {inst_m} {inst_s} `{GHC.Base.Functor
 Definition Applicative__StateT_op_ztzg__ {inst_m} {inst_s} `{_
    : GHC.Base.Functor inst_m} `{_ : GHC.Base.Monad inst_m}
    : forall {a} {b},
-     StateT inst_s inst_m a -> StateT inst_s inst_m b -> StateT inst_s inst_m b :=
+     StateT inst_s inst_m a -> (StateT inst_s inst_m b -> StateT inst_s inst_m b) :=
   fun {a} {b} =>
     fun m k =>
       Applicative__StateT_op_zlztzg__ (Applicative__StateT_op_zlztzg__
@@ -265,15 +265,15 @@ Program Instance MonadFail__StateT {m} {s} `{(Control.Monad.Fail.MonadFail m)}
    `Control.Monad.Trans.State.Lazy.Alternative__StateT' *)
 
 (* External variables:
-     op_zt__ pair tt unit Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
-     Control.Monad.Fail.fail__ Control.Monad.Signatures.CallCC
-     Control.Monad.Signatures.Listen Control.Monad.Signatures.Pass
-     Control.Monad.Trans.Class.MonadTrans Control.Monad.Trans.Class.lift__
-     Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity
-     Data.Functor.Identity.runIdentity Data.Tuple.fst Data.Tuple.snd
-     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.String
-     GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.liftA2__
-     GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
+     op_zmzg__ op_zt__ pair tt unit Control.Monad.Fail.MonadFail
+     Control.Monad.Fail.fail Control.Monad.Fail.fail__
+     Control.Monad.Signatures.CallCC Control.Monad.Signatures.Listen
+     Control.Monad.Signatures.Pass Control.Monad.Trans.Class.MonadTrans
+     Control.Monad.Trans.Class.lift__ Data.Functor.Identity.Identity
+     Data.Functor.Identity.Mk_Identity Data.Functor.Identity.runIdentity
+     Data.Tuple.fst Data.Tuple.snd GHC.Base.Applicative GHC.Base.Functor
+     GHC.Base.Monad GHC.Base.String GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.liftA2__ GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze__
      GHC.Base.op_zgzgze____ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
      GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
      GHC.Base.return___

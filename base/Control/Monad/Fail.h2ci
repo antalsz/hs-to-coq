@@ -4,9 +4,9 @@ classTypes:
   Control.Monad.Fail.MonadFail: fromList []
 classDefns:
   Control.Monad.Fail.MonadFail: ClassDefinition (Qualified "Control.Monad.Fail" "MonadFail")
-    [Typed Ungeneralizable Explicit (Ident (Bare "m") :| []) (Arrow (Qualid (Bare
-    "Type")) (Qualid (Bare "Type"))),Generalized Implicit (App (Qualid (Qualified
-    "GHC.Base" "Monad")) (PosArg (Qualid (Bare "m")) :| []))] Nothing [(Qualified
-    "Control.Monad.Fail" "fail",Forall (Inferred Implicit (Ident (Bare "a")) :| [])
-    (Arrow (Qualid (Qualified "GHC.Base" "String")) (App (Qualid (Bare "m")) (PosArg
-    (Qualid (Bare "a")) :| []))))]
+    [Typed Ungeneralizable Explicit (Ident (Bare "m") :| []) (App (Qualid (Bare "op_zmzg__"))
+    (PosArg (Qualid (Bare "Type")) :| [PosArg (Qualid (Bare "Type"))])),Generalized
+    Implicit (App (Qualid (Qualified "GHC.Base" "Monad")) (PosArg (Qualid (Bare "m"))
+    :| []))] Nothing [(Qualified "Control.Monad.Fail" "fail",Forall (Inferred Implicit
+    (Ident (Bare "a")) :| []) (Arrow (Qualid (Qualified "GHC.Base" "String")) (App
+    (Qualid (Bare "m")) (PosArg (Qualid (Bare "a")) :| []))))]

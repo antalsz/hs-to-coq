@@ -395,10 +395,10 @@ Local Definition Ord__Name_max : Name -> Name -> Name :=
 Local Definition Ord__Name_min : Name -> Name -> Name :=
   fun x y => if Ord__Name_op_zlze__ x y : bool then x else y.
 
-Local Definition Eq___Name_op_zeze__ : Name -> Name -> bool :=
+Local Definition Eq___Name_op_zeze__ : Name -> (Name -> bool) :=
   fun a b => match cmpName a b with | Eq => true | _ => false end.
 
-Local Definition Eq___Name_op_zsze__ : Name -> Name -> bool :=
+Local Definition Eq___Name_op_zsze__ : Name -> (Name -> bool) :=
   fun a b => match cmpName a b with | Eq => false | _ => true end.
 
 Program Instance Eq___Name : GHC.Base.Eq_ Name :=
@@ -453,8 +453,8 @@ Program Instance NamedThing__Name : NamedThing Name :=
            getOccName__ := NamedThing__Name_getOccName |}.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
-     Coq.Init.Datatypes.app FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
+     Eq Gt Lt None Some andb bool comparison default false negb op_zmzg__ option orb
+     true unit Coq.Init.Datatypes.app FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
      GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.max__
      GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
      GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____

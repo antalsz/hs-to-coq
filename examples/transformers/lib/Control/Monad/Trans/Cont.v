@@ -168,7 +168,7 @@ Local Definition Applicative__ContT_pure {inst_r} {inst_m}
 
 Definition Applicative__ContT_op_ztzg__ {inst_m} {inst_s}
    : forall {a} {b},
-     ContT inst_s inst_m a -> ContT inst_s inst_m b -> ContT inst_s inst_m b :=
+     ContT inst_s inst_m a -> (ContT inst_s inst_m b -> ContT inst_s inst_m b) :=
   fun {a} {b} =>
     fun m k =>
       Applicative__ContT_op_zlztzg__ (Applicative__ContT_op_zlztzg__
@@ -198,7 +198,7 @@ Program Instance MonadFail__ContT {m} {r} `{(Control.Monad.Fail.MonadFail m)}
     k__ {| Control.Monad.Fail.fail__ := fun {a} => MonadFail__ContT_fail |}.
 
 (* External variables:
-     Type Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
+     Type op_zmzg__ Control.Monad.Fail.MonadFail Control.Monad.Fail.fail
      Control.Monad.Fail.fail__ Control.Monad.Trans.Class.MonadTrans
      Control.Monad.Trans.Class.lift Control.Monad.Trans.Class.lift__
      Data.Functor.Identity.Identity Data.Functor.Identity.Mk_Identity

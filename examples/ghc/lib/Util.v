@@ -376,7 +376,7 @@ Definition mapAndUnzip {a} {b} {c} (f : a -> b * c)
            end.
 
 Definition makeRelativeTo
-   : GHC.Base.String -> GHC.Base.String -> GHC.Base.String :=
+   : GHC.Base.String -> (GHC.Base.String -> GHC.Base.String) :=
   fun this that => this.
 
 Definition looksLikePackageName : GHC.Base.String -> bool :=
@@ -654,8 +654,8 @@ Infix "Util.<&&>" := (_<&&>_) (at level 99).
 End Notations.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison cons false list nat nil op_zt__ option
-     orb pair true unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map
+     Eq Gt Lt None Some andb bool comparison cons false list nat nil op_zmzg__
+     op_zt__ option orb pair true unit Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Coq.Lists.List.repeat Coq.Lists.List.skipn Data.Bits.Bits Data.Bits.op_zizazi__
      Data.Bits.shiftR Data.Bits.xor Data.Either.Either Data.Either.Left
      Data.Either.Right Data.Foldable.elem Data.Foldable.foldr Data.Foldable.notElem

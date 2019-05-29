@@ -437,25 +437,25 @@ Program Instance Monoid__UniqDFM {a} : GHC.Base.Monoid (UniqDFM a) :=
            GHC.Base.mempty__ := Monoid__UniqDFM_mempty |}.
 
 (* External variables:
-     None Some andb bool cons false list nat negb nil op_zt__ option orb pair true
-     BinNat.N.to_nat Coq.Lists.List.flat_map Data.Foldable.foldl Data.Foldable.foldr
-     Data.Function.on Data.IntMap.Internal.IntMap Data.IntMap.Internal.adjust
-     Data.IntMap.Internal.alter Data.IntMap.Internal.delete
-     Data.IntMap.Internal.difference Data.IntMap.Internal.elems
-     Data.IntMap.Internal.empty Data.IntMap.Internal.filter
-     Data.IntMap.Internal.filterWithKey Data.IntMap.Internal.foldr
-     Data.IntMap.Internal.insertWith Data.IntMap.Internal.intersection
-     Data.IntMap.Internal.lookup Data.IntMap.Internal.map Data.IntMap.Internal.member
-     Data.IntMap.Internal.null Data.IntMap.Internal.partition
-     Data.IntMap.Internal.singleton Data.IntMap.Internal.size
-     Data.IntMap.Internal.toList Data.OldList.sortBy Data.Tuple.snd GHC.Base.Eq_
-     GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
-     GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr
-     GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__ GHC.Base.mempty__
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
-     GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
-     GHC.Base.op_zsze____ GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
-     UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
+     None Some andb bool cons false list nat negb nil op_zmzg__ op_zt__ option orb
+     pair true BinNat.N.to_nat Coq.Lists.List.flat_map Data.Foldable.foldl
+     Data.Foldable.foldr Data.Function.on Data.IntMap.Internal.IntMap
+     Data.IntMap.Internal.adjust Data.IntMap.Internal.alter
+     Data.IntMap.Internal.delete Data.IntMap.Internal.difference
+     Data.IntMap.Internal.elems Data.IntMap.Internal.empty
+     Data.IntMap.Internal.filter Data.IntMap.Internal.filterWithKey
+     Data.IntMap.Internal.foldr Data.IntMap.Internal.insertWith
+     Data.IntMap.Internal.intersection Data.IntMap.Internal.lookup
+     Data.IntMap.Internal.map Data.IntMap.Internal.member Data.IntMap.Internal.null
+     Data.IntMap.Internal.partition Data.IntMap.Internal.singleton
+     Data.IntMap.Internal.size Data.IntMap.Internal.toList Data.OldList.sortBy
+     Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup
+     GHC.Base.String GHC.Base.compare GHC.Base.const GHC.Base.fmap GHC.Base.fmap__
+     GHC.Base.foldr GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__
+     GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zg__ GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__
+     GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze____ GHC.Num.Int GHC.Num.fromInteger
+     GHC.Num.op_zp__ UniqFM.UniqFM UniqFM.listToUFM_Directly UniqFM.nonDetUFMToList
      UniqFM.ufmToIntMap Unique.Uniquable Unique.Unique Unique.getUnique
      Unique.getWordKey
 *)

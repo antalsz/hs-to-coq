@@ -1,10 +1,14 @@
 rename type GHC.Types.IO = GHC.MVar.IO
-rename value IO.MVar = IO.MkMVar
+rename value Freer.MVar = Freer.MkMVar
 rename value Interp.Heap = Interp.MkHeap
-data kinds IO.MVar Type
-data kinds IO.MemEff (Type -> Type)
+rename value FreerConcurrency.Concurrency = FreerConcurrency.MkConcurrency
+data kinds Freer.MVar Type
+data kinds Freer.MemEff (Type -> Type)
 
-order IO.ret IO.Applicative__Freer_pure
-order IO.Functor__Freer IO.Applicative__Freer_op_zlztzg__
-order IO.Applicative__Freer IO.Monad__Freer_return_
-order IO.Monad__Freer IO.newMVar
+order Freer.ret Freer.Applicative__Freer_pure
+order Freer.Functor__Freer Freer.Applicative__Freer_op_zlztzg__
+order Freer.Applicative__Freer Freer.Monad__Freer_return_
+order Freer.Monad__Freer Freer.newMVar
+
+order FreerConcurrency.Functor__Concurrency FreerConcurrency.Applicative__Concurrency_liftA2
+order FreerConcurrency.Applicative__Concurrency FreerConcurrency.Monad__Concurrency_return_

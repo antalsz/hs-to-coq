@@ -2,7 +2,7 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module IO where
+module Freer where
 
 -- General freer monads stuff
 

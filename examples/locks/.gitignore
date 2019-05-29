@@ -1,4 +1,4 @@
-Locks.v
+*.v
 *.h2ci
 Makefile.coq
 _CoqProject

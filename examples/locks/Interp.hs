@@ -2,7 +2,7 @@
 
 module Interp where
 
-import           IO
+import           Freer
 
 data Heap = Heap {
     maxLoc  :: Int

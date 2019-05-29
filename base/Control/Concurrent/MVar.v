@@ -17,6 +17,7 @@ Require GHC.MVar.
 Import GHC.Base.Notations.
 
 (* No type declarations to convert. *)
+
 (* Converted value declarations: *)
 
 Definition withMVarMasked {a} {b}

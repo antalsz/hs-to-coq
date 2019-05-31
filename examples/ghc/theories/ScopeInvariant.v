@@ -100,11 +100,13 @@ that are in [in_scope]. Remember that GHC allows shadowing!
 
 *)
 
-Definition WellScopedTickish (x : Tickish Var)(in_scope : VarSet) : Prop :=
+(* We don't care about ticks, and I'm not sure this case is correct *)
+
+(* Definition WellScopedTickish (x : Tickish Var)(in_scope : VarSet) : Prop :=
   match x with
   | Breakpoint _ ids => Forall (fun e => WellScopedVar e in_scope) ids
   | _ => True
-  end.
+  end. *)
 
 
 Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
@@ -124,7 +126,7 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
       let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
       WellScoped (snd alt) in_scope') alts
   | Cast e _ =>   WellScoped e in_scope
-  | Tick t e =>   WellScoped e in_scope /\ WellScopedTickish t in_scope
+  | Tick _ e =>   WellScoped e in_scope (* /\ WellScopedTickish t in_scope *)
   | Type_ _  =>   True
   | Coercion _ => True
   end
@@ -321,6 +323,9 @@ Proof.
   eapply almostEqual_trans with (v2 := v0); auto.
 Qed.
 
+
+(* No such thing as WellScopedTickish anymore *)
+(*
 Lemma WellScopedTickish_StrongSubset : forall e vs1 vs2, 
     WellScopedTickish e vs1 -> StrongSubset vs1 vs2 -> WellScopedTickish e vs2.
 Proof.
@@ -331,6 +336,7 @@ Proof.
   move=> a h. eapply WellScopedVar_StrongSubset; eauto. simpl in h.
   auto.
 Qed.
+*)
 
 Lemma WellScoped_StrongSubset : forall e vs1 vs2, 
     WellScoped e vs1 -> StrongSubset vs1 vs2 -> WellScoped e vs2.
@@ -382,8 +388,10 @@ Proof.
      simpl in *.
      destruct W3 as [GLV WS].
      eauto using StrongSubset_extendVarSetList.
+(*
   - move: H0 => [? ?].
     eauto using WellScopedTickish_StrongSubset.
+*)
 Qed.
 
 (** *** Relation to [exprFreeVars] *)
@@ -457,7 +465,11 @@ Proof.
       apply (H0 _ _ _ HIn).
       assumption.
   - rewrite exprFreeVars_Cast. apply H; assumption.
-  - rewrite exprFreeVars_Tick. 
+  - rewrite exprFreeVars_Tick.
+    simpl in H0.
+    by apply H.
+    (*
+    rewrite exprFreeVars_Tick. 
     simpl in H0. move: H0 => [a b].
     destruct tickish; unfold tickishFreeVars in *; hs_simpl;
       try (apply H; assumption).
@@ -468,8 +480,8 @@ Proof.
     move=> x InX.
     rewrite -> filter_iff in InX; try apply RespectsVar_isLocalVar.
     move: InX => [i0 i1].
-    rewrite -> Forall_forall in b.    
-    rewrite -> extendVarSetList_iff in i0. 
+    rewrite -> Forall_forall in b.
+    rewrite -> extendVarSetList_iff in i0.
     destruct i0; try done.
     unfold In.
     move: (elem_exists_in _ _ H0) => [y [Iny eqy]].
@@ -482,6 +494,7 @@ Proof.
     erewrite (elemVarSet_eq _ eqy); eauto.
     eapply lookupVarSet_elemVarSet; eauto.
     rewrite h in WSy. done.
+    *)
   - apply subVarSet_emptyVarSet.
   - apply subVarSet_emptyVarSet.
 Qed.
@@ -698,8 +711,15 @@ Proof.
     rewrite exprFreeVars_Cast.
     set_b_iff; fsetdec.
   * simpl.
+    apply H.
+    eapply disjointVarSet_subVarSet_l; only 1: apply H0.
+    apply subVarSet_delVarSetList_both.
+    rewrite exprFreeVars_Tick.
+    set_b_iff; fsetdec.
+    (*
+    simpl.
     eapply and_iff_compat_both.
-    ++ apply H. 
+    ++ apply H.
        eapply disjointVarSet_subVarSet_l; only 1: apply H0.
        apply subVarSet_delVarSetList_both.
        rewrite exprFreeVars_Tick.
@@ -726,6 +746,7 @@ Proof.
           auto.
        -- rewrite (exprFreeVars_global_Var x LV).
           apply subVarSet_emptyVarSet.
+    *)
   * reflexivity.
   * reflexivity.
 Qed.
@@ -788,6 +809,7 @@ Proof.
   eapply almostEqual_trans; eassumption.
 Qed.
 
+(*
 Instance Respects_StrongSubset_WellScopedTickish v : Respects_StrongSubset (WellScopedTickish v).
 Proof.
   intros ????.
@@ -798,6 +820,7 @@ Proof.
   move: (H0 x In) => h.
   eapply Respects_StrongSubset_WellScopedVar; eauto.
 Qed.
+*)
 
 Instance Respects_StrongSubset_WellScoped e : Respects_StrongSubset (WellScoped e).
 Proof.
@@ -834,12 +857,15 @@ Proof.
        apply Respects_StrongSubset_extendVarSetList.
        apply H0.
    * apply H.
-   * unfold Respects_StrongSubset. 
+   * apply H.
+     (*
+     unfold Respects_StrongSubset
      move=> vs1 vs2 SS.
      move=> [WSE WST].
      split.
      eauto.
-     eapply Respects_StrongSubset_WellScopedTickish; eauto.     
+     eapply Respects_StrongSubset_WellScopedTickish; eauto.
+     *)
    * apply Respects_StrongSubset_const.
    * apply Respects_StrongSubset_const.
 Qed.

@@ -1385,7 +1385,7 @@ Proof.
   - move => tickish e0 IH s vs in_scope_set env u1 u2 WSS WST.
     hs_simpl.
     simpl in WST.
-    move: WST => [WSe ?].
+    (*move: WST => [WSe ?].*)
     unfold CoreUtils.mkTick.
     eapply IH; eauto.
 Qed.

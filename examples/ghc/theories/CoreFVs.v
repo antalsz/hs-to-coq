@@ -197,8 +197,6 @@ Proof.
       constructor; reflexivity.
     + apply IHalts; auto. intros. specialize (H0 dc pats rhs).
       apply H0. apply in_cons; auto.
-  - apply union_FV_WF; auto.
-    unfold tickish_fvs. destruct tickish; auto. 
 Qed.
 
 (** Unfolding tactics *)
@@ -594,7 +592,7 @@ Proof.
   apply mkVarSet_mapUnionFV.
 Qed.
 
-
+(*
 Lemma exprFreeVars_Tick:
   forall e t,
   exprFreeVars (Tick t e) [=] (unionVarSet (exprFreeVars e) (filterVarSet isLocalVar (tickishFreeVars t))).
@@ -613,6 +611,12 @@ Proof.
   rewrite D5.
   rewrite <- unionVarSet_filterVarSet; try done.
 Qed.
+*)
+
+Lemma exprFreeVars_Tick:
+  forall e t,
+  exprFreeVars (Tick t e) [=] exprFreeVars e.
+Proof. done. Qed.
 
 Lemma exprFreeVars_Type:
   forall t,

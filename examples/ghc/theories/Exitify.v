@@ -3175,7 +3175,7 @@ Next Obligation.
     assumption.
   * (* Tick *)
     simpl in *.
-    destruct HWS as [HWS HWT].
+    (* destruct HWS as [HWS HWT]. *)
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
     intuition.
   * (* Type *)

@@ -20,9 +20,13 @@ module HsToCoq.Coq.Gallina.Util (
   fixBodyName, fixBodyArgs, fixBodyTermination, fixBodyResultType, fixBodyBody,
 
   -- * Manipulating 'Binder's, 'Name's, and 'Qualid's
+  -- ** Manipulating one 'Binder' at a time, even when the 'Typed' case has multiple names
+  caseOneBinder, caseOneUngeneralizedBinder,
+  unconsOneBinder, unconsOneBinderFromType,
+  BinderInfo(..), biGeneralizability, biExplicitness, biMaybeName, biMaybeType,
   -- ** Optics
   _Ident, _UnderscoreName, nameToIdent,
-  binderNames, binderIdents, binderExplicitness,
+  binderNames, binderIdents, binderExplicitness, binderGeneralizability,
   -- ** Functions
   qualidBase, qualidModule, qualidMapBase, qualidExtendBase,
   splitModule,
@@ -30,16 +34,19 @@ module HsToCoq.Coq.Gallina.Util (
   qualidIsOp, qualidToOp, qualidToPrefix,
   unsafeIdentToQualid,
   nameToTerm, nameToPattern,
-  binderArgs
+  binderArgs,
+  consolidateTypedBinders
   ) where
 
 import Control.Lens
 
+import Data.Bifunctor
+import Data.Functor.Contravariant (phantom)
 import Data.Semigroup ((<>))
 import Data.Foldable
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import qualified Data.List.NonEmpty as NE (toList)
+import qualified Data.List.NonEmpty as NEL
 
 import qualified Data.Text as T
 
@@ -171,6 +178,12 @@ binderExplicitness f (Typed       gen ei names ty) = f ei <&> \ei' -> Typed     
 binderExplicitness f (Generalized     ei       ty) = f ei <&> \ei' -> Generalized     ei'       ty
 {-# INLINEABLE binderExplicitness #-}
 
+binderGeneralizability :: Getter Binder Generalizability
+binderGeneralizability f (Inferred        _ _)   = phantom $ f Ungeneralizable
+binderGeneralizability f (Typed       gen _ _ _) = phantom $ f gen
+binderGeneralizability f (Generalized     _   _) = phantom $ f Generalizable
+{-# INLINEABLE binderGeneralizability #-}
+
 qualidBase :: Qualid -> Ident
 qualidBase (Bare      ident) = ident
 qualidBase (Qualified _ aid) = aid
@@ -230,7 +243,7 @@ collectArgs :: Monad m => Term -> m (Qualid, [Term])
 collectArgs (Qualid qid) = return (qid, [])
 collectArgs (App t args) = do
     (f, args1) <- collectArgs t
-    args2 <- mapM fromArg (NE.toList args)
+    args2 <- mapM fromArg (toList args)
     return $ (f, args1 ++ args2)
   where
     fromArg (PosArg t) = return t
@@ -247,3 +260,61 @@ collectBinders :: Term -> [Binder]
 collectBinders (Forall bs t) = do
   toList bs ++ collectBinders t
 collectBinders _ = []
+
+consolidateTypedBinders :: Binders -> Binders
+consolidateTypedBinders (Typed g1 ei1 xs1 t1 :| Typed g2 ei2 xs2 t2 : bs) | g1 == g2 , ei1 == ei2 , t1 == t2 =
+  consolidateTypedBinders (Typed g1 ei1 (xs1 <> xs2) t1 :| bs)
+consolidateTypedBinders (b1 :| b2 : bs) =
+  b1 NEL.<| consolidateTypedBinders (b2 :| bs)
+consolidateTypedBinders (b :| []) =
+  b :| []
+
+-- |Case analysis on a 'Binder', but pulls out a single case from a
+-- multiple-names-with-the-same-type binder.  (E.g., @x@ becomes @x@, @(x : t)@
+-- becomes @(x : t)@, but @(x y z : t)@ becomes @(x : t)@ plus @(y z : t)@.)
+caseOneBinder :: Binder
+              -> (Explicitness -> Name -> a)
+              -> (Generalizability -> Explicitness -> Name -> Term -> Maybe Binder -> a)
+              -> (Explicitness -> Term -> a)
+              -> a
+caseOneBinder b inferred typed generalized = case b of
+  Inferred ei x          -> inferred ei x
+  Typed g ei (x :| xs) t -> typed g ei x t $ case nonEmpty xs of
+                                               Just xs' -> Just (Typed g ei xs' t)
+                                               Nothing  -> Nothing
+  Generalized ei t       -> generalized ei t
+
+-- |As 'caseOneBinder', but cannot handle generalizable binders, and always
+-- returns a constant value if the binder is a @Typed Generalizable@ or
+-- @Generalized@.
+caseOneUngeneralizedBinder :: Binder
+                           -> (Explicitness -> Name -> a)
+                           -> (Explicitness -> Name -> Term -> Maybe Binder -> a)
+                           -> a
+                           -> a
+caseOneUngeneralizedBinder b inferred typed generalizable =
+  caseOneBinder b
+    inferred
+    (\case
+       Ungeneralizable -> typed
+       Generalizable   -> \_ _ _ _ -> generalizable)
+    (\_ _ -> generalizable)
+
+data BinderInfo = BinderInfo { _biGeneralizability :: !Generalizability
+                             , _biExplicitness     :: !Explicitness
+                             , _biMaybeName        :: !(Maybe Name)
+                             , _biMaybeType        :: !(Maybe Term) }
+                 deriving (Eq, Ord, Show, Read)
+makeLenses ''BinderInfo
+
+unconsOneBinder :: Binders -> (BinderInfo, [Binder])
+unconsOneBinder (b :| bs) = caseOneBinder b
+  (\  ei x       -> (BinderInfo Ungeneralizable ei (Just x) Nothing,  bs))
+  (\g ei x t mb' -> (BinderInfo g               ei (Just x) (Just t), maybeToList mb' ++ bs))
+  (\  ei   t     -> (BinderInfo Generalizable   ei Nothing  (Just t), bs))
+
+unconsOneBinderFromType :: Term -> Maybe (BinderInfo, Term)
+unconsOneBinderFromType (Forall bbs t) = Just $ second (maybeForall ?? t) (unconsOneBinder bbs)
+unconsOneBinderFromType (t `Arrow` t') = Just (BinderInfo Ungeneralizable Explicit Nothing (Just t), t')
+unconsOneBinderFromType (Parens t)     = unconsOneBinderFromType t
+unconsOneBinderFromType _              = Nothing

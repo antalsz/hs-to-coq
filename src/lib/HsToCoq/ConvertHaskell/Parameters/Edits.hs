@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedClasses, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, inEdits,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedClasses, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, inEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -111,6 +111,7 @@ data Edit = TypeSynonymTypeEdit           Ident Ident
           | RenameModuleEdit              ModuleName ModuleName
           | SimpleClassEdit               Qualid
           | InlineMutualEdit              Qualid (Maybe (Maybe Term))
+          | SetTypeEdit                   Qualid (Maybe Term)
           | InEdit                        Qualid Edit
           deriving (Eq, Ord, Show)
 
@@ -154,6 +155,7 @@ data Edits = Edits { _typeSynonymTypes          :: !(Map Ident Ident)
                    , _renamedModules            :: !(Map ModuleName ModuleName)
                    , _simpleClasses             :: !(Set Qualid)
                    , _inlinedMutuals            :: !(Map Qualid (Maybe (Maybe Term)))
+                   , _replacedTypes             :: !(Map Qualid (Maybe Term)) -- Instead of setTypes
                    , _inEdits                   :: !(Map Qualid Edits)
                    }
            deriving (Eq, Ord, Show, Generic)
@@ -214,6 +216,7 @@ descDuplEdit = \case
   OrderEdit                     _            -> error "Order edits are never duplicates"
   SimpleClassEdit               cls          -> duplicateQ_for  "simple class requests"                cls
   InlineMutualEdit              fun _        -> duplicateQ_for  "inlined mutually recursive functions" fun
+  SetTypeEdit                   qid _        -> duplicateQ_for  "set types"                            qid
   InEdit                        _ _          -> error "In Edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
@@ -248,6 +251,7 @@ addEdit e = case e of
   RenameModuleEdit              m1 m2            -> addFresh e renamedModules                         m1            m2
   SimpleClassEdit               cls              -> addFresh e simpleClasses                          cls           ()
   InlineMutualEdit              fun oot          -> addFresh e inlinedMutuals                         fun           oot
+  SetTypeEdit                   qid oty          -> addFresh e replacedTypes                          qid           oty
   AddEdit                       mod def          -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
   OrderEdit                     idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                   rewrite          -> return . (rewrites %~ (rewrite:))

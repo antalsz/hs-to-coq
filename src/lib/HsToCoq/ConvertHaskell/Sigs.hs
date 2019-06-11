@@ -1,15 +1,19 @@
 {-# LANGUAGE TupleSections, LambdaCase, FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Sigs (
-  convertLSigs, convertSigs,
+  convertLSigs, convertSigs, lookupSig,
   HsSignature(..), collectSigs, collectSigsWithErrors, convertSignatures, convertSignature,
   ) where
 
 import Prelude hiding (Num)
 
+import Control.Lens
+
+import Data.Maybe
 import Data.Semigroup (Semigroup(..))
 import qualified Data.Text as T
 
+import Control.Monad.Reader
 import Control.Monad.Except
 import HsToCoq.Util.Monad.ListT
 
@@ -80,15 +84,32 @@ convertSignature :: ConversionMonad r m => UnusedTyVarMode -> HsSignature -> m S
 convertSignature utvm (HsSignature sigTy _hsFix) = do
   Signature <$> convertLHsSigType utvm sigTy <*> pure Nothing
 
+-- Incorporates @set type …@ edits ('replacedTypes') for all bindings that
+-- /already had/ a type signature; use 'lookupSig' to get the rest.
 convertSignatures :: ConversionMonad r m => Map GHC.Name HsSignature -> m (Map Qualid Signature)
-convertSignatures = fmap M.fromList . traverse conv . M.toList where
+convertSignatures = fmap (M.fromList . catMaybes) . traverse conv . M.toList where
   conv (hsName, hsSig) = do
     coqName <- var ExprNS hsName
-    utvm    <- unusedTyVarModeFor coqName
-    (coqName,) <$> convertSignature utvm hsSig
+    view (edits.replacedTypes.at coqName) >>= \case
+      Just (Just ty) -> pure $ Just (coqName, Signature ty Nothing)
+      Just Nothing   -> pure Nothing
+      Nothing -> do
+        utvm <- unusedTyVarModeFor coqName
+        Just . (coqName,) <$> convertSignature utvm hsSig
 
+-- Incorporates @set type …@ edits ('replacedTypes') for all bindings that
+-- /already had/ a type signature; use 'lookupSig' to get the rest.
 convertSigs :: ConversionMonad r m => [Sig GhcRn] -> m (Map Qualid Signature)
 convertSigs = convertSignatures <=< collectSigsWithErrors
 
+-- Incorporates @set type …@ edits ('replacedTypes') for all bindings that
+-- /already had/ a type signature; use 'lookupSig' to get the rest.
 convertLSigs :: ConversionMonad r m => [LSig GhcRn] -> m (Map Qualid Signature)
 convertLSigs = convertSigs . map unLoc
+
+-- Falls back on the @set type …@ edits ('replacedTypes') if there's no
+-- 'Signature' in the map.
+lookupSig :: (MonadReader r m, HasEdits r Edits) => Qualid -> Map Qualid Signature -> m (Maybe Signature)
+lookupSig qid sigs = case M.lookup qid sigs of
+                       sig@Just{} -> pure sig
+                       Nothing    -> views (edits.replacedTypes.at qid) (fmap (Signature ?? Nothing) . join)

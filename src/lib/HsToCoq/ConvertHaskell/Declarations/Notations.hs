@@ -18,6 +18,8 @@ import HsToCoq.ConvertHaskell.InfixNames
 
 --------------------------------------------------------------------------------
 
+-- Doesn't use 'lookupSig' because the extra signature information is just
+-- /type/ signature information, not fixity information.
 buildInfixNotations :: Map Qualid Signature -> Qualid -> [Notation]
 buildInfixNotations sigs def
     | Just op <- identToOp (qualidBase def)

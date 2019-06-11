@@ -145,6 +145,9 @@ convertClassDecl (L _ hsCtx) (L _ hsName) ltvs fds lsigs defaults types typeDefa
                   <$> traverse (convertAssociatedType argNames . unLoc) types
   value_sigs <- convertLSigs lsigs
   storeClassTypes name $ M.keysSet type_sigs
+  -- We don't use 'lookupSig' here because type classes depend on the exact list
+  -- of signatures.  This also means all the signatures should be present, so
+  -- just using the result of `convertLSigs` shouldn't pose a problem.
   
   hideTypeArgs <- for (M.keys type_sigs) $ \meth -> do
     count <- maybe 0 length <$> lookupExplicitMethodArguments meth

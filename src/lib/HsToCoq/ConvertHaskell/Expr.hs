@@ -983,7 +983,7 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
        runMaybeT . wrap defn . fmap Right $ do
          ty <- case defn of
                  FunBind{fun_id = L _ hsName} ->
-                   fmap sigType . (`M.lookup` sigs) <$> var ExprNS hsName
+                   fmap (fmap sigType) . (`lookupSig` sigs) =<< var ExprNS hsName
                  _ ->
                    pure Nothing
          MaybeT $ convertSingleBinding ty defn

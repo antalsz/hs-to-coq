@@ -85,6 +85,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   simple          { TokWord    "simple"         }
   inline          { TokWord    "inline"         }
   mutual          { TokWord    "mutual"         }
+  set             { TokWord    "set"            }
   no              { TokWord    "no"             }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
@@ -301,6 +302,7 @@ Edit :: { Edit }
   | rename module Word Word                               { RenameModuleEdit              (mkModuleNameT $3) (mkModuleNameT $4) }
   | simple class Qualid                                   { SimpleClassEdit               $3                                    }
   | inline mutual Qualid Optional(TypeAnnotationOrNot)    { InlineMutualEdit              $3 $4                                 }
+  | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                   $3 $4                                 }
   | 'in' Qualid Edit                                      { InEdit                        $2 $3                                 }
 
 Edits :: { [Edit] }

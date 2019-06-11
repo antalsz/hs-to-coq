@@ -606,6 +606,26 @@ Examples:
 
      manual notation GHC.Base
 
+``set type`` -- Specify a type for a binding
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: set type, edit
+
+Format:
+  | **set type** *qualified_name* : *Coq_type*
+  | **set type** *qualified_name* no type
+
+Effect:
+  Sets the type of the given definition to the given type, or omits the type if
+  ``no type`` is specified.
+
+Examples:
+  .. code-block:: shell
+
+     set type Example.int_to_int : Z -> Z
+     set type Example.inferred no type
+     in CoreUtils.stripTicksE set type go_b : (b * Core.Expr b) -> (b * Core.Expr b)
 
 Termination edits
 -----------------

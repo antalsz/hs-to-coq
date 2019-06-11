@@ -19,7 +19,6 @@ import Data.Bifunctor
 import Data.Foldable
 import HsToCoq.Util.Foldable
 import Data.Traversable
-import HsToCoq.Util.Traversable
 import Data.Bitraversable
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
@@ -37,6 +36,7 @@ import Control.Monad.Writer
 
 import HsToCoq.Util.Containers
 
+import           Data.Set        (Set)
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -1014,38 +1014,12 @@ rdToLet RecDef{..} = Let rdName (toList rdArgs) rdResultType rdBody
 rdStripResultType :: RecDef -> RecDef
 rdStripResultType rd = rd{rdResultType = Nothing}
 
-splitInlinesWith :: (ConversionMonad r m, Traversable f)
-                 => Map Qualid (Maybe (Maybe Term))
-                 -> f RecDef
-                 -> m (Maybe (Map Qualid RecDef, NonEmpty RecDef))
+splitInlinesWith :: Foldable f => Set Qualid -> f RecDef -> Maybe (Map Qualid RecDef, NonEmpty RecDef)
 splitInlinesWith inlines =
-  fmap (bitraverse (pure . fold) nonEmpty) .: traversePartitionEithers $ \rd@RecDef{..} ->
-    case M.lookup rdName inlines of
-      Nothing ->
-        pure $ Right rd
-      Just mmNewType ->
-        Left . M.singleton rdName <$> case mmNewType of
-          Nothing             -> pure rd
-          Just Nothing        -> pure rd{ rdArgs       = sconcatMap stripBinderType rdArgs
-                                        , rdResultType = Nothing
-                                        , rdFullType   = Nothing }
-          Just (Just newType) -> case useTypeInBinders newType rdArgs of
-                                   Right (resultType', rdArgs', UTIBIsTypeTooShort False) ->
-                                     pure rd{ rdArgs       = rdArgs'
-                                            , rdResultType = Just resultType'
-                                            , rdFullType   = Just newType }
-                                   Right (_, _, UTIBIsTypeTooShort True) ->
-                                     unsupportedHere
-                                       "providing a type with fewer arguments than there are in the term"
-                                   Left  err ->
-                                     unsupportedHere $
-                                       "differing " ++ whatUTIB err ++ " between the binder and the type"
-                                   where unsupportedHere msg =
-                                           convUnsupportedIn msg "inlined recursive definition" (showP rdName)
-  where
-    whatUTIB UTIBMismatchedGeneralizability = "generalizability"
-    whatUTIB UTIBMismatchedExplicitness     = "explicitness"
-    whatUTIB UTIBMismatchedBoth             = "generalizability and explicitness"
+  bitraverse (pure . fold) nonEmpty .: mapPartitionEithers $ \rd@RecDef{..} ->
+    if rdName `elem` inlines
+    then Left $ M.singleton rdName rd
+    else Right rd
 
 data RecType = Standalone | Mutual deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
@@ -1055,7 +1029,7 @@ mutualRecursionInlining mutGroup = do
   
   inlines      <- view $ edits.inlinedMutuals
   (lets, recs) <- splitInlinesWith inlines mutGroup
-                    >>= maybe (editFailure "can't inline every function in a mutually-recursive group") pure
+                    & maybe (editFailure "can't inline every function in a mutually-recursive group") pure
   
   let rdFVs   = getFreeVars . rdBody
       letUses = rdFVs <$> lets

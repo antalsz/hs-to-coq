@@ -1,5 +1,7 @@
 # hs-to-coq
 
+[![Travis CI Build Status](https://travis-ci.org/antalsz/hs-to-coq.svg?branch=master)](https://travis-ci.org/antalsz/hs-to-coq)
+
 This repository contains a converter from Haskell code to equivalent Coq code,
 as part of the [CoreSpec] component of the [DeepSpec] project.
 

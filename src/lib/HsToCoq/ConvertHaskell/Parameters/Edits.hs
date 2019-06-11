@@ -110,7 +110,7 @@ data Edit = TypeSynonymTypeEdit           Ident Ident
           | CoinductiveEdit               Qualid
           | RenameModuleEdit              ModuleName ModuleName
           | SimpleClassEdit               Qualid
-          | InlineMutualEdit              Qualid
+          | InlineMutualEdit              Qualid (Maybe (Maybe Term))
           | InEdit                        Qualid Edit
           deriving (Eq, Ord, Show)
 
@@ -153,7 +153,7 @@ data Edits = Edits { _typeSynonymTypes          :: !(Map Ident Ident)
                    , _coinductiveTypes          :: !(Set Qualid)
                    , _renamedModules            :: !(Map ModuleName ModuleName)
                    , _simpleClasses             :: !(Set Qualid)
-                   , _inlinedMutuals            :: !(Set Qualid)
+                   , _inlinedMutuals            :: !(Map Qualid (Maybe (Maybe Term)))
                    , _inEdits                   :: !(Map Qualid Edits)
                    }
            deriving (Eq, Ord, Show, Generic)
@@ -213,7 +213,7 @@ descDuplEdit = \case
   RewriteEdit                   _            -> error "Rewrites are never duplicates"
   OrderEdit                     _            -> error "Order edits are never duplicates"
   SimpleClassEdit               cls          -> duplicateQ_for  "simple class requests"                cls
-  InlineMutualEdit              fun          -> duplicateQ_for  "inlined mutually recursive functions" fun
+  InlineMutualEdit              fun _        -> duplicateQ_for  "inlined mutually recursive functions" fun
   InEdit                        _ _          -> error "In Edits are never duplicates"
   where
     prettyScoped place name = let pplace = case place of
@@ -247,7 +247,7 @@ addEdit e = case e of
   CoinductiveEdit               ty               -> addFresh e coinductiveTypes                       ty            ()
   RenameModuleEdit              m1 m2            -> addFresh e renamedModules                         m1            m2
   SimpleClassEdit               cls              -> addFresh e simpleClasses                          cls           ()
-  InlineMutualEdit              fun              -> addFresh e inlinedMutuals                         fun           ()
+  InlineMutualEdit              fun oot          -> addFresh e inlinedMutuals                         fun           oot
   AddEdit                       mod def          -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
   OrderEdit                     idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                   rewrite          -> return . (rewrites %~ (rewrite:))

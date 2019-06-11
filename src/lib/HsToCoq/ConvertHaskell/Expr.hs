@@ -19,6 +19,7 @@ import Data.Bifunctor
 import Data.Foldable
 import HsToCoq.Util.Foldable
 import Data.Traversable
+import HsToCoq.Util.Traversable
 import Data.Bitraversable
 import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
@@ -36,7 +37,6 @@ import Control.Monad.Writer
 
 import HsToCoq.Util.Containers
 
-import           Data.Set        (Set)
 import           Data.Map.Strict (Map)
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
@@ -54,6 +54,7 @@ import HsToCoq.Util.GHC.Name hiding (Name)
 import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Gallina.UseTypeInBinders
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Util.FVs
@@ -867,31 +868,36 @@ convertTypedBinding convHsTy FunBind{..}   = do
         
         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
-wfFix :: TerminationArgument -> FixBody -> Term
+wfFix :: ConversionMonad r m => TerminationArgument -> FixBody -> m Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)
- = App1 (Qualid deferredFixN) $ Fun (Inferred Explicit (Ident ident) NEL.<| argBinders ) rhs
+ = pure $ App1 (Qualid deferredFixN) $ Fun (Inferred Explicit (Ident ident) NEL.<| argBinders ) rhs
   where
     deferredFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.DeferredFix.deferredFix"
 
 wfFix (WellFounded order) (FixBody ident argBinders Nothing Nothing rhs)
- = appList (Qualid wfFixN) $ map PosArg
-    [ rel
-    , Fun argBinders measure
-    , Underscore
-    , Fun (argBinders NEL.|> Inferred Explicit (Ident ident)) rhs
-    ]
+ = do (rel, measure) <- case order of
+        StructOrder _                   -> convUnsupportedIn
+                                             "well-founded recursion does not include structural recursion"
+                                             "fixpoint"
+                                             (showP ident)
+        MeasureOrder measure Nothing    -> pure ("Coq.Init.Peano.lt", measure)
+        MeasureOrder measure (Just rel) -> pure (rel, measure)
+        WFOrder rel arg                 -> pure (rel, Qualid arg)
+      pure . appList (Qualid wfFixN) $ map PosArg
+        [ rel
+        , Fun argBinders measure
+        , Underscore
+        , Fun (argBinders NEL.|> Inferred Explicit (Ident ident)) rhs
+        ]
   where
     wfFixN = qualidMapBase (<> T.pack (show (NEL.length argBinders)))
         "GHC.Wf.wfFix"
-    (rel, measure) = case order of
-        StructOrder _                   -> error "wfFix cannot handle structural recursion"
-        MeasureOrder measure Nothing    -> ("Coq.Init.Peano.lt", measure)
-        MeasureOrder measure (Just rel) -> (rel, measure)
-        WFOrder rel arg                 -> (rel, Qualid arg)
 
-wfFix Corecursive fb = Cofix $ FixOne fb
-wfFix _ _ = error "wfFix: cannot handle annotations or types"
+wfFix Corecursive fb = pure . Cofix $ FixOne fb
+wfFix _ fb = convUnsupportedIn "well-founded recursion cannot handle annotations or types"
+                               "fixpoint"
+                               (showP $ fb^.fixBodyName)
 
 --------------------------------------------------------------------------------
 
@@ -982,25 +988,64 @@ convertMultipleBindings convertSingleBinding defns sigs build mhandler =
                    pure Nothing
          MaybeT $ convertSingleBinding ty defn
 
--- ALMOST a 'ConvertedDefinition', but it's guaranteed to have arguments.
-data RecDef = RecDef { rdName :: !Qualid
-                     , rdArgs :: !Binders
-                     , rdType :: !(Maybe Term)
-                     , rdBody :: !Term }
+-- ALMOST a 'ConvertedDefinition', but:
+--   (a) It's guaranteed to have arguments; and
+--   (b) We store two types: the result type AFTER the argument types
+--       ('rdResultType'), and the full type including the argument types
+--       ('rdFullType')
+data RecDef = RecDef { rdName       :: !Qualid
+                     , rdArgs       :: !Binders
+                     , rdResultType :: !(Maybe Term)
+                     , rdFullType   :: !(Maybe Term)
+                     , rdBody       :: !Term }
             deriving (Eq, Ord, Show, Read)
 
+-- CURRENT IMPLEMENTATION: If we can't move the type to arguments, then:
+--   * If it was translated, fail-safe, and translate without the type
+--   * If it was specified, abort
+-- We can't unilaterally abort unless we can change type signatures.
+
 rdToFixBody :: RecDef -> FixBody
-rdToFixBody RecDef{..} = FixBody rdName rdArgs Nothing Nothing rdBody
+rdToFixBody RecDef{..} = FixBody rdName rdArgs Nothing rdResultType rdBody
 
 rdToLet :: RecDef -> Term -> Term
-rdToLet RecDef{..} = Let rdName (toList rdArgs) Nothing rdBody
+rdToLet RecDef{..} = Let rdName (toList rdArgs) rdResultType rdBody
 
-splitInlinesWith :: Foldable f => Set Qualid -> f RecDef -> Maybe (Map Qualid RecDef, NonEmpty RecDef)
+rdStripResultType :: RecDef -> RecDef
+rdStripResultType rd = rd{rdResultType = Nothing}
+
+splitInlinesWith :: (ConversionMonad r m, Traversable f)
+                 => Map Qualid (Maybe (Maybe Term))
+                 -> f RecDef
+                 -> m (Maybe (Map Qualid RecDef, NonEmpty RecDef))
 splitInlinesWith inlines =
-  bitraverse (pure . fold) nonEmpty .: mapPartitionEithers $ \rd@RecDef{..} ->
-    if rdName `elem` inlines
-    then Left $ M.singleton rdName rd
-    else Right rd
+  fmap (bitraverse (pure . fold) nonEmpty) .: traversePartitionEithers $ \rd@RecDef{..} ->
+    case M.lookup rdName inlines of
+      Nothing ->
+        pure $ Right rd
+      Just mmNewType ->
+        Left . M.singleton rdName <$> case mmNewType of
+          Nothing             -> pure rd
+          Just Nothing        -> pure rd{ rdArgs       = sconcatMap stripBinderType rdArgs
+                                        , rdResultType = Nothing
+                                        , rdFullType   = Nothing }
+          Just (Just newType) -> case useTypeInBinders newType rdArgs of
+                                   Right (resultType', rdArgs', UTIBIsTypeTooShort False) ->
+                                     pure rd{ rdArgs       = rdArgs'
+                                            , rdResultType = Just resultType'
+                                            , rdFullType   = Just newType }
+                                   Right (_, _, UTIBIsTypeTooShort True) ->
+                                     unsupportedHere
+                                       "providing a type with fewer arguments than there are in the term"
+                                   Left  err ->
+                                     unsupportedHere $
+                                       "differing " ++ whatUTIB err ++ " between the binder and the type"
+                                   where unsupportedHere msg =
+                                           convUnsupportedIn msg "inlined recursive definition" (showP rdName)
+  where
+    whatUTIB UTIBMismatchedGeneralizability = "generalizability"
+    whatUTIB UTIBMismatchedExplicitness     = "explicitness"
+    whatUTIB UTIBMismatchedBoth             = "generalizability and explicitness"
 
 data RecType = Standalone | Mutual deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
@@ -1010,7 +1055,7 @@ mutualRecursionInlining mutGroup = do
   
   inlines      <- view $ edits.inlinedMutuals
   (lets, recs) <- splitInlinesWith inlines mutGroup
-                    & maybe (editFailure "can't inline every function in a mutually-recursive group") pure
+                    >>= maybe (editFailure "can't inline every function in a mutually-recursive group") pure
   
   let rdFVs   = getFreeVars . rdBody
       letUses = rdFVs <$> lets
@@ -1047,20 +1092,30 @@ addRecursion eBindings = do
     fixConnComp (splitCommonPrefixOf convDefArgs -> (commonArgs, cds)) = do
       bodies <- for cds $ \case
         ConvertedDefinition{_convDefBody = Fun args body, ..} ->
-          pure $ RecDef { rdName = _convDefName
-                        , rdArgs = _convDefArgs <++ args
-                        , rdType = maybeForall _convDefArgs <$> _convDefType
-                        , rdBody = body }
+          let fullType = maybeForall _convDefArgs <$> _convDefType
+              (resultType, convArgs') =
+                let allArgs = _convDefArgs <++ args
+                in case fullType of
+                     Just ty | Right (ty', args', UTIBIsTypeTooShort False) <- useTypeInBinders ty allArgs ->
+                       (Just ty', args')
+                     _ ->
+                       (Nothing, allArgs)
+          in pure $ RecDef { rdName       = _convDefName
+                           , rdArgs       = convArgs'
+                           , rdResultType = resultType
+                           , rdFullType   = fullType
+                           , rdBody       = body }
         cd ->
           convUnsupportedIn "recursion through non-lambda value" "definition" (showP $ cd^.convDefName)
       
       nonstructural <- findM (\rd -> view $ edits.termination.at (rdName rd)) bodies
       
-      let getInfo = fmap $ rdName &&& rdType
+      let getInfo = fmap $ rdName &&& rdFullType
       
       (fixFor, recInfos, extraDefs) <- case (nonstructural, bodies) of
-        (Just order, body1 :| []) ->
-          pure (const . wfFix order $ rdToFixBody body1, getInfo bodies, [])
+        (Just order, body1 :| []) -> do
+          fixed <- wfFix order . rdToFixBody $ rdStripResultType body1
+          pure (const fixed, getInfo bodies, [])
         
         (Just _, _ :| _ : _) ->
           convUnsupportedIn "non-structural mutual recursion" "definitions"

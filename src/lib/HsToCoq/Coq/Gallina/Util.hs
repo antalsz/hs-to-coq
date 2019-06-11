@@ -21,7 +21,7 @@ module HsToCoq.Coq.Gallina.Util (
 
   -- * Manipulating 'Binder's, 'Name's, and 'Qualid's
   -- ** Manipulating one 'Binder' at a time, even when the 'Typed' case has multiple names
-  caseOneBinder, caseOneUngeneralizedBinder,
+  caseOneBinder,
   unconsOneBinder, unconsOneBinderFromType,
   BinderInfo(..), biGeneralizability, biExplicitness, biMaybeName, biMaybeType,
   -- ** Optics
@@ -35,7 +35,8 @@ module HsToCoq.Coq.Gallina.Util (
   unsafeIdentToQualid,
   nameToTerm, nameToPattern,
   binderArgs,
-  consolidateTypedBinders
+  consolidateTypedBinders,
+  stripBinderType
   ) where
 
 import Control.Lens
@@ -269,6 +270,13 @@ consolidateTypedBinders (b1 :| b2 : bs) =
 consolidateTypedBinders (b :| []) =
   b :| []
 
+-- @`{Show t}@ is left alone.
+stripBinderType :: Binder -> Binders
+stripBinderType b@Inferred{}                    = b :| []
+stripBinderType b@Generalized{}                 = b :| []
+stripBinderType b@(Typed Generalizable _ _ _)   = b :| []
+stripBinderType (Typed Ungeneralizable ei xs _) = Inferred ei <$> xs
+
 -- |Case analysis on a 'Binder', but pulls out a single case from a
 -- multiple-names-with-the-same-type binder.  (E.g., @x@ becomes @x@, @(x : t)@
 -- becomes @(x : t)@, but @(x y z : t)@ becomes @(x : t)@ plus @(y z : t)@.)
@@ -283,22 +291,6 @@ caseOneBinder b inferred typed generalized = case b of
                                                Just xs' -> Just (Typed g ei xs' t)
                                                Nothing  -> Nothing
   Generalized ei t       -> generalized ei t
-
--- |As 'caseOneBinder', but cannot handle generalizable binders, and always
--- returns a constant value if the binder is a @Typed Generalizable@ or
--- @Generalized@.
-caseOneUngeneralizedBinder :: Binder
-                           -> (Explicitness -> Name -> a)
-                           -> (Explicitness -> Name -> Term -> Maybe Binder -> a)
-                           -> a
-                           -> a
-caseOneUngeneralizedBinder b inferred typed generalizable =
-  caseOneBinder b
-    inferred
-    (\case
-       Ungeneralizable -> typed
-       Generalizable   -> \_ _ _ _ -> generalizable)
-    (\_ _ -> generalizable)
 
 data BinderInfo = BinderInfo { _biGeneralizability :: !Generalizability
                              , _biExplicitness     :: !Explicitness

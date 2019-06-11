@@ -11,6 +11,7 @@ module HsToCoq.Util.List (
   -- * Nonempty lists
   unconsNEL, unsnocNEL, (|:), (|>), snocNEL,
   (<++), (++>),
+  sconcatMap,
   -- * English
   explainItems, explainStrItems
 ) where
@@ -22,6 +23,7 @@ import qualified Control.Monad.Trans.State.Lazy   as Lazy
 
 import Data.Bifunctor
 import Data.Foldable
+import Data.Semigroup
 import Control.Applicative
 
 import HsToCoq.Util.Function
@@ -80,6 +82,9 @@ infixr 5 <++
 (++>) :: Foldable f => NonEmpty a -> f a -> NonEmpty a
 (x :| xs) ++> ys = x :| (xs ++ toList ys)
 infixr 5 ++>
+
+sconcatMap :: Semigroup b => (a -> b) -> NonEmpty a -> b
+sconcatMap = sconcat .: fmap
 
 insertSortedBy :: (a -> a -> Ordering) -> a -> [a] -> [a]
 insertSortedBy _   y []     = [y]

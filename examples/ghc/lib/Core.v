@@ -2752,8 +2752,8 @@ Definition useTop : ArgUse :=
   Mk_Use Many Used.
 
 Definition zap_usg : KillFlags -> UseDmd -> UseDmd :=
-  fix zap_usg arg_0__ arg_1__
-        := let zap_musg arg_0__ arg_1__ :=
+  fix zap_usg (arg_0__ : KillFlags) (arg_1__ : UseDmd) : UseDmd
+        := let zap_musg (arg_0__ : KillFlags) (arg_1__ : ArgUse) : ArgUse :=
              match arg_0__, arg_1__ with
              | kfs, Abs => if kf_abs kfs : bool then useTop else Abs
              | kfs, Mk_Use c u =>
@@ -3838,9 +3838,8 @@ Program Definition peelManyCalls : nat -> CleanDemand -> DmdShell :=
             match arg_0__, arg_1__ with
             | n, JD str abs =>
                 let go_abs : nat -> UseDmd -> Use unit :=
-                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_2__ arg_3__ => arg_2__) _ (fun arg_2__
-                                 arg_3__
-                                 go_abs =>
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun (arg_2__ : nat) (arg_3__ : UseDmd) =>
+                                   arg_2__) _ (fun (arg_2__ : nat) (arg_3__ : UseDmd) go_abs =>
                                    match arg_2__, arg_3__ with
                                    | num_4__, _ =>
                                        if Bool.Sumbool.sumbool_of_bool (num_4__ GHC.Base.== #0) then Mk_Use One tt else
@@ -3850,8 +3849,8 @@ Program Definition peelManyCalls : nat -> CleanDemand -> DmdShell :=
                                        end
                                    end) in
                 let go_str : nat -> StrDmd -> Str unit :=
-                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_10__ arg_11__ => arg_10__) _
-                                (fun arg_10__ arg_11__ go_str =>
+                  GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun (arg_10__ : nat) (arg_11__ : StrDmd) =>
+                                   arg_10__) _ (fun (arg_10__ : nat) (arg_11__ : StrDmd) go_str =>
                                    match arg_10__, arg_11__ with
                                    | num_12__, _ =>
                                        if Bool.Sumbool.sumbool_of_bool (num_12__ GHC.Base.== #0)
@@ -4413,8 +4412,8 @@ Definition mayHaveCafRefs : CafInfo -> bool :=
   fun arg_0__ => match arg_0__ with | MayHaveCafRefs => true | _ => false end.
 
 Definition markReused : UseDmd -> UseDmd :=
-  fix markReused arg_0__
-        := let markReusedDmd arg_0__ :=
+  fix markReused (arg_0__ : UseDmd) : UseDmd
+        := let markReusedDmd (arg_0__ : ArgUse) : ArgUse :=
              match arg_0__ with
              | Abs => Abs
              | Mk_Use _ a => Mk_Use Many (markReused a)
@@ -4684,8 +4683,8 @@ Definition isVanillaAlgTyCon : TyCon -> bool :=
     end.
 
 Definition isUsedU : UseDmd -> bool :=
-  fix isUsedU arg_0__
-        := let isUsedMU arg_0__ :=
+  fix isUsedU (arg_0__ : UseDmd) : bool
+        := let isUsedMU (arg_0__ : ArgUse) : bool :=
              match arg_0__ with
              | Abs => true
              | Mk_Use One _ => false
@@ -5071,8 +5070,8 @@ Definition mkSProd : list ArgStr -> StrDmd :=
     SProd sx.
 
 Definition lubStr : StrDmd -> StrDmd -> StrDmd :=
-  fix lubStr arg_0__ arg_1__
-        := let lubArgStr arg_0__ arg_1__ :=
+  fix lubStr (arg_0__ arg_1__ : StrDmd) : StrDmd
+        := let lubArgStr (arg_0__ arg_1__ : ArgStr) : ArgStr :=
              match arg_0__, arg_1__ with
              | Lazy, _ => Lazy
              | _, Lazy => Lazy
@@ -5219,7 +5218,7 @@ Definition varSetInScope : VarSet -> InScopeSet -> bool :=
 Definition transCloVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
   fun fn seeds =>
     let go : VarSet -> VarSet -> VarSet :=
-      GHC.DeferredFix.deferredFix2 (fun go acc candidates =>
+      GHC.DeferredFix.deferredFix1 (fun go (acc candidates : VarSet) =>
                                       let new_vs := minusVarSet (fn candidates) acc in
                                       if isEmptyVarSet new_vs : bool then acc else
                                       go (unionVarSet acc new_vs) new_vs) in
@@ -5252,7 +5251,7 @@ Definition subDVarSet : DVarSet -> DVarSet -> bool :=
 Definition transCloDVarSet : (DVarSet -> DVarSet) -> DVarSet -> DVarSet :=
   fun fn seeds =>
     let go : DVarSet -> DVarSet -> DVarSet :=
-      GHC.DeferredFix.deferredFix2 (fun go acc candidates =>
+      GHC.DeferredFix.deferredFix1 (fun go (acc candidates : DVarSet) =>
                                       let new_vs := minusDVarSet (fn candidates) acc in
                                       if isEmptyDVarSet new_vs : bool then acc else
                                       go (unionDVarSet acc new_vs) new_vs) in
@@ -5523,7 +5522,7 @@ Definition foldDVarEnv {a} {b} : (a -> b -> b) -> b -> DVarEnv a -> b :=
   UniqDFM.foldUDFM.
 
 Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
-  fix flattenBinds arg_0__
+  fix flattenBinds (arg_0__ : list (Bind b)) : list (b * Expr b)%type
         := match arg_0__ with
            | cons (NonRec b r) binds => cons (pair b r) (flattenBinds binds)
            | cons (Rec prs1) binds => Coq.Init.Datatypes.app prs1 (flattenBinds binds)
@@ -5531,7 +5530,9 @@ Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
            end.
 
 Definition fixVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
-  GHC.DeferredFix.deferredFix2 (fun fixVarSet fn vars =>
+  GHC.DeferredFix.deferredFix2 (fun fixVarSet
+                                (fn : (VarSet -> VarSet))
+                                (vars : VarSet) =>
                                   let new_vars := fn vars in
                                   if subVarSet new_vars vars : bool then vars else
                                   fixVarSet fn new_vars).
@@ -6121,8 +6122,8 @@ Definition delBndrL : RnEnv2 -> Var -> RnEnv2 :=
     end.
 
 Definition deTagExpr {t} : TaggedExpr t -> CoreExpr :=
-  fix deTagExpr arg_0__
-        := let deTagBind arg_0__ :=
+  fix deTagExpr (arg_0__ : TaggedExpr t) : CoreExpr
+        := let deTagBind (arg_0__ : TaggedBind t) : CoreBind :=
              match arg_0__ with
              | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
              | Rec prs =>
@@ -6131,7 +6132,7 @@ Definition deTagExpr {t} : TaggedExpr t -> CoreExpr :=
                         cons (pair b (deTagExpr rhs)) nil in
                       Coq.Lists.List.flat_map cont_2__ prs)
              end in
-           let deTagAlt arg_0__ :=
+           let deTagAlt (arg_0__ : TaggedAlt t) : CoreAlt :=
              let 'pair (pair con bndrs) rhs := arg_0__ in
              pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
                          Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs) in
@@ -6595,8 +6596,8 @@ Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
     end.
 
 Definition bothStr : StrDmd -> StrDmd -> StrDmd :=
-  fix bothStr arg_0__ arg_1__
-        := let bothArgStr arg_0__ arg_1__ :=
+  fix bothStr (arg_0__ arg_1__ : StrDmd) : StrDmd
+        := let bothArgStr (arg_0__ arg_1__ : ArgStr) : ArgStr :=
              match arg_0__, arg_1__ with
              | Lazy, s => s
              | s, Lazy => s

@@ -248,7 +248,7 @@ Definition notMember {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   fun k m => negb (member k m).
 
 Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
-  fix mapWithKey arg_0__ arg_1__
+  fix mapWithKey (arg_0__ : (k -> a -> b)) (arg_1__ : Map k a) : Map k b
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | f, Bin sx kx x l r => Bin sx kx (f kx x) (mapWithKey f l) (mapWithKey f r)
@@ -300,7 +300,7 @@ Definition mapMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
 
 Definition mapKeysMonotonic {k1} {k2} {a}
    : (k1 -> k2) -> Map k1 a -> Map k2 a :=
-  fix mapKeysMonotonic arg_0__ arg_1__
+  fix mapKeysMonotonic (arg_0__ : (k1 -> k2)) (arg_1__ : Map k1 a) : Map k2 a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | f, Bin sz k x l r =>
@@ -321,7 +321,8 @@ Definition mapGentlyWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
 
 Definition mapAccumRWithKey {a} {k} {b} {c}
    : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
-  fix mapAccumRWithKey arg_0__ arg_1__ arg_2__
+  fix mapAccumRWithKey (arg_0__ : (a -> k -> b -> (a * c)%type)) (arg_1__ : a)
+                       (arg_2__ : Map k b) : (a * Map k c)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, a, Tip => pair a Tip
            | f, a, Bin sx kx x l r =>
@@ -333,7 +334,8 @@ Definition mapAccumRWithKey {a} {k} {b} {c}
 
 Definition mapAccumL {a} {k} {b} {c}
    : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
-  fix mapAccumL arg_0__ arg_1__ arg_2__
+  fix mapAccumL (arg_0__ : (a -> k -> b -> (a * c)%type)) (arg_1__ : a) (arg_2__
+                  : Map k b) : (a * Map k c)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, a, Tip => pair a Tip
            | f, a, Bin sx kx x l r =>
@@ -356,7 +358,7 @@ Definition mapAccum {a} {b} {c} {k}
                        end) a m.
 
 Definition lookupMinSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
-  fix lookupMinSure arg_0__ arg_1__ arg_2__
+  fix lookupMinSure (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a) : (k * a)%type
         := match arg_0__, arg_1__, arg_2__ with
            | k, a, Tip => pair k a
            | _, _, Bin _ k a l _ => lookupMinSure k a l
@@ -370,7 +372,7 @@ Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
     end.
 
 Definition lookupMaxSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
-  fix lookupMaxSure arg_0__ arg_1__ arg_2__
+  fix lookupMaxSure (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a) : (k * a)%type
         := match arg_0__, arg_1__, arg_2__ with
            | k, a, Tip => pair k a
            | _, _, Bin _ k a _ r => lookupMaxSure k a r
@@ -429,7 +431,8 @@ Definition lookupIndex {k} {a} `{GHC.Base.Ord k}
    : k -> Map k a -> option GHC.Num.Int :=
   let go {k} {a} `{GHC.Base.Ord k}
    : GHC.Num.Int -> k -> Map k a -> option GHC.Num.Int :=
-    fix go arg_0__ arg_1__ arg_2__
+    fix go (arg_0__ : GHC.Num.Int) (arg_1__ : k) (arg_2__ : Map k a) : option
+                                                                       GHC.Num.Int
           := match arg_0__, arg_1__, arg_2__ with
              | _, _, Tip => None
              | idx, k, Bin _ kx _ l r =>
@@ -510,14 +513,14 @@ Definition lmapWhenMissing {b} {a} {f} {k} {x}
                       missingKey t k (f x)).
 
 Definition keysSet {k} {a} : Map k a -> Data.Set.Internal.Set_ k :=
-  fix keysSet arg_0__
+  fix keysSet (arg_0__ : Map k a) : Data.Set.Internal.Set_ k
         := match arg_0__ with
            | Tip => Data.Set.Internal.Tip
            | Bin sz kx _ l r => Data.Set.Internal.Bin sz kx (keysSet l) (keysSet r)
            end.
 
 Definition fromSet {k} {a} : (k -> a) -> Data.Set.Internal.Set_ k -> Map k a :=
-  fix fromSet arg_0__ arg_1__
+  fix fromSet (arg_0__ : (k -> a)) (arg_1__ : Data.Set.Internal.Set_ k) : Map k a
         := match arg_0__, arg_1__ with
            | _, Data.Set.Internal.Tip => Tip
            | f, Data.Set.Internal.Bin sz x l r =>
@@ -649,7 +652,7 @@ Definition findWithDefault {k} {a} `{GHC.Base.Ord k} : a -> k -> Map k a -> a :=
 
 Definition findIndex {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> GHC.Num.Int :=
   let go {k} {a} `{GHC.Base.Ord k} : GHC.Num.Int -> k -> Map k a -> GHC.Num.Int :=
-    fix go arg_0__ arg_1__ arg_2__
+    fix go (arg_0__ : GHC.Num.Int) (arg_1__ : k) (arg_2__ : Map k a) : GHC.Num.Int
           := match arg_0__, arg_1__, arg_2__ with
              | _, _, Tip =>
                  GHC.Err.error (GHC.Base.hs_string__ "Map.findIndex: element is not in the map")
@@ -737,7 +740,7 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
     end.
 
 Definition deleteMin {k} {a} : Map k a -> Map k a :=
-  fix deleteMin arg_0__
+  fix deleteMin (arg_0__ : Map k a) : Map k a
         := match arg_0__ with
            | Bin _ _ _ Tip r => r
            | Bin _ kx x l r => balanceR kx x (deleteMin l) r
@@ -745,7 +748,7 @@ Definition deleteMin {k} {a} : Map k a -> Map k a :=
            end.
 
 Definition insertMax {k} {a} : k -> a -> Map k a -> Map k a :=
-  fix insertMax kx x t
+  fix insertMax (kx : k) (x : a) (t : Map k a) : Map k a
         := match t with
            | Tip => singleton kx x
            | Bin _ ky y l r => balanceR ky y l (insertMax kx x r)
@@ -779,7 +782,8 @@ Definition minView {k} {a} : Map k a -> option (a * Map k a)%type :=
 
 Definition updateMinWithKey {k} {a}
    : (k -> a -> option a) -> Map k a -> Map k a :=
-  fix updateMinWithKey arg_0__ arg_1__
+  fix updateMinWithKey (arg_0__ : (k -> a -> option a)) (arg_1__ : Map k a) : Map
+                                                                              k a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | f, Bin sx kx x Tip r =>
@@ -839,7 +843,7 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
     end.
 
 Definition deleteMax {k} {a} : Map k a -> Map k a :=
-  fix deleteMax arg_0__
+  fix deleteMax (arg_0__ : Map k a) : Map k a
         := match arg_0__ with
            | Bin _ _ _ l Tip => l
            | Bin _ kx x l r => balanceL kx x l (deleteMax r)
@@ -849,7 +853,7 @@ Definition deleteMax {k} {a} : Map k a -> Map k a :=
 Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
   fun kx0 =>
     let go {k} {a} `{GHC.Base.Ord k} : k -> k -> a -> Map k a -> Map k a :=
-      fix go arg_0__ arg_1__ arg_2__ arg_3__
+      fix go (arg_0__ arg_1__ : k) (arg_2__ : a) (arg_3__ : Map k a) : Map k a
             := match arg_0__, arg_1__, arg_2__, arg_3__ with
                | orig, _, x, Tip => singleton (orig) x
                | orig, kx, x, (Bin sz ky y l r as t) =>
@@ -877,7 +881,8 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
   fun f0 k0 x0 =>
     let go {k} {a} `{GHC.Base.Ord k}
      : (k -> a -> a -> a) -> k -> a -> Map k a -> prod (option a) (Map k a) :=
-      fix go arg_0__ arg_1__ arg_2__ arg_3__
+      fix go (arg_0__ : (k -> a -> a -> a)) (arg_1__ : k) (arg_2__ : a) (arg_3__
+               : Map k a) : prod (option a) (Map k a)
             := match arg_0__, arg_1__, arg_2__, arg_3__ with
                | _, kx, x, Tip => (pair None (singleton kx x))
                | f, kx, x, Bin sy ky y l r =>
@@ -894,7 +899,7 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
     id GHC.Base.∘ go f0 k0 x0.
 
 Definition insertMin {k} {a} : k -> a -> Map k a -> Map k a :=
-  fix insertMin kx x t
+  fix insertMin (kx : k) (x : a) (t : Map k a) : Map k a
         := match t with
            | Tip => singleton kx x
            | Bin _ ky y l r => balanceL ky y (insertMin kx x l) r
@@ -903,7 +908,7 @@ Definition insertMin {k} {a} : k -> a -> Map k a -> Map k a :=
 Definition insertR {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
   fun kx0 =>
     let go {k} {a} `{GHC.Base.Ord k} : k -> k -> a -> Map k a -> Map k a :=
-      fix go arg_0__ arg_1__ arg_2__ arg_3__
+      fix go (arg_0__ arg_1__ : k) (arg_2__ : a) (arg_3__ : Map k a) : Map k a
             := match arg_0__, arg_1__, arg_2__, arg_3__ with
                | orig, _, x, Tip => singleton (orig) x
                | orig, kx, x, (Bin _ ky y l r as t) =>
@@ -925,7 +930,8 @@ Definition insertWith {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> k -> a -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__ arg_3__
+    fix go (arg_0__ : (a -> a -> a)) (arg_1__ : k) (arg_2__ : a) (arg_3__ : Map k a)
+          : Map k a
           := match arg_0__, arg_1__, arg_2__, arg_3__ with
              | _, kx, x, Tip => singleton kx x
              | f, kx, x, Bin sy ky y l r =>
@@ -941,7 +947,8 @@ Definition insertWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> k -> a -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__ arg_3__
+    fix go (arg_0__ : (k -> a -> a -> a)) (arg_1__ : k) (arg_2__ : a) (arg_3__
+             : Map k a) : Map k a
           := match arg_0__, arg_1__, arg_2__, arg_3__ with
              | _, kx, x, Tip => singleton kx x
              | f, kx, x, Bin sy ky y l r =>
@@ -981,7 +988,8 @@ Definition insertWithKeyR {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> k -> a -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__ arg_3__
+    fix go (arg_0__ : (k -> a -> a -> a)) (arg_1__ : k) (arg_2__ : a) (arg_3__
+             : Map k a) : Map k a
           := match arg_0__, arg_1__, arg_2__, arg_3__ with
              | _, kx, x, Tip => singleton kx x
              | f, kx, x, Bin sy ky y l r =>
@@ -997,7 +1005,8 @@ Definition insertWithR {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> k -> a -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> k -> a -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__ arg_3__
+    fix go (arg_0__ : (a -> a -> a)) (arg_1__ : k) (arg_2__ : a) (arg_3__ : Map k a)
+          : Map k a
           := match arg_0__, arg_1__, arg_2__, arg_3__ with
              | _, kx, x, Tip => singleton kx x
              | f, kx, x, Bin sy ky y l r =>
@@ -1009,9 +1018,8 @@ Definition insertWithR {k} {a} `{GHC.Base.Ord k}
              end in
   go.
 
-Program Fixpoint link {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
-                      (arg_3__ : Map k a) {measure (Nat.add (map_size arg_2__) (map_size arg_3__))}
-                   : Map k a
+Program Fixpoint link {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ arg_3__
+                        : Map k a) {measure (Nat.add (map_size arg_2__) (map_size arg_3__))} : Map k a
                    := match arg_0__, arg_1__, arg_2__, arg_3__ with
                       | kx, x, Tip, r => insertMin kx x r
                       | kx, x, l, Tip => insertMax kx x l
@@ -1051,7 +1059,7 @@ Definition drop {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
     end.
 
 Definition dropWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
-  fix dropWhileAntitone arg_0__ arg_1__
+  fix dropWhileAntitone (arg_0__ : (k -> bool)) (arg_1__ : Map k a) : Map k a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ kx x l r =>
@@ -1338,16 +1346,16 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k}
   fun k0 m =>
     let go {k} {a} `{GHC.Base.Ord k}
      : k -> Map k a -> StrictTriple (Map k a) (option a) (Map k a) :=
-      fix go k t
+      fix go (k0 : k) (t : Map k a) : StrictTriple (Map k a) (option a) (Map k a)
             := match t with
                | Tip => Mk_StrictTriple Tip None Tip
                | Bin _ kx x l r =>
-                   match GHC.Base.compare k kx with
+                   match GHC.Base.compare k0 kx with
                    | Lt =>
-                       let 'Mk_StrictTriple lt z gt := go k l in
+                       let 'Mk_StrictTriple lt z gt := go k0 l in
                        let gt' := link kx x gt r in Mk_StrictTriple lt z gt'
                    | Gt =>
-                       let 'Mk_StrictTriple lt z gt := go k r in
+                       let 'Mk_StrictTriple lt z gt := go k0 r in
                        let lt' := link kx x l lt in Mk_StrictTriple lt' z gt
                    | Eq => Mk_StrictTriple l (Some x) r
                    end
@@ -1357,7 +1365,8 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k}
 
 Definition submap' {a} {b} {c} `{GHC.Base.Ord a}
    : (b -> c -> bool) -> Map a b -> Map a c -> bool :=
-  fix submap' arg_0__ arg_1__ arg_2__
+  fix submap' (arg_0__ : (b -> c -> bool)) (arg_1__ : Map a b) (arg_2__ : Map a c)
+        : bool
         := match arg_0__, arg_1__, arg_2__ with
            | _, Tip, _ => true
            | _, _, Tip => false
@@ -1390,16 +1399,16 @@ Definition splitMember {k} {a} `{GHC.Base.Ord k}
   fun k0 m =>
     let go {k} {a} `{GHC.Base.Ord k}
      : k -> Map k a -> StrictTriple (Map k a) bool (Map k a) :=
-      fix go k t
+      fix go (k0 : k) (t : Map k a) : StrictTriple (Map k a) bool (Map k a)
             := match t with
                | Tip => Mk_StrictTriple Tip false Tip
                | Bin _ kx x l r =>
-                   match GHC.Base.compare k kx with
+                   match GHC.Base.compare k0 kx with
                    | Lt =>
-                       let 'Mk_StrictTriple lt z gt := go k l in
+                       let 'Mk_StrictTriple lt z gt := go k0 l in
                        let gt' := link kx x gt r in Mk_StrictTriple lt z gt'
                    | Gt =>
-                       let 'Mk_StrictTriple lt z gt := go k r in
+                       let 'Mk_StrictTriple lt z gt := go k0 r in
                        let lt' := link kx x l lt in Mk_StrictTriple lt' z gt
                    | Eq => Mk_StrictTriple l true r
                    end
@@ -1434,7 +1443,7 @@ Definition take {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
     end.
 
 Definition takeWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
-  fix takeWhileAntitone arg_0__ arg_1__
+  fix takeWhileAntitone (arg_0__ : (k -> bool)) (arg_1__ : Map k a) : Map k a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ kx x l r =>
@@ -1443,7 +1452,7 @@ Definition takeWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
            end.
 
 Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
-  fix union arg_0__ arg_1__
+  fix union (arg_0__ arg_1__ : Map k a) : Map k a
         := match arg_0__, arg_1__ with
            | t1, Tip => t1
            | t1, Bin _ k x Tip Tip => insertR k x t1
@@ -1465,7 +1474,7 @@ Definition unions {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
 
 Definition unionWith {k} {a} `{GHC.Base.Ord k}
    : (a -> a -> a) -> Map k a -> Map k a -> Map k a :=
-  fix unionWith arg_0__ arg_1__ arg_2__
+  fix unionWith (arg_0__ : (a -> a -> a)) (arg_1__ arg_2__ : Map k a) : Map k a
         := match arg_0__, arg_1__, arg_2__ with
            | _f, t1, Tip => t1
            | f, t1, Bin _ k x Tip Tip => insertWithR f k x t1
@@ -1487,7 +1496,8 @@ Definition unionsWith {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
 
 Definition unionWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a -> a) -> Map k a -> Map k a -> Map k a :=
-  fix unionWithKey arg_0__ arg_1__ arg_2__
+  fix unionWithKey (arg_0__ : (k -> a -> a -> a)) (arg_1__ arg_2__ : Map k a)
+        : Map k a
         := match arg_0__, arg_1__, arg_2__ with
            | _f, t1, Tip => t1
            | f, t1, Bin _ k x Tip Tip => insertWithKeyR f k x t1
@@ -1528,7 +1538,7 @@ Definition glue {k} {a} : Map k a -> Map k a -> Map k a :=
 
 Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__
+    fix go (arg_0__ : k) (arg_1__ : Map k a) : Map k a
           := match arg_0__, arg_1__ with
              | _, Tip => Tip
              | k, (Bin _ kx x l r as t) =>
@@ -1547,7 +1557,7 @@ Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
   go.
 
 Definition deleteAt {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
-  fix deleteAt i t
+  fix deleteAt (i : GHC.Num.Int) (t : Map k a) : Map k a
         := match t with
            | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.deleteAt: index out of range")
            | Bin _ kx x l r =>
@@ -1559,8 +1569,8 @@ Definition deleteAt {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
                end
            end.
 
-Program Fixpoint link2 {k} {a} (arg_0__ : Map k a) (arg_1__ : Map k a)
-                       {measure (Nat.add (map_size arg_0__) (map_size arg_1__))} : Map k a
+Program Fixpoint link2 {k} {a} (arg_0__ arg_1__ : Map k a) {measure (Nat.add
+                        (map_size arg_0__) (map_size arg_1__))} : Map k a
                    := match arg_0__, arg_1__ with
                       | Tip, r => r
                       | l, Tip => l
@@ -1575,7 +1585,7 @@ Solve Obligations with (termination_by_omega).
 
 Definition difference {k} {a} {b} `{GHC.Base.Ord k}
    : Map k a -> Map k b -> Map k a :=
-  fix difference arg_0__ arg_1__
+  fix difference (arg_0__ : Map k a) (arg_1__ : Map k b) : Map k a
         := match arg_0__, arg_1__ with
            | Tip, _ => Tip
            | t1, Tip => t1
@@ -1596,7 +1606,7 @@ Notation "'_\\_'" := (op_zrzr__).
 Infix "\\" := (_\\_) (at level 99).
 
 Definition filterWithKey {k} {a} : (k -> a -> bool) -> Map k a -> Map k a :=
-  fix filterWithKey arg_0__ arg_1__
+  fix filterWithKey (arg_0__ : (k -> a -> bool)) (arg_1__ : Map k a) : Map k a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, (Bin _ kx x l r as t) =>
@@ -1625,7 +1635,8 @@ Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
 
 Definition filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f}
    : (k -> a -> f bool) -> Map k a -> f (Map k a) :=
-  fix filterWithKeyA arg_0__ arg_1__
+  fix filterWithKeyA (arg_0__ : (k -> a -> f bool)) (arg_1__ : Map k a) : f (Map k
+                                                                             a)
         := match arg_0__, arg_1__ with
            | _, Tip => GHC.Base.pure Tip
            | p, (Bin _ kx x l r as t) =>
@@ -1650,7 +1661,7 @@ Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
 
 Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
    : Map k a -> Map k b -> Map k a :=
-  fix intersection arg_0__ arg_1__
+  fix intersection (arg_0__ : Map k a) (arg_1__ : Map k b) : Map k a
         := match arg_0__, arg_1__ with
            | Tip, _ => Tip
            | _, Tip => Tip
@@ -1668,7 +1679,8 @@ Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
 
 Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
    : (a -> b -> c) -> Map k a -> Map k b -> Map k c :=
-  fix intersectionWith arg_0__ arg_1__ arg_2__
+  fix intersectionWith (arg_0__ : (a -> b -> c)) (arg_1__ : Map k a) (arg_2__
+                         : Map k b) : Map k c
         := match arg_0__, arg_1__, arg_2__ with
            | _f, Tip, _ => Tip
            | _f, _, Tip => Tip
@@ -1684,7 +1696,8 @@ Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
 
 Definition intersectionWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
    : (k -> a -> b -> c) -> Map k a -> Map k b -> Map k c :=
-  fix intersectionWithKey arg_0__ arg_1__ arg_2__
+  fix intersectionWithKey (arg_0__ : (k -> a -> b -> c)) (arg_1__ : Map k a)
+                          (arg_2__ : Map k b) : Map k c
         := match arg_0__, arg_1__, arg_2__ with
            | _f, Tip, _ => Tip
            | _f, _, Tip => Tip
@@ -1724,7 +1737,8 @@ Definition mapEither {a} {b} {c} {k}
 
 Definition mapMaybeWithKey {k} {a} {b}
    : (k -> a -> option b) -> Map k a -> Map k b :=
-  fix mapMaybeWithKey arg_0__ arg_1__
+  fix mapMaybeWithKey (arg_0__ : (k -> a -> option b)) (arg_1__ : Map k a) : Map k
+                                                                             b
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | f, Bin _ kx x l r =>
@@ -1842,7 +1856,8 @@ Definition partition {a} {k}
 
 Definition restrictKeys {k} {a} `{GHC.Base.Ord k}
    : Map k a -> Data.Set.Internal.Set_ k -> Map k a :=
-  fix restrictKeys arg_0__ arg_1__
+  fix restrictKeys (arg_0__ : Map k a) (arg_1__ : Data.Set.Internal.Set_ k) : Map
+                                                                              k a
         := match arg_0__, arg_1__ with
            | Tip, _ => Tip
            | _, Data.Set.Internal.Tip => Tip
@@ -1882,7 +1897,8 @@ Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
 
 Definition withoutKeys {k} {a} `{GHC.Base.Ord k}
    : Map k a -> Data.Set.Internal.Set_ k -> Map k a :=
-  fix withoutKeys arg_0__ arg_1__
+  fix withoutKeys (arg_0__ : Map k a) (arg_1__ : Data.Set.Internal.Set_ k) : Map k
+                                                                             a
         := match arg_0__, arg_1__ with
            | Tip, _ => Tip
            | m, Data.Set.Internal.Tip => m
@@ -1914,7 +1930,8 @@ Definition maxView {k} {a} : Map k a -> option (a * Map k a)%type :=
 
 Definition updateAt {k} {a}
    : (k -> a -> option a) -> GHC.Num.Int -> Map k a -> Map k a :=
-  fix updateAt f i t
+  fix updateAt (f : (k -> a -> option a)) (i : GHC.Num.Int) (t : Map k a) : Map k
+                                                                            a
         := match t with
            | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.updateAt: index out of range")
            | Bin sx kx x l r =>
@@ -1931,7 +1948,8 @@ Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
   fun f0 k0 =>
     let go {k} {a} `{GHC.Base.Ord k}
      : (k -> a -> option a) -> k -> Map k a -> prod (option a) (Map k a) :=
-      fix go arg_0__ arg_1__ arg_2__
+      fix go (arg_0__ : (k -> a -> option a)) (arg_1__ : k) (arg_2__ : Map k a) : prod
+                                                                                  (option a) (Map k a)
             := match arg_0__, arg_1__, arg_2__ with
                | _, _, Tip => (pair None Tip)
                | f, k, Bin sx kx x l r =>
@@ -1953,7 +1971,8 @@ Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
 
 Definition updateMaxWithKey {k} {a}
    : (k -> a -> option a) -> Map k a -> Map k a :=
-  fix updateMaxWithKey arg_0__ arg_1__
+  fix updateMaxWithKey (arg_0__ : (k -> a -> option a)) (arg_1__ : Map k a) : Map
+                                                                              k a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | f, Bin sx kx x l Tip =>
@@ -1975,7 +1994,8 @@ Definition updateWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> option a) -> k -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> option a) -> k -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__
+    fix go (arg_0__ : (k -> a -> option a)) (arg_1__ : k) (arg_2__ : Map k a) : Map
+                                                                                k a
           := match arg_0__, arg_1__, arg_2__ with
              | _, _, Tip => Tip
              | f, k, Bin sx kx x l r =>
@@ -2070,7 +2090,8 @@ Definition atKeyPlain {k} {a} `{GHC.Base.Ord k}
   fun strict k0 f0 t =>
     let go {k} {a} `{GHC.Base.Ord k}
      : k -> (option a -> option a) -> Map k a -> Altered k a :=
-      fix go arg_0__ arg_1__ arg_2__
+      fix go (arg_0__ : k) (arg_1__ : (option a -> option a)) (arg_2__ : Map k a)
+            : Altered k a
             := match arg_0__, arg_1__, arg_2__ with
                | k, f, Tip =>
                    match f None with
@@ -2129,7 +2150,8 @@ Definition alter {k} {a} `{GHC.Base.Ord k}
    : (option a -> option a) -> k -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k}
    : (option a -> option a) -> k -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__
+    fix go (arg_0__ : (option a -> option a)) (arg_1__ : k) (arg_2__ : Map k a)
+          : Map k a
           := match arg_0__, arg_1__, arg_2__ with
              | f, k, Tip => match f None with | None => Tip | Some x => singleton k x end
              | f, k, Bin sx kx x l r =>
@@ -2148,7 +2170,7 @@ Definition alter {k} {a} `{GHC.Base.Ord k}
 Definition adjustWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> a) -> k -> Map k a -> Map k a :=
   let go {k} {a} `{GHC.Base.Ord k} : (k -> a -> a) -> k -> Map k a -> Map k a :=
-    fix go arg_0__ arg_1__ arg_2__
+    fix go (arg_0__ : (k -> a -> a)) (arg_1__ : k) (arg_2__ : Map k a) : Map k a
           := match arg_0__, arg_1__, arg_2__ with
              | _, _, Tip => Tip
              | f, k, Bin sx kx x l r =>

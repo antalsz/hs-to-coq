@@ -82,3 +82,7 @@ skip Data.Map.Internal.lookupTrace
 skip Data.Map.Internal.replaceAlong
 skip Data.Map.Internal.insertAlong
 rename type Utils.Containers.Internal.BitQueue.BitQueue = unit
+
+# Putting fixpoint type annotations in binders causes type/term namespace collision
+in Data.Map.Internal.splitLookup rename value k = k0
+in Data.Map.Internal.splitMember rename value k = k0

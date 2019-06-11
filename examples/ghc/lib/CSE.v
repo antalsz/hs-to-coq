@@ -165,8 +165,8 @@ Definition addBinder : CSEnv -> Core.Var -> (CSEnv * Core.Var)%type :=
 Definition cseBind
    : BasicTypes.TopLevelFlag ->
      CSEnv -> Core.CoreBind -> (CSEnv * Core.CoreBind)%type :=
-  fix cseExpr arg_0__ arg_1__
-        := let tryForCSE env expr :=
+  fix cseExpr (arg_0__ : CSEnv) (arg_1__ : Core.InExpr) : Core.OutExpr
+        := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
              let expr' := cseExpr env expr in
              let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
              let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
@@ -174,7 +174,12 @@ Definition cseBind
              | Some e => CoreUtils.mkTicks ticks e
              | _ => expr'
              end in
-           let cseCase env scrut bndr ty alts :=
+           let cseCase (env : CSEnv)
+           (scrut : Core.InExpr)
+           (bndr : Core.InId)
+           (ty : Core.InType)
+           (alts : list Core.InAlt)
+            : Core.OutExpr :=
              let bndr1 := Id.zapIdOccInfo bndr in
              let 'pair env1 bndr2 := addBinder env bndr1 in
              let scrut1 := tryForCSE env scrut in
@@ -214,8 +219,9 @@ Definition cseBind
                let 'pair env' bind' := cseBind BasicTypes.NotTopLevel env bind in
                Core.Let bind' (cseExpr env' e)
            | env, Core.Case e bndr ty alts => cseCase env e bndr ty alts
-           end with cseBind arg_0__ arg_1__ arg_2__
-                      := let tryForCSE env expr :=
+           end with cseBind (arg_0__ : BasicTypes.TopLevelFlag) (arg_1__ : CSEnv) (arg_2__
+                              : Core.CoreBind) : (CSEnv * Core.CoreBind)%type
+                      := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
                            let expr' := cseExpr env expr in
                            let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
                            let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
@@ -223,7 +229,11 @@ Definition cseBind
                            | Some e => CoreUtils.mkTicks ticks e
                            | _ => expr'
                            end in
-                         let cse_bind arg_0__ arg_1__ arg_2__ arg_3__ :=
+                         let cse_bind (arg_0__ : BasicTypes.TopLevelFlag)
+                         (arg_1__ : CSEnv)
+                         (arg_2__ : (Core.InId * Core.InExpr)%type)
+                         (arg_3__ : Core.OutId)
+                          : (CSEnv * (Core.OutId * Core.OutExpr)%type)%type :=
                            match arg_0__, arg_1__, arg_2__, arg_3__ with
                            | toplevel, env, pair in_id in_rhs, out_id =>
                                let out_rhs := tryForCSE env in_rhs in
@@ -290,8 +300,8 @@ Definition cseProgram : Core.CoreProgram -> Core.CoreProgram :=
                     emptyCSEnv binds).
 
 Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
-  fix cseExpr arg_0__ arg_1__
-        := let tryForCSE env expr :=
+  fix cseExpr (arg_0__ : CSEnv) (arg_1__ : Core.InExpr) : Core.OutExpr
+        := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
              let expr' := cseExpr env expr in
              let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
              let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
@@ -299,7 +309,12 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
              | Some e => CoreUtils.mkTicks ticks e
              | _ => expr'
              end in
-           let cseCase env scrut bndr ty alts :=
+           let cseCase (env : CSEnv)
+           (scrut : Core.InExpr)
+           (bndr : Core.InId)
+           (ty : Core.InType)
+           (alts : list Core.InAlt)
+            : Core.OutExpr :=
              let bndr1 := Id.zapIdOccInfo bndr in
              let 'pair env1 bndr2 := addBinder env bndr1 in
              let scrut1 := tryForCSE env scrut in
@@ -339,8 +354,9 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                let 'pair env' bind' := cseBind BasicTypes.NotTopLevel env bind in
                Core.Let bind' (cseExpr env' e)
            | env, Core.Case e bndr ty alts => cseCase env e bndr ty alts
-           end with cseBind arg_0__ arg_1__ arg_2__
-                      := let tryForCSE env expr :=
+           end with cseBind (arg_0__ : BasicTypes.TopLevelFlag) (arg_1__ : CSEnv) (arg_2__
+                              : Core.CoreBind) : (CSEnv * Core.CoreBind)%type
+                      := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
                            let expr' := cseExpr env expr in
                            let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
                            let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
@@ -348,7 +364,11 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                            | Some e => CoreUtils.mkTicks ticks e
                            | _ => expr'
                            end in
-                         let cse_bind arg_0__ arg_1__ arg_2__ arg_3__ :=
+                         let cse_bind (arg_0__ : BasicTypes.TopLevelFlag)
+                         (arg_1__ : CSEnv)
+                         (arg_2__ : (Core.InId * Core.InExpr)%type)
+                         (arg_3__ : Core.OutId)
+                          : (CSEnv * (Core.OutId * Core.OutExpr)%type)%type :=
                            match arg_0__, arg_1__, arg_2__, arg_3__ with
                            | toplevel, env, pair in_id in_rhs, out_id =>
                                let out_rhs := tryForCSE env in_rhs in

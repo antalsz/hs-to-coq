@@ -30,7 +30,7 @@ Definition validTipPrefix : Data.IntSet.Internal.Prefix -> bool :=
   fun p => (#63 Data.Bits..&.(**) p) GHC.Base.== #0.
 
 Definition tipsValid : Data.IntSet.Internal.IntSet -> bool :=
-  fix tipsValid t
+  fix tipsValid (t : Data.IntSet.Internal.IntSet) : bool
         := match t with
            | Data.IntSet.Internal.Nil => true
            | (Data.IntSet.Internal.Tip p b as tip) => validTipPrefix p
@@ -52,7 +52,7 @@ Definition nilNeverChildOfBin : Data.IntSet.Internal.IntSet -> bool :=
     end.
 
 Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
-  fix maskRespected t
+  fix maskRespected (t : Data.IntSet.Internal.IntSet) : bool
         := match t with
            | Data.IntSet.Internal.Nil => true
            | Data.IntSet.Internal.Tip _ _ => true
@@ -66,7 +66,7 @@ Definition maskRespected : Data.IntSet.Internal.IntSet -> bool :=
            end.
 
 Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
-  fix maskPowerOfTwo t
+  fix maskPowerOfTwo (t : Data.IntSet.Internal.IntSet) : bool
         := match t with
            | Data.IntSet.Internal.Nil => true
            | Data.IntSet.Internal.Tip _ _ => true
@@ -76,7 +76,7 @@ Definition maskPowerOfTwo : Data.IntSet.Internal.IntSet -> bool :=
            end.
 
 Definition commonPrefix : Data.IntSet.Internal.IntSet -> bool :=
-  fix commonPrefix t
+  fix commonPrefix (t : Data.IntSet.Internal.IntSet) : bool
         := let sharedPrefix
             : Data.IntSet.Internal.Prefix -> Coq.Numbers.BinNums.N -> bool :=
              fun p a => p GHC.Base.== (p Data.Bits..&.(**) a) in

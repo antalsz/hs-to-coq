@@ -121,8 +121,9 @@ Infix "=:" := (_=:_) (at level 99).
 
 Definition tidyBind
    : Core.TidyEnv -> Core.CoreBind -> (Core.TidyEnv * Core.CoreBind)%type :=
-  fix tidyExpr arg_0__ arg_1__
-        := let tidyAlt arg_0__ arg_1__ :=
+  fix tidyExpr (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreExpr) : Core.CoreExpr
+        := let tidyAlt (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreAlt)
+            : Core.CoreAlt :=
              match arg_0__, arg_1__ with
              | env, pair (pair con vs) rhs =>
                  tidyBndrs env vs =:
@@ -144,7 +145,8 @@ Definition tidyBind
                   Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
-           end with tidyBind arg_0__ arg_1__
+           end with tidyBind (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreBind)
+                      : (Core.TidyEnv * Core.CoreBind)%type
                       := match arg_0__, arg_1__ with
                          | env, Core.NonRec bndr rhs =>
                              tidyLetBndr env env (pair bndr rhs) =:
@@ -157,8 +159,9 @@ Definition tidyBind
                          end for tidyBind.
 
 Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
-  fix tidyExpr arg_0__ arg_1__
-        := let tidyAlt arg_0__ arg_1__ :=
+  fix tidyExpr (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreExpr) : Core.CoreExpr
+        := let tidyAlt (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreAlt)
+            : Core.CoreAlt :=
              match arg_0__, arg_1__ with
              | env, pair (pair con vs) rhs =>
                  tidyBndrs env vs =:
@@ -180,7 +183,8 @@ Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
                   Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
-           end with tidyBind arg_0__ arg_1__
+           end with tidyBind (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreBind)
+                      : (Core.TidyEnv * Core.CoreBind)%type
                       := match arg_0__, arg_1__ with
                          | env, Core.NonRec bndr rhs =>
                              tidyLetBndr env env (pair bndr rhs) =:

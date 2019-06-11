@@ -109,7 +109,9 @@ Definition exitifyRec
         end in
     let recursive_calls := Core.mkVarSet (GHC.Base.map Data.Tuple.fst pairs) in
     let go : list Core.Var -> CoreFVs.CoreExprWithFVs -> ExitifyM Core.CoreExpr :=
-      GHC.DeferredFix.deferredFix2 (fun go arg_19__ arg_20__ =>
+      GHC.DeferredFix.deferredFix2 (fun go
+                                    (arg_19__ : list Core.Var)
+                                    (arg_20__ : CoreFVs.CoreExprWithFVs) =>
                                       match arg_19__, arg_20__ with
                                       | captured, ann_e =>
                                           let j_22__ :=
@@ -211,7 +213,7 @@ Definition exitifyRec
 Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
   fun binds =>
     let go : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr :=
-      fix go arg_0__ arg_1__
+      fix go (arg_0__ : Core.InScopeSet) (arg_1__ : Core.CoreExpr) : Core.CoreExpr
             := match arg_0__, arg_1__ with
                | _, (Core.Mk_Var _ as e) => e
                | _, (Core.Lit _ as e) => e

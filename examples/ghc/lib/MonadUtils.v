@@ -26,7 +26,8 @@ Import GHC.Base.Notations.
 
 Definition zipWithAndUnzipM {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
    : (a -> b -> m (c * d)%type) -> list a -> list b -> m (list c * list d)%type :=
-  fix zipWithAndUnzipM arg_0__ arg_1__ arg_2__
+  fix zipWithAndUnzipM (arg_0__ : (a -> b -> m (c * d)%type)) (arg_1__ : list a)
+                       (arg_2__ : list b) : m (list c * list d)%type
         := match arg_0__, arg_1__, arg_2__ with
            | f, cons x xs, cons y ys =>
                let cont_3__ arg_4__ :=
@@ -42,7 +43,8 @@ Definition zipWithAndUnzipM {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
 Definition zipWith4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
    : (a -> b -> c -> d -> m e) ->
      list a -> list b -> list c -> list d -> m (list e) :=
-  fix zipWith4M arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
+  fix zipWith4M (arg_0__ : (a -> b -> c -> d -> m e)) (arg_1__ : list a) (arg_2__
+                  : list b) (arg_3__ : list c) (arg_4__ : list d) : m (list e)
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
            | _, nil, _, _, _ => GHC.Base.return_ nil
            | _, _, nil, _, _ => GHC.Base.return_ nil
@@ -56,7 +58,8 @@ Definition zipWith4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
 
 Definition zipWith3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
    : (a -> b -> c -> m d) -> list a -> list b -> list c -> m (list d) :=
-  fix zipWith3M arg_0__ arg_1__ arg_2__ arg_3__
+  fix zipWith3M (arg_0__ : (a -> b -> c -> m d)) (arg_1__ : list a) (arg_2__
+                  : list b) (arg_3__ : list c) : m (list d)
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | _, nil, _, _ => GHC.Base.return_ nil
            | _, _, nil, _ => GHC.Base.return_ nil
@@ -89,7 +92,8 @@ Definition maybeMapM {m} {a} {b} `{GHC.Base.Monad m}
 
 Definition mapSndM {m} {b} {c} {a} `{GHC.Base.Monad m}
    : (b -> m c) -> list (a * b)%type -> m (list (a * c)%type) :=
-  fix mapSndM arg_0__ arg_1__
+  fix mapSndM (arg_0__ : (b -> m c)) (arg_1__ : list (a * b)%type) : m (list (a *
+                                                                              c)%type)
         := match arg_0__, arg_1__ with
            | _, nil => GHC.Base.return_ nil
            | f, cons (pair a b) xs =>
@@ -105,7 +109,8 @@ Definition mapMaybeM {m} {a} {b} `{(GHC.Base.Monad m)}
 Definition mapAndUnzip5M {m} {a} {b} {c} {d} {e} {f} `{GHC.Base.Monad m}
    : (a -> m (b * c * d * e * f)%type) ->
      list a -> m (list b * list c * list d * list e * list f)%type :=
-  fix mapAndUnzip5M arg_0__ arg_1__
+  fix mapAndUnzip5M (arg_0__ : (a -> m (b * c * d * e * f)%type)) (arg_1__
+                      : list a) : m (list b * list c * list d * list e * list f)%type
         := match arg_0__, arg_1__ with
            | _, nil => GHC.Base.return_ (pair (pair (pair (pair nil nil) nil) nil) nil)
            | f, cons x xs =>
@@ -123,7 +128,8 @@ Definition mapAndUnzip5M {m} {a} {b} {c} {d} {e} {f} `{GHC.Base.Monad m}
 Definition mapAndUnzip4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
    : (a -> m (b * c * d * e)%type) ->
      list a -> m (list b * list c * list d * list e)%type :=
-  fix mapAndUnzip4M arg_0__ arg_1__
+  fix mapAndUnzip4M (arg_0__ : (a -> m (b * c * d * e)%type)) (arg_1__ : list a)
+        : m (list b * list c * list d * list e)%type
         := match arg_0__, arg_1__ with
            | _, nil => GHC.Base.return_ (pair (pair (pair nil nil) nil) nil)
            | f, cons x xs =>
@@ -139,7 +145,8 @@ Definition mapAndUnzip4M {m} {a} {b} {c} {d} {e} `{GHC.Base.Monad m}
 
 Definition mapAndUnzip3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
    : (a -> m (b * c * d)%type) -> list a -> m (list b * list c * list d)%type :=
-  fix mapAndUnzip3M arg_0__ arg_1__
+  fix mapAndUnzip3M (arg_0__ : (a -> m (b * c * d)%type)) (arg_1__ : list a) : m
+                                                                               (list b * list c * list d)%type
         := match arg_0__, arg_1__ with
            | _, nil => GHC.Base.return_ (pair (pair nil nil) nil)
            | f, cons x xs =>
@@ -154,7 +161,8 @@ Definition mapAndUnzip3M {m} {a} {b} {c} {d} `{GHC.Base.Monad m}
 
 Definition mapAccumLM {m} {acc} {x} {y} `{GHC.Base.Monad m}
    : (acc -> x -> m (acc * y)%type) -> acc -> list x -> m (acc * list y)%type :=
-  fix mapAccumLM arg_0__ arg_1__ arg_2__
+  fix mapAccumLM (arg_0__ : (acc -> x -> m (acc * y)%type)) (arg_1__ : acc)
+                 (arg_2__ : list x) : m (acc * list y)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, s, nil => GHC.Base.return_ (pair s nil)
            | f, s, cons x xs =>
@@ -169,7 +177,7 @@ Definition mapAccumLM {m} {acc} {x} {y} `{GHC.Base.Monad m}
 
 Definition foldrM {m} {b} {a} `{(GHC.Base.Monad m)}
    : (b -> a -> m a) -> a -> list b -> m a :=
-  fix foldrM arg_0__ arg_1__ arg_2__
+  fix foldrM (arg_0__ : (b -> a -> m a)) (arg_1__ : a) (arg_2__ : list b) : m a
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, nil => GHC.Base.return_ z
            | k, z, cons x xs => foldrM k z xs GHC.Base.>>= (fun r => k x r)
@@ -208,7 +216,7 @@ Definition concatMapM {m} {a} {b} `{GHC.Base.Monad m}
 
 Definition anyM {m} {a} `{GHC.Base.Monad m}
    : (a -> m bool) -> list a -> m bool :=
-  fix anyM arg_0__ arg_1__
+  fix anyM (arg_0__ : (a -> m bool)) (arg_1__ : list a) : m bool
         := match arg_0__, arg_1__ with
            | _, nil => GHC.Base.return_ false
            | f, cons x xs =>
@@ -218,7 +226,7 @@ Definition anyM {m} {a} `{GHC.Base.Monad m}
 
 Definition allM {m} {a} `{GHC.Base.Monad m}
    : (a -> m bool) -> list a -> m bool :=
-  fix allM arg_0__ arg_1__
+  fix allM (arg_0__ : (a -> m bool)) (arg_1__ : list a) : m bool
         := match arg_0__, arg_1__ with
            | _, nil => GHC.Base.return_ true
            | f, cons b bs =>

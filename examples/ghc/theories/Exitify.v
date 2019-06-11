@@ -381,7 +381,7 @@ Section in_exitifyRec.
     unfold DeferredFix.deferredFix2.
     unfold DeferredFix.curry.
     rewrite DeferredFix.deferredFix_eq_on with
-      (P := fun p => GoDom (deAnnotate (snd p)))
+      (P := fun p : list Var * CoreExprWithFVs => GoDom (deAnnotate (snd p)))
       (R := fun p1 p2 => CoreLT (deAnnotate (snd p1)) (deAnnotate (snd p2))).
     * reflexivity.
     * apply Inverse_Image.wf_inverse_image.

@@ -76,7 +76,7 @@ Definition emptyUniqDSet {a} : UniqDSet a :=
 Definition unionManyUniqDSets {a} (xs : list (UniqDSet a)) : UniqDSet a :=
   match xs with
   | nil => emptyUniqDSet
-  | cons set sets => Data.Foldable.foldr unionUniqDSets set sets
+  | cons udset udsets => Data.Foldable.foldr unionUniqDSets udset udsets
   end.
 
 Definition elementOfUniqDSet {a} `{Unique.Uniquable a}

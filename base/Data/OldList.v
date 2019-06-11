@@ -143,7 +143,9 @@ Definition sortBy {a} (cmp : a -> a -> comparison) (xs : list a): list a :=
 Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
    : (a -> b -> c -> d -> e -> f -> g -> h) ->
      list a -> list b -> list c -> list d -> list e -> list f -> list g -> list h :=
-  fix zipWith7 arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ arg_5__ arg_6__ arg_7__
+  fix zipWith7 (arg_0__ : (a -> b -> c -> d -> e -> f -> g -> h)) (arg_1__
+                 : list a) (arg_2__ : list b) (arg_3__ : list c) (arg_4__ : list d) (arg_5__
+                 : list e) (arg_6__ : list f) (arg_7__ : list g) : list h
         := match arg_0__
                , arg_1__
                , arg_2__
@@ -167,7 +169,9 @@ Definition zipWith7 {a} {b} {c} {d} {e} {f} {g} {h}
 Definition zipWith6 {a} {b} {c} {d} {e} {f} {g}
    : (a -> b -> c -> d -> e -> f -> g) ->
      list a -> list b -> list c -> list d -> list e -> list f -> list g :=
-  fix zipWith6 arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ arg_5__ arg_6__
+  fix zipWith6 (arg_0__ : (a -> b -> c -> d -> e -> f -> g)) (arg_1__ : list a)
+               (arg_2__ : list b) (arg_3__ : list c) (arg_4__ : list d) (arg_5__ : list e)
+               (arg_6__ : list f) : list g
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__, arg_5__, arg_6__ with
            | z, cons a as_, cons b bs, cons c cs, cons d ds, cons e es, cons f fs =>
                cons (z a b c d e f) (zipWith6 z as_ bs cs ds es fs)
@@ -177,7 +181,9 @@ Definition zipWith6 {a} {b} {c} {d} {e} {f} {g}
 Definition zipWith5 {a} {b} {c} {d} {e} {f}
    : (a -> b -> c -> d -> e -> f) ->
      list a -> list b -> list c -> list d -> list e -> list f :=
-  fix zipWith5 arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ arg_5__
+  fix zipWith5 (arg_0__ : (a -> b -> c -> d -> e -> f)) (arg_1__ : list a)
+               (arg_2__ : list b) (arg_3__ : list c) (arg_4__ : list d) (arg_5__ : list e)
+        : list f
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__, arg_5__ with
            | z, cons a as_, cons b bs, cons c cs, cons d ds, cons e es =>
                cons (z a b c d e) (zipWith5 z as_ bs cs ds es)
@@ -186,7 +192,8 @@ Definition zipWith5 {a} {b} {c} {d} {e} {f}
 
 Definition zipWith4 {a} {b} {c} {d} {e}
    : (a -> b -> c -> d -> e) -> list a -> list b -> list c -> list d -> list e :=
-  fix zipWith4 arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
+  fix zipWith4 (arg_0__ : (a -> b -> c -> d -> e)) (arg_1__ : list a) (arg_2__
+                 : list b) (arg_3__ : list c) (arg_4__ : list d) : list e
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
            | z, cons a as_, cons b bs, cons c cs, cons d ds =>
                cons (z a b c d) (zipWith4 z as_ bs cs ds)
@@ -288,7 +295,7 @@ Definition tailUnwords : GHC.Base.String -> GHC.Base.String :=
 
 Definition stripPrefix {a} `{GHC.Base.Eq_ a}
    : list a -> list a -> option (list a) :=
-  fix stripPrefix arg_0__ arg_1__
+  fix stripPrefix (arg_0__ arg_1__ : list a) : option (list a)
         := match arg_0__, arg_1__ with
            | nil, ys => Some ys
            | cons x xs, cons y ys =>
@@ -325,7 +332,7 @@ Definition select {a}
     end.
 
 Definition prependToAll {a} : a -> list a -> list a :=
-  fix prependToAll arg_0__ arg_1__
+  fix prependToAll (arg_0__ : a) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | _, nil => nil
            | sep, cons x xs => cons sep (cons x (prependToAll sep xs))
@@ -338,7 +345,7 @@ Definition pairWithNil {acc} {y} : acc -> (acc * list y)%type :=
   fun x => pair x nil.
 
 Definition nonEmptySubsequences {a} : list a -> list (list a) :=
-  fix nonEmptySubsequences arg_0__
+  fix nonEmptySubsequences (arg_0__ : list a) : list (list a)
         := match arg_0__ with
            | nil => nil
            | cons x xs =>
@@ -348,7 +355,8 @@ Definition nonEmptySubsequences {a} : list a -> list (list a) :=
 
 Definition mapAccumR {acc} {x} {y}
    : (acc -> x -> (acc * y)%type) -> acc -> list x -> (acc * list y)%type :=
-  fix mapAccumR arg_0__ arg_1__ arg_2__
+  fix mapAccumR (arg_0__ : (acc -> x -> (acc * y)%type)) (arg_1__ : acc) (arg_2__
+                  : list x) : (acc * list y)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, s, nil => pair s nil
            | f, s, cons x xs =>
@@ -369,7 +377,8 @@ Definition mapAccumLF {acc} {x} {y}
 
 Definition mapAccumL {acc} {x} {y}
    : (acc -> x -> (acc * y)%type) -> acc -> list x -> (acc * list y)%type :=
-  fix mapAccumL arg_0__ arg_1__ arg_2__
+  fix mapAccumL (arg_0__ : (acc -> x -> (acc * y)%type)) (arg_1__ : acc) (arg_2__
+                  : list x) : (acc * list y)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, s, nil => pair s nil
            | f, s, cons x xs =>
@@ -379,7 +388,7 @@ Definition mapAccumL {acc} {x} {y}
            end.
 
 Definition isPrefixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
-  fix isPrefixOf arg_0__ arg_1__
+  fix isPrefixOf (arg_0__ arg_1__ : list a) : bool
         := match arg_0__, arg_1__ with
            | nil, _ => true
            | _, nil => false
@@ -401,7 +410,8 @@ Definition intersect {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> list a :=
   intersectBy _GHC.Base.==_.
 
 Definition insertBy {a} : (a -> a -> comparison) -> a -> list a -> list a :=
-  fix insertBy arg_0__ arg_1__ arg_2__
+  fix insertBy (arg_0__ : (a -> a -> comparison)) (arg_1__ : a) (arg_2__ : list a)
+        : list a
         := match arg_0__, arg_1__, arg_2__ with
            | _, x, nil => cons x nil
            | cmp, x, (cons y ys' as ys) =>
@@ -416,7 +426,7 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> list a -> list a :=
 
 Definition genericTake {i} {a} `{(GHC.Real.Integral i)}
    : i -> list a -> list a :=
-  fix genericTake arg_0__ arg_1__
+  fix genericTake (arg_0__ : i) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | n, _ =>
                if n GHC.Base.<= #0 : bool then nil else
@@ -428,7 +438,7 @@ Definition genericTake {i} {a} `{(GHC.Real.Integral i)}
 
 Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)}
    : i -> list a -> (list a * list a)%type :=
-  fix genericSplitAt arg_0__ arg_1__
+  fix genericSplitAt (arg_0__ : i) (arg_1__ : list a) : (list a * list a)%type
         := match arg_0__, arg_1__ with
            | n, xs =>
                if n GHC.Base.<= #0 : bool then pair nil xs else
@@ -441,7 +451,7 @@ Definition genericSplitAt {i} {a} `{(GHC.Real.Integral i)}
            end.
 
 Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
-  fix genericLength arg_0__
+  fix genericLength (arg_0__ : list a) : i
         := match arg_0__ with
            | nil => #0
            | cons _ l => #1 GHC.Num.+ genericLength l
@@ -449,7 +459,7 @@ Definition genericLength {i} {a} `{(GHC.Num.Num i)} : list a -> i :=
 
 Definition genericDrop {i} {a} `{(GHC.Real.Integral i)}
    : i -> list a -> list a :=
-  fix genericDrop arg_0__ arg_1__
+  fix genericDrop (arg_0__ : i) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | n, xs =>
                if n GHC.Base.<= #0 : bool then xs else
@@ -466,7 +476,7 @@ Definition emptySB {a} : SnocBuilder a :=
   Mk_SnocBuilder #0 nil nil.
 
 Definition elem_by {a} : (a -> a -> bool) -> a -> list a -> bool :=
-  fix elem_by arg_0__ arg_1__ arg_2__
+  fix elem_by (arg_0__ : (a -> a -> bool)) (arg_1__ : a) (arg_2__ : list a) : bool
         := match arg_0__, arg_1__, arg_2__ with
            | _, _, nil => false
            | eq, y, cons x xs => orb (eq x y) (elem_by eq y xs)
@@ -494,7 +504,7 @@ Definition dropWhileEnd {a} : (a -> bool) -> list a -> list a :=
                       else cons x xs) nil.
 
 Definition dropLengthMaybe {a} {b} : list a -> list b -> option (list b) :=
-  fix dropLengthMaybe arg_0__ arg_1__
+  fix dropLengthMaybe (arg_0__ : list a) (arg_1__ : list b) : option (list b)
         := match arg_0__, arg_1__ with
            | nil, y => Some y
            | _, nil => None
@@ -502,7 +512,7 @@ Definition dropLengthMaybe {a} {b} : list a -> list b -> option (list b) :=
            end.
 
 Definition dropLength {a} {b} : list a -> list b -> list b :=
-  fix dropLength arg_0__ arg_1__
+  fix dropLength (arg_0__ : list a) (arg_1__ : list b) : list b
         := match arg_0__, arg_1__ with
            | nil, y => y
            | _, nil => nil
@@ -515,7 +525,8 @@ Definition isSuffixOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
                                         (fun delta => GHC.Base.return_ (ns GHC.Base.== dropLength delta hs))).
 
 Definition deleteBy {a} : (a -> a -> bool) -> a -> list a -> list a :=
-  fix deleteBy arg_0__ arg_1__ arg_2__
+  fix deleteBy (arg_0__ : (a -> a -> bool)) (arg_1__ : a) (arg_2__ : list a)
+        : list a
         := match arg_0__, arg_1__, arg_2__ with
            | _, _, nil => nil
            | eq, x, cons y ys => if eq x y : bool then ys else cons y (deleteBy eq x ys)

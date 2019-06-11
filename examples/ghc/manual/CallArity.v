@@ -181,7 +181,8 @@ Definition both : CallArityRes -> CallArityRes -> CallArityRes :=
 Definition callArityAnal
    : BasicTypes.Arity ->
      Core.VarSet -> Core.CoreExpr -> (CallArityRes * Core.CoreExpr)%type :=
-  fix callArityAnal arg_0__ arg_1__ arg_2__
+  fix callArityAnal (arg_0__ : BasicTypes.Arity) (arg_1__ : Core.VarSet) (arg_2__
+                      : Core.CoreExpr) : (CallArityRes * Core.CoreExpr)%type
         := let j_26__ :=
              match arg_0__, arg_1__, arg_2__ with
              | arity, int, Core.Lam v e =>
@@ -291,7 +292,10 @@ Definition callArityBind
          : list (Core.Id * option (bool * BasicTypes.Arity * CallArityRes)%type *
                  Core.CoreExpr)%type ->
            (CallArityRes * list (Core.Id * Core.CoreExpr)%type)%type :=
-          GHC.DeferredFix.deferredFix1 (fun fix_ ann_binds =>
+          GHC.DeferredFix.deferredFix1 (fun fix_
+                                        (ann_binds
+                                          : list (Core.Id * option (bool * BasicTypes.Arity * CallArityRes)%type *
+                                                  Core.CoreExpr)%type) =>
                                           let aes_old :=
                                             let cont_29__ arg_30__ :=
                                               match arg_30__ with
@@ -344,7 +348,8 @@ Definition callArityBind
 Definition callArityTopLvl
    : list Core.Var ->
      Core.VarSet -> list Core.CoreBind -> (CallArityRes * list Core.CoreBind)%type :=
-  fix callArityTopLvl arg_0__ arg_1__ arg_2__
+  fix callArityTopLvl (arg_0__ : list Core.Var) (arg_1__ : Core.VarSet) (arg_2__
+                        : list Core.CoreBind) : (CallArityRes * list Core.CoreBind)%type
         := match arg_0__, arg_1__, arg_2__ with
            | exported, _, nil =>
                pair (calledMultipleTimes (pair UnVarGraph.emptyUnVarGraph (Core.mkVarEnv

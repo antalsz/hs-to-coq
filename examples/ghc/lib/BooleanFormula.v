@@ -231,7 +231,8 @@ Definition mkAnd {a} `{GHC.Base.Eq_ a}
 
 Definition simplify {a} `{GHC.Base.Eq_ a}
    : (a -> option bool) -> BooleanFormula a -> BooleanFormula a :=
-  fix simplify arg_0__ arg_1__
+  fix simplify (arg_0__ : (a -> option bool)) (arg_1__ : BooleanFormula a)
+        : BooleanFormula a
         := match arg_0__, arg_1__ with
            | f, Var a => match f a with | None => Var a | Some b => mkBool b end
            | f, And xs =>
@@ -258,7 +259,7 @@ Definition isFalse {a} : BooleanFormula a -> bool :=
   fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
 
 Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
-  fix impliesAtom arg_0__ arg_1__
+  fix impliesAtom (arg_0__ : BooleanFormula a) (arg_1__ : a) : bool
         := match arg_0__, arg_1__ with
            | Var x, y => x GHC.Base.== y
            | And xs, y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
@@ -276,7 +277,7 @@ Definition implies {a} `{Unique.Uniquable a}
    : BooleanFormula a -> BooleanFormula a -> bool :=
   fun e1 e2 =>
     let go {a} `{Unique.Uniquable a} : Clause a -> Clause a -> bool :=
-      GHC.DeferredFix.deferredFix2 (fun go arg_0__ arg_1__ =>
+      GHC.DeferredFix.deferredFix1 (fun go (arg_0__ arg_1__ : Clause a) =>
                                       match arg_0__, arg_1__ with
                                       | (Mk_Clause _ (cons hyp hyps) as l), r =>
                                           match hyp with
@@ -330,7 +331,7 @@ Definition implies {a} `{Unique.Uniquable a}
                                                        UniqSet.emptyUniqSet (cons e2 nil)).
 
 Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
-  fix eval arg_0__ arg_1__
+  fix eval (arg_0__ : (a -> bool)) (arg_1__ : BooleanFormula a) : bool
         := match arg_0__, arg_1__ with
            | f, Var x => f x
            | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
@@ -533,7 +534,7 @@ Program Instance Traversable__BooleanFormula
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.build' GHC.Base.flip GHC.Base.fmap
      GHC.Base.fmap__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
      GHC.Base.op_zeze____ GHC.Base.op_zlzd____ GHC.Base.op_zsze____
-     GHC.DeferredFix.deferredFix2 GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.DeferredFix.deferredFix1 GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
      GHC.Num.op_zp__ MonadUtils.concatMapM SrcLoc.L SrcLoc.Located SrcLoc.unLoc
      UniqSet.UniqSet UniqSet.addOneToUniqSet UniqSet.elementOfUniqSet
      UniqSet.emptyUniqSet Unique.Uniquable

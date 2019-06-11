@@ -309,7 +309,7 @@ Definition cmmEqType_ignoring_ptrhood : CmmType -> CmmType -> bool :=
     match arg_0__, arg_1__ with
     | Mk_CmmType c1 w1, Mk_CmmType c2 w2 =>
         let weak_eq : CmmCat -> CmmCat -> bool :=
-          fix weak_eq arg_2__ arg_3__
+          fix weak_eq (arg_2__ arg_3__ : CmmCat) : bool
                 := match arg_2__, arg_3__ with
                    | FloatCat, FloatCat => true
                    | FloatCat, _other => false

@@ -160,7 +160,7 @@ Definition null : IntSet -> bool :=
   fun arg_0__ => match arg_0__ with | Nil => true | _ => false end.
 
 Definition nequal : IntSet -> IntSet -> bool :=
-  fix nequal arg_0__ arg_1__
+  fix nequal (arg_0__ arg_1__ : IntSet) : bool
         := match arg_0__, arg_1__ with
            | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
                orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
@@ -183,7 +183,7 @@ Definition nomatch : Coq.Numbers.BinNums.N -> Prefix -> Mask -> bool :=
   fun i p m => (mask i m) GHC.Base./= p.
 
 Definition subsetCmp : IntSet -> IntSet -> comparison :=
-  fix subsetCmp arg_0__ arg_1__
+  fix subsetCmp (arg_0__ arg_1__ : IntSet) : comparison
         := match arg_0__, arg_1__ with
            | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
                let subsetCmpEq :=
@@ -228,7 +228,7 @@ Definition subsetCmp : IntSet -> IntSet -> comparison :=
            end.
 
 Definition isSubsetOf : IntSet -> IntSet -> bool :=
-  fix isSubsetOf arg_0__ arg_1__
+  fix isSubsetOf (arg_0__ arg_1__ : IntSet) : bool
         := match arg_0__, arg_1__ with
            | (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
                if shorter m1 m2 : bool then false else
@@ -263,7 +263,7 @@ Definition lowestBitSet : Nat -> Coq.Numbers.BinNums.N :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.lowestBitMask x).
 
 Definition unsafeFindMin : IntSet -> option Key :=
-  fix unsafeFindMin arg_0__
+  fix unsafeFindMin (arg_0__ : IntSet) : option Key
         := match arg_0__ with
            | Nil => None
            | Tip kx bm => Some (kx GHC.Num.+ lowestBitSet bm)
@@ -274,7 +274,7 @@ Definition highestBitSet : Nat -> Coq.Numbers.BinNums.N :=
   fun x => indexOfTheOnlyBit (Utils.Containers.Internal.BitUtil.highestBitMask x).
 
 Definition unsafeFindMax : IntSet -> option Key :=
-  fix unsafeFindMax arg_0__
+  fix unsafeFindMax (arg_0__ : IntSet) : option Key
         := match arg_0__ with
            | Nil => None
            | Tip kx bm => Some (kx GHC.Num.+ highestBitSet bm)
@@ -443,7 +443,7 @@ Definition fold {b} : (Key -> b -> b) -> b -> IntSet -> b :=
   foldr.
 
 Definition equal : IntSet -> IntSet -> bool :=
-  fix equal arg_0__ arg_1__
+  fix equal (arg_0__ arg_1__ : IntSet) : bool
         := match arg_0__, arg_1__ with
            | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
                andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
@@ -459,8 +459,9 @@ Definition empty : IntSet :=
 Definition elems : IntSet -> list Key :=
   toAscList.
 
-Program Fixpoint disjoint (arg_0__ : IntSet) (arg_1__ : IntSet)
-                          {measure (size_nat arg_0__ + size_nat arg_1__)} : bool
+Program Fixpoint disjoint (arg_0__ arg_1__ : IntSet) {measure (size_nat arg_0__
+                           +
+                           size_nat arg_1__)} : bool
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let disjoint2 :=
@@ -520,7 +521,7 @@ Definition link : Prefix -> IntSet -> Prefix -> IntSet -> IntSet :=
     let p := mask p1 m in if zero p1 m : bool then Bin p m t1 t2 else Bin p m t2 t1.
 
 Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
-  fix insertBM arg_0__ arg_1__ arg_2__
+  fix insertBM (arg_0__ : Prefix) (arg_1__ : BitMap) (arg_2__ : IntSet) : IntSet
         := match arg_0__, arg_1__, arg_2__ with
            | kx, bm, (Bin p m l r as t) =>
                if nomatch kx p m : bool then link kx (Tip kx bm) p t else
@@ -532,8 +533,7 @@ Definition insertBM : Prefix -> BitMap -> IntSet -> IntSet :=
            | kx, bm, Nil => Tip kx bm
            end.
 
-Program Fixpoint union (arg_0__ : IntSet) (arg_1__ : IntSet) {measure (size_nat
-                        arg_0__ +
+Program Fixpoint union (arg_0__ arg_1__ : IntSet) {measure (size_nat arg_0__ +
                         size_nat arg_1__)} : IntSet
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
@@ -819,7 +819,7 @@ Definition bin : Prefix -> Mask -> IntSet -> IntSet -> IntSet :=
     end.
 
 Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
-  fix deleteBM arg_0__ arg_1__ arg_2__
+  fix deleteBM (arg_0__ : Prefix) (arg_1__ : BitMap) (arg_2__ : IntSet) : IntSet
         := match arg_0__, arg_1__, arg_2__ with
            | kx, bm, (Bin p m l r as t) =>
                if nomatch kx p m : bool then t else
@@ -835,8 +835,9 @@ Definition deleteBM : Prefix -> BitMap -> IntSet -> IntSet :=
 Definition delete : Key -> IntSet -> IntSet :=
   fun x => deleteBM (prefixOf x) (bitmapOf x).
 
-Program Fixpoint difference (arg_0__ : IntSet) (arg_1__ : IntSet)
-                            {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
+Program Fixpoint difference (arg_0__ arg_1__ : IntSet) {measure (size_nat
+                             arg_0__ +
+                             size_nat arg_1__)} : IntSet
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let difference2 :=
@@ -881,7 +882,7 @@ Notation "'_\\_'" := (op_zrzr__).
 Infix "\\" := (_\\_) (at level 99).
 
 Definition filter : (Key -> bool) -> IntSet -> IntSet :=
-  fix filter predicate t
+  fix filter (predicate : (Key -> bool)) (t : IntSet) : IntSet
         := let bitPred :=
              fun kx bm bi =>
                if predicate (kx GHC.Num.+ bi) : bool
@@ -893,8 +894,9 @@ Definition filter : (Key -> bool) -> IntSet -> IntSet :=
            | Nil => Nil
            end.
 
-Program Fixpoint intersection (arg_0__ : IntSet) (arg_1__ : IntSet)
-                              {measure (size_nat arg_0__ + size_nat arg_1__)} : IntSet
+Program Fixpoint intersection (arg_0__ arg_1__ : IntSet) {measure (size_nat
+                               arg_0__ +
+                               size_nat arg_1__)} : IntSet
                    := match arg_0__, arg_1__ with
                       | (Bin p1 m1 l1 r1 as t1), (Bin p2 m2 l2 r2 as t2) =>
                           let intersection2 :=

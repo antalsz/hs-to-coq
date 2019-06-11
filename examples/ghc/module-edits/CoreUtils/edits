@@ -27,12 +27,7 @@ termination CoreUtils.mergeAlts deferred
 in CoreUtils.eqExpr       inline mutual go_alt
 in CoreUtils.exprIsCheapX inline mutual ok
 
-# This really needs some sort of `add let type` edit
-#
-#     add let type CoreUtil.eqExpr go_alt : Core.RnEnv2 -> (Core.CoreAlt -> (Core.CoreAlt -> bool))
-#
-# See issue #110.
-in CoreUtils.eqExpr rewrite forall, go (Core.mkRnEnv2 in_scope) e1 e2 = let _go_alt : Core.RnEnv2 -> (Core.CoreAlt -> (Core.CoreAlt -> bool)) := go_alt in go (Core.mkRnEnv2 in_scope) e1 e2
+in CoreUtils.eqExpr set type go_alt : Core.RnEnv2 -> (Core.CoreAlt -> (Core.CoreAlt -> bool))
 
 # Justified by `NestedRecursionHelpers.all2Map_is_all2_map_map` plus changing
 #
@@ -73,11 +68,15 @@ skip CoreUtils.refineDefaultAlt
 # needs Core.dataConCannotMatch
 skip Core.filterAlts
 
+in CoreUtils.stripTicksE inline mutual go_b
+in CoreUtils.stripTicksE inline mutual go_a
+in CoreUtils.stripTicksE set type      go_b : (b * Core.Expr b) -> (b * Core.Expr b)
+in CoreUtils.stripTicksE set type      go_a : Core.Alt b        -> Core.Alt b
 
-# Redefined in the midamble because they use complex syntax
-skip CoreUtils.stripTicksE
-skip CoreUtils.stripTicksT
-
+in CoreUtils.stripTicksT inline mutual go_b
+in CoreUtils.stripTicksT inline mutual go_a
+in CoreUtils.stripTicksT set type      go_b : (b * Core.Expr b) -> OrdList.OrdList (Core.Tickish Core.Id)
+in CoreUtils.stripTicksT set type      go_a : Core.Alt b        -> OrdList.OrdList (Core.Tickish Core.Id)
 
 skip CoreUtils.diffUnfold
 skip CoreUtils.diffIdInfo

@@ -155,7 +155,7 @@ Definition emptyUniqSet {a} : UniqSet a :=
 Definition unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=
   match xs with
   | nil => emptyUniqSet
-  | cons set sets => Data.Foldable.foldr unionUniqSets set sets
+  | cons uset usets => Data.Foldable.foldr unionUniqSets uset usets
   end.
 
 Definition elementOfUniqSet {a} `{Unique.Uniquable a}

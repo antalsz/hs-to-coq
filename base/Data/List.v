@@ -20,7 +20,7 @@ Import GHC.Base.Notations.
 (* Converted value declarations: *)
 
 Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
-  fix isSubsequenceOf arg_0__ arg_1__
+  fix isSubsequenceOf (arg_0__ arg_1__ : list a) : bool
         := match arg_0__, arg_1__ with
            | nil, _ => true
            | _, nil => false

@@ -223,7 +223,7 @@ Definition prop_Single : Coq.Numbers.BinNums.N -> bool :=
      Data.IntSet.Internal.singleton x).
 
 Definition prop_Prefix : Data.IntSet.Internal.IntSet -> bool :=
-  fix prop_Prefix arg_0__
+  fix prop_Prefix (arg_0__ : Data.IntSet.Internal.IntSet) : bool
         := match arg_0__ with
            | (Data.IntSet.Internal.Bin prefix msk left_ right_ as s) =>
                andb (Data.Foldable.all (fun elem =>
@@ -329,7 +329,7 @@ Definition powersOf2 : Data.IntSet.Internal.IntSet :=
                                                          (GHC.Enum.enumFromTo #0 #63)).
 
 Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
-  fix prop_MaskPow2 arg_0__
+  fix prop_MaskPow2 (arg_0__ : Data.IntSet.Internal.IntSet) : bool
         := match arg_0__ with
            | Data.IntSet.Internal.Bin _ msk left_ right_ =>
                andb (Data.IntSet.Internal.member msk powersOf2) (andb (prop_MaskPow2 left_)

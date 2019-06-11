@@ -14,7 +14,7 @@ order UniqSet.Semigroup__UniqSet UniqSet.Monoid__UniqSet
 redefine Definition UniqSet.unionManyUniqSets {a} (xs : list (UniqSet a)) : UniqSet a :=
     match xs with
       | nil => UniqSet.emptyUniqSet
-      | cons set sets => Data.Foldable.foldr UniqSet.unionUniqSets set sets
+      | cons uset usets => Data.Foldable.foldr UniqSet.unionUniqSets uset usets
     end.
 
 add UniqSet Instance Unpeel_UniqSet ele : GHC.Prim.Unpeel (UniqSet ele) (UniqFM.UniqFM ele) :=

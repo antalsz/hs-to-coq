@@ -8,5 +8,5 @@ order UniqDSet.unionUniqDSets UniqDSet.unionManyUniqDSets
 redefine Definition UniqDSet.unionManyUniqDSets {a} (xs : list (UniqDSet a)) : UniqDSet a :=
     match xs with
       | nil => UniqDSet.emptyUniqDSet
-      | cons set sets => Data.Foldable.foldr UniqDSet.unionUniqDSets set sets
+      | cons udset udsets => Data.Foldable.foldr UniqDSet.unionUniqDSets udset udsets
     end.

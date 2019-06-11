@@ -670,7 +670,7 @@ Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
   fun f x y => f y x.
 
 Definition eqString : String -> String -> bool :=
-  fix eqString arg_0__ arg_1__
+  fix eqString (arg_0__ arg_1__ : String) : bool
         := match arg_0__, arg_1__ with
            | nil, nil => true
            | cons c1 cs1, cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)

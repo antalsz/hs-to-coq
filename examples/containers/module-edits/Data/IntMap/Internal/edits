@@ -122,3 +122,7 @@ skip Data.IntSet.Internal.zero
 
 redefine Definition Data.IntMap.Internal.Foldable__IntMap_length : forall {a}, (Data.IntMap.Internal.IntMap a) -> GHC.Num.Int :=
   fun {a} x => Coq.ZArith.BinInt.Z.of_N (Data.IntMap.Internal.size x).
+
+# Putting fixpoint type annotations in binders causes type/term namespace collision
+in Data.IntMap.Internal.mapAccumRWithKey rename value a = a0
+in Data.IntMap.Internal.mapAccumL        rename value a = a0

@@ -214,7 +214,8 @@ Definition substTickish
     end.
 
 Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
-  fix subst_expr doc subst expr
+  fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
+        : Core.CoreExpr
         := let go_alt :=
              fun arg_0__ arg_1__ =>
                match arg_0__, arg_1__ with
@@ -241,7 +242,8 @@ Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
                             let 'pair subst' bndr' := substBndr subst bndr in
                             Core.Case (go scrut) bndr' (substTy subst ty) (map (go_alt subst') alts)
                         end in
-           go expr with substBind arg_0__ arg_1__
+           go expr with substBind (arg_0__ : Subst) (arg_1__ : Core.CoreBind) : (Subst *
+                                                                                 Core.CoreBind)%type
                           := match arg_0__, arg_1__ with
                              | subst, Core.NonRec bndr rhs =>
                                  let 'pair subst' bndr' := substBndr subst bndr in
@@ -258,7 +260,8 @@ Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
                              end for substBind.
 
 Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
-  fix subst_expr doc subst expr
+  fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
+        : Core.CoreExpr
         := let go_alt :=
              fun arg_0__ arg_1__ =>
                match arg_0__, arg_1__ with
@@ -285,7 +288,8 @@ Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
                             let 'pair subst' bndr' := substBndr subst bndr in
                             Core.Case (go scrut) bndr' (substTy subst ty) (map (go_alt subst') alts)
                         end in
-           go expr with substBind arg_0__ arg_1__
+           go expr with substBind (arg_0__ : Subst) (arg_1__ : Core.CoreBind) : (Subst *
+                                                                                 Core.CoreBind)%type
                           := match arg_0__, arg_1__ with
                              | subst, Core.NonRec bndr rhs =>
                                  let 'pair subst' bndr' := substBndr subst bndr in
@@ -431,7 +435,8 @@ Definition extendSubst : Subst -> Core.Var -> Core.CoreArg -> Subst :=
 
 Definition extendSubstList
    : Subst -> list (Core.Var * Core.CoreArg)%type -> Subst :=
-  fix extendSubstList arg_0__ arg_1__
+  fix extendSubstList (arg_0__ : Subst) (arg_1__
+                        : list (Core.Var * Core.CoreArg)%type) : Subst
         := match arg_0__, arg_1__ with
            | subst, nil => subst
            | subst, cons (pair var rhs) prs =>

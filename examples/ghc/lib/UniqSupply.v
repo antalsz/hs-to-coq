@@ -54,7 +54,7 @@ Definition unUSM {result} (arg_0__ : UniqSM result) :=
 (* Converted value declarations: *)
 
 Definition uniqsFromSupply : UniqSupply -> list Unique.Unique :=
-  fix uniqsFromSupply arg_0__
+  fix uniqsFromSupply (arg_0__ : UniqSupply) : list Unique.Unique
         := let 'MkSplitUniqSupply n _ s2 := arg_0__ in
            cons (Unique.mkUniqueGrimily n) (uniqsFromSupply s2).
 
@@ -99,7 +99,7 @@ Definition returnUs {a} : a -> UniqSM a :=
   fun result => USM (fun us => pair result us).
 
 Definition listSplitUniqSupply : UniqSupply -> list UniqSupply :=
-  fix listSplitUniqSupply arg_0__
+  fix listSplitUniqSupply (arg_0__ : UniqSupply) : list UniqSupply
         := let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in
            cons s1 (listSplitUniqSupply s2).
 
@@ -116,7 +116,7 @@ Definition lazyThenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
            unUSM (cont result) us').
 
 Definition lazyMapUs {a} {b} : (a -> UniqSM b) -> list a -> UniqSM (list b) :=
-  fix lazyMapUs arg_0__ arg_1__
+  fix lazyMapUs (arg_0__ : (a -> UniqSM b)) (arg_1__ : list a) : UniqSM (list b)
         := match arg_0__, arg_1__ with
            | _, nil => returnUs nil
            | f, cons x xs =>

@@ -136,14 +136,14 @@ Definition notMember {a} `{GHC.Base.Ord a} : a -> Set_ a -> bool :=
   fun a t => negb (member a t).
 
 Definition mapMonotonic {a} {b} : (a -> b) -> Set_ a -> Set_ b :=
-  fix mapMonotonic arg_0__ arg_1__
+  fix mapMonotonic (arg_0__ : (a -> b)) (arg_1__ : Set_ a) : Set_ b
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | f, Bin sz x l r => Bin sz (f x) (mapMonotonic f l) (mapMonotonic f r)
            end.
 
 Definition lookupMinSure {a} : a -> Set_ a -> a :=
-  fix lookupMinSure arg_0__ arg_1__
+  fix lookupMinSure (arg_0__ : a) (arg_1__ : Set_ a) : a
         := match arg_0__, arg_1__ with
            | x, Tip => x
            | _, Bin _ x l _ => lookupMinSure x l
@@ -157,7 +157,7 @@ Definition lookupMin {a} : Set_ a -> option a :=
     end.
 
 Definition lookupMaxSure {a} : a -> Set_ a -> a :=
-  fix lookupMaxSure arg_0__ arg_1__
+  fix lookupMaxSure (arg_0__ : a) (arg_1__ : Set_ a) : a
         := match arg_0__, arg_1__ with
            | x, Tip => x
            | _, Bin _ x _ r => lookupMaxSure x r
@@ -214,7 +214,8 @@ Definition lookupIndex {a} `{GHC.Base.Ord a}
    : a -> Set_ a -> option GHC.Num.Int :=
   let go {a} `{GHC.Base.Ord a}
    : GHC.Num.Int -> a -> Set_ a -> option GHC.Num.Int :=
-    fix go arg_0__ arg_1__ arg_2__
+    fix go (arg_0__ : GHC.Num.Int) (arg_1__ : a) (arg_2__ : Set_ a) : option
+                                                                      GHC.Num.Int
           := match arg_0__, arg_1__, arg_2__ with
              | _, _, Tip => None
              | idx, x, Bin _ kx l r =>
@@ -458,8 +459,8 @@ Definition glue {a} : Set_ a -> Set_ a -> Set_ a :=
         balanceL m l r'
     end.
 
-Program Fixpoint merge {a} (arg_0__ : Set_ a) (arg_1__ : Set_ a)
-                       {measure (Nat.add (set_size arg_0__) (set_size arg_1__))} : Set_ a
+Program Fixpoint merge {a} (arg_0__ arg_1__ : Set_ a) {measure (Nat.add
+                        (set_size arg_0__) (set_size arg_1__))} : Set_ a
                    := match arg_0__, arg_1__ with
                       | Tip, r => r
                       | l, Tip => l
@@ -589,7 +590,7 @@ Definition bin {a} : a -> Set_ a -> Set_ a -> Set_ a :=
   fun x l r => Bin ((size l GHC.Num.+ size r) GHC.Num.+ #1) x l r.
 
 Definition balanced {a} : Set_ a -> bool :=
-  fix balanced t
+  fix balanced (t : Set_ a) : bool
         := match t with
            | Tip => true
            | Bin _ _ l r =>
@@ -605,7 +606,7 @@ Definition valid {a} `{GHC.Base.Ord a} : Set_ a -> bool :=
   fun t => andb (balanced t) (andb (ordered t) (validsize t)).
 
 Definition deleteMin {a} : Set_ a -> Set_ a :=
-  fix deleteMin arg_0__
+  fix deleteMin (arg_0__ : Set_ a) : Set_ a
         := match arg_0__ with
            | Bin _ _ Tip r => r
            | Bin _ x l r => balanceR x (deleteMin l) r
@@ -613,7 +614,7 @@ Definition deleteMin {a} : Set_ a -> Set_ a :=
            end.
 
 Definition insertMax {a} : a -> Set_ a -> Set_ a :=
-  fix insertMax x t
+  fix insertMax (x : a) (t : Set_ a) : Set_ a
         := match t with
            | Tip => singleton x
            | Bin _ y l r => balanceR y l (insertMax x r)
@@ -627,7 +628,7 @@ Definition minView {a} : Set_ a -> option (a * Set_ a)%type :=
     end.
 
 Definition deleteMax {a} : Set_ a -> Set_ a :=
-  fix deleteMax arg_0__
+  fix deleteMax (arg_0__ : Set_ a) : Set_ a
         := match arg_0__ with
            | Bin _ _ l Tip => l
            | Bin _ x l r => balanceL x l (deleteMax r)
@@ -637,7 +638,7 @@ Definition deleteMax {a} : Set_ a -> Set_ a :=
 Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
   fun x0 =>
     let go {a} `{GHC.Base.Ord a} : a -> a -> Set_ a -> Set_ a :=
-      fix go arg_0__ arg_1__ arg_2__
+      fix go (arg_0__ arg_1__ : a) (arg_2__ : Set_ a) : Set_ a
             := match arg_0__, arg_1__, arg_2__ with
                | orig, _, Tip => singleton (orig)
                | orig, x, (Bin sz y l r as t) =>
@@ -658,7 +659,7 @@ Definition insert {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
     go x0 x0.
 
 Definition insertMin {a} : a -> Set_ a -> Set_ a :=
-  fix insertMin x t
+  fix insertMin (x : a) (t : Set_ a) : Set_ a
         := match t with
            | Tip => singleton x
            | Bin _ y l r => balanceL y (insertMin x l) r
@@ -667,7 +668,7 @@ Definition insertMin {a} : a -> Set_ a -> Set_ a :=
 Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
   fun x0 =>
     let go {a} `{GHC.Base.Ord a} : a -> a -> Set_ a -> Set_ a :=
-      fix go arg_0__ arg_1__ arg_2__
+      fix go (arg_0__ arg_1__ : a) (arg_2__ : Set_ a) : Set_ a
             := match arg_0__, arg_1__, arg_2__ with
                | orig, _, Tip => singleton (orig)
                | orig, x, (Bin _ y l r as t) =>
@@ -685,7 +686,7 @@ Definition insertR {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
                end in
     go x0 x0.
 
-Program Fixpoint link {a} (arg_0__ : a) (arg_1__ : Set_ a) (arg_2__ : Set_ a)
+Program Fixpoint link {a} (arg_0__ : a) (arg_1__ arg_2__ : Set_ a)
                       {measure (Nat.add (set_size arg_1__) (set_size arg_2__))} : Set_ a
                    := match arg_0__, arg_1__, arg_2__ with
                       | x, Tip, r => insertMin x r
@@ -726,7 +727,7 @@ Definition drop {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
     end.
 
 Definition dropWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
-  fix dropWhileAntitone arg_0__ arg_1__
+  fix dropWhileAntitone (arg_0__ : (a -> bool)) (arg_1__ : Set_ a) : Set_ a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ x l r =>
@@ -886,7 +887,7 @@ Definition splitAt {a} : GHC.Num.Int -> Set_ a -> (Set_ a * Set_ a)%type :=
 
 Definition splitMember {a} `{GHC.Base.Ord a}
    : a -> Set_ a -> (Set_ a * bool * Set_ a)%type :=
-  fix splitMember arg_0__ arg_1__
+  fix splitMember (arg_0__ : a) (arg_1__ : Set_ a) : (Set_ a * bool * Set_ a)%type
         := match arg_0__, arg_1__ with
            | _, Tip => pair (pair Tip false) Tip
            | x, Bin _ y l r =>
@@ -902,7 +903,7 @@ Definition splitMember {a} `{GHC.Base.Ord a}
            end.
 
 Definition disjoint {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
-  fix disjoint arg_0__ arg_1__
+  fix disjoint (arg_0__ arg_1__ : Set_ a) : bool
         := match arg_0__, arg_1__ with
            | Tip, _ => true
            | _, Tip => true
@@ -912,7 +913,7 @@ Definition disjoint {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
            end.
 
 Definition isSubsetOfX {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
-  fix isSubsetOfX arg_0__ arg_1__
+  fix isSubsetOfX (arg_0__ arg_1__ : Set_ a) : bool
         := match arg_0__, arg_1__ with
            | Tip, _ => true
            | _, Tip => false
@@ -929,7 +930,7 @@ Definition isProperSubsetOf {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> bool :=
 
 Definition splitS {a} `{GHC.Base.Ord a}
    : a -> Set_ a -> prod (Set_ a) (Set_ a) :=
-  fix splitS arg_0__ arg_1__
+  fix splitS (arg_0__ : a) (arg_1__ : Set_ a) : prod (Set_ a) (Set_ a)
         := match arg_0__, arg_1__ with
            | _, Tip => (pair Tip Tip)
            | x, Bin _ y l r =>
@@ -971,7 +972,7 @@ Definition take {a} : GHC.Num.Int -> Set_ a -> Set_ a :=
     end.
 
 Definition takeWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
-  fix takeWhileAntitone arg_0__ arg_1__
+  fix takeWhileAntitone (arg_0__ : (a -> bool)) (arg_1__ : Set_ a) : Set_ a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, Bin _ x l r =>
@@ -980,7 +981,7 @@ Definition takeWhileAntitone {a} : (a -> bool) -> Set_ a -> Set_ a :=
            end.
 
 Definition union {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
-  fix union arg_0__ arg_1__
+  fix union (arg_0__ arg_1__ : Set_ a) : Set_ a
         := match arg_0__, arg_1__ with
            | t1, Tip => t1
            | t1, Bin num_2__ x _ _ =>
@@ -1011,7 +1012,7 @@ Definition unions {f} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord a}
 
 Definition delete {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
   let go {a} `{GHC.Base.Ord a} : a -> Set_ a -> Set_ a :=
-    fix go arg_0__ arg_1__
+    fix go (arg_0__ : a) (arg_1__ : Set_ a) : Set_ a
           := match arg_0__, arg_1__ with
              | _, Tip => Tip
              | x, (Bin _ y l r as t) =>
@@ -1044,7 +1045,7 @@ Definition maxView {a} : Set_ a -> option (a * Set_ a)%type :=
     end.
 
 Definition difference {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
-  fix difference arg_0__ arg_1__
+  fix difference (arg_0__ arg_1__ : Set_ a) : Set_ a
         := match arg_0__, arg_1__ with
            | Tip, _ => Tip
            | t1, Tip => t1
@@ -1069,7 +1070,7 @@ Definition disjointUnion {a} {b}
     merge (mapMonotonic Data.Either.Left as_) (mapMonotonic Data.Either.Right bs).
 
 Definition filter {a} : (a -> bool) -> Set_ a -> Set_ a :=
-  fix filter arg_0__ arg_1__
+  fix filter (arg_0__ : (a -> bool)) (arg_1__ : Set_ a) : Set_ a
         := match arg_0__, arg_1__ with
            | _, Tip => Tip
            | p, (Bin _ x l r as t) =>
@@ -1084,7 +1085,7 @@ Definition filter {a} : (a -> bool) -> Set_ a -> Set_ a :=
            end.
 
 Definition intersection {a} `{GHC.Base.Ord a} : Set_ a -> Set_ a -> Set_ a :=
-  fix intersection arg_0__ arg_1__
+  fix intersection (arg_0__ arg_1__ : Set_ a) : Set_ a
         := match arg_0__, arg_1__ with
            | Tip, _ => Tip
            | _, Tip => Tip

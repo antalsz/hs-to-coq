@@ -166,7 +166,8 @@ Definition zipWithAMatched {f} {x} {y} {z} `{GHC.Base.Applicative f}
 
 Definition unsafeFindMin {a}
    : IntMap a -> option (Data.IntSet.Internal.Key * a)%type :=
-  fix unsafeFindMin arg_0__
+  fix unsafeFindMin (arg_0__ : IntMap a) : option (Data.IntSet.Internal.Key *
+                                                   a)%type
         := match arg_0__ with
            | Nil => None
            | Tip ky y => Some (pair ky y)
@@ -175,7 +176,8 @@ Definition unsafeFindMin {a}
 
 Definition unsafeFindMax {a}
    : IntMap a -> option (Data.IntSet.Internal.Key * a)%type :=
-  fix unsafeFindMax arg_0__
+  fix unsafeFindMax (arg_0__ : IntMap a) : option (Data.IntSet.Internal.Key *
+                                                   a)%type
         := match arg_0__ with
            | Nil => None
            | Tip ky y => Some (pair ky y)
@@ -248,7 +250,7 @@ Definition node : GHC.Base.String :=
   GHC.Base.hs_string__ "+--".
 
 Definition nequal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
-  fix nequal arg_0__ arg_1__
+  fix nequal (arg_0__ arg_1__ : IntMap a) : bool
         := match arg_0__, arg_1__ with
            | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
                orb (m1 GHC.Base./= m2) (orb (p1 GHC.Base./= p2) (orb (nequal l1 l2) (nequal r1
@@ -285,7 +287,8 @@ Definition maskW : Nat -> Nat -> Prefix :=
 
 Definition mapWithKey {a} {b}
    : (Data.IntSet.Internal.Key -> a -> b) -> IntMap a -> IntMap b :=
-  fix mapWithKey f t
+  fix mapWithKey (f : (Data.IntSet.Internal.Key -> a -> b)) (t : IntMap a)
+        : IntMap b
         := match t with
            | Bin p m l r => Bin p m (mapWithKey f l) (mapWithKey f r)
            | Tip k x => Tip k (f k x)
@@ -366,27 +369,29 @@ Definition mapGT {a}
 Definition mapAccumRWithKey {a} {b} {c}
    : (a -> Data.IntSet.Internal.Key -> b -> (a * c)%type) ->
      a -> IntMap b -> (a * IntMap c)%type :=
-  fix mapAccumRWithKey f a t
+  fix mapAccumRWithKey (f : (a -> Data.IntSet.Internal.Key -> b -> (a * c)%type))
+                       (a0 : a) (t : IntMap b) : (a * IntMap c)%type
         := match t with
            | Bin p m l r =>
-               let 'pair a1 r' := mapAccumRWithKey f a r in
+               let 'pair a1 r' := mapAccumRWithKey f a0 r in
                let 'pair a2 l' := mapAccumRWithKey f a1 l in
                pair a2 (Bin p m l' r')
-           | Tip k x => let 'pair a' x' := f a k x in pair a' (Tip k x')
-           | Nil => pair a Nil
+           | Tip k x => let 'pair a' x' := f a0 k x in pair a' (Tip k x')
+           | Nil => pair a0 Nil
            end.
 
 Definition mapAccumL {a} {b} {c}
    : (a -> Data.IntSet.Internal.Key -> b -> (a * c)%type) ->
      a -> IntMap b -> (a * IntMap c)%type :=
-  fix mapAccumL f a t
+  fix mapAccumL (f : (a -> Data.IntSet.Internal.Key -> b -> (a * c)%type)) (a0
+                  : a) (t : IntMap b) : (a * IntMap c)%type
         := match t with
            | Bin p m l r =>
-               let 'pair a1 l' := mapAccumL f a l in
+               let 'pair a1 l' := mapAccumL f a0 l in
                let 'pair a2 r' := mapAccumL f a1 r in
                pair a2 (Bin p m l' r')
-           | Tip k x => let 'pair a' x' := f a k x in pair a' (Tip k x')
-           | Nil => pair a Nil
+           | Tip k x => let 'pair a' x' := f a0 k x in pair a' (Tip k x')
+           | Nil => pair a0 Nil
            end.
 
 Definition mapAccumWithKey {a} {b} {c}
@@ -403,7 +408,7 @@ Definition mapAccum {a} {b} {c}
                        end).
 
 Definition lookupPrefix {a} : IntSetPrefix -> IntMap a -> IntMap a :=
-  fix lookupPrefix arg_0__ arg_1__
+  fix lookupPrefix (arg_0__ : IntSetPrefix) (arg_1__ : IntMap a) : IntMap a
         := match arg_0__, arg_1__ with
            | kp, (Bin p m l r as t) =>
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base./=
@@ -596,7 +601,8 @@ Infix "!?" := (_!?_) (at level 99).
 
 Definition submapCmp {a} {b}
    : (a -> b -> bool) -> IntMap a -> IntMap b -> comparison :=
-  fix submapCmp arg_0__ arg_1__ arg_2__
+  fix submapCmp (arg_0__ : (a -> b -> bool)) (arg_1__ : IntMap a) (arg_2__
+                  : IntMap b) : comparison
         := match arg_0__, arg_1__, arg_2__ with
            | predicate, (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
                let submapCmpEq :=
@@ -641,7 +647,7 @@ Definition lmapWhenMissing {b} {a} {f} {x}
                       missingKey t k (f x)).
 
 Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
-  fix keysSet arg_0__
+  fix keysSet (arg_0__ : IntMap a) : Data.IntSet.Internal.IntSet
         := match arg_0__ with
            | Nil => Data.IntSet.Internal.Nil
            | Tip kx _ => Data.IntSet.Internal.singleton kx
@@ -663,7 +669,8 @@ Definition keysSet {a} : IntMap a -> Data.IntSet.Internal.IntSet :=
 
 Definition isSubmapOfBy {a} {b}
    : (a -> b -> bool) -> IntMap a -> IntMap b -> bool :=
-  fix isSubmapOfBy arg_0__ arg_1__ arg_2__
+  fix isSubmapOfBy (arg_0__ : (a -> b -> bool)) (arg_1__ : IntMap a) (arg_2__
+                     : IntMap b) : bool
         := match arg_0__, arg_1__, arg_2__ with
            | predicate, (Bin p1 m1 l1 r1 as t1), Bin p2 m2 l2 r2 =>
                if shorter m1 m2 : bool then false else
@@ -702,7 +709,8 @@ Definition isProperSubmapOf {a} `{GHC.Base.Eq_ a}
 
 Definition fromSet {a}
    : (Data.IntSet.Internal.Key -> a) -> Data.IntSet.Internal.IntSet -> IntMap a :=
-  fix fromSet arg_0__ arg_1__
+  fix fromSet (arg_0__ : (Data.IntSet.Internal.Key -> a)) (arg_1__
+                : Data.IntSet.Internal.IntSet) : IntMap a
         := match arg_0__, arg_1__ with
            | _, Data.IntSet.Internal.Nil => Nil
            | f, Data.IntSet.Internal.Bin p m l r => Bin p m (fromSet f l) (fromSet f r)
@@ -900,7 +908,7 @@ Definition findWithDefault {a}
     go.
 
 Definition equal {a} `{GHC.Base.Eq_ a} : IntMap a -> IntMap a -> bool :=
-  fix equal arg_0__ arg_1__
+  fix equal (arg_0__ arg_1__ : IntMap a) : bool
         := match arg_0__, arg_1__ with
            | Bin p1 m1 l1 r1, Bin p2 m2 l2 r2 =>
                andb (m1 GHC.Base.== m2) (andb (p1 GHC.Base.== p2) (andb (equal l1 l2) (equal r1
@@ -941,7 +949,8 @@ Definition link {a} : Prefix -> IntMap a -> Prefix -> IntMap a -> IntMap a :=
     Bin p m t2 t1.
 
 Definition insert {a} : Data.IntSet.Internal.Key -> a -> IntMap a -> IntMap a :=
-  fix insert arg_0__ arg_1__ arg_2__
+  fix insert (arg_0__ : Data.IntSet.Internal.Key) (arg_1__ : a) (arg_2__
+               : IntMap a) : IntMap a
         := match arg_0__, arg_1__, arg_2__ with
            | k, x, (Bin p m l r as t) =>
                if nomatch k p m : bool then link k (Tip k x) p t else
@@ -972,7 +981,9 @@ Definition mapKeys {a}
 Definition insertLookupWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> a -> a) ->
      Data.IntSet.Internal.Key -> a -> IntMap a -> (option a * IntMap a)%type :=
-  fix insertLookupWithKey arg_0__ arg_1__ arg_2__ arg_3__
+  fix insertLookupWithKey (arg_0__ : (Data.IntSet.Internal.Key -> a -> a -> a))
+                          (arg_1__ : Data.IntSet.Internal.Key) (arg_2__ : a) (arg_3__ : IntMap a)
+        : (option a * IntMap a)%type
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | f, k, x, (Bin p m l r as t) =>
                if nomatch k p m : bool then pair None (link k (Tip k x) p t) else
@@ -990,7 +1001,8 @@ Definition insertLookupWithKey {a}
 Definition insertWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> a -> a) ->
      Data.IntSet.Internal.Key -> a -> IntMap a -> IntMap a :=
-  fix insertWithKey arg_0__ arg_1__ arg_2__ arg_3__
+  fix insertWithKey (arg_0__ : (Data.IntSet.Internal.Key -> a -> a -> a)) (arg_1__
+                      : Data.IntSet.Internal.Key) (arg_2__ : a) (arg_3__ : IntMap a) : IntMap a
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | f, k, x, (Bin p m l r as t) =>
                if nomatch k p m : bool then link k (Tip k x) p t else
@@ -1227,7 +1239,7 @@ Definition binCheckLeft {a}
     end.
 
 Definition delete {a} : Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
-  fix delete arg_0__ arg_1__
+  fix delete (arg_0__ : Data.IntSet.Internal.Key) (arg_1__ : IntMap a) : IntMap a
         := match arg_0__, arg_1__ with
            | k, (Bin p m l r as t) =>
                if nomatch k p m : bool then t else
@@ -1241,7 +1253,9 @@ Definition delete {a} : Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
 Definition updateLookupWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> option a) ->
      Data.IntSet.Internal.Key -> IntMap a -> (option a * IntMap a)%type :=
-  fix updateLookupWithKey arg_0__ arg_1__ arg_2__
+  fix updateLookupWithKey (arg_0__ : (Data.IntSet.Internal.Key -> a -> option a))
+                          (arg_1__ : Data.IntSet.Internal.Key) (arg_2__ : IntMap a) : (option a *
+                                                                                       IntMap a)%type
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
                if nomatch k p m : bool then pair None t else
@@ -1262,7 +1276,8 @@ Definition updateLookupWithKey {a}
 
 Definition updatePrefix {a}
    : IntSetPrefix -> IntMap a -> (IntMap a -> IntMap a) -> IntMap a :=
-  fix updatePrefix arg_0__ arg_1__ arg_2__
+  fix updatePrefix (arg_0__ : IntSetPrefix) (arg_1__ : IntMap a) (arg_2__
+                     : (IntMap a -> IntMap a)) : IntMap a
         := match arg_0__, arg_1__, arg_2__ with
            | kp, (Bin p m l r as t), f =>
                if (m Data.Bits..&.(**) Data.IntSet.Internal.suffixBitMask) GHC.Base./=
@@ -1287,7 +1302,8 @@ Definition updatePrefix {a}
 Definition updateWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> option a) ->
      Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
-  fix updateWithKey arg_0__ arg_1__ arg_2__
+  fix updateWithKey (arg_0__ : (Data.IntSet.Internal.Key -> a -> option a))
+                    (arg_1__ : Data.IntSet.Internal.Key) (arg_2__ : IntMap a) : IntMap a
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
                if nomatch k p m : bool then t else
@@ -1346,7 +1362,8 @@ Definition filterMissing {f} {x} `{GHC.Base.Applicative f}
 
 Definition filterWithKeyA {f} {a} `{GHC.Base.Applicative f}
    : (Data.IntSet.Internal.Key -> a -> f bool) -> IntMap a -> f (IntMap a) :=
-  fix filterWithKeyA arg_0__ arg_1__
+  fix filterWithKeyA (arg_0__ : (Data.IntSet.Internal.Key -> a -> f bool))
+                     (arg_1__ : IntMap a) : f (IntMap a)
         := match arg_0__, arg_1__ with
            | _, Nil => GHC.Base.pure Nil
            | f, (Tip k x as t) =>
@@ -1413,7 +1430,8 @@ Definition mapEither {a} {b} {c}
 
 Definition mapMaybeWithKey {a} {b}
    : (Data.IntSet.Internal.Key -> a -> option b) -> IntMap a -> IntMap b :=
-  fix mapMaybeWithKey arg_0__ arg_1__
+  fix mapMaybeWithKey (arg_0__ : (Data.IntSet.Internal.Key -> a -> option b))
+                      (arg_1__ : IntMap a) : IntMap b
         := match arg_0__, arg_1__ with
            | f, Bin p m l r => bin p m (mapMaybeWithKey f l) (mapMaybeWithKey f r)
            | f, Tip k x => match f k x with | Some y => Tip k y | None => Nil end
@@ -1499,7 +1517,9 @@ Definition partition {a}
                         end) m.
 
 Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
-  GHC.DeferredFix.deferredFix2 (fun restrictBM arg_0__ arg_1__ =>
+  GHC.DeferredFix.deferredFix2 (fun restrictBM
+                                (arg_0__ : IntSetBitMap)
+                                (arg_1__ : IntMap a) =>
                                   match arg_0__, arg_1__ with
                                   | num_2__, _ =>
                                       if num_2__ GHC.Base.== #0 : bool then Nil else
@@ -1522,7 +1542,9 @@ Definition restrictBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
 
 Definition restrictKeys {a}
    : IntMap a -> Data.IntSet.Internal.IntSet -> IntMap a :=
-  GHC.DeferredFix.deferredFix2 (fun restrictKeys arg_0__ arg_1__ =>
+  GHC.DeferredFix.deferredFix2 (fun restrictKeys
+                                (arg_0__ : IntMap a)
+                                (arg_1__ : Data.IntSet.Internal.IntSet) =>
                                   match arg_0__, arg_1__ with
                                   | (Bin p1 m1 l1 r1 as t1), (Data.IntSet.Internal.Bin p2 m2 l2 r2 as t2) =>
                                       let intersection2 :=
@@ -1572,7 +1594,9 @@ Definition traverseMaybeMissing {f} {x} {y} `{GHC.Base.Applicative f}
   fun f => Mk_WhenMissing (traverseMaybeWithKey f) f.
 
 Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
-  GHC.DeferredFix.deferredFix2 (fun withoutBM arg_0__ arg_1__ =>
+  GHC.DeferredFix.deferredFix2 (fun withoutBM
+                                (arg_0__ : IntSetBitMap)
+                                (arg_1__ : IntMap a) =>
                                   match arg_0__, arg_1__ with
                                   | num_2__, t =>
                                       if num_2__ GHC.Base.== #0 : bool then t else
@@ -1594,7 +1618,9 @@ Definition withoutBM {a} : IntSetBitMap -> IntMap a -> IntMap a :=
 
 Definition withoutKeys {a}
    : IntMap a -> Data.IntSet.Internal.IntSet -> IntMap a :=
-  GHC.DeferredFix.deferredFix2 (fun withoutKeys arg_0__ arg_1__ =>
+  GHC.DeferredFix.deferredFix2 (fun withoutKeys
+                                (arg_0__ : IntMap a)
+                                (arg_1__ : Data.IntSet.Internal.IntSet) =>
                                   match arg_0__, arg_1__ with
                                   | (Bin p1 m1 l1 r1 as t1), (Data.IntSet.Internal.Bin p2 m2 l2 r2 as t2) =>
                                       let difference2 :=
@@ -1646,7 +1672,8 @@ Definition alterF {f} {a} `{GHC.Base.Functor f}
 
 Definition alter {a}
    : (option a -> option a) -> Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
-  fix alter arg_0__ arg_1__ arg_2__
+  fix alter (arg_0__ : (option a -> option a)) (arg_1__
+              : Data.IntSet.Internal.Key) (arg_2__ : IntMap a) : IntMap a
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
                if nomatch k p m : bool
@@ -1673,7 +1700,8 @@ Definition alter {a}
 Definition adjustWithKey {a}
    : (Data.IntSet.Internal.Key -> a -> a) ->
      Data.IntSet.Internal.Key -> IntMap a -> IntMap a :=
-  fix adjustWithKey arg_0__ arg_1__ arg_2__
+  fix adjustWithKey (arg_0__ : (Data.IntSet.Internal.Key -> a -> a)) (arg_1__
+                      : Data.IntSet.Internal.Key) (arg_2__ : IntMap a) : IntMap a
         := match arg_0__, arg_1__, arg_2__ with
            | f, k, (Bin p m l r as t) =>
                if nomatch k p m : bool then t else

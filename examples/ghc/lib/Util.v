@@ -73,7 +73,8 @@ Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc}
 
 Definition zipWithLazy {a} {b} {c}
    : (a -> b -> c) -> list a -> list b -> list c :=
-  fix zipWithLazy arg_0__ arg_1__ arg_2__
+  fix zipWithLazy (arg_0__ : (a -> b -> c)) (arg_1__ : list a) (arg_2__ : list b)
+        : list c
         := match arg_0__, arg_1__, arg_2__ with
            | _, nil, _ => nil
            | f, cons a as_, cons b bs => cons (f a b) (zipWithLazy f as_ bs)
@@ -86,7 +87,8 @@ Definition zipWithEqual {a} {b} {c}
 
 Definition zipWithAndUnzip {a} {b} {c} {d}
    : (a -> b -> (c * d)%type) -> list a -> list b -> (list c * list d)%type :=
-  fix zipWithAndUnzip arg_0__ arg_1__ arg_2__
+  fix zipWithAndUnzip (arg_0__ : (a -> b -> (c * d)%type)) (arg_1__ : list a)
+                      (arg_2__ : list b) : (list c * list d)%type
         := match arg_0__, arg_1__, arg_2__ with
            | f, cons a as_, cons b bs =>
                let 'pair rs1 rs2 := zipWithAndUnzip f as_ bs in
@@ -102,7 +104,8 @@ Definition zipWith4Equal {a} {b} {c} {d} {e}
 
 Definition zipWith3Lazy {a} {b} {c} {d}
    : (a -> b -> c -> d) -> list a -> list b -> list c -> list d :=
-  fix zipWith3Lazy arg_0__ arg_1__ arg_2__ arg_3__
+  fix zipWith3Lazy (arg_0__ : (a -> b -> c -> d)) (arg_1__ : list a) (arg_2__
+                     : list b) (arg_3__ : list c) : list d
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | _, nil, _, _ => nil
            | f, cons a as_, cons b bs, cons c cs =>
@@ -116,7 +119,7 @@ Definition zipWith3Equal {a} {b} {c} {d}
   fun arg_0__ => GHC.List.zipWith3.
 
 Definition zipLazy {a} {b} : list a -> list b -> list (a * b)%type :=
-  fix zipLazy arg_0__ arg_1__
+  fix zipLazy (arg_0__ : list a) (arg_1__ : list b) : list (a * b)%type
         := match arg_0__, arg_1__ with
            | nil, _ => nil
            | cons x xs, cons y ys => cons (pair x y) (zipLazy xs ys)
@@ -174,7 +177,7 @@ Definition thdOf3 {a} {b} {c} : (a * b * c)%type -> c :=
   fun '(pair (pair _ _) c) => c.
 
 Definition takeList {b} {a} : list b -> list a -> list a :=
-  fix takeList arg_0__ arg_1__
+  fix takeList (arg_0__ : list b) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | nil, _ => nil
            | cons _ xs, ls =>
@@ -186,7 +189,8 @@ Definition takeList {b} {a} : list b -> list a -> list a :=
 
 Definition stretchZipWith {a} {b} {c}
    : (a -> bool) -> b -> (a -> b -> c) -> list a -> list b -> list c :=
-  fix stretchZipWith arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
+  fix stretchZipWith (arg_0__ : (a -> bool)) (arg_1__ : b) (arg_2__
+                       : (a -> b -> c)) (arg_3__ : list a) (arg_4__ : list b) : list c
         := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
            | _, _, _, nil, _ => nil
            | p, z, f, cons x xs, ys =>
@@ -199,7 +203,8 @@ Definition stretchZipWith {a} {b} {c}
 
 Definition splitEithers {a} {b}
    : list (Data.Either.Either a b) -> (list a * list b)%type :=
-  fix splitEithers arg_0__
+  fix splitEithers (arg_0__ : list (Data.Either.Either a b)) : (list a *
+                                                                list b)%type
         := match arg_0__ with
            | nil => pair nil nil
            | cons e es =>
@@ -211,7 +216,7 @@ Definition splitEithers {a} {b}
            end.
 
 Definition splitAtList {b} {a} : list b -> list a -> (list a * list a)%type :=
-  fix splitAtList arg_0__ arg_1__
+  fix splitAtList (arg_0__ : list b) (arg_1__ : list a) : (list a * list a)%type
         := match arg_0__, arg_1__ with
            | nil, xs => pair nil xs
            | _, (nil as xs) => pair xs xs
@@ -221,7 +226,9 @@ Definition splitAtList {b} {a} : list b -> list a -> (list a * list a)%type :=
            end.
 
 Definition split : GHC.Char.Char -> GHC.Base.String -> list GHC.Base.String :=
-  GHC.DeferredFix.deferredFix2 (fun split c s =>
+  GHC.DeferredFix.deferredFix2 (fun split
+                                (c : GHC.Char.Char)
+                                (s : GHC.Base.String) =>
                                   let 'pair chunk rest := GHC.List.break (fun arg_0__ => arg_0__ GHC.Base.== c)
                                                             s in
                                   match rest with
@@ -271,7 +278,7 @@ Definition singleton {a} : a -> list a :=
   fun x => cons x nil.
 
 Definition seqList {a} {b} : list a -> b -> b :=
-  fix seqList arg_0__ arg_1__
+  fix seqList (arg_0__ : list a) (arg_1__ : b) : b
         := match arg_0__, arg_1__ with
            | nil, b => b
            | cons x xs, b => GHC.Prim.seq x (seqList xs b)
@@ -279,7 +286,8 @@ Definition seqList {a} {b} : list a -> b -> b :=
 
 Definition partitionWith {a} {b} {c}
    : (a -> Data.Either.Either b c) -> list a -> (list b * list c)%type :=
-  fix partitionWith arg_0__ arg_1__
+  fix partitionWith (arg_0__ : (a -> Data.Either.Either b c)) (arg_1__ : list a)
+        : (list b * list c)%type
         := match arg_0__, arg_1__ with
            | _, nil => pair nil nil
            | f, cons x xs =>
@@ -328,7 +336,7 @@ Definition notNull {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => false | _ => true end.
 
 Definition neLength {a} {b} : list a -> list b -> bool :=
-  fix neLength arg_0__ arg_1__
+  fix neLength (arg_0__ : list a) (arg_1__ : list b) : bool
         := match arg_0__, arg_1__ with
            | nil, nil => false
            | cons _ xs, cons _ ys => neLength xs ys
@@ -355,7 +363,10 @@ Definition mapFst {a} {c} {b}
 
 Definition mapAndUnzip3 {a} {b} {c} {d}
    : (a -> (b * c * d)%type) -> list a -> (list b * list c * list d)%type :=
-  fix mapAndUnzip3 arg_0__ arg_1__
+  fix mapAndUnzip3 (arg_0__ : (a -> (b * c * d)%type)) (arg_1__ : list a) : (list
+                                                                             b *
+                                                                             list c *
+                                                                             list d)%type
         := match arg_0__, arg_1__ with
            | _, nil => pair (pair nil nil) nil
            | f, cons x xs =>
@@ -442,14 +453,14 @@ Definition first3M {m} {a} {d} {b} {c} `{GHC.Base.Monad m}
     end.
 
 Definition filterOut {a} : (a -> bool) -> list a -> list a :=
-  fix filterOut arg_0__ arg_1__
+  fix filterOut (arg_0__ : (a -> bool)) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | _, nil => nil
            | p, cons x xs => if p x : bool then filterOut p xs else cons x (filterOut p xs)
            end.
 
 Definition filterByLists {a} : list bool -> list a -> list a -> list a :=
-  fix filterByLists arg_0__ arg_1__ arg_2__
+  fix filterByLists (arg_0__ : list bool) (arg_1__ arg_2__ : list a) : list a
         := match arg_0__, arg_1__, arg_2__ with
            | cons true bs, cons x xs, cons _ ys => cons x (filterByLists bs xs ys)
            | cons false bs, cons _ xs, cons y ys => cons y (filterByLists bs xs ys)
@@ -457,7 +468,7 @@ Definition filterByLists {a} : list bool -> list a -> list a -> list a :=
            end.
 
 Definition filterByList {a} : list bool -> list a -> list a :=
-  fix filterByList arg_0__ arg_1__
+  fix filterByList (arg_0__ : list bool) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | cons true bs, cons x xs => cons x (filterByList bs xs)
            | cons false bs, cons _ xs => filterByList bs xs
@@ -477,7 +488,7 @@ Definition exactLog2 : GHC.Num.Integer -> option GHC.Num.Integer :=
          else Some (pow2 x).
 
 Definition equalLength {a} {b} : list a -> list b -> bool :=
-  fix equalLength arg_0__ arg_1__
+  fix equalLength (arg_0__ : list a) (arg_1__ : list b) : bool
         := match arg_0__, arg_1__ with
            | nil, nil => true
            | cons _ xs, cons _ ys => equalLength xs ys
@@ -493,7 +504,7 @@ Definition eqMaybeBy {a} : (a -> a -> bool) -> option a -> option a -> bool :=
     end.
 
 Definition eqListBy {a} : (a -> a -> bool) -> list a -> list a -> bool :=
-  fix eqListBy arg_0__ arg_1__ arg_2__
+  fix eqListBy (arg_0__ : (a -> a -> bool)) (arg_1__ arg_2__ : list a) : bool
         := match arg_0__, arg_1__, arg_2__ with
            | _, nil, nil => true
            | eq, cons x xs, cons y ys => andb (eq x y) (eqListBy eq xs ys)
@@ -517,7 +528,7 @@ Definition dropTail {a} : nat -> list a -> list a :=
     go (Coq.Lists.List.skipn n xs) xs.
 
 Definition dropList {b} {a} : list b -> list a -> list a :=
-  fix dropList arg_0__ arg_1__
+  fix dropList (arg_0__ : list b) (arg_1__ : list a) : list a
         := match arg_0__, arg_1__ with
            | nil, xs => xs
            | _, (nil as xs) => xs
@@ -537,7 +548,7 @@ Definition count {a} : (a -> bool) -> list a -> nat :=
     go #0.
 
 Definition compareLength {a} {b} : list a -> list b -> comparison :=
-  fix compareLength arg_0__ arg_1__
+  fix compareLength (arg_0__ : list a) (arg_1__ : list b) : comparison
         := match arg_0__, arg_1__ with
            | nil, nil => Eq
            | cons _ xs, cons _ ys => compareLength xs ys
@@ -563,7 +574,8 @@ Definition ltLength {a} {b} : list a -> list b -> bool :=
 
 Definition cmpList {a}
    : (a -> a -> comparison) -> list a -> list a -> comparison :=
-  fix cmpList arg_0__ arg_1__ arg_2__
+  fix cmpList (arg_0__ : (a -> a -> comparison)) (arg_1__ arg_2__ : list a)
+        : comparison
         := match arg_0__, arg_1__, arg_2__ with
            | _, nil, nil => Eq
            | _, nil, _ => Lt
@@ -581,7 +593,7 @@ Definition chkAppend {a} : list a -> list a -> list a :=
     Coq.Init.Datatypes.app xs ys.
 
 Definition changeLast {a} : list a -> a -> list a :=
-  fix changeLast arg_0__ arg_1__
+  fix changeLast (arg_0__ : list a) (arg_1__ : a) : list a
         := match arg_0__, arg_1__ with
            | nil, _ => Panic.panic (GHC.Base.hs_string__ "changeLast")
            | cons _ nil, x => cons x nil
@@ -636,7 +648,8 @@ Definition listLengthCmp {a} : list a -> nat -> comparison :=
   let atEnd := Lt in atLength atLen atEnd.
 
 Definition all2 {a} {b} : (a -> b -> bool) -> list a -> list b -> bool :=
-  fix all2 arg_0__ arg_1__ arg_2__
+  fix all2 (arg_0__ : (a -> b -> bool)) (arg_1__ : list a) (arg_2__ : list b)
+        : bool
         := match arg_0__, arg_1__, arg_2__ with
            | _, nil, nil => true
            | p, cons x xs, cons y ys => andb (p x y) (all2 p xs ys)

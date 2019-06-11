@@ -61,7 +61,7 @@ Definition nilOL {a} : OrdList a :=
   None.
 
 Definition mapOL {a} {b} : (a -> b) -> OrdList a -> OrdList b :=
-  fix mapOL arg_0__ arg_1__
+  fix mapOL (arg_0__ : (a -> b)) (arg_1__ : OrdList a) : OrdList b
         := match arg_0__, arg_1__ with
            | _, None => None
            | f, One x => One (f x)
@@ -88,7 +88,7 @@ Definition fromOL {a} : OrdList a -> list a :=
     go a nil.
 
 Definition foldrOL {a} {b} : (a -> b -> b) -> b -> OrdList a -> b :=
-  fix foldrOL arg_0__ arg_1__ arg_2__
+  fix foldrOL (arg_0__ : (a -> b -> b)) (arg_1__ : b) (arg_2__ : OrdList a) : b
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, None => z
            | k, z, One x => k x z
@@ -99,7 +99,7 @@ Definition foldrOL {a} {b} : (a -> b -> b) -> b -> OrdList a -> b :=
            end.
 
 Definition foldlOL {b} {a} : (b -> a -> b) -> b -> OrdList a -> b :=
-  fix foldlOL arg_0__ arg_1__ arg_2__
+  fix foldlOL (arg_0__ : (b -> a -> b)) (arg_1__ : b) (arg_2__ : OrdList a) : b
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, None => z
            | k, z, One x => k z x

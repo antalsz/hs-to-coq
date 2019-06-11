@@ -72,7 +72,7 @@ Definition snocBag {a} : Bag a -> a -> Bag a :=
   fun bag elt => unionBags bag (unitBag elt).
 
 Definition mapMaybeBag {a} {b} : (a -> option b) -> Bag a -> Bag b :=
-  fix mapMaybeBag arg_0__ arg_1__
+  fix mapMaybeBag (arg_0__ : (a -> option b)) (arg_1__ : Bag a) : Bag b
         := match arg_0__, arg_1__ with
            | _, EmptyBag => EmptyBag
            | f, UnitBag x => match f x with | None => EmptyBag | Some y => UnitBag y end
@@ -82,7 +82,7 @@ Definition mapMaybeBag {a} {b} : (a -> option b) -> Bag a -> Bag b :=
 
 Definition mapBagM_ {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> m b) -> Bag a -> m unit :=
-  fix mapBagM_ arg_0__ arg_1__
+  fix mapBagM_ (arg_0__ : (a -> m b)) (arg_1__ : Bag a) : m unit
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ tt
            | f, UnitBag x => f x GHC.Base.>> GHC.Base.return_ tt
@@ -92,7 +92,7 @@ Definition mapBagM_ {m} {a} {b} `{GHC.Base.Monad m}
 
 Definition mapBagM {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> m b) -> Bag a -> m (Bag b) :=
-  fix mapBagM arg_0__ arg_1__
+  fix mapBagM (arg_0__ : (a -> m b)) (arg_1__ : Bag a) : m (Bag b)
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ EmptyBag
            | f, UnitBag x => f x GHC.Base.>>= (fun r => GHC.Base.return_ (UnitBag r))
@@ -106,7 +106,7 @@ Definition mapBagM {m} {a} {b} `{GHC.Base.Monad m}
            end.
 
 Definition mapBag {a} {b} : (a -> b) -> Bag a -> Bag b :=
-  fix mapBag arg_0__ arg_1__
+  fix mapBag (arg_0__ : (a -> b)) (arg_1__ : Bag a) : Bag b
         := match arg_0__, arg_1__ with
            | _, EmptyBag => EmptyBag
            | f, UnitBag x => UnitBag (f x)
@@ -116,7 +116,9 @@ Definition mapBag {a} {b} : (a -> b) -> Bag a -> Bag b :=
 
 Definition mapAndUnzipBagM {m} {a} {b} {c} `{GHC.Base.Monad m}
    : (a -> m (b * c)%type) -> Bag a -> m (Bag b * Bag c)%type :=
-  fix mapAndUnzipBagM arg_0__ arg_1__
+  fix mapAndUnzipBagM (arg_0__ : (a -> m (b * c)%type)) (arg_1__ : Bag a) : m (Bag
+                                                                               b *
+                                                                               Bag c)%type
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ (pair EmptyBag EmptyBag)
            | f, UnitBag x =>
@@ -141,7 +143,8 @@ Definition mapAndUnzipBagM {m} {a} {b} {c} `{GHC.Base.Monad m}
 
 Definition mapAccumBagLM {m} {acc} {x} {y} `{GHC.Base.Monad m}
    : (acc -> x -> m (acc * y)%type) -> acc -> Bag x -> m (acc * Bag y)%type :=
-  fix mapAccumBagLM arg_0__ arg_1__ arg_2__
+  fix mapAccumBagLM (arg_0__ : (acc -> x -> m (acc * y)%type)) (arg_1__ : acc)
+                    (arg_2__ : Bag x) : m (acc * Bag y)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, s, EmptyBag => GHC.Base.return_ (pair s EmptyBag)
            | f, s, UnitBag x =>
@@ -166,7 +169,8 @@ Definition mapAccumBagLM {m} {acc} {x} {y} `{GHC.Base.Monad m}
 
 Definition mapAccumBagL {acc} {x} {y}
    : (acc -> x -> (acc * y)%type) -> acc -> Bag x -> (acc * Bag y)%type :=
-  fix mapAccumBagL arg_0__ arg_1__ arg_2__
+  fix mapAccumBagL (arg_0__ : (acc -> x -> (acc * y)%type)) (arg_1__ : acc)
+                   (arg_2__ : Bag x) : (acc * Bag y)%type
         := match arg_0__, arg_1__, arg_2__ with
            | _, s, EmptyBag => pair s EmptyBag
            | f, s, UnitBag x => let 'pair s1 x1 := f s x in pair s1 (UnitBag x1)
@@ -183,7 +187,8 @@ Definition listToBag {a} : list a -> Bag a :=
   fun arg_0__ => match arg_0__ with | nil => EmptyBag | vs => ListBag vs end.
 
 Definition partitionBag {a} : (a -> bool) -> Bag a -> (Bag a * Bag a)%type :=
-  fix partitionBag arg_0__ arg_1__
+  fix partitionBag (arg_0__ : (a -> bool)) (arg_1__ : Bag a) : (Bag a *
+                                                                Bag a)%type
         := match arg_0__, arg_1__ with
            | _, EmptyBag => pair EmptyBag EmptyBag
            | pred, (UnitBag val as b) =>
@@ -201,7 +206,8 @@ Definition partitionBag {a} : (a -> bool) -> Bag a -> (Bag a * Bag a)%type :=
 
 Definition partitionBagWith {a} {b} {c}
    : (a -> Data.Either.Either b c) -> Bag a -> (Bag b * Bag c)%type :=
-  fix partitionBagWith arg_0__ arg_1__
+  fix partitionBagWith (arg_0__ : (a -> Data.Either.Either b c)) (arg_1__ : Bag a)
+        : (Bag b * Bag c)%type
         := match arg_0__, arg_1__ with
            | _, EmptyBag => pair EmptyBag EmptyBag
            | pred, UnitBag val =>
@@ -219,7 +225,7 @@ Definition partitionBagWith {a} {b} {c}
            end.
 
 Definition lengthBag {a} : Bag a -> nat :=
-  fix lengthBag arg_0__
+  fix lengthBag (arg_0__ : Bag a) : nat
         := match arg_0__ with
            | EmptyBag => #0
            | UnitBag _ => #1
@@ -241,7 +247,7 @@ Definition isEmptyBag {a} : Bag a -> bool :=
 
 Definition foldrBagM {m} {a} {b} `{(GHC.Base.Monad m)}
    : (a -> b -> m b) -> b -> Bag a -> m b :=
-  fix foldrBagM arg_0__ arg_1__ arg_2__
+  fix foldrBagM (arg_0__ : (a -> b -> m b)) (arg_1__ : b) (arg_2__ : Bag a) : m b
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, EmptyBag => GHC.Base.return_ z
            | k, z, UnitBag x => k x z
@@ -251,7 +257,7 @@ Definition foldrBagM {m} {a} {b} `{(GHC.Base.Monad m)}
            end.
 
 Definition foldrBag {a} {r} : (a -> r -> r) -> r -> Bag a -> r :=
-  fix foldrBag arg_0__ arg_1__ arg_2__
+  fix foldrBag (arg_0__ : (a -> r -> r)) (arg_1__ : r) (arg_2__ : Bag a) : r
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, EmptyBag => z
            | k, z, UnitBag x => k x z
@@ -261,7 +267,7 @@ Definition foldrBag {a} {r} : (a -> r -> r) -> r -> Bag a -> r :=
 
 Definition foldlBagM {m} {b} {a} `{(GHC.Base.Monad m)}
    : (b -> a -> m b) -> b -> Bag a -> m b :=
-  fix foldlBagM arg_0__ arg_1__ arg_2__
+  fix foldlBagM (arg_0__ : (b -> a -> m b)) (arg_1__ : b) (arg_2__ : Bag a) : m b
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, EmptyBag => GHC.Base.return_ z
            | k, z, UnitBag x => k z x
@@ -271,7 +277,7 @@ Definition foldlBagM {m} {b} {a} `{(GHC.Base.Monad m)}
            end.
 
 Definition foldlBag {r} {a} : (r -> a -> r) -> r -> Bag a -> r :=
-  fix foldlBag arg_0__ arg_1__ arg_2__
+  fix foldlBag (arg_0__ : (r -> a -> r)) (arg_1__ : r) (arg_2__ : Bag a) : r
         := match arg_0__, arg_1__, arg_2__ with
            | _, z, EmptyBag => z
            | k, z, UnitBag x => k z x
@@ -280,7 +286,8 @@ Definition foldlBag {r} {a} : (r -> a -> r) -> r -> Bag a -> r :=
            end.
 
 Definition foldBag {r} {a} : (r -> r -> r) -> (a -> r) -> r -> Bag a -> r :=
-  fix foldBag arg_0__ arg_1__ arg_2__ arg_3__
+  fix foldBag (arg_0__ : (r -> r -> r)) (arg_1__ : (a -> r)) (arg_2__ : r)
+              (arg_3__ : Bag a) : r
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | _, _, e, EmptyBag => e
            | t, u, e, UnitBag x => t (u x) e
@@ -290,7 +297,8 @@ Definition foldBag {r} {a} : (r -> r -> r) -> (a -> r) -> r -> Bag a -> r :=
 
 Definition flatMapBagPairM {m} {a} {b} {c} `{GHC.Base.Monad m}
    : (a -> m (Bag b * Bag c)%type) -> Bag a -> m (Bag b * Bag c)%type :=
-  fix flatMapBagPairM arg_0__ arg_1__
+  fix flatMapBagPairM (arg_0__ : (a -> m (Bag b * Bag c)%type)) (arg_1__ : Bag a)
+        : m (Bag b * Bag c)%type
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ (pair EmptyBag EmptyBag)
            | f, UnitBag x => f x
@@ -317,7 +325,7 @@ Definition flatMapBagPairM {m} {a} {b} {c} `{GHC.Base.Monad m}
 
 Definition flatMapBagM {m} {a} {b} `{GHC.Base.Monad m}
    : (a -> m (Bag b)) -> Bag a -> m (Bag b) :=
-  fix flatMapBagM arg_0__ arg_1__
+  fix flatMapBagM (arg_0__ : (a -> m (Bag b))) (arg_1__ : Bag a) : m (Bag b)
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ EmptyBag
            | f, UnitBag x => f x
@@ -333,7 +341,7 @@ Definition flatMapBagM {m} {a} {b} `{GHC.Base.Monad m}
 
 Definition filterBagM {m} {a} `{GHC.Base.Monad m}
    : (a -> m bool) -> Bag a -> m (Bag a) :=
-  fix filterBagM arg_0__ arg_1__
+  fix filterBagM (arg_0__ : (a -> m bool)) (arg_1__ : Bag a) : m (Bag a)
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ EmptyBag
            | pred, (UnitBag val as b) =>
@@ -353,7 +361,7 @@ Definition filterBagM {m} {a} `{GHC.Base.Monad m}
            end.
 
 Definition filterBag {a} : (a -> bool) -> Bag a -> Bag a :=
-  fix filterBag arg_0__ arg_1__
+  fix filterBag (arg_0__ : (a -> bool)) (arg_1__ : Bag a) : Bag a
         := match arg_0__, arg_1__ with
            | _, EmptyBag => EmptyBag
            | pred, (UnitBag val as b) => if pred val : bool then b else EmptyBag
@@ -367,7 +375,7 @@ Definition emptyBag {a} : Bag a :=
   EmptyBag.
 
 Definition elemBag {a} `{GHC.Base.Eq_ a} : a -> Bag a -> bool :=
-  fix elemBag arg_0__ arg_1__
+  fix elemBag (arg_0__ : a) (arg_1__ : Bag a) : bool
         := match arg_0__, arg_1__ with
            | _, EmptyBag => false
            | x, UnitBag y => x GHC.Base.== y
@@ -379,7 +387,7 @@ Definition consBag {a} : a -> Bag a -> Bag a :=
   fun elt bag => unionBags (unitBag elt) bag.
 
 Definition concatMapBag {a} {b} : (a -> Bag b) -> Bag a -> Bag b :=
-  fix concatMapBag arg_0__ arg_1__
+  fix concatMapBag (arg_0__ : (a -> Bag b)) (arg_1__ : Bag a) : Bag b
         := match arg_0__, arg_1__ with
            | _, EmptyBag => EmptyBag
            | f, UnitBag x => f x
@@ -405,7 +413,7 @@ Definition bagToList {a} : Bag a -> list a :=
 
 Definition anyBagM {m} {a} `{GHC.Base.Monad m}
    : (a -> m bool) -> Bag a -> m bool :=
-  fix anyBagM arg_0__ arg_1__
+  fix anyBagM (arg_0__ : (a -> m bool)) (arg_1__ : Bag a) : m bool
         := match arg_0__, arg_1__ with
            | _, EmptyBag => GHC.Base.return_ false
            | p, UnitBag v => p v
@@ -416,7 +424,7 @@ Definition anyBagM {m} {a} `{GHC.Base.Monad m}
            end.
 
 Definition anyBag {a} : (a -> bool) -> Bag a -> bool :=
-  fix anyBag arg_0__ arg_1__
+  fix anyBag (arg_0__ : (a -> bool)) (arg_1__ : Bag a) : bool
         := match arg_0__, arg_1__ with
            | _, EmptyBag => false
            | p, UnitBag v => p v
@@ -425,7 +433,7 @@ Definition anyBag {a} : (a -> bool) -> Bag a -> bool :=
            end.
 
 Definition allBag {a} : (a -> bool) -> Bag a -> bool :=
-  fix allBag arg_0__ arg_1__
+  fix allBag (arg_0__ : (a -> bool)) (arg_1__ : Bag a) : bool
         := match arg_0__, arg_1__ with
            | _, EmptyBag => true
            | p, UnitBag v => p v

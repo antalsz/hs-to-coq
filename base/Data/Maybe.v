@@ -42,7 +42,7 @@ Definition mapMaybeFB {b} {r} {a}
     end.
 
 Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
-  fix mapMaybe arg_0__ arg_1__
+  fix mapMaybe (arg_0__ : (a -> option b)) (arg_1__ : list a) : list b
         := match arg_0__, arg_1__ with
            | _, nil => nil
            | f, cons x xs =>

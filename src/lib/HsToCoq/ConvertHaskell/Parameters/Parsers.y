@@ -355,7 +355,7 @@ MediumTerm(Binop, LetRHS) :: { Term }
 
 BinopRHS(Binop) :: { Term -> Term }
   : ':'   SmallTerm    { \lhs -> HasType lhs $2 }
-  | Binop SmallTerm    { if $2 == "->" then \lhs -> Arrow lhs $2 else \lhs -> mkInfix lhs $1 $2 }
+  | Binop SmallTerm    { if $1 == "->" then \lhs -> Arrow lhs $2 else \lhs -> mkInfix lhs $1 $2 }
 
 SmallTerm :: { Term }
   : Atom Many(Arg)           { appList     $1 $2 } -- App or Atom

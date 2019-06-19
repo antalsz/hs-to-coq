@@ -180,6 +180,9 @@ redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamil
 # rewrites for type/corecion related operations defined in skipped modules
 ###############################################################################
 
+# maybe some of these should be axioms instead of rewrites so that we have 
+# to consider each case.
+
 rewrite forall e x y,  Coercion.eqCoercionX e x y = true
 rewrite forall v,      Coercion.mkCoVarCo v = tt
 rewrite forall co,     Coercion.coercionType co = tt

@@ -1,5 +1,17 @@
 rename type GHC.Num.Int = nat
 
+redefine Axiom Util.debugIsOn : bool.
+redefine Axiom Util.makeRelativeTo  : GHC.Base.String -> (GHC.Base.String -> GHC.Base.String).
+redefine Axiom Util.looksLikePackageName : GHC.Base.String -> bool.
+
+## TODO
+rewrite forall x, GHC.Unicode.toUpper x = x
+
+## Needs a `{Default a} constraint added to its type
+## and we don't have an edit that can do that directly.
+rewrite forall , Util.only = Panic.head
+skip Util.only
+
 rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
 rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
 rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x
@@ -54,14 +66,11 @@ skip Util.foldl2
 ## needs Data.Traversable.mapAccumL
 skip Util.mapAccumL2
 
-rewrite forall , Util.only = Panic.head
-skip Util.only
+
 
 # Environment dependent
 skip Util.isDarwinHost
 
-## TODO
-rewrite forall x, GHC.Unicode.toUpper x = x
 
 skip Util.charToC
 skip Util.chunkList
@@ -75,9 +84,6 @@ skip Util.toCmdArgs
 skip Util.golden
 skip Util.looksLikeModuleName
 
-## wrong but not incorrect
-redefine Definition Util.makeRelativeTo  : GHC.Base.String -> (GHC.Base.String -> GHC.Base.String) := fun this that => this.
-redefine Definition Util.looksLikePackageName : GHC.Base.String -> bool := fun x => false.
 
 redefine Definition Util.HasDebugCallStack := unit.
 
@@ -96,7 +102,6 @@ in Util.exactLog2 termination pow2 deferred
 in Util.transitiveClosure termination go deferred
 
 skip Util.nubSort
-
 skip Util.reslash
 
 skip Util.restrictedDamerauLevenshteinDistanceWorker

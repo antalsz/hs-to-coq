@@ -18,7 +18,7 @@ Require Import Proofs.Axioms.
 Require Import Proofs.Unique.
 
 
-
+Opaque Base.hs_string__.
 
 Ltac unfold_zeze := 
   repeat (GHC.Base.unfold_zeze; unfold Core.Eq___Var, Core.Eq___Var_op_zeze__).
@@ -243,7 +243,8 @@ Lemma isJoinId_eq : forall v,
 Proof.
   unfold isJoinId.
   induction v; auto.
-  now destruct id_details.
+  destruct id_details; simpl;  unfold isJoinId_maybe; simpl;
+  rewrite andb_false_r; reflexivity.
 Qed.
 
 Lemma isJoinId_ae: forall v1 v2,
@@ -261,7 +262,10 @@ Lemma isJoinId_isJoinId_maybe: forall v,
 Proof.
   unfold isJoinId.
   induction v; simpl; intros; auto; try discriminate.
-  now destruct id_details.
+  destruct id_details; try discriminate.
+  unfold idJoinArity,isJoinId_maybe; simpl.
+  rewrite andb_false_r.
+  reflexivity.
 Qed.
 
 Lemma idJoinArity_join: forall v a,
@@ -269,8 +273,13 @@ Lemma idJoinArity_join: forall v a,
 Proof.
   unfold isJoinId, isJoinId_maybe, idJoinArity.
   induction v; simpl; intros; auto; try discriminate.
+  rewrite andb_false_r in H.
   destruct id_details; simpl; try discriminate.
-  now inversion H.
+  inversion H.
+  unfold isJoinId_maybe; simpl.
+  rewrite andb_false_r.
+  simpl.
+  reflexivity.
 Qed.
 
 

@@ -386,12 +386,9 @@ Definition mapAndUnzip {a} {b} {c} (f : a -> b * c)
                pair (cons r1 rs1) (cons r2 rs2)
            end.
 
-Definition makeRelativeTo
-   : GHC.Base.String -> GHC.Base.String -> GHC.Base.String :=
-  fun this that => this.
+Axiom makeRelativeTo : GHC.Base.String -> GHC.Base.String -> GHC.Base.String.
 
-Definition looksLikePackageName : GHC.Base.String -> bool :=
-  fun x => false.
+Axiom looksLikePackageName : GHC.Base.String -> bool.
 
 Definition liftSnd {a} {b} {c} : (a -> b) -> (c * a)%type -> (c * b)%type :=
   fun arg_0__ arg_1__ =>
@@ -535,8 +532,7 @@ Definition dropList {b} {a} : list b -> list a -> list a :=
            | cons _ xs, cons _ ys => dropList xs ys
            end.
 
-Definition debugIsOn : bool :=
-  false.
+Axiom debugIsOn : bool.
 
 Definition count {a} : (a -> bool) -> list a -> nat :=
   fun p =>

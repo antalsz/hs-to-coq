@@ -31,6 +31,7 @@ Require Import Proofs.Var.
 Import GHC.Base.Notations.
 
 Set Bullet Behavior "Strict Subproofs".
+Opaque GHC.Base.hs_string__.
 
 Lemma contrapositive : forall (A B:Prop), (A -> B) -> (~ B) -> (~ A).
 Proof.
@@ -182,6 +183,8 @@ Lemma GoodLocalVar_asJoinId_mkSysLocal:
   GoodLocalVar (asJoinId (mkSysLocal s u ty) n).
 Proof.
   intros.
+  unfold mkSysLocal.
+  rewrite andb_false_r.
   split; only 1: split.
   * destruct u. symmetry. apply H.
   * split. destruct u. reflexivity. 
@@ -242,6 +245,7 @@ Proof.
   intros.
   destruct v; simpl; try trivial.
   unfold varToCoreExpr; simpl.
+  rewrite andb_false_r.
   destruct_match; simpl; try trivial.
 Qed.
 

@@ -17,7 +17,7 @@ skip Core.isKindTyCon
 
 
 ## need name of class
-skip Core.okParent
+## skip Core.okParent
 
 ## Needs DataCon.dataConExTyVars
 skip Core.isDataProductTyCon_maybe

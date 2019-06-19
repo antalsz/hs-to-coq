@@ -22,6 +22,7 @@ Require Core.
 Require Datatypes.
 Require FastString.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Require GHC.Prim.
 Require Maybes.
@@ -123,7 +124,11 @@ Definition mkWorkerId : Unique.Unique -> Core.Id -> unit -> Core.Id :=
 
 Definition mkSysLocal
    : FastString.FastString -> Unique.Unique -> unit -> Core.Id :=
-  fun fs uniq ty => mkLocalId (Name.mkSystemVarName uniq fs) ty.
+  fun fs uniq ty =>
+    if andb Util.debugIsOn (negb (negb (false))) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+          #313)
+    else mkLocalId (Name.mkSystemVarName uniq fs) ty.
 
 Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
    : FastString.FastString -> unit -> m Core.Id :=
@@ -133,7 +138,11 @@ Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
 
 Definition mkUserLocal
    : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Id :=
-  fun occ uniq ty loc => mkLocalId (Name.mkInternalName uniq occ loc) ty.
+  fun occ uniq ty loc =>
+    if andb Util.debugIsOn (negb (negb (false))) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+          #330)
+    else mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
 Definition mkGlobalId
    : Core.IdDetails -> Name.Name -> unit -> Core.IdInfo -> Core.Id :=
@@ -315,10 +324,12 @@ Definition isNaughtyRecordSelector : Core.Id -> bool :=
 Definition isJoinId_maybe : Core.Var -> option BasicTypes.JoinArity :=
   fun id =>
     if Core.isId id : bool
-    then match Core.idDetails id with
-         | Core.Mk_JoinId arity => Some arity
-         | _ => None
-         end else
+    then if andb Util.debugIsOn (negb (Core.isId id)) : bool
+         then (GHC.Err.error Panic.someSDoc)
+         else match Core.idDetails id with
+              | Core.Mk_JoinId arity => Some arity
+              | _ => None
+              end else
     None.
 
 Definition isJoinId : Core.Var -> bool :=
@@ -480,7 +491,11 @@ Definition idName : Core.Id -> Name.Name :=
 Definition localiseId : Core.Id -> Core.Id :=
   fun id =>
     let name := idName id in
-    if andb (Core.isLocalId id) (Name.isInternalName name) : bool then id else
+    if (if andb Util.debugIsOn (negb (Core.isId id)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+              #209)
+        else andb (Core.isLocalId id) (Name.isInternalName name)) : bool
+    then id else
     Core.mkLocalVar (Core.idDetails id) (Name.localiseName name) (tt) ((@Core.idInfo
                                                                         tt id)).
 
@@ -598,10 +613,11 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      Core.varName Core.varType Core.varUnique Core.zapDemandInfo Core.zapLamInfo
      Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo Datatypes.id
      FastString.FastString GHC.Base.mappend GHC.Base.op_zgzgze__ GHC.Base.return_
-     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse Module.Module
-     Name.Name Name.getName Name.isInternalName Name.localiseName
+     GHC.Err.error GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse
+     Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
      Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
-     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.panic
-     Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
+     Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.assertPanic
+     Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
      UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique Util.count
+     Util.debugIsOn
 *)

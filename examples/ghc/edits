@@ -46,7 +46,7 @@ rename type GHC.Integer.Type.Integer = GHC.Num.Integer
 rename value GHC.List.head = Panic.head
 
 # we're not debugging
-rewrite forall x, andb Util.debugIsOn x = false
+# rewrite forall x, andb Util.debugIsOn x = false
 
 # don't try to format the error messages
 rename type Outputable.SDoc           = GHC.Base.String

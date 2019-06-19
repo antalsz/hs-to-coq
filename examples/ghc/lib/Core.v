@@ -3518,12 +3518,14 @@ Definition zapTailCallInfo : IdInfo -> option IdInfo :=
 Definition setNeverLevPoly `{Util.HasDebugCallStack}
    : IdInfo -> unit -> IdInfo :=
   fun info ty =>
-    let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-       oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-       callArityInfo_9__ levityInfo_10__ := info in
-    Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
-              oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
-              callArityInfo_9__ NeverLevityPolymorphic.
+    if andb Util.debugIsOn (negb (negb (false))) : bool
+    then (GHC.Err.error Panic.someSDoc)
+    else let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+            oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+            callArityInfo_9__ levityInfo_10__ := info in
+         Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
+                   oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
+                   callArityInfo_9__ NeverLevityPolymorphic.
 
 Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
   fun info pr =>
@@ -3533,18 +3535,6 @@ Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
                   Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
                             oneShotInfo_4__ pr occInfo_6__ strictnessInfo_7__ demandInfo_8__
                             callArityInfo_9__ levityInfo_10__).
-
-Definition setIdNotExported : Id -> Id :=
-  fun id =>
-    match id with
-    | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_TcTyVar _ _ _ _ =>
-        GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-    id_info_5__ =>
-        Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
-              id_details_4__ id_info_5__
-    end.
 
 Definition setIdExported : Id -> Id :=
   fun arg_0__ =>
@@ -3940,6 +3930,15 @@ Definition oneifyDmd : Demand -> Demand :=
     match arg_0__ with
     | JD s (Mk_Use _ a) => JD s (Mk_Use One a)
     | jd => jd
+    end.
+
+Definition okParent : Name.Name -> AlgTyConFlav -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, VanillaAlgTyCon _ => true
+    | _, UnboxedAlgTyCon _ => true
+    | tc_name, ClassTyCon cls _ => tc_name GHC.Base.== tyConName (classTyCon cls)
+    | _, DataFamInstTyCon _ fam_tc tys => Util.lengthAtLeast tys (tyConArity fam_tc)
     end.
 
 Definition notOrphan : IsOrphan -> bool :=
@@ -5016,6 +5015,21 @@ Definition isLocalId : Var -> bool :=
     | _ => false
     end.
 
+Definition setIdNotExported : Id -> Id :=
+  fun id =>
+    if andb Util.debugIsOn (negb (isLocalId id)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
+          #591)
+    else match id with
+         | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+         | Mk_TcTyVar _ _ _ _ =>
+             GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
+         | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+         id_info_5__ =>
+             Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
+                   id_details_4__ id_info_5__
+         end.
+
 Definition isLazy : ArgStr -> bool :=
   fun arg_0__ => match arg_0__ with | Lazy => true | Mk_Str _ _ => false end.
 
@@ -5333,7 +5347,10 @@ Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
     if isTyVar v : bool then Type_ (tt) else
     if isCoVar v : bool then Coercion (tt) else
-    Mk_Var v.
+    if andb Util.debugIsOn (negb (isId v)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+          #1920)
+    else Mk_Var v.
 
 Definition mkVarApps {b} : Expr b -> list Var -> Expr b :=
   fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
@@ -5862,6 +5879,8 @@ Definition uniqAway' : InScopeSet -> Var -> Var :=
                                                                                                   (GHC.Base.hs_string__
                                                                                                    "tries")))
                                                                                Panic.someSDoc) Panic.someSDoc in
+                                          if andb Util.debugIsOn (k GHC.Base.> #1000) : bool
+                                          then Panic.panicStr (GHC.Base.hs_string__ "uniqAway loop:") msg else
                                           if elemVarSetByKey uniq set : bool then try (k GHC.Num.+ #1) else
                                           if k GHC.Base.> #3 : bool then setVarUnique var uniq else
                                           setVarUnique var uniq) in
@@ -6547,7 +6566,11 @@ Definition classAllSelIds : Class -> list Id :=
     match arg_0__ with
     | (Mk_Class _ _ _ _ _ (ConcreteClass _ sc_sels _ _ _) as c) =>
         Coq.Init.Datatypes.app sc_sels (classMethods c)
-    | c => nil
+    | c =>
+        if andb Util.debugIsOn (negb (Data.Foldable.null (classMethods c))) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/types/Class.hs")
+              #244)
+        else nil
     end.
 
 Definition classATs : Class -> list TyCon :=
@@ -6722,7 +6745,10 @@ Definition mkAlgTyCon
   fun name binders res_kind roles cType stupid rhs parent gadt_syn =>
     AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
              (Coq.Lists.List.length binders) roles cType gadt_syn stupid rhs
-             (fieldsOfAlgTcRhs rhs) parent.
+             (fieldsOfAlgTcRhs rhs) (if andb Util.debugIsOn (negb (okParent name
+                                                                   parent)) : bool
+              then (GHC.Err.error Panic.someSDoc)
+              else parent).
 
 Definition mkClassTyCon
    : Name.Name ->
@@ -7838,7 +7864,11 @@ Local Definition Ord__AltCon_compare : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | DataAlt con1, DataAlt con2 =>
-        GHC.Base.compare (dataConTag con1) (dataConTag con2)
+        if andb Util.debugIsOn (negb (dataConTyCon con1 GHC.Base.==
+                                      dataConTyCon con2)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+              #319)
+        else GHC.Base.compare (dataConTag con1) (dataConTag con2)
     | DataAlt _, _ => Gt
     | _, DataAlt _ => Lt
     | LitAlt l1, LitAlt l2 => GHC.Base.compare l1 l2
@@ -7959,43 +7989,44 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      Name.nameUnique Name.setNameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
      NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.HasOccName OccName.OccName
      OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.isTcOcc OccName.mkTyConRepOcc
-     OccName.occName__ Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     PrelNames.gHC_PRIM PrelNames.gHC_TYPES SrcLoc.RealSrcSpan SrcLoc.SrcSpan
-     UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C
-     UniqDFM.allUDFM UniqDFM.alterUDFM UniqDFM.anyUDFM UniqDFM.delFromUDFM
-     UniqDFM.delListFromUDFM UniqDFM.disjointUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM
-     UniqDFM.emptyUDFM UniqDFM.filterUDFM UniqDFM.foldUDFM UniqDFM.isNullUDFM
-     UniqDFM.listToUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM UniqDFM.minusUDFM
-     UniqDFM.partitionUDFM UniqDFM.plusUDFM UniqDFM.plusUDFM_C UniqDFM.udfmToUfm
-     UniqDFM.unitUDFM UniqDSet.UniqDSet UniqDSet.addListToUniqDSet
-     UniqDSet.addOneToUniqDSet UniqDSet.delListFromUniqDSet
-     UniqDSet.delOneFromUniqDSet UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet
-     UniqDSet.filterUniqDSet UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets
-     UniqDSet.isEmptyUniqDSet UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet
-     UniqDSet.partitionUniqDSet UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets
-     UniqDSet.unionUniqDSets UniqDSet.uniqDSetIntersectUniqSet
-     UniqDSet.uniqDSetMinusUniqSet UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet
-     UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addToUFM UniqFM.addToUFM_Acc
-     UniqFM.addToUFM_C UniqFM.addToUFM_Directly UniqFM.alterUFM UniqFM.delFromUFM
-     UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.disjointUFM
-     UniqFM.elemUFM UniqFM.elemUFM_Directly UniqFM.emptyUFM UniqFM.filterUFM
-     UniqFM.filterUFM_Directly UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.listToUFM
-     UniqFM.listToUFM_Directly UniqFM.lookupUFM UniqFM.lookupUFM_Directly
-     UniqFM.lookupWithDefaultUFM UniqFM.mapUFM UniqFM.minusUFM
-     UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetUFMToList UniqFM.partitionUFM
-     UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList UniqFM.plusUFM_C
-     UniqFM.plusUFM_CD UniqFM.unitUFM UniqSet.UniqSet UniqSet.addListToUniqSet
-     UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet UniqSet.delOneFromUniqSet
-     UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
-     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
-     UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
-     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.minusUniqSet
-     UniqSet.mkUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
-     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
-     UniqSet.unsafeUFMToUniqSet Unique.Uniquable Unique.Unique
-     Unique.dataConRepNameUnique Unique.deriveUnique Unique.getKey Unique.getUnique
-     Unique.getUnique__ Unique.mkUniqueGrimily Unique.nonDetCmpUnique
-     Unique.tyConRepNameUnique Util.HasDebugCallStack Util.count Util.equalLength
-     Util.foldl2 Util.lengthAtMost Util.lengthExceeds Util.lengthIs
-     Util.listLengthCmp Util.zipEqual Util.zipWithEqual
+     OccName.occName__ Panic.assertPanic Panic.panic Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace PrelNames.gHC_PRIM PrelNames.gHC_TYPES SrcLoc.RealSrcSpan
+     SrcLoc.SrcSpan UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM
+     UniqDFM.addToUDFM_C UniqDFM.allUDFM UniqDFM.alterUDFM UniqDFM.anyUDFM
+     UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.disjointUDFM
+     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
+     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM
+     UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
+     UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM UniqDSet.UniqDSet
+     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
+     UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
+     UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
+     UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet
+     UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet UniqDSet.partitionUniqDSet
+     UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets UniqDSet.unionUniqDSets
+     UniqDSet.uniqDSetIntersectUniqSet UniqDSet.uniqDSetMinusUniqSet
+     UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet UniqFM.UniqFM UniqFM.addListToUFM
+     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.addToUFM_Directly
+     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
+     UniqFM.delListFromUFM UniqFM.disjointUFM UniqFM.elemUFM UniqFM.elemUFM_Directly
+     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
+     UniqFM.isNullUFM UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
+     UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM UniqFM.mapUFM
+     UniqFM.minusUFM UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetUFMToList
+     UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList
+     UniqFM.plusUFM_C UniqFM.plusUFM_CD UniqFM.unitUFM UniqSet.UniqSet
+     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet
+     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
+     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
+     UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
+     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
+     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.sizeUniqSet
+     UniqSet.unionManyUniqSets UniqSet.unionUniqSets UniqSet.uniqSetAll
+     UniqSet.uniqSetAny UniqSet.unitUniqSet UniqSet.unsafeUFMToUniqSet
+     Unique.Uniquable Unique.Unique Unique.dataConRepNameUnique Unique.deriveUnique
+     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.mkUniqueGrimily
+     Unique.nonDetCmpUnique Unique.tyConRepNameUnique Util.HasDebugCallStack
+     Util.count Util.debugIsOn Util.equalLength Util.foldl2 Util.lengthAtLeast
+     Util.lengthAtMost Util.lengthExceeds Util.lengthIs Util.listLengthCmp
+     Util.zipEqual Util.zipWithEqual
 *)

@@ -555,7 +555,8 @@ Proof.
       assumption.
     - unfold varToCoreExpr.
       repeat destruct_match; try reflexivity.
-      simpl. rewrite isJoinId_eq in H.
+      + (* new case from debugIsOn *) destruct x; simpl in *; try discriminate.
+      + simpl. rewrite isJoinId_eq in H.
       destruct_match; congruence.
 Qed.
 

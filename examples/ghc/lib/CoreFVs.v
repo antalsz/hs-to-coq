@@ -25,12 +25,15 @@ Require Data.Tuple.
 Require FV.
 Require GHC.Base.
 Require GHC.List.
+Require GHC.Num.
 Require Lists.List.
 Require NameSet.
+Require Panic.
 Require UniqSet.
 Require Unique.
 Require Util.
 Import GHC.Base.Notations.
+Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
@@ -107,10 +110,18 @@ Definition idRuleVars : Core.Id -> Core.VarSet :=
   fun id => FV.fvVarSet (idRuleFVs id).
 
 Definition idFVs : Core.Id -> FV.FV :=
-  fun id => FV.unionFV (varTypeTyCoFVs id) FV.emptyFV.
+  fun id =>
+    if andb Util.debugIsOn (negb (Core.isId id)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
+          #629)
+    else FV.unionFV (varTypeTyCoFVs id) FV.emptyFV.
 
 Definition idFreeVars : Core.Id -> Core.VarSet :=
-  fun id => FV.fvVarSet (idFVs id).
+  fun id =>
+    if andb Util.debugIsOn (negb (Core.isId id)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
+          #622)
+    else FV.fvVarSet (idFVs id).
 
 Definition freeVarsOfAnn : FVAnn -> Core.DIdSet :=
   fun fvs => fvs.
@@ -399,21 +410,23 @@ Definition freeVarsBind
     end.
 
 (* External variables:
-     bool cons freeVarsBind1 list op_zt__ pair tt BasicTypes.Activation Core.AnnAlt
-     Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnCast Core.AnnCoercion Core.AnnExpr
-     Core.AnnExpr' Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec Core.AnnRec
-     Core.AnnTick Core.AnnType Core.AnnVar Core.App Core.Breakpoint Core.BuiltinRule
-     Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreBndr Core.CoreExpr
-     Core.CoreRule Core.CoreVect Core.DIdSet Core.DTyCoVarSet Core.DVarSet Core.Id
-     Core.IdSet Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NoVect Core.NonRec
-     Core.Rec Core.Rule Core.Tick Core.Tickish Core.TyCoVarSet Core.Type_ Core.Var
-     Core.VarSet Core.Vect Core.VectClass Core.VectInst Core.VectType Core.delDVarSet
-     Core.emptyDVarSet Core.emptyVarSet Core.isId Core.isLocalId Core.isLocalVar
-     Core.mapUnionVarSet Core.mkDVarSet Core.unionDVarSet Core.unionDVarSets
-     Core.unitDVarSet Data.Foldable.foldr Data.Tuple.fst FV.FV FV.InterestingVarFun
-     FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList FV.fvVarSet
-     FV.mapUnionFV FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip Lists.List.map NameSet.NameSet
-     NameSet.emptyNameSet NameSet.unionNameSet UniqSet.delOneFromUniqSet_Directly
-     Unique.getUnique Util.mapAndUnzip
+     andb bool cons freeVarsBind1 list negb op_zt__ pair tt BasicTypes.Activation
+     Core.AnnAlt Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnCast Core.AnnCoercion
+     Core.AnnExpr Core.AnnExpr' Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec
+     Core.AnnRec Core.AnnTick Core.AnnType Core.AnnVar Core.App Core.Breakpoint
+     Core.BuiltinRule Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreBndr
+     Core.CoreExpr Core.CoreRule Core.CoreVect Core.DIdSet Core.DTyCoVarSet
+     Core.DVarSet Core.Id Core.IdSet Core.Lam Core.Let Core.Lit Core.Mk_Var
+     Core.NoVect Core.NonRec Core.Rec Core.Rule Core.Tick Core.Tickish
+     Core.TyCoVarSet Core.Type_ Core.Var Core.VarSet Core.Vect Core.VectClass
+     Core.VectInst Core.VectType Core.delDVarSet Core.emptyDVarSet Core.emptyVarSet
+     Core.isId Core.isLocalId Core.isLocalVar Core.mapUnionVarSet Core.mkDVarSet
+     Core.unionDVarSet Core.unionDVarSets Core.unitDVarSet Data.Foldable.foldr
+     Data.Tuple.fst FV.FV FV.InterestingVarFun FV.delFV FV.emptyFV FV.filterFV
+     FV.fvDVarSet FV.fvVarList FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV
+     FV.unionsFV FV.unitFV GHC.Base.map GHC.Base.op_z2218U__ GHC.List.unzip
+     GHC.List.zip GHC.Num.fromInteger Lists.List.map NameSet.NameSet
+     NameSet.emptyNameSet NameSet.unionNameSet Panic.assertPanic
+     UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
+     Util.mapAndUnzip
 *)

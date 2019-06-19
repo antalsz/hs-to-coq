@@ -63,8 +63,16 @@ Definition trimConArgs
    : Core.AltCon -> list Core.CoreArg -> list Core.CoreArg :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | Core.DEFAULT, args => nil
-    | Core.LitAlt _, args => nil
+    | Core.DEFAULT, args =>
+        if andb Util.debugIsOn (negb (Data.Foldable.null args)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreUtils.hs") #600)
+        else nil
+    | Core.LitAlt _, args =>
+        if andb Util.debugIsOn (negb (Data.Foldable.null args)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreUtils.hs") #601)
+        else nil
     | Core.DataAlt dc, args => Util.dropList (Core.dataConUnivTyVars dc) args
     end.
 
@@ -339,7 +347,11 @@ Definition findDefault {a} {b}
      (list (Core.AltCon * list a * b)%type * option b)%type :=
   fun arg_0__ =>
     match arg_0__ with
-    | cons (pair (pair Core.DEFAULT args) rhs) alts => pair alts (Some rhs)
+    | cons (pair (pair Core.DEFAULT args) rhs) alts =>
+        if andb Util.debugIsOn (negb (Data.Foldable.null args)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreUtils.hs") #519)
+        else pair alts (Some rhs)
     | alts => pair alts None
     end.
 
@@ -354,7 +366,11 @@ Definition findAlt {a} {b}
                      match Core.cmpAltCon con con1 with
                      | Lt => deflt
                      | Eq => Some alt
-                     | Gt => go alts deflt
+                     | Gt =>
+                         if andb Util.debugIsOn (negb (negb (con1 GHC.Base.== Core.DEFAULT))) : bool
+                         then (Panic.assertPanic (GHC.Base.hs_string__
+                                                  "ghc/compiler/coreSyn/CoreUtils.hs") #545)
+                         else go alts deflt
                      end
                  end in
     match alts with
@@ -686,7 +702,7 @@ Definition filterAlts {a}
      Id.idUnfolding Id.isBottomingId Id.isConLikeId Id.isDataConWorkId Id.isJoinId
      Literal.MachStr Literal.litIsDupable Literal.litIsTrivial
      NestedRecursionHelpers.all2Map OrdList.OrdList OrdList.appOL OrdList.concatOL
-     OrdList.consOL OrdList.fromOL OrdList.nilOL Panic.panic Panic.panicStr
-     Panic.someSDoc PrelNames.makeStaticName Util.dropList Util.equalLength
-     Util.filterOut Util.lengthIs
+     OrdList.consOL OrdList.fromOL OrdList.nilOL Panic.assertPanic Panic.panic
+     Panic.panicStr Panic.someSDoc PrelNames.makeStaticName Util.debugIsOn
+     Util.dropList Util.equalLength Util.filterOut Util.lengthIs
 *)

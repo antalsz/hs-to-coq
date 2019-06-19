@@ -36,6 +36,7 @@ Require Name.
 Require Panic.
 Require UniqSupply.
 Require Unique.
+Require Util.
 Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
@@ -412,14 +413,20 @@ Definition extendIdSubstList
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, prs =>
-        Mk_Subst in_scope (Core.extendVarEnvList ids prs) tt tt
+        if andb Util.debugIsOn (negb (Data.Foldable.all (Core.isNonCoVarId ∘
+                                                         Data.Tuple.fst) prs)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #204)
+        else Mk_Subst in_scope (Core.extendVarEnvList ids prs) tt tt
     end.
 
 Definition extendIdSubst : Subst -> Core.Id -> Core.CoreExpr -> Subst :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | Mk_Subst in_scope ids tvs cvs, v, r =>
-        Mk_Subst in_scope (Core.extendVarEnv ids v r) tt tt
+        if andb Util.debugIsOn (negb (Core.isNonCoVarId v)) : bool
+        then (GHC.Err.error Panic.someSDoc)
+        else Mk_Subst in_scope (Core.extendVarEnv ids v r) tt tt
     end.
 
 Definition extendCvSubst : Subst -> Core.CoVar -> unit -> Subst :=
@@ -428,9 +435,21 @@ Definition extendCvSubst : Subst -> Core.CoVar -> unit -> Subst :=
 Definition extendSubst : Subst -> Core.Var -> Core.CoreArg -> Subst :=
   fun subst var arg =>
     match arg with
-    | Core.Type_ ty => extendTvSubst subst var ty
-    | Core.Coercion co => extendCvSubst subst var co
-    | _ => extendIdSubst subst var arg
+    | Core.Type_ ty =>
+        if andb Util.debugIsOn (negb (Core.isTyVar var)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #237)
+        else extendTvSubst subst var ty
+    | Core.Coercion co =>
+        if andb Util.debugIsOn (negb (Core.isCoVar var)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #238)
+        else extendCvSubst subst var co
+    | _ =>
+        if andb Util.debugIsOn (negb (Core.isId var)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #239)
+        else extendIdSubst subst var arg
     end.
 
 Definition extendSubstList
@@ -445,9 +464,20 @@ Definition extendSubstList
 
 Definition extendSubstWithVar : Subst -> Core.Var -> Core.Var -> Subst :=
   fun subst v1 v2 =>
-    if Core.isTyVar v1 : bool then extendTvSubst subst v1 (tt) else
-    if Core.isCoVar v1 : bool then extendCvSubst subst v1 (tt) else
-    extendIdSubst subst v1 (Core.Mk_Var v2).
+    if Core.isTyVar v1 : bool
+    then if andb Util.debugIsOn (negb (Core.isTyVar v2)) : bool
+         then (Panic.assertPanic (GHC.Base.hs_string__
+                                  "ghc/compiler/coreSyn/CoreSubst.hs") #243)
+         else extendTvSubst subst v1 (tt) else
+    if Core.isCoVar v1 : bool
+    then if andb Util.debugIsOn (negb (Core.isCoVar v2)) : bool
+         then (Panic.assertPanic (GHC.Base.hs_string__
+                                  "ghc/compiler/coreSyn/CoreSubst.hs") #244)
+         else extendCvSubst subst v1 (tt) else
+    if andb Util.debugIsOn (negb (Core.isId v2)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__
+                             "ghc/compiler/coreSyn/CoreSubst.hs") #245)
+    else extendIdSubst subst v1 (Core.Mk_Var v2).
 
 Definition emptySubst : Subst :=
   Mk_Subst Core.emptyInScopeSet Core.emptyVarEnv tt tt.
@@ -551,13 +581,14 @@ Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
      Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet
      Core.extendInScopeSet Core.extendInScopeSetList Core.extendInScopeSetSet
      Core.extendVarEnv Core.extendVarEnvList Core.idInfo Core.isCoVar
-     Core.isEmptyVarEnv Core.isId Core.isLocalId Core.isLocalVar Core.isTyVar
-     Core.lookupInScope Core.lookupVarEnv Core.mkDVarSet Core.mkVarEnv Core.ruleInfo
-     Core.setRuleInfo Core.setVarUnique Core.unfoldingInfo Core.uniqAway
-     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
-     Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd
-     Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Id.maybeModifyIdInfo Name.Name Panic.panicStr Panic.someSDoc
-     Panic.warnPprTrace UniqSupply.UniqSupply UniqSupply.uniqFromSupply
-     UniqSupply.uniqsFromSupply Unique.Unique
+     Core.isEmptyVarEnv Core.isId Core.isLocalId Core.isLocalVar Core.isNonCoVarId
+     Core.isTyVar Core.lookupInScope Core.lookupVarEnv Core.mkDVarSet Core.mkVarEnv
+     Core.ruleInfo Core.setRuleInfo Core.setVarUnique Core.unfoldingInfo
+     Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
+     Data.Foldable.all Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst
+     Data.Tuple.snd Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
+     GHC.Num.fromInteger Id.maybeModifyIdInfo Name.Name Panic.assertPanic
+     Panic.panicStr Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
+     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
+     Util.debugIsOn
 *)

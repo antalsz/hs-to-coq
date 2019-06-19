@@ -23,42 +23,43 @@ type Config = (Prog, Heap)
 
 interp :: Prog -> Heap -> Either StopFlag Config
 interp (Ret _) _       = Left Finished
-interp (Vis NewMV k) h = Right (k $ MVar newLoc, Heap newLoc newContent) where
+interp (Vis (InlF NewMV) k) h = Right (k $ MVar newLoc, Heap newLoc newContent) where
   newLoc = maxLoc h + 1
   newContent n = if n == newLoc then Nothing else content h n
-interp (Vis (TakeMV (MVar loc)) k) h =
+interp (Vis (InlF (TakeMV (MVar loc))) k) h =
   case content h loc of
     Nothing -> Left Blocked
     Just v  -> case decode v of
                  Nothing -> Left Unexpected
                  Just v  -> Right (k v, updateHeap h loc Nothing)
-interp (Vis (ReadMV (MVar loc)) k) h =
+interp (Vis (InlF (ReadMV (MVar loc))) k) h =
   case content h loc of
     Nothing -> Left Blocked
     Just v  -> case decode v of
                  Nothing -> Left Unexpected
                  Just v  -> Right (k v, h)
-interp (Vis (PutMV (MVar loc) v) k) h =
+interp (Vis (InlF (PutMV (MVar loc) v)) k) h =
   case content h loc of
     Nothing -> Right (k (), updateHeap h loc $ Just $ encode v)
     Just _  -> Left Blocked
-interp (Vis (TryTakeMV (MVar loc)) k) h =
+interp (Vis (InlF (TryTakeMV (MVar loc))) k) h =
   case content h loc of
     Nothing -> Right (k Nothing, h)
     Just v  -> case decode v of
                  Nothing -> Left Unexpected
                  v       -> Right (k v, updateHeap h loc Nothing)
-interp (Vis (TryReadMV (MVar loc)) k) h =
+interp (Vis (InlF (TryReadMV (MVar loc))) k) h =
   case content h loc of
     Nothing -> Right (k Nothing, h)
     Just v  -> case decode v of
                  Nothing -> Left Unexpected
                  v       -> Right (k v, h)
-interp (Vis (TryPutMV (MVar loc) v) k) h =
+interp (Vis (InlF (TryPutMV (MVar loc) v)) k) h =
   case content h loc of
     Nothing -> Right (k True, updateHeap h loc $ Just $ encode v)
     Just _  -> Right (k False, h)
-interp (Vis (IsEmptyMV (MVar loc)) k) h =
+interp (Vis (InlF (IsEmptyMV (MVar loc))) k) h =
   case content h loc of
     Nothing -> Right (k True, h)
     Just _  -> Right (k False, h)
+interp (Vis (InrF (ForkIO _)) _) h = Left Unexpected  -- not supported

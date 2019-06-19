@@ -3,7 +3,8 @@ rename value Freer.MVar = Freer.MkMVar
 rename value Interp.Heap = Interp.MkHeap
 rename value FreerConcurrency.Concurrency = FreerConcurrency.MkConcurrency
 data kinds Freer.MVar Type
-data kinds Freer.MemEff (Type -> Type)
+data kinds Freer.EitherF Type -> Type, Type -> Type, Type
+data kinds Freer.MemEff Type -> Type
 
 order Freer.ret Freer.Applicative__Freer_pure
 order Freer.Functor__Freer Freer.Applicative__Freer_op_zlztzg__

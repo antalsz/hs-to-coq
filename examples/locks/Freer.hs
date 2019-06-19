@@ -28,6 +28,10 @@ instance Applicative (Freer e) where
 instance Monad (Freer e) where
   xs >>= f = bind xs f
 
+data EitherF f g x where
+  InlF :: f x -> EitherF f g x
+  InrF :: g x -> EitherF f g x
+
 -- Specific mvar stuff
 
 class Encodable a where
@@ -54,19 +58,22 @@ data MemEff m :: * -> * where
   TryPutMV  :: Encodable a => m a -> a -> MemEff m Bool
   IsEmptyMV :: m a -> MemEff m Bool
 
-type IO' = Freer (MemEff MVar)
+data ConcurEff :: * -> * where
+  ForkIO :: Freer (EitherF a ConcurEff) () -> ConcurEff Int
+
+type IO' = Freer (EitherF (MemEff MVar) ConcurEff)
 
 newEmptyMVar :: IO' (MVar a)
-newEmptyMVar = vis NewMV
+newEmptyMVar = vis $ InlF NewMV
 
 takeMVar :: Encodable a => MVar a -> IO' a
-takeMVar = vis . TakeMV
+takeMVar = vis . InlF . TakeMV
 
 readMVar :: Encodable a => MVar a -> IO' a
-readMVar = vis . ReadMV
+readMVar = vis . InlF. ReadMV
 
 putMVar :: Encodable a => MVar a -> a -> IO' ()
-putMVar m = vis . PutMV m
+putMVar m = vis . InlF. PutMV m
 
 newMVar :: Encodable a => a -> IO' (MVar a)
 newMVar a = do
@@ -75,13 +82,16 @@ newMVar a = do
   ret m
 
 tryTakeMVar :: Encodable a => MVar a -> IO' (Maybe a)
-tryTakeMVar = vis . TryTakeMV
+tryTakeMVar = vis . InlF . TryTakeMV
 
 tryReadMVar :: Encodable a => MVar a -> IO' (Maybe a)
-tryReadMVar = vis . TryReadMV
+tryReadMVar = vis . InlF . TryReadMV
 
 tryPutMVar :: Encodable a => MVar a -> a -> IO' Bool
-tryPutMVar m = vis . TryPutMV m
+tryPutMVar m = vis . InlF . TryPutMV m
 
 isEmptyMVar :: MVar a -> IO' Bool
-isEmptyMVar = vis . IsEmptyMV
+isEmptyMVar = vis . InlF . IsEmptyMV
+
+forkIO :: IO' () -> IO' Int
+forkIO = vis . InrF . ForkIO

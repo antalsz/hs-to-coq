@@ -93,6 +93,134 @@ Lemma cseExpr_App env f a :
 Proof. done. Qed.
 Hint Rewrite cseExpr_App : hs_simpl.
 
+Lemma cseExpr_Let env bind e :
+  cseExpr env (Let bind e) = let: (env', bind') := cseBind NotTopLevel env bind
+                             in Let bind' (cseExpr env' e).
+Proof. done. Qed.
+Hint Rewrite cseExpr_Let : hs_simpl.
+
+Lemma cseExpr_NonRec toplevel env b e :
+  cseBind toplevel env (NonRec b e) =
+    let: (env1, b1)       := addBinder env b in
+    let: (env2, (b2, e2)) := cse_bind toplevel env1 (b,e) b1 in
+    (env2, NonRec b2 e2).
+Proof. done. Qed.
+Hint Rewrite cseExpr_NonRec : hs_simpl.
+
+Lemma stripTicksE_App {b} p (e1 e2 : Expr b) :
+  stripTicksE p (App e1 e2) = App (stripTicksE p e1) (stripTicksE p e2).
+Proof. done. Qed.
+Hint Rewrite @stripTicksE_App : hs_simpl.
+Hint Rewrite (@stripTicksE_App CoreBndr) : hs_simpl.
+
+Lemma stripTicksE_Lam {b} p (bndr : b) e :
+  stripTicksE p (Lam bndr e) = Lam bndr (stripTicksE p e).
+Proof. done. Qed.
+Hint Rewrite @stripTicksE_Lam : hs_simpl.
+Hint Rewrite (@stripTicksE_Lam CoreBndr) : hs_simpl.
+
+Lemma stripTicksE_Let_NonRec {b} p (bndr : b) rhs body :
+  stripTicksE p (Let (NonRec bndr rhs) body) =
+  Let (NonRec bndr (stripTicksE p rhs)) (stripTicksE p body).
+Proof. done. Qed.
+Hint Rewrite @stripTicksE_Let_NonRec : hs_simpl.
+Hint Rewrite (@stripTicksE_Let_NonRec CoreBndr) : hs_simpl.
+
+Lemma stripTicksE_Let_Rec {b} p (bndrs : list (b * Expr b)) body :
+  stripTicksE p (Let (Rec bndrs) body) =
+  Let (Rec (map (fun '(b',e') => (b', stripTicksE p e')) bndrs)) (stripTicksE p body).
+Proof. done. Qed.
+Hint Rewrite @stripTicksE_Let_Rec : hs_simpl.
+Hint Rewrite (@stripTicksE_Let_Rec CoreBndr) : hs_simpl.
+
+Lemma stripTicksE_Case {b} p e (bndr : b) t alts :
+  stripTicksE p (Case e bndr t alts) =
+  Case (stripTicksE p e) bndr t (map (fun '(c, bs, e) => (c, bs, stripTicksE p e)) alts).
+Proof. done. Qed.
+Hint Rewrite @stripTicksE_Case : hs_simpl.
+Hint Rewrite (@stripTicksE_Case CoreBndr) : hs_simpl.
+
+Lemma stripTicksE_Cast {b} p (e : Expr b) t :
+  stripTicksE p (Cast e t) =
+  Cast (stripTicksE p e) t.
+Proof. done. Qed.
+Hint Rewrite @stripTicksE_Cast : hs_simpl.
+Hint Rewrite (@stripTicksE_Cast CoreBndr) : hs_simpl.
+
+Lemma stripTicksE_Tick {b} p t (e : Expr b) :
+  stripTicksE p (Tick t e) =
+  if p t
+  then stripTicksE p e
+  else Tick t (stripTicksE p e).
+Proof. done. Qed. 
+Hint Rewrite @stripTicksE_Tick : hs_simpl.
+Hint Rewrite (@stripTicksE_Tick CoreBndr) : hs_simpl.
+
+Theorem flat_map_ext {A B} (f g : A -> list B) xs :
+  f =1 g ->
+  flat_map f xs = flat_map g xs.
+Proof.
+  move=> EQ1.
+  elim: xs => [|x xs IH] //=.
+  by rewrite EQ1 IH.
+Qed.
+
+Theorem Forall_In_impl {A} {P : A -> Prop} (Q : A -> Prop) :
+  forall l,
+  (forall a, In a l -> P a -> Q a) ->
+  Forall P l -> Forall Q l.
+Proof.
+  move=> l; rewrite !Forall_forall => IMPL In__P x IN.
+  by apply IMPL; last apply In__P.
+Qed.
+
+Lemma stripTicksE_map_fst {a b} p (pairs : list (a * Expr b)) :
+  List.map fst (List.map (fun '(b', e') => (b', stripTicksE p e')) pairs) = List.map fst pairs.
+Proof. by rewrite List.map_map; apply map_ext; case. Qed.
+
+Theorem WellScoped_stripTicksE p e vars :
+  WellScoped e vars <-> WellScoped (stripTicksE p e) vars.
+Proof.
+  elim/core_induct: e vars => 
+    [ v | lit
+    | e1 e2 IH1 IH2 | v e IH
+    | [v rhs | pairs] body IHbind IHbody | scrut bndr [] alts IHscrut IHalts
+    | e [] IH | tickish e IH
+    | [] | [] ]
+    vars
+    //;
+    hs_simpl.
+  - by rewrite /= IH1 IH2.
+  - by rewrite /= IH.
+  - by rewrite /= IHbind IHbody.
+  - rewrite /= IHbody.
+    repeat match goal with |- context[flat_map (fun '(b,_) => b :: nil) ?ps] =>
+      replace (flat_map (fun '(b,_) => b :: nil) ps) with (map fst ps)
+        by (rewrite -flat_map_cons_f; apply flat_map_ext; by case)
+    end.
+    replace @map with @List.map by done.
+    rewrite !Forall'_Forall !Forall_map.
+    rewrite !stripTicksE_map_fst.
+    split; move=> [[GLV_pairs [ND_pairs WS_ext_pairs]] WS_pairs]; repeat split=> //.
+    + by eapply Forall_impl => [[b e]|]; last by apply GLV_pairs.
+    + eapply Forall_In_impl => [[b e]|]; last by apply WS_ext_pairs.
+      by move=> /= /IHbind ->.
+    + by eapply Forall_impl => [[b e]|]; last by apply GLV_pairs.
+    + eapply Forall_In_impl => [[b e]|]; last by apply WS_ext_pairs.
+      by move=> /= /IHbind ->.
+  - rewrite /= IHscrut.
+    replace @map with @List.map by done.
+    rewrite !Forall'_Forall !Forall_map.
+    split; move=> [WS_vars [GLV OK_alts]]; repeat split=> //.
+    all: eapply Forall_In_impl; last by apply OK_alts.
+    all: move=> [[c bs] e] IN /=.
+    all: by rewrite -IHalts; last by apply IN.
+  - by rewrite /= IH.
+  - case: (p tickish) => //=.
+Qed.
+
+(* TODO freeVars/freeVarsBind *)
+
 Definition WS_cseExpr vars env e :
   WellScopedCSEnv env             vars ->
   WellScoped      e               vars ->
@@ -133,7 +261,47 @@ Proof.
       move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]].
     + constructor=> //; rewrite /cs_subst //.
 
-  - admit.
+  - rewrite (lock cse_bind) /= -(lock cse_bind) => -[[GLV WS_rhs] WS_ext].
+    rewrite /addBinder /substBndr /cs_subst /substTyVarBndr /substCoVarBndr.
+    case v_tv: (isTyVar v); last case v_cov: (isCoVar v).
+    + admit.
+    + admit.
+    + case def_sub'_v': (substIdBndr _ _ _ _) => [sub' v'].
+      have GLV': GoodLocalVar v' by eapply GoodLocalVar_substIdBndr; eassumption.
+      move: (WellScoped_Subst_substIdBndr _ _ _ _ _ _ _ def_sub'_v' GLV WSsubst)
+        => [subst_ext WSsubst'].
+      
+      (* cse_bind *)
+      simpl.
+      case def_env'_out_id': (addBinding _ _ _ _) => [env' out_id'].
+      case join_v: (isJoinId_maybe v) => [arity|].
+      * admit.
+      * rewrite /tryForCSE.
+        
+
+(*       case def_env2_b2_e2: (cse_bind _ _ _ _) => [env2 [b2 e2]]. *)
+      
+      
+                                
+    
+    
+(*     have not_tv: ~~ isTyVar v. *)
+(*     move: GLV => [] _ {WS_ext}. *)
+(*     case: v => //=. simpl.  *)
+(*     move=> ? ? ?. *)
+(*     rewrite /isLocalVar. simpl *)
+                             
+
+(* case: v GLV {WS_ext} => [? ? ? | ? ? ? ? | ? ? ? ? ? ?]. *)
+    
+(*     have not_cv: ~~ isCoVar v. *)
+    
+(*     rewrite {1}/WellScoped -/WellScoped. *)
+(*     rewrite /bindersOf extendVarSetList_singleton. *)
+(*     rewrite /cs_subst /getSubstInScopeVars. *)
+(*     move=> . *)
+(*     rewrite /cseExpr -/cseExpr -/cse_bind. *)
+        admit.
 
   - admit.
 
@@ -143,7 +311,7 @@ Proof.
 
   - move=> /= WSE; by apply (IH vars).
 Admitted.
-      
+
 
 (* Definition WS_cseExpr_cseBind vars env toplevel e b : *)
 (*   WellScoped     e vars -> *)

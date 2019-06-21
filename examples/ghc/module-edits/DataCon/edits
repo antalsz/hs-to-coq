@@ -27,7 +27,7 @@ skip Core.dataConFieldType
 skip Core.dataConOrigArgTys
 skip Core.dataConOrigResTy
 skip Core.dataConInstSig
-skip Core.dataConCannotMatch
+# skip Core.dataConCannotMatch
 
 skip Core.buildSynTyCon
 skip Core.dataConRepStrictness

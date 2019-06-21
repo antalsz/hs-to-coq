@@ -15,3 +15,8 @@ rename value Data.IntSet.Internal.lowestBitMask = Utils.Containers.Internal.BitU
 
 # This should travel to wherever our Test.QuickCheck modules travel to
 rename type  Test.QuickCheck.Property.Property   = Prop
+
+rename value Data.Set.fold = Data.Set.Internal.foldr
+rename value Data.Map.fold = Data.Map.Internal.foldr
+rename value Data.IntMap.foldWithKey = Data.IntMap.Internal.foldrWithKey
+rename value Data.IntMap.fold = Data.IntMap.Internal.foldr

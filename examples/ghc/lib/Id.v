@@ -41,21 +41,9 @@ Import GHC.Num.Notations.
 
 (* Midamble *)
 
-Parameter lookupDataCon : Core.DataConId -> Core.DataCon.
-Parameter lookupClass   : Core.ClassId -> Core.Class.
+(* Parameter lookupDataCon : Core.DataConId -> Core.DataCon.
+   Parameter lookupClass   : Core.ClassId -> Core.Class. *)
 
-(* Make this default so that we can reason about either case. *)
-(* Import GHC.Err. *)
-(* Definition isStateHackType : unit -> bool := GHC.Err.default. *)
-
-(* The real definition looks like this, but we don't have the type information
-   around:
-  fun ty =>
-    if DynFlags.hasNoStateHack DynFlags.unsafeGlobalDynFlags : bool then false else
-    match Type.tyConAppTyCon_maybe ty with
-    | Some tycon => tycon GHC.Base.== TysPrim.statePrimTyCon
-    | _ => false
-    end. *)
 
 
 
@@ -95,13 +83,35 @@ Definition mkLocalIdWithInfo : Name.Name -> unit -> Core.IdInfo -> Core.Id :=
 Definition mkLocalIdOrCoVarWithInfo
    : Name.Name -> unit -> Core.IdInfo -> Core.Id :=
   fun name ty info =>
-    let details := Core.VanillaId in Core.mkLocalVar details name ty info.
+    let details :=
+      if Core.isCoercionType ty : bool then Core.CoVarId else
+      Core.VanillaId in
+    Core.mkLocalVar details name ty info.
 
 Definition mkLocalId : Name.Name -> unit -> Core.Id :=
   fun name ty => mkLocalIdWithInfo name ty Core.vanillaIdInfo.
 
+Definition mkSysLocal
+   : FastString.FastString -> Unique.Unique -> unit -> Core.Id :=
+  fun fs uniq ty => mkLocalId (Name.mkSystemVarName uniq fs) ty.
+
+Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
+   : FastString.FastString -> unit -> m Core.Id :=
+  fun fs ty =>
+    UniqSupply.getUniqueM GHC.Base.>>=
+    (fun uniq => GHC.Base.return_ (mkSysLocal fs uniq ty)).
+
+Definition mkUserLocal
+   : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Id :=
+  fun occ uniq ty loc => mkLocalId (Name.mkInternalName uniq occ loc) ty.
+
+Definition mkLocalCoVar : Name.Name -> unit -> Core.CoVar :=
+  fun name ty => Core.mkLocalVar Core.CoVarId name ty Core.vanillaIdInfo.
+
 Definition mkLocalIdOrCoVar : Name.Name -> unit -> Core.Id :=
-  fun name ty => mkLocalId name ty.
+  fun name ty =>
+    if Core.isCoercionType ty : bool then mkLocalCoVar name ty else
+    mkLocalId name ty.
 
 Definition mkSysLocalOrCoVar
    : FastString.FastString -> Unique.Unique -> unit -> Core.Id :=
@@ -121,28 +131,6 @@ Definition mkWorkerId : Unique.Unique -> Core.Id -> unit -> Core.Id :=
   fun uniq unwrkr ty =>
     mkLocalIdOrCoVar (Name.mkDerivedInternalName OccName.mkWorkerOcc uniq
                       (Name.getName unwrkr)) ty.
-
-Definition mkSysLocal
-   : FastString.FastString -> Unique.Unique -> unit -> Core.Id :=
-  fun fs uniq ty =>
-    if andb Util.debugIsOn (negb (negb (false))) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-          #313)
-    else mkLocalId (Name.mkSystemVarName uniq fs) ty.
-
-Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
-   : FastString.FastString -> unit -> m Core.Id :=
-  fun fs ty =>
-    UniqSupply.getUniqueM GHC.Base.>>=
-    (fun uniq => GHC.Base.return_ (mkSysLocal fs uniq ty)).
-
-Definition mkUserLocal
-   : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Id :=
-  fun occ uniq ty loc =>
-    if andb Util.debugIsOn (negb (negb (false))) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-          #330)
-    else mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
 Definition mkGlobalId
    : Core.IdDetails -> Name.Name -> unit -> Core.IdInfo -> Core.Id :=
@@ -596,13 +584,14 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isOneOcc
      BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo BasicTypes.occ_in_lam
      BasicTypes.setInlinePragmaActivation BasicTypes.zapOccTailCallInfo Core.CafInfo
-     Core.Class Core.ClassOpId Core.DataCon Core.DataConWorkId Core.DataConWrapId
-     Core.Demand Core.FCallId Core.Id Core.IdDetails Core.IdInfo Core.JoinId
-     Core.Mk_DFunId Core.Mk_JoinId Core.NoUnfolding Core.PrimOpId Core.RecSelData
-     Core.RecSelId Core.RecSelParent Core.RecSelPatSyn Core.RuleInfo Core.StrictSig
-     Core.Unfolding Core.VanillaId Core.Var Core.arityInfo Core.cafInfo
-     Core.callArityInfo Core.demandInfo Core.getUnfolding Core.idDetails Core.idInfo
-     Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig Core.isId
+     Core.Class Core.ClassOpId Core.CoVar Core.CoVarId Core.DataCon
+     Core.DataConWorkId Core.DataConWrapId Core.Demand Core.FCallId Core.Id
+     Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId Core.Mk_JoinId
+     Core.NoUnfolding Core.PrimOpId Core.RecSelData Core.RecSelId Core.RecSelParent
+     Core.RecSelPatSyn Core.RuleInfo Core.StrictSig Core.Unfolding Core.VanillaId
+     Core.Var Core.arityInfo Core.cafInfo Core.callArityInfo Core.demandInfo
+     Core.getUnfolding Core.idDetails Core.idInfo Core.increaseStrictSigArity
+     Core.inlinePragInfo Core.isBottomingSig Core.isCoercionType Core.isId
      Core.isLocalId Core.isTyVar Core.isUnboxedSumCon Core.isUnboxedTupleCon
      Core.lazySetIdInfo Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar
      Core.nopSig Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo

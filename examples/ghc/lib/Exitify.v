@@ -24,8 +24,8 @@ Require Data.Tuple.
 Require FastString.
 Require GHC.Base.
 Require GHC.DeferredFix.
+Require GHC.Err.
 Require Id.
-Require Panic.
 Require State.
 Require Unique.
 Require Util.
@@ -143,7 +143,7 @@ Definition exitifyRec
                                                 let j_36__ :=
                                                   match ann_bind with
                                                   | Core.AnnRec pairs =>
-                                                      if Id.isJoinId (Data.Tuple.fst (Panic.head pairs)) : bool
+                                                      if Id.isJoinId (Data.Tuple.fst (GHC.Err.head pairs)) : bool
                                                       then let js := GHC.Base.map Data.Tuple.fst pairs in
                                                            Data.Traversable.forM pairs (fun '(pair j rhs) =>
                                                                                           let join_arity :=
@@ -273,7 +273,7 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
      Data.Foldable.elem Data.Foldable.foldr Data.Traversable.forM Data.Tuple.fst
      Data.Tuple.snd FastString.fsLit GHC.Base.map GHC.Base.op_z2218U__
      GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_
-     GHC.DeferredFix.deferredFix2 Id.asJoinId Id.idJoinArity Id.isJoinId
-     Id.isJoinId_maybe Id.mkSysLocal Id.setIdInfo Panic.head State.State State.get
-     State.put State.runState Unique.initExitJoinUnique Util.mapSnd
+     GHC.DeferredFix.deferredFix2 GHC.Err.head Id.asJoinId Id.idJoinArity Id.isJoinId
+     Id.isJoinId_maybe Id.mkSysLocal Id.setIdInfo State.State State.get State.put
+     State.runState Unique.initExitJoinUnique Util.mapSnd
 *)

@@ -1,12 +1,7 @@
-Require Import  GHC.Base.
+Require Import GHC.Base.
 Require Import GHC.Num.
 Require Import GHC.Err.
 
-Definition head {a} `{Default a} (xs : list a) : a :=
-  match xs with
-  | (x::_) => x
-  | _      => default
-  end.
 
 Parameter noString : forall {a}, a -> String.
 Parameter someSDoc : String.

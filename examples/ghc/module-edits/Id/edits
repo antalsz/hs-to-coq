@@ -27,7 +27,7 @@ skip Id.isStrictId
 skip Id.isDictId
 skip Id.idRepArity
 skip Id.isEvVar	
-skip Id.mkLocalCoVar
+
 
 # RepType
 skip Id.idFunRepArity

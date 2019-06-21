@@ -10,9 +10,9 @@ OUT=lib
 HANDMOD = \
   FastString \
   Panic \
-  ListSetOps \
   Digraph \
   PrelNames \
+  ListSetOps \
   NestedRecursionHelpers
     # Used by CSE
 #  CallArity \

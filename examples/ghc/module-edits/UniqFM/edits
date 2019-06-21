@@ -1,3 +1,5 @@
+# redefine Inductive UniqFM.UniqFM ele : Type := | UniqFM.UFM : ((Data.Map.Internal.Map Coq.Numbers.BinNums.Z ele) -> (UniqFM.UniqFM ele)).
+
 skip UniqFM.pprUniqFM
 skip UniqFM.pluralUFM
 skip UniqFM.pprUFM

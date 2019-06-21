@@ -151,6 +151,14 @@ skip method Data.Foldable.Foldable foldr1
 skip method Data.Foldable.Foldable maximum
 skip method Data.Foldable.Foldable minimum
 
+# workarounds for partial functions
+rewrite forall x y, Data.Foldable.minimum (cons x y) = Data.Foldable.foldr GHC.Base.min x y
+rewrite forall x y, Data.Foldable.maximum (cons x y) = Data.Foldable.foldr GHC.Base.max x y
+rewrite forall n tys, enumFrom n = (GHC.Enum.enumFromTo n (GHC.List.length tys))  
+
+# add Default constraint
+rewrite forall , GHC.List.head = GHC.Err.head
+
 
 # We do not create notation for constructors yet
 # (but it would not be hard)

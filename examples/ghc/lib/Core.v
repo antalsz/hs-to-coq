@@ -3515,10 +3515,12 @@ Definition zapTailCallInfo : IdInfo -> option IdInfo :=
     then Some (setOccInfo info safe_occ) else
     None.
 
+Axiom resultIsLevPoly : unit -> bool.
+
 Definition setNeverLevPoly `{Util.HasDebugCallStack}
    : IdInfo -> unit -> IdInfo :=
   fun info ty =>
-    if andb Util.debugIsOn (negb (negb (false))) : bool
+    if andb Util.debugIsOn (negb (negb (resultIsLevPoly ty))) : bool
     then (GHC.Err.error Panic.someSDoc)
     else let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__ cafInfo_3__
             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ strictnessInfo_7__ demandInfo_8__
@@ -4131,8 +4133,14 @@ Definition mkTyVar : Name.Name -> unit -> TyVar :=
 Definition mkTyBind : TyVar -> unit -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
 
+Axiom isCoercionTy_maybe : unit -> option unit.
+
 Definition mkTyArg {b} : unit -> Expr b :=
-  fun ty => match None with | Some co => Coercion co | _ => Type_ ty end.
+  fun ty =>
+    match isCoercionTy_maybe ty with
+    | Some co => Coercion co
+    | _ => Type_ ty
+    end.
 
 Definition mkTyApps {b} : Expr b -> list unit -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
@@ -4788,6 +4796,8 @@ Definition isTyVar : Var -> bool :=
 Definition isTyConAssoc : TyCon -> bool :=
   fun tc => Data.Maybe.isJust (tyConAssoc_maybe tc).
 
+Axiom isTyCoVar : Var -> bool.
+
 Definition isTyCoArg {b} : Expr b -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5339,9 +5349,6 @@ Definition isCoVar : Var -> bool :=
     | Mk_Id _ _ _ _ details _ => isCoVarDetails details
     | _ => false
     end.
-
-Definition isTyCoVar : Var -> bool :=
-  fun v => orb (isTyVar v) (isCoVar v).
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
@@ -6305,6 +6312,8 @@ Definition fieldsOfAlgTcRhs : AlgTyConRhs -> FieldLabel.FieldLabelEnv :=
     FastStringEnv.mkDFsEnv (Coq.Lists.List.flat_map (fun fl =>
                                                        cons (pair (FieldLabel.flLabel fl) fl) nil) (dataConsFields
                                                      (visibleDataCons rhs))).
+
+Axiom dataConCannotMatch : list unit -> DataCon -> bool.
 
 Definition dataConBoxer : DataCon -> option unit :=
   fun arg_0__ =>
@@ -7944,6 +7953,22 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
   fun _ k__ =>
     k__ {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
+
+Axiom tidyTyCoVarBndr : TidyEnv -> TyCoVar -> TidyEnv * TyCoVar.
+
+Axiom eqTypeX : RnEnv2 -> unit -> unit -> bool.
+
+Axiom eqCoercionX : RnEnv2 -> unit -> unit -> bool.
+
+Axiom splitPiTy_maybe : unit -> option (unit * unit).
+
+Axiom isTypeLevPoly : unit -> bool.
+
+Axiom isUnliftedType : unit -> bool.
+
+Axiom isFunTy : unit -> bool.
+
+Axiom isCoercionType : unit -> bool.
 
 (* External variables:
      Bool.Sumbool.sumbool_of_bool BootUnfolding CoreRuleInfo CoreUnfolding

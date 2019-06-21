@@ -407,7 +407,7 @@ Definition exprIsTickedString : Core.CoreExpr -> bool :=
   Data.Maybe.isJust GHC.Base.∘ exprIsTickedString_maybe.
 
 Definition exprIsTopLevelBindable : Core.CoreExpr -> unit -> bool :=
-  fun expr ty => orb (negb (false)) (exprIsTickedString expr).
+  fun expr ty => orb (negb (Core.isUnliftedType ty)) (exprIsTickedString expr).
 
 Definition exprIsHNFlike
    : (Core.Var -> bool) -> (Core.Unfolding -> bool) -> Core.CoreExpr -> bool :=
@@ -540,9 +540,9 @@ Definition eqTickish
 Definition eqExpr : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr -> bool :=
   fun in_scope e1 e2 =>
     let fix go arg_0__ arg_1__ arg_2__
-              := let go_alt (arg_16__ : Core.RnEnv2) (arg_17__ arg_18__ : Core.CoreAlt)
+              := let go_alt (arg_18__ : Core.RnEnv2) (arg_19__ arg_20__ : Core.CoreAlt)
                   : bool :=
-                   match arg_16__, arg_17__, arg_18__ with
+                   match arg_18__, arg_19__, arg_20__ with
                    | env, pair (pair c1 bs1) e1, pair (pair c2 bs2) e2 =>
                        andb (c1 GHC.Base.== c2) (go (env) e1 e2)
                    end in
@@ -551,14 +551,16 @@ Definition eqExpr : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr -> bool :=
                      if Core.rnOccL env v1 GHC.Base.== Core.rnOccR env v2 : bool then true else
                      false
                  | _, Core.Lit lit1, Core.Lit lit2 => lit1 GHC.Base.== lit2
-                 | env, Core.Type_ t1, Core.Type_ t2 => true
-                 | env, Core.Coercion co1, Core.Coercion co2 => true
-                 | env, Core.Cast e1 co1, Core.Cast e2 co2 => andb true (go env e1 e2)
+                 | env, Core.Type_ t1, Core.Type_ t2 => Core.eqTypeX env t1 t2
+                 | env, Core.Coercion co1, Core.Coercion co2 => Core.eqCoercionX env co1 co2
+                 | env, Core.Cast e1 co1, Core.Cast e2 co2 =>
+                     andb (Core.eqCoercionX env co1 co2) (go env e1 e2)
                  | env, Core.App f1 a1, Core.App f2 a2 => andb (go env f1 f2) (go env a1 a2)
                  | env, Core.Tick n1 e1, Core.Tick n2 e2 =>
                      andb (eqTickish env n1 n2) (go env e1 e2)
                  | env, Core.Lam b1 e1, Core.Lam b2 e2 =>
-                     andb true (go (Core.rnBndr2 env b1 b2) e1 e2)
+                     andb (Core.eqTypeX env (Core.varType b1) (Core.varType b2)) (go (Core.rnBndr2
+                                                                                      env b1 b2) e1 e2)
                  | env, Core.Let (Core.NonRec v1 r1) e1, Core.Let (Core.NonRec v2 r2) e2 =>
                      andb (go env r1 r2) (go (Core.rnBndr2 env v1 v2) e1 e2)
                  | env, Core.Let (Core.Rec ps1) e1, Core.Let (Core.Rec ps2) e2 =>
@@ -570,14 +572,15 @@ Definition eqExpr : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr -> bool :=
                                                             e2))
                  | env, Core.Case e1 b1 t1 a1, Core.Case e2 b2 t2 a2 =>
                      if Data.Foldable.null a1 : bool
-                     then andb (Data.Foldable.null a2) (andb (go env e1 e2) true) else
+                     then andb (Data.Foldable.null a2) (andb (go env e1 e2) (Core.eqTypeX env t1
+                                                              t2)) else
                      andb (go env e1 e2) (NestedRecursionHelpers.all2Map (go_alt (Core.rnBndr2 env b1
                                                                                   b2)) id id a1 a2)
                  | _, _, _ => false
                  end in
     let go_alt : Core.RnEnv2 -> Core.CoreAlt -> Core.CoreAlt -> bool :=
-      fun arg_16__ arg_17__ arg_18__ =>
-        match arg_16__, arg_17__, arg_18__ with
+      fun arg_18__ arg_19__ arg_20__ =>
+        match arg_18__, arg_19__, arg_20__ with
         | env, pair (pair c1 bs1) e1, pair (pair c2 bs2) e2 =>
             andb (c1 GHC.Base.== c2) (go (env) e1 e2)
         end in
@@ -665,14 +668,15 @@ Definition filterAlts {a}
         | _, pair (pair con _) _ =>
             if Data.Foldable.elem con imposs_cons : bool then true else
             match arg_0__, arg_1__ with
-            | inst_tys, pair (pair (Core.DataAlt con) _) _ => false
+            | inst_tys, pair (pair (Core.DataAlt con) _) _ =>
+                Core.dataConCannotMatch inst_tys con
             | _, _ => false
             end
         end in
     let 'pair alts_wo_default maybe_deflt := findDefault alts in
     let alt_cons :=
-      let cont_6__ arg_7__ := let 'pair (pair con _) _ := arg_7__ in cons con nil in
-      Coq.Lists.List.flat_map cont_6__ alts_wo_default in
+      let cont_7__ arg_8__ := let 'pair (pair con _) _ := arg_8__ in cons con nil in
+      Coq.Lists.List.flat_map cont_7__ alts_wo_default in
     let imposs_deflt_cons :=
       Data.OldList.nub (Coq.Init.Datatypes.app imposs_cons alt_cons) in
     let trimmed_alts := Util.filterOut (impossible_alt inst_tys) alts_wo_default in
@@ -687,20 +691,21 @@ Definition filterAlts {a}
      Core.InScopeSet Core.Lam Core.Let Core.Lit Core.LitAlt Core.Mk_Var Core.NonRec
      Core.PlaceCostCentre Core.Rec Core.RnEnv2 Core.Tick Core.Tickish Core.TyCon
      Core.Type_ Core.Unfolding Core.Var Core.cmpAlt Core.cmpAltCon
-     Core.collectArgsTicks Core.dataConTyCon Core.dataConUnivTyVars Core.idDetails
+     Core.collectArgsTicks Core.dataConCannotMatch Core.dataConTyCon
+     Core.dataConUnivTyVars Core.eqCoercionX Core.eqTypeX Core.idDetails
      Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isRuntimeArg
-     Core.isRuntimeVar Core.isTyVar Core.isTypeArg Core.isValArg Core.mkConApp
-     Core.mkRnEnv2 Core.rnBndr2 Core.rnOccL Core.rnOccR Core.tickishCounts
-     Core.tickishIsCode Core.tickishPlace Core.tyConFamilySize Core.valArgCount
-     Core.varsToCoreExprs Data.Foldable.all Data.Foldable.and Data.Foldable.elem
-     Data.Foldable.foldr Data.Foldable.null Data.Maybe.fromMaybe Data.Maybe.isJust
-     Data.OldList.nub Data.Tuple.snd DynFlags.DynFlags GHC.Base.String GHC.Base.const
-     GHC.Base.map GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zg__ GHC.Base.op_zgze__ GHC.Base.op_zl__
-     GHC.DeferredFix.deferredFix1 GHC.Err.default GHC.List.reverse GHC.List.unzip
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity Id.idName
-     Id.idUnfolding Id.isBottomingId Id.isConLikeId Id.isDataConWorkId Id.isJoinId
-     Literal.MachStr Literal.litIsDupable Literal.litIsTrivial
+     Core.isRuntimeVar Core.isTyVar Core.isTypeArg Core.isUnliftedType Core.isValArg
+     Core.mkConApp Core.mkRnEnv2 Core.rnBndr2 Core.rnOccL Core.rnOccR
+     Core.tickishCounts Core.tickishIsCode Core.tickishPlace Core.tyConFamilySize
+     Core.valArgCount Core.varType Core.varsToCoreExprs Data.Foldable.all
+     Data.Foldable.and Data.Foldable.elem Data.Foldable.foldr Data.Foldable.null
+     Data.Maybe.fromMaybe Data.Maybe.isJust Data.OldList.nub Data.Tuple.snd
+     DynFlags.DynFlags GHC.Base.String GHC.Base.const GHC.Base.map GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.default GHC.List.reverse
+     GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity
+     Id.idName Id.idUnfolding Id.isBottomingId Id.isConLikeId Id.isDataConWorkId
+     Id.isJoinId Literal.MachStr Literal.litIsDupable Literal.litIsTrivial
      NestedRecursionHelpers.all2Map OrdList.OrdList OrdList.appOL OrdList.concatOL
      OrdList.consOL OrdList.fromOL OrdList.nilOL Panic.assertPanic Panic.panic
      Panic.panicStr Panic.someSDoc PrelNames.makeStaticName Util.debugIsOn

@@ -35,3 +35,16 @@ Definition errorWithoutStackTrace {a} `{Default a} :
 
 Definition patternFailure {a} `{Default a} : a.
 Proof. exact default. Qed.
+
+
+(* ------------------------------------- *)
+
+(* Partial versions of prelude functions *)
+
+Definition head {a} `{Default a} (xs : list a) : a :=
+  match xs with
+  | (x::_) => x
+  | _      => default
+  end.
+
+

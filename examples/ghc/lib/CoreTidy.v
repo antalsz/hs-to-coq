@@ -106,7 +106,9 @@ Definition tidyIdBndr
 
 Definition tidyBndr
    : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
-  fun env var => tidyIdBndr env var.
+  fun env var =>
+    if Core.isTyCoVar var : bool then Core.tidyTyCoVarBndr env var else
+    tidyIdBndr env var.
 
 Definition tidyBndrs
    : Core.TidyEnv -> list Core.Var -> (Core.TidyEnv * list Core.Var)%type :=
@@ -215,12 +217,13 @@ End Notations.
      Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
      Core.Tickish Core.TidyEnv Core.Type_ Core.Var Core.demandInfo
      Core.evaldUnfolding Core.extendVarEnv Core.idDetails Core.idInfo
-     Core.inlinePragInfo Core.isEvaldUnfolding Core.lookupVarEnv Core.mkLocalVar
-     Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
+     Core.inlinePragInfo Core.isEvaldUnfolding Core.isTyCoVar Core.lookupVarEnv
+     Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
      Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
-     Core.setStrictnessInfo Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo
-     Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
-     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique
-     Id.mkLocalIdWithInfo Maybes.orElse Name.Name Name.getOccName Name.mkInternalName
-     OccName.tidyOccName SrcLoc.noSrcSpan UniqFM.lookupUFM
+     Core.setStrictnessInfo Core.strictnessInfo Core.tidyTyCoVarBndr
+     Core.unfoldingInfo Core.vanillaIdInfo Core.zapUsageEnvSig CoreArity.exprArity
+     Data.Traversable.mapAccumL GHC.Base.map GHC.Err.default GHC.List.zip
+     GHC.Prim.seq Id.idName Id.idUnique Id.mkLocalIdWithInfo Maybes.orElse Name.Name
+     Name.getOccName Name.mkInternalName OccName.tidyOccName SrcLoc.noSrcSpan
+     UniqFM.lookupUFM
 *)

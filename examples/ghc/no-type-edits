@@ -171,19 +171,13 @@ rename value CoAxiom.Nominal           = tt
 rename value TysWiredIn.liftedTypeKind = tt
 rename value TysWiredIn.constraintKind = tt
 
-## Could make these unit too.
-## ACTUALLY THE ARE UNUSED
-redefine Inductive CoAxiom.CoAxiomRule      : Type := CoAxiom.Mk_CoAxiomRule_Dummy.
-redefine Inductive CoAxiom.BuiltInSynFamily : Type := CoAxiom.Mk_BuiltInSynFamily_Dummy.
-
 ###############################################################################
 # rewrites for type/corecion related operations defined in skipped modules
-###############################################################################
+##############################################################################
 
 # maybe some of these should be axioms instead of rewrites so that we have 
 # to consider each case.
 
-rewrite forall e x y,  Coercion.eqCoercionX e x y = true
 rewrite forall v,      Coercion.mkCoVarCo v = tt
 rewrite forall co,     Coercion.coercionType co = tt
 
@@ -198,34 +192,59 @@ rewrite forall co,     TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 rewrite forall s knd,  TyCoRep.substTyUnchecked s knd  = tt
 rewrite forall s t n,  TyCoRep.extendTvSubstWithClone s t n = s
 rewrite forall s ty,   TyCoRep.substTy s ty            = tt
-rewrite forall x,      TyCoRep.isCoercionType x        = false
 rewrite forall x,      TyCoRep.noFreeVarsOfType x      = true
 rewrite forall x y,    TyCoRep.zipTvSubst x y          = tt
 
-rewrite forall x,      Type.isUnliftedType x = false
-rewrite forall x y,    Type.isTypeLevPoly x y = fun y => false
-rewrite forall x,      Type.resultIsLevPoly x = false
-rewrite forall x,      Type.isFunTy x = false
-rewrite forall x,      Type.splitPiTy_maybe x = None
-rewrite forall x,      Type.isCoercionTy_maybe x = None
 rewrite forall x,      Type.caseBinder x = x
-rewrite forall e x y,  Type.eqCoercionX e x y = true
-rewrite forall e x y,  Type.eqTypeX e x y = true
-rewrite forall ty,     Type.typeKind         ty = tt
+rewrite forall ty,     Type.typeKind  ty = tt
 rewrite forall x,      Type.mkInvForAllTys x y = tt
 
+# axiomatize functions that return bool or option
+# 
+# these functions are not defined in any of the modules that we are translating
+# but we need them so we move them to Core as we axiomatize their results.
+#
+rename value TyCoRep.isCoercionType = Core.isCoercionType
+add Core Axiom Core.isCoercionType : unit -> bool.
+rename value Type.isFunTy = Core.isFunTy
+add Core Axiom Core.isFunTy : unit -> bool.
+rename value Type.isUnliftedType = Core.isUnliftedType
+add Core Axiom Core.isUnliftedType : unit -> bool.
+rename value Type.isTypeLevPoly = Core.isTypeLevPoly
+add Core Axiom Core.isTypeLevPoly : unit -> bool.
+rename value Type.resultIsLevPoly = Core.resultIsLevPoly
+add Core Axiom Core.resultIsLevPoly : unit -> bool.
+rename value Type.splitPiTy_maybe = Core.splitPiTy_maybe
+add Core Axiom Core.splitPiTy_maybe : unit -> option (unit * unit).
+rename value Type.isCoercionTy_maybe = Core.isCoercionTy_maybe
+add Core Axiom Core.isCoercionTy_maybe : unit -> option unit.
+rename value Coercion.eqCoercionX = Core.eqCoercionX
+add Core Axiom Core.eqCoercionX : RnEnv2 -> (unit -> (unit -> bool)).
+rename value Type.eqTypeX = Core.eqTypeX
+add Core Axiom Core.eqTypeX : RnEnv2 -> (unit -> (unit -> bool)).
+rename value TyCoRep.tidyTyCoVarBndr = Core.tidyTyCoVarBndr
+add Core Axiom Core.tidyTyCoVarBndr : TidyEnv -> (TyCoVar -> (TidyEnv * TyCoVar)).
 
 
-###############################################################################
+axiomatize definition Core.isTyCoVar
+axiomatize definition Id.IsNeverLevPolyId
+axiomatize definition Core.dataConCannotMatch
+
+#
+# we cannot verify these assertions as we aren't tracking whether types are
+# coercion types are not. These two appear in Asserts in Id.hs
+#
+rewrite forall , andb Util.debugIsOn (negb (negb (Core.isCoercionType ty))) = false
+rewrite forall , andb Util.debugIsOn (negb (Core.isCoercionType ty)) = false
+
+############################################################################
 # rewrites for type/corecion related operations defined in translated modules
-###############################################################################
+############################################################################
 
 # TODO: translate PrelNames
 rewrite forall id, (Unique.hasKey id PrelNames.absentErrorIdKey) = false
 
 rewrite forall x,      Core.sel_tycon x = tt
-rewrite forall var,    Core.isTyCoVar var = false
-rewrite forall i c,    Core.dataConCannotMatch i c = false
 rewrite forall x y,    Core.mkTyConKind x y = tt
 rewrite forall e t1 t2,  Core.rnBndrs2 e t1 t2 = env
 
@@ -235,19 +254,17 @@ rewrite forall con,    DataCon.dataConRepStrictness con = nil
 rewrite forall con,    DataCon.dataConRepArgTys con = nil
 rewrite forall con,    DataCon.dataConExTyVars con = @nil unit
 
-
 rewrite forall x,      Literal.literalType x = tt
 
 rewrite forall x,      Id.idType x = tt
 rewrite forall x t,    Id.setIdType x t = x
-rewrite forall x,      Id.isNeverLevPolyId id = false
 
 rewrite forall ty,     CoreFVs.orphNamesOfType ty = NameSet.emptyNameSet
 rewrite forall co,     CoreFVs.orphNamesOfCo   co = NameSet.emptyNameSet
 rewrite forall id,     CoreFVs.bndrRuleAndUnfoldingFVs id = FV.emptyFV
 
-# TODO: make these disappear entirely with rewrites?
-#
+
+
 redefine Definition    CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
 redefine Definition    CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
 redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.

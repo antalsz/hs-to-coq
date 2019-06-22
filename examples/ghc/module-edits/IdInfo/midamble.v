@@ -3,46 +3,15 @@
 Require GHC.Err.
 
 (* --------------------- *)
-(* There are two parts of IdInfo that cause trouble -- Rules & unfolding information. 
-   Part of the issue is that types contain embedded CoreExpr's 
-*)
-
-Inductive UnfoldingInfo : Type
-  := NoUnfolding : UnfoldingInfo
-  |  BootUnfolding : UnfoldingInfo
-  |  OtherCon : list AltCon -> UnfoldingInfo
-  |  DFunUnfolding (df_bndrs : list Var)
-                   (df_con   :  DataCon)
-                   (df_args  : list CoreExpr) : UnfoldingInfo
-  |  CoreUnfolding (uf_tmpl         : CoreExpr)
-                   (uf_src          : UnfoldingSource)
-                   (uf_is_top       : bool)
-                   (uf_is_value     : bool)
-                   (uf_is_conlike   : bool)
-                   (uf_is_work_free : bool)
-                   (uf_expandable   : bool)
-                   (uf_guidance     : UnfoldingGuidance) : UnfoldingInfo.
-
-
-Parameter getUnfoldingInfo : Unfolding -> UnfoldingInfo.
-Parameter getUnfolding     : UnfoldingInfo -> Unfolding.
-
-
-Parameter getCoreRule : CoreRuleInfo -> CoreRule.
-Parameter getCoreRuleInfo : CoreRule -> CoreRuleInfo.
 
 
 (*****)
 
 Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
-  GHC.Err.Build_Default _ (Mk_RuleInfo nil UniqDSet.emptyUniqDSet).
-
-Instance Default_UnfoldingInfo : GHC.Err.Default UnfoldingInfo :=
-  GHC.Err.Build_Default _ NoUnfolding.
+  GHC.Err.Build_Default _ EmptyRuleInfo.
 
 Instance Default_Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ (getUnfolding GHC.Err.default).
-
+  GHC.Err.Build_Default _ NoUnfolding.
 
 Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).

@@ -1,84 +1,56 @@
-axiomatize definition Core.tickishCounts
-axiomatize definition Core.tickishIsCode
 
+#
+# skipping or redefining unfolding info so that it is 'NoUnfolding'
+#
 
-redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool :=
-  fun arg_0__ =>
-    match Core.getUnfoldingInfo arg_0__ with
-    | Core.NoUnfolding => false
-    | Core.BootUnfolding => false
-    | _ => true
-    end.
-
-# Avoiding record patterns for `Core.Unfolding`.  We need a much better story
-# for this.  Some or all of the skipped definitions can also be refactored to
-# use `Core.getUnfoldingInfo'.
+redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool
+  := fun x => false.
+redefine Definition Core.isConLikeUnfolding  : Core.Unfolding -> bool
+  := fun x => false.
+redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool
+  := fun x => false.
 
 skip Core.maybeUnfoldingTemplate
 
 redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
-  fun u => match Core.getUnfoldingInfo u with
-           | Core.OtherCon conses => conses
-           | _                    => nil
-           end.
+  fun u => nil.
 
-skip Core.isValueUnfolding
+redefine Definition Core.isValueUnfolding : Core.Unfolding -> bool :=
+  fun x => false.
 
-redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool :=
-  fun u => match Core.getUnfoldingInfo u with
-           | Core.OtherCon _ =>
-               true
-           | Core.CoreUnfolding _uf_tmpl _uf_src _uf_is_top
-                                uf_is_value
-                                _uf_is_conlike _uf_is_work_free _uf_expandable _uf_guidance =>
-               uf_is_value
-           | _ =>
-               false
-           end.
+redefine Definition Core.isCheapUnfolding  : Core.Unfolding -> bool :=
+  fun x => false.
 
-redefine Definition Core.isConLikeUnfolding : Core.Unfolding -> bool :=
-  fun u => match Core.getUnfoldingInfo u with
-           | Core.OtherCon _ =>
-               true
-           | Core.CoreUnfolding _uf_tmpl _uf_src _uf_is_top _uf_is_value
-                                uf_is_conlike _uf_is_work_free _uf_expandable _uf_guidance =>
-               uf_is_conlike
-           | _ =>
-               false
-           end.
-
-skip Core.isCheapUnfolding
-
-skip Core.isExpandableUnfolding
+redefine Definition Core.isExpandableUnfolding : Core.Unfolding -> bool :=
+  fun x => false.
 
 skip Core.expandUnfolding_maybe
 
-skip Core.isCompulsoryUnfolding
-
-skip Core.isStableUnfolding
-
-
+redefine Definition Core.isCompulsoryUnfolding : Core.Unfolding -> bool :=
+  fun x => false.
+redefine Definition Core.isStableUnfolding : Core.Unfolding -> bool :=
+  fun x => false.
 redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
-  fun u => match Core.getUnfoldingInfo u with
-           | Core.BootUnfolding => true
-           | _                  => false
-           end.
-
+  fun u => false.
 redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
-  fun u => match Core.getUnfoldingInfo u with
-           | Core.CoreUnfolding _ _ _ _ _ _ _ _ | DFunUnfolding _ _ _ => true
-           | _                                                        => false
-           end.
+  fun u => false.
+redefine Definition Core.canUnfold : Core.Unfolding -> bool :=
+  fun x => false.
 
-skip Core.canUnfold
+axiomatize definition Core.mkOtherCon
+axiomatize definition Core.evaldUnfolding
+axiomatize definition Core.bootUnfolding
 
+##
+##
 
 skip Core.mkNoCount
 skip Core.mkNoScope
 
+axiomatize definition Core.tickishCounts
+axiomatize definition Core.tickishIsCode
+
 skip Core.tickishCanSplit
-# skip Core.tickishCounts
-# skip Core.tickishIsCode
 skip Core.tickishContains
 
 # record selector, no place to add default

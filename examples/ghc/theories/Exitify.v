@@ -2375,7 +2375,7 @@ Section in_exitifyRec.
     split.
     - subst v.
       rewrite isLocalVar_uniqAway.
-      unfold mkSysLocal. rewrite andb_false_r.
+      unfold mkSysLocal. 
       reflexivity.
     - (* There is again a lot of repetition to above *)
       apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.

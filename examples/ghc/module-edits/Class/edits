@@ -1,8 +1,7 @@
 # debugging, uses List.!!
 skip Core.classSCSelId
 
-# needs information about prelude (parameter in midamble)
-skip Core.naturallyCoherentClass
+axiomatize definition Core.naturallyCoherentClass
 
 # ppr
 skip Core.pprDefMethInfo

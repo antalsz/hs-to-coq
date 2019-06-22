@@ -36,6 +36,10 @@ Definition tidyVarOcc : Core.TidyEnv -> Core.Var -> Core.Var :=
     | pair _ var_env, v => Maybes.orElse (Core.lookupVarEnv var_env v) v
     end.
 
+Definition tidyUnfolding
+   : Core.TidyEnv -> Core.Unfolding -> Core.Unfolding -> Core.Unfolding :=
+  fun e u v => u.
+
 Definition tidyTickish
    : Core.TidyEnv -> Core.Tickish Core.Id -> Core.Tickish Core.Id :=
   fun arg_0__ arg_1__ =>
@@ -66,15 +70,22 @@ Definition tidyLetBndr
         let old_info := (@Core.idInfo tt id) in
         let old_unf := Core.unfoldingInfo old_info in
         let new_unf :=
+          if Core.isStableUnfolding old_unf : bool
+          then tidyUnfolding rec_tidy_env old_unf old_unf else
           if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
           Core.noUnfolding in
         let new_info :=
-          Core.setInlinePragInfo (Core.setDemandInfo (Core.setStrictnessInfo
-                                                      (Core.setArityInfo (Core.setOccInfo Core.vanillaIdInfo
-                                                                                          (Core.occInfo old_info))
-                                                                         (CoreArity.exprArity rhs)) (Core.zapUsageEnvSig
-                                                       (Core.strictnessInfo old_info))) (Core.demandInfo old_info))
-                                 (Core.inlinePragInfo old_info) in
+          Core.setUnfoldingInfo (Core.setInlinePragInfo (Core.setDemandInfo
+                                                         (Core.setStrictnessInfo (Core.setArityInfo (Core.setOccInfo
+                                                                                                     Core.vanillaIdInfo
+                                                                                                     (Core.occInfo
+                                                                                                      old_info))
+                                                                                                    (CoreArity.exprArity
+                                                                                                     rhs))
+                                                                                 (Core.zapUsageEnvSig
+                                                                                  (Core.strictnessInfo old_info)))
+                                                         (Core.demandInfo old_info)) (Core.inlinePragInfo old_info))
+                                new_unf in
         let details := Core.idDetails id in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
         let ty' := tt in
@@ -95,7 +106,8 @@ Definition tidyIdBndr
           if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
           Core.noUnfolding in
         let new_info :=
-          Core.setOneShotInfo (Core.setOccInfo Core.vanillaIdInfo (Core.occInfo old_info))
+          Core.setOneShotInfo (Core.setUnfoldingInfo (Core.setOccInfo Core.vanillaIdInfo
+                                                                      (Core.occInfo old_info)) new_unf)
                               (Core.oneShotInfo old_info) in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
         let ty' := tt in
@@ -215,15 +227,15 @@ End Notations.
      None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
      Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id
      Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
-     Core.Tickish Core.TidyEnv Core.Type_ Core.Var Core.demandInfo
+     Core.Tickish Core.TidyEnv Core.Type_ Core.Unfolding Core.Var Core.demandInfo
      Core.evaldUnfolding Core.extendVarEnv Core.idDetails Core.idInfo
-     Core.inlinePragInfo Core.isEvaldUnfolding Core.isTyCoVar Core.lookupVarEnv
-     Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
-     Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
-     Core.setStrictnessInfo Core.strictnessInfo Core.tidyTyCoVarBndr
-     Core.unfoldingInfo Core.vanillaIdInfo Core.zapUsageEnvSig CoreArity.exprArity
-     Data.Traversable.mapAccumL GHC.Base.map GHC.Err.default GHC.List.zip
-     GHC.Prim.seq Id.idName Id.idUnique Id.mkLocalIdWithInfo Maybes.orElse Name.Name
-     Name.getOccName Name.mkInternalName OccName.tidyOccName SrcLoc.noSrcSpan
-     UniqFM.lookupUFM
+     Core.inlinePragInfo Core.isEvaldUnfolding Core.isStableUnfolding Core.isTyCoVar
+     Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo
+     Core.setArityInfo Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo
+     Core.setOneShotInfo Core.setStrictnessInfo Core.setUnfoldingInfo
+     Core.strictnessInfo Core.tidyTyCoVarBndr Core.unfoldingInfo Core.vanillaIdInfo
+     Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
+     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique
+     Id.mkLocalIdWithInfo Maybes.orElse Name.Name Name.getOccName Name.mkInternalName
+     OccName.tidyOccName SrcLoc.noSrcSpan UniqFM.lookupUFM
 *)

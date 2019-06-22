@@ -1,3 +1,20 @@
+# Redefine RuleInfo so that it is always empty. This is *safe*
+
+redefine Inductive  Core.RuleInfo : Type := Core.EmptyRuleInfo.
+redefine Definition Core.emptyRuleInfo   := Core.EmptyRuleInfo.
+redefine Definition Core.isEmptyRuleInfo  : Core.RuleInfo -> bool
+   := fun x => true.
+redefine Definition Core.ruleInfoFreeVars : Core.RuleInfo -> Core.DVarSet
+   := fun x => Core.emptyDVarSet.
+redefine Definition Core.ruleInfoRules    : Core.RuleInfo -> list Core.CoreRule 
+   := fun x => nil.
+redefine Definition Core.setRuleInfoHead  : Name.Name -> (Core.RuleInfo -> Core.RuleInfo)
+   := fun x y => Core.EmptyRuleInfo.
+
+# Redefine UnfoldingInfo so that it is always missing
+
+redefine Inductive Core.Unfolding := Core.NoUnfolding.
+
 ###################################
 #
 #   We have parameterized a new type "CoreRuleInfo" that is isomorphic to the 
@@ -8,15 +25,15 @@
 # 
 
 
-redefine Definition Core.ruleInfoRules : Core.RuleInfo -> (list Core.CoreRule) :=
-  fun x => match x with | (Mk_RuleInfo rules _) => Coq.Lists.List.map getCoreRule rules end.
+# redefine Definition Core.ruleInfoRules : Core.RuleInfo -> (list Core.CoreRule) :=
+#  fun x => match x with | (Mk_RuleInfo rules _) => Coq.Lists.List.map getCoreRule rules end.
 
-redefine Definition Core.setRuleInfoHead : Name.Name -> (Core.RuleInfo -> Core.RuleInfo) :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | fn, Mk_RuleInfo rules fvs =>
-        Mk_RuleInfo (Coq.Lists.List.map getCoreRuleInfo (Coq.Lists.List.map (Core.setRuleIdName fn) (Coq.Lists.List.map getCoreRule rules))) fvs
-    end.
+# redefine Definition Core.setRuleInfoHead : Name.Name -> (Core.RuleInfo -> Core.RuleInfo) :=
+#  fun arg_0__ arg_1__ =>
+#    match arg_0__, arg_1__ with
+#    | fn, Mk_RuleInfo rules fvs =>
+#        Mk_RuleInfo (Coq.Lists.List.map getCoreRuleInfo (Coq.Lists.List.map (Core.setRuleIdName fn) (Coq.Lists.List.map getCoreRule rules))) fvs
+#    end.
 
 ##################################
 
@@ -28,7 +45,7 @@ skip Core.df_con
 ## needs Type.resultIdLevPoly
 skip Core.setLevityInfoWithType
 ## needs IdInfo.levityInfo
-skip Core.isNeverLevPolyIdInfo  
+## skip Core.isNeverLevPolyIdInfo  
 
 ## Printing
 

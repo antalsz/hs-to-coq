@@ -1,6 +1,7 @@
 (* We might put these elsewhere, but these are some types that we 
    can use for untying the knots in DataCon/Class/PatSyn/TyCon *)
 
+(*
 Require GHC.Err.
 Require GHC.Nat.
 Require GHC.Base.
@@ -24,3 +25,4 @@ Parameter Ord_PatSynId  : Base.Ord PatSynId.  Existing Instance Ord_PatSynId.
 Parameter Ord_ClassId   : Base.Ord ClassId.   Existing Instance Ord_ClassId.
 Parameter Ord_DataConId : Base.Ord DataConId. Existing Instance Ord_DataConId.
 Parameter Ord_TyConId   : Base.Ord TyConId.   Existing Instance Ord_TyConId.
+*)

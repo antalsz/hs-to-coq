@@ -179,15 +179,13 @@ Qed.
 
 Lemma GoodLocalVar_asJoinId_mkSysLocal:
   forall s u ty n,
-  isCoercionType ty = false -> 
   isLocalUnique u = true ->
   GoodLocalVar (asJoinId (mkSysLocal s u ty) n).
 Proof.
-  move=> s u ty n h1 h2.
+  move=> s u ty n h1.
   unfold mkSysLocal.
-  rewrite h1. rewrite andb_false_r.
   split; only 1: split.
-  * destruct u. symmetry. apply h2.
+  * destruct u. symmetry. apply h1.
   * split. destruct u. reflexivity. 
     auto.
   * destruct u. reflexivity. 

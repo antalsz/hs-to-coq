@@ -203,8 +203,8 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
 CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))
 CORESYN_MID = $(wildcard $(addprefix module-edits/, $(addsuffix /midamble.v, $(CORESYN))))
 
-$(OUTFILES_CORESYN) : edits no-type-edits $(CORESYN_PRE) manual/ConIds.v $(CORESYN_MID) $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
-	cat manual/ConIds.v $(CORESYN_PRE) > CoreSyn_preamble.v
+$(OUTFILES_CORESYN) : edits no-type-edits $(CORESYN_PRE) $(CORESYN_MID) $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
+	cat $(CORESYN_PRE) > CoreSyn_preamble.v
 	cat $(CORESYN_MID) > CoreSyn_midamble.v
 	$(HS_TO_COQ) $(HS_TO_COQ_GHC_OPTS) \
                 -p CoreSyn_preamble.v \

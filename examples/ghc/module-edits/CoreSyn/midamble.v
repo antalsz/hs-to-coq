@@ -1,10 +1,5 @@
 (* ------------- CoreSyn midamble.v ------------ *)
 
-(*
-Parameter tickishCounts : forall {id}, Tickish id -> bool.
-Parameter tickishIsCode : forall {id}, Tickish id -> bool.
-*)
-
 Require Import Omega.
 
 Ltac intro_split := 
@@ -84,7 +79,6 @@ Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
 
 Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
   GHC.Err.Build_Default _ (Breakpoint GHC.Err.default GHC.Err.default).
-
 
 Instance Default_TaggedBndr {t}`{GHC.Err.Default t} : GHC.Err.Default (TaggedBndr t) :=
   GHC.Err.Build_Default _ (TB GHC.Err.default GHC.Err.default).

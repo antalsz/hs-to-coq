@@ -60,7 +60,6 @@ rename value Var.TcTyVar        = Core.Mk_TcTyVar
 rename value IdInfo.IdInfo      = Core.Mk_IdInfo
 rename value IdInfo.DFunId      = Core.Mk_DFunId
 rename value IdInfo.JoinId      = Core.Mk_JoinId
-rename value IdInfo.RuleInfo    = Core.Mk_RuleInfo
 rename value CoreSyn.Var        = Core.Mk_Var
 rename value CoreSyn.IsOrphan   = Core.Mk_IsOrphan
 rename value CoreSyn.RuleEnv    = Core.Mk_RuleEnv
@@ -96,51 +95,7 @@ rename type ForeignCall.CType       = unit
 rename type CostCentre.CostCentre   = unit
 
 # used in DataCon
-rename type MkId.DataConBoxer = unit
-
-
-
-###############################################################################
-# IdInfo  --- edit out unfoldingIndo, ruleInfo
-###############################################################################
-
-redefine Axiom Core.Unfolding : Type.
-
-## Core.getUnfolding and getUnfoldingInfo added to IdInfo/midamble.v
-## (must be used by other definitions in the midamble.v)
-## add Core Axiom Core.getUnfolding : Core.UnfoldingInfo -> Core.Unfolding.
-## add Core Axiom Core.getUnfoldingInfo : Core.Unfolding -> Core.UnfoldingInfo.
-
-## "Axiom CoreRuleInfo : Type" added to IdInfo/preamble.v
-redefine Inductive Core.RuleInfo : Type := Mk_RuleInfo : (list Core.CoreRuleInfo) -> (Core.DVarSet -> RuleInfo).
-## add Core Axiom Core.getCoreRule     : Core.CoreRuleInfo -> Core.CoreRule.
-## add Core Axiom Core.getCoreRuleInfo : Core.CoreRule -> Core.CoreRuleInfo.
-
-rewrite forall x,     Core.setUnfoldingInfo  x = x
-rewrite forall x dmd, Core.setUnfoldingInfo  x dmd = x
-
-rewrite forall arg y, Id.setIdUnfolding arg y = arg
-rewrite forall id,    Id.realIdUnfolding id = Core.NoUnfolding
-
-rewrite forall x,     Core.unfoldInfo x = tt
-rewrite forall x,     CoreSyn.isEvaldUnfolding x = false
-rewrite forall x,     Core.isStableUnfolding x = false
-rewrite forall x,     Core.isFragileUnfolding x = false
-
-
-# this is a type coercion
-rewrite forall ,      Core.NoUnfolding   = Core.getUnfolding Core.NoUnfolding
-rewrite forall ,      Core.BootUnfolding = Core.getUnfolding Core.BootUnfolding
-rewrite forall ,      Core.OtherCon      = fun x => Core.getUnfolding (Core.OtherCon x)
-
-
-rewrite forall x,     Core.isEmptyRuleInfo x = true
-
-
-# no free variables in non-present rules
-# (this edit is used in the CoreFVs module)
-rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
-
+rename type MkId.DataConBoxer       = unit
 
 ###############################################################################
 # brutaly skip all type info
@@ -225,17 +180,11 @@ add Core Axiom Core.eqTypeX : RnEnv2 -> (unit -> (unit -> bool)).
 rename value TyCoRep.tidyTyCoVarBndr = Core.tidyTyCoVarBndr
 add Core Axiom Core.tidyTyCoVarBndr : TidyEnv -> (TyCoVar -> (TidyEnv * TyCoVar)).
 
-
+# Var
 axiomatize definition Core.isTyCoVar
-axiomatize definition Id.IsNeverLevPolyId
+# DataCon
 axiomatize definition Core.dataConCannotMatch
 
-#
-# we cannot verify these assertions as we aren't tracking whether types are
-# coercion types are not. These two appear in Asserts in Id.hs
-#
-rewrite forall , andb Util.debugIsOn (negb (negb (Core.isCoercionType ty))) = false
-rewrite forall , andb Util.debugIsOn (negb (Core.isCoercionType ty)) = false
 
 ############################################################################
 # rewrites for type/corecion related operations defined in translated modules
@@ -270,5 +219,6 @@ redefine Definition    CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => 
 redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
 
 rewrite forall x y,    TyCon.mkTyConKind x y = tt
+
 # could make this unit too
-redefine Inductive TyCon.RuntimeRepInfo : Type := TyCon.Mk_RuntimeRepInfo_Dummy.
+axiomatize definition  TyCon.RuntimeRepInfo 

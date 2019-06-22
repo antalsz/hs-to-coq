@@ -1,1 +1,1 @@
-Parameter naturallyCoherentClass : Class -> bool.
+

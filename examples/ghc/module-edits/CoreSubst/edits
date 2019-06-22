@@ -16,8 +16,7 @@ redefine Definition CoreSubst.cloneTyVarBndr : Subst -> (Core.TyVar -> (Unique.U
 
 # cannot translate because we don't have unfolding information
 
-skip CoreSubst.substUnfolding
-skip CoreSubst.substUnfoldingSC
+redefine Definition CoreSubst.substUnfolding : Subst -> (Core.Unfolding -> Core.Unfolding) := fun s u => u.
 
 # Remove the type env and coercion environment components of the substitution
 

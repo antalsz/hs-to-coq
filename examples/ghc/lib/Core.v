@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 (* We might put these elsewhere, but these are some types that we 
    can use for untying the knots in DataCon/Class/PatSyn/TyCon *)
 
+(*
 Require GHC.Err.
 Require GHC.Nat.
 Require GHC.Base.
@@ -38,49 +39,7 @@ Parameter Ord_PatSynId  : Base.Ord PatSynId.  Existing Instance Ord_PatSynId.
 Parameter Ord_ClassId   : Base.Ord ClassId.   Existing Instance Ord_ClassId.
 Parameter Ord_DataConId : Base.Ord DataConId. Existing Instance Ord_DataConId.
 Parameter Ord_TyConId   : Base.Ord TyConId.   Existing Instance Ord_TyConId.
-(*  IdInfo: preamble *)
-
-(*
--- An 'IdInfo' gives /optional/ information about an 'Id'.  If
--- present it never lies, but it may not be present, in which case there
--- is always a conservative assumption which can be made.
-
--- Most of the 'IdInfo' gives information about the value, or definition, of
--- the 'Id', independent of its usage. Exceptions to this
--- are 'demandInfo', 'occInfo', 'oneShotInfo' and 'callArityInfo'.
---
-
-data IdInfo
-  = IdInfo {
-        arityInfo       :: !ArityInfo,          -- ^ 'Id' arity
-        ruleInfo        :: RuleInfo,            -- ^ Specialisations of the 'Id's function which exist
-                                                -- See Note [Specialisations and RULES in IdInfo]
-        unfoldingInfo   :: Unfolding,           -- ^ The 'Id's unfolding
-        cafInfo         :: CafInfo,             -- ^ 'Id' CAF info
-        oneShotInfo     :: OneShotInfo,         -- ^ Info about a lambda-bound variable, if the 'Id' is one
-        inlinePragInfo  :: InlinePragma,        -- ^ Any inline pragma atached to the 'Id'
-        occInfo         :: OccInfo,             -- ^ How the 'Id' occurs in the program
-
-        strictnessInfo  :: StrictSig,      --  ^ A strictness signature
-
-        demandInfo      :: Demand,       -- ^ ID demand information
-        callArityInfo   :: !ArityInfo,   -- ^ How this is called.
-                                         -- n <=> all calls have at least n arguments
-
-        levityInfo      :: LevityInfo    -- ^ when applied, will this Id ever have a levity-polymorphic type?
-    }
-
-data RuleInfo
-  = RuleInfo
-        [CoreRule]
-        DVarSet         -- Locally-defined free vars of *both* LHS and RHS
 *)
-
-(* We don't have an edit to add new axiomatized *types*  ...*)
-Axiom CoreRuleInfo : Type.
-
-(* -------------------- *)
-
 
 
 
@@ -153,7 +112,7 @@ Inductive UnfoldingGuidance : Type
    : UnfoldingGuidance
   |  UnfNever : UnfoldingGuidance.
 
-Axiom Unfolding : Type.
+Inductive Unfolding : Type := | NoUnfolding.
 
 Inductive TypeShape : Type
   := | TsFun : TypeShape -> TypeShape
@@ -228,6 +187,8 @@ Inductive SrcStrictness : Type
   := | SrcLazy : SrcStrictness
   |  SrcStrict : SrcStrictness
   |  NoSrcStrict : SrcStrictness.
+
+Inductive RuleInfo : Type := | EmptyRuleInfo.
 
 Inductive RecTcChecker : Type
   := | RC : nat -> (NameEnv.NameEnv nat) -> RecTcChecker.
@@ -406,6 +367,14 @@ Inductive DmdType : Type
 
 Inductive StrictSig : Type := | Mk_StrictSig : DmdType -> StrictSig.
 
+Inductive IdInfo : Type
+  := | Mk_IdInfo (arityInfo : ArityInfo) (ruleInfo : RuleInfo) (unfoldingInfo
+    : Unfolding) (cafInfo : CafInfo) (oneShotInfo : BasicTypes.OneShotInfo)
+  (inlinePragInfo : BasicTypes.InlinePragma) (occInfo : BasicTypes.OccInfo)
+  (strictnessInfo : StrictSig) (demandInfo : Demand) (callArityInfo : ArityInfo)
+  (levityInfo : LevityInfo)
+   : IdInfo.
+
 Definition CleanDemand :=
   (JointDmd StrDmd UseDmd)%type.
 
@@ -537,15 +506,6 @@ with PatSyn : Type
     : unit) (psMatcher : (Var%type * bool)%type) (psBuilder
     : option (Var%type * bool)%type)
    : PatSyn
-with IdInfo : Type
-  := | Mk_IdInfo (arityInfo : ArityInfo) (ruleInfo : RuleInfo) (unfoldingInfo
-    : Unfolding) (cafInfo : CafInfo) (oneShotInfo : BasicTypes.OneShotInfo)
-  (inlinePragInfo : BasicTypes.InlinePragma) (occInfo : BasicTypes.OccInfo)
-  (strictnessInfo : StrictSig) (demandInfo : Demand) (callArityInfo : ArityInfo)
-  (levityInfo : LevityInfo)
-   : IdInfo
-with RuleInfo : Type
-  := | Mk_RuleInfo : list CoreRuleInfo -> (UniqDSet.UniqDSet Var)%type -> RuleInfo
 with EqSpec : Type := | Mk_EqSpec : Var%type -> unit -> EqSpec.
 
 Definition TyVar :=
@@ -560,9 +520,6 @@ Definition TyConBinder :=
 Definition Id :=
   Var%type.
 
-Definition DVarSet :=
-  (UniqDSet.UniqDSet Var)%type.
-
 Definition ClassOpItem :=
   (Id * DefMethInfo)%type%type.
 
@@ -576,6 +533,9 @@ Definition OutBndr :=
   CoreBndr%type.
 
 Inductive TaggedBndr t : Type := | TB : CoreBndr -> t -> TaggedBndr t.
+
+Definition DVarSet :=
+  (UniqDSet.UniqDSet Var)%type.
 
 Definition CoVar :=
   Id%type.
@@ -1232,6 +1192,50 @@ Definition sd {s} {u} (arg_0__ : JointDmd s u) :=
 Definition ud {s} {u} (arg_0__ : JointDmd s u) :=
   let 'JD _ ud := arg_0__ in
   ud.
+
+Definition arityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo arityInfo _ _ _ _ _ _ _ _ _ _ := arg_0__ in
+  arityInfo.
+
+Definition cafInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ cafInfo _ _ _ _ _ _ _ := arg_0__ in
+  cafInfo.
+
+Definition callArityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ callArityInfo _ := arg_0__ in
+  callArityInfo.
+
+Definition demandInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ demandInfo _ _ := arg_0__ in
+  demandInfo.
+
+Definition inlinePragInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ inlinePragInfo _ _ _ _ _ := arg_0__ in
+  inlinePragInfo.
+
+Definition levityInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ _ levityInfo := arg_0__ in
+  levityInfo.
+
+Definition occInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ occInfo _ _ _ _ := arg_0__ in
+  occInfo.
+
+Definition oneShotInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ oneShotInfo _ _ _ _ _ _ := arg_0__ in
+  oneShotInfo.
+
+Definition ruleInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ ruleInfo _ _ _ _ _ _ _ _ _ := arg_0__ in
+  ruleInfo.
+
+Definition strictnessInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ _ _ _ _ _ strictnessInfo _ _ _ := arg_0__ in
+  strictnessInfo.
+
+Definition unfoldingInfo (arg_0__ : IdInfo) :=
+  let 'Mk_IdInfo _ _ unfoldingInfo _ _ _ _ _ _ _ _ := arg_0__ in
+  unfoldingInfo.
 
 Definition classBody (arg_0__ : Class) :=
   let 'Mk_Class _ _ _ _ _ classBody := arg_0__ in
@@ -2150,50 +2154,6 @@ Definition psUnivTyVars (arg_0__ : PatSyn) :=
   let 'MkPatSyn _ _ _ _ _ _ psUnivTyVars _ _ _ _ _ _ := arg_0__ in
   psUnivTyVars.
 
-Definition arityInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo arityInfo _ _ _ _ _ _ _ _ _ _ := arg_0__ in
-  arityInfo.
-
-Definition cafInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ cafInfo _ _ _ _ _ _ _ := arg_0__ in
-  cafInfo.
-
-Definition callArityInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ callArityInfo _ := arg_0__ in
-  callArityInfo.
-
-Definition demandInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ _ demandInfo _ _ := arg_0__ in
-  demandInfo.
-
-Definition inlinePragInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ inlinePragInfo _ _ _ _ _ := arg_0__ in
-  inlinePragInfo.
-
-Definition levityInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ _ _ _ levityInfo := arg_0__ in
-  levityInfo.
-
-Definition occInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ occInfo _ _ _ _ := arg_0__ in
-  occInfo.
-
-Definition oneShotInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ oneShotInfo _ _ _ _ _ _ := arg_0__ in
-  oneShotInfo.
-
-Definition ruleInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ ruleInfo _ _ _ _ _ _ _ _ _ := arg_0__ in
-  ruleInfo.
-
-Definition strictnessInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ _ _ _ _ _ strictnessInfo _ _ _ := arg_0__ in
-  strictnessInfo.
-
-Definition unfoldingInfo (arg_0__ : IdInfo) :=
-  let 'Mk_IdInfo _ _ unfoldingInfo _ _ _ _ _ _ _ _ := arg_0__ in
-  unfoldingInfo.
-
 Definition ru_act (arg_0__ : CoreRule) :=
   match arg_0__ with
   | Rule _ ru_act _ _ _ _ _ _ _ _ _ => ru_act
@@ -2313,46 +2273,15 @@ Definition in_scope (arg_0__ : RnEnv2) :=
 Require GHC.Err.
 
 (* --------------------- *)
-(* There are two parts of IdInfo that cause trouble -- Rules & unfolding information. 
-   Part of the issue is that types contain embedded CoreExpr's 
-*)
-
-Inductive UnfoldingInfo : Type
-  := NoUnfolding : UnfoldingInfo
-  |  BootUnfolding : UnfoldingInfo
-  |  OtherCon : list AltCon -> UnfoldingInfo
-  |  DFunUnfolding (df_bndrs : list Var)
-                   (df_con   :  DataCon)
-                   (df_args  : list CoreExpr) : UnfoldingInfo
-  |  CoreUnfolding (uf_tmpl         : CoreExpr)
-                   (uf_src          : UnfoldingSource)
-                   (uf_is_top       : bool)
-                   (uf_is_value     : bool)
-                   (uf_is_conlike   : bool)
-                   (uf_is_work_free : bool)
-                   (uf_expandable   : bool)
-                   (uf_guidance     : UnfoldingGuidance) : UnfoldingInfo.
-
-
-Parameter getUnfoldingInfo : Unfolding -> UnfoldingInfo.
-Parameter getUnfolding     : UnfoldingInfo -> Unfolding.
-
-
-Parameter getCoreRule : CoreRuleInfo -> CoreRule.
-Parameter getCoreRuleInfo : CoreRule -> CoreRuleInfo.
 
 
 (*****)
 
 Instance Default_RuleInfo : GHC.Err.Default RuleInfo :=
-  GHC.Err.Build_Default _ (Mk_RuleInfo nil UniqDSet.emptyUniqDSet).
-
-Instance Default_UnfoldingInfo : GHC.Err.Default UnfoldingInfo :=
-  GHC.Err.Build_Default _ NoUnfolding.
+  GHC.Err.Build_Default _ EmptyRuleInfo.
 
 Instance Default_Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ (getUnfolding GHC.Err.default).
-
+  GHC.Err.Build_Default _ NoUnfolding.
 
 Instance Default_TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
@@ -2392,7 +2321,7 @@ Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GH
 
 Instance Default__DataCon : GHC.Err.Default DataCon :=
  Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).
-Parameter naturallyCoherentClass : Class -> bool.
+
 (* ---- TyCon midamble ----- *)
 
 Instance Default__AlgTyConFlav : Err.Default AlgTyConFlav :=
@@ -2411,9 +2340,6 @@ Import FieldLabel.
 
 Require GHC.Err.
 
-(*
-Instance Uniqable_DataCon : Unique.Uniquable DataCon := {}.
-Admitted. *)
 
 
 Instance Name_NamedThing_TyCoVar : Name.NamedThing TyCoVar.
@@ -2430,11 +2356,6 @@ Instance Default__TidyEnv : GHC.Err.Default TidyEnv.
 Admitted.
 
 (* ------------- CoreSyn midamble.v ------------ *)
-
-(*
-Parameter tickishCounts : forall {id}, Tickish id -> bool.
-Parameter tickishIsCode : forall {id}, Tickish id -> bool.
-*)
 
 Require Import Omega.
 
@@ -2515,7 +2436,6 @@ Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
 
 Instance Default__Tickish {a} : GHC.Err.Default (Tickish a) :=
   GHC.Err.Build_Default _ (Breakpoint GHC.Err.default GHC.Err.default).
-
 
 Instance Default_TaggedBndr {t}`{GHC.Err.Default t} : GHC.Err.Default (TaggedBndr t) :=
   GHC.Err.Build_Default _ (TB GHC.Err.default GHC.Err.default).
@@ -2725,9 +2645,6 @@ Fixpoint StrDmd_size (s1 : StrDmd): nat :=
 Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
-
-Definition zapFragileUnfolding : Unfolding -> Unfolding :=
-  fun unf => unf.
 
 Definition visibleDataCons : AlgTyConRhs -> list DataCon :=
   fun arg_0__ =>
@@ -3449,6 +3366,9 @@ Definition setStrictnessInfo : IdInfo -> StrictSig -> IdInfo :=
                             oneShotInfo_4__ inlinePragInfo_5__ occInfo_6__ dd demandInfo_8__
                             callArityInfo_9__ levityInfo_10__).
 
+Definition setRuleInfoHead : Name.Name -> RuleInfo -> RuleInfo :=
+  fun x y => EmptyRuleInfo.
+
 Definition setRuleInfo : IdInfo -> RuleInfo -> IdInfo :=
   fun info sp =>
     GHC.Prim.seq sp (let 'Mk_IdInfo arityInfo_0__ ruleInfo_1__ unfoldingInfo_2__
@@ -3467,14 +3387,6 @@ Definition setRuleIdName : Name.Name -> CoreRule -> CoreRule :=
              ru_auto_7__ ru_origin_8__ ru_orphan_9__ ru_local_10__
     | BuiltinRule ru_name_11__ ru_fn_12__ ru_nargs_13__ ru_try_14__ =>
         BuiltinRule ru_name_11__ nm ru_nargs_13__ ru_try_14__
-    end.
-
-Definition setRuleInfoHead : Name.Name -> RuleInfo -> RuleInfo :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | fn, Mk_RuleInfo rules fvs =>
-        Mk_RuleInfo (Coq.Lists.List.map getCoreRuleInfo (Coq.Lists.List.map
-                                         (setRuleIdName fn) (Coq.Lists.List.map getCoreRule rules))) fvs
     end.
 
 Definition setOneShotInfo : IdInfo -> BasicTypes.OneShotInfo -> IdInfo :=
@@ -3692,10 +3604,7 @@ Definition ruleModule : CoreRule -> option Module.Module :=
     end.
 
 Definition ruleInfoRules : RuleInfo -> list CoreRule :=
-  fun '(Mk_RuleInfo rules _) => Coq.Lists.List.map getCoreRule rules.
-
-Definition ruleInfoFreeVars : RuleInfo -> DVarSet :=
-  fun '(Mk_RuleInfo _ fvs) => fvs.
+  fun x => nil.
 
 Definition ruleIdName : CoreRule -> Name.Name :=
   ru_fn.
@@ -3921,11 +3830,7 @@ Definition partitionDVarEnv {a}
   UniqDFM.partitionUDFM.
 
 Definition otherCons : Unfolding -> list AltCon :=
-  fun u =>
-    match getUnfoldingInfo u with
-    | OtherCon conses => conses
-    | _ => nil
-    end.
+  fun u => nil.
 
 Definition oneifyDmd : Demand -> Demand :=
   fun arg_0__ =>
@@ -3950,7 +3855,7 @@ Definition nonDetCmpVar : Var -> Var -> comparison :=
   fun a b => Unique.nonDetCmpUnique (varUnique a) (varUnique b).
 
 Definition noUnfolding : Unfolding :=
-  getUnfolding NoUnfolding.
+  NoUnfolding.
 
 Definition newTyConRhs : TyCon -> (list TyVar * unit)%type :=
   fun arg_0__ =>
@@ -4236,8 +4141,7 @@ Definition mkPatSyn
                  orig_res_ty matcher builder
     end.
 
-Definition mkOtherCon : list AltCon -> Unfolding :=
-  fun x => getUnfolding (OtherCon x).
+Axiom mkOtherCon : list AltCon -> Unfolding.
 
 Definition mkOnceUsedDmd : CleanDemand -> Demand :=
   fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use One a).
@@ -4689,6 +4593,9 @@ Definition isVanillaAlgTyCon : TyCon -> bool :=
     | _ => false
     end.
 
+Definition isValueUnfolding : Unfolding -> bool :=
+  fun x => false.
+
 Definition isUsedU : UseDmd -> bool :=
   fix isUsedU (arg_0__ : UseDmd) : bool
         := let isUsedMU (arg_0__ : ArgUse) : bool :=
@@ -4914,6 +4821,9 @@ Definition zapLamInfo : IdInfo -> option IdInfo :=
                     oneShotInfo_35__ inlinePragInfo_36__ safe_occ strictnessInfo_38__ topDmd
                     callArityInfo_40__ levityInfo_41__).
 
+Definition isStableUnfolding : Unfolding -> bool :=
+  fun x => false.
+
 Definition isStableSource : UnfoldingSource -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5002,6 +4912,13 @@ Definition isNewTyCon : TyCon -> bool :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ (NewTyCon _ _ _ _) _ _ => true
+    | _ => false
+    end.
+
+Definition isNeverLevPolyIdInfo : IdInfo -> bool :=
+  fun info =>
+    match levityInfo info with
+    | NeverLevityPolymorphic => true
     | _ => false
     end.
 
@@ -5177,11 +5094,10 @@ Definition isFunTyCon : TyCon -> bool :=
     end.
 
 Definition isFragileUnfolding : Unfolding -> bool :=
-  fun u =>
-    match getUnfoldingInfo u with
-    | CoreUnfolding _ _ _ _ _ _ _ _ | DFunUnfolding _ _ _ => true
-    | _ => false
-    end.
+  fun u => false.
+
+Definition zapFragileUnfolding : Unfolding -> Unfolding :=
+  fun unf => if isFragileUnfolding unf : bool then noUnfolding else unf.
 
 Definition isFamilyTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -5205,15 +5121,11 @@ Definition isExportedId : Var -> bool :=
     | _ => false
     end.
 
+Definition isExpandableUnfolding : Unfolding -> bool :=
+  fun x => false.
+
 Definition isEvaldUnfolding : Unfolding -> bool :=
-  fun u =>
-    match getUnfoldingInfo u with
-    | OtherCon _ => true
-    | CoreUnfolding _uf_tmpl _uf_src _uf_is_top uf_is_value _uf_is_conlike
-    _uf_is_work_free _uf_expandable _uf_guidance =>
-        uf_is_value
-    | _ => false
-    end.
+  fun x => false.
 
 Definition isEnumerationTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -5264,7 +5176,7 @@ Definition isTopSig : StrictSig -> bool :=
   fun '(Mk_StrictSig ty) => isTopDmdType ty.
 
 Definition isEmptyRuleInfo : RuleInfo -> bool :=
-  fun '(Mk_RuleInfo rs _) => Data.Foldable.null rs.
+  fun x => true.
 
 Definition isEmptyDVarSet : DVarSet -> bool :=
   UniqDSet.isEmptyUniqDSet.
@@ -5324,14 +5236,10 @@ Definition isTypeFamilyTyCon : TyCon -> bool :=
     end.
 
 Definition isConLikeUnfolding : Unfolding -> bool :=
-  fun u =>
-    match getUnfoldingInfo u with
-    | OtherCon _ => true
-    | CoreUnfolding _uf_tmpl _uf_src _uf_is_top _uf_is_value uf_is_conlike
-    _uf_is_work_free _uf_expandable _uf_guidance =>
-        uf_is_conlike
-    | _ => false
-    end.
+  fun x => false.
+
+Definition isCompulsoryUnfolding : Unfolding -> bool :=
+  fun x => false.
 
 Definition isCoVarDetails : IdDetails -> bool :=
   fun arg_0__ => match arg_0__ with | CoVarId => true | _ => false end.
@@ -5380,6 +5288,9 @@ Definition isClassTyCon : TyCon -> bool :=
     | _ => false
     end.
 
+Definition isCheapUnfolding : Unfolding -> bool :=
+  fun x => false.
+
 Definition isBuiltinRule : CoreRule -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5417,7 +5328,7 @@ Definition isBottomingSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType _ _ res)) => isBotRes res.
 
 Definition isBootUnfolding : Unfolding -> bool :=
-  fun u => match getUnfoldingInfo u with | BootUnfolding => true | _ => false end.
+  fun u => false.
 
 Definition isBanged : HsImplBang -> bool :=
   fun arg_0__ =>
@@ -5505,12 +5416,7 @@ Definition idDetails : Id -> IdDetails :=
     end.
 
 Definition hasSomeUnfolding : Unfolding -> bool :=
-  fun arg_0__ =>
-    match getUnfoldingInfo arg_0__ with
-    | NoUnfolding => false
-    | BootUnfolding => false
-    | _ => true
-    end.
+  fun x => false.
 
 Definition hasDemandEnvSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (isEmptyVarEnv env).
@@ -5682,8 +5588,7 @@ Definition expandSynTyCon_maybe {tyco}
 Definition exnRes : DmdResult :=
   ThrowsExn.
 
-Definition evaldUnfolding : Unfolding :=
-  (fun x => getUnfolding (OtherCon x)) nil.
+Axiom evaldUnfolding : Unfolding.
 
 Definition evalDmd : Demand :=
   JD (Mk_Str VanStr HeadStr) useTop.
@@ -5758,6 +5663,16 @@ Definition splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type :=
 Definition emptyTidyEnv : TidyEnv :=
   pair OccName.emptyTidyOccEnv emptyVarEnv.
 
+Definition emptyRuleInfo :=
+  EmptyRuleInfo.
+
+Definition zapFragileInfo : IdInfo -> option IdInfo :=
+  fun '((Mk_IdInfo _ _ unf _ _ _ occ _ _ _ _ as info)) =>
+    let new_unf := zapFragileUnfolding unf in
+    GHC.Prim.seq new_unf (Some (setOccInfo (setUnfoldingInfo (setRuleInfo info
+                                                                          emptyRuleInfo) new_unf)
+                                           (BasicTypes.zapFragileOcc occ))).
+
 Definition emptyRuleEnv : RuleEnv :=
   Mk_RuleEnv NameEnv.emptyNameEnv Module.emptyModuleSet.
 
@@ -5796,6 +5711,14 @@ Definition nopDmdType : DmdType :=
 
 Definition nopSig : StrictSig :=
   Mk_StrictSig nopDmdType.
+
+Definition vanillaIdInfo : IdInfo :=
+  Mk_IdInfo unknownArity emptyRuleInfo noUnfolding vanillaCafInfo
+            BasicTypes.NoOneShotInfo BasicTypes.defaultInlinePragma BasicTypes.noOccInfo
+            nopSig topDmd unknownArity NoLevityInfo.
+
+Definition noCafIdInfo : IdInfo :=
+  setCafInfo vanillaIdInfo NoCafRefs.
 
 Definition postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv :=
   fun arg_0__ arg_1__ =>
@@ -5836,26 +5759,12 @@ Definition postProcessUnsat : DmdShell -> DmdType -> DmdType :=
 Definition emptyDVarSet : DVarSet :=
   UniqDSet.emptyUniqDSet.
 
-Definition emptyRuleInfo : RuleInfo :=
-  Mk_RuleInfo nil emptyDVarSet.
-
-Definition vanillaIdInfo : IdInfo :=
-  Mk_IdInfo unknownArity emptyRuleInfo noUnfolding vanillaCafInfo
-            BasicTypes.NoOneShotInfo BasicTypes.defaultInlinePragma BasicTypes.noOccInfo
-            nopSig topDmd unknownArity NoLevityInfo.
-
-Definition noCafIdInfo : IdInfo :=
-  setCafInfo vanillaIdInfo NoCafRefs.
-
-Definition zapFragileInfo : IdInfo -> option IdInfo :=
-  fun '((Mk_IdInfo _ _ unf _ _ _ occ _ _ _ _ as info)) =>
-    let new_unf := zapFragileUnfolding unf in
-    GHC.Prim.seq new_unf (Some (setOccInfo (setRuleInfo info emptyRuleInfo)
-                                           (BasicTypes.zapFragileOcc occ))).
-
 Definition mapUnionDVarSet {a} : (a -> DVarSet) -> list a -> DVarSet :=
   fun get_set xs =>
     Data.Foldable.foldr (unionDVarSet GHC.Base.∘ get_set) emptyDVarSet xs.
+
+Definition ruleInfoFreeVars : RuleInfo -> DVarSet :=
+  fun x => emptyDVarSet.
 
 Definition emptyDVarEnv {a} : DVarEnv a :=
   UniqDFM.emptyUDFM.
@@ -6620,6 +6529,9 @@ Definition checkRecTc : RecTcChecker -> TyCon -> option RecTcChecker :=
 Definition catchArgDmd : Demand :=
   JD (Mk_Str Mk_ExnStr (SCall HeadStr)) (Mk_Use One (UCall One Used)).
 
+Definition canUnfold : Unfolding -> bool :=
+  fun x => false.
+
 Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -6714,8 +6626,7 @@ Definition boringCxtOk : bool :=
 Definition boringCxtNotOk : bool :=
   false.
 
-Definition bootUnfolding : Unfolding :=
-  getUnfolding BootUnfolding.
+Axiom bootUnfolding : Unfolding.
 
 Definition bindersOf {b} : Bind b -> list b :=
   fun arg_0__ =>
@@ -7971,11 +7882,9 @@ Axiom isFunTy : unit -> bool.
 Axiom isCoercionType : unit -> bool.
 
 (* External variables:
-     Bool.Sumbool.sumbool_of_bool BootUnfolding CoreRuleInfo CoreUnfolding
-     DFunUnfolding Eq Gt Lt NoUnfolding None OtherCon Some Type andb app bool
-     bothArgUse bothUse comparison cons deAnnotate' false getCoreRule getCoreRuleInfo
-     getUnfolding getUnfoldingInfo list lubArgUse nat negb nil op_zt__ option orb
-     pair size_AnnExpr' snd true tt unit BasicTypes.Activation
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool bothArgUse
+     bothUse comparison cons deAnnotate' false list lubArgUse nat negb nil op_zt__
+     option orb pair size_AnnExpr' snd true tt unit BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
      BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity
@@ -7987,10 +7896,10 @@ Axiom isCoercionType : unit -> bool.
      BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
      BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app
      Coq.Init.Peano.lt Coq.Lists.List.firstn Coq.Lists.List.flat_map
-     Coq.Lists.List.length Coq.Lists.List.map Coq.Lists.List.repeat
-     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
-     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
-     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     Coq.Lists.List.length Coq.Lists.List.repeat Coq.Lists.List.skipn
+     Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null Data.Function.on
+     Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt
      FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
      FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv

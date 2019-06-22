@@ -66,6 +66,9 @@ Definition mkOpenSubst
 Definition zapSubstEnv : Subst -> Subst :=
   fun '(Mk_Subst in_scope _ _ _) => Mk_Subst in_scope Core.emptyVarEnv tt tt.
 
+Definition substUnfolding : Subst -> Core.Unfolding -> Core.Unfolding :=
+  fun s u => u.
+
 Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
   fun s v => pair s v.
 
@@ -90,9 +93,12 @@ Definition substIdInfo
   fun subst new_id info =>
     let old_unf := Core.unfoldingInfo info in
     let old_rules := Core.ruleInfo info in
-    let nothing_to_do := andb true (negb (false)) in
+    let nothing_to_do :=
+      andb (Core.isEmptyRuleInfo old_rules) (negb (Core.isFragileUnfolding
+                                                   old_unf)) in
     if nothing_to_do : bool then None else
-    Some (Core.setRuleInfo info (substSpec subst new_id old_rules)).
+    Some (Core.setUnfoldingInfo (Core.setRuleInfo info (substSpec subst new_id
+                                                   old_rules)) (substUnfolding subst old_unf)).
 
 Definition substIdBndr
    : String -> Subst -> Subst -> Core.Id -> (Subst * Core.Id)%type :=
@@ -376,6 +382,11 @@ Definition substExprSC : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
     if isEmptySubst subst : bool then orig_expr else
     subst_expr doc subst orig_expr.
 
+Definition substUnfoldingSC : Subst -> Core.Unfolding -> Core.Unfolding :=
+  fun subst unf =>
+    if isEmptySubst subst : bool then unf else
+    substUnfolding subst unf.
+
 Definition getTCvSubst : Subst -> unit :=
   fun s => tt.
 
@@ -570,21 +581,22 @@ Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
    `CoreSubst.Outputable__Subst' *)
 
 (* External variables:
-     None Some String andb bool cons const false list map mappend negb nil
-     op_z2218U__ op_zeze__ op_zt__ option orb pair snd true tt unit
-     Coq.Lists.List.flat_map Core.App Core.Breakpoint Core.BuiltinRule Core.Case
-     Core.Cast Core.CoVar Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr
-     Core.CoreProgram Core.CoreRule Core.DVarSet Core.Id Core.IdEnv Core.IdInfo
-     Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec
-     Core.Rule Core.RuleInfo Core.Tick Core.Tickish Core.TyVar Core.Type_ Core.Var
-     Core.VarSet Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
+     None Some String andb bool cons const list map mappend negb nil op_z2218U__
+     op_zeze__ op_zt__ option orb pair snd true tt unit Coq.Lists.List.flat_map
+     Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.Cast Core.CoVar
+     Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr Core.CoreProgram
+     Core.CoreRule Core.DVarSet Core.Id Core.IdEnv Core.IdInfo Core.InScopeSet
+     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Rule
+     Core.RuleInfo Core.Tick Core.Tickish Core.TyVar Core.Type_ Core.Unfolding
+     Core.Var Core.VarSet Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
      Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet
      Core.extendInScopeSet Core.extendInScopeSetList Core.extendInScopeSetSet
      Core.extendVarEnv Core.extendVarEnvList Core.idInfo Core.isCoVar
-     Core.isEmptyVarEnv Core.isId Core.isLocalId Core.isLocalVar Core.isNonCoVarId
-     Core.isTyVar Core.lookupInScope Core.lookupVarEnv Core.mkDVarSet Core.mkVarEnv
-     Core.ruleInfo Core.setRuleInfo Core.setVarUnique Core.unfoldingInfo
-     Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
+     Core.isEmptyRuleInfo Core.isEmptyVarEnv Core.isFragileUnfolding Core.isId
+     Core.isLocalId Core.isLocalVar Core.isNonCoVarId Core.isTyVar Core.lookupInScope
+     Core.lookupVarEnv Core.mkDVarSet Core.mkVarEnv Core.ruleInfo Core.setRuleInfo
+     Core.setUnfoldingInfo Core.setVarUnique Core.unfoldingInfo Core.uniqAway
+     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
      Data.Foldable.all Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst
      Data.Tuple.snd Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
      GHC.Num.fromInteger Id.maybeModifyIdInfo Name.Name Panic.assertPanic

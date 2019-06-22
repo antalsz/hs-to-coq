@@ -26,6 +26,7 @@ Require FV.
 Require GHC.Base.
 Require GHC.List.
 Require GHC.Num.
+Require Id.
 Require Lists.List.
 Require NameSet.
 Require Panic.
@@ -299,7 +300,7 @@ Definition idRuleRhsVars
             noFVs
         | _ => noFVs
         end in
-    Core.emptyVarSet.
+    Core.mapUnionVarSet get_fvs (Id.idCoreRules id).
 
 Definition rhs_fvs : (Core.Id * Core.CoreExpr)%type -> FV.FV :=
   fun '(pair bndr rhs) => FV.unionFV (expr_fvs rhs) FV.emptyFV.
@@ -425,7 +426,7 @@ Definition freeVarsBind
      Data.Tuple.fst FV.FV FV.InterestingVarFun FV.delFV FV.emptyFV FV.filterFV
      FV.fvDVarSet FV.fvVarList FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV
      FV.unionsFV FV.unitFV GHC.Base.map GHC.Base.op_z2218U__ GHC.List.unzip
-     GHC.List.zip GHC.Num.fromInteger Lists.List.map NameSet.NameSet
+     GHC.List.zip GHC.Num.fromInteger Id.idCoreRules Lists.List.map NameSet.NameSet
      NameSet.emptyNameSet NameSet.unionNameSet Panic.assertPanic
      UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
      Util.mapAndUnzip

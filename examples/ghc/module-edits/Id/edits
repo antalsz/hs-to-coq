@@ -13,14 +13,23 @@
 # Id.mkSysLocalOrCoVar Id.typeOneShot
 ##############
 
+#
+# we cannot verify these assertions as we aren't tracking whether types are
+# coercion types are not. These two appear in Id.hs
+#
+rewrite forall , andb Util.debugIsOn (negb (negb (Core.isCoercionType ty))) = false
+rewrite forall , andb Util.debugIsOn (negb (Core.isCoercionType ty)) = false
+
 axiomatize definition Id.isStateHackType
 
-# Missing parts of IdInfo
-skip Id.isNeverLevPolyId 
+# Type inference issue from HasDebugCallStack
+in Id.isNeverLevPolyId rewrite forall , Core.idInfo = (@Core.idInfo tt)
+
+redefine Definition Id.idCoreRules : Core.Id -> list (Core.CoreRule) 
+   := fun x => nil.
+
 skip Id.zapFragileIdInfo
 skip Id.zapIdUsageEnvInfo
-
-skip Id.idCoreRules
 
 # Type/TyCoRep
 skip Id.isStrictId
@@ -31,7 +40,6 @@ skip Id.isEvVar
 
 # RepType
 skip Id.idFunRepArity
-
 skip Id.setCaseBndrEvald
 
 # Needs `GHC.Prim.seq`, used to evaluate the type information strictly

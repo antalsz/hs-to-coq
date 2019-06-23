@@ -13,11 +13,6 @@ Require Coq.Program.Wf.
 (* Preamble *)
 
 
-
-
-
-
-
 (* Converted imports: *)
 
 Require BasicTypes.
@@ -2423,7 +2418,7 @@ Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
                                    end
                                end in
             collect orig_n nil e.
-(* DEMAND midamble file *)
+(* DEMAND midamble file. Termination defs and tactics . *)
 
 Require Import GHC.Nat.
 Require Import Omega.
@@ -2465,64 +2460,6 @@ Ltac solve_dmdTransform := Tactics.program_simpl; try solve_mkWorkerDemand; try 
 Instance Unpeel_StrictSig : Prim.Unpeel StrictSig DmdType :=
   Prim.Build_Unpeel _ _ (fun x => match x with | Mk_StrictSig y => y end) Mk_StrictSig.
 
-(* Definitions that we cannot process, see edits file for details. *)
-
-Axiom lubUse : UseDmd -> UseDmd -> UseDmd.
-Axiom lubArgUse :  Use UseDmd ->  Use UseDmd ->  Use UseDmd.
-Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
-Axiom bothArgUse :  Use UseDmd ->  Use UseDmd ->  Use UseDmd.
-
-(*
-Axiom bothStr : StrDmd -> StrDmd -> StrDmd.
-Axiom lubStr : StrDmd -> StrDmd -> StrDmd.
-Axiom splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type.
-Axiom postProcessDmdEnv : DmdShell -> DmdEnv -> DmdEnv.
-Axiom peelManyCalls : GHC.Num.Int -> CleanDemand -> DmdShell.
-Axiom toCleanDmd : Demand -> unit -> (DmdShell * CleanDemand)%type.
-Axiom trimToType : Demand -> TypeShape -> Demand.
-Axiom dmdTransformDictSelSig : StrictSig -> CleanDemand -> DmdType.
-Axiom strictifyDictDmd : unit -> Demand -> Demand.
-Axiom dmdTransformDataConSig  : BasicTypes.Arity -> StrictSig -> CleanDemand -> DmdType.
-Axiom addCaseBndrDmd : Demand -> list Demand -> list Demand.
-Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
-Axiom zap_usg : KillFlags -> UseDmd -> UseDmd.
-*)
-
-(* Example of successful mutual recursion. Not sure that we can automate this *)
-(*
-Definition isUsedMU' isUsedU (au : ArgUse) : bool :=
-    match au with
-      | Abs => true
-      | Mk_Use One _ => false
-      | Mk_Use Many u => isUsedU u
-    end.
-
-Fixpoint isUsedU (ud : UseDmd) : bool :=
-    match ud with
-      | Used => true
-      | UHead => true
-      | UProd us => Data.Foldable.all (isUsedMU' isUsedU) us
-      | UCall One _ => false
-      | UCall Many _ => true
-    end.
-
-Definition isUsedMU := isUsedMU' isUsedU.
-
-Definition markReusedDmd' markReused : ArgUse -> ArgUse :=
-  fun arg_258__ =>
-    match arg_258__ with
-      | Abs => Abs
-      | Mk_Use _ a => Mk_Use Many (markReused a)
-    end.
-
-Fixpoint markReused (x : UseDmd) : UseDmd :=
-    match x with
-      | UCall _ u => UCall Many u
-      | UProd ux => UProd (GHC.Base.map (markReusedDmd' markReused) ux)
-      | u => u
-    end.
-Definition markReusedDmd := markReusedDmd' markReused.
-*)
 
 (* size metric, incase it is useful *)
 
@@ -4275,6 +4212,8 @@ Definition reuseEnv : DmdEnv -> DmdEnv :=
 Definition mapDVarEnv {a} {b} : (a -> b) -> DVarEnv a -> DVarEnv b :=
   UniqDFM.mapUDFM.
 
+Axiom lubUse : UseDmd -> UseDmd -> UseDmd.
+
 Definition lubExnStr : ExnStr -> ExnStr -> ExnStr :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -4312,6 +4251,8 @@ Definition lubDmdResult : DmdResult -> DmdResult -> DmdResult :=
     | Dunno c1, ThrowsExn => Dunno c1
     | Dunno c1, Dunno c2 => Dunno (lubCPR c1 c2)
     end.
+
+Axiom lubArgUse : ArgUse -> ArgUse -> ArgUse.
 
 Definition lookupDVarEnv {a} : DVarEnv a -> Var -> option a :=
   UniqDFM.lookupUDFM.
@@ -6499,6 +6440,8 @@ Definition catchArgDmd : Demand :=
 Definition canUnfold : Unfolding -> bool :=
   fun x => false.
 
+Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
+
 Definition bothExnStr : ExnStr -> ExnStr -> ExnStr :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -6543,6 +6486,8 @@ Definition bothCleanDmd : CleanDemand -> CleanDemand -> CleanDemand :=
     match arg_0__, arg_1__ with
     | JD s1 a1, JD s2 a2 => JD (bothStr s1 s2) (bothUse a1 a2)
     end.
+
+Axiom bothArgUse : ArgUse -> ArgUse -> ArgUse.
 
 Definition bothArgStr : ArgStr -> ArgStr -> ArgStr :=
   fun arg_0__ arg_1__ =>
@@ -7849,24 +7794,23 @@ Axiom isFunTy : unit -> bool.
 Axiom isCoercionType : unit -> bool.
 
 (* External variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool bothArgUse
-     bothUse comparison cons false list lubArgUse nat negb nil op_zt__ option orb
-     pair size_AnnExpr' snd true tt unit BasicTypes.Activation
-     BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
-     BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
-     BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity
-     BasicTypes.ManyOccs BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo
-     BasicTypes.OccInfo BasicTypes.OneOcc BasicTypes.OneShotInfo
-     BasicTypes.OneShotLam BasicTypes.RuleName BasicTypes.SourceText
-     BasicTypes.TupleSort BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
-     BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
-     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
-     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app
-     Coq.Init.Peano.lt Coq.Lists.List.firstn Coq.Lists.List.flat_map
-     Coq.Lists.List.length Coq.Lists.List.repeat Coq.Lists.List.skipn
-     Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null Data.Function.on
-     Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool comparison
+     cons false list nat negb nil op_zt__ option orb pair size_AnnExpr' snd true tt
+     unit BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
+     BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
+     BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
+     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
+     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleName
+     BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.defaultInlinePragma
+     BasicTypes.fIRST_TAG BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed
+     BasicTypes.noOccInfo BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc
+     BinNat.N.of_nat BinNums.N BooleanFormula.BooleanFormula BooleanFormula.mkTrue
+     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
+     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.repeat
+     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
+     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
+     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt
      FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
      FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv

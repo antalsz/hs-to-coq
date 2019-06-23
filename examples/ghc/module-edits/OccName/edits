@@ -1,38 +1,81 @@
-## Except for Outputtable, the skipped functions are axiomatized in the midamble.
-
 skip module Lexeme
 
+#
+# axiomatize functions we cannot translate (and don't really care about the definition)
+#
+
 # needs Lexeme.isLexConSym
-skip OccName.isDataSymOcc
-skip OccName.isSymOcc
+axiomatize definition OccName.isDataSymOcc
+axiomatize definition OccName.isSymOcc
 
-# nees show: Int -> String
-skip OccName.chooseUniqueOcc
-skip OccName.mkGenS
-skip OccName.mkGenC
-skip OccName.mkSuperDictAuxOcc
-skip OccName.mkSuperDictSelOcc
-skip OccName.mkLocalOcc
+# needs show: Int -> String
+axiomatize definition OccName.chooseUniqueOcc
+axiomatize definition OccName.mkGenS
+axiomatize definition OccName.mkGenC
+axiomatize definition OccName.mkSuperDictAuxOcc
+axiomatize definition OccName.mkSuperDictSelOcc
+axiomatize definition OccName.mkLocalOcc
 
-# Util.dropWhileEndLE GHC.Unicode.isDigit
-skip OccName.tidyOccName
+# needs Util.dropWhileEndLE GHC.Unicode.isDigit
+axiomatize definition OccName.tidyOccName
 
-## character constant
-skip OccName.startsWithUnderscore
-skip OccName.isDerivedOccName
-skip OccName.isTypeableBindOcc
-skip OccName.isDefaultMethodOcc
+# needs character constant
+axiomatize definition OccName.startsWithUnderscore
+axiomatize definition OccName.isDerivedOccName
+axiomatize definition OccName.isTypeableBindOcc
+axiomatize definition OccName.isDefaultMethodOcc
 
-redefine Local Definition OccName.Ord__NameSpace_compare : NameSpace -> (NameSpace -> comparison) := compare_Namespace.
+#
+# ISSUE: We cannot use the derived instance for Eq/Ord datatypes that are only tags
+# so we need to define them by hand here
+#
+redefine Local Definition OccName.Ord__NameSpace_compare : NameSpace -> (NameSpace -> comparison) := fun x y => match x , y with
+          | VarName   , VarName   => Eq
+          | VarName   , _         => Lt
+          | _         , VarName   => Gt
+          | DataName  , DataName  => Eq
+          | _         , DataName  => Lt
+          | DataName  , _         => Gt
+          | TvName    , TvName    => Eq
+          | _         , TvName    => Lt
+          | TvName    , _         => Gt
+          | TcClsName , TcClsName => Eq
+          end.
 
-redefine Local Definition OccName.Ord__NameSpace_op_zg__ := NameSpace_op_zg__.
-redefine Local Definition OccName.Ord__NameSpace_op_zgze__ := NameSpace_op_zgze__.
-redefine Local Definition OccName.Ord__NameSpace_op_zl__ := NameSpace_op_zl__.
-redefine Local Definition OccName.Ord__NameSpace_op_zlze__ := NameSpace_op_zlze__.
+redefine Local Definition OccName.Ord__NameSpace_op_zg__ : NameSpace -> (NameSpace -> bool) :=
+  fun x y => match OccName.Ord__NameSpace_compare x y with
+            | Gt => true
+            | _  => false
+          end.
+redefine Local Definition OccName.Ord__NameSpace_op_zgze__ : NameSpace -> (NameSpace -> bool) :=
+  fun x y => match OccName.Ord__NameSpace_compare x y with
+            | Gt => true
+            | Eq => true
+            | _  => false
+          end.
 
-order OccName.Eq___NameSpace OccName.Ord__NameSpace OccName.Eq___OccName_op_zeze__ OccName.Eq___OccName OccName.Ord__OccName_compare OccName.Ord__OccName
+redefine Local Definition OccName.Ord__NameSpace_op_zl__ : NameSpace -> (NameSpace -> bool) :=
+  fun x y => match OccName.Ord__NameSpace_compare x y with
+            | Lt => true
+            | _  => false
+          end.
+redefine Local Definition OccName.Ord__NameSpace_op_zlze__ : NameSpace -> (NameSpace -> bool) :=
+  fun x y => match OccName.Ord__NameSpace_compare x y with
+            | Lt => true
+            | Eq => true
+            | _  => false
+          end.
+
+order OccName.Eq___NameSpace OccName.Eq___OccName_op_zeze__ OccName.Eq___OccName OccName.Ord__OccName_compare OccName.Ord__OccName
 
 order OccName.Eq___NameSpace OccName.nameSpacesRelated
+
+# 
+# ISSUE: annoyingly, we need the Uniquable instance around before any function 
+# that uses UniqFM or UniqSet. So we need a big order here (it's not complete but
+# we got lucky.)
+#
+order OccName.Uniquable__OccName OccName.unitOccSet OccName.unitOccEnv OccName.mkOccSet OccName.mkOccEnv_C OccName.mkOccEnv OccName.lookupOccEnv OccName.initTidyOccEnv OccName.foldOccEnv OccName.filterOccSet OccName.extendOccSetList OccName.extendOccSet OccName.extendOccEnv_C OccName.extendOccEnv_Acc OccName.extendOccEnvList OccName.extendOccEnv
 
 # outputtable
 skip OccName.parenSymOcc

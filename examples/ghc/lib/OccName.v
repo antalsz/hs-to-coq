@@ -71,74 +71,27 @@ Definition occNameSpace (arg_0__ : OccName) :=
 
 (* Midamble *)
 
-(* records field accesses are not fully qualified. *)
-Require Import Module.
-
-Instance Uniquable_OccName : Unique.Uniquable OccName := {}.
-Admitted.
-
-
-Definition compare_Namespace : NameSpace -> NameSpace -> comparison :=
-  fun x y => match x , y with
-          | VarName   , VarName   => Eq
-          | VarName   , _         => Lt
-          | _         , VarName   => Gt
-          | DataName  , DataName  => Eq
-          | _         , DataName  => Lt
-          | DataName  , _         => Gt
-          | TvName    , TvName    => Eq
-          | _         , TvName    => Lt
-          | TvName    , _         => Gt
-          | TcClsName , TcClsName => Eq
-          end.
-
-Local Definition NameSpace_op_zg__ : NameSpace -> NameSpace -> bool :=
-  fun x y => match compare_Namespace x y with
-            | Gt => true
-            | _  => false
-          end.
-
-Local Definition NameSpace_op_zgze__ : NameSpace -> NameSpace -> bool :=
-  fun x y => match compare_Namespace x y with
-            | Gt => true
-            | Eq => true
-            | _  => false
-          end.
-
-Local Definition NameSpace_op_zl__ : NameSpace -> NameSpace -> bool :=
-  fun x y => match compare_Namespace x y with
-            | Lt => true
-            | _  => false
-          end.
-Local Definition NameSpace_op_zlze__ : NameSpace -> NameSpace -> bool :=
-  fun x y => match compare_Namespace x y with
-            | Lt => true
-            | Eq => true
-            | _  => false
-          end.
-
-(* Axioms for operations that we cannot yet translate *)
-
-Axiom isDataSymOcc : OccName -> bool.
-Axiom isSymOcc : OccName -> bool.
-Axiom chooseUniqueOcc : NameSpace -> GHC.Base.String -> OccSet -> OccName.
-Axiom startsWithUnderscore : OccName -> bool.
-Axiom isDerivedOccName : OccName -> bool.
-Axiom mkGenS : Module.Module -> OccName -> GHC.Num.Int -> GHC.Num.Int -> OccName.
-Axiom mkGenC : Module.Module -> OccName -> GHC.Num.Int -> OccName .
-Axiom tidyOccName : TidyOccEnv -> OccName -> (TidyOccEnv * OccName)%type.
-Axiom mkSuperDictAuxOcc : GHC.Num.Int -> OccName -> OccName.
-Axiom mkSuperDictSelOcc : GHC.Num.Int -> OccName -> OccName.
-Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
-
-(* Default values *)
 Require Import GHC.Err.
-Instance Default__OccName : Default OccName := Build_Default _ (Mk_OccName default default).
+
+Instance Default__OccName : Default OccName := 
+    Build_Default _ (Mk_OccName default default).
 
 (* Converted value declarations: *)
 
 Definition varName : NameSpace :=
   VarName.
+
+Local Definition Uniquable__OccName_getUnique : OccName -> Unique.Unique :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_OccName VarName fs => Unique.mkVarOccUnique fs
+    | Mk_OccName DataName fs => Unique.mkDataOccUnique fs
+    | Mk_OccName TvName fs => Unique.mkTvOccUnique fs
+    | Mk_OccName TcClsName fs => Unique.mkTcOccUnique fs
+    end.
+
+Program Instance Uniquable__OccName : Unique.Uniquable OccName :=
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__OccName_getUnique |}.
 
 Definition unitOccSet : OccName -> OccSet :=
   UniqSet.unitUniqSet.
@@ -155,11 +108,15 @@ Definition unionManyOccSets : list OccSet -> OccSet :=
 Definition tvName : NameSpace :=
   TvName.
 
+Axiom tidyOccName : TidyOccEnv -> OccName -> (TidyOccEnv * OccName)%type.
+
 Definition tcName : NameSpace :=
   TcClsName.
 
 Definition tcClsName : NameSpace :=
   TcClsName.
+
+Axiom startsWithUnderscore : OccName -> bool.
 
 Definition srcDataName : NameSpace :=
   DataName.
@@ -218,6 +175,10 @@ Program Instance Eq___NameSpace : GHC.Base.Eq_ NameSpace :=
 
 Definition nameSpacesRelated : NameSpace -> NameSpace -> bool :=
   fun ns1 ns2 => orb (ns1 GHC.Base.== ns2) (otherNameSpace ns1 GHC.Base.== ns2).
+
+Axiom mkSuperDictSelOcc : GHC.Num.Int -> OccName -> OccName.
+
+Axiom mkSuperDictAuxOcc : GHC.Num.Int -> OccName -> OccName.
 
 Definition mkOccSet : list OccName -> OccSet :=
   UniqSet.mkUniqSet.
@@ -327,10 +288,7 @@ Definition mkMaxTagOcc : OccName -> OccName :=
 Definition mkMatcherOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$m").
 
-Definition mkInstTyTcOcc : GHC.Base.String -> OccSet -> OccName :=
-  fun str =>
-    chooseUniqueOcc tcName (cons (GHC.Char.hs_char__ "R") (cons (GHC.Char.hs_char__
-                                                                 ":") str)).
+Axiom mkLocalOcc : Unique.Unique -> OccName -> OccName.
 
 Definition mkInstTyCoOcc : OccName -> OccName :=
   mk_simple_deriv tcName (GHC.Base.hs_string__ "D:").
@@ -356,28 +314,11 @@ Definition mkDictOcc : OccName -> OccName :=
 Definition mkDefaultMethodOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$dm").
 
-Definition mkDataTOcc : OccName -> OccSet -> OccName :=
-  fun occ =>
-    chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$t")
-                                                    (occNameString occ)).
-
 Definition mkDataConWrapperOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$W").
 
 Definition mkDataConWorkerOcc : OccName -> OccName :=
   fun datacon_occ => setOccNameSpace varName datacon_occ.
-
-Definition mkDataCOcc : OccName -> OccSet -> OccName :=
-  fun occ =>
-    chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$c")
-                                                    (occNameString occ)).
-
-Definition mkDFunOcc : GHC.Base.String -> bool -> OccSet -> OccName :=
-  fun info_str is_boot set =>
-    let prefix :=
-      if is_boot : bool then GHC.Base.hs_string__ "$fx" else
-      GHC.Base.hs_string__ "$f" in
-    chooseUniqueOcc VarName (Coq.Init.Datatypes.app prefix info_str) set.
 
 Definition mkCon2TagOcc : OccName -> OccName :=
   mk_simple_deriv varName (GHC.Base.hs_string__ "$con2tag_").
@@ -434,6 +375,8 @@ Definition isValNameSpace : NameSpace -> bool :=
     | _ => false
     end.
 
+Axiom isTypeableBindOcc : OccName -> bool.
+
 Definition isTvOcc : OccName -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -454,8 +397,16 @@ Definition isTcOcc : OccName -> bool :=
 Definition isTcClsNameSpace : NameSpace -> bool :=
   fun arg_0__ => match arg_0__ with | TcClsName => true | _ => false end.
 
+Axiom isSymOcc : OccName -> bool.
+
 Definition isEmptyOccSet : OccSet -> bool :=
   UniqSet.isEmptyUniqSet.
+
+Axiom isDerivedOccName : OccName -> bool.
+
+Axiom isDefaultMethodOcc : OccName -> bool.
+
+Axiom isDataSymOcc : OccName -> bool.
 
 Definition isDataOcc : OccName -> bool :=
   fun arg_0__ =>
@@ -610,6 +561,30 @@ Definition mkClsOcc : GHC.Base.String -> OccName :=
 Definition mkClsOccFS : FastString.FastString -> OccName :=
   mkOccNameFS clsName.
 
+Axiom chooseUniqueOcc : NameSpace -> GHC.Base.String -> OccSet -> OccName.
+
+Definition mkDFunOcc : GHC.Base.String -> bool -> OccSet -> OccName :=
+  fun info_str is_boot set =>
+    let prefix :=
+      if is_boot : bool then GHC.Base.hs_string__ "$fx" else
+      GHC.Base.hs_string__ "$f" in
+    chooseUniqueOcc VarName (Coq.Init.Datatypes.app prefix info_str) set.
+
+Definition mkDataCOcc : OccName -> OccSet -> OccName :=
+  fun occ =>
+    chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$c")
+                                                    (occNameString occ)).
+
+Definition mkDataTOcc : OccName -> OccSet -> OccName :=
+  fun occ =>
+    chooseUniqueOcc VarName (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "$t")
+                                                    (occNameString occ)).
+
+Definition mkInstTyTcOcc : GHC.Base.String -> OccSet -> OccName :=
+  fun str =>
+    chooseUniqueOcc tcName (cons (GHC.Char.hs_char__ "R") (cons (GHC.Char.hs_char__
+                                                                 ":") str)).
+
 Definition avoidClashesOccEnv : TidyOccEnv -> list OccName -> TidyOccEnv :=
   fun env occs =>
     let fix go arg_0__ arg_1__ arg_2__
@@ -630,21 +605,43 @@ Definition alterOccEnv {elt}
     | fn, A y, k => A (UniqFM.alterUFM fn y k)
     end.
 
-Local Definition Ord__NameSpace_op_zl__ :=
-  NameSpace_op_zl__.
-
-Local Definition Ord__NameSpace_op_zlze__ :=
-  NameSpace_op_zlze__.
-
-Local Definition Ord__NameSpace_op_zg__ :=
-  NameSpace_op_zg__.
-
-Local Definition Ord__NameSpace_op_zgze__ :=
-  NameSpace_op_zgze__.
-
 Local Definition Ord__NameSpace_compare
    : NameSpace -> NameSpace -> comparison :=
-  compare_Namespace.
+  fun x y =>
+    match x, y with
+    | VarName, VarName => Eq
+    | VarName, _ => Lt
+    | _, VarName => Gt
+    | DataName, DataName => Eq
+    | _, DataName => Lt
+    | DataName, _ => Gt
+    | TvName, TvName => Eq
+    | _, TvName => Lt
+    | TvName, _ => Gt
+    | TcClsName, TcClsName => Eq
+    end.
+
+Local Definition Ord__NameSpace_op_zl__ : NameSpace -> NameSpace -> bool :=
+  fun x y => match Ord__NameSpace_compare x y with | Lt => true | _ => false end.
+
+Local Definition Ord__NameSpace_op_zlze__ : NameSpace -> NameSpace -> bool :=
+  fun x y =>
+    match Ord__NameSpace_compare x y with
+    | Lt => true
+    | Eq => true
+    | _ => false
+    end.
+
+Local Definition Ord__NameSpace_op_zg__ : NameSpace -> NameSpace -> bool :=
+  fun x y => match Ord__NameSpace_compare x y with | Gt => true | _ => false end.
+
+Local Definition Ord__NameSpace_op_zgze__ : NameSpace -> NameSpace -> bool :=
+  fun x y =>
+    match Ord__NameSpace_compare x y with
+    | Gt => true
+    | Eq => true
+    | _ => false
+    end.
 
 Local Definition Ord__NameSpace_max : NameSpace -> NameSpace -> NameSpace :=
   fun x y => if Ord__NameSpace_op_zlze__ x y : bool then y else x.
@@ -670,18 +667,6 @@ Program Instance Ord__NameSpace : GHC.Base.Ord NameSpace :=
 
 (* Skipping all instances of class `Binary.Binary', including
    `OccName.Binary__OccName' *)
-
-Local Definition Uniquable__OccName_getUnique : OccName -> Unique.Unique :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_OccName VarName fs => Unique.mkVarOccUnique fs
-    | Mk_OccName DataName fs => Unique.mkDataOccUnique fs
-    | Mk_OccName TvName fs => Unique.mkTvOccUnique fs
-    | Mk_OccName TcClsName fs => Unique.mkTcOccUnique fs
-    end.
-
-Program Instance Uniquable__OccName : Unique.Uniquable OccName :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__OccName_getUnique |}.
 
 (* Skipping all instances of class `Outputable.OutputableBndr', including
    `OccName.OutputableBndr__OccName' *)
@@ -755,10 +740,8 @@ Program Instance HasOccName__OccName : HasOccName OccName :=
    `OccName.Outputable__OccEnv' *)
 
 (* External variables:
-     Gt Lt NameSpace_op_zg__ NameSpace_op_zgze__ NameSpace_op_zl__
-     NameSpace_op_zlze__ None Some andb bool chooseUniqueOcc compare_Namespace
-     comparison cons false list negb nil op_zt__ option orb true tt
-     Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
+     Eq Gt Lt None Some andb bool comparison cons false list negb nil op_zt__ option
+     orb true tt Coq.Init.Datatypes.app Data.Foldable.foldl FastString.FastString
      FastString.concatFS FastString.fsLit FastString.mkFastString FastString.unpackFS
      GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
      GHC.Base.id GHC.Base.max__ GHC.Base.min__ GHC.Base.op_zeze__

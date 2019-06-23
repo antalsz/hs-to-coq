@@ -10,11 +10,6 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-
-
-
 (* Converted imports: *)
 
 Require BasicTypes.

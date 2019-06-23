@@ -181,9 +181,12 @@ Definition unNDModule (arg_0__ : NDModule) :=
 
 Require Import GHC.Err.
 
-Instance Default__InstalledUnitId : Default InstalledUnitId := Build_Default _ (Mk_InstalledUnitId default ).
-Instance Default__DefUnitId : Default DefUnitId := Build_Default _ (Mk_DefUnitId default).
-Instance Default__UnitId : Default UnitId := Build_Default _ (DefiniteUnitId default).
+Instance Default__InstalledUnitId : Default InstalledUnitId := 
+  Build_Default _ (Mk_InstalledUnitId default ).
+Instance Default__DefUnitId : Default DefUnitId := 
+  Build_Default _ (Mk_DefUnitId default).
+Instance Default__UnitId : Default UnitId := 
+  Build_Default _ (DefiniteUnitId default).
 Instance Default__ModuleName : Default ModuleName :=
   Build_Default _ (Mk_ModuleName default).
 Instance Default__Module : Default Module :=
@@ -193,30 +196,11 @@ Instance Default__NDModule : Default NDModule :=
 Instance Default__ModLocation : Default ModLocation :=
   Build_Default _ (Mk_ModLocation default default default).
 
-
-Instance instance_Uniquable_ModuleName : Unique.Uniquable ModuleName := {}.
-Admitted.
-Instance instance_Uniquable_UnitId : Unique.Uniquable UnitId := {}.
-Admitted.
-
 Instance Unpeel_DefUnitId : Prim.Unpeel DefUnitId InstalledUnitId :=
   Prim.Build_Unpeel _ _ (fun arg_102__ => match arg_102__ with | Mk_DefUnitId fs => fs end) Mk_DefUnitId.
-(*
-Instance Unpeel_UnitId : Prim.Unpeel UnitId FastString.FastString :=
-  Prim.Build_Unpeel _ _ (fun arg_102__ => match arg_102__ with | PId fs => fs end) PId.
-Instance Unpeel_ModuleName : Prim.Unpeel ModuleName FastString.FastString :=
-  Prim.Build_Unpeel _ _ (fun arg_142__ => match arg_142__ with | Mk_ModuleName mod_ => mod_ end) Mk_ModuleName.
-*)
 Instance Unpeel_NDModule : Prim.Unpeel NDModule Module :=
   Prim.Build_Unpeel _ _ (fun arg_142__ => match arg_142__ with | Mk_NDModule mod_ => mod_ end) Mk_NDModule.
 
-
-
-
-(*
-Definition moduleNameSlashes : ModuleName -> GHC.Base.String := fun x => default.
-Definition mkModuleName : GHC.Base.String -> ModuleName := fun x => default.
-*)
 
 (* Converted value declarations: *)
 
@@ -245,6 +229,29 @@ Definition unitIdFS : UnitId -> FastString.FastString :=
 
 Definition unitIdString : UnitId -> GHC.Base.String :=
   FastString.unpackFS GHC.Base.∘ unitIdFS.
+
+Local Definition Uniquable__ModuleName_getUnique
+   : ModuleName -> Unique.Unique :=
+  fun '(Mk_ModuleName nm) => Unique.getUnique nm.
+
+Program Instance Uniquable__ModuleName : Unique.Uniquable ModuleName :=
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ModuleName_getUnique |}.
+
+Definition installedUnitIdKey : InstalledUnitId -> Unique.Unique :=
+  Unique.getUnique GHC.Base.∘ installedUnitIdFS.
+
+Definition unitIdKey : UnitId -> Unique.Unique :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | IndefiniteUnitId x => indefUnitIdKey x
+    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdKey x
+    end.
+
+Local Definition Uniquable__UnitId_getUnique : UnitId -> Unique.Unique :=
+  unitIdKey.
+
+Program Instance Uniquable__UnitId : Unique.Uniquable UnitId :=
+  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__UnitId_getUnique |}.
 
 Local Definition Ord__NDModule_compare : NDModule -> NDModule -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -282,16 +289,6 @@ Program Instance Eq___ModuleName : GHC.Base.Eq_ ModuleName :=
   fun _ k__ =>
     k__ {| GHC.Base.op_zeze____ := Eq___ModuleName_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___ModuleName_op_zsze__ |}.
-
-Definition installedUnitIdKey : InstalledUnitId -> Unique.Unique :=
-  Unique.getUnique GHC.Base.∘ installedUnitIdFS.
-
-Definition unitIdKey : UnitId -> Unique.Unique :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | IndefiniteUnitId x => indefUnitIdKey x
-    | DefiniteUnitId (Mk_DefUnitId x) => installedUnitIdKey x
-    end.
 
 Local Definition Eq___UnitId_op_zeze__ : UnitId -> UnitId -> bool :=
   fun uid1 uid2 => unitIdKey uid1 GHC.Base.== unitIdKey uid2.
@@ -1148,13 +1145,6 @@ Program Instance Ord__IndefModule : GHC.Base.Ord IndefModule :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `Module.Outputable__ModuleName' *)
 
-Local Definition Uniquable__ModuleName_getUnique
-   : ModuleName -> Unique.Unique :=
-  fun '(Mk_ModuleName nm) => Unique.getUnique nm.
-
-Program Instance Uniquable__ModuleName : Unique.Uniquable ModuleName :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ModuleName_getUnique |}.
-
 (* Skipping all instances of class `Binary.Binary', including
    `Module.Binary__ComponentId' *)
 
@@ -1209,12 +1199,6 @@ Program Instance Uniquable__InstalledUnitId
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Module.Data__UnitId' *)
-
-Local Definition Uniquable__UnitId_getUnique : UnitId -> Unique.Unique :=
-  unitIdKey.
-
-Program Instance Uniquable__UnitId : Unique.Uniquable UnitId :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__UnitId_getUnique |}.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Module.Show__UnitId' *)

@@ -13,6 +13,10 @@ skip module Encoding
 skip module GHC.Fingerprint
 skip module GHC.Fingerprint.Type
 
+order Module.Uniquable__ModuleName Module.Ord__NDModule_compare Module.Ord__NDModule 
+order Module.Uniquable__UnitId Module.Ord__NDModule_compare Ord__NDModule 
+
+
 # Avoid dependency on DynFlags here
 skip Module.indefUnitIdToUnitId
 skip Module.renameHoleModule

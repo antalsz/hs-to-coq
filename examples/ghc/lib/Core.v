@@ -2285,17 +2285,11 @@ Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GH
 Instance Default__DataCon : GHC.Err.Default DataCon :=
  Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).
 (* ---- TyCon midamble ----- *)
-
 Instance Default__AlgTyConFlav : Err.Default AlgTyConFlav :=
   Err.Build_Default _ (VanillaAlgTyCon Err.default).
-
 Instance Default__RuntimRepInfo : Err.Default RuntimeRepInfo :=
   Err.Build_Default _ NoRRI.
 
-(*
-Instance Uniquable_Tycon : Unique.Uniquable TyCon. 
-Admitted.
-*)
 
 
 

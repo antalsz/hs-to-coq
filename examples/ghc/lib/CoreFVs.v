@@ -23,6 +23,7 @@ Require GHC.Num.
 Require Id.
 Require Lists.List.
 Require NameSet.
+Require NestedRecursionHelpers.
 Require Panic.
 Require UniqSet.
 Require Unique.
@@ -356,7 +357,8 @@ Definition freeVars : Core.CoreExpr -> CoreExprWithFVs :=
                    fun '(pair (pair con args) rhs) =>
                      let rhs2 := go rhs in
                      pair (delBindersFV args (freeVarsOf rhs2)) (pair (pair con args) rhs2) in
-                 let 'pair alts_fvs_s alts2 := Util.mapAndUnzip fv_alt alts in
+                 let 'pair alts_fvs_s alts2 := NestedRecursionHelpers.mapAndUnzipFix fv_alt
+                                                 alts in
                  let alts_fvs := unionFVss alts_fvs_s in
                  let scrut2 := go scrut in
                  pair (unionFVs (unionFVs (delBinderFV bndr alts_fvs) (freeVarsOf scrut2))
@@ -421,7 +423,7 @@ Definition freeVarsBind
      FV.fvDVarSet FV.fvVarList FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV
      FV.unionsFV FV.unitFV GHC.Base.map GHC.Base.op_z2218U__ GHC.List.unzip
      GHC.List.zip GHC.Num.fromInteger Id.idCoreRules Lists.List.map NameSet.NameSet
-     NameSet.emptyNameSet NameSet.unionNameSet Panic.assertPanic
-     UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
-     Util.mapAndUnzip
+     NameSet.emptyNameSet NameSet.unionNameSet NestedRecursionHelpers.mapAndUnzipFix
+     Panic.assertPanic UniqSet.delOneFromUniqSet_Directly Unique.getUnique
+     Util.debugIsOn
 *)

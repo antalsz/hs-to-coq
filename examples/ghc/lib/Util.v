@@ -57,14 +57,14 @@ Instance Default__Direction : GHC.Err.Default Direction :=
 
 (* Midamble *)
 
-Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc}
+(* Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc}
    : (acc -> a -> b -> acc) -> acc -> list a -> list b -> acc :=
   fix foldl2 arg_0__ arg_1__ arg_2__ arg_3__
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
            | _, z, nil, nil => z
            | k, z, cons a as_, cons b bs => foldl2 k (k z a b) as_ bs
            | _, _, _, _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
-           end.
+           end. *)
 
 
 
@@ -332,6 +332,13 @@ Notation "'_<&&>_'" := (op_zlzazazg__).
 
 Infix "<&&>" := (_<&&>_) (at level 99).
 
+Definition only {a} `{GHC.Err.Default a} : list a -> a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | cons a _ => a
+    | _ => Panic.panic (GHC.Base.hs_string__ "Util: only")
+    end.
+
 Definition notNull {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => false | _ => true end.
 
@@ -375,13 +382,14 @@ Definition mapAndUnzip3 {a} {b} {c} {d}
                pair (pair (cons r1 rs1) (cons r2 rs2)) (cons r3 rs3)
            end.
 
-Definition mapAndUnzip {a} {b} {c} (f : a -> b * c)
-   : list a -> list b * list c :=
-  fix mapAndUnzip y
-        := match y with
-           | nil => pair nil nil
-           | cons x xs =>
-               let 'pair rs1 rs2 := mapAndUnzip xs in
+Definition mapAndUnzip {a} {b} {c}
+   : (a -> (b * c)%type) -> list a -> (list b * list c)%type :=
+  fix mapAndUnzip (arg_0__ : (a -> (b * c)%type)) (arg_1__ : list a) : (list b *
+                                                                        list c)%type
+        := match arg_0__, arg_1__ with
+           | _, nil => pair nil nil
+           | f, cons x xs =>
+               let 'pair rs1 rs2 := mapAndUnzip f xs in
                let 'pair r1 r2 := f x in
                pair (cons r1 rs1) (cons r2 rs2)
            end.
@@ -434,6 +442,16 @@ Definition fst3 {a} {d} {b} {c}
     match arg_0__, arg_1__ with
     | f, pair (pair a b) c => pair (pair (f a) b) c
     end.
+
+Definition foldl2 {acc} {a} {b} `{GHC.Err.Default acc}
+   : (acc -> a -> b -> acc) -> acc -> list a -> list b -> acc :=
+  fix foldl2 (arg_0__ : acc -> a -> b -> acc) (arg_1__ : acc) (arg_2__ : list a)
+             (arg_3__ : list b) : acc
+        := match arg_0__, arg_1__, arg_2__, arg_3__ with
+           | _, z, nil, nil => z
+           | k, z, cons a as_, cons b bs => foldl2 k (k z a b) as_ bs
+           | _, _, _, _ => Panic.panic (GHC.Base.hs_string__ "Util: foldl2")
+           end.
 
 Definition firstM {m} {a} {c} {b} `{GHC.Base.Monad m}
    : (a -> m c) -> (a * b)%type -> m (c * b)%type :=

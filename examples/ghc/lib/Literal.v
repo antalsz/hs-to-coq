@@ -27,6 +27,7 @@ Require GHC.Err.
 Require GHC.Num.
 Require GHC.Real.
 Require Panic.
+Require UniqFM.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -48,13 +49,6 @@ Inductive Literal : Type
 
 Instance Default__Literal : GHC.Err.Default Literal :=
   GHC.Err.Build_Default _ MachNullAddr.
-
-(* Midamble *)
-
-
-Parameter absent_lits :  UniqFM.UniqFM Literal.
-
-Parameter inCharRange : GHC.Char.Char -> bool.
 
 (* Converted value declarations: *)
 
@@ -212,6 +206,8 @@ Definition litIsDupable : DynFlags.DynFlags -> Literal -> bool :=
     | _, _ => true
     end.
 
+Axiom inCharRange : GHC.Char.Char -> bool.
+
 Definition float2DoubleLit : Literal -> Literal :=
   fun arg_0__ =>
     match arg_0__ with
@@ -249,6 +245,8 @@ Definition char2IntLit : Literal -> Literal :=
     | MachChar c => MachInt (GHC.Real.toInteger (GHC.Base.ord c))
     | l => Panic.panicStr (GHC.Base.hs_string__ "char2IntLit") (Panic.someSDoc)
     end.
+
+Axiom absent_lits : UniqFM.UniqFM Literal.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Literal.Data__Literal' *)
@@ -334,5 +332,5 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
      GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound GHC.Err.Build_Default
      GHC.Err.Default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
      GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.toInteger Panic.panicStr
-     Panic.someSDoc
+     Panic.someSDoc UniqFM.UniqFM
 *)

@@ -1,12 +1,9 @@
+axiomatize definition Literal.absent_lits
+axiomatize definition Literal.inCharRange
+
 # just to access type info
 skip Literal.literalType
 skip Literal.absentLiteralOf
-
-## declared as a parameter in the midamble.
-# is a list of specific prelude names
-skip Literal.absent_lits
-# needs Constants module
-skip Literal.inCharRange
 
 # needs Real.FrealFral Real.Rational
 skip Literal.double2IntLit
@@ -23,7 +20,6 @@ skip Literal.narrow32IntLit
 skip Literal.narrow32WordLit
 skip Literal.narrow8IntLit
 skip Literal.narrow8WordLit
-
 skip Literal.inInt64Range 
 skip Literal.mkMachInt64 
 skip Literal.inWord64Range

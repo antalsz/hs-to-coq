@@ -1,16 +1,18 @@
-## needs MonadPlus option
+# needs MonadPlus option
 skip Maybes.firstJusts
 skip Maybes.firstJust
 
 # Needs Control.Exception.Base
 skip Maybes.tryMaybeT
 
-## Defined in the midamble to push the partiality of expectJust to the caller
-## (should we do this??)
-skip Maybes.expectJust
+#
+# add Default constraint to partial function
+#
+set type Maybes.expectJust : forall {a} `{(GHC.Err.Default a)}, GHC.Base.String -> ((option a) -> a)
 
-
-## fmap and <*> defined in terms of liftM and ap
+#
+# fmap and <*> defined in terms of liftM and ap
+#
 redefine Local Definition Maybes.Functor__MaybeErr_fmap {inst_err} :
   forall {a} {b},
     (a -> b) -> (((MaybeErr inst_err) a) -> ((MaybeErr inst_err) b)) :=

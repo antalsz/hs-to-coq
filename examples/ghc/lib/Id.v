@@ -34,12 +34,6 @@ Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
 
-(* Midamble *)
-
-
-
-
-
 (* Converted value declarations: *)
 
 Definition stateHackOneShot : BasicTypes.OneShotInfo :=

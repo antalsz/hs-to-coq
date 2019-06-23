@@ -841,7 +841,7 @@ Section in_exitifyRec.
         rename c into v.
 
         do 2 expand_pairs. simpl.
-        rewrite map_unzip.
+        rewrite NestedRecursionHelpers.map_unzip.
         rewrite snd_unzip, !map_map.
         rewrite forM_map.
 

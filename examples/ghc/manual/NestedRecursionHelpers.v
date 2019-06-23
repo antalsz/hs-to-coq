@@ -1,10 +1,10 @@
-(*
+
 (* Useful for development *)
 Add LoadPath "../../../base".
 Add LoadPath "../lib".
 Add LoadPath "../../containers/lib".
 Add LoadPath "../../transformers/lib".
-*)
+
 
 Require Import GHC.Base. Import GHC.Base.Notations.
 Require Import GHC.Num.  Import GHC.Num.Notations.
@@ -16,6 +16,7 @@ Require Import Data.Functor.Utils.
 
 Require Import Core.
 Require Import Panic.
+Require Import Util.
 
 From Coq Require Import ssreflect.
 Set Bullet Behavior "Strict Subproofs".
@@ -171,3 +172,38 @@ Proof.
   elim: xs ys => [|x xs IH] [|y ys] //=.
   by rewrite IH.
 Qed.  
+
+(******************************************************************************)
+(** CoreFVs **)
+
+Definition mapAndUnzipFix {a} {b} {c}
+           (f : a -> (b * c)) : ((list a) -> ((list b) * (list c))) :=
+  fix mapAndUnzip y
+    := match y with
+       | nil => pair nil nil
+       | cons x xs =>
+         match mapAndUnzip xs with    
+         | pair rs1 rs2 => match f x with
+                          | pair r1 r2 =>
+                            pair (cons r1 rs1) (cons r2 rs2)
+                          end
+         end
+       end.
+
+Theorem mapAndUnzipFix_is_mapAndUnzip : forall a b c (f : a -> (b * c)) l, 
+    mapAndUnzip f l = mapAndUnzipFix f l.
+Proof.
+  induction l; try reflexivity.
+  simpl. rewrite IHl. reflexivity.
+Qed.
+
+Lemma map_unzip : forall (a b c : Type)( f : a -> b * c) xs, 
+  mapAndUnzipFix f xs = List.unzip (map f xs).
+Proof.
+  induction xs; simpl; auto.
+  destruct mapAndUnzipFix.
+  destruct List.unzip.
+  destruct (f a0).
+  inversion IHxs.
+  auto.
+Qed.

@@ -13,8 +13,10 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Control.Monad.Trans.Maybe.
+Require Coq.Init.Datatypes.
 Require Data.Maybe.
 Require GHC.Base.
+Require GHC.Err.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -26,18 +28,6 @@ Inductive MaybeErr err val : Type
 Arguments Succeeded {_} {_} _.
 
 Arguments Failed {_} {_} _.
-
-(* Midamble *)
-
-Require GHC.Err.
-
-Definition expectJust {a}`{_:GHC.Err.Default a} :
-			GHC.Base.String -> ((option a) -> a) :=
-  fun arg_14__ arg_15__ =>
-    match arg_14__ , arg_15__ with
-      | _ , Some x => x
-      | err , None => GHC.Err.error (GHC.Base.hs_string__ "expectJust ")
-    end.
 
 (* Converted value declarations: *)
 
@@ -61,6 +51,15 @@ Definition isSuccess {err} {val} : MaybeErr err val -> bool :=
 
 Definition failME {err} {val} : err -> MaybeErr err val :=
   fun e => Failed e.
+
+Definition expectJust {a} `{GHC.Err.Default a}
+   : GHC.Base.String -> option a -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | _, Some x => x
+    | err, None =>
+        GHC.Err.error (Coq.Init.Datatypes.app (GHC.Base.hs_string__ "expectJust ") err)
+    end.
 
 Local Definition Monad__MaybeErr_op_zgzgze__ {inst_err}
    : forall {a} {b},
@@ -147,11 +146,11 @@ Program Instance Monad__MaybeErr {err} : GHC.Base.Monad (MaybeErr err) :=
 
 (* External variables:
      None Some bool false option true tt unit Control.Monad.Trans.Maybe.MaybeT
-     Control.Monad.Trans.Maybe.Mk_MaybeT Data.Maybe.fromMaybe GHC.Base.Applicative
-     GHC.Base.Functor GHC.Base.Monad GHC.Base.const GHC.Base.flip GHC.Base.fmap
-     GHC.Base.fmap__ GHC.Base.id GHC.Base.liftA2__ GHC.Base.liftM
-     GHC.Base.op_z2218U__ GHC.Base.op_zgzg____ GHC.Base.op_zgzgze____
-     GHC.Base.op_zlzd__ GHC.Base.op_zlzd____ GHC.Base.op_zlztzg____
-     GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__ GHC.Base.return_
-     GHC.Base.return___
+     Control.Monad.Trans.Maybe.Mk_MaybeT Coq.Init.Datatypes.app Data.Maybe.fromMaybe
+     GHC.Base.Applicative GHC.Base.Functor GHC.Base.Monad GHC.Base.String
+     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.id
+     GHC.Base.liftA2__ GHC.Base.liftM GHC.Base.op_z2218U__ GHC.Base.op_zgzg____
+     GHC.Base.op_zgzgze____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____
+     GHC.Base.op_zlztzg____ GHC.Base.op_ztzg____ GHC.Base.pure GHC.Base.pure__
+     GHC.Base.return_ GHC.Base.return___ GHC.Err.Default GHC.Err.error
 *)

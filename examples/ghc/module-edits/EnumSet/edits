@@ -2,3 +2,6 @@ data kinds EnumSet.EnumSet Type
 
 rename value GHC.Enum.fromEnum = EnumSet.fromEnumN
 rename value GHC.Enum.toEnum = EnumSet.toEnumN
+
+add EnumSet Definition EnumSet.toEnumN  {a} `{(GHC.Enum.Enum a)} n : a := GHC.Enum.toEnum (Coq.ZArith.BinInt.Z.of_N n).
+add EnumSet Definition EnumSet.fromEnumN {a} `{(GHC.Enum.Enum a)} (e : a) := Coq.ZArith.BinInt.Z.to_N (GHC.Enum.fromEnum e).

@@ -1,11 +1,9 @@
-# break the cycle with TyThing
-# we may need to axiomatize these two functions in a separate module.
-rename type CoreType.TyThing = unit
 skip Name.mkWiredInName
 skip Name.wiredInNameTyThing_maybe
 
-
+#
 # cannot process error message when this fails
+#
 redefine Definition Name.nameModule : Name -> Module.Module :=
   fun name =>  Maybes.orElse (nameModule_maybe name)(Panic.panic default).
 
@@ -27,6 +25,8 @@ skip Name.ppr_z_occ_name
 skip Name.pprExternal
 skip Name.pprName
 skip Name.Default__Name
+
+##
 ## Eq_ instance defined in terms of Ord instance. Need to inline definition of
 ## 'compare' (i.e. cmpName) to resolve.
 

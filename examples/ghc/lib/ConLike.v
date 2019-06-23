@@ -26,10 +26,6 @@ Inductive ConLike : Type
   := | RealDataCon : Core.DataCon -> ConLike
   |  PatSynCon : Core.PatSyn -> ConLike.
 
-(* Midamble *)
-
-
-
 (* Converted value declarations: *)
 
 Local Definition Uniquable__ConLike_getUnique : ConLike -> Unique.Unique :=

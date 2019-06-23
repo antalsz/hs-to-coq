@@ -9,6 +9,8 @@
 
 # in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
 
+# Make it easier for Coq to see termination
+rename value Util.mapAndUnzip = NestedRecursionHelpers.mapAndUnzipFix 
 
 #
 # TODO: we don't try to translate the orphNames functions

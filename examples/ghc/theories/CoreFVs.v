@@ -769,8 +769,8 @@ Proof.
                       (delBindersFV args (freeVarsOf (freeVars rhs)),
                        (con, args, freeVars rhs))) alts)) eqn:Hl.
     simpl. destruct (freeVars scrut) eqn:Hfv.
-    destruct Util.mapAndUnzip eqn:Hmu. simpl.
-    rewrite map_unzip in Hmu.
+    destruct NestedRecursionHelpers.mapAndUnzipFix eqn:Hmu. simpl.
+    rewrite NestedRecursionHelpers.map_unzip in Hmu.
     simpl in H; rewrite H. f_equal.
     rewrite Hl in Hmu. inversion Hmu. subst.
     generalize dependent l1. generalize dependent l2. induction alts; intros.

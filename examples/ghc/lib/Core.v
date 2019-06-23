@@ -2284,7 +2284,6 @@ Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GH
 
 Instance Default__DataCon : GHC.Err.Default DataCon :=
  Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).
-
 (* ---- TyCon midamble ----- *)
 
 Instance Default__AlgTyConFlav : Err.Default AlgTyConFlav :=
@@ -2299,23 +2298,21 @@ Admitted.
 *)
 
 
-Import FieldLabel.
-Require GHC.Err.
-
-
 
 Instance Name_NamedThing_TyCoVar : Name.NamedThing TyCoVar.
 Admitted.
 Instance Name_NamedThing_VarId : Name.NamedThing Id.
 Admitted.
+(* ------------- VarEnv midamble.v ------------ *)
 Require GHC.Err.
 
 Instance Default__InScopeSet : GHC.Err.Default InScopeSet :=
   GHC.Err.Build_Default _ (InScope GHC.Err.default GHC.Err.default).
 Instance Default__RnEnv2 : GHC.Err.Default RnEnv2 :=
   GHC.Err.Build_Default _ (RV2 GHC.Err.default GHC.Err.default GHC.Err.default).
-Instance Default__TidyEnv : GHC.Err.Default TidyEnv.
-Admitted.
+Instance Default__TidyEnv : GHC.Err.Default TidyEnv :=
+  GHC.Err.Build_Default _ (pair GHC.Err.default GHC.Err.default).
+
 
 (* ------------- CoreSyn midamble.v ------------ *)
 Require Import Coq.ZArith.ZArith.

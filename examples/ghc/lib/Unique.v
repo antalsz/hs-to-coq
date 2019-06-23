@@ -10,11 +10,6 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
-(* Preamble *)
-
-
-
-
 (* Converted imports: *)
 
 Require BasicTypes.
@@ -46,15 +41,12 @@ Definition getUnique `{g__0__ : Uniquable a} : a -> Unique :=
 
 (* Midamble *)
 
-
 Instance Default__Name : GHC.Err.Default Unique
   := GHC.Err.Build_Default _ (MkUnique GHC.Err.default).
 
 Program Instance Uniquable__Word : Uniquable GHC.Num.Word :=
   fun _ k => k {| getUnique__ x := MkUnique x |}.
 
-
-(* Parameter mkUnique : GHC.Char.Char -> GHC.Num.Word -> Unique. *)
 
 (* Converted value declarations: *)
 

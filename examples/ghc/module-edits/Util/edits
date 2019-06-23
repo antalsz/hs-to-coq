@@ -1,22 +1,35 @@
+#
+# we are counting 
+#
 rename type GHC.Num.Int = nat
-
-redefine Axiom Util.debugIsOn : bool.
-redefine Axiom Util.makeRelativeTo  : GHC.Base.String -> (GHC.Base.String -> GHC.Base.String).
-redefine Axiom Util.looksLikePackageName : GHC.Base.String -> bool.
-
-## TODO
-rewrite forall x, GHC.Unicode.toUpper x = x
-
-## Needs a `{Default a} constraint added to its type
-## and we don't have an edit that can do that directly.
-rewrite forall , Util.only = Panic.head
-skip Util.only
-
 rewrite forall, Data.Foldable.length       = Coq.Lists.List.length
 rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
 rewrite forall x, GHC.List.take x        = Coq.Lists.List.firstn x
 rewrite forall x, GHC.List.drop x        = Coq.Lists.List.skipn x
 
+
+axiomatize definition Util.debugIsOn
+axiomatize definition Util.makeRelativeTo
+axiomatize definition Util.looksLikePackageName
+
+redefine Definition Util.HasDebugCallStack := unit.
+
+## TODO (axiomatize this in base)
+rewrite forall x, GHC.Unicode.toUpper x = x
+
+## partial
+set type Util.only : forall {a}`{(GHC.Err.Default a)}, (list a) -> a
+set type Util.foldl2 : forall {acc} {a} {b} `{(GHC.Err.Default acc)}, (acc -> (a -> (b -> acc))) -> (acc -> ((list a) -> ((list b) -> acc)))
+
+## termination
+skip Util.nTimes
+termination Util.nTimes deferred
+termination Util.split deferred
+
+in Util.exactLog2 termination pow2 deferred
+in Util.transitiveClosure termination go deferred
+
+## skipped definitions
 
 skip module Data.Char
 skip module GHC.Ptr
@@ -60,17 +73,11 @@ skip Util.readRational
 ## 
 skip Util.minWith
 
-## partial, needs {Default acc}, in midamble
-skip Util.foldl2
-
-## needs Data.Traversable.mapAccumL
+# needs Data.Traversable.mapAccumL
 skip Util.mapAccumL2
-
-
 
 # Environment dependent
 skip Util.isDarwinHost
-
 
 skip Util.charToC
 skip Util.chunkList
@@ -85,21 +92,10 @@ skip Util.golden
 skip Util.looksLikeModuleName
 
 
-redefine Definition Util.HasDebugCallStack := unit.
-
-
 skip Util.matchVectors
 skip Util.mulHi
 skip Util.hashInt32
 skip Util.hashString
-
-## termination
-skip Util.nTimes
-termination Util.nTimes deferred
-termination Util.split deferred
-
-in Util.exactLog2 termination pow2 deferred
-in Util.transitiveClosure termination go deferred
 
 skip Util.nubSort
 skip Util.reslash
@@ -121,20 +117,7 @@ skip Util.hSetTranslit
 skip Util.sharedGlobal
 skip Util.sharedGlobalM
 
-## needs tail
+# needs tail
 skip Util.splitLongestPrefix
 
 
-redefine Definition Util.mapAndUnzip {a} {b} {c}
-           (f : a -> (b * c)) : ((list a) -> ((list b) * (list c))) :=
-  fix mapAndUnzip y
-    := match y with
-       | nil => pair nil nil
-       | cons x xs =>
-         match mapAndUnzip xs with    
-         | pair rs1 rs2 => match f x with
-                          | pair r1 r2 =>
-                            pair (cons r1 rs1) (cons r2 rs2)
-                          end
-         end
-       end.

@@ -1,23 +1,17 @@
+#
+# Even though we are axiomatizing this module, it draws on a LOT of the code base, 
+# so we have to skip definitions that refer to parts that we aren't concerned with.
+#
 axiomatize module DynFlags
 
 rename type GHC.Num.Int = BinNums.N
 
-
 skip module Config
 skip module CmdLineParser
-# skip module Control.Monad.Trans.Class
-# skip module Control.Monad.Trans.Except
-# skip module Control.Monad.Trans.Maybe
-# skip module Control.Monad.Trans.Reader
-# skip module Control.Monad.Trans.Writer.Lazy
 skip module Control.Monad.IO.Class
 skip module Control.Monad.IO
-# skip module Data.IntSet.Base
-# skip module Data.Map.Base
-# skip module Data.Set.Base
 skip module Deriving
 skip module ErrUtils
-# skip module GHC.Base
 skip module GHC.IORef
 skip module GHC.IO.Handle
 skip module GHC.IO.Handle.Types
@@ -26,10 +20,7 @@ skip module GHC.IO.Unsafe
 skip module Text.ParserCombinators
 skip module Text.ParserCombinators.ReadP
 skip module GHC.LanguageExtensions.Type
-# skip module GHC.Num
-# skip module GHC.Prim
 skip module Hooks
-# skip module Module
 skip module PackageConfig
 skip module Packages
 skip module Platform
@@ -102,7 +93,6 @@ skip DynFlags.setExtensionFlag'
 skip DynFlags.disableGlasgowExts
 skip DynFlags.unSetExtensionFlag
 skip DynFlags.unSetExtensionFlag'
-#skip DynFlags.gopt
 skip DynFlags.unSetGeneralFlag
 skip DynFlags.setPackageTrust
 skip DynFlags.flagsPackage
@@ -227,9 +217,6 @@ skip DynFlags.unSetFatalWarningFlag
 skip DynFlags.parsePackageFlag
 skip DynFlags.parsePackageArg
 skip DynFlags.parseUnitIdArg
-
-
-
 
 # strange deriving behavior
 skip DynFlags.Ord__SseVersion

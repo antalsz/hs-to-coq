@@ -1,0 +1,8 @@
+axiomatize definition CoreStats.coStats
+axiomatize definition CoreStats.tyStats
+
+inline mutual CoreStats.pairSize
+inline mutual CoreStats.altSize
+
+inline mutual CoreStats.altStats
+inline mutual CoreStats.bindingStats

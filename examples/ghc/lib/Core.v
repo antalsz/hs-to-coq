@@ -12,34 +12,7 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-(* We might put these elsewhere, but these are some types that we 
-   can use for untying the knots in DataCon/Class/PatSyn/TyCon *)
 
-(*
-Require GHC.Err.
-Require GHC.Nat.
-Require GHC.Base.
-
-Parameter DataConId : Type.
-Parameter ClassId   : Type.
-Parameter PatSynId  : Type.
-Parameter TyConId   : Type.
-
-Parameter Default_PatSynId  : GHC.Err.Default PatSynId.  Existing Instance Default_PatSynId.
-Parameter Default_ClassId   : GHC.Err.Default ClassId.   Existing Instance Default_ClassId.
-Parameter Default_DataConId : GHC.Err.Default DataConId. Existing Instance Default_DataConId.
-Parameter Default_TyConId   : GHC.Err.Default TyConId.   Existing Instance Default_TyConId.
-
-Parameter Eq_PatSynId  : Base.Eq_ PatSynId.  Existing Instance Eq_PatSynId.
-Parameter Eq_ClassId   : Base.Eq_ ClassId.   Existing Instance Eq_ClassId.
-Parameter Eq_DataConId : Base.Eq_ DataConId. Existing Instance Eq_DataConId.
-Parameter Eq_TyConId   : Base.Eq_ TyConId.   Existing Instance Eq_TyConId.
-
-Parameter Ord_PatSynId  : Base.Ord PatSynId.  Existing Instance Ord_PatSynId.
-Parameter Ord_ClassId   : Base.Ord ClassId.   Existing Instance Ord_ClassId.
-Parameter Ord_DataConId : Base.Ord DataConId. Existing Instance Ord_DataConId.
-Parameter Ord_TyConId   : Base.Ord TyConId.   Existing Instance Ord_TyConId.
-*)
 
 
 
@@ -2337,7 +2310,6 @@ Admitted.
 
 
 Import FieldLabel.
-
 Require GHC.Err.
 
 
@@ -2374,11 +2346,11 @@ Ltac solve_collectAnnArgsTicks :=
              Tactics.program_simpl;
              omega].
 
-
+(* This function is needed to show the termination of collectAnnArgs, 
+   collectAnnArgsTicks *)
 (* ANTALSZ NOTE: to make this function structurally recursive, we need to 
    define size_AnnAlt as a *local* helper function, not a mutual 
    helper function. Changing size_AnnAlt to "with" results in an error. *)
-
 Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
   match e with 
   | AnnVar _ => 0
@@ -2406,30 +2378,7 @@ Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
   | AnnCoercion _ => 0
   end.
 
-
-Fixpoint core_size {v} (e : Expr v) : nat :=
-    match e with
-    | Mk_Var v => 0
-    | Lit l => 0
-    | App e1 e2 => S (core_size e1 + core_size e2)
-    | Lam v e => S (core_size e)
-    | Let (NonRec v rhs) body => 
-        S (core_size rhs + core_size body)
-    | Let (Rec pairs) body => 
-        S (Lists.List.fold_right plus 0 (Lists.List.map (fun p => core_size (snd p)) pairs) +
-           core_size body)
-    | Case scrut bndr ty alts  => 
-        S (core_size scrut +
-           Lists.List.fold_right plus 0 (Lists.List.map (fun p => core_size (snd p)) alts))
-    | Cast e _ =>   S (core_size e)
-    | Tick _ e =>   S (core_size e)
-    | Type_ _  =>   0
-    | Coercion _ => 0
-    end.
-
-
-
-
+(* ---------------------------------- *)
 
 Instance Default__Expr {b} : GHC.Err.Default (Expr b) :=
   GHC.Err.Build_Default _ (Mk_Var GHC.Err.default).
@@ -2458,58 +2407,13 @@ Instance Default__CoreRule : GHC.Err.Default CoreRule :=
 Instance Default__RuleEnv : GHC.Err.Default RuleEnv :=
   GHC.Err.Build_Default _ (Mk_RuleEnv GHC.Err.default GHC.Err.default).
 
-(* ANTALSZ: Here are some examples of mutual recursion that I've unwound 
-   by hand. We would like to generate these instead. *)
 
+(* ---------------------------------- *)
 
-Fixpoint deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr :=
-  let deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
-       fun arg_0__ =>  match arg_0__ with | pair _ e => deAnnotate' e end in
-  let deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
-      fun arg_0__ =>
-        match arg_0__ with
-        | pair (pair con args) rhs => pair (pair con args) (deAnnotate rhs)
-        end in
-    match arg_0__ with
-      | AnnType t => Type_ t
-      | AnnCoercion co => Coercion co
-      | AnnVar v => Mk_Var v
-      | AnnLit lit => Lit lit
-      | AnnLam binder body => Lam binder (deAnnotate body)
-      | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
-      | AnnCast e (pair _ co) => Cast (deAnnotate e) co
-      | AnnTick tick body => Tick tick (deAnnotate body)
-      | AnnLet bind body =>
-        let deAnnBind :=
-            fun arg_9__ =>
-              match arg_9__ with
-              | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
-              | AnnRec pairs => Rec (let cont_11__ arg_12__ :=
-                                        match arg_12__ with
-                                        | pair v rhs => cons (pair v (deAnnotate rhs)) nil
-                                        end in
-                                    Coq.Lists.List.flat_map cont_11__ pairs)
-              end in
-        Let (deAnnBind bind) (deAnnotate body)
-      | AnnCase scrut v t alts => Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt
-                                                                           alts)
-    end. 
-
-(* ANTALSZ: Here is another example *)
-
-Fixpoint collectAnnArgs_go {b}{a}(expr : AnnExpr' b a) g as_ :=
-  match expr with
-    | AnnApp f a => collectAnnArgs_go (snd f) (fst f) (cons a as_)
-    | e          => ((g,e), as_)
-  end.
-
-Definition collectAnnArgs {b}{a} :
-  AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
-  fun expr => collectAnnArgs_go (snd expr) (fst expr) nil.
-
+(* See comments in CoreSyn/edits file. We can't use termination edits for collect. *)
 
 Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
-           : nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
+    : nat -> AnnExpr bndr annot -> (list bndr * AnnExpr bndr annot)%type :=
           fun orig_n e =>
             let fix collect (arg_0__:nat) (arg_1__ : list bndr) (arg_2__:AnnExpr bndr annot) :=
                                match arg_0__, arg_1__, arg_2__ with
@@ -2523,8 +2427,6 @@ Definition collectNAnnBndrs {bndr} {annot}`{GHC.Err.Default annot}
                                    end
                                end in
             collect orig_n nil e.
-
-
 (* DEMAND midamble file *)
 
 Require Import GHC.Nat.
@@ -6101,19 +6003,75 @@ Definition deTagAlt {t} : TaggedAlt t -> CoreAlt :=
     pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
                 Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs).
 
+Definition deAnnotate'
+   : forall {bndr} {annot}, AnnExpr' bndr annot -> Expr bndr :=
+  fix deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr
+        := let deAnnotate {bndr} {annot} (arg_0__ : AnnExpr bndr annot) : Expr bndr :=
+             let 'pair _ e := arg_0__ in
+             deAnnotate' e in
+           let deAnnAlt {bndr} {annot} (arg_0__ : AnnAlt bndr annot) : Alt bndr :=
+             let 'pair (pair con args) rhs := arg_0__ in
+             pair (pair con args) (deAnnotate rhs) in
+           match arg_0__ with
+           | AnnType t => Type_ t
+           | AnnCoercion co => Coercion co
+           | AnnVar v => Mk_Var v
+           | AnnLit lit => Lit lit
+           | AnnLam binder body => Lam binder (deAnnotate body)
+           | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
+           | AnnCast e (pair _ co) => Cast (deAnnotate e) co
+           | AnnTick tick body => Tick tick (deAnnotate body)
+           | AnnLet bind body => Let (deAnnBind bind) (deAnnotate body)
+           | AnnCase scrut v t alts =>
+               Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt alts)
+           end with deAnnBind {b} {annot} (arg_0__ : AnnBind b annot) : Bind b
+                      := let deAnnotate {bndr} {annot} (arg_0__ : AnnExpr bndr annot) : Expr bndr :=
+                           let 'pair _ e := arg_0__ in
+                           deAnnotate' e in
+                         match arg_0__ with
+                         | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
+                         | AnnRec pairs =>
+                             Rec (let cont_2__ arg_3__ :=
+                                    let 'pair v rhs := arg_3__ in
+                                    cons (pair v (deAnnotate rhs)) nil in
+                                  Coq.Lists.List.flat_map cont_2__ pairs)
+                         end for deAnnotate'.
+
 Definition deAnnotate {bndr} {annot} : AnnExpr bndr annot -> Expr bndr :=
   fun '(pair _ e) => deAnnotate' e.
 
-Definition deAnnBind {b} {annot} : AnnBind b annot -> Bind b :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
-    | AnnRec pairs =>
-        Rec (let cont_2__ arg_3__ :=
-               let 'pair v rhs := arg_3__ in
-               cons (pair v (deAnnotate rhs)) nil in
-             Coq.Lists.List.flat_map cont_2__ pairs)
-    end.
+Definition deAnnBind : forall {b} {annot}, AnnBind b annot -> Bind b :=
+  fix deAnnotate' {bndr} {annot} (arg_0__ : AnnExpr' bndr annot) : Expr bndr
+        := let deAnnotate {bndr} {annot} (arg_0__ : AnnExpr bndr annot) : Expr bndr :=
+             let 'pair _ e := arg_0__ in
+             deAnnotate' e in
+           let deAnnAlt {bndr} {annot} (arg_0__ : AnnAlt bndr annot) : Alt bndr :=
+             let 'pair (pair con args) rhs := arg_0__ in
+             pair (pair con args) (deAnnotate rhs) in
+           match arg_0__ with
+           | AnnType t => Type_ t
+           | AnnCoercion co => Coercion co
+           | AnnVar v => Mk_Var v
+           | AnnLit lit => Lit lit
+           | AnnLam binder body => Lam binder (deAnnotate body)
+           | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
+           | AnnCast e (pair _ co) => Cast (deAnnotate e) co
+           | AnnTick tick body => Tick tick (deAnnotate body)
+           | AnnLet bind body => Let (deAnnBind bind) (deAnnotate body)
+           | AnnCase scrut v t alts =>
+               Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt alts)
+           end with deAnnBind {b} {annot} (arg_0__ : AnnBind b annot) : Bind b
+                      := let deAnnotate {bndr} {annot} (arg_0__ : AnnExpr bndr annot) : Expr bndr :=
+                           let 'pair _ e := arg_0__ in
+                           deAnnotate' e in
+                         match arg_0__ with
+                         | AnnNonRec var rhs => NonRec var (deAnnotate rhs)
+                         | AnnRec pairs =>
+                             Rec (let cont_2__ arg_3__ :=
+                                    let 'pair v rhs := arg_3__ in
+                                    cons (pair v (deAnnotate rhs)) nil in
+                                  Coq.Lists.List.flat_map cont_2__ pairs)
+                         end for deAnnBind.
 
 Definition deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
   fun '(pair (pair con args) rhs) => pair (pair con args) (deAnnotate rhs).
@@ -6371,6 +6329,19 @@ Program Definition collectAnnArgsTicks {b} {a}
                                | _, _, _ => j_4__
                                end) in
             go expr nil nil.
+Solve Obligations with (solve_collectAnnArgsTicks).
+
+Program Definition collectAnnArgs {b} {a}
+           : AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
+          fun expr =>
+            let go :=
+              GHC.Wf.wfFix2 Coq.Init.Peano.lt (fun arg_0__ arg_1__ =>
+                               size_AnnExpr' (snd arg_0__)) _ (fun arg_0__ arg_1__ go =>
+                               match arg_0__, arg_1__ with
+                               | pair _ (AnnApp f a), as_ => go f (cons a as_)
+                               | e, as_ => pair e as_
+                               end) in
+            go expr nil.
 Solve Obligations with (solve_collectAnnArgsTicks).
 
 Definition coVarDetails : IdDetails :=
@@ -7883,8 +7854,8 @@ Axiom isCoercionType : unit -> bool.
 
 (* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool bothArgUse
-     bothUse comparison cons deAnnotate' false list lubArgUse nat negb nil op_zt__
-     option orb pair size_AnnExpr' snd true tt unit BasicTypes.Activation
+     bothUse comparison cons false list lubArgUse nat negb nil op_zt__ option orb
+     pair size_AnnExpr' snd true tt unit BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
      BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity

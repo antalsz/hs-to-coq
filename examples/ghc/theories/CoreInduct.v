@@ -96,8 +96,6 @@ Proof. exact core_induct'. Qed.
 
 Section CoreLT.
   Context {v : Type}.
-  
-  (*
 
   Fixpoint core_size (e : Expr v) : nat :=
     match e with
@@ -118,7 +116,7 @@ Section CoreLT.
     | Type_ _  =>   0
     | Coercion _ => 0
     end.
-    *)
+    
   
   (* We use the size only for comparisons. So lets
      make a definition here that we never unfold otherwise,

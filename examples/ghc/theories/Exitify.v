@@ -1626,7 +1626,8 @@ Section in_exitifyRec.
       - intro e'; apply RevStateInvariant_return; intro He'.
         rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil in He'.
         simpl.
-        rewrite deAnnotate_freeVars.
+        pose (h0 := deAnnotate_freeVars). unfold deAnnotate in h0. clearbody h0.
+        rewrite h0.
         split; only 1: split.
         ++ apply HWS.
         ++ apply (weaken (isvsp_to_isvsp'_extended _)). apply HWS.
@@ -1666,7 +1667,8 @@ Section in_exitifyRec.
          rewrite Forall_map.
          eapply Forall_impl; only 2: apply HWSpairs.
          intros [v rhs] HWSv. simpl in *.
-         rewrite deAnnotate_freeVars.
+         pose (h0 := deAnnotate_freeVars). unfold deAnnotate in h0. clearbody h0.
+         rewrite h0.
          apply (weaken (isvsp_to_isvsp'_extended2 _ _)); assumption.
       ++ rewrite bindersOf_Rec.
          rewrite !map_map.
@@ -2488,7 +2490,8 @@ Section in_exitifyRec.
       - apply IHe.
       - intro e'; apply RevStateInvariant_return; intro He'.
         rewrite  updJPSs_append, updJPSs_cons, updJPSs_nil in He'.
-        rewrite deAnnotate_freeVars.
+        pose (h0 := deAnnotate_freeVars). unfold deAnnotate in h0. clearbody h0.
+        rewrite h0.
         simpl; simpl_bool; split.
         ++ fold isJoinPointsValidPair.
            rewrite isJoinPointsValidPair_isJoinPointsValid by apply HnotJoin.
@@ -2529,7 +2532,8 @@ Section in_exitifyRec.
          fold isJoinPointsValidPair.
          rewrite isJoinPointsValidPair_isJoinPointsValid
            by (eapply Hno_join; eassumption).
-         rewrite deAnnotate_freeVars.
+         pose (h0 := deAnnotate_freeVars). unfold deAnnotate in h0. clearbody h0.
+         rewrite h0.
 
          rewrite forallb_forall in HIJPVrhs.
          specialize (HIJPVrhs _ HIn).

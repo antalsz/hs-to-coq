@@ -1,6 +1,9 @@
 
 skip module CoreSeq
 
+#
+# No unfolding information
+#
 redefine Definition CoreTidy.tidyUnfolding : Core.TidyEnv -> (Core.Unfolding ->  (Core.Unfolding -> Core.Unfolding)) := fun e u v => u.
 
 skip CoreTidy.tidyRule

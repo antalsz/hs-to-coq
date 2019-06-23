@@ -16,12 +16,7 @@ Require Coq.Program.Wf.
 
 
 
-Require Import Coq.ZArith.ZArith.
-Require Import Omega.
 
-Ltac termination_by_omega :=
-  Coq.Program.Tactics.program_simpl;
-  simpl;Omega.omega.
 
 (* Converted imports: *)
 
@@ -2328,8 +2323,12 @@ Instance Default__TidyEnv : GHC.Err.Default TidyEnv.
 Admitted.
 
 (* ------------- CoreSyn midamble.v ------------ *)
-
+Require Import Coq.ZArith.ZArith.
 Require Import Omega.
+
+Ltac termination_by_omega :=
+  Coq.Program.Tactics.program_simpl;
+  simpl;Omega.omega.
 
 Ltac intro_split := 
   try intros [? [? [? ?]]];
@@ -2347,10 +2346,7 @@ Ltac solve_collectAnnArgsTicks :=
              omega].
 
 (* This function is needed to show the termination of collectAnnArgs, 
-   collectAnnArgsTicks *)
-(* ANTALSZ NOTE: to make this function structurally recursive, we need to 
-   define size_AnnAlt as a *local* helper function, not a mutual 
-   helper function. Changing size_AnnAlt to "with" results in an error. *)
+   collectAnnArgsTicks. *)
 Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
   match e with 
   | AnnVar _ => 0
@@ -2369,7 +2365,7 @@ Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
         S (size_AnnExpr' rhs + size_AnnExpr' body)
   | AnnLet (AnnRec pairs) (_,body) => 
         S (Lists.List.fold_right plus 0 
-                                 (Lists.List.map (fun p => size_AnnExpr' (snd (snd p))) pairs) +
+          (Lists.List.map (fun p => size_AnnExpr' (snd (snd p))) pairs) +
            size_AnnExpr' body)
 
   | AnnCast (_,e) _ => S (size_AnnExpr' e)

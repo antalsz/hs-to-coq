@@ -9,7 +9,6 @@ OUT=lib
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
   FastString \
-  Panic \
   NestedRecursionHelpers
     # Used by CSE
 #  TysWiredIn \
@@ -47,7 +46,7 @@ MODULES = \
   OccName \
   State \
   ListSetOps \
-
+  Panic \
 
 ## 
 CORESYN = \

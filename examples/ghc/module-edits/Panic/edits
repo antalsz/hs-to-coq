@@ -1,0 +1,37 @@
+axiomatize module Panic
+
+add Panic Axiom Panic.someSDoc : GHC.Base.String.
+add Panic Axiom Panic.noString : forall {a}, a -> GHC.Base.String.
+add Panic Axiom Panic.panicStr : forall {a} `{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Base.String -> a).
+add Panic Axiom Panic.assertPprPanic : forall {a} `{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Num.Integer -> (GHC.Base.String -> (GHC.Base.String -> a))).
+add Panic Axiom Panic.warnPprTrace : forall {a}`{(GHC.Err.Default a)}, bool -> (GHC.Base.String -> (GHC.Num.Integer -> (GHC.Base.String -> (a -> a)))).
+
+
+add Panic Inductive Panic.panicked {a} : a -> Prop :=
+ | PlainPanic `{(GHC.Err.Default a)} {s}     : panicked (Panic.panic s)
+ | StrPanic   `{(GHC.Err.Default a)} {s} {d} : panicked (Panic.panicStr s d).
+
+skip Panic.withSignalHandlers
+skip Panic.tryMost
+skip Panic.signalHandlersRefCount
+skip Panic.showException
+skip Panic.safeShowException
+skip Panic.handleGhcException
+skip Panic.throwGhcExceptionIO
+skip Panic.showGhcException
+
+set type Panic.throwGhcException: forall {a}`{(GHC.Err.Default a)}, GhcException -> a
+
+set type Panic.sorryDoc : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Base.String -> a)
+
+set type Panic.sorry : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> a
+
+set type Panic.pgmErrorDoc : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Base.String -> a)
+
+set type Panic.pgmError : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> a
+
+set type Panic.panicDoc : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Base.String -> a)
+
+set type Panic.panic : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> a
+
+set type Panic.assertPanic : forall {a}`{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Num.Int -> a)

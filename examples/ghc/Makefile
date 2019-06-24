@@ -10,13 +10,10 @@ OUT=lib
 HANDMOD = \
   FastString \
   Panic \
-  Digraph \
   NestedRecursionHelpers
     # Used by CSE
-#  CallArity \
 #  TysWiredIn \
-#  PrelNames \
-#  ListSetOps \
+
 
 # generated from drop-in/
 DROPIN = \
@@ -49,7 +46,8 @@ MODULES = \
   OrdList \
   OccName \
   State \
-  ListSetOps
+  ListSetOps \
+
 
 ## 
 CORESYN = \

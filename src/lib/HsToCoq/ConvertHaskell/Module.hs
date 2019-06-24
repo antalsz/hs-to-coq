@@ -100,7 +100,9 @@ convertHsGroup HsGroup{..} = do
                                   else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
-                   (\_ _ -> convUnsupported' "top-level pattern bindings")
+                   (\_ _ ->  -- TODO add a warming that the top-level pattern was skipped
+                      pure (Nothing,[]) --convUnsupported' "top-level pattern bindings"
+                           )
                    (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))
                    (\name def -> (Just name, [definitionSentence def]) <$ case def of
                       CoqInductiveDef        _   -> editFailure   "cannot redefine a value definition into an Inductive"

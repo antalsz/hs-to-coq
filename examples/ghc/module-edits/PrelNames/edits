@@ -1,0 +1,43 @@
+# ISSUE: We cannot axiomatize this module because hs-to-coq cannot yet handle 
+# axiomatized modules with pattern-binding
+#
+# axiomatize module PrelNames
+# 
+# instead we skip the two names defined by this pattern
+#
+skip PrelNames.liftedRepDataConKey
+skip PrelNames.runtimeRepSimpleDataConKeys
+
+
+# infinite list of Strings in haskell
+# but... can we assume that it will be long enough for us?
+axiomatize definition PrelNames.allNameStrings
+
+
+#
+# FEATURE request: automatically skip unknown types
+# Many defns in this file use RdrName in the type. So we axiomatize the type here
+# but maybe we'd rather skip the definitions
+#
+add PrelNames Axiom PrelNames.RdrName : Type.
+rename type RdrName.RdrName = PrelNames.RdrName 
+add PrelNames Axiom PrelNames.nameRdrName : Name.Name -> PrelNames.RdrName.
+rename value RdrName.nameRdrName = PrelNames.nameRdrName 
+
+axiomatize definition PrelNames.mkInteractiveModule
+axiomatize definition PrelNames.mkIntegerModule
+axiomatize definition PrelNames.pretendNameIsInScope
+
+# these use RdrName.mkOrig
+axiomatize definition PrelNames.clsQual_RDR
+axiomatize definition PrelNames.varQual_RDR
+axiomatize definition PrelNames.main_RDR_Unqual 
+axiomatize definition PrelNames.forall_tv_RDR
+axiomatize definition PrelNames.dot_tv_RDR
+axiomatize definition PrelNames.dataQual_RDR
+axiomatize definition PrelNames.tcQual_RDR
+
+# these use Config
+axiomatize definition PrelNames.integerSDataConName
+axiomatize definition PrelNames.genericTyConNames
+axiomatize definition PrelNames.basicKnownKeyNames

@@ -48,6 +48,7 @@ import BasicTypes
 import HsToCoq.Util.GHC.FastString
 import RdrName
 import HsToCoq.Util.GHC.Exception
+import qualified Outputable as GHC
 
 import HsToCoq.Util.GHC
 import HsToCoq.Util.GHC.Name hiding (Name)
@@ -901,10 +902,25 @@ wfFix _ fb = convUnsupportedIn "well-founded recursion cannot handle annotations
 
 --------------------------------------------------------------------------------
 
+-- find the first name in a pattern binding
+patBindName :: ConversionMonad r m => Pat GhcRn -> m Qualid
+patBindName p = case p of
+  WildPat _ -> convUnsupported' ("no name in binding pattern")
+  GHC.VarPat (L _ hsName)  -> var ExprNS hsName
+  LazyPat (L _ p) -> patBindName p
+  GHC.AsPat (L _ hsName) _ -> var ExprNS hsName
+  ParPat (L _ p) -> patBindName p
+  BangPat (L _ p) -> patBindName p
+  ListPat (L _ p:_) _ _ -> patBindName p
+  TuplePat (L _ p:_) _ _ -> patBindName p
+  _ -> convUnsupported' ("Cannot find name in pattern: " ++  GHC.showSDocUnsafe (GHC.ppr p))
+
 hsBindName :: ConversionMonad r m => HsBind GhcRn -> m Qualid
 hsBindName defn = case defn of
     FunBind{fun_id = L _ hsName} -> var ExprNS hsName
-    _ -> convUnsupported' "non-function top level bindings"
+    PatBind{pat_lhs = L _ p} -> patBindName p
+
+    _ -> convUnsupported' ( "non-function top level bindings: " ++ GHC.showSDocUnsafe (GHC.ppr defn))
 
 
 -- This is where we switch from the global monad to the local monad

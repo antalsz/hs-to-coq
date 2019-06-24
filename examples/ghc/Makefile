@@ -11,13 +11,12 @@ HANDMOD = \
   FastString \
   Panic \
   Digraph \
-  PrelNames \
   ListSetOps \
   NestedRecursionHelpers
     # Used by CSE
 #  CallArity \
 #  TysWiredIn \
-
+#  PrelNames \
 
 # generated from drop-in/
 DROPIN = \
@@ -80,7 +79,8 @@ CORE_MODULES = \
   CoreTidy \
   TrieMap \
   CSE \
-  CoreStats
+  CoreStats \
+  PrelNames 
 
 
 NOTRANSLATE = \

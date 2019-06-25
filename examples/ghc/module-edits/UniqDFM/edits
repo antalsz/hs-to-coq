@@ -10,12 +10,7 @@ order UniqDFM.Functor__TaggedVal UniqDFM.mapUDFM
 skip UniqDFM.Functor__UniqDFM
 
 # sizes are nats
-#
-
-redefine Definition UniqDFM.sizeUDFM {elt} : (UniqDFM elt) -> nat :=
-  fun x => match x with | (UDFM m _i) => BinNat.N.to_nat (Data.IntMap.Internal.size m) end.
-
-
+rename type GHC.Num.Int = nat
 
 ## type inference issue
 ## but this redefine does nothing
@@ -25,7 +20,7 @@ redefine Local Definition UniqDFM.Functor__UniqDFM_fmap : forall {a} {b},
     fun f arg_1__ =>
       match arg_1__ with
         | UDFM a1 a2 =>
-          UDFM (@GHC.Base.fmap Data.IntMap.Internal.IntMap _ _ _ (GHC.Base.fmap f) a1)
+          UDFM (@GHC.Base.fmap IntMap.IntMap _ _ _ (GHC.Base.fmap f) a1)
                ((fun b1 => b1) a2)
       end.
 

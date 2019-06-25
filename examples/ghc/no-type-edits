@@ -177,6 +177,8 @@ rename value Coercion.eqCoercionX = Core.eqCoercionX
 add Core Axiom Core.eqCoercionX : RnEnv2 -> (unit -> (unit -> bool)).
 rename value Type.eqTypeX = Core.eqTypeX
 add Core Axiom Core.eqTypeX : RnEnv2 -> (unit -> (unit -> bool)).
+rename value Type.eqType = Core.eqType
+add Core Axiom Core.eqType : (unit -> (unit -> bool)).
 rename value TyCoRep.tidyTyCoVarBndr = Core.tidyTyCoVarBndr
 add Core Axiom Core.tidyTyCoVarBndr : TidyEnv -> (TyCoVar -> (TidyEnv * TyCoVar)).
 

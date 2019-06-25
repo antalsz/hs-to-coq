@@ -7764,6 +7764,8 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
 
 Axiom tidyTyCoVarBndr : TidyEnv -> TyCoVar -> TidyEnv * TyCoVar.
 
+Axiom eqType : unit -> unit -> bool.
+
 Axiom eqTypeX : RnEnv2 -> unit -> unit -> bool.
 
 Axiom eqCoercionX : RnEnv2 -> unit -> unit -> bool.

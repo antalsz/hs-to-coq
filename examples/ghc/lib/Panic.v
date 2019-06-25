@@ -69,8 +69,10 @@ Inductive panicked {a} : a -> Prop
   := | PlainPanic `{GHC.Err.Default a} {s} : panicked (panic s)
   |  StrPanic `{GHC.Err.Default a} {s} {d} : panicked (panicStr s d).
 
-Axiom warnPprTrace : forall {a} `{GHC.Err.Default a},
-                     bool -> GHC.Base.String -> GHC.Num.Integer -> GHC.Base.String -> a -> a.
+Definition warnPprTrace
+   : forall {a} `{GHC.Err.Default a},
+     bool -> GHC.Base.String -> GHC.Num.Integer -> GHC.Base.String -> a -> a :=
+  fun {a} {_} b msg i msg2 x => if b then (pgmError msg : a) else x.
 
 Axiom assertPprPanic : forall {a} `{GHC.Err.Default a},
                        GHC.Base.String -> GHC.Num.Integer -> GHC.Base.String -> GHC.Base.String -> a.
@@ -80,5 +82,6 @@ Axiom noString : forall {a}, a -> GHC.Base.String.
 Axiom someSDoc : GHC.Base.String.
 
 (* External variables:
-     Prop bool GHC.Base.String GHC.Err.Default GHC.Num.Int GHC.Num.Integer
+     Prop bool else if then GHC.Base.String GHC.Err.Default GHC.Num.Int
+     GHC.Num.Integer
 *)

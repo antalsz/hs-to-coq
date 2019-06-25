@@ -1,0 +1,99 @@
+skip module HsUtils
+skip module HscTypes
+
+# recursion through non-lambda value unsupported 
+axiomatize definition MkCore.err_nm
+axiomatize definition MkCore.mkRuntimeErrorId 
+axiomatize definition MkCore.rEC_SEL_ERROR_ID
+axiomatize definition MkCore.rUNTIME_ERROR_ID
+axiomatize definition MkCore.iRREFUT_PAT_ERROR_ID          
+axiomatize definition MkCore.rEC_CON_ERROR_ID              
+axiomatize definition MkCore.pAT_ERROR_ID                  
+axiomatize definition MkCore.nO_METHOD_BINDING_ERROR_ID    
+axiomatize definition MkCore.nON_EXHAUSTIVE_GUARDS_ERROR_ID
+axiomatize definition MkCore.tYPE_ERROR_ID
+axiomatize definition MkCore.aBSENT_SUM_FIELD_ERROR_ID
+axiomatize definition MkCore.aBSENT_ERROR_ID
+
+# partial pattern match in do 
+skip MkCore.mkBuildExpr
+
+# too much types stuff
+axiomatize definition MkCore.mkBigCoreTupTy
+axiomatize definition MkCore.mkBigCoreVarTupTy
+axiomatize definition MkCore.mkBigCoreTup
+axiomatize definition MkCore.runtimeErrorTy
+
+rewrite forall x,   Type.getRuntimeRep x = tt
+rewrite forall x y, Type.piResultTy x y = tt
+rewrite forall x,   Type.splitFunTy x = (pair tt tt)
+rewrite forall ids, Type.toposortTyVars ids = ids
+rewrite forall f,   (f GHC.Base.∘ Type.getRuntimeRep) = f
+
+# add to core (or axiomatize TysWiredIn)
+add MkCore Axiom MkCore.unitDataConId : Core.Id.
+rename value TysWiredIn.unitDataConId = MkCore.unitDataConId
+add MkCore  Axiom MkCore.nothingDataCon : Core.DataCon.
+rename value TysWiredIn.nothingDataCon = MkCore.nothingDataCon
+add MkCore  Axiom MkCore.justDataCon : Core.DataCon.
+rename value TysWiredIn.justDataCon = MkCore.justDataCon
+add MkCore  Axiom MkCore.trueDataCon : Core.DataCon.
+rename value TysWiredIn.trueDataCon = MkCore.trueDataCon
+add MkCore  Axiom MkCore.falseDataCon : Core.DataCon.
+rename value TysWiredIn.falseDataCon = MkCore.falseDataCon
+
+add MkCore  Axiom MkCore.doubleDataCon : Core.DataCon.
+rename value TysWiredIn.doubleDataCon = MkCore.doubleDataCon
+add MkCore  Axiom MkCore.intDataCon : Core.DataCon.
+rename value TysWiredIn.intDataCon = MkCore.intDataCon
+add MkCore  Axiom MkCore.floatDataCon : Core.DataCon.
+rename value TysWiredIn.floatDataCon = MkCore.floatDataCon
+add MkCore  Axiom MkCore.wordDataCon : Core.DataCon.
+rename value TysWiredIn.wordDataCon = MkCore.wordDataCon
+add MkCore  Axiom MkCore.charDataCon : Core.DataCon.
+rename value TysWiredIn.charDataCon = MkCore.charDataCon
+
+add MkCore  Axiom MkCore.nilDataCon : Core.DataCon.
+rename value TysWiredIn.nilDataCon = MkCore.nilDataCon
+add MkCore  Axiom MkCore.consDataCon : Core.DataCon.
+rename value TysWiredIn.consDataCon = MkCore.consDataCon
+
+add MkCore  Axiom MkCore.boolTy : unit.
+rename value TysWiredIn.boolTy = MkCore.boolTy
+add MkCore  Axiom MkCore.charTy : unit.
+rename value TysWiredIn.charTy = MkCore.charTy
+
+
+add MkCore Axiom MkCore.tupleDataCon : BasicTypes.Boxity -> (nat ->  Core.DataCon). 
+rename value TysWiredIn.tupleDataCon = MkCore.tupleDataCon
+add MkCore Axiom MkCore.mkBoxedTupleTy : list unit -> unit.
+rename value TysWiredIn.mkBoxedTupleTy = MkCore.mkBoxedTupleTy
+
+##
+add MkCore Axiom MkCore.chunkify : list Core.Id -> list (list Core.Id).
+rename value HsUtils.chunkify = MkCore.chunkify
+
+in MkCore.mkTupleSelector termination mk_tup_sel    deferred
+in MkCore.mkTupleCase     termination mk_tuple_case deferred
+
+
+# difficult type inference issue with Util.<||>
+axiomatize definition MkCore.sortQuantVars
+
+# needs HscTypes.MonadThings
+# if we really need this, might be able to specialize the monad
+skip MkCore.mkIntegerExpr
+skip MkCore.mkFoldrExpr
+skip MkCore.mkNaturalExpr
+skip MkCore.mkStringExprFS
+skip MkCore.mkStringExpr
+
+# need GHC.Types.Double and GHC.Types.Float
+skip MkCore.mkDoubleExpr
+skip MkCore.mkFloatExpr
+
+# need Core.mkIntLit, Core.mkIntLitInt, Core.mkWordLit
+axiomatize definition MkCore.mkIntExpr
+axiomatize definition MkCore.mkIntExprInt
+axiomatize definition MkCore.mkWordExpr
+axiomatize definition MkCore.mkWordExprWord

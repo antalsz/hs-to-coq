@@ -61,6 +61,12 @@ Definition recordSelectorTyCon : Core.Id -> Core.RecSelParent :=
 Definition realIdUnfolding : Core.Id -> Core.Unfolding :=
   fun id => Core.unfoldingInfo ((@Core.idInfo tt id)).
 
+Axiom mkTemplateLocalsNum : nat -> list unit -> list Core.Id.
+
+Axiom mkTemplateLocals : list unit -> list Core.Id.
+
+Axiom mkTemplateLocal : nat -> unit -> Core.Id.
+
 Definition mkLocalIdWithInfo : Name.Name -> unit -> Core.IdInfo -> Core.Id :=
   fun name ty info => Core.mkLocalVar Core.VanillaId name ty info.
 
@@ -573,7 +579,7 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
     end.
 
 (* External variables:
-     None Some andb bool false list negb nil option orb pair true tt unit
+     None Some andb bool false list nat negb nil option orb pair true tt unit
      BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
      BasicTypes.JoinArity BasicTypes.NoOneShotInfo BasicTypes.OccInfo
      BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleMatchInfo

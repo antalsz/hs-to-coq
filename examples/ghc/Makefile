@@ -78,8 +78,8 @@ CORE_MODULES = \
   TrieMap \
   CSE \
   CoreStats \
-  PrelNames 
-
+  PrelNames \
+  MkCore
 
 NOTRANSLATE = \
   Constructors \

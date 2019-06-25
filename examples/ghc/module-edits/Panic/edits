@@ -4,7 +4,8 @@ add Panic Axiom Panic.someSDoc : GHC.Base.String.
 add Panic Axiom Panic.noString : forall {a}, a -> GHC.Base.String.
 add Panic Axiom Panic.panicStr : forall {a} `{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Base.String -> a).
 add Panic Axiom Panic.assertPprPanic : forall {a} `{(GHC.Err.Default a)}, GHC.Base.String -> (GHC.Num.Integer -> (GHC.Base.String -> (GHC.Base.String -> a))).
-add Panic Axiom Panic.warnPprTrace : forall {a}`{(GHC.Err.Default a)}, bool -> (GHC.Base.String -> (GHC.Num.Integer -> (GHC.Base.String -> (a -> a)))).
+add Panic Definition Panic.warnPprTrace : forall {a}`{(GHC.Err.Default a)}, bool -> (GHC.Base.String -> (GHC.Num.Integer -> (GHC.Base.String -> (a -> a))))
+:= fun {a} {_} b msg i msg2 x => if b then (pgmError msg: a) else x.
 
 
 add Panic Inductive Panic.panicked {a} : a -> Prop :=

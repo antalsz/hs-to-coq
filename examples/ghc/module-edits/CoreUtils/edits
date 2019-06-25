@@ -1,14 +1,16 @@
 
+axiomatize definition CoreUtils.needsCaseBinding
+axiomatize definition CoreUtils.isDivOp
+axiomatize definition CoreUtils.isExprLevPoly 
+axiomatize definition CoreUtils.isExpandableApp
+axiomatize definition CoreUtils.isCheapApp 
+axiomatize definition CoreUtils.isEmptyTy
+# needs Core.dataConCannotMatch
+axiomatize definition CoreUtils.filterAlts
 
-redefine Definition CoreUtils.isDivOp : unit -> bool := GHC.Err.default.
-redefine Definition CoreUtils.isExprLevPoly : Core.CoreExpr -> bool := GHC.Err.default.
-redefine Definition CoreUtils.isExpandableApp : CheapAppFun := GHC.Err.default.
-redefine Definition CoreUtils.isCheapApp : CheapAppFun := GHC.Err.default.
-redefine Definition CoreUtils.cheapEqExpr' {b} : ((Core.Expr b) -> bool) -> (((Core.Expr b) -> ((Core.Expr b) -> bool))) := GHC.Err.default.
+# termination issue (recursion through non-lambda value unsupported)
+axiomatize definition CoreUtils.cheapEqExpr'
 
-
-redefine Definition CoreUtils.isEmptyTy : unit -> bool := 
-  fun x => false.
 redefine Definition CoreUtils.mkCast : Core.CoreExpr -> (unit -> Core.CoreExpr) := 
   fun c t => c.
 redefine Definition CoreUtils.mkTick : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) :=
@@ -51,22 +53,22 @@ obligations CoreUtils.diffUnfold admit
 ############################################################
 ## skipped methods
 
+# needs Platform.Plaform type
 skip CoreUtils.rhsIsStatic
-skip CoreUtils.applyTypeToArgs
-skip CoreUtils.exprType
-skip CoreUtils.coreAltType
-skip CoreUtils.coreAltsType
+
+axiomatize definition CoreUtils.applyTypeToArgs
+axiomatize definition CoreUtils.exprType
+axiomatize definition CoreUtils.coreAltType
+axiomatize definition CoreUtils.coreAltsType
 
 
 ## needs more from DataCon
-skip CoreUtils.dataConInstPat
-skip CoreUtils.dataConRepFSInstPat
-skip CoreUtils.dataConRepInstPat
-skip CoreUtils.refineDefaultAlt
+axiomatize definition CoreUtils.dataConInstPat
+axiomatize definition CoreUtils.dataConRepFSInstPat
+axiomatize definition CoreUtils.dataConRepInstPat
+axiomatize definition CoreUtils.refineDefaultAlt
 
 
-# needs Core.dataConCannotMatch
-skip Core.filterAlts
 
 in CoreUtils.stripTicksE inline mutual go_b
 in CoreUtils.stripTicksE inline mutual go_a
@@ -78,18 +80,17 @@ in CoreUtils.stripTicksT inline mutual go_a
 in CoreUtils.stripTicksT set type      go_b : (b * Core.Expr b) -> OrdList.OrdList (Core.Tickish Core.Id)
 in CoreUtils.stripTicksT set type      go_a : Core.Alt b        -> OrdList.OrdList (Core.Tickish Core.Id)
 
-skip CoreUtils.diffUnfold
-skip CoreUtils.diffIdInfo
-skip CoreUtils.diffExpr
-skip CoreUtils.diffBinds
+axiomatize definition CoreUtils.diffUnfold
+axiomatize definition CoreUtils.diffIdInfo
+axiomatize definition CoreUtils.diffExpr
+axiomatize definition CoreUtils.diffBinds
 
 
-skip CoreUtils.combineIdenticalAlts
-skip CoreUtils.tryEtaReduce
+axiomatize definition CoreUtils.combineIdenticalAlts
+axiomatize definition CoreUtils.tryEtaReduce
 
-skip CoreUtils.app_ok
-skip CoreUtils.expr_ok
-skip CoreUtils.exprOkForSideEffects
-skip CoreUtils.exprOkForSpeculation
-skip CoreUtils.needsCaseBinding
-skip CoreUtils.bindNonRec
+axiomatize definition CoreUtils.app_ok
+axiomatize definition CoreUtils.expr_ok
+axiomatize definition CoreUtils.exprOkForSideEffects
+axiomatize definition CoreUtils.exprOkForSpeculation
+axiomatize definition CoreUtils.bindNonRec

@@ -40,11 +40,12 @@ TODO_PASS = \
   InstVar \
   TypeAnnotations \
   StrictPair \
-  MutrecInst
+  MutrecInst \
+  TopBind
 
 # tests that *should* pass but currently don't even translate
 TODO_TRANSLATE = \
-  TopBind
+
 
 MODULES = $(PASS) $(TODO_PASS) $(TODO_TRANSLATE)
 

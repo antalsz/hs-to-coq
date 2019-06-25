@@ -22,16 +22,18 @@ Definition fsLit (s : String) : FastString := s.
 
 Definition concatFS : list FastString -> FastString := GHC.List.concat.
 
-Parameter uniqueOfFS : FastString -> BinNums.N.
+Axiom uniqueOfFS : FastString -> BinNums.N.
 
-Parameter unpackFS : FastString -> GHC.Base.String.
+Axiom unpackFS : FastString -> GHC.Base.String.
 
-Parameter appendFS : FastString -> FastString -> FastString.
+Axiom appendFS : FastString -> FastString -> FastString.
 
 Definition LitString := String.
 Definition sLit (s : String) : LitString := s.
 
 Definition mkFastString (s : String) : FastString := s.
 
-Parameter hashByteString : FastString -> nat.
-Parameter fastStringToByteString : FastString -> GHC.Base.String.
+Axiom hashByteString : FastString -> nat.
+Axiom fastStringToByteString : FastString -> GHC.Base.String.
+
+Axiom nullFS : FastString -> bool.

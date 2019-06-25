@@ -48,6 +48,6 @@ skip Id.setIdType
 
 # figure out GHC.Num.Int representation
 #
-skip Id.mkTemplateLocal 
-skip Id.mkTemplateLocalsNum
-skip Id.mkTemplateLocals 
+axiomatize definition Id.mkTemplateLocal 
+axiomatize definition Id.mkTemplateLocalsNum
+axiomatize definition Id.mkTemplateLocals 

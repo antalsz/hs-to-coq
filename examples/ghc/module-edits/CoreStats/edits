@@ -1,3 +1,8 @@
+import module GHC.Num
+import module GHC.Base
+import module Core
+import module Data.Foldable
+
 axiomatize definition CoreStats.coStats
 axiomatize definition CoreStats.tyStats
 
@@ -6,3 +11,6 @@ inline mutual CoreStats.altSize
 
 inline mutual CoreStats.altStats
 inline mutual CoreStats.bindingStats
+
+# don't need these
+rewrite forall x, GHC.Num.fromInteger x = x

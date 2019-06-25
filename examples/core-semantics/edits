@@ -1,4 +1,3 @@
-
 rename value GHC.SmallStep.Step = GHC.SmallStep.Mk_Step
 
 rewrite forall , Outputable.empty = (GHC.Base.hs_string__ "Outputable.empty")

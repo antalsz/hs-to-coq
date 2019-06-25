@@ -35,3 +35,5 @@ CoreSemantics.v
 
 TrieMap.v
 CSE.v
+
+CoreStats.v

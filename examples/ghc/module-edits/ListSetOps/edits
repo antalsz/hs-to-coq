@@ -1,7 +1,4 @@
 
-
-rewrite forall x, Panic.warnPprTrace x y = y
-
 ## needs notation (List.!!) and partial
 skip ListSetOps.getNth
 

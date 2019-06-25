@@ -1,3 +1,5 @@
+Require CoreStats.
+
 Instance Default_Step {a} : GHC.Err.Default (Step a) :=
   GHC.Err.Build_Default _ Done.
 Instance Default_Value : GHC.Err.Default Value :=
@@ -18,7 +20,42 @@ Ltac solve_step_obligations :=
 
 Definition step_measure (conf : Conf) : nat := 
   match conf with 
-  | (heap , expr, stack ) => Core.core_size expr 
+  | (heap , expr, stack ) => CoreStats.exprSize expr 
   end.
 
 (* ----------- ----------------------------------- --------------- *)
+
+(*
+solve_step_obligations solves most. But for the remainder we need the following 
+proof script. I'm not sure how to turn this into a tactic.
+
+Next Obligation.
+  match goal with [wc : Core.Tickish _ |- _ ] => destruct wc; auto end.
+Defined.
+Next Obligation.
+  match goal with [a : Core.Expr _ , h : Core.isTypeArg a = true |- _ ] => 
+                 destruct a; simpl in h; try discriminate end;
+  simpl; replace (BinPos.Pos.to_nat 1) with 1; try Omega.omega; reflexivity.
+Defined.
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.  
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.  
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.  
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.  
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.  
+Next Obligation.
+  repeat split; intros; intro h0; inversion h0.
+Defined.  
+*)

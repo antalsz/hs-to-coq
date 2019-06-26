@@ -712,13 +712,14 @@ unfold exprFreeVars, exprFVs, expr_fvs.
 unfold_FV.
 simpl.
 destruct (isLocalVar v).
-* simpl.
+- simpl.
   unfold varUnique in H.
-  unfold GHC.Base.op_zeze__, GHC.Base.Eq_Char___, GHC.Base.op_zeze____.
-  rewrite BinNat.N.eqb_neq.
-  contradict H.
-  congruence.
-* reflexivity.
+  destruct (Base.compare _ _) eqn:Hcomp => //.
+  + apply Bounds.compare_Eq in Hcomp.
+    Require Import Proofs.GHC.Base.
+    contradict H.
+    f_equal. apply /Eq_eq_Word => //.
+- reflexivity.
 Qed.
 
 
@@ -739,8 +740,9 @@ Proof.
   - destruct (freeVars e0) eqn:Hfv.
     destruct (delBinderFV v f) eqn:Hdb.
     unfold deAnnotate in H.
-    destruct (Base.op_zg__ BinNums.Z0 i0); simpl; rewrite H; reflexivity.
-  - destruct binds; simpl.
+    destruct (Base.op_zg__ _ _); simpl; rewrite H; reflexivity.
+  - rewrite freeVarsBind1_freeVarsBind.
+    destruct binds; simpl.
     + destruct (freeVars body) eqn:Hfv. rewrite <- H0.
       destruct (freeVars e0) eqn:Hfv'. rewrite <- H. reflexivity.
     + rewrite -map_map.

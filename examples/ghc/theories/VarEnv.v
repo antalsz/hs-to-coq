@@ -160,7 +160,7 @@ Proof.
   unfold  UniqFM.elemUFM,  UniqFM.lookupUFM, UniqFM.addToUFM.
   move=> h.
   rewrite member_insert.
-  elim M: (IntMap.Internal.member (Unique.getWordKey (Unique.getUnique v2)) i).
+  elim M: (IntMap.member (Unique.getWordKey (Unique.getUnique v2)) i).
   rewrite orbT. done.
   rewrite orbF.
   apply /Eq_eq.

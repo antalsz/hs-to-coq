@@ -1221,7 +1221,6 @@ Proof.
   fsetdec.
 Qed.
 
-
 Lemma subVarSet_unitVarSet:
   forall v vs,
   subVarSet (unitVarSet v) vs = elemVarSet v vs.
@@ -1237,6 +1236,7 @@ Proof.
     apply SV.
     intros.
     rewrite In_eq_iff; eauto.
+    apply singleton_1 in H; symmetry; auto.
 Qed.
 
 Lemma elemVarSet_false_true:
@@ -1589,12 +1589,6 @@ Proof.
 Qed.
 
 
-Axiom null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.Internal.IntMap b), 
-  (forall a, IntMap.Internal.member a x1 <-> IntMap.Internal.member a y1) ->
-  (forall a, IntMap.Internal.member a x2 <-> IntMap.Internal.member a y2) ->
-  IntMap.Internal.null (IntMap.Internal.intersection x1 x2) = IntMap.Internal.null (IntMap.Internal.intersection y1 y2).
-
-
 (** ** [disjointVarSet]  *)
 
 Instance disjointVarSet_m : Proper (Equal ==> Equal ==> Logic.eq) disjointVarSet.
@@ -1866,7 +1860,7 @@ Proof.
   destruct (lookupVarSet (filterVarSet f vs) v) eqn:Hl.
   - revert Hl.
     unfold_VarSet_to_IntMap.
-    unfold IntMap.Internal.filter.
+    unfold IntMap.filter.
     symmetry.
     erewrite lookup_filterWithKey; eauto.
   - apply lookupVarSet_None_elemVarSet in Hl.
@@ -1961,7 +1955,7 @@ Proof.
   unfold UniqFM.minusUFM, UniqFM.emptyUFM.
   f_equal.
   f_equal.
-  unfold IntMap.Internal.empty.
+  unfold IntMap.empty.
   rewrite difference_nil_r.
   reflexivity.
 Qed.
@@ -1978,7 +1972,7 @@ Proof.
   unfold UniqFM.minusUFM, UniqFM.emptyUFM.
   f_equal.
   f_equal.
-  unfold IntMap.Internal.empty.
+  unfold IntMap.empty.
   rewrite difference_nil_l.
   reflexivity.
 Qed.
@@ -1996,12 +1990,14 @@ Proof. intros. set_b_iff.
        move: (diff_1 _ _ _ h) => h1.
        move: (diff_2 _ _ _ h) => h2.
        inversion h1. clear h1.
-       rewrite <- var_eq_realUnique in H1.
-       rewrite -> fold_is_true in H1.
+       destruct (compare _ _) eqn:H2 in H1;
+         try solve [inversion H1].
+       apply Bounds.compare_Eq in H2.
+       rewrite <- var_eq_realUnique in H2.
+       rewrite -> fold_is_true in H2.
        unfold In in H, h2.
        rewrite (@elemVarSet_eq a x) in h2.
-       done.
-       done.
+       done. done.
 Qed.
 
 
@@ -2018,6 +2014,8 @@ Proof.
   unfold In, singleton in *.
   rewrite  (@elemVarSet_eq x a) in H; try done.
   rewrite var_eq_realUnique.
+  destruct (compare _ _) eqn:H2 in H1; try solve [inversion H1].
+  apply Bounds.compare_Eq in H2.
   rewrite Eq_sym; done.
 Qed.
 

@@ -4,7 +4,6 @@ Require Import Data.Functor. Import Data.Functor.Notations.
 Require Import TrieMap.
 
 Require UniqDFM.
-Require Data.IntMap.Internal.
 
 From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
@@ -49,7 +48,7 @@ Theorem tml_delete_there `{TML : TrieMapLaws m} {a} k (tm : m a) k' :
 Proof. by move=> NEQ; rewrite /deleteTM tml_alter_there. Qed.
 
 Instance TrieMapLaws__Map          {k} `{GHC.Base.Ord k}                        : TrieMapLaws (Data.Map.Internal.Map k).   Admitted.
-Instance TrieMapLaws__IntMap                                                    : TrieMapLaws Data.IntMap.Internal.IntMap. Admitted.
+Instance TrieMapLaws__IntMap                                                    : TrieMapLaws IntMap.IntMap. Admitted.
 Instance TrieMapLaws__MaybeMap     {m} `{TrieMapLaws m}                         : TrieMapLaws (MaybeMap m).                Admitted.
 Instance TrieMapLaws__ListMap      {m} `{TrieMapLaws m}                         : TrieMapLaws (ListMap m).                 Admitted.
 Instance TrieMapLaws__UniqDFM                                                   : TrieMapLaws UniqDFM.UniqDFM.             Admitted.

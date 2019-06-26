@@ -9,7 +9,8 @@ OUT=lib
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
   FastString \
-  NestedRecursionHelpers
+  NestedRecursionHelpers \
+  IntMap
     # Used by CSE
 #  TysWiredIn \
 
@@ -48,11 +49,11 @@ MODULES = \
   ListSetOps \
   Panic \
 
-## 
+##
 CORESYN = \
    IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand \
 
-## 
+##
 CONSTRUCTORS = \
 
 
@@ -248,4 +249,4 @@ clean:
 	rm -f *.aux *.log
 
 cleancore:
-	rm -rf $(OUTFILES_CORE) 
+	rm -rf $(OUTFILES_CORE)

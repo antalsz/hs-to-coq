@@ -14,13 +14,13 @@ Require Coq.Program.Wf.
 
 Require Core.
 Require Data.Foldable.
-Require Data.IntMap.Internal.
 Require Data.IntSet.Internal.
 Require Data.Map.Internal.
 Require FastString.
 Require GHC.Base.
 Require GHC.Err.
 Require GHC.Num.
+Require IntMap.
 Require Literal.
 Require Name.
 Require NameEnv.
@@ -90,7 +90,7 @@ Inductive CoercionMap a : Type
   := | Mk_CoercionMap : (CoercionMapG a) -> CoercionMap a.
 
 Definition BoundVarMap :=
-  Data.IntMap.Internal.IntMap%type.
+  IntMap.IntMap%type.
 
 Inductive VarMap a : Type
   := | VM (vm_bvar : BoundVarMap a) (vm_fvar : Core.DVarEnv a) : VarMap a.
@@ -241,9 +241,8 @@ Axiom xtList : forall {m} {k} {a},
                list k -> XT a -> ListMap m a -> ListMap m a.
 
 Definition xtInt {a}
-   : Data.IntSet.Internal.Key ->
-     XT a -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap a :=
-  fun k f m => Data.IntMap.Internal.alter f k m.
+   : Data.IntSet.Internal.Key -> XT a -> IntMap.IntMap a -> IntMap.IntMap a :=
+  fun k f m => IntMap.alter f k m.
 
 Axiom xtG : forall {m} {a} `{TrieMap m} `{GHC.Base.Eq_ (Key m)},
             Key m -> XT a -> GenMap m a -> GenMap m a.
@@ -342,29 +341,25 @@ Local Definition TrieMap__IntMap_Key : Type :=
 
 Local Definition TrieMap__IntMap_alterTM
    : forall {b},
-     TrieMap__IntMap_Key ->
-     XT b -> Data.IntMap.Internal.IntMap b -> Data.IntMap.Internal.IntMap b :=
+     TrieMap__IntMap_Key -> XT b -> IntMap.IntMap b -> IntMap.IntMap b :=
   fun {b} => xtInt.
 
-Local Definition TrieMap__IntMap_emptyTM
-   : forall {a}, Data.IntMap.Internal.IntMap a :=
-  fun {a} => Data.IntMap.Internal.empty.
+Local Definition TrieMap__IntMap_emptyTM : forall {a}, IntMap.IntMap a :=
+  fun {a} => IntMap.empty.
 
 Local Definition TrieMap__IntMap_foldTM
-   : forall {a} {b}, (a -> b -> b) -> Data.IntMap.Internal.IntMap a -> b -> b :=
-  fun {a} {b} => fun k m z => Data.IntMap.Internal.foldr k z m.
+   : forall {a} {b}, (a -> b -> b) -> IntMap.IntMap a -> b -> b :=
+  fun {a} {b} => fun k m z => IntMap.foldr k z m.
 
 Local Definition TrieMap__IntMap_lookupTM
-   : forall {b},
-     TrieMap__IntMap_Key -> Data.IntMap.Internal.IntMap b -> option b :=
-  fun {b} => fun k m => Data.IntMap.Internal.lookup k m.
+   : forall {b}, TrieMap__IntMap_Key -> IntMap.IntMap b -> option b :=
+  fun {b} => fun k m => IntMap.lookup k m.
 
 Local Definition TrieMap__IntMap_mapTM
-   : forall {a} {b},
-     (a -> b) -> Data.IntMap.Internal.IntMap a -> Data.IntMap.Internal.IntMap b :=
-  fun {a} {b} => fun f m => Data.IntMap.Internal.map f m.
+   : forall {a} {b}, (a -> b) -> IntMap.IntMap a -> IntMap.IntMap b :=
+  fun {a} {b} => fun f m => IntMap.map f m.
 
-Program Instance TrieMap__IntMap : TrieMap Data.IntMap.Internal.IntMap :=
+Program Instance TrieMap__IntMap : TrieMap IntMap.IntMap :=
   {
   Key := TrieMap__IntMap_Key ;
   alterTM := fun {b} => TrieMap__IntMap_alterTM ;
@@ -892,7 +887,7 @@ Local Definition TrieMap__VarMap_alterTM
   fun {b} => xtVar emptyCME.
 
 Local Definition TrieMap__VarMap_emptyTM : forall {a}, VarMap a :=
-  fun {a} => VM Data.IntMap.Internal.empty Core.emptyDVarEnv.
+  fun {a} => VM IntMap.empty Core.emptyDVarEnv.
 
 Local Definition TrieMap__VarMap_foldTM
    : forall {a} {b}, (a -> b -> b) -> VarMap a -> b -> b :=
@@ -1105,15 +1100,14 @@ End Notations.
      tt unit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt
      Core.Id Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
      Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv
-     Core.lookupVarEnv Core.varType Data.Foldable.foldl Data.IntMap.Internal.IntMap
-     Data.IntMap.Internal.alter Data.IntMap.Internal.empty Data.IntMap.Internal.foldr
-     Data.IntMap.Internal.lookup Data.IntMap.Internal.map Data.IntSet.Internal.Key
+     Core.lookupVarEnv Core.varType Data.Foldable.foldl Data.IntSet.Internal.Key
      Data.Map.Internal.Map Data.Map.Internal.alter Data.Map.Internal.empty
      Data.Map.Internal.foldr Data.Map.Internal.lookup Data.Map.Internal.map
      FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.const GHC.Base.flip
      GHC.Base.fmap GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
      GHC.Base.op_zgzgze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
      GHC.Err.default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zp__
+     IntMap.IntMap IntMap.alter IntMap.empty IntMap.foldr IntMap.lookup IntMap.map
      Literal.Literal Name.NamedThing Name.getName NameEnv.DNameEnv
      NameEnv.alterDNameEnv NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv
      UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.foldUDFM

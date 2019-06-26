@@ -1,5 +1,3 @@
-# redefine Inductive UniqFM.UniqFM ele : Type := | UniqFM.UFM : ((Data.Map.Internal.Map Coq.Numbers.BinNums.Z ele) -> (UniqFM.UniqFM ele)).
-
 skip UniqFM.pprUniqFM
 skip UniqFM.pluralUFM
 skip UniqFM.pprUFM
@@ -9,7 +7,6 @@ skip UniqFM.equalKeysUFM
 
 # pick result type, GHC.Num.Int or N or nat?
 rename type GHC.Num.Int = nat
-in UniqFM.sizeUFM rewrite forall ,  Data.IntMap.Internal.size m = BinNat.N.to_nat (Data.IntMap.Internal.size m)
 
 skip module Compiler.Hoopl.Dataflow
 # requires Hoopl
@@ -20,7 +17,7 @@ order UniqFM.Functor__UniqFM UniqFM.Foldable__UniqFM UniqFM.Traversable__UniqFM
 order UniqFM.Semigroup__UniqFM UniqFM.Monoid__UniqFM_mappend
 order UniqFM.Semigroup__UniqFM UniqFM.Monoid__UniqFM_mconcat
 
-add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (Data.IntMap.Internal.IntMap ele) :=
+add UniqFM Instance Unpeel_UniqFM ele : GHC.Prim.Unpeel (UniqFM ele) (IntMap.IntMap ele) :=
   GHC.Prim.Build_Unpeel _ _ (fun x => match x with | UFM y => y end) UFM.
 
 rename value Unique.getKey = Unique.getWordKey

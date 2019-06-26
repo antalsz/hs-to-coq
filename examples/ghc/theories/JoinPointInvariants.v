@@ -634,7 +634,6 @@ Require Import CoreFVs.
 Require Import Proofs.CoreFVs.
 Require Import Proofs.VarSetFSet.
 
-
 (* There is some worrying duplication/similarity with
 [WellScoped_extendVarSetList_fresh_between] *)
 Lemma isJoinPointsValid_fresh_updJPSs_aux:
@@ -673,7 +672,7 @@ Proof.
          destruct H.
          rewrite IHvs2 by assumption.
          apply elemVarSet_updJPS_l.
-         apply H.
+         rewrite <- elemVarSet_unitVarSet_is_eq. apply H.
     + rewrite delVarSetList_app, delVarSetList_cons, delVarSetList_nil in H.
       rewrite !updJPSs_append, !updJPSs_cons, !updJPSs_nil.
       apply elemVarSet_updJPS_cong. intros Hne.
@@ -685,7 +684,7 @@ Proof.
       rewrite delVarSet_elemVarSet_false in H0; only 1: assumption.
       clear -Hne.
       apply elemVarSet_delVarSetList_false_l.
-      apply Hne.
+      rewrite elemVarSet_unitVarSet_is_eq. apply Hne.
   - reflexivity.
   - f_equal.
     apply H.

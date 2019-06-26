@@ -56,6 +56,7 @@ import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.UseTypeInBinders
+import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Util.FVs
@@ -860,7 +861,8 @@ convertTypedBinding convHsTy FunBind{..}   = do
 
         let tryCollapseLet defn = do
               view (edits.collapsedLets.contains name) >>= \case
-                True  -> collapseLet defn & maybe (convUnsupported "collapsing non-`let x=… in x` lets") pure
+                True  -> collapseLet name defn
+                           & maybe (convUnsupported "collapsing non-`let x=… in x` lets") pure
                 False -> pure defn
         
         defn <-
@@ -875,9 +877,13 @@ convertTypedBinding convHsTy FunBind{..}   = do
         
         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
 
-collapseLet :: Term -> Maybe Term
-collapseLet (Let x args _oty defn (Qualid x')) | x == x' = Just $ maybeFun args defn
-collapseLet _                                            = Nothing
+collapseLet :: Qualid -> Term -> Maybe Term
+collapseLet outer (Let x args _oty defn (Qualid x')) | x == x' =
+  Just . maybeFun args $ case defn of
+    Fix (FixOne (FixBody f args' _mord _oty body)) -> Fun args' $ subst1 f (Qualid outer) body
+    _                                              -> defn
+collapseLet _ _ =
+  Nothing
 
 wfFix :: ConversionMonad r m => TerminationArgument -> FixBody -> m Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)

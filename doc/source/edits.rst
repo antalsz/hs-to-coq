@@ -452,6 +452,15 @@ Effect:
   Both ``outer`` and ``inner`` can have arguments; ``inner`` can have a type
   annotation, but it's ignored.
 
+  Additionally, if ``definition`` is a non-mutual fixpoint ``fix f args :=
+  body``, the recursive calls to ``f`` in ``body`` are rewritten to direct calls
+  to ``outer``.
+
+  This is particularly important for mutual recursion: if ``inner`` is mutually
+  recursive with another top-level function, then if ``outer`` has no arguments,
+  it would otherwise appear not to be a function and would thus cause conversion
+  to fail, as Coq doesn't support recursion through non-functions.
+
 Examples:
 
  .. code-block:: shell

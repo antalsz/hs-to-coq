@@ -72,6 +72,7 @@ import HsToCoq.ConvertHaskell.Pattern
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Axiomatize
 
+import Debug.Trace
 --------------------------------------------------------------------------------
 
 rewriteExpr :: ConversionMonad r m => Term -> m Term
@@ -828,12 +829,15 @@ convertTypedBinding _convHsTy PatSynBind{}  = convUnsupported "pattern synonym b
 convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: Respect `skipped'?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
-  
-  whenM (view currentModuleAxiomatized) $
-    convUnsupported "pattern bindings in axiomatized modules"
-  
-  (pat, guards) <- runWriterT $ convertLPat pat_lhs
-  Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
+  ax <- view currentModuleAxiomatized
+  if ax
+    then do
+      traceM "pattern bindings in axiomatized modules, skipping"
+      pure Nothing
+     -- convUnsupported "pattern bindings in axiomatized modules"
+    else do  
+      (pat, guards) <- runWriterT $ convertLPat pat_lhs
+      Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding convHsTy FunBind{..}   = do
     name <- var ExprNS (unLoc fun_id)
     

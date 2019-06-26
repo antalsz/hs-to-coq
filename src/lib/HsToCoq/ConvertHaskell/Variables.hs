@@ -50,7 +50,7 @@ escapeReservedNames :: Ident -> Ident
 escapeReservedNames x =
   fromMaybe x . getFirst $
     foldMap (First . flip tryEscapeReservedWord x)
-            (T.words "Set Type Prop fun fix forall return mod match as cons pair nil for is with left right exists")
+            (T.words "Set Type Prop fun fix forall return mod match as cons pair nil for is with left right exists inl inr")
     <> if | T.all (== '.') x  -> pure $ T.map (const '∘') x
           | T.all (== '∘') x  -> pure $ "⟨" <> x <> "⟩"
 -- these type operators aren't parsed by the renaming file

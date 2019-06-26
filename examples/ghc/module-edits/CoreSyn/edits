@@ -10,7 +10,8 @@ redefine Definition Core.isConLikeUnfolding  : Core.Unfolding -> bool
 redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool
   := fun x => false.
 
-skip Core.maybeUnfoldingTemplate
+axiomatize definition Core.maybeUnfoldingTemplate
+axiomatize definition Core.unfoldingTemplate
 
 redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
   fun u => nil.
@@ -24,7 +25,7 @@ redefine Definition Core.isCheapUnfolding  : Core.Unfolding -> bool :=
 redefine Definition Core.isExpandableUnfolding : Core.Unfolding -> bool :=
   fun x => false.
 
-skip Core.expandUnfolding_maybe
+redefine Definition Core.expandUnfolding_maybe : Core.Unfolding -> option Core.CoreExpr := fun x => None.
 
 redefine Definition Core.isCompulsoryUnfolding : Core.Unfolding -> bool :=
   fun x => false.
@@ -58,7 +59,6 @@ skip Core.tickishContains
 # record selector, no place to add default
 #
 skip Core.uf_tmpl
-skip Core.unfoldingTemplate
 skip Core.ru_rhs
 
 #

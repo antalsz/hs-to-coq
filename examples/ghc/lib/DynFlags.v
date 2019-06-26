@@ -122,7 +122,7 @@ Inductive SseVersion : Type
   |  SSE4 : SseVersion
   |  SSE42 : SseVersion.
 
-Inductive Settings : Type := | Mk_Settings.
+Axiom Settings : Type.
 
 Inductive SafeHaskellMode : Type
   := | Sf_None : SafeHaskellMode
@@ -371,11 +371,11 @@ Inductive GeneralFlag : Type
   |  Opt_G_NoStateHack : GeneralFlag
   |  Opt_G_NoOptCoercion : GeneralFlag.
 
-Inductive FlushOut : Type := | Mk_FlushOut.
+Axiom FlushOut : Type.
 
-Inductive FlushErr : Type := | Mk_FlushErr.
+Axiom FlushErr : Type.
 
-Inductive FlagSpec (flag : Type) : Type := | Mk_FlagSpec.
+Axiom FlagSpec : Type -> Type.
 
 Inductive FilesToClean : Type
   := | Mk_FilesToClean (ftcGhcSession : (Data.Set.Internal.Set_ GHC.Base.String))
@@ -386,7 +386,7 @@ Inductive DynLibLoader : Type
   := | Deployable : DynLibLoader
   |  SystemDependent : DynLibLoader.
 
-Inductive DynFlags : Type := | Mk_DynFlags.
+Axiom DynFlags : Type.
 
 Record HasDynFlags__Dict m := HasDynFlags__Dict_Build {
   getDynFlags__ : m DynFlags }.

@@ -36,6 +36,10 @@ Import GHC.Num.Notations.
 
 (* Converted value declarations: *)
 
+Axiom zapIdUsageEnvInfo : Core.Id -> Core.Id.
+
+Axiom zapFragileIdInfo : Core.Id -> Core.Id.
+
 Definition stateHackOneShot : BasicTypes.OneShotInfo :=
   BasicTypes.OneShotLam.
 

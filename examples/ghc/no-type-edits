@@ -4,7 +4,7 @@ skip module CoAxiom
 skip module Type
 skip module Unify
 skip module TcType
-skip module TysWiredIn
+#skip module TysWiredIn
 skip module RepType
 skip module ForeignCall
 skip module	FamInstEnv
@@ -153,6 +153,13 @@ rewrite forall x y,    TyCoRep.zipTvSubst x y          = tt
 rewrite forall x,      Type.caseBinder x = x
 rewrite forall ty,     Type.typeKind  ty = tt
 rewrite forall x,      Type.mkInvForAllTys x y = tt
+
+rewrite forall x,   Type.getRuntimeRep x = tt
+rewrite forall x y, Type.piResultTy x y = tt
+rewrite forall x,   Type.splitFunTy x = (pair tt tt)
+rewrite forall ids, Type.toposortTyVars ids = ids
+rewrite forall f,   (f GHC.Base.∘ Type.getRuntimeRep) = f
+
 
 # axiomatize functions that return bool or option
 # 

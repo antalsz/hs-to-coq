@@ -24,11 +24,6 @@ axiomatize definition MkCore.mkBigCoreVarTupTy
 axiomatize definition MkCore.mkBigCoreTup
 axiomatize definition MkCore.runtimeErrorTy
 
-rewrite forall x,   Type.getRuntimeRep x = tt
-rewrite forall x y, Type.piResultTy x y = tt
-rewrite forall x,   Type.splitFunTy x = (pair tt tt)
-rewrite forall ids, Type.toposortTyVars ids = ids
-rewrite forall f,   (f GHC.Base.∘ Type.getRuntimeRep) = f
 
 # add to core (or axiomatize TysWiredIn)
 add MkCore Axiom MkCore.unitDataConId : Core.Id.

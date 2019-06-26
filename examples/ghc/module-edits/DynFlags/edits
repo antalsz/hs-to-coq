@@ -26,11 +26,17 @@ skip module Packages
 skip module Platform
 skip module PlatformConstants
 
-redefine Inductive DynFlags.Settings : Type := Mk_Settings.
-redefine Inductive DynFlags.FlushOut : Type := Mk_FlushOut.
-redefine Inductive DynFlags.FlushErr : Type := Mk_FlushErr.
-redefine Inductive DynFlags.DynFlags : Type := Mk_DynFlags.
-redefine Inductive DynFlags.FlagSpec (flag:Type) : Type := Mk_FlagSpec.
+redefine Axiom DynFlags.Settings : Type.
+redefine Axiom DynFlags.FlushOut : Type.
+redefine Axiom DynFlags.FlushErr : Type.
+redefine Axiom DynFlags.DynFlags : Type.
+redefine Axiom DynFlags.FlagSpec : Type -> Type. 
+
+# redefine Inductive DynFlags.Settings : Type := Mk_Settings.
+# redefine Inductive DynFlags.FlushOut : Type := Mk_FlushOut.
+# redefine Inductive DynFlags.FlushErr : Type := Mk_FlushErr.
+# redefine Inductive DynFlags.DynFlags : Type := Mk_DynFlags.
+# redefine Inductive DynFlags.FlagSpec (flag:Type) : Type := Mk_FlagSpec.
 
 skip DynFlags.FlagMaker
 skip DynFlags.FatalMessager

@@ -79,7 +79,9 @@ CORE_MODULES = \
   CSE \
   CoreStats \
   PrelNames \
-  MkCore
+  TysWiredIn \
+  MkCore 
+
 
 NOTRANSLATE = \
   Constructors \

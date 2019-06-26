@@ -28,8 +28,8 @@ in Id.isNeverLevPolyId rewrite forall , Core.idInfo = (@Core.idInfo tt)
 redefine Definition Id.idCoreRules : Core.Id -> list (Core.CoreRule) 
    := fun x => nil.
 
-skip Id.zapFragileIdInfo
-skip Id.zapIdUsageEnvInfo
+axiomatize definition Id.zapFragileIdInfo
+axiomatize definition Id.zapIdUsageEnvInfo
 
 # Type/TyCoRep
 skip Id.isStrictId

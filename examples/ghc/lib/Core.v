@@ -2613,6 +2613,8 @@ Definition unionDVarSets : list DVarSet -> DVarSet :=
 Definition unionDVarSet : DVarSet -> DVarSet -> DVarSet :=
   UniqDSet.unionUniqDSets.
 
+Axiom unfoldingTemplate : Unfolding -> CoreExpr.
+
 Definition unSaturatedOk : bool :=
   true.
 
@@ -4139,6 +4141,8 @@ Definition minusDVarEnv {a} {a'} : DVarEnv a -> DVarEnv a' -> DVarEnv a :=
 Definition mightBeUnsaturatedTyCon : TyCon -> bool :=
   tcFlavourCanBeUnsaturated GHC.Base.∘ tyConFlavour.
 
+Axiom maybeUnfoldingTemplate : Unfolding -> option CoreExpr.
+
 Definition mayHaveCafRefs : CafInfo -> bool :=
   fun arg_0__ => match arg_0__ with | MayHaveCafRefs => true | _ => false end.
 
@@ -5393,6 +5397,9 @@ Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
 
 Definition exprToCoercion_maybe : CoreExpr -> option unit :=
   fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
+
+Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
+  fun x => None.
 
 Definition expandSynTyCon_maybe {tyco}
    : TyCon ->

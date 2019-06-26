@@ -605,7 +605,6 @@ Section in_exitifyRec.
         repeat float_let.
         simpl.
         do 2 expand_pairs. simpl.
-        rewrite freeVarsBind1_freeVarsBind.
         unfold freeVarsBind.
         inversion HGoDom; subst; simpl; clear HGoDom.
         + inversion H1; subst; clear H1.
@@ -670,8 +669,9 @@ Section in_exitifyRec.
           rename pairs0 into pairs'.
 
           expand_pairs. simpl.
+          rewrite <- map_map with (f := snd).
+          rewrite <- snd_unzip.
           rewrite !zip_unzip_map.
-          rewrite !map_map.
 
           destruct (isJoinId _) eqn:Heq_isJoinId.
           2:{
@@ -782,6 +782,8 @@ Section in_exitifyRec.
         + expand_pairs. simpl.
           rename pairs0 into pairs'.
 
+          rewrite <- map_map with (f := snd).
+          rewrite <- snd_unzip.
           rewrite !zip_unzip_map.
 
           destruct (isJoinId _) eqn:Heq_isJoinId.
@@ -1330,7 +1332,7 @@ Section in_exitifyRec.
          intros [??] H. apply H.
     * apply StateInvariant_bind.
       - rewrite forM_map.
-        rewrite map_map.
+        rewrite !map_map.
         rewrite map_ext with (g := jrhs_v) by (intro a; destruct a; reflexivity).
         apply StateInvariant_forM.
         intros [j params rhs HisJoin] HIn.
@@ -1352,7 +1354,7 @@ Section in_exitifyRec.
               apply HWSpairs.
       - intro x.
         apply StateInvariant_bind_return.
-        rewrite map_map.
+        rewrite !map_map.
         rewrite map_ext with (g := jrhs_v) by (intro a; destruct a; reflexivity).
         apply IHe.
         ++ apply Forall_app; split; only 1: apply HGLVcaptured.
@@ -1686,7 +1688,7 @@ Section in_exitifyRec.
          erewrite idJoinArity_join by eassumption.
          rewrite collectNAnnBndrs_freeVars_mkLams.
          eapply RevStateInvariant_bind.
-         ++ rewrite map_map.
+         ++ rewrite !map_map.
             rewrite map_ext with (g := jrhs_v)
               by (intros; repeat expand_pairs; destruct a; reflexivity).
             apply (IHpairs _ _ _ _ HIn).
@@ -1703,7 +1705,7 @@ Section in_exitifyRec.
                apply HWSpairs.
             -- apply He'.
       - intro pairs''.
-        rewrite map_map.
+        rewrite !map_map.
         rewrite map_ext with (g := jrhs_v)
           by (intros; repeat expand_pairs; destruct a; reflexivity).
         eapply RevStateInvariant_bind; only 1: apply IHe.
@@ -2205,7 +2207,7 @@ Section in_exitifyRec.
          apply IHe.
     * apply StateInvariant_bind_return.
       apply IHe.
-    * rewrite map_map.
+    * rewrite !map_map.
       rewrite map_ext with (g := jrhs_v) by (intro a; destruct a; reflexivity).
       apply StateInvariant_bind.
       - rewrite forM_map.
@@ -2545,7 +2547,7 @@ Section in_exitifyRec.
          rewrite map_ext with (g := fst)
             by (intro a; destruct a; reflexivity).
          apply Hbody'.
-     * rewrite map_map.
+     * rewrite !map_map.
        rewrite map_ext with (g := jrhs_v) by (intro a; destruct a; reflexivity).
        eapply RevStateInvariant_bind.
        - rewrite forM_map.

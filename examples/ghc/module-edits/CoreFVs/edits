@@ -64,7 +64,13 @@ in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) 
 in CoreFVs.expr_fvs rewrite forall t, CoreFVs.tickish_fvs t = FV.emptyFV
 
 
-#
-# ANTALSZ: mutual recursion still needs to be addressed
-# NOW: mutual recursion through non-lambda values unsupported
-in CoreFVs.freeVars rewrite forall, CoreFVs.freeVarsBind = CoreFVs.freeVarsBind1
+# `freeVars = go where go = …`.  Since `go` is a function but `freeVars` isn't,
+# this blocks mutual recursion
+collapse let CoreFVs.freeVars
+
+# Justified by
+#   ∙ In `let 'pair _ ys := GHC.List.unzip xys in …`, we know that
+#     `ys = GHC.Base.map snd xys` (`Proofs.GHC.List.snd_unzip`).
+#   ∙ Successive `map`s can be converted to one `map` plus function composition
+#     (`Proofs.GHC.Base.map_map`).
+in CoreFVs.freeVarsBind rewrite forall, GHC.Base.map CoreFVs.freeVars rhss = GHC.Base.map (CoreFVs.freeVars GHC.Base.∘ snd) binds

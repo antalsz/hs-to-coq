@@ -4,15 +4,13 @@
 
 module HsToCoq.Coq.Subst (
   -- * Things that can be substituted
-  Subst(..),
+  Subst(..), subst1
   ) where
 
 import Prelude hiding (Num)
 
 
---import Control.Monad.Variables
---import HsToCoq.Util.Function
---import Data.List.NonEmpty (NonEmpty(), (<|))
+import HsToCoq.Util.Function
 import Data.Map.Strict (Map)
 import Data.Maybe
 import qualified Data.Map.Strict as M
@@ -30,7 +28,8 @@ import HsToCoq.Coq.Gallina
 class Subst t where
   subst :: Map Qualid Term -> t -> t
 
-
+subst1 :: Subst t => Qualid -> Term -> t -> t
+subst1 = subst .: M.singleton
 
 instance Subst IndBody where
   subst f (IndBody tyName params indicesUnivers cons) =

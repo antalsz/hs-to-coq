@@ -56,6 +56,7 @@ import HsToCoq.Util.GHC.HsExpr
 import HsToCoq.Coq.Gallina as Coq
 import HsToCoq.Coq.Gallina.Util
 import HsToCoq.Coq.Gallina.UseTypeInBinders
+import HsToCoq.Coq.Subst
 import HsToCoq.Coq.Gallina.Rewrite as Coq
 import HsToCoq.Coq.FreeVars
 import HsToCoq.Util.FVs
@@ -862,16 +863,31 @@ convertTypedBinding convHsTy FunBind{..}   = do
                   peelForall ty                = ([], ty)
               in maybe ([], Nothing) (second Just . peelForall) convHsTy
 
-        defn <-
-          if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-          then case unLoc $ mg_alts fun_matches of
-                 [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
-                 _ -> convUnsupported "malformed multi-match variable definitions"
-          else uncurry Fun <$> convertFunction fun_matches
+        let tryCollapseLet defn = do
+              view (edits.collapsedLets.contains name) >>= \case
+                True  -> collapseLet name defn
+                           & maybe (convUnsupported "collapsing non-`let x=… in x` lets") pure
+                False -> pure defn
         
+        defn <-
+          tryCollapseLet =<<
+            if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+            then case unLoc $ mg_alts fun_matches of
+                   [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+                   _ -> convUnsupported "malformed multi-match variable definitions"
+            else uncurry Fun <$> convertFunction fun_matches
+
         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
         
         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
+
+collapseLet :: Qualid -> Term -> Maybe Term
+collapseLet outer (Let x args _oty defn (Qualid x')) | x == x' =
+  Just . maybeFun args $ case defn of
+    Fix (FixOne (FixBody f args' _mord _oty body)) -> Fun args' $ subst1 f (Qualid outer) body
+    _                                              -> defn
+collapseLet _ _ =
+  Nothing
 
 wfFix :: ConversionMonad r m => TerminationArgument -> FixBody -> m Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)

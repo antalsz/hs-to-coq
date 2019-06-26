@@ -426,6 +426,48 @@ Examples:
 
      redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
 
+``collapse let`` -- if a definition is just a ``let``\-expression, inline it
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: collapse let, edit
+
+Format:
+  | **collapse let** *qualified_name*
+
+
+Effect:
+  If a converted definition is of the form
+
+  .. code-block:: coq
+  
+     Definition outer := let inner := definition in inner.
+
+  then convert it to simply
+
+  .. code-block:: coq
+  
+     Definition outer := definition.
+
+  Both ``outer`` and ``inner`` can have arguments; ``inner`` can have a type
+  annotation, but it's ignored.
+
+  Additionally, if ``definition`` is a non-mutual fixpoint ``fix f args :=
+  body``, the recursive calls to ``f`` in ``body`` are rewritten to direct calls
+  to ``outer``.
+
+  This is particularly important for mutual recursion: if ``inner`` is mutually
+  recursive with another top-level function, then if ``outer`` has no arguments,
+  it would otherwise appear not to be a function and would thus cause conversion
+  to fail, as Coq doesn't support recursion through non-functions.
+
+Examples:
+
+ .. code-block:: shell
+
+     collapse let CoreFVs.freeVars
+
+
 
 Extra information
 -----------------

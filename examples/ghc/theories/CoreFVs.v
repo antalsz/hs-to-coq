@@ -41,12 +41,6 @@ Import GHC.Base.ManualNotations.
 
 Set Bullet Behavior "Strict Subproofs".
 
-
-(* TODO: fix mutual recursion. *)
-Axiom freeVarsBind1_freeVarsBind: freeVarsBind1 = freeVarsBind.
-
-
-
 Lemma unionsVarSet_equal : forall vss1 vss2, Forall2 Equal vss1 vss2 ->
   (Foldable.foldr unionVarSet emptyVarSet) vss1 [=]
   (Foldable.foldr unionVarSet emptyVarSet) vss2.
@@ -746,11 +740,14 @@ Proof.
     destruct (delBinderFV v f) eqn:Hdb.
     unfold deAnnotate in H.
     destruct (Base.op_zg__ BinNums.Z0 i0); simpl; rewrite H; reflexivity.
-  - rewrite freeVarsBind1_freeVarsBind.
-    destruct binds; simpl.
+  - destruct binds; simpl.
     + destruct (freeVars body) eqn:Hfv. rewrite <- H0.
       destruct (freeVars e0) eqn:Hfv'. rewrite <- H. reflexivity.
-    + destruct (List.unzip l) eqn:Hl. simpl.
+    + rewrite -map_map.
+      replace @Base.map with map by done.
+      rewrite -snd_unzip.
+      replace @map with @Base.map by done.
+      destruct (List.unzip l) eqn:Hl. rewrite !Hl. simpl.
       destruct (freeVars body) eqn:Hfv. rewrite <- H0. f_equal.
       generalize dependent l1; generalize dependent l0.
       induction l; simpl; intros.

@@ -64,7 +64,26 @@ in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) 
 in CoreFVs.expr_fvs rewrite forall t, CoreFVs.tickish_fvs t = FV.emptyFV
 
 
-#
-# ANTALSZ: mutual recursion still needs to be addressed
-# NOW: mutual recursion through non-lambda values unsupported
-in CoreFVs.freeVars rewrite forall, CoreFVs.freeVarsBind = CoreFVs.freeVarsBind1
+# This is a horrible hack.  The issue is:
+#   1. `freeVars` is defined to simply be `go`, where `go` is a recursive
+#      function.
+#   2. `go`/`freeVars` is mutually recursive with `freeVarsBind`
+#   3. We can't handle mutual recursion through non-lambda values, INCLUDING
+#      through the `fix` resulting from inlining `go`.
+# Thus:
+#   A. We `collapse let` to get rid of `go`.
+#   B. We change `go` into `CoreFVs.freeVars` to prevent `go` from being
+#      preemptively recursive.
+#   C. We have to rewrite the eta-expanded version or `hs-to-coq` sees
+#   
+#          Definition CoreFVs.freeVars := let go := … in CoreFVs.freeVars.
+#      Which is (a) nonsensical, and (b) breaks `collapse let`.
+collapse let CoreFVs.freeVars
+in CoreFVs.freeVars rewrite forall x, go x = CoreFVs.freeVars x
+
+# Justified by
+#   ∙ In `let 'pair _ ys := GHC.List.unzip xys in …`, we know that
+#     `ys = GHC.Base.map snd xys` (`Proofs.GHC.List.snd_unzip`).
+#   ∙ Successive `map`s can be converted to one `map` plus function composition
+#     (`Proofs.GHC.Base.map_map`).
+in CoreFVs.freeVarsBind rewrite forall, GHC.Base.map CoreFVs.freeVars rhss = GHC.Base.map (CoreFVs.freeVars GHC.Base.∘ snd) binds

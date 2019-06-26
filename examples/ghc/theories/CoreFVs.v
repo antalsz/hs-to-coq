@@ -741,8 +741,7 @@ Proof.
     destruct (delBinderFV v f) eqn:Hdb.
     unfold deAnnotate in H.
     destruct (Base.op_zg__ _ _); simpl; rewrite H; reflexivity.
-  - rewrite freeVarsBind1_freeVarsBind.
-    destruct binds; simpl.
+  - destruct binds; simpl.
     + destruct (freeVars body) eqn:Hfv. rewrite <- H0.
       destruct (freeVars e0) eqn:Hfv'. rewrite <- H. reflexivity.
     + rewrite -map_map.

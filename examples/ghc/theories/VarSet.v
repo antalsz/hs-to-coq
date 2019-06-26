@@ -2614,4 +2614,18 @@ Proof.
 Qed.
 
 
+Lemma elemVarSet_unitVarSet_is_eq :
+  forall x v, elemVarSet x (unitVarSet v) = GHC.Base.op_zeze__ x v.
+Proof.
+  intros.
+  destruct (GHC.Base.op_zeze__ x v) eqn:Hcomp.
+  - apply varUnique_iff in Hcomp; inversion Hcomp.
+    cbn. rewrite H0 N.compare_refl =>//.
+  - apply ssrbool.negbT, notE in Hcomp.
+    cbn. apply not_true_iff_false.
+    destruct (N.compare _ _) eqn:Hcomp'; auto.
+    contradiction Hcomp.
+    apply varUnique_iff. rewrite /varUnique.
+    f_equal. apply N.compare_eq_iff =>//.
+Qed.
 

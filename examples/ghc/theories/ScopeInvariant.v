@@ -569,9 +569,8 @@ Proof.
         destruct H.
         rewrite -> IHvs1 by assumption.
         apply lookupVarSet_extendVarSet_neq.
-        contradict H.
-        rewrite not_false_iff_true.
-        apply H.
+        rewrite <- elemVarSet_unitVarSet_is_eq. intro.
+        contradict H. rewrite H1=>//.
     + rewrite -> delVarSetList_app, delVarSetList_cons, delVarSetList_nil in H.
       rewrite -> !extendVarSetList_append, !extendVarSetList_cons, !extendVarSetList_nil.
       destruct (x GHC.Base.== v) eqn:?.
@@ -587,9 +586,8 @@ Proof.
          rewrite -> delVarSet_elemVarSet_false in H0; only 1: assumption.
          clear -Heqb.
          apply elemVarSet_delVarSetList_false_l.
-         unfold is_true in Heqb.
-         rewrite -> not_true_iff_false in Heqb.
-         apply Heqb.
+         rewrite elemVarSet_unitVarSet_is_eq.
+         apply negbTE, notE => //. 
 Qed.
 
 

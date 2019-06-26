@@ -858,16 +858,26 @@ convertTypedBinding convHsTy FunBind{..}   = do
                   peelForall ty                = ([], ty)
               in maybe ([], Nothing) (second Just . peelForall) convHsTy
 
-        defn <-
-          if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
-          then case unLoc $ mg_alts fun_matches of
-                 [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
-                 _ -> convUnsupported "malformed multi-match variable definitions"
-          else uncurry Fun <$> convertFunction fun_matches
+        let tryCollapseLet defn = do
+              view (edits.collapsedLets.contains name) >>= \case
+                True  -> collapseLet defn & maybe (convUnsupported "collapsing non-`let x=… in x` lets") pure
+                False -> pure defn
         
+        defn <-
+          tryCollapseLet =<<
+            if all (null . m_pats . unLoc) . unLoc $ mg_alts fun_matches
+            then case unLoc $ mg_alts fun_matches of
+                   [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
+                   _ -> convUnsupported "malformed multi-match variable definitions"
+            else uncurry Fun <$> convertFunction fun_matches
+
         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
         
         pure . Just . ConvertedDefinitionBinding $ ConvertedDefinition name tvs coqTy (addScope defn)
+
+collapseLet :: Term -> Maybe Term
+collapseLet (Let x args _oty defn (Qualid x')) | x == x' = Just $ maybeFun args defn
+collapseLet _                                            = Nothing
 
 wfFix :: ConversionMonad r m => TerminationArgument -> FixBody -> m Term
 wfFix Deferred (FixBody ident argBinders Nothing Nothing rhs)

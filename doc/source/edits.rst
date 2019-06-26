@@ -426,6 +426,39 @@ Examples:
 
      redefine Definition GHC.Base.map {A B :Type} (f : A -> B) xs := Coq.Lists.List.map f xs.
 
+``collapse let`` -- if a definition is just a ``let``\-expression, inline it
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+   single: collapse let, edit
+
+Format:
+  | **collapse let** *qualified_name*
+
+
+Effect:
+  If a converted definition is of the form
+
+  .. code-block:: coq
+  
+     Definition outer := let inner := definition in inner.
+
+  then convert it to simply
+
+  .. code-block:: coq
+  
+     Definition outer := definition.
+
+  Both ``outer`` and ``inner`` can have arguments; ``inner`` can have a type
+  annotation, but it's ignored.
+
+Examples:
+
+ .. code-block:: shell
+
+     collapse let CoreFVs.freeVars
+
+
 
 Extra information
 -----------------

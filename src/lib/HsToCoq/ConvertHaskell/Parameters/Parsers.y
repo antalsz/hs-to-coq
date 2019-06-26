@@ -87,6 +87,7 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   mutual          { TokWord    "mutual"         }
   set             { TokWord    "set"            }
   no              { TokWord    "no"             }
+  collapse        { TokWord    "collapse"       }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   -- Tokens: Coq terms
@@ -303,6 +304,7 @@ Edit :: { Edit }
   | simple class Qualid                                   { SimpleClassEdit               $3                                    }
   | inline mutual Qualid                                  { InlineMutualEdit              $3                                    }
   | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                   $3 $4                                 }
+  | collapse 'let' Qualid                                 { CollapseLetEdit               $3                                    }
   | 'in' Qualid Edit                                      { InEdit                        $2 $3                                 }
 
 Edits :: { [Edit] }

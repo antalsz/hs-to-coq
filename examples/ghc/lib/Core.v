@@ -76,7 +76,7 @@ Inductive UnfoldingGuidance : Type
    : UnfoldingGuidance
   |  UnfNever : UnfoldingGuidance.
 
-Inductive Unfolding : Type := | NoUnfolding.
+Inductive Unfolding : Type := | NoUnfolding : Unfolding.
 
 Inductive TypeShape : Type
   := | TsFun : TypeShape -> TypeShape
@@ -864,6 +864,9 @@ Instance Default__UnfoldingSource : GHC.Err.Default UnfoldingSource :=
 Instance Default__UnfoldingGuidance : GHC.Err.Default UnfoldingGuidance :=
   GHC.Err.Build_Default _ (UnfWhen GHC.Err.default GHC.Err.default
                          GHC.Err.default).
+
+Instance Default__Unfolding : GHC.Err.Default Unfolding :=
+  GHC.Err.Build_Default _ NoUnfolding.
 
 Instance Default__TypeShape : GHC.Err.Default TypeShape :=
   GHC.Err.Build_Default _ TsUnk.
@@ -2261,9 +2264,6 @@ Require GHC.Err.
 
 Instance Default__RuleInfo : GHC.Err.Default RuleInfo :=
   GHC.Err.Build_Default _ EmptyRuleInfo.
-
-Instance Default__Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ NoUnfolding.
 
 Instance Default__TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
@@ -3688,7 +3688,7 @@ Definition partitionDVarEnv {a}
   UniqDFM.partitionUDFM.
 
 Definition otherCons : Unfolding -> list AltCon :=
-  fun u => nil.
+  fun arg_0__ => nil.
 
 Definition oneifyDmd : Demand -> Demand :=
   fun arg_0__ =>
@@ -4017,8 +4017,6 @@ Definition mkPatSyn
                  orig_res_ty matcher builder
     end.
 
-Axiom mkOtherCon : list AltCon -> Unfolding.
-
 Definition mkOnceUsedDmd : CleanDemand -> Demand :=
   fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use One a).
 
@@ -4203,7 +4201,8 @@ Definition minusDVarEnv {a} {a'} : DVarEnv a -> DVarEnv a' -> DVarEnv a :=
 Definition mightBeUnsaturatedTyCon : TyCon -> bool :=
   tcFlavourCanBeUnsaturated GHC.Base.∘ tyConFlavour.
 
-Axiom maybeUnfoldingTemplate : Unfolding -> option CoreExpr.
+Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
+  fun arg_0__ => None.
 
 Definition mayHaveCafRefs : CafInfo -> bool :=
   fun arg_0__ => match arg_0__ with | MayHaveCafRefs => true | _ => false end.
@@ -4486,7 +4485,7 @@ Definition isVanillaAlgTyCon : TyCon -> bool :=
     end.
 
 Definition isValueUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isUsedU : UseDmd -> bool :=
   fix isUsedU (arg_0__ : UseDmd) : bool
@@ -4712,7 +4711,7 @@ Definition zapLamInfo : IdInfo -> option IdInfo :=
                     callArityInfo_40__ levityInfo_41__).
 
 Definition isStableUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isStableSource : UnfoldingSource -> bool :=
   fun arg_0__ =>
@@ -4994,7 +4993,7 @@ Definition isFunTyCon : TyCon -> bool :=
     end.
 
 Definition isFragileUnfolding : Unfolding -> bool :=
-  fun u => false.
+  fun arg_0__ => false.
 
 Definition zapFragileUnfolding : Unfolding -> Unfolding :=
   fun unf => if isFragileUnfolding unf : bool then noUnfolding else unf.
@@ -5022,10 +5021,10 @@ Definition isExportedId : Var -> bool :=
     end.
 
 Definition isExpandableUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isEvaldUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isEnumerationTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -5140,10 +5139,10 @@ Definition isTypeFamilyTyCon : TyCon -> bool :=
     end.
 
 Definition isConLikeUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isCompulsoryUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isCoVarDetails : IdDetails -> bool :=
   fun arg_0__ => match arg_0__ with | CoVarId => true | _ => false end.
@@ -5200,7 +5199,7 @@ Definition isClassTyCon : TyCon -> bool :=
     end.
 
 Definition isCheapUnfolding : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Definition isBuiltinRule : CoreRule -> bool :=
   fun arg_0__ =>
@@ -5240,7 +5239,7 @@ Definition isBottomingSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType _ _ res)) => isBotRes res.
 
 Definition isBootUnfolding : Unfolding -> bool :=
-  fun u => false.
+  fun arg_0__ => false.
 
 Definition isBanged : HsImplBang -> bool :=
   fun arg_0__ =>
@@ -5326,9 +5325,6 @@ Definition idDetails : Id -> IdDetails :=
     | Mk_Id _ _ _ _ details _ => details
     | other => Panic.panicStr (GHC.Base.hs_string__ "idDetails") (Panic.someSDoc)
     end.
-
-Definition hasSomeUnfolding : Unfolding -> bool :=
-  fun x => false.
 
 Definition hasDemandEnvSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (isEmptyVarEnv env).
@@ -5484,7 +5480,7 @@ Definition exprToCoercion_maybe
   fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
 
 Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
-  fun x => None.
+  fun arg_0__ => None.
 
 Definition expandSynTyCon_maybe {tyco}
    : TyCon ->
@@ -5504,8 +5500,6 @@ Definition expandSynTyCon_maybe {tyco}
 
 Definition exnRes : DmdResult :=
   ThrowsExn.
-
-Axiom evaldUnfolding : Unfolding.
 
 Definition evalDmd : Demand :=
   JD (Mk_Str VanStr HeadStr) useTop.
@@ -6523,7 +6517,7 @@ Definition catchArgDmd : Demand :=
   JD (Mk_Str Mk_ExnStr (SCall HeadStr)) (Mk_Use One (UCall One Used)).
 
 Definition canUnfold : Unfolding -> bool :=
-  fun x => false.
+  fun arg_0__ => false.
 
 Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
 
@@ -6622,8 +6616,6 @@ Definition boringCxtOk : bool :=
 
 Definition boringCxtNotOk : bool :=
   false.
-
-Axiom bootUnfolding : Unfolding.
 
 Definition bindersOf {b} : Bind b -> list b :=
   fun arg_0__ =>
@@ -7876,6 +7868,8 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
   fun _ k__ =>
     k__ {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
+
+Axiom mkCoercionTy : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
 
 Axiom tyConAppArgs : AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
 

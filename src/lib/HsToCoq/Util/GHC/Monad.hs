@@ -17,6 +17,7 @@ import Control.Monad.Cont.Class
 
 import qualified Control.Monad.Trans.Identity      as I
 import qualified Control.Monad.Trans.Maybe         as M
+import qualified Control.Monad.Trans.Except        as E
 import qualified Control.Monad.Trans.Reader        as R
 import qualified Control.Monad.Trans.Writer.Strict as WS
 import qualified Control.Monad.Trans.Writer.Lazy   as WL
@@ -60,6 +61,10 @@ instance GhcMonad m => GhcMonad (I.IdentityT m) where
   setSession = lift . setSession
 
 instance GhcMonad m => GhcMonad (M.MaybeT m) where
+  getSession = lift   getSession
+  setSession = lift . setSession
+
+instance (GhcMonad m) => GhcMonad (E.ExceptT e m) where
   getSession = lift   getSession
   setSession = lift . setSession
 

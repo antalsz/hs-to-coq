@@ -3,44 +3,59 @@
 # skipping or redefining unfolding info so that it is 'NoUnfolding'
 #
 
-redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool
-  := fun x => false.
-redefine Definition Core.isConLikeUnfolding  : Core.Unfolding -> bool
-  := fun x => false.
-redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool
-  := fun x => false.
+# redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool
+#  := fun x => false.
+#redefine Definition Core.isConLikeUnfolding  : Core.Unfolding -> bool
+#  := fun x => false.
+#redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool
+#  := fun x => false.
 
-axiomatize definition Core.maybeUnfoldingTemplate
+
+
+#axiomatize definition Core.maybeUnfoldingTemplate
 axiomatize definition Core.unfoldingTemplate
 
-redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
-  fun u => nil.
+#redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
+#  fun u => nil.
 
-redefine Definition Core.isValueUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
+#redefine Definition Core.isValueUnfolding : Core.Unfolding -> bool :=
+#  fun x => false.
 
-redefine Definition Core.isCheapUnfolding  : Core.Unfolding -> bool :=
-  fun x => false.
+#redefine Definition Core.isCheapUnfolding  : Core.Unfolding -> bool :=
+#  fun x => false.
 
-redefine Definition Core.isExpandableUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
+#redefine Definition Core.isExpandableUnfolding : Core.Unfolding -> bool :=
+#  fun x => false.
 
-redefine Definition Core.expandUnfolding_maybe : Core.Unfolding -> option Core.CoreExpr := fun x => None.
+#redefine Definition Core.expandUnfolding_maybe : Core.Unfolding -> option Core.CoreExpr := fun x => None.
 
-redefine Definition Core.isCompulsoryUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
-redefine Definition Core.isStableUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
-redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
-  fun u => false.
-redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
-  fun u => false.
-redefine Definition Core.canUnfold : Core.Unfolding -> bool :=
-  fun x => false.
+#redefine Definition Core.isCompulsoryUnfolding : Core.Unfolding -> bool :=
+#  fun x => false.
+#redefine Definition Core.isStableUnfolding : Core.Unfolding -> bool :=
+#  fun x => false.
+#redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
+#  fun u => false.
+#redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
+#  fun u => false.
+#redefine Definition Core.canUnfold : Core.Unfolding -> bool :=
+#  fun x => false.
 
-axiomatize definition Core.mkOtherCon
-axiomatize definition Core.evaldUnfolding
-axiomatize definition Core.bootUnfolding
+#
+#  These are 'smart' constructors for constructors that no longer exist.
+#
+skip Core.bootUnfolding
+skip Core.mkOtherCon
+skip Core.evaldUnfolding
+
+#
+# We cannot translate this while skipping all but NoUnfolding because
+# the 'BootUnfolding' returns true whereas all others return false
+#
+skip Core.hasSomeUnfolding
+
+
+# axiomatize definition Core.evaldUnfolding
+
 
 #
 # Tick-related functions

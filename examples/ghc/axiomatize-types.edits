@@ -101,6 +101,28 @@ rename type CostCentre.CostCentre   = unit
 rename type MkId.DataConBoxer       = unit
 
 ###############################################################################
+# Skipping constructors 
+###############################################################################
+
+#
+# data Unfolding
+#  = NoUnfolding        -- ^ We have no information about the unfolding.
+#
+skip constructor Core.BootUnfolding
+skip constructor Core.OtherCon
+skip constructor Core.DFunUnfolding
+skip constructor Core.CoreUnfolding
+
+#
+# eliminating parts of the 'Expr' type
+#
+# skip constructor Core.Type_
+# skip constructor Core.Tick
+# skip constructor Core.Coercion
+# skip constructor Core.Cast
+
+
+###############################################################################
 # axiomatize type & coercion information
 #  - define types in a new (manual) module called AxiomatizedTypes
 #     (we cannot axiomatize the modules and include them in Core at the same time)
@@ -114,9 +136,6 @@ rename type MkId.DataConBoxer       = unit
 axiomatize module TyCoRep
 axiomatize module CoAxiom
 axiomatize module Coercion
-
-rename module Type Type_
-axiomatize module Type
 
 #
 # axiomatized types
@@ -181,6 +200,9 @@ rename value Type.typeKind = Core.typeKind
 add Core Axiom Core.tyConAppArgs : AxiomatizedTypes.Type_ -> list (AxiomatizedTypes.Type_).
 rename value Type.tyConAppArgs = Core.tyConAppArgs
 
+add Core Axiom Core.mkCoercionTy : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+rename value Type.mkCoercionTy = Core.mkCoercionTy
+
 #
 # not translating TysWiredIn yet
 #
@@ -219,4 +241,4 @@ rewrite forall co,     TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 ############################################################################
 
 redefine Definition    CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
+# redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.

@@ -68,6 +68,7 @@ constructors:
     "OpenTypeFamilyFlavour",Qualified "Core" "ClosedTypeFamilyFlavour",Qualified "Core"
     "TypeSynonymFlavour",Qualified "Core" "BuiltInTypeFlavour",Qualified "Core" "PromotedDataConFlavour"]'
   Core.TyVarBndr: ! '[Qualified "Core" "TvBndr"]'
+  Core.Unfolding: ! '[Qualified "Core" "NoUnfolding"]'
   Core.Expr: ! '[Qualified "Core" "Mk_Var",Qualified "Core" "Lit",Qualified "Core"
     "App",Qualified "Core" "Lam",Qualified "Core" "Let",Qualified "Core" "Case",Qualified
     "Core" "Cast",Qualified "Core" "Tick",Qualified "Core" "Type_",Qualified "Core"
@@ -330,6 +331,7 @@ constructorFields:
   Core.TsProd: NonRecordFields 1
   Core.NamedTCB: NonRecordFields 1
   Core.TB: NonRecordFields 2
+  Core.NoUnfolding: NonRecordFields 0
   Core.DEFAULT: NonRecordFields 0
   Core.VecCount: NonRecordFields 1
   Core.PlaceCostCentre: NonRecordFields 0
@@ -678,6 +680,7 @@ constructorTypes:
   Core.TsProd: Qualified "Core" "TypeShape"
   Core.NamedTCB: Qualified "Core" "TyConBndrVis"
   Core.TB: Qualified "Core" "TaggedBndr"
+  Core.NoUnfolding: Qualified "Core" "Unfolding"
   Core.DEFAULT: Qualified "Core" "AltCon"
   Core.VecCount: Qualified "Core" "RuntimeRepInfo"
   Core.PlaceCostCentre: Qualified "Core" "TickishPlacement"

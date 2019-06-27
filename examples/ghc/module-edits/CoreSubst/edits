@@ -1,16 +1,16 @@
 import module GHC.Base
-
+import module Data.Traversable
 
 axiomatize definition CoreSubst.substTyVarBndr 
 axiomatize definition CoreSubst.substCoVarBndr 
-axiomatize definition CoreSubst.extendCvSubst  
-axiomatize definition CoreSubst.extendTvSubst  
-axiomatize definition CoreSubst.extendTvSubstList
-axiomatize definition CoreSubst.getTCvSubst 
+#axiomatize definition CoreSubst.extendCvSubst  
+#axiomatize definition CoreSubst.extendTvSubst  
+#axiomatize definition CoreSubst.extendTvSubstList
+#axiomatize definition CoreSubst.getTCvSubst 
 axiomatize definition CoreSubst.substCo 
 axiomatize definition CoreSubst.substTy
 axiomatize definition CoreSubst.substSpec 
-axiomatize definition CoreSubst.lookupTCvSubst 
+#axiomatize definition CoreSubst.lookupTCvSubst 
 axiomatize definition CoreSubst.cloneTyVarBndr 
 
 

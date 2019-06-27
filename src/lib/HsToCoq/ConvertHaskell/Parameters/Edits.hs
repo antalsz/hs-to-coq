@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, hasManualNotation, skippedClasses, skippedMethods, skippedModules, importedModules, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
@@ -92,6 +92,7 @@ data Edit = TypeSynonymTypeEdit           Ident Ident
           | RedefinitionEdit              CoqDefinition
           | AddEdit                       ModuleName CoqDefinition
           | SkipEdit                      Qualid
+          | SkipConstructorEdit           Qualid
           | SkipClassEdit                 Qualid
           | SkipMethodEdit                Qualid Ident
           | SkipModuleEdit                ModuleName
@@ -136,6 +137,7 @@ data Edits = Edits { _typeSynonymTypes          :: !(Map Ident Ident)
                    , _redefinitions             :: !(Map Qualid CoqDefinition)
                    , _additions                 :: !(Map ModuleName [Sentence])
                    , _skipped                   :: !(Set Qualid)
+                   , _skippedConstructors       :: !(Set Qualid)
                    , _skippedClasses            :: !(Set Qualid)
                    , _skippedMethods            :: !(Set (Qualid,Ident))
                    , _skippedModules            :: !(Set ModuleName)
@@ -197,6 +199,7 @@ descDuplEdit = \case
   TerminationEdit               what _       -> duplicateQ_for  "termination requests"                 what
   RedefinitionEdit              def          -> duplicateQ_for  "redefinitions"                        (defName def)
   SkipEdit                      what         -> duplicateQ_for  "skips"                                what
+  SkipConstructorEdit           con          -> duplicateQ_for  "skipped constructor requests"         con
   SkipClassEdit                 cls          -> duplicateQ_for  "skipped class requests"               cls
   SkipMethodEdit                cls meth     -> duplicate_for   "skipped method requests"              (prettyLocalName cls meth)
   SkipModuleEdit                mod          -> duplicate_for   "skipped module requests"              (moduleNameString mod)
@@ -236,9 +239,10 @@ addEdit e = case e of
   TerminationEdit               what ta          -> addFresh e termination                            what          ta
   RedefinitionEdit              def              -> addFresh e redefinitions                          (defName def) def
   SkipEdit                      what             -> addFresh e skipped                                what          ()
+  SkipConstructorEdit           con              -> addFresh e skippedConstructors                    con           ()
+  SkipClassEdit                 cls              -> addFresh e skippedClasses                         cls           ()
   SkipMethodEdit                cls meth         -> addFresh e skippedMethods                         (cls,meth)    ()
   SkipModuleEdit                mod              -> addFresh e skippedModules                         mod           ()
-  SkipClassEdit                 cls              -> addFresh e skippedClasses                         cls           ()
   ImportModuleEdit              mod              -> addFresh e importedModules                        mod           ()
   HasManualNotationEdit         what             -> addFresh e hasManualNotation                      what          ()
   AxiomatizeModuleEdit          mod              -> addFresh e axiomatizedModules                     mod           ()

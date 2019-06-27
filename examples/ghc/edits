@@ -1,3 +1,36 @@
+####################################################
+# Replace IntMap with Map
+####################################################
+rename type Data.IntMap.Internal.IntMap = IntMap.IntMap
+rename value Data.IntMap.Internal.empty = IntMap.empty
+rename value Data.IntMap.Internal.singleton = IntMap.singleton
+rename value Data.IntMap.Internal.null = IntMap.null
+rename value Data.IntMap.Internal.keys = IntMap.keys
+rename value Data.IntMap.Internal.keysSet = IntMap.keysSet
+rename value Data.IntMap.Internal.elems = IntMap.elems
+rename value Data.IntMap.Internal.member = IntMap.member
+rename value Data.IntMap.Internal.size = IntMap.size
+rename value Data.IntMap.Internal.insert = IntMap.insert
+rename value Data.IntMap.Internal.insertWith = IntMap.insertWith
+rename value Data.IntMap.Internal.delete = IntMap.delete
+rename value Data.IntMap.Internal.alter = IntMap.alter
+rename value Data.IntMap.Internal.adjust = IntMap.adjust
+rename value Data.IntMap.Internal.map = IntMap.map
+rename value Data.IntMap.Internal.mapWithKey = IntMap.mapWithKey
+rename value Data.IntMap.Internal.mergeWithKey = IntMap.mergeWithKey
+rename value Data.IntMap.Internal.filter = IntMap.filter
+rename value Data.IntMap.Internal.filterWithKey = IntMap.filterWithKey
+rename value Data.IntMap.Internal.union = IntMap.union
+rename value Data.IntMap.Internal.unionWith = IntMap.unionWith
+rename value Data.IntMap.Internal.intersection = IntMap.intersection
+rename value Data.IntMap.Internal.intersectionWith = IntMap.intersectionWith
+rename value Data.IntMap.Internal.difference = IntMap.difference
+rename value Data.IntMap.Internal.partition = IntMap.partition
+rename value Data.IntMap.Internal.toList = IntMap.toList
+rename value Data.IntMap.Internal.foldr = IntMap.foldr
+rename value Data.IntMap.Internal.foldrWithKey = IntMap.foldrWithKey
+rename value Data.IntMap.Internal.findWithDefault = IntMap.findWithDefault
+rename value Data.IntMap.Internal.lookup = IntMap.lookup
 
 ####################################################
 # Edits related to base

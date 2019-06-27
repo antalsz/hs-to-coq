@@ -8,6 +8,8 @@ module HsToCoq.ConvertHaskell.Declarations.DataType (
 
 import Control.Lens
 
+import HsToCoq.Util.Function
+import Control.Applicative
 import Data.Bifunctor
 import Data.Semigroup (Semigroup(..))
 import Data.Foldable
@@ -17,8 +19,10 @@ import HsToCoq.Util.Traversable
 
 import qualified Data.Set        as S
 import qualified Data.Map.Strict as M
+import HsToCoq.Util.Containers
 
 import Control.Monad
+import Control.Monad.Trans.Maybe
 
 import GHC hiding (Name)
 import qualified GHC
@@ -50,12 +54,20 @@ addAdditionalConstructorScope ctor@(name, bs, Just resTy) =
 
 --------------------------------------------------------------------------------
 
+conNameOrSkip :: (ConversionMonad r m, Alternative m) => GHC.Name -> m Qualid
+conNameOrSkip name = do
+  con <- var ExprNS name
+  guard =<< view (edits.skippedConstructors.notContains con)
+  pure con
+
+------------------------------------------------------------------------------------------
+
 convertConDecl :: ConversionMonad r m
                => Term -> [Binder] -> ConDecl GhcRn -> m [Constructor]
-convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = do
+convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = fmap fold . runMaybeT $ do
   unless (maybe True (null . unLoc) mlcxt) $ convUnsupported' "constructor contexts"
 
-  con <- var ExprNS $ unLoc lname
+  con <- conNameOrSkip $ unLoc lname
 
   -- Only the explicit tyvars are available before renaming, so they're all we
   -- need to consider
@@ -80,8 +92,8 @@ convertConDecl curType extraArgs (ConDeclH98 lname mlqvs mlcxt details _doc) = d
       pure [(con, params , Just . maybeForall extraArgs $ foldr Arrow curType args)]
 
 convertConDecl curType extraArgs (ConDeclGADT lnames sigTy _doc) = do
-  for lnames $ \(L _ hsName) -> do
-    conName         <- var ExprNS hsName
+  fmap catMaybes . for lnames $ \(L _ hsName) -> runMaybeT $ do
+    conName         <- conNameOrSkip hsName
     utvm            <- unusedTyVarModeFor conName
     (_, curTypArgs) <- collectArgs curType
     conTy           <- maybeForall extraArgs <$> convertLHsSigTypeWithExcls utvm sigTy
@@ -168,7 +180,7 @@ convertDataDecl name tvs defn = do
   (resTy, cons) <- first (maybeForall indices)
                      <$> convertDataDefn curType conIndices defn
 
-  let conNames = [con | (con,_,_) <- cons]
+  conNames <- filterM (view . (edits.skippedConstructors.:notContains)) [con | (con,_,_) <- cons]
   storeConstructors coqName conNames
   for_ conNames $ \con -> do
     storeConstructorType con coqName

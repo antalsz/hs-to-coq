@@ -10,9 +10,6 @@ Require GHC.Err.
 Instance Default__RuleInfo : GHC.Err.Default RuleInfo :=
   GHC.Err.Build_Default _ EmptyRuleInfo.
 
-Instance Default__Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ NoUnfolding.
-
 Instance Default__TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
 

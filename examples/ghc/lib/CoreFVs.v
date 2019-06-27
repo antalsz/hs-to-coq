@@ -22,6 +22,7 @@ Require GHC.List.
 Require GHC.Num.
 Require Id.
 Require Lists.List.
+Require Maybes.
 Require NameSet.
 Require NestedRecursionHelpers.
 Require Panic.
@@ -69,6 +70,9 @@ Definition tickish_fvs : Core.Tickish Core.Id -> FV.FV :=
     | _ => FV.emptyFV
     end.
 
+Definition stableUnfoldingFVs : Core.Unfolding -> option FV.FV :=
+  fun '(_other) => None.
+
 Definition orphNamesOfThings {a}
    : (a -> NameSet.NameSet) -> list a -> NameSet.NameSet :=
   fun f =>
@@ -78,7 +82,7 @@ Definition noFVs : Core.VarSet :=
   Core.emptyVarSet.
 
 Definition idUnfoldingFVs : Core.Id -> FV.FV :=
-  fun id => FV.emptyFV.
+  fun id => Maybes.orElse (stableUnfoldingFVs (Id.realIdUnfolding id)) FV.emptyFV.
 
 Definition idUnfoldingVars : Core.Id -> Core.VarSet :=
   fun id => FV.fvVarSet (idUnfoldingFVs id).
@@ -458,22 +462,24 @@ Definition freeVarsBind
                          end for freeVarsBind.
 
 (* External variables:
-     andb bool cons list negb op_zt__ pair snd BasicTypes.Activation Core.AnnAlt
-     Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnCast Core.AnnCoercion Core.AnnExpr
-     Core.AnnExpr' Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec Core.AnnRec
-     Core.AnnTick Core.AnnType Core.AnnVar Core.App Core.Breakpoint Core.BuiltinRule
-     Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreBndr Core.CoreExpr
-     Core.CoreRule Core.CoreVect Core.DIdSet Core.DTyCoVarSet Core.DVarSet Core.Id
-     Core.IdSet Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NoVect Core.NonRec
-     Core.Rec Core.Rule Core.Tick Core.Tickish Core.TyCoVarSet Core.Type_ Core.Var
-     Core.VarSet Core.Vect Core.VectClass Core.VectInst Core.VectType Core.delDVarSet
-     Core.emptyDVarSet Core.emptyVarSet Core.isId Core.isLocalId Core.isLocalVar
-     Core.mapUnionVarSet Core.mkDVarSet Core.unionDVarSet Core.unionDVarSets
-     Core.unitDVarSet Data.Foldable.foldr Data.Tuple.fst FV.FV FV.InterestingVarFun
-     FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList FV.fvVarSet
-     FV.mapUnionFV FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
-     Id.idCoreRules Id.idType Lists.List.map NameSet.NameSet NameSet.emptyNameSet
-     NameSet.unionNameSet NestedRecursionHelpers.mapAndUnzipFix Panic.assertPanic
-     UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
+     None andb bool cons list negb op_zt__ option pair snd BasicTypes.Activation
+     Core.AnnAlt Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnCast Core.AnnCoercion
+     Core.AnnExpr Core.AnnExpr' Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec
+     Core.AnnRec Core.AnnTick Core.AnnType Core.AnnVar Core.App Core.Breakpoint
+     Core.BuiltinRule Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreBndr
+     Core.CoreExpr Core.CoreRule Core.CoreVect Core.DIdSet Core.DTyCoVarSet
+     Core.DVarSet Core.Id Core.IdSet Core.Lam Core.Let Core.Lit Core.Mk_Var
+     Core.NoVect Core.NonRec Core.Rec Core.Rule Core.Tick Core.Tickish
+     Core.TyCoVarSet Core.Type_ Core.Unfolding Core.Var Core.VarSet Core.Vect
+     Core.VectClass Core.VectInst Core.VectType Core.delDVarSet Core.emptyDVarSet
+     Core.emptyVarSet Core.isId Core.isLocalId Core.isLocalVar Core.mapUnionVarSet
+     Core.mkDVarSet Core.unionDVarSet Core.unionDVarSets Core.unitDVarSet
+     Data.Foldable.foldr Data.Tuple.fst FV.FV FV.InterestingVarFun FV.delFV
+     FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList FV.fvVarSet FV.mapUnionFV
+     FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map GHC.Base.op_z2218U__
+     GHC.List.unzip GHC.List.zip GHC.Num.fromInteger Id.idCoreRules Id.idType
+     Id.realIdUnfolding Lists.List.map Maybes.orElse NameSet.NameSet
+     NameSet.emptyNameSet NameSet.unionNameSet NestedRecursionHelpers.mapAndUnzipFix
+     Panic.assertPanic UniqSet.delOneFromUniqSet_Directly Unique.getUnique
+     Util.debugIsOn
 *)

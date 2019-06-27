@@ -52,7 +52,7 @@ in CoreFVs.exprOrphNames inline mutual go_alt
 #
 # first, we get rid of parts of the structure that we do not need
 #
-skip CoreFVs.stableUnfoldingFVs
+# skip CoreFVs.stableUnfoldingFVs
 skip CoreFVs.stableUnfoldingVars
 #
 # Then we unfuse some recursive calls so that Coq can see that they are structural

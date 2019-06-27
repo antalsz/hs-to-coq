@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, RecordWildCards, OverloadedStrings, OverloadedLists, FlexibleContexts, ScopedTypeVariables #-}
 
 module HsToCoq.ConvertHaskell.Pattern (
-  convertPat,  convertLPat,
+  convertPat,  convertLPat, runPatternT,
   -- * Utility
   Refutability(..), refutability, isRefutable, isConstructor, isSoleConstructor,
 
@@ -18,8 +18,10 @@ import Data.Traversable
 import Data.List.NonEmpty (toList)
 import qualified Data.Text as T
 
+import HsToCoq.Util.Monad
 import Control.Monad.Trans.Maybe
 import Control.Monad.Writer
+import Control.Monad.Except
 
 import qualified Data.Map.Strict as M
 
@@ -41,7 +43,7 @@ import HsToCoq.ConvertHaskell.Literals
 
 --------------------------------------------------------------------------------
 
-convertPat :: (LocalConvMonad r m, MonadWriter [Term] m) => Pat GhcRn -> m Pattern
+convertPat :: (LocalConvMonad r m, MonadWriter [Term] m, MonadError Qualid m) => Pat GhcRn -> m Pattern
 convertPat (WildPat PlaceHolder) =
   pure UnderscorePat
 
@@ -77,6 +79,7 @@ convertPat (PArrPat _ _) =
 
 convertPat (ConPatIn (L _ hsCon) conVariety) = do
   con <- var ExprNS hsCon
+  whenM (view $ edits.skippedConstructors.contains con) $ throwError con
 
   case conVariety of
     PrefixCon args ->
@@ -162,8 +165,13 @@ convertPat SumPat{} =
 
 --------------------------------------------------------------------------------
 
-convertLPat :: (LocalConvMonad r m, MonadWriter [Term] m) => LPat GhcRn -> m Pattern
+convertLPat :: (LocalConvMonad r m, MonadWriter [Term] m, MonadError Qualid m) => LPat GhcRn -> m Pattern
 convertLPat = convertPat . unLoc
+
+--------------------------------------------------------------------------------
+
+runPatternT :: LocalConvMonad r m => WriterT [Term] (ExceptT Qualid m) a -> m (Either Qualid (a, [Term]))
+runPatternT = runExceptT . runWriterT
 
 --------------------------------------------------------------------------------
 

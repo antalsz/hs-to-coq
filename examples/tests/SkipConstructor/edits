@@ -1,0 +1,4 @@
+skip constructor SkipConstructor.D
+
+# We don't link against GHC
+skip SkipConstructor.Default__T

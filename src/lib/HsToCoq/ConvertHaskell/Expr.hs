@@ -20,9 +20,9 @@ import Data.Foldable
 import HsToCoq.Util.Foldable
 import Data.Traversable
 import Data.Bitraversable
-import HsToCoq.Util.Monad
 import HsToCoq.Util.Function
 import Data.Maybe
+import Data.Either
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -467,10 +467,12 @@ isTrivialMatch (MG (L _ [L _ alt]) _ _ _) = trivMatch alt where
   trivPat _                     = False
 isTrivialMatch _ = Nothing
 
+-- TODO: Unify with `isTrivialMatch` to return a `Maybe (Binders, Term)`
 convTrivialMatch ::  LocalConvMonad r m =>
   Match GhcRn (LHsExpr GhcRn) ->  m (Binders, Term)
 convTrivialMatch alt = do
   (MultPattern pats, _, rhs) <- convertMatch alt
+                                  <&> maybe (error "internal error: convTrivialMatch: not a trivial match!") id
   names <- mapM patToName pats
   let argBinders = (Inferred Coq.Explicit) <$> names
   body <- rhs patternFailure
@@ -497,35 +499,38 @@ convertPatternBinding :: LocalConvMonad r m
                       => LPat GhcRn -> LHsExpr GhcRn
                       -> (Term -> (Term -> Term) -> m a)
                       -> (Term -> Qualid -> (Term -> Term -> Term) -> m a)
+                      -> (Qualid -> m a)
                       -> Term
                       -> m a
-convertPatternBinding hsPat hsExp buildTrivial buildNontrivial fallback = do
-  (pat, guards) <- runWriterT $ convertLPat hsPat
-  exp <- convertLExpr hsExp
-
-  ib <- ifThenElse
-
-  refutability pat >>= \case
-    Trivial tpat | null guards ->
-      buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
-
-    nontrivial -> do
-      cont <- genqid "cont"
-      arg  <- genqid "arg"
-
-      -- TODO: Use SSReflect's `let:` in the `SoleConstructor` case?
-      -- (Involves adding a constructor to `Term`.)
-      let fallbackMatches
-            | SoleConstructor <- nontrivial = []
-            | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
-          guarded tm | null guards = tm
-                     | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
-
-      buildNontrivial exp cont $ \body rest ->
-        Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
-                 (Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing $
-                   Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
-          body
+convertPatternBinding hsPat hsExp buildTrivial buildNontrivial buildSkipped fallback =
+  runPatternT (convertLPat hsPat) >>= \case
+    Left  skipped       -> buildSkipped skipped
+    Right (pat, guards) -> do
+      exp <- convertLExpr hsExp
+     
+      ib <- ifThenElse
+     
+      refutability pat >>= \case
+        Trivial tpat | null guards ->
+          buildTrivial exp $ Fun [Inferred Coq.Explicit $ maybe UnderscoreName Ident tpat]
+     
+        nontrivial -> do
+          cont <- genqid "cont"
+          arg  <- genqid "arg"
+     
+          -- TODO: Use SSReflect's `let:` in the `SoleConstructor` case?
+          -- (Involves adding a constructor to `Term`.)
+          let fallbackMatches
+                | SoleConstructor <- nontrivial = []
+                | otherwise                     = [ Equation [MultPattern [UnderscorePat]] fallback ]
+              guarded tm | null guards = tm
+                         | otherwise   = ib LinearIf (foldr1 (App2 "andb") guards) tm fallback
+     
+          buildNontrivial exp cont $ \body rest ->
+            Let cont [Inferred Coq.Explicit $ Ident arg] Nothing
+                     (Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing $
+                       Equation [MultPattern [pat]] (guarded rest) : fallbackMatches)
+              body
 
 convertDoBlock :: LocalConvMonad r m => [ExprLStmt GhcRn] -> m Term
 convertDoBlock allStmts = do
@@ -548,6 +553,8 @@ convertDoBlock allStmts = do
         pat exp
         (\exp' fun          -> monBind exp' . fun <$> rest)
         (\exp' cont letCont -> letCont (monBind exp' (Qualid cont)) <$> rest)
+        (\skipped           -> convUnsupported $  "binding against the skipped constructor \
+                                                  \`" ++ showP skipped ++ "' in `do' notation")
         (missingValue `App1` HsString "Partial pattern match in `do' notation")
 
     toExpr' (LetStmt (L _ binds)) rest =
@@ -586,6 +593,7 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
         pat exp
         (\exp' fun          -> App2 concatMapT <$> (fun <$> rest) <*> pure exp')
         (\exp' cont letCont -> letCont (App2 concatMapT (Qualid cont) exp') <$> rest)
+        (\skipped           -> pure $ App1 (Qualid "GHC.Skip.nil_skipped") (String $ textP skipped))
         (Var "nil")
 
     toExpr (LetStmt (L _ binds)) rest =
@@ -653,7 +661,7 @@ convertMatchGroup :: LocalConvMonad r m =>
     MatchGroup GhcRn (LHsExpr GhcRn) ->
     m Term
 convertMatchGroup args (MG (L _ alts) _ _ _) = do
-    convAlts <- mapM (convertMatch . unLoc) alts
+    convAlts <- catMaybes <$> traverse (convertMatch . unLoc) alts
     -- TODO: Group
     convGroups <- groupMatches convAlts
 
@@ -689,19 +697,22 @@ groupMatches pats = map (map snd) . go <$> mapM summarize pats
 
 convertMatch :: LocalConvMonad r m =>
     Match GhcRn (LHsExpr GhcRn) -> -- the match
-    m (MultPattern, HasGuard, Term -> m Term) -- the pattern, hasGuards, the right-hand side
+    m (Maybe (MultPattern, HasGuard, Term -> m Term)) -- the pattern, hasGuards, the right-hand side
 convertMatch GHC.Match{..} = do
-  (pats, guards) <- runWriterT $
-    maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
-      =<< traverse convertLPat m_pats
-
-  let extraGuards = map BoolGuard guards
-  let rhs = convertGRHSs extraGuards m_grhss
-
-  let hg | null extraGuards = hasGuards m_grhss
-         | otherwise        = HasGuard
-
-  return (MultPattern pats, hg, rhs)
+  when (null m_pats) $ convUnsupported "no-pattern case arms"
+  
+  (mpats, guards) <-  bimap nonEmpty fold
+                  .   unzip
+                  .   rights
+                  <$> traverse (runPatternT . convertLPat) m_pats
+  pure $ mpats <&> \pats ->
+    let extraGuards = map BoolGuard guards
+        rhs = convertGRHSs extraGuards m_grhss
+    
+        hg | null extraGuards = hasGuards m_grhss
+           | otherwise        = HasGuard
+    
+    in (MultPattern pats, hg, rhs)
 
 buildMatch :: ConversionMonad r m =>
     NonEmpty MatchItem -> [(MultPattern, Term -> m Term)] -> Term -> m Term
@@ -767,10 +778,15 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
       False -> (:[]) . BoolGuard <$> convertLExpr e
   toCond (LetStmt (L _ binds)) =
     pure . (:[]) . LetGuard $ convertLocalBinds binds
-  toCond (BindStmt pat exp _bind _fail PlaceHolder) = do
-    (pat', guards) <- runWriterT $ convertLPat pat
-    exp'           <- convertLExpr exp
-    pure $ PatternGuard pat' exp' : map BoolGuard guards
+  toCond (BindStmt pat exp _bind _fail PlaceHolder) =
+    runPatternT (convertLPat pat) >>= \case
+      Left  skipped ->
+        -- `GHC.Skip.impossible_skipped` always returns false, but it has a note
+        -- about what constructor was skipped.
+        pure [BoolGuard $ App1 (Qualid "GHC.Skip.impossible_skipped") (String $ textP skipped)]
+      Right (pat', guards) -> do
+        exp'           <- convertLExpr exp
+        pure $ PatternGuard pat' exp' : map BoolGuard guards
   toCond _ =
     convUnsupported "impossibly fancy guards"
 
@@ -836,9 +852,10 @@ convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
       traceM "pattern bindings in axiomatized modules, skipping"
       pure Nothing
      -- convUnsupported "pattern bindings in axiomatized modules"
-    else do  
-      (pat, guards) <- runWriterT $ convertLPat pat_lhs
-      Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
+    else
+      runPatternT (convertLPat pat_lhs) >>= \case
+        Left  _skipped      -> pure Nothing
+        Right (pat, guards) -> Just . ConvertedPatternBinding pat <$> convertGRHSs (map BoolGuard guards) pat_rhs patternFailure
 convertTypedBinding convHsTy FunBind{..}   = do
     name <- var ExprNS (unLoc fun_id)
     

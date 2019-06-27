@@ -13,7 +13,7 @@ redefine Definition Core.setRuleInfoHead  : Name.Name -> (Core.RuleInfo -> Core.
 
 # Redefine UnfoldingInfo so that it is always missing
 
-redefine Inductive Core.Unfolding := Core.NoUnfolding.
+# redefine Inductive Core.Unfolding := Core.NoUnfolding.
 
 ###################################
 #

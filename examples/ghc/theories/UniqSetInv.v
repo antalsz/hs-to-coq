@@ -31,7 +31,7 @@ Import GHC.Base.
 
 Require Proofs.GHC.List.
 Require Proofs.Data.Foldable.
-Require Import Data.IntMap.Internal.
+Require Import IntMap.
 
 
 Require Import Proofs.ContainerAxioms.
@@ -176,7 +176,7 @@ Polymorphic Definition UniqSet@{i} (a:Type@{i}) `{Unique.Uniquable a} : Type@{i}
 Local Notation Mk_UniqSet s:= (@existT _ _ s _).
 
 Definition getUniqSet' {a}`{Uniquable a} (arg_0__ : UniqSet a) :=
-  let 'existT _ getUniqSet' _ := arg_0__ in
+  let 'existT getUniqSet' _ := arg_0__ in
   getUniqSet'.
 
 (* Converted value declarations: *)
@@ -363,7 +363,7 @@ Program Definition filterUniqSet {a} `{Unique.Uniquable a} : (a -> bool) -> Uniq
 Next Obligation.
   unfold UniqInv in *.
   intros x y.
-  unfold lookupUFM, filterUFM in *. unfold IntMap.Internal.filter.
+  unfold lookupUFM, filterUFM in *. unfold IntMap.filter.
   destruct s.
   intro h.
   apply wildcard'.
@@ -469,7 +469,7 @@ Program Definition partitionUniqSet {a} `{Unique.Uniquable a}
    : (a -> bool) -> UniqSet a -> (UniqSet a * UniqSet a)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | p, existT _ s _ => let '(x,y):= (UniqFM.partitionUFM p s) in (existT _ x _, existT _ y _)
+    | p, existT s _ => let '(x,y):= (UniqFM.partitionUFM p s) in (existT _ x _, existT _ y _)
     end.
 Next Obligation.
   unfold UniqInv in *.
@@ -539,7 +539,7 @@ Definition uniqSetAll {a} `{Unique.Uniquable a} : (a -> bool) -> UniqSet a -> bo
 Definition uniqSetAny {a} `{Unique.Uniquable a} : (a -> bool) -> UniqSet a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | p, existT _ s _ => UniqFM.anyUFM p s
+    | p, existT s _ => UniqFM.anyUFM p s
     end.
 
 (*
@@ -560,14 +560,11 @@ Next Obligation.
   unfold lookupUFM, unitUFM.
   unfold singleton.
   simpl.
-  destruct (_GHC.Base.==_ (getWordKey (getUnique x0)) (getWordKey (getUnique x))) eqn:EQ.
-  unfold Internal.Key, Num.Word in *.
-  rewrite EQ.
-  intro h. inversion h. subst.
-  apply eq_getWordKey. auto.
-  unfold Internal.Key, Num.Word in *.
-  rewrite EQ.
-  intro h. inversion h.
+  destruct (compare (getWordKey (getUnique x0)) (getWordKey (getUnique x))) eqn:EQ.
+  - intro h. inversion h. subst.
+    apply eq_getWordKey, Bounds.compare_Eq. auto.
+  - intro h. inversion h.
+  - intro h. inversion h.
 Defined.
 
 (* Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=

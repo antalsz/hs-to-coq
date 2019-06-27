@@ -12,9 +12,10 @@ CORE_EDITS=axiomatize-types.edits
 HANDMOD = \
   FastString \
   AxiomatizedTypes \
-  NestedRecursionHelpers
-    # Used by CSE
-#  TysWiredIn \
+  NestedRecursionHelpers \
+  IntMap
+  # Used by CSE
+  # TysWiredIn \
 
 
 # generated from drop-in/
@@ -51,11 +52,11 @@ MODULES = \
   ListSetOps \
   Panic \
 
-## 
+##
 CORESYN = \
    IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand \
 
-## 
+##
 CONSTRUCTORS = \
 
 
@@ -269,4 +270,4 @@ clean:
 	rm -f *.aux *.log
 
 cleancore:
-	rm -rf $(OUTFILES_CORE) 
+	rm -rf $(OUTFILES_CORE)

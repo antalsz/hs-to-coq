@@ -9,6 +9,7 @@ import Exception
 
 import qualified Control.Monad.Trans.Identity      as I
 import qualified Control.Monad.Trans.Maybe         as M
+import qualified Control.Monad.Trans.Except        as E
 import qualified Control.Monad.Trans.Reader        as R
 import qualified Control.Monad.Trans.Writer.Strict as WS
 import qualified Control.Monad.Trans.Writer.Lazy   as WL
@@ -24,6 +25,11 @@ instance ExceptionMonad m => ExceptionMonad (I.IdentityT m) where
 instance ExceptionMonad m => ExceptionMonad (M.MaybeT m) where
   gcatch  = M.liftCatch gcatch
   gmask f = M.MaybeT . gmask $ M.runMaybeT . f . M.mapMaybeT
+
+-- I think this is OK
+instance ExceptionMonad m => ExceptionMonad (E.ExceptT e m) where
+  m `gcatch` h  = E.ExceptT $ E.runExceptT m `gcatch` (E.runExceptT . h)
+  gmask f = E.ExceptT . gmask $ E.runExceptT . f . E.mapExceptT
 
 instance ExceptionMonad m => ExceptionMonad (R.ReaderT r m) where
   gcatch  = R.liftCatch gcatch

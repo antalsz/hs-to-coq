@@ -1,8 +1,0 @@
-constructors:
-  MkCore.FloatBind: ! '[Qualified "MkCore" "FloatLet",Qualified "MkCore" "FloatCase"]'
-constructorFields:
-  MkCore.FloatCase: NonRecordFields 4
-  MkCore.FloatLet: NonRecordFields 1
-constructorTypes:
-  MkCore.FloatCase: Qualified "MkCore" "FloatBind"
-  MkCore.FloatLet: Qualified "MkCore" "FloatBind"

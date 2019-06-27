@@ -4595,8 +4595,6 @@ Definition isTyVar : Var -> bool :=
 Definition isTyConAssoc : TyCon -> bool :=
   fun tc => Data.Maybe.isJust (tyConAssoc_maybe tc).
 
-Axiom isTyCoVar : Var -> bool.
-
 Definition isTyCoArg {b} : Expr b -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -5163,6 +5161,9 @@ Definition isCoVar : Var -> bool :=
     | Mk_Id _ _ _ _ details _ => isCoVarDetails details
     | _ => false
     end.
+
+Definition isTyCoVar : Var -> bool :=
+  fun v => orb (isTyVar v) (isCoVar v).
 
 Axiom mkCoVarCo : CoVar -> AxiomatizedTypes.Coercion.
 

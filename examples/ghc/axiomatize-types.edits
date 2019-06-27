@@ -74,9 +74,6 @@ rename value Demand.KillFlags   = Core.Mk_KillFlags
 rename value CoreFVs.FVAnn    = CoreFVs.Mk_FVAnn
 rename value CoreSubst.Subst  = CoreSubst.Mk_Subst
 
-
-rename value Type.TyCoMapper = Type.Mk_TyCoMapper
-
 ###############################################################################
 #  General edits related to translating Core
 ###############################################################################
@@ -92,6 +89,11 @@ rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 #  Pruning the AST, general
 ###############################################################################
 
+#
+# we never use any operations on these types, so perfectly sound to forget
+# they exist. Could also axiomatize, but then would need to add Default/Eq
+# instances for them too.
+#
 rename type PrimOp.PrimOp           = unit
 rename type ForeignCall.ForeignCall = unit
 rename type ForeignCall.CType       = unit
@@ -101,15 +103,24 @@ rename type CostCentre.CostCentre   = unit
 rename type MkId.DataConBoxer       = unit
 
 ###############################################################################
-# brutaly skip all type info
+# axiomatize type & coercion information
+#  - define types in a new (manual) module called AxiomatizedTypes
+#     (we cannot axiomatize the modules and include them in Core at the same time)
+#  - rewrite refererences to these types to new module
+#  - operations on the axiomatized types mostly stay in original modules, 
+#    (TyCoRep, CoAxiom, Coercion) but are axiomatized. These can depend on Core
+#  - a few types and operations are needed in Core, so we add axioms for them 
+#    there, and rewrites to the new locations
 ###############################################################################
-
-rename type TcType.TcTyVarDetails = AxiomatizedTypes.TcTyVarDetails
 
 axiomatize module TyCoRep
 axiomatize module CoAxiom
 axiomatize module Coercion
 
+#
+# axiomatized types
+#
+rename type TcType.TcTyVarDetails = AxiomatizedTypes.TcTyVarDetails
 
 rename type TyCoRep.Coercion      = AxiomatizedTypes.Coercion
 rename type TyCoRep.Type_         = AxiomatizedTypes.Type_
@@ -119,14 +130,6 @@ rename type TyCoRep.TyThing       = AxiomatizedTypes.TyThing
 rename type TyCoRep.Kind          = AxiomatizedTypes.Kind
 rename type TyCoRep.PredType      = AxiomatizedTypes.PredType
 
-add Core Definition Core.TvSubstEnv := Core.TyVarEnv AxiomatizedTypes.Type_.
-rename type TyCoRep.TvSubstEnv    = Core.TvSubstEnv
-add Core Definition Core.CvSubstEnv := Core.CoVarEnv AxiomatizedTypes.Coercion.
-rename type TyCoRep.CvSubstEnv    = Core.CvSubstEnv
-add Core Inductive Core.TCvSubst := Core.Mk_TCvSubst : Core.InScopeSet -> (Core.TvSubstEnv -> (Core.CvSubstEnv -> Core.TCvSubst)).
-rename type TyCoRep.TCvSubst      = Core.TCvSubst
-rename value TyCoRep.TCvSubst     = Core.Mk_TCvSubst
-
 rename type CoAxiom.CoAxiom            = AxiomatizedTypes.CoAxiom
 rename type CoAxiom.Branched           = AxiomatizedTypes.Branched
 rename type CoAxiom.Unbranched         = AxiomatizedTypes.Unbranched
@@ -135,6 +138,20 @@ rename type CoAxiom.Role               = AxiomatizedTypes.Role
 rename value CoAxiom.Representational  = AxiomatizedTypes.Representational
 rename value CoAxiom.Nominal           = AxiomatizedTypes.Nominal
 
+#
+# types moved to core (concrete definitions)
+#
+add Core Definition Core.TvSubstEnv := Core.TyVarEnv AxiomatizedTypes.Type_.
+rename type TyCoRep.TvSubstEnv    = Core.TvSubstEnv
+add Core Definition Core.CvSubstEnv := Core.CoVarEnv AxiomatizedTypes.Coercion.
+rename type TyCoRep.CvSubstEnv    = Core.CvSubstEnv
+add Core Inductive Core.TCvSubst := Core.Mk_TCvSubst : Core.InScopeSet -> (Core.TvSubstEnv -> (Core.CvSubstEnv -> Core.TCvSubst)).
+rename type TyCoRep.TCvSubst      = Core.TCvSubst
+rename value TyCoRep.TCvSubst     = Core.Mk_TCvSubst
+
+#
+# Coercion/TyCoRep operations needed in Core
+#
 
 add Core Axiom Core.mkCoVarCo : Core.CoVar -> AxiomatizedTypes.Coercion.
 rename value Coercion.mkCoVarCo = Core.mkCoVarCo
@@ -142,6 +159,9 @@ rename value Coercion.mkCoVarCo = Core.mkCoVarCo
 add Core Axiom Core.mkTyVarTy : Core.TyVar -> AxiomatizedTypes.Type_.
 rename value TyCoRep.mkTyVarTy = Core.mkTyVarTy
 
+#
+# must move everything in Type that we need to Core because we cannot rename/axiomatize 
+#
 add Core Axiom Core.isCoercionTy_maybe : AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Coercion.
 rename value Type.isCoercionTy_maybe = Core.isCoercionTy_maybe
 
@@ -157,43 +177,31 @@ rename value Type.eqTypeX = Core.eqTypeX
 add Core Axiom Core.typeKind :  AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
 rename value Type.typeKind = Core.typeKind
 
+add Core Axiom Core.tyConAppArgs : AxiomatizedTypes.Type_ -> list (AxiomatizedTypes.Type_).
+rename value Type.tyConAppArgs = Core.tyConAppArgs
+
+#
+# not translating TysWiredIn yet
+#
+
 add Core Axiom Core.liftedTypeKind : AxiomatizedTypes.Kind.
 rename value TysWiredIn.liftedTypeKind = Core.liftedTypeKind
 
 add Core Axiom Core.constraintKind : AxiomatizedTypes.Kind.
 rename value TysWiredIn.constraintKind = Core.constraintKind
 
-add Core Axiom Core.tyConAppArgs : AxiomatizedTypes.Type_ -> list (AxiomatizedTypes.Type_).
-rename value Type.tyConAppArgs = Core.tyConAppArgs
 
 ###############################################################################
 # rewrites for type/corecion related operations defined in skipped modules
 ##############################################################################
 
-# Var
-axiomatize definition Core.isTyCoVar
 # DataCon
+# This relies on Unify.typesCantMatch as well as several operations from Type
 axiomatize definition Core.dataConCannotMatch
-
 
 ############################################################################
 # rewrites for type/corecion related operations defined in translated modules
 ############################################################################
-
-# TODO: translate PrelNames
-#  rewrite forall id, (Unique.hasKey id PrelNames.absentErrorIdKey) = false
-
-# rewrite forall rhs,    CoreUtils.exprType rhs = tt
-
-rewrite forall con,    DataCon.dataConRepStrictness con = nil
-rewrite forall con,    DataCon.dataConRepArgTys con = nil
-rewrite forall con,    DataCon.dataConExTyVars con = @nil unit
-
-redefine Definition    CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-
-# could make this unit too
-axiomatize definition  TyCon.RuntimeRepInfo 
 
 
 #
@@ -204,3 +212,10 @@ rewrite forall co,     TyCoRep.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,     TyCoRep.tyCoFVsOfType ty        = FV.emptyFV
 rewrite forall b_ty,   TyCoRep.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
 rewrite forall co,     TyCoRep.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
+
+############################################################################
+# pruning Rules and Unfolding
+############################################################################
+
+redefine Definition    CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.

@@ -126,11 +126,18 @@ OUTFILES_TYPE      = $(addprefix $(OUT)/,$(VFILES_TYPE))
 
 OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN) 
 
+HSFILES    = $(addsuffix .hs,$(MODULES)) $(addsuffix .hs,$(CORESYN)) $(addsuffix .hs,$(CORE_MODULES)) 
+HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES)) 
+
 all: vfiles coq
 
 vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES)
 
 core: $(OUT)/README.md coq
+
+
+filelist:
+	@ls -1 $(HSFILESPATH) 
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.
 $(OUT)/README.md:

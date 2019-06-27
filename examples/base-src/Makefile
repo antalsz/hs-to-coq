@@ -1,3 +1,5 @@
+
+
 include ../../common.mk
 
 OUT=../../base
@@ -83,6 +85,9 @@ VFILES_DROPIN  = $(addprefix $(OUT)/,$(addsuffix .v,$(DROPIN)))
 VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_SPECIAL) $(VFILES_DROPIN) $(VFILES_RENAMED)
 
 all:  vfiles coq
+
+filelist:
+	@ls -1 $(addprefix base/,$(addsuffix .hs,$(MODULES)))
 
 vfiles: $(OUT)/edits $(OUT)/README.md $(OUT)/Makefile $(VFILES)
 

@@ -64,7 +64,7 @@ HS_TO_COQ_OPTS := \
   -e ../containers/edits \
   -e ../transformers/edits \
   -e ../ghc/edits \
-  -e ../ghc/no-type-edits \
+  -e ../ghc/axiomatize-types.edits \
   -e edits \
    --iface-dir ../../base \
    --iface-dir ../containers/lib \

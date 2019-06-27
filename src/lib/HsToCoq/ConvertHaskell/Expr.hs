@@ -72,7 +72,6 @@ import HsToCoq.ConvertHaskell.Pattern
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Axiomatize
 
-import Debug.Trace
 --------------------------------------------------------------------------------
 
 rewriteExpr :: ConversionMonad r m => Term -> m Term
@@ -844,10 +843,9 @@ convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
   ax <- view currentModuleAxiomatized
   if ax
-    then do
-      traceM "pattern bindings in axiomatized modules, skipping"
-      pure Nothing
-     -- convUnsupported "pattern bindings in axiomatized modules"
+    then
+      liftIO $ Nothing <$ putStrLn "skipping a pattern binding in an axiomatized module" -- TODO: FIX HACK
+      -- convUnsupported "pattern bindings in axiomatized modules"
     else
       runPatternT (convertLPat pat_lhs) >>= \case
         Left  _skipped      -> pure Nothing

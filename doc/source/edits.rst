@@ -39,8 +39,8 @@ Skipping Haskell
 Sometimes, ``hs-to-coq`` should ignore various Haskell declarations, because
 they are not translatable, or they are out-of-scope, or for other reasons.
 
-``skip`` – skip a function, type, class or instance
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``skip`` – skip a function, type, or type class instance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. index::
   single: skip, edit
@@ -50,9 +50,9 @@ Format:
   | **skip** *qualified_name*
 
 Effect:
-  During translation, ignore the declaration of the function, value, type, class
-  or instance with the given *qualified_name*.  The name must be the translated
-  Coq name, not the original Haskell name (if those differ).
+  During translation, ignore the declaration of the function, value, type, or
+  type class instance with the given *qualified_name*.  The name must be the
+  translated Coq name, not the original Haskell name (if those differ).
 
   This does not affect the translation of *uses* of the given name. This means
   that you can use other methods, e.g. a preamble, to make it available.

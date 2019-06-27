@@ -175,7 +175,7 @@ type ConversionMonad r m =
 --   and a counter for fresh variables
 type LocalConvMonad r m =
         ( ConversionMonad r m
-        , CounterMonad m
+        , MonadCounter m
         , HasCurrentDefinition r Qualid
         )
 
@@ -215,7 +215,7 @@ withCurrentDefinition newDef act = do
     
     _leniency      <- view leniency
     _currentModule <- view currentModule
-    withCounterT $ runReaderT act $ LocalEnv
+    runCounterT . runReaderT act $ LocalEnv
         { _localEnvEdits             = edits_in_scope
         , _localEnvLeniency          = _leniency
         , _localEnvCurrentModule     = _currentModule

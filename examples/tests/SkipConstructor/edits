@@ -1,4 +1,6 @@
-skip constructor SkipConstructor.D
+skip constructor SkipConstructor.NonPositive
+skip constructor SkipConstructor.Record
+skip constructor SkipConstructor.SkipMe
 
 # We don't link against GHC
 skip SkipConstructor.Default__T

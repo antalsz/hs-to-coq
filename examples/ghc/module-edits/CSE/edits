@@ -1,13 +1,13 @@
 rename type  Var.Id            = Core.Var
-rename value Type.tyConAppArgs = Core.tyConAppArgs
+
 
 # Types currently don't exist
-skip CoreSubst.substTy
-rewrite forall s c, CoreSubst.substTy s c = tt
+# skip CoreSubst.substTy
+# rewrite forall s c, CoreSubst.substTy s c = tt
 
 # Coercions currently don't exist
-skip CoreSubst.substCo
-rewrite forall s c, CoreSubst.substCo s c = tt
+# skip CoreSubst.substCo
+# rewrite forall s c, CoreSubst.substCo s c = tt
 
 inline mutual CSE.cse_bind
 inline mutual CSE.tryForCSE
@@ -20,6 +20,7 @@ in CSE.cseBind rewrite forall f s xs1 xs2, Data.Traversable.mapAccumL f s (GHC.L
 in CSE.cse_bind rewrite forall arity in_rhs params in_body k, match Core.collectNBinders arity in_rhs with | pair params in_body => k end = NestedRecursionHelpers.collectNBinders_k arity in_rhs (fun params in_body => k)
 
 # OK?
-rewrite forall x, Core.tyConAppArgs x = nil
+# rewrite forall x, Core.tyConAppArgs x = nil
 
 skip CSE.Default__CSEnv
+

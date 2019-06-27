@@ -24,6 +24,7 @@ Require Maybes.
 Require Name.
 Require OccName.
 Require SrcLoc.
+Require TyCoRep.
 Require UniqFM.
 
 (* No type declarations to convert. *)
@@ -88,7 +89,7 @@ Definition tidyLetBndr
                                 new_unf in
         let details := Core.idDetails id in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
-        let ty' := tt in
+        let ty' := TyCoRep.tidyType env (Id.idType id) in
         let id' := Core.mkLocalVar details name' ty' new_info in
         let var_env' := Core.extendVarEnv var_env id id' in
         pair (pair tidy_env' var_env') id'
@@ -110,7 +111,7 @@ Definition tidyIdBndr
                                                                       (Core.occInfo old_info)) new_unf)
                               (Core.oneShotInfo old_info) in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
-        let ty' := tt in
+        let ty' := TyCoRep.tidyType env (Id.idType id) in
         let id' := Id.mkLocalIdWithInfo name' ty' new_info in
         let var_env' := Core.extendVarEnv var_env id id' in
         pair (pair tidy_env' var_env') id'
@@ -119,7 +120,7 @@ Definition tidyIdBndr
 Definition tidyBndr
    : Core.TidyEnv -> Core.Var -> (Core.TidyEnv * Core.Var)%type :=
   fun env var =>
-    if Core.isTyCoVar var : bool then Core.tidyTyCoVarBndr env var else
+    if Core.isTyCoVar var : bool then TyCoRep.tidyTyCoVarBndr env var else
     tidyIdBndr env var.
 
 Definition tidyBndrs
@@ -145,18 +146,19 @@ Definition tidyBind
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
-           | env, Core.Type_ ty => Core.Type_ (tt)
-           | env, Core.Coercion co => Core.Coercion (tt)
+           | env, Core.Type_ ty => Core.Type_ (TyCoRep.tidyType env ty)
+           | env, Core.Coercion co => Core.Coercion (TyCoRep.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
            | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (tt)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (TyCoRep.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
+                  Core.Case (tidyExpr env e) b (TyCoRep.tidyType env ty) (GHC.Base.map (tidyAlt
+                                                                                        env') alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreBind)
@@ -183,18 +185,19 @@ Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
-           | env, Core.Type_ ty => Core.Type_ (tt)
-           | env, Core.Coercion co => Core.Coercion (tt)
+           | env, Core.Type_ ty => Core.Type_ (TyCoRep.tidyType env ty)
+           | env, Core.Coercion co => Core.Coercion (TyCoRep.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
            | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (tt)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (TyCoRep.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
+                  Core.Case (tidyExpr env e) b (TyCoRep.tidyType env ty) (GHC.Base.map (tidyAlt
+                                                                                        env') alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreBind)
@@ -233,9 +236,10 @@ End Notations.
      Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo
      Core.setArityInfo Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo
      Core.setOneShotInfo Core.setStrictnessInfo Core.setUnfoldingInfo
-     Core.strictnessInfo Core.tidyTyCoVarBndr Core.unfoldingInfo Core.vanillaIdInfo
-     Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
-     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique
-     Id.mkLocalIdWithInfo Maybes.orElse Name.Name Name.getOccName Name.mkInternalName
-     OccName.tidyOccName SrcLoc.noSrcSpan UniqFM.lookupUFM
+     Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo Core.zapUsageEnvSig
+     CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map GHC.Err.default
+     GHC.List.zip GHC.Prim.seq Id.idName Id.idType Id.idUnique Id.mkLocalIdWithInfo
+     Maybes.orElse Name.Name Name.getOccName Name.mkInternalName OccName.tidyOccName
+     SrcLoc.noSrcSpan TyCoRep.tidyCo TyCoRep.tidyTyCoVarBndr TyCoRep.tidyType
+     UniqFM.lookupUFM
 *)

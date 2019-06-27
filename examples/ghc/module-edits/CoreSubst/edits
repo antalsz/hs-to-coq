@@ -1,56 +1,22 @@
 import module GHC.Base
 
 
-redefine Definition CoreSubst.substTyVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) := fun s v => pair s v.
-redefine Definition CoreSubst.substCoVarBndr : Subst -> (Core.Var -> (Subst * Core.Var)) := fun s v => pair s v.
-redefine Definition CoreSubst.extendCvSubst  : Subst -> (Core.CoVar -> (unit -> Subst)) := fun s v t => s.
-redefine Definition CoreSubst.extendTvSubst  : Subst -> (Core.TyVar -> (unit -> Subst)) := fun s v t => s.
-redefine Definition CoreSubst.extendTvSubstList  : Subst -> (list (Core.TyVar * unit) -> Subst) := fun s vs => s.
-redefine Definition CoreSubst.getTCvSubst : Subst -> unit := fun s => tt.
-redefine Definition CoreSubst.substCo : Subst -> (unit -> unit) := fun s c => tt.
-redefine Definition CoreSubst.substTy : Subst -> (unit -> unit) := fun s t => tt.
-redefine Definition CoreSubst.substSpec : Subst -> (Core.Id -> (Core.RuleInfo -> Core.RuleInfo)) := fun s x r => r.
-redefine Definition CoreSubst.lookupTCvSubst : Subst -> (Core.TyVar -> unit) := fun s v => tt.
-redefine Definition CoreSubst.cloneTyVarBndr : Subst -> (Core.TyVar -> (Unique.Unique -> (Subst * Core.TyVar))) := fun s v u => (pair s v).
+axiomatize definition CoreSubst.substTyVarBndr 
+axiomatize definition CoreSubst.substCoVarBndr 
+axiomatize definition CoreSubst.extendCvSubst  
+axiomatize definition CoreSubst.extendTvSubst  
+axiomatize definition CoreSubst.extendTvSubstList
+axiomatize definition CoreSubst.getTCvSubst 
+axiomatize definition CoreSubst.substCo 
+axiomatize definition CoreSubst.substTy
+axiomatize definition CoreSubst.substSpec 
+axiomatize definition CoreSubst.lookupTCvSubst 
+axiomatize definition CoreSubst.cloneTyVarBndr 
 
 
 # cannot translate because we don't have unfolding information
 
 redefine Definition CoreSubst.substUnfolding : Subst -> (Core.Unfolding -> Core.Unfolding) := fun s u => u.
-
-# Remove the type env and coercion environment components of the substitution
-
-rewrite forall in_scope id_env tenv cenv, CoreSubst.Mk_Subst in_scope id_env tenv cenv = CoreSubst.Mk_Subst in_scope id_env tt tt
-
-
-###################################################
-#
-# These (awful) edits handle the environment management for coercion and type variables.
-# Note that they don't list any variables after the forall. These are triggered exactly 
-# by the variable names that appear in the input file. 
-
-in CoreSubst.delBndr rewrite forall , Core.delVarEnv cvs v = cvs
-in CoreSubst.delBndr rewrite forall , Core.delVarEnv tvs v = tvs
-
-in CoreSubst.clone_id rewrite forall , Core.extendVarEnv cvs old_id tt = cvs
-
-in CoreSubst.delBndrs rewrite forall, (Core.delVarEnvList tvs vs) = tt
-in CoreSubst.delBndrs rewrite forall, (Core.delVarEnvList cvs vs) = tt
-
-in CoreSubst.extendInScope rewrite forall, (Core.delVarEnv tvs v) = tt
-in CoreSubst.extendInScope rewrite forall, (Core.delVarEnv cvs v) = tt
-
-in CoreSubst.extendInScopeList rewrite forall, (Core.delVarEnvList tvs vs) = tt
-in CoreSubst.extendInScopeList rewrite forall, (Core.delVarEnvList cvs vs) = tt
-
-in CoreSubst.isEmptySubst rewrite forall, (Core.isEmptyVarEnv tv_env) = true
-in CoreSubst.isEmptySubst rewrite forall, (Core.isEmptyVarEnv cv_env) = true
-
-in CoreSubst.substIdBndr rewrite forall, Core.isEmptyVarEnv tvs = true 
-in CoreSubst.substIdBndr rewrite forall, Core.isEmptyVarEnv cvs = true
-
-in CoreSubst.substIdType rewrite forall, Core.isEmptyVarEnv tv_env = true
-in CoreSubst.substIdType rewrite forall, Core.isEmptyVarEnv cv_env = true
 
 
 #############################################################################

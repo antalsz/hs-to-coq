@@ -16,6 +16,7 @@ Require GHC.Nat.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Data.Maybe.
 Require DynFlags.
@@ -45,7 +46,7 @@ Inductive Literal : Type
   |  MachDouble : GHC.Real.Rational -> Literal
   |  MachLabel
    : FastString.FastString -> (option nat) -> BasicTypes.FunctionOrData -> Literal
-  |  LitInteger : GHC.Num.Integer -> unit -> Literal.
+  |  LitInteger : GHC.Num.Integer -> AxiomatizedTypes.Type_ -> Literal.
 
 Instance Default__Literal : GHC.Err.Default Literal :=
   GHC.Err.Build_Default _ MachNullAddr.
@@ -81,7 +82,8 @@ Definition mkMachDouble : GHC.Real.Rational -> Literal :=
 Definition mkMachChar : GHC.Char.Char -> Literal :=
   MachChar.
 
-Definition mkLitInteger : GHC.Num.Integer -> unit -> Literal :=
+Definition mkLitInteger
+   : GHC.Num.Integer -> AxiomatizedTypes.Type_ -> Literal :=
   LitInteger.
 
 Definition litTag : Literal -> nat :=
@@ -320,17 +322,17 @@ Program Instance Ord__Literal : GHC.Base.Ord Literal :=
    `Literal.Binary__Literal' *)
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison false nat option true unit
-     BasicTypes.FunctionOrData Data.Maybe.isJust DynFlags.DynFlags
-     DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD DynFlags.tARGET_MIN_INT
-     FastString.FastString FastString.fastStringToByteString FastString.mkFastString
-     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
-     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
-     GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__
-     GHC.Base.op_zgze____ GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__
-     GHC.Base.op_zlze____ GHC.Base.op_zsze____ GHC.Base.ord GHC.Char.Char
-     GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound GHC.Err.Build_Default
-     GHC.Err.Default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.toInteger Panic.panicStr
-     Panic.someSDoc UniqFM.UniqFM
+     Eq Gt Lt None Some andb bool comparison false nat option true
+     AxiomatizedTypes.Type_ BasicTypes.FunctionOrData Data.Maybe.isJust
+     DynFlags.DynFlags DynFlags.tARGET_MAX_INT DynFlags.tARGET_MAX_WORD
+     DynFlags.tARGET_MIN_INT FastString.FastString FastString.fastStringToByteString
+     FastString.mkFastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String
+     GHC.Base.compare GHC.Base.compare__ GHC.Base.max__ GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zl__
+     GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze____
+     GHC.Base.ord GHC.Char.Char GHC.Char.chr GHC.Enum.maxBound GHC.Enum.minBound
+     GHC.Err.Build_Default GHC.Err.Default GHC.Num.Integer GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Real.Rational GHC.Real.toInteger
+     Panic.panicStr Panic.someSDoc UniqFM.UniqFM
 *)

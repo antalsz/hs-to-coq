@@ -29,6 +29,7 @@ order TrieMap.TrieMap__GenMap         TrieMap.mapA
 order TrieMap.Eq___DeBruijn__CoreExpr TrieMap.mapA
 order TrieMap.TrieMap__TypeMap        TrieMap.lookupTypeMap
 order TrieMap.TrieMap__CoreMap        TrieMap.lookupCoreMap
+order TrieMap.Eq___DeBruijn__Type_    TrieMap.xtBndr
 
 # Why do I need to specify explicit type class instances for Coq?
 in TrieMap.xtTickish                      rewrite forall, TrieMap.alterTM      = TrieMap.alterTM      (m := TrieMap.TickishMap)
@@ -104,6 +105,9 @@ redefine Definition TrieMap.Eq___DeBruijn__list_op_zeze__
                    end
              in equal xs0 ys0
            end.
+
+# 
+axiomatize definition TrieMap.Eq___DeBruijn__Type_
 
 ################################################################################
 ## Types we can't handle

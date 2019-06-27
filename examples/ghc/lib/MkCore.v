@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
@@ -31,6 +32,7 @@ Require Literal.
 Require Name.
 Require Panic.
 Require PrelNames.
+Require Type.
 Require UniqSupply.
 Require Unique.
 Require Util.
@@ -51,7 +53,7 @@ Definition wrapFloat : FloatBind -> Core.CoreExpr -> Core.CoreExpr :=
     match arg_0__, arg_1__ with
     | FloatLet defns, body => Core.Let defns body
     | FloatCase e b con bs, body =>
-        Core.Case e b (tt) (cons (pair (pair con bs) body) nil)
+        Core.Case e b (CoreUtils.exprType body) (cons (pair (pair con bs) body) nil)
     end.
 
 Axiom unitDataConId : Core.Id.
@@ -63,7 +65,7 @@ Axiom tYPE_ERROR_ID : Core.Id.
 
 Axiom sortQuantVars : list Core.Var -> list Core.Var.
 
-Axiom runtimeErrorTy : unit.
+Axiom runtimeErrorTy : AxiomatizedTypes.Type_.
 
 Axiom rUNTIME_ERROR_ID : Core.Id.
 
@@ -81,11 +83,13 @@ Axiom mkWordExprWord : DynFlags.DynFlags -> GHC.Num.Word -> Core.CoreExpr.
 
 Axiom mkWordExpr : DynFlags.DynFlags -> GHC.Num.Integer -> Core.CoreExpr.
 
-Definition mkWildValBinder : unit -> Core.Id :=
+Definition mkWildValBinder : AxiomatizedTypes.Type_ -> Core.Id :=
   fun ty => Id.mkLocalIdOrCoVar PrelNames.wildCardName ty.
 
 Definition mk_val_app
-   : Core.CoreExpr -> Core.CoreExpr -> unit -> unit -> Core.CoreExpr :=
+   : Core.CoreExpr ->
+     Core.CoreExpr ->
+     AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun fun_ arg arg_ty res_ty =>
     let arg_id := mkWildValBinder arg_ty in
     if negb (CoreUtils.needsCaseBinding arg_ty arg) : bool
@@ -93,11 +97,13 @@ Definition mk_val_app
     Core.Case arg arg_id res_ty (cons (pair (pair Core.DEFAULT nil) (Core.App fun_
                                              (Core.Mk_Var arg_id))) nil).
 
-Definition mkWildEvBinder : unit -> Core.EvVar :=
+Definition mkWildEvBinder : AxiomatizedTypes.PredType -> Core.EvVar :=
   fun pred => mkWildValBinder pred.
 
 Definition mkWildCase
-   : Core.CoreExpr -> unit -> unit -> list Core.CoreAlt -> Core.CoreExpr :=
+   : Core.CoreExpr ->
+     AxiomatizedTypes.Type_ ->
+     AxiomatizedTypes.Type_ -> list Core.CoreAlt -> Core.CoreExpr :=
   fun scrut scrut_ty res_ty alts =>
     Core.Case scrut (mkWildValBinder scrut_ty) res_ty alts.
 
@@ -109,9 +115,10 @@ Definition mkSmallTupleSelector1
     if andb Util.debugIsOn (negb (Util.notNull vars)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/MkCore.hs")
           #487)
-    else Core.Case scrut scrut_var (tt) (cons (pair (pair (Core.DataAlt
-                                                           (tupleDataCon BasicTypes.Boxed (Coq.Lists.List.length vars)))
-                                                          vars) (Core.Mk_Var the_var)) nil).
+    else Core.Case scrut scrut_var (Id.idType the_var) (cons (pair (pair
+                                                                    (Core.DataAlt (tupleDataCon BasicTypes.Boxed
+                                                                                   (Coq.Lists.List.length vars))) vars)
+                                                                   (Core.Mk_Var the_var)) nil).
 
 Definition mkSmallTupleSelector
    : list Core.Id -> Core.Id -> Core.Id -> Core.CoreExpr -> Core.CoreExpr :=
@@ -173,9 +180,10 @@ Definition mkSmallTupleCase
     match arg_0__, arg_1__, arg_2__, arg_3__ with
     | cons var nil, body, _scrut_var, scrut => CoreUtils.bindNonRec var scrut body
     | vars, body, scrut_var, scrut =>
-        Core.Case scrut scrut_var (tt) (cons (pair (pair (Core.DataAlt (tupleDataCon
-                                                                        BasicTypes.Boxed (Coq.Lists.List.length vars)))
-                                                         vars) body) nil)
+        Core.Case scrut scrut_var (CoreUtils.exprType body) (cons (pair (pair
+                                                                         (Core.DataAlt (tupleDataCon BasicTypes.Boxed
+                                                                                        (Coq.Lists.List.length vars)))
+                                                                         vars) body) nil)
     end.
 
 Definition mkTupleCase
@@ -212,27 +220,28 @@ Definition mkTupleCase
 Axiom mkRuntimeErrorId : Name.Name -> Core.Id.
 
 Definition mkRuntimeErrorApp
-   : Core.Id -> unit -> GHC.Base.String -> Core.CoreExpr :=
+   : Core.Id -> AxiomatizedTypes.Type_ -> GHC.Base.String -> Core.CoreExpr :=
   fun err_id res_ty err_msg =>
     let err_string := Core.Lit (Literal.mkMachString err_msg) in
-    Core.mkApps (Core.Mk_Var err_id) (cons (Core.Type_ (tt)) (cons (Core.Type_
-                                                                    res_ty) (cons err_string nil))).
+    Core.mkApps (Core.Mk_Var err_id) (cons (Core.Type_ (Type.getRuntimeRep res_ty))
+                                           (cons (Core.Type_ res_ty) (cons err_string nil))).
 
 Axiom nothingDataCon : Core.DataCon.
 
-Definition mkNothingExpr : unit -> Core.CoreExpr :=
+Definition mkNothingExpr : AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun ty => Core.mkConApp nothingDataCon (cons (Core.Type_ ty) nil).
 
 Axiom justDataCon : Core.DataCon.
 
-Definition mkJustExpr : unit -> Core.CoreExpr -> Core.CoreExpr :=
+Definition mkJustExpr
+   : AxiomatizedTypes.Type_ -> Core.CoreExpr -> Core.CoreExpr :=
   fun ty val => Core.mkConApp justDataCon (cons (Core.Type_ ty) (cons val nil)).
 
 Axiom mkIntExprInt : DynFlags.DynFlags -> nat -> Core.CoreExpr.
 
 Axiom mkIntExpr : DynFlags.DynFlags -> GHC.Num.Integer -> Core.CoreExpr.
 
-Definition mkImpossibleExpr : unit -> Core.CoreExpr :=
+Definition mkImpossibleExpr : AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun res_ty =>
     mkRuntimeErrorApp rUNTIME_ERROR_ID res_ty (GHC.Base.hs_string__
                                                "Impossible case alternative").
@@ -246,11 +255,12 @@ Axiom trueDataCon : Core.DataCon.
 Definition mkIfThenElse
    : Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr :=
   fun guard then_expr else_expr =>
-    mkWildCase guard boolTy (tt) (cons (pair (pair (Core.DataAlt falseDataCon) nil)
-                                             else_expr) (cons (pair (pair (Core.DataAlt trueDataCon) nil) then_expr)
-                                                              nil)).
+    mkWildCase guard boolTy (CoreUtils.exprType then_expr) (cons (pair (pair
+                                                                        (Core.DataAlt falseDataCon) nil) else_expr)
+                                                                 (cons (pair (pair (Core.DataAlt trueDataCon) nil)
+                                                                             then_expr) nil)).
 
-Definition mkCoreVarTupTy : list Core.Id -> unit :=
+Definition mkCoreVarTupTy : list Core.Id -> AxiomatizedTypes.Type_ :=
   fun ids => mkBoxedTupleTy (GHC.Base.map Id.idType ids).
 
 Definition mkCoreLet : Core.CoreBind -> Core.CoreExpr -> Core.CoreExpr :=
@@ -261,8 +271,10 @@ Definition mkCoreLet : Core.CoreBind -> Core.CoreExpr -> Core.CoreExpr :=
       end in
     match arg_0__, arg_1__ with
     | Core.NonRec bndr rhs, body =>
-        if andb (CoreUtils.needsCaseBinding (tt) rhs) (negb (Id.isJoinId bndr)) : bool
-        then Core.Case rhs bndr (tt) (cons (pair (pair Core.DEFAULT nil) body) nil) else
+        if andb (CoreUtils.needsCaseBinding (Id.idType bndr) rhs) (negb (Id.isJoinId
+                                                                         bndr)) : bool
+        then Core.Case rhs bndr (CoreUtils.exprType body) (cons (pair (pair Core.DEFAULT
+                                                                            nil) body) nil) else
         j_3__
     | _, _ => j_3__
     end.
@@ -275,23 +287,25 @@ Definition mkCoreLams : list Core.CoreBndr -> Core.CoreExpr -> Core.CoreExpr :=
 
 Definition mkCoreAppTyped
    : GHC.Base.String ->
-     (Core.CoreExpr * unit)%type -> Core.CoreExpr -> (Core.CoreExpr * unit)%type :=
+     (Core.CoreExpr * AxiomatizedTypes.Type_)%type ->
+     Core.CoreExpr -> (Core.CoreExpr * AxiomatizedTypes.Type_)%type :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | _, pair fun_ fun_ty, Core.Type_ ty => pair (Core.App fun_ (Core.Type_ ty)) tt
+    | _, pair fun_ fun_ty, Core.Type_ ty =>
+        pair (Core.App fun_ (Core.Type_ ty)) (Type.piResultTy fun_ty ty)
     | _, pair fun_ fun_ty, Core.Coercion co =>
-        let 'pair _ res_ty := pair tt tt in
+        let 'pair _ res_ty := Type.splitFunTy fun_ty in
         pair (Core.App fun_ (Core.Coercion co)) res_ty
     | d, pair fun_ fun_ty, arg =>
-        let 'pair arg_ty res_ty := pair tt tt in
-        if andb Util.debugIsOn (negb (Core.isFunTy fun_ty)) : bool
+        let 'pair arg_ty res_ty := Type.splitFunTy fun_ty in
+        if andb Util.debugIsOn (negb (Type.isFunTy fun_ty)) : bool
         then (GHC.Err.error Panic.someSDoc)
         else pair (mk_val_app fun_ arg arg_ty res_ty) res_ty
     end.
 
 Definition mkCoreApps : Core.CoreExpr -> list Core.CoreExpr -> Core.CoreExpr :=
   fun fun_ args =>
-    let fun_ty := tt in
+    let fun_ty := CoreUtils.exprType fun_ in
     let doc_string := Panic.someSDoc in
     Data.Tuple.fst (Data.Foldable.foldl' (mkCoreAppTyped doc_string) (pair fun_
                                                                            fun_ty) args).
@@ -314,14 +328,15 @@ Definition mkCoreTup : list Core.CoreExpr -> Core.CoreExpr :=
 Definition mkCoreVarTup : list Core.Id -> Core.CoreExpr :=
   fun ids => mkCoreTup (GHC.Base.map Core.Mk_Var ids).
 
-Definition mkCoreUbxTup : list unit -> list Core.CoreExpr -> Core.CoreExpr :=
+Definition mkCoreUbxTup
+   : list AxiomatizedTypes.Type_ -> list Core.CoreExpr -> Core.CoreExpr :=
   fun tys exps =>
     if andb Util.debugIsOn (negb (Util.equalLength tys exps)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/MkCore.hs")
           #372)
     else mkCoreConApps (tupleDataCon BasicTypes.Unboxed (Coq.Lists.List.length tys))
-         (Coq.Init.Datatypes.app (GHC.Base.map (Core.Type_) tys) (Coq.Init.Datatypes.app
-                                  (GHC.Base.map Core.Type_ tys) exps)).
+         (Coq.Init.Datatypes.app (GHC.Base.map (Core.Type_ GHC.Base.∘ Type.getRuntimeRep)
+                                  tys) (Coq.Init.Datatypes.app (GHC.Base.map Core.Type_ tys) exps)).
 
 Definition mkCoreTupBoxity
    : BasicTypes.Boxity -> list Core.CoreExpr -> Core.CoreExpr :=
@@ -334,7 +349,7 @@ Definition mkCoreTupBoxity
 
 Axiom nilDataCon : Core.DataCon.
 
-Definition mkNilExpr : unit -> Core.CoreExpr :=
+Definition mkNilExpr : AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun ty => mkCoreConApps nilDataCon (cons (Core.Type_ ty) nil).
 
 Axiom charTy : unit.
@@ -357,16 +372,18 @@ Definition mkStringExprFSWith {m} `{GHC.Base.Monad m}
 
 Definition mkCoreApp
    : GHC.Base.String -> Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr :=
-  fun s fun_ arg => Data.Tuple.fst (mkCoreAppTyped s (pair fun_ tt) arg).
+  fun s fun_ arg =>
+    Data.Tuple.fst (mkCoreAppTyped s (pair fun_ (CoreUtils.exprType fun_)) arg).
 
 Axiom consDataCon : Core.DataCon.
 
 Definition mkConsExpr
-   : unit -> Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr :=
+   : AxiomatizedTypes.Type_ -> Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr :=
   fun ty hd tl =>
     mkCoreConApps consDataCon (cons (Core.Type_ ty) (cons hd (cons tl nil))).
 
-Definition mkListExpr : unit -> list Core.CoreExpr -> Core.CoreExpr :=
+Definition mkListExpr
+   : AxiomatizedTypes.Type_ -> list Core.CoreExpr -> Core.CoreExpr :=
   fun ty xs => Data.Foldable.foldr (mkConsExpr ty) (mkNilExpr ty) xs.
 
 Axiom charDataCon : Core.DataCon.
@@ -374,9 +391,9 @@ Axiom charDataCon : Core.DataCon.
 Definition mkCharExpr : GHC.Char.Char -> Core.CoreExpr :=
   fun c => mkCoreConApps charDataCon (cons (Core.mkCharLit c) nil).
 
-Axiom mkBigCoreVarTupTy : list Core.Id -> unit.
+Axiom mkBigCoreVarTupTy : list Core.Id -> AxiomatizedTypes.Type_.
 
-Axiom mkBigCoreTupTy : list unit -> unit.
+Axiom mkBigCoreTupTy : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
 Axiom mkBigCoreTup : list Core.CoreExpr -> Core.CoreExpr.
 
@@ -387,8 +404,8 @@ Definition mkBigCoreVarTup1 : list Core.Id -> Core.CoreExpr :=
   fun arg_0__ =>
     match arg_0__ with
     | cons id nil =>
-        mkCoreConApps (tupleDataCon BasicTypes.Boxed #1) (cons (Core.Type_ (tt)) (cons
-                                                                (Core.Mk_Var id) nil))
+        mkCoreConApps (tupleDataCon BasicTypes.Boxed #1) (cons (Core.Type_ (Id.idType
+                                                                            id)) (cons (Core.Mk_Var id) nil))
     | ids => mkBigCoreTup (GHC.Base.map Core.Mk_Var ids)
     end.
 
@@ -427,10 +444,11 @@ Definition typeErrorName : Name.Name :=
   err_nm (GHC.Base.hs_string__ "typeError") PrelNames.typeErrorIdKey
   tYPE_ERROR_ID.
 
-Definition castBottomExpr : Core.CoreExpr -> unit -> Core.CoreExpr :=
+Definition castBottomExpr
+   : Core.CoreExpr -> AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun e res_ty =>
-    let e_ty := tt in
-    if Core.eqType e_ty res_ty : bool then e else
+    let e_ty := CoreUtils.exprType e in
+    if Type.eqType e_ty res_ty : bool then e else
     Core.Case e (mkWildValBinder e_ty) res_ty nil.
 
 Axiom aBSENT_SUM_FIELD_ERROR_ID : Core.Id.
@@ -453,7 +471,8 @@ Definition errorIds : list Core.Id :=
                                                                                           aBSENT_ERROR_ID (cons
                                                                                            tYPE_ERROR_ID nil)))))))).
 
-Definition mkAbsentErrorApp : unit -> GHC.Base.String -> Core.CoreExpr :=
+Definition mkAbsentErrorApp
+   : AxiomatizedTypes.Type_ -> GHC.Base.String -> Core.CoreExpr :=
   fun res_ty err_msg =>
     let err_string := Core.Lit (Literal.mkMachString err_msg) in
     Core.mkApps (Core.Mk_Var aBSENT_ERROR_ID) (cons (Core.Type_ res_ty) (cons
@@ -471,30 +490,31 @@ Axiom intDataCon : Core.DataCon.
 Axiom doubleDataCon : Core.DataCon.
 
 (* External variables:
-     andb bool cons list nat negb nil op_zt__ pair tt unit BasicTypes.Boxed
-     BasicTypes.Boxity BasicTypes.Unboxed Coq.Init.Datatypes.app
-     Coq.Lists.List.flat_map Coq.Lists.List.length Core.AltCon Core.App Core.Case
-     Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreBndr Core.CoreExpr
-     Core.DEFAULT Core.DataAlt Core.DataCon Core.EvVar Core.Id Core.Let Core.Lit
-     Core.Mk_Var Core.NonRec Core.Type_ Core.Var Core.dataConWorkId Core.eqType
-     Core.isFunTy Core.mkApps Core.mkCharLit Core.mkConApp Core.mkLams
-     CoreUtils.bindNonRec CoreUtils.exprType CoreUtils.needsCaseBinding
-     Data.Foldable.all Data.Foldable.elem Data.Foldable.foldl' Data.Foldable.foldr
-     Data.Tuple.fst DynFlags.DynFlags FastString.FastString
-     FastString.fastStringToByteString FastString.fsLit FastString.nullFS
-     FastString.unpackFS GHC.Base.Monad GHC.Base.String GHC.Base.map
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zlze__ GHC.Base.ord GHC.Base.return_ GHC.Char.Char
-     GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.error
-     GHC.Err.patternFailure GHC.Num.Integer GHC.Num.Word GHC.Num.fromInteger
-     Id.idType Id.isJoinId Id.mkLocalIdOrCoVar Id.mkSysLocal Id.mkTemplateLocals
-     Literal.MachStr Literal.mkMachString Name.Name Panic.assertPanic Panic.someSDoc
+     andb bool cons list nat negb nil op_zt__ pair unit AxiomatizedTypes.PredType
+     AxiomatizedTypes.Type_ BasicTypes.Boxed BasicTypes.Boxity BasicTypes.Unboxed
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.length Core.AltCon
+     Core.App Core.Case Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreBndr
+     Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataCon Core.EvVar Core.Id Core.Let
+     Core.Lit Core.Mk_Var Core.NonRec Core.Type_ Core.Var Core.dataConWorkId
+     Core.mkApps Core.mkCharLit Core.mkConApp Core.mkLams CoreUtils.bindNonRec
+     CoreUtils.exprType CoreUtils.needsCaseBinding Data.Foldable.all
+     Data.Foldable.elem Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst
+     DynFlags.DynFlags FastString.FastString FastString.fastStringToByteString
+     FastString.fsLit FastString.nullFS FastString.unpackFS GHC.Base.Monad
+     GHC.Base.String GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zgze__ GHC.Base.op_zgzgze__ GHC.Base.op_zlze__ GHC.Base.ord
+     GHC.Base.return_ GHC.Char.Char GHC.DeferredFix.deferredFix2
+     GHC.DeferredFix.deferredFix3 GHC.Err.error GHC.Err.patternFailure
+     GHC.Num.Integer GHC.Num.Word GHC.Num.fromInteger Id.idType Id.isJoinId
+     Id.mkLocalIdOrCoVar Id.mkSysLocal Id.mkTemplateLocals Literal.MachStr
+     Literal.mkMachString Name.Name Panic.assertPanic Panic.someSDoc
      PrelNames.absentErrorIdKey PrelNames.absentSumFieldErrorIdKey
      PrelNames.irrefutPatErrorIdKey PrelNames.noMethodBindingErrorIdKey
      PrelNames.nonExhaustiveGuardsErrorIdKey PrelNames.patErrorIdKey
      PrelNames.recConErrorIdKey PrelNames.recSelErrorIdKey
      PrelNames.runtimeErrorIdKey PrelNames.typeErrorIdKey PrelNames.unpackCStringName
-     PrelNames.unpackCStringUtf8Name PrelNames.wildCardName UniqSupply.UniqSupply
-     UniqSupply.takeUniqFromSupply Unique.Unique Util.debugIsOn Util.equalLength
-     Util.notNull Util.zipEqual
+     PrelNames.unpackCStringUtf8Name PrelNames.wildCardName Type.eqType
+     Type.getRuntimeRep Type.isFunTy Type.piResultTy Type.splitFunTy
+     UniqSupply.UniqSupply UniqSupply.takeUniqFromSupply Unique.Unique Util.debugIsOn
+     Util.equalLength Util.notNull Util.zipEqual
 *)

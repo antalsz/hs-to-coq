@@ -1,0 +1,4 @@
+skip Core.mkCoVarCo
+skip Core.maybeSubCo
+
+skip Coercion.maybeSubCo

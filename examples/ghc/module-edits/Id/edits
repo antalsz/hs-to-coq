@@ -32,10 +32,10 @@ axiomatize definition Id.zapFragileIdInfo
 axiomatize definition Id.zapIdUsageEnvInfo
 
 # Type/TyCoRep
-skip Id.isStrictId
-skip Id.isDictId
-skip Id.idRepArity
-skip Id.isEvVar	
+axiomatize definition Id.isStrictId
+axiomatize definition Id.isDictId
+axiomatize definition Id.idRepArity
+axiomatize definition Id.isEvVar	
 
 
 # RepType
@@ -44,7 +44,9 @@ skip Id.setCaseBndrEvald
 
 # Needs `GHC.Prim.seq`, used to evaluate the type information strictly
 # however, we are removing all type information so no need to do so.
-skip Id.setIdType
+# axiomatize definition Id.setIdType
+
+in Id.setIdType rewrite forall x y,GHC.Prim.seq x y = y
 
 # figure out GHC.Num.Int representation
 #

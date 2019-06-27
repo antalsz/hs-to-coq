@@ -1,0 +1,12 @@
+skip AxiomatizedTypes.CoAxiom
+skip AxiomatizedTypes.Branched
+skip AxiomatizedTypes.Unbranched
+skip AxiomatizedTypes.Role
+skip AxiomatizedTypes.BuiltInSynFamily
+
+rename value CoAxiom.CoAxiomRule = CoAxiom.Mk_CoAxiomRule
+rename value CoAxiom.CoAxBranch = CoAxiom.Mk_CoAxBranch
+
+redefine Axiom CoAxiom.Branches : Type -> Type.
+
+order CoAxiom.Eq___CoAxiomRule  CoAxiom.Ord__CoAxiomRule

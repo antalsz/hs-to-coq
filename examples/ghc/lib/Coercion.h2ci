@@ -1,0 +1,14 @@
+constructors:
+  Coercion.LiftingContext: ! '[Qualified "Coercion" "LC"]'
+  Coercion.NormaliseStepResult: ! '[Qualified "Coercion" "NS_Done",Qualified "Coercion"
+    "NS_Abort",Qualified "Coercion" "NS_Step"]'
+constructorFields:
+  Coercion.NS_Abort: NonRecordFields 0
+  Coercion.LC: NonRecordFields 2
+  Coercion.NS_Done: NonRecordFields 0
+  Coercion.NS_Step: NonRecordFields 3
+constructorTypes:
+  Coercion.NS_Abort: Qualified "Coercion" "NormaliseStepResult"
+  Coercion.LC: Qualified "Coercion" "LiftingContext"
+  Coercion.NS_Done: Qualified "Coercion" "NormaliseStepResult"
+  Coercion.NS_Step: Qualified "Coercion" "NormaliseStepResult"

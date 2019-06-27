@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require Coq.Init.Datatypes.
 Require FastString.
 Require GHC.Base.
@@ -33,7 +34,8 @@ Inductive BuiltInSyntax : Type
 
 Inductive NameSort : Type
   := | External : Module.Module -> NameSort
-  |  WiredIn : Module.Module -> unit -> BuiltInSyntax -> NameSort
+  |  WiredIn
+   : Module.Module -> AxiomatizedTypes.TyThing -> BuiltInSyntax -> NameSort
   |  Internal : NameSort
   |  System : NameSort.
 
@@ -448,19 +450,19 @@ Program Instance NamedThing__Name : NamedThing Name :=
            getOccName__ := NamedThing__Name_getOccName |}.
 
 (* External variables:
-     Eq Gt Lt None Some andb bool comparison default false negb option orb true unit
-     Coq.Init.Datatypes.app FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.max__
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
-     Maybes.orElse Module.Module Module.UnitId Module.isInteractiveModule
-     Module.moduleName Module.moduleNameColons Module.moduleStableString
-     Module.moduleUnitId Module.stableModuleCmp OccName.HasOccName OccName.OccName
-     OccName.isDataOcc OccName.isTcOcc OccName.isTvOcc OccName.isValOcc
-     OccName.isVarOcc OccName.mkTyVarOccFS OccName.mkVarOcc OccName.mkVarOccFS
-     OccName.occNameFS OccName.occNameString OccName.occName__ Panic.panic
-     SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan SrcLoc.noSrcSpan
-     SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Uniquable Unique.Unique
+     Eq Gt Lt None Some andb bool comparison default false negb option orb true
+     AxiomatizedTypes.TyThing Coq.Init.Datatypes.app FastString.FastString
+     GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
+     GHC.Base.max__ GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____
+     GHC.Base.op_zlze____ GHC.Base.op_zsze__ GHC.Base.op_zsze____
+     GHC.Err.Build_Default GHC.Err.Default Maybes.orElse Module.Module Module.UnitId
+     Module.isInteractiveModule Module.moduleName Module.moduleNameColons
+     Module.moduleStableString Module.moduleUnitId Module.stableModuleCmp
+     OccName.HasOccName OccName.OccName OccName.isDataOcc OccName.isTcOcc
+     OccName.isTvOcc OccName.isValOcc OccName.isVarOcc OccName.mkTyVarOccFS
+     OccName.mkVarOcc OccName.mkVarOccFS OccName.occNameFS OccName.occNameString
+     OccName.occName__ Panic.panic SrcLoc.GenLocated SrcLoc.SrcLoc SrcLoc.SrcSpan
+     SrcLoc.noSrcSpan SrcLoc.srcSpanStart SrcLoc.unLoc Unique.Uniquable Unique.Unique
      Unique.getUnique__ Unique.nonDetCmpUnique Util.thenCmp
 *)

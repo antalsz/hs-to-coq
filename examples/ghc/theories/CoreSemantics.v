@@ -156,12 +156,12 @@ Definition subst_expr'
              end in
        match expr with
        | Core.Mk_Var v => lookupIdSubst (Panic.someSDoc) subst v
-       | Core.Type_ ty => Core.Type_ (tt)
-       | Core.Coercion co => Core.Coercion (tt)
+       | Core.Type_ ty => Core.Type_ ty
+       | Core.Coercion co => Core.Coercion co
        | Core.Lit lit => Core.Lit lit
        | Core.App fun_ arg => Core.App (go fun_) (go arg)
        | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
-       | Core.Cast e co => Core.Cast (go e) (tt)
+       | Core.Cast e co => Core.Cast (go e) co
        | Core.Lam bndr body =>
          let 'pair subst' bndr' := substBndr subst bndr in
          Core.Lam bndr' (subst_expr doc subst' body)
@@ -170,7 +170,7 @@ Definition subst_expr'
          Core.Let bind' (subst_expr doc subst' body)
        | Core.Case scrut bndr ty alts =>
          let 'pair subst' bndr' := substBndr subst bndr in
-         Core.Case (go scrut) bndr' (tt) (GHC.Base.map (go_alt subst') alts)
+         Core.Case (go scrut) bndr' ty (GHC.Base.map (go_alt subst') alts)
        end
            with substBind arg_0__ arg_1__
        := match arg_0__, arg_1__ with
@@ -233,6 +233,7 @@ Definition case_match (e : CoreExpr) (K : DataCon) (args : list Id) : option (li
   else None.
 
 Reserved Notation "e₁ ⟶ e₂" (at level 90, right associativity).
+(*
 Inductive Step : CoreExpr -> CoreExpr -> Type :=
 
 | S_App {e₁ e₂ e₁'} :
@@ -301,3 +302,4 @@ Inductive Step : CoreExpr -> CoreExpr -> Type :=
     Let (Rec bs) u ⟶ substs u (map (second (Let (Rec bs))) bs)
   
 where "e₁ ⟶ e₂" := (Step e₁ e₂).
+*)

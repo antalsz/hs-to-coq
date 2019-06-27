@@ -2,6 +2,8 @@ include ../../common.mk
 
 OUT=lib
 
+CORE_EDITS=axiomatize-types.edits
+
 # Not all of these need to be handwritten. Eventually we should be able to
 # generate some of these modules as hs-to-coq is improved.
 # see [notes.md] for discussion of issues
@@ -9,6 +11,7 @@ OUT=lib
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
   FastString \
+  AxiomatizedTypes \
   NestedRecursionHelpers
     # Used by CSE
 #  TysWiredIn \
@@ -75,12 +78,14 @@ CORE_MODULES = \
   CallArity \
   CoreArity \
   CoreTidy \
+  $(CORETYPE) \
   TrieMap \
   CSE \
   CoreStats \
   PrelNames \
-  TysWiredIn \
-  MkCore 
+#  TysWiredIn \
+#  MkCore \
+
 
 
 NOTRANSLATE = \
@@ -93,8 +98,6 @@ CORETYPE = \
   TyCoRep \
   Coercion \
   CoAxiom \
-  Type \
-
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq
@@ -108,8 +111,9 @@ VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
 VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
 VFILES_CONSTR    = Constructors.v
 VFILES_CORESYN   = Core.v
+VFILES_TYPE      = Type_.v
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN)
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN) 
 
 OUTFILES_GEN       = $(addprefix $(OUT)/,$(VFILES_GEN))
 OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
@@ -118,8 +122,9 @@ OUTFILES_DROPIN    = $(addprefix $(OUT)/,$(VFILES_DROPIN))
 OUTFILES_CORETYPE  = $(addprefix $(OUT)/,$(VFILES_CORETYPE))
 OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
 OUTFILES_CORESYN   = $(addprefix $(OUT)/,$(VFILES_CORESYN))
+OUTFILES_TYPE      = $(addprefix $(OUT)/,$(VFILES_TYPE))
 
-OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN)
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN) 
 
 all: vfiles coq
 
@@ -191,12 +196,12 @@ $(OUTFILES_GEN): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildca
 		     $(word 1,$(wildcard ghc-head/$*.hs ghc/compiler/*/$*.hs))
 	test -e $@
 
-$(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits no-type-edits
+$(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildcard module-edits/$$*/midamble.v)  $$(wildcard module-edits/$$*/edits) edits $(CORE_EDITS)
 	$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/$*/edits)) \
 	             $(addprefix -p , $(wildcard module-edits/$*/preamble.v)) \
 	             $(addprefix --midamble , $(wildcard module-edits/$*/midamble.v)) \
 		     $(HS_TO_COQ_GHC_OPTS) \
-                     -e no-type-edits \
+                     -e $(CORE_EDITS) \
                      -o $(OUT) \
 		     $(word 1,$(wildcard ghc-head/$*.hs ghc/compiler/*/$*.hs))
 	test -e $@
@@ -204,25 +209,34 @@ $(OUTFILES_CORE): $(OUT)/%.v : $$(wildcard module-edits/$$*/preamble.v) $$(wildc
 CORESYN_PRE = $(wildcard $(addprefix module-edits/, $(addsuffix /preamble.v, $(CORESYN))))
 CORESYN_MID = $(wildcard $(addprefix module-edits/, $(addsuffix /midamble.v, $(CORESYN))))
 
-$(OUTFILES_CORESYN) : edits no-type-edits $(CORESYN_PRE) $(CORESYN_MID) $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
+$(OUTFILES_CORESYN) : edits $(CORE_EDITS) $(CORESYN_PRE) $(CORESYN_MID) $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))
 	cat $(CORESYN_PRE) > CoreSyn_preamble.v
 	cat $(CORESYN_MID) > CoreSyn_midamble.v
 	$(HS_TO_COQ) $(HS_TO_COQ_GHC_OPTS) \
                 -p CoreSyn_preamble.v \
                 --midamble CoreSyn_midamble.v \
 	             $(addprefix -e , $(wildcard $(addprefix module-edits/, $(addsuffix /edits, $(CORESYN))))) \
-                -e no-type-edits \
+                -e $(CORE_EDITS) \
                 -o $(OUT) \
 		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CORESYN)))
 	test -e $@
 	rm -f CoreSyn_preamble.v CoreSyn_midamble.v
 
-$(OUTFILES_CONSTR) : edits no-type-edits module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
+$(OUTFILES_TYPE) : edits $(CORE_EDITS) $$(wildcard module-edits/Type/preamble.v) $$(wildcard module-edits/Type/midamble.v)  $$(wildcard module-edits/Type/edits)
+		$(HS_TO_COQ) $(addprefix -e , $(wildcard module-edits/Type/edits)) \
+	             $(addprefix -p , $(wildcard module-edits/Type/preamble.v)) \
+	             $(addprefix --midamble , $(wildcard module-edits/Type/midamble.v)) \
+		     $(HS_TO_COQ_GHC_OPTS) \
+            -o Type_.v \
+		     $(word 1,$(wildcard ghc-head/Type.hs ghc/compiler/*/Type.hs))
+	test -e $@
+
+$(OUTFILES_CONSTR) : edits $(CORE_EDITS) module-edits/Constructors/preamble.v  module-edits/Constructors/midamble.v module-edits/Constructors/edits
 	$(HS_TO_COQ) -e module-edits/Constructors/edits \
 	                  -p module-edits/Constructors/preamble.v \
 	                  --midamble module-edits/Constructors/midamble.v \
 		     $(HS_TO_COQ_GHC_OPTS) \
-                     -e no-type-edits \
+                     -e $(CORE_EDITS) \
                      -o $(OUT) \
 		     $(addprefix ghc/compiler/*/, $(addsuffix .hs, $(CONSTRUCTORS)))
 	test -e $@

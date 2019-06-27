@@ -1,0 +1,20 @@
+redefine Axiom TyCoRep.CoercionHole : Type.
+
+skip TyCoRep.tidyToIfaceTypeSty
+skip TyCoRep.tidyToIfaceType
+skip TyCoRep.tidyToIfaceCoSty
+skip TyCoRep.tidyToIfaceCo 
+
+
+skip AxiomatizedTypes.Coercion
+skip AxiomatizedTypes.Type_
+skip AxiomatizedTypes.ThetaType
+skip AxiomatizedTypes.TyBinder
+skip AxiomatizedTypes.TyThing
+skip AxiomatizedTypes.Kind
+skip AxiomatizedTypes.PredType
+skip Core.TvSubstEnv
+skip Core.CvSubstEnv
+skip Core.TCvSubst
+
+skip Core.mkTyVarTy

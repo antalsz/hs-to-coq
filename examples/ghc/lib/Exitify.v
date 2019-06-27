@@ -12,11 +12,13 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Core.
 Require CoreFVs.
+Require CoreUtils.
 Require Data.Bifunctor.
 Require Data.Foldable.
 Require Data.Traversable.
@@ -39,7 +41,8 @@ Definition ExitifyM :=
 (* Converted value declarations: *)
 
 Definition mkExitJoinId
-   : Core.InScopeSet -> unit -> BasicTypes.JoinArity -> ExitifyM Core.JoinId :=
+   : Core.InScopeSet ->
+     AxiomatizedTypes.Type_ -> BasicTypes.JoinArity -> ExitifyM Core.JoinId :=
   fun in_scope ty join_arity =>
     let exit_id_tmpl :=
       Id.asJoinId (Id.mkSysLocal (FastString.fsLit (GHC.Base.hs_string__ "exit"))
@@ -55,7 +58,7 @@ Definition addExit
    : Core.InScopeSet ->
      BasicTypes.JoinArity -> Core.CoreExpr -> ExitifyM Core.JoinId :=
   fun in_scope join_arity rhs =>
-    let ty := tt in
+    let ty := CoreUtils.exprType rhs in
     mkExitJoinId in_scope ty join_arity GHC.Base.>>=
     (fun v =>
        State.get GHC.Base.>>=
@@ -257,7 +260,7 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
     GHC.Base.map goTopLvl binds.
 
 (* External variables:
-     Some andb bool cons false list negb nil op_zt__ pair tt unit
+     Some andb bool cons false list negb nil op_zt__ pair AxiomatizedTypes.Type_
      BasicTypes.JoinArity Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Coq.Lists.List.length Core.AnnCase Core.AnnLet Core.AnnNonRec Core.AnnRec
      Core.App Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr
@@ -269,9 +272,9 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
      Core.extendInScopeSet Core.extendInScopeSetList Core.isId Core.isLocalId
      Core.minusVarSet Core.mkLams Core.mkLets Core.mkVarApps Core.mkVarSet
      Core.uniqAway Core.vanillaIdInfo CoreFVs.CoreExprWithFVs CoreFVs.freeVars
-     CoreFVs.freeVarsOf Data.Bifunctor.second Data.Foldable.all Data.Foldable.any
-     Data.Foldable.elem Data.Foldable.foldr Data.Traversable.forM Data.Tuple.fst
-     Data.Tuple.snd FastString.fsLit GHC.Base.map GHC.Base.op_z2218U__
+     CoreFVs.freeVarsOf CoreUtils.exprType Data.Bifunctor.second Data.Foldable.all
+     Data.Foldable.any Data.Foldable.elem Data.Foldable.foldr Data.Traversable.forM
+     Data.Tuple.fst Data.Tuple.snd FastString.fsLit GHC.Base.map GHC.Base.op_z2218U__
      GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_
      GHC.DeferredFix.deferredFix2 GHC.Err.head Id.asJoinId Id.idJoinArity Id.isJoinId
      Id.isJoinId_maybe Id.mkSysLocal Id.setIdInfo State.State State.get State.put

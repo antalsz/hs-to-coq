@@ -1,5 +1,5 @@
 (* We parameterize this because we don't have type information *)
-Definition typeArity :  unit -> list BasicTypes.OneShotInfo.
+Definition typeArity :  AxiomatizedTypes.Kind -> list BasicTypes.OneShotInfo.
 apply GHC.Err.default. 
 Qed.
 

@@ -48,9 +48,9 @@ Proof.
   elim/(@core_induct' b): e =>
     [ v | lit
     | e1 e2 IH1 IH2 | v e IH
-    | [v rhs | pairs] body IHbind IHbody | scrut bndr [] alts IHscrut IHalts
-    | e [] IH | tickish e IH
-    | [] | [] ]
+    | [v rhs | pairs] body IHbind IHbody | scrut bndr ty alts IHscrut IHalts
+    | e ty IH | tickish e IH
+    | co | ty ]
     //=; rewrite -/go;
     try by repeat f_equal.
   
@@ -66,7 +66,7 @@ Lemma WellScoped_Subst_implies_StrongSubset subst vars :
   WellScoped_Subst subst vars ->
   vars {<=} getSubstInScopeVars subst.
 Proof.
-  case: subst => [in_scope id_env [] []] /= [SS lookup_WS].
+  case: subst => [in_scope id_env vs cs] /= [SS lookup_WS].
   move=> var; move /(_ var) in lookup_WS.
   case LVS:  (lookupVarSet _ _) => [v|//].
   move: (SS var).
@@ -184,9 +184,9 @@ Proof.
   elim/core_induct: e vars => 
     [ v | lit
     | e1 e2 IH1 IH2 | v e IH
-    | [v rhs | pairs] body IHbind IHbody | scrut bndr [] alts IHscrut IHalts
-    | e [] IH | tickish e IH
-    | [] | [] ]
+    | [v rhs | pairs] body IHbind IHbody | scrut bndr ty alts IHscrut IHalts
+    | e ty IH | tickish e IH
+    | co | ty ]
     vars
     //;
     hs_simpl.
@@ -229,11 +229,11 @@ Proof.
   elim/core_induct: e vars env => 
     [ v | lit
     | e1 e2 IH1 IH2 | v e IH
-    | [v rhs | pairs] body IHbind IHbody | scrut bndr [] alts IHscrut IHalts
-    | e [] IH | tickish e IH
-    | [] | [] ]
+    | [v rhs | pairs] body IHbind IHbody | scrut bndr ty alts IHscrut IHalts
+    | e ty IH | tickish e IH
+    | co | ty ]
     vars
-    [[in_scope id_env [] []] cs_map cs_rec_map]
+    [[in_scope id_env tm cm] cs_map cs_rec_map]
     //; hs_simpl;
     move=> WSenv; move: (WSenv) => [WSsubst _ _];
     rewrite /cs_subst in WSsubst.
@@ -262,21 +262,19 @@ Proof.
     + constructor=> //; rewrite /cs_subst //.
 
   - rewrite (lock cse_bind) /= -(lock cse_bind) => -[[GLV WS_rhs] WS_ext].
-    rewrite /addBinder /substBndr /cs_subst /substTyVarBndr /substCoVarBndr.
-    case v_tv: (isTyVar v); last case v_cov: (isCoVar v).
-    + admit.
-    + admit.
-    + case def_sub'_v': (substIdBndr _ _ _ _) => [sub' v'].
-      have GLV': GoodLocalVar v' by eapply GoodLocalVar_substIdBndr; eassumption.
-      move: (WellScoped_Subst_substIdBndr _ _ _ _ _ _ _ def_sub'_v' GLV WSsubst)
-        => [subst_ext WSsubst'].
-      
-      (* cse_bind *)
-      simpl.
-      case def_env'_out_id': (addBinding _ _ _ _) => [env' out_id'].
-      case join_v: (isJoinId_maybe v) => [arity|].
-      * admit.
-      * rewrite /tryForCSE.
+    have NTV: isTyVar v = false. admit.
+    have NCV: isCoVar v = false. admit.
+    rewrite /addBinder /substBndr /cs_subst. rewrite NTV NCV.
+    case def_sub'_v': (substIdBndr _ _ _ _) => [sub' v'].
+    have GLV': GoodLocalVar v' by eapply GoodLocalVar_substIdBndr; eassumption.
+    move: (WellScoped_Subst_substIdBndr _ _ _ _ _ _ _ def_sub'_v' GLV WSsubst)
+        => [subst_ext WSsubst'].      
+    (* cse_bind *)
+    simpl.
+    case def_env'_out_id': (addBinding _ _ _ _) => [env' out_id'].
+    case join_v: (isJoinId_maybe v) => [arity|].
+    * admit.
+    * rewrite /tryForCSE.
         
 
 (*       case def_env2_b2_e2: (cse_bind _ _ _ _) => [env2 [b2 e2]]. *)

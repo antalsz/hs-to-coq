@@ -1,0 +1,18 @@
+constructors:
+  TyCoRep.TyLit: ! '[Qualified "TyCoRep" "NumTyLit",Qualified "TyCoRep" "StrTyLit"]'
+  TyCoRep.UnivCoProvenance: ! '[Qualified "TyCoRep" "UnsafeCoerceProv",Qualified "TyCoRep"
+    "PhantomProv",Qualified "TyCoRep" "ProofIrrelProv",Qualified "TyCoRep" "PluginProv"]'
+constructorFields:
+  TyCoRep.UnsafeCoerceProv: NonRecordFields 0
+  TyCoRep.ProofIrrelProv: NonRecordFields 1
+  TyCoRep.PhantomProv: NonRecordFields 1
+  TyCoRep.PluginProv: NonRecordFields 1
+  TyCoRep.StrTyLit: NonRecordFields 1
+  TyCoRep.NumTyLit: NonRecordFields 1
+constructorTypes:
+  TyCoRep.UnsafeCoerceProv: Qualified "TyCoRep" "UnivCoProvenance"
+  TyCoRep.ProofIrrelProv: Qualified "TyCoRep" "UnivCoProvenance"
+  TyCoRep.PhantomProv: Qualified "TyCoRep" "UnivCoProvenance"
+  TyCoRep.PluginProv: Qualified "TyCoRep" "UnivCoProvenance"
+  TyCoRep.StrTyLit: Qualified "TyCoRep" "TyLit"
+  TyCoRep.NumTyLit: Qualified "TyCoRep" "TyLit"

@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Core.
 Require FastString.
@@ -32,7 +33,7 @@ Axiom wordTyConName : Name.Name.
 
 Axiom wordTyCon : Core.TyCon.
 
-Axiom wordTy : unit.
+Axiom wordTy : AxiomatizedTypes.Type_.
 
 Axiom wordDataConName : Name.Name.
 
@@ -42,7 +43,7 @@ Axiom word8TyConName : Name.Name.
 
 Axiom word8TyCon : Core.TyCon.
 
-Axiom word8Ty : unit.
+Axiom word8Ty : AxiomatizedTypes.Type_.
 
 Axiom word8DataConName : Name.Name.
 
@@ -76,7 +77,7 @@ Axiom unitTyConKey : Unique.Unique.
 
 Axiom unitTyCon : Core.TyCon.
 
-Axiom unitTy : unit.
+Axiom unitTy : AxiomatizedTypes.Type_.
 
 Axiom unitDataConId : Core.Id.
 
@@ -90,23 +91,24 @@ Axiom unboxedUnitTyCon : Core.TyCon.
 
 Axiom unboxedUnitDataCon : Core.DataCon.
 
-Axiom unboxedTupleSumKind : Core.TyCon -> list unit -> unit.
+Axiom unboxedTupleSumKind : Core.TyCon ->
+                            list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
 
-Axiom unboxedTupleKind : list unit -> unit.
+Axiom unboxedTupleKind : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
 
-Axiom unboxedSumKind : list unit -> unit.
+Axiom unboxedSumKind : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
 
 Axiom typeSymbolKindConName : Name.Name.
 
 Axiom typeSymbolKindCon : Core.TyCon.
 
-Axiom typeSymbolKind : unit.
+Axiom typeSymbolKind : AxiomatizedTypes.Kind.
 
 Axiom typeNatKindConName : Name.Name.
 
 Axiom typeNatKindCon : Core.TyCon.
 
-Axiom typeNatKind : unit.
+Axiom typeNatKind : AxiomatizedTypes.Kind.
 
 Axiom tupleTyConName : BasicTypes.TupleSort -> BasicTypes.Arity -> Name.Name.
 
@@ -138,7 +140,7 @@ Axiom sumRepDataCon : Core.DataCon.
 
 Axiom sumDataCon : BasicTypes.ConTag -> BasicTypes.Arity -> Core.DataCon.
 
-Axiom stringTy : unit.
+Axiom stringTy : AxiomatizedTypes.Type_.
 
 Axiom starKindTyConName : Name.Name.
 
@@ -148,7 +150,7 @@ Axiom runtimeRepTyConName : Name.Name.
 
 Axiom runtimeRepTyCon : Core.TyCon.
 
-Axiom runtimeRepTy : unit.
+Axiom runtimeRepTy : AxiomatizedTypes.Type_.
 
 Axiom runtimeRepSimpleDataConNames : list Name.Name.
 
@@ -174,22 +176,25 @@ Axiom promotedEQDataCon : Core.TyCon.
 Axiom promotedConsDataCon : Core.TyCon.
 
 Axiom pcSpecialDataCon : Name.Name ->
-                         list unit -> Core.TyCon -> Core.RuntimeRepInfo -> Core.DataCon.
+                         list AxiomatizedTypes.Type_ ->
+                         Core.TyCon -> Core.RuntimeRepInfo -> Core.DataCon.
 
 Axiom pcDataConWithFixity' : bool ->
                              Name.Name ->
                              Unique.Unique ->
                              Core.RuntimeRepInfo ->
                              list Core.TyVar ->
-                             list Core.TyVar -> list Core.TyVar -> list unit -> Core.TyCon -> Core.DataCon.
+                             list Core.TyVar ->
+                             list Core.TyVar -> list AxiomatizedTypes.Type_ -> Core.TyCon -> Core.DataCon.
 
 Axiom pcDataConWithFixity : bool ->
                             Name.Name ->
                             list Core.TyVar ->
-                            list Core.TyVar -> list Core.TyVar -> list unit -> Core.TyCon -> Core.DataCon.
+                            list Core.TyVar ->
+                            list Core.TyVar -> list AxiomatizedTypes.Type_ -> Core.TyCon -> Core.DataCon.
 
 Axiom pcDataCon : Name.Name ->
-                  list Core.TyVar -> list unit -> Core.TyCon -> Core.DataCon.
+                  list Core.TyVar -> list AxiomatizedTypes.Type_ -> Core.TyCon -> Core.DataCon.
 
 Axiom parrTyCon_RDR : PrelNames.RdrName.
 
@@ -220,7 +225,8 @@ Axiom mk_tuple : BasicTypes.Boxity -> nat -> (Core.TyCon * Core.DataCon)%type.
 Axiom mk_special_dc_name : FastString.FastString ->
                            Unique.Unique -> Core.DataCon -> Name.Name.
 
-Axiom mk_class : Core.TyCon -> unit -> Core.Id -> Core.Class.
+Axiom mk_class : Core.TyCon ->
+                 AxiomatizedTypes.PredType -> Core.Id -> Core.Class.
 
 Axiom mkWiredInTyConName : Name.BuiltInSyntax ->
                            Module.Module ->
@@ -235,29 +241,33 @@ Axiom mkWiredInDataConName : Name.BuiltInSyntax ->
 
 Axiom mkUnboxedTupleStr : BasicTypes.Arity -> GHC.Base.String.
 
-Axiom mkTupleTy : BasicTypes.Boxity -> list unit -> unit.
+Axiom mkTupleTy : BasicTypes.Boxity ->
+                  list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
 Axiom mkTupleOcc : OccName.NameSpace ->
                    BasicTypes.Boxity -> BasicTypes.Arity -> OccName.OccName.
 
 Axiom mkSumTyConOcc : BasicTypes.Arity -> OccName.OccName.
 
-Axiom mkSumTy : list unit -> unit.
+Axiom mkSumTy : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
 Axiom mkSumDataConOcc : BasicTypes.ConTag ->
                         BasicTypes.Arity -> OccName.OccName.
 
-Axiom mkPromotedListTy : unit -> list unit -> unit.
+Axiom mkPromotedListTy : AxiomatizedTypes.Kind ->
+                         list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
-Axiom mkPArrTy : unit -> unit.
+Axiom mkPArrTy : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
 Axiom mkPArrFakeCon : nat -> Core.DataCon.
 
-Axiom mkListTy : unit -> unit.
+Axiom mkListTy : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
-Axiom mkFunKind : unit -> unit -> unit.
+Axiom mkFunKind : AxiomatizedTypes.Kind ->
+                  AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind.
 
-Axiom mkForAllKind : Core.TyVar -> Core.ArgFlag -> unit -> unit.
+Axiom mkForAllKind : Core.TyVar ->
+                     Core.ArgFlag -> AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind.
 
 Axiom mkDataConWorkerName : Core.DataCon -> Unique.Unique -> Name.Name.
 
@@ -265,7 +275,7 @@ Axiom mkConstraintTupleStr : BasicTypes.Arity -> GHC.Base.String.
 
 Axiom mkCTupleOcc : OccName.NameSpace -> BasicTypes.Arity -> OccName.OccName.
 
-Axiom mkBoxedTupleTy : list unit -> unit.
+Axiom mkBoxedTupleTy : list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
 
 Axiom mkBoxedTupleStr : BasicTypes.Arity -> GHC.Base.String.
 
@@ -287,7 +297,7 @@ Axiom liftedTypeKindTyConName : Name.Name.
 
 Axiom liftedTypeKindTyCon : Core.TyCon.
 
-Axiom liftedRepTy : unit.
+Axiom liftedRepTy : AxiomatizedTypes.Type_.
 
 Axiom liftedRepDataConTyCon : Core.TyCon.
 
@@ -309,7 +319,7 @@ Axiom intTyConName : Name.Name.
 
 Axiom intTyCon : Core.TyCon.
 
-Axiom intTy : unit.
+Axiom intTy : AxiomatizedTypes.Type_.
 
 Axiom intDataCon_RDR : PrelNames.RdrName.
 
@@ -331,7 +341,7 @@ Axiom floatTyConName : Name.Name.
 
 Axiom floatTyCon : Core.TyCon.
 
-Axiom floatTy : unit.
+Axiom floatTy : AxiomatizedTypes.Type_.
 
 Axiom floatDataConName : Name.Name.
 
@@ -345,7 +355,8 @@ Axiom falseDataConId : Core.Id.
 
 Axiom falseDataCon : Core.DataCon.
 
-Axiom extractPromotedList : unit -> list unit.
+Axiom extractPromotedList : AxiomatizedTypes.Type_ ->
+                            list AxiomatizedTypes.Type_.
 
 Axiom eqDataConId : Core.Id.
 
@@ -355,7 +366,7 @@ Axiom doubleTyConName : Name.Name.
 
 Axiom doubleTyCon : Core.TyCon.
 
-Axiom doubleTy : unit.
+Axiom doubleTy : AxiomatizedTypes.Type_.
 
 Axiom doubleDataConName : Name.Name.
 
@@ -385,7 +396,7 @@ Axiom charTyConName : Name.Name.
 
 Axiom charTyCon : Core.TyCon.
 
-Axiom charTy : unit.
+Axiom charTy : AxiomatizedTypes.Type_.
 
 Axiom charDataConName : Name.Name.
 
@@ -411,27 +422,29 @@ Axiom boolTyConName : Name.Name.
 
 Axiom boolTyCon : Core.TyCon.
 
-Axiom boolTy : unit.
+Axiom boolTy : AxiomatizedTypes.Type_.
 
-Axiom anyTypeOfKind : unit -> unit.
+Axiom anyTypeOfKind : AxiomatizedTypes.Kind -> AxiomatizedTypes.Type_.
 
 Axiom anyTyConName : Name.Name.
 
 Axiom anyTyCon : Core.TyCon.
 
-Axiom anyTy : unit.
+Axiom anyTy : AxiomatizedTypes.Type_.
 
 Axiom alpha_tyvar : list Core.TyVar.
 
-Axiom alpha_ty : list unit.
+Axiom alpha_ty : list AxiomatizedTypes.Type_.
 
-Axiom tt : unit.
+Axiom Core.liftedTypeKind : AxiomatizedTypes.Kind.
+
+Axiom Core.constraintKind : AxiomatizedTypes.Kind.
 
 (* External variables:
-     bool list nat op_zt__ option unit BasicTypes.Arity BasicTypes.Boxity
-     BasicTypes.ConTag BasicTypes.TupleSort Core.ArgFlag Core.Class Core.DataCon
-     Core.Id Core.RuntimeRepInfo Core.TyCon Core.TyVar FastString.FastString
-     GHC.Base.String Module.Module Name.BuiltInSyntax Name.Name NameEnv.NameEnv
-     NameSet.NameSet OccName.NameSpace OccName.OccName PrelNames.RdrName
-     Unique.Unique
+     bool list nat op_zt__ option AxiomatizedTypes.Kind AxiomatizedTypes.PredType
+     AxiomatizedTypes.Type_ BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
+     BasicTypes.TupleSort Core.ArgFlag Core.Class Core.DataCon Core.Id
+     Core.RuntimeRepInfo Core.TyCon Core.TyVar FastString.FastString GHC.Base.String
+     Module.Module Name.BuiltInSyntax Name.Name NameEnv.NameEnv NameSet.NameSet
+     OccName.NameSpace OccName.OccName PrelNames.RdrName Unique.Unique
 *)

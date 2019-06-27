@@ -89,20 +89,6 @@ Definition idRuleFVs : Core.Id -> FV.FV :=
 Definition idRuleVars : Core.Id -> Core.VarSet :=
   fun id => FV.fvVarSet (idRuleFVs id).
 
-Definition idFVs : Core.Id -> FV.FV :=
-  fun id =>
-    if andb Util.debugIsOn (negb (Core.isId id)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
-          #629)
-    else FV.unionFV (varTypeTyCoFVs id) FV.emptyFV.
-
-Definition idFreeVars : Core.Id -> Core.VarSet :=
-  fun id =>
-    if andb Util.debugIsOn (negb (Core.isId id)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
-          #622)
-    else FV.fvVarSet (idFVs id).
-
 Definition freeVarsOfAnn : FVAnn -> Core.DIdSet :=
   fun fvs => fvs.
 
@@ -118,16 +104,30 @@ Definition delBinderFV : Core.Var -> Core.DVarSet -> Core.DVarSet :=
 Definition delBindersFV : list Core.Var -> Core.DVarSet -> Core.DVarSet :=
   fun bs fvs => Data.Foldable.foldr delBinderFV fvs bs.
 
-Definition dIdFreeVars : Core.Id -> Core.DVarSet :=
-  fun id => FV.fvDVarSet (idFVs id).
-
-Definition bndrRuleAndUnfoldingVarsDSet : Core.Id -> Core.DVarSet :=
-  fun id => FV.fvDVarSet FV.emptyFV.
-
 Definition bndrRuleAndUnfoldingFVs : Core.Id -> FV.FV :=
   fun id =>
     if Core.isId id : bool then FV.unionFV (idRuleFVs id) (idUnfoldingFVs id) else
     FV.emptyFV.
+
+Definition bndrRuleAndUnfoldingVarsDSet : Core.Id -> Core.DVarSet :=
+  fun id => FV.fvDVarSet (bndrRuleAndUnfoldingFVs id).
+
+Definition idFVs : Core.Id -> FV.FV :=
+  fun id =>
+    if andb Util.debugIsOn (negb (Core.isId id)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
+          #629)
+    else FV.unionFV (varTypeTyCoFVs id) (bndrRuleAndUnfoldingFVs id).
+
+Definition dIdFreeVars : Core.Id -> Core.DVarSet :=
+  fun id => FV.fvDVarSet (idFVs id).
+
+Definition idFreeVars : Core.Id -> Core.VarSet :=
+  fun id =>
+    if andb Util.debugIsOn (negb (Core.isId id)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreFVs.hs")
+          #622)
+    else FV.fvVarSet (idFVs id).
 
 Definition addBndr : Core.CoreBndr -> FV.FV -> FV.FV :=
   fun bndr fv fv_cand in_scope acc =>
@@ -282,7 +282,8 @@ Definition idRuleRhsVars
     Core.mapUnionVarSet get_fvs (Id.idCoreRules id).
 
 Definition rhs_fvs : (Core.Id * Core.CoreExpr)%type -> FV.FV :=
-  fun '(pair bndr rhs) => FV.unionFV (expr_fvs rhs) FV.emptyFV.
+  fun '(pair bndr rhs) =>
+    FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
 
 Definition bindFreeVars : Core.CoreBind -> Core.VarSet :=
   fun arg_0__ =>
@@ -327,7 +328,7 @@ Definition freeVars : Core.CoreExpr -> CoreExprWithFVs :=
                pair Core.emptyDVarSet (Core.AnnVar v)
            | Core.Lit lit => pair Core.emptyDVarSet (Core.AnnLit lit)
            | Core.Lam b body =>
-               let b_ty := tt in
+               let b_ty := Id.idType b in
                let b_fvs := Core.emptyDVarSet in
                let '(pair body_fvs _ as body') := freeVars body in
                pair (unionFVs b_fvs (delBinderFV b body_fvs)) (Core.AnnLam b body')
@@ -356,8 +357,8 @@ Definition freeVars : Core.CoreExpr -> CoreExprWithFVs :=
                pair (unionFVs (freeVarsOf expr2) cfvs) (Core.AnnCast expr2 (pair cfvs co))
            | Core.Tick tickish expr =>
                let tickishFVs :=
-                 fun arg_23__ =>
-                   match arg_23__ with
+                 fun arg_24__ =>
+                   match arg_24__ with
                    | Core.Breakpoint _ ids => Core.mkDVarSet ids
                    | _ => Core.emptyDVarSet
                    end in
@@ -397,7 +398,7 @@ Definition freeVarsBind
                pair Core.emptyDVarSet (Core.AnnVar v)
            | Core.Lit lit => pair Core.emptyDVarSet (Core.AnnLit lit)
            | Core.Lam b body =>
-               let b_ty := tt in
+               let b_ty := Id.idType b in
                let b_fvs := Core.emptyDVarSet in
                let '(pair body_fvs _ as body') := freeVars body in
                pair (unionFVs b_fvs (delBinderFV b body_fvs)) (Core.AnnLam b body')
@@ -426,8 +427,8 @@ Definition freeVarsBind
                pair (unionFVs (freeVarsOf expr2) cfvs) (Core.AnnCast expr2 (pair cfvs co))
            | Core.Tick tickish expr =>
                let tickishFVs :=
-                 fun arg_23__ =>
-                   match arg_23__ with
+                 fun arg_24__ =>
+                   match arg_24__ with
                    | Core.Breakpoint _ ids => Core.mkDVarSet ids
                    | _ => Core.emptyDVarSet
                    end in
@@ -457,7 +458,7 @@ Definition freeVarsBind
                          end for freeVarsBind.
 
 (* External variables:
-     andb bool cons list negb op_zt__ pair snd tt BasicTypes.Activation Core.AnnAlt
+     andb bool cons list negb op_zt__ pair snd BasicTypes.Activation Core.AnnAlt
      Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnCast Core.AnnCoercion Core.AnnExpr
      Core.AnnExpr' Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec Core.AnnRec
      Core.AnnTick Core.AnnType Core.AnnVar Core.App Core.Breakpoint Core.BuiltinRule
@@ -472,7 +473,7 @@ Definition freeVarsBind
      FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList FV.fvVarSet
      FV.mapUnionFV FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map
      GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
-     Id.idCoreRules Lists.List.map NameSet.NameSet NameSet.emptyNameSet
+     Id.idCoreRules Id.idType Lists.List.map NameSet.NameSet NameSet.emptyNameSet
      NameSet.unionNameSet NestedRecursionHelpers.mapAndUnzipFix Panic.assertPanic
      UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
 *)

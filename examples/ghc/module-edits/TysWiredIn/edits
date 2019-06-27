@@ -1,0 +1,56 @@
+axiomatize module TysWiredIn
+
+rename type RdrName.RdrName = PrelNames.RdrName
+
+skip module CoAxiom
+skip module Outputable
+skip module ForeignCall
+skip module Data.Array
+skip module RdrName
+skip module RepType
+skip module KnownUniques
+
+skip TysWiredIn.pcNonEnumTyCon
+skip TysWiredIn.pcTyCon
+
+# use GHC.Arr.Array type
+
+skip TysWiredIn.parrFakeConArr
+skip TysWiredIn.boxedTupleArr
+skip TysWiredIn.unboxedTupleArr
+skip TysWiredIn.unboxedSumArr
+skip TysWiredIn.mk_sum
+
+#
+# these are all top-level patterns, ugh
+#
+
+skip TysWiredIn.runtimeRepSimpleDataCons
+skip TysWiredIn.liftedRepDataCon 
+skip TysWiredIn.liftedRepDataConTy 
+skip TysWiredIn.unliftedRepDataConTy
+skip TysWiredIn.intRepDataConTy
+skip TysWiredIn.wordRepDataConTy 
+skip TysWiredIn.int64RepDataConTy
+skip TysWiredIn.word64RepDataConTy 
+skip TysWiredIn.addrRepDataConTy 
+skip TysWiredIn.floatRepDataConTy 
+skip TysWiredIn.doubleRepDataConTy
+
+skip TysWiredIn.vec2DataConTy
+skip TysWiredIn.vec4DataConTy
+skip TysWiredIn.vec8DataConTy
+skip TysWiredIn.vec16DataConTy
+skip TysWiredIn.vec32DataConTy
+skip TysWiredIn.vec64DataConTy
+
+skip TysWiredIn.int8ElemRepDataConTy
+skip TysWiredIn.int16ElemRepDataConTy
+skip TysWiredIn.int32ElemRepDataConTy
+skip TysWiredIn.int64ElemRepDataConTy
+skip TysWiredIn.word8ElemRepDataConTy
+skip TysWiredIn.word16ElemRepDataConTy
+skip TysWiredIn.word32ElemRepDataConTy
+skip TysWiredIn.word64ElemRepDataConTy
+skip TysWiredIn.floatElemRepDataConTy
+skip TysWiredIn.doubleElemRepDataConTy

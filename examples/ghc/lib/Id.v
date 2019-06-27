@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Core.
 Require Datatypes.
@@ -26,6 +27,7 @@ Require Name.
 Require OccName.
 Require Panic.
 Require SrcLoc.
+Require TyCoRep.
 Require UniqSupply.
 Require Unique.
 Require Util.
@@ -46,6 +48,9 @@ Definition stateHackOneShot : BasicTypes.OneShotInfo :=
 Definition setIdUnique : Core.Id -> Unique.Unique -> Core.Id :=
   Core.setVarUnique.
 
+Definition setIdType : Core.Id -> AxiomatizedTypes.Type_ -> Core.Id :=
+  fun id ty => Core.setVarType id ty.
+
 Definition setIdNotExported : Core.Id -> Core.Id :=
   Core.setIdNotExported.
 
@@ -65,83 +70,104 @@ Definition recordSelectorTyCon : Core.Id -> Core.RecSelParent :=
 Definition realIdUnfolding : Core.Id -> Core.Unfolding :=
   fun id => Core.unfoldingInfo ((@Core.idInfo tt id)).
 
-Axiom mkTemplateLocalsNum : nat -> list unit -> list Core.Id.
+Axiom mkTemplateLocalsNum : nat -> list AxiomatizedTypes.Type_ -> list Core.Id.
 
-Axiom mkTemplateLocals : list unit -> list Core.Id.
+Axiom mkTemplateLocals : list AxiomatizedTypes.Type_ -> list Core.Id.
 
-Axiom mkTemplateLocal : nat -> unit -> Core.Id.
+Axiom mkTemplateLocal : nat -> AxiomatizedTypes.Type_ -> Core.Id.
 
-Definition mkLocalIdWithInfo : Name.Name -> unit -> Core.IdInfo -> Core.Id :=
+Definition mkLocalIdWithInfo
+   : Name.Name -> AxiomatizedTypes.Type_ -> Core.IdInfo -> Core.Id :=
   fun name ty info => Core.mkLocalVar Core.VanillaId name ty info.
 
 Definition mkLocalIdOrCoVarWithInfo
-   : Name.Name -> unit -> Core.IdInfo -> Core.Id :=
+   : Name.Name -> AxiomatizedTypes.Type_ -> Core.IdInfo -> Core.Id :=
   fun name ty info =>
     let details :=
-      if Core.isCoercionType ty : bool then Core.CoVarId else
+      if TyCoRep.isCoercionType ty : bool then Core.CoVarId else
       Core.VanillaId in
     Core.mkLocalVar details name ty info.
 
-Definition mkLocalId : Name.Name -> unit -> Core.Id :=
+Definition mkLocalId : Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun name ty => mkLocalIdWithInfo name ty Core.vanillaIdInfo.
 
 Definition mkSysLocal
-   : FastString.FastString -> Unique.Unique -> unit -> Core.Id :=
-  fun fs uniq ty => mkLocalId (Name.mkSystemVarName uniq fs) ty.
+   : FastString.FastString ->
+     Unique.Unique -> AxiomatizedTypes.Type_ -> Core.Id :=
+  fun fs uniq ty =>
+    if andb Util.debugIsOn (negb (negb (TyCoRep.isCoercionType ty))) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+          #313)
+    else mkLocalId (Name.mkSystemVarName uniq fs) ty.
 
 Definition mkSysLocalM {m} `{UniqSupply.MonadUnique m}
-   : FastString.FastString -> unit -> m Core.Id :=
+   : FastString.FastString -> AxiomatizedTypes.Type_ -> m Core.Id :=
   fun fs ty =>
     UniqSupply.getUniqueM GHC.Base.>>=
     (fun uniq => GHC.Base.return_ (mkSysLocal fs uniq ty)).
 
 Definition mkUserLocal
-   : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Id :=
-  fun occ uniq ty loc => mkLocalId (Name.mkInternalName uniq occ loc) ty.
+   : OccName.OccName ->
+     Unique.Unique -> AxiomatizedTypes.Type_ -> SrcLoc.SrcSpan -> Core.Id :=
+  fun occ uniq ty loc =>
+    if andb Util.debugIsOn (negb (negb (TyCoRep.isCoercionType ty))) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+          #330)
+    else mkLocalId (Name.mkInternalName uniq occ loc) ty.
 
-Definition mkLocalCoVar : Name.Name -> unit -> Core.CoVar :=
-  fun name ty => Core.mkLocalVar Core.CoVarId name ty Core.vanillaIdInfo.
-
-Definition mkLocalIdOrCoVar : Name.Name -> unit -> Core.Id :=
+Definition mkLocalCoVar : Name.Name -> AxiomatizedTypes.Type_ -> Core.CoVar :=
   fun name ty =>
-    if Core.isCoercionType ty : bool then mkLocalCoVar name ty else
+    if andb Util.debugIsOn (negb (TyCoRep.isCoercionType ty)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
+          #275)
+    else Core.mkLocalVar Core.CoVarId name ty Core.vanillaIdInfo.
+
+Definition mkLocalIdOrCoVar : Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
+  fun name ty =>
+    if TyCoRep.isCoercionType ty : bool then mkLocalCoVar name ty else
     mkLocalId name ty.
 
 Definition mkSysLocalOrCoVar
-   : FastString.FastString -> Unique.Unique -> unit -> Core.Id :=
+   : FastString.FastString ->
+     Unique.Unique -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun fs uniq ty => mkLocalIdOrCoVar (Name.mkSystemVarName uniq fs) ty.
 
 Definition mkSysLocalOrCoVarM {m} `{UniqSupply.MonadUnique m}
-   : FastString.FastString -> unit -> m Core.Id :=
+   : FastString.FastString -> AxiomatizedTypes.Type_ -> m Core.Id :=
   fun fs ty =>
     UniqSupply.getUniqueM GHC.Base.>>=
     (fun uniq => GHC.Base.return_ (mkSysLocalOrCoVar fs uniq ty)).
 
 Definition mkUserLocalOrCoVar
-   : OccName.OccName -> Unique.Unique -> unit -> SrcLoc.SrcSpan -> Core.Id :=
+   : OccName.OccName ->
+     Unique.Unique -> AxiomatizedTypes.Type_ -> SrcLoc.SrcSpan -> Core.Id :=
   fun occ uniq ty loc => mkLocalIdOrCoVar (Name.mkInternalName uniq occ loc) ty.
 
-Definition mkWorkerId : Unique.Unique -> Core.Id -> unit -> Core.Id :=
+Definition mkWorkerId
+   : Unique.Unique -> Core.Id -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun uniq unwrkr ty =>
     mkLocalIdOrCoVar (Name.mkDerivedInternalName OccName.mkWorkerOcc uniq
                       (Name.getName unwrkr)) ty.
 
 Definition mkGlobalId
-   : Core.IdDetails -> Name.Name -> unit -> Core.IdInfo -> Core.Id :=
+   : Core.IdDetails ->
+     Name.Name -> AxiomatizedTypes.Type_ -> Core.IdInfo -> Core.Id :=
   Core.mkGlobalVar.
 
 Definition mkVanillaGlobalWithInfo
-   : Name.Name -> unit -> Core.IdInfo -> Core.Id :=
+   : Name.Name -> AxiomatizedTypes.Type_ -> Core.IdInfo -> Core.Id :=
   mkGlobalId Core.VanillaId.
 
-Definition mkVanillaGlobal : Name.Name -> unit -> Core.Id :=
+Definition mkVanillaGlobal : Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun name ty => mkVanillaGlobalWithInfo name ty Core.vanillaIdInfo.
 
-Definition mkExportedVanillaId : Name.Name -> unit -> Core.Id :=
+Definition mkExportedVanillaId
+   : Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun name ty =>
     Core.mkExportedLocalVar Core.VanillaId name ty Core.vanillaIdInfo.
 
-Definition mkExportedLocalId : Core.IdDetails -> Name.Name -> unit -> Core.Id :=
+Definition mkExportedLocalId
+   : Core.IdDetails -> Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun details name ty =>
     Core.mkExportedLocalVar details name ty Core.vanillaIdInfo.
 
@@ -268,9 +294,11 @@ Definition zapIdStrictness : Core.Id -> Core.Id :=
   fun id =>
     modifyIdInfo (fun arg_0__ => Core.setStrictnessInfo arg_0__ Core.nopSig) id.
 
-Axiom isStateHackType : unit -> bool.
+Axiom isStrictId : Core.Id -> bool.
 
-Definition typeOneShot : unit -> BasicTypes.OneShotInfo :=
+Axiom isStateHackType : AxiomatizedTypes.Type_ -> bool.
+
+Definition typeOneShot : AxiomatizedTypes.Type_ -> BasicTypes.OneShotInfo :=
   fun ty =>
     if isStateHackType ty : bool then stateHackOneShot else
     BasicTypes.NoOneShotInfo.
@@ -364,6 +392,10 @@ Definition isFCallId : Core.Id -> bool :=
     | _ => false
     end.
 
+Axiom isEvVar : Core.Var -> bool.
+
+Axiom isDictId : Core.Id -> bool.
+
 Definition isDataConWorkId_maybe : Core.Id -> option Core.DataCon :=
   fun id =>
     match Core.idDetails id with
@@ -417,7 +449,7 @@ Definition idUnfolding : Core.Id -> Core.Unfolding :=
     then Core.NoUnfolding else
     Core.unfoldingInfo info.
 
-Definition idType : Core.Id -> unit :=
+Definition idType : Core.Id -> AxiomatizedTypes.Kind :=
   Core.varType.
 
 Definition idStrictness : Core.Id -> Core.StrictSig :=
@@ -436,7 +468,7 @@ Definition idOneShotInfo : Core.Id -> BasicTypes.OneShotInfo :=
 
 Definition idStateHackOneShotInfo : Core.Id -> BasicTypes.OneShotInfo :=
   fun id =>
-    if isStateHackType (tt) : bool then stateHackOneShot else
+    if isStateHackType (idType id) : bool then stateHackOneShot else
     idOneShotInfo id.
 
 Definition isOneShotBndr : Core.Var -> bool :=
@@ -488,8 +520,8 @@ Definition localiseId : Core.Id -> Core.Id :=
               #209)
         else andb (Core.isLocalId id) (Name.isInternalName name)) : bool
     then id else
-    Core.mkLocalVar (Core.idDetails id) (Name.localiseName name) (tt) ((@Core.idInfo
-                                                                        tt id)).
+    Core.mkLocalVar (Core.idDetails id) (Name.localiseName name) (idType id)
+    ((@Core.idInfo tt id)).
 
 Definition idJoinArity : Core.JoinId -> BasicTypes.JoinArity :=
   fun id =>
@@ -584,30 +616,31 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
 
 (* External variables:
      None Some andb bool false list nat negb nil option orb pair true tt unit
-     BasicTypes.Activation BasicTypes.Arity BasicTypes.InlinePragma
-     BasicTypes.JoinArity BasicTypes.NoOneShotInfo BasicTypes.OccInfo
-     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleMatchInfo
-     BasicTypes.inlinePragmaActivation BasicTypes.inlinePragmaRuleMatchInfo
-     BasicTypes.isConLike BasicTypes.isDeadOcc BasicTypes.isOneOcc
-     BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo BasicTypes.occ_in_lam
-     BasicTypes.setInlinePragmaActivation BasicTypes.zapOccTailCallInfo Core.CafInfo
-     Core.Class Core.ClassOpId Core.CoVar Core.CoVarId Core.CoreRule Core.DataCon
-     Core.DataConWorkId Core.DataConWrapId Core.Demand Core.FCallId Core.Id
-     Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId Core.Mk_JoinId
-     Core.NoUnfolding Core.PrimOpId Core.RecSelData Core.RecSelId Core.RecSelParent
-     Core.RecSelPatSyn Core.RuleInfo Core.StrictSig Core.Unfolding Core.VanillaId
-     Core.Var Core.arityInfo Core.cafInfo Core.callArityInfo Core.demandInfo
-     Core.idDetails Core.idInfo Core.increaseStrictSigArity Core.inlinePragInfo
-     Core.isBottomingSig Core.isCoercionType Core.isEmptyRuleInfo Core.isId
-     Core.isLocalId Core.isNeverLevPolyIdInfo Core.isStableUnfolding Core.isTyVar
-     Core.isUnboxedSumCon Core.isUnboxedTupleCon Core.lazySetIdInfo
-     Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar Core.nopSig
-     Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo Core.setCafInfo
-     Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails Core.setIdExported
-     Core.setIdNotExported Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
-     Core.setRuleInfo Core.setStrictnessInfo Core.setUnfoldingInfo Core.setVarName
-     Core.setVarUnique Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo
-     Core.varName Core.varType Core.varUnique Core.zapDemandInfo Core.zapLamInfo
+     AxiomatizedTypes.Kind AxiomatizedTypes.Type_ BasicTypes.Activation
+     BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.JoinArity
+     BasicTypes.NoOneShotInfo BasicTypes.OccInfo BasicTypes.OneShotInfo
+     BasicTypes.OneShotLam BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
+     BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
+     BasicTypes.isOneOcc BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo
+     BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
+     BasicTypes.zapOccTailCallInfo Core.CafInfo Core.Class Core.ClassOpId Core.CoVar
+     Core.CoVarId Core.CoreRule Core.DataCon Core.DataConWorkId Core.DataConWrapId
+     Core.Demand Core.FCallId Core.Id Core.IdDetails Core.IdInfo Core.JoinId
+     Core.Mk_DFunId Core.Mk_JoinId Core.NoUnfolding Core.PrimOpId Core.RecSelData
+     Core.RecSelId Core.RecSelParent Core.RecSelPatSyn Core.RuleInfo Core.StrictSig
+     Core.Unfolding Core.VanillaId Core.Var Core.arityInfo Core.cafInfo
+     Core.callArityInfo Core.demandInfo Core.idDetails Core.idInfo
+     Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig
+     Core.isEmptyRuleInfo Core.isId Core.isLocalId Core.isNeverLevPolyIdInfo
+     Core.isStableUnfolding Core.isTyVar Core.isUnboxedSumCon Core.isUnboxedTupleCon
+     Core.lazySetIdInfo Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar
+     Core.nopSig Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo
+     Core.setCafInfo Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails
+     Core.setIdExported Core.setIdNotExported Core.setInlinePragInfo Core.setOccInfo
+     Core.setOneShotInfo Core.setRuleInfo Core.setStrictnessInfo
+     Core.setUnfoldingInfo Core.setVarName Core.setVarType Core.setVarUnique
+     Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo Core.varName
+     Core.varType Core.varUnique Core.zapDemandInfo Core.zapLamInfo
      Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo Datatypes.id
      FastString.FastString GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zgzgze__
      GHC.Base.return_ GHC.Err.error GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq
@@ -615,6 +648,6 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      Name.localiseName Name.mkDerivedInternalName Name.mkInternalName
      Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc
      Panic.assertPanic Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     SrcLoc.SrcSpan UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique
-     Util.count Util.debugIsOn
+     SrcLoc.SrcSpan TyCoRep.isCoercionType UniqSupply.MonadUnique
+     UniqSupply.getUniqueM Unique.Unique Util.count Util.debugIsOn
 *)

@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Import Core.
 Require Import Data.Foldable.
@@ -55,7 +56,7 @@ Definition cs_vb (arg_0__ : CoreStats) :=
 Definition zeroCS : CoreStats :=
   CS 0 0 0 0 0.
 
-Axiom tyStats : unit -> CoreStats.
+Axiom tyStats : AxiomatizedTypes.Type_ -> CoreStats.
 
 Definition tickSize : Tickish Id -> nat :=
   fun arg_0__ => match arg_0__ with | ProfNote _ _ _ => 1 | _ => 1 end.
@@ -74,7 +75,7 @@ Definition oneTM : CoreStats :=
   let 'CS cs_tm_0__ cs_ty_1__ cs_co_2__ cs_vb_3__ cs_jb_4__ := zeroCS in
   CS 1 cs_ty_1__ cs_co_2__ cs_vb_3__ cs_jb_4__.
 
-Axiom coStats : unit -> CoreStats.
+Axiom coStats : AxiomatizedTypes.Coercion -> CoreStats.
 
 Definition bndrStats : Var -> CoreStats :=
   fun v => plusCS oneTM (tyStats (varType v)).
@@ -228,7 +229,8 @@ Definition bindingStats
 (* External variables:
      App Case Cast Coercion CoreAlt CoreBind CoreExpr Id Lam Let Lit Mk_Var NonRec
      ProfNote Rec Tick Tickish Type_ Var bool foldl' isTyVar list map nat op_z2218U__
-     op_zp__ op_zt__ orb pair sum unit varType BasicTypes.NotTopLevel
-     BasicTypes.TopLevel BasicTypes.TopLevelFlag BasicTypes.isTopLevel
-     GHC.Err.Build_Default GHC.Err.Default GHC.Err.default Id.isJoinId
+     op_zp__ op_zt__ orb pair sum varType AxiomatizedTypes.Coercion
+     AxiomatizedTypes.Type_ BasicTypes.NotTopLevel BasicTypes.TopLevel
+     BasicTypes.TopLevelFlag BasicTypes.isTopLevel GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.default Id.isJoinId
 *)

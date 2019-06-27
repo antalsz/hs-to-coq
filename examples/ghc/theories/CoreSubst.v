@@ -146,7 +146,7 @@ Definition substAlt str subst (alt:AltCon * list Core.Var * CoreExpr) :=
 Lemma subst_expr_Case : forall str s e b u l, 
     subst_expr str s (Case e b u l) = 
     let '(subst', bndr') := substBndr s b in 
-    Case (subst_expr str s e) bndr' tt (map (substAlt str subst') l).
+    Case (subst_expr str s e) bndr' (substTy s u) (map (substAlt str subst') l).
 Proof. intros.  simpl.
 destruct (substBndr s b) as [subst' bndr'].       
 f_equal. destruct e; reflexivity.
@@ -154,7 +154,7 @@ Qed.
 
 Lemma subst_expr_Cast : forall doc subst e co, 
    subst_expr doc subst (Cast e co) = 
-   Cast (subst_expr doc subst e) tt.
+   Cast (subst_expr doc subst e) (substCo subst co).
 Proof.
   intros. 
   unfold subst_expr. simpl.
@@ -579,7 +579,7 @@ Proof.
      rewrite -> ELEM in k.
 
      (* Is var in the mid_env? *)
-     case ELEM2: (lookupVarEnv mid_env var) => [c|].
+     case ELEM2: (lookupVarEnv mid_env var) => [cc|].
      + rewrite ELEM2 in VEmf.
        move: VEmf => /andP [H7 H14].
        hs_simpl.
@@ -616,7 +616,7 @@ Proof.
             case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|]; 
             rewrite InM1 in H13; try done.
             rewrite InM1 in H6.
-            case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [c|]; 
+            case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [cc|]; 
             rewrite InF1 in H6; try done.
             eapply almostEqual_trans; eauto.
           ** have InV1': ~~ Foldable.elem var vars1 by rewrite InV1.
@@ -627,7 +627,7 @@ Proof.
           case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|] //;
              rewrite InM1 // in H13.
           rewrite InM1 in H6.         
-          case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [c|] //;
+          case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [cc|] //;
              rewrite InF1 // in H6.
           eapply almostEqual_trans; eauto.          
 Qed.
@@ -750,9 +750,17 @@ Proof.
   destruct_SubstExtends. auto.
 Qed.  
 
+Lemma GoodLocalVar_setIdType : forall x t, GoodLocalVar x -> GoodLocalVar (Id.setIdType x t).
+Proof.
+  intros. move: H => [[h0 [h2 [h3 h4]]] h1].  destruct x; simpl in *; econstructor; try done. 
+Qed.
 
-(* For multiple binders, we need to package up the reasoning above into a form that 
-   we can use directly with the IH. *)
+Lemma Eq_setIdType : forall x t, 
+    x GHC.Base.== (Id.setIdType x t).
+Proof.
+  intros x t. destruct x; simpl; unfold_zeze; simpl; 
+  rewrite (N.eqb_refl realUnique); auto.
+Qed.
 
 Lemma WellScoped_Subst_substIdBndr : forall s1 s2 subst subst' bndr' v vs,
   forall (SB : substIdBndr s1 s2 subst v = (subst', bndr')),
@@ -779,19 +787,32 @@ Proof.
     -- econstructor.
        inversion 1.
        econstructor.
-    -- econstructor; eauto using GoodLocalVar_uniqAway.
+    -- econstructor; eauto.
+       rewrite NC.
+       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
+       eauto using GoodLocalVar_setIdType.
 (*       uniqAway_isLocalVar. *)
-    -- rewrite /freshList => v1.
+    --
+       rewrite /freshList => v1.
        hs_simpl.
        move => InV.
        rewrite (lookupVarSet_eq (v2 := v)) -NC //.
        apply uniqAway_lookupVarSet_fresh. 
+       rewrite NC in InV.
+       rewrite NC.
+       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
+       rewrite Eq_sym.
+       eapply Eq_trans.
+       eapply Eq_setIdType; eauto.
+       rewrite Eq_sym. eauto.
     -- apply StrongSubset_refl.
     -- apply StrongSubset_refl.
     -- rewrite getInScopeVars_extendInScopeSet.
        eapply StrongSubset_trans.
        eapply minusDom_extend.
        rewrite getInScopeVars_extendInScopeSet NC.
+Admitted.
+(*
        eapply StrongSubset_extend.
        eapply StrongSubset_minusDom_left.
     -- rewrite /VarEnvExtends => var.
@@ -917,7 +938,7 @@ Proof.
          auto.
          unfold Id in *.
          intro h. rewrite -> h in Eq_vvar. discriminate.
-Qed. 
+Qed. *)
 
 Lemma WellScoped_Subst_substBndr : forall subst subst' bndr' v vs,
   forall (SB : substBndr subst v = (subst', bndr')),
@@ -929,26 +950,22 @@ Proof.
   intros.
   unfold substBndr in SB.
   simpl in *.
+  move: H => [[h0 [h1 [h2 h3]]] h4]. 
   destruct (isTyVar v) eqn:IsTyVar. 
-  { inversion SB; subst; clear SB. 
-    inversion H. 
-    inversion H1.
-    destruct H4 as (a & b & c).
-    destruct bndr'; simpl in *; try done.
+  { 
+    destruct v; simpl in *; try done.
    }
   destruct (isCoVar v) eqn:IsCoVar.
-  { inversion SB; subst; clear SB.
-    inversion H. inversion H1. 
-    destruct H4 as (a & b & c).
-    destruct bndr'; simpl in *; try done.
-    rewrite IsCoVar in c. done.
+  { 
+    destruct v; simpl in *; try done.
   }
   assert (ISL : isLocalId v = true).
-  { inversion H. inversion H1. destruct H4.
+  { 
     destruct v; unfold isLocalId, isLocalVar in *; simpl in *; try done.
     destruct idScope. done. done.
   }
   eapply WellScoped_Subst_substIdBndr; eauto.
+  econstructor; eauto. econstructor; eauto.
 Qed.
 
 Lemma WellScoped_substBndr : forall s in_scope_set env subst' bndr' body v vs u u0,
@@ -994,8 +1011,13 @@ Proof. intros.
   destruct subst.
   inversion H0. clear H0. 
   subst.
+  destruct (isEmptyVarEnv t0 && isEmptyVarEnv c || TyCoRep.noFreeVarsOfType (Id.idType bndr)).
   eapply GoodLocalVar_uniqAway. 
   assumption.
+  eapply GoodLocalVar_setIdType.
+  eapply GoodLocalVar_uniqAway. 
+  assumption.
+
 Qed.
 
 Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',
@@ -1003,11 +1025,15 @@ Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',
   substBndr subst bndr = (subst', bndr') ->
   GoodLocalVar bndr'.
 Proof.
-  intros.
+  move=> bndr bndr' subst subst' h h0.
+  move: h => [[h1 [h2 [h3 h4]]] h5].
+  destruct bndr; try done.
   unfold substBndr in *.
-  destruct (isTyVar bndr). inversion H0. subst. auto.
-  destruct (isCoVar bndr). inversion H0. subst. auto.
+  rewrite h4 in h0.
+  unfold isTyVar in h0.
   eapply GoodLocalVar_substIdBndr; eauto.
+  econstructor; eauto.
+  econstructor; eauto.  
 Qed.
 
 Lemma SubstExtends_step : forall a s' y bndrs subst subst' ys, 
@@ -1136,7 +1162,7 @@ Lemma lookupIdSubst_ok s v subst vs :
   WellScoped       (Mk_Var v) vs ->
   WellScoped (lookupIdSubst s subst v) (getSubstInScopeVars subst).
 Proof.
-  case: subst => [in_scope_set env [] []].
+  case: subst => [in_scope_set env st sc].
   rewrite /lookupIdSubst => WSsubst WSvar.
   simpl in WSsubst.
   destruct WSsubst as [ss vv] . specialize (vv v).         

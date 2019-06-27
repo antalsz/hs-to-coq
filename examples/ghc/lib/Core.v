@@ -15,6 +15,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require BinNat.
 Require BinNums.
@@ -183,18 +184,18 @@ Inductive PrimRep : Type
 
 Inductive RuntimeRepInfo : Type
   := | NoRRI : RuntimeRepInfo
-  |  RuntimeRep : (list unit -> list PrimRep) -> RuntimeRepInfo
+  |  RuntimeRep : (list AxiomatizedTypes.Type_ -> list PrimRep) -> RuntimeRepInfo
   |  VecCount : nat -> RuntimeRepInfo
   |  VecElem : PrimElemRep -> RuntimeRepInfo.
 
 Definition OutType :=
-  unit%type.
+  AxiomatizedTypes.Type_%type.
 
 Definition OutKind :=
-  unit%type.
+  AxiomatizedTypes.Kind%type.
 
 Definition OutCoercion :=
-  unit%type.
+  AxiomatizedTypes.Coercion%type.
 
 Inductive LevityInfo : Type
   := | NoLevityInfo : LevityInfo
@@ -218,13 +219,13 @@ Inductive Injectivity : Type
   |  Injective : list bool -> Injectivity.
 
 Definition InType :=
-  unit%type.
+  AxiomatizedTypes.Type_%type.
 
 Definition InKind :=
-  unit%type.
+  AxiomatizedTypes.Kind%type.
 
 Definition InCoercion :=
-  unit%type.
+  AxiomatizedTypes.Coercion%type.
 
 Definition IdEnv :=
   VarEnv%type.
@@ -236,7 +237,7 @@ Inductive HsSrcBang : Type
 Inductive HsImplBang : Type
   := | HsLazy : HsImplBang
   |  HsStrict : HsImplBang
-  |  HsUnpack : (option unit) -> HsImplBang.
+  |  HsUnpack : (option AxiomatizedTypes.Coercion) -> HsImplBang.
 
 Definition FunDep a :=
   (list a * list a)%type%type.
@@ -244,9 +245,10 @@ Definition FunDep a :=
 Inductive FamTyConFlav : Type
   := | DataFamilyTyCon : TyConRepName -> FamTyConFlav
   |  OpenSynFamilyTyCon : FamTyConFlav
-  |  ClosedSynFamilyTyCon : (option (list unit)) -> FamTyConFlav
+  |  ClosedSynFamilyTyCon
+   : (option (AxiomatizedTypes.CoAxiom AxiomatizedTypes.Branched)) -> FamTyConFlav
   |  AbstractClosedSynFamilyTyCon : FamTyConFlav
-  |  BuiltInSynFamTyCon : unit -> FamTyConFlav.
+  |  BuiltInSynFamTyCon : AxiomatizedTypes.BuiltInSynFamily -> FamTyConFlav.
 
 Inductive ExportFlag : Type
   := | NotExported : ExportFlag
@@ -261,7 +263,7 @@ Inductive ExnStr : Type := | VanStr : ExnStr |  Mk_ExnStr : ExnStr.
 Inductive Str s : Type := | Lazy : Str s |  Mk_Str : ExnStr -> s -> Str s.
 
 Definition DefMethInfo :=
-  (option (Name.Name * BasicTypes.DefMethSpec unit)%type)%type.
+  (option (Name.Name * BasicTypes.DefMethSpec AxiomatizedTypes.Type_)%type)%type.
 
 Definition DVarEnv :=
   UniqDFM.UniqDFM%type.
@@ -354,7 +356,9 @@ Inductive AlgTyConFlav : Type
   := | VanillaAlgTyCon : TyConRepName -> AlgTyConFlav
   |  UnboxedAlgTyCon : (option TyConRepName) -> AlgTyConFlav
   |  ClassTyCon : Class -> TyConRepName -> AlgTyConFlav
-  |  DataFamInstTyCon : (list unit) -> TyCon -> list unit -> AlgTyConFlav
+  |  DataFamInstTyCon
+   : (AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched) ->
+     TyCon -> list AxiomatizedTypes.Type_ -> AlgTyConFlav
 with Class : Type
   := | Mk_Class (classTyCon : TyCon) (className : Name.Name) (classKey
     : Unique.Unique) (classTyVars : list Var%type) (classFunDeps
@@ -362,54 +366,60 @@ with Class : Type
    : Class
 with ClassBody : Type
   := | AbstractClass : ClassBody
-  |  ConcreteClass (classSCThetaStuff : list unit) (classSCSels : list Var%type)
-  (classATStuff : list ClassATItem) (classOpStuff
+  |  ConcreteClass (classSCThetaStuff : list AxiomatizedTypes.PredType)
+  (classSCSels : list Var%type) (classATStuff : list ClassATItem) (classOpStuff
     : list (Var%type * DefMethInfo)%type%type) (classMinimalDefStuff
     : ClassMinimalDef)
    : ClassBody
 with ClassATItem : Type
-  := | ATI : TyCon -> (option (unit * SrcLoc.SrcSpan)%type) -> ClassATItem
+  := | ATI
+   : TyCon ->
+     (option (AxiomatizedTypes.Type_ * SrcLoc.SrcSpan)%type) -> ClassATItem
 with TyCon : Type
   := | FunTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
   (tyConBinders : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConResKind
-    : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity) (tcRepName
-    : TyConRepName)
+    : AxiomatizedTypes.Kind) (tyConKind : AxiomatizedTypes.Kind) (tyConArity
+    : BasicTypes.Arity) (tcRepName : TyConRepName)
    : TyCon
   |  AlgTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
     : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConTyVars : list Var%type)
-  (tyConResKind : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity)
-  (tcRoles : list unit) (tyConCType : option unit) (algTcGadtSyntax : bool)
-  (algTcStupidTheta : list unit) (algTcRhs : AlgTyConRhs) (algTcFields
+  (tyConResKind : AxiomatizedTypes.Kind) (tyConKind : AxiomatizedTypes.Kind)
+  (tyConArity : BasicTypes.Arity) (tcRoles : list AxiomatizedTypes.Role)
+  (tyConCType : option unit) (algTcGadtSyntax : bool) (algTcStupidTheta
+    : list AxiomatizedTypes.PredType) (algTcRhs : AlgTyConRhs) (algTcFields
     : FieldLabel.FieldLabelEnv) (algTcParent : AlgTyConFlav)
    : TyCon
   |  SynonymTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
   (tyConBinders : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConTyVars
-    : list Var%type) (tyConResKind : unit) (tyConKind : unit) (tyConArity
-    : BasicTypes.Arity) (tcRoles : list unit) (synTcRhs : unit) (synIsTau : bool)
-  (synIsFamFree : bool)
+    : list Var%type) (tyConResKind : AxiomatizedTypes.Kind) (tyConKind
+    : AxiomatizedTypes.Kind) (tyConArity : BasicTypes.Arity) (tcRoles
+    : list AxiomatizedTypes.Role) (synTcRhs : AxiomatizedTypes.Type_) (synIsTau
+    : bool) (synIsFamFree : bool)
    : TyCon
   |  FamilyTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
   (tyConBinders : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConTyVars
-    : list Var%type) (tyConResKind : unit) (tyConKind : unit) (tyConArity
-    : BasicTypes.Arity) (famTcResVar : option Name.Name) (famTcFlav : FamTyConFlav)
-  (famTcParent : option Class) (famTcInj : Injectivity)
+    : list Var%type) (tyConResKind : AxiomatizedTypes.Kind) (tyConKind
+    : AxiomatizedTypes.Kind) (tyConArity : BasicTypes.Arity) (famTcResVar
+    : option Name.Name) (famTcFlav : FamTyConFlav) (famTcParent : option Class)
+  (famTcInj : Injectivity)
    : TyCon
   |  PrimTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
-    : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConResKind : unit) (tyConKind
-    : unit) (tyConArity : BasicTypes.Arity) (tcRoles : list unit) (isUnlifted
-    : bool) (primRepName : option TyConRepName)
+    : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConResKind
+    : AxiomatizedTypes.Kind) (tyConKind : AxiomatizedTypes.Kind) (tyConArity
+    : BasicTypes.Arity) (tcRoles : list AxiomatizedTypes.Role) (isUnlifted : bool)
+  (primRepName : option TyConRepName)
    : TyCon
   |  PromotedDataCon (tyConUnique : Unique.Unique) (tyConName : Name.Name)
   (tyConBinders : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConResKind
-    : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity) (tcRoles
-    : list unit) (dataCon : DataCon) (tcRepName : TyConRepName) (promDcRepInfo
-    : RuntimeRepInfo)
+    : AxiomatizedTypes.Kind) (tyConKind : AxiomatizedTypes.Kind) (tyConArity
+    : BasicTypes.Arity) (tcRoles : list AxiomatizedTypes.Role) (dataCon : DataCon)
+  (tcRepName : TyConRepName) (promDcRepInfo : RuntimeRepInfo)
    : TyCon
   |  TcTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
     : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConTyVars : list Var%type)
-  (tyConResKind : unit) (tyConKind : unit) (tyConArity : BasicTypes.Arity)
-  (tcTyConScopedTyVars : list (Name.Name * Var%type)%type) (tcTyConFlavour
-    : TyConFlavour)
+  (tyConResKind : AxiomatizedTypes.Kind) (tyConKind : AxiomatizedTypes.Kind)
+  (tyConArity : BasicTypes.Arity) (tcTyConScopedTyVars
+    : list (Name.Name * Var%type)%type) (tcTyConFlavour : TyConFlavour)
    : TyCon
 with AlgTyConRhs : Type
   := | AbstractTyCon : AlgTyConRhs
@@ -417,33 +427,39 @@ with AlgTyConRhs : Type
   |  TupleTyCon (data_con : DataCon) (tup_sort : BasicTypes.TupleSort)
    : AlgTyConRhs
   |  SumTyCon (data_cons : list DataCon) : AlgTyConRhs
-  |  NewTyCon (data_con : DataCon) (nt_rhs : unit) (nt_etad_rhs
-    : (list Var%type * unit)%type) (nt_co : list unit)
+  |  NewTyCon (data_con : DataCon) (nt_rhs : AxiomatizedTypes.Type_) (nt_etad_rhs
+    : (list Var%type * AxiomatizedTypes.Type_)%type) (nt_co
+    : AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched)
    : AlgTyConRhs
 with DataCon : Type
   := | MkData (dcName : Name.Name) (dcUnique : Unique.Unique) (dcTag
     : BasicTypes.ConTag) (dcVanilla : bool) (dcUnivTyVars : list Var%type)
   (dcExTyVars : list Var%type) (dcUserTyVarBinders
     : list (TyVarBndr Var%type ArgFlag)%type) (dcEqSpec : list EqSpec)
-  (dcOtherTheta : unit) (dcStupidTheta : unit) (dcOrigArgTys : list unit)
-  (dcOrigResTy : unit) (dcSrcBangs : list HsSrcBang) (dcFields
+  (dcOtherTheta : AxiomatizedTypes.ThetaType) (dcStupidTheta
+    : AxiomatizedTypes.ThetaType) (dcOrigArgTys : list AxiomatizedTypes.Type_)
+  (dcOrigResTy : AxiomatizedTypes.Type_) (dcSrcBangs : list HsSrcBang) (dcFields
     : list FieldLabel.FieldLabel) (dcWorkId : Var%type) (dcRep : DataConRep)
   (dcRepArity : BasicTypes.Arity) (dcSourceArity : BasicTypes.Arity) (dcRepTyCon
-    : TyCon) (dcRepType : unit) (dcInfix : bool) (dcPromoted : TyCon)
+    : TyCon) (dcRepType : AxiomatizedTypes.Type_) (dcInfix : bool) (dcPromoted
+    : TyCon)
    : DataCon
 with DataConRep : Type
   := | NoDataConRep : DataConRep
-  |  DCR (dcr_wrap_id : Var%type) (dcr_boxer : unit) (dcr_arg_tys : list unit)
-  (dcr_stricts : list StrictnessMark) (dcr_bangs : list HsImplBang)
+  |  DCR (dcr_wrap_id : Var%type) (dcr_boxer : unit) (dcr_arg_tys
+    : list AxiomatizedTypes.Type_) (dcr_stricts : list StrictnessMark) (dcr_bangs
+    : list HsImplBang)
    : DataConRep
 with Var : Type
-  := | Mk_TyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
+  := | Mk_TyVar (varName : Name.Name) (realUnique : BinNums.N) (varType
+    : AxiomatizedTypes.Kind)
    : Var
-  |  Mk_TcTyVar (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
-  (tc_tv_details : unit)
+  |  Mk_TcTyVar (varName : Name.Name) (realUnique : BinNums.N) (varType
+    : AxiomatizedTypes.Kind) (tc_tv_details : AxiomatizedTypes.TcTyVarDetails)
    : Var
-  |  Mk_Id (varName : Name.Name) (realUnique : BinNums.N) (varType : unit)
-  (idScope : IdScope) (id_details : IdDetails) (id_info : IdInfo)
+  |  Mk_Id (varName : Name.Name) (realUnique : BinNums.N) (varType
+    : AxiomatizedTypes.Type_) (idScope : IdScope) (id_details : IdDetails) (id_info
+    : IdInfo)
    : Var
 with IdDetails : Type
   := | VanillaId : IdDetails
@@ -462,14 +478,16 @@ with RecSelParent : Type
   |  RecSelPatSyn : PatSyn -> RecSelParent
 with PatSyn : Type
   := | MkPatSyn (psName : Name.Name) (psUnique : Unique.Unique) (psArgs
-    : list unit) (psArity : BasicTypes.Arity) (psInfix : bool) (psFieldLabels
-    : list FieldLabel.FieldLabel) (psUnivTyVars
-    : list (TyVarBndr Var%type ArgFlag)%type) (psReqTheta : unit) (psExTyVars
-    : list (TyVarBndr Var%type ArgFlag)%type) (psProvTheta : unit) (psResultTy
-    : unit) (psMatcher : (Var%type * bool)%type) (psBuilder
-    : option (Var%type * bool)%type)
+    : list AxiomatizedTypes.Type_) (psArity : BasicTypes.Arity) (psInfix : bool)
+  (psFieldLabels : list FieldLabel.FieldLabel) (psUnivTyVars
+    : list (TyVarBndr Var%type ArgFlag)%type) (psReqTheta
+    : AxiomatizedTypes.ThetaType) (psExTyVars
+    : list (TyVarBndr Var%type ArgFlag)%type) (psProvTheta
+    : AxiomatizedTypes.ThetaType) (psResultTy : AxiomatizedTypes.Type_) (psMatcher
+    : (Var%type * bool)%type) (psBuilder : option (Var%type * bool)%type)
    : PatSyn
-with EqSpec : Type := | Mk_EqSpec : Var%type -> unit -> EqSpec.
+with EqSpec : Type
+  := | Mk_EqSpec : Var%type -> AxiomatizedTypes.Type_ -> EqSpec.
 
 Definition TyVar :=
   Var%type.
@@ -598,11 +616,12 @@ Inductive Expr b : Type
   |  Case
    : (Expr b) ->
      b ->
-     unit -> list ((fun b_ => (AltCon * list b_ * Expr b_)%type%type) b) -> Expr b
-  |  Cast : (Expr b) -> unit -> Expr b
+     AxiomatizedTypes.Type_ ->
+     list ((fun b_ => (AltCon * list b_ * Expr b_)%type%type) b) -> Expr b
+  |  Cast : (Expr b) -> AxiomatizedTypes.Coercion -> Expr b
   |  Tick : (Tickish Id) -> (Expr b) -> Expr b
-  |  Type_ : unit -> Expr b
-  |  Coercion : unit -> Expr b
+  |  Type_ : AxiomatizedTypes.Type_ -> Expr b
+  |  Coercion : AxiomatizedTypes.Coercion -> Expr b
 with Bind b : Type
   := | NonRec : b -> (Expr b) -> Bind b
   |  Rec : list (b * (Expr b))%type -> Bind b.
@@ -687,7 +706,7 @@ Inductive AnnExpr' bndr annot : Type
    : ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr
       annot) ->
      bndr ->
-     unit ->
+     AxiomatizedTypes.Type_ ->
      list ((fun bndr_ annot_ =>
               (AltCon * list bndr_ *
                (fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr_
@@ -700,13 +719,13 @@ Inductive AnnExpr' bndr annot : Type
   |  AnnCast
    : ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr
       annot) ->
-     (annot * unit)%type -> AnnExpr' bndr annot
+     (annot * AxiomatizedTypes.Coercion)%type -> AnnExpr' bndr annot
   |  AnnTick
    : (Tickish Id) ->
      ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr annot) ->
      AnnExpr' bndr annot
-  |  AnnType : unit -> AnnExpr' bndr annot
-  |  AnnCoercion : unit -> AnnExpr' bndr annot
+  |  AnnType : AxiomatizedTypes.Type_ -> AnnExpr' bndr annot
+  |  AnnCoercion : AxiomatizedTypes.Coercion -> AnnExpr' bndr annot
 with AnnBind bndr annot : Type
   := | AnnNonRec
    : bndr ->
@@ -2277,7 +2296,7 @@ Instance Default__RecSelParent : GHC.Err.Default RecSelParent :=
 Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
 
 Instance Default__DataCon : GHC.Err.Default DataCon :=
- Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).
+ Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil GHC.Err.default GHC.Err.default nil GHC.Err.default nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
 (* ---- TyCon midamble ----- *)
 Instance Default__AlgTyConFlav : Err.Default AlgTyConFlav :=
   Err.Build_Default _ (VanillaAlgTyCon Err.default).
@@ -2529,7 +2548,7 @@ Definition useBot : ArgUse :=
   Abs.
 
 Definition updateVarTypeM {m} `{GHC.Base.Monad m}
-   : (unit -> m unit) -> Id -> m Id :=
+   : (AxiomatizedTypes.Type_ -> m AxiomatizedTypes.Type_) -> Id -> m Id :=
   fun f id =>
     f (varType id) GHC.Base.>>=
     (fun ty' =>
@@ -2543,7 +2562,8 @@ Definition updateVarTypeM {m} `{GHC.Base.Monad m}
                              Mk_Id varName_7__ realUnique_8__ ty' idScope_10__ id_details_11__ id_info_12__
                          end)).
 
-Definition updateVarType : (unit -> unit) -> Id -> Id :=
+Definition updateVarType
+   : (AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_) -> Id -> Id :=
   fun f id =>
     match id with
     | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
@@ -2557,7 +2577,9 @@ Definition updateVarType : (unit -> unit) -> Id -> Id :=
     end.
 
 Definition unwrapNewTyCon_maybe
-   : TyCon -> option (list TyVar * unit * list unit)%type :=
+   : TyCon ->
+     option (list TyVar * AxiomatizedTypes.Type_ *
+             AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ tvs _ _ _ _ _ _ _ (NewTyCon _ rhs _ co) _ _ =>
@@ -2566,7 +2588,9 @@ Definition unwrapNewTyCon_maybe
     end.
 
 Definition unwrapNewTyConEtad_maybe
-   : TyCon -> option (list TyVar * unit * list unit)%type :=
+   : TyCon ->
+     option (list TyVar * AxiomatizedTypes.Type_ *
+             AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ (NewTyCon _ _ (pair tvs rhs) co) _ _ =>
@@ -2621,10 +2645,11 @@ Definition unSaturatedOk : bool :=
 Definition tyVarName : TyVar -> Name.Name :=
   varName.
 
-Definition tyVarKind : TyVar -> unit :=
+Definition tyVarKind : TyVar -> AxiomatizedTypes.Kind :=
   varType.
 
-Definition updateTyVarKind : (unit -> unit) -> TyVar -> TyVar :=
+Definition updateTyVarKind
+   : (AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind) -> TyVar -> TyVar :=
   fun update tv =>
     match tv with
     | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
@@ -2638,7 +2663,7 @@ Definition updateTyVarKind : (unit -> unit) -> TyVar -> TyVar :=
     end.
 
 Definition updateTyVarKindM {m} `{(GHC.Base.Monad m)}
-   : (unit -> m unit) -> TyVar -> m TyVar :=
+   : (AxiomatizedTypes.Kind -> m AxiomatizedTypes.Kind) -> TyVar -> m TyVar :=
   fun update tv =>
     update (tyVarKind tv) GHC.Base.>>=
     (fun k' =>
@@ -2663,7 +2688,7 @@ Definition tyConTuple_maybe : TyCon -> option BasicTypes.TupleSort :=
     | _ => None
     end.
 
-Definition tyConStupidTheta : TyCon -> list unit :=
+Definition tyConStupidTheta : TyCon -> list AxiomatizedTypes.PredType :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ stupid _ _ _ => stupid
@@ -2703,17 +2728,17 @@ Definition tyConSingleAlgDataCon_maybe : TyCon -> option DataCon :=
     | _ => None
     end.
 
-Definition tyConRoles : TyCon -> list unit :=
+Definition tyConRoles : TyCon -> list AxiomatizedTypes.Role :=
   fun tc =>
     let const_role := fun r => Coq.Lists.List.repeat r (tyConArity tc) in
     match tc with
-    | FunTyCon _ _ _ _ _ _ _ => const_role tt
+    | FunTyCon _ _ _ _ _ _ _ => const_role AxiomatizedTypes.Representational
     | AlgTyCon _ _ _ _ _ _ _ roles _ _ _ _ _ _ => roles
     | SynonymTyCon _ _ _ _ _ _ _ roles _ _ _ => roles
-    | FamilyTyCon _ _ _ _ _ _ _ _ _ _ _ => const_role tt
+    | FamilyTyCon _ _ _ _ _ _ _ _ _ _ _ => const_role AxiomatizedTypes.Nominal
     | PrimTyCon _ _ _ _ _ _ roles _ _ => roles
     | PromotedDataCon _ _ _ _ _ _ roles _ _ _ => roles
-    | TcTyCon _ _ _ _ _ _ _ _ _ => const_role tt
+    | TcTyCon _ _ _ _ _ _ _ _ _ => const_role AxiomatizedTypes.Nominal
     end.
 
 Definition tyConRepName_maybe : TyCon -> option TyConRepName :=
@@ -2746,6 +2771,8 @@ Definition tyConRepModOcc
       if tc_module GHC.Base.== PrelNames.gHC_PRIM : bool then PrelNames.gHC_TYPES else
       tc_module in
     pair rep_module (OccName.mkTyConRepOcc tc_occ).
+
+Axiom tyConInjectivityInfo : TyCon -> Injectivity.
 
 Definition tyConFlavour : TyCon -> TyConFlavour :=
   fun arg_0__ =>
@@ -2816,14 +2843,16 @@ Definition tyConFamilyResVar_maybe : TyCon -> option Name.Name :=
     | _ => None
     end.
 
-Definition tyConFamilyCoercion_maybe : TyCon -> option (list unit) :=
+Definition tyConFamilyCoercion_maybe
+   : TyCon -> option (AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched) :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ _ _ (DataFamInstTyCon ax _ _) => Some ax
     | _ => None
     end.
 
-Definition tyConFamInst_maybe : TyCon -> option (TyCon * list unit)%type :=
+Definition tyConFamInst_maybe
+   : TyCon -> option (TyCon * list AxiomatizedTypes.Type_)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ _ _ (DataFamInstTyCon _ f ts) =>
@@ -2832,7 +2861,9 @@ Definition tyConFamInst_maybe : TyCon -> option (TyCon * list unit)%type :=
     end.
 
 Definition tyConFamInstSig_maybe
-   : TyCon -> option (TyCon * list unit * list unit)%type :=
+   : TyCon ->
+     option (TyCon * list AxiomatizedTypes.Type_ *
+             AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ _ _ (DataFamInstTyCon ax f ts) =>
@@ -2884,6 +2915,8 @@ Definition tyConAssoc_maybe : TyCon -> option Class :=
     | FamilyTyCon _ _ _ _ _ _ _ _ _ mb_cls _ => mb_cls
     | _ => None
     end.
+
+Axiom tyConATs : TyCon -> list TyCon.
 
 Definition trimCPRInfo : bool -> bool -> DmdResult -> DmdResult :=
   fun trim_all trim_sums res =>
@@ -3030,14 +3063,15 @@ Definition tcFlavourCanBeUnsaturated : TyConFlavour -> bool :=
     | ClosedTypeFamilyFlavour => false
     end.
 
-Definition synTyConRhs_maybe : TyCon -> option unit :=
+Definition synTyConRhs_maybe : TyCon -> option AxiomatizedTypes.Type_ :=
   fun arg_0__ =>
     match arg_0__ with
     | SynonymTyCon _ _ _ _ _ _ _ _ rhs _ _ => Some rhs
     | _ => None
     end.
 
-Definition synTyConDefn_maybe : TyCon -> option (list TyVar * unit)%type :=
+Definition synTyConDefn_maybe
+   : TyCon -> option (list TyVar * AxiomatizedTypes.Type_)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | SynonymTyCon _ _ _ tyvars _ _ _ _ ty _ _ => Some (pair tyvars ty)
@@ -3116,7 +3150,7 @@ Definition setVarUnique : Var -> Unique.Unique -> Var :=
               idScope_10__ id_details_11__ id_info_12__
     end.
 
-Definition setVarType : Id -> unit -> Id :=
+Definition setVarType : Id -> AxiomatizedTypes.Type_ -> Id :=
   fun id ty =>
     match id with
     | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
@@ -3157,7 +3191,7 @@ Definition setTyVarUnique : TyVar -> Unique.Unique -> TyVar :=
 Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
   setVarName.
 
-Definition setTyVarKind : TyVar -> unit -> TyVar :=
+Definition setTyVarKind : TyVar -> AxiomatizedTypes.Kind -> TyVar :=
   fun tv k =>
     match tv with
     | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
@@ -3169,7 +3203,8 @@ Definition setTyVarKind : TyVar -> unit -> TyVar :=
         Mk_Id varName_7__ realUnique_8__ k idScope_10__ id_details_11__ id_info_12__
     end.
 
-Definition setTcTyVarDetails : TyVar -> unit -> TyVar :=
+Definition setTcTyVarDetails
+   : TyVar -> AxiomatizedTypes.TcTyVarDetails -> TyVar :=
   fun tv details =>
     match tv with
     | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
@@ -3249,10 +3284,10 @@ Definition zapTailCallInfo : IdInfo -> option IdInfo :=
     then Some (setOccInfo info safe_occ) else
     None.
 
-Axiom resultIsLevPoly : unit -> bool.
+Axiom resultIsLevPoly : AxiomatizedTypes.Type_ -> bool.
 
 Definition setNeverLevPoly `{Util.HasDebugCallStack}
-   : IdInfo -> unit -> IdInfo :=
+   : IdInfo -> AxiomatizedTypes.Type_ -> IdInfo :=
   fun info ty =>
     if andb Util.debugIsOn (negb (negb (resultIsLevPoly ty))) : bool
     then (GHC.Err.error Panic.someSDoc)
@@ -3613,7 +3648,8 @@ Definition patSynMatcher : PatSyn -> (Id * bool)%type :=
 Definition patSynIsInfix : PatSyn -> bool :=
   psInfix.
 
-Definition patSynFieldType : PatSyn -> FieldLabel.FieldLabelString -> unit :=
+Definition patSynFieldType
+   : PatSyn -> FieldLabel.FieldLabelString -> AxiomatizedTypes.Type_ :=
   fun ps label =>
     match Data.Foldable.find ((fun arg_0__ => arg_0__ GHC.Base.== label) GHC.Base.∘
                               (FieldLabel.flLabel GHC.Base.∘ Data.Tuple.fst)) (GHC.List.zip (psFieldLabels ps)
@@ -3636,7 +3672,7 @@ Definition patSynBuilder : PatSyn -> option (Id * bool)%type :=
 Definition patSynArity : PatSyn -> BasicTypes.Arity :=
   psArity.
 
-Definition patSynArgs : PatSyn -> list unit :=
+Definition patSynArgs : PatSyn -> list AxiomatizedTypes.Type_ :=
   psArgs.
 
 Definition partitionVarEnv {a}
@@ -3679,14 +3715,15 @@ Definition nonDetCmpVar : Var -> Var -> comparison :=
 Definition noUnfolding : Unfolding :=
   NoUnfolding.
 
-Definition newTyConRhs : TyCon -> (list TyVar * unit)%type :=
+Definition newTyConRhs : TyCon -> (list TyVar * AxiomatizedTypes.Type_)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ tvs _ _ _ _ _ _ _ (NewTyCon _ rhs _ _) _ _ => pair tvs rhs
     | tycon => Panic.panicStr (GHC.Base.hs_string__ "newTyConRhs") (Panic.someSDoc)
     end.
 
-Definition newTyConEtadRhs : TyCon -> (list TyVar * unit)%type :=
+Definition newTyConEtadRhs
+   : TyCon -> (list TyVar * AxiomatizedTypes.Type_)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ (NewTyCon _ _ tvs_rhs _) _ _ => tvs_rhs
@@ -3710,14 +3747,16 @@ Definition newTyConDataCon_maybe : TyCon -> option DataCon :=
     | _ => None
     end.
 
-Definition newTyConCo_maybe : TyCon -> option (list unit) :=
+Definition newTyConCo_maybe
+   : TyCon -> option (AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched) :=
   fun arg_0__ =>
     match arg_0__ with
     | AlgTyCon _ _ _ _ _ _ _ _ _ _ _ (NewTyCon _ _ _ co) _ _ => Some co
     | _ => None
     end.
 
-Definition newTyConCo : TyCon -> list unit :=
+Definition newTyConCo
+   : TyCon -> AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched :=
   fun tc =>
     match newTyConCo_maybe tc with
     | Some co => co
@@ -3738,7 +3777,9 @@ Definition modifyVarEnv_Directly {a}
     | Some xx => UniqFM.addToUFM_Directly env key (mangle_fn xx)
     end.
 
-Definition mk_id : Name.Name -> unit -> IdScope -> IdDetails -> IdInfo -> Id :=
+Definition mk_id
+   : Name.Name ->
+     AxiomatizedTypes.Type_ -> IdScope -> IdDetails -> IdInfo -> Id :=
   fun name ty scope details info =>
     Mk_Id name (Unique.getKey (Name.nameUnique name)) ty scope details info.
 
@@ -3854,36 +3895,43 @@ Definition tyConTyVarBinders : list TyConBinder -> list TyVarBinder :=
         mkTyVarBinder vis tv in
     GHC.Base.map mk_binder tc_bndrs.
 
-Definition mkTyVar : Name.Name -> unit -> TyVar :=
+Definition mkTyVar : Name.Name -> AxiomatizedTypes.Kind -> TyVar :=
   fun name kind => Mk_TyVar name (Unique.getKey (Name.nameUnique name)) kind.
 
-Definition mkTyBind : TyVar -> unit -> CoreBind :=
+Axiom mkTyConKind : list TyConBinder ->
+                    AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind.
+
+Definition mkTyBind : TyVar -> AxiomatizedTypes.Type_ -> CoreBind :=
   fun tv ty => NonRec tv (Type_ ty).
 
-Axiom isCoercionTy_maybe : unit -> option unit.
+Axiom isCoercionTy_maybe : AxiomatizedTypes.Type_ ->
+                           option AxiomatizedTypes.Coercion.
 
-Definition mkTyArg {b} : unit -> Expr b :=
+Definition mkTyArg {b} : AxiomatizedTypes.Type_ -> Expr b :=
   fun ty =>
     match isCoercionTy_maybe ty with
     | Some co => Coercion co
     | _ => Type_ ty
     end.
 
-Definition mkTyApps {b} : Expr b -> list unit -> Expr b :=
+Definition mkTyApps {b} : Expr b -> list AxiomatizedTypes.Type_ -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
 
-Definition mkTcTyVar : Name.Name -> unit -> unit -> TyVar :=
+Definition mkTcTyVar
+   : Name.Name ->
+     AxiomatizedTypes.Kind -> AxiomatizedTypes.TcTyVarDetails -> TyVar :=
   fun name kind details =>
     Mk_TcTyVar name (Unique.getKey (Name.nameUnique name)) kind details.
 
 Definition mkSumTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit ->
+     AxiomatizedTypes.Kind ->
      BasicTypes.Arity -> list TyVar -> list DataCon -> AlgTyConFlav -> TyCon :=
   fun name binders res_kind arity tyvars cons_ parent =>
-    AlgTyCon (Name.nameUnique name) name binders tyvars res_kind tt arity
-             (Coq.Lists.List.repeat tt arity) None false nil (SumTyCon cons_)
+    AlgTyCon (Name.nameUnique name) name binders tyvars res_kind (mkTyConKind
+              binders res_kind) arity (Coq.Lists.List.repeat AxiomatizedTypes.Representational
+                                                             arity) None false nil (SumTyCon cons_)
              FastStringEnv.emptyDFsEnv parent.
 
 Definition mkStringLit {b} : GHC.Base.String -> Expr b :=
@@ -3902,17 +3950,21 @@ Definition mkPromotedDataCon
    : DataCon ->
      Name.Name ->
      TyConRepName ->
-     list TyConBinder -> unit -> list unit -> RuntimeRepInfo -> TyCon :=
+     list TyConBinder ->
+     AxiomatizedTypes.Kind ->
+     list AxiomatizedTypes.Role -> RuntimeRepInfo -> TyCon :=
   fun con name rep_name binders res_kind roles rep_info =>
-    PromotedDataCon (Name.nameUnique name) name binders res_kind tt
-                    (Coq.Lists.List.length roles) roles con rep_name rep_info.
+    PromotedDataCon (Name.nameUnique name) name binders res_kind (mkTyConKind
+                     binders res_kind) (Coq.Lists.List.length roles) roles con rep_name rep_info.
 
 Definition mkPrimTyCon'
    : Name.Name ->
-     list TyConBinder -> unit -> list unit -> bool -> option TyConRepName -> TyCon :=
+     list TyConBinder ->
+     AxiomatizedTypes.Kind ->
+     list AxiomatizedTypes.Role -> bool -> option TyConRepName -> TyCon :=
   fun name binders res_kind roles is_unlifted rep_nm =>
-    PrimTyCon (Name.nameUnique name) name binders res_kind tt (Coq.Lists.List.length
-               roles) roles is_unlifted rep_nm.
+    PrimTyCon (Name.nameUnique name) name binders res_kind (mkTyConKind binders
+               res_kind) (Coq.Lists.List.length roles) roles is_unlifted rep_nm.
 
 Definition mkPrelTyConRepName : Name.Name -> TyConRepName :=
   fun tc_name =>
@@ -3926,17 +3978,19 @@ Definition mkPrelTyConRepName : Name.Name -> TyConRepName :=
     Name.mkExternalName rep_uniq rep_mod rep_occ (Name.nameSrcSpan tc_name).
 
 Definition mkPrimTyCon
-   : Name.Name -> list TyConBinder -> unit -> list unit -> TyCon :=
+   : Name.Name ->
+     list TyConBinder ->
+     AxiomatizedTypes.Kind -> list AxiomatizedTypes.Role -> TyCon :=
   fun name binders res_kind roles =>
     mkPrimTyCon' name binders res_kind roles true (Some (mkPrelTyConRepName name)).
 
 Definition mkPatSyn
    : Name.Name ->
      bool ->
-     (list TyVarBinder * unit)%type ->
-     (list TyVarBinder * unit)%type ->
-     list unit ->
-     unit ->
+     (list TyVarBinder * AxiomatizedTypes.ThetaType)%type ->
+     (list TyVarBinder * AxiomatizedTypes.ThetaType)%type ->
+     list AxiomatizedTypes.Type_ ->
+     AxiomatizedTypes.Type_ ->
      (Id * bool)%type ->
      option (Id * bool)%type -> list FieldLabel.FieldLabel -> PatSyn :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ arg_5__ arg_6__ arg_7__ arg_8__ =>
@@ -3977,11 +4031,14 @@ Definition mkNamedTyConBinders : ArgFlag -> list TyVar -> list TyConBinder :=
 Definition mkManyUsedDmd : CleanDemand -> Demand :=
   fun '(JD s a) => JD (Mk_Str VanStr s) (Mk_Use Many a).
 
-Definition mkLocalVar : IdDetails -> Name.Name -> unit -> IdInfo -> Id :=
+Definition mkLocalVar
+   : IdDetails -> Name.Name -> AxiomatizedTypes.Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId NotExported) details info.
 
 Definition mkLiftedPrimTyCon
-   : Name.Name -> list TyConBinder -> unit -> list unit -> TyCon :=
+   : Name.Name ->
+     list TyConBinder ->
+     AxiomatizedTypes.Kind -> list AxiomatizedTypes.Role -> TyCon :=
   fun name binders res_kind roles =>
     let rep_nm := mkPrelTyConRepName name in
     mkPrimTyCon' name binders res_kind roles false (Some rep_nm).
@@ -4010,7 +4067,9 @@ Definition mkLams {b} : list b -> Expr b -> Expr b :=
   fun binders body => Data.Foldable.foldr Lam body binders.
 
 Definition mkKindTyCon
-   : Name.Name -> list TyConBinder -> unit -> list unit -> Name.Name -> TyCon :=
+   : Name.Name ->
+     list TyConBinder ->
+     AxiomatizedTypes.Kind -> list AxiomatizedTypes.Role -> Name.Name -> TyCon :=
   fun name binders res_kind roles rep_nm =>
     let tc := mkPrimTyCon' name binders res_kind roles false (Some rep_nm) in tc.
 
@@ -4054,22 +4113,25 @@ Definition mkInScopeSet : VarSet -> InScopeSet :=
 Definition mkHeadStrict : CleanDemand -> CleanDemand :=
   fun '(JD sd_0__ ud_1__) => JD HeadStr ud_1__.
 
-Definition mkGlobalVar : IdDetails -> Name.Name -> unit -> IdInfo -> Id :=
+Definition mkGlobalVar
+   : IdDetails -> Name.Name -> AxiomatizedTypes.Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty GlobalId details info.
+
+Axiom liftedTypeKind : AxiomatizedTypes.Kind.
 
 Definition mkFunTyCon : Name.Name -> list TyConBinder -> Name.Name -> TyCon :=
   fun name binders rep_nm =>
-    FunTyCon (Name.nameUnique name) name binders tt tt (Coq.Lists.List.length
-              binders) rep_nm.
+    FunTyCon (Name.nameUnique name) name binders liftedTypeKind (mkTyConKind binders
+              liftedTypeKind) (Coq.Lists.List.length binders) rep_nm.
 
 Definition mkFloatLit {b} : GHC.Real.Rational -> Expr b :=
   fun f => Lit (Literal.mkMachFloat f).
 
 Definition mkExportedLocalVar
-   : IdDetails -> Name.Name -> unit -> IdInfo -> Id :=
+   : IdDetails -> Name.Name -> AxiomatizedTypes.Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty (LocalId Exported) details info.
 
-Definition mkEqSpec : TyVar -> unit -> EqSpec :=
+Definition mkEqSpec : TyVar -> AxiomatizedTypes.Type_ -> EqSpec :=
   fun tv ty => Mk_EqSpec tv ty.
 
 Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
@@ -4078,17 +4140,17 @@ Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
 Definition mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType :=
   fun fv ds res => Mk_DmdType fv ds res.
 
-Definition mkCoBind : CoVar -> unit -> CoreBind :=
+Definition mkCoBind : CoVar -> AxiomatizedTypes.Coercion -> CoreBind :=
   fun cv co => NonRec cv (Coercion co).
 
-Definition mkCoApps {b} : Expr b -> list unit -> Expr b :=
+Definition mkCoApps {b} : Expr b -> list AxiomatizedTypes.Coercion -> Expr b :=
   fun f args => Data.Foldable.foldl (fun e a => App e (Coercion a)) f args.
 
 Definition mkClass
    : Name.Name ->
      list TyVar ->
      list (FunDep TyVar) ->
-     list unit ->
+     list AxiomatizedTypes.PredType ->
      list Id ->
      list ClassATItem -> list ClassOpItem -> ClassMinimalDef -> TyCon -> Class :=
   fun cls_name
@@ -4326,6 +4388,8 @@ Definition lazyApply2Dmd : Demand :=
 
 Definition lazyApply1Dmd : Demand :=
   JD Lazy (Mk_Use One (UCall One Used)).
+
+Axiom kindTyConKeys : UniqSet.UniqSet Unique.Unique.
 
 Definition kill_usage : KillFlags -> Demand -> Demand :=
   fun arg_0__ arg_1__ =>
@@ -4676,6 +4740,8 @@ Definition isSeqDmd : Demand -> bool :=
 Definition isRuntimeArg : CoreExpr -> bool :=
   isValArg.
 
+Axiom isPromotedTupleTyCon : TyCon -> bool.
+
 Definition isPromotedDataCon_maybe : TyCon -> option DataCon :=
   fun arg_0__ =>
     match arg_0__ with
@@ -4689,6 +4755,8 @@ Definition isPromotedDataCon : TyCon -> bool :=
     | PromotedDataCon _ _ _ _ _ _ _ _ _ _ => true
     | _ => false
     end.
+
+Axiom isProductTyCon : TyCon -> bool.
 
 Definition isPrimTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -4791,6 +4859,8 @@ Definition isLazy : ArgStr -> bool :=
 Definition isWeakDmd : Demand -> bool :=
   fun '(JD s a) => andb (isLazy s) (isUsedMU a).
 
+Axiom isKindTyCon : TyCon -> bool.
+
 Definition isJoinIdDetails_maybe : IdDetails -> option BasicTypes.JoinArity :=
   fun arg_0__ =>
     match arg_0__ with
@@ -4803,6 +4873,8 @@ Definition isInvisibleTyConBinder {tv} : TyVarBndr tv TyConBndrVis -> bool :=
 
 Definition isInvisibleArgFlag : ArgFlag -> bool :=
   negb GHC.Base.∘ isVisibleArgFlag.
+
+Axiom isInjectiveTyCon : TyCon -> AxiomatizedTypes.Role -> bool.
 
 Definition isImplicitTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -4888,6 +4960,8 @@ Definition isLocalVar : Var -> bool :=
 
 Definition mustHaveLocalBinding : Var -> bool :=
   fun var => isLocalVar var.
+
+Axiom isGenerativeTyCon : TyCon -> AxiomatizedTypes.Role -> bool.
 
 Definition isGenInjAlgRhs : AlgTyConRhs -> bool :=
   fun arg_0__ =>
@@ -5038,6 +5112,10 @@ Definition isDataTyCon : TyCon -> bool :=
     | _ => false
     end.
 
+Axiom isDataSumTyCon_maybe : TyCon -> option (list DataCon).
+
+Axiom isDataProductTyCon_maybe : TyCon -> option DataCon.
+
 Definition isDataFamFlav : FamTyConFlav -> bool :=
   fun arg_0__ => match arg_0__ with | DataFamilyTyCon _ => true | _ => false end.
 
@@ -5086,10 +5164,14 @@ Definition isCoVar : Var -> bool :=
     | _ => false
     end.
 
+Axiom mkCoVarCo : CoVar -> AxiomatizedTypes.Coercion.
+
+Axiom mkTyVarTy : TyVar -> AxiomatizedTypes.Type_.
+
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if isTyVar v : bool then Type_ (tt) else
-    if isCoVar v : bool then Coercion (tt) else
+    if isTyVar v : bool then Type_ (mkTyVarTy v) else
+    if isCoVar v : bool then Coercion (mkCoVarCo v) else
     if andb Util.debugIsOn (negb (isId v)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
           #1920)
@@ -5102,7 +5184,7 @@ Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
   fun vs => GHC.Base.map varToCoreExpr vs.
 
 Definition isClosedSynFamilyTyConWithAxiom_maybe
-   : TyCon -> option (list unit) :=
+   : TyCon -> option (AxiomatizedTypes.CoAxiom AxiomatizedTypes.Branched) :=
   fun arg_0__ =>
     match arg_0__ with
     | FamilyTyCon _ _ _ _ _ _ _ _ (ClosedSynFamilyTyCon mb) _ _ => mb
@@ -5126,7 +5208,8 @@ Definition isBuiltinRule : CoreRule -> bool :=
     | _ => false
     end.
 
-Definition isBuiltInSynFamTyCon_maybe : TyCon -> option unit :=
+Definition isBuiltInSynFamTyCon_maybe
+   : TyCon -> option AxiomatizedTypes.BuiltInSynFamily :=
   fun arg_0__ =>
     match arg_0__ with
     | FamilyTyCon _ _ _ _ _ _ _ _ (BuiltInSynFamTyCon ops) _ _ => Some ops
@@ -5395,7 +5478,8 @@ Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
     | Some xx => extendDVarEnv env key (mangle_fn xx)
     end.
 
-Definition exprToCoercion_maybe : CoreExpr -> option unit :=
+Definition exprToCoercion_maybe
+   : CoreExpr -> option AxiomatizedTypes.Coercion :=
   fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
 
 Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
@@ -5403,7 +5487,8 @@ Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
 
 Definition expandSynTyCon_maybe {tyco}
    : TyCon ->
-     list tyco -> option (list (TyVar * tyco)%type * unit * list tyco)%type :=
+     list tyco ->
+     option (list (TyVar * tyco)%type * AxiomatizedTypes.Type_ * list tyco)%type :=
   fun tc tys =>
     match tc with
     | SynonymTyCon _ _ _ tvs _ _ arity _ rhs _ _ =>
@@ -5424,7 +5509,7 @@ Axiom evaldUnfolding : Unfolding.
 Definition evalDmd : Demand :=
   JD (Mk_Str VanStr HeadStr) useTop.
 
-Definition eqSpecType : EqSpec -> unit :=
+Definition eqSpecType : EqSpec -> AxiomatizedTypes.Type_ :=
   fun '(Mk_EqSpec _ ty) => ty.
 
 Definition eqSpecTyVar : EqSpec -> TyVar :=
@@ -5449,7 +5534,7 @@ Definition filterEqSpec : list EqSpec -> list TyVar -> list TyVar :=
                            ((fun arg_0__ => arg_0__ GHC.Base.== var) GHC.Base.∘ eqSpecTyVar)) eq_spec in
     GHC.List.filter not_in_eq_spec.
 
-Definition eqSpecPair : EqSpec -> (TyVar * unit)%type :=
+Definition eqSpecPair : EqSpec -> (TyVar * AxiomatizedTypes.Type_)%type :=
   fun '(Mk_EqSpec tv ty) => pair tv ty.
 
 Definition emptyVarSet : VarSet :=
@@ -6025,7 +6110,8 @@ Definition dataConWorkId : DataCon -> Id :=
 Definition mkConApp {b} : DataCon -> list (Arg b) -> Expr b :=
   fun con args => mkApps (Mk_Var (dataConWorkId con)) args.
 
-Definition mkConApp2 {b} : DataCon -> list unit -> list Var -> Expr b :=
+Definition mkConApp2 {b}
+   : DataCon -> list AxiomatizedTypes.Type_ -> list Var -> Expr b :=
   fun con tys arg_ids =>
     mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map Type_ tys))
            (GHC.Base.map varToCoreExpr arg_ids).
@@ -6049,7 +6135,7 @@ Definition dataConTag : DataCon -> BasicTypes.ConTag :=
 Definition dataConTagZ : DataCon -> BasicTypes.ConTagZ :=
   fun con => dataConTag con GHC.Num.- BasicTypes.fIRST_TAG.
 
-Definition dataConStupidTheta : DataCon -> unit :=
+Definition dataConStupidTheta : DataCon -> AxiomatizedTypes.ThetaType :=
   fun dc => dcStupidTheta dc.
 
 Definition dataConSrcBangs : DataCon -> list HsSrcBang :=
@@ -6061,7 +6147,7 @@ Definition dataConSourceArity : DataCon -> BasicTypes.Arity :=
 Definition isNullarySrcDataCon : DataCon -> bool :=
   fun dc => dataConSourceArity dc GHC.Base.== #0.
 
-Definition dataConRepType : DataCon -> unit :=
+Definition dataConRepType : DataCon -> AxiomatizedTypes.Type_ :=
   dcRepType.
 
 Definition dataConRepArity : DataCon -> BasicTypes.Arity :=
@@ -6085,14 +6171,17 @@ Definition dataConImplBangs : DataCon -> list HsImplBang :=
 
 Definition dataConFullSig
    : DataCon ->
-     (list TyVar * list TyVar * list EqSpec * unit * list unit * unit)%type :=
+     (list TyVar * list TyVar * list EqSpec * AxiomatizedTypes.ThetaType *
+      list AxiomatizedTypes.Type_ *
+      AxiomatizedTypes.Type_)%type :=
   fun '(MkData _ _ _ _ univ_tvs ex_tvs _ eq_spec theta _ arg_tys res_ty _ _ _ _ _
   _ _ _ _ _) =>
     pair (pair (pair (pair (pair univ_tvs ex_tvs) eq_spec) theta) arg_tys) res_ty.
 
 Definition dataConFieldType_maybe
    : DataCon ->
-     FieldLabel.FieldLabelString -> option (FieldLabel.FieldLabel * unit)%type :=
+     FieldLabel.FieldLabelString ->
+     option (FieldLabel.FieldLabel * AxiomatizedTypes.Type_)%type :=
   fun con label =>
     Data.Foldable.find ((fun arg_0__ => arg_0__ GHC.Base.== label) GHC.Base.∘
                         (FieldLabel.flLabel GHC.Base.∘ Data.Tuple.fst)) (GHC.List.zip (dcFields con)
@@ -6109,7 +6198,7 @@ Definition fieldsOfAlgTcRhs : AlgTyConRhs -> FieldLabel.FieldLabelEnv :=
                                                        cons (pair (FieldLabel.flLabel fl) fl) nil) (dataConsFields
                                                      (visibleDataCons rhs))).
 
-Axiom dataConCannotMatch : list unit -> DataCon -> bool.
+Axiom dataConCannotMatch : list AxiomatizedTypes.Type_ -> DataCon -> bool.
 
 Definition dataConBoxer : DataCon -> option unit :=
   fun arg_0__ =>
@@ -6276,7 +6365,7 @@ Solve Obligations with (solve_collectAnnArgsTicks).
 Definition coVarDetails : IdDetails :=
   CoVarId.
 
-Definition mkCoVar : Name.Name -> unit -> CoVar :=
+Definition mkCoVar : Name.Name -> AxiomatizedTypes.Type_ -> CoVar :=
   fun name ty => mk_id name ty (LocalId NotExported) coVarDetails vanillaIdInfo.
 
 Definition cmpAltCon : AltCon -> AltCon -> comparison :=
@@ -6321,7 +6410,7 @@ Definition cleanEvalDmd : CleanDemand :=
 Definition classTvsFds : Class -> (list TyVar * list (FunDep TyVar))%type :=
   fun c => pair (classTyVars c) (classFunDeps c).
 
-Definition classSCTheta : Class -> list unit :=
+Definition classSCTheta : Class -> list AxiomatizedTypes.PredType :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_Class _ _ _ _ _ (ConcreteClass theta_stuff _ _ _ _) => theta_stuff
@@ -6356,7 +6445,8 @@ Definition classHasFds : Class -> bool :=
 
 Definition classExtraBigSig
    : Class ->
-     (list TyVar * list (FunDep TyVar) * list unit * list Id * list ClassATItem *
+     (list TyVar * list (FunDep TyVar) * list AxiomatizedTypes.PredType * list Id *
+      list ClassATItem *
       list ClassOpItem)%type :=
   fun arg_0__ =>
     match arg_0__ with
@@ -6368,7 +6458,9 @@ Definition classExtraBigSig
     end.
 
 Definition classBigSig
-   : Class -> (list TyVar * list unit * list Id * list ClassOpItem)%type :=
+   : Class ->
+     (list TyVar * list AxiomatizedTypes.PredType * list Id *
+      list ClassOpItem)%type :=
   fun arg_0__ =>
     match arg_0__ with
     | Mk_Class _ _ _ tyvars _ AbstractClass => pair (pair (pair tyvars nil) nil) nil
@@ -6563,47 +6655,57 @@ Definition dataConUserTyVarsArePermuted : DataCon -> bool :=
 Definition mkAlgTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit ->
-     list unit ->
-     option unit -> list unit -> AlgTyConRhs -> AlgTyConFlav -> bool -> TyCon :=
+     AxiomatizedTypes.Kind ->
+     list AxiomatizedTypes.Role ->
+     option unit ->
+     list AxiomatizedTypes.PredType ->
+     AlgTyConRhs -> AlgTyConFlav -> bool -> TyCon :=
   fun name binders res_kind roles cType stupid rhs parent gadt_syn =>
-    AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-             (Coq.Lists.List.length binders) roles cType gadt_syn stupid rhs
-             (fieldsOfAlgTcRhs rhs) (if andb Util.debugIsOn (negb (okParent name
-                                                                   parent)) : bool
+    AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind
+             (mkTyConKind binders res_kind) (Coq.Lists.List.length binders) roles cType
+             gadt_syn stupid rhs (fieldsOfAlgTcRhs rhs) (if andb Util.debugIsOn (negb
+                                                                  (okParent name parent)) : bool
               then (GHC.Err.error Panic.someSDoc)
               else parent).
 
+Axiom constraintKind : AxiomatizedTypes.Kind.
+
 Definition mkClassTyCon
    : Name.Name ->
-     list TyConBinder -> list unit -> AlgTyConRhs -> Class -> Name.Name -> TyCon :=
+     list TyConBinder ->
+     list AxiomatizedTypes.Role -> AlgTyConRhs -> Class -> Name.Name -> TyCon :=
   fun name binders roles rhs clas tc_rep_name =>
-    mkAlgTyCon name binders tt roles None nil rhs (ClassTyCon clas tc_rep_name)
-    false.
+    mkAlgTyCon name binders constraintKind roles None nil rhs (ClassTyCon clas
+                                                               tc_rep_name) false.
 
 Definition mkFamilyTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit ->
+     AxiomatizedTypes.Kind ->
      option Name.Name -> FamTyConFlav -> option Class -> Injectivity -> TyCon :=
   fun name binders res_kind resVar flav parent inj =>
-    FamilyTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-                (Coq.Lists.List.length binders) resVar flav parent inj.
+    FamilyTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind
+                (mkTyConKind binders res_kind) (Coq.Lists.List.length binders) resVar flav
+                parent inj.
 
 Definition mkSynonymTyCon
    : Name.Name ->
-     list TyConBinder -> unit -> list unit -> unit -> bool -> bool -> TyCon :=
+     list TyConBinder ->
+     AxiomatizedTypes.Kind ->
+     list AxiomatizedTypes.Role -> AxiomatizedTypes.Type_ -> bool -> bool -> TyCon :=
   fun name binders res_kind roles rhs is_tau is_fam_free =>
     SynonymTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind
-                 tt (Coq.Lists.List.length binders) roles rhs is_tau is_fam_free.
+                 (mkTyConKind binders res_kind) (Coq.Lists.List.length binders) roles rhs is_tau
+                 is_fam_free.
 
 Definition mkTcTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit -> list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon :=
+     AxiomatizedTypes.Kind ->
+     list (Name.Name * TyVar)%type -> TyConFlavour -> TyCon :=
   fun name binders res_kind scoped_tvs flav =>
-    TcTyCon (Unique.getUnique name) name binders (binderVars binders) res_kind tt
-            (Coq.Lists.List.length binders) scoped_tvs flav.
+    TcTyCon (Unique.getUnique name) name binders (binderVars binders) res_kind
+            (mkTyConKind binders res_kind) (Coq.Lists.List.length binders) scoped_tvs flav.
 
 Definition makeRecoveryTyCon : TyCon -> TyCon :=
   fun tc =>
@@ -6613,23 +6715,28 @@ Definition makeRecoveryTyCon : TyCon -> TyCon :=
 Definition mkTupleTyCon
    : Name.Name ->
      list TyConBinder ->
-     unit ->
+     AxiomatizedTypes.Kind ->
      BasicTypes.Arity -> DataCon -> BasicTypes.TupleSort -> AlgTyConFlav -> TyCon :=
   fun name binders res_kind arity con sort parent =>
-    AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind tt
-             arity (Coq.Lists.List.repeat tt arity) None false nil (TupleTyCon con sort)
+    AlgTyCon (Name.nameUnique name) name binders (binderVars binders) res_kind
+             (mkTyConKind binders res_kind) arity (Coq.Lists.List.repeat
+              AxiomatizedTypes.Representational arity) None false nil (TupleTyCon con sort)
              FastStringEnv.emptyDFsEnv parent.
 
 Definition patSynExTyVars : PatSyn -> list TyVar :=
   fun ps => binderVars (psExTyVars ps).
 
 Definition patSynSig
-   : PatSyn -> (list TyVar * unit * list TyVar * unit * list unit * unit)%type :=
+   : PatSyn ->
+     (list TyVar * AxiomatizedTypes.ThetaType * list TyVar *
+      AxiomatizedTypes.ThetaType *
+      list AxiomatizedTypes.Type_ *
+      AxiomatizedTypes.Type_)%type :=
   fun '(MkPatSyn _ _ arg_tys _ _ _ univ_tvs req ex_tvs prov res_ty _ _) =>
     pair (pair (pair (pair (pair (binderVars univ_tvs) req) (binderVars ex_tvs))
                      prov) arg_tys) res_ty.
 
-Definition binderKind {argf} : TyVarBndr TyVar argf -> unit :=
+Definition binderKind {argf} : TyVarBndr TyVar argf -> AxiomatizedTypes.Kind :=
   fun '(TvBndr tv _) => tyVarKind tv.
 
 Definition binderArgFlag {tv} {argf} : TyVarBndr tv argf -> argf :=
@@ -7769,42 +7876,48 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
     k__ {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
-Axiom tidyTyCoVarBndr : TidyEnv -> TyCoVar -> TidyEnv * TyCoVar.
+Axiom tyConAppArgs : AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
 
-Axiom eqType : unit -> unit -> bool.
+Axiom typeKind : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
 
-Axiom eqTypeX : RnEnv2 -> unit -> unit -> bool.
+Axiom eqTypeX : RnEnv2 ->
+                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> bool.
 
-Axiom eqCoercionX : RnEnv2 -> unit -> unit -> bool.
+Axiom isUnliftedType : AxiomatizedTypes.Type_ -> bool.
 
-Axiom splitPiTy_maybe : unit -> option (unit * unit).
+Definition CvSubstEnv :=
+  CoVarEnv AxiomatizedTypes.Coercion.
 
-Axiom isTypeLevPoly : unit -> bool.
+Definition TvSubstEnv :=
+  TyVarEnv AxiomatizedTypes.Type_.
 
-Axiom isUnliftedType : unit -> bool.
-
-Axiom isFunTy : unit -> bool.
-
-Axiom isCoercionType : unit -> bool.
+Inductive TCvSubst : Type
+  := | Mk_TCvSubst : InScopeSet -> TvSubstEnv -> CvSubstEnv -> TCvSubst.
 
 (* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool comparison
      cons false list nat negb nil op_zt__ option orb pair size_AnnExpr' snd true tt
-     unit BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
-     BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
-     BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
-     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
-     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
-     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleName
-     BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.defaultInlinePragma
-     BasicTypes.fIRST_TAG BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed
-     BasicTypes.noOccInfo BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc
-     BinNat.N.of_nat BinNums.N BooleanFormula.BooleanFormula BooleanFormula.mkTrue
-     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
-     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.repeat
-     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
-     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
-     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     unit AxiomatizedTypes.Branched AxiomatizedTypes.BuiltInSynFamily
+     AxiomatizedTypes.CoAxiom AxiomatizedTypes.Coercion AxiomatizedTypes.Kind
+     AxiomatizedTypes.Nominal AxiomatizedTypes.PredType
+     AxiomatizedTypes.Representational AxiomatizedTypes.Role
+     AxiomatizedTypes.TcTyVarDetails AxiomatizedTypes.ThetaType
+     AxiomatizedTypes.Type_ AxiomatizedTypes.Unbranched BasicTypes.Activation
+     BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
+     BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
+     BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity
+     BasicTypes.ManyOccs BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo
+     BasicTypes.OccInfo BasicTypes.OneOcc BasicTypes.OneShotInfo
+     BasicTypes.OneShotLam BasicTypes.RuleName BasicTypes.SourceText
+     BasicTypes.TupleSort BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
+     BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
+     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
+     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app
+     Coq.Init.Peano.lt Coq.Lists.List.firstn Coq.Lists.List.flat_map
+     Coq.Lists.List.length Coq.Lists.List.repeat Coq.Lists.List.skipn
+     Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null Data.Function.on
+     Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt
      FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
      FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv

@@ -57,15 +57,46 @@ Effect:
   This does not affect the translation of *uses* of the given name. This means
   that you can use other methods, e.g. a preamble, to make it available.
 
-  To skip type classes, see ``skip class``; to skip type class methods, see
-  ``skip methods``.  They are not unified here because those effects are more
-  powerful.
-
   You can skip type class instances, but as they do not have names in Haskell,
   you must use the name ``hs-to-coq`` generates for them.  The name generation
   is systematic, but you might want to first attempt the translation and check
   the output for the precise name.
 
+  To skip data type constructors, see ``skip constructor``; to skip type
+  classes, see ``skip class``; to skip type class methods, see ``skip methods``.
+  They are not unified here because those effects are more powerful.  You can
+  also skip whole modules with ``skip module``.
+
+
+Examples:
+   .. code-block:: shell
+
+     skip Data.Function.fix_ # Note the mangled name!
+     skip GHC.Base.String
+     skip GHC.Real.Fractional
+     skip Data.Monoid.Show__Last # an instance
+
+``skip constructor`` – skip a constructor of a data type
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip constructor, edit
+
+
+Format:
+  | **skip constructor** *qualified_name*
+
+Effect:
+  During translation, ignore the given data type constructor.  Any equation of a
+  function or arm of a case statement that pattern-matches on that constructor
+  is also skipped.
+
+  As with ``skip``, this does not affect the translation of *uses* of the
+  constructor.  This means that you must either make it available in a preamble
+  or elide it with other edits.
+
+  These skipped constructors are not stored in the generated metadata, so you
+  need to include the ``skip constructor`` edits in all downstream modules.
 
 Examples:
    .. code-block:: shell

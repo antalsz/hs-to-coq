@@ -46,5 +46,3 @@ Definition head {a} `{Default a} (xs : list a) : a :=
   | (x::_) => x
   | _      => default
   end.
-
-

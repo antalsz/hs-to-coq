@@ -33,7 +33,8 @@ PASS = \
   AxiomatizeModule \
   RedefineAddAxiom \
   AddTheorem \
-  Existential
+  Existential \
+	SkipConstructor
 
 # tests that *should* pass but currently fail
 TODO_PASS = \

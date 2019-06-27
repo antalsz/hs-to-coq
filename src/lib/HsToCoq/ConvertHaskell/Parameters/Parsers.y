@@ -282,6 +282,7 @@ Edit :: { Edit }
   | redefine CoqDefinition                                { RedefinitionEdit              $2                                    }
   | add Word CoqDefinition                                { AddEdit                       (mkModuleNameT $2) $3                 }
   | skip Qualid                                           { SkipEdit                      $2                                    }
+  | skip constructor Qualid                               { SkipConstructorEdit           $3                                    }
   | skip class Qualid                                     { SkipClassEdit                 $3                                    }
   | skip method Qualid Word                               { SkipMethodEdit                $3 $4                                 }
   | skip module Word                                      { SkipModuleEdit                (mkModuleNameT $3)                    }

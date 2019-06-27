@@ -36,9 +36,6 @@ import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Reader.Class
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
-import Control.Monad.Trans.Counter
-import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.Writer
 import Data.IORef
 import Data.Maybe
 import Data.Monoid
@@ -60,6 +57,18 @@ import HsToCoq.Coq.Gallina.Util (qualidModule, qualidToIdent, unsafeIdentToQuali
 import HsToCoq.Coq.Pretty
 import HsToCoq.ConvertHaskell.BuiltIn
 
+import qualified Control.Monad.Trans.Identity      as I
+import qualified Control.Monad.Trans.Reader        as R
+import qualified Control.Monad.Trans.Writer.Strict as WS
+import qualified Control.Monad.Trans.Writer.Lazy   as WL
+import qualified Control.Monad.Trans.State.Lazy    as SL
+import qualified Control.Monad.Trans.State.Strict  as SS
+import qualified Control.Monad.Trans.RWS.Strict    as RWSS
+import qualified Control.Monad.Trans.RWS.Lazy      as RWSL
+import qualified Control.Monad.Trans.Maybe         as M
+import qualified Control.Monad.Trans.Except        as E
+import qualified Control.Monad.Trans.Cont          as C
+import qualified Control.Monad.Trans.Counter       as Ct
 
 data ConstructorFields = NonRecordFields !Int
                        | RecordFields    ![Qualid]
@@ -156,7 +165,7 @@ typeInfoFields =
 -- so that the state (which is mostly a cache) survives error handling
 -- in the rest of the application
 newtype TypeInfoT m a = TypeInfoT (ReaderT (IORef TypeInfo) m a)
-  deriving ( Functor, Applicative, Monad, MonadIO, ExceptionMonad
+  deriving ( Functor, Applicative, Monad, MonadIO, ExceptionMonad, GhcMonad
            , HasDynFlags, MonadTrans)
 
 get :: (MonadReader (IORef r) m, MonadIO m) => m r
@@ -396,9 +405,9 @@ runTypeInfoMonad paths (TypeInfoT act) = do
 isConstructor :: TypeInfoMonad m => Qualid -> m Bool
 isConstructor con = isJust <$> lookupConstructorType con
 
--- Boiler plate instances
+-- Boilerplate instances -- nothing interesting from hereon out
 
-instance TypeInfoMonad m => TypeInfoMonad (ReaderT s m) where
+instance TypeInfoMonad m => TypeInfoMonad (I.IdentityT m) where
     isProcessedModule mi = lift $ isProcessedModule mi
 
     lookupConstructors            ty = lift $ lookupConstructors            ty
@@ -424,7 +433,7 @@ instance TypeInfoMonad m => TypeInfoMonad (ReaderT s m) where
     serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
     loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
-instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
+instance TypeInfoMonad m => TypeInfoMonad (R.ReaderT r m) where
     isProcessedModule mi = lift $ isProcessedModule mi
 
     lookupConstructors            ty = lift $ lookupConstructors            ty
@@ -450,7 +459,7 @@ instance TypeInfoMonad m => TypeInfoMonad (CounterT m) where
     serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
     loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
-instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
+instance (TypeInfoMonad m, Monoid w) => TypeInfoMonad (WS.WriterT w m) where
     isProcessedModule mi = lift $ isProcessedModule mi
 
     lookupConstructors            ty = lift $ lookupConstructors            ty
@@ -476,7 +485,7 @@ instance (TypeInfoMonad m, Monoid s) => TypeInfoMonad (WriterT s m) where
     serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
     loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
-instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
+instance (TypeInfoMonad m, Monoid w) => TypeInfoMonad (WL.WriterT w m) where
     isProcessedModule mi = lift $ isProcessedModule mi
 
     lookupConstructors            ty = lift $ lookupConstructors            ty
@@ -502,6 +511,212 @@ instance TypeInfoMonad m => TypeInfoMonad (MaybeT m) where
     serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
     loadedInterfaceFiles   = lift $ loadedInterfaceFiles
 
-instance GhcMonad m => GhcMonad (TypeInfoT m) where
-  getSession = lift   getSession
-  setSession = lift . setSession
+instance TypeInfoMonad m => TypeInfoMonad (SS.StateT s m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance TypeInfoMonad m => TypeInfoMonad (SL.StateT s m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance (TypeInfoMonad m, Monoid w) => TypeInfoMonad (RWSS.RWST r w s m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance (TypeInfoMonad m, Monoid w) => TypeInfoMonad (RWSL.RWST r w s m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance TypeInfoMonad m => TypeInfoMonad (M.MaybeT m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance TypeInfoMonad m => TypeInfoMonad (E.ExceptT e m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance TypeInfoMonad m => TypeInfoMonad (C.ContT r m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+instance TypeInfoMonad m => TypeInfoMonad (Ct.CounterT m) where
+    isProcessedModule mi = lift $ isProcessedModule mi
+
+    lookupConstructors            ty = lift $ lookupConstructors            ty
+    lookupConstructorType         cn = lift $ lookupConstructorType         cn
+    lookupConstructorFields       cn = lift $ lookupConstructorFields       cn
+    lookupRecordFieldType         cn = lift $ lookupRecordFieldType         cn
+    lookupClassDefn               cl = lift $ lookupClassDefn               cl
+    lookupDefaultMethods          cl = lift $ lookupDefaultMethods          cl
+    lookupExplicitMethodArguments nm = lift $ lookupExplicitMethodArguments nm
+    lookupClassTypes              cl = lift $ lookupClassTypes              cl
+    lookupSuperclassCount         cl = lift $ lookupSuperclassCount         cl
+
+    storeConstructors            ty x = lift $ storeConstructors            ty x
+    storeConstructorType         cn x = lift $ storeConstructorType         cn x
+    storeConstructorFields       cn x = lift $ storeConstructorFields       cn x
+    storeRecordFieldType         cn x = lift $ storeRecordFieldType         cn x
+    storeClassDefn               cl x = lift $ storeClassDefn               cl x
+    storeDefaultMethods          cl x = lift $ storeDefaultMethods          cl x
+    storeExplicitMethodArguments nm x = lift $ storeExplicitMethodArguments nm x
+    storeClassTypes              cl x = lift $ storeClassTypes              cl x
+    storeSuperclassCount         cl x = lift $ storeSuperclassCount         cl x
+
+    serializeIfaceFor m fp = lift $ serializeIfaceFor m fp
+    loadedInterfaceFiles   = lift $ loadedInterfaceFiles
+
+-- Don't put anything interesting down here!  Boilerplate instances only!

@@ -1,7 +1,8 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes, FlexibleContexts #-}
 
 module HsToCoq.Util.Containers (
+  -- * Optics
+  notContains,
   -- * Sets
   setMapMaybe,
   setMapMaybeM,
@@ -40,6 +41,10 @@ import qualified Data.Map.Strict as M
 import Data.Maybe
 
 import Data.Graph
+
+notContains :: Contains m => Index m -> Lens' m Bool
+notContains i = lens (^.contains i.to not) (\m b -> m & contains i .~ not b)
+{-# INLINE notContains #-}
 
 setMapMaybe :: Ord b => (a -> Maybe b) -> Set a -> Set b
 setMapMaybe f = S.foldr (\x s -> maybe s (`S.insert` s) $ f x) S.empty

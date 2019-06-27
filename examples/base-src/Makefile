@@ -9,6 +9,7 @@ OUT=../../base
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
   GHC/Wf \
+  GHC/Skip \
   GHC/DeferredFix \
   GHC/DeferredFixImpl \
   GHC/Num \

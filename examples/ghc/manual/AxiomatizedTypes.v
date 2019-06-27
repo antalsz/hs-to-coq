@@ -10,10 +10,6 @@ Axiom TyThing       : Type.
 Definition Kind     : Type := Type_.
 Axiom PredType      : Type.
 
-(* Axiom TvSubstEnv    : Type.
-Axiom CvSubstEnv    : Type.
-Axiom TCvSubst      : Type. *)
-
 Axiom CoAxiom            : Type -> Type.
 Axiom Branched           : Type.
 Axiom Unbranched         : Type.
@@ -49,20 +45,6 @@ Admitted.
 Instance Default__PredType
    : GHC.Err.Default PredType := {}.
 Admitted.
-
-(*
-
-Instance Default__TvSubstEnv
-   : GHC.Err.Default TvSubstEnv := {}.
-Admitted.
-
-Instance Default__CvSubstEnv
-   : GHC.Err.Default CvSubstEnv := {}.
-Admitted.
-
-Instance Default__TCvSubst
-   : GHC.Err.Default TCvSubst := {}.
-Admitted. *)
 
 Instance Default__CoAxiom
    : forall {a}, GHC.Err.Default (CoAxiom a) := {}.

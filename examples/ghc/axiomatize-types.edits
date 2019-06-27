@@ -45,8 +45,6 @@ rename module VarEnv  Core
 rename module CoreSyn Core
 rename module Demand  Core
 
-
-
 #
 # Punned constructor values (in Core)
 #
@@ -116,6 +114,9 @@ rename type MkId.DataConBoxer       = unit
 axiomatize module TyCoRep
 axiomatize module CoAxiom
 axiomatize module Coercion
+
+rename module Type Type_
+axiomatize module Type
 
 #
 # axiomatized types

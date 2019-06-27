@@ -101,10 +101,11 @@ Effect:
 Examples:
    .. code-block:: shell
 
-     skip Data.Function.fix_ # Note the mangled name!
-     skip GHC.Base.String
-     skip GHC.Real.Fractional
-     skip Data.Monoid.Show__Last # an instance
+     skip constructor Core.Cast
+     skip constructor Core.Tick
+     skip constructor Core.Type_
+     skip constructor Core.Coercion
+
 
 ``skip class`` – skip a type class and all its instances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

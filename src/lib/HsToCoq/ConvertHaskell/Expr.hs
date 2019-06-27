@@ -22,7 +22,6 @@ import Data.Traversable
 import Data.Bitraversable
 import HsToCoq.Util.Function
 import Data.Maybe
-import Data.Either
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -670,7 +669,7 @@ convertMatchGroup args (MG (L _ alts) _ _ _) = do
 
     chainFallThroughs matches patternFailure
 
-data HasGuard = HasGuard | HasNoGuard
+data HasGuard = HasGuard | HasNoGuard deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 groupMatches :: forall r m a. ConversionMonad r m =>
     [(MultPattern, HasGuard, a)] -> m [[(MultPattern, a)]]
@@ -698,21 +697,18 @@ groupMatches pats = map (map snd) . go <$> mapM summarize pats
 convertMatch :: LocalConvMonad r m =>
     Match GhcRn (LHsExpr GhcRn) -> -- the match
     m (Maybe (MultPattern, HasGuard, Term -> m Term)) -- the pattern, hasGuards, the right-hand side
-convertMatch GHC.Match{..} = do
-  when (null m_pats) $ convUnsupported "no-pattern case arms"
-  
-  (mpats, guards) <-  bimap nonEmpty fold
-                  .   unzip
-                  .   rights
-                  <$> traverse (runPatternT . convertLPat) m_pats
-  pure $ mpats <&> \pats ->
-    let extraGuards = map BoolGuard guards
-        rhs = convertGRHSs extraGuards m_grhss
-    
-        hg | null extraGuards = hasGuards m_grhss
-           | otherwise        = HasGuard
-    
-    in (MultPattern pats, hg, rhs)
+convertMatch GHC.Match{..} =
+  (runPatternT $    maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
+               =<< traverse convertLPat m_pats) <&> \case
+    Left _skipped        -> Nothing
+    Right (pats, guards) ->
+      let extraGuards = map BoolGuard guards
+          rhs = convertGRHSs extraGuards m_grhss
+     
+          hg | null extraGuards = hasGuards m_grhss
+             | otherwise        = HasGuard
+     
+      in Just (MultPattern pats, hg, rhs)
 
 buildMatch :: ConversionMonad r m =>
     NonEmpty MatchItem -> [(MultPattern, Term -> m Term)] -> Term -> m Term

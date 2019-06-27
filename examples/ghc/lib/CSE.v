@@ -205,14 +205,13 @@ Definition cseBind
              let ty' := CoreSubst.substTy (csEnvSubst env) ty in
              Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
            match arg_0__, arg_1__ with
-           | env, Core.Type_ t => Core.Type_ (CoreSubst.substTy (csEnvSubst env) t)
-           | env, Core.Coercion c => Core.Coercion (CoreSubst.substCo (csEnvSubst env) c)
+           | env => Core.Type_ (CoreSubst.substTy (csEnvSubst env) t)
+           | env => Core.Coercion (CoreSubst.substCo (csEnvSubst env) c)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.Mk_Var v => lookupSubst env v
            | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
-           | env, Core.Tick t e => Core.Tick t (cseExpr env e)
-           | env, Core.Cast e co =>
-               Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
+           | env => Core.Tick t (cseExpr env e)
+           | env => Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
            | env, Core.Lam b e =>
                let 'pair env' b' := addBinder env b in
                Core.Lam b' (cseExpr env' e)
@@ -341,14 +340,13 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
              let ty' := CoreSubst.substTy (csEnvSubst env) ty in
              Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
            match arg_0__, arg_1__ with
-           | env, Core.Type_ t => Core.Type_ (CoreSubst.substTy (csEnvSubst env) t)
-           | env, Core.Coercion c => Core.Coercion (CoreSubst.substCo (csEnvSubst env) c)
+           | env => Core.Type_ (CoreSubst.substTy (csEnvSubst env) t)
+           | env => Core.Coercion (CoreSubst.substCo (csEnvSubst env) c)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.Mk_Var v => lookupSubst env v
            | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
-           | env, Core.Tick t e => Core.Tick t (cseExpr env e)
-           | env, Core.Cast e co =>
-               Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
+           | env => Core.Tick t (cseExpr env e)
+           | env => Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
            | env, Core.Lam b e =>
                let 'pair env' b' := addBinder env b in
                Core.Lam b' (cseExpr env' e)
@@ -502,7 +500,7 @@ Definition cse_bind
     end.
 
 (* External variables:
-     Some andb bool cons false list negb nil op_zt__ option orb pair true
+     Some andb bool c co cons e false list negb nil op_zt__ option orb pair t true
      BasicTypes.NotTopLevel BasicTypes.TopLevel BasicTypes.TopLevelFlag
      BasicTypes.inlinePragmaSpec BasicTypes.isAlwaysActive
      BasicTypes.isAnyInlinePragma BasicTypes.isTopLevel BasicTypes.noUserInlineSpec

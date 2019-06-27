@@ -1,13 +1,3 @@
-# 
-# NEEDED by Exitify
-# CoreFVs.CoreExprWithFVs CoreFVs.freeVars
-# CoreFVs.freeVarsOf
-#
-# NEEDED from Id
-# Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
-#
-
-# in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
 
 # Make it easier for Coq to see termination
 rename value Util.mapAndUnzip = NestedRecursionHelpers.mapAndUnzipFix 
@@ -32,17 +22,12 @@ skip CoreFVs.orphNamesOfCo
 skip CoreFVs.exprOrphNames
 skip CoreFVs.exprsOrphNames
 
-
 in CoreFVs.exprOrphNames inline mutual go_alt
 
 #
-# These edits are due to the fact that Id's are missing information (Rules, Unfoldings and Types info)
-# We assume that the missing information does not contain any free variables
+# TODO: XXX This is a serious workaround for an issue of 
 #
-# redefine Definition CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-# redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
-# redefine Definition CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-
+axiomatize definition CoreFVs.expr_fvs
 
 #
 # expr_fvs

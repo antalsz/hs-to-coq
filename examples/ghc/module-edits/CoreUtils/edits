@@ -1,4 +1,6 @@
 
+
+
 axiomatize definition CoreUtils.needsCaseBinding
 axiomatize definition CoreUtils.isDivOp
 axiomatize definition CoreUtils.isExprLevPoly 
@@ -11,12 +13,33 @@ axiomatize definition CoreUtils.filterAlts
 # termination issue (recursion through non-lambda value unsupported)
 axiomatize definition CoreUtils.cheapEqExpr'
 
-redefine Definition CoreUtils.mkCast : Core.CoreExpr -> (unit -> Core.CoreExpr) := 
-  fun c t => c.
-redefine Definition CoreUtils.mkTick : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) :=
-  fun t orig => orig.
 redefine Definition CoreUtils.tickHNFArgs : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) := 
   fun t orig => orig.
+
+# refers to skipped components.
+skip CoreUtils.collectMakeStaticArgs
+skip CoreUtils.stripTicksTopT
+skip CoreUtils.stripTicksTop
+skip CoreUtils.mkTick
+skip CoreUtils.mkTicks
+skip CoreUtils.mkCast
+
+in Core.mkAltExpr rewrite forall, Core.Type_ = (GHC.Err.default) 
+
+# maybe axiomatize???
+skip CoreUtils.isSaturatedConApp
+skip CoreUtils.exprIsHNFlike
+skip CoreUtils.exprIsHNF
+skip CoreUtils.mkTixkNoHNF
+
+axiomatize definition CoreUtils.exprIsConLike 
+axiomatize definition CoreUtils.exprIsCheapX
+axiomatize definition CoreUtils.exprIsBottom
+axiomatize definition CoreUtils.exprIsDupable
+
+#
+# TODO: come back to this one
+axiomatize definition CoreUtils.eqExpr
 
 ###############################################################################
 ## termination edits

@@ -618,10 +618,6 @@ Inductive Expr b : Type
      b ->
      AxiomatizedTypes.Type_ ->
      list ((fun b_ => (AltCon * list b_ * Expr b_)%type%type) b) -> Expr b
-  |  Cast : (Expr b) -> AxiomatizedTypes.Coercion -> Expr b
-  |  Tick : (Tickish Id) -> (Expr b) -> Expr b
-  |  Type_ : AxiomatizedTypes.Type_ -> Expr b
-  |  Coercion : AxiomatizedTypes.Coercion -> Expr b
 with Bind b : Type
   := | NonRec : b -> (Expr b) -> Bind b
   |  Rec : list (b * (Expr b))%type -> Bind b.
@@ -716,16 +712,6 @@ Inductive AnnExpr' bndr annot : Type
    : (AnnBind bndr annot) ->
      ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr annot) ->
      AnnExpr' bndr annot
-  |  AnnCast
-   : ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr
-      annot) ->
-     (annot * AxiomatizedTypes.Coercion)%type -> AnnExpr' bndr annot
-  |  AnnTick
-   : (Tickish Id) ->
-     ((fun bndr_ annot_ => (annot_ * AnnExpr' bndr_ annot_)%type%type) bndr annot) ->
-     AnnExpr' bndr annot
-  |  AnnType : AxiomatizedTypes.Type_ -> AnnExpr' bndr annot
-  |  AnnCoercion : AxiomatizedTypes.Coercion -> AnnExpr' bndr annot
 with AnnBind bndr annot : Type
   := | AnnNonRec
    : bndr ->
@@ -822,14 +808,6 @@ Arguments Let {_} _ _.
 
 Arguments Case {_} _ _ _ _.
 
-Arguments Cast {_} _ _.
-
-Arguments Tick {_} _ _.
-
-Arguments Type_ {_} _.
-
-Arguments Coercion {_} _.
-
 Arguments NonRec {_} _ _.
 
 Arguments Rec {_} _.
@@ -845,14 +823,6 @@ Arguments AnnApp {_} {_} _ _.
 Arguments AnnCase {_} {_} _ _ _ _.
 
 Arguments AnnLet {_} {_} _ _.
-
-Arguments AnnCast {_} {_} _ _.
-
-Arguments AnnTick {_} {_} _ _.
-
-Arguments AnnType {_} {_} _.
-
-Arguments AnnCoercion {_} {_} _.
 
 Arguments AnnNonRec {_} {_} _ _.
 
@@ -2367,10 +2337,10 @@ Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
           (Lists.List.map (fun p => size_AnnExpr' (snd (snd p))) pairs) +
            size_AnnExpr' body)
 
-  | AnnCast (_,e) _ => S (size_AnnExpr' e)
+(*  | AnnCast (_,e) _ => S (size_AnnExpr' e)
   | AnnTick _ (_,e) => S (size_AnnExpr' e)
   | AnnType _ => 0
-  | AnnCoercion _ => 0
+  | AnnCoercion _ => 0 *)
   end.
 
 (* ---------------------------------- *)
@@ -3901,22 +3871,6 @@ Definition mkTyVar : Name.Name -> AxiomatizedTypes.Kind -> TyVar :=
 Axiom mkTyConKind : list TyConBinder ->
                     AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind.
 
-Definition mkTyBind : TyVar -> AxiomatizedTypes.Type_ -> CoreBind :=
-  fun tv ty => NonRec tv (Type_ ty).
-
-Axiom isCoercionTy_maybe : AxiomatizedTypes.Type_ ->
-                           option AxiomatizedTypes.Coercion.
-
-Definition mkTyArg {b} : AxiomatizedTypes.Type_ -> Expr b :=
-  fun ty =>
-    match isCoercionTy_maybe ty with
-    | Some co => Coercion co
-    | _ => Type_ ty
-    end.
-
-Definition mkTyApps {b} : Expr b -> list AxiomatizedTypes.Type_ -> Expr b :=
-  fun f args => Data.Foldable.foldl (fun e a => App e (mkTyArg a)) f args.
-
 Definition mkTcTyVar
    : Name.Name ->
      AxiomatizedTypes.Kind -> AxiomatizedTypes.TcTyVarDetails -> TyVar :=
@@ -4137,12 +4091,6 @@ Definition mkDoubleLit {b} : GHC.Real.Rational -> Expr b :=
 
 Definition mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType :=
   fun fv ds res => Mk_DmdType fv ds res.
-
-Definition mkCoBind : CoVar -> AxiomatizedTypes.Coercion -> CoreBind :=
-  fun cv co => NonRec cv (Coercion co).
-
-Definition mkCoApps {b} : Expr b -> list AxiomatizedTypes.Coercion -> Expr b :=
-  fun f args => Data.Foldable.foldl (fun e a => App e (Coercion a)) f args.
 
 Definition mkClass
    : Name.Name ->
@@ -4575,7 +4523,7 @@ Definition isTypeSynonymTyCon : TyCon -> bool :=
     end.
 
 Definition isTypeArg {b} : Expr b -> bool :=
-  fun arg_0__ => match arg_0__ with | Type_ _ => true | _ => false end.
+  fun arg_0__ => false.
 
 Definition isValArg {b} : Expr b -> bool :=
   fun e => negb (isTypeArg e).
@@ -4595,12 +4543,7 @@ Definition isTyConAssoc : TyCon -> bool :=
   fun tc => Data.Maybe.isJust (tyConAssoc_maybe tc).
 
 Definition isTyCoArg {b} : Expr b -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Type_ _ => true
-    | Coercion _ => true
-    | _ => false
-    end.
+  fun arg_0__ => false.
 
 Definition isTupleTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -5170,8 +5113,6 @@ Axiom mkTyVarTy : TyVar -> AxiomatizedTypes.Type_.
 
 Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
   fun v =>
-    if isTyVar v : bool then Type_ (mkTyVarTy v) else
-    if isCoVar v : bool then Coercion (mkCoVarCo v) else
     if andb Util.debugIsOn (negb (isId v)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
           #1920)
@@ -5477,7 +5418,7 @@ Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
 
 Definition exprToCoercion_maybe
    : CoreExpr -> option AxiomatizedTypes.Coercion :=
-  fun arg_0__ => match arg_0__ with | Coercion co => Some co | _ => None end.
+  fun arg_0__ => None.
 
 Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
   fun arg_0__ => None.
@@ -5985,15 +5926,11 @@ Definition deTagExpr {t} : TaggedExpr t -> CoreExpr :=
            match arg_0__ with
            | Mk_Var v => Mk_Var v
            | Lit l => Lit l
-           | Type_ ty => Type_ ty
-           | Coercion co => Coercion co
            | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
            | Lam (TB b _) e => Lam b (deTagExpr e)
            | Let bind body => Let (deTagBind bind) (deTagExpr body)
            | Case e (TB b _) ty alts =>
                Case (deTagExpr e) b ty (GHC.Base.map deTagAlt alts)
-           | Tick t e => Tick t (deTagExpr e)
-           | Cast e co => Cast (deTagExpr e) co
            end.
 
 Definition deTagBind {t} : TaggedBind t -> CoreBind :=
@@ -6022,14 +5959,10 @@ Definition deAnnotate'
              let 'pair (pair con args) rhs := arg_0__ in
              pair (pair con args) (deAnnotate rhs) in
            match arg_0__ with
-           | AnnType t => Type_ t
-           | AnnCoercion co => Coercion co
            | AnnVar v => Mk_Var v
            | AnnLit lit => Lit lit
            | AnnLam binder body => Lam binder (deAnnotate body)
            | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
-           | AnnCast e (pair _ co) => Cast (deAnnotate e) co
-           | AnnTick tick body => Tick tick (deAnnotate body)
            | AnnLet bind body => Let (deAnnBind bind) (deAnnotate body)
            | AnnCase scrut v t alts =>
                Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt alts)
@@ -6058,14 +5991,10 @@ Definition deAnnBind : forall {b} {annot}, AnnBind b annot -> Bind b :=
              let 'pair (pair con args) rhs := arg_0__ in
              pair (pair con args) (deAnnotate rhs) in
            match arg_0__ with
-           | AnnType t => Type_ t
-           | AnnCoercion co => Coercion co
            | AnnVar v => Mk_Var v
            | AnnLit lit => Lit lit
            | AnnLam binder body => Lam binder (deAnnotate body)
            | AnnApp fun_ arg => App (deAnnotate fun_) (deAnnotate arg)
-           | AnnCast e (pair _ co) => Cast (deAnnotate e) co
-           | AnnTick tick body => Tick tick (deAnnotate body)
            | AnnLet bind body => Let (deAnnBind bind) (deAnnotate body)
            | AnnCase scrut v t alts =>
                Case (deAnnotate scrut) v t (GHC.Base.map deAnnAlt alts)
@@ -6105,11 +6034,13 @@ Definition dataConWorkId : DataCon -> Id :=
 Definition mkConApp {b} : DataCon -> list (Arg b) -> Expr b :=
   fun con args => mkApps (Mk_Var (dataConWorkId con)) args.
 
+(*
 Definition mkConApp2 {b}
    : DataCon -> list AxiomatizedTypes.Type_ -> list Var -> Expr b :=
   fun con tys arg_ids =>
     mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map Type_ tys))
            (GHC.Base.map varToCoreExpr arg_ids).
+*)
 
 Definition dataConUserTyVarBinders : DataCon -> list TyVarBinder :=
   dcUserTyVarBinders.
@@ -6286,21 +6217,22 @@ Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
                  end in
     go nil expr.
 
+(*
 Definition collectArgsTicks {b}
    : (Tickish Id -> bool) ->
      Expr b -> (Expr b * list (Arg b) * list (Tickish Id))%type :=
   fun skipTick expr =>
     let fix go arg_0__ arg_1__ arg_2__
-              := let j_4__ :=
-                   match arg_0__, arg_1__, arg_2__ with
-                   | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
-                   end in
-                 match arg_0__, arg_1__, arg_2__ with
+              := match arg_0__, arg_1__, arg_2__ with
                  | App f a, as_, ts => go f (cons a as_) ts
-                 | Tick t e, as_, ts => if skipTick t : bool then go e as_ (cons t ts) else j_4__
-                 | _, _, _ => j_4__
+                 | as_, ts =>
+                     if skipTick t : bool then go e as_ (cons t ts) else
+                     match arg_0__, arg_1__, arg_2__ with
+                     | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
+                     end
                  end in
     go expr nil nil.
+*)
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
   fun expr =>
@@ -6323,6 +6255,7 @@ Program Definition collectAnnBndrs {bndr} {annot}
                                end) in
             collect nil e.
 
+(*
 Program Definition collectAnnArgsTicks {b} {a}
            : (Tickish Var -> bool) ->
              AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a) * list (Tickish Var))%type :=
@@ -6330,19 +6263,17 @@ Program Definition collectAnnArgsTicks {b} {a}
             let go :=
               GHC.Wf.wfFix3 Coq.Init.Peano.lt (fun arg_0__ arg_1__ arg_2__ =>
                                size_AnnExpr' (snd arg_0__)) _ (fun arg_0__ arg_1__ arg_2__ go =>
-                               let j_4__ :=
-                                 match arg_0__, arg_1__, arg_2__ with
-                                 | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
-                                 end in
                                match arg_0__, arg_1__, arg_2__ with
                                | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
-                               | pair _ (AnnTick t e), as_, ts =>
+                               | as_, ts =>
                                    if Bool.Sumbool.sumbool_of_bool (tickishOk t) then go e as_ (cons t ts) else
-                                   j_4__
-                               | _, _, _ => j_4__
+                                   match arg_0__, arg_1__, arg_2__ with
+                                   | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
+                                   end
                                end) in
             go expr nil nil.
 Solve Obligations with (solve_collectAnnArgsTicks).
+*)
 
 Program Definition collectAnnArgs {b} {a}
            : AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
@@ -7880,6 +7811,9 @@ Axiom eqTypeX : RnEnv2 ->
 
 Axiom isUnliftedType : AxiomatizedTypes.Type_ -> bool.
 
+Axiom isCoercionTy_maybe : AxiomatizedTypes.Type_ ->
+                           option AxiomatizedTypes.Coercion.
+
 Definition CvSubstEnv :=
   CoVarEnv AxiomatizedTypes.Coercion.
 
@@ -7890,13 +7824,13 @@ Inductive TCvSubst : Type
   := | Mk_TCvSubst : InScopeSet -> TvSubstEnv -> CvSubstEnv -> TCvSubst.
 
 (* External variables:
-     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool comparison
-     cons false list nat negb nil op_zt__ option orb pair size_AnnExpr' snd true tt
-     unit AxiomatizedTypes.Branched AxiomatizedTypes.BuiltInSynFamily
-     AxiomatizedTypes.CoAxiom AxiomatizedTypes.Coercion AxiomatizedTypes.Kind
-     AxiomatizedTypes.Nominal AxiomatizedTypes.PredType
-     AxiomatizedTypes.Representational AxiomatizedTypes.Role
-     AxiomatizedTypes.TcTyVarDetails AxiomatizedTypes.ThetaType
+     Bool.Sumbool.sumbool_of_bool Coercion Eq Gt Lt None Some Type Type_ andb app
+     bool comparison cons e false list nat negb nil op_zt__ option orb pair
+     size_AnnExpr' snd t true tt unit AxiomatizedTypes.Branched
+     AxiomatizedTypes.BuiltInSynFamily AxiomatizedTypes.CoAxiom
+     AxiomatizedTypes.Coercion AxiomatizedTypes.Kind AxiomatizedTypes.Nominal
+     AxiomatizedTypes.PredType AxiomatizedTypes.Representational
+     AxiomatizedTypes.Role AxiomatizedTypes.TcTyVarDetails AxiomatizedTypes.ThetaType
      AxiomatizedTypes.Type_ AxiomatizedTypes.Unbranched BasicTypes.Activation
      BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
      BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker

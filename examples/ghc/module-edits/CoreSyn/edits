@@ -1,45 +1,17 @@
+skip Core.mkTyBind
+skip Core.mkTyArg
+skip Core.mkTyApps
+skip Core.mkCoBind
+skip Core.mkCoApps
 
-#
+
+in Core.varToCoreExpr rewrite forall v, isCoVar v = false
+in Core.varToCoreExpr rewrite forall v, isTyVar v = false
+
+####################################
 # skipping or redefining unfolding info so that it is 'NoUnfolding'
 #
-
-# redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool
-#  := fun x => false.
-#redefine Definition Core.isConLikeUnfolding  : Core.Unfolding -> bool
-#  := fun x => false.
-#redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool
-#  := fun x => false.
-
-
-
-#axiomatize definition Core.maybeUnfoldingTemplate
 axiomatize definition Core.unfoldingTemplate
-
-#redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
-#  fun u => nil.
-
-#redefine Definition Core.isValueUnfolding : Core.Unfolding -> bool :=
-#  fun x => false.
-
-#redefine Definition Core.isCheapUnfolding  : Core.Unfolding -> bool :=
-#  fun x => false.
-
-#redefine Definition Core.isExpandableUnfolding : Core.Unfolding -> bool :=
-#  fun x => false.
-
-#redefine Definition Core.expandUnfolding_maybe : Core.Unfolding -> option Core.CoreExpr := fun x => None.
-
-#redefine Definition Core.isCompulsoryUnfolding : Core.Unfolding -> bool :=
-#  fun x => false.
-#redefine Definition Core.isStableUnfolding : Core.Unfolding -> bool :=
-#  fun x => false.
-#redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
-#  fun u => false.
-#redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
-#  fun u => false.
-#redefine Definition Core.canUnfold : Core.Unfolding -> bool :=
-#  fun x => false.
-
 #
 #  These are 'smart' constructors for constructors that no longer exist.
 #
@@ -54,9 +26,7 @@ skip Core.evaldUnfolding
 skip Core.hasSomeUnfolding
 
 
-# axiomatize definition Core.evaldUnfolding
-
-
+####################################
 #
 # Tick-related functions
 #

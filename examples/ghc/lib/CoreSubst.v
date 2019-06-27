@@ -26,6 +26,7 @@ Require Import GHC.Base.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
+Require GHC.Skip.
 Require Id.
 Require Maybes.
 Require Name.
@@ -153,22 +154,9 @@ Definition mkOpenSubst
                                         let 'pair id e := arg_1__ in
                                         if Core.isId id : bool then cons (pair id e) nil else
                                         nil in
-                                      Coq.Lists.List.flat_map cont_0__ pairs)) (Core.mkVarEnv (let cont_2__ arg_3__ :=
-                                                                                                 match arg_3__ with
-                                                                                                 | pair tv (Core.Type_
-                                                                                                  ty) =>
-                                                                                                     cons (pair tv ty)
-                                                                                                          nil
-                                                                                                 | _ => nil
-                                                                                                 end in
-                                                                                               Coq.Lists.List.flat_map
-                                                                                               cont_2__ pairs))
-    (Core.mkVarEnv (let cont_4__ arg_5__ :=
-                      match arg_5__ with
-                      | pair v (Core.Coercion co) => cons (pair v co) nil
-                      | _ => nil
-                      end in
-                    Coq.Lists.List.flat_map cont_4__ pairs)).
+                                      Coq.Lists.List.flat_map cont_0__ pairs)) (Core.mkVarEnv (GHC.Skip.nil_skipped
+                                                                                               "Core.Type_"))
+    (Core.mkVarEnv (GHC.Skip.nil_skipped "Core.Coercion")).
 
 Definition mkEmptySubst : Core.InScopeSet -> Subst :=
   fun in_scope =>
@@ -204,6 +192,48 @@ Definition lookupIdSubst : String -> Subst -> Core.Id -> Core.CoreExpr :=
         end
     end.
 
+Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
+  fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
+        : Core.CoreExpr
+        := let go_alt :=
+             fun arg_0__ arg_1__ =>
+               match arg_0__, arg_1__ with
+               | subst, pair (pair con bndrs) rhs =>
+                   let 'pair subst' bndrs' := substBndrs subst bndrs in
+                   pair (pair con bndrs') (subst_expr doc subst' rhs)
+               end in
+           let fix go arg_5__
+                     := match arg_5__ with
+                        | Core.Mk_Var v => lookupIdSubst (doc) subst v
+                        | Core.Lit lit => Core.Lit lit
+                        | Core.App fun_ arg => Core.App (go fun_) (go arg)
+                        | Core.Lam bndr body =>
+                            let 'pair subst' bndr' := substBndr subst bndr in
+                            Core.Lam bndr' (subst_expr doc subst' body)
+                        | Core.Let bind body =>
+                            let 'pair subst' bind' := substBind subst bind in
+                            Core.Let bind' (subst_expr doc subst' body)
+                        | Core.Case scrut bndr ty alts =>
+                            let 'pair subst' bndr' := substBndr subst bndr in
+                            Core.Case (go scrut) bndr' (substTy subst ty) (map (go_alt subst') alts)
+                        end in
+           go expr with substBind (arg_0__ : Subst) (arg_1__ : Core.CoreBind) : (Subst *
+                                                                                 Core.CoreBind)%type
+                          := match arg_0__, arg_1__ with
+                             | subst, Core.NonRec bndr rhs =>
+                                 let 'pair subst' bndr' := substBndr subst bndr in
+                                 pair subst' (Core.NonRec bndr' (subst_expr (Datatypes.id (GHC.Base.hs_string__
+                                                                                           "substBind")) subst rhs))
+                             | subst, Core.Rec pairs =>
+                                 let 'pair bndrs rhss := GHC.List.unzip pairs in
+                                 let 'pair subst' bndrs' := substRecBndrs subst bndrs in
+                                 let rhss' :=
+                                   map (fun ps =>
+                                          subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBind")) subst' (snd ps))
+                                       pairs in
+                                 pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
+                             end for substBind.
+
 Definition substDVarSet : Subst -> Core.DVarSet -> Core.DVarSet :=
   fun subst fvs =>
     let subst_fv :=
@@ -237,52 +267,6 @@ Definition substTickish
     | _subst, other => other
     end.
 
-Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
-  fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
-        : Core.CoreExpr
-        := let go_alt :=
-             fun arg_0__ arg_1__ =>
-               match arg_0__, arg_1__ with
-               | subst, pair (pair con bndrs) rhs =>
-                   let 'pair subst' bndrs' := substBndrs subst bndrs in
-                   pair (pair con bndrs') (subst_expr doc subst' rhs)
-               end in
-           let fix go arg_5__
-                     := match arg_5__ with
-                        | Core.Mk_Var v => lookupIdSubst (doc) subst v
-                        | Core.Type_ ty => Core.Type_ (substTy subst ty)
-                        | Core.Coercion co => Core.Coercion (substCo subst co)
-                        | Core.Lit lit => Core.Lit lit
-                        | Core.App fun_ arg => Core.App (go fun_) (go arg)
-                        | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
-                        | Core.Cast e co => Core.Cast (go e) (substCo subst co)
-                        | Core.Lam bndr body =>
-                            let 'pair subst' bndr' := substBndr subst bndr in
-                            Core.Lam bndr' (subst_expr doc subst' body)
-                        | Core.Let bind body =>
-                            let 'pair subst' bind' := substBind subst bind in
-                            Core.Let bind' (subst_expr doc subst' body)
-                        | Core.Case scrut bndr ty alts =>
-                            let 'pair subst' bndr' := substBndr subst bndr in
-                            Core.Case (go scrut) bndr' (substTy subst ty) (map (go_alt subst') alts)
-                        end in
-           go expr with substBind (arg_0__ : Subst) (arg_1__ : Core.CoreBind) : (Subst *
-                                                                                 Core.CoreBind)%type
-                          := match arg_0__, arg_1__ with
-                             | subst, Core.NonRec bndr rhs =>
-                                 let 'pair subst' bndr' := substBndr subst bndr in
-                                 pair subst' (Core.NonRec bndr' (subst_expr (Datatypes.id (GHC.Base.hs_string__
-                                                                                           "substBind")) subst rhs))
-                             | subst, Core.Rec pairs =>
-                                 let 'pair bndrs rhss := GHC.List.unzip pairs in
-                                 let 'pair subst' bndrs' := substRecBndrs subst bndrs in
-                                 let rhss' :=
-                                   map (fun ps =>
-                                          subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBind")) subst' (snd ps))
-                                       pairs in
-                                 pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
-                             end for substBind.
-
 Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
   fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
         : Core.CoreExpr
@@ -296,12 +280,8 @@ Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
            let fix go arg_5__
                      := match arg_5__ with
                         | Core.Mk_Var v => lookupIdSubst (doc) subst v
-                        | Core.Type_ ty => Core.Type_ (substTy subst ty)
-                        | Core.Coercion co => Core.Coercion (substCo subst co)
                         | Core.Lit lit => Core.Lit lit
                         | Core.App fun_ arg => Core.App (go fun_) (go arg)
-                        | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
-                        | Core.Cast e co => Core.Cast (go e) (substCo subst co)
                         | Core.Lam bndr body =>
                             let 'pair subst' bndr' := substBndr subst bndr in
                             Core.Lam bndr' (subst_expr doc subst' body)
@@ -474,36 +454,12 @@ Definition extendIdSubst : Subst -> Core.Id -> Core.CoreExpr -> Subst :=
         else Mk_Subst in_scope (Core.extendVarEnv ids v r) tvs cvs
     end.
 
-Definition extendCvSubst
-   : Subst -> Core.CoVar -> AxiomatizedTypes.Coercion -> Subst :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | Mk_Subst in_scope ids tvs cvs, v, r =>
-        if andb Util.debugIsOn (negb (Core.isCoVar v)) : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__
-                                 "ghc/compiler/coreSyn/CoreSubst.hs") #228)
-        else Mk_Subst in_scope ids tvs (Core.extendVarEnv cvs v r)
-    end.
-
 Definition extendSubst : Subst -> Core.Var -> Core.CoreArg -> Subst :=
   fun subst var arg =>
-    match arg with
-    | Core.Type_ ty =>
-        if andb Util.debugIsOn (negb (Core.isTyVar var)) : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__
-                                 "ghc/compiler/coreSyn/CoreSubst.hs") #237)
-        else extendTvSubst subst var ty
-    | Core.Coercion co =>
-        if andb Util.debugIsOn (negb (Core.isCoVar var)) : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__
-                                 "ghc/compiler/coreSyn/CoreSubst.hs") #238)
-        else extendCvSubst subst var co
-    | _ =>
-        if andb Util.debugIsOn (negb (Core.isId var)) : bool
-        then (Panic.assertPanic (GHC.Base.hs_string__
-                                 "ghc/compiler/coreSyn/CoreSubst.hs") #239)
-        else extendIdSubst subst var arg
-    end.
+    if andb Util.debugIsOn (negb (Core.isId var)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__
+                             "ghc/compiler/coreSyn/CoreSubst.hs") #239)
+    else extendIdSubst subst var arg.
 
 Definition extendSubstList
    : Subst -> list (Core.Var * Core.CoreArg)%type -> Subst :=
@@ -514,6 +470,17 @@ Definition extendSubstList
            | subst, cons (pair var rhs) prs =>
                extendSubstList (extendSubst subst var rhs) prs
            end.
+
+Definition extendCvSubst
+   : Subst -> Core.CoVar -> AxiomatizedTypes.Coercion -> Subst :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_Subst in_scope ids tvs cvs, v, r =>
+        if andb Util.debugIsOn (negb (Core.isCoVar v)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #228)
+        else Mk_Subst in_scope ids tvs (Core.extendVarEnv cvs v r)
+    end.
 
 Definition extendSubstWithVar : Subst -> Core.Var -> Core.Var -> Subst :=
   fun subst v1 v2 =>
@@ -627,26 +594,26 @@ Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
      None Some String andb bool cons const list map mapAccumL mappend negb nil
      op_z2218U__ op_zeze__ op_zt__ option orb pair snd true tt
      AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Coq.Lists.List.flat_map
-     Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.Cast Core.CoVar
-     Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr Core.CoreProgram
-     Core.CoreRule Core.CvSubstEnv Core.DVarSet Core.Id Core.IdEnv Core.IdInfo
-     Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_TCvSubst Core.Mk_Var
-     Core.NonRec Core.Rec Core.Rule Core.RuleInfo Core.TCvSubst Core.Tick
-     Core.Tickish Core.TvSubstEnv Core.TyVar Core.Type_ Core.Unfolding Core.Var
-     Core.VarSet Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
-     Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet
-     Core.extendInScopeSet Core.extendInScopeSetList Core.extendInScopeSetSet
-     Core.extendVarEnv Core.extendVarEnvList Core.idInfo Core.isCoVar
-     Core.isEmptyRuleInfo Core.isEmptyVarEnv Core.isFragileUnfolding Core.isId
-     Core.isLocalId Core.isLocalVar Core.isNonCoVarId Core.isTyVar Core.lookupInScope
-     Core.lookupVarEnv Core.mkCoVarCo Core.mkCoercionTy Core.mkDVarSet Core.mkTyVarTy
-     Core.mkVarEnv Core.ruleInfo Core.setRuleInfo Core.setUnfoldingInfo
-     Core.setVarUnique Core.unfoldingInfo Core.uniqAway CoreFVs.expr_fvs
-     CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick Data.Foldable.all
+     Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.CoVar Core.CoreArg
+     Core.CoreBind Core.CoreExpr Core.CoreProgram Core.CoreRule Core.CvSubstEnv
+     Core.DVarSet Core.Id Core.IdEnv Core.IdInfo Core.InScopeSet Core.Lam Core.Let
+     Core.Lit Core.Mk_TCvSubst Core.Mk_Var Core.NonRec Core.Rec Core.Rule
+     Core.RuleInfo Core.TCvSubst Core.Tickish Core.TvSubstEnv Core.TyVar
+     Core.Unfolding Core.Var Core.VarSet Core.dVarSetElems Core.delVarEnv
+     Core.delVarEnvList Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv
+     Core.emptyVarSet Core.extendInScopeSet Core.extendInScopeSetList
+     Core.extendInScopeSetSet Core.extendVarEnv Core.extendVarEnvList Core.idInfo
+     Core.isCoVar Core.isEmptyRuleInfo Core.isEmptyVarEnv Core.isFragileUnfolding
+     Core.isId Core.isLocalId Core.isLocalVar Core.isNonCoVarId Core.isTyVar
+     Core.lookupInScope Core.lookupVarEnv Core.mkCoVarCo Core.mkCoercionTy
+     Core.mkDVarSet Core.mkTyVarTy Core.mkVarEnv Core.ruleInfo Core.setRuleInfo
+     Core.setUnfoldingInfo Core.setVarUnique Core.unfoldingInfo Core.uniqAway
+     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr Data.Foldable.all
      Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst Data.Tuple.snd
      Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Id.idType Id.maybeModifyIdInfo Id.setIdType Maybes.orElse
-     Name.Name Panic.assertPanic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     TyCoRep.noFreeVarsOfType UniqSupply.UniqSupply UniqSupply.uniqFromSupply
-     UniqSupply.uniqsFromSupply Unique.Unique Util.debugIsOn
+     GHC.Num.fromInteger GHC.Skip.nil_skipped Id.idType Id.maybeModifyIdInfo
+     Id.setIdType Maybes.orElse Name.Name Panic.assertPanic Panic.panicStr
+     Panic.someSDoc Panic.warnPprTrace TyCoRep.noFreeVarsOfType UniqSupply.UniqSupply
+     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
+     Util.debugIsOn
 *)

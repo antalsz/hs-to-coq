@@ -44,10 +44,10 @@ Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
           (Lists.List.map (fun p => size_AnnExpr' (snd (snd p))) pairs) +
            size_AnnExpr' body)
 
-  | AnnCast (_,e) _ => S (size_AnnExpr' e)
+(*  | AnnCast (_,e) _ => S (size_AnnExpr' e)
   | AnnTick _ (_,e) => S (size_AnnExpr' e)
   | AnnType _ => 0
-  | AnnCoercion _ => 0
+  | AnnCoercion _ => 0 *)
   end.
 
 (* ---------------------------------- *)

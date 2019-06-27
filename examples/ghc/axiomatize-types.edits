@@ -116,10 +116,15 @@ skip constructor Core.CoreUnfolding
 #
 # eliminating parts of the 'Expr' type
 #
-# skip constructor Core.Type_
-# skip constructor Core.Tick
-# skip constructor Core.Coercion
-# skip constructor Core.Cast
+skip constructor Core.Type_
+skip constructor Core.Tick
+skip constructor Core.Coercion
+skip constructor Core.Cast
+
+skip constructor Core.AnnType
+skip constructor Core.AnnTick
+skip constructor Core.AnnCoercion
+skip constructor Core.AnnCast
 
 
 ###############################################################################

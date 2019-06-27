@@ -143,12 +143,12 @@ Definition tidyBind
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
-           | env, Core.Type_ ty => Core.Type_ (TyCoRep.tidyType env ty)
-           | env, Core.Coercion co => Core.Coercion (TyCoRep.tidyCo env co)
+           | env => Core.Type_ (TyCoRep.tidyType env ty)
+           | env => Core.Coercion (TyCoRep.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
-           | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (TyCoRep.tidyCo env co)
+           | env => Core.Tick (tidyTickish env t) (tidyExpr env e)
+           | env => Core.Cast (tidyExpr env e) (TyCoRep.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
@@ -182,12 +182,12 @@ Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
-           | env, Core.Type_ ty => Core.Type_ (TyCoRep.tidyType env ty)
-           | env, Core.Coercion co => Core.Coercion (TyCoRep.tidyCo env co)
+           | env => Core.Type_ (TyCoRep.tidyType env ty)
+           | env => Core.Coercion (TyCoRep.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
-           | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (TyCoRep.tidyCo env co)
+           | env => Core.Tick (tidyTickish env t) (tidyExpr env e)
+           | env => Core.Cast (tidyExpr env e) (TyCoRep.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
@@ -224,9 +224,9 @@ Infix "CoreTidy.=:" := (_=:_) (at level 99).
 End Notations.
 
 (* External variables:
-     None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
-     Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id
-     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
+     None Some bool co e list op_zt__ pair snd t tt ty Core.App Core.Breakpoint
+     Core.Case Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr
+     Core.Id Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
      Core.Tickish Core.TidyEnv Core.Type_ Core.Unfolding Core.Var Core.demandInfo
      Core.extendVarEnv Core.idDetails Core.idInfo Core.inlinePragInfo
      Core.isStableUnfolding Core.isTyCoVar Core.lookupVarEnv Core.mkLocalVar

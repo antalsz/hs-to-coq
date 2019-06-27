@@ -109,10 +109,6 @@ Definition exprSize : CoreExpr -> nat :=
            | Lam b e => bndrSize b + exprSize e
            | Let b e => bindSize b + exprSize e
            | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
-           | Cast e _ => 1 + exprSize e
-           | Tick n e => tickSize n + exprSize e
-           | Type_ _ => 1
-           | Coercion _ => 1
            end with bindSize (arg_0__ : CoreBind) : nat
                       := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
                            let 'pair b e := arg_0__ in
@@ -137,10 +133,6 @@ Definition bindSize : CoreBind -> nat :=
            | Lam b e => bndrSize b + exprSize e
            | Let b e => bindSize b + exprSize e
            | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
-           | Cast e _ => 1 + exprSize e
-           | Tick n e => tickSize n + exprSize e
-           | Type_ _ => 1
-           | Coercion _ => 1
            end with bindSize (arg_0__ : CoreBind) : nat
                       := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
                            let 'pair b e := arg_0__ in
@@ -167,15 +159,11 @@ Definition bindStats : BasicTypes.TopLevelFlag -> CoreBind -> CoreStats :=
            match arg_0__ with
            | Mk_Var _ => oneTM
            | Lit _ => oneTM
-           | Type_ t => tyStats t
-           | Coercion c => coStats c
            | App f a => plusCS (exprStats f) (exprStats a)
            | Lam b e => plusCS (bndrStats b) (exprStats e)
            | Let b e => plusCS (bindStats BasicTypes.NotTopLevel b) (exprStats e)
            | Case e b _ as_ =>
                plusCS (plusCS (exprStats e) (bndrStats b)) (sumCS altStats as_)
-           | Cast e co => plusCS (coStats co) (exprStats e)
-           | Tick _ e => exprStats e
            end with bindStats (arg_0__ : BasicTypes.TopLevelFlag) (arg_1__ : CoreBind)
                       : CoreStats
                       := let bindingStats (top_lvl : BasicTypes.TopLevelFlag) (v : Var) (r : CoreExpr)
@@ -197,15 +185,11 @@ Definition exprStats : CoreExpr -> CoreStats :=
            match arg_0__ with
            | Mk_Var _ => oneTM
            | Lit _ => oneTM
-           | Type_ t => tyStats t
-           | Coercion c => coStats c
            | App f a => plusCS (exprStats f) (exprStats a)
            | Lam b e => plusCS (bndrStats b) (exprStats e)
            | Let b e => plusCS (bindStats BasicTypes.NotTopLevel b) (exprStats e)
            | Case e b _ as_ =>
                plusCS (plusCS (exprStats e) (bndrStats b)) (sumCS altStats as_)
-           | Cast e co => plusCS (coStats co) (exprStats e)
-           | Tick _ e => exprStats e
            end with bindStats (arg_0__ : BasicTypes.TopLevelFlag) (arg_1__ : CoreBind)
                       : CoreStats
                       := let bindingStats (top_lvl : BasicTypes.TopLevelFlag) (v : Var) (r : CoreExpr)
@@ -227,10 +211,10 @@ Definition bindingStats
    `CoreStats.Outputable__CoreStats' *)
 
 (* External variables:
-     App Case Cast Coercion CoreAlt CoreBind CoreExpr Id Lam Let Lit Mk_Var NonRec
-     ProfNote Rec Tick Tickish Type_ Var bool foldl' isTyVar list map nat op_z2218U__
-     op_zp__ op_zt__ orb pair sum varType AxiomatizedTypes.Coercion
-     AxiomatizedTypes.Type_ BasicTypes.NotTopLevel BasicTypes.TopLevel
-     BasicTypes.TopLevelFlag BasicTypes.isTopLevel GHC.Err.Build_Default
-     GHC.Err.Default GHC.Err.default Id.isJoinId
+     App Case CoreAlt CoreBind CoreExpr Id Lam Let Lit Mk_Var NonRec ProfNote Rec
+     Tickish Var bool foldl' isTyVar list map nat op_z2218U__ op_zp__ op_zt__ orb
+     pair sum varType AxiomatizedTypes.Coercion AxiomatizedTypes.Type_
+     BasicTypes.NotTopLevel BasicTypes.TopLevel BasicTypes.TopLevelFlag
+     BasicTypes.isTopLevel GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
+     Id.isJoinId
 *)

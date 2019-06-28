@@ -8,9 +8,9 @@ rename value GHC.Types.:  = cons
 rename type  GHC.Types.Bool  = bool
 rename value GHC.Types.True  = true
 rename value GHC.Types.False = false
-rename value GHC.Types.not   = negb
-rename value GHC.Types.||    = orb
-rename value GHC.Types.&&    = andb
+rename value GHC.Classes.not = negb
+rename value GHC.Classes.||  = orb
+rename value GHC.Classes.&&  = andb
 
 
 rename type  GHC.Base.Maybe   = option

@@ -43,3 +43,6 @@ multipleArguments Ok1             True  = False
 multipleArguments Ok1             False = True
 multipleArguments (NonPositive _) b     = b     -- The whole equation, not just the first argument, should be skipped
 multipleArguments _               _     = False
+
+listComprehension :: [T] -> [T]
+listComprehension ts = [Ok1 | Ok1 <- ts] ++ [f SkipMe | NonPositive f <- ts, True]

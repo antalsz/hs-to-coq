@@ -6,4 +6,5 @@ skip constructor SkipConstructor.SkipMe
 skip equation SkipConstructor.extraUnderscore _
 
 # We don't link against GHC
+skip module GHC.Skip # It's been copied into the preamble
 skip SkipConstructor.Default__T

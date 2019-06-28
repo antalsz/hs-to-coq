@@ -915,6 +915,14 @@ Proof.
   intuition.
 Qed.
 
+Lemma Desc'_WF:
+  forall s f,
+    Desc' s None None f -> WF s.
+Proof.
+  intros. unfold WF.
+  apply H; auto.
+Qed.
+
 Lemma Desc_WF':
   forall m sz f lb ub,
   Desc m lb ub sz f -> WF m.

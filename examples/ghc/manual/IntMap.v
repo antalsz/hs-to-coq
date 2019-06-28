@@ -1,80 +1,177 @@
 Require Data.IntSet.Internal.
 Require Import Data.Map.Internal.
 Require Import GHC.Num.
+Require Import Coq.Classes.Morphisms.
 
-Definition IntMap := Map Word.
+From Coq Require Import ssreflect ssrbool.
+
+Require Import Proofs.GHC.Base.
+
+Require Import MapProofs.
+
+Definition IntMap := WFMap Word.
+
+Global Instance Eq_IntMap {A} `{ Base.Eq_ A} : Base.Eq_ (IntMap A) :=
+  Eq_Map_WF.
+
+Section WF.
+
+  Context { e a b c : Type}.
+
+  Context `{Base.Eq_ e}.
+  Context `{Base.EqLaws e}.
+  Context `{Base.Ord e}.
+  Context `{OrdTactic.OrdLaws e}.
+
+  Axiom mergeWithKey_WF :
+    forall (f : e -> a -> b -> option c)
+      (g : Map e a -> Map e c)
+      (h : Map e b -> Map e c) x y,
+      WF x -> WF y ->
+      WF (mergeWithKey f g h x y).
+
+End WF.
+
+
+Ltac prove_WF :=
+  match goal with
+  | [ |- WF (proj1_sig ?x) ] =>
+    match goal with
+    | [ x : IntMap _ |- _] =>
+      destruct x; assumption
+    end
+  end.
+
 
 Section IntMap.
 
   Context {A B C: Type}.
   
-  Definition empty : IntMap A := empty.
+  Program Definition empty : IntMap A := empty.
+  Next Obligation. apply empty_WF. Defined.
 
-  Definition singleton : Word -> A -> IntMap A := singleton.
+  Program Definition singleton : Word -> A -> IntMap A := singleton.
+  Next Obligation. apply singleton_WF. Defined.
 
-  Definition null : IntMap A -> bool := null.
+  Program Definition null : IntMap A -> bool := null.
 
-  Definition keys : IntMap A -> list Word := keys.
+  Program Definition keys : IntMap A -> list Word := keys.
 
   Definition keysSet (m : IntMap A) : Data.IntSet.Internal.IntSet :=
     Data.IntSet.Internal.fromList (keys m).
 
-  Definition elems : IntMap A -> list A := elems.
+  Program Definition elems : IntMap A -> list A := elems.
 
-  Definition member : Word -> IntMap A -> bool := member.
+  Program Definition member : Word -> IntMap A -> bool := member.
 
-  Definition size : IntMap A -> nat := map_size.
+  Program Definition size : IntMap A -> nat := map_size.
 
-  Definition insert : Word -> A -> IntMap A -> IntMap A := insert.
+  Program Definition insert : Word -> A -> IntMap A -> IntMap A := insert.
+  Next Obligation. apply insert_WF; prove_WF. Defined.
 
-  Definition insertWith : (A -> A -> A) -> Word -> A -> IntMap A -> IntMap A :=
+  Program Definition insertWith : (A -> A -> A) -> Word -> A -> IntMap A -> IntMap A :=
     insertWith.
+  Next Obligation. apply insertWith_WF; prove_WF. Defined.
 
-  Definition delete : Word -> IntMap A -> IntMap A := delete.
+  Program Definition delete : Word -> IntMap A -> IntMap A := delete.
+  Next Obligation. apply delete_WF; prove_WF. Defined.
 
-  Definition alter : (option A -> option A) -> Word -> IntMap A -> IntMap A :=
+  Program Definition alter : (option A -> option A) -> Word -> IntMap A -> IntMap A :=
     alter.
+  Next Obligation. apply alter_WF. prove_WF. Defined.
 
-  Definition adjust : (A -> A) -> Word -> IntMap A -> IntMap A := adjust.
+  Program Definition adjust : (A -> A) -> Word -> IntMap A -> IntMap A := adjust.
+  Next Obligation. apply adjust_WF. prove_WF. Defined.
 
-  Definition map : (A -> B) -> IntMap A -> IntMap B := map.
+  Program Definition map : (A -> B) -> IntMap A -> IntMap B := map.
+  Next Obligation. apply map_WF. prove_WF. Defined.
 
-  Definition mapWithKey : (Word -> A -> B) -> IntMap A -> IntMap B := mapWithKey.
+  Program Definition mapWithKey : (Word -> A -> B) -> IntMap A -> IntMap B :=
+    mapWithKey.
+  Next Obligation.
+    apply mapWithKey_WF.
+    - intros i j H. f_equal.
+      apply /Eq_eq =>//.
+    - prove_WF.
+  Defined.
 
-  Definition mergeWithKey : (Word -> A -> B -> option C) ->
-                            (IntMap A -> IntMap C) ->
-                            (IntMap B -> IntMap C) ->
-                            IntMap A -> IntMap B -> IntMap C :=
+  Program Definition mergeWithKey : (Word -> A -> B -> option C) ->
+                                    (IntMap A -> IntMap C) ->
+                                    (IntMap B -> IntMap C) ->
+                                    IntMap A -> IntMap B -> IntMap C :=
     mergeWithKey.
+  Next Obligation.
+    (* This is not provable, and I do not have a better way of
+       addressing it at the moment. *)
+  Admitted.
+  Next Obligation.
+    (* This is not provable, and I do not have a better way of
+       addressing it at the moment. *)
+  Admitted.
+  Next Obligation. apply mergeWithKey_WF; prove_WF. Defined.
 
-  Definition filter : (A -> bool) -> IntMap A -> IntMap A := filter.
+  Coercion unfoldIntMap (m : IntMap A) : Map Word A :=
+    let (x, _) := m in x.
 
-  Definition filterWithKey : (Word -> A -> bool) -> IntMap A -> IntMap A :=
+
+  Program Definition filter : (A -> bool) -> IntMap A -> IntMap A := filter.
+  Next Obligation. apply filter_WF. destruct x0. assumption. Defined.
+
+  Program Definition filterWithKey : (Word -> A -> bool) -> IntMap A -> IntMap A :=
     filterWithKey.
+  Next Obligation.
+    apply filterWithKey_WF.
+    - intros i j H. f_equal. apply /Eq_eq =>//.
+    - destruct x0; assumption.
+  Defined.
 
-  Definition union : IntMap A -> IntMap A -> IntMap A := union.
+  Program Definition union : IntMap A -> IntMap A -> IntMap A := union.
+  Next Obligation.
+    clear.
+  Admitted.
 
-  Definition unionWith : (A -> A -> A) -> IntMap A -> IntMap A -> IntMap A :=
+  Program Definition unionWith : (A -> A -> A) -> IntMap A -> IntMap A -> IntMap A :=
     unionWith.
+  Next Obligation.
+    clear.
+  Admitted.
 
-  Definition intersection : IntMap A -> IntMap B -> IntMap A := intersection.
+  Program Definition intersection : IntMap A -> IntMap B -> IntMap A :=
+    intersection.
+  Next Obligation.
+    clear.
+  Admitted.
   
-  Definition intersectionWith : (A -> B -> C) -> IntMap A -> IntMap B -> IntMap C :=
+  Program Definition intersectionWith : (A -> B -> C) ->
+                                        IntMap A -> IntMap B -> IntMap C :=
     intersectionWith.
+  Next Obligation.
+    clear.
+  Admitted.
 
-  Definition difference : IntMap A -> IntMap B -> IntMap A := difference.
+  Program Definition difference : IntMap A -> IntMap B -> IntMap A := difference.
+  Next Obligation.
+    clear.
+  Admitted.
 
-  Definition partition : (A -> bool) -> IntMap A -> IntMap A * IntMap A :=
+  Program Definition partition : (A -> bool) -> IntMap A -> IntMap A * IntMap A :=
     partition.
+  Next Obligation.
+    clear.
+  Admitted.
+  Next Obligation.
+    clear.
+  Admitted.
 
-  Definition toList : IntMap A -> list (Word * A) := toList.
+  Program Definition toList : IntMap A -> list (Word * A) := toList.
 
-  Definition foldr : (A -> B -> B) -> B -> IntMap A -> B := foldr.
+  Program Definition foldr : (A -> B -> B) -> B -> IntMap A -> B := foldr.
 
-  Definition foldrWithKey : (Word -> A -> B -> B) -> B -> IntMap A -> B := foldrWithKey.
+  Program Definition foldrWithKey : (Word -> A -> B -> B) -> B -> IntMap A -> B :=
+    foldrWithKey.
 
-  Definition findWithDefault : A -> Word -> IntMap A -> A := findWithDefault.
+  Program Definition findWithDefault : A -> Word -> IntMap A -> A := findWithDefault.
 
-  Definition lookup : Word -> IntMap A -> option A := lookup.
+  Program Definition lookup : Word -> IntMap A -> option A := lookup.
 
 End IntMap.

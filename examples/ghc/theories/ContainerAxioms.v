@@ -8,9 +8,12 @@ Require Import Proofs.Prelude.
 Require Import MapProofs.InterfaceProofs.
 Require IntMap.
 
-Axiom member_eq : forall A k k' (i : IntMap.IntMap A),
+Lemma member_eq : forall A k k' (i : IntMap.IntMap A),
     k == k' ->
     IntMap.member k i = IntMap.member k' i.
+Proof.
+  intros. cbn in H. apply N.eqb_eq in H; subst. reflexivity.
+Qed.
 
 Axiom lookup_insert : forall A key (val:A) i, 
     IntMap.lookup key (IntMap.insert key val i) = Some val.

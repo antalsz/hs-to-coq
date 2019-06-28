@@ -92,7 +92,6 @@ CORE_MODULES = \
 ## for Exitify/CSE
 
 
-
 NOTRANSLATE = \
   Constructors \
   CoreType \
@@ -116,7 +115,7 @@ VFILES_CONSTR    = Constructors.v
 VFILES_CORESYN   = Core.v
 VFILES_TYPE      = Type_.v
 
-VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN) 
+VFILES   = $(VFILES_GEN) $(VFILES_MAN) $(VFILES_DROPIN) $(VFILES_CORE) $(VFILES_CORESYN)
 
 OUTFILES_GEN       = $(addprefix $(OUT)/,$(VFILES_GEN))
 OUTFILES_MAN       = $(addprefix $(OUT)/,$(VFILES_MAN))
@@ -127,23 +126,23 @@ OUTFILES_CONSTR    = $(addprefix $(OUT)/,$(VFILES_CONSTR))
 OUTFILES_CORESYN   = $(addprefix $(OUT)/,$(VFILES_CORESYN))
 OUTFILES_TYPE      = $(addprefix $(OUT)/,$(VFILES_TYPE))
 
-OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN) 
+OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN)
 
-HSFILES    = $(addsuffix .hs,$(MODULES)) $(addsuffix .hs,$(CORESYN)) $(addsuffix .hs,$(CORE_MODULES)) 
-HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES)) 
+HSFILES    = $(addsuffix .hs,$(MODULES)) $(addsuffix .hs,$(CORESYN)) $(addsuffix .hs,$(CORE_MODULES))
+HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES))
 
 EDITPATHS = $(addprefix module-edits/,$(MODULES) $(CORESYN) $(CORE_MODULES))
-EDITFILES = edits $(CORE_EDITS) $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDITPATHS)) 
+EDITFILES = edits $(CORE_EDITS) $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDITPATHS))
 
 all: vfiles coq
 
-vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES) 
+vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES)
 
 core: $(OUT)/README.md coq
 
 
 filelist:
-	@ls -1 $(HSFILESPATH) 
+	@ls -1 $(HSFILESPATH)
 
 editlist:
 	@ls -1 $(EDITFILES) 2>/dev/null | xargs cloc --by-file --lang-no-ext=zsh --force-lang=zsh,edits --skip-uniqueness
@@ -176,6 +175,7 @@ $(OUT)/_CoqProject: $(OUT)/README.md Makefile
 	echo '-R ../../../base ""' >> $@
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
+	echo '-Q ../../containers/theories  ""' >> $@
 	echo '-Q ../../transformers/lib  ""' >> $@
 	echo $(filter-out $(addsuffix .v,$(BROKEN_MODULES)), $(VFILES)) >> $@
 

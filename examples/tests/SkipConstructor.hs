@@ -46,3 +46,11 @@ multipleArguments _               _     = False
 
 listComprehension :: [T] -> [T]
 listComprehension ts = [Ok1 | Ok1 <- ts] ++ [f SkipMe | NonPositive f <- ts, True]
+
+patternGuard :: T -> T
+patternGuard t | Ok1 <- t           = t
+               | NonPositive f <- t = f t
+patternGuard t | True
+               , Record{} <- t
+               , True               = t
+patternGuard _                      = Ok2

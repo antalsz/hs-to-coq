@@ -22,6 +22,7 @@ import Data.Traversable
 import Data.Bitraversable
 import HsToCoq.Util.Function
 import Data.Maybe
+import Data.Either
 import HsToCoq.Util.List hiding (unsnoc)
 import Data.List.NonEmpty (nonEmpty, NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
@@ -598,6 +599,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
         (\exp' cont letCont -> letCont (App2 concatMapT (Qualid cont) exp') <$> rest)
         (\skipped           -> pure $ App1 (Qualid "GHC.Skip.nil_skipped") (String $ textP skipped))
         (Var "nil")
+        -- `GHC.Skip.nil_skipped` always returns `[]`, but it has a note about
+        -- what constructor was skipped.
 
     toExpr (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
@@ -741,21 +744,21 @@ hasGuards _                             = HasGuard
 convertGRHS :: LocalConvMonad r m
             => [ConvertedGuard m]
             -> GRHS GhcRn (LHsExpr GhcRn)
-            -> Term -- failure
-            -> m Term
-convertGRHS extraGuards (GRHS gs rhs) failure = do
-    convGuards <- (extraGuards ++) <$> convertGuard gs
-    rhs <- convertLExpr rhs
-    guardTerm convGuards rhs failure
+            -> ExceptT Qualid m (Term -> m Term)
+convertGRHS extraGuards (GRHS gs rhs) = do
+  convGuards <- (extraGuards ++) <$> convertGuard gs
+  rhs <- convertLExpr rhs
+  pure $ \failure -> guardTerm convGuards rhs failure
 
 convertLGRHSList :: LocalConvMonad r m
                  => [ConvertedGuard m]
                  -> [LGRHS GhcRn (LHsExpr GhcRn)]
                  -> Term
                  -> m Term
-convertLGRHSList extraGuards lgrhs failure  = do
+convertLGRHSList extraGuards lgrhs failure = do
     let rhss = unLoc <$> lgrhs
-    chainFallThroughs (convertGRHS extraGuards <$> rhss) failure
+    convRhss <- rights <$> traverse (runExceptT . convertGRHS extraGuards) rhss
+    chainFallThroughs convRhss failure
 
 convertGRHSs :: LocalConvMonad r m
              => [ConvertedGuard m]
@@ -772,7 +775,7 @@ data ConvertedGuard m = OtherwiseGuard
                       | PatternGuard   Pattern Term
                       | LetGuard       (m Term -> m Term)
 
-convertGuard :: LocalConvMonad r m => [GuardLStmt GhcRn] -> m [ConvertedGuard m]
+convertGuard :: LocalConvMonad r m => [GuardLStmt GhcRn] -> ExceptT Qualid m [ConvertedGuard m]
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
@@ -781,15 +784,10 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
       False -> (:[]) . BoolGuard <$> convertLExpr e
   toCond (LetStmt (L _ binds)) =
     pure . (:[]) . LetGuard $ convertLocalBinds binds
-  toCond (BindStmt pat exp _bind _fail PlaceHolder) =
-    runPatternT (convertLPat pat) >>= \case
-      Left  skipped ->
-        -- `GHC.Skip.impossible_skipped` always returns false, but it has a note
-        -- about what constructor was skipped.
-        pure [BoolGuard $ App1 (Qualid "GHC.Skip.impossible_skipped") (String $ textP skipped)]
-      Right (pat', guards) -> do
-        exp'           <- convertLExpr exp
-        pure $ PatternGuard pat' exp' : map BoolGuard guards
+  toCond (BindStmt pat exp _bind _fail PlaceHolder) = do
+    (pat', guards) <- runWriterT (convertLPat pat)
+    exp'           <- convertLExpr exp
+    pure $ PatternGuard pat' exp' : map BoolGuard guards
   toCond _ =
     convUnsupported "impossibly fancy guards"
 

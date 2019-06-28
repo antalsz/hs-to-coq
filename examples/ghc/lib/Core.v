@@ -451,13 +451,7 @@ with DataConRep : Type
     : list HsImplBang)
    : DataConRep
 with Var : Type
-  := | Mk_TyVar (varName : Name.Name) (realUnique : BinNums.N) (varType
-    : AxiomatizedTypes.Kind)
-   : Var
-  |  Mk_TcTyVar (varName : Name.Name) (realUnique : BinNums.N) (varType
-    : AxiomatizedTypes.Kind) (tc_tv_details : AxiomatizedTypes.TcTyVarDetails)
-   : Var
-  |  Mk_Id (varName : Name.Name) (realUnique : BinNums.N) (varType
+  := | Mk_Id (varName : Name.Name) (realUnique : BinNums.N) (varType
     : AxiomatizedTypes.Type_) (idScope : IdScope) (id_details : IdDetails) (id_info
     : IdInfo)
    : Var
@@ -471,7 +465,6 @@ with IdDetails : Type
   |  FCallId : unit -> IdDetails
   |  TickBoxOpId : TickBoxOp -> IdDetails
   |  Mk_DFunId : bool -> IdDetails
-  |  CoVarId : IdDetails
   |  Mk_JoinId : BasicTypes.JoinArity -> IdDetails
 with RecSelParent : Type
   := | RecSelData : TyCon -> RecSelParent
@@ -1969,58 +1962,24 @@ Definition dcr_stricts (arg_0__ : DataConRep) :=
   end.
 
 Definition idScope (arg_0__ : Var) :=
-  match arg_0__ with
-  | Mk_TyVar _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `idScope' has no match in constructor `Mk_TyVar' of type `Var'")
-  | Mk_TcTyVar _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `idScope' has no match in constructor `Mk_TcTyVar' of type `Var'")
-  | Mk_Id _ _ _ idScope _ _ => idScope
-  end.
+  let 'Mk_Id _ _ _ idScope _ _ := arg_0__ in
+  idScope.
 
 Definition id_details (arg_0__ : Var) :=
-  match arg_0__ with
-  | Mk_TyVar _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `id_details' has no match in constructor `Mk_TyVar' of type `Var'")
-  | Mk_TcTyVar _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `id_details' has no match in constructor `Mk_TcTyVar' of type `Var'")
-  | Mk_Id _ _ _ _ id_details _ => id_details
-  end.
+  let 'Mk_Id _ _ _ _ id_details _ := arg_0__ in
+  id_details.
 
 Definition realUnique (arg_0__ : Var) :=
-  match arg_0__ with
-  | Mk_TyVar _ realUnique _ => realUnique
-  | Mk_TcTyVar _ realUnique _ _ => realUnique
-  | Mk_Id _ realUnique _ _ _ _ => realUnique
-  end.
-
-Definition tc_tv_details (arg_0__ : Var) :=
-  match arg_0__ with
-  | Mk_TyVar _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `tc_tv_details' has no match in constructor `Mk_TyVar' of type `Var'")
-  | Mk_TcTyVar _ _ _ tc_tv_details => tc_tv_details
-  | Mk_Id _ _ _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `tc_tv_details' has no match in constructor `Mk_Id' of type `Var'")
-  end.
+  let 'Mk_Id _ realUnique _ _ _ _ := arg_0__ in
+  realUnique.
 
 Definition varName (arg_0__ : Var) :=
-  match arg_0__ with
-  | Mk_TyVar varName _ _ => varName
-  | Mk_TcTyVar varName _ _ _ => varName
-  | Mk_Id varName _ _ _ _ _ => varName
-  end.
+  let 'Mk_Id varName _ _ _ _ _ := arg_0__ in
+  varName.
 
 Definition varType (arg_0__ : Var) :=
-  match arg_0__ with
-  | Mk_TyVar _ _ varType => varType
-  | Mk_TcTyVar _ _ varType _ => varType
-  | Mk_Id _ _ varType _ _ _ => varType
-  end.
+  let 'Mk_Id _ _ varType _ _ _ := arg_0__ in
+  varType.
 
 Definition sel_naughty (arg_0__ : IdDetails) :=
   match arg_0__ with
@@ -2049,9 +2008,6 @@ Definition sel_naughty (arg_0__ : IdDetails) :=
   | Mk_DFunId _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `sel_naughty' has no match in constructor `Mk_DFunId' of type `IdDetails'")
-  | CoVarId =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `sel_naughty' has no match in constructor `CoVarId' of type `IdDetails'")
   | Mk_JoinId _ =>
       GHC.Err.error (GHC.Base.hs_string__
                      "Partial record selector: field `sel_naughty' has no match in constructor `Mk_JoinId' of type `IdDetails'")
@@ -2522,29 +2478,17 @@ Definition updateVarTypeM {m} `{GHC.Base.Monad m}
   fun f id =>
     f (varType id) GHC.Base.>>=
     (fun ty' =>
-       GHC.Base.return_ (match id with
-                         | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-                             Mk_TyVar varName_0__ realUnique_1__ ty'
-                         | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-                             Mk_TcTyVar varName_3__ realUnique_4__ ty' tc_tv_details_6__
-                         | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-                         id_info_12__ =>
-                             Mk_Id varName_7__ realUnique_8__ ty' idScope_10__ id_details_11__ id_info_12__
-                         end)).
+       GHC.Base.return_ (let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__
+                            id_details_4__ id_info_5__ := id in
+                         Mk_Id varName_0__ realUnique_1__ ty' idScope_3__ id_details_4__ id_info_5__)).
 
 Definition updateVarType
    : (AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_) -> Id -> Id :=
   fun f id =>
-    match id with
-    | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar varName_0__ realUnique_1__ (f (varType id))
-    | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar varName_3__ realUnique_4__ (f (varType id)) tc_tv_details_6__
-    | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-    id_info_12__ =>
-        Mk_Id varName_7__ realUnique_8__ (f (varType id)) idScope_10__ id_details_11__
-              id_info_12__
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := id in
+    Mk_Id varName_0__ realUnique_1__ (f (varType id)) idScope_3__ id_details_4__
+          id_info_5__.
 
 Definition unwrapNewTyCon_maybe
    : TyCon ->
@@ -2621,31 +2565,19 @@ Definition tyVarKind : TyVar -> AxiomatizedTypes.Kind :=
 Definition updateTyVarKind
    : (AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind) -> TyVar -> TyVar :=
   fun update tv =>
-    match tv with
-    | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar varName_0__ realUnique_1__ (update (tyVarKind tv))
-    | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar varName_3__ realUnique_4__ (update (tyVarKind tv)) tc_tv_details_6__
-    | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-    id_info_12__ =>
-        Mk_Id varName_7__ realUnique_8__ (update (tyVarKind tv)) idScope_10__
-              id_details_11__ id_info_12__
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := tv in
+    Mk_Id varName_0__ realUnique_1__ (update (tyVarKind tv)) idScope_3__
+          id_details_4__ id_info_5__.
 
 Definition updateTyVarKindM {m} `{(GHC.Base.Monad m)}
    : (AxiomatizedTypes.Kind -> m AxiomatizedTypes.Kind) -> TyVar -> m TyVar :=
   fun update tv =>
     update (tyVarKind tv) GHC.Base.>>=
     (fun k' =>
-       GHC.Base.return_ (match tv with
-                         | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-                             Mk_TyVar varName_0__ realUnique_1__ k'
-                         | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-                             Mk_TcTyVar varName_3__ realUnique_4__ k' tc_tv_details_6__
-                         | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-                         id_info_12__ =>
-                             Mk_Id varName_7__ realUnique_8__ k' idScope_10__ id_details_11__ id_info_12__
-                         end)).
+       GHC.Base.return_ (let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__
+                            id_details_4__ id_info_5__ := tv in
+                         Mk_Id varName_0__ realUnique_1__ k' idScope_3__ id_details_4__ id_info_5__)).
 
 Definition tyConTuple_maybe : TyCon -> option BasicTypes.TupleSort :=
   fun arg_0__ =>
@@ -2996,9 +2928,6 @@ Axiom tickishCounts : forall {id}, Tickish id -> bool.
 Definition tickishFloatable {id} : Tickish id -> bool :=
   fun t => andb (tickishScopesLike t SoftScope) (negb (tickishCounts t)).
 
-Definition tcTyVarDetails : TyVar -> unit :=
-  fun x => tt.
-
 Definition tcFlavourIsOpen : TyConFlavour -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -3107,44 +3036,23 @@ Definition sizeDVarSet : DVarSet -> nat :=
 
 Definition setVarUnique : Var -> Unique.Unique -> Var :=
   fun var uniq =>
-    match var with
-    | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq)
-                 varType_2__
-    | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq)
-                   varType_5__ tc_tv_details_6__
-    | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-    id_info_12__ =>
-        Mk_Id (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq) varType_9__
-              idScope_10__ id_details_11__ id_info_12__
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := var in
+    Mk_Id (Name.setNameUnique (varName var) uniq) (Unique.getKey uniq) varType_2__
+          idScope_3__ id_details_4__ id_info_5__.
 
 Definition setVarType : Id -> AxiomatizedTypes.Type_ -> Id :=
   fun id ty =>
-    match id with
-    | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar varName_0__ realUnique_1__ ty
-    | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar varName_3__ realUnique_4__ ty tc_tv_details_6__
-    | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-    id_info_12__ =>
-        Mk_Id varName_7__ realUnique_8__ ty idScope_10__ id_details_11__ id_info_12__
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := id in
+    Mk_Id varName_0__ realUnique_1__ ty idScope_3__ id_details_4__ id_info_5__.
 
 Definition setVarName : Var -> Name.Name -> Var :=
   fun var new_name =>
-    match var with
-    | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar new_name (Unique.getKey (Unique.getUnique new_name)) varType_2__
-    | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar new_name (Unique.getKey (Unique.getUnique new_name)) varType_5__
-                   tc_tv_details_6__
-    | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-    id_info_12__ =>
-        Mk_Id new_name (Unique.getKey (Unique.getUnique new_name)) varType_9__
-              idScope_10__ id_details_11__ id_info_12__
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := var in
+    Mk_Id new_name (Unique.getKey (Unique.getUnique new_name)) varType_2__
+          idScope_3__ id_details_4__ id_info_5__.
 
 Definition setUnfoldingInfo : IdInfo -> Unfolding -> IdInfo :=
   fun info uf =>
@@ -3163,26 +3071,9 @@ Definition setTyVarName : TyVar -> Name.Name -> TyVar :=
 
 Definition setTyVarKind : TyVar -> AxiomatizedTypes.Kind -> TyVar :=
   fun tv k =>
-    match tv with
-    | Mk_TyVar varName_0__ realUnique_1__ varType_2__ =>
-        Mk_TyVar varName_0__ realUnique_1__ k
-    | Mk_TcTyVar varName_3__ realUnique_4__ varType_5__ tc_tv_details_6__ =>
-        Mk_TcTyVar varName_3__ realUnique_4__ k tc_tv_details_6__
-    | Mk_Id varName_7__ realUnique_8__ varType_9__ idScope_10__ id_details_11__
-    id_info_12__ =>
-        Mk_Id varName_7__ realUnique_8__ k idScope_10__ id_details_11__ id_info_12__
-    end.
-
-Definition setTcTyVarDetails
-   : TyVar -> AxiomatizedTypes.TcTyVarDetails -> TyVar :=
-  fun tv details =>
-    match tv with
-    | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_TcTyVar varName_0__ realUnique_1__ varType_2__ tc_tv_details_3__ =>
-        Mk_TcTyVar varName_0__ realUnique_1__ varType_2__ details
-    | Mk_Id _ _ _ _ _ _ =>
-        GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := tv in
+    Mk_Id varName_0__ realUnique_1__ k idScope_3__ id_details_4__ id_info_5__.
 
 Definition setStrictnessInfo : IdInfo -> StrictSig -> IdInfo :=
   fun info dd =>
@@ -3281,29 +3172,18 @@ Definition setIdExported : Id -> Id :=
   fun arg_0__ =>
     match arg_0__ with
     | (Mk_Id _ _ _ (LocalId _) _ _ as id) =>
-        match id with
-        | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-        | Mk_TcTyVar _ _ _ _ =>
-            GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-        | Mk_Id varName_1__ realUnique_2__ varType_3__ idScope_4__ id_details_5__
-        id_info_6__ =>
-            Mk_Id varName_1__ realUnique_2__ varType_3__ (LocalId Exported) id_details_5__
-                  id_info_6__
-        end
+        let 'Mk_Id varName_1__ realUnique_2__ varType_3__ idScope_4__ id_details_5__
+           id_info_6__ := id in
+        Mk_Id varName_1__ realUnique_2__ varType_3__ (LocalId Exported) id_details_5__
+              id_info_6__
     | (Mk_Id _ _ _ GlobalId _ _ as id) => id
-    | tv => Panic.panicStr (GHC.Base.hs_string__ "setIdExported") (Panic.someSDoc)
     end.
 
 Definition setIdDetails : Id -> IdDetails -> Id :=
   fun id details =>
-    match id with
-    | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_TcTyVar _ _ _ _ =>
-        GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-    id_info_5__ =>
-        Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ details id_info_5__
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := id in
+    Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ details id_info_5__.
 
 Definition setDemandInfo : IdInfo -> Demand -> IdInfo :=
   fun info dd =>
@@ -3846,36 +3726,8 @@ Program Definition mkWorkerDemand : nat -> Demand :=
             JD Lazy (Mk_Use One (go n)).
 Solve Obligations with (solve_mkWorkerDemand).
 
-Definition mkTyVarBinder : ArgFlag -> Var -> TyVarBinder :=
-  fun vis var => TvBndr var vis.
-
-Definition mkTyVarBinders : ArgFlag -> list TyVar -> list TyVarBinder :=
-  fun vis => GHC.Base.map (mkTyVarBinder vis).
-
-Definition tyConTyVarBinders : list TyConBinder -> list TyVarBinder :=
-  fun tc_bndrs =>
-    let mk_binder :=
-      fun '(TvBndr tv tc_vis) =>
-        let vis :=
-          match tc_vis with
-          | AnonTCB => Specified
-          | NamedTCB Required => Specified
-          | NamedTCB vis => vis
-          end in
-        mkTyVarBinder vis tv in
-    GHC.Base.map mk_binder tc_bndrs.
-
-Definition mkTyVar : Name.Name -> AxiomatizedTypes.Kind -> TyVar :=
-  fun name kind => Mk_TyVar name (Unique.getKey (Name.nameUnique name)) kind.
-
 Axiom mkTyConKind : list TyConBinder ->
                     AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind.
-
-Definition mkTcTyVar
-   : Name.Name ->
-     AxiomatizedTypes.Kind -> AxiomatizedTypes.TcTyVarDetails -> TyVar :=
-  fun name kind details =>
-    Mk_TcTyVar name (Unique.getKey (Name.nameUnique name)) kind details.
 
 Definition mkSumTyCon
    : Name.Name ->
@@ -4321,14 +4173,9 @@ Definition lookupRnInScope : RnEnv2 -> Var -> Var :=
 
 Definition lazySetIdInfo : Id -> IdInfo -> Var :=
   fun id info =>
-    match id with
-    | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_TcTyVar _ _ _ _ =>
-        GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-    id_info_5__ =>
-        Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__ info
-    end.
+    let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+       id_info_5__ := id in
+    Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__ info.
 
 Definition lazyApply2Dmd : Demand :=
   JD Lazy (Mk_Use One (UCall One (UCall One Used))).
@@ -4532,12 +4379,7 @@ Definition valArgCount {b} : list (Arg b) -> nat :=
   Util.count isValArg.
 
 Definition isTyVar : Var -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_TyVar _ _ _ => true
-    | Mk_TcTyVar _ _ _ _ => true
-    | _ => false
-    end.
+  fun arg_0__ => false.
 
 Definition isTyConAssoc : TyCon -> bool :=
   fun tc => Data.Maybe.isJust (tyConAssoc_maybe tc).
@@ -4566,7 +4408,7 @@ Definition isTopDmd : Demand -> bool :=
     end.
 
 Definition isTcTyVar : Var -> bool :=
-  fun arg_0__ => match arg_0__ with | Mk_TcTyVar _ _ _ _ => true | _ => false end.
+  fun arg_0__ => false.
 
 Definition isTcTyCon : TyCon -> bool :=
   fun arg_0__ =>
@@ -4783,15 +4625,10 @@ Definition setIdNotExported : Id -> Id :=
     if andb Util.debugIsOn (negb (isLocalId id)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
           #591)
-    else match id with
-         | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-         | Mk_TcTyVar _ _ _ _ =>
-             GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-         | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-         id_info_5__ =>
-             Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
-                   id_details_4__ id_info_5__
-         end.
+    else let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__
+            id_details_4__ id_info_5__ := id in
+         Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
+               id_details_4__ id_info_5__.
 
 Definition isLazy : ArgStr -> bool :=
   fun arg_0__ => match arg_0__ with | Lazy => true | Mk_Str _ _ => false end.
@@ -4833,13 +4670,26 @@ Definition isImplicitTyCon : TyCon -> bool :=
     end.
 
 Definition isId : Var -> bool :=
-  fun arg_0__ => match arg_0__ with | Mk_Id _ _ _ _ _ _ => true | _ => false end.
+  fun '(Mk_Id _ _ _ _ _ _) => true.
 
 Definition isRuntimeVar : Var -> bool :=
   isId.
 
 Definition valBndrCount : list CoreBndr -> nat :=
   Util.count isId.
+
+Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
+  fun v =>
+    if andb Util.debugIsOn (negb (isId v)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+          #1920)
+    else Mk_Var v.
+
+Definition mkVarApps {b} : Expr b -> list Var -> Expr b :=
+  fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
+
+Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
+  fun vs => GHC.Base.map varToCoreExpr vs.
 
 Definition isHyperStr : ArgStr -> bool :=
   fun arg_0__ => match arg_0__ with | Mk_Str _ HyperStr => true | _ => false end.
@@ -5088,41 +4938,16 @@ Definition isCompulsoryUnfolding : Unfolding -> bool :=
   fun arg_0__ => false.
 
 Definition isCoVarDetails : IdDetails -> bool :=
-  fun arg_0__ => match arg_0__ with | CoVarId => true | _ => false end.
+  fun arg_0__ => false.
 
 Definition isNonCoVarId : Var -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ _ details _ => negb (isCoVarDetails details)
-    | _ => false
-    end.
+  fun '(Mk_Id _ _ _ _ details _) => negb (isCoVarDetails details).
 
 Definition isCoVar : Var -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ _ details _ => isCoVarDetails details
-    | _ => false
-    end.
+  fun '(Mk_Id _ _ _ _ details _) => isCoVarDetails details.
 
 Definition isTyCoVar : Var -> bool :=
   fun v => orb (isTyVar v) (isCoVar v).
-
-Axiom mkCoVarCo : CoVar -> AxiomatizedTypes.Coercion.
-
-Axiom mkTyVarTy : TyVar -> AxiomatizedTypes.Type_.
-
-Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
-  fun v =>
-    if andb Util.debugIsOn (negb (isId v)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-          #1920)
-    else Mk_Var v.
-
-Definition mkVarApps {b} : Expr b -> list Var -> Expr b :=
-  fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
-
-Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
-  fun vs => GHC.Base.map varToCoreExpr vs.
 
 Definition isClosedSynFamilyTyConWithAxiom_maybe
    : TyCon -> option (AxiomatizedTypes.CoAxiom AxiomatizedTypes.Branched) :=
@@ -5254,32 +5079,22 @@ Definition increaseStrictSigArity : nat -> StrictSig -> StrictSig :=
     end.
 
 Definition idInfo `{Util.HasDebugCallStack} : Id -> IdInfo :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ _ _ info => info
-    | other => Panic.panicStr (GHC.Base.hs_string__ "idInfo") (Panic.someSDoc)
-    end.
+  fun '(Mk_Id _ _ _ _ _ info) => info.
 
 Definition idDetails : Id -> IdDetails :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ _ details _ => details
-    | other => Panic.panicStr (GHC.Base.hs_string__ "idDetails") (Panic.someSDoc)
-    end.
+  fun '(Mk_Id _ _ _ _ details _) => details.
+
+Definition hasSomeUnfolding : Unfolding -> bool :=
+  fun '(NoUnfolding) => false.
 
 Definition hasDemandEnvSig : StrictSig -> bool :=
   fun '(Mk_StrictSig (Mk_DmdType env _ _)) => negb (isEmptyVarEnv env).
 
 Definition globaliseId : Id -> Id :=
-  fun id =>
-    match id with
-    | Mk_TyVar _ _ _ => GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_TcTyVar _ _ _ _ =>
-        GHC.Err.error (GHC.Base.hs_string__ "Partial record update")
-    | Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-    id_info_5__ =>
-        Mk_Id varName_0__ realUnique_1__ varType_2__ GlobalId id_details_4__ id_info_5__
-    end.
+  fun '(Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
+  id_info_5__) =>
+    Mk_Id varName_0__ realUnique_1__ varType_2__ GlobalId id_details_4__
+          id_info_5__.
 
 Definition getUseDmd {s} {u} : JointDmd s u -> u :=
   ud.
@@ -6034,13 +5849,11 @@ Definition dataConWorkId : DataCon -> Id :=
 Definition mkConApp {b} : DataCon -> list (Arg b) -> Expr b :=
   fun con args => mkApps (Mk_Var (dataConWorkId con)) args.
 
-(*
 Definition mkConApp2 {b}
    : DataCon -> list AxiomatizedTypes.Type_ -> list Var -> Expr b :=
   fun con tys arg_ids =>
-    mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map Type_ tys))
+    mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map GHC.Err.default tys))
            (GHC.Base.map varToCoreExpr arg_ids).
-*)
 
 Definition dataConUserTyVarBinders : DataCon -> list TyVarBinder :=
   dcUserTyVarBinders.
@@ -6217,7 +6030,6 @@ Definition collectBinders {b} : Expr b -> (list b * Expr b)%type :=
                  end in
     go nil expr.
 
-(*
 Definition collectArgsTicks {b}
    : (Tickish Id -> bool) ->
      Expr b -> (Expr b * list (Arg b) * list (Tickish Id))%type :=
@@ -6225,14 +6037,9 @@ Definition collectArgsTicks {b}
     let fix go arg_0__ arg_1__ arg_2__
               := match arg_0__, arg_1__, arg_2__ with
                  | App f a, as_, ts => go f (cons a as_) ts
-                 | as_, ts =>
-                     if skipTick t : bool then go e as_ (cons t ts) else
-                     match arg_0__, arg_1__, arg_2__ with
-                     | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
-                     end
+                 | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
                  end in
     go expr nil nil.
-*)
 
 Definition collectArgs {b} : Expr b -> (Expr b * list (Arg b))%type :=
   fun expr =>
@@ -6255,7 +6062,6 @@ Program Definition collectAnnBndrs {bndr} {annot}
                                end) in
             collect nil e.
 
-(*
 Program Definition collectAnnArgsTicks {b} {a}
            : (Tickish Var -> bool) ->
              AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a) * list (Tickish Var))%type :=
@@ -6265,15 +6071,10 @@ Program Definition collectAnnArgsTicks {b} {a}
                                size_AnnExpr' (snd arg_0__)) _ (fun arg_0__ arg_1__ arg_2__ go =>
                                match arg_0__, arg_1__, arg_2__ with
                                | pair _ (AnnApp f a), as_, ts => go f (cons a as_) ts
-                               | as_, ts =>
-                                   if Bool.Sumbool.sumbool_of_bool (tickishOk t) then go e as_ (cons t ts) else
-                                   match arg_0__, arg_1__, arg_2__ with
-                                   | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
-                                   end
+                               | e, as_, ts => pair (pair e as_) (GHC.List.reverse ts)
                                end) in
             go expr nil nil.
 Solve Obligations with (solve_collectAnnArgsTicks).
-*)
 
 Program Definition collectAnnArgs {b} {a}
            : AnnExpr b a -> (AnnExpr b a * list (AnnExpr b a))%type :=
@@ -6287,12 +6088,6 @@ Program Definition collectAnnArgs {b} {a}
                                end) in
             go expr nil.
 Solve Obligations with (solve_collectAnnArgsTicks).
-
-Definition coVarDetails : IdDetails :=
-  CoVarId.
-
-Definition mkCoVar : Name.Name -> AxiomatizedTypes.Type_ -> CoVar :=
-  fun name ty => mk_id name ty (LocalId NotExported) coVarDetails vanillaIdInfo.
 
 Definition cmpAltCon : AltCon -> AltCon -> comparison :=
   fun arg_0__ arg_1__ =>
@@ -7800,6 +7595,9 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
     k__ {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
+Axiom splitTyConApp_maybe : AxiomatizedTypes.Type_ ->
+                            option (TyCon * list AxiomatizedTypes.Type_).
+
 Axiom mkCoercionTy : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
 
 Axiom tyConAppArgs : AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
@@ -7824,29 +7622,28 @@ Inductive TCvSubst : Type
   := | Mk_TCvSubst : InScopeSet -> TvSubstEnv -> CvSubstEnv -> TCvSubst.
 
 (* External variables:
-     Bool.Sumbool.sumbool_of_bool Coercion Eq Gt Lt None Some Type Type_ andb app
-     bool comparison cons e false list nat negb nil op_zt__ option orb pair
-     size_AnnExpr' snd t true tt unit AxiomatizedTypes.Branched
-     AxiomatizedTypes.BuiltInSynFamily AxiomatizedTypes.CoAxiom
-     AxiomatizedTypes.Coercion AxiomatizedTypes.Kind AxiomatizedTypes.Nominal
-     AxiomatizedTypes.PredType AxiomatizedTypes.Representational
-     AxiomatizedTypes.Role AxiomatizedTypes.TcTyVarDetails AxiomatizedTypes.ThetaType
-     AxiomatizedTypes.Type_ AxiomatizedTypes.Unbranched BasicTypes.Activation
-     BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity BasicTypes.ConTag
-     BasicTypes.ConTagZ BasicTypes.DefMethSpec BasicTypes.IAmALoopBreaker
-     BasicTypes.IAmDead BasicTypes.InlinePragma BasicTypes.JoinArity
-     BasicTypes.ManyOccs BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo
-     BasicTypes.OccInfo BasicTypes.OneOcc BasicTypes.OneShotInfo
-     BasicTypes.OneShotLam BasicTypes.RuleName BasicTypes.SourceText
-     BasicTypes.TupleSort BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
-     BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
-     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
-     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app
-     Coq.Init.Peano.lt Coq.Lists.List.firstn Coq.Lists.List.flat_map
-     Coq.Lists.List.length Coq.Lists.List.repeat Coq.Lists.List.skipn
-     Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find
-     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null Data.Function.on
-     Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool comparison
+     cons false list nat negb nil op_zt__ option orb pair size_AnnExpr' snd true tt
+     unit AxiomatizedTypes.Branched AxiomatizedTypes.BuiltInSynFamily
+     AxiomatizedTypes.CoAxiom AxiomatizedTypes.Coercion AxiomatizedTypes.Kind
+     AxiomatizedTypes.Nominal AxiomatizedTypes.PredType
+     AxiomatizedTypes.Representational AxiomatizedTypes.Role
+     AxiomatizedTypes.ThetaType AxiomatizedTypes.Type_ AxiomatizedTypes.Unbranched
+     BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity
+     BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
+     BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
+     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
+     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
+     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleName
+     BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.defaultInlinePragma
+     BasicTypes.fIRST_TAG BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed
+     BasicTypes.noOccInfo BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc
+     BinNat.N.of_nat BinNums.N BooleanFormula.BooleanFormula BooleanFormula.mkTrue
+     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
+     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.repeat
+     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
+     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
+     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt
      FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
      FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv

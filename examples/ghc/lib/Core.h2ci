@@ -34,8 +34,7 @@ constructors:
     "Core" "Inferred"]'
   Core.DmdType: ! '[Qualified "Core" "Mk_DmdType"]'
   Core.KillFlags: ! '[Qualified "Core" "Mk_KillFlags"]'
-  Core.Var: ! '[Qualified "Core" "Mk_TyVar",Qualified "Core" "Mk_TcTyVar",Qualified
-    "Core" "Mk_Id"]'
+  Core.Var: ! '[Qualified "Core" "Mk_Id"]'
   Core.StrictnessMark: ! '[Qualified "Core" "MarkedStrict",Qualified "Core" "NotMarkedStrict"]'
   Core.DataConRep: ! '[Qualified "Core" "NoDataConRep",Qualified "Core" "DCR"]'
   Core.RuntimeRepInfo: ! '[Qualified "Core" "NoRRI",Qualified "Core" "RuntimeRep",Qualified
@@ -80,7 +79,7 @@ constructors:
   Core.IdDetails: ! '[Qualified "Core" "VanillaId",Qualified "Core" "RecSelId",Qualified
     "Core" "DataConWorkId",Qualified "Core" "DataConWrapId",Qualified "Core" "ClassOpId",Qualified
     "Core" "PrimOpId",Qualified "Core" "FCallId",Qualified "Core" "TickBoxOpId",Qualified
-    "Core" "Mk_DFunId",Qualified "Core" "CoVarId",Qualified "Core" "Mk_JoinId"]'
+    "Core" "Mk_DFunId",Qualified "Core" "Mk_JoinId"]'
   Core.InScopeSet: ! '[Qualified "Core" "InScope"]'
   Core.PrimElemRep: ! '[Qualified "Core" "Int8ElemRep",Qualified "Core" "Int16ElemRep",Qualified
     "Core" "Int32ElemRep",Qualified "Core" "Int64ElemRep",Qualified "Core" "Word8ElemRep",Qualified
@@ -210,8 +209,6 @@ constructorFields:
     "Core" "ru_origin",Qualified "Core" "ru_orphan",Qualified "Core" "ru_local"]
   Core.JD: RecordFields [Qualified "Core" "sd",Qualified "Core" "ud"]
   Core.ThrowsExn: NonRecordFields 0
-  Core.Mk_TcTyVar: RecordFields [Qualified "Core" "varName",Qualified "Core" "realUnique",Qualified
-    "Core" "varType",Qualified "Core" "tc_tv_details"]
   Core.Lazy: NonRecordFields 0
   Core.Dunno: NonRecordFields 1
   Core.RecSelId: RecordFields [Qualified "Core" "sel_tycon",Qualified "Core" "sel_naughty"]
@@ -227,7 +224,6 @@ constructorFields:
   Core.TypeSynonymFlavour: NonRecordFields 0
   Core.Mk_Var: NonRecordFields 1
   Core.Rec: NonRecordFields 1
-  Core.CoVarId: NonRecordFields 0
   Core.SumTyCon: RecordFields [Qualified "Core" "data_cons"]
   Core.VectType: NonRecordFields 3
   Core.ATI: NonRecordFields 2
@@ -256,8 +252,6 @@ constructorFields:
   Core.NeverLevityPolymorphic: NonRecordFields 0
   Core.Lit: NonRecordFields 1
   Core.SrcStrict: NonRecordFields 0
-  Core.Mk_TyVar: RecordFields [Qualified "Core" "varName",Qualified "Core" "realUnique",Qualified
-    "Core" "varType"]
   Core.DataAlt: NonRecordFields 1
   Core.SProd: NonRecordFields 1
   Core.AnnNonRec: NonRecordFields 2
@@ -379,7 +373,6 @@ recordFieldTypes:
   Core.kf_abs: Qualified "Core" "KillFlags"
   Core.ru_orphan: Qualified "Core" "CoreRule"
   Core.dcr_stricts: Qualified "Core" "DataConRep"
-  Core.tc_tv_details: Qualified "Core" "Var"
   Core.dcRepTyCon: Qualified "Core" "DataCon"
   Core.dcInfix: Qualified "Core" "DataCon"
   Core.re_visible_orphs: Qualified "Core" "RuleEnv"
@@ -569,7 +562,6 @@ constructorTypes:
   Core.Rule: Qualified "Core" "CoreRule"
   Core.JD: Qualified "Core" "JointDmd"
   Core.ThrowsExn: Qualified "Core" "Termination"
-  Core.Mk_TcTyVar: Qualified "Core" "Var"
   Core.Lazy: Qualified "Core" "Str"
   Core.Dunno: Qualified "Core" "Termination"
   Core.RecSelId: Qualified "Core" "IdDetails"
@@ -583,7 +575,6 @@ constructorTypes:
   Core.TypeSynonymFlavour: Qualified "Core" "TyConFlavour"
   Core.Mk_Var: Qualified "Core" "Expr"
   Core.Rec: Qualified "Core" "Bind"
-  Core.CoVarId: Qualified "Core" "IdDetails"
   Core.SumTyCon: Qualified "Core" "AlgTyConRhs"
   Core.VectType: Qualified "Core" "CoreVect"
   Core.ATI: Qualified "Core" "ClassATItem"
@@ -610,7 +601,6 @@ constructorTypes:
   Core.NeverLevityPolymorphic: Qualified "Core" "LevityInfo"
   Core.Lit: Qualified "Core" "Expr"
   Core.SrcStrict: Qualified "Core" "SrcStrictness"
-  Core.Mk_TyVar: Qualified "Core" "Var"
   Core.DataAlt: Qualified "Core" "AltCon"
   Core.SProd: Qualified "Core" "StrDmd"
   Core.AnnNonRec: Qualified "Core" "AnnBind"

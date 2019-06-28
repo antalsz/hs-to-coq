@@ -354,6 +354,8 @@ Axiom noFreeVarsOfCo : AxiomatizedTypes.Coercion -> bool.
 
 Axiom mkTyVarTys : list Core.TyVar -> list AxiomatizedTypes.Type_.
 
+Axiom mkTyVarTy : Core.TyVar -> AxiomatizedTypes.Type_.
+
 Axiom mkTyConTy : Core.TyCon -> AxiomatizedTypes.Type_.
 
 Axiom mkTyCoInScopeSet : list AxiomatizedTypes.Type_ ->

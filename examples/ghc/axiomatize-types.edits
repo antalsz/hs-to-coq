@@ -52,8 +52,8 @@ rename value DataCon.HsSrcBang  = Core.Mk_HsSrcBang
 rename value DataCon.EqSpec     = Core.Mk_EqSpec
 rename value Class.Class        = Core.Mk_Class
 rename value Var.Id             = Core.Mk_Id
-rename value Var.TyVar          = Core.Mk_TyVar
-rename value Var.TcTyVar        = Core.Mk_TcTyVar
+# rename value Var.TyVar          = Core.Mk_TyVar
+# rename value Var.TcTyVar        = Core.Mk_TcTyVar
 rename value IdInfo.IdInfo      = Core.Mk_IdInfo
 rename value IdInfo.DFunId      = Core.Mk_DFunId
 rename value IdInfo.JoinId      = Core.Mk_JoinId
@@ -126,6 +126,18 @@ skip constructor Core.AnnTick
 skip constructor Core.AnnCoercion
 skip constructor Core.AnnCast
 
+#
+# eliminating Ty and TcTy variables
+#
+skip constructor Core.TcTyVar
+skip constructor Core.TyVar
+
+#
+# eliminating Co variables
+#
+skip constructor Core.CoVarId
+skip constructor Core.TicBoxOpId
+
 
 ###############################################################################
 # axiomatize type & coercion information
@@ -178,11 +190,11 @@ rename value TyCoRep.TCvSubst     = Core.Mk_TCvSubst
 # Coercion/TyCoRep operations needed in Core
 #
 
-add Core Axiom Core.mkCoVarCo : Core.CoVar -> AxiomatizedTypes.Coercion.
-rename value Coercion.mkCoVarCo = Core.mkCoVarCo
+# add Core Axiom Core.mkCoVarCo : Core.CoVar -> AxiomatizedTypes.Coercion.
+# rename value Coercion.mkCoVarCo = Core.mkCoVarCo
 
-add Core Axiom Core.mkTyVarTy : Core.TyVar -> AxiomatizedTypes.Type_.
-rename value TyCoRep.mkTyVarTy = Core.mkTyVarTy
+# add Core Axiom Core.mkTyVarTy : Core.TyVar -> AxiomatizedTypes.Type_.
+# rename value TyCoRep.mkTyVarTy = Core.mkTyVarTy
 
 #
 # must move everything in Type that we need to Core because we cannot rename/axiomatize 
@@ -207,6 +219,9 @@ rename value Type.tyConAppArgs = Core.tyConAppArgs
 
 add Core Axiom Core.mkCoercionTy : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
 rename value Type.mkCoercionTy = Core.mkCoercionTy
+
+add Core Axiom Core.splitTyConApp_maybe : AxiomatizedTypes.Type_ -> option (Core.TyCon * list AxiomatizedTypes.Type_).
+rename value Type.splitTyConApp_maybe = Core.splitTyConApp_maybe
 
 #
 # not translating TysWiredIn yet

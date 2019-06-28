@@ -25,11 +25,6 @@ skip CoreFVs.exprsOrphNames
 in CoreFVs.exprOrphNames inline mutual go_alt
 
 #
-# TODO: XXX This is a serious workaround for an issue of 
-#
-axiomatize definition CoreFVs.expr_fvs
-
-#
 # expr_fvs
 #
 # This set of mutually-recursive functions is heavily edited to make it past Coq's 

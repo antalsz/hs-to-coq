@@ -80,14 +80,6 @@ Definition mkLocalIdWithInfo
    : Name.Name -> AxiomatizedTypes.Type_ -> Core.IdInfo -> Core.Id :=
   fun name ty info => Core.mkLocalVar Core.VanillaId name ty info.
 
-Definition mkLocalIdOrCoVarWithInfo
-   : Name.Name -> AxiomatizedTypes.Type_ -> Core.IdInfo -> Core.Id :=
-  fun name ty info =>
-    let details :=
-      if TyCoRep.isCoercionType ty : bool then Core.CoVarId else
-      Core.VanillaId in
-    Core.mkLocalVar details name ty info.
-
 Definition mkLocalId : Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun name ty => mkLocalIdWithInfo name ty Core.vanillaIdInfo.
 
@@ -114,40 +106,6 @@ Definition mkUserLocal
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
           #330)
     else mkLocalId (Name.mkInternalName uniq occ loc) ty.
-
-Definition mkLocalCoVar : Name.Name -> AxiomatizedTypes.Type_ -> Core.CoVar :=
-  fun name ty =>
-    if andb Util.debugIsOn (negb (TyCoRep.isCoercionType ty)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
-          #275)
-    else Core.mkLocalVar Core.CoVarId name ty Core.vanillaIdInfo.
-
-Definition mkLocalIdOrCoVar : Name.Name -> AxiomatizedTypes.Type_ -> Core.Id :=
-  fun name ty =>
-    if TyCoRep.isCoercionType ty : bool then mkLocalCoVar name ty else
-    mkLocalId name ty.
-
-Definition mkSysLocalOrCoVar
-   : FastString.FastString ->
-     Unique.Unique -> AxiomatizedTypes.Type_ -> Core.Id :=
-  fun fs uniq ty => mkLocalIdOrCoVar (Name.mkSystemVarName uniq fs) ty.
-
-Definition mkSysLocalOrCoVarM {m} `{UniqSupply.MonadUnique m}
-   : FastString.FastString -> AxiomatizedTypes.Type_ -> m Core.Id :=
-  fun fs ty =>
-    UniqSupply.getUniqueM GHC.Base.>>=
-    (fun uniq => GHC.Base.return_ (mkSysLocalOrCoVar fs uniq ty)).
-
-Definition mkUserLocalOrCoVar
-   : OccName.OccName ->
-     Unique.Unique -> AxiomatizedTypes.Type_ -> SrcLoc.SrcSpan -> Core.Id :=
-  fun occ uniq ty loc => mkLocalIdOrCoVar (Name.mkInternalName uniq occ loc) ty.
-
-Definition mkWorkerId
-   : Unique.Unique -> Core.Id -> AxiomatizedTypes.Type_ -> Core.Id :=
-  fun uniq unwrkr ty =>
-    mkLocalIdOrCoVar (Name.mkDerivedInternalName OccName.mkWorkerOcc uniq
-                      (Name.getName unwrkr)) ty.
 
 Definition mkGlobalId
    : Core.IdDetails ->
@@ -623,31 +581,30 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
      BasicTypes.isOneOcc BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo
      BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation
-     BasicTypes.zapOccTailCallInfo Core.CafInfo Core.Class Core.ClassOpId Core.CoVar
-     Core.CoVarId Core.CoreRule Core.DataCon Core.DataConWorkId Core.DataConWrapId
-     Core.Demand Core.FCallId Core.Id Core.IdDetails Core.IdInfo Core.JoinId
-     Core.Mk_DFunId Core.Mk_JoinId Core.NoUnfolding Core.PrimOpId Core.RecSelData
-     Core.RecSelId Core.RecSelParent Core.RecSelPatSyn Core.RuleInfo Core.StrictSig
-     Core.Unfolding Core.VanillaId Core.Var Core.arityInfo Core.cafInfo
-     Core.callArityInfo Core.demandInfo Core.idDetails Core.idInfo
-     Core.increaseStrictSigArity Core.inlinePragInfo Core.isBottomingSig
-     Core.isEmptyRuleInfo Core.isId Core.isLocalId Core.isNeverLevPolyIdInfo
-     Core.isStableUnfolding Core.isTyVar Core.isUnboxedSumCon Core.isUnboxedTupleCon
-     Core.lazySetIdInfo Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar
-     Core.nopSig Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo
-     Core.setCafInfo Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails
-     Core.setIdExported Core.setIdNotExported Core.setInlinePragInfo Core.setOccInfo
-     Core.setOneShotInfo Core.setRuleInfo Core.setStrictnessInfo
-     Core.setUnfoldingInfo Core.setVarName Core.setVarType Core.setVarUnique
-     Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo Core.varName
-     Core.varType Core.varUnique Core.zapDemandInfo Core.zapLamInfo
-     Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo Datatypes.id
-     FastString.FastString GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zgzgze__
-     GHC.Base.return_ GHC.Err.error GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq
-     Maybes.orElse Module.Module Name.Name Name.getName Name.isInternalName
-     Name.localiseName Name.mkDerivedInternalName Name.mkInternalName
-     Name.mkSystemVarName Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc
-     Panic.assertPanic Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     SrcLoc.SrcSpan TyCoRep.isCoercionType UniqSupply.MonadUnique
-     UniqSupply.getUniqueM Unique.Unique Util.count Util.debugIsOn
+     BasicTypes.zapOccTailCallInfo Core.CafInfo Core.Class Core.ClassOpId
+     Core.CoreRule Core.DataCon Core.DataConWorkId Core.DataConWrapId Core.Demand
+     Core.FCallId Core.Id Core.IdDetails Core.IdInfo Core.JoinId Core.Mk_DFunId
+     Core.Mk_JoinId Core.NoUnfolding Core.PrimOpId Core.RecSelData Core.RecSelId
+     Core.RecSelParent Core.RecSelPatSyn Core.RuleInfo Core.StrictSig Core.Unfolding
+     Core.VanillaId Core.Var Core.arityInfo Core.cafInfo Core.callArityInfo
+     Core.demandInfo Core.idDetails Core.idInfo Core.increaseStrictSigArity
+     Core.inlinePragInfo Core.isBottomingSig Core.isEmptyRuleInfo Core.isId
+     Core.isLocalId Core.isNeverLevPolyIdInfo Core.isStableUnfolding Core.isTyVar
+     Core.isUnboxedSumCon Core.isUnboxedTupleCon Core.lazySetIdInfo
+     Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar Core.nopSig
+     Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo Core.setCafInfo
+     Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails Core.setIdExported
+     Core.setIdNotExported Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
+     Core.setRuleInfo Core.setStrictnessInfo Core.setUnfoldingInfo Core.setVarName
+     Core.setVarType Core.setVarUnique Core.strictnessInfo Core.unfoldingInfo
+     Core.vanillaIdInfo Core.varName Core.varType Core.varUnique Core.zapDemandInfo
+     Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageInfo Core.zapUsedOnceInfo
+     Datatypes.id FastString.FastString GHC.Base.mappend GHC.Base.op_z2218U__
+     GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Err.error GHC.Num.fromInteger
+     GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse Module.Module Name.Name
+     Name.isInternalName Name.localiseName Name.mkInternalName Name.mkSystemVarName
+     Name.nameIsLocalOrFrom OccName.OccName Panic.assertPanic Panic.panic
+     Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
+     TyCoRep.isCoercionType UniqSupply.MonadUnique UniqSupply.getUniqueM
+     Unique.Unique Util.count Util.debugIsOn
 *)

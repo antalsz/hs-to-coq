@@ -1,4 +1,4 @@
-rename type  Var.Id            = Core.Var
+# rename type  Var.Id            = Core.Var
 
 
 # Types currently don't exist
@@ -8,6 +8,14 @@ rename type  Var.Id            = Core.Var
 # Coercions currently don't exist
 # skip CoreSubst.substCo
 # rewrite forall s c, CoreSubst.substCo s c = tt
+
+#
+# remove reasoning about ticks
+#
+rewrite forall xs e, CoreUtils.stripTicksE xs e = e
+rewrite forall xs e, CoreUtils.stripTicksT xs e = e
+rewrite forall ts e, CoreUtils.mkTicks ts e = e
+
 
 inline mutual CSE.cse_bind
 inline mutual CSE.tryForCSE

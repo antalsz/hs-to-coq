@@ -21,6 +21,7 @@ Require GHC.Base.
 Require GHC.List.
 Require GHC.Num.
 Require Id.
+Require Lists.List.
 Require Maybes.
 Require NameSet.
 Require NestedRecursionHelpers.
@@ -98,84 +99,6 @@ Definition freeVarsOfAnn : FVAnn -> Core.DIdSet :=
 Definition freeVarsOf : CoreExprWithFVs -> Core.DIdSet :=
   fun '(pair fvs _) => fvs.
 
-Axiom expr_fvs : Core.CoreExpr -> FV.FV.
-
-Definition exprsSomeFreeVars
-   : FV.InterestingVarFun -> list Core.CoreExpr -> Core.VarSet :=
-  fun fv_cand es => FV.fvVarSet (FV.filterFV fv_cand (FV.mapUnionFV expr_fvs es)).
-
-Definition exprsSomeFreeVarsDSet
-   : FV.InterestingVarFun -> list Core.CoreExpr -> Core.DVarSet :=
-  fun fv_cand e => FV.fvDVarSet (FV.filterFV fv_cand (FV.mapUnionFV expr_fvs e)).
-
-Definition exprsFreeIdsDSet : list Core.CoreExpr -> Core.DIdSet :=
-  exprsSomeFreeVarsDSet Core.isLocalId.
-
-Definition exprsSomeFreeVarsList
-   : FV.InterestingVarFun -> list Core.CoreExpr -> list Core.Var :=
-  fun fv_cand es =>
-    FV.fvVarList (FV.filterFV fv_cand (FV.mapUnionFV expr_fvs es)).
-
-Definition exprsFreeIdsList : list Core.CoreExpr -> list Core.Id :=
-  exprsSomeFreeVarsList Core.isLocalId.
-
-Definition exprs_fvs : list Core.CoreExpr -> FV.FV :=
-  fun exprs => FV.mapUnionFV expr_fvs exprs.
-
-Definition vectsFreeVars : list Core.CoreVect -> Core.VarSet :=
-  let vectFreeVars :=
-    fun arg_0__ =>
-      match arg_0__ with
-      | Core.Vect _ rhs => FV.fvVarSet (FV.filterFV Core.isLocalId (expr_fvs rhs))
-      | Core.NoVect _ => noFVs
-      | Core.VectType _ _ _ => noFVs
-      | Core.VectClass _ => noFVs
-      | Core.VectInst _ => noFVs
-      end in
-  Core.mapUnionVarSet vectFreeVars.
-
-Definition exprSomeFreeVarsList
-   : FV.InterestingVarFun -> Core.CoreExpr -> list Core.Var :=
-  fun fv_cand e => FV.fvVarList (FV.filterFV fv_cand (expr_fvs e)).
-
-Definition exprSomeFreeVarsDSet
-   : FV.InterestingVarFun -> Core.CoreExpr -> Core.DVarSet :=
-  fun fv_cand e => FV.fvDVarSet (FV.filterFV fv_cand (expr_fvs e)).
-
-Definition exprSomeFreeVars
-   : FV.InterestingVarFun -> Core.CoreExpr -> Core.VarSet :=
-  fun fv_cand e => FV.fvVarSet (FV.filterFV fv_cand (expr_fvs e)).
-
-Definition exprFreeIdsList : Core.CoreExpr -> list Core.Id :=
-  exprSomeFreeVarsList Core.isLocalId.
-
-Definition exprFreeIdsDSet : Core.CoreExpr -> Core.DIdSet :=
-  exprSomeFreeVarsDSet Core.isLocalId.
-
-Definition exprFreeIds : Core.CoreExpr -> Core.IdSet :=
-  exprSomeFreeVars Core.isLocalId.
-
-Definition exprFVs : Core.CoreExpr -> FV.FV :=
-  FV.filterFV Core.isLocalVar GHC.Base.∘ expr_fvs.
-
-Definition exprFreeVars : Core.CoreExpr -> Core.VarSet :=
-  FV.fvVarSet GHC.Base.∘ exprFVs.
-
-Definition exprFreeVarsDSet : Core.CoreExpr -> Core.DVarSet :=
-  FV.fvDVarSet GHC.Base.∘ exprFVs.
-
-Definition exprFreeVarsList : Core.CoreExpr -> list Core.Var :=
-  FV.fvVarList GHC.Base.∘ exprFVs.
-
-Definition exprsFVs : list Core.CoreExpr -> FV.FV :=
-  fun exprs => FV.mapUnionFV exprFVs exprs.
-
-Definition exprsFreeVars : list Core.CoreExpr -> Core.VarSet :=
-  FV.fvVarSet GHC.Base.∘ exprsFVs.
-
-Definition exprsFreeVarsList : list Core.CoreExpr -> list Core.Var :=
-  FV.fvVarList GHC.Base.∘ exprsFVs.
-
 Definition dVarTypeTyCoVars : Core.Var -> Core.DTyCoVarSet :=
   fun var => FV.fvDVarSet (varTypeTyCoFVs var).
 
@@ -210,10 +133,6 @@ Definition idFreeVars : Core.Id -> Core.VarSet :=
           #622)
     else FV.fvVarSet (idFVs id).
 
-Definition rhs_fvs : (Core.Id * Core.CoreExpr)%type -> FV.FV :=
-  fun '(pair bndr rhs) =>
-    FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
-
 Definition addBndr : Core.CoreBndr -> FV.FV -> FV.FV :=
   fun bndr fv fv_cand in_scope acc =>
     (FV.unionFV (varTypeTyCoFVs bndr) (FV.delFV bndr fv)) fv_cand in_scope acc.
@@ -221,31 +140,94 @@ Definition addBndr : Core.CoreBndr -> FV.FV -> FV.FV :=
 Definition addBndrs : list Core.CoreBndr -> FV.FV -> FV.FV :=
   fun bndrs fv => Data.Foldable.foldr addBndr fv bndrs.
 
-Definition bindFreeVars : Core.CoreBind -> Core.VarSet :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Core.NonRec b r =>
-        FV.fvVarSet (FV.filterFV Core.isLocalVar (rhs_fvs (pair b r)))
-    | Core.Rec prs =>
-        FV.fvVarSet (FV.filterFV Core.isLocalVar (addBndrs (GHC.Base.map Data.Tuple.fst
-                                                            prs) (FV.mapUnionFV rhs_fvs prs)))
-    end.
+Definition expr_fvs : Core.CoreExpr -> FV.FV :=
+  fix expr_fvs arg_0__ arg_1__ arg_2__ arg_3__
+        := match arg_0__, arg_1__, arg_2__, arg_3__ with
+           | Core.Mk_Var var, fv_cand, in_scope, acc => FV.unitFV var fv_cand in_scope acc
+           | Core.Lit _, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+           | Core.App fun_ arg, fv_cand, in_scope, acc =>
+               (FV.unionFV (expr_fvs fun_) (expr_fvs arg)) fv_cand in_scope acc
+           | Core.Lam bndr body, fv_cand, in_scope, acc =>
+               addBndr bndr (expr_fvs body) fv_cand in_scope acc
+           | Core.Case scrut bndr ty alts, fv_cand, in_scope, acc =>
+               let alt_fvs :=
+                 fun '(pair (pair _ bndrs) rhs) => addBndrs bndrs (expr_fvs rhs) in
+               (FV.unionFV (FV.unionFV (expr_fvs scrut) FV.emptyFV) (addBndr bndr (FV.unionsFV
+                                                                                   (Lists.List.map alt_fvs alts))))
+               fv_cand in_scope acc
+           | Core.Let (Core.NonRec bndr rhs) body, fv_cand, in_scope, acc =>
+               (FV.unionFV (FV.unionFV (expr_fvs rhs) FV.emptyFV) (addBndr bndr (expr_fvs
+                                                                                 body))) fv_cand in_scope acc
+           | Core.Let (Core.Rec pairs) body, fv_cand, in_scope, acc =>
+               addBndrs (GHC.Base.map Data.Tuple.fst pairs) (FV.unionFV (FV.unionsFV
+                                                                         (Lists.List.map (fun '(pair bndr rhs) =>
+                                                                                            expr_fvs rhs) pairs))
+                                                                        (expr_fvs body)) fv_cand in_scope acc
+           end.
 
-Definition idRuleRhsVars
-   : (BasicTypes.Activation -> bool) -> Core.Id -> Core.VarSet :=
-  fun is_active id =>
-    let get_fvs :=
-      fun arg_0__ =>
-        match arg_0__ with
-        | Core.Rule _ act fn _ bndrs _ rhs _ _ _ _ =>
-            let fvs :=
-              FV.fvVarSet (FV.filterFV Core.isLocalVar (addBndrs bndrs (expr_fvs rhs))) in
-            if is_active act : bool
-            then UniqSet.delOneFromUniqSet_Directly fvs (Unique.getUnique fn) else
-            noFVs
-        | _ => noFVs
-        end in
-    Core.mapUnionVarSet get_fvs (Id.idCoreRules id).
+Definition exprFVs : Core.CoreExpr -> FV.FV :=
+  FV.filterFV Core.isLocalVar GHC.Base.∘ expr_fvs.
+
+Definition exprFreeVars : Core.CoreExpr -> Core.VarSet :=
+  FV.fvVarSet GHC.Base.∘ exprFVs.
+
+Definition exprFreeVarsDSet : Core.CoreExpr -> Core.DVarSet :=
+  FV.fvDVarSet GHC.Base.∘ exprFVs.
+
+Definition exprFreeVarsList : Core.CoreExpr -> list Core.Var :=
+  FV.fvVarList GHC.Base.∘ exprFVs.
+
+Definition exprsFVs : list Core.CoreExpr -> FV.FV :=
+  fun exprs => FV.mapUnionFV exprFVs exprs.
+
+Definition exprsFreeVars : list Core.CoreExpr -> Core.VarSet :=
+  FV.fvVarSet GHC.Base.∘ exprsFVs.
+
+Definition exprsFreeVarsList : list Core.CoreExpr -> list Core.Var :=
+  FV.fvVarList GHC.Base.∘ exprsFVs.
+
+Definition exprSomeFreeVars
+   : FV.InterestingVarFun -> Core.CoreExpr -> Core.VarSet :=
+  fun fv_cand e => FV.fvVarSet (FV.filterFV fv_cand (expr_fvs e)).
+
+Definition exprFreeIds : Core.CoreExpr -> Core.IdSet :=
+  exprSomeFreeVars Core.isLocalId.
+
+Definition exprSomeFreeVarsDSet
+   : FV.InterestingVarFun -> Core.CoreExpr -> Core.DVarSet :=
+  fun fv_cand e => FV.fvDVarSet (FV.filterFV fv_cand (expr_fvs e)).
+
+Definition exprFreeIdsDSet : Core.CoreExpr -> Core.DIdSet :=
+  exprSomeFreeVarsDSet Core.isLocalId.
+
+Definition exprSomeFreeVarsList
+   : FV.InterestingVarFun -> Core.CoreExpr -> list Core.Var :=
+  fun fv_cand e => FV.fvVarList (FV.filterFV fv_cand (expr_fvs e)).
+
+Definition exprFreeIdsList : Core.CoreExpr -> list Core.Id :=
+  exprSomeFreeVarsList Core.isLocalId.
+
+Definition exprsSomeFreeVars
+   : FV.InterestingVarFun -> list Core.CoreExpr -> Core.VarSet :=
+  fun fv_cand es => FV.fvVarSet (FV.filterFV fv_cand (FV.mapUnionFV expr_fvs es)).
+
+Definition exprsSomeFreeVarsDSet
+   : FV.InterestingVarFun -> list Core.CoreExpr -> Core.DVarSet :=
+  fun fv_cand e => FV.fvDVarSet (FV.filterFV fv_cand (FV.mapUnionFV expr_fvs e)).
+
+Definition exprsFreeIdsDSet : list Core.CoreExpr -> Core.DIdSet :=
+  exprsSomeFreeVarsDSet Core.isLocalId.
+
+Definition exprsSomeFreeVarsList
+   : FV.InterestingVarFun -> list Core.CoreExpr -> list Core.Var :=
+  fun fv_cand es =>
+    FV.fvVarList (FV.filterFV fv_cand (FV.mapUnionFV expr_fvs es)).
+
+Definition exprsFreeIdsList : list Core.CoreExpr -> list Core.Id :=
+  exprsSomeFreeVarsList Core.isLocalId.
+
+Definition exprs_fvs : list Core.CoreExpr -> FV.FV :=
+  fun exprs => FV.mapUnionFV expr_fvs exprs.
 
 Definition ruleFVs : Core.CoreRule -> FV.FV :=
   fun arg_0__ =>
@@ -281,6 +263,36 @@ Definition ruleLhsFreeIds : Core.CoreRule -> Core.VarSet :=
 Definition ruleLhsFreeIdsList : Core.CoreRule -> list Core.Var :=
   FV.fvVarList GHC.Base.∘ ruleLhsFVIds.
 
+Definition idRuleRhsVars
+   : (BasicTypes.Activation -> bool) -> Core.Id -> Core.VarSet :=
+  fun is_active id =>
+    let get_fvs :=
+      fun arg_0__ =>
+        match arg_0__ with
+        | Core.Rule _ act fn _ bndrs _ rhs _ _ _ _ =>
+            let fvs :=
+              FV.fvVarSet (FV.filterFV Core.isLocalVar (addBndrs bndrs (expr_fvs rhs))) in
+            if is_active act : bool
+            then UniqSet.delOneFromUniqSet_Directly fvs (Unique.getUnique fn) else
+            noFVs
+        | _ => noFVs
+        end in
+    Core.mapUnionVarSet get_fvs (Id.idCoreRules id).
+
+Definition rhs_fvs : (Core.Id * Core.CoreExpr)%type -> FV.FV :=
+  fun '(pair bndr rhs) =>
+    FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr).
+
+Definition bindFreeVars : Core.CoreBind -> Core.VarSet :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Core.NonRec b r =>
+        FV.fvVarSet (FV.filterFV Core.isLocalVar (rhs_fvs (pair b r)))
+    | Core.Rec prs =>
+        FV.fvVarSet (FV.filterFV Core.isLocalVar (addBndrs (GHC.Base.map Data.Tuple.fst
+                                                            prs) (FV.mapUnionFV rhs_fvs prs)))
+    end.
+
 Definition ruleRhsFreeVars : Core.CoreRule -> Core.VarSet :=
   fun arg_0__ =>
     match arg_0__ with
@@ -288,6 +300,18 @@ Definition ruleRhsFreeVars : Core.CoreRule -> Core.VarSet :=
     | Core.Rule _ _ _ _ bndrs _ rhs _ _ _ _ =>
         FV.fvVarSet (FV.filterFV Core.isLocalVar (addBndrs bndrs (expr_fvs rhs)))
     end.
+
+Definition vectsFreeVars : list Core.CoreVect -> Core.VarSet :=
+  let vectFreeVars :=
+    fun arg_0__ =>
+      match arg_0__ with
+      | Core.Vect _ rhs => FV.fvVarSet (FV.filterFV Core.isLocalId (expr_fvs rhs))
+      | Core.NoVect _ => noFVs
+      | Core.VectType _ _ _ => noFVs
+      | Core.VectClass _ => noFVs
+      | Core.VectInst _ => noFVs
+      end in
+  Core.mapUnionVarSet vectFreeVars.
 
 Definition aFreeVar : Core.Var -> Core.DVarSet :=
   Core.unitDVarSet.
@@ -412,9 +436,10 @@ Definition freeVarsBind
      Core.isLocalId Core.isLocalVar Core.mapUnionVarSet Core.unionDVarSet
      Core.unionDVarSets Core.unitDVarSet Data.Foldable.foldr Data.Tuple.fst FV.FV
      FV.InterestingVarFun FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList
-     FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV GHC.Base.map GHC.Base.op_z2218U__
-     GHC.List.unzip GHC.List.zip GHC.Num.fromInteger Id.idCoreRules Id.idType
-     Id.realIdUnfolding Maybes.orElse NameSet.NameSet NameSet.emptyNameSet
-     NameSet.unionNameSet NestedRecursionHelpers.mapAndUnzipFix Panic.assertPanic
+     FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
+     Id.idCoreRules Id.idType Id.realIdUnfolding Lists.List.map Maybes.orElse
+     NameSet.NameSet NameSet.emptyNameSet NameSet.unionNameSet
+     NestedRecursionHelpers.mapAndUnzipFix Panic.assertPanic
      UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
 *)

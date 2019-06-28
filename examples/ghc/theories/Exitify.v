@@ -88,7 +88,7 @@ Inductive GoDom : CoreExpr -> Prop :=
   | GoDom_Case scrut bndr ty alts:
     Forall (fun p => GoDom (snd p)) alts ->
     GoDom (Case scrut bndr ty alts)
-  | GoDom_Cast e c:
+(*  | GoDom_Cast e c:
     GoDom e ->
     GoDom (Cast e c)
   | GoDom_Tick  e t:
@@ -97,7 +97,7 @@ Inductive GoDom : CoreExpr -> Prop :=
   | GoDom_Type t:
     GoDom (Type_ t)
   | GoDom_Coercion t:
-    GoDom (Coercion t)
+    GoDom (Coercion t) *)
  with GoDom_JoinPair : CoreBndr -> CoreExpr -> Prop :=
   | GoDom_Join v params rhs :
     isJoinId_maybe v = Some (length params) ->
@@ -230,14 +230,14 @@ Next Obligation.
      simpl_bool. destruct Halts as [HnotJoins Hrhs].
      apply IH in Hrhs; only 2: Core_termination.
      assumption.
-   * simpl in H.
+(*   * simpl in H.
      apply IH in H; only 2: Core_termination.
      constructor. assumption.
    * simpl in H.
      apply IH in H; only 2: Core_termination.
      constructor. assumption.
    * constructor.
-   * constructor.
+   * constructor. *)
 Qed.
 
 Lemma isValidJoinPointsPair_GoDom_JoinPair:
@@ -1052,14 +1052,14 @@ Section in_exitifyRec.
    *)
 
   Definition zap := ltac:(
-    let rhs := eval cbv beta delta [go_exit] in (go_exit [] (Type_ GHC.Err.default)  emptyVarSet) in
+    let rhs := eval cbv beta delta [go_exit] in (go_exit [] GHC.Err.default  emptyVarSet) in
     lazymatch rhs with (let zap := ?rhs in ?body) =>
       exact rhs
     end
    ).
 
    Definition pick := ltac:(
-    let rhs := eval cbv beta delta [go_exit] in (go_exit [] (Type_ GHC.Err.default)  emptyVarSet) in
+    let rhs := eval cbv beta delta [go_exit] in (go_exit [] GHC.Err.default  emptyVarSet) in
     lazymatch rhs with (let zap' := _ in let abs_vars := let pick := @?rhs zap' in _ in _) =>
       let e' := eval cbv beta in (rhs zap) in
       exact e'
@@ -3177,7 +3177,7 @@ Next Obligation.
       - apply IHrhs.
       - apply Hnot_joins.
       - apply IHrhs.
-  * (* Cast *)
+(*  * (* Cast *)
     simpl in *.
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
     assumption.
@@ -3189,7 +3189,7 @@ Next Obligation.
   * (* Type *)
     intuition.
   * (* Coercion *)
-    intuition.
+    intuition. *)
 Unshelve.
   all: Core_termination || (unfold CoreLT; simpl; lia). (* phew *)
 Qed.

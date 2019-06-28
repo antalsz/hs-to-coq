@@ -258,6 +258,8 @@ Axiom mkCoercionType : AxiomatizedTypes.Role ->
 
 Axiom mkCoVarCos : list Core.CoVar -> list AxiomatizedTypes.Coercion.
 
+Axiom mkCoVarCo : Core.CoVar -> AxiomatizedTypes.Coercion.
+
 Axiom mkCoCast : AxiomatizedTypes.Coercion ->
                  AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
 

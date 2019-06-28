@@ -53,3 +53,17 @@ in Id.setIdType rewrite forall x y,GHC.Prim.seq x y = y
 axiomatize definition Id.mkTemplateLocal 
 axiomatize definition Id.mkTemplateLocalsNum
 axiomatize definition Id.mkTemplateLocals 
+
+#
+# skipping type and coercion variables
+#
+# TODO: can we justify this edit? let's skip the whole thing 
+# in Id.mkLocalIdOrCoVarWithInfo rewrite forall ty, TyCoRep.isCoercionType ty = false
+skip Id.mkLocalIdOrCoVarWithInfo
+skip Id.mkLocalIdOrCoVar
+skip Id.mkSysLocalOrCoVar
+skip Id.mkSysLocalOrCoVarM
+skip Id.mkUserLocalOrCoVar
+skip Id.mkWorkerId
+skip Id.mkLocalCoVar 
+

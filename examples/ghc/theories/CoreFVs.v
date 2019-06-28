@@ -550,6 +550,7 @@ Proof.
   rewrite filterVarSet_delVarSetList => //.
 Qed.
 
+(*
 Lemma exprFreeVars_Cast:
   forall e co,
   exprFreeVars (Cast e co) [=] exprFreeVars e.
@@ -562,7 +563,7 @@ fun arg_0__ : Tickish Var => match arg_0__ with
                           | Breakpoint _ ids => mkVarSet ids
                           | _ => emptyVarSet
                           end.
-
+*)
 
 Lemma mkVarSet_mapUnionFV vs : 
   Denotes (mkVarSet vs) (FV.mapUnionFV FV.unitFV vs). 
@@ -577,6 +578,7 @@ Proof.
     assumption.
 Qed.
 
+(*
 Lemma Denotes_tickish co : 
   Denotes (tickishFreeVars co) (tickish_fvs co).
 Proof.
@@ -585,6 +587,7 @@ Proof.
   unfold FV.mkFVs.
   apply mkVarSet_mapUnionFV.
 Qed.
+*)
 
 (*
 Lemma exprFreeVars_Tick:
@@ -607,6 +610,7 @@ Proof.
 Qed.
 *)
 
+(*
 Lemma exprFreeVars_Tick:
   forall e t,
   exprFreeVars (Tick t e) [=] exprFreeVars e.
@@ -621,7 +625,7 @@ Lemma exprFreeVars_Coercion:
   forall co,
   exprFreeVars (Coercion co) = emptyVarSet.
 Proof. intros. reflexivity. Qed.
-
+*)
 
 (* ---------------------------------------------------------- *)
 

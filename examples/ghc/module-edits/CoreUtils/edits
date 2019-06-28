@@ -1,53 +1,42 @@
+###############################################################################
+# edits from skipping Type/Coercion/Tick/Cast
+
+#
+# takes a list of types as arguments
+# should only succeed if that list is empty
+#
+in CoreUtils.mkAltExpr rewrite forall, Core.Type_ = (GHC.Err.default) 
 
 
-
-axiomatize definition CoreUtils.needsCaseBinding
-axiomatize definition CoreUtils.isDivOp
-axiomatize definition CoreUtils.isExprLevPoly 
+# uses type information to decide
+#
 axiomatize definition CoreUtils.isExpandableApp
+axiomatize definition CoreUtils.isExprLevPoly 
+
+# needs more from PrimOp (IntQuotOp, IntRemOp etc)
+#
+axiomatize definition CoreUtils.isDivOp
+
+# needs more from PrimOp (primOpIsCheap)
 axiomatize definition CoreUtils.isCheapApp 
-axiomatize definition CoreUtils.isEmptyTy
-# needs Core.dataConCannotMatch
-axiomatize definition CoreUtils.filterAlts
 
-# termination issue (recursion through non-lambda value unsupported)
-axiomatize definition CoreUtils.cheapEqExpr'
-
-redefine Definition CoreUtils.tickHNFArgs : (Core.Tickish Core.Var) -> (Core.CoreExpr -> Core.CoreExpr) := 
-  fun t orig => orig.
-
-# refers to skipped components.
+# refers to skipped components. (Tick and Cast)
 skip CoreUtils.collectMakeStaticArgs
 skip CoreUtils.stripTicksTopT
 skip CoreUtils.stripTicksTop
 skip CoreUtils.mkTick
 skip CoreUtils.mkTicks
 skip CoreUtils.mkCast
-
-in Core.mkAltExpr rewrite forall, Core.Type_ = (GHC.Err.default) 
-
-# maybe axiomatize???
-skip CoreUtils.isSaturatedConApp
-skip CoreUtils.exprIsHNFlike
-skip CoreUtils.exprIsHNF
-skip CoreUtils.mkTixkNoHNF
-
-axiomatize definition CoreUtils.exprIsConLike 
-axiomatize definition CoreUtils.exprIsCheapX
-axiomatize definition CoreUtils.exprIsBottom
-axiomatize definition CoreUtils.exprIsDupable
-
-#
-# TODO: come back to this one
-axiomatize definition CoreUtils.eqExpr
+skip CoreUtils.mkTickNoHNF
+skip CoreUtils.tickHNFArgs
 
 ###############################################################################
 ## termination edits
 
 termination CoreUtils.mergeAlts deferred
 
-
-# Translating `cheapEqExpr'' failed: mutual recursion through non-lambda values unsupported 
+# termination issue (recursion through non-lambda value unsupported)
+axiomatize definition CoreUtils.cheapEqExpr'
  
 in CoreUtils.eqExpr       inline mutual go_alt
 in CoreUtils.exprIsCheapX inline mutual ok
@@ -72,9 +61,18 @@ in CoreUtils.diffUnfold termination go { measure arg_14__ }
 obligations CoreUtils.diffUnfold admit
 
 
+in CoreUtils.stripTicksE inline mutual go_b
+in CoreUtils.stripTicksE inline mutual go_a
+in CoreUtils.stripTicksE set type      go_b : (b * Core.Expr b) -> (b * Core.Expr b)
+in CoreUtils.stripTicksE set type      go_a : Core.Alt b        -> Core.Alt b
+
+in CoreUtils.stripTicksT inline mutual go_b
+in CoreUtils.stripTicksT inline mutual go_a
+in CoreUtils.stripTicksT set type      go_b : (b * Core.Expr b) -> OrdList.OrdList (Core.Tickish Core.Id)
+in CoreUtils.stripTicksT set type      go_a : Core.Alt b        -> OrdList.OrdList (Core.Tickish Core.Id)
 
 ############################################################
-## skipped methods
+## skipped methods (I'm not sure why these are skipped)
 
 # needs Platform.Plaform type
 skip CoreUtils.rhsIsStatic
@@ -90,18 +88,6 @@ axiomatize definition CoreUtils.dataConInstPat
 axiomatize definition CoreUtils.dataConRepFSInstPat
 axiomatize definition CoreUtils.dataConRepInstPat
 axiomatize definition CoreUtils.refineDefaultAlt
-
-
-
-in CoreUtils.stripTicksE inline mutual go_b
-in CoreUtils.stripTicksE inline mutual go_a
-in CoreUtils.stripTicksE set type      go_b : (b * Core.Expr b) -> (b * Core.Expr b)
-in CoreUtils.stripTicksE set type      go_a : Core.Alt b        -> Core.Alt b
-
-in CoreUtils.stripTicksT inline mutual go_b
-in CoreUtils.stripTicksT inline mutual go_a
-in CoreUtils.stripTicksT set type      go_b : (b * Core.Expr b) -> OrdList.OrdList (Core.Tickish Core.Id)
-in CoreUtils.stripTicksT set type      go_a : Core.Alt b        -> OrdList.OrdList (Core.Tickish Core.Id)
 
 axiomatize definition CoreUtils.diffUnfold
 axiomatize definition CoreUtils.diffIdInfo

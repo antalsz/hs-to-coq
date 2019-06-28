@@ -1,23 +1,32 @@
 import module GHC.Base
 import module Data.Traversable
 
-axiomatize definition CoreSubst.substTyVarBndr 
-axiomatize definition CoreSubst.substCoVarBndr 
+
 #axiomatize definition CoreSubst.extendCvSubst  
 #axiomatize definition CoreSubst.extendTvSubst  
 #axiomatize definition CoreSubst.extendTvSubstList
 #axiomatize definition CoreSubst.getTCvSubst 
-axiomatize definition CoreSubst.substCo 
-axiomatize definition CoreSubst.substTy
-axiomatize definition CoreSubst.substSpec 
 #axiomatize definition CoreSubst.lookupTCvSubst 
-axiomatize definition CoreSubst.cloneTyVarBndr 
 
 
 # cannot translate because we don't have unfolding information
 
 redefine Definition CoreSubst.substUnfolding : Subst -> (Core.Unfolding -> Core.Unfolding) := fun s u => u.
 
+#############################################################################
+# skipping Type/Coercion/Cast/Tick
+
+in CoreSubst.mkOpenSubst rewrite forall xs, (GHC.Skip.nil_skipped xs) = GHC.Err.default
+
+in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
+in CoreSubst.substBndr rewrite forall bndr, Core.isCoVar bndr = false 
+
+axiomatize definition CoreSubst.substTyVarBndr 
+axiomatize definition CoreSubst.substCoVarBndr 
+axiomatize definition CoreSubst.substCo 
+axiomatize definition CoreSubst.substTy
+axiomatize definition CoreSubst.substSpec 
+axiomatize definition CoreSubst.cloneTyVarBndr 
 
 #############################################################################
 #  Edits that just make the translation go through

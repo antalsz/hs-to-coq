@@ -29,11 +29,7 @@ Lemma core_induct' {b} :
        end) ->
       P body ->
       P (Let binds body))
-  (HCase : forall scrut bndr ty alts, P scrut -> (forall dc pats rhs, In (dc, pats ,rhs) alts -> P rhs) -> P (Case scrut bndr ty alts))
-  (HCast : forall e co, P e -> P (Cast e co))
-  (HTick : forall tickish e, P e -> P (Tick tickish e))
-  (HType : forall ty, P (Type_ ty))
-  (HCoercion : forall co, P (Coercion co)),
+  (HCase : forall scrut bndr ty alts, P scrut -> (forall dc pats rhs, In (dc, pats ,rhs) alts -> P rhs) -> P (Case scrut bndr ty alts)),
   P e.
 Proof.
   intros.
@@ -66,10 +62,6 @@ Proof.
             rewrite <- H2.
             apply IH.
          ++ eapply IHalts'. eassumption.
-  * apply HCast; apply IH.
-  * apply HTick; apply IH.
-  * apply HType.
-  * apply HCoercion.
 Qed.
 
 Lemma core_induct :
@@ -86,11 +78,7 @@ Lemma core_induct :
        end) ->
       P body ->
       P (Let binds body))
-  (HCase : forall scrut bndr ty alts, P scrut -> (forall dc pats rhs, In (dc, pats ,rhs) alts -> P rhs) -> P (Case scrut bndr ty alts))
-  (HCast : forall e co, P e -> P (Cast e co))
-  (HTick : forall tickish e, P e -> P (Tick tickish e))
-  (HType : forall ty, P (Type_ ty))
-  (HCoercion : forall co, P (Coercion co)),
+  (HCase : forall scrut bndr ty alts, P scrut -> (forall dc pats rhs, In (dc, pats ,rhs) alts -> P rhs) -> P (Case scrut bndr ty alts)),
   P e.
 Proof. exact core_induct'. Qed.
 
@@ -111,10 +99,6 @@ Section CoreLT.
     | Case scrut bndr ty alts  => 
         S (core_size scrut +
            fold_right plus 0 (map (fun p => core_size (snd p)) alts))
-    | Cast e _ =>   S (core_size e)
-    | Tick _ e =>   S (core_size e)
-    | Type_ _  =>   0
-    | Coercion _ => 0
     end.
     
   

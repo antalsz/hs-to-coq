@@ -23,6 +23,7 @@ Require Data.Tuple.
 Require DynFlags.
 Require GHC.Base.
 Require GHC.DeferredFix.
+Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require Id.
@@ -182,15 +183,12 @@ Definition callArityAnal
      Core.VarSet -> Core.CoreExpr -> (CallArityRes * Core.CoreExpr)%type :=
   fix callArityAnal (arg_0__ : BasicTypes.Arity) (arg_1__ : Core.VarSet) (arg_2__
                       : Core.CoreExpr) : (CallArityRes * Core.CoreExpr)%type
-        := let j_26__ :=
+        := let j_24__ :=
              match arg_0__, arg_1__, arg_2__ with
              | arity, int, Core.Lam v e =>
                  let 'pair ae e' := callArityAnal (arity GHC.Num.- #1) (Core.delVarSet int v)
                                       e in
                  pair ae (Core.Lam v e')
-             | arity, int =>
-                 Control.Arrow.arrow_second (fun e => Core.App e (Core.Type_ t)) (callArityAnal
-                                                                                  arity int e)
              | arity, int, Core.App e1 e2 =>
                  let 'pair ae2 e2' := callArityAnal #0 int e2 in
                  let ae2' :=
@@ -214,15 +212,19 @@ Definition callArityAnal
                  let 'pair final_ae bind' := callArityBind1 (boringBinds bind) ae_body int
                                                bind in
                  pair final_ae (Core.Let bind' e')
+             | _, _, _ => GHC.Err.patternFailure
+             end in
+           let j_28__ :=
+             match arg_0__, arg_1__, arg_2__ with
+             | num_3__, int, Core.Lam v e =>
+                 let 'pair ae e' := callArityAnal #0 (Core.delVarSet int v) e in
+                 let ae' := calledMultipleTimes ae in
+                 if num_3__ GHC.Base.== #0 : bool then pair ae' (Core.Lam v e') else
+                 j_24__
+             | _, _, _ => j_24__
              end in
            match arg_0__, arg_1__, arg_2__ with
            | _, _, (Core.Lit _ as e) => pair emptyArityRes e
-           | _, _ => pair emptyArityRes e
-           | _, _ => pair emptyArityRes e
-           | arity, int =>
-               Control.Arrow.arrow_second (Core.Tick t) (callArityAnal arity int e)
-           | arity, int =>
-               Control.Arrow.arrow_second (fun e => Core.Cast e co) (callArityAnal arity int e)
            | arity, int, (Core.Mk_Var v as e) =>
                if Core.elemVarSet v int : bool then pair (unitArityRes v arity) e else
                pair emptyArityRes e
@@ -230,14 +232,8 @@ Definition callArityAnal
                if negb (Core.isId v) : bool
                then Control.Arrow.arrow_second (Core.Lam v) (callArityAnal arity
                                                                            (Core.delVarSet int v) e) else
-               match arg_0__, arg_1__, arg_2__ with
-               | num_3__, int, Core.Lam v e =>
-                   let 'pair ae e' := callArityAnal #0 (Core.delVarSet int v) e in
-                   let ae' := calledMultipleTimes ae in
-                   if num_3__ GHC.Base.== #0 : bool then pair ae' (Core.Lam v e') else
-                   j_26__
-               | _, _, _ => j_26__
-               end
+               j_28__
+           | _, _, _ => j_28__
            end.
 
 Definition callArityRHS : Core.CoreExpr -> Core.CoreExpr :=
@@ -367,25 +363,26 @@ Definition callArityAnalProgram
     binds'.
 
 (* External variables:
-     None Some andb bool callArityBind1 co cons e false list negb nil op_zt__ option
-     pair t true typeArity BasicTypes.Arity Control.Arrow.arrow_first
+     None Some andb bool callArityBind1 cons false list negb nil op_zt__ option pair
+     true typeArity BasicTypes.Arity Control.Arrow.arrow_first
      Control.Arrow.arrow_second Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     Coq.Lists.List.length Core.App Core.Case Core.Cast Core.CoreBind Core.CoreExpr
+     Coq.Lists.List.length Core.App Core.Case Core.CoreBind Core.CoreExpr
      Core.CoreProgram Core.Id Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec
-     Core.Rec Core.Tick Core.Type_ Core.Var Core.VarEnv Core.VarSet Core.bindersOf
-     Core.delVarEnv Core.delVarSet Core.delVarSetList Core.elemVarSet
-     Core.emptyVarEnv Core.emptyVarSet Core.extendVarSetList Core.isBotRes
-     Core.isExportedId Core.isId Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet
-     Core.plusVarEnv_C Core.splitStrictSig Core.unitVarEnv CoreUtils.exprIsCheap
+     Core.Rec Core.Var Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv
+     Core.delVarSet Core.delVarSetList Core.elemVarSet Core.emptyVarEnv
+     Core.emptyVarSet Core.extendVarSetList Core.isBotRes Core.isExportedId Core.isId
+     Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet Core.plusVarEnv_C
+     Core.splitStrictSig Core.unitVarEnv CoreUtils.exprIsCheap
      CoreUtils.exprIsTrivial Data.Foldable.any Data.Foldable.foldl
      Data.Foldable.foldr Data.Foldable.null Data.Foldable.or Data.Tuple.fst
      Data.Tuple.snd DynFlags.DynFlags GHC.Base.const GHC.Base.map GHC.Base.min
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.DeferredFix.deferredFix1 GHC.List.filter GHC.List.unzip GHC.Num.fromInteger
-     GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idCallArity Id.idStrictness Id.idType
-     Id.setIdCallArity UnVarGraph.UnVarGraph UnVarGraph.UnVarSet
-     UnVarGraph.completeBipartiteGraph UnVarGraph.completeGraph UnVarGraph.delNode
-     UnVarGraph.delUnVarSet UnVarGraph.elemUnVarSet UnVarGraph.emptyUnVarGraph
-     UnVarGraph.neighbors UnVarGraph.unionUnVarGraph UnVarGraph.unionUnVarGraphs
-     UnVarGraph.unionUnVarSets UnVarGraph.varEnvDom Util.lengthExceeds
+     GHC.DeferredFix.deferredFix1 GHC.Err.patternFailure GHC.List.filter
+     GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
+     Id.idCallArity Id.idStrictness Id.idType Id.setIdCallArity UnVarGraph.UnVarGraph
+     UnVarGraph.UnVarSet UnVarGraph.completeBipartiteGraph UnVarGraph.completeGraph
+     UnVarGraph.delNode UnVarGraph.delUnVarSet UnVarGraph.elemUnVarSet
+     UnVarGraph.emptyUnVarGraph UnVarGraph.neighbors UnVarGraph.unionUnVarGraph
+     UnVarGraph.unionUnVarGraphs UnVarGraph.unionUnVarSets UnVarGraph.varEnvDom
+     Util.lengthExceeds
 *)

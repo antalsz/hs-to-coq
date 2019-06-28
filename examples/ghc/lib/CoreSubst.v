@@ -13,6 +13,7 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require AxiomatizedTypes.
+Require Coercion.
 Require Coq.Lists.List.
 Require Core.
 Require CoreFVs.
@@ -26,7 +27,6 @@ Require Import GHC.Base.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
-Require GHC.Skip.
 Require Id.
 Require Maybes.
 Require Name.
@@ -128,8 +128,6 @@ Axiom substCo : Subst -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
 
 Definition substBndr : Subst -> Core.Var -> (Subst * Core.Var)%type :=
   fun subst bndr =>
-    if Core.isTyVar bndr : bool then substTyVarBndr subst bndr else
-    if Core.isCoVar bndr : bool then substCoVarBndr subst bndr else
     substIdBndr (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
 
 Definition substBndrs
@@ -154,9 +152,8 @@ Definition mkOpenSubst
                                         let 'pair id e := arg_1__ in
                                         if Core.isId id : bool then cons (pair id e) nil else
                                         nil in
-                                      Coq.Lists.List.flat_map cont_0__ pairs)) (Core.mkVarEnv (GHC.Skip.nil_skipped
-                                                                                               "Core.Type_"))
-    (Core.mkVarEnv (GHC.Skip.nil_skipped "Core.Coercion")).
+                                      Coq.Lists.List.flat_map cont_0__ pairs)) (Core.mkVarEnv GHC.Err.default)
+    (Core.mkVarEnv GHC.Err.default).
 
 Definition mkEmptySubst : Core.InScopeSet -> Subst :=
   fun in_scope =>
@@ -167,8 +164,9 @@ Definition lookupTCvSubst : Subst -> Core.TyVar -> AxiomatizedTypes.Type_ :=
     match arg_0__, arg_1__ with
     | Mk_Subst _ _ tvs cvs, v =>
         if Core.isTyVar v : bool
-        then Maybes.orElse (Core.lookupVarEnv tvs v) (Core.mkTyVarTy v) else
-        Core.mkCoercionTy (Maybes.orElse (Core.lookupVarEnv cvs v) (Core.mkCoVarCo v))
+        then Maybes.orElse (Core.lookupVarEnv tvs v) (TyCoRep.mkTyVarTy v) else
+        Core.mkCoercionTy (Maybes.orElse (Core.lookupVarEnv cvs v) (Coercion.mkCoVarCo
+                                          v))
     end.
 
 Definition lookupIdSubst : String -> Subst -> Core.Id -> Core.CoreExpr :=
@@ -488,12 +486,12 @@ Definition extendSubstWithVar : Subst -> Core.Var -> Core.Var -> Subst :=
     then if andb Util.debugIsOn (negb (Core.isTyVar v2)) : bool
          then (Panic.assertPanic (GHC.Base.hs_string__
                                   "ghc/compiler/coreSyn/CoreSubst.hs") #243)
-         else extendTvSubst subst v1 (Core.mkTyVarTy v2) else
+         else extendTvSubst subst v1 (TyCoRep.mkTyVarTy v2) else
     if Core.isCoVar v1 : bool
     then if andb Util.debugIsOn (negb (Core.isCoVar v2)) : bool
          then (Panic.assertPanic (GHC.Base.hs_string__
                                   "ghc/compiler/coreSyn/CoreSubst.hs") #244)
-         else extendCvSubst subst v1 (Core.mkCoVarCo v2) else
+         else extendCvSubst subst v1 (Coercion.mkCoVarCo v2) else
     if andb Util.debugIsOn (negb (Core.isId v2)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__
                              "ghc/compiler/coreSyn/CoreSubst.hs") #245)
@@ -536,7 +534,7 @@ Definition clone_id
           Id.maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id)))
           id2 in
         let 'pair new_idvs new_cvs := (if Core.isCoVar old_id : bool
-                                       then pair idvs (Core.extendVarEnv cvs old_id (Core.mkCoVarCo new_id)) else
+                                       then pair idvs (Core.extendVarEnv cvs old_id (Coercion.mkCoVarCo new_id)) else
                                        pair (Core.extendVarEnv idvs old_id (Core.Mk_Var new_id)) cvs) in
         pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_idvs tvs new_cvs)
              new_id
@@ -593,27 +591,27 @@ Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
 (* External variables:
      None Some String andb bool cons const list map mapAccumL mappend negb nil
      op_z2218U__ op_zeze__ op_zt__ option orb pair snd true tt
-     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Coq.Lists.List.flat_map
-     Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.CoVar Core.CoreArg
-     Core.CoreBind Core.CoreExpr Core.CoreProgram Core.CoreRule Core.CvSubstEnv
-     Core.DVarSet Core.Id Core.IdEnv Core.IdInfo Core.InScopeSet Core.Lam Core.Let
-     Core.Lit Core.Mk_TCvSubst Core.Mk_Var Core.NonRec Core.Rec Core.Rule
-     Core.RuleInfo Core.TCvSubst Core.Tickish Core.TvSubstEnv Core.TyVar
-     Core.Unfolding Core.Var Core.VarSet Core.dVarSetElems Core.delVarEnv
-     Core.delVarEnvList Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv
-     Core.emptyVarSet Core.extendInScopeSet Core.extendInScopeSetList
-     Core.extendInScopeSetSet Core.extendVarEnv Core.extendVarEnvList Core.idInfo
-     Core.isCoVar Core.isEmptyRuleInfo Core.isEmptyVarEnv Core.isFragileUnfolding
-     Core.isId Core.isLocalId Core.isLocalVar Core.isNonCoVarId Core.isTyVar
-     Core.lookupInScope Core.lookupVarEnv Core.mkCoVarCo Core.mkCoercionTy
-     Core.mkDVarSet Core.mkTyVarTy Core.mkVarEnv Core.ruleInfo Core.setRuleInfo
-     Core.setUnfoldingInfo Core.setVarUnique Core.unfoldingInfo Core.uniqAway
-     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr Data.Foldable.all
+     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Coercion.mkCoVarCo
+     Coq.Lists.List.flat_map Core.App Core.Breakpoint Core.BuiltinRule Core.Case
+     Core.CoVar Core.CoreArg Core.CoreBind Core.CoreExpr Core.CoreProgram
+     Core.CoreRule Core.CvSubstEnv Core.DVarSet Core.Id Core.IdEnv Core.IdInfo
+     Core.InScopeSet Core.Lam Core.Let Core.Lit Core.Mk_TCvSubst Core.Mk_Var
+     Core.NonRec Core.Rec Core.Rule Core.RuleInfo Core.TCvSubst Core.Tickish
+     Core.TvSubstEnv Core.TyVar Core.Unfolding Core.Var Core.VarSet Core.dVarSetElems
+     Core.delVarEnv Core.delVarEnvList Core.elemInScopeSet Core.emptyInScopeSet
+     Core.emptyVarEnv Core.emptyVarSet Core.extendInScopeSet
+     Core.extendInScopeSetList Core.extendInScopeSetSet Core.extendVarEnv
+     Core.extendVarEnvList Core.idInfo Core.isCoVar Core.isEmptyRuleInfo
+     Core.isEmptyVarEnv Core.isFragileUnfolding Core.isId Core.isLocalId
+     Core.isLocalVar Core.isNonCoVarId Core.isTyVar Core.lookupInScope
+     Core.lookupVarEnv Core.mkCoercionTy Core.mkDVarSet Core.mkVarEnv Core.ruleInfo
+     Core.setRuleInfo Core.setUnfoldingInfo Core.setVarUnique Core.unfoldingInfo
+     Core.uniqAway CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr Data.Foldable.all
      Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst Data.Tuple.snd
-     Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger GHC.Skip.nil_skipped Id.idType Id.maybeModifyIdInfo
-     Id.setIdType Maybes.orElse Name.Name Panic.assertPanic Panic.panicStr
-     Panic.someSDoc Panic.warnPprTrace TyCoRep.noFreeVarsOfType UniqSupply.UniqSupply
-     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
-     Util.debugIsOn
+     Datatypes.id FV.emptyFV GHC.Err.default GHC.Err.error GHC.List.unzip
+     GHC.List.zip GHC.Num.fromInteger Id.idType Id.maybeModifyIdInfo Id.setIdType
+     Maybes.orElse Name.Name Panic.assertPanic Panic.panicStr Panic.someSDoc
+     Panic.warnPprTrace TyCoRep.mkTyVarTy TyCoRep.noFreeVarsOfType
+     UniqSupply.UniqSupply UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply
+     Unique.Unique Util.debugIsOn
 *)

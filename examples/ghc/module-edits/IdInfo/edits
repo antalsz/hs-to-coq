@@ -1,3 +1,6 @@
+skip Core.coVarDetails
+
+###################################
 # Redefine RuleInfo so that it is always empty. This is *safe*
 
 redefine Inductive  Core.RuleInfo : Type := Core.EmptyRuleInfo.

@@ -15,18 +15,25 @@ Require Coq.Program.Wf.
 Require AxiomatizedTypes.
 Require BasicTypes.
 Require Coq.Init.Datatypes.
+Require Coq.Lists.List.
 Require Core.
 Require Data.Foldable.
 Require Data.Maybe.
+Require Data.OldList.
+Require Data.Tuple.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
 Require GHC.DeferredFix.
+Require GHC.Err.
+Require GHC.List.
 Require GHC.Num.
 Require Id.
 Require Literal.
+Require NestedRecursionHelpers.
 Require OrdList.
 Require Panic.
+Require PrelNames.
 Require Unique.
 Require Util.
 Import GHC.Base.Notations.
@@ -57,10 +64,6 @@ Definition trimConArgs
         else nil
     | Core.DataAlt dc, args => Util.dropList (Core.dataConUnivTyVars dc) args
     end.
-
-Definition tickHNFArgs
-   : Core.Tickish Core.Var -> Core.CoreExpr -> Core.CoreExpr :=
-  fun t orig => orig.
 
 Definition stripTicksTopE {b}
    : (Core.Tickish Core.Id -> bool) -> Core.Expr b -> Core.Expr b :=
@@ -170,20 +173,14 @@ Axiom refineDefaultAlt : list Unique.Unique ->
                          list AxiomatizedTypes.Type_ ->
                          list Core.AltCon -> list Core.CoreAlt -> (bool * list Core.CoreAlt)%type.
 
-Axiom needsCaseBinding : AxiomatizedTypes.Type_ -> Core.CoreExpr -> bool.
-
-Definition mkTickNoHNF
-   : Core.Tickish Core.Id -> Core.CoreExpr -> Core.CoreExpr :=
-  fun t e => if exprIsHNF e : bool then tickHNFArgs t e else mkTick t e.
-
 Definition mkAltExpr
    : Core.AltCon ->
      list Core.CoreBndr -> list AxiomatizedTypes.Type_ -> Core.CoreExpr :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | Core.DataAlt con, args, inst_tys =>
-        Core.mkConApp con (Coq.Init.Datatypes.app (GHC.Base.map Core.Type_ inst_tys)
-                                                  (Core.varsToCoreExprs args))
+        Core.mkConApp con (Coq.Init.Datatypes.app (GHC.Base.map GHC.Err.default
+                                                   inst_tys) (Core.varsToCoreExprs args))
     | Core.LitAlt lit, nil, nil => Core.Lit lit
     | Core.LitAlt _, _, _ => Panic.panic (GHC.Base.hs_string__ "mkAltExpr LitAlt")
     | Core.DEFAULT, _, _ => Panic.panic (GHC.Base.hs_string__ "mkAltExpr DEFAULT")
@@ -224,6 +221,17 @@ Definition isWorkFreeApp : CheapAppFun :=
     | _ => false
     end.
 
+Definition isSaturatedConApp : Core.CoreExpr -> bool :=
+  fun e =>
+    let fix go arg_0__ arg_1__
+              := match arg_0__, arg_1__ with
+                 | Core.App f a, as_ => go f (cons a as_)
+                 | Core.Mk_Var fun_, args =>
+                     andb (Id.isConLikeId fun_) (Id.idArity fun_ GHC.Base.== Core.valArgCount args)
+                 | _, _ => false
+                 end in
+    go e nil.
+
 Definition isJoinBind : Core.CoreBind -> bool :=
   fun arg_0__ =>
     match arg_0__ with
@@ -236,7 +244,19 @@ Axiom isExprLevPoly : Core.CoreExpr -> bool.
 
 Axiom isExpandableApp : CheapAppFun.
 
-Axiom isEmptyTy : AxiomatizedTypes.Type_ -> bool.
+Definition isEmptyTy : AxiomatizedTypes.Type_ -> bool :=
+  fun ty =>
+    match Core.splitTyConApp_maybe ty with
+    | Some (pair tc inst_tys) =>
+        match Core.tyConDataCons_maybe tc with
+        | Some dcs =>
+            if Data.Foldable.all (Core.dataConCannotMatch inst_tys) dcs : bool
+            then true else
+            false
+        | _ => false
+        end
+    | _ => false
+    end.
 
 Axiom isDivOp : unit -> bool.
 
@@ -301,18 +321,14 @@ Definition findAlt {a} {b}
     | _ => go alts None
     end.
 
-Axiom filterAlts : forall {a},
-                   Core.TyCon ->
-                   list AxiomatizedTypes.Type_ ->
-                   list Core.AltCon ->
-                   list (Core.AltCon * list Core.Var * a)%type ->
-                   (list Core.AltCon * list (Core.AltCon * list Core.Var * a)%type)%type.
-
 Axiom expr_ok : (unit -> bool) -> Core.CoreExpr -> bool.
 
 Axiom exprType : Core.CoreExpr -> AxiomatizedTypes.Type_.
 
 Axiom exprOkForSpeculation : Core.CoreExpr -> bool.
+
+Definition needsCaseBinding : AxiomatizedTypes.Type_ -> Core.CoreExpr -> bool :=
+  fun ty rhs => andb (Core.isUnliftedType ty) (negb (exprOkForSpeculation rhs)).
 
 Axiom exprOkForSideEffects : Core.CoreExpr -> bool.
 
@@ -341,11 +357,64 @@ Definition exprIsTopLevelBindable
    : Core.CoreExpr -> AxiomatizedTypes.Type_ -> bool :=
   fun expr ty => orb (negb (Core.isUnliftedType ty)) (exprIsTickedString expr).
 
-Axiom exprIsDupable : DynFlags.DynFlags -> Core.CoreExpr -> bool.
+Definition exprIsHNFlike
+   : (Core.Var -> bool) -> (Core.Unfolding -> bool) -> Core.CoreExpr -> bool :=
+  fun is_con is_con_unf =>
+    let id_app_is_value :=
+      fun id n_val_args =>
+        orb (is_con id) (orb (Id.idArity id GHC.Base.> n_val_args) (Unique.hasKey id
+                                                                                  PrelNames.absentErrorIdKey)) in
+    let app_is_value : Core.CoreExpr -> nat -> bool :=
+      fix app_is_value (arg_1__ : Core.CoreExpr) (arg_2__ : nat) : bool
+            := match arg_1__, arg_2__ with
+               | Core.Mk_Var f, nva => id_app_is_value f nva
+               | Core.App f a, nva =>
+                   if Core.isValArg a : bool then app_is_value f (nva GHC.Num.+ #1) else
+                   app_is_value f nva
+               | _, _ => false
+               end in
+    let fix is_hnf_like arg_7__
+              := match arg_7__ with
+                 | Core.Mk_Var v => orb (id_app_is_value v #0) (is_con_unf (Id.idUnfolding v))
+                 | Core.Lit _ => true
+                 | Core.Lam b e => orb (Core.isRuntimeVar b) (is_hnf_like e)
+                 | Core.App e a =>
+                     if Core.isValArg a : bool then app_is_value e #1 else
+                     is_hnf_like e
+                 | _ => match arg_7__ with | Core.Let _ e => is_hnf_like e | _ => false end
+                 end in
+    is_hnf_like.
 
-Axiom exprIsConLike : Core.CoreExpr -> bool.
+Definition exprIsHNF : Core.CoreExpr -> bool :=
+  exprIsHNFlike Id.isDataConWorkId Core.isEvaldUnfolding.
 
-Axiom exprIsCheapX : CheapAppFun -> Core.CoreExpr -> bool.
+Definition exprIsConLike : Core.CoreExpr -> bool :=
+  exprIsHNFlike Id.isConLikeId Core.isConLikeUnfolding.
+
+Definition exprIsCheapX : CheapAppFun -> Core.CoreExpr -> bool :=
+  fun ok_app e =>
+    let fix go arg_1__ arg_2__
+              := let ok e := go #0 e in
+                 match arg_1__, arg_2__ with
+                 | n, Core.Mk_Var v => ok_app v n
+                 | _, Core.Lit _ => true
+                 | n, Core.Case scrut _ _ alts =>
+                     andb (ok scrut) (Data.Foldable.and (let cont_4__ arg_5__ :=
+                                                           let 'pair (pair _ _) rhs := arg_5__ in
+                                                           cons (go n rhs) nil in
+                                                         Coq.Lists.List.flat_map cont_4__ alts))
+                 | n, Core.Lam x e =>
+                     if Core.isRuntimeVar x : bool
+                     then orb (n GHC.Base.== #0) (go (n GHC.Num.- #1) e) else
+                     go n e
+                 | n, Core.App f e =>
+                     if Core.isRuntimeArg e : bool then andb (go (n GHC.Num.+ #1) f) (ok e) else
+                     go n f
+                 | n, Core.Let (Core.NonRec _ r) e => andb (go n e) (ok r)
+                 | n, Core.Let (Core.Rec prs) e =>
+                     andb (go n e) (Data.Foldable.all (ok GHC.Base.∘ Data.Tuple.snd) prs)
+                 end in
+    let ok := fun e => go #0 e in ok e.
 
 Definition exprIsExpandable : Core.CoreExpr -> bool :=
   exprIsCheapX isExpandableApp.
@@ -356,7 +425,25 @@ Definition exprIsWorkFree : Core.CoreExpr -> bool :=
 Definition exprIsCheap : Core.CoreExpr -> bool :=
   exprIsCheapX isCheapApp.
 
-Axiom exprIsBottom : Core.CoreExpr -> bool.
+Definition exprIsBottom : Core.CoreExpr -> bool :=
+  fun e =>
+    let fix go arg_0__ arg_1__
+              := let j_3__ :=
+                   match arg_0__, arg_1__ with
+                   | _, Core.Case _ _ _ alts => Data.Foldable.null alts
+                   | _, _ => false
+                   end in
+                 match arg_0__, arg_1__ with
+                 | n, Core.Mk_Var v => andb (Id.isBottomingId v) (n GHC.Base.>= Id.idArity v)
+                 | n, Core.App e a =>
+                     if Core.isTypeArg a : bool then go n e else
+                     go (n GHC.Num.+ #1) e
+                 | n, Core.Let _ e => go n e
+                 | n, Core.Lam v e => if Core.isTyVar v : bool then go n e else j_3__
+                 | _, _ => j_3__
+                 end in
+    if isEmptyTy (exprType e) : bool then true else
+    go #0 e.
 
 Definition exprIsBig {b} : Core.Expr b -> bool :=
   fix exprIsBig (arg_0__ : Core.Expr b) : bool
@@ -378,10 +465,71 @@ Definition eqTickish
     | _, l, r => l GHC.Base.== r
     end.
 
-Axiom eqExpr : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr -> bool.
+Definition eqExpr : Core.InScopeSet -> Core.CoreExpr -> Core.CoreExpr -> bool :=
+  fun in_scope e1 e2 =>
+    let fix go arg_0__ arg_1__ arg_2__
+              := let go_alt (arg_15__ : Core.RnEnv2) (arg_16__ arg_17__ : Core.CoreAlt)
+                  : bool :=
+                   match arg_15__, arg_16__, arg_17__ with
+                   | env, pair (pair c1 bs1) e1, pair (pair c2 bs2) e2 =>
+                       andb (c1 GHC.Base.== c2) (go (Core.rnBndrs2 env bs1 bs2) e1 e2)
+                   end in
+                 match arg_0__, arg_1__, arg_2__ with
+                 | env, Core.Mk_Var v1, Core.Mk_Var v2 =>
+                     if Core.rnOccL env v1 GHC.Base.== Core.rnOccR env v2 : bool then true else
+                     false
+                 | _, Core.Lit lit1, Core.Lit lit2 => lit1 GHC.Base.== lit2
+                 | env, Core.App f1 a1, Core.App f2 a2 => andb (go env f1 f2) (go env a1 a2)
+                 | env, Core.Lam b1 e1, Core.Lam b2 e2 =>
+                     andb (Core.eqTypeX env (Core.varType b1) (Core.varType b2)) (go (Core.rnBndr2
+                                                                                      env b1 b2) e1 e2)
+                 | env, Core.Let (Core.NonRec v1 r1) e1, Core.Let (Core.NonRec v2 r2) e2 =>
+                     andb (go env r1 r2) (go (Core.rnBndr2 env v1 v2) e1 e2)
+                 | env, Core.Let (Core.Rec ps1) e1, Core.Let (Core.Rec ps2) e2 =>
+                     let 'pair bs2 rs2 := GHC.List.unzip ps2 in
+                     let 'pair bs1 rs1 := GHC.List.unzip ps1 in
+                     let env' := Core.rnBndrs2 env bs1 bs2 in
+                     andb (Util.equalLength ps1 ps2) (andb (NestedRecursionHelpers.all2Map (go env')
+                                                                                           snd snd ps1 ps2) (go env' e1
+                                                            e2))
+                 | env, Core.Case e1 b1 t1 a1, Core.Case e2 b2 t2 a2 =>
+                     if Data.Foldable.null a1 : bool
+                     then andb (Data.Foldable.null a2) (andb (go env e1 e2) (Core.eqTypeX env t1
+                                                              t2)) else
+                     andb (go env e1 e2) (NestedRecursionHelpers.all2Map (go_alt (Core.rnBndr2 env b1
+                                                                                  b2)) id id a1 a2)
+                 | _, _, _ => false
+                 end in
+    let go_alt : Core.RnEnv2 -> Core.CoreAlt -> Core.CoreAlt -> bool :=
+      fun arg_15__ arg_16__ arg_17__ =>
+        match arg_15__, arg_16__, arg_17__ with
+        | env, pair (pair c1 bs1) e1, pair (pair c2 bs2) e2 =>
+            andb (c1 GHC.Base.== c2) (go (Core.rnBndrs2 env bs1 bs2) e1 e2)
+        end in
+    go (Core.mkRnEnv2 in_scope) e1 e2.
 
 Definition dupAppSize : nat :=
   #8.
+
+Definition exprIsDupable : DynFlags.DynFlags -> Core.CoreExpr -> bool :=
+  fun dflags e =>
+    let decrement : nat -> option nat :=
+      fun arg_0__ =>
+        let 'num_1__ := arg_0__ in
+        if num_1__ GHC.Base.== #0 : bool then None else
+        let 'n := arg_0__ in
+        Some (n GHC.Num.- #1) in
+    let go : nat -> Core.CoreExpr -> option nat :=
+      fix go (arg_6__ : nat) (arg_7__ : Core.CoreExpr) : option nat
+            := match arg_6__, arg_7__ with
+               | n, Core.Mk_Var _ => decrement n
+               | n, Core.App f a => match go n a with | Some n' => go n' f | _ => None end
+               | n, Core.Lit lit =>
+                   if Literal.litIsDupable dflags lit : bool then decrement n else
+                   None
+               | _, _ => None
+               end in
+    Data.Maybe.isJust (go dupAppSize e).
 
 Axiom diffUnfold : Core.RnEnv2 ->
                    Core.Unfolding -> Core.Unfolding -> list GHC.Base.String.
@@ -453,23 +601,59 @@ Definition addDefault {a} {b}
     | alts, Some rhs => cons (pair (pair Core.DEFAULT nil) rhs) alts
     end.
 
+Definition filterAlts {a}
+   : Core.TyCon ->
+     list AxiomatizedTypes.Type_ ->
+     list Core.AltCon ->
+     list (Core.AltCon * list Core.Var * a)%type ->
+     (list Core.AltCon * list (Core.AltCon * list Core.Var * a)%type)%type :=
+  fun _tycon inst_tys imposs_cons alts =>
+    let impossible_alt {a} {b}
+     : list AxiomatizedTypes.Type_ -> (Core.AltCon * a * b)%type -> bool :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | _, pair (pair con _) _ =>
+            if Data.Foldable.elem con imposs_cons : bool then true else
+            match arg_0__, arg_1__ with
+            | inst_tys, pair (pair (Core.DataAlt con) _) _ =>
+                Core.dataConCannotMatch inst_tys con
+            | _, _ => false
+            end
+        end in
+    let 'pair alts_wo_default maybe_deflt := findDefault alts in
+    let alt_cons :=
+      let cont_7__ arg_8__ := let 'pair (pair con _) _ := arg_8__ in cons con nil in
+      Coq.Lists.List.flat_map cont_7__ alts_wo_default in
+    let imposs_deflt_cons :=
+      Data.OldList.nub (Coq.Init.Datatypes.app imposs_cons alt_cons) in
+    let trimmed_alts := Util.filterOut (impossible_alt inst_tys) alts_wo_default in
+    pair imposs_deflt_cons (addDefault trimmed_alts maybe_deflt).
+
 (* External variables:
-     Eq Gt Lt None Some andb bool cons exprIsHNF false list mkTick nat negb nil
-     op_zt__ option orb pair true unit AxiomatizedTypes.Type_ BasicTypes.Arity
-     Coq.Init.Datatypes.app Core.Alt Core.AltCon Core.App Core.Breakpoint Core.Case
-     Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr Core.CoreExpr Core.DEFAULT
-     Core.DataAlt Core.DataCon Core.DataConWorkId Core.Expr Core.Id Core.InScopeSet
-     Core.Lam Core.Let Core.Lit Core.LitAlt Core.Mk_Var Core.NonRec Core.Rec
-     Core.RnEnv2 Core.Tickish Core.TyCon Core.TyVar Core.Type_ Core.Unfolding
-     Core.Var Core.cmpAlt Core.cmpAltCon Core.dataConTyCon Core.dataConUnivTyVars
-     Core.idDetails Core.isRuntimeArg Core.isRuntimeVar Core.isUnliftedType
-     Core.mkConApp Core.rnOccL Core.rnOccR Core.tyConFamilySize Core.varsToCoreExprs
-     Data.Foldable.null Data.Maybe.fromMaybe Data.Maybe.isJust DynFlags.DynFlags
+     Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
+     pair snd true unit AxiomatizedTypes.Type_ BasicTypes.Arity
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App
+     Core.Breakpoint Core.Case Core.CoreAlt Core.CoreArg Core.CoreBind Core.CoreBndr
+     Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataCon Core.DataConWorkId
+     Core.Expr Core.Id Core.InScopeSet Core.Lam Core.Let Core.Lit Core.LitAlt
+     Core.Mk_Var Core.NonRec Core.Rec Core.RnEnv2 Core.Tickish Core.TyCon Core.TyVar
+     Core.Unfolding Core.Var Core.cmpAlt Core.cmpAltCon Core.dataConCannotMatch
+     Core.dataConTyCon Core.dataConUnivTyVars Core.eqTypeX Core.idDetails
+     Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isRuntimeArg
+     Core.isRuntimeVar Core.isTyVar Core.isTypeArg Core.isUnliftedType Core.isValArg
+     Core.mkConApp Core.mkRnEnv2 Core.rnBndr2 Core.rnBndrs2 Core.rnOccL Core.rnOccR
+     Core.splitTyConApp_maybe Core.tyConDataCons_maybe Core.tyConFamilySize
+     Core.valArgCount Core.varType Core.varsToCoreExprs Data.Foldable.all
+     Data.Foldable.and Data.Foldable.elem Data.Foldable.null Data.Maybe.fromMaybe
+     Data.Maybe.isJust Data.OldList.nub Data.Tuple.snd DynFlags.DynFlags
      FastString.FastString GHC.Base.String GHC.Base.const GHC.Base.map
-     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zl__
-     GHC.DeferredFix.deferredFix1 GHC.Num.fromInteger GHC.Num.op_zm__ Id.idArity
-     Id.isJoinId Literal.MachStr Literal.litIsTrivial OrdList.OrdList OrdList.appOL
-     OrdList.concatOL OrdList.fromOL OrdList.nilOL Panic.assertPanic Panic.panic
-     Panic.panicStr Panic.someSDoc Unique.Unique Util.debugIsOn Util.dropList
-     Util.lengthIs
+     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.default
+     GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity
+     Id.idUnfolding Id.isBottomingId Id.isConLikeId Id.isDataConWorkId Id.isJoinId
+     Literal.MachStr Literal.litIsDupable Literal.litIsTrivial
+     NestedRecursionHelpers.all2Map OrdList.OrdList OrdList.appOL OrdList.concatOL
+     OrdList.fromOL OrdList.nilOL Panic.assertPanic Panic.panic Panic.panicStr
+     Panic.someSDoc PrelNames.absentErrorIdKey Unique.Unique Unique.hasKey
+     Util.debugIsOn Util.dropList Util.equalLength Util.filterOut Util.lengthIs
 *)

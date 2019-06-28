@@ -195,12 +195,12 @@ Qed.
 *)
 
 Inductive almostEqual : Var -> Var -> Prop :=
- | AE_TyVar   : forall n u ty,
+(* | AE_TyVar   : forall n u ty,
    almostEqual (Mk_TyVar n u ty)
                (Mk_TyVar n u ty)
  | AE_TcTyVar : forall n u ty1 ty2,
    almostEqual (Mk_TcTyVar n u ty1 ty2)
-               (Mk_TcTyVar n u ty1 ty2)
+               (Mk_TcTyVar n u ty1 ty2) *)
  | AE_Id : forall n u ty ids idd id1 id2,
    almostEqual (Mk_Id n u ty ids idd id1)
                (Mk_Id n u ty ids idd id2).
@@ -296,8 +296,9 @@ Proof.
   unfold isGlobalId.
   unfold isLocalId. 
   destruct var.
-  simpl. tauto.
-  tauto.
+  simpl. 
+(* tauto.
+  tauto. *)
   destruct idScope; simpl; tauto.
 Qed.
 
@@ -309,8 +310,8 @@ Proof.
   unfold isGlobalId.
   unfold isLocalId. 
   destruct var.
-  simpl. tauto.
-  tauto.
+(*   simpl. tauto.
+  tauto. *)
   destruct idScope; simpl; tauto.
 Qed.
 

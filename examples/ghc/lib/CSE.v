@@ -64,7 +64,7 @@ Definition noCSE : Core.InId -> bool :=
                                                                                         (Id.idInlinePragma id))
                                                                                        (Id.isJoinId id)).
 
-Definition lookupSubst : CSEnv -> Core.Var -> Core.OutExpr :=
+Definition lookupSubst : CSEnv -> Core.Id -> Core.OutExpr :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | CS sub _ _, x =>
@@ -85,7 +85,7 @@ Definition lookupCSEnv : CSEnv -> Core.OutExpr -> option Core.OutExpr :=
     | CS _ csmap _, expr => TrieMap.lookupCoreMap csmap expr
     end.
 
-Definition extendCSSubst : CSEnv -> Core.Var -> Core.CoreExpr -> CSEnv :=
+Definition extendCSSubst : CSEnv -> Core.Id -> Core.CoreExpr -> CSEnv :=
   fun cse x rhs =>
     let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
     CS (CoreSubst.extendSubst (cs_subst cse) x rhs) cs_map_1__ cs_rec_map_2__.
@@ -99,10 +99,10 @@ Definition extendCSRecEnv
 
 Definition extendCSEnv : CSEnv -> Core.OutExpr -> Core.OutExpr -> CSEnv :=
   fun cse expr triv_expr =>
-    let sexpr := CoreUtils.stripTicksE Core.tickishFloatable expr in
-    let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
-    CS cs_subst_1__ (TrieMap.extendCoreMap (cs_map cse) sexpr triv_expr)
-       cs_rec_map_3__.
+    let sexpr := expr in
+    let 'CS cs_subst_0__ cs_map_1__ cs_rec_map_2__ := cse in
+    CS cs_subst_0__ (TrieMap.extendCoreMap (cs_map cse) sexpr triv_expr)
+       cs_rec_map_2__.
 
 Definition emptyCSEnv : CSEnv :=
   CS CoreSubst.emptySubst TrieMap.emptyCoreMap TrieMap.emptyCoreMap.
@@ -130,7 +130,7 @@ Definition combineAlts : CSEnv -> list Core.InAlt -> list Core.InAlt :=
     end.
 
 Definition addRecBinders
-   : CSEnv -> list Core.Var -> (CSEnv * list Core.Var)%type :=
+   : CSEnv -> list Core.Id -> (CSEnv * list Core.Id)%type :=
   fun cse vs =>
     let 'pair sub' vs' := CoreSubst.substRecBndrs (cs_subst cse) vs in
     pair (let 'CS cs_subst_1__ cs_map_2__ cs_rec_map_3__ := cse in
@@ -168,10 +168,10 @@ Definition cseBind
   fix cseExpr (arg_0__ : CSEnv) (arg_1__ : Core.InExpr) : Core.OutExpr
         := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
              let expr' := cseExpr env expr in
-             let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
-             let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+             let expr'' := expr' in
+             let ticks := expr' in
              match lookupCSEnv env expr'' with
-             | Some e => CoreUtils.mkTicks ticks e
+             | Some e => e
              | _ => expr'
              end in
            let cseCase (env : CSEnv)
@@ -205,13 +205,9 @@ Definition cseBind
              let ty' := CoreSubst.substTy (csEnvSubst env) ty in
              Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
            match arg_0__, arg_1__ with
-           | env => Core.Type_ (CoreSubst.substTy (csEnvSubst env) t)
-           | env => Core.Coercion (CoreSubst.substCo (csEnvSubst env) c)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.Mk_Var v => lookupSubst env v
            | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
-           | env => Core.Tick t (cseExpr env e)
-           | env => Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
            | env, Core.Lam b e =>
                let 'pair env' b' := addBinder env b in
                Core.Lam b' (cseExpr env' e)
@@ -223,10 +219,10 @@ Definition cseBind
                               : Core.CoreBind) : (CSEnv * Core.CoreBind)%type
                       := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
                            let expr' := cseExpr env expr in
-                           let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
-                           let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+                           let expr'' := expr' in
+                           let ticks := expr' in
                            match lookupCSEnv env expr'' with
-                           | Some e => CoreUtils.mkTicks ticks e
+                           | Some e => e
                            | _ => expr'
                            end in
                          let cse_bind (arg_0__ : BasicTypes.TopLevelFlag)
@@ -261,15 +257,15 @@ Definition cseBind
                              match addRecBinders env (cons in_id nil) with
                              | pair env1 (cons out_id nil) =>
                                  let rhs' := cseExpr env1 rhs in
-                                 let rhs'' := CoreUtils.stripTicksE Core.tickishFloatable rhs' in
-                                 let ticks := CoreUtils.stripTicksT Core.tickishFloatable rhs' in
+                                 let rhs'' := rhs' in
+                                 let ticks := rhs' in
                                  let id_expr' := Core.varToCoreExpr out_id in
                                  let zapped_id := Id.zapIdUsageInfo out_id in
                                  if noCSE in_id : bool
                                  then pair env1 (Core.Rec (cons (pair out_id rhs') nil)) else
                                  match lookupCSRecEnv env out_id rhs'' with
                                  | Some previous =>
-                                     let previous' := CoreUtils.mkTicks ticks previous in
+                                     let previous' := previous in
                                      pair (extendCSSubst env1 in_id previous') (Core.NonRec out_id previous')
                                  | _ =>
                                      pair (extendCSRecEnv env1 out_id rhs'' id_expr') (Core.Rec (cons (pair zapped_id
@@ -303,10 +299,10 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
   fix cseExpr (arg_0__ : CSEnv) (arg_1__ : Core.InExpr) : Core.OutExpr
         := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
              let expr' := cseExpr env expr in
-             let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
-             let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+             let expr'' := expr' in
+             let ticks := expr' in
              match lookupCSEnv env expr'' with
-             | Some e => CoreUtils.mkTicks ticks e
+             | Some e => e
              | _ => expr'
              end in
            let cseCase (env : CSEnv)
@@ -340,13 +336,9 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
              let ty' := CoreSubst.substTy (csEnvSubst env) ty in
              Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
            match arg_0__, arg_1__ with
-           | env => Core.Type_ (CoreSubst.substTy (csEnvSubst env) t)
-           | env => Core.Coercion (CoreSubst.substCo (csEnvSubst env) c)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.Mk_Var v => lookupSubst env v
            | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
-           | env => Core.Tick t (cseExpr env e)
-           | env => Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
            | env, Core.Lam b e =>
                let 'pair env' b' := addBinder env b in
                Core.Lam b' (cseExpr env' e)
@@ -358,10 +350,10 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                               : Core.CoreBind) : (CSEnv * Core.CoreBind)%type
                       := let tryForCSE (env : CSEnv) (expr : Core.InExpr) : Core.OutExpr :=
                            let expr' := cseExpr env expr in
-                           let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
-                           let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+                           let expr'' := expr' in
+                           let ticks := expr' in
                            match lookupCSEnv env expr'' with
-                           | Some e => CoreUtils.mkTicks ticks e
+                           | Some e => e
                            | _ => expr'
                            end in
                          let cse_bind (arg_0__ : BasicTypes.TopLevelFlag)
@@ -396,15 +388,15 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
                              match addRecBinders env (cons in_id nil) with
                              | pair env1 (cons out_id nil) =>
                                  let rhs' := cseExpr env1 rhs in
-                                 let rhs'' := CoreUtils.stripTicksE Core.tickishFloatable rhs' in
-                                 let ticks := CoreUtils.stripTicksT Core.tickishFloatable rhs' in
+                                 let rhs'' := rhs' in
+                                 let ticks := rhs' in
                                  let id_expr' := Core.varToCoreExpr out_id in
                                  let zapped_id := Id.zapIdUsageInfo out_id in
                                  if noCSE in_id : bool
                                  then pair env1 (Core.Rec (cons (pair out_id rhs') nil)) else
                                  match lookupCSRecEnv env out_id rhs'' with
                                  | Some previous =>
-                                     let previous' := CoreUtils.mkTicks ticks previous in
+                                     let previous' := previous in
                                      pair (extendCSSubst env1 in_id previous') (Core.NonRec out_id previous')
                                  | _ =>
                                      pair (extendCSRecEnv env1 out_id rhs'' id_expr') (Core.Rec (cons (pair zapped_id
@@ -440,10 +432,10 @@ Definition cseOneExpr : Core.InExpr -> Core.OutExpr :=
 Definition tryForCSE : CSEnv -> Core.InExpr -> Core.OutExpr :=
   fun env expr =>
     let expr' := cseExpr env expr in
-    let expr'' := CoreUtils.stripTicksE Core.tickishFloatable expr' in
-    let ticks := CoreUtils.stripTicksT Core.tickishFloatable expr' in
+    let expr'' := expr' in
+    let ticks := expr' in
     match lookupCSEnv env expr'' with
-    | Some e => CoreUtils.mkTicks ticks e
+    | Some e => e
     | _ => expr'
     end.
 
@@ -500,22 +492,20 @@ Definition cse_bind
     end.
 
 (* External variables:
-     Some andb bool c co cons e false list negb nil op_zt__ option orb pair t true
+     Some andb bool cons false list negb nil op_zt__ option orb pair true
      BasicTypes.NotTopLevel BasicTypes.TopLevel BasicTypes.TopLevelFlag
      BasicTypes.inlinePragmaSpec BasicTypes.isAlwaysActive
      BasicTypes.isAnyInlinePragma BasicTypes.isTopLevel BasicTypes.noUserInlineSpec
-     Core.App Core.Case Core.Cast Core.Coercion Core.CoreBind Core.CoreExpr
-     Core.CoreProgram Core.DEFAULT Core.DataAlt Core.InAlt Core.InExpr Core.InId
-     Core.InType Core.InVar Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec
-     Core.OutExpr Core.OutId Core.OutType Core.Rec Core.Tick Core.Type_ Core.Var
-     Core.elemInScopeSet Core.isId Core.mkInScopeSet Core.mkLams
-     Core.tickishFloatable Core.tyConAppArgs Core.varToCoreExpr CoreFVs.exprFreeVars
+     Core.App Core.Case Core.CoreBind Core.CoreExpr Core.CoreProgram Core.DEFAULT
+     Core.DataAlt Core.Id Core.InAlt Core.InExpr Core.InId Core.InType Core.InVar
+     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.OutExpr Core.OutId
+     Core.OutType Core.Rec Core.Var Core.elemInScopeSet Core.isId Core.mkInScopeSet
+     Core.mkLams Core.tyConAppArgs Core.varToCoreExpr CoreFVs.exprFreeVars
      CoreSubst.Subst CoreSubst.emptySubst CoreSubst.extendSubst
      CoreSubst.lookupIdSubst CoreSubst.mkEmptySubst CoreSubst.substBndr
-     CoreSubst.substBndrs CoreSubst.substCo CoreSubst.substInScope
-     CoreSubst.substRecBndrs CoreSubst.substTy CoreUtils.eqExpr
-     CoreUtils.exprIsTickedString CoreUtils.mkAltExpr CoreUtils.mkTicks
-     CoreUtils.stripTicksE CoreUtils.stripTicksT Data.Foldable.all Data.Foldable.null
+     CoreSubst.substBndrs CoreSubst.substInScope CoreSubst.substRecBndrs
+     CoreSubst.substTy CoreUtils.eqExpr CoreUtils.exprIsTickedString
+     CoreUtils.mkAltExpr Data.Foldable.all Data.Foldable.null
      Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd Datatypes.id
      GHC.Base.map GHC.Err.patternFailure Id.idInlineActivation Id.idInlinePragma
      Id.idType Id.isDeadBinder Id.isJoinId Id.isJoinId_maybe Id.zapIdOccInfo

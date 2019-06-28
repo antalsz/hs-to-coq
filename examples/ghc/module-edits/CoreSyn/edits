@@ -1,12 +1,3 @@
-skip Core.mkTyBind
-skip Core.mkTyArg
-skip Core.mkTyApps
-skip Core.mkCoBind
-skip Core.mkCoApps
-
-
-in Core.varToCoreExpr rewrite forall v, isCoVar v = false
-in Core.varToCoreExpr rewrite forall v, isTyVar v = false
 
 ####################################
 # skipping or redefining unfolding info so that it is 'NoUnfolding'
@@ -19,12 +10,36 @@ skip Core.bootUnfolding
 skip Core.mkOtherCon
 skip Core.evaldUnfolding
 
+####################################
+# removing Type/Coercion/Cast/Tick datacons from Expr
 #
-# We cannot translate this while skipping all but NoUnfolding because
-# the 'BootUnfolding' returns true whereas all others return false
-#
-skip Core.hasSomeUnfolding
 
+#
+# Skip constructor (in Unfolding) produces a redundant case in this function
+#
+# skip Core.hasSomeUnfolding
+skip equation Core.hasSomeUnfolding _
+
+#
+# This function creates an mixed term/type application. with this edit we will 
+# only be able to use it when the list of types is nil
+#
+in Core.mkConApp2 rewrite forall , Core.Type_ = GHC.Err.default
+
+#
+#  These are 'smart' constructors for constructors that no longer exist.
+#
+skip Core.mkTyBind
+skip Core.mkTyArg
+skip Core.mkTyApps
+skip Core.mkCoBind
+skip Core.mkCoApps
+
+#
+# We need to avoid creating new Coercions and Types
+#
+in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
+in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
 
 ####################################
 #

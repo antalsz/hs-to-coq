@@ -39,6 +39,7 @@ Opaque GHC.Base.hs_string__.
 Theorem foldr_id {A B} (a : A) (bs : list B) : foldr (fun _ => id) a bs = a.
 Proof. by elim: bs. Qed.
 
+(*
 Theorem stripTicksE_id {b} p (e : Expr b) :
   stripTicksE p e = e.
 Proof.
@@ -61,7 +62,7 @@ Abort.
 
 Lemma mkTicks_id ticks e : mkTicks ticks e = e.
 Proof. apply foldr_id. Qed.
-
+*)
 Lemma WellScoped_Subst_implies_StrongSubset subst vars :
   WellScoped_Subst subst vars ->
   vars {<=} getSubstInScopeVars subst.
@@ -107,6 +108,7 @@ Lemma cseExpr_NonRec toplevel env b e :
 Proof. done. Qed.
 Hint Rewrite cseExpr_NonRec : hs_simpl.
 
+(*
 Lemma stripTicksE_App {b} p (e1 e2 : Expr b) :
   stripTicksE p (App e1 e2) = App (stripTicksE p e1) (stripTicksE p e2).
 Proof. done. Qed.
@@ -155,6 +157,7 @@ Lemma stripTicksE_Tick {b} p t (e : Expr b) :
 Proof. done. Qed. 
 Hint Rewrite @stripTicksE_Tick : hs_simpl.
 Hint Rewrite (@stripTicksE_Tick CoreBndr) : hs_simpl.
+*)
 
 Theorem flat_map_ext {A B} (f g : A -> list B) xs :
   f =1 g ->
@@ -174,6 +177,7 @@ Proof.
   by apply IMPL; last apply In__P.
 Qed.
 
+(*
 Lemma stripTicksE_map_fst {a b} p (pairs : list (a * Expr b)) :
   List.map fst (List.map (fun '(b', e') => (b', stripTicksE p e')) pairs) = List.map fst pairs.
 Proof. by rewrite List.map_map; apply map_ext; case. Qed.
@@ -218,6 +222,7 @@ Proof.
   - by rewrite /= IH.
   - case: (p tickish) => //=.
 Qed.
+*)
 
 (* TODO freeVars/freeVarsBind *)
 
@@ -230,8 +235,8 @@ Proof.
     [ v | lit
     | e1 e2 IH1 IH2 | v e IH
     | [v rhs | pairs] body IHbind IHbody | scrut bndr ty alts IHscrut IHalts
-    | e ty IH | tickish e IH
-    | co | ty ]
+(*    | e ty IH | tickish e IH
+    | co | ty *)]
     vars
     [[in_scope id_env tm cm] cs_map cs_rec_map]
     //; hs_simpl;
@@ -248,7 +253,7 @@ Proof.
     case: cs_map WSenv WSsubst => [cs_map_guts] /= WSenv WSsubst.
     admit.
 
-  - rewrite /= /addBinder /= => -[GLV WSe].
+  - admit. (* rewrite /= /addBinder /= => -[GLV WSe].
     case SB: (substBndr _ _) => [sub' v'] /=.
     move: (WellScoped_Subst_substBndr _ _ _ _ _ SB GLV WSsubst) => [SE WSsubst'].
     move: (GoodLocalVar_substBndr _ _ _ _ GLV SB) => GLV'.
@@ -259,9 +264,9 @@ Proof.
       apply WellScoped_StrongSubset with (vs1 := getSubstInScopeVars sub') => //.
       destruct sub' as [in_scope' id_env' [] []] => /=.
       move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]].
-    + constructor=> //; rewrite /cs_subst //.
+    + constructor=> //; rewrite /cs_subst //. *)
 
-  - rewrite (lock cse_bind) /= -(lock cse_bind) => -[[GLV WS_rhs] WS_ext].
+  - admit. (* rewrite (lock cse_bind) /= -(lock cse_bind) => -[[GLV WS_rhs] WS_ext].
     have NTV: isTyVar v = false. admit.
     have NCV: isCoVar v = false. admit.
     rewrite /addBinder /substBndr /cs_subst. rewrite NTV NCV.
@@ -275,7 +280,7 @@ Proof.
     case join_v: (isJoinId_maybe v) => [arity|].
     * admit.
     * rewrite /tryForCSE.
-        
+    *)
 
 (*       case def_env2_b2_e2: (cse_bind _ _ _ _) => [env2 [b2 e2]]. *)
       
@@ -299,17 +304,12 @@ Proof.
 (*     rewrite /cs_subst /getSubstInScopeVars. *)
 (*     move=> . *)
 (*     rewrite /cseExpr -/cseExpr -/cse_bind. *)
-        admit.
 
   - admit.
 
   - admit.
 
-  - admit.
-
-  - move=> /= WSE; by apply (IH vars).
 Admitted.
-
 
 (* Definition WS_cseExpr_cseBind vars env toplevel e b : *)
 (*   WellScoped     e vars -> *)

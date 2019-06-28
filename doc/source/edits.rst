@@ -88,12 +88,14 @@ Format:
 
 Effect:
   During translation, ignore the given data type constructor.  Any equation of a
-  function or arm of a case statement that pattern-matches on that constructor
-  is also skipped.
+  function, alternative of a case statement, or pattern guard that
+  pattern-matches on that constructor is also skipped.  List comprehensions that
+  bind to that constructor become `[]`.
 
   As with ``skip``, this does not affect the translation of *uses* of the
   constructor.  This means that you must either make it available in a preamble
-  or elide it with other edits.
+  or elide it with other edits.  Additionally, matching against the constructor
+  in ``do`` notation will cause a translation failure.
 
   These skipped constructors are not stored in the generated metadata, so you
   need to include the ``skip constructor`` edits in all downstream modules.

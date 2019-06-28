@@ -90,7 +90,7 @@ Effect:
   During translation, ignore the given data type constructor.  Any equation of a
   function, alternative of a case statement, or pattern guard that
   pattern-matches on that constructor is also skipped.  List comprehensions that
-  bind to that constructor become `[]`.
+  bind to that constructor become ``[]``.
 
   As with ``skip``, this does not affect the translation of *uses* of the
   constructor.  This means that you must either make it available in a preamble

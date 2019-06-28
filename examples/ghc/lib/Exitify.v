@@ -139,11 +139,11 @@ Definition exitifyRec
                                                    GHC.Base.return_ (Core.Case (Core.deAnnotate scrut) bndr ty alts'))
                                             | captured, pair _ (Core.AnnLet ann_bind body) =>
                                                 let bind := Core.deAnnBind ann_bind in
-                                                let j_28__ :=
+                                                let j_37__ :=
                                                   go (Coq.Init.Datatypes.app captured (Core.bindersOf bind)) body
                                                   GHC.Base.>>=
                                                   (fun body' => GHC.Base.return_ (Core.Let bind body')) in
-                                                let j_36__ :=
+                                                let j_38__ :=
                                                   match ann_bind with
                                                   | Core.AnnRec pairs =>
                                                       if Id.isJoinId (Data.Tuple.fst (GHC.Err.head pairs)) : bool
@@ -171,8 +171,8 @@ Definition exitifyRec
                                                               (fun body' =>
                                                                  GHC.Base.return_ (Core.Let (Core.Rec pairs')
                                                                                             body'))) else
-                                                      j_28__
-                                                  | _ => j_28__
+                                                      j_37__
+                                                  | _ => j_37__
                                                   end in
                                                 match ann_bind with
                                                 | Core.AnnNonRec j rhs =>
@@ -188,9 +188,9 @@ Definition exitifyRec
                                                            GHC.Base.>>=
                                                            (fun body' =>
                                                               GHC.Base.return_ (Core.Let (Core.NonRec j rhs') body')))
-                                                    | _ => j_36__
+                                                    | _ => j_38__
                                                     end
-                                                | _ => j_36__
+                                                | _ => j_38__
                                                 end
                                             | _, _ => j_22__
                                             end in

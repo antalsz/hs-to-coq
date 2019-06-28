@@ -1,4 +1,10 @@
-skip constructor SkipConstructor.D
+skip constructor SkipConstructor.NonPositive
+skip constructor SkipConstructor.Record
+skip constructor SkipConstructor.SkipMe
+
+# In the future, it'd be great to infer this – see issue #135
+skip equation SkipConstructor.extraUnderscore _
 
 # We don't link against GHC
+skip module GHC.Skip # It's been copied into the preamble
 skip SkipConstructor.Default__T

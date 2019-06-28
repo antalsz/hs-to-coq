@@ -73,7 +73,6 @@ import HsToCoq.ConvertHaskell.Pattern
 import HsToCoq.ConvertHaskell.Sigs
 import HsToCoq.ConvertHaskell.Axiomatize
 
-import Debug.Trace
 --------------------------------------------------------------------------------
 
 rewriteExpr :: ConversionMonad r m => Term -> m Term
@@ -132,10 +131,11 @@ convertExpr' (HsLit lit) =
     HsDoublePrim _ _       -> convUnsupported "`Double#' literals"
 
 convertExpr' (HsLam mg) =
-  uncurry Fun <$> convertFunction mg
+  uncurry Fun <$> convertFunction [] mg -- We don't skip any equations in an ordinary lambda
 
-convertExpr' (HsLamCase mg) =
-  uncurry Fun <$> convertFunction mg
+convertExpr' (HsLamCase mg) = do
+  skipPats <- views (edits.skippedCasePatterns) (S.map pure)
+  uncurry Fun <$> convertFunction skipPats mg
 
 convertExpr' (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
@@ -183,8 +183,9 @@ convertExpr' (ExplicitTuple exprs _boxity) = do
   pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
 
 convertExpr' (HsCase e mg) = do
-  scrut <- convertLExpr e
-  bindIn "scrut" scrut $ \scrut -> convertMatchGroup [scrut] mg
+  scrut    <- convertLExpr e
+  skipPats <- views (edits.skippedCasePatterns) (S.map pure)
+  bindIn "scrut" scrut $ \scrut -> convertMatchGroup skipPats [scrut] mg
 
 convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
@@ -441,13 +442,16 @@ convertLExpr = convertExpr . unLoc
 
 --------------------------------------------------------------------------------
 
-convertFunction :: LocalConvMonad r m => MatchGroup GhcRn (LHsExpr GhcRn) -> m (Binders, Term)
-convertFunction mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
-convertFunction mg = do
+convertFunction :: LocalConvMonad r m
+                => Set (NonEmpty NormalizedPattern)
+                -> MatchGroup GhcRn (LHsExpr GhcRn)
+                -> m (Binders, Term)
+convertFunction _ mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
+convertFunction skipEqns mg = do
   let n_args = matchGroupArity mg
   args <- replicateM n_args (genqid "arg") >>= maybe err pure . nonEmpty
   let argBinders = (Inferred Coq.Explicit . Ident) <$> args
-  match <- convertMatchGroup (Qualid <$> args) mg
+  match <- convertMatchGroup skipEqns (Qualid <$> args) mg
   pure (argBinders, match)
  where
    err = convUnsupported "convertFunction: Empty argument list"
@@ -595,6 +599,8 @@ convertListComprehension allStmts = case fmap unLoc <$> unsnoc allStmts of
         (\exp' cont letCont -> letCont (App2 concatMapT (Qualid cont) exp') <$> rest)
         (\skipped           -> pure $ App1 (Qualid "GHC.Skip.nil_skipped") (String $ textP skipped))
         (Var "nil")
+        -- `GHC.Skip.nil_skipped` always returns `[]`, but it has a note about
+        -- what constructor was skipped.
 
     toExpr (LetStmt (L _ binds)) rest =
       convertLocalBinds binds rest
@@ -656,12 +662,15 @@ chainFallThroughs cases failure = go (reverse cases) failure where
 -- * Group patterns that are mutually exclusive, and put them in match-with clauses.
 --   Add a catch-all case if that group is not complete already.
 -- * Chain these groups.
-convertMatchGroup :: LocalConvMonad r m =>
-    NonEmpty Term ->
-    MatchGroup GhcRn (LHsExpr GhcRn) ->
-    m Term
-convertMatchGroup args (MG (L _ alts) _ _ _) = do
-    convAlts <- catMaybes <$> traverse (convertMatch . unLoc) alts
+convertMatchGroup :: LocalConvMonad r m
+                  => Set (NonEmpty NormalizedPattern)
+                  -> NonEmpty Term
+                  -> MatchGroup GhcRn (LHsExpr GhcRn)
+                  -> m Term
+convertMatchGroup skipEqns args (MG (L _ alts) _ _ _) = do
+    allConvAlts <- traverse (convertMatch . unLoc) alts
+    let convAlts = [alt | Just alt@(MultPattern pats, _, _) <- allConvAlts
+                        , (normalizePattern <$> pats) `notElem` skipEqns ]
     -- TODO: Group
     convGroups <- groupMatches convAlts
 
@@ -670,7 +679,7 @@ convertMatchGroup args (MG (L _ alts) _ _ _) = do
 
     chainFallThroughs matches patternFailure
 
-data HasGuard = HasGuard | HasNoGuard
+data HasGuard = HasGuard | HasNoGuard deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 groupMatches :: forall r m a. ConversionMonad r m =>
     [(MultPattern, HasGuard, a)] -> m [[(MultPattern, a)]]
@@ -698,21 +707,18 @@ groupMatches pats = map (map snd) . go <$> mapM summarize pats
 convertMatch :: LocalConvMonad r m =>
     Match GhcRn (LHsExpr GhcRn) -> -- the match
     m (Maybe (MultPattern, HasGuard, Term -> m Term)) -- the pattern, hasGuards, the right-hand side
-convertMatch GHC.Match{..} = do
-  when (null m_pats) $ convUnsupported "no-pattern case arms"
-  
-  (mpats, guards) <-  bimap nonEmpty fold
-                  .   unzip
-                  .   rights
-                  <$> traverse (runPatternT . convertLPat) m_pats
-  pure $ mpats <&> \pats ->
-    let extraGuards = map BoolGuard guards
-        rhs = convertGRHSs extraGuards m_grhss
-    
-        hg | null extraGuards = hasGuards m_grhss
-           | otherwise        = HasGuard
-    
-    in (MultPattern pats, hg, rhs)
+convertMatch GHC.Match{..} =
+  (runPatternT $    maybe (convUnsupported "no-pattern case arms") pure . nonEmpty
+               =<< traverse convertLPat m_pats) <&> \case
+    Left _skipped        -> Nothing
+    Right (pats, guards) ->
+      let extraGuards = map BoolGuard guards
+          rhs = convertGRHSs extraGuards m_grhss
+     
+          hg | null extraGuards = hasGuards m_grhss
+             | otherwise        = HasGuard
+     
+      in Just (MultPattern pats, hg, rhs)
 
 buildMatch :: ConversionMonad r m =>
     NonEmpty MatchItem -> [(MultPattern, Term -> m Term)] -> Term -> m Term
@@ -738,21 +744,21 @@ hasGuards _                             = HasGuard
 convertGRHS :: LocalConvMonad r m
             => [ConvertedGuard m]
             -> GRHS GhcRn (LHsExpr GhcRn)
-            -> Term -- failure
-            -> m Term
-convertGRHS extraGuards (GRHS gs rhs) failure = do
-    convGuards <- (extraGuards ++) <$> convertGuard gs
-    rhs <- convertLExpr rhs
-    guardTerm convGuards rhs failure
+            -> ExceptT Qualid m (Term -> m Term)
+convertGRHS extraGuards (GRHS gs rhs) = do
+  convGuards <- (extraGuards ++) <$> convertGuard gs
+  rhs <- convertLExpr rhs
+  pure $ \failure -> guardTerm convGuards rhs failure
 
 convertLGRHSList :: LocalConvMonad r m
                  => [ConvertedGuard m]
                  -> [LGRHS GhcRn (LHsExpr GhcRn)]
                  -> Term
                  -> m Term
-convertLGRHSList extraGuards lgrhs failure  = do
+convertLGRHSList extraGuards lgrhs failure = do
     let rhss = unLoc <$> lgrhs
-    chainFallThroughs (convertGRHS extraGuards <$> rhss) failure
+    convRhss <- rights <$> traverse (runExceptT . convertGRHS extraGuards) rhss
+    chainFallThroughs convRhss failure
 
 convertGRHSs :: LocalConvMonad r m
              => [ConvertedGuard m]
@@ -769,7 +775,7 @@ data ConvertedGuard m = OtherwiseGuard
                       | PatternGuard   Pattern Term
                       | LetGuard       (m Term -> m Term)
 
-convertGuard :: LocalConvMonad r m => [GuardLStmt GhcRn] -> m [ConvertedGuard m]
+convertGuard :: LocalConvMonad r m => [GuardLStmt GhcRn] -> ExceptT Qualid m [ConvertedGuard m]
 convertGuard [] = pure []
 convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
   toCond (BodyStmt e _bind _guard _PlaceHolder) =
@@ -778,15 +784,10 @@ convertGuard gs = collapseGuards <$> traverse (toCond . unLoc) gs where
       False -> (:[]) . BoolGuard <$> convertLExpr e
   toCond (LetStmt (L _ binds)) =
     pure . (:[]) . LetGuard $ convertLocalBinds binds
-  toCond (BindStmt pat exp _bind _fail PlaceHolder) =
-    runPatternT (convertLPat pat) >>= \case
-      Left  skipped ->
-        -- `GHC.Skip.impossible_skipped` always returns false, but it has a note
-        -- about what constructor was skipped.
-        pure [BoolGuard $ App1 (Qualid "GHC.Skip.impossible_skipped") (String $ textP skipped)]
-      Right (pat', guards) -> do
-        exp'           <- convertLExpr exp
-        pure $ PatternGuard pat' exp' : map BoolGuard guards
+  toCond (BindStmt pat exp _bind _fail PlaceHolder) = do
+    (pat', guards) <- runWriterT (convertLPat pat)
+    exp'           <- convertLExpr exp
+    pure $ PatternGuard pat' exp' : map BoolGuard guards
   toCond _ =
     convUnsupported "impossibly fancy guards"
 
@@ -848,10 +849,9 @@ convertTypedBinding _convHsTy PatBind{..}   = do -- TODO use `_convHsTy`?
   -- TODO: what if we need to rename this definition? (i.e. for a class member)
   ax <- view currentModuleAxiomatized
   if ax
-    then do
-      traceM "pattern bindings in axiomatized modules, skipping"
-      pure Nothing
-     -- convUnsupported "pattern bindings in axiomatized modules"
+    then
+      liftIO $ Nothing <$ putStrLn "skipping a pattern binding in an axiomatized module" -- TODO: FIX HACK
+      -- convUnsupported "pattern bindings in axiomatized modules"
     else
       runPatternT (convertLPat pat_lhs) >>= \case
         Left  _skipped      -> pure Nothing
@@ -892,7 +892,9 @@ convertTypedBinding convHsTy FunBind{..}   = do
             then case unLoc $ mg_alts fun_matches of
                    [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
                    _ -> convUnsupported "malformed multi-match variable definitions"
-            else uncurry Fun <$> convertFunction fun_matches
+            else do
+              skipEqns <- view $ edits.skippedEquations.at name.non mempty
+              uncurry Fun <$> convertFunction skipEqns fun_matches
 
         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
         
@@ -1002,8 +1004,8 @@ convertMethodBinding name FunBind{..}   = withCurrentDefinition name $ do
                [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
                _ -> convUnsupported "malformed multi-match variable definitions"
         else do
-          (argBinders, match) <- convertFunction fun_matches
-          pure $  Fun argBinders match
+          skipEqns <- view $ edits.skippedEquations.at name.non mempty
+          uncurry Fun <$> convertFunction skipEqns fun_matches
       pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
 
 convertTypedBindings :: LocalConvMonad r m

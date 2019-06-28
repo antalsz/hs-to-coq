@@ -85,11 +85,11 @@ Definition letBndrStats : BasicTypes.TopLevelFlag -> Var -> CoreStats :=
     let ty_stats := tyStats (varType v) in
     if orb (isTyVar v) (BasicTypes.isTopLevel top_lvl) : bool then bndrStats v else
     if Id.isJoinId v : bool
-    then plusCS (let 'CS cs_tm_9__ cs_ty_10__ cs_co_11__ cs_vb_12__ cs_jb_13__ :=
+    then plusCS (let 'CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ cs_jb_5__ :=
                    oneTM in
-                 CS cs_tm_9__ cs_ty_10__ cs_co_11__ cs_vb_12__ 1) ty_stats else
-    plusCS (let 'CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ cs_jb_5__ := oneTM in
-            CS cs_tm_1__ cs_ty_2__ cs_co_3__ 1 cs_jb_5__) ty_stats.
+                 CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ 1) ty_stats else
+    plusCS (let 'CS cs_tm_8__ cs_ty_9__ cs_co_10__ cs_vb_11__ cs_jb_12__ := oneTM in
+            CS cs_tm_8__ cs_ty_9__ cs_co_10__ 1 cs_jb_12__) ty_stats.
 
 Definition bndrSize : Var -> nat :=
   fun arg_0__ => 1.

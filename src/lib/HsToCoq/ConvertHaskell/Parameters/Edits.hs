@@ -1,13 +1,14 @@
-{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric #-}
+{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric, GeneralizedNewtypeDeriving #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
-  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
+  Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
   HsNamespace(..), NamespacedIdent(..), Renamings,
   DataTypeArguments(..), dtParameters, dtIndices,
   CoqDefinition(..), definitionSentence,
   anAssertionVariety,
   ScopePlace(..),
   TerminationArgument(..),
+  NormalizedPattern(), getNormalizedPattern, normalizePattern,
   Rewrite(..), Rewrites,
   Edit(..), addEdit, buildEdits,
   useProgram,
@@ -38,8 +39,10 @@ import HsToCoq.Coq.FreeVars ()
 
 import HsToCoq.Coq.Gallina
 import HsToCoq.Coq.Gallina.Util
+import HsToCoq.Coq.Subst (Subst())
 import HsToCoq.Coq.Gallina.Rewrite (Rewrite(..), Rewrites)
 import HsToCoq.ConvertHaskell.Axiomatize
+import HsToCoq.Coq.Pretty
 
 --------------------------------------------------------------------------------
 
@@ -85,6 +88,31 @@ data ScopePlace = SPValue | SPConstructor
 data TerminationArgument = WellFounded Order | Deferred | Corecursive
                 deriving (Eq, Ord, Show, Read)
 
+-- Used to match patterns that might disagree on the question of whether a name
+-- is an @ArgsPat qid []@ or a @QualidPat@; this is useful when reading from an edits file.
+newtype NormalizedPattern = NormalizedPattern Pattern
+                          deriving (Eq, Ord, Show, Read, Subst, HasBV Qualid, Gallina)
+
+getNormalizedPattern :: NormalizedPattern -> Pattern
+getNormalizedPattern (NormalizedPattern pat) = pat
+{-# INLINE getNormalizedPattern #-}
+
+normalizePattern :: Pattern -> NormalizedPattern
+normalizePattern = NormalizedPattern . go where
+  go (ArgsPat         qid [])     = QualidPat       qid
+  go (ArgsPat         qid args)   = ArgsPat         qid (go <$> args)
+  go (ExplicitArgsPat qid args)   = ExplicitArgsPat qid (go <$> args)
+  go (InfixPat        lhs op rhs) = InfixPat        (go lhs) op (go rhs)
+  go (AsPat           p qid)      = AsPat           (go p) qid
+  go (InScopePat      p scope)    = InScopePat      (go p) scope
+  go (QualidPat       qid)        = QualidPat       qid
+  go UnderscorePat                = UnderscorePat
+  go (NumPat          n)          = NumPat          n
+  go (StringPat       s)          = StringPat       s
+  go (OrPats          ps)         = OrPats          (goO <$> ps)
+
+  goO (OrPattern ps) = OrPattern (go <$> ps)
+
 data Edit = TypeSynonymTypeEdit           Ident Ident
           | DataTypeArgumentsEdit         Qualid DataTypeArguments
           | TerminationEdit               Qualid TerminationArgument
@@ -95,6 +123,8 @@ data Edit = TypeSynonymTypeEdit           Ident Ident
           | SkipConstructorEdit           Qualid
           | SkipClassEdit                 Qualid
           | SkipMethodEdit                Qualid Ident
+          | SkipEquationEdit              Qualid (NonEmpty Pattern)
+          | SkipCasePatternEdit           Pattern
           | SkipModuleEdit                ModuleName
           | ImportModuleEdit              ModuleName
           | AxiomatizeModuleEdit          ModuleName
@@ -140,6 +170,8 @@ data Edits = Edits { _typeSynonymTypes          :: !(Map Ident Ident)
                    , _skippedConstructors       :: !(Set Qualid)
                    , _skippedClasses            :: !(Set Qualid)
                    , _skippedMethods            :: !(Set (Qualid,Ident))
+                   , _skippedEquations          :: !(Map Qualid (Set (NonEmpty NormalizedPattern)))
+                   , _skippedCasePatterns       :: !(Set NormalizedPattern)
                    , _skippedModules            :: !(Set ModuleName)
                    , _importedModules           :: !(Set ModuleName)
                    , _axiomatizedModules        :: !(Set ModuleName)
@@ -186,11 +218,17 @@ duplicate_for' what disp x = "Duplicate " ++ what ++ " for " ++ disp x
 duplicate_for :: String -> String -> String
 duplicate_for what = duplicate_for' what id
 
+-- Module-local
 duplicateI_for :: String -> Ident -> String
 duplicateI_for what = duplicate_for' what T.unpack
 
+-- Module-local
 duplicateQ_for :: String -> Qualid -> String
 duplicateQ_for what = duplicate_for' what (T.unpack . qualidToIdent)
+
+-- Module-local
+duplicateP_for :: Gallina g => String -> g -> String
+duplicateP_for what = duplicate_for' what showP
 
 descDuplEdit :: Edit                    -> String
 descDuplEdit = \case
@@ -202,6 +240,8 @@ descDuplEdit = \case
   SkipConstructorEdit           con          -> duplicateQ_for  "skipped constructor requests"         con
   SkipClassEdit                 cls          -> duplicateQ_for  "skipped class requests"               cls
   SkipMethodEdit                cls meth     -> duplicate_for   "skipped method requests"              (prettyLocalName cls meth)
+  SkipEquationEdit              fun pats     -> duplicateP_for  "skipped equation requests"            (ArgsPat fun $ toList pats)
+  SkipCasePatternEdit           pat          -> duplicateP_for  "skipped case pattern requests"        pat
   SkipModuleEdit                mod          -> duplicate_for   "skipped module requests"              (moduleNameString mod)
   ImportModuleEdit              mod          -> duplicate_for   "imported module requests"             (moduleNameString mod)
   HasManualNotationEdit         what         -> duplicate_for   "has manual notation"                  (moduleNameString what)
@@ -234,32 +274,34 @@ descDuplEdit = \case
 
 addEdit :: MonadError String m => Edit -> Edits -> m Edits
 addEdit e = case e of
-  TypeSynonymTypeEdit           syn  res         -> addFresh e typeSynonymTypes                       syn           res
-  DataTypeArgumentsEdit         ty   args        -> addFresh e dataTypeArguments                      ty            args
-  TerminationEdit               what ta          -> addFresh e termination                            what          ta
-  RedefinitionEdit              def              -> addFresh e redefinitions                          (defName def) def
-  SkipEdit                      what             -> addFresh e skipped                                what          ()
-  SkipConstructorEdit           con              -> addFresh e skippedConstructors                    con           ()
-  SkipClassEdit                 cls              -> addFresh e skippedClasses                         cls           ()
-  SkipMethodEdit                cls meth         -> addFresh e skippedMethods                         (cls,meth)    ()
-  SkipModuleEdit                mod              -> addFresh e skippedModules                         mod           ()
-  ImportModuleEdit              mod              -> addFresh e importedModules                        mod           ()
-  HasManualNotationEdit         what             -> addFresh e hasManualNotation                      what          ()
-  AxiomatizeModuleEdit          mod              -> addFresh e axiomatizedModules                     mod           ()
-  AxiomatizeDefinitionEdit      what             -> addFresh e axiomatizedDefinitions                 what          ()
-  UnaxiomatizeDefinitionEdit    what             -> addFresh e unaxiomatizedDefinitions               what          ()
-  AdditionalScopeEdit           place name scope -> addFresh e additionalScopes                       (place,name)  scope
-  RenameEdit                    hs to            -> addFresh e renamings                              hs            to
-  ObligationsEdit               what tac         -> addFresh e obligations                            what          tac
-  ClassKindEdit                 cls kinds        -> addFresh e classKinds                             cls           kinds
-  DataKindEdit                  cls kinds        -> addFresh e dataKinds                              cls           kinds
-  DeleteUnusedTypeVariablesEdit qid              -> addFresh e deleteUnusedTypeVariables              qid           ()
-  CoinductiveEdit               ty               -> addFresh e coinductiveTypes                       ty            ()
-  RenameModuleEdit              m1 m2            -> addFresh e renamedModules                         m1            m2
-  SimpleClassEdit               cls              -> addFresh e simpleClasses                          cls           ()
-  InlineMutualEdit              fun              -> addFresh e inlinedMutuals                         fun           ()
-  SetTypeEdit                   qid oty          -> addFresh e replacedTypes                          qid           oty
-  CollapseLetEdit               qid              -> addFresh e collapsedLets                          qid           ()
+  TypeSynonymTypeEdit           syn  res         -> addFresh e typeSynonymTypes                       syn                         res
+  DataTypeArgumentsEdit         ty   args        -> addFresh e dataTypeArguments                      ty                          args
+  TerminationEdit               what ta          -> addFresh e termination                            what                        ta
+  RedefinitionEdit              def              -> addFresh e redefinitions                          (defName def)               def
+  SkipEdit                      what             -> addFresh e skipped                                what                        ()
+  SkipConstructorEdit           con              -> addFresh e skippedConstructors                    con                         ()
+  SkipClassEdit                 cls              -> addFresh e skippedClasses                         cls                         ()
+  SkipMethodEdit                cls meth         -> addFresh e skippedMethods                         (cls,meth)                  ()
+  SkipEquationEdit              fun pats         -> addFresh e (skippedEquations.at fun.non mempty)   (normalizePattern <$> pats) ()
+  SkipCasePatternEdit           pat              -> addFresh e skippedCasePatterns                    (normalizePattern pat)      ()
+  SkipModuleEdit                mod              -> addFresh e skippedModules                         mod                         ()
+  ImportModuleEdit              mod              -> addFresh e importedModules                        mod                         ()
+  HasManualNotationEdit         what             -> addFresh e hasManualNotation                      what                        ()
+  AxiomatizeModuleEdit          mod              -> addFresh e axiomatizedModules                     mod                         ()
+  AxiomatizeDefinitionEdit      what             -> addFresh e axiomatizedDefinitions                 what                        ()
+  UnaxiomatizeDefinitionEdit    what             -> addFresh e unaxiomatizedDefinitions               what                        ()
+  AdditionalScopeEdit           place name scope -> addFresh e additionalScopes                       (place,name)                scope
+  RenameEdit                    hs to            -> addFresh e renamings                              hs                          to
+  ObligationsEdit               what tac         -> addFresh e obligations                            what                        tac
+  ClassKindEdit                 cls kinds        -> addFresh e classKinds                             cls                         kinds
+  DataKindEdit                  cls kinds        -> addFresh e dataKinds                              cls                         kinds
+  DeleteUnusedTypeVariablesEdit qid              -> addFresh e deleteUnusedTypeVariables              qid                         ()
+  CoinductiveEdit               ty               -> addFresh e coinductiveTypes                       ty                          ()
+  RenameModuleEdit              m1 m2            -> addFresh e renamedModules                         m1                          m2
+  SimpleClassEdit               cls              -> addFresh e simpleClasses                          cls                         ()
+  InlineMutualEdit              fun              -> addFresh e inlinedMutuals                         fun                         ()
+  SetTypeEdit                   qid oty          -> addFresh e replacedTypes                          qid                         oty
+  CollapseLetEdit               qid              -> addFresh e collapsedLets                          qid                         ()
   AddEdit                       mod def          -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
   OrderEdit                     idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                   rewrite          -> return . (rewrites %~ (rewrite:))

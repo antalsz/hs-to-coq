@@ -1,0 +1,11 @@
+skip equation SkipMatches.skipEquation _
+
+# We have to write the patterns using the *translated* names
+skip equation SkipMatches.skipEquationMultipleArgs _ true
+skip equation SkipMatches.skipEquationMultipleArgs _ false
+
+in SkipMatches.skipCasePattern       skip case pattern _
+in SkipMatches.skipLambdaCasePattern skip case pattern _
+
+skip case pattern ignore
+in SkipMatches.redundant skip case pattern _

@@ -3828,7 +3828,7 @@ Program Instance Eq___UseDmd : GHC.Base.Eq_ UseDmd :=
 
 Definition mkUProd : list ArgUse -> UseDmd :=
   fun ux =>
-    if Data.Foldable.all (fun arg_1__ => arg_1__ GHC.Base.== Abs) ux : bool
+    if Data.Foldable.all (fun arg_0__ => arg_0__ GHC.Base.== Abs) ux : bool
     then UHead else
     UProd ux.
 

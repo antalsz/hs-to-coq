@@ -628,11 +628,11 @@ Definition xtVar {a} : CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a :=
   fun env v f m =>
     match lookupCME env v with
     | Some bv =>
-        let 'VM vm_bvar_5__ vm_fvar_6__ := m in
-        VM (vm_bvar m |> alterTM (m := BoundVarMap) bv f) vm_fvar_6__
-    | _ =>
         let 'VM vm_bvar_0__ vm_fvar_1__ := m in
-        VM vm_bvar_0__ (vm_fvar m |> xtDFreeVar v f)
+        VM (vm_bvar m |> alterTM (m := BoundVarMap) bv f) vm_fvar_1__
+    | _ =>
+        let 'VM vm_bvar_4__ vm_fvar_5__ := m in
+        VM vm_bvar_4__ (vm_fvar m |> xtDFreeVar v f)
     end.
 
 Definition lkTickish {a} : Core.Tickish Core.Id -> TickishMap a -> option a :=

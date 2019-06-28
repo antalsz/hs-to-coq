@@ -27,7 +27,7 @@ nestedPattern (True, Just Ok2)    = Just Ok1
 nestedPattern (True, Just SkipMe) = Just SkipMe -- This case should be skipped
 nestedPattern _                   = Nothing
 
--- Issue #130
+-- Issue #130; see also issue #135
 extraUnderscore :: T -> T
 extraUnderscore Ok1             = Ok1
 extraUnderscore Ok2             = Ok2

@@ -34,7 +34,8 @@ PASS = \
   RedefineAddAxiom \
   AddTheorem \
   Existential \
-	SkipConstructor
+	SkipConstructor \
+	SkipMatches
 
 # tests that *should* pass but currently fail
 TODO_PASS = \

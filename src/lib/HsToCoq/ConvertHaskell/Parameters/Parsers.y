@@ -88,6 +88,9 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   set             { TokWord    "set"            }
   no              { TokWord    "no"             }
   collapse        { TokWord    "collapse"       }
+  equation        { TokWord    "equation"       }
+  case            { TokWord    "case"           }
+  pattern         { TokWord    "pattern"        }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   -- Tokens: Coq terms
@@ -285,6 +288,8 @@ Edit :: { Edit }
   | skip constructor Qualid                               { SkipConstructorEdit           $3                                    }
   | skip class Qualid                                     { SkipClassEdit                 $3                                    }
   | skip method Qualid Word                               { SkipMethodEdit                $3 $4                                 }
+  | skip equation Qualid Some(AtomicPattern)              { SkipEquationEdit              $3 $4                                 }
+  | skip case pattern Pattern                             { SkipCasePatternEdit           $4                                    }
   | skip module Word                                      { SkipModuleEdit                (mkModuleNameT $3)                    }
   | import module Word                                    { ImportModuleEdit              (mkModuleNameT $3)                    }
   | manual notation Word                                  { HasManualNotationEdit         (mkModuleNameT $3)                    }
@@ -459,15 +464,16 @@ MultPattern :: { MultPattern }
 -- arguments as variables. We could hard-code common nullary constructors.
 -- But can we do better?
 Pattern :: { Pattern }
-  : Qualid Some(AtomicPattern) { ArgsPat $1 (NEL.toList $2) }
-  | Pattern as Qualid          { AsPat $1 $3 }
-  | AtomicPattern              { $1 }
+  : Qualid Some(AtomicPattern)        { ArgsPat $1 (NEL.toList $2) }
+  | '@' Qualid Some(AtomicPattern)    { ExplicitArgsPat $2 $3 }
+  | Pattern as Qualid                 { AsPat $1 $3 }
+  | AtomicPattern                     { $1 }
 
 AtomicPattern :: { Pattern }
-  : '_'                     { UnderscorePat }
-  | Num                     { NumPat $1 }
-  | Qualid                  { QualidPat $1  }
-  | '(' Pattern ')'         { $2 }
+  : '_'                { UnderscorePat }
+  | Num                { NumPat $1 }
+  | Qualid             { QualidPat $1  }
+  | '(' Pattern ')'    { $2 }
 
 Rewrite :: { Rewrite }
   : forall Many(Word) ',' EqlessTerm '=' Term    { Rewrite $2 $4 $6 }

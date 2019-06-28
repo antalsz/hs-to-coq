@@ -147,6 +147,143 @@ Examples:
 
      skip method GHC.Base.Monad fail
 
+``skip equation`` – skip one equation of a function definition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip equation, edit
+
+Format:
+  | **skip equation** *qualified_function* *pattern* ...
+
+Effect:
+  Skip the equation of the function definition whose arguments are the specified
+  patterns.  Guards are not considered, only the patterns themselves.
+
+  For example, consider the following (silly) function definition:
+
+  .. code-block:: haskell
+
+     redundant :: Maybe Bool -> Maybe Bool -> Bool
+     redundant (Just True)  _        = False
+     redundant (Just False) _        = True
+     redundant _            _        = True
+     redundant _            (Just b) = b
+
+  The last case is redundant, so Coq will reject this definition.  However, we
+  can add the following edit:
+
+  .. code-block:: shell
+
+     skip equation ModuleName.redundant _ (Some b)
+  
+  And the last case will be deleted on the Coq side:
+
+  .. code-block:: coq
+
+     Definition redundant : option bool -> option bool -> bool :=
+       fun arg_0__ arg_1__ =>
+         match arg_0__, arg_1__ with
+         | Some true, _ => false
+         | Some false, _ => true
+         | _, _ => true
+         end.
+
+  Note that you have to use the translated name (``Some`` vs. ``Just``), and
+  most constructor names will be fully qualified.
+
+  Why would you want this?  This edit is most useful in tandem with ``skip
+  constructor`` (which see).  Suppose we have a function where the final catch-all
+  case can only match skipped constructors, such as
+  
+  .. code-block:: haskell
+
+     data T = TranslateMe
+            | SkipMe
+     
+     function :: T -> Bool
+     function TranslateMe = True
+     function _           = False
+
+  Then, on skipping ``SkipMe``, this function's ``_`` case will be redundant,
+  and Coq would reject it.  We can fix this with
+  
+   .. code-block:: shell
+
+      skip equation ModuleName.function _
+
+  to translate just the ``TranslateMe`` case.
+
+  See also ``skip case pattern`` for the equivalent edit for ``case`` and lambda-case
+  expressions.
+
+Examples:
+   .. code-block:: shell
+
+     skip equation ModuleName.redundant _ (Some b)
+     skip equation Core.hasSomeUnfolding _
+
+``skip case pattern`` – skip one alternative of a ``case`` expression
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: skip case pattern, edit
+
+Format:
+  | **skip case pattern** *pattern*
+
+Effect:
+  Skip any alternative of a ``case`` expression (or a lambda-case expression)
+  which matches against the given pattern. Guards are not considered, only the
+  pattern itself.
+
+  For example, consider the following (silly) function definition:
+  
+  .. code-block:: haskell
+
+     redundant :: Bool -> Bool
+     redundant b = not (case b of
+                          True  -> False
+                          False -> True
+                          _     -> True)
+
+  The last case is redundant, so Coq will reject this definition.  However, we
+  can add the following edit:
+
+  .. code-block:: shell
+
+     in ModuleName.redundant skip case pattern _
+  
+  And the last case will be deleted on the Coq side (reformatted):
+
+  .. code-block:: coq
+
+     Definition redundant : bool -> bool :=
+       fun b => negb (match b with
+                      | true => false
+                      | false => true
+                      end).
+
+  You can use an arbitrary pattern, not simply ``_``; constructor names must be
+  fully qualified and the names used must be those that appear *after* renaming.
+
+  Why would you want this?  This edit is most useful in tandem with ``skip
+  constructor`` (which see); see the discussion in ``skip equation`` for a
+  worked example (with a named function).
+
+  This edit is unusual in that you *very likely* want to use it with the ``in``
+  meta-edit to scope its effects to within a specific definition.  However, this
+  isn't mandatory; if, for some reason, you want to skip every ``_`` in every
+  ``case``, then ``skip case pattern _`` will do what you want.
+
+  See also ``skip equation`` for the equivalent edit for named functions.
+
+Examples:
+   .. code-block:: shell
+
+     in ModuleName.redundant skip case pattern _
+
+
 ``skip module`` – skip a module import
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

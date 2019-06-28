@@ -130,10 +130,11 @@ convertExpr' (HsLit lit) =
     HsDoublePrim _ _       -> convUnsupported "`Double#' literals"
 
 convertExpr' (HsLam mg) =
-  uncurry Fun <$> convertFunction mg
+  uncurry Fun <$> convertFunction [] mg -- We don't skip any equations in an ordinary lambda
 
-convertExpr' (HsLamCase mg) =
-  uncurry Fun <$> convertFunction mg
+convertExpr' (HsLamCase mg) = do
+  skipPats <- views (edits.skippedCasePatterns) (S.map pure)
+  uncurry Fun <$> convertFunction skipPats mg
 
 convertExpr' (HsApp e1 e2) =
   App1 <$> convertLExpr e1 <*> convertLExpr e2
@@ -181,8 +182,9 @@ convertExpr' (ExplicitTuple exprs _boxity) = do
   pure $ maybe id Fun (nonEmpty $ map (Inferred Coq.Explicit . Ident) args) tuple
 
 convertExpr' (HsCase e mg) = do
-  scrut <- convertLExpr e
-  bindIn "scrut" scrut $ \scrut -> convertMatchGroup [scrut] mg
+  scrut    <- convertLExpr e
+  skipPats <- views (edits.skippedCasePatterns) (S.map pure)
+  bindIn "scrut" scrut $ \scrut -> convertMatchGroup skipPats [scrut] mg
 
 convertExpr' (HsIf overloaded c t f) =
   if maybe True isNoSyntaxExpr overloaded
@@ -439,13 +441,16 @@ convertLExpr = convertExpr . unLoc
 
 --------------------------------------------------------------------------------
 
-convertFunction :: LocalConvMonad r m => MatchGroup GhcRn (LHsExpr GhcRn) -> m (Binders, Term)
-convertFunction mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
-convertFunction mg = do
+convertFunction :: LocalConvMonad r m
+                => Set (NonEmpty NormalizedPattern)
+                -> MatchGroup GhcRn (LHsExpr GhcRn)
+                -> m (Binders, Term)
+convertFunction _ mg | Just alt <- isTrivialMatch mg = convTrivialMatch alt
+convertFunction skipEqns mg = do
   let n_args = matchGroupArity mg
   args <- replicateM n_args (genqid "arg") >>= maybe err pure . nonEmpty
   let argBinders = (Inferred Coq.Explicit . Ident) <$> args
-  match <- convertMatchGroup (Qualid <$> args) mg
+  match <- convertMatchGroup skipEqns (Qualid <$> args) mg
   pure (argBinders, match)
  where
    err = convUnsupported "convertFunction: Empty argument list"
@@ -654,12 +659,15 @@ chainFallThroughs cases failure = go (reverse cases) failure where
 -- * Group patterns that are mutually exclusive, and put them in match-with clauses.
 --   Add a catch-all case if that group is not complete already.
 -- * Chain these groups.
-convertMatchGroup :: LocalConvMonad r m =>
-    NonEmpty Term ->
-    MatchGroup GhcRn (LHsExpr GhcRn) ->
-    m Term
-convertMatchGroup args (MG (L _ alts) _ _ _) = do
-    convAlts <- catMaybes <$> traverse (convertMatch . unLoc) alts
+convertMatchGroup :: LocalConvMonad r m
+                  => Set (NonEmpty NormalizedPattern)
+                  -> NonEmpty Term
+                  -> MatchGroup GhcRn (LHsExpr GhcRn)
+                  -> m Term
+convertMatchGroup skipEqns args (MG (L _ alts) _ _ _) = do
+    allConvAlts <- traverse (convertMatch . unLoc) alts
+    let convAlts = [alt | Just alt@(MultPattern pats, _, _) <- allConvAlts
+                        , (normalizePattern <$> pats) `notElem` skipEqns ]
     -- TODO: Group
     convGroups <- groupMatches convAlts
 
@@ -886,7 +894,9 @@ convertTypedBinding convHsTy FunBind{..}   = do
             then case unLoc $ mg_alts fun_matches of
                    [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
                    _ -> convUnsupported "malformed multi-match variable definitions"
-            else uncurry Fun <$> convertFunction fun_matches
+            else do
+              skipEqns <- view $ edits.skippedEquations.at name.non mempty
+              uncurry Fun <$> convertFunction skipEqns fun_matches
 
         addScope <- maybe id (flip InScope) <$> view (edits.additionalScopes.at (SPValue, name))
         
@@ -996,8 +1006,8 @@ convertMethodBinding name FunBind{..}   = withCurrentDefinition name $ do
                [L _ (GHC.Match _ [] grhss)] -> convertGRHSs [] grhss patternFailure
                _ -> convUnsupported "malformed multi-match variable definitions"
         else do
-          (argBinders, match) <- convertFunction fun_matches
-          pure $  Fun argBinders match
+          skipEqns <- view $ edits.skippedEquations.at name.non mempty
+          uncurry Fun <$> convertFunction skipEqns fun_matches
       pure $ ConvertedDefinitionBinding $ ConvertedDefinition name [] Nothing defn
 
 convertTypedBindings :: LocalConvMonad r m

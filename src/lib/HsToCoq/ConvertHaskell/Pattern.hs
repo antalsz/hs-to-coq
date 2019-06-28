@@ -256,7 +256,6 @@ mutExcl (ConApp con1 args1) (ConApp con2 args2)
     = con1 /= con2 || mutExcls args1 args2
 mutExcl _ _ = False
 
-
 -- A simple completeness checker. Traverses the list of patterns, and keep
 -- tracks of all pattern summaries that we still need to match
 -- Internally, we use OtherSummary as “everything yet has to match”

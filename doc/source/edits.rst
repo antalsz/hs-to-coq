@@ -343,6 +343,41 @@ Examples:
 
     axiomatize module TrieMap
 
+``axiomatize original module name`` -- replace all definitions in a module with axioms, using the pre-renaming module name
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: axiomatize original module name, edit
+
+Format:
+  | **axiomatize original module name** *module*
+
+Effect:
+  You probably do not need to use this edit; it's only important when using
+  ``rename module`` to merge multiple modules into one.  If you are doing this,
+  however, and wish you could use ``axiomatize module`` on *some* of the input
+  modules but not others, then ``axiomatize original module name`` is the edit for you.
+
+  The behavior of ``axiomatize original module name`` is the same as that of
+  ``axiomatize module``, except for how it picks which module to axiomatize.
+  While every other edit operates in terms of the Coq name after any renamings
+  from the edits have been applied, ``axiomatize original module name`` checks
+  the *original*, pre-``rename module``, form of the module name.  Most of the
+  time, this would be confusing, and ``axiomatize module`` would be preferable.
+  
+  However, if you have used ``rename module`` to merge two (or more) modules
+  into one, but you only want one of them (or some other strict subset) to be
+  axiomatized, then ``axiomatize original module name`` is the only way to get
+  this behavior.
+
+Examples:
+
+  .. code-block:: shell
+
+    axiomatize original module name Part1
+    rename module Part1 Whole
+    rename module Part2 Whole
+
 ``axiomatize definition`` -- replace a value definition with an axiom
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

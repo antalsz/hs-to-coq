@@ -167,7 +167,7 @@ Definition nameModule_maybe : Name -> option Module.Module :=
     end.
 
 Definition nameModule : Name -> Module.Module :=
-  fun name => Maybes.orElse (nameModule_maybe name) (Panic.panic default).
+  fun nm => Maybes.orElse (nameModule_maybe nm) (Panic.panic default).
 
 Definition nameIsLocalOrFrom : Module.Module -> Name -> bool :=
   fun from name =>

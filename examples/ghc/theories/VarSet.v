@@ -9,6 +9,7 @@ Import ListNotations.
 Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Classes.Morphisms.
 Require Import SetoidList.
+Require Import Coq.Logic.ProofIrrelevance.
 
 Require Import GHC.Base.
 
@@ -1006,7 +1007,8 @@ Proof.
   unfold delVarSet, emptyVarSet.
   unfold  UniqSet.delOneFromUniqSet , UniqSet.emptyUniqSet.
   unfold UniqFM.delFromUFM, UniqFM.emptyUFM.
-  f_equal.
+  repeat f_equal. unfold IntMap.delete, IntMap.empty.
+  f_equal. apply proof_irrelevance.
 Qed.
 Hint Rewrite delVarSet_emptyVarSet : hs_simpl. 
 
@@ -1765,9 +1767,12 @@ Proof.
   move=> f x RR TR.
   set_b_iff.
   replace (singleton x) with (add x empty).
-  rewrite -> filter_add_1; auto.
-  fsetdec.
-  fsetdec.
+  - rewrite -> filter_add_1; auto.
+    fsetdec.
+  - simpl. unfold singleton, unitVarSet, UniqSet.unitUniqSet.
+    f_equal. unfold UniqFM.unitUFM; f_equal.
+    unfold IntMap.insert, IntMap.singleton; f_equal.
+    apply proof_irrelevance.
 Qed.
 
 Lemma filterSingletonFalse : forall f x,
@@ -1778,16 +1783,22 @@ Proof.
   move=> f x RR TR.
   set_b_iff.
   replace (singleton x) with (add x empty).
-  rewrite -> filter_add_2; auto.
-  fsetdec.
-  fsetdec.
+  - rewrite -> filter_add_2; auto.
+    fsetdec.
+  - simpl. unfold singleton, unitVarSet, UniqSet.unitUniqSet.
+    f_equal. unfold UniqFM.unitUFM; f_equal.
+    unfold IntMap.insert, IntMap.singleton; f_equal.
+    apply proof_irrelevance.
 Qed.
 
 Lemma filterVarSet_emptyVarSet f :
   filterVarSet f emptyVarSet = emptyVarSet.
 Proof.
   set_b_iff.
-  fsetdec.
+  simpl. unfold empty, emptyVarSet, UniqSet.emptyUniqSet.
+  f_equal. unfold UniqFM.emptyUFM. f_equal.
+  unfold IntMap.filter, IntMap.empty. simpl.
+  f_equal. apply proof_irrelevance.
 Qed.
 Hint Rewrite filterVarSet_emptyVarSet : hs_simpl.
 
@@ -1863,7 +1874,9 @@ Proof.
     unfold_VarSet_to_IntMap.
     unfold IntMap.filter.
     symmetry.
-    erewrite lookup_filterWithKey; eauto.
+    erewrite lookup_filterWithKey.
+    + reflexivity.
+    + apply Hl.
   - apply lookupVarSet_None_elemVarSet in Hl.
     symmetry.
     apply lookupVarSet_None_elemVarSet.
@@ -1985,20 +1998,20 @@ Hint Rewrite minusVarSet_emptyVarSet_l : hs_simpl.
 Lemma elemVarSet_minusVarSetTrue : forall x s,
   elemVarSet x s = true -> 
   minusVarSet (unitVarSet x) s [=] emptyVarSet.
-Proof. intros. set_b_iff. 
+Proof. intros. set_b_iff.
        split; try fsetdec.
        move=> h.
        move: (diff_1 _ _ _ h) => h1.
        move: (diff_2 _ _ _ h) => h2.
        inversion h1. clear h1.
+       unfold IntMap.member, Internal.member in H1; simpl in H1.
        destruct (compare _ _) eqn:H2 in H1;
          try solve [inversion H1].
        apply Bounds.compare_Eq in H2.
        rewrite <- var_eq_realUnique in H2.
        rewrite -> fold_is_true in H2.
        unfold In in H, h2.
-       rewrite (@elemVarSet_eq a x) in h2.
-       done. done.
+       rewrite (@elemVarSet_eq a x) in h2; done.
 Qed.
 
 
@@ -2015,6 +2028,7 @@ Proof.
   unfold In, singleton in *.
   rewrite  (@elemVarSet_eq x a) in H; try done.
   rewrite var_eq_realUnique.
+  unfold IntMap.member, Internal.member in H1; simpl in H1.
   destruct (compare _ _) eqn:H2 in H1; try solve [inversion H1].
   apply Bounds.compare_Eq in H2.
   rewrite Eq_sym; done.
@@ -2629,4 +2643,3 @@ Proof.
     apply varUnique_iff. rewrite /varUnique.
     f_equal. apply N.compare_eq_iff =>//.
 Qed.
-

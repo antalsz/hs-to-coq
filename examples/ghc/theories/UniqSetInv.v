@@ -13,6 +13,8 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+From Coq Require Import ssreflect ssrbool.
+
 (* Converted imports: *)
 
 Require Data.Foldable.
@@ -33,7 +35,7 @@ Require Proofs.GHC.List.
 Require Proofs.Data.Foldable.
 Require Import IntMap.
 
-
+Require Import Proofs.GHC.Base.
 Require Import Proofs.ContainerAxioms.
 Require Import Proofs.Unique.
 
@@ -368,7 +370,7 @@ Next Obligation.
   intro h.
   apply wildcard'.
   eapply lookup_filterWithKey.
-  eauto.
+  apply h.
 Defined.
 
 Program Definition filterUniqSet_Directly {elt} `{Unique.Uniquable elt}
@@ -385,7 +387,7 @@ Next Obligation.
   intro h.
   apply wildcard'.
   eapply lookup_filterWithKey.
-  eauto.
+  apply h.
 Defined.
 
 Definition getUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> UniqFM.UniqFM a :=
@@ -558,13 +560,14 @@ Next Obligation.
   unfold UniqInv.
   intros x0 y.
   unfold lookupUFM, unitUFM.
-  unfold singleton.
-  simpl.
-  destruct (compare (getWordKey (getUnique x0)) (getWordKey (getUnique x))) eqn:EQ.
-  - intro h. inversion h. subst.
-    apply eq_getWordKey, Bounds.compare_Eq. auto.
-  - intro h. inversion h.
-  - intro h. inversion h.
+  intros. 
+  eapply lookup_singleton_key in H0 as Hk.
+  eapply lookup_singleton_val in H0 as Hv.
+  destruct (getWordKey (getUnique x0) == getWordKey (getUnique x)) eqn:Heq.
+  - move /Eq_eq in Heq. unfold getWordKey, getKey in Heq.
+    destruct (getUnique x0) eqn:Hu1; destruct (getUnique x) eqn:Hu2; subst.
+    auto.
+  - congruence.
 Defined.
 
 (* Definition unsafeUFMToUniqSet {a} : UniqFM.UniqFM a -> UniqSet a :=

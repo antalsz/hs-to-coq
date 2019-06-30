@@ -5,7 +5,7 @@ From Coq Require Import ssreflect ssrfun ssrbool.
 Require Import GHC.Base.
 
 Require Import Proofs.Prelude.
-Require Import MapProofs.InterfaceProofs.
+Require Import MapProofs.ContainerAxiomsProofs.
 Require IntMap.
 
 Lemma member_eq : forall A k k' (i : IntMap.IntMap A),
@@ -15,8 +15,29 @@ Proof.
   intros. cbn in H. apply N.eqb_eq in H; subst. reflexivity.
 Qed.
 
-Axiom lookup_insert : forall A key (val:A) i, 
+Lemma lookup_insert : forall A key (val:A) i, 
     IntMap.lookup key (IntMap.insert key val i) = Some val.
+Proof.
+  intros. destruct i. apply lookup_insert'; assumption.
+Qed.
+
+Lemma lookup_singleton_key : forall {A} x y (a b : A),
+    IntMap.lookup x (IntMap.singleton y a) = Some b -> x == y.
+Proof.
+  unfold IntMap.singleton, IntMap.lookup. simpl. intros.
+  destruct (compare x y) eqn:Hc;
+    rewrite Hc in H; inversion H.
+  apply Bounds.compare_Eq => //.
+Qed.
+
+Lemma lookup_singleton_val : forall {A} x y (a b : A),
+    IntMap.lookup x (IntMap.singleton y a) = Some b -> a = b.
+Proof.
+  unfold IntMap.singleton, IntMap.lookup. simpl. intros.
+  destruct (compare x y) eqn:Hc;
+    rewrite Hc in H; inversion H.
+  reflexivity.
+Qed.
 
 Axiom lookup_insert_neq : 
   forall b key1 key2 (val:b) m, 

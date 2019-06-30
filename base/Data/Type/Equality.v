@@ -1,1 +1,0 @@
-../../../examples/base-src/manual/Data/Type/Equality.v

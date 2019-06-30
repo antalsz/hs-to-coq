@@ -1,8 +1,0 @@
-constructors:
-  State.State: ! '[Qualified "State" "Mk_State"]'
-constructorFields:
-  State.Mk_State: RecordFields [Qualified "State" "runState'"]
-recordFieldTypes:
-  State.runState': Qualified "State" "State"
-constructorTypes:
-  State.Mk_State: Qualified "State" "State"

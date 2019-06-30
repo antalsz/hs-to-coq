@@ -4,6 +4,7 @@ module HsToCoq.Util.List (
   -- * Lists
   uncons, assertUncons, unsnoc, assertUnsnoc,
   splitCommonPrefix,
+  ordNub,
   -- ** Lensy variants
   unconsOf, unsnocOf, splitCommonPrefixOf,
   -- * Sorted lists
@@ -26,11 +27,15 @@ import Data.Foldable
 import Data.Semigroup
 import Control.Applicative
 
+import Control.Monad.State
+
 import HsToCoq.Util.Function
 import Data.Maybe
 import Data.Tuple
 
 import Data.List.NonEmpty (NonEmpty(..), (<|))
+
+import qualified Data.Set as S
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -115,6 +120,9 @@ splitCommonPrefixOf l ss =
 
 splitCommonPrefix :: (Traversable t, Eq a) => t [a] -> ([a], t [a])
 splitCommonPrefix = splitCommonPrefixOf id
+
+ordNub :: Ord a => [a] -> [a]
+ordNub = flip evalState S.empty .: filterM $ \x -> gets (x `S.notMember`) <* modify' (S.insert x)
 
 -- TODO: Differentiate arguments somehow
 explainItems :: Foldable f => (a -> Text) -> Text -> Text -> Text -> Text -> Text -> f a -> Text

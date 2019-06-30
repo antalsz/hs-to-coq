@@ -1,1 +1,0 @@
-../../manual/Data/SequenceManual.v

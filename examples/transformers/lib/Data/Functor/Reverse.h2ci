@@ -1,9 +1,0 @@
-constructors:
-  Data.Functor.Reverse.Reverse: ! '[Qualified "Data.Functor.Reverse" "Mk_Reverse"]'
-constructorFields:
-  Data.Functor.Reverse.Mk_Reverse: RecordFields [Qualified "Data.Functor.Reverse"
-    "getReverse"]
-recordFieldTypes:
-  Data.Functor.Reverse.getReverse: Qualified "Data.Functor.Reverse" "Reverse"
-constructorTypes:
-  Data.Functor.Reverse.Mk_Reverse: Qualified "Data.Functor.Reverse" "Reverse"

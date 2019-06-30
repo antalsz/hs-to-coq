@@ -1,8 +1,0 @@
-constructors:
-  Maybes.MaybeErr: ! '[Qualified "Maybes" "Succeeded",Qualified "Maybes" "Failed"]'
-constructorFields:
-  Maybes.Failed: NonRecordFields 1
-  Maybes.Succeeded: NonRecordFields 1
-constructorTypes:
-  Maybes.Failed: Qualified "Maybes" "MaybeErr"
-  Maybes.Succeeded: Qualified "Maybes" "MaybeErr"

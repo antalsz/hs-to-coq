@@ -1,1 +1,0 @@
-../../../../manual/Utils/Containers/Internal/PtrEquality.v

@@ -1,9 +1,0 @@
-constructors:
-  Pair.Pair: ! '[Qualified "Pair" "Mk_Pair"]'
-constructorFields:
-  Pair.Mk_Pair: RecordFields [Qualified "Pair" "pFst",Qualified "Pair" "pSnd"]
-recordFieldTypes:
-  Pair.pSnd: Qualified "Pair" "Pair"
-  Pair.pFst: Qualified "Pair" "Pair"
-constructorTypes:
-  Pair.Mk_Pair: Qualified "Pair" "Pair"

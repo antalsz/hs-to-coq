@@ -1,9 +1,0 @@
-constructors:
-  Data.Functor.Constant.Constant: ! '[Qualified "Data.Functor.Constant" "Mk_Constant"]'
-constructorFields:
-  Data.Functor.Constant.Mk_Constant: RecordFields [Qualified "Data.Functor.Constant"
-    "getConstant"]
-recordFieldTypes:
-  Data.Functor.Constant.getConstant: Qualified "Data.Functor.Constant" "Constant"
-constructorTypes:
-  Data.Functor.Constant.Mk_Constant: Qualified "Data.Functor.Constant" "Constant"

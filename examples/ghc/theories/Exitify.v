@@ -2381,7 +2381,8 @@ Section in_exitifyRec.
     - subst v.
       rewrite isLocalVar_uniqAway.
       unfold mkSysLocal. 
-      admit. (* reflexivity. *)
+      rewrite andb_false_r.
+      reflexivity.
     - (* There is again a lot of repetition to above *)
       apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.
       * rewrite updJPSs_joinId by apply all_exits_isJoinId.
@@ -2404,7 +2405,7 @@ Section in_exitifyRec.
         apply subVarSet_extendVarSetList_l.
         apply subVarSet_extendVarSetList_r.
         apply subVarSet_refl.
-  Admitted.
+  Qed.
 
 
   Lemma go_exit_res_isJoinPointsValid captured e : 

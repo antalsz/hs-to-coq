@@ -184,14 +184,13 @@ Lemma GoodLocalVar_asJoinId_mkSysLocal:
 Proof.
   move=> s u ty n h1.
   unfold mkSysLocal.
-Admitted.
-(*   split; only 1: split.
-  * destruct u. symmetry.  
-    apply h1.
-  * split. destruct u. reflexivity. 
-    auto.
-  * destruct u. reflexivity. 
-Qed. *)
+  rewrite andb_false_r.
+  split; destruct u; only 1: split.
+  * symmetry. apply h1.
+  * split. reflexivity. auto.
+  * reflexivity. 
+Qed. 
+
 
 
 Lemma GoodLocalVar_almostEqual:

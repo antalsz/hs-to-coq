@@ -99,8 +99,7 @@ Definition substIdBndr
     | _doc, rec_subst, (Mk_Subst in_scope env tvs cvs as subst), old_id =>
         let old_ty := Id.idType old_id in
         let no_type_change :=
-          orb (andb (Core.isEmptyVarEnv tvs) (Core.isEmptyVarEnv cvs))
-              (TyCoRep.noFreeVarsOfType old_ty) in
+          orb (andb (Core.isEmptyVarEnv tvs) (Core.isEmptyVarEnv cvs)) true in
         let id1 := Core.uniqAway in_scope old_id in
         let id2 :=
           if no_type_change : bool then id1 else

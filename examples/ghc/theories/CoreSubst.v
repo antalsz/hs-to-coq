@@ -805,34 +805,23 @@ Proof.
        econstructor.
     -- econstructor; eauto.
        rewrite NC.
-       process_setIdType.
-       all: eauto using GoodLocalVar_setIdType.
+       rewrite orb_true_r.
+       auto.
     --
        rewrite /freshList => v1.
        hs_simpl.
        move => InV.
        rewrite (lookupVarSet_eq (v2 := v)) -NC //.
        apply uniqAway_lookupVarSet_fresh. 
-       rewrite NC in InV.
-       rewrite NC.
-       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
-       rewrite Eq_sym.
-       eapply Eq_trans.
-       eapply Eq_setIdType; eauto.
-       rewrite Eq_sym. eauto.
     -- apply StrongSubset_refl.
     -- apply StrongSubset_refl.
     -- rewrite getInScopeVars_extendInScopeSet.
        eapply StrongSubset_trans.
        eapply minusDom_extend.
        rewrite getInScopeVars_extendInScopeSet NC.
-       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
+       rewrite orb_true_r.
        eapply StrongSubset_extend.
        eapply StrongSubset_minusDom_left.
-       (* 
-       eapply StrongSubset_extend.
-       eapply StrongSubset_minusDom_left. *)
-       admit.
     -- rewrite /VarEnvExtends => var.
        specialize_all var.
        destruct (v == var) eqn:EQv.
@@ -842,9 +831,7 @@ Proof.
          rewrite lookupVarEnv_delVarEnv_eq //.
          destruct (lookupVarEnv env var) eqn:INSUBST; auto.
          hs_simpl.
-       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
          by rewrite NC Eq_sym.
-         admit.
        ++ unfold Id in *.
           rewrite lookupVarEnv_delVarEnv_neq; last by rewrite EQv.
           destruct (lookupVarEnv env var).
@@ -856,10 +843,9 @@ Proof.
        eapply StrongSubset_trans with (vs2 := extendVarSet (minusDom vs env) v).
        eapply minusDom_extend.
        rewrite -> NC.
-       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
+       rewrite orb_true_r.
        eapply StrongSubset_extend.
        auto.
-       admit.
     -- intro var.
        destruct (v == var) eqn:Evvar.
        rewrite -> lookupVarEnv_delVarEnv_eq; auto.
@@ -869,10 +855,9 @@ Proof.
        rewrite -> getInScopeVars_extendInScopeSet.
        eapply WellScoped_StrongSubset; eauto.       
        eapply StrongSubset_extend_fresh.
-       destruct (isEmptyVarEnv u && isEmptyVarEnv u0 || TyCoRep.noFreeVarsOfType (Id.idType v)); auto.
+       rewrite orb_true_r.
        rewrite <- NC.
        eapply uniqAway_lookupVarSet_fresh.
-       admit.
        unfold CoreBndr in *. intro h. rewrite h in Evvar. discriminate.
 
   + (* Binder needs to be freshened. *)
@@ -882,7 +867,7 @@ Proof.
     -- simpl. eauto.
     -- rewrite Forall.Forall_cons_iff.
        split. 
-       process_setIdType.
+       rewrite orb_true_r.
        all: try (eapply GoodLocalVar_uniqAway; auto).
        eauto.
     -- unfold freshList.
@@ -890,8 +875,8 @@ Proof.
        rewrite -> elem_cons, orE in InV.
        destruct InV.
        erewrite -> lookupVarSet_eq; eauto.
-Admitted.
-(*       apply uniqAway_lookupVarSet_fresh. 
+       rewrite orb_true_r.
+       apply uniqAway_lookupVarSet_fresh. 
        rewrite -> elem_nil in H0.
        discriminate.
     -- rewrite <- getInScopeVars_extendInScopeSetList.
@@ -916,13 +901,15 @@ Admitted.
        eapply StrongSubset_minusDom_extend_extend.
        eapply StrongSubset_trans.
        eapply StrongSubset_minusDom_left.
-       eapply StrongSubset_extendVarSet_fresh. 
+       eapply StrongSubset_extendVarSet_fresh.
+       rewrite orb_true_r.
        auto.
     -- unfold VarEnvExtends.
        intro var. specialize_all var.
        destruct (v == var) eqn:EQ.
        ++ rewrite -> lookupVarEnv_extendVarEnv_eq; auto.
        left. exists (uniqAway in_scope_set v).
+       rewrite orb_true_r.
        repeat split. econstructor; eauto.
        rewrite -> elem_cons.
        rewrite -> Base.Eq_sym.
@@ -939,23 +926,25 @@ Admitted.
        eapply StrongSubset_trans; eauto.
        rewrite -> getInScopeVars_extendInScopeSet.
        eapply StrongSubset_extendVarSet_fresh.
+       rewrite orb_true_r.
        eapply uniqAway_lookupVarSet_fresh.
     -- intros var.
        destruct (v == var) eqn:Eq_vvar.
        - rewrite -> lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
+         rewrite orb_true_r.
          destruct_match.
          rewrite -> getInScopeVars_extendInScopeSet.
          rewrite -> lookupVarSet_extendVarSet_self.
          split.
          eapply almostEqual_refl.
          eapply GoodLocalVar_uniqAway in H.
-         unfold GoodLocalVar in H.
+         unfold GoodLocalVar in H.         
          eapply H.
          eapply GoodLocalVar_uniqAway in H.
          unfold GoodLocalVar in H.
          eapply H.
-       - rewrite -> lookupVarEnv_extendVarEnv_neq; auto.
+       -          rewrite orb_true_r. rewrite -> lookupVarEnv_extendVarEnv_neq; auto.
          specialize (LVi var).
          destruct lookupVarEnv eqn:LU.
          rewrite -> getInScopeVars_extendInScopeSet.
@@ -965,7 +954,7 @@ Admitted.
          auto.
          unfold Id in *.
          intro h. rewrite -> h in Eq_vvar. discriminate.
-Qed. *)
+Qed.
 
 Lemma WellScoped_Subst_substBndr : forall subst subst' bndr' v vs,
   forall (SB : substBndr subst v = (subst', bndr')),
@@ -1038,13 +1027,9 @@ Proof. intros.
   destruct subst.
   inversion H0. clear H0. 
   subst.
-  destruct (isEmptyVarEnv t0 && isEmptyVarEnv c || TyCoRep.noFreeVarsOfType (Id.idType bndr)).
+  rewrite orb_true_r.
   eapply GoodLocalVar_uniqAway. 
   assumption.
-  eapply GoodLocalVar_setIdType.
-  eapply GoodLocalVar_uniqAway. 
-  assumption.
-
 Qed.
 
 Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',

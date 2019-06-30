@@ -1,24 +1,9 @@
 
-
-##############
-### NEEDED for Exitify
-# Id.asJoinId Id.idJoinArity Id.isJoinId Id.isJoinId_maybe
-# Id.mkSysLocal Id.setIdOccInfo
-#
-# NEEDED for CoreFVs
-# Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
-# 
-# NEEDED for CoreArity
-# Id.idArity Id.idStateHackOneShotInfo Id.idStrictness Id.isJoinId
-# Id.mkSysLocalOrCoVar Id.typeOneShot
-##############
-
-#
 # we cannot verify these assertions as we aren't tracking whether types are
-# coercion types are not. These two appear in Id.hs
+# coercion types are not. 
 #
-rewrite forall , andb Util.debugIsOn (negb (negb (Core.isCoercionType ty))) = false
-rewrite forall , andb Util.debugIsOn (negb (Core.isCoercionType ty)) = false
+in Id.mkSysLocal rewrite forall ty, (TyCoRep.isCoercionType ty) = false
+in Id.mkUserLocal rewrite forall ty, (TyCoRep.isCoercionType ty) = false
 
 axiomatize definition Id.isStateHackType
 

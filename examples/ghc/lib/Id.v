@@ -27,7 +27,6 @@ Require Name.
 Require OccName.
 Require Panic.
 Require SrcLoc.
-Require TyCoRep.
 Require UniqSupply.
 Require Unique.
 Require Util.
@@ -87,7 +86,7 @@ Definition mkSysLocal
    : FastString.FastString ->
      Unique.Unique -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun fs uniq ty =>
-    if andb Util.debugIsOn (negb (negb (TyCoRep.isCoercionType ty))) : bool
+    if andb Util.debugIsOn (negb (negb (false))) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
           #313)
     else mkLocalId (Name.mkSystemVarName uniq fs) ty.
@@ -102,7 +101,7 @@ Definition mkUserLocal
    : OccName.OccName ->
      Unique.Unique -> AxiomatizedTypes.Type_ -> SrcLoc.SrcSpan -> Core.Id :=
   fun occ uniq ty loc =>
-    if andb Util.debugIsOn (negb (negb (TyCoRep.isCoercionType ty))) : bool
+    if andb Util.debugIsOn (negb (negb (false))) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Id.hs")
           #330)
     else mkLocalId (Name.mkInternalName uniq occ loc) ty.
@@ -605,6 +604,6 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      Name.isInternalName Name.localiseName Name.mkInternalName Name.mkSystemVarName
      Name.nameIsLocalOrFrom OccName.OccName Panic.assertPanic Panic.panic
      Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan
-     TyCoRep.isCoercionType UniqSupply.MonadUnique UniqSupply.getUniqueM
-     Unique.Unique Util.count Util.debugIsOn
+     UniqSupply.MonadUnique UniqSupply.getUniqueM Unique.Unique Util.count
+     Util.debugIsOn
 *)

@@ -1,0 +1,20 @@
+constructors:
+  Data.Functor.Utils.Max: ! '[Qualified "Data.Functor.Utils" "Mk_Max"]'
+  Data.Functor.Utils.StateR: ! '[Qualified "Data.Functor.Utils" "Mk_StateR"]'
+  Data.Functor.Utils.Min: ! '[Qualified "Data.Functor.Utils" "Mk_Min"]'
+  Data.Functor.Utils.StateL: ! '[Qualified "Data.Functor.Utils" "Mk_StateL"]'
+constructorFields:
+  Data.Functor.Utils.Mk_StateR: RecordFields [Qualified "Data.Functor.Utils" "runStateR"]
+  Data.Functor.Utils.Mk_Min: RecordFields [Qualified "Data.Functor.Utils" "getMin"]
+  Data.Functor.Utils.Mk_StateL: RecordFields [Qualified "Data.Functor.Utils" "runStateL"]
+  Data.Functor.Utils.Mk_Max: RecordFields [Qualified "Data.Functor.Utils" "getMax"]
+recordFieldTypes:
+  Data.Functor.Utils.runStateR: Qualified "Data.Functor.Utils" "StateR"
+  Data.Functor.Utils.getMin: Qualified "Data.Functor.Utils" "Min"
+  Data.Functor.Utils.getMax: Qualified "Data.Functor.Utils" "Max"
+  Data.Functor.Utils.runStateL: Qualified "Data.Functor.Utils" "StateL"
+constructorTypes:
+  Data.Functor.Utils.Mk_StateR: Qualified "Data.Functor.Utils" "StateR"
+  Data.Functor.Utils.Mk_Min: Qualified "Data.Functor.Utils" "Min"
+  Data.Functor.Utils.Mk_StateL: Qualified "Data.Functor.Utils" "StateL"
+  Data.Functor.Utils.Mk_Max: Qualified "Data.Functor.Utils" "Max"

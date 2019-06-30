@@ -1,0 +1,12 @@
+constructors:
+  Data.Monoid.Last: ! '[Qualified "Data.Monoid" "Mk_Last"]'
+  Data.Monoid.First: ! '[Qualified "Data.Monoid" "Mk_First"]'
+constructorFields:
+  Data.Monoid.Mk_Last: RecordFields [Qualified "Data.Monoid" "getLast"]
+  Data.Monoid.Mk_First: RecordFields [Qualified "Data.Monoid" "getFirst"]
+recordFieldTypes:
+  Data.Monoid.getFirst: Qualified "Data.Monoid" "First"
+  Data.Monoid.getLast: Qualified "Data.Monoid" "Last"
+constructorTypes:
+  Data.Monoid.Mk_Last: Qualified "Data.Monoid" "Last"
+  Data.Monoid.Mk_First: Qualified "Data.Monoid" "First"

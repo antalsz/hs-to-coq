@@ -1,0 +1,9 @@
+constructors:
+  Data.Functor.Sum.Sum: ! '[Qualified "Data.Functor.Sum" "InL",Qualified "Data.Functor.Sum"
+    "InR"]'
+constructorFields:
+  Data.Functor.Sum.InR: NonRecordFields 1
+  Data.Functor.Sum.InL: NonRecordFields 1
+constructorTypes:
+  Data.Functor.Sum.InR: Qualified "Data.Functor.Sum" "Sum"
+  Data.Functor.Sum.InL: Qualified "Data.Functor.Sum" "Sum"

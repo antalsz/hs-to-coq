@@ -1,0 +1,6 @@
+constructors:
+  EnumSet.EnumSet: ! '[Qualified "EnumSet" "Mk_EnumSet"]'
+constructorFields:
+  EnumSet.Mk_EnumSet: NonRecordFields 1
+constructorTypes:
+  EnumSet.Mk_EnumSet: Qualified "EnumSet" "EnumSet"

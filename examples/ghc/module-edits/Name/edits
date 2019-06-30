@@ -5,7 +5,7 @@ skip Name.wiredInNameTyThing_maybe
 # cannot process error message when this fails
 #
 redefine Definition Name.nameModule : Name -> Module.Module :=
-  fun name =>  Maybes.orElse (nameModule_maybe name)(Panic.panic default).
+  fun nm =>  Maybes.orElse (nameModule_maybe nm) (Panic.panic default).
 
 order Name.nameModule_maybe Name.nameModule
 

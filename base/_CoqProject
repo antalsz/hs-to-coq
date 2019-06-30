@@ -1,0 +1,6 @@
+-Q . ""
+GHC/Wf.v GHC/Skip.v GHC/DeferredFix.v GHC/DeferredFixImpl.v GHC/Num.v GHC/Char.v GHC/Real.v GHC/Enum.v Data/Bits.v GHC/Prim.v GHC/Types.v GHC/Tuple.v Data/Type/Equality.v GHC/Err.v GHC/Nat.v GHC/Unicode.v Prelude.v
+GHC/Base.v Data/Maybe.v GHC/List.v Data/List.v Data/OldList.v Data/Bool.v Data/Tuple.v Data/Void.v Data/Function.v Data/Ord.v Data/Functor.v Data/Either.v Data/Proxy.v Control/Monad.v Data/Monoid.v Data/Functor/Utils.v Data/Traversable.v Control/Monad/Fail.v Data/Foldable.v Control/Arrow.v Data/Functor/Identity.v Data/Functor/Const.v Control/Applicative.v Data/Functor/Classes.v Control/Category.v Data/Bifunctor.v Data/List/NonEmpty.v Data/Semigroup.v Data/Functor/Compose.v Data/Functor/Product.v Data/Functor/Sum.v Data/Bifoldable.v Data/Bitraversable.v Control/Monad/Zip.v
+Data/SemigroupInternal.v
+
+

@@ -1,0 +1,6 @@
+constructors:
+  UniqFM.UniqFM: ! '[Qualified "UniqFM" "UFM"]'
+constructorFields:
+  UniqFM.UFM: NonRecordFields 1
+constructorTypes:
+  UniqFM.UFM: Qualified "UniqFM" "UniqFM"

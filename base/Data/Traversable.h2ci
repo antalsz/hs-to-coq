@@ -1,0 +1,44 @@
+superclassCount:
+  Data.Traversable.Traversable: '2'
+defaultMethods:
+  Data.Traversable.Traversable: fromList [(Qualified "Data.Traversable" "mapM",Qualid
+    (Qualified "Data.Traversable" "traverse")),(Qualified "Data.Traversable" "sequence",Qualid
+    (Qualified "Data.Traversable" "sequenceA")),(Qualified "Data.Traversable" "sequenceA",App
+    (Qualid (Qualified "Data.Traversable" "traverse")) (PosArg (Qualid (Qualified
+    "GHC.Base" "id")) :| [])),(Qualified "Data.Traversable" "traverse",Fun (Inferred
+    Explicit (Ident (Bare "f")) :| []) (App (Qualid (Qualified "GHC.Base" "op_z2218U__"))
+    (PosArg (Qualid (Qualified "Data.Traversable" "sequenceA")) :| [PosArg (App (Qualid
+    (Qualified "GHC.Base" "fmap")) (PosArg (Qualid (Bare "f")) :| []))])))]
+classTypes:
+  Data.Traversable.Traversable: fromList []
+classDefns:
+  Data.Traversable.Traversable: ClassDefinition (Qualified "Data.Traversable" "Traversable")
+    [Inferred Explicit (Ident (Bare "t")),Generalized Implicit (App (Qualid (Qualified
+    "GHC.Base" "Functor")) (PosArg (Qualid (Bare "t")) :| [])),Generalized Implicit
+    (App (Qualid (Qualified "Data.Foldable" "Foldable")) (PosArg (Qualid (Bare "t"))
+    :| []))] Nothing [(Qualified "Data.Traversable" "mapM",Forall (Inferred Implicit
+    (Ident (Bare "m")) :| [Inferred Implicit (Ident (Bare "a")),Inferred Implicit
+    (Ident (Bare "b"))]) (Forall (Generalized Implicit (App (Qualid (Qualified "GHC.Base"
+    "Monad")) (PosArg (Qualid (Bare "m")) :| [])) :| []) (Arrow (Parens (Arrow (Qualid
+    (Bare "a")) (App (Qualid (Bare "m")) (PosArg (Qualid (Bare "b")) :| [])))) (Arrow
+    (App (Qualid (Bare "t")) (PosArg (Qualid (Bare "a")) :| [])) (App (Qualid (Bare
+    "m")) (PosArg (Parens (App (Qualid (Bare "t")) (PosArg (Qualid (Bare "b")) :|
+    []))) :| [])))))),(Qualified "Data.Traversable" "sequence",Forall (Inferred Implicit
+    (Ident (Bare "m")) :| [Inferred Implicit (Ident (Bare "a"))]) (Forall (Generalized
+    Implicit (App (Qualid (Qualified "GHC.Base" "Monad")) (PosArg (Qualid (Bare "m"))
+    :| [])) :| []) (Arrow (App (Qualid (Bare "t")) (PosArg (Parens (App (Qualid (Bare
+    "m")) (PosArg (Qualid (Bare "a")) :| []))) :| [])) (App (Qualid (Bare "m")) (PosArg
+    (Parens (App (Qualid (Bare "t")) (PosArg (Qualid (Bare "a")) :| []))) :| []))))),(Qualified
+    "Data.Traversable" "sequenceA",Forall (Inferred Implicit (Ident (Bare "f")) :|
+    [Inferred Implicit (Ident (Bare "a"))]) (Forall (Generalized Implicit (App (Qualid
+    (Qualified "GHC.Base" "Applicative")) (PosArg (Qualid (Bare "f")) :| [])) :| [])
+    (Arrow (App (Qualid (Bare "t")) (PosArg (Parens (App (Qualid (Bare "f")) (PosArg
+    (Qualid (Bare "a")) :| []))) :| [])) (App (Qualid (Bare "f")) (PosArg (Parens
+    (App (Qualid (Bare "t")) (PosArg (Qualid (Bare "a")) :| []))) :| []))))),(Qualified
+    "Data.Traversable" "traverse",Forall (Inferred Implicit (Ident (Bare "f")) :|
+    [Inferred Implicit (Ident (Bare "a")),Inferred Implicit (Ident (Bare "b"))]) (Forall
+    (Generalized Implicit (App (Qualid (Qualified "GHC.Base" "Applicative")) (PosArg
+    (Qualid (Bare "f")) :| [])) :| []) (Arrow (Parens (Arrow (Qualid (Bare "a")) (App
+    (Qualid (Bare "f")) (PosArg (Qualid (Bare "b")) :| [])))) (Arrow (App (Qualid
+    (Bare "t")) (PosArg (Qualid (Bare "a")) :| [])) (App (Qualid (Bare "f")) (PosArg
+    (Parens (App (Qualid (Bare "t")) (PosArg (Qualid (Bare "b")) :| []))) :| []))))))]

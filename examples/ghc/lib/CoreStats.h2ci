@@ -1,0 +1,14 @@
+constructors:
+  CoreStats.CoreStats: ! '[Qualified "CoreStats" "CS"]'
+constructorFields:
+  CoreStats.CS: RecordFields [Qualified "CoreStats" "cs_tm",Qualified "CoreStats"
+    "cs_ty",Qualified "CoreStats" "cs_co",Qualified "CoreStats" "cs_vb",Qualified
+    "CoreStats" "cs_jb"]
+recordFieldTypes:
+  CoreStats.cs_vb: Qualified "CoreStats" "CoreStats"
+  CoreStats.cs_co: Qualified "CoreStats" "CoreStats"
+  CoreStats.cs_tm: Qualified "CoreStats" "CoreStats"
+  CoreStats.cs_jb: Qualified "CoreStats" "CoreStats"
+  CoreStats.cs_ty: Qualified "CoreStats" "CoreStats"
+constructorTypes:
+  CoreStats.CS: Qualified "CoreStats" "CoreStats"

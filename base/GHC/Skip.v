@@ -1,0 +1,1 @@
+../../examples/base-src/manual/GHC/Skip.v

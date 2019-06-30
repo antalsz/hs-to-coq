@@ -1,0 +1,6 @@
+-Q . ""
+-R ../../../base ""
+-Q ../../../base-thy  Proofs
+-Q ../../containers/lib   ""
+-Q ../../transformers/lib  ""
+Util.v Maybes.v MonadUtils.v Pair.v Bag.v SrcLoc.v Unique.v UniqSupply.v UniqFM.v EnumSet.v CmmType.v BooleanFormula.v UniqSet.v BasicTypes.v FiniteMap.v UniqDFM.v UniqDSet.v FastStringEnv.v DynFlags.v Module.v OrdList.v OccName.v State.v ListSetOps.v Panic.v FastString.v NestedRecursionHelpers.v IntMap.v Constants.v Id.v UnVarGraph.v CoreSubst.v CoreUtils.v Name.v NameEnv.v NameSet.v FV.v Literal.v FieldLabel.v ConLike.v CoreFVs.v Exitify.v CallArity.v CoreArity.v CoreTidy.v TrieMap.v CSE.v CoreStats.v PrelNames.v TysWiredIn.v MkCore.v Core.v

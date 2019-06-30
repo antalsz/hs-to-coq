@@ -1,0 +1,6 @@
+constructors:
+  Data.OldList.SnocBuilder: ! '[Qualified "Data.OldList" "Mk_SnocBuilder"]'
+constructorFields:
+  Data.OldList.Mk_SnocBuilder: NonRecordFields 3
+constructorTypes:
+  Data.OldList.Mk_SnocBuilder: Qualified "Data.OldList" "SnocBuilder"

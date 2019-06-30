@@ -1,0 +1,9 @@
+constructors:
+  Control.Applicative.Lift.Lift: ! '[Qualified "Control.Applicative.Lift" "Pure",Qualified
+    "Control.Applicative.Lift" "Other"]'
+constructorFields:
+  Control.Applicative.Lift.Other: NonRecordFields 1
+  Control.Applicative.Lift.Pure: NonRecordFields 1
+constructorTypes:
+  Control.Applicative.Lift.Other: Qualified "Control.Applicative.Lift" "Lift"
+  Control.Applicative.Lift.Pure: Qualified "Control.Applicative.Lift" "Lift"

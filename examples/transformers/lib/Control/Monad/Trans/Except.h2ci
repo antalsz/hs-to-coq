@@ -1,0 +1,6 @@
+constructors:
+  Control.Monad.Trans.Except.ExceptT: ! '[Qualified "Control.Monad.Trans.Except" "Mk_ExceptT"]'
+constructorFields:
+  Control.Monad.Trans.Except.Mk_ExceptT: NonRecordFields 1
+constructorTypes:
+  Control.Monad.Trans.Except.Mk_ExceptT: Qualified "Control.Monad.Trans.Except" "ExceptT"

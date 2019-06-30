@@ -1,0 +1,9 @@
+constructors:
+  Data.Functor.Identity.Identity: ! '[Qualified "Data.Functor.Identity" "Mk_Identity"]'
+constructorFields:
+  Data.Functor.Identity.Mk_Identity: RecordFields [Qualified "Data.Functor.Identity"
+    "runIdentity"]
+recordFieldTypes:
+  Data.Functor.Identity.runIdentity: Qualified "Data.Functor.Identity" "Identity"
+constructorTypes:
+  Data.Functor.Identity.Mk_Identity: Qualified "Data.Functor.Identity" "Identity"

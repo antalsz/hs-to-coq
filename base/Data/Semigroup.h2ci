@@ -1,0 +1,31 @@
+constructors:
+  Data.Semigroup.Min: ! '[Qualified "Data.Semigroup" "Mk_Min"]'
+  Data.Semigroup.Option: ! '[Qualified "Data.Semigroup" "Mk_Option"]'
+  Data.Semigroup.Arg: ! '[Qualified "Data.Semigroup" "Mk_Arg"]'
+  Data.Semigroup.Last: ! '[Qualified "Data.Semigroup" "Mk_Last"]'
+  Data.Semigroup.First: ! '[Qualified "Data.Semigroup" "Mk_First"]'
+  Data.Semigroup.WrappedMonoid: ! '[Qualified "Data.Semigroup" "WrapMonoid"]'
+  Data.Semigroup.Max: ! '[Qualified "Data.Semigroup" "Mk_Max"]'
+constructorFields:
+  Data.Semigroup.WrapMonoid: RecordFields [Qualified "Data.Semigroup" "unwrapMonoid"]
+  Data.Semigroup.Mk_Option: RecordFields [Qualified "Data.Semigroup" "getOption"]
+  Data.Semigroup.Mk_Arg: NonRecordFields 2
+  Data.Semigroup.Mk_First: RecordFields [Qualified "Data.Semigroup" "getFirst"]
+  Data.Semigroup.Mk_Max: RecordFields [Qualified "Data.Semigroup" "getMax"]
+  Data.Semigroup.Mk_Min: RecordFields [Qualified "Data.Semigroup" "getMin"]
+  Data.Semigroup.Mk_Last: RecordFields [Qualified "Data.Semigroup" "getLast"]
+recordFieldTypes:
+  Data.Semigroup.getMin: Qualified "Data.Semigroup" "Min"
+  Data.Semigroup.unwrapMonoid: Qualified "Data.Semigroup" "WrappedMonoid"
+  Data.Semigroup.getMax: Qualified "Data.Semigroup" "Max"
+  Data.Semigroup.getOption: Qualified "Data.Semigroup" "Option"
+  Data.Semigroup.getLast: Qualified "Data.Semigroup" "Last"
+  Data.Semigroup.getFirst: Qualified "Data.Semigroup" "First"
+constructorTypes:
+  Data.Semigroup.WrapMonoid: Qualified "Data.Semigroup" "WrappedMonoid"
+  Data.Semigroup.Mk_Option: Qualified "Data.Semigroup" "Option"
+  Data.Semigroup.Mk_Arg: Qualified "Data.Semigroup" "Arg"
+  Data.Semigroup.Mk_First: Qualified "Data.Semigroup" "First"
+  Data.Semigroup.Mk_Max: Qualified "Data.Semigroup" "Max"
+  Data.Semigroup.Mk_Min: Qualified "Data.Semigroup" "Min"
+  Data.Semigroup.Mk_Last: Qualified "Data.Semigroup" "Last"

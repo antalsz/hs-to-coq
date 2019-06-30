@@ -1,0 +1,65 @@
+superclassCount:
+  Data.Bifoldable.Bifoldable: '0'
+defaultMethods:
+  Data.Bifoldable.Bifoldable: fromList [(Qualified "Data.Bifoldable" "bifold",App
+    (App (Qualid (Qualified "Data.Bifoldable" "bifoldMap")) (PosArg (Qualid (Qualified
+    "GHC.Base" "id")) :| [])) (PosArg (Qualid (Qualified "GHC.Base" "id")) :| [])),(Qualified
+    "Data.Bifoldable" "bifoldMap",Fun (Inferred Explicit (Ident (Bare "f")) :| [Inferred
+    Explicit (Ident (Bare "g"))]) (App (App (App (Qualid (Qualified "Data.Bifoldable"
+    "bifoldr")) (PosArg (Parens (App (Qualid (Qualified "GHC.Base" "op_z2218U__"))
+    (PosArg (Qualid (Qualified "GHC.Base" "mappend")) :| [PosArg (Qualid (Bare "f"))])))
+    :| [])) (PosArg (Parens (App (Qualid (Qualified "GHC.Base" "op_z2218U__")) (PosArg
+    (Qualid (Qualified "GHC.Base" "mappend")) :| [PosArg (Qualid (Bare "g"))]))) :|
+    [])) (PosArg (Qualid (Qualified "GHC.Base" "mempty")) :| []))),(Qualified "Data.Bifoldable"
+    "bifoldl",Fun (Inferred Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident
+    (Bare "g")),Inferred Explicit (Ident (Bare "z")),Inferred Explicit (Ident (Bare
+    "t"))]) (App (App (Qualid (Qualified "Data.SemigroupInternal" "appEndo")) (PosArg
+    (Parens (App (Qualid (Qualified "Data.SemigroupInternal" "getDual")) (PosArg (Parens
+    (App (App (App (Qualid (Qualified "Data.Bifoldable" "bifoldMap")) (PosArg (Parens
+    (App (Qualid (Qualified "GHC.Base" "op_z2218U__")) (PosArg (Qualid (Qualified
+    "Data.SemigroupInternal" "Mk_Dual")) :| [PosArg (App (Qualid (Qualified "GHC.Base"
+    "op_z2218U__")) (PosArg (Qualid (Qualified "Data.SemigroupInternal" "Mk_Endo"))
+    :| [PosArg (App (Qualid (Qualified "GHC.Base" "flip")) (PosArg (Qualid (Bare "f"))
+    :| []))]))]))) :| [])) (PosArg (Parens (App (Qualid (Qualified "GHC.Base" "op_z2218U__"))
+    (PosArg (Qualid (Qualified "Data.SemigroupInternal" "Mk_Dual")) :| [PosArg (App
+    (Qualid (Qualified "GHC.Base" "op_z2218U__")) (PosArg (Qualid (Qualified "Data.SemigroupInternal"
+    "Mk_Endo")) :| [PosArg (App (Qualid (Qualified "GHC.Base" "flip")) (PosArg (Qualid
+    (Bare "g")) :| []))]))]))) :| [])) (PosArg (Qualid (Bare "t")) :| []))) :| [])))
+    :| [])) (PosArg (Qualid (Bare "z")) :| []))),(Qualified "Data.Bifoldable" "bifoldr",Fun
+    (Inferred Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g")),Inferred
+    Explicit (Ident (Bare "z")),Inferred Explicit (Ident (Bare "t"))]) (App (App (Qualid
+    (Qualified "Data.SemigroupInternal" "appEndo")) (PosArg (Parens (App (App (App
+    (Qualid (Qualified "Data.Bifoldable" "bifoldMap")) (PosArg (Parens (App (Qualid
+    (Qualified "Coq.Program.Basics" "compose")) (PosArg (Qualid (Qualified "Data.SemigroupInternal"
+    "Mk_Endo")) :| [PosArg (Qualid (Bare "f"))]))) :| [])) (PosArg (Parens (App (Qualid
+    (Qualified "Coq.Program.Basics" "compose")) (PosArg (Qualid (Qualified "Data.SemigroupInternal"
+    "Mk_Endo")) :| [PosArg (Qualid (Bare "g"))]))) :| [])) (PosArg (Qualid (Bare "t"))
+    :| []))) :| [])) (PosArg (Qualid (Bare "z")) :| [])))]
+classTypes:
+  Data.Bifoldable.Bifoldable: fromList []
+classDefns:
+  Data.Bifoldable.Bifoldable: ClassDefinition (Qualified "Data.Bifoldable" "Bifoldable")
+    [Inferred Explicit (Ident (Bare "p"))] Nothing [(Qualified "Data.Bifoldable" "bifold",Forall
+    (Inferred Implicit (Ident (Bare "m")) :| []) (Forall (Generalized Implicit (App
+    (Qualid (Qualified "GHC.Base" "Monoid")) (PosArg (Qualid (Bare "m")) :| [])) :|
+    []) (Arrow (App (App (Qualid (Bare "p")) (PosArg (Qualid (Bare "m")) :| [])) (PosArg
+    (Qualid (Bare "m")) :| [])) (Qualid (Bare "m"))))),(Qualified "Data.Bifoldable"
+    "bifoldMap",Forall (Inferred Implicit (Ident (Bare "m")) :| [Inferred Implicit
+    (Ident (Bare "a")),Inferred Implicit (Ident (Bare "b"))]) (Forall (Generalized
+    Implicit (App (Qualid (Qualified "GHC.Base" "Monoid")) (PosArg (Qualid (Bare "m"))
+    :| [])) :| []) (Arrow (Parens (Arrow (Qualid (Bare "a")) (Qualid (Bare "m"))))
+    (Arrow (Parens (Arrow (Qualid (Bare "b")) (Qualid (Bare "m")))) (Arrow (App (App
+    (Qualid (Bare "p")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg (Qualid (Bare
+    "b")) :| [])) (Qualid (Bare "m"))))))),(Qualified "Data.Bifoldable" "bifoldl",Forall
+    (Inferred Implicit (Ident (Bare "c")) :| [Inferred Implicit (Ident (Bare "a")),Inferred
+    Implicit (Ident (Bare "b"))]) (Arrow (Parens (Arrow (Qualid (Bare "c")) (Arrow
+    (Qualid (Bare "a")) (Qualid (Bare "c"))))) (Arrow (Parens (Arrow (Qualid (Bare
+    "c")) (Arrow (Qualid (Bare "b")) (Qualid (Bare "c"))))) (Arrow (Qualid (Bare "c"))
+    (Arrow (App (App (Qualid (Bare "p")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg
+    (Qualid (Bare "b")) :| [])) (Qualid (Bare "c"))))))),(Qualified "Data.Bifoldable"
+    "bifoldr",Forall (Inferred Implicit (Ident (Bare "a")) :| [Inferred Implicit (Ident
+    (Bare "c")),Inferred Implicit (Ident (Bare "b"))]) (Arrow (Parens (Arrow (Qualid
+    (Bare "a")) (Arrow (Qualid (Bare "c")) (Qualid (Bare "c"))))) (Arrow (Parens (Arrow
+    (Qualid (Bare "b")) (Arrow (Qualid (Bare "c")) (Qualid (Bare "c"))))) (Arrow (Qualid
+    (Bare "c")) (Arrow (App (App (Qualid (Bare "p")) (PosArg (Qualid (Bare "a")) :|
+    [])) (PosArg (Qualid (Bare "b")) :| [])) (Qualid (Bare "c")))))))]

@@ -1,0 +1,9 @@
+constructors:
+  Control.Monad.Trans.Maybe.MaybeT: ! '[Qualified "Control.Monad.Trans.Maybe" "Mk_MaybeT"]'
+constructorFields:
+  Control.Monad.Trans.Maybe.Mk_MaybeT: RecordFields [Qualified "Control.Monad.Trans.Maybe"
+    "runMaybeT"]
+recordFieldTypes:
+  Control.Monad.Trans.Maybe.runMaybeT: Qualified "Control.Monad.Trans.Maybe" "MaybeT"
+constructorTypes:
+  Control.Monad.Trans.Maybe.Mk_MaybeT: Qualified "Control.Monad.Trans.Maybe" "MaybeT"

@@ -1,0 +1,20 @@
+constructors:
+  CoreArity.ArityType: ! '[Qualified "CoreArity" "ATop",Qualified "CoreArity" "ABot"]'
+  CoreArity.ArityEnv: ! '[Qualified "CoreArity" "AE"]'
+  CoreArity.EtaInfo: ! '[Qualified "CoreArity" "EtaVar",Qualified "CoreArity" "EtaCo"]'
+constructorFields:
+  CoreArity.ABot: NonRecordFields 1
+  CoreArity.AE: RecordFields [Qualified "CoreArity" "ae_cheap_fn",Qualified "CoreArity"
+    "ae_ped_bot"]
+  CoreArity.EtaVar: NonRecordFields 1
+  CoreArity.ATop: NonRecordFields 1
+  CoreArity.EtaCo: NonRecordFields 1
+recordFieldTypes:
+  CoreArity.ae_ped_bot: Qualified "CoreArity" "ArityEnv"
+  CoreArity.ae_cheap_fn: Qualified "CoreArity" "ArityEnv"
+constructorTypes:
+  CoreArity.ABot: Qualified "CoreArity" "ArityType"
+  CoreArity.AE: Qualified "CoreArity" "ArityEnv"
+  CoreArity.EtaVar: Qualified "CoreArity" "EtaInfo"
+  CoreArity.ATop: Qualified "CoreArity" "ArityType"
+  CoreArity.EtaCo: Qualified "CoreArity" "EtaInfo"

@@ -1,0 +1,2 @@
+constructors:
+  Data.Void.Void: ! '[]'

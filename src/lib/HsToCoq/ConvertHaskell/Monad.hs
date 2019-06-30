@@ -12,8 +12,7 @@ module HsToCoq.ConvertHaskell.Monad (
   GlobalEnv(..), ModuleEnv(..), LocalEnv(..),
   -- * Constraints
   GlobalMonad, ConversionMonad, LocalConvMonad,
-  HasEdits(..), HasLeniency(..), HasCurrentModuleInfo(..), HasCurrentDefinition(..),
-  currentModule, currentOriginalModuleName,
+  HasEdits(..), HasLeniency(..), HasCurrentModule(..), HasCurrentDefinition(..),
   runGlobalMonad,
   withCurrentModule,
   withCurrentDefinition,
@@ -23,8 +22,6 @@ module HsToCoq.ConvertHaskell.Monad (
   Leniency(..), whenPermissive, handleIfPermissive,
   -- * Testing skippedness/axiomness
   definitionTask, TranslationTask(..), AxiomatizationMode(..),
-  -- * New and old module names
-  ModuleNameInfo(..), newModuleName, oldModuleName,
   -- * Operations
   fresh, gensym, genqid,
   useProgramHere, renamed,
@@ -77,12 +74,6 @@ data Leniency = Permissive -- ^Try to recover by e.g. introducing an axiom
 
 --------------------------------------------------------------------------------
 
-data ModuleNameInfo = ModuleNameInfo { _newModuleName, _oldModuleName :: !ModuleName }
-                    deriving (Eq, Ord, Show)
-makeLenses ''ModuleNameInfo
-
---------------------------------------------------------------------------------
-
 -- The reader states
 --
 -- In various stages of the program (top-level, module level, definition level)
@@ -99,15 +90,15 @@ data GlobalEnv = GlobalEnv
     } deriving Show
 
 data ModuleEnv = ModuleEnv
-    { _moduleEnvEdits             :: !Edits
-    , _moduleEnvLeniency          :: !Leniency
-    , _moduleEnvCurrentModuleInfo :: !ModuleNameInfo
+    { _moduleEnvEdits         :: !Edits
+    , _moduleEnvLeniency      :: !Leniency
+    , _moduleEnvCurrentModule :: !ModuleName
     }
 
 data LocalEnv = LocalEnv
     { _localEnvEdits             :: !Edits
     , _localEnvLeniency          :: !Leniency
-    , _localEnvCurrentModuleInfo :: !ModuleNameInfo
+    , _localEnvCurrentModule     :: !ModuleName
     , _localEnvCurrentDefinition :: !Qualid
     }
 
@@ -115,16 +106,8 @@ makeFields ''GlobalEnv
 makeFields ''ModuleEnv
 makeFields ''LocalEnv
 
-currentModule :: HasCurrentModuleInfo s ModuleNameInfo => Lens' s ModuleName
-currentModule = currentModuleInfo.newModuleName
-
-currentOriginalModuleName :: HasCurrentModuleInfo s ModuleNameInfo => Lens' s ModuleName
-currentOriginalModuleName = currentModuleInfo.oldModuleName
-
-currentModuleAxiomatized :: (HasEdits s Edits, HasCurrentModuleInfo s ModuleNameInfo) => Getter s Bool
-currentModuleAxiomatized = to $ \s ->
-     s^.edits.axiomatizedModules.contains             (s^.currentModule)
-  || s^.edits.axiomatizedOriginalModuleNames.contains (s^.currentOriginalModuleName)
+currentModuleAxiomatized :: (HasEdits s Edits, HasCurrentModule s ModuleName) => Getter  s Bool
+currentModuleAxiomatized = to $ \s -> s^.edits.axiomatizedModules.contains (s^.currentModule)
 
 data AxiomatizationMode = SpecificAxiomatize | GeneralAxiomatize
                         deriving (Eq, Ord, Enum, Bounded, Show, Read)
@@ -137,7 +120,7 @@ data TranslationTask = SkipIt
 
 -- |Should this definition be skipped, axiomatized, or translated?
 -- `HasEdits`, and `HasCurrentModule`, but that hardly seems necessary.
-definitionTask :: forall s m. (MonadReader s m, HasEdits s Edits , HasCurrentModuleInfo s ModuleNameInfo )
+definitionTask :: forall s m. (MonadReader s m, HasEdits s Edits, HasCurrentModule s ModuleName)
                => Qualid -> m TranslationTask
 definitionTask name =
   let isIn :: Lens' Edits (Set Qualid) -> m Bool
@@ -186,7 +169,7 @@ type GlobalMonad r m =
 --   Has edits, current module name, access to GHC etc.
 type ConversionMonad r m =
         ( GlobalMonad r m
-        , HasCurrentModuleInfo r ModuleNameInfo
+        , HasCurrentModule r ModuleName
         )
 -- | The local one monad, additional knows the current function name
 --   and a counter for fresh variables
@@ -208,17 +191,17 @@ runGlobalMonad initEdits leniency paths act =
     act
 
 withCurrentModule :: GlobalMonad r m =>
-    ModuleNameInfo ->
+    ModuleName ->
     (forall r m. ConversionMonad r m => m a) ->
     m a
 withCurrentModule newModule act = do
     _edits    <- view edits
     _leniency <- view leniency
-    isProcessedModule (moduleNameText $ newModule^.newModuleName) -- Start collecting the interface
+    isProcessedModule (moduleNameText newModule) -- Start collecting the interface
     runReaderT act $ ModuleEnv
-        { _moduleEnvEdits             = _edits
-        , _moduleEnvLeniency          = _leniency
-        , _moduleEnvCurrentModuleInfo = newModule
+        { _moduleEnvEdits         = _edits
+        , _moduleEnvLeniency      = _leniency
+        , _moduleEnvCurrentModule = newModule
         }
 
 withCurrentDefinition :: ConversionMonad r m =>
@@ -230,12 +213,12 @@ withCurrentDefinition newDef act = do
     local_edits <- view (edits.inEdits.at newDef.non mempty)
     let edits_in_scope = local_edits <> global_edits
     
-    _leniency          <- view leniency
-    _currentModuleInfo <- view currentModuleInfo
+    _leniency      <- view leniency
+    _currentModule <- view currentModule
     runCounterT . runReaderT act $ LocalEnv
         { _localEnvEdits             = edits_in_scope
         , _localEnvLeniency          = _leniency
-        , _localEnvCurrentModuleInfo = _currentModuleInfo
+        , _localEnvCurrentModule     = _currentModule
         , _localEnvCurrentDefinition = newDef
         }
 

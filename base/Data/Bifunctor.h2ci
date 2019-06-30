@@ -1,0 +1,36 @@
+superclassCount:
+  Data.Bifunctor.Bifunctor: '0'
+defaultMethods:
+  Data.Bifunctor.Bifunctor: fromList [(Qualified "Data.Bifunctor" "bimap",Fun (Inferred
+    Explicit (Ident (Bare "f")) :| [Inferred Explicit (Ident (Bare "g"))]) (App (Qualid
+    (Qualified "GHC.Base" "op_z2218U__")) (PosArg (App (Qualid (Qualified "Data.Bifunctor"
+    "first")) (PosArg (Qualid (Bare "f")) :| [])) :| [PosArg (App (Qualid (Qualified
+    "Data.Bifunctor" "second")) (PosArg (Qualid (Bare "g")) :| []))]))),(Qualified
+    "Data.Bifunctor" "first",Fun (Inferred Explicit (Ident (Bare "f")) :| []) (App
+    (App (Qualid (Qualified "Data.Bifunctor" "bimap")) (PosArg (Qualid (Bare "f"))
+    :| [])) (PosArg (Qualid (Qualified "GHC.Base" "id")) :| []))),(Qualified "Data.Bifunctor"
+    "second",App (Qualid (Qualified "Data.Bifunctor" "bimap")) (PosArg (Qualid (Qualified
+    "GHC.Base" "id")) :| []))]
+classTypes:
+  Data.Bifunctor.Bifunctor: fromList []
+classDefns:
+  Data.Bifunctor.Bifunctor: ClassDefinition (Qualified "Data.Bifunctor" "Bifunctor")
+    [Inferred Explicit (Ident (Bare "p"))] Nothing [(Qualified "Data.Bifunctor" "bimap",Forall
+    (Inferred Implicit (Ident (Bare "a")) :| [Inferred Implicit (Ident (Bare "b")),Inferred
+    Implicit (Ident (Bare "c")),Inferred Implicit (Ident (Bare "d"))]) (Arrow (Parens
+    (Arrow (Qualid (Bare "a")) (Qualid (Bare "b")))) (Arrow (Parens (Arrow (Qualid
+    (Bare "c")) (Qualid (Bare "d")))) (Arrow (App (App (Qualid (Bare "p")) (PosArg
+    (Qualid (Bare "a")) :| [])) (PosArg (Qualid (Bare "c")) :| [])) (App (App (Qualid
+    (Bare "p")) (PosArg (Qualid (Bare "b")) :| [])) (PosArg (Qualid (Bare "d")) :|
+    [])))))),(Qualified "Data.Bifunctor" "first",Forall (Inferred Implicit (Ident
+    (Bare "a")) :| [Inferred Implicit (Ident (Bare "b")),Inferred Implicit (Ident
+    (Bare "c"))]) (Arrow (Parens (Arrow (Qualid (Bare "a")) (Qualid (Bare "b"))))
+    (Arrow (App (App (Qualid (Bare "p")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg
+    (Qualid (Bare "c")) :| [])) (App (App (Qualid (Bare "p")) (PosArg (Qualid (Bare
+    "b")) :| [])) (PosArg (Qualid (Bare "c")) :| []))))),(Qualified "Data.Bifunctor"
+    "second",Forall (Inferred Implicit (Ident (Bare "b")) :| [Inferred Implicit (Ident
+    (Bare "c")),Inferred Implicit (Ident (Bare "a"))]) (Arrow (Parens (Arrow (Qualid
+    (Bare "b")) (Qualid (Bare "c")))) (Arrow (App (App (Qualid (Bare "p")) (PosArg
+    (Qualid (Bare "a")) :| [])) (PosArg (Qualid (Bare "b")) :| [])) (App (App (Qualid
+    (Bare "p")) (PosArg (Qualid (Bare "a")) :| [])) (PosArg (Qualid (Bare "c")) :|
+    [])))))]

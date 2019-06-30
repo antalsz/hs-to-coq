@@ -1,0 +1,49 @@
+constructors:
+  Data.Map.Internal.AreWeStrict: ! '[Qualified "Data.Map.Internal" "Strict",Qualified
+    "Data.Map.Internal" "Lazy"]'
+  Data.Map.Internal.MinView: ! '[Qualified "Data.Map.Internal" "Mk_MinView"]'
+  Data.Map.Internal.WhenMissing: ! '[Qualified "Data.Map.Internal" "Mk_WhenMissing"]'
+  Data.Map.Internal.StrictTriple: ! '[Qualified "Data.Map.Internal" "Mk_StrictTriple"]'
+  Data.Map.Internal.MaxView: ! '[Qualified "Data.Map.Internal" "Mk_MaxView"]'
+  Data.Map.Internal.Altered: ! '[Qualified "Data.Map.Internal" "AltSmaller",Qualified
+    "Data.Map.Internal" "AltBigger",Qualified "Data.Map.Internal" "AltAdj",Qualified
+    "Data.Map.Internal" "AltSame"]'
+  Data.Map.Internal.TraceResult: ! '[Qualified "Data.Map.Internal" "Mk_TraceResult"]'
+  Data.Map.Internal.WhenMatched: ! '[Qualified "Data.Map.Internal" "Mk_WhenMatched"]'
+  Data.Map.Internal.Map: ! '[Qualified "Data.Map.Internal" "Bin",Qualified "Data.Map.Internal"
+    "Tip"]'
+constructorFields:
+  Data.Map.Internal.Mk_WhenMissing: RecordFields [Qualified "Data.Map.Internal" "missingSubtree",Qualified
+    "Data.Map.Internal" "missingKey"]
+  Data.Map.Internal.AltSmaller: NonRecordFields 1
+  Data.Map.Internal.Bin: NonRecordFields 5
+  Data.Map.Internal.Lazy: NonRecordFields 0
+  Data.Map.Internal.AltAdj: NonRecordFields 1
+  Data.Map.Internal.Mk_MinView: NonRecordFields 3
+  Data.Map.Internal.AltSame: NonRecordFields 0
+  Data.Map.Internal.Strict: NonRecordFields 0
+  Data.Map.Internal.Mk_TraceResult: NonRecordFields 2
+  Data.Map.Internal.Mk_WhenMatched: RecordFields [Qualified "Data.Map.Internal" "matchedKey"]
+  Data.Map.Internal.Mk_MaxView: NonRecordFields 3
+  Data.Map.Internal.Tip: NonRecordFields 0
+  Data.Map.Internal.AltBigger: NonRecordFields 1
+  Data.Map.Internal.Mk_StrictTriple: NonRecordFields 3
+recordFieldTypes:
+  Data.Map.Internal.matchedKey: Qualified "Data.Map.Internal" "WhenMatched"
+  Data.Map.Internal.missingKey: Qualified "Data.Map.Internal" "WhenMissing"
+  Data.Map.Internal.missingSubtree: Qualified "Data.Map.Internal" "WhenMissing"
+constructorTypes:
+  Data.Map.Internal.Mk_WhenMissing: Qualified "Data.Map.Internal" "WhenMissing"
+  Data.Map.Internal.AltSmaller: Qualified "Data.Map.Internal" "Altered"
+  Data.Map.Internal.Bin: Qualified "Data.Map.Internal" "Map"
+  Data.Map.Internal.Lazy: Qualified "Data.Map.Internal" "AreWeStrict"
+  Data.Map.Internal.AltAdj: Qualified "Data.Map.Internal" "Altered"
+  Data.Map.Internal.Mk_MinView: Qualified "Data.Map.Internal" "MinView"
+  Data.Map.Internal.AltSame: Qualified "Data.Map.Internal" "Altered"
+  Data.Map.Internal.Strict: Qualified "Data.Map.Internal" "AreWeStrict"
+  Data.Map.Internal.Mk_TraceResult: Qualified "Data.Map.Internal" "TraceResult"
+  Data.Map.Internal.Mk_WhenMatched: Qualified "Data.Map.Internal" "WhenMatched"
+  Data.Map.Internal.Mk_MaxView: Qualified "Data.Map.Internal" "MaxView"
+  Data.Map.Internal.Tip: Qualified "Data.Map.Internal" "Map"
+  Data.Map.Internal.AltBigger: Qualified "Data.Map.Internal" "Altered"
+  Data.Map.Internal.Mk_StrictTriple: Qualified "Data.Map.Internal" "StrictTriple"

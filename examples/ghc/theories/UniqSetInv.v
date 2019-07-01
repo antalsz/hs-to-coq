@@ -506,10 +506,10 @@ Next Obligation.
   destruct s.
   destruct arg_1__.
   intro h.
-  (* rewrite <- lookup_intersection in h. destruct h.
-     eauto. *)
-  admit.
-Admitted.
+  Set Printing Implicit.
+  rewrite <- lookup_intersection in h. destruct h.
+  eauto.
+Defined.
 
 Definition sizeUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> nat :=
   fun '(Mk_UniqSet s) => UniqFM.sizeUFM s.

@@ -12,7 +12,7 @@ Require Import MapProofs.Tactics.
 Require Import MapProofs.InsertProofs.
 Require Import MapProofs.DeleteUpdateProofs.
 
-Section WF.
+Section WF_Part1.
 Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 (** ** Verification of [split] *)
@@ -737,41 +737,55 @@ Proof.
       simpl_options. assumption.
 Qed.
 
+End WF_Part1.
+
+Section WF_Part2.
+
+Context {e : Type} {a b c : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
+
 (** ** Verification of [intersection] *)
 
 Lemma intersection_Desc:
-  forall (s1: Map e a) s2 lb ub,
+  forall (s1: Map e a) (s2 : Map e b) lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
   Desc' (intersection s1 s2) lb ub
-        (fun i => sem s1 i &&& sem s2 i).
+        (fun i => ando' (sem s1 i) (sem s2 i)).
 Proof.
   intros ???? HB1 HB2.
   revert s2 HB2.
   induction HB1; intros s3 HB3.
   - simpl. solve_Desc e. f_solver e.
+    unfold ando' in Heqo. destruct (sem s3 i); congruence.
   - simpl.
     destruct s3 eqn:Hs3.
     + rewrite <- Hs3 in *.
-      clear Hs3 s e0 a0 m1 m2.
-      eapply splitMember_Desc;
-        only 1: eassumption.
-      intros s4' b s5' HB1 HB2 Hb Hi.
+      clear Hs3 s e0 b0 m1 m2.
+      eapply splitMember_Desc; [eassumption|].
+      intros s4' p s5' HB1 HB2 Hb Hi.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2.
-      destruct b.
+      destruct p.
       * destruct_ptrEq.
-        -- solve_Desc e. f_solver e.
+        -- solve_Desc e. unfold ando' in *. f_solver e.
+           rewrite Hi in Hsem0. congruence.
         -- applyDesc e (@link_Desc e a).
-           solve_Desc e. f_solver e.
-      * applyDesc e link2_Desc.
-        solve_Desc e. f_solver e.
+           solve_Desc e. unfold ando' in *.
+           f_solver e;
+             try solve [rewrite Hi in Hsem0;
+                        rewrite <- Hsem0; symmetry; assumption].
+      * applyDesc e (@link2_Desc e a).
+        solve_Desc e. unfold ando' in *.
+        f_solver e;
+          try solve [rewrite Hi in Hsem0;
+                     rewrite <- Hsem0; symmetry; assumption].
     + solve_Desc e. f_solver e.
 Qed.
 
 (** Verificataion of [intersectionWith] *)
 Lemma intersectionWith_Desc:
-  forall (s1: Map e a) (s2: Map e a) (f: a -> a -> a) lb ub,
+  forall (s1: Map e a) (s2: Map e b) (f: a -> b -> c) lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
   Desc' (intersectionWith f s1 s2) lb ub
@@ -787,20 +801,21 @@ Proof.
   - simpl.
     destruct s3 eqn:Hs3.
     + rewrite <- Hs3 in *.
-      clear Hs3 s e0 a0 m1 m2.
-      eapply splitLookup_Desc;
-        only 1: eassumption.
-      intros s4' b s5' HB1 HB2 Hb Hi.
+      clear Hs3 s e0 b0 m1 m2.
+      eapply splitLookup_Desc; [eassumption|].
+      intros s4' p s5' HB1 HB2 Hb Hi.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2.
-      destruct b.
-      applyDesc e (@link_Desc e a). 
-      (*Also taking long see*)
-      apply showDesc'. split. solve_Bounded e. f_solver e; rewrite Hi in Hsem0; 
-      rewrite <- Hsem1; assumption.
-      applyDesc e link2_Desc.
-      apply showDesc'. split. solve_Bounded e. f_solver e; rewrite Hi in Hsem0;
-      rewrite <-Hsem1; assumption.
+      destruct p.
+      * applyDesc e (@link_Desc e c). 
+        (*Also taking long see*)
+        apply showDesc'. split. solve_Bounded e.
+        f_solver e; rewrite Hi in Hsem0; 
+          rewrite <- Hsem1; assumption.
+      * applyDesc e (@link2_Desc e c).
+        apply showDesc'. split. solve_Bounded e.
+        f_solver e; rewrite Hi in Hsem0;
+          rewrite <-Hsem1; assumption.
     + solve_Desc e. f_solver e.
 Qed.
 
@@ -809,7 +824,7 @@ Qed.
 (*Had to add assumption that f is Proper*)
 
 Lemma intersectionWithKey_Desc:
-  forall (s1: Map e a) s2 (f: e -> a -> a -> a) lb ub,
+  forall (s1: Map e a) (s2 : Map e b) (f: e -> a -> b -> c) lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
   Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -826,23 +841,23 @@ Proof.
   - simpl.
     destruct s3 eqn:Hs3.
     + rewrite <- Hs3 in *.
-      clear Hs3 s e0 a0 m1 m2.
-      eapply splitLookup_Desc;
-        only 1: eassumption.
-      intros s4' b s5' HB1 HB2 Hb Hi.
+      clear Hs3 s e0 b0 m1 m2.
+      eapply splitLookup_Desc; [eassumption|].
+      intros s4' p s5' HB1 HB2 Hb Hi.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2.
-      destruct b.
-      applyDesc e (@link_Desc e a). 
-      (*Also taking long see*)
-      apply showDesc'. split. solve_Bounded e. f_solver e.
-      assert (f x v a0 = f i v a0). apply equal_f. apply equal_f. apply HP. order e.
-      rewrite H1. reflexivity.
-      all :( try (rewrite Hi in Hsem0; 
-      rewrite <- Hsem1; assumption)).
-      applyDesc e link2_Desc.
-      apply showDesc'. split. solve_Bounded e. f_solver e; rewrite Hi in Hsem0;
-      rewrite <-Hsem1; assumption.
+      destruct p.
+      * applyDesc e (@link_Desc e c). 
+        (*Also taking long see*)
+        apply showDesc'. split. solve_Bounded e.
+        f_solver e.
+        f_equal. do 2 apply equal_f. apply HP. order e.
+        all :( try (rewrite Hi in Hsem0; 
+                    rewrite <- Hsem1; assumption)).
+      * applyDesc e (@link2_Desc e c).
+        apply showDesc'. split. solve_Bounded e.
+        f_solver e; rewrite Hi in Hsem0;
+          rewrite <-Hsem1; assumption.
     + solve_Desc e. f_solver e.
 Qed.
       
@@ -921,7 +936,7 @@ Proof.
         lapply H8; [intro; subst; clear H8|lia].
         assert (sem sl x0 = None) by (destruct (sem sl x0); simpl in *; try reflexivity; lia).
         f_solver e. (* TODO: More stuff that [f_solver] should do *)
-      * applyDesc e link2_Desc.
+      * applyDesc e (@link2_Desc e a).
         showP.
         -- assumption.
         -- destruct (sem sl x0); simpl in *; lia.
@@ -935,4 +950,4 @@ Proof.
         -- f_solver e.
 Qed.
 
-End WF.
+End WF_Part2.

@@ -207,12 +207,11 @@ Proof.
   intros. eapply filter_true; destruct_IntMap.
 Qed.
 
-(** TODO: a more general theorem is needed (where the second map can
-    have a different value type. *)
 Lemma lookup_intersection :
-  forall a key (val1:a) m1 m2, 
+  forall a b key (val1:a)
+    (m1 : IntMap.IntMap a) (m2 : IntMap.IntMap b), 
     IntMap.lookup key m1 = Some val1 /\
-    (exists (val2:a), IntMap.lookup key m2 = Some val2) <-> 
+    (exists (val2:b), IntMap.lookup key m2 = Some val2) <-> 
     IntMap.lookup key (IntMap.intersection m1 m2) = Some val1.
 Proof.
   intros. eapply lookup_intersection; destruct_IntMap.

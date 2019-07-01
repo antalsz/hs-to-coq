@@ -127,14 +127,18 @@ Section IntMap.
 
   Program Definition union : IntMap A -> IntMap A -> IntMap A := union.
   Next Obligation.
-    clear.
-  Admitted.
+    eapply Desc'_WF.
+    destruct x; destruct x0.
+    eapply union_Desc; try eassumption.
+  Defined.
 
   Program Definition unionWith : (A -> A -> A) -> IntMap A -> IntMap A -> IntMap A :=
     unionWith.
   Next Obligation.
-    clear.
-  Admitted.
+    eapply Desc'_WF.
+    destruct x0; destruct x1.
+    eapply unionWith_Desc; try eassumption.
+  Defined.
 
   Program Definition intersection : IntMap A -> IntMap B -> IntMap A :=
     intersection.

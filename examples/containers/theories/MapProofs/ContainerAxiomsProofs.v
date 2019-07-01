@@ -293,38 +293,38 @@ Qed.
 
 Lemma partitionPreservesNone: forall m lb ub f,
   Bounded m lb ub ->
-  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
   forall i, sem m i = None -> sem_filter m f i = None.
 Proof.
   intros. induction H.
   - reflexivity.
-  - simpl. simpl in H1. destruct (compare i x) eqn : ?.
-   + destruct (sem s1 i). inversion H1. assert (i == x = true) by (order e).
-    rewrite H7 in H1. simpl in H1. inversion H1.
-   + destruct (sem s1 i). inversion H1. destruct (i == x) eqn : ?.
-     inversion H1. order e.
-   + destruct (sem s1 i). inversion H1. destruct (i == x) eqn : ?. inversion H1.
-     destruct (sem s2 i) eqn : ?. inversion H1. apply IHBounded2. reflexivity.
+  - simpl. simpl in H0. destruct (compare i x) eqn : ?.
+   + destruct (sem s1 i). inversion H0. assert (i == x = true) by (order e).
+    rewrite H6 in H0. simpl in H0. inversion H0.
+   + destruct (sem s1 i). inversion H0. destruct (i == x) eqn : ?.
+     inversion H0. order e.
+   + destruct (sem s1 i). inversion H0. destruct (i == x) eqn : ?. inversion H0.
+     destruct (sem s2 i) eqn : ?. inversion H0. apply IHBounded2. reflexivity.
 Qed.
 
 (*If a key, value pair is in the filtered map, it was in the original map*)
-Lemma partitionPreservesValues: forall `{EqLaws a} m lb ub f,
+Lemma partitionPreservesValues: forall m lb ub f,
   Bounded m lb ub ->
-  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
-  forall i v, sem_filter m f i == Some v = true -> sem m i == Some v = true.
+  forall i v, sem_filter m f i = Some v -> sem m i = Some v.
 Proof.
-  intros. induction H1.
-  - simpl in H3. inversion H3.
+  intros. induction H.
+  - inversion H0.
   - simpl. destruct (compare i x) eqn : ?.
-    + assert (sem s1 i = None). eapply sem_outside_above. apply H1_. solve_Bounds e.
-      simpl in H3. rewrite Heqc in H3. rewrite H7. simpl. assert (i == x = true) by (order e).
-      rewrite H8. simpl. destruct (f x v0). simpl in H3. assumption. inversion H3.
-    + simpl in H3. rewrite Heqc in H3. destruct (sem s1 i) eqn : ?. simpl.
-      apply IHBounded1. apply H3. eapply partitionPreservesNone in Heqo.
-      rewrite Heqo in H3. inversion H3. apply H1_. apply H2.
-    + simpl in H3. rewrite Heqc in H3. assert (sem s1 i = None). eapply sem_outside_above.
-      apply H1_. solve_Bounds e. rewrite H7. assert (i == x = false) by (order e). rewrite H8.
-      simpl. apply IHBounded2. apply H3.
+    + assert (sem s1 i = None). eapply sem_outside_above. apply H. solve_Bounds e.
+      simpl in H0. rewrite Heqc in H0. rewrite H6. simpl. assert (i == x = true) by (order e).
+      rewrite H7. simpl. destruct (f x v0). assumption. inversion H0.
+    + simpl in H0. rewrite Heqc in H0. destruct (sem s1 i) eqn : ?. simpl.
+      apply IHBounded1. apply H0. eapply partitionPreservesNone in Heqo.
+      rewrite Heqo in H0. congruence. eassumption.
+    + simpl in H0. rewrite Heqc in H0. assert (sem s1 i = None).
+      eapply sem_outside_above.
+      apply H. solve_Bounds e. rewrite H6.
+      assert (i == x = false) by (order e). rewrite H7.
+      simpl. apply IHBounded2. assumption.
 Qed.
 
 (*Same as above, but for intersection*)
@@ -592,7 +592,7 @@ Proof.
 Qed.
 
 (*The difference of the empty map with any map is empty*)
-Lemma difference_nil_l: forall  (B : Type) (map: Map e a) lb ub (key : e),
+Lemma difference_nil_l: forall  (B : Type) (map: Map e a) lb ub,
   Bounded map lb ub ->
   difference (@empty e B) map = empty.
 Proof.
@@ -808,32 +808,30 @@ that the negation of P is proper as well*)
 say that if lookup key m == Some value = true, then for all maps m',
 we have the 3 conditions, which is not true
 TODO: ASk*)
-Lemma lookup_partition: forall key value `{EqLaws a} (m: Map e a) m' P lb ub,
-  Bounded m lb ub ->
-  Bounded m' lb ub ->
-  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) P ->
-  Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun a b => negb (P a b)) ->
-  ((m' == fst (partitionWithKey P m) = true) \/ (m' == snd (partitionWithKey P m) = true)) /\
-  lookup key m' == Some value = true -> lookup key m == Some value = true.
+Lemma lookup_partition: forall key value (m: Map e a) m' P lb ub,
+    Bounded m lb ub ->
+    Bounded m' lb ub ->
+    (m' = fst (partition P m) \/
+     m' = snd (partition P m)) /\
+    lookup key m' = Some value -> lookup key m = Some value.
 Proof.
-  intros. 
-  - destruct H5. destruct H5.
-    + rewrite (weak_equals_spec m') in H5. specialize (H5 key).
-      erewrite fst_partition_sem in H5. erewrite lookup_spec.
-      erewrite lookup_spec in H6. assert ((sem_filter m P key) == (Some value) = true).
-      eapply Eq_Transitive. apply Eq_Symmetric. apply H5. apply H6. 
-      eapply partitionPreservesValues. apply H1. apply H3. apply H7. apply H2. apply H1.
-      apply H1. apply H3. apply H2. eapply partitionWithKey_spec. apply H1. apply H3.
-      intros. simpl. apply H7. intros. apply H8.
-    + rewrite weak_equals_spec in H5. specialize (H5 key).
-      erewrite snd_partition_sem in H5. erewrite lookup_spec. erewrite lookup_spec in H6.
-      assert (sem_filter m (fun a b => negb (P a b)) key == Some value = true). eapply Eq_Transitive.
-      apply Eq_Symmetric. apply H5. apply H6. eapply partitionPreservesValues. apply H1.
-      apply H4. apply H7. apply H2. apply H1. apply H1. apply H3. apply H2.
-      eapply partitionWithKey_spec. apply H1. apply H3. intros. simpl. apply H7.
-      intros. apply H8.
+  unfold partition. intros. 
+  erewrite lookup_spec; [|eassumption].
+  erewrite lookup_spec in H1; [|eassumption].
+  destruct H1 as [[Hf | Hs] Hl].
+  - rewrite Hf in Hl.
+    erewrite fst_partition_sem in Hl; try eassumption.
+    + eapply partitionPreservesValues.
+      * eassumption.
+      * eassumption.
+    + intros ???. reflexivity.
+  - rewrite Hs in Hl.
+    erewrite snd_partition_sem in Hl; try eassumption.
+    + eapply partitionPreservesValues.
+      * eassumption.
+      * eassumption.
+    + intros ???. reflexivity.
 Qed.
-
 
 (*Need to have proven EqLaws for Map first, since we need to show that left = snd Partition
 -> left == snd Partition, but we need equality in the hypothesis because equality of

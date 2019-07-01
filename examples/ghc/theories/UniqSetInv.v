@@ -479,7 +479,8 @@ Next Obligation.
   apply wildcard'.
   destruct x as [m'].
   destruct s as [m].
-  eapply lookup_partition; eauto.
+  eapply lookup_partition. split; [|eauto].
+  left. unfold fst. inversion Heq_anonymous. reflexivity.
 Defined.
 
 Next Obligation.
@@ -488,7 +489,8 @@ Next Obligation.
   apply wildcard'.
   destruct y as [m'].
   destruct s as [m].  
-  eapply lookup_partition; eauto.
+  eapply lookup_partition. split; [|eauto].
+  right. unfold snd. inversion Heq_anonymous. reflexivity.
 Defined.
 
 Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.Uniquable b}
@@ -504,9 +506,10 @@ Next Obligation.
   destruct s.
   destruct arg_1__.
   intro h.
-  rewrite <- lookup_intersection in h. destruct h.
-  eauto.
-Defined.
+  (* rewrite <- lookup_intersection in h. destruct h.
+     eauto. *)
+  admit.
+Admitted.
 
 Definition sizeUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> nat :=
   fun '(Mk_UniqSet s) => UniqFM.sizeUFM s.

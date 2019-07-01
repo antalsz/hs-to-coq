@@ -1,14 +1,6 @@
 
-# we cannot verify these assertions as we aren't tracking whether types are
-# coercion types are not. 
-#
-in Id.mkSysLocal rewrite forall ty, (TyCoRep.isCoercionType ty) = false
-in Id.mkUserLocal rewrite forall ty, (TyCoRep.isCoercionType ty) = false
 
 axiomatize definition Id.isStateHackType
-
-# Type inference issue from HasDebugCallStack
-in Id.isNeverLevPolyId rewrite forall , Core.idInfo = (@Core.idInfo tt)
 
 redefine Definition Id.idCoreRules : Core.Id -> list (Core.CoreRule) 
    := fun x => nil.
@@ -31,7 +23,7 @@ skip Id.setCaseBndrEvald
 # however, we are removing all type information so no need to do so.
 # axiomatize definition Id.setIdType
 
-in Id.setIdType rewrite forall x y,GHC.Prim.seq x y = y
+in Id.setIdType rewrite forall x y, GHC.Prim.seq x y = y
 
 # figure out GHC.Num.Int representation
 #

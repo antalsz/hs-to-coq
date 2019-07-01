@@ -1,7 +1,5 @@
 (* We parameterize this because we don't have type information *)
-Definition typeArity :  AxiomatizedTypes.Kind -> list BasicTypes.OneShotInfo.
-apply GHC.Err.default. 
-Qed.
+Axiom typeArity :  Core.Kind -> list BasicTypes.OneShotInfo.
 
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes := 
 GHC.Err.Build_Default _ (GHC.Err.default, GHC.Err.default).

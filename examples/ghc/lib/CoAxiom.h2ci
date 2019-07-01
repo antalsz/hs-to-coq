@@ -1,30 +1,8 @@
 constructors:
-  CoAxiom.CoAxiomRule: ! '[Qualified "CoAxiom" "Mk_CoAxiomRule"]'
   CoAxiom.BranchFlag: ! '[Qualified "CoAxiom" "Branched",Qualified "CoAxiom" "Unbranched"]'
-  CoAxiom.CoAxBranch: ! '[Qualified "CoAxiom" "Mk_CoAxBranch"]'
 constructorFields:
   CoAxiom.Branched: NonRecordFields 0
-  CoAxiom.Mk_CoAxBranch: RecordFields [Qualified "CoAxiom" "cab_loc",Qualified "CoAxiom"
-    "cab_tvs",Qualified "CoAxiom" "cab_cvs",Qualified "CoAxiom" "cab_roles",Qualified
-    "CoAxiom" "cab_lhs",Qualified "CoAxiom" "cab_rhs",Qualified "CoAxiom" "cab_incomps"]
   CoAxiom.Unbranched: NonRecordFields 0
-  CoAxiom.Mk_CoAxiomRule: RecordFields [Qualified "CoAxiom" "coaxrName",Qualified
-    "CoAxiom" "coaxrAsmpRoles",Qualified "CoAxiom" "coaxrRole",Qualified "CoAxiom"
-    "coaxrProves"]
-recordFieldTypes:
-  CoAxiom.coaxrAsmpRoles: Qualified "CoAxiom" "CoAxiomRule"
-  CoAxiom.cab_loc: Qualified "CoAxiom" "CoAxBranch"
-  CoAxiom.coaxrName: Qualified "CoAxiom" "CoAxiomRule"
-  CoAxiom.coaxrRole: Qualified "CoAxiom" "CoAxiomRule"
-  CoAxiom.cab_tvs: Qualified "CoAxiom" "CoAxBranch"
-  CoAxiom.cab_incomps: Qualified "CoAxiom" "CoAxBranch"
-  CoAxiom.coaxrProves: Qualified "CoAxiom" "CoAxiomRule"
-  CoAxiom.cab_roles: Qualified "CoAxiom" "CoAxBranch"
-  CoAxiom.cab_lhs: Qualified "CoAxiom" "CoAxBranch"
-  CoAxiom.cab_rhs: Qualified "CoAxiom" "CoAxBranch"
-  CoAxiom.cab_cvs: Qualified "CoAxiom" "CoAxBranch"
 constructorTypes:
   CoAxiom.Branched: Qualified "CoAxiom" "BranchFlag"
-  CoAxiom.Mk_CoAxBranch: Qualified "CoAxiom" "CoAxBranch"
   CoAxiom.Unbranched: Qualified "CoAxiom" "BranchFlag"
-  CoAxiom.Mk_CoAxiomRule: Qualified "CoAxiom" "CoAxiomRule"

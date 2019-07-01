@@ -54,7 +54,7 @@ MODULES = \
 
 ##
 CORESYN = \
-   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand \
+   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand Type $(CORETYPE)  \
 
 ##
 CONSTRUCTORS = \
@@ -76,29 +76,26 @@ CORE_MODULES = \
   ConLike \
   CoreFVs \
   Exitify \
-  CallArity \
   CoreArity \
   CoreTidy \
-  $(CORETYPE) \
   TrieMap \
   CSE \
   CoreStats \
   PrelNames \
+#  CoAxiom \
 #  TysWiredIn \
 #  MkCore \
-
+  CallArity \
 
 
 NOTRANSLATE = \
   Constructors \
   CoreType \
   IdInfo2 \
-  TyCoRep \
 
 CORETYPE = \
   TyCoRep \
   Coercion \
-  CoAxiom \
 
 # These modules translate, but do not compile, at the moment and
 # should not be processed by coq

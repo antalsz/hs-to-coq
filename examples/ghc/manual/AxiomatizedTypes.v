@@ -14,10 +14,14 @@ Axiom CoAxiom            : Type -> Type.
 Axiom Branched           : Type.
 Axiom Unbranched         : Type.
 Axiom BuiltInSynFamily   : Type.
-Inductive Role           : Type := Representational | Nominal.
+Axiom BranchIndex        : Type.
+Axiom CoAxiomRule        : Type.
+Axiom CoAxBranch         : Type.
+Inductive Role           : Type := Representational | Nominal | Phantom.
 
-Axiom TcTyVarDetails : Type.
-
+Axiom TcTyVarDetails     : Type.
+Axiom liftedTypeKind     : Kind.
+Axiom constraintKind     : Kind.
 
 (* -------------------- assumed default instances ------------------- *)
 

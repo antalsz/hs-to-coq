@@ -765,19 +765,6 @@ Proof.
   rewrite (N.eqb_refl realUnique); auto.
 Qed.
 
-Ltac process_setIdType :=
-       match goal with 
-         [ u : TvSubstEnv , u0 : CvSubstEnv , v : Id |- 
-           GoodLocalVar _ ] =>  
-            destruct (isEmptyVarEnv u && 
-                      isEmptyVarEnv u0
-                      || TyCoRep.noFreeVarsOfType 
-                          (Id.idType v)) ;
-            [ idtac | apply GoodLocalVar_setIdType ] 
-       end. 
-
-
-
 Lemma WellScoped_Subst_substIdBndr : forall s1 s2 subst subst' bndr' v vs,
   forall (SB : substIdBndr s1 s2 subst v = (subst', bndr')),
   GoodLocalVar v ->

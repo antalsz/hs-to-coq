@@ -17,6 +17,16 @@ Require Coq.Program.Wf.
 
 Require AxiomatizedTypes.
 Require BasicTypes.
+Require FastString.
+Require GHC.Base.
+Require GHC.Num.
+Require Name.
+Require OccName.
+Require Pair.
+Require UniqSet.
+Require UniqSupply.
+Require Unique.
+Require Util.
 Require BinNat.
 Require BinNums.
 Require BooleanFormula.
@@ -31,30 +41,23 @@ Require Datatypes.
 Require DynFlags.
 Require FastStringEnv.
 Require FieldLabel.
-Require GHC.Base.
 Require GHC.Char.
 Require GHC.DeferredFix.
 Require GHC.Err.
 Require GHC.List.
-Require GHC.Num.
 Require GHC.Prim.
 Require GHC.Real.
 Require GHC.Wf.
 Require Literal.
 Require Maybes.
 Require Module.
-Require Name.
 Require NameEnv.
-Require OccName.
 Require Panic.
 Require PrelNames.
 Require SrcLoc.
 Require UniqDFM.
 Require UniqDSet.
 Require UniqFM.
-Require UniqSet.
-Require Unique.
-Require Util.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
@@ -83,11 +86,21 @@ Inductive TypeShape : Type
   |  TsProd : list TypeShape -> TypeShape
   |  TsUnk : TypeShape.
 
+Inductive TypeOrdering : Type
+  := | TLT : TypeOrdering
+  |  TEQ : TypeOrdering
+  |  TEQX : TypeOrdering
+  |  TGT : TypeOrdering.
+
 Definition TyVarEnv :=
   VarEnv%type.
 
 Inductive TyVarBndr tyvar argf : Type
   := | TvBndr : tyvar -> argf -> TyVarBndr tyvar argf.
+
+Inductive TyLit : Type
+  := | NumTyLit : GHC.Num.Integer -> TyLit
+  |  StrTyLit : FastString.FastString -> TyLit.
 
 Definition TyConRepName :=
   Name.Name%type.
@@ -108,6 +121,9 @@ Inductive TyConFlavour : Type
 
 Definition TyCoVarEnv :=
   VarEnv%type.
+
+Definition TvSubstEnv :=
+  (TyVarEnv AxiomatizedTypes.Type_)%type.
 
 Inductive TickishScoping : Type
   := | NoScope : TickishScoping
@@ -197,9 +213,21 @@ Definition OutKind :=
 Definition OutCoercion :=
   AxiomatizedTypes.Coercion%type.
 
+Inductive NormaliseStepResult ev : Type
+  := | NS_Done : NormaliseStepResult ev
+  |  NS_Abort : NormaliseStepResult ev
+  |  NS_Step
+   : RecTcChecker -> AxiomatizedTypes.Type_ -> ev -> NormaliseStepResult ev.
+
+Definition LiftCoEnv :=
+  (VarEnv AxiomatizedTypes.Coercion)%type.
+
 Inductive LevityInfo : Type
   := | NoLevityInfo : LevityInfo
   |  NeverLevityPolymorphic : LevityInfo.
+
+Definition KindOrType :=
+  AxiomatizedTypes.Type_%type.
 
 Inductive KillFlags : Type
   := | Mk_KillFlags (kf_abs : bool) (kf_used_once : bool) (kf_called_once : bool)
@@ -262,6 +290,8 @@ Inductive ExnStr : Type := | VanStr : ExnStr |  Mk_ExnStr : ExnStr.
 
 Inductive Str s : Type := | Lazy : Str s |  Mk_Str : ExnStr -> s -> Str s.
 
+Inductive EqRel : Type := | NomEq : EqRel |  ReprEq : EqRel.
+
 Definition DefMethInfo :=
   (option (Name.Name * BasicTypes.DefMethSpec AxiomatizedTypes.Type_)%type)%type.
 
@@ -281,8 +311,31 @@ Inductive Use u : Type := | Abs : Use u |  Mk_Use : Count -> u -> Use u.
 Definition DmdShell :=
   (JointDmd (Str unit) (Use unit))%type.
 
+Definition CoercionR :=
+  AxiomatizedTypes.Coercion%type.
+
+Definition CoercionP :=
+  AxiomatizedTypes.Coercion%type.
+
+Definition CoercionN :=
+  AxiomatizedTypes.Coercion%type.
+
+Definition KindCoercion :=
+  CoercionN%type.
+
+Inductive UnivCoProvenance : Type
+  := | UnsafeCoerceProv : UnivCoProvenance
+  |  PhantomProv : KindCoercion -> UnivCoProvenance
+  |  ProofIrrelProv : KindCoercion -> UnivCoProvenance
+  |  PluginProv : GHC.Base.String -> UnivCoProvenance.
+
+Axiom CoercionHole : Type.
+
 Definition CoVarEnv :=
   VarEnv%type.
+
+Definition CvSubstEnv :=
+  (CoVarEnv AxiomatizedTypes.Coercion)%type.
 
 Definition ClassMinimalDef :=
   (BooleanFormula.BooleanFormula Name.Name)%type.
@@ -497,6 +550,10 @@ Definition Id :=
 Definition ClassOpItem :=
   (Id * DefMethInfo)%type%type.
 
+Definition NormaliseStepper ev :=
+  (RecTcChecker ->
+   TyCon -> list AxiomatizedTypes.Type_ -> NormaliseStepResult ev)%type.
+
 Definition CoreBndr :=
   Var%type.
 
@@ -586,6 +643,12 @@ Definition TKVar :=
 Definition TidyEnv :=
   (OccName.TidyOccEnv * VarEnv Var)%type%type.
 
+Inductive PredTree : Type
+  := | ClassPred : Class -> list AxiomatizedTypes.Type_ -> PredTree
+  |  EqPred
+   : EqRel -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> PredTree
+  |  IrredPred : AxiomatizedTypes.PredType -> PredTree.
+
 Definition DTyVarSet :=
   (UniqDSet.UniqDSet TyVar)%type.
 
@@ -594,6 +657,14 @@ Definition InTyVar :=
 
 Definition OutTyVar :=
   TyVar%type.
+
+Inductive TyCoMapper env m : Type
+  := | Mk_TyCoMapper (tcm_smart : bool) (tcm_tyvar
+    : env -> TyVar -> m AxiomatizedTypes.Type_) (tcm_covar
+    : env -> CoVar -> m AxiomatizedTypes.Coercion) (tcm_hole
+    : env -> CoercionHole -> m AxiomatizedTypes.Coercion) (tcm_tybinder
+    : env -> TyVar -> ArgFlag -> m (env * TyVar)%type)
+   : TyCoMapper env m.
 
 Inductive AltCon : Type
   := | DataAlt : DataCon -> AltCon
@@ -761,6 +832,12 @@ Inductive RnEnv2 : Type
   := | RV2 (envL : VarEnv Var) (envR : VarEnv Var) (in_scope : InScopeSet)
    : RnEnv2.
 
+Inductive TCvSubst : Type
+  := | Mk_TCvSubst : InScopeSet -> TvSubstEnv -> CvSubstEnv -> TCvSubst.
+
+Inductive LiftingContext : Type
+  := | LC : TCvSubst -> LiftCoEnv -> LiftingContext.
+
 Arguments TvBndr {_} {_} _ _.
 
 Arguments ProfNote {_} _ _ _.
@@ -777,6 +854,12 @@ Arguments ThrowsExn {_}.
 
 Arguments Dunno {_} _.
 
+Arguments NS_Done {_}.
+
+Arguments NS_Abort {_}.
+
+Arguments NS_Step {_} _ _ _.
+
 Arguments JD {_} {_} _ _.
 
 Arguments Lazy {_}.
@@ -788,6 +871,8 @@ Arguments Abs {_}.
 Arguments Mk_Use {_} _ _.
 
 Arguments TB {_} _ _.
+
+Arguments Mk_TyCoMapper {_} {_} _ _ _ _ _.
 
 Arguments Mk_Var {_} _.
 
@@ -833,6 +918,9 @@ Instance Default__Unfolding : GHC.Err.Default Unfolding :=
 
 Instance Default__TypeShape : GHC.Err.Default TypeShape :=
   GHC.Err.Build_Default _ TsUnk.
+
+Instance Default__TypeOrdering : GHC.Err.Default TypeOrdering :=
+  GHC.Err.Build_Default _ TLT.
 
 Instance Default__TyConFlavour : GHC.Err.Default TyConFlavour :=
   GHC.Err.Build_Default _ ClassFlavour.
@@ -889,7 +977,13 @@ Instance Default__IdScope : GHC.Err.Default IdScope :=
 Instance Default__ExnStr : GHC.Err.Default ExnStr :=
   GHC.Err.Build_Default _ VanStr.
 
+Instance Default__EqRel : GHC.Err.Default EqRel :=
+  GHC.Err.Build_Default _ NomEq.
+
 Instance Default__Count : GHC.Err.Default Count := GHC.Err.Build_Default _ One.
+
+Instance Default__UnivCoProvenance : GHC.Err.Default UnivCoProvenance :=
+  GHC.Err.Build_Default _ UnsafeCoerceProv.
 
 Instance Default__CafInfo : GHC.Err.Default CafInfo :=
   GHC.Err.Build_Default _ MayHaveCafRefs.
@@ -2065,6 +2159,26 @@ Definition psUnivTyVars (arg_0__ : PatSyn) :=
   let 'MkPatSyn _ _ _ _ _ _ psUnivTyVars _ _ _ _ _ _ := arg_0__ in
   psUnivTyVars.
 
+Definition tcm_covar {env} {m} (arg_0__ : TyCoMapper env m) :=
+  let 'Mk_TyCoMapper _ _ tcm_covar _ _ := arg_0__ in
+  tcm_covar.
+
+Definition tcm_hole {env} {m} (arg_0__ : TyCoMapper env m) :=
+  let 'Mk_TyCoMapper _ _ _ tcm_hole _ := arg_0__ in
+  tcm_hole.
+
+Definition tcm_smart {env} {m} (arg_0__ : TyCoMapper env m) :=
+  let 'Mk_TyCoMapper tcm_smart _ _ _ _ := arg_0__ in
+  tcm_smart.
+
+Definition tcm_tybinder {env} {m} (arg_0__ : TyCoMapper env m) :=
+  let 'Mk_TyCoMapper _ _ _ _ tcm_tybinder := arg_0__ in
+  tcm_tybinder.
+
+Definition tcm_tyvar {env} {m} (arg_0__ : TyCoMapper env m) :=
+  let 'Mk_TyCoMapper _ tcm_tyvar _ _ _ := arg_0__ in
+  tcm_tyvar.
+
 Definition ru_act (arg_0__ : CoreRule) :=
   match arg_0__ with
   | Rule _ ru_act _ _ _ _ _ _ _ _ _ => ru_act
@@ -2410,6 +2524,1199 @@ Fixpoint StrDmd_size (s1 : StrDmd): nat :=
 Definition ArgStrDmd_size := Str_size StrDmd_size.
 
 (* Converted value declarations: *)
+
+Axiom zipTyEnv : list TyVar -> list AxiomatizedTypes.Type_ -> TvSubstEnv.
+
+Axiom zipTvSubst : list TyVar -> list AxiomatizedTypes.Type_ -> TCvSubst.
+
+Axiom zipCvSubst : list CoVar -> list AxiomatizedTypes.Coercion -> TCvSubst.
+
+Axiom zipCoEnv : list CoVar -> list AxiomatizedTypes.Coercion -> CvSubstEnv.
+
+Axiom zapTCvSubst : TCvSubst -> TCvSubst.
+
+Axiom zapLiftingContext : LiftingContext -> LiftingContext.
+
+Axiom userTypeError_maybe : AxiomatizedTypes.Type_ ->
+                            option AxiomatizedTypes.Type_.
+
+Axiom unwrapNewTypeStepper : NormaliseStepper AxiomatizedTypes.Coercion.
+
+Axiom unionTCvSubst : TCvSubst -> TCvSubst -> TCvSubst.
+
+Axiom typeSize : AxiomatizedTypes.Type_ -> nat.
+
+Axiom typeLiteralKind : TyLit -> AxiomatizedTypes.Kind.
+
+Axiom typeKind : forall `{Util.HasDebugCallStack},
+                 AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
+
+Axiom ty_co_subst : LiftingContext ->
+                    AxiomatizedTypes.Role -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom tyThingCategory : AxiomatizedTypes.TyThing -> GHC.Base.String.
+
+Axiom tyConsOfType : AxiomatizedTypes.Type_ -> UniqSet.UniqSet TyCon.
+
+Axiom tyConRolesX : AxiomatizedTypes.Role ->
+                    TyCon -> list AxiomatizedTypes.Role.
+
+Axiom tyConRolesRepresentational : TyCon -> list AxiomatizedTypes.Role.
+
+Axiom tyConBindersTyBinders : list TyConBinder ->
+                              list AxiomatizedTypes.TyBinder.
+
+Axiom tyConAppTyCon_maybe : AxiomatizedTypes.Type_ -> option TyCon.
+
+Axiom tyConAppTyConPicky_maybe : AxiomatizedTypes.Type_ -> option TyCon.
+
+Axiom tyConAppTyCon : AxiomatizedTypes.Type_ -> TyCon.
+
+Axiom tyConAppArgs_maybe : AxiomatizedTypes.Type_ ->
+                           option (list AxiomatizedTypes.Type_).
+
+Axiom tyConAppArgs : AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom tyConAppArgN : nat -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom tyCoVarsOfTypesWellScoped : list AxiomatizedTypes.Type_ -> list TyVar.
+
+Axiom tyCoVarsOfTypesSet : TyVarEnv AxiomatizedTypes.Type_ -> TyCoVarSet.
+
+Axiom tyCoVarsOfTypesList : list AxiomatizedTypes.Type_ -> list TyCoVar.
+
+Axiom tyCoVarsOfTypesDSet : list AxiomatizedTypes.Type_ -> DTyCoVarSet.
+
+Axiom tyCoVarsOfTypes : list AxiomatizedTypes.Type_ -> TyCoVarSet.
+
+Axiom tyCoVarsOfTypeWellScoped : AxiomatizedTypes.Type_ -> list TyVar.
+
+Axiom tyCoVarsOfTypeList : AxiomatizedTypes.Type_ -> list TyCoVar.
+
+Axiom tyCoVarsOfTypeDSet : AxiomatizedTypes.Type_ -> DTyCoVarSet.
+
+Axiom tyCoVarsOfType : AxiomatizedTypes.Type_ -> TyCoVarSet.
+
+Axiom tyCoVarsOfProv : UnivCoProvenance -> TyCoVarSet.
+
+Axiom tyCoVarsOfCosSet : CoVarEnv AxiomatizedTypes.Coercion -> TyCoVarSet.
+
+Axiom tyCoVarsOfCos : list AxiomatizedTypes.Coercion -> TyCoVarSet.
+
+Axiom tyCoVarsOfCoList : AxiomatizedTypes.Coercion -> list TyCoVar.
+
+Axiom tyCoVarsOfCoDSet : AxiomatizedTypes.Coercion -> DTyCoVarSet.
+
+Axiom tyCoVarsOfCo : AxiomatizedTypes.Coercion -> TyCoVarSet.
+
+Axiom tyBinderType : AxiomatizedTypes.TyBinder -> AxiomatizedTypes.Type_.
+
+Axiom toposortTyVars : list TyCoVar -> list TyCoVar.
+
+Axiom topNormaliseTypeX : forall {ev},
+                          NormaliseStepper ev ->
+                          (ev -> ev -> ev) ->
+                          AxiomatizedTypes.Type_ -> option (ev * AxiomatizedTypes.Type_)%type.
+
+Axiom topNormaliseNewType_maybe : AxiomatizedTypes.Type_ ->
+                                  option (AxiomatizedTypes.Coercion * AxiomatizedTypes.Type_)%type.
+
+Axiom toPhantomCo : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom tidyTypes : TidyEnv ->
+                  list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom tidyType : TidyEnv -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom tidyTyVarOcc : TidyEnv -> TyVar -> TyVar.
+
+Axiom tidyTyVarBinders : forall {vis},
+                         TidyEnv ->
+                         list (TyVarBndr TyVar vis) -> (TidyEnv * list (TyVarBndr TyVar vis))%type.
+
+Axiom tidyTyVarBinder : forall {vis},
+                        TidyEnv -> TyVarBndr TyVar vis -> (TidyEnv * TyVarBndr TyVar vis)%type.
+
+Axiom tidyTyCoVarBndrs : TidyEnv ->
+                         list TyCoVar -> (TidyEnv * list TyCoVar)%type.
+
+Axiom tidyTyCoVarBndr : TidyEnv -> TyCoVar -> (TidyEnv * TyCoVar)%type.
+
+Axiom tidyTopType : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom tidyOpenTypes : TidyEnv ->
+                      list AxiomatizedTypes.Type_ -> (TidyEnv * list AxiomatizedTypes.Type_)%type.
+
+Axiom tidyOpenType : TidyEnv ->
+                     AxiomatizedTypes.Type_ -> (TidyEnv * AxiomatizedTypes.Type_)%type.
+
+Axiom tidyOpenTyCoVars : TidyEnv ->
+                         list TyCoVar -> (TidyEnv * list TyCoVar)%type.
+
+Axiom tidyOpenTyCoVar : TidyEnv -> TyCoVar -> (TidyEnv * TyCoVar)%type.
+
+Axiom tidyOpenKind : TidyEnv ->
+                     AxiomatizedTypes.Kind -> (TidyEnv * AxiomatizedTypes.Kind)%type.
+
+Axiom tidyKind : TidyEnv -> AxiomatizedTypes.Kind -> AxiomatizedTypes.Kind.
+
+Axiom tidyFreeTyCoVars : TidyEnv -> list TyCoVar -> TidyEnv.
+
+Axiom tidyCos : TidyEnv ->
+                list AxiomatizedTypes.Coercion -> list AxiomatizedTypes.Coercion.
+
+Axiom tidyCo : TidyEnv ->
+               AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom tcView : AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Type_.
+
+Axiom tcSplitTyConApp_maybe : forall `{Util.HasDebugCallStack},
+                              AxiomatizedTypes.Type_ -> option (TyCon * list AxiomatizedTypes.Type_)%type.
+
+Axiom tcRepSplitTyConApp_maybe : forall `{Util.HasDebugCallStack},
+                                 AxiomatizedTypes.Type_ -> option (TyCon * list AxiomatizedTypes.Type_)%type.
+
+Axiom tcRepSplitAppTy_maybe : AxiomatizedTypes.Type_ ->
+                              option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom synTyConResKind : TyCon -> AxiomatizedTypes.Kind.
+
+Axiom swapLiftCoEnv : LiftCoEnv -> LiftCoEnv.
+
+Axiom subst_ty : TCvSubst -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom subst_co : TCvSubst ->
+                 AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom substTysWithCoVars : list CoVar ->
+                           list AxiomatizedTypes.Coercion ->
+                           list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom substTysWith : list TyVar ->
+                     list AxiomatizedTypes.Type_ ->
+                     list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom substTysUnchecked : TCvSubst ->
+                          list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom substTys : forall `{Util.HasDebugCallStack},
+                 TCvSubst -> list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom substTyWithUnchecked : list TyVar ->
+                             list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substTyWithInScope : InScopeSet ->
+                           list TyVar ->
+                           list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substTyWithCoVars : list CoVar ->
+                          list AxiomatizedTypes.Coercion ->
+                          AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substTyWith : forall `{Util.HasDebugCallStack},
+                    list TyVar ->
+                    list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substTyVars : TCvSubst -> list TyVar -> list AxiomatizedTypes.Type_.
+
+Axiom substTyVarBndrUnchecked : TCvSubst -> TyVar -> (TCvSubst * TyVar)%type.
+
+Axiom substTyVarBndrCallback : (TCvSubst ->
+                                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_) ->
+                               TCvSubst -> TyVar -> (TCvSubst * TyVar)%type.
+
+Axiom substTyVarBndr : forall `{Util.HasDebugCallStack},
+                       TCvSubst -> TyVar -> (TCvSubst * TyVar)%type.
+
+Axiom substTyVar : TCvSubst -> TyVar -> AxiomatizedTypes.Type_.
+
+Axiom substTyUnchecked : TCvSubst ->
+                         AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substTyAddInScope : TCvSubst ->
+                          AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substTy : forall `{Util.HasDebugCallStack},
+                TCvSubst -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom substThetaUnchecked : TCvSubst ->
+                            AxiomatizedTypes.ThetaType -> AxiomatizedTypes.ThetaType.
+
+Axiom substTheta : forall `{Util.HasDebugCallStack},
+                   TCvSubst -> AxiomatizedTypes.ThetaType -> AxiomatizedTypes.ThetaType.
+
+Axiom substRightCo : LiftingContext ->
+                     AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom substLeftCo : LiftingContext ->
+                    AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom substForAllCoBndrUnchecked : TCvSubst ->
+                                   TyVar ->
+                                   AxiomatizedTypes.Coercion ->
+                                   (TCvSubst * TyVar * AxiomatizedTypes.Coercion)%type.
+
+Axiom substForAllCoBndrCallbackLC : bool ->
+                                    (AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion) ->
+                                    LiftingContext ->
+                                    TyVar ->
+                                    AxiomatizedTypes.Coercion ->
+                                    (LiftingContext * TyVar * AxiomatizedTypes.Coercion)%type.
+
+Axiom substForAllCoBndrCallback : bool ->
+                                  (AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion) ->
+                                  TCvSubst ->
+                                  TyVar ->
+                                  AxiomatizedTypes.Coercion ->
+                                  (TCvSubst * TyVar * AxiomatizedTypes.Coercion)%type.
+
+Axiom substForAllCoBndr : TCvSubst ->
+                          TyVar ->
+                          AxiomatizedTypes.Coercion ->
+                          (TCvSubst * TyVar * AxiomatizedTypes.Coercion)%type.
+
+Axiom substCos : forall `{Util.HasDebugCallStack},
+                 TCvSubst -> list AxiomatizedTypes.Coercion -> list AxiomatizedTypes.Coercion.
+
+Axiom substCoWithUnchecked : list TyVar ->
+                             list AxiomatizedTypes.Type_ ->
+                             AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom substCoWith : forall `{Util.HasDebugCallStack},
+                    list TyVar ->
+                    list AxiomatizedTypes.Type_ ->
+                    AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom substCoVars : TCvSubst -> list CoVar -> list AxiomatizedTypes.Coercion.
+
+Axiom substCoVarBndr : TCvSubst -> CoVar -> (TCvSubst * CoVar)%type.
+
+Axiom substCoVar : TCvSubst -> CoVar -> AxiomatizedTypes.Coercion.
+
+Axiom substCoUnchecked : TCvSubst ->
+                         AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom substCo : forall `{Util.HasDebugCallStack},
+                TCvSubst -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom stripCoercionTy : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom splitVisVarsOfTypes : list AxiomatizedTypes.Type_ -> Pair.Pair TyCoVarSet.
+
+Axiom splitVisVarsOfType : AxiomatizedTypes.Type_ -> Pair.Pair TyCoVarSet.
+
+Axiom splitTyConApp_maybe : forall `{Util.HasDebugCallStack},
+                            AxiomatizedTypes.Type_ -> option (TyCon * list AxiomatizedTypes.Type_)%type.
+
+Axiom splitTyConAppCo_maybe : AxiomatizedTypes.Coercion ->
+                              option (TyCon * list AxiomatizedTypes.Coercion)%type.
+
+Axiom splitTyConApp : AxiomatizedTypes.Type_ ->
+                      (TyCon * list AxiomatizedTypes.Type_)%type.
+
+Axiom splitPiTysInvisible : AxiomatizedTypes.Type_ ->
+                            (list AxiomatizedTypes.TyBinder * AxiomatizedTypes.Type_)%type.
+
+Axiom splitPiTys : AxiomatizedTypes.Type_ ->
+                   (list AxiomatizedTypes.TyBinder * AxiomatizedTypes.Type_)%type.
+
+Axiom splitPiTy_maybe : AxiomatizedTypes.Type_ ->
+                        option (AxiomatizedTypes.TyBinder * AxiomatizedTypes.Type_)%type.
+
+Axiom splitPiTy : AxiomatizedTypes.Type_ ->
+                  (AxiomatizedTypes.TyBinder * AxiomatizedTypes.Type_)%type.
+
+Axiom splitListTyConApp_maybe : AxiomatizedTypes.Type_ ->
+                                option AxiomatizedTypes.Type_.
+
+Axiom splitFunTys : AxiomatizedTypes.Type_ ->
+                    (list AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom splitFunTy_maybe : AxiomatizedTypes.Type_ ->
+                         option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom splitFunTy : AxiomatizedTypes.Type_ ->
+                   (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom splitFunCo_maybe : AxiomatizedTypes.Coercion ->
+                         option (AxiomatizedTypes.Coercion * AxiomatizedTypes.Coercion)%type.
+
+Axiom splitForAllTys' : AxiomatizedTypes.Type_ ->
+                        (list TyVar * list ArgFlag * AxiomatizedTypes.Type_)%type.
+
+Axiom splitForAllTys : AxiomatizedTypes.Type_ ->
+                       (list TyVar * AxiomatizedTypes.Type_)%type.
+
+Axiom splitForAllTy_maybe : AxiomatizedTypes.Type_ ->
+                            option (TyVar * AxiomatizedTypes.Type_)%type.
+
+Axiom splitForAllTyVarBndrs : AxiomatizedTypes.Type_ ->
+                              (list TyVarBinder * AxiomatizedTypes.Type_)%type.
+
+Axiom splitForAllTy : AxiomatizedTypes.Type_ ->
+                      (TyVar * AxiomatizedTypes.Type_)%type.
+
+Axiom splitForAllCo_maybe : AxiomatizedTypes.Coercion ->
+                            option (TyVar * AxiomatizedTypes.Coercion * AxiomatizedTypes.Coercion)%type.
+
+Axiom splitCoercionType_maybe : AxiomatizedTypes.Type_ ->
+                                option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom splitCastTy_maybe : AxiomatizedTypes.Type_ ->
+                          option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Coercion)%type.
+
+Axiom splitAppTys : AxiomatizedTypes.Type_ ->
+                    (AxiomatizedTypes.Type_ * list AxiomatizedTypes.Type_)%type.
+
+Axiom splitAppTy_maybe : AxiomatizedTypes.Type_ ->
+                         option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom splitAppTy : AxiomatizedTypes.Type_ ->
+                   (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom splitAppCo_maybe : AxiomatizedTypes.Coercion ->
+                         option (AxiomatizedTypes.Coercion * AxiomatizedTypes.Coercion)%type.
+
+Axiom setTvSubstEnv : TCvSubst -> TvSubstEnv -> TCvSubst.
+
+Axiom setNominalRole_maybe : AxiomatizedTypes.Coercion ->
+                             option AxiomatizedTypes.Coercion.
+
+Axiom setJoinResTy : nat ->
+                     AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom setCvSubstEnv : TCvSubst -> CvSubstEnv -> TCvSubst.
+
+Axiom setCoVarUnique : CoVar -> Unique.Unique -> CoVar.
+
+Axiom setCoVarName : CoVar -> Name.Name -> CoVar.
+
+Axiom seqTypes : list AxiomatizedTypes.Type_ -> unit.
+
+Axiom seqType : AxiomatizedTypes.Type_ -> unit.
+
+Axiom seqProv : UnivCoProvenance -> unit.
+
+Axiom seqCos : list AxiomatizedTypes.Coercion -> unit.
+
+Axiom seqCo : AxiomatizedTypes.Coercion -> unit.
+
+Axiom resultIsLevPoly : AxiomatizedTypes.Type_ -> bool.
+
+Axiom repSplitTyConApp_maybe : forall `{Util.HasDebugCallStack},
+                               AxiomatizedTypes.Type_ -> option (TyCon * list AxiomatizedTypes.Type_)%type.
+
+Axiom repSplitAppTys : forall `{Util.HasDebugCallStack},
+                       AxiomatizedTypes.Type_ ->
+                       (AxiomatizedTypes.Type_ * list AxiomatizedTypes.Type_)%type.
+
+Axiom repSplitAppTy_maybe : forall `{Util.HasDebugCallStack},
+                            AxiomatizedTypes.Type_ ->
+                            option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom repGetTyVar_maybe : AxiomatizedTypes.Type_ -> option TyVar.
+
+Axiom provSize : UnivCoProvenance -> nat.
+
+Axiom promoteCoercion : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom predTypeEqRel : AxiomatizedTypes.PredType -> EqRel.
+
+Axiom ppr_co_ax_branch : forall {br},
+                         (TyCon -> AxiomatizedTypes.Type_ -> GHC.Base.String) ->
+                         AxiomatizedTypes.CoAxiom br -> AxiomatizedTypes.CoAxBranch -> GHC.Base.String.
+
+Axiom pprUserTypeErrorTy : AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom pprUserForAll : list TyVarBinder -> GHC.Base.String.
+
+Axiom pprTypeApp : TyCon -> list AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom pprType : AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom pprTyVars : list TyVar -> GHC.Base.String.
+
+Axiom pprTyVar : TyVar -> GHC.Base.String.
+
+Axiom pprTyThingCategory : AxiomatizedTypes.TyThing -> GHC.Base.String.
+
+Axiom pprTyLit : TyLit -> GHC.Base.String.
+
+Axiom pprTvBndrs : list TyVarBinder -> GHC.Base.String.
+
+Axiom pprTvBndr : TyVarBinder -> GHC.Base.String.
+
+Axiom pprThetaArrowTy : AxiomatizedTypes.ThetaType -> GHC.Base.String.
+
+Axiom pprTheta : AxiomatizedTypes.ThetaType -> GHC.Base.String.
+
+Axiom pprSourceTyCon : TyCon -> GHC.Base.String.
+
+Axiom pprSigmaType : AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom pprShortTyThing : AxiomatizedTypes.TyThing -> GHC.Base.String.
+
+Axiom pprPrecType : BasicTypes.TyPrec ->
+                    AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom pprParendType : AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom pprParendTheta : AxiomatizedTypes.ThetaType -> GHC.Base.String.
+
+Axiom pprParendKind : AxiomatizedTypes.Kind -> GHC.Base.String.
+
+Axiom pprParendCo : AxiomatizedTypes.Coercion -> GHC.Base.String.
+
+Axiom pprKind : AxiomatizedTypes.Kind -> GHC.Base.String.
+
+Axiom pprForAll : list TyVarBinder -> GHC.Base.String.
+
+Axiom pprDataCons : TyCon -> GHC.Base.String.
+
+Axiom pprDataConWithArgs : DataCon -> GHC.Base.String.
+
+Axiom pprCoAxiom : forall {br}, AxiomatizedTypes.CoAxiom br -> GHC.Base.String.
+
+Axiom pprCoAxBranchHdr : forall {br},
+                         AxiomatizedTypes.CoAxiom br -> AxiomatizedTypes.BranchIndex -> GHC.Base.String.
+
+Axiom pprCoAxBranch : forall {br},
+                      AxiomatizedTypes.CoAxiom br -> AxiomatizedTypes.CoAxBranch -> GHC.Base.String.
+
+Axiom pprCo : AxiomatizedTypes.Coercion -> GHC.Base.String.
+
+Axiom pprClassPred : Class -> list AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom ppSuggestExplicitKinds : GHC.Base.String.
+
+Axiom piResultTys : forall `{Util.HasDebugCallStack},
+                    AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom piResultTy_maybe : AxiomatizedTypes.Type_ ->
+                         AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Type_.
+
+Axiom piResultTy : forall `{Util.HasDebugCallStack},
+                   AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom partitionInvisibles : forall {a},
+                            TyCon -> (a -> AxiomatizedTypes.Type_) -> list a -> (list a * list a)%type.
+
+Axiom nthRole : AxiomatizedTypes.Role -> TyCon -> nat -> AxiomatizedTypes.Role.
+
+Axiom notElemTCvSubst : Var -> TCvSubst -> bool.
+
+Axiom nonDetCmpTypesX : RnEnv2 ->
+                        list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_ -> comparison.
+
+Axiom nonDetCmpTypes : list AxiomatizedTypes.Type_ ->
+                       list AxiomatizedTypes.Type_ -> comparison.
+
+Axiom nonDetCmpTypeX : RnEnv2 ->
+                       AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> comparison.
+
+Axiom nonDetCmpType : AxiomatizedTypes.Type_ ->
+                      AxiomatizedTypes.Type_ -> comparison.
+
+Axiom nonDetCmpTc : TyCon -> TyCon -> comparison.
+
+Axiom noFreeVarsOfType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom noFreeVarsOfProv : UnivCoProvenance -> bool.
+
+Axiom noFreeVarsOfCo : AxiomatizedTypes.Coercion -> bool.
+
+Axiom nextRole : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Role.
+
+Axiom newTyConInstRhs : TyCon ->
+                        list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom modifyJoinResTy : nat ->
+                        (AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_) ->
+                        AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkVisForAllTys : list TyVar ->
+                       AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkUnsafeCo : AxiomatizedTypes.Role ->
+                   AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkUnivCo : UnivCoProvenance ->
+                 AxiomatizedTypes.Role ->
+                 AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkUnbranchedAxInstRHS : AxiomatizedTypes.CoAxiom
+                              AxiomatizedTypes.Unbranched ->
+                              list AxiomatizedTypes.Type_ ->
+                              list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom mkUnbranchedAxInstLHS : AxiomatizedTypes.CoAxiom
+                              AxiomatizedTypes.Unbranched ->
+                              list AxiomatizedTypes.Type_ ->
+                              list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom mkUnbranchedAxInstCo : AxiomatizedTypes.Role ->
+                             AxiomatizedTypes.CoAxiom AxiomatizedTypes.Unbranched ->
+                             list AxiomatizedTypes.Type_ ->
+                             list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkTyVarTys : list TyVar -> list AxiomatizedTypes.Type_.
+
+Axiom mkTyConTy : TyCon -> AxiomatizedTypes.Type_.
+
+Axiom mkTyConBindersPreferAnon : list TyVar ->
+                                 AxiomatizedTypes.Type_ -> list TyConBinder.
+
+Axiom mkTyConAppCo : forall `{Util.HasDebugCallStack},
+                     AxiomatizedTypes.Role ->
+                     TyCon -> list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkTyConApp : TyCon ->
+                   list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkTyCoInScopeSet : list AxiomatizedTypes.Type_ ->
+                         list AxiomatizedTypes.Coercion -> InScopeSet.
+
+Axiom mkTvSubstPrs : list (TyVar * AxiomatizedTypes.Type_)%type -> TCvSubst.
+
+Axiom mkTvSubst : InScopeSet -> TvSubstEnv -> TCvSubst.
+
+Axiom mkTransCo : AxiomatizedTypes.Coercion ->
+                  AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkTransAppCo : AxiomatizedTypes.Role ->
+                     AxiomatizedTypes.Coercion ->
+                     AxiomatizedTypes.Type_ ->
+                     AxiomatizedTypes.Type_ ->
+                     AxiomatizedTypes.Role ->
+                     AxiomatizedTypes.Coercion ->
+                     AxiomatizedTypes.Type_ ->
+                     AxiomatizedTypes.Type_ -> AxiomatizedTypes.Role -> AxiomatizedTypes.Coercion.
+
+Axiom mkTCvSubst : InScopeSet -> (TvSubstEnv * CvSubstEnv)%type -> TCvSubst.
+
+Axiom mkSymCo : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkSubstLiftingContext : TCvSubst -> LiftingContext.
+
+Axiom mkSubCo : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkStrLitTy : FastString.FastString -> AxiomatizedTypes.Type_.
+
+Axiom mkSpecForAllTys : list TyVar ->
+                        AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkRuntimeRepCo : forall `{Util.HasDebugCallStack},
+                       AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkReprPrimEqPred : AxiomatizedTypes.Type_ ->
+                         AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkRepReflCo : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkReflCo : AxiomatizedTypes.Role ->
+                 AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkProofIrrelCo : AxiomatizedTypes.Role ->
+                       AxiomatizedTypes.Coercion ->
+                       AxiomatizedTypes.Coercion ->
+                       AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkPrimEqPredRole : AxiomatizedTypes.Role ->
+                         AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.PredType.
+
+Axiom mkPrimEqPred : AxiomatizedTypes.Type_ ->
+                     AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkPiTys : list AxiomatizedTypes.TyBinder ->
+                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkPiTy : AxiomatizedTypes.TyBinder ->
+               AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkPiCos : AxiomatizedTypes.Role ->
+                list Var -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkPiCo : AxiomatizedTypes.Role ->
+               Var -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkPhantomCo : AxiomatizedTypes.Coercion ->
+                    AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkNumLitTy : GHC.Num.Integer -> AxiomatizedTypes.Type_.
+
+Axiom mkNthCoRole : AxiomatizedTypes.Role ->
+                    nat -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkNthCo : nat -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkNomReflCo : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkLiftingContext : list (TyCoVar * AxiomatizedTypes.Coercion)%type ->
+                         LiftingContext.
+
+Axiom mkLamTypes : list Var -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkLamType : Var -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkLRCo : BasicTypes.LeftOrRight ->
+               AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkKindCo : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkInvForAllTys : list TyVar ->
+                       AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkInvForAllTy : TyVar -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkInstCo : AxiomatizedTypes.Coercion ->
+                 AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkHomoPhantomCo : AxiomatizedTypes.Type_ ->
+                        AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom mkHomoForAllCos_NoRefl : list TyVar ->
+                               AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkHomoForAllCos : list TyVar ->
+                        AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkHoleCo : CoercionHole -> AxiomatizedTypes.Coercion.
+
+Axiom mkHeteroReprPrimEqPred : AxiomatizedTypes.Kind ->
+                               AxiomatizedTypes.Kind ->
+                               AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkHeteroPrimEqPred : AxiomatizedTypes.Kind ->
+                           AxiomatizedTypes.Kind ->
+                           AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkHeteroCoercionType : AxiomatizedTypes.Role ->
+                             AxiomatizedTypes.Kind ->
+                             AxiomatizedTypes.Kind ->
+                             AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkFunTys : list AxiomatizedTypes.Type_ ->
+                 AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkFunTy : AxiomatizedTypes.Type_ ->
+                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkFunCos : AxiomatizedTypes.Role ->
+                 list AxiomatizedTypes.Coercion ->
+                 AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkFunCo : AxiomatizedTypes.Role ->
+                AxiomatizedTypes.Coercion ->
+                AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkForAllTys' : list (TyVar * ArgFlag)%type ->
+                     AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkForAllTys : list TyVarBinder ->
+                    AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkForAllTy : TyVar ->
+                   ArgFlag -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkForAllCos : list (TyVar * AxiomatizedTypes.Coercion)%type ->
+                    AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkForAllCo : TyVar ->
+                   AxiomatizedTypes.Coercion ->
+                   AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkFamilyTyConApp : TyCon ->
+                         list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkEmptyTCvSubst : InScopeSet -> TCvSubst.
+
+Axiom mkCoherenceRightCo : AxiomatizedTypes.Coercion ->
+                           AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkCoherenceLeftCo : AxiomatizedTypes.Coercion ->
+                          AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkCoherenceCo : AxiomatizedTypes.Coercion ->
+                      AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkCoercionType : AxiomatizedTypes.Role ->
+                       AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkCoercionTy : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom mkCoVarCos : list CoVar -> list AxiomatizedTypes.Coercion.
+
+Axiom mkCoVarCo : CoVar -> AxiomatizedTypes.Coercion.
+
+Axiom mkCoCast : AxiomatizedTypes.Coercion ->
+                 AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkClassPred : Class ->
+                    list AxiomatizedTypes.Type_ -> AxiomatizedTypes.PredType.
+
+Axiom mkCastTy : AxiomatizedTypes.Type_ ->
+                 AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom mkAxiomRuleCo : AxiomatizedTypes.CoAxiomRule ->
+                      list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkAxiomInstCo : AxiomatizedTypes.CoAxiom AxiomatizedTypes.Branched ->
+                      AxiomatizedTypes.BranchIndex ->
+                      list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkAxInstRHS : forall {br},
+                    AxiomatizedTypes.CoAxiom br ->
+                    AxiomatizedTypes.BranchIndex ->
+                    list AxiomatizedTypes.Type_ ->
+                    list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom mkAxInstLHS : forall {br},
+                    AxiomatizedTypes.CoAxiom br ->
+                    AxiomatizedTypes.BranchIndex ->
+                    list AxiomatizedTypes.Type_ ->
+                    list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom mkAxInstCo : forall {br},
+                   AxiomatizedTypes.Role ->
+                   AxiomatizedTypes.CoAxiom br ->
+                   AxiomatizedTypes.BranchIndex ->
+                   list AxiomatizedTypes.Type_ ->
+                   list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkAppTys : AxiomatizedTypes.Type_ ->
+                 list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkAppTy : AxiomatizedTypes.Type_ ->
+                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom mkAppCos : AxiomatizedTypes.Coercion ->
+                 list AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkAppCo : AxiomatizedTypes.Coercion ->
+                AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom mkAnonBinder : AxiomatizedTypes.Type_ -> AxiomatizedTypes.TyBinder.
+
+Axiom mapType : forall {m} {env},
+                forall `{GHC.Base.Monad m},
+                TyCoMapper env m -> env -> AxiomatizedTypes.Type_ -> m AxiomatizedTypes.Type_.
+
+Axiom mapStepResult : forall {ev1} {ev2},
+                      (ev1 -> ev2) -> NormaliseStepResult ev1 -> NormaliseStepResult ev2.
+
+Axiom mapCoercion : forall {m} {env},
+                    forall `{GHC.Base.Monad m},
+                    TyCoMapper env m ->
+                    env -> AxiomatizedTypes.Coercion -> m AxiomatizedTypes.Coercion.
+
+Axiom ltRole : AxiomatizedTypes.Role -> AxiomatizedTypes.Role -> bool.
+
+Axiom lookupTyVar : TCvSubst -> TyVar -> option AxiomatizedTypes.Type_.
+
+Axiom lookupCoVar : TCvSubst -> Var -> option AxiomatizedTypes.Coercion.
+
+Axiom liftEnvSubstRight : TCvSubst -> LiftCoEnv -> TCvSubst.
+
+Axiom liftEnvSubstLeft : TCvSubst -> LiftCoEnv -> TCvSubst.
+
+Axiom liftEnvSubst : (forall {a}, Pair.Pair a -> a) ->
+                     TCvSubst -> LiftCoEnv -> TCvSubst.
+
+Axiom liftCoSubstWithEx : AxiomatizedTypes.Role ->
+                          list TyVar ->
+                          list AxiomatizedTypes.Coercion ->
+                          list TyVar ->
+                          list AxiomatizedTypes.Type_ ->
+                          ((AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion) *
+                           list AxiomatizedTypes.Type_)%type.
+
+Axiom liftCoSubstWith : AxiomatizedTypes.Role ->
+                        list TyCoVar ->
+                        list AxiomatizedTypes.Coercion ->
+                        AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom liftCoSubstVarBndrCallback : forall {a},
+                                   (LiftingContext ->
+                                    AxiomatizedTypes.Type_ -> (AxiomatizedTypes.Coercion * a)%type) ->
+                                   LiftingContext ->
+                                   TyVar -> (LiftingContext * TyVar * AxiomatizedTypes.Coercion * a)%type.
+
+Axiom liftCoSubstVarBndr : LiftingContext ->
+                           TyVar -> (LiftingContext * TyVar * AxiomatizedTypes.Coercion)%type.
+
+Axiom liftCoSubstTyVar : LiftingContext ->
+                         AxiomatizedTypes.Role -> TyVar -> option AxiomatizedTypes.Coercion.
+
+Axiom liftCoSubst : forall `{Util.HasDebugCallStack},
+                    AxiomatizedTypes.Role ->
+                    LiftingContext -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Coercion.
+
+Axiom lcTCvSubst : LiftingContext -> TCvSubst.
+
+Axiom lcSubstRight : LiftingContext -> TCvSubst.
+
+Axiom lcSubstLeft : LiftingContext -> TCvSubst.
+
+Axiom lcInScopeSet : LiftingContext -> InScopeSet.
+
+Axiom is_TYPE : (AxiomatizedTypes.Type_ -> bool) ->
+                AxiomatizedTypes.Kind -> bool.
+
+Axiom isVisibleBinder : AxiomatizedTypes.TyBinder -> bool.
+
+Axiom isValidTCvSubst : TCvSubst -> bool.
+
+Axiom isValidJoinPointType : BasicTypes.JoinArity ->
+                             AxiomatizedTypes.Type_ -> bool.
+
+Axiom isUnliftedTypeKind : AxiomatizedTypes.Kind -> bool.
+
+Axiom isUnliftedType : forall `{Util.HasDebugCallStack},
+                       AxiomatizedTypes.Type_ -> bool.
+
+Axiom isUnboxedTupleType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isUnboxedSumType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isTypeLevPoly : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isTyVarTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isTauTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isStrictType : forall `{Util.HasDebugCallStack},
+                     AxiomatizedTypes.Type_ -> bool.
+
+Axiom isStrLitTy : AxiomatizedTypes.Type_ -> option FastString.FastString.
+
+Axiom isRuntimeRepVar : TyVar -> bool.
+
+Axiom isRuntimeRepTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isRuntimeRepKindedTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isReflexiveCo_maybe : AxiomatizedTypes.Coercion ->
+                            option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Role)%type.
+
+Axiom isReflexiveCo : AxiomatizedTypes.Coercion -> bool.
+
+Axiom isReflCo_maybe : AxiomatizedTypes.Coercion ->
+                       option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Role)%type.
+
+Axiom isReflCoVar_maybe : CoVar -> option AxiomatizedTypes.Coercion.
+
+Axiom isReflCo : AxiomatizedTypes.Coercion -> bool.
+
+Axiom isPrimitiveType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isPredTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isPiTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isNumLitTy : AxiomatizedTypes.Type_ -> option GHC.Num.Integer.
+
+Axiom isNomEqPred : AxiomatizedTypes.PredType -> bool.
+
+Axiom isNamedTyBinder : AxiomatizedTypes.TyBinder -> bool.
+
+Axiom isMappedByLC : TyCoVar -> LiftingContext -> bool.
+
+Axiom isLiftedType_maybe : forall `{Util.HasDebugCallStack},
+                           AxiomatizedTypes.Type_ -> option bool.
+
+Axiom isLiftedTypeKind : AxiomatizedTypes.Kind -> bool.
+
+Axiom isInvisibleBinder : AxiomatizedTypes.TyBinder -> bool.
+
+Axiom isInScope : Var -> TCvSubst -> bool.
+
+Axiom isIPTyCon : TyCon -> bool.
+
+Axiom isIPPred_maybe : AxiomatizedTypes.Type_ ->
+                       option (FastString.FastString * AxiomatizedTypes.Type_)%type.
+
+Axiom isIPPred : AxiomatizedTypes.PredType -> bool.
+
+Axiom isIPClass : Class -> bool.
+
+Axiom isFunTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isForAllTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isFamFreeTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isEqPred : AxiomatizedTypes.PredType -> bool.
+
+Axiom isEmptyTCvSubst : TCvSubst -> bool.
+
+Axiom isDictTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isDictLikeTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isDataFamilyAppType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isCoercionType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isCoercionTy_maybe : AxiomatizedTypes.Type_ ->
+                           option AxiomatizedTypes.Coercion.
+
+Axiom isCoercionTy : AxiomatizedTypes.Type_ -> bool.
+
+Axiom isCoVar_maybe : AxiomatizedTypes.Coercion -> option CoVar.
+
+Axiom isClassPred : AxiomatizedTypes.PredType -> bool.
+
+Axiom isCTupleClass : Class -> bool.
+
+Axiom isAnonTyBinder : AxiomatizedTypes.TyBinder -> bool.
+
+Axiom isAlgType : AxiomatizedTypes.Type_ -> bool.
+
+Axiom instNewTyCon_maybe : TyCon ->
+                           list AxiomatizedTypes.Type_ ->
+                           option (AxiomatizedTypes.Type_ * AxiomatizedTypes.Coercion)%type.
+
+Axiom instCoercions : AxiomatizedTypes.Coercion ->
+                      list AxiomatizedTypes.Coercion -> option AxiomatizedTypes.Coercion.
+
+Axiom instCoercion : Pair.Pair AxiomatizedTypes.Type_ ->
+                     AxiomatizedTypes.Coercion ->
+                     AxiomatizedTypes.Coercion -> option AxiomatizedTypes.Coercion.
+
+Axiom getTyVar_maybe : AxiomatizedTypes.Type_ -> option TyVar.
+
+Axiom getTyVar : GHC.Base.String -> AxiomatizedTypes.Type_ -> TyVar.
+
+Axiom getTvSubstEnv : TCvSubst -> TvSubstEnv.
+
+Axiom getTCvSubstRangeFVs : TCvSubst -> VarSet.
+
+Axiom getTCvInScope : TCvSubst -> InScopeSet.
+
+Axiom getRuntimeRep_maybe : forall `{Util.HasDebugCallStack},
+                            AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Type_.
+
+Axiom getRuntimeRepFromKind_maybe : forall `{Util.HasDebugCallStack},
+                                    AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Type_.
+
+Axiom getRuntimeRepFromKind : forall `{Util.HasDebugCallStack},
+                              AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom getRuntimeRep : forall `{Util.HasDebugCallStack},
+                      AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom getHelpfulOccName : TyCoVar -> OccName.OccName.
+
+Axiom getEqPredTys_maybe : AxiomatizedTypes.PredType ->
+                           option (AxiomatizedTypes.Role * AxiomatizedTypes.Type_ *
+                                   AxiomatizedTypes.Type_)%type.
+
+Axiom getEqPredTys : AxiomatizedTypes.PredType ->
+                     (AxiomatizedTypes.Type_ * AxiomatizedTypes.Type_)%type.
+
+Axiom getEqPredRole : AxiomatizedTypes.PredType -> AxiomatizedTypes.Role.
+
+Axiom getCvSubstEnv : TCvSubst -> CvSubstEnv.
+
+Axiom getCoVar_maybe : AxiomatizedTypes.Coercion -> option CoVar.
+
+Axiom getClassPredTys_maybe : AxiomatizedTypes.PredType ->
+                              option (Class * list AxiomatizedTypes.Type_)%type.
+
+Axiom getClassPredTys : AxiomatizedTypes.PredType ->
+                        (Class * list AxiomatizedTypes.Type_)%type.
+
+Axiom getCastedTyVar_maybe : AxiomatizedTypes.Type_ ->
+                             option (TyVar * CoercionN)%type.
+
+Axiom funResultTy : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom funArgTy : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom filterOutInvisibleTypes : TyCon ->
+                                list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom extendTvSubstWithClone : TCvSubst -> TyVar -> TyVar -> TCvSubst.
+
+Axiom extendTvSubstList : TCvSubst ->
+                          list Var -> list AxiomatizedTypes.Type_ -> TCvSubst.
+
+Axiom extendTvSubstBinderAndInScope : TCvSubst ->
+                                      AxiomatizedTypes.TyBinder -> AxiomatizedTypes.Type_ -> TCvSubst.
+
+Axiom extendTvSubstAndInScope : TCvSubst ->
+                                TyVar -> AxiomatizedTypes.Type_ -> TCvSubst.
+
+Axiom extendTvSubst : TCvSubst -> TyVar -> AxiomatizedTypes.Type_ -> TCvSubst.
+
+Axiom extendTCvSubst : TCvSubst ->
+                       TyCoVar -> AxiomatizedTypes.Type_ -> TCvSubst.
+
+Axiom extendTCvInScopeSet : TCvSubst -> VarSet -> TCvSubst.
+
+Axiom extendTCvInScopeList : TCvSubst -> list Var -> TCvSubst.
+
+Axiom extendTCvInScope : TCvSubst -> Var -> TCvSubst.
+
+Axiom extendLiftingContextEx : LiftingContext ->
+                               list (TyVar * AxiomatizedTypes.Type_)%type -> LiftingContext.
+
+Axiom extendLiftingContext : LiftingContext ->
+                             TyVar -> AxiomatizedTypes.Coercion -> LiftingContext.
+
+Axiom extendCvSubstWithClone : TCvSubst -> CoVar -> CoVar -> TCvSubst.
+
+Axiom extendCvSubst : TCvSubst ->
+                      CoVar -> AxiomatizedTypes.Coercion -> TCvSubst.
+
+Axiom expandTypeSynonyms : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom equalityTyCon : AxiomatizedTypes.Role -> TyCon.
+
+Axiom eqVarBndrs : RnEnv2 -> list Var -> list Var -> option RnEnv2.
+
+Axiom eqTypes : list AxiomatizedTypes.Type_ ->
+                list AxiomatizedTypes.Type_ -> bool.
+
+Axiom eqTypeX : RnEnv2 ->
+                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> bool.
+
+Axiom eqType : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> bool.
+
+Axiom eqRelRole : EqRel -> AxiomatizedTypes.Role.
+
+Axiom eqCoercionX : RnEnv2 ->
+                    AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion -> bool.
+
+Axiom eqCoercion : AxiomatizedTypes.Coercion ->
+                   AxiomatizedTypes.Coercion -> bool.
+
+Axiom emptyTvSubstEnv : TvSubstEnv.
+
+Axiom emptyTCvSubst : TCvSubst.
+
+Axiom emptyLiftingContext : InScopeSet -> LiftingContext.
+
+Axiom emptyCvSubstEnv : CvSubstEnv.
+
+Axiom dropRuntimeRepArgs : list AxiomatizedTypes.Type_ ->
+                           list AxiomatizedTypes.Type_.
+
+Axiom dropForAlls : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom downgradeRole_maybe : AxiomatizedTypes.Role ->
+                            AxiomatizedTypes.Role ->
+                            AxiomatizedTypes.Coercion -> option AxiomatizedTypes.Coercion.
+
+Axiom downgradeRole : AxiomatizedTypes.Role ->
+                      AxiomatizedTypes.Role -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom delBinderVar : VarSet -> TyVarBinder -> VarSet.
+
+Axiom decomposeFunCo : AxiomatizedTypes.Coercion ->
+                       (AxiomatizedTypes.Coercion * AxiomatizedTypes.Coercion)%type.
+
+Axiom decomposeCo : BasicTypes.Arity ->
+                    AxiomatizedTypes.Coercion -> list AxiomatizedTypes.Coercion.
+
+Axiom debug_ppr_ty : BasicTypes.TyPrec ->
+                     AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom debugPprType : AxiomatizedTypes.Type_ -> GHC.Base.String.
+
+Axiom dVarSetElemsWellScoped : DVarSet -> list Var.
+
+Axiom coreView : AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Type_.
+
+Axiom composeTCvSubstEnv : InScopeSet ->
+                           (TvSubstEnv * CvSubstEnv)%type ->
+                           (TvSubstEnv * CvSubstEnv)%type -> (TvSubstEnv * CvSubstEnv)%type.
+
+Axiom composeTCvSubst : TCvSubst -> TCvSubst -> TCvSubst.
+
+Axiom composeSteppers : forall {ev},
+                        NormaliseStepper ev -> NormaliseStepper ev -> NormaliseStepper ev.
+
+Axiom coercionType : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
+
+Axiom coercionSize : AxiomatizedTypes.Coercion -> nat.
+
+Axiom coercionRole : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Role.
+
+Axiom coercionKinds : list AxiomatizedTypes.Coercion ->
+                      Pair.Pair (list AxiomatizedTypes.Type_).
+
+Axiom coercionKindRole : AxiomatizedTypes.Coercion ->
+                         (Pair.Pair AxiomatizedTypes.Type_ * AxiomatizedTypes.Role)%type.
+
+Axiom coercionKind : AxiomatizedTypes.Coercion ->
+                     Pair.Pair AxiomatizedTypes.Type_.
+
+Axiom coVarsOfTypes : list AxiomatizedTypes.Type_ -> TyCoVarSet.
+
+Axiom coVarsOfType : AxiomatizedTypes.Type_ -> CoVarSet.
+
+Axiom coVarsOfProv : UnivCoProvenance -> CoVarSet.
+
+Axiom coVarsOfCos : list AxiomatizedTypes.Coercion -> CoVarSet.
+
+Axiom coVarsOfCoVar : CoVar -> CoVarSet.
+
+Axiom coVarsOfCo : AxiomatizedTypes.Coercion -> CoVarSet.
+
+Axiom coVarTypes : CoVar -> Pair.Pair AxiomatizedTypes.Type_.
+
+Axiom coVarRole : CoVar -> AxiomatizedTypes.Role.
+
+Axiom coVarName : CoVar -> Name.Name.
+
+Axiom coVarKindsTypesRole : CoVar ->
+                            (AxiomatizedTypes.Kind * AxiomatizedTypes.Kind * AxiomatizedTypes.Type_ *
+                             AxiomatizedTypes.Type_ *
+                             AxiomatizedTypes.Role)%type.
+
+Axiom coVarKind : CoVar -> AxiomatizedTypes.Type_.
+
+Axiom coHoleCoVar : CoercionHole -> CoVar.
+
+Axiom coAxNthLHS : forall {br},
+                   AxiomatizedTypes.CoAxiom br -> nat -> AxiomatizedTypes.Type_.
+
+Axiom closeOverKindsList : list TyVar -> list TyVar.
+
+Axiom closeOverKindsDSet : DTyVarSet -> DTyVarSet.
+
+Axiom closeOverKinds : TyVarSet -> TyVarSet.
+
+Axiom cloneTyVarBndrs : TCvSubst ->
+                        list TyVar -> UniqSupply.UniqSupply -> (TCvSubst * list TyVar)%type.
+
+Axiom cloneTyVarBndr : TCvSubst ->
+                       TyVar -> Unique.Unique -> (TCvSubst * TyVar)%type.
+
+Axiom classifyPredType : AxiomatizedTypes.PredType -> PredTree.
+
+Axiom checkValidSubst : forall {a},
+                        forall `{Util.HasDebugCallStack},
+                        TCvSubst ->
+                        list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Coercion -> a -> a.
+
+Axiom castCoercionKind : AxiomatizedTypes.Coercion ->
+                         AxiomatizedTypes.Coercion ->
+                         AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion.
+
+Axiom caseBinder : forall {a},
+                   AxiomatizedTypes.TyBinder ->
+                   (TyVarBinder -> a) -> (AxiomatizedTypes.Type_ -> a) -> a.
+
+Axiom binderRelevantType_maybe : AxiomatizedTypes.TyBinder ->
+                                 option AxiomatizedTypes.Type_.
+
+Axiom applyTysX : list TyVar ->
+                  AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom applyRoles : TyCon ->
+                   list AxiomatizedTypes.Coercion -> list AxiomatizedTypes.Coercion.
 
 Definition visibleDataCons : AlgTyConRhs -> list DataCon :=
   fun arg_0__ =>
@@ -3144,8 +4451,6 @@ Definition zapTailCallInfo : IdInfo -> option IdInfo :=
     if BasicTypes.isAlwaysTailCalled occ : bool
     then Some (setOccInfo info safe_occ) else
     None.
-
-Axiom resultIsLevPoly : AxiomatizedTypes.Type_ -> bool.
 
 Definition setNeverLevPoly `{Util.HasDebugCallStack}
    : IdInfo -> AxiomatizedTypes.Type_ -> IdInfo :=
@@ -3921,12 +5226,11 @@ Definition mkGlobalVar
    : IdDetails -> Name.Name -> AxiomatizedTypes.Type_ -> IdInfo -> Id :=
   fun details name ty info => mk_id name ty GlobalId details info.
 
-Axiom liftedTypeKind : AxiomatizedTypes.Kind.
-
 Definition mkFunTyCon : Name.Name -> list TyConBinder -> Name.Name -> TyCon :=
   fun name binders rep_nm =>
-    FunTyCon (Name.nameUnique name) name binders liftedTypeKind (mkTyConKind binders
-              liftedTypeKind) (Coq.Lists.List.length binders) rep_nm.
+    FunTyCon (Name.nameUnique name) name binders AxiomatizedTypes.liftedTypeKind
+             (mkTyConKind binders AxiomatizedTypes.liftedTypeKind) (Coq.Lists.List.length
+              binders) rep_nm.
 
 Definition mkFloatLit {b} : GHC.Real.Rational -> Expr b :=
   fun f => Lit (Literal.mkMachFloat f).
@@ -6387,15 +7691,13 @@ Definition mkAlgTyCon
               then (GHC.Err.error Panic.someSDoc)
               else parent).
 
-Axiom constraintKind : AxiomatizedTypes.Kind.
-
 Definition mkClassTyCon
    : Name.Name ->
      list TyConBinder ->
      list AxiomatizedTypes.Role -> AlgTyConRhs -> Class -> Name.Name -> TyCon :=
   fun name binders roles rhs clas tc_rep_name =>
-    mkAlgTyCon name binders constraintKind roles None nil rhs (ClassTyCon clas
-                                                               tc_rep_name) false.
+    mkAlgTyCon name binders AxiomatizedTypes.constraintKind roles None nil rhs
+    (ClassTyCon clas tc_rep_name) false.
 
 Definition mkFamilyTyCon
    : Name.Name ->
@@ -6674,6 +7976,92 @@ Program Instance NamedThing__Var : Name.NamedThing Var :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__TyVarBndr__ArgFlag__11' *)
 
+Local Definition Eq___EqRel_op_zeze__ : EqRel -> EqRel -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NomEq, NomEq => true
+    | ReprEq, ReprEq => true
+    | _, _ => false
+    end.
+
+Local Definition Eq___EqRel_op_zsze__ : EqRel -> EqRel -> bool :=
+  fun x y => negb (Eq___EqRel_op_zeze__ x y).
+
+Program Instance Eq___EqRel : GHC.Base.Eq_ EqRel :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___EqRel_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___EqRel_op_zsze__ |}.
+
+Local Definition Ord__EqRel_op_zl__ : EqRel -> EqRel -> bool :=
+  fun a b =>
+    match a with
+    | NomEq => match b with | NomEq => false | _ => true end
+    | ReprEq => match b with | ReprEq => false | _ => false end
+    end.
+
+Local Definition Ord__EqRel_op_zlze__ : EqRel -> EqRel -> bool :=
+  fun a b => negb (Ord__EqRel_op_zl__ b a).
+
+Local Definition Ord__EqRel_op_zg__ : EqRel -> EqRel -> bool :=
+  fun a b => Ord__EqRel_op_zl__ b a.
+
+Local Definition Ord__EqRel_op_zgze__ : EqRel -> EqRel -> bool :=
+  fun a b => negb (Ord__EqRel_op_zl__ a b).
+
+Local Definition Ord__EqRel_compare : EqRel -> EqRel -> comparison :=
+  fun a b =>
+    match a with
+    | NomEq => match b with | NomEq => Eq | _ => Lt end
+    | ReprEq => match b with | ReprEq => Eq | _ => Gt end
+    end.
+
+Local Definition Ord__EqRel_max : EqRel -> EqRel -> EqRel :=
+  fun x y => if Ord__EqRel_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__EqRel_min : EqRel -> EqRel -> EqRel :=
+  fun x y => if Ord__EqRel_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__EqRel : GHC.Base.Ord EqRel :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__EqRel_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__EqRel_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__EqRel_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__EqRel_op_zgze__ ;
+           GHC.Base.compare__ := Ord__EqRel_compare ;
+           GHC.Base.max__ := Ord__EqRel_max ;
+           GHC.Base.min__ := Ord__EqRel_min |}.
+
+Local Definition Eq___TypeOrdering_op_zeze__
+   : TypeOrdering -> TypeOrdering -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | TLT, TLT => true
+    | TEQ, TEQ => true
+    | TEQX, TEQX => true
+    | TGT, TGT => true
+    | _, _ => false
+    end.
+
+Local Definition Eq___TypeOrdering_op_zsze__
+   : TypeOrdering -> TypeOrdering -> bool :=
+  fun x y => negb (Eq___TypeOrdering_op_zeze__ x y).
+
+Program Instance Eq___TypeOrdering : GHC.Base.Eq_ TypeOrdering :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TypeOrdering_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TypeOrdering_op_zsze__ |}.
+
+(* Skipping instance `Core.Ord__TypeOrdering' of class `GHC.Base.Ord' *)
+
+(* Skipping all instances of class `GHC.Enum.Enum', including
+   `Core.Enum__TypeOrdering' *)
+
+(* Skipping all instances of class `GHC.Enum.Bounded', including
+   `Core.Bounded__TypeOrdering' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__EqRel' *)
+
 Local Definition Eq___Injectivity_op_zeze__
    : Injectivity -> Injectivity -> bool :=
   fun arg_0__ arg_1__ =>
@@ -6820,6 +8208,121 @@ Program Instance Eq___TyCon : GHC.Base.Eq_ TyCon :=
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__AlgTyConFlav' *)
+
+Local Definition Eq___TyLit_op_zeze__ : TyLit -> TyLit -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | NumTyLit a1, NumTyLit b1 => ((a1 GHC.Base.== b1))
+    | StrTyLit a1, StrTyLit b1 => ((a1 GHC.Base.== b1))
+    | _, _ => false
+    end.
+
+Local Definition Eq___TyLit_op_zsze__ : TyLit -> TyLit -> bool :=
+  fun x y => negb (Eq___TyLit_op_zeze__ x y).
+
+Program Instance Eq___TyLit : GHC.Base.Eq_ TyLit :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___TyLit_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___TyLit_op_zsze__ |}.
+
+Local Definition Ord__TyLit_op_zl__ : TyLit -> TyLit -> bool :=
+  fun a b =>
+    match a with
+    | NumTyLit a1 =>
+        match b with
+        | NumTyLit b1 => (a1 GHC.Base.< b1)
+        | _ => true
+        end
+    | StrTyLit a1 =>
+        match b with
+        | StrTyLit b1 => (a1 GHC.Base.< b1)
+        | _ => false
+        end
+    end.
+
+Local Definition Ord__TyLit_op_zlze__ : TyLit -> TyLit -> bool :=
+  fun a b => negb (Ord__TyLit_op_zl__ b a).
+
+Local Definition Ord__TyLit_op_zg__ : TyLit -> TyLit -> bool :=
+  fun a b => Ord__TyLit_op_zl__ b a.
+
+Local Definition Ord__TyLit_op_zgze__ : TyLit -> TyLit -> bool :=
+  fun a b => negb (Ord__TyLit_op_zl__ a b).
+
+Local Definition Ord__TyLit_compare : TyLit -> TyLit -> comparison :=
+  fun a b =>
+    match a with
+    | NumTyLit a1 =>
+        match b with
+        | NumTyLit b1 => (GHC.Base.compare a1 b1)
+        | _ => Lt
+        end
+    | StrTyLit a1 =>
+        match b with
+        | StrTyLit b1 => (GHC.Base.compare a1 b1)
+        | _ => Gt
+        end
+    end.
+
+Local Definition Ord__TyLit_max : TyLit -> TyLit -> TyLit :=
+  fun x y => if Ord__TyLit_op_zlze__ x y : bool then y else x.
+
+Local Definition Ord__TyLit_min : TyLit -> TyLit -> TyLit :=
+  fun x y => if Ord__TyLit_op_zlze__ x y : bool then x else y.
+
+Program Instance Ord__TyLit : GHC.Base.Ord TyLit :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zl____ := Ord__TyLit_op_zl__ ;
+           GHC.Base.op_zlze____ := Ord__TyLit_op_zlze__ ;
+           GHC.Base.op_zg____ := Ord__TyLit_op_zg__ ;
+           GHC.Base.op_zgze____ := Ord__TyLit_op_zgze__ ;
+           GHC.Base.compare__ := Ord__TyLit_compare ;
+           GHC.Base.max__ := Ord__TyLit_max ;
+           GHC.Base.min__ := Ord__TyLit_min |}.
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Core.Data__TyLit' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Core.Data__Coercion' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Core.Data__UnivCoProvenance' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Core.Data__Type_' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Core.Data__TyBinder' *)
+
+(* Skipping instance `Core.NamedThing__TyThing' of class `Name.NamedThing' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__TyThing' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__TyLit' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__Coercion' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__Type_' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__CoercionHole' *)
+
+(* Skipping all instances of class `Data.Data.Data', including
+   `Core.Data__CoercionHole' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__UnivCoProvenance' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__TyBinder' *)
+
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__TCvSubst' *)
 
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__PatSyn' *)
@@ -7561,6 +9064,9 @@ Program Instance Ord__AltCon : GHC.Base.Ord AltCon :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `Core.Outputable__TaggedBndr' *)
 
+(* Skipping all instances of class `Outputable.Outputable', including
+   `Core.Outputable__LiftingContext' *)
+
 (* Skipping all instances of class `Data.Data.Data', including
    `Core.Data__Class' *)
 
@@ -7595,116 +9101,95 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
     k__ {| GHC.Base.op_zeze____ := Eq___Class_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
-Axiom splitTyConApp_maybe : AxiomatizedTypes.Type_ ->
-                            option (TyCon * list AxiomatizedTypes.Type_).
-
-Axiom mkCoercionTy : AxiomatizedTypes.Coercion -> AxiomatizedTypes.Type_.
-
-Axiom tyConAppArgs : AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
-
-Axiom typeKind : AxiomatizedTypes.Type_ -> AxiomatizedTypes.Kind.
-
-Axiom eqTypeX : RnEnv2 ->
-                AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ -> bool.
-
-Axiom isUnliftedType : AxiomatizedTypes.Type_ -> bool.
-
-Axiom isCoercionTy_maybe : AxiomatizedTypes.Type_ ->
-                           option AxiomatizedTypes.Coercion.
-
-Definition CvSubstEnv :=
-  CoVarEnv AxiomatizedTypes.Coercion.
-
-Definition TvSubstEnv :=
-  TyVarEnv AxiomatizedTypes.Type_.
-
-Inductive TCvSubst : Type
-  := | Mk_TCvSubst : InScopeSet -> TvSubstEnv -> CvSubstEnv -> TCvSubst.
-
 (* External variables:
      Bool.Sumbool.sumbool_of_bool Eq Gt Lt None Some Type andb app bool comparison
      cons false list nat negb nil op_zt__ option orb pair size_AnnExpr' snd true tt
-     unit AxiomatizedTypes.Branched AxiomatizedTypes.BuiltInSynFamily
-     AxiomatizedTypes.CoAxiom AxiomatizedTypes.Coercion AxiomatizedTypes.Kind
-     AxiomatizedTypes.Nominal AxiomatizedTypes.PredType
+     unit AxiomatizedTypes.BranchIndex AxiomatizedTypes.Branched
+     AxiomatizedTypes.BuiltInSynFamily AxiomatizedTypes.CoAxBranch
+     AxiomatizedTypes.CoAxiom AxiomatizedTypes.CoAxiomRule AxiomatizedTypes.Coercion
+     AxiomatizedTypes.Kind AxiomatizedTypes.Nominal AxiomatizedTypes.PredType
      AxiomatizedTypes.Representational AxiomatizedTypes.Role
-     AxiomatizedTypes.ThetaType AxiomatizedTypes.Type_ AxiomatizedTypes.Unbranched
+     AxiomatizedTypes.ThetaType AxiomatizedTypes.TyBinder AxiomatizedTypes.TyThing
+     AxiomatizedTypes.Type_ AxiomatizedTypes.Unbranched
+     AxiomatizedTypes.constraintKind AxiomatizedTypes.liftedTypeKind
      BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity
      BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
      BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
-     BasicTypes.JoinArity BasicTypes.ManyOccs BasicTypes.NoOneShotInfo
-     BasicTypes.NoTailCallInfo BasicTypes.OccInfo BasicTypes.OneOcc
-     BasicTypes.OneShotInfo BasicTypes.OneShotLam BasicTypes.RuleName
-     BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.defaultInlinePragma
-     BasicTypes.fIRST_TAG BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed
-     BasicTypes.noOccInfo BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc
-     BinNat.N.of_nat BinNums.N BooleanFormula.BooleanFormula BooleanFormula.mkTrue
-     Coq.Init.Datatypes.app Coq.Init.Peano.lt Coq.Lists.List.firstn
-     Coq.Lists.List.flat_map Coq.Lists.List.length Coq.Lists.List.repeat
-     Coq.Lists.List.skipn Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap
-     Data.Foldable.find Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null
-     Data.Function.on Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
+     BasicTypes.JoinArity BasicTypes.LeftOrRight BasicTypes.ManyOccs
+     BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo BasicTypes.OccInfo
+     BasicTypes.OneOcc BasicTypes.OneShotInfo BasicTypes.OneShotLam
+     BasicTypes.RuleName BasicTypes.SourceText BasicTypes.TupleSort BasicTypes.TyPrec
+     BasicTypes.defaultInlinePragma BasicTypes.fIRST_TAG
+     BasicTypes.isAlwaysTailCalled BasicTypes.isBoxed BasicTypes.noOccInfo
+     BasicTypes.tupleSortBoxity BasicTypes.zapFragileOcc BinNat.N.of_nat BinNums.N
+     BooleanFormula.BooleanFormula BooleanFormula.mkTrue Coq.Init.Datatypes.app
+     Coq.Init.Peano.lt Coq.Lists.List.firstn Coq.Lists.List.flat_map
+     Coq.Lists.List.length Coq.Lists.List.repeat Coq.Lists.List.skipn
+     Data.Foldable.all Data.Foldable.any Data.Foldable.concatMap Data.Foldable.find
+     Data.Foldable.foldl Data.Foldable.foldr Data.Foldable.null Data.Function.on
+     Data.Maybe.isJust Data.Tuple.fst Datatypes.id DynFlags.DynFlags
      DynFlags.Opt_KillAbsence DynFlags.Opt_KillOneShot DynFlags.gopt
-     FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv FastStringEnv.lookupDFsEnv
-     FastStringEnv.mkDFsEnv FieldLabel.FieldLabel FieldLabel.FieldLabelEnv
-     FieldLabel.FieldLabelString FieldLabel.flLabel GHC.Base.Eq_ GHC.Base.Monad
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__
-     GHC.Base.eq_default GHC.Base.fmap GHC.Base.map GHC.Base.mappend GHC.Base.max
-     GHC.Base.max__ GHC.Base.min GHC.Base.min__ GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__ GHC.Base.op_zg____
-     GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__ GHC.Base.op_zl__
-     GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____ GHC.Base.op_zsze__
-     GHC.Base.op_zsze____ GHC.Base.return_ GHC.Char.Char GHC.DeferredFix.deferredFix1
-     GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default GHC.Err.Default
-     GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse GHC.List.zip
-     GHC.List.zipWith GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq GHC.Real.Rational GHC.Wf.wfFix1
-     GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal Literal.mkMachChar
-     Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString Maybes.orElse
-     Module.Module Module.ModuleSet Module.emptyModuleSet Module.mkModuleSet
-     Name.Name Name.NamedThing Name.getName__ Name.getOccName__ Name.isWiredInName
-     Name.mkExternalName Name.nameModule Name.nameOccName Name.nameSrcSpan
-     Name.nameUnique Name.setNameUnique NameEnv.NameEnv NameEnv.emptyNameEnv
-     NameEnv.extendNameEnv NameEnv.lookupNameEnv OccName.HasOccName OccName.OccName
-     OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.isTcOcc OccName.mkTyConRepOcc
-     OccName.occName__ Panic.assertPanic Panic.panic Panic.panicStr Panic.someSDoc
-     Panic.warnPprTrace PrelNames.gHC_PRIM PrelNames.gHC_TYPES SrcLoc.RealSrcSpan
-     SrcLoc.SrcSpan UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM
-     UniqDFM.addToUDFM_C UniqDFM.allUDFM UniqDFM.alterUDFM UniqDFM.anyUDFM
-     UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.disjointUDFM
-     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
-     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM
-     UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
-     UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM UniqDSet.UniqDSet
-     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
-     UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
-     UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
-     UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet
-     UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet UniqDSet.partitionUniqDSet
-     UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets UniqDSet.unionUniqDSets
-     UniqDSet.uniqDSetIntersectUniqSet UniqDSet.uniqDSetMinusUniqSet
-     UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet UniqFM.UniqFM UniqFM.addListToUFM
-     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.addToUFM_Directly
-     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
-     UniqFM.delListFromUFM UniqFM.disjointUFM UniqFM.elemUFM UniqFM.elemUFM_Directly
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
-     UniqFM.isNullUFM UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
-     UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM UniqFM.mapUFM
-     UniqFM.minusUFM UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetUFMToList
-     UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList
-     UniqFM.plusUFM_C UniqFM.plusUFM_CD UniqFM.unitUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet
-     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
-     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
-     UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
-     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
-     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.sizeUniqSet
-     UniqSet.unionManyUniqSets UniqSet.unionUniqSets UniqSet.uniqSetAll
-     UniqSet.uniqSetAny UniqSet.unitUniqSet UniqSet.unsafeUFMToUniqSet
-     Unique.Uniquable Unique.Unique Unique.dataConRepNameUnique Unique.deriveUnique
-     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.mkUniqueGrimily
-     Unique.nonDetCmpUnique Unique.tyConRepNameUnique Util.HasDebugCallStack
-     Util.count Util.debugIsOn Util.equalLength Util.foldl2 Util.lengthAtLeast
-     Util.lengthAtMost Util.lengthExceeds Util.lengthIs Util.listLengthCmp
-     Util.zipEqual Util.zipWithEqual
+     FastString.FastString FastStringEnv.dFsEnvElts FastStringEnv.emptyDFsEnv
+     FastStringEnv.lookupDFsEnv FastStringEnv.mkDFsEnv FieldLabel.FieldLabel
+     FieldLabel.FieldLabelEnv FieldLabel.FieldLabelString FieldLabel.flLabel
+     GHC.Base.Eq_ GHC.Base.Monad GHC.Base.Ord GHC.Base.String GHC.Base.compare
+     GHC.Base.compare__ GHC.Base.eq_default GHC.Base.fmap GHC.Base.map
+     GHC.Base.mappend GHC.Base.max GHC.Base.max__ GHC.Base.min GHC.Base.min__
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zg__
+     GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____ GHC.Base.op_zgzgze__
+     GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
+     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Base.return_ GHC.Char.Char
+     GHC.DeferredFix.deferredFix1 GHC.DeferredFix.deferredFix2 GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.default GHC.Err.error GHC.List.filter GHC.List.reverse
+     GHC.List.zip GHC.List.zipWith GHC.Num.Integer GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__ GHC.Prim.coerce GHC.Prim.seq
+     GHC.Real.Rational GHC.Wf.wfFix1 GHC.Wf.wfFix2 GHC.Wf.wfFix3 Literal.Literal
+     Literal.mkMachChar Literal.mkMachDouble Literal.mkMachFloat Literal.mkMachString
+     Maybes.orElse Module.Module Module.ModuleSet Module.emptyModuleSet
+     Module.mkModuleSet Name.Name Name.NamedThing Name.getName__ Name.getOccName__
+     Name.isWiredInName Name.mkExternalName Name.nameModule Name.nameOccName
+     Name.nameSrcSpan Name.nameUnique Name.setNameUnique NameEnv.NameEnv
+     NameEnv.emptyNameEnv NameEnv.extendNameEnv NameEnv.lookupNameEnv
+     OccName.HasOccName OccName.OccName OccName.TidyOccEnv OccName.emptyTidyOccEnv
+     OccName.isTcOcc OccName.mkTyConRepOcc OccName.occName__ Pair.Pair
+     Panic.assertPanic Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
+     PrelNames.gHC_PRIM PrelNames.gHC_TYPES SrcLoc.RealSrcSpan SrcLoc.SrcSpan
+     UniqDFM.UniqDFM UniqDFM.addListToUDFM UniqDFM.addToUDFM UniqDFM.addToUDFM_C
+     UniqDFM.allUDFM UniqDFM.alterUDFM UniqDFM.anyUDFM UniqDFM.delFromUDFM
+     UniqDFM.delListFromUDFM UniqDFM.disjointUDFM UniqDFM.elemUDFM UniqDFM.eltsUDFM
+     UniqDFM.emptyUDFM UniqDFM.filterUDFM UniqDFM.foldUDFM UniqDFM.isNullUDFM
+     UniqDFM.listToUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM UniqDFM.minusUDFM
+     UniqDFM.partitionUDFM UniqDFM.plusUDFM UniqDFM.plusUDFM_C UniqDFM.udfmToUfm
+     UniqDFM.unitUDFM UniqDSet.UniqDSet UniqDSet.addListToUniqDSet
+     UniqDSet.addOneToUniqDSet UniqDSet.delListFromUniqDSet
+     UniqDSet.delOneFromUniqDSet UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet
+     UniqDSet.filterUniqDSet UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets
+     UniqDSet.isEmptyUniqDSet UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet
+     UniqDSet.partitionUniqDSet UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets
+     UniqDSet.unionUniqDSets UniqDSet.uniqDSetIntersectUniqSet
+     UniqDSet.uniqDSetMinusUniqSet UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet
+     UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addToUFM UniqFM.addToUFM_Acc
+     UniqFM.addToUFM_C UniqFM.addToUFM_Directly UniqFM.alterUFM UniqFM.delFromUFM
+     UniqFM.delFromUFM_Directly UniqFM.delListFromUFM UniqFM.disjointUFM
+     UniqFM.elemUFM UniqFM.elemUFM_Directly UniqFM.emptyUFM UniqFM.filterUFM
+     UniqFM.filterUFM_Directly UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.listToUFM
+     UniqFM.listToUFM_Directly UniqFM.lookupUFM UniqFM.lookupUFM_Directly
+     UniqFM.lookupWithDefaultUFM UniqFM.mapUFM UniqFM.minusUFM
+     UniqFM.nonDetFoldUFM_Directly UniqFM.nonDetUFMToList UniqFM.partitionUFM
+     UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList UniqFM.plusUFM_C
+     UniqFM.plusUFM_CD UniqFM.unitUFM UniqSet.UniqSet UniqSet.addListToUniqSet
+     UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet UniqSet.delOneFromUniqSet
+     UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
+     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
+     UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
+     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.minusUniqSet
+     UniqSet.mkUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
+     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
+     UniqSet.unsafeUFMToUniqSet UniqSupply.UniqSupply Unique.Uniquable Unique.Unique
+     Unique.dataConRepNameUnique Unique.deriveUnique Unique.getKey Unique.getUnique
+     Unique.getUnique__ Unique.mkUniqueGrimily Unique.nonDetCmpUnique
+     Unique.tyConRepNameUnique Util.HasDebugCallStack Util.count Util.debugIsOn
+     Util.equalLength Util.foldl2 Util.lengthAtLeast Util.lengthAtMost
+     Util.lengthExceeds Util.lengthIs Util.listLengthCmp Util.zipEqual
+     Util.zipWithEqual
 *)

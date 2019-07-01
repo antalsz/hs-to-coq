@@ -29,7 +29,9 @@ skip Name.Default__Name
 ##
 ## Eq_ instance defined in terms of Ord instance. Need to inline definition of
 ## 'compare' (i.e. cmpName) to resolve.
-
+#
+# This is just a hint to make Coq's termination checker happy
+#
 order Name.cmpName Name.Eq___Name_op_zeze__ Name.Eq___Name_op_zsze__ Name.Eq___Name Name.Ord__Name
 
 redefine Local Definition Name.Eq___Name_op_zeze__ : Name -> (Name -> bool) :=

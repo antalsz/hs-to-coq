@@ -10,6 +10,10 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Axiom TyThing : Type.
+
 (* Converted imports: *)
 
 Require AxiomatizedTypes.

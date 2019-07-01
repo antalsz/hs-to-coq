@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require AxiomatizedTypes.
-Require Coercion.
 Require Core.
 Require Data.Foldable.
 Require Data.IntSet.Internal.
@@ -267,7 +266,7 @@ Definition xtC {a}
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | D env co, f, Mk_CoercionMapX m =>
-        Mk_CoercionMapX (xtT (D env (Coercion.coercionType co)) f m)
+        Mk_CoercionMapX (xtT (D env (Core.coercionType co)) f m)
     end.
 
 Instance Eq___DeBruijn__Type_
@@ -531,7 +530,7 @@ Definition xtTT {a}
     match arg_0__, arg_1__, arg_2__ with
     | D env ty, f, Mk_TypeMap m =>
         Mk_TypeMap (m |>
-                    (xtG (m := TypeMapX) (D env (Core.typeKind ty)) |>>
+                    (xtG (m := TypeMapX) (D env (@Core.typeKind tt ty)) |>>
                      xtG (m := TypeMapX) (D env ty) f))
     end.
 
@@ -555,8 +554,8 @@ Definition lkTT {a}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | D env ty, Mk_TypeMap m =>
-        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (Core.typeKind
-                                                                        ty)) m) (lkG (m := TypeMapX) (D env ty))
+        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (@Core.typeKind
+                                                                        tt ty)) m) (lkG (m := TypeMapX) (D env ty))
     end.
 
 Local Definition TrieMap__TypeMap_lookupTM
@@ -692,7 +691,7 @@ Definition lkC {a}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | D env co, Mk_CoercionMapX core_tm =>
-        lkT (D env (Coercion.coercionType co)) core_tm
+        lkT (D env (Core.coercionType co)) core_tm
     end.
 
 Axiom lkBndr : forall {a}, CmEnv -> Core.Var -> BndrMap a -> option a.
@@ -896,8 +895,7 @@ Local Definition Eq___DeBruijn__Coercion_op_zeze__
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | D env1 co1, D env2 co2 =>
-        D env1 (Coercion.coercionType co1) GHC.Base.==
-        D env2 (Coercion.coercionType co2)
+        D env1 (Core.coercionType co1) GHC.Base.== D env2 (Core.coercionType co2)
     end.
 
 Local Definition Eq___DeBruijn__Coercion_op_zsze__
@@ -1133,21 +1131,20 @@ End Notations.
 
 (* External variables:
      Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
-     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Coercion.coercionType
-     Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt Core.Id
-     Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
-     Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv
-     Core.lookupVarEnv Core.typeKind Core.varType Data.Foldable.foldl
-     Data.IntSet.Internal.Key Data.Map.Internal.Map Data.Map.Internal.alter
-     Data.Map.Internal.empty Data.Map.Internal.foldr Data.Map.Internal.lookup
-     Data.Map.Internal.map FastString.FastString GHC.Base.Eq_ GHC.Base.Ord
-     GHC.Base.const GHC.Base.flip GHC.Base.fmap GHC.Base.op_z2218U__
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zgzgze__
-     GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default GHC.Err.default
-     GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zp__ IntMap.IntMap IntMap.alter
-     IntMap.empty IntMap.foldr IntMap.lookup IntMap.map Literal.Literal
-     Name.NamedThing Name.getName NameEnv.DNameEnv NameEnv.alterDNameEnv
-     NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv UniqDFM.UniqDFM UniqDFM.alterUDFM
-     UniqDFM.emptyUDFM UniqDFM.foldUDFM UniqDFM.lookupUDFM UniqDFM.mapUDFM
-     Unique.Unique
+     tt AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Core.CoreAlt Core.CoreExpr
+     Core.DEFAULT Core.DVarEnv Core.DataAlt Core.Id Core.LitAlt Core.Tickish Core.Var
+     Core.VarEnv Core.alterDVarEnv Core.coercionType Core.emptyDVarEnv
+     Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv Core.lookupVarEnv
+     Core.typeKind Core.varType Data.Foldable.foldl Data.IntSet.Internal.Key
+     Data.Map.Internal.Map Data.Map.Internal.alter Data.Map.Internal.empty
+     Data.Map.Internal.foldr Data.Map.Internal.lookup Data.Map.Internal.map
+     FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.const GHC.Base.flip
+     GHC.Base.fmap GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
+     GHC.Base.op_zgzgze__ GHC.Base.op_zsze____ GHC.Err.Build_Default GHC.Err.Default
+     GHC.Err.default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zp__
+     IntMap.IntMap IntMap.alter IntMap.empty IntMap.foldr IntMap.lookup IntMap.map
+     Literal.Literal Name.NamedThing Name.getName NameEnv.DNameEnv
+     NameEnv.alterDNameEnv NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv
+     UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.foldUDFM
+     UniqDFM.lookupUDFM UniqDFM.mapUDFM Unique.Unique
 *)

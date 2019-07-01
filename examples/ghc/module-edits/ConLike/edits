@@ -1,23 +1,25 @@
+axiomatize module ConLike
+
 # type inference. Try again when better type for PatSyn.paySynBuilder
-skip ConLike.conLikeWrapId_maybe
+# skip ConLike.conLikeWrapId_maybe
 
 # type components of the data structure
-skip ConLike.conLikeStupidTheta
-skip ConLike.conLikeResTy
-skip ConLike.conLikeInstOrigArgTys
-skip ConLike.conLikeFullSig
-skip ConLike.conLikeFieldType
+# skip ConLike.conLikeStupidTheta
+# skip ConLike.conLikeResTy
+# skip ConLike.conLikeInstOrigArgTys
+# skip ConLike.conLikeFullSig
+# skip ConLike.conLikeFieldType
 
 # Needs DataCon2 and PatSyn2
-skip ConLike.conLikeImplBangs
+# skip ConLike.conLikeImplBangs
 
 # Needs stuff in DataCon
-skip ConLike.conLikeIsInfix
+# skip ConLike.conLikeIsInfix
 
-skip ConLike.conLikeFieldLabels 
-skip ConLike.conLikesWithFields
+# skip ConLike.conLikeFieldLabels 
+# skip ConLike.conLikesWithFields
 
 # in Core
-skip ConLike.conLikeExTyVars
+# skip ConLike.conLikeExTyVars
 
 order ConLike.Uniquable__ConLike ConLike.eqConLike

@@ -1,0 +1,5 @@
+rename value Type.TyCoMapper = Core.Mk_TyCoMapper
+
+skip Core.Ord__TypeOrdering
+skip Core.Ord__Role
+ 

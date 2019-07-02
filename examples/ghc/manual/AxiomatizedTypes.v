@@ -1,14 +1,14 @@
 Require GHC.Base.
 Require GHC.Err.
 
-Axiom Coercion      : Type.
-Axiom Type_         : Type.
-Axiom ThetaType     : Type.
-Axiom TyBinder      : Type.
-Axiom TyThing       : Type.
+Axiom Coercion           : Type.
+Axiom Type_              : Type.
+Axiom ThetaType          : Type.
+Axiom TyBinder           : Type.
+Axiom TyThing            : Type.
 
-Definition Kind     : Type := Type_.
-Axiom PredType      : Type.
+Definition Kind          : Type := Type_.
+Axiom PredType           : Type.
 
 Axiom CoAxiom            : Type -> Type.
 Axiom Branched           : Type.
@@ -74,4 +74,24 @@ Admitted.
 
 Instance Default__Role
    : GHC.Err.Default Role := {}.
+Admitted.
+
+
+Instance Default__BranchIndex
+   : GHC.Err.Default BranchIndex := {}.
+Admitted.
+
+Instance Default__CoAxiomRule
+   : GHC.Err.Default CoAxiomRule := {}.
+Admitted.
+
+Instance Default__CoAxiomBranch
+   : GHC.Err.Default CoAxBranch := {}.
+Admitted.
+
+
+(* ---------------- Eq -------------- *)
+
+Instance Eq___CoAxiomRule
+   : GHC.Base.Eq_ CoAxiomRule := {}.
 Admitted.

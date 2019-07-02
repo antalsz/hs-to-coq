@@ -726,10 +726,28 @@ destruct (isLocalVar v).
 - reflexivity.
 Qed.
 
-
+(** Working with [exprFreeVars] *)
 
  
 (** Working with [freeVars] *)
+
+(*
+Lemma freeVarsOf_freeVars:
+  forall e,
+  dVarSetToVarSet (freeVarsOf (freeVars e)) [=] exprFreeVars e.
+Proof.
+  intro e; apply (core_induct e).
+  - intros x; simpl.
+    destruct (isLocalVar x) eqn:IS; simpl. 
+    rewrite exprFreeVars_Var //.
+    rewrite exprFreeVars_global_Var //.
+  - intros l. rewrite exprFreeVars_Lit //.
+  - intros e1 e2 h1 h2. rewrite exprFreeVars_App //.
+    unfold freeVars; fold freeVars.
+    rewrite <- h1. rewrite <- h2.
+    unfold freeVarsOf.
+Admitted.
+*)
 
 Lemma deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.

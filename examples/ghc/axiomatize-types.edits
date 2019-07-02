@@ -108,6 +108,7 @@ rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 # they exist. Could also axiomatize, but then would need to add Default/Eq
 # instances for them too.
 #
+
 rename type PrimOp.PrimOp           = unit
 rename type ForeignCall.ForeignCall = unit
 rename type ForeignCall.CType       = unit

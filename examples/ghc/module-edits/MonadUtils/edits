@@ -1,3 +1,5 @@
+axiomatize module MonadUtils
+
 skip module Control.Monad.Fix
 skip module Control.Monad.IO.Class
 

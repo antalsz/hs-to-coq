@@ -4,6 +4,9 @@
 
 axiomatize module CoreArity
 
+# in CoreArity.typeArity termination go deferred
+# in CoreArity.mkEtaWW termination go deferred
+
 # add CoreArity Axiom CoreArity.isDictLikeTy : unit -> bool.
 # rename value Type.isDictLikeTy = CoreArity.isDictLikTy
 

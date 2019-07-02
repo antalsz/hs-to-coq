@@ -14,9 +14,7 @@ Require Coq.Program.Wf.
 
 Require Coq.ZArith.BinInt.
 Require Data.IntSet.Internal.
-Require GHC.Base.
 Require GHC.Enum.
-Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -27,45 +25,27 @@ Arguments Mk_EnumSet {_} _.
 
 (* Converted value declarations: *)
 
-Definition toEnumN {a} `{GHC.Enum.Enum a} n : a :=
-  GHC.Enum.toEnum (Coq.ZArith.BinInt.Z.of_N n).
+Axiom toList : forall {a}, forall `{GHC.Enum.Enum a}, EnumSet a -> list a.
 
-Definition toList {a} `{GHC.Enum.Enum a} : EnumSet a -> list a :=
-  fun '(Mk_EnumSet s) => GHC.Base.map toEnumN (Data.IntSet.Internal.toList s).
+Axiom member : forall {a}, forall `{GHC.Enum.Enum a}, a -> EnumSet a -> bool.
+
+Axiom insert : forall {a},
+               forall `{GHC.Enum.Enum a}, a -> EnumSet a -> EnumSet a.
+
+Axiom fromList : forall {a}, forall `{GHC.Enum.Enum a}, list a -> EnumSet a.
+
+Axiom empty : forall {a}, EnumSet a.
+
+Axiom delete : forall {a},
+               forall `{GHC.Enum.Enum a}, a -> EnumSet a -> EnumSet a.
 
 Definition fromEnumN {a} `{GHC.Enum.Enum a} (e : a) :=
   Coq.ZArith.BinInt.Z.to_N (GHC.Enum.fromEnum e).
 
-Definition member {a} `{GHC.Enum.Enum a} : a -> EnumSet a -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | x, Mk_EnumSet s => Data.IntSet.Internal.member (fromEnumN x) s
-    end.
-
-Definition insert {a} `{GHC.Enum.Enum a} : a -> EnumSet a -> EnumSet a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | x, Mk_EnumSet s => Mk_EnumSet (Data.IntSet.Internal.insert (fromEnumN x) s)
-    end.
-
-Definition fromList {a} `{GHC.Enum.Enum a} : list a -> EnumSet a :=
-  Mk_EnumSet GHC.Base.∘
-  (Data.IntSet.Internal.fromList GHC.Base.∘ GHC.Base.map fromEnumN).
-
-Definition empty {a} : EnumSet a :=
-  Mk_EnumSet Data.IntSet.Internal.empty.
-
-Definition delete {a} `{GHC.Enum.Enum a} : a -> EnumSet a -> EnumSet a :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | x, Mk_EnumSet s => Mk_EnumSet (Data.IntSet.Internal.delete (fromEnumN x) s)
-    end.
+Definition toEnumN {a} `{GHC.Enum.Enum a} n : a :=
+  GHC.Enum.toEnum (Coq.ZArith.BinInt.Z.of_N n).
 
 (* External variables:
      Type bool list Coq.ZArith.BinInt.Z.of_N Coq.ZArith.BinInt.Z.to_N
-     Data.IntSet.Internal.IntSet Data.IntSet.Internal.delete
-     Data.IntSet.Internal.empty Data.IntSet.Internal.fromList
-     Data.IntSet.Internal.insert Data.IntSet.Internal.member
-     Data.IntSet.Internal.toList GHC.Base.map GHC.Base.op_z2218U__ GHC.Enum.Enum
-     GHC.Enum.fromEnum GHC.Enum.toEnum
+     Data.IntSet.Internal.IntSet GHC.Enum.Enum GHC.Enum.fromEnum GHC.Enum.toEnum
 *)

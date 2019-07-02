@@ -36,11 +36,9 @@ MODULES = \
   UniqSupply \
   UniqFM \
   EnumSet \
-  CmmType \
   BooleanFormula \
   UniqSet \
   BasicTypes \
-  FiniteMap \
   UniqDFM \
   UniqDSet \
   FastStringEnv \
@@ -51,6 +49,10 @@ MODULES = \
   State \
   ListSetOps \
   Panic \
+  FiniteMap \
+## Not actually used??
+#  CmmType \
+
 
 ##
 CORESYN = \
@@ -76,16 +78,21 @@ CORE_MODULES = \
   ConLike \
   CoreFVs \
   Exitify \
-  CoreArity \
-  CoreTidy \
   TrieMap \
   CSE \
   CoreStats \
+  CoreArity \
   PrelNames \
-#  CoAxiom \
-#  TysWiredIn \
-#  MkCore \
+  CoreTidy \
   CallArity \
+  CoAxiom \
+  TysWiredIn \
+  TysPrim \
+#  MkCore \
+
+## We don't actually need any of these
+## for Exitify/CSE
+
 
 
 NOTRANSLATE = \
@@ -136,6 +143,14 @@ core: $(OUT)/README.md coq
 
 filelist:
 	@ls -1 $(HSFILESPATH) 
+
+ghc.all.pdf: Makefile
+	find ghc/compiler -name \*.hs | xargs graphmod --no-cluster --prune-edges -r Outputable -r GhcPrelude | dot -Tpdf -o ghc.all.pdf
+
+
+ghc.core.pdf: Makefile
+	@ls -1 $(HSFILESPATH) | xargs	graphmod -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --no-cluster --prune-edges -r Util -r Outputable -r GhcPrelude -r Panic | dot -Tpdf -o ghc.core.pdf
+
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.
 $(OUT)/README.md:

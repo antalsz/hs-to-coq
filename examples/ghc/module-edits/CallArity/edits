@@ -1,12 +1,6 @@
 
 
 
-# This is actually the only function that we need from the CoreArity module
-# We parameterize it here because it needs type information to work correctly
-#
-rewrite forall x, CoreArity.typeArity = CallArity.typeArity
-
-
 # ANTALSZ: example of mutual recursion
 in CallArity.callArityAnal rewrite forall, CallArity.callArityBind = CallArity.callArityBind1
 

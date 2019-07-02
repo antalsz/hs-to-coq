@@ -2,22 +2,24 @@
 in Core.Var rename type GHC.Num.Int = BinNums.N
 
 # These don't exist
-# skip Core.mkTyVar
+skip Core.mkTyVar
 skip Core.mkTcTyVar
- skip Core.tcTyVarDetails 
+skip Core.tcTyVarDetails 
 skip Core.setTcTyVarDetails
+skip Core.coVarDetails
+skip Core.mkCoVar
+
 # skip Core.mkTyVarBinder
 # skip Core.mkTyVarBinders
 # skip Core.tyConTyVarBinders
-# skip Core.coVarDetails
-# skip Core.mkCoVar
 
-# skip equation Core.setIdExported tv
-# skip equation Core.isId _
-# skip equation Core.isNonCoVarId _
-# skip equation Core.isCoVar _
-# skip equation Core.idInfo other
-# skip equation Core.idDetails other
+
+skip equation Core.setIdExported tv
+skip equation Core.isId _
+skip equation Core.isNonCoVarId _
+skip equation Core.isCoVar _
+skip equation Core.idInfo other
+skip equation Core.idDetails other
 
 # record selector, can't add Default fast enough
 skip Core.dcr_wrap_id

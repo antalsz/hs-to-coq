@@ -8,7 +8,7 @@ Axiom TyBinder           : Type.
 Axiom TyThing            : Type.
 
 Definition Kind          : Type := Type_.
-Axiom PredType           : Type.
+Definition PredType      : Type := Type_.
 
 Axiom CoAxiom            : Type -> Type.
 Axiom Branched           : Type.
@@ -44,10 +44,6 @@ Admitted.
 
 Instance Default__TyThing
    : GHC.Err.Default TyThing := {}.
-Admitted.
-
-Instance Default__PredType
-   : GHC.Err.Default PredType := {}.
 Admitted.
 
 Instance Default__CoAxiom
@@ -94,4 +90,8 @@ Admitted.
 
 Instance Eq___CoAxiomRule
    : GHC.Base.Eq_ CoAxiomRule := {}.
+Admitted.
+
+Instance Eq___Role
+   : GHC.Base.Eq_ Role := {}.
 Admitted.

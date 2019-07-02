@@ -160,12 +160,15 @@ Definition expr_fvs : Core.CoreExpr -> FV.FV :=
                                                                                    (Lists.List.map alt_fvs alts))))
                fv_cand in_scope acc
            | Core.Let (Core.NonRec bndr rhs) body, fv_cand, in_scope, acc =>
-               (FV.unionFV (FV.unionFV (expr_fvs rhs) FV.emptyFV) (addBndr bndr (expr_fvs
-                                                                                 body))) fv_cand in_scope acc
+               (FV.unionFV (let 'pair bndr rhs := pair bndr rhs in
+                            FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr)) (addBndr bndr
+                            (expr_fvs body))) fv_cand in_scope acc
            | Core.Let (Core.Rec pairs) body, fv_cand, in_scope, acc =>
                addBndrs (GHC.Base.map Data.Tuple.fst pairs) (FV.unionFV (FV.unionsFV
                                                                          (Lists.List.map (fun '(pair bndr rhs) =>
-                                                                                            expr_fvs rhs) pairs))
+                                                                                            FV.unionFV (expr_fvs rhs)
+                                                                                                       (bndrRuleAndUnfoldingFVs
+                                                                                                        bndr)) pairs))
                                                                         (expr_fvs body)) fv_cand in_scope acc
            end.
 

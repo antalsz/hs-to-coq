@@ -21,13 +21,12 @@ axiomatize definition CoreUtils.isDivOp
 # needs more from PrimOp (primOpIsCheap)
 axiomatize definition CoreUtils.isCheapApp 
 
-# refers to skipped components. (Tick and Cast)
+# refers to skipped components. (Tick)
 skip CoreUtils.collectMakeStaticArgs
 skip CoreUtils.stripTicksTopT
 skip CoreUtils.stripTicksTop
 skip CoreUtils.mkTick
 skip CoreUtils.mkTicks
-skip CoreUtils.mkCast
 skip CoreUtils.mkTickNoHNF
 skip CoreUtils.tickHNFArgs
 

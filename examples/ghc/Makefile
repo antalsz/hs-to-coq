@@ -87,8 +87,7 @@ CORE_MODULES = \
   CallArity \
   CoAxiom \
   TysWiredIn \
-#  MkCore \
-
+  MkCore \
 ## We don't actually need any of these
 ## for Exitify/CSE
 

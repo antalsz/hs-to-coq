@@ -1,14 +1,9 @@
-# This module depends strongly on Type/Coercion/TyCoRep/TyCon
-# in order to determine the arity of some of the operations
-#
 
 axiomatize module CoreArity
 
 # in CoreArity.typeArity termination go deferred
 # in CoreArity.mkEtaWW termination go deferred
-
-# add CoreArity Axiom CoreArity.isDictLikeTy : unit -> bool.
-# rename value Type.isDictLikeTy = CoreArity.isDictLikTy
+# in CoreArity.etaExpandToJoinPoint termination go deferred
 
 # axiomatize definition CoreArity.typeArity
 # axiomatize definition CoreArity.pushCoercion
@@ -17,11 +12,5 @@ axiomatize module CoreArity
 # axiomatize definition CoreArity.etaInfoAppTy
 # axiomatize definition CoreArity.etaBodyForJoinPoint
 
-# in CoreArity.exprArity rewrite forall p, (Pair.pSnd p) = tt
-# in CoreArity.arityType rewrite forall p, (Pair.pSnd p) = tt
 
-# in CoreArity.etaInfoAbs rewrite forall co, Coercion.mkSymCo co = tt
 
-# in CoreArity.etaExpandToJoinPoint termination go deferred
-
-# rewrite forall x s y z, Panic.warnPprTrace x s y z = z

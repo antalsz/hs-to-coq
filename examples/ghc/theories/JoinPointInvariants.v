@@ -556,7 +556,8 @@ Proof.
     - unfold varToCoreExpr.
       repeat destruct_match; try reflexivity.
       + (* new case from debugIsOn *)
-          try rewrite andb_false_r in Heq;
+        destruct x; simpl in *.
+        try rewrite andb_false_r in Heq1;
           try discriminate.
       + simpl. rewrite isJoinId_eq in H.
       destruct_match; congruence. 

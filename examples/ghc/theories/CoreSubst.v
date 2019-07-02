@@ -1028,6 +1028,7 @@ Proof.
   move: h => [[h1 [h2 [h3 h4]]] h5].
   destruct bndr; simpl in *; try done.
   unfold substBndr in *.
+  simpl in h0.
   (* rewrite h4 in h0. *)
   (* unfold isTyVar in h0. *)
   eapply GoodLocalVar_substIdBndr; eauto.

@@ -2,29 +2,29 @@ import module GHC.Base
 import module Data.Traversable
 
 
-#axiomatize definition CoreSubst.extendCvSubst  
-#axiomatize definition CoreSubst.extendTvSubst  
-#axiomatize definition CoreSubst.extendTvSubstList
-#axiomatize definition CoreSubst.getTCvSubst 
-axiomatize definition CoreSubst.lookupTCvSubst 
+# axiomatize definition CoreSubst.lookupTCvSubst 
 
 
 # cannot translate because we don't have unfolding information
 
-redefine Definition CoreSubst.substUnfolding : Subst -> (Core.Unfolding -> Core.Unfolding) := fun s u => u.
+# redefine Definition CoreSubst.substUnfolding : Subst -> (Core.Unfolding -> Core.Unfolding) := fun s u => u.
 
 #############################################################################
 # skipping Type/Coercion/Cast/Tick
 
 # temp until remake base
-in CoreSubst.mkOpenSubst rewrite forall xs, (GHC.Skip.nil_skipped xs) = GHC.Err.default
+# in CoreSubst.mkOpenSubst rewrite forall xs, (GHC.Skip.nil_skipped xs) = GHC.Err.default
 
-axiomatize definition CoreSubst.substTyVarBndr 
-axiomatize definition CoreSubst.substCoVarBndr 
-axiomatize definition CoreSubst.substCo 
-axiomatize definition CoreSubst.substTy
+# axiomatize definition CoreSubst.substTyVarBndr 
+# axiomatize definition CoreSubst.substCoVarBndr 
+# axiomatize definition CoreSubst.substCo 
+# axiomatize definition CoreSubst.substTy
+
+# axiomatize definition CoreSubst.cloneTyVarBndr 
+
+#
+# ruleInfo
 axiomatize definition CoreSubst.substSpec 
-axiomatize definition CoreSubst.cloneTyVarBndr 
 
 #############################################################################
 #  Edits that just make the translation go through
@@ -39,8 +39,13 @@ axiomatize definition CoreSubst.cloneTyVarBndr
 in CoreSubst.substRecBndrs rewrite forall x, CoreSubst.substIdBndr x new_subst = CoreSubst.substIdBndr x (GHC.Err.error Panic.someSDoc)
 in CoreSubst.cloneRecIdBndrs rewrite forall, CoreSubst.clone_id subst' = CoreSubst.clone_id (GHC.Err.error Panic.someSDoc)
 #
-# Pairs are awful!!
+# Replace a map & unzip with a map and snd
 #
 in CoreSubst.substBind rewrite forall x rhss, GHC.Base.map (CoreSubst.subst_expr x subst') rhss = GHC.Base.map (fun ps => CoreSubst.subst_expr x subst' (snd ps)) pairs
+
+#
+# use of GHC.Prim.seq
+#
+in CoreSubst.substUnfolding rewrite forall x y, GHC.Prim.seq x y = y
 
 

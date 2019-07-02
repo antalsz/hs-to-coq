@@ -21,16 +21,19 @@ Require Data.Foldable.
 Require Data.Maybe.
 Require Data.OldList.
 Require Data.Tuple.
+Require Datatypes.
 Require DynFlags.
 Require FastString.
 Require GHC.Base.
 Require GHC.DeferredFix.
+Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require Id.
 Require Literal.
 Require NestedRecursionHelpers.
 Require OrdList.
+Require Pair.
 Require Panic.
 Require PrelNames.
 Require Unique.
@@ -329,6 +332,59 @@ Definition findAlt {a} {b}
 Axiom expr_ok : (unit -> bool) -> Core.CoreExpr -> bool.
 
 Axiom exprType : Core.CoreExpr -> AxiomatizedTypes.Type_.
+
+Definition mkCast
+   : Core.CoreExpr -> AxiomatizedTypes.Coercion -> Core.CoreExpr :=
+  fix mkCast (arg_0__ : Core.CoreExpr) (arg_1__ : AxiomatizedTypes.Coercion)
+        : Core.CoreExpr
+        := match arg_0__, arg_1__ with
+           | e, co =>
+               if (if andb Util.debugIsOn (negb (Core.coercionRole co GHC.Base.==
+                                                 AxiomatizedTypes.Representational)) : bool
+                   then (GHC.Err.error (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend
+                                                                            (GHC.Base.mappend (GHC.Base.mappend
+                                                                                               (Datatypes.id
+                                                                                                (GHC.Base.hs_string__
+                                                                                                 "coercion"))
+                                                                                               Panic.someSDoc)
+                                                                                              Panic.someSDoc)
+                                                                            Panic.someSDoc) (Datatypes.id
+                                                                            (GHC.Base.hs_string__ "has wrong role")))
+                                                         Panic.someSDoc))
+                   else Core.isReflCo co) : bool
+               then e else
+               let j_7__ :=
+                 match arg_0__, arg_1__ with
+                 | Core.Cast expr co2, co =>
+                     Panic.warnPprTrace (let 'Pair.Mk_Pair _from_ty2 to_ty2 := Core.coercionKind
+                                                                                 co2 in
+                                         let 'Pair.Mk_Pair from_ty _to_ty := Core.coercionKind co in
+                                         negb (Core.eqType from_ty to_ty2)) (GHC.Base.hs_string__
+                                         "ghc/compiler/coreSyn/CoreUtils.hs") #279 (Panic.someSDoc) (mkCast expr
+                                                                                                            (Core.mkTransCo
+                                                                                                             co2 co))
+                 | expr, co =>
+                     let 'Pair.Mk_Pair from_ty _to_ty := Core.coercionKind co in
+                     Panic.warnPprTrace (negb (Core.eqType from_ty (exprType expr)))
+                                        (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreUtils.hs") #290
+                                        (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend
+                                                                                               (Datatypes.id
+                                                                                                (GHC.Base.hs_string__
+                                                                                                 "Trying to coerce"))
+                                                                                               (Datatypes.id
+                                                                                                (GHC.Base.hs_string__
+                                                                                                 "("))) Panic.someSDoc)
+                                                                            Panic.someSDoc) (Datatypes.id
+                                                           (GHC.Base.hs_string__ ")"))) (Core.Cast expr co)
+                 end in
+               match arg_0__, arg_1__ with
+               | Core.Mk_Coercion e_co, co =>
+                   if Core.isCoercionType (Pair.pSnd (Core.coercionKind co)) : bool
+                   then Core.Mk_Coercion (Core.mkCoCast e_co co) else
+                   j_7__
+               | _, _ => j_7__
+               end
+           end.
 
 Axiom exprOkForSpeculation : Core.CoreExpr -> bool.
 
@@ -660,30 +716,34 @@ Definition filterAlts {a}
 
 (* External variables:
      Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
-     pair snd true tt unit AxiomatizedTypes.Type_ BasicTypes.Arity
+     pair snd true tt unit AxiomatizedTypes.Coercion
+     AxiomatizedTypes.Representational AxiomatizedTypes.Type_ BasicTypes.Arity
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App
      Core.Breakpoint Core.Case Core.Cast Core.CoreAlt Core.CoreArg Core.CoreBind
      Core.CoreBndr Core.CoreExpr Core.DEFAULT Core.DataAlt Core.DataCon
      Core.DataConWorkId Core.Expr Core.Id Core.InScopeSet Core.Lam Core.Let Core.Lit
      Core.LitAlt Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec
      Core.RnEnv2 Core.Tickish Core.TyCon Core.TyVar Core.Unfolding Core.Var
-     Core.cmpAlt Core.cmpAltCon Core.dataConCannotMatch Core.dataConTyCon
-     Core.dataConUnivTyVars Core.eqCoercionX Core.eqTypeX Core.idDetails
-     Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isRuntimeArg
+     Core.cmpAlt Core.cmpAltCon Core.coercionKind Core.coercionRole
+     Core.dataConCannotMatch Core.dataConTyCon Core.dataConUnivTyVars
+     Core.eqCoercionX Core.eqType Core.eqTypeX Core.idDetails Core.isCoercionType
+     Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isReflCo Core.isRuntimeArg
      Core.isRuntimeVar Core.isTyVar Core.isTypeArg Core.isUnliftedType Core.isValArg
-     Core.mkConApp Core.mkRnEnv2 Core.rnBndr2 Core.rnBndrs2 Core.rnOccL Core.rnOccR
-     Core.splitTyConApp_maybe Core.tyConDataCons_maybe Core.tyConFamilySize
-     Core.valArgCount Core.varType Core.varsToCoreExprs Data.Foldable.all
-     Data.Foldable.and Data.Foldable.elem Data.Foldable.null Data.Maybe.fromMaybe
-     Data.Maybe.isJust Data.OldList.nub Data.Tuple.snd DynFlags.DynFlags
-     FastString.FastString GHC.Base.String GHC.Base.const GHC.Base.map
-     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
-     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.List.unzip
+     Core.mkCoCast Core.mkConApp Core.mkRnEnv2 Core.mkTransCo Core.rnBndr2
+     Core.rnBndrs2 Core.rnOccL Core.rnOccR Core.splitTyConApp_maybe
+     Core.tyConDataCons_maybe Core.tyConFamilySize Core.valArgCount Core.varType
+     Core.varsToCoreExprs Data.Foldable.all Data.Foldable.and Data.Foldable.elem
+     Data.Foldable.null Data.Maybe.fromMaybe Data.Maybe.isJust Data.OldList.nub
+     Data.Tuple.snd Datatypes.id DynFlags.DynFlags FastString.FastString
+     GHC.Base.String GHC.Base.const GHC.Base.map GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
+     GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.error GHC.List.unzip
      GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity Id.idUnfolding
      Id.isBottomingId Id.isConLikeId Id.isDataConWorkId Id.isJoinId Literal.MachStr
      Literal.litIsDupable Literal.litIsTrivial NestedRecursionHelpers.all2Map
      OrdList.OrdList OrdList.appOL OrdList.concatOL OrdList.fromOL OrdList.nilOL
-     Panic.assertPanic Panic.panic Panic.panicStr Panic.someSDoc
-     PrelNames.absentErrorIdKey Unique.Unique Unique.hasKey Util.debugIsOn
-     Util.dropList Util.equalLength Util.filterOut Util.lengthIs
+     Pair.Mk_Pair Pair.pSnd Panic.assertPanic Panic.panic Panic.panicStr
+     Panic.someSDoc Panic.warnPprTrace PrelNames.absentErrorIdKey Unique.Unique
+     Unique.hasKey Util.debugIsOn Util.dropList Util.equalLength Util.filterOut
+     Util.lengthIs
 *)

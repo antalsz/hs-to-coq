@@ -7,6 +7,7 @@ Require Import Coq.Classes.Morphisms.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 
+
 Require Import CoreFVs.
 Require Import Id.
 Require Import Exitify.
@@ -112,6 +113,16 @@ Qed.
 
 (** ** [FV] *)
 
+Lemma emptyVarSet_bndrRuleAndUnfoldingFVs bndr :
+  Denotes emptyVarSet (bndrRuleAndUnfoldingFVs bndr).
+Proof.
+  destruct bndr; unfold bndrRuleAndUnfoldingFVs; simpl.
+  eapply emptyVarSet_emptyFV.
+(*  unfold idRuleFVs, idUnfoldingFVs, stableUnfoldingFVs. simpl.
+  rewrite union_empty_l.
+  eapply emptyVarSet_emptyFV. *)
+Qed.
+
 Lemma addBndr_fv fv bndr vs :
   Denotes vs fv -> 
   Denotes (delVarSet vs bndr) (addBndr bndr fv).
@@ -172,15 +183,31 @@ Proof.
   intros. simpl. apply addBndr_WF. auto.
 Qed.
 
+Lemma bndrRuleAndUnfoldingFVs_WF bndr : WF_fv (bndrRuleAndUnfoldingFVs bndr).
+Proof.
+  destruct bndr; unfold bndrRuleAndUnfoldingFVs; simpl.
+  eapply empty_FV_WF.
+(*   unfold idRuleFVs, idUnfoldingFVs, stableUnfoldingFVs. simpl.
+  eapply union_FV_WF; eapply empty_FV_WF. *)
+Qed.
+
+
 Lemma expr_fvs_WF : forall e,
     WF_fv (expr_fvs e).
 Proof.
   intros e. apply (core_induct e); intros; simpl; auto.
-  - destruct binds; auto. apply addBndrs_WF.
+  - destruct binds; auto. 
+    apply union_FV_WF; apply union_FV_WF; try done.
+    eapply bndrRuleAndUnfoldingFVs_WF.
+    eapply del_FV_WF; auto.
+    apply addBndrs_WF.
     apply union_FV_WF; auto. apply unions_FV_WF.
     intros. induction l; simpl in H1; try contradiction.
     destruct a. destruct H1. 
-    + rewrite <- H1. apply H with (v:=c). constructor; reflexivity.
+    + rewrite <- H1. 
+      eapply union_FV_WF.
+      apply H with (v:=c). constructor; reflexivity.
+      eapply bndrRuleAndUnfoldingFVs_WF.
     + apply IHl; auto. intros.
       specialize (H v rhs). apply H. apply in_cons; auto.
   - apply union_FV_WF; auto.
@@ -328,20 +355,24 @@ Proof.
   unfold exprFVs.
   unfold_FV.
   unfold expr_fvs. fold expr_fvs.
-  rewrite union_empty_r.
-
-
   move: (expr_fvs_WF body) => [vbody h1].
   denote h1 h5.
   move: (expr_fvs_WF rhs) => [vrhs h0].
   denote h0 h5.
   move: (addBndr_fv (expr_fvs body) v vbody h1) => h2.
-  move: (unionVarSet_unionFV _ _ _ _ h2 h0) => h3.
-  denote h3 h5.
+  move: (emptyVarSet_bndrRuleAndUnfoldingFVs v) => h4.
+  move: (unionVarSet_unionFV _ _ _ _ h4 h0) => h3.
+  move: (unionVarSet_unionFV _ _ _ _ h2 h3) => h6.
+  denote h6 h5.
 
   rewrite <- unionVarSet_filterVarSet => //.
   rewrite unionVarSet_sym.
   rewrite filterVarSet_delVarSet => //.
+  eapply union_equal_1.
+  eapply filterVarSet_equal.
+  eauto.
+  rewrite unionEmpty_l.
+  reflexivity.
 Qed.
 
 Lemma push_foldable (f : VarSet -> VarSet) b (xs : list VarSet) :
@@ -413,46 +444,50 @@ Proof.
   rewrite h5.
 
   have g0 : Forall2 Denotes 
-                 (map (fun rhs => (FV.fvVarSet (expr_fvs rhs))) (map snd pairs))
-                 (map (fun '(_, rhs) => expr_fvs rhs) pairs).
+                 (map (fun '(bndr,rhs) => (FV.fvVarSet (FV.unionFV (expr_fvs rhs)(bndrRuleAndUnfoldingFVs bndr)))) pairs)
+                 (map (fun '(bndr, rhs) => (FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr))) pairs).
   { 
     clear h h2 H2 H3 h5.
     elim: pairs => [|p ps].  simpl. 
     eauto.
     simpl.
-    move: p => [? rhs]. simpl.
+    move: p => [bndr rhs]. simpl.
     move=> Ih.
     econstructor; eauto.
+    admit.
+(*    clear Ih f f1.
     move: (expr_fvs_WF rhs) => [vsr h0].
-    move: (DenotesfvVarSet _ _ h0) => h2. rewrite <- h2 in h0.  auto.
-    
+    move: (emptyVarSet_bndrRuleAndUnfoldingFVs bndr) => h3. 
+    move: (unionVarSet_unionFV _ _ _ _ h3 h0) => h4.
+    move: (DenotesfvVarSet _ _ h4) => h2.
+    rewrite -> unionEmpty_l in h2.
+    rewrite <- h2 in h0.
+    auto. *)
   }
 
   move: (unionsVarSet_unionsFV _ _ g0) => h4.
-  move: (unionVarSet_unionFV _ _ _ _ h1 h4) => g5. 
+  move: (unionVarSet_unionFV _ _ _ _ h1 h4) => g5.
   move: (addBndrs_fv _ (Base.map Tuple.fst pairs) _ g5) => h6.
   
   denote h6 h7.
 
-  rewrite filterVarSet_delVarSetList.
+  rewrite filterVarSet_delVarSetList; try done.
   f_equiv.
-  rewrite <- unionVarSet_filterVarSet.
+  rewrite <- unionVarSet_filterVarSet; try done.
   rewrite unionVarSet_sym.
   f_equiv.
   unfold mapUnionVarSet.
   rewrite Foldable_foldr_map.
+  rewrite List.map_map.
   unfold f1.
   rewrite push_foldable.
-  f_equiv.
-  rewrite List.map_map.
-  f_equal.
+  + admit.
+  +
   move=> x y.
   rewrite unionVarSet_filterVarSet.
   reflexivity.
   done.
-  done.
-  done.
-Qed.
+Admitted.
 
 Lemma Denotes_fvVarSet e: Denotes (FV.fvVarSet (expr_fvs e)) (expr_fvs e).
 Proof. 

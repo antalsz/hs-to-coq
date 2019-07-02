@@ -204,7 +204,7 @@ Proof.
   induction H0.
   * split; only 1: split; assumption.
 (*   * split; only 1: split; assumption. *)
-  * split; only 1: split; assumption. 
+(*  * split; only 1: split; assumption.  *)
 Qed.
 
 Lemma GoodVar_almostEqual : 
@@ -237,17 +237,16 @@ Proof.
   * trivial.
 Qed.
 
-(* XXXX this is not true if v can be a tyvar. *)
 Lemma WellScoped_varToCoreExpr:
   forall v isvs,
   WellScopedVar v isvs -> WellScoped (varToCoreExpr v) isvs.
 Proof.
   intros.
   destruct v; simpl; try trivial.
-  + unfold WellScopedVar in H. simpl in H.
+(*  + unfold WellScopedVar in H. simpl in H.
     destruct lookupVarSet; try done.
     move: H => [h0 h1]. unfold GoodVar in h1; simpl in h1.
-    move: h1 => [_ [_ [h2 _]]]. done.
+    move: h1 => [_ [_ [h2 _]]]. done. *)
   + unfold varToCoreExpr; simpl.
     rewrite andb_false_r; try done.
 Qed. 

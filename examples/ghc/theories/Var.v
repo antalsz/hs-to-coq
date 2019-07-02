@@ -195,9 +195,9 @@ Qed.
 *)
 
 Inductive almostEqual : Var -> Var -> Prop :=
- | AE_TyVar   : forall n u ty,
+(*  | AE_TyVar   : forall n u ty,
    almostEqual (Mk_TyVar n u ty)
-               (Mk_TyVar n u ty) 
+               (Mk_TyVar n u ty)  *)
 (* | AE_TcTyVar : forall n u ty1 ty2,
    almostEqual (Mk_TcTyVar n u ty1 ty2)
                (Mk_TcTyVar n u ty1 ty2) *)

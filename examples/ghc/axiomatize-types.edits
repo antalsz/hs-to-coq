@@ -60,7 +60,7 @@ rename value DataCon.HsSrcBang  = Core.Mk_HsSrcBang
 rename value DataCon.EqSpec     = Core.Mk_EqSpec
 rename value Class.Class        = Core.Mk_Class
 rename value Var.Id             = Core.Mk_Id
-rename value Var.TyVar          = Core.Mk_TyVar
+# rename value Var.TyVar          = Core.Mk_TyVar
 # rename value Var.TcTyVar        = Core.Mk_TcTyVar
 rename value IdInfo.IdInfo      = Core.Mk_IdInfo
 rename value IdInfo.DFunId      = Core.Mk_DFunId
@@ -90,14 +90,16 @@ rename value CoreSubst.Subst  = CoreSubst.Mk_Subst
 
 ## Outputtable
 rewrite forall x, Core.pprIdDetails x = Panic.someSDoc
+
 ## CallStack 
 rewrite forall x, Core.idInfo x = @Core.idInfo tt x
-
 rewrite forall x, Core.splitTyConApp_maybe x = @Core.splitTyConApp_maybe tt x
 rewrite forall x, Core.isUnliftedType x = @Core.isUnliftedType tt x
 rewrite forall , Core.idInfo = (@Core.idInfo tt)
-
 rewrite forall x, Core.typeKind x = @Core.typeKind tt x
+rewrite forall x, Core.substTyVarBndr x = @Core.substTyVarBndr tt x
+rewrite forall x, Core.substCo x = @Core.substCo tt x
+rewrite forall x, Core.isStrictType x = @Core.isStrictType tt x
 
 rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 
@@ -133,16 +135,22 @@ skip constructor Core.DFunUnfolding
 skip constructor Core.CoreUnfolding
 
 #
-# eliminating parts of the 'Expr' type
+# eliminating parts of the 'Expr' and 'AnnExpr' type
 #
 skip constructor Core.Tick
 
 skip constructor Core.AnnTick
 #
-# eliminating TcTy variables
+# eliminating TcTy variables and Type variables from 'Var'
 #
 skip constructor Core.TcTyVar
+skip constructor Core.TyVar
 
+# eliminating coercion variables from 'IdDetails' 
+# (there are other unimportant IdDetails, but this one controls
+# the operations 'isCoVar` and `isNonCoVarId`)
+
+skip constructor Core.CoVarId
 
 ###############################################################################
 # axiomatize type & coercion information
@@ -205,44 +213,53 @@ axiomatize definition Core.dataConCannotMatch
 
 
 #
-# These are wrong, but important for our proofs
-# (they were in TyCoRep)
+# (these operations were in TyCoRep)
 #
 rewrite forall co,     Core.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,     Core.tyCoFVsOfType ty        = FV.emptyFV
 rewrite forall b_ty,   Core.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
 rewrite forall co,     Core.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 
-in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
-in CoreSubst.substBndr rewrite forall bndr, Core.isCoVar bndr = false
+# in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
+# in CoreSubst.substBndr rewrite forall bndr, Core.isCoVar bndr = false
+# in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isTyVar bndr = false 
+# in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isCoVar bndr = false
+
 in CoreSubst.substBndr   rewrite forall x, Core.noFreeVarsOfType x = true
 in CoreSubst.substIdBndr rewrite forall x, Core.noFreeVarsOfType x = true
-in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isTyVar bndr = false 
-in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isCoVar bndr = false
 
 # we cannot verify these assertions as we aren't tracking whether types are
 # coercion types are not. 
 #
 in Id.mkSysLocal rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkUserLocal rewrite forall ty, (Core.isCoercionType ty) = false
+in Id.mkLocalIdOrCoVarWithInfo rewrite forall ty, (Core.isCoercionType ty) = false
+in Id.mkLocalIdOrCoVar rewrite forall ty, Core.isCoercionType ty = false
 
 #
 # We need to avoid creating new Coercions and Types
 #
-in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
-in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
-in Core.varToCoreExpr rewrite forall bndr, Core.isId v = true
+# in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
+# in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
+# in Core.varToCoreExpr rewrite forall bndr, Core.isId v = true
 
-#
-# This function creates an mixed term/type application. with this edit we will 
-# only be able to use it when the list of types is nil
-#
-# in Core.mkConApp2 rewrite forall , Core.Type_ = GHC.Err.default
+############################################################################
+# pruning ticks
+############################################################################
 
+in CoreFVs.expr_fvs rewrite forall t, CoreFVs.tickish_fvs t = FV.emptyFV
+
+# remove reasoning about ticks
+#
+rewrite forall xs e, CoreUtils.stripTicksE xs e = e
+rewrite forall xs e, CoreUtils.stripTicksT xs e = e
+rewrite forall ts e, CoreUtils.mkTicks ts e = e
 
 ############################################################################
 # pruning Rules and Unfolding
 ############################################################################
 
-redefine Definition    CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition CoreFVs.idRuleFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
+redefine Definition Id.idCoreRules    : Core.Id -> list (Core.CoreRule) 
+   := fun x => nil.
 

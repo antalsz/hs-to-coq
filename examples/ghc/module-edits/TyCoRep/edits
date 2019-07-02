@@ -32,7 +32,7 @@ skip AxiomatizedTypes.PredType
 #skip Core.CvSubstEnv
 #skip Core.TCvSubst
 
-skip Core.mkTyVarTy
+# skip Core.mkTyVarTy
 
 #
 # refers to ConLike

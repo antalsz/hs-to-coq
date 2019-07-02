@@ -87,7 +87,6 @@ CORE_MODULES = \
   CallArity \
   CoAxiom \
   TysWiredIn \
-  TysPrim \
 #  MkCore \
 
 ## We don't actually need any of these

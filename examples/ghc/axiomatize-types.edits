@@ -60,7 +60,7 @@ rename value DataCon.HsSrcBang  = Core.Mk_HsSrcBang
 rename value DataCon.EqSpec     = Core.Mk_EqSpec
 rename value Class.Class        = Core.Mk_Class
 rename value Var.Id             = Core.Mk_Id
-# rename value Var.TyVar          = Core.Mk_TyVar
+rename value Var.TyVar          = Core.Mk_TyVar
 # rename value Var.TcTyVar        = Core.Mk_TcTyVar
 rename value IdInfo.IdInfo      = Core.Mk_IdInfo
 rename value IdInfo.DFunId      = Core.Mk_DFunId
@@ -75,7 +75,9 @@ rename value Demand.DmdType     = Core.Mk_DmdType
 rename value Demand.StrictSig   = Core.Mk_StrictSig
 rename value Demand.KillFlags   = Core.Mk_KillFlags
 
-rename value TyCoRep.TCvSubst     = Core.Mk_TCvSubst
+rename value TyCoRep.TCvSubst   = Core.Mk_TCvSubst
+rename value CoreSyn.Type_      = Core.Mk_Type
+rename value CoreSyn.Coercion   = Core.Mk_Coercion
 
 ## Other punning
 
@@ -133,27 +135,13 @@ skip constructor Core.CoreUnfolding
 #
 # eliminating parts of the 'Expr' type
 #
-skip constructor Core.Type_
 skip constructor Core.Tick
-skip constructor Core.Coercion
-skip constructor Core.Cast
 
-skip constructor Core.AnnType
 skip constructor Core.AnnTick
-skip constructor Core.AnnCoercion
-skip constructor Core.AnnCast
-
 #
-# eliminating Ty and TcTy variables
+# eliminating TcTy variables
 #
 skip constructor Core.TcTyVar
-skip constructor Core.TyVar
-
-#
-# eliminating Co variables
-#
-skip constructor Core.CoVarId
-skip constructor Core.TicBoxOpId
 
 
 ###############################################################################
@@ -238,10 +226,23 @@ in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isCoVar bndr = false
 in Id.mkSysLocal rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkUserLocal rewrite forall ty, (Core.isCoercionType ty) = false
 
+#
+# We need to avoid creating new Coercions and Types
+#
+in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
+in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
+in Core.varToCoreExpr rewrite forall bndr, Core.isId v = true
+
+#
+# This function creates an mixed term/type application. with this edit we will 
+# only be able to use it when the list of types is nil
+#
+# in Core.mkConApp2 rewrite forall , Core.Type_ = GHC.Err.default
+
 
 ############################################################################
 # pruning Rules and Unfolding
 ############################################################################
 
 redefine Definition    CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-# redefine Definition    CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
+

@@ -88,16 +88,16 @@ Inductive GoDom : CoreExpr -> Prop :=
   | GoDom_Case scrut bndr ty alts:
     Forall (fun p => GoDom (snd p)) alts ->
     GoDom (Case scrut bndr ty alts)
-(*  | GoDom_Cast e c:
+  | GoDom_Cast e c:
     GoDom e ->
     GoDom (Cast e c)
-  | GoDom_Tick  e t:
+(*  | GoDom_Tick  e t:
     GoDom e ->
-    GoDom (Tick t e)
+    GoDom (Tick t e) *)
   | GoDom_Type t:
-    GoDom (Type_ t)
+    GoDom (Mk_Type t)
   | GoDom_Coercion t:
-    GoDom (Coercion t) *)
+    GoDom (Mk_Coercion t) 
  with GoDom_JoinPair : CoreBndr -> CoreExpr -> Prop :=
   | GoDom_Join v params rhs :
     isJoinId_maybe v = Some (length params) ->
@@ -230,14 +230,14 @@ Next Obligation.
      simpl_bool. destruct Halts as [HnotJoins Hrhs].
      apply IH in Hrhs; only 2: Core_termination.
      assumption.
-(*   * simpl in H.
-     apply IH in H; only 2: Core_termination.
-     constructor. assumption.
    * simpl in H.
      apply IH in H; only 2: Core_termination.
      constructor. assumption.
+(*   * simpl in H.
+     apply IH in H; only 2: Core_termination.
+     constructor. assumption. *)
    * constructor.
-   * constructor. *)
+   * constructor. 
 Qed.
 
 Lemma isValidJoinPointsPair_GoDom_JoinPair:
@@ -3178,19 +3178,19 @@ Next Obligation.
       - apply IHrhs.
       - apply Hnot_joins.
       - apply IHrhs.
-(*  * (* Cast *)
+  * (* Cast *)
     simpl in *.
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
     assumption.
-  * (* Tick *)
+(*  * (* Tick *)
     simpl in *.
     (* destruct HWS as [HWS HWT]. *)
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
-    intuition.
+    intuition. *)
   * (* Type *)
     intuition.
   * (* Coercion *)
-    intuition. *)
+    intuition. 
 Unshelve.
   all: Core_termination || (unfold CoreLT; simpl; lia). (* phew *)
 Qed.

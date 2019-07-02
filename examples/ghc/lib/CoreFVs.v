@@ -143,12 +143,16 @@ Definition addBndrs : list Core.CoreBndr -> FV.FV -> FV.FV :=
 Definition expr_fvs : Core.CoreExpr -> FV.FV :=
   fix expr_fvs arg_0__ arg_1__ arg_2__ arg_3__
         := match arg_0__, arg_1__, arg_2__, arg_3__ with
+           | Core.Mk_Type ty, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+           | Core.Mk_Coercion co, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
            | Core.Mk_Var var, fv_cand, in_scope, acc => FV.unitFV var fv_cand in_scope acc
            | Core.Lit _, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
            | Core.App fun_ arg, fv_cand, in_scope, acc =>
                (FV.unionFV (expr_fvs fun_) (expr_fvs arg)) fv_cand in_scope acc
            | Core.Lam bndr body, fv_cand, in_scope, acc =>
                addBndr bndr (expr_fvs body) fv_cand in_scope acc
+           | Core.Cast expr co, fv_cand, in_scope, acc =>
+               (FV.unionFV (expr_fvs expr) FV.emptyFV) fv_cand in_scope acc
            | Core.Case scrut bndr ty alts, fv_cand, in_scope, acc =>
                let alt_fvs :=
                  fun '(pair (pair _ bndrs) rhs) => addBndrs bndrs (expr_fvs rhs) in
@@ -349,6 +353,12 @@ Definition freeVars : Core.CoreExpr -> CoreExprWithFVs :=
                let body2 := freeVars body in
                let 'pair bind2 bind_fvs := freeVarsBind bind (freeVarsOf body2) in
                pair bind_fvs (Core.AnnLet bind2 body2)
+           | Core.Cast expr co =>
+               let cfvs := Core.emptyDVarSet in
+               let expr2 := freeVars expr in
+               pair (unionFVs (freeVarsOf expr2) cfvs) (Core.AnnCast expr2 (pair cfvs co))
+           | Core.Mk_Type ty => pair Core.emptyDVarSet (Core.AnnType ty)
+           | Core.Mk_Coercion co => pair Core.emptyDVarSet (Core.AnnCoercion co)
            end with freeVarsBind (arg_0__ : Core.CoreBind) (arg_1__ : Core.DVarSet)
                       : (CoreBindWithFVs * Core.DVarSet)%type
                       := match arg_0__, arg_1__ with
@@ -403,6 +413,12 @@ Definition freeVarsBind
                let body2 := freeVars body in
                let 'pair bind2 bind_fvs := freeVarsBind bind (freeVarsOf body2) in
                pair bind_fvs (Core.AnnLet bind2 body2)
+           | Core.Cast expr co =>
+               let cfvs := Core.emptyDVarSet in
+               let expr2 := freeVars expr in
+               pair (unionFVs (freeVarsOf expr2) cfvs) (Core.AnnCast expr2 (pair cfvs co))
+           | Core.Mk_Type ty => pair Core.emptyDVarSet (Core.AnnType ty)
+           | Core.Mk_Coercion co => pair Core.emptyDVarSet (Core.AnnCoercion co)
            end with freeVarsBind (arg_0__ : Core.CoreBind) (arg_1__ : Core.DVarSet)
                       : (CoreBindWithFVs * Core.DVarSet)%type
                       := match arg_0__, arg_1__ with
@@ -425,18 +441,19 @@ Definition freeVarsBind
 
 (* External variables:
      None andb bool cons list negb op_zt__ option pair snd BasicTypes.Activation
-     Core.AnnAlt Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnExpr Core.AnnExpr'
-     Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec Core.AnnRec Core.AnnVar
-     Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.CoreBind Core.CoreBndr
-     Core.CoreExpr Core.CoreRule Core.CoreVect Core.DIdSet Core.DTyCoVarSet
-     Core.DVarSet Core.Id Core.IdSet Core.Lam Core.Let Core.Lit Core.Mk_Var
-     Core.NoVect Core.NonRec Core.Rec Core.Rule Core.Tickish Core.TyCoVarSet
-     Core.Unfolding Core.Var Core.VarSet Core.Vect Core.VectClass Core.VectInst
-     Core.VectType Core.delDVarSet Core.emptyDVarSet Core.emptyVarSet Core.isId
-     Core.isLocalId Core.isLocalVar Core.mapUnionVarSet Core.unionDVarSet
-     Core.unionDVarSets Core.unitDVarSet Data.Foldable.foldr Data.Tuple.fst FV.FV
-     FV.InterestingVarFun FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList
-     FV.fvVarSet FV.mapUnionFV FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map
+     Core.AnnAlt Core.AnnApp Core.AnnBind Core.AnnCase Core.AnnCast Core.AnnCoercion
+     Core.AnnExpr Core.AnnExpr' Core.AnnLam Core.AnnLet Core.AnnLit Core.AnnNonRec
+     Core.AnnRec Core.AnnType Core.AnnVar Core.App Core.Breakpoint Core.BuiltinRule
+     Core.Case Core.Cast Core.CoreBind Core.CoreBndr Core.CoreExpr Core.CoreRule
+     Core.CoreVect Core.DIdSet Core.DTyCoVarSet Core.DVarSet Core.Id Core.IdSet
+     Core.Lam Core.Let Core.Lit Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NoVect
+     Core.NonRec Core.Rec Core.Rule Core.Tickish Core.TyCoVarSet Core.Unfolding
+     Core.Var Core.VarSet Core.Vect Core.VectClass Core.VectInst Core.VectType
+     Core.delDVarSet Core.emptyDVarSet Core.emptyVarSet Core.isId Core.isLocalId
+     Core.isLocalVar Core.mapUnionVarSet Core.unionDVarSet Core.unionDVarSets
+     Core.unitDVarSet Data.Foldable.foldr Data.Tuple.fst FV.FV FV.InterestingVarFun
+     FV.delFV FV.emptyFV FV.filterFV FV.fvDVarSet FV.fvVarList FV.fvVarSet
+     FV.mapUnionFV FV.mkFVs FV.unionFV FV.unionsFV FV.unitFV GHC.Base.map
      GHC.Base.op_z2218U__ GHC.List.unzip GHC.List.zip GHC.Num.fromInteger
      Id.idCoreRules Id.idType Id.realIdUnfolding Lists.List.map Maybes.orElse
      NameSet.NameSet NameSet.emptyNameSet NameSet.unionNameSet

@@ -550,13 +550,15 @@ Proof.
   rewrite filterVarSet_delVarSetList => //.
 Qed.
 
-(*
+
 Lemma exprFreeVars_Cast:
   forall e co,
   exprFreeVars (Cast e co) [=] exprFreeVars e.
 Proof. 
   intros. reflexivity.
 Qed.
+
+(*
 
 Definition tickishFreeVars := 
 fun arg_0__ : Tickish Var => match arg_0__ with
@@ -615,17 +617,18 @@ Lemma exprFreeVars_Tick:
   forall e t,
   exprFreeVars (Tick t e) [=] exprFreeVars e.
 Proof. done. Qed.
+*)
 
 Lemma exprFreeVars_Type:
   forall t,
-  exprFreeVars (Type_ t) = emptyVarSet.
+  exprFreeVars (Mk_Type t) = emptyVarSet.
 Proof. intros. reflexivity. Qed.
 
 Lemma exprFreeVars_Coercion:
   forall co,
-  exprFreeVars (Coercion co) = emptyVarSet.
+  exprFreeVars (Mk_Coercion co) = emptyVarSet.
 Proof. intros. reflexivity. Qed.
-*)
+
 
 (* ---------------------------------------------------------- *)
 
@@ -746,7 +749,7 @@ Proof.
     unfold freeVars; fold freeVars.
     rewrite <- h1. rewrite <- h2.
     unfold freeVarsOf.
-Admitted.
+Abort.
 *)
 
 Lemma deAnnotate_freeVars:

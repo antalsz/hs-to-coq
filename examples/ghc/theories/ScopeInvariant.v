@@ -126,10 +126,10 @@ Fixpoint WellScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
       Forall GoodLocalVar (snd (fst alt)) /\
       let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
       WellScoped (snd alt) in_scope') alts
-(*  | Cast e _ =>   WellScoped e in_scope
-  | Tick _ e =>   WellScoped e in_scope (* /\ WellScopedTickish t in_scope *)
-  | Type_ _  =>   True
-  | Coercion _ => True *)
+  | Cast e _ =>   WellScoped e in_scope
+(*  | Tick _ e =>   WellScoped e in_scope *) (* /\ WellScopedTickish t in_scope *) 
+  | Mk_Type _  =>   True
+  | Mk_Coercion _ => True 
   end
 with WellScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
   match bind with
@@ -203,8 +203,8 @@ Proof.
   destruct H. destruct H.
   induction H0.
   * split; only 1: split; assumption.
-(*   * split; only 1: split; assumption.
-  * split; only 1: split; assumption. *)
+(*   * split; only 1: split; assumption. *)
+  * split; only 1: split; assumption. 
 Qed.
 
 Lemma GoodVar_almostEqual : 
@@ -237,17 +237,20 @@ Proof.
   * trivial.
 Qed.
 
-
+(* XXXX this is not true if v can be a tyvar. *)
 Lemma WellScoped_varToCoreExpr:
   forall v isvs,
   WellScopedVar v isvs -> WellScoped (varToCoreExpr v) isvs.
 Proof.
   intros.
   destruct v; simpl; try trivial.
-  unfold varToCoreExpr; simpl.
-  rewrite andb_false_r; try done.
-(*  destruct_match; simpl; try trivial. *)
-Qed.
+  + unfold WellScopedVar in H. simpl in H.
+    destruct lookupVarSet; try done.
+    move: H => [h0 h1]. unfold GoodVar in h1; simpl in h1.
+    move: h1 => [_ [_ [h2 _]]]. done.
+  + unfold varToCoreExpr; simpl.
+    rewrite andb_false_r; try done.
+Qed. 
 
 
 Lemma WellScoped_Lam:
@@ -468,11 +471,11 @@ Proof.
       apply subVarSet_delVarSetList_extendVarSetList_dual.
       apply (H0 _ _ _ HIn).
       assumption.
-(*  - rewrite exprFreeVars_Cast. apply H; assumption.
-  - rewrite exprFreeVars_Tick.
+  - rewrite exprFreeVars_Cast. apply H; assumption.
+(*  - rewrite exprFreeVars_Tick.
     simpl in H0.
     by apply H.
-    (*
+
     rewrite exprFreeVars_Tick. 
     simpl in H0. move: H0 => [a b].
     destruct tickish; unfold tickishFreeVars in *; hs_simpl;
@@ -500,7 +503,7 @@ Proof.
     rewrite h in WSy. done.
     *)
   - apply subVarSet_emptyVarSet.
-  - apply subVarSet_emptyVarSet. *)
+  - apply subVarSet_emptyVarSet. 
 Qed.
 
 
@@ -707,12 +710,12 @@ Proof.
         epose proof (mapUnionVarSet_In_subVarSet f HIn) as H ; simpl in H end.
       rewrite -> delVarSetList_rev, <- delVarSetList_single, <- delVarSetList_app.
       set_b_iff; fsetdec.
-(*  * apply H. 
+  * apply H. 
     eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     apply subVarSet_delVarSetList_both.
     rewrite exprFreeVars_Cast.
     set_b_iff; fsetdec.
-  * simpl.
+(*  * simpl.
     apply H.
     eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     apply subVarSet_delVarSetList_both.
@@ -748,9 +751,9 @@ Proof.
           auto.
        -- rewrite (exprFreeVars_global_Var x LV).
           apply subVarSet_emptyVarSet.
-    *)
+    *) *)
   * reflexivity.
-  * reflexivity. *)
+  * reflexivity. 
 Qed.
 
 Lemma WellScoped_extendVarSetList_fresh:
@@ -858,8 +861,8 @@ Proof.
        specialize (H0 _ _ _ HIn).
        apply Respects_StrongSubset_extendVarSetList.
        apply H0.
-(*   * apply H.
    * apply H.
+(*   * apply H.
      (*
      unfold Respects_StrongSubset
      move=> vs1 vs2 SS.
@@ -867,7 +870,7 @@ Proof.
      split.
      eauto.
      eapply Respects_StrongSubset_WellScopedTickish; eauto.
-     *)
+     *) *)
    * apply Respects_StrongSubset_const.
-   * apply Respects_StrongSubset_const. *)
+   * apply Respects_StrongSubset_const. 
 Qed.

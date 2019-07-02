@@ -235,8 +235,8 @@ Proof.
     [ v | lit
     | e1 e2 IH1 IH2 | v e IH
     | [v rhs | pairs] body IHbind IHbody | scrut bndr ty alts IHscrut IHalts
-(*    | e ty IH | tickish e IH
-    | co | ty *)]
+    | e ty IH (* | tickish e IH *)
+    | co | ty ]
     vars
     [[in_scope id_env tm cm] cs_map cs_rec_map]
     //; hs_simpl;

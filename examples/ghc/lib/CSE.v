@@ -205,9 +205,14 @@ Definition cseBind
              let ty' := CoreSubst.substTy (csEnvSubst env) ty in
              Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
            match arg_0__, arg_1__ with
+           | env, Core.Mk_Type t => Core.Mk_Type (CoreSubst.substTy (csEnvSubst env) t)
+           | env, Core.Mk_Coercion c =>
+               Core.Mk_Coercion (CoreSubst.substCo (csEnvSubst env) c)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.Mk_Var v => lookupSubst env v
            | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
+           | env, Core.Cast e co =>
+               Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
            | env, Core.Lam b e =>
                let 'pair env' b' := addBinder env b in
                Core.Lam b' (cseExpr env' e)
@@ -336,9 +341,14 @@ Definition cseExpr : CSEnv -> Core.InExpr -> Core.OutExpr :=
              let ty' := CoreSubst.substTy (csEnvSubst env) ty in
              Core.Case scrut1 bndr3 ty' (combineAlts alt_env (GHC.Base.map cse_alt alts)) in
            match arg_0__, arg_1__ with
+           | env, Core.Mk_Type t => Core.Mk_Type (CoreSubst.substTy (csEnvSubst env) t)
+           | env, Core.Mk_Coercion c =>
+               Core.Mk_Coercion (CoreSubst.substCo (csEnvSubst env) c)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.Mk_Var v => lookupSubst env v
            | env, Core.App f a => Core.App (cseExpr env f) (tryForCSE env a)
+           | env, Core.Cast e co =>
+               Core.Cast (tryForCSE env e) (CoreSubst.substCo (csEnvSubst env) co)
            | env, Core.Lam b e =>
                let 'pair env' b' := addBinder env b in
                Core.Lam b' (cseExpr env' e)
@@ -496,20 +506,21 @@ Definition cse_bind
      BasicTypes.NotTopLevel BasicTypes.TopLevel BasicTypes.TopLevelFlag
      BasicTypes.inlinePragmaSpec BasicTypes.isAlwaysActive
      BasicTypes.isAnyInlinePragma BasicTypes.isTopLevel BasicTypes.noUserInlineSpec
-     Core.App Core.Case Core.CoreBind Core.CoreExpr Core.CoreProgram Core.DEFAULT
-     Core.DataAlt Core.Id Core.InAlt Core.InExpr Core.InId Core.InType Core.InVar
-     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.OutExpr Core.OutId
-     Core.OutType Core.Rec Core.Var Core.elemInScopeSet Core.isId Core.mkInScopeSet
-     Core.mkLams Core.tyConAppArgs Core.varToCoreExpr CoreFVs.exprFreeVars
-     CoreSubst.Subst CoreSubst.emptySubst CoreSubst.extendSubst
-     CoreSubst.lookupIdSubst CoreSubst.mkEmptySubst CoreSubst.substBndr
-     CoreSubst.substBndrs CoreSubst.substInScope CoreSubst.substRecBndrs
-     CoreSubst.substTy CoreUtils.eqExpr CoreUtils.exprIsTickedString
-     CoreUtils.mkAltExpr Data.Foldable.all Data.Foldable.null
-     Data.Traversable.mapAccumL Data.Tuple.fst Data.Tuple.snd Datatypes.id
-     GHC.Base.map GHC.Err.patternFailure Id.idInlineActivation Id.idInlinePragma
-     Id.idType Id.isDeadBinder Id.isJoinId Id.isJoinId_maybe Id.zapIdOccInfo
-     Id.zapIdUsageInfo NestedRecursionHelpers.collectNBinders_k
-     NestedRecursionHelpers.zipMapAccumL TrieMap.CoreMap TrieMap.emptyCoreMap
-     TrieMap.extendCoreMap TrieMap.lookupCoreMap Util.filterOut
+     Core.App Core.Case Core.Cast Core.CoreBind Core.CoreExpr Core.CoreProgram
+     Core.DEFAULT Core.DataAlt Core.Id Core.InAlt Core.InExpr Core.InId Core.InType
+     Core.InVar Core.Lam Core.Let Core.Lit Core.Mk_Coercion Core.Mk_Type Core.Mk_Var
+     Core.NonRec Core.OutExpr Core.OutId Core.OutType Core.Rec Core.Var
+     Core.elemInScopeSet Core.isId Core.mkInScopeSet Core.mkLams Core.tyConAppArgs
+     Core.varToCoreExpr CoreFVs.exprFreeVars CoreSubst.Subst CoreSubst.emptySubst
+     CoreSubst.extendSubst CoreSubst.lookupIdSubst CoreSubst.mkEmptySubst
+     CoreSubst.substBndr CoreSubst.substBndrs CoreSubst.substCo
+     CoreSubst.substInScope CoreSubst.substRecBndrs CoreSubst.substTy
+     CoreUtils.eqExpr CoreUtils.exprIsTickedString CoreUtils.mkAltExpr
+     Data.Foldable.all Data.Foldable.null Data.Traversable.mapAccumL Data.Tuple.fst
+     Data.Tuple.snd Datatypes.id GHC.Base.map GHC.Err.patternFailure
+     Id.idInlineActivation Id.idInlinePragma Id.idType Id.isDeadBinder Id.isJoinId
+     Id.isJoinId_maybe Id.zapIdOccInfo Id.zapIdUsageInfo
+     NestedRecursionHelpers.collectNBinders_k NestedRecursionHelpers.zipMapAccumL
+     TrieMap.CoreMap TrieMap.emptyCoreMap TrieMap.extendCoreMap TrieMap.lookupCoreMap
+     Util.filterOut
 *)

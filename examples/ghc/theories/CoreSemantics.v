@@ -48,10 +48,10 @@ Definition subst (e₀ : CoreExpr) (n : Id) (e' : CoreExpr) : CoreExpr :=
                                    (if n == n'
                                     then alts
                                     else map (λ '(k, ns, u), (k, ns, if elem n ns then u else subst u)) alts)
-(*        | Cast e γ         => Cast (subst e) γ
-        | Tick tick e      => Tick tick (subst e)
-        | Type_ τ          => Type_ τ
-        | Coercion γ       => Coercion γ *)
+        | Cast e γ         => Cast (subst e) γ
+(*        | Tick tick e      => Tick tick (subst e) *)
+        | Mk_Type τ        => Mk_Type τ
+        | Mk_Coercion γ    => Mk_Coercion γ 
       end
   in subst e₀.
 
@@ -82,10 +82,10 @@ Definition substs (e₀ : CoreExpr) (ss : list (Id * CoreExpr)) : CoreExpr :=
                                                              then u
                                                              else subst u))
                                             alts)
-(*         | Cast e γ        => Cast (subst e) γ
-        | Tick tick e     => Tick tick (subst e)
-        | Type_ τ         => Type_ τ
-        | Coercion γ      => Coercion γ *)
+        | Cast e γ        => Cast (subst e) γ
+(*        | Tick tick e     => Tick tick (subst e) *)
+        | Mk_Type τ         => Mk_Type τ
+        | Mk_Coercion γ      => Mk_Coercion γ 
       end
   in subst e₀.
 
@@ -122,8 +122,8 @@ Proof.
   rewrite /subst /substs.
   match goal with |- ?fix_subst e₀ = ?fix_substs e₀ => set subst := fix_subst; set substs := fix_substs end.
   elim/core_induct: e₀ =>
-    [ n' | lit | e₁  e₂ IH₁ IH₂ | n' e IH | [n' e₁ | bs] e₂ IH₁ IH₂ | e n' τ alts IH₁ IH₂ ]
-(*     | e γ IH | tick e IH | τ | γ ] *)
+    [ n' | lit | e₁  e₂ IH₁ IH₂ | n' e IH | [n' e₁ | bs] e₂ IH₁ IH₂ | e n' τ alts IH₁ IH₂ 
+     | e γ IH (* | tick e IH *) | τ | γ ] 
     //=.
   - by rewrite Eq_sym; case: (_ == _).
   - by rewrite IH₁ IH₂.
@@ -139,8 +139,8 @@ Proof.
     + elim: ns {IN} => [|n'' ns IHns] //=.
       by rewrite elemC IHns Eq_sym; case: (_ == _).
     + by rewrite (IH₂ _ _ _ IN).
-(*   - by rewrite IH.
-  - by rewrite IH. *)
+   - by rewrite IH.
+(*  - by rewrite IH. *)
 Qed.
 
 Definition subst_expr'
@@ -156,12 +156,12 @@ Definition subst_expr'
              end in
        match expr with
        | Core.Mk_Var v => lookupIdSubst (Panic.someSDoc) subst v
-(*        | Core.Type_ ty => Core.Type_ ty
-       | Core.Coercion co => Core.Coercion co *)
+       | Core.Mk_Type ty => Core.Mk_Type ty
+       | Core.Mk_Coercion co => Core.Mk_Coercion co 
        | Core.Lit lit => Core.Lit lit
        | Core.App fun_ arg => Core.App (go fun_) (go arg)
-(*       | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
-       | Core.Cast e co => Core.Cast (go e) co *)
+(*       | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e) *)
+       | Core.Cast e co => Core.Cast (go e) co 
        | Core.Lam bndr body =>
          let 'pair subst' bndr' := substBndr subst bndr in
          Core.Lam bndr' (subst_expr doc subst' body)

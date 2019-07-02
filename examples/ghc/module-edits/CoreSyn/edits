@@ -13,7 +13,7 @@ skip Core.mkOtherCon
 skip Core.evaldUnfolding
 
 ####################################
-# removing Type/Coercion/Cast/Tick datacons from Expr
+# removing Tick datacons from Expr
 #
 
 #
@@ -23,25 +23,13 @@ skip Core.evaldUnfolding
 skip equation Core.hasSomeUnfolding _
 
 #
-# This function creates an mixed term/type application. with this edit we will 
-# only be able to use it when the list of types is nil
-#
-in Core.mkConApp2 rewrite forall , Core.Type_ = GHC.Err.default
-
-#
 #  These are 'smart' constructors for constructors that no longer exist.
 #
-skip Core.mkTyBind
-skip Core.mkTyArg
-skip Core.mkTyApps
-skip Core.mkCoBind
-skip Core.mkCoApps
-
-#
-# We need to avoid creating new Coercions and Types
-#
-in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
-in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
+# skip Core.mkTyBind
+# skip Core.mkTyArg
+# skip Core.mkTyApps
+# skip Core.mkCoBind
+# skip Core.mkCoApps
 
 ####################################
 #

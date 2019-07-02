@@ -142,8 +142,11 @@ Definition tidyBind
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
+           | env, Core.Mk_Type ty => Core.Mk_Type (Core.tidyType env ty)
+           | env, Core.Mk_Coercion co => Core.Mk_Coercion (Core.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (Core.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
@@ -177,8 +180,11 @@ Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
+           | env, Core.Mk_Type ty => Core.Mk_Type (Core.tidyType env ty)
+           | env, Core.Mk_Coercion co => Core.Mk_Coercion (Core.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (Core.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
@@ -216,13 +222,14 @@ End Notations.
 
 (* External variables:
      None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
-     Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id Core.Lam Core.Let Core.Lit
-     Core.Mk_Var Core.NonRec Core.Rec Core.Tickish Core.TidyEnv Core.Unfolding
-     Core.Var Core.demandInfo Core.extendVarEnv Core.idDetails Core.idInfo
-     Core.inlinePragInfo Core.isStableUnfolding Core.isTyCoVar Core.lookupVarEnv
-     Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
+     Core.Cast Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id Core.Lam Core.Let
+     Core.Lit Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec
+     Core.Tickish Core.TidyEnv Core.Unfolding Core.Var Core.demandInfo
+     Core.extendVarEnv Core.idDetails Core.idInfo Core.inlinePragInfo
+     Core.isStableUnfolding Core.isTyCoVar Core.lookupVarEnv Core.mkLocalVar
+     Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
      Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
-     Core.setStrictnessInfo Core.setUnfoldingInfo Core.strictnessInfo
+     Core.setStrictnessInfo Core.setUnfoldingInfo Core.strictnessInfo Core.tidyCo
      Core.tidyTyCoVarBndr Core.tidyType Core.unfoldingInfo Core.vanillaIdInfo
      Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
      GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idType Id.idUnique

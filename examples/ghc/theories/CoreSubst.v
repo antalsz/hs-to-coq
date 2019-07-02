@@ -154,7 +154,7 @@ destruct (substBndr s b) as [subst' bndr'].
 f_equal. destruct e; reflexivity.
 Qed.
 
-(*
+
 Lemma subst_expr_Cast : forall doc subst e co, 
    subst_expr doc subst (Cast e co) = 
    Cast (subst_expr doc subst e) (substCo subst co).
@@ -164,9 +164,9 @@ Proof.
   f_equal.
   destruct e; simpl; auto.
 Qed.
-*)
 
-Hint Rewrite subst_expr_App subst_expr_Case (* subst_expr_Cast  *)
+
+Hint Rewrite subst_expr_App subst_expr_Case subst_expr_Cast  
      substBind_NonRec substBind_Rec subst_expr_Let subst_expr_Lam
      (* subst_expr_Tick *) : hs_simpl.
 

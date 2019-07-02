@@ -220,6 +220,9 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
             := match arg_0__, arg_1__ with
                | _, (Core.Mk_Var _ as e) => e
                | _, (Core.Lit _ as e) => e
+               | _, (Core.Mk_Type _ as e) => e
+               | _, (Core.Mk_Coercion _ as e) => e
+               | in_scope, Core.Cast e' c => Core.Cast (go in_scope e') c
                | in_scope, Core.App e1 e2 => Core.App (go in_scope e1) (go in_scope e2)
                | in_scope, Core.Lam v e' =>
                    let in_scope' := Core.extendInScopeSet in_scope v in
@@ -247,8 +250,8 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
     let in_scope_toplvl :=
       Core.extendInScopeSetList Core.emptyInScopeSet (Core.bindersOfBinds binds) in
     let goTopLvl :=
-      fun arg_21__ =>
-        match arg_21__ with
+      fun arg_22__ =>
+        match arg_22__ with
         | Core.NonRec v e => Core.NonRec v (go in_scope_toplvl e)
         | Core.Rec pairs =>
             Core.Rec (GHC.Base.map (Data.Bifunctor.second (go in_scope_toplvl)) pairs)
@@ -259,9 +262,10 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
      Some andb bool cons false list negb nil op_zt__ pair AxiomatizedTypes.Type_
      BasicTypes.JoinArity Coq.Init.Datatypes.app Coq.Lists.List.flat_map
      Coq.Lists.List.length Core.AnnCase Core.AnnLet Core.AnnNonRec Core.AnnRec
-     Core.App Core.Case Core.CoreBind Core.CoreExpr Core.CoreProgram Core.InScopeSet
-     Core.JoinId Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Var
-     Core.VarSet Core.anyVarSet Core.bindersOf Core.bindersOfBinds Core.collectArgs
+     Core.App Core.Case Core.Cast Core.CoreBind Core.CoreExpr Core.CoreProgram
+     Core.InScopeSet Core.JoinId Core.Lam Core.Let Core.Lit Core.Mk_Coercion
+     Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec Core.Var Core.VarSet
+     Core.anyVarSet Core.bindersOf Core.bindersOfBinds Core.collectArgs
      Core.collectNAnnBndrs Core.dVarSetToVarSet Core.deAnnBind Core.deAnnotate
      Core.delVarSet Core.disjointVarSet Core.elemVarSet Core.emptyInScopeSet
      Core.extendInScopeSet Core.extendInScopeSetList Core.isId Core.isLocalId

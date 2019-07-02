@@ -42,7 +42,7 @@ constructors:
   Core.KillFlags: ! '[Qualified "Core" "Mk_KillFlags"]'
   Core.PredTree: ! '[Qualified "Core" "ClassPred",Qualified "Core" "EqPred",Qualified
     "Core" "IrredPred"]'
-  Core.Var: ! '[Qualified "Core" "Mk_Id"]'
+  Core.Var: ! '[Qualified "Core" "Mk_TyVar",Qualified "Core" "Mk_Id"]'
   Core.StrictnessMark: ! '[Qualified "Core" "MarkedStrict",Qualified "Core" "NotMarkedStrict"]'
   Core.DataConRep: ! '[Qualified "Core" "NoDataConRep",Qualified "Core" "DCR"]'
   Core.RuntimeRepInfo: ! '[Qualified "Core" "NoRRI",Qualified "Core" "RuntimeRep",Qualified
@@ -67,7 +67,8 @@ constructors:
     "Core" "Dunno"]'
   Core.AnnExpr': ! '[Qualified "Core" "AnnVar",Qualified "Core" "AnnLit",Qualified
     "Core" "AnnLam",Qualified "Core" "AnnApp",Qualified "Core" "AnnCase",Qualified
-    "Core" "AnnLet"]'
+    "Core" "AnnLet",Qualified "Core" "AnnCast",Qualified "Core" "AnnType",Qualified
+    "Core" "AnnCoercion"]'
   Core.Bind: ! '[Qualified "Core" "NonRec",Qualified "Core" "Rec"]'
   Core.HsImplBang: ! '[Qualified "Core" "HsLazy",Qualified "Core" "HsStrict",Qualified
     "Core" "HsUnpack"]'
@@ -79,7 +80,8 @@ constructors:
   Core.TyVarBndr: ! '[Qualified "Core" "TvBndr"]'
   Core.Unfolding: ! '[Qualified "Core" "NoUnfolding"]'
   Core.Expr: ! '[Qualified "Core" "Mk_Var",Qualified "Core" "Lit",Qualified "Core"
-    "App",Qualified "Core" "Lam",Qualified "Core" "Let",Qualified "Core" "Case"]'
+    "App",Qualified "Core" "Lam",Qualified "Core" "Let",Qualified "Core" "Case",Qualified
+    "Core" "Cast",Qualified "Core" "Mk_Type",Qualified "Core" "Mk_Coercion"]'
   Core.TyCon: ! '[Qualified "Core" "FunTyCon",Qualified "Core" "AlgTyCon",Qualified
     "Core" "SynonymTyCon",Qualified "Core" "FamilyTyCon",Qualified "Core" "PrimTyCon",Qualified
     "Core" "PromotedDataCon",Qualified "Core" "TcTyCon"]'
@@ -91,7 +93,7 @@ constructors:
   Core.IdDetails: ! '[Qualified "Core" "VanillaId",Qualified "Core" "RecSelId",Qualified
     "Core" "DataConWorkId",Qualified "Core" "DataConWrapId",Qualified "Core" "ClassOpId",Qualified
     "Core" "PrimOpId",Qualified "Core" "FCallId",Qualified "Core" "TickBoxOpId",Qualified
-    "Core" "Mk_DFunId",Qualified "Core" "Mk_JoinId"]'
+    "Core" "Mk_DFunId",Qualified "Core" "CoVarId",Qualified "Core" "Mk_JoinId"]'
   Core.InScopeSet: ! '[Qualified "Core" "InScope"]'
   Core.LiftingContext: ! '[Qualified "Core" "LC"]'
   Core.PrimElemRep: ! '[Qualified "Core" "Int8ElemRep",Qualified "Core" "Int16ElemRep",Qualified
@@ -129,9 +131,11 @@ constructorFields:
   Core.ConcreteClass: RecordFields [Qualified "Core" "classSCThetaStuff",Qualified
     "Core" "classSCSels",Qualified "Core" "classATStuff",Qualified "Core" "classOpStuff",Qualified
     "Core" "classMinimalDefStuff"]
+  Core.AnnCoercion: NonRecordFields 1
   Core.LiftedRep: NonRecordFields 0
   Core.ReprEq: NonRecordFields 0
   Core.ClosedTypeFamilyFlavour: NonRecordFields 0
+  Core.Mk_Coercion: NonRecordFields 1
   Core.ClassTyCon: NonRecordFields 2
   Core.App: NonRecordFields 2
   Core.PrimTyCon: RecordFields [Qualified "Core" "tyConUnique",Qualified "Core" "tyConName",Qualified
@@ -196,6 +200,7 @@ constructorFields:
     "Core" "algTcRhs",Qualified "Core" "algTcFields",Qualified "Core" "algTcParent"]
   Core.Diverges: NonRecordFields 0
   Core.AnnRec: NonRecordFields 1
+  Core.Cast: NonRecordFields 2
   Core.SourceNote: RecordFields [Qualified "Core" "sourceSpan",Qualified "Core" "sourceName"]
   Core.AbstractTypeFlavour: NonRecordFields 0
   Core.Int8ElemRep: NonRecordFields 0
@@ -247,6 +252,7 @@ constructorFields:
   Core.TypeSynonymFlavour: NonRecordFields 0
   Core.Mk_Var: NonRecordFields 1
   Core.Rec: NonRecordFields 1
+  Core.CoVarId: NonRecordFields 0
   Core.SumTyCon: RecordFields [Qualified "Core" "data_cons"]
   Core.VectType: NonRecordFields 3
   Core.ATI: NonRecordFields 2
@@ -268,7 +274,9 @@ constructorFields:
   Core.AnnLam: NonRecordFields 2
   Core.UnfWhen: RecordFields [Qualified "Core" "ug_arity",Qualified "Core" "ug_unsat_ok",Qualified
     "Core" "ug_boring_ok"]
+  Core.AnnType: NonRecordFields 1
   Core.Mk_IsOrphan: NonRecordFields 0
+  Core.Mk_Type: NonRecordFields 1
   Core.FCallId: NonRecordFields 1
   Core.NoSrcUnpack: NonRecordFields 0
   Core.Required: NonRecordFields 0
@@ -277,6 +285,8 @@ constructorFields:
   Core.NeverLevityPolymorphic: NonRecordFields 0
   Core.Lit: NonRecordFields 1
   Core.SrcStrict: NonRecordFields 0
+  Core.Mk_TyVar: RecordFields [Qualified "Core" "varName",Qualified "Core" "realUnique",Qualified
+    "Core" "varType"]
   Core.DataAlt: NonRecordFields 1
   Core.SProd: NonRecordFields 1
   Core.AnnNonRec: NonRecordFields 2
@@ -369,6 +379,7 @@ constructorFields:
   Core.UProd: NonRecordFields 1
   Core.VectInst: NonRecordFields 1
   Core.AnnLet: NonRecordFields 2
+  Core.AnnCast: NonRecordFields 2
   Core.NoLevityInfo: NonRecordFields 0
   Core.VanillaId: NonRecordFields 0
   Core.VanillaAlgTyCon: NonRecordFields 1
@@ -540,9 +551,11 @@ constructorTypes:
   Core.Word32ElemRep: Qualified "Core" "PrimElemRep"
   Core.OpenSynFamilyTyCon: Qualified "Core" "FamTyConFlav"
   Core.ConcreteClass: Qualified "Core" "ClassBody"
+  Core.AnnCoercion: Qualified "Core" "AnnExpr'"
   Core.LiftedRep: Qualified "Core" "PrimRep"
   Core.ReprEq: Qualified "Core" "EqRel"
   Core.ClosedTypeFamilyFlavour: Qualified "Core" "TyConFlavour"
+  Core.Mk_Coercion: Qualified "Core" "Expr"
   Core.ClassTyCon: Qualified "Core" "AlgTyConFlav"
   Core.App: Qualified "Core" "Expr"
   Core.PrimTyCon: Qualified "Core" "TyCon"
@@ -593,6 +606,7 @@ constructorTypes:
   Core.AlgTyCon: Qualified "Core" "TyCon"
   Core.Diverges: Qualified "Core" "Termination"
   Core.AnnRec: Qualified "Core" "AnnBind"
+  Core.Cast: Qualified "Core" "Expr"
   Core.SourceNote: Qualified "Core" "Tickish"
   Core.AbstractTypeFlavour: Qualified "Core" "TyConFlavour"
   Core.Int8ElemRep: Qualified "Core" "PrimElemRep"
@@ -624,6 +638,7 @@ constructorTypes:
   Core.TypeSynonymFlavour: Qualified "Core" "TyConFlavour"
   Core.Mk_Var: Qualified "Core" "Expr"
   Core.Rec: Qualified "Core" "Bind"
+  Core.CoVarId: Qualified "Core" "IdDetails"
   Core.SumTyCon: Qualified "Core" "AlgTyConRhs"
   Core.VectType: Qualified "Core" "CoreVect"
   Core.ATI: Qualified "Core" "ClassATItem"
@@ -643,7 +658,9 @@ constructorTypes:
   Core.StrTyLit: Qualified "Core" "TyLit"
   Core.AnnLam: Qualified "Core" "AnnExpr'"
   Core.UnfWhen: Qualified "Core" "UnfoldingGuidance"
+  Core.AnnType: Qualified "Core" "AnnExpr'"
   Core.Mk_IsOrphan: Qualified "Core" "IsOrphan"
+  Core.Mk_Type: Qualified "Core" "Expr"
   Core.FCallId: Qualified "Core" "IdDetails"
   Core.NoSrcUnpack: Qualified "Core" "SrcUnpackedness"
   Core.Required: Qualified "Core" "ArgFlag"
@@ -652,6 +669,7 @@ constructorTypes:
   Core.NeverLevityPolymorphic: Qualified "Core" "LevityInfo"
   Core.Lit: Qualified "Core" "Expr"
   Core.SrcStrict: Qualified "Core" "SrcStrictness"
+  Core.Mk_TyVar: Qualified "Core" "Var"
   Core.DataAlt: Qualified "Core" "AltCon"
   Core.SProd: Qualified "Core" "StrDmd"
   Core.AnnNonRec: Qualified "Core" "AnnBind"
@@ -731,6 +749,7 @@ constructorTypes:
   Core.UProd: Qualified "Core" "UseDmd"
   Core.VectInst: Qualified "Core" "CoreVect"
   Core.AnnLet: Qualified "Core" "AnnExpr'"
+  Core.AnnCast: Qualified "Core" "AnnExpr'"
   Core.NoLevityInfo: Qualified "Core" "LevityInfo"
   Core.VanillaId: Qualified "Core" "IdDetails"
   Core.VanillaAlgTyCon: Qualified "Core" "AlgTyConFlav"

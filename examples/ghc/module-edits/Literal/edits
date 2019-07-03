@@ -1,8 +1,9 @@
+axiomatize module Literal
+
 axiomatize definition Literal.absent_lits
 axiomatize definition Literal.inCharRange
 
-# just to access type info
-skip Literal.literalType
+# just to access type info, remove to break dependency on Core
 skip Literal.absentLiteralOf
 
 # needs Real.FrealFral Real.Rational

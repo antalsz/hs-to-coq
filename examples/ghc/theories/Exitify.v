@@ -1474,7 +1474,7 @@ Section in_exitifyRec.
   Qed.
 
   (**
-  Now we du the [addExit], [go_Exit], [go] dance again, but this
+  Now we do the [addExit], [go_Exit], [go] dance again, but this
   time we prove that the resulting code in [pairs'] is well-scoped.
 
   Here is a pretty tough trick: How do we know that the result of any call

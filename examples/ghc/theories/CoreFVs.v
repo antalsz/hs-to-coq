@@ -40,6 +40,10 @@ Require Import Proofs.GHC.Base.
 Require GHC.Base.
 Import GHC.Base.ManualNotations.
 
+(*
+Require Import Proofs.ScopeInvariant.
+*)
+
 Set Bullet Behavior "Strict Subproofs".
 
 Lemma unionsVarSet_equal : forall vss1 vss2, Forall2 Equal vss1 vss2 ->
@@ -787,6 +791,8 @@ Qed.
  
 (** Working with [freeVars] *)
 
+Print DVarSet.
+Print UniqDSet.
 (*
 Lemma freeVarsOf_freeVars:
   forall e,
@@ -906,4 +912,3 @@ Proof.
   simpl in K.
   auto.
 Qed.
-

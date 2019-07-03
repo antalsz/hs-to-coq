@@ -21,6 +21,20 @@ HANDMOD = \
 # generated from drop-in/
 DROPIN = \
 
+# These are core dependencies that we do not need to translate
+#
+EXTRA_CORE = Json \
+  FastFunctions \
+  Encoding \
+  ErrUtils \
+  Annotations \
+  GhcPrelude \
+  Packages \
+  Foreign \
+  IfaceType \
+  PrelNames \
+  TysWiredIn \
+  CoAxiom 
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -50,6 +64,7 @@ MODULES = \
   ListSetOps \
   Panic \
   FiniteMap \
+
 ## Not actually used??
 #  CmmType \
 
@@ -66,8 +81,8 @@ CONSTRUCTORS = \
 CORE_MODULES = \
   Constants \
   Id \
-  UnVarGraph \
   CoreSubst \
+  PrelNames \
   CoreUtils \
   Name \
   NameEnv \
@@ -81,8 +96,8 @@ CORE_MODULES = \
   TrieMap \
   CSE \
   CoreStats \
+#  UnVarGraph \
   CoreArity \
-  PrelNames \
   CoreTidy \
   CallArity \
   CoAxiom \
@@ -129,8 +144,11 @@ OUTFILES_TYPE      = $(addprefix $(OUT)/,$(VFILES_TYPE))
 
 OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN) 
 
-HSFILES    = $(addsuffix .hs,$(MODULES)) $(addsuffix .hs,$(CORESYN)) $(addsuffix .hs,$(CORE_MODULES)) 
+HSFILES     = $(addsuffix .hs,$(MODULES) $(CORESYN) $(CORE_MODULES)) 
 HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES)) 
+
+SMALLCORE = $(addsuffix .hs,$(CORESYN))
+SMALLPATH  = $(addprefix ghc/compiler/*/,$(SMALLCORE)) 
 
 EDITPATHS = $(addprefix module-edits/,$(MODULES) $(CORESYN) $(CORE_MODULES))
 EDITFILES = edits $(CORE_EDITS) $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDITPATHS)) 
@@ -145,6 +163,7 @@ core: $(OUT)/README.md coq
 filelist:
 	@ls -1 $(HSFILESPATH) 
 
+
 editlist:
 	@ls -1 $(EDITFILES) 2>/dev/null | xargs cloc --by-file --lang-no-ext=zsh --force-lang=zsh,edits --skip-uniqueness
 
@@ -155,7 +174,13 @@ ghc.all.pdf: Makefile
 
 
 ghc.core.pdf: Makefile
-	@ls -1 $(HSFILESPATH) | xargs	graphmod -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --no-cluster --prune-edges -r Util -r Outputable -r GhcPrelude -r Panic | dot -Tpdf -o ghc.core.pdf
+	@ls -1 $(HSFILESPATH) | xargs	graphmod -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --no-cluster --prune-edges | dot -Tpdf -o ghc.core.pdf
+
+# ghcrec.dot: Makefile
+#	@ls -1 $(SMALLPATH) | xargs	graphmod -s 2 -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --prune-edges -r BooleanFormula -r Outputable -r Util -r DynFlags -r Module -r FiniteMap -r MonadUtils -r GhcPrelude -r FastString -r StringBuffer -r Lexeme -r UniqSupply -r BasicTypes -r CmdLineParser -r Packages -r Platform -r Binary -r UniqDSet -r OccName -r Digraph -r ErrUtils -r Panic -r Bag -r CoreStats -r SrcLoc -r Maybes -r Unique -r ListSetOps -r FastStringEnv -r UniqFM -r InteractiveEvalTypes -r OrdList -r DriverPhases -r Exception -r Pair -r UniqDFM -r UniqSet -r Constants > ghcrec.dot
+
+ghcrec.pdf: ghcrec.dot
+	dot -Tpdf -o ghcrec.pdf ghcrec.dot
 
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.

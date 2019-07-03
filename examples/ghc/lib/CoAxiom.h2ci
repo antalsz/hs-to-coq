@@ -1,8 +1,0 @@
-constructors:
-  CoAxiom.BranchFlag: ! '[Qualified "CoAxiom" "Branched",Qualified "CoAxiom" "Unbranched"]'
-constructorFields:
-  CoAxiom.Branched: NonRecordFields 0
-  CoAxiom.Unbranched: NonRecordFields 0
-constructorTypes:
-  CoAxiom.Branched: Qualified "CoAxiom" "BranchFlag"
-  CoAxiom.Unbranched: Qualified "CoAxiom" "BranchFlag"

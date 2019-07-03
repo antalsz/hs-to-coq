@@ -1,5 +1,7 @@
 import module GHC.Base
+import module GHC.List
 import module Data.Traversable
+import module Core
 
 # ruleInfo substitution function (but unused)
 axiomatize definition CoreSubst.substSpec 

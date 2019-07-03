@@ -66,9 +66,7 @@ First we define invariants for [Var] that are independent of scope, namely:
 *)
 Definition GoodVar (v : Var) : Prop :=
   isLocalVar v = isLocalUnique (varUnique v) /\
-  varUnique v = nameUnique (varName v) /\
-  isId v = true /\
-  isCoVar v = false.
+  varUnique v = nameUnique (varName v).
 
 Definition GoodLocalVar (v : Var) : Prop :=
   GoodVar v /\ isLocalVar v = true.
@@ -168,11 +166,11 @@ Lemma GoodLocalVar_uniqAway:
 Proof.
   intros.
   unfold GoodLocalVar, GoodVar in *.
-  destruct H; destruct H; destruct H1. destruct H2.
+  destruct H; destruct H. (* destruct H2. *)
   rewrite isLocalVar_uniqAway.
   rewrite isLocalUnique_uniqAway.
-  rewrite isId_uniqAway.
-  rewrite isCoVar_uniqAway.
+  (* rewrite isId_uniqAway. *)
+  (*  rewrite isCoVar_uniqAway. *)
   repeat split; auto.
   rewrite nameUnique_varName_uniqAway; auto.
 Qed.
@@ -187,7 +185,7 @@ Proof.
   rewrite andb_false_r.
   split; destruct u; only 1: split.
   * symmetry. apply h1.
-  * split. reflexivity. auto.
+  * reflexivity. 
   * reflexivity. 
 Qed. 
 
@@ -212,7 +210,7 @@ Lemma GoodVar_almostEqual :
     GoodVar v1 -> almostEqual v1 v2 -> GoodVar v2.
 Proof.
   move => v1 v2.
-  elim => h1 [h2 [h3 h4]]. 
+  elim => h1 h2. 
   move => h. inversion h. 
   all: unfold GoodVar.
   all: repeat split.
@@ -873,3 +871,78 @@ Proof.
    * apply Respects_StrongSubset_const.
    * apply Respects_StrongSubset_const. 
 Qed.
+
+
+
+(* This seems straitforward to prove given our current
+   theories of exprFreeVars. 
+   However, a stronger result is possible: that the free vars  
+   are a *strong subset* of the in_scope set.
+*)
+Lemma WellScoped_exprFreeVars :
+  forall e vs, WellScoped e vs -> exprFreeVars e [<=] vs.
+Proof.
+  intro e. apply (core_induct e); intros; unfold WellScoped in H.
+  - destruct (isLocalVar v) eqn:L.
+    + rewrite exprFreeVars_Var; auto.
+      unfold WellScopedVar in H. rewrite L in H.
+      destruct (lookupVarSet vs v) eqn: K; try done.
+      move: (lookupVarSet_elemVarSet K) => K2.
+      set_b_iff.
+      rewrite singleton_equal_add.
+      eapply subset_add_3; auto.
+      fsetdec.
+    + rewrite exprFreeVars_global_Var; auto.
+      fsetdec.
+  - hs_simpl. fsetdec.
+  - fold WellScoped in H. simpl in H1.
+    move: H1 => [he1 he2]. 
+    rewrite exprFreeVars_App.
+    rewrite H; eauto. rewrite H0; eauto. fsetdec.
+  - fold WellScoped in H. simpl in H0.
+    move: H0 => [GV WS].
+    rewrite exprFreeVars_Lam.
+    apply H in WS. 
+    set_b_iff.
+    rewrite WS.
+    fsetdec.
+  - fold WellScoped in H. simpl in H1.
+    move: H1 => [WSbi WSbo].
+    destruct binds; simpl in WSbi.
+    + rewrite exprFreeVars_Let_NonRec.
+      move: WSbi => [Gc WSe0].
+      apply H in WSe0.
+      apply H0 in WSbo.
+      simpl in WSbo.
+      autorewrite with hs_simpl in WSbo.
+      eapply union_subset_3; auto.
+      set_b_iff.
+      fsetdec.
+    + rewrite exprFreeVars_Let_Rec.
+      move: WSbi => [Gc[ nd FWSe0]].
+      apply H0 in WSbo.
+      rewrite delVarSetList_unionVarSet.
+      eapply union_subset_3.
+      ++ rewrite <- SubsetE.
+         eapply subVarSet_delVarSetList_extendVarSetList_dual.
+         eapply subVarSet_exprsFreeVars.
+         rewrite Forall_forall.
+         rewrite -> Forall.Forall'_Forall in FWSe0.
+         rewrite -> Forall_forall in FWSe0.
+         move=> x In.
+         admit.
+      ++ admit.
+  - fold WellScoped in H. simpl in H1.
+    move: H1 => [WSs [GVb FF]].
+    rewrite exprFreeVars_Case.
+    apply H in WSs.
+    eapply union_subset_3; auto.
+    admit.
+  - fold WellScoped in H. simpl in H0.
+    rewrite exprFreeVars_Cast.
+    eauto.
+  - rewrite exprFreeVars_Type.
+    fsetdec.
+  - rewrite exprFreeVars_Coercion.
+    fsetdec.
+Admitted.

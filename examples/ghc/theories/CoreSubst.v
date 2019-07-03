@@ -753,6 +753,7 @@ Proof.
   destruct_SubstExtends. auto.
 Qed.  
 
+(*
 Lemma GoodLocalVar_setIdType : forall x t, GoodLocalVar x -> GoodLocalVar (Id.setIdType x t).
 Proof.
   intros. move: H => [[h0 [h2 [h3 h4]]] h1].  destruct x; simpl in *; econstructor; try done. 
@@ -763,7 +764,7 @@ Lemma Eq_setIdType : forall x t,
 Proof.
   intros x t. destruct x; simpl; unfold_zeze; simpl; 
   rewrite (N.eqb_refl realUnique); auto.
-Qed.
+Qed. *)
 
 Lemma WellScoped_Subst_substIdBndr : forall s1 s2 subst subst' bndr' v vs,
   forall (SB : substIdBndr s1 s2 subst v = (subst', bndr')),
@@ -953,7 +954,7 @@ Proof.
   intros.
   unfold substBndr in SB.
   simpl in *.
-  move: H => [[h0 [h1 [h2 h3]]] h4]. 
+  move: H => [[h0 h1] h4]. 
   destruct (isTyVar v) eqn:IsTyVar. 
   { 
     destruct v; simpl in *; try done.
@@ -1025,7 +1026,7 @@ Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',
   GoodLocalVar bndr'.
 Proof.
   move=> bndr bndr' subst subst' h h0.
-  move: h => [[h1 [h2 [h3 h4]]] h5].
+  move: h => [[h1 h2] h5].
   destruct bndr; simpl in *; try done.
   unfold substBndr in *.
   simpl in h0.
@@ -1198,11 +1199,13 @@ Proof.
     destruct (isLocalVar v) eqn:h; try auto.
     destruct (lookupVarSet vs v) eqn:h0; try contradiction.
     unfold GoodVar in WSvar.
-    destruct WSvar as [ ? [? [? [h1 ?]]]].
+    destruct WSvar as [ ? [h1 ?]].
     destruct v; simpl in *; try done.
     destruct idScope; try done.
 Qed.
 
+
+ 
 Lemma substExpr_ok : forall e s vs in_scope_set env u0 u1, 
     WellScoped_Subst (Mk_Subst in_scope_set env u0 u1) vs -> 
     WellScoped e vs -> 
@@ -1415,3 +1418,10 @@ Proof.
     unfold CoreUtils.mkTick.
     eapply IH; eauto. *)
 Qed.
+
+Lemma WellScoped_substExpr : forall e s vs subst, 
+    WellScoped_Subst subst vs -> 
+    WellScoped e vs -> 
+    WellScoped (substExpr s subst e) 
+               (getSubstInScopeVars subst).
+Proof. intros. destruct subst. simpl. eapply substExpr_ok; eauto. Qed.

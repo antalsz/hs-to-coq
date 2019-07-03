@@ -34,24 +34,28 @@ rewrite forall x, GHC.List.drop x          = Coq.Lists.List.skipn x
 #
 # This must stay in sync with the Makefile
 #
-rename module Class   Core
-rename module TyCon   Core
-rename module DataCon Core
 rename module Var     Core
 rename module IdInfo  Core
-rename module PatSyn  Core
 rename module VarSet  Core
 rename module VarEnv  Core
 rename module CoreSyn Core
-rename module Demand  Core
 
+rename module Class   Core
+axiomatize original module name Class
+rename module TyCon   Core
+axiomatize original module name TyCon
+rename module DataCon Core
+axiomatize original module name DataCon
+rename module PatSyn  Core
+axiomatize original module name PatSyn
+rename module Demand  Core
+axiomatize original module name Demand
 rename module Type    Core
 axiomatize original module name Type
 rename module TyCoRep Core
 axiomatize original module name TyCoRep
 rename module Coercion Core
 axiomatize original module name Coercion
-
 
 #
 # Punned constructor values (in Core)

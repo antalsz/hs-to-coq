@@ -44,10 +44,9 @@ Proof.
   destruct (p _); f_equal; auto.
 Qed.
 
-Theorem hs_coq_reverse : forall A (xs : list A), 
+Theorem hs_coq_reverse {A} (xs : list A) :
   List.reverse xs = Coq.Lists.List.rev xs.
 Proof.
-  intros A.
   unfold List.reverse.
   set (rev := fix rev (arg_0__ arg_1__ : list A) {struct arg_0__} : 
    list A :=
@@ -336,6 +335,15 @@ Proof.
 Qed.
 
 
+(* Where dodes this belong? *)
+Theorem Forall_In_impl {A} {P : A -> Prop} (Q : A -> Prop) :
+  forall l,
+  (forall a, In a l -> P a -> Q a) ->
+  Forall P l -> Forall Q l.
+Proof.
+  intros l; rewrite !Forall_forall; intros IMPL In__P x IN.
+  now apply IMPL; [|apply In__P].
+Qed.
 
 (* List simplifications, similar to Coq std library. *)
 

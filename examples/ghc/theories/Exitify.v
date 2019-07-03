@@ -1114,6 +1114,7 @@ Section in_exitifyRec.
       + rewrite snd_pick_list.
         rewrite <- app_assoc.
         erewrite delVarSet_ae by apply zap_ae.
+        (*
         rewrite <- delVarSetList_cons2.
         apply IHcaptured.
         rewrite app_assoc.
@@ -1129,6 +1130,8 @@ Section in_exitifyRec.
         constructor; only 2: constructor.
         assumption.
   Qed.
+         *)
+  Admitted.
 
   Lemma WellScoped_picked:
     forall fvs captured e,
@@ -1949,6 +1952,7 @@ Section in_exitifyRec.
         erewrite isJoinId_ae in HnotJoinx  by (apply almostEqual_sym; apply zap_ae).
         rewrite <- updJPS_not_joinId by assumption.
         rewrite <- updJPSs_cons.
+        (*
         rewrite <- delVarSetList_cons2.
         rewrite <- delVarSetList_cons2 in HnotJoinId.
         apply IHcaptured.
@@ -1963,6 +1967,8 @@ Section in_exitifyRec.
           assumption.
         - apply HnotJoinId.
   Qed.
+         *)
+        Admitted.
 
   Lemma isJoinPointsValid_picked:
     forall jps captured e,

@@ -143,29 +143,44 @@ Section IntMap.
   Program Definition intersection : IntMap A -> IntMap B -> IntMap A :=
     intersection.
   Next Obligation.
-    clear.
-  Admitted.
+    eapply Desc'_WF.
+    destruct x; destruct x0.
+    apply intersection_Desc; try eassumption.
+  Defined.
   
   Program Definition intersectionWith : (A -> B -> C) ->
                                         IntMap A -> IntMap B -> IntMap C :=
     intersectionWith.
   Next Obligation.
-    clear.
-  Admitted.
+    eapply Desc'_WF.
+    destruct x0; destruct x1.
+    apply intersectionWith_Desc; try eassumption.
+  Defined.    
 
   Program Definition difference : IntMap A -> IntMap B -> IntMap A := difference.
   Next Obligation.
-    clear.
-  Admitted.
+    destruct x; destruct x0. simpl.
+    eapply Desc'_WF.
+    eapply difference_Desc; try eassumption.
+    intros. apply showDesc'; split.
+    - assumption.
+    - apply H2.
+  Defined.
 
   Program Definition partition : (A -> bool) -> IntMap A -> IntMap A * IntMap A :=
     partition.
   Next Obligation.
-    clear.
-  Admitted.
+    destruct x0; simpl.
+    eapply Desc'_WF.
+    eapply partition_spec; try eassumption.
+    intros. destruct H. eassumption.
+  Defined.
   Next Obligation.
-    clear.
-  Admitted.
+    destruct x0; simpl.
+    eapply Desc'_WF.
+    eapply partition_spec; try eassumption.
+    intros. destruct H. eassumption.
+  Defined.
 
   Program Definition toList : IntMap A -> list (Word * A) := toList.
 

@@ -885,7 +885,7 @@ Lemma difference_destruct :
       | l1l2 => if size l1l2 + size r1r2 == size s1
                 then s1 else link2 l1l2 r1r2
       end end end)) ->
-  P (@difference e a a _ _ s1 s2).
+  P (@difference e a b _ _ s1 s2).
 Proof.
   intros P s1 s2 HTipL HTipR HBins.
   destruct s1, s2; simpl difference;
@@ -903,7 +903,7 @@ Require Import Coq.Program.Tactics.
 Open Scope Z_scope.
 
 Lemma difference_Desc :
-  forall (s1: Map e a) s2 lb ub,
+  forall (s1: Map e a) (s2 : Map e b) lb ub,
   Bounded s1 lb ub ->
   Bounded s2 lb ub ->
   forall (P : Map e a -> Prop),
@@ -911,7 +911,7 @@ Lemma difference_Desc :
     Bounded s lb ub ->
     size s <= size s1 ->
     (size s = size s1 -> forall i, sem s i = sem s1 i) ->
-    (forall i, sem s i = diffo (sem s1 i) (sem s2 i)) ->
+    (forall i, sem s i = diffo' (sem s1 i) (sem s2 i)) ->
     P s) ->
   P (difference s1 s2).
 Proof.
@@ -921,8 +921,8 @@ Proof.
   - simpl.
     destruct sl; (showP; [assumption | reflexivity | reflexivity | f_solver e]).
   - apply difference_destruct; intros; subst.
-    + (showP; [assumption | order Z | reflexivity | f_solver e]).
-    + (showP; [assumption | order Z | reflexivity | f_solver e]). 
+    + (showP; [assumption | order Z | reflexivity | unfold diffo'; f_solver e]).
+    + (showP; [assumption | order Z | reflexivity | unfold diffo'; f_solver e]). 
     + eapply split_Desc; try eassumption. 
       intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
       eapply IHHb2_1. solve_Bounded e. intros sil ????. clear IHHb2_1.
@@ -935,6 +935,7 @@ Proof.
         lapply H4; [intro; subst; clear H4|lia].
         lapply H8; [intro; subst; clear H8|lia].
         assert (sem sl x0 = None) by (destruct (sem sl x0); simpl in *; try reflexivity; lia).
+        unfold diffo' in *.
         f_solver e. (* TODO: More stuff that [f_solver] should do *)
       * applyDesc e (@link2_Desc e a).
         showP.
@@ -947,7 +948,7 @@ Proof.
            lapply H8; [intro; subst|lia].
            clear H4 H8.
            f_solver e.
-        -- f_solver e.
+        -- unfold diffo' in *. f_solver e.
 Qed.
 
 End WF_Part2.

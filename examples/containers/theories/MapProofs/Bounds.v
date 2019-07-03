@@ -56,6 +56,12 @@ Definition diffo : option a -> option a -> option a :=
     | None => x
     end.
 
+Definition diffo' {b : Type} : option a -> option b -> option a :=
+  fun x y => match y with
+    | Some v => None
+    | None => x
+    end.
+
 Lemma oro_None_l : forall x, None ||| x = x.
 Proof. intros. destruct x; reflexivity. Qed.
 

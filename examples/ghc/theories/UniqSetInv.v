@@ -506,7 +506,6 @@ Next Obligation.
   destruct s.
   destruct arg_1__.
   intro h.
-  Set Printing Implicit.
   rewrite <- lookup_intersection in h. destruct h.
   eauto.
 Defined.

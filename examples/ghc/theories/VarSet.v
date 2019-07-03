@@ -1749,15 +1749,25 @@ Qed.
 
 (** ** [filterVarSet] *)
 
+Lemma IntMapEq_VarSetEq : forall x y,
+    x == y ->
+    UniqSet.Mk_UniqSet (UniqFM.UFM x) [=] UniqSet.Mk_UniqSet (UniqFM.UFM y).
+Proof.
+  intros. constructor.
+  - unfold In. simpl. intros.
+    eapply IntMap.Eq_membership in H.
+    erewrite H0 in H. symmetry. move /Eq_eq in H. assumption.
+  - unfold In. simpl. intros.
+    eapply IntMap.Eq_membership in H.
+    erewrite H0 in H. move /Eq_eq in H. assumption.
+Qed.
+
 Lemma filterVarSet_comp : forall f f' vs,
     filterVarSet f (filterVarSet f' vs) [=] filterVarSet (fun v => f v && f' v) vs.
 Proof.
-  intros.
-  destruct vs; destruct getUniqSet'. simpl. do 2 f_equal.
-  rewrite filter_comp.
-  reflexivity.
+  intros. destruct vs, getUniqSet'. simpl.
+  apply IntMapEq_VarSetEq, filter_comp, EqLaws_Var.
 Qed.
-
 
 Lemma filterSingletonTrue : forall f x,
   RespectsVar f ->
@@ -1804,17 +1814,13 @@ Hint Rewrite filterVarSet_emptyVarSet : hs_simpl.
 
 
 Lemma filterVarSet_constTrue vs : 
-  filterVarSet (const true) vs = vs.
+  filterVarSet (const true) vs [=] vs.
 Proof. 
   unfold filterVarSet.
   elim: vs => [i].
   elim: i => [m].
-  unfold UniqSet.filterUniqSet.
-  unfold UniqFM.filterUFM.
-  f_equal.
-  f_equal.
-  rewrite filter_true.
-  reflexivity.
+  simpl. apply IntMapEq_VarSetEq.
+  apply filter_true, EqLaws_Var.
 Qed.
 Hint Rewrite filterVarSet_constTrue : hs_simpl.
 
@@ -1836,6 +1842,9 @@ Qed.
 Lemma filterVarSet_iff (f1 f2 : Var -> bool) vs : 
   (forall x, (f1 x) <-> (f2 x)) -> 
   filterVarSet f1 vs [=] filterVarSet f2 vs.
+Proof.
+  intros. destruct vs, getUniqSet'. simpl.
+  apply IntMapEq_VarSetEq.
 Admitted.
 
 Lemma filterVarSet_equal f vs1 vs2 :

@@ -676,7 +676,7 @@ Proof.
       assert (f' i a0 = false). { eapply filter_sem_false. apply H1. apply H3. apply Heqo0.
       apply Heqo. } rewrite H12 in H11. rewrite andb_false_r in H11. rewrite H11. rewrite H8.
       apply Eq_Reflexive. rewrite H8. rewrite H11. apply Eq_Reflexive.
-Qed.  
+Qed.
 
 (*We do not need any such assumptions for filter_comp (the version actually in ContainerAxioms). However,
   we do use Haskell equality and assume {EqLaws a}*)

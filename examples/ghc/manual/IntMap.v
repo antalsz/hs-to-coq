@@ -1,7 +1,9 @@
+Require Import GHC.Base.
 Require Data.IntSet.Internal.
 Require Import Data.Map.Internal.
 Require Import GHC.Num.
 Require Import Coq.Classes.Morphisms.
+Import GHC.Num.Notations.
 
 From Coq Require Import ssreflect ssrbool.
 
@@ -13,6 +15,7 @@ Definition IntMap := WFMap Word.
 
 Global Instance Eq_IntMap {A} `{ Base.Eq_ A} : Base.Eq_ (IntMap A) :=
   Eq_Map_WF.
+
 
 Section WF.
 
@@ -194,3 +197,55 @@ Section IntMap.
   Program Definition lookup : Word -> IntMap A -> option A := lookup.
 
 End IntMap.
+
+(** These should be in [containers]. *)
+
+Lemma list_KeyIn : forall {A B} `{EqLaws A} `{EqLaws B}
+                     (l1 l2 : list (A * B)) k v,
+    l1 == l2 ->
+    Key_In k v l1 ->
+    (exists v', v == v' /\ Key_In k v' l2).
+Proof.
+  intros. generalize dependent l2. induction l1.
+  - inversion H4. 
+  - destruct a; simpl in H4. destruct H4.
+    + destruct H3; subst. intros. destruct l2.
+      * inversion H4.
+      * destruct p. exists b. split.
+        -- move: H4. cbn. move /andP =>[Hh ?].
+           move /andP in Hh. tauto.
+        -- constructor. move: H4. cbn. move /andP =>[Hh ?].
+           move /andP in Hh. intuition.
+           apply Eq_trans with (y:=a); [symmetry |]; assumption.
+    + intros. destruct l2.
+      * inversion H4.
+      * destruct p. cbn in H4. move /andP in H4.
+        destruct H4. specialize (IHl1 H3 l2 H5).
+        destruct IHl1 as [v' IHl]. exists v'. intuition.
+        simpl. right. assumption.
+Qed.
+ 
+Lemma Eq_membership : forall {A} `{ Base.EqLaws A} (s1 s2: IntMap A),
+    s1 == s2 -> (forall k, member k s1 == member k s2).
+Proof.    
+  intros A ?? s1 s2. destruct s1; destruct s2; simpl.
+  unfold member, "==". simpl. cbn. unfold Internal.Eq___Map_op_zeze__.
+  move /andP. intros Heq. destruct Heq as [Hs Hl].
+  rewrite !toAscList_spec in Hl. intro k.
+  destruct (Internal.member k x) eqn:Hkx.
+  - rewrite Hkx.
+    eapply member_spec in Hkx; [| eassumption].
+    destruct Hkx as [v Hkx].
+    apply eqb_true_iff. symmetry.
+    eapply toList_sem in Hkx; [| eassumption].
+    apply (list_KeyIn _ _ _ _ Hl) in Hkx. destruct Hkx as [v' Hkv'].
+    eapply member_spec; [eassumption|]. exists v'.
+    eapply toList_sem; [eassumption|]. tauto.
+  - rewrite Hkx. apply not_true_iff_false in Hkx.
+    erewrite member_spec in Hkx; [|eassumption].
+    apply eqb_true_iff. symmetry. apply not_true_iff_false.
+    intro. apply Hkx. eapply member_spec in H1; [|eassumption].
+    destruct H1 as [v Hkv]. eapply toList_sem in Hkv; [|eassumption].
+    eapply list_KeyIn in Hkv; [| symmetry; eassumption].
+    destruct Hkv as [v' [??]]. exists v'. eapply toList_sem; eassumption.
+Qed.    

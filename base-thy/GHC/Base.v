@@ -10,8 +10,6 @@
 Require Import GHC.Base.
 Require Import Data.Semigroup.
 
-Require Import Coq.Logic.FunctionalExtensionality.
-
 Set Warnings "-notation-overridden".
 From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".
@@ -40,16 +38,10 @@ Tactic Notation "hs_simpl" "in" hyp(h) := autorewrite with hs_simpl in h.
 (* Haskell-Coq equivalence *)
 
 Theorem hs_coq_map : @map = @Coq.Lists.List.map.
-Proof.
-  extensionality A; extensionality B; extensionality f; extensionality l.
-  induction l; simpl; [|f_equal]; auto.
-Qed.
+Proof. reflexivity. Qed.
 
 Theorem hs_coq_foldr_base {A B} : @foldr A B = @Coq.Lists.List.fold_right B A.
-Proof.
-  extensionality f; extensionality z; extensionality l.
-  induction l; simpl; [|f_equal]; auto.
-Qed.
+Proof. reflexivity. Qed.
 
 Theorem hs_coq_foldl_base {A B} (f : B -> A -> B) (z : B) (l : list A) :
   foldl f z l = Coq.Lists.List.fold_left f l z.
@@ -57,23 +49,20 @@ Proof. by rewrite /foldl; move: z; elim: l => //=. Qed.
 
 (* ---------- foldr ------------------------------ *)
 
-Lemma foldr_initial : forall A (x : list A), foldr (_::_) nil x = x.
-Proof. induction x. simpl. auto. simpl. rewrite IHx. auto.
-Qed.
-
+Lemma foldr_initial {A} (x : list A) : foldr (_::_) nil x = x.
+Proof. by elim: x => //= x xs ->. Qed.
 Hint Rewrite @foldr_initial : hs_simpl.
 
-Lemma foldr_single : forall A B k (z:B) (x:A), foldr k z (x :: nil) = k x z.
-Proof. 
-  intros. reflexivity.
-Qed.
+Lemma foldr_single {A B} (k : A -> B -> B) z x : foldr k z (x :: nil) = k x z.
+Proof. done. Qed.
 
-Lemma foldr_nil : forall A B k (z:B), foldr k z (@nil A) = z.
-Proof. 
-  intros. reflexivity.
-Qed.
+Lemma foldr_nil {A B} (k : A -> B -> B) z : foldr k z nil = z.
+Proof. done. Qed.
 
 Hint Rewrite @foldr_initial @foldr_single @foldr_nil : hs_simpl.
+
+Lemma foldr_id {A B} (a : A) (bs : list B) : foldr (fun _ => id) a bs = a.
+Proof. by elim: bs. Qed.
 
 (* ---------- append ------------------------------ *)
 
@@ -85,118 +74,62 @@ Hint Rewrite @app_nil_r @app_length : hs_simpl.
 
 (* ---------- map ------------------------------ *)
 
-Lemma map_id:
-  forall a (x : list a),
-  map id x = x.
-Proof.
-  intros. rewrite hs_coq_map. apply Coq.Lists.List.map_id.
-Qed.
-
+Lemma map_id {a} (x : list a) : map id x = x.
+Proof. by rewrite hs_coq_map Coq.Lists.List.map_id. Qed.
 Hint Rewrite @map_id : hs_simpl.
 
-Lemma map_map:
-  forall a b c (f : a -> b) (g : b -> c) (x : list a),
+Lemma map_map {a b c} (f : a -> b) (g : b -> c) (x : list a) :
   map g (map f x) = map (g ∘ f) x.
-Proof.
-  intros.
-  repeat rewrite hs_coq_map.
-  apply Coq.Lists.List.map_map.
-Qed.
+Proof. by rewrite !hs_coq_map Coq.Lists.List.map_map. Qed.
 
-
-Lemma map_append:
-  forall a b (f : a -> b) (x y : list a),
+Lemma map_append {a b} (f : a -> b) (x y : list a) :
   map f (x ++ y) = map f x ++ map f y.
-Proof.
-  intros.
-  repeat rewrite hs_coq_map.
-  apply Coq.Lists.List.map_app.
-Qed.
+Proof. by rewrite !hs_coq_map Coq.Lists.List.map_app. Qed.
 
 Hint Rewrite @map_append : hs_simpl.
 
-Lemma map_cong:
-  forall a b (f g : a -> b) (x : list a),
-  (forall x, f x = g x) -> map f x = map g x.
-Proof.
-  intros.
-  repeat rewrite hs_coq_map.
-  apply Coq.Lists.List.map_ext.
-  auto.
-Qed.
+Lemma map_cong {a b} (f g : a -> b) (x : list a) :
+  f =1 g -> map f x = map g x.
+Proof. by rewrite !hs_coq_map => /Coq.Lists.List.map_ext ->. Qed.
 
-Lemma concat_map : forall A B (f : A -> B) l,
-    map f (concat l) = concat (map (map f) l).
-  intros.
-  repeat rewrite hs_coq_map.
-  apply Coq.Lists.List.concat_map.
-Qed.
-
+Lemma concat_map {A B} (f : A -> B) l : 
+  map f (concat l) = concat (map (map f) l).
+Proof. by rewrite !hs_coq_map Coq.Lists.List.concat_map. Qed.
 
 (* ---------------- flat map ----------------------- *)
 
-Lemma flat_map_concat_map : forall A B (f : A -> list B) l,
-    flat_map f l = concat (map f l).
-Proof.
-  intros.
-  rewrite hs_coq_map.
-  apply Coq.Lists.List.flat_map_concat_map.
-Qed.
+Lemma flat_map_concat_map {A B} (f : A -> list B) l :
+ flat_map f l = concat (map f l).
+Proof. by rewrite !hs_coq_map Coq.Lists.List.flat_map_concat_map. Qed.
 
-
-Lemma flat_map_app : forall A B (f : A -> list B) xs ys,
+Lemma flat_map_app {A B} (f : A -> list B) xs ys :
   flat_map f (xs ++ ys) = flat_map f xs ++ flat_map f ys.
-Proof.
-  induction xs.
-  - intros. rewrite app_nil_l.
-    simpl. auto.
-  - intros. simpl.
-    rewrite <- app_assoc.
-    rewrite IHxs.
-    auto.
-Qed.
+Proof. by elim: xs => //= x xs ->; rewrite app_assoc. Qed.
 
-Lemma flat_map_nil :
-  forall A B (xs : list A),
-    flat_map (fun x => nil) xs = (nil : list B).
-Proof.
-  induction xs. simpl. auto. simpl. auto.
-Qed.
+Lemma flat_map_nil {A B} (xs : list A) :
+  flat_map (fun _ => nil) xs = nil :> list B.
+Proof. by elim: xs. Qed.
 
+Lemma flat_map_cons_f {A B} (f : A -> B) xs :
+  flat_map (fun x => f x :: nil) xs = map f xs.
+Proof. by elim: xs. Qed.
 
-Lemma flat_map_cons_f : forall A B (f : A -> B) xs,
-    flat_map (fun x => f x :: nil) xs = map f xs.
-Proof.
-  induction xs.
-  - simpl. auto.
-  - simpl. auto.
-Qed.
-
-Lemma flat_map_cons_id:
-  forall A (xs : list A),
+Lemma flat_map_cons_id {A} (xs : list A) :
   flat_map (fun x => x :: nil) xs = xs.
-Proof.
-  induction xs; auto. simpl. rewrite IHxs. reflexivity.
-Qed.
+Proof. by elim: xs => //= x xs ->. Qed.
 
-Lemma flat_map_map : forall a b c (f : b -> list c) (g : a -> b) (u : list a),
+Lemma flat_map_map {a b c} (f : b -> list c) (g : a -> b) (u : list a) :
   flat_map f (map g u) = flat_map (f ∘ g) u.
-Proof.
-  intros.
-  rewrite flat_map_concat_map.
-  rewrite map_map.
-  rewrite <- flat_map_concat_map.
-  auto.
-Qed.
+Proof. by rewrite !flat_map_concat_map map_map. Qed.
 
-Lemma fmfm : forall a c (w : list a) (xs : list (a -> c)),
-   flat_map (fun f : a -> c => flat_map (fun x : a => f x :: nil) w) xs =
+Lemma flat_map_cong {a b} (f g : a -> list b) xs :
+  f =1 g -> flat_map f xs = flat_map g xs.
+Proof. by rewrite !flat_map_concat_map => /map_cong ->. Qed.
+
+Lemma fmfm {a c} (w : list a) (xs : list (a -> c)) :
+   flat_map (fun f => flat_map (fun x : a => f x :: nil) w) xs =
    flat_map (fun f => map f w) xs.
-Proof.
-  induction xs. simpl. auto. simpl.
-  rewrite IHxs.
-  rewrite flat_map_cons_f. auto.
-Qed.
+Proof. by elim: xs. Qed. (* ??? That works?! *)
 
 (* -------------------------------------------------------------------- *)
 
@@ -280,7 +213,7 @@ Qed.
 
 (* I would love to be able to use rewriting instead of this 
    lemma to do this. Why doesn't it work??? *)
-Lemma eq_replace_r : forall {a}`{EqLaws a}  (v1 v2 v3 : a),
+Lemma eq_replace_r : forall {a} `{EqLaws a}  (v1 v2 v3 : a),
     (v2 == v3) -> (v1 == v2) = (v1 == v3).
 Proof.
   intros.
@@ -722,8 +655,8 @@ Proof.
   split;
     repeat unfold fmap, Functor__list,
     Base.Functor__list_fmap.
-  - exact map_id.
-  - exact map_map.
+  - exact @map_id.
+  - exact @map_map.
 Qed.
 
 
@@ -820,10 +753,8 @@ Proof.
     rewrite flat_map_cons_id.
     auto.
   - auto.
-  - f_equal.
-    extensionality g.
-    rewrite flat_map_cons_id.
-    auto.
+  - apply flat_map_cong => f1.
+    by rewrite flat_map_cons_id.
 Qed.
 
 (* ------------------------------- boolean simplification ----------------------------- *)

@@ -52,7 +52,8 @@ Lemma map_snd_zip' :
     (map f ys).
 Proof.
   move=> a b c f xs ys Hle.
-  rewrite <- (map_map (a * b) _ _ snd f).
+  Check map_map.
+  rewrite <- (map_map (snd (A:=a)) f).
   rewrite -> map_snd_zip; auto.
 Qed.
 

@@ -388,3 +388,11 @@ Proof.
   auto.
 Qed.
 Hint Resolve RespectsAEVar_isLocalVar.
+
+(** ** [isTyVar] and [isCoVar] *)
+
+Lemma isn'tTyVar v : isTyVar v = false.
+Proof. by case: v. Qed.
+
+Lemma isn'tCoVar v : isCoVar v = false.
+Proof. by case: v. Qed.

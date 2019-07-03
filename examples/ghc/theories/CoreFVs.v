@@ -5,6 +5,7 @@ From Coq Require Import ssreflect ssrfun ssrbool.
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Coq.Logic.ProofIrrelevance.
 
 
 
@@ -241,12 +242,14 @@ Lemma exprFreeVars_Var: forall v,
     isLocalVar v = true -> 
     exprFreeVars (Mk_Var v) = unitVarSet v.
 Proof.
-intros v NG.
-unfold exprFreeVars, exprFVs, expr_fvs.
-unfold_FV.
-set_b_iff.
-rewrite NG.
-auto.
+  intros v NG.
+  unfold exprFreeVars, exprFVs, expr_fvs.
+  unfold_FV. unfold elemVarSet; simpl.
+  set_b_iff. rewrite NG.
+  simpl. unfold singleton, unitVarSet, UniqSet.unitUniqSet.
+  f_equal. unfold UniqFM.unitUFM. f_equal. simpl.
+  unfold IntMap.insert, IntMap.singleton, IntMap.empty.
+  f_equal. apply proof_irrelevance.
 Qed.
 
 Lemma exprFreeVars_global_Var: forall v, 
@@ -505,18 +508,19 @@ Proof.
     rewrite Foldable_foldr_cons.
     rewrite <- IHpairs0.
     f_equiv.
-    eapply filterVarSet_equal. eauto.
-    eapply DenotesfvVarSet.
-    rewrite DenotesfvVarSet.
-    eapply unionVarSet_unionFV.
-    eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
-    eapply Denotes_fvVarSet.
-    rewrite unionEmpty_l.
-    eapply Denotes_fvVarSet.
+    * eapply filterVarSet_equal. eauto.
+      eapply DenotesfvVarSet.
+      rewrite DenotesfvVarSet.
+      eapply unionVarSet_unionFV.
+      eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
+      eapply Denotes_fvVarSet.
+      rewrite unionEmpty_l.
+      eapply Denotes_fvVarSet.
+    * rewrite filterVarSet_emptyVarSet. reflexivity.
   + move=> x y.
     rewrite unionVarSet_filterVarSet.
     reflexivity.
-    done.
+    done. 
 Qed.
 
 Lemma exprFreeVars_Case:
@@ -778,11 +782,9 @@ simpl.
 destruct (isLocalVar v).
 - simpl.
   unfold varUnique in H.
-  destruct (Base.compare _ _) eqn:Hcomp => //.
-  + apply Bounds.compare_Eq in Hcomp.
-    Require Import Proofs.GHC.Base.
-    contradict H.
-    f_equal. apply /Eq_eq_Word => //.
+  rewrite ContainerAxioms.member_insert.
+  apply /orP. intro. intuition.
+  apply H. f_equal. apply /Eq_eq =>//.
 - reflexivity.
 Qed.
 

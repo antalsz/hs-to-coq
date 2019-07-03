@@ -310,7 +310,17 @@ Qed.
 
 Lemma insert_WF:
   forall y v (s: Map e a), WF s -> WF (insert y v s).
-Proof. intros. eapply Desc_WF. eapply insert_Desc; try reflexivity; try assumption. Qed.
+Proof.
+  intros. eapply Desc_WF.
+  eapply insert_Desc; try reflexivity; try assumption.
+Qed.
+
+Lemma insertWith_WF:
+  forall f y v (s: Map e a), WF s -> WF (insertWith f y v s).
+Proof.
+  intros. eapply Desc_WF.
+  eapply insertWith_Desc; [assumption | | ]; reflexivity.
+Qed.
 
 End WF.
 

@@ -258,7 +258,7 @@ Qed.
 
 
 Instance Eq_m : forall {a}`{EqLaws a},
-  Proper ((fun (x y :a) => x == y) ==> (fun x y => x == y) ==> Logic.eq)
+  Proper ((_==_) ==> (_==_) ==> Logic.eq)
   (_==_).
 Proof.
   move=> a HE HE2 x1 x2 Hx y1 y2 Hy.
@@ -527,6 +527,29 @@ Proof.
   - by contradict E; case: E.
 Qed.
 
+Instance EqLaws_pair {a b} `{EqLaws a} `{EqLaws b} : EqLaws (a * b).
+Proof.
+  split; rewrite /op_zeze__ /op_zsze__ /Eq_pair___ /op_zeze____ /op_zsze____.
+  - case=> [??] //=. apply /andP; split; reflexivity.
+  - do 2 case=> [??] //=. rewrite Eq_sym.
+    apply andb_id2l=> Ha. rewrite Eq_sym =>//=.
+  - do 3 case=> [??] //=. move /andP => [??] //= /andP => ?.
+    apply /andP. intuition; eapply Eq_trans; eassumption.
+  - do 2 case=> [??] //=. rewrite negb_involutive. reflexivity.
+Qed.
+
+Instance EqExact_pair {a b} `{EqExact a} `{EqExact b} : EqExact (a * b).
+Proof.
+  split; rewrite /op_zeze__ /op_zsze__ /Eq_pair___ /op_zeze____ /op_zsze____.
+  case =>[??] [??] //=. destruct (_ == _) eqn:?.
+  - rewrite andb_true_l. move /Eq_eq in Heqb0.
+    destruct (_ == _) eqn:?.
+    + constructor. move /Eq_eq in Heqb1. subst. reflexivity.
+    + constructor. move /Eq_eq in Heqb1. intro. apply Heqb1.
+      inversion H5; reflexivity.
+  - rewrite andb_false_l. constructor. move /Eq_eq in Heqb0.
+    intro. inversion H5. apply Heqb0. assumption.
+Qed.
 
 (* -------------------------------------------------------------------- *)
 

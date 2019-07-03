@@ -504,14 +504,15 @@ Proof.
     rewrite Foldable_foldr_cons.
     rewrite <- IHpairs0.
     f_equiv.
-    eapply filterVarSet_equal. eauto.
-    eapply DenotesfvVarSet.
-    rewrite DenotesfvVarSet.
-    eapply unionVarSet_unionFV.
-    eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
-    eapply Denotes_fvVarSet.
-    rewrite unionEmpty_l.
-    eapply Denotes_fvVarSet.
+    * eapply filterVarSet_equal. eauto.
+      eapply DenotesfvVarSet.
+      rewrite DenotesfvVarSet.
+      eapply unionVarSet_unionFV.
+      eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
+      eapply Denotes_fvVarSet.
+      rewrite unionEmpty_l.
+      eapply Denotes_fvVarSet.
+    * rewrite filterVarSet_emptyVarSet. reflexivity.
   + move=> x y.
     rewrite unionVarSet_filterVarSet.
     reflexivity.

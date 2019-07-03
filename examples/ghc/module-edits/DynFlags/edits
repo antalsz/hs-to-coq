@@ -6,37 +6,11 @@ axiomatize module DynFlags
 
 rename type GHC.Num.Int = BinNums.N
 
-skip module Config
-skip module CmdLineParser
-skip module Control.Monad.IO.Class
-skip module Control.Monad.IO
-skip module Deriving
-skip module ErrUtils
-skip module GHC.IORef
-skip module GHC.IO.Handle
-skip module GHC.IO.Handle.Types
-skip module GHC.IO.Handle.FD
-skip module GHC.IO.Unsafe
-skip module Text.ParserCombinators
-skip module Text.ParserCombinators.ReadP
-skip module GHC.LanguageExtensions.Type
-skip module Hooks
-skip module PackageConfig
-skip module Packages
-skip module Platform
-skip module PlatformConstants
-
 redefine Axiom DynFlags.Settings : Type.
 redefine Axiom DynFlags.FlushOut : Type.
 redefine Axiom DynFlags.FlushErr : Type.
 redefine Axiom DynFlags.DynFlags : Type.
 redefine Axiom DynFlags.FlagSpec : Type -> Type. 
-
-# redefine Inductive DynFlags.Settings : Type := Mk_Settings.
-# redefine Inductive DynFlags.FlushOut : Type := Mk_FlushOut.
-# redefine Inductive DynFlags.FlushErr : Type := Mk_FlushErr.
-# redefine Inductive DynFlags.DynFlags : Type := Mk_DynFlags.
-# redefine Inductive DynFlags.FlagSpec (flag:Type) : Type := Mk_FlagSpec.
 
 skip DynFlags.FlagMaker
 skip DynFlags.FatalMessager
@@ -224,7 +198,7 @@ skip DynFlags.parsePackageFlag
 skip DynFlags.parsePackageArg
 skip DynFlags.parseUnitIdArg
 
-# strange deriving behavior
+# can't derive Eq/Ord for enums
 skip DynFlags.Ord__SseVersion
 skip DynFlags.Ord__Way
 skip DynFlags.Eq___WarningFlag

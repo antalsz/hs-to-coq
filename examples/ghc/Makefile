@@ -132,15 +132,23 @@ OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE)
 HSFILES    = $(addsuffix .hs,$(MODULES)) $(addsuffix .hs,$(CORESYN)) $(addsuffix .hs,$(CORE_MODULES)) 
 HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES)) 
 
+EDITPATHS = $(addprefix module-edits/,$(MODULES) $(CORESYN) $(CORE_MODULES))
+EDITFILES = edits $(CORE_EDITS) $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDITPATHS)) 
+
 all: vfiles coq
 
-vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES)
+vfiles: $(OUT)/edits  $(OUT)/README.md $(OUT)/Makefile $(OUTFILES) 
 
 core: $(OUT)/README.md coq
 
 
 filelist:
 	@ls -1 $(HSFILESPATH) 
+
+editlist:
+	@ls -1 $(EDITFILES) 2>/dev/null | xargs cloc --by-file --lang-no-ext=zsh --force-lang=zsh,edits --skip-uniqueness
+
+
 
 ghc.all.pdf: Makefile
 	find ghc/compiler -name \*.hs | xargs graphmod --no-cluster --prune-edges -r Outputable -r GhcPrelude | dot -Tpdf -o ghc.all.pdf

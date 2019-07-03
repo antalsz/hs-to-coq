@@ -201,8 +201,8 @@ convertModule' convModName group = do
 -- Handles module renaming
 convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
 convertModule convModNameOrig group = do
-  moduleNames <- renameModule convModNameOrig
-  convertModule' moduleNames group
+  convModName <- renameModule convModNameOrig
+  convertModule' convModName group
 
 -- Module-local
 data Convert_Module_Mode = Mode_Initial

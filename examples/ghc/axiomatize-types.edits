@@ -256,8 +256,23 @@ rewrite forall xs e, CoreUtils.stripTicksT xs e = e
 rewrite forall ts e, CoreUtils.mkTicks ts e = e
 
 ############################################################################
-# pruning Rules and Unfolding
+# pruning Rules
 ############################################################################
+
+
+# Redefine RuleInfo so that it is always empty. This is *safe*
+# these redefines are for definitions in IdInfo
+redefine Inductive  Core.RuleInfo : Type := Core.EmptyRuleInfo.
+redefine Definition Core.emptyRuleInfo   := Core.EmptyRuleInfo.
+redefine Definition Core.isEmptyRuleInfo  : Core.RuleInfo -> bool
+   := fun x => true.
+redefine Definition Core.ruleInfoFreeVars : Core.RuleInfo -> Core.DVarSet
+   := fun x => Core.emptyDVarSet.
+redefine Definition Core.ruleInfoRules    : Core.RuleInfo -> list Core.CoreRule 
+   := fun x => nil.
+redefine Definition Core.setRuleInfoHead  : Name.Name -> (Core.RuleInfo -> Core.RuleInfo)
+   := fun x y => Core.EmptyRuleInfo.
+
 
 redefine Definition CoreFVs.idRuleFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
 redefine Definition Id.idCoreRules    : Core.Id -> list (Core.CoreRule) 

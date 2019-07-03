@@ -257,49 +257,66 @@ Axiom lookup_union_None:
              (IntMap.union m1 m2) = None.
 *)
 
-Axiom lookup_difference_in_snd:
+Lemma lookup_difference_in_snd:
   forall (key : Internal.Key) (b : Type) (i i': IntMap.IntMap b) (y:b),
     IntMap.lookup key i' = Some y -> 
     IntMap.lookup key (IntMap.difference i i') = None.
+Proof.
+  intros. eapply lookup_difference_in_snd; destruct_IntMap.
+Qed.
 
-Axiom lookup_difference_not_in_snd:
+Lemma lookup_difference_not_in_snd:
   forall (key : Internal.Key) (b : Type) (i i': IntMap.IntMap b)(y:b),
     IntMap.lookup key i' = None ->
     IntMap.lookup key (IntMap.difference i i') = IntMap.lookup key i.
-
+Proof.
+  intros. eapply lookup_difference_not_in_snd; destruct_IntMap.
+Qed.
 
 (* This is a pretty strong property about the representation of 
    IntMaps. I hope that it is true. *)
-Axiom delete_commute :
-  forall (A : Type)
+Lemma delete_commute :
+  forall (A : Type) `{EqLaws A}
     (kx ky : Internal.Key) 
     (i : IntMap.IntMap A),
-  IntMap.delete ky (IntMap.delete kx i) =
+  IntMap.delete ky (IntMap.delete kx i) ==
   IntMap.delete kx (IntMap.delete ky i).
+Proof.
+  intros. eapply delete_commute; destruct_IntMap.
+Qed.  
 
-Axiom intersection_empty :
+Lemma intersection_empty :
   forall A B (i : IntMap.IntMap A) (j : IntMap.IntMap B),
     (j = IntMap.empty) ->
     IntMap.null (IntMap.intersection i j).
+Proof.
+  intros. eapply intersection_empty; destruct_IntMap.
+  simpl. inversion H. reflexivity.
+Qed.
 
-Axiom null_intersection_non_member: forall b k (v : b)(i1 i2 : IntMap.IntMap b),
+Lemma null_intersection_non_member: forall b k (v : b)(i1 i2 : IntMap.IntMap b),
   IntMap.null
     (IntMap.intersection i1 (IntMap.insert k v i2)) <->
   IntMap.member k i1 = false /\
   IntMap.null (IntMap.intersection i1 i2).
+Proof.
+  intros. eapply null_intersection_non_member; destruct_IntMap.
+  reflexivity. reflexivity.
+Qed.
 
-Axiom disjoint_difference: forall  b (i1 i2 i3 : IntMap.IntMap b),
+Lemma disjoint_difference: forall  b (i1 i2 i3 : IntMap.IntMap b),
   IntMap.null (IntMap.intersection i2 i3) ->
   IntMap.null (IntMap.difference i1 i2) ->
   IntMap.null (IntMap.intersection i1 i3).
-
+Proof.
+  intros. destruct i2.
+  eapply disjoint_difference with (m2:=x); destruct_IntMap.
+Qed.
 
 Axiom null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.IntMap b), 
   (forall a, IntMap.member a x1 <-> IntMap.member a y1) ->
   (forall a, IntMap.member a x2 <-> IntMap.member a y2) ->
   IntMap.null (IntMap.intersection x1 x2) = IntMap.null (IntMap.intersection y1 y2).
-
-
 
 
 (*

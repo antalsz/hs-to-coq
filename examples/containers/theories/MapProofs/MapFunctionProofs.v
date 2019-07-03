@@ -30,6 +30,15 @@ Proof.
     assert (f x v = f i v). apply equal_f. apply H1. order e. rewrite H5. reflexivity.
 Qed.
 
+Lemma mapWithKey_WF :
+  forall {e} {a} {b} `{OrdLaws e} (f : e -> a -> b) (s : Map e a),
+    Proper ((fun i j : e => Base.op_zeze__ i j = true) ==> eq) f ->
+    WF s -> WF (mapWithKey f s).
+Proof.
+  intros. eapply Desc_WF.
+  apply mapWithKey_Desc; assumption.
+Qed.
+
 (*The following are several other lemmas about [map] and [mapWithKey] that are useful
 for [FMapInterface]*)
 
@@ -103,7 +112,15 @@ Proof.
   intros. induction H0.
   - simpl. solve_Desc e.
   - simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. solve_Desc e.
-Qed. 
+Qed.
+
+Lemma map_WF :
+  forall {e} {a} {b} `{OrdLaws e} (f : a -> b) (s : Map e a),
+    WF s -> WF (map f s).
+Proof.
+  intros. eapply Desc_WF.
+  apply map_Desc; assumption.
+Qed.
 
 Lemma map_mapWithKey_equiv:  forall {e} {a} {b} `{Ord e} (f : a -> b) (m : Map e a),
   Internal.map f m = mapWithKey (fun k v => f v) m.

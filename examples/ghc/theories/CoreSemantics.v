@@ -49,9 +49,9 @@ Definition subst (e₀ : CoreExpr) (n : Id) (e' : CoreExpr) : CoreExpr :=
                                     then alts
                                     else map (λ '(k, ns, u), (k, ns, if elem n ns then u else subst u)) alts)
         | Cast e γ         => Cast (subst e) γ
-        | Tick tick e      => Tick tick (subst e)
-        | Type_ τ          => Type_ τ
-        | Coercion γ       => Coercion γ
+(*        | Tick tick e      => Tick tick (subst e) *)
+        | Mk_Type τ        => Mk_Type τ
+        | Mk_Coercion γ    => Mk_Coercion γ 
       end
   in subst e₀.
 
@@ -83,9 +83,9 @@ Definition substs (e₀ : CoreExpr) (ss : list (Id * CoreExpr)) : CoreExpr :=
                                                              else subst u))
                                             alts)
         | Cast e γ        => Cast (subst e) γ
-        | Tick tick e     => Tick tick (subst e)
-        | Type_ τ         => Type_ τ
-        | Coercion γ      => Coercion γ
+(*        | Tick tick e     => Tick tick (subst e) *)
+        | Mk_Type τ         => Mk_Type τ
+        | Mk_Coercion γ      => Mk_Coercion γ 
       end
   in subst e₀.
 
@@ -122,8 +122,8 @@ Proof.
   rewrite /subst /substs.
   match goal with |- ?fix_subst e₀ = ?fix_substs e₀ => set subst := fix_subst; set substs := fix_substs end.
   elim/core_induct: e₀ =>
-    [ n' | lit | e₁  e₂ IH₁ IH₂ | n' e IH | [n' e₁ | bs] e₂ IH₁ IH₂ | e n' τ alts IH₁ IH₂
-    | e γ IH | tick e IH | τ | γ ]
+    [ n' | lit | e₁  e₂ IH₁ IH₂ | n' e IH | [n' e₁ | bs] e₂ IH₁ IH₂ | e n' τ alts IH₁ IH₂ 
+     | e γ IH (* | tick e IH *) | τ | γ ] 
     //=.
   - by rewrite Eq_sym; case: (_ == _).
   - by rewrite IH₁ IH₂.
@@ -139,8 +139,8 @@ Proof.
     + elim: ns {IN} => [|n'' ns IHns] //=.
       by rewrite elemC IHns Eq_sym; case: (_ == _).
     + by rewrite (IH₂ _ _ _ IN).
-  - by rewrite IH.
-  - by rewrite IH.
+   - by rewrite IH.
+(*  - by rewrite IH. *)
 Qed.
 
 Definition subst_expr'
@@ -156,12 +156,12 @@ Definition subst_expr'
              end in
        match expr with
        | Core.Mk_Var v => lookupIdSubst (Panic.someSDoc) subst v
-       | Core.Type_ ty => Core.Type_ (tt)
-       | Core.Coercion co => Core.Coercion (tt)
+       | Core.Mk_Type ty => Core.Mk_Type ty
+       | Core.Mk_Coercion co => Core.Mk_Coercion co 
        | Core.Lit lit => Core.Lit lit
        | Core.App fun_ arg => Core.App (go fun_) (go arg)
-       | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
-       | Core.Cast e co => Core.Cast (go e) (tt)
+(*       | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e) *)
+       | Core.Cast e co => Core.Cast (go e) co 
        | Core.Lam bndr body =>
          let 'pair subst' bndr' := substBndr subst bndr in
          Core.Lam bndr' (subst_expr doc subst' body)
@@ -170,7 +170,7 @@ Definition subst_expr'
          Core.Let bind' (subst_expr doc subst' body)
        | Core.Case scrut bndr ty alts =>
          let 'pair subst' bndr' := substBndr subst bndr in
-         Core.Case (go scrut) bndr' (tt) (GHC.Base.map (go_alt subst') alts)
+         Core.Case (go scrut) bndr' ty (GHC.Base.map (go_alt subst') alts)
        end
            with substBind arg_0__ arg_1__
        := match arg_0__, arg_1__ with
@@ -200,7 +200,7 @@ Proof.
   move_let => /=;
     rewrite /subst; match goal with |- ?fix_subst e = _ => set subst := fix_subst end.
   rewrite /substExpr (*subst_expr_refix*) /subst_expr.
-  elim: e => [n' | lit | e₁ IH₁ e₂ IH₂ | n' e IH | lb e IH | e IH n' τ alts | e IH γ | tick e IH | τ | γ] //=.
+  elim: e => [n' | lit | e₁ IH₁ e₂ IH₂ | n' e IH | lb e IH | e IH n' τ alts (* | e IH γ | tick e IH | τ | γ  *) ] //=.
   - admit.
   - rewrite IH₁ IH₂ //.
     admit.
@@ -209,7 +209,6 @@ Proof.
     admit.
   - admit.
   - admit.
-  - 
 Abort.
 
 Notation "e @[ n ↦ e' ]" := (subst e n e') (at level 15, no associativity, format "e @[ n  ↦  e' ]").
@@ -233,6 +232,7 @@ Definition case_match (e : CoreExpr) (K : DataCon) (args : list Id) : option (li
   else None.
 
 Reserved Notation "e₁ ⟶ e₂" (at level 90, right associativity).
+(*
 Inductive Step : CoreExpr -> CoreExpr -> Type :=
 
 | S_App {e₁ e₂ e₁'} :
@@ -301,3 +301,4 @@ Inductive Step : CoreExpr -> CoreExpr -> Type :=
     Let (Rec bs) u ⟶ substs u (map (second (Let (Rec bs))) bs)
   
 where "e₁ ⟶ e₂" := (Step e₁ e₂).
+*)

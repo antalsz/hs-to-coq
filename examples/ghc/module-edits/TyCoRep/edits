@@ -1,0 +1,40 @@
+redefine Axiom Core.CoercionHole : Type.
+
+skip Core.tidyToIfaceTypeSty
+skip Core.tidyToIfaceType
+skip Core.tidyToIfaceCoSty
+skip Core.tidyToIfaceCo 
+
+# Not all of these operations were originally defined in TyCoRep
+# However, together they bring the FV module into mutual recursion with
+# the rest of Core. And we don't want that. So we just skip all of these
+# definitions (and rewrite them where they appear in the code)
+skip Core.tyCoFVsOfTypes
+skip Core.tyCoFVsOfType 
+skip Core.tyCoFVsOfProv
+skip Core.tyCoFVsOfCos
+skip Core.tyCoFVsOfCoVar
+skip Core.tyCoFVsOfCo 
+skip Core.tyCoFVsBndr
+skip Core.injectiveVarsOfType
+skip Core.injectiveVarsOfBinder 
+skip Core.closeOverKindsFV 
+
+
+skip AxiomatizedTypes.Coercion
+skip AxiomatizedTypes.Type_
+skip AxiomatizedTypes.ThetaType
+skip AxiomatizedTypes.TyBinder
+skip AxiomatizedTypes.TyThing
+skip AxiomatizedTypes.Kind
+skip AxiomatizedTypes.PredType
+#skip Core.TvSubstEnv
+#skip Core.CvSubstEnv
+#skip Core.TCvSubst
+
+# skip Core.mkTyVarTy
+
+#
+# refers to ConLike
+skip Core.NamedThing__TyThing
+

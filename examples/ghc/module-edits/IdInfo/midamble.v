@@ -10,9 +10,6 @@ Require GHC.Err.
 Instance Default__RuleInfo : GHC.Err.Default RuleInfo :=
   GHC.Err.Build_Default _ EmptyRuleInfo.
 
-Instance Default__Unfolding : GHC.Err.Default Unfolding :=
-  GHC.Err.Build_Default _ NoUnfolding.
-
 Instance Default__TickBoxOp : GHC.Err.Default TickBoxOp :=
   GHC.Err.Build_Default _ (TickBox GHC.Err.default GHC.Err.default).
 
@@ -44,4 +41,4 @@ Instance Default__RecSelParent : GHC.Err.Default RecSelParent :=
 Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
 
 Instance Default__DataCon : GHC.Err.Default DataCon :=
- Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil tt tt nil tt nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default tt GHC.Err.default GHC.Err.default).
+ Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil GHC.Err.default GHC.Err.default nil GHC.Err.default nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).

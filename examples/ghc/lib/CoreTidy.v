@@ -67,12 +67,11 @@ Definition tidyLetBndr
     match arg_0__, arg_1__, arg_2__ with
     | rec_tidy_env, (pair tidy_env var_env as env), pair id rhs =>
         let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := (@Core.idInfo tt id) in
+        let old_info := (@Core.idInfo tt) id in
         let old_unf := Core.unfoldingInfo old_info in
         let new_unf :=
           if Core.isStableUnfolding old_unf : bool
           then tidyUnfolding rec_tidy_env old_unf old_unf else
-          if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
           Core.noUnfolding in
         let new_info :=
           Core.setUnfoldingInfo (Core.setInlinePragInfo (Core.setDemandInfo
@@ -88,7 +87,7 @@ Definition tidyLetBndr
                                 new_unf in
         let details := Core.idDetails id in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
-        let ty' := tt in
+        let ty' := Core.tidyType env (Id.idType id) in
         let id' := Core.mkLocalVar details name' ty' new_info in
         let var_env' := Core.extendVarEnv var_env id id' in
         pair (pair tidy_env' var_env') id'
@@ -100,17 +99,15 @@ Definition tidyIdBndr
     match arg_0__, arg_1__ with
     | (pair tidy_env var_env as env), id =>
         let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := (@Core.idInfo tt id) in
+        let old_info := (@Core.idInfo tt) id in
         let old_unf := Core.unfoldingInfo old_info in
-        let new_unf :=
-          if Core.isEvaldUnfolding old_unf : bool then Core.evaldUnfolding else
-          Core.noUnfolding in
+        let new_unf := Core.noUnfolding in
         let new_info :=
           Core.setOneShotInfo (Core.setUnfoldingInfo (Core.setOccInfo Core.vanillaIdInfo
                                                                       (Core.occInfo old_info)) new_unf)
                               (Core.oneShotInfo old_info) in
         let name' := Name.mkInternalName (Id.idUnique id) occ' SrcLoc.noSrcSpan in
-        let ty' := tt in
+        let ty' := Core.tidyType env (Id.idType id) in
         let id' := Id.mkLocalIdWithInfo name' ty' new_info in
         let var_env' := Core.extendVarEnv var_env id id' in
         pair (pair tidy_env' var_env') id'
@@ -145,18 +142,18 @@ Definition tidyBind
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
-           | env, Core.Type_ ty => Core.Type_ (tt)
-           | env, Core.Coercion co => Core.Coercion (tt)
+           | env, Core.Mk_Type ty => Core.Mk_Type (Core.tidyType env ty)
+           | env, Core.Mk_Coercion co => Core.Mk_Coercion (Core.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
-           | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (tt)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (Core.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
+                  Core.Case (tidyExpr env e) b (Core.tidyType env ty) (GHC.Base.map (tidyAlt env')
+                                                                       alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreBind)
@@ -183,18 +180,18 @@ Definition tidyExpr : Core.TidyEnv -> Core.CoreExpr -> Core.CoreExpr :=
              end in
            match arg_0__, arg_1__ with
            | env, Core.Mk_Var v => Core.Mk_Var (tidyVarOcc env v)
-           | env, Core.Type_ ty => Core.Type_ (tt)
-           | env, Core.Coercion co => Core.Coercion (tt)
+           | env, Core.Mk_Type ty => Core.Mk_Type (Core.tidyType env ty)
+           | env, Core.Mk_Coercion co => Core.Mk_Coercion (Core.tidyCo env co)
            | _, Core.Lit lit => Core.Lit lit
            | env, Core.App f a => Core.App (tidyExpr env f) (tidyExpr env a)
-           | env, Core.Tick t e => Core.Tick (tidyTickish env t) (tidyExpr env e)
-           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (tt)
+           | env, Core.Cast e co => Core.Cast (tidyExpr env e) (Core.tidyCo env co)
            | env, Core.Let b e =>
                tidyBind env b =: (fun '(pair env' b') => Core.Let b' (tidyExpr env' e))
            | env, Core.Case e b ty alts =>
                tidyBndr env b =:
                (fun '(pair env' b) =>
-                  Core.Case (tidyExpr env e) b (tt) (GHC.Base.map (tidyAlt env') alts))
+                  Core.Case (tidyExpr env e) b (Core.tidyType env ty) (GHC.Base.map (tidyAlt env')
+                                                                       alts))
            | env, Core.Lam b e =>
                tidyBndr env b =: (fun '(pair env' b) => Core.Lam b (tidyExpr env' e))
            end with tidyBind (arg_0__ : Core.TidyEnv) (arg_1__ : Core.CoreBind)
@@ -225,17 +222,17 @@ End Notations.
 
 (* External variables:
      None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
-     Core.Cast Core.Coercion Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id
-     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Tick
-     Core.Tickish Core.TidyEnv Core.Type_ Core.Unfolding Core.Var Core.demandInfo
-     Core.evaldUnfolding Core.extendVarEnv Core.idDetails Core.idInfo
-     Core.inlinePragInfo Core.isEvaldUnfolding Core.isStableUnfolding Core.isTyCoVar
-     Core.lookupVarEnv Core.mkLocalVar Core.noUnfolding Core.occInfo Core.oneShotInfo
-     Core.setArityInfo Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo
-     Core.setOneShotInfo Core.setStrictnessInfo Core.setUnfoldingInfo
-     Core.strictnessInfo Core.tidyTyCoVarBndr Core.unfoldingInfo Core.vanillaIdInfo
+     Core.Cast Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id Core.Lam Core.Let
+     Core.Lit Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec
+     Core.Tickish Core.TidyEnv Core.Unfolding Core.Var Core.demandInfo
+     Core.extendVarEnv Core.idDetails Core.idInfo Core.inlinePragInfo
+     Core.isStableUnfolding Core.isTyCoVar Core.lookupVarEnv Core.mkLocalVar
+     Core.noUnfolding Core.occInfo Core.oneShotInfo Core.setArityInfo
+     Core.setDemandInfo Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
+     Core.setStrictnessInfo Core.setUnfoldingInfo Core.strictnessInfo Core.tidyCo
+     Core.tidyTyCoVarBndr Core.tidyType Core.unfoldingInfo Core.vanillaIdInfo
      Core.zapUsageEnvSig CoreArity.exprArity Data.Traversable.mapAccumL GHC.Base.map
-     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idUnique
+     GHC.Err.default GHC.List.zip GHC.Prim.seq Id.idName Id.idType Id.idUnique
      Id.mkLocalIdWithInfo Maybes.orElse Name.Name Name.getOccName Name.mkInternalName
      OccName.tidyOccName SrcLoc.noSrcSpan UniqFM.lookupUFM
 *)

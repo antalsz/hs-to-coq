@@ -47,7 +47,16 @@ Definition ando : option a -> option a -> option a :=
 
 Infix "&&&" := ando.
 
+Definition ando' {b : Type} : option a -> option b -> option a :=
+  fun x y => match y with None => None | _ => x end.
+
 Definition diffo : option a -> option a -> option a :=
+  fun x y => match y with
+    | Some v => None
+    | None => x
+    end.
+
+Definition diffo' {b : Type} : option a -> option b -> option a :=
   fun x y => match y with
     | Some v => None
     | None => x
@@ -913,6 +922,14 @@ Proof.
      in the context. *)
   assert (Bounded s None None /\ size s = size s /\ sem s = sem s) by (apply HD; auto).
   intuition.
+Qed.
+
+Lemma Desc'_WF:
+  forall s f,
+    Desc' s None None f -> WF s.
+Proof.
+  intros. unfold WF.
+  apply H; auto.
 Qed.
 
 Lemma Desc_WF':

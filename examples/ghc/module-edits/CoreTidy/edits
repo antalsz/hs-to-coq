@@ -6,6 +6,12 @@ skip module CoreSeq
 #
 redefine Definition CoreTidy.tidyUnfolding : Core.TidyEnv -> (Core.Unfolding ->  (Core.Unfolding -> Core.Unfolding)) := fun e u v => u.
 
+#
+# avoid calling a smart constructor in a case that will never be executed
+#
+rewrite forall x, Core.isEvaldUnfolding x = false
+
+
 skip CoreTidy.tidyRule
 skip CoreTidy.tidyRules
 

@@ -403,4 +403,28 @@ Proof.
       destruct (f(None)); cbn -[Z.add]; solve_size.
 Qed.
 
+Lemma delete_WF:
+  forall x (s: Map e a), WF s -> WF (delete x s).
+Proof.
+  intros. eapply Desc_WF.
+  eapply delete_Desc. assumption.
+Qed.
+
+Lemma alter_WF :
+  forall f x (s : Map e a), WF s -> WF (alter f x s).
+Proof.
+  intros. eapply Desc_WF.
+  eapply alter_Desc; [assumption | reflexivity | reflexivity ].
+Qed.
+
+Lemma adjust_WF :
+  forall f x (s : Map e a),
+    WF s -> WF (adjust f x s).
+Proof.
+  intros. eapply Desc_WF. rewrite adjust_spec.
+  eapply adjustWithKey_Desc.
+  - assumption.
+  - intros i j Heq. reflexivity.
+Qed.
+
 End WF.

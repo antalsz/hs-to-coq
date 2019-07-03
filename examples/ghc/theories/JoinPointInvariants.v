@@ -299,9 +299,9 @@ Fixpoint isJoinPointsValid (e : CoreExpr) (n : nat) (jps : VarSet) {struct e} : 
       forallb (fun v => negb (isJoinId v)) pats &&
       isJoinPointsValid rhs 0 jps'') alts  (* Tail-call position *)
   | Cast e _ =>    isJoinPointsValid e 0 jps
-  | Tick _ e =>    isJoinPointsValid e 0 jps
-  | Type_ _  =>   true
-  | Coercion _ => true
+(*  | Tick _ e =>    isJoinPointsValid e 0 jps *)
+  | Mk_Type _  =>   true
+  | Mk_Coercion _ => true 
   end
 with isJoinRHS_aux (a : JoinArity) (rhs : CoreExpr) (jps : VarSet) {struct rhs} : bool :=
   if a <? 1 then false else
@@ -555,11 +555,12 @@ Proof.
       assumption.
     - unfold varToCoreExpr.
       repeat destruct_match; try reflexivity.
-      + (* new case from debugIsOn *) destruct x; simpl in *; 
-          try rewrite andb_false_r in Heq1;
+      + (* new case from debugIsOn *)
+        destruct x; simpl in *.
+        try rewrite andb_false_r in Heq1;
           try discriminate.
       + simpl. rewrite isJoinId_eq in H.
-      destruct_match; congruence.
+      destruct_match; congruence. 
 Qed.
 
 Lemma isJoinPointsValid_MkLetRec: forall pairs body jps,
@@ -812,13 +813,13 @@ Proof.
     apply subVarSet_delVarSetList_both.
     rewrite exprFreeVars_Cast.
     set_b_iff; fsetdec.
-  - apply H. 
+(*  - apply H. 
     eapply disjointVarSet_subVarSet_l; only 1: apply H0.
     apply subVarSet_delVarSetList_both.
     rewrite exprFreeVars_Tick.
-    set_b_iff; fsetdec.
+    set_b_iff; fsetdec. *)
   - reflexivity.
-  - reflexivity.
+  - reflexivity. 
 Qed.
 
 Lemma isJoinPointsValid_fresh_updJPSs:
@@ -1019,9 +1020,9 @@ Proof.
           (P := fun jps => isJoinPointsValid rhs 0 jps = true).
      apply H0.
    * apply H.
-   * apply H.
+(*   * apply H. *)
    * apply Respects_StrongSubset_const.
-   * apply Respects_StrongSubset_const.
+   * apply Respects_StrongSubset_const. 
 Qed.
 
 Instance Respects_StrongSubset_isJoinPointsValid e n :

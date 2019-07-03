@@ -91,13 +91,13 @@ Inductive GoDom : CoreExpr -> Prop :=
   | GoDom_Cast e c:
     GoDom e ->
     GoDom (Cast e c)
-  | GoDom_Tick  e t:
+(*  | GoDom_Tick  e t:
     GoDom e ->
-    GoDom (Tick t e)
+    GoDom (Tick t e) *)
   | GoDom_Type t:
-    GoDom (Type_ t)
+    GoDom (Mk_Type t)
   | GoDom_Coercion t:
-    GoDom (Coercion t)
+    GoDom (Mk_Coercion t) 
  with GoDom_JoinPair : CoreBndr -> CoreExpr -> Prop :=
   | GoDom_Join v params rhs :
     isJoinId_maybe v = Some (length params) ->
@@ -233,11 +233,11 @@ Next Obligation.
    * simpl in H.
      apply IH in H; only 2: Core_termination.
      constructor. assumption.
-   * simpl in H.
+(*   * simpl in H.
      apply IH in H; only 2: Core_termination.
-     constructor. assumption.
+     constructor. assumption. *)
    * constructor.
-   * constructor.
+   * constructor. 
 Qed.
 
 Lemma isValidJoinPointsPair_GoDom_JoinPair:
@@ -876,8 +876,8 @@ Section in_exitifyRec.
         }
         clear IH Hnext HGoDom_alts.
         rename l into alts.
-        destruct u.
-        revert e v alts captured Hcapt HWSscrut HGLVv HWSalts IHalts.
+        (* destruct u. *)
+        revert e v t alts captured Hcapt HWSscrut HGLVv HWSalts IHalts.
         refine IH6.
     }
 
@@ -1050,15 +1050,16 @@ Section in_exitifyRec.
       and a right fold), so extract their definitions to the top level
       and state lemmas about them.
    *)
+
   Definition zap := ltac:(
-    let rhs := eval cbv beta delta [go_exit] in (go_exit [] (Type_ tt)  emptyVarSet) in
+    let rhs := eval cbv beta delta [go_exit] in (go_exit [] GHC.Err.default  emptyVarSet) in
     lazymatch rhs with (let zap := ?rhs in ?body) =>
       exact rhs
     end
    ).
 
    Definition pick := ltac:(
-    let rhs := eval cbv beta delta [go_exit] in (go_exit [] (Type_ tt)  emptyVarSet) in
+    let rhs := eval cbv beta delta [go_exit] in (go_exit [] GHC.Err.default  emptyVarSet) in
     lazymatch rhs with (let zap' := _ in let abs_vars := let pick := @?rhs zap' in _ in _) =>
       let e' := eval cbv beta in (rhs zap) in
       exact e'
@@ -2174,7 +2175,7 @@ Section in_exitifyRec.
         rewrite updJPS_not_joinId by assumption.
         assumption.
       + clear IHalts. rename H into IHalts.
-        revert e v alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
+        revert e v t alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
         eapply IH6.
     * clear IH1 IH2 IH4 IH5 IH6.
       revert e captured Hcapt HWS HIJPV.
@@ -2380,6 +2381,7 @@ Section in_exitifyRec.
     - subst v.
       rewrite isLocalVar_uniqAway.
       unfold mkSysLocal. 
+      rewrite andb_false_r.
       reflexivity.
     - (* There is again a lot of repetition to above *)
       apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.
@@ -3180,15 +3182,15 @@ Next Obligation.
     simpl in *.
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
     assumption.
-  * (* Tick *)
+(*  * (* Tick *)
     simpl in *.
     (* destruct HWS as [HWS HWT]. *)
     epose proof (IH _ _ _ _ _ HWS HJPV ltac:(solve_subVarSet)).
-    intuition.
+    intuition. *)
   * (* Type *)
     intuition.
   * (* Coercion *)
-    intuition.
+    intuition. 
 Unshelve.
   all: Core_termination || (unfold CoreLT; simpl; lia). (* phew *)
 Qed.

@@ -1,1 +1,3 @@
-skip FastStringEnv.lookupFsEnv_NF
+axiomatize module FastStringEnv
+
+# skip FastStringEnv.lookupFsEnv_NF

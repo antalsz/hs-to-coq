@@ -1,1 +1,3 @@
+axiomatize module Constants
+
 skip Constants.hiVersion

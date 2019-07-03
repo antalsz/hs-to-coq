@@ -137,9 +137,9 @@ Proof.
   elim: orig_expr orig_n nil => 
     [ v | lit
     | e1 IH1 e2 IH2 | v e IH
-    | bind body IH | scrut IHscrut bndr [] alts
-    | e IH [] | tickish e IH
-    | [] | [] ]
+    | bind body IH | scrut IHscrut bndr t alts
+    | e IH a (* | tickish e IH *)
+    | a | a ]
     [| n]
     bs;
     try by [right; split; econstructor | left].

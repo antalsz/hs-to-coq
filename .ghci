@@ -1,1 +1,2 @@
 :seti -fno-warn-type-defaults
+:set  -fdefer-typed-holes

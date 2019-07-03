@@ -12,12 +12,13 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require Coq.Lists.List.
 Require Core.
 Require CoreFVs.
 Require CoreUtils.
 Require Data.Foldable.
-Require Data.Traversable.
+Require Import Data.Traversable.
 Require Data.Tuple.
 Require Datatypes.
 Require FV.
@@ -26,6 +27,7 @@ Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require Id.
+Require Maybes.
 Require Name.
 Require Panic.
 Require UniqSupply.
@@ -39,7 +41,8 @@ Definition IdSubstEnv :=
   (Core.IdEnv Core.CoreExpr)%type.
 
 Inductive Subst : Type
-  := | Mk_Subst : Core.InScopeSet -> IdSubstEnv -> unit -> unit -> Subst.
+  := | Mk_Subst
+   : Core.InScopeSet -> IdSubstEnv -> Core.TvSubstEnv -> Core.CvSubstEnv -> Subst.
 
 (* Midamble *)
 
@@ -49,29 +52,25 @@ Instance Default_Subst : GHC.Err.Default Subst :=
 (* Converted value declarations: *)
 
 Definition zapSubstEnv : Subst -> Subst :=
-  fun '(Mk_Subst in_scope _ _ _) => Mk_Subst in_scope Core.emptyVarEnv tt tt.
+  fun '(Mk_Subst in_scope _ _ _) =>
+    Mk_Subst in_scope Core.emptyVarEnv Core.emptyVarEnv Core.emptyVarEnv.
 
 Definition substUnfolding : Subst -> Core.Unfolding -> Core.Unfolding :=
-  fun s u => u.
+  fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, unf => unf end.
 
-Definition substTyVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
-  fun s v => pair s v.
+Definition substTyVarBndr : Subst -> Core.TyVar -> (Subst * Core.TyVar)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Subst in_scope id_env tv_env cv_env, tv =>
+        let 'pair (Core.Mk_TCvSubst in_scope' tv_env' cv_env') tv' :=
+          (@Core.substTyVarBndr tt (Core.Mk_TCvSubst in_scope tv_env cv_env)) tv in
+        pair (Mk_Subst in_scope' id_env tv_env' cv_env') tv'
+    end.
 
-Definition substTy : Subst -> unit -> unit :=
-  fun s t => tt.
-
-Definition substSpec : Subst -> Core.Id -> Core.RuleInfo -> Core.RuleInfo :=
-  fun s x r => r.
+Axiom substSpec : Subst -> Core.Id -> Core.RuleInfo -> Core.RuleInfo.
 
 Definition substInScope : Subst -> Core.InScopeSet :=
   fun '(Mk_Subst in_scope _ _ _) => in_scope.
-
-Definition substIdType : Subst -> Core.Id -> Core.Id :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | (Mk_Subst _ _ tv_env cv_env as subst), id =>
-        let old_ty := tt in if orb (andb true true) true : bool then id else id
-    end.
 
 Definition substIdInfo
    : Subst -> Core.Id -> Core.IdInfo -> option Core.IdInfo :=
@@ -85,56 +84,25 @@ Definition substIdInfo
     Some (Core.setUnfoldingInfo (Core.setRuleInfo info (substSpec subst new_id
                                                    old_rules)) (substUnfolding subst old_unf)).
 
-Definition substIdBndr
-   : String -> Subst -> Subst -> Core.Id -> (Subst * Core.Id)%type :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__ with
-    | _doc, rec_subst, (Mk_Subst in_scope env tvs cvs as subst), old_id =>
-        let old_ty := tt in
-        let no_type_change := orb (andb true true) true in
-        let id1 := Core.uniqAway in_scope old_id in
-        let id2 := if no_type_change : bool then id1 else id1 in
-        let mb_new_info := substIdInfo rec_subst id2 ((@Core.idInfo tt id2)) in
-        let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
-        let no_change := id1 == old_id in
-        let new_env :=
-          if no_change : bool then Core.delVarEnv env old_id else
-          Core.extendVarEnv env old_id (Core.Mk_Var new_id) in
-        pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_env tt tt) new_id
+Definition substCoVarBndr : Subst -> Core.TyVar -> (Subst * Core.TyVar)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Subst in_scope id_env tv_env cv_env, cv =>
+        let 'pair (Core.Mk_TCvSubst in_scope' tv_env' cv_env') cv' :=
+          Core.substCoVarBndr (Core.Mk_TCvSubst in_scope tv_env cv_env) cv in
+        pair (Mk_Subst in_scope' id_env tv_env' cv_env') cv'
     end.
-
-Definition substRecBndrs
-   : Subst -> list Core.Id -> (Subst * list Core.Id)%type :=
-  fun subst bndrs =>
-    let 'pair new_subst new_bndrs := Data.Traversable.mapAccumL (substIdBndr
-                                                                 (Datatypes.id (GHC.Base.hs_string__ "rec-bndr"))
-                                                                 (GHC.Err.error Panic.someSDoc)) subst bndrs in
-    pair new_subst new_bndrs.
-
-Definition substCoVarBndr : Subst -> Core.Var -> Subst * Core.Var :=
-  fun s v => pair s v.
-
-Definition substCo : Subst -> unit -> unit :=
-  fun s c => tt.
-
-Definition substBndr : Subst -> Core.Var -> (Subst * Core.Var)%type :=
-  fun subst bndr =>
-    if Core.isTyVar bndr : bool then substTyVarBndr subst bndr else
-    if Core.isCoVar bndr : bool then substCoVarBndr subst bndr else
-    substIdBndr (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
-
-Definition substBndrs
-   : Subst -> list Core.Var -> (Subst * list Core.Var)%type :=
-  fun subst bndrs => Data.Traversable.mapAccumL substBndr subst bndrs.
 
 Definition setInScope : Subst -> Core.InScopeSet -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | Mk_Subst _ ids tvs cvs, in_scope => Mk_Subst in_scope ids tt tt
+    | Mk_Subst _ ids tvs cvs, in_scope => Mk_Subst in_scope ids tvs cvs
     end.
 
-Definition mkSubst : Core.InScopeSet -> unit -> unit -> IdSubstEnv -> Subst :=
-  fun in_scope tvs cvs ids => Mk_Subst in_scope ids tt tt.
+Definition mkSubst
+   : Core.InScopeSet ->
+     Core.TvSubstEnv -> Core.CvSubstEnv -> IdSubstEnv -> Subst :=
+  fun in_scope tvs cvs ids => Mk_Subst in_scope ids tvs cvs.
 
 Definition mkOpenSubst
    : Core.InScopeSet -> list (Core.Var * Core.CoreArg)%type -> Subst :=
@@ -143,13 +111,35 @@ Definition mkOpenSubst
                                         let 'pair id e := arg_1__ in
                                         if Core.isId id : bool then cons (pair id e) nil else
                                         nil in
-                                      Coq.Lists.List.flat_map cont_0__ pairs)) tt tt.
+                                      Coq.Lists.List.flat_map cont_0__ pairs)) (Core.mkVarEnv (let cont_2__ arg_3__ :=
+                                                                                                 match arg_3__ with
+                                                                                                 | pair tv (Core.Mk_Type
+                                                                                                  ty) =>
+                                                                                                     cons (pair tv ty)
+                                                                                                          nil
+                                                                                                 | _ => nil
+                                                                                                 end in
+                                                                                               Coq.Lists.List.flat_map
+                                                                                               cont_2__ pairs))
+    (Core.mkVarEnv (let cont_4__ arg_5__ :=
+                      match arg_5__ with
+                      | pair v (Core.Mk_Coercion co) => cons (pair v co) nil
+                      | _ => nil
+                      end in
+                    Coq.Lists.List.flat_map cont_4__ pairs)).
 
 Definition mkEmptySubst : Core.InScopeSet -> Subst :=
-  fun in_scope => Mk_Subst in_scope Core.emptyVarEnv tt tt.
+  fun in_scope =>
+    Mk_Subst in_scope Core.emptyVarEnv Core.emptyVarEnv Core.emptyVarEnv.
 
-Definition lookupTCvSubst : Subst -> Core.TyVar -> unit :=
-  fun s v => tt.
+Definition lookupTCvSubst : Subst -> Core.TyVar -> AxiomatizedTypes.Type_ :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_Subst _ _ tvs cvs, v =>
+        if Core.isTyVar v : bool
+        then Maybes.orElse (Core.lookupVarEnv tvs v) (Core.mkTyVarTy v) else
+        Core.mkCoercionTy (Maybes.orElse (Core.lookupVarEnv cvs v) (Core.mkCoVarCo v))
+    end.
 
 Definition lookupIdSubst : String -> Subst -> Core.Id -> Core.CoreExpr :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -205,6 +195,72 @@ Definition substTickish
     | _subst, other => other
     end.
 
+Definition isInScope : Core.Var -> Subst -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | v, Mk_Subst in_scope _ _ _ => Core.elemInScopeSet v in_scope
+    end.
+
+Definition isEmptySubst : Subst -> bool :=
+  fun '(Mk_Subst _ id_env tv_env cv_env) =>
+    andb (Core.isEmptyVarEnv id_env) (andb (Core.isEmptyVarEnv tv_env)
+                                           (Core.isEmptyVarEnv cv_env)).
+
+Definition substUnfoldingSC : Subst -> Core.Unfolding -> Core.Unfolding :=
+  fun subst unf =>
+    if isEmptySubst subst : bool then unf else
+    substUnfolding subst unf.
+
+Definition getTCvSubst : Subst -> Core.TCvSubst :=
+  fun '(Mk_Subst in_scope _ tenv cenv) => Core.Mk_TCvSubst in_scope tenv cenv.
+
+Definition substCo
+   : Subst -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion :=
+  fun subst co => (@Core.substCo tt (getTCvSubst subst)) co.
+
+Definition substTy
+   : Subst -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ :=
+  fun subst ty => Core.substTyUnchecked (getTCvSubst subst) ty.
+
+Definition substIdBndr
+   : String -> Subst -> Subst -> Core.Id -> (Subst * Core.Id)%type :=
+  fun arg_0__ arg_1__ arg_2__ arg_3__ =>
+    match arg_0__, arg_1__, arg_2__, arg_3__ with
+    | _doc, rec_subst, (Mk_Subst in_scope env tvs cvs as subst), old_id =>
+        let old_ty := Id.idType old_id in
+        let no_type_change :=
+          orb (andb (Core.isEmptyVarEnv tvs) (Core.isEmptyVarEnv cvs)) true in
+        let id1 := Core.uniqAway in_scope old_id in
+        let id2 :=
+          if no_type_change : bool then id1 else
+          Id.setIdType id1 (substTy subst old_ty) in
+        let mb_new_info := substIdInfo rec_subst id2 ((@Core.idInfo tt) id2) in
+        let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
+        let no_change := id1 == old_id in
+        let new_env :=
+          if no_change : bool then Core.delVarEnv env old_id else
+          Core.extendVarEnv env old_id (Core.Mk_Var new_id) in
+        pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_env tvs cvs) new_id
+    end.
+
+Definition substBndr : Subst -> Core.Var -> (Subst * Core.Var)%type :=
+  fun subst bndr =>
+    if Core.isTyVar bndr : bool then substTyVarBndr subst bndr else
+    if Core.isCoVar bndr : bool then substCoVarBndr subst bndr else
+    substIdBndr (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
+
+Definition substBndrs
+   : Subst -> list Core.Var -> (Subst * list Core.Var)%type :=
+  fun subst bndrs => mapAccumL substBndr subst bndrs.
+
+Definition substRecBndrs
+   : Subst -> list Core.Id -> (Subst * list Core.Id)%type :=
+  fun subst bndrs =>
+    let 'pair new_subst new_bndrs := mapAccumL (substIdBndr (Datatypes.id
+                                                             (GHC.Base.hs_string__ "rec-bndr")) (GHC.Err.error
+                                                             Panic.someSDoc)) subst bndrs in
+    pair new_subst new_bndrs.
+
 Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
   fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
         : Core.CoreExpr
@@ -218,11 +274,10 @@ Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
            let fix go arg_5__
                      := match arg_5__ with
                         | Core.Mk_Var v => lookupIdSubst (doc) subst v
-                        | Core.Type_ ty => Core.Type_ (substTy subst ty)
-                        | Core.Coercion co => Core.Coercion (substCo subst co)
+                        | Core.Mk_Type ty => Core.Mk_Type (substTy subst ty)
+                        | Core.Mk_Coercion co => Core.Mk_Coercion (substCo subst co)
                         | Core.Lit lit => Core.Lit lit
                         | Core.App fun_ arg => Core.App (go fun_) (go arg)
-                        | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
                         | Core.Cast e co => Core.Cast (go e) (substCo subst co)
                         | Core.Lam bndr body =>
                             let 'pair subst' bndr' := substBndr subst bndr in
@@ -251,6 +306,17 @@ Definition substBind : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
                                  pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
                              end for substBind.
 
+Definition substIdType : Subst -> Core.Id -> Core.Id :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | (Mk_Subst _ _ tv_env cv_env as subst), id =>
+        let old_ty := Id.idType id in
+        if orb (andb (Core.isEmptyVarEnv tv_env) (Core.isEmptyVarEnv cv_env))
+               (Core.noFreeVarsOfType old_ty) : bool
+        then id else
+        Id.setIdType id (substTy subst old_ty)
+    end.
+
 Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
   fix subst_expr (doc : String) (subst : Subst) (expr : Core.CoreExpr)
         : Core.CoreExpr
@@ -264,11 +330,10 @@ Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
            let fix go arg_5__
                      := match arg_5__ with
                         | Core.Mk_Var v => lookupIdSubst (doc) subst v
-                        | Core.Type_ ty => Core.Type_ (substTy subst ty)
-                        | Core.Coercion co => Core.Coercion (substCo subst co)
+                        | Core.Mk_Type ty => Core.Mk_Type (substTy subst ty)
+                        | Core.Mk_Coercion co => Core.Mk_Coercion (substCo subst co)
                         | Core.Lit lit => Core.Lit lit
                         | Core.App fun_ arg => Core.App (go fun_) (go arg)
-                        | Core.Tick tickish e => CoreUtils.mkTick (substTickish subst tickish) (go e)
                         | Core.Cast e co => Core.Cast (go e) (substCo subst co)
                         | Core.Lam bndr body =>
                             let 'pair subst' bndr' := substBndr subst bndr in
@@ -296,6 +361,24 @@ Definition subst_expr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
                                        pairs in
                                  pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
                              end for subst_expr.
+
+Definition substBindSC
+   : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
+  fun subst bind =>
+    if negb (isEmptySubst subst) : bool then substBind subst bind else
+    match bind with
+    | Core.NonRec bndr rhs =>
+        let 'pair subst' bndr' := substBndr subst bndr in
+        pair subst' (Core.NonRec bndr' rhs)
+    | Core.Rec pairs =>
+        let 'pair bndrs rhss := GHC.List.unzip pairs in
+        let 'pair subst' bndrs' := substRecBndrs subst bndrs in
+        let rhss' :=
+          if isEmptySubst subst' : bool then rhss else
+          map (subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBindSC")) subst')
+          rhss in
+        pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
+    end.
 
 Definition substExpr : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
   fun doc subst orig_expr => subst_expr doc subst orig_expr.
@@ -334,74 +417,54 @@ Definition substRulesForImportedIds
         (Panic.someSDoc) in
     map (substRule subst not_needed) rules.
 
-Definition isInScope : Core.Var -> Subst -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | v, Mk_Subst in_scope _ _ _ => Core.elemInScopeSet v in_scope
-    end.
-
-Definition isEmptySubst : Subst -> bool :=
-  fun '(Mk_Subst _ id_env tv_env cv_env) =>
-    andb (Core.isEmptyVarEnv id_env) (andb true true).
-
-Definition substBindSC
-   : Subst -> Core.CoreBind -> (Subst * Core.CoreBind)%type :=
-  fun subst bind =>
-    if negb (isEmptySubst subst) : bool then substBind subst bind else
-    match bind with
-    | Core.NonRec bndr rhs =>
-        let 'pair subst' bndr' := substBndr subst bndr in
-        pair subst' (Core.NonRec bndr' rhs)
-    | Core.Rec pairs =>
-        let 'pair bndrs rhss := GHC.List.unzip pairs in
-        let 'pair subst' bndrs' := substRecBndrs subst bndrs in
-        let rhss' :=
-          if isEmptySubst subst' : bool then rhss else
-          map (subst_expr (Datatypes.id (GHC.Base.hs_string__ "substBindSC")) subst')
-          rhss in
-        pair subst' (Core.Rec (GHC.List.zip bndrs' rhss'))
-    end.
-
 Definition substExprSC : String -> Subst -> Core.CoreExpr -> Core.CoreExpr :=
   fun doc subst orig_expr =>
     if isEmptySubst subst : bool then orig_expr else
     subst_expr doc subst orig_expr.
 
-Definition substUnfoldingSC : Subst -> Core.Unfolding -> Core.Unfolding :=
-  fun subst unf =>
-    if isEmptySubst subst : bool then unf else
-    substUnfolding subst unf.
+Definition extendTvSubst
+   : Subst -> Core.TyVar -> AxiomatizedTypes.Type_ -> Subst :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_Subst in_scope ids tvs cvs, tv, ty =>
+        if andb Util.debugIsOn (negb (Core.isTyVar tv)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #214)
+        else Mk_Subst in_scope ids (Core.extendVarEnv tvs tv ty) cvs
+    end.
 
-Definition getTCvSubst : Subst -> unit :=
-  fun s => tt.
-
-Definition extendTvSubstList : Subst -> list (Core.TyVar * unit) -> Subst :=
-  fun s vs => s.
-
-Definition extendTvSubst : Subst -> Core.TyVar -> unit -> Subst :=
-  fun s v t => s.
+Definition extendTvSubstList
+   : Subst -> list (Core.TyVar * AxiomatizedTypes.Type_)%type -> Subst :=
+  fun subst vrs =>
+    let extend :=
+      fun arg_0__ arg_1__ =>
+        match arg_0__, arg_1__ with
+        | subst, pair v r => extendTvSubst subst v r
+        end in
+    Data.Foldable.foldl' extend subst vrs.
 
 Definition extendInScopeList : Subst -> list Core.Var -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, vs =>
-        Mk_Subst (Core.extendInScopeSetList in_scope vs) (Core.delVarEnvList ids vs) tt
-                 tt
+        Mk_Subst (Core.extendInScopeSetList in_scope vs) (Core.delVarEnvList ids vs)
+        (Core.delVarEnvList tvs vs) (Core.delVarEnvList cvs vs)
     end.
 
 Definition extendInScopeIds : Subst -> list Core.Id -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, vs =>
-        Mk_Subst (Core.extendInScopeSetList in_scope vs) (Core.delVarEnvList ids vs) tt
-                 tt
+        Mk_Subst (Core.extendInScopeSetList in_scope vs) (Core.delVarEnvList ids vs) tvs
+        cvs
     end.
 
 Definition extendInScope : Subst -> Core.Var -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, v =>
-        Mk_Subst (Core.extendInScopeSet in_scope v) (Core.delVarEnv ids v) tt tt
+        Mk_Subst (Core.extendInScopeSet in_scope v) (Core.delVarEnv ids v)
+        (Core.delVarEnv tvs v) (Core.delVarEnv cvs v)
     end.
 
 Definition extendIdSubstList
@@ -413,7 +476,7 @@ Definition extendIdSubstList
                                                          Data.Tuple.fst) prs)) : bool
         then (Panic.assertPanic (GHC.Base.hs_string__
                                  "ghc/compiler/coreSyn/CoreSubst.hs") #204)
-        else Mk_Subst in_scope (Core.extendVarEnvList ids prs) tt tt
+        else Mk_Subst in_scope (Core.extendVarEnvList ids prs) tvs cvs
     end.
 
 Definition extendIdSubst : Subst -> Core.Id -> Core.CoreExpr -> Subst :=
@@ -422,21 +485,29 @@ Definition extendIdSubst : Subst -> Core.Id -> Core.CoreExpr -> Subst :=
     | Mk_Subst in_scope ids tvs cvs, v, r =>
         if andb Util.debugIsOn (negb (Core.isNonCoVarId v)) : bool
         then (GHC.Err.error Panic.someSDoc)
-        else Mk_Subst in_scope (Core.extendVarEnv ids v r) tt tt
+        else Mk_Subst in_scope (Core.extendVarEnv ids v r) tvs cvs
     end.
 
-Definition extendCvSubst : Subst -> Core.CoVar -> unit -> Subst :=
-  fun s v t => s.
+Definition extendCvSubst
+   : Subst -> Core.CoVar -> AxiomatizedTypes.Coercion -> Subst :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_Subst in_scope ids tvs cvs, v, r =>
+        if andb Util.debugIsOn (negb (Core.isCoVar v)) : bool
+        then (Panic.assertPanic (GHC.Base.hs_string__
+                                 "ghc/compiler/coreSyn/CoreSubst.hs") #228)
+        else Mk_Subst in_scope ids tvs (Core.extendVarEnv cvs v r)
+    end.
 
 Definition extendSubst : Subst -> Core.Var -> Core.CoreArg -> Subst :=
   fun subst var arg =>
     match arg with
-    | Core.Type_ ty =>
+    | Core.Mk_Type ty =>
         if andb Util.debugIsOn (negb (Core.isTyVar var)) : bool
         then (Panic.assertPanic (GHC.Base.hs_string__
                                  "ghc/compiler/coreSyn/CoreSubst.hs") #237)
         else extendTvSubst subst var ty
-    | Core.Coercion co =>
+    | Core.Mk_Coercion co =>
         if andb Util.debugIsOn (negb (Core.isCoVar var)) : bool
         then (Panic.assertPanic (GHC.Base.hs_string__
                                  "ghc/compiler/coreSyn/CoreSubst.hs") #238)
@@ -464,39 +535,42 @@ Definition extendSubstWithVar : Subst -> Core.Var -> Core.Var -> Subst :=
     then if andb Util.debugIsOn (negb (Core.isTyVar v2)) : bool
          then (Panic.assertPanic (GHC.Base.hs_string__
                                   "ghc/compiler/coreSyn/CoreSubst.hs") #243)
-         else extendTvSubst subst v1 (tt) else
+         else extendTvSubst subst v1 (Core.mkTyVarTy v2) else
     if Core.isCoVar v1 : bool
     then if andb Util.debugIsOn (negb (Core.isCoVar v2)) : bool
          then (Panic.assertPanic (GHC.Base.hs_string__
                                   "ghc/compiler/coreSyn/CoreSubst.hs") #244)
-         else extendCvSubst subst v1 (tt) else
+         else extendCvSubst subst v1 (Core.mkCoVarCo v2) else
     if andb Util.debugIsOn (negb (Core.isId v2)) : bool
     then (Panic.assertPanic (GHC.Base.hs_string__
                              "ghc/compiler/coreSyn/CoreSubst.hs") #245)
     else extendIdSubst subst v1 (Core.Mk_Var v2).
 
 Definition emptySubst : Subst :=
-  Mk_Subst Core.emptyInScopeSet Core.emptyVarEnv tt tt.
+  Mk_Subst Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarEnv
+  Core.emptyVarEnv.
 
 Definition delBndrs : Subst -> list Core.Var -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, vs =>
-        Mk_Subst in_scope (Core.delVarEnvList ids vs) tt tt
+        Mk_Subst in_scope (Core.delVarEnvList ids vs) (Core.delVarEnvList tvs vs)
+        (Core.delVarEnvList cvs vs)
     end.
 
 Definition delBndr : Subst -> Core.Var -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, v =>
-        if Core.isCoVar v : bool then Mk_Subst in_scope ids tt tt else
-        if Core.isTyVar v : bool then Mk_Subst in_scope ids tt tt else
-        Mk_Subst in_scope (Core.delVarEnv ids v) tt tt
+        if Core.isCoVar v : bool
+        then Mk_Subst in_scope ids tvs (Core.delVarEnv cvs v) else
+        if Core.isTyVar v : bool
+        then Mk_Subst in_scope ids (Core.delVarEnv tvs v) cvs else
+        Mk_Subst in_scope (Core.delVarEnv ids v) tvs cvs
     end.
 
 Definition deShadowBinds : Core.CoreProgram -> Core.CoreProgram :=
-  fun binds =>
-    Data.Tuple.snd (Data.Traversable.mapAccumL substBind emptySubst binds).
+  fun binds => Data.Tuple.snd (mapAccumL substBind emptySubst binds).
 
 Definition clone_id
    : Subst -> Subst -> (Core.Id * Unique.Unique)%type -> (Subst * Core.Id)%type :=
@@ -506,34 +580,39 @@ Definition clone_id
         let id1 := Core.setVarUnique old_id uniq in
         let id2 := substIdType subst id1 in
         let new_id :=
-          Id.maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt old_id)))
+          Id.maybeModifyIdInfo (substIdInfo rec_subst id2 ((@Core.idInfo tt) old_id))
           id2 in
         let 'pair new_idvs new_cvs := (if Core.isCoVar old_id : bool
-                                       then pair idvs cvs else
+                                       then pair idvs (Core.extendVarEnv cvs old_id (Core.mkCoVarCo new_id)) else
                                        pair (Core.extendVarEnv idvs old_id (Core.Mk_Var new_id)) cvs) in
-        pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_idvs tt tt) new_id
+        pair (Mk_Subst (Core.extendInScopeSet in_scope new_id) new_idvs tvs new_cvs)
+             new_id
     end.
 
 Definition cloneTyVarBndr
-   : Subst -> Core.TyVar -> Unique.Unique -> Subst * Core.TyVar :=
-  fun s v u => pair s v.
+   : Subst -> Core.TyVar -> Unique.Unique -> (Subst * Core.TyVar)%type :=
+  fun arg_0__ arg_1__ arg_2__ =>
+    match arg_0__, arg_1__, arg_2__ with
+    | Mk_Subst in_scope id_env tv_env cv_env, tv, uniq =>
+        let 'pair (Core.Mk_TCvSubst in_scope' tv_env' cv_env') tv' :=
+          Core.cloneTyVarBndr (Core.Mk_TCvSubst in_scope tv_env cv_env) tv uniq in
+        pair (Mk_Subst in_scope' id_env tv_env' cv_env') tv'
+    end.
 
 Definition cloneRecIdBndrs
    : Subst ->
      UniqSupply.UniqSupply -> list Core.Id -> (Subst * list Core.Id)%type :=
   fun subst us ids =>
-    let 'pair subst' ids' := Data.Traversable.mapAccumL (clone_id (GHC.Err.error
-                                                                   Panic.someSDoc)) subst (GHC.List.zip ids
-                                                                                                        (UniqSupply.uniqsFromSupply
-                                                                                                         us)) in
+    let 'pair subst' ids' := mapAccumL (clone_id (GHC.Err.error Panic.someSDoc))
+                               subst (GHC.List.zip ids (UniqSupply.uniqsFromSupply us)) in
     pair subst' ids'.
 
 Definition cloneIdBndrs
    : Subst ->
      UniqSupply.UniqSupply -> list Core.Id -> (Subst * list Core.Id)%type :=
   fun subst us ids =>
-    Data.Traversable.mapAccumL (clone_id subst) subst (GHC.List.zip ids
-                                                                    (UniqSupply.uniqsFromSupply us)).
+    mapAccumL (clone_id subst) subst (GHC.List.zip ids (UniqSupply.uniqsFromSupply
+                                                    us)).
 
 Definition cloneIdBndr
    : Subst -> UniqSupply.UniqSupply -> Core.Id -> (Subst * Core.Id)%type :=
@@ -550,42 +629,46 @@ Definition cloneBndrs
    : Subst ->
      UniqSupply.UniqSupply -> list Core.Var -> (Subst * list Core.Var)%type :=
   fun subst us vs =>
-    Data.Traversable.mapAccumL (fun arg_0__ arg_1__ =>
-                                  match arg_0__, arg_1__ with
-                                  | subst, pair v u => cloneBndr subst u v
-                                  end) subst (GHC.List.zip vs (UniqSupply.uniqsFromSupply us)).
+    mapAccumL (fun arg_0__ arg_1__ =>
+                 match arg_0__, arg_1__ with
+                 | subst, pair v u => cloneBndr subst u v
+                 end) subst (GHC.List.zip vs (UniqSupply.uniqsFromSupply us)).
 
 Definition addInScopeSet : Subst -> Core.VarSet -> Subst :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope ids tvs cvs, vs =>
-        Mk_Subst (Core.extendInScopeSetSet in_scope vs) ids tt tt
+        Mk_Subst (Core.extendInScopeSetSet in_scope vs) ids tvs cvs
     end.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `CoreSubst.Outputable__Subst' *)
 
 (* External variables:
-     None Some String andb bool cons const list map mappend negb nil op_z2218U__
-     op_zeze__ op_zt__ option orb pair snd true tt unit Coq.Lists.List.flat_map
+     None Some String andb bool cons const list map mapAccumL mappend negb nil
+     op_z2218U__ op_zeze__ op_zt__ option orb pair snd true tt
+     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Coq.Lists.List.flat_map
      Core.App Core.Breakpoint Core.BuiltinRule Core.Case Core.Cast Core.CoVar
-     Core.Coercion Core.CoreArg Core.CoreBind Core.CoreExpr Core.CoreProgram
-     Core.CoreRule Core.DVarSet Core.Id Core.IdEnv Core.IdInfo Core.InScopeSet
-     Core.Lam Core.Let Core.Lit Core.Mk_Var Core.NonRec Core.Rec Core.Rule
-     Core.RuleInfo Core.Tick Core.Tickish Core.TyVar Core.Type_ Core.Unfolding
-     Core.Var Core.VarSet Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
+     Core.CoreArg Core.CoreBind Core.CoreExpr Core.CoreProgram Core.CoreRule
+     Core.CvSubstEnv Core.DVarSet Core.Id Core.IdEnv Core.IdInfo Core.InScopeSet
+     Core.Lam Core.Let Core.Lit Core.Mk_Coercion Core.Mk_TCvSubst Core.Mk_Type
+     Core.Mk_Var Core.NonRec Core.Rec Core.Rule Core.RuleInfo Core.TCvSubst
+     Core.Tickish Core.TvSubstEnv Core.TyVar Core.Unfolding Core.Var Core.VarSet
+     Core.cloneTyVarBndr Core.dVarSetElems Core.delVarEnv Core.delVarEnvList
      Core.elemInScopeSet Core.emptyInScopeSet Core.emptyVarEnv Core.emptyVarSet
      Core.extendInScopeSet Core.extendInScopeSetList Core.extendInScopeSetSet
      Core.extendVarEnv Core.extendVarEnvList Core.idInfo Core.isCoVar
      Core.isEmptyRuleInfo Core.isEmptyVarEnv Core.isFragileUnfolding Core.isId
      Core.isLocalId Core.isLocalVar Core.isNonCoVarId Core.isTyVar Core.lookupInScope
-     Core.lookupVarEnv Core.mkDVarSet Core.mkVarEnv Core.ruleInfo Core.setRuleInfo
-     Core.setUnfoldingInfo Core.setVarUnique Core.unfoldingInfo Core.uniqAway
-     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr CoreUtils.mkTick
-     Data.Foldable.all Data.Foldable.foldr Data.Traversable.mapAccumL Data.Tuple.fst
-     Data.Tuple.snd Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
-     GHC.Num.fromInteger Id.maybeModifyIdInfo Name.Name Panic.assertPanic
-     Panic.panicStr Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
-     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
-     Util.debugIsOn
+     Core.lookupVarEnv Core.mkCoVarCo Core.mkCoercionTy Core.mkDVarSet Core.mkTyVarTy
+     Core.mkVarEnv Core.noFreeVarsOfType Core.ruleInfo Core.setRuleInfo
+     Core.setUnfoldingInfo Core.setVarUnique Core.substCo Core.substCoVarBndr
+     Core.substTyUnchecked Core.substTyVarBndr Core.unfoldingInfo Core.uniqAway
+     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr Data.Foldable.all
+     Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst Data.Tuple.snd
+     Datatypes.id FV.emptyFV GHC.Err.error GHC.List.unzip GHC.List.zip
+     GHC.Num.fromInteger Id.idType Id.maybeModifyIdInfo Id.setIdType Maybes.orElse
+     Name.Name Panic.assertPanic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
+     UniqSupply.UniqSupply UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply
+     Unique.Unique Util.debugIsOn
 *)

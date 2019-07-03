@@ -236,6 +236,14 @@ Proof.
       apply Heqb. } rewrite HPx in H6. inversion H6.
 Qed.
 
+Lemma filterWithKey_WF :
+  forall f (s : Map e a),
+    Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
+    WF s -> WF (filterWithKey f s).
+Proof.
+  intros. eapply Desc'_WF.
+  apply filterWithKey_Desc; assumption.
+Qed.
 
 (*This requires no conditions on the function P*)
 Lemma filter_Desc:
@@ -247,6 +255,14 @@ Lemma filter_Desc:
                                                 end).
 Proof.
   intros. eapply filterWithKey_Desc. apply H. f_solver e.
+Qed.
+
+Lemma filter_WF :
+  forall f (s : Map e a),
+    WF s -> WF (filter f s).
+Proof.
+  intros. eapply Desc'_WF.
+  apply filter_Desc; assumption.
 Qed.
 
 (** ** Verification of [partition] *)

@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require Core.
 Require Data.Foldable.
 Require Data.IntSet.Internal.
@@ -229,7 +230,8 @@ Definition xtTickish {a}
    : Core.Tickish Core.Id -> XT a -> TickishMap a -> TickishMap a :=
   alterTM (m := TickishMap).
 
-Axiom xtT : forall {a}, DeBruijn unit -> XT a -> TypeMapX a -> TypeMapX a.
+Axiom xtT : forall {a},
+            DeBruijn AxiomatizedTypes.Type_ -> XT a -> TypeMapX a -> TypeMapX a.
 
 Definition xtLit {a}
    : Literal.Literal -> XT a -> LiteralMap a -> LiteralMap a :=
@@ -259,14 +261,22 @@ Definition xtDFreeVar {a}
   fun v f m => Core.alterDVarEnv f m v.
 
 Definition xtC {a}
-   : DeBruijn unit -> XT a -> CoercionMapX a -> CoercionMapX a :=
+   : DeBruijn AxiomatizedTypes.Coercion ->
+     XT a -> CoercionMapX a -> CoercionMapX a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
-    | D env co, f, Mk_CoercionMapX m => Mk_CoercionMapX (xtT (D env tt) f m)
+    | D env co, f, Mk_CoercionMapX m =>
+        Mk_CoercionMapX (xtT (D env (Core.coercionType co)) f m)
     end.
 
+Instance Eq___DeBruijn__Type_
+   : GHC.Base.Eq_ (DeBruijn AxiomatizedTypes.Type_) :=
+  {}.
+Proof.
+Admitted.
+
 Local Definition TrieMap__TypeMapX_Key : Type :=
-  DeBruijn unit.
+  DeBruijn AxiomatizedTypes.Type_.
 
 Local Definition TrieMap__TypeMapX_alterTM
    : forall {b}, TrieMap__TypeMapX_Key -> XT b -> TypeMapX b -> TypeMapX b :=
@@ -283,7 +293,8 @@ Local Definition TrieMap__TypeMapX_foldTM
    : forall {a} {b}, (a -> b -> b) -> TypeMapX a -> b -> b :=
   fun {a} {b} => fdT.
 
-Axiom lkT : forall {a}, DeBruijn unit -> TypeMapX a -> option a.
+Axiom lkT : forall {a},
+            DeBruijn AxiomatizedTypes.Type_ -> TypeMapX a -> option a.
 
 Local Definition TrieMap__TypeMapX_lookupTM
    : forall {b}, TrieMap__TypeMapX_Key -> TypeMapX b -> option b :=
@@ -307,7 +318,7 @@ Program Instance TrieMap__TypeMapX : TrieMap TypeMapX :=
 Definition xtBndr {a} : CmEnv -> Core.Var -> XT a -> BndrMap a -> BndrMap a :=
   fun env v f => xtG (D env (Core.varType v)) f.
 
-Axiom trieMapView : unit -> option unit.
+Axiom trieMapView : AxiomatizedTypes.Type_ -> option AxiomatizedTypes.Type_.
 
 Definition op_zgzizg__ {a} {b} {c} : (a -> b) -> (b -> c) -> a -> c :=
   fun f g x => g (f x).
@@ -491,7 +502,7 @@ Definition mapA {a} {b} : (a -> b) -> AltMap a -> AltMap b :=
     end.
 
 Local Definition TrieMap__TypeMap_Key : Type :=
-  unit.
+  AxiomatizedTypes.Type_.
 
 Definition emptyCME : CmEnv :=
   CME #0 Core.emptyVarEnv.
@@ -513,12 +524,14 @@ Infix "|>>" := (_|>>_) (at level 99).
 
 Instance TrieMap__TypeMapG : TrieMap TypeMapG := TrieMap__GenMap.
 
-Definition xtTT {a} : DeBruijn unit -> XT a -> TypeMap a -> TypeMap a :=
+Definition xtTT {a}
+   : DeBruijn AxiomatizedTypes.Type_ -> XT a -> TypeMap a -> TypeMap a :=
   fun arg_0__ arg_1__ arg_2__ =>
     match arg_0__, arg_1__, arg_2__ with
     | D env ty, f, Mk_TypeMap m =>
         Mk_TypeMap (m |>
-                    (xtG (m := TypeMapX) (D env tt) |>> xtG (m := TypeMapX) (D env ty) f))
+                    (xtG (m := TypeMapX) (D env (@Core.typeKind tt ty)) |>>
+                     xtG (m := TypeMapX) (D env ty) f))
     end.
 
 Local Definition TrieMap__TypeMap_alterTM
@@ -536,12 +549,13 @@ Local Definition TrieMap__TypeMap_foldTM
       | k, Mk_TypeMap m => foldTM (foldTM k) m
       end.
 
-Definition lkTT {a} : DeBruijn unit -> TypeMap a -> option a :=
+Definition lkTT {a}
+   : DeBruijn AxiomatizedTypes.Type_ -> TypeMap a -> option a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | D env ty, Mk_TypeMap m =>
-        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env tt) m) (lkG (m
-                                                                                      := TypeMapX) (D env ty))
+        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (@Core.typeKind
+                                                                        tt ty)) m) (lkG (m := TypeMapX) (D env ty))
     end.
 
 Local Definition TrieMap__TypeMap_lookupTM
@@ -565,7 +579,8 @@ Program Instance TrieMap__TypeMap : TrieMap TypeMap :=
   lookupTM := fun {b} => TrieMap__TypeMap_lookupTM ;
   mapTM := fun {a} {b} => TrieMap__TypeMap_mapTM }.
 
-Definition lookupTypeMap {a} : TypeMap a -> unit -> option a :=
+Definition lookupTypeMap {a}
+   : TypeMap a -> AxiomatizedTypes.Type_ -> option a :=
   fun cm t => lookupTM t cm.
 
 Local Definition TrieMap__CoreMap_Key : Type :=
@@ -628,11 +643,11 @@ Definition xtVar {a} : CmEnv -> Core.Var -> XT a -> VarMap a -> VarMap a :=
   fun env v f m =>
     match lookupCME env v with
     | Some bv =>
-        let 'VM vm_bvar_5__ vm_fvar_6__ := m in
-        VM (vm_bvar m |> alterTM (m := BoundVarMap) bv f) vm_fvar_6__
-    | _ =>
         let 'VM vm_bvar_0__ vm_fvar_1__ := m in
-        VM vm_bvar_0__ (vm_fvar m |> xtDFreeVar v f)
+        VM (vm_bvar m |> alterTM (m := BoundVarMap) bv f) vm_fvar_1__
+    | _ =>
+        let 'VM vm_bvar_4__ vm_fvar_5__ := m in
+        VM vm_bvar_4__ (vm_fvar m |> xtDFreeVar v f)
     end.
 
 Definition lkTickish {a} : Core.Tickish Core.Id -> TickishMap a -> option a :=
@@ -654,7 +669,7 @@ Axiom lkList : forall {m} {k} {a},
                (forall {b}, k -> m b -> option b) -> list k -> ListMap m a -> option a.
 
 Definition lookupTypeMapWithScope {a}
-   : TypeMap a -> CmEnv -> unit -> option a :=
+   : TypeMap a -> CmEnv -> AxiomatizedTypes.Type_ -> option a :=
   fun m cm t => lkTT (D cm t) m.
 
 Definition lkDNamed {n} {a} `{Name.NamedThing n}
@@ -671,10 +686,12 @@ Definition lkVar {a} : CmEnv -> Core.Var -> VarMap a -> option a :=
     | _ => vm_fvar >.> lkDFreeVar v
     end.
 
-Definition lkC {a} : DeBruijn unit -> CoercionMapX a -> option a :=
+Definition lkC {a}
+   : DeBruijn AxiomatizedTypes.Coercion -> CoercionMapX a -> option a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
-    | D env co, Mk_CoercionMapX core_tm => lkT (D env tt) core_tm
+    | D env co, Mk_CoercionMapX core_tm =>
+        lkT (D env (Core.coercionType co)) core_tm
     end.
 
 Axiom lkBndr : forall {a}, CmEnv -> Core.Var -> BndrMap a -> option a.
@@ -717,7 +734,8 @@ Definition fdA {a} {b} : (a -> b -> b) -> AltMap a -> b -> b :=
     foldTM k (am_deflt m) GHC.Base.∘
     (foldTM (foldTM k) (am_data m) GHC.Base.∘ foldTM (foldTM k) (am_lit m)).
 
-Definition extendTypeMap {a} : TypeMap a -> unit -> a -> TypeMap a :=
+Definition extendTypeMap {a}
+   : TypeMap a -> AxiomatizedTypes.Type_ -> a -> TypeMap a :=
   fun m t v => alterTM (m := TypeMap) t (GHC.Base.const (Some v)) m.
 
 Definition extendCoreMap {a} : CoreMap a -> Core.CoreExpr -> a -> CoreMap a :=
@@ -768,7 +786,7 @@ Definition xtA {a} : CmEnv -> Core.CoreAlt -> XT a -> AltMap a -> AltMap a :=
     end.
 
 Definition extendTypeMapWithScope {a}
-   : TypeMap a -> CmEnv -> unit -> a -> TypeMap a :=
+   : TypeMap a -> CmEnv -> AxiomatizedTypes.Type_ -> a -> TypeMap a :=
   fun m cm t v => xtTT (D cm t) (GHC.Base.const (Some v)) m.
 
 Local Definition TrieMap__MaybeMap_Key {m} `{TrieMap m} : Type :=
@@ -871,9 +889,25 @@ Program Instance Eq___DeBruijn__list {a} `{GHC.Base.Eq_ (DeBruijn a)}
     k__ {| GHC.Base.op_zeze____ := Eq___DeBruijn__list_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___DeBruijn__list_op_zsze__ |}.
 
-(* Skipping instance `TrieMap.Eq___DeBruijn__unit' of class `GHC.Base.Eq_' *)
+Local Definition Eq___DeBruijn__Coercion_op_zeze__
+   : (DeBruijn AxiomatizedTypes.Coercion) ->
+     (DeBruijn AxiomatizedTypes.Coercion) -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | D env1 co1, D env2 co2 =>
+        D env1 (Core.coercionType co1) GHC.Base.== D env2 (Core.coercionType co2)
+    end.
 
-(* Skipping instance `TrieMap.Eq___DeBruijn__unit' of class `GHC.Base.Eq_' *)
+Local Definition Eq___DeBruijn__Coercion_op_zsze__
+   : (DeBruijn AxiomatizedTypes.Coercion) ->
+     (DeBruijn AxiomatizedTypes.Coercion) -> bool :=
+  fun x y => negb (Eq___DeBruijn__Coercion_op_zeze__ x y).
+
+Program Instance Eq___DeBruijn__Coercion
+   : GHC.Base.Eq_ (DeBruijn AxiomatizedTypes.Coercion) :=
+  fun _ k__ =>
+    k__ {| GHC.Base.op_zeze____ := Eq___DeBruijn__Coercion_op_zeze__ ;
+           GHC.Base.op_zsze____ := Eq___DeBruijn__Coercion_op_zsze__ |}.
 
 Instance Eq___DeBruijn__CoreAlt : GHC.Base.Eq_ (DeBruijn Core.CoreAlt) := {}.
 Proof.
@@ -914,7 +948,7 @@ Program Instance TrieMap__VarMap : TrieMap VarMap :=
    `TrieMap.Outputable__TypeMapG' *)
 
 Local Definition TrieMap__LooseTypeMap_Key : Type :=
-  unit.
+  AxiomatizedTypes.Type_.
 
 Local Definition TrieMap__LooseTypeMap_alterTM
    : forall {b},
@@ -963,7 +997,7 @@ Program Instance TrieMap__LooseTypeMap : TrieMap LooseTypeMap :=
   mapTM := fun {a} {b} => TrieMap__LooseTypeMap_mapTM }.
 
 Local Definition TrieMap__CoercionMapX_Key : Type :=
-  DeBruijn unit.
+  DeBruijn AxiomatizedTypes.Coercion.
 
 Local Definition TrieMap__CoercionMapX_alterTM
    : forall {b},
@@ -1003,7 +1037,7 @@ Program Instance TrieMap__CoercionMapX : TrieMap CoercionMapX :=
   mapTM := fun {a} {b} => TrieMap__CoercionMapX_mapTM }.
 
 Local Definition TrieMap__CoercionMap_Key : Type :=
-  unit.
+  AxiomatizedTypes.Coercion.
 
 Instance TrieMap__CoercionMapG : TrieMap CoercionMapG := TrieMap__GenMap.
 
@@ -1097,10 +1131,11 @@ End Notations.
 
 (* External variables:
      Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
-     tt unit Core.CoreAlt Core.CoreExpr Core.DEFAULT Core.DVarEnv Core.DataAlt
-     Core.Id Core.LitAlt Core.Tickish Core.Var Core.VarEnv Core.alterDVarEnv
-     Core.emptyDVarEnv Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv
-     Core.lookupVarEnv Core.varType Data.Foldable.foldl Data.IntSet.Internal.Key
+     tt AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Core.CoreAlt Core.CoreExpr
+     Core.DEFAULT Core.DVarEnv Core.DataAlt Core.Id Core.LitAlt Core.Tickish Core.Var
+     Core.VarEnv Core.alterDVarEnv Core.coercionType Core.emptyDVarEnv
+     Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv Core.lookupVarEnv
+     Core.typeKind Core.varType Data.Foldable.foldl Data.IntSet.Internal.Key
      Data.Map.Internal.Map Data.Map.Internal.alter Data.Map.Internal.empty
      Data.Map.Internal.foldr Data.Map.Internal.lookup Data.Map.Internal.map
      FastString.FastString GHC.Base.Eq_ GHC.Base.Ord GHC.Base.const GHC.Base.flip

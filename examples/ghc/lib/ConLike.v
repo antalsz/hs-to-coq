@@ -12,13 +12,13 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Core.
+Require FieldLabel.
 Require GHC.Base.
 Require Name.
-Require OccName.
 Require Unique.
-Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
 
@@ -28,32 +28,46 @@ Inductive ConLike : Type
 
 (* Converted value declarations: *)
 
-Local Definition Uniquable__ConLike_getUnique : ConLike -> Unique.Unique :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon dc => Unique.getUnique dc
-    | PatSynCon ps => Unique.getUnique ps
-    end.
+Instance Uniquable__ConLike : Unique.Uniquable ConLike := {}.
+Proof.
+Admitted.
 
-Program Instance Uniquable__ConLike : Unique.Uniquable ConLike :=
-  fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__ConLike_getUnique |}.
+Axiom eqConLike : ConLike -> ConLike -> bool.
 
-Definition eqConLike : ConLike -> ConLike -> bool :=
-  fun x y => Unique.getUnique x GHC.Base.== Unique.getUnique y.
+Axiom conLikesWithFields : list ConLike ->
+                           list FieldLabel.FieldLabelString -> list ConLike.
 
-Definition conLikeName : ConLike -> Name.Name :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon data_con => Core.dataConName data_con
-    | PatSynCon pat_syn => Core.patSynName pat_syn
-    end.
+Axiom conLikeWrapId_maybe : ConLike -> option Core.Id.
 
-Definition conLikeArity : ConLike -> BasicTypes.Arity :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon data_con => Core.dataConSourceArity data_con
-    | PatSynCon pat_syn => Core.patSynArity pat_syn
-    end.
+Axiom conLikeStupidTheta : ConLike -> AxiomatizedTypes.ThetaType.
+
+Axiom conLikeResTy : ConLike ->
+                     list AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_.
+
+Axiom conLikeName : ConLike -> Name.Name.
+
+Axiom conLikeIsInfix : ConLike -> bool.
+
+Axiom conLikeInstOrigArgTys : ConLike ->
+                              list AxiomatizedTypes.Type_ -> list AxiomatizedTypes.Type_.
+
+Axiom conLikeImplBangs : ConLike -> list Core.HsImplBang.
+
+Axiom conLikeFullSig : ConLike ->
+                       (list Core.TyVar * list Core.TyVar * list Core.EqSpec *
+                        AxiomatizedTypes.ThetaType *
+                        AxiomatizedTypes.ThetaType *
+                        list AxiomatizedTypes.Type_ *
+                        AxiomatizedTypes.Type_)%type.
+
+Axiom conLikeFieldType : ConLike ->
+                         FieldLabel.FieldLabelString -> AxiomatizedTypes.Type_.
+
+Axiom conLikeFieldLabels : ConLike -> list FieldLabel.FieldLabel.
+
+Axiom conLikeExTyVars : ConLike -> list Core.TyVar.
+
+Axiom conLikeArity : ConLike -> BasicTypes.Arity.
 
 (* Skipping all instances of class `Data.Data.Data', including
    `ConLike.Data__ConLike' *)
@@ -64,37 +78,17 @@ Definition conLikeArity : ConLike -> BasicTypes.Arity :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `ConLike.Outputable__ConLike' *)
 
-Local Definition NamedThing__ConLike_getName : ConLike -> Name.Name :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | RealDataCon dc => Name.getName dc
-    | PatSynCon ps => Name.getName ps
-    end.
+Instance NamedThing__ConLike : Name.NamedThing ConLike := {}.
+Proof.
+Admitted.
 
-Local Definition NamedThing__ConLike_getOccName : ConLike -> OccName.OccName :=
-  fun n => Name.nameOccName (NamedThing__ConLike_getName n).
-
-Program Instance NamedThing__ConLike : Name.NamedThing ConLike :=
-  fun _ k__ =>
-    k__ {| Name.getName__ := NamedThing__ConLike_getName ;
-           Name.getOccName__ := NamedThing__ConLike_getOccName |}.
-
-Local Definition Eq___ConLike_op_zeze__ : ConLike -> ConLike -> bool :=
-  eqConLike.
-
-Local Definition Eq___ConLike_op_zsze__ : ConLike -> ConLike -> bool :=
-  fun x y => negb (Eq___ConLike_op_zeze__ x y).
-
-Program Instance Eq___ConLike : GHC.Base.Eq_ ConLike :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___ConLike_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___ConLike_op_zsze__ |}.
+Instance Eq___ConLike : GHC.Base.Eq_ ConLike := {}.
+Proof.
+Admitted.
 
 (* External variables:
-     bool negb BasicTypes.Arity Core.DataCon Core.PatSyn Core.dataConName
-     Core.dataConSourceArity Core.patSynArity Core.patSynName GHC.Base.Eq_
-     GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zsze____ Name.Name
-     Name.NamedThing Name.getName Name.getName__ Name.getOccName__ Name.nameOccName
-     OccName.OccName Unique.Uniquable Unique.Unique Unique.getUnique
-     Unique.getUnique__
+     bool list op_zt__ option AxiomatizedTypes.ThetaType AxiomatizedTypes.Type_
+     BasicTypes.Arity Core.DataCon Core.EqSpec Core.HsImplBang Core.Id Core.PatSyn
+     Core.TyVar FieldLabel.FieldLabel FieldLabel.FieldLabelString GHC.Base.Eq_
+     Name.Name Name.NamedThing Unique.Uniquable
 *)

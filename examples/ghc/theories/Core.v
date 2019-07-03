@@ -206,8 +206,7 @@ Proof.
   * reflexivity.
   * destruct e as [fvs e']; destruct e'; simpl; try reflexivity.
     + apply IHn; assumption.
-    + expand_pairs.
-      reflexivity.
+    + expand_pairs. reflexivity.
 Qed.
 
 

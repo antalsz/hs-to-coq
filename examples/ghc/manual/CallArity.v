@@ -17,6 +17,7 @@ Require Control.Arrow.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Core.
+Require CoreArity.
 Require CoreUtils.
 Require Data.Foldable.
 Require Data.Tuple.
@@ -39,10 +40,6 @@ Definition CallArityRes :=
 
 (* Midamble *)
 
-(* We parameterize this because we don't have type information *)
-Definition typeArity :  unit -> list BasicTypes.OneShotInfo.
-apply GHC.Err.default. 
-Qed.
 
 Instance Default_CallArityRes : GHC.Err.Default CallArityRes := 
 GHC.Err.Build_Default _ (GHC.Err.default, GHC.Err.default).
@@ -67,7 +64,8 @@ Definition trimArity : Core.Id -> BasicTypes.Arity -> BasicTypes.Arity :=
     let max_arity_by_strsig :=
       if Core.isBotRes result_info : bool then Coq.Lists.List.length demands else
       a in
-    let max_arity_by_type := Coq.Lists.List.length (typeArity (tt)) in
+    let max_arity_by_type :=
+      Coq.Lists.List.length (CoreArity.typeArity (Id.idType v)) in
     Data.Foldable.foldr GHC.Base.min a (cons max_arity_by_type (cons
                                               max_arity_by_strsig nil)).
 
@@ -104,7 +102,7 @@ Definition lookupCallArityRes
     end.
 
 Definition isInteresting : Core.Var -> bool :=
-  fun v => negb (Data.Foldable.null (typeArity (tt))).
+  fun v => negb (Data.Foldable.null (CoreArity.typeArity (Id.idType v))).
 
 Definition interestingBinds : Core.CoreBind -> list Core.Var :=
   GHC.List.filter isInteresting GHC.Base.∘ Core.bindersOf.
@@ -189,9 +187,9 @@ Definition callArityAnal
                  let 'pair ae e' := callArityAnal (arity GHC.Num.- #1) (Core.delVarSet int v)
                                       e in
                  pair ae (Core.Lam v e')
-             | arity, int, Core.App e (Core.Type_ t) =>
-                 Control.Arrow.arrow_second (fun e => Core.App e (Core.Type_ t)) (callArityAnal
-                                                                                  arity int e)
+             | arity, int, Core.App e (Core.Mk_Type t) =>
+                 Control.Arrow.arrow_second (fun e => Core.App e (Core.Mk_Type t)) (callArityAnal
+                                                                                    arity int e)
              | arity, int, Core.App e1 e2 =>
                  let 'pair ae2 e2' := callArityAnal #0 int e2 in
                  let ae2' :=
@@ -228,10 +226,8 @@ Definition callArityAnal
              end in
            match arg_0__, arg_1__, arg_2__ with
            | _, _, (Core.Lit _ as e) => pair emptyArityRes e
-           | _, _, (Core.Type_ _ as e) => pair emptyArityRes e
-           | _, _, (Core.Coercion _ as e) => pair emptyArityRes e
-           | arity, int, Core.Tick t e =>
-               Control.Arrow.arrow_second (Core.Tick t) (callArityAnal arity int e)
+           | _, _, (Core.Mk_Type _ as e) => pair emptyArityRes e
+           | _, _, (Core.Mk_Coercion _ as e) => pair emptyArityRes e
            | arity, int, Core.Cast e co =>
                Control.Arrow.arrow_second (fun e => Core.Cast e co) (callArityAnal arity int e)
            | arity, int, (Core.Mk_Var v as e) =>
@@ -373,22 +369,22 @@ Definition callArityAnalProgram
 
 (* External variables:
      None Some andb bool callArityBind1 cons false list negb nil op_zt__ option pair
-     true tt typeArity BasicTypes.Arity Control.Arrow.arrow_first
-     Control.Arrow.arrow_second Coq.Init.Datatypes.app Coq.Lists.List.flat_map
-     Coq.Lists.List.length Core.App Core.Case Core.Cast Core.Coercion Core.CoreBind
-     Core.CoreExpr Core.CoreProgram Core.Id Core.Lam Core.Let Core.Lit Core.Mk_Var
-     Core.NonRec Core.Rec Core.Tick Core.Type_ Core.Var Core.VarEnv Core.VarSet
-     Core.bindersOf Core.delVarEnv Core.delVarSet Core.delVarSetList Core.elemVarSet
-     Core.emptyVarEnv Core.emptyVarSet Core.extendVarSetList Core.isBotRes
-     Core.isExportedId Core.isId Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet
-     Core.plusVarEnv_C Core.splitStrictSig Core.unitVarEnv CoreUtils.exprIsCheap
+     true BasicTypes.Arity Control.Arrow.arrow_first Control.Arrow.arrow_second
+     Coq.Init.Datatypes.app Coq.Lists.List.flat_map Coq.Lists.List.length Core.App
+     Core.Case Core.Cast Core.CoreBind Core.CoreExpr Core.CoreProgram Core.Id
+     Core.Lam Core.Let Core.Lit Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec
+     Core.Rec Core.Var Core.VarEnv Core.VarSet Core.bindersOf Core.delVarEnv
+     Core.delVarSet Core.delVarSetList Core.elemVarSet Core.emptyVarEnv
+     Core.emptyVarSet Core.extendVarSetList Core.isBotRes Core.isExportedId Core.isId
+     Core.lookupVarEnv Core.mkVarEnv Core.mkVarSet Core.plusVarEnv_C
+     Core.splitStrictSig Core.unitVarEnv CoreArity.typeArity CoreUtils.exprIsCheap
      CoreUtils.exprIsTrivial Data.Foldable.any Data.Foldable.foldl
      Data.Foldable.foldr Data.Foldable.null Data.Foldable.or Data.Tuple.fst
      Data.Tuple.snd DynFlags.DynFlags GHC.Base.const GHC.Base.map GHC.Base.min
      GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
      GHC.DeferredFix.deferredFix1 GHC.Err.patternFailure GHC.List.filter
      GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     Id.idCallArity Id.idStrictness Id.setIdCallArity UnVarGraph.UnVarGraph
+     Id.idCallArity Id.idStrictness Id.idType Id.setIdCallArity UnVarGraph.UnVarGraph
      UnVarGraph.UnVarSet UnVarGraph.completeBipartiteGraph UnVarGraph.completeGraph
      UnVarGraph.delNode UnVarGraph.delUnVarSet UnVarGraph.elemUnVarSet
      UnVarGraph.emptyUnVarGraph UnVarGraph.neighbors UnVarGraph.unionUnVarGraph

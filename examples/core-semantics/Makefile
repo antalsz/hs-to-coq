@@ -36,6 +36,7 @@ $(OUT)/_CoqProject : $(OUT)/README.md Makefile
 	echo '-R ../../../base ""' >> $@
 	echo '-Q ../../../base-thy  Proofs' >> $@
 	echo '-Q ../../containers/lib   ""' >> $@
+	echo '-Q ../../containers/theories   ""' >> $@
 	echo '-Q ../../transformers/lib  ""' >> $@
 	echo '-Q ../../ghc/lib  ""' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
@@ -64,7 +65,7 @@ HS_TO_COQ_OPTS := \
   -e ../containers/edits \
   -e ../transformers/edits \
   -e ../ghc/edits \
-  -e ../ghc/no-type-edits \
+  -e ../ghc/axiomatize-types.edits \
   -e edits \
    --iface-dir ../../base \
    --iface-dir ../containers/lib \

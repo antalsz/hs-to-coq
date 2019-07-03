@@ -719,8 +719,8 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
         | Tip => Bin (#1 GHC.Num.+ ls) k x l Tip
         | Bin rs rk rx rl rr =>
             if rs GHC.Base.> (delta GHC.Num.* ls) : bool
-            then let scrut_10__ := pair rl rr in
-                 match scrut_10__ with
+            then let scrut_9__ := pair rl rr in
+                 match scrut_9__ with
                  | pair (Bin rls rlk rlx rll rlr) (Bin rrs _ _ _ _) =>
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin ((#1 GHC.Num.+ ls)
@@ -732,7 +732,7 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                    size rlr) rk rx rlr
                                                                                               rr)
                  | _ =>
-                     let 'pair _ _ := scrut_10__ in
+                     let 'pair _ _ := scrut_9__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceR")
                  end else
             Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
@@ -822,8 +822,8 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
         | Tip => Bin (#1 GHC.Num.+ rs) k x Tip r
         | Bin ls lk lx ll lr =>
             if ls GHC.Base.> (delta GHC.Num.* rs) : bool
-            then let scrut_10__ := pair ll lr in
-                 match scrut_10__ with
+            then let scrut_9__ := pair ll lr in
+                 match scrut_9__ with
                  | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
                      if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
@@ -835,7 +835,7 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                       size lrr) k x lrr
                                                                                                  r)
                  | _ =>
-                     let 'pair _ _ := scrut_10__ in
+                     let 'pair _ _ := scrut_9__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balanceL")
                  end else
             Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r
@@ -2048,8 +2048,8 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
             end
         | Bin rs rk rx rl rr =>
             if rs GHC.Base.> (delta GHC.Num.* ls) : bool
-            then let scrut_24__ := pair rl rr in
-                 match scrut_24__ with
+            then let scrut_16__ := pair rl rr in
+                 match scrut_16__ with
                  | pair (Bin rls rlk rlx rll rlr) (Bin rrs _ _ _ _) =>
                      if rls GHC.Base.< (ratio GHC.Num.* rrs) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) rk rx (Bin ((#1 GHC.Num.+ ls)
@@ -2061,12 +2061,12 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                    size rlr) rk rx rlr
                                                                                               rr)
                  | _ =>
-                     let 'pair _ _ := scrut_24__ in
+                     let 'pair _ _ := scrut_16__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
                  end else
             if ls GHC.Base.> (delta GHC.Num.* rs) : bool
-            then let scrut_17__ := pair ll lr in
-                 match scrut_17__ with
+            then let scrut_22__ := pair ll lr in
+                 match scrut_22__ with
                  | pair (Bin lls _ _ _ _) (Bin lrs lrk lrx lrl lrr) =>
                      if lrs GHC.Base.< (ratio GHC.Num.* lls) : bool
                      then Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) lk lx ll (Bin ((#1 GHC.Num.+ rs)
@@ -2078,7 +2078,7 @@ Definition balance {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
                                                                                                       size lrr) k x lrr
                                                                                                  r)
                  | _ =>
-                     let 'pair _ _ := scrut_17__ in
+                     let 'pair _ _ := scrut_22__ in
                      GHC.Err.error (GHC.Base.hs_string__ "Failure in Data.Map.balance")
                  end else
             Bin ((#1 GHC.Num.+ ls) GHC.Num.+ rs) k x l r

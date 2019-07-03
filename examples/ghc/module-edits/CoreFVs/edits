@@ -1,13 +1,3 @@
-# 
-# NEEDED by Exitify
-# CoreFVs.CoreExprWithFVs CoreFVs.freeVars
-# CoreFVs.freeVarsOf
-#
-# NEEDED from Id
-# Id.idCoreRules Id.idSpecialisation Id.realIdUnfolding
-#
-
-# in CoreFVs.idRuleRhsVars rewrite forall get_fvs id, Core.mapUnionVarSet get_fvs (Id.idCoreRules id) = Core.emptyVarSet
 
 # Make it easier for Coq to see termination
 rename value Util.mapAndUnzip = NestedRecursionHelpers.mapAndUnzipFix 
@@ -32,17 +22,7 @@ skip CoreFVs.orphNamesOfCo
 skip CoreFVs.exprOrphNames
 skip CoreFVs.exprsOrphNames
 
-
 in CoreFVs.exprOrphNames inline mutual go_alt
-
-#
-# These edits are due to the fact that Id's are missing information (Rules, Unfoldings and Types info)
-# We assume that the missing information does not contain any free variables
-#
-# redefine Definition CoreFVs.idRuleFVs      : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-# redefine Definition CoreFVs.varTypeTyCoFVs : Core.Var -> FV.FV := fun var => FV.emptyFV.
-# redefine Definition CoreFVs.idUnfoldingFVs : Core.Id  -> FV.FV := fun id  => FV.emptyFV.
-
 
 #
 # expr_fvs
@@ -52,16 +32,16 @@ in CoreFVs.exprOrphNames inline mutual go_alt
 #
 # first, we get rid of parts of the structure that we do not need
 #
-skip CoreFVs.stableUnfoldingFVs
 skip CoreFVs.stableUnfoldingVars
 #
 # Then we unfuse some recursive calls so that Coq can see that they are structural
 #
-in CoreFVs.expr_fvs rewrite forall bndr rhs, CoreFVs.rhs_fvs (pair bndr rhs) = FV.unionFV (CoreFVs.expr_fvs rhs) FV.emptyFV
+# Inline the definition of rhs_fvs (inline mutual doesn't quite do what we need)
+in CoreFVs.expr_fvs rewrite forall x, CoreFVs.rhs_fvs x = (match x with | pair bndr rhs => FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr) end)
+
+# replace mapUnionFV with unions . map  (and also inline an occurrence of rhs_fvs)
 in CoreFVs.expr_fvs rewrite forall alts,  (FV.mapUnionFV alt_fvs alts)  = FV.unionsFV (Lists.List.map alt_fvs alts)
-in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) = FV.unionsFV (Lists.List.map (fun x => match x with | pair bndr rhs => CoreFVs.expr_fvs rhs end) pairs)
-# Ignore ticks
-in CoreFVs.expr_fvs rewrite forall t, CoreFVs.tickish_fvs t = FV.emptyFV
+in CoreFVs.expr_fvs rewrite forall pairs, (FV.mapUnionFV CoreFVs.rhs_fvs pairs) = FV.unionsFV (Lists.List.map (fun x => match x with | pair bndr rhs => FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr) end) pairs)
 
 
 # `freeVars = go where go = …`.  Since `go` is a function but `freeVars` isn't,

@@ -1,47 +1,37 @@
+import module AxiomatizedTypes
+import module Literal
 
-#
+####################################
 # skipping or redefining unfolding info so that it is 'NoUnfolding'
 #
-
-redefine Definition Core.isEvaldUnfolding : Core.Unfolding -> bool
-  := fun x => false.
-redefine Definition Core.isConLikeUnfolding  : Core.Unfolding -> bool
-  := fun x => false.
-redefine Definition Core.hasSomeUnfolding : Core.Unfolding -> bool
-  := fun x => false.
-
-axiomatize definition Core.maybeUnfoldingTemplate
 axiomatize definition Core.unfoldingTemplate
+#
+#  These are 'smart' constructors for constructors that no longer exist.
+#
+skip Core.bootUnfolding
+skip Core.mkOtherCon
+skip Core.evaldUnfolding
 
-redefine Definition Core.otherCons : Core.Unfolding -> (list Core.AltCon) :=
-  fun u => nil.
+####################################
+# removing Tick datacons from Expr
+#
 
-redefine Definition Core.isValueUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
+#
+# Skip constructor (in Unfolding) produces a redundant case in this function
+#
+# skip Core.hasSomeUnfolding
+skip equation Core.hasSomeUnfolding _
 
-redefine Definition Core.isCheapUnfolding  : Core.Unfolding -> bool :=
-  fun x => false.
+#
+#  These are 'smart' constructors for constructors that no longer exist.
+#
+# skip Core.mkTyBind
+# skip Core.mkTyArg
+# skip Core.mkTyApps
+# skip Core.mkCoBind
+# skip Core.mkCoApps
 
-redefine Definition Core.isExpandableUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
-
-redefine Definition Core.expandUnfolding_maybe : Core.Unfolding -> option Core.CoreExpr := fun x => None.
-
-redefine Definition Core.isCompulsoryUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
-redefine Definition Core.isStableUnfolding : Core.Unfolding -> bool :=
-  fun x => false.
-redefine Definition Core.isBootUnfolding : Core.Unfolding -> bool :=
-  fun u => false.
-redefine Definition Core.isFragileUnfolding : Core.Unfolding -> bool :=
-  fun u => false.
-redefine Definition Core.canUnfold : Core.Unfolding -> bool :=
-  fun x => false.
-
-axiomatize definition Core.mkOtherCon
-axiomatize definition Core.evaldUnfolding
-axiomatize definition Core.bootUnfolding
-
+####################################
 #
 # Tick-related functions
 #

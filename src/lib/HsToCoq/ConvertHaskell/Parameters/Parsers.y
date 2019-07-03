@@ -88,6 +88,11 @@ import HsToCoq.ConvertHaskell.Parameters.Parsers.Lexing
   set             { TokWord    "set"            }
   no              { TokWord    "no"             }
   collapse        { TokWord    "collapse"       }
+  equation        { TokWord    "equation"       }
+  case            { TokWord    "case"           }
+  pattern         { TokWord    "pattern"        }
+  original        { TokWord    "original"       }
+  name            { TokWord    "name"           }
   '='             { TokOp      "="              }
   ':->'           { TokOp      ":->"            }
   -- Tokens: Coq terms
@@ -277,36 +282,39 @@ Scope :: { Ident }
   | type    { "type" } -- This is so common, we have to special-case it
 
 Edit :: { Edit }
-  : type synonym Word ':->' Word                          { TypeSynonymTypeEdit           $3 $5                                 }
-  | data type arguments Qualid DataTypeArguments          { DataTypeArgumentsEdit         $4 $5                                 }
-  | redefine CoqDefinition                                { RedefinitionEdit              $2                                    }
-  | add Word CoqDefinition                                { AddEdit                       (mkModuleNameT $2) $3                 }
-  | skip Qualid                                           { SkipEdit                      $2                                    }
-  | skip constructor Qualid                               { SkipConstructorEdit           $3                                    }
-  | skip class Qualid                                     { SkipClassEdit                 $3                                    }
-  | skip method Qualid Word                               { SkipMethodEdit                $3 $4                                 }
-  | skip module Word                                      { SkipModuleEdit                (mkModuleNameT $3)                    }
-  | import module Word                                    { ImportModuleEdit              (mkModuleNameT $3)                    }
-  | manual notation Word                                  { HasManualNotationEdit         (mkModuleNameT $3)                    }
-  | termination Qualid TerminationArgument                { TerminationEdit               $2 $3                                 }
-  | obligations Qualid TrivialLtac                        { ObligationsEdit               $2 $3                                 }
-  | rename Renaming                                       { RenameEdit                    (fst $2) (snd $2)                     }
-  | axiomatize module Word                                { AxiomatizeModuleEdit          (mkModuleNameT $3)                    }
-  | axiomatize definition Qualid                          { AxiomatizeDefinitionEdit      $3                                    }
-  | unaxiomatize definition Qualid                        { UnaxiomatizeDefinitionEdit    $3                                    }
-  | add scope Scope for ScopePlace Qualid                 { AdditionalScopeEdit           $5 $6 $3                              }
-  | order Some(Qualid)                                    { OrderEdit                     $2                                    }
-  | class kinds Qualid SepBy1(Term,',')                   { ClassKindEdit                 $3 $4                                 }
-  | data  kinds Qualid SepBy1(Term,',')                   { DataKindEdit                  $3 $4                                 }
-  | delete unused type variables Qualid                   { DeleteUnusedTypeVariablesEdit $5                                    }
-  | coinductive Qualid                                    { CoinductiveEdit               $2                                    }
-  | rewrite Rewrite                                       { RewriteEdit                   $2                                    }
-  | rename module Word Word                               { RenameModuleEdit              (mkModuleNameT $3) (mkModuleNameT $4) }
-  | simple class Qualid                                   { SimpleClassEdit               $3                                    }
-  | inline mutual Qualid                                  { InlineMutualEdit              $3                                    }
-  | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                   $3 $4                                 }
-  | collapse 'let' Qualid                                 { CollapseLetEdit               $3                                    }
-  | 'in' Qualid Edit                                      { InEdit                        $2 $3                                 }
+  : type synonym Word ':->' Word                          { TypeSynonymTypeEdit              $3 $5                                 }
+  | data type arguments Qualid DataTypeArguments          { DataTypeArgumentsEdit            $4 $5                                 }
+  | redefine CoqDefinition                                { RedefinitionEdit                 $2                                    }
+  | add Word CoqDefinition                                { AddEdit                          (mkModuleNameT $2) $3                 }
+  | skip Qualid                                           { SkipEdit                         $2                                    }
+  | skip constructor Qualid                               { SkipConstructorEdit              $3                                    }
+  | skip class Qualid                                     { SkipClassEdit                    $3                                    }
+  | skip method Qualid Word                               { SkipMethodEdit                   $3 $4                                 }
+  | skip equation Qualid Some(AtomicPattern)              { SkipEquationEdit                 $3 $4                                 }
+  | skip case pattern Pattern                             { SkipCasePatternEdit              $4                                    }
+  | skip module Word                                      { SkipModuleEdit                   (mkModuleNameT $3)                    }
+  | import module Word                                    { ImportModuleEdit                 (mkModuleNameT $3)                    }
+  | manual notation Word                                  { HasManualNotationEdit            (mkModuleNameT $3)                    }
+  | termination Qualid TerminationArgument                { TerminationEdit                  $2 $3                                 }
+  | obligations Qualid TrivialLtac                        { ObligationsEdit                  $2 $3                                 }
+  | rename Renaming                                       { RenameEdit                       (fst $2) (snd $2)                     }
+  | axiomatize module Word                                { AxiomatizeModuleEdit             (mkModuleNameT $3)                    }
+  | axiomatize original module name Word                  { AxiomatizeOriginalModuleNameEdit (mkModuleNameT $5)                    }
+  | axiomatize definition Qualid                          { AxiomatizeDefinitionEdit         $3                                    }
+  | unaxiomatize definition Qualid                        { UnaxiomatizeDefinitionEdit       $3                                    }
+  | add scope Scope for ScopePlace Qualid                 { AdditionalScopeEdit              $5 $6 $3                              }
+  | order Some(Qualid)                                    { OrderEdit                        $2                                    }
+  | class kinds Qualid SepBy1(Term,',')                   { ClassKindEdit                    $3 $4                                 }
+  | data  kinds Qualid SepBy1(Term,',')                   { DataKindEdit                     $3 $4                                 }
+  | delete unused type variables Qualid                   { DeleteUnusedTypeVariablesEdit    $5                                    }
+  | coinductive Qualid                                    { CoinductiveEdit                  $2                                    }
+  | rewrite Rewrite                                       { RewriteEdit                      $2                                    }
+  | rename module Word Word                               { RenameModuleEdit                 (mkModuleNameT $3) (mkModuleNameT $4) }
+  | simple class Qualid                                   { SimpleClassEdit                  $3                                    }
+  | inline mutual Qualid                                  { InlineMutualEdit                 $3                                    }
+  | set type Qualid TypeAnnotationOrNot                   { SetTypeEdit                      $3 $4                                 }
+  | collapse 'let' Qualid                                 { CollapseLetEdit                  $3                                    }
+  | 'in' Qualid Edit                                      { InEdit                           $2 $3                                 }
 
 Edits :: { [Edit] }
   : Lines(Edit)    { $1 }
@@ -459,15 +467,16 @@ MultPattern :: { MultPattern }
 -- arguments as variables. We could hard-code common nullary constructors.
 -- But can we do better?
 Pattern :: { Pattern }
-  : Qualid Some(AtomicPattern) { ArgsPat $1 (NEL.toList $2) }
-  | Pattern as Qualid          { AsPat $1 $3 }
-  | AtomicPattern              { $1 }
+  : Qualid Some(AtomicPattern)        { ArgsPat $1 (NEL.toList $2) }
+  | '@' Qualid Some(AtomicPattern)    { ExplicitArgsPat $2 $3 }
+  | Pattern as Qualid                 { AsPat $1 $3 }
+  | AtomicPattern                     { $1 }
 
 AtomicPattern :: { Pattern }
-  : '_'                     { UnderscorePat }
-  | Num                     { NumPat $1 }
-  | Qualid                  { QualidPat $1  }
-  | '(' Pattern ')'         { $2 }
+  : '_'                { UnderscorePat }
+  | Num                { NumPat $1 }
+  | Qualid             { QualidPat $1  }
+  | '(' Pattern ')'    { $2 }
 
 Rewrite :: { Rewrite }
   : forall Many(Word) ',' EqlessTerm '=' Term    { Rewrite $2 $4 $6 }

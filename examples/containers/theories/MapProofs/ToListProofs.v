@@ -1171,11 +1171,12 @@ Lemma strong_eq2 : forall `{Eq_ a} `{EqLaws a} m1 m2 lb ub,
   (forall i, sem m1 i =  sem m2 i) <-> m1 == m2 = true.
 Proof.
   intros. split; intros.
-  - eapply strong_eq1. apply H2. apply H3. apply H5.
-  - rewrite weak_equals_spec in H5. specialize (H5 i).
+  - eapply strong_eq1; eassumption.
+  - rewrite weak_equals_spec in H5; try eassumption.
+    specialize (H5 i).
     destruct (sem m1 i). destruct (sem m2 i). 
     rewrite simpl_option_some_eq in H5. rewrite H4 in H5. subst. reflexivity.
-    discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity. apply H2. apply H3.
+    discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity. 
 Qed.
 
 End WF.

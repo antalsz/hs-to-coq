@@ -3,7 +3,7 @@
 module HsToCoq.ConvertHaskell.Module (
   -- * Convert whole module graphs and modules
   ConvertedModule(..),
-  convertModules,
+  convertModules, convertModule,
   -- ** Extract all the declarations from a module
   ModuleDeclarations(..), moduleDeclarations,
   -- * Convert declaration groups
@@ -13,11 +13,17 @@ module HsToCoq.ConvertHaskell.Module (
 import Control.Lens
 
 import Data.Foldable
+import Data.Traversable
+import HsToCoq.Util.Monad
+import Data.Function
 import Data.Maybe
 import Data.List.NonEmpty (NonEmpty(..))
+import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 
 import Data.Generics
+
+import Control.Monad.Reader
 
 import Control.Exception (SomeException)
 import qualified Data.Set as S
@@ -62,7 +68,7 @@ data ConvertedModuleDeclarations =
 convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup HsGroup{..} = do
   mod                 <- view currentModule
-  isModuleAxiomatized <- view $ edits.axiomatizedModules.contains mod
+  isModuleAxiomatized <- view currentModuleAxiomatized
   let catchIfAxiomatizing | isModuleAxiomatized = const
                           | otherwise           = gcatch
   handler             <- whenPermissive axiomatizeBinding
@@ -116,6 +122,8 @@ convertHsGroup HsGroup{..} = do
 
         let defnsMap = M.fromList namedSentences
         let ordered = foldMap (foldMap (defnsMap M.!)) . topoSortEnvironment $ fmap NoBinding <$> defnsMap
+        -- TODO: We use 'topoSortByVariablesBy' later in 'moduleDeclarations' --
+        -- is this 'topoSortEnvironment' really necessary?
 
         pure $ unnamedSentences ++ ordered
 
@@ -146,9 +154,12 @@ data ConvertedModule =
                   }
   deriving (Eq, Ord, Show, Data)
 
-convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
-convertModule convModNameOrig group = do
-  convModName <- view $ edits.renamedModules.at convModNameOrig . non convModNameOrig
+renameModule :: GlobalMonad r m => ModuleName -> m ModuleName
+renameModule mod = view $ edits.renamedModules.at mod.non mod
+
+-- Assumes module renaming has been accomplished
+convertModule' :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
+convertModule' convModName group = do
   withCurrentModule convModName $ do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
@@ -187,16 +198,67 @@ convertModule convModNameOrig group = do
             ]
     pure (ConvertedModule{..}, modules)
 
--- NOT THE SAME as `traverse $ uncurry convertModule`!  Handles module
--- renaming/merging and produces connected components.
+-- Handles module renaming
+convertModule :: GlobalMonad r m => ModuleName -> HsGroup GhcRn -> m (ConvertedModule, [ModuleName])
+convertModule convModNameOrig group = do
+  convModName <- renameModule convModNameOrig
+  convertModule' convModName group
+
+-- Module-local
+data Convert_Module_Mode = Mode_Initial
+                         | Mode_Axiomatize
+                         | Mode_Convert
+                         | Mode_Both
+                         deriving (Eq, Ord, Show, Read)
+
+instance Semigroup Convert_Module_Mode where
+  Mode_Initial    <> mode2           = mode2
+  mode1           <> Mode_Initial    = mode1
+  Mode_Axiomatize <> Mode_Axiomatize = Mode_Axiomatize
+  Mode_Convert    <> Mode_Convert    = Mode_Convert
+  _               <> _               = Mode_Both
+
+instance Monoid Convert_Module_Mode where
+  mempty = Mode_Initial
+                 
 convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
-  sources' <- sources & each._1 %%~ \mod_orig ->
-                view (edits.renamedModules.at mod_orig.non mod_orig)
-  let merged = M.toList $ M.fromListWith appendGroups sources'
+  -- Collect modules with the same post-`rename module` name
+  mergedModulesNELs <-  traverse (foldrM buildGroups (emptyRnGroup, emptyRnGroup, mempty))
+                    =<< M.fromListWith (<>)
+                    <$> traverse (renameModule . fst <&&&> pure . pure @NonEmpty) sources
 
-  mods <- traverse (uncurry convertModule) merged
-  pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- mods]
+  cmods <- for (M.toList mergedModulesNELs) $ \(name, (axGrp, convGrp, mode)) -> case mode of
+             Mode_Axiomatize -> axiomatizeModule' name (axGrp `appendGroups` convGrp)
+             Mode_Convert    -> convertModule' name convGrp
+             Mode_Both       -> combineModules <$> axiomatizeModule' name axGrp <*> convertModule' name convGrp
+             Mode_Initial    -> error "INTERNAL ERROR: impossible, `foldrM` over a `NonEmpty`"
+          
+  pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- cmods]
+  
+  where
+    buildGroups (oldName, modGrp) (axGrp, convGrp, mode) =
+      view (edits.axiomatizedOriginalModuleNames.contains oldName) <&> \case
+        True  -> ( modGrp{hs_tyclds = []}                     `appendGroups` axGrp
+                 , emptyRnGroup{hs_tyclds = hs_tyclds modGrp} `appendGroups` convGrp
+                 , Mode_Axiomatize <> mode )
+        False -> ( axGrp
+                 , modGrp `appendGroups` convGrp
+                 , Mode_Convert <> mode )
+
+    combineModules (ConvertedModule name  imports1 tyClDecls1 valDecls1 clsInstDecls1 addedDecls1, imps1)
+                   (ConvertedModule _name imports2 tyClDecls2 valDecls2 clsInstDecls2 addedDecls2, imps2) =
+      ( ConvertedModule name
+                        (ordNub                     $ imports1      <> imports2)
+                        (topoSortByVariables mempty $ tyClDecls1    <> tyClDecls2)
+                        (                             valDecls1     <> valDecls2)
+                        (                             clsInstDecls1 <> clsInstDecls2)
+                        (                             addedDecls1   <> addedDecls2)
+      , S.toList $ ((<>) `on` S.fromList) imps1 imps2 )
+      -- It's OK not to worry about ordering the value-level declarations
+      -- because we 'topoSortByVariablesBy' them in 'moduleDeclarations'.
+    
+    axiomatizeModule' name = local (edits.axiomatizedModules %~ S.insert name) . convertModule' name
 
 data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sentence]
                                              , moduleValueDeclarations :: ![Sentence] }

@@ -26,95 +26,71 @@ Definition DFastStringEnv :=
 
 (* Converted value declarations: *)
 
-Definition unitFsEnv {a} : FastString.FastString -> a -> FastStringEnv a :=
-  fun x y => UniqFM.unitUFM x y.
+Axiom unitFsEnv : forall {a}, FastString.FastString -> a -> FastStringEnv a.
 
-Definition plusFsEnv_C {a}
-   : (a -> a -> a) -> FastStringEnv a -> FastStringEnv a -> FastStringEnv a :=
-  fun f x y => UniqFM.plusUFM_C f x y.
+Axiom plusFsEnv_C : forall {a},
+                    (a -> a -> a) -> FastStringEnv a -> FastStringEnv a -> FastStringEnv a.
 
-Definition plusFsEnv {a}
-   : FastStringEnv a -> FastStringEnv a -> FastStringEnv a :=
-  fun x y => UniqFM.plusUFM x y.
+Axiom plusFsEnv : forall {a},
+                  FastStringEnv a -> FastStringEnv a -> FastStringEnv a.
 
-Definition mkFsEnv {a}
-   : list (FastString.FastString * a)%type -> FastStringEnv a :=
-  fun l => UniqFM.listToUFM l.
+Axiom mkFsEnv : forall {a},
+                list (FastString.FastString * a)%type -> FastStringEnv a.
 
-Definition mkDFsEnv {a}
-   : list (FastString.FastString * a)%type -> DFastStringEnv a :=
-  fun l => UniqDFM.listToUDFM l.
+Axiom mkDFsEnv : forall {a},
+                 list (FastString.FastString * a)%type -> DFastStringEnv a.
 
-Definition mapFsEnv {elt1} {elt2}
-   : (elt1 -> elt2) -> FastStringEnv elt1 -> FastStringEnv elt2 :=
-  fun f x => UniqFM.mapUFM f x.
+Axiom mapFsEnv : forall {elt1} {elt2},
+                 (elt1 -> elt2) -> FastStringEnv elt1 -> FastStringEnv elt2.
 
-Definition lookupFsEnv {a}
-   : FastStringEnv a -> FastString.FastString -> option a :=
-  fun x y => UniqFM.lookupUFM x y.
+Axiom lookupFsEnv_NF : forall {a},
+                       FastStringEnv a -> FastString.FastString -> a.
 
-Definition lookupDFsEnv {a}
-   : DFastStringEnv a -> FastString.FastString -> option a :=
-  UniqDFM.lookupUDFM.
+Axiom lookupFsEnv : forall {a},
+                    FastStringEnv a -> FastString.FastString -> option a.
 
-Definition filterFsEnv {elt}
-   : (elt -> bool) -> FastStringEnv elt -> FastStringEnv elt :=
-  fun x y => UniqFM.filterUFM x y.
+Axiom lookupDFsEnv : forall {a},
+                     DFastStringEnv a -> FastString.FastString -> option a.
 
-Definition extendFsEnv_C {a}
-   : (a -> a -> a) ->
-     FastStringEnv a -> FastString.FastString -> a -> FastStringEnv a :=
-  fun f x y z => UniqFM.addToUFM_C f x y z.
+Axiom filterFsEnv : forall {elt},
+                    (elt -> bool) -> FastStringEnv elt -> FastStringEnv elt.
 
-Definition extendFsEnv_Acc {a} {b}
-   : (a -> b -> b) ->
-     (a -> b) -> FastStringEnv b -> FastString.FastString -> a -> FastStringEnv b :=
-  fun x y z a b => UniqFM.addToUFM_Acc x y z a b.
+Axiom extendFsEnv_C : forall {a},
+                      (a -> a -> a) ->
+                      FastStringEnv a -> FastString.FastString -> a -> FastStringEnv a.
 
-Definition extendFsEnvList_C {a}
-   : (a -> a -> a) ->
-     FastStringEnv a -> list (FastString.FastString * a)%type -> FastStringEnv a :=
-  fun x y z => UniqFM.addListToUFM_C x y z.
+Axiom extendFsEnv_Acc : forall {a} {b},
+                        (a -> b -> b) ->
+                        (a -> b) -> FastStringEnv b -> FastString.FastString -> a -> FastStringEnv b.
 
-Definition extendFsEnvList {a}
-   : FastStringEnv a ->
-     list (FastString.FastString * a)%type -> FastStringEnv a :=
-  fun x l => UniqFM.addListToUFM x l.
+Axiom extendFsEnvList_C : forall {a},
+                          (a -> a -> a) ->
+                          FastStringEnv a -> list (FastString.FastString * a)%type -> FastStringEnv a.
 
-Definition extendFsEnv {a}
-   : FastStringEnv a -> FastString.FastString -> a -> FastStringEnv a :=
-  fun x y z => UniqFM.addToUFM x y z.
+Axiom extendFsEnvList : forall {a},
+                        FastStringEnv a -> list (FastString.FastString * a)%type -> FastStringEnv a.
 
-Definition emptyFsEnv {a} : FastStringEnv a :=
-  UniqFM.emptyUFM.
+Axiom extendFsEnv : forall {a},
+                    FastStringEnv a -> FastString.FastString -> a -> FastStringEnv a.
 
-Definition emptyDFsEnv {a} : DFastStringEnv a :=
-  UniqDFM.emptyUDFM.
+Axiom emptyFsEnv : forall {a}, FastStringEnv a.
 
-Definition elemFsEnv {a} : FastString.FastString -> FastStringEnv a -> bool :=
-  fun x y => UniqFM.elemUFM x y.
+Axiom emptyDFsEnv : forall {a}, DFastStringEnv a.
 
-Definition delListFromFsEnv {a}
-   : FastStringEnv a -> list FastString.FastString -> FastStringEnv a :=
-  fun x y => UniqFM.delListFromUFM x y.
+Axiom elemFsEnv : forall {a}, FastString.FastString -> FastStringEnv a -> bool.
 
-Definition delFromFsEnv {a}
-   : FastStringEnv a -> FastString.FastString -> FastStringEnv a :=
-  fun x y => UniqFM.delFromUFM x y.
+Axiom delListFromFsEnv : forall {a},
+                         FastStringEnv a -> list FastString.FastString -> FastStringEnv a.
 
-Definition dFsEnvElts {a} : DFastStringEnv a -> list a :=
-  UniqDFM.eltsUDFM.
+Axiom delFromFsEnv : forall {a},
+                     FastStringEnv a -> FastString.FastString -> FastStringEnv a.
 
-Definition alterFsEnv {a}
-   : (option a -> option a) ->
-     FastStringEnv a -> FastString.FastString -> FastStringEnv a :=
-  UniqFM.alterUFM.
+Axiom dFsEnvElts : forall {a}, DFastStringEnv a -> list a.
+
+Axiom alterFsEnv : forall {a},
+                   (option a -> option a) ->
+                   FastStringEnv a -> FastString.FastString -> FastStringEnv a.
 
 (* External variables:
-     bool list op_zt__ option FastString.FastString UniqDFM.UniqDFM UniqDFM.eltsUDFM
-     UniqDFM.emptyUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM UniqFM.UniqFM
-     UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc
-     UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM
-     UniqFM.elemUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.listToUFM
-     UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
+     bool list op_zt__ option FastString.FastString UniqDFM.UniqDFM UniqFM.UniqFM
 *)

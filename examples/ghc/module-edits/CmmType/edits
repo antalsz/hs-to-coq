@@ -1,3 +1,5 @@
+axiomatize module CmmType
+
 # need Word8, etc.
 skip CmmType.narrowU
 skip CmmType.narrowS
@@ -17,7 +19,6 @@ order CmmType.Eq__Width CmmType.cmmEqType CmmType.cmmEqType_ignoring_ptrhood
 
 # something strange with this *derived* instance
 skip CmmType.Ord__Width
-
 
 ## recursive instance definition! replace when we can parse
 redefine Local Definition CmmType.Eq___CmmCat_op_zeze__ : CmmCat -> (CmmCat -> bool) := fun x y => true.

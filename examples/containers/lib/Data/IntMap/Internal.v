@@ -1165,7 +1165,7 @@ Definition splitLookup {a}
                           then Mk_SplitLookup t' None Nil
                           else Mk_SplitLookup Nil None t' else
                      if Data.IntSet.Internal.zero k' m : bool
-                     then mapGT (fun arg_3__ => union arg_3__ r) (go k' l) else
+                     then mapGT (fun arg_2__ => union arg_2__ r) (go k' l) else
                      mapLT (union l) (go k' r)
                  | k', (Tip ky y as t') =>
                      if k' GHC.Base.> ky : bool then Mk_SplitLookup t' None Nil else

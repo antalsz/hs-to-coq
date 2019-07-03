@@ -11,25 +11,22 @@ skip Core.algTcParent
 skip Core.promDcRepInfo
 
 
-skip Core.mkTyConKind
-skip Core.kindTyConKeys
-skip Core.isKindTyCon
+axiomatize definition Core.mkTyConKind
+axiomatize definition Core.kindTyConKeys
+axiomatize definition Core.isKindTyCon
 
-
-## need name of class
-## skip Core.okParent
 
 ## Needs DataCon.dataConExTyVars
-skip Core.isDataProductTyCon_maybe
-skip Core.isDataSumTyCon_maybe 
-skip Core.isProductTyCon 
-skip Core.isPromotedTupleTyCon
+axiomatize definition Core.isDataProductTyCon_maybe
+axiomatize definition Core.isDataSumTyCon_maybe 
+axiomatize definition Core.isProductTyCon 
+axiomatize definition Core.isPromotedTupleTyCon
 
-skip Core.isInjectiveTyCon
-skip Core.isGenerativeTyCon
-skip Core.tyConInjectivityInfo 
+axiomatize definition Core.isInjectiveTyCon
+axiomatize definition Core.isGenerativeTyCon
+axiomatize definition Core.tyConInjectivityInfo 
 
-skip Core.tyConATs
+axiomatize definition Core.tyConATs
 
 # Needs ClassSpec
 # skip Core.tyConAssoc_maybe

@@ -34,7 +34,8 @@ PASS = \
   RedefineAddAxiom \
   AddTheorem \
   Existential \
-	SkipConstructor
+	SkipConstructor \
+	SkipMatches
 
 # tests that *should* pass but currently fail
 TODO_PASS = \
@@ -116,9 +117,10 @@ todo_translate: $(foreach f, $(TODO_TRANSLATE), $(f).fail_translate)
 .SECONDEXPANSION:
 %.v : FORCE $$(wildcard $*/edits) $$(wildcard $*/preamble.v) %.hs
 	@rm -f $*.v
-	@if [ -e $*/preamble.v ]; then P_ARG="-p $*/preamble.v"; else P_ARG=; fi;\
-	if [ -e $*/edits ]; then E_ARG="-e $*/edits"; else E_ARG=; fi;\
-	$(HS_TO_COQ) $${E_ARG} -N -e renamings -o . $${P_ARG} $*.hs 1>/dev/null || true
+	@if [ -e $*/preamble.v ]; then P_ARG="--preamble $*/preamble.v"; else P_ARG=; fi;\
+	 if [ -e $*/midamble.v ]; then M_ARG="--midamble $*/midamble.v"; else M_ARG=; fi;\
+	 if [ -e $*/edits ];      then E_ARG="--edits    $*/edits";      else E_ARG=; fi;\
+	 $(HS_TO_COQ) $${E_ARG} -N -e renamings -o . $${P_ARG} $${M_ARG} $*.hs 1>/dev/null || true
 
 Renamed.v: RenameMe.hs RenameMe.hs-boot RenameMeToo.hs RenameMe/edits
 	@rm -f Renamed.v

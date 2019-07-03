@@ -1,3 +1,5 @@
+axiomatize module EnumSet
+
 data kinds EnumSet.EnumSet Type
 
 rename value GHC.Enum.fromEnum = EnumSet.fromEnumN

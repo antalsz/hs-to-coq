@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require AxiomatizedTypes.
 Require BasicTypes.
 Require Import Core.
 Require Import Data.Foldable.
@@ -55,7 +56,7 @@ Definition cs_vb (arg_0__ : CoreStats) :=
 Definition zeroCS : CoreStats :=
   CS 0 0 0 0 0.
 
-Axiom tyStats : unit -> CoreStats.
+Axiom tyStats : AxiomatizedTypes.Type_ -> CoreStats.
 
 Definition tickSize : Tickish Id -> nat :=
   fun arg_0__ => match arg_0__ with | ProfNote _ _ _ => 1 | _ => 1 end.
@@ -74,7 +75,7 @@ Definition oneTM : CoreStats :=
   let 'CS cs_tm_0__ cs_ty_1__ cs_co_2__ cs_vb_3__ cs_jb_4__ := zeroCS in
   CS 1 cs_ty_1__ cs_co_2__ cs_vb_3__ cs_jb_4__.
 
-Axiom coStats : unit -> CoreStats.
+Axiom coStats : AxiomatizedTypes.Coercion -> CoreStats.
 
 Definition bndrStats : Var -> CoreStats :=
   fun v => plusCS oneTM (tyStats (varType v)).
@@ -84,11 +85,11 @@ Definition letBndrStats : BasicTypes.TopLevelFlag -> Var -> CoreStats :=
     let ty_stats := tyStats (varType v) in
     if orb (isTyVar v) (BasicTypes.isTopLevel top_lvl) : bool then bndrStats v else
     if Id.isJoinId v : bool
-    then plusCS (let 'CS cs_tm_9__ cs_ty_10__ cs_co_11__ cs_vb_12__ cs_jb_13__ :=
+    then plusCS (let 'CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ cs_jb_5__ :=
                    oneTM in
-                 CS cs_tm_9__ cs_ty_10__ cs_co_11__ cs_vb_12__ 1) ty_stats else
-    plusCS (let 'CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ cs_jb_5__ := oneTM in
-            CS cs_tm_1__ cs_ty_2__ cs_co_3__ 1 cs_jb_5__) ty_stats.
+                 CS cs_tm_1__ cs_ty_2__ cs_co_3__ cs_vb_4__ 1) ty_stats else
+    plusCS (let 'CS cs_tm_8__ cs_ty_9__ cs_co_10__ cs_vb_11__ cs_jb_12__ := oneTM in
+            CS cs_tm_8__ cs_ty_9__ cs_co_10__ 1 cs_jb_12__) ty_stats.
 
 Definition bndrSize : Var -> nat :=
   fun arg_0__ => 1.
@@ -109,9 +110,8 @@ Definition exprSize : CoreExpr -> nat :=
            | Let b e => bindSize b + exprSize e
            | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
            | Cast e _ => 1 + exprSize e
-           | Tick n e => tickSize n + exprSize e
-           | Type_ _ => 1
-           | Coercion _ => 1
+           | Mk_Type _ => 1
+           | Mk_Coercion _ => 1
            end with bindSize (arg_0__ : CoreBind) : nat
                       := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
                            let 'pair b e := arg_0__ in
@@ -137,9 +137,8 @@ Definition bindSize : CoreBind -> nat :=
            | Let b e => bindSize b + exprSize e
            | Case e b _ as_ => exprSize e + bndrSize b + 1 + sum (map altSize as_)
            | Cast e _ => 1 + exprSize e
-           | Tick n e => tickSize n + exprSize e
-           | Type_ _ => 1
-           | Coercion _ => 1
+           | Mk_Type _ => 1
+           | Mk_Coercion _ => 1
            end with bindSize (arg_0__ : CoreBind) : nat
                       := let pairSize (arg_0__ : (Var * CoreExpr)%type) : nat :=
                            let 'pair b e := arg_0__ in
@@ -166,15 +165,14 @@ Definition bindStats : BasicTypes.TopLevelFlag -> CoreBind -> CoreStats :=
            match arg_0__ with
            | Mk_Var _ => oneTM
            | Lit _ => oneTM
-           | Type_ t => tyStats t
-           | Coercion c => coStats c
+           | Mk_Type t => tyStats t
+           | Mk_Coercion c => coStats c
            | App f a => plusCS (exprStats f) (exprStats a)
            | Lam b e => plusCS (bndrStats b) (exprStats e)
            | Let b e => plusCS (bindStats BasicTypes.NotTopLevel b) (exprStats e)
            | Case e b _ as_ =>
                plusCS (plusCS (exprStats e) (bndrStats b)) (sumCS altStats as_)
            | Cast e co => plusCS (coStats co) (exprStats e)
-           | Tick _ e => exprStats e
            end with bindStats (arg_0__ : BasicTypes.TopLevelFlag) (arg_1__ : CoreBind)
                       : CoreStats
                       := let bindingStats (top_lvl : BasicTypes.TopLevelFlag) (v : Var) (r : CoreExpr)
@@ -196,15 +194,14 @@ Definition exprStats : CoreExpr -> CoreStats :=
            match arg_0__ with
            | Mk_Var _ => oneTM
            | Lit _ => oneTM
-           | Type_ t => tyStats t
-           | Coercion c => coStats c
+           | Mk_Type t => tyStats t
+           | Mk_Coercion c => coStats c
            | App f a => plusCS (exprStats f) (exprStats a)
            | Lam b e => plusCS (bndrStats b) (exprStats e)
            | Let b e => plusCS (bindStats BasicTypes.NotTopLevel b) (exprStats e)
            | Case e b _ as_ =>
                plusCS (plusCS (exprStats e) (bndrStats b)) (sumCS altStats as_)
            | Cast e co => plusCS (coStats co) (exprStats e)
-           | Tick _ e => exprStats e
            end with bindStats (arg_0__ : BasicTypes.TopLevelFlag) (arg_1__ : CoreBind)
                       : CoreStats
                       := let bindingStats (top_lvl : BasicTypes.TopLevelFlag) (v : Var) (r : CoreExpr)
@@ -226,9 +223,10 @@ Definition bindingStats
    `CoreStats.Outputable__CoreStats' *)
 
 (* External variables:
-     App Case Cast Coercion CoreAlt CoreBind CoreExpr Id Lam Let Lit Mk_Var NonRec
-     ProfNote Rec Tick Tickish Type_ Var bool foldl' isTyVar list map nat op_z2218U__
-     op_zp__ op_zt__ orb pair sum unit varType BasicTypes.NotTopLevel
-     BasicTypes.TopLevel BasicTypes.TopLevelFlag BasicTypes.isTopLevel
-     GHC.Err.Build_Default GHC.Err.Default GHC.Err.default Id.isJoinId
+     App Case Cast CoreAlt CoreBind CoreExpr Id Lam Let Lit Mk_Coercion Mk_Type
+     Mk_Var NonRec ProfNote Rec Tickish Var bool foldl' isTyVar list map nat
+     op_z2218U__ op_zp__ op_zt__ orb pair sum varType AxiomatizedTypes.Coercion
+     AxiomatizedTypes.Type_ BasicTypes.NotTopLevel BasicTypes.TopLevel
+     BasicTypes.TopLevelFlag BasicTypes.isTopLevel GHC.Err.Build_Default
+     GHC.Err.Default GHC.Err.default Id.isJoinId
 *)

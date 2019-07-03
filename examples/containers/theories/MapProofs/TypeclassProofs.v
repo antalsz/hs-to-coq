@@ -102,7 +102,7 @@ Qed.
 
 
 (** ** Verification of [Eq] *)
-Global Program Instance Eq_Map_WF `{EqLaws a} : Eq_ (WFMap e a) := fun _ k => k
+Global Program Instance Eq_Map_WF `{ Eq_ a } : Eq_ (WFMap e a) := fun _ k => k
   {| op_zeze____ := @op_zeze__ (Map e a) _
    ; op_zsze____ := @op_zsze__ (Map e a) _
   |}.

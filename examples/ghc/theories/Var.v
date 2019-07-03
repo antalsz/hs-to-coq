@@ -195,12 +195,12 @@ Qed.
 *)
 
 Inductive almostEqual : Var -> Var -> Prop :=
- | AE_TyVar   : forall n u ty,
+(*  | AE_TyVar   : forall n u ty,
    almostEqual (Mk_TyVar n u ty)
-               (Mk_TyVar n u ty)
- | AE_TcTyVar : forall n u ty1 ty2,
+               (Mk_TyVar n u ty)  *)
+(* | AE_TcTyVar : forall n u ty1 ty2,
    almostEqual (Mk_TcTyVar n u ty1 ty2)
-               (Mk_TcTyVar n u ty1 ty2)
+               (Mk_TcTyVar n u ty1 ty2) *)
  | AE_Id : forall n u ty ids idd id1 id2,
    almostEqual (Mk_Id n u ty ids idd id1)
                (Mk_Id n u ty ids idd id2).
@@ -242,9 +242,10 @@ Lemma isJoinId_eq : forall v,
   isJoinId v = match isJoinId_maybe v with | None => false |Some _ => true end.
 Proof.
   unfold isJoinId.
-  induction v; auto.
-  destruct id_details; simpl;  unfold isJoinId_maybe; simpl;
-  rewrite andb_false_r; reflexivity.
+  induction v; auto; simpl.
+  unfold isJoinId_maybe; simpl.
+  rewrite andb_false_r. 
+  all: destruct id_details; done. 
 Qed.
 
 Lemma isJoinId_ae: forall v1 v2,
@@ -296,8 +297,8 @@ Proof.
   unfold isGlobalId.
   unfold isLocalId. 
   destruct var.
-  simpl. tauto.
-  tauto.
+  simpl. 
+  all: try tauto.
   destruct idScope; simpl; tauto.
 Qed.
 
@@ -308,9 +309,8 @@ Proof.
   unfold isLocalVar.
   unfold isGlobalId.
   unfold isLocalId. 
-  destruct var.
-  simpl. tauto.
-  tauto.
+  destruct var; simpl.
+  all: try tauto.
   destruct idScope; simpl; tauto.
 Qed.
 

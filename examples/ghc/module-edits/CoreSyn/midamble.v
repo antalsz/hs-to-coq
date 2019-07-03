@@ -45,9 +45,9 @@ Fixpoint size_AnnExpr' {a}{b} (e: AnnExpr' a b) :=
            size_AnnExpr' body)
 
   | AnnCast (_,e) _ => S (size_AnnExpr' e)
-  | AnnTick _ (_,e) => S (size_AnnExpr' e)
+(*  | AnnTick _ (_,e) => S (size_AnnExpr' e) *)
   | AnnType _ => 0
-  | AnnCoercion _ => 0
+  | AnnCoercion _ => 0 
   end.
 
 (* ---------------------------------- *)

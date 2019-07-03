@@ -65,13 +65,17 @@ jobs:
 
   - stage: Tests and Examples
 
-    name: tests and base tests
+    name: GHC (including transformers)
     script:
       - eval $(opam config env)
-      - stack --no-terminal --install-ghc install
       - make -j2 -C base
-      - make -j2 -C examples/tests
-      - make -j2 -C examples/base-tests
+      - make -j2 -C base-thy
+      - make -j2 -C examples/containers
+      - make -j2 -C examples/transformers
+      - make -j2 -C examples/containers/theories
+      - make -j2 -C examples/ghc/lib
+      - make -j2 -C examples/ghc/theories
+      - make -j2 -C examples/core-semantics
 
   - name: Containers (theory)
     script:
@@ -108,17 +112,13 @@ jobs:
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
 
-  - name: GHC (including transformers)
+  - name: tests and base tests
     script:
       - eval $(opam config env)
+      - stack --no-terminal --install-ghc install
       - make -j2 -C base
-      - make -j2 -C base-thy
-      - make -j2 -C examples/containers
-      - make -j2 -C examples/transformers
-      - make -j2 -C examples/containers/theories
-      - make -j2 -C examples/ghc/lib
-      - make -j2 -C examples/ghc/theories
-      - make -j2 -C examples/core-semantics
+      - make -j2 -C examples/tests
+      - make -j2 -C examples/base-tests
 
   - name: Translating base (ensures convenience copy is up-to-date)
     script:

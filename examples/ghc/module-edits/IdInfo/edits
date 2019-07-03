@@ -1,21 +1,3 @@
-
-###################################
-# Redefine RuleInfo so that it is always empty. This is *safe*
-
-redefine Inductive  Core.RuleInfo : Type := Core.EmptyRuleInfo.
-redefine Definition Core.emptyRuleInfo   := Core.EmptyRuleInfo.
-redefine Definition Core.isEmptyRuleInfo  : Core.RuleInfo -> bool
-   := fun x => true.
-redefine Definition Core.ruleInfoFreeVars : Core.RuleInfo -> Core.DVarSet
-   := fun x => Core.emptyDVarSet.
-redefine Definition Core.ruleInfoRules    : Core.RuleInfo -> list Core.CoreRule 
-   := fun x => nil.
-redefine Definition Core.setRuleInfoHead  : Name.Name -> (Core.RuleInfo -> Core.RuleInfo)
-   := fun x y => Core.EmptyRuleInfo.
-
-###################################
-##################################
-
 # needs a default for RecSelParent *before* one can be 
 # provided in the midamble
 skip Core.sel_tycon
@@ -23,11 +5,8 @@ skip Core.df_con
 
 ## needs Type.resultIdLevPoly
 skip Core.setLevityInfoWithType
-## needs IdInfo.levityInfo
-## skip Core.isNeverLevPolyIdInfo  
 
 ## Printing
-
 skip Core.pprArityInfo
 skip Core.pprCafInfo
 skip Core.pprIdDetails
@@ -36,6 +15,5 @@ skip Core.ppArityInfo
 skip Core.ppCafInfo 
 
 ## Ordering
-
 order Core.Eq___CafInfo Core.Ord__CafInfo
 order Core.Eq___TyCon Core.Eq___RecSelParent_op_zeze__

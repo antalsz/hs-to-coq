@@ -1748,11 +1748,12 @@ Qed.
 (** ** [filterVarSet] *)
 
 Lemma filterVarSet_comp : forall f f' vs,
-    filterVarSet f (filterVarSet f' vs) = filterVarSet (fun v => f v && f' v) vs.
+    filterVarSet f (filterVarSet f' vs) [=] filterVarSet (fun v => f v && f' v) vs.
 Proof.
   intros.
   destruct vs; destruct getUniqSet'. simpl. do 2 f_equal.
-  apply filter_comp.
+  rewrite filter_comp.
+  reflexivity.
 Qed.
 
 

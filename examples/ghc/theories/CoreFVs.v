@@ -387,6 +387,16 @@ Proof.
   rewrite Ih => //.
 Qed.  
 
+
+Lemma Denotes_fvVarSet e: Denotes (FV.fvVarSet (expr_fvs e)) (expr_fvs e).
+Proof. 
+  move: (expr_fvs_WF e) => [vs h].
+  move: (DenotesfvVarSet _ _ h) => eq.
+  rewrite eq.
+  auto.
+Qed.
+
+
 Lemma exprFreeVars_Let_Rec:
   forall pairs body,
   exprFreeVars (Let (Rec pairs) body) [=]
@@ -403,11 +413,14 @@ Proof.
   unfold expr_fvs. fold expr_fvs.
   move: (expr_fvs_WF body) => [vbody h1].
   denote h1 h5.
+
   set (f:= (fun (x : CoreExpr) (fv_cand1 : FV.InterestingVarFun)
                     (in_scope : VarSet) =>
                   [eta expr_fvs x (fun v : Var => fv_cand1 v && isLocalVar v)
                          in_scope])).
+
   set f1 := fun rhs => filterVarSet isLocalVar (FV.fvVarSet (expr_fvs rhs)).
+
   have h: Forall2 Denotes 
               (map f1 (map snd pairs))
               (map f (map snd pairs)).
@@ -433,7 +446,7 @@ Proof.
     apply g.
     symmetry.
     done.
-  }
+  } 
 
   move : (mapUnionVarSet_mapUnionFV _ _ _ _ h) => h2.
   inversion h2.
@@ -454,15 +467,13 @@ Proof.
     move: p => [bndr rhs]. simpl.
     move=> Ih.
     econstructor; eauto.
-    admit.
-(*    clear Ih f f1.
-    move: (expr_fvs_WF rhs) => [vsr h0].
-    move: (emptyVarSet_bndrRuleAndUnfoldingFVs bndr) => h3. 
-    move: (unionVarSet_unionFV _ _ _ _ h3 h0) => h4.
-    move: (DenotesfvVarSet _ _ h4) => h2.
-    rewrite -> unionEmpty_l in h2.
-    rewrite <- h2 in h0.
-    auto. *)
+    rewrite DenotesfvVarSet.
+    eapply unionVarSet_unionFV.
+    eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
+    eapply Denotes_fvVarSet.
+    eapply unionVarSet_unionFV.
+    eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
+    eapply Denotes_fvVarSet.
   }
 
   move: (unionsVarSet_unionsFV _ _ g0) => h4.
@@ -481,20 +492,27 @@ Proof.
   rewrite List.map_map.
   unfold f1.
   rewrite push_foldable.
-  + admit.
-  +
-  move=> x y.
-  rewrite unionVarSet_filterVarSet.
-  reflexivity.
-  done.
-Admitted.
-
-Lemma Denotes_fvVarSet e: Denotes (FV.fvVarSet (expr_fvs e)) (expr_fvs e).
-Proof. 
-  move: (expr_fvs_WF e) => [vs h].
-  move: (DenotesfvVarSet _ _ h) => eq.
-  rewrite eq.
-  auto.
+  + generalize pairs.
+    induction pairs0. hs_simpl. reflexivity.
+    hs_simpl. rewrite map_cons.
+    rewrite map_cons. destruct a. 
+    simpl.
+    rewrite Foldable_foldr_cons.
+    rewrite Foldable_foldr_cons.
+    rewrite <- IHpairs0.
+    f_equiv.
+    eapply filterVarSet_equal. eauto.
+    eapply DenotesfvVarSet.
+    rewrite DenotesfvVarSet.
+    eapply unionVarSet_unionFV.
+    eapply emptyVarSet_bndrRuleAndUnfoldingFVs.
+    eapply Denotes_fvVarSet.
+    rewrite unionEmpty_l.
+    eapply Denotes_fvVarSet.
+  + move=> x y.
+    rewrite unionVarSet_filterVarSet.
+    reflexivity.
+    done.
 Qed.
 
 Lemma exprFreeVars_Case:

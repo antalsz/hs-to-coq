@@ -2,12 +2,15 @@ From Coq Require Import ssreflect ssrbool ssrfun.
 From mathcomp Require Import ssrnat.
 Set Bullet Behavior "Strict Subproofs".
 
+Generalizable All Variables.
+
 Require Import Coq.Lists.List.
 
 Require Import GHC.Base.
 Import GHC.Base.Notations.
 Require Import Data.Foldable.
 Require Import Data.Traversable.
+Require Import Data.Maybe.
 
 Require Import Proofs.GHC.Base.
 Require Import Proofs.Data.Foldable.
@@ -118,8 +121,21 @@ Hint Rewrite (@stripTicksT_nil CoreBndr) : hs_simpl.
 Record WellScopedCSEnv (env : CSEnv) (vars : VarSet) : Prop :=
  IsWellScopedCSEnv
    { ws_subst   : WellScoped_Subst (cs_subst env) vars
-   ; ws_map     : const True (cs_map env)
-   ; ws_rec_map : const True (cs_rec_map env) }.
+   ; ws_map     : TrieMap_All (WellScoped^~ vars) (cs_map env)
+   ; ws_rec_map : TrieMap_All (WellScoped^~ vars) (cs_rec_map env) }.
+
+Theorem WellScoped_Subst_subset subst vars :
+  WellScoped_Subst subst vars ->
+  vars {<=} getSubstInScopeVars subst.
+Proof.
+  case: subst => [in_scope_set subst_env /= _ _].
+  
+  (* Specialize everything *)
+  unfold "{<=}" => WSS var; move: WSS => [/(_ var) WSS_iss /(_ var) WSS_env]; move: WSS_iss WSS_env.
+
+  case def_expr: (lookupVarEnv _) => [expr|]; last by rewrite lookupVarSet_minusDom_1.
+  case def_v: (lookupVarSet vars var) => [v|//] _ WS.
+Admitted.
 
 Lemma tryForCSE_simpl env expr :
   tryForCSE env expr = match lookupCSEnv env (cseExpr env expr) with
@@ -130,6 +146,8 @@ Proof.
   rewrite /tryForCSE; hs_simpl.
   by case: (lookupCSEnv _ _) => [e|//]; hs_simpl.
 Qed.
+
+Ltac simpl_Key := rewrite /Key /TrieMap__CoreMap /TrieMap.TrieMap__CoreMap_Key.
 
 Definition WS_cseExpr vars env e :
   WellScopedCSEnv env             vars ->
@@ -145,8 +163,8 @@ Proof.
     vars
     [[in_scope id_env tm cm] cs_map cs_rec_map]
     //; hs_simpl;
-    move=> WSenv; move: (WSenv) => [WSsubst _ _];
-    rewrite /cs_subst in WSsubst.
+    move=> WSenv; move: (WSenv) => [WSsubst WSmap WSrec];
+    rewrite /cs_subst in WSsubst; rewrite /CSE.cs_map in WSmap; rewrite /CSE.cs_rec_map in WSrec.
   
   - rewrite /cseExpr /lookupSubst => WSv.
     eapply lookupIdSubst_ok; eassumption.
@@ -154,7 +172,9 @@ Proof.
   - move=> /= [WSe1 WSe2]; split; first by apply (IH1 vars).
     rewrite tryForCSE_simpl /=.
     case LOOKUP: (lookupCoreMap _ _) => [e|]; last by apply (IH2 vars).
-    admit.
+    eapply TrieMap_All_lookup_Some in LOOKUP; last eassumption; simpl in LOOKUP.
+    eapply WellScoped_StrongSubset; first by apply LOOKUP.
+    by apply WellScoped_Subst_subset in WSsubst.
   
   - rewrite /= /addBinder /= => -[GLV WSe].
     case SB: (substBndr _ _) => [sub' v'] /=.
@@ -162,12 +182,25 @@ Proof.
     move: (GoodLocalVar_substBndr _ _ _ _ GLV SB) => GLV'.
     split=> //.
     specialize (IH (extendVarSet vars v) (CS sub' cs_map cs_rec_map)).
+    case def_sub': sub' IH SB SE WSsubst' => [in_scope' id_env' tm' cm'];
+      rewrite -!def_sub' => IH SB SE WSsubst'.
+    move: (SE); rewrite {1}def_sub' /SubstExtends /=; hs_simpl.
+    move=> [_ [_ [_ [FL [inScopeVars_eq [minusDom_subset VEE]]]]]].
+    move: FL => /freshList_cons [fresh_v' _].
     lapply IH; first move=> {IH} IH.
     + move: IH; rewrite /cs_subst => /(_ WSe) IH.
       apply WellScoped_StrongSubset with (vs1 := getSubstInScopeVars sub') => //.
-      destruct sub' as [in_scope' id_env' [] []] => /=.
-      move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]].
-    + constructor=> //; rewrite /cs_subst //.
+      by rewrite def_sub'; case: inScopeVars_eq.
+    + constructor=> //; rewrite /cs_subst //=.
+      * eapply TrieMap_All_impl_lookup; last eassumption.
+        simpl_Key.
+        move=> k v''.
+
+        clear
+        
+        
+        move=> /= v'' /=.
+        apply WellScoped_extendVarSet_fresh
 
   - rewrite (lock cse_bind) /= -(lock cse_bind) => -[[GLV WS_rhs] WS_ext].
     rewrite /addBinder /substBndr isn'tTyVar isn'tCoVar.

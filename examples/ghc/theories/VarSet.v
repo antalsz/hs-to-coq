@@ -1615,7 +1615,8 @@ Qed.
 (** ** [disjointVarSet]  *)
 
 Instance disjointVarSet_m : Proper (Equal ==> Equal ==> Logic.eq) disjointVarSet.
-Proof. 
+Proof.
+ 
   move => x1 y1.  
   move: (@ValidVarSet_Axiom x1).
   move: (@ValidVarSet_Axiom y1).
@@ -1637,9 +1638,14 @@ Proof.
   unfold Equal, In, elemVarSet, UniqSet.elementOfUniqSet, UniqFM.elemUFM in Eq2.
   apply null_intersection_eq; eauto.
   move=> k1.  
-  split. move=> Ink1.
-Admitted.
-
+  specialize (Eq1 (Mk_Id GHC.Err.default k1 GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default)).
+  simpl in Eq1.
+  auto.
+  move=> k1.
+  specialize (Eq2 (Mk_Id GHC.Err.default k1 GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default)).
+  simpl in Eq2.
+  auto.
+Qed.
 
 (*
 Lemma foldl'_simplify (a b c :Type) (f:c -> b) (g:b->c) (h:b -> a -> b)
@@ -1934,7 +1940,14 @@ Lemma filterVarSet_delVarSet f vs v :
 Proof.
   move=> Ff. unfold RespectsVar in Ff.
   set_b_iff. 
-Admitted.
+  unfold Equal.
+  move=> x.
+  rewrite filter_iff; auto.
+  rewrite remove_iff; auto.
+  rewrite remove_iff; auto.
+  rewrite filter_iff; auto.
+  fsetdec.
+Qed.
 
 
 Lemma filterVarSet_delVarSetList:

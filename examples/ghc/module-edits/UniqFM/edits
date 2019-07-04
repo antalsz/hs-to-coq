@@ -5,6 +5,10 @@ skip UniqFM.pprUFM
 # Needs Data.IntMap.Internal.mergeA
 skip UniqFM.equalKeysUFM
 
+# Needs Data.IntMap.Internal.mergeWithKey
+axiomatize definition UniqFM.plusUFM_CD
+axiomatize definition UniqFM.plusMaybeUFM_C
+
 # pick result type, GHC.Num.Int or N or nat?
 rename type GHC.Num.Int = nat
 

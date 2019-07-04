@@ -555,7 +555,7 @@ Proof.
             lookupVarSet (extendVarSetList vs vs2) v) as Htmp
       by (rewrite Htmp; reflexivity).
     rewrite -> exprFreeVars_Var in H by assumption.
-    rewrite delVarSetList_rev in H.
+    setoid_rewrite delVarSetList_rev in H.
     clear -H.
     (* duplication with isJoinPointsValid_fresh_updJPSs_aux here *)
     induction vs2 using rev_ind.

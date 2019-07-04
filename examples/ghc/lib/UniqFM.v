@@ -52,17 +52,8 @@ Definition ufmToIntMap {elt} : UniqFM elt -> IntMap.IntMap elt :=
 Definition sizeUFM {elt} : UniqFM elt -> nat :=
   fun '(UFM m) => IntMap.size m.
 
-Definition plusUFM_CD {elt}
-   : (elt -> elt -> elt) ->
-     UniqFM elt -> elt -> UniqFM elt -> elt -> UniqFM elt :=
-  fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ =>
-    match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-    | f, UFM xm, dx, UFM ym, dy =>
-        UFM (IntMap.mergeWithKey (fun arg_5__ arg_6__ arg_7__ =>
-                                    match arg_5__, arg_6__, arg_7__ with
-                                    | _, x, y => Some (f x y)
-                                    end) (IntMap.map (fun x => f x dy)) (IntMap.map (fun y => f dx y)) xm ym)
-    end.
+Axiom plusUFM_CD : forall {elt},
+                   (elt -> elt -> elt) -> UniqFM elt -> elt -> UniqFM elt -> elt -> UniqFM elt.
 
 Definition plusUFM_C {elt}
    : (elt -> elt -> elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt :=
@@ -77,16 +68,8 @@ Definition plusUFM {elt} : UniqFM elt -> UniqFM elt -> UniqFM elt :=
     | UFM x, UFM y => UFM (IntMap.union y x)
     end.
 
-Definition plusMaybeUFM_C {elt}
-   : (elt -> elt -> option elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt :=
-  fun arg_0__ arg_1__ arg_2__ =>
-    match arg_0__, arg_1__, arg_2__ with
-    | f, UFM xm, UFM ym =>
-        UFM (IntMap.mergeWithKey (fun arg_3__ arg_4__ arg_5__ =>
-                                    match arg_3__, arg_4__, arg_5__ with
-                                    | _, x, y => f x y
-                                    end) GHC.Base.id GHC.Base.id xm ym)
-    end.
+Axiom plusMaybeUFM_C : forall {elt},
+                       (elt -> elt -> option elt) -> UniqFM elt -> UniqFM elt -> UniqFM elt.
 
 Definition partitionUFM {elt}
    : (elt -> bool) -> UniqFM elt -> (UniqFM elt * UniqFM elt)%type :=
@@ -438,20 +421,20 @@ Program Instance Monoid__UniqFM {a} : GHC.Base.Monoid (UniqFM a) :=
            GHC.Base.mempty__ := Monoid__UniqFM_mempty |}.
 
 (* External variables:
-     Some andb bool false list nat op_zt__ option orb pair true unit
-     Data.Foldable.foldl Data.Foldable.foldl' Data.IntSet.Internal.IntSet
-     GHC.Base.Eq_ GHC.Base.Functor GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String
-     GHC.Base.flip GHC.Base.fmap GHC.Base.fmap__ GHC.Base.foldr GHC.Base.id
-     GHC.Base.map GHC.Base.mappend__ GHC.Base.mconcat__ GHC.Base.mempty__
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____ GHC.Base.op_zlzd__
-     GHC.Base.op_zlzd____ GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
-     GHC.Prim.coerce IntMap.IntMap IntMap.adjust IntMap.alter IntMap.delete
-     IntMap.difference IntMap.elems IntMap.empty IntMap.filter IntMap.filterWithKey
+     andb bool false list nat op_zt__ option orb pair true unit Data.Foldable.foldl
+     Data.Foldable.foldl' Data.IntSet.Internal.IntSet GHC.Base.Eq_ GHC.Base.Functor
+     GHC.Base.Monoid GHC.Base.Semigroup GHC.Base.String GHC.Base.flip GHC.Base.fmap
+     GHC.Base.fmap__ GHC.Base.foldr GHC.Base.map GHC.Base.mappend__
+     GHC.Base.mconcat__ GHC.Base.mempty__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__
+     GHC.Base.op_zeze____ GHC.Base.op_zlzd__ GHC.Base.op_zlzd____
+     GHC.Base.op_zlzlzgzg__ GHC.Base.op_zlzlzgzg____ GHC.Base.op_zsze__
+     GHC.Base.op_zsze____ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel GHC.Prim.coerce
+     IntMap.IntMap IntMap.adjust IntMap.alter IntMap.delete IntMap.difference
+     IntMap.elems IntMap.empty IntMap.filter IntMap.filterWithKey
      IntMap.findWithDefault IntMap.foldr IntMap.foldrWithKey IntMap.insert
      IntMap.insertWith IntMap.intersection IntMap.intersectionWith IntMap.keys
      IntMap.keysSet IntMap.lookup IntMap.map IntMap.mapWithKey IntMap.member
-     IntMap.mergeWithKey IntMap.null IntMap.partition IntMap.singleton IntMap.size
-     IntMap.toList IntMap.union IntMap.unionWith Unique.Uniquable Unique.Unique
-     Unique.getUnique Unique.getWordKey
+     IntMap.null IntMap.partition IntMap.singleton IntMap.size IntMap.toList
+     IntMap.union IntMap.unionWith Unique.Uniquable Unique.Unique Unique.getUnique
+     Unique.getWordKey
 *)

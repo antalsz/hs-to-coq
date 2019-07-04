@@ -37,6 +37,18 @@ Unset Printing Implicit Defensive.
 Set Bullet Behavior "Strict Subproofs".
 
 
+Lemma IntMapEq_VarSetEq : forall x y,
+    x == y ->
+    UniqSet.Mk_UniqSet (UniqFM.UFM x) [=] UniqSet.Mk_UniqSet (UniqFM.UFM y).
+Proof.
+  intros. constructor.
+  - unfold In. simpl. intros.
+    eapply IntMap.Eq_membership in H.
+    erewrite H0 in H. symmetry. move /Eq_eq in H. assumption.
+  - unfold In. simpl. intros.
+    eapply IntMap.Eq_membership in H.
+    erewrite H0 in H. move /Eq_eq in H. assumption.
+Qed.
 
 (* Stephanie's hack. *)
 Lemma fold_is_true : forall b, b = true <-> b.
@@ -664,6 +676,18 @@ Proof.
   erewrite <- eqlist_Foldable_elem; eauto using EqLaws_Var.
 Qed.
 
+Instance delVarSet_m : 
+  Proper (Equal ==> (fun x y => x == y) ==> Equal) delVarSet.
+Proof.
+  intros x y H s s' H0 a.
+  replace (delVarSet x s) with (delVarSetList x [s]).
+  replace (delVarSet y s') with (delVarSetList y [s']).
+  assert (eqlistA (_==_) [s] [s']).
+  { constructor; [assumption|constructor]. }
+  rewrite H. rewrite H1. reflexivity.
+  rewrite delVarSetList_cons delVarSetList_nil //=. 
+  rewrite delVarSetList_cons delVarSetList_nil //=.
+Qed.
 
 (* We can commute the order of addition to varsets. 
    This is only true for [=] *)
@@ -1100,23 +1124,20 @@ Qed.
 (* These next two rely on this strong property about the unique 
    representations of IntMaps. *)
 Lemma delVarSet_commute : forall x y vs, 
-    delVarSet (delVarSet vs x) y = delVarSet (delVarSet vs y) x.
+    delVarSet (delVarSet vs x) y [=] delVarSet (delVarSet vs y) x.
 Proof.
   intros.
   unfold delVarSet.
   unfold UniqSet.delOneFromUniqSet.
   destruct vs.
-  f_equal.
-  unfold UniqFM.delFromUFM.
-  destruct getUniqSet'.
-  f_equal.
-  set (kx := Unique.getWordKey (Unique.getUnique x)).
-  set (ky := Unique.getWordKey (Unique.getUnique y)).
+  unfold UniqFM.delFromUFM. destruct getUniqSet'.
+  apply IntMapEq_VarSetEq.
   eapply delete_commute; eauto.
+  apply EqLaws_Var.
 Qed.
 
 Lemma delVarSetList_cons2:
-  forall vs e a, delVarSetList e (a :: vs) = delVarSet (delVarSetList e vs) a.
+  forall vs e a, delVarSetList e (a :: vs) [=] delVarSet (delVarSetList e vs) a.
 Proof.
   induction vs; intros e a1;
   rewrite -> delVarSetList_cons in *.
@@ -1128,15 +1149,15 @@ Proof.
     rewrite delVarSet_commute.
     rewrite <- IHvs.
     rewrite delVarSetList_cons.
-    auto.
+    reflexivity.
 Qed.
 
 Lemma delVarSetList_rev:
   forall vs1 vs2,
-  delVarSetList vs1 (rev vs2) = delVarSetList vs1 vs2.
+  delVarSetList vs1 (rev vs2) [=] delVarSetList vs1 vs2.
 Proof.
   induction vs2.
-  - simpl. auto.
+  - simpl. reflexivity.
   - simpl rev.
     rewrite delVarSetList_cons.
     rewrite delVarSetList_app.
@@ -1748,19 +1769,6 @@ Qed.
 
 
 (** ** [filterVarSet] *)
-
-Lemma IntMapEq_VarSetEq : forall x y,
-    x == y ->
-    UniqSet.Mk_UniqSet (UniqFM.UFM x) [=] UniqSet.Mk_UniqSet (UniqFM.UFM y).
-Proof.
-  intros. constructor.
-  - unfold In. simpl. intros.
-    eapply IntMap.Eq_membership in H.
-    erewrite H0 in H. symmetry. move /Eq_eq in H. assumption.
-  - unfold In. simpl. intros.
-    eapply IntMap.Eq_membership in H.
-    erewrite H0 in H. move /Eq_eq in H. assumption.
-Qed.
 
 Lemma filterVarSet_comp : forall f f' vs,
     filterVarSet f (filterVarSet f' vs) [=] filterVarSet (fun v => f v && f' v) vs.

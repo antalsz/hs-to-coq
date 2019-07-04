@@ -16,26 +16,6 @@ Definition IntMap := WFMap Word.
 Global Instance Eq_IntMap {A} `{ Base.Eq_ A} : Base.Eq_ (IntMap A) :=
   Eq_Map_WF.
 
-
-Section WF.
-
-  Context { e a b c : Type}.
-
-  Context `{Base.Eq_ e}.
-  Context `{Base.EqLaws e}.
-  Context `{Base.Ord e}.
-  Context `{OrdTactic.OrdLaws e}.
-
-  Axiom mergeWithKey_WF :
-    forall (f : e -> a -> b -> option c)
-      (g : Map e a -> Map e c)
-      (h : Map e b -> Map e c) x y,
-      WF x -> WF y ->
-      WF (mergeWithKey f g h x y).
-
-End WF.
-
-
 Ltac prove_WF :=
   match goal with
   | [ |- WF (proj1_sig ?x) ] =>
@@ -97,25 +77,6 @@ Section IntMap.
       apply /Eq_eq =>//.
     - prove_WF.
   Defined.
-
-  Program Definition mergeWithKey : (Word -> A -> B -> option C) ->
-                                    (IntMap A -> IntMap C) ->
-                                    (IntMap B -> IntMap C) ->
-                                    IntMap A -> IntMap B -> IntMap C :=
-    mergeWithKey.
-  Next Obligation.
-    (* This is not provable, and I do not have a better way of
-       addressing it at the moment. *)
-  Admitted.
-  Next Obligation.
-    (* This is not provable, and I do not have a better way of
-       addressing it at the moment. *)
-  Admitted.
-  Next Obligation. apply mergeWithKey_WF; prove_WF. Defined.
-
-  Coercion unfoldIntMap (m : IntMap A) : Map Word A :=
-    let (x, _) := m in x.
-
 
   Program Definition filter : (A -> bool) -> IntMap A -> IntMap A := filter.
   Next Obligation. apply filter_WF. destruct x0. assumption. Defined.

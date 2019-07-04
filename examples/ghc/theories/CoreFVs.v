@@ -148,6 +148,20 @@ Proof.
   eauto using addBndr_fv.
 Qed.
 
+(** A very specialized [Proper] instance, written for the sole purpose
+    of proving [delVarSetList_commute]. *)
+Instance foldl_m :
+  Proper (Equal ==> (fun (a b : list Var) => a = b) ==> Equal)
+         (Foldable.foldl delVarSet).
+Proof.
+  intros s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  induction l2.
+  - rewrite /Foldable.foldl //=.
+  - intros s1 s2 Heqs. rewrite !Foldable_foldl_cons.
+    apply IHl2. rewrite Heqs. reflexivity.
+Qed.
 
 Lemma delVarSetList_commute :forall (bndrs:list Var) vs bndr,
   Foldable.foldl delVarSet (delVarSet vs bndr) bndrs [=]

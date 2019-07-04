@@ -1098,7 +1098,48 @@ Section in_exitifyRec.
       + rewrite IHxs. reflexivity. 
       + rewrite IHxs. reflexivity. 
   Qed.
- 
+
+  (** A few very specialized lemmata for proof purpose. *)
+  Require Import Coq.Classes.Morphisms.
+  Require Import Proofs.VarSetFSet.
+
+  Definition varset_pair_eq (x y : VarSet * list Id) :=
+    let (a, b) := x in
+    let (c, d) := y in
+    Equal a c /\ b = d.
+
+  Instance pair_l_m :
+    Proper (Equal ==> Logic.eq ==> varset_pair_eq) pair.
+  Proof.
+    intros v1 v2 Heq1 ? ? ?; subst.
+    constructor; auto.
+  Qed.
+  
+  Instance fold_right_m:
+    Proper (varset_pair_eq ==> Logic.eq ==> varset_pair_eq) (fold_right pick).
+  Proof.
+    intros [v1 ?] [v2 ?] Heq ? ? ?; subst.
+    induction y; simpl.
+    - apply Heq.
+    - remember (fold_right pick (v1, l) y)  as p1.
+      remember (fold_right pick (v2, l0) y) as p2.
+      destruct p1; destruct p2. destruct IHy; subst.
+      simpl.
+      replace (elemVarSet a v) with (elemVarSet a v0).
+      + destruct (elemVarSet a v0).
+        * constructor.
+          -- rewrite H. reflexivity.
+          -- reflexivity.
+        * split; auto.
+      + rewrite H. reflexivity.
+  Qed.
+
+  Instance snd_m :
+    Proper (varset_pair_eq ==> Logic.eq) snd.
+  Proof.
+    intros [? ?] [??] [??]; subst. reflexivity.
+  Qed.
+
   Lemma WellScoped_picked_aux:
     forall fvs captured e vs,
     WellScoped e (extendVarSetList fvs (captured ++ vs)) ->
@@ -1114,7 +1155,6 @@ Section in_exitifyRec.
       + rewrite snd_pick_list.
         rewrite <- app_assoc.
         erewrite delVarSet_ae by apply zap_ae.
-        (*
         rewrite <- delVarSetList_cons2.
         apply IHcaptured.
         rewrite app_assoc.
@@ -1130,8 +1170,7 @@ Section in_exitifyRec.
         constructor; only 2: constructor.
         assumption.
   Qed.
-         *)
-  Admitted.
+
 
   Lemma WellScoped_picked:
     forall fvs captured e,
@@ -1952,7 +1991,6 @@ Section in_exitifyRec.
         erewrite isJoinId_ae in HnotJoinx  by (apply almostEqual_sym; apply zap_ae).
         rewrite <- updJPS_not_joinId by assumption.
         rewrite <- updJPSs_cons.
-        (*
         rewrite <- delVarSetList_cons2.
         rewrite <- delVarSetList_cons2 in HnotJoinId.
         apply IHcaptured.
@@ -1967,8 +2005,6 @@ Section in_exitifyRec.
           assumption.
         - apply HnotJoinId.
   Qed.
-         *)
-        Admitted.
 
   Lemma isJoinPointsValid_picked:
     forall jps captured e,
@@ -2181,7 +2217,7 @@ Section in_exitifyRec.
         rewrite updJPS_not_joinId by assumption.
         assumption.
       + clear IHalts. rename H into IHalts.
-        revert e v t alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
+        revert e v t0 alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
         eapply IH6.
     * clear IH1 IH2 IH4 IH5 IH6.
       revert e captured Hcapt HWS HIJPV.

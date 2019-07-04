@@ -15,6 +15,70 @@ skip module PrimOp
 skip module TysPrim
 skip module Platform
 
+####################################################
+### DVarSet => VarSet
+
+## This doesn't work to reimplement DVarSet as VarSets
+## we need to change the toplevel type, not just the implementation
+
+rename type UniqDSet.UniqDSet = UniqSet.UniqSet
+rename value UniqDSet.unitUniqDSet = UniqSet.unitUniqSet
+rename value UniqDSet.unionManyUniqDSets = UniqSet.unionManyUniqSets 
+rename value UniqDSet.unionUniqDSets = UniqSet.unionUniqSets
+rename value UniqDSet.sizeUniqDSet = UniqSet.sizeUniqSet
+rename value UniqDSet.partitionUniqDSet = UniqSet.partitionUniqSet
+rename value UniqDSet.mkUniqDSet = UniqSet.mkUniqSet
+rename value UniqDSet.minusUniqDSet = UniqSet.minusUniqSet
+rename value UniqDSet.isEmptyUniqDSet = UniqSet.isEmptyUniqSet
+rename value UniqDSet.intersectUniqDSets = UniqSet.intersectUniqSets
+rename value UniqDSet.foldUniqDSet = UniqSet.nonDetFoldUniqSet
+rename value UniqDSet.filterUniqDSet = UniqSet.filterUniqSet
+rename value UniqDSet.addOneToUniqDSet = UniqSet.addOneToUniqSet
+rename value UniqDSet.addListToUniqDSet = UniqSet.addListToUniqSet
+rename value UniqDSet.emptyUniqDSet = UniqSet.emptyUniqSet
+rename value UniqDSet.delOneFromUniqDSet = UniqSet.delOneFromUniqSet
+rename value UniqDSet.delListFromUniqDSet = UniqSet.delListFromUniqSet
+rename value UniqDSet.elementOfUniqDSet = UniqSet.elementOfUniqSet
+rename value UniqDSet.uniqDSetMinusUniqSet = UniqSet.minusUniqSet
+rename value UniqDSet.uniqDSetIntersectUniqSet = UniqSet.intersectUniqSets
+rename value UniqDSet.uniqDSetToList = UniqSet.nonDetEltsUniqSet
+
+redefine Definition Core.disjointDVarSet := Core.disjointVarSet.
+redefine Definition Core.anyDVarSet := Core.anyVarSet.
+redefine Definition Core.allDVarSet := Core.allVarSet.
+
+skip Core.foldDVarSet 
+
+redefine Definition Core.dVarSetToVarSet : DVarSet -> VarSet := fun x => x.
+redefine Definition FV.fvDVarSet : FV.FV -> Core.DVarSet := FV.fvVarSet.
+
+
+rename type UniqDFM.UniqDFM = UniqFM.UniqFM
+rename value UniqDFM.unitUDFM = UniqFM.unitUFM
+rename value UniqDFM.addListToUDFM = UniqFM.addListToUFM
+rename value UniqDFM.addToUDFM = UniqFM.addToUFM 
+rename value UniqDFM.addToUDFM_C = UniqFM.addToUFM_C 
+rename value UniqDFM.allUDFM = UniqFM.allUFM 
+rename value UniqDFM.alterUDFM = UniqFM.alterUFM
+rename value UniqDFM.anyUDFM  = UniqFM.anyUFM 
+rename value UniqDFM.delFromUDFM = UniqFM.delFromUFM 
+rename value UniqDFM.delListFromUDFM = UniqFM.delListFromUFM 
+rename value UniqDFM.disjointUDFM = UniqFM.disjointUFM
+rename value UniqDFM.elemUDFM = UniqFM.elemUFM 
+rename value UniqDFM.eltsUDFM = UniqFM.eltsUFM 
+rename value UniqDFM.emptyUDFM = UniqFM.emptyUFM 
+rename value UniqDFM.filterUDFM = UniqFM.filterUFM
+rename value UniqDFM.foldUDFM  = UniqFM.nonDetFoldUFM 
+rename value UniqDFM.isNullUDFM = UniqFM.isNullUFM 
+rename value UniqDFM.listToUDFM  = UniqFM.listToUFM 
+rename value UniqDFM.lookupUDFM = UniqFM.lookupUFM
+rename value UniqDFM.mapUDFM = UniqFM.mapUFM 
+rename value UniqDFM.minusUDFM  = UniqFM.minusUFM 
+rename value UniqDFM.partitionUDFM = UniqFM.partitionUFM 
+rename value UniqDFM.plusUDFM = UniqFM.plusUFM
+rename value UniqDFM.plusUDFM_C = UniqFM.plusUFM_C 
+rewrite forall x, UniqDFM.udfmToUfm x = x
+rename value UniqDFM.unitUFM = UniqDFM.unitUFM
 
 ####################################################
 ## Most of the time, we are counting 

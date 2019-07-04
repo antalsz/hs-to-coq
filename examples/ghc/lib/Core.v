@@ -52,8 +52,6 @@ Require Maybes.
 Require NameEnv.
 Require Panic.
 Require SrcLoc.
-Require UniqDFM.
-Require UniqDSet.
 Require UniqFM.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -291,7 +289,7 @@ Definition DefMethInfo :=
   (option (Name.Name * BasicTypes.DefMethSpec Type_)%type)%type.
 
 Definition DVarEnv :=
-  UniqDFM.UniqDFM%type.
+  UniqFM.UniqFM%type.
 
 Definition DTyVarEnv :=
   DVarEnv%type.
@@ -546,7 +544,7 @@ Definition OutBndr :=
 Inductive TaggedBndr t : Type := | TB : CoreBndr -> t -> TaggedBndr t.
 
 Definition DVarSet :=
-  (UniqDSet.UniqDSet Var)%type.
+  (UniqSet.UniqSet Var)%type.
 
 Definition CoVar :=
   Id%type.
@@ -564,7 +562,7 @@ Definition DFunId :=
   Id%type.
 
 Definition DIdSet :=
-  (UniqDSet.UniqDSet Id)%type.
+  (UniqSet.UniqSet Id)%type.
 
 Definition EvId :=
   Id%type.
@@ -603,7 +601,7 @@ Definition TyCoVar :=
   Id%type.
 
 Definition DTyCoVarSet :=
-  (UniqDSet.UniqDSet TyCoVar)%type.
+  (UniqSet.UniqSet TyCoVar)%type.
 
 Definition TyCoVarSet :=
   (UniqSet.UniqSet TyCoVar)%type.
@@ -629,7 +627,7 @@ Inductive PredTree : Type
   |  IrredPred : PredType -> PredTree.
 
 Definition DTyVarSet :=
-  (UniqDSet.UniqDSet TyVar)%type.
+  (UniqSet.UniqSet TyVar)%type.
 
 Definition InTyVar :=
   TyVar%type.
@@ -4419,13 +4417,13 @@ Program Instance Uniquable__Var : Unique.Uniquable Var :=
   fun _ k__ => k__ {| Unique.getUnique__ := Uniquable__Var_getUnique |}.
 
 Definition unitDVarEnv {a} : Var -> a -> DVarEnv a :=
-  UniqDFM.unitUDFM.
+  UniqFM.unitUFM.
 
 Definition unitVarEnv {a} : Var -> a -> VarEnv a :=
   UniqFM.unitUFM.
 
 Definition unitDVarSet : Var -> DVarSet :=
-  UniqDSet.unitUniqDSet.
+  UniqSet.unitUniqSet.
 
 Definition unitVarSet : Var -> VarSet :=
   UniqSet.unitUniqSet.
@@ -4443,10 +4441,10 @@ Definition unionInScope : InScopeSet -> InScopeSet -> InScopeSet :=
     end.
 
 Definition unionDVarSets : list DVarSet -> DVarSet :=
-  UniqDSet.unionManyUniqDSets.
+  UniqSet.unionManyUniqSets.
 
 Definition unionDVarSet : DVarSet -> DVarSet -> DVarSet :=
-  UniqDSet.unionUniqDSets.
+  UniqSet.unionUniqSets.
 
 Axiom unfoldingTemplate : Unfolding -> CoreExpr.
 
@@ -4521,7 +4519,7 @@ Definition sizeVarSet : VarSet -> nat :=
   UniqSet.sizeUniqSet.
 
 Definition sizeDVarSet : DVarSet -> nat :=
-  UniqDSet.sizeUniqDSet.
+  UniqSet.sizeUniqSet.
 
 Definition setVarUnique : Var -> Unique.Unique -> Var :=
   fun var uniq =>
@@ -4802,10 +4800,10 @@ Definition plusMaybeVarEnv_C {a}
 
 Definition plusDVarEnv_C {a}
    : (a -> a -> a) -> DVarEnv a -> DVarEnv a -> DVarEnv a :=
-  UniqDFM.plusUDFM_C.
+  UniqFM.plusUFM_C.
 
 Definition plusDVarEnv {a} : DVarEnv a -> DVarEnv a -> DVarEnv a :=
-  UniqDFM.plusUDFM.
+  UniqFM.plusUFM.
 
 Definition partitionVarEnv {a}
    : (a -> bool) -> VarEnv a -> (VarEnv a * VarEnv a)%type :=
@@ -4813,11 +4811,11 @@ Definition partitionVarEnv {a}
 
 Definition partitionDVarSet
    : (Var -> bool) -> DVarSet -> (DVarSet * DVarSet)%type :=
-  UniqDSet.partitionUniqDSet.
+  UniqSet.partitionUniqSet.
 
 Definition partitionDVarEnv {a}
    : (a -> bool) -> DVarEnv a -> (DVarEnv a * DVarEnv a)%type :=
-  UniqDFM.partitionUDFM.
+  UniqFM.partitionUFM.
 
 Definition otherCons : Unfolding -> list AltCon :=
   fun arg_0__ => nil.
@@ -4850,13 +4848,13 @@ Definition mk_id : Name.Name -> Type_ -> IdScope -> IdDetails -> IdInfo -> Id :=
     Mk_Id name (Unique.getKey (Name.nameUnique name)) ty scope details info.
 
 Definition mkDVarEnv {a} : list (Var * a)%type -> DVarEnv a :=
-  UniqDFM.listToUDFM.
+  UniqFM.listToUFM.
 
 Definition mkVarEnv {a} : list (Var * a)%type -> VarEnv a :=
   UniqFM.listToUFM.
 
 Definition mkDVarSet : list Var -> DVarSet :=
-  UniqDSet.mkUniqDSet.
+  UniqSet.mkUniqSet.
 
 Definition mkVarSet : list Var -> VarSet :=
   UniqSet.mkUniqSet.
@@ -4957,10 +4955,10 @@ Definition minusVarEnv {a} {b} : VarEnv a -> VarEnv b -> VarEnv a :=
   UniqFM.minusUFM.
 
 Definition minusDVarSet : DVarSet -> DVarSet -> DVarSet :=
-  UniqDSet.minusUniqDSet.
+  UniqSet.minusUniqSet.
 
 Definition minusDVarEnv {a} {a'} : DVarEnv a -> DVarEnv a' -> DVarEnv a :=
-  UniqDFM.minusUDFM.
+  UniqFM.minusUFM.
 
 Definition maybeUnfoldingTemplate : Unfolding -> option CoreExpr :=
   fun arg_0__ => None.
@@ -4972,10 +4970,10 @@ Definition mapVarEnv {a} {b} : (a -> b) -> VarEnv a -> VarEnv b :=
   UniqFM.mapUFM.
 
 Definition mapDVarEnv {a} {b} : (a -> b) -> DVarEnv a -> DVarEnv b :=
-  UniqDFM.mapUDFM.
+  UniqFM.mapUFM.
 
 Definition lookupDVarEnv {a} : DVarEnv a -> Var -> option a :=
-  UniqDFM.lookupUDFM.
+  UniqFM.lookupUFM.
 
 Definition lookupVarEnv {a} : VarEnv a -> Var -> option a :=
   UniqFM.lookupUFM.
@@ -5200,7 +5198,7 @@ Definition isEmptyRuleInfo : RuleInfo -> bool :=
   fun x => true.
 
 Definition isEmptyDVarSet : DVarSet -> bool :=
-  UniqDSet.isEmptyUniqDSet.
+  UniqSet.isEmptyUniqSet.
 
 Definition subDVarSet : DVarSet -> DVarSet -> bool :=
   fun s1 s2 => isEmptyDVarSet (minusDVarSet s1 s2).
@@ -5215,7 +5213,7 @@ Definition transCloDVarSet : (DVarSet -> DVarSet) -> DVarSet -> DVarSet :=
     go seeds seeds.
 
 Definition isEmptyDVarEnv {a} : DVarEnv a -> bool :=
-  UniqDFM.isNullUDFM.
+  UniqFM.isNullUFM.
 
 Definition isConLikeUnfolding : Unfolding -> bool :=
   fun arg_0__ => false.
@@ -5282,7 +5280,7 @@ Definition intersectVarSet : VarSet -> VarSet -> VarSet :=
   UniqSet.intersectUniqSets.
 
 Definition intersectDVarSet : DVarSet -> DVarSet -> DVarSet :=
-  UniqDSet.intersectUniqDSets.
+  UniqSet.intersectUniqSets.
 
 Definition idInfo `{Util.HasDebugCallStack} : Id -> IdInfo :=
   fun '(Mk_Id _ _ _ _ _ info) => info.
@@ -5302,11 +5300,8 @@ Definition globaliseId : Id -> Id :=
 Definition getInScopeVars : InScopeSet -> VarSet :=
   fun '(InScope vs _) => vs.
 
-Definition foldDVarSet {a} : (Var -> a -> a) -> a -> DVarSet -> a :=
-  UniqDSet.foldUniqDSet.
-
 Definition foldDVarEnv {a} {b} : (a -> b -> b) -> b -> DVarEnv a -> b :=
-  UniqDFM.foldUDFM.
+  UniqFM.nonDetFoldUFM.
 
 Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
   fix flattenBinds (arg_0__ : list (Bind b)) : list (b * Expr b)%type
@@ -5335,27 +5330,27 @@ Definition filterVarEnv {a} : (a -> bool) -> VarEnv a -> VarEnv a :=
   UniqFM.filterUFM.
 
 Definition filterDVarSet : (Var -> bool) -> DVarSet -> DVarSet :=
-  UniqDSet.filterUniqDSet.
+  UniqSet.filterUniqSet.
 
 Definition filterDVarEnv {a} : (a -> bool) -> DVarEnv a -> DVarEnv a :=
-  UniqDFM.filterUDFM.
+  UniqFM.filterUFM.
 
 Definition extendDVarEnv {a} : DVarEnv a -> Var -> a -> DVarEnv a :=
-  UniqDFM.addToUDFM.
+  UniqFM.addToUFM.
 
 Definition extendVarEnv {a} : VarEnv a -> Var -> a -> VarEnv a :=
   UniqFM.addToUFM.
 
 Definition extendDVarEnvList {a}
    : DVarEnv a -> list (Var * a)%type -> DVarEnv a :=
-  UniqDFM.addListToUDFM.
+  UniqFM.addListToUFM.
 
 Definition extendVarEnvList {a} : VarEnv a -> list (Var * a)%type -> VarEnv a :=
   UniqFM.addListToUFM.
 
 Definition extendDVarEnv_C {a}
    : (a -> a -> a) -> DVarEnv a -> Var -> a -> DVarEnv a :=
-  UniqDFM.addToUDFM_C.
+  UniqFM.addToUFM_C.
 
 Definition extendVarEnv_Acc {a} {b}
    : (a -> b -> b) -> (a -> b) -> VarEnv b -> Var -> a -> VarEnv b :=
@@ -5373,10 +5368,10 @@ Definition extendVarSet : VarSet -> Var -> VarSet :=
   UniqSet.addOneToUniqSet.
 
 Definition extendDVarSet : DVarSet -> Var -> DVarSet :=
-  UniqDSet.addOneToUniqDSet.
+  UniqSet.addOneToUniqSet.
 
 Definition extendDVarSetList : DVarSet -> list Var -> DVarSet :=
-  UniqDSet.addListToUniqDSet.
+  UniqSet.addListToUniqSet.
 
 Definition extendVarSetList : VarSet -> list Var -> VarSet :=
   UniqSet.addListToUniqSet.
@@ -5472,7 +5467,7 @@ Definition emptyInScopeSet : InScopeSet :=
   InScope emptyVarSet #1.
 
 Definition emptyDVarSet : DVarSet :=
-  UniqDSet.emptyUniqDSet.
+  UniqSet.emptyUniqSet.
 
 Definition mapUnionDVarSet {a} : (a -> DVarSet) -> list a -> DVarSet :=
   fun get_set xs =>
@@ -5482,7 +5477,7 @@ Definition ruleInfoFreeVars : RuleInfo -> DVarSet :=
   fun x => emptyDVarSet.
 
 Definition emptyDVarEnv {a} : DVarEnv a :=
-  UniqDFM.emptyUDFM.
+  UniqFM.emptyUFM.
 
 Definition elemVarSetByKey : Unique.Unique -> VarSet -> bool :=
   UniqSet.elemUniqSet_Directly.
@@ -5520,32 +5515,32 @@ Definition uniqAway' : InScopeSet -> Var -> Var :=
 
 Definition alterDVarEnv {a}
    : (option a -> option a) -> DVarEnv a -> Var -> DVarEnv a :=
-  UniqDFM.alterUDFM.
+  UniqFM.alterUFM.
 
 Definition alterVarEnv {a}
    : (option a -> option a) -> VarEnv a -> Var -> VarEnv a :=
   UniqFM.alterUFM.
 
 Definition delDVarEnv {a} : DVarEnv a -> Var -> DVarEnv a :=
-  UniqDFM.delFromUDFM.
+  UniqFM.delFromUFM.
 
 Definition delVarEnv {a} : VarEnv a -> Var -> VarEnv a :=
   UniqFM.delFromUFM.
 
 Definition delDVarEnvList {a} : DVarEnv a -> list Var -> DVarEnv a :=
-  UniqDFM.delListFromUDFM.
+  UniqFM.delListFromUFM.
 
 Definition delVarEnvList {a} : VarEnv a -> list Var -> VarEnv a :=
   UniqFM.delListFromUFM.
 
 Definition delDVarSet : DVarSet -> Var -> DVarSet :=
-  UniqDSet.delOneFromUniqDSet.
+  UniqSet.delOneFromUniqSet.
 
 Definition delVarSet : VarSet -> Var -> VarSet :=
   UniqSet.delOneFromUniqSet.
 
 Definition delDVarSetList : DVarSet -> list Var -> DVarSet :=
-  UniqDSet.delListFromUniqDSet.
+  UniqSet.delListFromUniqSet.
 
 Definition delVarSetList : VarSet -> list Var -> VarSet :=
   UniqSet.delListFromUniqSet.
@@ -5557,13 +5552,13 @@ Definition delVarSetByKey : VarSet -> Unique.Unique -> VarSet :=
   UniqSet.delOneFromUniqSet_Directly.
 
 Definition elemDVarEnv {a} : Var -> DVarEnv a -> bool :=
-  UniqDFM.elemUDFM.
+  UniqFM.elemUFM.
 
 Definition elemVarEnv {a} : Var -> VarEnv a -> bool :=
   UniqFM.elemUFM.
 
 Definition elemDVarSet : Var -> DVarSet -> bool :=
-  UniqDSet.elementOfUniqDSet.
+  UniqSet.elementOfUniqSet.
 
 Definition elemVarSet : Var -> VarSet -> bool :=
   UniqSet.elementOfUniqSet.
@@ -5660,8 +5655,8 @@ Definition intersectsVarSet : VarSet -> VarSet -> bool :=
 Definition disjointVarEnv {a} : VarEnv a -> VarEnv a -> bool :=
   UniqFM.disjointUFM.
 
-Definition disjointDVarSet : DVarSet -> DVarSet -> bool :=
-  fun s1 s2 => UniqDFM.disjointUDFM s1 s2.
+Definition disjointDVarSet :=
+  disjointVarSet.
 
 Definition intersectsDVarSet : DVarSet -> DVarSet -> bool :=
   fun s1 s2 => negb (disjointDVarSet s1 s2).
@@ -5820,19 +5815,19 @@ Definition deAnnAlt {bndr} {annot} : AnnAlt bndr annot -> Alt bndr :=
   fun '(pair (pair con args) rhs) => pair (pair con args) (deAnnotate rhs).
 
 Definition dVarSetToVarSet : DVarSet -> VarSet :=
-  UniqSet.unsafeUFMToUniqSet GHC.Base.∘ UniqDFM.udfmToUfm.
+  fun x => x.
 
 Definition dVarSetMinusVarSet : DVarSet -> VarSet -> DVarSet :=
-  UniqDSet.uniqDSetMinusUniqSet.
+  UniqSet.minusUniqSet.
 
 Definition dVarSetIntersectVarSet : DVarSet -> VarSet -> DVarSet :=
-  UniqDSet.uniqDSetIntersectUniqSet.
+  UniqSet.intersectUniqSets.
 
 Definition dVarSetElems : DVarSet -> list Var :=
-  UniqDSet.uniqDSetToList.
+  UniqSet.nonDetEltsUniqSet.
 
 Definition dVarEnvElts {a} : DVarEnv a -> list a :=
-  UniqDFM.eltsUDFM.
+  UniqFM.eltsUFM.
 
 Definition collectValBinders : CoreExpr -> (list Id * CoreExpr)%type :=
   fun expr =>
@@ -6022,17 +6017,17 @@ Definition binderArgFlag {tv} {argf} : TyVarBndr tv argf -> argf :=
 Definition anyVarSet : (Var -> bool) -> VarSet -> bool :=
   UniqSet.uniqSetAny.
 
-Definition anyDVarSet : (Var -> bool) -> DVarSet -> bool :=
-  UniqDFM.anyUDFM.
+Definition anyDVarSet :=
+  anyVarSet.
 
 Definition anyDVarEnv {a} : (a -> bool) -> DVarEnv a -> bool :=
-  UniqDFM.anyUDFM.
+  UniqFM.anyUFM.
 
 Definition allVarSet : (Var -> bool) -> VarSet -> bool :=
   UniqSet.uniqSetAll.
 
-Definition allDVarSet : (Var -> bool) -> DVarSet -> bool :=
-  UniqDFM.allUDFM.
+Definition allDVarSet :=
+  allVarSet.
 
 Definition addRnInScopeSet : RnEnv2 -> VarSet -> RnEnv2 :=
   fun env vs =>
@@ -7292,39 +7287,26 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      Name.setNameUnique NameEnv.NameEnv NameEnv.emptyNameEnv OccName.HasOccName
      OccName.OccName OccName.TidyOccEnv OccName.emptyTidyOccEnv OccName.occName__
      Pair.Pair Panic.assertPanic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     SrcLoc.RealSrcSpan SrcLoc.SrcSpan UniqDFM.UniqDFM UniqDFM.addListToUDFM
-     UniqDFM.addToUDFM UniqDFM.addToUDFM_C UniqDFM.allUDFM UniqDFM.alterUDFM
-     UniqDFM.anyUDFM UniqDFM.delFromUDFM UniqDFM.delListFromUDFM UniqDFM.disjointUDFM
-     UniqDFM.elemUDFM UniqDFM.eltsUDFM UniqDFM.emptyUDFM UniqDFM.filterUDFM
-     UniqDFM.foldUDFM UniqDFM.isNullUDFM UniqDFM.listToUDFM UniqDFM.lookupUDFM
-     UniqDFM.mapUDFM UniqDFM.minusUDFM UniqDFM.partitionUDFM UniqDFM.plusUDFM
-     UniqDFM.plusUDFM_C UniqDFM.udfmToUfm UniqDFM.unitUDFM UniqDSet.UniqDSet
-     UniqDSet.addListToUniqDSet UniqDSet.addOneToUniqDSet
-     UniqDSet.delListFromUniqDSet UniqDSet.delOneFromUniqDSet
-     UniqDSet.elementOfUniqDSet UniqDSet.emptyUniqDSet UniqDSet.filterUniqDSet
-     UniqDSet.foldUniqDSet UniqDSet.intersectUniqDSets UniqDSet.isEmptyUniqDSet
-     UniqDSet.minusUniqDSet UniqDSet.mkUniqDSet UniqDSet.partitionUniqDSet
-     UniqDSet.sizeUniqDSet UniqDSet.unionManyUniqDSets UniqDSet.unionUniqDSets
-     UniqDSet.uniqDSetIntersectUniqSet UniqDSet.uniqDSetMinusUniqSet
-     UniqDSet.uniqDSetToList UniqDSet.unitUniqDSet UniqFM.UniqFM UniqFM.addListToUFM
+     SrcLoc.RealSrcSpan SrcLoc.SrcSpan UniqFM.UniqFM UniqFM.addListToUFM
      UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.addToUFM_Directly
-     UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
+     UniqFM.alterUFM UniqFM.anyUFM UniqFM.delFromUFM UniqFM.delFromUFM_Directly
      UniqFM.delListFromUFM UniqFM.disjointUFM UniqFM.elemUFM UniqFM.elemUFM_Directly
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly UniqFM.intersectUFM
-     UniqFM.isNullUFM UniqFM.listToUFM UniqFM.listToUFM_Directly UniqFM.lookupUFM
-     UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM UniqFM.mapUFM
-     UniqFM.minusUFM UniqFM.nonDetUFMToList UniqFM.partitionUFM UniqFM.plusMaybeUFM_C
-     UniqFM.plusUFM UniqFM.plusUFMList UniqFM.plusUFM_C UniqFM.plusUFM_CD
-     UniqFM.unitUFM UniqSet.UniqSet UniqSet.addListToUniqSet UniqSet.addOneToUniqSet
-     UniqSet.delListFromUniqSet UniqSet.delOneFromUniqSet
-     UniqSet.delOneFromUniqSet_Directly UniqSet.elemUniqSet_Directly
-     UniqSet.elementOfUniqSet UniqSet.emptyUniqSet UniqSet.filterUniqSet
-     UniqSet.getUniqSet UniqSet.intersectUniqSets UniqSet.isEmptyUniqSet
-     UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly UniqSet.minusUniqSet
-     UniqSet.mkUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
+     UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.filterUFM_Directly
+     UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.listToUFM UniqFM.listToUFM_Directly
+     UniqFM.lookupUFM UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM
+     UniqFM.mapUFM UniqFM.minusUFM UniqFM.nonDetFoldUFM UniqFM.nonDetUFMToList
+     UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList
+     UniqFM.plusUFM_C UniqFM.plusUFM_CD UniqFM.unitUFM UniqSet.UniqSet
+     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet
+     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
+     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
+     UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
+     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
+     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.nonDetEltsUniqSet
+     UniqSet.partitionUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
      UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
-     UniqSet.unsafeUFMToUniqSet UniqSupply.UniqSupply Unique.Uniquable Unique.Unique
-     Unique.deriveUnique Unique.getKey Unique.getUnique Unique.getUnique__
-     Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count
-     Util.debugIsOn Util.foldl2 Util.zipEqual
+     UniqSupply.UniqSupply Unique.Uniquable Unique.Unique Unique.deriveUnique
+     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.mkUniqueGrimily
+     Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count Util.debugIsOn
+     Util.foldl2 Util.zipEqual
 *)

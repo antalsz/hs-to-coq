@@ -807,12 +807,15 @@ Qed.
  
 (** Working with [freeVars] *)
 
-Print DVarSet.
-Print UniqDSet.
-(*
-Lemma freeVarsOf_freeVars:
+Ltac DVarToVar := 
+    replace unionDVarSet with unionVarSet; auto;
+    replace emptyDVarSet with emptyVarSet; auto;
+    replace delDVarSet with delVarSet; auto;
+    replace FV.fvDVarSet with FV.fvVarSet; auto.
+
+Lemma freeVarsOf_freeVars_revised:
   forall e,
-  dVarSetToVarSet (freeVarsOf (freeVars e)) [=] exprFreeVars e.
+  (freeVarsOf (freeVars e)) [=] exprFreeVars e.
 Proof.
   intro e; apply (core_induct e).
   - intros x; simpl.
@@ -823,9 +826,50 @@ Proof.
   - intros e1 e2 h1 h2. rewrite exprFreeVars_App //.
     unfold freeVars; fold freeVars.
     rewrite <- h1. rewrite <- h2.
-    unfold freeVarsOf.
-Abort.
-*)
+    simpl.
+    reflexivity.
+  - intros.
+    rewrite exprFreeVars_Lam.
+    unfold freeVars; fold freeVars.
+    destruct (freeVars e0). unfold freeVarsOf.
+    rewrite <- H. unfold freeVarsOf.
+    unfold unionFVs. unfold delBinderFV. unfold dVarTypeTyCoVars. unfold varTypeTyCoFVs.
+    DVarToVar.
+    fsetdec.
+  - intros.
+    destruct binds.
+    + rewrite exprFreeVars_Let_NonRec.
+      unfold freeVars; fold freeVars.
+      unfold freeVarsOf.
+      destruct (freeVars e0).
+      destruct (freeVars body).
+      rewrite <- H0. rewrite <- H. unfold freeVarsOf.
+      unfold delBinderFV. unfold dVarTypeTyCoVars. unfold varTypeTyCoFVs.
+      unfold bndrRuleAndUnfoldingVarsDSet.
+      unfold bndrRuleAndUnfoldingFVs.
+      DVarToVar.
+      replace (isId c) with true; try (destruct c; reflexivity).
+      fsetdec.
+    + rewrite exprFreeVars_Let_Rec. rewrite <- H0.
+      induction l. 
+      ++ hs_simpl.         
+         unfold freeVars; fold freeVars.
+         simpl.
+         unfold delBindersFV.
+         hs_simpl.
+         reflexivity.
+      ++ admit.
+  - intros.
+    rewrite exprFreeVars_Case.
+    unfold freeVars; fold freeVars.
+    admit.
+  - intros. rewrite exprFreeVars_Cast. unfold freeVars. fold freeVars. 
+    simpl. rewrite H. fsetdec.
+  - intros. rewrite exprFreeVars_Type. unfold freeVars. fold freeVars.
+    simpl. reflexivity.
+  - intros. rewrite exprFreeVars_Coercion. unfold freeVars. fold freeVars.
+    simpl. reflexivity.
+ Abort.
 
 Lemma deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.
@@ -839,8 +883,7 @@ Proof.
     + destruct (freeVars e2) eqn:fv. rewrite <- H0; reflexivity.
   - destruct (freeVars e0) eqn:Hfv.
     destruct (delBinderFV v f) eqn:Hdb.
-    unfold deAnnotate in H.
-    destruct (Base.op_zg__ _ _); simpl; rewrite H; reflexivity.
+    unfold deAnnotate in H. simpl; rewrite H; reflexivity.
   - destruct binds; simpl.
     + destruct (freeVars body) eqn:Hfv. rewrite <- H0.
       destruct (freeVars e0) eqn:Hfv'. rewrite <- H. reflexivity.

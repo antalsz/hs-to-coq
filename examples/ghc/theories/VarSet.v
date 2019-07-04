@@ -1853,7 +1853,7 @@ Lemma filterVarSet_iff (f1 f2 : Var -> bool) vs :
 Proof.
   intros. destruct vs, getUniqSet'. simpl.
   apply IntMapEq_VarSetEq.
-Admitted.
+Abort.
 
 Lemma filterVarSet_equal f vs1 vs2 :
   RespectsVar f -> 

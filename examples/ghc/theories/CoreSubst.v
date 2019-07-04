@@ -28,6 +28,7 @@ Require Import Proofs.VarSetFSet.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Var.
 Require Import Proofs.ScopeInvariant.
+Require Import Proofs.Forall.
 
 
 
@@ -53,6 +54,43 @@ Proof.
   rewrite <- (map_map (a * b) _ _ snd f).
   rewrite -> map_snd_zip; auto.
 Qed.
+
+(* ---------------------------------------------------------------- *)
+
+(* No shadowing either *)
+
+Fixpoint UniqScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
+  match e with
+  | Mk_Var v => WellScopedVar v in_scope
+  | Lit l => True
+  | App e1 e2 => UniqScoped e1 in_scope /\  UniqScoped e2 in_scope
+  | Lam v e => GoodLocalVar v /\ UniqScoped e (extendVarSet in_scope v)
+                             /\ elemVarSet v in_scope = false 
+  | Let bind body =>
+      UniqScopedBind bind in_scope /\
+      UniqScoped body (extendVarSetList in_scope (bindersOf bind))
+  | Case scrut bndr ty alts  => 
+    UniqScoped scrut in_scope /\
+    GoodLocalVar bndr /\
+    Forall' (fun alt =>
+      Forall GoodLocalVar (snd (fst alt)) /\
+      let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
+      UniqScoped (snd alt) in_scope') alts
+  | Cast e _ =>   UniqScoped e in_scope
+(*  | Tick _ e =>   UniqScoped e in_scope *) (* /\ UniqScopedTickish t in_scope *) 
+  | Mk_Type _  =>   True
+  | Mk_Coercion _ => True 
+  end
+with UniqScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
+  match bind with
+  | NonRec v rhs =>
+    GoodLocalVar v /\
+    UniqScoped rhs in_scope
+  | Rec pairs => 
+    Forall (fun p => GoodLocalVar (fst p)) pairs /\
+    NoDup (map varUnique (map fst pairs)) /\
+    Forall' (fun p => UniqScoped (snd p) (extendVarSetList in_scope (map fst pairs))) pairs
+  end.
 
    
 (* ---------------------------------------------------------------- *)
@@ -245,7 +283,7 @@ Ltac destruct_WellScoped_Subst :=
   end.
 
 
-(* Neither of these is actually used in this file. *)
+(* Not actually used in this file. *)
 Lemma WellScoped_Subst_StrongSubset : forall vs1 s vs2,
   vs2 {<=} vs1 -> 
   WellScoped_Subst s vs1 ->

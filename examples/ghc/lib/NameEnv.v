@@ -14,7 +14,6 @@ Require Coq.Program.Wf.
 
 Require GHC.Base.
 Require Name.
-Require UniqDFM.
 Require UniqFM.
 Import GHC.Base.Notations.
 
@@ -24,7 +23,7 @@ Definition NameEnv :=
   UniqFM.UniqFM%type.
 
 Definition DNameEnv :=
-  UniqDFM.UniqDFM%type.
+  UniqFM.UniqFM%type.
 
 (* Converted value declarations: *)
 
@@ -49,13 +48,13 @@ Definition mapNameEnv {elt1} {elt2}
   fun f x => UniqFM.mapUFM f x.
 
 Definition mapDNameEnv {a} {b} : (a -> b) -> DNameEnv a -> DNameEnv b :=
-  UniqDFM.mapUDFM.
+  UniqFM.mapUFM.
 
 Definition lookupNameEnv {a} : NameEnv a -> Name.Name -> option a :=
   fun x y => UniqFM.lookupUFM x y.
 
 Definition lookupDNameEnv {a} : DNameEnv a -> Name.Name -> option a :=
-  UniqDFM.lookupUDFM.
+  UniqFM.lookupUFM.
 
 Definition isEmptyNameEnv {a} : NameEnv a -> bool :=
   UniqFM.isNullUFM.
@@ -86,7 +85,7 @@ Definition emptyNameEnv {a} : NameEnv a :=
   UniqFM.emptyUFM.
 
 Definition emptyDNameEnv {a} : DNameEnv a :=
-  UniqDFM.emptyUDFM.
+  UniqFM.emptyUFM.
 
 Definition elemNameEnv {a} : Name.Name -> NameEnv a -> bool :=
   fun x y => UniqFM.elemUFM x y.
@@ -109,15 +108,13 @@ Definition alterNameEnv {a}
 
 Definition alterDNameEnv {a}
    : (option a -> option a) -> DNameEnv a -> Name.Name -> DNameEnv a :=
-  UniqDFM.alterUDFM.
+  UniqFM.alterUFM.
 
 (* External variables:
-     bool false list op_zt__ option orb GHC.Base.op_z2218U__ Name.Name
-     UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.lookupUDFM
-     UniqDFM.mapUDFM UniqFM.UniqFM UniqFM.addListToUFM UniqFM.addListToUFM_C
-     UniqFM.addToUFM UniqFM.addToUFM_Acc UniqFM.addToUFM_C UniqFM.alterUFM
-     UniqFM.delFromUFM UniqFM.delListFromUFM UniqFM.elemUFM UniqFM.eltsUFM
-     UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM UniqFM.intersectUFM
-     UniqFM.isNullUFM UniqFM.listToUFM UniqFM.lookupUFM UniqFM.mapUFM UniqFM.plusUFM
-     UniqFM.plusUFM_C UniqFM.unitUFM
+     bool false list op_zt__ option orb GHC.Base.op_z2218U__ Name.Name UniqFM.UniqFM
+     UniqFM.addListToUFM UniqFM.addListToUFM_C UniqFM.addToUFM UniqFM.addToUFM_Acc
+     UniqFM.addToUFM_C UniqFM.alterUFM UniqFM.delFromUFM UniqFM.delListFromUFM
+     UniqFM.elemUFM UniqFM.eltsUFM UniqFM.emptyUFM UniqFM.filterUFM UniqFM.foldUFM
+     UniqFM.intersectUFM UniqFM.isNullUFM UniqFM.listToUFM UniqFM.lookupUFM
+     UniqFM.mapUFM UniqFM.plusUFM UniqFM.plusUFM_C UniqFM.unitUFM
 *)

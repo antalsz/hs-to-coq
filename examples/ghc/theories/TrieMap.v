@@ -51,7 +51,7 @@ Instance TrieMapLaws__Map          {k} `{GHC.Base.Ord k}                        
 Instance TrieMapLaws__IntMap                                                    : TrieMapLaws IntMap.IntMap. Admitted.
 Instance TrieMapLaws__MaybeMap     {m} `{TrieMapLaws m}                         : TrieMapLaws (MaybeMap m).                Admitted.
 Instance TrieMapLaws__ListMap      {m} `{TrieMapLaws m}                         : TrieMapLaws (ListMap m).                 Admitted.
-Instance TrieMapLaws__UniqDFM                                                   : TrieMapLaws UniqDFM.UniqDFM.             Admitted.
+Instance TrieMapLaws__UniqFM                                                    : TrieMapLaws UniqFM.UniqFM.             Admitted.
 
 Instance TrieMapLaws__TypeMapX                                                  : TrieMapLaws TypeMapX.                    Admitted.
 Instance TrieMapLaws__CoreMapX                                                  : TrieMapLaws CoreMapX.                    Admitted.

@@ -1,3 +1,5 @@
+(* Where does this file belong? *)
+
 Require Import Coq.Lists.List.
 
 Lemma Forall_map:
@@ -31,4 +33,13 @@ Proof.
   unfold id.
   rewrite Forall_map.
   reflexivity.
+Qed.
+
+Theorem Forall_In_impl {A} {P : A -> Prop} (Q : A -> Prop) :
+  forall l,
+  (forall a, In a l -> P a -> Q a) ->
+  Forall P l -> Forall Q l.
+Proof.
+  intros l; rewrite !Forall_forall; intros IMPL In__P x IN.
+  now apply IMPL; [|apply In__P].
 Qed.

@@ -56,6 +56,21 @@ Proof. intros. rewrite -> !Forall_forall in *. firstorder. Qed.
 
 (** ** The invariants *)
 
+(* These are the original definitions of isGlobalId and isGlobalScope *)
+Definition isGlobalScope : Var -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_Id _ _ _ GlobalId _ _ => true
+    | _ => false
+    end.
+
+Definition isLocalScope : Var -> bool :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | Mk_Id _ _ _ (LocalId _) _ _ => true
+    | _ => false
+    end.
+
 (**
 First we define invariants for [Var] that are independent of scope, namely:
 - It is a localVar iff the unique is local.
@@ -65,6 +80,7 @@ First we define invariants for [Var] that are independent of scope, namely:
 - but not one that is a coercion variable.
 *)
 Definition GoodVar (v : Var) : Prop :=
+  isLocalVar v = isLocalScope v /\ 
   varUnique v = nameUnique (varName v).
 
 Definition GoodLocalVar (v : Var) : Prop :=
@@ -165,12 +181,14 @@ Lemma GoodLocalVar_uniqAway:
 Proof.
   intros.
   unfold GoodLocalVar, GoodVar in *.
-  destruct H. (* destruct H. destruct H2. *)
+  destruct H. destruct H. (* destruct H2. *)
   rewrite isLocalVar_uniqAway.
   (* rewrite isLocalUnique_uniqAway. *)
   (* rewrite isId_uniqAway. *)
   (*  rewrite isCoVar_uniqAway. *)
   repeat split; auto.
+  move: (idScope_uniqAway vss v) => h.   rewrite H. 
+  unfold isLocalScope. destruct v. destruct uniqAway eqn:m. simpl in h. rewrite h. done.
   rewrite nameUnique_varName_uniqAway; auto.
 Qed.
 
@@ -182,7 +200,8 @@ Proof.
   move=> s u ty n h1.
   unfold mkSysLocal.
   rewrite andb_false_r.
-  split; destruct u. 
+  split; destruct u. split.
+  - cbv. rewrite h1. rewrite h1. done.
   - cbv. rewrite h1. done.
   - cbv. rewrite h1. rewrite h1. done.
 Qed.

@@ -118,6 +118,12 @@ Axiom isLocalId_uniqAway:
   isLocalId (uniqAway iss v) = isLocalId v.
 
 
+
+Axiom idScope_uniqAway: forall iss v, idScope v = idScope (uniqAway iss v).
+
+
+
+
 (* Because we removed constructors from the Var type, these 
    three are provable directly. However, in the full system, we would 
    have to know more about uniqAway to know that they are true. *)

@@ -133,19 +133,6 @@ Record WellScopedCSEnv (env : CSEnv) (vars : VarSet) : Prop :=
    ; ws_rec_map : TrieMap_All (WellScoped^~ (getCSEnvInScopeVars env)) (cs_rec_map env) }.
    (* `WellScoped^~ vars` or `WellScoped (getSubstInScopeVars (cs_subst env)`? *)
 
-Theorem WellScoped_Subst_subset subst vars :
-  WellScoped_Subst subst vars ->
-  vars {<=} getSubstInScopeVars subst.
-Proof.
-  case: subst => [in_scope_set subst_env /= _ _].
-  
-  (* Specialize everything *)
-  unfold "{<=}" => WSS var; move: WSS => [/(_ var) WSS_iss /(_ var) WSS_env]; move: WSS_iss WSS_env.
-
-  case def_expr: (lookupVarEnv _) => [expr|]; last by rewrite lookupVarSet_minusDom_1.
-  case def_v: (lookupVarSet vars var) => [v|//] _ WS.
-Admitted.
-
 Lemma tryForCSE_simpl env expr :
   tryForCSE env expr = match lookupCSEnv env (cseExpr env expr) with
                        | Some e => e

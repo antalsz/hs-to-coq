@@ -23,6 +23,7 @@ Axiom TcTyVarDetails     : Type.
 Axiom liftedTypeKind     : Kind.
 Axiom constraintKind     : Kind.
 
+
 (* -------------------- assumed default instances ------------------- *)
 
 Instance Default__Coercion

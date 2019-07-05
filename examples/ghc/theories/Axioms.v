@@ -75,16 +75,17 @@ Allocation of unique supply characters:
         z       anonymous sums
 *)
 
+(*
 Open Scope N_scope.
 Definition isLocalUnique  (u : Unique.Unique) : bool :=
   (u == mkPreludeMiscIdUnique  0) (* The wild card key is local *)
   || let '(c,i) := unpkUnique u in
      negb (List.elem c &"B0123456789:kmnrz").
-
+*)
 
 (** [initExitJoinUnique] better be a local unique *)
 Axiom isLocalUnique_initExitJoinUnique:
-  isLocalUnique Unique.initExitJoinUnique = true.
+  Unique.isLocalUnique Unique.initExitJoinUnique = true.
 
 
 
@@ -110,23 +111,43 @@ Axiom isJoinId_maybe_uniqAway:
 (* See discussion of [isLocalUnique] above *)
 Axiom isLocalUnique_uniqAway:
   forall iss v,
-  isLocalUnique (varUnique (uniqAway iss v)) = true.
+  Unique.isLocalUnique (varUnique (uniqAway iss v)) = true.
 
 Axiom isLocalId_uniqAway:
   forall iss v,
   isLocalId (uniqAway iss v) = isLocalId v.
 
-Axiom isLocalVar_uniqAway:
+
+(* Because we removed constructors from the Var type, these 
+   three are provable directly. However, in the full system, we would 
+   have to know more about uniqAway to know that they are true. *)
+Lemma isLocalVar_uniqAway:
   forall iss v,
   isLocalVar (uniqAway iss v) = isLocalVar v.
+Proof.
+  move=> iss v.
+  move: (isLocalId_uniqAway iss v) => h.
+  destruct v. 
+  unfold isLocalId in *. unfold isLocalVar in *.
+  unfold isGlobalId. 
+  destruct uniqAway.
+  destruct idScope0, idScope; done.
+Qed.
 
-Axiom isId_uniqAway:
+Lemma isId_uniqAway:
   forall iss v,
     isId (uniqAway iss v) = isId v.
+Proof.
+  intros iss v. unfold isId. destruct uniqAway. destruct v. 
+  done.
+Qed.
 
-Axiom isCoVar_uniqAway:
+Lemma isCoVar_uniqAway:
   forall iss v,
     isCoVar (uniqAway iss v) = isCoVar v.
+Proof.
+  unfold isCoVar. destruct v, uniqAway. done.
+Qed.
 
 (* Variables have a unique cached inside.  This unique *should* be 
    the same as the unique stored in the name of the variable. *)
@@ -135,7 +156,7 @@ Axiom nameUnique_varName_uniqAway:
   forall vss v,
   Name.nameUnique (varName v) = varUnique v ->
   Name.nameUnique (varName (uniqAway vss v)) = varUnique (uniqAway vss v).
-
+  
 (**** *)
 
 (* NOTE: are these better as rewrites? Or as axioms? *)
@@ -149,6 +170,10 @@ Axiom isJoinId_maybe_asJoinId:
 
 (** ** isLocalVar respects the GHC.Base.== equality for Vars  *)
 
+(* SCW: technically, we should know this directly for GoodVars, i.e. those 
+   where the unique agrees with the idScope. But all of the Vars that we work 
+   with should be good. And having this axiom around is really, really convenient 
+   for reasoning about FV. *)
 Definition RespectsVar (f :Var -> bool) :=
     Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
 

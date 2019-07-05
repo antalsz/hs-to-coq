@@ -46,14 +46,8 @@ Definition setIdUnique : Core.Id -> Unique.Unique -> Core.Id :=
 Definition setIdType : Core.Id -> AxiomatizedTypes.Type_ -> Core.Id :=
   fun id ty => Core.setVarType id ty.
 
-Definition setIdNotExported : Core.Id -> Core.Id :=
-  Core.setIdNotExported.
-
 Definition setIdName : Core.Id -> Name.Name -> Core.Id :=
   Core.setVarName.
-
-Definition setIdExported : Core.Id -> Core.Id :=
-  Core.setIdExported.
 
 Definition recordSelectorTyCon : Core.Id -> Core.RecSelParent :=
   fun id =>
@@ -633,16 +627,16 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
      Core.isUnboxedSumCon Core.isUnboxedTupleCon Core.lazySetIdInfo
      Core.mkExportedLocalVar Core.mkGlobalVar Core.mkLocalVar Core.nopSig
      Core.occInfo Core.oneShotInfo Core.ruleInfo Core.setArityInfo Core.setCafInfo
-     Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails Core.setIdExported
-     Core.setIdNotExported Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo
-     Core.setRuleInfo Core.setStrictnessInfo Core.setUnfoldingInfo Core.setVarName
-     Core.setVarType Core.setVarUnique Core.strictnessInfo Core.unfoldingInfo
-     Core.vanillaIdInfo Core.varName Core.varType Core.varUnique Core.zapDemandInfo
-     Core.zapFragileInfo Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageEnvInfo
-     Core.zapUsageInfo Core.zapUsedOnceInfo Datatypes.id FastString.FastString
-     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zgzgze__ GHC.Base.return_
-     GHC.Err.error GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse
-     Module.Module Name.Name Name.getName Name.isInternalName Name.localiseName
+     Core.setCallArityInfo Core.setDemandInfo Core.setIdDetails
+     Core.setInlinePragInfo Core.setOccInfo Core.setOneShotInfo Core.setRuleInfo
+     Core.setStrictnessInfo Core.setUnfoldingInfo Core.setVarName Core.setVarType
+     Core.setVarUnique Core.strictnessInfo Core.unfoldingInfo Core.vanillaIdInfo
+     Core.varName Core.varType Core.varUnique Core.zapDemandInfo Core.zapFragileInfo
+     Core.zapLamInfo Core.zapTailCallInfo Core.zapUsageEnvInfo Core.zapUsageInfo
+     Core.zapUsedOnceInfo Datatypes.id FastString.FastString GHC.Base.mappend
+     GHC.Base.op_z2218U__ GHC.Base.op_zgzgze__ GHC.Base.return_ GHC.Err.error
+     GHC.Num.fromInteger GHC.Num.op_zp__ GHC.Prim.seq Maybes.orElse Module.Module
+     Name.Name Name.getName Name.isInternalName Name.localiseName
      Name.mkDerivedInternalName Name.mkInternalName Name.mkSystemVarName
      Name.nameIsLocalOrFrom OccName.OccName OccName.mkWorkerOcc Panic.assertPanic
      Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace SrcLoc.SrcSpan

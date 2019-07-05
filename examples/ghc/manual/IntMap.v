@@ -1,5 +1,8 @@
+Set Warnings "-notation-overridden".
+Set Warnings "-masking-absolute-name".
+
 Require Import GHC.Base.
-Require Data.IntSet.Internal.
+Require Data.IntSet.Internal. 
 Require Import Data.Map.Internal.
 Require Import GHC.Num.
 Require Import Coq.Classes.Morphisms.
@@ -7,7 +10,7 @@ Import GHC.Num.Notations.
 
 From Coq Require Import ssreflect ssrbool.
 
-Require Import Proofs.GHC.Base.
+Require Proofs.GHC.Base.
 
 Require Import MapProofs.
 
@@ -74,7 +77,7 @@ Section IntMap.
   Next Obligation.
     apply mapWithKey_WF.
     - intros i j H. f_equal.
-      apply /Eq_eq =>//.
+      apply /Base.Eq_eq =>//.
     - prove_WF.
   Defined.
 
@@ -85,7 +88,7 @@ Section IntMap.
     filterWithKey.
   Next Obligation.
     apply filterWithKey_WF.
-    - intros i j H. f_equal. apply /Eq_eq =>//.
+    - intros i j H. f_equal. apply /Base.Eq_eq =>//.
     - destruct x0; assumption.
   Defined.
 
@@ -161,7 +164,7 @@ End IntMap.
 
 (** These should be in [containers]. *)
 
-Lemma list_KeyIn : forall {A B} `{EqLaws A} `{EqLaws B}
+Lemma list_KeyIn : forall {A B} `{Base.EqLaws A} `{Base.EqLaws B}
                      (l1 l2 : list (A * B)) k v,
     l1 == l2 ->
     Key_In k v l1 ->
@@ -177,7 +180,7 @@ Proof.
            move /andP in Hh. tauto.
         -- constructor. move: H4. cbn. move /andP =>[Hh ?].
            move /andP in Hh. intuition.
-           apply Eq_trans with (y:=a); [symmetry |]; assumption.
+           apply Base.Eq_trans with (y:=a); [symmetry |]; assumption.
     + intros. destruct l2.
       * inversion H4.
       * destruct p. cbn in H4. move /andP in H4.

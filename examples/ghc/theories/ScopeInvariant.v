@@ -65,7 +65,6 @@ First we define invariants for [Var] that are independent of scope, namely:
 - but not one that is a coercion variable.
 *)
 Definition GoodVar (v : Var) : Prop :=
-  isLocalVar v = isLocalUnique (varUnique v) /\
   varUnique v = nameUnique (varName v).
 
 Definition GoodLocalVar (v : Var) : Prop :=
@@ -166,9 +165,9 @@ Lemma GoodLocalVar_uniqAway:
 Proof.
   intros.
   unfold GoodLocalVar, GoodVar in *.
-  destruct H; destruct H. (* destruct H2. *)
+  destruct H. (* destruct H. destruct H2. *)
   rewrite isLocalVar_uniqAway.
-  rewrite isLocalUnique_uniqAway.
+  (* rewrite isLocalUnique_uniqAway. *)
   (* rewrite isId_uniqAway. *)
   (*  rewrite isCoVar_uniqAway. *)
   repeat split; auto.
@@ -177,18 +176,14 @@ Qed.
 
 Lemma GoodLocalVar_asJoinId_mkSysLocal:
   forall s u ty n,
-  isLocalUnique u = true ->
+  Unique.isLocalUnique u = true ->
   GoodLocalVar (asJoinId (mkSysLocal s u ty) n).
 Proof.
   move=> s u ty n h1.
   unfold mkSysLocal.
   rewrite andb_false_r.
-  split; destruct u; only 1: split.
-  * symmetry. apply h1.
-  * reflexivity. 
-  * reflexivity. 
-Qed. 
-
+  split; destruct u; reflexivity.
+Qed.
 
 
 Lemma GoodLocalVar_almostEqual:
@@ -198,9 +193,10 @@ Lemma GoodLocalVar_almostEqual:
   GoodLocalVar v2.
 Proof.
   intros.
-  destruct H. destruct H.
+  destruct H. 
   induction H0.
-  * split; only 1: split; assumption.
+  * split; only 1: assumption.
+    destruct ids; simpl in *; done.
 (*   * split; only 1: split; assumption. *)
 (*  * split; only 1: split; assumption.  *)
 Qed.
@@ -209,15 +205,19 @@ Lemma GoodVar_almostEqual :
   forall v1 v2, 
     GoodVar v1 -> almostEqual v1 v2 -> GoodVar v2.
 Proof.
-  move => v1 v2.
-  elim => h1 h2. 
+  move => v1 v2 h1 h2.
+  destruct h2. 
+  all: unfold GoodVar in *.
+  simpl in *. auto.
+Qed.
+(*  elim => h1 h2. 
   move => h. inversion h. 
   all: unfold GoodVar.
   all: repeat split.
   all: rewrite <- H in *.
   all: simpl in *.
   all: try done.
-Qed.
+Qed. *)
 
 
 (** *** Structural lemmas *)

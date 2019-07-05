@@ -992,7 +992,7 @@ Proof.
   intros.
   unfold substBndr in SB.
   simpl in *.
-  move: H => [[h0 h1] h4]. 
+  move: H => [h0 h4]. 
   destruct (isTyVar v) eqn:IsTyVar. 
   { 
     destruct v; simpl in *; try done.
@@ -1007,7 +1007,7 @@ Proof.
     destruct idScope. done. done.
   }
   eapply WellScoped_Subst_substIdBndr; eauto.
-  econstructor; eauto. econstructor; eauto.
+  econstructor; eauto. 
 Qed.
 
 Lemma WellScoped_substBndr : forall s in_scope_set env subst' bndr' body v vs u u0,
@@ -1064,7 +1064,7 @@ Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',
   GoodLocalVar bndr'.
 Proof.
   move=> bndr bndr' subst subst' h h0.
-  move: h => [[h1 h2] h5].
+  move: h => [h1 h5].
   destruct bndr; simpl in *; try done.
   unfold substBndr in *.
   simpl in h0.
@@ -1072,7 +1072,6 @@ Proof.
   (* unfold isTyVar in h0. *)
   eapply GoodLocalVar_substIdBndr; eauto.
   econstructor; eauto.
-  econstructor; eauto.  
 Qed.
 
 Lemma SubstExtends_step : forall a s' y bndrs subst subst' ys, 
@@ -1237,7 +1236,7 @@ Proof.
     destruct (isLocalVar v) eqn:h; try auto.
     destruct (lookupVarSet vs v) eqn:h0; try contradiction.
     unfold GoodVar in WSvar.
-    destruct WSvar as [ ? [h1 ?]].
+    destruct WSvar as [ ? h1 ].
     destruct v; simpl in *; try done.
     destruct idScope; try done.
 Qed.

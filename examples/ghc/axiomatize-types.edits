@@ -251,6 +251,8 @@ rename value CoAxiom.Representational  = AxiomatizedTypes.Representational
 rename value CoAxiom.Nominal           = AxiomatizedTypes.Nominal
 rename value CoAxiom.Phantom           = AxiomatizedTypes.Phantom
 
+
+
 #
 # not translating TcType or TysWiredIn yet
 #

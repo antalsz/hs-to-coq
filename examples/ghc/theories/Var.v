@@ -299,7 +299,10 @@ Proof.
   destruct var.
   simpl. 
   all: try tauto.
-  destruct idScope; simpl; tauto.
+  destruct idScope; done.
+(*  move=>h. rewrite <- h.
+  rewrite negb_involutive.
+  auto. *)
 Qed.
 
 Lemma isLocalVar_isLocalId : 
@@ -310,7 +313,8 @@ Proof.
   unfold isGlobalId.
   unfold isLocalId. 
   destruct var; simpl.
-  all: try tauto.
-  destruct idScope; simpl; tauto.
+  destruct idScope; done.
+(*  rewrite negb_involutive.
+  auto. *)
 Qed.
 

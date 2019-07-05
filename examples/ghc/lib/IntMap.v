@@ -1,1 +1,0 @@
-../manual/IntMap.v

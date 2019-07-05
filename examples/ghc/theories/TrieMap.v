@@ -3,7 +3,7 @@ Require Import Data.Functor. Import Data.Functor.Notations.
 
 Require Import TrieMap.
 
-Require UniqDFM.
+Require UniqFM.
 
 From Coq Require Import ssreflect ssrbool ssrfun.
 Set Bullet Behavior "Strict Subproofs".

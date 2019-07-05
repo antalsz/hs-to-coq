@@ -1,5 +1,51 @@
 # Override the Core-edit back to
 in Core.Var rename type GHC.Num.Int = BinNums.N
+# skip AxiomatizedTypes.Var
+
+# add Core Axiom Core.idScope    : AxiomatizedTypes.Var -> Core.IdScope.
+# add Core Axiom Core.id_details : AxiomatizedTypes.Var -> Core.IdDetails.
+# add Core Axiom Core.id_info    : AxiomatizedTypes.Var -> Core.IdInfo.
+# add Core Axiom Core.realUnique : AxiomatizedTypes.Var -> BinNums.N.
+# add Core Axiom Core.varName    : AxiomatizedTypes.Var -> Name.Name.
+# add Core Axiom Core.varType    : AxiomatizedTypes.Var -> AxiomatizedTypes.Type_.
+
+# axiomatize definition Core.updateVarTypeM
+# axiomatize definition Core.updateVarType
+# axiomatize definition Core.updateTyVarKind
+# axiomatize definition Core.updateTyVarKindM
+# axiomatize definition Core.setVarUnique
+# axiomatize definition Core.setVarType
+# axiomatize definition Core.setVarName
+# axiomatize definition Core.setTyVarKind
+# axiomatize definition Core.setIdDetails
+# axiomatize definition Core.lazySetIdInfo
+# axiomatize definition Core.isLocalId
+# axiomatize definition Core.isId
+# axiomatize definition Core.isCoVar
+# axiomatize definition Core.isGlobalId
+# axiomatize definition Core.isExportedId
+# axiomatize definition Core.isNonCoVarId 
+# axiomatize definition Core.isTyCoVarId 
+# axiomatize definition Core.idInfo
+# axiomatize definition Core.idDetails
+
+# redefine Definition Core.isLocalId : Var -> bool :=
+#  fun v => Unique.isLocalUnique (Core.varUnique v). 
+# redefine Definition Core.isGlobalId : Var -> bool :=
+#  fun v => negb (Unique.isLocalUnique (Core.varUnique v)).
+
+#
+# Only way to change the scope of a Var without using Mk_Id
+#
+# skip Core.globaliseId
+# skip Core.setIdExported
+# skip Core.setIdNotExported
+# skip Core.mk_id
+
+# these use mk_id : only checks invariant about unique matching, not the scope
+# axiomatize definition Core.mkLocalVar
+# axiomatize definition Core.mkGlobalVar
+# axiomatize definition Core.mkExportedLocalVar
 
 # These don't exist
 skip Core.mkTyVar

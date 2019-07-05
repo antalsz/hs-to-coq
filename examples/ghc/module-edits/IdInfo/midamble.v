@@ -38,7 +38,9 @@ Instance Default__IdInfo : GHC.Err.Default IdInfo :=
 Instance Default__RecSelParent : GHC.Err.Default RecSelParent :=
   GHC.Err.Build_Default _ (RecSelData GHC.Err.default).
 
+
 Instance Default__Var : GHC.Err.Default Var := GHC.Err.Build_Default _ (Mk_Id GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).
+
 
 Instance Default__DataCon : GHC.Err.Default DataCon :=
  Err.Build_Default _ (MkData GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default nil nil nil nil GHC.Err.default GHC.Err.default nil GHC.Err.default nil nil GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default GHC.Err.default).

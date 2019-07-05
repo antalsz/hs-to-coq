@@ -36,34 +36,37 @@ EXTRA_CORE = Json \
   TysWiredIn \
   CoAxiom 
 
-# Generated modules
-# generated directly from ghc/compiler/*/
-# These are general purpose utility modules
-MODULES = \
+
+UTILS = \
   Util \
   Maybes \
   MonadUtils \
   Pair \
-  Bag \
+  State \
   SrcLoc \
   Unique \
   UniqSupply \
-  UniqFM \
+  BasicTypes \
+  DynFlags \
+  Panic \
+  OccName \
+
+DATASTRUCTS = \
+  Bag \
   EnumSet \
   BooleanFormula \
+  UniqFM \
   UniqSet \
-  BasicTypes \
-  UniqDFM \
-  UniqDSet \
-  FastStringEnv \
-  DynFlags \
-  Module \
   OrdList \
-  OccName \
-  State \
-  ListSetOps \
-  Panic \
   FiniteMap \
+  ListSetOps \
+
+# Generated modules
+# generated directly from ghc/compiler/*/
+# These are general purpose utility modules
+MODULES = \
+  $(UTILS) \
+  $(DATASTRUCTS) \
 
 ## Not actually used??
 #  CmmType \
@@ -71,7 +74,7 @@ MODULES = \
 
 ##
 CORESYN = \
-   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand Type $(CORETYPE)  \
+   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand Type TyCoRep Coercion  \
 
 ##
 CONSTRUCTORS = \
@@ -79,6 +82,8 @@ CONSTRUCTORS = \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
+  Module \
+  FastStringEnv \
   Constants \
   Id \
   CoreSubst \
@@ -96,7 +101,7 @@ CORE_MODULES = \
   TrieMap \
   CSE \
   CoreStats \
-#  UnVarGraph \
+  UnVarGraph \
   CoreArity \
   CoreTidy \
   CallArity \
@@ -181,6 +186,21 @@ ghc.core.pdf: Makefile
 
 ghcrec.pdf: ghcrec.dot
 	dot -Tpdf -o ghcrec.pdf ghcrec.dot
+
+
+cloc_table: 
+	echo MANUAL
+	cloc $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+	echo UTIL 
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(UTILS))) $(addsuffix .v,$(addprefix lib/,$(UTILS)))
+	echo DATASTRUCTS
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(DATASTRUCTS))) $(addsuffix .v,$(addprefix lib/,$(DATASTRUCTS)))
+	echo CORESYN
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORESYN))) lib/Core.v 
+	echo CORE_MODULES
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(CORE_MODULES)))
+	echo TOTAL
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(MODULES) $(CORESYN) $(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(MODULES) $(CORE_MODULES))) lib/Core.v $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
 
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.

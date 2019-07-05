@@ -25,9 +25,8 @@ Require FiniteMap.
 Require GHC.Base.
 Require GHC.Prim.
 Require Panic.
-Require UniqDFM.
-Require UniqDSet.
 Require UniqFM.
+Require UniqSet.
 Require Unique.
 Require Util.
 Import GHC.Base.Notations.
@@ -62,7 +61,7 @@ Inductive DefUnitId : Type
   := | Mk_DefUnitId (unDefUnitId : InstalledUnitId) : DefUnitId.
 
 Definition DModuleNameEnv :=
-  UniqDFM.UniqDFM%type.
+  UniqFM.UniqFM%type.
 
 Inductive ComponentId : Type
   := | Mk_ComponentId : FastString.FastString -> ComponentId.
@@ -71,7 +70,7 @@ Inductive IndefUnitId : Type
   := | Mk_IndefUnitId (indefUnitIdFS : FastString.FastString) (indefUnitIdKey
     : Unique.Unique) (indefUnitIdComponentId : ComponentId) (indefUnitIdInsts
     : list (ModuleName * Module)%type) (indefUnitIdFreeHoles
-    : UniqDSet.UniqDSet ModuleName)
+    : UniqSet.UniqSet ModuleName)
    : IndefUnitId
 with Module : Type
   := | Mk_Module (moduleUnitId : UnitId) (moduleName : ModuleName) : Module
@@ -210,15 +209,15 @@ Definition unitModuleSet : Module -> ModuleSet :=
 Definition unitModuleEnv {a} : Module -> a -> ModuleEnv a :=
   fun m x => Mk_ModuleEnv (Data.Map.Internal.singleton (Mk_NDModule m) x).
 
-Definition unitIdFreeHoles : UnitId -> UniqDSet.UniqDSet ModuleName :=
+Definition unitIdFreeHoles : UnitId -> UniqSet.UniqSet ModuleName :=
   fun arg_0__ =>
     match arg_0__ with
     | IndefiniteUnitId x => indefUnitIdFreeHoles x
-    | DefiniteUnitId _ => UniqDSet.emptyUniqDSet
+    | DefiniteUnitId _ => UniqSet.emptyUniqSet
     end.
 
 Definition unitIdIsDefinite : UnitId -> bool :=
-  UniqDSet.isEmptyUniqDSet GHC.Base.∘ unitIdFreeHoles.
+  UniqSet.isEmptyUniqSet GHC.Base.∘ unitIdFreeHoles.
 
 Definition unitIdFS : UnitId -> FastString.FastString :=
   fun arg_0__ =>
@@ -708,13 +707,13 @@ Definition holeUnitId : UnitId :=
 Definition isHoleModule : Module -> bool :=
   fun mod_ => moduleUnitId mod_ GHC.Base.== holeUnitId.
 
-Definition moduleFreeHoles : Module -> UniqDSet.UniqDSet ModuleName :=
+Definition moduleFreeHoles : Module -> UniqSet.UniqSet ModuleName :=
   fun m =>
-    if isHoleModule m : bool then UniqDSet.unitUniqDSet (moduleName m) else
+    if isHoleModule m : bool then UniqSet.unitUniqSet (moduleName m) else
     unitIdFreeHoles (moduleUnitId m).
 
 Definition moduleIsDefinite : Module -> bool :=
-  UniqDSet.isEmptyUniqDSet GHC.Base.∘ moduleFreeHoles.
+  UniqSet.isEmptyUniqSet GHC.Base.∘ moduleFreeHoles.
 
 Definition mkHoleModule : ModuleName -> Module :=
   mkModule holeUnitId.
@@ -1257,8 +1256,8 @@ Program Instance Uniquable__Module : Unique.Uniquable Module :=
      GHC.Base.op_zg__ GHC.Base.op_zg____ GHC.Base.op_zgze__ GHC.Base.op_zgze____
      GHC.Base.op_zl__ GHC.Base.op_zl____ GHC.Base.op_zlze__ GHC.Base.op_zlze____
      GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.Prim.Build_Unpeel GHC.Prim.Unpeel
-     GHC.Prim.coerce Panic.someSDoc UniqDFM.UniqDFM UniqDSet.UniqDSet
-     UniqDSet.emptyUniqDSet UniqDSet.isEmptyUniqDSet UniqDSet.unitUniqDSet
-     UniqFM.UniqFM Unique.Uniquable Unique.Unique Unique.getUnique Unique.getUnique__
-     Unique.nonDetCmpUnique Util.thenCmp
+     GHC.Prim.coerce Panic.someSDoc UniqFM.UniqFM UniqSet.UniqSet
+     UniqSet.emptyUniqSet UniqSet.isEmptyUniqSet UniqSet.unitUniqSet Unique.Uniquable
+     Unique.Unique Unique.getUnique Unique.getUnique__ Unique.nonDetCmpUnique
+     Util.thenCmp
 *)

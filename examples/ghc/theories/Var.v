@@ -314,10 +314,15 @@ Proof.
   destruct idScope; simpl; tauto.
 Qed.
 
-(** ** [isTyVar] and [isCoVar] *)
+(** ** [isId], [isTyVar], and [isCoVar] *)
+
+Lemma isIdAlways v : isId v = true.
+Proof. by case: v. Qed.
 
 Lemma isn'tTyVar v : isTyVar v = false.
 Proof. by case: v. Qed.
 
 Lemma isn'tCoVar v : isCoVar v = false.
 Proof. by case: v. Qed.
+
+Hint Rewrite isIdAlways isn'tTyVar isn'tCoVar : hs_simpl.

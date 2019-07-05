@@ -1002,9 +1002,10 @@ Proof.
     destruct v; simpl in *; try done.
   }
   assert (ISL : isLocalId v = true).
-  { 
-    destruct v; unfold isLocalId, isLocalVar in *; simpl in *; try done.
-    destruct idScope. done. done.
+  {
+    destruct v; cbv; unfold isLocalId, isLocalVar in *; simpl in *; try done.
+    cbv in h4. destruct (Unique.isLocalUnique (Unique.MkUnique realUnique)); try done.
+(*    destruct idScope. done. done. *)
   }
   eapply WellScoped_Subst_substIdBndr; eauto.
   econstructor; eauto. 
@@ -1238,7 +1239,9 @@ Proof.
     unfold GoodVar in WSvar.
     destruct WSvar as [ ? h1 ].
     destruct v; simpl in *; try done.
-    destruct idScope; try done.
+    unfold isLocalVar, isGlobalId in h. unfold isLocalId in HLocal.
+    rewrite HLocal in h. done.
+    (* destruct idScope; try done. *)
 Qed.
 
 

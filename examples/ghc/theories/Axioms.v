@@ -131,7 +131,8 @@ Proof.
   unfold isLocalId in *. unfold isLocalVar in *.
   unfold isGlobalId. 
   destruct uniqAway.
-  destruct idScope0, idScope; done.
+(*  destruct idScope0, idScope; done. *)
+  rewrite h. auto.
 Qed.
 
 Lemma isId_uniqAway:

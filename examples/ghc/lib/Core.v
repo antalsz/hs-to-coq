@@ -4655,17 +4655,6 @@ Definition setInlinePragInfo : IdInfo -> BasicTypes.InlinePragma -> IdInfo :=
                             oneShotInfo_4__ pr occInfo_6__ strictnessInfo_7__ demandInfo_8__
                             callArityInfo_9__ levityInfo_10__).
 
-Definition setIdExported : Id -> Id :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | (Mk_Id _ _ _ (LocalId _) _ _ as id) =>
-        let 'Mk_Id varName_1__ realUnique_2__ varType_3__ idScope_4__ id_details_5__
-           id_info_6__ := id in
-        Mk_Id varName_1__ realUnique_2__ varType_3__ (LocalId Exported) id_details_5__
-              id_info_6__
-    | (Mk_Id _ _ _ GlobalId _ _ as id) => id
-    end.
-
 Definition setIdDetails : Id -> IdDetails -> Id :=
   fun id details =>
     let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
@@ -5104,21 +5093,7 @@ Definition isLocalRule : CoreRule -> bool :=
   ru_local.
 
 Definition isLocalId : Var -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ (LocalId _) _ _ => true
-    | _ => false
-    end.
-
-Definition setIdNotExported : Id -> Id :=
-  fun id =>
-    if andb Util.debugIsOn (negb (isLocalId id)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/basicTypes/Var.hs")
-          #591)
-    else let 'Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__
-            id_details_4__ id_info_5__ := id in
-         Mk_Id varName_0__ realUnique_1__ varType_2__ (LocalId NotExported)
-               id_details_4__ id_info_5__.
+  fun v => Unique.isLocalUnique (varUnique v).
 
 Definition isJoinIdDetails_maybe : IdDetails -> option BasicTypes.JoinArity :=
   fun arg_0__ =>
@@ -5140,11 +5115,7 @@ Definition valBndrCount : list CoreBndr -> nat :=
   Util.count isId.
 
 Definition isGlobalId : Var -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ GlobalId _ _ => true
-    | _ => false
-    end.
+  fun v => negb (Unique.isLocalUnique (varUnique v)).
 
 Definition isLocalVar : Var -> bool :=
   fun v => negb (isGlobalId v).
@@ -5158,13 +5129,7 @@ Definition isFragileUnfolding : Unfolding -> bool :=
 Definition zapFragileUnfolding : Unfolding -> Unfolding :=
   fun unf => if isFragileUnfolding unf : bool then noUnfolding else unf.
 
-Definition isExportedId : Var -> bool :=
-  fun arg_0__ =>
-    match arg_0__ with
-    | Mk_Id _ _ _ GlobalId _ _ => true
-    | Mk_Id _ _ _ (LocalId Exported) _ _ => true
-    | _ => false
-    end.
+Axiom isExportedId : Var -> bool.
 
 Definition isExpandableUnfolding : Unfolding -> bool :=
   fun arg_0__ => false.
@@ -5292,12 +5257,6 @@ Definition idDetails : Id -> IdDetails :=
 
 Definition hasSomeUnfolding : Unfolding -> bool :=
   fun '(NoUnfolding) => false.
-
-Definition globaliseId : Id -> Id :=
-  fun '(Mk_Id varName_0__ realUnique_1__ varType_2__ idScope_3__ id_details_4__
-  id_info_5__) =>
-    Mk_Id varName_0__ realUnique_1__ varType_2__ GlobalId id_details_4__
-          id_info_5__.
 
 Definition getInScopeVars : InScopeSet -> VarSet :=
   fun '(InScope vs _) => vs.
@@ -7308,7 +7267,7 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      UniqSet.partitionUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
      UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
      UniqSupply.UniqSupply Unique.Uniquable Unique.Unique Unique.deriveUnique
-     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.mkUniqueGrimily
-     Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count Util.debugIsOn
-     Util.foldl2 Util.zipEqual
+     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.isLocalUnique
+     Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count
+     Util.debugIsOn Util.foldl2 Util.zipEqual
 *)

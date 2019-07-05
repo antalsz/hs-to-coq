@@ -182,7 +182,9 @@ Proof.
   move=> s u ty n h1.
   unfold mkSysLocal.
   rewrite andb_false_r.
-  split; destruct u; reflexivity.
+  split; destruct u. 
+  - cbv. rewrite h1. done.
+  - cbv. rewrite h1. rewrite h1. done.
 Qed.
 
 

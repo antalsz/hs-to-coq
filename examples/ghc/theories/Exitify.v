@@ -32,7 +32,7 @@ Require Import Proofs.GhcUtils.
 Require Import Proofs.Util.
 
 Set Bullet Behavior "Strict Subproofs".
-
+Opaque Base.hs_string__.
 Close Scope Z_scope.
 
 (** * Proofs about the Exitification pass *)
@@ -2424,6 +2424,13 @@ Section in_exitifyRec.
       rewrite isLocalVar_uniqAway.
       unfold mkSysLocal. 
       rewrite andb_false_r.
+      Opaque Unique.initExitJoinUnique.
+      cbv. 
+      destruct Unique.initExitJoinUnique eqn:h.
+      rewrite <- h.
+      rewrite isLocalUnique_initExitJoinUnique.
+      rewrite <- h.
+      rewrite isLocalUnique_initExitJoinUnique.
       reflexivity.
     - (* There is again a lot of repetition to above *)
       apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.

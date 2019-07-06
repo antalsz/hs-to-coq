@@ -3,9 +3,9 @@ size="3,6";
 ratio="fill";
 node [shape="diamond", penwidth="1"];
 u0[label="",style="filled",fillcolor=greenyellow,shape="circle"]; //DataCon
-u1[label="",style="filled",fillcolor="#bbbbff"];//MkId
+u1[label=""];//MkId
 u2[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Type
-u3[label="",style="filled",fillcolor="#bbbbff"];//Kind
+u3[label=""];//Kind
 u4[label="",style="filled",fillcolor=greenyellow,shape="circle"];//TyCoRep
 u5[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Coercion
 u6[label="",style="filled",fillcolor=greenyellow,shape="circle"];//TyCon
@@ -22,30 +22,30 @@ u16[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Class
 u17[label="",style="filled",fillcolor=greenyellow,shape="circle"];//PatSyn
 u18[label="",style="filled",fillcolor=pink,shape="square"];//FieldLabel
 u19[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Demand
-u20[label="",style="filled",fillcolor="#bbbbff"];//CoAxiom
+u20[label=""];//CoAxiom
 u21[label="",style="filled",fillcolor=pink,shape="square"];//ConLike
 u22[label="",style="filled",fillcolor=deeppink,shape="square"];//FV
-u23[label="",style="filled",fillcolor="#bbbbff"];//FamInstEnv
-u24[label="",style="filled",fillcolor="#bbbbff"];//Unify
+u23[label=""];//FamInstEnv
+u24[label=""];//Unify
 u25[label="",style="filled",fillcolor=pink,shape="square"];//TrieMap
-u26[label="",style="filled",fillcolor="#bbbbff"];//MkCore
+u26[label=""];//MkCore
 u27[label="",style="filled",fillcolor=deeppink,shape="square"];//Id
 u28[label="",style="filled",fillcolor=deeppink,shape="square"];//CoreUtils
-u29[label="",style="filled",fillcolor="#bbbbff"];//PprCore
+u29[label=""];//PprCore
 u30[label="",style="filled",fillcolor=deeppink,shape="square"];//CoreFVs
-u31[label="",style="filled",fillcolor="#bbbbff"];//HscTypes
-u32[label="",style="filled",fillcolor="#bbbbff"];//RdrName
-u33[label="",style="filled",fillcolor="#bbbbff"];//Avail
-u34[label="",style="filled",fillcolor="#bbbbff"];//InstEnv
-u35[label="",style="filled",fillcolor="#bbbbff"];//Annotations
-u36[label="",style="filled",fillcolor="#bbbbff"];//NameCache
-u37[label="",style="filled",fillcolor="#bbbbff"];//CoreUnfold
-u38[label="",style="filled",fillcolor="#bbbbff"];//OccurAnal
-u39[label="",style="filled",fillcolor="#bbbbff"];//CoreArity
+u31[label=""];//HscTypes
+u32[label=""];//RdrName
+u33[label=""];//Avail
+u34[label=""];//InstEnv
+u35[label=""];//Annotations
+u36[label=""];//NameCache
+u37[label=""];//CoreUnfold
+u38[label=""];//OccurAnal
+u39[label=""];//CoreArity
 u40[label="",style="filled",fillcolor=deeppink,shape="square"];//CoreSubst
-u41[label="",style="filled",fillcolor="#bbbbff"];//CoreSeq
-u42[label="",style="filled",fillcolor="#bbbbff"];//CoreOpt
-u43[label="",style="filled",fillcolor="#bbbbff"];//OptCoercion
+u41[label=""];//CoreSeq
+u42[label=""];//CoreOpt
+u43[label=""];//OptCoercion
 u0 -> u24[penwidth="2",style="bold"];
 u1 -> u26[penwidth="2",style="bold"];
 u1 -> u37[penwidth="2",style="bold"];

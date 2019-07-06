@@ -707,7 +707,7 @@ End Lemmas.
 Hint Resolve
   @notin_empty_1 @notin_add_3 @notin_singleton_2 @notin_remove_2
   @notin_remove_3 @notin_remove_3' @notin_union_3 @notin_inter_2
-  @notin_inter_3 @notin_diff_2 @notin_diff_3.
+  @notin_inter_3 @notin_diff_2 @notin_diff_3 : notin.
 
 
 (* *********************************************************************** *)

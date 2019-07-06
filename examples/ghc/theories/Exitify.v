@@ -27,6 +27,7 @@ Require Import Proofs.GhcTactics.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
 Require Import Proofs.VarEnv.
+Require Proofs.VarSetFSet. (* Import breaks stuff :-( *)
 Require Import Proofs.Unique.
 Require Import Proofs.GhcUtils.
 Require Import Proofs.Util.
@@ -35,9 +36,8 @@ Set Bullet Behavior "Strict Subproofs".
 
 Close Scope Z_scope.
 
+
 (** * Proofs about the Exitification pass *)
-
-
 
 
 (**
@@ -531,6 +531,28 @@ Section in_exitifyRec.
     assumption.
   Qed.
 
+  Axiom freeVarsOf_freeVars_true:
+  forall e,
+  Proofs.VarSetFSet.VarSetFSet.Equal (dVarSetToVarSet (freeVarsOf (freeVars e))) (exprFreeVars e).
+
+(*
+  Global Instance bar:
+    Morphisms.Proper
+    (Morphisms.respectful Logic.eq
+       (Morphisms.respectful VarSetFSet.VarSetFSet.Equal Logic.eq))
+    anyVarSet.
+  Proof. clear. admit. Admitted.
+*)
+
+  Global Instance foo:
+  forall captured e,
+  Morphisms.Proper (Morphisms.respectful Proofs.VarSetFSet.VarSetFSet.Equal Logic.eq) (go_exit captured e).
+  Proof.
+    clear.
+    admit.
+  Admitted.
+
+
   (**
   We are always only ever going to run [go] on expressions
   that are well-scoped and in the domain of [go].
@@ -578,15 +600,16 @@ Section in_exitifyRec.
     cbv beta delta [go_f]. (* No [zeta]! *)
 
     rewrite !deAnnotate_freeVars in *.
-    rewrite !freeVarsOf_freeVars in *.
 
     (* Float out lets *)
     repeat float_let.
     enough (Hnext : P captured e j_40__). {
       clearbody j_40__; cleardefs.
-      destruct (disjointVarSet fvs recursive_calls) eqn:Hdisjoint; try apply Hnext.
+      subst fvs.
+      rewrite !freeVarsOf_freeVars_true in *.
+      destruct (disjointVarSet (exprFreeVars e) recursive_calls) eqn:Hdisjoint; try apply Hnext.
       clear IH Hnext HGoDom.
-      revert e captured Hcapt fvs HWS Hdisjoint.
+      revert e captured Hcapt HWS Hdisjoint.
       refine IH1.
     }
 
@@ -2122,7 +2145,7 @@ Section in_exitifyRec.
     revert e captured H H2 H0 H1.
     refine (go_ind (fun captured e r => impl (isJoinPointsValid e 0 (updJPSs jpsp captured) = true) (P captured e r)) _ _ _ _ _ _ _);
       intros; intro HIJPV.
-    * revert e captured fvs Hcapt HWS Hdisjoint HIJPV.
+    * revert e captured Hcapt HWS Hdisjoint HIJPV.
       eapply IH1.
     * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
       fold isJoinPointsValidPair in HIJPVrhs.

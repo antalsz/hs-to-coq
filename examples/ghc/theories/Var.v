@@ -318,3 +318,20 @@ Proof.
   auto. 
 Qed.
 
+(* SCW: This is provable because we have modified the definition of isLocalVar 
+   to look at the uniques instead of the scope. In GoodVars we know that these two 
+   should be consistent with eachother.  So the remapping shouldn't matter as long 
+   as all of the vars that we work with are good.
+ *)
+Definition RespectsVar (f :Var -> bool) :=
+    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
+
+Lemma RespectsVar_isLocalVar : RespectsVar isLocalVar.
+Proof.
+  move=> v1 v2.
+  move=> h.
+  rewrite -> varUnique_iff  in h.
+  unfold isLocalVar. unfold isGlobalId. rewrite h.
+  auto.
+Qed.
+Hint Resolve RespectsVar_isLocalVar.

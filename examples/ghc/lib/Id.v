@@ -291,7 +291,7 @@ Definition isRecordSelector : Core.Id -> bool :=
     | _ => false
     end.
 
-Definition isPrimOpId_maybe : Core.Id -> option unit :=
+Definition isPrimOpId_maybe : Core.Id -> option AxiomatizedTypes.PrimOp :=
   fun id =>
     match Core.idDetails id with
     | Core.PrimOpId op => Some op
@@ -359,7 +359,7 @@ Definition isImplicitId : Core.Id -> bool :=
     | _ => false
     end.
 
-Definition isFCallId_maybe : Core.Id -> option unit :=
+Definition isFCallId_maybe : Core.Id -> option AxiomatizedTypes.ForeignCall :=
   fun id =>
     match Core.idDetails id with
     | Core.FCallId call => Some call
@@ -606,11 +606,12 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
     end.
 
 (* External variables:
-     None Some andb bool false list nat negb nil option orb pair true tt unit
-     AxiomatizedTypes.Kind AxiomatizedTypes.Type_ BasicTypes.Activation
-     BasicTypes.Arity BasicTypes.InlinePragma BasicTypes.JoinArity
-     BasicTypes.NoOneShotInfo BasicTypes.OccInfo BasicTypes.OneShotInfo
-     BasicTypes.OneShotLam BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
+     None Some andb bool false list nat negb nil option orb pair true tt
+     AxiomatizedTypes.ForeignCall AxiomatizedTypes.Kind AxiomatizedTypes.PrimOp
+     AxiomatizedTypes.Type_ BasicTypes.Activation BasicTypes.Arity
+     BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.NoOneShotInfo
+     BasicTypes.OccInfo BasicTypes.OneShotInfo BasicTypes.OneShotLam
+     BasicTypes.RuleMatchInfo BasicTypes.inlinePragmaActivation
      BasicTypes.inlinePragmaRuleMatchInfo BasicTypes.isConLike BasicTypes.isDeadOcc
      BasicTypes.isOneOcc BasicTypes.isStrongLoopBreaker BasicTypes.noOccInfo
      BasicTypes.occ_in_lam BasicTypes.setInlinePragmaActivation

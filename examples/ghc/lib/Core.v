@@ -131,7 +131,8 @@ Inductive TickishPlacement : Type
   |  PlaceCostCentre : TickishPlacement.
 
 Inductive Tickish id : Type
-  := | ProfNote (profNoteCC : unit) (profNoteCount : bool) (profNoteScope : bool)
+  := | ProfNote (profNoteCC : CostCentre) (profNoteCount : bool) (profNoteScope
+    : bool)
    : Tickish id
   |  HpcTick (tickModule : Module.Module) (tickId : nat) : Tickish id
   |  Breakpoint (breakpointId : nat) (breakpointFVs : list id) : Tickish id
@@ -427,7 +428,7 @@ with TyCon : Type
   |  AlgTyCon (tyConUnique : Unique.Unique) (tyConName : Name.Name) (tyConBinders
     : list (TyVarBndr Var%type TyConBndrVis)%type) (tyConTyVars : list Var%type)
   (tyConResKind : Kind) (tyConKind : Kind) (tyConArity : BasicTypes.Arity)
-  (tcRoles : list Role) (tyConCType : option unit) (algTcGadtSyntax : bool)
+  (tcRoles : list Role) (tyConCType : option CType) (algTcGadtSyntax : bool)
   (algTcStupidTheta : list PredType) (algTcRhs : AlgTyConRhs) (algTcFields
     : FieldLabel.FieldLabelEnv) (algTcParent : AlgTyConFlav)
    : TyCon
@@ -482,8 +483,8 @@ with DataCon : Type
    : DataCon
 with DataConRep : Type
   := | NoDataConRep : DataConRep
-  |  DCR (dcr_wrap_id : Var%type) (dcr_boxer : unit) (dcr_arg_tys : list Type_)
-  (dcr_stricts : list StrictnessMark) (dcr_bangs : list HsImplBang)
+  |  DCR (dcr_wrap_id : Var%type) (dcr_boxer : DataConBoxer) (dcr_arg_tys
+    : list Type_) (dcr_stricts : list StrictnessMark) (dcr_bangs : list HsImplBang)
    : DataConRep
 with Var : Type
   := | Mk_Id (varName : Name.Name) (realUnique : BinNums.N) (varType : Type_)
@@ -495,8 +496,8 @@ with IdDetails : Type
   |  DataConWorkId : DataCon -> IdDetails
   |  DataConWrapId : DataCon -> IdDetails
   |  ClassOpId : Class -> IdDetails
-  |  PrimOpId : unit -> IdDetails
-  |  FCallId : unit -> IdDetails
+  |  PrimOpId : PrimOp -> IdDetails
+  |  FCallId : ForeignCall -> IdDetails
   |  TickBoxOpId : TickBoxOp -> IdDetails
   |  Mk_DFunId : bool -> IdDetails
   |  Mk_JoinId : BasicTypes.JoinArity -> IdDetails
@@ -2633,7 +2634,7 @@ Axiom tyConDataCons : TyCon -> list DataCon.
 
 Axiom tyConClass_maybe : TyCon -> option Class.
 
-Axiom tyConCType_maybe : TyCon -> option unit.
+Axiom tyConCType_maybe : TyCon -> option CType.
 
 Axiom tyConBindersTyBinders : list TyConBinder -> list TyBinder.
 
@@ -3539,7 +3540,7 @@ Axiom mkAlgTyCon : Name.Name ->
                    list TyConBinder ->
                    Kind ->
                    list Role ->
-                   option unit -> list PredType -> AlgTyConRhs -> AlgTyConFlav -> bool -> TyCon.
+                   option CType -> list PredType -> AlgTyConRhs -> AlgTyConFlav -> bool -> TyCon.
 
 Axiom mkAbstractClass : Name.Name ->
                         list TyVar -> list (FunDep TyVar) -> TyCon -> Class.
@@ -4132,7 +4133,7 @@ Axiom dataConFieldLabels : DataCon -> list FieldLabel.FieldLabel.
 
 Axiom dataConCannotMatch : list Type_ -> DataCon -> bool.
 
-Axiom dataConBoxer : DataCon -> option unit.
+Axiom dataConBoxer : DataCon -> option DataConBoxer.
 
 Axiom dVarSetElemsWellScoped : DVarSet -> list Var.
 
@@ -7214,12 +7215,13 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
            GHC.Base.op_zsze____ := Eq___Class_op_zsze__ |}.
 
 (* External variables:
-     BranchIndex Branched BuiltInSynFamily CoAxBranch CoAxiom CoAxiomRule Coercion Eq
-     Gt Kind Literal Lt None PredType Role Some ThetaType TyBinder TyThing Type Type_
-     Unbranched andb bool comparison cons false list mkMachChar mkMachDouble
-     mkMachFloat mkMachString nat negb nil op_zt__ option orb pair size_AnnExpr' snd
-     true tt unit BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity
-     BasicTypes.Boxity BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
+     BranchIndex Branched BuiltInSynFamily CType CoAxBranch CoAxiom CoAxiomRule
+     Coercion CostCentre DataConBoxer Eq ForeignCall Gt Kind Literal Lt None PredType
+     PrimOp Role Some ThetaType TyBinder TyThing Type Type_ Unbranched andb bool
+     comparison cons false list mkMachChar mkMachDouble mkMachFloat mkMachString nat
+     negb nil op_zt__ option orb pair size_AnnExpr' snd true tt unit
+     BasicTypes.Activation BasicTypes.AlwaysActive BasicTypes.Arity BasicTypes.Boxity
+     BasicTypes.ConTag BasicTypes.ConTagZ BasicTypes.DefMethSpec
      BasicTypes.IAmALoopBreaker BasicTypes.IAmDead BasicTypes.InlinePragma
      BasicTypes.JoinArity BasicTypes.LeftOrRight BasicTypes.ManyOccs
      BasicTypes.NoOneShotInfo BasicTypes.NoTailCallInfo BasicTypes.OccInfo

@@ -23,6 +23,12 @@ Axiom TcTyVarDetails     : Type.
 Axiom liftedTypeKind     : Kind.
 Axiom constraintKind     : Kind.
 
+Axiom PrimOp             : Type.
+Axiom ForeignCall        : Type.
+Axiom CType              : Type.
+Axiom CostCentre         : Type.
+Axiom DataConBoxer       : Type.
+
 
 (* -------------------- assumed default instances ------------------- *)
 
@@ -87,6 +93,26 @@ Instance Default__CoAxiomBranch
 Admitted.
 
 
+Instance Default__CostCentre
+   : GHC.Err.Default CostCentre := {}.
+Admitted.
+
+Instance Default__DataConBoxer
+   : GHC.Err.Default DataConBoxer := {}.
+Admitted.
+
+
+Instance Default__PrimOp
+   : GHC.Err.Default PrimOp := {}.
+Admitted.
+Instance Default__ForeignCall
+   : GHC.Err.Default ForeignCall := {}.
+Admitted.
+Instance Default__CType
+   : GHC.Err.Default CType := {}.
+Admitted.
+
+
 (* ---------------- Eq -------------- *)
 
 Instance Eq___CoAxiomRule
@@ -95,4 +121,12 @@ Admitted.
 
 Instance Eq___Role
    : GHC.Base.Eq_ Role := {}.
+Admitted.
+
+Instance Eq___CostCentre
+   : GHC.Base.Eq_ CostCentre := {}.
+Admitted.
+
+Instance Ord___CostCentre
+   : GHC.Base.Ord CostCentre := {}.
 Admitted.

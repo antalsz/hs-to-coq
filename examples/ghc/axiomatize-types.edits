@@ -181,13 +181,15 @@ rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 # instances for them too.
 #
 
-rename type PrimOp.PrimOp           = unit
-rename type ForeignCall.ForeignCall = unit
-rename type ForeignCall.CType       = unit
-rename type CostCentre.CostCentre   = unit
+rename type PrimOp.PrimOp           = AxiomatizedTypes.PrimOp
+rename type ForeignCall.ForeignCall = AxiomatizedTypes.ForeignCall
+rename type ForeignCall.CType       = AxiomatizedTypes.CType
+rename type CostCentre.CostCentre   = AxiomatizedTypes.CostCentre
 
 # used in DataCon
-rename type MkId.DataConBoxer       = unit
+rename type MkId.DataConBoxer       = AxiomatizedTypes.DataConBoxer
+
+
 
 ###############################################################################
 # Skipping constructors 

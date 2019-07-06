@@ -265,7 +265,7 @@ Definition isEmptyTy : AxiomatizedTypes.Type_ -> bool :=
     | _ => false
     end.
 
-Axiom isDivOp : unit -> bool.
+Axiom isDivOp : AxiomatizedTypes.PrimOp -> bool.
 
 Definition isDefaultAlt {a} {b} : (Core.AltCon * a * b)%type -> bool :=
   fun arg_0__ =>
@@ -329,7 +329,7 @@ Definition findAlt {a} {b}
     | _ => go alts None
     end.
 
-Axiom expr_ok : (unit -> bool) -> Core.CoreExpr -> bool.
+Axiom expr_ok : (AxiomatizedTypes.PrimOp -> bool) -> Core.CoreExpr -> bool.
 
 Axiom exprType : Core.CoreExpr -> AxiomatizedTypes.Type_.
 
@@ -662,7 +662,8 @@ Axiom bindNonRec : Core.Id -> Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr.
 Axiom applyTypeToArgs : Core.CoreExpr ->
                         AxiomatizedTypes.Type_ -> list Core.CoreExpr -> AxiomatizedTypes.Type_.
 
-Axiom app_ok : (unit -> bool) -> Core.Id -> list Core.CoreExpr -> bool.
+Axiom app_ok : (AxiomatizedTypes.PrimOp -> bool) ->
+               Core.Id -> list Core.CoreExpr -> bool.
 
 Definition altsAreExhaustive {b} : list (Core.Alt b) -> bool :=
   fun arg_0__ =>
@@ -716,7 +717,7 @@ Definition filterAlts {a}
 
 (* External variables:
      Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
-     pair snd true tt unit AxiomatizedTypes.Coercion
+     pair snd true tt AxiomatizedTypes.Coercion AxiomatizedTypes.PrimOp
      AxiomatizedTypes.Representational AxiomatizedTypes.Type_ BasicTypes.Arity
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App
      Core.Breakpoint Core.Case Core.Cast Core.CoreAlt Core.CoreArg Core.CoreBind

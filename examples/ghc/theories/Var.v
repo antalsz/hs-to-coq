@@ -318,6 +318,8 @@ Proof.
   auto. 
 Qed.
 
+(** ** isLocalVar respects the GHC.Base.== equality for Vars  *)
+
 (* SCW: This is provable because we have modified the definition of isLocalVar 
    to look at the uniques instead of the scope. In GoodVars we know that these two 
    should be consistent with eachother.  So the remapping shouldn't matter as long 

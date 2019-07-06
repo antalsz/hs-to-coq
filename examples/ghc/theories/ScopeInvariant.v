@@ -941,24 +941,47 @@ Proof.
       fsetdec.
     + rewrite exprFreeVars_Let_Rec.
       move: WSbi => [Gc[ nd FWSe0]].
-      apply H0 in WSbo.
-      rewrite delVarSetList_unionVarSet.
-      eapply union_subset_3.
-      ++ rewrite <- SubsetE.
-         eapply subVarSet_delVarSetList_extendVarSetList_dual.
-         eapply subVarSet_exprsFreeVars.
-         rewrite Forall_forall.
-         rewrite -> Forall.Forall'_Forall in FWSe0.
-         rewrite -> Forall_forall in FWSe0.
-         move=> x In.
-         admit.
-      ++ admit.
+      apply H0 in WSbo. 
+      unfold bindersOf in WSbo.
+      rewrite Core.bindersOf_Rec_cleanup in WSbo.
+      rewrite <- SubsetE.
+      apply subVarSet_delVarSetList_extendVarSetList_dual.
+      unfold is_true.
+      rewrite -> subVarSet_unionVarSet, andb_true_iff; split.
+      * apply subVarSet_exprsFreeVars.
+        rewrite -> Forall_map, Forall_forall in *.
+        intros [v rhs] HIn. simpl in *.
+        specialize (H _ _ HIn (extendVarSetList vs (map fst l))).
+        rewrite <- SubsetE in H. eapply H.
+        rewrite -> Forall'_Forall in FWSe0.
+        rewrite -> Forall_forall in FWSe0.
+        apply (FWSe0 _ HIn).
+      * rewrite <- SubsetE in WSbo.
+        auto.
   - fold WellScoped in H. simpl in H1.
     move: H1 => [WSs [GVb FF]].
     rewrite exprFreeVars_Case.
     apply H in WSs.
     eapply union_subset_3; auto.
-    admit.
+    rewrite -> Forall'_Forall in FF. rewrite -> Forall_forall in FF.
+    rewrite <- SubsetE.
+    eapply subVarSet_mapUnionVarSet.
+    rewrite -> Forall_forall.
+    move=> x In.
+    move: (FF x In) => [h0 h1].
+    destruct x as [[dc pats] rhs].
+    specialize (H0 dc pats rhs In).
+    rewrite <- delVarSetList_rev.
+    (* smelly reverse *)
+    rewrite rev_app_distr.
+    rewrite delVarSetList_app.
+    rewrite !delVarSetList_rev.
+    rewrite <- delVarSetList_app.
+
+    eapply subVarSet_delVarSetList_extendVarSetList_dual.
+    rewrite -> SubsetE.
+    eapply H0.
+    eapply h1.
   - fold WellScoped in H. simpl in H0.
     rewrite exprFreeVars_Cast.
     eauto.
@@ -966,4 +989,4 @@ Proof.
     fsetdec.
   - rewrite exprFreeVars_Coercion.
     fsetdec.
-Abort.
+Qed.

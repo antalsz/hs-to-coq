@@ -175,17 +175,6 @@ Axiom isJoinId_maybe_asJoinId:
   forall v a,
   isJoinId_maybe (asJoinId v a) = Some a.
 
-(** ** isLocalVar respects the GHC.Base.== equality for Vars  *)
-
-(* SCW: technically, we should know this directly for GoodVars, i.e. those 
-   where the unique agrees with the idScope. But all of the Vars that we work 
-   with should be good. And having this axiom around is really, really convenient 
-   for reasoning about FV. *)
-Definition RespectsVar (f :Var -> bool) :=
-    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
-
-Axiom RespectsVar_isLocalVar : RespectsVar isLocalVar.
-Hint Resolve RespectsVar_isLocalVar.
 
 (** ** Valid VarSets *)
 

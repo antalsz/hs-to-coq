@@ -850,15 +850,19 @@ Proof.
       DVarToVar.
       replace (isId c) with true; try (destruct c; reflexivity).
       fsetdec.
-    + rewrite exprFreeVars_Let_Rec. rewrite <- H0.
-      induction l. 
-      ++ hs_simpl.         
-         unfold freeVars; fold freeVars.
-         simpl.
-         unfold delBindersFV.
-         hs_simpl.
-         reflexivity.
-      ++ admit.
+    + rewrite exprFreeVars_Let_Rec. 
+      unfold freeVarsOf in H0.
+      destruct (freeVars body) eqn:h.
+      unfold freeVars. fold freeVars. simpl.
+      rewrite h. rewrite <- H0. simpl.
+      destruct List.unzip eqn:h0. simpl.
+      unfold delBindersFV.
+      rewrite <- snd_unzip. rewrite h0. simpl.
+      rewrite delVarSetList_unionVarSet.
+      unfold unionFVs. unfold delBinderFV. unfold unionFVs.
+      unfold dVarTypeTyCoVars. unfold varTypeTyCoFVs.
+      DVarToVar.
+      admit.
   - intros.
     rewrite exprFreeVars_Case.
     unfold freeVars; fold freeVars.

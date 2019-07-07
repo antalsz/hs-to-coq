@@ -26,6 +26,7 @@ Require Import Proofs.ScopeInvariant.
 Require Import Proofs.Forall.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 
 Require Import CSE.

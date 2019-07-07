@@ -21,6 +21,7 @@ Require Import Proofs.Var.
 Require Import Proofs.Unique.
 Require Import Proofs.VarSet.
 Require Import Proofs.VarSetFSet.
+Require Import Proofs.VarSetStrong.
 
 Require Import Proofs.GHC.Base.
 

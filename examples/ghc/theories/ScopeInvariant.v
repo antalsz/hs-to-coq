@@ -24,6 +24,7 @@ Require Import Proofs.Forall.
 Require Import Proofs.Unique.
 Require Import Proofs.CoreFVs. 
 Require Import Proofs.VarSet.
+Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Var.
@@ -558,7 +559,6 @@ Proof.
   destruct_match.
   rewrite -> lookupVarSet_extendVarSetList_self_in by assumption.
   intuition.
-  apply almostEqual_refl.
   assumption.
 Qed.
 

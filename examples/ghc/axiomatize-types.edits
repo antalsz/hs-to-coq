@@ -289,7 +289,7 @@ axiomatize definition Core.dataConCannotMatch
 #
 rewrite forall co,     Core.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,     Core.tyCoFVsOfType ty        = FV.emptyFV
-rewrite forall b_ty,   Core.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
+rewrite forall ty,     Core.tyCoVarsOfTypeDSet ty   = Core.emptyDVarSet
 rewrite forall co,     Core.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 
 # in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
@@ -300,11 +300,18 @@ rewrite forall co,     Core.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 in CoreSubst.substBndr   rewrite forall x, Core.noFreeVarsOfType x = true
 in CoreSubst.substIdBndr rewrite forall x, Core.noFreeVarsOfType x = true
 
+
+
+#
 # we cannot verify these assertions as we aren't tracking whether types are
-# coercion types are not. 
+# coercion types are not. But they are debug assertions!
 #
 in Id.mkSysLocal rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkUserLocal rewrite forall ty, (Core.isCoercionType ty) = false
+
+# these two use the type information to determine whether to make a type
+# or a coercion variable
+#
 in Id.mkLocalIdOrCoVarWithInfo rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkLocalIdOrCoVar rewrite forall ty, Core.isCoercionType ty = false
 

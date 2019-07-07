@@ -26,6 +26,7 @@ Require Import Proofs.CoreFVs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Unique.
 Require Import Proofs.GhcUtils.
@@ -344,7 +345,8 @@ Section in_exitifyRec.
 
   (** Corresponding definitions for the join points in scope *)
   (** The let-scope, before exitification *)
-  Definition jpsp := updJPSs jps fs .
+  
+Definition jpsp := updJPSs jps fs .
   (** The outermost scope, including the exit join points we produce *)
   Definition jps' := updJPSs jps (map fst exits).
   (** The let-scope, after exitification *)

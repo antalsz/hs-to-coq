@@ -47,6 +47,17 @@ Require Import Proofs.ScopeInvariant.
 
 Set Bullet Behavior "Strict Subproofs".
 
+Lemma unzip_fst {A B} l : forall (l0 : list A) (l1 : list B), List.unzip l = (l0, l1) -> List.map fst l = l0.
+Proof. 
+  induction l. 
+  - simpl. move=> l0 l1 h. inversion h. auto.
+  - move=> l0 l1. destruct a; simpl. 
+    destruct (List.unzip l) eqn:LL.
+    move=> h. inversion h. subst.
+    f_equal. eapply IHl. eauto.
+Qed.
+
+
 Lemma unionsVarSet_equal : forall vss1 vss2, Forall2 Equal vss1 vss2 ->
   (Foldable.foldr unionVarSet emptyVarSet) vss1 [=]
   (Foldable.foldr unionVarSet emptyVarSet) vss2.
@@ -159,6 +170,110 @@ Proof.
     auto.
 Qed.
 
+
+(** A very specialized [Proper] instance, written for the sole purpose
+    of proving [delVarSetList_commute]. *)
+Instance foldl_m :
+  Proper (Equal ==> (fun (a b : list Var) => a = b) ==> Equal)
+         (Foldable.foldl delVarSet).
+Proof.
+  intros s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  induction l2.
+  - rewrite /Foldable.foldl //=.
+  - intros s1 s2 Heqs. rewrite !Foldable_foldl_cons.
+    apply IHl2. rewrite Heqs. reflexivity.
+Qed.
+
+Instance delVarSet_m : 
+  Proper (Equal ==> (fun x y => (x GHC.Base.== y)) ==> Equal) delVarSet.
+Proof.
+  move=> [[i1]] [[i2]] E1 y1 y2 E2.
+  simpl.
+  unfold Equal, In, elemVarSet,UniqSet.elementOfUniqSet,UniqFM.elemUFM in *.
+  move=> v.
+  specialize (E1 v).
+Admitted.
+  
+
+Lemma delVarSetList_commute :forall (bndrs:list Var) vs bndr,
+  Foldable.foldl delVarSet (delVarSet vs bndr) bndrs [=]
+  delVarSet (Foldable.foldl delVarSet vs bndrs) bndr.
+Proof.
+  elim => [|bndr' bndrs].
+  - move=> vs bndr. hs_simpl. reflexivity.
+  - move=> IH vs bndr.
+    hs_simpl.
+    rewrite delVarSet_commute.
+    eapply IH.
+Qed.
+
+
+
+(** A [Proper] instance, written for the sole purpose
+    of proving [delVarSetList_commute]. *)
+Instance foldr_m :
+  Proper (((fun x y => (x GHC.Base.== y)) ==> Equal ==> Equal) ==> Equal ==> (fun (a b : list Var) => a = b) ==> Equal)
+         Foldable.foldr.
+Proof.
+  intros f1 f2 Hf s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  induction l2.
+  - rewrite /Foldable.foldr //=.
+  - intros s1 s2 Heqs. rewrite !Foldable_foldr_cons.
+    specialize (IHl2 s1 s2 Heqs).
+    eapply Hf. reflexivity.
+    eapply IHl2.  
+Qed.
+
+
+
+(** A [Proper] instance, written for showing that folding a unionVarSet like term  *)
+Instance foldr_mE :
+  Proper ((Equal ==> Equal ==> Equal) ==> Equal ==> (Forall2 Equal) ==> Equal)
+         Foldable.foldr.
+Proof.
+  intros f1 f2 Hf s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  generalize dependent l1. 
+  induction l2.
+  - move=> l1 Heql. inversion Heql. rewrite /Foldable.foldr //=.
+  - move=> l1 Heql. inversion Heql. subst. 
+    intros s1 s2 Heqs. rewrite !Foldable_foldr_cons.   
+    specialize (IHl2 _ H3 s1 s2 Heqs).
+    eapply Hf. auto.
+    eapply IHl2.  
+Qed.
+
+Lemma delVarSetList_commute_foldr : forall (bndrs:list Var) vs bndr,
+  Foldable.foldr (fun x y => delVarSet y x) (delVarSet vs bndr) bndrs [=]
+  delVarSet (Foldable.foldr (fun x y => delVarSet y x) vs bndrs) bndr.
+Proof.
+  elim => [|bndr' bndrs].
+  - move=> vs bndr. hs_simpl. reflexivity.
+  - move=> IH vs bndr.
+    hs_simpl.
+    rewrite delVarSet_commute.
+    rewrite IH. reflexivity.
+Qed.
+
+Lemma delVarSetList_foldr ss xs : 
+  delVarSetList ss xs [=] Foldable.foldr (fun x ss => delVarSet ss x) ss xs.
+Proof.
+  generalize dependent ss.
+  induction xs.
+  cbv. destruct ss. auto.
+  - move=> ss. hs_simpl.
+    rewrite <- delVarSetList_commute_foldr.
+    rewrite <- IHxs.
+    reflexivity.
+Qed. 
+
+
+
 (** ** [FV] *)
 
 Lemma emptyVarSet_bndrRuleAndUnfoldingFVs bndr :
@@ -189,33 +304,6 @@ Proof.
   move=> fv bndr [vs D].
   eexists.
   eauto using addBndr_fv.
-Qed.
-
-(** A very specialized [Proper] instance, written for the sole purpose
-    of proving [delVarSetList_commute]. *)
-Instance foldl_m :
-  Proper (Equal ==> (fun (a b : list Var) => a = b) ==> Equal)
-         (Foldable.foldl delVarSet).
-Proof.
-  intros s1 s2 Heqs l1 l2 Heql; subst.
-  generalize dependent s2.
-  generalize dependent s1.
-  induction l2.
-  - rewrite /Foldable.foldl //=.
-  - intros s1 s2 Heqs. rewrite !Foldable_foldl_cons.
-    apply IHl2. rewrite Heqs. reflexivity.
-Qed.
-
-Lemma delVarSetList_commute :forall (bndrs:list Var) vs bndr,
-  Foldable.foldl delVarSet (delVarSet vs bndr) bndrs [=]
-  delVarSet (Foldable.foldl delVarSet vs bndrs) bndr.
-Proof.
-  elim => [|bndr' bndrs].
-  - move=> vs bndr. hs_simpl. reflexivity.
-  - move=> IH vs bndr.
-    hs_simpl.
-    rewrite delVarSet_commute.
-    eapply IH.
 Qed.
 
 
@@ -865,6 +953,11 @@ Lemma no_TyCoVars bndr: (dVarTypeTyCoVars bndr) [=] emptyVarSet.
   reflexivity.
 Qed.
 
+Lemma no_RuleAndUnfoldingFVs l0 : 
+  (FV.fvVarSet (FV.mapUnionFV bndrRuleAndUnfoldingFVs l0)) [=] emptyVarSet.
+Proof.
+Admitted.
+
 Lemma freeVarsOf_freeVars_revised:
   forall e,
   (freeVarsOf (freeVars e)) [=] exprFreeVars e.
@@ -911,13 +1004,31 @@ Proof.
       unfold delBindersFV.
       rewrite <- snd_unzip. rewrite h0. simpl.
       unfold delBinderFV. unfold unionFVs.
-      rewrite delVarSetList_unionVarSet.
-      unfold unionFVs. 
       unfold dVarTypeTyCoVars. unfold varTypeTyCoFVs.
       DVarToVar.
-      admit.
+      rewrite delVarSetList_foldr.
 
-
+      move: (unzip_fst _ _ _ h0) => h1. rewrite h1.
+      rewrite <- Foldable_foldr_map. unfold Base.op_z2218U__.
+      eapply foldr_m; auto.
+      ++ move => x1 x2 Ex s1 s2 Ev.
+         rewrite DenotesfvVarSet;
+           try apply emptyVarSet_emptyFV.
+         rewrite unionEmpty_r. 
+         rewrite Ev. rewrite -> Ex.
+         reflexivity.
+      ++ rewrite no_RuleAndUnfoldingFVs.
+         rewrite unionEmpty_r.
+         clear h1.
+         move: l1 l0 h0 H. 
+         induction l.
+         simpl. move=> l1 l0 [] e1 e2. subst. hs_simpl. reflexivity.
+         move=> l1 l0 UZ IH.
+         destruct a0. simpl in UZ. destruct (List.unzip l) eqn:hl.  inversion UZ. subst.
+         hs_simpl. rewrite IHl; eauto.
+         +++ move: (IH c e0) => hh. rewrite hh; simpl; eauto.
+             set_b_iff. fsetdec.
+         +++ intros v rhs In. eapply (IH v). simpl. right. auto.              
   - intros.
     rewrite exprFreeVars_Case.
     unfold freeVars; fold freeVars.
@@ -934,13 +1045,40 @@ Proof.
     unfold unionFVs. DVarToVar.
     rewrite unionEmpty_r.
 
+    rewrite delVarSet_unionVarSets.
+    rewrite mapUnionVarSets_unionVarSets.
+    rewrite unionVarSets_def.
+    rewrite unionVarSets_def.
+    eapply foldr_mE; try reflexivity.
+    eapply unionVarSet_m.
 
-  rewrite delVarSet_unionVarSets.
-  rewrite mapUnionVarSets_unionVarSets.
-  rewrite unionVarSets_def.
-  rewrite unionVarSets_def.
-  eapply unionsVarSet_equal.
-    admit.
+    move: alts alt_fvs_s alts2 Z H0.
+    induction alts.
+    ++ intros. simpl in Z. inversion Z. simpl. auto.
+    ++ intros. 
+       destruct a. destruct p. simpl in Z.
+       destruct List.unzip eqn:ZZ.
+       simpl.
+       inversion Z. destruct alt_fvs_s; inversion H2.
+       destruct alts2; inversion H3. subst.
+       simpl. clear H2. clear H3.
+       eapply Forall2_cons.
+       +++ move: (H0 a l c ltac:(simpl; eauto)) => h1. 
+           unfold delBindersFV.
+           hs_simpl.
+           eapply delVarSet_m; try reflexivity.
+           unfold delBinderFV.
+           rewrite delVarSetList_foldr.
+           eapply foldr_m; eauto.
+           move=> x1 x2 Ex y1 y2 Ey.
+           rewrite no_TyCoVars.
+           unfold unionFVs. DVarToVar.
+           rewrite unionEmpty_r.
+           rewrite -> Ex. 
+           rewrite Ey.
+           reflexivity.
+       +++ eapply IHalts; eauto.
+           move=> dc pats rhs In. eapply H0. simpl. right. eauto.
 
   - intros. rewrite exprFreeVars_Cast. unfold freeVars. fold freeVars. 
     simpl. rewrite H. fsetdec.
@@ -948,7 +1086,7 @@ Proof.
     simpl. reflexivity.
   - intros. rewrite exprFreeVars_Coercion. unfold freeVars. fold freeVars.
     simpl. reflexivity.
- Abort.
+Qed.
 
 Lemma deAnnotate_freeVars:
   forall e, deAnnotate (freeVars e) = e.

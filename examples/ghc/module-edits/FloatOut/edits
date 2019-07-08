@@ -1,0 +1,20 @@
+rewrite forall t e, CoreUtils.mkTick t e = e
+rewrite forall t e, CoreUtils.tickHNFArgs t e = e
+
+rename value SetLevels.Level = SetLevels.Mk_Level
+
+# needs IntMap.splitLookup
+#
+axiomatize definition FloatOut.partitionByLevel
+
+# This is the main loop of the pass
+# It looks a little more tractable than the others
+# but is still pretty hairy. 
+#
+# inline mutual FloatOut.floatRhs
+# inline mutual FloatOut.floatBody
+# axiomatize definition FloatOut.floatBind
+axiomatize definition FloatOut.floatExpr
+
+# needs IO monad
+skip FloatOut.floatOutwards

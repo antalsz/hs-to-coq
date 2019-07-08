@@ -172,6 +172,7 @@ Definition WellScopedProgram (pgm : CoreProgram) : Prop :=
    Forall' (fun p => WellScoped (snd p) (mkVarSet (bindersOfBinds pgm))) (flattenBinds pgm).
 
 
+
 (** ** Lemmas *)
 
 

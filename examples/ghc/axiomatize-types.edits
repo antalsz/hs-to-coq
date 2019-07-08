@@ -5,14 +5,14 @@ skip module Unify
 skip module TcType
 skip module RepType
 skip module ForeignCall
-skip module	FamInstEnv
+#skip module	FamInstEnv
 skip module PprCore
 skip module Data.ByteString
 skip module ErrUtils
-skip module OccurAnal
+#skip module OccurAnal
 skip module CostCentre
-skip module PrimOp
-skip module TysPrim
+#skip module PrimOp
+#skip module TysPrim
 skip module Platform
 
 ####################################################
@@ -47,7 +47,7 @@ redefine Definition Core.disjointDVarSet := Core.disjointVarSet.
 redefine Definition Core.anyDVarSet := Core.anyVarSet.
 redefine Definition Core.allDVarSet := Core.allVarSet.
 
-skip Core.foldDVarSet 
+rename value UniqDSet.foldDVarSet = Core.nonDetFoldUniqSet
 
 redefine Definition Core.dVarSetToVarSet : DVarSet -> VarSet := fun x => x.
 redefine Definition FV.fvDVarSet : FV.FV -> Core.DVarSet := FV.fvVarSet.

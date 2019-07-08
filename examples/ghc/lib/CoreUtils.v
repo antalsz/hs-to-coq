@@ -651,6 +651,20 @@ Axiom coreAltType : Core.CoreAlt -> AxiomatizedTypes.Type_.
 Axiom combineIdenticalAlts : list Core.AltCon ->
                              list Core.CoreAlt -> (bool * list Core.AltCon * list Core.CoreAlt)%type.
 
+Definition collectMakeStaticArgs
+   : Core.CoreExpr ->
+     option (Core.CoreExpr * AxiomatizedTypes.Type_ * Core.CoreExpr *
+             Core.CoreExpr)%type :=
+  fun '(e) =>
+    match Core.collectArgsTicks (GHC.Base.const true) e with
+    | pair (pair (Core.Mk_Var b as fun_) (cons (Core.Mk_Type t) (cons loc (cons arg
+        nil)))) _ =>
+        if Id.idName b GHC.Base.== PrelNames.makeStaticName : bool
+        then Some (pair (pair (pair fun_ t) loc) arg) else
+        None
+    | _ => None
+    end.
+
 Axiom cheapEqExpr' : forall {b},
                      (Core.Tickish Core.Id -> bool) -> Core.Expr b -> Core.Expr b -> bool.
 
@@ -726,25 +740,25 @@ Definition filterAlts {a}
      Core.LitAlt Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec
      Core.RnEnv2 Core.Tickish Core.TyCon Core.TyVar Core.Unfolding Core.Var
      Core.cmpAlt Core.cmpAltCon Core.coercionKind Core.coercionRole
-     Core.dataConCannotMatch Core.dataConTyCon Core.dataConUnivTyVars
-     Core.eqCoercionX Core.eqType Core.eqTypeX Core.idDetails Core.isCoercionType
-     Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isReflCo Core.isRuntimeArg
-     Core.isRuntimeVar Core.isTyVar Core.isTypeArg Core.isUnliftedType Core.isValArg
-     Core.mkCoCast Core.mkConApp Core.mkRnEnv2 Core.mkTransCo Core.rnBndr2
-     Core.rnBndrs2 Core.rnOccL Core.rnOccR Core.splitTyConApp_maybe
-     Core.tyConDataCons_maybe Core.tyConFamilySize Core.valArgCount Core.varType
-     Core.varsToCoreExprs Data.Foldable.all Data.Foldable.and Data.Foldable.elem
-     Data.Foldable.null Data.Maybe.fromMaybe Data.Maybe.isJust Data.OldList.nub
-     Data.Tuple.snd Datatypes.id DynFlags.DynFlags FastString.FastString
-     GHC.Base.String GHC.Base.const GHC.Base.map GHC.Base.mappend
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.error GHC.List.unzip
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity Id.idUnfolding
-     Id.isBottomingId Id.isConLikeId Id.isDataConWorkId Id.isJoinId Literal.MachStr
-     Literal.litIsDupable Literal.litIsTrivial NestedRecursionHelpers.all2Map
-     OrdList.OrdList OrdList.appOL OrdList.concatOL OrdList.fromOL OrdList.nilOL
-     Pair.Mk_Pair Pair.pSnd Panic.assertPanic Panic.panic Panic.panicStr
-     Panic.someSDoc Panic.warnPprTrace PrelNames.absentErrorIdKey Unique.Unique
-     Unique.hasKey Util.debugIsOn Util.dropList Util.equalLength Util.filterOut
-     Util.lengthIs
+     Core.collectArgsTicks Core.dataConCannotMatch Core.dataConTyCon
+     Core.dataConUnivTyVars Core.eqCoercionX Core.eqType Core.eqTypeX Core.idDetails
+     Core.isCoercionType Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isReflCo
+     Core.isRuntimeArg Core.isRuntimeVar Core.isTyVar Core.isTypeArg
+     Core.isUnliftedType Core.isValArg Core.mkCoCast Core.mkConApp Core.mkRnEnv2
+     Core.mkTransCo Core.rnBndr2 Core.rnBndrs2 Core.rnOccL Core.rnOccR
+     Core.splitTyConApp_maybe Core.tyConDataCons_maybe Core.tyConFamilySize
+     Core.valArgCount Core.varType Core.varsToCoreExprs Data.Foldable.all
+     Data.Foldable.and Data.Foldable.elem Data.Foldable.null Data.Maybe.fromMaybe
+     Data.Maybe.isJust Data.OldList.nub Data.Tuple.snd Datatypes.id DynFlags.DynFlags
+     FastString.FastString GHC.Base.String GHC.Base.const GHC.Base.map
+     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.error
+     GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity
+     Id.idName Id.idUnfolding Id.isBottomingId Id.isConLikeId Id.isDataConWorkId
+     Id.isJoinId Literal.MachStr Literal.litIsDupable Literal.litIsTrivial
+     NestedRecursionHelpers.all2Map OrdList.OrdList OrdList.appOL OrdList.concatOL
+     OrdList.fromOL OrdList.nilOL Pair.Mk_Pair Pair.pSnd Panic.assertPanic
+     Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
+     PrelNames.absentErrorIdKey PrelNames.makeStaticName Unique.Unique Unique.hasKey
+     Util.debugIsOn Util.dropList Util.equalLength Util.filterOut Util.lengthIs
 *)

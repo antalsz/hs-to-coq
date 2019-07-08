@@ -1,0 +1,6 @@
+constructors:
+  FloatIn.FloatInBind: ! '[Qualified "FloatIn" "FB"]'
+constructorFields:
+  FloatIn.FB: NonRecordFields 3
+constructorTypes:
+  FloatIn.FB: Qualified "FloatIn" "FloatInBind"

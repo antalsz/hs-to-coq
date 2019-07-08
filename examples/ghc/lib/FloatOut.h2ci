@@ -1,0 +1,9 @@
+constructors:
+  FloatOut.FloatBinds: ! '[Qualified "FloatOut" "FB"]'
+  FloatOut.FloatStats: ! '[Qualified "FloatOut" "FlS"]'
+constructorFields:
+  FloatOut.FB: NonRecordFields 3
+  FloatOut.FlS: NonRecordFields 3
+constructorTypes:
+  FloatOut.FB: Qualified "FloatOut" "FloatBinds"
+  FloatOut.FlS: Qualified "FloatOut" "FloatStats"

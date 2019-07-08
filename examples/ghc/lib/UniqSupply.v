@@ -51,6 +51,12 @@ Definition unUSM {result} (arg_0__ : UniqSM result) :=
   let 'USM unUSM := arg_0__ in
   unUSM.
 
+(* Midamble *)
+
+Instance Default__UniqSupply
+   : GHC.Err.Default UniqSupply := {}.
+Admitted.
+
 (* Converted value declarations: *)
 
 Definition uniqsFromSupply : UniqSupply -> list Unique.Unique :=

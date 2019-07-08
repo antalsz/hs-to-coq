@@ -57,6 +57,23 @@ Proof.
     f_equal. eapply IHl. eauto.
 Qed.
 
+Instance delVarSet_m : 
+  Proper (Equal ==> (fun x y => (x GHC.Base.== y)) ==> Equal) delVarSet.
+Proof.
+  move=> [[i1]] [[i2]] E1 y1 y2 E2.
+  simpl.
+  unfold Equal, In, elemVarSet,UniqSet.elementOfUniqSet,UniqFM.elemUFM in *.
+  move=> v.
+  specialize (E1 v).
+Admitted.
+  
+Lemma unionVarSets_cons a ss : unionVarSets (a :: ss) [=] unionVarSet a (unionVarSets ss).
+Proof.
+  unfold unionVarSets.
+  unfold UniqSet.unionManyUniqSets.  
+Admitted.
+Hint Rewrite unionVarSets_cons : hs_simpl.
+
 
 Lemma unionsVarSet_equal : forall vss1 vss2, Forall2 Equal vss1 vss2 ->
   (Foldable.foldr unionVarSet emptyVarSet) vss1 [=]
@@ -71,17 +88,14 @@ Proof.
 Qed.
 
 
-Lemma unionVarSets_cons a ss : unionVarSets (a :: ss) [=] unionVarSet a (unionVarSets ss).
-Proof.
-Admitted.
-Hint Rewrite unionVarSets_cons : hs_simpl.
-
 Lemma unionVarSets_def ss : 
   unionVarSets ss [=] Foldable.foldr unionVarSet emptyVarSet ss.
 Proof.
   induction ss. cbv. done.
-  hs_simpl. rewrite IHss. reflexivity.
+  hs_simpl. 
+  rewrite IHss. reflexivity.
 Qed.
+
 
 Lemma delVarSet_unionVarSets ss x :
   delVarSet (unionVarSets ss) x [=] unionVarSets (List.map (fun s => delVarSet s x) ss).
@@ -186,16 +200,6 @@ Proof.
     apply IHl2. rewrite Heqs. reflexivity.
 Qed.
 
-Instance delVarSet_m : 
-  Proper (Equal ==> (fun x y => (x GHC.Base.== y)) ==> Equal) delVarSet.
-Proof.
-  move=> [[i1]] [[i2]] E1 y1 y2 E2.
-  simpl.
-  unfold Equal, In, elemVarSet,UniqSet.elementOfUniqSet,UniqFM.elemUFM in *.
-  move=> v.
-  specialize (E1 v).
-Admitted.
-  
 
 Lemma delVarSetList_commute :forall (bndrs:list Var) vs bndr,
   Foldable.foldl delVarSet (delVarSet vs bndr) bndrs [=]
@@ -956,7 +960,25 @@ Qed.
 Lemma no_RuleAndUnfoldingFVs l0 : 
   (FV.fvVarSet (FV.mapUnionFV bndrRuleAndUnfoldingFVs l0)) [=] emptyVarSet.
 Proof.
-Admitted.
+  rewrite DenotesfvVarSet.
+  2: { 
+    unfold bndrRuleAndUnfoldingFVs.
+    eapply mapUnionVarSet_mapUnionFV with (f1 := fun x => emptyVarSet).
+    induction l0; simpl in *.
+    eauto.
+    econstructor; eauto.
+    unfold isId, idRuleFVs, idUnfoldingFVs.
+    destruct a. simpl.
+    rewrite union_empty_r.
+    eapply emptyVarSet_emptyFV.
+  }
+  induction l0.
+  hs_simpl.
+  rewrite mapUnionVarSets_unionVarSets. simpl. reflexivity.
+  rewrite mapUnionVarSet_cons.  rewrite IHl0.
+  rewrite unionEmpty_r.
+  reflexivity.
+Qed.
 
 Lemma freeVarsOf_freeVars_revised:
   forall e,

@@ -5262,6 +5262,9 @@ Definition hasSomeUnfolding : Unfolding -> bool :=
 Definition getInScopeVars : InScopeSet -> VarSet :=
   fun '(InScope vs _) => vs.
 
+Definition foldDVarSet {a} : (Var -> a -> a) -> a -> DVarSet -> a :=
+  UniqSet.nonDetFoldUniqSet.
+
 Definition foldDVarEnv {a} {b} : (a -> b -> b) -> b -> DVarEnv a -> b :=
   UniqFM.nonDetFoldUFM.
 
@@ -7266,10 +7269,11 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
      UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
      UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.nonDetEltsUniqSet
-     UniqSet.partitionUniqSet UniqSet.sizeUniqSet UniqSet.unionManyUniqSets
-     UniqSet.unionUniqSets UniqSet.uniqSetAll UniqSet.uniqSetAny UniqSet.unitUniqSet
-     UniqSupply.UniqSupply Unique.Uniquable Unique.Unique Unique.deriveUnique
-     Unique.getKey Unique.getUnique Unique.getUnique__ Unique.isLocalUnique
-     Unique.mkUniqueGrimily Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count
-     Util.debugIsOn Util.foldl2 Util.zipEqual
+     UniqSet.nonDetFoldUniqSet UniqSet.partitionUniqSet UniqSet.sizeUniqSet
+     UniqSet.unionManyUniqSets UniqSet.unionUniqSets UniqSet.uniqSetAll
+     UniqSet.uniqSetAny UniqSet.unitUniqSet UniqSupply.UniqSupply Unique.Uniquable
+     Unique.Unique Unique.deriveUnique Unique.getKey Unique.getUnique
+     Unique.getUnique__ Unique.isLocalUnique Unique.mkUniqueGrimily
+     Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count Util.debugIsOn
+     Util.foldl2 Util.zipEqual
 *)

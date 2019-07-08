@@ -79,6 +79,21 @@ CORESYN = \
 ##
 CONSTRUCTORS = \
 
+# These are modules that we translate but do not do anything about
+EXTRAS = \
+  UnVarGraph \
+  CoreArity \
+  CoreTidy \
+  CallArity \
+  CoAxiom \
+  TysWiredIn \
+  MkCore \
+  Digraph \
+  SetLevels \
+  CoreMonad \
+  OccurAnal \
+  FloatIn \
+  FloatOut \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
@@ -101,15 +116,7 @@ CORE_MODULES = \
   TrieMap \
   CSE \
   CoreStats \
-  UnVarGraph \
-  CoreArity \
-  CoreTidy \
-  CallArity \
-  CoAxiom \
-  TysWiredIn \
-  MkCore \
-## We don't actually need any of these
-## for Exitify/CSE
+
 
 
 NOTRANSLATE = \
@@ -130,7 +137,7 @@ BROKEN_MODULES = \
 VFILES_GEN       = $(addsuffix .v,$(MODULES))
 VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
 VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
-VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
+VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES) $(EXTRAS))
 VFILES_CONSTR    = Constructors.v
 VFILES_CORESYN   = Core.v
 VFILES_TYPE      = Type_.v

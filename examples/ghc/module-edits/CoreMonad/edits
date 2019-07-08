@@ -1,0 +1,49 @@
+skip module ErrUtils
+skip module Annotations
+skip module Control.Monad.IO.Class
+skip module Data.Typeable.Internal 
+skip module HscTypes
+skip module IOEnv
+skip module Language.Haskell.TH.Syntax
+skip module Data.Graph
+skip module NameCache
+
+rename value CoreMonad.SimplMode = CoreMonad.Mk_SimplMode
+rename value CoreMonad.SimplCount = CoreMonad.Mk_SimplCount
+rename value CoreMonad.FloatOutSwitches = CoreMonad.Mk_FloatOutSwitches
+rename value CoreMonad.CoreWriter = CoreMonad.Mk_CoreWriter
+rename value CoreMonad.CoreState = CoreMonad.Mk_CoreState
+rename value CoreMonad.CoreM = CoreMonad.Mk_CoreM
+
+redefine Axiom CoreMonad.CoreReader : Type.
+redefine Axiom CoreMonad.CoreIOEnv : Type -> Type.
+redefine Axiom CoreMonad.PluginPass : Type.
+
+axiomatize module CoreMonad
+
+axiomatize definition CoreMonad.putMsg
+axiomatize definition CoreMonad.errorMsgS
+axiomatize definition CoreMonad.warnMsgS
+axiomatize definition CoreMonad.fatalErrorMsg
+axiomatize definition CoreMonad.fatalErrorMsgS
+axiomatize definition CoreMonad.debugTraceMsg
+axiomatize definition CoreMonad.debugTraceMsgS
+axiomatize definition CoreMonad.dumpIfSet_dyn
+
+skip class HscTypes.MonadThings
+
+skip CoreMonad.runCoreM
+skip CoreMonad.liftIOWithCount
+skip CoreMonad.thNameToGhcName
+
+skip CoreMonad.msg
+skip CoreMonad.getPrintUnqualified 
+skip CoreMonad.getPackageFamInstEnv
+skip CoreMonad.getOrigNameCache 
+skip CoreMonad.getHscEnv
+skip CoreMonad.getFirstAnnotations
+skip CoreMonad.getAnnotations
+skip CoreMonad.bindsOnlyPass
+
+order CoreMonad.Eq___Tick CoreMonad.Ord__Tick 
+order CoreMonad.Functor__CoreM CoreMonad.Applicative__CoreM CoreMonad.Monad__CoreM CoreMonad.MonadUnique__CoreM

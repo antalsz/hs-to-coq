@@ -530,7 +530,7 @@ Definition xtTT {a}
     match arg_0__, arg_1__, arg_2__ with
     | D env ty, f, Mk_TypeMap m =>
         Mk_TypeMap (m |>
-                    (xtG (m := TypeMapX) (D env (@Core.typeKind tt ty)) |>>
+                    (xtG (m := TypeMapX) (D env (Core.typeKind ty)) |>>
                      xtG (m := TypeMapX) (D env ty) f))
     end.
 
@@ -554,8 +554,8 @@ Definition lkTT {a}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | D env ty, Mk_TypeMap m =>
-        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (@Core.typeKind
-                                                                        tt ty)) m) (lkG (m := TypeMapX) (D env ty))
+        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (Core.typeKind
+                                                                        ty)) m) (lkG (m := TypeMapX) (D env ty))
     end.
 
 Local Definition TrieMap__TypeMap_lookupTM
@@ -1131,7 +1131,7 @@ End Notations.
 
 (* External variables:
      Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
-     tt AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Core.CoreAlt Core.CoreExpr
+     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Core.CoreAlt Core.CoreExpr
      Core.DEFAULT Core.DVarEnv Core.DataAlt Core.Id Core.LitAlt Core.Tickish Core.Var
      Core.VarEnv Core.alterDVarEnv Core.coercionType Core.emptyDVarEnv
      Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv Core.lookupVarEnv

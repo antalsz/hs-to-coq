@@ -253,7 +253,7 @@ Axiom isExpandableApp : CheapAppFun.
 
 Definition isEmptyTy : AxiomatizedTypes.Type_ -> bool :=
   fun ty =>
-    match (@Core.splitTyConApp_maybe tt ty) with
+    match Core.splitTyConApp_maybe ty with
     | Some (pair tc inst_tys) =>
         match Core.tyConDataCons_maybe tc with
         | Some dcs =>
@@ -389,8 +389,7 @@ Definition mkCast
 Axiom exprOkForSpeculation : Core.CoreExpr -> bool.
 
 Definition needsCaseBinding : AxiomatizedTypes.Type_ -> Core.CoreExpr -> bool :=
-  fun ty rhs =>
-    andb (@Core.isUnliftedType tt ty) (negb (exprOkForSpeculation rhs)).
+  fun ty rhs => andb (Core.isUnliftedType ty) (negb (exprOkForSpeculation rhs)).
 
 Axiom exprOkForSideEffects : Core.CoreExpr -> bool.
 
@@ -420,8 +419,7 @@ Definition exprIsTickedString : Core.CoreExpr -> bool :=
 
 Definition exprIsTopLevelBindable
    : Core.CoreExpr -> AxiomatizedTypes.Type_ -> bool :=
-  fun expr ty =>
-    orb (negb ((@Core.isUnliftedType tt ty))) (exprIsTickedString expr).
+  fun expr ty => orb (negb (Core.isUnliftedType ty)) (exprIsTickedString expr).
 
 Definition exprIsHNFlike
    : (Core.Var -> bool) -> (Core.Unfolding -> bool) -> Core.CoreExpr -> bool :=
@@ -731,7 +729,7 @@ Definition filterAlts {a}
 
 (* External variables:
      Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
-     pair snd true tt AxiomatizedTypes.Coercion AxiomatizedTypes.PrimOp
+     pair snd true AxiomatizedTypes.Coercion AxiomatizedTypes.PrimOp
      AxiomatizedTypes.Representational AxiomatizedTypes.Type_ BasicTypes.Arity
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App
      Core.Breakpoint Core.Case Core.Cast Core.CoreAlt Core.CoreArg Core.CoreBind

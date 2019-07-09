@@ -118,7 +118,7 @@ Definition splitRecFloats
     let fix go arg_0__ arg_1__ arg_2__
               := match arg_0__, arg_1__, arg_2__ with
                  | ul_prs, prs, cons (MkCore.FloatLet (Core.NonRec b r)) fs =>
-                     if andb (@Core.isUnliftedType tt (Id.idType b)) (negb (Id.isJoinId b)) : bool
+                     if andb (Core.isUnliftedType (Id.idType b)) (negb (Id.isJoinId b)) : bool
                      then go (cons (pair b r) ul_prs) prs fs else
                      go ul_prs (cons (pair b r) prs) fs
                  | _, _, _ =>
@@ -349,7 +349,7 @@ Definition floatTopBind
    `FloatOut.Outputable__FloatBinds' *)
 
 (* External variables:
-     None Some andb bool cons list nat negb nil op_zt__ pair tt Bag.Bag Bag.bagToList
+     None Some andb bool cons list nat negb nil op_zt__ pair Bag.Bag Bag.bagToList
      Bag.emptyBag Bag.foldrBag Bag.isEmptyBag Bag.lengthBag Bag.listToBag Bag.mapBag
      Bag.snocBag Bag.unionBags Bag.unitBag Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Core.AltCon Core.CoreBind Core.CoreBndr Core.CoreExpr

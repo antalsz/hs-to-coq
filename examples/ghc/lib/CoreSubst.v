@@ -61,8 +61,8 @@ Definition substTyVarBndr : Subst -> TyVar -> (Subst * TyVar)%type :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_Subst in_scope id_env tv_env cv_env, tv =>
-        let 'pair (Mk_TCvSubst in_scope' tv_env' cv_env') tv' := (@substTyVarBndr tt
-                                                                    (Mk_TCvSubst in_scope tv_env cv_env)) tv in
+        let 'pair (Mk_TCvSubst in_scope' tv_env' cv_env') tv' := substTyVarBndr
+                                                                   (Mk_TCvSubst in_scope tv_env cv_env) tv in
         pair (Mk_Subst in_scope' id_env tv_env' cv_env') tv'
     end.
 
@@ -204,7 +204,7 @@ Definition getTCvSubst : Subst -> TCvSubst :=
 
 Definition substCo
    : Subst -> AxiomatizedTypes.Coercion -> AxiomatizedTypes.Coercion :=
-  fun subst co => (@substCo tt (getTCvSubst subst)) co.
+  fun subst co => substCo (getTCvSubst subst) co.
 
 Definition substTy
    : Subst -> AxiomatizedTypes.Type_ -> AxiomatizedTypes.Type_ :=
@@ -220,7 +220,7 @@ Definition substIdBndr : String -> Subst -> Subst -> Id -> (Subst * Id)%type :=
         let id2 :=
           if no_type_change : bool then id1 else
           Id.setIdType id1 (substTy subst old_ty) in
-        let mb_new_info := substIdInfo rec_subst id2 ((@idInfo tt) id2) in
+        let mb_new_info := substIdInfo rec_subst id2 (idInfo id2) in
         let new_id := Id.maybeModifyIdInfo mb_new_info id2 in
         let no_change := id1 == old_id in
         let new_env :=
@@ -552,7 +552,7 @@ Definition clone_id
         let id1 := setVarUnique old_id uniq in
         let id2 := substIdType subst id1 in
         let new_id :=
-          Id.maybeModifyIdInfo (substIdInfo rec_subst id2 ((@idInfo tt) old_id)) id2 in
+          Id.maybeModifyIdInfo (substIdInfo rec_subst id2 (idInfo old_id)) id2 in
         let 'pair new_idvs new_cvs := (if isCoVar old_id : bool
                                        then pair idvs (extendVarEnv cvs old_id (mkCoVarCo new_id)) else
                                        pair (extendVarEnv idvs old_id (Mk_Var new_id)) cvs) in
@@ -621,7 +621,7 @@ Definition addInScopeSet : Subst -> VarSet -> Subst :=
      list lookupInScope lookupVarEnv map mapAccumL mappend mkCoVarCo mkCoercionTy
      mkDVarSet mkTyVarTy mkVarEnv negb nil noFreeVarsOfType op_z2218U__ op_zeze__
      op_zt__ option orb pair ruleInfo setRuleInfo setUnfoldingInfo setVarUnique snd
-     substCo substCoVarBndr substTyUnchecked substTyVarBndr true tt unfoldingInfo
+     substCo substCoVarBndr substTyUnchecked substTyVarBndr true unfoldingInfo
      uniqAway unzip zip AxiomatizedTypes.Coercion AxiomatizedTypes.Type_
      Coq.Lists.List.flat_map CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr
      Data.Foldable.all Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst

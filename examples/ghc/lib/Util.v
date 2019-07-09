@@ -55,6 +55,11 @@ Instance Default__OverridingBool : GHC.Err.Default OverridingBool :=
 Instance Default__Direction : GHC.Err.Default Direction :=
   GHC.Err.Build_Default _ Forwards.
 
+(* Midamble *)
+
+Existing Class HasDebugCallStack.
+Instance Util_HasDebugCallStack : HasDebugCallStack := tt.
+
 (* Converted value declarations: *)
 
 Definition zipWithLazy {a} {b} {c}

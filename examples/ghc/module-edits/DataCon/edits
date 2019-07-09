@@ -3,42 +3,43 @@
 skip Core.dataConIdentity
 
 # skipped fcns as a result of eliminating type information
-# generally these fcns return units so are easy to replace
+# now that we are axiomatizing types (and this module) there is 
+# no need to explicitly skip them.
 
-skip Core.dataConRepArgTys
-skip Core.buildAlgTyCon
-skip Core.classDataCon
-skip Core.dataFieldType
-skip Core.dataConImplicitTyThings
-skip Core.dataConInstOrigArgTys
-skip Core.dataConOrigTyCon
-skip Core.dataConInstArgTys
-skip Core.splitDataProductType_maybe
-skip Core.dataConRepRepArity
-skip Core.specialPromotedDc
-skip Core.eqSpecPreds
-skip Core.dataConTheta
+# skip Core.dataConRepArgTys
+# skip Core.buildAlgTyCon
+# skip Core.classDataCon
+# skip Core.dataFieldType
+# skip Core.dataConImplicitTyThings
+# skip Core.dataConInstOrigArgTys
+# skip Core.dataConOrigTyCon
+# skip Core.dataConInstArgTys
+# skip Core.splitDataProductType_maybe
+# skip Core.dataConRepRepArity
+# skip Core.specialPromotedDc
+# skip Core.eqSpecPreds
+# skip Core.dataConTheta
 
 
 # still refer to TyCoRep
-skip Core.dataConExTyBinders
-skip Core.dataConExTyVars
-skip Core.dataConFieldType
-skip Core.dataConOrigArgTys
-skip Core.dataConOrigResTy
-skip Core.dataConInstSig
+# skip Core.dataConExTyBinders
+# skip Core.dataConExTyVars
+# skip Core.dataConFieldType
+# skip Core.dataConOrigArgTys
+# skip Core.dataConOrigResTy
+# skip Core.dataConInstSig
 
-skip Core.buildSynTyCon
-skip Core.dataConRepStrictness
-skip Core.dataConSig
-skip Core.dataConUserType
-skip Core.eqHsBang
+# skip Core.buildSynTyCon
+# skip Core.dataConRepStrictness
+# skip Core.dataConSig
+# skip Core.dataConUserType
+# skip Core.eqHsBang
 
-skip Core.mkDataCon
-skip Core.isLegacyPromotableDataCon
-skip Core.isLegacyPromotableTyCon
-skip Core.dataConEqSpec
-skip Core.substEqSpec 
+# skip Core.mkDataCon
+# skip Core.isLegacyPromotableDataCon
+# skip Core.isLegacyPromotableTyCon
+# skip Core.dataConEqSpec
+# skip Core.substEqSpec 
 
 
 # uses enumFrom, coinductively

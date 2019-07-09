@@ -57,7 +57,7 @@ Definition recordSelectorTyCon : Core.Id -> Core.RecSelParent :=
     end.
 
 Definition realIdUnfolding : Core.Id -> Core.Unfolding :=
-  fun id => Core.unfoldingInfo ((@Core.idInfo tt) id).
+  fun id => Core.unfoldingInfo (Core.idInfo id).
 
 Axiom mkTemplateLocalsNum : nat -> list AxiomatizedTypes.Type_ -> list Core.Id.
 
@@ -160,7 +160,7 @@ Definition maybeModifyIdInfo : option Core.IdInfo -> Core.Id -> Core.Id :=
 
 Definition zapInfo
    : (Core.IdInfo -> option Core.IdInfo) -> Core.Id -> Core.Id :=
-  fun zapper id => maybeModifyIdInfo (zapper ((@Core.idInfo tt) id)) id.
+  fun zapper id => maybeModifyIdInfo (zapper (Core.idInfo id)) id.
 
 Definition zapFragileIdInfo : Core.Id -> Core.Id :=
   zapInfo Core.zapFragileInfo.
@@ -187,7 +187,7 @@ Definition setIdInfo : Core.Id -> Core.IdInfo -> Core.Id :=
   fun id info => GHC.Prim.seq info (lazySetIdInfo id info).
 
 Definition modifyIdInfo : (Core.IdInfo -> Core.IdInfo) -> Core.Id -> Core.Id :=
-  fun fn id => setIdInfo id (fn ((@Core.idInfo tt) id)).
+  fun fn id => setIdInfo id (fn (Core.idInfo id)).
 
 Definition modifyInlinePragma
    : Core.Id -> (BasicTypes.InlinePragma -> BasicTypes.InlinePragma) -> Core.Id :=
@@ -256,7 +256,7 @@ Definition setOneShotLambda : Core.Id -> Core.Id :=
 Definition transferPolyIdInfo
    : Core.Id -> list Core.Var -> Core.Id -> Core.Id :=
   fun old_id abstract_wrt new_id =>
-    let old_info := (@Core.idInfo tt) old_id in
+    let old_info := Core.idInfo old_id in
     let old_arity := Core.arityInfo old_info in
     let old_inline_prag := Core.inlinePragInfo old_info in
     let old_occ_info := Core.occInfo old_info in
@@ -313,7 +313,7 @@ Definition isPatSynRecordSelector : Core.Id -> bool :=
     end.
 
 Definition isNeverLevPolyId : Core.Id -> bool :=
-  Core.isNeverLevPolyIdInfo GHC.Base.∘ (@Core.idInfo tt).
+  Core.isNeverLevPolyIdInfo GHC.Base.∘ Core.idInfo.
 
 Definition isNaughtyRecordSelector : Core.Id -> bool :=
   fun id =>
@@ -424,7 +424,7 @@ Definition idUnique : Core.Id -> Unique.Unique :=
 
 Definition idUnfolding : Core.Id -> Core.Unfolding :=
   fun id =>
-    let info := (@Core.idInfo tt) id in
+    let info := Core.idInfo id in
     if BasicTypes.isStrongLoopBreaker (Core.occInfo info) : bool
     then Core.NoUnfolding else
     Core.unfoldingInfo info.
@@ -436,7 +436,7 @@ Definition isDictId : Core.Id -> bool :=
   fun id => Core.isDictTy (idType id).
 
 Definition idStrictness : Core.Id -> Core.StrictSig :=
-  fun id => Core.strictnessInfo ((@Core.idInfo tt) id).
+  fun id => Core.strictnessInfo (Core.idInfo id).
 
 Definition isBottomingId : Core.Var -> bool :=
   fun v =>
@@ -444,10 +444,10 @@ Definition isBottomingId : Core.Var -> bool :=
     false.
 
 Definition idSpecialisation : Core.Id -> Core.RuleInfo :=
-  fun id => Core.ruleInfo ((@Core.idInfo tt) id).
+  fun id => Core.ruleInfo (Core.idInfo id).
 
 Definition idOneShotInfo : Core.Id -> BasicTypes.OneShotInfo :=
-  fun id => Core.oneShotInfo ((@Core.idInfo tt) id).
+  fun id => Core.oneShotInfo (Core.idInfo id).
 
 Definition idStateHackOneShotInfo : Core.Id -> BasicTypes.OneShotInfo :=
   fun id =>
@@ -480,7 +480,7 @@ Definition updOneShotInfo : Core.Id -> BasicTypes.OneShotInfo -> Core.Id :=
     id.
 
 Definition idOccInfo : Core.Id -> BasicTypes.OccInfo :=
-  fun id => Core.occInfo ((@Core.idInfo tt) id).
+  fun id => Core.occInfo (Core.idInfo id).
 
 Definition isDeadBinder : Core.Id -> bool :=
   fun bndr =>
@@ -504,7 +504,7 @@ Definition localiseId : Core.Id -> Core.Id :=
         else andb (Core.isLocalId id) (Name.isInternalName name)) : bool
     then id else
     Core.mkLocalVar (Core.idDetails id) (Name.localiseName name) (idType id)
-    ((@Core.idInfo tt) id).
+    (Core.idInfo id).
 
 Definition idJoinArity : Core.JoinId -> BasicTypes.JoinArity :=
   fun id =>
@@ -515,7 +515,7 @@ Definition idIsFrom : Module.Module -> Core.Id -> bool :=
   fun mod_ id => Name.nameIsLocalOrFrom mod_ (idName id).
 
 Definition idInlinePragma : Core.Id -> BasicTypes.InlinePragma :=
-  fun id => Core.inlinePragInfo ((@Core.idInfo tt) id).
+  fun id => Core.inlinePragInfo (Core.idInfo id).
 
 Definition idRuleMatchInfo : Core.Id -> BasicTypes.RuleMatchInfo :=
   fun id => BasicTypes.inlinePragmaRuleMatchInfo (idInlinePragma id).
@@ -530,14 +530,14 @@ Definition idHasRules : Core.Id -> bool :=
   fun id => negb (Core.isEmptyRuleInfo (idSpecialisation id)).
 
 Definition idDemandInfo : Core.Id -> Core.Demand :=
-  fun id => Core.demandInfo ((@Core.idInfo tt) id).
+  fun id => Core.demandInfo (Core.idInfo id).
 
 Definition isStrictId : Core.Id -> bool :=
   fun id =>
     if andb Util.debugIsOn (negb (Core.isId id)) : bool
     then (GHC.Err.error (GHC.Base.mappend (Datatypes.id (GHC.Base.hs_string__
                                                          "isStrictId: not an id: ")) Panic.someSDoc))
-    else andb (negb (isJoinId id)) (orb ((@Core.isStrictType tt (idType id)))
+    else andb (negb (isJoinId id)) (orb (Core.isStrictType (idType id))
                                         (Core.isStrictDmd (idDemandInfo id))).
 
 Definition idDataCon : Core.Id -> Core.DataCon :=
@@ -549,13 +549,13 @@ Definition idCoreRules : Core.Id -> list Core.CoreRule :=
   fun x => nil.
 
 Definition idCallArity : Core.Id -> BasicTypes.Arity :=
-  fun id => Core.callArityInfo ((@Core.idInfo tt) id).
+  fun id => Core.callArityInfo (Core.idInfo id).
 
 Definition idCafInfo : Core.Id -> Core.CafInfo :=
-  fun id => Core.cafInfo ((@Core.idInfo tt) id).
+  fun id => Core.cafInfo (Core.idInfo id).
 
 Definition idArity : Core.Id -> BasicTypes.Arity :=
-  fun id => Core.arityInfo ((@Core.idInfo tt) id).
+  fun id => Core.arityInfo (Core.idInfo id).
 
 Definition hasNoBinding : Core.Id -> bool :=
   fun id =>
@@ -606,7 +606,7 @@ Definition asJoinId_maybe : Core.Id -> option BasicTypes.JoinArity -> Core.Id :=
     end.
 
 (* External variables:
-     None Some andb bool false list nat negb nil option orb pair true tt
+     None Some andb bool false list nat negb nil option orb pair true
      AxiomatizedTypes.ForeignCall AxiomatizedTypes.Kind AxiomatizedTypes.PrimOp
      AxiomatizedTypes.Type_ BasicTypes.Activation BasicTypes.Arity
      BasicTypes.InlinePragma BasicTypes.JoinArity BasicTypes.NoOneShotInfo

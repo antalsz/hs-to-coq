@@ -77,7 +77,7 @@ Definition noFloatIntoArg
    : CoreFVs.CoreExprWithFVs' -> AxiomatizedTypes.Type_ -> bool :=
   fun expr expr_ty =>
     let deann_expr := Core.deAnnotate' expr in
-    if (@Core.isUnliftedType tt expr_ty) : bool then true else
+    if Core.isUnliftedType expr_ty : bool then true else
     match expr with
     | Core.AnnLam bndr e =>
         let 'pair bndrs _ := Core.collectAnnBndrs e in
@@ -245,7 +245,7 @@ Definition fiBind
     end.
 
 (* External variables:
-     Some andb bool cons false list negb nil op_zt__ orb pair true tt
+     Some andb bool cons false list negb nil op_zt__ orb pair true
      AxiomatizedTypes.Type_ BasicTypes.NonRecursive BasicTypes.RecFlag
      BasicTypes.Recursive BasicTypes.isRec Coq.Init.Datatypes.app
      Coq.Lists.List.flat_map Coq.Lists.List.length Core.AnnLam Core.AnnNonRec

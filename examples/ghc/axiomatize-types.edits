@@ -5,21 +5,18 @@ skip module Unify
 skip module TcType
 skip module RepType
 skip module ForeignCall
-#skip module	FamInstEnv
 skip module PprCore
 skip module Data.ByteString
 skip module ErrUtils
-#skip module OccurAnal
 skip module CostCentre
-#skip module PrimOp
-#skip module TysPrim
 skip module Platform
 
 ####################################################
-### DVarSet => VarSet
-
-## This doesn't work to reimplement DVarSet as VarSets
-## we need to change the toplevel type, not just the implementation
+### DVarSet => VarSet,  DVarEnv => VarEnv
+##
+## We do this translation by implementing DVarSets using
+## the same implementation as VarSets. (Both are definitions
+## in Coq.)
 
 rename type UniqDSet.UniqDSet = UniqSet.UniqSet
 rename value UniqDSet.unitUniqDSet = UniqSet.unitUniqSet
@@ -42,16 +39,14 @@ rename value UniqDSet.elementOfUniqDSet = UniqSet.elementOfUniqSet
 rename value UniqDSet.uniqDSetMinusUniqSet = UniqSet.minusUniqSet
 rename value UniqDSet.uniqDSetIntersectUniqSet = UniqSet.intersectUniqSets
 rename value UniqDSet.uniqDSetToList = UniqSet.nonDetEltsUniqSet
+rename value UniqDSet.foldDVarSet = Core.nonDetFoldUniqSet
 
 redefine Definition Core.disjointDVarSet := Core.disjointVarSet.
-redefine Definition Core.anyDVarSet := Core.anyVarSet.
-redefine Definition Core.allDVarSet := Core.allVarSet.
-
-rename value UniqDSet.foldDVarSet = Core.nonDetFoldUniqSet
+redefine Definition Core.anyDVarSet      := Core.anyVarSet.
+redefine Definition Core.allDVarSet      := Core.allVarSet.
 
 redefine Definition Core.dVarSetToVarSet : DVarSet -> VarSet := fun x => x.
 redefine Definition FV.fvDVarSet : FV.FV -> Core.DVarSet := FV.fvVarSet.
-
 
 rename type UniqDFM.UniqDFM = UniqFM.UniqFM
 rename value UniqDFM.unitUDFM = UniqFM.unitUFM
@@ -159,16 +154,6 @@ rename value CoreSubst.Subst  = CoreSubst.Mk_Subst
 ## Outputtable
 rewrite forall x, Core.pprIdDetails x = Panic.someSDoc
 
-## CallStack 
-rewrite forall x, Core.idInfo x = @Core.idInfo tt x
-rewrite forall x, Core.splitTyConApp_maybe x = @Core.splitTyConApp_maybe tt x
-rewrite forall x, Core.isUnliftedType x = @Core.isUnliftedType tt x
-rewrite forall , Core.idInfo = (@Core.idInfo tt)
-rewrite forall x, Core.typeKind x = @Core.typeKind tt x
-rewrite forall x, Core.substTyVarBndr x = @Core.substTyVarBndr tt x
-rewrite forall x, Core.substCo x = @Core.substCo tt x
-rewrite forall x, Core.isStrictType x = @Core.isStrictType tt x
-
 rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 
 ###############################################################################
@@ -252,7 +237,6 @@ rename type CoAxiom.CoAxBranch         = AxiomatizedTypes.CoAxBranch
 rename value CoAxiom.Representational  = AxiomatizedTypes.Representational
 rename value CoAxiom.Nominal           = AxiomatizedTypes.Nominal
 rename value CoAxiom.Phantom           = AxiomatizedTypes.Phantom
-
 
 
 #

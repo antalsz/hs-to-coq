@@ -49,7 +49,6 @@ with the kind of definitions that we get out of hs-to-coq here.
 
 
 
-
 (** ** A domain predicate for [go] *)
 
 (**
@@ -532,6 +531,31 @@ Definition jpsp := updJPSs jps fs .
     rewrite deAnnotate_freeVars.
     assumption.
   Qed.
+
+Import Morphisms.
+
+Instance Proper_anyVarSet :
+  Proper (Logic.eq ==> Proofs.VarSetFSet.VarSetFSet.Equal ==> Logic.eq) anyVarSet.
+Admitted.
+
+Instance Proper_minusVarSet : 
+  Proper (Proofs.VarSetFSet.VarSetFSet.Equal 
+            ==> Proofs.VarSetFSet.VarSetFSet.Equal 
+            ==> Proofs.VarSetFSet.VarSetFSet.Equal)
+         minusVarSet.
+Admitted.
+
+Global Instance foo:
+  forall captured e,
+  Morphisms.Proper (Morphisms.respectful Proofs.VarSetFSet.VarSetFSet.Equal Logic.eq) (go_exit captured e).
+  Proof.
+    clear.
+    intros captured e x1 x2 Ex.
+    unfold go_exit; destruct e.
+    + simpl. 
+      hs_simpl.
+  Admitted.
+
 
   (**
   We are always only ever going to run [go] on expressions

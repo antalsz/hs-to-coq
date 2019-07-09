@@ -2590,11 +2590,15 @@ Axiom tyConTuple_maybe : TyCon -> option BasicTypes.TupleSort.
 
 Axiom tyConStupidTheta : TyCon -> list PredType.
 
+Axiom tyConSkolem : TyCon -> bool.
+
 Axiom tyConSingleDataCon_maybe : TyCon -> option DataCon.
 
 Axiom tyConSingleDataCon : TyCon -> DataCon.
 
 Axiom tyConSingleAlgDataCon_maybe : TyCon -> option DataCon.
+
+Axiom tyConRuntimeRepInfo : TyCon -> RuntimeRepInfo.
 
 Axiom tyConRolesX : Role -> TyCon -> list Role.
 
@@ -2835,6 +2839,8 @@ Axiom substForAllCoBndrCallback : bool ->
 Axiom substForAllCoBndr : TCvSubst ->
                           TyVar -> Coercion -> (TCvSubst * TyVar * Coercion)%type.
 
+Axiom substEqSpec : TCvSubst -> EqSpec -> EqSpec.
+
 Axiom substCos : forall `{Util.HasDebugCallStack},
                  TCvSubst -> list Coercion -> list Coercion.
 
@@ -2920,6 +2926,9 @@ Axiom splitFVs : bool -> DmdEnv -> (DmdEnv * DmdEnv)%type.
 
 Axiom splitDmdTy : DmdType -> (Demand * DmdType)%type.
 
+Axiom splitDataProductType_maybe : Type_ ->
+                                   option (TyCon * list Type_ * DataCon * list Type_)%type.
+
 Axiom splitCoercionType_maybe : Type_ -> option (Type_ * Type_)%type.
 
 Axiom splitCastTy_maybe : Type_ -> option (Type_ * Coercion)%type.
@@ -2933,6 +2942,8 @@ Axiom splitAppTy_maybe : Type_ -> option (Type_ * Type_)%type.
 Axiom splitAppTy : Type_ -> (Type_ * Type_)%type.
 
 Axiom splitAppCo_maybe : Coercion -> option (Coercion * Coercion)%type.
+
+Axiom specialPromotedDc : DataCon -> bool.
 
 Axiom setTvSubstEnv : TCvSubst -> TvSubstEnv -> TCvSubst.
 
@@ -3134,6 +3145,10 @@ Axiom patSynName : PatSyn -> Name.Name.
 Axiom patSynMatcher : PatSyn -> (Id * bool)%type.
 
 Axiom patSynIsInfix : PatSyn -> bool.
+
+Axiom patSynInstResTy : PatSyn -> list Type_ -> Type_.
+
+Axiom patSynInstArgTys : PatSyn -> list Type_ -> list Type_.
 
 Axiom patSynFieldType : PatSyn -> FieldLabel.FieldLabelString -> Type_.
 
@@ -3472,6 +3487,19 @@ Axiom mkEmptyTCvSubst : InScopeSet -> TCvSubst.
 
 Axiom mkDmdType : DmdEnv -> list Demand -> DmdResult -> DmdType.
 
+Axiom mkDataCon : Name.Name ->
+                  bool ->
+                  TyConRepName ->
+                  list HsSrcBang ->
+                  list FieldLabel.FieldLabel ->
+                  list TyVar ->
+                  list TyVar ->
+                  list TyVarBinder ->
+                  list EqSpec ->
+                  ThetaType ->
+                  list Type_ ->
+                  Type_ -> RuntimeRepInfo -> TyCon -> ThetaType -> Id -> DataConRep -> DataCon.
+
 Axiom mkCoherenceRightCo : Coercion -> Coercion -> Coercion.
 
 Axiom mkCoherenceLeftCo : Coercion -> Coercion -> Coercion.
@@ -3789,7 +3817,13 @@ Axiom isMappedByLC : TyCoVar -> LiftingContext -> bool.
 Axiom isLiftedType_maybe : forall `{Util.HasDebugCallStack},
                            Type_ -> option bool.
 
+Axiom isLiftedTypeKindTyConName : Name.Name -> bool.
+
 Axiom isLiftedTypeKind : Kind -> bool.
+
+Axiom isLegacyPromotableTyCon : TyCon -> bool.
+
+Axiom isLegacyPromotableDataCon : DataCon -> bool.
 
 Axiom isLazy : ArgStr -> bool.
 
@@ -4034,9 +4068,13 @@ Axiom eqSpecType : EqSpec -> Type_.
 
 Axiom eqSpecTyVar : EqSpec -> TyVar.
 
+Axiom eqSpecPreds : list EqSpec -> ThetaType.
+
 Axiom eqSpecPair : EqSpec -> (TyVar * Type_)%type.
 
 Axiom eqRelRole : EqRel -> Role.
+
+Axiom eqHsBang : HsImplBang -> HsImplBang -> bool.
 
 Axiom eqCoercionX : RnEnv2 -> Coercion -> Coercion -> bool.
 
@@ -4091,6 +4129,8 @@ Axiom dataConWrapId : DataCon -> Id.
 
 Axiom dataConWorkId : DataCon -> Id.
 
+Axiom dataConUserType : DataCon -> Type_.
+
 Axiom dataConUserTyVarsArePermuted : DataCon -> bool.
 
 Axiom dataConUserTyVars : DataCon -> list TyVar.
@@ -4103,6 +4143,8 @@ Axiom dataConUnivAndExTyVars : DataCon -> list TyVar.
 
 Axiom dataConTyCon : DataCon -> TyCon.
 
+Axiom dataConTheta : DataCon -> ThetaType.
+
 Axiom dataConTagZ : DataCon -> BasicTypes.ConTagZ.
 
 Axiom dataConTag : DataCon -> BasicTypes.ConTag.
@@ -4113,13 +4155,35 @@ Axiom dataConSrcBangs : DataCon -> list HsSrcBang.
 
 Axiom dataConSourceArity : DataCon -> BasicTypes.Arity.
 
+Axiom dataConSig : DataCon ->
+                   (list TyVar * ThetaType * list Type_ * Type_)%type.
+
 Axiom dataConRepType : DataCon -> Type_.
 
+Axiom dataConRepStrictness : DataCon -> list StrictnessMark.
+
 Axiom dataConRepArity : DataCon -> BasicTypes.Arity.
+
+Axiom dataConRepArgTys : DataCon -> list Type_.
+
+Axiom dataConOrigTyCon : DataCon -> TyCon.
+
+Axiom dataConOrigResTy : DataCon -> Type_.
+
+Axiom dataConOrigArgTys : DataCon -> list Type_.
 
 Axiom dataConName : DataCon -> Name.Name.
 
 Axiom dataConIsInfix : DataCon -> bool.
+
+Axiom dataConInstSig : DataCon ->
+                       list Type_ -> (list TyVar * ThetaType * list Type_)%type.
+
+Axiom dataConInstOrigArgTys : DataCon -> list Type_ -> list Type_.
+
+Axiom dataConInstArgTys : DataCon -> list Type_ -> list Type_.
+
+Axiom dataConImplicitTyThings : DataCon -> list TyThing.
 
 Axiom dataConImplBangs : DataCon -> list HsImplBang.
 
@@ -4129,7 +4193,13 @@ Axiom dataConFullSig : DataCon ->
 Axiom dataConFieldType_maybe : DataCon ->
                                FieldLabel.FieldLabelString -> option (FieldLabel.FieldLabel * Type_)%type.
 
+Axiom dataConFieldType : DataCon -> FieldLabel.FieldLabelString -> Type_.
+
 Axiom dataConFieldLabels : DataCon -> list FieldLabel.FieldLabel.
+
+Axiom dataConExTyVars : DataCon -> list TyVar.
+
+Axiom dataConEqSpec : DataCon -> list EqSpec.
 
 Axiom dataConCannotMatch : list Type_ -> DataCon -> bool.
 
@@ -4230,6 +4300,8 @@ Axiom classExtraBigSig : Class ->
                          (list TyVar * list (FunDep TyVar) * list PredType * list Id * list ClassATItem *
                           list ClassOpItem)%type.
 
+Axiom classDataCon : Class -> DataCon.
+
 Axiom classBigSig : Class ->
                     (list TyVar * list PredType * list Id * list ClassOpItem)%type.
 
@@ -4253,6 +4325,14 @@ Axiom castCoercionKind : Coercion -> Coercion -> Coercion -> Coercion.
 
 Axiom caseBinder : forall {a},
                    TyBinder -> (TyVarBinder -> a) -> (Type_ -> a) -> a.
+
+Axiom buildSynTyCon : Name.Name ->
+                      list TyConBinder -> Kind -> list Role -> Type_ -> TyCon.
+
+Axiom buildAlgTyCon : Name.Name ->
+                      list TyVar ->
+                      list Role ->
+                      option CType -> ThetaType -> AlgTyConRhs -> bool -> AlgTyConFlav -> TyCon.
 
 Axiom bothUse : UseDmd -> UseDmd -> UseDmd.
 

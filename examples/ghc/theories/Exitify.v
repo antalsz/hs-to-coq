@@ -532,33 +532,18 @@ Definition jpsp := updJPSs jps fs .
     assumption.
   Qed.
 
-Import Morphisms.
-
-Instance Proper_anyVarSet :
-  Proper (Logic.eq ==> Proofs.VarSetFSet.VarSetFSet.Equal ==> Logic.eq) anyVarSet.
-Admitted.
-
-Instance Proper_minusVarSet : 
-  Proper (Proofs.VarSetFSet.VarSetFSet.Equal 
-            ==> Proofs.VarSetFSet.VarSetFSet.Equal 
-            ==> Proofs.VarSetFSet.VarSetFSet.Equal)
-         minusVarSet.
-Admitted.
-
-Global Instance foo:
+Global Instance go_exit_respects_VarSet_Equal:
   forall captured e,
   Morphisms.Proper (Morphisms.respectful Proofs.VarSetFSet.VarSetFSet.Equal Logic.eq) (go_exit captured e).
   Proof.
     clear.
     intros captured e x1 x2 Ex.
-    unfold go_exit; destruct e.
-    + simpl. 
-      hs_simpl.
+    unfold go_exit.
   Admitted.
 
 
   (**
-  We are always only ever going to run [go] on expressions
+
   that are well-scoped and in the domain of [go].
   When we do induction in such a case, we have to prove that these predicate
   holds for the arguments of recursive calls of [go]. This would clutter these
@@ -604,15 +589,17 @@ Global Instance foo:
     cbv beta delta [go_f]. (* No [zeta]! *)
 
     rewrite !deAnnotate_freeVars in *.
-    rewrite !freeVarsOf_freeVars in *.
 
     (* Float out lets *)
     repeat float_let.
     enough (Hnext : P captured e j_40__). {
       clearbody j_40__; cleardefs.
-      destruct (disjointVarSet fvs recursive_calls) eqn:Hdisjoint; try apply Hnext.
+      subst fvs.
+      unfold dVarSetToVarSet.
+      rewrite !freeVarsOf_freeVars_revised in *.
+      destruct (disjointVarSet (exprFreeVars e) recursive_calls) eqn:Hdisjoint; try apply Hnext.
       clear IH Hnext HGoDom.
-      revert e captured Hcapt fvs HWS Hdisjoint.
+      revert e captured Hcapt HWS Hdisjoint.
       refine IH1.
     }
 
@@ -2148,7 +2135,7 @@ Global Instance foo:
     revert e captured H H2 H0 H1.
     refine (go_ind (fun captured e r => impl (isJoinPointsValid e 0 (updJPSs jpsp captured) = true) (P captured e r)) _ _ _ _ _ _ _);
       intros; intro HIJPV.
-    * revert e captured fvs Hcapt HWS Hdisjoint HIJPV.
+    * revert e captured Hcapt HWS Hdisjoint HIJPV.
       eapply IH1.
     * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
       fold isJoinPointsValidPair in HIJPVrhs.

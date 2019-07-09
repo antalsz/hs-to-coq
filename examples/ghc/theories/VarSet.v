@@ -1988,6 +1988,92 @@ Hint Rewrite unionEmpty_l unionEmpty_r
   hs_simpl.
 
 
+(** ** [unionVarSets] *)
+
+Lemma unionVarSet_commute (ss : list VarSet) : forall v a,
+      unionVarSet v (Foldable.foldr unionVarSet a ss)
+  [=] unionVarSet a (Foldable.foldr unionVarSet v ss).
+Proof.   
+  induction ss.
+  + intros v a. hs_simpl. eapply unionVarSet_sym.
+  + intros v b. hs_simpl.
+    rewrite (IHss a b).
+    rewrite (IHss a v).
+    fsetdec.
+Qed.
+
+Lemma unionVarSets_cons a ss : unionVarSets (a :: ss) [=] unionVarSet a (unionVarSets ss).
+Proof.
+  unfold unionVarSets.
+  unfold UniqSet.unionManyUniqSets.
+  destruct ss.
+  + hs_simpl. reflexivity.
+  + hs_simpl. rewrite unionVarSet_commute.
+    reflexivity.
+Qed.
+Hint Rewrite unionVarSets_cons : hs_simpl.
+
+
+Lemma unionVarSets_def ss : 
+  unionVarSets ss [=] Foldable.foldr unionVarSet emptyVarSet ss.
+Proof.
+  induction ss. cbv. done.
+  hs_simpl. 
+  rewrite IHss. reflexivity.
+Qed.
+
+
+Lemma unionsVarSet_equal : forall vss1 vss2, Forall2 Equal vss1 vss2 ->
+  (Foldable.foldr unionVarSet emptyVarSet) vss1 [=]
+  (Foldable.foldr unionVarSet emptyVarSet) vss2.
+Proof.
+  move=>vss1 vss2.
+  elim.
+  hs_simpl. reflexivity.
+  move=> x y l l' Eq1 Eq2 IH.
+  hs_simpl.
+  f_equiv; auto.
+Qed.
+
+Instance unionsVarSet_m : 
+   Proper (Forall2 Equal ==> Equal) unionVarSets.
+Proof.
+  move=> vss1 vss2 Eq. 
+  rewrite unionVarSets_def. rewrite unionVarSets_def.
+  eapply unionsVarSet_equal. auto.
+Defined.
+
+
+Lemma delVarSet_unionVarSets ss x :
+  delVarSet (unionVarSets ss) x [=] unionVarSets (List.map (fun s => delVarSet s x) ss).
+Proof.
+  induction ss.
+  + cbv. done.
+  + hs_simpl.
+    rewrite delVarSet_unionVarSet. rewrite IHss.
+    rewrite unionVarSets_cons.
+    unfold map. reflexivity.
+Qed.
+    
+Lemma mapUnionVarSet_cons {A} f (x:A) xs : 
+  mapUnionVarSet f (x :: xs) [=] unionVarSet (f x) (mapUnionVarSet f xs).
+Proof.                                           
+  unfold mapUnionVarSet.
+  hs_simpl. unfold Base.op_z2218U__.
+  reflexivity.
+Qed.
+
+Lemma mapUnionVarSets_unionVarSets {A} (f : A -> VarSet) ss :
+  mapUnionVarSet f ss [=] unionVarSets (List.map f ss).
+Proof. 
+  induction ss. cbv. done.
+  rewrite mapUnionVarSet_cons.
+  rewrite unionVarSets_cons.
+  rewrite IHss.
+  reflexivity.
+Qed.
+
+
 (** ** [minusVarSet] *)
 
 Lemma minusVarSet_emptyVarSet vs : 
@@ -2246,3 +2332,96 @@ Proof.
     apply varUnique_iff. rewrite /varUnique.
     f_equal. apply N.compare_eq_iff =>//.
 Qed.
+
+
+(** A very specialized [Proper] instance, written for the sole purpose
+    of proving [delVarSetList_commute]. *)
+Instance foldl_m :
+  Proper (Equal ==> (fun (a b : list Var) => a = b) ==> Equal)
+         (Foldable.foldl delVarSet).
+Proof.
+  intros s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  induction l2.
+  - rewrite /Foldable.foldl //=.
+  - intros s1 s2 Heqs. rewrite !Foldable_foldl_cons.
+    apply IHl2. rewrite Heqs. reflexivity.
+Qed.
+
+
+Lemma delVarSetList_commute :forall (bndrs:list Var) vs bndr,
+  Foldable.foldl delVarSet (delVarSet vs bndr) bndrs [=]
+  delVarSet (Foldable.foldl delVarSet vs bndrs) bndr.
+Proof.
+  elim => [|bndr' bndrs].
+  - move=> vs bndr. hs_simpl. reflexivity.
+  - move=> IH vs bndr.
+    hs_simpl.
+    rewrite delVarSet_commute.
+    eapply IH.
+Qed.
+
+
+
+(** A [Proper] instance, written for the sole purpose
+    of proving [delVarSetList_commute]. *)
+Instance foldr_m :
+  Proper (((fun x y => (x == y)) ==> Equal ==> Equal) ==> Equal ==> (fun (a b : list Var) => a = b) ==> Equal)
+         Foldable.foldr.
+Proof.
+  intros f1 f2 Hf s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  induction l2.
+  - rewrite /Foldable.foldr //=.
+  - intros s1 s2 Heqs. rewrite !Foldable_foldr_cons.
+    specialize (IHl2 s1 s2 Heqs).
+    eapply Hf. reflexivity.
+    eapply IHl2.  
+Qed.
+
+
+
+(** A [Proper] instance, written for showing that folding a unionVarSet like term  *)
+Instance foldr_mE :
+  Proper ((Equal ==> Equal ==> Equal) ==> Equal ==> (Forall2 Equal) ==> Equal)
+         Foldable.foldr.
+Proof.
+  intros f1 f2 Hf s1 s2 Heqs l1 l2 Heql; subst.
+  generalize dependent s2.
+  generalize dependent s1.
+  generalize dependent l1. 
+  induction l2.
+  - move=> l1 Heql. inversion Heql. rewrite /Foldable.foldr //=.
+  - move=> l1 Heql. inversion Heql. subst. 
+    intros s1 s2 Heqs. rewrite !Foldable_foldr_cons.   
+    specialize (IHl2 _ H3 s1 s2 Heqs).
+    eapply Hf. auto.
+    eapply IHl2.  
+Qed.
+
+Lemma delVarSetList_commute_foldr : forall (bndrs:list Var) vs bndr,
+  Foldable.foldr (fun x y => delVarSet y x) (delVarSet vs bndr) bndrs [=]
+  delVarSet (Foldable.foldr (fun x y => delVarSet y x) vs bndrs) bndr.
+Proof.
+  elim => [|bndr' bndrs].
+  - move=> vs bndr. hs_simpl. reflexivity.
+  - move=> IH vs bndr.
+    hs_simpl.
+    rewrite delVarSet_commute.
+    rewrite IH. reflexivity.
+Qed.
+
+Lemma delVarSetList_foldr ss xs : 
+  delVarSetList ss xs [=] Foldable.foldr (fun x ss => delVarSet ss x) ss xs.
+Proof.
+  generalize dependent ss.
+  induction xs.
+  cbv. destruct ss. auto.
+  - move=> ss. hs_simpl.
+    rewrite <- delVarSetList_commute_foldr.
+    rewrite <- IHxs.
+    reflexivity.
+Qed. 
+

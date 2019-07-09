@@ -221,10 +221,6 @@ Axiom ValidVarSet_Axiom : forall vs, ValidVarSet vs.
 
 
 (********************************* *)
-(* From: CoreFVs. Used in Exitify. This is stronger than the real result 
-   in CoreFVs. *)
-Axiom freeVarsOf_freeVars:
-  forall e,
-  dVarSetToVarSet (freeVarsOf (freeVars e)) = exprFreeVars e.
+
 
 

@@ -1,0 +1,41 @@
+constructors:
+  OccurAnal.OccEncl: ! '[Qualified "OccurAnal" "OccRhs",Qualified "OccurAnal" "OccVanilla"]'
+  OccurAnal.UsageDetails: ! '[Qualified "OccurAnal" "UD"]'
+  OccurAnal.Details: ! '[Qualified "OccurAnal" "ND"]'
+  OccurAnal.OccEnv: ! '[Qualified "OccurAnal" "Mk_OccEnv"]'
+constructorFields:
+  OccurAnal.Mk_OccEnv: RecordFields [Qualified "OccurAnal" "occ_encl",Qualified "OccurAnal"
+    "occ_one_shots",Qualified "OccurAnal" "occ_gbl_scrut",Qualified "OccurAnal" "occ_rule_act",Qualified
+    "OccurAnal" "occ_binder_swap"]
+  OccurAnal.OccVanilla: NonRecordFields 0
+  OccurAnal.UD: RecordFields [Qualified "OccurAnal" "ud_env",Qualified "OccurAnal"
+    "ud_z_many",Qualified "OccurAnal" "ud_z_in_lam",Qualified "OccurAnal" "ud_z_no_tail"]
+  OccurAnal.ND: RecordFields [Qualified "OccurAnal" "nd_bndr",Qualified "OccurAnal"
+    "nd_rhs",Qualified "OccurAnal" "nd_rhs_bndrs",Qualified "OccurAnal" "nd_uds",Qualified
+    "OccurAnal" "nd_inl",Qualified "OccurAnal" "nd_weak",Qualified "OccurAnal" "nd_active_rule_fvs",Qualified
+    "OccurAnal" "nd_score"]
+  OccurAnal.OccRhs: NonRecordFields 0
+recordFieldTypes:
+  OccurAnal.ud_z_many: Qualified "OccurAnal" "UsageDetails"
+  OccurAnal.ud_env: Qualified "OccurAnal" "UsageDetails"
+  OccurAnal.occ_encl: Qualified "OccurAnal" "OccEnv"
+  OccurAnal.occ_binder_swap: Qualified "OccurAnal" "OccEnv"
+  OccurAnal.nd_rhs: Qualified "OccurAnal" "Details"
+  OccurAnal.nd_uds: Qualified "OccurAnal" "Details"
+  OccurAnal.nd_bndr: Qualified "OccurAnal" "Details"
+  OccurAnal.nd_rhs_bndrs: Qualified "OccurAnal" "Details"
+  OccurAnal.occ_one_shots: Qualified "OccurAnal" "OccEnv"
+  OccurAnal.ud_z_in_lam: Qualified "OccurAnal" "UsageDetails"
+  OccurAnal.nd_inl: Qualified "OccurAnal" "Details"
+  OccurAnal.nd_active_rule_fvs: Qualified "OccurAnal" "Details"
+  OccurAnal.occ_rule_act: Qualified "OccurAnal" "OccEnv"
+  OccurAnal.occ_gbl_scrut: Qualified "OccurAnal" "OccEnv"
+  OccurAnal.nd_score: Qualified "OccurAnal" "Details"
+  OccurAnal.nd_weak: Qualified "OccurAnal" "Details"
+  OccurAnal.ud_z_no_tail: Qualified "OccurAnal" "UsageDetails"
+constructorTypes:
+  OccurAnal.Mk_OccEnv: Qualified "OccurAnal" "OccEnv"
+  OccurAnal.OccVanilla: Qualified "OccurAnal" "OccEncl"
+  OccurAnal.UD: Qualified "OccurAnal" "UsageDetails"
+  OccurAnal.ND: Qualified "OccurAnal" "Details"
+  OccurAnal.OccRhs: Qualified "OccurAnal" "OccEncl"

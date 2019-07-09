@@ -65,6 +65,7 @@ Theorem Denotes_fvVarSet : forall m fv f in_scope l vs,
 Proof.
   move => m fv f in_scope l vs [vs' fv' H0] H1 H2.
   specialize (H0 f in_scope vs l H1 H2); subst.
+  destruct fv'.
   move: H0 => [h0 h1].
   auto.
 Qed.
@@ -465,3 +466,4 @@ Proof.
     rewrite unionsFV_cons.
     auto.
 Qed.
+

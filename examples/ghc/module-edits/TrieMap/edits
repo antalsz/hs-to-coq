@@ -22,7 +22,7 @@ rename value TrieMap.CoreMap      = TrieMap.Mk_CoreMap
 ## Ordering constraints and type class resolution
 order TrieMap.TrieMap__Map            TrieMap.xtTickish
 order TrieMap.TrieMap__IntMap         TrieMap.mapVar
-order TrieMap.TrieMap__UniqDFM        TrieMap.mapVar
+order TrieMap.TrieMap__UniqFM         TrieMap.mapVar
 order TrieMap.TrieMap__TypeMapX       TrieMap.xtBndr
 order TrieMap.TrieMap__CoreMapX       TrieMap.mapA
 order TrieMap.TrieMap__GenMap         TrieMap.mapA

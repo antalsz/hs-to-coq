@@ -1,0 +1,12 @@
+skip module HscTypes
+
+skip FloatIn.floatInwards
+
+## This is the main recursive group of this module, but it is just 
+## too difficult to figure out how to make it pass the termination checker.
+
+
+# axiomatize definition FloatIn.fiBind
+axiomatize definition FloatIn.fiBinds
+# axiomatize definition FloatIn.fiRhs
+axiomatize definition FloatIn.fiExpr

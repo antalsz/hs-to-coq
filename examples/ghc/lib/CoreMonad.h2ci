@@ -1,0 +1,150 @@
+constructors:
+  CoreMonad.SimplCount: ! '[Qualified "CoreMonad" "VerySimplCount",Qualified "CoreMonad"
+    "Mk_SimplCount"]'
+  CoreMonad.CoreM: ! '[Qualified "CoreMonad" "Mk_CoreM"]'
+  CoreMonad.CoreState: ! '[Qualified "CoreMonad" "Mk_CoreState"]'
+  CoreMonad.Tick: ! '[Qualified "CoreMonad" "PreInlineUnconditionally",Qualified "CoreMonad"
+    "PostInlineUnconditionally",Qualified "CoreMonad" "UnfoldingDone",Qualified "CoreMonad"
+    "RuleFired",Qualified "CoreMonad" "LetFloatFromLet",Qualified "CoreMonad" "EtaExpansion",Qualified
+    "CoreMonad" "EtaReduction",Qualified "CoreMonad" "BetaReduction",Qualified "CoreMonad"
+    "CaseOfCase",Qualified "CoreMonad" "KnownBranch",Qualified "CoreMonad" "CaseMerge",Qualified
+    "CoreMonad" "AltMerge",Qualified "CoreMonad" "CaseElim",Qualified "CoreMonad"
+    "CaseIdentity",Qualified "CoreMonad" "FillInCaseDefault",Qualified "CoreMonad"
+    "BottomFound",Qualified "CoreMonad" "SimplifierDone"]'
+  CoreMonad.SimplMode: ! '[Qualified "CoreMonad" "Mk_SimplMode"]'
+  CoreMonad.CoreToDo: ! '[Qualified "CoreMonad" "CoreDoSimplify",Qualified "CoreMonad"
+    "CoreDoPluginPass",Qualified "CoreMonad" "CoreDoFloatInwards",Qualified "CoreMonad"
+    "CoreDoFloatOutwards",Qualified "CoreMonad" "CoreLiberateCase",Qualified "CoreMonad"
+    "CoreDoPrintCore",Qualified "CoreMonad" "CoreDoStaticArgs",Qualified "CoreMonad"
+    "CoreDoCallArity",Qualified "CoreMonad" "CoreDoExitify",Qualified "CoreMonad"
+    "CoreDoStrictness",Qualified "CoreMonad" "CoreDoWorkerWrapper",Qualified "CoreMonad"
+    "CoreDoSpecialising",Qualified "CoreMonad" "CoreDoSpecConstr",Qualified "CoreMonad"
+    "CoreCSE",Qualified "CoreMonad" "CoreDoRuleCheck",Qualified "CoreMonad" "CoreDoVectorisation",Qualified
+    "CoreMonad" "CoreDoNothing",Qualified "CoreMonad" "CoreDoPasses",Qualified "CoreMonad"
+    "CoreDesugar",Qualified "CoreMonad" "CoreDesugarOpt",Qualified "CoreMonad" "CoreTidy",Qualified
+    "CoreMonad" "CorePrep",Qualified "CoreMonad" "CoreOccurAnal"]'
+  CoreMonad.CoreWriter: ! '[Qualified "CoreMonad" "Mk_CoreWriter"]'
+  CoreMonad.FloatOutSwitches: ! '[Qualified "CoreMonad" "Mk_FloatOutSwitches"]'
+constructorFields:
+  CoreMonad.CoreDesugar: NonRecordFields 0
+  CoreMonad.CoreDoStrictness: NonRecordFields 0
+  CoreMonad.Mk_FloatOutSwitches: RecordFields [Qualified "CoreMonad" "floatOutLambdas",Qualified
+    "CoreMonad" "floatOutConstants",Qualified "CoreMonad" "floatOutOverSatApps",Qualified
+    "CoreMonad" "floatToTopLevelOnly"]
+  CoreMonad.CoreDesugarOpt: NonRecordFields 0
+  CoreMonad.LetFloatFromLet: NonRecordFields 0
+  CoreMonad.CoreCSE: NonRecordFields 0
+  CoreMonad.BottomFound: NonRecordFields 0
+  CoreMonad.PostInlineUnconditionally: NonRecordFields 1
+  CoreMonad.Mk_SimplCount: RecordFields [Qualified "CoreMonad" "ticks",Qualified "CoreMonad"
+    "details",Qualified "CoreMonad" "n_log",Qualified "CoreMonad" "log1",Qualified
+    "CoreMonad" "log2"]
+  CoreMonad.EtaReduction: NonRecordFields 1
+  CoreMonad.Mk_SimplMode: RecordFields [Qualified "CoreMonad" "sm_names",Qualified
+    "CoreMonad" "sm_phase",Qualified "CoreMonad" "sm_dflags",Qualified "CoreMonad"
+    "sm_rules",Qualified "CoreMonad" "sm_inline",Qualified "CoreMonad" "sm_case_case",Qualified
+    "CoreMonad" "sm_eta_expand"]
+  CoreMonad.CoreOccurAnal: NonRecordFields 0
+  CoreMonad.EtaExpansion: NonRecordFields 1
+  CoreMonad.CaseOfCase: NonRecordFields 1
+  CoreMonad.CaseMerge: NonRecordFields 1
+  CoreMonad.CorePrep: NonRecordFields 0
+  CoreMonad.CoreDoFloatInwards: NonRecordFields 0
+  CoreMonad.CoreLiberateCase: NonRecordFields 0
+  CoreMonad.RuleFired: NonRecordFields 1
+  CoreMonad.CaseIdentity: NonRecordFields 1
+  CoreMonad.CoreDoSpecConstr: NonRecordFields 0
+  CoreMonad.UnfoldingDone: NonRecordFields 1
+  CoreMonad.SimplifierDone: NonRecordFields 0
+  CoreMonad.CoreDoNothing: NonRecordFields 0
+  CoreMonad.CoreDoFloatOutwards: NonRecordFields 1
+  CoreMonad.CoreDoPluginPass: NonRecordFields 2
+  CoreMonad.VerySimplCount: NonRecordFields 1
+  CoreMonad.CoreDoRuleCheck: NonRecordFields 2
+  CoreMonad.CoreTidy: NonRecordFields 0
+  CoreMonad.BetaReduction: NonRecordFields 1
+  CoreMonad.CoreDoSpecialising: NonRecordFields 0
+  CoreMonad.PreInlineUnconditionally: NonRecordFields 1
+  CoreMonad.CoreDoExitify: NonRecordFields 0
+  CoreMonad.CoreDoVectorisation: NonRecordFields 0
+  CoreMonad.CaseElim: NonRecordFields 1
+  CoreMonad.AltMerge: NonRecordFields 1
+  CoreMonad.KnownBranch: NonRecordFields 1
+  CoreMonad.Mk_CoreM: RecordFields [Qualified "CoreMonad" "unCoreM"]
+  CoreMonad.CoreDoPasses: NonRecordFields 1
+  CoreMonad.CoreDoStaticArgs: NonRecordFields 0
+  CoreMonad.FillInCaseDefault: NonRecordFields 1
+  CoreMonad.CoreDoPrintCore: NonRecordFields 0
+  CoreMonad.Mk_CoreWriter: RecordFields [Qualified "CoreMonad" "cw_simpl_count"]
+  CoreMonad.Mk_CoreState: RecordFields [Qualified "CoreMonad" "cs_uniq_supply"]
+  CoreMonad.CoreDoWorkerWrapper: NonRecordFields 0
+  CoreMonad.CoreDoSimplify: NonRecordFields 2
+  CoreMonad.CoreDoCallArity: NonRecordFields 0
+recordFieldTypes:
+  CoreMonad.cs_uniq_supply: Qualified "CoreMonad" "CoreState"
+  CoreMonad.floatOutConstants: Qualified "CoreMonad" "FloatOutSwitches"
+  CoreMonad.ticks: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.sm_phase: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.sm_rules: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.floatToTopLevelOnly: Qualified "CoreMonad" "FloatOutSwitches"
+  CoreMonad.details: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.unCoreM: Qualified "CoreMonad" "CoreM"
+  CoreMonad.log1: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.sm_eta_expand: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.sm_inline: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.log2: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.sm_case_case: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.cw_simpl_count: Qualified "CoreMonad" "CoreWriter"
+  CoreMonad.floatOutOverSatApps: Qualified "CoreMonad" "FloatOutSwitches"
+  CoreMonad.sm_dflags: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.floatOutLambdas: Qualified "CoreMonad" "FloatOutSwitches"
+  CoreMonad.n_log: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.sm_names: Qualified "CoreMonad" "SimplMode"
+constructorTypes:
+  CoreMonad.CoreDesugar: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoStrictness: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.Mk_FloatOutSwitches: Qualified "CoreMonad" "FloatOutSwitches"
+  CoreMonad.CoreDesugarOpt: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.LetFloatFromLet: Qualified "CoreMonad" "Tick"
+  CoreMonad.CoreCSE: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.BottomFound: Qualified "CoreMonad" "Tick"
+  CoreMonad.PostInlineUnconditionally: Qualified "CoreMonad" "Tick"
+  CoreMonad.Mk_SimplCount: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.EtaReduction: Qualified "CoreMonad" "Tick"
+  CoreMonad.Mk_SimplMode: Qualified "CoreMonad" "SimplMode"
+  CoreMonad.CoreOccurAnal: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.EtaExpansion: Qualified "CoreMonad" "Tick"
+  CoreMonad.CaseOfCase: Qualified "CoreMonad" "Tick"
+  CoreMonad.CaseMerge: Qualified "CoreMonad" "Tick"
+  CoreMonad.CorePrep: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoFloatInwards: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreLiberateCase: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.RuleFired: Qualified "CoreMonad" "Tick"
+  CoreMonad.CaseIdentity: Qualified "CoreMonad" "Tick"
+  CoreMonad.CoreDoSpecConstr: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.UnfoldingDone: Qualified "CoreMonad" "Tick"
+  CoreMonad.SimplifierDone: Qualified "CoreMonad" "Tick"
+  CoreMonad.CoreDoNothing: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoFloatOutwards: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoPluginPass: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.VerySimplCount: Qualified "CoreMonad" "SimplCount"
+  CoreMonad.CoreDoRuleCheck: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreTidy: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.BetaReduction: Qualified "CoreMonad" "Tick"
+  CoreMonad.CoreDoSpecialising: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.PreInlineUnconditionally: Qualified "CoreMonad" "Tick"
+  CoreMonad.CoreDoExitify: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoVectorisation: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CaseElim: Qualified "CoreMonad" "Tick"
+  CoreMonad.AltMerge: Qualified "CoreMonad" "Tick"
+  CoreMonad.KnownBranch: Qualified "CoreMonad" "Tick"
+  CoreMonad.Mk_CoreM: Qualified "CoreMonad" "CoreM"
+  CoreMonad.CoreDoPasses: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoStaticArgs: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.FillInCaseDefault: Qualified "CoreMonad" "Tick"
+  CoreMonad.CoreDoPrintCore: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.Mk_CoreWriter: Qualified "CoreMonad" "CoreWriter"
+  CoreMonad.Mk_CoreState: Qualified "CoreMonad" "CoreState"
+  CoreMonad.CoreDoWorkerWrapper: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoSimplify: Qualified "CoreMonad" "CoreToDo"
+  CoreMonad.CoreDoCallArity: Qualified "CoreMonad" "CoreToDo"

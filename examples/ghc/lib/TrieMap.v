@@ -25,7 +25,7 @@ Require IntMap.
 Require Literal.
 Require Name.
 Require NameEnv.
-Require UniqDFM.
+Require UniqFM.
 Require Unique.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -379,37 +379,37 @@ Program Instance TrieMap__IntMap : TrieMap IntMap.IntMap :=
   lookupTM := fun {b} => TrieMap__IntMap_lookupTM ;
   mapTM := fun {a} {b} => TrieMap__IntMap_mapTM }.
 
-Local Definition TrieMap__UniqDFM_Key : Type :=
+Local Definition TrieMap__UniqFM_Key : Type :=
   Unique.Unique.
 
-Local Definition TrieMap__UniqDFM_alterTM
+Local Definition TrieMap__UniqFM_alterTM
    : forall {b},
-     TrieMap__UniqDFM_Key -> XT b -> UniqDFM.UniqDFM b -> UniqDFM.UniqDFM b :=
-  fun {b} => fun k f m => UniqDFM.alterUDFM f m k.
+     TrieMap__UniqFM_Key -> XT b -> UniqFM.UniqFM b -> UniqFM.UniqFM b :=
+  fun {b} => fun k f m => UniqFM.alterUFM f m k.
 
-Local Definition TrieMap__UniqDFM_emptyTM : forall {a}, UniqDFM.UniqDFM a :=
-  fun {a} => UniqDFM.emptyUDFM.
+Local Definition TrieMap__UniqFM_emptyTM : forall {a}, UniqFM.UniqFM a :=
+  fun {a} => UniqFM.emptyUFM.
 
-Local Definition TrieMap__UniqDFM_foldTM
-   : forall {a} {b}, (a -> b -> b) -> UniqDFM.UniqDFM a -> b -> b :=
-  fun {a} {b} => fun k m z => UniqDFM.foldUDFM k z m.
+Local Definition TrieMap__UniqFM_foldTM
+   : forall {a} {b}, (a -> b -> b) -> UniqFM.UniqFM a -> b -> b :=
+  fun {a} {b} => fun k m z => UniqFM.nonDetFoldUFM k z m.
 
-Local Definition TrieMap__UniqDFM_lookupTM
-   : forall {b}, TrieMap__UniqDFM_Key -> UniqDFM.UniqDFM b -> option b :=
-  fun {b} => fun k m => UniqDFM.lookupUDFM m k.
+Local Definition TrieMap__UniqFM_lookupTM
+   : forall {b}, TrieMap__UniqFM_Key -> UniqFM.UniqFM b -> option b :=
+  fun {b} => fun k m => UniqFM.lookupUFM m k.
 
-Local Definition TrieMap__UniqDFM_mapTM
-   : forall {a} {b}, (a -> b) -> UniqDFM.UniqDFM a -> UniqDFM.UniqDFM b :=
-  fun {a} {b} => fun f m => UniqDFM.mapUDFM f m.
+Local Definition TrieMap__UniqFM_mapTM
+   : forall {a} {b}, (a -> b) -> UniqFM.UniqFM a -> UniqFM.UniqFM b :=
+  fun {a} {b} => fun f m => UniqFM.mapUFM f m.
 
-Program Instance TrieMap__UniqDFM : TrieMap UniqDFM.UniqDFM :=
+Program Instance TrieMap__UniqFM : TrieMap UniqFM.UniqFM :=
   {
-  Key := TrieMap__UniqDFM_Key ;
-  alterTM := fun {b} => TrieMap__UniqDFM_alterTM ;
-  emptyTM := fun {a} => TrieMap__UniqDFM_emptyTM ;
-  foldTM := fun {a} {b} => TrieMap__UniqDFM_foldTM ;
-  lookupTM := fun {b} => TrieMap__UniqDFM_lookupTM ;
-  mapTM := fun {a} {b} => TrieMap__UniqDFM_mapTM }.
+  Key := TrieMap__UniqFM_Key ;
+  alterTM := fun {b} => TrieMap__UniqFM_alterTM ;
+  emptyTM := fun {a} => TrieMap__UniqFM_emptyTM ;
+  foldTM := fun {a} {b} => TrieMap__UniqFM_foldTM ;
+  lookupTM := fun {b} => TrieMap__UniqFM_lookupTM ;
+  mapTM := fun {a} {b} => TrieMap__UniqFM_mapTM }.
 
 Definition mapVar {a} {b} : (a -> b) -> VarMap a -> VarMap b :=
   fun arg_0__ arg_1__ =>
@@ -530,7 +530,7 @@ Definition xtTT {a}
     match arg_0__, arg_1__, arg_2__ with
     | D env ty, f, Mk_TypeMap m =>
         Mk_TypeMap (m |>
-                    (xtG (m := TypeMapX) (D env (@Core.typeKind tt ty)) |>>
+                    (xtG (m := TypeMapX) (D env (Core.typeKind ty)) |>>
                      xtG (m := TypeMapX) (D env ty) f))
     end.
 
@@ -554,8 +554,8 @@ Definition lkTT {a}
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | D env ty, Mk_TypeMap m =>
-        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (@Core.typeKind
-                                                                        tt ty)) m) (lkG (m := TypeMapX) (D env ty))
+        GHC.Base.op_zgzgze__ (m := option) (lkG (m := TypeMapX) (D env (Core.typeKind
+                                                                        ty)) m) (lkG (m := TypeMapX) (D env ty))
     end.
 
 Local Definition TrieMap__TypeMap_lookupTM
@@ -1131,7 +1131,7 @@ End Notations.
 
 (* External variables:
      Build_TrieMap Key None Some Type andb bool cons false list negb option pair true
-     tt AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Core.CoreAlt Core.CoreExpr
+     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Core.CoreAlt Core.CoreExpr
      Core.DEFAULT Core.DVarEnv Core.DataAlt Core.Id Core.LitAlt Core.Tickish Core.Var
      Core.VarEnv Core.alterDVarEnv Core.coercionType Core.emptyDVarEnv
      Core.emptyVarEnv Core.extendVarEnv Core.lookupDVarEnv Core.lookupVarEnv
@@ -1144,7 +1144,7 @@ End Notations.
      GHC.Err.default GHC.Num.Integer GHC.Num.fromInteger GHC.Num.op_zp__
      IntMap.IntMap IntMap.alter IntMap.empty IntMap.foldr IntMap.lookup IntMap.map
      Literal.Literal Name.NamedThing Name.getName NameEnv.DNameEnv
-     NameEnv.alterDNameEnv NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv
-     UniqDFM.UniqDFM UniqDFM.alterUDFM UniqDFM.emptyUDFM UniqDFM.foldUDFM
-     UniqDFM.lookupUDFM UniqDFM.mapUDFM Unique.Unique
+     NameEnv.alterDNameEnv NameEnv.emptyDNameEnv NameEnv.lookupDNameEnv UniqFM.UniqFM
+     UniqFM.alterUFM UniqFM.emptyUFM UniqFM.lookupUFM UniqFM.mapUFM
+     UniqFM.nonDetFoldUFM Unique.Unique
 *)

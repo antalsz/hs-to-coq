@@ -1,0 +1,43 @@
+rename value OccurAnal.OccEnv = OccurAnal.Mk_OccEnv
+
+# need view patterns
+axiomatize definition OccurAnal.mk_non_loop_breaker
+axiomatize definition OccurAnal.mk_loop_breaker
+
+# need Data.Graph.SCC
+axiomatize definition OccurAnal.loopBreakNodes
+axiomatize definition OccurAnal.reOrderNodes
+
+# needs Data.Graph.SCC, but is main recursive function
+skip OccurAnal.occAnalRec
+axiomatize definition OccurAnal.occAnalRecRhs
+axiomatize definition OccurAnal.occAnalRecBind
+
+# Error: Anomaly "Evar ?X405 was not declared."
+# Please report at http://coq.inria.fr/bugs/.
+axiomatize definition OccurAnal.transClosureFV
+
+
+# difficult mutual recursion.  (n - exprSize)
+axiomatize definition OccurAnal.cheapExprSize
+
+# inline mutual OccurAnal.occAnalApp
+# inline mutual OccurAnal.occAnalAlt
+# inline mutual OccurAnal.wrapAltRHS
+# inline mutual OccurAnal.occAnalNonRecBind
+# inline mutual OccurAnal.occAnalRecBind
+# inline mutual OccurAnal.occAnalNonRecRhs 
+
+# ugh, these are just too difficult to untangle
+#
+#
+axiomatize definition OccurAnal.occAnal
+axiomatize definition OccurAnal.occAnalBind
+axiomatize definition OccurAnal.occAnalArgs
+axiomatize definition OccurAnal.occAnalLamOrRhs
+
+
+# rewrite forall env mar rf id, OccurAnal.occAnalRules env mar rf id = nil
+axiomatize definition OccurAnal.occAnalRules
+
+axiomatize definition OccurAnal.occurAnalysePgm 

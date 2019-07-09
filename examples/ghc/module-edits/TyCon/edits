@@ -10,33 +10,34 @@ skip Core.data_con
 skip Core.algTcParent
 skip Core.promDcRepInfo
 
+# We're axiomatizing the whole module, so no need to axiomatize individually
 
-axiomatize definition Core.mkTyConKind
-axiomatize definition Core.kindTyConKeys
-axiomatize definition Core.isKindTyCon
+# axiomatize definition Core.mkTyConKind
+# axiomatize definition Core.kindTyConKeys
+# axiomatize definition Core.isKindTyCon
 
 
 ## Needs DataCon.dataConExTyVars
-axiomatize definition Core.isDataProductTyCon_maybe
-axiomatize definition Core.isDataSumTyCon_maybe 
-axiomatize definition Core.isProductTyCon 
-axiomatize definition Core.isPromotedTupleTyCon
+# axiomatize definition Core.isDataProductTyCon_maybe
+# axiomatize definition Core.isDataSumTyCon_maybe 
+# axiomatize definition Core.isProductTyCon 
+# axiomatize definition Core.isPromotedTupleTyCon
 
-axiomatize definition Core.isInjectiveTyCon
-axiomatize definition Core.isGenerativeTyCon
-axiomatize definition Core.tyConInjectivityInfo 
+# axiomatize definition Core.isInjectiveTyCon
+# axiomatize definition Core.isGenerativeTyCon
+# axiomatize definition Core.tyConInjectivityInfo 
 
-axiomatize definition Core.tyConATs
+# axiomatize definition Core.tyConATs
 
 # Needs ClassSpec
 # skip Core.tyConAssoc_maybe
 # skip Core.isTyConAssoc
 
 ## can't use Applicative ((->)A)
-skip Core.isLiftedTypeKindTyConName
+# skip Core.isLiftedTypeKindTyConName
 
-skip Core.tyConRuntimeRepInfo
-skip Core.tyConSkolem
+# skip Core.tyConRuntimeRepInfo
+# skip Core.tyConSkolem
 
 
 

@@ -5,16 +5,75 @@ skip module Unify
 skip module TcType
 skip module RepType
 skip module ForeignCall
-skip module	FamInstEnv
 skip module PprCore
 skip module Data.ByteString
 skip module ErrUtils
-skip module OccurAnal
 skip module CostCentre
-skip module PrimOp
-skip module TysPrim
 skip module Platform
 
+####################################################
+### DVarSet => VarSet,  DVarEnv => VarEnv
+##
+## We do this translation by implementing DVarSets using
+## the same implementation as VarSets. (Both are definitions
+## in Coq.)
+
+rename type UniqDSet.UniqDSet = UniqSet.UniqSet
+rename value UniqDSet.unitUniqDSet = UniqSet.unitUniqSet
+rename value UniqDSet.unionManyUniqDSets = UniqSet.unionManyUniqSets 
+rename value UniqDSet.unionUniqDSets = UniqSet.unionUniqSets
+rename value UniqDSet.sizeUniqDSet = UniqSet.sizeUniqSet
+rename value UniqDSet.partitionUniqDSet = UniqSet.partitionUniqSet
+rename value UniqDSet.mkUniqDSet = UniqSet.mkUniqSet
+rename value UniqDSet.minusUniqDSet = UniqSet.minusUniqSet
+rename value UniqDSet.isEmptyUniqDSet = UniqSet.isEmptyUniqSet
+rename value UniqDSet.intersectUniqDSets = UniqSet.intersectUniqSets
+rename value UniqDSet.foldUniqDSet = UniqSet.nonDetFoldUniqSet
+rename value UniqDSet.filterUniqDSet = UniqSet.filterUniqSet
+rename value UniqDSet.addOneToUniqDSet = UniqSet.addOneToUniqSet
+rename value UniqDSet.addListToUniqDSet = UniqSet.addListToUniqSet
+rename value UniqDSet.emptyUniqDSet = UniqSet.emptyUniqSet
+rename value UniqDSet.delOneFromUniqDSet = UniqSet.delOneFromUniqSet
+rename value UniqDSet.delListFromUniqDSet = UniqSet.delListFromUniqSet
+rename value UniqDSet.elementOfUniqDSet = UniqSet.elementOfUniqSet
+rename value UniqDSet.uniqDSetMinusUniqSet = UniqSet.minusUniqSet
+rename value UniqDSet.uniqDSetIntersectUniqSet = UniqSet.intersectUniqSets
+rename value UniqDSet.uniqDSetToList = UniqSet.nonDetEltsUniqSet
+rename value UniqDSet.foldDVarSet = Core.nonDetFoldUniqSet
+
+redefine Definition Core.disjointDVarSet := Core.disjointVarSet.
+redefine Definition Core.anyDVarSet      := Core.anyVarSet.
+redefine Definition Core.allDVarSet      := Core.allVarSet.
+
+redefine Definition Core.dVarSetToVarSet : DVarSet -> VarSet := fun x => x.
+redefine Definition FV.fvDVarSet : FV.FV -> Core.DVarSet := FV.fvVarSet.
+
+rename type UniqDFM.UniqDFM = UniqFM.UniqFM
+rename value UniqDFM.unitUDFM = UniqFM.unitUFM
+rename value UniqDFM.addListToUDFM = UniqFM.addListToUFM
+rename value UniqDFM.addToUDFM = UniqFM.addToUFM 
+rename value UniqDFM.addToUDFM_C = UniqFM.addToUFM_C 
+rename value UniqDFM.allUDFM = UniqFM.allUFM 
+rename value UniqDFM.alterUDFM = UniqFM.alterUFM
+rename value UniqDFM.anyUDFM  = UniqFM.anyUFM 
+rename value UniqDFM.delFromUDFM = UniqFM.delFromUFM 
+rename value UniqDFM.delListFromUDFM = UniqFM.delListFromUFM 
+rename value UniqDFM.disjointUDFM = UniqFM.disjointUFM
+rename value UniqDFM.elemUDFM = UniqFM.elemUFM 
+rename value UniqDFM.eltsUDFM = UniqFM.eltsUFM 
+rename value UniqDFM.emptyUDFM = UniqFM.emptyUFM 
+rename value UniqDFM.filterUDFM = UniqFM.filterUFM
+rename value UniqDFM.foldUDFM  = UniqFM.nonDetFoldUFM 
+rename value UniqDFM.isNullUDFM = UniqFM.isNullUFM 
+rename value UniqDFM.listToUDFM  = UniqFM.listToUFM 
+rename value UniqDFM.lookupUDFM = UniqFM.lookupUFM
+rename value UniqDFM.mapUDFM = UniqFM.mapUFM 
+rename value UniqDFM.minusUDFM  = UniqFM.minusUFM 
+rename value UniqDFM.partitionUDFM = UniqFM.partitionUFM 
+rename value UniqDFM.plusUDFM = UniqFM.plusUFM
+rename value UniqDFM.plusUDFM_C = UniqFM.plusUFM_C 
+rewrite forall x, UniqDFM.udfmToUfm x = x
+rename value UniqDFM.unitUFM = UniqDFM.unitUFM
 
 ####################################################
 ## Most of the time, we are counting 
@@ -34,24 +93,28 @@ rewrite forall x, GHC.List.drop x          = Coq.Lists.List.skipn x
 #
 # This must stay in sync with the Makefile
 #
-rename module Class   Core
-rename module TyCon   Core
-rename module DataCon Core
 rename module Var     Core
 rename module IdInfo  Core
-rename module PatSyn  Core
 rename module VarSet  Core
 rename module VarEnv  Core
 rename module CoreSyn Core
-rename module Demand  Core
 
+rename module Class   Core
+axiomatize original module name Class
+rename module TyCon   Core
+axiomatize original module name TyCon
+rename module DataCon Core
+axiomatize original module name DataCon
+rename module PatSyn  Core
+axiomatize original module name PatSyn
+rename module Demand  Core
+axiomatize original module name Demand
 rename module Type    Core
 axiomatize original module name Type
 rename module TyCoRep Core
 axiomatize original module name TyCoRep
 rename module Coercion Core
 axiomatize original module name Coercion
-
 
 #
 # Punned constructor values (in Core)
@@ -91,16 +154,6 @@ rename value CoreSubst.Subst  = CoreSubst.Mk_Subst
 ## Outputtable
 rewrite forall x, Core.pprIdDetails x = Panic.someSDoc
 
-## CallStack 
-rewrite forall x, Core.idInfo x = @Core.idInfo tt x
-rewrite forall x, Core.splitTyConApp_maybe x = @Core.splitTyConApp_maybe tt x
-rewrite forall x, Core.isUnliftedType x = @Core.isUnliftedType tt x
-rewrite forall , Core.idInfo = (@Core.idInfo tt)
-rewrite forall x, Core.typeKind x = @Core.typeKind tt x
-rewrite forall x, Core.substTyVarBndr x = @Core.substTyVarBndr tt x
-rewrite forall x, Core.substCo x = @Core.substCo tt x
-rewrite forall x, Core.isStrictType x = @Core.isStrictType tt x
-
 rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 
 ###############################################################################
@@ -113,13 +166,15 @@ rename type GHC.Stack.Types.HasCallStack = Util.HasDebugCallStack
 # instances for them too.
 #
 
-rename type PrimOp.PrimOp           = unit
-rename type ForeignCall.ForeignCall = unit
-rename type ForeignCall.CType       = unit
-rename type CostCentre.CostCentre   = unit
+rename type PrimOp.PrimOp           = AxiomatizedTypes.PrimOp
+rename type ForeignCall.ForeignCall = AxiomatizedTypes.ForeignCall
+rename type ForeignCall.CType       = AxiomatizedTypes.CType
+rename type CostCentre.CostCentre   = AxiomatizedTypes.CostCentre
 
 # used in DataCon
-rename type MkId.DataConBoxer       = unit
+rename type MkId.DataConBoxer       = AxiomatizedTypes.DataConBoxer
+
+
 
 ###############################################################################
 # Skipping constructors 
@@ -183,6 +238,7 @@ rename value CoAxiom.Representational  = AxiomatizedTypes.Representational
 rename value CoAxiom.Nominal           = AxiomatizedTypes.Nominal
 rename value CoAxiom.Phantom           = AxiomatizedTypes.Phantom
 
+
 #
 # not translating TcType or TysWiredIn yet
 #
@@ -217,7 +273,7 @@ axiomatize definition Core.dataConCannotMatch
 #
 rewrite forall co,     Core.tyCoFVsOfCo co          = FV.emptyFV
 rewrite forall ty,     Core.tyCoFVsOfType ty        = FV.emptyFV
-rewrite forall b_ty,   Core.tyCoVarsOfTypeDSet b_ty = Core.emptyDVarSet
+rewrite forall ty,     Core.tyCoVarsOfTypeDSet ty   = Core.emptyDVarSet
 rewrite forall co,     Core.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 
 # in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
@@ -228,11 +284,18 @@ rewrite forall co,     Core.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 in CoreSubst.substBndr   rewrite forall x, Core.noFreeVarsOfType x = true
 in CoreSubst.substIdBndr rewrite forall x, Core.noFreeVarsOfType x = true
 
+
+
+#
 # we cannot verify these assertions as we aren't tracking whether types are
-# coercion types are not. 
+# coercion types are not. But they are debug assertions!
 #
 in Id.mkSysLocal rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkUserLocal rewrite forall ty, (Core.isCoercionType ty) = false
+
+# these two use the type information to determine whether to make a type
+# or a coercion variable
+#
 in Id.mkLocalIdOrCoVarWithInfo rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkLocalIdOrCoVar rewrite forall ty, Core.isCoercionType ty = false
 

@@ -1,0 +1,43 @@
+axiomatize module Digraph
+
+skip module Data.Graph
+skip module Data.Tree
+skip module GHC.ST
+
+rename value Digraph.Edge = Digraph.Mk_Edge
+
+redefine Axiom Digraph.Set_ : Type -> Type.
+redefine Axiom Digraph.ReduceFn : Type -> (Type -> Type).
+redefine Axiom Digraph.IntGraph : Type.
+redefine Axiom Digraph.Graph : Type -> Type.
+
+skip Digraph.contains
+skip Digraph.decodeSccs
+skip Digraph.degreeG
+skip Digraph.graphEmpty
+skip Digraph.include
+skip Digraph.noOutEdges
+skip Digraph.reachable
+
+skip Digraph.vertexReady
+skip Digraph.vertexGroupsS
+
+# Data.Graph.Verted
+skip Digraph.vertexGroupsG
+skip Digraph.vertexGroups
+
+# needs Data.Graph
+skip Digraph.stronglyConnCompG
+skip Digraph.stronglyConnCompFromEdgedVerticesUniqR
+skip Digraph.stronglyConnCompFromEdgedVerticesUniq
+skip Digraph.stronglyConnCompFromEdgedVerticesOrdR
+skip Digraph.stronglyConnCompFromEdgedVerticesOrd 
+skip Digraph.reduceNodesIntoVertices 
+skip Digraph.mkEmpty
+
+#need data.tree.forest
+
+skip Digraph.preorderF
+
+
+ 

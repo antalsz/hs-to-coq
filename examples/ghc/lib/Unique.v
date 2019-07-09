@@ -232,6 +232,8 @@ Program Instance Uniquable__FastString : Uniquable FastString.FastString :=
 Definition getWordKey : Unique -> GHC.Num.Word :=
   getKey.
 
+Axiom isLocalUnique : Unique -> bool.
+
 (* External variables:
      Eq Gt Lt andb bool comparison negb op_zt__ pair BasicTypes.Arity BinNat.N.of_nat
      BinNums.N Coq.ZArith.BinInt.Z.land Coq.ZArith.BinInt.Z.lor

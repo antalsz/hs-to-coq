@@ -1,0 +1,28 @@
+constructors:
+  SetLevels.FloatSpec: ! '[Qualified "SetLevels" "FloatMe",Qualified "SetLevels" "StayPut"]'
+  SetLevels.Level: ! '[Qualified "SetLevels" "Mk_Level"]'
+  SetLevels.LevelType: ! '[Qualified "SetLevels" "BndrLvl",Qualified "SetLevels" "JoinCeilLvl"]'
+  SetLevels.LevelEnv: ! '[Qualified "SetLevels" "LE"]'
+constructorFields:
+  SetLevels.BndrLvl: NonRecordFields 0
+  SetLevels.LE: RecordFields [Qualified "SetLevels" "le_switches",Qualified "SetLevels"
+    "le_ctxt_lvl",Qualified "SetLevels" "le_lvl_env",Qualified "SetLevels" "le_join_ceil",Qualified
+    "SetLevels" "le_subst",Qualified "SetLevels" "le_env"]
+  SetLevels.StayPut: NonRecordFields 1
+  SetLevels.Mk_Level: NonRecordFields 3
+  SetLevels.JoinCeilLvl: NonRecordFields 0
+  SetLevels.FloatMe: NonRecordFields 1
+recordFieldTypes:
+  SetLevels.le_env: Qualified "SetLevels" "LevelEnv"
+  SetLevels.le_ctxt_lvl: Qualified "SetLevels" "LevelEnv"
+  SetLevels.le_lvl_env: Qualified "SetLevels" "LevelEnv"
+  SetLevels.le_switches: Qualified "SetLevels" "LevelEnv"
+  SetLevels.le_join_ceil: Qualified "SetLevels" "LevelEnv"
+  SetLevels.le_subst: Qualified "SetLevels" "LevelEnv"
+constructorTypes:
+  SetLevels.BndrLvl: Qualified "SetLevels" "LevelType"
+  SetLevels.LE: Qualified "SetLevels" "LevelEnv"
+  SetLevels.StayPut: Qualified "SetLevels" "FloatSpec"
+  SetLevels.Mk_Level: Qualified "SetLevels" "Level"
+  SetLevels.JoinCeilLvl: Qualified "SetLevels" "LevelType"
+  SetLevels.FloatMe: Qualified "SetLevels" "FloatSpec"

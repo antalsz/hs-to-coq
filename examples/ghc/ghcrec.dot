@@ -1,0 +1,134 @@
+digraph G {
+size="3,6";
+ratio="fill";
+node [shape="diamond", penwidth="1"];
+u0[label="",style="filled",fillcolor=greenyellow,shape="circle"]; //DataCon
+u1[label=""];//MkId
+u2[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Type
+u3[label=""];//Kind
+u4[label="",style="filled",fillcolor=greenyellow,shape="circle"];//TyCoRep
+u5[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Coercion
+u6[label="",style="filled",fillcolor=greenyellow,shape="circle"];//TyCon
+u7[label="",style="filled",fillcolor=darkgreen,shape="circle"];//Var
+u8[label="",style="filled",fillcolor=darkgreen,shape="circle"];//IdInfo
+u9[label="",style="filled",fillcolor=darkgreen,shape="circle"];//CoreSyn
+u10[label="",style="filled",fillcolor=darkgreen,shape="circle"];//VarEnv
+u11[label="",style="filled",fillcolor=darkgreen,shape="circle"];//VarSet
+u12[label="",style="filled",fillcolor=deeppink,shape="square"];//Name
+u13[label="",style="filled",fillcolor=deeppink,shape="square"];//NameSet
+u14[label="",style="filled",fillcolor=deeppink,shape="square"];//NameEnv
+u15[label="",style="filled",fillcolor=pink,shape="square"];//Literal
+u16[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Class
+u17[label="",style="filled",fillcolor=greenyellow,shape="circle"];//PatSyn
+u18[label="",style="filled",fillcolor=pink,shape="square"];//FieldLabel
+u19[label="",style="filled",fillcolor=greenyellow,shape="circle"];//Demand
+u20[label=""];//CoAxiom
+u21[label="",style="filled",fillcolor=pink,shape="square"];//ConLike
+u22[label="",style="filled",fillcolor=deeppink,shape="square"];//FV
+u23[label=""];//FamInstEnv
+u24[label=""];//Unify
+u25[label="",style="filled",fillcolor=pink,shape="square"];//TrieMap
+u26[label=""];//MkCore
+u27[label="",style="filled",fillcolor=deeppink,shape="square"];//Id
+u28[label="",style="filled",fillcolor=deeppink,shape="square"];//CoreUtils
+u29[label=""];//PprCore
+u30[label="",style="filled",fillcolor=deeppink,shape="square"];//CoreFVs
+u31[label=""];//HscTypes
+u32[label=""];//RdrName
+u33[label=""];//Avail
+u34[label=""];//InstEnv
+u35[label=""];//Annotations
+u36[label=""];//NameCache
+u37[label=""];//CoreUnfold
+u38[label=""];//OccurAnal
+u39[label=""];//CoreArity
+u40[label="",style="filled",fillcolor=deeppink,shape="square"];//CoreSubst
+u41[label=""];//CoreSeq
+u42[label=""];//CoreOpt
+u43[label=""];//OptCoercion
+u0 -> u24[penwidth="2",style="bold"];
+u1 -> u26[penwidth="2",style="bold"];
+u1 -> u37[penwidth="2",style="bold"];
+u2 -> u3[penwidth="2",style="bold"];
+u3 -> u4[penwidth="2",style="bold"];
+u4 -> u6[penwidth="2",style="bold"];
+u4 -> u10[penwidth="2",style="bold"];
+u4 -> u22[penwidth="2",style="bold"];
+u5 -> u2[penwidth="2",style="bold"];
+u6 -> u14[penwidth="2",style="bold"];
+u6 -> u16[penwidth="2",style="bold"];
+u6 -> u18[penwidth="2",style="bold"];
+u6 -> u20[penwidth="2",style="bold"];
+u7 -> u12[penwidth="2",style="bold"];
+u8 -> u9[penwidth="2",style="bold"];
+u8 -> u17[penwidth="2",style="bold"];
+u8 -> u19[penwidth="2",style="bold"];
+u9 -> u0[penwidth="2",style="bold"];
+u9 -> u13[penwidth="2",style="bold"];
+u9 -> u15[penwidth="2",style="bold"];
+u10 -> u11[penwidth="2",style="bold"];
+u11 -> u7[penwidth="2",style="bold"];
+u13 -> u12[penwidth="2",style="bold"];
+u14 -> u12[penwidth="2",style="bold"];
+u15 -> u2[penwidth="2",style="bold"];
+u16 -> u7[penwidth="2",style="bold"];
+u17 -> u2[penwidth="2",style="bold"];
+u18 -> u12[penwidth="2",style="bold"];
+u19 -> u0[penwidth="2",style="bold"];
+u20 -> u7[penwidth="2",style="bold"];
+u21 -> u0[penwidth="2",style="bold"];
+u21 -> u17[penwidth="2",style="bold"];
+u22 -> u11[penwidth="2",style="bold"];
+u23 -> u25[penwidth="2",style="bold"];
+u24 -> u5[penwidth="2",style="bold"];
+u25 -> u9[penwidth="2",style="bold"];
+u26 -> u28[penwidth="2",style="bold"];
+u26 -> u31[penwidth="2",style="bold"];
+u27 -> u8[penwidth="2",style="bold"];
+u28 -> u29[penwidth="2",style="bold"];
+u28 -> u30[penwidth="2",style="bold"];
+u29 -> u27[penwidth="2",style="bold"];
+u30 -> u23[penwidth="2",style="bold"];
+u30 -> u27[penwidth="2",style="bold"];
+u31 -> u21[penwidth="2",style="bold"];
+u31 -> u23[penwidth="2",style="bold"];
+u31 -> u32[penwidth="2",style="bold"];
+u31 -> u34[penwidth="2",style="bold"];
+u31 -> u35[penwidth="2",style="bold"];
+u31 -> u36[penwidth="2",style="bold"];
+u32 -> u33[penwidth="2",style="bold"];
+u33 -> u13[penwidth="2",style="bold"];
+u33 -> u14[penwidth="2",style="bold"];
+u33 -> u18[penwidth="2",style="bold"];
+u34 -> u27[penwidth="2",style="bold"];
+u35 -> u12[penwidth="2",style="bold"];
+u36 -> u12[penwidth="2",style="bold"];
+u37 -> u42[penwidth="2",style="bold"];
+u38 -> u39[penwidth="2",style="bold"];
+u39 -> u40[penwidth="2",style="bold"];
+u40 -> u28[penwidth="2",style="bold"];
+u40 -> u41[penwidth="2",style="bold"];
+u41 -> u27[penwidth="2",style="bold"];
+u42 -> u38[penwidth="2",style="bold"];
+u42 -> u43[penwidth="2",style="bold"];
+u43 -> u23[penwidth="2",style="bold"];
+u43 -> u34[penwidth="2",style="bold"];
+u0 -> u1[style="dashed",penwidth="2"]
+u2 -> u5[style="dashed",penwidth="2"];
+u3 -> u0[style="dashed",penwidth="2"];
+u3 -> u2[style="dashed",penwidth="2"];
+u4 -> u0[style="dashed",penwidth="2"];
+u4 -> u2[style="dashed",penwidth="2"];
+u4 -> u5[style="dashed",penwidth="2"];
+u4 -> u21[style="dashed",penwidth="2"];
+u6 -> u0[style="dashed",penwidth="2"];
+u6 -> u4[style="dashed",penwidth="2"];
+u7 -> u4[style="dashed",penwidth="2"];
+u7 -> u8[style="dashed",penwidth="2"];
+u12 -> u4[style="dashed",penwidth="2"];
+u16 -> u4[style="dashed",penwidth="2"];
+u16 -> u6[style="dashed",penwidth="2"];
+u20 -> u4[style="dashed",penwidth="2"];
+u20 -> u6[style="dashed",penwidth="2"];
+
+}

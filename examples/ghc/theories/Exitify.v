@@ -26,13 +26,14 @@ Require Import Proofs.CoreFVs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Unique.
 Require Import Proofs.GhcUtils.
 Require Import Proofs.Util.
 
 Set Bullet Behavior "Strict Subproofs".
-
+Opaque Base.hs_string__.
 Close Scope Z_scope.
 
 (** * Proofs about the Exitification pass *)
@@ -45,7 +46,6 @@ In this module, we prove that the exitification pass preserves the various
 invariants of Core. But first we need to do some yak-shaving to deal
 with the kind of definitions that we get out of hs-to-coq here.
 *)
-
 
 
 
@@ -344,7 +344,8 @@ Section in_exitifyRec.
 
   (** Corresponding definitions for the join points in scope *)
   (** The let-scope, before exitification *)
-  Definition jpsp := updJPSs jps fs .
+  
+Definition jpsp := updJPSs jps fs .
   (** The outermost scope, including the exit join points we produce *)
   Definition jps' := updJPSs jps (map fst exits).
   (** The let-scope, after exitification *)
@@ -531,6 +532,16 @@ Section in_exitifyRec.
     assumption.
   Qed.
 
+Global Instance go_exit_respects_VarSet_Equal:
+  forall captured e,
+  Morphisms.Proper (Morphisms.respectful Proofs.VarSetFSet.VarSetFSet.Equal Logic.eq) (go_exit captured e).
+  Proof.
+    clear.
+    intros captured e x1 x2 Ex.
+    unfold go_exit.
+  Admitted.
+
+
   (**
   We are always only ever going to run [go] on expressions
   that are well-scoped and in the domain of [go].
@@ -578,15 +589,17 @@ Section in_exitifyRec.
     cbv beta delta [go_f]. (* No [zeta]! *)
 
     rewrite !deAnnotate_freeVars in *.
-    rewrite !freeVarsOf_freeVars in *.
 
     (* Float out lets *)
     repeat float_let.
     enough (Hnext : P captured e j_40__). {
       clearbody j_40__; cleardefs.
-      destruct (disjointVarSet fvs recursive_calls) eqn:Hdisjoint; try apply Hnext.
+      subst fvs.
+      unfold dVarSetToVarSet.
+      rewrite !freeVarsOf_freeVars_revised in *.
+      destruct (disjointVarSet (exprFreeVars e) recursive_calls) eqn:Hdisjoint; try apply Hnext.
       clear IH Hnext HGoDom.
-      revert e captured Hcapt fvs HWS Hdisjoint.
+      revert e captured Hcapt HWS Hdisjoint.
       refine IH1.
     }
 
@@ -1098,7 +1111,48 @@ Section in_exitifyRec.
       + rewrite IHxs. reflexivity. 
       + rewrite IHxs. reflexivity. 
   Qed.
- 
+
+  (** A few very specialized lemmata for proof purpose. *)
+  Require Import Coq.Classes.Morphisms.
+  Require Import Proofs.VarSetFSet.
+
+  Definition varset_pair_eq (x y : VarSet * list Id) :=
+    let (a, b) := x in
+    let (c, d) := y in
+    Equal a c /\ b = d.
+
+  Instance pair_l_m :
+    Proper (Equal ==> Logic.eq ==> varset_pair_eq) pair.
+  Proof.
+    intros v1 v2 Heq1 ? ? ?; subst.
+    constructor; auto.
+  Qed.
+  
+  Instance fold_right_m:
+    Proper (varset_pair_eq ==> Logic.eq ==> varset_pair_eq) (fold_right pick).
+  Proof.
+    intros [v1 ?] [v2 ?] Heq ? ? ?; subst.
+    induction y; simpl.
+    - apply Heq.
+    - remember (fold_right pick (v1, l) y)  as p1.
+      remember (fold_right pick (v2, l0) y) as p2.
+      destruct p1; destruct p2. destruct IHy; subst.
+      simpl.
+      replace (elemVarSet a v) with (elemVarSet a v0).
+      + destruct (elemVarSet a v0).
+        * constructor.
+          -- rewrite H. reflexivity.
+          -- reflexivity.
+        * split; auto.
+      + rewrite H. reflexivity.
+  Qed.
+
+  Instance snd_m :
+    Proper (varset_pair_eq ==> Logic.eq) snd.
+  Proof.
+    intros [? ?] [??] [??]; subst. reflexivity.
+  Qed.
+
   Lemma WellScoped_picked_aux:
     forall fvs captured e vs,
     WellScoped e (extendVarSetList fvs (captured ++ vs)) ->
@@ -1114,7 +1168,6 @@ Section in_exitifyRec.
       + rewrite snd_pick_list.
         rewrite <- app_assoc.
         erewrite delVarSet_ae by apply zap_ae.
-        (*
         rewrite <- delVarSetList_cons2.
         apply IHcaptured.
         rewrite app_assoc.
@@ -1130,8 +1183,7 @@ Section in_exitifyRec.
         constructor; only 2: constructor.
         assumption.
   Qed.
-         *)
-  Admitted.
+
 
   Lemma WellScoped_picked:
     forall fvs captured e,
@@ -1477,7 +1529,7 @@ Section in_exitifyRec.
   Qed.
 
   (**
-  Now we du the [addExit], [go_Exit], [go] dance again, but this
+  Now we do the [addExit], [go_Exit], [go] dance again, but this
   time we prove that the resulting code in [pairs'] is well-scoped.
 
   Here is a pretty tough trick: How do we know that the result of any call
@@ -1952,7 +2004,6 @@ Section in_exitifyRec.
         erewrite isJoinId_ae in HnotJoinx  by (apply almostEqual_sym; apply zap_ae).
         rewrite <- updJPS_not_joinId by assumption.
         rewrite <- updJPSs_cons.
-        (*
         rewrite <- delVarSetList_cons2.
         rewrite <- delVarSetList_cons2 in HnotJoinId.
         apply IHcaptured.
@@ -1967,8 +2018,6 @@ Section in_exitifyRec.
           assumption.
         - apply HnotJoinId.
   Qed.
-         *)
-        Admitted.
 
   Lemma isJoinPointsValid_picked:
     forall jps captured e,
@@ -2086,7 +2135,7 @@ Section in_exitifyRec.
     revert e captured H H2 H0 H1.
     refine (go_ind (fun captured e r => impl (isJoinPointsValid e 0 (updJPSs jpsp captured) = true) (P captured e r)) _ _ _ _ _ _ _);
       intros; intro HIJPV.
-    * revert e captured fvs Hcapt HWS Hdisjoint HIJPV.
+    * revert e captured Hcapt HWS Hdisjoint HIJPV.
       eapply IH1.
     * simpl in HIJPV. simpl_bool. destruct HIJPV as [HIJPVrhs HIJPVe].
       fold isJoinPointsValidPair in HIJPVrhs.
@@ -2181,7 +2230,7 @@ Section in_exitifyRec.
         rewrite updJPS_not_joinId by assumption.
         assumption.
       + clear IHalts. rename H into IHalts.
-        revert e v t alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
+        revert e v t0 alts captured Hcapt HWSscrut HGLVv HWSalts HnotJoin HIJPVe HIJPValts IHalts.
         eapply IH6.
     * clear IH1 IH2 IH4 IH5 IH6.
       revert e captured Hcapt HWS HIJPV.
@@ -2388,6 +2437,13 @@ Section in_exitifyRec.
       rewrite isLocalVar_uniqAway.
       unfold mkSysLocal. 
       rewrite andb_false_r.
+      Opaque Unique.initExitJoinUnique.
+      cbv. 
+      destruct Unique.initExitJoinUnique eqn:h.
+      rewrite <- h.
+      rewrite isLocalUnique_initExitJoinUnique.
+      rewrite <- h.
+      rewrite isLocalUnique_initExitJoinUnique.
       reflexivity.
     - (* There is again a lot of repetition to above *)
       apply elemVarSet_updJPSs_l; only 1: apply elemVarSet_updJPSs_l.

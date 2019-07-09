@@ -25,9 +25,11 @@ Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
 Require Import Proofs.VarSet.
 Require Import Proofs.VarSetFSet.
+Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Var.
 Require Import Proofs.ScopeInvariant.
+Require Import Proofs.Forall.
 
 
 
@@ -54,6 +56,43 @@ Proof.
   rewrite <- (map_map (snd (A:=a)) f).
   rewrite -> map_snd_zip; auto.
 Qed.
+
+(* ---------------------------------------------------------------- *)
+
+(* No shadowing either *)
+
+Fixpoint UniqScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
+  match e with
+  | Mk_Var v => WellScopedVar v in_scope
+  | Lit l => True
+  | App e1 e2 => UniqScoped e1 in_scope /\  UniqScoped e2 in_scope
+  | Lam v e => GoodLocalVar v /\ UniqScoped e (extendVarSet in_scope v)
+                             /\ elemVarSet v in_scope = false 
+  | Let bind body =>
+      UniqScopedBind bind in_scope /\
+      UniqScoped body (extendVarSetList in_scope (bindersOf bind))
+  | Case scrut bndr ty alts  => 
+    UniqScoped scrut in_scope /\
+    GoodLocalVar bndr /\
+    Forall' (fun alt =>
+      Forall GoodLocalVar (snd (fst alt)) /\
+      let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
+      UniqScoped (snd alt) in_scope') alts
+  | Cast e _ =>   UniqScoped e in_scope
+(*  | Tick _ e =>   UniqScoped e in_scope *) (* /\ UniqScopedTickish t in_scope *) 
+  | Mk_Type _  =>   True
+  | Mk_Coercion _ => True 
+  end
+with UniqScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
+  match bind with
+  | NonRec v rhs =>
+    GoodLocalVar v /\
+    UniqScoped rhs in_scope
+  | Rec pairs => 
+    Forall (fun p => GoodLocalVar (fst p)) pairs /\
+    NoDup (map varUnique (map fst pairs)) /\
+    Forall' (fun p => UniqScoped (snd p) (extendVarSetList in_scope (map fst pairs))) pairs
+  end.
 
    
 (* ---------------------------------------------------------------- *)
@@ -246,7 +285,7 @@ Ltac destruct_WellScoped_Subst :=
   end.
 
 
-(* Neither of these is actually used in this file. *)
+(* Not actually used in this file. *)
 Lemma WellScoped_Subst_StrongSubset : forall vs1 s vs2,
   vs2 {<=} vs1 -> 
   WellScoped_Subst s vs1 ->
@@ -472,14 +511,14 @@ Ltac destruct_SubstExtends :=
     | [ H : SubstExtends ?s1 ?vs ?s2 ?vs1 |- _ ] => 
       try (is_var s1 ; destruct s1);
       try (is_var s2 ; destruct s2);
-      unfold SubstExtends in H; repeat (destruct_one_pair)
+      unfold SubstExtends in H;  unfold StrongEquivalence in *; repeat (destruct_one_pair)
     end.
 
 
 (* Prove goals about lookupVarSet, given StrongSubset assumptions *)
 Ltac lookup_StrongSubset :=
     match goal with 
-      [ h1 : StrongSubset (extendVarSetList ?i3 ?vars1) ?i,
+      [ h1 : (extendVarSetList ?i3 ?vars1) {<=} ?i,
         h2 : forall v:Var, is_true (Foldable.elem v ?vars1) -> lookupVarSet ?i3 v = None,
         m  : lookupVarSet ?i ?v  = ?r |- 
              lookupVarSet ?i3 ?v = ?r ] =>
@@ -505,7 +544,6 @@ Proof.
   apply freshList_nil.
   eapply StrongSubset_refl.
   eapply StrongSubset_refl.
-(*   eapply strongSubset_implies_subset. *)
   eapply StrongSubset_minusDom_left.
   intros var.
   destruct lookupVarEnv eqn:LU; try tauto.
@@ -597,43 +635,43 @@ Proof.
        apply almostEqual_refl.
        eapply Eq_trans; first rewrite Eq_sym; eassumption.
      +  clear VEmf H5.
-        rewrite lookupVarSet_minusDom_1 in H13; try done.
-       rewrite ELEM2 in VEim.
-       case InV2: (Foldable.elem var vars2); hs_simpl.
-       ++ move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
+        rewrite -> lookupVarSet_minusDom_1 in H13; try done.
+        rewrite ELEM2 in VEim.
+        case InV2: (Foldable.elem var vars2); hs_simpl.
+        ++ move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
                    (extendVarSetList (getInScopeVars init_scope) vars1) InV2) => [v1 [-> q1 r1]].
-          move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
-                  (getInScopeVars mid_scope) InV2) => [v2 [p2 q2 r2]].
-          rewrite p2 in H6.
-          destruct (lookupVarSet (getInScopeVars fin_scope) var) eqn:InF; try done.
-          eapply LastIn_inj in r2; try eapply r1.
-          subst. auto.
-          eapply Eq_trans; first rewrite Eq_sym; eassumption.
-       ++ have InV2': ~~ Foldable.elem var vars2 by rewrite InV2.
-          rewrite lookupVarSet_extendVarSetList_false //.
-          rewrite lookupVarSet_extendVarSetList_false // in H6.
-          case InV1: (Foldable.elem var vars1); hs_simpl.
-          ** move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
-                   (getInScopeVars init_scope) InV1) => [v1 [p1 q1 r1]].
-            rewrite p1.
-            rewrite p1 in H13.
-            case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|]; 
-            rewrite InM1 in H13; try done.
-            rewrite InM1 in H6.
-            case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [cc|]; 
-            rewrite InF1 in H6; try done.
-            eapply almostEqual_trans; eauto.
-          ** have InV1': ~~ Foldable.elem var vars1 by rewrite InV1.
-          rewrite lookupVarSet_extendVarSetList_false //.
-          rewrite lookupVarSet_extendVarSetList_false // in H13.
-          case InI1: (lookupVarSet (getInScopeVars init_scope) var) => [a|] //.
-          rewrite InI1 in H13.
-          case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|] //;
-             rewrite InM1 // in H13.
-          rewrite InM1 in H6.         
-          case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [cc|] //;
-             rewrite InF1 // in H6.
-          eapply almostEqual_trans; eauto.          
+           move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
+                   (getInScopeVars mid_scope) InV2) => [v2 [p2 q2 r2]].
+           rewrite p2 in H6.
+           destruct (lookupVarSet (getInScopeVars fin_scope) var) eqn:InF; try done.
+           eapply LastIn_inj in r2; try eapply r1.
+           subst. auto.
+           eapply Eq_trans; first rewrite Eq_sym; eassumption.
+        ++ have InV2': ~~ Foldable.elem var vars2 by rewrite InV2.
+           rewrite lookupVarSet_extendVarSetList_false //.
+           rewrite lookupVarSet_extendVarSetList_false // in H6.
+           case InV1: (Foldable.elem var vars1); hs_simpl.
+           ** move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
+                      (getInScopeVars init_scope) InV1) => [v1 [p1 q1 r1]].
+              rewrite p1.
+              rewrite p1 in H13.
+              case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|]; 
+                                                                           rewrite InM1 in H13; try done.
+              rewrite InM1 in H6.
+              case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [cc|]; 
+                                                                           rewrite InF1 in H6; try done.
+              eapply almostEqual_trans; eauto.
+           ** have InV1': ~~ Foldable.elem var vars1 by rewrite InV1.
+              rewrite lookupVarSet_extendVarSetList_false //.
+              rewrite lookupVarSet_extendVarSetList_false // in H13.
+              case InI1: (lookupVarSet (getInScopeVars init_scope) var) => [a|] //.
+              rewrite InI1 in H13.
+              case InM1: (lookupVarSet (getInScopeVars mid_scope) var) => [b|] //;
+                                                                              rewrite InM1 // in H13.
+              rewrite InM1 in H6.         
+              case InF1: (lookupVarSet (getInScopeVars fin_scope) var) => [cc|] //;
+                                                                               rewrite InF1 // in H6.
+              eapply almostEqual_trans; eauto.          
 Qed.
 
 Lemma Subset_VarEnvExtends : forall old_env vars new_env vars' vs1 vs2,
@@ -754,6 +792,7 @@ Proof.
   destruct_SubstExtends. auto.
 Qed.  
 
+(*
 Lemma GoodLocalVar_setIdType : forall x t, GoodLocalVar x -> GoodLocalVar (Id.setIdType x t).
 Proof.
   intros. move: H => [[h0 [h2 [h3 h4]]] h1].  destruct x; simpl in *; econstructor; try done. 
@@ -764,7 +803,7 @@ Lemma Eq_setIdType : forall x t,
 Proof.
   intros x t. destruct x; simpl; unfold_zeze; simpl; 
   rewrite (N.eqb_refl realUnique); auto.
-Qed.
+Qed. *)
 
 Lemma WellScoped_Subst_substIdBndr : forall s1 s2 subst subst' bndr' v vs,
   forall (SB : substIdBndr s1 s2 subst v = (subst', bndr')),
@@ -954,7 +993,7 @@ Proof.
   intros.
   unfold substBndr in SB.
   simpl in *.
-  move: H => [[h0 [h1 [h2 h3]]] h4]. 
+  move: H => [h0 h4]. 
   destruct (isTyVar v) eqn:IsTyVar. 
   { 
     destruct v; simpl in *; try done.
@@ -964,12 +1003,13 @@ Proof.
     destruct v; simpl in *; try done.
   }
   assert (ISL : isLocalId v = true).
-  { 
-    destruct v; unfold isLocalId, isLocalVar in *; simpl in *; try done.
-    destruct idScope. done. done.
+  {
+    destruct v; cbv; unfold isLocalId, isLocalVar in *; simpl in *; try done.
+    cbv in h4. destruct (Unique.isLocalUnique (Unique.MkUnique realUnique)); try done.
+(*    destruct idScope. done. done. *)
   }
   eapply WellScoped_Subst_substIdBndr; eauto.
-  econstructor; eauto. econstructor; eauto.
+  econstructor; eauto. 
 Qed.
 
 Lemma WellScoped_substBndr : forall s in_scope_set env subst' bndr' body v vs u u0,
@@ -1026,7 +1066,7 @@ Lemma GoodLocalVar_substBndr : forall bndr bndr' subst subst',
   GoodLocalVar bndr'.
 Proof.
   move=> bndr bndr' subst subst' h h0.
-  move: h => [[h1 [h2 [h3 h4]]] h5].
+  move: h => [h1 h5].
   destruct bndr; simpl in *; try done.
   unfold substBndr in *.
   simpl in h0.
@@ -1034,7 +1074,6 @@ Proof.
   (* unfold isTyVar in h0. *)
   eapply GoodLocalVar_substIdBndr; eauto.
   econstructor; eauto.
-  econstructor; eauto.  
 Qed.
 
 Lemma SubstExtends_step : forall a s' y bndrs subst subst' ys, 
@@ -1199,11 +1238,15 @@ Proof.
     destruct (isLocalVar v) eqn:h; try auto.
     destruct (lookupVarSet vs v) eqn:h0; try contradiction.
     unfold GoodVar in WSvar.
-    destruct WSvar as [ ? [? [? [h1 ?]]]].
+    destruct WSvar as [ ? h1 ].
     destruct v; simpl in *; try done.
-    destruct idScope; try done.
+    unfold isLocalVar, isGlobalId in h. unfold isLocalId in HLocal.
+    rewrite HLocal in h. done.
+    (* destruct idScope; try done. *)
 Qed.
 
+
+ 
 Lemma substExpr_ok : forall e s vs in_scope_set env u0 u1, 
     WellScoped_Subst (Mk_Subst in_scope_set env u0 u1) vs -> 
     WellScoped e vs -> 
@@ -1416,3 +1459,10 @@ Proof.
     unfold CoreUtils.mkTick.
     eapply IH; eauto. *)
 Qed.
+
+Lemma WellScoped_substExpr : forall e s vs subst, 
+    WellScoped_Subst subst vs -> 
+    WellScoped e vs -> 
+    WellScoped (substExpr s subst e) 
+               (getSubstInScopeVars subst).
+Proof. intros. destruct subst. simpl. eapply substExpr_ok; eauto. Qed.

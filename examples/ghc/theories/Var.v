@@ -184,6 +184,8 @@ Proof.
 Qed.
 
 
+
+
 (** ** [almostEqual] *)
 
 (* Two [Var]s are almostEqual if they differ only in 
@@ -228,6 +230,18 @@ Proof.
   econstructor.
 Qed.
 
+Instance Equivalence_ae : Equivalence almostEqual.
+Proof.
+  split. 
+  - unfold Reflexive.
+    apply almostEqual_refl.
+  - unfold Symmetric.
+    eauto using almostEqual_sym.
+  - unfold Transitive.
+    intros x y z h1 h2.
+    eapply almostEqual_trans; eauto.
+Defined.
+
 Lemma almostEqual_eq :
   forall v1 v2, 
     almostEqual v1 v2 -> (v1 == v2).
@@ -235,6 +249,29 @@ Proof.
   intros v1 v2 H.
   inversion H; unfold_zeze; simpl; apply N.eqb_refl.
 Qed.
+
+Instance eq_m :
+  Proper ((fun (x y:Var) => x == y) ==> (fun x y => x == y) ==> Logic.eq) (fun (x y : Var) => (x == y)).
+Proof.
+  unfold_zeze.
+  move=> x1 y1 E1 x2 y2 E2.
+  apply N.eqb_eq in E1.
+  apply N.eqb_eq in E2.
+  rewrite E1. rewrite E2.
+  eauto.
+Qed.
+
+Instance almostEqual_eq_m :
+  Proper (almostEqual ==> almostEqual ==> Logic.eq) (fun (x y : Var) => (x == y)).
+Proof.
+  move=> x1 y1 E1 x2 y2 E2.
+  apply almostEqual_eq in E1.
+  apply almostEqual_eq in E2.
+  rewrite -> E1.
+  rewrite -> E2.
+  auto.
+Qed.
+
 
 (** ** [isJoinId] etc. *)
 
@@ -299,7 +336,10 @@ Proof.
   destruct var.
   simpl. 
   all: try tauto.
-  destruct idScope; simpl; tauto.
+  (* destruct idScope; done. *)
+  move=>h. rewrite <- h.
+  rewrite negb_involutive.
+  auto. 
 Qed.
 
 Lemma isLocalVar_isLocalId : 
@@ -310,9 +350,44 @@ Proof.
   unfold isGlobalId.
   unfold isLocalId. 
   destruct var; simpl.
-  all: try tauto.
-  destruct idScope; simpl; tauto.
+(*  destruct idScope; done. *)
+  rewrite negb_involutive.
+  auto. 
 Qed.
+
+(** ** isLocalVar respects the GHC.Base.== equality for Vars  *)
+
+(* SCW: This is provable because we have modified the definition of isLocalVar 
+   to look at the uniques instead of the scope. In GoodVars we know that these two 
+   should be consistent with eachother.  So the remapping shouldn't matter as long 
+   as all of the vars that we work with are good.
+ *)
+Definition RespectsVar (f :Var -> bool) :=
+    Proper ((fun x0 y : Var => x0 == y) ==> Logic.eq) f.
+
+Lemma RespectsVar_isLocalVar : RespectsVar isLocalVar.
+Proof.
+  move=> v1 v2.
+  move=> h.
+  rewrite -> varUnique_iff  in h.
+  unfold isLocalVar. unfold isGlobalId. rewrite h.
+  auto.
+Qed.
+Hint Resolve RespectsVar_isLocalVar.
+
+
+Definition RespectsAEVar (f :Var -> bool) :=
+    Proper ((fun x0 y : Var => almostEqual x0 y) ==> Logic.eq) f.
+Lemma RespectsAEVar_isLocalVar : RespectsAEVar isLocalVar.
+Proof.
+  move=> v1 v2.
+  move=> h.
+  apply almostEqual_eq in h.
+  rewrite -> varUnique_iff  in h.
+  unfold isLocalVar. unfold isGlobalId. rewrite h.
+  auto.
+Qed.
+Hint Resolve RespectsAEVar_isLocalVar.
 
 (** ** [isId], [isTyVar], and [isCoVar] *)
 

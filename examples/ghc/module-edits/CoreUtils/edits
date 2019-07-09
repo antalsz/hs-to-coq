@@ -22,7 +22,7 @@ axiomatize definition CoreUtils.isDivOp
 axiomatize definition CoreUtils.isCheapApp 
 
 # refers to skipped components. (Tick)
-skip CoreUtils.collectMakeStaticArgs
+# skip CoreUtils.collectMakeStaticArgs
 skip CoreUtils.stripTicksTopT
 skip CoreUtils.stripTicksTop
 skip CoreUtils.mkTick

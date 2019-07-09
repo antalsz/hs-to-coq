@@ -68,7 +68,7 @@ Definition fvVarList : FV -> list Core.Var :=
   Data.Tuple.fst GHC.Base.∘ fvVarListVarSet.
 
 Definition fvDVarSet : FV -> Core.DVarSet :=
-  Core.mkDVarSet GHC.Base.∘ (Data.Tuple.fst GHC.Base.∘ fvVarListVarSet).
+  fvVarSet.
 
 Definition filterFV : InterestingVarFun -> FV -> FV :=
   fun fv_cand2 fv fv_cand1 in_scope acc =>
@@ -90,7 +90,6 @@ Definition delFV : Core.Var -> FV -> FV :=
 
 (* External variables:
      andb bool cons list nil op_zt__ pair true Core.DVarSet Core.Id Core.Var
-     Core.VarSet Core.elemVarSet Core.emptyVarSet Core.extendVarSet Core.mkDVarSet
-     Core.unionVarSet Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id
-     GHC.Base.op_z2218U__
+     Core.VarSet Core.elemVarSet Core.emptyVarSet Core.extendVarSet Core.unionVarSet
+     Data.Tuple.fst Data.Tuple.snd GHC.Base.const GHC.Base.id GHC.Base.op_z2218U__
 *)

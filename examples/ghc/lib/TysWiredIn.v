@@ -176,14 +176,17 @@ Axiom promotedEQDataCon : Core.TyCon.
 Axiom promotedConsDataCon : Core.TyCon.
 
 Axiom pcTyCon : bool ->
-                Name.Name -> option unit -> list Core.TyVar -> list Core.DataCon -> Core.TyCon.
+                Name.Name ->
+                option AxiomatizedTypes.CType ->
+                list Core.TyVar -> list Core.DataCon -> Core.TyCon.
 
 Axiom pcSpecialDataCon : Name.Name ->
                          list AxiomatizedTypes.Type_ ->
                          Core.TyCon -> Core.RuntimeRepInfo -> Core.DataCon.
 
 Axiom pcNonEnumTyCon : Name.Name ->
-                       option unit -> list Core.TyVar -> list Core.DataCon -> Core.TyCon.
+                       option AxiomatizedTypes.CType ->
+                       list Core.TyVar -> list Core.DataCon -> Core.TyCon.
 
 Axiom pcDataConWithFixity' : bool ->
                              Name.Name ->
@@ -443,7 +446,7 @@ Axiom alpha_tyvar : list Core.TyVar.
 Axiom alpha_ty : list AxiomatizedTypes.Type_.
 
 (* External variables:
-     bool list nat op_zt__ option unit AxiomatizedTypes.Kind
+     bool list nat op_zt__ option AxiomatizedTypes.CType AxiomatizedTypes.Kind
      AxiomatizedTypes.PredType AxiomatizedTypes.Type_ BasicTypes.Arity
      BasicTypes.Boxity BasicTypes.ConTag BasicTypes.TupleSort Core.ArgFlag Core.Class
      Core.DataCon Core.Id Core.RuntimeRepInfo Core.TyCon Core.TyVar

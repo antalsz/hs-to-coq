@@ -4,6 +4,10 @@ skip module Coq.NArith.BinNat.N
 
 rename type GHC.Num.Int = BinNums.N
 
+# add an (axiomatized test) whether the bits in the unique correspond to a
+# local identifier
+add Unique Axiom Unique.isLocalUnique : Unique.Unique -> bool.
+
 #
 # All GHC.Num.Int's should be N in this compiler (double check that that makes sense).
 #

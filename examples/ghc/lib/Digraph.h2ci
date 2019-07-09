@@ -1,0 +1,14 @@
+constructors:
+  Digraph.Edge: ! '[Qualified "Digraph" "Mk_Edge"]'
+  Digraph.Node: ! '[Qualified "Digraph" "DigraphNode"]'
+constructorFields:
+  Digraph.DigraphNode: RecordFields [Qualified "Digraph" "node_payload",Qualified
+    "Digraph" "node_key",Qualified "Digraph" "node_dependencies"]
+  Digraph.Mk_Edge: NonRecordFields 2
+recordFieldTypes:
+  Digraph.node_key: Qualified "Digraph" "Node"
+  Digraph.node_payload: Qualified "Digraph" "Node"
+  Digraph.node_dependencies: Qualified "Digraph" "Node"
+constructorTypes:
+  Digraph.DigraphNode: Qualified "Digraph" "Node"
+  Digraph.Mk_Edge: Qualified "Digraph" "Edge"

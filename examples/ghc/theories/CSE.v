@@ -30,6 +30,7 @@ Require Import Proofs.Forall.
 Require Import Proofs.OrdList.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
+Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 
 Require Import CSE.

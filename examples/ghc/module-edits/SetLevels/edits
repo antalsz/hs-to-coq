@@ -1,0 +1,25 @@
+axiomatize module SetLevels
+
+in SetLevels.Level rename type GHC.Num.Int = BinNums.N
+
+axiomatize definition SetLevels.countFreeIds
+
+rename value SetLevels.Level = SetLevels.Mk_Level
+
+add SetLevels Instance SetLevels.Default__Level : GHC.Err.Default SetLevels.Level :=
+  GHC.Err.Build_Default _ (SetLevels.Mk_Level GHC.Err.default GHC.Err.default GHC.Err.default).
+
+order SetLevels.Default__LevelType SetLevels.Default__Level SetLevels.Default__LevelEnv
+
+order SetLevels.Eq___LevelType SetLevels.Eq___Level SetLevels.isJoinCeilLvl
+
+# Core.foldDVarSet
+axiomatize definition SetLevels.maxFvLevel
+
+termination SetLevels.isFunction deferred
+
+in SetLevels.abstractVars termination close deferred
+in SetLevels.lvlApp termination left_ deferred
+
+
+skip SetLevels.Default__LevelEnv

@@ -21,53 +21,88 @@ HANDMOD = \
 # generated from drop-in/
 DROPIN = \
 
+# These are core dependencies that we do not need to translate
+#
+EXTRA_CORE = Json \
+  FastFunctions \
+  Encoding \
+  ErrUtils \
+  Annotations \
+  GhcPrelude \
+  Packages \
+  Foreign \
+  IfaceType \
+  PrelNames \
+  TysWiredIn \
+  CoAxiom 
+
+
+UTILS = \
+  Util \
+  Maybes \
+  MonadUtils \
+  Pair \
+  State \
+  SrcLoc \
+  Unique \
+  UniqSupply \
+  BasicTypes \
+  DynFlags \
+  Panic \
+  OccName \
+
+DATASTRUCTS = \
+  Bag \
+  EnumSet \
+  BooleanFormula \
+  UniqFM \
+  UniqSet \
+  OrdList \
+  FiniteMap \
+  ListSetOps \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
 # These are general purpose utility modules
 MODULES = \
-  Util \
-  Maybes \
-  MonadUtils \
-  Pair \
-  Bag \
-  SrcLoc \
-  Unique \
-  UniqSupply \
-  UniqFM \
-  EnumSet \
-  BooleanFormula \
-  UniqSet \
-  BasicTypes \
-  UniqDFM \
-  UniqDSet \
-  FastStringEnv \
-  DynFlags \
-  Module \
-  OrdList \
-  OccName \
-  State \
-  ListSetOps \
-  Panic \
-  FiniteMap \
+  $(UTILS) \
+  $(DATASTRUCTS) \
+
 ## Not actually used??
 #  CmmType \
 
 
 ##
 CORESYN = \
-   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand Type $(CORETYPE)  \
+   IdInfo Class TyCon DataCon PatSyn Var VarSet VarEnv CoreSyn Demand Type TyCoRep Coercion  \
 
 ##
 CONSTRUCTORS = \
 
+# These are modules that we translate but do not do anything about
+EXTRAS = \
+  UnVarGraph \
+  CoreArity \
+  CoreTidy \
+  CallArity \
+  CoAxiom \
+  TysWiredIn \
+  MkCore \
+  Digraph \
+  SetLevels \
+  CoreMonad \
+  OccurAnal \
+  FloatIn \
+  FloatOut \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
+  Module \
+  FastStringEnv \
   Constants \
   Id \
-  UnVarGraph \
   CoreSubst \
+  PrelNames \
   CoreUtils \
   Name \
   NameEnv \
@@ -81,15 +116,7 @@ CORE_MODULES = \
   TrieMap \
   CSE \
   CoreStats \
-  CoreArity \
-  PrelNames \
-  CoreTidy \
-  CallArity \
-  CoAxiom \
-  TysWiredIn \
-  MkCore \
-## We don't actually need any of these
-## for Exitify/CSE
+
 
 
 NOTRANSLATE = \
@@ -110,7 +137,7 @@ BROKEN_MODULES = \
 VFILES_GEN       = $(addsuffix .v,$(MODULES))
 VFILES_MAN       = $(addsuffix .v,$(HANDMOD))
 VFILES_DROPIN    = $(addsuffix .v,$(DROPIN))
-VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES))
+VFILES_CORE      = $(addsuffix .v,$(CORE_MODULES) $(EXTRAS))
 VFILES_CONSTR    = Constructors.v
 VFILES_CORESYN   = Core.v
 VFILES_TYPE      = Type_.v
@@ -128,8 +155,12 @@ OUTFILES_TYPE      = $(addprefix $(OUT)/,$(VFILES_TYPE))
 
 OUTFILES   = $(OUTFILES_GEN) $(OUTFILES_MAN) $(OUTFILES_DROPIN) $(OUTFILES_CORE) $(OUTFILES_CORESYN)
 
-HSFILES    = $(addsuffix .hs,$(MODULES)) $(addsuffix .hs,$(CORESYN)) $(addsuffix .hs,$(CORE_MODULES))
-HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES))
+
+HSFILES     = $(addsuffix .hs,$(MODULES) $(CORESYN) $(CORE_MODULES)) 
+HSFILESPATH = $(addprefix ghc/compiler/*/,$(HSFILES)) 
+
+SMALLCORE = $(addsuffix .hs,$(CORESYN))
+SMALLPATH  = $(addprefix ghc/compiler/*/,$(SMALLCORE)) 
 
 EDITPATHS = $(addprefix module-edits/,$(MODULES) $(CORESYN) $(CORE_MODULES))
 EDITFILES = edits $(CORE_EDITS) $(addsuffix /edits,$(EDITPATHS)) $(addsuffix /*.v, $(EDITPATHS))
@@ -144,6 +175,7 @@ core: $(OUT)/README.md coq
 filelist:
 	@ls -1 $(HSFILESPATH)
 
+
 editlist:
 	@ls -1 $(EDITFILES) 2>/dev/null | xargs cloc --by-file --lang-no-ext=zsh --force-lang=zsh,edits --skip-uniqueness
 
@@ -154,7 +186,28 @@ ghc.all.pdf: Makefile
 
 
 ghc.core.pdf: Makefile
-	@ls -1 $(HSFILESPATH) | xargs	graphmod -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --no-cluster --prune-edges -r Util -r Outputable -r GhcPrelude -r Panic | dot -Tpdf -o ghc.core.pdf
+	@ls -1 $(HSFILESPATH) | xargs	graphmod -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --no-cluster --prune-edges | dot -Tpdf -o ghc.core.pdf
+
+# ghcrec.dot: Makefile
+#	@ls -1 $(SMALLPATH) | xargs	graphmod -s 2 -i ghc/compiler/coreSyn -i ghc/compiler/basicTypes -i ghc/compiler/types -i ghc/compiler/utils -i ghc/compiler/simplCore -i ghc/compiler/main --prune-edges -r BooleanFormula -r Outputable -r Util -r DynFlags -r Module -r FiniteMap -r MonadUtils -r GhcPrelude -r FastString -r StringBuffer -r Lexeme -r UniqSupply -r BasicTypes -r CmdLineParser -r Packages -r Platform -r Binary -r UniqDSet -r OccName -r Digraph -r ErrUtils -r Panic -r Bag -r CoreStats -r SrcLoc -r Maybes -r Unique -r ListSetOps -r FastStringEnv -r UniqFM -r InteractiveEvalTypes -r OrdList -r DriverPhases -r Exception -r Pair -r UniqDFM -r UniqSet -r Constants > ghcrec.dot
+
+ghcrec.pdf: ghcrec.dot
+	dot -Tpdf -o ghcrec.pdf ghcrec.dot
+
+
+cloc_table: 
+	echo MANUAL
+	cloc $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+	echo UTIL 
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(UTILS))) $(addsuffix .v,$(addprefix lib/,$(UTILS)))
+	echo DATASTRUCTS
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(DATASTRUCTS))) $(addsuffix .v,$(addprefix lib/,$(DATASTRUCTS)))
+	echo CORESYN
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORESYN))) lib/Core.v 
+	echo CORE_MODULES
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(CORE_MODULES)))
+	echo TOTAL
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(MODULES) $(CORESYN) $(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(MODULES) $(CORE_MODULES))) lib/Core.v $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
 
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.

@@ -253,7 +253,7 @@ Axiom isExpandableApp : CheapAppFun.
 
 Definition isEmptyTy : AxiomatizedTypes.Type_ -> bool :=
   fun ty =>
-    match (@Core.splitTyConApp_maybe tt ty) with
+    match Core.splitTyConApp_maybe ty with
     | Some (pair tc inst_tys) =>
         match Core.tyConDataCons_maybe tc with
         | Some dcs =>
@@ -265,7 +265,7 @@ Definition isEmptyTy : AxiomatizedTypes.Type_ -> bool :=
     | _ => false
     end.
 
-Axiom isDivOp : unit -> bool.
+Axiom isDivOp : AxiomatizedTypes.PrimOp -> bool.
 
 Definition isDefaultAlt {a} {b} : (Core.AltCon * a * b)%type -> bool :=
   fun arg_0__ =>
@@ -329,7 +329,7 @@ Definition findAlt {a} {b}
     | _ => go alts None
     end.
 
-Axiom expr_ok : (unit -> bool) -> Core.CoreExpr -> bool.
+Axiom expr_ok : (AxiomatizedTypes.PrimOp -> bool) -> Core.CoreExpr -> bool.
 
 Axiom exprType : Core.CoreExpr -> AxiomatizedTypes.Type_.
 
@@ -389,8 +389,7 @@ Definition mkCast
 Axiom exprOkForSpeculation : Core.CoreExpr -> bool.
 
 Definition needsCaseBinding : AxiomatizedTypes.Type_ -> Core.CoreExpr -> bool :=
-  fun ty rhs =>
-    andb (@Core.isUnliftedType tt ty) (negb (exprOkForSpeculation rhs)).
+  fun ty rhs => andb (Core.isUnliftedType ty) (negb (exprOkForSpeculation rhs)).
 
 Axiom exprOkForSideEffects : Core.CoreExpr -> bool.
 
@@ -420,8 +419,7 @@ Definition exprIsTickedString : Core.CoreExpr -> bool :=
 
 Definition exprIsTopLevelBindable
    : Core.CoreExpr -> AxiomatizedTypes.Type_ -> bool :=
-  fun expr ty =>
-    orb (negb ((@Core.isUnliftedType tt ty))) (exprIsTickedString expr).
+  fun expr ty => orb (negb (Core.isUnliftedType ty)) (exprIsTickedString expr).
 
 Definition exprIsHNFlike
    : (Core.Var -> bool) -> (Core.Unfolding -> bool) -> Core.CoreExpr -> bool :=
@@ -651,6 +649,20 @@ Axiom coreAltType : Core.CoreAlt -> AxiomatizedTypes.Type_.
 Axiom combineIdenticalAlts : list Core.AltCon ->
                              list Core.CoreAlt -> (bool * list Core.AltCon * list Core.CoreAlt)%type.
 
+Definition collectMakeStaticArgs
+   : Core.CoreExpr ->
+     option (Core.CoreExpr * AxiomatizedTypes.Type_ * Core.CoreExpr *
+             Core.CoreExpr)%type :=
+  fun '(e) =>
+    match Core.collectArgsTicks (GHC.Base.const true) e with
+    | pair (pair (Core.Mk_Var b as fun_) (cons (Core.Mk_Type t) (cons loc (cons arg
+        nil)))) _ =>
+        if Id.idName b GHC.Base.== PrelNames.makeStaticName : bool
+        then Some (pair (pair (pair fun_ t) loc) arg) else
+        None
+    | _ => None
+    end.
+
 Axiom cheapEqExpr' : forall {b},
                      (Core.Tickish Core.Id -> bool) -> Core.Expr b -> Core.Expr b -> bool.
 
@@ -662,7 +674,8 @@ Axiom bindNonRec : Core.Id -> Core.CoreExpr -> Core.CoreExpr -> Core.CoreExpr.
 Axiom applyTypeToArgs : Core.CoreExpr ->
                         AxiomatizedTypes.Type_ -> list Core.CoreExpr -> AxiomatizedTypes.Type_.
 
-Axiom app_ok : (unit -> bool) -> Core.Id -> list Core.CoreExpr -> bool.
+Axiom app_ok : (AxiomatizedTypes.PrimOp -> bool) ->
+               Core.Id -> list Core.CoreExpr -> bool.
 
 Definition altsAreExhaustive {b} : list (Core.Alt b) -> bool :=
   fun arg_0__ =>
@@ -716,7 +729,7 @@ Definition filterAlts {a}
 
 (* External variables:
      Eq Gt Lt None Some andb bool cons false id list nat negb nil op_zt__ option orb
-     pair snd true tt unit AxiomatizedTypes.Coercion
+     pair snd true AxiomatizedTypes.Coercion AxiomatizedTypes.PrimOp
      AxiomatizedTypes.Representational AxiomatizedTypes.Type_ BasicTypes.Arity
      Coq.Init.Datatypes.app Coq.Lists.List.flat_map Core.Alt Core.AltCon Core.App
      Core.Breakpoint Core.Case Core.Cast Core.CoreAlt Core.CoreArg Core.CoreBind
@@ -725,25 +738,25 @@ Definition filterAlts {a}
      Core.LitAlt Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec
      Core.RnEnv2 Core.Tickish Core.TyCon Core.TyVar Core.Unfolding Core.Var
      Core.cmpAlt Core.cmpAltCon Core.coercionKind Core.coercionRole
-     Core.dataConCannotMatch Core.dataConTyCon Core.dataConUnivTyVars
-     Core.eqCoercionX Core.eqType Core.eqTypeX Core.idDetails Core.isCoercionType
-     Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isReflCo Core.isRuntimeArg
-     Core.isRuntimeVar Core.isTyVar Core.isTypeArg Core.isUnliftedType Core.isValArg
-     Core.mkCoCast Core.mkConApp Core.mkRnEnv2 Core.mkTransCo Core.rnBndr2
-     Core.rnBndrs2 Core.rnOccL Core.rnOccR Core.splitTyConApp_maybe
-     Core.tyConDataCons_maybe Core.tyConFamilySize Core.valArgCount Core.varType
-     Core.varsToCoreExprs Data.Foldable.all Data.Foldable.and Data.Foldable.elem
-     Data.Foldable.null Data.Maybe.fromMaybe Data.Maybe.isJust Data.OldList.nub
-     Data.Tuple.snd Datatypes.id DynFlags.DynFlags FastString.FastString
-     GHC.Base.String GHC.Base.const GHC.Base.map GHC.Base.mappend
-     GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__ GHC.Base.op_zgze__
-     GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.error GHC.List.unzip
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity Id.idUnfolding
-     Id.isBottomingId Id.isConLikeId Id.isDataConWorkId Id.isJoinId Literal.MachStr
-     Literal.litIsDupable Literal.litIsTrivial NestedRecursionHelpers.all2Map
-     OrdList.OrdList OrdList.appOL OrdList.concatOL OrdList.fromOL OrdList.nilOL
-     Pair.Mk_Pair Pair.pSnd Panic.assertPanic Panic.panic Panic.panicStr
-     Panic.someSDoc Panic.warnPprTrace PrelNames.absentErrorIdKey Unique.Unique
-     Unique.hasKey Util.debugIsOn Util.dropList Util.equalLength Util.filterOut
-     Util.lengthIs
+     Core.collectArgsTicks Core.dataConCannotMatch Core.dataConTyCon
+     Core.dataConUnivTyVars Core.eqCoercionX Core.eqType Core.eqTypeX Core.idDetails
+     Core.isCoercionType Core.isConLikeUnfolding Core.isEvaldUnfolding Core.isReflCo
+     Core.isRuntimeArg Core.isRuntimeVar Core.isTyVar Core.isTypeArg
+     Core.isUnliftedType Core.isValArg Core.mkCoCast Core.mkConApp Core.mkRnEnv2
+     Core.mkTransCo Core.rnBndr2 Core.rnBndrs2 Core.rnOccL Core.rnOccR
+     Core.splitTyConApp_maybe Core.tyConDataCons_maybe Core.tyConFamilySize
+     Core.valArgCount Core.varType Core.varsToCoreExprs Data.Foldable.all
+     Data.Foldable.and Data.Foldable.elem Data.Foldable.null Data.Maybe.fromMaybe
+     Data.Maybe.isJust Data.OldList.nub Data.Tuple.snd Datatypes.id DynFlags.DynFlags
+     FastString.FastString GHC.Base.String GHC.Base.const GHC.Base.map
+     GHC.Base.mappend GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zg__
+     GHC.Base.op_zgze__ GHC.Base.op_zl__ GHC.DeferredFix.deferredFix1 GHC.Err.error
+     GHC.List.unzip GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ Id.idArity
+     Id.idName Id.idUnfolding Id.isBottomingId Id.isConLikeId Id.isDataConWorkId
+     Id.isJoinId Literal.MachStr Literal.litIsDupable Literal.litIsTrivial
+     NestedRecursionHelpers.all2Map OrdList.OrdList OrdList.appOL OrdList.concatOL
+     OrdList.fromOL OrdList.nilOL Pair.Mk_Pair Pair.pSnd Panic.assertPanic
+     Panic.panic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
+     PrelNames.absentErrorIdKey PrelNames.makeStaticName Unique.Unique Unique.hasKey
+     Util.debugIsOn Util.dropList Util.equalLength Util.filterOut Util.lengthIs
 *)

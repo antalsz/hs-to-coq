@@ -13,7 +13,6 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require FastString.
-Require UniqDFM.
 Require UniqFM.
 
 (* Converted type declarations: *)
@@ -22,7 +21,7 @@ Definition FastStringEnv :=
   UniqFM.UniqFM%type.
 
 Definition DFastStringEnv :=
-  UniqDFM.UniqDFM%type.
+  UniqFM.UniqFM%type.
 
 (* Converted value declarations: *)
 
@@ -92,5 +91,5 @@ Axiom alterFsEnv : forall {a},
                    FastStringEnv a -> FastString.FastString -> FastStringEnv a.
 
 (* External variables:
-     bool list op_zt__ option FastString.FastString UniqDFM.UniqDFM UniqFM.UniqFM
+     bool list op_zt__ option FastString.FastString UniqFM.UniqFM
 *)

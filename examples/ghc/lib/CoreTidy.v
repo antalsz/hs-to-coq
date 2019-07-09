@@ -67,7 +67,7 @@ Definition tidyLetBndr
     match arg_0__, arg_1__, arg_2__ with
     | rec_tidy_env, (pair tidy_env var_env as env), pair id rhs =>
         let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := (@Core.idInfo tt) id in
+        let old_info := Core.idInfo id in
         let old_unf := Core.unfoldingInfo old_info in
         let new_unf :=
           if Core.isStableUnfolding old_unf : bool
@@ -99,7 +99,7 @@ Definition tidyIdBndr
     match arg_0__, arg_1__ with
     | (pair tidy_env var_env as env), id =>
         let 'pair tidy_env' occ' := OccName.tidyOccName tidy_env (Name.getOccName id) in
-        let old_info := (@Core.idInfo tt) id in
+        let old_info := Core.idInfo id in
         let old_unf := Core.unfoldingInfo old_info in
         let new_unf := Core.noUnfolding in
         let new_info :=
@@ -221,7 +221,7 @@ Infix "CoreTidy.=:" := (_=:_) (at level 99).
 End Notations.
 
 (* External variables:
-     None Some bool list op_zt__ pair snd tt Core.App Core.Breakpoint Core.Case
+     None Some bool list op_zt__ pair snd Core.App Core.Breakpoint Core.Case
      Core.Cast Core.CoreAlt Core.CoreBind Core.CoreExpr Core.Id Core.Lam Core.Let
      Core.Lit Core.Mk_Coercion Core.Mk_Type Core.Mk_Var Core.NonRec Core.Rec
      Core.Tickish Core.TidyEnv Core.Unfolding Core.Var Core.demandInfo

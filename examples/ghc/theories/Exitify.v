@@ -543,7 +543,7 @@ Global Instance go_exit_respects_VarSet_Equal:
 
 
   (**
-
+  We are always only ever going to run [go] on expressions
   that are well-scoped and in the domain of [go].
   When we do induction in such a case, we have to prove that these predicate
   holds for the arguments of recursive calls of [go]. This would clutter these

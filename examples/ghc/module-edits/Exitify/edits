@@ -1,3 +1,3 @@
-
-
 in Exitify.exitifyRec termination go deferred
+
+in Exitify.exitifyRec rewrite forall e, CoreFVs.freeVarsOf ann_e = CoreFVs.exprFreeVars (Core.deAnnotate ann_e)

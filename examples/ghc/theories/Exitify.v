@@ -532,15 +532,6 @@ Definition jpsp := updJPSs jps fs .
     assumption.
   Qed.
 
-Global Instance go_exit_respects_VarSet_Equal:
-  forall captured e,
-  Morphisms.Proper (Morphisms.respectful Proofs.VarSetFSet.VarSetFSet.Equal Logic.eq) (go_exit captured e).
-  Proof.
-    clear.
-    intros captured e x1 x2 Ex.
-    unfold go_exit.
-  Admitted.
-
 
   (**
   We are always only ever going to run [go] on expressions
@@ -596,7 +587,6 @@ Global Instance go_exit_respects_VarSet_Equal:
       clearbody j_40__; cleardefs.
       subst fvs.
       unfold dVarSetToVarSet.
-      rewrite !freeVarsOf_freeVars_revised in *.
       destruct (disjointVarSet (exprFreeVars e) recursive_calls) eqn:Hdisjoint; try apply Hnext.
       clear IH Hnext HGoDom.
       revert e captured Hcapt HWS Hdisjoint.

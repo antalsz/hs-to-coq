@@ -194,7 +194,8 @@ Definition exitifyRec
                                                 end
                                             | _, _ => j_22__
                                             end in
-                                          let fvs := Core.dVarSetToVarSet (CoreFVs.freeVarsOf ann_e) in
+                                          let fvs :=
+                                            Core.dVarSetToVarSet (CoreFVs.exprFreeVars (Core.deAnnotate ann_e)) in
                                           if Core.disjointVarSet fvs recursive_calls : bool
                                           then go_exit captured (Core.deAnnotate ann_e) fvs else
                                           j_40__
@@ -270,8 +271,8 @@ Definition exitifyProgram : Core.CoreProgram -> Core.CoreProgram :=
      Core.delVarSet Core.disjointVarSet Core.elemVarSet Core.emptyInScopeSet
      Core.extendInScopeSet Core.extendInScopeSetList Core.isId Core.isLocalId
      Core.minusVarSet Core.mkLams Core.mkLets Core.mkVarApps Core.mkVarSet
-     Core.uniqAway Core.vanillaIdInfo CoreFVs.CoreExprWithFVs CoreFVs.freeVars
-     CoreFVs.freeVarsOf CoreUtils.exprType Data.Bifunctor.second Data.Foldable.all
+     Core.uniqAway Core.vanillaIdInfo CoreFVs.CoreExprWithFVs CoreFVs.exprFreeVars
+     CoreFVs.freeVars CoreUtils.exprType Data.Bifunctor.second Data.Foldable.all
      Data.Foldable.any Data.Foldable.elem Data.Foldable.foldr Data.Traversable.forM
      Data.Tuple.fst Data.Tuple.snd FastString.fsLit GHC.Base.map GHC.Base.op_z2218U__
      GHC.Base.op_zgzg__ GHC.Base.op_zgzgze__ GHC.Base.return_

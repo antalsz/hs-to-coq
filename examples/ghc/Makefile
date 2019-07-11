@@ -39,10 +39,6 @@ EXTRA_CORE = Json \
 
 UTILS = \
   Util \
-  Maybes \
-  MonadUtils \
-  Pair \
-  State \
   SrcLoc \
   Unique \
   UniqSupply \
@@ -50,6 +46,7 @@ UTILS = \
   DynFlags \
   Panic \
   OccName \
+  Module \
 
 DATASTRUCTS = \
   Bag \
@@ -60,6 +57,10 @@ DATASTRUCTS = \
   OrdList \
   FiniteMap \
   ListSetOps \
+  Pair \
+  State \
+  Maybes \
+  MonadUtils \
 
 # Generated modules
 # generated directly from ghc/compiler/*/
@@ -81,6 +82,9 @@ CONSTRUCTORS = \
 
 # These are modules that we translate but do not do anything about
 EXTRAS = \
+  TrieMap \
+  CSE \
+  CoreStats \
   UnVarGraph \
   CoreArity \
   CoreTidy \
@@ -97,7 +101,6 @@ EXTRAS = \
 
 ## These are the modules most directly related to the core language
 CORE_MODULES = \
-  Module \
   FastStringEnv \
   Constants \
   Id \
@@ -113,9 +116,7 @@ CORE_MODULES = \
   ConLike \
   CoreFVs \
   Exitify \
-  TrieMap \
-  CSE \
-  CoreStats \
+
 
 
 

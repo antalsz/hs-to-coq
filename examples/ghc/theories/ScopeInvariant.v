@@ -57,7 +57,7 @@ Proof. intros. rewrite -> !Forall_forall in *. firstorder. Qed.
 
 (** ** The invariants *)
 
-(* These are the original definitions of isGlobalId and isGlobalScope *)
+(* These are the original definitions of isGlobalScope and isLocalScope *)
 Definition isGlobalScope : Var -> bool :=
   fun arg_0__ =>
     match arg_0__ with

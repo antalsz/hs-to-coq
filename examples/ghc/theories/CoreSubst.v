@@ -25,11 +25,13 @@ Require Import Proofs.CoreInduct.
 Require Import Proofs.Core.
 Require Import Proofs.VarSet.
 Require Import Proofs.VarSetFSet.
-Require Import Proofs.VarSetStrong.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Var.
 Require Import Proofs.ScopeInvariant.
 Require Import Proofs.Forall.
+
+Require Import Proofs.StrongVarSet.
+Require Proofs.StrongCoreFVs.
 
 
 
@@ -55,43 +57,6 @@ Proof.
   rewrite <- (map_map (snd (A:=a)) f).
   rewrite -> map_snd_zip; auto.
 Qed.
-
-(* ---------------------------------------------------------------- *)
-
-(* No shadowing either *)
-
-Fixpoint UniqScoped (e : CoreExpr) (in_scope : VarSet) {struct e} : Prop :=
-  match e with
-  | Mk_Var v => WellScopedVar v in_scope
-  | Lit l => True
-  | App e1 e2 => UniqScoped e1 in_scope /\  UniqScoped e2 in_scope
-  | Lam v e => GoodLocalVar v /\ UniqScoped e (extendVarSet in_scope v)
-                             /\ elemVarSet v in_scope = false 
-  | Let bind body =>
-      UniqScopedBind bind in_scope /\
-      UniqScoped body (extendVarSetList in_scope (bindersOf bind))
-  | Case scrut bndr ty alts  => 
-    UniqScoped scrut in_scope /\
-    GoodLocalVar bndr /\
-    Forall' (fun alt =>
-      Forall GoodLocalVar (snd (fst alt)) /\
-      let in_scope' := extendVarSetList in_scope (bndr :: snd (fst alt)) in
-      UniqScoped (snd alt) in_scope') alts
-  | Cast e _ =>   UniqScoped e in_scope
-(*  | Tick _ e =>   UniqScoped e in_scope *) (* /\ UniqScopedTickish t in_scope *) 
-  | Mk_Type _  =>   True
-  | Mk_Coercion _ => True 
-  end
-with UniqScopedBind (bind : CoreBind) (in_scope : VarSet) : Prop :=
-  match bind with
-  | NonRec v rhs =>
-    GoodLocalVar v /\
-    UniqScoped rhs in_scope
-  | Rec pairs => 
-    Forall (fun p => GoodLocalVar (fst p)) pairs /\
-    NoDup (map varUnique (map fst pairs)) /\
-    Forall' (fun p => UniqScoped (snd p) (extendVarSetList in_scope (map fst pairs))) pairs
-  end.
 
    
 (* ---------------------------------------------------------------- *)
@@ -268,6 +233,8 @@ Definition WellScoped_Subst  (s : Subst) (vs:VarSet) :=
         | Some expr => 
           
              WellScoped expr (getInScopeVars in_scope_set)
+             /\
+             isLocalId var 
 
         | None => True
 
@@ -741,7 +708,8 @@ Proof.
     destruct H8.
     ++ destruct_one_id var2.
        subst.
-       eapply WellScoped_StrongSubset with 
+       split.
+       eapply StrongCoreFVs.WellScoped_StrongSubset with 
        (vs1 := extendVarSetList (getInScopeVars i) vars'); eauto.
        unfold WellScoped.
        unfold WellScopedVar.
@@ -758,14 +726,16 @@ Proof.
        specialize (H4 _ H10).
        unfold GoodLocalVar in H4.
        apply H4.
+       admit. (* ?!?!?!? *)
     ++ destruct_one_expr val1. 
        rewrite -> H8 in H2. subst.
-       eapply WellScoped_StrongSubset with 
+       intuition.
+       eapply StrongCoreFVs.WellScoped_StrongSubset with 
        (vs1 := extendVarSetList (getInScopeVars i) vars'); eauto.
-       eapply WellScoped_StrongSubset; eauto.
+       eapply StrongCoreFVs.WellScoped_StrongSubset; eauto.
        eapply StrongSubset_extendVarSetList_fresh.
        auto.       
-Qed.
+Admitted.
 
 
 Lemma WellScoped_substBody : forall doc vs vars vars' body s1 s2,
@@ -782,7 +752,7 @@ Proof.
   destruct s1.
   simpl.
   rewrite <- getInScopeVars_extendInScopeSetList.
-  eapply WellScoped_StrongSubset.
+  eapply StrongCoreFVs.WellScoped_StrongSubset.
   eapply IH.
   eapply SubstExtends_WellScoped_Subst; eauto.
   destruct s2.
@@ -879,7 +849,8 @@ Proof.
        specialize (LVi var).
        destruct (lookupVarEnv env var); auto.
        rewrite -> getInScopeVars_extendInScopeSet.
-       eapply WellScoped_StrongSubset; eauto.       
+       intuition.
+       eapply StrongCoreFVs.WellScoped_StrongSubset; eauto.       
        eapply StrongSubset_extend_fresh.
        rewrite orb_true_r.
        rewrite <- NC.
@@ -947,40 +918,39 @@ Proof.
        auto.
        unfold Id in *.
        intro h. rewrite -> h in EQ. auto.
-    -- eapply StrongSubset_trans; eauto.
-       eapply StrongSubset_minusDom_extend_extend.
-       eapply StrongSubset_trans; eauto.
-       rewrite -> getInScopeVars_extendInScopeSet.
+    -- rewrite orb_true_r.
+       rewrite -> StrongSubset_minusDom_extend_extend.
+       rewrite -> SS.
+       rewrite -> getInScopeVars_extendInScopeSet.   
        eapply StrongSubset_extendVarSet_fresh.
-       rewrite orb_true_r.
        eapply uniqAway_lookupVarSet_fresh.
     -- intros var.
        destruct (v == var) eqn:Eq_vvar.
        - rewrite -> lookupVarEnv_extendVarEnv_eq; auto.
          unfold WellScoped, WellScopedVar.
          rewrite orb_true_r.
-         destruct_match.
+(*          destruct_match. *)
          rewrite -> getInScopeVars_extendInScopeSet.
          rewrite -> lookupVarSet_extendVarSet_self.
-         split.
+         split. split.
          eapply almostEqual_refl.
          eapply GoodLocalVar_uniqAway in H.
          unfold GoodLocalVar in H.         
          eapply H.
-         eapply GoodLocalVar_uniqAway in H.
          unfold GoodLocalVar in H.
-         eapply H.
-       -          rewrite orb_true_r. rewrite -> lookupVarEnv_extendVarEnv_neq; auto.
+         admit. (* uniqAway should be local *)
+       - rewrite orb_true_r. rewrite -> lookupVarEnv_extendVarEnv_neq; auto.
          specialize (LVi var).
          destruct lookupVarEnv eqn:LU.
+         intuition.
          rewrite -> getInScopeVars_extendInScopeSet.
-         eapply WellScoped_StrongSubset; eauto.
+         eapply StrongCoreFVs.WellScoped_StrongSubset; eauto.
          eapply StrongSubset_extendVarSet_fresh.
          eapply uniqAway_lookupVarSet_fresh.
          auto.
          unfold Id in *.
          intro h. rewrite -> h in Eq_vvar. discriminate.
-Qed.
+Admitted.
 
 Lemma WellScoped_Subst_substBndr : forall subst subst' bndr' v vs,
   forall (SB : substBndr subst v = (subst', bndr')),
@@ -1027,7 +997,7 @@ Proof.
   edestruct WellScoped_Subst_substBndr; eauto.
   destruct_SubstExtends.
   rewrite <- getInScopeVars_extendInScopeSet.
-  eapply WellScoped_StrongSubset.
+  eapply StrongCoreFVs.WellScoped_StrongSubset.
   eapply IH; eauto. clear IH. 
   rewrite -> extendVarSetList_cons in *.
   rewrite -> extendVarSetList_nil in *.
@@ -1213,35 +1183,31 @@ Proof.
       + unfold StrongSubset in ss.
         specialize (ss v).
         rewrite lookupVarSet_minusDom_1 in ss ; try done.
-        apply isLocalVar_isLocalId in HLocal.
-        rewrite HLocal in WSvar.
         destruct (lookupVarSet vs v) eqn:LVS; try contradiction.
         destruct (lookupVarSet inscope v) eqn:LI; try contradiction.
         move: WSvar  => [v2 h].
         unfold WellScoped, WellScopedVar.
-        case Lv2: (isLocalVar v1).
-        ++ move: (@ValidVarSet_Axiom inscope) => VV.
-           unfold ValidVarSet in VV.
-           specialize (VV _ _ LI).
-           rewrite -> lookupVarSet_eq with (v2 := v).
-           2: { rewrite -> Base.Eq_sym. auto. }
-           rewrite LI.
-           split.
-           eapply Var.almostEqual_refl; auto.
-           eapply GoodVar_almostEqual; eauto.
-           eapply almostEqual_trans; eauto.
-        ++ eapply GoodVar_almostEqual; eauto.
-           eapply almostEqual_trans; eauto.
- -- (* Impossible case *)
+        move: (@ValidVarSet_Axiom inscope) => VV.
+        unfold ValidVarSet in VV.
+        specialize (VV _ _ LI).
+        rewrite -> lookupVarSet_eq with (v2 := v).
+        2: { rewrite -> Base.Eq_sym. auto. }
+        rewrite LI.
+        split.
+        eapply Var.almostEqual_refl; auto.
+        eapply GoodVar_almostEqual; eauto.
+        eapply almostEqual_trans; eauto.
+ -- (* Global var case *)
     unfold WellScopedVar.
-    destruct (isLocalVar v) eqn:h; try auto.
     destruct (lookupVarSet vs v) eqn:h0; try contradiction.
-    unfold GoodVar in WSvar.
-    destruct WSvar as [ ? h1 ].
-    destruct v; simpl in *; try done.
-    unfold isLocalVar, isGlobalId in h. unfold isLocalId in HLocal.
-    rewrite HLocal in h. done.
-    (* destruct idScope; try done. *)
+    destruct (lookupVarEnv env v) eqn:h2. 
+    move: vv => [ ws lv]. done.
+    specialize (ss v).
+    rewrite lookupVarSet_minusDom_1 in ss; auto. rewrite h0 in ss.
+    destruct (lookupVarSet inscope v) eqn:h1.
+    intuition.   
+    eapply almostEqual_trans; eauto.    
+    done.
 Qed.
 
 
@@ -1396,7 +1362,7 @@ Proof.
          destruct_SubstExtends.
          rewrite -> map_fst_zip.
          rewrite <- getInScopeVars_extendInScopeSetList.
-         eapply WellScoped_StrongSubset.
+         eapply StrongCoreFVs.WellScoped_StrongSubset.
          eapply IHbody;eauto.
          rewrite -> getInScopeVars_extendInScopeSetList.
          eauto.
@@ -1440,7 +1406,7 @@ Proof.
     { destruct_SubstExtends. auto. }
     destruct subst'' as [i0'' i1'' u0'' u1''].
 
-    eapply WellScoped_StrongSubset.
+    eapply StrongCoreFVs.WellScoped_StrongSubset.
     eapply H0. eapply IN.
     eauto.
     rewrite -> extendVarSetList_cons in *.

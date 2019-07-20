@@ -27,8 +27,9 @@ Require Import Proofs.Forall.
 Require Import Proofs.OrdList.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
-Require Import Proofs.VarSetStrong.
+Require Import Proofs.StrongVarSet.
 Require Import Proofs.VarEnv.
+Require Proofs.StrongCoreFVs.
 
 Require Import CSE.
 Require Import TrieMap.
@@ -165,7 +166,7 @@ Proof.
     specialize (IH (extendVarSet vars v) (CS sub' cs_map cs_rec_map)).
     lapply IH; first move=> {IH} IH.
     + move: IH; rewrite /cs_subst => /(_ WSe) IH.
-      apply WellScoped_StrongSubset with (vs1 := getSubstInScopeVars sub') => //.
+      apply StrongCoreFVs.WellScoped_StrongSubset with (vs1 := getSubstInScopeVars sub') => //.
       destruct sub' as [in_scope' id_env' [] []] => /=.
       move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]].
     + constructor=> //; rewrite /cs_subst //.

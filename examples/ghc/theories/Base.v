@@ -77,4 +77,24 @@ Proof.
 Qed.
 
 
+Lemma contrapositive : forall (A B:Prop), (A -> B) -> (~ B) -> (~ A).
+Proof.
+  intros.
+  intro h. apply H in h. apply H0. auto.
+Qed.
 
+Lemma and_iff_compat_both:
+  forall A B C D : Prop,
+    A <-> C -> B <-> D ->
+    A /\ B <-> C /\ D.
+Proof. intros. intuition. Qed.
+
+Lemma unzip_fst {A B} l : forall (l0 : list A) (l1 : list B), List.unzip l = (l0, l1) -> List.map fst l = l0.
+Proof. 
+  induction l. 
+  - simpl. move=> l0 l1 h. inversion h. auto.
+  - move=> l0 l1. destruct a; simpl. 
+    destruct (List.unzip l) eqn:LL.
+    move=> h. inversion h. subst.
+    f_equal. eapply IHl. eauto.
+Qed.

@@ -16,7 +16,7 @@ Require Import Proofs.Core.
 Require Import Proofs.CoreInduct.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
-Require Import Proofs.VarSetStrong.
+Require Import Proofs.StrongVarSet.
 Require Import Proofs.GhcTactics.
 
 Set Bullet Behavior "Strict Subproofs".

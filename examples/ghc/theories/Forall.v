@@ -43,3 +43,9 @@ Proof.
   intros l; rewrite !Forall_forall; intros IMPL In__P x IN.
   now apply IMPL; [|apply In__P].
 Qed.
+
+Lemma Forall_iff:
+  forall a P Q (xs : list a),
+    Forall (fun x => P x <-> Q x) xs ->
+    Forall P xs <-> Forall Q xs.
+Proof. intros. rewrite -> !Forall_forall in *. firstorder. Qed.

@@ -26,7 +26,8 @@ Require Import Proofs.CoreFVs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Var.
 Require Import Proofs.VarSet.
-Require Import Proofs.VarSetStrong.
+Require Import Proofs.StrongVarSet.
+Require Proofs.StrongCoreFVs.
 Require Import Proofs.VarEnv.
 Require Import Proofs.Unique.
 Require Import Proofs.GhcUtils.
@@ -35,6 +36,7 @@ Require Import Proofs.Util.
 Set Bullet Behavior "Strict Subproofs".
 Opaque Base.hs_string__.
 Close Scope Z_scope.
+
 
 (** * Proofs about the Exitification pass *)
 
@@ -274,6 +276,7 @@ Section in_exitifyRec.
   (** These are (almost) the parameters of [exitifyRec] *)
   Variable in_scope : InScopeSet.
   Variable pairs : list (CoreBndr * CoreExpr).
+
   (** almost, because [exitifyRec] is actually called with the following
       in-scope-set, but we need access to the underlying [in_scope] in our proofs.
   *)
@@ -557,7 +560,7 @@ Definition jpsp := updJPSs jps fs .
     { IHs : Prop | 
     IHs ->
     forall e captured,
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     GoDom e ->
     WellScoped e (extendVarSetList isvsp captured) ->
     P captured e (go captured (freeVars e))
@@ -626,7 +629,7 @@ Definition jpsp := updJPSs jps fs .
                 rewrite WellScoped_mkLams in H4.
                 unfold GoodLocalVar in H4. destruct H4 as [h0 ?].
                 eapply Forall_impl; try apply h0.
-                simpl. intuition.
+                simpl. unfold GoodLocalVar. intuition. 
              ** assumption.
              ** rewrite extendVarSetList_append.
                 simpl in HWS.
@@ -640,7 +643,7 @@ Definition jpsp := updJPSs jps fs .
                 rewrite Forall_cons_iff. split; auto.
                 inversion HWS.
                 inversion H.
-                unfold GoodLocalVar in H3. intuition.
+                assumption.
              ** assumption. 
              ** rewrite extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
                 apply HWS.
@@ -659,7 +662,7 @@ Definition jpsp := updJPSs jps fs .
             ** rewrite Forall_app, Forall_cons_iff.
                split; auto.
                split; auto.
-               inversion HWS. inversion H. unfold GoodLocalVar in H1. intuition.
+               inversion HWS. inversion H. assumption.
             ** assumption.
             ** simpl.
                rewrite  extendVarSetList_append, extendVarSetList_cons, extendVarSetList_nil.
@@ -741,7 +744,7 @@ Definition jpsp := updJPSs jps fs .
                   rewrite Forall_map in HGLV.
                   eapply Forall_impl; try apply HGLV.
                   intros a x. destruct a.  simpl in x. simpl.
-                  unfold GoodLocalVar in x. intuition.
+                  assumption.
                ++ (* Forall GoodVar params *)
                  rewrite Forall_forall in HWSpairs.
                  specialize (HWSpairs _ HIn).
@@ -749,7 +752,7 @@ Definition jpsp := updJPSs jps fs .
                  rewrite WellScoped_mkLams in HWSpairs.
                  destruct HWSpairs as [h0 ?].
                  eapply Forall_impl; try eapply h0.
-                 intros a h. unfold GoodLocalVar in h. intuition.
+                 intros a h. assumption.
             ** (* GoDom rhs *) 
               rewrite Forall_forall in H1.
               eapply in_map in HIn.
@@ -774,7 +777,7 @@ Definition jpsp := updJPSs jps fs .
                rewrite Forall_map in HGLV.
                eapply Forall_impl; try eapply HGLV.
                intro a. destruct a. simpl.
-               unfold GoodLocalVar. intuition.
+               auto.
             ** assumption.
             ** rewrite !extendVarSetList_append.
                apply HWSe.
@@ -832,7 +835,7 @@ Definition jpsp := updJPSs jps fs .
                rewrite Forall_map.
                eapply Forall_impl; try eapply HGLV.
                intros [bndr ?] WS. simpl in *.
-               unfold GoodLocalVar in WS. intuition.
+               assumption.
             ** assumption.
             ** rewrite !extendVarSetList_append.
                apply HWSe.
@@ -866,10 +869,7 @@ Definition jpsp := updJPSs jps fs .
              rewrite Forall_cons_iff.
              specialize (HWSalts _ HIn).
              simpl in HWSalts.
-             unfold GoodLocalVar in *.
              intuition.
-             eapply Forall_impl; try eapply H1. simpl.
-             intros a [h0 ?].  auto.
           ** rewrite Forall_forall in HGoDom_alts.
              specialize (HGoDom_alts _ HIn).
              apply HGoDom_alts.
@@ -888,7 +888,8 @@ Definition jpsp := updJPSs jps fs .
     clear IH HGoDom.
     revert e captured Hcapt HWS.
     refine IH7.
-  * assumption.
+  * eapply Forall_impl; only 2: exact Hcapt.
+    unfold GoodLocalVar. intuition.
   * assumption. 
   Defined. (* important! *)
 
@@ -951,7 +952,7 @@ Definition jpsp := updJPSs jps fs .
     intros ?.
     unfold WellScopedFloats.
     generalize isvs as isvs.
-    clear in_scope pairs jps jps_subset_isvs.
+    clear in_scope pairs jps jps_subset_isvs .
     induction exits' as [|[v rhs] exits']; intros isvs' e Hbase Hfloats.
     * simpl. unfold Base.id. assumption.
     * simpl in *.
@@ -994,6 +995,7 @@ Definition jpsp := updJPSs jps fs .
           eapply subVarSet_elemVarSet_false; only 2: eassumption.
           apply WellScoped_subset.
           apply Hrhss; assumption.
+          auto.
         + assumption.
   Qed.
 
@@ -1146,13 +1148,14 @@ Definition jpsp := updJPSs jps fs .
   Lemma WellScoped_picked_aux:
     forall fvs captured e vs,
     WellScoped e (extendVarSetList fvs (captured ++ vs)) ->
+    Forall GoodLocalVar captured ->
     WellScoped e (extendVarSetList fvs (snd (fold_right pick (delVarSetList (exprFreeVars e) vs, []) captured) ++ vs)).
   Proof.
     intros.
-    revert vs H.
+    revert vs H H0.
     induction captured using rev_ind; intros vs HWSe; simpl.
-    * simpl. assumption.
-    * rewrite fold_right_app.
+    * intro L. simpl. assumption.
+    * intro L. rewrite fold_right_app.
       simpl.
       destruct_match; simpl.
       + rewrite snd_pick_list.
@@ -1161,23 +1164,28 @@ Definition jpsp := updJPSs jps fs .
         rewrite <- delVarSetList_cons2.
         apply IHcaptured.
         rewrite app_assoc.
-        erewrite Respects_StrongSubset_extendVarSetList_ae; only 1: apply HWSe.
+        erewrite StrongVarSet.Respects_StrongSubset_extendVarSetList_ae; only 1: apply HWSe.
         repeat apply Forall2_app.
         - apply Forall2_symmetric. intro. apply almostEqual_refl.
         - constructor. apply almostEqual_sym. apply zap_ae. constructor.
         - apply Forall2_symmetric. intro. apply almostEqual_refl.
+        - simpl.
+          rewrite Forall_app in L. intuition.
       + apply IHcaptured.
         rewrite <- WellScoped_extendVarSetList_fresh_between.
         apply HWSe.
         apply disjointVarSet_mkVarSet.
         constructor; only 2: constructor.
         assumption.
+        rewrite Forall_app in L. intuition.
+        rewrite Forall_app in L. intuition.
   Qed.
 
 
   Lemma WellScoped_picked:
     forall fvs captured e,
     WellScoped e (extendVarSetList fvs captured) ->
+    Forall GoodLocalVar captured ->
     WellScoped e (extendVarSetList fvs (snd (fold_right pick (exprFreeVars e, []) captured))).
   Proof.
     intros.
@@ -1190,7 +1198,7 @@ Definition jpsp := updJPSs jps fs .
   (** This lemma verifies the bugfix of #15110 *)
   Lemma WellScopedVar_picked_aux:
     forall vsis captured fvs,
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
            (snd (fold_right pick (fvs, []) captured)) /\
     Forall (fun v => elemVarSet v fvs = true)
@@ -1211,7 +1219,7 @@ Definition jpsp := updJPSs jps fs .
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
-          apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
+          apply WellScoped_extendVarSet_fresh; only 3: apply IH1.
           apply elemVarSet_exprFreeVars_Var_false.
           rewrite elemVarSet_delVarSet in *.
           rewrite andb_true_iff in IH2. destruct IH2.
@@ -1223,11 +1231,13 @@ Definition jpsp := updJPSs jps fs .
           rewrite not_false_iff_true.
           rewrite N.eqb_eq.
           congruence.
+          apply H. eapply in_or_app. right. econstructor; eauto.
         - constructor; only 2: constructor.
           change (WellScoped (Mk_Var (zap x)) (extendVarSet (extendVarSetList vsis captured) x)).
           rewrite Respects_StrongSubset_extendVarSet_ae by (apply zap_ae).
           apply WellScopedVar_extendVarSet.
           rewrite Forall_app in H. destruct H as [h0 h1]. inversion h1.
+          unfold GoodLocalVar in H1. destruct H1.
           eauto using GoodVar_zap.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
@@ -1244,9 +1254,10 @@ Definition jpsp := updJPSs jps fs .
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           change (WellScoped (Mk_Var v) (extendVarSet (extendVarSetList vsis captured) x)).
-          apply WellScoped_extendVarSet_fresh; only 2: apply IH1.
+          apply WellScoped_extendVarSet_fresh; only 3: apply IH1.
           apply elemVarSet_exprFreeVars_Var_false.
           eapply elemVarSet_false_true; eassumption.
+          eapply H. eapply in_or_app. right. econstructor; eauto.
         - rewrite Forall_forall in *.
           intros v HIn. specialize (IH1 v HIn). specialize (IH2 v HIn).
           assumption.
@@ -1254,7 +1265,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma WellScopedVar_picked:
     forall vsis captured fvs,
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     Forall (fun v => WellScopedVar v (extendVarSetList vsis captured))
            (snd (fold_right pick (fvs, []) captured)).
   Proof. intros. apply WellScopedVar_picked_aux.  auto.
@@ -1277,6 +1288,17 @@ Definition jpsp := updJPSs jps fs .
       - apply IHForall.
   Qed.
 
+  (** More assumptions for this section:
+     Clearly the [pairs] that we get need to be well-scoped and join-point valid. *)
+  Variable pairs_GLV:
+    Forall (fun p : Var * Expr CoreBndr => GoodLocalVar (fst p)) pairs.
+  Variable pairs_WS :
+    Forall (fun p => WellScoped (snd p) isvsp) pairs.
+  Variable pairs_VJPP:
+    Forall (fun p : Var * Expr CoreBndr => isValidJoinPointsPair (fst p) (snd p) jpsp = true) pairs.
+  Variable pairs_NoDup:
+    NoDup (map varUnique fs).
+
   (** We first show that all exit join points floated by [go_exit] are well-scoped,
       then we lift it to [go]. *)
   Lemma go_exit_all_WellScopedFloats captured e : 
@@ -1284,7 +1306,7 @@ Definition jpsp := updJPSs jps fs .
     WellScoped e (extendVarSetList isvsp captured) ->
     disjointVarSet (exprFreeVars e) recursive_calls = true ->
     StateInvariant WellScopedFloats (go_exit captured e (exprFreeVars e)).
-  Proof.
+  Proof  using in_scope pairs pairs_GLV.
     intros HGLV HWSe Hdisjoint.
     set (P := WellScopedFloats).
     cbv beta delta [go_exit]. (* No [zeta]! *)
@@ -1335,24 +1357,25 @@ Definition jpsp := updJPSs jps fs .
       eapply GoodLocalVar_almostEqual. apply HGLVv.
       apply zap_ae.
 
-    * apply WellScoped_picked.
+    * apply WellScoped_picked. 
       rewrite hs_coq_map in Hdisjoint.
       replace (map _ pairs) with fs in Hdisjoint by reflexivity.
       unfold isvsp in HWSe.
       rewrite WellScoped_extendVarSetList_fresh_under in HWSe; only 1: assumption.
       eapply disjointVarSet_subVarSet_l; only 1: eassumption.
       apply subVarSet_delVarSetList.
+      unfold fs. rewrite Forall_map. assumption. assumption.
   Qed.
 
   Lemma go_all_WellScopedFloats captured e: 
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     GoDom e ->
     WellScoped e (extendVarSetList isvsp captured) ->
     Forall GoodLocalVar captured ->
     StateInvariant WellScopedFloats (go captured (freeVars e)).
-  Proof.
+  Proof using in_scope pairs pairs_GLV.
     revert e captured.
-    refine (go_ind (fun captured _ r => impl (Forall GoodLocalVar captured) (_ r)) _ _ _ _ _ _ _);
+      refine (go_ind (fun captured _ r => impl (Forall GoodLocalVar captured) (_ r)) _ _ _ _ _ _ _) ; 
       intros; intro HGLVcaptured.
     * apply go_exit_all_WellScopedFloats; assumption.
     * apply StateInvariant_bind_return.
@@ -1422,22 +1445,12 @@ Definition jpsp := updJPSs jps fs .
     * apply StateInvariant_return.
   Qed.
 
-  (** More assumptions for this section:
-     Clearly the [pairs] that we get need to be well-scoped and join-point valid. *)
-  Variable pairs_WS :
-    Forall (fun p => WellScoped (snd p) isvsp) pairs.
-  Variable pairs_GLV:
-    Forall (fun p : Var * Expr CoreBndr => GoodLocalVar (fst p)) pairs.
-  Variable pairs_VJPP:
-    Forall (fun p : Var * Expr CoreBndr => isValidJoinPointsPair (fst p) (snd p) jpsp = true) pairs.
-  Variable pairs_NoDup:
-    NoDup (map varUnique fs).
 
 
   (** [exists] is produced by running [go], so now we know that this is well-scoped. *)
   Lemma all_exits_WellScoped:
     WellScopedFloats exits.
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     unfold exits.
     unfold pairs'_exits.
     unfold ann_pairs.
@@ -1463,7 +1476,7 @@ Definition jpsp := updJPSs jps fs .
       rewrite WellScoped_mkLams in pairs_WS.
       apply go_all_WellScopedFloats.
       + eapply Forall_impl; try apply pairs_WS.
-        intros a h. unfold GoodLocalVar in h. intuition.
+        intuition.
       + assumption.
       + apply pairs_WS.
       + apply pairs_WS.
@@ -1474,7 +1487,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma disjoint_isvs_exits:
      disjointVarSet isvs (mkVarSet (map fst exits)) = true.
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     rewrite fold_is_true in *.
     rewrite disjointVarSet_mkVarSet.
     rewrite Forall_map. simpl.
@@ -1486,7 +1499,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma isvs_to_isvs':
      StrongSubset isvs isvs'.
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros.
     apply StrongSubset_extendList_fresh.
     apply disjoint_isvs_exits.
@@ -1494,7 +1507,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma isvsp_to_isvsp':
      StrongSubset isvsp isvsp'.
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros.
     apply StrongSubset_extendVarSetList.
     apply isvs_to_isvs'.
@@ -1502,7 +1515,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma isvsp_to_isvsp'_extended:
      forall vs, StrongSubset (extendVarSetList isvsp vs) (extendVarSetList isvsp' vs).
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros.
     apply StrongSubset_extendVarSetList.
     apply isvsp_to_isvsp'.
@@ -1512,7 +1525,7 @@ Definition jpsp := updJPSs jps fs .
      forall vs1 vs2,
      StrongSubset (extendVarSetList (extendVarSetList isvsp vs1) vs2)
                   (extendVarSetList (extendVarSetList isvsp' vs1) vs2).
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros.
     apply StrongSubset_extendVarSetList.
     apply isvsp_to_isvsp'_extended.
@@ -1535,12 +1548,12 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma addExit_all_WellScopedVar:
     forall captured ja e,
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     let after := extendVarSetList isvsp' captured in
     RevStateInvariant (sublistOf exits) 
          (addExit (extendInScopeSetList in_scope2 captured) ja e)
          (fun v => WellScopedVar v after).
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros.
     (* This is much easier to prove by breaking the State abstraction and turning
        it into a simple function. *)
@@ -1588,11 +1601,11 @@ Definition jpsp := updJPSs jps fs .
   Lemma go_exit_res_WellScoped captured e : 
     let orig := extendVarSetList isvsp captured in
     let after := extendVarSetList isvsp' captured in
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     WellScoped e orig ->
     disjointVarSet (exprFreeVars e) recursive_calls = true ->
     RevStateInvariant (sublistOf exits) (go_exit captured e (exprFreeVars e)) (fun e' => WellScoped e' after).
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros ??? HWSe Hdisjoint.
 
     set (P := fun x => RevStateInvariant (sublistOf exits) x 
@@ -1659,11 +1672,11 @@ Definition jpsp := updJPSs jps fs .
   Lemma go_res_WellScoped captured e: 
     let orig := extendVarSetList isvsp captured in
     let after := extendVarSetList isvsp' captured in
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     GoDom e ->
     WellScoped e orig ->
     RevStateInvariant (sublistOf exits) (go captured (freeVars e)) (fun e' => WellScoped e' after).
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     revert e captured.
     apply (go_ind (fun captured _ r => RevStateInvariant (sublistOf exits) r 
          (fun e' => WellScoped e' (extendVarSetList isvsp' captured))));
@@ -1813,7 +1826,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma pairs'_WS:
     Forall (fun p => WellScoped (snd p) isvsp') pairs'.
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     unfold pairs', pairs'_exits, ann_pairs.
     eapply RevStateInvariant_runState with (P := sublistOf exits).
     * rewrite forM_map.
@@ -2104,7 +2117,7 @@ Definition jpsp := updJPSs jps fs .
     { IHs : Prop | 
     IHs ->
     forall e captured,
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
     isJoinPointsValid e 0 (updJPSs jpsp captured) = true ->
     P captured e (go captured (freeVars e))
@@ -2233,7 +2246,7 @@ Definition jpsp := updJPSs jps fs .
 
 
   Lemma go_all_ValidJoinPairs captured e: 
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
     isJoinPointsValid e 0 (updJPSs jpsp captured) = true ->
     StateInvariant (fun xs => forallb (fun '(v,rhs) => isValidJoinPointsPair v rhs jps) xs = true)
@@ -2344,7 +2357,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma disjoint_jps_exits:
      disjointVarSet jps (mkVarSet (map fst exits)) = true.
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     eapply disjointVarSet_subVarSet_l.
     apply disjoint_isvs_exits.
     apply jps_subset_isvs.
@@ -2352,7 +2365,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma jps_to_jps':
      StrongSubset jps jps'.
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     intros.
     apply StrongSubset_updJPSs_fresh.
     apply disjoint_jps_exits.
@@ -2360,7 +2373,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma jpsp_to_jpsp':
      StrongSubset jpsp jpsp'.
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     intros.
     apply StrongSubset_updJPSs.
     apply jps_to_jps'.
@@ -2368,7 +2381,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma jpsp_to_jpsp'_extended:
      forall vs, StrongSubset (updJPSs jpsp vs) (updJPSs jpsp' vs).
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     intros.
     apply StrongSubset_updJPSs.
     apply jpsp_to_jpsp'.
@@ -2378,7 +2391,7 @@ Definition jpsp := updJPSs jps fs .
      forall vs1 vs2,
      StrongSubset (updJPSs (updJPSs jpsp vs1) vs2)
                   (updJPSs (updJPSs jpsp' vs1) vs2).
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     intros.
     apply StrongSubset_updJPSs.
     apply jpsp_to_jpsp'_extended.
@@ -2393,7 +2406,7 @@ Definition jpsp := updJPSs jps fs .
     RevStateInvariant (sublistOf exits) 
          (addExit (extendInScopeSetList in_scope2 captured) ja e)
          (fun v => isJoinPointsValid (Mk_Var v) ja after = true).
-  Proof using Type pairs_WS pairs_VJPP.
+  Proof using Type pairs_WS pairs_VJPP pairs_GLV.
     intros.
     (* This is much easier to prove by breaking the State abstraction and turning
        it into a simple function. *)
@@ -2466,7 +2479,7 @@ Definition jpsp := updJPSs jps fs .
     isJoinPointsValid e 0 orig = true ->
     RevStateInvariant (sublistOf exits) (go_exit captured e (exprFreeVars e))
                       (fun e' => isJoinPointsValid e' 0 after = true).
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     intros ?? HJPVe.
 
     set (P := fun x => RevStateInvariant (sublistOf exits) x (fun e' => isJoinPointsValid e' 0 after = true)).
@@ -2532,12 +2545,12 @@ Definition jpsp := updJPSs jps fs .
   Lemma go_res_isJoinPointsValid captured e: 
     let orig := updJPSs jpsp captured in
     let after := updJPSs jpsp' captured in
-    Forall GoodVar captured ->
+    Forall GoodLocalVar captured ->
     WellScoped e (extendVarSetList isvsp captured) ->
     isJoinPointsValid e 0 orig = true ->
     RevStateInvariant (sublistOf exits) (go captured (freeVars e))
                       (fun e' => isJoinPointsValid e' 0 after = true).
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     revert e captured.
     refine (go_ind2 (fun captured e r => RevStateInvariant (sublistOf exits) r (fun e' => isJoinPointsValid e' 0 (updJPSs jpsp' captured) = true)) _ _ _ _ _ _ _);
       intros.
@@ -2703,7 +2716,7 @@ Definition jpsp := updJPSs jps fs .
 
   Lemma pairs'_JPV:
     Forall (fun '(v,rhs) => isValidJoinPointsPair v rhs jpsp' = true) pairs'.
-  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs.
+  Proof using Type pairs_WS pairs_VJPP jps_subset_isvs pairs_GLV.
     unfold pairs', pairs'_exits, ann_pairs.
     eapply RevStateInvariant_runState with (P := sublistOf exits).
     * rewrite hs_coq_map, forM_map.
@@ -2805,7 +2818,7 @@ Definition jpsp := updJPSs jps fs .
     let jps' := updJPSs jps fs in
     isJoinPointsValid body 0 jps' = true ->
     isJoinPointsValid (mkLets (exitifyRec (extendInScopeSetList in_scope fs) pairs) body) n jps = true.
-  Proof using Type jps_subset_isvs pairs_VJPP pairs_WS.
+  Proof using Type jps_subset_isvs pairs_VJPP pairs_WS pairs_GLV.
     intros.
     cbv beta delta [exitifyRec].
     zeta_with go_exit.
@@ -2894,6 +2907,7 @@ Proof.
     * assumption.
     * eapply Forall_impl; only 2: eassumption. intros [v rhs] H. intuition eassumption.
     * eapply Forall_impl; only 2: eassumption. intros [v rhs] H. intuition eassumption.
+    * eapply Forall_impl; only 2: eassumption. intros [v rhs] H. intuition eassumption.   
     * assumption.
     * assumption.
 Qed.

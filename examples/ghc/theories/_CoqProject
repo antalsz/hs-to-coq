@@ -8,30 +8,40 @@
 -arg -w -arg -masking-absolute-name
 Util.v
 Axioms.v
-ScopeInvariant.v
-JoinPointInvariants.v
-# JoinPointInvariantsInductive.v
-CoreInduct.v
-Exitify.v
-# CoreSubstInvariants.v
-StateLogic.v
+ContainerAxioms.v
 GhcTactics.v
 GhcUtils.v
-Forall.v
-Core.v
-CoreFVs.v
 Base.v
+Forall.v
+OrdList.v
+
+Unique.v
+Var.v
+
+
+Core.v
+CoreInduct.v
+
 VarSetFSet.v
 VarSet.v
-VarSetStrong.v
+StrongVarSet.v
 VarEnv.v
-Unique.v
-ContainerAxioms.v
-Var.v
+
+ScopeInvariant.v
+
 FV.v
+
+CoreFVs.v
+StrongFV.v
+StrongCoreFVs.v
+
+JoinPointInvariants.v
+# JoinPointInvariantsInductive.v
+StateLogic.v
+Exitify.v
+
 UniqSetInv.v
 CoreSubst.v
-OrdList.v
 
 CoreSemantics.v
 

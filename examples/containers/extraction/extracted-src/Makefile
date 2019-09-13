@@ -365,7 +365,6 @@ pre-all::
 
 post-all::
 	@# Extension point
-	perl -i fixcode.pl *.hs
 .PHONY: post-all
 
 real-all: $(VOFILES) $(if $(USEBYTE),bytefiles,optfiles)

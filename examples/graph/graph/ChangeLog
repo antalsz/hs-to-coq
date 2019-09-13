@@ -1,0 +1,336 @@
+5.7.0.1
+-------
+
+* Accidentally released the wrong version.
+
+5.7.0.0
+-------
+
+* Updating the GraphM class to be compatible with the MonadFail proposal and GHC's
+  MonadFailDesugaring language extension which is enabled by default by GHC-8.6.1.
+
+5.6.0.0
+-------
+
+* The previous version should have been a major version bump due to
+  the API change.
+
+5.5.4.0
+-------
+
+* Improved type safety of shortest-path functions (in
+  `Data.Graph.Inductive.Query.SP`) thanks to Nathan Collins.
+
+    - `getDistance`, `spLength` and `sp` now return `Maybe` values.
+
+* Fixed building on GHC < 7.4; previously uncaught due to
+  cabal-install doing the wrong thing on Travis-CI.
+
+
+5.5.3.1
+-------
+
+* Hopefully clearer documentation for `&`, `Context` and the
+  `ufold`-based functions.
+
+* Thanks to David Feuer, the existing benchmark suite is now runnable
+  with `cabal bench`.
+
+* Some performance improvements for `PatriciaTree`, thanks to David
+  Feuer.
+
+5.5.3.0
+-------
+
+* Additional closure functions by Matthew Danish.
+
+* `Bifunctor` instances for base >= 4.8.0.0.
+
+* An `ST`-based `GraphM` instance.
+
+* Addition of `order` and `size` functions for finding the number of
+  nodes and edges respectively in a graph (the former is an alias for
+  the existing `noNodes` function).
+
+* The rules for faster implementations of `insNode` and `insEdge` for
+  `PatriciaTree` should fire more often now.
+
+5.5.2.3
+-------
+
+* Earlier fix for `NFData` wasn't quite complete/correct.
+
+5.5.2.2
+-------
+
+* Ensure firing of specialised rules for `PatriciaTree`.
+
+* Better way of only creating `NFData` instances when possible.
+
+5.5.2.1
+-------
+
+* Only create `NFData` instances for GHC >= 7.4.1.
+
+5.5.2.0
+-------
+
+* Documentation, clean-up and refactoring of various parts of the
+  library.
+
+    - As part of this, various types now have instances for classes
+      like `Show`, `Eq`, `Ord`, `NFData`, etc. where applicable.
+
+    - In particular, the various options for use with depth-first
+      search and shortest path queries was documented by David
+      Luposchainsky.
+
+* Addition of a proper test-suite.  So far it covers the
+  `Data.Graph.Inductive.Graph` module and all
+  `Data.Graph.Inductive.Query.*` modules except for `Monad`.
+
+    - The tests are also automatically run for every (set of) commits
+      thanks to Travis-CI.
+
+* Arbitrary instances for the two graph types are now available in the
+  new `fgl-arbitrary` sub-package.
+
+* Now depends solely on the `transformers` library rather than `mtl`.
+
+* Potentially breaking changes:
+
+    These changes are those where the behaviour was un-specified or
+    didn't match the documentation.
+
+    - `nodeRange` and `nodeRangeM` for the various graph data
+      structures erroneously returned `(0,0)` for empty graphs (making
+      them indistinguishable from graphs containing the single node
+      `0`).  They now match the default implementation of throwing an
+      error.
+
+    - The behaviour of `delLEdge` when dealing with multiple edges was
+      unspecified; it now deletes only a single edge and the new
+      function `delAllLEdge` deletes all edges matching the one
+      provided.
+
+* Additional functions thanks to Sergiu Ivanov:
+
+    - Creating sub-graphs by `Node`- and `Context`-filtering as well
+      as induced by a set of `Node`s.
+
+    - Graph condensation (i.e. graph of
+      strongly-connected-components).
+
+    - Various edge- and neighbor-based helper functions.
+
+* The graph types now have `Generic` instances thanks to Piotr
+  Mlodawski.
+
+* The `OrdGr` wrapper by Trevor Cook allows performing `Ord`-based
+  comparisons on graphs.
+
+5.5.1.0
+-------
+
+* Support added for GHC 7.10 by Herbert Valerio Riedel.
+
+* Additional DFS query functions added by Conrad Parker.
+
+* Repository location changed to GitHub.
+
+* Code cleanup:
+
+    - Replaced usage of internal FiniteMap copy with Data.Map and
+      Data.Set from the containers library.
+
+    - Remove usage of data type contexts.
+
+    - Use newtypes where applicable.
+
+5.5.0.1
+-------
+
+* Fix up Eq instances for Tree and PatriciaTree so that they work with
+  multiple edges.
+
+5.5.0.0
+-------
+
+* Add proper Show, Read and Eq instances to Data.Graph.Inductive.Tree
+  and Data.Graph.Inductive.PatriciaTree.
+
+* Add pretty-printing functions to Data.Graph.Inductive.Graph.  These
+  are based upon the old Show implementation for
+  Data.Graph.Inductive.Tree.
+
+* Now use PatriciaTree by default rather than Tree (and recommend as
+  such).  IntMap has been receiving a lot of optimisation work on it,
+  whereas the internal FiniteMap implementation hasn't received any
+  attention.
+
+* The `version :: IO ()` action now uses the actual Cabal version.
+
+* Remove Data.Graph.Inductive.Graphviz; use the graphviz package
+  instead.
+
+5.4.2.4
+-------
+
+* Update to work with GHC-7.2 and Cabal-1.6.
+
+5.4.2.3
+-------
+
+* Maintainership taken over by Ivan Miljenovic.
+
+* Allow Data.Graph.Inductive.PatriciaTree to deal with multiple edges
+  between nodes.
+
+5.4.2.2 (November 2008)
+-----------------------
+
+* Bugfix in Graphviz.sq
+
+5.4.2.1 (June 2008)
+-------------------
+
+* bug fix in bcc by Reid Barton
+
+* added new dynamic graph implementation:
+  Data.Graph.Inductive.PatriciaTree (thanks to Pho)
+
+* added test/benchmark.hs: a benchmark to compare Tree and PatriciaTree
+  implementations (thanks to Pho)
+
+5.4.2 (May 2008)
+----------------
+
+* added Setup.hs to tar file
+
+* reimplementation of Data.Graph.Inductive.Query.Dominators
+  by Bertram Felgenhauer:
+
+  It was buggy and very slow for large graphs. See
+      http://www.haskell.org/pipermail/haskell-cafe/2008-April/041739.html
+
+  This patch also adds a new function, iDom, that returns the
+  immediate dominators of the graph nodes.
+
+* Exported xdf*With functions from DFS.hs
+
+* many little cleanups thanks to many people
+  (use 'darcs changes' to see the details)
+
+5.4 (April 2007)
+----------------
+
+* changed the implementation for inspection functions (suc, pred, ...)
+  to correct the behavior in the presence of loops (thanks to Ralf
+  Juengling for pointing out the inconsistency)
+
+5.3 (June 2006)
+---------------
+
+* fixed a bug in findP (thanks to lnagy@fit.edu)
+
+* added function delLEdge in Graph.hs (thanks to Jose Labra)
+
+* changed implementation of updFM and mkGraph (thanks to Don Stewart)
+
+February 2005
+-------------
+
+* fixed an import error in Basic.hs
+
+* removed Eq instance of gr because it caused overlapping instance
+  problems.  Instead the function equal defined in Graph.hs can be
+  used
+
+* added some more functions to the export list of DFS.hs
+
+* changed the definition of LPath into a newtype to avoid overlapping
+  instances with lists
+
+* fixed the Makefile (for GHC and GHCi)
+
+
+January 2004
+------------
+
+* bug fix for nearestNode (src/Data/Graph/Inductive/Query/GVD.hs)
+  Update contributed by Aetion Technologies LLC (www.aetion.com)
+
+* Refactor into hierarchical namespace
+
+* Build changes:
+  - build a standard haskell library (libHSfgl.a, HSfgl.o)
+  - install as ghc package (fgl), uses Auto so no -package is needed
+
+* Automatic Node generation for labels: Data.Graph.Inductive.NodeMap
+
+* Graphviz output: Data.Graph.Inductive.Graphviz
+
+September 2002
+--------------
+
+* Introduction of graph classes
+
+* Monadic graphs and graph computation monad
+
+* Graph implementation based on balanced (AVL) trees
+
+* Fast graph implementation based on IO arrays
+
+* New algorithms:
+  - Maximum flow
+  - Articulation points
+  - biconnected components
+  - dominators
+  - transitive closure
+
+* minor changes in utility functions
+  - changed signatures (swapped order of arguments) of
+    functions context and lab to be consistent with other graph functions
+  - changed function first in RootPath: not existing path is now reported
+    as an empty list and will not produce an error
+  - esp version that returns a list of labeled edges
+    (to find minimum label in maxflow algorithm)
+  - BFS uses amortized O(1) queue
+  - Heap stores key and value separately
+  - ...
+
+March 2001
+----------
+* Changes to User Guide
+
+* a couple of new functions
+
+* some internal changes
+
+April 2000
+----------
+
+* User Guide
+
+* Systematic structure for all depth-first search functions
+
+* Graph Voronoi diagram
+
+* Several small changes and additions in utility functions
+
+February 2000
+-------------
+
+* Representation for inward-directed trees
+
+* Breadth-first search
+
+* Dijkstra's algorithm
+
+* Minimum-spanning-tree algorithm
+
+
+August 1999
+-----------
+
+* First Haskell version

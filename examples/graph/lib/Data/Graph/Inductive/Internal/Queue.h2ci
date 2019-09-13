@@ -1,0 +1,8 @@
+constructors:
+  Data.Graph.Inductive.Internal.Queue.Queue: ! '[Qualified "Data.Graph.Inductive.Internal.Queue"
+    "MkQueue"]'
+constructorFields:
+  Data.Graph.Inductive.Internal.Queue.MkQueue: NonRecordFields 2
+constructorTypes:
+  Data.Graph.Inductive.Internal.Queue.MkQueue: Qualified "Data.Graph.Inductive.Internal.Queue"
+    "Queue"

@@ -1,0 +1,11 @@
+skip module GHC.Show
+skip module Data.Data
+skip module System.IO
+
+#for now
+skip Data.Graph.Inductive.Graph.OrdGr
+
+#eventually change to program fixpoint most likely
+termination Data.Graph.Inductive.Graph.ufold deferred
+
+#rename value Data.Graph.Inductive.Graph.OrdGr = Data.Graph.Inductive.Graph.OrdGr_val

@@ -14,9 +14,9 @@ GHC (8.4.3), the base libraries (4.11.1.0) and containers (0.5.11.0).
   This will extract Haskell modules from the containers/lib .v files.
   
   Use fixcode.pl script to add missing imports to a few extracted files.
-	  Ascii.hs
-	  QArith_base.hs
-	  Real.hs
+  (Ascii.hs,QArith_base.hs,Real.hs)
+	  
+      perl -i examples/containers/extraction/extracted-src/fixcode.pl examples/containers/extraction/extracted-src/*.hs
 
 - `stack build` 
 

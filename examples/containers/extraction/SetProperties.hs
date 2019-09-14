@@ -31,10 +31,16 @@ import Control.Applicative (Applicative (..), (<$>))
 #endif
 import Control.Applicative (liftA2)
 
+do2 f (x,y) = "(" ++ f x ++ "," ++ f y ++ ")"
+
 main :: IO ()
 main = do
-  putStrLn $ "union [0,3][0,3] " ++ (showTree (union (fromList [0,3]) (fromList [0,3])))
-  putStrLn $ "union [0,3][0,3] " ++ (showDSTree (DS.union (DS.fromList [0,3]) (DS.fromList [0,3])))  
+  putStrLn $ "fromList [0,3] = " ++ showTree (fromList [0,3])
+  putStrLn $ "DS.fromList [0,3] = " ++ showDSTree (DS.fromList [0,3])
+  putStrLn $ "splitS 0 [0,3] = " ++ do2 showTree (split 0 (fromList [0,3]))  
+  putStrLn $ "DS.splitS 0 [0,3] = " ++ do2 showDSTree (DS.split 0 (DS.fromList [0,3]))
+  putStrLn $ "union [0,3][0,3] = " ++ (showTree (union (fromList [0,3]) (fromList [0,3])))
+  putStrLn $ "DS.union [0,3][0,3] = " ++ (showDSTree (DS.union (DS.fromList [0,3]) (DS.fromList [0,3])))  
   defaultMain [ testCase "lookupLT" test_lookupLT
                    , testCase "lookupGT" test_lookupGT
                    , testCase "lookupLE" test_lookupLE
@@ -112,7 +118,7 @@ main = do
                    , testProperty "toDataSet same"       prop_toSame
                    , testProperty "same (==)"            prop_sameEq
                    , testProperty "same x == x"          prop_sameEq1
-                   , testProperty "same (/=)"            prop_sameNEq                   
+                   , testProperty "same (/=)"            prop_sameNEq                                    -- single, member, insert, delete
                    , testCase     "same empty"           test_sameEmpty
                    , testProperty "same singleton"       prop_sameSingleton
                    , testProperty "same member"          prop_sameMember
@@ -120,12 +126,23 @@ main = do
                    , testProperty "same insert"          prop_sameInsert
                    , testProperty "same delete"          prop_sameDelete
                    , testProperty "same mapMonotonic"    prop_sameMapMonotonic
+                   -- balance
                    , testProperty "same split"           prop_sameSplit
+                   , testProperty "same link"            prop_sameLink                                   , testProperty "same merge"           prop_sameMerge
+                   -- union
                    , testProperty "same union"           prop_sameUnion
                    , testProperty "same difference"      prop_sameDifference
                    , testProperty "same intersection"    prop_sameIntersection
                    , testProperty "same disjoint"        prop_sameDisjoint
-                   , testProperty "same null"            prop_sameNull                                     
+                   , testProperty "same null"            prop_sameNull
+                   -- lists
+                   , testProperty "same fromAscList"     prop_sameFromAscList
+                   , testProperty "same fromDescList"    prop_sameFromDescList
+                   , testProperty "same fromList"        prop_sameFromList
+                   -- set operations
+                   , testProperty "same filter"          prop_sameFilter
+                   , testProperty "same partition"       prop_samePartition
+
                    ]
 
 -- A type with a peculiar Eq instance designed to make sure keys
@@ -759,3 +776,38 @@ prop_sameDisjoint (TwoSets xs ys) = (DS.disjoint (toDataSet xs) (toDataSet ys)) 
 
 prop_sameNull :: Set Int -> Bool
 prop_sameNull xs = DS.null (toDataSet xs) == null xs
+
+-- Lists
+
+prop_sameFromAscList :: Property
+prop_sameFromAscList = forAll (choose (5,100)) $ \n ->
+    let xs = [0..n::Int]
+    in DS.fromAscList xs `equalSets` fromAscList xs
+
+prop_sameFromDescList :: Property
+prop_sameFromDescList = forAll (choose (5,100)) $ \n ->
+    let xs = reverse [0..n::Int]
+    in DS.fromDescList xs `equalSets` fromDescList xs
+
+prop_sameFromList :: [Int] -> Bool
+prop_sameFromList xs =
+   DS.fromList xs `equalSets` fromList xs
+-- 
+
+prop_sameFilter :: Set Int -> Bool
+prop_sameFilter xs = equalSets (DS.filter (>2) (toDataSet xs)) (filter (>2) xs)
+
+prop_samePartition :: Set Int -> Bool
+prop_samePartition xs = equalSets ys1 zs1 && equalSets ys2 zs2 where
+   (ys1, ys2) = DS.partition (>2) (toDataSet xs)
+   (zs1, zs2) = partition (>2) xs
+
+prop_sameLink :: Int -> TwoSets -> Bool
+prop_sameLink i (TwoSets xs ys) =
+    equalSets (DS.link i (toDataSet xs) (toDataSet ys))
+              (link i xs ys)
+
+prop_sameMerge :: TwoSets -> Bool
+prop_sameMerge (TwoSets xs ys) =
+  equalSets (DS.merge (toDataSet xs) (toDataSet ys))
+            (merge xs ys)

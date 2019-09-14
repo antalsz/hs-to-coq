@@ -336,7 +336,7 @@ splitMember m s = (x,y,z) where
 --
 -- We cannot do that here:
 -- it would require a `foldable_a` that synthesizes a `Foldable f` dictionary
--- as expected by S2.uions. But I could not find out how to
+-- as expected by S2.unions. But I could not find out how to
 -- write such a definition, as some methods themselves expect
 -- types and dictionaries, and we cannot go from Coq-extracted dictionary to
 -- Haskell instance.

@@ -12,21 +12,23 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinInt.
 Require Control.Arrow.
 Require Coq.Init.Datatypes.
+Require Coq.Numbers.BinNums.
 Require Data.Foldable.
 Require Data.Function.
 Require Data.IntSet.Internal.
 Require Data.Maybe.
 Require Data.OldList.
 Require Data.Tuple.
+Require Err.
 Require GHC.Base.
-Require GHC.DeferredFix.
-Require GHC.Enum.
 Require GHC.Err.
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Tuple.
+Require String.
 Import Data.OldList.Notations.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -34,7 +36,7 @@ Import GHC.Num.Notations.
 (* Converted type declarations: *)
 
 Definition Node :=
-  GHC.Num.Int%type.
+  Coq.Numbers.BinNums.N.
 
 Definition Path :=
   (list Node)%type.
@@ -158,15 +160,13 @@ Definition unLPath {a} (arg_0__ : LPath a) :=
 
 (* Converted value declarations: *)
 
-Definition ufold {gr} {a} {b} {c} `{(Graph gr)}
-   : (Context a b -> c -> c) -> c -> gr a b -> c :=
-  GHC.DeferredFix.deferredFix3 (fun ufold
-                                (f : (Context a b -> c -> c))
-                                (u : c)
-                                (g : gr a b) =>
-                                  let 'pair c g' := matchAny g in
-                                  if isEmpty g : bool then u else
-                                  f c (ufold f u g')).
+Program Fixpoint ufold {gr} {a} {b} {c} `{(Graph gr)} (f
+                         : (Context a b -> c -> c)) (u : c) (g : gr a b) {measure (BinInt.Z.abs_nat
+                        (noNodes g))} : c
+                   := let 'pair c g' := matchAny g in
+                      if Bool.Sumbool.sumbool_of_bool (isEmpty g) then u else
+                      f c (ufold f u g').
+Admit Obligations.
 
 Definition toLEdge {b} : Edge -> b -> LEdge b :=
   fun arg_0__ arg_1__ =>
@@ -202,13 +202,6 @@ Definition nodes {gr} {a} {b} `{(Graph gr)} : gr a b -> list Node :=
 Definition node' {a} {b} : Context a b -> Node :=
   fun '(pair (pair (pair _ v) _) _) => v.
 
-Definition newNodes {gr} {a} {b} `{(Graph gr)}
-   : GHC.Num.Int -> gr a b -> list Node :=
-  fun i g =>
-    let 'pair _ n := nodeRange g in
-    if isEmpty g : bool then GHC.Enum.enumFromTo #0 (i GHC.Num.- #1) else
-    GHC.Enum.enumFromTo (n GHC.Num.+ #1) (n GHC.Num.+ i).
-
 Definition neighbors' {a} {b} : Context a b -> list Node :=
   fun '(pair (pair (pair p _) _) s) =>
     Coq.Init.Datatypes.app (GHC.Base.map Data.Tuple.snd p) (GHC.Base.map
@@ -241,7 +234,8 @@ Definition lab' {a} {b} : Context a b -> a :=
   fun '(pair (pair (pair _ _) l) _) => l.
 
 Definition lab {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> option a :=
-  fun g v => (GHC.Base.fmap lab' GHC.Base.∘ Data.Tuple.fst) (match_ v g).
+  fun g v =>
+    ((@GHC.Base.fmap option _ _ _) lab' GHC.Base.∘ Data.Tuple.fst) (match_ v g).
 
 Definition insNode {gr} {a} {b} `{(DynGraph gr)}
    : LNode a -> gr a b -> gr a b :=
@@ -251,7 +245,7 @@ Definition insNodes {gr} {a} {b} `{(DynGraph gr)}
    : list (LNode a) -> gr a b -> gr a b :=
   fun vs g => Data.Foldable.foldl' (GHC.Base.flip insNode) g vs.
 
-Definition insEdge {gr} {b} {a} `{(DynGraph gr)}
+Definition insEdge {gr} {b} {a} `{DynGraph gr} `{Err.Default (Context a b)}
    : LEdge b -> gr a b -> gr a b :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -260,17 +254,19 @@ Definition insEdge {gr} {b} {a} `{(DynGraph gr)}
         let 'pair (pair (pair pr _) la) su := Data.Maybe.fromMaybe (GHC.Err.error
                                                                     (Coq.Init.Datatypes.app (GHC.Base.hs_string__
                                                                                              "insEdge: cannot add edge from non-existent vertex ")
-                                                                                            (GHC.Show.show v))) mcxt in
+                                                                                            (GHC.Base.hs_string__
+                                                                                             String.EmptyString)))
+                                                mcxt in
         pair (pair (pair pr v) la) (cons (pair l w) su) & g'
     end.
 
-Definition insEdges {gr} {b} {a} `{(DynGraph gr)}
+Definition insEdges {gr} {b} {a} `{DynGraph gr} `{Err.Default (Context a b)}
    : list (LEdge b) -> gr a b -> gr a b :=
   fun es g => Data.Foldable.foldl' (GHC.Base.flip insEdge) g es.
 
 Definition hasNeighborAdj {gr} {b} {a} `{Graph gr} `{GHC.Base.Eq_ b}
    : gr a b -> Node -> (b * Node)%type -> bool :=
-  fun gr v a => Data.Foldable.elem a (lneighbors gr v).
+  fun gr v a => GHC.List.elem a (lneighbors gr v).
 
 Definition hasNeighbor {gr} {a} {b} `{Graph gr}
    : gr a b -> Node -> Node -> bool :=
@@ -320,21 +316,6 @@ Definition edges {gr} {a} {b} `{(Graph gr)} : gr a b -> list Edge :=
 
 Definition edgeLabel {b} : LEdge b -> b :=
   fun '(pair (pair _ _) l) => l.
-
-Definition glabEdges {gr} {a} {b} `{(Graph gr)}
-   : gr a b -> list (GroupEdges b) :=
-  let groupLabels :=
-    fun les => toLEdge (toEdge (GHC.Err.head les)) (GHC.Base.map edgeLabel les) in
-  GHC.Base.map (GEs GHC.Base.∘ groupLabels) GHC.Base.∘
-  (Data.OldList.groupBy (Data.Function.on _GHC.Base.==_ toEdge) GHC.Base.∘
-   (Data.OldList.sortBy (Data.Function.on GHC.Base.compare toEdge) GHC.Base.∘
-    labEdges)).
-
-Definition equal {a} {b} {gr} `{GHC.Base.Eq_ a} `{GHC.Base.Eq_ b} `{Graph gr}
-   : gr a b -> gr a b -> bool :=
-  fun g g' =>
-    andb (slabNodes g GHC.Base.== slabNodes g') (glabEdges g GHC.Base.==
-          glabEdges g').
 
 Definition delNodes {gr} {a} {b} `{(Graph gr)}
    : list Node -> gr a b -> gr a b :=
@@ -403,7 +384,7 @@ Definition delAllLEdge {gr} {b} {a} `{DynGraph gr} `{GHC.Base.Eq_ b}
 
 Definition deg' {a} {b} : Context a b -> GHC.Num.Int :=
   fun '(pair (pair (pair p _) _) s) =>
-    Data.Foldable.length p GHC.Num.+ Data.Foldable.length s.
+    GHC.List.length p GHC.Num.+ GHC.List.length s.
 
 Definition context4l' {a} {b} : Context a b -> Adj b :=
   fun '(pair (pair (pair p v) _) s) =>
@@ -419,7 +400,7 @@ Definition out' {a} {b} : Context a b -> list (LEdge b) :=
     GHC.Base.map (fun '(pair l w) => pair (pair v w) l) (context4l' c).
 
 Definition outdeg' {a} {b} : Context a b -> GHC.Num.Int :=
-  Data.Foldable.length GHC.Base.∘ context4l'.
+  GHC.List.length GHC.Base.∘ context4l'.
 
 Definition suc' {a} {b} : Context a b -> list Node :=
   GHC.Base.map Data.Tuple.snd GHC.Base.∘ context4l'.
@@ -442,7 +423,7 @@ Definition out {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> list (LEdge b) :=
   fun g v => GHC.Base.map (fun '(pair l w) => pair (pair v w) l) (context4l g v).
 
 Definition outdeg {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> GHC.Num.Int :=
-  Data.Foldable.length .: context4l.
+  GHC.List.length .: context4l.
 
 Definition suc {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> list Node :=
   GHC.Base.map Data.Tuple.snd .: context4l.
@@ -460,7 +441,7 @@ Definition context1l' {a} {b} : Context a b -> Adj b :=
                                                Data.Tuple.snd) s).
 
 Definition indeg' {a} {b} : Context a b -> GHC.Num.Int :=
-  Data.Foldable.length GHC.Base.∘ context1l'.
+  GHC.List.length GHC.Base.∘ context1l'.
 
 Definition inn' {a} {b} : Context a b -> list (LEdge b) :=
   fun '((pair (pair (pair _ v) _) _ as c)) =>
@@ -476,7 +457,7 @@ Definition context1l {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> Adj b :=
   Data.Maybe.maybe nil context1l' .: mcontext.
 
 Definition indeg {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> GHC.Num.Int :=
-  Data.Foldable.length .: context1l.
+  GHC.List.length .: context1l.
 
 Definition inn {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> list (LEdge b) :=
   fun g v => GHC.Base.map (fun '(pair l w) => pair (pair w v) l) (context1l g v).
@@ -488,37 +469,16 @@ Definition lpre {gr} {a} {b} `{(Graph gr)}
 Definition pre {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> list Node :=
   GHC.Base.map Data.Tuple.snd .: context1l.
 
-Definition context {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> Context a b :=
+Definition context {gr} {a} {b} `{Graph gr} `{Err.Default (Context a b)}
+   : gr a b -> Node -> Context a b :=
   fun g v =>
     Data.Maybe.fromMaybe (GHC.Err.error (Coq.Init.Datatypes.app
-                                         (GHC.Base.hs_string__ "Match Exception, Node: ") (GHC.Show.show v)))
-    (Data.Tuple.fst (match_ v g)).
+                                         (GHC.Base.hs_string__ "Match Exception, Node: ") (GHC.Base.hs_string__
+                                          String.EmptyString))) (Data.Tuple.fst (match_ v g)).
 
-Definition deg {gr} {a} {b} `{(Graph gr)} : gr a b -> Node -> GHC.Num.Int :=
+Definition deg {gr} {a} {b} `{Graph gr} `{Err.Default (Context a b)}
+   : gr a b -> Node -> GHC.Num.Int :=
   deg' .: context.
-
-Definition prettify {gr} {a} {b} `{DynGraph gr} `{GHC.Show.Show a}
-  `{GHC.Show.Show b}
-   : gr a b -> GHC.Base.String :=
-  fun g =>
-    let showsContext :=
-      fun arg_0__ arg_1__ =>
-        match arg_0__, arg_1__ with
-        | pair (pair (pair _ n) l) s, sg =>
-            GHC.Show.shows n GHC.Base.∘
-            ((fun arg_2__ => cons (GHC.Char.hs_char__ ":") arg_2__) GHC.Base.∘
-             (GHC.Show.shows l GHC.Base.∘
-              (GHC.Show.showString (GHC.Base.hs_string__ "->") GHC.Base.∘
-               (GHC.Show.shows s GHC.Base.∘
-                ((fun arg_3__ => cons (GHC.Char.hs_char__ "") arg_3__) GHC.Base.∘ sg)))))
-        end in
-    Data.Foldable.foldr (showsContext GHC.Base.∘ context g) GHC.Base.id (nodes g)
-    (GHC.Base.hs_string__ "").
-
-Definition prettyPrint {gr} {a} {b} `{DynGraph gr} `{GHC.Show.Show a}
-  `{GHC.Show.Show b}
-   : gr a b -> GHC.Types.IO unit :=
-  System.IO.putStr GHC.Base.∘ prettify.
 
 Definition buildGr {gr} {a} {b} `{(DynGraph gr)}
    : list (Context a b) -> gr a b :=
@@ -536,163 +496,23 @@ Definition buildGr {gr} {a} {b} `{(DynGraph gr)}
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Graph.Inductive.Graph.Show__OrdGr' *)
 
-Local Definition Ord__LPath_compare {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | LP nil, LP nil => Eq
-    | LP (cons (pair _ x) _), LP (cons (pair _ y) _) => GHC.Base.compare x y
-    | _, _ =>
-        GHC.Err.error (GHC.Base.hs_string__ "LPath: cannot compare two empty paths")
-    end.
+(* Skipping all instances of class `GHC.Base.Ord', including
+   `Data.Graph.Inductive.Graph.Ord__LPath' *)
 
-Local Definition Ord__LPath_op_zl__ {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> bool :=
-  fun x y => Ord__LPath_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__LPath_op_zlze__ {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> bool :=
-  fun x y => Ord__LPath_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__LPath_op_zg__ {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> bool :=
-  fun x y => Ord__LPath_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__LPath_op_zgze__ {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> bool :=
-  fun x y => Ord__LPath_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__LPath_max {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> (LPath inst_a) :=
-  fun x y => if Ord__LPath_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__LPath_min {inst_a} `{(GHC.Base.Ord inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> (LPath inst_a) :=
-  fun x y => if Ord__LPath_op_zlze__ x y : bool then x else y.
-
-Program Instance Ord__LPath {a} `{(GHC.Base.Ord a)} : GHC.Base.Ord (LPath a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__LPath_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__LPath_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__LPath_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__LPath_op_zgze__ ;
-           GHC.Base.compare__ := Ord__LPath_compare ;
-           GHC.Base.max__ := Ord__LPath_max ;
-           GHC.Base.min__ := Ord__LPath_min |}.
-
-Local Definition Eq___LPath_op_zeze__ {inst_a} `{(GHC.Base.Eq_ inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | LP nil, LP nil => true
-    | LP (cons (pair _ x) _), LP (cons (pair _ y) _) => x GHC.Base.== y
-    | LP _, LP _ => false
-    end.
-
-Local Definition Eq___LPath_op_zsze__ {inst_a} `{(GHC.Base.Eq_ inst_a)}
-   : (LPath inst_a) -> (LPath inst_a) -> bool :=
-  fun x y => negb (Eq___LPath_op_zeze__ x y).
-
-Program Instance Eq___LPath {a} `{(GHC.Base.Eq_ a)} : GHC.Base.Eq_ (LPath a) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___LPath_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___LPath_op_zsze__ |}.
+(* Skipping all instances of class `GHC.Base.Eq_', including
+   `Data.Graph.Inductive.Graph.Eq___LPath' *)
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `Data.Graph.Inductive.Graph.Show__LPath' *)
 
-Local Definition Eq___GroupEdges_op_zeze__ {inst_b} `{(GHC.Base.Eq_ inst_b)}
-   : (GroupEdges inst_b) -> (GroupEdges inst_b) -> bool :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | GEs (pair (pair v1 w1) bs1), GEs (pair (pair v2 w2) bs2) =>
-        andb (v1 GHC.Base.== v2) (andb (w1 GHC.Base.== w2) (eqLists bs1 bs2))
-    end.
+(* Skipping all instances of class `GHC.Base.Eq_', including
+   `Data.Graph.Inductive.Graph.Eq___GroupEdges' *)
 
-Local Definition Eq___GroupEdges_op_zsze__ {inst_b} `{(GHC.Base.Eq_ inst_b)}
-   : (GroupEdges inst_b) -> (GroupEdges inst_b) -> bool :=
-  fun x y => negb (Eq___GroupEdges_op_zeze__ x y).
+(* Skipping all instances of class `GHC.Base.Ord', including
+   `Data.Graph.Inductive.Graph.Ord__OrdGr' *)
 
-Program Instance Eq___GroupEdges {b} `{(GHC.Base.Eq_ b)}
-   : GHC.Base.Eq_ (GroupEdges b) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___GroupEdges_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___GroupEdges_op_zsze__ |}.
-
-Local Definition Ord__OrdGr_compare {inst_gr} {inst_a} {inst_b} `{Graph inst_gr}
-  `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) ->
-     (OrdGr inst_gr inst_a inst_b) -> comparison :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | OrdGr g1, OrdGr g2 =>
-        GHC.Base.mappend ((Data.Function.on GHC.Base.compare (Data.OldList.sort
-                                             GHC.Base.∘
-                                             labNodes)) g1 g2) ((Data.Function.on GHC.Base.compare (Data.OldList.sort
-                                                                                   GHC.Base.∘
-                                                                                   labEdges)) g1 g2)
-    end.
-
-Local Definition Ord__OrdGr_op_zl__ {inst_gr} {inst_a} {inst_b} `{Graph inst_gr}
-  `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) -> bool :=
-  fun x y => Ord__OrdGr_compare x y GHC.Base.== Lt.
-
-Local Definition Ord__OrdGr_op_zlze__ {inst_gr} {inst_a} {inst_b} `{Graph
-  inst_gr} `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) -> bool :=
-  fun x y => Ord__OrdGr_compare x y GHC.Base./= Gt.
-
-Local Definition Ord__OrdGr_op_zg__ {inst_gr} {inst_a} {inst_b} `{Graph inst_gr}
-  `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) -> bool :=
-  fun x y => Ord__OrdGr_compare x y GHC.Base.== Gt.
-
-Local Definition Ord__OrdGr_op_zgze__ {inst_gr} {inst_a} {inst_b} `{Graph
-  inst_gr} `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) -> bool :=
-  fun x y => Ord__OrdGr_compare x y GHC.Base./= Lt.
-
-Local Definition Ord__OrdGr_max {inst_gr} {inst_a} {inst_b} `{Graph inst_gr}
-  `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) ->
-     (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) :=
-  fun x y => if Ord__OrdGr_op_zlze__ x y : bool then y else x.
-
-Local Definition Ord__OrdGr_min {inst_gr} {inst_a} {inst_b} `{Graph inst_gr}
-  `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) ->
-     (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) :=
-  fun x y => if Ord__OrdGr_op_zlze__ x y : bool then x else y.
-
-Program Instance Ord__OrdGr {gr} {a} {b} `{Graph gr} `{GHC.Base.Ord a}
-  `{GHC.Base.Ord b}
-   : GHC.Base.Ord (OrdGr gr a b) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zl____ := Ord__OrdGr_op_zl__ ;
-           GHC.Base.op_zlze____ := Ord__OrdGr_op_zlze__ ;
-           GHC.Base.op_zg____ := Ord__OrdGr_op_zg__ ;
-           GHC.Base.op_zgze____ := Ord__OrdGr_op_zgze__ ;
-           GHC.Base.compare__ := Ord__OrdGr_compare ;
-           GHC.Base.max__ := Ord__OrdGr_max ;
-           GHC.Base.min__ := Ord__OrdGr_min |}.
-
-Local Definition Eq___OrdGr_op_zeze__ {inst_gr} {inst_a} {inst_b} `{Graph
-  inst_gr} `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) -> bool :=
-  fun g1 g2 => GHC.Base.compare g1 g2 GHC.Base.== Eq.
-
-Local Definition Eq___OrdGr_op_zsze__ {inst_gr} {inst_a} {inst_b} `{Graph
-  inst_gr} `{GHC.Base.Ord inst_a} `{GHC.Base.Ord inst_b}
-   : (OrdGr inst_gr inst_a inst_b) -> (OrdGr inst_gr inst_a inst_b) -> bool :=
-  fun x y => negb (Eq___OrdGr_op_zeze__ x y).
-
-Program Instance Eq___OrdGr {gr} {a} {b} `{Graph gr} `{GHC.Base.Ord a}
-  `{GHC.Base.Ord b}
-   : GHC.Base.Eq_ (OrdGr gr a b) :=
-  fun _ k__ =>
-    k__ {| GHC.Base.op_zeze____ := Eq___OrdGr_op_zeze__ ;
-           GHC.Base.op_zsze____ := Eq___OrdGr_op_zsze__ |}.
+(* Skipping all instances of class `GHC.Base.Eq_', including
+   `Data.Graph.Inductive.Graph.Eq___OrdGr' *)
 
 Module Notations.
 Notation "'_Data.Graph.Inductive.Graph.&_'" := (op_za__).
@@ -702,19 +522,15 @@ Infix "Data.Graph.Inductive.Graph..:" := (_.:_) (at level 99).
 End Notations.
 
 (* External variables:
-     Eq Gt Lt None OrdGr Some andb bool comparison cons false list negb nil op_zt__
-     option pair true tt unit Control.Arrow.first Coq.Init.Datatypes.app
-     Data.Foldable.elem Data.Foldable.foldl' Data.Foldable.foldr Data.Foldable.length
-     Data.Foldable.null Data.Function.on Data.IntSet.Internal.fromList
-     Data.IntSet.Internal.member Data.Maybe.fromMaybe Data.Maybe.isJust
-     Data.Maybe.maybe Data.OldList.delete Data.OldList.groupBy Data.OldList.op_zrzr__
-     Data.OldList.sort Data.OldList.sortBy Data.Tuple.fst Data.Tuple.snd GHC.Base.Eq_
-     GHC.Base.Ord GHC.Base.String GHC.Base.compare GHC.Base.compare__ GHC.Base.flip
-     GHC.Base.fmap GHC.Base.id GHC.Base.map GHC.Base.mappend GHC.Base.max__
-     GHC.Base.min__ GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zeze____
-     GHC.Base.op_zg____ GHC.Base.op_zgze____ GHC.Base.op_zl____ GHC.Base.op_zlze____
-     GHC.Base.op_zsze__ GHC.Base.op_zsze____ GHC.DeferredFix.deferredFix3
-     GHC.Enum.enumFromTo GHC.Err.error GHC.Err.head GHC.List.filter GHC.Num.Int
-     GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Show.Show GHC.Show.show
-     GHC.Show.showString GHC.Show.shows GHC.Tuple.pair2 GHC.Types.IO System.IO.putStr
+     Bool.Sumbool.sumbool_of_bool None Some andb bool cons list negb nil op_zt__
+     option pair tt unit BinInt.Z.abs_nat Control.Arrow.first Coq.Init.Datatypes.app
+     Coq.Numbers.BinNums.N Data.Foldable.elem Data.Foldable.foldl'
+     Data.Foldable.foldr Data.Foldable.length Data.Foldable.null Data.Function.on
+     Data.IntSet.Internal.fromList Data.IntSet.Internal.member Data.Maybe.fromMaybe
+     Data.Maybe.isJust Data.Maybe.maybe Data.OldList.delete Data.OldList.op_zrzr__
+     Data.OldList.sortBy Data.Tuple.fst Data.Tuple.snd Err.Default GHC.Base.Eq_
+     GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.hs_string__ GHC.Base.id
+     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
+     GHC.Err.error GHC.List.elem GHC.List.filter GHC.List.length GHC.Num.Int
+     GHC.Num.op_zp__ GHC.Tuple.pair2 String.EmptyString
 *)

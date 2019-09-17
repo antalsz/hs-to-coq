@@ -12,6 +12,7 @@ Require Coq.Program.Wf.
 
 (* Converted imports: *)
 
+Require BinInt.
 Require Coq.Init.Datatypes.
 Require Data.Graph.Inductive.Graph.
 Require Data.Graph.Inductive.Internal.Queue.
@@ -30,7 +31,9 @@ Import GHC.Num.Notations.
 Definition suci {a} {b}
    : Data.Graph.Inductive.Graph.Context a b ->
      GHC.Num.Int -> list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type :=
-  fun c i => GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.repeat i).
+  fun c i =>
+    GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.replicate
+                  (GHC.List.length (Data.Graph.Inductive.Graph.suc' c)) i).
 
 Definition outU {a} {b}
    : Data.Graph.Inductive.Graph.Context a b ->
@@ -39,57 +42,58 @@ Definition outU {a} {b}
     GHC.Base.map Data.Graph.Inductive.Graph.toEdge (Data.Graph.Inductive.Graph.out'
                                                     c).
 
-Definition leveln {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
-   : list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type ->
-     gr a b -> list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type :=
-  fix leveln (arg_0__ : list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type)
-             (arg_1__ : gr a b) : list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type
-        := match arg_0__, arg_1__ with
-           | nil, _ => nil
-           | _, g =>
-               if Data.Graph.Inductive.Graph.isEmpty g : bool then nil else
-               match arg_0__, arg_1__ with
-               | cons (pair v j) vs, g =>
-                   match Data.Graph.Inductive.Graph.match_ v g with
-                   | pair (Some c) g' =>
-                       cons (pair v j) (leveln (Coq.Init.Datatypes.app vs (suci c (j GHC.Num.+ #1)))
-                             g')
-                   | pair None g' => leveln vs g'
-                   end
-               | _, _ => GHC.Err.patternFailure
-               end
-           end.
+Program Fixpoint leveln {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
+                        (arg_0__ : list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type) (arg_1__
+                          : gr a b) {measure (BinInt.Z.abs_nat (Data.Graph.Inductive.Graph.noNodes
+                                                                arg_1__))} : list (Data.Graph.Inductive.Graph.Node *
+                                                                                   GHC.Num.Int)%type
+                   := match arg_0__, arg_1__ with
+                      | nil, _ => nil
+                      | _, g =>
+                          if Bool.Sumbool.sumbool_of_bool (Data.Graph.Inductive.Graph.isEmpty g)
+                          then nil else
+                          match arg_0__, arg_1__ with
+                          | cons (pair v j) vs, g =>
+                              match Data.Graph.Inductive.Graph.match_ v g with
+                              | pair (Some c) g' =>
+                                  cons (pair v j) (leveln (Coq.Init.Datatypes.app vs (suci c (j GHC.Num.+ #1)))
+                                        g')
+                              | pair None g' => leveln vs g'
+                              end
+                          | _, _ => GHC.Err.patternFailure
+                          end
+                      end.
+Admit Obligations.
 
 Definition level {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
    : Data.Graph.Inductive.Graph.Node ->
      gr a b -> list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type :=
   fun v => leveln (cons (pair v #0) nil).
 
-Definition lbf {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)}
-   : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
-                                                b) ->
-     gr a b -> Data.Graph.Inductive.Internal.RootPath.LRTree b :=
-  fix lbf (q
-            : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
-                                                         b)) (g : gr a b)
-        : Data.Graph.Inductive.Internal.RootPath.LRTree b
-        := match Data.Graph.Inductive.Internal.Queue.queueGet q with
-           | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>
-               if orb (Data.Graph.Inductive.Internal.Queue.queueEmpty q)
-                      (Data.Graph.Inductive.Graph.isEmpty g) : bool
-               then nil else
-               match Data.Graph.Inductive.Graph.match_ v g with
-               | pair (Some c) g' =>
-                   cons (Data.Graph.Inductive.Graph.LP p) (lbf
-                         (Data.Graph.Inductive.Internal.Queue.queuePutList (GHC.Base.map (fun v' =>
-                                                                                            Data.Graph.Inductive.Graph.LP
-                                                                                            (cons v' p))
-                                                                            (Data.Graph.Inductive.Graph.lsuc' c)) q')
-                         g')
-               | pair None g' => lbf q' g'
-               end
-           | _ => GHC.Err.patternFailure
-           end.
+Program Fixpoint lbf {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)} (q
+                       : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
+                                                                    b)) (g : gr a b) {measure (BinInt.Z.abs_nat
+                      (Data.Graph.Inductive.Graph.noNodes g))}
+                   : Data.Graph.Inductive.Internal.RootPath.LRTree b
+                   := match Data.Graph.Inductive.Internal.Queue.queueGet q with
+                      | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>
+                          if Bool.Sumbool.sumbool_of_bool (orb
+                                                           (Data.Graph.Inductive.Internal.Queue.queueEmpty q)
+                                                           (Data.Graph.Inductive.Graph.isEmpty g))
+                          then nil else
+                          match Data.Graph.Inductive.Graph.match_ v g with
+                          | pair (Some c) g' =>
+                              cons (Data.Graph.Inductive.Graph.LP p) (lbf
+                                    (Data.Graph.Inductive.Internal.Queue.queuePutList (GHC.Base.map (fun v' =>
+                                                                                                       Data.Graph.Inductive.Graph.LP
+                                                                                                       (cons v' p))
+                                                                                       (Data.Graph.Inductive.Graph.lsuc'
+                                                                                        c)) q') g')
+                          | pair None g' => lbf q' g'
+                          end
+                      | _ => GHC.Err.patternFailure
+                      end.
+Admit Obligations.
 
 Definition lbft {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
    : Data.Graph.Inductive.Graph.Node ->
@@ -216,12 +220,13 @@ Definition esp {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
   fun s t => Data.Graph.Inductive.Internal.RootPath.getPath t GHC.Base.∘ bft s.
 
 (* External variables:
-     None Some bool cons list nil op_zt__ orb pair Coq.Init.Datatypes.app
-     Data.Graph.Inductive.Graph.Context Data.Graph.Inductive.Graph.Edge
-     Data.Graph.Inductive.Graph.Graph Data.Graph.Inductive.Graph.LP
-     Data.Graph.Inductive.Graph.LPath Data.Graph.Inductive.Graph.Node
-     Data.Graph.Inductive.Graph.Path Data.Graph.Inductive.Graph.isEmpty
-     Data.Graph.Inductive.Graph.lsuc' Data.Graph.Inductive.Graph.match_
+     Bool.Sumbool.sumbool_of_bool None Some bool cons list nil op_zt__ orb pair
+     BinInt.Z.abs_nat Coq.Init.Datatypes.app Data.Graph.Inductive.Graph.Context
+     Data.Graph.Inductive.Graph.Edge Data.Graph.Inductive.Graph.Graph
+     Data.Graph.Inductive.Graph.LP Data.Graph.Inductive.Graph.LPath
+     Data.Graph.Inductive.Graph.Node Data.Graph.Inductive.Graph.Path
+     Data.Graph.Inductive.Graph.isEmpty Data.Graph.Inductive.Graph.lsuc'
+     Data.Graph.Inductive.Graph.match_ Data.Graph.Inductive.Graph.noNodes
      Data.Graph.Inductive.Graph.node' Data.Graph.Inductive.Graph.out
      Data.Graph.Inductive.Graph.out' Data.Graph.Inductive.Graph.suc'
      Data.Graph.Inductive.Graph.toEdge Data.Graph.Inductive.Internal.Queue.Queue
@@ -234,6 +239,6 @@ Definition esp {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
      Data.Graph.Inductive.Internal.RootPath.RTree
      Data.Graph.Inductive.Internal.RootPath.getLPath
      Data.Graph.Inductive.Internal.RootPath.getPath GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Err.patternFailure GHC.List.repeat GHC.List.zip GHC.Num.Int
-     GHC.Num.fromInteger GHC.Num.op_zp__
+     GHC.Err.patternFailure GHC.List.length GHC.List.replicate GHC.List.zip
+     GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
 *)

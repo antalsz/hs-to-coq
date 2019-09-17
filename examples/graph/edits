@@ -1,11 +1,92 @@
+###### Graph ######
+
 skip module GHC.Show
 skip module Data.Data
 skip module System.IO
 
-#for now
+#skip for now because Data.OldList.GroupBy is not translated
+skip Data.Graph.Inductive.Graph.glabEdges
+skip Data.Graph.Inductive.Graph.equal
+
+#for now - these use partial functions/Data.OldList.GroupBy
 skip Data.Graph.Inductive.Graph.OrdGr
+skip class GHC.Base.Ord
+skip class GHC.Base.Eq_
 
-#eventually change to program fixpoint most likely
-termination Data.Graph.Inductive.Graph.ufold deferred
+#from IntSet - for consistency and because the Nodes cannot be negative
+redefine Definition Data.Graph.Inductive.Graph.Node := Coq.Numbers.BinNums.N.
 
-#rename value Data.Graph.Inductive.Graph.OrdGr = Data.Graph.Inductive.Graph.OrdGr_val
+#termination for ufold - TODO: make lawful and prove for real
+termination Data.Graph.Inductive.Graph.ufold        {measure (BinInt.Z.abs_nat(noNodes g))}
+obligations Data.Graph.Inductive.Graph.ufold        admit
+
+#coq cannot infer all of the type arguments correctly
+in Data.Graph.Inductive.Graph.lab rewrite forall, GHC.Base.fmap = (@GHC.Base.fmap option _ _ _)
+
+#ignore show output in errors
+rewrite forall s, (GHC.Show.show s) = (GHC.Base.hs_string__ String.EmptyString)
+
+#need some Default constraints
+set type Data.Graph.Inductive.Graph.insEdge : forall {gr} {b} {a} `{(DynGraph gr)} `{(Err.Default (Context a b))}, (LEdge b) -> ((gr a b) -> (gr a b))
+set type Data.Graph.Inductive.Graph.insEdges : forall {gr} {b} {a} `{(DynGraph gr)} `{(Err.Default (Context a b))}, list (LEdge b) -> ((gr a b) -> (gr a b))
+set type Data.Graph.Inductive.Graph.context: forall {gr} {a} {b} `{(Graph gr)} `{(Err.Default (Context a b))}, (gr a b) -> (Node -> (Context a b))
+set type Data.Graph.Inductive.Graph.deg: forall {gr} {a} {b} `{(Graph gr)} `{(Err.Default (Context a b))}, (gr a b) -> (Node -> GHC.Num.Int)
+
+#Coq gets confused about some polymorphic definitions
+in Data.Graph.Inductive.Graph.hasNeighborAdj rewrite forall, Data.Foldable.elem = GHC.List.elem
+in Data.Graph.Inductive.Graph.deg' rewrite forall, Data.Foldable.length = GHC.List.length
+in Data.Graph.Inductive.Graph.outdeg' rewrite forall, Data.Foldable.length = GHC.List.length
+in Data.Graph.Inductive.Graph.indeg' rewrite forall, Data.Foldable.length = GHC.List.length
+in Data.Graph.Inductive.Graph.deg rewrite forall, Data.Foldable.length = GHC.List.length
+in Data.Graph.Inductive.Graph.outdeg rewrite forall, Data.Foldable.length = GHC.List.length
+in Data.Graph.Inductive.Graph.indeg rewrite forall, Data.Foldable.length = GHC.List.length
+
+#ignore Show stuff
+skip Data.Graph.Inductive.Graph.prettify
+skip Data.Graph.Inductive.Graph.prettyPrint
+
+#number incompatibility and this function is not used for anything anyway - maybe go back and fix later
+skip Data.Graph.Inductive.Graph.newNodes
+
+########### QUEUE ############
+
+#does not terminate on empty queue
+set type Data.Graph.Inductive.Internal.Queue.queueGet: forall {a} `{(Err.Default (a * Queue a))}, Queue a -> (a * Queue a)
+termination Data.Graph.Inductive.Internal.Queue.queueGet  deferred
+
+######## HEAP #######
+
+skip module Text.Show
+skip Data.Graph.Inductive.Internal.Heap.prettyHeap
+skip Data.Graph.Inductive.Internal.Heap.printPrettyHeap
+
+#needs default as well for some reason
+set type Data.Graph.Inductive.Internal.Heap.splitMin: forall {a} {b} `{(GHC.Base.Ord a)} `{(Err.Default ((a * b) * (Heap a b)))}, (Heap a b) -> ((a * b) * (Heap a b))
+set type Data.Graph.Inductive.Internal.Heap.findMin: forall {a} {b} `{(Err.Default (a * b))}, (Heap a b) -> (a * b)
+
+#need to prove that toList terminates - we need a function for the size of a heap
+add Data.Graph.Inductive.Internal.Heap Fixpoint Data.Graph.Inductive.Internal.Heap.size {a} {b} (h: Heap a b) :=
+match h with
+| Empty => 0
+| Node _ _ l => 1 + List.fold_right plus 0 (List.map (fun x => Data.Graph.Inductive.Internal.Heap.size x) l)
+end.
+order Data.Graph.Inductive.Internal.Heap.size Data.Graph.Inductive.Internal.Heap.toList
+
+termination Data.Graph.Inductive.Internal.Heap.toList        {measure (Data.Graph.Inductive.Internal.Heap.size arg_0__)}
+obligations Data.Graph.Inductive.Internal.Heap.toList       admit
+
+#more defaut constrants 
+set type Data.Graph.Inductive.Internal.Heap.toList: forall {a} {b} `{(GHC.Base.Ord a)} `{(Err.Default (a * b))}, (Heap a b) -> list (a * b)
+set type Data.Graph.Inductive.Internal.Heap.heapsort: forall {a} `{(GHC.Base.Ord a)} `{(Err.Default (a * a))}, list a -> list a 
+
+
+###### BFS #######
+#avoid use of repeat by using replicate instead - this is safe because we are zipping the two lists, only need up to length l1 elements of l2
+in Data.Graph.Inductive.Query.BFS.suci rewrite forall c i, GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.repeat i) = GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.replicate (GHC.List.length (Data.Graph.Inductive.Graph.suc' c)) i)
+
+#termination arguments - TODO - require lawful graphs and prove
+termination Data.Graph.Inductive.Query.BFS.leveln       {measure (BinInt.Z.abs_nat(Data.Graph.Inductive.Graph.noNodes arg_1__))}
+obligations Data.Graph.Inductive.Query.BFS.leveln       admit
+
+termination Data.Graph.Inductive.Query.BFS.lbf       {measure (BinInt.Z.abs_nat(Data.Graph.Inductive.Graph.noNodes g))}
+obligations Data.Graph.Inductive.Query.BFS.lbf       admit

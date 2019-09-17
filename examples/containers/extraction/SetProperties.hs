@@ -3,8 +3,10 @@
 
 module Main where
 
+import qualified Internal as EI
 import ExtractedSet
 
+import qualified Data.Set.Internal as DS
 import qualified Data.IntSet as IntSet
 import Data.List (nub,sort)
 import qualified Data.List as List
@@ -29,8 +31,17 @@ import Control.Applicative (Applicative (..), (<$>))
 #endif
 import Control.Applicative (liftA2)
 
+do2 f (x,y) = "(" ++ f x ++ "," ++ f y ++ ")"
+
 main :: IO ()
-main = defaultMain [ testCase "lookupLT" test_lookupLT
+main = do
+  putStrLn $ "fromList [0,3] = " ++ showTree (fromList [0,3])
+  putStrLn $ "DS.fromList [0,3] = " ++ showDSTree (DS.fromList [0,3])
+  putStrLn $ "splitS 0 [0,3] = " ++ do2 showTree (split 0 (fromList [0,3]))  
+  putStrLn $ "DS.splitS 0 [0,3] = " ++ do2 showDSTree (DS.split 0 (DS.fromList [0,3]))
+  putStrLn $ "union [0,3][0,3] = " ++ (showTree (union (fromList [0,3]) (fromList [0,3])))
+  putStrLn $ "DS.union [0,3][0,3] = " ++ (showDSTree (DS.union (DS.fromList [0,3]) (DS.fromList [0,3])))  
+  defaultMain [ testCase "lookupLT" test_lookupLT
                    , testCase "lookupGT" test_lookupGT
                    , testCase "lookupLE" test_lookupLE
                    , testCase "lookupGE" test_lookupGE
@@ -104,6 +115,34 @@ main = defaultMain [ testCase "lookupLT" test_lookupLT
                    , testProperty "powerSet"             prop_powerSet
                    , testProperty "cartesianProduct"     prop_cartesianProduct
                    , testProperty "disjointUnion"        prop_disjointUnion
+                   , testProperty "toDataSet same"       prop_toSame
+                   , testProperty "same (==)"            prop_sameEq
+                   , testProperty "same x == x"          prop_sameEq1
+                   , testProperty "same (/=)"            prop_sameNEq                                    -- single, member, insert, delete
+                   , testCase     "same empty"           test_sameEmpty
+                   , testProperty "same singleton"       prop_sameSingleton
+                   , testProperty "same member"          prop_sameMember
+                   , testProperty "same notMember"       prop_sameNotMember
+                   , testProperty "same insert"          prop_sameInsert
+                   , testProperty "same delete"          prop_sameDelete
+                   , testProperty "same mapMonotonic"    prop_sameMapMonotonic
+                   -- balance
+                   , testProperty "same split"           prop_sameSplit
+                   , testProperty "same link"            prop_sameLink                                   , testProperty "same merge"           prop_sameMerge
+                   -- union
+                   , testProperty "same union"           prop_sameUnion
+                   , testProperty "same difference"      prop_sameDifference
+                   , testProperty "same intersection"    prop_sameIntersection
+                   , testProperty "same disjoint"        prop_sameDisjoint
+                   , testProperty "same null"            prop_sameNull
+                   -- lists
+                   , testProperty "same fromAscList"     prop_sameFromAscList
+                   , testProperty "same fromDescList"    prop_sameFromDescList
+                   , testProperty "same fromList"        prop_sameFromList
+                   -- set operations
+                   , testProperty "same filter"          prop_sameFilter
+                   , testProperty "same partition"       prop_samePartition
+
                    ]
 
 -- A type with a peculiar Eq instance designed to make sure keys
@@ -651,3 +690,124 @@ isLeft _ = False
 
 
 
+---------------------------------------------------------------
+-- Comparing the two different versions
+---------------------------------------------------------------
+
+showTree :: Show a => Set a -> String
+showTree t = showsTree t ""
+
+showsTree :: Show a => Set a -> String -> String
+showsTree EI.Tip s = "EI.TIP" ++ s
+showsTree (EI.Bin sz a l r) s = "(EI.Bin " ++ show sz ++ " " ++ show a ++ " " ++ showsTree l (" " ++ showsTree r (")" ++s))
+
+
+showDSTree :: Show a => DS.Set a -> String
+showDSTree t = showsDSTree t ""
+
+showsDSTree :: Show a => DS.Set a -> String -> String
+showsDSTree DS.Tip s = "DS.TIP" ++ s
+showsDSTree (DS.Bin sz a l r) s = "(DS.Bin " ++ show sz ++ " " ++ show a ++ " " ++ showsDSTree l (" " ++ showsDSTree r (")" ++s))
+
+equalSets :: Eq a => DS.Set a -> Set a -> Bool
+equalSets DS.Tip EI.Tip = True
+equalSets (DS.Bin sz1 a1 l1 r1) (EI.Bin sz2 a2 l2 r2) =
+  toInteger sz1 == sz2 && a1 == a2 && l1 `equalSets` l2 && r1 `equalSets` r2
+
+fromDataSet :: DS.Set a -> Set a
+fromDataSet DS.Tip = EI.Tip
+fromDataSet (DS.Bin sz a l r) = EI.Bin (toInteger sz) a (fromDataSet l) (fromDataSet r)
+
+toDataSet :: Set a -> DS.Set a
+toDataSet EI.Tip = DS.Tip
+toDataSet (EI.Bin sz a l r) = DS.Bin (fromInteger sz) a (toDataSet l) (toDataSet r)
+
+prop_toSame :: Set Int -> Bool
+prop_toSame xs = (toDataSet xs) `equalSets` xs
+
+
+prop_sameEq :: TwoSets -> Bool
+prop_sameEq (TwoSets xs ys) = (xs == ys) == (toDataSet xs == toDataSet ys)
+
+prop_sameEq1 :: Set Int -> Bool
+prop_sameEq1 xs = (xs == xs) == (toDataSet xs == toDataSet xs)
+
+prop_sameNEq :: TwoSets -> Bool
+prop_sameNEq (TwoSets xs ys) = (xs /= ys) == (toDataSet xs /= toDataSet ys)
+
+test_sameEmpty :: Assertion
+test_sameEmpty = do
+  DS.empty `equalSets` (empty :: Set Int) @?= True
+
+prop_sameSingleton :: Int -> Bool
+prop_sameSingleton x = (DS.singleton x) `equalSets` (singleton x)
+
+prop_sameMember :: Int -> Set Int -> Bool
+prop_sameMember x xs = DS.member x (toDataSet xs) == member x xs
+
+prop_sameNotMember :: Int -> Set Int -> Bool
+prop_sameNotMember x xs = DS.notMember x (toDataSet xs) == notMember x xs
+
+prop_sameInsert :: Int -> Set Int -> Bool
+prop_sameInsert x xs = DS.insert x (toDataSet xs) `equalSets` (insert x xs)
+
+prop_sameDelete :: Int -> Set Int -> Bool
+prop_sameDelete x xs = DS.delete x (toDataSet xs) `equalSets` (delete x xs)
+
+prop_sameMapMonotonic :: Set Int -> Bool
+prop_sameMapMonotonic xs = DS.mapMonotonic (+1) (toDataSet xs) `equalSets` (mapMonotonic (+1) xs)
+
+prop_sameSplit :: Int -> Set Int -> Bool
+prop_sameSplit x xs = ys1 `equalSets` ys2 && zs1 `equalSets` zs2 where
+  (ys1, zs1) = DS.split x (toDataSet xs)
+  (ys2, zs2) = split x xs
+  
+prop_sameUnion :: TwoSets -> Bool
+prop_sameUnion (TwoSets xs ys) = equalSets (DS.union (toDataSet xs) (toDataSet ys)) (union xs ys) 
+
+prop_sameDifference :: TwoSets -> Bool
+prop_sameDifference (TwoSets xs ys) = equalSets (DS.difference (toDataSet xs) (toDataSet ys)) (difference xs ys) 
+
+prop_sameIntersection :: TwoSets -> Bool
+prop_sameIntersection (TwoSets xs ys) = equalSets (DS.intersection (toDataSet xs) (toDataSet ys)) (intersection xs ys) 
+
+prop_sameDisjoint :: TwoSets -> Bool
+prop_sameDisjoint (TwoSets xs ys) = (DS.disjoint (toDataSet xs) (toDataSet ys)) == (disjoint xs ys) 
+
+prop_sameNull :: Set Int -> Bool
+prop_sameNull xs = DS.null (toDataSet xs) == null xs
+
+-- Lists
+
+prop_sameFromAscList :: Property
+prop_sameFromAscList = forAll (choose (5,100)) $ \n ->
+    let xs = [0..n::Int]
+    in DS.fromAscList xs `equalSets` fromAscList xs
+
+prop_sameFromDescList :: Property
+prop_sameFromDescList = forAll (choose (5,100)) $ \n ->
+    let xs = reverse [0..n::Int]
+    in DS.fromDescList xs `equalSets` fromDescList xs
+
+prop_sameFromList :: [Int] -> Bool
+prop_sameFromList xs =
+   DS.fromList xs `equalSets` fromList xs
+-- 
+
+prop_sameFilter :: Set Int -> Bool
+prop_sameFilter xs = equalSets (DS.filter (>2) (toDataSet xs)) (filter (>2) xs)
+
+prop_samePartition :: Set Int -> Bool
+prop_samePartition xs = equalSets ys1 zs1 && equalSets ys2 zs2 where
+   (ys1, ys2) = DS.partition (>2) (toDataSet xs)
+   (zs1, zs2) = partition (>2) xs
+
+prop_sameLink :: Int -> TwoSets -> Bool
+prop_sameLink i (TwoSets xs ys) =
+    equalSets (DS.link i (toDataSet xs) (toDataSet ys))
+              (link i xs ys)
+
+prop_sameMerge :: TwoSets -> Bool
+prop_sameMerge (TwoSets xs ys) =
+  equalSets (DS.merge (toDataSet xs) (toDataSet ys))
+            (merge xs ys)

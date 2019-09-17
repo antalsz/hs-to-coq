@@ -6,13 +6,20 @@ This repository contains a converter from Haskell code to equivalent Coq code,
 as part of the [CoreSpec] component of the [DeepSpec] project.
 
 CPP'18 paper [“Total Haskell is Reasonable Coq”](https://arxiv.org/abs/1711.09286) by
-Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie Weirich.
+Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie
+Weirich. This paper describes the following examples:
+
+  * [bag](examples/bag) Multiset implementation from GHC's implemention
+  * [compiler](examples/compiler) Hutton's razor
+  * [base-src](examples/base-src) The sources of the `base/` directory
+
 
 ICFP'18 paper ["Ready, set, verify! applying hs-to-coq to real-world Haskell code (experience report)"](https://dl.acm.org/citation.cfm?id=3236784) by
-Joachim Breitner, Antal Spector-Zabusky, Yao Li, Christine Rizkallah, John Wiegley, and Stephanie Weirich	
+Joachim Breitner, Antal Spector-Zabusky, Yao Li, Christine Rizkallah, John Wiegley, and Stephanie Weirich.
+This paper describes the verification of the [containers](examples/containers) library.
 
 
-[**Nascent documentation is available!**](https://hs-to-coq.readthedocs.io/en/latest/)
+[**Documentation for the `hs-to-coq` tool is available!**](https://hs-to-coq.readthedocs.io/en/latest/)
 
 # Installation
 
@@ -97,6 +104,9 @@ for the edits files.
 * The `examples/` directories contains a number of example translation and
   verification projects, including
 
+  * [intervals](examples/intervals) A simple example described in this
+    [blog post](https://www.joachim-breitner.de/blog/734-Finding_bugs_in_Haskell_code_by_proving_it).
+
   * [ghc](examples/ghc) Modules of GHC itself.
   * [containers](examples/containers) Modules from the `containers` library,
 	including `Data.Set` and `Data.IntSet`
@@ -109,7 +119,8 @@ for the edits files.
   * [base-src](examples/base-src) The sources of the `base/` directory
   * [tests](examples/tests) Simple unit-tests
   * [base-tests](examples/base-tests) Unit-tests that require `base/`
-
+	
+  
   Some examples use git submodule, so run
 
       git submodule update --init --recursive

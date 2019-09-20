@@ -13,6 +13,8 @@ Require Coq.Program.Wf.
 (* Preamble *)
 
 Require Import Coq.Lists.List.
+Require Import Omega.
+Require Import Wellfounded.
 
 (* Converted imports: *)
 
@@ -22,6 +24,7 @@ Require Err.
 Require GHC.Base.
 Require GHC.Err.
 Require List.
+Require Nat.
 Import GHC.Base.Notations.
 
 (* Converted type declarations: *)
@@ -96,13 +99,51 @@ Fixpoint size {a} {b} (h : Heap a b)
               | Node _ _ l => 1 + List.fold_right plus 0 (List.map (fun x => size x) l)
               end.
 
+Lemma merge_size {a} {b} `{GHC.Base.Ord a} (h1 h2 : Heap a b) : size (merge h1
+                                                                            h2) =
+  Nat.add (size h1) (size h2).
+Proof.
+intros. generalize dependent h2. induction h1; intros; simpl.
+  - destruct h2; reflexivity.
+  - destruct h2; simpl. omega. destruct (_GHC.Base.<_ a0 a1 ) eqn : ?; simpl; omega.
+ 
+Qed.
+
+Lemma mergeAll_size {a} {b} `{GHC.Base.Ord a} (l : list (Heap a b)) : size
+  (mergeAll l) =
+  List.fold_right plus 0 (List.map (fun x => size x) l).
+Proof.
+  intros. induction l using (well_founded_induction
+                       (wf_inverse_image _ nat _ (@length _)
+                          PeanoNat.Nat.lt_wf_0)).
+  destruct l.
+  - reflexivity.
+  - destruct l.
+    + simpl. omega.
+    + simpl. repeat(rewrite merge_size). rewrite plus_assoc. rewrite H1. reflexivity. simpl. omega.
+Qed.
+
+Lemma deleteMin_size {a} {b} `{GHC.Base.Ord a} (h : Heap a b) : h <> Empty ->
+  size (deleteMin h) + 1 = size h.
+Proof.
+  intros. unfold deleteMin. destruct h. contradiction. rewrite mergeAll_size.
+  unfold size. simpl. omega.
+Qed.
+
+Lemma toList_termination {a} {b} `{GHC.Base.Ord a} (h : Heap a b) : Empty <>
+  h ->
+  size (deleteMin h) < size h.
+Proof.
+  intros. assert (A: h <> Empty) by auto; apply deleteMin_size in A; omega.
+Qed.
+
 Program Fixpoint toList {a} {b} `{GHC.Base.Ord a} `{Err.Default (a * b)}
                         (arg_0__ : Heap a b) {measure (size arg_0__)} : list (a * b)
                    := match arg_0__ with
                       | Empty => nil
                       | h => let 'pair x r := pair (findMin h) (deleteMin h) in cons x (toList r)
                       end.
-Admit Obligations.
+Solve Obligations with ((Tactics.program_simpl; apply toList_termination; auto)).
 
 Definition build {a} {b} `{(GHC.Base.Ord a)} : list (a * b)%type -> Heap a b :=
   Data.Foldable.foldr insert Empty.
@@ -125,7 +166,8 @@ Definition heapsort {a} `{GHC.Base.Ord a} `{Err.Default (a * a)}
    `Data.Graph.Inductive.Internal.Heap.NFData__Heap' *)
 
 (* External variables:
-     bool cons false list nil op_zp__ op_zt__ pair plus true Data.Foldable.foldr
-     Data.Tuple.fst Err.Default GHC.Base.Ord GHC.Base.map GHC.Base.op_z2218U__
-     GHC.Base.op_zl__ GHC.Err.error List.fold_right List.map
+     bool cons false list nil op_ze__ op_zl__ op_zlzg__ op_zp__ op_zt__ pair plus
+     true Data.Foldable.foldr Data.Tuple.fst Err.Default GHC.Base.Ord GHC.Base.map
+     GHC.Base.op_z2218U__ GHC.Base.op_zl__ GHC.Err.error List.fold_right List.map
+     Nat.add
 *)

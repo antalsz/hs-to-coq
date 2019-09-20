@@ -72,8 +72,47 @@ match h with
 end.
 order Data.Graph.Inductive.Internal.Heap.size Data.Graph.Inductive.Internal.Heap.toList
 
+#need several lemmas and tactics to prove termination:
+add Data.Graph.Inductive.Internal.Heap Lemma merge_size {a} {b} `{(GHC.Base.Ord a)} (h1 h2: Heap a b) : (size (merge h1 h2) = Nat.add (size h1) (size h2)). 
+Proof.
+intros. generalize dependent h2. induction h1; intros; simpl.
+  - destruct h2; reflexivity.
+  - destruct h2; simpl. omega. destruct (_GHC.Base.<_ a0 a1 ) eqn : ?; simpl; omega.
+ Qed.
+
+ add Data.Graph.Inductive.Internal.Heap Lemma mergeAll_size {a} {b} `{(GHC.Base.Ord a)} (l: list (Heap a b)) :
+  size (mergeAll l) = List.fold_right plus 0 (List.map (fun x => size x) l).
+Proof.
+  intros. induction l using (well_founded_induction
+                       (wf_inverse_image _ nat _ (@length _)
+                          PeanoNat.Nat.lt_wf_0)).
+  destruct l.
+  - reflexivity.
+  - destruct l.
+    + simpl. omega.
+    + simpl. repeat(rewrite merge_size). rewrite plus_assoc. rewrite H1. reflexivity. simpl. omega.
+Qed. 
+
+add Data.Graph.Inductive.Internal.Heap Lemma deleteMin_size {a} {b} `{(GHC.Base.Ord a)} (h: Heap a b) :
+  (h <> Empty) ->
+  ((size (deleteMin h) + 1) = size h).
+Proof.
+  intros. unfold deleteMin. destruct h. contradiction. rewrite mergeAll_size.
+  unfold size. simpl. omega.
+Qed. 
+
+#can't use ltac, so prove the result as a lemma and apply it
+add Data.Graph.Inductive.Internal.Heap Lemma toList_termination {a} {b} `{(GHC.Base.Ord a)} (h: Heap a b):
+  (Empty <> h) ->
+  (size (deleteMin h) < size h).
+Proof.
+  intros. assert (A: h <> Empty) by auto; apply deleteMin_size in A; omega.
+Qed.
+
+order merge_size mergeAll_size deleteMin_size toList_termination Data.Graph.Inductive.Internal.Heap.toList  
+
 termination Data.Graph.Inductive.Internal.Heap.toList        {measure (Data.Graph.Inductive.Internal.Heap.size arg_0__)}
-obligations Data.Graph.Inductive.Internal.Heap.toList       admit
+obligations Data.Graph.Inductive.Internal.Heap.toList       (Tactics.program_simpl; apply toList_termination; auto)
 
 #more defaut constrants 
 set type Data.Graph.Inductive.Internal.Heap.toList: forall {a} {b} `{(GHC.Base.Ord a)} `{(Err.Default (a * b))}, (Heap a b) -> list (a * b)
@@ -88,5 +127,16 @@ in Data.Graph.Inductive.Query.BFS.suci rewrite forall c i, GHC.List.zip (Data.Gr
 termination Data.Graph.Inductive.Query.BFS.leveln       {measure (BinInt.Z.abs_nat(Data.Graph.Inductive.Graph.noNodes arg_1__))}
 obligations Data.Graph.Inductive.Query.BFS.leveln       admit
 
+in Data.Graph.Inductive.Query.BFS.lbf rewrite forall q b v q' x x', (match (Data.Graph.Inductive.Internal.Queue.queueGet q) with | pair (Data.Graph.Inductive.Graph.LP (cons (pair v x) x' as p)) q' => b | _ => GHC.Err.patternFailure end) = (let p := (cons (pair v x) x') in b)
+
+
+#in Data.Graph.Inductive.Query.BFS.lbf rewrite forall q b v q' x x', (match (Data.Graph.Inductive.Internal.Queue.queueGet q) with | (pair (Data.Graph.Inductive.Graph.LP (cons (pair v x) x' as p)) q') => b | _ => GHC.Err.patternFailure end) = (let p := (cons (pair v x) x') in b)
+
+#in Data.Graph.Inductive.Query.BFS.lbf rewrite forall q b, (match Data.Graph.Inductive.Inernal.Queue.queueGet q with | _ => b) = test
+# = (match Data.Graph.Inductive.Internal.Queue.queueGet q with | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ )) q' => let p := Data.Graph.Inductive.Graph.LP (cons (pair v _) _) in b)
+
+
+#a b, a as b = let b := a in
+#in Data.Graph.Inductive.Query.BFS.lbf rewrite forall v p q', (pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>) = (pair (Data.Graph.Inductive.Graph.LP (cons (pair v x) y)) q' => let p := (cons (pair v x) y) in)
 termination Data.Graph.Inductive.Query.BFS.lbf       {measure (BinInt.Z.abs_nat(Data.Graph.Inductive.Graph.noNodes g))}
 obligations Data.Graph.Inductive.Query.BFS.lbf       admit

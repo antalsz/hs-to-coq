@@ -10,6 +10,10 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require Import Omega.
+Require Import Lists.List.
 (* Converted imports: *)
 
 Require BinInt.
@@ -158,15 +162,89 @@ Definition unLPath {a} (arg_0__ : LPath a) :=
   let 'LP unLPath := arg_0__ in
   unLPath.
 
+(* Midamble *)
+
+Definition ulabNodes  {a} l :=
+  map (fun (x: Node * a) => let (i, l):= x in i) l.
+
+Definition ulabNodes_gr {gr} `{(Graph gr)} {a} {b} (g: gr a b) :=
+  ulabNodes (labNodes g).
+
+Definition ulabEdges {b} l :=
+  map (fun (x: Node * Node * b) => match x with |  (u, v, l) => (u,v) end) l.
+
+Definition ulabEdges_gr {gr : Type -> Type -> Type}  {a b : Type} `{(Graph gr)} (g: gr a b) :=
+  ulabEdges (labEdges g).
+
+(*We want a specification of a graph*)
+
+(*Find a vertex in a graph*)
+Definition vIn {gr a b} `{Graph gr} (g: gr a b) (v: Node) : Prop :=
+  In v (ulabNodes_gr g).
+
+(*Find an edge in a graph*)
+Definition eIn {gr a b} `{Graph gr} (g: gr a b) (u v: Node) : Prop :=
+  In (u,v) (ulabEdges_gr g).
+
+Definition Desc {gr a b} `{Graph gr} (g: gr a b) (sz: GHC.Num.Int) fv fe: Prop :=
+  forall (P: (gr a b) -> Prop),
+  (forall g',
+    noNodes g' =  sz ->
+    (forall (v: Node), vIn g' v <-> fv v) -> 
+    (forall (u v : Node), eIn g' u v <-> fe u v) ->
+  P g') -> P g.
+
+
+(*Should replace Int with Nat here in noNodes bc it is the length of a list
+TODO: see if replacing with a nat is ok or if it should be BinNumsN - we define as length of list,
+so should be nat, but ok if have to change - just need things to be aligned*)
+Class LawfulGraph (gr: Type  -> Type -> Type) `{Graph gr} := {
+  empty_def: forall (a b : Type), Desc (@empty gr _ a b) #0 (fun v => False) (fun u v => False);
+  is_empty_def: forall (a b: Type) (g: gr a b), isEmpty g = true <-> Desc g #0 (fun v => False) (fun u v => False);
+  (*If the vertex is in the graph, then we can get a context with the vertex we queried, and every predecessor
+    is an edge (u', v), while every successor is an edge (v, u') *)
+  match_1: forall (a b : Type) (g: gr a b) v, vIn g v -> 
+    exists i x l o g', @match_ gr _ a b v g = (Some (i, x, l, o), g') /\ x = v /\ 
+    (forall u' l', In (l',u') i -> eIn g u' v) /\ (forall u' l', In (l',u') o -> eIn g v u');
+  (*The remaining graph has the same vertices and edges as the previous graph, except for v and its neighbors*)
+  match_2: forall (a b : Type) (g: gr a b) v x g' n, vIn g v -> @match_ gr _ a b v g = (Some x, g') ->
+    (noNodes g) = BinInt.Z.of_nat (S n) ->
+    Desc g' (BinInt.Z.of_nat n) (fun u => vIn g u /\ u <> v) (fun x y => eIn g x y /\ x <> v /\ y <> v);
+  (*See if I need this specifically*)
+  match_3: forall (a b : Type) (g: gr a b) v x g', match_ v g = (Some x, g') -> vIn g v;
+  mkGraph_def: forall (a b : Type) lv le, Desc (mkGraph lv le) (BinInt.Z.of_nat (@length (LNode a) lv))
+     (fun v => In v (@ulabNodes a lv))
+     (fun u v => In (u,v) (@ulabEdges b le));
+  matchAny_def: forall (a b : Type) (g: gr a b) g' x i l o, isEmpty g = false ->
+    matchAny g = ((i, x, l, o), g') ->
+    match_ x g = (Some (i, x, l, o), g');
+  noNodes_def: forall (a b : Type) (g: gr a b), noNodes g = BinInt.Z.of_nat (length (labNodes g))
+  (*TODO: others later, see about translating definitions*)
+}.
+
+Lemma match_decr_size: forall {a b : Type} {gr} `{Graph gr} `{LawfulGraph gr} c g' (g: gr a b),
+  (c, g') = matchAny g ->
+  isEmpty g = false ->
+  BinInt.Z.abs_nat (noNodes g') < BinInt.Z.abs_nat (noNodes g).
+Proof.
+  intros. symmetry in H2. destruct c. destruct p. destruct p. 
+  apply (matchAny_def _ _ _ _ _ _ _ _ H3) in H2. assert (vIn g n). eapply match_3. apply H2.
+  pose proof (noNodes_def _ _ g). assert (length (labNodes g) > 0).
+  destruct (length (labNodes g)) eqn : A.
+  apply length_zero_iff_nil in A. unfold vIn in H4. unfold ulabNodes_gr in H4. rewrite A in H4.
+  destruct H4. omega. destruct (length (labNodes g)) eqn : B. omega.
+  apply (match_2 a b g n (a2, n, a1, a0) g' n0). assumption. assumption. assumption. intros.
+  rewrite !noNodes_def in *.  rewrite Zabs2Nat.id. rewrite Zabs2Nat.id. omega.
+Qed.
 (* Converted value declarations: *)
 
-Program Fixpoint ufold {gr} {a} {b} {c} `{(Graph gr)} (f
-                         : (Context a b -> c -> c)) (u : c) (g : gr a b) {measure (BinInt.Z.abs_nat
+Program Fixpoint ufold {gr} {a} {b} {c} `{Graph gr} `{LawfulGraph gr} (f
+                         : Context a b -> c -> c) (u : c) (g : gr a b) {measure (BinInt.Z.abs_nat
                         (noNodes g))} : c
                    := let 'pair c g' := matchAny g in
                       if Bool.Sumbool.sumbool_of_bool (isEmpty g) then u else
                       f c (ufold f u g').
-Admit Obligations.
+Solve Obligations with ((Tactics.program_simpl; eapply match_decr_size; try (apply Heq_anonymous); auto)).
 
 Definition toLEdge {b} : Edge -> b -> LEdge b :=
   fun arg_0__ arg_1__ =>
@@ -272,23 +350,23 @@ Definition hasNeighbor {gr} {a} {b} `{Graph gr}
    : gr a b -> Node -> Node -> bool :=
   fun gr v w => Data.Foldable.elem w (neighbors gr v).
 
-Definition gmap {gr} {a} {b} {c} {d} `{(DynGraph gr)}
+Definition gmap {gr} {a} {b} {c} {d} `{DynGraph gr} `{LawfulGraph gr}
    : (Context a b -> Context c d) -> gr a b -> gr c d :=
   fun f => ufold (fun c => (fun arg_0__ => f c & arg_0__)) empty.
 
-Definition nemap {gr} {a} {c} {b} {d} `{(DynGraph gr)}
+Definition nemap {gr} {a} {c} {b} {d} `{DynGraph gr} `{LawfulGraph gr}
    : (a -> c) -> (b -> d) -> gr a b -> gr c d :=
   fun fn fe =>
     let fe' := GHC.Base.map (Control.Arrow.first fe) in
     gmap (fun '(pair (pair (pair p v) l) s) =>
             pair (pair (pair (fe' p) v) (fn l)) (fe' s)).
 
-Definition nmap {gr} {a} {c} {b} `{(DynGraph gr)}
+Definition nmap {gr} {a} {c} {b} `{DynGraph gr} `{LawfulGraph gr}
    : (a -> c) -> gr a b -> gr c b :=
   fun f =>
     gmap (fun '(pair (pair (pair p v) l) s) => pair (pair (pair p v) (f l)) s).
 
-Definition gfiltermap {gr} {a} {b} {c} {d} `{DynGraph gr}
+Definition gfiltermap {gr} {a} {b} {c} {d} `{DynGraph gr} `{LawfulGraph gr}
    : (Context a b -> MContext c d) -> gr a b -> gr c d :=
   fun f => ufold (Data.Maybe.maybe GHC.Base.id _&_ GHC.Base.∘ f) empty.
 
@@ -304,7 +382,7 @@ Definition eqLists {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
                                                                            Data.OldList.\\
                                                                            xs)).
 
-Definition emap {gr} {b} {c} {a} `{(DynGraph gr)}
+Definition emap {gr} {b} {c} {a} `{DynGraph gr} `{LawfulGraph gr}
    : (b -> c) -> gr a b -> gr a c :=
   fun f =>
     let map1 := fun g => GHC.Base.map (Control.Arrow.first g) in
@@ -522,15 +600,16 @@ Infix "Data.Graph.Inductive.Graph..:" := (_.:_) (at level 99).
 End Notations.
 
 (* External variables:
-     Bool.Sumbool.sumbool_of_bool None Some andb bool cons list negb nil op_zt__
-     option pair tt unit BinInt.Z.abs_nat Control.Arrow.first Coq.Init.Datatypes.app
-     Coq.Numbers.BinNums.N Data.Foldable.elem Data.Foldable.foldl'
-     Data.Foldable.foldr Data.Foldable.length Data.Foldable.null Data.Function.on
-     Data.IntSet.Internal.fromList Data.IntSet.Internal.member Data.Maybe.fromMaybe
-     Data.Maybe.isJust Data.Maybe.maybe Data.OldList.delete Data.OldList.op_zrzr__
-     Data.OldList.sortBy Data.Tuple.fst Data.Tuple.snd Err.Default GHC.Base.Eq_
-     GHC.Base.compare GHC.Base.flip GHC.Base.fmap GHC.Base.hs_string__ GHC.Base.id
-     GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Err.error GHC.List.elem GHC.List.filter GHC.List.length GHC.Num.Int
-     GHC.Num.op_zp__ GHC.Tuple.pair2 String.EmptyString
+     Bool.Sumbool.sumbool_of_bool LawfulGraph None Some andb bool cons list negb nil
+     op_zt__ option pair tt unit BinInt.Z.abs_nat Control.Arrow.first
+     Coq.Init.Datatypes.app Coq.Numbers.BinNums.N Data.Foldable.elem
+     Data.Foldable.foldl' Data.Foldable.foldr Data.Foldable.length Data.Foldable.null
+     Data.Function.on Data.IntSet.Internal.fromList Data.IntSet.Internal.member
+     Data.Maybe.fromMaybe Data.Maybe.isJust Data.Maybe.maybe Data.OldList.delete
+     Data.OldList.op_zrzr__ Data.OldList.sortBy Data.Tuple.fst Data.Tuple.snd
+     Err.Default GHC.Base.Eq_ GHC.Base.compare GHC.Base.flip GHC.Base.fmap
+     GHC.Base.hs_string__ GHC.Base.id GHC.Base.map GHC.Base.op_z2218U__
+     GHC.Base.op_zeze__ GHC.Base.op_zsze__ GHC.Err.error GHC.List.elem
+     GHC.List.filter GHC.List.length GHC.Num.Int GHC.Num.op_zp__ GHC.Tuple.pair2
+     String.EmptyString
 *)

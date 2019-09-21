@@ -16,9 +16,17 @@ skip class GHC.Base.Eq_
 #from IntSet - for consistency and because the Nodes cannot be negative
 redefine Definition Data.Graph.Inductive.Graph.Node := Coq.Numbers.BinNums.N.
 
-#termination for ufold - TODO: make lawful and prove for real
+#termination for ufold
+set type Data.Graph.Inductive.Graph.ufold : forall {gr} {a} {b} {c} `{(Graph gr)} `{(LawfulGraph gr)}, (((Context a b) -> (c -> c))) -> (c -> ((gr a b) -> c))
 termination Data.Graph.Inductive.Graph.ufold        {measure (BinInt.Z.abs_nat(noNodes g))}
-obligations Data.Graph.Inductive.Graph.ufold        admit
+obligations Data.Graph.Inductive.Graph.ufold        (Tactics.program_simpl; eapply match_decr_size; try(apply Heq_anonymous); auto)
+
+#other functions that use ufold and thus need a lawful graph
+set type Data.Graph.Inductive.Graph.gmap : forall {gr} {a} {b} {c} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, ((Context a b) -> (Context c d)) -> ((gr a b) -> (gr c d))
+set type Data.Graph.Inductive.Graph.nemap : forall {gr} {a} {c} {b} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, (a -> c) -> ((b -> d) -> ((gr a b) -> (gr c d)))
+set type Data.Graph.Inductive.Graph.nmap : forall {gr} {a} {c} {b} `{(DynGraph gr)} `{(LawfulGraph gr)}, (a -> c) -> ((gr a b) -> (gr c b))
+set type Data.Graph.Inductive.Graph.gfiltermap: forall {gr} {a} {b} {c} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, (Context a b -> MContext c d) -> ((gr a b) -> (gr c d))
+set type Data.Graph.Inductive.Graph.emap: forall {gr} {b} {c} {a} `{(DynGraph gr)} `{(LawfulGraph gr)}, (b -> c) -> ((gr a b) -> (gr a c))
 
 #coq cannot infer all of the type arguments correctly
 in Data.Graph.Inductive.Graph.lab rewrite forall, GHC.Base.fmap = (@GHC.Base.fmap option _ _ _)

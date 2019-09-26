@@ -212,6 +212,8 @@ Class LawfulGraph (gr: Type  -> Type -> Type) `{Graph gr} := {
     Desc g' (BinInt.Z.of_nat n) (fun u => vIn g u /\ u <> v) (fun x y => eIn g x y /\ x <> v /\ y <> v);
   (*See if I need this specifically*)
   match_3: forall (a b : Type) (g: gr a b) v x g', match_ v g = (Some x, g') -> vIn g v;
+  (*Also see if I need this*)
+  match_4: forall (a b : Type) (g : gr a b) v n g' i l o, match_ v g = (Some (i, n, l, o), g') -> v = n;
   mkGraph_def: forall (a b : Type) lv le, Desc (mkGraph lv le) (BinInt.Z.of_nat (@length (LNode a) lv))
      (fun v => In v (@ulabNodes a lv))
      (fun u v => In (u,v) (@ulabEdges b le));
@@ -222,19 +224,28 @@ Class LawfulGraph (gr: Type  -> Type -> Type) `{Graph gr} := {
   (*TODO: others later, see about translating definitions*)
 }.
 
-Lemma match_decr_size: forall {a b : Type} {gr} `{Graph gr} `{LawfulGraph gr} c g' (g: gr a b),
+Lemma match_decr_size: forall {a b : Type} {gr} `{Graph gr} `{LawfulGraph gr} c g' (g: gr a b) v,
+  (Some c, g') = match_ v g ->
+  BinInt.Z.abs_nat (noNodes g') < BinInt.Z.abs_nat (noNodes g).
+Proof.
+  intros. symmetry in H2. destruct c. destruct p. destruct p. 
+  assert (vIn g v). eapply match_3. apply H2.
+  pose proof (noNodes_def _ _ g). assert (length (labNodes g) > 0).
+  destruct (length (labNodes g)) eqn : A.
+  apply length_zero_iff_nil in A. unfold vIn in H3. unfold ulabNodes_gr in H3. rewrite A in H3.
+  destruct H3. omega. destruct (length (labNodes g)) eqn : B. omega.
+  assert (v = n) by (eapply match_4; apply H2); subst.
+  apply (match_2 a b g n (a2, n, a1, a0) g' n0). assumption. assumption. assumption. intros.
+  rewrite !noNodes_def in *.  rewrite Zabs2Nat.id. rewrite Zabs2Nat.id. omega.
+Qed.
+
+Lemma matchAny_decr_size: forall {a b : Type} {gr} `{Graph gr} `{LawfulGraph gr} c g' (g: gr a b),
   (c, g') = matchAny g ->
   isEmpty g = false ->
   BinInt.Z.abs_nat (noNodes g') < BinInt.Z.abs_nat (noNodes g).
 Proof.
   intros. symmetry in H2. destruct c. destruct p. destruct p. 
-  apply (matchAny_def _ _ _ _ _ _ _ _ H3) in H2. assert (vIn g n). eapply match_3. apply H2.
-  pose proof (noNodes_def _ _ g). assert (length (labNodes g) > 0).
-  destruct (length (labNodes g)) eqn : A.
-  apply length_zero_iff_nil in A. unfold vIn in H4. unfold ulabNodes_gr in H4. rewrite A in H4.
-  destruct H4. omega. destruct (length (labNodes g)) eqn : B. omega.
-  apply (match_2 a b g n (a2, n, a1, a0) g' n0). assumption. assumption. assumption. intros.
-  rewrite !noNodes_def in *.  rewrite Zabs2Nat.id. rewrite Zabs2Nat.id. omega.
+  apply (matchAny_def _ _ _ _ _ _ _ _ H3) in H2. symmetry in H2. eapply match_decr_size; apply H2.
 Qed.
 (* Converted value declarations: *)
 
@@ -244,7 +255,7 @@ Program Fixpoint ufold {gr} {a} {b} {c} `{Graph gr} `{LawfulGraph gr} (f
                    := let 'pair c g' := matchAny g in
                       if Bool.Sumbool.sumbool_of_bool (isEmpty g) then u else
                       f c (ufold f u g').
-Solve Obligations with ((Tactics.program_simpl; eapply match_decr_size; try (apply Heq_anonymous); auto)).
+Solve Obligations with ((Tactics.program_simpl; eapply matchAny_decr_size; try (apply Heq_anonymous); auto)).
 
 Definition toLEdge {b} : Edge -> b -> LEdge b :=
   fun arg_0__ arg_1__ =>

@@ -19,7 +19,7 @@ redefine Definition Data.Graph.Inductive.Graph.Node := Coq.Numbers.BinNums.N.
 #termination for ufold
 set type Data.Graph.Inductive.Graph.ufold : forall {gr} {a} {b} {c} `{(Graph gr)} `{(LawfulGraph gr)}, (((Context a b) -> (c -> c))) -> (c -> ((gr a b) -> c))
 termination Data.Graph.Inductive.Graph.ufold        {measure (BinInt.Z.abs_nat(noNodes g))}
-obligations Data.Graph.Inductive.Graph.ufold        (Tactics.program_simpl; eapply match_decr_size; try(apply Heq_anonymous); auto)
+obligations Data.Graph.Inductive.Graph.ufold        (Tactics.program_simpl; eapply matchAny_decr_size; try(apply Heq_anonymous); auto)
 
 #other functions that use ufold and thus need a lawful graph
 set type Data.Graph.Inductive.Graph.gmap : forall {gr} {a} {b} {c} {d} `{(DynGraph gr)} `{(LawfulGraph gr)}, ((Context a b) -> (Context c d)) -> ((gr a b) -> (gr c d))
@@ -131,20 +131,15 @@ set type Data.Graph.Inductive.Internal.Heap.heapsort: forall {a} `{(GHC.Base.Ord
 #avoid use of repeat by using replicate instead - this is safe because we are zipping the two lists, only need up to length l1 elements of l2
 in Data.Graph.Inductive.Query.BFS.suci rewrite forall c i, GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.repeat i) = GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.replicate (GHC.List.length (Data.Graph.Inductive.Graph.suc' c)) i)
 
-#termination arguments - TODO - require lawful graphs and prove
-termination Data.Graph.Inductive.Query.BFS.leveln       {measure (BinInt.Z.abs_nat(Data.Graph.Inductive.Graph.noNodes arg_1__))}
-obligations Data.Graph.Inductive.Query.BFS.leveln       admit
+#termination arguments - this turns out to be more difficult, since either the graph decreases in size or the queue decreases
+termination Data.Graph.Inductive.Query.BFS.leveln       deferred
+termination Data.Graph.Inductive.Query.BFS.lbf 			deferred
+termination Data.Graph.Inductive.Query.BFS.bfsnInternal deferred
+termination Data.Graph.Inductive.Query.BFS.bfenInternal deferred
+termination Data.Graph.Inductive.Query.BFS.bf           deferred
 
-in Data.Graph.Inductive.Query.BFS.lbf rewrite forall q b v q' x x', (match (Data.Graph.Inductive.Internal.Queue.queueGet q) with | pair (Data.Graph.Inductive.Graph.LP (cons (pair v x) x' as p)) q' => b | _ => GHC.Err.patternFailure end) = (let p := (cons (pair v x) x') in b)
+###### Dijkstra's #######
 
+set type Data.Graph.Inductive.Query.SP.dijkstra: forall {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)} `{(GHC.Real.Real b)} `{(Err.Default b)}, (Data.Graph.Inductive.Internal.Heap.Heap b (Data.Graph.Inductive.Graph.LPath b)) -> ((gr a b) -> (Data.Graph.Inductive.Internal.RootPath.LRTree b))
 
-#in Data.Graph.Inductive.Query.BFS.lbf rewrite forall q b v q' x x', (match (Data.Graph.Inductive.Internal.Queue.queueGet q) with | (pair (Data.Graph.Inductive.Graph.LP (cons (pair v x) x' as p)) q') => b | _ => GHC.Err.patternFailure end) = (let p := (cons (pair v x) x') in b)
-
-#in Data.Graph.Inductive.Query.BFS.lbf rewrite forall q b, (match Data.Graph.Inductive.Inernal.Queue.queueGet q with | _ => b) = test
-# = (match Data.Graph.Inductive.Internal.Queue.queueGet q with | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ )) q' => let p := Data.Graph.Inductive.Graph.LP (cons (pair v _) _) in b)
-
-
-#a b, a as b = let b := a in
-#in Data.Graph.Inductive.Query.BFS.lbf rewrite forall v p q', (pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>) = (pair (Data.Graph.Inductive.Graph.LP (cons (pair v x) y)) q' => let p := (cons (pair v x) y) in)
-termination Data.Graph.Inductive.Query.BFS.lbf       {measure (BinInt.Z.abs_nat(Data.Graph.Inductive.Graph.noNodes g))}
-obligations Data.Graph.Inductive.Query.BFS.lbf       admit
+termination Data.Graph.Inductive.Query.SP.dijkstra      deferred

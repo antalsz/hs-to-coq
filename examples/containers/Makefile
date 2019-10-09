@@ -20,6 +20,7 @@ HANDMOD = \
   Test/QuickCheck/Property \
   Test/QuickCheck/Arbitrary \
   Test/QuickCheck/Gen \
+  Test/QuickCheck/Function \
   IntWord \
 
 #  Data/SequenceManual \
@@ -36,9 +37,11 @@ MODULES = \
   IntSetValidity \
 
 HS_SPEC_MODULES = \
+  SetProperties \
   IntSetProperties
 
 # Non-standard file names
+SRC_FILE_SetProperties = containers/tests/set-properties.hs
 SRC_FILE_IntSetProperties = containers/tests/intset-properties.hs
 SRC_FILE_Data/IntSet/InternalWord = containers/Data/IntSet/Internal.hs
 

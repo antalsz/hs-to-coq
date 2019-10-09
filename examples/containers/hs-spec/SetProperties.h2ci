@@ -1,0 +1,20 @@
+constructors:
+  SetProperties.TwoSets: ! '[Qualified "SetProperties" "Mk_TwoSets"]'
+  SetProperties.OddEq: ! '[Qualified "SetProperties" "Mk_OddEq"]'
+  SetProperties.Options2: ! '[Qualified "SetProperties" "One2",Qualified "SetProperties"
+    "Two2",Qualified "SetProperties" "Both2"]'
+  SetProperties.TwoLists: ! '[Qualified "SetProperties" "Mk_TwoLists"]'
+constructorFields:
+  SetProperties.Mk_TwoSets: NonRecordFields 2
+  SetProperties.Mk_TwoLists: NonRecordFields 2
+  SetProperties.Mk_OddEq: NonRecordFields 2
+  SetProperties.Two2: NonRecordFields 0
+  SetProperties.One2: NonRecordFields 0
+  SetProperties.Both2: NonRecordFields 0
+constructorTypes:
+  SetProperties.Mk_TwoSets: Qualified "SetProperties" "TwoSets"
+  SetProperties.Mk_TwoLists: Qualified "SetProperties" "TwoLists"
+  SetProperties.Mk_OddEq: Qualified "SetProperties" "OddEq"
+  SetProperties.Two2: Qualified "SetProperties" "Options2"
+  SetProperties.One2: Qualified "SetProperties" "Options2"
+  SetProperties.Both2: Qualified "SetProperties" "Options2"

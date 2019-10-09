@@ -12,9 +12,19 @@ skip GHC.List.replicate   # needs take and drop
 skip GHC.List.scanr
 skip GHC.List.splitAt
 
+redefine Definition GHC.List.badHead {a : Type} {H : GHC.Err.Default a} :=
+    GHC.Err.default.
+
+redefine Definition GHC.List.head {a} {H: GHC.Err.Default a} : (list a) -> a :=
+  fun arg_0__ =>
+      match arg_0__ with
+      | cons x _ => x
+      | nil => badHead
+      end.
+
+order GHC.List.badHead GHC.List.head
+
 # partial functions
-skip GHC.List.head
-skip GHC.List.badHead
 skip GHC.List.unsafeTake
 skip GHC.List.repeat
 skip GHC.List.until

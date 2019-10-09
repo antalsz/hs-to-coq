@@ -13,7 +13,7 @@ skip Data.OldList.sortBy
 #skip Data.OldList.sort
 
 # tricky metric
-skip Data.OldList.groupBy
+termination Data.OldList.groupBy deferred
 # not obviously total, also strange Coq error
 skip Data.OldList.transpose
 # terminating, but hard to tell
@@ -36,7 +36,6 @@ skip Data.OldList.findIndices
 skip Data.OldList.isInfixOf
 skip Data.OldList.subsequences
 skip Data.OldList.intersperse
-skip Data.OldList.group
 skip Data.OldList.genericReplicate
 skip Data.OldList.findIndex
 skip Data.OldList.inits

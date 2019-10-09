@@ -18,6 +18,7 @@ Require Data.Maybe.
 Require Data.Ord.
 Require Data.Tuple.
 Require GHC.Base.
+Require GHC.DeferredFix.
 Require GHC.List.
 Require GHC.Num.
 Require GHC.Prim.
@@ -424,6 +425,20 @@ Definition insertBy {a} : (a -> a -> comparison) -> a -> list a -> list a :=
 Definition insert {a} `{GHC.Base.Ord a} : a -> list a -> list a :=
   fun e ls => insertBy (GHC.Base.compare) e ls.
 
+Definition groupBy {a} : (a -> a -> bool) -> list a -> list (list a) :=
+  GHC.DeferredFix.deferredFix2 (fun groupBy
+                                (arg_0__ : (a -> a -> bool))
+                                (arg_1__ : list a) =>
+                                  match arg_0__, arg_1__ with
+                                  | _, nil => nil
+                                  | eq, cons x xs =>
+                                      let 'pair ys zs := GHC.List.span (eq x) xs in
+                                      cons (cons x ys) (groupBy eq zs)
+                                  end).
+
+Definition group {a} `{GHC.Base.Eq_ a} : list a -> list (list a) :=
+  groupBy _GHC.Base.==_.
+
 Definition genericTake {i} {a} `{(GHC.Real.Integral i)}
    : i -> list a -> list a :=
   fix genericTake (arg_0__ : i) (arg_1__ : list a) : list a
@@ -566,8 +581,9 @@ End Notations.
      Data.Tuple.snd GHC.Base.Eq_ GHC.Base.Ord GHC.Base.String GHC.Base.build'
      GHC.Base.compare GHC.Base.flip GHC.Base.foldl GHC.Base.foldr GHC.Base.id
      GHC.Base.map GHC.Base.op_z2218U__ GHC.Base.op_zeze__ GHC.Base.op_zgzgze__
-     GHC.Base.op_zlze__ GHC.Base.return_ GHC.List.any GHC.List.filter GHC.List.null
-     GHC.List.reverse GHC.Num.Num GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__
-     GHC.Num.op_zp__ GHC.Prim.seq GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5
-     GHC.Tuple.pair6 GHC.Tuple.pair7
+     GHC.Base.op_zlze__ GHC.Base.return_ GHC.DeferredFix.deferredFix2 GHC.List.any
+     GHC.List.filter GHC.List.null GHC.List.reverse GHC.List.span GHC.Num.Num
+     GHC.Num.Word GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Prim.seq
+     GHC.Real.Integral GHC.Tuple.pair4 GHC.Tuple.pair5 GHC.Tuple.pair6
+     GHC.Tuple.pair7
 *)

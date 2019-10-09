@@ -64,6 +64,7 @@ Defined.
 
 Require Coq.Init.Datatypes.
 Require GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
@@ -277,6 +278,12 @@ Definition length {a} : list a -> GHC.Num.Int :=
 Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
   GHC.Base.id.
 
+Definition badHead {a : Type} {H : GHC.Err.Default a} :=
+  GHC.Err.default.
+
+Definition head {a} {H : GHC.Err.Default a} : list a -> a :=
+  fun arg_0__ => match arg_0__ with | cons x _ => x | nil => badHead end.
+
 Definition foldr2_left {a} {b} {c} {d}
    : (a -> b -> c -> d) -> d -> a -> (list b -> c) -> list b -> d :=
   fun arg_0__ arg_1__ arg_2__ arg_3__ arg_4__ =>
@@ -366,9 +373,9 @@ Definition all {a} : (a -> bool) -> list a -> bool :=
            end.
 
 (* External variables:
-     None Some andb bool cons false list nil op_zt__ option orb pair true
+     None Some Type andb bool cons false list nil op_zt__ option orb pair true
      Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
      GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__
+     GHC.Err.Default GHC.Err.default GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

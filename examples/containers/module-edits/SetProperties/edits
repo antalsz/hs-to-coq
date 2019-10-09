@@ -1,0 +1,55 @@
+rename module Main SetProperties
+
+rename value Main.TwoSets = Main.Mk_TwoSets
+rename value Main.TwoLists = Main.Mk_TwoLists
+rename value Main.OddEq = Main.Mk_OddEq
+
+skip module Test.Framework.Providers.HUnit
+skip module Test.Framework.Providers.QuickCheck2
+skip module Test.Framework.Runners.Console
+skip module Test.HUnit.Base
+skip module Test.HUnit.Lang
+skip module Text.Read
+
+skip module Control.Monad.Trans.Class
+skip module Control.Monad.Trans.State.Strict
+
+skip Test.QuickCheck.Arbitrary.Arbitrary
+skip class Test.QuickCheck.Arbitrary.Arbitrary
+
+rename value GHC.Real.^ = Coq.NArith.BinNat.N.pow
+rename type GHC.Num.Int = Coq.Numbers.BinNums.N
+
+skip SetProperties.Show__OddEq
+skip class SetProperties.IsInt
+skip class SetProperties.MonadGen
+
+skip SetProperties.setFromList
+skip SetProperties.prop_readShow
+skip SetProperties.mkArb
+skip SetProperties.liftGen
+skip SetProperties.main
+skip SetProperties.divide2Gen
+
+skip SetProperties.MonadGen__StateT_liftGen
+skip SetProperties.MonadGen__StateT
+
+skip SetProperties.prop_LookupLT        # test_LookupSomething
+skip SetProperties.prop_LookupLE        # test_LookupSomething
+skip SetProperties.prop_LookupGT        # test_LookupSomething
+skip SetProperties.prop_LookupGE        # test_LookupSomething
+skip SetProperties.prop_findMin         # Foldable.minimum
+skip SetProperties.prop_minView         # Foldable.minimum
+skip SetProperties.prop_lookupMin       # prop_minView
+skip SetProperties.prop_findMax         # Foldable.maximum
+skip SetProperties.prop_maxView         # Foldable.maximum
+skip SetProperties.prop_lookupMax       # prop_maxView
+skip SetProperties.test_lookupGE        # HUnit
+skip SetProperties.test_lookupGT        # HUnit
+skip SetProperties.test_lookupLE        # HUnit
+skip SetProperties.test_lookupLT        # HUnit
+skip SetProperties.test_lookupIndex     # HUnit
+skip SetProperties.test_findIndex       # HUnit
+skip SetProperties.test_elemAt          # HUnit
+skip SetProperties.test_deleteAt        # HUnit
+skip SetProperties.test_LookupSomething # head

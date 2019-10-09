@@ -32,7 +32,7 @@ Ltac destruct_ptrEq := lazymatch goal with
   => let Hpe := fresh "Hpe" in
      destruct (PtrEquality.ptrEq x y) eqn:Hpe;
      [ apply PtrEquality.ptrEq_eq in Hpe; subst
-     | clear Hpe] 
+     | clear Hpe]
 end.
 
 Section WF.
@@ -142,7 +142,7 @@ Definition balance_prop sz1 sz2 :=
 Definition balance_prop_inserted sz1 sz2 :=
   (delta * sz1 <= delta*delta*sz2 + delta*sz2 + sz2 /\ sz2 <= sz1)%Z.
 
-(* NB: this does not work: 
+(* NB: this does not work:
 Definition balance_prop_inserted sz1 sz2 := balance_prop sz1 sz2.
 *)
 
@@ -162,7 +162,7 @@ Proof.
   * reflexivity.
 Qed.
 
-(** This inductive predicate describes when sets are well-formed within 
+(** This inductive predicate describes when sets are well-formed within
   (exclusive) bounds.
 *)
 
@@ -220,7 +220,7 @@ Lemma sem_inside:
 Proof.
   intros ???? HD ?.
   induction HD; intros; subst; simpl in *; rewrite ?orb_true_iff in *; intuition;
-  order_Bounds.  
+  order_Bounds.
 Qed.
 
 
@@ -295,7 +295,7 @@ Proof.
             ++ rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                simpl Z.sub.
                lia.
-            ++ assert (size s2 = 0)%Z by lia. 
+            ++ assert (size s2 = 0)%Z by lia.
                rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                replace (height s1) with 1%Z in *
                  by (symmetry; eapply size_height_1; eassumption).
@@ -316,7 +316,7 @@ Proof.
             ++ rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                simpl Z.sub.
                lia.
-            ++ assert (size s1 = 0)%Z by lia. 
+            ++ assert (size s1 = 0)%Z by lia.
                rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                replace (height s2) with 1%Z in *
                  by (symmetry; eapply size_height_1; eassumption).
@@ -505,7 +505,7 @@ Ltac solve_Bounds := first
    Fails if it does not start with [forall i,], but may leave a partially solve goal.
     *)
 Ltac f_solver_simple  :=
-  let i := fresh "i" in 
+  let i := fresh "i" in
   intro i;
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
@@ -517,7 +517,7 @@ Ltac f_solver_simple  :=
 (** This auxillary tactic destructs one boolean atom in the argument *)
 
 Ltac split_bool_go expr :=
-  lazymatch expr with 
+  lazymatch expr with
     | true       => fail
     | false      => fail
     | Some _     => fail
@@ -533,7 +533,7 @@ Ltac split_bool_go expr :=
 (** This auxillary tactic destructs one boolean or option atom in the goal *)
 
 Ltac split_bool :=
-  match goal with 
+  match goal with
     | |- ?lhs = ?rhs        => split_bool_go lhs || split_bool_go rhs
     (* A bit ad-hoc, could be improved: *)
     | H : ?x || ?y = true  |- _ => split_bool_go x
@@ -685,7 +685,7 @@ Ltac applyDesc lem :=
   apply hide;
   eapply lem;
   [ solve_Precondition ..
-  | let s := fresh "s" in 
+  | let s := fresh "s" in
     let HB := fresh "HB" in
     let Hsz := fresh "Hsz" in
     let Hsem := fresh "Hsem" in
@@ -942,7 +942,7 @@ Lemma insertMax_Desc:
     Desc (insertMax x s1) lb ub (1 + size s1) (fun i => sem s1 i || (i == x)).
 Proof.
   intros.
-  
+
   remember (Some x) as ub'. revert dependent x.
   induction H; intros; subst; cbn - [Z.add].
   * applyDesc singleton_Desc.
@@ -991,11 +991,13 @@ Proof.
   unfold link at 1, link_func at 1.
   destruct s1; only 2: reflexivity.
   destruct s2; only 2: reflexivity.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+  lazymatch goal with
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs =>
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
 Qed.
+
+Print link.
 
 (* [program_simpl] calls [simpl], which is very confusing due to [1 + _]. So
 ask [Next Obligation] to use this only when it solves the goal completely. *)
@@ -1012,7 +1014,7 @@ Program Fixpoint link_Desc (x : e) (s1: Set_ e)  (s2: Set_ e)
     := _.
 Next Obligation.
   intros.
-  rewrite link_eq. 
+  rewrite link_eq.
   inversion H; subst; clear H;
   inversion H0; subst; clear H0.
   * simpl insertMin.
@@ -1078,14 +1080,14 @@ Qed.
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
 Fixpoint insert' (x : e) (s : Set_ e ) : Set_ e :=
-  match s with 
+  match s with
     | Tip => singleton x
     | Bin sz y l r => match compare x y with
       | Lt =>
         let l' := insert' x l in
         if PtrEquality.ptrEq l' l then s else balanceL y l' r
       | Gt =>
-        let r' := insert' x r in 
+        let r' := insert' x r in
         if PtrEquality.ptrEq r' r then s else balanceR y l r'
       | Eq =>
         if PtrEquality.ptrEq x y then s else Bin sz x l r
@@ -1159,18 +1161,18 @@ Qed.
 
 (** ** Verification of [insertR] *)
 
-(** For our purposes, [insertR] and [insert] are equivalent (the sets 
+(** For our purposes, [insertR] and [insert] are equivalent (the sets
     are equal up to [==] of elements. *)
 
 Fixpoint insertR' (x : e) (s : Set_ e ) : Set_ e :=
-  match s with 
+  match s with
     | Tip => singleton x
     | Bin sz y l r => match compare x y with
       | Lt =>
         let l' := insertR' x l in
         if PtrEquality.ptrEq l' l then s else balanceL y l' r
       | Gt =>
-        let r' := insertR' x r in 
+        let r' := insertR' x r in
         if PtrEquality.ptrEq r' r then s else balanceR y l r'
       | Eq => Bin sz y l r
      end
@@ -1318,7 +1320,7 @@ Qed.
 Lemma lookupMin_Desc:
   forall s lb ub,
     Bounded s lb ub ->
-    match lookupMin s with 
+    match lookupMin s with
       | None => (forall i, sem s i = false)
       | Some y => sem s y = true /\ (forall i, sem s i = true -> (y GHC.Base.<= i) = true)
     end.
@@ -1380,7 +1382,7 @@ Qed.
 Lemma lookupMax_Desc:
   forall s lb ub,
     Bounded s lb ub ->
-    match lookupMax s with 
+    match lookupMax s with
       | None => (forall i, sem s i = false)
       | Some y => sem s y = true /\ (forall i, sem s i = true -> (i GHC.Base.<= y) = true)
     end.
@@ -1691,13 +1693,13 @@ Proof.
     rewrite orb_true_r. simpl. lia.
   + apply IHHB1; intros s1_2 s1_3 HB1_2 HB1_3 Hsz Hsems1; clear IHHB1 IHHB2.
     applyDesc link_Desc.
-    solveThis. destruct (sem s1 x). 
+    solveThis. destruct (sem s1 x).
     * simpl. lia.
     * replace (x == x0) with false by order e. simpl.
       rewrite (sem_outside_below HB2) by solve_Bounds. lia.
   + apply IHHB2; intros s2_2 s2_3 HB2_2 HB2_3 Hsz Hsems2; clear IHHB1 IHHB2.
     applyDesc link_Desc.
-    solveThis. destruct (sem s2 x). 
+    solveThis. destruct (sem s2 x).
     * rewrite orb_true_r. lia.
     * replace (x == x0) with false by order e. simpl.
       rewrite (sem_outside_above HB1) by solve_Bounds. simpl. lia.
@@ -1714,7 +1716,7 @@ Lemma union_destruct :
   (s1 = Tip -> P s2) ->
   (forall x l r, (s2 = Bin 1 x l r) -> P (insertR x s1)) ->
   (forall x l r, (s1 = Bin 1 x l r) -> P (insert x s2)) ->
-  (forall sz1 x l1 r1, (s1 = Bin sz1 x l1 r1) -> 
+  (forall sz1 x l1 r1, (s1 = Bin sz1 x l1 r1) ->
     P (
       match splitS x s2 with
       | pair l2 r2 =>
@@ -1739,7 +1741,7 @@ Proof.
         | eapply HTipR; reflexivity
         | idtac
         ].
-Qed. 
+Qed.
 
 Lemma union_Desc :
   forall s1 s2 lb ub,
@@ -1826,14 +1828,14 @@ Qed.
 
 (** ** Verification of [merge] *)
 
-Lemma merge_eq: forall (l r: Set_ e), merge l r = 
-  match l, r with 
+Lemma merge_eq: forall (l r: Set_ e), merge l r =
+  match l, r with
   | Tip, r => r
   | l, Tip => l
   | (Bin sizeL x lx rx as l), (Bin sizeR y ly ry as r) =>
     if Sumbool.sumbool_of_bool
          ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
-    then balanceL y (merge l ly) ry           
+    then balanceL y (merge l ly) ry
     else if Sumbool.sumbool_of_bool
               ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
          then balanceR x lx (merge rx r)
@@ -1843,8 +1845,8 @@ Proof.
   unfold merge at 1, merge_func at 1.
   destruct l; only 2: reflexivity.
   destruct r; only 2: reflexivity.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+  lazymatch goal with
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs =>
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
 Qed.
@@ -1862,7 +1864,7 @@ Program Fixpoint merge_Desc (s1: Set_ e)  (s2: Set_ e)
   := _.
 Next Obligation.
   intros.
-  rewrite merge_eq. 
+  rewrite merge_eq.
   inversion H; subst; clear H;
     inversion H0; subst; clear H0;
       try solve [solve_Desc].
@@ -1890,7 +1892,7 @@ Lemma splitMember_Desc:
     Bounded s1 lb (Some x) ->
     Bounded s2 (Some x) ub ->
     (forall i, sem s i =
-          (if i == x then b 
+          (if i == x then b
            else  (sem s1 i || sem s2 i))) ->
     P (s1, b, s2)) ->
   P (splitMember x s) : Prop.
@@ -1933,7 +1935,7 @@ Proof.
       clear Hs3 e0 s4 s5 s6.
       eapply splitMember_Desc;
         only 1: eassumption.
-      intros s4' b s5' HB1 HB2 Hi.  
+      intros s4' b s5' HB1 HB2 Hi.
       applyDesc IHHB1_1.
       applyDesc IHHB1_2.
       destruct b.
@@ -1953,7 +1955,7 @@ Lemma difference_destruct :
   forall s1 s2,
   (s1 = Tip -> P Tip) ->
   (s2 = Tip -> P s1) ->
-  (forall sz2 x l2 r2, (s2 = Bin sz2 x l2 r2) -> 
+  (forall sz2 x l2 r2, (s2 = Bin sz2 x l2 r2) ->
     P (
       match splitS x s1 with
       | pair l1 r1 =>
@@ -1996,8 +1998,8 @@ Proof.
     destruct sl; (showP; [assumption | reflexivity | reflexivity | f_solver]).
   - apply difference_destruct; intros; subst.
     + (showP; [assumption | reflexivity | reflexivity | f_solver]).
-    + (showP; [assumption | reflexivity | reflexivity | f_solver]). 
-    + eapply splitS_Desc; try eassumption. 
+    + (showP; [assumption | reflexivity | reflexivity | f_solver]).
+    + eapply splitS_Desc; try eassumption.
       intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
       eapply IHHb2_1. solve_Bounded. intros sil ????. clear IHHb2_1.
       eapply IHHb2_2. solve_Bounded. intros sir ????. clear IHHb2_2.
@@ -2062,7 +2064,7 @@ Lemma fold_right_toList_go:
   forall {a} k (n : a) s (xs : list e),
   fold_right k n (foldr cons xs s) = foldr k (fold_right k n xs) s.
 Proof.
-  intros. 
+  intros.
   revert xs; induction s; intros.
   * simpl.
     rewrite IHs1.
@@ -2153,7 +2155,7 @@ Proof.
     destruct Hi as [?|[?|?]].
     - intuition.
     - subst. assumption.
-    - enough(isLB (Some x) y = true) by order_Bounds. 
+    - enough(isLB (Some x) y = true) by order_Bounds.
       intuition.
 Qed.
 
@@ -2170,7 +2172,7 @@ Proof.
     simpl in Hi.
     rewrite !in_app_iff in *.
     destruct Hi as [?|[?|?]].
-    - enough(isUB (Some x) y = true) by order_Bounds. 
+    - enough(isUB (Some x) y = true) by order_Bounds.
       intuition.
     - subst. assumption.
     - intuition.
@@ -2285,7 +2287,7 @@ Program Fixpoint toList_link (x : e) (s1: Set_ e)  (s2: Set_ e)
     toList (link x s1 s2) = toList s1 ++ [x] ++ toList s2 := _.
 Next Obligation.
   intros.
-  rewrite link_eq. 
+  rewrite link_eq.
   inversion H; subst; clear H;
   inversion H0; subst; clear H0.
   * reflexivity.
@@ -2600,7 +2602,7 @@ Next Obligation.
         apply Z_shiftr_lt; lia.
       }
       apply IH.
-      - assumption. 
+      - assumption.
       - apply Z_shiftr_pos; lia.
       - intros.
         destruct_match.
@@ -2615,8 +2617,8 @@ Qed.
 Definition fromDistinctAscList_go_f : (Int -> Set_ e -> list e -> Set_ e) -> (Int -> Set_ e -> list e -> Set_ e).
 Proof.
   let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e) in
-  let rhs := eval fold fromDistinctAscList_create_f in rhs in 
-  let rhs := eval fold fromDistinctAscList_create in rhs in 
+  let rhs := eval fold fromDistinctAscList_create_f in rhs in
+  let rhs := eval fold fromDistinctAscList_create in rhs in
   lazymatch rhs with context [deferredFix3 ?f] => exact f end.
 Defined.
 
@@ -2673,7 +2675,7 @@ Program Fixpoint fromDistinctAscList_create_Desc
   ) ->
   P (fromDistinctAscList_create (2^sz)%Z xs) := _.
 Next Obligation.
-  intros ???? Hnonneg HSorted.  
+  intros ???? Hnonneg HSorted.
   rename fromDistinctAscList_create_Desc into IH.
   rewrite fromDistinctAscList_create_eq
     by (enough (0 < 2^sz)%Z by lia; apply Z.pow_pos_nonneg; lia).
@@ -2689,12 +2691,12 @@ Next Obligation.
     inversion HSorted. subst.
     inversion H2. subst. clear H2.
     inversion H1. subst.
-    
+
     assert (isUB (safeHd xs) e0 = true). {
       destruct xs; try reflexivity.
       inversion H5. assumption.
-    } 
-    
+    }
+
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
       ++ solve_Bounded.
@@ -2709,7 +2711,7 @@ Next Obligation.
         rewrite Z.pow_sub_r by lia.
         reflexivity.
       assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
-      { rewrite Z2Nat.inj_sub by lia. 
+      { rewrite Z2Nat.inj_sub by lia.
         apply Nat.sub_lt.
         apply Z2Nat.inj_le.
         lia.
@@ -2811,7 +2813,7 @@ Next Obligation.
         rewrite Forall_forall in H4.
         apply H4.
         apply in_or_app. right. left. reflexivity.
-      }      
+      }
       applyDesc link_Desc.
       eapply IH.
       + simpl. rewrite app_length. lia.
@@ -2951,7 +2953,7 @@ Next Obligation.
         apply Z_shiftr_lt; lia.
       }
       apply IH.
-      - assumption. 
+      - assumption.
       - apply Z_shiftr_pos; lia.
       - intros.
         destruct_match.
@@ -2966,8 +2968,8 @@ Qed.
 Definition fromDistinctDescList_go_f : (Int -> Set_ e -> list e -> Set_ e) -> (Int -> Set_ e -> list e -> Set_ e).
 Proof.
   let rhs := eval unfold fromDistinctDescList in (@fromDistinctDescList e) in
-  let rhs := eval fold fromDistinctDescList_create_f in rhs in 
-  let rhs := eval fold fromDistinctDescList_create in rhs in 
+  let rhs := eval fold fromDistinctDescList_create_f in rhs in
+  let rhs := eval fold fromDistinctDescList_create in rhs in
   lazymatch rhs with context [deferredFix3 ?f] => exact f end.
 Defined.
 
@@ -3013,7 +3015,7 @@ Program Fixpoint fromDistinctDescList_create_Desc
   ) ->
   P (fromDistinctDescList_create (2^sz)%Z xs) := _.
 Next Obligation.
-  intros ???? Hnonneg HSorted.  
+  intros ???? Hnonneg HSorted.
   rename fromDistinctDescList_create_Desc into IH.
   rewrite fromDistinctDescList_create_eq
     by (enough (0 < 2^sz)%Z by lia; apply Z.pow_pos_nonneg; lia).
@@ -3029,12 +3031,12 @@ Next Obligation.
     inversion HSorted. subst.
     inversion H2. subst. clear H2.
     inversion H1. subst.
-    
+
     assert (isLB (safeHd xs) e0 = true). {
       destruct xs; try reflexivity.
       inversion H5. simpl. order e.
-    } 
-    
+    }
+
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
       ++ solve_Bounded.
@@ -3049,7 +3051,7 @@ Next Obligation.
         rewrite Z.pow_sub_r by lia.
         reflexivity.
       assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
-      { rewrite Z2Nat.inj_sub by lia. 
+      { rewrite Z2Nat.inj_sub by lia.
         apply Nat.sub_lt.
         apply Z2Nat.inj_le.
         lia.
@@ -3355,7 +3357,7 @@ Proof.
   * intros X HX; apply HX; clear X HX.
     + constructor; constructor.
     + intro. reflexivity.
-  * inversion Hlt; subst; clear Hlt.  
+  * inversion Hlt; subst; clear Hlt.
     simpl.
     destruct_match.
     + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
@@ -3395,7 +3397,7 @@ Proof.
   * intros X HX; apply HX; clear X HX.
     + constructor; constructor.
     + intro. reflexivity.
-  * inversion Hlt; subst; clear Hlt.  
+  * inversion Hlt; subst; clear Hlt.
     simpl.
     destruct_match.
     + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
@@ -3496,7 +3498,7 @@ Qed.
 (** The verification of [fromList] should be similar to that of [fromDistinctAscList], only
 that the condition is checked and -- if it fails -- we resort to a backup implementation. *)
 
-(* The following definitions are copied from the local definitions of [fromList]; 
+(* The following definitions are copied from the local definitions of [fromList];
    my ltac foo failed to do that automatic.
 *)
 Definition fromList' :=
@@ -3540,7 +3542,7 @@ Definition fromList_create : Int -> list e -> Set_ e * list e * list e
   := deferredFix2 (fromList_create_f).
 
 Definition fromList_go_f :=
-  (fun (go : Int -> Set_ e -> list e -> Set_ e) (arg_22__ : Int) 
+  (fun (go : Int -> Set_ e -> list e -> Set_ e) (arg_22__ : Int)
           (arg_23__ : Set_ e) (arg_24__ : list e) =>
         match arg_24__ with
         | [] => arg_23__
@@ -3633,7 +3635,7 @@ Next Obligation.
         apply Z_shiftr_lt; lia.
       }
       apply IH.
-      - assumption. 
+      - assumption.
       - apply Z_shiftr_pos; lia.
       - intros.
         destruct_match.
@@ -3704,7 +3706,7 @@ Next Obligation.
     - left. reflexivity.
   * repeat replace (#1) with 1%Z by reflexivity.
     unfold op_zeze__, Eq_Integer___, op_zeze____.
-    
+
     simpl in HheadOrdered.
 
 (*     assert (isUB (safeHd xs) e0 = true). {
@@ -3732,7 +3734,7 @@ Next Obligation.
         rewrite Z.pow_sub_r by lia.
         reflexivity.
       assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
-      { rewrite Z2Nat.inj_sub by lia. 
+      { rewrite Z2Nat.inj_sub by lia.
         apply Nat.sub_lt.
         apply Z2Nat.inj_le.
         lia.
@@ -3909,7 +3911,7 @@ Proof.
     - repeat replace (#1) with (2^0)%Z by reflexivity.
       eapply fromList_go_Desc.
       + lia.
-      + simpl in Heq. 
+      + simpl in Heq.
         solve_Bounded.
       + right. reflexivity.
       + intros.
@@ -4293,7 +4295,7 @@ Proof.
     rewrite IHxs by lia.
     destruct (Z.leb_spec n 0); [lia|reflexivity].
 Qed.
-  
+
 Lemma take_app_cons:
   forall a n (l1 : list a) (x : a) (l2 : list a),
   List.take n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with
@@ -4409,7 +4411,7 @@ Proof.
     rewrite IHxs by lia.
     destruct (Z.leb_spec n 0); [lia|reflexivity].
 Qed.
-  
+
 Lemma drop_app_cons:
   forall a n (l1 : list a) (x : a) (l2 : list a),
   List.drop n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with
@@ -4542,7 +4544,7 @@ Proof.
   lazymatch goal with |- ?b _ _ _ = _ => set (bounded := b) end.
   enough (forall lo lo' hi hi',
     (forall x, lo x = lo' x) -> (forall x, hi x = hi' x) ->
-    bounded lo hi t = bounded' lo' hi' t) 
+    bounded lo hi t = bounded' lo' hi' t)
     by (apply H; intro; reflexivity).
   induction t; intros; simpl.
   * erewrite !H, !H0, IHt1, IHt2; auto.
@@ -4590,12 +4592,12 @@ Proof.
   split.
   - destruct s1; unfold validsize in *.
     + intros. repeat destruct_match; try ssreflect.done.
-      rewrite size_size in *. cbn. 
+      rewrite size_size in *. cbn.
       rewrite Z.eqb_eq. inversion Heq; reflexivity.
     + reflexivity.
   - destruct s2; unfold validsize in *.
     + intros. repeat destruct_match; try ssreflect.done.
-      rewrite size_size in *. cbn. 
+      rewrite size_size in *. cbn.
       rewrite Z.eqb_eq. inversion Heq0; reflexivity.
     + reflexivity.
 Qed.
@@ -4613,12 +4615,12 @@ Proof.
       split; [| split]; try assumption.
       unfold balance_prop in H4.
       rewrite orb_true_iff.
-      rewrite andb_true_iff. cbn -[Z.mul]. 
+      rewrite andb_true_iff. cbn -[Z.mul].
       repeat rewrite Z.leb_le.
       assumption.
     + simpl.
       rewrite H1, H2, IHbd1, IHbd2. reflexivity.
-    + unfold validsize. 
+    + unfold validsize.
       repeat destruct_match; try ssreflect.done; rewrite size_size;
         unfold validsize in IHv1, IHv2;
         rewrite Heq in IHv1.
@@ -4881,6 +4883,8 @@ Ltac unfold_Monoid_Set :=
          Internal.Semigroup__Set__op_zlzlzgzg__
     in *.
 
+Axiom break : forall P, P.
+
 Global Program Instance Semigroup_WF : Semigroup (WFSet e) := fun _ k => k
   {| op_zlzlzgzg____  := @mappend (Set_ e) _ _ |}.
 Next Obligation.
@@ -4888,7 +4892,6 @@ Next Obligation.
   unfold_Monoid_Set.
   eapply union_Desc; try eassumption. intuition.
 Qed.
-
 
 Global Instance SemigroupLaws_Set : SemigroupLaws (WFSet e).
 Proof.
@@ -5058,9 +5061,9 @@ Require OrdTheories.
 
 Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
   Module E := E.
-  
+
   Include OrdTheories.OrdTheories E.
-  
+
   Lemma E_eq_zeze:
     forall x y : elt, E.eq x y <-> (x == y) = true.
   Proof. apply elt_eq. Qed.
@@ -5068,9 +5071,9 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
   Lemma E_lt_zl:
     forall x y : elt, E.lt x y <-> (x < y) = true.
   Proof. apply elt_lt. Qed.
-  
+
   Lemma InA_Eeq_elem:
-    forall x xs,  
+    forall x xs,
     InA E.eq x xs <-> List.elem x xs = true.
   Proof.
     intros.
@@ -5103,19 +5106,19 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
   Program Definition is_empty : t -> bool := null.
 
   (* IntSet comparison predicate *)
-  
+
   Definition lt (s s' : t) : Prop := (s < s') = true.
-  
+
   (* More information later, after we've proved theorems *)
 
   (* Minimal and maximal elements *)
-  
+
   Definition min_elt : t -> option elt := lookupMin ∘ unpack.
-  
+
   Definition max_elt : t -> option elt := lookupMax ∘ unpack.
-  
+
   (* Theorems *)
-  
+
   Lemma empty_1 : Empty empty.
   Proof. intros x H. inversion H. Qed.
 
@@ -5146,7 +5149,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     unfold is_empty, unpack, WF in *.
     destruct (proj1_sig s); [ inversion H | reflexivity].
   Qed.
-  
+
   Definition eq : t -> t -> Prop := Equal.
   Definition eq_dec : forall s s' : t, {eq s s'} + {~ eq s s'}.
   Proof.
@@ -5167,7 +5170,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
   Proof. destruct s. unfold eq. unfold Equal. intro. reflexivity. Qed.
 
   Lemma eq_sym : forall s s' : t, eq s s' -> eq s' s.
-  Proof. destruct s; destruct s'; 
+  Proof. destruct s; destruct s';
     unfold eq, Equal in *. intros. rewrite H. intuition. Qed.
 
   Lemma eq_trans :
@@ -5266,7 +5269,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     rewrite equals_spec by eassumption.
     intros. apply eq_iff_eq_true. apply H.
   Qed.
-  
+
   Lemma equal_2 : forall s s' : t, equal s s' = true -> Equal s s'.
   Proof.
     intros [s1?] [s2?].
@@ -5282,7 +5285,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     rewrite isSubsetOf_spec by eassumption.
     intuition.
   Qed.
-  
+
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.
   Proof.
     intros [s1?] [s2?].
@@ -5427,7 +5430,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     rewrite orb_true_iff.
     intuition.
   Qed.
-  
+
   Lemma union_3 :
     forall (s s' : t) (x : elt), In x s' -> In x (union s s').
   Proof.
@@ -5465,7 +5468,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     rewrite andb_true_iff in H2.
     intuition.
   Qed.
-  
+
   Lemma inter_3 : forall (s s' : t) (x : elt),
       In x s -> In x s' -> In x (inter s s').
   Proof.
@@ -5530,7 +5533,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     rewrite foldl_spec.
     reflexivity.
   Qed.
-  
+
   Lemma cardinal_1 : forall s : t, cardinal s = length (elements s).
   Proof.
     intros [s?].
@@ -5598,7 +5601,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     rewrite Hsem, Hsems1'.
     reflexivity.
   Qed.
-  
+
   Lemma compat_bool_negb:
     forall A R (f : A -> bool), compat_bool R f -> compat_bool R (fun x => negb (f x)).
   Proof. intros. intros x y HR. f_equal. apply H. assumption. Qed.
@@ -5641,7 +5644,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     erewrite toList_sem in * by eassumption.
     assumption.
   Qed.
-  
+
   Lemma elements_3 (s : t) : Sorted E.lt (elements s).
   Proof.
     destruct s as [s WFs]; unfold elements; simpl.
@@ -5649,12 +5652,12 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     - apply E_lt_zl.
     - eapply to_List_sorted; eassumption.
   Qed.
-  
+
   Lemma elements_3w (s : t) : NoDupA E.eq (elements s).
   Proof. apply OrdFacts.Sort_NoDup, elements_3. Qed.
-  
+
   (* Ordering theorems *)
-  
+
   Definition compare (s s' : t) : Compare lt eq s s'.
   Proof.
     destruct (compare s s') eqn:CMP.
@@ -5663,11 +5666,11 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     - apply LT; abstract order t.
     - apply GT; abstract order t.
   Defined.
-  
+
   Theorem lt_trans (s1 s2 s3 : t) :
     lt s1 s2 -> lt s2 s3 -> lt s1 s3.
-  Proof. unfold lt; order t. Qed. 
-  
+  Proof. unfold lt; order t. Qed.
+
   Theorem lt_not_eq (s1 s2 : t) :
     lt s1 s2 -> ~ eq s1 s2.
   Proof.
@@ -5675,7 +5678,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     assert (s1 == s2 = true) as EQ' by apply EQ.
     order t.
   Qed.
-  
+
   Lemma min_elt_1 (s : t) (x : elt) : min_elt s = Some x -> In x s.
   Proof.
     destruct s as [s WFs]; unfold min_elt, In; simpl; intros def_x.
@@ -5689,7 +5692,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     specialize (x_min y sem_y).
     rewrite E_lt_zl; order elt.
   Qed.
-  
+
   Lemma min_elt_3 (s : t) : min_elt s = None -> Empty s.
   Proof.
     destruct s as [s WFs]; unfold min_elt, Empty, In; simpl; intros def_x.
@@ -5797,7 +5800,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
     apply OrdFacts.ListIn_In.
     assumption.
   Qed.
-  
+
   Definition choose : t -> option elt := min_elt.
 
   Lemma choose_1 :
@@ -5808,7 +5811,7 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
   Proof. apply min_elt_3. Qed.
 
   Lemma choose_3 (s1 s2 : t) (x1 x2 : elt) :
-    choose s1 = Some x1 -> 
+    choose s1 = Some x1 ->
     choose s2 = Some x2 ->
     Equal s1 s2         ->
     E.eq  x1 x2.

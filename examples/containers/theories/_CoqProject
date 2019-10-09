@@ -31,6 +31,7 @@ MapProofs.v
 IntSetProofs.v
 IntSetWordProofs.v
 RevNatSlowProofs.v
+../hs-spec/SetProperties.v
 ../hs-spec/IntSetProperties.v
 IntSetUtil.v
 IntSetPropertyProofs.v

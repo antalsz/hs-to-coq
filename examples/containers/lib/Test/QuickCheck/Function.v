@@ -1,0 +1,1 @@
+../../../manual/Test/QuickCheck/Function.v

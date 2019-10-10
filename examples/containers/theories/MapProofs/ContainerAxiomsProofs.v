@@ -1010,4 +1010,52 @@ Proof.
   rewrite null_empty_iff. eapply empty_no_elts. apply H4.
 Qed.
 
+Lemma non_member_spec  : forall (s : Map e a) (lb ub : bound) (i : e),
+       Bounded s lb ub -> member i s = false <-> sem s i = None.
+Proof.
+  intros. pose proof (member_spec s lb ub i H). destruct H0. split; intros.
+  - apply contrapositive in H1. destruct (sem s i) eqn : ?. exfalso. apply H1. exists a0. reflexivity.
+    reflexivity. rewrite H2. auto.
+  - apply contrapositive in H0. destruct (member i s) eqn : ?; auto. contradiction. rewrite H2.
+    intro. destruct H3. inversion H3.
+Qed. 
+
+
+Lemma null_intersection_eq : forall (x1 x2 y1 y2 : Map e a) lb ub,
+  Bounded x1 lb ub ->
+  Bounded x2 lb ub ->
+  Bounded y1 lb ub ->
+  Bounded y2 lb ub ->
+  (forall a, member a x1 = member a y1) ->
+  (forall a, member a x2 = member a y2) ->
+  null (intersection x1 x2) = null (intersection y1 y2).
+Proof.
+  intros. applyDesc e (@intersection_Desc e a). applyDesc e (@intersection_Desc e a).
+  destruct (null s) eqn : N.
+  - symmetry. rewrite null_empty_iff. rewrite null_empty_iff in N.
+    rewrite <- empty_no_elts. rewrite <- empty_no_elts in N.
+    intros. specialize (N i). rewrite Hsem in N. unfold ando' in N.
+    destruct (sem x2 i) eqn : S. specialize (Hsem0 i). unfold ando' in Hsem0.
+    rewrite <- non_member_spec in N. rewrite H3 in N. rewrite non_member_spec in N.
+    rewrite Hsem0. destruct (sem y2 i). assumption. reflexivity. apply H1. apply H. 
+    unfold ando' in Hsem. rewrite <- non_member_spec in S.
+    rewrite H4 in S. rewrite non_member_spec in S. unfold ando' in Hsem0.
+    rewrite Hsem0. rewrite S. reflexivity. apply H2. apply H0.
+  - unfold null in N. destruct s. remember (Bin s1 e0 a0 s2 s3) as s. assert (sem s e0 = Some a0). {
+    rewrite Heqs. simpl. subst. inversion HB; subst. destruct (sem s2 e0) eqn : ?. solve_Bounds e.
+    simpl. unfold SomeIf. rewrite Eq_Reflexive. reflexivity. }
+    destruct (null s0) eqn : N'.
+    + rewrite Hsem in H5. unfold ando' in H5. destruct (sem x2 e0) eqn : X2.
+      assert (member e0 x1 = true). rewrite member_spec. exists a0. assumption.
+      apply H. rewrite H3 in H6. rewrite member_spec in H6. destruct H6.
+      rewrite null_empty_iff in N'. rewrite <- empty_no_elts in N'.
+      specialize (N' e0). rewrite Hsem0 in N'. rewrite H6 in N'. unfold ando' in N'.
+      destruct (sem y2 e0) eqn : ?. inversion N'. 
+      rewrite <- non_member_spec in Heqo. rewrite <- H4 in Heqo.
+      rewrite non_member_spec in Heqo. rewrite Heqo in X2. inversion X2. apply H0. apply H2.
+      apply H1. inversion H5.
+    + reflexivity.
+    + inversion N.
+Qed.
+
 End WF_Part2. 

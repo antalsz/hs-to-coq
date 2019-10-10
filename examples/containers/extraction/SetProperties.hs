@@ -761,15 +761,18 @@ prop_sameSplit :: Int -> Set Int -> Bool
 prop_sameSplit x xs = ys1 `equalSets` ys2 && zs1 `equalSets` zs2 where
   (ys1, zs1) = DS.split x (toDataSet xs)
   (ys2, zs2) = split x xs
-  
+
+-- NOTE: cannot compare trees
+-- use of pointer equality means that sometimes the structure will differ
 prop_sameUnion :: TwoSets -> Bool
-prop_sameUnion (TwoSets xs ys) = equalSets (DS.union (toDataSet xs) (toDataSet ys)) (union xs ys) 
+prop_sameUnion (TwoSets xs ys) = DS.elems (DS.union (toDataSet xs) (toDataSet ys)) == (elems (union xs ys))
 
 prop_sameDifference :: TwoSets -> Bool
 prop_sameDifference (TwoSets xs ys) = equalSets (DS.difference (toDataSet xs) (toDataSet ys)) (difference xs ys) 
 
+-- NOTE: cannot compare trees
 prop_sameIntersection :: TwoSets -> Bool
-prop_sameIntersection (TwoSets xs ys) = equalSets (DS.intersection (toDataSet xs) (toDataSet ys)) (intersection xs ys) 
+prop_sameIntersection (TwoSets xs ys) = DS.elems (DS.intersection (toDataSet xs) (toDataSet ys)) == (elems (intersection xs ys))
 
 prop_sameDisjoint :: TwoSets -> Bool
 prop_sameDisjoint (TwoSets xs ys) = (DS.disjoint (toDataSet xs) (toDataSet ys)) == (disjoint xs ys) 
@@ -794,13 +797,16 @@ prop_sameFromList xs =
    DS.fromList xs `equalSets` fromList xs
 -- 
 
+-- NOTE: cannot compare trees
 prop_sameFilter :: Set Int -> Bool
-prop_sameFilter xs = equalSets (DS.filter (>2) (toDataSet xs)) (filter (>2) xs)
+prop_sameFilter xs = DS.elems (DS.filter (>2) (toDataSet xs)) == (elems (filter (>2) xs))
 
+-- NOTE: cannot compare trees
 prop_samePartition :: Set Int -> Bool
-prop_samePartition xs = equalSets ys1 zs1 && equalSets ys2 zs2 where
+prop_samePartition xs = cmp ys1 zs1 && cmp ys2 zs2 where
    (ys1, ys2) = DS.partition (>2) (toDataSet xs)
    (zs1, zs2) = partition (>2) xs
+   cmp ys zs = DS.elems ys == elems zs 
 
 prop_sameLink :: Int -> TwoSets -> Bool
 prop_sameLink i (TwoSets xs ys) =

@@ -167,7 +167,8 @@ lookupLE = S2.lookupLE eq_a ord_a
 lookupGE :: Prelude.Ord a => a -> Set a -> Maybe a
 lookupGE = S2.lookupGE eq_a ord_a
 
-
+elems :: Set a -> [a]
+elems = S2.elems 
 --------------------------------------------------
 -- Indexed
 --------------------------------------------------

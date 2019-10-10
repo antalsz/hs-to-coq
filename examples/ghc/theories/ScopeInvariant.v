@@ -526,6 +526,9 @@ Proof.
   - apply subVarSet_emptyVarSet. 
 Qed.
 
+Print Assumptions WellScoped_subset.
+
+
 
 (** *** Freshness *)
 

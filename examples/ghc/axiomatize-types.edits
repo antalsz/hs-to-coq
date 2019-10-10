@@ -203,8 +203,6 @@ axiomatize definition Core.dataConCannotMatch
 ############################################################################
 # rewrites for type/corecion related operations defined in translated modules
 ############################################################################
-
-
 #
 # (these operations were in TyCoRep)
 #
@@ -213,17 +211,28 @@ rewrite forall ty,     Core.tyCoFVsOfType ty        = FV.emptyFV
 rewrite forall ty,     Core.tyCoVarsOfTypeDSet ty   = Core.emptyDVarSet
 rewrite forall co,     Core.tyCoVarsOfCoDSet co     = Core.emptyDVarSet
 
-# in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
-# in CoreSubst.substBndr rewrite forall bndr, Core.isCoVar bndr = false
-# in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isTyVar bndr = false 
-# in CoreSubst.extendSubstWithVar rewrite forall bndr, Core.isCoVar bndr = false
-
 in CoreSubst.substBndr   rewrite forall x, Core.noFreeVarsOfType x = true
 in CoreSubst.substIdBndr rewrite forall x, Core.noFreeVarsOfType x = true
 
 
+# don't need substCoVarBndr and substTyVarBndr
+in CoreSubst.substBndr rewrite forall bndr, Core.isTyVar bndr = false 
+in CoreSubst.substBndr rewrite forall bndr, Core.isCoVar bndr = false
 
 #
+# We need to avoid creating new Coercions and Types with mkTyVarTy and mkCoVarCo
+#
+in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
+in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
+in Core.varToCoreExpr rewrite forall bndr, Core.isId v = true
+
+in CoreSubst.extendSubstWithVar rewrite forall v2, andb Util.debugIsOn (negb (Core.isTyVar v2)) = false
+in CoreSubst.extendSubstWithVar rewrite forall v1, (Core.isTyVar v1) = false
+in CoreSubst.extendSubstWithVar rewrite forall v2, andb Util.debugIsOn (negb (Core.isCoVar v2)) = false
+in CoreSubst.extendSubstWithVar rewrite forall v1, (Core.isCoVar v1) = false
+in CoreSubst.clone_id rewrite forall old_id, Core.isCoVar old_id = false
+
+#######
 # we cannot verify these assertions as we aren't tracking whether types are
 # coercion types are not. But they are debug assertions!
 #
@@ -236,12 +245,6 @@ in Id.mkUserLocal rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkLocalIdOrCoVarWithInfo rewrite forall ty, (Core.isCoercionType ty) = false
 in Id.mkLocalIdOrCoVar rewrite forall ty, Core.isCoercionType ty = false
 
-#
-# We need to avoid creating new Coercions and Types
-#
-# in Core.varToCoreExpr rewrite forall v, Core.isCoVar v = false
-# in Core.varToCoreExpr rewrite forall v, Core.isTyVar v = false
-# in Core.varToCoreExpr rewrite forall bndr, Core.isId v = true
 
 ############################################################################
 # pruning ticks

@@ -27,7 +27,6 @@ Require GHC.Err.
 Require Import GHC.List.
 Require GHC.Num.
 Require Id.
-Require Maybes.
 Require Name.
 Require Panic.
 Require UniqSupply.
@@ -123,14 +122,6 @@ Definition mkOpenSubst : InScopeSet -> list (Var * CoreArg)%type -> Subst :=
 
 Definition mkEmptySubst : InScopeSet -> Subst :=
   fun in_scope => Mk_Subst in_scope emptyVarEnv emptyVarEnv emptyVarEnv.
-
-Definition lookupTCvSubst : Subst -> TyVar -> AxiomatizedTypes.Type_ :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | Mk_Subst _ _ tvs cvs, v =>
-        if isTyVar v : bool then Maybes.orElse (lookupVarEnv tvs v) (mkTyVarTy v) else
-        mkCoercionTy (Maybes.orElse (lookupVarEnv cvs v) (mkCoVarCo v))
-    end.
 
 Definition lookupIdSubst : String -> Subst -> Id -> CoreExpr :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -464,6 +455,13 @@ Definition extendIdSubst : Subst -> Id -> CoreExpr -> Subst :=
         else Mk_Subst in_scope (extendVarEnv ids v r) tvs cvs
     end.
 
+Definition extendSubstWithVar : Subst -> Var -> Var -> Subst :=
+  fun subst v1 v2 =>
+    if andb Util.debugIsOn (negb (isId v2)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__
+                             "ghc/compiler/coreSyn/CoreSubst.hs") #245)
+    else extendIdSubst subst v1 (Mk_Var v2).
+
 Definition extendCvSubst
    : Subst -> CoVar -> AxiomatizedTypes.Coercion -> Subst :=
   fun arg_0__ arg_1__ arg_2__ =>
@@ -504,23 +502,6 @@ Definition extendSubstList : Subst -> list (Var * CoreArg)%type -> Subst :=
                extendSubstList (extendSubst subst var rhs) prs
            end.
 
-Definition extendSubstWithVar : Subst -> Var -> Var -> Subst :=
-  fun subst v1 v2 =>
-    if isTyVar v1 : bool
-    then if andb Util.debugIsOn (negb (isTyVar v2)) : bool
-         then (Panic.assertPanic (GHC.Base.hs_string__
-                                  "ghc/compiler/coreSyn/CoreSubst.hs") #243)
-         else extendTvSubst subst v1 (mkTyVarTy v2) else
-    if isCoVar v1 : bool
-    then if andb Util.debugIsOn (negb (isCoVar v2)) : bool
-         then (Panic.assertPanic (GHC.Base.hs_string__
-                                  "ghc/compiler/coreSyn/CoreSubst.hs") #244)
-         else extendCvSubst subst v1 (mkCoVarCo v2) else
-    if andb Util.debugIsOn (negb (isId v2)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__
-                             "ghc/compiler/coreSyn/CoreSubst.hs") #245)
-    else extendIdSubst subst v1 (Mk_Var v2).
-
 Definition emptySubst : Subst :=
   Mk_Subst emptyInScopeSet emptyVarEnv emptyVarEnv emptyVarEnv.
 
@@ -553,9 +534,8 @@ Definition clone_id
         let id2 := substIdType subst id1 in
         let new_id :=
           Id.maybeModifyIdInfo (substIdInfo rec_subst id2 (idInfo old_id)) id2 in
-        let 'pair new_idvs new_cvs := (if isCoVar old_id : bool
-                                       then pair idvs (extendVarEnv cvs old_id (mkCoVarCo new_id)) else
-                                       pair (extendVarEnv idvs old_id (Mk_Var new_id)) cvs) in
+        let 'pair new_idvs new_cvs := pair (extendVarEnv idvs old_id (Mk_Var new_id))
+                                           cvs in
         pair (Mk_Subst (extendInScopeSet in_scope new_id) new_idvs tvs new_cvs) new_id
     end.
 
@@ -618,16 +598,16 @@ Definition addInScopeSet : Subst -> VarSet -> Subst :=
      emptyVarEnv emptyVarSet extendInScopeSet extendInScopeSetList
      extendInScopeSetSet extendVarEnv extendVarEnvList idInfo isCoVar isEmptyRuleInfo
      isEmptyVarEnv isFragileUnfolding isId isLocalId isLocalVar isNonCoVarId isTyVar
-     list lookupInScope lookupVarEnv map mapAccumL mappend mkCoVarCo mkCoercionTy
-     mkDVarSet mkTyVarTy mkVarEnv negb nil noFreeVarsOfType op_z2218U__ op_zeze__
-     op_zt__ option orb pair ruleInfo setRuleInfo setUnfoldingInfo setVarUnique snd
-     substCo substCoVarBndr substTyUnchecked substTyVarBndr true unfoldingInfo
-     uniqAway unzip zip AxiomatizedTypes.Coercion AxiomatizedTypes.Type_
-     Coq.Lists.List.flat_map CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr
-     Data.Foldable.all Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst
-     Data.Tuple.snd Datatypes.id FV.emptyFV GHC.Err.error GHC.Num.fromInteger
-     Id.idType Id.maybeModifyIdInfo Id.setIdType Maybes.orElse Name.Name
-     Panic.assertPanic Panic.panicStr Panic.someSDoc Panic.warnPprTrace
-     UniqSupply.UniqSupply UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply
-     Unique.Unique Util.debugIsOn
+     list lookupInScope lookupVarEnv map mapAccumL mappend mkDVarSet mkVarEnv negb
+     nil noFreeVarsOfType op_z2218U__ op_zeze__ op_zt__ option orb pair ruleInfo
+     setRuleInfo setUnfoldingInfo setVarUnique snd substCo substCoVarBndr
+     substTyUnchecked substTyVarBndr true unfoldingInfo uniqAway unzip zip
+     AxiomatizedTypes.Coercion AxiomatizedTypes.Type_ Coq.Lists.List.flat_map
+     CoreFVs.expr_fvs CoreUtils.getIdFromTrivialExpr Data.Foldable.all
+     Data.Foldable.foldl' Data.Foldable.foldr Data.Tuple.fst Data.Tuple.snd
+     Datatypes.id FV.emptyFV GHC.Err.error GHC.Num.fromInteger Id.idType
+     Id.maybeModifyIdInfo Id.setIdType Name.Name Panic.assertPanic Panic.panicStr
+     Panic.someSDoc Panic.warnPprTrace UniqSupply.UniqSupply
+     UniqSupply.uniqFromSupply UniqSupply.uniqsFromSupply Unique.Unique
+     Util.debugIsOn
 *)

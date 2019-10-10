@@ -2344,11 +2344,17 @@ Instance Default__RuntimRepInfo : Err.Default RuntimeRepInfo :=
 
 
 
-
+(* ------------- Var midamble.v --------------- *)
 Instance Name_NamedThing_TyCoVar : Name.NamedThing TyCoVar.
-Admitted.
+intros r d. eapply d. eapply Name.NamedThing__Dict_Build.
+eapply varName. intro v. eapply Name.nameOccName. eapply varName. exact v.
+Qed.
 Instance Name_NamedThing_VarId : Name.NamedThing Id.
-Admitted.
+intros r d. eapply d. eapply Name.NamedThing__Dict_Build.
+eapply varName. intro v. eapply Name.nameOccName. eapply varName. exact v.
+Qed.
+
+
 (* ------------- VarEnv midamble.v ------------ *)
 Require GHC.Err.
 
@@ -3288,10 +3294,6 @@ Axiom mkUProd : list ArgUse -> UseDmd.
 
 Axiom mkUCall : Count -> UseDmd -> UseDmd.
 
-Axiom mkTyVarTys : list TyVar -> list Type_.
-
-Axiom mkTyVarTy : TyVar -> Type_.
-
 Axiom mkTyConTy : TyCon -> Type_.
 
 Axiom mkTyConKind : list TyConBinder -> Kind -> Kind.
@@ -3509,10 +3511,6 @@ Axiom mkCoherenceCo : Coercion -> Coercion -> Coercion.
 Axiom mkCoercionType : Role -> Type_ -> Type_ -> Type_.
 
 Axiom mkCoercionTy : Coercion -> Type_.
-
-Axiom mkCoVarCos : list CoVar -> list Coercion.
-
-Axiom mkCoVarCo : CoVar -> Coercion.
 
 Axiom mkCoCast : Coercion -> Coercion -> Coercion.
 
@@ -4471,6 +4469,16 @@ Definition zapDemandInfo : IdInfo -> option IdInfo :=
 Definition varUnique : Var -> Unique.Unique :=
   fun var => Unique.mkUniqueGrimily (realUnique var).
 
+Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
+  fun v =>
+    if andb Util.debugIsOn (negb (true)) : bool
+    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
+          #1920)
+    else Mk_Var v.
+
+Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
+  fun vs => GHC.Base.map varToCoreExpr vs.
+
 Definition vanillaCafInfo : CafInfo :=
   MayHaveCafRefs.
 
@@ -4938,6 +4946,9 @@ Definition zipVarEnv {a} : list Var -> list a -> VarEnv a :=
   fun tyvars tys =>
     mkVarEnv (Util.zipEqual (GHC.Base.hs_string__ "zipVarEnv") tyvars tys).
 
+Definition mkVarApps {b} : Expr b -> list Var -> Expr b :=
+  fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
+
 Definition mkTyVarBinder : ArgFlag -> Var -> TyVarBinder :=
   fun vis var => TvBndr var vis.
 
@@ -5019,6 +5030,11 @@ Definition mkApps {b} : Expr b -> list (Arg b) -> Expr b :=
 
 Definition mkConApp {b} : DataCon -> list (Arg b) -> Expr b :=
   fun con args => mkApps (Mk_Var (dataConWorkId con)) args.
+
+Definition mkConApp2 {b} : DataCon -> list Type_ -> list Var -> Expr b :=
+  fun con tys arg_ids =>
+    mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map Mk_Type tys))
+           (GHC.Base.map varToCoreExpr arg_ids).
 
 Definition minusVarSet : VarSet -> VarSet -> VarSet :=
   UniqSet.minusUniqSet.
@@ -5280,26 +5296,6 @@ Definition isCoVar : Var -> bool :=
 
 Definition isTyCoVar : Var -> bool :=
   fun v => orb (isTyVar v) (isCoVar v).
-
-Definition varToCoreExpr {b} : CoreBndr -> Expr b :=
-  fun v =>
-    if isTyVar v : bool then Mk_Type (mkTyVarTy v) else
-    if isCoVar v : bool then Mk_Coercion (mkCoVarCo v) else
-    if andb Util.debugIsOn (negb (isId v)) : bool
-    then (Panic.assertPanic (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreSyn.hs")
-          #1920)
-    else Mk_Var v.
-
-Definition mkConApp2 {b} : DataCon -> list Type_ -> list Var -> Expr b :=
-  fun con tys arg_ids =>
-    mkApps (mkApps (Mk_Var (dataConWorkId con)) (GHC.Base.map Mk_Type tys))
-           (GHC.Base.map varToCoreExpr arg_ids).
-
-Definition mkVarApps {b} : Expr b -> list Var -> Expr b :=
-  fun f vars => Data.Foldable.foldl (fun e a => App e (varToCoreExpr a)) f vars.
-
-Definition varsToCoreExprs {b} : list CoreBndr -> list (Expr b) :=
-  fun vs => GHC.Base.map varToCoreExpr vs.
 
 Definition isCheapUnfolding : Unfolding -> bool :=
   fun arg_0__ => false.

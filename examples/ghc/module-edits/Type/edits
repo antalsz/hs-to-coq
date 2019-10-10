@@ -2,4 +2,9 @@ rename value Type.TyCoMapper = Core.Mk_TyCoMapper
 
 skip Core.Ord__TypeOrdering
 skip Core.Ord__Role
+
+skip Core.mkTyVarTy
+skip Core.mkTyVarTys
+skip Core.mkCoVarCo
+skip Core.mkCoVarCos
  

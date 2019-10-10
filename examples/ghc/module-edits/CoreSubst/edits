@@ -3,6 +3,9 @@ import module GHC.List
 import module Data.Traversable
 import module Core
 
+# requires mkTyVarTy and mkCoVarCo
+skip CoreSubst.lookupTCvSubst
+
 # ruleInfo substitution function (but unused)
 axiomatize definition CoreSubst.substSpec 
 

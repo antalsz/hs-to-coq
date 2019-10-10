@@ -1465,3 +1465,6 @@ Lemma WellScoped_substExpr : forall e s vs subst,
     WellScoped (substExpr s subst e) 
                (getSubstInScopeVars subst).
 Proof. intros. destruct subst. simpl. eapply substExpr_ok; eauto. Qed.
+
+
+Print Assumptions WellScoped_substExpr.

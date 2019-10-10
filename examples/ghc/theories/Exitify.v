@@ -3377,3 +3377,5 @@ Proof.
          ** apply HJPVrhs.
          ** apply subVarSet_emptyVarSet.
 Qed.
+
+Print Assumptions exitifyProgram_WellScoped_JPV.

@@ -158,20 +158,23 @@ Proof.
     admit.
   
   - rewrite /= /addBinder /= => -[GLV WSe].
-    case SB: (substBndr _ _) => [sub' v'] /=.
+    case SB: (substBndr (Mk_Subst in_scope id_env tm cm) v) => [sub' v'] /=. 
     move: (WellScoped_Subst_substBndr _ _ _ _ _ SB GLV WSsubst) => [SE WSsubst'].
     move: (GoodLocalVar_substBndr _ _ _ _ GLV SB) => GLV'.
     split=> //.
     specialize (IH (extendVarSet vars v) (CS sub' cs_map cs_rec_map)).
     lapply IH; first move=> {IH} IH.
-    + move: IH; rewrite /cs_subst => /(_ WSe) IH.
-      apply WellScoped_StrongSubset with (vs1 := getSubstInScopeVars sub') => //.
+    + admit.  
+(*      move: IH; rewrite /cs_subst => /(_ WSe) IH.
+       apply WellScoped_StrongSubset with (vs1 := getSubstInScopeVars sub') => //. 
       destruct sub' as [in_scope' id_env' [] []] => /=.
-      move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]].
+      move: SE; rewrite /SubstExtends; move=> [_ [_ [_ [_ [[// _] _]]]]]. *)
     + constructor=> //; rewrite /cs_subst //.
+    + admit.
 
   - rewrite (lock cse_bind) /= -(lock cse_bind) => -[[GLV WS_rhs] WS_ext].
-    rewrite /addBinder /substBndr isn'tTyVar isn'tCoVar.
+    admit.
+(*    rewrite /addBinder /substBndr. isn'tTyVar isn'tCoVar.
     case def_sub'_v': (substIdBndr _ _ _ _) => [sub' v'].
     have GLV': GoodLocalVar v' by eapply GoodLocalVar_substIdBndr; eassumption.
     move: (WellScoped_Subst_substIdBndr _ _ _ _ _ _ _ def_sub'_v' GLV WSsubst)
@@ -194,7 +197,7 @@ Proof.
              constructor => //.
              admit.
            }
-           admit.
+           admit. *)
 
   - rewrite (lock cseBind) /= -(lock cseBind).
     case: pairs IHbind => [|[in_id rhs] [|[in_id' rhs'] pairs]] IHbind [[GLVs [Uniq WS_pairs]] WS_body] /=.

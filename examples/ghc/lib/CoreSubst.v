@@ -222,8 +222,6 @@ Definition substIdBndr : String -> Subst -> Subst -> Id -> (Subst * Id)%type :=
 
 Definition substBndr : Subst -> Var -> (Subst * Var)%type :=
   fun subst bndr =>
-    if isTyVar bndr : bool then substTyVarBndr subst bndr else
-    if isCoVar bndr : bool then substCoVarBndr subst bndr else
     substIdBndr (Datatypes.id (GHC.Base.hs_string__ "var-bndr")) subst subst bndr.
 
 Definition substBndrs : Subst -> list Var -> (Subst * list Var)%type :=

@@ -171,7 +171,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     unfold subset,Subset in *.
     unfold In in *.
     unfold subVarSet, minusVarSet, isEmptyVarSet.
-    simpl.
+    simpl. intros.
   Admitted.
 
   Lemma subset_2 : forall s s' : t, subset s s' = true -> Subset s s'.

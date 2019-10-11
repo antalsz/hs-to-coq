@@ -313,11 +313,20 @@ Proof.
   eapply disjoint_difference with (m2:=x); destruct_IntMap.
 Qed.
 
-Axiom null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.IntMap b), 
+Lemma null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.IntMap b), 
   (forall a, IntMap.member a x1 <-> IntMap.member a y1) ->
   (forall a, IntMap.member a x2 <-> IntMap.member a y2) ->
   IntMap.null (IntMap.intersection x1 x2) = IntMap.null (IntMap.intersection y1 y2).
-
+Proof. 
+  intros. 
+  eapply null_intersection_eq; destruct_IntMap.
+  unfold IntMap.member in *.
+  simpl in *.
+  intros a. rewrite HSUtil.bool_eq_iff. eauto.
+  unfold IntMap.member in *.
+  simpl in *.
+  intros a. rewrite HSUtil.bool_eq_iff. eauto.
+Qed.
 
 (*
 This is a QuickChick setup to test the above axioms

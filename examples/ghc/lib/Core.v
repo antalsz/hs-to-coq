@@ -4519,6 +4519,8 @@ Definition unitDVarSet : Var -> DVarSet :=
 Definition unitVarSet : Var -> VarSet :=
   UniqSet.unitUniqSet.
 
+Axiom uniqAway : InScopeSet -> Var -> Var.
+
 Definition unionVarSets : list VarSet -> VarSet :=
   UniqSet.unionManyUniqSets.
 
@@ -5446,6 +5448,42 @@ Definition extendInScopeSet : InScopeSet -> Var -> InScopeSet :=
     | InScope in_scope n, v => InScope (extendVarSet in_scope v) (n GHC.Num.+ #1)
     end.
 
+Definition rnBndrL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bL =>
+        let new_b := uniqAway in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) envR (extendInScopeSet in_scope new_b))
+             new_b
+    end.
+
+Definition rnBndrR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bR =>
+        let new_b := uniqAway in_scope bR in
+        pair (RV2 envL (extendVarEnv envR bR new_b) (extendInScopeSet in_scope new_b))
+             new_b
+    end.
+
+Definition rnEtaL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bL =>
+        let new_b := uniqAway in_scope bL in
+        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR new_b new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
+Definition rnEtaR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | RV2 envL envR in_scope, bR =>
+        let new_b := uniqAway in_scope bR in
+        pair (RV2 (extendVarEnv envL new_b new_b) (extendVarEnv envR bR new_b)
+                  (extendInScopeSet in_scope new_b)) new_b
+    end.
+
 Definition modifyDVarEnv {a} : (a -> a) -> DVarEnv a -> Var -> DVarEnv a :=
   fun mangle_fn env key =>
     match (lookupDVarEnv env key) with
@@ -5645,47 +5683,6 @@ Definition rnBndrs2 : RnEnv2 -> list Var -> list Var -> RnEnv2 :=
 
 Definition rnInScope : Var -> RnEnv2 -> bool :=
   fun x env => elemInScopeSet x (in_scope env).
-
-Definition uniqAway : InScopeSet -> Var -> Var :=
-  fun in_scope var =>
-    if elemInScopeSet var in_scope : bool then uniqAway' in_scope var else
-    var.
-
-Definition rnBndrL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bL =>
-        let new_b := uniqAway in_scope bL in
-        pair (RV2 (extendVarEnv envL bL new_b) envR (extendInScopeSet in_scope new_b))
-             new_b
-    end.
-
-Definition rnBndrR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bR =>
-        let new_b := uniqAway in_scope bR in
-        pair (RV2 envL (extendVarEnv envR bR new_b) (extendInScopeSet in_scope new_b))
-             new_b
-    end.
-
-Definition rnEtaL : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bL =>
-        let new_b := uniqAway in_scope bL in
-        pair (RV2 (extendVarEnv envL bL new_b) (extendVarEnv envR new_b new_b)
-                  (extendInScopeSet in_scope new_b)) new_b
-    end.
-
-Definition rnEtaR : RnEnv2 -> Var -> (RnEnv2 * Var)%type :=
-  fun arg_0__ arg_1__ =>
-    match arg_0__, arg_1__ with
-    | RV2 envL envR in_scope, bR =>
-        let new_b := uniqAway in_scope bR in
-        pair (RV2 (extendVarEnv envL new_b new_b) (extendVarEnv envR bR new_b)
-                  (extendInScopeSet in_scope new_b)) new_b
-    end.
 
 Definition disjointVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => UniqFM.disjointUFM (UniqSet.getUniqSet s1) (UniqSet.getUniqSet s2).

@@ -1,3 +1,4 @@
+axiomatize definition Core.uniqAway
 
 in Core.uniqAway' termination try deferred
 # obligations Core.uniqAway' admit

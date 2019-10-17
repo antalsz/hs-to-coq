@@ -213,7 +213,8 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     destruct j, j'. simpl.
     unfold IntMap.null, IntMap.difference, IntMap.member. simpl.
     eapply difference_Desc; eauto.
-    intros. rewrite -> null_spec' in H3; [|assumption].
+    intros. 
+    rewrite -> null_spec' in H3; [|assumption].
     rewrite member_spec; [|eassumption].
     rewrite -> member_spec in H4; [|eassumption].
     specialize (H2 (realUnique a)).

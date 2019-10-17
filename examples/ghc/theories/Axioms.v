@@ -196,18 +196,29 @@ Proof.
 Qed.
 
 (* SCW: this one has a precondition that v is VanillaId or JoinId *)
-Axiom isJoinId_maybe_asJoinId:
+Lemma isJoinId_maybe_asJoinId:
   forall v a,
+  ( match Core.idDetails v with
+        | Core.VanillaId => true
+        | Core.Mk_JoinId _ => true
+        | _ => false
+        end ) -> 
+  isLocalId v ->
   isJoinId_maybe (asJoinId v a) = Some a.
-(*
+Proof.
   intros. destruct v.
-  unfold isJoinId_maybe. unfold isId. 
+  simpl in *.
+  unfold isJoinId_maybe. unfold isId.
   destruct asJoinId eqn:AS.
   rewrite andb_false_r.
+  unfold asJoinId in AS. rewrite H0 in AS. 
+  unfold Panic.warnPprTrace in AS. simpl in AS. 
+  rewrite H in AS. simpl in AS. inversion AS.
   simpl.
-  unfold asJoinId in AS.
-  unfold Panic.warnPprTrace in AS.
-  destruct isLocalId eqn:IL. simpl in AS. *)
+  auto.
+Qed.  
+
+
   
 (** ** Valid VarSets *)
 

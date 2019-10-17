@@ -38,6 +38,20 @@ Close Scope Z_scope.
 
 (** * Proofs about the Exitification pass *)
 
+Lemma etaUnique: forall u, Unique.MkUnique (Unique.getKey u) = u.
+Proof. intro u. destruct u. simpl. auto. Qed.
+
+Lemma isLocalId_mkLocalId : forall s ty,  
+  is_true
+    (isLocalId
+       (mkLocalId (Name.mkSystemVarName Unique.initExitJoinUnique s) ty)).
+Proof. intros.
+    unfold mkLocalId. unfold mkLocalIdWithInfo. unfold mkLocalVar.
+        unfold isLocalId, varUnique, mk_id, realUnique, Unique.mkUniqueGrimily, Name.nameUnique, Name.mkSystemVarName, Name.mkSystemName, Name.n_uniq. 
+        unfold Name.mkSystemNameAt.
+        rewrite etaUnique.
+        rewrite isLocalUnique_initExitJoinUnique. auto.
+Qed.        
 
 
 
@@ -1957,6 +1971,12 @@ Definition jpsp := updJPSs jps fs .
         rewrite isJoinId_maybe_uniqAway.
         rewrite isJoinId_maybe_asJoinId.
         reflexivity.
+        unfold mkSysLocal. rewrite andb_false_r.
+        simpl.
+        auto.
+        unfold mkSysLocal. rewrite andb_false_r.
+        apply isLocalId_mkLocalId.
+
     * intros x HiJI.
       eapply SP_bind.
       - apply SP_get.
@@ -2417,6 +2437,10 @@ Definition jpsp := updJPSs jps fs .
       subst v.
       rewrite isJoinId_maybe_uniqAway, isJoinId_maybe_asJoinId.
       reflexivity.
+      unfold mkSysLocal. rewrite andb_false_r. simpl.
+      auto.
+      unfold mkSysLocal. rewrite andb_false_r. 
+      apply isLocalId_mkLocalId.
     } 
     rewrite H; clear H.
     rewrite Nat.leb_refl. simpl.

@@ -213,7 +213,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     destruct j, j'. simpl.
     unfold IntMap.null, IntMap.difference, IntMap.member. simpl.
     eapply difference_Desc; eauto.
-    intros. 
+    intros.
     rewrite -> null_spec' in H3; [|assumption].
     rewrite member_spec; [|eassumption].
     rewrite -> member_spec in H4; [|eassumption].
@@ -713,19 +713,157 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     compat_bool E.eq f ->
     Exists (fun x : elt => f x = true) s -> exists_ f s = true.
   Proof.
-    intros.
-    unfold Exists, exists_ in *.
-  Admitted.
+    move=>s.
+    assert (ValidVarSet s) by apply ValidVarSet_Axiom.
+    move: H.
+    destruct s, getUniqSet', i.
+    rewrite /Exists /In /ValidVarSet. cbn. move=>Hvalid f Heq.
+    rewrite foldr_spec foldrWithKey_spec.
+    move=>[v [Hmem Hf]]. remember false as bf. clear Heqbf.
+    generalize dependent bf.
+    induction x.
+    - move: Hmem. rewrite member_spec; [|eassumption].
+      simpl. move=>[v' Hsem] bf.
+      rewrite toList_bin fold_right_app /=.
+      assert (forall l, fold_right
+                     (fun (x : Word * Var) (t : bool) =>
+                        let (_, b0) := x in f b0 || t)
+                     true l = true).
+      { intros. rewrite -(rev_involutive l) fold_left_rev_right.
+        induction (rev l); simpl. reflexivity.
+        destruct a0. rewrite orb_true_r. apply IHl0. }
+      destruct (sem x1 (realUnique v)) eqn:Hx1.
+      + move: Hsem. rewrite Hx1 /=. inversion 1; subst.
+        inversion w; subst.
+        apply Bounded_relax_ub_None in H5.
+        assert (Hvx1: ValidVarSet (UniqSet.Mk_UniqSet
+                                     (UniqFM.UFM (exist _ x1 H5))))
+        by apply ValidVarSet_Axiom.
+        rewrite IHx1; try assumption.
+        rewrite member_spec; [|eassumption]. eapply ex_intro; eassumption.
+      + move: Hsem. rewrite Hx1 /=.
+        destruct (realUnique v == k) eqn:Hvk.
+        * simpl. inversion 1; subst.
+          assert (f v = f v').
+          { apply Heq. rewrite -E.eqb_eq. apply Hvalid.
+            erewrite lookup_spec; [|eassumption].
+            simpl. rewrite Hx1 Hvk //=. }
+          rewrite -H0 Hf /= H //=.
+        * simpl. move=>Hx2. inversion w; subst.
+          apply Bounded_relax_lb_None in H6.
+          assert (Hvx2: ValidVarSet (UniqSet.Mk_UniqSet
+                                       (UniqFM.UFM (exist _ x2 H6))))
+            by apply ValidVarSet_Axiom.
+          rewrite IHx2; try assumption.
+          rewrite orb_true_r H //=.
+          rewrite member_spec; [|eassumption]. eapply ex_intro; eassumption.
+    - inversion Hmem.
+  Qed.
 
   Lemma exists_2 :
     forall (s : t) (f : elt -> bool),
     compat_bool E.eq f ->
     exists_ f s = true -> Exists (fun x : elt => f x = true) s.
   Proof.
-    intros.
-    unfold Exists, exists_ in *.
-  Admitted.
-
+    move=>s.
+    assert (ValidVarSet s) by apply ValidVarSet_Axiom.
+    move: H.
+    destruct s, getUniqSet', i.
+    rewrite /Exists /In /ValidVarSet. cbn. move=>Hvalid f Heq.
+    rewrite foldr_spec foldrWithKey_spec.
+    move=>Hfold.
+    assert (forall l, fold_right
+                   (fun (x : Word * Var) (t : bool) =>
+                      let (_, b0) := x in f b0 || t)
+                   true l = true).
+    { intros. rewrite -(rev_involutive l) fold_left_rev_right.
+      induction (rev l); simpl. reflexivity.
+      destruct a. rewrite orb_true_r. apply IHl0. }
+    induction x.
+    - move: Hfold. rewrite toList_bin fold_right_app.
+      move=> Hfold. simpl in Hfold.
+      destruct (fold_right
+                  (fun (x : Word * Var) (t : bool) =>
+                     let (_, b0) := x in f b0 || t) false
+                  (Internal.toList x1)) eqn:Hx1.
+      + inversion w; subst.
+        assert (exists x : Var, Internal.member (realUnique x) x1 = true /\ f x = true).
+        {
+          apply Bounded_relax_ub_None in H5.
+          apply IHx1; try assumption.
+          move=>v1 v2. erewrite lookup_spec; [| eassumption].
+          move=>Hsem1. specialize (Hvalid v1 v2).
+          move: Hvalid.
+          erewrite lookup_spec; [| eassumption].
+          simpl. rewrite Hsem1 /=. auto.
+        }
+        destruct H0 as [v H0]. exists v. move: H0.
+        rewrite !member_spec; try eassumption.
+        move=>[[v' Hsem1] Hfv]. intuition.
+        exists v'. simpl. rewrite Hsem1. reflexivity.
+      + remember (Mk_Id GHC.Err.default
+                        k
+                        GHC.Err.default
+                        GHC.Err.default
+                        GHC.Err.default
+                        GHC.Err.default) as kv.
+        assert ((realUnique kv =? realUnique a)%N).
+        {
+          apply Hvalid. erewrite lookup_spec; try eassumption. simpl.
+          inversion w; subst.
+          erewrite sem_outside_above; try eassumption.
+          - simpl. rewrite Eq_refl //=.
+          - simpl. OrdTactic.order N.
+        }
+        destruct (f kv) eqn:Hf.
+        * exists kv. rewrite member_spec; [|eassumption].
+          intuition. rewrite Heqkv /= Eq_refl /=.
+          destruct (sem x1 k) eqn:Hx1k.
+          -- rewrite Hx1k. exists v. reflexivity.
+          -- exists a. rewrite Hx1k. reflexivity.
+        * destruct (fold_right
+                      (fun (x : Word * Var) (t : bool) =>
+                         let (_, b0) := x in f b0 || t)
+                      false (Internal.toList x2)) eqn:Hx2.
+          -- inversion w; subst.
+             assert (exists x : Var, Internal.member (realUnique x) x2 = true /\ f x = true).
+             {
+               apply Bounded_relax_lb_None in H7 as Hwf2.
+               apply IHx2; try assumption.
+               move=>v1 v2. erewrite lookup_spec; [| eassumption].
+               move=>Hsem2. specialize (Hvalid v1 v2).
+               move: Hvalid.
+               erewrite lookup_spec; [| eassumption].
+               simpl. pose proof sem_inside H7 Hsem2.
+               destruct H1. simpl in H1.
+               erewrite sem_outside_above; try eassumption; simpl.
+               - assert (k == realUnique v1 = false)
+                   by (apply lt_not_eq; assumption).
+                 rewrite Eq_sym H3 /= Hsem2. auto.
+               - rewrite -negb_true_iff OrdTactic.Ord_lt_le negb_involutive /=.
+                 assert (forall (n1 n2 : N),
+                            _GHC.Base.<_ n1 n2 = true ->
+                            _GHC.Base.<=_ n1 n2 = true).
+                 { intros. OrdTactic.order N. }
+                 apply H3; assumption.
+                 (* Why can't I used [OrderTactic.order] outside? *)
+             }
+             destruct H1 as [v H1]. exists v. move: H1.
+             rewrite !member_spec; try eassumption.
+             move=>[[v' Hsem] Hf']. intuition.
+             simpl. rewrite Hsem.
+             intros. intuition.
+             destruct (sem x1 (realUnique v)) eqn:Hsem1; rewrite Hsem1.
+             ++ exists v0. reflexivity.
+             ++ destruct (realUnique v == k) eqn:Hkv.
+                ** exists a. reflexivity.
+                ** exists v'. reflexivity.
+          -- move: Hfold. rewrite orb_false_r.
+             assert (f a = f kv).
+             { symmetry. apply Heq. rewrite -E.eqb_eq. apply H0. }
+             rewrite H1 Hf Hx1. inversion 1.
+    - move: Hfold => //=.
+  Qed.
 
   (* Not needed after this line ---------------------- *)
 

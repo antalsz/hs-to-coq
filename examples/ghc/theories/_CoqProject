@@ -26,10 +26,8 @@ VarSet.v
 VarSetStrong.v
 VarEnv.v
 Unique.v
-ContainerAxioms.v
 Var.v
 FV.v
-UniqSetInv.v
 CoreSubst.v
 OrdList.v
 

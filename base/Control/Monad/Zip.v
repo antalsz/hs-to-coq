@@ -31,7 +31,6 @@ Record MonadZip__Dict m := MonadZip__Dict_Build {
 
 Definition MonadZip m `{GHC.Base.Monad m} :=
   forall r__, (MonadZip__Dict m -> r__) -> r__.
-
 Existing Class MonadZip.
 
 Definition munzip `{g__0__ : MonadZip m}

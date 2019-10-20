@@ -50,7 +50,6 @@ Record HasOccName__Dict name := HasOccName__Dict_Build {
 
 Definition HasOccName name :=
   forall r__, (HasOccName__Dict name -> r__) -> r__.
-
 Existing Class HasOccName.
 
 Definition occName `{g__0__ : HasOccName name} : name -> OccName :=

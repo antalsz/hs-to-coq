@@ -317,6 +317,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                                                       (subst allLocalNames <$> params)
                                                       (Just $ subst allLocalNames ty)
                                                       qbody
+                                                      NotExistingClass
    
       let instHeadTy = appList (Qualid className) [PosArg instTy]
       instance_sentence <- view (edits.simpleClasses.contains className) >>= \case

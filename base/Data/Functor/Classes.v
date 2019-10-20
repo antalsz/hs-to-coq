@@ -28,8 +28,11 @@ Record Eq2__Dict f := Eq2__Dict_Build {
 
 Definition Eq2 f :=
   forall r__, (Eq2__Dict f -> r__) -> r__.
-
 Existing Class Eq2.
+
+Record Ord1__Dict f := Ord1__Dict_Build {
+  liftCompare__ : forall {a} {b},
+  (a -> b -> comparison) -> f a -> f b -> comparison }.
 
 Definition liftEq2 `{g__0__ : Eq2 f}
    : forall {a} {b} {c} {d},
@@ -43,7 +46,6 @@ Record Ord2__Dict f := Ord2__Dict_Build {
 
 Definition Ord2 f `{(Eq2 f)} :=
   forall r__, (Ord2__Dict f -> r__) -> r__.
-
 Existing Class Ord2.
 
 Definition liftCompare2 `{g__0__ : Ord2 f}
@@ -57,20 +59,14 @@ Record Eq1__Dict f := Eq1__Dict_Build {
 
 Definition Eq1 f :=
   forall r__, (Eq1__Dict f -> r__) -> r__.
-
 Existing Class Eq1.
 
 Definition liftEq `{g__0__ : Eq1 f}
    : forall {a} {b}, (a -> b -> bool) -> f a -> f b -> bool :=
   g__0__ _ (liftEq__ f).
 
-Record Ord1__Dict f := Ord1__Dict_Build {
-  liftCompare__ : forall {a} {b},
-  (a -> b -> comparison) -> f a -> f b -> comparison }.
-
 Definition Ord1 f `{(Eq1 f)} :=
   forall r__, (Ord1__Dict f -> r__) -> r__.
-
 Existing Class Ord1.
 
 Definition liftCompare `{g__0__ : Ord1 f}

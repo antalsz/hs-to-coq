@@ -75,6 +75,7 @@ module HsToCoq.Coq.Gallina (
   Arguments(..),
   ArgumentSpec(..),
   ArgumentExplicitness(..),
+  IsExistingClass(..),
   ) where
 
 import Prelude hiding (Num)
@@ -264,6 +265,9 @@ newtype Comment = Comment Text                                                  
 --
 -- We also add cases to deal with certain notation definitions and similar.
 
+data IsExistingClass = ExistingClass | NotExistingClass
+         deriving (Eq, Ord, Show, Read, Typeable, Data)
+
 -- |@/sentence/ ::=@
 data Sentence = AssumptionSentence       Assumption                                            -- ^@/assumption/@
               | DefinitionSentence       Definition                                            -- ^@/definition/@
@@ -273,7 +277,7 @@ data Sentence = AssumptionSentence       Assumption                             
               | AssertionSentence        Assertion Proof                                       -- ^@/assertion/ /proof/@
               | ModuleSentence           ModuleSentence                                        -- ^@/module_sentence/@ – extra (inferred from §2.5)
               | ClassSentence            ClassDefinition                                       -- ^@/class_definition/@ – extra
-              | ExistingClassSentence    Qualid                                                -- ^@/Existing Class /ident//@ – extra
+--              | ExistingClassSentence    Qualid                                                -- ^@/Existing Class /ident//@ – extra
               | RecordSentence           RecordDefinition                                      -- ^@/class_definition/@ – extra
               | InstanceSentence         InstanceDefinition                                    -- ^@/instance_definition/@ – extra
               | NotationSentence         Notation                                              -- ^@/notation/@ – extra
@@ -308,7 +312,7 @@ data Locality = Global                                                          
               deriving (Eq, Ord, Show, Read, Enum, Bounded, Typeable, Data)
 
 -- |@/definition/ ::=@
-data Definition = DefinitionDef Locality Qualid [Binder] (Maybe Term) Term                     -- ^@[Local] Definition /ident/ [/binders/] [: /term/] := /term/ .@
+data Definition = DefinitionDef Locality Qualid [Binder] (Maybe Term) Term IsExistingClass     -- ^@[Local] Definition /ident/ [/binders/] [: /term/] := /term/ .@
                 | LetDef Qualid [Binder] (Maybe Term) Term                                     -- ^@Let /ident/ [/binders/] [: /term/] := /term/ .@
                 deriving (Eq, Ord, Show, Read, Typeable, Data)
 

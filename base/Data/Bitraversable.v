@@ -35,7 +35,6 @@ Record Bitraversable__Dict t := Bitraversable__Dict_Build {
 Definition Bitraversable t `{Data.Bifunctor.Bifunctor t}
   `{Data.Bifoldable.Bifoldable t} :=
   forall r__, (Bitraversable__Dict t -> r__) -> r__.
-
 Existing Class Bitraversable.
 
 Definition bitraverse `{g__0__ : Bitraversable t}

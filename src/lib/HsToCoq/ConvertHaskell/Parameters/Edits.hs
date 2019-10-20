@@ -12,6 +12,7 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   Rewrite(..), Rewrites,
   Edit(..), addEdit, buildEdits,
   useProgram,
+  Phase(..),
 ) where
 
 import Prelude hiding (tail)
@@ -113,12 +114,18 @@ normalizePattern = NormalizedPattern . go where
 
   goO (OrPattern ps) = OrPattern (go <$> ps)
 
+data Phase = PhaseTyCl | PhaseTerm deriving (Eq, Ord, Show)
+type Additions = ([Sentence],[Sentence]) 
+addPhase :: Phase -> Sentence -> Additions -> Additions
+addPhase PhaseTyCl s (tcls,tms) = (s:tcls, tms)
+addPhase PhaseTerm s (tcls,tms) = (tcls, s:tms)
+
 data Edit = TypeSynonymTypeEdit              Ident Ident
           | DataTypeArgumentsEdit            Qualid DataTypeArguments
           | TerminationEdit                  Qualid TerminationArgument
           | ObligationsEdit                  Qualid Tactics
           | RedefinitionEdit                 CoqDefinition
-          | AddEdit                          ModuleName CoqDefinition
+          | AddEdit                          ModuleName CoqDefinition Phase
           | SkipEdit                         Qualid
           | SkipConstructorEdit              Qualid
           | SkipClassEdit                    Qualid
@@ -166,7 +173,7 @@ data Edits = Edits { _typeSynonymTypes               :: !(Map Ident Ident)
                    , _dataTypeArguments              :: !(Map Qualid DataTypeArguments)
                    , _termination                    :: !(Map Qualid TerminationArgument)
                    , _redefinitions                  :: !(Map Qualid CoqDefinition)
-                   , _additions                      :: !(Map ModuleName [Sentence])
+                   , _additions                      :: !(Map ModuleName Additions)
                    , _skipped                        :: !(Set Qualid)
                    , _skippedConstructors            :: !(Set Qualid)
                    , _skippedClasses                 :: !(Set Qualid)
@@ -259,7 +266,7 @@ descDuplEdit = \case
   ObligationsEdit                  what _       -> duplicateQ_for  "obligation kinds"                               what
   CoinductiveEdit                  ty           -> duplicateQ_for  "coinductive data types"                         ty
   RenameModuleEdit                 m1 _         -> duplicate_for   "renamed modules"                                (moduleNameString m1)
-  AddEdit                          _ _          -> error "Add edits are never duplicates"
+  AddEdit                          _ _ _        -> error "Add edits are never duplicates"
   RewriteEdit                      _            -> error "Rewrites are never duplicates"
   OrderEdit                        _            -> error "Order edits are never duplicates"
   SimpleClassEdit                  cls          -> duplicateQ_for  "simple class requests"                          cls
@@ -306,14 +313,14 @@ addEdit e = case e of
   InlineMutualEdit                 fun              -> addFresh e inlinedMutuals                         fun                         ()
   SetTypeEdit                      qid oty          -> addFresh e replacedTypes                          qid                         oty
   CollapseLetEdit                  qid              -> addFresh e collapsedLets                          qid                         ()
-  AddEdit                          mod def          -> return . (additions.at mod.non mempty %~ (definitionSentence def:))
+  AddEdit                          mod def ph -> return . (additions.at mod.non mempty %~ (addPhase ph (definitionSentence def)))
   OrderEdit                        idents           -> return . appEndo (foldMap (Endo . addEdge orders . swap) (adjacents idents))
   RewriteEdit                      rewrite          -> return . (rewrites %~ (rewrite:))
   InEdit                           qid edit         -> inEdits.at qid.non mempty %%~ (addEdit edit)
 
 
 defName :: CoqDefinition -> Qualid
-defName (CoqDefinitionDef (DefinitionDef _ x _ _ _))                = x
+defName (CoqDefinitionDef (DefinitionDef _ x _ _ _ _))              = x
 defName (CoqDefinitionDef (LetDef          x _ _ _))                = x
 defName (CoqFixpointDef   (Fixpoint    (FixBody x _ _ _ _ :| _) _)) = x
 defName (CoqFixpointDef   (CoFixpoint  (FixBody x _ _ _ _ :| _) _)) = x

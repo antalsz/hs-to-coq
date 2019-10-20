@@ -36,7 +36,6 @@ Record Bifoldable__Dict p := Bifoldable__Dict_Build {
 
 Definition Bifoldable p :=
   forall r__, (Bifoldable__Dict p -> r__) -> r__.
-
 Existing Class Bifoldable.
 
 Definition bifold `{g__0__ : Bifoldable p}

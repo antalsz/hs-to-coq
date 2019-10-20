@@ -473,6 +473,23 @@ Examples:
       add Data.Monoid Instance Unpeel_Last a : GHC.Prim.Unpeel (Last a) (option a) :=
         GHC.Prim.Build_Unpeel _ _ getLast Mk_Last.
 
+
+``add type`` – inject a definition into the type component
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. index::
+  single: add, edit
+
+Format:
+  | **add type** *module* *coq_definition*
+
+Effect:
+  Add a Coq definition to the *type* component of a *module*. The definition
+  can be as above, and need not be a type definition. However, it is inserted
+  before the *midamble* section and will appear grouped with the type and
+  class definitions.
+
+
 ``import`` – inject an ``Import`` statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

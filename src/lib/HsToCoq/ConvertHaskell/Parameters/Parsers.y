@@ -285,7 +285,8 @@ Edit :: { Edit }
   : type synonym Word ':->' Word                          { TypeSynonymTypeEdit              $3 $5                                 }
   | data type arguments Qualid DataTypeArguments          { DataTypeArgumentsEdit            $4 $5                                 }
   | redefine CoqDefinition                                { RedefinitionEdit                 $2                                    }
-  | add Word CoqDefinition                                { AddEdit                          (mkModuleNameT $2) $3                 }
+  | add type Word CoqDefinition                           { AddEdit                          (mkModuleNameT $3) $4 PhaseTyCl       }
+  | add Word CoqDefinition                                { AddEdit                          (mkModuleNameT $2) $3 PhaseTerm       }
   | skip Qualid                                           { SkipEdit                         $2                                    }
   | skip constructor Qualid                               { SkipConstructorEdit              $3                                    }
   | skip class Qualid                                     { SkipClassEdit                    $3                                    }
@@ -508,7 +509,7 @@ Locality :: { Locality }
   : Optional('Local')    { ifMaybe $1 Local Global }
 
 Definition :: { Definition }
-  : Locality 'Definition' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { DefinitionDef $1 $3 $4 $5 $7 }
+  : Locality 'Definition' Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { DefinitionDef $1 $3 $4 $5 $7 NotExistingClass }
   |          'Let'        Qualid Many(Binder) Optional(TypeAnnotation) ':=' Term    { LetDef           $2 $3 $4 $6 }
 
 Fixpoint :: { Fixpoint }

@@ -127,7 +127,6 @@ instance HasBV Qualid Sentence where
   bvOf (AssertionSentence     assert _pf) = bvOf   assert
   bvOf (ModuleSentence        _mod)       = mempty
   bvOf (ClassSentence         cls)        = bvOf   cls
-  bvOf (ExistingClassSentence name)       = fvOf'  name
   bvOf (RecordSentence        rcd)        = bvOf   rcd
   bvOf (InstanceSentence      ins)        = bvOf   ins
   bvOf (NotationSentence      not)        = bvOf   not
@@ -142,7 +141,7 @@ instance HasBV Qualid Assums where
   bvOf (Assums xs ty) = fvOf' ty <> binders xs
 
 instance HasBV Qualid Definition where
-  bvOf (DefinitionDef _locality x args oty def)
+  bvOf (DefinitionDef _locality x args oty def _)
     = binder x <> bindsNothing (foldScopes bvOf args $ fvOf oty <> fvOf def)
   bvOf (LetDef x args oty def)
     = binder x <> bindsNothing (foldScopes bvOf args $ fvOf oty <> fvOf def)

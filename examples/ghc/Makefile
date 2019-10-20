@@ -13,7 +13,9 @@ HANDMOD = \
   FastString \
   AxiomatizedTypes \
   NestedRecursionHelpers \
-  IntMap
+  ContainerProofs \
+  UniqSetInv \
+  IntMap \
   # Used by CSE
   # TysWiredIn \
 

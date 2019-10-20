@@ -29,7 +29,7 @@ Require Import IntSetProofs.
 (* ghc theory (incl. some that should move above. *)
 Require Import Proofs.Base.
 Require Import Proofs.Axioms.
-Require Import Proofs.ContainerAxioms.
+Require Import ContainerProofs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
 Require Import Proofs.Var.
@@ -223,7 +223,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     destruct (sem x0 (realUnique a)) eqn:Hx0.
     - exists v. assumption.
     - simpl in H2. inversion H2.
-  Qed.
+  Qed. 
 
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.

@@ -52,7 +52,7 @@ convertValDecls mdecls = do
                       -> let def = DefinitionDef Global (cdef^.convDefName)
                                                         (cdef^.convDefArgs)
                                                         (cdef^.convDefType)
-                                                        (cdef^.convDefBody)
+                                                        (cdef^.convDefBody) NotExistingClass
                          in pure $
                             [ if useProgram
                               then ProgramSentence (DefinitionSentence def) obl

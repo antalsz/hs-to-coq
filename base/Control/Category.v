@@ -27,7 +27,6 @@ Record Category__Dict (cat : Type -> Type -> Type) := Category__Dict_Build {
 
 Definition Category (cat : Type -> Type -> Type) :=
   forall r__, (Category__Dict cat -> r__) -> r__.
-
 Existing Class Category.
 
 Definition id `{g__0__ : Category cat} : forall {a}, cat a a :=

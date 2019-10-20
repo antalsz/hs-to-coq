@@ -531,7 +531,6 @@ instance Gallina Sentence where
   renderGallina' p (AssertionSentence       ass pf) = renderGallina' p ass <!> renderGallina' p pf
   renderGallina' p (ModuleSentence          mod)    = renderGallina' p mod
   renderGallina' p (ClassSentence           cls)    = renderGallina' p cls
-  renderGallina' _ (ExistingClassSentence   qid)  = "Existing Class" <+> renderGallina qid <> "."
   renderGallina' p (RecordSentence          rcd)    = renderGallina' p rcd
   renderGallina' p (InstanceSentence        ins)    = renderGallina' p ins
   renderGallina' p (NotationSentence        not)    = renderGallina' p not
@@ -573,9 +572,12 @@ renderFullLocality (Just Local)  = "Local"  <> space
 
 instance Gallina Definition where
   renderGallina' _ = \case
-    DefinitionDef loc name args oty body -> renderDef (renderLocality loc <> "Definition") name args oty body
+    DefinitionDef loc name args oty body ex -> renderDef (renderLocality loc <> "Definition") name args oty body
+                                           <$$> renderEx ex name
     LetDef            name args oty body -> renderDef "Let"                                name args oty body
     where
+      renderEx NotExistingClass _ = mempty
+      renderEx ExistingClass qid  = "Existing Class" <+> renderGallina qid <> "."
       renderDef def name args oty body =
         hang 2 ((def <+> renderGallina name
                      <>  spaceIf args <> render_args_oty H args oty

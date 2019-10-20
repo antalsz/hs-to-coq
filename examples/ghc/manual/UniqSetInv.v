@@ -34,13 +34,42 @@ Import GHC.Base.
 Require Proofs.GHC.List.
 Require Proofs.Data.Foldable.
 Require Import IntMap.
+Require Import ContainerProofs.
 
 Require Import Proofs.GHC.Base.
-Require Import Proofs.ContainerAxioms.
-Require Import Proofs.Unique.
+
 
 
 (* Properties about Uniques that we need. *)
+
+
+Definition eqUnique_eq : forall u1 u2, eqUnique u1 u2 = true <-> u1 = u2.
+Proof.
+  intros.
+  unfold eqUnique.
+  destruct u1; destruct u2.
+  unfold GHC.Base.op_zeze__.
+  unfold Base.Eq_Char___.
+  unfold Base.op_zeze____.
+  rewrite BinNat.N.eqb_eq. 
+  split. intros h; rewrite h; auto.
+  intros h; inversion h; auto.
+Qed.
+
+Definition eqUnique_neq : forall u1 u2, eqUnique u1 u2 = false <-> u1 <> u2.
+Proof.
+  intros.
+  unfold eqUnique.
+  destruct u1; destruct u2.
+  unfold GHC.Base.op_zeze__.
+  unfold Base.Eq_Char___.
+  unfold Base.op_zeze____.
+  rewrite BinNat.N.eqb_neq. 
+  split. unfold not. intros m h; inversion h; auto.
+  unfold not. intros m h; rewrite h in m; auto.
+Qed.
+
+(* ---------------------------------------- *)
 
 Lemma lookup_delFromUFM:
   forall A (H: Uniquable A) z (s : UniqFM A) (x y: A),
@@ -393,6 +422,13 @@ Defined.
 Definition getUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> UniqFM.UniqFM a :=
   getUniqSet'.
 
+Definition disjointUniqSet {a} `{Unique.Uniquable a} : UniqSet a -> UniqSet a -> bool :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | Mk_UniqSet s, Mk_UniqSet t => UniqFM.disjointUFM s t
+    end.
+
+
 Program Definition intersectUniqSets {a} `{Unique.Uniquable a} : UniqSet a -> UniqSet a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -493,7 +529,7 @@ Next Obligation.
   right. unfold snd. inversion Heq_anonymous. reflexivity.
 Defined.
 
-Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} `{Unique.Uniquable b}
+Program Definition restrictUniqSetToUFM {a} {b} `{Unique.Uniquable a} 
    : UniqSet a -> UniqFM.UniqFM b -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with

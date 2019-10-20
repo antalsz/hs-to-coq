@@ -50,7 +50,6 @@ Record NamedThing__Dict a := NamedThing__Dict_Build {
 
 Definition NamedThing a :=
   forall r__, (NamedThing__Dict a -> r__) -> r__.
-
 Existing Class NamedThing.
 
 Definition getName `{g__0__ : NamedThing a} : a -> Name :=

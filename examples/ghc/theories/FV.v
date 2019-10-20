@@ -7,7 +7,7 @@ Require Import ssreflect ssrnat prime ssrbool eqtype.
 Require Import Core.
 Require Import FV.
 Require Import Proofs.Axioms.
-Require Import Proofs.ContainerAxioms.
+Require Import ContainerProofs.
 Require Import Proofs.VarSet.
 Require Import Proofs.VarSetFSet.
 Require Import Proofs.Var.

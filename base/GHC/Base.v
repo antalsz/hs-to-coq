@@ -24,8 +24,12 @@ Record Semigroup__Dict a := Semigroup__Dict_Build {
 
 Definition Semigroup a :=
   forall r__, (Semigroup__Dict a -> r__) -> r__.
-
 Existing Class Semigroup.
+
+Record Monoid__Dict a := Monoid__Dict_Build {
+  mappend__ : a -> a -> a ;
+  mconcat__ : list a -> a ;
+  mempty__ : a }.
 
 Definition op_zlzlzgzg__ `{g__0__ : Semigroup a} : a -> a -> a :=
   g__0__ _ (op_zlzlzgzg____ a).
@@ -36,14 +40,8 @@ Infix "<<>>" := (_<<>>_) (at level 99).
 
 Inductive NonEmpty a : Type := | NEcons : a -> list a -> NonEmpty a.
 
-Record Monoid__Dict a := Monoid__Dict_Build {
-  mappend__ : a -> a -> a ;
-  mconcat__ : list a -> a ;
-  mempty__ : a }.
-
 Definition Monoid a `{Semigroup a} :=
   forall r__, (Monoid__Dict a -> r__) -> r__.
-
 Existing Class Monoid.
 
 Definition mappend `{g__0__ : Monoid a} : a -> a -> a :=
@@ -61,8 +59,13 @@ Record Functor__Dict f := Functor__Dict_Build {
 
 Definition Functor f :=
   forall r__, (Functor__Dict f -> r__) -> r__.
-
 Existing Class Functor.
+
+Record Applicative__Dict f := Applicative__Dict_Build {
+  liftA2__ : forall {a} {b} {c}, (a -> b -> c) -> f a -> f b -> f c ;
+  op_zlztzg____ : forall {a} {b}, f (a -> b) -> f a -> f b ;
+  op_ztzg____ : forall {a} {b}, f a -> f b -> f b ;
+  pure__ : forall {a}, a -> f a }.
 
 Definition fmap `{g__0__ : Functor f}
    : forall {a} {b}, (a -> b) -> f a -> f b :=
@@ -75,15 +78,8 @@ Notation "'_<$_'" := (op_zlzd__).
 
 Infix "<$" := (_<$_) (at level 99).
 
-Record Applicative__Dict f := Applicative__Dict_Build {
-  liftA2__ : forall {a} {b} {c}, (a -> b -> c) -> f a -> f b -> f c ;
-  op_zlztzg____ : forall {a} {b}, f (a -> b) -> f a -> f b ;
-  op_ztzg____ : forall {a} {b}, f a -> f b -> f b ;
-  pure__ : forall {a}, a -> f a }.
-
 Definition Applicative f `{Functor f} :=
   forall r__, (Applicative__Dict f -> r__) -> r__.
-
 Existing Class Applicative.
 
 Definition liftA2 `{g__0__ : Applicative f}
@@ -116,7 +112,6 @@ Record Monad__Dict m := Monad__Dict_Build {
 
 Definition Monad m `{Applicative m} :=
   forall r__, (Monad__Dict m -> r__) -> r__.
-
 Existing Class Monad.
 
 Definition op_zgzg__ `{g__0__ : Monad m} : forall {a} {b}, m a -> m b -> m b :=

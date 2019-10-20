@@ -393,7 +393,6 @@ Record HasDynFlags__Dict m := HasDynFlags__Dict_Build {
 
 Definition HasDynFlags m :=
   forall r__, (HasDynFlags__Dict m -> r__) -> r__.
-
 Existing Class HasDynFlags.
 
 Definition getDynFlags `{g__0__ : HasDynFlags m} : m DynFlags :=
@@ -491,7 +490,6 @@ Record ContainsDynFlags__Dict t := ContainsDynFlags__Dict_Build {
 
 Definition ContainsDynFlags t :=
   forall r__, (ContainsDynFlags__Dict t -> r__) -> r__.
-
 Existing Class ContainsDynFlags.
 
 Definition extractDynFlags `{g__0__ : ContainsDynFlags t} : t -> DynFlags :=

@@ -55,12 +55,14 @@ import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.Coq.Preamble
 
+import qualified Debug.Trace as Debug
 --------------------------------------------------------------------------------
 
 data ConvertedModuleDeclarations =
   ConvertedModuleDeclarations { convertedTyClDecls    :: ![Sentence]
                               , convertedValDecls     :: ![Sentence]
                               , convertedClsInstDecls :: ![Sentence]
+                              , convertedAddedTyCls   :: ![Sentence]
                               , convertedAddedDecls   :: ![Sentence]
                               }
   deriving (Eq, Ord, Show, Data)
@@ -69,6 +71,7 @@ convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDecla
 convertHsGroup HsGroup{..} = do
   mod                 <- view currentModule
   isModuleAxiomatized <- view currentModuleAxiomatized
+
   let catchIfAxiomatizing | isModuleAxiomatized = const
                           | otherwise           = gcatch
   handler             <- whenPermissive axiomatizeBinding
@@ -99,7 +102,7 @@ convertHsGroup HsGroup{..} = do
                           -> let def = DefinitionDef Global (cdef^.convDefName)
                                                             (cdef^.convDefArgs)
                                                             (cdef^.convDefType)
-                                                            (cdef^.convDefBody)
+                                                            (cdef^.convDefBody) NotExistingClass
                              in pure $
                                 [ if useProgram
                                   then ProgramSentence (DefinitionSentence def) obl
@@ -129,7 +132,7 @@ convertHsGroup HsGroup{..} = do
 
   convertedClsInstDecls <- convertClsInstDecls [cid | grp <- hs_tyclds, L _ (ClsInstD cid) <- group_instds grp]
 
-  convertedAddedDecls <- view (edits.additions.at mod.non [])
+  (convertedAddedTyCls,convertedAddedDecls) <- view (edits.additions.at mod.non ([],[]))
 
   pure ConvertedModuleDeclarations{..}
   where
@@ -150,6 +153,7 @@ data ConvertedModule =
                   , convModTyClDecls    :: ![Sentence]
                   , convModValDecls     :: ![Sentence]
                   , convModClsInstDecls :: ![Sentence]
+                  , convModAddedTyCls   :: ![Sentence]
                   , convModAddedDecls   :: ![Sentence]
                   }
   deriving (Eq, Ord, Show, Data)
@@ -164,11 +168,12 @@ convertModule' convModName group = do
     ConvertedModuleDeclarations { convertedTyClDecls    = convModTyClDecls
                                 , convertedValDecls     = convModValDecls
                                 , convertedClsInstDecls = convModClsInstDecls
+                                , convertedAddedTyCls   = convModAddedTyCls
                                 , convertedAddedDecls   = convModAddedDecls
                                 }
       <- convertHsGroup group
 
-    let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
+    let allSentences = convModTyClDecls ++ convModValDecls ++ convModClsInstDecls ++ convModAddedTyCls ++ convModAddedDecls
     let freeVars = toList $ foldMap getFreeVars' allSentences
     let modules = filter (/= convModName)
                      . map (mkModuleName . T.unpack)
@@ -246,16 +251,17 @@ convertModules sources = do
                  , modGrp `appendGroups` convGrp
                  , Mode_Convert <> mode )
 
-    combineModules (ConvertedModule name  imports1 tyClDecls1 valDecls1 clsInstDecls1 addedDecls1, imps1)
-                   (ConvertedModule _name imports2 tyClDecls2 valDecls2 clsInstDecls2 addedDecls2, imps2) =
+    combineModules (ConvertedModule name  imports1 tyClDecls1 valDecls1 clsInstDecls1 addedTyCls1 addedDecls1, imps1)
+                   (ConvertedModule _name imports2 tyClDecls2 valDecls2 clsInstDecls2 _addedTyCls2 _addedDecls2, imps2) =
       ( ConvertedModule name
                         (ordNub                     $ imports1      <> imports2)
-                        (topoSortByVariables mempty $ tyClDecls1    <> tyClDecls2)
+                        (                             tyClDecls1    <> tyClDecls2)
                         (                             valDecls1     <> valDecls2)
                         (                             clsInstDecls1 <> clsInstDecls2)
-                        (                             addedDecls1   <> addedDecls2)
+                        (                             addedTyCls1   ) -- only need one copy of the added components                        
+                        (                             addedDecls1   ) -- 
       , S.toList $ ((<>) `on` S.fromList) imps1 imps2 )
-      -- It's OK not to worry about ordering the value-level declarations
+      -- It's OK not to worry about ordering the declarations
       -- because we 'topoSortByVariablesBy' them in 'moduleDeclarations'.
     
     axiomatizeModule' name = local (edits.axiomatizedModules %~ S.insert name) . convertModule' name
@@ -292,14 +298,16 @@ moduleDeclarations ConvertedModule{..} = do
   -- to do this properly.
       
   orders <- view $ edits.orders
-  let sorted = topoSortByVariablesBy bvWithInfix orders $
+  let sortedDecls = topoSortByVariablesBy bvWithInfix orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
-  let ax_decls = usedAxioms sorted
-  not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sorted)
+  let ax_decls = usedAxioms sortedDecls
+  let sortedTyCls = topoSortByVariablesBy bvWithInfix orders $
+        convModTyClDecls ++ convModAddedTyCls ++ ax_decls  
+  not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sortedDecls)
   imported_modules <- view $ edits.importedModules
   pure . deQualifyLocalNames (convModName `S.insert` imported_modules)
-       $ ModuleDeclarations { moduleTypeDeclarations  = convModTyClDecls ++ ax_decls
-                            , moduleValueDeclarations = sorted           ++ not_decls }
+       $ ModuleDeclarations { moduleTypeDeclarations  = sortedTyCls 
+                            , moduleValueDeclarations = sortedDecls ++ not_decls }
 
 -- | This un-qualifies all variable names in the current module.
 -- It should be called very late, just before pretty-printing.

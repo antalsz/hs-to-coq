@@ -187,7 +187,7 @@ proofPass guts@ModGuts {..} = do
           , ModuleSentence (Require Nothing (Just Import) ["Coq.NArith.BinNat"])
           , DefinitionSentence
               (DefinitionDef Global "program" []
-                 (Just (Qualid "CoreProgram")) body)
+                 (Just (Qualid "CoreProgram")) body NotExistingClass)                  
           ]
 
     body :: Term

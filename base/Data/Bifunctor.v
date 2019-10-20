@@ -26,7 +26,6 @@ Record Bifunctor__Dict p := Bifunctor__Dict_Build {
 
 Definition Bifunctor p :=
   forall r__, (Bifunctor__Dict p -> r__) -> r__.
-
 Existing Class Bifunctor.
 
 Definition bimap `{g__0__ : Bifunctor p}

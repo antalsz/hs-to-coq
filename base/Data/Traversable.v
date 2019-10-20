@@ -39,7 +39,6 @@ Record Traversable__Dict t := Traversable__Dict_Build {
 
 Definition Traversable t `{GHC.Base.Functor t} `{Data.Foldable.Foldable t} :=
   forall r__, (Traversable__Dict t -> r__) -> r__.
-
 Existing Class Traversable.
 
 Definition mapM `{g__0__ : Traversable t}

@@ -41,8 +41,10 @@ Record Arrow__Dict (a : Type -> Type -> Type) := Arrow__Dict_Build {
 
 Definition Arrow (a : Type -> Type -> Type) `{Control.Category.Category a} :=
   forall r__, (Arrow__Dict a -> r__) -> r__.
-
 Existing Class Arrow.
+
+Record ArrowPlus__Dict (a : Type -> Type -> Type) := ArrowPlus__Dict_Build {
+  op_zlzpzg____ : forall {b} {c}, a b c -> a b c -> a b c }.
 
 Definition arr `{g__0__ : Arrow a} : forall {b} {c}, (b -> c) -> a b c :=
   g__0__ _ (arr__ a).
@@ -77,7 +79,6 @@ Record ArrowApply__Dict (a : Type -> Type -> Type) := ArrowApply__Dict_Build {
 
 Definition ArrowApply (a : Type -> Type -> Type) `{Arrow a} :=
   forall r__, (ArrowApply__Dict a -> r__) -> r__.
-
 Existing Class ArrowApply.
 
 Definition app `{g__0__ : ArrowApply a}
@@ -96,7 +97,6 @@ Record ArrowChoice__Dict a := ArrowChoice__Dict_Build {
 
 Definition ArrowChoice a `{Arrow a} :=
   forall r__, (ArrowChoice__Dict a -> r__) -> r__.
-
 Existing Class ArrowChoice.
 
 Definition left_ `{g__0__ : ArrowChoice a}
@@ -131,7 +131,6 @@ Record ArrowLoop__Dict a := ArrowLoop__Dict_Build {
 
 Definition ArrowLoop a `{Arrow a} :=
   forall r__, (ArrowLoop__Dict a -> r__) -> r__.
-
 Existing Class ArrowLoop.
 
 Definition loop `{g__0__ : ArrowLoop a}
@@ -143,18 +142,13 @@ Record ArrowZero__Dict (a : Type -> Type -> Type) := ArrowZero__Dict_Build {
 
 Definition ArrowZero (a : Type -> Type -> Type) `{Arrow a} :=
   forall r__, (ArrowZero__Dict a -> r__) -> r__.
-
 Existing Class ArrowZero.
 
 Definition zeroArrow `{g__0__ : ArrowZero a} : forall {b} {c}, a b c :=
   g__0__ _ (zeroArrow__ a).
 
-Record ArrowPlus__Dict (a : Type -> Type -> Type) := ArrowPlus__Dict_Build {
-  op_zlzpzg____ : forall {b} {c}, a b c -> a b c -> a b c }.
-
 Definition ArrowPlus (a : Type -> Type -> Type) `{ArrowZero a} :=
   forall r__, (ArrowPlus__Dict a -> r__) -> r__.
-
 Existing Class ArrowPlus.
 
 Definition op_zlzpzg__ `{g__0__ : ArrowPlus a}

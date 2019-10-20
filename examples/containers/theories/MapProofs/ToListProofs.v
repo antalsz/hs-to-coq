@@ -11,14 +11,14 @@ Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
 Require Export MapProofs.PairTypeclass.
 
-Section WF.
-Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+Section WF_1.
+Context {e : Type} {a b : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 (** ** Verification of [foldrWithKey] *)
 
 Lemma fold_right_toList_go:
-  forall f (n : a) map (xs : list (e * a)),
-  fold_right f n (foldrWithKey (fun x y t  => (x,y) :: t) xs map) = 
+  forall f (n : b) map (xs : list (e * a)),
+  fold_right f n (foldrWithKey (fun x y t  => (x,y) :: t) xs map) =
   foldrWithKey (fun x y t => f (x,y) t) (fold_right f n xs) map.
 Proof.
   intros. generalize dependent xs. induction map.
@@ -26,16 +26,23 @@ Proof.
   - simpl. intros. reflexivity.
 Qed.
 
+End WF_1.
+
+Section WF_2.
+
+Context {e : Type} {a b : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+
 Lemma foldrWithKey_spec:
-  forall f (n : a) map,
+  forall f (n : b) map,
   foldrWithKey f n map = fold_right (fun (x : e * a) t => let (a0, b0) := x in f a0 b0 t) n (toList map).
 Proof.
-  intros. unfold toList. unfold toAscList. rewrite fold_right_toList_go. simpl. reflexivity.
+  intros. unfold toList. unfold toAscList.
+  rewrite fold_right_toList_go. simpl. reflexivity.
 Qed.
 
 (** ** Verification of [foldr] *)
 Lemma foldr_spec:
-  forall f (n: a) (map : Map e a),
+  forall f (n: b) (map : Map e a),
   foldr f n map = foldrWithKey (fun x y t => f y t) n map.
 Proof.
   intros. generalize dependent n. induction map.
@@ -56,7 +63,7 @@ Lemma foldrWithKey_const_append:
   foldrWithKey (fun x y t => (x,y) :: t) xs map = toList map ++ xs.
 Proof.
   intros. generalize dependent xs. induction map; intros.
-  - unfold toList, toAscList in *. simpl. rewrite IHmap1. rewrite IHmap2. 
+  - unfold toList, toAscList in *. simpl. rewrite IHmap1. rewrite IHmap2.
     rewrite (IHmap1 ((k, a0) :: foldrWithKey (fun (k0 : e) (x : a) (xs0 : list (e * a)) => (k0, x) :: xs0) nil map2)).
     rewrite <- app_assoc. reflexivity.
   - simpl. reflexivity.
@@ -102,7 +109,7 @@ Proof.
   intros. split; intros.
   - destruct H. destruct H. apply H.
   - right. apply H.
-Qed. 
+Qed.
 
 (*Key property of Key_In for lists - if we append to 2 lists, an item is in the whole list
 iff it is in one of them*)
@@ -117,7 +124,7 @@ Proof.
 Qed.
 
 (*The first toList_sem:
-This says that sem m key returns a Value iff that key, value pair appears in the 
+This says that sem m key returns a Value iff that key, value pair appears in the
 resulting toList of the map (according to Coq equality for values)*)
 
 Lemma toList_sem :
@@ -126,14 +133,14 @@ Lemma toList_sem :
 Proof.
   intros. generalize dependent value. induction H.
   - simpl. intros. split; intros. discriminate H. destruct H.
-  - intros. simpl. rewrite toList_Bin. rewrite elem_or. 
+  - intros. simpl. rewrite toList_Bin. rewrite elem_or.
     assert (((x, v) :: nil ++ toList s2) = (((x, v) :: nil) ++ toList s2)).
     simpl. reflexivity. rewrite H5. rewrite elem_or. split; intros.
       + destruct (sem s1 key) eqn : ?; simpl in H6.
-      * apply IHBounded1 in H6. left. apply H6. 
+      * apply IHBounded1 in H6. left. apply H6.
       * destruct (key == x) eqn : ?; simpl in H6.
-        { right. left. simpl. left. apply Eq_Symmetric in Heqb.
-          split. apply Heqb. inversion H6. reflexivity. }
+        { right. left. simpl. left. apply Eq_Symmetric in Heqb0.
+          split. apply Heqb0. inversion H6. reflexivity. }
         { apply IHBounded2 in H6. right. right. assumption. }
      + destruct H6.
       * apply IHBounded1 in H6. rewrite H6. simpl. reflexivity.
@@ -160,7 +167,7 @@ Proof.
     reflexivity. simpl. rewrite IHl1. rewrite orb_assoc. simpl. reflexivity.
 Qed.
 
-(*Weaker version of [toList_sem], using Haskell equality instead of Coq's. sem m key == Some value 
+(*Weaker version of [toList_sem], using Haskell equality instead of Coq's. sem m key == Some value
 iff the (key, value) pair appears in toList*)
 Lemma toList_sem' :
   forall `{Eq_ a} `{EqLaws a}  m lb ub, Bounded m lb ub ->
@@ -180,18 +187,18 @@ Proof.
         { simpl in H6. contradiction. }
         { simpl in H6. destruct (_GHC.Base.==_ (key, value) (x, v)) eqn : ?.
           { simpl. reflexivity. }
-          { simpl. rewrite eq_tuple_eq in Heqb0. 
-            rewrite andb_false_iff in Heqb0. destruct Heqb0.
+          { simpl. rewrite eq_tuple_eq in Heqb1.
+            rewrite andb_false_iff in Heqb1. destruct Heqb1.
             { rewrite H9 in H6. simpl in H6. apply IHBounded2. apply H6. }
             { destruct (_GHC.Base.==_ key x) eqn : ?.
-              { simpl in H6. rewrite simpl_option_some_eq in H6. 
-                apply Eq_Symmetric in H6. unfold is_true in H6. 
+              { simpl in H6. rewrite simpl_option_some_eq in H6.
+                apply Eq_Symmetric in H6. unfold is_true in H6.
                 rewrite H9 in H6. discriminate H6. }
               { simpl in H6. apply IHBounded2. assumption. }
             }
           }
         }
-        { destruct (List.elem (key, value) (toList s1)). discriminate Heqb.
+        { destruct (List.elem (key, value) (toList s1)). discriminate Heqb0.
           intro. discriminate H9. }
     + rewrite toList_Bin in H6. simpl in H6. rewrite list_elem_or in H6.
       rewrite orb_true_iff in H6. destruct H6.
@@ -200,7 +207,7 @@ Proof.
         { discriminate H6. }
       * simpl in H6. rewrite orb_true_iff in H6. destruct H6.
         { assert (forall i, sem s1 key <> Some i). { rewrite eq_tuple_prop in H6.
-          destruct H6. intros. intro. solve_Bounds e. } 
+          destruct H6. intros. intro. solve_Bounds e. }
           assert (sem s1 key = None). { destruct (sem s1 key). specialize (H7 a0).
           contradiction. reflexivity. }
           rewrite H8. simpl. rewrite eq_tuple_prop in H6. destruct H6.
@@ -211,7 +218,7 @@ Proof.
           destruct Heqo. eapply sem_outside_above. apply H2_. order_Bounds e. }
           rewrite H7. simpl. assert (key == x = false) by solve_Bounds e. rewrite H8.
           simpl. assumption. discriminate H6. }
-Qed. 
+Qed.
 
 (*Equality based (rather than prop based) version of the above*)
 Lemma toList_sem'_eq :
@@ -232,9 +239,9 @@ Proof.
     intros. simpl in H5. rewrite in_app_iff in *.
     destruct H5.
     + apply IHBounded1. assumption.
-    +  simpl in H5.  destruct H5. 
-      *  subst.  assumption. 
-      * apply IHBounded2 in H5. simpl in H5. rename x0 into x2. 
+    +  simpl in H5.  destruct H5.
+      *  subst.  assumption.
+      * apply IHBounded2 in H5. simpl in H5. rename x0 into x2.
         destruct x2. order_Bounds e.
 Qed.
 
@@ -248,7 +255,7 @@ Proof.
     simpl in H5. rewrite in_app_iff in *. destruct H5.
     + apply IHBounded1 in H5. destruct x0. order_Bounds e.
     + simpl in H5. destruct H5. subst. assumption. apply IHBounded2. assumption.
-Qed. 
+Qed.
 
 (*The list of the empty tree is empty*)
 Lemma toList_Tip: toList (@Tip e a) = nil.
@@ -285,7 +292,7 @@ Proof.
   all: repeat find_Tip.
   all: rewrite ?toList_Bin, <- ?app_assoc; try reflexivity.
   simpl. rewrite <- app_assoc. simpl. reflexivity. simpl. rewrite <-app_assoc. simpl.
-  reflexivity. 
+  reflexivity.
 Qed.
 
 Lemma toList_balanceL:
@@ -355,7 +362,7 @@ Program Fixpoint toList_link (x : e) (y : a) (m1: Map e a)  (m2: Map e a)
     toList (link x y m1 m2) = toList m1 ++ (x,y) :: nil ++ toList m2 := _.
 Next Obligation.
   intros.
-  rewrite link_eq. 
+  rewrite link_eq.
   inversion H; subst; clear H;
   inversion H0; subst; clear H0.
   * reflexivity.
@@ -381,7 +388,7 @@ Next Obligation.
     - rewrite ?toList_bin, ?toList_Bin, <- ?app_assoc.
       unfold bin. rewrite toList_bin. rewrite toList_bin.
       rewrite toList_bin. simpl. rewrite <- app_assoc. simpl.
-      reflexivity. 
+      reflexivity.
 Qed.
 
 
@@ -418,7 +425,7 @@ Proof.
       destruct Hz.
       - rewrite Forall_forall in H.
         apply H; auto.
-      - destruct a0.  assert (e0 < x = true). eapply Hlt. left. reflexivity. 
+      - destruct a0.  assert (e0 < x = true). eapply Hlt. left. reflexivity.
         unfold lt. destruct z. apply Hge in H0. order e.
 Qed.
 
@@ -431,7 +438,7 @@ Fixpoint list_elem_tuple (x : e * a) (l : list (e * a)) :=
   end.
 
 (*This states that if x is a lower bound for a list and the tuple i is in the list, then x is less than i.
-Note: this required a change from toList (using lt rather than < in the conclusion), though this 
+Note: this required a change from toList (using lt rather than < in the conclusion), though this
 is needed because there is no definition of ordering on all tuples*)
 Lemma All_lt_elem:
   forall x i xs,
@@ -459,15 +466,15 @@ Proof.
   - apply SSorted_nil.
   - rewrite toList_bin. eapply sorted_append. assumption.
     apply SSorted_cons. assumption. apply toList_lb in H0.
-    apply H0. apply toList_ub in H.  intros. 
+    apply H0. apply toList_ub in H.  intros.
     rewrite Forall_forall in H.
-    remember (y,z) as t. 
+    remember (y,z) as t.
     apply H in H5. destruct t. inversion Heqt. rewrite <- H7. unfold isUB in H5. apply H5.
     intros. simpl in H5. destruct H5.
     + inversion H5. order e.
-    + apply toList_lb in H0. 
+    + apply toList_lb in H0.
       rewrite Forall_forall in H0. apply H0 in H5. order_Bounds e.
-Qed. 
+Qed.
 
 (** ** Verification of [toAscList] *)
 
@@ -477,13 +484,13 @@ Lemma toAscList_spec: @toAscList = @toList. Proof. reflexivity. Qed.
 
 Lemma fold_right_with_assoc:
   forall l1 l2,
-    fold_right (fun (x : e * a) acc => let (a,b) := x in b :: acc) l1 l2  = 
+    fold_right (fun (x : e * a) acc => let (a,b) := x in b :: acc) l1 l2  =
   fold_right (fun (x : e * a) acc => let (a,b) := x in b :: acc) nil l2 ++ l1.
 Proof.
   intros. generalize dependent l1. induction l2.
   - intros. simpl. reflexivity.
   - intros. simpl. destruct a0. rewrite IHl2. simpl. reflexivity.
-Qed. 
+Qed.
 
 Lemma foldr_const_append:
   forall xs (map : Map e a),
@@ -499,8 +506,8 @@ Lemma elems_Bin:
   forall sz key value (m1 m2 : Map e a),
   elems (Bin sz key value m1 m2) = elems m1 ++ (value :: nil) ++ elems m2.
 Proof.
-  intros. 
-  unfold elems at 1. simpl. rewrite foldr_const_append. rewrite foldr_const_append. 
+  intros.
+  unfold elems at 1. simpl. rewrite foldr_const_append. rewrite foldr_const_append.
   rewrite app_nil_r. reflexivity.
 Qed.
 
@@ -509,7 +516,7 @@ Lemma elems_spec: forall map,
   elems map = fold_right (fun (x : e * a) acc => let (a,b) := x in  b :: acc) nil (toList map).
 Proof.
   intros. induction map.
-  - rewrite elems_Bin.  rewrite IHmap1. simpl. rewrite IHmap2. rewrite toList_bin. 
+  - rewrite elems_Bin.  rewrite IHmap1. simpl. rewrite IHmap2. rewrite toList_bin.
     rewrite fold_right_app. simpl. rewrite <- fold_right_with_assoc. reflexivity.
   - simpl. unfold elems. simpl. reflexivity.
 Qed.
@@ -518,20 +525,20 @@ Qed.
 
 Lemma fold_right_with_assoc':
   forall l1 l2,
-    fold_right (fun (x : e * a) acc => let (a,b) := x in a :: acc) l1 l2  = 
+    fold_right (fun (x : e * a) acc => let (a,b) := x in a :: acc) l1 l2  =
   fold_right (fun (x : e * a) acc => let (a,b) := x in a :: acc) nil l2 ++ l1.
 Proof.
   intros. generalize dependent l1. induction l2.
   - intros. simpl. reflexivity.
   - intros. simpl. destruct a0. rewrite IHl2. simpl. reflexivity.
-Qed. 
+Qed.
 
 Lemma foldrWithKey_const_append':
   forall xs (map : Map e a),
   foldrWithKey (fun x y t => x :: t) xs map = keys map ++ xs.
 Proof.
   intros. generalize dependent xs. induction map; intros.
-  - unfold keys in *.  simpl. rewrite IHmap1. rewrite IHmap2. 
+  - unfold keys in *.  simpl. rewrite IHmap1. rewrite IHmap2.
     rewrite (IHmap1 (k :: foldrWithKey (fun (arg_0__ : e) (_ : a) (arg_2__ : list e) => arg_0__ :: arg_2__) nil map2) ).
     rewrite <- app_assoc. reflexivity.
   - simpl. reflexivity.
@@ -541,8 +548,8 @@ Lemma keys_Bin:
   forall sz key value (m1 m2 : Map e a),
   keys (Bin sz key value m1 m2) = keys m1 ++ (key :: nil) ++ keys m2.
 Proof.
-  intros. 
-  unfold keys at 1. simpl. rewrite foldrWithKey_const_append'. rewrite foldrWithKey_const_append'. 
+  intros.
+  unfold keys at 1. simpl. rewrite foldrWithKey_const_append'. rewrite foldrWithKey_const_append'.
   rewrite app_nil_r. reflexivity.
 Qed.
 
@@ -550,7 +557,7 @@ Lemma keys_spec: forall map,
   keys map = fold_right (fun (x : e * a) acc => let (a,b) := x in  a :: acc) nil (toList map).
 Proof.
   intros. induction map.
-  - rewrite keys_Bin.  rewrite IHmap1. simpl. rewrite IHmap2. rewrite toList_bin. 
+  - rewrite keys_Bin.  rewrite IHmap1. simpl. rewrite IHmap2. rewrite toList_bin.
     rewrite fold_right_app. simpl. rewrite <- fold_right_with_assoc'. reflexivity.
   - simpl. unfold keys. simpl. reflexivity.
 Qed.
@@ -569,9 +576,9 @@ Lemma rev_nil : forall {A : Type} (x : list A),
   rev x = nil <-> x = nil.
 Proof.
   intros. split; intros.
-  - destruct x. 
+  - destruct x.
     + reflexivity.
-    + simpl in H. assert (nil <> rev x ++ a0 :: nil ) by apply app_cons_not_nil.  
+    + simpl in H. assert (nil <> rev x ++ a0 :: nil ) by apply app_cons_not_nil.
       rewrite H in H0. contradiction.
   - rewrite H. reflexivity.
 Qed.
@@ -606,7 +613,7 @@ Proof.
   - simpl. rewrite IHm2. rewrite IHm1. symmetry. rewrite IHm2. rewrite <- app_assoc.
     reflexivity.
   - simpl. reflexivity.
-Qed. 
+Qed.
 
 (*reversing a list takes the last element and puts it at the front*)
 Lemma rev_cons: forall {A: Type} (l : list A) (x : A),
@@ -615,7 +622,7 @@ Proof.
   intros. induction l.
   - simpl. reflexivity.
   - simpl. rewrite IHl. simpl. reflexivity.
-Qed. 
+Qed.
 
 (*toDescList returns the reverse of toAscList on a map*)
 Lemma toDescList_spec (map : Map e a) :
@@ -631,7 +638,7 @@ Proof.
     rewrite foldrWithKey_const_append. rewrite app_nil_r. rewrite foldrWithKey_const_append. rewrite app_nil_r.
     rewrite foldrWithKey_const_append. rewrite <- app_assoc. simpl. reflexivity.
   - simpl. reflexivity.
-Qed. 
+Qed.
 
 (** ** Verification of [foldl] and [foldlWithKey *)
 
@@ -644,7 +651,7 @@ Proof.
   - simpl. rewrite (elems_Bin s k0 a0 m1 m2) . rewrite IHm1. rewrite IHm2.
     rewrite fold_left_app. simpl. reflexivity.
   - simpl. reflexivity.
-Qed. 
+Qed.
 
 (*TODO: REPLACE WITH UPDATED SPEC FROM MAPFUNCTIONPROOFS*)
 (** This relates [foldlWithKey] and [toList]. *)
@@ -680,7 +687,7 @@ Lemma size_spec:
 Proof.
   intros. induction H.
   - simpl. reflexivity.
-  - simpl. rewrite toList_Bin. simpl. rewrite app_length. simpl. 
+  - simpl. rewrite toList_Bin. simpl. rewrite app_length. simpl.
     rewrite Nat2Z.inj_add. rewrite <- IHBounded1.
     rewrite Nat2Z.inj_succ. rewrite <- IHBounded2.
     omega.
@@ -690,7 +697,7 @@ Qed.
 
 (*Note: This is substantially different from SetProofs because the values' equality may differ between
 Coq and Haskell. Instead of a single spec, we will prove 3 different specifications of [Eq]
-1. [weak_equals_spec]: This states that m1 == m2 iff for every key, sem m1 key == sem m2 key 
+1. [weak_equals_spec]: This states that m1 == m2 iff for every key, sem m1 key == sem m2 key
  (all according to Haskell notions of equality)
 2. [strong_eq1]: If sem m1 key = sem m2 key for all keys, then m1 == m2 (the other direction is not true
 in general)
@@ -708,7 +715,7 @@ specification gives a specification that is actually useful in Coq, allowing us 
 properties we want even without an {eqLaws a} assumption*)
 Fixpoint eqlist_key {e a} `{EqLaws e} (l1 l2 : list (e * a)) :=
   match l1, l2 with
-  | nil, nil => True 
+  | nil, nil => True
   | x:: t1 , y :: t2 => let (a,b) := x in let (c,d) := y in (a == c = true /\ b = d /\ eqlist_key t1 t2)
   | _, _ => False
   end.
@@ -736,9 +743,9 @@ Proof.
   simpl in H1. simpl in H2. destruct a1. destruct p. destruct p0. simpl.
   repeat match goal with
   | [H: _ /\ _  |- _] => destruct H
-  end; subst. split. eapply Eq_Transitive. apply H1. apply H2. split. reflexivity. 
+  end; subst. split. eapply Eq_Transitive. apply H1. apply H2. split. reflexivity.
   eapply IHxs. apply H6. apply H4.
-Qed. 
+Qed.
 
 Lemma eqlist_key_refl:
   forall {e a} `{EqLaws e} (xs: list (e * a)),
@@ -746,14 +753,14 @@ Lemma eqlist_key_refl:
 Proof.
   intros. induction xs. reflexivity. simpl.
   destruct a1. split. apply Eq_Reflexive. split. reflexivity. apply IHxs.
-Qed. 
+Qed.
 
 Lemma eqlist_key_length:
   forall {e a} `{EqLaws e} (xs ys : list (e * a)),
   eqlist_key xs ys ->
   length xs = length ys.
 Proof.
-  intros. generalize dependent ys. induction xs; intros; destruct ys; try (reflexivity); 
+  intros. generalize dependent ys. induction xs; intros; destruct ys; try (reflexivity);
   try (inversion H1).
   simpl. simpl in H1. destruct a1. destruct p. destruct H1. destruct H2. erewrite IHxs.
   reflexivity. assumption.
@@ -771,19 +778,19 @@ Proof.
     apply H1. apply H2. assumption. right. apply IHxs. assumption. assumption.
   + destruct H2. destruct H2. left. split. eapply Eq_Transitive. apply H1. apply H2. assumption.
     right. rewrite  IHxs. apply H2. assumption.
-Qed. 
+Qed.
 
 Lemma sem_false_nil:
   forall (m: Map e a),
   (forall i, sem m i = None) <-> m = Tip.
 Proof.
-  intros. destruct m. 
+  intros. destruct m.
   - simpl. split; intros.
     + specialize (H e0). rewrite Eq_Reflexive in H. simpl in H.
        destruct (sem m1 e0); inversion H.
     + inversion H.
   - simpl. split; intros; reflexivity.
-Qed. 
+Qed.
 
 Lemma Forall_lt: forall (l : list (e * a)) t,
   Forall (lt t) l <-> (forall x y, Key_In x y l -> lt t (x,y)).
@@ -822,18 +829,18 @@ Proof.
   - simpl in H1. destruct a0. specialize (H1 e0 a0). destruct H1. apply H1. left.
     split. order e. reflexivity.
   - simpl. destruct a0. destruct p. simpl in H1. inversion H; subst. inversion H0; subst.
-    rewrite Forall_lt in H7. rewrite Forall_lt in H5. assert (A:=H1). 
+    rewrite Forall_lt in H7. rewrite Forall_lt in H5. assert (A:=H1).
     specialize (H1 e1 a1). destruct H1.
     assert (_GHC.Base.==_ e0 e1 = true /\ a0 = a1 \/ Key_In e1 a1 xs). apply H2. left.
     split. order e. reflexivity. destruct H3. split. order e. split. destruct H3. subst.
-    reflexivity. apply IHxs. assumption. assumption. intros. 
+    reflexivity. apply IHxs. assumption. assumption. intros.
     assert (A1:=A). specialize (A x y). split; intros.
     destruct A.
     assert (_GHC.Base.==_ e1 x = true /\ a1 = y \/ Key_In x y ys). apply H9. right.
     apply H8. destruct H11. apply H5 in H8. unfold lt in H8. order e. assumption.
     destruct A. assert (_GHC.Base.==_ e0 x = true /\ a0 = y \/ Key_In x y xs). apply H10.
     right. apply H8. destruct H11. apply H7 in H8. unfold lt in H8. order e. assumption.
-    assert (A1:=A). specialize (A e0 a0). destruct A. 
+    assert (A1:=A). specialize (A e0 a0). destruct A.
     assert ( _GHC.Base.==_ e1 e0 = true /\ a1 = a0 \/ Key_In e0 a0 ys). apply H8.
     left. split. order e. reflexivity. destruct H10.
     apply H5 in H3. unfold lt in H3. order e.
@@ -844,7 +851,7 @@ Lemma Key_In_unique: forall k (m: Map e a) lb ub v1 v2,
   Bounded m lb ub ->
   Key_In k v1 (toList m) /\ Key_In k v2 (toList m) -> v1 = v2.
 Proof.
-  intros. destruct H0. rewrite <- toList_sem in H0. rewrite <- toList_sem in H1. 
+  intros. destruct H0. rewrite <- toList_sem in H0. rewrite <- toList_sem in H1.
   rewrite H1 in H0. inversion H0; subst; reflexivity. all: apply H.
 Qed.
 
@@ -865,7 +872,7 @@ Lemma eq_size : forall (m1: Map e a) m2 lb ub,
   eqlist_key (toList m1) (toList m2)  ->
   Internal.size m1 = Internal.size m2.
 Proof.
-  intros. rewrite size_size. erewrite size_spec. erewrite size_spec. 
+  intros. rewrite size_size. erewrite size_spec. erewrite size_spec.
   apply eqlist_key_length in H1. rewrite H1. reflexivity. all : eassumption.
 Qed.
 
@@ -899,10 +906,10 @@ Lemma size_sem: forall (m1: Map e a) m2 lb ub,
   size m1 = size m2.
 Proof.
   intros. pose proof (coq_equals_spec m1 m2 lb ub H H0). destruct H2.
-  apply H2 in H1. repeat(erewrite size_spec). 
+  apply H2 in H1. repeat(erewrite size_spec).
   assert (length (toList m1) = length (toList m2)). apply eqlist_key_length. assumption.
   rewrite H4. reflexivity. all: eassumption.
-Qed.  
+Qed.
 
 
 (*END NEW*)
@@ -913,13 +920,13 @@ Lemma eqlist_sym:
   eqlist xs ys = eqlist ys xs.
 Proof.
   intros. generalize dependent ys. induction xs; intros.
-  - destruct ys. reflexivity. simpl. reflexivity. 
+  - destruct ys. reflexivity. simpl. reflexivity.
   - destruct ys. simpl. reflexivity. simpl.
     destruct (a1 == a2) eqn : ?.
-    + simpl. rewrite Eq_Symmetric. simpl. apply IHxs. apply Heqb.
+    + simpl. rewrite Eq_Symmetric. simpl. apply IHxs. apply Heqb0.
     + simpl. assert (a2 == a1 = false). apply Lemmas.Eq_neq_sym. assumption.
       rewrite H1. simpl. reflexivity.
-Qed. 
+Qed.
 
 (*Equal lists have the same length*)
 Lemma eqlist_length:
@@ -944,7 +951,7 @@ Proof.
   - simpl. destruct ys. simpl. reflexivity. simpl in H2. discriminate H2.
   - destruct ys. simpl in H2. discriminate H2. simpl. simpl in H2. split; intros.
     + destruct p. rewrite andb_true_iff in H2. destruct H2. rewrite orb_true_iff.
-      rewrite orb_true_iff in H3. destruct H3. left. destruct a0.  eapply Eq_Tuple_Trans. 
+      rewrite orb_true_iff in H3. destruct H3. left. destruct a0.  eapply Eq_Tuple_Trans.
       apply H3. apply H2. right. apply IHxs. assumption. assumption.
     + rewrite orb_true_iff. rewrite orb_true_iff in H3. rewrite andb_true_iff in H2.
       destruct H2. destruct H3. left. destruct a0. destruct p. eapply Eq_Tuple_Trans.
@@ -958,14 +965,14 @@ Lemma sem_false_nil:
 Proof.
   intros. remember m as m1. split; intros.
   - destruct m.
-    + assert (sem m1 e0 <> None). { subst. 
-      simpl. destruct (sem m2 e0). 
+    + assert (sem m1 e0 <> None). { subst.
+      simpl. destruct (sem m2 e0).
       * simpl. intro. discriminate H0.
       * simpl. rewrite Eq_Reflexive. simpl. intro. discriminate H0. }
         specialize (H e0). rewrite H in H0. contradiction.
     + assumption.
   - rewrite H. simpl. reflexivity.
-Qed. 
+Qed.
 *)
 (*We don't want to use Forall_forall because all we know is that List.elem is true,
 which is much weaker than List.In*)
@@ -981,7 +988,7 @@ Proof.
   - apply Forall_cons. destruct a0. specialize (H2 e0 a0). apply H2. simpl.
     apply orb_true_iff. left. apply Eq_Tuple_Refl. apply IHl. intros. apply H2.
     simpl. apply orb_true_iff. right. apply H3.
-Qed. 
+Qed.
 
 (*If two tuples are equal according to Haskell, List.elem returns the same result for either on a list*)
 Lemma list_elem_eq : forall `{Eq_ a} `{EqLaws a} (x1 x2 : e) (y1 y2 : a) l,
@@ -1009,30 +1016,30 @@ Lemma strongly_sorted_unique':
   eqlist xs ys = true.
 Proof.
   intros. generalize dependent ys. induction xs; intros.
-  - simpl in H4. destruct ys. reflexivity. 
+  - simpl in H4. destruct ys. reflexivity.
     assert (forall x y, List.elem (x,y) (p :: ys) = false). { intros. specialize (H4 x y).
    destruct H4. apply contrapositive in H5. destruct (List.elem (x, y) (p :: ys)). contradiction.
     reflexivity. intro. discriminate H6. }
     assert (List.elem p (p :: ys) = true). { simpl. rewrite orb_true_iff. left. destruct p.
     apply Eq_Tuple_Refl. } destruct p. specialize (H5 e0 a0). rewrite H6 in H5. discriminate H5.
-  - destruct ys. 
+  - destruct ys.
     + assert (forall x y, List.elem (x,y) (a0 :: xs) = false). { intros x y.
       specialize (H4 x y). destruct H4. apply contrapositive in H4. destruct (List.elem (x, y) (a0 :: xs)).
       contradiction. reflexivity. intro. simpl in H6. discriminate H6. }
       destruct a0. assert (List.elem (e0, a0) ((e0, a0) :: xs) = true). { simpl. rewrite orb_true_iff.
       left. apply Eq_Tuple_Refl. }
       specialize (H5 e0 a0). rewrite H6 in H5. discriminate H5.
-    + simpl. rewrite andb_true_iff. inversion H2; subst. inversion H3; subst. split. 
+    + simpl. rewrite andb_true_iff. inversion H2; subst. inversion H3; subst. split.
       assert (A:=H4). destruct a0. destruct p. specialize (H4 e0 a0). specialize (A e1 a1).
-      destruct H4. destruct A. 
+      destruct H4. destruct A.
       assert (List.elem (e0, a0) ((e1, a1) :: ys) = true). { apply H4. simpl. rewrite orb_true_iff.
       left. apply Eq_Tuple_Refl. }
       assert (List.elem (e1, a1) ((e0, a0) :: xs) = true). { apply H11. simpl. rewrite orb_true_iff.
       left. apply Eq_Tuple_Refl. }
-      rewrite Forall_lt' in H8. rewrite Forall_lt' in H10. simpl in H12. simpl in H13. 
-      rewrite orb_true_iff in *. destruct H12. destruct H13. apply H12. apply H12. 
-      destruct H13. apply Eq_Tuple_Sym. apply H13. apply H8 in H13. apply H10 in H12. 
-      unfold lt in H12. unfold lt in H13. order e. 
+      rewrite Forall_lt' in H8. rewrite Forall_lt' in H10. simpl in H12. simpl in H13.
+      rewrite orb_true_iff in *. destruct H12. destruct H13. apply H12. apply H12.
+      destruct H13. apply Eq_Tuple_Sym. apply H13. apply H8 in H13. apply H10 in H12.
+      unfold lt in H12. unfold lt in H13. order e.
       apply IHxs. assumption. assumption. intros. split; intros.
       * assert (A1:=H4). specialize (H4 x y). destruct H4. rewrite Forall_lt' in H8. rewrite Forall_lt' in H10.
         assert (A:=H5).  assert (List.elem (x,y) (a0 :: xs) = true). {
@@ -1088,10 +1095,10 @@ Proof.
       specialize (H3 a0). rewrite H4 in H3. discriminate H3. apply H2.
     + reflexivity.
   - destruct (List.elem (key, value) (toList map)) eqn : ?.
-    + rewrite <- toList_sem' in Heqb. rewrite H3 in Heqb. discriminate Heqb. apply H2.
+    + rewrite <- toList_sem' in Heqb0. rewrite H3 in Heqb0. discriminate Heqb0. apply H2.
     + reflexivity.
 Qed.
-      
+
 (*If two maps have equal lists, their size is equal*)
 Lemma eq_size' : forall `{Eq_ a} `{EqLaws a} m1 m2 lb ub,
   Bounded m1 lb ub ->
@@ -1099,7 +1106,7 @@ Lemma eq_size' : forall `{Eq_ a} `{EqLaws a} m1 m2 lb ub,
   toList m1 == toList m2 = true ->
   Internal.size m1 = Internal.size m2.
 Proof.
-  intros. rewrite size_size. erewrite size_spec. erewrite size_spec. 
+  intros. rewrite size_size. erewrite size_spec. erewrite size_spec.
   unfold op_zeze__ in H4. unfold Eq_list in H4. unfold op_zeze____ in H4. apply eqlist_length in H4.
   rewrite H4. reflexivity. apply H3. apply H2.
 Qed.
@@ -1112,7 +1119,7 @@ Lemma eq_toList : forall `{Eq_ a} `{EqLaws a} m1 m2 lb ub,
   m1 == m2 = true <-> (toList m1 == toList m2) = true.
 Proof.
   intros. split; intros.
-  - unfold op_zeze__ in H4. unfold Eq___Map in H4. unfold op_zeze____ in H4. 
+  - unfold op_zeze__ in H4. unfold Eq___Map in H4. unfold op_zeze____ in H4.
     unfold Internal.Eq___Map_op_zeze__ in H4. rewrite andb_true_iff in H4. destruct H4.
     unfold toList. assumption.
   - unfold_zeze. unfold  Eq___Map. unfold Internal.Eq___Map_op_zeze__. rewrite andb_true_iff.
@@ -1129,19 +1136,19 @@ Proof.
   intros. split; intros. unfold op_zeze__ in H4. unfold Eq___Map in H4.
       unfold op_zeze____ in H4. unfold Internal.Eq___Map_op_zeze__ in H4.  rewrite andb_true_iff in H4.
       destruct H4. unfold op_zeze__ in H5. unfold Eq_list in H5. unfold op_zeze____ in H5.
-  - destruct (sem m1 i) eqn : ?. 
+  - destruct (sem m1 i) eqn : ?.
     + eapply eqlist_elem in H5. assert (sem m1 i == Some a0 = true). { rewrite Heqo. apply Eq_Reflexive. }
       rewrite toList_sem' in H6. unfold toList in H6. apply H5 in H6. rewrite <- toList_sem' in H6.
       apply Eq_Symmetric. apply H6. apply H3. apply H2.
     + rewrite <- elem_not_in_list in Heqo. pose proof (toList_sem') as H7. specialize (H7 m2 lb ub H3 i).
       assert (forall value, List.elem (i, value) (toList m2) = false). { intros.
       specialize (H7 value). destruct H7. apply contrapositive in H7.
-      destruct (List.elem (i, value) (toList m2)). contradiction. reflexivity. 
+      destruct (List.elem (i, value) (toList m2)). contradiction. reflexivity.
       assert (forall value, List.elem (i, value) (toAscList m2) = false). { intros.
       apply (eqlist_elem _ _ i value0) in H5. destruct H5. apply contrapositive in H8.
       destruct (List.elem (i, value0) (toAscList m2)). contradiction. reflexivity.
       destruct (List.elem (i, value0) (toAscList m1)) eqn : ?. specialize (Heqo value0).
-      unfold toList in Heqo. rewrite Heqo in Heqb. discriminate Heqb. intro. discriminate H9. }
+      unfold toList in Heqo. rewrite Heqo in Heqb0. discriminate Heqb0. intro. discriminate H9. }
       eapply elem_not_in_list in H8. rewrite H8. intro. discriminate H9. apply H3. }
       eapply elem_not_in_list in H6. rewrite H6. order e. apply H3. apply H2.
   - eapply eq_toList. apply H2. apply H3. apply strongly_sorted_unique'. eapply to_List_sorted.
@@ -1174,9 +1181,9 @@ Proof.
   - eapply strong_eq1; eassumption.
   - rewrite weak_equals_spec in H5; try eassumption.
     specialize (H5 i).
-    destruct (sem m1 i). destruct (sem m2 i). 
+    destruct (sem m1 i). destruct (sem m2 i).
     rewrite simpl_option_some_eq in H5. rewrite H4 in H5. subst. reflexivity.
-    discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity. 
+    discriminate H5. destruct (sem m2 i). discriminate H5. reflexivity.
 Qed.
 
-End WF.
+End WF_2.

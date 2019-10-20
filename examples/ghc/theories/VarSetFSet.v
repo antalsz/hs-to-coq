@@ -387,58 +387,124 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
   Lemma union_2 :
     forall (s s' : t) (x : elt), In x s -> In x (union s s').
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply union_Desc; eauto. move => s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H as [v H].
+    specialize (Hsem (realUnique e)). rewrite Hsem.
+    destruct (sem x0 (realUnique e)).
+    - exists v0. reflexivity.
+    - exists v. rewrite H. reflexivity.
+  Qed.
 
   Lemma union_3 :
     forall (s s' : t) (x : elt), In x s' -> In x (union s s').
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply union_Desc; eauto. move => s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H as [v H].
+    specialize (Hsem (realUnique e)). rewrite Hsem.
+    rewrite H. exists v. reflexivity.
+  Qed.
 
   Lemma inter_1 :
     forall (s s' : t) (x : elt), In x (inter s s') -> In x s.
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply intersection_Desc; eauto. move => s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H as [v H].
+    specialize (Hsem (realUnique e)). rewrite Hsem in H.
+    exists v. rewrite -H. destruct (sem x0 (realUnique e)).
+    - reflexivity.
+    - inversion H.
+  Qed.
 
   Lemma inter_2 :
     forall (s s' : t) (x : elt), In x (inter s s') -> In x s'.
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply intersection_Desc; eauto. move => s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H as [v H].
+    specialize (Hsem (realUnique e)).
+    rewrite H in Hsem.
+    destruct (sem x0 (realUnique e)) eqn:Hs.
+    - rewrite Hs. exists v0. reflexivity.
+    - inversion Hsem.
+  Qed.
 
   Lemma inter_3 :
     forall (s s' : t) (x : elt), In x s -> In x s' -> In x (inter s s').
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply intersection_Desc; eauto. move => s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H as [v H]. destruct H0 as [v' H'].
+    specialize (Hsem (realUnique e)).
+    rewrite Hsem.
+    exists v. rewrite H'. simpl. assumption.
+  Qed.
 
   Lemma diff_1 :
     forall (s s' : t) (x : elt), In x (diff s s') -> In x s.
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply difference_Desc; eauto. move => s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H0 as [v Hs].
+    specialize (H (realUnique e)).
+    rewrite H in Hs.
+    destruct (sem x0 (realUnique e)).
+    - inversion Hs.
+    - exists v. simpl in Hs. assumption.
+  Qed.
 
   Lemma diff_2 :
     forall (s s' : t) (x : elt), In x (diff s s') -> ~ In x s'.
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply difference_Desc; eauto. move => s HB _ Hsem1 Hsem2.
+    rewrite !member_spec; try eassumption.
+    intros. destruct H as [v Hs].
+    intro. destruct H as [v' Hx0].
+    specialize (Hsem2 (realUnique e)).
+    rewrite Hs Hx0 in Hsem2. simpl in Hsem2.
+    inversion Hsem2.
+  Qed.
 
   Lemma diff_3 :
     forall (s s' : t) (x : elt), In x s -> ~ In x s' -> In x (diff s s').
   Proof.
-    intros.
-    destruct s, s'.
-  Admitted.
+    rewrite /In. cbn. move=> s s'.
+    destruct s, getUniqSet', i, s', getUniqSet', i.
+    cbn. move=>e.
+    eapply difference_Desc; eauto. move => s HB _ Hsem1 Hsem2.
+    rewrite !member_spec; try eassumption. intros.
+    assert (sem x0 (realUnique e) = None).
+    { destruct (sem x0 (realUnique e)) eqn:Hx0.
+      - rewrite Hx0 in H0. exfalso. apply H0.
+        exists v. reflexivity.
+      - reflexivity. }
+    specialize (Hsem2 (realUnique e)).
+    destruct H as [v H]. rewrite H H1 in Hsem2.
+    exists v. assumption.
+  Qed.
 
   Lemma fold_left_map:
     forall {a b c} f (g : a -> b) (x : c) xs,
@@ -457,41 +523,190 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     forall (s : t) (x : elt) (f : elt -> bool),
     compat_bool E.eq f -> In x (filter f s) -> In x s.
   Proof.
-    intros s x P Heq Hin.
-  Admitted.
+    move=>s. destruct s, getUniqSet', i.
+    rewrite /In. cbn. move=>e f Heq.
+    eapply filterWithKey_Desc; eauto.
+    move=>s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    move=>[v H]. specialize (Hsem (realUnique e)).
+    rewrite H in Hsem. destruct (sem x (realUnique e)) eqn:Hx.
+    - destruct (f v0); inversion Hsem; subst.
+      exists v0. assumption.
+    - inversion Hsem.
+  Qed.
 
   Lemma filter_2 :
     forall (s : t) (x : elt) (f : elt -> bool),
     compat_bool E.eq f -> In x (filter f s) -> f x = true.
   Proof.
-    intros s x P Heq Hin.
-  Admitted.
+    move=>s.
+    assert (ValidVarSet s) by apply ValidVarSet_Axiom.
+    move: H.
+    destruct s, getUniqSet', i.
+    rewrite /In /ValidVarSet. cbn. move=>Hvalid e f Heq.
+    eapply filterWithKey_Desc; eauto.
+    move=>s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    move=>[v Hs].
+    specialize (Hsem (realUnique e)).
+    rewrite Hs in Hsem.
+    destruct (sem x (realUnique e)) eqn:Hx.
+    - specialize (Hvalid e v0).
+      erewrite lookup_spec in Hvalid; [|eassumption].
+      rewrite Hx in Hvalid.
+      replace (f e) with (f v0).
+      + destruct (f v0); inversion Hsem. reflexivity.
+      + apply Heq. symmetry.
+        rewrite -E.eqb_eq -realUnique_eq.
+        apply Hvalid. reflexivity.
+    - inversion Hsem.
+  Qed.
 
   Lemma filter_3 :
     forall (s : t) (x : elt) (f : elt -> bool),
     compat_bool E.eq f -> In x s -> f x = true -> In x (filter f s).
   Proof.
-    intros s x P Heq Hin HP.
-  Admitted.
-
+    move=>s.
+    assert (ValidVarSet s) by apply ValidVarSet_Axiom.
+    move: H.
+    destruct s, getUniqSet', i.
+    rewrite /In /ValidVarSet. cbn. move=>Hvalid e f Heq.
+    eapply filterWithKey_Desc; eauto.
+    move=>s HB _ Hsem.
+    rewrite !member_spec; try eassumption.
+    move=>[v Hs] Hf. exists v.
+    specialize (Hsem (realUnique e)).
+    rewrite Hs in Hsem.
+    specialize (Hvalid e v).
+    erewrite lookup_spec in Hvalid; [|eassumption].
+    rewrite Hs in Hvalid.
+    replace (f v) with (f e) in Hsem.
+    - rewrite Hf in Hsem. rewrite Hsem. reflexivity.
+    - apply Heq. rewrite -E.eqb_eq -realUnique_eq.
+      apply Hvalid. reflexivity.
+  Qed.
 
   Lemma for_all_1 :
     forall (s : t) (f : elt -> bool),
     compat_bool E.eq f ->
     For_all (fun x : elt => f x = true) s -> for_all f s = true.
   Proof.
-    intros.
-    unfold For_all, for_all in *.
-  Admitted.
+    move=>s.
+    assert (ValidVarSet s) by apply ValidVarSet_Axiom.
+    move: H.
+    destruct s, getUniqSet', i.
+    rewrite /For_all /In /ValidVarSet. cbn. move=>Hv f Heq Hmem.
+    rewrite foldr_spec foldrWithKey_spec.
+    induction x.
+    - rewrite toList_bin !fold_right_app.
+      inversion w; subst. simpl.
+      remember (Mk_Id GHC.Err.default
+                      k
+                      GHC.Err.default
+                      GHC.Err.default
+                      GHC.Err.default
+                      GHC.Err.default) as kv.
+      specialize (Hmem kv) as Hkv.
+      assert (f a = f kv).
+      { apply Heq. symmetry. rewrite -E.eqb_eq.
+        apply Hv. erewrite lookup_spec; try eassumption.
+        simpl. rewrite Heqkv. simpl.
+        erewrite sem_outside_above; try eassumption.
+        - rewrite Eq_refl. reflexivity.
+        - simpl. OrdTactic.order N. }
+      rewrite H Hkv.
+      + apply Bounded_relax_ub_None in H4.
+        apply Bounded_relax_lb_None in H5.
+        clear H. simpl. rewrite IHx2; try assumption.
+        * apply IHx1; try assumption.
+          -- intros.
+             apply ValidVarSet_Axiom with
+                 (vs:=UniqSet.Mk_UniqSet (UniqFM.UFM (exist _ x1 H4))).
+             cbn. assumption.
+          -- move=>x H. apply Hmem. move: H.
+             rewrite !member_spec; try eassumption.
+             simpl. move=>[v H].
+             exists v. rewrite H. reflexivity.
+        * intros.
+          apply ValidVarSet_Axiom with
+              (vs:=UniqSet.Mk_UniqSet (UniqFM.UFM (exist _ x2 H5))).
+             cbn. assumption.
+        * move=>x H. apply Hmem. move: H.
+          rewrite !member_spec; try eassumption.
+          simpl. move=>[v H].
+          destruct (sem x1 (realUnique x)) eqn:Hx1.
+          -- exists v0. rewrite Hx1. reflexivity.
+          -- rewrite Hx1. simpl.
+             destruct (realUnique x == k); simpl.
+             exists a. reflexivity.
+             rewrite H. exists v. reflexivity.
+      + rewrite !member_spec; try eassumption. simpl. exists a.
+        rewrite Heqkv. erewrite sem_outside_above; try eassumption.
+        * rewrite Eq_refl. reflexivity.
+        * simpl. OrdTactic.order N.
+    - reflexivity.
+  Qed.
 
   Lemma for_all_2 :
     forall (s : t) (f : elt -> bool),
     compat_bool E.eq f ->
     for_all f s = true -> For_all (fun x : elt => f x = true) s.
   Proof.
-    intros.
-    unfold For_all, for_all in *.
-  Admitted.
+    move=>s.
+    assert (ValidVarSet s) by apply ValidVarSet_Axiom.
+    move: H.
+    destruct s, getUniqSet', i.
+    rewrite /For_all /In /ValidVarSet. cbn. move=>Hv f Heq.
+    rewrite foldr_spec foldrWithKey_spec. move=>Hfold v.
+    rewrite member_spec; try eassumption.
+    move=>[v' Hsem].
+    induction x.
+    - move: Hfold. rewrite toList_bin !fold_right_app /=.
+      assert (forall l, fold_right
+                     (fun (x : Word * Var) (t : bool) =>
+                        let (_, b0) := x in f b0 && t)
+                     false l = false).
+      { intros. rewrite -(rev_involutive l) fold_left_rev_right.
+        induction (rev l); simpl. reflexivity.
+        destruct a0. rewrite andb_false_r. apply IHl0. }
+      destruct (f a) eqn:Hfa.
+      + simpl. simpl in Hsem.
+        inversion w; subst.
+        destruct (sem x1 (realUnique v)) eqn:Hx1.
+        * intros. apply Bounded_relax_ub_None in H5.
+          assert (Hvx1: ValidVarSet (UniqSet.Mk_UniqSet
+                                       (UniqFM.UFM (exist _ x1 H5))))
+            by apply ValidVarSet_Axiom.
+          move: Hvx1. rewrite /ValidVarSet. cbn. move=>Hvx1.
+          apply IHx1; auto.
+          -- destruct (fold_right
+                         (fun (x : Word * Var) (t : bool) =>
+                            let (_, b0) := x in f b0 && t)
+                         true (Internal.toList x2)); [assumption|].
+             rewrite H in Hfold. inversion Hfold.
+          -- rewrite Hx1 in Hsem. simpl in Hsem.
+             inversion Hsem; subst. assumption.
+        * move: Hsem. rewrite Hx1 /= =>Hsem.
+          destruct (realUnique v == k) eqn:Hvk.
+          -- simpl in Hsem. inversion Hsem. subst.
+             assert (f v = f v').
+             { apply Heq. rewrite -E.eqb_eq.
+               apply Hv. erewrite lookup_spec; try eassumption.
+               simpl. rewrite Hx1 Hvk //. }
+             rewrite H0 //.
+          -- simpl in Hsem. intros. apply Bounded_relax_lb_None in H6.
+             assert (Hvx2: ValidVarSet (UniqSet.Mk_UniqSet
+                                          (UniqFM.UFM (exist _ x2 H6))))
+               by apply ValidVarSet_Axiom.
+             move: Hvx2. rewrite /ValidVarSet. cbn. move=>Hvx2.
+             apply IHx2; auto.
+             destruct (fold_right (fun (x : Word * Var) (t0 : bool) =>
+                                     let (_, b0) := x in f b0 && t0)
+                                  true (Internal.toList x2)); [reflexivity|].
+             rewrite H in Hfold. inversion Hfold.
+      + simpl. rewrite H. inversion 1.
+    - simpl in Hsem. inversion Hsem.
+  Qed.
 
   Lemma exists_1 :
     forall (s : t) (f : elt -> bool),

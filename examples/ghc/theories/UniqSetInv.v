@@ -34,7 +34,7 @@ Import GHC.Base.
 Require Proofs.GHC.List.
 Require Proofs.Data.Foldable.
 Require Import IntMap.
-Require Import ContainerProofs.
+Require Import Proofs.ContainerProofs.
 
 Require Import Proofs.GHC.Base.
 

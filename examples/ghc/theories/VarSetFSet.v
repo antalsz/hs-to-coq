@@ -29,7 +29,7 @@ Require Import IntSetProofs.
 (* ghc theory (incl. some that should move above. *)
 Require Import Proofs.Base.
 Require Import Proofs.Axioms.
-Require Import ContainerProofs.
+Require Import Proofs.ContainerProofs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
 Require Import Proofs.Var.

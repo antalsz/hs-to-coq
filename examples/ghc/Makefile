@@ -13,8 +13,6 @@ HANDMOD = \
   FastString \
   AxiomatizedTypes \
   NestedRecursionHelpers \
-  ContainerProofs \
-  UniqSetInv \
   IntMap \
   # Used by CSE
   # TysWiredIn \
@@ -230,19 +228,33 @@ ghcrec.pdf: ghcrec.dot
 	dot -Tpdf -o ghcrec.pdf ghcrec.dot
 
 
-cloc_table: 
+cloc_table_hs: 
+	echo UTIL 
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(UTILS))) 
+	echo DATASTRUCTS
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(DATASTRUCTS))) 
+	echo CORESYN
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORESYN))) 
+	echo CORE_MODULES
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORE_MODULES)))
+	echo TOTAL
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(MODULES) $(CORESYN) $(CORE_MODULES))) 
+
+
+cloc_table_v: 
 	echo MANUAL
 	cloc --by-file $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
 	echo UTIL 
-	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(UTILS))) $(addsuffix .v,$(addprefix lib/,$(UTILS)))
+	cloc --by-file $(addsuffix .v,$(addprefix lib/,$(UTILS)))
 	echo DATASTRUCTS
-	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(DATASTRUCTS))) $(addsuffix .v,$(addprefix lib/,$(DATASTRUCTS)))
+	cloc --by-file $(addsuffix .v,$(addprefix lib/,$(DATASTRUCTS)))
 	echo CORESYN
-	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORESYN))) lib/Core.v 
+	cloc --by-file lib/Core.v 
 	echo CORE_MODULES
-	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(CORE_MODULES)))
+	cloc --by-file $(addsuffix .v,$(addprefix lib/,$(CORE_MODULES)))
 	echo TOTAL
-	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(MODULES) $(CORESYN) $(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(MODULES) $(CORE_MODULES))) lib/Core.v $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+	cloc $(addsuffix .v,$(addprefix lib/,$(MODULES) $(CORE_MODULES))) lib/Core.v $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+
 
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.

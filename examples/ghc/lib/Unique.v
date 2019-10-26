@@ -33,7 +33,6 @@ Record Uniquable__Dict a := Uniquable__Dict_Build {
 
 Definition Uniquable a :=
   forall r__, (Uniquable__Dict a -> r__) -> r__.
-
 Existing Class Uniquable.
 
 Definition getUnique `{g__0__ : Uniquable a} : a -> Unique :=

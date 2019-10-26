@@ -33,7 +33,6 @@ Record MonadUnique__Dict m := MonadUnique__Dict_Build {
 
 Definition MonadUnique m `{GHC.Base.Monad m} :=
   forall r__, (MonadUnique__Dict m -> r__) -> r__.
-
 Existing Class MonadUnique.
 
 Definition getUniqueM `{g__0__ : MonadUnique m} : m Unique.Unique :=

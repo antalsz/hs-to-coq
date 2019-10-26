@@ -14,7 +14,7 @@ Require Import Id.
 Require Import Core.
 
 Require Import Proofs.Axioms.
-Require Import Proofs.ContainerAxioms.
+Require Import Proofs.ContainerProofs.
 
 Require Import Proofs.Core.
 Require Import Proofs.Var.

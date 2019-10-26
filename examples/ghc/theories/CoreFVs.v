@@ -713,7 +713,7 @@ simpl.
 destruct (isLocalVar v).
 - simpl.
   unfold varUnique in H.
-  rewrite ContainerAxioms.member_insert.
+  rewrite ContainerProofs.member_insert.
   apply /orP. intro. intuition.
   apply H. f_equal. apply /Eq_eq =>//.
 - reflexivity.

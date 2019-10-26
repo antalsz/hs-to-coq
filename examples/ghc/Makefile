@@ -13,7 +13,7 @@ HANDMOD = \
   FastString \
   AxiomatizedTypes \
   NestedRecursionHelpers \
-  IntMap
+  IntMap \
   # Used by CSE
   # TysWiredIn \
 
@@ -178,9 +178,41 @@ filelist:
 
 
 editlist:
-	@ls -1 $(EDITFILES) 2>/dev/null | xargs cloc --by-file --lang-no-ext=zsh --force-lang=zsh,edits --skip-uniqueness
+	@ls -1 $(EDITFILES) 2>/dev/null | xargs cloc --by-file-by-lang --lang-no-ext=zsh --force-lang=zsh,edits --force-lang=Coq,v --skip-uniqueness
 
-
+edittable:
+	@echo "skip"
+	@cat $(EDITFILES) 2>/dev/null | grep "skip" | grep -v "#" | grep -v "constructor" | grep -v "module" | wc -l
+	@echo "skip constructor"
+	@cat $(EDITFILES) 2>/dev/null | grep "skip constructor" | grep -v "#" | wc -l
+	@echo "skip module"
+	@cat $(EDITFILES) 2>/dev/null | grep "skip module" | grep -v "#" | wc -l
+	@echo "axiomatize"
+	@cat $(EDITFILES) 2>/dev/null | grep "axiomatize" | grep -v "#" | grep -v "module" | wc -l
+	@echo "redefine Axiom"
+	@cat $(EDITFILES) 2>/dev/null | grep "redefine Axiom" | grep -v "#" | wc -l
+	@echo "axiomatize module"
+	@cat $(EDITFILES) 2>/dev/null | grep "axiomatize" | grep "module" | grep -v "#" | wc -l
+	@echo "order"
+	@cat $(EDITFILES) 2>/dev/null | grep "order" | grep -v "#" | wc -l
+	@echo "termination"
+	@cat $(EDITFILES) 2>/dev/null | grep "termination" | grep -v "#" | wc -l
+	@echo "rewrite"
+	@cat $(EDITFILES) 2>/dev/null | grep "rewrite" | grep -v "#" | wc -l
+	@echo "redefine"
+	@cat $(EDITFILES) 2>/dev/null | grep "redefine" | grep -v "#" | grep -v "Axiom" 
+	@echo "rename type"
+	@cat $(EDITFILES) 2>/dev/null | grep "rename type" | grep -v "#" | wc -l
+	@echo "rename value"
+	@cat $(EDITFILES) 2>/dev/null | grep "rename value" | grep -v "#" | wc -l
+	@echo "set type"
+	@cat $(EDITFILES) 2>/dev/null | grep "set type" | grep -v "#" | wc -l
+	@echo "inline mutual"
+	@cat $(EDITFILES) 2>/dev/null | grep "inline mutual" | grep -v "#" | wc -l
+	@echo "rename module"
+	@cat $(EDITFILES) 2>/dev/null | grep "rename module" | grep -v "#" | wc -l
+	@echo "TOTAL"
+	@cat $(EDITFILES) 2>/dev/null | grep -v "#" --include "*edits" | wc -l
 
 ghc.all.pdf: Makefile
 	find ghc/compiler -name \*.hs | xargs graphmod --no-cluster --prune-edges -r Outputable -r GhcPrelude | dot -Tpdf -o ghc.all.pdf
@@ -196,19 +228,33 @@ ghcrec.pdf: ghcrec.dot
 	dot -Tpdf -o ghcrec.pdf ghcrec.dot
 
 
-cloc_table: 
-	echo MANUAL
-	cloc $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+cloc_table_hs: 
 	echo UTIL 
-	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(UTILS))) $(addsuffix .v,$(addprefix lib/,$(UTILS)))
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(UTILS))) 
 	echo DATASTRUCTS
-	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(DATASTRUCTS))) $(addsuffix .v,$(addprefix lib/,$(DATASTRUCTS)))
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(DATASTRUCTS))) 
 	echo CORESYN
-	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORESYN))) lib/Core.v 
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORESYN))) 
 	echo CORE_MODULES
-	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(CORE_MODULES)))
+	cloc --by-file $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(CORE_MODULES)))
 	echo TOTAL
-	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(MODULES) $(CORESYN) $(CORE_MODULES))) $(addsuffix .v,$(addprefix lib/,$(MODULES) $(CORE_MODULES))) lib/Core.v $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+	cloc $(addsuffix .hs,$(addprefix ghc/compiler/*/,$(MODULES) $(CORESYN) $(CORE_MODULES))) 
+
+
+cloc_table_v: 
+	echo MANUAL
+	cloc --by-file $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+	echo UTIL 
+	cloc --by-file $(addsuffix .v,$(addprefix lib/,$(UTILS)))
+	echo DATASTRUCTS
+	cloc --by-file $(addsuffix .v,$(addprefix lib/,$(DATASTRUCTS)))
+	echo CORESYN
+	cloc --by-file lib/Core.v 
+	echo CORE_MODULES
+	cloc --by-file $(addsuffix .v,$(addprefix lib/,$(CORE_MODULES)))
+	echo TOTAL
+	cloc $(addsuffix .v,$(addprefix lib/,$(MODULES) $(CORE_MODULES))) lib/Core.v $(addsuffix .v, $(addprefix manual/,$(HANDMOD)))
+
 
 
 # This target is also used as a dependecy to ensure that $(OUT) exists.

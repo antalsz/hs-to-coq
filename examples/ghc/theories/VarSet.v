@@ -22,7 +22,7 @@ Require UniqFM.
 
 Require Import Proofs.Base.
 Require Import Proofs.Axioms.
-Require Import Proofs.ContainerAxioms.
+Require Import Proofs.ContainerProofs.
 Require Import Proofs.GhcTactics.
 Require Import Proofs.Unique.
 Require Import Proofs.Var.

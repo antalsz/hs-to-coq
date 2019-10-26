@@ -26,7 +26,7 @@ Ltac destruct_ptrEq := lazymatch goal with
   => let Hpe := fresh "Hpe" in
      destruct (PtrEquality.ptrEq x y) eqn:Hpe;
      [ apply PtrEquality.ptrEq_eq in Hpe; subst
-     | clear Hpe] 
+     | clear Hpe]
 end.
 
 (** * Tactics for option-valued functions *)
@@ -73,6 +73,12 @@ Proof. intros. reflexivity. Qed.
 
 Lemma oro_Some_iff: forall x y v, x ||| y = Some v <-> (x = Some v \/ (x = None /\ y = Some v)).
 Proof. intros. destruct x, y; simpl; intuition congruence. Qed.
+
+Lemma oro_assoc : forall o1 o2 o3,
+  (o1 ||| o2) ||| o3 = o1 ||| (o2 ||| o3).
+Proof.
+  intros. destruct o1. simpl. reflexivity. simpl. reflexivity.
+Qed.
 
 Lemma ando_None_l : forall x, None &&& x = None.
 Proof. intros. destruct x; reflexivity. Qed.
@@ -262,7 +268,7 @@ Definition balance_prop sz1 sz2 :=
 Definition balance_prop_inserted sz1 sz2 :=
   (delta * sz1 <= delta*delta*sz2 + delta*sz2 + sz2 /\ sz2 <= sz1)%Z.
 
-(* NB: this does not work: 
+(* NB: this does not work:
 Definition balance_prop_inserted sz1 sz2 := balance_prop sz1 sz2.
 *)
 
@@ -282,7 +288,7 @@ Proof.
   * reflexivity.
 Qed.
 
-(** This inductive predicate describes when sets are well-formed within 
+(** This inductive predicate describes when sets are well-formed within
   (exclusive) bounds.
 *)
 
@@ -367,14 +373,14 @@ Proof. intros. reflexivity. Qed.
 (* Pose the proof [prf], unless it already exists. *)
 Ltac pose_new prf :=
   let prop := type of prf in
-  match goal with 
+  match goal with
     | [ H : prop |- _] => fail 1
     | _ => pose proof prf
   end.
 
 (* Pose the [prop], using [prf], unless it already exists. *)
 Ltac assert_new prop prf :=
-  match goal with 
+  match goal with
     | [ H : prop |- _] => fail 1
     | _ => assert prop by prf
   end.
@@ -444,7 +450,7 @@ Proof.
             ++ rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                simpl Z.sub.
                lia.
-            ++ assert (size s2 = 0)%Z by lia. 
+            ++ assert (size s2 = 0)%Z by lia.
                rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                replace (height s1) with 1%Z in *
                  by (symmetry; eapply size_height_1; eassumption).
@@ -465,7 +471,7 @@ Proof.
             ++ rewrite (size_0_iff_tip HB2) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                simpl Z.sub.
                lia.
-            ++ assert (size s1 = 0)%Z by lia. 
+            ++ assert (size s1 = 0)%Z by lia.
                rewrite (size_0_iff_tip HB1) in *. subst. cbn -[N.add Z.add Z.mul] in *.
                replace (height s2) with 1%Z in *
                  by (symmetry; eapply size_height_1; eassumption).
@@ -656,7 +662,7 @@ Ltac solve_Bounds := first
    Fails if it does not start with [forall i,], but may leave a partially solve goal.
     *)
 Ltac f_solver_simple  :=
-  let i := fresh "i" in 
+  let i := fresh "i" in
   intro i;
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
@@ -668,7 +674,7 @@ Ltac f_solver_simple  :=
 (** This auxillary tactic destructs one boolean or option atom in the argument *)
 
 Ltac split_bool_go expr :=
-  lazymatch expr with 
+  lazymatch expr with
     | true       => fail
     | false      => fail
     | Some _     => fail
@@ -689,7 +695,7 @@ Ltac split_bool_go expr :=
 
 
 Ltac split_bool :=
-  match goal with 
+  match goal with
     | |- ?lhs = ?rhs        => split_bool_go lhs || split_bool_go rhs
     (* A bit ad-hoc, could be improved: *)
     | H : ?x ||| ?y = Some _   |- _ => split_bool_go x
@@ -727,7 +733,7 @@ Ltac f_solver_cleanup :=
   (* Try to solve it *)
   try solve [exfalso; inside_bounds; order_Bounds];
   try reflexivity;
-  (* Find conradiction *)   
+  (* Find conradiction *)
   try lazymatch goal with
     |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = Some _, H3 : sem ?s ?j = None |- _
       => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
@@ -847,7 +853,7 @@ Ltac applyDesc lem :=
   apply hide;
   eapply lem;
   [ solve_Precondition ..
-  | let s := fresh "s" in 
+  | let s := fresh "s" in
     let HB := fresh "HB" in
     let Hsz := fresh "Hsz" in
     let Hsem := fresh "Hsem" in
@@ -983,6 +989,17 @@ Lemma null_spec:
   forall s, WF s -> null s = true <-> s = Tip.
 Proof. intros. unfold null. inversion H; simpl; intuition (congruence || lia_sizes). Qed.
 
+Lemma null_spec':
+  forall s, WF s -> null s = true <-> forall i, sem s i = None.
+Proof.
+  intros. rewrite null_spec; [|assumption]. split.
+  - intros; subst. reflexivity.
+  - intros; destruct s.
+    + specialize (H0 e0). revert H0.
+      simpl. rewrite Eq_refl, oro_assoc.
+      simpl. destruct (sem s2 e0); inversion 1.
+    + reflexivity.
+Qed.
 
 (** ** Verification of [singleton] *)
 
@@ -1119,7 +1136,7 @@ Lemma balance_Desc:
   isUB ub x = true ->
   balance_prop (size s1) (size s2)  \/
   balance_prop_inserted (size s2 - 1) (size s1) /\ (1 <= size s2)%Z  \/
-  balance_prop (size s1 + 1) (size s2) \/ 
+  balance_prop (size s1 + 1) (size s2) \/
   balance_prop_inserted (size s1 - 1) (size s2) /\ (1 <= size s1)%Z \/
   balance_prop (size s1) (size s2 + 1) ->
   Desc (balance x v s1 s2) lb ub (1 + size s1 + size s2) (fun i => sem s1 i ||| SomeIf (i == x) v ||| sem s2 i).
@@ -1178,8 +1195,8 @@ Proof.
   destruct s1; [|reflexivity].
   destruct s2; [|reflexivity].
   unfold link at 1, link_func at 1.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+  lazymatch goal with
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs =>
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
 Qed.
@@ -1194,7 +1211,7 @@ Lemma insertMax_Desc:
     Desc (insertMax x v s1) lb ub (1 + size s1) (fun i => sem s1 i ||| SomeIf (i == x) v).
 Proof.
   intros.
-  
+
   remember (Some x) as ub'. revert dependent x.
   induction H; intros; subst; cbn - [Z.add SomeIf].
   * applyDesc singleton_Desc.
@@ -1241,7 +1258,7 @@ Program Fixpoint link_Desc (x : e) (v : a) (s1: Map e a) (s2: Map e a)
     := _.
 Next Obligation.
   intros.
-  rewrite link_eq. 
+  rewrite link_eq.
   inversion H; subst; clear H;
   inversion H0; subst; clear H0.
   * simpl insertMin.

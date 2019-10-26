@@ -21,7 +21,6 @@ Record MonadTrans__Dict t := MonadTrans__Dict_Build {
 
 Definition MonadTrans t :=
   forall r__, (MonadTrans__Dict t -> r__) -> r__.
-
 Existing Class MonadTrans.
 
 Definition lift `{g__0__ : MonadTrans t}

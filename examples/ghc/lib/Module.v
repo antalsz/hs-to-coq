@@ -88,7 +88,6 @@ Record ContainsModule__Dict t := ContainsModule__Dict_Build {
 
 Definition ContainsModule t :=
   forall r__, (ContainsModule__Dict t -> r__) -> r__.
-
 Existing Class ContainsModule.
 
 Definition extractModule `{g__0__ : ContainsModule t} : t -> Module :=
@@ -99,7 +98,6 @@ Record HasModule__Dict m := HasModule__Dict_Build {
 
 Definition HasModule m :=
   forall r__, (HasModule__Dict m -> r__) -> r__.
-
 Existing Class HasModule.
 
 Definition getModule `{g__0__ : HasModule m} : m Module :=

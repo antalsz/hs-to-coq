@@ -62,7 +62,7 @@ Lemma union_destruct :
   (s1 = Tip -> P s2) ->
   (forall sz2 x vx, (s2 = Bin sz2 x vx Tip Tip) -> P (insertR x vx s1)) ->
   (forall sz1 x vx, (s1 = Bin sz1 x vx Tip Tip) -> P (insert x vx s2)) ->
-  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) -> 
+  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) ->
     P (
       match split x s2 with
       | pair l2 r2 =>
@@ -86,7 +86,7 @@ Proof.
         | eapply HTipR; reflexivity
         | idtac
         ].
-Qed. 
+Qed.
 
 Lemma union_Desc :
   forall (s1: Map e a) s2 lb ub,
@@ -136,12 +136,6 @@ Lemma Forall_rev:
   forall A P (l : list A), Forall P (rev l) <-> Forall P l.
 Proof. intros. rewrite !Forall_forall. setoid_rewrite <- in_rev. reflexivity. Qed.
 
-Lemma oro_assoc : forall {a} (o1 o2 o3: option a),
-  (o1 ||| o2) ||| o3 = o1 ||| (o2 ||| o3).
-Proof.
-  intros. destruct o1. simpl. reflexivity. simpl. reflexivity.
-Qed.
-
 Lemma oro_app: forall o l1 l2 (i : e),
   (fold_right (fun (h: Map e a) t => sem h i ||| t) o (l1 ++ l2)) =
   (fold_right (fun h t => sem h i ||| t) None l1) |||
@@ -174,7 +168,7 @@ Proof.
   * simpl fold_right.
     applyDesc e IHForall.
     applyDesc e union_Desc.
-    solve_Desc e. 
+    solve_Desc e.
     intro i.
     rewrite Hsem0, Hsem. rewrite oro_app. simpl. rewrite oro_None_r. reflexivity.
 Qed.
@@ -304,7 +298,7 @@ Lemma unionWith_destruct :
   (s1 = Tip -> P s2) ->
   (forall sz2 x vx, (s2 = Bin sz2 x vx Tip Tip) -> P (insertWithR f x vx s1)) ->
   (forall sz1 x vx, (s1 = Bin sz1 x vx Tip Tip) -> P (insertWith f x vx s2)) ->
-  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) -> 
+  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) ->
     P (
       match splitLookup x s2 with
       | (l2, mb, r2) =>
@@ -329,7 +323,7 @@ Proof.
         | eapply HTipR; reflexivity
         | idtac
         ].
-Qed. 
+Qed.
 
 Lemma unionWith_Desc :
   forall (s1: Map e a) s2 lb ub f,
@@ -364,8 +358,8 @@ intros ????? HB1 HB2.
       assert (sem s1 x0 = sem s1 i) by (apply sem_resp_eq; order e). rewrite H1 in Hsem.
       rewrite Heqo0 in Hsem. assert (x0 == x = true) by (order e). rewrite H3 in Hsem.
       simpl in Hsem. symmetry. assumption.
-      assert (sem s2 i = sem s2 x0) by (apply sem_resp_eq; order e). 
-      rewrite <- H1 in Hsem. rewrite Heqo1 in Hsem. 
+      assert (sem s2 i = sem s2 x0) by (apply sem_resp_eq; order e).
+      rewrite <- H1 in Hsem. rewrite Heqo1 in Hsem.
       assert (sem s1 x0 = None). eapply sem_outside_above. eassumption. solve_Bounds e.
       rewrite H3 in Hsem. assert (x0 == x = false) by (order e). rewrite H4 in Hsem.
       simpl in Hsem. symmetry. assumption.
@@ -393,13 +387,13 @@ intros ????? HB1 HB2.
       intros.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2. destruct b.
-      - applyDesc e (@link_Desc e a). apply showDesc'. split. 
+      - applyDesc e (@link_Desc e a). apply showDesc'. split.
         (*Not using solve_Desc because it was very slow*)
         solve_Bounded e. f_solver e; rewrite H5 in Hsem0;
         rewrite <- Hsem1; assumption.
       - applyDesc e (@link_Desc e a). apply showDesc'. split.
         solve_Bounded e. f_solver e; rewrite H5 in Hsem0; rewrite <-Hsem1; assumption.
-Qed. 
+Qed.
 
 Require Import Coq.Classes.Morphisms.
 (** ** Verification of [insertWithKeyR] *)
@@ -450,7 +444,7 @@ Lemma unionWithKey_destruct :
   (s1 = Tip -> P s2) ->
   (forall sz2 x vx, (s2 = Bin sz2 x vx Tip Tip) -> P (insertWithKeyR f x vx s1)) ->
   (forall sz1 x vx, (s1 = Bin sz1 x vx Tip Tip) -> P (insertWithKey f x vx s2)) ->
-  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) -> 
+  (forall sz1 x vx l1 r1, (s1 = Bin sz1 x vx l1 r1) ->
     P (
       match splitLookup x s2 with
       | (l2, mb, r2) =>
@@ -475,7 +469,7 @@ Proof.
         | eapply HTipR; reflexivity
         | idtac
         ].
-Qed. 
+Qed.
 
 Lemma unionWithKey_Desc :
   forall (s1: Map e a) s2 lb ub f,
@@ -511,8 +505,8 @@ intros ????? HB1 HB2 HP.
       assert (sem s1 x0 = sem s1 i) by (apply sem_resp_eq; order e). rewrite H5 in H4.
       rewrite Heqo0 in H4. assert (x0 == x = true) by (order e). rewrite H6 in H4.
       simpl in H4. symmetry. assumption.
-      assert (sem s2 i = sem s2 x0) by (apply sem_resp_eq; order e). 
-      rewrite <- H5 in H4. rewrite Heqo1 in H4. 
+      assert (sem s2 i = sem s2 x0) by (apply sem_resp_eq; order e).
+      rewrite <- H5 in H4. rewrite Heqo1 in H4.
       assert (sem s1 x0 = None). eapply sem_outside_above. eassumption. solve_Bounds e.
       rewrite H6 in H4. assert (x0 == x = false) by (order e). rewrite H9 in H4.
       simpl in H4. symmetry. assumption.
@@ -548,7 +542,7 @@ intros ????? HB1 HB2 HP.
       intros.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2. destruct b.
-      - applyDesc e (@link_Desc e a). apply showDesc'. split. 
+      - applyDesc e (@link_Desc e a). apply showDesc'. split.
         (*Not using solve_Desc because it was very slow*)
         solve_Bounded e. f_solver e.
         assert (f x0 vx a0 = f i vx a0). apply equal_f. apply equal_f. apply HP. order e.
@@ -556,7 +550,7 @@ intros ????? HB1 HB2 HP.
         all : (rewrite H5 in Hsem0; rewrite <- Hsem1; assumption).
       - applyDesc e (@link_Desc e a). apply showDesc'. split.
         solve_Bounded e. f_solver e; rewrite H5 in Hsem0; rewrite <-Hsem1; assumption.
-Qed. 
+Qed.
 
 (** ** Verification of [unionsWith] *)
 Lemma unionsWith_Desc:
@@ -582,11 +576,11 @@ Proof.
   rewrite rev_involutive.
 
   induction H.
-  * simpl. applyDesc e (@empty_Desc e a). solve_Desc e. f_solver e. 
+  * simpl. applyDesc e (@empty_Desc e a). solve_Desc e. f_solver e.
   * simpl fold_right.
     applyDesc e IHForall.
     applyDesc e unionWith_Desc.
-    solve_Desc e. 
+    solve_Desc e.
     intro i.
     rewrite Hsem0, Hsem. simpl. rewrite fold_left_app. simpl. destruct (fold_left
     (fun (t : option a) (h : Map e a) =>
@@ -597,20 +591,20 @@ Proof.
                  end
      | None => sem h i
      end) (rev l) None); destruct (sem x i ) eqn : ?; reflexivity.
-Qed. 
+Qed.
 
 (** ** Verification of [link2] *)
 
 (** This is called  [merge] for Set *)
 
-Lemma link2_eq: forall (l r: Map e a), link2 l r = 
-  match l, r with 
+Lemma link2_eq: forall (l r: Map e a), link2 l r =
+  match l, r with
   | Tip, r => r
   | l, Tip => l
   | (Bin sizeL x vx lx rx as l), (Bin sizeR y vy ly ry as r) =>
     if Sumbool.sumbool_of_bool
          ((delta GHC.Num.* sizeL) GHC.Base.< sizeR)
-    then balanceL y vy (link2 l ly) ry           
+    then balanceL y vy (link2 l ly) ry
     else if Sumbool.sumbool_of_bool
               ((delta GHC.Num.* sizeR) GHC.Base.< sizeL)
          then balanceR x vx lx (link2 rx r)
@@ -621,8 +615,8 @@ Proof.
   destruct l; [|auto].
   destruct r; [|auto].
   unfold link2 at 1, link2_func at 1;
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+  lazymatch goal with
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs =>
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
 Qed.
@@ -640,7 +634,7 @@ Program Fixpoint link2_Desc (s1: Map e a)  (s2: Map e a)
   := _.
 Next Obligation.
   intros.
-  rewrite link2_eq. 
+  rewrite link2_eq.
   inversion H; subst; clear H;
     inversion H0; subst; clear H0;
       try solve [solve_Desc e].
@@ -807,10 +801,10 @@ Proof.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2.
       destruct p.
-      * applyDesc e (@link_Desc e c). 
+      * applyDesc e (@link_Desc e c).
         (*Also taking long see*)
         apply showDesc'. split. solve_Bounded e.
-        f_solver e; rewrite Hi in Hsem0; 
+        f_solver e; rewrite Hi in Hsem0;
           rewrite <- Hsem1; assumption.
       * applyDesc e (@link2_Desc e c).
         apply showDesc'. split. solve_Bounded e.
@@ -847,12 +841,12 @@ Proof.
       applyDesc e IHHB1_1.
       applyDesc e IHHB1_2.
       destruct p.
-      * applyDesc e (@link_Desc e c). 
+      * applyDesc e (@link_Desc e c).
         (*Also taking long see*)
         apply showDesc'. split. solve_Bounded e.
         f_solver e.
         f_equal. do 2 apply equal_f. apply HP. order e.
-        all :( try (rewrite Hi in Hsem0; 
+        all :( try (rewrite Hi in Hsem0;
                     rewrite <- Hsem1; assumption)).
       * applyDesc e (@link2_Desc e c).
         apply showDesc'. split. solve_Bounded e.
@@ -860,11 +854,11 @@ Proof.
           rewrite <-Hsem1; assumption.
     + solve_Desc e. f_solver e.
 Qed.
-      
+
 
 (** ** Verification of [difference] *)
 
-(** A wart: Because we are in a section that fixes [a], 
+(** A wart: Because we are in a section that fixes [a],
 we get this proof only for invocations of [difference] where
 boths maps have the same element type. This does not
 affect the proof, but requires some Coq proof structure engineering
@@ -875,7 +869,7 @@ Lemma difference_destruct :
   forall s1 s2,
   (s1 = Tip -> P Tip) ->
   (s2 = Tip -> P s1) ->
-  (forall sz2 x vx l2 r2, (s2 = Bin sz2 x vx l2 r2) -> 
+  (forall sz2 x vx l2 r2, (s2 = Bin sz2 x vx l2 r2) ->
     P (
       match split x s1 with
       | pair l1 r1 =>
@@ -922,8 +916,8 @@ Proof.
     destruct sl; (showP; [assumption | reflexivity | reflexivity | f_solver e]).
   - apply difference_destruct; intros; subst.
     + (showP; [assumption | order Z | reflexivity | unfold diffo'; f_solver e]).
-    + (showP; [assumption | order Z | reflexivity | unfold diffo'; f_solver e]). 
-    + eapply split_Desc; try eassumption. 
+    + (showP; [assumption | order Z | reflexivity | unfold diffo'; f_solver e]).
+    + eapply split_Desc; try eassumption.
       intros sl1 sl2 HBsl1 HBsl2 Hsz Hsem. inversion H3; subst; clear H3.
       eapply IHHb2_1. solve_Bounded e. intros sil ????. clear IHHb2_1.
       eapply IHHb2_2. solve_Bounded e. intros sir ????. clear IHHb2_2.

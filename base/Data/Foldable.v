@@ -46,7 +46,6 @@ Record Foldable__Dict t := Foldable__Dict_Build {
 
 Definition Foldable t :=
   forall r__, (Foldable__Dict t -> r__) -> r__.
-
 Existing Class Foldable.
 
 Definition fold `{g__0__ : Foldable t}

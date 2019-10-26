@@ -22,6 +22,59 @@ rewrite forall x y, GHC.List.replicate x y = Coq.Lists.List.repeat y x
 rewrite forall x, GHC.List.take x          = Coq.Lists.List.firstn x
 rewrite forall x, GHC.List.drop x          = Coq.Lists.List.skipn x
 
+####################################################
+#
+# Here are some edits to redefine the VarSet to use invariants.
+# However, making this change will require many modifications to our 
+# proofs. 
+
+# redefine Definition Core.VarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.DVarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.CoVarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.TyVarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.DTyVarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.TyCoVarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.DTyCoVarSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.IdSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition Core.DIdSet := (UniqSetInv.UniqSet Core.Var).
+# redefine Definition NameSet.NameSet := (UniqSetInv.UniqSet Name.Name).
+# add type Core Instance Core.Uniquable__Var2 : (Unique.Uniquable Core.Var) :=
+#    fun _ k__ => k__  (Unique.Uniquable__Dict_Build _
+#    (fun v =>  (Unique.mkUniqueGrimily (match v with 
+#    	 | Core.Mk_Id _ x _ _ _ _ => x end)))).
+
+# order Core.Uniquable__Var2 Core.VarSet Core.DVarSet Core.CoVarSet Core.TyVarSet Core.DTyVarSEt Core.TyCOVarSet Core.DTyCoVarSet Core.IdSet Core.DIdSet
+
+# rename value UniqSet.unitUniqSet = UniqSetInv.unitUniqSet
+# rename value UniqSet.unionManyUniqSets = UniqSetInv.unionManyUniqSets
+# rename value UniqSet.unionUniqSets = UniqSetInv.unionUniqSets 
+# rename value UniqSet.sizeUniqSet = UniqSetInv.sizeUniqSet
+# rename value UniqSet.mkUniqSet = UniqSetInv.mkUniqSet
+# rename value UniqSet.minusUniqSet = UniqSetInv.minusUniqSet
+# rename value UniqSet.lookupUniqSet = UniqSetInv.lookupUniqSet
+# rename value UniqSet.lookupUniqSet_Directly = UniqSetInv.lookupUniqSet_Directly
+# rename value UniqSet.isEmptyUniqSet = UniqSetInv.isEmptyUniqSet
+# rename value UniqSet.intersectUniqSets = UniqSetInv.intersectUniqSets
+# rename value UniqSet.partitionUniqSet = UniqSetInv.partitionUniqSet
+# rename value UniqSet.nonDetFoldUniqSet = UniqSetInv.nonDetFoldUniqSet
+# rename value UniqSet.filterUniqSet = UniqSetInv.filterUniqSet
+# rename value UniqSet.addOneToUniqSet = UniqSetInv.addOneToUniqSet
+# rename value UniqSet.addListToUniqSet = UniqSetInv.addListToUniqSet
+# rename value UniqSet.emptyUniqSet = UniqSetInv.emptyUniqSet
+# rename value UniqSet.elemUniqSet_Directly = UniqSetInv.elemUniqSet_Directly
+# rename value UniqSet.delOneFromUniqSet = UniqSetInv.delOneFromUniqSet
+# rename value UniqSet.delOneFromUniqSet_Directly = UniqSetInv.delOneFromUniqSet_Directly
+# rename value UniqSet.delListFromUniqSet = UniqSetInv.delListFromUniqSet
+# rename value UniqSet.elementOfUniqSet = UniqSetInv.elementOfUniqSet
+# rename value UniqSet.getUniqSet = UniqSetInv.getUniqSet
+# rename value UniqSet.nonDetEltsUniqSet = UniqSetInv.nonDetEltsUniqSet
+# rename value UniqSet.uniqSetAny = UniqSetInv.uniqSetAny
+# rename value UniqSet.uniqSetAll = UniqSetInv.uniqSetAll
+# rename value UniqSet.restrictUniqSetToUFM = UniqSetInv.restrictUniqSetToUFM
+# rename value UniqSet.nonDetKeysUniqSet = UniqSetInv.nonDetKeysUniqSet
+# preserve abstraction
+# redefine Core.disjointVarSet : Core.VarSet -> Core.VarSet -> bool := UniqSetInv.disjointUniqSet
+
 
 ####################################################
 ## Glueing together the Core

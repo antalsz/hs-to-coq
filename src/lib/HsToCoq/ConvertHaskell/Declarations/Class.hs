@@ -222,8 +222,8 @@ cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
   
   let wholeClassSentences =
         [ RecordSentence dict_record
-        , DefinitionSentence (DefinitionDef Global name args Nothing class_ty)
-        , ExistingClassSentence name ]
+        , DefinitionSentence (DefinitionDef Global name args Nothing class_ty ExistingClass)
+        ]
 
       notations = map NotationSentence nots
   
@@ -249,6 +249,7 @@ cpsClassSentences (ClassBody (ClassDefinition name args ty methods) nots) = do
                (explicitArgs ++ [Typed Generalizable Implicit [Ident g] $ app_args name])
                (Just ty)
                (App2 (Qualid g) Underscore . app_args $ qualidExtendBase "__" meth)
+               NotExistingClass
 
 classSentences :: ConversionMonad r m => ClassBody -> m [Sentence]
 classSentences cls@(ClassBody (ClassDefinition name _ _ _) _) =

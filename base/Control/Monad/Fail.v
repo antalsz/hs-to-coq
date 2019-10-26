@@ -21,7 +21,6 @@ Record MonadFail__Dict (m : Type -> Type) := MonadFail__Dict_Build {
 
 Definition MonadFail (m : Type -> Type) `{GHC.Base.Monad m} :=
   forall r__, (MonadFail__Dict m -> r__) -> r__.
-
 Existing Class MonadFail.
 
 Definition fail `{g__0__ : MonadFail m} : forall {a}, GHC.Base.String -> m a :=

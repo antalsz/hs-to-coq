@@ -108,7 +108,7 @@ convertTyClDecl decl = do
               
               (SynDecl{},  CoqDefinitionDef def) ->
                 pure . ConvSyn $ case def of
-                  DefinitionDef _ name args oty body -> SynBody name args oty body
+                  DefinitionDef _ name args oty body _ -> SynBody name args oty body
                   LetDef          name args oty body -> SynBody name args oty body
               
               (DataDecl{}, CoqInductiveDef ind) ->
@@ -199,7 +199,7 @@ convertDeclarationGroup DeclarationGroup{..} =
       pure [InductiveSentence $ CoInductive coinds []]
     
     (Nothing, Nothing, Just (SynBody name args oty def :| []), Nothing, Nothing) ->
-      pure [DefinitionSentence $ DefinitionDef Global name args oty def]
+      pure [DefinitionSentence $ DefinitionDef Global name args oty def NotExistingClass]
     
 {-    (Just inds, Nothing, Just syns, Nothing, Nothing) ->
       pure $  foldMap recSynType syns
@@ -260,7 +260,7 @@ convertDeclarationGroup DeclarationGroup{..} =
 
     
     orderRecSynDefs synDefs =
-      [ DefinitionSentence $ DefinitionDef Global syn [] Nothing $ synDefs M.! syn
+      [ DefinitionSentence $ DefinitionDef Global syn [] Nothing (synDefs M.! syn) NotExistingClass
       | syn <- foldMap toList $ topoSortEnvironment synDefs ]
 
 
@@ -415,8 +415,8 @@ generateRecordAccessors (IndBody tyName params resTy cons) = do
         argBinder    = Typed Ungeneralizable Coq.Explicit
                                [Ident arg] (appList (Qualid tyName) $ binderArgs typeArgs)
 
-    pure . DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing $
-      Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing equations
+    pure . (\ m -> DefinitionDef Global field (implicitArgs ++ [argBinder]) Nothing m NotExistingClass) $
+      (Coq.Match [MatchItem (Qualid arg) Nothing Nothing] Nothing equations) 
 
 generateGroupRecordAccessors :: ConversionMonad r m => DeclarationGroup -> m [Sentence]
 generateGroupRecordAccessors = fmap (fmap DefinitionSentence)

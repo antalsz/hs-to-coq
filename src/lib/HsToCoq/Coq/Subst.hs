@@ -89,7 +89,6 @@ instance Subst Sentence where
   subst f (InstanceSentence        ins)       = InstanceSentence          (subst f ins)
   subst f (NotationSentence        not)       = NotationSentence          (subst f not)
   subst f (LocalModuleSentence     lmd)       = LocalModuleSentence       (subst f lmd)
-  subst _ s@(ExistingClassSentence  _)        = s
   subst _ s@(ArgumentsSentence  _)            = s
   subst _ s@(CommentSentence    _)            = s
 
@@ -105,8 +104,8 @@ instance Subst Definition where
   subst f (LetDef x args oty def) =
     LetDef x (subst f args) (subst f oty) (subst f def)
 
-  subst f (DefinitionDef isL x args oty def) =
-    DefinitionDef isL x (subst f args) (subst f oty) (subst f def)
+  subst f (DefinitionDef isL x args oty def ex) =
+    DefinitionDef isL x (subst f args) (subst f oty) (subst f def) ex
 
 
 

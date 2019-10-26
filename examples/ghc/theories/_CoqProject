@@ -7,6 +7,7 @@
 -Q ../../containers/theories ""
 -arg -w -arg -masking-absolute-name
 Util.v
+ContainerProofs.v
 Axioms.v
 ScopeInvariant.v
 JoinPointInvariants.v
@@ -26,16 +27,13 @@ VarSet.v
 VarSetStrong.v
 VarEnv.v
 Unique.v
-ContainerAxioms.v
 Var.v
 FV.v
-UniqSetInv.v
 CoreSubst.v
 OrdList.v
-
 CoreSemantics.v
-
 TrieMap.v
 CSE.v
-
 CoreStats.v
+UniqSetInv.v
+

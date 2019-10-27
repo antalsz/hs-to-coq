@@ -33,7 +33,7 @@ Context {a : Type} {b : Type} { gr : Type -> Type -> Type} {Hgraph : Graph.Graph
 
 Section Lex.
 
-(*Well formed lexicographic measure - maybe put in own section*)
+(*Well formed lexicographic measure*)
 Definition natNodes := (@Path.natNodes a b gr Hgraph).
 
 Definition natNodes_lt (x y : gr a b) := natNodes x < natNodes y.
@@ -99,8 +99,47 @@ Proof.
   apply WF_transp_wf. apply wf_bf_measure_queue.
 Qed.
 
+(*A few properties of this relation*)
+Lemma measure_trans: forall {a} x y z,
+  bf_measure_list a x y ->
+  bf_measure_list a y z ->
+  bf_measure_list a x z.
+Proof.
+  intros. unfold bf_measure_list in *. unfold transp in *.
+  inversion H; subst.
+  - inversion H0; subst.
+    + apply lex1. unfold natNodes_lt in *. omega.
+    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H5. omega.
+  - inversion H0; subst.
+    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H1. omega.
+    + apply lex2. unfold natNodes_eq in *. omega. unfold list_length_lt in *. omega.
+Qed. 
+
+Lemma measure_antisym: forall {a} x y,
+  bf_measure_list a x y ->
+  ~bf_measure_list a y x.
+Proof.
+  intros. intro. unfold bf_measure_list in *. unfold transp in *.
+  inversion H; inversion H0; subst; unfold natNodes_lt in *; unfold natNodes_eq in *.
+  - inversion H5; subst. inversion H6; subst. omega.
+  - inversion H6; subst. inversion H7; subst. omega.
+  - inversion H6; subst. inversion H7; subst. omega.
+  - inversion H7; subst. inversion H8; subst.
+    unfold list_length_lt in *. omega.
+Qed.
+
+Lemma measure_antirefl: forall {a} x,
+  ~bf_measure_list a x x.
+Proof.
+  intros. intro. inversion H; subst; unfold transp in *; unfold natNodes_lt in *; unfold list_length_lt in *; try(omega).
+Qed.
+
+
 End Lex.
 
+(*We define an equivalent version of BFS that is tail recursive and consists of a series of states
+  that step to each other. This way, we can reason about the specific states of the algorithm. A state
+  consists of the current graph, the current queue, and the current output*)
 Definition state : Type := (gr a b) * (list (Node * Num.Int)) * (list (Node * Num.Int)) .
 
 
@@ -119,6 +158,8 @@ Definition get_dists (s: state) :=
   | (_, _, d) => d
   end.
 
+(*How to step from 1 state to another. The inductive definiction makes it easier to use as
+  an assumption in proofs*)
 Inductive bfs_step : state -> state -> Prop :=
   | bfs_find: forall g d v j vs c g',
       isEmpty g = false ->
@@ -132,6 +173,7 @@ Inductive bfs_step : state -> state -> Prop :=
 
 Definition start (g : gr a b) (v: Graph.Node) : state := (g, ((v, Num.fromInteger 0) :: nil), nil).
 
+(*A valid state is any state that can be reached from the start state.*)
 Inductive valid : state -> (gr a b) -> Node -> Prop :=
   | v_start : forall g v, vIn g v = true -> valid (start g v) g v
   | v_step : forall s s' v g, valid s' g v -> bfs_step s' s -> valid s g v.
@@ -167,7 +209,6 @@ Proof.
       apply IHG. assumption.
 Qed.
 
-
 Definition bfs_multi (s1 s2 : state):= multi (bfs_step) s1 s2.
 
 Lemma multi_valid: forall s1 s2 g v,
@@ -183,7 +224,6 @@ Definition done (s: state) := null (get_queue s) || isEmpty (get_graph s).
 (*The executable, tail recursive version of this, which we will prove equivalent to the hs-to-coq version*)
 Section Exec.
 
-(*Want to show that done is nuique*)
 Lemma match_none_size: forall g v g',
   match_ v g = (None, g') -> natNodes g = natNodes g'.
 Proof.
@@ -210,7 +250,6 @@ Next Obligation.
 unfold bf_measure_list. unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
 simpl. omega.
 Defined.
-
 
 Definition expand_bfs_tail := 
 fun s : gr a b * list (Node * Num.Int) * list (Node * Num.Int) =>
@@ -243,6 +282,11 @@ Lemma unfold_bfs_tail: forall s,
 Proof.
   intros. unfold expand_bfs_tail. apply bfs_tail_elim; intros; reflexivity.
 Qed.
+
+(*This is equivalent to repeatedly stepping with the bfs_step inductive relation. We prove this by proving that
+  bfs_tail represents a multistep to a done state. So when we start with the start state, we get a valid
+  done state. We will later prove that all valid done states are equivalent, so we can prove claims about bfs_tail
+  by considering valid done states in general*)
 
 Lemma bfs_tail_multi: forall s,
   bfs_multi s (bfs_tail s).
@@ -281,581 +325,11 @@ Qed.
 
 End Exec.
 
-(*Proof of correctness of bfs. Later, we prove equivalence between this inductive formulation and leveln,
-  allowing us to prove the correctness of this instead*)
-Section Correctness.
+(*Results about multistepping and measure. In particular, we will prove that any two done states
+  are equivalent, that any valid state multisteps to a done state, and several other needed results*)
+Section Multi.
 
-Definition distance := (@Path.distance a b gr Hgraph).
-
-(*As per CLRS, a None distance is equivalent to infinity*)
-Definition lt_distance (o1: option nat) (o2: option nat) :=
-  match o1, o2 with
-  | _, None => true
-  | None, _ => false
-  | Some x, Some y => leb x y
-  end.
-
-Definition plus_distance (o1: option nat) (n: nat) :=
-  match o1 with
-  | None => None
-  | Some x => Some (x + n)
-  end.
-
-(*Lemma 22.1 of CLRS*)
-Lemma distance_triangle: forall g s u v,
-  eIn g u v = true ->
-  vIn g s = true ->
-  lt_distance (distance g s v) (plus_distance (distance g s u) 1) = true.
-Proof.
-  intros. destruct (path_dec g s u).
-  - destruct e as [l]. assert ( path g s v (u :: l)). { constructor; assumption. }
-    destruct (distance g s v) eqn : D.
-    + destruct (distance g s u) eqn : D'.
-      * simpl. rewrite Nat.leb_le. unfold distance in D'. 
-        rewrite distance_some in D'. destruct D'. destruct_all; subst.
-        assert (path g u v nil). constructor. assumption.
-        unfold distance in D. rewrite distance_some in D. destruct D. destruct_all; subst; omega.
-        destruct_all. simpl. assert (n > 1 \/ n <= 1) by omega. destruct H9. rewrite path_list_equiv in H3. rewrite H7 in H3. inversion H3.
-        simpl. omega. assumption.
-        destruct_all. unfold distance in D. rewrite distance_some in D. destruct D. destruct_all. subst.
-        omega. destruct_all.  
-        assert (n<= n0 + 1 \/ n > n0 + 1) by omega. destruct H13. assumption.
-        rewrite path_list_equiv in H5.
-        assert (length l >= n0 - 1). assert (length l >= n0 - 1 \/ length l < n0 - 1) by omega.
-        destruct H14. assumption. rewrite path_list_equiv in H1. rewrite H6 in H1. inversion H1.
-        assumption.
-        assert (length l = n0 - 1 \/ length l > n0 - 1) by omega. destruct H15.
-        rewrite path_list_equiv in H2. 
-        rewrite H11 in H2. inversion H2. simpl. omega.
-        assert (path g s v (u :: x)). constructor. rewrite path_list_equiv. assumption. assumption. 
-        rewrite path_list_equiv in H16. 
-        rewrite H11 in H16. inversion H16. simpl. omega.
-      * simpl. reflexivity.
-    + simpl. unfold distance in D. rewrite distance_none in D.
-      rewrite path_list_equiv in H2. destruct D. rewrite H3 in H2. inversion H2.
-  - destruct (N.eq_dec s u). subst. unfold distance at 2. unfold Path.distance. destruct (N.eq_dec u u).
-    simpl. destruct (distance g u v) eqn : ?. unfold distance in Heqo. rewrite distance_some in Heqo.
-    destruct Heqo; destruct_all; subst. reflexivity. 
-    assert (path_list g u v nil = true). simpl. assumption. assert (n0 - 1 = 0 \/ n0 - 1 > 0) by omega.
-    destruct H7. assert (n0 = 0 \/ n0 = 1) by omega. destruct H8; subst; reflexivity.
-    rewrite H4 in H6. inversion H6. simpl. omega. unfold distance in Heqo. rewrite distance_none in Heqo.
-    destruct Heqo. specialize (H1 nil). simpl in H1. rewrite H1 in H. inversion H. contradiction.
-    assert (distance g s u = None). { unfold distance. rewrite distance_none. split. intros. 
-    destruct (path_list g s u l) eqn : ?. exfalso. apply n. exists l; rewrite path_list_equiv; assumption.
-    reflexivity. assumption. } rewrite H1. simpl. destruct (distance g s v) eqn : D'; reflexivity.
-Qed.
-
-(*We want to be able to reason about discovered and undiscovered vertices*)
-(*
-Lemma og_graph_constant: forall s s',
-  bfs_multi s s' ->
-  get_og_graph s = get_og_graph s'.
-Proof.
-  intros. induction H.
-  - reflexivity.
-  - inversion H; subst; simpl in *. assumption. assumption.
-Qed.*)
-
-Definition white (s: state) (v: Node) : bool :=
-  vIn (get_graph s) v.
-
-Definition gray (s: state) (v: Node) : bool :=
-  if In_dec N.eq_dec v (map fst (get_queue s)) then vIn (get_graph s) v else false.
-
-Definition black (s: state) (g: gr a b) (v: Node) : bool :=
-  vIn g v && negb (vIn (get_graph s) v).
-
-(*Prove correctness of colors*)
-
-(*Once a vertex is removed from the graph, it is never there again*)
-Lemma not_white_remains: forall s v s',
-  white s v = false ->
-  bfs_multi s s' ->
-  white s' v = false.
-Proof.
-  intros. unfold white in *. induction H0; simpl.
-  - assumption.
-  - inversion H0; subst; simpl in *. apply IHmulti. apply match_remain_some in H3.
-    destruct H3. destruct (vIn g' v) eqn : E. rewrite H3 in E. destruct E. rewrite H5 in H. inversion H.
-    reflexivity. apply IHmulti. apply match_remain_none in H3. subst. assumption.
-Qed.
-
-(*Each vertex appears at most once in the output*)
-
-(*TODO: Move these to helper*)
-Lemma In_InA_equiv: forall A (x : A) l,
-    In x l <-> InA eq x l.
-  Proof.
-    intros. induction l.
-    - simpl. split; intros. 
-      + destruct H.
-      + apply InA_nil in H. destruct H.
-    - simpl. split; intros.
-      + apply InA_cons. destruct H. left. subst. reflexivity. right. apply IHl. assumption.
-      + apply InA_cons in H. destruct H. left. subst. reflexivity. right. apply IHl. assumption.
-  Qed.
-
-Lemma NoDup_NoDupA: forall {a} (l: list a),
-  NoDup l <-> NoDupA eq l.
-Proof.
-  intros; split; intros; induction H; try(constructor).
-  - rewrite <- In_InA_equiv. assumption.
-  - assumption.
-  - rewrite In_InA_equiv. assumption.
-  - assumption.
-Qed.
-
-Lemma graph_subset: forall s v g,
-  valid s g v ->
-  (forall v, vIn (get_graph s) v = true -> vIn g v = true) /\
-  (forall u v, eIn (get_graph s) u v = true -> eIn g u v = true).
-Proof.
-  intros. induction H; simpl.
-  - split; intros; assumption.
-  - inversion H0; subst; simpl in *. assert (M:=H2). apply match_remain_some in H2.
-    destruct H2. split. intros. rewrite H2 in H4. apply IHvalid. apply H4.
-    intros. rewrite H3 in H4. apply IHvalid. apply H4. apply match_remain_none in H2.
-    subst. apply IHvalid.
-Qed.
-
-Lemma black_iff_dists: forall s v v' g,
-  valid s g v ->
-  black s g v' = true <-> In v' (map fst (get_dists s)).
-Proof.
-  intros. unfold black. induction H; simpl.
-  - split; intros.
-    + rewrite andb_true_iff in H0. destruct H0. rewrite H0 in H1. inversion H1.
-    + destruct H0.
-  - rewrite andb_true_iff in *. inversion H0; subst; simpl in *. split; intros.
-    + destruct (N.eq_dec v' v0).
-      * subst. rewrite in_map_iff. exists (v0, j). split; simpl; try(reflexivity).
-        solve_in.
-      * destruct H3. assert (negb (vIn g0 v') = true). { destruct (vIn g0 v') eqn : I.
-        rewrite negb_true_iff in H4. apply match_remain_some in H2.
-        destruct H2. specialize (H2 v'). destruct H2. rewrite H6 in H4. inversion H4.
-        
-         simplify'. reflexivity. } assert (In v' (map fst d)). apply IHvalid.
-        simplify'. rewrite in_map_iff in H6. destruct H6. rewrite in_map_iff.
-        exists x. split; try(simplify'); try(solve_in).
-    + rewrite in_map_iff in H3. destruct_all. apply in_app_or in H4. destruct H4.
-      assert (In v' (map fst d)). rewrite in_map_iff. exists x. simplify'.
-      rewrite <- IHvalid in H5. destruct_all. split; try(assumption). destruct (N.eq_dec v' v0).
-      subst. destruct x; simpl in *. 
-      destruct (vIn g' n) eqn : V. apply match_remain_some in H2.
-      destruct H2. rewrite H2 in V.  simplify'. reflexivity.
-      destruct (vIn g' v') eqn : I. apply match_remain_some in H2. destruct H2. rewrite H2 in I.
-      destruct I. rewrite H8 in H6. inversion H6. reflexivity. simpl in H4. destruct H4.
-      subst. simpl in *. assert (A:=H2).
-      assert (vIn g0 v0 = true). { erewrite <- match_in. exists c. exists g'. assumption. }
-      apply match_remain_some in H2. destruct H2.
-      split. pose proof (graph_subset (g0, (v0, j) :: vs, d) v); simpl in *.
-      apply H5. assumption. assumption. destruct (vIn g' v0) eqn : E.
-      rewrite H2 in E. destruct E. contradiction. reflexivity. destruct H4.
-    + apply match_remain_none in H2. subst. assumption.
-Qed.
-
-Lemma no_dups_output: forall s g v,
-  valid s g v ->
-  NoDup (map fst (get_dists s)).
-Proof.
-  intros. induction H; simpl.
-  - constructor.
-  - inversion H0; subst; simpl in *.
-    rewrite map_app. simpl. assert (map fst d ++ v0 :: nil = rev (v0 :: rev ((map fst d)))).
-    simpl. rewrite rev_involutive. reflexivity.
-    rewrite H3. rewrite NoDup_NoDupA. apply NoDupA_rev. apply eq_equivalence.
-    constructor. intro. rewrite <- In_InA_equiv in H4. rewrite <- in_rev in H4.
-    pose proof (black_iff_dists (g0, (v0, j) :: vs, d) v v0 g H) as D; unfold black in D; simpl in *.
-    apply D in H4. rewrite andb_true_iff in H4. destruct H4.
-    assert (vIn g0 v0 = true). apply match_in. exists c. exists g'. assumption.
-    rewrite H6 in H5. inversion H5. apply NoDupA_rev. apply eq_equivalence. rewrite <- NoDup_NoDupA.
-    assumption. assumption.
-Qed.
-
-Lemma color_total: forall s g v v',
-  valid s g v ->
-  vIn g v' = true ->
-  (white s v' = true \/ gray s v' = true \/ black s g v' = true).
-Proof.
-  intros. induction H.
-  - unfold start in H0. simpl in H0. unfold white; unfold gray; unfold black; simpl. left. assumption.
-  - inversion H1; subst; simpl in *.
-    + unfold white in *; unfold gray in *; unfold black in *; simpl in *.
-      destruct (N.eq_dec v' v0). subst. right. right. rewrite andb_true_iff.
-      split; try(assumption). apply match_remain_some in H3.
-      destruct H3. destruct (vIn g' v0) eqn : E.
-      rewrite H3 in E. destruct E. contradiction. reflexivity. 
-      apply IHvalid in H0. clear IHvalid. destruct H0.
-      left. apply match_remain_some in H3. destruct H3. rewrite H3. split; assumption.
-      destruct H0. destruct (N.eq_dec v0 v'). subst. contradiction.
-      destruct (in_dec N.eq_dec v' (map fst vs)).
-      right. left. destruct (in_dec N.eq_dec v' (map fst (vs ++ suci c (j + 1)%Z))).
-      apply match_remain_some in H3. destruct H3. rewrite H3. split; assumption.
-      exfalso. apply n1. rewrite in_map_iff. rewrite in_map_iff in i. destruct i. exists x. 
-      destruct H4; split; solve_in. inversion H0. rewrite andb_true_iff in H0. destruct H0.
-      right. right. rewrite andb_true_iff. split; try(assumption).
-      apply match_remain_some in H3. destruct H3. destruct (vIn g' v') eqn : V.
-      rewrite H3 in V. destruct V. rewrite H6 in H4. inversion H4. reflexivity.
-    + assert (A:=H3). apply match_remain_none in H3. subst. unfold white in *; unfold black in *; unfold gray in *; simpl in *.
-      apply IHvalid in H0. clear IHvalid. destruct H0. left. assumption.
-      destruct (N.eq_dec v0 v'). subst. destruct H0. left. assumption.
-      right. right. assumption. destruct (in_dec N.eq_dec v' (map fst vs)).
-      * destruct H0. left. assumption. right. right. assumption.
-      * destruct H0. inversion H0. right. right. assumption.
-Qed.
-
-(*Stuff about the times*)
-(*
-Lemma time_iff_done: forall s v v',
-  valid s v ->
-  (exists n, M.find v' (get_times s) = Some n) <-> black s v' = true.
-Proof.
-  intros. induction H; split; intros; unfold black in *; simpl.
-  - unfold start in H0; simpl in H0. destruct H0. rewrite F.empty_o in H0. inversion H0.
-  - unfold start in *; simpl in *. rewrite andb_true_iff in H0. destruct H0.
-    rewrite H0 in H1. inversion H1.
-  - inversion H0; subst; simpl in *.
-    + destruct (N.eq_dec v' v0).
-      * subst. rewrite andb_true_iff. split.
-        pose proof (graph_subset ((g, (v0, j) :: vs, d, n, t, g_og)) v H); simpl in *.
-        apply H4. apply match_in. exists c. exists g'. assumption.
-        apply match_remain_some in H3. destruct H3. destruct (vIn g' v0) eqn : E.
-        rewrite H3 in E. destruct E. contradiction. reflexivity.
-      * rewrite F.add_neq_o in H1. rewrite IHvalid in H1. rewrite andb_true_iff in *.
-        split. apply H1. destruct (vIn g' v') eqn : V.
-        apply match_remain_some in H3. destruct H3. rewrite H3 in V.
-        destruct V. rewrite H5 in H1. inversion H1. inversion H8.
-        reflexivity. auto.
-    + apply match_remain_none in H3. subst. apply IHvalid. assumption.
-  - inversion H0; subst; simpl in *. destruct (N.eq_dec v' v0).
-    + subst. rewrite F.add_eq_o. exists (n+1). reflexivity. reflexivity.
-    + rewrite F.add_neq_o. 
-      assert (exists n : nat, M.find (elt:=nat) v' t = Some n). apply IHvalid.
-      rewrite andb_true_iff in *. split. apply H1. destruct (vIn g v') eqn : V.
-      apply match_remain_some in H3. destruct H3. destruct H1. destruct (vIn g' v') eqn : V'.
-      inversion H5. specialize (H3 v'). destruct H3. rewrite H6 in V'.
-      inversion V'. intuition. reflexivity. apply H4. auto.
-    + apply match_remain_none in H3. subst. apply IHvalid. assumption.
-Qed. 
-*)
-
-Lemma zip_in: forall {a} {b} (l1 : list a) (l2: list b),
-  (forall x y, In (x,y) (List.zip l1 l2) -> In x l1 /\ In y l2).
-Proof.
-  intros. generalize dependent l2. induction l1; intros.
-  - simpl in H. destruct H.
-  - simpl in H. destruct l2. destruct H.
-    simpl in H.  destruct H. inversion H; subst.
-    split; simpl; left; reflexivity. simpl. apply IHl1 in H. destruct H.
-    split; right; assumption. 
-Qed. 
-
-Fixpoint replicate_nat {a} (n: nat) (x: a) :=
-  match n with
-  | O => nil
-  | S m => x :: replicate_nat m x
-  end.
-
-Definition replicate {a} (n: Z) (x: a) :=
-  replicate_nat (Z.to_nat n) x.
-
-(*TODO: See about this and how replciate is defined*)
-Axiom replicate_def: forall {a} (n: Z) (x : a),
-  replicate n x = List.replicate n x.
-
-Lemma replicate_const: forall {a} (x: a) (n: Z),
-  length (List.replicate n x) = Z.to_nat n /\ forall y, In y (List.replicate n x) -> y = x.
-Proof.
-  intros. rewrite <- replicate_def. unfold replicate. induction (Z.to_nat n); simpl.
-  - split. reflexivity. intros. destruct H.
-  - destruct IHn0. split. rewrite H. reflexivity. intros. destruct H1. subst. reflexivity.
-    apply H0. assumption.
-Qed. 
-
-Lemma filter_equiv: forall {a} (l: list a) p,
-  List.filter p l = filter p l.
-Proof.
-  intros. induction l; simpl. reflexivity. rewrite IHl. reflexivity.
-Qed.
-
-Lemma context4l'_def: forall (g: gr a b) v i x l o g' y,
-  match_ v g = (Some (i, x, l, o), g') ->
-  In y (map snd (context4l' (i, x, l, o))) <-> eIn g v y = true.
-Proof.
-  intros. unfold context4l'. split; intros.
-  - rewrite in_map_iff in H0. destruct H0. destruct x0. simpl in *. destruct H0. subst.
-    apply in_app_or in H1. destruct H1. apply match_context in H.
-    destruct_all. subst. apply H2. rewrite in_map_iff. exists (b0, y). split; auto.
-    unfold Base.op_z2218U__ in H0. unfold Base.op_zeze__ in H0. unfold Base.Eq_Char___ in H0.
-    unfold Base.op_zeze____  in H0. rewrite filter_equiv in H0. apply filter_In in H0.
-    destruct H0. apply match_context in H. destruct_all. subst. 
-    simpl in H1. rewrite N.eqb_eq in H1. subst. apply H2. rewrite in_map_iff. exists (b0, x).
-    split. reflexivity. assumption.
-  - apply match_context in H. destruct_all. subst.
-    apply H2 in H0. rewrite in_map_iff in H0. destruct H0. rewrite in_map_iff. exists x0.
-    split. apply H. destruct H. solve_in.
-Qed.
-
-Lemma snd_equiv: @Tuple.snd = @snd.
-Proof.
-  unfold Tuple.snd. unfold snd. reflexivity.
-Qed.
-
-Lemma len_acc_def: forall {a} (l : list a ) n,
-  List.lenAcc l n = (n + Z.of_nat (length l))%Z.
-Proof.
-  intros. revert n. induction l; intros; simpl.
-  - omega.
-  - rewrite IHl. rewrite Zpos_P_of_succ_nat. omega.
-Qed. 
-
-Lemma length_equiv: forall {a} (l: list a),
-  length l = Z.to_nat (List.length l).
-Proof.
-  intros. induction l; simpl.
-  - reflexivity.
-  - unfold List.length. simpl. unfold List.length in IHl. rewrite len_acc_def. 
-    rewrite len_acc_def in IHl. simpl in IHl.
-    rewrite Z2Nat.inj_add. simpl. omega. omega. omega.
-Qed.
-
-(*Need specialized lemma for zip with replicate*)
-Lemma zip_replicate: forall {a} {b} (l : list a) (m : b) x (n: b) ,
-  In (x,n) (List.zip l (List.replicate (List.length l) m)) <-> In x l /\ n = m.
-Proof.
-  intros. rewrite <- replicate_def. unfold replicate. rewrite <- length_equiv. induction l; simpl; split; intros.
-  - destruct H.
-  - destruct_all. destruct H.
-  - destruct H. inversion H; subst. split; try(left); reflexivity.
-    apply IHl in H. destruct H. subst. split. right. assumption. reflexivity.
-  - destruct H. subst. destruct H. inversion H. left. reflexivity.
-    right. apply IHl. split; try(assumption); reflexivity.
-Qed.
-
-Lemma suci_def: forall x y n (c: Context a b) v g g',
-  match_ v g = (Some c, g') ->
-  In (x,y) (suci c n) <-> y = n /\ eIn g v x = true. 
-Proof. 
-  intros. split. intros. split. unfold suci in H0. apply zip_in in H0. destruct H0. apply replicate_const in H1. assumption.
-  unfold suci in H0. apply zip_in in H0. destruct H0. unfold suc' in H0.
-  unfold Base.op_z2218U__ in H0. unfold Base.map in H0. rewrite snd_equiv in H0. 
-  destruct c. destruct p. destruct p.
-  eapply context4l'_def. apply H. apply H0.
-  intros. unfold suci. destruct H0. subst.
-  epose proof (zip_replicate (suc' c) n x n). apply H0. split.
-  unfold suc'. unfold Base.op_z2218U__. rewrite snd_equiv. unfold Base.map.
-  destruct c. destruct p. destruct p. rewrite context4l'_def. apply H1. apply H. reflexivity.
-Qed.
-
-Lemma dist_geq_0: forall s g v v' d,
-  valid s g v ->
-  In (v', d) (get_queue s) ->
-  (d >= 0)%Z.
-Proof.
-  intros. generalize dependent v'. generalize dependent d. induction H; intros.
-  - unfold start in H0; simpl in *. destruct H0. inversion H0; subst. omega. destruct H0.
-  - inversion H0; subst; simpl in *.
-    +  apply in_app_or in H1. destruct H1. eapply IHvalid. right. apply H1.
-      eapply (suci_def _ _ _ _ _ _ _ H3) in H1. destruct H1. 
-       assert ((j >=0)%Z). eapply IHvalid. left. reflexivity. omega.
-     + eapply IHvalid. right. apply H1.
-Qed. 
-
-Lemma dists_geq_0: forall s g v v' d,
-  valid s g v ->
-  In (v', d) (get_dists s) ->
-  (0 <= d)%Z.
-Proof.
-  intros. induction H.
-  - unfold start in *. simpl in *. destruct H0.
-  - inversion H1; subst; simpl in *.
-    + apply in_app_or in H0. destruct H0. apply IHvalid; assumption. simpl in H0. destruct H0.
-      inversion H0; subst.
-      pose proof (dist_geq_0 (g0, (v', d) :: vs, d0) g v v' d H). simpl in H4.
-      assert (d >= 0)%Z. apply H4. left. reflexivity. omega. destruct H0.
-    + apply IHvalid; assumption.
-Qed.
-
-Lemma queue_has_pred: forall s g v v' d,
-  valid s g v ->
-  v <> v' ->
-  In (v', (d + 1)%Z) (get_queue s) ->
-  (exists u, In (u, d) (get_dists s) /\ eIn g u v' = true).
-Proof.
-  intros. generalize dependent d. induction H; intros.
-  - unfold start in H1; simpl in H1. destruct H1. inversion H1. subst. contradiction. destruct H1.
-  - specialize (IHvalid H0). inversion H1; subst; simpl in *.
-    + apply in_app_or in H2. destruct H2.
-      * assert (exists u : Node, In (u, d) d0 /\ eIn g u v' = true). apply IHvalid.
-        right. assumption. destruct H5. destruct H5. exists x. split.
-        solve_in. assumption.
-      * apply (suci_def _ _ _ _ _ _ _ H4) in H2. destruct H2.
-        assert (d = j) by omega. subst. exists v0. split. apply in_or_app.
-        right. left. reflexivity. pose proof (graph_subset (g0, (v0, j) :: vs, d0) v g H).
-        simpl in H6; destruct H6. apply H7. assumption.
-    + apply IHvalid. right. assumption.
-Qed.
-
-Lemma finished_has_pred: forall s g v v' d,
-  valid s g v ->
-  v <> v' ->
-  In (v', (d + 1)%Z) (get_dists s) ->
-  (exists u, In (u, d) (get_dists s) /\ eIn g u v' = true).
-Proof.
-  intros. induction H.
-  - unfold start in *; simpl in *. destruct H1.
-  - inversion H2; subst; simpl in *.
-    + apply in_app_or in H1. destruct H1. apply (IHvalid H0) in H1.
-      destruct H1. exists x. split. destruct H1. solve_in. apply H1.
-      simpl in H1. destruct H1. inversion H1. 
-      subst. pose proof (queue_has_pred (g0, (v', (d + 1)%Z) :: vs, d0) g v v' d H H0).
-      simpl in H5. assert (exists u : Node, In (u, d) d0 /\ eIn g u v' = true). apply H5. left.
-      reflexivity. clear H5. destruct H6. exists x. destruct H5. split. solve_in. assumption.
-      destruct H1.
-    + apply IHvalid. assumption. assumption.
-Qed.
-
-Lemma source_in_gr: forall s g v,
-  valid s g v ->
-  vIn g v = true.
-Proof.
-  intros. induction H; simpl.
-  - assumption.
-  - inversion H0; subst; simpl in *; assumption.
-Qed.
-
-(** ** Lemma 22.2 of CLRS **)
-
-(*First, the necessary statement for queues: if (v', d) is in the queue, then d(v') >= d*)
-Lemma queue_upper_bound: forall s g v v' d,
-  valid s g v ->
-  In (v', d) (get_queue s) ->
-  lt_distance (distance g v v')  (Some (Z.to_nat d)) = true.
-Proof.
-  intros. generalize dependent v'. generalize dependent d. induction H; intros.
-  - unfold start in *; simpl in *. destruct H0. inversion H0; subst.
-    simpl. unfold distance. unfold Path.distance. destruct (N.eq_dec v' v'). reflexivity. contradiction.
-    destruct H0. 
-  - inversion H0; subst; simpl in *.
-    + apply in_app_or in H1. destruct H1. apply IHvalid. right. assumption.
-      apply (suci_def _ _ _ _ _ _ _ H3) in H1. destruct H1. subst.
-      pose proof (source_in_gr (g0, (v0, j) :: vs, d0) g v H). simpl in H1.
-      pose proof (graph_subset (g0, (v0, j) :: vs, d0) v g H). simpl in H5.
-      destruct H5. apply H6 in H4. 
-      pose proof (distance_triangle _ _ _ _ H4 H1).
-      assert (lt_distance (distance g v v0) (Some (Z.to_nat j)) = true). apply IHvalid. left.
-      reflexivity. destruct (distance g v v0) eqn : ?; simpl in *.
-      destruct (distance g v v') eqn : ?. simpl in *. rewrite Nat.leb_le in *.
-      assert ((j >= 0)%Z). eapply dist_geq_0. apply H. simpl. left. reflexivity.
-      assert (Z.to_nat j + 1 = Z.to_nat (j + 1)). assert (Z.to_nat j + Z.to_nat (1%Z) = Z.to_nat (j + 1)).
-      rewrite <- Z2Nat.inj_add. reflexivity. omega. omega. 
-      assert (Z.to_nat 1 = 1). unfold Z.to_nat. unfold Pos.to_nat. simpl. reflexivity.
-      rewrite H11 in H10. omega. omega. simpl. simpl in H7. inversion H7.
-      inversion H8.
-    + apply IHvalid. right. assumption.
-Qed. 
-
-(*Lemma 22.2 of CLRS*)
-Lemma dist_upper_bound: forall s g v v' d,
-  valid s g v ->
-  In (v', d) (get_dists s) ->
-  lt_distance (distance g v v') (Some (Z.to_nat d))  = true.
-Proof.
-  intros. induction H; simpl.
-  - unfold start in H0; simpl in H0. destruct H0.
-  - inversion H1; subst; simpl in *.
-    + apply in_app_or in H0. destruct H0. specialize (IHvalid H0).
-      apply IHvalid. simpl in H0. destruct H0. inversion H0; subst.
-      pose proof (queue_upper_bound _ _ _ v' d H). simpl in H4.
-      unfold lt_distance in H4. apply H4. left. reflexivity. destruct H0.
-    + apply IHvalid. assumption.
-Qed.
-
-Lemma map_snd_zip: forall {a b} (l1: list a) (l2: list b),
-  length l1 = length l2 ->
-  map snd (List.zip l1 l2) = l2.
-Proof.
-  intros. generalize dependent l2. induction l1; intros; simpl.
-  - simpl in H. destruct l2; try(reflexivity). simpl in H. omega.
-  - simpl in H. destruct l2. simpl in H. omega. simpl in H. inversion H.
-    simpl. rewrite IHl1. reflexivity. assumption.
-Qed.
-
-Lemma in_replicate_nat: forall {a} x (c : a) n,
-  In x (replicate_nat n c) -> x = c.
-Proof.
-  intros. induction n; simpl in *. destruct H. destruct H. subst. reflexivity. apply IHn.
-  assumption.
-Qed.
-
-Lemma replicate_sorted: forall c n,
-  Sorted Z.le (replicate n c). 
-Proof.
-  intros. unfold replicate.
-  induction (Z.to_nat n); simpl; try(constructor).
-  - assumption.
-  - apply In_InfA. intros. apply in_replicate_nat in H. subst. omega.
-Qed. 
-
-
-(** Lemma 22.3 of CLRS **)
-Lemma queue_structure: forall s g v v' d tl,
-  valid s g v ->
-  get_queue s = (v', d) :: tl ->
-  (Sorted Z.le (map snd (get_queue s))) /\ (forall v' d', In (v', d') (get_queue s) -> (d' <= d + 1)%Z).
-Proof.
-  intros. generalize dependent v'. revert d. revert tl. induction H; intros; simpl.
-  - unfold start; simpl in *. inversion H0; subst. split. constructor. constructor. constructor.
-    intros. destruct H1. inversion H1. subst. omega. destruct H1.
-  - inversion H0; subst; simpl in *.
-    + split. rewrite map_app. eapply SortA_app. apply eq_equivalence.
-      assert (Sorted Z.le (j :: map snd vs)). { specialize (IHvalid vs j v0).
-      apply IHvalid. reflexivity. } inversion H4; subst. assumption.
-      unfold suci. rewrite map_snd_zip. rewrite <- replicate_def . apply replicate_sorted.
-       pose proof (replicate_const (j+1)%Z (List.length (suc' c)) ).
-      destruct H4. rewrite  H4. rewrite length_equiv. reflexivity. intros.
-      unfold suci in H5. rewrite map_snd_zip in H5. 
-      rewrite <- In_InA_equiv in H5. rewrite <- replicate_def in H5.
-      unfold replicate in H5. apply in_replicate_nat in H5. subst.
-      rewrite <- In_InA_equiv in H4. rewrite in_map_iff in H4.
-      destruct H4. destruct H4. destruct x0; subst.
-      simpl. specialize (IHvalid vs j v0). destruct IHvalid. reflexivity.
-      specialize (H6 n i). apply H6. right. assumption.
-      epose proof (replicate_const (j + 1)%Z (List.length (suc' c))).
-      destruct H6. rewrite H6. apply length_equiv.
-      intros. apply in_app_or in H4.
-      (*d is in vs or suci *)
-      destruct vs. simpl in H1. destruct H4. simpl in H4. destruct H4.
-      unfold suci in H4. apply zip_in in H4. destruct H4.
-      rewrite <- replicate_def in H5. unfold replicate in H5.
-      apply in_replicate_nat in H5. subst.
-      assert (In (v', d) (suci c (j+1)%Z)). rewrite H1. solve_in.
-      unfold suci in H5. apply zip_in in H5. destruct H5.
-      rewrite <- replicate_def in H6. unfold replicate in H6.
-      apply in_replicate_nat in H6. subst. omega. 
-      (*other case*)
-      simpl in H1. inversion H1. subst.
-      specialize (IHvalid ((v', d) :: vs) j v0). destruct IHvalid.
-      reflexivity. inversion H5. subst.
-      inversion H10. subst. 
-      destruct H4.
-      simpl in H4. destruct H4. inversion H4. subst. omega.
-      assert (d' <= j + 1)%Z. eapply H6. right. right. apply H4.
-      omega.
-      unfold suci in H4. apply zip_in in H4. destruct H4.
-      rewrite <- replicate_def in H7. unfold replicate in H7.
-      apply in_replicate_nat in H7. subst. omega.
-    + specialize (IHvalid vs j v0). destruct IHvalid. reflexivity.
-      split. inversion H4. assumption. intros. rewrite H1 in H6.
-      destruct H6. inversion H6; subst. omega.
-      inversion H4; subst. inversion H10; subst.
-      assert (d' <= j + 1)%Z. eapply H5. right. right. apply H6. omega.
-Qed. 
-
-
-
-
-
+(*if we step from s to s', s' < s*)
 Lemma measure_step: forall s s',
   bfs_step s s' ->
   bf_measure_list (Node * Num.Int) (get_graph s', get_queue s') (get_graph s, get_queue s) .
@@ -866,40 +340,7 @@ Proof.
 simpl. omega.
 Qed.
 
-Lemma measure_trans: forall {a} x y z,
-  bf_measure_list a x y ->
-  bf_measure_list a y z ->
-  bf_measure_list a x z.
-Proof.
-  intros. unfold bf_measure_list in *. unfold transp in *.
-  inversion H; subst.
-  - inversion H0; subst.
-    + apply lex1. unfold natNodes_lt in *. omega.
-    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H5. omega.
-  - inversion H0; subst.
-    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H1. omega.
-    + apply lex2. unfold natNodes_eq in *. omega. unfold list_length_lt in *. omega.
-Qed. 
-
-Lemma measure_antisym: forall {a} x y,
-  bf_measure_list a x y ->
-  ~bf_measure_list a y x.
-Proof.
-  intros. intro. unfold bf_measure_list in *. unfold transp in *.
-  inversion H; inversion H0; subst; unfold natNodes_lt in *; unfold natNodes_eq in *.
-  - inversion H5; subst. inversion H6; subst. omega.
-  - inversion H6; subst. inversion H7; subst. omega.
-  - inversion H6; subst. inversion H7; subst. omega.
-  - inversion H7; subst. inversion H8; subst.
-    unfold list_length_lt in *. omega.
-Qed.
-
-Lemma measure_antirefl: forall {a} x,
-  ~bf_measure_list a x x.
-Proof.
-  intros. intro. inversion H; subst; unfold transp in *; unfold natNodes_lt in *; unfold list_length_lt in *; try(omega).
-Qed.
-
+(*The same for multistep*)
 Lemma measure_multi: forall s s',
   bfs_multi s s' ->
   s = s' \/ bf_measure_list (Node * Num.Int) (get_graph s', get_queue s') (get_graph s, get_queue s) .
@@ -910,6 +351,7 @@ Proof.
     right. eapply measure_trans. apply H1. apply measure_step. assumption.
 Qed.
 
+(*If s multisteps to s', s and s' are equal exactly when s < s' and s' < s are both false*)
 Lemma multistep_eq_measure: forall s s',
   bfs_multi s s' ->
   (s = s') <-> (~bf_measure_list _ (get_graph s', get_queue s') (get_graph s, get_queue s) /\
@@ -954,6 +396,7 @@ Proof.
   - eapply multi_trans. apply IHvalid.  eapply multi_step. apply H0. apply multi_refl.
 Qed.
 
+(*For any two valid states, one multisteps to the other*)
 Lemma valid_multi: forall s s' g v,
   valid s g v ->
   valid s' g v ->
@@ -962,7 +405,8 @@ Proof.
   intros. eapply multi_from_start. apply valid_begins_with_start. apply H0.
   apply valid_begins_with_start. assumption.
 Qed.
-(*Can prove by done cannot step and bf of 1 implies not bf of other but see*)
+
+(*A valid state is not done iff it can step*)
 Lemma not_done_step: forall s g v,
   valid s g v ->
   (done s = false <-> exists s', bfs_step s s').
@@ -980,12 +424,7 @@ Proof.
   - destruct H0. unfold done in *; inversion H0; subst; simpl in *; assumption.
 Qed.
 
-(**TODO: add to helper*)
-Lemma contrapositive: forall (P Q : Prop), (P -> Q) -> (~Q -> ~P).
-Proof.
-  tauto.
-Qed. 
-
+(*If a state is done, it cannot step*)
 Lemma done_cannot_step: forall s g v,
   valid s g v ->
   done s = true ->
@@ -996,6 +435,7 @@ Proof.
   rewrite H0. intro. inversion H4.
 Qed.
 
+(*A state is done if for every valid state s', s' < s is false*)
 Lemma measure_done: forall s g v,
   valid s g v ->
   done s = true <-> (forall s', valid s' g v -> ~bf_measure_list _(get_graph s', get_queue s') (get_graph s, get_queue s)).
@@ -1015,6 +455,7 @@ Proof.
       apply H0 in H3. apply measure_step in H2. contradiction.
 Qed.  
 
+(*two valid states are equal if neither is less than the other*)
 Lemma measure_unique: forall s g v s',
   valid s g v ->
   valid s' g v ->
@@ -1027,6 +468,8 @@ Proof.
   - apply measure_multi in H3. destruct H3. subst. reflexivity. contradiction.
 Qed. 
 
+(*An important lemma: any two done states that are valid are unique. This allows us to use a tail
+  recursive function and still prove claims about generic done states*)
 Lemma done_unique: forall s g v s',
   valid s g v ->
   valid s' g v ->
@@ -1113,47 +556,227 @@ Proof.
     apply H5 in H3. contradiction.
 Qed.
 
-
-(*Reachability*)
-Lemma queue_reachable: forall s g v v',
+(*Every state that is not the start state has a previous state*)
+Lemma prior_state: forall s g v,
   valid s g v ->
-  In v' (map fst (get_queue s)) ->
-  v = v' \/ (exists l, path g v v' l).
+  s <> (start g v) ->
+  (exists s', valid s' g v /\ bfs_step s' s).
 Proof.
-  intros. generalize dependent v'. induction H; intros; subst.
-  - unfold start in *; simpl in *. destruct H0. subst. left. reflexivity. destruct H0.
-  - inversion H0; subst; simpl in *.
-    + rewrite map_app in H1. apply in_app_or in H1. destruct H1.
-      apply IHvalid. right. assumption. rewrite in_map_iff in H1.
-      destruct H1. destruct x. simpl in H1. destruct H1; subst.
-      apply (suci_def _ _ _ _ _  _ _ H3) in H4. destruct H4; subst.
-      specialize (IHvalid v0). destruct IHvalid. left. reflexivity. subst.
-      right. exists nil. constructor. pose proof (graph_subset _ _ _ H).
-      destruct H1. apply H5. simpl. assumption.
-      destruct H1. right. exists (v0 :: x). constructor. assumption.
-      pose proof (graph_subset _ _ _ H).
-      apply H5. simpl. assumption.
-    + apply IHvalid. right. assumption.
+  intros. inversion H; subst.
+  - contradiction.
+  - exists s'. split; assumption.
+Qed.
+
+(*The start state is not done*)
+Lemma done_not_start: forall g v,
+  vIn g v = true ->
+  done (start g v) = false.
+Proof.
+  intros. unfold start. unfold done. simpl. destruct (isEmpty g) eqn : E.
+  rewrite isEmpty_def in E. rewrite E in H. inversion H. apply v. reflexivity.
+Qed.  
+
+
+End Multi.
+
+(*This section contains various results about some Haskell functions used, inlcuding List.zip,
+  repeat (used in place of List.repeat), and suci*)
+Section HaskellFunctions.
+
+(*Replicate is trivially sorted*)
+Lemma replicate_sorted: forall c n,
+  Sorted Z.le (repeat c (Z.to_nat n)). 
+Proof.
+  intros. 
+  induction (Z.to_nat n); simpl; try(constructor).
+  - assumption.
+  - apply In_InfA. intros. apply repeat_spec in H. subst. omega. 
 Qed. 
 
-Theorem output_is_reachable: forall s g v v',
-  valid s g v ->
-  In v' (map fst (get_dists s)) ->
-  v = v' \/ (exists l, path g v v' l).
+(*List.filter equivalence with Coq*)
+Lemma filter_equiv: forall {a} (l: list a) p,
+  List.filter p l = filter p l.
 Proof.
-  intros. induction H; subst.
-  - unfold start in *; simpl in *. destruct H0.
-  - inversion H1; subst; simpl in *.
-    + rewrite map_app in H0. apply in_app_or in H0. destruct H0.
-      apply IHvalid. assumption. eapply queue_reachable. apply H. simpl.
-      simpl in H0. destruct H0; subst. left. reflexivity. destruct H0.
-    + apply IHvalid. assumption.
+  intros. induction l; simpl. reflexivity. rewrite IHl. reflexivity.
+Qed.
+
+(*Tuple.snd quivalence with Coq*)
+Lemma snd_equiv: @Tuple.snd = @snd.
+Proof.
+  unfold Tuple.snd. unfold snd. reflexivity.
+Qed.
+
+(*Prove that List.length is equivalent (up to Z -> nat conversion) with Coq list length *)
+Lemma len_acc_def: forall {a} (l : list a ) n,
+  List.lenAcc l n = (n + Z.of_nat (length l))%Z.
+Proof.
+  intros. revert n. induction l; intros; simpl.
+  - omega.
+  - rewrite IHl. rewrite Zpos_P_of_succ_nat. omega.
 Qed. 
 
+Lemma length_equiv: forall {a} (l: list a),
+  length l = Z.to_nat (List.length l).
+Proof.
+  intros. induction l; simpl.
+  - reflexivity.
+  - unfold List.length. simpl. unfold List.length in IHl. rewrite len_acc_def. 
+    rewrite len_acc_def in IHl. simpl in IHl.
+    rewrite Z2Nat.inj_add. simpl. omega. omega. omega.
+Qed.
 
-(*Now the harder side: everything that is reachable is in the output*)
+(*List.zip results*)
+Lemma zip_in: forall {a} {b} (l1 : list a) (l2: list b),
+  (forall x y, In (x,y) (List.zip l1 l2) -> In x l1 /\ In y l2).
+Proof.
+  intros. generalize dependent l2. induction l1; intros.
+  - simpl in H. destruct H.
+  - simpl in H. destruct l2. destruct H.
+    simpl in H.  destruct H. inversion H; subst.
+    split; simpl; left; reflexivity. simpl. apply IHl1 in H. destruct H.
+    split; right; assumption. 
+Qed. 
 
-(*plan: prove that vertex in graph iff it is not in output *)
+Lemma map_snd_zip: forall {a b} (l1: list a) (l2: list b),
+  length l1 = length l2 ->
+  map snd (List.zip l1 l2) = l2.
+Proof.
+  intros. generalize dependent l2. induction l1; intros; simpl.
+  - simpl in H. destruct l2; try(reflexivity). simpl in H. omega.
+  - simpl in H. destruct l2. simpl in H. omega. simpl in H. inversion H.
+    simpl. rewrite IHl1. reflexivity. assumption.
+Qed.
+
+(*Need specialized lemma for zip with replicate*)
+Lemma zip_replicate: forall {a} {b} (l : list a) (m : b) x (n: b) ,
+  In (x,n) (List.zip l (repeat m (Z.to_nat (List.length l)))) <-> In x l /\ n = m.
+Proof.
+  intros. rewrite <- length_equiv. induction l; simpl; split; intros.
+  - destruct H.
+  - destruct_all. destruct H.
+  - destruct H. inversion H; subst. split; try(left); reflexivity.
+    apply IHl in H. destruct H. subst. split. right. assumption. reflexivity.
+  - destruct H. subst. destruct H. inversion H. left. reflexivity.
+    right. apply IHl. split; try(assumption); reflexivity.
+Qed.
+
+(*Definition about context4l' (a custom function in Data.Graph*)
+Lemma context4l'_def: forall (g: gr a b) v i x l o g' y,
+  match_ v g = (Some (i, x, l, o), g') ->
+  In y (map snd (context4l' (i, x, l, o))) <-> eIn g v y = true.
+Proof.
+  intros. unfold context4l'. split; intros.
+  - rewrite in_map_iff in H0. destruct H0. destruct x0. simpl in *. destruct H0. subst.
+    apply in_app_or in H1. destruct H1. apply match_context in H.
+    destruct_all. subst. apply H2. rewrite in_map_iff. exists (b0, y). split; auto.
+    unfold Base.op_z2218U__ in H0. unfold Base.op_zeze__ in H0. unfold Base.Eq_Char___ in H0.
+    unfold Base.op_zeze____  in H0. rewrite filter_equiv in H0. apply filter_In in H0.
+    destruct H0. apply match_context in H. destruct_all. subst. 
+    simpl in H1. rewrite N.eqb_eq in H1. subst. apply H2. rewrite in_map_iff. exists (b0, x).
+    split. reflexivity. assumption.
+  - apply match_context in H. destruct_all. subst.
+    apply H2 in H0. rewrite in_map_iff in H0. destruct H0. rewrite in_map_iff. exists x0.
+    split. apply H. destruct H. solve_in.
+Qed.
+
+(*Characterizing suci, which is the function uesd by BFS*)
+Lemma suci_def: forall x y n (c: Context a b) v g g',
+  match_ v g = (Some c, g') ->
+  In (x,y) (suci c n) <-> y = n /\ eIn g v x = true. 
+Proof. 
+  intros. split. intros. split. unfold suci in H0. apply zip_in in H0. destruct H0. eapply repeat_spec.
+  apply H1. 
+  unfold suci in H0. apply zip_in in H0. destruct H0. unfold suc' in H0.
+  unfold Base.op_z2218U__ in H0. unfold Base.map in H0. rewrite snd_equiv in H0. 
+  destruct c. destruct p. destruct p.
+  eapply context4l'_def. apply H. apply H0.
+  intros. unfold suci. destruct H0. subst.
+  epose proof (zip_replicate (suc' c) n x n). apply H0. split.
+  unfold suc'. unfold Base.op_z2218U__. rewrite snd_equiv. unfold Base.map.
+  destruct c. destruct p. destruct p. rewrite context4l'_def. apply H1. apply H. reflexivity.
+Qed.
+
+End HaskellFunctions.
+
+(*We only need to prove correctness for any valid done state, as explained above.*)
+Section Correctness.
+
+Definition distance := (@Path.distance a b gr Hgraph).
+
+(*We use a None distance to represent infinity (as in CLRS).*)
+Definition lt_distance (o1: option nat) (o2: option nat) :=
+  match o1, o2 with
+  | _, None => true
+  | None, _ => false
+  | Some x, Some y => leb x y
+  end.
+
+Definition plus_distance (o1: option nat) (n: nat) :=
+  match o1 with
+  | None => None
+  | Some x => Some (x + n)
+  end.
+
+(*Lemma 22.1 of CLRS: if (u,v) in E, then v.d <= u.d + 1 (distance from s)*)
+Lemma distance_triangle: forall g s u v,
+  eIn g u v = true ->
+  vIn g s = true ->
+  lt_distance (distance g s v) (plus_distance (distance g s u) 1) = true.
+Proof.
+  intros. destruct (path_dec g s u).
+  - destruct e as [l]. assert ( path g s v (u :: l)). { constructor; assumption. }
+    destruct (distance g s v) eqn : D.
+    + destruct (distance g s u) eqn : D'.
+      * simpl. rewrite Nat.leb_le. unfold distance in D'. 
+        rewrite distance_some in D'. destruct D'. destruct_all; subst.
+        assert (path g u v nil). constructor. assumption.
+        unfold distance in D. rewrite distance_some in D. destruct D. destruct_all; subst; omega.
+        destruct_all. simpl. assert (n > 1 \/ n <= 1) by omega. destruct H9. rewrite path_list_equiv in H3. rewrite H7 in H3. inversion H3.
+        simpl. omega. assumption.
+        destruct_all. unfold distance in D. rewrite distance_some in D. destruct D. destruct_all. subst.
+        omega. destruct_all.  
+        assert (n<= n0 + 1 \/ n > n0 + 1) by omega. destruct H13. assumption.
+        rewrite path_list_equiv in H5.
+        assert (length l >= n0 - 1). assert (length l >= n0 - 1 \/ length l < n0 - 1) by omega.
+        destruct H14. assumption. rewrite path_list_equiv in H1. rewrite H6 in H1. inversion H1.
+        assumption.
+        assert (length l = n0 - 1 \/ length l > n0 - 1) by omega. destruct H15.
+        rewrite path_list_equiv in H2. 
+        rewrite H11 in H2. inversion H2. simpl. omega.
+        assert (path g s v (u :: x)). constructor. rewrite path_list_equiv. assumption. assumption. 
+        rewrite path_list_equiv in H16. 
+        rewrite H11 in H16. inversion H16. simpl. omega.
+      * simpl. reflexivity.
+    + simpl. unfold distance in D. rewrite distance_none in D.
+      rewrite path_list_equiv in H2. destruct D. rewrite H3 in H2. inversion H2.
+  - destruct (N.eq_dec s u). subst. unfold distance at 2. unfold Path.distance. destruct (N.eq_dec u u).
+    simpl. destruct (distance g u v) eqn : ?. unfold distance in Heqo. rewrite distance_some in Heqo.
+    destruct Heqo; destruct_all; subst. reflexivity. 
+    assert (path_list g u v nil = true). simpl. assumption. assert (n0 - 1 = 0 \/ n0 - 1 > 0) by omega.
+    destruct H7. assert (n0 = 0 \/ n0 = 1) by omega. destruct H8; subst; reflexivity.
+    rewrite H4 in H6. inversion H6. simpl. omega. unfold distance in Heqo. rewrite distance_none in Heqo.
+    destruct Heqo. specialize (H1 nil). simpl in H1. rewrite H1 in H. inversion H. contradiction.
+    assert (distance g s u = None). { unfold distance. rewrite distance_none. split. intros. 
+    destruct (path_list g s u l) eqn : ?. exfalso. apply n. exists l; rewrite path_list_equiv; assumption.
+    reflexivity. assumption. } rewrite H1. simpl. destruct (distance g s v) eqn : D'; reflexivity.
+Qed.
+
+(*Any vertex or edge in the graph at any point during BFS was in the original graph*)
+Lemma graph_subset: forall s v g,
+  valid s g v ->
+  (forall v, vIn (get_graph s) v = true -> vIn g v = true) /\
+  (forall u v, eIn (get_graph s) u v = true -> eIn g u v = true).
+Proof.
+  intros. induction H; simpl.
+  - split; intros; assumption.
+  - inversion H0; subst; simpl in *. assert (M:=H2). apply match_remain_some in H2.
+    destruct H2. split. intros. rewrite H2 in H4. apply IHvalid. apply H4.
+    intros. rewrite H3 in H4. apply IHvalid. apply H4. apply match_remain_none in H2.
+    subst. apply IHvalid.
+Qed.
+
+(*A vertex that is in the original graph is in the graph in a given state iff
+  it is not already finished*)
 Lemma graph_iff_not_output: forall s g v v',
   valid s g v ->
   vIn g v' = true ->
@@ -1185,6 +808,221 @@ Proof.
     + apply IHvalid. assumption. apply match_remain_none in H4. subst. assumption.
 Qed.
 
+(*Every vertex in the queue is in the graph*)
+Lemma queue_in_graph: forall s v g v',
+  valid s g v ->
+  In v' (map fst (get_queue s)) -> 
+  vIn g v' = true.
+Proof.
+  intros. induction H.
+  - unfold start in *. simpl in *. destruct H0. subst. assumption. destruct H0.
+  - inversion H1; subst; simpl in *.
+    + rewrite map_app in H0. apply in_app_or in H0. destruct H0.
+      apply IHvalid. right. assumption. rewrite in_map_iff in H0.
+      destruct H0. destruct x. destruct H0; subst. apply (suci_def n i (j + 1)%Z) in H3.
+      rewrite H3 in H4. destruct H4. subst. simpl. 
+      apply edges_valid in H4. destruct H4.
+      pose proof (graph_subset _ _ _ H). destruct H5. apply H5. simpl. assumption.
+    + apply IHvalid. right. assumption.
+Qed.
+
+(*Each vertex appears at most once in the output*)
+Lemma no_dups_output: forall s g v,
+  valid s g v ->
+  NoDup (map fst (get_dists s)).
+Proof.
+  intros. induction H; simpl.
+  - constructor.
+  - inversion H0; subst; simpl in *.
+    rewrite map_app. simpl. assert (map fst d ++ v0 :: nil = rev (v0 :: rev ((map fst d)))).
+    simpl. rewrite rev_involutive. reflexivity.
+    rewrite H3. rewrite NoDup_NoDupA. apply NoDupA_rev. apply eq_equivalence.
+    constructor. intro. rewrite <- In_InA_equiv in H4. rewrite <- in_rev in H4.
+    assert (vIn g v0 = true). eapply queue_in_graph. apply H. simpl. left. reflexivity. 
+    pose proof (graph_iff_not_output _ _ _ _ H H5) as D; simpl in *.
+    apply D in H4. 
+    assert (vIn g0 v0 = true). apply match_in. exists c. exists g'. assumption.
+    rewrite H6 in H4. inversion H4. apply NoDupA_rev. apply eq_equivalence. rewrite <- NoDup_NoDupA.
+    assumption. assumption.
+Qed.
+
+(*Every distance on the queue is >= 0*)
+Lemma dist_geq_0: forall s g v v' d,
+  valid s g v ->
+  In (v', d) (get_queue s) ->
+  (d >= 0)%Z.
+Proof.
+  intros. generalize dependent v'. generalize dependent d. induction H; intros.
+  - unfold start in H0; simpl in *. destruct H0. inversion H0; subst. omega. destruct H0.
+  - inversion H0; subst; simpl in *.
+    +  apply in_app_or in H1. destruct H1. eapply IHvalid. right. apply H1.
+      eapply (suci_def _ _ _ _ _ _ _ H3) in H1. destruct H1. 
+       assert ((j >=0)%Z). eapply IHvalid. left. reflexivity. omega.
+     + eapply IHvalid. right. apply H1.
+Qed. 
+
+(*Likewise for the output*)
+Lemma dists_geq_0: forall s g v v' d,
+  valid s g v ->
+  In (v', d) (get_dists s) ->
+  (0 <= d)%Z.
+Proof.
+  intros. induction H.
+  - unfold start in *. simpl in *. destruct H0.
+  - inversion H1; subst; simpl in *.
+    + apply in_app_or in H0. destruct H0. apply IHvalid; assumption. simpl in H0. destruct H0.
+      inversion H0; subst.
+      pose proof (dist_geq_0 (g0, (v', d) :: vs, d0) g v v' d H). simpl in H4.
+      assert (d >= 0)%Z. apply H4. left. reflexivity. omega. destruct H0.
+    + apply IHvalid; assumption.
+Qed.
+
+Lemma valid_in: forall s g v,
+  valid s g v ->
+  vIn g v = true.
+Proof.
+  intros. induction H. assumption. assumption.
+Qed.
+
+(** ** Lemma 22.2 of CLRS **)
+
+(*First, the necessary statement for queues: if (v', d) is in the queue, then d(v') >= d*)
+Lemma queue_upper_bound: forall s g v v' d,
+  valid s g v ->
+  In (v', d) (get_queue s) ->
+  lt_distance (distance g v v')  (Some (Z.to_nat d)) = true.
+Proof.
+  intros. generalize dependent v'. generalize dependent d. induction H; intros.
+  - unfold start in *; simpl in *. destruct H0. inversion H0; subst.
+    simpl. unfold distance. unfold Path.distance. destruct (N.eq_dec v' v'). reflexivity. contradiction.
+    destruct H0. 
+  - inversion H0; subst; simpl in *.
+    + apply in_app_or in H1. destruct H1. apply IHvalid. right. assumption.
+      apply (suci_def _ _ _ _ _ _ _ H3) in H1. destruct H1. subst.
+      pose proof (valid_in (g0, (v0, j) :: vs, d0) g v H). simpl in H1.
+      pose proof (graph_subset (g0, (v0, j) :: vs, d0) v g H). simpl in H5.
+      destruct H5. apply H6 in H4. 
+      pose proof (distance_triangle _ _ _ _ H4 H1).
+      assert (lt_distance (distance g v v0) (Some (Z.to_nat j)) = true). apply IHvalid. left.
+      reflexivity. destruct (distance g v v0) eqn : ?; simpl in *.
+      destruct (distance g v v') eqn : ?. simpl in *. rewrite Nat.leb_le in *.
+      assert ((j >= 0)%Z). eapply dist_geq_0. apply H. simpl. left. reflexivity.
+      assert (Z.to_nat j + 1 = Z.to_nat (j + 1)). assert (Z.to_nat j + Z.to_nat (1%Z) = Z.to_nat (j + 1)).
+      rewrite <- Z2Nat.inj_add. reflexivity. omega. omega. 
+      assert (Z.to_nat 1 = 1). unfold Z.to_nat. unfold Pos.to_nat. simpl. reflexivity.
+      rewrite H11 in H10. omega. omega. simpl. simpl in H7. inversion H7.
+      inversion H8.
+    + apply IHvalid. right. assumption.
+Qed. 
+
+(*Lemma 22.2 of CLRS*)
+Lemma dist_upper_bound: forall s g v v' d,
+  valid s g v ->
+  In (v', d) (get_dists s) ->
+  lt_distance (distance g v v') (Some (Z.to_nat d))  = true.
+Proof.
+  intros. induction H; simpl.
+  - unfold start in H0; simpl in H0. destruct H0.
+  - inversion H1; subst; simpl in *.
+    + apply in_app_or in H0. destruct H0. specialize (IHvalid H0).
+      apply IHvalid. simpl in H0. destruct H0. inversion H0; subst.
+      pose proof (queue_upper_bound _ _ _ v' d H). simpl in H4.
+      unfold lt_distance in H4. apply H4. left. reflexivity. destruct H0.
+    + apply IHvalid. assumption.
+Qed.
+
+(** Lemma 22.3 of CLRS **)
+(*I believe we only ever use the first part (sortedness of the queue), but the second is necessary for the IH*)
+Lemma queue_structure: forall s g v v' d tl,
+  valid s g v ->
+  get_queue s = (v', d) :: tl ->
+  (Sorted Z.le (map snd (get_queue s))) /\ (forall v' d', In (v', d') (get_queue s) -> (d' <= d + 1)%Z).
+Proof.
+  intros. generalize dependent v'. revert d. revert tl. induction H; intros; simpl.
+  - unfold start; simpl in *. inversion H0; subst. split. constructor. constructor. constructor.
+    intros. destruct H1. inversion H1. subst. omega. destruct H1.
+  - inversion H0; subst; simpl in *.
+    + split. rewrite map_app. eapply SortA_app. apply eq_equivalence.
+      assert (Sorted Z.le (j :: map snd vs)). { specialize (IHvalid vs j v0).
+      apply IHvalid. reflexivity. } inversion H4; subst. assumption.
+      unfold suci. rewrite map_snd_zip.  apply replicate_sorted.
+      rewrite repeat_length. apply length_equiv.
+      intros.
+      unfold suci in H5. rewrite map_snd_zip in H5. 
+      rewrite <- In_InA_equiv in H5. apply repeat_spec in H5.  subst.
+      rewrite <- In_InA_equiv in H4. rewrite in_map_iff in H4.
+      destruct H4. destruct H4. destruct x0; subst.
+      simpl. specialize (IHvalid vs j v0). destruct IHvalid. reflexivity.
+      specialize (H6 n i). apply H6. right. assumption.
+      rewrite repeat_length. apply length_equiv.
+      intros. apply in_app_or in H4.
+      (*d is in vs or suci *)
+      destruct vs. simpl in H1. destruct H4. simpl in H4. destruct H4.
+      unfold suci in H4. apply zip_in in H4. destruct H4.
+      apply repeat_spec in H5. subst.
+      assert (In (v', d) (suci c (j+1)%Z)). rewrite H1. solve_in.
+      unfold suci in H5. apply zip_in in H5. destruct H5.
+      apply repeat_spec in H6. subst. omega.
+      (*other case*)
+      simpl in H1. inversion H1. subst.
+      specialize (IHvalid ((v', d) :: vs) j v0). destruct IHvalid.
+      reflexivity. inversion H5. subst.
+      inversion H10. subst. 
+      destruct H4.
+      simpl in H4. destruct H4. inversion H4. subst. omega.
+      assert (d' <= j + 1)%Z. eapply H6. right. right. apply H4.
+      omega.
+      unfold suci in H4. apply zip_in in H4. destruct H4.
+      apply repeat_spec in H7. subst. omega.
+    + specialize (IHvalid vs j v0). destruct IHvalid. reflexivity.
+      split. inversion H4. assumption. intros. rewrite H1 in H6.
+      destruct H6. inversion H6; subst. omega.
+      inversion H4; subst. inversion H10; subst.
+      assert (d' <= j + 1)%Z. eapply H5. right. right. apply H6. omega.
+Qed. 
+
+(** Reachability **)
+
+(*First, everything on the queue is reachable fron v*)
+Lemma queue_reachable: forall s g v v',
+  valid s g v ->
+  In v' (map fst (get_queue s)) ->
+  v = v' \/ (exists l, path g v v' l).
+Proof.
+  intros. generalize dependent v'. induction H; intros; subst.
+  - unfold start in *; simpl in *. destruct H0. subst. left. reflexivity. destruct H0.
+  - inversion H0; subst; simpl in *.
+    + rewrite map_app in H1. apply in_app_or in H1. destruct H1.
+      apply IHvalid. right. assumption. rewrite in_map_iff in H1.
+      destruct H1. destruct x. simpl in H1. destruct H1; subst.
+      apply (suci_def _ _ _ _ _  _ _ H3) in H4. destruct H4; subst.
+      specialize (IHvalid v0). destruct IHvalid. left. reflexivity. subst.
+      right. exists nil. constructor. pose proof (graph_subset _ _ _ H).
+      destruct H1. apply H5. simpl. assumption.
+      destruct H1. right. exists (v0 :: x). constructor. assumption.
+      pose proof (graph_subset _ _ _ H).
+      apply H5. simpl. assumption.
+    + apply IHvalid. right. assumption.
+Qed. 
+
+(*Thus, everything in the output is reachable from v*)
+Theorem output_is_reachable: forall s g v v',
+  valid s g v ->
+  In v' (map fst (get_dists s)) ->
+  v = v' \/ (exists l, path g v v' l).
+Proof.
+  intros. induction H; subst.
+  - unfold start in *; simpl in *. destruct H0.
+  - inversion H1; subst; simpl in *.
+    + rewrite map_app in H0. apply in_app_or in H0. destruct H0.
+      apply IHvalid. assumption. eapply queue_reachable. apply H. simpl.
+      simpl in H0. destruct H0; subst. left. reflexivity. destruct H0.
+    + apply IHvalid. assumption.
+Qed. 
+
+(*Now the harder side: everything that is reachable is in the output*)
+
+(*Everything in the output at one state is there in all future states*)
 Lemma output_preserved_strong: forall s v g v' s' (d : Num.Int),
   valid s g v ->
   bfs_multi s s' ->
@@ -1206,6 +1044,8 @@ Proof.
   apply H. apply H0. assumption.
 Qed.
 
+(*A stronger version of [graph_subset]: if a vertex or edge is in the graph at a later point,
+  then it was in the graph in an earlier state that steps to the current state *)
 Lemma graph_subset': forall s v g s',
   valid s g v ->
   bfs_multi s s' ->
@@ -1223,23 +1063,7 @@ Proof.
     rewrite H4 in H5. destruct H5. assumption. apply match_remain_none in H3. subst. apply IHmulti.
 Qed.
 
-Lemma queue_in_graph: forall s v g v',
-  valid s g v ->
-  In v' (map fst (get_queue s)) -> 
-  vIn g v' = true.
-Proof.
-  intros. induction H.
-  - unfold start in *. simpl in *. destruct H0. subst. assumption. destruct H0.
-  - inversion H1; subst; simpl in *.
-    + rewrite map_app in H0. apply in_app_or in H0. destruct H0.
-      apply IHvalid. right. assumption. rewrite in_map_iff in H0.
-      destruct H0. destruct x. destruct H0; subst. apply (suci_def n i (j + 1)%Z) in H3.
-      rewrite H3 in H4. destruct H4. subst. simpl. 
-      apply edges_valid in H4. destruct H4.
-      pose proof (graph_subset _ _ _ H). destruct H5. apply H5. simpl. assumption.
-    + apply IHvalid. right. assumption.
-Qed.
-
+(*Everything in the queue at one point that is not in the queue at a future point must be in the output*)
 Lemma queue_added_to_output: forall s v g v' s',
   valid s g v ->
   bfs_multi s s' ->
@@ -1283,7 +1107,8 @@ Proof.
   eapply multi_valid. apply H. assumption. eapply queue_in_graph. apply H. assumption.
 Qed.
 
-(*If a vertex is in the distances at any point, there must be a step when it was added to the distances*)
+(*If a vertex is in the distances at any point, there must be a step when it was added to the distances. The rest
+  of the lemma gives a bunch of information about that state and the queue/distances*)
 Lemma output_is_added: forall s v g v' d,
   valid s g v ->
   In (v', d) (get_dists s) ->
@@ -1326,36 +1151,8 @@ Proof.
       exists x. split. assumption. apply H8. exists x0. assumption.
 Qed.
 
-Lemma prior_state: forall s g v,
-  valid s g v ->
-  s <> (start g v) ->
-  (exists s', valid s' g v /\ bfs_step s' s).
-Proof.
-  intros. inversion H; subst.
-  - contradiction.
-  - exists s'. split; assumption.
-Qed.
-(*
-Lemma state_eq_dec: forall s s' g v,
-  valid s g v ->
-  valid s' g v ->
-  s = s' \/ s <> s'.
-Proof.
-  intros. pose proof (valid_multi _ _ _ _ H H0). destruct H1.
-  - apply measure_multi in H1. destruct H1. left. assumption.
-    right. intro. subst. pose proof (measure_antirefl (get_graph s', get_queue s')); contradiction.
-  - apply measure_multi in H1. destruct H1. left. subst. reflexivity.
-    right. intro. subst. pose proof (measure_antirefl (get_graph s', get_queue s')); contradiction.
-Qed.
-*)
-Lemma valid_in: forall s g v,
-  valid s g v ->
-  vIn g v = true.
-Proof.
-  intros. induction H. assumption. assumption.
-Qed.
-
-(*Last lemma before reachability*)
+(*Last lemma before reachability - an edge is in the graph in a given state exactly when both ot its
+  vertices are in the graph*)
 Lemma edge_in_state: forall s g v u' v',
   valid s g v ->  
   eIn g u' v' = true ->
@@ -1373,18 +1170,6 @@ Proof.
         destruct_all; split; assumption.
     + apply match_remain_none in H3. subst. apply IHvalid.
 Qed.
-
-(*plan is as follows:
-1. we know that every vertex that was finished has state it was finished
-2. so for a vertex, look at ancestor in path. Must have been seen by induction, so has state
-    it is on queue, so has state it is finished, so has state it was added to finished list
-3. In that state, if (p, c) in graph (from prior state, which exists), then in succs, so done
-4. Otherwise, by lemma below, p or c is in distance, if c is there, good, if p there contradiction
-QED
-    
-
-Lemma: if an edge (u,v) is in the graph, at any state, either (u,v) is in the current graph, or
-  u or v are in the output*)
 
 (*First, prove everything reachable is in queue at some point*)
 Lemma reachable_in_queue: forall g v v',
@@ -1451,6 +1236,7 @@ Proof.
   assumption. assumption.
 Qed.
 
+(*The start vertex is in the output*)
 Lemma v_in_output: forall s g v,
   valid s g v ->
   s = start g v \/ In v (map fst (get_dists s)).
@@ -1470,15 +1256,7 @@ Proof.
       right. assumption.
 Qed.
 
-Lemma done_not_start: forall g v,
-  vIn g v = true ->
-  done (start g v) = false.
-Proof.
-  intros. unfold start. unfold done. simpl. destruct (isEmpty g) eqn : E.
-  rewrite isEmpty_def in E. rewrite E in H. inversion H. apply v. reflexivity.
-Qed.  
-
-(** Proof the BFS computes all reachable vertices **)
+(** Proof the BFS finds all reachable vertices and only reachable vertices **)
 Theorem output_iff_reachable: forall s g v v',
   valid s g v ->
   done s = true ->
@@ -1490,13 +1268,17 @@ Proof.
     apply v_in_output in H. destruct H. subst. rewrite done_not_start in H0. inversion H0.
     apply H1. assumption. eapply reachable_in_output. apply H. apply H0. apply H1.
 Qed.
-   
 
 (** Correctness of BFS **)
 
+(*Now we will prove that every (v',d) pair in the output has the property that d' is the distance from v
+  to v'. This requires several lemmas first.*)
+
 (*Find distance from state*)
-Definition find_dist s v :=
-  fold_right (fun x acc => if N.eq_dec (fst x) v then Some (Z.to_nat (snd x)) else acc) None (get_dists s).
+Definition find_dist_list l v :=
+  fold_right (fun x acc => if N.eq_dec (fst x) v then Some (Z.to_nat (snd x)) else acc) None l.
+
+Definition find_dist s := find_dist_list (get_dists s).
 
 Lemma find_dist_in: forall s g v v' n,
   valid s g v ->
@@ -1597,36 +1379,6 @@ Proof.
   apply valid_in in H. apply H. apply H1.
 Qed.
 
-Lemma NoDup_pairs: forall {a b} (l1 : list (a * b)) x y y',
-  NoDup (map fst l1) ->
-  In (x,y) l1 ->
-  In (x, y') l1 ->
-  y = y'.
-Proof.
-  intros. induction l1.
-  - destruct H0.
-  - simpl in *. destruct a1. simpl in H. inversion H. subst.
-    destruct H0. inversion H0; subst. destruct H1. inversion H1; subst.
-    reflexivity. assert (In x (map fst l1)). rewrite in_map_iff. exists (x, y').
-    simpl. split. reflexivity. assumption. contradiction.
-    destruct H1. inversion H1; subst. assert (In x (map fst l1)). rewrite in_map_iff.
-    exists (x, y). simpl. split. reflexivity. assumption. contradiction.
-    apply IHl1; assumption.
-Qed.
-
-(*If a vertex is on the queue once and not in the distances, then it multisteps
-  to a point where this value is at the front of the queue*)
-(*
-Lemma first_finish_first: forall s s' g v v' d' v'' d'' l1 l2 l3,
-  valid s g v ->
-  get_queue s = l1 ++ (v', d') :: l2 ++ (v'', d'') :: l3 ->
-  (forall x, In x (map fst l1) -> x <> v') ->
-  (forall x, In x (map fst ( l1 ++ (v', d') :: l2)) -> x <> v'') ->
-  In v' (map fst (get_dists s)) = false ->
-  In v'' (map fst (get_dists s)) = false ->
-  bfs_multi s s' ->
-  *)
-
 (*A key characterization of distances: If (v', d) is the first instance of v' on the queue and v' has not
   yet been discovered, when we step, either (v', d) is in the output, or the same condition holds*)
 Lemma first_queue_constant: forall s g v v' d' l1 l2 s',
@@ -1715,44 +1467,6 @@ Proof.
     assumption.
 Qed.
 
-(*TODO: move to helper*)
-Lemma in_split_app_fst_map: forall {A B: Type} {Eq1: (forall x y : A, {x = y} + {x <> y})}
-   {Eq2: forall x y : B, {x = y} + {x <> y}}  (l: list (A * B)) x y,
-  In (x, y) l ->
-  (forall y', In (x, y') l -> y = y') ->
-  exists l1 l2, l = l1 ++ ((x, y) :: l2) /\ forall y, In y (map fst l1) -> y <> x.
-Proof.
-  intros. induction l.
-  - inversion H.
-  - destruct a0. simpl. destruct (Eq2 y b0). subst. destruct (Eq1 x a0). subst. exists nil.
-    exists l. split. reflexivity. intros. inversion H1. 
-    subst. simpl in H. destruct H. inversion H; subst. contradiction.
-     apply IHl in H. destruct_all.
-    exists ((a0, b0) :: x0). exists x1. split. rewrite H. reflexivity. intros. intro. subst.
-    simpl in H2. destruct H2. subst. contradiction. apply H1 in H. contradiction.
-    intros. apply H0. solve_in. destruct (Eq1 x a0). subst. assert (y = b0). apply H0.
-    simpl. left. reflexivity. subst. contradiction. simpl in H. destruct H.
-    inversion H; subst; contradiction. apply IHl in H.
-    destruct_all. exists ((a0, b0) :: x0). exists x1. split. rewrite H. simpl. reflexivity.
-    intros. simpl in H2. destruct H2. subst. intro. subst. contradiction. apply H1. assumption.
-    intros. apply H0. solve_in.
-Qed.
-
-Lemma in_split_app_special:  forall {A B: Type} {Eq1: (forall x y : A, {x = y} + {x <> y})}
-    (l: list (A * B)) x,
-  In x (map fst l) ->
-  exists y l1 l2, l = l1 ++ ((x, y) :: l2) /\ forall y, In y (map fst l1) -> y <> x.
-Proof.
-  intros. induction l.
-  - destruct H.
-  - simpl in *. destruct a0. destruct (Eq1 x a0). subst. destruct H. simpl in H. inversion H; subst. exists b0.
-    exists nil. exists l. split. reflexivity. intros. destruct H1.
-    exists b0. exists nil. exists l. split. reflexivity. intros. inversion H0.
-    destruct H. simpl in H. inversion H. subst. contradiction. 
-    apply IHl in H. destruct_all. exists x0. exists ((a0, b0) :: x1). exists x2. split. rewrite H. reflexivity.
-    intros. simpl in H1. destruct H1. subst. auto. apply H0. assumption.
-Qed.
-
 Lemma queue_smaller_than_dists: forall s g v,
   valid s g v ->
   (forall n, In n (map snd (get_queue s)) ->
@@ -1775,21 +1489,6 @@ Proof.
   - apply IHvalid. assumption. right. assumption.
 Qed.
 
-(*TODO: move to helper*)
-Lemma sort_app: forall {A : Type} (l1 l2 : list A) R,
-  Sorted R (l1 ++ l2) ->
-  Relations_1.Transitive R ->
-  (forall x y, In x l1 -> In y l2 -> R x y).
-Proof.
-  intros. generalize dependent l2. induction l1; intros.
-  - simpl in H. destruct H1.
-  - simpl in H. apply Sorted_StronglySorted in H. inversion H. subst.
-    rewrite Forall_forall in H6. simpl in H1.
-    destruct H1. subst. apply H6. solve_in. eapply IHl1.
-    assumption. apply StronglySorted_Sorted . apply H5.
-    assumption. assumption.
-Qed. 
-
 (*Another key property of BFS: the distances are sorted*)
 Theorem dists_sorted: forall s g v,
   valid s g v ->
@@ -1806,7 +1505,6 @@ Proof.
       simpl. assumption.
     + assumption.
 Qed.
-
 
 (** The big result: Every (v', d) pair that appears in the output is actually the shortest
   distance from v to v'. This also implies reachability, although that was already proved separately
@@ -1838,7 +1536,7 @@ Proof.
     subst. contradiction. destruct H2. destruct H4. destruct H5.
     destruct H5 as [l]. destruct H5. destruct l as [| w l]. simpl in H7.
     inversion H5. subst.
-    (*TODO: see if i can do this without repeating twice*)
+    (*case when v, v' is edge*)
     assert (n = 1) by omega. subst. clear H2. clear H7. assert (vIn g v = true).
     eapply valid_in; apply H. pose proof (done_not_start g v H2). rewrite not_done_step in H7.
     destruct H7 as [s2]. pose proof (second_state s2 _ _ H2 H7).
@@ -1968,8 +1666,8 @@ Section Equiv.
 
 (*TODO: Fix this*)
 
-
 (*
+
 (*Let's try it*)
 Equations bfs_queue (s: state) : state by wf (get_graph s, get_queue s) (bf_measure_list (Node * Num.Int)) :=
   bfs_queue (g, nil, x, go) => (g, nil, x, go);
@@ -2046,60 +1744,7 @@ Proof.
   intros. unfold done. inversion H; subst; simpl; assumption.
 Qed.
 
-(*Maybe, alternate*)
-(*For every element in the queue, there is a state you multistep to where that element is at the front of the queue*)
-(*And they occur in order*)
-(**)
 
-(*Let's try with map solution*)
-
-
-Lemma queue_remove_dup_single: forall g q d go v s' l1 l2 l3 v' d' d'',
-  q = l1 ++ (v', d') :: l2 ++ (v', d'') :: l3 ->
-  done (g, q, d, go) = false ->
-  valid (g, q, d, go) v ->
-  bfs_multi (g, q, d, go) s' ->
-  done s' = true ->
-  bfs_multi (g, l1 ++ (v', d') :: l2 ++ l3, d, go) s'.
-Proof.
-  intros. remember (g, q, d, go) as s. generalize dependent l1. revert l2. revert l3. revert v'. revert d'.
-  revert d''. generalize dependent q. revert g. revert d. revert go. induction H1; intros; subst.
-  - unfold start in Heqs. inversion Heqs; subst. destruct l1; inversion H5; subst. 
-    destruct l2; inversion H7. destruct l1; inversion H6.
-  - assert (done s'0 = false) by (eapply done_cannot_step; apply H). specialize (IHvalid H4). clear H4.
-    assert (bfs_multi s'0 s'). eapply multi_step. apply H. apply H2. specialize (IHvalid H4). clear H4.
-    inversion H; subst; simpl in *.
-    + eapply IHvalid. reflexivity. unfold done in H0. simpl in H0.
-
-  inversion H4; subst; simpl in *.
-    + 
-    inversion H5; subst. 
-
-
- induction H1; subst.
-  - unfold start in Heqs. inversion Heqs. subst.  unfold done in H2. simpl in H2. destruct l1; simpl in H2. simpl in H2.
-  - 
-  
-
-Lemma queue_remove_dup: forall 
-
-Lemma queue_equiv: forall s,
-  bfs_tail s = bfs_queue s.
-Proof.
-  intros. destruct s as [r go]. destruct r as [r d]. revert d. revert go.
-  induction (r) using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
-  intros. destruct r as [g q]. rewrite unfold_bfs_tail. rewrite unfold_bfs_queue. simpl.
-  destruct q.
-  - reflexivity.
-  - destruct p. destruct (isEmpty g) eqn : E.
-    + reflexivity.
-    + destruct (match_ n g) eqn : M. destruct m.
-      * 
-
-*)
-(*Want to prove this is valid, done and equivalent to other*)
-
-(*
 (*Equivalence of 2 versions - TODO: prove leveln and leveln' equivalent (proof is basically what I did before*)
 Equations leveln' (x: (gr a b) * (list (Node * Num.Int))) : list (Node * Num.Int) by wf x (bf_measure_list (Node * Num.Int)) :=
   leveln' (g, nil) := nil;
@@ -2347,18 +1992,6 @@ Proof.
 Qed.
 
 End WithPath.
-
-(*Equivalence*)
-
-(*Steps:
-1. show we can unwrap BFS if first in queue not in graph
-2. show we can unwrap to pop_list
-3. equivalence of lists and queues
-4. then can unwarp deferredFix and prove termination
-5. need something about the paths, tail vs regular recursive*)
-
-(*Next step: try to prove this is equivalent to Haskell BFS, then can just work with this version/ valid states*)
-
 *)
 End Equiv.
-End Ind.
+End Ind. 

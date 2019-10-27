@@ -1,0 +1,64 @@
+skip Data.Graph.Inductive.Internal.Heap.prettyHeap
+skip Data.Graph.Inductive.Internal.Heap.printPrettyHeap
+
+#needs default as well for some reason
+set type Data.Graph.Inductive.Internal.Heap.splitMin: forall {a} {b} `{(GHC.Base.Ord a)} `{(Err.Default ((a * b) * (Heap a b)))}, (Heap a b) -> ((a * b) * (Heap a b))
+set type Data.Graph.Inductive.Internal.Heap.findMin: forall {a} {b} `{(Err.Default (a * b))}, (Heap a b) -> (a * b)
+
+#need to prove that toList terminates - we need a function for the size of a heap
+add Data.Graph.Inductive.Internal.Heap Fixpoint Data.Graph.Inductive.Internal.Heap.size {a} {b} (h: Heap a b) :=
+match h with
+| Empty => 0
+| Node _ _ l => 1 + List.fold_right plus 0 (List.map (fun x => Data.Graph.Inductive.Internal.Heap.size x) l)
+end.
+order Data.Graph.Inductive.Internal.Heap.size Data.Graph.Inductive.Internal.Heap.toList
+
+#need several lemmas and tactics to prove termination:
+add Data.Graph.Inductive.Internal.Heap Lemma merge_size {a} {b} `{(GHC.Base.Ord a)} (h1 h2: Heap a b) : (size (merge h1 h2) = Nat.add (size h1) (size h2)). 
+Proof.
+intros. generalize dependent h2. induction h1; intros; simpl.
+  - destruct h2; reflexivity.
+  - destruct h2; simpl. omega. destruct (_GHC.Base.<_ a0 a1 ) eqn : ?; simpl; omega.
+ Qed.
+
+ add Data.Graph.Inductive.Internal.Heap Lemma mergeAll_size {a} {b} `{(GHC.Base.Ord a)} (l: list (Heap a b)) :
+  size (mergeAll l) = List.fold_right plus 0 (List.map (fun x => size x) l).
+Proof.
+  intros. induction l using (well_founded_induction
+                       (wf_inverse_image _ nat _ (@length _)
+                          PeanoNat.Nat.lt_wf_0)).
+  destruct l.
+  - reflexivity.
+  - destruct l.
+    + simpl. omega.
+    + simpl. repeat(rewrite merge_size). rewrite plus_assoc. rewrite H1. reflexivity. simpl. omega.
+Qed. 
+
+add Data.Graph.Inductive.Internal.Heap Lemma deleteMin_size {a} {b} `{(GHC.Base.Ord a)} (h: Heap a b) :
+  (h <> Empty) ->
+  ((size (deleteMin h) + 1) = size h).
+Proof.
+  intros. unfold deleteMin. destruct h. contradiction. rewrite mergeAll_size.
+  unfold size. simpl. omega.
+Qed. 
+
+#can't use ltac, so prove the result as a lemma and apply it
+add Data.Graph.Inductive.Internal.Heap Lemma toList_termination {a} {b} `{(GHC.Base.Ord a)} (h: Heap a b):
+  (Empty <> h) ->
+  (size (deleteMin h) < size h).
+Proof.
+  intros. assert (A: h <> Empty) by auto; apply deleteMin_size in A; omega.
+Qed.
+
+order merge_size mergeAll_size deleteMin_size toList_termination Data.Graph.Inductive.Internal.Heap.toList  
+
+termination Data.Graph.Inductive.Internal.Heap.toList        {measure (Data.Graph.Inductive.Internal.Heap.size arg_0__)}
+obligations Data.Graph.Inductive.Internal.Heap.toList       (Tactics.program_simpl; apply toList_termination; auto)
+
+#more defaut constrants 
+set type Data.Graph.Inductive.Internal.Heap.toList: forall {a} {b} `{(GHC.Base.Ord a)} `{(Err.Default (a * b))}, (Heap a b) -> list (a * b)
+set type Data.Graph.Inductive.Internal.Heap.heapsort: forall {a} `{(GHC.Base.Ord a)} `{(Err.Default (a * a))}, list a -> list a 
+
+#recursive definition that is difficult to translate
+skip class GHC.Base.Ord
+skip class GHC.Base.Eq_

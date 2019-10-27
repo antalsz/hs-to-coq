@@ -10,8 +10,15 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require Import Coq.ZArith.BinInt.
+Require Import Coq.Lists.List.
+Require Import Coq.ZArith.BinIntDef.
+
 (* Converted imports: *)
 
+Require BinInt.
 Require Coq.Init.Datatypes.
 Require Data.Graph.Inductive.Graph.
 Require Data.Graph.Inductive.Internal.Queue.
@@ -39,8 +46,8 @@ Definition suci {a} {b}
    : Data.Graph.Inductive.Graph.Context a b ->
      GHC.Num.Int -> list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type :=
   fun c i =>
-    GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.replicate
-                  (GHC.List.length (Data.Graph.Inductive.Graph.suc' c)) i).
+    GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (repeat i (BinInt.Z.to_nat
+                                                              (GHC.List.length (Data.Graph.Inductive.Graph.suc' c)))).
 
 Definition outU {a} {b}
    : Data.Graph.Inductive.Graph.Context a b ->
@@ -232,15 +239,16 @@ Definition esp {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
   fun s t => Data.Graph.Inductive.Internal.RootPath.getPath t GHC.Base.∘ bft s.
 
 (* External variables:
-     None Some bool cons list nil op_zt__ orb pair Coq.Init.Datatypes.app
-     Data.Graph.Inductive.Graph.Context Data.Graph.Inductive.Graph.Edge
-     Data.Graph.Inductive.Graph.Graph Data.Graph.Inductive.Graph.LP
-     Data.Graph.Inductive.Graph.LPath Data.Graph.Inductive.Graph.Node
-     Data.Graph.Inductive.Graph.Path Data.Graph.Inductive.Graph.isEmpty
-     Data.Graph.Inductive.Graph.lsuc' Data.Graph.Inductive.Graph.match_
-     Data.Graph.Inductive.Graph.node' Data.Graph.Inductive.Graph.out
-     Data.Graph.Inductive.Graph.out' Data.Graph.Inductive.Graph.suc'
-     Data.Graph.Inductive.Graph.toEdge Data.Graph.Inductive.Internal.Queue.Queue
+     None Some bool cons list nil op_zt__ orb pair repeat BinInt.Z.to_nat
+     Coq.Init.Datatypes.app Data.Graph.Inductive.Graph.Context
+     Data.Graph.Inductive.Graph.Edge Data.Graph.Inductive.Graph.Graph
+     Data.Graph.Inductive.Graph.LP Data.Graph.Inductive.Graph.LPath
+     Data.Graph.Inductive.Graph.Node Data.Graph.Inductive.Graph.Path
+     Data.Graph.Inductive.Graph.isEmpty Data.Graph.Inductive.Graph.lsuc'
+     Data.Graph.Inductive.Graph.match_ Data.Graph.Inductive.Graph.node'
+     Data.Graph.Inductive.Graph.out Data.Graph.Inductive.Graph.out'
+     Data.Graph.Inductive.Graph.suc' Data.Graph.Inductive.Graph.toEdge
+     Data.Graph.Inductive.Internal.Queue.Queue
      Data.Graph.Inductive.Internal.Queue.mkQueue
      Data.Graph.Inductive.Internal.Queue.queueEmpty
      Data.Graph.Inductive.Internal.Queue.queueGet
@@ -251,6 +259,5 @@ Definition esp {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
      Data.Graph.Inductive.Internal.RootPath.getLPath
      Data.Graph.Inductive.Internal.RootPath.getPath GHC.Base.map GHC.Base.op_z2218U__
      GHC.DeferredFix.deferredFix2 GHC.DeferredFix.deferredFix3 GHC.Err.patternFailure
-     GHC.List.length GHC.List.replicate GHC.List.zip GHC.Num.Int GHC.Num.fromInteger
-     GHC.Num.op_zp__
+     GHC.List.length GHC.List.zip GHC.Num.Int GHC.Num.fromInteger GHC.Num.op_zp__
 *)

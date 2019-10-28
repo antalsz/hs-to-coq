@@ -16,14 +16,16 @@ Section WF_Part1.
 Context {e : Type} {a b : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 
-(*The following theorems are the axioms from ContainerAxioms. Some are slightly modified, such as adding
-  the condition that the function in filter respects equality and using Haskell equality on maps rather
-  than Coq equality. I have noted where the definitions are changed
-   Also, in nearly every axiom, I had to add the hypothesis that the map is Bounded.  *)
+(* The following theorems are the theorems about containers, used by
+   [examples/ghc]. Some are slightly modified, such as adding the condition that
+   the function in filter respects equality and using Haskell equality on maps
+   rather than Coq equality. I have noted where the definitions are changed
+   Also, in nearly every theorem, I had to add the hypothesis that the map is
+   Bounded. *)
 
-(*First, the following are lemmas that are used in proving various ContainerAxioms*)
+(* First, the following are lemmas that are used in proving various theorems. *)
 
-(*Simpler definition of lookup*)
+(* Simpler definition of lookup *)
 Fixpoint lookup' (key : e) (map : Map e a) : option a :=
   match map with
   | Tip => None
@@ -34,7 +36,7 @@ Fixpoint lookup' (key : e) (map : Map e a) : option a :=
                           end
  end.
 
-(*Prove the two definitions are equivalent*)
+(* Prove the two definitions are equivalent *)
 Lemma lookup_lookup'_equiv : forall  (key : e) (map : Map e a),
     lookup key map = lookup' key map.
 Proof.
@@ -43,7 +45,8 @@ Proof.
   - simpl. reflexivity.
 Qed.
 
-(*Follows from sem_inside, says that if a key is in a map, it is between the bounds*)
+(* Follows from sem_inside, says that if a key is in a map, it is between the
+   bounds *)
 Lemma keys_inside_bounds : forall (map: Map e a) key lb ub,
   Bounded map lb ub ->
   member key map = true ->
@@ -53,8 +56,9 @@ Proof.
   eapply sem_inside. apply H. apply H0. apply H.
 Qed.
 
-(*This function represents sem on a filtered map. It is needed when we have goals about filterWithKey
-in the hypothesis, since filterWithKey_Desc only works on the goal*)
+(* This function represents sem on a filtered map. It is needed when we have
+   goals about filterWithKey in the hypothesis, since filterWithKey_Desc only
+   works on the goal *)
 Fixpoint sem_filter (m: Map e a) f i:=
   match m with
   |Tip => None
@@ -65,7 +69,8 @@ Fixpoint sem_filter (m: Map e a) f i:=
                     end
   end.
 
-(*Proves the equivalence of this function with using sem on the filtered map directly*)
+(* Proves the equivalence of this function with using sem on the filtered map
+  directly *)
 Lemma sem_filter_equiv: forall m lb ub key f,
   Bounded m lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -92,7 +97,7 @@ Proof.
       specialize (H13 key). rewrite <- H13 in H8. apply H8.
 Qed.
 
-(*If a key, value pair is in the filtered map, it was in the original map*)
+(* If a key, value pair is in the filtered map, it was in the original map *)
 Lemma filterPreservesValues: forall (m: Map e a) lb ub f,
   Bounded m lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -111,7 +116,8 @@ Proof.
   - assumption.
 Qed.
 
-(*If a key, value pair is in the filtered map, the function returns true on the pair*)
+(* If a key, value pair is in the filtered map, the function returns true on the
+   pair *)
 Lemma filter_sem_true: forall (m: Map e a) lb ub f,
   Bounded m lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -128,7 +134,8 @@ Proof.
   - assumption.
 Qed.
 
-(*Conversely, if a key, value pair was in the map and not in the filtered map, f k v is false*)
+(* Conversely, if a key, value pair was in the map and not in the filtered map,
+   f k v is false *)
 Lemma filter_sem_false: forall (m: Map e a) lb ub f,
   Bounded m lb ub ->
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -153,8 +160,8 @@ Proof.
   - assumption.
 Qed.
 
-(*This is similar for intersection. This allows us to work with [sem (intersection _)] in
-  a hypothesis*)
+(* This is similar for intersection. This allows us to work with [sem
+   (intersection _)] in a hypothesis *)
 Definition sem_intersect (m1: Map e a)(m2: Map e b) i :=
   match (sem m1 i), (sem m2 i) with
   | Some v, Some v2 => Some v
@@ -365,7 +372,7 @@ Section WF_Part2.
 Context {e : Type} {a b : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 
-(*Start of ContainerAxioms*)
+(*Start of ContainerFacts *)
 
 (*This lemma says that if two keys are equal, then the result of member is the same when either is called*)
 Lemma member_eq: forall {a : Type} (n : e) (n' : e) (m : Map e a),
@@ -671,8 +678,8 @@ Proof.
       apply Eq_Reflexive. rewrite H8. rewrite H11. apply Eq_Reflexive.
 Qed.
 
-(*We do not need any such assumptions for filter_comp (the version actually in ContainerAxioms). However,
-  we do use Haskell equality and assume {EqLaws a}*)
+(*We do not need any such assumptions for filter_comp (the version actually in
+  ContainerFacts). However, we do use Haskell equality and assume {EqLaws a}*)
 Lemma filter_comp: forall `{EqLaws a} (f: a -> bool) (f': a -> bool) (m: Map e a) lb ub ,
   Bounded m lb ub ->
   Internal.filter f (Internal.filter f' m) == Internal.filter (fun v => f v && f' v) m = true.
@@ -683,9 +690,10 @@ Proof.
   - unfold respectful. unfold Proper. intros. reflexivity.
 Qed.
 
-(*This (commented out) ContainerAxiom is actually false, as long as the type a is inhabited
-  by at least 2 nonequal elements. Since the function we use only depends on the value,
-  this actually proves that [filter_insert] is false as well*)
+(* This (commented out) ContainerFact is actually false, as long as the type a
+   is inhabited by at least 2 nonequal elements. Since the function we use only
+   depends on the value, this actually proves that [filter_insert] is false as
+   well *)
 Lemma filterWithKey_insert_false:forall `{EqLaws a} (key: e) (v v1: a), v == v1 = false ->
 ~(forall  key v lb ub f m,
   Bounded m lb ub ->
@@ -727,8 +735,8 @@ Proof.
   assumption.
 Qed.
 
-(*If we lookup a key in the filtered map and get Some value, we will get the same in the original map.
-I needed to added the assumption that f is proper*)
+(*If we lookup a key in the filtered map and get Some value, we will get the
+  same in the original map.  I needed to added the assumption that f is proper*)
 Lemma lookup_filterWithKey:
   forall key value (m: Map e a) f lb ub,
   Bounded m lb ub ->
@@ -909,8 +917,9 @@ Proof.
   apply H. apply H2. apply H0.
 Qed.
 
-(*The stronger claim in ContainerAxioms (using Coq equality) is not true, because we may have rebalancing.
-  But we do have the weaker version with Haskell equality (and therefore {EqLaws a}) *)
+(*The stronger claim in ContainerFacts (using Coq equality) is not true,
+  because we may have rebalancing.  But we do have the weaker version with
+  Haskell equality (and therefore {EqLaws a}) *)
 Lemma delete_commute: forall `{EqLaws a} k1 k2 m lb ub,
   Bounded m lb ub ->
   delete k1 (delete k2 m) == delete k2 (delete k1 m) = true.

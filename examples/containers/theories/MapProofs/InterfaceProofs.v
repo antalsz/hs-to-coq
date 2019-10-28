@@ -11,7 +11,7 @@ Require Import MapProofs.FilterPartitionProofs.
 Require Import MapProofs.MaxMinProofs.
 Require Import MapProofs.MapFunctionProofs.
 Require Import MapProofs.TypeclassProofs.
-Require Import MapProofs.ContainerAxiomsProofs.
+Require Import MapProofs.ContainerFacts.
 (** * Instantiating the [FSetInterface] *)
 
 Require Import Coq.FSets.FMapInterface.

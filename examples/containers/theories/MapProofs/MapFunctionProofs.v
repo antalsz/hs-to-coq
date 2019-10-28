@@ -5,7 +5,7 @@ Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
-Require Import MapProofs.ContainerAxiomsProofs.
+Require Import MapProofs.ContainerFacts.
 Require Import MapProofs.UnionIntersectDifferenceProofs.
 Require Import MapProofs.ToListProofs.
 Require Import MapProofs.FilterPartitionProofs.

@@ -7,7 +7,7 @@ Require Import Coq.Logic.ProofIrrelevance.
 Require Import GHC.Base.
 
 Require Import Proofs.Prelude.
-Require Import MapProofs.ContainerAxiomsProofs.
+Require Import MapProofs.ContainerFacts.
 Require IntMap.
 
 Ltac destruct_IntMap :=
@@ -23,7 +23,7 @@ Proof.
   intros. cbn in H. apply N.eqb_eq in H; subst. reflexivity.
 Qed.
 
-Lemma lookup_insert : forall A key (val:A) i, 
+Lemma lookup_insert : forall A key (val:A) i,
     IntMap.lookup key (IntMap.insert key val i) = Some val.
 Proof.
   intros. eapply lookup_insert'. destruct_IntMap.
@@ -47,8 +47,8 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma lookup_insert_neq : 
-  forall b key1 key2 (val:b) m, 
+Lemma lookup_insert_neq :
+  forall b key1 key2 (val:b) m,
     key1 <> key2 ->
     IntMap.lookup key1 (IntMap.insert key2 val m) = IntMap.lookup key1 m.
 Proof.
@@ -87,7 +87,7 @@ Qed.
 
 Lemma non_member_lookup :
    forall (A : Type)
-     (key : Internal.Key) 
+     (key : Internal.Key)
      (i : IntMap.IntMap A),
    (IntMap.member key i = false) <-> (IntMap.lookup key i = None).
 Proof.
@@ -104,7 +104,7 @@ Qed.
 
 Lemma member_lookup :
    forall (A : Type)
-     (key : Internal.Key) 
+     (key : Internal.Key)
      (i : IntMap.IntMap A),
    (is_true (IntMap.member key i)) <-> (exists val, IntMap.lookup key i = Some val).
 Proof.
@@ -122,14 +122,14 @@ Qed.
 
 Lemma member_union :
    forall (A : Type)
-     (key : Internal.Key) 
+     (key : Internal.Key)
      (i i0 : IntMap.IntMap A),
-   (IntMap.member key (IntMap.union i i0)) = 
+   (IntMap.member key (IntMap.union i i0)) =
    (IntMap.member key i0 || IntMap.member key i).
 Proof.
   intros. eapply member_union; destruct_IntMap.
 Qed.
-  
+
 (*
 Axiom union_nil_l : forall A (i : IntMap.IntMap A),
     IntMap.union IntMap.Nil i = i.
@@ -151,9 +151,9 @@ Proof.
   eapply difference_nil_r.
   eassumption.
 Qed.
-  
+
 Lemma difference_nil_l : forall B A (i : IntMap.IntMap A),
-    IntMap.difference (@IntMap.empty B) i = 
+    IntMap.difference (@IntMap.empty B) i =
     (@IntMap.empty B).
 Proof.
   intros. destruct_IntMap.
@@ -162,7 +162,7 @@ Proof.
   eapply difference_nil_l.
   eassumption.
 Qed.
-  
+
 (*
 Axiom difference_Tip_member:
   forall A (i : IntMap.IntMap A) (n : IntMap.Key),
@@ -170,7 +170,7 @@ Axiom difference_Tip_member:
     forall x:A, IntMap.difference
         (IntMap.Tip n x) i = IntMap.Nil.
 
-Axiom difference_Tip_non_member: 
+Axiom difference_Tip_non_member:
     forall A (i : IntMap.IntMap A) (n : IntMap.Key),
       (IntMap.member n i) = false ->
       forall x : A, IntMap.difference (IntMap.Tip n x) i =
@@ -183,7 +183,7 @@ Lemma filter_comp : forall A `{EqLaws A} f f' (i : IntMap.IntMap A),
     IntMap.filter (fun v => f v && f' v) i.
 Proof.
   intros. eapply filter_comp. destruct_IntMap.
-Qed.  
+Qed.
 
 (*
 Axiom filter_insert: forall A f key (v:A) i,
@@ -193,7 +193,7 @@ Axiom filter_insert: forall A f key (v:A) i,
    else IntMap.filter f i).
 *)
 
-Lemma lookup_filterWithKey : 
+Lemma lookup_filterWithKey :
   forall b key (val:b) m f, IntMap.lookup key (IntMap.filterWithKey f m) = Some val ->
                        IntMap.lookup key m = Some val.
 Proof.
@@ -201,7 +201,7 @@ Proof.
   intros i j Heq. f_equal. apply /Eq_eq. assumption.
 Qed.
 
-Lemma filter_true : forall (A:Type) `{EqLaws A} (m:IntMap.IntMap A), 
+Lemma filter_true : forall (A:Type) `{EqLaws A} (m:IntMap.IntMap A),
     IntMap.filter (const true) m == m.
 Proof.
   intros. eapply filter_true; destruct_IntMap.
@@ -209,16 +209,16 @@ Qed.
 
 Lemma lookup_intersection :
   forall a b key (val1:a)
-    (m1 : IntMap.IntMap a) (m2 : IntMap.IntMap b), 
+    (m1 : IntMap.IntMap a) (m2 : IntMap.IntMap b),
     IntMap.lookup key m1 = Some val1 /\
-    (exists (val2:b), IntMap.lookup key m2 = Some val2) <-> 
+    (exists (val2:b), IntMap.lookup key m2 = Some val2) <->
     IntMap.lookup key (IntMap.intersection m1 m2) = Some val1.
 Proof.
   intros. eapply lookup_intersection; destruct_IntMap.
 Qed.
 
 Lemma lookup_union :
-  forall (A:Type) key (val:A) (m1 m2: IntMap.IntMap A), 
+  forall (A:Type) key (val:A) (m1 m2: IntMap.IntMap A),
     (IntMap.lookup key m1 = Some val \/ (IntMap.lookup key m1 = None /\ IntMap.lookup key m2 = Some val)) <->
     IntMap.lookup key (IntMap.union m1 m2) = Some val.
 Proof.
@@ -226,7 +226,7 @@ Proof.
 Qed.
 
 Lemma lookup_partition :
-  forall (A:Type) key (val:A) (m m': IntMap.IntMap A) (P: A -> bool), 
+  forall (A:Type) key (val:A) (m m': IntMap.IntMap A) (P: A -> bool),
     ((m' = fst (IntMap.partition P m) \/
       m' = snd (IntMap.partition P m)) /\
      IntMap.lookup key m' = Some val) ->
@@ -241,10 +241,10 @@ Qed.
 
 (*
 Axiom lookup_partition :
-  forall (key : IntMap.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b), 
+  forall (key : IntMap.Key) (b : Type) (i left right: IntMap b)(f:b -> bool)(y : b),
     lookup key i = Some y ->
-    (left, right) = partition f i -> 
-    lookup key left = Some y \/ lookup key right = Some y.    
+    (left, right) = partition f i ->
+    lookup key left = Some y \/ lookup key right = Some y.
 *)
 (*
 Axiom lookup_union_None:
@@ -259,7 +259,7 @@ Axiom lookup_union_None:
 
 Lemma lookup_difference_in_snd:
   forall (key : Internal.Key) (b : Type) (i i': IntMap.IntMap b) (y:b),
-    IntMap.lookup key i' = Some y -> 
+    IntMap.lookup key i' = Some y ->
     IntMap.lookup key (IntMap.difference i i') = None.
 Proof.
   intros. eapply lookup_difference_in_snd; destruct_IntMap.
@@ -273,17 +273,17 @@ Proof.
   intros. eapply lookup_difference_not_in_snd; destruct_IntMap.
 Qed.
 
-(* This is a pretty strong property about the representation of 
+(* This is a pretty strong property about the representation of
    IntMaps. I hope that it is true. *)
 Lemma delete_commute :
   forall (A : Type) `{EqLaws A}
-    (kx ky : Internal.Key) 
+    (kx ky : Internal.Key)
     (i : IntMap.IntMap A),
   IntMap.delete ky (IntMap.delete kx i) ==
   IntMap.delete kx (IntMap.delete ky i).
 Proof.
   intros. eapply delete_commute; destruct_IntMap.
-Qed.  
+Qed.
 
 Lemma intersection_empty :
   forall A B (i : IntMap.IntMap A) (j : IntMap.IntMap B),
@@ -313,12 +313,12 @@ Proof.
   eapply disjoint_difference with (m2:=x); destruct_IntMap.
 Qed.
 
-Lemma null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.IntMap b), 
+Lemma null_intersection_eq : forall b (x1 x2 y1 y2 : IntMap.IntMap b),
   (forall a, IntMap.member a x1 <-> IntMap.member a y1) ->
   (forall a, IntMap.member a x2 <-> IntMap.member a y2) ->
   IntMap.null (IntMap.intersection x1 x2) = IntMap.null (IntMap.intersection y1 y2).
-Proof. 
-  intros. 
+Proof.
+  intros.
   eapply null_intersection_eq; destruct_IntMap.
   unfold IntMap.member in *.
   simpl in *.
@@ -332,7 +332,7 @@ Qed.
 This is a QuickChick setup to test the above axioms
 (as bugs easily lurk there).
 
-Unfortunately, we have to wait for 
+Unfortunately, we have to wait for
 https://github.com/QuickChick/QuickChick/issues/87
 to be fixed, as currently the programs that QuickChick extracts to
 test stuff do not compile...
@@ -343,16 +343,16 @@ Import GenLow GenHigh.
 From QuickChick Require Import Instances.
 Set Warnings "-extraction-opaque-accessed,-extraction".
 
-Global Instance genKey : GenSized IntMap.Key := 
+Global Instance genKey : GenSized IntMap.Key :=
   {| arbitrarySized n := fmap N.of_nat (arbitrarySized n) |}.
 
-Global Instance genIntMap {A} `{GenSized A} : GenSized (IntMap A) := 
+Global Instance genIntMap {A} `{GenSized A} : GenSized (IntMap A) :=
   {| arbitrarySized n := fmap IntMap.fromList (arbitrarySized n) |}.
 
-Global Instance shrinkIntMap {A} : Shrink (IntMap A) := 
+Global Instance shrinkIntMap {A} : Shrink (IntMap A) :=
   {| shrink := fun _ => nil |}.
 
-Global Instance shrinkKey : Shrink IntMap.Key := 
+Global Instance shrinkKey : Shrink IntMap.Key :=
   {| shrink := fun _ => nil |}.
 
 Global Instance showKey : Show IntMap.Key :=

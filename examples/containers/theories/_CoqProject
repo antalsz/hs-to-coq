@@ -21,7 +21,7 @@ SetProofs.v
 ./MapProofs/UnionIntersectDifferenceProofs.v
 ./MapProofs/ToListProofs.v
 ./MapProofs/FilterPartitionProofs.v
-./MapProofs/ContainerAxiomsProofs.v
+./MapProofs/ContainerFacts.v
 ./MapProofs/FromListProofs.v
 ./MapProofs/MapFunctionProofs.v
 ./MapProofs/TypeclassProofs.v

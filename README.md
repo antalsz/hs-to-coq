@@ -1,25 +1,32 @@
 # hs-to-coq
 
-[![Travis CI Build Status](https://travis-ci.org/antalsz/hs-to-coq.svg?branch=master)](https://travis-ci.org/antalsz/hs-to-coq)
+[![Travis CI Build
+Status](https://travis-ci.org/antalsz/hs-to-coq.svg?branch=master)](https://travis-ci.org/antalsz/hs-to-coq)
 
-This repository contains a converter from Haskell code to equivalent Coq code,
-as part of the [CoreSpec] component of the [DeepSpec] project.
+This repository contains a converter from Haskell code to equivalent
+Coq code, as part of the [CoreSpec] component of the [DeepSpec]
+project.
 
-CPP'18 paper [“Total Haskell is Reasonable Coq”](https://arxiv.org/abs/1711.09286) by
-Antal Spector-Zabusky, Joachim Breitner, Christine Rizkallah, and Stephanie
-Weirich. This paper describes the following examples:
+CPP'18 paper [“Total Haskell is Reasonable
+Coq”](https://arxiv.org/abs/1711.09286) by Antal Spector-Zabusky,
+Joachim Breitner, Christine Rizkallah, and Stephanie Weirich. This
+paper describes the following examples:
 
   * [bag](examples/bag) Multiset implementation from GHC's implemention
   * [compiler](examples/compiler) Hutton's razor
   * [base-src](examples/base-src) The sources of the `base/` directory
 
 
-ICFP'18 paper ["Ready, set, verify! applying hs-to-coq to real-world Haskell code (experience report)"](https://dl.acm.org/citation.cfm?id=3236784) by
-Joachim Breitner, Antal Spector-Zabusky, Yao Li, Christine Rizkallah, John Wiegley, and Stephanie Weirich.
-This paper describes the verification of the [containers](examples/containers) library.
+ICFP'18 paper ["Ready, set, verify! applying hs-to-coq to real-world
+Haskell code (experience
+report)"](https://dl.acm.org/citation.cfm?id=3236784) by Joachim
+Breitner, Antal Spector-Zabusky, Yao Li, Christine Rizkallah, John
+Wiegley, and Stephanie Weirich.  This paper describes the verification
+of the [containers](examples/containers) library.
 
 
-[**Documentation for the `hs-to-coq` tool is available!**](https://hs-to-coq.readthedocs.io/en/latest/)
+[**Documentation for the `hs-to-coq` tool is
+available!**](https://hs-to-coq.readthedocs.io/en/latest/)
 
 # Installation
 
@@ -119,8 +126,8 @@ for the edits files.
   * [base-src](examples/base-src) The sources of the `base/` directory
   * [tests](examples/tests) Simple unit-tests
   * [base-tests](examples/base-tests) Unit-tests that require `base/`
-	
-  
+
+
   Some examples use git submodule, so run
 
       git submodule update --init --recursive

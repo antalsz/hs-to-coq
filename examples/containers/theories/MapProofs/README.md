@@ -11,5 +11,21 @@ This README will give you a brief summary of what each file contains:
 * `LookupProofs.v` contains top-level theorems and proofs of operations
   `lookup`, `member`, `notMember`, `findWithDefault`, `lookupLT`, and
   `lookupLE`.
-* `InsertProofs.v` contain top-level theorems and proofs of operations `insert`,
-  `insertWith`, `insertWithKey`, `insertLookupWithKey`, and `insertR`.
+* `InsertProofs.v` contains top-level theorems and proofs of operations
+  `insert`, `insertWith`, `insertWithKey`, `insertLookupWithKey`, and `insertR`.
+* `MaxMinProofs.v` contains top-level theorems and proofs of operations
+  `maxViewSure`, `maxViewWithKey`, `maxView`, `minViewSure`, `minViewWithKey`,
+  `minView`, `lookupMaxSure`, `lookupMax`, `lookupMin`, and `lookupMinSure`.
+* `DeleteUpdateProofs.v` contains top-level theorems and proofs of operations
+  `glue`, `delete`, `deleteMin`, `deleteMax`, `adjustWithKey`, `adjust`,
+  `updateWithKey`, `update`, `updateLookupWithKey`, and `alter`.
+* `UnionIntersectDifferenceProofs.v` contains top-level theorems and proofs of
+  operations `split`, `splitLookup`, `splitMember`, `union`, `unions`,
+  `unionWith`, `unionWithKey`, `unionsWith`, `insertWithR`, `insertWithKeyR`,
+  `link2`, `intersection`, `intersectionWith`, `intersectionWithKey`, and
+  `difference`.
+* `ToListProofs.v` contains
+   - theorems and proofs of operations `foldrWithKey`, `foldr`, `foldr'`,
+     `foldlWithKey`, `foldl`, `foldl'`, `elems`, `keys`, `assoc`, `toDescList`,
+     `size`, and `(==)` and
+   - many theorems related to `toList`.

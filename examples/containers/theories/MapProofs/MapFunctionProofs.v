@@ -823,7 +823,7 @@ Proof.
   - inversion H. reflexivity.
 Qed.
 
-(** ** Verification of [mapEitherWithKey *)
+(** ** Verification of [mapEitherWithKey] *)
 Lemma mapEitherWithKey_Desc: forall {e a b c} `{OrdLaws e} (f: e -> a -> Data.Either.Either  b c)
   (m: Map e a) lb ub,
   Bounded m lb ub ->

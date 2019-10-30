@@ -12,7 +12,7 @@ Require Import MapProofs.MaxMinProofs.
 Require Import MapProofs.MapFunctionProofs.
 Require Import MapProofs.TypeclassProofs.
 Require Import MapProofs.ContainerFacts.
-(** * Instantiating the [FSetInterface] *)
+(** * Instantiating the [FMapInterface] *)
 
 Require Import Coq.FSets.FMapInterface.
 Require Import Coq.Structures.Equalities.

@@ -1,8 +1,8 @@
 This directory contains the specifications and proofs of [the translated Gallina
 code](../lib) of Haskell's `containers` library.
 
-We have formalized and proved a representative subset of three modules. They can
-be found in:
+We have formalized and proved a representative subset of three modules, namely, 
+`Data.Set`, `Data.IntSet`, and `Data.Map`. They can be found in:
 * `SetProofs.v` for `Data.Set` (this includes theorems for operations,
   type class laws, and Coq's finite set theorems),
 * `IntSetProofs.v` for `Data.IntSet` (this includes theorems for operations,

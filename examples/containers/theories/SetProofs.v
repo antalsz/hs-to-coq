@@ -13,6 +13,22 @@ Require Import SortedUtil.
 Require Import Coq.Classes.Morphisms. (* For [Proper] *)
 Set Bullet Behavior "Strict Subproofs".
 
+(** This file contains our specifications and proofs for [Data.Set]. The file
+consists of the following four parts:
+
+1. definitions, lemmas, and tactics for bounds ([Bound], [Bounded], etc.) and
+well-formedness ([Desc], [WF], etc.) of sets, (this part is from the beginning
+of the file until the lemma [Desc_WF'])
+
+2. theorems (including lemmas) of many operations of [Data.Set], (this part is
+from the theorem [null_spec] until the theorem [mapMonotonic_Desc])
+
+3. proofs that [Data.Set] satisfies certain type class properties, (this part
+can be found in section [TypeClassLaws])
+
+4, proofs that [Data.Set] satisfies Coq's [FSetInterface]. (this part can be
+found in module [SetFSet]).  *)
+
 
 (** ** Tactics for pointer equality *)
 

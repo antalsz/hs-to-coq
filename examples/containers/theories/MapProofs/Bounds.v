@@ -410,7 +410,8 @@ Proof.
     intuition try (congruence || lia).
 Qed.
 
-(** The main point of the balancing condition: Logarithmic height (Same as SetProofs)*)
+(** The main point of the balancing condition: Logarithmic height
+    (Same as SetProofs)*)
 
 Fixpoint height (s :Map e a) : Z := match s with
   | Tip => 0%Z

@@ -13,12 +13,15 @@ directories:
 * `theories` contains our specifications and proofs for `containers` library. A
   more detailed documentation about it can be found [here](theories/README.md).
 
-You do not need to compile the `hs-to-coq` tool to compile files in the above
-directories, but you will need Coq 8.8.1 and the ssreflect plugin.
+You can compile the files of the above two directories by running the `boot.sh`
+script in this directory (which will invoke `Make` for these two directories, as
+well as for their dependencies). You do not need to compile the `hs-to-coq` tool
+for this, but you will need Coq 8.8.1 and the ssreflect plugin.
 
 You can regenerate files in the `lib` directory yourself by running `make clean;
 make` from this directory (you will need to compile the `hs-to-coq` tool for
-doing that, for detailed instructions check [here](../../README.md)).
+doing that, for detailed instructions check [here](../../README.md)), or by
+running the `boot.sh` in the [examples](../) directory.
 
 Other notable components in this directories are:
 * the `edits` file and the `module-edits` directory (organized in the same

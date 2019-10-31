@@ -9,16 +9,18 @@ of the this library.
 The most important components of this work are in the `lib` and `theories`
 directories:
 * `lib` contains the pre-translated Coq representation of Haskell's `containers`
-  library. Running `make` from here will reproduce the exactly same translated
-  code in the `lib` directory, provided that you have the proper git submodule
-  downloaded.
+  library.
 * `theories` contains our specifications and proofs for `containers` library. A
   more detailed documentation about it can be found [here](theories/README.md).
 
 You do not need to compile the `hs-to-coq` tool to compile files in the above
 directories, but you will need Coq 8.8.1 and the ssreflect plugin.
 
-Other notable components:
+You can regenerate file in the `lib` directory yourself by running `make clean;
+make` from this directory (you will need to compile the `hs-to-coq` tool for
+doing that, for detailed instructions check [here](../../README.md)).
+
+Other notable components in this directories are:
 * the `edits` file and the `module-edits` directory (organized in the same
   structure as the `lib` directory) record all the edits we make for the
   translation.

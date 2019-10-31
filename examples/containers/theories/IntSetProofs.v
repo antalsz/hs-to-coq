@@ -17,6 +17,23 @@ Require Import DyadicIntervals.
 Require Import CustomTactics.
 Require Import OrdTactic.
 
+(** This file contains our specifications and proofs for [Data.IntSet]. The file
+consists of the following four parts:
+
+1. definitions, lemmas, and tactics for well-formedness ([Desc], [WF], etc.) of
+[IntSet]s, (this part is from the beginning of the file until the lemma
+[Sem_extensional])
+
+2. theorems (including lemmas) of many operations of [Data.IntSet], (this part
+is from the theorem [equal_spec] until the theorem [valid_correct])
+
+3. proofs that [Data.IntSet] satisfies certain type class properties, (this part
+is from [Eq_eq_IntSet] to [MonoidLaws_WFIntSet])
+
+4, proofs that [Data.IntSet] satisfies Coq's [FSetInterface]. (this part can be
+found in module [IntSetFSet]).  *)
+
+
 (** ** Utilities about sorted (specialized to [N.lt]) *)
 
 Require Import Coq.Lists.List.

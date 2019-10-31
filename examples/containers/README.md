@@ -16,7 +16,7 @@ directories:
 You do not need to compile the `hs-to-coq` tool to compile files in the above
 directories, but you will need Coq 8.8.1 and the ssreflect plugin.
 
-You can regenerate file in the `lib` directory yourself by running `make clean;
+You can regenerate files in the `lib` directory yourself by running `make clean;
 make` from this directory (you will need to compile the `hs-to-coq` tool for
 doing that, for detailed instructions check [here](../../README.md)).
 
@@ -24,7 +24,7 @@ Other notable components in this directories are:
 * the `edits` file and the `module-edits` directory (organized in the same
   structure as the `lib` directory) record all the edits we make for the
   translation.
-* `manual` contains all the manually translated modules.
+* `manual` contains all the manually translated modules,
 * `hs-spec` contains all the properties we translated from Haskell's
-  QuickCheck properties.
+  QuickCheck properties, and
 * `extraction` contains the extraction of our translation back to Haskell.

@@ -170,11 +170,11 @@ Definition natNodes (g : gr a b) := (BinInt.Z.abs_nat(Graph.noNodes g)).
 (*By the above lemma, we can simply define distance by repeatedly checking if there is a list with 
   the given distance*)
 Definition distance (g: gr a b) (u v : Node) : option nat :=
-  if (N.eq_dec u v) then (Some 0) else
+  if (N.eq_dec u v) then if vIn g v then (Some 0) else None else
   fold_right (fun x acc => if path_of_length g u v x then Some (x + 1) else acc) None (seq 0 (natNodes g + 1)).
 
 Lemma distance_none: forall g u v,
-  distance g u v = None <-> (forall l, path_list g u v l = false) /\ u <> v.
+  distance g u v = None <-> ((forall l, path_list g u v l = false) /\ u <> v) \/ vIn g v = false.
 Proof.
   intros.  assert (A: forall l, fold_right (fun (x : nat) (acc : option nat) => 
     if path_of_length g u v x then Some (x + 1) else acc) None l = None <->
@@ -185,7 +185,8 @@ Proof.
     specialize (H a0). rewrite H in Heqb0. inversion Heqb0. left. reflexivity.
     apply IHl. intros. apply H. right. assumption. } 
      split; intros.
-  - unfold distance in H. destruct (N.eq_dec u v). inversion H. split. intros. 
+  - unfold distance in H. destruct (N.eq_dec u v). destruct (vIn g v) eqn : ?. inversion H. right. reflexivity. 
+    left. split; intros.
     assert (forall x, In x (seq 0 (natNodes g + 1)) -> path_of_length g u v x = false). { intros.
     eapply A.  apply H. assumption. } clear H. clear A.
     destruct (path_list g u v l) eqn : P.
@@ -197,11 +198,12 @@ Proof.
       unfold nodeList. unfold ulabNodes. apply map_length. omega. 
       apply H0 in H3. rewrite H3 in H2. inversion H2.
     + reflexivity.
-    + assumption.
-  - unfold distance. destruct (N.eq_dec u v). subst. destruct H. contradiction.
+    + assumption. 
+  - unfold distance. destruct (N.eq_dec u v). destruct (vIn g v) eqn : V. subst. destruct H.
+    destruct H. contradiction. inversion H. reflexivity.
     apply A. intros. destruct (path_of_length g u v x) eqn : ?.
-    + apply path_of_length_implies_path in Heqb0. destruct Heqb0. destruct H1. destruct H. rewrite H in H1.
-      inversion H1.
+    + apply path_of_length_implies_path in Heqb0. destruct Heqb0. destruct H1. destruct H. destruct H. rewrite H in H1.
+      inversion H1. apply path_implies_in_graph in H1. destruct_all. rewrite H3 in H. inversion H.
     + reflexivity.
 Qed.
 
@@ -247,8 +249,8 @@ Qed.
 
 (*This actually computes the shortest path*)
 Lemma distance_some: forall g u v n,
-  distance g u v = Some n <->
-  ((u = v /\ n = 0)) \/ (n > 0 /\ u <> v /\ (exists l, path g u v l /\ length l = (n - 1)) /\ (forall l, length l < (n - 1) -> path_list g u v l = false)).
+  distance g u v = Some n <-> vIn g v = true /\
+  (((u = v /\ n = 0)) \/ (n > 0 /\ u <> v /\ (exists l, path g u v l /\ length l = (n - 1)) /\ (forall l, length l < (n - 1) -> path_list g u v l = false))).
 Proof.
   intros. 
   assert (forall l n, 
@@ -271,14 +273,15 @@ Proof.
       left. reflexivity.
     + destruct x. inversion H; subst. rewrite Heqb0 in H1. inversion H1.
       inversion H; subst. apply IHl. exists x. exists x0. simplify'. }
-   destruct (N.eq_dec u v).
-   - unfold distance. subst. destruct (N.eq_dec v v ). 
-    split; intros. inversion H0. subst. left. split; reflexivity. 
-   destruct H0. destruct H0; subst; reflexivity. destruct_all; contradiction. contradiction.
-  - split; intros. pose proof (distance_neq _ _ _ _ n0 H0). assert (exists m, m + 1 = n). {
+  destruct (vIn g v) eqn : ?.
+   destruct (N.eq_dec u v). 
+   - unfold distance. subst. destruct (N.eq_dec v v ). rewrite Heqb0. 
+    split; intros. inversion H0. subst. split. reflexivity. left. split; reflexivity. 
+   destruct H0. destruct H1; destruct_all; subst. reflexivity. contradiction.  contradiction.
+  - split; intros. split.  reflexivity.
+    pose proof (distance_neq _ _ _ _ n0 H0). assert (exists m, m + 1 = n). {
     exists (n - 1). omega. } destruct H2 as [m]. subst.
-    right. unfold distance in H0. destruct (N.eq_dec u v). inversion H0. 
-    rewrite <- H3 in H1. exfalso. omega.  
+    right. unfold distance in H0. destruct (N.eq_dec u v). subst. contradiction. 
     rewrite H in H0. destruct_all. clear H. split; try(assumption). split; try(assumption).
     apply path_of_length_implies_path in H3. split. setoid_rewrite path_list_equiv. 
     destruct  H3. destruct H. assert (length x1 = m \/ length x1 < m) by omega. destruct H4.
@@ -293,27 +296,34 @@ Proof.
     assert (In m (seq 0 (natNodes g + 1))). rewrite H0. solve_in. rewrite in_seq in H4.
     omega. } rewrite H0 in H4. apply seq_split in H0. 
     destruct H0. apply in_app_or in H4. destruct H4. 
-    destruct (path_list g u v l) eqn : ?. eapply path_of_size_implies_function in Heqb0.
-    rewrite (H2 (length l)) in Heqb0. inversion Heqb0.
+    destruct (path_list g u v l) eqn : ?. eapply path_of_size_implies_function in Heqb1.
+
+    rewrite (H2 (length l)) in Heqb1. inversion Heqb1.
     assumption. omega. reflexivity. simpl in H4. destruct H4. omega.
-    apply H5 in H4. omega. destruct H0. destruct H0; contradiction. destruct_all.
-    assert (exists m, m + 1 = n). exists (n-1). omega. destruct H5 as [m]. subst.
-    assert (length x = m ) by omega. clear H4. unfold distance. destruct (N.eq_dec u v). subst. contradiction.
+    apply H5 in H4. omega. destruct H0. destruct H1. destruct H1; contradiction. destruct_all.
+    assert (exists m, m + 1 = n). exists (n-1). omega. destruct H6 as [m]. subst.
+    assert (length x = m ) by omega. clear H5. unfold distance. destruct (N.eq_dec u v). subst. contradiction.
     clear n. rewrite H. 
-    assert (m <= (natNodes g)). { assert (m <= natNodes g \/ m > natNodes g) by omega. destruct H4.
-    assumption. rewrite path_list_equiv in H2. apply path_shorter_than_graph_size in H2.
-    destruct H2. destruct H2. rewrite H3 in H2. inversion H2. unfold nodeList in H6.
-    unfold ulabNodes in H6. rewrite map_length in H6. rewrite <- noNodes_def in H6.
-    unfold natNodes in H4. omega. }
+    assert (m <= (natNodes g)). { assert (m <= natNodes g \/ m > natNodes g) by omega. destruct H5.
+    assumption. rewrite path_list_equiv in H3. apply path_shorter_than_graph_size in H3.
+    destruct H3. destruct H3. rewrite H4 in H3. inversion H3. unfold nodeList in H7.
+    unfold ulabNodes in H7. rewrite map_length in H7. rewrite <- noNodes_def in H7.
+    unfold natNodes in H5. omega. }
     pose proof (in_split_app_fst _ (seq 0 (natNodes g + 1)) m Nat.eq_dec).
     assert (In m (seq 0 (natNodes g + 1))). rewrite in_seq. omega.
-    apply H6 in H7. clear H6. destruct_all. exists x0. exists x1. split. assumption.
-    apply seq_split in H6. split; intros.
-    destruct H6. destruct (path_of_length g u v y) eqn : ?.
-    apply path_of_length_implies_path in Heqb0. destruct Heqb0.
-    destruct H10. rewrite H3 in H10. inversion H10. apply H6 in H8. omega. reflexivity.
-    eapply path_of_size_implies_function. assert (length x <= m) by omega. apply H8.
+    apply H7 in H8. clear H7. destruct_all. exists x0. exists x1. split. assumption.
+    apply seq_split in H7. split; intros.
+    destruct H7. destruct (path_of_length g u v y) eqn : ?.
+    apply path_of_length_implies_path in Heqb1. destruct Heqb1.
+    destruct H11. rewrite H4 in H11. inversion H11. apply H7 in H9. omega. reflexivity.
+    eapply path_of_size_implies_function. assert (length x <= m) by omega. apply H9.
     rewrite <- path_list_equiv. assumption.
+  - split; intros. assert (A:=H0). unfold distance in H0. destruct (N.eq_dec u v). rewrite Heqb0 in H0. inversion H0.
+     assert (n > 0). eapply distance_neq.  apply n0. apply A. assert (exists m, n = m + 1).
+      destruct n. omega. exists n. omega. destruct H2. subst. rewrite H in H0. destruct_all.
+    apply path_of_length_implies_path in H3. destruct_all.
+     apply path_implies_in_graph in H3. destruct_all. rewrite H5 in Heqb0. inversion Heqb0.
+    destruct H0. inversion H0.
 Qed.
 
 (* Key property of shortest paths - if u -> v is a shortest path passing through w, 

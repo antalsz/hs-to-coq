@@ -40,6 +40,7 @@ Instance LPath__Default {a} : GHC.Err.Default (Data.Graph.Inductive.Graph.LPath 
 
 Instance Queue__Default {a} : GHC.Err.Default (Data.Graph.Inductive.Internal.Queue.Queue a) :=
   { default := Data.Graph.Inductive.Internal.Queue.MkQueue nil nil }.
+
 (* Converted value declarations: *)
 
 Definition suci {a} {b}

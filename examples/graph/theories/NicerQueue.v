@@ -1,9 +1,7 @@
 Require Import Data.Graph.Inductive.Internal.Queue.
 Require Import Coq.Lists.List.
 Require Import Foldable.
-Require Import Data.Graph.Inductive.Query.BFS.
 Require Import GHC.DeferredFix.
-Require Import Crush.
 Require Import Omega.
 
 Section Queue.
@@ -49,7 +47,9 @@ Qed.
 Lemma toList_queueEmpty: forall q, queueEmpty q = true <-> toList q = nil.
 Proof.
   intros. unfold queueEmpty. unfold_null. destruct q. unfold toList. destruct l; simpl.
-  destruct l0; crush. crush. destruct l0; try(inversion H). destruct (rev l); inversion H.
+  destruct l0. split; intros; reflexivity. split; intro H; inversion H.
+  split; intros H. inversion H. destruct l0. destruct (rev l).
+  simpl in H. inversion H. simpl in H. inversion H. simpl in H. inversion H. 
 Qed.
 
 (** ** Specification for QueueGet **)
@@ -69,9 +69,9 @@ Definition queue_order q1 q2 := queue_size' q1 < queue_size' q2.
 
 Lemma queue_order_wf': forall x, forall q, queue_size' q <= x -> Acc queue_order q.
 Proof.
-  intros. unfold queue_order. generalize dependent q. induction x; crush.
-  - apply Acc_intro. intros. assert (queue_size' y < 0) by omega. unfold queue_size' in H1. crush.
-  - intros. apply Acc_intro. intros. apply IHx.  omega.
+  intros. unfold queue_order. generalize dependent q. induction x; intros. 
+  - apply Acc_intro. intros. assert (queue_size' y < 0) by omega. omega.
+  - intros. apply Acc_intro. intros. apply IHx. omega.
 Defined.  
 
 Lemma queue_order_wf : well_founded queue_order.
@@ -94,18 +94,21 @@ Definition betterQueueGet (q: Queue a) (x : a) : (a * Queue a) :=
   | MkQueue _ _ => (x, MkQueue nil nil)
   end.
 
+Instance Queue__Default {a} : GHC.Err.Default (Data.Graph.Inductive.Internal.Queue.Queue a) :=
+  { default := Data.Graph.Inductive.Internal.Queue.MkQueue nil nil }.
+
 Lemma queueGet_def: forall q x `{Default a}, queueEmpty q = false -> queueGet q = betterQueueGet q x.
 Proof.
-  intros. unfold queueGet. unfold deferredFix1. destruct q. destruct l0. destruct l. simpl in H0. crush.
+  intros. unfold queueGet. unfold deferredFix1. destruct q. destruct l0. destruct l. simpl in H0. inversion H0. 
   - remember (MkQueue (a0 :: l) nil) as q. rewrite (deferredFix_eq_on _ (fun x => queueEmpty x = false) 
   (fun x y => queue_size' x < queue_size' y)).
     + rewrite Heqq. rewrite_rev. 
      rewrite (deferredFix_eq_on _ (fun x => queueEmpty x = false) 
   (fun x y => queue_size' x < queue_size' y)).
     * destruct (rev l) eqn : R. simpl. unfold betterQueueGet. simpl. rewrite R. simpl. reflexivity.
-      simpl. unfold betterQueueGet. crush.
+      simpl. unfold betterQueueGet. simpl. rewrite R. simpl. rewrite app_nil_r. reflexivity.
     * apply queue_order_wf.
-    * unfold recurses_on. intros. destruct x0. destruct l1. destruct l0. simpl in H1. crush.
+    * unfold recurses_on. intros. destruct x0. destruct l1. destruct l0. simpl in H1. inversion H1. 
       apply H2. simpl. rewrite_rev. unfold_null. 
       destruct (rev l0);  reflexivity.
       simpl. rewrite_rev. rewrite app_nil_r. rewrite app_length. simpl.  rewrite rev_length. omega. 

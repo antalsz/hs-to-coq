@@ -15,9 +15,6 @@ Require Import Path.
 Require Import Helper.
 Require Import Coq.FSets.FMapFacts.
 
-Require Import CoLoR.Util.Relation.Lexico.
-Require Import CoLoR.Util.Relation.SN.
-
 Require Import Coq.FSets.FMapList.
 Require Import Coq.FSets.FMapInterface.
 Require Import Coq.Structures.OrderedTypeEx.
@@ -26,26 +23,56 @@ Module M := FMapList.Make(N_as_OT).
 Module P := WProperties_fun N_as_OT M.
 Module F := P.F.
 
-(* Inductive relation*)
-Section Ind.
+Require Import Coq.Wellfounded.Lexicographic_Product.
+Require Import Relation_Operators.
 
-Context {a : Type} {b : Type} { gr : Type -> Type -> Type} {Hgraph : Graph.Graph gr} {Hlaw : Graph.LawfulGraph gr}.
 
+Definition compose A (R S : relation A) : relation A :=
+  fun x y => exists z, R x z /\ S z y.
+(*Heavily based on the Lex proofs from the CoLoR library. The main difference is that I need the 
+  first relation to be on the second type in the tuple because of the order of the arguments in the
+  Haskell functions*)
 Section Lex.
+  Variables (A B : Type) (ltA eqA : relation A) (ltB : relation B).
+  Inductive lex : relation (B * A) :=
+  | lex1 a a' b b' : ltA a a' -> lex (b,a) (b',a')
+  | lex2 a a' b b' : eqA a a' -> ltB b b' -> lex (b,a) (b',a').
+  Variables (WF_gtA : well_founded ltA) (WF_gtB : well_founded ltB)
+    (eqA_trans : Transitive eqA) (Hcomp : forall x y : A, (exists z : A, eqA y z /\ ltA x z) -> ltA x y)
+    (eqA_sym: Symmetric eqA).
+  
+   Lemma lex_Acc_eq : forall a b,
+    Acc lex (b,a) -> forall a', eqA a a' -> Acc lex (b,a').
 
-(*Well formed lexicographic measure*)
-Definition natNodes := (@Path.natNodes a b gr Hgraph).
+  Proof.
+    intros a b SN_ab a' eqaa'. inversion SN_ab. apply Acc_intro.
+    destruct y as (a'',b'). intro H'.
+    inversion H'; subst a'0 b'0 a0 b0; apply H.
+    apply lex1. apply Hcomp. exists a'. auto. 
+    apply lex2. assert (eqA a' b'). eapply eqA_sym. assumption. 
+    pose proof (eqA_trans _ _ _ eqaa' H0). apply eqA_sym. assumption. assumption.
+  Qed.
 
-Definition natNodes_lt (x y : gr a b) := natNodes x < natNodes y.
-Definition natNodes_eq (x y : gr a b) := natNodes x = natNodes y.
-Definition list_length_lt {a} (x y : list a) := length x < length y.
-Definition queue_length_lt  {a} (x y : Queue a) := list_length_lt (toList _ x) (toList _ y).
+  Lemma lex_Acc :
+    forall a, Acc ltA a -> forall b, Acc ltB b -> Acc lex (b, a).
 
-Definition bf_measure_list (a: Type) := 
-  transp (lex (transp natNodes_lt) natNodes_eq (transp  (@list_length_lt a))).
+  Proof.
+    induction 1 as [a Ha1 Ha2]. induction 1 as [b Hb1 Hb2]. apply Acc_intro.
+    destruct y as (a'',b'). intro H. inversion H. subst a'' b'0. subst a0. subst a'. (* subst a'' b'0 a0 b0.*)
+    (* gtA a a' *)
+    apply Ha2. exact H1. apply WF_gtB. 
+    (* eqA a a' /\ gtB b b' *)
+    apply (@lex_Acc_eq a).
+    apply Hb2. assumption. apply eqA_sym. assumption.
+  Qed.
 
-Definition bf_measure_queue (a: Type) :=
-  transp (lex (transp natNodes_lt) natNodes_eq (transp (@queue_length_lt a))).
+  Lemma WF_lex : well_founded lex.
+
+  Proof.
+    unfold well_founded. destruct a as (a,b). apply lex_Acc. apply WF_gtA. apply WF_gtB.
+  Qed.
+
+End Lex.
 
 Definition f_nat_lt {a} (f: a -> nat) x y := f x < f y.
 
@@ -61,43 +88,67 @@ Proof.
   red. intro. intro. intro. eapply f_nat_lt_acc. eauto.
 Qed.
 
-Lemma wf_bf_measure_list : forall a,  WF (transp (bf_measure_list a)).
+(* Inductive relation*)
+Section Ind.
+
+
+Context {a : Type} {b : Type} { gr : Type -> Type -> Type} {Hgraph : Graph.Graph gr} {Hlaw : Graph.LawfulGraph gr}.
+
+(*Well formed lexicographic measure*)
+Definition natNodes := (@Path.natNodes a b gr Hgraph).
+
+Definition natNodes_lt (x y : gr a b) := natNodes x < natNodes y.
+
+Definition natNodes_eq (x y : gr a b) := natNodes x = natNodes y.
+Definition list_length_lt {a} (x y : list a) := length x < length y.
+Definition queue_length_lt  {a} (x y : Queue a) := list_length_lt (toList _ x) (toList _ y).
+(*
+Definition bf_measure_list (A: Type) :=
+  symprod  (@list_length_lt A) (natNodes_lt).
+
+Definition bf_measure_queue (A: Type) :=
+  symprod (@queue_length_lt A) (natNodes_lt).
+*)
+
+Definition bf_measure_list (a: Type) := 
+  lex _ _ (natNodes_lt) natNodes_eq ((@list_length_lt a)).
+
+
+Definition bf_measure_queue (a: Type) :=
+  lex _ _ (natNodes_lt) natNodes_eq (@queue_length_lt a).
+(*
+Lemma wf_bf_measure_list: forall a, well_founded (bf_measure_list a).
+Proof.
+  intros. apply wf_symprod; apply f_nat_lt_wf.
+Qed.
+
+Lemma wf_bf_measure_queue: forall a, well_founded (bf_measure_queue a).
+Proof.
+  intros. apply wf_symprod; apply f_nat_lt_wf.
+Qed.
+*)
+
+Lemma well_founded_bf_measure_list : forall a,  well_founded (bf_measure_list a).
 Proof.
   intros. eapply WF_lex.
-  - apply wf_transp_WF. unfold transp. 
-    pose proof (f_nat_lt_wf (natNodes)). unfold f_nat_lt in H. unfold natNodes_lt. apply H.
-  - apply wf_transp_WF. unfold transp.
-    pose proof (f_nat_lt_wf (@length a0)). unfold f_nat_lt in H. unfold natNodes_lt. apply H.
-  - unfold Transitive. intros. unfold natNodes_eq in *. omega.
-  - unfold inclusion. unfold RelUtil.compose. intros.
-    unfold transp in *. unfold natNodes_lt in *. unfold natNodes_eq in *. destruct H. omega.
-Qed.
+  - apply f_nat_lt_wf.
+  - apply f_nat_lt_wf.
+  - unfold Transitive. intros. unfold natNodes_eq in *; omega.
+  - intros. unfold natNodes_eq in *. unfold natNodes_lt in *. destruct H. destruct H.
+    omega.
+  - unfold Symmetric. intros. unfold natNodes_eq in *. omega.
+Qed. 
 
-Lemma well_founded_bf_measure_list: forall a, well_founded (bf_measure_list a).
-Proof. 
-  intros.
-  apply WF_transp_wf. apply wf_bf_measure_list.
-Qed.
-
-Lemma wf_bf_measure_queue : forall a, WF (transp (bf_measure_queue a)).
+Lemma well_founded_bf_measure_queue : forall a,  well_founded (bf_measure_queue a).
 Proof.
-  intros.
-  eapply WF_lex.
-  - apply wf_transp_WF. unfold transp. 
-    pose proof (f_nat_lt_wf (natNodes)). unfold f_nat_lt in H. unfold natNodes_lt. apply H.
-  - apply wf_transp_WF. unfold transp.
-    pose proof (f_nat_lt_wf (fun x => length (toList a0 x))). unfold f_nat_lt in H. unfold queue_length_lt.
-    unfold list_length_lt. apply H.
-  - unfold Transitive. intros. unfold natNodes_eq in *. omega.
-  - unfold inclusion. unfold RelUtil.compose. intros.
-    unfold transp in *. unfold natNodes_lt in *. unfold natNodes_eq in *. destruct H. omega.
-Qed.
-
-Lemma well_founded_bf_measure_queue: forall a, well_founded (bf_measure_queue a).
-Proof.
-  intros.
-  apply WF_transp_wf. apply wf_bf_measure_queue.
-Qed.
+  intros. eapply WF_lex.
+  - apply f_nat_lt_wf.
+  - apply f_nat_lt_wf.
+  - unfold Transitive. intros. unfold natNodes_eq in *; omega.
+  - intros. unfold natNodes_eq in *. unfold natNodes_lt in *. destruct H. destruct H.
+    omega.
+  - unfold Symmetric. intros. unfold natNodes_eq in *. omega.
+Qed. 
 
 (*A few properties of this relation*)
 Lemma measure_trans: forall {a} x y z,
@@ -105,11 +156,11 @@ Lemma measure_trans: forall {a} x y z,
   bf_measure_list a y z ->
   bf_measure_list a x z.
 Proof.
-  intros. unfold bf_measure_list in *. unfold transp in *.
+  intros. unfold bf_measure_list in *.
   inversion H; subst.
   - inversion H0; subst.
     + apply lex1. unfold natNodes_lt in *. omega.
-    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H5. omega.
+    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H4. omega.
   - inversion H0; subst.
     + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H1. omega.
     + apply lex2. unfold natNodes_eq in *. omega. unfold list_length_lt in *. omega.
@@ -119,7 +170,7 @@ Lemma measure_antisym: forall {a} x y,
   bf_measure_list a x y ->
   ~bf_measure_list a y x.
 Proof.
-  intros. intro. unfold bf_measure_list in *. unfold transp in *.
+  intros. intro. unfold bf_measure_list in *. 
   inversion H; inversion H0; subst; unfold natNodes_lt in *; unfold natNodes_eq in *.
   - inversion H5; subst. inversion H6; subst. omega.
   - inversion H6; subst. inversion H7; subst. omega.
@@ -131,11 +182,9 @@ Qed.
 Lemma measure_antirefl: forall {a} x,
   ~bf_measure_list a x x.
 Proof.
-  intros. intro. inversion H; subst; unfold transp in *; unfold natNodes_lt in *; unfold list_length_lt in *; try(omega).
+  intros. intro. inversion H; subst; unfold natNodes_lt in *; unfold list_length_lt in *; try(omega).
 Qed.
 
-
-End Lex.
 
 (*We define an equivalent version of BFS that is tail recursive and consists of a series of states
   that step to each other. This way, we can reason about the specific states of the algorithm. A state
@@ -235,7 +284,7 @@ Proof.
   unfold WellFounded. apply well_founded_bf_measure_list.
 Defined.
 
-Equations bfs_tail (s: state) : state by wf (get_graph s, get_queue s) (bf_measure_list (Node * Num.Int)) :=
+Equations bfs_tail (s: state) : state by wf (get_queue s, get_graph s) (bf_measure_list (Node * Num.Int)) :=
   bfs_tail (g, nil, x) => (g, nil, x);
   bfs_tail (g, (v, j) :: vs, d) => if (isEmpty g) then  (g, (v, j) :: vs, d) else
       match (match_ v g) as y return ((match_ v g = y) -> _) with
@@ -244,10 +293,10 @@ Equations bfs_tail (s: state) : state by wf (get_graph s, get_queue s) (bf_measu
       | (None, g') => fun H: (match_ v g) = (None, g') => bfs_tail (g', vs, d)
       end (eq_refl).
 Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
+unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
 Defined.
 Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
+unfold bf_measure_list. apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply H. unfold list_length_lt.
 simpl. omega.
 Defined.
 
@@ -288,39 +337,45 @@ Qed.
   done state. We will later prove that all valid done states are equivalent, so we can prove claims about bfs_tail
   by considering valid done states in general*)
 
+Definition tup_rev {A B : Type} (x: a * b) := (snd x, fst x).
+
 Lemma bfs_tail_multi: forall s,
   bfs_multi s (bfs_tail s).
 Proof.
-  intros. destruct s as[r d]. 
-  generalize dependent d.
-   induction (r) using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
-  intros.
-  destruct r as [g q]. rewrite unfold_bfs_tail. simpl. destruct q eqn : Q.
+  intros. destruct s as[r d].
+  remember (snd r, fst r) as r'. generalize dependent r. revert d. 
+  induction (r') using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
+  intros. destruct r' as [q g]. inversion Heqr'; subst. clear Heqr'. destruct r as [g q].
+  rewrite unfold_bfs_tail. simpl. destruct q eqn : Q.
   - apply multi_refl.
   - destruct p as [v j]. destruct (isEmpty g) eqn : E.
     + apply multi_refl.
-    + destruct (match_ v g) eqn : M. destruct m eqn : M'.
-      *  eapply multi_step. apply bfs_find. assumption. apply M. apply H. unfold bf_measure_list.
-         unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply M.
-      * eapply multi_step. apply bfs_skip. assumption. apply M. apply H. unfold bf_measure_list.
-        unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size; eassumption.
-        unfold list_length_lt. simpl. omega.
-Qed.  
+    + destruct (match_ v g) eqn : M.  destruct m eqn : M'.
+      *  eapply multi_step. apply bfs_find. assumption. apply M. eapply H. unfold bf_measure_list.
+         apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply M. simpl. reflexivity.
+      * eapply multi_step. apply bfs_skip. assumption. apply M. eapply H. unfold bf_measure_list.
+        apply lex2. unfold natNodes_eq. assert (g = g0) by (eapply match_remain_none; apply M).
+        subst. eapply match_none_size. simpl.  apply M. 
+        unfold list_length_lt. simpl. assert (length l < S(length l)) by omega. apply H0. simpl. 
+        assert (g = g0) by (eapply match_remain_none; apply M). subst. reflexivity.
+Qed.
 
 Lemma bfs_tail_done: forall s,
   done (bfs_tail s) = true.
 Proof.
   intros. unfold done. destruct s as [r d].
-  generalize dependent d.  
-   induction (r) using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
-  intros.
+  remember (snd r, fst r) as r'. generalize dependent r. revert d. 
+  induction (r') using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
+  intros. destruct r'. inversion Heqr'. subst. clear Heqr'.
   destruct r as [g q]. rewrite unfold_bfs_tail. simpl. destruct q eqn : Q.
   - simpl. reflexivity.
   - destruct p. simpl. destruct (isEmpty g) eqn : G. simpl. assumption.
     destruct (match_ n g) eqn : M. destruct m; simpl.
-    apply H. unfold bf_measure_list. unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size;
-    symmetry; eassumption. apply H. unfold bf_measure_list. unfold transp. apply lex2.
-    unfold natNodes_eq. eapply match_none_size. eassumption. unfold list_length_lt. simpl. omega.
+    eapply H. unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size;
+    symmetry; apply M. simpl. reflexivity. assert (g = g0) by (eapply match_remain_none; apply M). subst.
+    eapply H. unfold bf_measure_list. apply lex2.
+    unfold natNodes_eq. eapply match_none_size. simpl. apply M.  unfold list_length_lt. simpl.
+    assert (length l < S(length l)) by omega. apply H0. simpl. reflexivity.
 Qed. 
 
 End Exec.
@@ -332,18 +387,18 @@ Section Multi.
 (*if we step from s to s', s' < s*)
 Lemma measure_step: forall s s',
   bfs_step s s' ->
-  bf_measure_list (Node * Num.Int) (get_graph s', get_queue s') (get_graph s, get_queue s) .
+  bf_measure_list (Node * Num.Int) (get_queue s', get_graph s') (get_queue s, get_graph s) .
 Proof.
   intros. unfold bf_measure_list. unfold transp. inversion H; subst; simpl in *.
   - apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H1.
-  - apply lex2. unfold natNodes_eq. eapply match_none_size. apply H1.  unfold list_length_lt.
+  - apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply H1.  unfold list_length_lt.
 simpl. omega.
 Qed.
 
 (*The same for multistep*)
 Lemma measure_multi: forall s s',
   bfs_multi s s' ->
-  s = s' \/ bf_measure_list (Node * Num.Int) (get_graph s', get_queue s') (get_graph s, get_queue s) .
+  s = s' \/ bf_measure_list (Node * Num.Int) (get_queue s', get_graph s') (get_queue s, get_graph s) .
 Proof.
   intros. induction H.
   - left. reflexivity.
@@ -354,11 +409,11 @@ Qed.
 (*If s multisteps to s', s and s' are equal exactly when s < s' and s' < s are both false*)
 Lemma multistep_eq_measure: forall s s',
   bfs_multi s s' ->
-  (s = s') <-> (~bf_measure_list _ (get_graph s', get_queue s') (get_graph s, get_queue s) /\
-  ~bf_measure_list (Node * Num.Int) (get_graph s, get_queue s) (get_graph s', get_queue s')). 
+  (s = s') <-> (~bf_measure_list _ (get_queue s', get_graph s') (get_queue s, get_graph s) /\
+  ~bf_measure_list (Node * Num.Int) (get_queue s, get_graph s) (get_queue s', get_graph s')). 
 Proof.
   intros. split. intros. subst. split; intro;
-  pose proof (measure_antirefl (get_graph s', get_queue s')); contradiction. intros.
+  pose proof (measure_antirefl (get_queue s', get_graph s')); contradiction. intros.
   destruct H0. apply measure_multi in H. destruct H. subst. reflexivity. contradiction.
 Qed. 
 
@@ -438,15 +493,16 @@ Qed.
 (*A state is done if for every valid state s', s' < s is false*)
 Lemma measure_done: forall s g v,
   valid s g v ->
-  done s = true <-> (forall s', valid s' g v -> ~bf_measure_list _(get_graph s', get_queue s') (get_graph s, get_queue s)).
+  done s = true <-> 
+  (forall s', valid s' g v -> ~bf_measure_list _(get_queue s', get_graph s') (get_queue s, get_graph s)).
 Proof.
   intros. split; intros.
   - intro. pose proof (valid_multi _ _ _ _ H H1). destruct H3.
-    + inversion H3. subst. pose proof (measure_antirefl (get_graph s', get_queue s')).
+    + inversion H3. subst. pose proof (measure_antirefl (get_queue s', get_graph s')).
       contradiction. subst. pose proof (done_cannot_step _ _ _ H H0).
       apply H6. exists y. assumption.
     + apply measure_multi in H3. destruct H3. subst.
-      pose proof (measure_antirefl (get_graph s, get_queue s)).
+      pose proof (measure_antirefl (get_queue s, get_graph s)).
       contradiction. pose proof (measure_antisym _ _ H2). contradiction.
   - destruct (done s) eqn : D.
     + reflexivity.
@@ -459,8 +515,8 @@ Qed.
 Lemma measure_unique: forall s g v s',
   valid s g v ->
   valid s' g v ->
-  ~bf_measure_list _(get_graph s', get_queue s') (get_graph s, get_queue s) ->
-  ~bf_measure_list _(get_graph s, get_queue s) (get_graph s', get_queue s') ->
+  ~bf_measure_list _(get_queue s', get_graph s') (get_queue s, get_graph s) ->
+  ~bf_measure_list _(get_queue s, get_graph s) (get_queue s', get_graph s') ->
   s = s'.
 Proof.
   intros. pose proof (valid_multi _ _ _ _ H H0). destruct H3.
@@ -477,9 +533,9 @@ Lemma done_unique: forall s g v s',
   done s' = true ->
   s = s'.
 Proof.
-  intros. assert (forall s', valid s' g v -> ~bf_measure_list _(get_graph s', get_queue s') (get_graph s, get_queue s)).
+  intros. assert (forall s', valid s' g v -> ~bf_measure_list _(get_queue s', get_graph s') (get_queue s, get_graph s)).
   eapply measure_done. assumption. assumption.
-  assert (forall s'', valid s'' g v -> ~bf_measure_list _(get_graph s'', get_queue s'') (get_graph s', get_queue s')).
+  assert (forall s'', valid s'' g v -> ~bf_measure_list _(get_queue s'', get_graph s'') (get_queue s', get_graph s')).
   eapply measure_done. assumption. assumption.
   eapply measure_unique. apply H. apply H0. apply H3. apply H0.
   apply H4. apply H.
@@ -506,21 +562,21 @@ Qed.
 Lemma bfs_step_measure_exact: forall s s' g v,
   valid s g v ->
   bfs_step s s' ->
-  (forall x, valid x g v -> ~ (bf_measure_list _ (get_graph x, get_queue x) (get_graph s, get_queue s) /\
-  bf_measure_list _ (get_graph s', get_queue s') (get_graph x, get_queue x))).
+  (forall x, valid x g v -> ~ (bf_measure_list _ (get_queue x, get_graph x) (get_queue s, get_graph s) /\
+  bf_measure_list _ (get_queue s', get_graph s') (get_queue x, get_graph x))).
 Proof.
   intros. intro. destruct H2.
   assert (valid s' g v). eapply v_step. apply H. assumption.
   pose proof (valid_multi _ _ _ _ H H1). destruct H5.
-  inversion H5. subst. pose proof (measure_antirefl (get_graph x, get_queue x)). contradiction.
+  inversion H5. subst. pose proof (measure_antirefl (get_queue x, get_graph x)). contradiction.
   subst. assert (y = s'). eapply bfs_step_deterministic. apply H6. assumption. subst.
   eapply measure_multi in H7. destruct H7. subst. 
-  pose proof (measure_antirefl (get_graph x, get_queue x)). contradiction.
-  pose proof (measure_antisym (get_graph x, get_queue x) (get_graph s', get_queue s')).
+  pose proof (measure_antirefl (get_queue x, get_graph x)). contradiction.
+  pose proof (measure_antisym (get_queue x, get_graph x) (get_queue s', get_graph s')).
   apply H8 in H7. contradiction.
   apply measure_multi in H5. destruct H5. subst.
-  pose proof (measure_antirefl (get_graph s, get_queue s)). contradiction.
-  pose proof (measure_antisym (get_graph x, get_queue x) (get_graph s, get_queue s)).
+  pose proof (measure_antirefl (get_queue s, get_graph s)). contradiction.
+  pose proof (measure_antisym (get_queue x, get_graph x) (get_queue s, get_graph s)).
   apply H6 in H2. contradiction.
 Qed.
 
@@ -536,23 +592,23 @@ Proof.
   destruct H3.
   - apply multistep_eq_measure. apply H3.
     apply measure_multi in H3. destruct H3. subst.
-    split; intro; pose proof (measure_antirefl (get_graph s', get_queue s')); contradiction.
+    split; intro; pose proof (measure_antirefl (get_queue s', get_graph s')); contradiction.
     assert (S1 := H1). assert (S2 := H2).
     apply measure_step in H1. apply measure_step in H2. split.
     exfalso. pose proof (bfs_step_measure_exact _ _ _ _ H S1).
     specialize (H4 s' H0). apply H4. split; assumption.
     intro.
-    pose proof (measure_antisym (get_graph s, get_queue s) (get_graph s', get_queue s')).
+    pose proof (measure_antisym (get_queue s, get_graph s) (get_queue s', get_graph s')).
     apply H5 in H4. contradiction.
   - symmetry. apply multistep_eq_measure. apply H3.
     apply measure_multi in H3. destruct H3. subst.
-    split; intro; pose proof (measure_antirefl (get_graph s, get_queue s)); contradiction.
+    split; intro; pose proof (measure_antirefl (get_queue s, get_graph s)); contradiction.
     assert (S1 := H1). assert (S2 := H2).
     apply measure_step in H1. apply measure_step in H2. split.
     exfalso. pose proof (bfs_step_measure_exact _ _ _ _ H0 S2).
     specialize (H4 s H). apply H4. split; assumption.
     intro.
-    pose proof (measure_antisym (get_graph s, get_queue s) (get_graph s', get_queue s')).
+    pose proof (measure_antisym (get_queue s, get_graph s) (get_queue s', get_graph s')).
     apply H5 in H3. contradiction.
 Qed.
 
@@ -728,12 +784,12 @@ Proof.
     destruct (distance g s v) eqn : D.
     + destruct (distance g s u) eqn : D'.
       * simpl. rewrite Nat.leb_le. unfold distance in D'. 
-        rewrite distance_some in D'. destruct D'. destruct_all; subst.
+        rewrite distance_some in D'. destruct D' as [A]. destruct H3. destruct_all; subst.
         assert (path g u v nil). constructor. assumption.
-        unfold distance in D. rewrite distance_some in D. destruct D. destruct_all; subst; omega.
+        unfold distance in D. rewrite distance_some in D. destruct D as [L]. destruct H4. destruct_all; subst; omega.
         destruct_all. simpl. assert (n > 1 \/ n <= 1) by omega. destruct H9. rewrite path_list_equiv in H3. rewrite H7 in H3. inversion H3.
         simpl. omega. assumption.
-        destruct_all. unfold distance in D. rewrite distance_some in D. destruct D. destruct_all. subst.
+        destruct_all. unfold distance in D. rewrite distance_some in D. destruct D as [L]. destruct H8. destruct_all. subst.
         omega. destruct_all.  
         assert (n<= n0 + 1 \/ n > n0 + 1) by omega. destruct H13. assumption.
         rewrite path_list_equiv in H5.
@@ -748,15 +804,17 @@ Proof.
         rewrite H11 in H16. inversion H16. simpl. omega.
       * simpl. reflexivity.
     + simpl. unfold distance in D. rewrite distance_none in D.
-      rewrite path_list_equiv in H2. destruct D. rewrite H3 in H2. inversion H2.
+      rewrite path_list_equiv in H2. destruct D. destruct H3. rewrite H3 in H2. inversion H2.
+      apply path_implies_in_graph in H2. destruct_all. rewrite H4 in H3. inversion H3.
   - destruct (N.eq_dec s u). subst. unfold distance at 2. unfold Path.distance. destruct (N.eq_dec u u).
     simpl. destruct (distance g u v) eqn : ?. unfold distance in Heqo. rewrite distance_some in Heqo.
-    destruct Heqo; destruct_all; subst. reflexivity. 
+    destruct Heqo. destruct H2; destruct_all; subst. rewrite H1. simpl. reflexivity. 
     assert (path_list g u v nil = true). simpl. assumption. assert (n0 - 1 = 0 \/ n0 - 1 > 0) by omega.
-    destruct H7. assert (n0 = 0 \/ n0 = 1) by omega. destruct H8; subst; reflexivity.
-    rewrite H4 in H6. inversion H6. simpl. omega. unfold distance in Heqo. rewrite distance_none in Heqo.
-    destruct Heqo. specialize (H1 nil). simpl in H1. rewrite H1 in H. inversion H. contradiction.
-    assert (distance g s u = None). { unfold distance. rewrite distance_none. split. intros. 
+    destruct H8. assert (n0 = 0 \/ n0 = 1) by omega. rewrite H0. destruct H9; subst; reflexivity.
+    rewrite H5 in H7. inversion H7. simpl. omega. unfold distance in Heqo. rewrite distance_none in Heqo.
+    destruct Heqo. destruct H1. specialize (H1 nil). simpl in H1. rewrite H1 in H. inversion H.
+    apply edges_valid in H. destruct H. rewrite H2 in H1. inversion H1. contradiction.
+    assert (distance g s u = None). { unfold distance. rewrite distance_none. left. split. intros. 
     destruct (path_list g s u l) eqn : ?. exfalso. apply n. exists l; rewrite path_list_equiv; assumption.
     reflexivity. assumption. } rewrite H1. simpl. destruct (distance g s v) eqn : D'; reflexivity.
 Qed.
@@ -894,7 +952,7 @@ Lemma queue_upper_bound: forall s g v v' d,
 Proof.
   intros. generalize dependent v'. generalize dependent d. induction H; intros.
   - unfold start in *; simpl in *. destruct H0. inversion H0; subst.
-    simpl. unfold distance. unfold Path.distance. destruct (N.eq_dec v' v'). reflexivity. contradiction.
+    simpl. unfold distance. unfold Path.distance. destruct (N.eq_dec v' v'). rewrite H. reflexivity. contradiction.
     destruct H0. 
   - inversion H0; subst; simpl in *.
     + apply in_app_or in H1. destruct H1. apply IHvalid. right. assumption.
@@ -1526,13 +1584,13 @@ Proof.
     destruct (Nat.eq_dec n n'). subst. reflexivity. rewrite Nat.leb_le in H2.
     assert (n < n') by omega. clear n0. clear H2.
     (*It cannot be the start node*)
-    destruct (N.eq_dec v v'). subst. unfold distance in D. rewrite distance_some in D.
+    destruct (N.eq_dec v v'). subst. unfold distance in D. rewrite distance_some in D. destruct D as [JO D].
     destruct D. destruct H2. subst. pose proof (start_0_dist _ _ _ H).
     assert (In (v', 0%Z) (get_dists s)). apply H4. intro. rewrite H5 in D'. destruct D'.
     assert (Z.of_nat n' = 0%Z). eapply NoDup_pairs. apply   (no_dups_output _ _ _ H).
     apply D'. assumption. assert (n' = 0) by omega. subst. omega. destruct_all. contradiction.
     (*Get predecessor on shortest path*)
-    assert (P := D). unfold distance in P. rewrite distance_some in P. destruct P. destruct H2.
+    assert (P := D). unfold distance in P. rewrite distance_some in P. destruct P as [JO P]. destruct P. destruct H2.
     subst. contradiction. destruct H2. destruct H4. destruct H5.
     destruct H5 as [l]. destruct H5. destruct l as [| w l]. simpl in H7.
     inversion H5. subst.
@@ -1558,7 +1616,7 @@ Proof.
     inversion H5; subst.
     assert (vIn g v = true). eapply valid_in. apply H.
     destruct (distance g v w) as [nw|] eqn : DW . unfold distance in DW. assert (E := DW).
-    rewrite distance_some in DW. simpl in H7. destruct DW. destruct H9. symmetry in H9. subst.
+    rewrite distance_some in DW. simpl in H7. destruct DW as [JO' DW]. destruct DW. destruct H9. symmetry in H9. subst.
     assert (path_list g v v' nil = true). simpl. assumption. rewrite H6 in H9. inversion H9.
     simpl. omega. assert (nw + 1 = n). { destruct_all.
     pose proof (shortest_path_transitive g v v' (w :: l) w x nil). simpl in H16.
@@ -1641,10 +1699,11 @@ Proof.
     assert (i = Z.of_nat n'). eapply NoDup_pairs. eapply no_dups_output.
     apply H. apply H25. assumption. subst. omega. apply H.
     (*The hard part is over!*)
-    unfold distance in DW. rewrite distance_none in DW. destruct DW. rewrite path_list_equiv in H13.
-    rewrite H9 in H13. inversion H13. apply H.
+    unfold distance in DW. rewrite distance_none in DW. destruct DW. destruct H9. rewrite path_list_equiv in H13.
+    rewrite H9 in H13. inversion H13. apply path_list_equiv in H13. apply path_implies_in_graph in H13. destruct_all.
+    rewrite H9 in H11. inversion H11. apply H.
     rewrite find_dist_not in D'. unfold distance in D. rewrite distance_some in D.
-    destruct D. destruct_all. subst. exfalso. apply (D' 0%Z). eapply start_0_dist.
+    destruct D as [JO D]. destruct D. destruct_all. subst. exfalso. apply (D' 0%Z). eapply start_0_dist.
     apply H. intro. rewrite dists_nil_iff_start in H2. 
     assert (done s = false). rewrite H2. apply done_not_start .  apply H1.
     rewrite H3 in H0. inversion H0. assumption. destruct_all.
@@ -1657,129 +1716,57 @@ Proof.
     unfold distance in D. rewrite distance_none in D.
     destruct H2. apply contrapositive in H2. rewrite find_dist_not. intros.
     intro. apply H2. rewrite in_map_iff. exists (v', y). simpl. split. reflexivity.
-    assumption. intro. destruct H4. subst. destruct_all; contradiction.
-    destruct H4. destruct D. rewrite path_list_equiv in H4. rewrite H5 in H4. inversion H4.
+    assumption. intro. destruct H4. subst. destruct D. destruct_all; contradiction.
+    rewrite H4 in H1. inversion H1.
+    destruct H4. destruct D. destruct H5. rewrite path_list_equiv in H4. rewrite H5 in H4. inversion H4.
+    apply path_list_equiv in H4. apply path_implies_in_graph in H4. destruct_all. rewrite H5 in H6. inversion H6.
 Qed. 
 End Correctness.
 
 Section Equiv.
 
-(*TODO: Fix this*)
-
-(*
-
-(*Let's try it*)
-Equations bfs_queue (s: state) : state by wf (get_graph s, get_queue s) (bf_measure_list (Node * Num.Int)) :=
-  bfs_queue (g, nil, x, go) => (g, nil, x, go);
-  bfs_queue (g, (v, j) :: vs, d, go) => if (isEmpty g) then (g, (v,j) :: vs, d, go) else
-    match (match_ v g) as y return ((match_ v g = y) -> _) with
-      | (Some c, g') => fun H: (match_ v g) = (Some c, g') => 
-        bfs_queue (g', (vs ++ (filter (fun x => if (in_dec N.eq_dec (fst x) (map fst ((v,j) :: vs))) then false else true)
-       (suci c (Num.op_zp__ j (Num.fromInteger 1))))), d ++ (v,j) :: nil, go)
-      | (None, g') => fun H: (match_ v g) = (None, g') => bfs_queue (g', vs, d, go)
-      end (eq_refl).
-
-Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
-Defined.
-Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
-simpl. omega.
-Defined.
-
-Definition expand_bfs_queue := 
-fun s : gr a b * list (Node * Num.Int) * list (Node * Num.Int) * gr a b =>
-let (p, g) := s in
-(let (p0, l) := p in
- fun g0 : gr a b =>
- (let (g1, l0) := p0 in
-  fun (l1 : list (Node * Num.Int)) (g2 : gr a b) =>
-  match l0 with
-  | nil => fun (l2 : list (Node * Num.Int)) (g3 : gr a b) => (g1, nil, l2, g3)
-  | p1 :: l2 =>
-      fun (l3 : list (Node * Num.Int)) (g3 : gr a b) =>
-      (let (n, i) := p1 in
-       fun (l4 l5 : list (Node * Num.Int)) (g4 : gr a b) =>
-       if isEmpty g1
-       then (g1, (n, i) :: l4, l5, g4)
-       else
-        (let
-           (m, g') as y
-            return (match_ n g1 = y -> gr a b * list (Node * Num.Int) * list (Node * Num.Int) * gr a b) :=
-           match_ n g1 in
-         match
-           m as m0
-           return (match_ n g1 = (m0, g') -> gr a b * list (Node * Num.Int) * list (Node * Num.Int) * gr a b)
-         with
-         | Some c =>
-             fun _ : match_ n g1 = (Some c, g') =>
-             bfs_queue
-               (g',
-               l4 ++
-               filter
-                 (fun x : N * Num.Int =>
-                  if in_dec N.eq_dec (fst x) (map fst ((n, i) :: l4)) then false else true)
-                 (suci c (Num.op_zp__ i (Num.fromInteger 1))), l5 ++ (n, i) :: nil, g4)
-         | None => fun _ : match_ n g1 = (None, g') => bfs_queue (g', l4, l5, g4)
-         end) eq_refl) l2 l3 g3
-  end l1 g2) l g0) g.
-
-Lemma unfold_bfs_queue: forall s,
-  bfs_queue s = expand_bfs_queue s.
+Instance need_this_for_equations' : WellFounded (bf_measure_list (Node * Num.Int)).
 Proof.
-  intros. unfold expand_bfs_queue. apply bfs_queue_elim; intros; reflexivity.
-Qed.
-
-(*Let's see...*)
-
-(*Show that if s --> done state, and steps to another, then unique*)
-(*show that every done, valid state is unique*)
-(*Then, show that every state multisteps to a done, valid state (done)*)
-(*So, then show that if we take a state, remove duplicates from its queue, then it multisteps to a valid done state*)
-
-Lemma done_cannot_step: forall s s',
-  bfs_step s s' ->
-  done s = false.
-Proof.
-  intros. unfold done. inversion H; subst; simpl; assumption.
-Qed.
-
+  unfold WellFounded. apply well_founded_bf_measure_list.
+Defined.
 
 (*Equivalence of 2 versions - TODO: prove leveln and leveln' equivalent (proof is basically what I did before*)
-Equations leveln' (x: (gr a b) * (list (Node * Num.Int))) : list (Node * Num.Int) by wf x (bf_measure_list (Node * Num.Int)) :=
-  leveln' (g, nil) := nil;
-  leveln' (g, (v,j) :: vs) := if (isEmpty g) then nil else
+Equations leveln' (x: (list (Node * Num.Int) * (gr a b))) : list (Node * Num.Int) by wf x (bf_measure_list (Node * Num.Int)) :=
+  leveln' (nil, g) := nil;
+  leveln' ((v,j) :: vs, g) := if (isEmpty g) then nil else
                                 match (match_ v g) as y return ((match_ v g = y) -> _ ) with
-                                | (Some c, g') => fun H : (match_ v g) = (Some c, g') => (v,j) :: leveln' (g', (vs ++ suci c (Num.op_zp__ j (Num.fromInteger 1))))
-                                | (None, g') => fun H: (match_ v g) = (None, g') => leveln' (g', vs)
+                                | (Some c, g') => fun H : (match_ v g) = (Some c, g') => (v,j) :: leveln' ( (vs ++ suci c (Num.op_zp__ j (Num.fromInteger 1))), g')
+                                | (None, g') => fun H: (match_ v g) = (None, g') => leveln' (vs, g')
                                  end (eq_refl).
 Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
+unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
 Defined.
 Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
+unfold bf_measure_list. apply lex2. symmetry. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
 simpl. omega.
 Defined.
 
+
 Definition expand_leveln' := 
-fun x : gr a b * list (Node * Num.Int) =>
-let (g, l) := x in
+fun x : list (Node * Num.Int) * gr a b =>
+let (l, g) := x in
 match l with
-| nil => nil
+| nil => fun _ : gr a b => nil
 | p :: l0 =>
+    fun g0 : gr a b =>
     (let (n, i) := p in
-     fun l1 : list (Node * Num.Int) =>
-     if isEmpty g
+     fun (l1 : list (Node * Num.Int)) (g1 : gr a b) =>
+     if isEmpty g1
      then nil
      else
-      (let (m, g') as y return (match_ n g = y -> list (Node * Num.Int)) := match_ n g in
-       match m as m0 return (match_ n g = (m0, g') -> list (Node * Num.Int)) with
+      (let (m, g') as y return (match_ n g1 = y -> list (Node * Num.Int)) := match_ n g1 in
+       match m as m0 return (match_ n g1 = (m0, g') -> list (Node * Num.Int)) with
        | Some c =>
-           fun _ : match_ n g = (Some c, g') =>
-           (n, i) :: leveln' (g', l1 ++ suci c (Num.op_zp__ i (Num.fromInteger 1)))
-       | None => fun _ : match_ n g = (None, g') => leveln' (g', l1)
-       end) eq_refl) l0
-end.
+           fun _ : match_ n g1 = (Some c, g') =>
+           (n, i) :: leveln' (l1 ++ suci c (Num.op_zp__ i (Num.fromInteger 1)), g')
+       | None => fun _ : match_ n g1 = (None, g') => leveln' (l1, g')
+       end) eq_refl) l0 g0
+end g.
 
 Lemma unfold_leveln': forall x,
   leveln' x = expand_leveln' x.
@@ -1787,211 +1774,114 @@ Proof.
   intros. unfold expand_leveln'. apply leveln'_elim. reflexivity. reflexivity.
 Qed.
 
-Lemma leveln_tail_equiv: forall x l go,
-  get_dists (bfs_tail (x, l, go)) = l ++ leveln' x.
+Lemma leveln_leveln'_equiv: forall g q,
+  leveln' (q, g) = leveln q g.
 Proof.
-  intros x. 
-  induction (x) using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
-  intros. rewrite unfold_leveln'. rewrite unfold_bfs_tail. simpl. unfold expand_leveln'.
+  intros. remember (q, g) as x. generalize dependent q. revert g. 
+  induction (x) as [y IH] using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
+  intros. destruct y. inversion Heqx; subst. clear Heqx. unfold leveln.
+  rewrite unfold_leveln'. simpl. 
+   unfold deferredFix2 in *. unfold curry in *.
+  rewrite (deferredFix_eq_on _ (fun x => True) ( (bf_measure_list (_)) )).
+  - simpl. destruct q eqn : Q.  
+    + reflexivity.
+    + simpl. destruct p. 
+      destruct (isEmpty g) eqn : GE. reflexivity. 
+      destruct (match_ n g) eqn : M. unfold leveln in IH. unfold deferredFix2 in IH. unfold curry in IH. destruct m.
+      *  erewrite IH.
+        reflexivity. unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size.
+        symmetry. apply M. reflexivity.
+      * erewrite IH. reflexivity. unfold bf_measure_list. apply lex2. unfold natNodes_eq.
+        symmetry. eapply match_none_size. apply M. unfold list_length_lt. simpl. omega. reflexivity.
+  - eapply well_founded_bf_measure_list.
+  - unfold recurses_on. intros. unfold uncurry. destruct x. destruct l eqn : ?. reflexivity. 
+    destruct (isEmpty g1) eqn : ?. reflexivity. simpl. destruct p. 
+    destruct (match_ n g1) eqn : ?. destruct m. rewrite H0. reflexivity. apply I.
+    unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply Heqd.
+    rewrite H0. reflexivity. apply I. apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size.
+    apply Heqd. unfold list_length_lt. simpl. omega.
+  - apply I.
+Qed. 
+
+Lemma leveln_tail_equiv: forall x l,
+  get_dists (bfs_tail (x, l)) = l ++ leveln' (snd x, fst x).
+Proof.
+  intros x. remember (snd x, fst x) as x'. generalize dependent x.
+  induction (x') using (well_founded_induction (well_founded_bf_measure_list (Node * Num.Int))).
+  intros. destruct x'; inversion Heqx'; subst; clear Heqx'.
+  rewrite unfold_leveln'. rewrite unfold_bfs_tail. simpl.  (* unfold expand_leveln'. *)
   destruct x as [g q]. simpl. destruct q eqn : Q.
   - simpl. rewrite app_nil_r. reflexivity.
   - destruct p as [v j]. destruct (isEmpty g) eqn : G. 
     + simpl. rewrite app_nil_r. reflexivity.
     + destruct (match_ v g) eqn : M. destruct m.
-      * remember (g0, l0 ++ suci c (j + 1)%Z) as x. rewrite H. rewrite <- app_assoc. simpl.
-        reflexivity. unfold bf_measure_list.  unfold transp. simpl. destruct x. apply lex1.
+      * remember (g0, l0 ++ suci c (j + 1)%Z) as x. erewrite H. rewrite <- app_assoc. simpl.
+        reflexivity. unfold bf_measure_list. simpl. destruct x. apply lex1.
         unfold natNodes_lt. eapply match_decr_size. symmetry. inversion Heqx; subst. apply M.
-      * rewrite H. reflexivity. unfold bf_measure_list. unfold transp. apply lex2.
-        unfold natNodes_eq. eapply match_none_size. apply M. unfold list_length_lt. simpl. omega.
+        destruct x. inversion Heqx; subst. simpl. reflexivity.
+      * erewrite H. reflexivity. unfold bf_measure_list.  apply lex2.
+        unfold natNodes_eq. symmetry. eapply match_none_size. apply M. unfold list_length_lt. simpl. omega.
+        simpl. reflexivity.
 Qed. 
 
-(*Need to wait until I prove equivalence of leveln and leveln', but easy from there*)
+(** Correctness of [level] **)
+
+
+(*The Haskell level function (the actual BFS function) is equivalent to running bfs_tail from the start
+  state and getting the distances. Now we get correctness from the previous proven results*)
 Theorem level_tail_equiv: forall v g,
   get_dists (bfs_tail (start g v)) = level v g.
 Proof.
-Abort.
-
-End Equiv.
-
-(*BFS with paths - come back to this*)
-
-Section WithPath.
-
-Instance also_need_this_for_equations : WellFounded (bf_measure_list (Path)).
-Proof.
-  unfold WellFounded. apply well_founded_bf_measure_list.
-Defined.
-
-Equations bf_list (x : (gr a b) * (list Path)) : RootPath.RTree by wf x (bf_measure_list Path) :=
-  bf_list (g, nil) := nil;
-  bf_list (g, (nil :: q')) := if (isEmpty g) then nil else GHC.Err.patternFailure;
-  bf_list (g, ((v :: t) :: q')) := let p:= v :: t in  if (isEmpty g) then nil else
-      match (match_ v g) as y return ((match_ v g = y) -> _) with
-                        | (Some c, g') => fun H : (match_ v g) = (Some c, g') => p :: (bf_list (g', (q' ++ map (fun x => x :: p)  (suc' c))))
-                        | (None, g') => fun H : (match_ v g) = (None, g') => ( bf_list (g', q'))
-                        end (eq_refl)
-
-  
-.
-Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
-Defined.
-Next Obligation.
-unfold bf_measure_list. unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size. apply H.
-unfold list_length_lt. simpl. omega.
-Defined.
-
-
-
-
-(*NOTE: need to resolve this, working with this for now bc of issue with lazy evaluation vs strict*)
-(*TODO: Add to midable before I resolve the issue with hs-toc-qo*)
-(*only difference is that we check if the queue is empty BEFORE calling queueGet*)
-(*
-Definition bf_strict : Queue Path -> gr a b -> RootPath.RTree :=
-deferredFix2
-  (fun (bf : Queue Path -> gr a b -> list Path) (q : Queue Path) (g : gr a b) =>
-   if queueEmpty q || isEmpty g : bool
-       then nil else 
-   let (p, q') := queueGet q in
-   match p with
-   | nil => patternFailure
-   | v :: _ =>
-        let (m, g') := match_ v g in
-        match m with
-        | Some c => p :: bf (queuePutList (Base.map (fun arg_2__ : Node => arg_2__ :: p) (suc' c)) q') g'
-        | None => bf q' g'
-        end
-   end).
-*)
-
-(*TODO: NOTE: I changed the order ot the arguments to make the proofs MUCH easier (lex requires that
-  graph comes first, and I can use the same well-founded proof for both*)
-(*
-Definition flip {a} {b} (x: a * b) : b * a :=
-  match x with
-  | (y, z) => (z, y)
-  end.
-
-Lemma wf_flip: forall {a b : Type} (f: (a * b) -> (a * b) -> Prop),
-  well_founded f -> well_founded (fun x y => f (flip x) (flip y)).
-Proof.
-  intros. unfold well_founded in *. intros. 
-  apply Acc_intro. intros. specialize (H (flip y) (flip a1)). specialize (H (flip y)).
-*)
-
-Definition bf_strict' :  gr a b -> Queue Path -> RootPath.RTree :=
-deferredFix2
-  (fun (bf : gr a b ->  Queue Path ->  list Path)  (g : gr a b) (q : Queue Path) =>
-   if queueEmpty q || isEmpty g : bool
-       then nil else 
-   let (p, q') := queueGet q in
-   match p with
-   | nil => patternFailure
-   | v :: _ =>
-        let (m, g') := match_ v g in
-        match m with
-        | Some c => p :: bf g' (queuePutList (Base.map (fun arg_2__ : Node => arg_2__ :: p) (suc' c)) q')
-        | None => bf g' q'
-        end
-   end).
-
-
-(*test*)
-Definition bf_list_unfold' := 
-fun x : gr a b * list Path =>
-let (g, l) := x in
-match l with
-| nil => nil
-| p :: l0 =>
-    match p with
-    | nil => fun _ : list Path => if isEmpty g then nil else patternFailure
-    | n :: l1 =>
-        fun l2 : list Path =>
-        if isEmpty g
-        then nil
-        else
-         (let (m, g') as y return (match_ n g = y -> list (list Node)) := match_ n g in
-          match m as m0 return (match_ n g = (m0, g') -> list (list Node)) with
-          | Some c =>
-              fun _ : match_ n g = (Some c, g') =>
-              (n :: l1) :: bf_list (g', l2 ++ map (fun x0 : Node => x0 :: n :: l1) (suc' c))
-          | None => fun _ : match_ n g = (None, g') => bf_list (g', l2)
-          end) eq_refl
-    end l0
-end.
-
-Lemma bf_list_unfold'_equiv: forall x,
-  bf_list_unfold' x = bf_list x.
-Proof.
-  intros. unfold bf_list_unfold'. apply bf_list_elim; try(reflexivity).
+  intros. unfold level. rewrite <- leveln_leveln'_equiv.
+  rewrite leveln_tail_equiv. simpl. reflexivity.
 Qed.
 
-Lemma bf_list_equiv: forall (x: (gr a b) * (Queue Path)), 
-  bf_strict'  (fst x) (snd x) = bf_list ((fst x), (toList _ (snd x))).
+Lemma level_invalid: forall v (g: gr a b),
+  vIn g v = false ->
+  level v g = nil.
 Proof.
-  intros. unfold bf_strict'. rewrite <- bf_list_unfold'_equiv. simpl.
-  induction (x) as [y IH] using (well_founded_induction (well_founded_bf_measure_queue (Path))). 
-  destruct y as [g q]. simpl. unfold deferredFix2 in *. unfold curry in *.
-  rewrite (deferredFix_eq_on _ (fun x => True) ( (bf_measure_queue (Path)) )).
-  - simpl. destruct (toList _ q) eqn : Q.  
-    + simpl. assert (queueEmpty q = true). rewrite toList_queueEmpty. assumption. rewrite H.
-      simpl. reflexivity.
-    + simpl. assert (queueEmpty q = false). destruct (queueEmpty q) eqn : ?. rewrite toList_queueEmpty in Heqb0.
-      rewrite Heqb0 in Q. inversion Q. reflexivity. rewrite H. simpl.
-      destruct (isEmpty g) eqn : GE. destruct p; reflexivity.
-      destruct (queueGet q) eqn : QG.
-      pose proof (toList_queueGet _ _ _ _ Q). rewrite QG in H0. simpl in H0. destruct H0; subst.
-      destruct p. reflexivity. destruct (match_ n g) eqn : M. destruct m.
-      * specialize (IH (g0, 
-        queuePutList (Base.map (fun arg_2__ : Node => arg_2__ :: n :: p) (suc' c)) q0)). simpl in IH.
-        rewrite IH. simpl. rewrite <- bf_list_unfold'_equiv. simpl.
-        rewrite toList_queuePutList. reflexivity.
-        unfold bf_measure_queue. unfold transp. apply lex1. unfold natNodes_lt. eapply match_decr_size.
-        symmetry. apply M.
-      * specialize (IH (g0, q0)). rewrite IH. simpl. rewrite <- bf_list_unfold'_equiv. simpl.
-        reflexivity. unfold bf_measure_queue. unfold transp. apply lex2. unfold natNodes_eq.
-        eapply match_none_size. apply M. unfold queue_length_lt. unfold list_length_lt.
-        rewrite Q. simpl. omega.
-  -  eapply well_founded_bf_measure_queue.
-  - unfold recurses_on. intros. unfold uncurry. destruct x. destruct (queueEmpty q0) eqn : ?.
-    reflexivity. destruct (isEmpty g1) eqn : ?. reflexivity. simpl. destruct (queueGet q0) eqn : ?.
-    destruct p. reflexivity. destruct (match_ n g1) eqn : ?. destruct m.
-    rewrite H0. reflexivity. apply I. unfold bf_measure_queue. unfold transp. apply lex1.
-    unfold natNodes_lt. eapply match_decr_size. symmetry. apply Heqd. apply H0. apply I.
-    unfold bf_measure_queue. unfold transp. apply lex2. unfold natNodes_eq. eapply match_none_size.
-    apply Heqd. unfold queue_length_lt. unfold list_length_lt. 
-    destruct (toList Path q0) eqn : ?. rewrite <- toList_queueEmpty in Heql. rewrite Heql in Heqb0.
-    inversion Heqb0. eapply toList_queueGet in Heql. rewrite Heqp in Heql. simpl in Heql. destruct Heql; subst.
-    simpl. omega.
-  - apply I.
-Qed.
-
-(*Finally, the result we want (mostly - TODO NEED to figure out order stuff*)
-Lemma bf_list_equiv': forall (g: gr a b) (q: Queue Path),
-  bf_strict' g q = bf_list (g,(toList _ q)).
-Proof.
-  intros. pose proof (bf_list_equiv (g, q)). simpl in H. assumption.
+  intros. unfold level. rewrite <- leveln_leveln'_equiv. simpl. rewrite unfold_leveln'. simpl.
+  destruct (isEmpty g). reflexivity. destruct (match_ v g) eqn : M. destruct m.
+  - assert (vIn g v = true). rewrite <- match_in. exists c. exists g0. assumption. rewrite H0 in H. inversion H.
+  - rewrite unfold_leveln'. simpl. reflexivity.
 Qed. 
 
-
-(*probably dont need this*)
-Lemma bf_list_unroll: forall (g: gr a b) (l: list Path) n p t,
-  l = (n :: p) :: t ->
-  vIn g n = false ->
-  bf_list (g, l) = bf_list (g, t).
+(*[level], when run from a vertex v (not necessarily in the graph), produces a list of the shortest distances from v to v' for
+  each v' that is reachable from v. Note that this also implies that a vertex is in this list iff it is
+  reachable from v.*)
+Theorem level_finds_shortest_path: forall v g v',
+  find_dist_list (level v g) v' = distance g v v'.
 Proof.
-  intros. rewrite <- bf_list_unfold'_equiv at 1. simpl.
-  rewrite H. destruct (isEmpty g) eqn : G.
-  rewrite <- bf_list_unfold'_equiv. simpl. destruct t. reflexivity.
-  destruct l0. rewrite G. reflexivity. rewrite G. reflexivity.
-  destruct (match_ n g) eqn : M. destruct m.
-  - pose proof (match_in g n). destruct H1. apply contrapositive in H1.
-    exfalso. apply H1. exists c. exists g0. assumption. intro. rewrite H3 in H0. inversion H0.
-  - pose proof (match_remain_none g n g0 M). subst. reflexivity.
-Qed.
+  intros. 
+  destruct (vIn g v) eqn : H.
+  rewrite <- level_tail_equiv.
+  destruct (vIn g v') eqn : D.
+  - pose proof bfs_tail_correct. unfold find_dist in H0. apply H0. eapply multi_valid.
+    apply v_start. assumption. eapply bfs_tail_multi. eapply bfs_tail_done. assumption.
+  - destruct (distance g v v') eqn : ?.
+    + unfold distance in Heqo. rewrite distance_some in Heqo. destruct Heqo. rewrite D in H0. inversion H0.
+    + pose proof find_dist_not. unfold find_dist in H0. rewrite H0. clear H0. intro. intro.
+      pose proof output_iff_reachable. assert (In v' (map fst (get_dists (bfs_tail (start g v))))).
+      rewrite in_map_iff. exists (v',y). split;simpl. reflexivity. assumption.
+      specialize (H1 (bfs_tail (start g v)) g v v'). rewrite H1 in H2. clear H1.
+      destruct H2. subst. rewrite D in H. inversion H.  destruct H1. apply path_list_equiv in H1.
+      apply path_implies_in_graph in H1. destruct_all. rewrite H2 in D. inversion D.
+      eapply multi_valid. apply v_start. assumption. apply bfs_tail_multi. apply bfs_tail_done.
+  - rewrite level_invalid. simpl. unfold distance. symmetry. rewrite distance_none. destruct (N.eq_dec v v').
+    subst. right. assumption. left. split. intro. destruct (path_list g v v' l) eqn : ?.
+    apply path_implies_in_graph in Heqb0. destruct_all. rewrite H0 in H. inversion H. reflexivity. assumption.
+    assumption.
+Qed. 
 
-End WithPath.
-*)
+(*The resulting list is sorted by shortest path distance*)
+Theorem level_sorted_by_dist: forall v (g: gr a b),
+  Sorted Z.le (map snd (level v g)).
+Proof.
+  intros. destruct (vIn g v) eqn : ?.  rewrite <- level_tail_equiv.
+  eapply dists_sorted. eapply multi_valid. 
+  apply v_start. apply Heqb0. apply bfs_tail_multi. rewrite level_invalid. simpl. constructor.
+  assumption.
+Qed.
+ 
 End Equiv.
 End Ind. 

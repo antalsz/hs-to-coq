@@ -1,0 +1,9 @@
+-Q . Proofs
+-Q ../../wc/lib ""
+-R ../../../base ""
+-Q ../../../base-thy  Proofs
+-Q ../../transformers/lib ""
+-Q ../../containers/lib ""
+-Q ../../containers/theories ""
+-arg -w -arg -masking-absolute-name
+Proofs.v

@@ -1,0 +1,21 @@
+skip module GHC.IO.IOMode
+skip module GHC.IO.Device
+skip module GHC.IO.Handle
+skip module GHC.IO.Handle.FD
+skip module System.IO
+skip module GHC.Conc.Sync
+
+rename type Data.ByteString.Lazy.Internal.ByteString = MultiCore.ByteString
+
+
+rename type GHC.Types.IO = GHC.Base.IO
+rename value System.IO.putStrLn = MultiCore.putStrLn
+rename value GHC.Con.Syn.numCapabilities = MultiCore.numCapabilities
+rename value System.Posix.Files.getFileStatus = MultiCore.getFileStatus
+rename value System.Posix.Files.Common.fileSize = MultiCore.fileSize
+import module Types
+
+import module GHC.Conc.Sync
+axiomatize definition MultiCore.forConcurrently 
+
+import module IO

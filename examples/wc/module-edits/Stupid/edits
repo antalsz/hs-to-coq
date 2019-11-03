@@ -1,0 +1,9 @@
+import module Types
+import module Data.Foldable
+import module Data.Traversable
+import module Data.Functor
+
+
+# Need System.IO.readFile and GHC.Types.IO
+#
+skip Stupid.stupid

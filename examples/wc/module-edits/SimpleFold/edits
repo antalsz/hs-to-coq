@@ -1,0 +1,9 @@
+import module Control.Monad
+import module Control.Arrow
+import module Data.Traversable
+import module Data.Foldable
+import module Types
+import module GHC.Unicode
+
+skip SimpleFold.simpleFold
+

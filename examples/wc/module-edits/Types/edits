@@ -1,0 +1,4 @@
+add Types Axiom Types.newline : GHC.Char.Char.
+
+order Types.Semigroup__Flux Types.Monoid__Flux_mappend
+order Types.Semigroup__Counts Types.Monoid__Counts_mappend Types.countByteUTF8 

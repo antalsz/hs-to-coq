@@ -1,0 +1,72 @@
+#
+# prelude
+#
+import module GHC.Base
+import module GHC.Char
+import module GHC.Num
+import module GHC.Real
+import module GHC.Show
+import module GHC.Enum
+import module Data.Functor
+import module Data.Foldable
+import module Data.Traversable
+import module Control.Monad
+
+rewrite forall , GHC.Char.hs_char__ = Types.newline
+
+# 
+# ByteString, use axiomatized library
+#
+
+rename type Data.ByteString.Lazy.Char8.ByteString = BL.ByteString
+rename value Data.ByteString.Lazy.Char8.foldl' = BL.foldl'
+rename value Data.ByteString.Char8.foldl' = BL.foldl'
+
+rename type Data.ByteString.Lazy.Internal.ByteString = BL.ByteString
+rename value Data.ByteString.Lazy.take = BL.take
+rename value Data.ByteString.Lazy.hGetContents = BL.hGetContents
+rename value Data.ByteString.Lazy.readFile = BL.readFile
+
+rename type Data.ByteString.Internal.ByteString = BL.ByteString
+rename value Data.ByteString.Internal.c2w = BL.c2w
+rename value Data.ByteString.Internal.isSpaceChar8 = BL.isSpaceChar8
+rename value Data.ByteString.readFile = BL.readFile
+
+
+#
+# IO
+#
+rename type GHC.Types.IO = GHC.Base.IO
+rename type GHC.IO.Handle.Handle = IO.Handle
+
+rename type System.Posix.Files.FileStatus = IO.FileStatus
+rename value System.Posix.Files.getFileStatus = IO.getFileStatus
+rename value GHC.IO.Handle.FD.openBinaryFile = IO.openBinaryFile
+
+rename value GHC.IO.IOMode.ReadMode = IO.ReadMode
+rename value GHC.IO.Device.AbsoluteSeek = IO.AbsoluteSeek
+rename value GHC.IO.Handle.hSeek = IO.hSeek
+
+rename value GHC.Base.putStrLn = IO.putStrLn
+
+
+#
+# punning
+#
+rename value Types.Pair = Types.Mk_Pair
+rename value Types.Flux = Types.Mk_Flux
+rename value Types.Counts = Types.Mk_Counts
+
+
+#
+#
+#
+# skip MonoidBSFold.monoidBSFold
+# skip InlinedMonoidBSFold.inlinedMonoidBSFold
+# skip InlinedBSFold.inlinedBSFold
+# skip Lazy.lazyBytestream
+# skip LazyUTFAgnostic.lazyUTF8
+# skip SimpleBSFold.simpleBSFold
+# skip Strict.strictBytestream
+
+#

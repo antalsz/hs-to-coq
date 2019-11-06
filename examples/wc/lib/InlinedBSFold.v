@@ -1,0 +1,1 @@
+../manual/InlinedBSFold.v

@@ -1,0 +1,10 @@
+#avoid use of repeat by using Coq's repeat instead - this is safe because we are zipping the two lists, only need up to length l1 elements of l2
+in Data.Graph.Inductive.Query.BFS.suci rewrite forall c i, GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (GHC.List.repeat i) = GHC.List.zip (Data.Graph.Inductive.Graph.suc' c) (repeat i (BinInt.Z.to_nat(GHC.List.length (Data.Graph.Inductive.Graph.suc' c))))
+
+
+#termination arguments - this turns out to be more difficult, since either the graph decreases in size or the queue decreases. We will use a well founded relation and unfold the deferredFix (TODO: maybe change)
+termination Data.Graph.Inductive.Query.BFS.leveln       deferred
+termination Data.Graph.Inductive.Query.BFS.lbf 			deferred
+termination Data.Graph.Inductive.Query.BFS.bfsnInternal deferred
+termination Data.Graph.Inductive.Query.BFS.bfenInternal deferred
+termination Data.Graph.Inductive.Query.BFS.bf           deferred

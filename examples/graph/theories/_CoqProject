@@ -4,5 +4,7 @@
 -Q ../../graph/lib ""
 -Q ../../containers/lib ""
 Crush.v
+Helper.v
 NicerQueue.v
+Path.v
 BFSProofs.v

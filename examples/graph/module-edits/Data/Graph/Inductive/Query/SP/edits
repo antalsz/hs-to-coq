@@ -1,0 +1,3 @@
+set type Data.Graph.Inductive.Query.SP.dijkstra: forall {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)} `{(GHC.Real.Real b)} `{(Err.Default b)}, (Data.Graph.Inductive.Internal.Heap.Heap b (Data.Graph.Inductive.Graph.LPath b)) -> ((gr a b) -> (Data.Graph.Inductive.Internal.RootPath.LRTree b))
+
+termination Data.Graph.Inductive.Query.SP.dijkstra      deferred

@@ -63,9 +63,9 @@ Defined.
 (* Converted imports: *)
 
 Require Coq.Init.Datatypes.
-Require GHC.Base.
+Require Import GHC.Base.
+Require GHC.Err.
 Require GHC.Num.
-Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
@@ -120,17 +120,17 @@ Definition zip {a} {b} : list a -> list b -> list (a * b)%type :=
 
 Definition unzip3 {a} {b} {c}
    : list (a * b * c)%type -> (list a * list b * list c)%type :=
-  GHC.Base.foldr (fun arg_0__ arg_1__ =>
-                    match arg_0__, arg_1__ with
-                    | pair (pair a b) c, pair (pair as_ bs) cs =>
-                        pair (pair (cons a as_) (cons b bs)) (cons c cs)
-                    end) (pair (pair nil nil) nil).
+  foldr (fun arg_0__ arg_1__ =>
+           match arg_0__, arg_1__ with
+           | pair (pair a b) c, pair (pair as_ bs) cs =>
+               pair (pair (cons a as_) (cons b bs)) (cons c cs)
+           end) (pair (pair nil nil) nil).
 
 Definition unzip {a} {b} : list (a * b)%type -> (list a * list b)%type :=
-  GHC.Base.foldr (fun arg_0__ arg_1__ =>
-                    match arg_0__, arg_1__ with
-                    | pair a b, pair as_ bs => pair (cons a as_) (cons b bs)
-                    end) (pair nil nil).
+  foldr (fun arg_0__ arg_1__ =>
+           match arg_0__, arg_1__ with
+           | pair a b, pair as_ bs => pair (cons a as_) (cons b bs)
+           end) (pair nil nil).
 
 Definition uncons {a} : list a -> option (a * list a)%type :=
   fun arg_0__ =>
@@ -155,11 +155,11 @@ Definition takeFB {a} {b}
   fun c n x xs =>
     fun m =>
       let 'num_0__ := m in
-      if num_0__ GHC.Base.== #1 : bool then c x n else
+      if num_0__ == #1 : bool then c x n else
       c x (xs (m GHC.Num.- #1)).
 
 Definition sum {a} `{(GHC.Num.Num a)} : list a -> a :=
-  GHC.Base.foldl _GHC.Num.+_ #0.
+  foldl _GHC.Num.+_ #0.
 
 Definition strictUncurryScanr {a} {b} {c}
    : (a -> b -> c) -> (a * b)%type -> c :=
@@ -181,6 +181,19 @@ Definition scanrFB {a} {b} {c}
       match arg_0__, arg_1__ with
       | x, pair r est => pair (f x r) (c r est)
       end.
+
+Definition scanr1 {a} `{_ : GHC.Err.Default a}
+   : (a -> a -> a) -> list a -> list a :=
+  fix scanr1 (arg_0__ : a -> a -> a) (arg_1__ : list a) : list a
+        := match arg_0__, arg_1__ with
+           | _, nil => nil
+           | _, cons x nil => cons x nil
+           | f, cons x xs =>
+               match scanr1 f xs with
+               | (cons q _ as qs) => cons (f x q) qs
+               | _ => GHC.Err.patternFailure
+               end
+           end.
 
 Definition scanlFB' {b} {a} {c}
    : (b -> a -> b) -> (b -> c -> c) -> a -> (b -> c) -> b -> c :=
@@ -225,10 +238,15 @@ Definition reverse {a} : list a -> list a :=
     rev l nil.
 
 Definition product {a} `{(GHC.Num.Num a)} : list a -> a :=
-  GHC.Base.foldl _GHC.Num.*_ #1.
+  foldl _GHC.Num.*_ #1.
 
-Definition prel_list_str : GHC.Base.String :=
+Definition prel_list_str : String :=
   GHC.Base.hs_string__ "Prelude.".
+
+Definition tooLarge {a} `{_ : GHC.Err.Default a} : GHC.Num.Int -> a :=
+  fun arg_0__ =>
+    GHC.Err.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
+                                                           (GHC.Base.hs_string__ "!!: index too large")).
 
 Definition or : list bool -> bool :=
   fix or (arg_0__ : list bool) : bool
@@ -240,21 +258,35 @@ Definition or : list bool -> bool :=
 Definition null {a} : list a -> bool :=
   fun arg_0__ => match arg_0__ with | nil => true | cons _ _ => false end.
 
-Definition notElem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
+Definition notElem {a} `{(Eq_ a)} : a -> list a -> bool :=
   fix notElem (arg_0__ : a) (arg_1__ : list a) : bool
         := match arg_0__, arg_1__ with
            | _, nil => true
-           | x, cons y ys => andb (x GHC.Base./= y) (notElem x ys)
+           | x, cons y ys => andb (x /= y) (notElem x ys)
            end.
 
-Definition lookup {a} {b} `{(GHC.Base.Eq_ a)}
-   : a -> list (a * b)%type -> option b :=
+Definition negIndex {a} `{_ : GHC.Err.Default a} : a :=
+  GHC.Err.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
+                                                         (GHC.Base.hs_string__ "!!: negative index")).
+
+Definition op_znzn__ {a} `{_ : GHC.Err.Default a}
+   : list a -> GHC.Num.Int -> a :=
+  fun xs n =>
+    if n < #0 : bool then negIndex else
+    foldr (fun x r k =>
+             let 'num_0__ := k in
+             if num_0__ == #0 : bool then x else
+             r (k GHC.Num.- #1)) tooLarge xs n.
+
+Notation "'_!!_'" := (op_znzn__).
+
+Infix "!!" := (_!!_) (at level 99).
+
+Definition lookup {a} {b} `{(Eq_ a)} : a -> list (a * b)%type -> option b :=
   fix lookup (arg_0__ : a) (arg_1__ : list (a * b)%type) : option b
         := match arg_0__, arg_1__ with
            | _key, nil => None
-           | key, cons (pair x y) xys =>
-               if key GHC.Base.== x : bool then Some y else
-               lookup key xys
+           | key, cons (pair x y) xys => if key == x : bool then Some y else lookup key xys
            end.
 
 Definition lengthFB {x}
@@ -275,7 +307,7 @@ Definition length {a} : list a -> GHC.Num.Int :=
   fun xs => lenAcc xs #0.
 
 Definition idLength : GHC.Num.Int -> GHC.Num.Int :=
-  GHC.Base.id.
+  id.
 
 Definition foldr2_left {a} {b} {c} {d}
    : (a -> b -> c -> d) -> d -> a -> (list b -> c) -> list b -> d :=
@@ -314,11 +346,86 @@ Definition filter {a} : (a -> bool) -> list a -> list a :=
                filter pred xs
            end.
 
-Definition elem {a} `{(GHC.Base.Eq_ a)} : a -> list a -> bool :=
+Definition errorEmptyList {a} `{_ : GHC.Err.Default a} : String -> a :=
+  fun fun_ =>
+    GHC.Err.errorWithoutStackTrace (Coq.Init.Datatypes.app prel_list_str
+                                                           (Coq.Init.Datatypes.app fun_ (GHC.Base.hs_string__
+                                                                                    ": empty list"))).
+
+Definition foldl1 {a} `{_ : GHC.Err.Default a} : (a -> a -> a) -> list a -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, cons x xs => foldl f x xs
+    | _, nil => errorEmptyList (GHC.Base.hs_string__ "foldl1")
+    end.
+
+Definition foldl1' {a} `{_ : GHC.Err.Default a}
+   : (a -> a -> a) -> list a -> a :=
+  fun arg_0__ arg_1__ =>
+    match arg_0__, arg_1__ with
+    | f, cons x xs => foldl' f x xs
+    | _, nil => errorEmptyList (GHC.Base.hs_string__ "foldl1'")
+    end.
+
+Definition foldr1 {a} `{_ : GHC.Err.Default a} : (a -> a -> a) -> list a -> a :=
+  fun f =>
+    let fix go arg_0__
+              := match arg_0__ with
+                 | cons x nil => x
+                 | cons x xs => f x (go xs)
+                 | nil => errorEmptyList (GHC.Base.hs_string__ "foldr1")
+                 end in
+    go.
+
+Definition init {a} `{_ : GHC.Err.Default a} : list a -> list a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | nil => errorEmptyList (GHC.Base.hs_string__ "init")
+    | cons x xs =>
+        let fix init' arg_2__ arg_3__
+                  := match arg_2__, arg_3__ with
+                     | _, nil => nil
+                     | y, cons z zs => cons y (init' z zs)
+                     end in
+        init' x xs
+    end.
+
+Definition lastError {a} `{_ : GHC.Err.Default a} : a :=
+  errorEmptyList (GHC.Base.hs_string__ "last").
+
+Definition last {a} `{_ : GHC.Err.Default a} : list a -> a :=
+  fun xs =>
+    foldl (fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | _, x => x end)
+    lastError xs.
+
+Definition maximum {a} `{_ : GHC.Err.Default a} {_ : Eq_ a} {_ : Ord a}
+   : list a -> a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | nil => errorEmptyList (GHC.Base.hs_string__ "maximum")
+    | xs => foldl1 max xs
+    end.
+
+Definition minimum {a} `{_ : GHC.Err.Default a} {_ : Eq_ a} {_ : Ord a}
+   : list a -> a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | nil => errorEmptyList (GHC.Base.hs_string__ "minimum")
+    | xs => foldl1 min xs
+    end.
+
+Definition tail {a} `{_ : GHC.Err.Default a} : list a -> list a :=
+  fun arg_0__ =>
+    match arg_0__ with
+    | cons _ xs => xs
+    | nil => errorEmptyList (GHC.Base.hs_string__ "tail")
+    end.
+
+Definition elem {a} `{(Eq_ a)} : a -> list a -> bool :=
   fix elem (arg_0__ : a) (arg_1__ : list a) : bool
         := match arg_0__, arg_1__ with
            | _, nil => false
-           | x, cons y ys => orb (x GHC.Base.== y) (elem x ys)
+           | x, cons y ys => orb (x == y) (elem x ys)
            end.
 
 Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
@@ -329,10 +436,10 @@ Definition dropWhile {a} : (a -> bool) -> list a -> list a :=
            end.
 
 Definition constScanl {a} {b} : a -> b -> a :=
-  GHC.Base.const.
+  const.
 
 Definition concat {a} : list (list a) -> list a :=
-  GHC.Base.foldr Coq.Init.Datatypes.app nil.
+  foldr Coq.Init.Datatypes.app nil.
 
 Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
   fix break (arg_0__ : (a -> bool)) (arg_1__ : list a) : (list a * list a)%type
@@ -343,6 +450,12 @@ Definition break {a} : (a -> bool) -> list a -> (list a * list a)%type :=
                let 'pair ys zs := break p xs' in
                pair (cons x ys) zs
            end.
+
+Definition badHead {a} `{_ : GHC.Err.Default a} : a :=
+  errorEmptyList (GHC.Base.hs_string__ "head").
+
+Definition head {a} `{_ : GHC.Err.Default a} : list a -> a :=
+  fun arg_0__ => match arg_0__ with | cons x _ => x | nil => badHead end.
 
 Definition any {a} : (a -> bool) -> list a -> bool :=
   fix any (arg_0__ : (a -> bool)) (arg_1__ : list a) : bool
@@ -365,10 +478,15 @@ Definition all {a} : (a -> bool) -> list a -> bool :=
            | p, cons x xs => andb (p x) (all p xs)
            end.
 
+Module Notations.
+Notation "'_GHC.List.!!_'" := (op_znzn__).
+Infix "GHC.List.!!" := (_!!_) (at level 99).
+End Notations.
+
 (* External variables:
-     None Some andb bool cons false list nil op_zt__ option orb pair true
-     Coq.Init.Datatypes.app GHC.Base.Eq_ GHC.Base.String GHC.Base.const
-     GHC.Base.foldl GHC.Base.foldr GHC.Base.id GHC.Base.op_zeze__ GHC.Base.op_zsze__
-     GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger GHC.Num.op_zm__ GHC.Num.op_zp__
-     GHC.Num.op_zt__
+     Eq_ None Ord Some String andb bool cons const false foldl foldl' foldr id list
+     max min nil op_zeze__ op_zl__ op_zsze__ op_zt__ option orb pair true
+     Coq.Init.Datatypes.app GHC.Err.Default GHC.Err.errorWithoutStackTrace
+     GHC.Err.patternFailure GHC.Num.Int GHC.Num.Num GHC.Num.fromInteger
+     GHC.Num.op_zm__ GHC.Num.op_zp__ GHC.Num.op_zt__
 *)

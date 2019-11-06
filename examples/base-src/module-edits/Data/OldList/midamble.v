@@ -1,3 +1,9 @@
+Require Import GHC.Char.
+Require GHC.Unicode.
+Require Coq.Lists.List.
+Require Import Omega.
+
+
 Fixpoint ascending {a0} (arg_48__: a0 -> a0 -> comparison) (a:a0) (as_:list a0 -> list a0) (bs: list a0)
          {struct bs} : list (list a0)
         := let j_53__ : list (list a0) :=
@@ -65,17 +71,17 @@ Fixpoint mergePairs {a0} (cmp: a0 -> a0 -> comparison) xs
              | xs => xs
            end.
 
-Require Import Omega.
+
 Lemma mergePairs_length : forall n, forall a cmp (xs : list (list a)) x y, 
-      length xs <= n ->                                                                
-      length (mergePairs cmp (cons x (cons y xs))) < 2 + n.
+      le (length xs) n ->                                                                
+      lt (length (mergePairs cmp (cons x (cons y xs)))) (2 + n).
 induction n. intros; simpl. destruct xs; inversion H. simpl. auto.
 intros.
 destruct xs.
 simpl in *. omega.
 destruct xs.
 simpl in *. omega.
-assert (L : length xs <= n).
+assert (L : le (length xs) n).
 simpl in H. omega.
 specialize (IHn a cmp xs l l0 L).
 simpl in *. omega.
@@ -100,3 +106,81 @@ Defined.
 
 Definition sortBy {a} (cmp : a -> a -> comparison) (xs : list a): list a :=
      mergeAll cmp (sequences cmp xs).
+
+(* -------------------------------------------- *)
+
+Lemma dropWhile_cons_prop : forall {A} (c:A) s p s',
+  cons c s' = GHC.List.dropWhile p s -> 
+  p c = false.
+Proof. 
+  induction s. 
+  + intros. simpl in *. discriminate.
+  + intros p s' H. simpl in H.
+    destruct (p a) eqn:Hp.
+    ++ eapply IHs. eauto.
+    ++ inversion H. subst. auto.
+Qed.
+
+Lemma dropWhile_cons_length : forall {A} (c:A) s p s',
+  cons c s' = GHC.List.dropWhile p s -> 
+  lt (length s') (length s).
+Proof. 
+  induction s.
+  + intros. simpl in *. discriminate.
+  + intros p s' H. simpl in *.
+    destruct (p a) eqn:Hp.
+    pose (K := IHs p s' H). clearbody K.
+    omega. 
+    inversion H. subst.
+    auto.
+Qed.
+
+Lemma break_length {A} {p} {s:list A} : forall {w} {s''},
+  pair w s'' = List.break p s ->  le (length s'') (length s).
+Proof. 
+  induction s.
+  + simpl. intros w s'' h. inversion h. subst. simpl. auto.
+  + simpl. intros w s'' h1. 
+    destruct (p a) eqn:Hp.
+    ++ inversion h1. subst. simpl. auto.
+    ++ destruct (List.break p s) as [ys zs] eqn:B. 
+       inversion h1. subst.
+       pose (K := IHs ys zs eq_refl). clearbody K.
+       auto.
+Qed.
+
+
+Program Fixpoint words (s : GHC.Base.String) { measure (length s) } 
+  : list GHC.Base.String :=
+  match (GHC.List.dropWhile GHC.Unicode.isSpace s) with 
+    | nil => nil
+    | s'  =>
+     let 'pair w s'' := GHC.List.break GHC.Unicode.isSpace s' in
+     cons w (words s'')
+  end.
+Next Obligation.
+  destruct (List.dropWhile Unicode.isSpace s) eqn:D. contradiction.
+  symmetry in D.
+  pose (h0 := dropWhile_cons_prop _ _ _ _ D). clearbody h0.
+  pose (h1 := dropWhile_cons_length _ _ _ _ D). clearbody h1.
+  simpl in Heq_anonymous.
+  rewrite h0 in Heq_anonymous.
+  destruct (List.break Unicode.isSpace l) as [ys zs] eqn:B.
+  inversion Heq_anonymous. subst.
+  symmetry in B.
+  pose (h2 := break_length B).
+  omega.
+Defined.
+
+Program Fixpoint lines (s : GHC.Base.String) { measure (length s) } 
+  : list GHC.Base.String :=
+  if (List.null s) then nil else 
+  let cons_ := fun '(pair h t) => cons h t in
+  cons_ (let 'pair l s' := GHC.List.break 
+                             (fun arg_4__ =>
+                                arg_4__ == newline) s in
+         pair l (match s' with | nil => nil | cons _ s'' => lines s'' end)).
+Next Obligation.
+  pose (h0 := break_length Heq_anonymous). clearbody h0. simpl in h0.
+  omega.
+Defined.

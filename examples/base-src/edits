@@ -9,7 +9,6 @@ skip module GHC.Classes
 skip module GHC.Magic
 skip module GHC.IO
 skip module GHC.Integer
-skip module GHC.Unicode
 skip module GHC.Show
 skip module Data.Data
 

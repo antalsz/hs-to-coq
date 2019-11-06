@@ -13,3 +13,6 @@ Notation "'&#' c" := (hs_char__ c) (at level 1, format "'&#' c").
 
 
 Definition chr : Int -> Char := Z.to_N.
+
+(* newline character *)
+Definition newline := hs_char__ "010".

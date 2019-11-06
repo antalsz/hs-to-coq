@@ -16,7 +16,6 @@ Require GHC.Char.
 
 Require Import GHC.Base.
 
-
 Definition eq_CharType (x : CharType) (y:CharType) :=
   match x , y with 
     | IsSpace , IsSpace => true
@@ -65,28 +64,43 @@ Instance Lawful_Flux : MonoidLaws Flux := {}.
 + intros x. apply Eq_reflI. reflexivity.
 Qed.
 
+Definition eq_counts (x:Counts) (y:Counts) : bool := 
+  match x , y with
+    | Mk_Counts x1 x2 x3, Mk_Counts y1 y2 y3 => 
+      (x1 == y1) && (x2 == y2) && (x3 == y3)
+  end.
+
+Instance Eq_Counts : Eq_ Counts := eq_default eq_counts.
+
+Instance EqLaws_Counts : EqLaws Counts. Admitted.
+
+Instance EqExact_Counts : EqExact Counts. Admitted.
+
+Instance SemigroupLaws_Counts : SemigroupLaws Counts := {}.
+Proof.
+  intros x y z.
+  destruct x eqn:Hx; destruct y eqn:Hy; destruct z eqn:Hz;  
+    unfold op_zlzlzgzg__, Semigroup__Counts, Types.Semigroup__Counts_op_zlzlzgzg__; simpl.
+  unfold op_zeze__, Eq_Counts, eq_default, op_zeze____,eq_counts .
+Admitted.
+
+Instance MonoidLaws_Counts : MonoidLaws Counts := {}.
+Proof.
+  + intros x. destruct x. apply Eq_reflI. reflexivity.
+  + intros x. destruct x. apply Eq_reflI. 
+  unfold mappend, mempty, Monoid__Counts , mappend__ , mempty__, Types.Monoid__Counts_mempty . 
+  unfold Types.Monoid__Counts_mappend.
+  unfold op_zlzlzgzg__, Semigroup__Counts, Types.Semigroup__Counts_op_zlzlzgzg__; simpl.
+  f_equal. omega. admit. omega.
+  + intros x y. apply Eq_reflI. reflexivity.
+  + intros x. apply Eq_reflI. reflexivity.
+Admitted.
+
+
 Lemma to_from : forall c, toTuple (fromTuple c) = c.
 Proof.
   destruct c. destruct p. reflexivity.
 Qed.
-
-Axiom words_nil : OldList.words nil = nil.
-Axiom lines_nil : OldList.lines nil = nil.
-
-Axiom words_cons : forall c s, OldList.words (cons c s) = 
-                   if Types.isSpaceChar8 c then OldList.words s
-                   else let (w, s'') := break Types.isSpaceChar8 s in 
-                        (cons w (OldList.words s'')).
-Axiom lines_cons : forall c s, OldList.lines (cons c s) = 
-                          (fun x => match x with | (pair h t) => cons h t end) 
-                           (match break (fun x => x == Types.newline) (cons c s) with
-                                    | (l, s') => (l, match s' with 
-                                                   | nil => nil
-                                                   | cons _ s'' => OldList.lines s''
-                                                   end)
-                            end).
-Hint Rewrite words_nil lines_nil words_cons lines_cons : hs_simpl.
-
 
 Opaque Z.add.
 
@@ -95,47 +109,54 @@ Proof. intros x y.
        apply iff_reflect. split. intro h. subst. apply Eq_reflI. reflexivity.
 Admitted.  
 
+Require Import Proofs.Data.OldList.
 
-Check Eq_eq.
-     
+Lemma eqIsEq : forall {A:Type} `{EqExact A}{x}{y}, ((x == y) = true) -> (x = y).
+Proof. intros. Admitted.
+
+Lemma Counts_assoc : forall x y z : Counts, ((x <<>> (y <<>> z)) = ((x <<>> y) <<>> z)).
+  intros x y z. eapply eqIsEq. eapply semigroup_assoc; eauto.
+Qed.
+
+Axiom one_newline : GHC.Char.newline = Types.newline.
+Axiom one_space : Unicode.isSpace = Types.isSpaceChar8.
+
+Lemma assoc : forall s m2,
+  (m2 <<>> (fromTuple (Stupid.length s, Stupid.length (OldList.words s), Stupid.length (OldList.lines s)))) =
+  (BL.foldl' (fun (a : Counts) (b : Char) => a <<>> countChar b) (mempty <<>> m2) (BL.pack s)).
+Proof.
+  induction s; intro m2; autorewrite with hs_simpl.
+  + rewrite BL.ByteString_foldl_nil. admit.
+  + rewrite BL.ByteString_foldl_cons.
+    rewrite <- Counts_assoc.    
+    rewrite <- IHs.
+    rewrite <- Counts_assoc.
+    f_equal.
+    unfold countChar. unfold flux.
+    rewrite one_newline in *. rewrite one_space in *.
+    destruct (isSpaceChar8 a) eqn:AS.
+    destruct (a == Types.newline) eqn:AN.
+    ++ admit. (* can't be both space and newline *)
+    ++ simpl. rewrite AN.
+       destruct break as [ys zs] eqn:B.
+       simpl.
+       unfold op_zlzlzgzg__, Semigroup__Counts, Types.Semigroup__Counts_op_zlzlzgzg__; simpl.
+       unfold op_zlzlzgzg__, Semigroup__Flux, Types.Semigroup__Flux_op_zlzlzgzg__; simpl.
+       f_equal.
+       destruct s. simpl in *. inversion B. simpl. admit.
+       inversion B.
+       hs_simpl.
+Admitted.
 
 Lemma stupid_inlined : forall s, toTuple (stupidCountFile s) = toTuple (countFile (BL.pack s)).
 Proof.
+  unfold stupidCountFile, countFile in *.
+  intro s. 
   induction s;
-  unfold stupidCountFile, countFile;
   autorewrite with hs_simpl.
-  + rewrite ByteString_foldl_nil. reflexivity.
-  + rewrite ByteString_foldl_cons.
-    destruct (isSpaceChar8 a) eqn:S.
-    ++ Check monoid_left_id.
-      rewrite monoid_left_id.
-       unfold break.
-       assert (a == newline = false). admit.
-       rewrite H.
-       simpl. destruct s. simpl.
-       
-    unfold Base.mempty, Types.Monoid__Counts, Base.mempty__ , Types.Monoid__Counts_mempty. simpl.
-    unfold Base.mempty, Types.Monoid__Flux, Base.mempty__ , Types.Monoid__Flux_mempty. 
-    
+  + rewrite BL.ByteString_foldl_nil. reflexivity.
+  + rewrite BL.ByteString_foldl_cons.
+    rewrite one_newline in *. rewrite one_space in *.
+Admitted.    
                                                               
-
-Lemma simple_simpleFold : 
-  forall s, simpleCountFile s = stupidCountFile s.
-Proof.
-  induction s.
-  + unfold stupidCountFile. simpl.    
-    unfold simpleCountFile. 
-    hs_simpl. simpl.
-    unfold Foldable.foldMap, Foldable.Foldable__list , Foldable.foldMap__, Foldable.Foldable__list_foldMap .
-    simpl.
-    unfold Base.mempty, Types.Monoid__Counts, Base.mempty__ , Types.Monoid__Counts_mempty. simpl.
-    unfold Base.mempty, Types.Monoid__Flux, Base.mempty__ , Types.Monoid__Flux_mempty. 
-    admit.
-  + unfold stupidCountFile, simpleCountFile.
-    hs_simpl.
-    unfold Foldable.foldMap, Foldable.Foldable__list , Foldable.foldMap__, Foldable.Foldable__list_foldMap .
-    hs_simpl.
-    unfold Types.fromTuple.
-    admit.
-Admitted.
 

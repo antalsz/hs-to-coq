@@ -35,7 +35,7 @@ Definition go
           if GHC.Unicode.isSpace c : bool then fromInteger 1 else
           fromInteger 0 in
         let addLine :=
-          if c == Types.newline : bool then fromInteger 1 else
+          if c == Char.newline : bool then fromInteger 1 else
           fromInteger 0 in
         pair (pair (pair (cs + fromInteger 1) (ws + addWord)) (ls + addLine))
              (GHC.Unicode.isSpace c)

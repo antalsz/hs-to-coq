@@ -118,8 +118,6 @@ Lemma Counts_assoc : forall x y z : Counts, ((x <<>> (y <<>> z)) = ((x <<>> y) <
   intros x y z. eapply eqIsEq. eapply semigroup_assoc; eauto.
 Qed.
 
-Axiom one_newline : GHC.Char.newline = Types.newline.
-Axiom one_space : Unicode.isSpace = Types.isSpaceChar8.
 
 Lemma assoc : forall s m2,
   (m2 <<>> (fromTuple (Stupid.length s, Stupid.length (OldList.words s), Stupid.length (OldList.lines s)))) =
@@ -133,8 +131,7 @@ Proof.
     rewrite <- Counts_assoc.
     f_equal.
     unfold countChar. unfold flux.
-    rewrite one_newline in *. rewrite one_space in *.
-    destruct (isSpaceChar8 a) eqn:AS.
+    destruct (isSpace a) eqn:AS.
     destruct (a == Types.newline) eqn:AN.
     ++ admit. (* can't be both space and newline *)
     ++ simpl. rewrite AN.
@@ -156,7 +153,6 @@ Proof.
   autorewrite with hs_simpl.
   + rewrite BL.ByteString_foldl_nil. reflexivity.
   + rewrite BL.ByteString_foldl_cons.
-    rewrite one_newline in *. rewrite one_space in *.
 Admitted.    
                                                               
 

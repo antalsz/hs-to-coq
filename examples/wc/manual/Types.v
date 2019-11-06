@@ -17,6 +17,10 @@ Require Import GHC.Base.
 Require Import GHC.Char.
 Require GHC.Err.
 Require Import GHC.Num.
+Require GHC.Unicode.
+
+Locate newline.
+
 
 (* Converted type declarations: *)
 
@@ -55,9 +59,7 @@ Definition wordCount (arg_0__ : Counts) :=
   let 'Mk_Counts _ wordCount _ := arg_0__ in
   wordCount.
 
-Axiom isSpaceChar8 : Char -> bool.
 Axiom c2w : Char -> N.
-Axiom newline : Char.
 
 (* Converted value declarations: *)
 
@@ -79,18 +81,18 @@ Definition fromTuple : (Int * Int * Int)%type -> Counts :=
 
 Definition flux : Char -> Flux :=
   fun c =>
-    if isSpaceChar8 c : bool then Mk_Flux IsSpace (fromInteger 0) IsSpace else
+    if Unicode.isSpace c : bool then Mk_Flux IsSpace (fromInteger 0) IsSpace else
     Mk_Flux NotSpace (fromInteger 1) NotSpace.
 
 Definition countChar : Char -> Counts :=
   fun c =>
-    Mk_Counts (fromInteger 1) (flux c) (if (c == newline) : bool
+    Mk_Counts (fromInteger 1) (flux c) (if (c == Char.newline) : bool
                then fromInteger 1
                else fromInteger 0).
 
 Definition countByte : Char -> Counts :=
   fun c =>
-    Mk_Counts (fromInteger 1) (flux c) (if (c == newline) : bool
+    Mk_Counts (fromInteger 1) (flux c) (if (c == Char.newline) : bool
                then fromInteger 1
                else fromInteger 0).
 
@@ -186,7 +188,7 @@ Definition countByteUTF8 : Char -> Counts :=
               (if isContinutation 
                then mempty
                else flux c) 
-              (if (c == newline) 
+              (if (c == Char.newline) 
                then fromInteger 1
                else fromInteger 0).
 

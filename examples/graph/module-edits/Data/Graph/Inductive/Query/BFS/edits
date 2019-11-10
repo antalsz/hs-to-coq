@@ -3,10 +3,11 @@ in Data.Graph.Inductive.Query.BFS.suci rewrite forall c i, GHC.List.zip (Data.Gr
 
 #translated in midamble because of laziness issue
 skip Data.Graph.Inductive.Query.BFS.bf
+skip Data.Graph.Inductive.Query.BFS.lbf
 
 #termination arguments - this turns out to be more difficult, since either the graph decreases in size or the queue decreases. We will use a well founded relation and unfold the deferredFix (TODO: maybe change)
 termination Data.Graph.Inductive.Query.BFS.leveln       deferred
-termination Data.Graph.Inductive.Query.BFS.lbf 			deferred
+#termination Data.Graph.Inductive.Query.BFS.lbf 			deferred
 termination Data.Graph.Inductive.Query.BFS.bfsnInternal deferred
 termination Data.Graph.Inductive.Query.BFS.bfenInternal deferred
 #termination Data.Graph.Inductive.Query.BFS.bf           deferred

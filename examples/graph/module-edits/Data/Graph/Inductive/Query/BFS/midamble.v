@@ -28,3 +28,31 @@ Definition bf {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
                                       end
                                   | _ => GHC.Err.patternFailure
                                   end).
+
+Definition lbf {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)}
+   : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
+                                                b) ->
+     gr a b -> Data.Graph.Inductive.Internal.RootPath.LRTree b :=
+  GHC.DeferredFix.deferredFix2 (fun lbf
+                                (q
+                                  : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
+                                                                               b))
+                                (g : gr a b) =>
+                                 if orb (Data.Graph.Inductive.Internal.Queue.queueEmpty q)
+                                             (Data.Graph.Inductive.Graph.isEmpty g) : bool
+                                      then nil else
+                                  match Data.Graph.Inductive.Internal.Queue.queueGet q with
+                                  | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>
+                                      match Data.Graph.Inductive.Graph.match_ v g with
+                                      | pair (Some c) g' =>
+                                          cons (Data.Graph.Inductive.Graph.LP p) (lbf
+                                                (Data.Graph.Inductive.Internal.Queue.queuePutList (GHC.Base.map
+                                                                                                   (fun v' =>
+                                                                                                      Data.Graph.Inductive.Graph.LP
+                                                                                                      (cons v' p))
+                                                                                                   (Data.Graph.Inductive.Graph.lsuc'
+                                                                                                    c)) q') g')
+                                      | pair None g' => lbf q' g'
+                                      end
+                                  | _ => GHC.Err.patternFailure
+                                  end).

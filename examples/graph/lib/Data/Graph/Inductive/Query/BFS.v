@@ -65,6 +65,34 @@ Definition bf {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
                                       end
                                   | _ => GHC.Err.patternFailure
                                   end).
+
+Definition lbf {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)}
+   : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
+                                                b) ->
+     gr a b -> Data.Graph.Inductive.Internal.RootPath.LRTree b :=
+  GHC.DeferredFix.deferredFix2 (fun lbf
+                                (q
+                                  : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
+                                                                               b))
+                                (g : gr a b) =>
+                                 if orb (Data.Graph.Inductive.Internal.Queue.queueEmpty q)
+                                             (Data.Graph.Inductive.Graph.isEmpty g) : bool
+                                      then nil else
+                                  match Data.Graph.Inductive.Internal.Queue.queueGet q with
+                                  | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>
+                                      match Data.Graph.Inductive.Graph.match_ v g with
+                                      | pair (Some c) g' =>
+                                          cons (Data.Graph.Inductive.Graph.LP p) (lbf
+                                                (Data.Graph.Inductive.Internal.Queue.queuePutList (GHC.Base.map
+                                                                                                   (fun v' =>
+                                                                                                      Data.Graph.Inductive.Graph.LP
+                                                                                                      (cons v' p))
+                                                                                                   (Data.Graph.Inductive.Graph.lsuc'
+                                                                                                    c)) q') g')
+                                      | pair None g' => lbf q' g'
+                                      end
+                                  | _ => GHC.Err.patternFailure
+                                  end).
 (* Converted value declarations: *)
 
 Definition suci {a} {b}
@@ -107,34 +135,6 @@ Definition level {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
    : Data.Graph.Inductive.Graph.Node ->
      gr a b -> list (Data.Graph.Inductive.Graph.Node * GHC.Num.Int)%type :=
   fun v => leveln (cons (pair v #0) nil).
-
-Definition lbf {gr} {b} {a} `{(Data.Graph.Inductive.Graph.Graph gr)}
-   : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
-                                                b) ->
-     gr a b -> Data.Graph.Inductive.Internal.RootPath.LRTree b :=
-  GHC.DeferredFix.deferredFix2 (fun lbf
-                                (q
-                                  : Data.Graph.Inductive.Internal.Queue.Queue (Data.Graph.Inductive.Graph.LPath
-                                                                               b))
-                                (g : gr a b) =>
-                                  match Data.Graph.Inductive.Internal.Queue.queueGet q with
-                                  | pair (Data.Graph.Inductive.Graph.LP (cons (pair v _) _ as p)) q' =>
-                                      if orb (Data.Graph.Inductive.Internal.Queue.queueEmpty q)
-                                             (Data.Graph.Inductive.Graph.isEmpty g) : bool
-                                      then nil else
-                                      match Data.Graph.Inductive.Graph.match_ v g with
-                                      | pair (Some c) g' =>
-                                          cons (Data.Graph.Inductive.Graph.LP p) (lbf
-                                                (Data.Graph.Inductive.Internal.Queue.queuePutList (GHC.Base.map
-                                                                                                   (fun v' =>
-                                                                                                      Data.Graph.Inductive.Graph.LP
-                                                                                                      (cons v' p))
-                                                                                                   (Data.Graph.Inductive.Graph.lsuc'
-                                                                                                    c)) q') g')
-                                      | pair None g' => lbf q' g'
-                                      end
-                                  | _ => GHC.Err.patternFailure
-                                  end).
 
 Definition lbft {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
    : Data.Graph.Inductive.Graph.Node ->
@@ -240,16 +240,15 @@ Definition bfe {gr} {a} {b} `{(Data.Graph.Inductive.Graph.Graph gr)}
   fun v => bfen (cons (pair v v) nil).
 
 (* External variables:
-     None Some bf bool cons list nil op_zt__ orb pair repeat BinInt.Z.to_nat
+     None Some bf bool cons lbf list nil op_zt__ orb pair repeat BinInt.Z.to_nat
      Coq.Init.Datatypes.app Data.Graph.Inductive.Graph.Context
      Data.Graph.Inductive.Graph.Edge Data.Graph.Inductive.Graph.Graph
      Data.Graph.Inductive.Graph.LP Data.Graph.Inductive.Graph.LPath
      Data.Graph.Inductive.Graph.Node Data.Graph.Inductive.Graph.Path
-     Data.Graph.Inductive.Graph.isEmpty Data.Graph.Inductive.Graph.lsuc'
-     Data.Graph.Inductive.Graph.match_ Data.Graph.Inductive.Graph.node'
-     Data.Graph.Inductive.Graph.out Data.Graph.Inductive.Graph.out'
-     Data.Graph.Inductive.Graph.suc' Data.Graph.Inductive.Graph.toEdge
-     Data.Graph.Inductive.Internal.Queue.Queue
+     Data.Graph.Inductive.Graph.isEmpty Data.Graph.Inductive.Graph.match_
+     Data.Graph.Inductive.Graph.node' Data.Graph.Inductive.Graph.out
+     Data.Graph.Inductive.Graph.out' Data.Graph.Inductive.Graph.suc'
+     Data.Graph.Inductive.Graph.toEdge Data.Graph.Inductive.Internal.Queue.Queue
      Data.Graph.Inductive.Internal.Queue.mkQueue
      Data.Graph.Inductive.Internal.Queue.queueEmpty
      Data.Graph.Inductive.Internal.Queue.queueGet

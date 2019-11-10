@@ -2516,4 +2516,319 @@ Qed.
 
 End Bft. 
 
+(** Labelled Paths (lbf) **)
+Section Lbft.
+
+Instance need_this_for_equations'''' : WellFounded (bf_measure_list (LPath b)).
+Proof.
+  unfold WellFounded. apply well_founded_bf_measure_list.
+Defined.
+
+
+Equations lbf' (x :  (list (LPath b)) * (gr a b)) : (RootPath.LRTree b) by wf x (bf_measure_list (LPath b)) :=
+  lbf' (nil, g) := nil;
+  lbf' ((LP nil :: q'), g) := if (isEmpty g) then nil else GHC.Err.patternFailure;
+  lbf' ((LP ((v, l) :: t) :: q'), g) := let p:= (v, l) :: t in  if (isEmpty g) then nil else
+      match (match_ v g) as y return ((match_ v g = y) -> _) with
+                        | (Some c, g') => fun H : (match_ v g) = (Some c, g') => LP p :: (lbf' ((q' ++ map (fun v' => LP (v' :: p))  (lsuc' c)), g'))
+                        | (None, g') => fun H : (match_ v g) = (None, g') => (lbf' (q', g'))
+                        end (eq_refl).
+Next Obligation.
+unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
+Defined.
+Next Obligation.
+unfold bf_measure_list. apply lex2. symmetry. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
+simpl. omega.
+Defined.
+
+Definition expand_lbf' :=
+fun x : list (LPath b) * gr a b =>
+let (l, g) := x in
+match l with
+| nil => fun _ : gr a b => nil
+| l0 :: l1 =>
+    fun g0 : gr a b =>
+    match l0 with
+    | LP unLPath =>
+        fun (l2 : list (LPath b)) (g1 : gr a b) =>
+        match unLPath with
+        | nil => fun (_ : list (LPath b)) (g2 : gr a b) => if isEmpty g2 then nil else patternFailure
+        | l3 :: l4 =>
+            fun (l5 : list (LPath b)) (g2 : gr a b) =>
+            (let (n, b0) := l3 in
+             fun (l6 : list (LNode b)) (l7 : list (LPath b)) (g3 : gr a b) =>
+             if isEmpty g3
+             then nil
+             else
+              (let (m, g') as y return (match_ n g3 = y -> list (LPath b)) := match_ n g3 in
+               match m as m0 return (match_ n g3 = (m0, g') -> list (LPath b)) with
+               | Some c =>
+                   fun _ : match_ n g3 = (Some c, g') =>
+                   LP ((n, b0) :: l6)
+                   :: lbf' (l7 ++ map (fun v' : Node * b => LP (v' :: (n, b0) :: l6)) (lsuc' c), g')
+               | None => fun _ : match_ n g3 = (None, g') => lbf' (l7, g')
+               end) eq_refl) l4 l5 g2
+        end l2 g1
+    end l1 g0
+end g. 
+
+
+Lemma unfold_lbf' : forall x, lbf' x = expand_lbf' x.
+Proof.
+  intros. unfold expand_lbf'. apply lbf'_elim. reflexivity. reflexivity. reflexivity.
+Qed.
+
+(*Need assumption that q is nonempty, or else queueGet is undefined (and this is OK, bft is called on nonempty queue*)
+Lemma lbf_lbf'_equiv: forall g q,
+  lbf' ((toList _ q), g) = lbf q g.
+Proof.
+  intros. remember (toList _ q) as l. remember (l, g) as x. generalize dependent q.
+  generalize dependent g. revert l.
+  induction (x) as [y IH] using (well_founded_induction (well_founded_bf_measure_list _)).
+  intros. destruct y. inversion Heqx; subst. clear Heqx. unfold lbf.
+  rewrite unfold_lbf'. simpl. 
+   unfold deferredFix2 in *. unfold curry in *.
+  rewrite (deferredFix_eq_on _ (fun x => True) ( (bf_measure_queue (_)) )).
+  - simpl.  destruct (toList _ q) eqn : Q'. rewrite <- toList_queueEmpty in Q'. rewrite Q'. simpl.
+    reflexivity. assert (queueEmpty q = false). destruct (queueEmpty q) eqn : ?.
+    rewrite toList_queueEmpty in Heqb0. rewrite Heqb0 in Q'. inversion Q'.
+    reflexivity. rewrite H. simpl. destruct (isEmpty g) eqn : E.
+    destruct l. destruct unLPath. rewrite E. reflexivity. destruct l. rewrite E. reflexivity. 
+    destruct (queueGet q) eqn : G.
+    pose proof (toList_queueGet _ _ _ _ Q'). rewrite G in H0. simpl in H0. destruct H0. subst.
+    destruct l. destruct unLPath. rewrite E. reflexivity. destruct l. rewrite E.
+    destruct (match_ n g) eqn : M. destruct m.
+    + unfold lbf in IH. unfold deferredFix2 in IH. unfold curry in IH. erewrite IH. reflexivity.
+      apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply M. reflexivity.
+      rewrite toList_queuePutList . reflexivity.
+    + unfold lbf in IH. unfold deferredFix2 in IH. unfold curry in IH. erewrite IH. reflexivity.
+      apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply M. unfold list_length_lt.
+      simpl. omega. reflexivity. reflexivity.
+  - apply well_founded_bf_measure_queue.
+  - unfold recurses_on. intros. unfold uncurry. destruct x. destruct (queueEmpty q0) eqn : QE. simpl.
+    reflexivity. simpl. destruct (isEmpty g1); simpl; try(reflexivity). destruct (queueGet q0) eqn : Q''.
+    destruct l; try(reflexivity). destruct unLPath; try reflexivity. destruct l.
+    destruct (match_ n g1) eqn : M'. destruct m. rewrite H0.
+    reflexivity. auto. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply M'.
+    rewrite H0. reflexivity. auto. apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size.
+    apply M'. unfold queue_length_lt. destruct (toList _ q0) eqn : L. rewrite <- toList_queueEmpty in L.
+    rewrite L in QE. inversion QE.
+    pose proof (toList_queueGet _ _ _ _ L). rewrite Q'' in H1; simpl in H1; destruct H1; subst.
+    unfold list_length_lt. simpl. omega.
+  - auto.
+Qed.
+
+(** ** COrrectness of [lbf] **)
+
+(*The correctness property is simple: [lb] is the same as [bf] when we remove the labels*)
+
+Definition unlabel_path (l : LPath b) : Path := 
+  match l with
+  | LP l' => map fst l'
+  end.
+
+Definition unlabel_tree (l : list (LPath b)) : list (Path) :=
+  map unlabel_path l.
+
+Lemma unlabel_app: forall l1 l2, unlabel_tree (l1 ++ l2) = unlabel_tree l1 ++ unlabel_tree l2.
+Proof.
+  intros. unfold unlabel_tree. rewrite map_app. reflexivity.
+Qed. 
+
+Lemma lbf_unlabel: forall g q q',
+  ~In nil q' ->
+  unlabel_tree q = q' ->
+  unlabel_tree (lbf' (q, g)) = bf' (q', g).
+Proof.
+  intros. remember (q, g) as x. generalize dependent q. generalize dependent q'. revert g.
+  induction (x) as [y IH] using (well_founded_induction (well_founded_bf_measure_list _)).
+  intros. destruct y. inversion Heqx. subst. clear Heqx. rewrite unfold_lbf'.
+  rewrite unfold_bf'. simpl. destruct q. simpl. reflexivity.
+  simpl. destruct l. simpl. destruct unLPath. simpl. simpl in H. exfalso. apply H.
+  left. reflexivity. destruct l. simpl. destruct (isEmpty g) eqn : E. reflexivity.
+  destruct (match_ n g) eqn : M. destruct m.
+  - simpl. erewrite IH. reflexivity. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry.
+    apply M. intro. simpl in H. apply in_app_or in H0. destruct H0.
+    apply H. right. assumption. rewrite in_map_iff in H0. destruct_all. inversion H0.
+    2: { reflexivity. } simpl. rewrite unlabel_app. 
+    assert (unlabel_tree (map (fun v' : Node * b => LP (v' :: (n, b0) :: unLPath)) (lsuc' c)) = 
+    map (fun x0 : Node => x0 :: n :: map fst unLPath) (suc' c)). unfold unlabel_tree.
+    rewrite map_map. simpl. unfold lsuc'. unfold suc'. unfold Base.op_z2218U__.
+    unfold Base.map. unfold Graph.flip2. unfold Tuple.snd. induction (context4l' c).
+    simpl. reflexivity. simpl. rewrite IHa0. destruct a0. simpl. reflexivity. rewrite H0. reflexivity.
+  - erewrite IH. reflexivity. apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size.
+    apply M. unfold list_length_lt. simpl. omega. intro. apply H. simpl. right. assumption.
+    reflexivity. reflexivity.
+Qed.
+
+(*For some reason, if the vertex v has no edges, [lbft] returns a list of nil instead of nil, so
+  the property we want only holds if v has at least one outgoing edge*)
+
+Lemma out_fst: forall (g: gr a b) v n m b l,
+  out g v = (n, m, b) :: l -> v = n.
+Proof.
+  intros. unfold out in H. unfold Base.map in H. 
+  destruct (context4l g v). simpl in H. inversion H. simpl in H. destruct p. inversion H. subst.
+  reflexivity.
+Qed.
+
+Theorem lbft_label: forall (g: gr a b) v,
+  out g v <> nil ->
+  unlabel_tree (lbft v g) = bft v g.
+Proof.
+  intros. unfold lbft. unfold bft. destruct (out g v) eqn : O. contradiction. destruct l.
+  destruct p. rewrite <- lbf_lbf'_equiv. rewrite <- bf_bf'_equiv. apply lbf_unlabel.
+  intro. simpl in H0. destruct H0. inversion H0. auto. simpl. apply out_fst in O. subst. reflexivity.
+Qed. 
+
+End Lbft.
+
+(** Correctness of [bfen] (BFS with predecessors **)
+Section Bfen.
+
+Instance need_this_for_equations''''' : WellFounded (bf_measure_list (Node * Node)).
+Proof.
+  unfold WellFounded. apply well_founded_bf_measure_list.
+Defined.
+
+Equations bfenInternal' (x: (list (Node * Node) * (gr a b))) : list (Node * Node) by wf x (bf_measure_list (Node * Node)) :=
+  bfenInternal' (nil, g) := nil;
+  bfenInternal' ((u,v) :: vs, g) := if (isEmpty g) then nil else
+                                match (match_ v g) as y return ((match_ v g = y) -> _ ) with
+                                | (Some c, g') => fun H : (match_ v g) = (Some c, g') => (u,v) :: bfenInternal' (vs ++ (outU c), g')
+                                | (None, g') => fun H: (match_ v g) = (None, g') => bfenInternal' (vs, g')
+                                 end (eq_refl).
+Next Obligation.
+unfold bf_measure_list. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H.
+Defined.
+Next Obligation.
+unfold bf_measure_list. apply lex2. symmetry. unfold natNodes_eq. eapply match_none_size. apply H. unfold list_length_lt.
+simpl. omega.
+Defined.
+
+Definition expand_bfenInternal' := 
+fun x : list (Node * Node) * gr a b =>
+let (l, g) := x in
+match l with
+| nil => fun _ : gr a b => nil
+| p :: l0 =>
+    fun g0 : gr a b =>
+    (let (n, n0) := p in
+     fun (l1 : list (Node * Node)) (g1 : gr a b) =>
+     if isEmpty g1
+     then nil
+     else
+      (let (m, g') as y return (match_ n0 g1 = y -> list (Node * Node)) := match_ n0 g1 in
+       match m as m0 return (match_ n0 g1 = (m0, g') -> list (Node * Node)) with
+       | Some c => fun _ : match_ n0 g1 = (Some c, g') => (n, n0) :: bfenInternal' (l1 ++ outU c, g')
+       | None => fun _ : match_ n0 g1 = (None, g') => bfenInternal' (l1, g')
+       end) eq_refl) l0 g0
+end g.
+
+Lemma unfold_bfenInternal': forall x,
+  bfenInternal' x = expand_bfenInternal' x.
+Proof.
+  intros. unfold expand_bfenInternal'. apply bfenInternal'_elim. reflexivity. reflexivity.
+Qed.
+
+Lemma bfenInternal_bfenInternal'_equiv: forall g q,
+  bfenInternal' (toList _ q, g) = bfenInternal q g.
+Proof.
+  intros. remember (q, g) as x. generalize dependent q. revert g. 
+  induction (x) as [y IH] using (well_founded_induction (well_founded_bf_measure_queue _)).
+  intros. destruct y. inversion Heqx; subst. clear Heqx. unfold bfenInternal.
+  rewrite unfold_bfenInternal'. simpl. 
+   unfold deferredFix2 in *. unfold curry in *.
+  rewrite (deferredFix_eq_on _ (fun x => True) ( (bf_measure_queue (_)) )).
+  - simpl. destruct (toList _ q) eqn : Q. rewrite <- toList_queueEmpty in Q. rewrite Q. simpl.
+    destruct (queueGet q) eqn : G. rewrite G. destruct p. reflexivity. destruct p.
+    destruct (queueGet q) eqn : QG. rewrite QG. pose proof (toList_queueGet _ _ _ _ Q).
+    rewrite QG in H. simpl in H. destruct H. subst.
+    destruct (queueEmpty q) eqn : E. rewrite toList_queueEmpty in E. rewrite E in Q. inversion Q.
+    rewrite E. clear E. destruct (isEmpty g) eqn : E. simpl. reflexivity.
+    simpl. destruct (match_ n0 g) eqn : M. destruct m.
+    + unfold bfenInternal in IH. unfold deferredFix2 in IH. unfold curry in IH. erewrite <- IH.
+      rewrite toList_queuePutList. reflexivity. 2: { reflexivity. } apply lex1.
+      unfold natNodes_lt. eapply match_decr_size. symmetry. apply M.
+    + unfold bfenInternal in IH. unfold deferredFix2 in IH. unfold curry in IH. erewrite IH. reflexivity.
+      2: { reflexivity. } apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply M.
+      unfold queue_length_lt. rewrite Q. unfold list_length_lt. simpl. omega.
+  - apply well_founded_bf_measure_queue.
+  - unfold recurses_on. intros. unfold uncurry. destruct x. destruct (queueGet q0) eqn : Q.
+    destruct e. destruct (queueEmpty q0) eqn : E. simpl. reflexivity. destruct (isEmpty g1) eqn : G.
+    simpl. reflexivity. simpl. destruct (match_ n0 g1) eqn : M'. destruct m.
+    rewrite H0. reflexivity. auto. apply lex1. unfold natNodes_lt. eapply match_decr_size.
+    symmetry. apply M'. apply H0. auto. apply lex2. unfold natNodes_eq. symmetry.
+    eapply match_none_size. apply M'. unfold queue_length_lt. unfold list_length_lt.
+    destruct (toList _ q0) eqn : L. rewrite <- toList_queueEmpty in L. rewrite L in E. inversion E.
+    pose proof (toList_queueGet _ _ _ _ L). rewrite Q in H1. simpl in H1. destruct H1. destruct e. inversion H1; subst. simpl. omega.
+  - auto.
+Qed.
+
+Definition first_two (l: list Node) : option (Node * Node) :=
+  match l with
+  | x :: y :: t => Some (y,x)
+  | _ => None
+  end.
+
+(*Maybe - prove this claim for suitably long queues, manually go through 1 iteration in other, prove that
+  if we take 1st off of bf' then get (v,v) cons that*)
+
+Lemma bfenInternal_pred: forall g q q',
+  (forall x, In x q -> first_two x <> None) ->
+  map first_two q = map Some q' ->
+  map first_two (bf' (q, g)) = map Some (bfenInternal' (q', g)).
+Proof.
+  intros. remember (q, g) as x. generalize dependent q. revert q'. revert g. 
+  induction (x) as [y IH] using (well_founded_induction (well_founded_bf_measure_list _)).
+  intros. destruct y. inversion Heqx. subst. clear Heqx.
+  rewrite unfold_bfenInternal'. rewrite unfold_bf'. simpl. destruct q; destruct q'.
+  reflexivity. simpl in H0. inversion H0. simpl in H0. inversion H0. simpl in H0. inversion H0.
+  destruct l. inversion H2. simpl in H2. destruct l. inversion H2. simpl in H2. inversion H2.
+  destruct p. inversion H4; subst. clear H4. 
+  destruct (isEmpty g) eqn : E. reflexivity. destruct (match_ n2 g) eqn : M.
+  destruct m.
+  - simpl. erewrite IH. reflexivity. apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply M.
+    3: { reflexivity. } intros. intro. apply in_app_or in H1. destruct H1.
+    apply (H x). right. assumption. assumption. apply in_map_iff in H1. destruct H1. destruct H1. subst.
+    simpl in H4. inversion H4. rewrite map_app. rewrite map_app.
+    rewrite H3. unfold outU. unfold out'. unfold suc'. destruct c.
+    destruct p. destruct p. unfold Base.map. unfold Base.op_z2218U__.
+    rewrite snd_equiv. rewrite map_map. rewrite map_map. rewrite map_map. rewrite map_map.
+    simpl. rewrite filter_equiv. unfold Base.op_z2218U__ . rewrite snd_equiv.
+    assert (map (fun x : b * Node => Some (n2, snd x)) (a0 ++ filter (fun x : b * Node => Base.op_zeze__ (snd x) n) a2) =
+    map (fun x : b * Node => Some (toEdge (let '(l0, w) := x in (n, w, l0))))
+  (a0 ++ filter (fun x : b * Node => Base.op_zeze__ (snd x) n) a2)).
+    induction (a0 ++ filter (fun x : b * Node => Base.op_zeze__ (snd x) n) a2); simpl.
+    reflexivity. rewrite IHl0. destruct a3. simpl. eapply match_context in M. destruct M. subst. reflexivity.
+    rewrite H1. reflexivity.
+  - erewrite IH. reflexivity. apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply M.
+    unfold list_length_lt. simpl. omega. 3: { reflexivity. } intros. apply H. right. assumption.
+    assumption.
+Qed.
+
+(*The first element in the list is (v,v), but the rest are the first two elements in the path
+  returned by [bft]*)
+Theorem bfe_pred: forall v (g: gr a b) h t,
+  vIn g v = true ->
+  bft v g = h :: t ->
+  map Some (bfe v g) = Some (v,v) :: map first_two t.
+Proof.
+  intros. unfold bfe. unfold bft in H0. unfold bfen.
+  rewrite <- bf_bf'_equiv in H0. rewrite <- bfenInternal_bfenInternal'_equiv.
+  simpl. rewrite unfold_bfenInternal'. rewrite unfold_bf' in H0. simpl in *.
+  destruct (isEmpty g) eqn : E. inversion H0. destruct (match_ v g) eqn : M.
+  destruct m.
+  - simpl in *. inversion H0; subst. erewrite bfenInternal_pred. reflexivity.
+    intros. rewrite in_map_iff in H1. destruct_all. intro. subst. simpl in H3. inversion H3.
+    unfold suc'. unfold outU. unfold out'. destruct c. destruct p. destruct p.
+    unfold Base.map. rewrite snd_equiv. rewrite map_map. rewrite map_map. rewrite map_map.
+    unfold Base.op_z2218U__ . eapply match_context in M. destruct M. subst.
+    induction (context4l' (a2, n, a1, a0)). simpl. reflexivity. simpl. rewrite IHa3. simpl.
+    destruct a3. simpl. reflexivity.
+  - epose proof (match_in g v). destruct H1. apply H2 in H. destruct_all. rewrite M in H.  inversion H.
+Qed.
+
+End Bfen.
+
 End Ind. 

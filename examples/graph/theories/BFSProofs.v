@@ -10,7 +10,7 @@ Require Import Coq.Bool.Bool.
 Require Import Coq.Lists.SetoidList.
 Require Import Omega.
 Require Import Wellfounded.
-Require Import Coq.Relations.Relation_Operators.
+
 Require Import Path.
 Require Import Helper.
 Require Import Coq.FSets.FMapFacts.
@@ -23,70 +23,8 @@ Module M := FMapList.Make(N_as_OT).
 Module P := WProperties_fun N_as_OT M.
 Module F := P.F.
 
-Require Import Coq.Wellfounded.Lexicographic_Product.
-Require Import Relation_Operators.
-
-
-Definition compose A (R S : relation A) : relation A :=
-  fun x y => exists z, R x z /\ S z y.
-(*Heavily based on the Lex proofs from the CoLoR library. The main difference is that I need the 
-  first relation to be on the second type in the tuple because of the order of the arguments in the
-  Haskell functions*)
-Section Lex.
-  Variables (A B : Type) (ltA eqA : relation A) (ltB : relation B).
-  Inductive lex : relation (B * A) :=
-  | lex1 a a' b b' : ltA a a' -> lex (b,a) (b',a')
-  | lex2 a a' b b' : eqA a a' -> ltB b b' -> lex (b,a) (b',a').
-  Variables (WF_gtA : well_founded ltA) (WF_gtB : well_founded ltB)
-    (eqA_trans : Transitive eqA) (Hcomp : forall x y : A, (exists z : A, eqA y z /\ ltA x z) -> ltA x y)
-    (eqA_sym: Symmetric eqA).
-  
-   Lemma lex_Acc_eq : forall a b,
-    Acc lex (b,a) -> forall a', eqA a a' -> Acc lex (b,a').
-
-  Proof.
-    intros a b SN_ab a' eqaa'. inversion SN_ab. apply Acc_intro.
-    destruct y as (a'',b'). intro H'.
-    inversion H'; subst a'0 b'0 a0 b0; apply H.
-    apply lex1. apply Hcomp. exists a'. auto. 
-    apply lex2. assert (eqA a' b'). eapply eqA_sym. assumption. 
-    pose proof (eqA_trans _ _ _ eqaa' H0). apply eqA_sym. assumption. assumption.
-  Qed.
-
-  Lemma lex_Acc :
-    forall a, Acc ltA a -> forall b, Acc ltB b -> Acc lex (b, a).
-
-  Proof.
-    induction 1 as [a Ha1 Ha2]. induction 1 as [b Hb1 Hb2]. apply Acc_intro.
-    destruct y as (a'',b'). intro H. inversion H. subst a'' b'0. subst a0. subst a'. (* subst a'' b'0 a0 b0.*)
-    (* gtA a a' *)
-    apply Ha2. exact H1. apply WF_gtB. 
-    (* eqA a a' /\ gtB b b' *)
-    apply (@lex_Acc_eq a).
-    apply Hb2. assumption. apply eqA_sym. assumption.
-  Qed.
-
-  Lemma WF_lex : well_founded lex.
-
-  Proof.
-    unfold well_founded. destruct a as (a,b). apply lex_Acc. apply WF_gtA. apply WF_gtB.
-  Qed.
-
-End Lex.
-
-Definition f_nat_lt {a} (f: a -> nat) x y := f x < f y.
-
-Lemma f_nat_lt_acc: forall {a} (f: a -> nat) x n, f x <= n -> Acc (f_nat_lt f) x.
-Proof.
-  intros. generalize dependent x. induction n; auto.
-  - intros. apply Acc_intro. intros. unfold f_nat_lt in *. omega.
-  - unfold f_nat_lt in *. intros. apply Acc_intro. intros. apply IHn. omega.
-Qed.
-
-Lemma f_nat_lt_wf: forall {a} (f: a -> nat), well_founded (f_nat_lt f).
-Proof.
-  red. intro. intro. intro. eapply f_nat_lt_acc. eauto.
-Qed.
+Require Import Coq.Relations.Relation_Operators.
+Require Import Lex.
 
 (* Inductive relation*)
 Section Ind.
@@ -102,13 +40,6 @@ Definition natNodes_lt (x y : gr a b) := natNodes x < natNodes y.
 Definition natNodes_eq (x y : gr a b) := natNodes x = natNodes y.
 Definition list_length_lt {a} (x y : list a) := length x < length y.
 Definition queue_length_lt  {a} (x y : Queue a) := list_length_lt (toList _ x) (toList _ y).
-(*
-Definition bf_measure_list (A: Type) :=
-  symprod  (@list_length_lt A) (natNodes_lt).
-
-Definition bf_measure_queue (A: Type) :=
-  symprod (@queue_length_lt A) (natNodes_lt).
-*)
 
 Definition bf_measure_list (a: Type) := 
   lex _ _ (natNodes_lt) natNodes_eq ((@list_length_lt a)).
@@ -116,17 +47,6 @@ Definition bf_measure_list (a: Type) :=
 
 Definition bf_measure_queue (a: Type) :=
   lex _ _ (natNodes_lt) natNodes_eq (@queue_length_lt a).
-(*
-Lemma wf_bf_measure_list: forall a, well_founded (bf_measure_list a).
-Proof.
-  intros. apply wf_symprod; apply f_nat_lt_wf.
-Qed.
-
-Lemma wf_bf_measure_queue: forall a, well_founded (bf_measure_queue a).
-Proof.
-  intros. apply wf_symprod; apply f_nat_lt_wf.
-Qed.
-*)
 
 Lemma well_founded_bf_measure_list : forall a,  well_founded (bf_measure_list a).
 Proof.
@@ -1888,6 +1808,14 @@ Proof.
   eapply dists_sorted. eapply multi_valid. 
   apply v_start. apply Heqb0. apply bfs_tail_multi. rewrite level_invalid. simpl. constructor.
   assumption.
+Qed.
+
+Theorem no_dup_level: forall v (g: gr a b),
+  NoDup (map fst (level v g)).
+Proof.
+  intros. destruct (vIn g v) eqn : ?. rewrite <- level_tail_equiv.
+  eapply no_dups_output. eapply multi_valid. apply v_start. apply Heqb0. apply bfs_tail_multi.
+  rewrite level_invalid. simpl. constructor. assumption.
 Qed.
  
 End Level.

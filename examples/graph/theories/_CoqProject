@@ -3,8 +3,11 @@
 -Q ../../../base-thy  Proofs
 -Q ../../graph/lib ""
 -Q ../../containers/lib ""
-Crush.v
+HeapEquiv.v
 Helper.v
 NicerQueue.v
 Path.v
+Lex.v
 BFSProofs.v
+HeapProofs.v
+SPProofs.v

@@ -3,6 +3,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.Wellfounded.Inverse_Image.
 Require Import Omega.
 Require Import HeapEquiv.
+Require Import Helper.
 
 Require Import Equations.Equations.
 
@@ -123,6 +124,68 @@ Proof.
   destruct H2. left. assumption. right. apply IHl'. apply H2. } rewrite H2. split; intros.
   destruct H3. left. subst. reflexivity. right. assumption. destruct H3. left. subst. reflexivity. right.
   assumption.
+Qed.
+
+(*Empty does not appear in the heap*)
+Inductive nEmpty : Heap A B -> Prop  :=
+  | h_unit : forall x y, nEmpty (unit x y)
+  | h_merge: forall h h', nEmpty h -> nEmpty h' -> nEmpty (merge h h')
+  | h_mergeAll: forall hs, (forall h, In h hs -> nEmpty h) -> nEmpty (mergeAll hs).
+(*
+Inductive WF_Heap : Heap A B -> Prop :=
+  | h_empty : WF_Heap Heap.Empty
+  | h_merge : forall h h', WF_Heap h -> WF_Heap h' -> nEmpty h -> nEmpty h' -> WF_Heap 
+*)
+
+(*Total versions of the partial functions in [Heap.v]*)
+
+Definition splitMinT (h: Heap A B) :=
+match h with
+| Heap.Empty => None
+| Node key val hs => Some (key, val, mergeAll hs)
+end.
+
+(*Equivalence of [splitMin] and [splitMinT]*)
+Lemma splitMin_equiv: forall (h : Heap A B),
+  h <> Heap.Empty ->
+  Some (splitMin h) = splitMinT h.
+Proof.
+  intros. destruct h. contradiction. simpl. reflexivity.
+Qed.
+
+Definition findMinT (h: Heap A B) :=
+  match h with
+  | Heap.Empty => None
+  | Node key val _ => Some (key, val)
+  end.
+
+
+(*Equivalence of [findMin] and [findMinT]*)
+Lemma findMin_equiv: forall (h: Heap A B),
+  h <> Heap.Empty ->
+  Some (findMin h) = findMinT h.
+Proof.
+  intros. destruct h; [contradiction | reflexivity].
+Qed. 
+
+(*Two equivalent functions used in In_Heap*)
+Lemma in_heap_equiv: forall l k v,
+fold_right (fun (x : Heap A B) (acc : Prop) => In_Heap (k, v) x \/ acc) False l <->
+fold_right (fun y acc : Prop => y \/ acc) False (map (fun y : Heap A B => In_Heap (k, v) y) l).
+Proof.
+  intros. induction l; simpl. reflexivity. rewrite IHl. reflexivity.
+Qed.
+
+(*Another property used for In_Heap*)
+Lemma in_heap_exists: forall l k v,
+  fold_right (fun (x : Heap A B) (acc : Prop) => In_Heap (k, v) x \/ acc) False l <->
+  exists h, In h l /\ In_Heap (k, v) h.
+Proof.
+  intros. induction l; intros; simpl.
+  - split; intros. destruct H0. destruct_all. destruct H0.
+  - rewrite IHl. split; intros.
+    + destruct H0. exists a. simplify'. destruct_all. exists x. split. right. all: assumption.
+    + destruct_all. destruct H0. subst. left. assumption. right. exists x. simplify'.
 Qed.
 
 End Heap.

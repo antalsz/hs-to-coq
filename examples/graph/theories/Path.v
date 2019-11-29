@@ -7,6 +7,9 @@ Require Import Coq.Lists.ListDec.
 Require Import Coq.NArith.BinNat.
 Require Import Omega.
 Require Import Crush.
+Require Import WeightedGraphs.
+Import GHC.Num.Notations.
+
 
 (*Lots of stuff about paths here*)
 Section Path.
@@ -374,4 +377,1061 @@ Proof.
   right. intro. apply path_equiv in H. rewrite H in Heqb0. inversion Heqb0.
 Qed.
 
+(* Weighted paths. We first define a new path definition that matches the one used in FGL code*)
+
+Inductive path': (gr a b) -> Node -> Node -> (list Node) -> Prop :=
+  | p_single: forall g v, vIn g v = true -> path' g v v (v :: nil)
+  | p_multi: forall g u v v' l,
+      path' g u v' l ->
+      eIn g v' v = true ->
+      path' g u v (v :: l).
+
+Require Import GHC.Base.
+Require Import OrdTactic.
+Require Import Coq.micromega.OrderedRing.
+Require Import Coq.Classes.RelationClasses.
+Require Import Coq.Classes.Morphisms.
+Require Import Coq.Classes.SetoidTactics.
+Require Import RealRing.
+(*Paths and shortest paths in weighted graphs*)
+Section Weighted.
+
+
+(*We declare b as an ordered ring. GHC.Num should usually be a ring, and we need the fact that addition
+  acts in a consistent way with the ordering (ie, x < y -> p + x < p + y and x >= 0 and y >= 0 -> x + y >= 0).
+  I don't know if we need a full ordered ring, but Coq provides decent facilities for working with them*)
+
+Context {Hnum: GHC.Num.Num b} {Heq: Base.Eq_ b} {HOrd: Base.Ord b} {Hreal: @GHC.Real.Real b Hnum Heq HOrd}
+{Hlaw2 : (@WeightedGraphs.LawfulWGraph a b gr Hgraph) } {HEqLaw: Base.EqLaws b} {HOrdLaw: @OrdLaws b Heq HOrd HEqLaw}
+{HorderedRing: @RealRing b Heq HOrd HEqLaw Hnum Hreal}.
+
+
+
+Add Relation b (fun x y => x == y = true)
+  reflexivity proved by (@Equivalence_Reflexive _ _ (SORsetoid real_ring))
+  symmetry proved by (@Equivalence_Symmetric _ _ (SORsetoid real_ring))
+  transitivity proved by (@Equivalence_Transitive _ _ (SORsetoid real_ring))
+as sor_setoid.
+
+Add Morphism op_zp__ with signature (fun x y => x == y = true) ==> (fun x y => x == y = true) ==> (fun x y => x == y = true) as rplus_morph.
+destruct HorderedRing; assumption.
+Qed.
+
+Add Morphism op_zt__ with signature (fun x y => x == y = true) ==> (fun x y => x == y = true) ==> (fun x y => x == y = true) as rtimes_morph.
+destruct HorderedRing; assumption.
+Qed. 
+Add Morphism negate with signature (fun x y => x == y = true) ==> (fun x y => x == y = true) as ropp_morph.
+ destruct HorderedRing; assumption.
+Qed. 
+Add Morphism (fun x y => x <= y = true) with signature (fun x y => x == y = true) ==> (fun x y => x == y = true) ==> iff as rle_morph.
+destruct HorderedRing; assumption. 
+Qed.
+Add Morphism (fun x y => x < y = true) with signature (fun x y => x == y = true) ==> (fun x y => x == y = true) ==> iff as rlt_morph.
+destruct HorderedRing; assumption.
+Qed.
+Lemma req_dec: forall x y, x == y = true -> (fun x y => x == y = true) x y. intros. assumption.
+Qed.
+
+(*TODO: figure out why ring tactic is not working*)
+Add Ring b : (SORrt real_ring) (decidable req_dec).
+
+
+(*For now, I will assume that the graph is simple (no parallel edges). Eventually, I may be able to
+  relax that restriction, and it should only matter for the path proofs*)
+Variable g : gr a b.
+Variable Hsimple: forall u v w w', WeIn g u v w -> WeIn g u v w' -> w = w'.
+Variable HNonneg: forall u v w, WeIn g u v w -> #0 <= w = true.
+
+Definition find_weight (g: gr a b) (u v : Node) : option b :=
+  match (match_ u g) with
+  | (Some (_, _, _, o), g') => fold_right (fun (x : b * Node) acc => let (w, y) := x in if N.eq_dec y v then Some w
+    else acc) None o
+  | (None, g') => None
+  end. 
+
+Fixpoint path_cost (g: gr a b) (l: list Node) : option b :=
+  match l with
+  | nil => None
+  | (x :: l') => match l' with
+                 | nil => if vIn g x then Some #0 else None
+                 | y :: l'' =>  match (find_weight g y x) with
+                      | None => None
+                      | Some w => match (path_cost g l') with
+                                  | None => None
+                                  | Some w' => Some (w + w')
+                                  end
+                      end
+                end
+   end.
+
+Definition eInP (g: gr a b) (u v : Node) : Prop :=
+  In (u,v) (ulabEdges (labEdges g)).
+
+Ltac destruct_if :=
+  match goal with 
+    | [H: (if ?b then _ else _) = _ |- _] => destruct b
+    | [H: _ |- (if ?b then _ else _) = _ ] => destruct b
+    end. 
+
+Lemma eIn_equiv: forall g u v,
+  eIn g u v = true <-> eInP g u v.
+Proof.
+  intros. unfold eIn. unfold eInP. unfold mem. split; intros.
+  destruct_if.
+  - unfold edgeList in i. apply i.
+  - inversion H.
+  - destruct_if. reflexivity. unfold edgeList in n. contradiction.
+Qed.
+
+Lemma edge_weight: forall (g: gr a b) u v,
+  eIn g u v = true <-> exists w, WeIn g u v w.
+Proof.
+  intros. rewrite eIn_equiv.  unfold eInP. unfold WeIn. induction (labEdges g0); simpl.
+  - split; intros; auto. destruct H. destruct_all. destruct H.
+  - destruct a0. destruct p. split; intros.
+    + destruct H. inversion H; subst. exists b0. left. reflexivity.
+      apply IHl in H. destruct H. exists x. right. assumption.
+    + destruct_all. destruct H. inversion H; subst. left. reflexivity.
+      right. apply IHl. exists x. assumption.
+Qed.
+
+(*Not true in multigraph (only converse holds)*)
+Lemma edge_weight_in: forall u v w,
+  WeIn g u v w <-> find_weight g u v = Some w.
+Proof.
+  intros.
+  assert (forall l w v,
+        (forall w w', In (w,v) l -> In (w', v) l -> w = w') ->
+        fold_right (fun (x : b * Node) (acc : option b) => let (w0, y) := x in if N.eq_dec y v then Some w0 else acc)
+          None l = Some w <-> In (w, v) l). {
+  intros. induction l; simpl.
+  - split; intros. inversion H0. destruct H0.
+  - destruct a0. destruct (N.eq_dec n v0). subst. split; intros. inversion H0; subst. left. reflexivity.
+    destruct H0. inversion H0; subst. reflexivity. simpl in H. assert (b0 = w0). eapply H.
+    left. reflexivity. right. assumption. subst. reflexivity.
+    rewrite IHl. split; intros. right. assumption. destruct H0. inversion H0. subst. contradiction.
+    assumption. intros. eapply H. simpl. right. assumption. right. assumption. }
+ split; intros.
+  - unfold find_weight. destruct (match_ u g) eqn : M. destruct m.
+    + destruct c. destruct p. destruct p. epose proof (@Wmatch_context _ _ gr _ Hlaw2 _ _ _ _ _ _  _ M).
+      rewrite H. destruct_all. apply H3. apply H0. intros. eapply Hsimple. destruct_all. apply i0. apply H2.
+      destruct_all. apply H5. apply H3.
+    + destruct (vIn g u) eqn : V. rewrite <- match_in in V. destruct_all. rewrite H1 in M. inversion M.
+      assert (eIn g u v = true). rewrite edge_weight. exists w. assumption. apply edges_valid in H1.
+      destruct_all. rewrite H1 in V. inversion V.
+  - unfold find_weight in H0. destruct (match_ u g) eqn : M. destruct m.
+    + destruct c. destruct p. destruct p. apply H in H0. 
+       epose proof (@Wmatch_context _ _ gr _ Hlaw2 _ _ _ _ _ _  _ M). destruct_all.
+      apply H3. assumption. intros. epose proof (@Wmatch_context _ _ gr _ Hlaw2 _ _ _ _ _ _  _ M).
+      destruct_all. subst. eapply Hsimple. apply H6. apply H2. apply H6. apply H3.
+    + inversion H0.
+Qed.
+
+Lemma find_weight_nonneg: forall u v w,
+  find_weight g u v = Some w -> #0 <= w = true.
+Proof.
+  intros. rewrite <- edge_weight_in in H. eapply HNonneg. apply H.
+Qed. 
+
+(*Easier to work with, through equivalent, to [path_cost]*)
+Inductive Wpath : (gr a b) -> Node -> Node -> (list Node) -> b -> Prop :=
+  | wp_single: forall g v, vIn g v = true -> Wpath g v v (v :: nil) #0
+  | wp_step: forall g u v v' w w' l, 
+     Wpath g u v' l w ->
+     WeIn g v' v w' ->
+     Wpath g u v (v :: l) (_GHC.Num.+_ w' w) .
+
+Lemma wpath_nonneg: forall u v l w,
+  Wpath g u v l w ->
+  #0 <= w = true.
+Proof.
+  intros. induction H.
+  - order b.
+  - apply HNonneg in H0.
+    pose proof (Rplus_nonneg_nonneg real_ring). apply H1. assumption. apply IHWpath.
+    apply Hsimple. apply HNonneg.
+Qed. 
+
+Lemma hd_path: forall g u v l w u',
+  Wpath g u v (u' :: l) w ->
+  v = u'.
+Proof.
+  intros. inversion H; subst; reflexivity.
+Qed. 
+
+Lemma path_cost_sum: forall l w,
+  path_cost g l = Some w <-> (exists u v, Wpath g u v l w).
+Proof.
+  intros. split; intros.
+  - generalize dependent w. induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)); intros.
+    + destruct l. simpl in H0. inversion H0.
+      simpl in H0. destruct l. 
+      destruct (vIn g n) eqn : V. inversion H0; subst.
+      exists n. exists n. constructor. assumption. inversion H0.
+      destruct (find_weight g n0 n) eqn : W.
+      * destruct (path_cost g (n0 :: l)) eqn : P.
+        -- specialize (H (n0 :: l)). assert (exists u v : Node, Wpath g u v (n0 :: l) b1).
+           apply H. simpl. omega. apply P. destruct_all. exists x. exists n. inversion H0; subst. eapply wp_step.
+           apply H1. rewrite edge_weight_in. apply hd_path in H1. subst. apply W.
+        -- inversion H0.
+      * inversion H0.
+  - destruct H as [u]. destruct H as [v]. remember g as g'. induction H; subst.
+    + simpl. rewrite H. reflexivity.
+    + simpl. destruct l. inversion H. assert (v' = n). eapply hd_path. apply H. subst.
+      rewrite edge_weight_in in H0. rewrite H0. rewrite IHWpath. reflexivity. reflexivity. apply Hsimple. assumption.
+Qed.
+
+Lemma path_cost_nonneg: forall l w,
+  path_cost g l = Some w ->
+  #0 <= w = true.
+Proof.
+  intros. rewrite path_cost_sum in H. destruct_all. eapply wpath_nonneg. apply H.
+Qed.
+
+
+Lemma path'_WPath: forall u v l,
+  path' g u v l <-> exists w, Wpath g u v l w.
+Proof.
+  intros. split; intros. induction H. exists #0. constructor.
+  assumption. specialize (IHpath' Hsimple HNonneg).  destruct_all. 
+  rewrite edge_weight in H0. destruct_all. exists (x0 + x). econstructor.
+  apply H1. assumption. destruct H. induction H. constructor. assumption.
+  econstructor. apply IHWpath. apply Hsimple. apply HNonneg. 
+  rewrite edge_weight. exists w'. assumption.
+Qed.
+
+Lemma path_cost_path' : forall l,
+  (exists w, path_cost g l = Some w) <-> (exists u v, path' g u v l).
+Proof.
+  intros; split; intros; destruct_all. eapply path_cost_sum in H. 
+  destruct_all. exists x0. exists x1. rewrite path'_WPath. exists x. assumption.
+  rewrite path'_WPath in H. destruct H. exists x1. rewrite path_cost_sum. exists x. exists x0. assumption.
+Qed.
+
+Lemma path_cost_cons: forall h' h t n m,
+  path_cost g (h' :: t) = Some n ->
+  find_weight g h' h = Some m ->
+  path_cost g (h :: h' :: t) == Some (n + m) = true.
+Proof.
+  intros. remember (h' :: t) as l. simpl. rewrite Heql. rewrite <- Heql. rewrite H0. rewrite H. 
+  rewrite Base.simpl_option_some_eq. (*ring*) destruct HorderedRing.
+  destruct real_ring. destruct (SORrt). apply Radd_comm.
+Qed. 
+
+Lemma path_in_graph: forall u v l v',
+  path' g u v l ->
+  In v' l ->
+  vIn g v' = true.
+Proof.
+  intros. induction H. simpl in H0. destruct H0. subst. assumption. destruct H0.
+  simpl in H0. destruct H0. subst. apply edges_valid in H1. apply H1. apply IHpath'.
+  apply Hsimple. assumption. assumption.
+Qed.
+
+Lemma some_none_eq: forall (n : b),
+  None == Some n = false.
+Proof.
+  intros. unfold "==". unfold op_zeze____. unfold Eq___option.
+  unfold Base.Eq___option_op_zeze__. reflexivity.
+Qed.
+
+Lemma path_cost_app: forall l l' a n,
+  path_cost g (l ++ a :: l') == Some n = true ->
+  exists m p, path_cost g (l ++ a :: nil) == Some m = true /\ path_cost g (a :: l') == Some p = true 
+  /\  n == (m + p) = true.
+Proof.
+  intro l. induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)); intros.
+  - assert (A: vIn g a0 = true). { 
+    assert (exists u v, path' g u v (l ++ a0 :: l')). apply path_cost_path'.
+    destruct (path_cost g (l ++ a0 :: l')). exists b0. reflexivity. rewrite some_none_eq in H0.
+    inversion H0.
+    destruct_all. eapply path_in_graph. apply H1. solve_in. } 
+    destruct l.
+    + simpl in H0. destruct l'. rewrite A in H0. inversion H0; subst.
+      exists #0. exists #0. simpl. rewrite A. split. rewrite H0. 
+      rewrite Base.simpl_option_some_eq. destruct HEqLaw. apply Eq_refl.
+      split. rewrite H0. rewrite Base.simpl_option_some_eq. destruct HEqLaw; apply Eq_refl.
+      rewrite H0. rewrite Base.simpl_option_some_eq in H2. 
+      destruct HorderedRing. assert (#0 + n == #0 + #0 = true). eapply rplus_eq. destruct HEqLaw. apply Eq_refl.
+      destruct HEqLaw; rewrite Eq_sym. assumption. destruct HEqLaw; eapply Eq_trans. 
+      rewrite Eq_sym. apply H2. destruct real_ring. destruct SORrt. rewrite Eq_sym. apply Radd_0_l.
+      destruct (find_weight g n0 a0) eqn : F.
+      destruct (path_cost g (n0 :: l')) eqn : P. inversion H0; subst.
+      rewrite app_nil_l. exists #0. exists (b0 + b1). split. simpl. rewrite A. rewrite H2.
+      destruct HEqLaw; apply Eq_refl. 
+      remember (n0 :: l') as l''. split. simpl. rewrite Heql''. rewrite <- Heql''.
+      rewrite F. rewrite P. rewrite H2. destruct HEqLaw; apply Eq_refl.
+      rewrite H0. rewrite Base.simpl_option_some_eq in H2. destruct HEqLaw. eapply Eq_trans.
+      rewrite Eq_sym. apply H2. destruct HorderedRing. destruct real_ring. destruct SORrt. rewrite Eq_sym. apply Radd_0_l.
+      rewrite some_none_eq in H0. inversion H0. rewrite some_none_eq in H0. inversion H0.
+      (*ring.*)
+    + assert (forall l', (n0 :: l) ++ a0 :: l' = n0 :: (l ++ a0 :: l')) by (intros; reflexivity). rewrite H1 in H0.
+      destruct l.
+      * replace (n0 :: nil ++ a0 :: l') with (n0 :: a0 :: l') in H0 by reflexivity.
+        remember (a0 :: l') as l''. simpl in H0. rewrite Heql'' in H0. rewrite <- Heql'' in H0.
+        destruct (find_weight g a0 n0) eqn : F. destruct (path_cost g l'') eqn : P'.
+        exists b0. exists b1. split. simpl. rewrite F. rewrite A.
+        rewrite Base.simpl_option_some_eq. destruct HEqLaw. rewrite Eq_sym.
+        destruct HorderedRing. destruct real_ring. destruct SORrt. eapply Eq_trans.
+        rewrite Eq_sym. apply Radd_0_l. apply Radd_comm. 
+        split. destruct HEqLaw; apply Eq_refl. rewrite Base.simpl_option_some_eq in H0.
+        destruct HEqLaw; rewrite Eq_sym. assumption.
+        rewrite some_none_eq in H0. inversion H0. rewrite some_none_eq in H0. inversion H0. 
+      * remember ((n1 :: l) ++ a0 :: l') as l''. simpl in H0.
+        simpl in Heql''. rewrite Heql'' in H0. rewrite <- Heql'' in H0. 
+        destruct (find_weight g n1 n0) eqn : F. destruct (path_cost g l'') eqn : P.
+        rewrite Heql'' in P. specialize (H ((n1 :: l))).
+        assert (n1 :: l ++ a0 :: l' = (n1 :: l) ++ a0 :: l'). simpl. reflexivity.
+        rewrite H2 in P. clear H2. 
+        assert (
+        (exists m p : b,
+        path_cost g ((n1 :: l) ++ a0 :: nil) == Some m = true /\ path_cost g (a0 :: l') == Some p = true
+         /\ b1 == _+_ m p = true)).
+        apply H. simpl. omega. rewrite P. rewrite Base.simpl_option_some_eq. destruct HEqLaw; apply Eq_refl.
+         destruct H2 as [m]. destruct H2 as [p]. destruct_all.
+        exists (b0 + m). exists p. split. replace (((n0 :: n1 :: l) ++ a0 :: nil)) with
+        (n0 :: (n1 :: l ++ a0 :: nil)) by reflexivity. remember (n1 :: l ++ a0 :: nil) as l0.
+        simpl. rewrite Heql0. rewrite <- Heql0.  rewrite F. 
+        assert (((n1 :: l) ++ a0 :: nil) = l0). subst. reflexivity. rewrite H5 in H2.
+        destruct (path_cost g l0) eqn : O. rewrite Base.simpl_option_some_eq in H2.
+        rewrite Base.simpl_option_some_eq. destruct HorderedRing. apply rplus_eq.
+        destruct HEqLaw; apply Eq_refl. assumption. rewrite some_none_eq in H2. inversion H2.
+        split. apply H3. rewrite Base.simpl_option_some_eq in H0. 
+        destruct HorderedRing. destruct HEqLaw. eapply Eq_trans. rewrite Eq_sym. apply H0.
+        eapply Eq_trans. assert (b0 + b1 == b0 + (m + p) = true). apply rplus_eq.
+        apply Eq_refl. assumption. apply H5. destruct real_ring. destruct SORrt. apply Radd_assoc.
+        rewrite some_none_eq in H0. inversion H0. rewrite some_none_eq in H0. inversion H0.
+Qed. 
+
+(*Back to not as general version*)
+(*All paths from a given vertex of size n*)
+Fixpoint paths_of_length (u v : Node) (n : nat) : list (list Node) :=
+  match n with
+  | O => nil
+  | S(O) => if N.eq_dec u v then if vIn g v then (v :: nil) :: nil else nil else nil
+  | S(m) => fold_right (fun x t => match (paths_of_length u x m) with
+                                    | nil => t
+                                    | l => if (eIn g x v) then (map (fun y => v :: y) l) ++ t else t
+                                    end) nil (nodeList g)
+  end.
+
+  Fixpoint All {T} (P: T -> Prop) (ls : list T) : Prop :=
+    match ls with
+      | nil => True
+      | cons h t => P h /\ All P t
+    end.
+
+Lemma paths_of_length_n: forall u v n,
+  forall l, In l (paths_of_length u v n) -> length l = n.
+Proof.
+  intros. destruct n. simpl in H. destruct H. generalize dependent u. revert v. revert l. induction n; intros.
+  - simpl in H. destruct (N.eq_dec u v). subst. destruct (vIn g v). simpl in H. destruct H.
+    subst. simpl. reflexivity. destruct H. inversion H. inversion H.
+  - remember (S(n)) as m. simpl in H. rewrite Heqm in H. rewrite <- Heqm in H. induction (nodeList g).
+    simpl in H. destruct H. simpl in H. destruct (paths_of_length u a0 m) eqn : P. apply IHl0. apply H.
+    destruct (eIn g a0 v) eqn : E. simpl in H. destruct H. subst. simpl. erewrite IHn. reflexivity.
+    rewrite P. left. reflexivity. apply in_app_or in H. destruct H. rewrite in_map_iff in H.
+    destruct_all. subst. simpl. erewrite IHn. reflexivity. rewrite P. right. assumption.
+    apply IHl0. apply H. apply IHl0. apply H.
+Qed.
+
+Lemma paths_of_length_are_paths: forall u v n,
+  (forall l, In l (paths_of_length u v n) -> path' g u v l).
+Proof.
+  intros. destruct n. simpl in H. destruct H. generalize dependent u. revert v. revert l.
+  induction n; intros.
+  - simpl in H. destruct (N.eq_dec u v). subst. destruct (vIn g v) eqn : V. simpl in H.
+    destruct H. subst. constructor. assumption. destruct H. inversion H. inversion H.
+  - remember (S(n)) as m. simpl in H. rewrite Heqm in H. rewrite <- Heqm in H.
+   assert (forall l' l, (forall v', In v' l' -> vIn g v' = true) ->
+    In l
+      (fold_right
+         (fun (x : Node) (t : list (list Node)) =>
+          match paths_of_length u x m with
+          | nil => t
+          | l0 :: l1 => if eIn g x v then (v :: l0) :: map (fun y : list Node => v :: y) l1 ++ t else t
+          end) nil l') -> path' g u v l). { intros. induction l'. simpl in H1. destruct H1.
+      simpl in H1. destruct (paths_of_length u a0 m) eqn : P. apply IHl'. 
+      intros. apply H0. right. assumption. apply H1. destruct (eIn g a0 v) eqn : E. simpl in H1.
+      destruct H1. subst. eapply p_multi. apply IHn. rewrite P. left. reflexivity. assumption.
+      apply in_app_or in H1. destruct H1. rewrite in_map_iff in H1. destruct_all. subst.
+      eapply p_multi. apply IHn. rewrite P. right. assumption. assumption. apply IHl'. intros.
+      apply H0. right. assumption. apply H1. apply IHl'. intros. apply H0. right. assumption.
+      apply H1. } (apply (H0 (nodeList g))). intros. unfold vIn. unfold mem. destruct_if. reflexivity.
+      contradiction. apply H.
+Qed.
+
+Lemma in_path': forall u v l,
+  path' g u v l ->
+  vIn g u = true /\ vIn g v = true.
+Proof.
+  intros. remember g as g0. induction H; subst. split; assumption.
+  eapply edges_valid in H0. destruct_all. split. apply IHpath'. reflexivity. assumption. assumption.
+  assumption.
+Qed.
+
+
+
+Lemma paths_of_length_appear: forall u v n l,
+  path' g u v l /\ length l = n -> In l (paths_of_length u v n).
+Proof.
+  intros. generalize dependent v. revert u. revert n. induction l; simpl in *; intros; destruct_all.
+  - subst. inversion H.
+  - destruct n. omega. assert (length l = n) by omega. clear H0. remember n as n'. inversion H.  subst.
+    simpl. destruct (N.eq_dec a0 a0). rewrite H5. left. reflexivity. contradiction. subst.
+    simpl. destruct (length l) eqn : L. destruct l. inversion H6. simpl in L. inversion L.
+    assert (forall a v'' l', In a l' ->
+      In l (paths_of_length u a (S n)) ->
+      eIn g a v'' = true ->
+      In (v'' :: l)
+  (fold_right
+     (fun (x : Node) (t : list (list Node)) =>
+      match paths_of_length u x (S n) with
+      | nil => t
+      | l0 :: l1 => if eIn g x v'' then (v'' :: l0) :: map (fun y : list Node => v'' :: y) l1 ++ t else t
+      end) nil l')). { intros. induction l'. inversion H0. simpl in H0. destruct (N.eq_dec a2 a1). subst. 
+      unfold fold_right. destruct (paths_of_length u a1 (S n)) eqn : P.
+      inversion H1.  rewrite H2. simpl in H1. destruct H1. subst. left. reflexivity.
+      right. apply in_or_app. left. rewrite in_map_iff. exists l. split. reflexivity. assumption.
+      destruct H0. subst. contradiction. 
+      unfold fold_right. destruct (paths_of_length u a2 (S n)) eqn : P.
+      apply IHl'. assumption. destruct (eIn g a2 v'') eqn :  simpl. right.
+      apply in_or_app. right. apply IHl'. assumption. apply IHl'. assumption. }
+      apply (H0 v'). apply edges_valid in H7. unfold vIn in H7. destruct H7.
+      unfold mem in H1. destruct_if. assumption. inversion H1.
+      apply IHl. split. assumption. reflexivity. assumption.
+Qed.
+
+(*What we want to say: This function defines all of the paths from u to v of length n*)
+Lemma paths_of_length_def: forall u v n l,
+  In l (paths_of_length u v n) <-> path' g u v l /\ length l = n.
+Proof.
+  intros. split; intros.
+  - split. eapply paths_of_length_are_paths. apply H.
+    eapply paths_of_length_n. apply H.
+  - eapply paths_of_length_appear. apply H.
+Qed.
+
+Section Min.
+
+Variable A : Type.
+Variable lt: A -> A -> Prop.
+Variable eqb : A -> A -> Prop.
+Variable lt_dec: forall x y, {lt x y} + {~lt x y}.
+Variable eq_dec: forall x y, {eqb x y} + {~ eqb x y}.
+Variable eqb_equiv: RelationClasses.Equivalence eqb.
+Variable lt_trans: forall x y z, lt x y -> lt y z -> lt x z.
+Variable lt_neq: forall x y, lt x y -> ~eqb x y.
+Variable lt_total: forall x y, lt x y \/ eqb x y \/ lt y x.
+Variable lt_antisym: forall x y, lt x y -> ~lt y x.
+Variable lt_compat_r: forall x y z, lt x y -> eqb y z -> lt x z.
+
+(*General function for finding minimum according to a decidable lt relation TODO: move this*)
+Definition min_list (l: list A) : option A :=
+  fold_right (fun x acc => match acc with
+                           | Some y => if lt_dec x y then Some x else Some y
+                           | None => Some x
+                           end) None l.
+
+(*Proof that this actually finds the minimum*)
+Lemma min_list_empty: forall (l: list A) ,
+  min_list l = None <-> l = nil.
+Proof.
+  intros. split; intros. unfold min_list in H. destruct l. reflexivity. simpl in H.
+  destruct (fold_right
+        (fun (x : A) (acc : option A) =>
+         match acc with
+         | Some y => if lt_dec x y then Some x else Some y
+         | None => Some x
+         end) None l). destruct (lt_dec a0 a1); inversion H. inversion H. subst. simpl. reflexivity.
+Qed.
+
+Lemma min_list_in: forall (l: list A) x,
+  min_list l = Some x -> In x l.
+Proof.
+  intros. generalize dependent x. induction l; intros. simpl in H. inversion H. simpl in H.
+  destruct (min_list l) eqn : M. destruct (lt_dec a0 a1). inversion H; subst. solve_in.
+  inversion H. subst. right. apply IHl. reflexivity. inversion H; subst. solve_in.
+Qed.
+
+Lemma min_list_min: forall (l: list A) x,
+  min_list l = Some x ->  forall y, ~eqb x y -> In y l -> lt x y.
+Proof.
+  intros. generalize dependent x. induction l; intros.
+  - simpl in H. inversion H.
+  - simpl in H. destruct (min_list l) eqn : M.
+    + destruct (lt_dec a0 a1).
+      * inversion H; subst. 
+        simpl in H1. destruct H1. subst. destruct eqb_equiv. unfold RelationClasses.Reflexive in Equivalence_Reflexive.
+        specialize (Equivalence_Reflexive y). contradiction. 
+        destruct (eq_dec y a1). eapply lt_compat_r. apply l0. destruct eqb_equiv as [E1 E2 E3]. eapply E2.
+        assumption.
+        eapply lt_trans. apply l0. apply IHl. assumption. reflexivity.
+        intro. destruct eqb_equiv as [E1 E2 E3]. apply E2 in H2. contradiction.
+      * inversion H; subst. simpl in H1. destruct H1.
+        subst. specialize (lt_total x y). destruct lt_total. assumption. destruct H1. contradiction.
+        contradiction. apply IHl. assumption. reflexivity. assumption.
+   + inversion H; subst. rewrite min_list_empty in M. subst. destruct H1. subst.
+     destruct eqb_equiv as [E1 E2 E3]. pose proof (E1 y). contradiction. destruct H1.
+Qed.
+
+End Min.
+
+Definition lt_weight_b (l1 l2: list Node) :=
+  match (path_cost g l1, path_cost g l2) with
+  | (Some b1, Some b2) => b1 < b2
+  | (None, Some _) => true
+  | (_, _) => false
+  end.
+
+Definition eq_weight_b (l1 l2: list Node) :=
+  match (path_cost g l1, path_cost g l2) with
+  | (Some b1, Some b2) => b1 == b2
+  | (None, None) => true
+  | (_, _) => false
+  end.
+
+Definition lt_weight l1 l2 := lt_weight_b l1 l2 = true.
+Definition eq_weight l1 l2 := eq_weight_b l1 l2 = true.
+
+(*Prove this is a valid ordering on paths*)
+Lemma lt_weight_dec: forall x y, {lt_weight x y} + {~lt_weight x y}.
+Proof.
+  intros. unfold lt_weight. destruct (lt_weight_b x y). left. reflexivity. right. intro. inversion H.
+Qed.
+Lemma eq_weight_dec: forall x y, {eq_weight x y} + {~ eq_weight x y}.
+Proof.
+  intros. unfold eq_weight. destruct (eq_weight_b x y). left. reflexivity. right. intro. inversion H.
+Qed.
+Lemma eq_weight_equiv: RelationClasses.Equivalence eq_weight.
+Proof.
+  split. unfold RelationClasses.Reflexive. intros. unfold eq_weight. unfold eq_weight_b.
+  destruct (path_cost g x). order b. reflexivity.
+  unfold RelationClasses.Symmetric. intros. unfold eq_weight in *. unfold eq_weight_b in *.
+  destruct (path_cost g x). destruct (path_cost g y). order b. inversion H. apply H.
+  unfold RelationClasses.Transitive. intros. unfold eq_weight in *. unfold eq_weight_b in *.
+  destruct (path_cost g x). destruct (path_cost g z). destruct (path_cost g y); order b.
+  destruct (path_cost g y); order b. destruct (path_cost g z); destruct (path_cost g y); order b.
+Qed. 
+Lemma lt_weight_trans: forall x y z, lt_weight x y -> lt_weight y z -> lt_weight x z.
+Proof.
+  intros. unfold lt_weight in *. unfold lt_weight_b in *. destruct (path_cost g x); destruct (path_cost g y);
+  destruct (path_cost g z); order b.
+Qed.
+Lemma lt_weight_neq: forall x y, lt_weight x y -> ~eq_weight x y.
+Proof.
+  intros. intro. unfold eq_weight in *. unfold lt_weight in *. unfold lt_weight_b in *. unfold eq_weight_b in H0.
+  destruct (path_cost g x); destruct (path_cost g y); try(order b). 
+Qed. 
+Lemma lt_weight_total: forall x y, lt_weight x y \/ eq_weight x y \/ lt_weight y x.
+Proof.
+  intros. unfold lt_weight. unfold eq_weight. unfold lt_weight_b. unfold eq_weight_b. destruct (path_cost g x).
+  destruct (path_cost g y). pose proof Ord_total. specialize (H b0 b1). destruct (b0 == b1) eqn : ?. order b.
+  order b. right. right. reflexivity. destruct (path_cost g y). left. reflexivity. right. left. reflexivity.
+Qed. 
+Lemma lt_weight_antisym: forall x y, lt_weight x y -> ~lt_weight y x.
+Proof.
+  intros. intro. unfold lt_weight in *. unfold lt_weight_b in *. destruct (path_cost g x); destruct(path_cost g y);
+  order b.
+Qed.
+Lemma lt_weight_compat_r: forall x y z, lt_weight x y -> eq_weight y z -> lt_weight x z.
+Proof.
+  intros. unfold lt_weight in *. unfold eq_weight in *. unfold lt_weight_b in *. unfold eq_weight_b in *.
+  destruct (path_cost g x); destruct (path_cost g z); destruct (path_cost g y); order b.
+Qed.
+
+Definition min_weight_size_n u v n := min_list _ lt_weight lt_weight_dec (paths_of_length u v n).
+
+Definition le_weight l l' := lt_weight l l' \/ eq_weight l l'.
+
+(*Now, we will show that this really does find the minimum weight path of a given length*)
+Lemma min_weight_size_correct: forall u v n l,
+  min_weight_size_n u v n = Some l ->
+  path' g u v l /\ length l = n /\ forall l', path' g u v l' /\ length l' = n -> le_weight l l' .
+Proof.
+  intros. pose proof (min_list_min _ _ _ lt_weight_dec eq_weight_dec eq_weight_equiv lt_weight_trans
+  lt_weight_total lt_weight_compat_r _ _ H). assert (A:= H).
+  eapply (min_list_in _ _ lt_weight_dec) in H.  apply paths_of_length_def in H. split. apply H. split.
+  apply H. intros. destruct (eq_weight_dec l l'). right. assumption.
+  left. apply H0. assumption. apply paths_of_length_def. apply H1.
+Qed.
+
+Lemma path_app': forall u v w l1 l2,
+  path' g u v (l1 ++ w :: l2) <->
+  path' g w v (l1 ++ w :: nil) /\ path' g u w (w :: l2).
+Proof.
+  intros. split; intros. generalize dependent v. revert l2. induction l1; intros.
+  - simpl in H. inversion H; subst. split; simpl; assumption.
+    split. simpl. constructor. eapply edges_valid in H6. apply H6.
+    eapply p_multi. apply H5. assumption.
+  - simpl in H. simpl. inversion H; subst. destruct l1; inversion H5.
+    split. eapply p_multi. apply (IHl1 l2 v'). assumption. assumption. apply (IHl1 l2 v').
+    assumption.
+  - generalize dependent v. revert u. revert l2. induction l1; intros; destruct_all. simpl in *.
+    inversion H. subst. assumption. subst. inversion H6. simpl in *.
+    inversion H; subst. destruct l1; inversion H6.
+    eapply p_multi. apply (IHl1 l2 u v'). split; assumption. assumption.
+Qed. 
+Require Import Proofs.GHC.Base.
+(*Now we can find the shortest path for a given length. We want to show that if all the edge weights
+  are nonnegative, if there is a shortest path of size > n, then there is a shortest path of size at most n*)
+Lemma path_app_strong: forall u v w l1 l2 ,
+  path' g u v (l1 ++ w :: l2) ->
+  path' g w v (l1 ++ w :: nil)  /\ path' g u w (w :: l2) /\ (forall n m,
+    path_cost g (l1 ++ w :: nil) == Some n = true -> 
+    path_cost g (w :: l2) == Some m = true -> path_cost g (l1 ++ w :: l2) == Some (n+m) = true).
+Proof.
+  intros. assert (A:= H). apply path_app' in A. split. apply A. split. apply A.
+  intros.  pose proof path_cost_app. pose proof path_cost_path'.
+  assert (exists w', path_cost g (l1 ++ w :: l2) = Some w'). apply H3. exists u. exists v. assumption.
+  destruct H4 as [w']. assert (B:=H4). assert (C :path_cost g (l1 ++ w :: l2) == Some w' = true).
+  rewrite H4. rewrite Base.simpl_option_some_eq. destruct HEqLaw; apply Eq_refl.
+  apply H2 in C. destruct C as [m']. destruct H5 as [p'].
+  destruct_all. 
+  assert (n == m' = true). rewrite <- Base.simpl_option_some_eq. destruct (EqLaws_option).
+  eapply Eq_trans. rewrite Eq_sym. apply H0. apply H5. rewrite H4.
+  assert (Some p' == Some m = true). destruct (EqLaws_option). eapply Eq_trans.
+  rewrite Eq_sym. apply H6. apply H1. rewrite Base.simpl_option_some_eq in H11.
+  rewrite Base.simpl_option_some_eq. destruct HorderedRing. destruct real_ring. destruct SORrt.
+  destruct HEqLaw. eapply Eq_trans. apply H7. eapply Eq_trans. eapply SORplus_wd.
+  rewrite Eq_sym. apply H10. apply H11. apply Eq_refl.
+Qed. 
+
+Lemma le_weight_trans: forall l1 l2 l3,
+  le_weight l1 l2 ->
+  le_weight l2 l3 ->
+  le_weight l1 l3.
+Proof.
+  intros. unfold le_weight in *. unfold lt_weight in *. unfold eq_weight in *.
+  destruct H; destruct H0.
+  - left. unfold lt_weight_b in *. destruct (path_cost g l1) eqn : P.
+    destruct (path_cost g l3) eqn : P'.
+    destruct (path_cost g l2) eqn : P''.
+    order b. inversion H. destruct (path_cost g l2) eqn : P''. inversion H0. inversion H.
+    destruct (path_cost g l3). destruct (path_cost g l2). reflexivity. inversion H. destruct (path_cost g l2).
+    inversion H0. inversion H.
+  - left. unfold eq_weight_b in *. unfold lt_weight_b in *. destruct (path_cost g l1);
+    destruct (path_cost g l2); destruct (path_cost g l3); try(reflexivity); try( order b).
+  - left. unfold eq_weight_b in *. unfold lt_weight_b in *. destruct (path_cost g l1);
+    destruct (path_cost g l2); destruct (path_cost g l3); try(reflexivity); try( order b).
+  - right. unfold eq_weight_b in *. destruct (path_cost g l1);
+    destruct (path_cost g l2); destruct (path_cost g l3); try(reflexivity); try( order b).
+Qed.
+
+Lemma path'_remove_cycle: forall u v w l1 l2 l3,
+  path' g u v (l1 ++ w :: l2 ++ w :: l3) ->
+  path' g u v (l1 ++ w :: l3).
+Proof.
+  intros. apply path_app' in H. destruct_all. replace (w :: l2 ++ w :: l3) with ((w :: l2) ++ w :: l3) in H0 by
+  reflexivity. apply path_app' in H0. destruct_all.
+  apply path_app'. simplify'.
+Qed.
+
+
+(*If there is a path, then there is a path with no duplicates, and this list is smaller*)
+(*A very hard theorem to prove (the le_weight part), but an important property: if there is a path,
+  there is a smaller weight path with no duplicates*)
+Lemma path_no_dups_strong: forall u v l,
+  path' g u v l ->
+  exists l1, path' g u v l1 /\ NoDup l1 /\
+  (forall x, In x l1 -> In x l) /\ le_weight l1 l. 
+  Proof.
+    intros. induction l using (well_founded_induction
+                       (wf_inverse_image _ nat _ (@length _)
+                          PeanoNat.Nat.lt_wf_0)).
+    destruct (NoDup_dec (N.eq_dec) l).
+    - destruct (In_dec N.eq_dec u l).
+      + eapply in_split_app_fst in i. destruct_all. clear H2. subst.
+        apply path_app_strong in H. destruct H. destruct H1 as [H1 A]. destruct x0.
+        * exists (x ++ u :: nil). split. assumption. split. assumption. split. intros.
+          assumption. unfold le_weight. right. destruct (eq_weight_equiv) as [E1 E2 E3]. apply E1.
+        * specialize (H0 (x ++ u :: nil)). destruct H0 as [l]. 
+          repeat(rewrite app_length). simpl. omega. assumption. 
+          exists l. destruct_all. repeat(split; try(assumption)). intros.
+          apply H3 in H5. apply in_app_or in H5. destruct H5; simpl in H5. apply in_or_app.
+          left. assumption. destruct H5; subst. apply in_or_app. right. solve_in. destruct H5.
+          unfold le_weight. 
+          assert (exists w', path_cost g (x ++ u :: nil) = Some w'). apply path_cost_path'.
+          exists u. exists v. assumption.
+          assert (exists w', path_cost g (u :: n0 :: x0) = Some w'). apply path_cost_path'.
+          exists u. exists u. assumption. destruct H5 as [n']. destruct H6 as [m'].
+          assert (D : path_cost g (x ++ u :: nil) == Some n' = true). rewrite H5.
+          rewrite Base.simpl_option_some_eq. destruct (HEqLaw); apply Eq_refl.
+          assert (E: path_cost g (u :: n0 :: x0) == Some m' = true). rewrite H6.
+          rewrite Base.simpl_option_some_eq. destruct (HEqLaw); apply Eq_refl.
+          specialize (A _ _ D E). 
+          unfold le_weight in H4. destruct H4. left. unfold lt_weight. unfold lt_weight_b.
+          unfold lt_weight in H4. unfold lt_weight_b in H4. destruct (path_cost g l) eqn : P'.
+          rewrite H5 in H4.            
+           match goal with
+                      | [H: _ |- match ?b with | Some _ => _ | None => _ end = _] => destruct b eqn : P
+                      end.
+          assert (Some b1 == Some (n' + m') = true). rewrite <- P. rewrite <- A. reflexivity.
+          rewrite Base.simpl_option_some_eq in H7. 
+          apply path_cost_nonneg in H6. destruct HorderedRing.
+          pose proof (Rplus_le_lt_mono real_ring _ _ _ _ H6 H4).
+          assert (b0 == #0 + b0 = true). assert (R:= real_ring). destruct real_ring. destruct SORrt. destruct HEqLaw; rewrite Eq_sym.
+          apply Radd_0_l. assert (n' + m' == m' + n' = true). destruct real_ring. destruct SORrt. apply Radd_comm.
+          rewrite <- rlt_eq. 2 : { destruct HEqLaw; rewrite Eq_sym. apply H9. }
+          2 : { destruct (HEqLaw); rewrite Eq_sym. apply H7. } 
+          rewrite <- rlt_eq. 2 : { destruct HEqLaw; apply Eq_refl. }  2 : { destruct HEqLaw; rewrite Eq_sym. apply H10. }
+          apply H8. assert (None == Some (n' + m') = true). rewrite <- A.
+          rewrite <- P. reflexivity. rewrite some_none_eq in H7. inversion H7.
+           match goal with
+                      | [H: _ |- match ?b with | Some _ => _ | None => _ end = _] => destruct b eqn : P
+                      end. reflexivity.
+           assert (None == Some (n' + m') = true). rewrite <- A. rewrite <- P. reflexivity.
+          rewrite some_none_eq in H7. inversion H7.
+          assert (B:= H6). apply path_cost_nonneg in B. destruct HorderedRing. apply (Rle_lt_eq real_ring) in B.
+          destruct B. left. unfold lt_weight. unfold lt_weight_b. unfold eq_weight in H4.
+          unfold eq_weight_b in H4. destruct (path_cost g l) eqn : P'.
+          rewrite H5 in H4. 
+           match goal with
+                      | [H: _ |- match ?b with | Some _ => _ | None => _ end = _] => destruct b eqn : P
+                      end.
+          assert (Some b1 == Some (n' + m') = true). rewrite <- P. rewrite <- A. reflexivity.
+          rewrite Base.simpl_option_some_eq in H8.
+          assert (b0 < n' + m' = true <-> n' < n' + m' = true). apply rlt_eq. apply H4. destruct HEqLaw; apply Eq_refl.
+          eapply rlt_eq. apply H4. apply H8. 
+          assert (n' + #0 < n' + m' = true). apply (Rplus_lt_mono_l real_ring). assumption.
+          destruct real_ring. destruct SORrt. eapply rlt_eq. 3 : { apply H10. }
+          destruct HEqLaw. destruct HEqLaw. eapply Eq_trans. rewrite Eq_sym; apply Radd_0_l.
+          apply Radd_comm. apply Eq_refl. assert (None == Some (_+_ n' m') = true).
+          rewrite <- P. rewrite <- A. reflexivity. rewrite some_none_eq in H8. inversion H8.
+          match goal with
+                      | [H: _ |- match ?b with | Some _ => _ | None => _ end = _] => destruct b eqn : P
+                      end.
+          reflexivity. assert (None == Some (_+_ n' m') = true). rewrite <- P. rewrite <- A. reflexivity.
+          rewrite some_none_eq in H8. inversion H8.
+          right. unfold eq_weight in *. unfold eq_weight_b in *.
+          destruct (path_cost g l) eqn : P'.
+          match goal with
+                      | [H: _ |- match ?b with | Some _ => _ | None => _ end = _] => destruct b eqn : P
+                      end.
+          rewrite H5 in H4.
+          assert (Some b1 == Some (n' + m') = true). rewrite <- P. rewrite <- A. reflexivity.
+          rewrite Base.simpl_option_some_eq in H8. destruct (HEqLaw). eapply Eq_trans.
+          apply H4. destruct real_ring. destruct SORrt. eapply Eq_trans. rewrite Eq_sym.
+          apply Radd_0_l. rewrite Eq_sym. eapply Eq_trans. apply H8.
+          eapply Eq_trans. apply Radd_comm.  eapply rplus_eq. rewrite Eq_sym. assumption.
+          apply Eq_refl. assert (None == Some (_+_ n' m') = true). rewrite <- P. rewrite <- A. reflexivity.
+          rewrite some_none_eq in H8. inversion H8. 
+          rewrite H5 in H4. inversion H4.
+      * apply N.eq_dec.
+    + (*ugh, have to do it again*)
+       destruct (In_dec N.eq_dec v l).
+        * eapply in_split_app_fst in i. destruct_all; subst. clear H2. apply path_app_strong in H.
+          destruct H. destruct H1 as [H1 A]. destruct x.
+          --  exists (v :: x0). split. assumption. split. simpl in n. assumption.
+              simpl. split; intros. assumption. unfold le_weight. right. 
+              destruct (eq_weight_equiv) as [E1 E2 E3]. apply E1.
+          -- specialize (H0 (v :: x0 )). destruct H0 as [l]. 
+             repeat(rewrite app_length). simpl.
+             assert (forall m n, Nat.lt (S(n))  (S(m + S(n)))). intros. unfold Nat.lt. omega.
+             apply H0. assumption. 
+            exists l. destruct_all. repeat(split; try(assumption)). intros.
+            apply H3 in H5. simpl in H5. apply in_or_app. destruct H5. subst. right. left. reflexivity.
+            right. right. assumption.
+(*prove le_trans, and then prove that l1 ++ l2*)
+            assert (exists w', path_cost g ((n1 :: x) ++ v :: nil) = Some w'). apply path_cost_path'.
+            exists v. exists v. assumption.
+            assert (exists w', path_cost g (v :: x0) = Some w'). apply path_cost_path'.
+            exists u. exists v. assumption. destruct H5 as [n']. destruct H6 as [m'].
+            assert (D : path_cost g ((n1 :: x) ++ v :: nil) == Some n' = true). rewrite H5.
+            rewrite Base.simpl_option_some_eq. destruct (HEqLaw); apply Eq_refl.
+            assert (E: path_cost g (v :: x0) == Some m' = true). rewrite H6.
+            rewrite Base.simpl_option_some_eq. destruct (HEqLaw); apply Eq_refl.
+            specialize (A _ _ D E). eapply le_weight_trans. apply H4.
+            unfold le_weight.
+            unfold lt_weight. unfold eq_weight. unfold lt_weight_b. unfold eq_weight_b.
+            rewrite H6. 
+            match goal with
+                        | [H: _ |- (match ?b with | Some _ => _ | None => _ end = _ \/ _ )] => destruct b eqn : P
+                        end.
+            assert (Some b0 == Some (n' + m') = true). rewrite <- A. rewrite <- P. reflexivity.
+            rewrite Base.simpl_option_some_eq in H7. 
+            eapply path_cost_nonneg in H5.
+            pose proof (Rle_lt_eq real_ring #0 n').  apply H8 in H5. clear H8. destruct H5.
+            ++ left. destruct HorderedRing. pose proof (Rplus_lt_mono_l real_ring m' b0 n'). simpl in H8.
+               apply H8. eapply rlt_eq. destruct HEqLaw; rewrite Eq_sym. apply H7. destruct HEqLaw; apply Eq_refl.
+              eapply rlt_eq. destruct real_ring. destruct SORrt. destruct HEqLaw; rewrite Eq_sym; apply Radd_0_l.
+              destruct HEqLaw; apply Eq_refl. rewrite <- (Rplus_lt_mono_r real_ring). assumption.
+            ++ right. destruct HEqLaw. eapply Eq_trans. destruct HorderedRing. destruct real_ring.
+              destruct SORrt. rewrite Eq_sym; apply Radd_0_l. eapply Eq_trans. 2 : { rewrite Eq_sym.
+              apply H7. } destruct HorderedRing. eapply rplus_eq. assumption. apply Eq_refl.
+            ++ assert (None == Some (n' + m') = true). rewrite <- P. rewrite <- A. reflexivity.
+               rewrite some_none_eq in H7. inversion H7.
+        -- apply N.eq_dec.
+      * exists l. simplify'. unfold le_weight. right. destruct (eq_weight_equiv) as [E1 E2 E3]; apply E1.
+  - rewrite no_no_dup in n. destruct_all. subst. assert (A:= H). 
+      apply path'_remove_cycle in H. specialize (H0 (x0 ++ x :: x2)). destruct H0 as [l].
+      repeat(rewrite app_length; simpl). omega. apply H. exists l. simplify'. apply H2 in H3.
+      apply in_app_or in H3. destruct H3. apply in_or_app. left. assumption. simpl in H3.
+      destruct H3. subst. solve_in. solve_in. eapply le_weight_trans. apply H4.
+      unfold le_weight. unfold lt_weight. unfold lt_weight_b. unfold eq_weight. unfold eq_weight_b.
+      assert (exists n, path_cost g (x0 ++ x :: x2) = Some n). apply path_cost_path'. exists u.
+      exists v. assumption. destruct H3 as [n']. rewrite H3. 
+      assert (exists n, path_cost g (x0 ++ x :: x1 ++ x :: x2) = Some n). apply path_cost_path'.
+      exists u. exists v. assumption. destruct H5 as [m']. rewrite H5.
+      pose proof (path_app_strong).
+      specialize (H6 _ _ _ _ _ H). destruct_all.
+      assert (exists a', path_cost g (x0 ++ x :: nil) = Some a'). apply path_cost_path'.
+      exists x. exists v. assumption. destruct H9 as [a'].
+      assert (exists b', path_cost g (x :: x2) = Some b'). apply path_cost_path'. 
+      exists u. exists x. assumption. destruct H10 as [b'].
+      assert (path_cost g (x0 ++ x :: nil) == Some a' = true). rewrite H9. destruct HEqLaw. apply Eq_refl.
+      assert (path_cost g (x :: x2) == Some b' = true). rewrite H10. destruct HEqLaw. apply Eq_refl.
+      specialize (H8 _ _ H11 H12).
+      assert (Some n' == Some (a' + b') = true). rewrite <- H3. rewrite <- H8. reflexivity.
+      rewrite Base.simpl_option_some_eq in H13.
+      remember (x1 ++ x :: x2) as l'. 
+      assert (C:= A). apply path_app' in C. destruct C. clear H14. 
+      assert (exists c', path_cost g (x :: l') = Some c'). eapply path_cost_path'.
+      exists u. exists x. assumption. destruct H14 as [c'].
+      pose proof (@path_app_strong _ _ _ _ _ A). destruct_all. clear H16. clear H17.
+      assert (path_cost g (x :: l') == Some c' = true). rewrite H14. destruct HEqLaw; apply Eq_refl.
+      specialize (H18 _ _ H11 H16).
+      assert (Some m' == Some (a' + c') = true). rewrite <- H18. rewrite <- H5. reflexivity.
+      rewrite Base.simpl_option_some_eq in H17. subst. remember (x :: x1) as l'.
+      pose proof (path_app_strong u x x (x :: x1) x2 H15). destruct_all. simpl in H19.
+      assert (exists d', path_cost g (x :: x1 ++ x :: nil) = Some d'). apply path_cost_path'.
+      exists x. exists x. assumption. destruct H22 as [d']. 
+      assert ( path_cost g (x :: x1 ++ x :: nil) == Some d' = true). rewrite H22.
+      destruct HEqLaw; apply Eq_refl. specialize (H21 _ _ H23 H12). 
+      assert (Some c' == Some (d' + b') = true). rewrite <- H21.
+      rewrite <- H14. reflexivity. rewrite Base.simpl_option_some_eq in H24.
+      eapply path_cost_nonneg in H22.
+      pose proof (Rle_lt_eq real_ring #0 d'). simpl in H25. apply H25 in H22. clear H25.
+      destruct HorderedRing.
+      destruct H22. left. eapply rlt_eq. apply H13. apply H17. 
+      rewrite <- (Rplus_lt_mono_l real_ring). eapply rlt_eq. assert (b' == #0 + b' = true).
+      destruct real_ring. destruct SORrt. destruct HEqLaw; rewrite Eq_sym; apply Radd_0_l.
+      apply H25. apply H24. rewrite <- (Rplus_lt_mono_r real_ring). assumption. 
+      right. destruct HEqLaw. eapply Eq_trans. apply H13. eapply Eq_trans. 2 : {  rewrite <- Eq_sym.
+      apply H17. } apply rplus_eq. apply Eq_refl. eapply Eq_trans. 2 : { rewrite Eq_sym. apply H24. }
+      eapply Eq_trans. assert (b' == #0 + b' = true). destruct real_ring. destruct SORrt.
+      rewrite Eq_sym. apply Radd_0_l. apply H25. apply rplus_eq. assumption. apply Eq_refl.
+      apply N.eq_dec.
+Qed.
+
+(*Finally!!!!!*)
+ 
+(*If there is a path, then there is a path at most as large as the number of vertices in the graph (because
+  there is a path with no duplicates and every vertex is in the graph*)
+
+Lemma shortest_path_leq_n: forall u v l,
+  path' g u v l ->
+  exists l', path' g u v l' /\ Nat.le (length l') (length (nodeList g)) /\ le_weight l' l.
+Proof.
+  intros. apply path_no_dups_strong in H. destruct_all.
+  assert (forall a, In a x -> In a (nodeList g)). intros. apply (path_in_graph _ _ _ a0) in H.
+  unfold vIn in H. unfold mem in H.
+  destruct_if. assumption. inversion H. assumption. exists x. split.
+  assumption. split. eapply NoDup_incl_length. assumption. unfold incl. assumption.
+  assumption.
+Qed.
+
+Definition shortest_wpath (u v : Node) : option (list Node) :=
+  fold_right (fun x acc => match (min_weight_size_n u v x) with
+                            | None => match acc with
+                                        | None => None
+                                        | Some l => Some l
+                                        end
+                            | Some l => match acc with
+                                        | None => Some l
+                                        | Some l' => if lt_weight_b l l' then Some l else Some l'
+                                        end
+                            end) None (List.seq 0 (natNodes g + 1)).
+
+Ltac destruct_option H':= match goal with
+  | [H: match ?x with | Some l' => _ | None => _  end = _ |- _] => destruct ?x eqn : H'
+  end.
+
+Lemma shortest_none_helper: forall l u v,
+  (fold_right
+  (fun (x : nat) (acc : option (list Node)) =>
+   match min_weight_size_n u v x with
+   | Some l =>
+       match acc with
+       | Some l' => if lt_weight_b l l' then Some l else Some l'
+       | None => Some l
+       end
+   | None => match acc with
+             | Some l => Some l
+             | None => None
+             end
+   end) None l) = None <-> (forall x, In x l -> min_weight_size_n u v x = None).
+Proof.
+  intros. 
+  induction l; simpl; split; intros.
+  - destruct H0.
+  - reflexivity.
+  -  destruct (min_weight_size_n u v a0) eqn : M.
+    destruct ( fold_right
+        (fun (x : nat) (acc : option (list Node)) =>
+         match min_weight_size_n u v x with
+         | Some l =>
+             match acc with
+             | Some l' => if lt_weight_b l l' then Some l else Some l'
+             | None => Some l
+             end
+         | None => match acc with
+                   | Some l => Some l
+                   | None => None
+                   end
+         end) None l). destruct (lt_weight_b l0 l1 ); inversion H. inversion H.
+    destruct ( fold_right
+        (fun (x : nat) (acc : option (list Node)) =>
+         match min_weight_size_n u v x with
+         | Some l =>
+             match acc with
+             | Some l' => if lt_weight_b l l' then Some l else Some l'
+             | None => Some l
+             end
+         | None => match acc with
+                   | Some l => Some l
+                   | None => None
+                   end
+         end) None l ) eqn : H'. inversion H. destruct H0. subst. apply M. apply IHl. reflexivity. assumption.
+  - destruct (min_weight_size_n u v a0) eqn : ?.
+    rewrite H in Heqo. inversion Heqo. left. reflexivity.
+    destruct (fold_right
+    (fun (x : nat) (acc : option (list Node)) =>
+     match min_weight_size_n u v x with
+     | Some l0 =>
+         match acc with
+         | Some l' => if lt_weight_b l0 l' then Some l0 else Some l'
+         | None => Some l0
+         end
+     | None => match acc with
+               | Some l0 => Some l0
+               | None => None
+               end
+     end) None l) eqn : ?. apply IHl. intros. apply H. right. assumption. reflexivity.
+Qed.
+
+Lemma shortest_wpath_none: forall u v,
+  shortest_wpath u v = None <-> (forall l, ~path' g u v l).
+Proof.
+  intros. unfold shortest_wpath. assert (H:=  shortest_none_helper).
+  rewrite H. clear H. split; intros.
+  - intro. pose proof (shortest_path_leq_n _ _ _ H0). destruct H1. destruct H1.
+    destruct H2.  assert (In (length x) (List.seq 0 (natNodes g + 1))). apply in_seq.
+    split. omega. simpl. unfold Nat.le in H2.  unfold natNodes. rewrite noNodes_def.
+    unfold nodeList in H2. unfold ulabNodes in H2. rewrite map_length in H2. 
+    assert (forall n m, Nat.le n m -> Nat.lt n (m + 1)). intros. unfold Nat.lt.
+    unfold Nat.le in H4. omega. apply H4. apply H2. apply H in H4.
+    unfold min_weight_size_n in H4. rewrite min_list_empty in H4.
+    pose proof (paths_of_length_appear u v (length x) x). 
+    rewrite H4 in H5. simpl in H5. apply H5. split. assumption. reflexivity.
+  - destruct (min_weight_size_n u v x) eqn : M.
+    + apply min_weight_size_correct in M. destruct_all. exfalso. apply (H l). assumption.
+    + reflexivity.
+Qed.
+
+(*The following lemma proves finally that this function actually computes the shortest path*)
+
+Lemma shortest_wpath_correct: forall u v l,
+  shortest_wpath u v = Some l -> path' g u v l /\ forall l', path' g u v l' -> le_weight l l'.
+Proof.
+  intros. unfold shortest_wpath in H.
+  assert (forall l' l'' u' v',
+   (fold_right
+      (fun (x : nat) (acc : option (list Node)) =>
+       match min_weight_size_n u' v' x with
+       | Some l => match acc with
+                   | Some l' => if lt_weight_b l l' then Some l else Some l'
+                   | None => Some l
+                   end
+       | None => match acc with
+                 | Some l => Some l
+                 | None => None
+                 end
+       end) None l') = Some l'' ->
+      path' g u' v' l'' /\ (forall x p, In x l' -> path' g u' v' p -> length p = x -> le_weight l'' p)). { intros l'. induction l'; intros; simpl in H0.
+  - inversion H0.
+  - destruct (min_weight_size_n u' v' a0) eqn : M.
+    + destruct (fold_right
+             (fun (x : nat) (acc : option (list Node)) =>
+              match min_weight_size_n u' v' x with
+              | Some l0 =>
+                  match acc with
+                  | Some l' => if lt_weight_b l0 l' then Some l0 else Some l'
+                  | None => Some l0
+                  end
+              | None => match acc with
+                        | Some l0 => Some l0
+                        | None => None
+                        end
+              end) None l') eqn : F.
+    destruct (lt_weight_b l0 l1) eqn : L; inversion H0; subst.
+    * assert (A:= M). apply min_weight_size_correct in M. destruct_all. split. assumption.
+      intros. destruct H4. subst. apply H3. split; assumption. subst.
+      eapply le_weight_trans. left. apply L. eapply IHl'. apply F. apply H4.
+      assumption. reflexivity.
+    * apply IHl' in F. destruct_all. split. assumption. intros. subst. simpl in H3.
+      destruct H3. subst. apply min_weight_size_correct in M. destruct_all.
+      assert (le_weight l'' l0). unfold le_weight. pose proof (lt_weight_total l'' l0).
+      destruct H7. left. assumption. destruct H7. right. assumption. unfold lt_weight in H7.
+      rewrite H7 in L. inversion L. eapply le_weight_trans. apply H7. apply H6.
+      split. assumption. reflexivity. eapply H2. apply H3. assumption. reflexivity.
+    * inversion H0; subst. rewrite shortest_none_helper in F. assert (A:= M).
+      apply min_weight_size_correct in M. destruct_all. split. apply H1.
+      intros. subst. simpl in H4. destruct H4.
+      apply H3. split. assumption. symmetry. assumption. apply F in H2.
+      unfold min_weight_size_n in H2. rewrite min_list_empty in H2.
+      pose proof (paths_of_length_appear u' v' (length p) p). rewrite H2 in H4.
+      simpl in H4. exfalso. apply H4. split. assumption. reflexivity.
+    + destruct (fold_right
+         (fun (x : nat) (acc : option (list Node)) =>
+          match min_weight_size_n u' v' x with
+          | Some l =>
+              match acc with
+              | Some l' => if lt_weight_b l l' then Some l else Some l'
+              | None => Some l
+              end
+          | None => match acc with
+                    | Some l => Some l
+                    | None => None
+                    end
+          end) None l') eqn : F.
+      * apply IHl' in F. inversion H0; subst. destruct_all. split. assumption.
+        intros. simpl in H3. destruct H3. subst. unfold min_weight_size_n in M.
+        rewrite min_list_empty in M. exfalso. 
+        pose proof (paths_of_length_appear u' v' (length p) p). rewrite M in H3.
+        simpl in H3. apply H3. split. assumption. reflexivity. eapply H2. apply H3.
+        assumption. assumption.
+      * inversion H0. }
+  apply H0 in H. clear H0. destruct_all. split. assumption.
+  intros. pose proof (shortest_path_leq_n _ _ _ H1). destruct_all. eapply le_weight_trans.
+  2 : { apply H4. } eapply H0. 3 : { reflexivity. } rewrite in_seq. split. omega.
+  simpl. assert (forall n m, Nat.le n m -> Nat.lt n (m+1)). intros. unfold Nat.lt.
+  unfold Nat.le in H5. omega. apply H5. unfold natNodes. rewrite noNodes_def.
+  unfold nodeList in H3. unfold ulabNodes in H3. rewrite map_length in H3. apply H3.
+  assumption.
+Qed.
+
+(*2 other lemmas that are good to know - and actually let me use this information in proofs*)
+Lemma path_implies_shortest: forall u v l,
+  path' g u v l ->
+  exists l', path' g u v l' /\ forall l'', path' g u v l'' -> le_weight l' l''.
+Proof.
+  intros. destruct (shortest_wpath u v) eqn : D.
+  - exists l0. apply shortest_wpath_correct. apply D.
+  - rewrite shortest_wpath_none in D. specialize (D l). contradiction.
+Qed.
+
+Lemma path'_decidable: forall u v,
+  {exists l, path' g u v l} + {~exists l, path' g u v l}.
+Proof.
+  intros. destruct (shortest_wpath u v) eqn : D.
+  - left. exists l. apply shortest_wpath_correct in D. apply D.
+  - right. intro. destruct H. rewrite shortest_wpath_none in D. specialize (D x). contradiction.
+Qed.
+
+End Weighted.
 End Path. 

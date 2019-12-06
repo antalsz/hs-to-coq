@@ -1235,7 +1235,7 @@ Proof.
   assumption.
 Qed.
 
-Definition shortest_wpath (u v : Node) : option (list Node) :=
+Definition find_shortest_wpath (u v : Node) : option (list Node) :=
   fold_right (fun x acc => match (min_weight_size_n u v x) with
                             | None => match acc with
                                         | None => None
@@ -1314,10 +1314,10 @@ Proof.
      end) None l) eqn : ?. apply IHl. intros. apply H. right. assumption. reflexivity.
 Qed.
 
-Lemma shortest_wpath_none: forall u v,
-  shortest_wpath u v = None <-> (forall l, ~path' g u v l).
+Lemma find_shortest_wpath_none: forall u v,
+  find_shortest_wpath u v = None <-> (forall l, ~path' g u v l).
 Proof.
-  intros. unfold shortest_wpath. assert (H:=  shortest_none_helper).
+  intros. unfold find_shortest_wpath. assert (H:=  shortest_none_helper).
   rewrite H. clear H. split; intros.
   - intro. pose proof (shortest_path_leq_n _ _ _ H0). destruct H1. destruct H1.
     destruct H2.  assert (In (length x) (List.seq 0 (natNodes g + 1))). apply in_seq.
@@ -1335,10 +1335,13 @@ Qed.
 
 (*The following lemma proves finally that this function actually computes the shortest path*)
 
-Lemma shortest_wpath_correct: forall u v l,
-  shortest_wpath u v = Some l -> path' g u v l /\ forall l', path' g u v l' -> le_weight l l'.
+Definition shortest_wpath u v l :=
+  path' g u v l /\ forall l', path' g u v l' -> le_weight l l'.
+
+Lemma find_shortest_wpath_correct: forall u v l,
+  find_shortest_wpath u v = Some l -> shortest_wpath u v l. 
 Proof.
-  intros. unfold shortest_wpath in H.
+  intros. unfold find_shortest_wpath in H. unfold shortest_wpath.
   assert (forall l' l'' u' v',
    (fold_right
       (fun (x : nat) (acc : option (list Node)) =>
@@ -1418,20 +1421,33 @@ Qed.
 (*2 other lemmas that are good to know - and actually let me use this information in proofs*)
 Lemma path_implies_shortest: forall u v l,
   path' g u v l ->
-  exists l', path' g u v l' /\ forall l'', path' g u v l'' -> le_weight l' l''.
+  exists l', shortest_wpath u v l'.
 Proof.
-  intros. destruct (shortest_wpath u v) eqn : D.
-  - exists l0. apply shortest_wpath_correct. apply D.
-  - rewrite shortest_wpath_none in D. specialize (D l). contradiction.
+  intros. unfold shortest_wpath. destruct (find_shortest_wpath u v) eqn : D.
+  - exists l0. apply find_shortest_wpath_correct. apply D.
+  - rewrite find_shortest_wpath_none in D. specialize (D l). contradiction.
 Qed.
 
 Lemma path'_decidable: forall u v,
   {exists l, path' g u v l} + {~exists l, path' g u v l}.
 Proof.
-  intros. destruct (shortest_wpath u v) eqn : D.
-  - left. exists l. apply shortest_wpath_correct in D. apply D.
-  - right. intro. destruct H. rewrite shortest_wpath_none in D. specialize (D x). contradiction.
+  intros. destruct (find_shortest_wpath u v) eqn : D.
+  - left. exists l. apply find_shortest_wpath_correct in D. apply D.
+  - right. intro. destruct H. rewrite find_shortest_wpath_none in D. specialize (D x). contradiction.
 Qed.
 
+Lemma shortest_wpath_same_weight: forall u v l l',
+  shortest_wpath u v l ->
+  path' g u v l' ->
+  eq_weight l l' ->
+  shortest_wpath u v l'.
+Proof.
+  intros. unfold shortest_wpath in *. split. assumption. intros. destruct_all.
+  eapply le_weight_trans. unfold le_weight.  right. destruct (eq_weight_equiv). apply Equivalence_Symmetric.
+  apply H1. apply H3. assumption.
+Qed. 
+
 End Weighted.
-End Path. 
+End Path.
+
+ 

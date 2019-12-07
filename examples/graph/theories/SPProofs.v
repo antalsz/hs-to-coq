@@ -13,6 +13,10 @@ Import GHC.Num.Notations.
 Require Import HeapProofs.
 Require Import OrdTactic.
 Require Import RealRing.
+Require Import Helper.
+Require Import Lex.
+
+Require Import Coq.Wellfounded.Inverse_Image.
 
 (* Inductive relation*)
 Section Ind.
@@ -51,6 +55,41 @@ Proof.
   - unfold RelationClasses.Symmetric. intros. unfold natNodes_eq in *. omega.
 Qed. 
 
+(*A few properties of this relation*)
+Lemma measure_trans: forall {a} x y z,
+  @bf_measure_heap a x y ->
+  bf_measure_heap y z ->
+  bf_measure_heap x z.
+Proof.
+  intros. unfold bf_measure_heap in *.
+  inversion H; subst.
+  - inversion H0; subst.
+    + apply lex1. unfold natNodes_lt in *. omega.
+    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H4. omega.
+  - inversion H0; subst.
+    + apply lex1. unfold natNodes_lt in *. unfold natNodes_eq in H1. omega.
+    + apply lex2. unfold natNodes_eq in *. omega. unfold heap_length_lt in *. omega.
+Qed. 
+
+Lemma measure_antisym: forall {a} x y,
+  @bf_measure_heap a x y ->
+  ~bf_measure_heap y x.
+Proof.
+  intros. intro. unfold bf_measure_heap in *. 
+  inversion H; inversion H0; subst; unfold natNodes_lt in *; unfold natNodes_eq in *.
+  - inversion H5; subst. inversion H6; subst. omega.
+  - inversion H6; subst. inversion H7; subst. omega.
+  - inversion H6; subst. inversion H7; subst. omega.
+  - inversion H7; subst. inversion H8; subst.
+    unfold heap_length_lt in *. omega.
+Qed.
+
+Lemma measure_antirefl: forall {a} x,
+  ~@bf_measure_heap a x x.
+Proof.
+  intros. intro. inversion H; subst; unfold natNodes_lt in *; unfold heap_length_lt in *; try(omega).
+Qed.
+
 Instance need_this_for_equations : forall A, WellFounded (@bf_measure_heap A).
 Proof.
   unfold WellFounded. apply well_founded_bf_measure_heap.
@@ -64,7 +103,7 @@ Proof.
   intros. pose proof (match_remain_none g). erewrite H0. reflexivity. apply H.
 Qed.  
 
-Definition state : Type := (gr a b) * (Heap b (LPath b)) * (list (LPath b)).
+Definition state : Type := (gr a b) * (Heap b Node) * (list (b * Node)).
 
 Definition get_graph (s: state) :=
   match s with
@@ -76,30 +115,35 @@ Definition get_heap (s: state) :=
   | (_, h, _) => h
 end.
 
-Definition get_paths (s: state) :=
+Definition get_dists (s: state) :=
   match s with
   | (_, _, p) => p
   end.
 
+(*TODO: remove v*)
+Definition expand_dist (d : b) (v : Node) (c: Context a b) :=
+  match c with
+  | (_, _, _, s) => map (fun x : b * Node => let (l,v') := x in unit (_GHC.Num.+_ l d) v') s
+  end.
 
 (*How to step from 1 state to another. The inductive definiction makes it easier to use as
   an assumption in proofs*)
 Inductive sp_step : state -> state -> Prop :=
-  | sp_find: forall (g: gr a b) (v : Node) (c: Context a b) (g': gr a b) (a' : b) 
-      (d: b) (t: list (Node * b)) (h' h : Heap b (LPath b)) (p : list (LPath b)) (p' : (LPath b)),
+  | sp_find: forall (g: gr a b) (v : Node) (c: Context a b) (g': gr a b) 
+      (d: b) (h' h : Heap b Node) (p : list (b * Node)),
       isEmpty g = false ->
       match_ v g = (Some c, g') ->
-      splitMinT h = Some ((a', p'), h') ->
-      p' = LP ((v,d) :: t) ->
-      sp_step (g, h, p) (g', mergeAll (h' :: expand d p' c), p ++ p' :: nil)
-  | sp_skip : forall (g: gr a b) (v: Node) (g': gr a b) (h h' : Heap b (LPath b))
-     (p: list (LPath b)) (p': (LPath b)) (a' : b),
+      splitMinT h = Some ((d,v), h') ->
+      sp_step (g, h, p) (g', mergeAll (h' :: expand_dist d v c), p ++ (d,v) :: nil)
+  | sp_skip : forall (g: gr a b) (v: Node) (g': gr a b) (h h' : Heap b Node)
+     (p: list (b * Node)) d,
       isEmpty g = false ->
       match_ v g = (None, g') ->
-      splitMinT h = Some ((a', p'), h') ->
+      splitMinT h = Some ((d,v), h') ->
       sp_step (g, h, p) (g', h', p).
 
-Definition start (g : gr a b) (v: Graph.Node) : state := (g, Heap.unit #0 (LP ((v, #0) :: nil)), nil).
+
+Definition start (g : gr a b) (v: Graph.Node) : state := (g, (Heap.unit #0 v), nil).
 
 (*A valid state is any state that can be reached from the start state.*)
 Inductive valid : state -> (gr a b) -> Node -> Prop :=
@@ -149,6 +193,162 @@ Qed.
 
 Definition done (s: state) := Heap.isEmpty (get_heap s) || isEmpty (get_graph s).
 
+(*Lots is basically the same as BFS, TODO see if I can improve that*)
+Section Multi.
+
+(*if we step from s to s', s' < s*)
+Lemma measure_step: forall s s',
+  sp_step s s' ->
+  bf_measure_heap (get_heap s', get_graph s') (get_heap s, get_graph s) .
+Proof.
+  intros. unfold bf_measure_heap. inversion H; subst; simpl in *.
+  - apply lex1. unfold natNodes_lt. eapply match_decr_size. symmetry. apply H1.
+  - apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply H1.  unfold heap_length_lt.
+    destruct h; inversion H2; subst. rewrite mergeAll_size. simpl. omega.
+Qed.
+
+(*The same for multistep*)
+Lemma measure_multi: forall s s',
+  sp_multi s s' ->
+  s = s' \/ bf_measure_heap (get_heap s', get_graph s') (get_heap s, get_graph s) .
+Proof.
+  intros. induction H.
+  - left. reflexivity.
+  - destruct IHmulti. subst. right. apply measure_step. assumption.
+    right. eapply measure_trans. apply H1. apply measure_step. assumption.
+Qed.
+
+(*If s multisteps to s', s and s' are equal exactly when s < s' and s' < s are both false*)
+Lemma multistep_eq_measure: forall s s',
+  sp_multi s s' ->
+  (s = s') <-> (~bf_measure_heap (get_heap s', get_graph s') (get_heap s, get_graph s) /\
+  ~bf_measure_heap  (get_heap s, get_graph s) (get_heap s', get_graph s')). 
+Proof.
+  intros. split. intros. subst. split; intro;
+  pose proof (measure_antirefl (get_heap s', get_graph s')); contradiction. intros.
+  destruct H0. apply measure_multi in H. destruct H. subst. reflexivity. contradiction.
+Qed. 
+
+Lemma sp_step_deterministic : forall s1 s2 s,
+  sp_step s s1 -> sp_step s s2 -> s1 = s2.
+Proof.
+  intros. inversion H; inversion H0; subst; inversion H9; subst; rewrite H8 in H3; inversion H3; subst;
+    rewrite H7 in H2; inversion H2; subst; reflexivity.
+Qed.
+
+Lemma multi_from_start: forall s s' s'',
+  sp_multi s s'' ->
+  sp_multi s s' ->
+  (sp_multi s' s'' \/ sp_multi s'' s').
+Proof.
+  intros. generalize dependent s'. induction H; intros.
+  - right. apply H0.
+  - inversion H1; subst.
+    + left. eapply multi_step. apply H. apply H0.
+    + assert (y=y0). eapply sp_step_deterministic.
+      apply H. apply H2. subst. apply IHmulti. apply H3.
+Qed.
+
+Lemma valid_begins_with_start: forall s g v,
+  valid s g v ->
+  sp_multi (start g v) s.
+Proof.
+  intros. induction H.
+  - constructor.
+  - eapply multi_trans. apply IHvalid.  eapply multi_step. apply H0. apply multi_refl.
+Qed.
+
+(*For any two valid states, one multisteps to the other*)
+Lemma valid_multi: forall s s' g v,
+  valid s g v ->
+  valid s' g v ->
+  sp_multi s s' \/ sp_multi s' s.
+Proof.
+  intros. eapply multi_from_start. apply valid_begins_with_start. apply H0.
+  apply valid_begins_with_start. assumption.
+Qed.
+
+(*A valid state is not done iff it can step*)
+Lemma not_done_step: forall s g v,
+  valid s g v ->
+  (done s = false <-> exists s', sp_step s s').
+Proof.
+  intros. split; intros.
+  - destruct s as [p d]. destruct p as [g' h].
+    unfold done in H0. simpl in H0.
+    rewrite orb_false_iff in H0. destruct H0.
+    destruct h. simpl in H0. inversion H0.
+    destruct (match_ n g') eqn : M. destruct m.
+    + exists (g0, mergeAll ((mergeAll l) :: expand_dist b0 n c), d ++ (b0,n) :: nil).
+      constructor; try(assumption). simpl. reflexivity.
+    + exists (g0, (mergeAll l), d). econstructor; try eassumption. simpl. reflexivity.
+  - destruct H0. unfold done in *; inversion H0; subst; simpl in *; rewrite H1; simpl; destruct h;
+    try(reflexivity); try(inversion H3).
+Qed.
+
+(*If a state is done, it cannot step*)
+Lemma done_cannot_step: forall s g v,
+  valid s g v ->
+  done s = true ->
+  ~(exists s', sp_step s s').
+Proof.
+  intros. intro. pose proof (not_done_step _ _ _ H).
+  destruct H2. apply contrapositive in H3. contradiction. 
+  rewrite H0. intro. inversion H4.
+Qed.
+
+(*A state is done if for every valid state s', s' < s is false*)
+Lemma measure_done: forall s g v,
+  valid s g v ->
+  done s = true <-> 
+  (forall s', valid s' g v -> ~bf_measure_heap (get_heap s', get_graph s') (get_heap s, get_graph s)).
+Proof.
+  intros. split; intros.
+  - intro. pose proof (valid_multi _ _ _ _ H H1). destruct H3.
+    + inversion H3. subst. pose proof (measure_antirefl (get_heap s', get_graph s')).
+      contradiction. subst. pose proof (done_cannot_step _ _ _ H H0).
+      apply H6. exists y. assumption.
+    + apply measure_multi in H3. destruct H3. subst.
+      pose proof (measure_antirefl (get_heap s, get_graph s)).
+      contradiction. pose proof (measure_antisym _ _ H2). contradiction.
+  - destruct (done s) eqn : D.
+    + reflexivity.
+    + pose proof (not_done_step _ _ _ H). apply H1 in D.
+      destruct D. assert (valid x g v). eapply v_step. apply H. apply H2.
+      apply H0 in H3. apply measure_step in H2. contradiction.
+Qed.  
+
+(*two valid states are equal if neither is less than the other*)
+Lemma measure_unique: forall s g v s',
+  valid s g v ->
+  valid s' g v ->
+  ~bf_measure_heap (get_heap s', get_graph s') (get_heap s, get_graph s) ->
+  ~bf_measure_heap (get_heap s, get_graph s) (get_heap s', get_graph s') ->
+  s = s'.
+Proof.
+  intros. pose proof (valid_multi _ _ _ _ H H0). destruct H3.
+  - apply measure_multi in H3. destruct H3. assumption. contradiction.
+  - apply measure_multi in H3. destruct H3. subst. reflexivity. contradiction.
+Qed. 
+
+(*An important lemma: any two done states that are valid are unique. This allows us to use a tail
+  recursive function and still prove claims about generic done states*)
+Lemma done_unique: forall s g v s',
+  valid s g v ->
+  valid s' g v ->
+  done s = true ->
+  done s' = true ->
+  s = s'.
+Proof.
+  intros. assert (forall s', valid s' g v -> ~bf_measure_heap (get_heap s', get_graph s') (get_heap s, get_graph s)).
+  eapply measure_done. assumption. assumption.
+  assert (forall s'', valid s'' g v -> ~bf_measure_heap (get_heap s'', get_graph s'') (get_heap s', get_graph s')).
+  eapply measure_done. assumption. assumption.
+  eapply measure_unique. apply H. apply H0. apply H3. apply H0.
+  apply H4. apply H.
+Qed.
+End Multi.
+
 (*The executable, tail recursive version of this, which we will prove equivalent to the hs-to-coq version*)
 Section Exec.
 
@@ -161,16 +361,12 @@ Defined.
 Equations sp_tail (s: state) : state by wf (get_heap s, get_graph s) (bf_measure_heap) :=
   sp_tail (g, h, l) =>  if bool_dec ((Heap.isEmpty h) || (@Graph.isEmpty gr Hgraph a b g)) true then (g, h, l) else
                         match (splitMinT h) as s return ((splitMinT h = s) -> _) with
-                          |Some ((_, p), h') => fun H : (splitMinT h = Some ((_, p), h')) =>
-                          match p as p'' return ((p = p'') -> _) with
-                            | LP nil => fun H : (p = LP nil) => Err.patternFailure
-                            | LP ((v,d) :: t) => fun H : (p = LP ( (v,d) :: t)) =>
+                          |Some ((d,v), h') => fun H : (splitMinT h =  Some ((d,v), h')) =>
                                 match (match_ v g) as y return ((match_ v g = y) -> _ ) with
-                                | (Some c, g') => fun H : (match_ v g) = (Some c, g') => sp_tail (g', mergeAll (h' :: expand d p c), l ++ (p :: nil))
-                                | (None, g') => fun H: (match_ v g) = (None, g') => sp_tail (g', h', l)
-                                 end (eq_refl)
-                            end (eq_refl)
-                           | None => fun H : (splitMinT h = None) => Err.patternFailure
+                                | (Some c, g') => fun H : (match_ v g) = (Some c, g') => 
+                                      sp_tail (g', mergeAll (h' :: expand_dist d v c), l ++ (d,v) :: nil)
+                                | (None, g') => fun H: (match_ v g) = (None, g') => sp_tail(g', h', l)                                 end (eq_refl)
+                          | None => fun H : (splitMinT h = None) => Err.patternFailure
                          end (eq_refl).
 Next Obligation.
 simpl. destruct c. destruct p. destruct p. unfold Base.map. apply lex1. unfold natNodes_lt. eapply match_decr_size.
@@ -179,40 +375,29 @@ Defined.
 Next Obligation.
 apply lex2. symmetry. unfold natNodes_eq. eapply match_none_size. apply H. unfold heap_length_lt.
 unfold splitMin in H0. destruct h. simpl in n. contradiction. inversion H0; subst.
-rewrite (mergeAll_size l5). simpl. omega.
+rewrite (mergeAll_size l0). simpl. assert (forall x, x < S x). intros.  omega. apply H1.
 Defined.
 
 Definition expand_sp_tail :=
-fun s : gr a b * Heap b (LPath b) * list (LPath b) =>
+fun s : gr a b * Heap b Node * list (b * Node) =>
 let (p, l) := s in
 (let (g, h) := p in
- fun l0 : list (LPath b) =>
+ fun l0 : list (b * Node) =>
  if bool_dec (Heap.isEmpty h || isEmpty g) true
  then (g, h, l0)
  else
-  match splitMinT h as s0 return (splitMinT h = s0 -> gr a b * Heap b (LPath b) * list (LPath b)) with
+  match splitMinT h as s0 return (splitMinT h = s0 -> gr a b * Heap b Node * list (b * Node)) with
   | Some p0 =>
-      let (p1, h') as p1 return (splitMinT h = Some p1 -> gr a b * Heap b (LPath b) * list (LPath b)) := p0 in
-      let (b0, p2) as p2 return (splitMinT h = Some (p2, h') -> gr a b * Heap b (LPath b) * list (LPath b)) :=
-        p1 in
-      fun _ : splitMinT h = Some (b0, p2, h') =>
-      match p2 as p'' return (p2 = p'' -> gr a b * Heap b (LPath b) * list (LPath b)) with
-      | LP unLPath =>
-          match unLPath as unLPath0 return (p2 = LP unLPath0 -> gr a b * Heap b (LPath b) * list (LPath b)) with
-          | nil => fun _ : p2 = LP nil => patternFailure
-          | l1 :: t =>
-              let (v, d) as l2 return (p2 = LP (l2 :: t) -> gr a b * Heap b (LPath b) * list (LPath b)) := l1 in
-              fun _ : p2 = LP ((v, d) :: t) =>
-              (let (m, g') as y return (match_ v g = y -> gr a b * Heap b (LPath b) * list (LPath b)) :=
-                 match_ v g in
-               match m as m0 return (match_ v g = (m0, g') -> gr a b * Heap b (LPath b) * list (LPath b)) with
-               | Some c =>
-                   fun _ : match_ v g = (Some c, g') =>
-                   sp_tail (g', mergeAll (h' :: expand d p2 c), l0 ++ p2 :: nil)
-               | None => fun _ : match_ v g = (None, g') => sp_tail (g', h', l0)
-               end) eq_refl
-          end
-      end eq_refl
+      let (p1, h') as p1 return (splitMinT h = Some p1 -> gr a b * Heap b Node * list (b * Node)) := p0 in
+      let (d, v) as p2 return (splitMinT h = Some (p2, h') -> gr a b * Heap b Node * list (b * Node)) := p1 in
+      fun _ : splitMinT h = Some (d, v, h') =>
+      (let (m, g') as y return (match_ v g = y -> gr a b * Heap b Node * list (b * Node)) := match_ v g in
+       match m as m0 return (match_ v g = (m0, g') -> gr a b * Heap b Node * list (b * Node)) with
+       | Some c =>
+           fun _ : match_ v g = (Some c, g') =>
+           sp_tail (g', mergeAll (h' :: expand_dist d v c), l0 ++ (d, v) :: nil)
+       | None => fun _ : match_ v g = (None, g') => sp_tail (g', h', l0)
+       end) eq_refl
   | None => fun _ : splitMinT h = None => patternFailure
   end eq_refl) l.
 
@@ -222,144 +407,100 @@ Proof.
   intros. unfold expand_sp_tail. apply sp_tail_elim; intros; reflexivity.
 Qed.
 
-(*This is equivalent to repeatedly stepping with the sp_step inductive relation. We prove this by proving that
-  bfs_tail represents a multistep to a done state. So when we start with the start state, we get a valid
-  done state. We will later prove that all valid done states are equivalent, so we can prove claims about bfs_tail
-  by considering valid done states in general*)
-
-Lemma heap_not_none: forall s v g k,
-  valid s v g ->
-  ~ In_Heap (k, (LP nil)) (get_heap s).
-Proof.
-  intros. induction H; intro.
-  - simpl in H0. destruct H0. inversion H0. destruct H0.
-  - inversion H0; subst.
-    + unfold get_heap in H1. rewrite in_heap_mergeAll in H1. unfold fold_right in H1.
-      destruct H1. simpl in IHvalid. apply IHvalid. pose proof (in_heap_splitMin (k, (LP nil)) h h' a' (LP ((v0, d) :: t))).
-      rewrite H5. right. assumption. intro. subst. simpl in H4. inversion H4. 
-      rewrite <- splitMin_equiv in H4. inversion H4. reflexivity. intro. subst. simpl in H4. inversion H4.
-      assert (fold_right (fun x acc => In_Heap (k, LP nil) x \/ acc) False (expand d (LP ((v0, d) :: t)) c)).
-      unfold fold_right. apply H1. clear H1. rewrite in_heap_exists in H5.
-      destruct H5. destruct H1. simpl in IHvalid.
-      simpl in H1. destruct c. destruct p0. destruct p0. unfold Base.map in H1.
-      rewrite in_map_iff in H1. destruct H1. destruct x0. destruct H1.
-      rewrite <- H1 in H5. unfold unit in H5. simpl in H5. destruct H5. inversion H5. destruct H5.
-    + simpl in IHvalid. simpl in H1. destruct h. simpl in H4. inversion H4. simpl in H4. 
-      inversion H4. subst. simpl in IHvalid. rewrite in_heap_mergeAll in H1. apply IHvalid.
-      right. rewrite <- in_heap_equiv. apply H1. 
-Qed.
-
-Lemma sp_tail_multi: forall s v g,
-  valid s v g ->
+Lemma sp_tail_multi: forall s,
   sp_multi s (sp_tail s).
 Proof.
-  intros. destruct s as[r p].
+  intros.  destruct s as[r p].
   remember (snd r, fst r) as r'. generalize dependent r. revert p. 
   induction r' using (well_founded_induction (@well_founded_bf_measure_heap _)).
-  intros. destruct r' as [q h]. inversion Heqr'; subst. clear Heqr'. destruct r as [g' h].
-  rewrite unfold_sp_tail. unfold expand_sp_tail. destruct (Heap.isEmpty h) eqn : E. apply multi_refl.
-  destruct (isEmpty g') eqn : GE. simpl. apply multi_refl. destruct (bool_dec (false || false) true) eqn : U.
-  simpl in e. inversion e. destruct (splitMinT h) eqn : S. destruct p0. destruct p0. 
-  destruct l. destruct h. inversion S. simpl in S. inversion S. subst. destruct unLPath.
-  exfalso. eapply heap_not_none. apply H0. simpl.  left. reflexivity. destruct l. 
-  destruct (match_ n0 g') eqn : M. destruct m.
-  - eapply multi_step. eapply sp_find. assumption. apply M. simpl. reflexivity.
-    reflexivity. eapply H. apply lex1. 3 :{ reflexivity. } unfold natNodes_lt. simpl.
-    eapply match_decr_size. symmetry. apply M. eapply v_step. apply H0. eapply sp_find.
-    apply GE. apply M. simpl. reflexivity. reflexivity.
-  - eapply multi_step. eapply sp_skip. apply GE. apply M. simpl. reflexivity.
-    eapply H. 3 : { reflexivity. }  apply lex2. simpl. symmetry. eapply match_none_size.
-    apply M. simpl. unfold heap_length_lt. rewrite mergeAll_size. simpl.
-    omega. eapply v_step. apply H0. eapply sp_skip. assumption. apply M. simpl. reflexivity.
-  - destruct h. simpl in E. inversion E. simpl in S. inversion S.
-Qed.
+  intros. destruct r. destruct r'. simpl in Heqr'. inversion Heqr'; subst. clear Heqr'.
+  rewrite unfold_sp_tail. unfold expand_sp_tail. destruct (Heap.isEmpty h) eqn : E.
+  - simpl. apply multi_refl.
+  - destruct (isEmpty g) eqn : G.
+    + simpl. apply multi_refl.
+    + destruct (bool_dec (false || false) true). simpl in e. inversion e. clear n.
+      destruct (splitMinT h) eqn : Min.
+      * destruct p0. destruct p0. destruct (match_ n g) eqn : M. destruct m.
+        -- eapply multi_step. apply sp_find. assumption. apply M. apply Min. eapply H.
+            2 : { reflexivity. } apply lex1. simpl. eapply match_decr_size. symmetry. apply M.
+        -- eapply multi_step. eapply sp_skip. assumption. apply M. apply Min.
+           eapply H. 2 : { reflexivity. } simpl. eapply lex2. symmetry. eapply match_none_size. apply M.
+           unfold heap_length_lt. destruct h. simpl in Min. inversion Min. simpl in Min. inversion Min; subst.
+           rewrite mergeAll_size. simpl. omega.
+      * destruct h. simpl in E. inversion E. inversion Min.
+Qed. 
 
-Lemma sp_tail_done: forall s v g,
-  valid s v g ->
+Lemma sp_tail_done: forall s,
   done (sp_tail s) = true.
 Proof.
   intros. unfold done. destruct s as[r p].
   remember (snd r, fst r) as r'. generalize dependent r. revert p. 
   induction r' using (well_founded_induction (@well_founded_bf_measure_heap _)).
-  intros. destruct r. simpl in Heqr'. destruct r'. inversion Heqr'. subst. clear Heqr'.
-  rewrite unfold_sp_tail. unfold expand_sp_tail. destruct h. simpl. reflexivity.
-  destruct (isEmpty g0) eqn : E. simpl. assumption.
-  destruct (bool_dec (Heap.isEmpty (Heap.Node b0 l l0) || false) true) eqn : ?. simpl in Heqs. inversion Heqs.
-  clear Heqs. destruct (splitMinT (Heap.Node b0 l l0)) eqn : Min. simpl in Min. destruct p0. destruct p0.
-  inversion Min; subst. clear Min. destruct l1. destruct unLPath.
-  exfalso. eapply heap_not_none. apply H0. simpl. left. reflexivity. destruct l. 
-  destruct (match_ n0 g0) eqn : M. destruct m.
-  -  remember (sp_tail (g1, mergeAll (mergeAll l0 :: expand b0 (LP ((n0, b0) :: unLPath)) c),
-        p ++ LP ((n0, b0) :: unLPath) :: nil)) as s'. eapply H.  3 : { reflexivity. } apply lex1.
-    simpl. eapply match_decr_size. symmetry. apply M. eapply v_step. apply H0. eapply sp_find.
-    symmetry. symmetry; assumption. apply M. simpl. reflexivity. reflexivity.
-  - eapply H. 3 : { reflexivity. } apply lex2. simpl. symmetry. eapply match_none_size. apply M.
-    simpl. unfold heap_length_lt. rewrite mergeAll_size.  simpl. omega. eapply v_step. apply H0.
-    eapply sp_skip. assumption. apply M. simpl. reflexivity.
-  - simpl in Min. inversion Min.
+  intros. destruct r. destruct r'. simpl in Heqr'. inversion Heqr'; subst.
+  rewrite unfold_sp_tail. unfold expand_sp_tail. destruct (Heap.isEmpty h) eqn : E.
+  - simpl. rewrite E. reflexivity.
+  - destruct (isEmpty g) eqn : G.
+    + simpl. rewrite G. rewrite E. reflexivity.
+    + destruct (bool_dec (false || false) true). inversion e. clear n. destruct (splitMinT h) eqn : Min.
+      * destruct p0. destruct p0. destruct (match_ n g) eqn : M. destruct m.
+        -- eapply H. 2 : { reflexivity. } eapply lex1. simpl. eapply match_decr_size. symmetry.
+           apply M.
+        -- eapply H. 2 : {  reflexivity. } apply lex2; simpl. unfold natNodes_eq. symmetry.
+           eapply match_none_size. apply M. unfold heap_length_lt. destruct h. inversion E. simpl.
+            simpl in Min; inversion Min. rewrite mergeAll_size. omega.
+      * destruct h. inversion E. inversion Min.
+Qed. 
+
+(*This enables us to talk about any prior valid state, with the assurance that we will multistep to the
+  current, done state*)
+Lemma multi_done: forall s s' g v,
+  valid s g v ->
+  valid s' g v ->
+  done s = false ->
+  done s' = true ->
+  sp_multi s s'.
+Proof.
+  intros. assert (exists s'', sp_multi s s'' /\ done s'' = true).
+  exists (sp_tail s). split. apply sp_tail_multi. apply sp_tail_done.
+  destruct H3 as [s'']. destruct H3. assert (valid s'' g v). eapply multi_valid.
+  apply H. apply H3. assert (s' = s''). eapply done_unique; try(assumption).
+  apply H0. apply H5. subst. assumption.
 Qed.
+
+
 
 End Exec.
 
 Require Import GHC.Base.
 
 Section Correct.
-Require Import Data.Graph.Inductive.Internal.RootPath.
-Require Import Helper.
-
-Definition orl {A} (l l': list A) :=
-  match l with
-  | nil => l'
-  | _ => l
-  end.
-
-Lemma findP_app: forall {A} v (l l' : LRTree A),
-  findP v (l ++ l') = orl (findP v l) (findP v l').
-Proof.
-  intros. generalize dependent l'. induction l; intros.
-  - simpl. reflexivity.
-  - simpl. destruct a0. destruct unLPath. apply IHl. destruct l0.
-    destruct (Base.op_zeze__ v n) eqn : E. simpl. reflexivity.
-    apply IHl.
-Qed.
-
-Lemma node_eq: forall (v v' : Node),
-  v == v' = true <-> v = v'.
-Proof.
-  intros. unfold "==". unfold Eq_Char___. unfold op_zeze____. apply N.eqb_eq.
-Qed. 
-
-Ltac unfold_eq H :=
-  unfold "==" in H; unfold Eq_Char___ in H; unfold op_zeze____ in H;
-  try (apply N.eqb_eq in H); try (apply N.eqb_neq in H).
 
 Lemma graph_iff_not_output: forall s g v v',
   valid s g v ->
   vIn g v' = true ->
-  findP v' (get_paths s) <> nil <->  (vIn (get_graph s) v' = false).
+  In v' (map snd (get_dists s)) <->  (vIn (get_graph s) v' = false).
 Proof.
   intros. induction H; split; intros; simpl in *.
   - contradiction. 
   - rewrite H0 in H1. inversion H1.
-  - inversion H1; subst.
-    + simpl. unfold get_paths in H2. rewrite findP_app in H2. 
-      destruct (findP v' p) eqn : F. simpl in H2. destruct (Base.op_zeze__ v' v0) eqn : E.
-      apply node_eq in E. subst. epose proof (match_remain_some g0 v0 c g' H4). destruct_all.
-      destruct (vIn g' v0) eqn : V. apply H6 in V. destruct_all; contradiction. reflexivity.
-      contradiction. simpl in IHvalid. 
-      rewrite F in IHvalid. pose proof (match_remain_some g0 v0 c g' H4). destruct_all.
-      destruct (vIn g' v') eqn : V. apply H6 in V. destruct_all. 
-      assert (vIn g0 v' = false). apply IHvalid. assumption. auto. rewrite H10 in H8. inversion H8.
-      reflexivity.
-    + simpl. simpl in IHvalid. simpl in H2. assert (g' = g0). erewrite match_remain_none. reflexivity. apply H4.
-      subst. apply IHvalid. assumption. assumption.
-  - inversion H1; subst. simpl in IHvalid. simpl in H2. simpl. rewrite findP_app. destruct (findP v' p) eqn : F.
-    simpl. destruct (v' == v0) eqn : E. intro. inversion H6. apply IHvalid. assumption.
-    pose proof (match_remain_some g0 v0 c g' H4). destruct_all. destruct (vIn g0 v') eqn : V.
-    assert (vIn g' v' = true). apply H6. split. assumption. intro. subst. unfold_eq E. contradiction.
-    rewrite H8 in H2. inversion H2. reflexivity. simpl. intro. inversion H6.
-    simpl in *. apply IHvalid. assumption. assert (g0 = g'). eapply match_remain_none. apply H4. subst.
-    assumption.
+  - specialize (IHvalid H0). inversion H1; subst.
+    + simpl. simpl in H2. unfold map in H2. rewrite map_app in H2. apply in_app_or in H2.
+      destruct H2. simpl in IHvalid. eapply match_remain_some in H4. destruct_all.
+      rewrite IHvalid in H2. destruct (vIn g' v') eqn : V.
+      apply H4 in V. destruct_all. rewrite H2 in H7. inversion H7. reflexivity.
+      simpl in H2. destruct H2. subst. eapply match_remain_some in H4. destruct_all.
+      destruct (vIn g' v') eqn : V. apply H2 in V. destruct_all; contradiction. reflexivity.
+      destruct H2.
+    + simpl in *. eapply match_remain_none in H4. subst. apply IHvalid; assumption.
+  - specialize (IHvalid H0). inversion H1; subst; simpl in *.
+    + destruct (N.eq_dec v' v0). subst. unfold map. rewrite map_app. apply in_or_app.
+      right. simpl. left. reflexivity.
+      apply match_remain_some in H4. destruct_all.
+      assert (vIn g0 v' = false). destruct (vIn g0 v') eqn : V. 
+      assert (vIn g' v' = true). apply H4. split; assumption. rewrite H7 in H2. inversion H2. 
+      reflexivity. unfold map. rewrite map_app. apply in_or_app. left. unfold map in IHvalid. apply IHvalid.
+      assumption.
+    + apply match_remain_none in H4. subst. apply IHvalid; assumption.
 Qed.
 
 Require Import WeightedGraphs.
@@ -368,24 +509,21 @@ Lemma graph_subset: forall s s' v g,
   valid s v g ->
   valid s' v g ->
   sp_multi s s' ->
+  (forall v', vIn (get_graph s') v' = true -> vIn (get_graph s) v' = true) /\
   (forall u v w, WeIn (get_graph s') u v w -> WeIn (get_graph s) u v w).
 Proof.
-  intros. induction H1. assumption. inversion H1; subst.
-  - remember ((g', mergeAll (h' :: expand d (LP ((v1, d) :: t)) c), p ++ LP ((v1, d) :: t) :: nil)) as s''.
-    rewrite Heqs'' in IHmulti at 2. simpl in IHmulti. simpl. eapply Wmatch_remain_some in H5.
-    destruct_all. apply IHmulti in H2. apply H7 in H2. destruct_all; assumption. eapply v_step. apply H.
-    assumption. eapply multi_valid. eapply v_step. apply H. apply H1. assumption.
-  - eapply match_remain_none in H5. subst. simpl in *. apply IHmulti. eapply v_step. apply H. assumption.
-    eapply multi_valid. eapply v_step. apply H. apply H1. assumption. assumption.
-Qed.
-
-Lemma valid_begins_with_start: forall s g v,
-  valid s g v ->
-  sp_multi (start g v) s.
-Proof.
-  intros. induction H.
-  - constructor.
-  - eapply multi_trans. apply IHvalid.  eapply multi_step. apply H0. apply multi_refl.
+  intros. induction H1. split; intros. assumption. assumption.
+  assert (valid y v g). eapply v_step. apply H. assumption. specialize (IHmulti H3 H0).
+  inversion H1; subst. remember (g', mergeAll (h' :: expand_dist d v0 c), p ++ (d, v0) :: nil) as y.
+  split; intros.
+  - simpl. assert (M:= H5). apply (match_remain_some) in H5. destruct_all.
+    apply H9 in H7. rewrite Heqy in H7; simpl in H7. rewrite H5 in H7. destruct_all; assumption.
+  - simpl. apply (Wmatch_remain_some) in H5. destruct_all; subst.
+    remember (g', mergeAll (h' :: expand_dist d v0 c), p ++ (d, v0) :: nil) as y. apply H10 in H7.
+    rewrite Heqy in H7; simpl in H7. apply H8 in H7. destruct_all; assumption.
+  - apply match_remain_none in H5. subst. split; intros; destruct_all; simpl in *.
+    + apply H7. assumption.
+    + apply H8. assumption.
 Qed.
 
 Lemma start_in: forall s v g,
@@ -399,224 +537,335 @@ Qed.
 
 Lemma graph_subset_start: forall s v (g: gr a b),
   valid s g v ->
+  (forall v, vIn (get_graph s) v = true -> vIn g v = true) /\
   (forall u v w, WeIn (get_graph s) u v w -> WeIn g u v w).
 Proof.
   intros. remember (start g v) as s'.
-  assert (g = get_graph s'). subst; simpl. reflexivity. rewrite H1. eapply graph_subset.
+  assert (g = get_graph s'). subst; simpl. reflexivity. setoid_rewrite H0. eapply graph_subset.
   subst. apply v_start. eapply start_in. apply H. apply H. subst. apply valid_begins_with_start. apply H.
-  assumption.
-Qed. 
+Qed.
 
-Definition unlabel_path (l : LPath b) : Path := 
-  match l with
-  | LP l' => map fst l'
-  end.
-(*All paths in the heap are valid Wpaths. Then, we can use the equivalent definitions of Wpaths (in terms of 
-  paths anf path_cost, to reason about the paths*)
-
-(*Require Import GHC.Base.
-Import GHC.Num.Notations.
-*)
-
-Lemma expand_preserves_valid: forall (w : Node) (l: LPath b) (l': list Node)
-   (c : Context a b) (u v : Node) (y : b) (g g': gr a b) g'',
-  unlabel_path l = w :: l' ->
-  Wpath g v u (unlabel_path l) y ->
-  match_ w g'' = (Some c, g') ->
-  (forall u v w, WeIn g'' u v w -> WeIn g u v w) -> 
-  (forall h, In h (expand y l c) ->
-  forall x l'', In_Heap (x, l'') h -> 
-  exists b' u', WeIn g w u' b' /\ x == op_zp__ b' y = true /\  Wpath g v u' (unlabel_path l'') x).
+Lemma eIn_WeIn: forall (g: gr a b) u v,
+  eIn g u v = true <-> exists w, WeIn g u v w.
 Proof.
-  intros. unfold expand in H2. destruct c. destruct p. destruct p. destruct l.
-  simpl in H3. rewrite in_map_iff in H3. destruct H3. destruct x0. destruct H3. unfold unit in H3.
-  subst. simpl in H4. destruct H4. inversion H3; subst. simpl. simpl in H. rewrite H.  exists b0.
-  exists n0. simpl in H0. rewrite H in H0. assert (WeIn g w n0 b0).  
-  - apply Wmatch_context in H1. destruct_all. subst. apply H2. apply H6. assumption.
-  - split. assumption. split. destruct HEqLaw; apply Eq_refl. 
-    assert (u = w). inversion H0; subst; reflexivity. subst. econstructor. apply H0. apply H4.
-  - destruct H3.
+  intros. unfold eIn. unfold WeIn. unfold edgeList. unfold ulabEdges. split; intros; unfold mem in *.
+  - match goal with
+    | [H: (if ?b then _ else _) = _ |- _] => destruct b
+    end.
+    rewrite in_map_iff in i. destruct_all. destruct x. destruct p. inversion H0; subst. exists b0. assumption.
+    inversion H.
+  - match goal with
+    | [H: _ |- (if ?b then _ else _) = _ ] => destruct b
+    end. reflexivity.
+    destruct_all. setoid_rewrite in_map_iff in n. exfalso. apply n. exists (u,v,x). split. reflexivity. assumption.
 Qed. 
 
-Lemma heap_path_value: forall s g v x u d t,
+(*Now we need analagous theorems as with reachability of BFS, in particular, we need to prove that
+  if a vertex is in the output, then it is reachable and vice versa*)
+
+(*First, the statement for the heap.*)
+Lemma in_heap_reachable: forall s v g v',
   valid s g v ->
-  In_Heap (x, (LP ((u, d) :: t))) (get_heap s) ->
-  x = d.
+  (exists d, In_Heap (d, v') (get_heap s)) ->
+  exists l, path' g v v' l.
 Proof.
-  intros. induction H.
-  - simpl in H0. destruct H0. inversion H0. subst. reflexivity. destruct H0.
-  - inversion H1; subst.
-    + unfold get_heap in H0. rewrite in_heap_mergeAll in H0. rewrite in_heap_unfold in H0.
-      destruct H0.
-      * simpl in IHvalid. apply IHvalid. rewrite in_heap_splitMin. right. apply H0.
-        intro. subst. inversion H4. rewrite <- splitMin_equiv in H4. inversion H4. apply H6. intro.
-        subst. inversion H4.
-      * rewrite in_heap_exists in H0. destruct H0 as [h'']. destruct H0. simpl in H0.
-        destruct c. destruct p0. destruct p0. rewrite in_map_iff in H0. destruct_all. destruct x0.
-        unfold unit in H0. subst. simpl in H5. destruct H5. inversion H0; subst. reflexivity.
-        destruct H0.
-    + simpl in *. apply IHvalid. rewrite in_heap_splitMin. right.
-      apply H0. intro. subst. inversion H4. rewrite <- splitMin_equiv in H4. inversion H4. apply H6.
-      intro. subst. inversion H4.
-Qed. 
-
-Lemma in_heap_wpath: forall s g v x l,
-  valid s g v ->
-  In_Heap (x, l) (get_heap s) ->
-  exists u, Wpath g v u (unlabel_path l) x.
-Proof.
-  intros. generalize dependent l. revert x. induction H; intros.
-  - simpl in H0. destruct H0. inversion H0; subst. simpl. exists v. constructor. assumption.
+  intros. generalize dependent v'. induction H; intros.
+  - simpl in H0. destruct_all. destruct H0. inversion H0; subst. exists (v' :: nil). constructor. assumption.
     destruct H0.
   - inversion H0; subst.
-    + unfold get_heap in H1. rewrite in_heap_mergeAll in H1.
-      rewrite in_heap_unfold in H1. destruct H1.
-    * simpl in IHvalid. apply IHvalid. rewrite in_heap_splitMin. right. apply H1. intro. subst.
-      inversion H4. rewrite <- splitMin_equiv in H4.
-    inversion H4; subst. apply H6. intro. subst. simpl in H4. inversion H4.
-    * rewrite in_heap_exists in H1. destruct H1 as [h'']. destruct H1.
-      pose proof (expand_preserves_valid v0 (LP ((v0, d) :: t)) (map fst t) c v0 v d g g' g0 eq_refl). 
-      assert (a' = d). eapply heap_path_value. apply H. simpl.
-      rewrite in_heap_splitMin. left. reflexivity. intro. subst. inversion H4.
-      rewrite <- splitMin_equiv in H4. inversion H4. apply H8. intro. subst. inversion H4.
-      subst.
-      assert (Wpath g v v0 (unlabel_path (LP ((v0, d) :: t))) d). simpl. simpl in IHvalid.
-      specialize (IHvalid d (LP ((v0, d) :: t))). simpl in IHvalid. destruct IHvalid. 
-      rewrite in_heap_splitMin. left. reflexivity. intro. subst. inversion H4.
-      rewrite <- splitMin_equiv in H4. inversion H4; subst. apply H8.
-      intro. subst. inversion H4. assert (A:=H7). apply hd_path in H7. subst. apply A.
-      specialize (H6 H7 H3).
-      assert ((forall (u v : Node) (w : b), WeIn g0 u v w -> WeIn g u v w)). intros.
-      eapply graph_subset_start. apply H. simpl. assumption. specialize (H6 H8 h'' H1 x l H5).
-      destruct H6 as [b']. destruct H6 as [u']. destruct_all.
-      exists u'. assumption.
-    + simpl in *. apply IHvalid. rewrite in_heap_splitMin. right. apply H1. intro. subst. inversion H4.
-      rewrite <- splitMin_equiv in H4. inversion H4. apply H6. intro. subst. inversion H4.
+    + unfold get_heap in H1. destruct H1 as [d']. rewrite in_heap_mergeAll in H1.
+      rewrite in_heap_unfold in H1. destruct H1. apply IHvalid. exists d'. simpl.
+      destruct h; inversion H4. subst. simpl. right. rewrite <- in_heap_equiv.
+      rewrite in_heap_mergeAll in H1. apply H1. destruct c. destruct p0. destruct p0. simpl in H1.
+      rewrite in_heap_exists in H1. destruct H1 as [h'']. destruct_all.
+      rewrite in_map_iff in H1. destruct H1. destruct x. destruct_all.
+      subst. simpl in H5. destruct H5. inversion H1; subst.
+      specialize (IHvalid v0). simpl in IHvalid. 
+      assert (exists l : list Node, path' g v v0 l). apply IHvalid. exists d. destruct h;
+      inversion H4. simpl. left. reflexivity. destruct H5 as [l]. exists (v' :: l).
+      econstructor. apply H5. eapply (match_context) in H3. destruct_all; subst.
+      assert (eIn g0 n v' = true). apply H8. rewrite in_map_iff. exists (b0, v'). split; simpl.
+      reflexivity. assumption. pose proof (graph_subset_start _ _ _ H).
+      simpl in H9. 
+      assert (exists w, WeIn g0 n v' w). rewrite <- eIn_WeIn. assumption. destruct H10. apply H9 in H10.
+      rewrite eIn_WeIn. exists x. assumption. destruct H1.
+    + simpl in *. destruct H1 as [d']. apply IHvalid. exists d'.
+      destruct h; inversion H4. subst. simpl. right. rewrite in_heap_mergeAll in H1. rewrite <- in_heap_equiv.
+      assumption.
 Qed.
 
-Lemma in_output_wpath: forall s v g l,
+Theorem output_is_reachable: forall s v g v',
   valid s g v ->
-  In l (get_paths s) ->
-  exists x u, Wpath g v u (unlabel_path l) x.
-Proof.
-  intros.
-  induction H; subst.
-  - simpl in H0. destruct H0.
-  - inversion H1; subst.
-    + unfold get_paths in H0. apply in_app_or in H0. destruct H0. apply IHvalid. apply H0.
-      simpl in H0. destruct H0. subst. exists a'.   eapply in_heap_wpath. apply H. simpl. rewrite in_heap_splitMin.
-      left. reflexivity. intro. subst. inversion H4. rewrite <- splitMin_equiv in H4. inversion H4. apply H5.
-      intro. subst. inversion H4. destruct H0.
-    + apply IHvalid. simpl in *. assumption.
-Qed.
-
-(*
-
-(*Everything on the heap is in the graph*)
-
-
-(*A safe head function that uses a default value so that we don't have to wrap and unwarp options. We know
-  by above that each list in the output is a valid path, so it is not nil*)
-Definition hdDefault {A} (x : A) (l : list A) : A :=
-  match l with
-  | nil => x
-  | h :: t => h
-  end.
-
-Definition get_verts v l := map (hdDefault v) (map unlabel_path l).
-
-Require Import Coq.Lists.SetoidList.
-
-Lemma nodups_output: forall s g v,
-  valid s g v ->
-  NoDup (get_verts v (get_paths s)).
+  In v' (map snd (get_dists s)) ->
+  exists l, path' g v v' l.
 Proof.
   intros. induction H.
-  - simpl. unfold get_verts; simpl. constructor.
-  - inversion H0; subst.
-    + simpl. unfold get_verts. unfold map. rewrite map_map. rewrite map_app.
-      simpl.
-      assert (List.map (fun x : LPath b => hdDefault v (unlabel_path x)) p ++ v0 :: nil = 
-      rev (v0 :: rev (List.map (fun x : LPath b => hdDefault v (unlabel_path x)) p))). simpl.
-      rewrite rev_involutive. reflexivity.
-      rewrite H4. rewrite NoDup_NoDupA. apply NoDupA_rev. apply eq_equivalence.
-      constructor. intro. rewrite <- In_InA_equiv in H5. rewrite <- in_rev in H5.
-      assert (vIn g v0 = true). 
+  - simpl in H0. destruct H0.
+  - inversion H1; subst.
+    + simpl in *. unfold map in H0. rewrite map_app in H0.
+      apply in_app_or in H0. destruct H0. apply IHvalid. assumption. simpl in H0. destruct H0. subst.
+      eapply in_heap_reachable. apply H. simpl. destruct h; inversion H4. subst. simpl. exists d. left.
+      reflexivity. destruct H0.
+    + simpl in *. apply IHvalid; assumption.
+Qed.
 
-  apply SetoiList.NoDupA_rev. simpl.
+(*The harder direction: if a vertex is reachable, then it is in the output. We follow a similar strategy to BFS*)
 
+(*Everything in the output at one state is there in all future states*)
+Lemma output_preserved_strong: forall s v g v' s' d,
+  valid s g v ->
+  sp_multi s s' ->
+  In (d, v') (get_dists s) ->
+  In (d, v') (get_dists s').
+Proof.
+  intros. induction H0. assumption. assert (valid y g v). eapply v_step. apply H. assumption.
+  specialize (IHmulti H3). clear H3. inversion H0; subst; simpl in *; apply IHmulti; solve_in.
+Qed.
+
+Lemma output_preserved: forall s v g v' s',
+  valid s g v ->
+  sp_multi s s' ->
+  In v' (map snd (get_dists s)) ->
+  In v' (map snd (get_dists s')).
+Proof.
+  intros. rewrite in_map_iff in *. destruct H1. exists x. destruct H1.
+  split. assumption. destruct x; simpl. subst. eapply output_preserved_strong.
+  apply H. apply H0. assumption.
+Qed.
+
+(*Everything in the heap is a valid vertex*)
+Lemma heap_valid: forall s v g v' d,
+  valid s g v ->
+  In_Heap (d, v') (get_heap s) ->
+  vIn g v' = true.
+Proof.
+  intros. induction H.
+  - simpl in H0. destruct H0. inversion H0; subst. assumption. destruct H0.
+  - inversion H1; subst.
+    + unfold get_heap in H0. rewrite in_heap_mergeAll in H0. rewrite in_heap_unfold in H0.
+      destruct H0. apply IHvalid. simpl. destruct h. inversion H4. inversion H4; subst.
+      right. rewrite in_heap_mergeAll in H0. rewrite in_heap_equiv in H0. assumption.
+      destruct c. destruct p0. destruct p0. simpl in H0. rewrite in_heap_exists in H0.
+      destruct H0. rewrite in_map_iff in H0. destruct_all. destruct x0. subst. simpl in H5.
+      destruct H5. inversion H0; subst. apply match_context in H3. destruct_all; subst.
+      assert (eIn g0 n v' = true). apply H7. rewrite in_map_iff. exists (b0, v'). split; simpl; auto.
+      apply edges_valid in H3. destruct_all. pose proof (graph_subset_start _ _ _ H).
+      destruct_all. apply H9; simpl. assumption.
+      destruct H0.
+    + apply IHvalid. simpl in *. destruct h; inversion H4; subst. right. 
+      rewrite in_heap_mergeAll in H0. rewrite in_heap_equiv in H0. assumption.
+Qed.
+
+
+(*Everything in the heap at one point that is not in the heap at a future point must be in the output*)
+Lemma heap_added_to_output: forall s v g v' s',
+  valid s g v ->
+  sp_multi s s' ->
+  (exists d, In_Heap (d, v') (get_heap s)) ->
+  ~(exists d, In_Heap (d, v') (get_heap s')) ->
+  In v' (map snd (get_dists s')).
+Proof.
+  intros. induction H0.
+  - contradiction.
+  - assert (valid y g v). eapply v_step. apply H; assumption. assumption.
+    specialize (IHmulti H4). inversion H0; subst.
+    + destruct H1 as [d']. simpl in H1. remember ((h' :: expand_dist d v0 c)) as h0.
+      simpl in IHmulti. subst. destruct h; inversion H7. subst. simpl in H1.
+      destruct H1. inversion H1; subst. eapply output_preserved. apply H4. 
+      assumption. simpl. unfold map. rewrite map_app. apply in_or_app. simpl.
+      right. left. reflexivity. 
+      destruct_all. apply IHmulti. exists d'. rewrite in_heap_mergeAll.
+      rewrite in_heap_unfold. left. rewrite in_heap_mergeAll. rewrite in_heap_equiv. apply H1.
+      assumption.
+    + destruct (N.eq_dec v' v0). subst. eapply output_preserved. apply H4.
+      assumption. destruct H1. eapply graph_iff_not_output. apply H4. eapply heap_valid.
+      apply H. simpl. apply H1. simpl. assert (M:= H6). apply match_remain_none in M. subst.
+      destruct (vIn g' v0) eqn : V. apply match_in in V.
+      destruct_all. rewrite H8 in H6. inversion H6. reflexivity. apply IHmulti.
+      destruct h; inversion H7; subst. destruct H1. simpl in H1. destruct H1. inversion H1; subst. contradiction.
+      exists x. simpl. rewrite in_heap_mergeAll. rewrite in_heap_equiv. assumption. assumption.
+Qed.
+
+(*An important lemma: If a vertex is on the heap at any point, when we multistep to the end, it is in
+  the list of distances*)
+Lemma heap_ends_in_output: forall s v g s' v',
+  valid s g v ->
+  sp_multi s s' ->
+  done s' = true ->
+  (exists d, In_Heap (d, v') (get_heap s)) ->
+  In v' (map snd (get_dists s')).
+Proof.
+  intros. unfold done in H1. rewrite orb_true_iff in H1.
+  destruct H1. destruct (get_heap s') eqn : E. 
+  eapply heap_added_to_output. apply H. assumption. assumption. rewrite E. simpl. intro. destruct_all. destruct H3. 
+  simpl in H1. inversion H1. rewrite graph_iff_not_output. 
+  rewrite isEmpty_def in H1. apply H1. apply v'. 
+  eapply multi_valid. apply H. assumption. destruct H2. eapply heap_valid. apply H. apply H2. 
+Qed.
+Require Import Coq.Lists.SetoidList.
 (*Each vertex appears at most once in the output*)
 Lemma no_dups_output: forall s g v,
   valid s g v ->
-  NoDup (map fst (get_dists s)).
+  NoDup (map snd (get_dists s)).
 Proof.
   intros. induction H; simpl.
   - constructor.
-  - inversion H0; subst; simpl in *.
-    rewrite map_app. simpl. assert (map fst d ++ v0 :: nil = rev (v0 :: rev ((map fst d)))).
+  - inversion H0; subst; simpl in *. unfold map.
+    rewrite map_app. simpl. assert (List.map snd p ++ v0 :: nil = rev (v0 :: rev ((map snd p)))).
     simpl. rewrite rev_involutive. reflexivity.
-    rewrite H3. rewrite NoDup_NoDupA. apply NoDupA_rev. apply eq_equivalence.
-    constructor. intro. rewrite <- In_InA_equiv in H4. rewrite <- in_rev in H4.
-    assert (vIn g v0 = true). eapply queue_in_graph. apply H. simpl. left. reflexivity. 
-    pose proof (graph_iff_not_output _ _ _ _ H H5) as D; simpl in *.
-    apply D in H4. 
+    rewrite H4. rewrite NoDup_NoDupA. apply NoDupA_rev. apply eq_equivalence.
+    constructor. intro. rewrite <- In_InA_equiv in H5. rewrite <- in_rev in H5.
+    assert (vIn g v0 = true). destruct h; inversion H3; subst. eapply heap_valid. apply H. simpl.
+    left. reflexivity. 
+    pose proof (graph_iff_not_output _ _ _ _ H H6) as D; simpl in *.
+    apply D in H5. 
     assert (vIn g0 v0 = true). apply match_in. exists c. exists g'. assumption.
-    rewrite H6 in H4. inversion H4. apply NoDupA_rev. apply eq_equivalence. rewrite <- NoDup_NoDupA.
+    rewrite H7 in H5. inversion H5. apply NoDupA_rev. apply eq_equivalence. rewrite <- NoDup_NoDupA.
     assumption. assumption.
 Qed. 
-  
 
-
-(*Theorem 24.6 in CLRS*)
-Theorem sp_invariant: forall s g v u,
+(*If a vertex is in the distances at any point, there must be a step when it was added to the distances. The rest
+  of the lemma gives a bunch of information about that state and the heap/distances*)
+Lemma output_is_added: forall s v g v' d,
   valid s g v ->
-  vIn g u = true ->
-  vIn (get_graph s) u = false ->
-  shortest_wpath g u v (getDistance u (get_paths s)).
+  In (d, v') (get_dists s) ->
+  (exists s'' s' c g', valid s'' g v /\ sp_step s'' s' /\ sp_multi s' s  /\ (exists h,
+    get_heap s' = mergeAll (h :: expand_dist d v' c) /\ ~In v' (map snd (get_dists s'')) /\
+    match_ v' (get_graph s'') = (Some c, g') /\
+    splitMinT (get_heap s'') = Some (d, v',  h) /\ exists l2, get_dists s' = l2 ++ (d, v') :: nil)).
 Proof.
-  intros. generalize dependent u. generalize dependent H. induction (get_heap s, get_graph s) using (well_founded_induction well_founded_bf_measure_heap).
-  intros. inversion H0; subst.
-  - simpl. unfold getDistance. simpl. simpl in H2. rewrite H2 in H1. inversion H1.
-  - inversion H4; subst.
-    + simpl. unfold getDistance. rewrite findP_app. destruct (N.eq_dec v0 u). subst.
-      destruct (findP u p0) eqn : F. simpl. assert (u == u = true). apply node_eq. reflexivity.
-      rewrite H8. clear H8. 
-  (*Plan
-    - show that shortest path always exists - DONE
-    - prove that the heap contains valid paths to the start vertex - DONE
-    - so there is a shortest path from u to v
-    - then, if a condition holds at the start of a path and doesn't hold at the end, there is a boundary
-      where it doesn/doesnt not hold (may have proved for SCC)
-    - then I have x and y in the CLRS proof
-    - also, may need to prove that u <> v (which should not be hard) - or really just prove for this*)
-  (*Need to know that shortest_wpath is not None*)
-        unfold findP. simpl.
-    + destruct c. destruct p1. destruct p1. simpl in *.
+  intros. induction H.
+  - simpl in H0. destruct H0.
+  - inversion H1; subst.
+    + assert (~In v0 (map snd p)). { assert (valid (g', mergeAll (h' :: expand_dist d0 v0 c), p ++ (d0, v0) :: nil) g v).
+      eapply v_step. apply H. assumption. apply no_dups_output in H5. simpl in H5. rewrite NoDup_NoDupA in H5. unfold map in H5.
+      rewrite map_app in H5. simpl in H5. apply NoDupA_swap in H5. inversion H5; subst.
+      intro. rewrite In_InA_equiv in H6. rewrite app_nil_r in H8. contradiction.
+      apply eq_equivalence. } destruct (N.eq_dec v' v0).
+      * subst. simpl in H0. apply in_app_or in H0. destruct H0.
+        rewrite in_map_iff in H5. exfalso. apply H5. exists (d, v0). split; simpl. reflexivity. assumption.
+        simpl in H0. destruct H0. inversion H0; subst. 
+        exists (g0, h, p). exists ( (g', mergeAll (h' :: expand_dist d v0 c), p ++ (d, v0) :: nil)).
+        exists c. exists g'.
+        repeat(split; try(assumption); try(reflexivity)).
+        apply multi_refl. exists h'. repeat(split; try(assumption); try(reflexivity)).
+        exists p. simpl. reflexivity. destruct H0.
+      * apply in_app_or in H0. destruct H0.
+        apply IHvalid in H0. clear IHvalid. destruct H0 as [s'']. destruct H0 as [s']. destruct H0 as [c'].
+        destruct H0 as [g'']. destruct_all. exists s''. exists s'. exists c'. exists g''.
+        repeat(split; try(assumption)). eapply multi_trans. apply H7. apply multi_R. assumption.
+        exists x. repeat(split; try(assumption)). exists x0. assumption. simpl in H0. destruct H0. inversion H0; subst.
+        contradiction. destruct H0.
+    + apply IHvalid in H0. clear IHvalid. destruct H0 as [s'']. destruct H0 as [s']. destruct H0 as [c'].
+      destruct H0 as [g'']. destruct_all. exists s''. exists s'. exists c'. exists g''.
+      repeat(split; try(assumption)). eapply multi_trans. apply H6. apply multi_R. assumption.
+      exists x. split. assumption. repeat(split; try(assumption)). exists x0. assumption.
+Qed.
 
-(*Need to reason about distance*)
-Print expand.
-(*Either have additional distance information*)
-Definition path_cost (l :LPath b) : b :=
-  match l with
-  | LP l' => fold_right (fun (x: LNode b) acc => let (_, y) := x in y + acc) #0 l' end.
+(*Last lemma before reachability - an edge is in the graph in a given state exactly when both ot its
+  vertices are in the graph*)
+Lemma edge_in_state: forall s g v u' v' w,
+  valid s g v ->  
+  WeIn g u' v' w ->
+  WeIn (get_graph s) u' v' w <-> (vIn (get_graph s) u' = true /\ vIn (get_graph s) v' = true).
+Proof.
+  intros. induction H.
+  - unfold start; simpl. split; intros.
+    + assert (eIn g u' v' = true). apply eIn_WeIn. exists w. assumption. apply edges_valid. assumption.
+    + assumption.
+  - specialize (IHvalid H0). inversion H1; subst; simpl in *.
+    + split; intros.
+      * assert (eIn g' u' v' = true). apply eIn_WeIn. exists w. assumption. apply edges_valid. assumption.
+      * destruct H5. apply Wmatch_remain_some in H3. destruct H3. apply H3 in H5.
+        apply H3 in H6. rewrite H7. split. rewrite IHvalid. destruct_all. split; assumption.
+        destruct_all; split; assumption.
+    + apply match_remain_none in H3. subst. apply IHvalid.
+Qed.
+Import GHC.Num.Notations.
+(*Characterizing expand_dist, which is the function uesd by SP*)
+Lemma expand_dists_def: forall d' v' v (c: Context a b) g g' d,
+  match_ v g = (Some c, g') ->
+  (exists h, In h (expand_dist d v c) /\ In_Heap (d', v') h) <-> 
+  (exists (w : b), WeIn g v v' w /\ (d' = (_+_ w d))).
+Proof.
+  intros. split; intros. unfold expand_dist in H0. destruct c. destruct p. destruct p. destruct H0 as [h].
+  rewrite in_map_iff in H0. destruct_all.  destruct x. subst. simpl in H1. destruct H1.
+  inversion H0; subst. exists b0. apply (Wmatch_context) in H. destruct_all. subst.
+  split. apply H3. assumption. reflexivity. destruct H0.
+  destruct H0 as [w]. destruct_all. unfold expand_dist. destruct c. destruct p. destruct p.
+  setoid_rewrite in_map_iff. exists (unit d' v'). split. exists (w, v'). simpl. split. subst.
+  reflexivity. apply Wmatch_context in H. destruct_all; subst. apply H3. assumption. simpl.
+  left. reflexivity.
+Qed.
 
-Print findP.
+(*First, prove everything reachable is in heap at some point*)
+Lemma reachable_in_heap: forall g v v',
+  (exists l, path' g v v' l) ->
+  (exists s, valid s g v /\ (exists d, In_Heap (d, v') (get_heap s))).
+Proof.
+  intros. destruct H as [l]. generalize dependent v'.
+  induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)).
+  intros. destruct l.
+  - inversion H0; subst.
+  - inversion H0; subst.  exists (start g n). simpl. split. constructor. assumption.
+    exists #0. left. reflexivity.
+    assert (exists s : state, valid s g v /\ (exists d', In_Heap (d', v'0) (get_heap s))).
+    eapply H. 2 : { apply H6. } simpl. omega. 
+    destruct H1 as [s]. destruct H1.  
+    assert (exists sd, done sd = true /\ sp_multi s sd). exists (sp_tail s).
+    split. apply sp_tail_done. apply sp_tail_multi. destruct H3 as [sd]. destruct H3.
+    pose proof (heap_ends_in_output _ _ _ _ _ H1 H4 H3 H2).
+    assert (valid sd g v). eapply multi_valid. apply H1. assumption.
+    rewrite in_map_iff in H5. destruct H5. destruct x as [n' d]. simpl in H5. destruct H5; subst.
+    pose proof (output_is_added _ _ _ _ _ H8 H9). destruct H5 as [sb]. destruct H5 as [sp]. destruct H5 as [c].
+    destruct H5 as [g']. destruct H5. destruct H10. destruct H11. destruct H12 as [l1].
+    (*need prior state*)
+    destruct H12. destruct H13. destruct H14. destruct H15. assert (E: exists w, WeIn g v'0 n w).
+    apply eIn_WeIn. assumption. destruct E as [w E].
+    pose proof (edge_in_state _ _ _ _ _ _ H5 E). destruct (vIn (get_graph sb) n) eqn : M.
+    + assert (vIn (get_graph sb) v'0 = true). erewrite <- match_in. exists c. exists g'. assumption.
+      rewrite H18 in H17. assert (WeIn (get_graph sb) v'0 n w). rewrite H17. split; reflexivity.
+      exists sp. split; try(assumption). eapply v_step. apply H5. assumption.
+      rewrite H12. setoid_rewrite in_heap_mergeAll. setoid_rewrite in_heap_unfold.
+      destruct c. destruct p. destruct p. exists (_+_ w n'). right.
+      epose proof (expand_dists_def _ _ _ _ _ _ _ H14).
+      rewrite in_heap_exists. apply H20. exists w. split.
+      assumption. reflexivity.
+    + rewrite <- graph_iff_not_output in M. rewrite in_map_iff in M. destruct M. destruct x. simpl in H18; destruct H18; subst.
+      pose proof (output_is_added _ _ _ _ _ H5 H19). destruct_all. exists x. split. assumption.
+      exists b0. destruct (get_heap x); inversion H25; subst. left. reflexivity. apply H5.
+      apply edges_valid in H7. apply H7.
+Qed. 
 
+(*Now, everything reachable is in the ouptut*)
+Lemma reachable_in_output: forall g v v' s,
+  valid s g v ->
+  done s = true ->
+  (exists l, path' g v v' l) ->
+  In v' (map snd (get_dists s)).
+Proof.
+  intros. eapply reachable_in_heap in H1. destruct H1 as [s']. destruct H1.
+  eapply heap_ends_in_output. apply H1. destruct (done s') eqn : D.
+  assert (s = s'). eapply done_unique. apply H. apply H1. assumption. assumption.
+  subst. apply multi_refl. eapply multi_done. apply H1. apply H. assumption. assumption.
+  assumption. assumption.
+Qed.
 
-(*Some stuff
-- prove by well founded induction (strong induction)
- - need to prove that there is a state where previous one found and multisteps (anything on path)
-- ie, if a path is the min chosen in the heap, all previous ones are already there (?)
-*)
+(** Proof the SP finds vertices exactly when they are reachable **)
+Theorem output_iff_reachable: forall s g v v',
+  valid s g v ->
+  done s = true ->
+  In v' (map snd (get_dists s)) <->  (exists l, path' g v v' l).
+Proof.
+  intros. split; intros.
+  - eapply output_is_reachable. apply H. apply H1.
+  - eapply reachable_in_output. apply H. assumption. assumption.
+Qed.
 
-
-*)
 End Correct.
 
-Definition expand_dist (d : b) (v : Node) (c: Context a b) :=
-  match c with
-  | (_, _, _, s) => map (fun x : b * Node => let (l,v') := x in unit (_GHC.Num.+_ l d) v') s
-  end.
 
 Equations sp_distance (x : (Heap b Node) * (gr a b)) : list (b * Node) by wf x (@bf_measure_heap Node) :=
   sp_distance (h, g) :=  if bool_dec ((Heap.isEmpty h) || (Graph.isEmpty g)) true then nil else
@@ -728,21 +977,14 @@ Proof.
 Qed.
 
 (*Relation of distance to sp. If we take the list returned by disjkstra's and return the length of the path,
-  as well as the head of the list, ew should get the same as the distance*)
+  as well as the head of the list, we should get the same as the distance*)
 
 Definition labelHead (l: (LPath b)) : (option b * option Node)  :=
   match l with
   | LP nil => (None, None)
   | LP ((x,y) :: tl) => (Some y, Some x) 
   end.
-Require Import Coq.Wellfounded.Inverse_Image.
-(*
-(*First, we need to know that nil is not in the heap*)
-Lemma nil_notin_heap: forall h g,
-  (forall x, ~In_Heap (x, LP nil) h) ->
-  *)
 
-(*If we calculate the path cost *)
 Lemma distance_sp: forall (h : Heap b (LPath b)) (h' : Heap b Node) (g: gr a b) (Z: forall x, ~In_Heap (x, LP nil) h),
   map_heap (fun x l => (labelHead l)) h = map_heap (fun x y => (Some x, Some y)) h' ->
   map labelHead (dijkstra' (h,g)) =
@@ -814,78 +1056,19 @@ Proof.
       * subst. inversion Mi.
 Qed.
 
-(*Now we prove that it has valid paths and weights*)
+(*TODO: Now we prove that it has valid paths and weights*)
+(*
 Lemma paths_dijkstra: forall h g,
   map labelHead (dijkstra' (h,g)) = map (fun l => (path_cost (unlabel_path l), snd (labelHead l))) (dijkstra' (h,g
+*)
 
-
-apply lex2. symmetry. unfold natNodes_eq. eapply match_none_size. apply H. unfold heap_length_lt.
-unfold splitMin in H0. destruct h. simpl in n. contradiction. inversion H0; subst.
-rewrite (mergeAll_size l4). simpl. omega.
-
- }
-     (map (fun x : b * Node => let (l2, v') := x in unit (_GHC.Num.+_ l2 b3) v') l')). intros; induction l'.
-      simpl. rewrite H7. reflexivity. simpl. destruct a3. 
-
-
- induction a0. simpl. rewrite H7. reflexivity.  simpl.
-
-
-
- simpl. 
-          destruct c. destruct p. destruct p. simpl. 
-          assert (forall l, 
-          map_heap (fun (_ : b) (l2 : LPath b) => labelHead l2)
-  match
-    map (fun '(l2, v) => unit (_GHC.Num.+_ l2 b3) (LP ((v, _GHC.Num.+_ l2 b3) :: (n0, b3) :: unLPath))) l
-  with
-  | nil => h0
-  | h'0 :: hs => merge (merge h0 h'0) (mergeAll hs)
-  end =
-map_heap (fun (x : b) (y : Node) => (Some x, Some y))
-  match map (fun x : b * Node => let (l2, v') := x in unit (_GHC.Num.+_ l2 b3) v') l with
-  | nil => h1
-  | h'0 :: hs => merge (merge h1 h'0) (mergeAll hs)
-  end). { intros. induction l2. simpl. apply H7.
-    
-      unfold map. unfold
-
- intros;  induction l2 using (well_founded_induction
-                     (wf_inverse_image _ nat _ (@length _)
-                        PeanoNat.Nat.lt_wf_0)). destruct l2. simpl. assumption. simpl. 
-    rewrite map_merge. rewrite map_merge. rewrite map_merge. rewrite map_merge. 
-     rewrite map_mergeAll. rewrite map_mergeAll. destruct l2. simpl.
-      rewrite H7. destruct p. simpl. reflexivity. simpl.
-     
-
-
-
- reflexivity. subst.  rewrite H7. simpl.
-    simpl.
-
-
-
- reflexivity. unfold map. unfold List.map. rewrite H. simpl. rewrite 
-
-
- rewrite H8 in 
-
-
- unfold Default. apply None. specialize (H1 _ _ _ (fun l : LPath b => snd (labelHead l)) _ _ _ _ H2 H4).
-      assert (h <> Heap.Empty) by (intro; subst). rewrite H1. simpl. rewrite H1.
-
-
-
-    destruct (Heap.isEmpty h) eqn : He. simpl.
-    destruct h. simpl in H0. destruct h'. simpl. reflexivity. simpl in H0; inversion H0. simpl in He; inversion He. simpl.
-    destruct (Heap.isEmpty h') eqn : Hf. destruct h'.
 
 
 Lemma dijkstra'_equiv: forall h g,
   dijkstra h g = dijkstra' (h, g).
 Proof.
   intros. remember (h,g) as x. generalize dependent g. revert h.
-  induction x using (well_founded_induction (well_founded_bf_measure_heap)).
+  induction x using (well_founded_induction (well_founded_bf_measure_heap _)).
   intros. destruct x. inversion Heqx. subst. clear Heqx. unfold dijkstra.
   rewrite <- unfold_dijkstra'. simpl. unfold deferredFix2. unfold curry.
   rewrite (deferredFix_eq_on _ (fun x => True) ( (bf_measure_heap) )).
@@ -912,37 +1095,24 @@ Qed.
 
 (*Equivalence with tail recursive version*)
 Lemma sp_tail_equiv: forall g h l,
-  (forall k, ~In_Heap (k, LP nil) h) ->
-  get_paths (sp_tail (g, h, l)) = l ++ dijkstra' (h, g).
+  get_dists (sp_tail (g, h, l)) = l ++ sp_distance (h, g).
 Proof.
   intros. remember (h, g) as x. generalize dependent h. revert g. revert l.
-  induction x using (well_founded_induction (well_founded_bf_measure_heap)).
+  induction x using (well_founded_induction (well_founded_bf_measure_heap _)).
   intros. destruct x; inversion Heqx; subst; clear Heqx.
-  rewrite <- unfold_dijkstra'. rewrite unfold_sp_tail. simpl.
+  rewrite unfold_sp_distance. rewrite unfold_sp_tail. unfold expand_sp_tail. unfold expand_sp_distance.
   destruct h eqn : H'. 
   - simpl. rewrite app_nil_r. reflexivity.
-  - simpl. destruct (isEmpty g) eqn : G. 
+  - destruct (isEmpty g) eqn : G. 
     + simpl. rewrite app_nil_r. reflexivity.
-    + simpl. destruct l0. destruct unLPath. exfalso. eapply H0. simpl. left. reflexivity.
-      destruct l0. destruct (match_ n g) eqn : M. destruct m.
+    + destruct (bool_dec (Heap.isEmpty (Heap.Node b0 n l0) || false) true). simpl in e. inversion e. clear n0.
+      destruct (splitMinT (Heap.Node b0 n l0)) eqn : Min. destruct p. destruct p.
+      destruct (match_ n0 g) eqn : M. destruct m.
       * erewrite H. rewrite <- app_assoc. reflexivity. apply lex1. unfold natNodes_lt. eapply match_decr_size.
-        symmetry. apply M. intros. intro. destruct (expand b1 (LP ((n, b1) :: unLPath)) c) eqn : E; rewrite E in H1.
-        -- rewrite in_heap_mergeAll in H1. eapply H0. simpl. right. rewrite <- in_heap_equiv. apply H1.
-        -- simpl in E. destruct c. destruct p. destruct p.
-           rewrite in_heap_merge in H1. destruct H1.
-           ++ rewrite in_heap_merge in H1. destruct H1.
-              ** rewrite in_heap_mergeAll in H1. eapply H0. simpl. right. rewrite <- in_heap_equiv. apply H1.
-              ** destruct a0. simpl in E. inversion E. simpl in E. inversion E. destruct p. 
-                 rewrite <- H3 in H1. simpl in H1. destruct H1. inversion H1. destruct H1.
-          ++ destruct a0. simpl in E. inversion E. simpl in E. inversion E. rewrite in_heap_mergeAll in H1.
-             rewrite in_heap_exists in H1. destruct H1. rewrite <- H4 in H1. destruct H1. 
-             unfold Base.map in H1. rewrite in_map_iff in H1. destruct H1. destruct x0.
-             destruct H1. rewrite <- H1 in H2. unfold unit in H2. simpl in H2. destruct H2. inversion H2.
-             destruct H2.
-        -- reflexivity.
+        symmetry. apply M. reflexivity.
       * erewrite H. reflexivity. apply lex2. unfold natNodes_eq. symmetry. eapply match_none_size. apply M.
-        unfold heap_length_lt. rewrite mergeAll_size. simpl. omega. intros. intro.
-        apply (H0 k). right. rewrite in_heap_mergeAll in H1. rewrite in_heap_equiv in H1. apply H1. reflexivity.
+        unfold heap_length_lt. inversion Min; subst. rewrite mergeAll_size. simpl. omega. reflexivity.
+      * inversion Min.
 Qed.
 
 End Ind.

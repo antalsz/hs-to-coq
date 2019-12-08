@@ -864,6 +864,653 @@ Proof.
   - eapply reachable_in_output. apply H. assumption. assumption.
 Qed.
 
+(** Correctness of Dijkstra's **)
+Definition find_dist_list l v :=
+  fold_right (fun (x : b * Node)  acc => if N.eq_dec (snd x) v then Some (fst x) else acc) None l.
+
+Definition find_dist s := find_dist_list (get_dists s).
+
+(*TODO: reduce copy and paste form BFS*)
+Lemma find_dist_in: forall s g v v' n,
+  valid s g v ->
+  find_dist s v' = Some n <-> In (n,v') (get_dists s).
+Proof.
+  intros. pose proof no_dups_output _ _ _ H. unfold find_dist.
+  induction (get_dists s).
+  - simpl. split; intros. inversion H1. destruct H1.
+  - simpl. inversion H0; subst. split; intros.
+    + destruct ( N.eq_dec (snd a0) v'). destruct a0. simpl in *. inversion H1; subst. left. reflexivity.
+      right. apply IHl. assumption. assumption.
+    + destruct H1. destruct a0; subst; simpl. inversion H1; subst. destruct (N.eq_dec v' v'). reflexivity.
+      contradiction. destruct a0. simpl in *.
+      destruct ( N.eq_dec n0 v'). subst.
+      exfalso. apply H3. rewrite in_map_iff. exists (n, v'). simpl. split. reflexivity. assumption.
+      apply IHl. assumption. assumption.
+Qed.
+
+Lemma find_dist_not: forall s v,
+  find_dist s v = None <-> (forall y, ~In (y, v) (get_dists s)).
+Proof.
+  intros. unfold find_dist. induction (get_dists s).
+  - simpl. split; intros. auto. reflexivity.
+  - simpl. split; intros. intro. destruct H0. destruct a0; inversion H0; subst.
+    simpl in *. destruct (N.eq_dec v v). inversion H. contradiction.
+    destruct (N.eq_dec (snd a0) v). destruct a0. inversion H. rewrite IHl in H.
+    apply (H y). assumption. destruct a0. simpl in *. destruct (N.eq_dec n v).
+    subst. exfalso. apply (H b0). left. reflexivity. apply IHl. intros.
+    intro. apply (H y). right. assumption.
+Qed.
+
+(*The first vertex is added with distance 0. We need a few small lemmas to deal with the fact that this
+  is added specifically in the second state*)
+Lemma second_state: forall s g v,
+  vIn g v = true ->
+  sp_step (start g v) s ->
+  get_dists s = (#0, v) :: nil.
+Proof.
+  intros. unfold start in H0. inversion 0; subst; simpl.
+  simpl in H7. inversion H7; subst. reflexivity.
+  rewrite <- match_in in H. destruct H. destruct H. simpl in H7. inversion H7; subst.
+  rewrite H in H6. inversion H6.
+Qed.
+
+Lemma dists_nil_iff_start: forall s g v,
+  valid s g v ->
+  get_dists s = nil <-> s = start g v.
+Proof.
+  intros. induction H.
+  - split; intros; try(reflexivity).
+  - split; intros.
+    + inversion H0; subst.
+      * simpl in H1. destruct p; inversion H1. 
+      * unfold start in IHvalid. destruct IHvalid. simpl in H1. subst. 
+        specialize (H5 eq_refl). inversion H5; subst. simpl in H4. inversion H4; subst.
+        pose proof (start_in _ _ _ H). rewrite <- match_in in H1.
+        destruct_all. rewrite H1 in H3. inversion H3.
+    + subst. inversion H0; subst.
+      * destruct p; inversion H3.
+      * unfold start in IHvalid. destruct IHvalid. 
+        specialize (H1 eq_refl). inversion H1; subst. simpl in H7. inversion H7.
+Qed.
+
+Lemma multi_from_second: forall s g v s',
+  valid s g v  ->
+  sp_step (start g v) s' ->
+  s = start g v \/ sp_multi s' s.
+Proof.
+  intros. induction H.
+  - left. reflexivity.
+  - specialize (IHvalid H0). destruct IHvalid. subst.
+    assert (s = s'). eapply sp_step_deterministic. apply H1. apply H0. subst.
+    right. apply multi_refl. right. eapply multi_trans. apply H2. eapply multi_step.
+    apply H1. apply multi_refl.
+Qed. 
+
+(*The start state is not done*)
+Lemma done_not_start: forall g v,
+  vIn g v = true ->
+  done (start g v) = false.
+Proof.
+  intros. unfold start. unfold done. simpl. destruct (isEmpty g) eqn : E.
+  rewrite isEmpty_def in E. rewrite E in H. inversion H. apply v. reflexivity.
+Qed. 
+
+Lemma start_0_dist: forall s g v,
+  valid s g v ->
+  (get_dists s) <> nil ->
+  In (#0, v) (get_dists s).
+Proof.
+  intros. assert (exists s', sp_step (start g v) s').
+  assert (vIn g v = true) by (eapply start_in; apply H).
+  pose proof (done_not_start g v H1). rewrite not_done_step in H2.
+  apply H2. apply v_start. apply H1. destruct H1 as [s'].
+  pose proof (multi_from_second _ _ _ _ H H1). destruct H2. subst.
+  rewrite dists_nil_iff_start in H0. contradiction. apply H. 
+  eapply output_preserved_strong. eapply v_step. apply v_start.
+  apply start_in in H. apply H. apply H1. assumption.
+  erewrite second_state. simpl. left. reflexivity. 
+  apply start_in in H. apply H. apply H1.
+Qed.
+
+Lemma find_dist_constant: forall s s' v g v' x y,
+  valid s v g ->
+  valid s' v g ->
+  find_dist s v' = Some x ->
+  find_dist s' v' = Some y ->
+  x = y.
+Proof.
+  intros. pose proof (valid_multi _ _ _ _ H H0). rewrite find_dist_in in H1.
+  rewrite find_dist_in in H2. pose proof (no_dups_output _ _ _ H).
+  pose proof (no_dups_output _ _ _ H0). epose proof (NoDup_pairs' _ _ _ y H4 H1).
+  pose proof (NoDup_pairs' _ _ _ x H5 H2).
+  destruct H3.
+  pose proof (output_preserved_strong _ _ _ _ _ _ H H3 H1).
+  apply H7 in H8. subst. reflexivity. 
+  pose proof (output_preserved_strong _ _ _ _ _ _ H0 H3 H2).
+  apply H6 in H8. assumption. apply H0. apply H.
+Qed.
+
+(*Few more helper lemmas*)
+
+(*Heap is WF*)
+Lemma heap_WF: forall s v g,
+  valid s g v ->
+  get_heap s = Heap.Empty \/ WF (get_heap s).
+Proof.
+  intros. induction H.
+  - simpl. right. constructor.
+  - inversion H0; subst. destruct IHvalid. simpl in H4. subst. inversion H3.
+    simpl in H4. right. unfold get_heap. constructor. intros.
+    simpl in H5. destruct H5. subst. destruct h. inversion H3. simpl in H3.
+    inversion H3; subst. constructor. intros. (*TODO*) admit.
+    destruct c. destruct p0. destruct p0. simpl in H5. rewrite in_map_iff in H5.
+    destruct H5. destruct x. destruct_all. subst. constructor.
+    destruct IHvalid. simpl in H4. subst. inversion H3. simpl in *. right.
+    admit.
+Admitted.
+
+(*If (a,b) is on heap and b is not chosen, (a,b) still on heap*)
+Lemma heap_preserved: forall s v g s' v' d,
+  valid s g v ->
+  vIn (get_graph s) v' = true ->
+  In_Heap (d, v') (get_heap s) ->
+  sp_step s s' ->
+  vIn (get_graph s') v' = true ->
+  In_Heap (d, v') (get_heap s').
+Proof.
+  intros. inversion H2; subst.
+  - unfold get_heap. simpl in H1. destruct (N.eq_dec v0 v'). subst.
+    simpl in H3. apply match_remain_some in H5. destruct_all. apply H5 in H3.
+    destruct_all. contradiction.
+    rewrite in_heap_splitMin in H1. 3: { rewrite <- splitMin_equiv in H6. inversion H6. apply H8.
+    intro; subst; inversion H6. } destruct H1. inversion H1; subst. contradiction.
+    rewrite in_heap_mergeAll. rewrite in_heap_exists. exists h'. split. left. reflexivity. assumption.
+    intro; subst; inversion H6.
+  - simpl in *. rewrite in_heap_splitMin in H1. 3 : { rewrite <- splitMin_equiv in H6. inversion H6; subst.
+    apply H8. intro; subst; inversion H6. } destruct H1. inversion H1; subst.
+    rewrite <- match_in in H0. destruct_all. rewrite H0 in H5. inversion H5.
+    assumption. intro; subst; inversion H6.
+Qed.
+
+(*multistep version*)
+Lemma heap_preserved_multi: forall s v g s' v' d,
+  valid s g v ->
+  vIn (get_graph s) v' = true ->
+  In_Heap (d, v') (get_heap s) ->
+  sp_multi s s' ->
+  vIn (get_graph s') v' = true ->
+  In_Heap (d, v') (get_heap s').
+Proof.
+  intros. induction H2. assumption. 
+  destruct (vIn (get_graph y) v') eqn : V.
+  - apply IHmulti. eapply v_step. apply H. assumption. reflexivity.
+    eapply heap_preserved; try(apply H); try assumption. assumption.
+  - assert (valid y g v). eapply v_step. apply H. assumption.
+    assert (valid z g v). eapply multi_valid. apply H5. assumption.
+    pose proof (graph_subset _ _ _ _ H5 H6  H4). destruct_all. apply H7 in H3. rewrite H3 in V. inversion V.
+Qed.
+
+(*Everything in the heap is the distance of a valid path*)
+Lemma heap_valid_path: forall s v g v' d,
+  valid s g v ->
+  In_Heap (d, v') (get_heap s) ->
+  exists l, Wpath g v v' l d.
+Proof.
+  intros. generalize dependent v'. revert d. induction H; intros.
+  - simpl in H0. destruct H0. inversion H0; subst. exists (v' :: nil). constructor. assumption. 
+    destruct H0.
+  - inversion H0; subst.
+    + unfold get_heap in H1. rewrite in_heap_mergeAll in H1. rewrite in_heap_unfold in H1.
+      destruct H1. apply IHvalid. simpl. rewrite in_heap_splitMin. right. apply H1. 
+      intro; subst; inversion H4. rewrite <- splitMin_equiv in H4. inversion H4. apply H6.
+      intro; subst; inversion H4. rewrite in_heap_exists in H1. destruct H1 as [h''].
+      destruct H1. unfold expand_dist in H1. destruct c. destruct p0. destruct p0. 
+      rewrite in_map_iff in H1. destruct H1. destruct x. destruct_all. subst. simpl in H5.
+      destruct H5. inversion H1; subst. clear H1. 
+      specialize (IHvalid d0 v0). assert (exists l : list Node, Wpath g v v0 l d0).
+      apply IHvalid. simpl. rewrite in_heap_splitMin. left. reflexivity.
+      intro; subst; inversion H4. rewrite <- splitMin_equiv in H4. inversion H4; eassumption.
+      intro; subst; inversion H4. destruct H1 as [l]. exists (v' :: l). econstructor.
+      apply H1. eapply Wmatch_context in H3. destruct_all; subst.
+      apply H7 in H6. pose proof (graph_subset_start _ _ _ H). simpl in H3. apply H3. assumption.
+      destruct H1.
+    + apply IHvalid; simpl in *. rewrite in_heap_splitMin. right. apply H1. intro; subst; inversion H4.
+      rewrite <- splitMin_equiv in H4. inversion H4; eassumption. intro; subst; inversion H4.
+Qed.
+
+Lemma next_graph: forall s  v' d h o g' s',
+  splitMinT (get_heap s) = Some(d, v', h) ->
+  match_ v' (get_graph s) = (o, g') ->
+  sp_step s s' ->
+  get_graph s' = g'.
+Proof.
+  intros. inversion H1; subst. simpl in *. rewrite H4 in H. inversion H; subst.
+  rewrite H3 in H0. inversion H0; subst. reflexivity. simpl in *. rewrite H4 in H. inversion H; subst.
+  rewrite H3 in H0. inversion H0. reflexivity.
+Qed. 
+(*
+(*For convenience: if a vertex has a distance at the end but is not discovered at the current state, that is on
+  the heap*)
+Lemma dist_on_heap: forall s v g v' d' sd,
+  valid s g v ->
+  sp_multi s sd ->
+  In (d', v') (get_dists sd) ->
+  vIn (get_graph s) v' = true ->
+  In_Heap (d',v) (get_heap s).
+Proof.
+  intros. assert (valid sd g v). eapply multi_valid. apply H. assumption.
+  pose proof (output_is_added _ _ _ _ _ H2 H1). destruct_all.
+  *)
+
+(*For final lemma and theorem, we need more*)
+(*Need 2 additional assumptions: the edge weights are nonnegative and there are no parallel edges. The latter
+  restriction may be removed, but it would require more complicated functions in [Path.v]*)
+Variable g : gr a b.
+Variable Hsimple: forall u v w w', WeIn g u v w -> WeIn g u v w' -> w = w'.
+Variable HNonneg: forall u v w, WeIn g u v w -> #0 <= w = true.
+
+(*Therefore, heap values geq shortest path distance*)
+Lemma heap_geq_sp_dist: forall s v  v' d l w,
+  shortest_wpath g v v' l ->
+  path_cost g l == Some w = true ->
+  valid s g v ->
+  In_Heap (d, v') (get_heap s) ->
+  w <= d = true.
+Proof.
+  intros. eapply heap_valid_path in H2. 2 : { apply H1. }
+  destruct H2 as [l']. assert (path_cost g l' = Some d). apply path_cost_sum.
+  assumption. assumption. exists v. exists v'. assumption.
+  unfold shortest_wpath in H. destruct_all.
+  assert (path' g v v' l'). eapply path'_WPath.
+  assumption. assumption. exists d. assumption. apply H4 in H5.
+  unfold le_weight in H5. unfold lt_weight in H5.
+  unfold lt_weight_b in H5. unfold eq_weight in H5. unfold eq_weight_b in H5.
+  rewrite H3 in H5. destruct (path_cost g l). rewrite Base.simpl_option_some_eq in H0.
+  order b. rewrite some_none_eq in H0. inversion H0.
+Qed.
+
+Require Import Coq.micromega.OrderedRing.
+
+
+(*Theorem 24.6 of CLRS*)
+Theorem sp_invariant: forall s s' v,
+  valid s g v ->
+  sp_step s s' ->
+  (forall v', vIn g v' = true ->
+  vIn (get_graph s) v' = false ->
+  find_dist s v' == sp_distance g (find_shortest_wpath g v v') = true) ->
+  forall v', vIn g v' = true ->
+  vIn (get_graph s') v' = false ->
+  find_dist s' v' == sp_distance g (find_shortest_wpath g v v') = true.
+Proof.
+  intros. assert (V: valid s' g v). eapply v_step. apply H. assumption.  inversion H0; subst.
+  - simpl in H3. simpl in H1. destruct (N.eq_dec v0 v').
+    + subst. remember (g', mergeAll (h' :: expand_dist d v' c), p ++ (d, v') :: nil) as s'.
+      rewrite Heqs'. assert (find_dist (g', mergeAll (h' :: expand_dist d v' c), p ++ (d, v') :: nil) v' = Some d). {
+      rewrite find_dist_in. simpl. apply in_or_app. right. left. reflexivity. rewrite Heqs' in H0. eapply v_step.
+      apply H. assumption. }
+      rewrite H7. destruct (sp_distance g (find_shortest_wpath g v v')) eqn : D.
+      -- rewrite Base.simpl_option_some_eq. destruct (d == b0) eqn : E. reflexivity.
+         (*What if v' is the start vertex?*)
+         destruct (N.eq_dec v v').
+         ++ subst. remember (g', mergeAll (h' :: expand_dist d v' c), p ++ (d, v') :: nil) as s'.
+            assert (#0 == b0 = true). { unfold sp_distance in D. destruct (find_shortest_wpath g v' v') eqn : P.
+            pose proof (sp_distance_unique g Hsimple HNonneg v' v' (v' :: nil) l).
+            simpl in H8. rewrite H2 in H8. rewrite D in H8.
+            rewrite Base.simpl_option_some_eq in H8. apply H8. apply shortest_path_refl. assumption. assumption.
+            assumption. apply find_shortest_wpath_correct. assumption. assumption. assumption. inversion D. }
+            assert (d = #0). { rewrite find_dist_in in H7. pose proof (start_0_dist s' g v' V).
+            assert (In (#0, v') (get_dists s')). apply H9. subst. intro. simpl in H10. destruct p; inversion H10.
+            apply no_dups_output in V.
+            epose proof (NoDup_pairs' _ _ _ _ V H7 H10). assumption. apply V. } subst.
+            rewrite H8 in E. inversion E.
+            (*We now know that v' cannot be the start vertex*)
+         ++ (*There must be a shortest path from v to v'*)
+             unfold sp_distance in D. destruct (find_shortest_wpath g v v') eqn : P.
+             apply find_shortest_wpath_correct in P.  assert (S:= P). unfold shortest_wpath in P.
+             destruct P.
+               (*Therefore, let us consider the first vertex in S on the path such that its sucessor is not in S*)
+             pose proof (path_start g Hsimple HNonneg _ _  _ H8). destruct H10 as [l1].
+             assert (exists x y, rev_split_function (fun z => negb(vIn g0 z)) l = Some (x,y)). {
+             rewrite H10. rewrite rev_split_function_exists. exists v'. split.
+             subst. inversion H8; subst. contradiction. destruct l1. inversion H10; subst. contradiction.  inversion H10; subst.
+             left. reflexivity. epose proof (match_in g0 v').
+             assert (vIn g0 v' = true). { apply H11. exists c. exists g'. assumption. } rewrite H12. reflexivity.
+             assert (In (#0, v) (get_dists (g0, h, p))). { eapply start_0_dist. apply H.
+             intro. rewrite dists_nil_iff_start in H11. 2 : { apply H. } unfold start in H11.
+             inversion H11; subst. remember ((g', mergeAll (h' :: expand_dist d v' c), nil ++ (d, v') :: nil)) as s'.
+             simpl in H6. inversion H6; subst. contradiction. } 
+             assert (In v (map snd (get_dists (g0, h, p)))). { rewrite in_map_iff. exists (#0,v). simplify'. }
+             rewrite graph_iff_not_output in H12. simpl in H12. rewrite H12. reflexivity. apply H.
+             eapply start_in. apply H. }
+             destruct H11 as [x]. destruct H11 as [y]. rewrite rev_split_function_def in H11.
+             destruct H11 as [l1']. destruct H11 as [l2']. destruct_all.
+             rewrite negb_true_iff in H12. rewrite negb_false_iff in H13.
+             setoid_rewrite negb_true_iff in H14. 
+             (*We can find a state at which x is discovered,
+               and it must be before the current state (because x is in the output). So by induction, 
+               this distance is its shortest path distance*)
+             assert (In x (map snd (get_dists (g0, h, p)))). eapply graph_iff_not_output.
+             apply H. eapply path_in_graph in H8. apply H8. assumption. assumption. rewrite H11.
+             apply in_or_app. right. simpl. right. left. reflexivity. simpl. assumption.
+             rewrite in_map_iff in H15. destruct H15. destruct x0. destruct H15. simpl in H15. 
+             rewrite H15 in H16. clear H15. apply (output_is_added _ _ _ _ _ H) in H16.
+             destruct H16 as [sp]. destruct H15 as [sx]. destruct H15 as [cx]. destruct H15 as [gx].
+             destruct H15. destruct H16. destruct H17. destruct H18 as [hx].
+             destruct_all.
+             (*We can apply the IH to find that x's distance was set correctly*)
+             assert (find_dist sx x = Some b1). { rewrite find_dist_in. rewrite H22. apply in_or_app. right.
+             left. reflexivity. eapply v_step. apply H15. apply H16. } 
+             assert ((find_dist sx x == sp_distance g (find_shortest_wpath g v x)) = true). {
+             assert ((find_dist (g0, h, p) x == sp_distance g (find_shortest_wpath g v x)) = true). {
+             eapply H1. eapply  path_in_graph. assumption. assumption. apply H8. rewrite H11.
+             apply in_or_app. right. right. left. reflexivity. assumption. }
+             assert (find_dist (g0, h, p) x = Some b1). { rewrite find_dist_in.
+             eapply output_preserved_strong. eapply v_step. apply H15. apply H16.
+             assumption. rewrite find_dist_in in H23. assumption. eapply v_step. apply H15. assumption.
+             apply H. } rewrite H25 in H24. rewrite H23. assumption. }
+             (*Now we need to prove that y is set to its correct distance*)
+             (*Plan: show that shortest path dist is b0 + w, and that is in the heap.
+               y has not been discovered yet, but we know that it will. Need to prove that
+               all distances in the heap are >= shortest path distance and preserved iff still not discovered,
+               so when y is discoverd, b0 + w will be smallest and it will be chosen. Therefore, at the end,
+               y has its smallest distance. We know that v' will add a distance of d, so it has a distance of d
+               at the end. By upper bound, d >= shortest path. b0 + w = dist(y) <= dist(u) (bc nonneg) <= d
+               but we know that d <= b0 + w bc both are in the heap and heap finds min. So 
+               dist(u) = d, as desired (then can push that back by lemma)
+                - *)
+              assert (exists sd, sp_multi s' sd /\ done sd = true). exists (sp_tail s').
+              split. apply sp_tail_multi. apply sp_tail_done. destruct H25 as [sd].
+              destruct H25. assert (find_dist sd y == sp_distance g (find_shortest_wpath g v y) = true). {
+              (*Step 1: y's shortest path distance is b1 + w'*)
+              assert (shortest_wpath g v y (y :: x :: l2')). { eapply shortest_path_subpath.
+              assumption. assumption. rewrite <- H11. apply S. }
+              assert (exists w, path_cost g (y :: x :: l2') = Some w). apply path_cost_path'.
+              assumption. assumption. exists v. exists y. unfold shortest_wpath in H27. apply H27.
+              destruct H28 as [dy].
+              assert (path_cost g (y :: x :: l2') == Some dy = true). rewrite H28.
+              rewrite Base.simpl_option_some_eq. destruct HEqLaw; apply Eq_refl.
+              assert (P := H27). unfold shortest_wpath in P. destruct P. clear H31.
+              rewrite path'_WPath in H30. destruct H30 as [dy'].
+              assert (path_cost g (y :: x :: l2') = Some dy'). { rewrite path_cost_sum. exists v. exists y.
+              assumption. assumption. assumption. } rewrite H28 in H31. inversion H31; subst.
+              inversion H30; subst. apply hd_path in H32. clear H31. subst.
+              assert (shortest_wpath g v x (x :: l2')). eapply shortest_path_subpath.
+              assumption. assumption. assert ((y :: x :: l2') = ((y :: nil) ++ x :: l2')).
+              simpl. reflexivity. rewrite <- H10. apply H27. 
+              assert (Some b1 == path_cost g (x :: l2') = true ). {
+              rewrite H23 in H24. unfold sp_distance in H24.  destruct (find_shortest_wpath g v x) eqn : F.
+              assert (path_cost g l == path_cost g (x :: l2') = true). pose proof sp_distance_unique. simpl in H31. eapply H31.
+              assumption. assumption. apply find_shortest_wpath_correct. assumption. assumption. apply F.
+              assumption. 
+              destruct Base.EqLaws_option.
+              eapply Eq_trans. apply H24. apply H31. destruct Base.EqLaws_option. rewrite Eq_sym in H24.
+              rewrite some_none_eq in H24. inversion H24. }
+              assert (Some ( _+_ b1 w') == sp_distance g (find_shortest_wpath g v y) = true). {
+              destruct (path_cost g (x :: l2')) eqn : T.  rewrite edge_weight_in in H36.
+              epose proof (path_cost_cons _ _ _ _ _ _ T H36). 
+              rewrite Base.simpl_option_some_eq in H31. 
+              unfold sp_distance. destruct( find_shortest_wpath g v y ) eqn : F.
+              assert (path_cost g (y :: x :: l2') == path_cost g l = true). 
+              pose proof sp_distance_unique.  simpl in H33. eapply H33. assumption. assumption.
+              apply H27. apply find_shortest_wpath_correct. assumption. assumption. apply F.
+              destruct (Base.EqLaws_option). eapply Eq_trans. 2 : { apply H33. }
+              eapply Eq_trans. 2 : { rewrite Eq_sym. apply H32. } 
+              rewrite Base.simpl_option_some_eq. destruct HorderedRing. eapply rplus_eq.
+               assumption. destruct HEqLaw. apply Eq_refl0. rewrite find_shortest_wpath_none in F.
+              exfalso. apply (F (y :: x :: l2')). unfold shortest_wpath in H27. apply H27. assumption.
+              assumption. assumption. destruct (Base.EqLaws_option). rewrite Eq_sym in H31. rewrite some_none_eq in H31.
+              inversion H31. } 
+              (*Step 2: b1 + w' is in the heap at state sx*)
+              assert (In_Heap (_+_ w' b1, y) (get_heap sx)). { rewrite H18.
+              rewrite in_heap_mergeAll. rewrite in_heap_unfold. right. unfold expand_dist.
+              destruct cx. destruct p0. destruct p0. rewrite in_heap_exists. exists (unit (_+_ w' b1) y).
+              split. rewrite in_map_iff. exists (w', y). split. reflexivity. assert (T:= H20).
+              apply Wmatch_context in H20. destruct_all; subst. apply H34.
+              eapply edge_in_state. apply H15. assumption. split. rewrite <- match_in.
+              exists (a2, n1, a1, a0). exists gx. assumption. eapply graph_subset.
+              apply H15. apply H. eapply multi_trans. apply multi_R. apply H16. apply H17. simpl. assumption.
+              simpl. left. reflexivity. }
+              (*Step 3: y has not been discovered, but it will at some future state sy*)
+              assert (valid sd g v). eapply multi_valid. eapply v_step. apply H. eassumption. apply H25.
+              assert (exists l, path' g v y l). unfold shortest_wpath in H27. exists (y :: x :: l2'). apply H27.
+              pose proof (reachable_in_output _ _ _ _ H34 H26 H35). rewrite in_map_iff in H37.
+              destruct H37. destruct x1. simpl in H37. destruct H37. subst.
+              pose proof (output_is_added _ _ _ _ _ H34 H38). destruct H37 as [sy].
+              destruct H37 as [syn]. destruct H37 as [c'']. destruct H37 as [g''].
+              destruct_all.
+              (*Step 4: at state sy, b0 + w will be chosen bc it is smallest *)
+              assert (sp_multi (g0, h, p) sy). { pose proof (valid_multi _ _ _ _ H37 H).
+              destruct H46. inversion H46. subst. apply multi_refl.
+              subst. assert (y0 = syn). eapply sp_step_deterministic. apply H47. assumption. subst.
+              clear H47. assert (vIn (get_graph syn) y = true). eapply graph_subset. eapply v_step. apply H37. assumption.
+              apply H. assumption. simpl. assumption. pose proof (next_graph _ _ _ _ _ _ _ H44 H43 H39).
+              rewrite H49 in H47. apply match_remain_some in H43. destruct_all. apply H43 in H47.
+              destruct_all; contradiction. assumption. }
+              assert (b2 == _+_ w' b1 = true). { 
+              assert (In_Heap (_+_ w' b1, y) (get_heap sy)). eapply heap_preserved_multi.
+              eapply v_step. apply H15. apply H16. eapply graph_subset. eapply v_step. apply H15. assumption.
+              apply H. assumption. simpl. assumption. assumption. eapply multi_trans. apply H17. assumption.
+              rewrite <- match_in. exists c''. exists g''. assumption. 
+              pose proof (heap_WF sy v g H37). destruct H48. rewrite H48 in H44. inversion H44.
+              epose proof (WF_min _ _ _ _ H48 H44 (_+_ w' b1) y H47).
+              unfold sp_distance in H32.
+              destruct ((find_shortest_wpath g v y)) eqn : L. destruct (path_cost g l) eqn : P.
+              pose proof heap_geq_sp_dist. assert (_GHC.Num.+_ w' b1 <= b2 = true). eapply H50.
+              apply find_shortest_wpath_correct. assumption. assumption. apply L. rewrite P.
+              destruct (Base.EqLaws_option). eapply Eq_trans. rewrite Eq_sym. apply H32.
+              rewrite Base.simpl_option_some_eq. destruct real_ring. destruct SORrt. apply Radd_comm.
+              apply H37. rewrite in_heap_splitMin. left. reflexivity. intro; rewrite H51 in H44; inversion H44.
+              rewrite <- splitMin_equiv in H44; inversion H44; subst. apply H52. intro; rewrite H51 in H44; inversion H44.
+              order b. destruct (Base.EqLaws_option). rewrite Eq_sym in H32. rewrite some_none_eq in H32. inversion H32.
+               destruct (Base.EqLaws_option). rewrite Eq_sym in H32. rewrite some_none_eq in H32. inversion H32. }
+              (*Step 5: At the end, therefore, y is set to its correct distance*)
+              assert (find_dist syn y == sp_distance g (find_shortest_wpath g v y) = true). {
+              destruct (Base.EqLaws_option). eapply Eq_trans. 2 : { apply H32. }
+              eapply Eq_trans. 2 : { assert (_GHC.Num.+_ w' b1 == (_GHC.Num.+_ b1 w') = true).
+              destruct real_ring. destruct SORrt. apply Radd_comm. 
+              assert  ((Some (_GHC.Num.+_ w' b1) == Some (_GHC.Num.+_ b1 w')) = true).
+              rewrite Base.simpl_option_some_eq. assumption. apply H49. }
+              eapply Eq_trans. 2 : { assert (Some b2 == Some (_GHC.Num.+_ w' b1) = true).
+              rewrite Base.simpl_option_some_eq. assumption. apply H48. }
+              assert (find_dist syn y = Some b2). rewrite find_dist_in. rewrite H45.
+              apply in_or_app. right. left. reflexivity. eapply v_step. apply H37. assumption.
+              rewrite H48. apply Eq_refl. }
+              assert (find_dist syn y = find_dist sd y). { assert (find_dist syn y = Some b2).
+              rewrite find_dist_in. 
+              rewrite H45. apply in_or_app. right. left. reflexivity. eapply v_step. apply H37.
+              assumption. rewrite H49. symmetry. rewrite find_dist_in. eapply output_preserved_strong.
+              eapply v_step. apply H37. apply H39. assumption. rewrite <- find_dist_in. assumption. 
+              eapply v_step. apply H37. apply H39. apply H34. } rewrite <- H49. assumption.
+              assumption. assumption. }
+              (*Yay, the hardest part is done! From here on out, we should basically be able to follow CLRS*)
+              4 : { inversion D. } 2 : { assumption. } 2 : { assumption. }
+              (*Need to prove that y's sp distance is <= v''s sp distance*)
+              destruct (find_dist sd y) eqn : FY.
+              assert (b2 <= b0 = true). {
+              assert (shortest_wpath g v y (y :: x :: l2')). eapply shortest_path_subpath.
+              assumption. assumption. rewrite <- H11. eassumption.
+              destruct (path_cost g (y :: x :: l2')) eqn : P1.
+              assert (b2 == b3 = true). destruct ((find_shortest_wpath g v y)) eqn : F. simpl in H27.
+              apply find_shortest_wpath_correct in F.
+              pose proof (sp_distance_unique _ Hsimple HNonneg _ _ _ _ H28 F). 
+              unfold sp_distance at 1 in H29. rewrite P1 in H29. simpl in H29.
+              assert (Some b2 == Some b3 = true). destruct (Base.EqLaws_option). eapply Eq_trans.
+              apply H27. rewrite Eq_sym. assumption. rewrite Base.simpl_option_some_eq in H30.
+              assumption. assumption. assumption. simpl in H27. destruct (Base.EqLaws_option).
+              rewrite Eq_sym in H27. rewrite some_none_eq in H27. inversion H27.
+              assert (b3 <= b0 = true). {  
+              assert (path_cost g (l1' ++ y :: x :: l2') == Some b0 = true). rewrite <- H11. rewrite D. 
+              destruct (Base.EqLaws_option). apply Eq_refl. 
+              pose proof (path_cost_app _ Hsimple HNonneg _ _ _ _ H30). destruct_all.
+              rewrite P1 in H32. rewrite Base.simpl_option_some_eq in H32. 
+              destruct (path_cost g (l1' ++ y :: nil)) eqn : T.
+              rewrite Base.simpl_option_some_eq in H31.
+              assert (#0 <= b4 = true). pose proof (path_cost_nonneg). eapply H34. 3 : { apply T. }
+              assumption. assumption. 
+              destruct HorderedRing. eapply rle_eq. 2 : { apply H33. } destruct HEqLaw; apply Eq_refl.
+              eapply rle_eq. destruct HEqLaw; apply Eq_refl. eapply rplus_eq. destruct HEqLaw; apply Eq_refl.
+              destruct HEqLaw; rewrite Eq_sym. apply H32.
+              assert (#0 <= x1 = true).  destruct HEqLaw. eapply rle_eq. apply Eq_refl.
+              rewrite Eq_sym. apply H31. assumption. assert (b3 == _+_ #0 b3 = true).
+              destruct real_ring. destruct SORrt. destruct HEqLaw; rewrite Eq_sym. apply Radd_0_l .
+              eapply rle_eq. apply H36. destruct HEqLaw; apply Eq_refl.
+              apply (Rplus_le_mono_r real_ring). assumption. rewrite some_none_eq in H31. inversion H31. }
+              order b. pose proof path_cost_path'. assert ((exists w : b, path_cost g (y :: x :: l2') = Some w)). apply H29.
+              assumption. assumption. exists v. exists y. unfold shortest_wpath in H28. apply H28. destruct_all. rewrite H30 in P1.
+              inversion P1. } 
+              (*Now, we know that v''s sp distance is smaller than its heap distance*)
+              assert (b0 <= d = true). { eapply heap_geq_sp_dist. 2 : { rewrite D.
+              destruct HEqLaw; apply Eq_refl. }  apply S. apply H. simpl. 
+              rewrite in_heap_splitMin. left. reflexivity. intro; subst; inversion H6.
+              rewrite <- splitMin_equiv in H6; inversion H6. apply H30. intro; subst; inversion H6. }
+              assert (b2 <= d = true) by order b.
+              (*Now we know that y's heap distance is smaller than v''s. But because the heap chooses the smallest,
+                d <= b2*)
+              (*Unfortunately, need to redo some of it because we lost information about y's heap*)
+              assert ((exists o, In_Heap (o, y) (get_heap sx) /\ b2 == o = true) /\ vIn (get_graph sx) y = true). { rewrite H18.
+              setoid_rewrite in_heap_mergeAll. setoid_rewrite in_heap_unfold. unfold expand_dist.
+              destruct cx. destruct p0. destruct p0. setoid_rewrite in_heap_exists.
+              assert (shortest_wpath g v y (y :: x :: l2')). eapply shortest_path_subpath. assumption.
+              assumption. rewrite <- H11. apply S.
+              assert (S' := H31).
+              unfold shortest_wpath in H31. destruct H31. inversion H31; subst.
+              assert (v'0 = x).  rewrite path'_WPath in H34. destruct H34 as [w'].
+              eapply hd_path. apply H10. assumption. assumption. subst.
+              rewrite edge_weight in H38. destruct H38 as [w'].  
+              assert (exists w, path_cost g (x :: l2') = Some w). apply path_cost_path'. assumption.
+              assumption. exists v. exists x. assumption. destruct H33 as [pw].
+              apply edge_weight_in in H10.
+              epose proof (path_cost_cons _ _ _ _ _ _ H33 H10).
+              assert (b1 == pw = true). { assert (shortest_wpath g v x (x :: l2')). eapply shortest_path_subpath.
+              assumption. assumption. assert (y :: x :: l2' = (y :: nil) ++ (x :: l2')). simpl. reflexivity.
+              rewrite <- H36. apply S'.
+              destruct ((find_shortest_wpath g v x)) eqn : T.  simpl in H24. destruct (path_cost g l) eqn : T'.
+              rewrite H23 in H24. rewrite Base.simpl_option_some_eq in H24.
+              assert (path_cost g (x :: l2') == path_cost g l = true). pose proof sp_distance_unique.
+              simpl in H37. eapply H37. assumption. assumption. apply H36. apply find_shortest_wpath_correct.
+              assumption. assumption. assumption.
+              destruct HEqLaw. eapply Eq_trans. 
+              apply H24. assert (Some b3 == Some pw = true). destruct (Base.EqLaws_option). eapply Eq_trans0.
+              assert (Some b3 == path_cost g l = true). rewrite T'. apply Eq_refl. apply H38.
+              eapply Eq_trans0. 2 : { rewrite <- H33. apply Eq_refl0. } rewrite Eq_sym0. assumption.
+              rewrite  Base.simpl_option_some_eq in H38. assumption. destruct (Base.EqLaws_option); rewrite
+              Eq_sym in H24. rewrite H23 in H24. rewrite some_none_eq in H24. inversion H24.
+              simpl in H24. rewrite H23 in H24. destruct (Base.EqLaws_option); rewrite Eq_sym in H24.
+              rewrite some_none_eq in H24; inversion H24. }
+              assert (V': vIn (get_graph sx) y = true). eapply graph_subset. eapply v_step. apply H15. assumption.
+              apply H. assumption. simpl. assumption. split.
+              exists (_+_ w' b1). split. right.
+              exists (unit (_+_ w' b1) y). rewrite in_map_iff. split. exists (w', y). split. reflexivity.
+              rewrite <- edge_weight_in in H10. assert (M:= H20). apply Wmatch_context in H20. apply H20.
+              rewrite edge_in_state. split. rewrite <- match_in. exists ( (a2, n1, a1, a0)). exists gx. assumption.
+              eapply graph_subset. apply H15. apply H. eapply multi_trans. apply multi_R. eassumption. assumption.
+              simpl. assumption. apply H15. assumption. assumption. simpl. left. reflexivity.
+              assert (path_cost g (y :: x :: l2') == Some b2 = true). { destruct (Base.EqLaws_option). eapply Eq_trans.
+              2 : { rewrite Eq_sym. apply H27. } destruct ((find_shortest_wpath g v y)) eqn : P1.
+              unfold sp_distance. pose proof sp_distance_unique. simpl in H37. eapply H37.
+              assumption. assumption. apply S'. apply find_shortest_wpath_correct. assumption. assumption.
+              assumption. simpl in H27. destruct (Base.EqLaws_option); rewrite Eq_sym in H27. rewrite some_none_eq in H27;
+              inversion H27. } 
+              assert ( Some b2 == Some (_GHC.Num.+_ pw w') = true). destruct (Base.EqLaws_option); eapply Eq_trans.
+              rewrite Eq_sym. apply H37. assumption. 
+               rewrite Base.simpl_option_some_eq in H38. destruct HEqLaw. eapply Eq_trans.
+              apply H38. destruct HorderedRing. eapply Eq_trans. destruct real_ring. destruct SORrt. apply Radd_comm.
+              eapply rplus_eq. apply Eq_refl. rewrite Eq_sym. assumption. assumption. assumption. } destruct H31.
+              destruct H31 as [o]. destruct H31.
+              (*Now we know that b3 is in the heap, so we want to show that d <= b2 = b3 = o*)
+              assert (d <= o = true). eapply WF_min in H6. apply H6. pose proof (heap_WF _ _ _ H).
+              destruct H34. simpl in H34. subst. inversion H6. simpl in H34. apply H34. 
+              assert (In_Heap (o, y) (get_heap (g0, h, p))). eapply heap_preserved_multi.
+              eapply v_step. apply H15. eassumption. assumption. assumption. assumption. simpl.
+              assumption. simpl in H34. apply H34. order b. (*CONTRADICTION!*)
+              assert (shortest_wpath g v y (y :: x :: l2')). eapply shortest_path_subpath.
+              assumption. assumption. rewrite <- H11. apply S.
+              destruct ((find_shortest_wpath g v y)) eqn : P. simpl in H27.
+              apply find_shortest_wpath_correct in P. assert (exists w, path_cost g l0 = Some w).
+              apply path_cost_path'. assumption. assumption. exists v. exists y. unfold shortest_wpath in P.
+              apply P. destruct_all. rewrite H29 in H27.
+               rewrite some_none_eq in H27. inversion H27. assumption. assumption.
+              rewrite find_shortest_wpath_none in P. unfold shortest_wpath in H28. destruct_all. exfalso.
+              eapply P. apply H28. assumption. assumption.
+       -- destruct ((find_shortest_wpath g v v')) eqn : P. 
+          simpl in D. assert (exists w, path_cost g l = Some w). apply path_cost_path'.
+          assumption. assumption. exists v. exists v'. apply find_shortest_wpath_correct in P.
+          unfold shortest_wpath in P. apply P. assumption. assumption.
+          destruct_all. rewrite D in H8. inversion H8. rewrite find_shortest_wpath_none in P.
+          assert (exists sd, sp_multi s' sd /\ done sd = true). exists (sp_tail s'). split.
+          apply sp_tail_multi. apply sp_tail_done. destruct_all.
+          assert (In (d, v') (get_dists x)). eapply output_preserved_strong. eapply v_step.  apply H.
+          eassumption. assumption. subst. rewrite find_dist_in in H7. assumption. eapply v_step. apply H.
+          assumption. assert (In v' (map snd (get_dists x))). rewrite in_map_iff. exists (d, v'). split. 
+          reflexivity. assumption. rewrite output_iff_reachable in H11. 2 : { eapply multi_valid.
+          eapply v_step. apply H. eassumption. assumption. } exfalso. destruct H11. apply (P x0). assumption.
+          assumption. assumption. assumption.
+    + destruct (Base.EqLaws_option). eapply Eq_trans. 2 : { apply H1. assumption. 
+      eapply match_remain_some in H5. destruct_all. destruct (vIn g0 v') eqn : V'.
+      assert (vIn g' v' = true). apply H5. split; auto. rewrite H8 in H3. inversion H3.
+      reflexivity. } 
+      assert (find_dist (g', mergeAll (h' :: expand_dist d v0 c), p ++ (d, v0) :: nil) v' = find_dist (g0, h, p) v'). {
+      destruct (find_dist (g0, h, p) v') eqn : F. rewrite find_dist_in in F.
+      rewrite find_dist_in. simpl. simpl in F. apply in_or_app. left. assumption.
+      eapply v_step. apply H. eassumption. apply H.
+      rewrite find_dist_not in F. simpl in F.
+      assert (In v' (map snd (get_dists (g', mergeAll (h' :: expand_dist d v0 c), p ++ (d, v0) :: nil)))).
+      eapply graph_iff_not_output. eapply v_step. apply H. assumption. assumption. simpl. assumption.
+      simpl in H7. unfold map in H7. rewrite map_app in H7. apply in_app_or in H7. destruct H7.
+      rewrite in_map_iff in H7. destruct_all. destruct x. simpl in *; subst. exfalso. apply (F b0). assumption.
+      simpl in H7. destruct H7. contradiction. destruct H7. }
+      rewrite H7. apply Eq_refl.
+  - simpl in *. eapply match_remain_none in H5. subst. destruct (Base.EqLaws_option). eapply Eq_trans. 2 : { apply H1. assumption.
+    assumption. } assert  (find_dist (g', h', p) v' = find_dist (g', h, p) v').
+    destruct (find_dist (g', h', p) v') eqn : F. rewrite find_dist_in in F. symmetry. rewrite find_dist_in.
+     simpl in *. assumption. apply H.  eapply v_step. apply H. assumption.
+    rewrite find_dist_not in F. simpl in F. symmetry. rewrite find_dist_not. simpl. apply F.
+    rewrite H5. apply Eq_refl.
+Qed.
+
+(*Trivially, we get the final results*)
+Theorem sp_invariant_multi: forall s s' v,
+  valid s g v ->
+  sp_multi s s' ->
+  (forall v', vIn g v' = true ->
+  vIn (get_graph s) v' = false ->
+  find_dist s v' == sp_distance g (find_shortest_wpath g v v') = true) ->
+  forall v', vIn g v' = true ->
+  vIn (get_graph s') v' = false ->
+  find_dist s' v' == sp_distance g (find_shortest_wpath g v v') = true.
+Proof.
+  intros. induction H0. apply H1. assumption. assumption.
+  apply IHmulti. eapply v_step. apply H. assumption.
+  eapply sp_invariant. apply H. assumption. assumption. assumption.
+Qed.
+
+Theorem sp_correct: forall s v,
+  valid s g v ->
+  done s = true ->
+  forall v', vIn g v' = true ->
+  find_dist s v' == sp_distance g (find_shortest_wpath g v v') = true.
+Proof.
+  intros. destruct (find_dist s v') eqn : F.
+  - assert (vIn (get_graph s) v' = false). eapply graph_iff_not_output. apply H. assumption.
+    rewrite find_dist_in in F. rewrite in_map_iff. exists (b0, v'). split; try reflexivity. assumption.
+    apply H. rewrite <- F. clear F.
+    eapply sp_invariant_multi. apply v_start. eapply start_in. apply H.
+    eapply valid_begins_with_start. assumption. intros. simpl in H4. rewrite H4 in H3. inversion H3.
+    assumption. assumption.
+  - rewrite find_dist_not in F.
+    pose proof (output_iff_reachable). 
+    assert (forall l, ~path' g v v' l). intros. intro. 
+    assert (exists l, path' g v v' l). exists l. assumption. rewrite <- H2 in H4.
+    2 : { apply H. } rewrite in_map_iff in H4. destruct_all. destruct x; subst. simpl in F.
+    apply (F b0). assumption. assumption. 
+    destruct ((find_shortest_wpath g v v')) eqn : F1.
+    simpl. apply find_shortest_wpath_correct in F1. unfold shortest_wpath in F1.
+    destruct_all. exfalso. apply (H3 l). assumption.
+    assumption. assumption. simpl. destruct (Base.EqLaws_option). apply Eq_refl.
+Qed.
+
+
 End Correct.
 
 

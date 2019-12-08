@@ -6,10 +6,11 @@ Require Import HeapEquiv.
 Require Import Helper.
 
 Require Import Equations.Equations.
+Require Import OrdTactic.
 
 Section Heap.
 
-Context {A B : Type} `{Hord: Base.Ord A} {Hdefault : Err.Default A} {Hdefault' : Err.Default B}.
+Context {A B : Type} `{Hord: Base.Ord A} {Hdefault : Err.Default A} {Hdefault' : Err.Default B} `{HOrdLaws: OrdLaws A}.
 
 
 (*An equivalent version that uses Equations*)
@@ -264,4 +265,224 @@ Proof.
       split. exists x0. split. reflexivity. assumption. assumption.
   - simpl. split; intros. destruct H0. destruct_all. destruct H1.
 Qed.
+
+(*Proving that findMin actually works: we need a well-founded heap, ie, a heap that can actually be
+  created by the exported functions*)
+
+Inductive WF : Heap A B -> Prop :=
+  | WF_empty: WF (Heap.Empty)
+  | WF_unit: forall x y, WF (unit x y)
+  | WF_merge: forall h1 h2, WF h1 -> WF h2 -> WF (merge h1 h2)
+  | WF_mergeAll: forall l, (forall h, In h l -> WF h) -> WF (mergeAll l).
+
+Require Import GHC.Base.
+
+(*The [mergeAll] case needs additional results, since the IH is not strong enough on its own to prove
+  the claim. We need to know that for any heap in the list that is merged, the root is larger than
+  the minimum of the merged heap. To do this, we need a few helper lemmas *)
+
+Lemma merge_min': forall h1 h2 x y h',
+  splitMinT (merge h1 h2) = Some (x,y,h') ->
+  (exists h'', h1 = Node x y h'' /\ (forall x' y' z', h2 = Node x' y' z' -> x <= x' = true))
+ \/ (exists h'', h2 = Node x y h'' /\ (forall x' y' z', h1 = Node x' y' z' -> x <= x' = true )).
+Proof.
+  intros. destruct h1; destruct h2. inversion H0. simpl in H0. inversion H0; subst. right.
+  exists l. split. reflexivity. intros. inversion H1. inversion H0; subst. left. exists l. split. reflexivity.
+  intros. inversion H1.
+  simpl in H0. destruct (a < a0) eqn : L. remember (Node a0 b0 l0 :: l) as h. inversion H0; subst.
+  left. exists l. split. reflexivity. intros. inversion H1; subst. order A.
+  remember ((Node a b l :: l0)) as h. inversion H0; subst.
+  right. exists l0. split. reflexivity. intros. inversion H1; subst. order A.
+Qed.
+
+
+Lemma merge_empty: forall (h1 h2 : Heap A B),
+  merge h1 h2 = Heap.Empty <-> h1 = Heap.Empty /\ h2 = Heap.Empty.
+Proof.
+  intros. split; intros. destruct h1; destruct h2; simpl in H0; try(split; reflexivity); try(inversion H0).
+  destruct (a < a0); inversion H0. destruct_all; subst. simpl. reflexivity.
+Qed.
+
+Lemma mergeAll_empty: forall (l: list (Heap A B)),
+  mergeAll l = Heap.Empty <-> l = nil \/ (forall h, In h l -> h = Heap.Empty).
+Proof.
+  intros. induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)). split; intros.
+  - destruct l. left. reflexivity. destruct l. simpl in H1.
+    subst. right. intros. simpl in H1. destruct H1. subst. reflexivity. destruct H1.
+    simpl in H1. rewrite merge_empty in H1. destruct H1. rewrite merge_empty in H1.
+    destruct_all. subst. right. intros. simpl in H1. destruct H1. subst. reflexivity.
+    destruct H1. subst. reflexivity. apply H0 in H2. destruct H2. subst. inversion H1.
+    apply H2. assumption. simpl. omega.
+  - destruct l. reflexivity. destruct l. simpl. destruct H1. inversion H1.
+    apply H1. left. reflexivity. simpl. destruct H1. inversion H1.
+    rewrite merge_empty. split. rewrite merge_empty. split; apply H1; try(solve_in).
+    right. left. reflexivity. apply H0. simpl. omega. right. intros. apply H1. right. right. assumption.
+Qed. 
+
+(*The key lemma for proving mergeAll finds the minimum. The proof boils down to checking a lot of cases
+  and using [merge_min']*)
+Lemma mergeAll_min'': forall l x y h',
+  splitMinT (mergeAll l) = Some (x,y,h') ->
+  forall x' y' z', In (Node x' y' z') l -> x <= x' = true.
+Proof.
+  intros. generalize dependent h'. revert x y. induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)); intros.
+  destruct l. simpl in H1. inversion H1. destruct l. simpl in H2. simpl in H1. destruct H1. subst.
+  inversion H2; subst. order A. destruct H1. simpl in H2.
+  apply merge_min' in H2.
+ destruct H2; simpl in H1; destruct_all.
+  assert (splitMinT (merge h h0) = Some(x,y,(mergeAll x0))) by (rewrite H2; reflexivity).
+  apply merge_min' in H4. destruct H4; destruct_all. destruct H1.
+  subst. inversion H4; subst. order A. destruct H1. subst. eapply H5. reflexivity.
+  destruct (mergeAll l) eqn : M.
+  - rewrite mergeAll_empty in M. destruct M. subst. inversion H1. apply H6 in H1. inversion H1.
+  - assert (x <= a = true). eapply H3. reflexivity. 
+    assert (a <= x' = true). eapply H0. 2 : { apply H1. } simpl. omega. rewrite M. simpl. reflexivity.
+    order A.
+  - subst. destruct H1; subst. eapply H5. reflexivity. destruct H1. inversion H1; subst. order A.
+    destruct (mergeAll l) eqn : M.
+    + rewrite mergeAll_empty in M. destruct M; subst. inversion H1. apply H4 in H1. inversion H1.
+    + assert (x <= a = true). eapply H3. reflexivity. assert (a <= x' = true). eapply H0.
+      2 : { apply H1. } simpl. omega. rewrite M. reflexivity. order A.
+  - destruct (merge h h0) eqn : M.
+    + rewrite merge_empty in M. destruct_all. subst. destruct H1. inversion H1. destruct H1. inversion H1.
+      eapply H0. 2 : { apply H1. } simpl. omega. rewrite H2. simpl. reflexivity.
+    + assert (splitMinT (merge h h0) = Some (a, b, mergeAll l0)) by (rewrite M; reflexivity).
+      apply merge_min' in H4. destruct H4; destruct_all; subst.
+      * destruct H1; subst. inversion H1; subst. eapply H3. reflexivity.
+        destruct H1; subst. simpl in M. destruct (a < x') eqn : L.
+        assert (x <= a = true). eapply H3. reflexivity. order A. inversion M; subst.
+        eapply H3. reflexivity. eapply H0. 2 : { apply H1. } simpl. omega. rewrite H2. reflexivity.
+      * destruct H1; subst. simpl in M. destruct (x' < a) eqn : L.
+        inversion M; subst. order A. assert (x <= a = true). eapply H3. reflexivity. order A.
+        destruct H1. inversion H1; subst. eapply H3. reflexivity.
+        eapply H0. 2 : { apply H1. } simpl. omega. rewrite H2. reflexivity.
+Qed. 
+
+(*If the heap is well_formed, then findMin actually finds the min.*)
+Lemma WF_min: forall h x y h',
+  WF h ->
+  splitMinT h = Some (x,y, h') ->
+  forall a b, In_Heap (a,b) h -> x <= a = true.
+Proof.
+  intros. generalize dependent x. revert y. generalize dependent a. revert h'. revert b. induction H0; intros.
+  - simpl in H1. inversion H1; subst.
+  - simpl in H1. inversion H1; subst. simpl in H2. destruct H2. inversion H0; subst. order A. destruct H0.
+  - destruct h1; simpl in H1.
+    + destruct h2; inversion H1. subst. unfold merge in H2. eapply IHWF2. apply H2. reflexivity.
+    + destruct h2.
+      * simpl in H1. unfold merge in H2. inversion H1; subst. eapply IHWF1. apply H2. reflexivity.
+      * destruct (a0 < a1) eqn : L.
+        -- rewrite in_heap_merge in H2. remember (Node a1 b1 l0 :: l) as h. simpl in H1. inversion H1.
+           subst. destruct H2.
+           ++ eapply IHWF1. apply H0. reflexivity.
+           ++ assert (a1 <= a = true). eapply IHWF2. apply H0. reflexivity.
+              order A.
+       -- assert (a1 <= a0 = true) by (order A). clear L. rewrite in_heap_merge in H2.
+          remember (Node a0 b0 l :: l0) as h. simpl in H1. inversion H1. subst. destruct H2.
+          ++ assert (a0 <= a = true). eapply IHWF1. apply H2. reflexivity. order A.
+          ++ eapply IHWF2. apply H2. reflexivity.
+  - rewrite in_heap_mergeAll in H2. rewrite in_heap_exists in H2. destruct H2 as [h'']. destruct_all. 
+    destruct h''. simpl in H4. destruct H4.
+    assert (splitMinT  (Node a0 b0 l0) = Some (a0, b0, mergeAll l0)). reflexivity.
+    assert (a0 <= a = true). eapply H1. apply H2. apply H4. apply H5. 
+    assert (x <= a0 = true).
+    eapply mergeAll_min'' in H3. apply H3. apply H2. order A.
+Qed.
+
+(*Now we need to show that subheaps of well formed heaps are well formed (to show that the heap
+  at each iteration is still well formed). This requires a few helper lemmas*)
+
+Definition subheap (h1 h2 : Heap A B) : Prop :=
+  match h2 with
+  | Heap.Empty => False
+  | Heap.Node x y l => In h1 l
+  end.
+
+Lemma subheap_merge: forall h1 h2 h3,
+  subheap h1 (merge h2 h3) ->
+  h1 = h2 \/ h1 = h3 \/ subheap h1 h2 \/ subheap h1 h3.
+Proof.
+  intros. destruct h2. destruct h3. inversion H0.
+  simpl in H0. simpl. right. right. right. assumption.
+  destruct h3. simpl in *. right. right. left. assumption.
+  simpl in H0. destruct (a < a0). simpl in H0.
+  destruct H0. subst. right. left. reflexivity. simpl. right. right. left. assumption.
+  simpl in H0. destruct H0; subst; simpl in *. left. reflexivity.
+  right. right. right. assumption.
+Qed.
+
+(*We characterize all the possibilities for a subheap of mergeAll l*)
+Lemma subheap_mergeAll: forall h l,
+  subheap h (mergeAll l) ->
+  (exists h' h'', In h' l /\ In h'' l /\ h = merge h' h'') \/ (exists h', In h' l /\ subheap h h') \/
+  (exists h', In h' l /\ h = h') \/ (exists y, (forall x, In x y -> In x l) /\ h = mergeAll y) \/
+  (exists h' h'', In h' l /\ In h'' l /\ subheap h (merge h' h'')).
+Proof.
+  intros. induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)); intros.
+  destruct l. simpl in H0. destruct H0.
+  destruct l. simpl in H0. right. left. exists h0. split. left. reflexivity. assumption.
+  simpl in H0. apply subheap_merge in H0. destruct H0.
+  subst. left.  exists h0. exists h1. split. solve_in. split. right. left. reflexivity. reflexivity.
+  destruct H0. right. right. right. left. exists l. split. intros. right. right. assumption. assumption.
+  destruct H0. right. right. right. right. exists h0. exists h1. split. solve_in. split. right. left.
+  reflexivity. assumption.
+  apply H1 in H0. destruct H0.
+  - destruct_all. left. exists x. exists x0. split. right. right. assumption. split.
+    right. right. assumption. assumption.
+  - destruct H0; destruct_all.
+    + right. left. exists x. split. right. right. assumption. assumption.
+    + destruct H0; destruct_all.
+      * subst. right. right. left. exists x. split. right. right. assumption. reflexivity.
+      * destruct H0; destruct_all.
+        -- right. right. right. left. exists x. split. intros. right. right. apply H0. assumption.
+            assumption.
+        -- right. right. right. right. exists x. exists x0. split. right. right. assumption.
+           split. right. right. assumption. assumption.
+  - simpl. omega.
+Qed.
+
+(*The result we want*)
+Lemma subheap_wf: forall h1 h2,
+  WF h2 ->
+  subheap h1 h2 ->
+  WF h1.
+Proof.
+intros; induction H0.
+  - simpl in H1. destruct H1.
+  - simpl in H1. destruct H1.
+  - apply subheap_merge in H1. destruct H1. subst. assumption.
+    destruct H0. subst. assumption. destruct H0. apply IHWF1. assumption.
+    apply IHWF2. assumption.
+  - apply subheap_mergeAll in H1. destruct H1. destruct_all.
+    subst. constructor. apply H0. assumption. apply H0. assumption.
+    destruct H1. destruct_all. eapply H2. apply H1. assumption. destruct H1.
+    destruct_all. subst. apply H0. assumption. destruct H1.
+    destruct_all. subst. constructor. intros. apply H0. apply H1. assumption.
+    destruct_all. apply subheap_merge in H4. destruct H4; subst.
+    apply H0. assumption. destruct H4; subst. apply H0. assumption.
+    destruct H4. eapply H2. apply H1. assumption. eapply H2. apply H3. assumption.
+Qed.
+
+(*Now, the result we need to disjkstra's*)
+Lemma node_WF: forall x y l,
+  WF (Node x y l) ->
+  (forall h, In h l -> WF h).
+Proof.
+  intros. eapply subheap_wf. apply H0. simpl.  assumption.
+Qed.
+
+Lemma splitMInT_WF: forall h x y h',
+  WF h ->
+  splitMinT h = Some(x,y,h') ->
+  WF h'.
+Proof.
+  intros. destruct h. inversion H1; subst. simpl in H1. inversion H1; subst.
+  constructor. intros. eapply node_WF. apply H0. assumption.
+Qed. 
 End Heap.

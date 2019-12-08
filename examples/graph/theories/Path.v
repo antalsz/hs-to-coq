@@ -1447,6 +1447,111 @@ Proof.
   apply H1. apply H3. assumption.
 Qed. 
 
+Lemma shortest_path_refl: forall v,
+  vIn g v = true ->
+  shortest_wpath v v (v :: nil).
+Proof.
+  intros. unfold shortest_wpath. split. constructor. assumption. intros. unfold le_weight.
+  unfold lt_weight. unfold lt_weight_b. unfold eq_weight. unfold eq_weight_b. simpl. rewrite H.
+  pose proof (path_cost_path' l').
+  assert (exists w : b, path_cost g l' = Some w). apply H1. exists v. exists v. assumption.
+  destruct H2 as [w]. rewrite H2. apply path_cost_nonneg in H2.
+  destruct HOrdLaw.
+  assert (O := H2). destruct (w <= #0) eqn : R. right. apply Ord_antisym. assumption. assumption.
+  left. rewrite Ord_lt_le. rewrite R. reflexivity.
+Qed.
+
+Definition sp_distance (g: gr a b) (o : option (list Node)) : option b :=
+  match o with
+  | None => None
+  | Some l => path_cost g l
+  end.
+
+(*[sp_distance] unique*)
+Lemma sp_distance_unique: forall u v l1 l2,
+  shortest_wpath u v l1 ->
+  shortest_wpath u v l2 ->
+  sp_distance g (Some l1) == sp_distance g (Some l2) = true.
+Proof.
+  intros. unfold sp_distance. destruct (path_cost g l1 == path_cost g l2) eqn : E.
+  reflexivity. assert (forall x y, x == y = false -> x < y = true \/ y < x = true). intros.
+  destruct HOrdLaw. specialize (Ord_total x y). destruct Ord_total.
+  destruct (y <= x) eqn : O. rewrite Ord_antisym in H1. inversion H1. assumption. assumption.
+  left. rewrite Ord_lt_le. rewrite O. reflexivity. destruct (x <= y) eqn : O.
+  rewrite Ord_antisym in H1. inversion H1. assumption. assumption.
+  right. rewrite Ord_lt_le. rewrite O. reflexivity.
+  pose proof path_cost_path'. assert (exists w : b, path_cost g l1 = Some w). apply H2.
+  exists u. exists v. unfold shortest_wpath in H. apply H.
+  assert (exists w : b, path_cost g l2 = Some w). apply H2. exists u. exists v.
+  unfold shortest_wpath in H0. apply H0. clear H2. destruct H3 as [w1]. destruct H4 as [w2].
+  rewrite H2 in E. rewrite H3 in E. rewrite Base.simpl_option_some_eq in E. apply H1 in E.
+  clear H1. unfold shortest_wpath in *. destruct_all. destruct E.
+  - specialize (H1 l1 H). unfold le_weight in H1. unfold lt_weight in H1.
+    unfold eq_weight in H1. unfold lt_weight_b in H1. unfold eq_weight_b in H1. rewrite H2 in H1. rewrite H3 in H1.
+    order b.
+  - specialize (H4 l2 H0). unfold le_weight in H4. unfold lt_weight in H4.
+    unfold eq_weight in H4. unfold lt_weight_b in H4. unfold eq_weight_b in H4. rewrite H2 in H4. rewrite H3 in H4.
+    order b.
+Qed.
+
+Lemma path_start: forall u v l,
+  path' g u v l -> exists l1, l = l1 ++ (u :: nil).
+Proof.
+  intros. induction H.
+  - exists nil. reflexivity.
+  - specialize (IHpath' Hsimple HNonneg). destruct_all. exists (v :: x). simpl. rewrite H1. reflexivity.
+Qed.
+
+(*Lemma 24.1 in CLRS*)
+Lemma shortest_path_subpath: forall u v v' l1 l2,
+  shortest_wpath u v (l1 ++ v' :: l2) ->
+  shortest_wpath u v' (v' :: l2).
+Proof.
+  intros. unfold shortest_wpath in *. destruct_all. split. apply path_app' in H. apply H.
+  intros. pose proof (lt_weight_total (v' :: l2) l'). unfold le_weight.
+  destruct H2. simplify'. destruct H2. simplify'. destruct l'. inversion H1.
+  assert (n = v'). rewrite path'_WPath in H1. destruct H1. eapply hd_path in H1. subst. reflexivity.
+  subst. 
+  assert (path' g u v (l1 ++ v' :: l')). apply path_app' in H. rewrite path_app'. split.
+  apply H. assumption. apply H0 in H3.
+  assert (exists w, path_cost g (l1 ++ v' :: l2) = Some w). apply path_cost_path'. exists u. exists v.
+  assumption. assert (exists w, path_cost g (l1 ++ v' :: l') = Some w). apply path_cost_path'.
+  exists u. exists v. apply path_app' in H. apply path_app'. split. apply H. assumption.
+  destruct H4 as [w1]. destruct H5 as [w2].
+  assert (path_cost g (l1 ++ v' :: l2) == Some w1 = true). rewrite H4. 
+  rewrite simpl_option_some_eq. destruct HEqLaw as [E1 E2 E3]. apply E1.
+  assert (path_cost g (l1 ++ v' :: l') == Some w2 = true). rewrite H5.
+  rewrite simpl_option_some_eq. destruct HEqLaw as [E1 E2 E3]. apply E1.
+  pose proof (path_cost_app _ _ _ _ H6). 
+  pose proof (path_cost_app _ _ _ _ H7).
+  destruct H8 as [m1]. destruct H8 as [p1].
+  destruct H9 as [m2]. destruct H9 as [p2]. destruct_all.
+  unfold le_weight in H3. unfold lt_weight in *. unfold eq_weight in *. exfalso.
+  unfold lt_weight_b in *. unfold eq_weight_b in *. rewrite H4 in H3. rewrite H5 in H3.
+  assert (w1 <= w2 = true) by (order b). clear H3.
+  (*Lots of annoying stuff with ordering and addition because ring doesn't work*)
+  destruct (path_cost g (v' :: l')). 
+  destruct (path_cost g (v' :: l2)).
+  rewrite simpl_option_some_eq in H10.
+  rewrite simpl_option_some_eq in H12.
+  destruct HorderedRing. destruct (HEqLaw) as [E1 E2 E3].
+  assert (m1 + p1 <= m2 + p2 = true). eapply rle_eq. rewrite E2. apply H13.
+  rewrite E2. apply H11. assumption.
+  assert (Some m1 == Some m2 = true).   destruct (EqLaws_option). 
+  eapply Eq_trans. rewrite Eq_sym. apply H8.
+  apply H9. rewrite simpl_option_some_eq in H15.
+  assert (p1 <= p2 = true).
+  assert (m1 + p1 <= m1 + p2 = true). eapply rle_eq. apply E1.
+  eapply rplus_eq. apply H15. apply E1. apply H3.
+  apply (Rplus_le_mono_l real_ring) in H16. apply H16.
+  assert (b1 <= b0 = true). eapply rle_eq. apply H12. apply H10.
+  assumption. destruct real_ring.
+  apply SORlt_le_neq in H2. destruct_all.
+  eapply SORle_antisymm in H17. rewrite H17 in H18. contradiction. assumption.
+  rewrite some_none_eq in H12. inversion H12. rewrite some_none_eq in H10. inversion H10.
+Qed.
+
+
 End Weighted.
 End Path.
 

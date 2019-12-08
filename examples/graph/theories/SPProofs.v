@@ -1001,13 +1001,13 @@ Proof.
   - simpl. right. constructor.
   - inversion H0; subst. destruct IHvalid. simpl in H4. subst. inversion H3.
     simpl in H4. right. unfold get_heap. constructor. intros.
-    simpl in H5. destruct H5. subst. destruct h. inversion H3. simpl in H3.
-    inversion H3; subst. constructor. intros. (*TODO*) admit.
+    simpl in H5. destruct H5. subst. eapply splitMInT_WF. 2 : { apply H3. }
+    assumption. 
     destruct c. destruct p0. destruct p0. simpl in H5. rewrite in_map_iff in H5.
     destruct H5. destruct x. destruct_all. subst. constructor.
     destruct IHvalid. simpl in H4. subst. inversion H3. simpl in *. right.
-    admit.
-Admitted.
+    eapply splitMInT_WF. apply H4. apply H3.
+Qed.
 
 (*If (a,b) is on heap and b is not chosen, (a,b) still on heap*)
 Lemma heap_preserved: forall s v g s' v' d,

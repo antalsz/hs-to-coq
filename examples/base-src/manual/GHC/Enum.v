@@ -10,6 +10,7 @@ Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Import Ascii.AsciiSyntax.
 From Coq Require Import ssreflect.
 
 (* Note: we will only be able to make instances of this class for bounded

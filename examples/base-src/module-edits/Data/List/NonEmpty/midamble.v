@@ -1,5 +1,5 @@
 Definition NonEmpty_foldr1 {a} (f : a -> a -> a) (x: GHC.Base.NonEmpty a) : a :=
-  match x with 
+  match x with
     | GHC.Base.NEcons a as_ => List.fold_right f a as_
   end.
 
@@ -25,7 +25,7 @@ Program Fixpoint insertBy {a} (cmp: a -> a -> comparison) (x : a)
         (xs : GHC.Base.NonEmpty a) {measure (NonEmpty_size xs)} : GHC.Base.NonEmpty a :=
   match xs with
   | GHC.Base.NEcons x nil => GHC.Base.NEcons x nil
-  | (GHC.Base.NEcons y ((cons y1 ys') as ys)) => 
+  | (GHC.Base.NEcons y ((cons y1 ys') as ys)) =>
     match cmp x y with
     | Gt  => GHC.Base.NEcons y (toList (insertBy cmp x (GHC.Base.NEcons y1 ys')))
     | _   => GHC.Base.NEcons x ys
@@ -37,7 +37,7 @@ Program Fixpoint insertBy' {a} (cmp: a -> a -> comparison) (x : a)
   match xs with
   | nil => GHC.Base.NEcons x nil
   | cons x nil => GHC.Base.NEcons x nil
-  | (cons y ((cons y1 ys') as ys)) => 
+  | (cons y ((cons y1 ys') as ys)) =>
     match cmp x y with
     | Gt  => GHC.Base.NEcons y (toList (insertBy' cmp x (cons y1 ys')))
     | _   => GHC.Base.NEcons x ys
@@ -55,5 +55,3 @@ Definition sortBy {a} : (a -> a -> comparison) -> GHC.Base.NonEmpty a -> GHC.Bas
 
 Definition sort {a} `{GHC.Base.Ord a} : GHC.Base.NonEmpty a -> GHC.Base.NonEmpty a :=
              sortBy GHC.Base.compare.
-
-

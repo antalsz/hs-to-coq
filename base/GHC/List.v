@@ -17,6 +17,7 @@ Require Import GHC.Base.
 
 Require Import ZArith.
 Require Import ZArith.BinInt.
+Import String.StringSyntax.
 
 (* Hand-translated version of the prelude definitions
    of these functions. *)

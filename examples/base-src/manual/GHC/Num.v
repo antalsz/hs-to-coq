@@ -86,6 +86,8 @@ Instance Num_Word__ : Num Word := {
   signum      := fun x => match x with | N0 => N0 | _ => 1%N  end }.
 
 Module Notations.
+Require Export BinInt.
+
 Infix    "GHC.Num.+"     := op_zp__ (at level 50, left associativity).
 Notation "'_GHC.Num.+_'" := op_zp__.
 

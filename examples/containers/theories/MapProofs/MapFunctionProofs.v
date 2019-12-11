@@ -1,3 +1,6 @@
+Require Import String.
+Import StringSyntax.
+
 Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.

@@ -1,6 +1,9 @@
 Require Import GHC.Base.
 Require Import GHC.Num.
 
+Export String.StringSyntax.
+Export Ascii.AsciiSyntax.
+
 Class Default (a :Type) := {
   default : a
 }.

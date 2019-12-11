@@ -1,9 +1,11 @@
+Require String.
+Export String.StringSyntax.
+
 Require Import GHC.Base.
 (* _==_ notation *)
 
 Require Import ZArith.
 Require Import ZArith.BinInt.
-Import String.StringSyntax.
 
 (* Hand-translated version of the prelude definitions
    of these functions. *)

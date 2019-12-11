@@ -197,75 +197,6 @@ Proof.
   intros. simpl. reflexivity.
 Qed.
 
-(*HMap function with key*)
-Fixpoint map_heap {C} (f: A -> B -> C) (h: Heap A B) : Heap A C :=
-  match h with
-  | Heap.Empty => Heap.Empty
-  | Node x y l => Node x (f x y) (map (map_heap f) l)
-  end.
-
-Lemma map_merge: forall {C} (f: A -> B -> C) (h1 h2: Heap A B),
-  map_heap f (merge h1 h2) = merge (map_heap f h1) (map_heap f h2).
-Proof.
-  intros. destruct h1; destruct h2; try(reflexivity).
-  simpl. destruct (Base.op_zl__ a a0); reflexivity.
-Qed. 
-
-Lemma map_mergeAll: forall {C} (f : A -> B -> C) (l: list (Heap A B)),
-  map_heap f (mergeAll l) = mergeAll (map (map_heap f) l).
-Proof.
-  intros. induction l using (well_founded_induction
-                     (wf_inverse_image _ nat _ (@length _)
-                        PeanoNat.Nat.lt_wf_0)).
-  - destruct l. simpl. reflexivity. simpl. destruct l. simpl. reflexivity.
-    rewrite map_merge. rewrite H0. simpl. rewrite map_merge. reflexivity. simpl. omega.
-Qed.
-
-Lemma map_splitMin: forall C `{Err.Default C} `{Err.Default (A * C * Heap A C)} (f : A -> B -> C) x y
-   (h : Heap A B) (h' : Heap A B),
-  h <> Heap.Empty ->
-  splitMin h = ((x,y), h') ->
-  splitMin (@map_heap C f h) = ((x, f x y), (@map_heap C f h')).
-Proof.
-  intros. destruct h. contradiction.
-  simpl. simpl in H3. inversion H3; subst. rewrite map_mergeAll. reflexivity.
-Qed.
-
-
-
-Lemma all_in: forall {A : Type} (P : A -> Prop) l,
-  All A P l <-> (forall x, In x l -> P x).
-Proof.
-  intros. induction l; simpl; split; intros.
-  - destruct H1.
-  - apply I.
-  - destruct_all. destruct H1. subst. assumption. apply IHl. assumption. assumption.
-  - split. apply H0. left. reflexivity. apply IHl. intros. apply H0. right. assumption.
-Qed.
-
-Lemma map_in_heap: forall f h x y,
-  In_Heap (x,y) (map_heap f h) <-> exists z, f x z = y /\ In_Heap (x,z) h.
-Proof.
-  intros. induction h using Heap_ind'.
-  - simpl. split; intros.
-    + destruct H1.
-      * inversion H1; subst. exists b. split. reflexivity. left. reflexivity.
-      * rewrite <- in_heap_equiv in H1. rewrite all_in in H0.
-        rewrite in_heap_exists in H1.
-        destruct H1 as [h]. assert (C:= H1). destruct H1. rewrite in_map_iff in H1. destruct H1.
-        assert (D:= H1). destruct_all.
-        subst. apply H0 in H4. apply H4 in H2. destruct_all. exists x1. split. assumption.
-        right.  rewrite <- in_heap_equiv. rewrite in_heap_exists. exists x0. split; assumption.
-    + destruct H1 as [z]. destruct_all. subst. destruct H2. inversion H1; subst. left. reflexivity.
-      right. rewrite <- in_heap_equiv in H1. rewrite <- in_heap_equiv. rewrite in_heap_exists in H1.
-      rewrite in_heap_exists. rewrite all_in in H0.
-       destruct_all. assert (C := H1). apply H0 in H1.
-      destruct H1. assert ( In_Heap (x, f x z) (map_heap f x0)). apply H3. 
-      exists z. split. reflexivity. assumption. exists (map_heap f x0). rewrite in_map_iff.
-      split. exists x0. split. reflexivity. assumption. assumption.
-  - simpl. split; intros. destruct H0. destruct_all. destruct H1.
-Qed.
-
 (*Proving that findMin actually works: we need a well-founded heap, ie, a heap that can actually be
   created by the exported functions*)
 
@@ -485,4 +416,78 @@ Proof.
   intros. destruct h. inversion H1; subst. simpl in H1. inversion H1; subst.
   constructor. intros. eapply node_WF. apply H0. assumption.
 Qed. 
+
 End Heap.
+(*TODO: Move to helper*)
+Lemma all_in: forall {A : Type} (P : A -> Prop) l,
+  All A P l <-> (forall x, In x l -> P x).
+Proof.
+  intros. induction l; simpl; split; intros.
+  - destruct H0.
+  - apply I.
+  - destruct_all. destruct H0. subst. assumption. apply IHl. assumption. assumption.
+  - split. apply H. left. reflexivity. apply IHl. intros. apply H. right. assumption.
+Qed.
+
+(*New section because map deals with different types of heaps*)
+Section Map.
+Context {A B C : Type} `{Hord: Base.Ord A}  `{HOrdLaws: OrdLaws A}.
+
+(*HMap function with key*)
+Fixpoint map_heap {C} (f: A -> B -> C) (h: Heap A B) : Heap A C :=
+  match h with
+  | Heap.Empty => Heap.Empty
+  | Node x y l => Node x (f x y) (map (map_heap f) l)
+  end.
+
+Lemma map_merge: forall {C} (f: A -> B -> C) (h1 h2: Heap A B),
+  map_heap f (merge h1 h2) = merge (map_heap f h1) (map_heap f h2).
+Proof.
+  intros. destruct h1; destruct h2; try(reflexivity).
+  simpl. destruct (Base.op_zl__ a a0); reflexivity.
+Qed. 
+
+Lemma map_mergeAll: forall {C} (f : A -> B -> C) (l: list (Heap A B)),
+  map_heap f (mergeAll l) = mergeAll (map (map_heap f) l).
+Proof.
+  intros. induction l using (well_founded_induction
+                     (wf_inverse_image _ nat _ (@length _)
+                        PeanoNat.Nat.lt_wf_0)).
+  - destruct l. simpl. reflexivity. simpl. destruct l. simpl. reflexivity.
+    rewrite map_merge. rewrite H0. simpl. rewrite map_merge. reflexivity. simpl. omega.
+Qed.
+
+Lemma map_splitMinT: forall (f: A -> B -> C) x y (h h' : Heap A B),
+  h <> Heap.Empty ->
+  splitMinT h = Some ((x,y), h') ->
+  splitMinT (map_heap f h) = Some ((x, f x y), (map_heap f h')).
+Proof.
+  intros. destruct h. contradiction.
+  simpl. simpl in H1. inversion H1; subst. rewrite map_mergeAll. reflexivity.
+Qed.
+
+End Map.
+
+Lemma map_in_heap: forall {A B C} (f: A -> B -> C) (h: Heap A B) x y,
+  In_Heap (x,y) (map_heap f h) <-> exists z, f x z = y /\ In_Heap (x,z) h.
+Proof.
+  intros. induction h using Heap_ind'.
+  - simpl. split; intros.
+    + destruct H0.
+      * inversion H0; subst. exists b. split. reflexivity. left. reflexivity.
+      * rewrite <- in_heap_equiv in H0. rewrite all_in in H.
+        rewrite in_heap_exists in H0.
+        destruct H0 as [h]. assert (D:= H0). destruct H0. rewrite in_map_iff in H0. destruct H0.
+        assert (E:= H0). destruct_all.
+        subst. apply H in H3. apply H3 in H1. destruct_all. exists x1. split. assumption.
+        right.  rewrite <- in_heap_equiv. rewrite in_heap_exists. exists x0. split; assumption.
+    + destruct H0 as [z]. destruct_all. subst. destruct H1. inversion H0; subst. left. reflexivity.
+      right. rewrite <- in_heap_equiv in H0. rewrite <- in_heap_equiv. rewrite in_heap_exists in H0.
+      rewrite in_heap_exists. rewrite all_in in H.
+       destruct_all. assert (D := H0). apply H in H0.
+      destruct H0. assert ( In_Heap (x, f x z) (map_heap f x0)). apply H2. 
+      exists z. split. reflexivity. assumption. exists (map_heap f x0). rewrite in_map_iff.
+      split. exists x0. split. reflexivity. assumption. assumption.
+  - simpl. split; intros. destruct H. destruct_all. destruct H0.
+Qed.
+

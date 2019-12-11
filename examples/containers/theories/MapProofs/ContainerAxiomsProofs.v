@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -35,11 +28,11 @@ Fixpoint lookup' (key : e) (map : Map e a) : option a :=
   match map with
   | Tip => None
   | Bin sz k1 v1 lt rt => match compare key k1 with
-                          | Eq => Some v1 
-                          | Lt => lookup' key lt 
+                          | Eq => Some v1
+                          | Lt => lookup' key lt
                           | Gt => lookup' key rt
                           end
- end.  
+ end.
 
 (*Prove the two definitions are equivalent*)
 Lemma lookup_lookup'_equiv : forall  (key : e) (map : Map e a),
@@ -48,7 +41,7 @@ Proof.
   intros. induction map.
   - simpl. destruct (compare key k); try (reflexivity); assumption.
   - simpl. reflexivity.
-Qed.  
+Qed.
 
 (*Follows from sem_inside, says that if a key is in a map, it is between the bounds*)
 Lemma keys_inside_bounds : forall (map: Map e a) key lb ub,
@@ -127,7 +120,7 @@ Proof.
   intros. rewrite (sem_filter_equiv _ lb ub) in H1. induction H.
   - simpl in H1. inversion H1.
   - simpl in H1. destruct (compare i x) eqn : ?.
-    + unfold SomeIf in H1. destruct (f x v0) eqn : ?. 
+    + unfold SomeIf in H1. destruct (f x v0) eqn : ?.
       rewrite <- Heqb0. inversion H1; subst. eapply equal_f. apply H0. order e. inversion H1.
     + apply IHBounded1. apply H1.
     + apply IHBounded2. apply H1.
@@ -145,10 +138,10 @@ Proof.
   intros. rewrite (sem_filter_equiv _ lb ub) in H2. induction H.
   - simpl in H1. inversion H1.
   - simpl in H2. destruct (compare i x) eqn : ?.
-    + unfold SomeIf in H2. destruct (f x v0) eqn : ?. inversion H2. 
+    + unfold SomeIf in H2. destruct (f x v0) eqn : ?. inversion H2.
       rewrite <- Heqb0. simpl in H1. assert (sem s1 i = None). { eapply sem_outside_above. apply H.
       solve_Bounds e. } rewrite H8 in H1. simpl in H1. assert (i == x = true) by (order e).
-      rewrite H9 in H1. inversion H1; subst. eapply equal_f. apply H0. assumption. 
+      rewrite H9 in H1. inversion H1; subst. eapply equal_f. apply H0. assumption.
     + simpl in H1. destruct (sem s1 i) eqn : ?. inversion H1; subst. apply IHBounded1.
       reflexivity. assumption. assert (i == x = false) by (order e). assert (sem s2 i = None). {
       eapply sem_outside_below. apply H3. solve_Bounds e. } rewrite H8 in H1. rewrite H9 in H1.
@@ -160,7 +153,7 @@ Proof.
   - assumption.
 Qed.
 
-(*This is similar for intersection. This allows us to work with [sem (intersection _)] in 
+(*This is similar for intersection. This allows us to work with [sem (intersection _)] in
   a hypothesis*)
 Definition sem_intersect (m1: Map e a)(m2: Map e b) i :=
   match (sem m1 i), (sem m2 i) with
@@ -210,7 +203,7 @@ Lemma sem_filter_in_map: forall key value map lb ub f,
   f key value = true ->
   sem_filter map f key = Some value.
 Proof.
-  intros. induction H.  
+  intros. induction H.
   - inversion H1.
   - simpl. simpl in H1. destruct (compare key x) eqn : ?.
      + assert (sem s1 key = None). eapply sem_outside_above. apply H. solve_Bounds e.
@@ -221,9 +214,9 @@ Proof.
       + apply IHBounded1. destruct (sem s1 key). inversion H1; subst; reflexivity.
         destruct (key == x) eqn : ?. order e. destruct (sem s2 key) eqn : ?. solve_Bounds e.
         inversion H1.
-      + apply IHBounded2. destruct (sem s1 key) eqn : ?. solve_Bounds e. 
+      + apply IHBounded2. destruct (sem s1 key) eqn : ?. solve_Bounds e.
         destruct (key == x) eqn : ?. order e. simpl in H1. apply H1.
-Qed. 
+Qed.
 
 Lemma eq_coq_implies_haskell : forall {a} `{EqLaws a} (x y : a),
   x = y -> x == y = true.
@@ -251,7 +244,7 @@ Proof.
         simpl. apply H10. intros. specialize (H13 key). specialize (H9 key).
         destruct (sem s1 key) eqn : ?. simpl in H9.
         rewrite H9. rewrite H13. reflexivity. assert (key == x = false) by (order e).
-        assert (sem s2 key = None). eapply sem_outside_below. apply H1. solve_Bounds e. 
+        assert (sem s2 key = None). eapply sem_outside_below. apply H1. solve_Bounds e.
         rewrite H14 in H9. rewrite H15 in H9. simpl in H9. rewrite H9. rewrite H13.
         reflexivity.
       * rewrite <- IHBounded2. eapply partitionWithKey_spec. apply H1. apply H0. intros.
@@ -281,7 +274,7 @@ Proof.
         simpl. apply H10. intros. specialize (H13 key). specialize (H9 key).
         destruct (sem s1 key) eqn : ?. simpl in H9.
         rewrite H9. rewrite H13. reflexivity. assert (key == x = false) by (order e).
-        assert (sem s2 key = None). eapply sem_outside_below. apply H1. solve_Bounds e. 
+        assert (sem s2 key = None). eapply sem_outside_below. apply H1. solve_Bounds e.
         rewrite H14 in H9. rewrite H15 in H9. simpl in H9. rewrite H9. rewrite H13.
         reflexivity.
       * rewrite <- IHBounded2. eapply partitionWithKey_spec. apply H1. apply H0. intros.
@@ -368,7 +361,7 @@ Qed.
 End WF_Part1.
 
 Section WF_Part2.
-  
+
 Context {e : Type} {a b : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 
@@ -379,7 +372,7 @@ Lemma member_eq: forall {a : Type} (n : e) (n' : e) (m : Map e a),
   n == n' = true ->
   member n m = member n' m.
 Proof.
-  intros. 
+  intros.
  induction m.
    - simpl. destruct (compare n k) eqn : E.
     + assert (compare n' k = Eq) by (order e). rewrite H0. reflexivity.
@@ -395,25 +388,25 @@ Lemma lookup_insert : forall (key: e) (value : a) (map : Map e a) lb ub,
   isUB ub key = true ->
   lookup key (insert key value map) = Some value.
 Proof.
-  intros. applyDesc e (@insert_Desc e a). erewrite lookup_spec. specialize (Hsem key). 
+  intros. applyDesc e (@insert_Desc e a). erewrite lookup_spec. specialize (Hsem key).
   rewrite Eq_Reflexive in Hsem. simpl in Hsem. assumption. apply HB.
-Qed. 
+Qed.
 
 (*A more general version that makes it explicit that the keys do not have to be bounded*)
 Lemma lookup_insert': forall key value (m: Map e a),
   WF m ->
   lookup key (insert key value m) = Some value.
 Proof.
-  intros. eapply lookup_insert. apply H. reflexivity. reflexivity. 
+  intros. eapply lookup_insert. apply H. reflexivity. reflexivity.
 Qed.
 
-(*If we lookup a key key1, the result is the same regardless of whether or not we have inserted key2 
+(*If we lookup a key key1, the result is the same regardless of whether or not we have inserted key2
 (a different key than key1). I had to  change the 4th hypothesis to Haskell equality*)
 Lemma lookup_insert_neq : forall (key1: e) (key2: e) (value : a) (map : Map e a) lb ub,
   Bounded map lb ub ->
   isLB lb key2 = true ->
   isUB ub key2 = true ->
-  key1 == key2 = false -> 
+  key1 == key2 = false ->
   lookup key1 (insert key2 value map) = lookup key1 map.
 Proof.
   intros. applyDesc e (@insert_Desc e a). specialize (Hsem key1). rewrite H2 in Hsem.
@@ -427,33 +420,33 @@ Lemma lookup_insert_neq': forall key1 key2 value (m: Map e a),
 Proof.
   intros. eapply lookup_insert_neq. apply H. reflexivity. reflexivity. assumption.
 Qed.
- 
+
 (*States that if we check for key1 in the map in which we have inserted key2, then either
 key1 was already in the map, or key1 == key2. *)
 Lemma member_insert: forall key1 key2 value (map: Map e a) lb ub,
   Bounded map lb ub ->
   isLB lb key2 = true ->
   isUB ub key2 = true ->
-  member key1 (insert key2 value map) = (key1 == key2) || member key1 map. 
+  member key1 (insert key2 value map) = (key1 == key2) || member key1 map.
 Proof.
   intros. applyDesc e (@insert_Desc e a). destruct (member key1 s) eqn : ?.
   - erewrite member_spec in Heqb0. destruct Heqb0. specialize (Hsem key1). destruct (key1 == key2).
     reflexivity. simpl in Hsem. simpl. symmetry. erewrite member_spec. exists x.
     rewrite <- Hsem. assumption. apply H. apply HB.
-  - specialize (Hsem key1). destruct (key1 == key2). simpl in Hsem. 
+  - specialize (Hsem key1). destruct (key1 == key2). simpl in Hsem.
     assert (member key1 s = true). { erewrite member_spec. exists value. assumption. apply HB. }
     rewrite Heqb0 in H2. inversion H2. simpl. simpl in Hsem.
     assert (sem s key1 = None). { erewrite <- notMember_spec. unfold notMember. rewrite negb_true_iff.
     assumption. apply HB. } rewrite Hsem in H2. erewrite <- notMember_spec in H2.
     unfold notMember in H2. rewrite negb_true_iff in H2. symmetry. assumption. apply H.
-Qed. 
+Qed.
 
 Lemma member_insert': forall key1 key2 value (map: Map e a),
   WF map ->
   member key1 (insert key2 value map) = (key1 == key2) || member key1 map.
 Proof.
   intros. eapply member_insert; try (eassumption); try(reflexivity).
-Qed. 
+Qed.
 
 (*If we lookup a key that is deleted, we should get None*)
 Lemma delete_eq : forall key (map : Map e a) lb ub,
@@ -471,7 +464,7 @@ Lemma delete_neq : forall key1 key2 (map : Map e a) lb ub,
   key1 == key2 = false ->
   lookup key1 (delete key2 map) = lookup key1 map.
 Proof.
-  intros. applyDesc e (@delete_Desc e a). erewrite lookup_spec. erewrite lookup_spec. 
+  intros. applyDesc e (@delete_Desc e a). erewrite lookup_spec. erewrite lookup_spec.
   specialize (Hsem key1). rewrite H0 in Hsem. assumption. apply H. apply HB.
 Qed.
 
@@ -502,13 +495,13 @@ Proof.
   eapply notMember_spec. apply H. apply H.
 Qed.
 
-(*If two keys are equal (according to the Eq typeclass), then their values in 
+(*If two keys are equal (according to the Eq typeclass), then their values in
 a map are equal*)
 Lemma lookup_eq : forall k k' (m : Map e a),
     k == k' = true ->
     lookup k m = lookup k' m.
 Proof.
-  intros. 
+  intros.
  induction m.
   - simpl. destruct (compare k k0) eqn : E.
     + assert (compare k' k0 = Eq) by (order e). rewrite H0. reflexivity.
@@ -517,23 +510,23 @@ Proof.
   - reflexivity.
 Qed.
 
-(*This follows almost immediately from member_spec. I also had to change it to an iff rather 
+(*This follows almost immediately from member_spec. I also had to change it to an iff rather
 than equality*)
-Lemma member_lookup : 
+Lemma member_lookup :
   forall key (map: Map e a) lb ub,
-  Bounded map lb ub -> 
+  Bounded map lb ub ->
   (member key map = true) <-> (exists value, lookup key map = Some value).
 Proof.
   intros. assert(A:=H). eapply member_spec in A. eapply lookup_spec in H.
   rewrite <- H in A. apply A.
-Qed. 
+Qed.
 
 (** ** Verification of [null] *)
-Lemma null_empty: 
+Lemma null_empty:
     @null e a empty = true.
 Proof.
   unfold null. simpl. reflexivity.
-Qed. 
+Qed.
 
 (*A key is a member of the union of two maps whenever it is a member of at least one of the maps*)
 Lemma member_union :
@@ -550,7 +543,7 @@ Proof.
     assumption. apply H0. } rewrite H2. reflexivity. apply HB.
   - rewrite <- negb_true_iff in Heqb0. assert (notMember key s = true). { unfold notMember.
     assumption. } eapply notMember_spec in H1. rewrite H1 in Hsem. destruct (sem map1 key) eqn : ?.
-    inversion Hsem. destruct (sem map2 key) eqn : ?. inversion Hsem. 
+    inversion Hsem. destruct (sem map2 key) eqn : ?. inversion Hsem.
     erewrite <- notMember_spec in Heqo. erewrite <- notMember_spec in Heqo0.
     unfold notMember in *. rewrite negb_true_iff in *. rewrite Heqo. rewrite Heqo0. reflexivity.
     apply H0. apply H. apply HB.
@@ -581,12 +574,12 @@ Lemma difference_self: forall (map: Map e a) lb ub,
   Bounded map lb ub ->
   difference map map = empty.
 Proof.
-  intros. 
+  intros.
  eapply difference_Desc. apply H. apply H. intros.
   unfold diffo in H3.
   assert (forall i, sem s i = None). { intros i. specialize (H3 i).
   destruct (sem map i); assumption. } apply empty_no_elts. apply H4.
-Qed. 
+Qed.
 
 (*The difference of a map with the empty map is itself*)
 Lemma difference_nil_r: forall (B : Type) (map: Map e a) lb ub,
@@ -625,7 +618,7 @@ Proof.
 Qed.
 
 (*For this lemma, I had to change to use Haskell equality. Even though the structure of a singleton map is
-unique, we only know the key up to Haskell equality. We also had to add {EqLaws a} in order to compare the 
+unique, we only know the key up to Haskell equality. We also had to add {EqLaws a} in order to compare the
 maps *)
 Lemma difference_Tip_non_member: forall `{EqLaws a} (map: Map e a) (key :e) lb ub,
   Bounded map lb ub ->
@@ -653,7 +646,7 @@ Qed.
 
 (*For filterWithKey, we need to add the assumptions that the functions we are concerned with
   respect Haskell equality. Note that the third condition follows from the first two, but only
-  if we use functional extensionality. We also need to change the result to Haskell equality and 
+  if we use functional extensionality. We also need to change the result to Haskell equality and
   assumpe {EqLaws a}.*)
 Lemma filterWithKey_comp: forall `{EqLaws a} f f' (m: Map e a) lb ub ,
   Bounded m lb ub ->
@@ -664,10 +657,10 @@ Lemma filterWithKey_comp: forall `{EqLaws a} f f' (m: Map e a) lb ub ,
 Proof.
   intros. assert (Bounded (filterWithKey f' m) lb ub). apply filterWithKey_Bounded. apply H1.
   eapply filterWithKey_Desc. apply H5. apply H2. intros.
-  eapply filterWithKey_Desc. apply H1. apply H4. 
+  eapply filterWithKey_Desc. apply H1. apply H4.
   intros.
   - eapply weak_equals_spec. apply H6. apply H9. intros.
-    destruct (sem (filterWithKey f' m) i) eqn : ?. 
+    destruct (sem (filterWithKey f' m) i) eqn : ?.
     + specialize (H8 i). rewrite Heqo in H8.
       assert (A:= Heqo). eapply filter_sem_true in Heqo. eapply filterPreservesValues in A.
       specialize (H11 i). rewrite A in H11. rewrite Heqo in H11. rewrite andb_true_r in H11.
@@ -682,7 +675,7 @@ Qed.
   we do use Haskell equality and assume {EqLaws a}*)
 Lemma filter_comp: forall `{EqLaws a} (f: a -> bool) (f': a -> bool) (m: Map e a) lb ub ,
   Bounded m lb ub ->
-  Internal.filter f (Internal.filter f' m) == Internal.filter (fun v => f v && f' v) m = true.  
+  Internal.filter f (Internal.filter f' m) == Internal.filter (fun v => f v && f' v) m = true.
 Proof.
   intros. unfold filter. eapply filterWithKey_comp. apply H1. unfold respectful.
   unfold Proper. intros. reflexivity. unfold respectful. unfold Proper.
@@ -693,7 +686,7 @@ Qed.
 (*This (commented out) ContainerAxiom is actually false, as long as the type a is inhabited
   by at least 2 nonequal elements. Since the function we use only depends on the value,
   this actually proves that [filter_insert] is false as well*)
-Lemma filterWithKey_insert_false:forall `{EqLaws a} (key: e) (v v1: a), v == v1 = false -> 
+Lemma filterWithKey_insert_false:forall `{EqLaws a} (key: e) (v v1: a), v == v1 = false ->
 ~(forall  key v lb ub f m,
   Bounded m lb ub ->
   isUB ub key = true ->
@@ -722,12 +715,12 @@ Proof.
   destruct (PtrEquality.ptrEq Tip Tip). simpl in H2. rewrite Eq_Reflexive in H2. simpl in H2.
   inversion H2. simpl in H2. rewrite Eq_Reflexive in H2. simpl in H2. inversion H2.
   apply insert_WF. unfold WF. unfold singleton. apply BoundedBin. apply BoundedTip. apply BoundedTip.
-  solve_Bounds e. solve_Bounds e. simpl. reflexivity. unfold balance_prop. simpl. omega. 
+  solve_Bounds e. solve_Bounds e. simpl. reflexivity. unfold balance_prop. simpl. omega.
   unfold respectful. unfold Proper. intros. rewrite Heqf1. reflexivity. apply filterWithKey_Bounded.
   apply insert_WF. applyDesc e (@singleton_Desc e a). assert (isLB None key = true) by (solve_Bounds e).
   apply H3. assert (isUB None key = true) by (solve_Bounds e). apply H3. apply HB.
   destruct (f1 key v). applyDesc e (@singleton_Desc e a). assert (isLB None key = true) by (solve_Bounds e).
-  apply H3. assert (isUB None key = true) by (solve_Bounds e). apply H3. 
+  apply H3. assert (isUB None key = true) by (solve_Bounds e). apply H3.
   apply insert_WF. apply filterWithKey_Bounded. assumption. applyDesc e (@singleton_Desc e a).
    assert (isLB None key = true) by (solve_Bounds e).
   apply H3. assert (isUB None key = true) by (solve_Bounds e). apply H3. apply filterWithKey_Bounded.
@@ -773,7 +766,7 @@ Proof.
   - applyDesc e (@intersection_Desc e a). erewrite lookup_spec. destruct H1.
     erewrite lookup_spec in H1. specialize (Hsem key). rewrite H1 in Hsem.
     destruct H2. erewrite lookup_spec in H2.  rewrite H2 in Hsem. simpl in Hsem.
-    assumption. all: eassumption. 
+    assumption. all: eassumption.
   - erewrite lookup_spec in H1. erewrite sem_intersect_equiv in H1.
     unfold sem_intersect in H1. destruct (sem m1 key) eqn : ?.
     destruct (sem m2 key) eqn : ?. inversion H1; subst.
@@ -791,15 +784,15 @@ Lemma lookup_union:
   lookup key m1 = Some value \/ (lookup key m1 = None /\ lookup key m2 = Some value) <->
   lookup key (union m1 m2) = Some value.
 Proof.
-  intros. split; intros. 
+  intros. split; intros.
   - applyDesc e (@union_Desc e a). erewrite lookup_spec. specialize (Hsem key). destruct H1.
     erewrite lookup_spec in H1. rewrite H1 in Hsem. simpl in Hsem. assumption. eassumption.
-    destruct H1. erewrite lookup_spec in H1. erewrite lookup_spec in H2. 
-    rewrite H1 in Hsem. rewrite H2 in Hsem. simpl in Hsem. assumption. all: eassumption. 
+    destruct H1. erewrite lookup_spec in H1. erewrite lookup_spec in H2.
+    rewrite H1 in Hsem. rewrite H2 in Hsem. simpl in Hsem. assumption. all: eassumption.
   - erewrite lookup_spec in H1. erewrite sem_union_equiv in H1. unfold sem_union in H1.
     destruct (sem m1 key) eqn : ?.
     + left. erewrite lookup_spec.  inversion H1; subst; assumption. eassumption.
-    + destruct (sem m2 key) eqn : ?. right. split. erewrite lookup_spec. 
+    + destruct (sem m2 key) eqn : ?. right. split. erewrite lookup_spec.
       assumption. eassumption. erewrite lookup_spec.  inversion H1; subst; assumption. eassumption.
        inversion H1.
    + apply H.
@@ -822,7 +815,7 @@ Lemma lookup_partition: forall key value (m: Map e a) m' P lb ub,
      m' = snd (partition P m)) /\
     lookup key m' = Some value -> lookup key m = Some value.
 Proof.
-  unfold partition. intros. 
+  unfold partition. intros.
   erewrite lookup_spec; [|eassumption].
   erewrite lookup_spec in H1; [|eassumption].
   destruct H1 as [[Hf | Hs] Hl].
@@ -871,7 +864,7 @@ Proof.
   - assert (Bounded left lb ub). rewrite H6. eapply partitionWithKey_spec. apply H1.
     apply H2. intros. simpl. apply H10. intros. apply H11. apply H10.
   - apply H1.
-Qed. 
+Qed.
 
 
 (*A key is not in m1 and m2 iff it is not in their union*)
@@ -882,7 +875,7 @@ Lemma lookup_union_None: forall key (m1: Map e a) m2 lb ub,
 Proof.
   intros. split; intros.
   - applyDesc e (@union_Desc e a). erewrite lookup_spec in H1. erewrite lookup_spec in H1. destruct H1.
-    specialize (Hsem key). rewrite H1 in Hsem. rewrite H2 in Hsem. erewrite lookup_spec. 
+    specialize (Hsem key). rewrite H1 in Hsem. rewrite H2 in Hsem. erewrite lookup_spec.
     apply Hsem. apply HB. apply H0. apply H.
   - erewrite lookup_spec in H1. erewrite sem_union_equiv in H1. erewrite lookup_spec.
     erewrite lookup_spec. unfold sem_union in H1. destruct (sem m1 key) eqn : ?.
@@ -922,7 +915,7 @@ Lemma delete_commute: forall `{EqLaws a} k1 k2 m lb ub,
   Bounded m lb ub ->
   delete k1 (delete k2 m) == delete k2 (delete k1 m) = true.
 Proof.
-  intros. eapply delete_Desc. 
+  intros. eapply delete_Desc.
   - applyDesc e (@delete_Desc e a). apply HB.
   - intros. eapply delete_Desc.
     + applyDesc e (@delete_Desc e a). apply HB.
@@ -946,7 +939,7 @@ Proof.
 Qed.
 
 (*This says that the intersection of m1 and insert key value m2 is empty iff key is not in m1 and
-  m1 intersection m2 is empty 
+  m1 intersection m2 is empty
   Have to add hypotheses that key are between bounds so that (insert key value m2) is still Bounded*)
 Lemma null_intersection_non_member: forall (m1: Map e a) (m2: Map e b) key value lb ub,
   Bounded m1 lb ub ->
@@ -959,9 +952,9 @@ Proof.
   intros. split; intros.
   - applyDesc e (@intersection_Desc e a). rewrite null_empty_iff in H3. rewrite <- empty_no_elts in H3.
     assert (forall i, ando' (sem m1 i) (sem (insert key value m2) i) = None). intros.
-    erewrite <- sem_intersection. apply H3. apply H. applyDesc e (@insert_Desc e b). 
+    erewrite <- sem_intersection. apply H3. apply H. applyDesc e (@insert_Desc e b).
     assert (forall i, ando' (sem m1 i) (SomeIf (i == key) value ||| sem m2 i) = None).
-    intros. erewrite <- sem_insert. apply H4. apply H0. assumption. assumption. 
+    intros. erewrite <- sem_insert. apply H4. apply H0. assumption. assumption.
     assert (A:=H5). specialize (H5 key). destruct (sem m1 key) eqn : ?.
     rewrite Eq_Reflexive in H5. simpl in H5. inversion H5. split.
     + erewrite <- notMember_spec in Heqo. unfold notMember in Heqo. rewrite negb_true_iff in Heqo.
@@ -972,8 +965,8 @@ Proof.
       destruct (sem m2 i); reflexivity.
       rewrite null_empty_iff. apply empty_no_elts. apply H6.
   - applyDesc e (@insert_Desc e b). applyDesc e (@intersection_Desc e a). destruct H3. setoid_rewrite Hsem in Hsem0.
-    rewrite null_empty_iff in H4. rewrite <- empty_no_elts in H4. 
-    setoid_rewrite (sem_intersection m1 m2 _ lb ub H H0) in H4. 
+    rewrite null_empty_iff in H4. rewrite <- empty_no_elts in H4.
+    setoid_rewrite (sem_intersection m1 m2 _ lb ub H H0) in H4.
     assert (forall i, sem s0 i = None). { intros. destruct (i == key) eqn : ?.
     - assert (sem m1 i = None). erewrite <- notMember_spec. unfold notMember.
       assert (forall a b, a == b = true -> member a m1 = member b m1). { intros.
@@ -982,7 +975,7 @@ Proof.
       apply H. rewrite non_member_lookup. rewrite non_member_lookup in Heqb1.
       erewrite lookup_spec. erewrite lookup_spec in Heqb1. erewrite sem_resp_eq.
       apply Heqb1. apply H5. apply H. apply H. apply H. apply H. }
-      apply H5 in Heqb0. rewrite Heqb0. rewrite H3. reflexivity. apply H. 
+      apply H5 in Heqb0. rewrite Heqb0. rewrite H3. reflexivity. apply H.
       specialize (Hsem0 i). rewrite H5 in Hsem0. rewrite Heqb0 in Hsem0. simpl in Hsem0.
       apply Hsem0.
     - specialize (Hsem0 i). rewrite Heqb0 in Hsem0. simpl in Hsem0.
@@ -1018,7 +1011,7 @@ Proof.
     reflexivity. rewrite H2. auto.
   - apply contrapositive in H0. destruct (member i s) eqn : ?; auto. contradiction. rewrite H2.
     intro. destruct H3. inversion H3.
-Qed. 
+Qed.
 
 
 Lemma null_intersection_eq : forall (x1 x2 y1 y2 : Map e a) lb ub,
@@ -1037,7 +1030,7 @@ Proof.
     intros. specialize (N i). rewrite Hsem in N. unfold ando' in N.
     destruct (sem x2 i) eqn : S. specialize (Hsem0 i). unfold ando' in Hsem0.
     rewrite <- non_member_spec in N. rewrite H3 in N. rewrite non_member_spec in N.
-    rewrite Hsem0. destruct (sem y2 i). assumption. reflexivity. apply H1. apply H. 
+    rewrite Hsem0. destruct (sem y2 i). assumption. reflexivity. apply H1. apply H.
     unfold ando' in Hsem. rewrite <- non_member_spec in S.
     rewrite H4 in S. rewrite non_member_spec in S. unfold ando' in Hsem0.
     rewrite Hsem0. rewrite S. reflexivity. apply H2. apply H0.
@@ -1050,7 +1043,7 @@ Proof.
       apply H. rewrite H3 in H6. rewrite member_spec in H6. destruct H6.
       rewrite null_empty_iff in N'. rewrite <- empty_no_elts in N'.
       specialize (N' e0). rewrite Hsem0 in N'. rewrite H6 in N'. unfold ando' in N'.
-      destruct (sem y2 e0) eqn : ?. inversion N'. 
+      destruct (sem y2 e0) eqn : ?. inversion N'.
       rewrite <- non_member_spec in Heqo. rewrite <- H4 in Heqo.
       rewrite non_member_spec in Heqo. rewrite Heqo in X2. inversion X2. apply H0. apply H2.
       apply H1. inversion H5.
@@ -1058,4 +1051,4 @@ Proof.
     + inversion N.
 Qed.
 
-End WF_Part2. 
+End WF_Part2.

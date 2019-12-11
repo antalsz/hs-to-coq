@@ -12,7 +12,8 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require BitTerminationProofs.
+Require String BitTerminationProofs.
+Import String.StringSyntax.
 
 (* Converted imports: *)
 

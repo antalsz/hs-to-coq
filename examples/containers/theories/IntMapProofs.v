@@ -1,5 +1,3 @@
-
-
 Require Import Omega.
 Require Import Coq.ZArith.ZArith.
 Require Import Coq.NArith.NArith.
@@ -8,7 +6,7 @@ Require Import Coq.Bool.Bool.
 
 Require Import BitUtils.
 Require Import DyadicIntervals.
-Require Import Tactics.
+Require Import CustomTactics.
 
 (** * The IntMap formalization *)
 
@@ -33,7 +31,7 @@ Proof. reflexivity. Qed.
 Lemma oro_Some_l a (v:a) x : oro (Some v) x = Some v.
 Proof. destruct x; simpl; auto. Qed.
 Lemma oro_Some a (v:a) x y : oro x y = Some v -> x = Some v \/ y = Some v.
-Proof. 
+Proof.
   destruct x; destruct y; simpl; auto.
 Qed.
 
@@ -63,7 +61,7 @@ Inductive Desc : forall {a}, IntMap a -> range -> (N -> option a) -> Prop :=
     isSubrange r1 (halfRange r false) = true ->
     isSubrange r2 (halfRange r true) = true ->
     p = rPrefix r ->
-    msk = rMask r -> 
+    msk = rMask r ->
     (forall i, f i = oro (f1 i) (f2 i)) ->
     Desc (Bin p msk m1 m2) r f.
 
@@ -97,7 +95,7 @@ Definition WF {a} (s : IntMap a) : Prop := exists f, Sem s f.
 
 Ltac inversion_Desc HD1 :=
   inversion HD1;
-  repeat match goal with [ H : existT ?f ?a ?s1 = existT ?f ?a ?s2 |- _ ] => 
+  repeat match goal with [ H : existT ?f ?a ?s1 = existT ?f ?a ?s2 |- _ ] =>
                   apply Eqdep.EqdepTheory.inj_pair2 in H
   end;
   subst.
@@ -207,7 +205,7 @@ Lemma Desc_some_f:
 Proof.
   intros ???? HD.
   induction HD; subst.
-  + 
+  +
     exists k. exists v.
     rewrite H.
     rewrite N.eqb_refl.
@@ -227,8 +225,8 @@ Proof.
   revert r2 f2.
   induction HD; subst.
   + intros r2 f2 HD2 i.
-    inversion_Desc HD2. 
-    rewrite H H5. 
+    inversion_Desc HD2.
+    rewrite H H5.
     reflexivity.
   + intros r3 f3 HD3 i.
     inversion_Desc HD3.
@@ -246,7 +244,7 @@ Lemma DescBin' : forall {a} (s1:IntMap a) r1 f1 s2 r2 f2 p msk r f,
     isSubrange r1 (halfRange r false) = true ->
     isSubrange r2 (halfRange r true) = true ->
     p = rPrefix r ->
-    msk = rMask r -> 
+    msk = rMask r ->
     (forall i, inRange i (halfRange r false) = true  -> f i = f1 i) ->
     (forall i, inRange i (halfRange r true)  = true  -> f i = f2 i) ->
     (forall i, inRange i r                   = false -> f i = None) ->
@@ -281,8 +279,8 @@ Qed.
 
 
 Ltac point_to_inRange :=
-  lazymatch goal with 
-    | [ HD : Desc ?s ?r ?f, Hf : ?f ?i = Some ?v |- _ ] 
+  lazymatch goal with
+    | [ HD : Desc ?s ?r ?f, Hf : ?f ?i = Some ?v |- _ ]
       => apply (Desc_inside HD) in Hf
   end.
 
@@ -357,22 +355,22 @@ Proof.
     + subst.
       destruct (N.eq_decidable k k0).
       ++ subst.
-         specialize (H k0). rewrite Hf H1 in H.  
+         specialize (H k0). rewrite Hf H1 in H.
          rewrite N.eqb_refl in H. inversion H.
          reflexivity.
-      ++ specialize (H k0). rewrite Hf H1 in H.  
+      ++ specialize (H k0). rewrite Hf H1 in H.
          rewrite N.eqb_refl in H.
          destruct (N.eqb_neq k k0) as [h0 h1].
          rewrite N.eqb_sym in H.
-         rewrite (h1 H0)  in H. 
+         rewrite (h1 H0)  in H.
          inversion H.
-    + 
+    +
       exfalso. subst.
       eapply larger_f_imp with (r1 := r0) (r2 := singletonRange k).
       - simpl. auto.
       - eapply DescBin with (m1 := m1) (m2 := m2); try eassumption; reflexivity.
       - eapply DescTip; try eassumption; reflexivity.
-      - intros i Hi. rewrite Hf. auto. 
+      - intros i Hi. rewrite Hf. auto.
   * intros s3 r3 f3 HD3 Hf.
     destruct HD3.
     + exfalso. subst.
@@ -380,8 +378,8 @@ Proof.
       - simpl. auto.
       - eapply DescBin with (m1 := m1) (m2 := m2); try eassumption; reflexivity.
       - eapply DescTip; try eassumption; reflexivity.
-      - intros i Hi. rewrite <- Hf. auto. 
-        
+      - intros i Hi. rewrite <- Hf. auto.
+
     + subst.
       assert (r4 = r). {
         destruct (Desc_some_f HD3_1) as [i1 [v1 Hi1]].
@@ -397,7 +395,7 @@ Proof.
           rewrite oro_Some_l in H10.
           rewrite <- Hf in H10.
           specialize (H4 i1); rewrite H10 in H4; clear H10; symmetry in H4.
-          apply oro_Some in H4. 
+          apply oro_Some in H4.
           destruct H4.
           + apply (Desc_inside HD1_1) in H2.
             eapply inRange_isSubrange_true; [|eassumption].
@@ -478,11 +476,11 @@ Proof.
         -- rewrite -> (Desc_outside HD1_1) in H4 by inRange_false.
            rewrite oro_None_l in H4.
            rewrite <- H4; clear H4.
-           
+
            rewrite -> (Desc_outside HD3_1) in H10 by inRange_false.
            rewrite oro_None_l in H10.
            rewrite <- H10; clear H10.
-           
+
            assumption.
         -- rewrite (Desc_outside HD1_2) ; last inRange_false.
            rewrite (Desc_outside HD3_2) ; last inRange_false.
@@ -506,12 +504,12 @@ Proof.
   destruct H, H0.
   * reflexivity.
   * exfalso.
-    destruct (Desc_some_f HD) as [i [v Hi]]. 
+    destruct (Desc_some_f HD) as [i [v Hi]].
     rewrite <- H1 in Hi.
     rewrite H in Hi.
     congruence.
   * exfalso.
-    destruct (Desc_some_f HD) as [i [v Hi]]. 
+    destruct (Desc_some_f HD) as [i [v Hi]].
     rewrite -> H1 in Hi.
     rewrite H in Hi.
     congruence.
@@ -533,9 +531,9 @@ Proof.
     subst f2';
     try subst s1; try subst s2.
   - now rewrite E1 E2.
-  - subst. 
+  - subst.
     inversion D2.
-  - subst. 
+  - subst.
     inversion D1.
   - apply Eqdep.EqdepTheory.inj_pair2 in H2.
     subst.
@@ -587,7 +585,7 @@ Lemma nomatch_zero:
   (inRange i r = false -> P otherwise) ->
   (inRange i (halfRange r false) = true -> inRange i (halfRange r true) = false -> P left) ->
   (inRange i (halfRange r false) = false -> inRange i (halfRange r true) = true -> P right) ->
-  P (if nomatch i (rPrefix r) (rMask r) then otherwise else 
+  P (if nomatch i (rPrefix r) (rMask r) then otherwise else
      if zero i (rMask r) then left else right).
 Proof.
   intros.
@@ -610,7 +608,7 @@ Lemma nomatch_zero_smaller:
   (rangeDisjoint r1 r = true -> P otherwise) ->
   (isSubrange r1 (halfRange r false) = true  -> isSubrange r1 (halfRange r true) = false -> P left) ->
   (isSubrange r1 (halfRange r false) = false -> isSubrange r1 (halfRange r true) = true -> P right) ->
-  P (if nomatch (rPrefix r1) (rPrefix r) (rMask r) then otherwise else 
+  P (if nomatch (rPrefix r1) (rPrefix r) (rMask r) then otherwise else
      if zero (rPrefix r1) (rMask r) then left else right).
 Proof.
   intros ????????.
@@ -637,7 +635,7 @@ Proof.
     rewrite IHs1_1.
     rewrite IHs1_2.
     intuition congruence.
-  * simpl. 
+  * simpl.
     rewrite !andb_true_iff.
     rewrite <- (reflect_iff _ _ (Base.Eq_eq a0 a1)).
     rewrite !N.eqb_eq.
@@ -718,7 +716,7 @@ Lemma lookup_Desc0:
 Proof.
   intros.
   destruct H; simpl; auto.
-  rewrite Hf. 
+  rewrite Hf.
   eapply lookup_Desc; eauto.
 Abort.
 
@@ -747,7 +745,7 @@ Proof.
   ** eassumption.
   ** eapply Desc_inside; eassumption.
   ** eapply H in Hi.
-     destruct Hi as [v2 [Hi EQ]]. 
+     destruct Hi as [v2 [Hi EQ]].
      apply (Desc_inside HD2) in Hi.
      assumption.
 Qed.
@@ -776,7 +774,7 @@ Program Fixpoint isSubmapOfBy_Desc {a} (f : a -> a -> bool)
   { measure (size_nat s1 + size_nat s2) } :
   Desc s1 r1 f1 ->
   Desc s2 r2 f2 ->
-  isSubmapOfBy f s1 s2 = true <-> 
+  isSubmapOfBy f s1 s2 = true <->
   (forall i v1, f1 i = Some v1 -> exists v2, f2 i = Some v2 /\ f v1 v2 = true) := _.
 Next Obligation.
   revert isSubmapOfBy_Desc H H0.
@@ -787,13 +785,13 @@ Next Obligation.
     unfold isSubmapOfBy.
     simpl; subst.
     unfoldMethods.
-    destruct (k =? k0) eqn:h. 
+    destruct (k =? k0) eqn:h.
     + apply N.eqb_eq in h; subst.
       split.
       -- intros fh i v1 h0.
          rewrite H2 in h0.
          destruct (i =? k0) eqn:EQ; try discriminate.
-         inversion h0; subst.       
+         inversion h0; subst.
          exists v0. split; auto.
          rewrite H3. rewrite EQ. auto.
       -- intro h0.
@@ -875,7 +873,7 @@ Proof.
   * erewrite member_Desc; eauto.
 Qed.
 
-Lemma Desc_has_member: 
+Lemma Desc_has_member:
   forall {a}{s:IntMap a}{r f}, Desc s r f -> exists i, member i s = true.
 Proof.
   intros ???? HD.
@@ -917,7 +915,7 @@ Qed.
 Lemma empty_Sem {a} (f : N -> option a) : Sem empty f <-> forall i, f i = None.
 Proof.
   split.
-  - intro s. 
+  - intro s.
     apply null_Sem in s.
     simpl in s. destruct s as [s _].
     apply s.
@@ -932,7 +930,7 @@ Hint Resolve empty_WF.
 
 (** *** Verification of [insert] *)
 
-Lemma disjoint_reorder a (s1 : IntMap a) r1 f1 s2 r2 f2 : 
+Lemma disjoint_reorder a (s1 : IntMap a) r1 f1 s2 r2 f2 :
   Desc s1 r1 f1 ->
   Desc s2 r2 f2 ->
   rangeDisjoint r2 r1 = true ->
@@ -970,11 +968,11 @@ Proof.
     { apply not_true_is_false.
       rewrite <- Hbit.
       apply not_eq_sym.
-      apply (commonRangeDisj_rBits_Different r1 r2); 
+      apply (commonRangeDisj_rBits_Different r1 r2);
           try (eapply Desc_rNonneg; eassumption); auto.
     }
-    rewrite rangeDisjoint_sym in H3. 
-    rewrite -> commonRangeDisj_sym in * by (eapply Desc_rNonneg; eassumption). 
+    rewrite rangeDisjoint_sym in H3.
+    rewrite -> commonRangeDisj_sym in * by (eapply Desc_rNonneg; eassumption).
     apply (DescBin _ _ _ _ _ _ _  _ _ _ f H0 H); auto.
     + apply commonRangeDisj_rBits_pos; (eapply Desc_rNonneg; eassumption).
     + rewrite <- Hbit2.
@@ -985,9 +983,9 @@ Proof.
       rewrite rangeDisjoint_sym in H3.
       apply isSubrange_halfRange_commonRangeDisj;
         try (eapply Desc_rNonneg; eassumption); auto.
-    + 
-      intro i. erewrite disjoint_reorder; eauto. 
-      rewrite rangeDisjoint_sym. 
+    +
+      intro i. erewrite disjoint_reorder; eauto.
+      rewrite rangeDisjoint_sym.
       auto.
   * assert (Hbit2 : N.testbit (rPrefix r2) (rBits (commonRangeDisj r1 r2) - 1)%N = true).
     { apply not_false_iff_true.
@@ -1007,7 +1005,7 @@ Proof.
         try (eapply Desc_rNonneg; eassumption); auto.
 Qed.
 
-Lemma disjoint_neq : forall x y, (x =? y) = false -> 
+Lemma disjoint_neq : forall x y, (x =? y) = false ->
   rangeDisjoint (singletonRange x) (singletonRange y) = true.
 Proof.
        unfold singletonRange, rangeDisjoint. unfold isSubrange, rPrefix, inRange.
@@ -1021,7 +1019,7 @@ rewrite N.eqb_sym.
 rewrite EE.
 rewrite andb_false_l.
 simpl. auto.
-Qed.  
+Qed.
 
 Lemma insert_Nil_Desc a:
   forall e (v:a) r f,
@@ -1040,7 +1038,7 @@ Hint Rewrite rPrefix_singletonRange.
 Lemma insert_Desc a:
   forall e v r1,
   forall (s2:IntMap a) r2 f2,
-  forall r f, 
+  forall r f,
   Desc s2 r2 f2 ->
   r1 = (singletonRange e) ->
   r = commonRange r1 r2 ->
@@ -1075,7 +1073,7 @@ Proof.
   + simpl.
     eapply nomatch_zero; auto.
     ++ intro RF.
-       assert (h0: rangeDisjoint (singletonRange e) r0 = true). { 
+       assert (h0: rangeDisjoint (singletonRange e) r0 = true). {
          unfold singletonRange, rangeDisjoint.
          unfold isSubrange. simpl. rewrite N.shiftl_0_r.
          rewrite RF.
@@ -1084,7 +1082,7 @@ Proof.
          admit.
        }
        eapply link_Desc with (f1 := fun i => if i =? e then Some v else None); eauto.
-       eapply DescTip; eauto. 
+       eapply DescTip; eauto.
        eapply DescBin; eauto.
        rewrite rPrefix_singletonRange; auto.
        eapply disjoint_commonRange; eauto.
@@ -1142,7 +1140,7 @@ Proof.
 Defined.
 
 
-Definition restrictKeys_body {a} := restrictKeys_f (@restrictKeys a). 
+Definition restrictKeys_body {a} := restrictKeys_f (@restrictKeys a).
 
 Lemma restrictKeys_eq {a} (m : IntMap a) s :
   restrictKeys m s = restrictKeys_body m s.
@@ -1153,7 +1151,7 @@ Qed.
 
 Definition restrictBitMapToRange r bm :=
   let p := rPrefix r in
-  let msk := rMask r in 
+  let msk := rMask r in
     N.land (N.land bm (N.lxor (bitmapOf p - 1)%N (N.ones 64%N)))
            (N.lor (bitmapOf (N.lor p (N.lor msk (msk - 1))))
            (bitmapOf (N.lor p (N.lor msk (msk - 1))) - 1)%N).
@@ -1166,21 +1164,21 @@ Lemma bin_Desc0:
     isSubrange r1 (halfRange r false) = true ->
     isSubrange r2 (halfRange r true) = true ->
     p = rPrefix r ->
-    msk = rMask r -> 
+    msk = rMask r ->
     (forall i, f i = oro (f1 i) (f2 i)) ->
     Desc0 (bin p msk m1 m2) r f.
 Admitted.
 
 Ltac point_to_inRange_Map :=
-  lazymatch goal with 
-    | [ HD : IntSetProofs.Desc ?s ?r ?f, Hf : ?f ?i = true |- _ ] 
+  lazymatch goal with
+    | [ HD : IntSetProofs.Desc ?s ?r ?f, Hf : ?f ?i = true |- _ ]
       => apply (IntSetProofs.Desc_inside HD) in Hf
     | [ H : bitmapInRange ?r ?bm ?i = true |- _ ]
       => apply bitmapInRange_inside in H
-    | [ HD : Desc ?m ?r ?f, Hf : ?f ?i = Some _ |- _ ] 
+    | [ HD : Desc ?m ?r ?f, Hf : ?f ?i = Some _ |- _ ]
       => apply (Desc_inside HD) in Hf
   end.
-  
+
 Ltac solve_f_eq_disjoint_Map :=
   solve_f_eq;
   repeat point_to_inRange_Map;
@@ -1194,7 +1192,7 @@ Program Fixpoint restrictKeys_Desc
   Desc m1 r1 f1 ->
   IntSetProofs.Desc s2 r2 f2 ->
   (forall i, f i = if f2 i then f1 i else None) ->
-  Desc0 (restrictKeys m1 s2) r1 f 
+  Desc0 (restrictKeys m1 s2) r1 f
   := fun HD1 HD2 Hf => _.
 Next Obligation.
   rewrite restrictKeys_eq.
@@ -1318,5 +1316,3 @@ Proof.
   destruct H, H0.
   eexists. apply restrictKeys_Sem; eassumption.
 Qed.
-
-

@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -47,7 +40,7 @@ Proof.
     destruct Hthere as [[??]|Hthere]; subst; applyDesc e (@balanceL_Desc e a).
     rewrite size_Bin in H1. solve_size. solve_Desc e. rewrite size_Bin in Hsz0. solve_size.
     rewrite size_Bin in H1. solve_size. solve_Desc e. rewrite size_Bin in Hsz0. solve_size.
-    
+
 Qed.
 
 (** ** Verification of [delete] *)
@@ -181,7 +174,7 @@ Proof.
       assert (f x0 v = f x v). apply equal_f. apply HP. order e. rewrite H3. reflexivity.
     + applyDesc e IHHA1; clear IHHA1 IHHA2. replace (x == x0) with false by solve_Bounds e.
       rewrite -> (sem_outside_below HA2) by solve_Bounds e.
-      simpl_options. solve_Desc e. 
+      simpl_options. solve_Desc e.
     + applyDesc e IHHA2; clear IHHA1 IHHA2. replace (x == x0) with false by solve_Bounds e.
       rewrite -> (sem_outside_above HA1) by solve_Bounds e. simpl_options.
       solve_Desc e.
@@ -190,7 +183,7 @@ Qed.
 (** ** Verification of [adjust] *)
 Lemma adjust_spec: forall (m: Map e a) (f: a -> a) k,
   adjust f k m = adjustWithKey (fun _ x => f x) k m.
-Proof. 
+Proof.
   intros. unfold adjust. reflexivity.
 Qed.
 
@@ -218,8 +211,8 @@ intros ????? HB HP.
       * solve_Desc e. rewrite size_Bin in *.
         rewrite -> (sem_outside_above HB1) by solve_Bounds e.
         rewrite -> (sem_outside_below HB2) by solve_Bounds e.
-        simpl_options. rewrite <- H1. reflexivity. 
-      * applyDesc e glue_Desc. solve_Desc e. 
+        simpl_options. rewrite <- H1. reflexivity.
+      * applyDesc e glue_Desc. solve_Desc e.
         rewrite -> (sem_outside_above HB1) by solve_Bounds e.
         rewrite -> (sem_outside_below HB2) by solve_Bounds e.
         simpl_options. rewrite <-H1. cbn -[Z.add]. rewrite Hsz. omega.
@@ -230,7 +223,7 @@ intros ????? HB HP.
       simpl in Hsz. rewrite Hsz. solve_size.
       solve_Desc e. rewrite Hsz0. destruct (f x a0); simpl in Hsz; rewrite Hsz;
       cbn -[Z.add]. reflexivity. omega. solve_Desc e.
-    + applyDesc e IHHB2. replace (x == x0) with false by (order e). 
+    + applyDesc e IHHB2. replace (x == x0) with false by (order e).
       rewrite -> (sem_outside_above HB1) by solve_Bounds e.
       simpl_options. destruct (sem s2 x); cbn -[Z.add] in *; applyDesc e (@balanceL_Desc e a).
       destruct (f x a0) eqn : ?. simpl in Hsz. rewrite Hsz. left. assumption.
@@ -242,7 +235,7 @@ Qed.
 (** ** Verification of [update] *)
 Lemma update_spec: forall (m: Map e a) (f: a -> option a) k,
   update f k m = updateWithKey (fun _ x => f x) k m.
-Proof. 
+Proof.
   intros. unfold update. reflexivity.
 Qed.
 
@@ -258,7 +251,7 @@ Proof.
   intros. generalize dependent k. revert v v1. induction H; intros.
   - inversion H1.
   - simpl. simpl in H6. destruct (sem s1 k) eqn : ?.
-   + assert (compare k x = Lt) by (solve_Bounds e). rewrite H8. 
+   + assert (compare k x = Lt) by (solve_Bounds e). rewrite H8.
      rewrite (pair_fst_snd (updateLookupWithKey f k s1 )). simpl.
      eapply IHBounded1. apply Heqo. inversion H6. apply H7.
    + simpl in H6. destruct (k == x) eqn : ?.
@@ -270,7 +263,7 @@ Proof.
            apply H0. order e. rewrite <- H4 in Heqo0. rewrite Heqo0 in H7.
            inversion H7.
       * simpl. destruct (sem s2 k) eqn : ?.
-        -- assert (compare k x = Gt) by (solve_Bounds e). rewrite H8. 
+        -- assert (compare k x = Gt) by (solve_Bounds e). rewrite H8.
            rewrite (pair_fst_snd (updateLookupWithKey f k s2 )). simpl.
            eapply IHBounded2. apply Heqo0. inversion H6; subst. apply H7.
         -- inversion H6.
@@ -296,10 +289,10 @@ Proof.
         -- simpl. inversion H6; subst.  assert (f k v0 = f x v0). apply equal_f.
            apply H0. order e. rewrite H4 in H7. rewrite H7 in Heqo0. inversion Heqo0.
         -- simpl. assumption.
-      * simpl in H6. assert (compare k x = Gt) by (solve_Bounds e). rewrite H8. 
+      * simpl in H6. assert (compare k x = Gt) by (solve_Bounds e). rewrite H8.
            rewrite (pair_fst_snd (updateLookupWithKey f k s2 )). simpl.
            eapply IHBounded2. apply H6. apply H7.
-Qed. 
+Qed.
 
 Lemma updateLookupWithKey_lookup_None:
   forall (m: Map e a) lb ub f k,
@@ -327,15 +320,15 @@ Lemma updateWithKey_updateLookupWithKey: forall (m: Map e a) f k,
 Proof.
   intros m. induction m; intros.
   - simpl. destruct (compare k0 k).
-    + destruct (f k a0); simpl; reflexivity. 
+    + destruct (f k a0); simpl; reflexivity.
     + rewrite (pair_fst_snd (updateLookupWithKey f k0 m1)). simpl.
       rewrite IHm1. reflexivity.
     + rewrite (pair_fst_snd (updateLookupWithKey f k0 m2)). simpl.
       rewrite IHm2. reflexivity.
   - simpl. reflexivity.
-Qed.  
+Qed.
 
-Lemma updateLookupWithKey_Desc: 
+Lemma updateLookupWithKey_Desc:
   forall x f (m: Map e a) lb ub,
   Bounded m lb ub ->
   Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -370,7 +363,7 @@ Proof.
   - cbn -[Z.add]. destruct (compare k x) eqn : Heq.
     + replace (k == x) with true by solve_Bounds e. simpl_options.
       destruct (f (Some v)) eqn : ?.
-      * solve_Desc e. simpl. 
+      * solve_Desc e. simpl.
         rewrite -> (sem_outside_above HB1) by (solve_Bounds e). simpl_options.
         rewrite Heqo. simpl. reflexivity. f_solver e.
         assert (sem s1 k = None). eapply sem_outside_above. eassumption.
@@ -382,7 +375,7 @@ Proof.
         rewrite -> (sem_outside_below HB2) by (solve_Bounds e).
         simpl_options. applyDesc e glue_Desc. solve_Desc e.
         simpl. rewrite Heqo. simpl. solve_size.
-    + replace (k == x) with false by solve_Bounds e. 
+    + replace (k == x) with false by solve_Bounds e.
       rewrite -> (sem_outside_below HB2) by (solve_Bounds e).
       simpl_options.
       applyDesc e IHHB1. applyDesc e (@balance_Desc e a). destruct (sem s1 k). simpl in Hsz.
@@ -393,7 +386,7 @@ Proof.
       destruct (f(Some a0)); cbn -[Z.add]; solve_size.
       destruct (f(None)); cbn -[Z.add]; solve_size.
     + replace (k == x) with false by (order e).
-      rewrite -> (sem_outside_above HB1) by (solve_Bounds e). 
+      rewrite -> (sem_outside_above HB1) by (solve_Bounds e).
       simpl_options.
       applyDesc e IHHB2. applyDesc e (@balance_Desc e a). destruct (sem s2 k); cbn -[Z.add] in *.
       destruct (f(Some a0)); cbn -[Z.add] in *; solve_size.

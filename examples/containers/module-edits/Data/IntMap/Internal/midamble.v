@@ -1,5 +1,8 @@
 Require GHC.Err.
 
+Definition complement' x :=
+  Coq.NArith.BinNat.N.lxor x (Coq.NArith.BinNat.N.ones (#64%N)).
+
 Instance Default_Map {a} : Err.Default (IntMap a) := {| Err.default := Nil |}.
 
 Fixpoint IntMap_op_zlzd__ {a} {b} (x: a) (m: IntMap b): IntMap a :=

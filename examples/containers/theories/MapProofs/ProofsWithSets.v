@@ -1,12 +1,5 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
+Require Import MapProofs.Common.
 Require Import Data.Set.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -57,7 +50,7 @@ Ltac solve_Bounds_set := first
    Fails if it does not start with [forall i,], but may leave a partially solve goal.
     *)
 Ltac f_solver_simple_set  :=
-  let i := fresh "i" in 
+  let i := fresh "i" in
   intro i;
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
@@ -69,7 +62,7 @@ Ltac f_solver_simple_set  :=
 (** This auxillary tactic destructs one boolean atom in the argument *)
 
 Ltac split_bool_go_set expr :=
-  lazymatch expr with 
+  lazymatch expr with
     | true       => fail
     | false      => fail
     | Some _     => fail
@@ -85,7 +78,7 @@ Ltac split_bool_go_set expr :=
 (** This auxillary tactic destructs one boolean or option atom in the goal *)
 
 Ltac split_bool :=
-  match goal with 
+  match goal with
     | |- ?lhs = ?rhs        => split_bool_go lhs || split_bool_go rhs
     (* A bit ad-hoc, could be improved: *)
     | H : ?x || ?y = true  |- _ => split_bool_go x
@@ -210,7 +203,7 @@ Ltac applyDesc_set lem :=
   apply hide;
   eapply lem;
   [ solve_Precondition_set ..
-  | let s := fresh "s" in 
+  | let s := fresh "s" in
     let HB := fresh "HB" in
     let Hsz := fresh "Hsz" in
     let Hsem := fresh "Hsem" in
@@ -257,7 +250,7 @@ Proof.
   - simpl. solve_Desc e.
   - simpl. eapply IHBounded1. intros. eapply IHBounded2. intros. solve_Desc e.
     rewrite H10. rewrite H7. solve_size. intros. rewrite H11. rewrite H8.
-    destruct (sem s1 i). reflexivity. destruct (i == x) eqn : ?. simpl. 
+    destruct (sem s1 i). reflexivity. destruct (i == x) eqn : ?. simpl.
     assert (f x = f i). apply H0. order e. rewrite H12. reflexivity. reflexivity.
 Qed.
 
@@ -293,7 +286,7 @@ Proof.
   - simpl. eapply SetProofs.splitMember_Desc. apply H3. intros. eapply IHBounded1.
     wf_bounds_set. intros. eapply IHBounded2. wf_bounds_set. intros. destruct_ptrEq.
     + destruct s.
-      * destruct b. 
+      * destruct b.
         -- solve_Desc e. f_solver e. rewrite H6 in H12. inversion H12.
         -- eapply link2_Desc; try(eassumption). intros. solve_Desc e. f_solver e.
            rewrite H6 in H12. rewrite H12 in H14. inversion H14.
@@ -301,7 +294,7 @@ Proof.
     + eapply Bounds.link_Desc. apply H7. apply H10. assumption. assumption. intros.
       eapply link2_Desc; try (eassumption). intros. destruct s.
       * destruct b.
-        -- solve_Desc e. f_solver e; try (rewrite H15 in H12; destruct (sem s3 i); inversion H12; 
+        -- solve_Desc e. f_solver e; try (rewrite H15 in H12; destruct (sem s3 i); inversion H12;
             reflexivity).
             ++ rewrite H6 in H12. rewrite H15 in H12. inversion H12.
             ++ assert (i > x = true) by solve_Bounds_set. solve_Bounds e.
@@ -332,17 +325,17 @@ Proof.
     + eapply splitMember_Desc. constructor; try eassumption. intros.
       eapply IHBounded1. apply H15. eapply IHBounded2. apply H16. intros.
       eapply link2_Desc. apply H22. apply H19. assumption. assumption. intros.
-      destruct b. 
-      * simpl. solve_Desc e. f_solver e; subst; 
-        try (assert (i > x  = true) by (solve_Bounds_set); solve_Bounds e). 
+      destruct b.
+      * simpl. solve_Desc e. f_solver e; subst;
+        try (assert (i > x  = true) by (solve_Bounds_set); solve_Bounds e).
         -- rewrite H27 in H21. destruct (sem s2 i). inversion H21.
            assert (i > x = true) by (solve_Bounds e). solve_Bounds_set.
-        -- rewrite H27 in H21. destruct (sem s2 i). inversion H21. 
+        -- rewrite H27 in H21. destruct (sem s2 i). inversion H21.
            assert (i > x = true) by (solve_Bounds e). solve_Bounds_set.
-        -- rewrite H27 in H21. destruct (sem s2 i). inversion H21. 
+        -- rewrite H27 in H21. destruct (sem s2 i). inversion H21.
            assert (i > x = true) by (solve_Bounds e). solve_Bounds_set.
       * simpl. destruct_ptrEq.
-        -- solve_Desc e. f_solver e; subst; 
+        -- solve_Desc e. f_solver e; subst;
            try (assert (i > x = true) by (solve_Bounds e); solve_Bounds_set);
            try (assert (i > x = true) by (solve_Bounds_set); solve_Bounds e).
         -- solve_Desc e. f_solver e; intros.

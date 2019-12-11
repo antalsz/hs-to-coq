@@ -110,7 +110,7 @@ rewrite forall x, Data.IntMap.Internal.natFromInt x = x
 # `complement x` does not work at type `N`, as the complement of a natural
 # number is negative. But in this module, all uses of `complement` are meant to be
 # 64bit numbers anyways, so we can complement just these bits.
-rewrite forall x, (Data.Bits.complement x) = (Coq.NArith.BinNat.N.lxor x (Coq.NArith.BinNat.N.ones (64%N)))
+rewrite forall x, (Data.Bits.complement x) = (complement' x)
 
 rewrite forall x, (x Data.Bits..&. Data.IntSet.Internal.prefixBitMask) = Coq.NArith.BinNat.N.ldiff x Data.IntSet.Internal.suffixBitMask
 

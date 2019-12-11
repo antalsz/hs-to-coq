@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 
 (** ** Tactics for pointer equality *)
@@ -846,8 +839,8 @@ Definition Desc s lb ub sz f : Prop :=
     P s) ->
   P s.
 
-Local Inductive HIDE (P : Prop) := unhide : P -> HIDE P.
-Local Lemma hide : forall {P : Prop},  HIDE P -> P. Proof. intros. inversion H. assumption. Qed.
+Inductive HIDE (P : Prop) := unhide : P -> HIDE P.
+Lemma hide : forall {P : Prop},  HIDE P -> P. Proof. intros. inversion H. assumption. Qed.
 
 Ltac applyDesc lem :=
   apply hide;

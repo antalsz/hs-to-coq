@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.

@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -85,7 +78,7 @@ Proof.
   intros. destruct m; intros.
   - simpl. reflexivity.
   - contradiction.
-Qed. 
+Qed.
 
 Lemma lookupMax_in_bin: forall (m: Map e a),
   m <> Tip -> forall k1 k2 v1 v2, lookupMaxSure k1 v1 m = lookupMaxSure k2 v2 m.
@@ -93,7 +86,7 @@ Proof.
   intros. destruct m; intros.
   - simpl. reflexivity.
   - contradiction.
-Qed. 
+Qed.
 
 Lemma lookupMinSure_Desc:
   forall (m: Map e a) x v0 lb ub,
@@ -112,19 +105,19 @@ Proof.
       destruct (e0 == i) eqn : ?. order e. assert (i == e0 = false) by order e. rewrite H5 in H3.
       simpl in H3. solve_Bounds e.
     + destruct H5. simpl in Heqp. assert (s1 <> Tip). { destruct s1. intro. discriminate H7.
-      simpl in H5. inversion H5. } 
+      simpl in H5. inversion H5. }
       eapply lookupMin_in_bin in H7. rewrite Heqp in H7. rewrite Heqp0 in H7. inversion H7; subst.
       rewrite H5. simpl. split. reflexivity. intros.
-      destruct (sem s1 i) eqn : ?. simpl in H3. inversion H3; subst. 
+      destruct (sem s1 i) eqn : ?. simpl in H3. inversion H3; subst.
       apply H6 in Heqo. assumption.
       simpl in H3. assert (_GHC.Base.<=_  e1 x = true) by solve_Bounds e.
-      destruct (i == x) eqn : ?. order e. simpl in H3. solve_Bounds e. 
-Qed. 
+      destruct (i == x) eqn : ?. order e. simpl in H3. solve_Bounds e.
+Qed.
 
 Lemma lookupMin_Desc:
   forall (m: Map e a) lb ub,
     Bounded m lb ub ->
-    match lookupMin m with 
+    match lookupMin m with
       | None => (forall i, sem m i = None)
       | Some (y, v) => sem m y = Some v /\ (forall i v1, sem m i = Some v1 -> (y GHC.Base.<= i) = true)
     end.
@@ -142,7 +135,7 @@ Proof.
     - destruct H. rewrite H. simpl; split. reflexivity. intros. destruct (sem s1 i) eqn : ?.
       apply H4 in Heqo. assumption. simpl in H6. destruct (i == x) eqn : ?.
       solve_Bounds e. simpl in H6. solve_Bounds e.
-Qed. 
+Qed.
 
 
 (** ** Verification of [lookupMax] *)
@@ -165,19 +158,19 @@ Proof.
       destruct (e0 == i) eqn : ?. order e. assert (i == e0 = false) by order e. rewrite H6 in H5.
       simpl in H5. rewrite oro_None_r in H5. rewrite oro_None_r in H5. solve_Bounds e.
     + destruct H5. simpl in Heqp. assert (s2 <> Tip). { destruct s2. intro. discriminate H7.
-      simpl in H5. inversion H5. } 
+      simpl in H5. inversion H5. }
       eapply lookupMax_in_bin in H7. rewrite Heqp in H7. rewrite Heqp0 in H7. inversion H7; subst.
       rewrite H5. assert (sem s1 e1 = None). { eapply (sem_inside H0) in H5. destruct H5.
       eapply sem_outside_above. apply H. solve_Bounds e. } rewrite H3. simpl.
       destruct (e1 == x) eqn : ?. solve_Bounds e. simpl. split. reflexivity. intros.
       destruct (sem s1 i) eqn : ?. solve_Bounds e. simpl in H8. destruct (i == x) eqn : ?.
       solve_Bounds e. simpl in H8. apply H6 in H8. assumption.
-Qed. 
+Qed.
 
 Lemma lookupMax_Desc:
   forall (m: Map e a) lb ub,
     Bounded m lb ub ->
-    match lookupMax m with 
+    match lookupMax m with
       | None => (forall i, sem m i = None)
       | Some (y, v) => sem m y = Some v /\ (forall i v1, sem m i = Some v1 -> (i GHC.Base.<= y) = true)
     end.
@@ -280,9 +273,9 @@ Proof.
     split.
     - simpl. destruct H3. destruct H3. destruct H3. subst. rewrite Eq_Reflexive.
       assert (sem s1 x = None). { eapply sem_outside_above. apply H. solve_Bounds e. }
-      rewrite H3. simpl. reflexivity. rewrite H3. 
+      rewrite H3. simpl. reflexivity. rewrite H3.
       assert (sem s1 y = None). { eapply sem_outside_above. apply H. solve_Bounds e. }
-      rewrite H6. simpl. destruct (y == x) eqn : ?. solve_Bounds e. reflexivity. 
+      rewrite H6. simpl. destruct (y == x) eqn : ?. solve_Bounds e. reflexivity.
     - applyDesc e H3. solve_Desc e.
 Qed.
 
@@ -321,7 +314,7 @@ Proof.
     split.
     - simpl. destruct H3. destruct H3. destruct H3. subst. rewrite Eq_Reflexive.
       assert (sem s1 x = None). { eapply sem_outside_above. apply H. solve_Bounds e. }
-      rewrite H3. simpl. reflexivity. rewrite H3. simpl. reflexivity. 
+      rewrite H3. simpl. reflexivity. rewrite H3. simpl. reflexivity.
     - applyDesc e H3. solve_Desc e.
 Qed.
 

@@ -55,7 +55,6 @@ import HsToCoq.ConvertHaskell.Declarations.Notations
 import HsToCoq.ConvertHaskell.Axiomatize
 import HsToCoq.Coq.Preamble
 
-import qualified Debug.Trace as Debug
 --------------------------------------------------------------------------------
 
 data ConvertedModuleDeclarations =
@@ -75,7 +74,7 @@ convertHsGroup HsGroup{..} = do
   let catchIfAxiomatizing | isModuleAxiomatized = const
                           | otherwise           = gcatch
   handler             <- whenPermissive axiomatizeBinding
-  
+
   convertedTyClDecls <- convertModuleTyClDecls
                      .  map unLoc
                      $  concatMap group_tyclds hs_tyclds
@@ -225,7 +224,7 @@ instance Semigroup Convert_Module_Mode where
 
 instance Monoid Convert_Module_Mode where
   mempty = Mode_Initial
-                 
+
 convertModules :: GlobalMonad r m => [(ModuleName, HsGroup GhcRn)] -> m [NonEmpty ConvertedModule]
 convertModules sources = do
   -- Collect modules with the same post-`rename module` name
@@ -238,9 +237,9 @@ convertModules sources = do
              Mode_Convert    -> convertModule' name convGrp
              Mode_Both       -> combineModules <$> axiomatizeModule' name axGrp <*> convertModule' name convGrp
              Mode_Initial    -> error "INTERNAL ERROR: impossible, `foldrM` over a `NonEmpty`"
-          
+
   pure $ stronglyConnCompNE [(cmod, convModName cmod, imps) | (cmod, imps) <- cmods]
-  
+
   where
     buildGroups (oldName, modGrp) (axGrp, convGrp, mode) =
       view (edits.axiomatizedOriginalModuleNames.contains oldName) <&> \case
@@ -258,12 +257,12 @@ convertModules sources = do
                         (                             tyClDecls1    <> tyClDecls2)
                         (                             valDecls1     <> valDecls2)
                         (                             clsInstDecls1 <> clsInstDecls2)
-                        (                             addedTyCls1   ) -- only need one copy of the added components                        
-                        (                             addedDecls1   ) -- 
+                        (                             addedTyCls1   ) -- only need one copy of the added components
+                        (                             addedDecls1   ) --
       , S.toList $ ((<>) `on` S.fromList) imps1 imps2 )
       -- It's OK not to worry about ordering the declarations
       -- because we 'topoSortByVariablesBy' them in 'moduleDeclarations'.
-    
+
     axiomatizeModule' name = local (edits.axiomatizedModules %~ S.insert name) . convertModule' name
 
 data ModuleDeclarations = ModuleDeclarations { moduleTypeDeclarations  :: ![Sentence]
@@ -280,9 +279,9 @@ moduleDeclarations ConvertedModule{..} = do
                             = S.empty
       addLocalInfixNamesExcept del (BVs bvs fvs) =
         BVs bvs $ fvs <> (foldMap localInfixNames fvs S.\\ del)
-      
+
       unused = S.singleton . Bare
-      
+
       unusedNotations (NotationSentence (NotationBinding (NotationIdentBinding op _))) =
         unused op <> foldMap unused (prefixOpToInfix op)
       unusedNotations (NotationSentence (InfixDefinition op _ _ _)) =
@@ -296,17 +295,17 @@ moduleDeclarations ConvertedModule{..} = do
   -- This feels like a hack, and like we could use the 'RawQualid'
   -- constructor, but we don't have the right module information in 'bvOf'
   -- to do this properly.
-      
+
   orders <- view $ edits.orders
   let sortedDecls = topoSortByVariablesBy bvWithInfix orders $
         convModValDecls ++ convModClsInstDecls ++ convModAddedDecls
   let ax_decls = usedAxioms sortedDecls
   let sortedTyCls = topoSortByVariablesBy bvWithInfix orders $
-        convModTyClDecls ++ convModAddedTyCls ++ ax_decls  
+        convModTyClDecls ++ convModAddedTyCls ++ ax_decls
   not_decls <- qualifiedNotations convModName (convModTyClDecls ++ sortedDecls)
   imported_modules <- view $ edits.importedModules
   pure . deQualifyLocalNames (convModName `S.insert` imported_modules)
-       $ ModuleDeclarations { moduleTypeDeclarations  = sortedTyCls 
+       $ ModuleDeclarations { moduleTypeDeclarations  = sortedTyCls
                             , moduleValueDeclarations = sortedDecls ++ not_decls }
 
 -- | This un-qualifies all variable names in the current module.

@@ -1,21 +1,24 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts,
-             TypeSynonymInstances, FlexibleInstances,
-             OverloadedStrings, OverloadedLists #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLists       #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 module HsToCoq.Coq.Subst (
   -- * Things that can be substituted
   Subst(..), subst1
   ) where
 
-import Prelude hiding (Num)
+import           Prelude               hiding (Num)
 
 
-import HsToCoq.Util.Function
-import Data.Map.Strict (Map)
-import Data.Maybe
-import qualified Data.Map.Strict as M
+import           Data.Map.Strict       (Map)
+import qualified Data.Map.Strict       as M
+import           Data.Maybe
+import           HsToCoq.Util.Function
 
-import HsToCoq.Coq.Gallina
+import           HsToCoq.Coq.Gallina
 
 ----------------------------------------------------------------------------------------------------
 
@@ -38,7 +41,7 @@ instance Subst IndBody where
              substCon f (qid,binders, Just t)  = (qid, map (subst f) binders, Just (subst f t))
 
 instance Subst Binder where
-  subst _f b@(Inferred _ex _x)    = b
+  subst _f b@(Inferred _ex _x) = b
   subst f (Typed gen ex xs ty) = Typed gen ex xs (subst f ty)
   subst f (Generalized ex ty)  = Generalized ex (subst f ty)
 
@@ -141,10 +144,11 @@ instance Subst RecordDefinition where
 instance Subst InstanceDefinition where
   subst _f (InstanceDefinition _inst _params _cl _defns _mpf) = error "subst"
   subst _f (InstanceTerm       _inst _params _cl _term _mpf)  = error "subst"
+  subst _f (InstanceProof      _inst _params _cl _pf)         = error "subst"
 
 instance Subst Notation where
-  subst _f (ReservedNotationIdent _x) = error "subst"
-  subst _f (NotationBinding _nb) = error "subst"
+  subst _f (ReservedNotationIdent _x)                 = error "subst"
+  subst _f (NotationBinding _nb)                      = error "subst"
   subst _f (InfixDefinition _op _defn _oassoc _level) = error "subst"
 
 instance Subst NotationBinding where
@@ -158,7 +162,7 @@ instance Subst FixBody where
     subst f (FixBody n bs ma mt t) = FixBody n (subst f bs) (subst f ma) (subst f mt) (subst f t)
 
 instance Subst Arg where
-   subst f (PosArg t) = PosArg (subst f t)
+   subst f (PosArg t)     = PosArg (subst f t)
    subst f (NamedArg i t) = NamedArg i (subst f t)
 
 instance Subst DepRetType where

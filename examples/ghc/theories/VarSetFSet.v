@@ -223,7 +223,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     destruct (sem x0 (realUnique a)) eqn:Hx0.
     - exists v. assumption.
     - simpl in H2. inversion H2.
-  Qed. 
+  Qed.
 
   Lemma empty_1 : Empty empty.
   Proof. unfold Empty; intros a H. inversion H. Qed.
@@ -525,7 +525,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
   Proof.
     move=>s. destruct s, getUniqSet', i.
     rewrite /In. cbn. move=>e f Heq.
-    eapply filterWithKey_Desc; eauto.
+    eapply filterWithKey_Desc; eauto; [constructor|].
     move=>s HB _ Hsem.
     rewrite !member_spec; try eassumption.
     move=>[v H]. specialize (Hsem (realUnique e)).
@@ -544,7 +544,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     move: H.
     destruct s, getUniqSet', i.
     rewrite /In /ValidVarSet. cbn. move=>Hvalid e f Heq.
-    eapply filterWithKey_Desc; eauto.
+    eapply filterWithKey_Desc; eauto; [constructor|].
     move=>s HB _ Hsem.
     rewrite !member_spec; try eassumption.
     move=>[v Hs].
@@ -571,7 +571,7 @@ Module VarSetFSet <: WSfun(Var_as_DT) <: WS.
     move: H.
     destruct s, getUniqSet', i.
     rewrite /In /ValidVarSet. cbn. move=>Hvalid e f Heq.
-    eapply filterWithKey_Desc; eauto.
+    eapply filterWithKey_Desc; eauto; [constructor|].
     move=>s HB _ Hsem.
     rewrite !member_spec; try eassumption.
     move=>[v Hs] Hf. exists v.

@@ -87,7 +87,7 @@ Lemma core_induct :
       P body ->
       P (Let binds body))
   (HCase : forall scrut bndr ty alts, P scrut -> (forall dc pats rhs, In (dc, pats ,rhs) alts -> P rhs) -> P (Case scrut bndr ty alts))
-  (HCast : forall e co, P e -> P (Cast e co)) 
+  (HCast : forall e co, P e -> P (Cast e co))
 (*  (HTick : forall tickish e, P e -> P (Tick tickish e)) *)
   (HType : forall ty, P (Mk_Type ty))
   (HCoercion : forall co, P (Mk_Coercion co)),
@@ -103,12 +103,12 @@ Section CoreLT.
     | Lit l => 0
     | App e1 e2 => S (core_size e1 + core_size e2)
     | Lam v e => S (core_size e)
-    | Let (NonRec v rhs) body => 
+    | Let (NonRec v rhs) body =>
         S (core_size rhs + core_size body)
-    | Let (Rec pairs) body => 
+    | Let (Rec pairs) body =>
         S (fold_right plus 0 (map (fun p => core_size (snd p)) pairs) +
            core_size body)
-    | Case scrut bndr ty alts  => 
+    | Case scrut bndr ty alts  =>
         S (core_size scrut +
            fold_right plus 0 (map (fun p => core_size (snd p)) alts))
     | Cast e _ =>   S (core_size e)
@@ -125,7 +125,7 @@ Section CoreLT.
 
   Lemma CoreLT_wf : well_founded CoreLT.
   Proof.
-    apply Wf_nat.well_founded_ltof. 
+    apply Wf_nat.well_founded_ltof.
   Qed.
 
   Lemma CoreLT_case_alts:
@@ -245,9 +245,9 @@ Hint Resolve CoreLT_wf : arith.
 
 (* This is a bit plump yet *)
 Ltac Core_termination :=
-  try solve [unfold CoreLT; simpl; lia]; 
+  try solve [unfold CoreLT; simpl; lia];
   try (apply CoreLT_collectNBinders; only 1: assumption);
-  first 
+  first
     [ apply CoreLT_let_rhs
     | apply CoreLT_let_rhs_mkLams
     | apply CoreLT_let_body
@@ -338,10 +338,9 @@ Hint Resolve AnnCoreLT_wf : arith.
 (* This is a bit plump yet *)
 Ltac AnnCore_termination :=
   try (apply AnnCoreLT_collectNAnnBndrs; only 1: assumption);
-  first 
+  first
     [ apply AnnCoreLT_let_rhs
     | apply AnnCoreLT_let_body
     | eapply AnnCoreLT_let_pairs; eassumption
     | eapply AnnCoreLT_case_alts; eassumption
     ].
-

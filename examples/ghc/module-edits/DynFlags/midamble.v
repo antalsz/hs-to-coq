@@ -3,5 +3,5 @@ Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.Strin
 
 
 Instance Default__DynFlags
-   : GHC.Err.Default DynFlags := {}.
+   : GHC.Err.Default DynFlags.
 Admitted.

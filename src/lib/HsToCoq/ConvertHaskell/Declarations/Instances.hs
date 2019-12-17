@@ -82,7 +82,7 @@ convertInstanceName n = do
         unTyCon (Bare "option")     = Just "option"
         unTyCon (Bare "op_zt__")    = Just "op_zt__"
         unTyCon (Bare "unit")       = Just "unit"
-        unTyCon (Bare "nat")        = Just "nat"      
+        unTyCon (Bare "nat")        = Just "nat"
         unTyCon _                   = Nothing
 
         bitsToInt :: [Bool] -> Integer
@@ -137,7 +137,7 @@ convertClsInstDeclInfo ClsInstDecl{..} = do
                                                 "type class instance"
                                                 (showP instanceName))
                              pure
-                    
+
 
   pure InstanceInfo{..}
 
@@ -191,13 +191,13 @@ convertClsInstDecl :: forall r m. ConversionMonad r m => ClsInstDecl GhcRn -> m 
 convertClsInstDecl cid@ClsInstDecl{..} = do
   ii@InstanceInfo{..} <- convertClsInstDeclInfo cid
   let convUnsupportedHere what = convUnsupportedIn what "type class instance" (showP instanceName)
-  
+
   let err_handler exn = pure [ translationFailedComment ("instance " <> qualidBase instanceName) exn ]
   unlessSkippedClass ii . handleIfPermissive err_handler $ definitionTask instanceName >>= \case
     SkipIt ->
       pure [CommentSentence . Comment $
               "Skipping instance `" <> textP instanceName <> "' of class `" <> textP instanceClass <> "'"]
-    
+
     RedefineIt def ->
       [definitionSentence def] <$ case def of
         CoqInductiveDef        _   -> editFailure   "cannot redefine an instance definition into an Inductive"
@@ -206,39 +206,41 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
         CoqInstanceDef         _   -> pure ()
         CoqAxiomDef            _   -> editFailure   "cannot redefine an instance definition into an Axiom"
         CoqAssertionDef        apf -> editFailure $ "cannot redefine an instance definition into " ++ anAssertionVariety apf
-    
+
     AxiomatizeIt axMode ->
       lookupClassDefn instanceClass >>= \case
-        Just (ClassDefinition _ _ _ methods) ->
-          pure $ [ InstanceSentence $ InstanceDefinition instanceName [] instanceHead []
-                                    $ if null methods then Nothing else Just $ ProofAdmitted "" ]
+        Just (ClassDefinition _ _ _ methods)
+          | null methods ->
+            pure $ [ InstanceSentence $ InstanceDefinition instanceName [] instanceHead [] Nothing]
+          | otherwise ->
+            pure $ [ InstanceSentence $ InstanceProof instanceName [] instanceHead $ ProofAdmitted ""]
         Nothing -> case axMode of
           GeneralAxiomatize  -> pure []
           SpecificAxiomatize -> no_class_instance_error instanceClass instanceName
-    
+
     TranslateIt -> do
       cid_binds_map <- bindsToMap (map unLoc $ bagToList cid_binds)
       cid_types_map <- clsInstFamiliesToMap cid_tyfam_insts
-   
+
       let (binds, classTy) = decomposeForall instanceHead
-   
+
       -- decomposeClassTy can fail, so run it in the monad so that
       -- failure will be caught and cause the instance to be skipped
       (className, instTy) <- either convUnsupportedHere pure $ decomposeClassTy classTy
-   
+
       -- Get the methods of this class (this should already exclude skipped ones)
       (classMethods, classArgs) <- lookupClassDefn className >>= \case
         Just (ClassDefinition _ args _ sigs) -> pure $ (map fst sigs, args)
         _ -> no_class_instance_error className instanceName
-      
+
       -- Associated types for this class
       classTypes <- fromMaybe mempty <$> lookupClassTypes className
-      
+
       classDefaults <- fromMaybe M.empty <$> lookupDefaultMethods className
-   
+
       let localNameFor :: Qualid -> Qualid
           localNameFor meth = qualidMapBase (<> ("_" <> qualidBase meth)) instanceName
-      
+
       -- In the translation of meth1, we want all _other_ methods to be renamed
       -- to the concrete methods of the current instance (because type class methods
       -- usually refer to each other).
@@ -251,18 +253,18 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
             | m <- classMethods
             , m /= meth
             , let ns = if m `elem` classTypes then TypeNS else ExprNS]
-      
+
       let allLocalNames = M.fromList $  [ (m, Qualid (localNameFor m)) | m <- classMethods ]
-      
+
       let quantify meth body = (maybeFun ?? body) <$> getImplicitBindersForClassMember className meth
-      
+
       -- For each method, look for
       --  * explicit definitions
       --  * default definitions
       -- in that order
       methodSentences <- forM classMethods $ \meth -> do
         let localMeth = localNameFor meth
-        
+
         methBody <- case (M.lookup meth cid_binds_map, M.lookup meth cid_types_map, M.lookup meth classDefaults) of
           (Just bind, _, _) ->
             local (envFor meth) $ convertMethodBinding localMeth bind >>= \case
@@ -282,11 +284,11 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                   CoqInstanceDef         _   -> editFailure   "cannot redefine an instance method definition into an Instance"
                   CoqAxiomDef            _   -> pure ()
                   CoqAssertionDef        apf -> editFailure $ "cannot redefine an instance method definition into " ++ anAssertionVariety apf
-            
+
           (Nothing, Just assoc, _) ->
             CM_Defined CL_Type <$> local (envFor meth) (convertType assoc)
             -- TODO: Permit rewriting or renaming or similar here
-           
+
           (Nothing, Nothing, Just term) ->
             let extraSubst
                   | meth `elem` classTypes =
@@ -298,10 +300,10 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                -- refer to their local version
                -- TODO: Associated type defaults should remember that they're types
                pure . CM_Defined CL_Term $ subst (allLocalNames <> extraSubst) term
-           
+
           (Nothing, Nothing, Nothing) ->
             throwProgramError $ "The method `" <> showP meth <> "' has no definition and no default definition"
-        
+
         case methBody of
           CM_Renamed renamed ->
             pure renamed
@@ -318,7 +320,7 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
                                                       (Just $ subst allLocalNames ty)
                                                       qbody
                                                       NotExistingClass
-   
+
       let instHeadTy = appList (Qualid className) [PosArg instTy]
       instance_sentence <- view (edits.simpleClasses.contains className) >>= \case
         True  -> do
@@ -340,9 +342,9 @@ convertClsInstDecl cid@ClsInstDecl{..} = do
           let instBody = Fun (Inferred Explicit UnderscoreName NE.:| [Inferred Explicit (Ident cont_name)])
                              (App1 (Qualid cont_name) instRHS)
           let instTerm = InstanceTerm instanceName binds instHeadTy instBody Nothing
-          
+
           pure $ ProgramSentence (InstanceSentence instTerm) Nothing
-      
+
       pure $ methodSentences ++ [instance_sentence]
 
 --------------------------------------------------------------------------------
@@ -371,7 +373,7 @@ makeAssociatedTypeTy className params instTy memberName = do
 -- add extra quantifiers from the class & instance definitions
 makeInstanceMethodTy :: ConversionMonad r m => Qualid -> [Binder] -> Term -> Qualid -> m ([Binder], Term)
 makeInstanceMethodTy className params instTy memberName = do
-  (var, sigType) <- lookupInstanceTypeOrMethodVarTy className memberName 
+  (var, sigType) <- lookupInstanceTypeOrMethodVarTy className memberName
   -- GOAL: Consider
   -- @
   --     class Functor f where
@@ -395,14 +397,14 @@ makeInstanceMethodTy className params instTy memberName = do
       renameInst (Ident x) =
         let inst_x = qualidMapBase ("inst_" <>) x
         in Ident inst_x <$ modify' (M.insert x (Qualid inst_x))
-  
+
       sub ty = ($ ty) <$> gets subst
-  
+
       (instBnds, instSubst) = (runState ?? M.empty) $ for params $ \case
         Inferred      ei x     -> Inferred      ei <$> renameInst x
         Typed       g ei xs ty -> Typed       g ei <$> traverse renameInst xs <*> sub ty
         Generalized ei tm      -> Generalized   ei <$> sub tm
-  
+
       -- Why the nested substitution?  The only place the
       -- per-instance variable name can show up is in the
       -- specific instance type!  It can't show up in the

@@ -53,7 +53,7 @@ Definition unUSM {result} (arg_0__ : UniqSM result) :=
 (* Midamble *)
 
 Instance Default__UniqSupply
-   : GHC.Err.Default UniqSupply := {}.
+   : GHC.Err.Default UniqSupply.
 Admitted.
 
 (* Converted value declarations: *)

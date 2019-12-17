@@ -122,11 +122,11 @@ Axiom coAxBranchCoVars : AxiomatizedTypes.CoAxBranch -> list Core.CoVar.
 Axiom branchesNth : forall {br},
                     Branches br -> AxiomatizedTypes.BranchIndex -> AxiomatizedTypes.CoAxBranch.
 
-Instance Eq___Role : GHC.Base.Eq_ AxiomatizedTypes.Role := {}.
+Instance Eq___Role : GHC.Base.Eq_ AxiomatizedTypes.Role.
 Proof.
 Admitted.
 
-Instance Ord__Role : GHC.Base.Ord AxiomatizedTypes.Role := {}.
+Instance Ord__Role : GHC.Base.Ord AxiomatizedTypes.Role.
 Proof.
 Admitted.
 
@@ -149,8 +149,7 @@ Admitted.
    `CoAxiom.Data__CoAxiom' *)
 
 Instance NamedThing__CoAxiom
-   : forall {br}, Name.NamedThing (AxiomatizedTypes.CoAxiom br) :=
-  {}.
+   : forall {br}, Name.NamedThing (AxiomatizedTypes.CoAxiom br).
 Proof.
 Admitted.
 
@@ -158,31 +157,26 @@ Admitted.
    `CoAxiom.Outputable__CoAxiom' *)
 
 Instance Uniquable__CoAxiom
-   : forall {br}, Unique.Uniquable (AxiomatizedTypes.CoAxiom br) :=
-  {}.
+   : forall {br}, Unique.Uniquable (AxiomatizedTypes.CoAxiom br).
 Proof.
 Admitted.
 
-Instance Eq___CoAxiom
-   : forall {br}, GHC.Base.Eq_ (AxiomatizedTypes.CoAxiom br) :=
-  {}.
+Instance Eq___CoAxiom : forall {br}, GHC.Base.Eq_ (AxiomatizedTypes.CoAxiom br).
 Proof.
 Admitted.
 
 (* Skipping all instances of class `Outputable.Outputable', including
    `CoAxiom.Outputable__CoAxiomRule' *)
 
-Instance Ord__CoAxiomRule : GHC.Base.Ord AxiomatizedTypes.CoAxiomRule := {}.
+Instance Ord__CoAxiomRule : GHC.Base.Ord AxiomatizedTypes.CoAxiomRule.
 Proof.
 Admitted.
 
-Instance Eq___CoAxiomRule : GHC.Base.Eq_ AxiomatizedTypes.CoAxiomRule := {}.
+Instance Eq___CoAxiomRule : GHC.Base.Eq_ AxiomatizedTypes.CoAxiomRule.
 Proof.
 Admitted.
 
-Instance Uniquable__CoAxiomRule
-   : Unique.Uniquable AxiomatizedTypes.CoAxiomRule :=
-  {}.
+Instance Uniquable__CoAxiomRule : Unique.Uniquable AxiomatizedTypes.CoAxiomRule.
 Proof.
 Admitted.
 

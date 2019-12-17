@@ -177,11 +177,11 @@ Axiom joinCeilingLevel : LevelEnv -> Level.
 
 Axiom isTopLvl : Level -> bool.
 
-Instance Eq___LevelType : GHC.Base.Eq_ LevelType := {}.
+Instance Eq___LevelType : GHC.Base.Eq_ LevelType.
 Proof.
 Admitted.
 
-Instance Eq___Level : GHC.Base.Eq_ Level := {}.
+Instance Eq___Level : GHC.Base.Eq_ Level.
 Proof.
 Admitted.
 

@@ -181,7 +181,7 @@ Definition am_lit {a} (arg_0__ : AltMap a) :=
 
 (* Midamble *)
 
-Instance Eq___DeBruijn__unit : GHC.Base.Eq_ (DeBruijn unit) := {}.
+Instance Eq___DeBruijn__unit : GHC.Base.Eq_ (DeBruijn unit).
 Proof.
 Admitted.
 
@@ -269,9 +269,7 @@ Definition xtC {a}
         Mk_CoercionMapX (xtT (D env (Core.coercionType co)) f m)
     end.
 
-Instance Eq___DeBruijn__Type_
-   : GHC.Base.Eq_ (DeBruijn AxiomatizedTypes.Type_) :=
-  {}.
+Instance Eq___DeBruijn__Type_ : GHC.Base.Eq_ (DeBruijn AxiomatizedTypes.Type_).
 Proof.
 Admitted.
 
@@ -438,7 +436,7 @@ Axiom mapG : forall {m} {a} {b},
 
 Axiom mapE : forall {a} {b}, (a -> b) -> CoreMapX a -> CoreMapX b.
 
-Instance Eq___DeBruijn__CoreExpr : GHC.Base.Eq_ (DeBruijn Core.CoreExpr) := {}.
+Instance Eq___DeBruijn__CoreExpr : GHC.Base.Eq_ (DeBruijn Core.CoreExpr).
 Proof.
 Admitted.
 
@@ -859,7 +857,7 @@ Program Instance TrieMap__ListMap {m} `{TrieMap m} : TrieMap (ListMap m) :=
 (* Skipping all instances of class `Outputable.Outputable', including
    `TrieMap.Outputable__GenMap' *)
 
-Instance TrieMap__TyLitMap : TrieMap TyLitMap := {}.
+Instance TrieMap__TyLitMap : TrieMap TyLitMap.
 Proof.
 Admitted.
 
@@ -909,7 +907,7 @@ Program Instance Eq___DeBruijn__Coercion
     k__ {| GHC.Base.op_zeze____ := Eq___DeBruijn__Coercion_op_zeze__ ;
            GHC.Base.op_zsze____ := Eq___DeBruijn__Coercion_op_zsze__ |}.
 
-Instance Eq___DeBruijn__CoreAlt : GHC.Base.Eq_ (DeBruijn Core.CoreAlt) := {}.
+Instance Eq___DeBruijn__CoreAlt : GHC.Base.Eq_ (DeBruijn Core.CoreAlt).
 Proof.
 Admitted.
 

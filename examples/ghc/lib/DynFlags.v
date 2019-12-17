@@ -585,7 +585,7 @@ Instance Unpeel_IgnorePackageFlag : Prim.Unpeel IgnorePackageFlag GHC.Base.Strin
 
 
 Instance Default__DynFlags
-   : GHC.Err.Default DynFlags := {}.
+   : GHC.Err.Default DynFlags.
 Admitted.
 
 (* Converted value declarations: *)
@@ -1268,7 +1268,7 @@ Axiom aP_STACK_SPLIM : DynFlags -> BinNums.N.
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__WarnReason' *)
 
-Instance Eq___Language : GHC.Base.Eq_ Language := {}.
+Instance Eq___Language : GHC.Base.Eq_ Language.
 Proof.
 Admitted.
 
@@ -1278,66 +1278,66 @@ Admitted.
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__Language' *)
 
-Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode := {}.
+Instance Eq___SafeHaskellMode : GHC.Base.Eq_ SafeHaskellMode.
 Proof.
 Admitted.
 
-Instance Eq___ProfAuto : GHC.Base.Eq_ ProfAuto := {}.
+Instance Eq___ProfAuto : GHC.Base.Eq_ ProfAuto.
 Proof.
 Admitted.
 
 (* Skipping all instances of class `GHC.Enum.Enum', including
    `DynFlags.Enum__ProfAuto' *)
 
-Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget := {}.
+Instance Eq___HscTarget : GHC.Base.Eq_ HscTarget.
 Proof.
 Admitted.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__HscTarget' *)
 
-Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode := {}.
+Instance Eq___GhcMode : GHC.Base.Eq_ GhcMode.
 Proof.
 Admitted.
 
-Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink := {}.
+Instance Eq___GhcLink : GHC.Base.Eq_ GhcLink.
 Proof.
 Admitted.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__GhcLink' *)
 
-Instance Eq___PackageArg : GHC.Base.Eq_ PackageArg := {}.
+Instance Eq___PackageArg : GHC.Base.Eq_ PackageArg.
 Proof.
 Admitted.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__PackageArg' *)
 
-Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming := {}.
+Instance Eq___ModRenaming : GHC.Base.Eq_ ModRenaming.
 Proof.
 Admitted.
 
-Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag := {}.
+Instance Eq___IgnorePackageFlag : GHC.Base.Eq_ IgnorePackageFlag.
 Proof.
 Admitted.
 
-Instance Eq___TrustFlag : GHC.Base.Eq_ TrustFlag := {}.
+Instance Eq___TrustFlag : GHC.Base.Eq_ TrustFlag.
 Proof.
 Admitted.
 
-Instance Eq___PackageFlag : GHC.Base.Eq_ PackageFlag := {}.
+Instance Eq___PackageFlag : GHC.Base.Eq_ PackageFlag.
 Proof.
 Admitted.
 
-Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader := {}.
+Instance Eq___DynLibLoader : GHC.Base.Eq_ DynLibLoader.
 Proof.
 Admitted.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__RtsOptsEnabled' *)
 
-Instance Eq___Way : GHC.Base.Eq_ Way := {}.
+Instance Eq___Way : GHC.Base.Eq_ Way.
 Proof.
 Admitted.
 
@@ -1347,53 +1347,52 @@ Admitted.
    `DynFlags.Show__Way' *)
 
 Instance Eq___OnOff
-   : forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (OnOff a) :=
-  {}.
+   : forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (OnOff a).
 Proof.
 Admitted.
 
 (* Skipping all instances of class `GHC.Show.Show', including
    `DynFlags.Show__OnOff' *)
 
-Instance Eq___Option : GHC.Base.Eq_ Option := {}.
+Instance Eq___Option : GHC.Base.Eq_ Option.
 Proof.
 Admitted.
 
-Instance Eq___Deprecation : GHC.Base.Eq_ Deprecation := {}.
+Instance Eq___Deprecation : GHC.Base.Eq_ Deprecation.
 Proof.
 Admitted.
 
-Instance Ord__Deprecation : GHC.Base.Ord Deprecation := {}.
+Instance Ord__Deprecation : GHC.Base.Ord Deprecation.
 Proof.
 Admitted.
 
-Instance Eq___PkgConfRef : GHC.Base.Eq_ PkgConfRef := {}.
+Instance Eq___PkgConfRef : GHC.Base.Eq_ PkgConfRef.
 Proof.
 Admitted.
 
-Instance Eq___PackageDBFlag : GHC.Base.Eq_ PackageDBFlag := {}.
+Instance Eq___PackageDBFlag : GHC.Base.Eq_ PackageDBFlag.
 Proof.
 Admitted.
 
-Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion := {}.
+Instance Eq___SseVersion : GHC.Base.Eq_ SseVersion.
 Proof.
 Admitted.
 
 (* Skipping instance `DynFlags.Ord__SseVersion' of class `GHC.Base.Ord' *)
 
-Instance Eq___BmiVersion : GHC.Base.Eq_ BmiVersion := {}.
+Instance Eq___BmiVersion : GHC.Base.Eq_ BmiVersion.
 Proof.
 Admitted.
 
-Instance Ord__BmiVersion : GHC.Base.Ord BmiVersion := {}.
+Instance Ord__BmiVersion : GHC.Base.Ord BmiVersion.
 Proof.
 Admitted.
 
-Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo := {}.
+Instance Eq___LinkerInfo : GHC.Base.Eq_ LinkerInfo.
 Proof.
 Admitted.
 
-Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo := {}.
+Instance Eq___CompilerInfo : GHC.Base.Eq_ CompilerInfo.
 Proof.
 Admitted.
 

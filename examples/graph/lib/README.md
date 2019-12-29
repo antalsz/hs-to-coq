@@ -1,2 +1,2 @@
-This directory contains a Coq’ified version of the Haskell containers library
-Do not edit files here! Instead, look in `examples/containers`.
+This directory contains a Coq’ified version of the Haskell Functional Graph Library
+Do not edit files here! Instead, look in `examples/graph`.

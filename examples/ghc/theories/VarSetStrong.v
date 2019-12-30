@@ -144,7 +144,7 @@ Proof.
   unfold StrongSubset.
   intros v.
   destruct_match; try trivial.
-  case in2: (Foldable.elem v vs2).  
+  destruct (Foldable.elem v vs2) eqn:in2.  
   * eapply elemNegbDisjoint in in2; eauto.
     eapply lookupVarSet_elemVarSet in Heq; eauto. 
     erewrite Heq in in2. done.

@@ -599,7 +599,7 @@ Definition jpsp := updJPSs jps fs .
     repeat float_let.
     enough (Hnext : P captured e j_40__). {
       clearbody j_40__; cleardefs.
-      subst fvs.
+      subst _go1 fvs.
       unfold dVarSetToVarSet.
       destruct (disjointVarSet (exprFreeVars e) recursive_calls) eqn:Hdisjoint; try apply Hnext.
       clear IH Hnext HGoDom.
@@ -898,7 +898,7 @@ Definition jpsp := updJPSs jps fs .
         refine IH6.
     }
 
-    subst j_22__.
+    subst _go j_22__.
     clear IH HGoDom.
     revert e captured Hcapt HWS.
     refine IH7.
@@ -1306,7 +1306,7 @@ Definition jpsp := updJPSs jps fs .
 
     (* First case *)
     enough (Hnext: StateInvariant P j_16__). {
-      clearbody j_16__; cleardefs.
+      clearbody j_16__; cleardefs. subst _go3.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
       destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
@@ -1317,6 +1317,7 @@ Definition jpsp := updJPSs jps fs .
     (* Second case *)
     subst j_16__.
     enough (Hnext: StateInvariant P j_15__). {
+      subst _go2.
       destruct (negb is_interesting) ; try apply Hnext.
       apply StateInvariant_return.
     }
@@ -1331,7 +1332,7 @@ Definition jpsp := updJPSs jps fs .
     cleardefs.
 
     (* Third case: Actual exitification *)
-    subst j_14__.
+    subst _go _go0 j_14__.
     unfold recursive_calls in Hdisjoint.
     apply StateInvariant_bind_return.
     apply addExit_all_WellScopedFloats.
@@ -1625,7 +1626,7 @@ Definition jpsp := updJPSs jps fs .
 
     (* First case *)
     enough (Hnext: P j_16__). {
-      clearbody j_16__; cleardefs.
+      clearbody j_16__; cleardefs. subst _go3.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
       destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
@@ -1636,6 +1637,7 @@ Definition jpsp := updJPSs jps fs .
     (* Second case *)
     subst j_16__.
     enough (Hnext: P j_15__). {
+      subst _go2.
       destruct (negb is_interesting) ; try apply Hnext.
       apply Hreturn.
     }
@@ -1664,7 +1666,7 @@ Definition jpsp := updJPSs jps fs .
     * intros v' HWSv'.
       apply (weaken (isvsp_to_isvsp'_extended _)).
       apply HWSv'.
-    * subst zap0. fold zap. fold pick. simpl.
+    * subst _go0 zap0. fold zap. fold pick. simpl.
       rewrite Foldable.hs_coq_foldr_list.
       apply WellScopedVar_picked.
       auto.
@@ -2060,7 +2062,7 @@ Definition jpsp := updJPSs jps fs .
 
     (* First case *)
     enough (Hnext: StateInvariant P j_16__). {
-      clearbody j_16__; cleardefs.
+      clearbody j_16__; cleardefs. subst _go3.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
       destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
@@ -2071,6 +2073,7 @@ Definition jpsp := updJPSs jps fs .
     (* Second case *)
     subst j_16__.
     enough (Hnext: StateInvariant P j_15__). {
+      subst _go2.
       destruct (negb is_interesting) ; try apply Hnext.
       apply StateInvariant_return.
     }
@@ -2508,7 +2511,7 @@ Definition jpsp := updJPSs jps fs .
 
     (* First case *)
     enough (Hnext: P j_16__). {
-      clearbody j_16__; cleardefs.
+      clearbody j_16__; cleardefs. subst _go3.
       destruct (collectArgs _) as [rhs fun_args] eqn:HcA.
       destruct rhs; try apply Hnext.
       destruct (isJoinId i && Foldable.all isCapturedVarArg fun_args) ; try apply Hnext.
@@ -2519,6 +2522,7 @@ Definition jpsp := updJPSs jps fs .
     (* Second case *)
     subst j_16__.
     enough (Hnext: P j_15__). {
+      subst _go2.
       destruct (negb is_interesting) ; try apply Hnext.
       apply Hreturn.
     }
@@ -2852,7 +2856,7 @@ Definition jpsp := updJPSs jps fs .
       + apply jps_subset_isvs.
     * rewrite isJoinPointsValid_MkLet_Rec.
       subst jps'0.
-      float_let. subst jps'0.
+      float_let. subst _go jps'0.
       rewrite map_fst_pairs'.
       simpl_bool; repeat apply conj.
       -- simpl_bool. right.
@@ -3350,6 +3354,7 @@ Proof.
 
   unfold WellScopedProgram.
   unfold isJoinPointsValidProgram.
+  subst _go _go0.
   rewrite Forall'_Forall.
   rewrite and_assoc.
   rewrite HbindersOfBinds.

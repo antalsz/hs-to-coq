@@ -200,7 +200,7 @@ Proof.
   move_let => /=;
     rewrite /subst; match goal with |- ?fix_subst e = _ => set subst := fix_subst end.
   rewrite /substExpr (*subst_expr_refix*) /subst_expr.
-  elim: e => [n' | lit | e₁ IH₁ e₂ IH₂ | n' e IH | lb e IH | e IH n' τ alts (* | e IH γ | tick e IH | τ | γ  *) ] //=.
+  elim: e => [n' | lit | e₁ IH₁ e₂ IH₂ | n' e IH | lb e IH | e IH n' τ alts (* | e IH γ | tick e IH | τ | γ  *) | | |] //=.
   - admit.
   - rewrite IH₁ IH₂ //.
     admit.

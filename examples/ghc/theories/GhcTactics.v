@@ -45,17 +45,19 @@ Ltac cleardefs := repeat (multimatch goal with [ x := _  |- _ ] => clear x end).
     and moves it into the context, without zeta-reducing it. *)
 Ltac find_let e k :=
   lazymatch e with 
-    | let x := ?rhs in ?body => k x rhs body
-    | ?e1 ?e2 =>
-      find_let e1 ltac:(fun x rhs body => k x rhs uconstr:(body e2)) ||
-      find_let e2 ltac:(fun x rhs body => k x rhs uconstr:(e1 body))
-    | _ => fail
+  (** LY: It seems that there is a bug in Coq about variable binding.
+      This is a temporary fix. *)
+  | let _go := ?rhs in ?body => k _go rhs body
+  | ?e1 ?e2 =>
+    find_let e1 ltac:(fun x rhs body => k x rhs uconstr:(body e2)) ||
+    find_let e2 ltac:(fun x rhs body => k x rhs uconstr:(e1 body))
+  | _ => fail
   end.
 Ltac float_let :=
   lazymatch goal with |- ?goal =>
     find_let goal ltac:(fun x rhs body =>
-      let goal' := uconstr:(let x := rhs in body) in
-      (change goal'; intro) || fail 1000 "Failed to change to" goal'
+      let goal' := uconstr:(let x := rhs in let _go := x in body) in
+      (change goal'; do 2 intro; subst) || fail 1000 "Failed to change to" goal'
     )
   end.
 

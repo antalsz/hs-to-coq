@@ -651,7 +651,7 @@ Proof.
   unfold exprFVs.
   unfold Base.op_z2218U__.
   move: (Denotes_fvVarSet x) => h0.
-  move: (filterVarSet_filterFV isLocalVar _ _ ltac:(eauto) h0) => h1.
+  move: (filterVarSet_filterFV isLocalVar _ _ ltac:(intros ??; auto) h0) => h1.
   set f2 := (fun x0 : CoreExpr => FV.filterFV isLocalVar (expr_fvs x0)).
   set f1 := fun x => filterVarSet isLocalVar (FV.fvVarSet (expr_fvs x)).
   have h2: Forall2 Denotes (map f1 xs) (map f2 xs). 
@@ -659,7 +659,7 @@ Proof.
     move=> a l IH. simpl.
     econstructor; eauto.
     unfold f1. unfold f2.
-    eapply filterVarSet_filterFV. auto.
+    eapply filterVarSet_filterFV. intros ??; auto.
     eapply Denotes_fvVarSet.
   }
   move: (mapUnionVarSet_mapUnionFV _ xs f1 f2 h2) => h3.

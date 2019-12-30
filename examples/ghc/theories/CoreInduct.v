@@ -2,6 +2,7 @@ Require Import Core.
 Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import Psatz.
+Import String.StringSyntax.
 
 Require Import Omega.
 

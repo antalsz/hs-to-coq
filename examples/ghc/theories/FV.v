@@ -231,10 +231,9 @@ Proof.
     move: h1 => /andP. move => [h3 h4].
     elim hf: (f x); rewrite hf in h3; try done; clear h3.
     rewrite elemVarSet_delVarSet in h4.
-    elim ev: (v GHC.Base.== x).
-    + rewrite ev in h4. done. 
-    + rewrite ev in h4. 
-      move: h4 => /andP. move => [h5 h6].
+    induction (v GHC.Base.== x) eqn:ev.
+    + done. 
+    + move: h4 => /andP. move => [h5 h6].
       rewrite elemVarSet_filterVarSet => //.
       rewrite elemVarSet_extendVarSet.
       rewrite hf.

@@ -69,10 +69,12 @@ $(OUT)/_CoqProject : Makefile $(OUT)/README.md
 	> $@
 	echo '-Q . ""' >> $@
 	echo '-R ../../../base ""' >> $@
+	echo '-Q ../../containers/lib ""' >> $@
 	echo $(addsuffix .v,$(HANDMOD)) >> $@
 	echo $(addsuffix .v,$(MODULES)) >> $@
 	echo $(addsuffix .v,$(SPECIAL_MODULES)) >> $@
 	echo $(addsuffix .v,$(DROPIN)) >> $@
+
 
 $(OUT)/Makefile: $(OUT)/_CoqProject $(VFILES) $(OUT)/README.md
 	cd $(OUT); coq_makefile -f _CoqProject -o Makefile
@@ -83,14 +85,13 @@ $(OUT)/edits: $(OUT)/README.md
 $(OUT)/README.md:
 	mkdir -p $(OUT)
 	> $@
-	echo 'This directory contains a Coq’ified version of the Haskell containers library' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/containers`.' >> $@
+	echo 'This directory contains a Coq’ified version of the Haskell Functional Graph Library' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/graph`.' >> $@
 
 $(HS_SPEC)/README.md:
 	mkdir -p $(HS_SPEC)
 	> $@
-	echo 'This directory contains a Coq’ified version of the Haskell containers library specification' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/containers`.' >> $@
+	echo 'This directory was copied from the Containers structure but is not needed for FGL' >> $@
 
 coq: $(OUT)/Makefile $(VFILES)
 	$(MAKE) -C $(OUT) -f Makefile OPT=$(COQFLAGS)

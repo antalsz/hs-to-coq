@@ -103,8 +103,10 @@ Record Graph__Dict gr := Graph__Dict_Build {
 
 Definition Graph gr :=
   forall r__, (Graph__Dict gr -> r__) -> r__.
-
 Existing Class Graph.
+
+Record DynGraph__Dict gr := DynGraph__Dict_Build {
+  op_za____ : forall {a} {b}, Context a b -> gr a b -> gr a b }.
 
 Definition empty `{g__0__ : Graph gr} : forall {a} {b}, gr a b :=
   g__0__ _ (empty__ gr).
@@ -140,12 +142,8 @@ Definition nodeRange `{g__0__ : Graph gr}
    : forall {a} {b}, gr a b -> (Node * Node)%type :=
   g__0__ _ (nodeRange__ gr).
 
-Record DynGraph__Dict gr := DynGraph__Dict_Build {
-  op_za____ : forall {a} {b}, Context a b -> gr a b -> gr a b }.
-
 Definition DynGraph gr `{(Graph gr)} :=
   forall r__, (DynGraph__Dict gr -> r__) -> r__.
-
 Existing Class DynGraph.
 
 Definition op_za__ `{g__0__ : DynGraph gr}

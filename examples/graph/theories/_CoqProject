@@ -5,6 +5,7 @@
 -Q ../../containers/lib ""
 -Q ../../containers/theories ""
 HeapEquiv.v
+Crush.v
 Helper.v
 NicerQueue.v
 RealRing.v

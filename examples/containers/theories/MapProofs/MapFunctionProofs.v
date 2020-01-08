@@ -5,7 +5,7 @@ Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
-Require Import MapProofs.ContainerAxiomsProofs.
+Require Import MapProofs.ContainerFacts.
 Require Import MapProofs.UnionIntersectDifferenceProofs.
 Require Import MapProofs.ToListProofs.
 Require Import MapProofs.FilterPartitionProofs.
@@ -819,7 +819,7 @@ Proof.
   - inversion H. reflexivity.
 Qed.
 
-(** ** Verification of [mapEitherWithKey *)
+(** ** Verification of [mapEitherWithKey] *)
 Lemma mapEitherWithKey_Desc: forall {e a b c} `{OrdLaws e} (f: e -> a -> Data.Either.Either  b c)
   (m: Map e a) lb ub,
   Bounded m lb ub ->

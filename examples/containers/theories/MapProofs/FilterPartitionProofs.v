@@ -167,7 +167,7 @@ Proof.
 Qed.
 
 (** ** Veriticcation of [isProperSubmpaOf] *)
-Lemma isProperSubmapOf:
+Lemma isProperSubmapOf_spec:
   forall `{EqLaws a} (m1: Map e a) (m2: Map e a) lb ub,
   Bounded m1 lb ub ->
   Bounded m2 lb ub ->

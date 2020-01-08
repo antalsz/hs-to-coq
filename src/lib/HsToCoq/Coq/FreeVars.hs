@@ -1,9 +1,13 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts,
-             TypeSynonymInstances, FlexibleInstances,
-             OverloadedStrings, ConstraintKinds, DataKinds #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 -- For TypeError
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -17,24 +21,24 @@ module HsToCoq.Coq.FreeVars (
   topoSortEnvironment, topoSortEnvironmentWith, topoSortByVariablesBy, topoSortByVariables,
   ) where
 
-import Prelude hiding (Num)
+import           Prelude                 hiding (Num)
 
-import Control.Lens hiding ((<|))
+import           Control.Lens            hiding ((<|))
 
-import Data.Foldable
-import HsToCoq.Util.List
-import HsToCoq.Util.Containers
+import           Data.Foldable
+import           HsToCoq.Util.Containers
+import           HsToCoq.Util.List
 
-import HsToCoq.Util.FVs
+import           HsToCoq.Util.FVs
 
-import Data.List.NonEmpty (NonEmpty(), (<|))
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as M
-import GHC.TypeLits
+import           Data.List.NonEmpty      (NonEmpty (), (<|))
+import           Data.Map.Strict         (Map)
+import qualified Data.Map.Strict         as M
+import           Data.Set                (Set)
+import qualified Data.Set                as S
+import           GHC.TypeLits
 
-import HsToCoq.Coq.Gallina
+import           HsToCoq.Coq.Gallina
 
 ----------------------------------------------------------------------------------------------------
 
@@ -97,18 +101,18 @@ instance HasBV Qualid MultPattern where
 
 -- See Note [Bound variables in patterns]
 instance HasBV Qualid Pattern where
-  bvOf (ArgsPat con xs)          = fvOf' con <> foldMap bvOf xs
-  bvOf (ExplicitArgsPat con xs)  = fvOf' con <> foldMap bvOf xs
-  bvOf (InfixPat l op r)         = bvOf l <> fvOf' (Bare op) <> bvOf r
-  bvOf (AsPat pat x)             = bvOf pat <> binder x
-  bvOf (InScopePat pat _scp)     = bvOf pat
-  bvOf (QualidPat qid@(Bare _))  = binder qid
+  bvOf (ArgsPat con xs)         = fvOf' con <> foldMap bvOf xs
+  bvOf (ExplicitArgsPat con xs) = fvOf' con <> foldMap bvOf xs
+  bvOf (InfixPat l op r)        = bvOf l <> fvOf' (Bare op) <> bvOf r
+  bvOf (AsPat pat x)            = bvOf pat <> binder x
+  bvOf (InScopePat pat _scp)    = bvOf pat
+  bvOf (QualidPat qid@(Bare _)) = binder qid
     -- See [Note Bound variables in patterns]
-  bvOf (QualidPat qid)           = fvOf' qid
-  bvOf UnderscorePat             = mempty
-  bvOf (NumPat _num)             = mempty
-  bvOf (StringPat _str)          = mempty
-  bvOf (OrPats ors)              = foldMap bvOf ors
+  bvOf (QualidPat qid)          = fvOf' qid
+  bvOf UnderscorePat            = mempty
+  bvOf (NumPat _num)            = mempty
+  bvOf (StringPat _str)         = mempty
+  bvOf (OrPats ors)             = foldMap bvOf ors
     -- We don't check that all the or-patterns bind the same variables
 
 instance HasBV Qualid OrPattern where
@@ -178,6 +182,9 @@ instance HasBV Qualid InstanceDefinition where
   bvOf (InstanceTerm inst params cl term _mpf) =
     binder inst <>
     bindsNothing (foldScopes bvOf params $ fvOf cl <> fvOf term)
+  bvOf (InstanceProof inst params cl _pf) =
+    binder inst <>
+    bindsNothing (foldScopes bvOf params $ fvOf cl)
 
 instance HasBV Qualid Notation where
   bvOf (ReservedNotationIdent _)     = mempty

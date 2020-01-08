@@ -3,7 +3,7 @@
 -R ../../../base ""
 -Q ../../../base-thy  Proofs
 -Q ../../containers/lib ""
-Tactics.v
+CustomTactics.v
 OrdTactic.v
 OrdTheories.v
 SortSorted.v
@@ -11,6 +11,7 @@ BitUtils.v
 HSUtil.v
 SortedUtil.v
 SetProofs.v
+./MapProofs/Common.v
 ./MapProofs/PairTypeclass.v
 ./MapProofs/Bounds.v
 ./MapProofs/Tactics.v

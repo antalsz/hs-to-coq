@@ -8,7 +8,11 @@ Stability   : experimental
 
 -}
 
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE OverloadedLists    #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
 
 module HsToCoq.Coq.Pretty (
   renderGallina,
@@ -16,25 +20,25 @@ module HsToCoq.Coq.Pretty (
   Gallina(..),
   ) where
 
-import Prelude hiding (Num)
+import           Prelude                     hiding (Num)
 
-import Data.Foldable
-import HsToCoq.Util.Function
+import           Data.Foldable
+import           HsToCoq.Util.Function
 
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Set as S
+import qualified Data.Set                    as S
+import           Data.Text                   (Text)
+import qualified Data.Text                   as T
 
-import Data.List.NonEmpty (NonEmpty(), (<|), nonEmpty)
+import           Data.List.NonEmpty          (NonEmpty (), nonEmpty, (<|))
 
-import Data.Typeable
-import Data.Data (Data(..))
+import           Data.Data                   (Data (..))
+import           Data.Typeable
 
-import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
-import HsToCoq.Coq.FreeVars
-import HsToCoq.Coq.Gallina.Orphans ()
-import HsToCoq.PrettyPrint
+import           HsToCoq.Coq.FreeVars
+import           HsToCoq.Coq.Gallina
+import           HsToCoq.Coq.Gallina.Orphans ()
+import           HsToCoq.Coq.Gallina.Util
+import           HsToCoq.PrettyPrint
 
 
 -- https://coq.inria.fr/refman/Reference-Manual005.html#init-notations
@@ -618,14 +622,14 @@ instance Gallina Assertion where
                      <>  "."
 
 instance Gallina AssertionKeyword where
-  renderGallina' _ Theorem      = "Theorem"
-  renderGallina' _ Lemma        = "Lemma"
-  renderGallina' _ Remark       = "Remark"
-  renderGallina' _ Fact         = "Fact"
-  renderGallina' _ Corollary    = "Corollary"
-  renderGallina' _ Proposition  = "Proposition"
-  renderGallina' _ Definition   = "Definition"
-  renderGallina' _ Example      = "Example"
+  renderGallina' _ Theorem     = "Theorem"
+  renderGallina' _ Lemma       = "Lemma"
+  renderGallina' _ Remark      = "Remark"
+  renderGallina' _ Fact        = "Fact"
+  renderGallina' _ Corollary   = "Corollary"
+  renderGallina' _ Proposition = "Proposition"
+  renderGallina' _ Definition  = "Definition"
+  renderGallina' _ Example     = "Example"
 
 instance Gallina Proof where
   renderGallina' _ = \case
@@ -667,16 +671,19 @@ instance Gallina RecordDefinition where
                                      <> spaceIf fields <> "}.")
 
 instance Gallina InstanceDefinition where
-  renderGallina' _ (InstanceDefinition inst params cl defns mpf) = (group $ nest 2 $
+  renderGallina' _ (InstanceDefinition inst params cl defns mpf) = group (nest 2 $
     "Instance" <+> renderGallina inst <> spaceIf params <> render_args_ty H params cl <+> ":="
         <!> "{" <> lineIf defns
                 <> sepWith (<+>) (<!>) ";" (map (\(f,def) -> renderGallina f <+> ":=" <+> renderGallina def) defns)
                 <> spaceIf defns <> "}."
     ) <!> maybe empty renderGallina mpf
-  renderGallina' _ (InstanceTerm inst params cl term mpf) = (group $ nest 2 $
+  renderGallina' _ (InstanceTerm inst params cl term mpf) = group (nest 2 $
     "Instance" <+> renderGallina inst <> spaceIf params <> render_args_ty H params cl <+> ":="
         <!> renderGallina term <> "."
     ) <!> maybe empty renderGallina mpf
+  renderGallina' _ (InstanceProof inst params cl pf) = group (nest 2 $
+    "Instance" <+> renderGallina inst <> spaceIf params <> render_args_ty H params cl <> "."
+    ) <!> renderGallina pf
 
 instance Gallina Associativity where
   renderGallina' _ LeftAssociativity  = "left"

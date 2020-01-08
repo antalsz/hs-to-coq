@@ -4,6 +4,7 @@ Definition String := list Char.
 
 Require Coq.Strings.String.
 Require Coq.Strings.Ascii.
+Import String.StringSyntax Ascii.AsciiSyntax.
 
 Bind Scope string_scope with String.string.
 Bind Scope char_scope   with Ascii.ascii.
@@ -22,5 +23,3 @@ Module Err.
 Axiom error : forall {A : Type}, String -> A.
 End Err.
 End GHC.
-
-

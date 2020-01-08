@@ -1,3 +1,6 @@
+Require String.
+Export String.StringSyntax.
+
 Require Import GHC.Base.
 (* _==_ notation *)
 

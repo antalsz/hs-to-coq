@@ -9,7 +9,7 @@ Set Bullet Behavior "Strict Subproofs".
 
 Require Import OrderedType.
 Require Import OrdTactic.
-Require Import Tactics.
+Require Import CustomTactics.
 
 Module OrdTheories(E: OrderedType).
   Instance Eq_t : GHC.Base.Eq_ E.t :=
@@ -39,7 +39,7 @@ Module OrdTheories(E: OrderedType).
     rewrite /_GHC.Base.==_ /Eq_t /=.
     destruct (E.eq_dec e1 e2); constructor; auto.
   Qed.
-        
+
   Lemma elt_ltP { e1 e2 } : reflect (E.lt e1 e2) (e1 GHC.Base.< e2).
   Proof.
     rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
@@ -131,7 +131,7 @@ Module OrdTheories(E: OrderedType).
 
   Lemma elt_eq : forall e1 e2, E.eq e1 e2 <-> e1 GHC.Base.== e2.
   Proof. move=>e1 e2. apply rwP =>//. Qed.
-  
+
   Lemma elt_lt : forall e1 e2, E.lt e1 e2 <-> e1 GHC.Base.< e2.
   Proof. move=>e1 e2. apply rwP =>//. Qed.
 

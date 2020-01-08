@@ -4,6 +4,7 @@ Require Import GHC.Char.
 Require Import GHC.Enum.
 Require Import GHC.Real.
 
+Import Ascii.AsciiSyntax.
 
 Set Implicit Arguments.
 Generalizable All Variables.

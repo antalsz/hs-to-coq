@@ -433,7 +433,7 @@ Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
 
 Instance Ord_comparison___ : Ord comparison := ord_default compare_comparison.
 
-Definition eq_pair {t1} {t2} `{Eq_ t1} `{Eq_ t2} (a b : (t1 * t2)) := 
+Definition eq_pair {t1} {t2} `{Eq_ t1} `{Eq_ t2} (a b : (t1 * t2)) :=
   match a, b with
   | (a1, a2), (b1, b2) =>
     (a1 == b1) && (a2 == b2)
@@ -546,8 +546,10 @@ Infix "GHC.Base.>" := (op_zg__) (no associativity, at level 70).
 Notation "'_GHC.Base.>_'" := (op_zg__).
 Infix "GHC.Base.>=" := (op_zgze__) (no associativity, at level 70).
 Notation "'_GHC.Base.>=_'" := (op_zgze__).
-End ManualNotations.
 
+Require String Ascii.
+Export String.StringSyntax Ascii.AsciiSyntax.
+End ManualNotations.
 
 (* Converted value declarations: *)
 

@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -21,13 +14,13 @@ Lemma submap'_spec:
   forall (m1: Map e a) (m2: Map e a) lb ub f,
   Bounded m1 lb ub ->
   Bounded m2 lb ub ->
-  submap' f m1 m2 = true <-> 
+  submap' f m1 m2 = true <->
   (forall i value, sem m1 i = Some value -> exists v, (sem m2 i = Some v /\ f value v = true)).
 Proof.
   intros ????? HB1 HB2.
   revert dependent m2.
   induction HB1; intros; simpl; subst.
-  * intuition. discriminate H0. 
+  * intuition. discriminate H0.
   * destruct m2 eqn:Hs0.
     - rewrite <- Hs0 in *.
       clear s e0 a0 m1 m3 Hs0.
@@ -36,31 +29,31 @@ Proof.
       destruct HB2.
       + simpl. split; intros. simpl in Hb. subst. discriminate H1. specialize (H1 x v).
         assert (sem s1 x = None). { eapply sem_outside_above. apply HB1_1. unfold isUB. order e. }
-        rewrite H3 in H1. simpl in H1. rewrite Eq_Reflexive in H1. simpl in H1. 
+        rewrite H3 in H1. simpl in H1. rewrite Eq_Reflexive in H1. simpl in H1.
         assert (exists v0 : a, None = Some v0 /\ f v v0 = true) by  (apply H1; reflexivity).
         destruct H4. destruct H4. discriminate H4.
-      + destruct b. rewrite andb_true_iff. rewrite andb_true_iff. rewrite IHHB1_1 by eassumption. 
+      + destruct b. rewrite andb_true_iff. rewrite andb_true_iff. rewrite IHHB1_1 by eassumption.
         rewrite IHHB1_2 by eassumption. split; intro.
         -- destruct H6. destruct H7. intros i value Hi. rewrite Hsem. destruct (sem s1 i) eqn : ?.
             ** apply H7 in Heqo. destruct Heqo. destruct H9. exists x1.
                destruct (i == x) eqn : ?. solve_Bounds e. rewrite H9. simpl. simpl in Hi. split. reflexivity.
               inversion Hi. subst. apply H10.
-            ** simpl in Hi. destruct (i == x) eqn : ?. simpl in Hi. exists a0. split. 
+            ** simpl in Hi. destruct (i == x) eqn : ?. simpl in Hi. exists a0. split.
               eapply sem_resp_eq in Heqb. rewrite <- Hb in Heqb. assumption. inversion Hi; subst.
               assumption. simpl in Hi. apply H8 in Hi. destruct Hi. exists x1.
-              assert (sem sr1 i = None). { eapply sem_outside_above. apply HBsr1. 
+              assert (sem sr1 i = None). { eapply sem_outside_above. apply HBsr1.
               destruct H9. apply (sem_inside HBsr2) in H9. destruct H9. solve_Bounds e. }
               rewrite H10. simpl. apply H9.
        -- split. specialize (H6 x v). assert (sem s1 x = None). { eapply sem_outside_above.
           apply HB1_1. unfold isUB. order e. } rewrite H7 in H6. simpl in H6. rewrite Eq_Reflexive in H6.
-          simpl in H6. 
-          assert (exists v1 : a, sem s0 x ||| SomeIf (_GHC.Base.==_ x x0) v0 ||| sem s3 x = Some v1 
+          simpl in H6.
+          assert (exists v1 : a, sem s0 x ||| SomeIf (_GHC.Base.==_ x x0) v0 ||| sem s3 x = Some v1
           /\ f v v1 = true) by (apply H6; reflexivity). destruct H8. simpl in Hb. rewrite <- Hb in H8.
           destruct H8. inversion H8; subst. assumption.
           split.
           ** intros. specialize (H6 i value). rewrite H7 in H6. simpl in H6.
              assert (exists v : a, sem s0 i ||| SomeIf (_GHC.Base.==_ i x0) v0 ||| sem s3 i = Some v
-             /\ f value v = true) by (apply H6; reflexivity). destruct H8. destruct H8. 
+             /\ f value v = true) by (apply H6; reflexivity). destruct H8. destruct H8.
             specialize (Hsem i). simpl in Hsem. rewrite H8 in Hsem. destruct (i==x) eqn : ?.
             ++ solve_Bounds e.
             ++ assert (sem sr2 i = None). { eapply (sem_inside HB1_1) in H7. destruct H7.
@@ -71,7 +64,7 @@ Proof.
               assert (sem s1 i = None). eapply sem_outside_above. apply HB1_1. eapply (sem_inside HB1_2) in H7.
               destruct H7. solve_Bounds e. rewrite H8 in H6. simpl in H6. destruct (i == x) eqn : ?.
               ++ solve_Bounds e.
-              ++ simpl in H6. assert ( exists v : a, sem s0 i ||| 
+              ++ simpl in H6. assert ( exists v : a, sem s0 i |||
               SomeIf (_GHC.Base.==_ i x0) v0 ||| sem s3 i = Some v /\ f value v = true) by (apply H6; reflexivity).
              destruct H9. specialize (Hsem i). simpl in Hsem. destruct H9. rewrite H9 in Hsem.
               rewrite Heqb in Hsem. assert (sem sr1 i = None). { eapply (sem_inside HB1_2) in H7.
@@ -81,14 +74,14 @@ Proof.
               eapply sem_outside_above. apply HB1_1. unfold isUB.  order e. } rewrite H7 in H6. simpl in H6.
               specialize (H6 v). rewrite Eq_Reflexive in H6. simpl in H6. destruct H6. reflexivity.
               simpl in Hb. rewrite <- Hb in H6. destruct H6. discriminate H6.
-    - intuition. 
+    - intuition.
       + discriminate H1.
       + subst. simpl in H1. specialize (H1 x v). assert (sem s1 x = None). { eapply sem_outside_above.
         apply HB1_1. unfold isUB. order e. } rewrite H3 in H1. simpl in H1. rewrite Eq_Reflexive in H1.
         simpl in H1. destruct H1. reflexivity. destruct H1. discriminate H1.
 Qed.
 
-Lemma submap_size : 
+Lemma submap_size :
   forall (m1: Map e a) (m2: Map e a) lb ub,
   Bounded m1 lb ub ->
   Bounded m2 lb ub ->
@@ -112,7 +105,7 @@ Proof.
       intros i v1 Hi.
       specialize (Hsubmap i). simpl in Hsubmap.
       rewrite Hi in Hsubmap. simpl in Hsubmap.
-      specialize (Hsubmap v1). destruct Hsubmap. reflexivity. 
+      specialize (Hsubmap v1). destruct Hsubmap. reflexivity.
       specialize (H7 i). destruct (i == x) eqn : ?.
       { solve_Bounds e. }
       { assert (sem s3 i = None). { assert (i < x = true) by solve_Bounds e. eapply sem_outside_below.
@@ -139,7 +132,7 @@ Lemma isSubmapOfBy_spec:
   forall (m1: Map e a) (m2: Map e a) f lb ub,
   Bounded m1 lb ub ->
   Bounded m2 lb ub ->
-  isSubmapOfBy f m1 m2 = true <-> (forall i value, sem m1 i = Some value -> exists v, sem m2 i = 
+  isSubmapOfBy f m1 m2 = true <-> (forall i value, sem m1 i = Some value -> exists v, sem m2 i =
   Some v /\ f value v = true).
 Proof.
   intros. unfold isSubmapOfBy. split; intros.
@@ -499,7 +492,7 @@ Proof.
     rewrite IHxs by lia.
     destruct (Z.leb_spec n 0); [lia|reflexivity].
 Qed.
-  
+
 Lemma drop_app_cons:
   forall a n (l1 : list a) (x : a) (l2 : list a),
   List.drop n (l1 ++ x :: l2) = match (n ?= Z.of_nat (length l1))%Z with

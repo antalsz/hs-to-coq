@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -17,14 +10,14 @@ Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e} 
 (* The [orig] passing and the local fixpoint in insert is plain ugly, so let’s to this instead *)
 
 Fixpoint insert' (x : e) (v : a) (s : Map e a) : Map e a :=
-  match s with 
+  match s with
     | Tip => singleton x v
     | Bin sz y vy l r => match compare x y with
       | Lt =>
         let l' := insert' x v l in
         if PtrEquality.ptrEq l' l then s else balanceL y vy l' r
       | Gt =>
-        let r' := insert' x v r in 
+        let r' := insert' x v r in
         if PtrEquality.ptrEq r' r then s else balanceR y vy l r'
       | Eq =>
         if PtrEquality.ptrEq v vy && PtrEquality.ptrEq x y then s else Bin sz x v l r
@@ -58,7 +51,7 @@ Proof.
     applyDesc e (@singleton_Desc e a); try eassumption; solve_Desc e.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
-    + assert (y == x = true) by (order e). 
+    + assert (y == x = true) by (order e).
       rewrite H1.
       rewrite ?isSome_oro, ?isSome_Some, ?orb_true_r, ?orb_true_l.
       destruct_ptrEq.
@@ -113,7 +106,7 @@ Proof.
     applyDesc e (@singleton_Desc e a); try eassumption; solve_Desc e.
   * subst; cbn -[Z.add].
     destruct (compare y x) eqn:?.
-    + rewrite compare_Eq in Heqc. 
+    + rewrite compare_Eq in Heqc.
       rewrite Heqc.
       rewrite ?isSome_oro, ?isSome_Some, ?orb_true_r, ?orb_true_l.
       solve_Desc e.
@@ -182,14 +175,14 @@ Proof.
   intros. generalize dependent k. revert f v1. induction H; intros.
   - simpl. reflexivity.
   - simpl.   destruct (sem s1 k) eqn : ?.
-   + assert (compare k x = Lt) by (solve_Bounds e). rewrite H5. simpl. 
+   + assert (compare k x = Lt) by (solve_Bounds e). rewrite H5. simpl.
      rewrite (pair_fst_snd (insertLookupWithKey f k v1 s1 )). simpl.
      rewrite <- Heqo. apply IHBounded1.
    + simpl. destruct (k == x) eqn : ?.
       * simpl. assert (compare k x = Eq) by (order e).
         rewrite H5. simpl. reflexivity.
       * simpl. destruct (sem s2 k) eqn : ?.
-        -- assert (compare k x = Gt) by (solve_Bounds e). rewrite H5. 
+        -- assert (compare k x = Gt) by (solve_Bounds e). rewrite H5.
            rewrite (pair_fst_snd (insertLookupWithKey f k v1 s2 )). simpl.
            rewrite <- Heqo0. apply IHBounded2.
         -- destruct (compare k x) eqn : ?.
@@ -212,7 +205,7 @@ Proof.
     + rewrite (pair_fst_snd (insertLookupWithKey f k0 v m2)). simpl.
       rewrite IHm2. reflexivity.
   - simpl. reflexivity.
-Qed.  
+Qed.
 
 Lemma insertLookupWithKey_Desc:
   forall (f: e -> a -> a -> a) y v s lb ub,
@@ -226,20 +219,20 @@ Lemma insertLookupWithKey_Desc:
                                 end  else None ||| sem s i )).
 Proof.
   intros. rewrite <- insertWithKey_insertLookupWithKey. apply insertWithKey_Desc; assumption.
-Qed. 
+Qed.
 
 
 (** ** Verification of [insertR] *)
 
 Fixpoint insertR' (x : e) (v : a) (s : Map e a) : Map e a :=
-  match s with 
+  match s with
     | Tip => singleton x v
     | Bin sz y vy l r => match compare x y with
       | Lt =>
         let l' := insertR' x v l in
         if PtrEquality.ptrEq l' l then s else balanceL y vy l' r
       | Gt =>
-        let r' := insertR' x v r in 
+        let r' := insertR' x v r in
         if PtrEquality.ptrEq r' r then s else balanceR y vy l r'
       | Eq => Bin sz y vy l r
      end
@@ -298,7 +291,7 @@ Proof.
       rewrite (sem_outside_above HB1) by order_Bounds e.
       replace (y == x) with false by order_Bounds e.
       simpl_options.
-      
+
       destruct_ptrEq.
       - destruct (sem s2 y) eqn:?; simpl_options; try lia.
         solve_Desc e.
@@ -323,5 +316,3 @@ Proof.
 Qed.
 
 End WF.
-
-

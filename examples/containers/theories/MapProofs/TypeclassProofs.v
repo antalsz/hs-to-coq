@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.MapFunctionProofs.
@@ -26,7 +19,7 @@ the law classes with a subset type. *)
 Require Import Proofs.GHC.Base.
 
 Section TypeClassLaws.
-Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
+Context {e : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
 
 
 (*First, we need lawful [Eq] and [Ord] instances for pairs*)
@@ -50,9 +43,9 @@ Qed.
 Instance OrdLaws_Pair {a} {b} `{OrdLaws a} `{OrdLaws b} : OrdLaws (a * b).
 Proof.
   constructor.
-  - intros. destruct a1. destruct b0. unfold "<=", "==" in *. unfold Ord_pair___, Eq_pair___ in *.
-    unfold ord_default, op_zeze____  in *. simpl in *. rewrite andb_true_iff.  rewrite negb_true_iff in *. 
-    destruct (compare a2 a1) eqn : ?. destruct (compare b0 b1) eqn : ?.
+  - intros. destruct a0. destruct b0. unfold "<=", "==" in *. unfold Ord_pair___, Eq_pair___ in *.
+    unfold ord_default, op_zeze____  in *. simpl in *. rewrite andb_true_iff.  rewrite negb_true_iff in *.
+    destruct (compare a1 a0) eqn : ?. destruct (compare b0 b1) eqn : ?.
     rewrite compare_Eq in Heqc. rewrite compare_Eq in Heqc0. split.
     apply Eq_Symmetric. apply Heqc. apply Eq_Symmetric. apply Heqc0.
     inversion Heqc0. inversion H1. rewrite compare_Eq in Heqc. apply Eq_Symmetric in Heqc.
@@ -60,37 +53,37 @@ Proof.
     inversion H0. apply Ord_compare_Gt in Heqc0. apply Ord_compare_Lt in Heqc0.
     rewrite Heqc0 in H2. inversion H2. inversion H1. inversion H. rewrite Ord_compare_Gt in Heqc.
     apply Ord_compare_Lt in Heqc. rewrite Heqc in H2. inversion H2.
-  - intros. destruct a1. destruct c. destruct b0. unfold "<=" in *. unfold Ord_pair___  in *.
+  - intros. destruct a0. destruct c. destruct b0. unfold "<=" in *. unfold Ord_pair___  in *.
     unfold compare_pair in *. unfold ord_default in *. simpl in *. rewrite negb_true_iff in *.
-    repeat (try (destruct (compare a2 a1) eqn : ?); try (destruct (compare b2 b1) eqn : ?);
-    try (destruct (compare a3 a1) eqn : ?); try (destruct (compare b0 b1) eqn : ?);
-    try (destruct (compare a2 a3) eqn : ?); try (destruct (compare b2 b0) eqn : ?); 
-    try (order b); try (order a0)).
-  - intros. destruct a1. destruct b0. unfold "<=" in *. unfold Ord_pair___ in *. unfold compare_pair in *.
+    repeat (try (destruct (compare a1 a0) eqn : ?); try (destruct (compare b2 b1) eqn : ?);
+    try (destruct (compare a2 a0) eqn : ?); try (destruct (compare b0 b1) eqn : ?);
+    try (destruct (compare a1 a2) eqn : ?); try (destruct (compare b2 b0) eqn : ?);
+    try (order b); try (order a)).
+  - intros. destruct a0. destruct b0. unfold "<=" in *. unfold Ord_pair___ in *. unfold compare_pair in *.
     unfold ord_default. unfold ord_default in *. simpl. rewrite negb_true_iff. rewrite negb_true_iff.
-    destruct (compare a2 a1) eqn : ?. assert (compare a1 a2 = Eq) by (order a0). rewrite H1.
+    destruct (compare a1 a0) eqn : ?. assert (compare a0 a1 = Eq) by (order a). rewrite H1.
     destruct (compare b0 b1) eqn : ?. left. reflexivity. right. assert (compare b1 b0 <> Lt) by (order b).
     destruct (compare b1 b0). reflexivity. contradiction. reflexivity. left. reflexivity.
-    right. destruct (compare a1 a2) eqn : ?. order a0. order a0. reflexivity.
+    right. destruct (compare a0 a1) eqn : ?. order a. order a. reflexivity.
     left. reflexivity.
   - intros. unfold compare.   unfold "<=" in *. unfold Ord_pair___ in *. unfold compare_pair in *.
-    unfold ord_default. simpl. rewrite negb_false_iff. destruct a1. destruct b0. 
-    split; intros. destruct (compare a1 a2). rewrite H1. reflexivity. reflexivity. inversion H1.
-    destruct (compare a1 a2). destruct (compare b1 b0). inversion H1. reflexivity. inversion H1.
+    unfold ord_default. simpl. rewrite negb_false_iff. destruct a0. destruct b0.
+    split; intros. destruct (compare a0 a1). rewrite H1. reflexivity. reflexivity. inversion H1.
+    destruct (compare a0 a1). destruct (compare b1 b0). inversion H1. reflexivity. inversion H1.
     reflexivity. inversion H1.
   - intros. unfold compare. unfold "==". unfold Ord_pair___ , Eq_pair___ . unfold compare_pair,op_zeze____ .
-    unfold ord_default, eq_pair. simpl. destruct a1. destruct b0. split; intros. destruct (compare a1 a2) eqn : ?.
+    unfold ord_default, eq_pair. simpl. destruct a0. destruct b0. split; intros. destruct (compare a0 a1) eqn : ?.
     inversion H. rewrite Ord_compare_Eq in Heqc. inversion H0. rewrite Ord_compare_Eq0 in H1. rewrite andb_true_iff.
     split; assumption. inversion H1. inversion H1. rewrite andb_true_iff in H1. destruct H1.
     inversion H. inversion H0. apply Ord_compare_Eq in H1. apply Ord_compare_Eq0 in H2. rewrite H1. assumption.
   - intros. unfold compare. unfold Ord_pair___ , "<=". unfold compare_pair. unfold ord_default. simpl.
-    destruct a1. destruct b0. split; intros. rewrite negb_false_iff.  
-    destruct (compare a1 a2) eqn : ?. assert (compare a2 a1 = Eq) by (order a0). rewrite H2.
+    destruct a0. destruct b0. split; intros. rewrite negb_false_iff.
+    destruct (compare a0 a1) eqn : ?. assert (compare a1 a0 = Eq) by (order a). rewrite H2.
     assert (compare b0 b1 = Lt) by (order b). rewrite H3. reflexivity. inversion H1. inversion H1.
-    assert (compare a2 a1 = Lt) by (order a0). rewrite H2. reflexivity.
-    rewrite negb_false_iff in H1. destruct (compare a2 a1) eqn : ?.
-    assert (compare a1 a2 = Eq) by (order a0). rewrite H2. destruct (compare b0 b1) eqn : ?.
-    inversion H1. order b. inversion H1. assert (compare a1 a2 = Gt) by (order a0). rewrite H2.
+    assert (compare a1 a0 = Lt) by (order a). rewrite H2. reflexivity.
+    rewrite negb_false_iff in H1. destruct (compare a1 a0) eqn : ?.
+    assert (compare a0 a1 = Eq) by (order a). rewrite H2. destruct (compare b0 b1) eqn : ?.
+    inversion H1. order b. inversion H1. assert (compare a0 a1 = Gt) by (order a). rewrite H2.
     reflexivity. inversion H1.
   - intros. unfold "<", "<=". unfold Ord_pair___.  unfold compare_pair; unfold ord_default; simpl.
     rewrite negb_involutive. reflexivity.
@@ -100,6 +93,8 @@ Proof.
     rewrite negb_involutive. reflexivity.
 Qed.
 
+
+Context {a : Type}.
 
 (** ** Verification of [Eq] *)
 Global Program Instance Eq_Map_WF `{ Eq_ a } : Eq_ (WFMap e a) := fun _ k => k
@@ -209,9 +204,9 @@ Proof.
     match goal with |- context[?b = true] => fold (is_true b) end.
     rewrite <-(ssrbool.rwP (Eq_eq _ _)).
     order (list (e * a)).
-  - intros. unfold Internal.Ord__Map_op_zl__, "/=". unfold Internal.Ord__Map_compare, 
+  - intros. unfold Internal.Ord__Map_op_zl__, "/=". unfold Internal.Ord__Map_compare,
     Eq_comparison___. unfold op_zsze____ . rewrite negb_involutive. destruct (compare _ _) eqn : ?;
-    unfold eq_comparison; unfold proj1_sig in *; destruct a0; destruct b. 
+    unfold eq_comparison; unfold proj1_sig in *; destruct a0; destruct b.
     assert (compare (toAscList x0) (toAscList x) = Eq) by (order (list (e * a))). rewrite H0.
     reflexivity.  assert (compare (toAscList x0) (toAscList x) = Gt) by (order (list (e * a))).
     rewrite H0. reflexivity. assert (compare (toAscList x0) (toAscList x) = Lt) by (order (list (e * a))).
@@ -284,7 +279,7 @@ Next Obligation.
 Qed.
 Next Obligation.
   unfold mempty. unfold Monoid__Map. unfold mempty__. unfold Internal.Monoid__Map_mempty.
-  eapply empty_Desc. intros. apply H0.
+  eapply empty_Desc. intros. apply H.
 Qed.
 
 (*Some lemmas about [map] for functor*)
@@ -307,16 +302,16 @@ Proof.
     apply H2. erewrite <- map_preserves_size. erewrite <- map_preserves_size. apply H3.
     apply H0. apply H. erewrite <- map_preserves_size. erewrite <- map_preserves_size.
     apply H4. apply H0. apply H.
-Qed. 
+Qed.
 
 Lemma map_preserves_WF : forall {b} {c} (m : Map e b) (f : b -> c),
   WF m -> WF (map f m).
-Proof. 
+Proof.
   intros. unfold WF in *. apply map_bounded. apply H.
-Qed. 
+Qed.
 
 
-Definition Functor__Map_fmap 
+Definition Functor__Map_fmap
    : forall {a} {b}, (a -> b) -> (Map e) a -> (Map e) b :=
   fun {a} {b} => fun f m => map f m.
 
@@ -327,12 +322,12 @@ Local Definition Functor__map_op_zlzd__
 Lemma const_WF: forall {b} {a: Type} (x : a) (m: Map e b),
   WF m -> WF (map (const x) m).
 Proof.
-  intros. apply map_preserves_WF. apply H. 
+  intros. apply map_preserves_WF. apply H.
 Qed.
 
 
 Global Program Instance Functor_Map : Functor (WFMap e) :=
-  fun _ k => 
+  fun _ k =>
   k {| GHC.Base.fmap__ := fun {a} => @fmap (Map e) _ _ ;
         GHC.Base.op_zlzd____ := fun {a} {b} x => @fmap (Map e) _ b a (@const a b _) |}.
 Next Obligation.
@@ -344,19 +339,19 @@ Qed.
 
 Global Instance FunctorLaws_MapWF: FunctorLaws (WFMap e).
   constructor.
-  - intros. destruct x. unfold fmap. unfold fmap__.  unfold Functor_Map. 
+  - intros. destruct x. unfold fmap. unfold fmap__.  unfold Functor_Map.
     apply ProofIrrelevance.ProofIrrelevanceTheory.subset_eq_compat. unfold proj1_sig.
     unfold fmap. unfold fmap__. unfold Functor__Map. unfold Internal.Functor__Map_fmap.
-    induction w. 
+    induction w.
     + simpl. reflexivity.
     + simpl. rewrite IHw1. rewrite IHw2. reflexivity.
   - intros. destruct x. unfold fmap in *. unfold fmap__ in *.
     unfold Functor_Map in *. apply ProofIrrelevance.ProofIrrelevanceTheory.subset_eq_compat.
-    unfold proj1_sig in *. unfold fmap. unfold Functor__Map. unfold fmap__. 
+    unfold proj1_sig in *. unfold fmap. unfold Functor__Map. unfold fmap__.
     unfold Internal.Functor__Map_fmap. simpl. induction w.
     + simpl. reflexivity.
     + simpl. rewrite IHw1. rewrite IHw2. reflexivity.
-Qed. 
+Qed.
 
 
 (** ** Verification of [Eq1] - NOT COMPLETE*)

@@ -218,8 +218,3 @@ Extraction Blacklist Internal.
 
 Require Import Data.IntSet.Internal.
 Recursive Extraction Library Internal.
-
-
-
-
-

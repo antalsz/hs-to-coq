@@ -59,7 +59,7 @@ Proof.
   - move: All AllRev; rewrite !Forall_forall => /= All AllRev a.
     rewrite in_app_iff => -[IN | [? | //]]; last subst a=> //.
     by apply All.
-Qed.    
+Qed.
 
 Theorem StronglySorted_rev' {A} (R : A -> A -> Prop) (xs : list A) :
   StronglySorted R xs -> StronglySorted (fun a b => R b a) (rev xs).
@@ -156,13 +156,13 @@ Qed.
 Theorem StronglySorted_NoDup {A} (R R' : A -> A -> Prop) :
   (forall x,       R  x x) ->
   (forall x,     ~ R' x x) ->
-  
+
   (forall x y z, R  x y -> R  y z -> R  x z) ->
   (forall x y z, R' x y -> R' y z -> R' x z) ->
-  
+
   (forall x y, R  x y <-> (x =  y \/ R' x y)) ->
   (forall x y, R' x y <-> (x <> y /\ R  x y)) ->
-  
+
   forall xs,
     StronglySorted R xs -> NoDup xs -> StronglySorted R' xs.
 Proof.
@@ -179,7 +179,7 @@ Proof.
     by contradict NIn_x_x'xs; subst; left.
   - apply IH=> //=.
     by contradict NIn_x_x'xs; right.
-Qed.  
+Qed.
 
 (******************************************************************************)
 (** Previous StronglySorted theorems with specific relations **)
@@ -212,7 +212,7 @@ Corollary StronglySorted_NoDup_Ord {A} `{OrdLaws A} `{!EqExact A} (xs : list A) 
 Proof.
   apply StronglySorted_NoDup; try order A.
   - move=> x y; split=> [LExy | [-> | LTxy]]; try order A.
-    move: LExy; case Cxy: (compare x y); try order A.
+    move: LExy. destruct (compare x y) eqn:Cxy; try order A.
     move: Cxy => /Ord_compare_Eq/Eq_eq; order A.
   - move=> x y; split=> [LTxy | [Nxy LExy]]; try order A.
     rewrite Ord_lt_le; apply/negP; contradict Nxy.
@@ -287,7 +287,7 @@ Proof.
       have: In x (x :: acc) by constructor.
       move: (x :: acc); clear acc acc_uniq MEM.
       elim: xs => [|x' xs IH] acc IN //=.
-      case EQ: (x == x') => //=.
+      destruct (x == x') eqn:EQ => //=.
       -- move/Eq_eq in EQ; subst x'.
          by move: (IN) => /elem_byP ->; apply IH.
       -- case MEM': (elem_by _==_ x' acc) => //=; first by apply IH.

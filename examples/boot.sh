@@ -8,7 +8,7 @@ set -e
 CLEAN=YES
 COQ=YES
 COQ_TEST=YES
-COQ_VERSION=8.8
+COQ_VERSION=8.10
 
 function clean ()    { if [ "$CLEAN"    = "YES" ]; then "$@"; fi }
 function coq ()      { if [ "$COQ"      = "YES" ]; then "$@"; fi }

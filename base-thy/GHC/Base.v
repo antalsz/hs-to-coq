@@ -21,10 +21,10 @@ Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Classes.Morphisms.
 
 
-(* ** hs_simpl tactic *) 
+(* ** hs_simpl tactic *)
 
 (*
-   Furthermore, this file defines a rewriting database hs_simpl and 
+   Furthermore, this file defines a rewriting database hs_simpl and
    associated tactic (hs_simpl) for simplifying Haskell expressions
    and unfolding type class applications.
 *)
@@ -66,7 +66,7 @@ Proof. by elim: bs. Qed.
 
 (* ---------- append ------------------------------ *)
 
-(* Because we map Haskell's append to Coq's ++ directly. All of the 
+(* Because we map Haskell's append to Coq's ++ directly. All of the
    Coq theorems are automatically available. However, we make these
    automatically available to hs_simpl. *)
 
@@ -92,7 +92,7 @@ Lemma map_cong {a b} (f g : a -> b) (x : list a) :
   f =1 g -> map f x = map g x.
 Proof. by rewrite !hs_coq_map => /Coq.Lists.List.map_ext ->. Qed.
 
-Lemma concat_map {A B} (f : A -> B) l : 
+Lemma concat_map {A B} (f : A -> B) l :
   map f (concat l) = concat (map (map f) l).
 Proof. by rewrite !hs_coq_map Coq.Lists.List.concat_map. Qed.
 
@@ -167,7 +167,7 @@ Instance Eq_Transitive : forall {a} `{EqLaws a}, Transitive (fun (x y:a) => x ==
 Proof. move=> ??????. apply Eq_trans. Qed.
 
 Instance Eq_Equivalence :  forall {a} `{EqLaws a}, Equivalence (fun (x y:a) => x == y).
-Proof. move=> ???. split; typeclasses eauto. Qed.  
+Proof. move=> ???. split; typeclasses eauto. Qed.
 
 Instance Eq_is_true_m : forall {a} `{EqLaws a},
     Proper ((fun (x y:a) => x == y) ==> (fun (x y:a) => x == y) ==> iff)
@@ -207,11 +207,11 @@ Proof.
     eauto.
     eapply Eq_trans. eauto.
     rewrite Eq_sym. eauto.
-  } 
+  }
   rewrite H in E1. inversion E1.
 Qed.
 
-(* I would love to be able to use rewriting instead of this 
+(* I would love to be able to use rewriting instead of this
    lemma to do this. Why doesn't it work??? *)
 Lemma eq_replace_r : forall {a} `{EqLaws a}  (v1 v2 v3 : a),
     (v2 == v3) -> (v1 == v2) = (v1 == v3).
@@ -240,7 +240,7 @@ Proof.
   intros x y z.
   pose (k := Eq_trans).
   eapply k.
-Defined. 
+Defined.
 
 Local Lemma parametric_eq_sym : forall (a : Type) (H : Eq_ a),
   EqLaws a -> Symmetric (fun x y : a => x == y).
@@ -249,39 +249,39 @@ Proof.
   intros x y.
   rewrite Eq_sym.
   auto.
-Defined. 
+Defined.
 
 
-Add Parametric Relation {a}`{H: EqLaws a} : a 
-  (fun x y => x == y) 
-    reflexivity proved by Eq_refl 
+Add Parametric Relation {a}`{H: EqLaws a} : a
+  (fun x y => x == y)
+    reflexivity proved by Eq_refl
     symmetry proved by (@parametric_eq_sym a _ H)
     transitivity proved by (@parametric_eq_trans a _ H) as parametric_eq.
 
-Instance: RewriteRelation (fun x y => x == y).
+Instance: RewriteRelation (fun x y => x == y) := {}.
 
 
 (* --------------------------------------------------------------------- *)
 
 
 Ltac unfold_zeze :=
-  repeat unfold op_zeze__, op_zeze____, 
+  repeat unfold op_zeze__, op_zeze____,
   Eq_Int___,
-  Eq_Integer___, 
+  Eq_Integer___,
   Eq_Word___,
   Eq_Char___,
-  Eq_bool___, 
+  Eq_bool___,
   Eq_unit___ ,
-  Eq_comparison___, 
-  Eq_pair___ , 
-  Eq_list, 
+  Eq_comparison___,
+  Eq_pair___ ,
+  Eq_list,
   Eq___NonEmpty, Base.Eq___NonEmpty_op_zeze__,
   Eq___option, Base.Eq___option_op_zeze__.
 
 Ltac unfold_zsze :=
   repeat unfold op_zsze__, op_zsze____,
   Eq_Int___,
-  Eq_Integer___, 
+  Eq_Integer___,
   Eq_Word___,
   Eq_Char___,
   Eq_bool___,
@@ -295,16 +295,16 @@ Ltac unfold_zsze :=
 
 Lemma simpl_option_some_eq a `{Eq_ a} (x y :a) :
   (Some x == Some y) = (x == y).
-Proof.  
-    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+Proof.
+    repeat unfold Eq___option, op_zeze__, op_zeze____,
            Base.Eq___option_op_zeze__, op_zeze____.
     auto.
 Qed.
 
 Lemma simpl_option_none_eq a `{Eq_ a} :
   ((None : option a) == None) = true.
-Proof.  
-    repeat unfold Eq___option, op_zeze__, op_zeze____, 
+Proof.
+    repeat unfold Eq___option, op_zeze__, op_zeze____,
            Base.Eq___option_op_zeze__, op_zeze____.
     auto.
 Qed.
@@ -312,7 +312,7 @@ Qed.
 
 Lemma simpl_list_cons_eq a `{Eq_ a} (x y :a) xs ys :
   (cons x xs) == (cons y ys) = (x == y) && (xs == ys).
-Proof.  
+Proof.
     unfold op_zeze__, op_zeze____, Eq_list.
     simpl.
     auto.
@@ -320,18 +320,18 @@ Qed.
 
 Lemma simpl_list_nil_eq a `{Eq_ a} :
   (nil : list a) == nil = true.
-Proof.  
+Proof.
     unfold op_zeze__, op_zeze____, Eq_list.
     simpl.
     auto.
 Qed.
 
-Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq 
+Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq
              @simpl_list_cons_eq @simpl_list_nil_eq : hs_simpl.
 
 
 (** ** [EqExact] **)
-  
+
 Class EqExact (t : Type) `{EqLaws t} :=
   { Eq_eq : forall x y : t, reflect (x = y) (x == y) }.
 
@@ -614,7 +614,7 @@ Qed.
 
 Instance instance_SemigroupLaws_list {a} `{ EqLaws a } : SemigroupLaws (list a).
 Proof.
-  split; 
+  split;
     unfold op_zlzlzgzg__, Semigroup__list, op_zlzlzgzg____,
       Base.Semigroup__list_op_zlzlzgzg__.
   - intros. apply Eq_reflI. apply app_assoc.
@@ -761,7 +761,7 @@ Qed.
 
 (* The base edits file maps boolean operations to Coq's andb, orb, negb.
 
-   We add some of the more common rewrites to the hs_simpl tactic so that they do not 
+   We add some of the more common rewrites to the hs_simpl tactic so that they do not
    need to be applied by hand.
 
  *)

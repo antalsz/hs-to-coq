@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 
 Lemma Eq_Tuple_Trans: forall {e a} `{EqLaws e} `{EqLaws a} (x1 x2 x3 : e) (y1 y2 y3 : a),
@@ -23,7 +16,7 @@ Proof.
   rewrite andb_true_iff in *. rewrite andb_true_iff in *. split; intros.
   - destruct H3. split. apply Eq_Symmetric. apply H3. apply Eq_Symmetric. apply H4.
   - destruct H3. split. apply Eq_Symmetric. apply H3. apply Eq_Symmetric. apply H4.
-Qed. 
+Qed.
 
 Lemma Eq_Tuple_Refl: forall {e a} `{EqLaws e} `{EqLaws a} (x :e) (y : a),
   (x, y) == (x, y) = true.
@@ -53,7 +46,7 @@ Qed.
 Lemma eq_tuple_eq: forall {a} {b} `{Eq_ a} `{EqLaws a} `{Eq_ b} `{EqLaws b}
   (x1 x2 : a) (y1 y2 : b),
   (x1, y1) == (x2, y2) = (x1 == x2) && (y1 == y2).
-Proof. 
+Proof.
   intros. rewrite prop_bool. rewrite andb_true_iff. apply eq_tuple_prop.
 Qed.
 
@@ -81,11 +74,11 @@ Proof.
   constructor.
   - intros. destruct a0. destruct b0. unfold "<=", "==" in *. unfold Ord_pair___, Eq_pair___ in *.
     unfold ord_default, op_zeze____  in *. simpl in *.
-    rewrite andb_true_iff.  rewrite negb_true_iff in *. 
+    rewrite andb_true_iff.  rewrite negb_true_iff in *.
     destruct (compare a1 a0) eqn : ?. destruct (compare b0 b1) eqn : ?. split. order a. order b.
     inversion H1. split. order a. assert (compare a0 a1 = Eq) by (order a). rewrite H3 in H2.
     assert (compare b1 b0 = Lt) by (order b). rewrite H4 in H2. inversion H2. inversion H1.
-    assert (compare a0 a1 = Lt) by (order a). rewrite H3 in H2. inversion H2. 
+    assert (compare a0 a1 = Lt) by (order a). rewrite H3 in H2. inversion H2.
   - intros. destruct a0. destruct c. destruct b0. unfold "<=" in *. unfold Ord_pair___  in *.
     unfold compare_pair in *. unfold ord_default in *. simpl in *. rewrite negb_true_iff in *.
     repeat (try (destruct (compare a2 a0) eqn : ?); try (destruct (compare a1 a2) eqn : ?);
@@ -100,7 +93,7 @@ Proof.
     right. destruct (compare a0 a1) eqn : ?. order a. order a. reflexivity.
     left. reflexivity.
   - intros. unfold compare.   unfold "<=" in *. unfold Ord_pair___ in *. unfold compare_pair in *.
-    unfold ord_default. simpl. rewrite negb_false_iff. destruct a0. destruct b0. 
+    unfold ord_default. simpl. rewrite negb_false_iff. destruct a0. destruct b0.
     split; intros. destruct (compare a0 a1). rewrite H1. reflexivity. reflexivity. inversion H1.
     destruct (compare a0 a1). destruct (compare b1 b0). inversion H1. reflexivity. inversion H1.
     reflexivity. inversion H1.
@@ -110,7 +103,7 @@ Proof.
     split; assumption. inversion H1. inversion H1. rewrite andb_true_iff in H1. destruct H1.
     inversion H. inversion H0. apply Ord_compare_Eq in H1. apply Ord_compare_Eq0 in H2. rewrite H1. assumption.
   - intros. unfold compare. unfold Ord_pair___ , "<=". unfold compare_pair. unfold ord_default. simpl.
-    destruct a0. destruct b0. split; intros. rewrite negb_false_iff.  
+    destruct a0. destruct b0. split; intros. rewrite negb_false_iff.
     destruct (compare a0 a1) eqn : ?. assert (compare a1 a0 = Eq) by (order a). rewrite H2.
     assert (compare b0 b1 = Lt) by (order b). rewrite H3. reflexivity. inversion H1. inversion H1.
     assert (compare a1 a0 = Lt) by (order a). rewrite H2. reflexivity.

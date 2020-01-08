@@ -109,11 +109,11 @@ Axiom absent_lits : UniqFM.UniqFM Literal.
 (* Skipping all instances of class `Data.Data.Data', including
    `Literal.Data__Literal' *)
 
-Instance Eq___Literal : GHC.Base.Eq_ Literal := {}.
+Instance Eq___Literal : GHC.Base.Eq_ Literal.
 Proof.
 Admitted.
 
-Instance Ord__Literal : GHC.Base.Ord Literal := {}.
+Instance Ord__Literal : GHC.Base.Ord Literal.
 Proof.
 Admitted.
 

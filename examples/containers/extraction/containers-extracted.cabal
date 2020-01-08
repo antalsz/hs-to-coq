@@ -31,6 +31,8 @@ library
   exposed-modules: BitUtil
   exposed-modules: Bool
   exposed-modules: Bvector
+  exposed-modules: Byte
+  exposed-modules: ByteVector
   exposed-modules: Char
   exposed-modules: Classes
   exposed-modules: Const

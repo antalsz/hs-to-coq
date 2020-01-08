@@ -20,14 +20,14 @@ Require Import Proofs.Unique.
 
 Opaque Base.hs_string__.
 
-Ltac unfold_zeze := 
+Ltac unfold_zeze :=
   repeat (GHC.Base.unfold_zeze; unfold Core.Eq___Var, Core.Eq___Var_op_zeze__).
 Ltac unfold_zsze :=
   repeat (GHC.Base.unfold_zsze; unfold Core.Eq___Var, Core.Eq___Var_op_zsze__).
 
 (** ** Stuff about [Var] and [Unique] *)
 
-Lemma getUnique_varUnique: 
+Lemma getUnique_varUnique:
     (Unique.getUnique : Var -> Unique.Unique) = varUnique.
 Proof.
   unfold Unique.getUnique, Unique.getUnique__,Uniquable__Var,
@@ -39,22 +39,23 @@ Qed.
 (** ** Properties about [GHC.Base.==] for Var. *)
 
 (* Equal vars have equal keys *)
-Lemma eq_unique : forall (v1 v2: Var), 
+Lemma eq_unique : forall (v1 v2: Var),
     (v1 == v2) <->
-    Unique.getWordKey (Unique.getUnique v1) = 
-    Unique.getWordKey (Unique.getUnique v2). 
+    Unique.getWordKey (Unique.getUnique v1) =
+    Unique.getWordKey (Unique.getUnique v2).
 Proof.
   intros v1 v2.
   unfold_zeze.
   unfold Unique.getUnique.
-  unfold Uniquable__Var, getUnique__, Core.Uniquable__Var_getUnique, 
+  unfold Uniquable__Var, getUnique__, Core.Uniquable__Var_getUnique,
   varUnique.
   destruct v1; destruct v2; simpl;
   apply N.eqb_eq.
 Qed.
 
-Instance EqLaws_Var : EqLaws Var := {}.
+Instance EqLaws_Var : EqLaws Var.
 Proof.
+  constructor.
   - unfold ssrbool.reflexive.
     unfold_zeze.
     intros. unfold is_true.
@@ -65,7 +66,7 @@ Proof.
   - unfold ssrbool.transitive.
     unfold_zeze.
     unfold is_true.
-    intros x y z. 
+    intros x y z.
     destruct x; destruct y; destruct z; simpl;
     repeat erewrite N.eqb_eq; intro h; rewrite h; auto.
   - intros.
@@ -95,8 +96,8 @@ Proof.
 Qed.
 
 
-Lemma In_varUnique_elem : forall a l, 
-    In (varUnique a) (map varUnique l) <-> 
+Lemma In_varUnique_elem : forall a l,
+    In (varUnique a) (map varUnique l) <->
     Foldable.elem a l.
 Proof.
   intros.
@@ -108,7 +109,7 @@ Proof.
     rewrite orb_true_iff.
     split.
     intro h. inversion h.
-    left. 
+    left.
     rewrite <- varUnique_iff in *.
     apply Eq_Symmetric in H.
     auto.
@@ -117,14 +118,14 @@ Proof.
     rewrite <- IHl in h.
     simpl.
     destruct h.
-    left. 
+    left.
     rewrite <- varUnique_iff in *.
     symmetry. auto.
     right. auto.
 Qed.
 
 
-Lemma var_eq_realUnique v1 v2 : 
+Lemma var_eq_realUnique v1 v2 :
   (v1 == v2) = (realUnique v1 == realUnique v2).
 Proof.
   repeat unfold op_zeze__, op_zeze____,Core.Eq___Var_op_zeze__,Core.Eq___Var.
@@ -147,7 +148,7 @@ Module Var_as_DT <: BooleanDecidableType <: DecidableType.
 
   Definition eq_equiv : Equivalence eq.
   Proof.
-  split. 
+  split.
   - unfold eq, eqb, Reflexive.
     apply Eq_refl.
   - unfold eq, eqb, Symmetric.
@@ -168,7 +169,7 @@ Module Var_as_DT <: BooleanDecidableType <: DecidableType.
 
   Lemma eqb_eq : forall x y, eqb x y = true <-> eq x y.
     unfold eq. tauto.
-  Qed. 
+  Qed.
 
  Definition eq_refl := eq_equiv.(@Equivalence_Reflexive _ _).
  Definition eq_sym := eq_equiv.(@Equivalence_Symmetric _ _).
@@ -188,7 +189,7 @@ Qed.
 
 (** ** [almostEqual] *)
 
-(* Two [Var]s are almostEqual if they differ only in 
+(* Two [Var]s are almostEqual if they differ only in
    their IdInfo. All other components must be identitical.
 
    We define this as a [Prop] rather than a bool because
@@ -222,17 +223,17 @@ Proof.
 Qed.
 
 Lemma almostEqual_trans:
-  forall v1 v2 v3, 
+  forall v1 v2 v3,
     almostEqual v1 v2 -> almostEqual v2 v3 -> almostEqual v1 v3.
 Proof.
-  intros v1 v2 v3 H1 H2. 
+  intros v1 v2 v3 H1 H2.
   inversion H1; inversion H2; subst; inversion H3; eauto.
   econstructor.
 Qed.
 
 Instance Equivalence_ae : Equivalence almostEqual.
 Proof.
-  split. 
+  split.
   - unfold Reflexive.
     apply almostEqual_refl.
   - unfold Symmetric.
@@ -243,7 +244,7 @@ Proof.
 Defined.
 
 Lemma almostEqual_eq :
-  forall v1 v2, 
+  forall v1 v2,
     almostEqual v1 v2 -> (v1 == v2).
 Proof.
   intros v1 v2 H.
@@ -281,8 +282,8 @@ Proof.
   unfold isJoinId.
   induction v; auto; simpl.
   unfold isJoinId_maybe; simpl.
-  rewrite andb_false_r. 
-  all: destruct id_details; done. 
+  rewrite andb_false_r.
+  all: destruct id_details; done.
 Qed.
 
 Lemma isJoinId_ae: forall v1 v2,
@@ -326,40 +327,40 @@ Qed.
 
 (* Local Vars include localIds as well as type/coercion vars *)
 
-Lemma isLocalId_isLocalVar : 
+Lemma isLocalId_isLocalVar :
   forall var, isLocalVar var = false -> isLocalId var = false.
 Proof.
   intros var.
   unfold isLocalVar.
   unfold isGlobalId.
-  unfold isLocalId. 
+  unfold isLocalId.
   destruct var.
-  simpl. 
+  simpl.
   all: try tauto.
   (* destruct idScope; done. *)
   move=>h. rewrite <- h.
   rewrite negb_involutive.
-  auto. 
+  auto.
 Qed.
 
-Lemma isLocalVar_isLocalId : 
+Lemma isLocalVar_isLocalId :
   forall var, isLocalId var = true -> isLocalVar var = true.
 Proof.
   intros var.
   unfold isLocalVar.
   unfold isGlobalId.
-  unfold isLocalId. 
+  unfold isLocalId.
   destruct var; simpl.
 (*  destruct idScope; done. *)
   rewrite negb_involutive.
-  auto. 
+  auto.
 Qed.
 
 (** ** isLocalVar respects the GHC.Base.== equality for Vars  *)
 
-(* SCW: This is provable because we have modified the definition of isLocalVar 
-   to look at the uniques instead of the scope. In GoodVars we know that these two 
-   should be consistent with eachother.  So the remapping shouldn't matter as long 
+(* SCW: This is provable because we have modified the definition of isLocalVar
+   to look at the uniques instead of the scope. In GoodVars we know that these two
+   should be consistent with eachother.  So the remapping shouldn't matter as long
    as all of the vars that we work with are good.
  *)
 Definition RespectsVar (f :Var -> bool) :=

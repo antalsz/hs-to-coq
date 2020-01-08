@@ -9,7 +9,11 @@ Stability   : experimental
 <https://coq.inria.fr/distrib/current/refman/Reference-Manual003. Chapter 1, \"The Gallina Specification Language\", in the Coq reference manual.>
 -}
 
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, OverloadedLists, LambdaCase, TemplateHaskell #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE OverloadedLists    #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
 
 module HsToCoq.Coq.Gallina (
   -- * Lexical structure
@@ -78,15 +82,15 @@ module HsToCoq.Coq.Gallina (
   IsExistingClass(..),
   ) where
 
-import Prelude hiding (Num)
+import           Prelude            hiding (Num)
 
-import Data.Text (Text)
-import Numeric.Natural
+import           Data.Text          (Text)
+import           Numeric.Natural
 
-import Data.List.NonEmpty (NonEmpty())
+import           Data.List.NonEmpty (NonEmpty ())
 
-import Data.Typeable
-import Data.Data (Data(..))
+import           Data.Data          (Data (..))
+import           Data.Typeable
 
 -- $Lexical
 -- <https://coq.inria.fr/distrib/current/refman/Reference-Manual003.html#lexical §1.1, \"Lexical conventions\", in the Coq reference manual.>
@@ -376,8 +380,9 @@ data RecordDefinition = RecordDefinition Qualid [Binder] (Maybe Sort) (Maybe Qua
 
 -- |@/instance_definition/ ::=@ /(extra)/
 data InstanceDefinition = InstanceDefinition Qualid [Binder] Term [(Qualid, Term)] (Maybe Proof) -- ^@Instance /ident/ [/binders/] : /term/ := { [/ident/ := /term/ ; … ; /ident/ := /term/] } [/proof/] .
-                                                                                               -- TODO: field arguments (which become @fun@ arguments)
-                        | InstanceTerm Qualid [Binder] Term Term (Maybe Proof)                  -- ^@Instance /ident/ [/binders/] : /term/ := /term/ [/proof/] .
+                                                                                                 -- TODO: field arguments (which become @fun@ arguments)
+                        | InstanceTerm Qualid [Binder] Term Term (Maybe Proof)                   -- ^@Instance /ident/ [/binders/] : /term/ := /term/ [/proof/] .
+                        | InstanceProof Qualid [Binder] Term Proof                               -- ^@Instance /ident/ [/binders/] : /term/. /proof/
                         deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- |@/associativity/ ::=@ /(extra)/

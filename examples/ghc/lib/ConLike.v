@@ -28,7 +28,7 @@ Inductive ConLike : Type
 
 (* Converted value declarations: *)
 
-Instance Uniquable__ConLike : Unique.Uniquable ConLike := {}.
+Instance Uniquable__ConLike : Unique.Uniquable ConLike.
 Proof.
 Admitted.
 
@@ -78,11 +78,11 @@ Axiom conLikeArity : ConLike -> BasicTypes.Arity.
 (* Skipping all instances of class `Outputable.Outputable', including
    `ConLike.Outputable__ConLike' *)
 
-Instance NamedThing__ConLike : Name.NamedThing ConLike := {}.
+Instance NamedThing__ConLike : Name.NamedThing ConLike.
 Proof.
 Admitted.
 
-Instance Eq___ConLike : GHC.Base.Eq_ ConLike := {}.
+Instance Eq___ConLike : GHC.Base.Eq_ ConLike.
 Proof.
 Admitted.
 

@@ -1,11 +1,7 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import String.
+Import StringSyntax.
+
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -53,18 +49,18 @@ Proof.
   intros. generalize dependent i. induction H2; intros; split; intros.
   - reflexivity.
   - reflexivity.
-  - simpl. simpl in H6. destruct (sem s1 i) eqn : ?. inversion H6. 
+  - simpl. simpl in H6. destruct (sem s1 i) eqn : ?. inversion H6.
     apply IHBounded1 in Heqo. rewrite Heqo. simpl. simpl in H6.
     destruct (i == x) eqn : ?. inversion H6. simpl. simpl in H6.
     apply IHBounded2. apply H6.
   - simpl in H6. simpl. destruct (sem (mapWithKey f s1) i) eqn : ?. inversion H6.
     apply IHBounded1 in Heqo. rewrite Heqo. simpl. destruct (i == x) eqn : ?. inversion H6.
     simpl. simpl in H6. apply IHBounded2. apply H6.
-Qed. 
+Qed.
 
 (*Says that if we take any (key, value) pair in the map resulting from mapWithKey, then they
 come from a corresponding entry in the original map*)
-Lemma map_spec_reverse : 
+Lemma map_spec_reverse :
   forall {b} {a} {e}  `{Ord e} (H : EqLaws e) (f : e -> a -> b) (m : Map e a) lb ub,
   Bounded m lb ub ->
   Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
@@ -75,7 +71,7 @@ Proof.
   - simpl in H7. simpl. destruct ( sem (mapWithKey f s1) i ) eqn : ?. apply IHBounded1 in Heqo.
     destruct Heqo. exists x0. destruct H8. rewrite H8. simpl. split. reflexivity. inversion H7; subst.
     reflexivity. simpl in H7.  assert (sem s1 i = None). { erewrite map_none_spec. apply Heqo. apply H2_. }
-    rewrite H8. destruct (i == x) eqn : ?. simpl in H7. simpl. exists v. split. reflexivity. inversion H7. 
+    rewrite H8. destruct (i == x) eqn : ?. simpl in H7. simpl. exists v. split. reflexivity. inversion H7.
     apply equal_f. apply H3. order e. simpl. simpl in H7. apply IHBounded2. apply H7.
 Qed.
 
@@ -87,7 +83,7 @@ Lemma map_spec_coq:
   (forall i v, sem m i = Some v -> sem (mapWithKey f m) i = Some (f i v)).
 Proof.
   intros. applyDesc e (@mapWithKey_Desc e a). specialize (Hsem i). rewrite H2 in Hsem. assumption.
-Qed. 
+Qed.
 
 (*If f is injective, then (k,v) is in the original map iff (k, f k v) is in the new map*)
 Lemma map_spec_coq_injective:
@@ -133,12 +129,12 @@ Qed.
 (** Vertification of [mapAccumL] *)
 
 (*This turns out to be highly nontrivial to specify and verify. At each step, the new value is calculated
-based on a function that uses the old key and the accumulated value through all of the previous keys. 
+based on a function that uses the old key and the accumulated value through all of the previous keys.
 We can specify the value by stating that it is euivalent to folding the function over the map,
 but the resulting map is much harder to specify, and the proof is quite complex*)
 
 
-Lemma mapAccumL_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumL_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)) lb ub,
    Bounded m lb ub ->
   fst(mapAccumL f x m) = foldlWithKey (fun (t: b) k v => fst (f t k v)) x m.
@@ -147,10 +143,10 @@ Proof.
   - simpl. reflexivity.
   - simpl. rewrite (surjective_pairing (mapAccumL f x0 s1 )).
     rewrite (surjective_pairing (mapAccumL f x0 s1)). simpl.
-    rewrite IHBounded1. 
+    rewrite IHBounded1.
     rewrite (surjective_pairing (f (foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s1) x v )).
-    simpl. 
-    rewrite (surjective_pairing (mapAccumL f (fst (f (foldlWithKey (fun (t : b) (k : e) (v0 : a) => 
+    simpl.
+    rewrite (surjective_pairing (mapAccumL f (fst (f (foldlWithKey (fun (t : b) (k : e) (v0 : a) =>
     fst (f t k v0)) x0 s1) x v)) s2 )). simpl. rewrite IHBounded2. reflexivity.
 Qed.
 
@@ -169,17 +165,17 @@ Proof.
   - simpl. solve_Desc e. f_solver e.
   - eapply (@partitionWithKey_spec e a). assumption. constructor. apply H0_. apply H0_0.
     assumption. assumption. assumption. assumption. unfold respectful. unfold Proper.
-    intros. assert ( _GHC.Base.<_ x0 k =  _GHC.Base.<_ y k ) by (order e). 
+    intros. assert ( _GHC.Base.<_ x0 k =  _GHC.Base.<_ y k ) by (order e).
     rewrite H5. reflexivity. intros. simpl. applyDesc e H4. solve_Desc e. f_solver e.
     destruct (sem s1 i); simpl in Hsem. inversion Hsem. destruct (i == x); simpl in Hsem.
     inversion Hsem. destruct (sem s2 i); inversion Hsem.
-Qed.  
+Qed.
 
 (*The key issue in the resulting proof is that we have something like
 [forall i, sem s4 i = sem s1 i ||| SomeIf (i == x) v ||| sem s3 i]
 and we want to prove that folding over s1, then x, then s3 is the same as folding over s4.
 This turns out to be very complicated, and is slightly easier to reason about if we use lists
-instead. The next several lemmas allow us to do this.*) 
+instead. The next several lemmas allow us to do this.*)
 
 (*TODO: Move this to toListProofs. The one in toListProofs is not sufficiently general*)
 Lemma foldlWithKey_spec' :
@@ -193,11 +189,11 @@ Proof.
 Qed.
 
 
-(*I don't think the {EqLaws a} assumption is strictly necessary, but it is difficult to remove, 
+(*I don't think the {EqLaws a} assumption is strictly necessary, but it is difficult to remove,
 since the proofs rely on theorems about toList and equality that would have to be re-proved
 without reference to EqLaws*)
 (*NOTE: it has been removed*)
-Lemma fold_left_proper: 
+Lemma fold_left_proper:
   forall {e} {a} {b} `{OrdLaws e} (f: b -> e * a -> b) x (l1 l2: list (e * a)),
   eqlist_key l1 l2  ->
   (forall x1 x2 z y, x1 == x2 = true -> f y (x1, z) = f y (x2, z)) ->
@@ -210,12 +206,12 @@ Proof.
   - simpl. simpl in H0. destruct a0. destruct p. destruct H0. destruct H2. subst.
     assert (f x (e0, a1) = (f x (e1, a1))). apply H1. order e. rewrite H2.
     apply IHl1. assumption.
-Qed. 
+Qed.
 
 (*The result we really need about fold: If we have maps that are equivalent sem-wise,
 then folding over them gives the same result (assuming the function is Proper)*)
 Lemma foldlWithKey_equiv_maps:
-  forall {e} {a} {b} `{OrdLaws e} (f: b -> e -> a -> b) x (m1: Map e a) m2, 
+  forall {e} {a} {b} `{OrdLaws e} (f: b -> e -> a -> b) x (m1: Map e a) m2,
   WF m1 ->
   WF m2 ->
   (forall (i j : e) y v, i == j = true -> f y i v = f y j v) ->
@@ -225,7 +221,7 @@ Proof.
   intros. rewrite foldlWithKey_spec'. rewrite foldlWithKey_spec'.
   assert (eqlist_key (toList m1) (toList m2)). {
   rewrite <- coq_equals_spec. apply H3. apply H0. apply H1. }
-  apply fold_left_proper. apply H4. intros. 
+  apply fold_left_proper. apply H4. intros.
   apply H2. order e.
 Qed.
 
@@ -234,18 +230,18 @@ Require Import Coq.Sorting.Sorted.
 
 (*A few lemmas about the Boundedness of lists*)
 (*TODO:Move to toListProofs*)
-Lemma toList_Bounds_UB: forall {e} {a} `{OrdLaws e} (m: Map e a) lb ub, 
-  Bounded m lb ub -> 
+Lemma toList_Bounds_UB: forall {e} {a} `{OrdLaws e} (m: Map e a) lb ub,
+  Bounded m lb ub ->
   forall k v, In (k,v) (toList m) ->
   isUB ub k = true.
 Proof.
   intros. induction H0. inversion H1. rewrite toList_Bin in H1.
   apply in_app_or in H1. destruct H1. apply IHBounded1 in H1. solve_Bounds e. simpl in H1.
   destruct H1. solve_Bounds e. apply IHBounded2. assumption.
-Qed. 
+Qed.
 
-Lemma toList_Bounds_LB: forall {e} {a} `{OrdLaws e} (m: Map e a) lb ub, 
-  Bounded m lb ub -> 
+Lemma toList_Bounds_LB: forall {e} {a} `{OrdLaws e} (m: Map e a) lb ub,
+  Bounded m lb ub ->
   forall k v, In (k,v) (toList m) ->
   isLB lb k = true.
 Proof.
@@ -267,11 +263,11 @@ not true unless the list has unique elements)*)
 (*Lemma sem_to_lists_elem: forall {e} {a} `{OrdLaws e} `{EqLaws a} (l: list (e * a)) i x,
   StronglySorted ToListProofs.lt l ->
  (sem_for_lists l i == Some x) = true <-> List.elem (i, x) l = true.
-Proof. 
+Proof.
   intros. revert H2. revert i x. induction l; intros.
-    - simpl. split; intros contra; inversion contra. 
+    - simpl. split; intros contra; inversion contra.
     - simpl. destruct a0. split; intros.
-      + destruct (i == e0) eqn : ?. 
+      + destruct (i == e0) eqn : ?.
       rewrite orb_true_iff. left. unfold "==". unfold Eq_pair___. unfold op_zeze____.
       unfold eq_pair. rewrite andb_true_iff. split. assumption. apply Eq_Symmetric.
       rewrite simpl_option_some_eq in H3. apply H3.
@@ -287,7 +283,7 @@ Qed. *)
 Lemma sem_to_lists_elem: forall {e} {a} `{OrdLaws e} (l: list (e * a)) i x,
   StronglySorted ToListProofs.lt l ->
  (sem_for_lists l i = Some x) <-> Key_In i x l.
-Proof. 
+Proof.
   intros. induction H0; intros.
   - simpl. split; intros. inversion H0. destruct H0.
   - simpl. destruct a0. split; intros.
@@ -299,8 +295,8 @@ Proof.
          replace (i == e0) with (false) by (order e). apply IHStronglySorted. assumption.
 Qed.
 
-Lemma fromDistinctAscList_toList: forall {e} {a} `{OrdLaws e}(l: list (e * a)), 
-  StronglySorted ToListProofs.lt l -> 
+Lemma fromDistinctAscList_toList: forall {e} {a} `{OrdLaws e}(l: list (e * a)),
+  StronglySorted ToListProofs.lt l ->
   eqlist_key (toList(fromDistinctAscList l)) l .
 Proof.
   intros. apply strongly_sorted_unique.
@@ -316,14 +312,14 @@ Proof.
       rewrite <- toList_sem. rewrite H3. rewrite Heqo. assumption. apply H1. inversion H4. apply H0.
 Qed.
 
-Ltac unfold_pair := unfold "==" ; unfold Eq_pair___ ; unfold op_zeze____ ; unfold eq_pair. 
+Ltac unfold_pair := unfold "==" ; unfold Eq_pair___ ; unfold op_zeze____ ; unfold eq_pair.
 
 
 (*Finally, the actual specification, which says that any element is found by computing f on the
 accumulated value (value resulting from folding f over all elements less than f) and the key itself.
 Again, I'm not sure if the {EqLaws a} assumption is strictly needed*)
 (*Edit: removed `{EqLaws a} assumption*)
-Lemma mapAccumL_snd_Desc: forall {e} {a} {b : Type} {c : Type}  `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumL_snd_Desc: forall {e} {a} {b : Type} {c : Type}  `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)) lb ub,
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
@@ -333,7 +329,7 @@ Lemma mapAccumL_snd_Desc: forall {e} {a} {b : Type} {c : Type}  `{OrdLaws e} (m:
            | None => None
             end).
 Proof.
-  intros. 
+  intros.
  revert x. induction H1; intros.
   - simpl. solve_Desc e.
   - simpl.  rewrite (surjective_pairing (mapAccumL f x0 s1 )).
@@ -345,17 +341,17 @@ Proof.
          intros. destruct (_GHC.Base.<_ i0 i) eqn : ?.
           - specialize (Hsem1 i0). rewrite Heqb0 in Hsem1. simpl in Hsem1.
             assert (i0 == x = false) by (solve_Bounds e). assert (sem s2 i0 = None). eapply sem_outside_below.
-            eassumption. solve_Bounds e. rewrite H5 in Hsem1. rewrite H3 in Hsem1. simpl in Hsem1. 
+            eassumption. solve_Bounds e. rewrite H5 in Hsem1. rewrite H3 in Hsem1. simpl in Hsem1.
             repeat (rewrite oro_None_r in Hsem1). rewrite Hsem1. rewrite Hsem.
             rewrite Heqb0. reflexivity.
-          - specialize (Hsem1 i0). specialize (Hsem i0). rewrite Hsem. rewrite Hsem1. rewrite Heqb0. 
+          - specialize (Hsem1 i0). specialize (Hsem i0). rewrite Hsem. rewrite Hsem1. rewrite Heqb0.
             reflexivity. }
         assert ((foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s3) =
            (foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s4)). {
             apply foldlWithKey_equiv_maps. wf_bounds. wf_bounds.
-            intros. 
-            assert (f y i0 v0 = f y j v0). { apply equal_f. apply H0 in H5. apply (equal_f H5). } 
-            rewrite H6. reflexivity. 
+            intros.
+            assert (f y i0 v0 = f y j v0). { apply equal_f. apply H0 in H5. apply (equal_f H5). }
+            rewrite H6. reflexivity.
             intros. rewrite H3. reflexivity. }
         rewrite H5. reflexivity.
     + applyDesc e (@map_lt_Desc e a). repeat (erewrite mapAccumL_fst); try (eassumption).
@@ -363,33 +359,33 @@ Proof.
         intros. destruct (_GHC.Base.<_ i0 i) eqn : ?.
         - specialize (Hsem i0). rewrite Heqb1 in Hsem. simpl in Hsem.
           assert (i0 == x = false) by (solve_Bounds e). assert (sem s2 i0 = None). eapply sem_outside_below.
-          eassumption. solve_Bounds e. rewrite H6 in Hsem. rewrite H5 in Hsem. simpl in Hsem. 
+          eassumption. solve_Bounds e. rewrite H6 in Hsem. rewrite H5 in Hsem. simpl in Hsem.
           repeat (rewrite oro_None_r in Hsem). rewrite Hsem. reflexivity.
         - specialize (Hsem i0). rewrite Hsem.  rewrite Heqb1. eapply sem_outside_above. eassumption.
-          solve_Bounds e. }  
+          solve_Bounds e. }
         assert ((foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s1) =
            (foldlWithKey (fun (t : b) (k : e) (v0 : a) => fst (f t k v0)) x0 s3)). {
           apply foldlWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
           assert (f y i0 v0 = f y j v0). { apply H0 in H6. apply equal_f. apply (equal_f H6). }
-          rewrite H7. reflexivity. 
+          rewrite H7. reflexivity.
           intros. rewrite H5. reflexivity. }
       rewrite H6. assert (forall z, f z x v = f z i v). { intros. apply equal_f. apply H0 in Heqb0.
       symmetry. apply (equal_f Heqb0). }  rewrite H7. reflexivity.
-    + (*This case is the complicated one that involves all sorts of results about fold, toList, and 
+    + (*This case is the complicated one that involves all sorts of results about fold, toList, and
         fromDistinctAscList*)
     remember ((1 + size s1 + size s2)%Z) as sz. repeat (applyDesc e (@map_lt_Desc e a)).
     repeat (erewrite mapAccumL_fst); try (eassumption). repeat (rewrite foldlWithKey_spec').
     assert
-        ((fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) 
+        ((fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0))
            (toList s3)
            (fst
               (f (fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) (toList s1) x0) x
-                 v))) = fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) 
+                 v))) = fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0))
                   ((toList s1) ++ ((x, v) :: nil) ++ (toList s3)) x0). { simpl.
     rewrite fold_left_app. simpl. reflexivity. }
-    rewrite H3. clear H3. 
+    rewrite H3. clear H3.
     assert ((fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0))
-           (toList s1 ++ ((x, v) :: nil) ++ toList s3) x0) = 
+           (toList s1 ++ ((x, v) :: nil) ++ toList s3) x0) =
     (fold_left (fun (t : b) (x1 : e * a) => let (a1, b0) := x1 in fst (f t a1 b0)) (toList s4) x0) ). {
       assert (StronglySorted ToListProofs.lt (toList s1 ++ ((x, v) :: nil) ++ toList s3)). {
         eapply sorted_append.
@@ -416,7 +412,7 @@ Proof.
           rewrite H8. simpl. rewrite sem_list_app.
           destruct (i0 < i) eqn : ?.
           * erewrite <- toList_sem''. simpl. unfold SomeIf.  erewrite <- toList_sem''.
-            rewrite Hsem. rewrite Heqb1. 
+            rewrite Hsem. rewrite Heqb1.
             destruct (sem s1 i0).
             -- reflexivity.
             -- destruct (i0 == x); reflexivity.
@@ -430,7 +426,7 @@ Proof.
                   eassumption.
             -- eassumption.
       - intros. assert (f y x1 z = f y x2 z). apply H0 in H5. eapply equal_f in H5. apply equal_f.
-        apply H5. rewrite H6. reflexivity. } 
+        apply H5. rewrite H6. reflexivity. }
       rewrite H3. reflexivity.
 Qed.
 
@@ -438,14 +434,14 @@ Qed.
 (** Verification of [mapAccumWithKey] *)
 
 (*This is much simpler*)
-Lemma mapAccumWithKey_mapAccumL: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumWithKey_mapAccumL: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)),
   mapAccumWithKey f x m = mapAccumL f x m.
 Proof.
   intros. unfold mapAccumWithKey. reflexivity.
 Qed.
 
-Lemma mapAccumWithKey_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumWithKey_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)) lb ub,
    Bounded m lb ub ->
   fst(mapAccumWithKey f x m) = foldlWithKey (fun (t: b) k v => fst (f t k v)) x m.
@@ -453,7 +449,7 @@ Proof.
   intros. rewrite mapAccumWithKey_mapAccumL. eapply mapAccumL_fst. apply H0.
 Qed.
 
-Lemma mapAccumWithKey_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumWithKey_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)) lb ub,
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
@@ -467,14 +463,14 @@ Proof.
 Qed.
 
 (** Verification of [mapAccum] *)
-Lemma mapAccum_mapAccumWithKey: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccum_mapAccumWithKey: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b ->  a -> (b * c)),
   mapAccum f x m = mapAccumWithKey (fun a b c => f a c) x m.
 Proof.
   intros. unfold mapAccum. reflexivity.
 Qed.
 
-Lemma mapAccum_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccum_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> a -> (b * c)) lb ub,
    Bounded m lb ub ->
   fst(mapAccum f x m) = foldlWithKey (fun (t: b) k v => fst (f t v)) x m.
@@ -482,7 +478,7 @@ Proof.
   intros. rewrite mapAccum_mapAccumWithKey. eapply mapAccumWithKey_fst. apply H0.
 Qed.
 
-Lemma mapAccum_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccum_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> a -> (b * c)) lb ub,
   Bounded m lb ub ->
   Desc (snd (mapAccum f x m)) lb ub (size m) (
@@ -493,11 +489,11 @@ Lemma mapAccum_snd_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: M
 Proof.
   intros. repeat(setoid_rewrite mapAccum_mapAccumWithKey). eapply (@mapAccumWithKey_snd_Desc e a).
   all: try (assumption). unfold respectful. unfold Proper. intros. reflexivity.
-Qed. 
+Qed.
 
 (** Verification of [mapAccumRWithKey] *)
 (*This is the reverse of [mapAccumL] (fold right instead of left)*)
-Lemma mapAccumRWithKey_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumRWithKey_fst: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)) lb ub,
    Bounded m lb ub ->
   fst(mapAccumRWithKey f x m) = foldrWithKey (fun k v t => fst (f t k v)) x m.
@@ -506,10 +502,10 @@ Proof.
   - simpl. reflexivity.
   - simpl. rewrite (surjective_pairing (mapAccumRWithKey f x0 s2 )).
     rewrite (surjective_pairing (mapAccumRWithKey f x0 s2)). simpl.
-    rewrite IHBounded2. 
+    rewrite IHBounded2.
     rewrite (surjective_pairing (f (foldrWithKey (fun (k : e) (v0 : a) (t: b) => fst (f t k v0)) x0 s2) x v )).
-    simpl. 
-    rewrite (surjective_pairing (mapAccumRWithKey f (fst (f (foldrWithKey (fun (k : e) (v0 : a)  (t : b) => 
+    simpl.
+    rewrite (surjective_pairing (mapAccumRWithKey f (fst (f (foldrWithKey (fun (k : e) (v0 : a)  (t : b) =>
     fst (f t k v0)) x0 s2) x v)) s1 )). simpl. rewrite IHBounded1. reflexivity.
 Qed.
 
@@ -524,11 +520,11 @@ Proof.
   - simpl. solve_Desc e. f_solver e.
   - eapply (@partitionWithKey_spec e a). assumption. constructor. apply H0_. apply H0_0.
     assumption. assumption. assumption. assumption. unfold respectful. unfold Proper.
-    intros. assert ( _GHC.Base.>_ x0 k =  _GHC.Base.>_ y k ) by (order e). 
+    intros. assert ( _GHC.Base.>_ x0 k =  _GHC.Base.>_ y k ) by (order e).
     rewrite H5. reflexivity. intros. simpl. applyDesc e H4. solve_Desc e. f_solver e.
     destruct (sem s1 i); simpl in Hsem. inversion Hsem. destruct (i == x); simpl in Hsem.
     inversion Hsem. destruct (sem s2 i); inversion Hsem.
-Qed.  
+Qed.
 
 (*TODO: Move this to toListProofs. The one in toListProofs is not sufficiently general*)
 Lemma foldrWithKey_spec' :
@@ -541,7 +537,7 @@ Proof.
   - reflexivity.
 Qed.
 
-Lemma fold_right_proper: 
+Lemma fold_right_proper:
   forall {e} {a} {b} `{OrdLaws e} (f: e * a -> b -> b) x (l1 l2: list (e * a)),
   eqlist_key l1 l2 ->
   (forall x1 x2 z y, x1 == x2 = true -> f (x1, z) y = f (x2, z) y) ->
@@ -549,12 +545,12 @@ Lemma fold_right_proper:
 Proof.
   intros. revert x. generalize dependent l2. induction l1; intros; destruct l2;
   try (reflexivity); try(inversion H0). simpl in H0. simpl. destruct a0.
-  destruct p. destruct H0. destruct H2. subst. 
+  destruct p. destruct H0. destruct H2. subst.
   rewrite (IHl1 l2). apply H1. order e. assumption.
 Qed.
 
 Lemma foldrWithKey_equiv_maps:
-  forall {e} {a} {b} `{OrdLaws e} (f: e -> a -> b -> b) x (m1: Map e a) m2, 
+  forall {e} {a} {b} `{OrdLaws e} (f: e -> a -> b -> b) x (m1: Map e a) m2,
   WF m1 ->
   WF m2 ->
   (forall (i j : e) y v, i == j = true -> f i y v = f j y v) ->
@@ -565,10 +561,10 @@ Proof.
   assert (eqlist_key (toList m1) (toList m2)). {
   rewrite <- coq_equals_spec. apply H3. apply H0. apply H1. }
   apply fold_right_proper. apply H4. apply H2.
-Qed. 
+Qed.
 
 
-Lemma mapAccumRWithKey_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b) 
+Lemma mapAccumRWithKey_Desc: forall {e} {a} {b : Type} {c : Type} `{OrdLaws e} (m: Map e a) (x : b)
   (f: b -> e -> a -> (b * c)) lb ub,
   Proper ((fun (i j : e) => _GHC.Base.==_ i j = true) ==> eq) (fun x y =>  f y x) ->
   Bounded m lb ub ->
@@ -584,7 +580,7 @@ Proof.
     rewrite (surjective_pairing (f (fst (mapAccumRWithKey f x0 s2)) x v)).
     rewrite (surjective_pairing ( mapAccumRWithKey f (fst (f (fst (mapAccumRWithKey f x0 s2)) x v)) s1)).
     simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. solve_Desc e. f_solver e.
-    + (*This case is the complicated one that involves all sorts of results about fold, toList, and 
+    + (*This case is the complicated one that involves all sorts of results about fold, toList, and
         fromDistinctAscList*)
     remember ((1 + size s1 + size s2)%Z) as sz. repeat (applyDesc e (@map_gt_Desc e a)).
     repeat (erewrite mapAccumRWithKey_fst). repeat (rewrite foldrWithKey_spec').
@@ -593,12 +589,12 @@ Proof.
            (fst
               (f (fold_right (fun (x1 : e * a) (t : b) => let (a1, b0) := x1 in fst (f t a1 b0)) x0 (toList s2))
                  x v)) (toList s3)) =
-        fold_right (fun (x1 : e * a) (t : b) => let (a1, b0) := x1 in fst (f t a1 b0)) 
+        fold_right (fun (x1 : e * a) (t : b) => let (a1, b0) := x1 in fst (f t a1 b0))
          x0 ((toList s3) ++ ((x, v) :: nil) ++ (toList s2))). { simpl. rewrite fold_right_app.
          simpl. reflexivity. }
-    rewrite H3. clear H3. 
+    rewrite H3. clear H3.
     assert ((fold_right (fun  (x1 : e * a) (t : b) => let (a1, b0) := x1 in fst (f t a1 b0)) x0
-           (toList s3 ++ ((x, v) :: nil) ++ toList s2)) = 
+           (toList s3 ++ ((x, v) :: nil) ++ toList s2)) =
     (fold_right (fun(x1 : e * a)  (t : b)  => let (a1, b0) := x1 in fst (f t a1 b0)) x0 (toList s4)) ). {
       assert (StronglySorted ToListProofs.lt (toList s3 ++ ((x, v) :: nil) ++ toList s2)). {
         eapply sorted_append.
@@ -625,7 +621,7 @@ Proof.
           rewrite H8. simpl. rewrite sem_list_app.
           destruct (i0 > i) eqn : ?.
           * erewrite <- toList_sem''. simpl. unfold SomeIf.  erewrite <- toList_sem''.
-            rewrite Hsem. rewrite Heqb0. 
+            rewrite Hsem. rewrite Heqb0.
             destruct (sem s1 i0).
             -- reflexivity.
             -- destruct (i0 == x); reflexivity.
@@ -648,7 +644,7 @@ Proof.
             solve_Bounds e. rewrite H5. simpl. assert (i0 == x = false) by (order e). rewrite H6.
             reflexivity.
           - specialize (Hsem i0).  rewrite Hsem. rewrite Heqb1. eapply sem_outside_below. eassumption.
-            solve_Bounds e. } 
+            solve_Bounds e. }
         assert ((foldrWithKey (fun  (k : e) (v0 : a) (t : b) => fst (f t k v0)) x0 s2) =
            (foldrWithKey (fun (k : e) (v0 : a) (t : b)  => fst (f t k v0)) x0 s3)). {
             eapply foldrWithKey_equiv_maps. wf_bounds. wf_bounds. intros.
@@ -663,7 +659,7 @@ Proof.
       * assert (forall i, sem s4 i = sem s3 i). {
         intros.  destruct (_GHC.Base.>_ i0 i) eqn : ?.
         - rewrite Hsem. rewrite Hsem0. simpl. rewrite Heqb1. assert (sem s1 i0 = None). eapply sem_outside_above.
-          eassumption. solve_Bounds e. rewrite H3. simpl. 
+          eassumption. solve_Bounds e. rewrite H3. simpl.
           assert (i0 == x = false) by (solve_Bounds e). rewrite H5. reflexivity.
         - rewrite Hsem0. rewrite Hsem. rewrite Heqb1. reflexivity. }
         assert ((foldrWithKey (fun (k : e) (v0 : a)(t : b)  => fst (f t k v0)) x0 s3) =
@@ -673,7 +669,7 @@ Proof.
           reflexivity. intros. rewrite H3. reflexivity. } rewrite H5. reflexivity.
      * eassumption.
      * eassumption.
-Qed. 
+Qed.
 
 (** Vertification of [mapKeys] *)
 
@@ -682,14 +678,14 @@ Qed.
   backwards in the list produced by folding the function over the keys*)
 Lemma mapKeys_Desc: forall {e e' a} `{OrdLaws e} `{OrdLaws e'} (f: e -> e') (m: Map e a) ub lb,
   Bounded m lb ub ->
-  Desc' (mapKeys f m) None None 
+  Desc' (mapKeys f m) None None
   (fun i => sem_for_lists (rev (foldrWithKey (fun k v t => ((f k), v) :: t) nil m)) i).
 Proof.
   intros. unfold mapKeys. eapply (@fromList_Desc e' a). apply H0.
 Qed.
 
 (*[mapKeysWith] requires fromListWith, so it is not done yet*)
-  
+
 (** Verification of [mapKeysMonotonic] *)
 
 Definition f_bound {e e'} (f: e -> e') (b: bound) : bound :=
@@ -713,32 +709,32 @@ Proof.
   intros. induction l.
   - reflexivity.
   - simpl. destruct a0. rewrite IHl. reflexivity.
-Qed. 
+Qed.
 
 (*Here we can give actual bounds and do not need to reverse the resulting list. The proof is a bit longer
   because the function is not defined using fromList*)
 Lemma mapKeysMonotonic_Desc: forall {e e' a} `{OrdLaws e} `{OrdLaws e'} (f: e -> e') (m : Map e a) lb ub,
   Bounded m lb ub ->
   (forall x y, x < y = true -> (f x < f y) = true) ->
-  Desc (mapKeysMonotonic f m) (f_bound f lb) (f_bound f ub) (size m) 
+  Desc (mapKeysMonotonic f m) (f_bound f lb) (f_bound f ub) (size m)
   (fun i => sem_for_lists(foldrWithKey (fun k v t => ((f k), v) :: t) nil m) i).
 Proof.
   intros. induction H1.
   - simpl. solve_Desc e.
-  - simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. solve_Desc e. 
+  - simpl. applyDesc e IHBounded1. applyDesc e IHBounded2. solve_Desc e.
     + destruct lb. assert (e0 < x = true) by (solve_Bounds e). simpl. apply H2. apply H6. reflexivity.
     + destruct ub. assert (x < e0 = true) by (solve_Bounds e). simpl. apply H2. apply H6. reflexivity.
-    + intros. repeat (erewrite foldrWithKey_spec'). 
+    + intros. repeat (erewrite foldrWithKey_spec').
     assert (fold_right (fun (x0 : e * a) (t : list (e' * a)) => let (a0, b) := x0 in (f a0, b) :: t)
      ((f x, v)
       :: fold_right (fun (x0 : e * a) (t : list (e' * a)) => let (a0, b) := x0 in (f a0, b) :: t) nil (toList s2))
-     (toList s1) = 
-      fold_right (fun (x0 : e * a) (t : list (e' * a)) => let (a0, b) := x0 in (f a0, b) :: t) 
+     (toList s1) =
+      fold_right (fun (x0 : e * a) (t : list (e' * a)) => let (a0, b) := x0 in (f a0, b) :: t)
        nil (toList s1 ++ (x, v) :: toList s2)). { rewrite fold_right_app. simpl. reflexivity. }
-    rewrite H6. clear H6. 
+    rewrite H6. clear H6.
     assert ((fold_right (fun (x0 : e * a) (t : list (e' * a)) => let (a0, b) := x0 in (f a0, b) :: t) nil
      (toList s1 ++ (x, v) :: toList s2)) = List.map (fun (x0 : e * a) => let (x, y) := x0 in (f x, y))
-    (toList s1 ++ (x, v) :: toList s2)). { 
+    (toList s1 ++ (x, v) :: toList s2)). {
     rewrite <- (fold_right_map (toList s1 ++ (x, v) :: toList s2) (fun x => let (a, b) := x in (f a, b))).
     rewrite fold_right_scope. reflexivity. }
     rewrite H6. rewrite map_app. simpl. rewrite sem_list_app. simpl.
@@ -779,7 +775,7 @@ Qed.
 Lemma mapMaybeWithKey_Desc: forall {e a b} `{OrdLaws e} (f: e -> a -> option b) (m: Map e a) lb ub,
   Bounded m lb ub ->
   Proper ((fun i j : e => _GHC.Base.==_ i j = true) ==> eq) f ->
-  Desc' (mapMaybeWithKey f m) lb ub (fun i => match (sem m i ) with 
+  Desc' (mapMaybeWithKey f m) lb ub (fun i => match (sem m i ) with
                                               | Some y => f i y
                                               | _ => None
                                               end).
@@ -797,17 +793,17 @@ Qed.
 (** ** Verification of [mapMaybe] *)
 Lemma mapMaybe_Desc: forall {e a b} `{OrdLaws e} (f: a -> option b) (m: Map e a) lb ub,
   Bounded m lb ub ->
-  Desc' (mapMaybe f m) lb ub (fun i => match (sem m i ) with 
+  Desc' (mapMaybe f m) lb ub (fun i => match (sem m i ) with
                                               | Some y => f y
                                               | _ => None
                                               end).
 Proof.
   intros. unfold mapMaybe. eapply mapMaybeWithKey_Desc. apply H0.
   unfold respectful. unfold Proper. intros. reflexivity.
-Qed. 
+Qed.
 
 
-Lemma Either_eq_left: forall {a b} (x y: a), 
+Lemma Either_eq_left: forall {a b} (x y: a),
   x = y <-> (@Data.Either.Left a b) x = Data.Either.Left y.
 Proof.
   intros. split; intros.
@@ -815,7 +811,7 @@ Proof.
   - inversion H. reflexivity.
 Qed.
 
-Lemma Either_eq_right: forall {a b} (x y: b), 
+Lemma Either_eq_right: forall {a b} (x y: b),
   x = y <-> (@Data.Either.Right a b) x = Data.Either.Right y.
 Proof.
   intros. split; intros.
@@ -841,16 +837,16 @@ Lemma mapEitherWithKey_Desc: forall {e a b c} `{OrdLaws e} (f: e -> a -> Data.Ei
                                                                 | _ => None
                                                                 end
                                                     | None => None
-                                                     end) 
+                                                     end)
 .
 Proof.
   intros. induction H0.
-  - simpl. split; solve_Desc e; intros; reflexivity. 
+  - simpl. split; solve_Desc e; intros; reflexivity.
   - split; simpl;  rewrite (surjective_pairing (mapEitherWithKey f s2));
     rewrite (surjective_pairing (mapEitherWithKey f s1)); applyDesc e IHBounded1;
     applyDesc e IHBounded2; destruct (f x v) eqn : ?; applyDesc e IHBounded1; applyDesc e IHBounded2.
-    + eapply link_Desc; try(eassumption); try (reflexivity). intros. 
-      eapply link2_Desc; try(eassumption); try(reflexivity). intros. solve_Desc e. f_solver e. 
+    + eapply link_Desc; try(eassumption); try (reflexivity). intros.
+      eapply link2_Desc; try(eassumption); try(reflexivity). intros. solve_Desc e. f_solver e.
        * assert (b1 = b2). rewrite (@Either_eq_left b c). rewrite <- Heqe1. rewrite <- Heqe0.
          apply equal_f. apply H1. order e. subst. reflexivity.
        * assert (Either.Right c0 = Either.Left b1). rewrite <- Heqe1. rewrite <- Heqe0.
@@ -869,7 +865,7 @@ Proof.
          apply H1. order e. inversion H3.
       * assert (c1 = c2). rewrite (@Either_eq_right b c). rewrite <- Heqe1. rewrite <- Heqe0.
         apply equal_f. apply H1. order e. subst. reflexivity.
-Qed. 
+Qed.
 
 (** ** Verification of [mapEither] *)
 Lemma mapEither_Desc: forall {e a b c} `{OrdLaws e} (f: a -> Data.Either.Either  b c)
@@ -898,7 +894,7 @@ Qed.
 
 (*This function can only produce lists of size 0 or 3*)
 Lemma splitRoot_Desc: forall { e a} `{OrdLaws e} (m: Map e a) lb ub,
-  Bounded m lb ub -> 
+  Bounded m lb ub ->
   match (splitRoot m) with
   | nil => m = Tip
   | l :: m1 :: r :: nil =>
@@ -912,16 +908,16 @@ Lemma splitRoot_Desc: forall { e a} `{OrdLaws e} (m: Map e a) lb ub,
   | _ => False
   end.
 Proof.
-  intros. inversion H0; subst. 
+  intros. inversion H0; subst.
   - simpl. reflexivity.
   - simpl. split. solve_Desc e. f_solver e.
     split. applyDesc e (@singleton_Desc e a). solve_Desc e. solve_Desc e. f_solver e.
-Qed. 
+Qed.
 
 (** ** Verification of [findIndex] *)
 (*This function calls error when the key is not in the map, so we will prove a spec only for the cases
 when the key is in the map*)
-(*This is also highly nontrivial to prove. Specifying the function itself is not very easy, 
+(*This is also highly nontrivial to prove. Specifying the function itself is not very easy,
 but I settled on proving the specification that the number returned for an element within the map
 is equal to the length of the list of all of the elements less than the given element. Once again,
 because sem does not play too well with length, we make heavy use of [toList] and related lemmas,
@@ -990,7 +986,7 @@ Proof.
       assert (sem s2 x = None). eapply sem_outside_below. eassumption. solve_Bounds e.
       rewrite H6 in H4. rewrite H5 in H4. simpl in H4. repeat (rewrite oro_None_r in H4).
       apply H4.
-    + rewrite <- IHBounded2. assert ((n + Internal.size l + 1 + Internal.size s1 + 1)%Z 
+    + rewrite <- IHBounded2. assert ((n + Internal.size l + 1 + Internal.size s1 + 1)%Z
       =(n + Internal.size s1 + 1 + Internal.size l + 1)%Z). lia_sizes. rewrite H5. reflexivity.
       simpl in H4. assert (sem s1 x = None). eapply sem_outside_above. eassumption. solve_Bounds e.
       assert (x == x0 = false) by (order e). rewrite H6 in H4. rewrite H5 in H4. simpl in H4. apply H4.
@@ -1013,10 +1009,10 @@ Proof.
   - simpl. destruct H1. inversion H0.
   - simpl in H1. eapply map_lt_Desc. constructor; try (eassumption); try(reflexivity). intros.
     destruct (compare k x) eqn : ?.
-    + unfold findIndex; rewrite Heqc. 
+    + unfold findIndex; rewrite Heqc.
       assert (forall i, sem s i = sem s1 i). { intros. rewrite H7. simpl.
-      destruct (i < k) eqn : ?. destruct (sem s1 i). reflexivity. simpl. 
-      assert (i == x = false) by (order e). rewrite H8. simpl. 
+      destruct (i < k) eqn : ?. destruct (sem s1 i). reflexivity. simpl.
+      assert (i == x = false) by (order e). rewrite H8. simpl.
       assert (sem s2 i = None). eapply sem_outside_below. eassumption. solve_Bounds e.
       assumption. symmetry. eapply sem_outside_above. eassumption. solve_Bounds e. }
       erewrite <- size_spec. assert (size s1 = size s). apply (size_sem _ _ lb ub).
@@ -1024,18 +1020,18 @@ Proof.
       solve_Bounds e. reflexivity. unfold smaller_bound. destruct lb. order e. reflexivity.
       apply H5. intros. rewrite H8. reflexivity. simpl. rewrite size_size. assumption. apply H5.
     + unfold findIndex in *; rewrite Heqc. rewrite  IHBounded1. applyDesc e (@map_lt_Desc e a).
-      assert (eqlist_key (toList s0) (toList s)). eapply coq_equals_spec. 
+      assert (eqlist_key (toList s0) (toList s)). eapply coq_equals_spec.
       assert (Bounded s0 lb ub). eapply expand_bounds. eassumption. unfold larger_bound.
       destruct ub. unfold isUB in H2. order e. reflexivity. destruct lb. simpl. order e.
-      reflexivity. apply H8. apply H5. intros. rewrite Hsem. rewrite H7. 
+      reflexivity. apply H8. apply H5. intros. rewrite Hsem. rewrite H7.
       destruct (i < k) eqn : ?. simpl. assert (i == x = false) by (solve_Bounds e).
       rewrite H8. assert (sem s2 i = None). eapply sem_outside_below. eassumption. solve_Bounds e.
-      rewrite H9. simpl. repeat(rewrite oro_None_r). reflexivity. reflexivity. 
+      rewrite H9. simpl. repeat(rewrite oro_None_r). reflexivity. reflexivity.
       erewrite eqlist_key_length. reflexivity. apply H8. assert (k == x = false) by (order e).
       rewrite H8 in H1. assert (sem s2 k = None). eapply sem_outside_below. eassumption. solve_Bounds e.
       rewrite H9 in H1. simpl in H1. repeat(rewrite oro_None_r in H1). apply H1.
     + rewrite find_index_go_equiv in *. erewrite findIndex_go_plus.
-      rewrite IHBounded2. simpl. 
+      rewrite IHBounded2. simpl.
       applyDesc e (@map_lt_Desc e a). simpl in H7.
       assert (forall i, sem s i = sem s1 i ||| SomeIf(i == x) v ||| sem s0 i). { intros.
       rewrite H7. rewrite Hsem.
@@ -1070,7 +1066,7 @@ Proof.
         reflexivity. eassumption. eassumption. }
         rewrite Heql in H10. rewrite app_length in H10.
         assert (size s = size m). eapply size_sem. wf_bounds. rewrite Heqm.
-        eapply fromDistinctAscList_Desc. apply H9. intros. assumption. intros. rewrite H11. reflexivity. 
+        eapply fromDistinctAscList_Desc. apply H9. intros. assumption. intros. rewrite H11. reflexivity.
         erewrite size_spec in H12. erewrite size_spec in H12. rewrite H12.
         rewrite H10. simpl. erewrite size_spec. lia_sizes. eassumption. rewrite Heqm.
         eapply fromDistinctAscList_Desc. apply H9. intros. apply H13. eassumption.
@@ -1079,6 +1075,5 @@ Proof.
         apply H1. constructor; try (eassumption).
         assert (sem s1 k = None). eapply sem_outside_above. eassumption. solve_Bounds e.
         assert (k == x = false) by (order e). rewrite H8 in H1. rewrite H9 in H1. simpl in H1.
-        apply H1. 
+        apply H1.
 Qed.
-

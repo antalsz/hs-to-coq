@@ -89,7 +89,7 @@ Section Lemmas.
       rewrite <-not_false_iff_true, <-Ord_compare_Lt.
       congruence.
   Qed.
-  
+
   Lemma NEq_le_l (x y : t) : (x == y) = false -> (x <= y) = true -> (y <= x) = false.
   Proof.
     intros Nxy LExy.
@@ -114,7 +114,7 @@ Section Lemmas.
     destruct (Ord_total y x) as [? | LEyx]; try tauto.
     specialize (Ord_trans_le _ _ _ LEzx LEyx); auto.
   Qed.
-  
+
   Lemma Ord_trans_lt_le (x y z : t) : y <= x = false -> y <= z = true -> z <= x = false.
   Proof.
     intros GTyx LEyz;
@@ -123,7 +123,7 @@ Section Lemmas.
       intros LEzx.
     specialize (Ord_trans_le _ _ _ LEyz LEzx); auto.
   Qed.
-      
+
 
   Lemma Ord_trans_le_lt (x y z : t) : x <= y = true -> z <= y = false -> z <= x = false.
   Proof.
@@ -217,7 +217,7 @@ Ltac order_eq t x y Heq :=
 
 Ltac pose_new prf :=
   let prop := type of prf in
-  match goal with 
+  match goal with
     | [ H : prop |- _] => fail 1
     | _ => pose proof prf
   end.
@@ -446,11 +446,12 @@ Ltac unfoldN := unfold
   op_zeze____, op_zgze____, op_zlze____, op_zl____, op_zg____, compare__
   in *.
 
-Instance OrdLaws_N : OrdLaws N := {}.
+Instance OrdLaws_N : OrdLaws N.
 Proof.
+  constructor.
   all: intros; unfoldN;
     rewrite ?N.eqb_eq, ?N.leb_le in *;
-    try apply eq_iff_eq_true; 
+    try apply eq_iff_eq_true;
     rewrite ?negb_true_iff, ?N.eqb_eq, ?N.eqb_neq, ?N.leb_le,  ?N.leb_gt, ?N.ltb_lt,
             ?N.compare_eq_iff, ?N.compare_lt_iff, ?N.compare_gt_iff in *;
     try (zify;omega).
@@ -462,11 +463,12 @@ Ltac unfoldZ := unfold
   op_zeze____, op_zgze____, op_zlze____, op_zl____, op_zg____, compare__
   in *.
 
-Instance OrdLaws_Z : OrdLaws Z := {}.
+Instance OrdLaws_Z : OrdLaws Z.
 Proof.
+  constructor.
   all: intros; unfoldZ;
     rewrite ?Z.eqb_eq, ?Z.leb_le in *;
-    try apply eq_iff_eq_true; 
+    try apply eq_iff_eq_true;
     rewrite ?negb_true_iff, ?Z.eqb_eq, ?Z.eqb_neq, ?Z.leb_le,  ?Z.leb_gt, ?Z.ltb_lt,
             ?Z.compare_eq_iff, ?Z.compare_lt_iff, ?Z.compare_gt_iff in *;
     try omega.

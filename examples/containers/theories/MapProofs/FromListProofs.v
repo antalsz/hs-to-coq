@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -26,7 +19,7 @@ Context {e : Type} {a : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e} 
 
 
 
-Definition fromDistinctAscList_create_f : (Int -> list (e * a) -> (Map e a) * list (e * a)) -> 
+Definition fromDistinctAscList_create_f : (Int -> list (e * a) -> (Map e a) * list (e * a)) ->
 (Int -> list (e * a) -> Map e a * list ( e * a)).
 Proof.
   let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e a) in
@@ -128,7 +121,7 @@ Next Obligation.
         apply Z_shiftr_lt; lia.
       }
       apply IH.
-      - assumption. 
+      - assumption.
       - apply Z_shiftr_pos; lia.
       - intros.
         destruct_match.
@@ -144,8 +137,8 @@ Definition fromDistinctAscList_go_f : (Int -> Map e a -> list (e * a) -> Map e a
  (Int -> Map e a -> list (e * a) -> Map e a).
 Proof.
   let rhs := eval unfold fromDistinctAscList in (@fromDistinctAscList e a) in
-  let rhs := eval fold fromDistinctAscList_create_f in rhs in 
-  let rhs := eval fold fromDistinctAscList_create in rhs in 
+  let rhs := eval fold fromDistinctAscList_create_f in rhs in
+  let rhs := eval fold fromDistinctAscList_create in rhs in
   lazymatch rhs with context [deferredFix3 ?f] => exact f end.
 Defined.
 
@@ -211,7 +204,7 @@ Program Fixpoint fromDistinctAscList_create_Desc
   ) ->
   P (fromDistinctAscList_create (2^sz)%Z xs)) := _.
 Next Obligation.
-  intros ????? Hnonneg HSorted.  
+  intros ????? Hnonneg HSorted.
   rename fromDistinctAscList_create_Desc into IH.
   rewrite fromDistinctAscList_create_eq
     by (enough (0 < 2^sz)%Z by lia; apply Z.pow_pos_nonneg; lia).
@@ -230,8 +223,8 @@ Next Obligation.
     destruct p.
     assert (isUB (safeHd xs) e0 = true). {
       destruct xs; try reflexivity.
-      inversion H5. subst. unfold safeHd. destruct p. assumption. } 
-    
+      inversion H5. subst. unfold safeHd. destruct p. assumption. }
+
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
       ++ solve_Bounded e.
@@ -246,12 +239,12 @@ Next Obligation.
         rewrite Z.pow_sub_r by lia.
         reflexivity.
       assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
-      { rewrite Z2Nat.inj_sub by lia. 
+      { rewrite Z2Nat.inj_sub by lia.
         apply Nat.sub_lt.
         apply Z2Nat.inj_le.
         lia.
         lia.
-        lia. 
+        lia.
         replace (Z.to_nat 1) with 1 by reflexivity.
         lia.
       }
@@ -270,9 +263,9 @@ Next Obligation.
            eapply IH; clear IH.
            ** assumption.
            ** lia.
-           ** rewrite Hlist_l in H1. 
+           ** rewrite Hlist_l in H1.
               apply StronglySorted_app in H1.
-              destruct H1. 
+              destruct H1.
               eassumption.
            ** intros r zs HBounded_r Hlist_r Hsize_r.
               rewrite Hlist_l in HSorted.
@@ -281,7 +274,7 @@ Next Obligation.
                 destruct HSorted.
                 simpl.
                 rewrite Forall_forall in H10. unfold lt in H10.
-                specialize (H10 (e1, a1)). 
+                specialize (H10 (e1, a1)).
                 apply H10.
                 apply in_or_app. right. left. reflexivity.
               }
@@ -338,7 +331,7 @@ Proof.
   - simpl. rewrite IHBounded1. rewrite IHBounded2. rewrite toList_Bin.
     rewrite sem_list_app. rewrite app_comm_cons. rewrite sem_list_app.
     simpl. unfold SomeIf. rewrite oro_assoc. reflexivity.
-Qed. 
+Qed.
 
 Program Fixpoint fromDistinctAscList_go_Desc
   sz s xs {measure (length xs)} :
@@ -347,7 +340,7 @@ Program Fixpoint fromDistinctAscList_go_Desc
   Bounded s None (safeHd xs) ->
   xs = nil \/ size s = (2*2^sz-1)%Z ->
   Desc (fromDistinctAscList_go (2^sz)%Z s xs) None None (size s + List.length xs)
-    (fun i => sem s i ||| sem_for_lists xs i) := _. 
+    (fun i => sem s i ||| sem_for_lists xs i) := _.
 Next Obligation.
   intros.
   rename fromDistinctAscList_go_Desc into IH.
@@ -378,9 +371,9 @@ Next Obligation.
         destruct H0.
         rewrite Forall_forall in H4. specialize (H4 p). unfold isUB. destruct p. simpl.
         unfold lt in H4.
-        apply H4. 
+        apply H4.
         apply in_or_app. right. left. reflexivity.
-      }      
+      }
       applyDesc e (@link_Desc e a).
       eapply IH.
       + simpl. rewrite app_length. lia.
@@ -403,7 +396,7 @@ Next Obligation.
            rewrite app_length, Nat2Z.inj_succ, Nat2Z.inj_add.
            erewrite <- size_spec by eassumption.
            lia.
-        ** simpl. 
+        ** simpl.
            setoid_rewrite sem_list_app.
            setoid_rewrite <- toList_sem''; only 2: eassumption.
            f_solver e.
@@ -433,7 +426,7 @@ Proof.
         apply StronglySorted_inv in H.
         destruct H.
         rewrite Forall_forall in H0. destruct p. unfold isUB. simpl.
-        unfold lt in H0. specialize (H0 (e1, a1)). 
+        unfold lt in H0. specialize (H0 (e1, a1)).
         apply H0.
         left. reflexivity.
       }
@@ -452,7 +445,7 @@ Qed.
 Local Definition gt : e * a -> e * a -> Prop
   := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in (e1 > e2) = true.
 
-Definition fromDistinctDescList_create_f : (Int -> list (e * a) -> (Map e a) * list (e * a)) -> 
+Definition fromDistinctDescList_create_f : (Int -> list (e * a) -> (Map e a) * list (e * a)) ->
 (Int -> list (e * a) -> Map e a * list ( e * a)).
 Proof.
   let rhs := eval unfold fromDistinctDescList in (@fromDistinctDescList e a) in
@@ -522,7 +515,7 @@ Next Obligation.
         apply Z_shiftr_lt; lia.
       }
       apply IH.
-      - assumption. 
+      - assumption.
       - apply Z_shiftr_pos; lia.
       - intros.
         destruct_match.
@@ -538,8 +531,8 @@ Definition fromDistinctDescList_go_f : (Int -> Map e a -> list (e * a) -> Map e 
  (Int -> Map e a -> list (e * a) -> Map e a).
 Proof.
   let rhs := eval unfold fromDistinctDescList in (@fromDistinctDescList e a) in
-  let rhs := eval fold fromDistinctDescList_create_f in rhs in 
-  let rhs := eval fold fromDistinctDescList_create in rhs in 
+  let rhs := eval fold fromDistinctDescList_create_f in rhs in
+  let rhs := eval fold fromDistinctDescList_create in rhs in
   lazymatch rhs with context [deferredFix3 ?f] => exact f end.
 Defined.
 
@@ -584,7 +577,7 @@ Program Fixpoint fromDistinctDescList_create_Desc
   ) ->
   P (fromDistinctDescList_create (2^sz)%Z xs) := _.
 Next Obligation.
-  intros ????? Hnonneg HSorted.  
+  intros ????? Hnonneg HSorted.
   rename fromDistinctDescList_create_Desc into IH.
   rewrite fromDistinctDescList_create_eq
     by (enough (0 < 2^sz)%Z by lia; apply Z.pow_pos_nonneg; lia).
@@ -604,8 +597,8 @@ Next Obligation.
     assert (isLB (safeHd xs) e0 = true). {
       destruct xs; try reflexivity.
       inversion H5. subst. unfold safeHd. destruct p. unfold gt in H6.
-      unfold isLB. order e. } 
-    
+      unfold isLB. order e. }
+
     destruct (Z.eqb_spec (2^sz) 1).
     - intros X HX. apply HX. clear HX.
       ++ solve_Bounded e. unfold gt in H3. unfold isUB. order e.
@@ -620,7 +613,7 @@ Next Obligation.
         rewrite Z.pow_sub_r by lia.
         reflexivity.
       assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
-      { rewrite Z2Nat.inj_sub by lia. 
+      { rewrite Z2Nat.inj_sub by lia.
         apply Nat.sub_lt.
         apply Z2Nat.inj_le.
         lia.
@@ -644,9 +637,9 @@ Next Obligation.
            eapply IH; clear IH.
            ** assumption.
            ** lia.
-           ** rewrite Hlist_l in H1. 
+           ** rewrite Hlist_l in H1.
               apply StronglySorted_app in H1.
-              destruct H1. 
+              destruct H1.
               eassumption.
            ** intros r zs HBounded_r Hlist_r Hsize_r.
               rewrite Hlist_l in HSorted.
@@ -655,7 +648,7 @@ Next Obligation.
                 destruct HSorted.
                 simpl.
                 rewrite Forall_forall in H10. unfold gt in H10.
-                specialize (H10 (e1, a1)). 
+                specialize (H10 (e1, a1)).
                 assert (e1 < ub = true <-> ub > e1 = true) by (order e). rewrite H11.
                 apply H10.
                 apply in_or_app. right. left. reflexivity.
@@ -720,7 +713,7 @@ Program Fixpoint fromDistinctDescList_go_Desc
   Bounded s (safeHd xs) None  ->
   xs = nil \/ size s = (2*2^sz-1)%Z ->
   Desc (fromDistinctDescList_go (2^sz)%Z s xs) None None (size s + List.length xs)
-    (fun i => sem s i ||| sem_for_lists xs i) := _. 
+    (fun i => sem s i ||| sem_for_lists xs i) := _.
 Next Obligation.
   intros.
   rename fromDistinctDescList_go_Desc into IH.
@@ -751,9 +744,9 @@ Next Obligation.
         destruct H0.
         rewrite Forall_forall in H4. specialize (H4 p). unfold isLB. destruct p. simpl.
         unfold gt in H4. assert (e1 < e0 = true <->e0 > e1 = true) by (order e). rewrite H6.
-        apply H4. 
+        apply H4.
         apply in_or_app. right. left. reflexivity.
-      }      
+      }
       applyDesc e (@link_Desc e a).
       eapply IH.
       + simpl. rewrite app_length. lia.
@@ -776,9 +769,9 @@ Next Obligation.
            rewrite app_length, Nat2Z.inj_succ, Nat2Z.inj_add, rev_length.
            erewrite <- size_spec by eassumption.
            lia.
-        ** simpl. setoid_rewrite sem_list_app. 
+        ** simpl. setoid_rewrite sem_list_app.
             assert (forall i, sem_for_lists (rev (toList s0)) i = sem_for_lists (toList s0) i).
-            setoid_rewrite (sem_list_rev s0 (safeHd ys) (Some e0) _ H3). intros. reflexivity. 
+            setoid_rewrite (sem_list_rev s0 (safeHd ys) (Some e0) _ H3). intros. reflexivity.
             setoid_rewrite H9.
             setoid_rewrite <- toList_sem''; only 2: eassumption.
             f_solver e.
@@ -810,7 +803,7 @@ Proof.
         apply StronglySorted_inv in H.
         destruct H.
         rewrite Forall_forall in H0. destruct p. unfold isLB. simpl.
-        unfold gt in H0. specialize (H0 (e1, a1)). 
+        unfold gt in H0. specialize (H0 (e1, a1)).
         assert (e1 < e0 = true <-> e0 > e1 = true) by (order e). rewrite H1.
         apply H0.
         left. reflexivity.
@@ -909,11 +902,11 @@ Fixpoint last_value (l : list (e * a)) i:=
                                | None => Some y
                                | Some z => Some z
                                end else last_value t i
-  end. 
+  end.
 
 (*This proves that the last_value does in fact find the last value, since it finds
 the first value in the reversed list. It also justifies using either
-[sem_for_lists (rev l)] or [last_value l] based on which is more convienent. For 
+[sem_for_lists (rev l)] or [last_value l] based on which is more convienent. For
 [combineEq] and [fromDescList] (and similar), I use [last_value l], and in
 from_list, I use [sem_for_lists (rev l)]*)
 Lemma last_sem_equiv: forall l x,
@@ -925,7 +918,7 @@ Proof.
     simpl. destruct (e0 == x) eqn : ?. assert (x == e0 = true) by (order e).
     rewrite H. destruct (last_value l x) eqn : ?. simpl. reflexivity. simpl. reflexivity.
     assert (x == e0 = false) by (order e). rewrite H. rewrite oro_None_r. reflexivity.
-Qed. 
+Qed.
 
 (*An element has a last occurrence iff it is in the list*)
 Lemma last_iff_elem: forall l i,
@@ -933,7 +926,7 @@ Lemma last_iff_elem: forall l i,
 Proof.
   intros. revert  i. induction l; split; intros.
   - simpl in H. inversion H. inversion H0.
-  - simpl in H. inversion H. 
+  - simpl in H. inversion H.
   - simpl. destruct a0.  simpl in H. destruct (e0 == i) eqn : ?.
     simpl. reflexivity. simpl. eapply IHl. apply H.
   - simpl. destruct a0. simpl in H. destruct (e0  == i) eqn : ?.
@@ -943,7 +936,7 @@ Qed.
 
 Local Definition le : e * a -> e * a -> Prop
   := fun x1 x2 => let (e1, a1) := x1 in let (e2, a2) := x2 in (e1 <= e2) = true.
-  
+
 Lemma Forall_le_elem:
   forall x x0 xs,
   Forall (fun y => le (x, x0) y) xs <-> (forall i, key_elem xs i = true -> x <= i = true).
@@ -956,7 +949,7 @@ Proof.
   * split; intro H.
     - inversion H; subst; clear H.
       rewrite IHxs in H3; clear IHxs.
-      intros i Hi; simpl in Hi. destruct a0. 
+      intros i Hi; simpl in Hi. destruct a0.
       rewrite orb_true_iff in Hi. destruct Hi.
       + unfold le in *.  order e.
       + apply H3; assumption.
@@ -974,7 +967,7 @@ Proof.
   rewrite Forall_le_elem. split; intros.
   - apply H. apply last_iff_elem. exists v. assumption.
   - apply last_iff_elem in H0. destruct H0. apply H in H0. assumption.
-Qed. 
+Qed.
 
 
 Local Definition ge : e * a -> e * a -> Prop
@@ -992,7 +985,7 @@ Proof.
   * split; intro H.
     - inversion H; subst; clear H.
       rewrite IHxs in H3; clear IHxs.
-      intros i Hi; simpl in Hi. destruct a0. 
+      intros i Hi; simpl in Hi. destruct a0.
       rewrite orb_true_iff in Hi. destruct Hi.
       + unfold ge in *.  order e.
       + apply H3; assumption.
@@ -1010,7 +1003,7 @@ Proof.
   rewrite Forall_ge_elem. split; intros.
   - apply H. apply last_iff_elem. exists v. assumption.
   - apply last_iff_elem in H0. destruct H0. apply H in H0. assumption.
-Qed. 
+Qed.
 
 Lemma Forall_lt_elem:
   forall x x0 xs,
@@ -1024,7 +1017,7 @@ Proof.
   * split; intro H.
     - inversion H; subst; clear H.
       rewrite IHxs in H3; clear IHxs.
-      intros i Hi; simpl in Hi. destruct a0. 
+      intros i Hi; simpl in Hi. destruct a0.
       rewrite orb_true_iff in Hi. destruct Hi.
       + unfold lt in *.  order e.
       + apply H3; assumption.
@@ -1042,7 +1035,7 @@ Proof.
   rewrite Forall_lt_elem. split; intros.
   - apply H. apply last_iff_elem. exists v. assumption.
   - apply last_iff_elem in H0. destruct H0. apply H in H0. assumption.
-Qed. 
+Qed.
 
 
 Lemma Forall_gt_elem:
@@ -1057,7 +1050,7 @@ Proof.
   * split; intro H.
     - inversion H; subst; clear H.
       rewrite IHxs in H3; clear IHxs.
-      intros i Hi; simpl in Hi. destruct a0. 
+      intros i Hi; simpl in Hi. destruct a0.
       rewrite orb_true_iff in Hi. destruct Hi.
       + unfold gt in *.  order e.
       + apply H3; assumption.
@@ -1075,7 +1068,7 @@ Proof.
   rewrite Forall_gt_elem. split; intros.
   - apply H. apply last_iff_elem. exists v. assumption.
   - apply last_iff_elem in H0. destruct H0. apply H in H0. assumption.
-Qed. 
+Qed.
 
 
 (*Note: This is significatly different than SetProofs. It is not enough that the keys are preserved,
@@ -1098,13 +1091,13 @@ Proof.
     + unfold lt. unfold le in Hlt. unfold combineEqGo. simpl. destruct x.
       constructor; constructor.
     + intro. unfold combineEqGo. simpl. destruct x. simpl. reflexivity.
-  * inversion Hlt; subst; clear Hlt.  
+  * inversion Hlt; subst; clear Hlt.
     simpl. unfold combineEqGo in *. simpl in *. destruct a0. destruct x.
     destruct_match.
     + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
       intros X HX; apply HX; clear X HX.
       - assumption.
-      - intro i. rewrite Hiys. simpl. 
+      - intro i. rewrite Hiys. simpl.
         destruct (e0 == i) eqn:?, (e1 == i) eqn:?. destruct (last_value l i) eqn : ?.
         reflexivity. reflexivity. reflexivity. order e. reflexivity.
     + assert (Hlt : e1 < e0 = true) by (unfold le in H3; order e). clear H3 Heq.
@@ -1138,13 +1131,13 @@ Proof.
     + unfold lt. unfold ge in Hlt. unfold combineEqGo. simpl. destruct x.
       constructor; constructor.
     + intro. unfold combineEqGo. simpl. destruct x.  simpl. reflexivity.
-  * inversion Hlt; subst; clear Hlt.  
+  * inversion Hlt; subst; clear Hlt.
     simpl. unfold combineEqGo in *. simpl in *. destruct a0. destruct x.
     destruct_match.
     + eapply IHStronglySorted; only 1: assumption; intros ys Hsortedys Hiys.
       intros X HX; apply HX; clear X HX.
       - assumption.
-      - intro i. rewrite Hiys. simpl. 
+      - intro i. rewrite Hiys. simpl.
         destruct (e0 == i) eqn:?, (e1 == i) eqn:?. destruct (last_value l i) eqn : ?.
         reflexivity. reflexivity. reflexivity. order e. reflexivity.
     + assert (Hlt : e1 > e0 = true) by (unfold ge in H3; order e). clear H3 Heq.
@@ -1216,7 +1209,7 @@ Fixpoint weak_In (l : list (e * a)) (x : e * a) :=
   | (a,b) :: t => let (x0, y0) := x in (a == x0 = true) /\ b = y0 \/ weak_In t x
   end.
 
-Lemma Forall_forall_lt: 
+Lemma Forall_forall_lt:
   forall  (l : list (e * a)) t, Forall (lt t) l <-> (forall x, weak_In l x -> lt t x).
 Proof.
   intros. split; intros; induction l; intros.
@@ -1230,7 +1223,7 @@ Proof.
     destruct a0. apply IHl. intros. apply H. destruct x. right. assumption.
 Qed.
 
-Lemma Forall_forall_gt: 
+Lemma Forall_forall_gt:
   forall  (l : list (e * a)) t, Forall (gt t) l <-> (forall x, weak_In l x -> gt t x).
 Proof.
   intros. split; intros; induction l; intros.
@@ -1288,7 +1281,7 @@ Proof.
   - simpl. destruct a0. destruct (x == e0) eqn : ?.
     rewrite Forall_forall_lt in H0.
     rewrite IHStronglySorted.
-    destruct (sem_for_lists l x) eqn : ?. 
+    destruct (sem_for_lists l x) eqn : ?.
     + rewrite strongly_sorted_in_sem_lt in Heqo. apply H0 in Heqo.
       unfold lt in Heqo. order e. apply H. destruct (e0 == x) eqn : ?. reflexivity.
     order e. assert (e0 == x = false) by (order e). rewrite H1. apply IHStronglySorted.
@@ -1304,7 +1297,7 @@ Proof.
   - simpl. destruct a0. destruct (x == e0) eqn : ?.
     rewrite Forall_forall_gt in H0.
     rewrite IHStronglySorted.
-    destruct (sem_for_lists l x) eqn : ?. 
+    destruct (sem_for_lists l x) eqn : ?.
     + rewrite strongly_sorted_in_sem_gt in Heqo. apply H0 in Heqo.
       unfold gt in Heqo. order e. apply H. destruct (e0 == x) eqn : ?. reflexivity.
     order e. assert (e0 == x = false) by (order e). rewrite H1. apply IHStronglySorted.
@@ -1345,7 +1338,7 @@ Qed.
 (** The verification of [fromList] should be similar to that of [fromDistinctAscList], only
 that the condition is checked and -- if it fails -- we resort to a backup implementation. *)
 
-(* The following definitions are copied from the local definitions of [fromList]; 
+(* The following definitions are copied from the local definitions of [fromList];
    my ltac foo failed to do that automatic.
 *)
 
@@ -1365,7 +1358,7 @@ Definition not_ordered :=
             | kx, cons (pair ky _) _ => kx GHC.Base.>= ky
             end .
 
-Definition fromList_create_f : (Int -> list (e * a) -> Map e a * list (e * a) * list (e * a)) -> 
+Definition fromList_create_f : (Int -> list (e * a) -> Map e a * list (e * a) * list (e * a)) ->
 (Int -> list (e * a) -> Map e a * list (e * a)  * list (e * a))
   := (fun create arg_11__ arg_12__ =>
       match arg_11__, arg_12__ with
@@ -1479,7 +1472,7 @@ Next Obligation.
         apply Z_shiftr_lt; lia.
       }
       apply IH.
-      - assumption. 
+      - assumption.
       - apply Z_shiftr_pos; lia.
       - intros.
         destruct_match.
@@ -1551,7 +1544,7 @@ Next Obligation.
     - left. reflexivity.
   * repeat replace (#1) with 1%Z by reflexivity.
     unfold op_zeze__, Eq_Integer___, op_zeze____.
-    
+
     simpl in HheadOrdered. destruct p.
 
 (*     assert (isUB (safeHd xs) e0 = true). {
@@ -1579,7 +1572,7 @@ Next Obligation.
         rewrite Z.pow_sub_r by lia.
         reflexivity.
       assert (Z.to_nat (sz - 1) < Z.to_nat sz)%nat.
-      { rewrite Z2Nat.inj_sub by lia. 
+      { rewrite Z2Nat.inj_sub by lia.
         apply Nat.sub_lt.
         apply Z2Nat.inj_le.
         lia.
@@ -1643,7 +1636,7 @@ Lemma foldl_foldl' : forall {b} f (x : b) (l: list (e * a)),
   Foldable.foldl f x l = Foldable.foldl' f x l.
 Proof.
   intros.  unfold Foldable.foldl, Foldable.foldl'; unfold Foldable.Foldable__list;
-    unfold  Foldable.foldl__ , Foldable.foldl'__ ; 
+    unfold  Foldable.foldl__ , Foldable.foldl'__ ;
     unfold Foldable.Foldable__list_foldl', Foldable.Foldable__list_foldl;
     unfold Base.foldl, Base.foldl'. reflexivity.
 Qed.
@@ -1694,7 +1687,7 @@ Proof.
     + rewrite Heqo2 in Heqo0. inversion Heqo0.
     + rewrite Heqo2 in Heqo0. simpl in Heqo0. rewrite Heqb in Heqo0. inversion Heqo0.
     + rewrite Heqo1 in Heqo0. simpl in Heqo0. rewrite Heqb in Heqo0. inversion Heqo0.
-Qed. 
+Qed.
 
 (*In a well formed map, we can only find each key once in the list, so it doesn't matter
 if we look in the list or the reverse list*)
@@ -1705,7 +1698,7 @@ Proof.
   intros. revert i. induction H; intros.
   - simpl. reflexivity.
   - rewrite toList_Bin. rewrite rev_app_distr. rewrite sem_list_app.
-    rewrite sem_list_app. simpl. rewrite sem_list_app. 
+    rewrite sem_list_app. simpl. rewrite sem_list_app.
     rewrite IHBounded2. simpl. rewrite IHBounded1. repeat (erewrite <- toList_sem'').
     destruct (sem s2 i) eqn : ?. assert (sem s1 i = None). { eapply sem_outside_above.
     apply H. unfold isUB. apply (sem_inside H0) in Heqo. destruct Heqo. order_Bounds e. }
@@ -1746,9 +1739,9 @@ Next Obligation.
       rewrite Z.pow_add_r by lia.
       lia. destruct p.
     destruct_match.
-    --  apply Bounded_relax_ub_None in H0. 
+    --  apply Bounded_relax_ub_None in H0.
         applyDesc e fromList'_Desc.
-        solve_Desc e. assumption. 
+        solve_Desc e. assumption.
     --  eapply fromList_create_Desc.
         - lia.
         - eassumption.
@@ -1772,13 +1765,13 @@ Next Obligation.
                 solve_Desc e. simpl.
                 (*setoid_rewrite elem_cons.*)
                 setoid_rewrite sem_list_app. setoid_rewrite rev_app_distr.
-                setoid_rewrite sem_list_app. 
-                setoid_rewrite (sem_toList_reverse s0 _ _ _ H2). 
+                setoid_rewrite sem_list_app.
+                setoid_rewrite (sem_toList_reverse s0 _ _ _ H2).
                 setoid_rewrite <- toList_sem''; only 2: eassumption. f_solver e.
                 ** assert (sem s i = None). { eapply sem_outside_above. apply H0. solve_Bounds e. }
                    rewrite H9 in Hsem. simpl in Hsem. assert (i == e0 = false) by solve_Bounds e.
                    rewrite H10 in Hsem. simpl in Hsem. rewrite Hsem in H8. inversion H8; reflexivity.
-                ** simpl in Heqo2. destruct( i == e0) eqn : ?. simpl in Hsem. 
+                ** simpl in Heqo2. destruct( i == e0) eqn : ?. simpl in Hsem.
                    assert (sem s i = None). { eapply sem_outside_above. apply H0.
                    solve_Bounds e. } rewrite H9 in Hsem. simpl in Hsem. rewrite Hsem in H8.
                   rewrite Heqo2 in H8. inversion H8; reflexivity.
@@ -1799,11 +1792,11 @@ Next Obligation.
             solve_Desc e. simpl.
             (*setoid_rewrite elem_cons.*)
             setoid_rewrite sem_list_app. setoid_rewrite rev_app_distr. simpl.
-            setoid_rewrite sem_list_app. setoid_rewrite (sem_toList_reverse s0 _ _ _ H2). 
+            setoid_rewrite sem_list_app. setoid_rewrite (sem_toList_reverse s0 _ _ _ H2).
             setoid_rewrite <- toList_sem''; only 2: eassumption. simpl in Hsem0.
             f_solver e.
             ** assert (sem s i = None). { eapply sem_outside_above. apply H0.
-              solve_Bounds e. } rewrite H5 in Hsem. simpl in Hsem. 
+              solve_Bounds e. } rewrite H5 in Hsem. simpl in Hsem.
               assert (i == e0 = false) by solve_Bounds e. rewrite H6 in Hsem. simpl in Hsem.
               rewrite Hsem in Hsem0. inversion Hsem0; reflexivity.
             **  assert (sem s i = None). { eapply sem_outside_above. apply H0.
@@ -1823,7 +1816,7 @@ Proof.
   cbv beta delta [fromList].
   destruct xs as [ | ? [|??] ].
   * solve_Desc e. reflexivity.
-  * destruct p. solve_Desc e. intros. simpl. destruct (i == e0); reflexivity. 
+  * destruct p. solve_Desc e. intros. simpl. destruct (i == e0); reflexivity.
   * fold fromList'. destruct p.
     zeta_one.
     fold not_ordered.
@@ -1843,7 +1836,7 @@ Proof.
     - repeat replace (#1) with (2^0)%Z by reflexivity.
       eapply fromList_go_Desc.
       + lia.
-      + destruct p0. simpl in Heq. 
+      + destruct p0. simpl in Heq.
         solve_Bounded e.
       + right. reflexivity.
       + intros.

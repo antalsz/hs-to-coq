@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -34,7 +27,7 @@ Module MapFMap (E : OrderedType)<: WSfun(E) <: WS <: Sfun(E) <: S.
 
   Definition WFMap (e: Type) :=
   {m : Map key e | WF m}.
-  
+
   Definition t: Type -> Type := WFMap.
 Section Types.
 
@@ -47,16 +40,16 @@ Section Types.
 
   Program Definition add: key -> elt -> t elt -> t elt := insert.
   Next Obligation. unfold proj1_sig. destruct x1. apply insert_WF; assumption.
-  Defined. 
+  Defined.
 
-  Program Definition find: key -> t elt -> option elt := lookup.  
+  Program Definition find: key -> t elt -> option elt := lookup.
 
   Program Definition remove: key -> t elt -> t elt := delete.
   Next Obligation. destruct x0. simpl. eapply delete_Desc.
   - apply w.
   - intros. apply H.
   Defined.
-  
+
   Program Definition mem : key -> t elt -> bool := member.
 
   Variable elt' elt'' : Type.
@@ -77,13 +70,13 @@ Section Types.
   Proof.
     intros. induction H.
     - simpl. constructor.
-    - simpl. apply BoundedBin; try(assumption); erewrite <- mapWithKey_pres_size; 
+    - simpl. apply BoundedBin; try(assumption); erewrite <- mapWithKey_pres_size;
       try(erewrite <- mapWithKey_pres_size); try (assumption); try (eassumption).
   Qed.
 
   Program Definition mapi : (key -> elt -> elt') -> t elt -> t elt' := mapWithKey.
   Next Obligation. destruct x0. simpl. apply mapWithKey_pres_WF. apply w. Defined.
-  
+
   (*[map2] is a particularly complex function to write, since there is no direct analogue. It is possible
   to write several ways, including folding over both maps in order or folding over the [toList] of the
   two maps. Instead, I defined it by first mapping each map to a map of (key, option elt''), then
@@ -108,7 +101,7 @@ Section Types.
     WF m2 ->
     WF (map2_map m1 m2 f).
   Proof.
-    intros. unfold map2_map. eapply union_Desc. 
+    intros. unfold map2_map. eapply union_Desc.
     - apply mapWithKey_pres_WF. apply H.
     - apply mapWithKey_pres_WF. apply H0.
     - intros. apply H1.
@@ -136,10 +129,10 @@ Qed.
 
   Program Definition cardinal : t elt -> nat := map_size.
 
-  Definition foldlWithKey2 {a} := fun (f : key -> elt -> a -> a) (m : Map key elt) b => 
+  Definition foldlWithKey2 {a} := fun (f : key -> elt -> a -> a) (m : Map key elt) b =>
   foldlWithKey (fun t k v => f k v t) b m.
 
-  Program Definition fold : forall (A : Type), (key -> elt -> A -> A) -> t elt -> A -> A := 
+  Program Definition fold : forall (A : Type), (key -> elt -> A -> A) -> t elt -> A -> A :=
    @foldlWithKey2.
 
   (*Possibly defined elsewhere, this just compares two lists using a comparison function f
@@ -176,7 +169,7 @@ Variable e e' : elt.
 
   Lemma MapsTo_1: E.eq x y -> MapsTo x e m -> MapsTo y e m.
   Proof.
-    intros. unfold MapsTo in *. erewrite sem_resp_eq. apply H0.  
+    intros. unfold MapsTo in *. erewrite sem_resp_eq. apply H0.
     epose proof elt_eqP. inversion H1. symmetry. apply H2.
     apply E.eq_sym in H. contradiction.
   Qed.
@@ -190,7 +183,7 @@ Variable e e' : elt.
   Lemma mem_2 :mem x m = true -> In x m.
   Proof.
     intros. destruct m. unfold mem in H. unfold In. unfold MapsTo. simpl in *.
-    eapply member_spec. apply w. apply H. 
+    eapply member_spec. apply w. apply H.
   Qed.
 
   Lemma empty_1 : Empty empty.
@@ -202,7 +195,7 @@ Variable e e' : elt.
   Proof.
     intros. destruct m. unfold Empty in H. unfold is_empty. unfold MapsTo in H. simpl in *.
     assert (forall a, sem x0 a = None). intros. specialize (H a). destruct (sem x0 a) eqn : ?.
-    specialize (H e0). contradiction. reflexivity. rewrite null_empty_iff. 
+    specialize (H e0). contradiction. reflexivity. rewrite null_empty_iff.
     rewrite <- empty_no_elts. apply H0.
   Qed.
 
@@ -212,7 +205,7 @@ Variable e e' : elt.
     intros. erewrite null_empty_iff in H. rewrite <- empty_no_elts in H.
     specialize (H a). rewrite H. intro contra. discriminate contra.
   Qed.
-  
+
   Lemma elt_neq: ~E.eq x y <-> x == y = false.
   Proof.
     intros. split; intros.
@@ -226,7 +219,7 @@ Variable e e' : elt.
     - apply w.
     - reflexivity.
     - reflexivity.
-    - intros. specialize (H2 y). apply E.eq_sym in H. apply elt_eq in H. 
+    - intros. specialize (H2 y). apply E.eq_sym in H. apply elt_eq in H.
       rewrite H in H2. simpl in H2. assumption.
   Qed.
 
@@ -250,7 +243,7 @@ Variable e e' : elt.
       simpl in H0. assumption.
     - apply w.
     - reflexivity.
-    - reflexivity. 
+    - reflexivity.
   Qed.
 
   (*A sem rule for delete*)
@@ -266,16 +259,16 @@ Variable e e' : elt.
   Lemma remove_1 : E.eq x y -> ~ In y (remove x m).
   Proof.
     intros. destruct m. unfold In. unfold MapsTo. unfold remove. simpl. intro.
-    destruct H0. rewrite delete_sem in H0. apply elt_eq in H. 
+    destruct H0. rewrite delete_sem in H0. apply elt_eq in H.
     assert ( x == y = true) by (apply H). assert (y == x = true) by (order key).
      rewrite H2 in H0. inversion H0. apply w.
-  Qed. 
+  Qed.
 
   Lemma remove_2 : ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
   Proof.
-    intros. unfold MapsTo in *. unfold remove. destruct m. simpl in *. 
+    intros. unfold MapsTo in *. unfold remove. destruct m. simpl in *.
     rewrite delete_sem. apply elt_neq in H.  assert (y == x = false) by (order key).
-    rewrite H1. assumption. apply w. 
+    rewrite H1. assumption. apply w.
   Qed.
 
   Lemma remove_3 : MapsTo y e (remove x m) -> MapsTo y e m.
@@ -312,7 +305,7 @@ Variable e e' : elt.
         * apply InA_cons_tl. apply IHl. apply H.
       + destruct a. inversion H; subst.
         * simpl in H1. destruct H1. left. split. assert (k == k0 = true) by (apply elt_eq; apply H0).
-          order key. symmetry. apply H1. 
+          order key. symmetry. apply H1.
         * right. apply IHl. apply H1.
   Qed.
 
@@ -325,21 +318,21 @@ Proof.
   clear.
   intros. generalize dependent value. induction H.
   - simpl. intros. split; intros. discriminate H. destruct H.
-  - intros. simpl. rewrite toList_Bin. rewrite elem_or. 
+  - intros. simpl. rewrite toList_Bin. rewrite elem_or.
     assert (((x, v) :: nil ++ toList s2) = (((x, v) :: nil) ++ toList s2)).
     simpl. reflexivity. simpl.  split; intros.
       + destruct (sem s1 key0) eqn : ?; simpl in H6.
-      * apply IHBounded1 in H6. left. apply H6. 
+      * apply IHBounded1 in H6. left. apply H6.
       * destruct (key0 == x) eqn : ?; simpl in H6.
         { right. left. simpl. split. order key. inversion H6; subst; reflexivity. }
         { apply IHBounded2 in H6. right. right. assumption. }
      + destruct H6.
       * apply IHBounded1 in H6. rewrite H6. simpl. reflexivity.
-      * destruct H6. destruct H6. 
+      * destruct H6. destruct H6.
         assert (sem s1 key0 = None). { eapply sem_outside_above.
-        apply H. unfold isUB. order key. } 
+        apply H. unfold isUB. order key. }
         rewrite H8. simpl. apply Eq_Symmetric in H6. rewrite H6. simpl.
-        rewrite H7. reflexivity. apply IHBounded2 in H6. 
+        rewrite H7. reflexivity. apply IHBounded2 in H6.
         assert (sem s1 key0 = None). { eapply sem_outside_above. apply H. unfold isUB.
         apply (sem_inside H0 ) in H6. destruct H6. unfold isLB in H6. order key. }
         rewrite H7. assert (key0 == x = false). { apply (sem_inside H0) in H6.
@@ -347,7 +340,7 @@ Proof.
         assumption.
 Qed.
 
-  Lemma elements_1 : 
+  Lemma elements_1 :
         MapsTo x e m -> InA eq_key_elt (x,e) (elements m).
   Proof.
     intros. destruct m. unfold elements. unfold MapsTo in H. simpl in *.
@@ -383,9 +376,9 @@ Qed.
       - apply IHForall. apply H3.
   Qed.
 
-  (*Unfortunately, we know that the list is sorted, which is much stronger than than there 
+  (*Unfortunately, we know that the list is sorted, which is much stronger than than there
     are no duplicates. We must prove one implies the other*)
-  Lemma sorted_no_dups: forall (l: list (key * elt)), 
+  Lemma sorted_no_dups: forall (l: list (key * elt)),
   StronglySorted lt l -> NoDupA (eq_key) l.
   Proof.
     intros. induction H.
@@ -414,7 +407,7 @@ Qed.
   Lemma cardinal_1 : cardinal m = length (elements m).
   Proof.
     intros. unfold cardinal. unfold elements. destruct m. simpl.
-    assert (Z.of_nat (map_size x0) = Z.of_nat (length (toList x0))). { 
+    assert (Z.of_nat (map_size x0) = Z.of_nat (length (toList x0))). {
     rewrite <- size_equiv. eapply size_spec. apply w. apply w. }
     omega.
   Qed.
@@ -461,7 +454,7 @@ Proof.
     + constructor. unfold eq_key. simpl. unfold eq_key_elt in H1. destruct H1. simpl in H0.
       apply H0.
     + apply InA_cons_tl. apply IHl. apply H1.
-Qed. 
+Qed.
 
 (*Annoyingly, we cannot use the results about StronglySortedness from before, since they
 all deal with haskell equality and require EqLaws a. So we have to prove a similar, but
@@ -473,23 +466,23 @@ Lemma strongly_sorted_cmp_unique: forall (xs ys : list (key * elt)) (cmp: elt ->
    (forall y z, Key_In x y xs /\ Key_In x z ys -> cmp y z = true )) ->
   cmp_list xs ys cmp = true.
 Proof.
-  clear. 
+  clear.
   intros. generalize dependent ys. generalize dependent cmp. induction xs; intros.
-  - destruct ys. 
+  - destruct ys.
     + reflexivity.
     + destruct p. specialize (H1 k). destruct H1. destruct H1. simpl in H3.
-      assert (exists (e: elt), False). apply H3. exists e. left. split. apply Eq_Reflexive. 
+      assert (exists (e: elt), False). apply H3. exists e. left. split. apply Eq_Reflexive.
       reflexivity. destruct H4. destruct H4.
   - destruct ys.
-    + destruct a. specialize (H1 k). destruct H1. destruct H1. simpl in H1. 
+    + destruct a. specialize (H1 k). destruct H1. destruct H1. simpl in H1.
       assert (exists (e: elt), False). apply H1. exists e. left. split. apply Eq_Reflexive.
       reflexivity. destruct H4. destruct H4.
-    + simpl. destruct a. destruct p. rewrite andb_true_iff. split. 
+    + simpl. destruct a. destruct p. rewrite andb_true_iff. split.
       * rewrite andb_true_iff. split.
         -- inversion H; subst. inversion H0; subst. assert (A:=H1). specialize (H1 k). destruct H1.
            destruct H1. assert (exists z : elt, Key_In k z ((k0, e0) :: ys)). apply H1.
            simpl. exists e. left. split. apply Eq_Reflexive. reflexivity. destruct H8.
-           simpl in H8. destruct H8. 
+           simpl in H8. destruct H8.
            ++ destruct H8. apply elt_eq. apply Eq_Symmetric in H8. apply elt_eq in H8. apply H8.
            ++ specialize (A k0). destruct A. destruct H9. assert (exists y : elt, Key_In k0 y ((k, e) :: xs)).
               apply H11. exists e0. simpl. left. split. apply Eq_Reflexive. reflexivity. destruct H12.
@@ -515,7 +508,7 @@ Proof.
             unfold lt in H14. order key. apply eq_key_elt_implies_key. apply In_InA_equiv.
             apply H8. apply eq_key_elt_implies_key. apply In_InA_equiv. apply H7.
       * inversion H; subst. inversion H0; subst. apply IHxs. apply H4. apply H6. intros.
-        split. 
+        split.
         -- assert (k == k0 = true). { assert (A:=H1). specialize (H1 k).
               specialize (A k0). destruct H1. destruct H1. destruct A. destruct H8.
               assert (exists z : elt, Key_In k z ((k0, e0) :: ys)). apply H1. exists e.
@@ -526,11 +519,11 @@ Proof.
               apply (All_lt_elem _ (k, x0) _ ) in H7. apply (All_lt_elem _ (k0, x1) _ ) in H5.
               unfold lt in *. order key. apply  eq_key_elt_implies_key. apply In_InA_equiv.
               apply H12. apply eq_key_elt_implies_key. apply In_InA_equiv. apply H11. }
-              split; intros. 
+              split; intros.
            ++ assert (k < x = true). destruct H3. apply (All_lt_elem _ (x, x0) _) in H5.
               unfold lt in H5. assumption. apply eq_key_elt_implies_key. apply In_InA_equiv.
-              apply H3. 
-              assert (k0 < x = true) by (order key). 
+              apply H3.
+              assert (k0 < x = true) by (order key).
               specialize (H1 x). destruct H1. destruct H1.
               assert (exists z : elt, Key_In x z ((k0, e0) :: ys)). apply H1. destruct H3.
               exists x0. simpl. right. assumption. destruct H12. simpl in H12.
@@ -538,18 +531,18 @@ Proof.
             ++ assert (k0 < x = true). destruct H3. apply (All_lt_elem _ (x, x0) _) in H7.
                 unfold lt in H7. assumption. apply eq_key_elt_implies_key. apply In_InA_equiv.
                 apply H3. assert (k < x = true ) by (order key).
-                specialize (H1 x). destruct H1. destruct H1. 
+                specialize (H1 x). destruct H1. destruct H1.
                 assert (exists y : elt, Key_In x y ((k, e) :: xs)). apply H11. destruct H3.
                 exists x0. simpl. right. assumption. destruct H12. simpl in H12. destruct H12.
                 order key. exists x0. assumption.
           -- intros. specialize (H1 x). destruct H1. apply H3. destruct H2. split.
               ++ simpl. right. assumption.
               ++ simpl. right. assumption.
-Qed. 
+Qed.
 
 
 Lemma equal_1: Equivb cmp m m' -> equal cmp m m' = true.
-Proof. 
+Proof.
   clear.
   intros. unfold equal. unfold Equivb in H. unfold Equiv in H. unfold MapsTo in H.
   unfold Cmp in H. unfold In in H. unfold MapsTo in H. destruct m. destruct m'.
@@ -564,7 +557,7 @@ Lemma eq_list_prop: forall (l: list (key * elt)) l' (cmp: elt -> elt -> bool),
   StronglySorted lt l ->
   StronglySorted lt l' ->
   cmp_list l l' cmp = true ->
-  (forall k, (exists v, Key_In k v l) <-> (exists v, Key_In k v l')) /\ 
+  (forall k, (exists v, Key_In k v l) <-> (exists v, Key_In k v l')) /\
   (forall k v v', Key_In k v l /\ Key_In k v' l' -> cmp v v' = true).
 Proof.
   clear.
@@ -581,7 +574,7 @@ Proof.
     + simpl in H1. destruct a. destruct p. setoid_rewrite andb_true_iff in H1. destruct H1.
       setoid_rewrite andb_true_iff in H1. destruct H1. split; intros.
       * split; intros.
-        -- destruct H4. simpl in H4. destruct H4. 
+        -- destruct H4. simpl in H4. destruct H4.
            ++ destruct H4. subst. simpl. exists e0. left. split. assert (k == k0 = true). apply elt_eq.
               apply elt_eq in H1. apply H1. order key. reflexivity.
            ++ simpl. apply IHl in H2. destruct H2. assert ((exists v : elt, Key_In k1 v l')).
@@ -590,7 +583,7 @@ Proof.
         -- simpl in H4. destruct H4. destruct H4.
            ++ destruct H4. subst. simpl. exists e. left. split. assert (k == k0 = true). apply elt_eq.
               apply elt_eq in H1. apply H1. order key. reflexivity.
-           ++ simpl. apply IHl in H2. destruct H2. 
+           ++ simpl. apply IHl in H2. destruct H2.
               assert (exists v : elt, Key_In k1 v l). apply H2. exists x. assumption. destruct H6.
               exists x0. right. assumption. inversion H; assumption. inversion H0; assumption.
       * simpl in H4. destruct H4. destruct H4.
@@ -613,7 +606,7 @@ Proof.
   destruct m. destruct m'. simpl in *. apply eq_list_prop in H.
   destruct H. split; intros.
   - specialize (H k). setoid_rewrite toList_sem_again. apply H. apply w. apply w0.
-  - eapply H0. setoid_rewrite toList_sem_again in H1. setoid_rewrite toList_sem_again in H2. 
+  - eapply H0. setoid_rewrite toList_sem_again in H1. setoid_rewrite toList_sem_again in H2.
     split. apply H1. apply H2. apply w0. apply w.
   - eapply to_List_sorted. apply w.
   - eapply to_List_sorted. apply w0.
@@ -627,13 +620,13 @@ Lemma map_1 :forall (elt elt' : Type) (m: t elt) (x : key) (e : elt) (f: elt -> 
   MapsTo _ x e m -> MapsTo _ x (f e) (map _ _ f m).
 Proof.
   intros. unfold MapsTo in *. destruct m. simpl in *. eapply map_Desc.
-  apply w. intros. specialize (H2 x). rewrite H in H2. assumption. 
+  apply w. intros. specialize (H2 x). rewrite H in H2. assumption.
 Qed.
 
 Lemma map_2: forall (elt elt' : Type) (m : t elt) (x : key) (f : elt -> elt'),
   In _ x (map _ _ f m) -> In _ x m.
 Proof.
-  intros. unfold In in *. unfold MapsTo in *. destruct m. simpl in *. 
+  intros. unfold In in *. unfold MapsTo in *. destruct m. simpl in *.
   rewrite map_mapWithKey_equiv in H.
   destruct (sem x0 x) eqn : ?.
   - exists e. reflexivity.
@@ -641,7 +634,7 @@ Proof.
     apply w.
 Qed.
 
-(*If sem of the mapped map is Some v, then there was an equivalent (Haskell) key in the 
+(*If sem of the mapped map is Some v, then there was an equivalent (Haskell) key in the
   original map*)
 Lemma mapWithKey_reverse: forall (elt elt' : Type) (m: Map key elt) (f: key -> elt -> elt'),
   WF m ->
@@ -657,7 +650,7 @@ Proof.
     split. apply elt_eq in Heqb. assumption. rewrite Eq_Reflexive. simpl. exists v.
     assert (sem s1 x = None). erewrite sem_resp_eq. apply Heqo. order key. rewrite H6.
     simpl. reflexivity. simpl in H5. exists i. split. auto. apply IHBounded2 in H5.
-    destruct H5. destruct H5. destruct H6. exists x1. rewrite Heqo. rewrite Heqb. simpl. 
+    destruct H5. destruct H5. destruct H6. exists x1. rewrite Heqo. rewrite Heqb. simpl.
     erewrite sem_resp_eq. apply H6. apply elt_eq. assumption. apply H.
 Qed.
 
@@ -684,7 +677,7 @@ Qed.
 
 (*For [map2], there are a lot of lemmas to prove. First, we further split map2_map into two functions
   (proving equivalence) so we can prove things about each of them. This gets a bit redundant, but
-  ultimately we want to prove that if a key is is 1 of the two maps, then k, f (sem m1 k) (sem m2 k) 
+  ultimately we want to prove that if a key is is 1 of the two maps, then k, f (sem m1 k) (sem m2 k)
   is in the resulting map, and if it is in neither maps, then k is not in the resulting map *)
 
 Definition map2_map_part1 (elt elt' elt'' : Type) (m1: Map key elt) (m2: Map key elt')
@@ -720,11 +713,11 @@ Proof.
   - reflexivity.
   - apply H.
   - unfold respectful. unfold Proper. intros. assert (sem m x1 = sem m y). {
-    apply sem_resp_eq. assumption. } 
+    apply sem_resp_eq. assumption. }
     assert (sem m' x1 = sem m' y). { apply sem_resp_eq. assumption. }
     rewrite H3. rewrite H4. reflexivity.
   - apply H1.
-Qed. 
+Qed.
 
 Lemma map2_map_part_1_notin : forall (elt elt' elt'' : Type)(m: Map key elt) (m': Map key elt') (x: key)
   (f: option elt -> option elt' -> option elt''),
@@ -736,7 +729,7 @@ Lemma map2_map_part_1_notin : forall (elt elt' elt'' : Type)(m: Map key elt) (m'
 Proof.
   intros. unfold map2_map_part1. apply (map_none_spec (fun k e => f (sem m k)  (sem m' k)) m None None).
   apply H. apply H1.
-Qed. 
+Qed.
 
 (*See if I can cut down on repetition*)
 Lemma map2_map_part_2_in : forall (elt elt' elt'' : Type)(m: Map key elt) (m': Map key elt') (x: key)
@@ -765,7 +758,7 @@ Lemma map2_map_part_2_notin : forall (elt elt' elt'' : Type)(m: Map key elt) (m'
 Proof.
   intros. unfold map2_map_part2. apply (map_none_spec (fun k e => f (sem m k)  (sem m' k)) m' None None).
   apply H0. apply H2.
-Qed.  
+Qed.
 
 (*Putting the parts together*)
 
@@ -779,7 +772,7 @@ Proof.
   intros. rewrite map2_map_equiv. unfold map2_map_alt.
   erewrite sem_union_equiv. unfold sem_union.
   destruct H1.
-  - pose proof (map2_map_part_1_in _ _ _ _ _ _ f H H0 H1). 
+  - pose proof (map2_map_part_1_in _ _ _ _ _ _ f H H0 H1).
     rewrite H2. reflexivity.
   - pose proof (map2_map_part_2_in _ _ _ _ _ _ f H H0 H1).
     rewrite H2. destruct (sem m x0) eqn : ?.
@@ -802,15 +795,15 @@ Lemma map2_map_notin: forall (elt elt' elt'' : Type)(m: Map key elt) (m': Map ke
   sem (map2_map _ _ _ m m' f) x = None.
 Proof.
   intros. rewrite map2_map_equiv. unfold map2_map_alt. erewrite sem_union_equiv.
-  unfold sem_union. destruct H1. 
-  assert (sem (map2_map_part1 elt0 elt' elt'' m m' f) x0 = None). { 
+  unfold sem_union. destruct H1.
+  assert (sem (map2_map_part1 elt0 elt' elt'' m m' f) x0 = None). {
   apply map2_map_part_1_notin; assumption. }
-  assert (sem (map2_map_part2 elt0 elt' elt'' m m' f) x0 = None). { 
+  assert (sem (map2_map_part2 elt0 elt' elt'' m m' f) x0 = None). {
   apply map2_map_part_2_notin; assumption. }
-  rewrite H3. rewrite H4. reflexivity. 
+  rewrite H3. rewrite H4. reflexivity.
   unfold map2_map_part1. apply mapWithKey_pres_WF. apply H.
   unfold map2_map_part2. apply mapWithKey_pres_WF. apply H0.
-Qed. 
+Qed.
 
 (*Some lemmas and ltac to prove that any m such that Bounded m lb ub is well formed*)
 
@@ -850,7 +843,7 @@ Proof.
   - simpl in H2. simpl. destruct (sem s1 x) eqn : ?. inversion H2.
     destruct (x == x0) eqn : ?. inversion H2. destruct (sem s2 x) eqn : ?.
     inversion H2. apply IHBounded1.
-    + reflexivity. 
+    + reflexivity.
     + destruct v. apply insert_WF. apply map2_fix_pres_wf. wf_bounds. assumption.
       apply map2_fix_pres_wf. wf_bounds. assumption.
     + destruct v.
@@ -858,7 +851,7 @@ Proof.
         assumption. assumption. apply map2_fix_pres_wf. wf_bounds. assumption.
         reflexivity. reflexivity.
       * apply IHBounded2. reflexivity. assumption. assumption.
-Qed. 
+Qed.
 
 (*If a key is not in the folded map, but it maps to y in the base, then it maps to y in the
   result map. Note that map2 defines the base as Tip, so the premise of this is always false for
@@ -890,7 +883,7 @@ Proof.
     wf_bounds. assumption. rewrite <- IHBounded1 in H7. apply IHBounded2.
     reflexivity. assumption. assumption. reflexivity. apply map2_fix_pres_wf.
     wf_bounds. assumption.
-Qed. 
+Qed.
 
 (*The main helper lemma: If a key is not in the base map but it maps to (Some (Some y)) in the map
   we are folding over, then it maps to (Some y) in the result*)
@@ -906,9 +899,9 @@ Proof.
   - simpl in H7. simpl. destruct (sem s1 x) eqn : ?.
     + simpl in H7. rewrite <- IHBounded1. apply H7. destruct v. apply insert_WF.
       apply map2_fix_pres_wf. wf_bounds. apply H5. eapply map2_fix_pres_wf. wf_bounds. apply H5.
-      assert (x < x0 = true). { eapply (sem_inside H) in Heqo. destruct Heqo. unfold isUB in *. 
+      assert (x < x0 = true). { eapply (sem_inside H) in Heqo. destruct Heqo. unfold isUB in *.
       assumption. } assert (sem s2 x = None). { eapply sem_outside_below. apply H0. unfold isLB.
-      order key. } destruct v. 
+      order key. } destruct v.
       * erewrite sem_insert. assert (x == x0 = false) by (order key). rewrite H10. simpl.
         apply map2_fix_none. wf_bounds. assumption. assumption. assumption. apply map2_fix_pres_wf.
         wf_bounds. assumption. reflexivity. reflexivity.
@@ -942,7 +935,7 @@ Proof.
             eassumption. unfold isUB. apply (sem_inside H0) in Heqo.
             destruct Heqo. unfold isLB in H8. order key. rewrite H8. reflexivity.
             assumption. assumption. apply map2_fix_pres_wf. wf_bounds. assumption.
-            reflexivity. reflexivity. wf_bounds. apply insert_WF. 
+            reflexivity. reflexivity. wf_bounds. apply insert_WF.
             apply map2_fix_pres_wf. wf_bounds. assumption. rewrite <- IHBounded2 in Heqo.
             eapply sem_outside_above. eassumption. unfold isUB. apply (sem_inside H0) in Heqo.
             destruct Heqo. unfold isLB in H9. order key. assumption. assumption.
@@ -983,18 +976,18 @@ Proof.
       apply map2_fix_pres_wf. wf_bounds. assumption. destruct v.
        erewrite sem_insert.
       assert (x == x0 = false) by (order key). rewrite H9. simpl.
-      apply map2_fix_none. wf_bounds. assumption. assumption. 
+      apply map2_fix_none. wf_bounds. assumption. assumption.
       eapply sem_outside_below. eassumption. unfold isLB. order key.
       apply map2_fix_pres_wf. wf_bounds. assumption. reflexivity. reflexivity.
       apply map2_fix_none. wf_bounds. assumption. assumption.
-      eapply sem_outside_below. eassumption. unfold isLB. order key. 
+      eapply sem_outside_below. eassumption. unfold isLB. order key.
     + simpl in H2. destruct (x == x0) eqn : ?.
       * simpl in H2. inversion H2. apply map2_fix_none. wf_bounds. apply map2_fix_pres_wf.
         wf_bounds. assumption. apply map2_fix_none. wf_bounds. assumption. assumption.
         eapply sem_outside_below. eassumption. unfold isLB. order key.
         eapply sem_outside_above. eassumption. unfold isUB. order key.
       * simpl in H2. assert (x > x0 = true). { apply (sem_inside H0) in H2. destruct H2.
-        unfold isLB in H2. order key. } apply map2_fix_none. wf_bounds. 
+        unfold isLB in H2. order key. } apply map2_fix_none. wf_bounds.
         destruct v. apply insert_WF. apply map2_fix_pres_wf. wf_bounds. assumption.
         apply map2_fix_pres_wf. wf_bounds. assumption. destruct v.
         erewrite sem_insert. rewrite Heqb. simpl. apply IHBounded2. assumption.
@@ -1003,7 +996,7 @@ Proof.
         assumption. assumption.
 Qed.
 
-(*Finally, we can prove the properties we want.*) 
+(*Finally, we can prove the properties we want.*)
 
 Lemma map2_1: forall (elt elt' elt'' : Type) (m : t elt) (m': t elt') (x: key)
   (f: option elt -> option elt' -> option elt''),
@@ -1018,11 +1011,11 @@ Proof.
       * apply map2_map_wf; assumption.
       * constructor.
       * reflexivity.
-    + rewrite Heqo. apply map2_fix_some_none. 
+    + rewrite Heqo. apply map2_fix_some_none.
       * apply map2_map_wf; assumption.
       * constructor.
       * reflexivity.
-      * assumption. 
+      * assumption.
     + assumption.
     + assumption.
   - apply w0.
@@ -1050,7 +1043,7 @@ Definition lt_key (p p': key * elt) := E.lt (fst p) (fst p').
 (*These two definitions of lt can only be proved equivalent by functional extensionality,
 so instead we prove that if sorted by 1, it is sorted by the other*)
 Lemma lt_lt_key_sort: forall (l: list (key * elt)),
-  StronglySorted (lt elt) l -> 
+  StronglySorted (lt elt) l ->
   StronglySorted lt_key l.
 Proof.
   intros. unfold lt in *. unfold lt_key. induction H; subst.
@@ -1067,6 +1060,6 @@ Lemma elements_3:  forall (m : t elt), sort lt_key (elements _ m).
 Proof.
   intros. apply StronglySorted_Sorted. unfold elements. apply lt_lt_key_sort.
   destruct m. simpl. eapply to_List_sorted. apply w.
-Qed.  
+Qed.
 End Elt'.
 End MapFMap.

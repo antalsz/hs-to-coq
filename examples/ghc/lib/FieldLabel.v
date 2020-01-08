@@ -59,20 +59,19 @@ Axiom mkFieldLabelOccs : FieldLabelString ->
    `FieldLabel.Data__FieldLbl' *)
 
 Instance Eq___FieldLbl
-   : forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (FieldLbl a) :=
-  {}.
+   : forall {a}, forall `{GHC.Base.Eq_ a}, GHC.Base.Eq_ (FieldLbl a).
 Proof.
 Admitted.
 
-Instance Functor__FieldLbl : GHC.Base.Functor FieldLbl := {}.
+Instance Functor__FieldLbl : GHC.Base.Functor FieldLbl.
 Proof.
 Admitted.
 
-Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl := {}.
+Instance Foldable__FieldLbl : Data.Foldable.Foldable FieldLbl.
 Proof.
 Admitted.
 
-Instance Traversable__FieldLbl : Data.Traversable.Traversable FieldLbl := {}.
+Instance Traversable__FieldLbl : Data.Traversable.Traversable FieldLbl.
 Proof.
 Admitted.
 

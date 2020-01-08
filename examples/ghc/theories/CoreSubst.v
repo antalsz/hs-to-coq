@@ -636,7 +636,7 @@ Proof.
      +  clear VEmf H5.
         rewrite -> lookupVarSet_minusDom_1 in H13; try done.
         rewrite ELEM2 in VEim.
-        case InV2: (Foldable.elem var vars2); hs_simpl.
+        destruct (Foldable.elem var vars2) eqn:InV2; hs_simpl.
         ++ move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
                    (extendVarSetList (getInScopeVars init_scope) vars1) InV2) => [v1 [-> q1 r1]].
            move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
@@ -649,7 +649,7 @@ Proof.
         ++ have InV2': ~~ Foldable.elem var vars2 by rewrite InV2.
            rewrite lookupVarSet_extendVarSetList_false //.
            rewrite lookupVarSet_extendVarSetList_false // in H6.
-           case InV1: (Foldable.elem var vars1); hs_simpl.
+           destruct (Foldable.elem var vars1) eqn:InV1; hs_simpl.
            ** move:(lookupVarSet_extendVarSetList_self_exists_LastIn 
                       (getInScopeVars init_scope) InV1) => [v1 [p1 q1 r1]].
               rewrite p1.

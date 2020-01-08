@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
@@ -44,7 +37,7 @@ Lemma member_spec:
  forall (s: Map e a) lb ub i, Bounded s lb ub -> member i s = true <-> exists v, sem s i = Some v.
 Proof.
   intros. induction H.
-  - simpl. split. intros. discriminate H. intros. destruct H. discriminate H. 
+  - simpl. split. intros. discriminate H. intros. destruct H. discriminate H.
   - subst. simpl. destruct (compare i x) eqn: ?; split; intros.
     + replace (i==x) with true by order_Bounds e.
       rewrite (sem_outside_above H) by order_Bounds e.
@@ -56,8 +49,8 @@ Proof.
     + assert (sem s2 i = None). { eapply sem_outside_below. apply H0. unfold isLB.
       order_Bounds e. }
       rewrite H5 in H3. assert (i == x = false). { rewrite compare_Lt in Heqc.
-      apply lt_not_eq. assumption. } rewrite H6 in H3. simpl in H3. simpl_options. 
-      apply IHBounded1. destruct H3. exists x0. assumption. 
+      apply lt_not_eq. assumption. } rewrite H6 in H3. simpl in H3. simpl_options.
+      apply IHBounded1. destruct H3. exists x0. assumption.
     + replace (i==x) with false by order_Bounds e.
       rewrite (sem_outside_above H) by order_Bounds e.
       simpl. apply IHBounded2 in H3. destruct H3. exists x0. assumption.
@@ -83,7 +76,7 @@ Qed.
 
 (** ** Verification of [findWithDefault] *)
 Lemma findWithDefault_spec:
-  forall (m: Map e a) lb ub i v, Bounded m lb ub -> 
+  forall (m: Map e a) lb ub i v, Bounded m lb ub ->
   Some (findWithDefault v i m) = sem m i ||| Some v.
 Proof.
   intros. induction H.
@@ -102,7 +95,7 @@ Fixpoint goJustLT k  (k1: e) v1 (m : Map e a) : option (e * a) :=
   match m with
   | Tip => Some (k1, v1)
   | Bin sz k2 v2 l r => if (_GHC.Base.<=_ k k2) then goJustLT k k1 v1 l else
-    goJustLT k k2 v2 r 
+    goJustLT k k2 v2 r
   end.
 Fixpoint lookupLT' k (m : Map e a) :=
   match m with
@@ -135,24 +128,24 @@ Lemma goJustLT_bounded: forall k k1 v1 m k2 v2 lb ub l u,
   Bounded m lb ub ->
   _GHC.Base.<_ k1 k = true ->
   goJustLT k k1 v1 m = Some (k2, v2) ->
-  (lb = Some l /\ _GHC.Base.<=_ l k1 = true -> _GHC.Base.<=_ l k2 = true ) 
+  (lb = Some l /\ _GHC.Base.<=_ l k1 = true -> _GHC.Base.<=_ l k2 = true )
   /\ (ub = Some u /\ _GHC.Base.<=_ k1 u = true -> _GHC.Base.<=_ k2 u = true).
 Proof.
   intros. generalize dependent k1. revert k v1 k2 v2 u l. induction H; intros.
   - simpl in H1. inversion H1; subst. split; intros; subst; solve_Bounds e.
-  - simpl in H6. destruct (_GHC.Base.<=_ k x) eqn : ?. 
+  - simpl in H6. destruct (_GHC.Base.<=_ k x) eqn : ?.
     + split; intros; subst.  specialize (IHBounded1 _ _ _ _ u l _ H5 H6). destruct IHBounded1.
        apply H3. apply H7. specialize (IHBounded1 _ _ _ _ x l  _ H5 H6). destruct IHBounded1.
         destruct H7; subst. assert (Some x = Some x /\ _GHC.Base.<=_ k1 x = true).
-        split. reflexivity. order e. apply H8 in H7.  assert (compare x u = Lt) by (solve_Bounds e). 
+        split. reflexivity. order e. apply H8 in H7.  assert (compare x u = Lt) by (solve_Bounds e).
         order e.
-    + assert (_GHC.Base.<_ x k = true) by (order e).  split; intros; subst. 
-      specialize (IHBounded2  _ _ _ _ u x _ H7 H6). destruct IHBounded2. 
+    + assert (_GHC.Base.<_ x k = true) by (order e).  split; intros; subst.
+      specialize (IHBounded2  _ _ _ _ u x _ H7 H6). destruct IHBounded2.
       destruct H8; subst. assert (_GHC.Base.<=_ x k2 = true). apply H3. split. reflexivity.
       order e. assert (_GHC.Base.<_ l x = true) by (solve_Bounds e). order e.
       specialize (IHBounded2 _ _ _ _ u l _ H7 H6). destruct IHBounded2. apply H9.
       split. apply H8. destruct H8. subst. solve_Bounds e.
-Qed. 
+Qed.
 
 Lemma goJustLT_nothing_between: forall k k1 v1 m lb ub k2 v2,
   Bounded m lb ub ->
@@ -183,7 +176,7 @@ Lemma goJustLT_finds_upper_bound: forall k k1 v1 m lb ub k2 v2,
   Bounded m lb ub ->
   _GHC.Base.<_ k1 k = true ->
   goJustLT k k1 v1 m = Some (k2, v2) ->
-   (_GHC.Base.<_  k2 k = true) /\ 
+   (_GHC.Base.<_  k2 k = true) /\
   (forall k3, (_GHC.Base.<_  k3 k = true) /\ (k2 == k3 = false) /\
   sem m k3 <> None -> (_GHC.Base.<_  k3 k2 = true)).
 Proof.
@@ -214,7 +207,7 @@ Proof.
       * assert (k2 == x = false) by (solve_Bounds e). rewrite H12. simpl. left.
         assumption.
       * destruct H11.  left. rewrite H11. simpl. subst. reflexivity.
-Qed. 
+Qed.
 
 Lemma goJustLt_never_none: forall k k1 v1 m,
   goJustLT k k1 v1 m <> None.
@@ -222,14 +215,14 @@ Proof.
   intros. revert k k1 v1. induction m; intros.
   - simpl. destruct (_GHC.Base.<=_ k0 k ). apply IHm1. apply IHm2.
   - simpl. intro contra. discriminate contra.
-Qed. 
+Qed.
 
 (*Part 1 of the spec: If lookupLT returns a k1, v1 pair, then (k1, v1) is in the map
   and k1 is the largest key smaller than k*)
 Lemma lookupLT_spec_Some:
   forall (m: Map e a) lb ub k (k1: e) v1, Bounded m lb ub ->
   lookupLT k m = Some (k1, v1) ->
-  sem m k1 = Some v1 /\ (_GHC.Base.<_  k1 k = true) /\ 
+  sem m k1 = Some v1 /\ (_GHC.Base.<_  k1 k = true) /\
   (forall k2, (_GHC.Base.<_  k2 k = true) /\ (k1 == k2 = false) /\
   sem m k2 <> None -> (_GHC.Base.<_  k2 k1 = true)).
 Proof.
@@ -237,27 +230,27 @@ Proof.
   - inversion H0.
   - inversion H0.
   - simpl in H5. simpl. destruct (_GHC.Base.<=_  k x) eqn : ?.
-    + apply IHBounded1 in H5. destruct H5. rewrite H5. simpl. reflexivity. 
+    + apply IHBounded1 in H5. destruct H5. rewrite H5. simpl. reflexivity.
     + assert ( _GHC.Base.<_ x k = true) by (order e).
       pose proof (goJustLT_finds_upper_bound k x v s2 (Some x) ub k1 v1 H0 H6 H5).
-      destruct H7. specialize (H8 x).  
-      pose proof (goJustLt_val_in_map k x v s2 (Some x) ub k1 v1 H0 H5). 
-      pose proof goJustLT_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5). 
+      destruct H7. specialize (H8 x).
+      pose proof (goJustLt_val_in_map k x v s2 (Some x) ub k1 v1 H0 H5).
+      pose proof goJustLT_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5).
       destruct H10. assert (_GHC.Base.<=_ x k1 = true). apply H10. split. reflexivity. order e.
       assert (sem s1 k1 = None). eapply sem_outside_above. eassumption. solve_Bounds e.
       rewrite H13. simpl. destruct H9.
       * assert (k1 == x = false) by (solve_Bounds e). rewrite H14. simpl. assumption.
       * destruct H9. subst. rewrite H9. reflexivity.
-  - simpl in H5. destruct (_GHC.Base.<=_ k x) eqn : ?. 
+  - simpl in H5. destruct (_GHC.Base.<=_ k x) eqn : ?.
     + simpl. specialize (IHBounded1 k1 v1 k H5). destruct IHBounded1. destruct H7. split.
       assumption. intros. apply H8. destruct H9. destruct H10.
-      split. assumption. split. assumption. assert (k2 == x = false) by (order e). 
+      split. assumption. split. assumption. assert (k2 == x = false) by (order e).
       assert (sem s2 k2 = None). eapply sem_outside_below. eassumption. solve_Bounds e.
       rewrite H13 in H11. rewrite H12 in H11. simpl in H11. repeat (rewrite oro_None_r in H11).
       assumption.
     + assert (_GHC.Base.<_ x k = true) by (order e). split. eapply goJustLT_pres_smaller. apply H0.
       apply H6. apply H5. intros. destruct H7. destruct H8. simpl in H9.
-      pose proof goJustLT_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5). 
+      pose proof goJustLT_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5).
       destruct H10. assert (_GHC.Base.<=_ x k1 = true). apply H10. split. reflexivity.
       order e. destruct (compare k2 k1) eqn : ?.
       order e.
@@ -277,7 +270,7 @@ Proof.
   intros. generalize dependent k2. generalize dependent k. revert v2. induction H; intros.
   - inversion H1.
   - rewrite <- lookupLT_equiv in H5. simpl in H5. destruct (_GHC.Base.<=_ k x) eqn : ?.
-    simpl in H6. destruct (sem s1 k2) eqn : ?.  
+    simpl in H6. destruct (sem s1 k2) eqn : ?.
     * simpl in H6; inversion H6; subst. eapply IHBounded1. apply H5. apply Heqo.
     * simpl in H6. destruct (k2 == x) eqn : ?.
       -- order e.
@@ -304,7 +297,7 @@ Fixpoint lookupLE' k (m : Map e a) :=
                         | Lt => lookupLE' k l
                         | Eq => Some (k1, v1)
                         | Gt => goJustLE k k1 v1 r
-                        end 
+                        end
   end.
 
 Lemma lookupLE_equiv:
@@ -321,7 +314,7 @@ Lemma goJustLE_pres_smaller: forall k k1 v1 m k2 v2 lb ub,
   _GHC.Base.<=_ k2 k = true.
 Proof.
   intros. generalize dependent k1. revert v1 v2 k2 k. induction H; intros.
-  - simpl in H1. inversion H1; subst. order e. 
+  - simpl in H1. inversion H1; subst. order e.
   - simpl in H6. destruct (compare k x) eqn : ?.
     + inversion H6; subst. order e.
     + eapply IHBounded1. eassumption. eassumption.
@@ -333,7 +326,7 @@ Lemma goJustLE_bounded: forall k k1 v1 m k2 v2 lb ub l u,
   Bounded m lb ub ->
   _GHC.Base.<_ k1 k = true ->
   goJustLE k k1 v1 m = Some (k2, v2) ->
-  (lb = Some l /\ _GHC.Base.<=_ l k1 = true -> _GHC.Base.<=_ l k2 = true ) 
+  (lb = Some l /\ _GHC.Base.<=_ l k1 = true -> _GHC.Base.<=_ l k2 = true )
   /\ (ub = Some u /\ _GHC.Base.<=_ k1 u = true -> _GHC.Base.<=_ k2 u = true).
 Proof.
   intros. generalize dependent k1. revert k v1 k2 v2 u l. induction H; intros.
@@ -343,15 +336,15 @@ Proof.
     + split; intros; subst.  specialize (IHBounded1 _ _ _ _ u l _ H5 H6). destruct IHBounded1.
        apply H3. apply H7. specialize (IHBounded1 _ _ _ _ x l  _ H5 H6). destruct IHBounded1.
         destruct H7; subst. assert (Some x = Some x /\ _GHC.Base.<=_ k1 x = true).
-        split. reflexivity. order e. apply H8 in H7.  assert (compare x u = Lt) by (solve_Bounds e). 
+        split. reflexivity. order e. apply H8 in H7.  assert (compare x u = Lt) by (solve_Bounds e).
         order e.
-    + assert (_GHC.Base.<_ x k = true) by (order e).  split; intros; subst. 
-      specialize (IHBounded2  _ _ _ _ u x _ H7 H6). destruct IHBounded2. 
+    + assert (_GHC.Base.<_ x k = true) by (order e).  split; intros; subst.
+      specialize (IHBounded2  _ _ _ _ u x _ H7 H6). destruct IHBounded2.
       destruct H8; subst. assert (_GHC.Base.<=_ x k2 = true). apply H3. split. reflexivity.
       order e. assert (_GHC.Base.<_ l x = true) by (solve_Bounds e). order e.
       specialize (IHBounded2 _ _ _ _ u l _ H7 H6). destruct IHBounded2. apply H9.
       split. apply H8. destruct H8. subst. solve_Bounds e.
-Qed. 
+Qed.
 
 Lemma goJustLE_nothing_between: forall k k1 v1 m lb ub k2 v2,
   Bounded m lb ub ->
@@ -368,7 +361,7 @@ Proof.
     + assert (i == x = false) by (order e). rewrite H8. assert (sem s2 i = None). {
       eapply sem_outside_below. eassumption. solve_Bounds e. } rewrite H9.
       simpl. repeat(rewrite oro_None_r). inversion H6; subst. eapply sem_outside_above.
-      eassumption. solve_Bounds e. 
+      eassumption. solve_Bounds e.
     + assert (i == x = false) by (order e). rewrite H8. assert (sem s2 i = None). {
       eapply sem_outside_below. eassumption. solve_Bounds e. } rewrite H9.
       simpl. repeat(rewrite oro_None_r).  eapply IHBounded1. apply H5. apply H6.
@@ -386,7 +379,7 @@ Lemma goJustLE_finds_upper_bound: forall k k1 v1 m lb ub k2 v2,
   Bounded m lb ub ->
   _GHC.Base.<_ k1 k = true ->
   goJustLE k k1 v1 m = Some (k2, v2) ->
-   (_GHC.Base.<=_  k2 k = true) /\ 
+   (_GHC.Base.<=_  k2 k = true) /\
   (forall k3, (_GHC.Base.<_  k3 k = true) /\ (k2 == k3 = false) /\
   sem m k3 <> None -> (_GHC.Base.<_  k3 k2 = true)).
 Proof.
@@ -408,7 +401,7 @@ Proof.
   - simpl. simpl in H5. destruct (compare k x) eqn : ?.
     + inversion H5; subst. assert (sem s1 k2 = None). eapply sem_outside_above.
       eassumption. solve_Bounds e. rewrite H3. rewrite Eq_Reflexive. simpl.
-      left. reflexivity. 
+      left. reflexivity.
     + specialize (IHBounded1 k k1 v1 v2 k2 H5). destruct IHBounded1.
       * rewrite H6. simpl. left. reflexivity.
       * right. apply H6.
@@ -420,7 +413,7 @@ Proof.
       * assert (k2 == x = false) by (solve_Bounds e). rewrite H12. simpl. left.
         assumption.
       * destruct H11.  left. rewrite H11. simpl. subst. reflexivity.
-Qed. 
+Qed.
 
 Lemma goJustLE_never_none: forall k k1 v1 m,
   goJustLE k k1 v1 m <> None.
@@ -431,14 +424,14 @@ Proof.
     + apply IHm1.
     + apply IHm2.
   - simpl. intro contra. discriminate contra.
-Qed. 
+Qed.
 
 (*Part 1 of the spec: If lookupLT returns a k1, v1 pair, then (k1, v1) is in the map
   and k1 is the largest key less than or equal to than k*)
 Lemma lookupLE_spec_Some:
   forall (m: Map e a) lb ub k (k1: e) v1, Bounded m lb ub ->
   lookupLE k m = Some (k1, v1) ->
-  sem m k1 = Some v1 /\ (_GHC.Base.<=_  k1 k = true) /\ 
+  sem m k1 = Some v1 /\ (_GHC.Base.<=_  k1 k = true) /\
   (forall k2, (_GHC.Base.<_  k2 k = true) /\ (k1 == k2 = false) /\
   sem m k2 <> None -> (_GHC.Base.<_  k2 k1 = true)).
 Proof.
@@ -448,28 +441,28 @@ Proof.
   - simpl in H5. simpl. destruct (compare k x) eqn : ?.
     + inversion H5; subst. assert (sem s1 k1 = None). eapply sem_outside_above. eassumption.
       solve_Bounds e. rewrite H3. rewrite Eq_Reflexive. reflexivity.
-    + apply IHBounded1 in H5. destruct H5. rewrite H5. simpl. reflexivity. 
+    + apply IHBounded1 in H5. destruct H5. rewrite H5. simpl. reflexivity.
     + assert ( _GHC.Base.<_ x k = true) by (order e).
       pose proof (goJustLE_finds_upper_bound k x v s2 (Some x) ub k1 v1 H0 H6 H5).
-      destruct H7. specialize (H8 x).  
-      pose proof (goJustLE_val_in_map k x v s2 (Some x) ub k1 v1 H0 H5). 
-      pose proof goJustLE_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5). 
+      destruct H7. specialize (H8 x).
+      pose proof (goJustLE_val_in_map k x v s2 (Some x) ub k1 v1 H0 H5).
+      pose proof goJustLE_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5).
       destruct H10. assert (_GHC.Base.<=_ x k1 = true). apply H10. split. reflexivity. order e.
       assert (sem s1 k1 = None). eapply sem_outside_above. eassumption. solve_Bounds e.
       rewrite H13. simpl. destruct H9.
       * assert (k1 == x = false) by (solve_Bounds e). rewrite H14. simpl. assumption.
       * destruct H9. subst. rewrite H9. reflexivity.
   - simpl in H5. destruct (compare k x ) eqn : ?.
-    + inversion H5; subst. split. order e. intros. order e. 
+    + inversion H5; subst. split. order e. intros. order e.
     + simpl. specialize (IHBounded1 k1 v1 k H5). destruct IHBounded1. destruct H7. split.
       assumption. intros. apply H8. destruct H9. destruct H10.
-      split. assumption. split. assumption. assert (k2 == x = false) by (order e). 
+      split. assumption. split. assumption. assert (k2 == x = false) by (order e).
       assert (sem s2 k2 = None). eapply sem_outside_below. eassumption. solve_Bounds e.
       rewrite H13 in H11. rewrite H12 in H11. simpl in H11. repeat (rewrite oro_None_r in H11).
       assumption.
     + assert (_GHC.Base.<_ x k = true) by (order e). split. eapply goJustLE_pres_smaller. apply H0.
       apply H6. apply H5. intros. destruct H7. destruct H8. simpl in H9.
-      pose proof goJustLE_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5). 
+      pose proof goJustLE_bounded. specialize (H10 k x v s2 k1 v1 (Some x) ub x k H0 H6 H5).
       destruct H10. assert (_GHC.Base.<=_ x k1 = true). apply H10. split. reflexivity.
       order e. destruct (compare k2 k1) eqn : ?.
       order e.
@@ -487,7 +480,7 @@ Lemma goJustLE_spec_eq: forall m lb ub k v k' v',
 Proof.
   intros. generalize dependent k. revert v k' v'. induction H; intros.
   - inversion H0.
-  - simpl in H5. simpl. destruct (sem s1 k) eqn : ?. 
+  - simpl in H5. simpl. destruct (sem s1 k) eqn : ?.
     + assert (compare k x = Lt) by (solve_Bounds e).
       rewrite H6. apply IHBounded1. simpl in H5. inversion H5; subst. assumption.
     + simpl in H5. destruct (k == x) eqn : ?. assert (compare k x = Eq) by (order e).
@@ -514,7 +507,7 @@ Proof.
       * simpl in H5. assert (compare k x = Gt) by (solve_Bounds e). rewrite H6.
         eapply goJustLE_spec_eq. eassumption. assumption.
 Qed.
-    
+
 (*Part 3: If lookupLT returns None, then every key in the map is smaller than k*)
 Lemma lookupLE_spec_None:
   forall (m: Map e a) lb ub k, Bounded m lb ub ->
@@ -524,8 +517,8 @@ Proof.
   intros. generalize dependent k2. generalize dependent k. revert v2. induction H; intros.
   - inversion H1.
   - rewrite <- lookupLE_equiv in H5. simpl in H5. destruct (compare k x) eqn : ?.
-    + simpl in H6. order e. 
-    + simpl in H6. destruct (sem s1 k2) eqn : ?.  
+    + simpl in H6. order e.
+    + simpl in H6. destruct (sem s1 k2) eqn : ?.
       * simpl in H6; inversion H6; subst. eapply IHBounded1. apply H5. apply Heqo.
       * simpl in H6. destruct (k2 == x) eqn : ?.
       -- order e.

@@ -12,7 +12,8 @@ Require Coq.Program.Wf.
 
 (* Preamble *)
 
-Require BitTerminationProofs.
+Require String BitTerminationProofs.
+Import String.StringSyntax.
 
 (* Converted imports: *)
 
@@ -118,6 +119,9 @@ Definition missingSubtree {f} {x} {y} (arg_0__ : WhenMissing f x y) :=
 (* Midamble *)
 
 Require GHC.Err.
+
+Definition complement' x :=
+  Coq.NArith.BinNat.N.lxor x (Coq.NArith.BinNat.N.ones (#64%N)).
 
 Instance Default_Map {a} : Err.Default (IntMap a) := {| Err.default := Nil |}.
 
@@ -280,10 +284,7 @@ Definition match_ : Data.IntSet.Internal.Key -> Prefix -> Mask -> bool :=
   fun i p m => (Data.IntSet.Internal.mask i m) GHC.Base.== p.
 
 Definition maskW : Nat -> Nat -> Prefix :=
-  fun i m =>
-    i Data.Bits..&.(**)
-    (Data.Bits.xor (Coq.NArith.BinNat.N.lxor (m GHC.Num.- #1)
-                                             (Coq.NArith.BinNat.N.ones (64 % N))) m).
+  fun i m => i Data.Bits..&.(**) (Data.Bits.xor (complement' (m GHC.Num.- #1)) m).
 
 Definition mapWithKey {a} {b}
    : (Data.IntSet.Internal.Key -> a -> b) -> IntMap a -> IntMap b :=
@@ -1565,9 +1566,7 @@ Definition restrictKeys {a}
                                         bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
                                       let le_maxbit := maxbit Data.Bits..|.(**) (maxbit GHC.Num.- #1) in
                                       let minbit := bitmapOf p1 in
-                                      let ge_minbit :=
-                                        Coq.NArith.BinNat.N.lxor (minbit GHC.Num.- #1) (Coq.NArith.BinNat.N.ones (64 %
-                                                                                                                  N)) in
+                                      let ge_minbit := complement' (minbit GHC.Num.- #1) in
                                       restrictBM ((bm2 Data.Bits..&.(**) ge_minbit) Data.Bits..&.(**) le_maxbit)
                                       (lookupPrefix p2 t1)
                                   | Bin _ _ _ _, Data.IntSet.Internal.Nil => Nil
@@ -1640,10 +1639,7 @@ Definition withoutKeys {a}
                                   | (Bin p1 m1 _ _ as t1), Data.IntSet.Internal.Tip p2 bm2 =>
                                       let maxbit :=
                                         bitmapOf (p1 Data.Bits..|.(**) (m1 Data.Bits..|.(**) (m1 GHC.Num.- #1))) in
-                                      let gt_maxbit :=
-                                        Data.Bits.xor maxbit (Coq.NArith.BinNat.N.lxor (maxbit GHC.Num.- #1)
-                                                                                       (Coq.NArith.BinNat.N.ones (64 %
-                                                                                                                  N))) in
+                                      let gt_maxbit := Data.Bits.xor maxbit (complement' (maxbit GHC.Num.- #1)) in
                                       let minbit := bitmapOf p1 in
                                       let lt_minbit := minbit GHC.Num.- #1 in
                                       updatePrefix p2 t1 (withoutBM ((bm2 Data.Bits..|.(**) lt_minbit)
@@ -1960,22 +1956,22 @@ Infix "Data.IntMap.Internal.\\" := (_\\_) (at level 99).
 End Notations.
 
 (* External variables:
-     Eq Gt IntMap_op_zlzd__ Lt N None Some andb bool comparison cons false id list
-     negb nil op_zt__ op_zv__ option orb pair true Coq.NArith.BinNat.N.ldiff
-     Coq.NArith.BinNat.N.lxor Coq.NArith.BinNat.N.ones Coq.Numbers.BinNums.N
-     Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__ Data.Bits.op_zizbzi__
-     Data.Bits.xor Data.Either.Either Data.Either.Left Data.Either.Right
-     Data.Foldable.Foldable Data.Foldable.foldMap__ Data.Foldable.fold__
-     Data.Foldable.foldl' Data.Foldable.foldl'__ Data.Foldable.foldl__
-     Data.Foldable.foldr'__ Data.Foldable.foldr__ Data.Foldable.length__
-     Data.Foldable.null__ Data.Foldable.product__ Data.Foldable.sum__
-     Data.Foldable.toList__ Data.Functor.op_zlzdzg__ Data.Functor.Identity.Identity
-     Data.IntSet.Internal.Bin Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key
-     Data.IntSet.Internal.Nil Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf
-     Data.IntSet.Internal.mask Data.IntSet.Internal.member
-     Data.IntSet.Internal.singleton Data.IntSet.Internal.suffixBitMask
-     Data.IntSet.Internal.zero Data.Maybe.maybe Data.Traversable.Traversable
-     Data.Traversable.mapM__ Data.Traversable.sequenceA__ Data.Traversable.sequence__
+     Eq Gt IntMap_op_zlzd__ Lt None Some andb bool comparison complement' cons false
+     id list negb nil op_zt__ option orb pair true Coq.NArith.BinNat.N.ldiff
+     Coq.Numbers.BinNums.N Coq.ZArith.BinInt.Z.of_N Data.Bits.op_zizazi__
+     Data.Bits.op_zizbzi__ Data.Bits.xor Data.Either.Either Data.Either.Left
+     Data.Either.Right Data.Foldable.Foldable Data.Foldable.foldMap__
+     Data.Foldable.fold__ Data.Foldable.foldl' Data.Foldable.foldl'__
+     Data.Foldable.foldl__ Data.Foldable.foldr'__ Data.Foldable.foldr__
+     Data.Foldable.length__ Data.Foldable.null__ Data.Foldable.product__
+     Data.Foldable.sum__ Data.Foldable.toList__ Data.Functor.op_zlzdzg__
+     Data.Functor.Identity.Identity Data.IntSet.Internal.Bin
+     Data.IntSet.Internal.IntSet Data.IntSet.Internal.Key Data.IntSet.Internal.Nil
+     Data.IntSet.Internal.Tip Data.IntSet.Internal.bitmapOf Data.IntSet.Internal.mask
+     Data.IntSet.Internal.member Data.IntSet.Internal.singleton
+     Data.IntSet.Internal.suffixBitMask Data.IntSet.Internal.zero Data.Maybe.maybe
+     Data.Traversable.Traversable Data.Traversable.mapM__
+     Data.Traversable.sequenceA__ Data.Traversable.sequence__
      Data.Traversable.traverse__ GHC.Base.Applicative GHC.Base.Eq_ GHC.Base.Functor
      GHC.Base.Monad GHC.Base.Monoid GHC.Base.Ord GHC.Base.Semigroup GHC.Base.String
      GHC.Base.compare GHC.Base.compare__ GHC.Base.const GHC.Base.fmap GHC.Base.fmap__

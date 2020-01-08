@@ -844,7 +844,7 @@ Proof.
     rewrite -> orE in H.
     elim: H.
     move => H.
-    case Hv: (Foldable.elem v vars).
+    destruct (Foldable.elem v vars) eqn:Hv.
     + specialize (IHvars v (extendVarSet vs a)).
       unfold is_true in *.
       apply IHvars. 
@@ -912,7 +912,7 @@ Proof.
 
   move => /orP [h1 | h1].  (* case analysis on boolean || *)
 
-  case IN: (Foldable.elem v vars). 
+  destruct (Foldable.elem v vars) eqn:IN. 
 
   + unfold is_true in *.
     move: (IH v (extendVarSet vs a) IN) => [v' [p q r]].
@@ -974,7 +974,7 @@ Proof.
   - move => vs1 vs2.
     hs_simpl.  
     move=> /orP [h1|h2].
-    + case h: (Foldable.elem v vars); eauto.
+    + destruct (Foldable.elem v vars) eqn:h; eauto.
       (* ! rewrites one or more times. *)
       rewrite !lookupVarSet_extendVarSetList_false; try (rewrite h; done).
       rewrite !lookupVarSet_extendVarSet_eq // ; symmetry ; done.
@@ -2423,5 +2423,4 @@ Proof.
     rewrite <- delVarSetList_commute_foldr.
     rewrite <- IHxs.
     reflexivity.
-Qed. 
-
+Qed.

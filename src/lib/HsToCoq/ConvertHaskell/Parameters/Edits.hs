@@ -1,4 +1,12 @@
-{-# LANGUAGE LambdaCase, TemplateHaskell, RecordWildCards, OverloadedStrings, FlexibleContexts, MultiParamTypeClasses, RankNTypes, DeriveGeneric, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module HsToCoq.ConvertHaskell.Parameters.Edits (
   Edits(..), typeSynonymTypes, dataTypeArguments, termination, redefinitions, additions, skipped, skippedConstructors, skippedClasses, skippedMethods, skippedEquations, skippedCasePatterns, skippedModules, importedModules, hasManualNotation, axiomatizedModules, axiomatizedOriginalModuleNames, axiomatizedDefinitions, unaxiomatizedDefinitions, additionalScopes, orders, renamings, coinductiveTypes, classKinds, dataKinds, deleteUnusedTypeVariables, rewrites, obligations, renamedModules, simpleClasses, inlinedMutuals, replacedTypes, collapsedLets, inEdits,
@@ -15,35 +23,35 @@ module HsToCoq.ConvertHaskell.Parameters.Edits (
   Phase(..),
 ) where
 
-import Prelude hiding (tail)
+import           Prelude                           hiding (tail)
 
-import Control.Lens
+import           Control.Lens
 
-import HsToCoq.Util.Generics
+import           HsToCoq.Util.Generics
 
-import Control.Monad
-import Control.Monad.Except
-import Data.Semigroup
-import Data.List.NonEmpty (NonEmpty(..), toList, tail)
-import qualified Data.Text as T
-import Data.Tuple
+import           Control.Monad
+import           Control.Monad.Except
+import           Data.List.NonEmpty                (NonEmpty (..), tail, toList)
+import           Data.Semigroup
+import qualified Data.Text                         as T
+import           Data.Tuple
 
-import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as M
-import Data.Set (Set)
-import qualified Data.Set as S
+import           Data.Map.Strict                   (Map)
+import qualified Data.Map.Strict                   as M
+import           Data.Set                          (Set)
+import qualified Data.Set                          as S
 
-import HsToCoq.Util.GHC.Module
+import           HsToCoq.Util.GHC.Module
 
-import HsToCoq.Util.FVs
-import HsToCoq.Coq.FreeVars ()
+import           HsToCoq.Coq.FreeVars              ()
+import           HsToCoq.Util.FVs
 
-import HsToCoq.Coq.Gallina
-import HsToCoq.Coq.Gallina.Util
-import HsToCoq.Coq.Subst (Subst())
-import HsToCoq.Coq.Gallina.Rewrite (Rewrite(..), Rewrites)
-import HsToCoq.ConvertHaskell.Axiomatize
-import HsToCoq.Coq.Pretty
+import           HsToCoq.ConvertHaskell.Axiomatize
+import           HsToCoq.Coq.Gallina
+import           HsToCoq.Coq.Gallina.Rewrite       (Rewrite (..), Rewrites)
+import           HsToCoq.Coq.Gallina.Util
+import           HsToCoq.Coq.Pretty
+import           HsToCoq.Coq.Subst                 (Subst ())
 
 --------------------------------------------------------------------------------
 
@@ -115,7 +123,7 @@ normalizePattern = NormalizedPattern . go where
   goO (OrPattern ps) = OrPattern (go <$> ps)
 
 data Phase = PhaseTyCl | PhaseTerm deriving (Eq, Ord, Show)
-type Additions = ([Sentence],[Sentence]) 
+type Additions = ([Sentence],[Sentence])
 addPhase :: Phase -> Sentence -> Additions -> Additions
 addPhase PhaseTyCl s (tcls,tms) = (s:tcls, tms)
 addPhase PhaseTerm s (tcls,tms) = (tcls, s:tms)
@@ -217,7 +225,7 @@ useProgram name edits = or
     ]
   where
    isWellFounded (WellFounded {}) = True
-   isWellFounded _ = False
+   isWellFounded _                = False
 
 -- Module-local'
 duplicate_for' :: String -> (a -> String) -> a -> String
@@ -328,6 +336,7 @@ defName (CoqInductiveDef  (Inductive   (IndBody x _ _ _   :| _) _)) = x
 defName (CoqInductiveDef  (CoInductive (IndBody x _ _ _   :| _) _)) = x
 defName (CoqInstanceDef   (InstanceDefinition x _ _ _ _))           = x
 defName (CoqInstanceDef   (InstanceTerm       x _ _ _ _))           = x
+defName (CoqInstanceDef   (InstanceProof x _ _ _))                  = x
 defName (CoqAxiomDef      (x, _))                                   = x
 defName (CoqAssertionDef  (Assertion _ x _ _, _))                   = x
 

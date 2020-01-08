@@ -10,6 +10,11 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require String.
+Import String.StringSyntax.
+
 (* Converted imports: *)
 
 Require BasicTypes.
@@ -327,11 +332,11 @@ Axiom addSimplCount : SimplCount -> CoreM unit.
 (* Skipping all instances of class `Outputable.Outputable', including
    `CoreMonad.Outputable__FloatOutSwitches' *)
 
-Instance Eq___Tick : GHC.Base.Eq_ Tick := {}.
+Instance Eq___Tick : GHC.Base.Eq_ Tick.
 Proof.
 Admitted.
 
-Instance Ord__Tick : GHC.Base.Ord Tick := {}.
+Instance Ord__Tick : GHC.Base.Ord Tick.
 Proof.
 Admitted.
 
@@ -341,30 +346,30 @@ Admitted.
 (* Skipping all instances of class `HscTypes.MonadThings', including
    `CoreMonad.MonadThings__CoreM' *)
 
-Instance HasModule__CoreM : Module.HasModule CoreM := {}.
+Instance HasModule__CoreM : Module.HasModule CoreM.
 Proof.
 Admitted.
 
-Instance HasDynFlags__CoreM : DynFlags.HasDynFlags CoreM := {}.
+Instance HasDynFlags__CoreM : DynFlags.HasDynFlags CoreM.
 Proof.
 Admitted.
 
 (* Skipping all instances of class `Control.Monad.IO.Class.MonadIO', including
    `CoreMonad.MonadIO__CoreM' *)
 
-Instance Functor__CoreM : GHC.Base.Functor CoreM := {}.
+Instance Functor__CoreM : GHC.Base.Functor CoreM.
 Proof.
 Admitted.
 
-Instance Applicative__CoreM : GHC.Base.Applicative CoreM := {}.
+Instance Applicative__CoreM : GHC.Base.Applicative CoreM.
 Proof.
 Admitted.
 
-Instance Monad__CoreM : GHC.Base.Monad CoreM := {}.
+Instance Monad__CoreM : GHC.Base.Monad CoreM.
 Proof.
 Admitted.
 
-Instance MonadUnique__CoreM : UniqSupply.MonadUnique CoreM := {}.
+Instance MonadUnique__CoreM : UniqSupply.MonadUnique CoreM.
 Proof.
 Admitted.
 

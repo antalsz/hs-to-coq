@@ -1,11 +1,4 @@
-Require Import GHC.Base.
-Import GHC.Base.Notations.
-Require Import Proofs.GHC.Base.
-Require Import Data.Map.Internal.
-Import GHC.Num.Notations.
-Require Import OrdTactic.
-Require Import Psatz.
-Require Import Tactics.
+Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import Coq.Classes.Morphisms.
@@ -25,14 +18,14 @@ Ltac order_Bounds e :=
 (* Pose the proof [prf], unless it already exists. *)
 Ltac pose_new prf :=
   let prop := type of prf in
-  match goal with 
+  match goal with
     | [ H : prop |- _] => fail 1
     | _ => pose proof prf
   end.
 
 (* Pose the [prop], using [prf], unless it already exists. *)
 Ltac assert_new prop prf :=
-  match goal with 
+  match goal with
     | [ H : prop |- _] => fail 1
     | _ => assert prop by prf
   end.
@@ -65,7 +58,7 @@ Ltac solve_Bounds e := first
    Fails if it does not start with [forall i,], but may leave a partially solve goal.
     *)
 Ltac f_solver_simple  :=
-  let i := fresh "i" in 
+  let i := fresh "i" in
   intro i;
   try reflexivity; (* for when we have an existential variable *)
   repeat multimatch goal with [ H : (forall i, _) |- _] => specialize (H i) end;
@@ -77,7 +70,7 @@ Ltac f_solver_simple  :=
 (** This auxillary tactic destructs one boolean or option atom in the argument *)
 
 Ltac split_bool_go expr :=
-  lazymatch expr with 
+  lazymatch expr with
     | true       => fail
     | false      => fail
     | Some _     => fail
@@ -98,7 +91,7 @@ Ltac split_bool_go expr :=
 
 
 Ltac split_bool :=
-  match goal with 
+  match goal with
     | |- ?lhs = ?rhs        => split_bool_go lhs || split_bool_go rhs
     (* A bit ad-hoc, could be improved: *)
     | H : ?x ||| ?y = Some _   |- _ => split_bool_go x
@@ -136,7 +129,7 @@ Ltac f_solver_cleanup e :=
   (* Try to solve it *)
   try solve [exfalso; inside_bounds; order_Bounds e];
   try reflexivity;
-  (* Find conradiction *)   
+  (* Find conradiction *)
   try lazymatch goal with
     |  H1 : (?i == ?j) = true , H2 : sem ?s ?i = Some _, H3 : sem ?s ?j = None |- _
       => exfalso; rewrite (sem_resp_eq s i j H1) in H2; congruence
@@ -233,7 +226,7 @@ Ltac applyDesc e lem :=
   apply hide;
   eapply lem;
   [ solve_Precondition e ..
-  | let s := fresh "s" in 
+  | let s := fresh "s" in
     let HB := fresh "HB" in
     let Hsz := fresh "Hsz" in
     let Hsem := fresh "Hsem" in

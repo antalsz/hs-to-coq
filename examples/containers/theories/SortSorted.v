@@ -14,7 +14,7 @@ Require Import GHC.Base      Proofs.GHC.Base.
 Import GHC.Base.Notations.
 Require Import Data.OldList  Proofs.Data.OldList.
 
-Require Import Tactics.
+Require Import CustomTactics.
 
 (* Working with Haskell *)
 Require Import OrdTactic.
@@ -29,8 +29,8 @@ Lemma mergeAll_singleton: forall a cmp (xs : list a),
 Proof.
   intros.
   unfold mergeAll at 1. unfold mergeAll_func.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+  lazymatch goal with
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs =>
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
 Qed.
@@ -41,8 +41,8 @@ Lemma mergeAll_eq: forall a cmp (xs : list a) ys zss,
 Proof.
   intros.
   unfold mergeAll at 1. unfold mergeAll_func.
-  lazymatch goal with 
-    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs => 
+  lazymatch goal with
+    |- Wf.Fix_sub ?A ?R ?Rwf ?P ?F_sub ?x = ?rhs =>
     apply (@Wf.WfExtensionality.fix_sub_eq_ext A R Rwf P F_sub x)
   end.
 Qed.
@@ -199,7 +199,7 @@ Proof.
   revert xs Heqys.
   induction H; intros xs Heqys.
   * exfalso. eapply app_cons_not_nil. eassumption.
-  * 
+  *
     assert (xs = []). {
       destruct xs; try reflexivity.
       inversion Heqys.
@@ -313,7 +313,7 @@ Proof.
         ++ repeat (assumption || constructor).
         ++ destruct_le.
            ** repeat (assumption || constructor).
-           ** constructor. repeat (assumption || constructor). 
+           ** constructor. repeat (assumption || constructor).
       - constructor.
         apply IHSorted.
         constructor.
@@ -405,7 +405,7 @@ Qed.
 Section Stable.
 Context {a} `{Hord : OrdLaws a}.
 
-(** We define a sorte stable when it it does not change the all subsequence of 
+(** We define a sorte stable when it it does not change the all subsequence of
     equivalent elements, which we can conveniently describe using filter.
  *)
 Definition Stable (xs ys : list a) :=
@@ -621,7 +621,7 @@ Proof.
             inversion H3; subst; clear H3.
             assumption.
             unfold le in *. order a.
-        } 
+        }
         etransitivity.
         ** apply Stable_cons.
            apply IHys. assumption.

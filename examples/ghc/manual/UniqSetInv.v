@@ -194,14 +194,15 @@ Qed.
 
 (** The invariant is that for any unique, the result that we get out has 
     the same unique stored.
-*)
-Polymorphic Definition UniqInv@{i} {a:Type@{i}} : Type@{i} :=
-  forall (x:a)(y:a)(H:Unique.Uniquable a)(fm : UniqFM.UniqFM a),
+ *)
+
+Polymorphic Definition UniqInv@{i} {a:Type@{i}}(fm : UniqFM.UniqFM a) : Type@{i} :=
+  forall (x:a)(y:a)(H:Unique.Uniquable a),
     UniqFM.lookupUFM fm x = Some y ->
     getUnique x = getUnique y. 
 
-Polymorphic Definition UniqSet@{i} (a:Type@{i}) `{Unique.Uniquable a} : Type@{i} :=
-  sigT (fun fm => UniqInv fm).
+Polymorphic Definition UniqSet@{i} (a:Type@{i}) : Type@{i} :=
+  sigT (fun fm => @UniqInv a fm).
 
 Local Notation Mk_UniqSet s:= (@existT _ _ s _).
 
@@ -233,8 +234,8 @@ Program Definition Semigroup__UniqSet_op_zlzlzgzg__ {inst_a}`{Unique.Uniquable i
 Next Obligation.
   destruct m1. destruct m2.
   simpl.
-  unfold UniqInv in *. 
-  intros y1 y2 Hu.
+  unfold UniqInv in *.
+  intros ??? Hu.
   unfold lookupUFM, plusUFM in *.
   destruct x. destruct x0.
   rewrite <- lookup_union in Hu.
@@ -264,14 +265,14 @@ Program Instance Monoid__UniqSet {a}`{Unique.Uniquable a} : GHC.Base.Monoid (Uni
 
 About UniqFM.addToUFM.
 
-Program Definition addOneToUniqSet {a} `{Unique.Uniquable a}
+Program Definition addOneToUniqSet {a} `{Uniquable a}
    : UniqSet a -> a -> UniqSet a :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | Mk_UniqSet set, x => Mk_UniqSet (UniqFM.addToUFM set x x) 
     end.
 Next Obligation.
-unfold UniqInv in *.
+  unfold UniqInv in *.
 unfold UniqFM.addToUFM.
 unfold UniqFM.lookupUFM in *.
 intros.
@@ -279,7 +280,9 @@ destruct set.
 rename arg_1__ into z.
 destruct (eqUnique (getUnique z) (getUnique x)) eqn:EQ.
 - apply eqUnique_eq in EQ. rewrite <- EQ in *.
-  rewrite lookup_insert in H0.
+  Set Printing All.
+  (* In H1, we get H0 and H. *)
+  rewrite lookup_insert in H1.
   inversion H0.
   auto.
 - apply eqUnique_neq in EQ.

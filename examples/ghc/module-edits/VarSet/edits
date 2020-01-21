@@ -16,3 +16,4 @@ skip Core.mapVarSet
 
 skip Core.partitionVarSet
 
+order Core.realUnique Core.DVarSet

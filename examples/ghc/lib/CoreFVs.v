@@ -26,7 +26,7 @@ Require Maybes.
 Require NameSet.
 Require NestedRecursionHelpers.
 Require Panic.
-Require UniqSet.
+Require UniqSetInv.
 Require Unique.
 Require Util.
 Import GHC.Base.Notations.
@@ -280,7 +280,7 @@ Definition idRuleRhsVars
             let fvs :=
               FV.fvVarSet (FV.filterFV Core.isLocalVar (addBndrs bndrs (expr_fvs rhs))) in
             if is_active act : bool
-            then UniqSet.delOneFromUniqSet_Directly fvs (Unique.getUnique fn) else
+            then UniqSetInv.delOneFromUniqSet_Directly fvs (Unique.getUnique fn) else
             noFVs
         | _ => noFVs
         end in
@@ -461,5 +461,5 @@ Definition freeVarsBind
      Id.idCoreRules Id.idType Id.realIdUnfolding Lists.List.map Maybes.orElse
      NameSet.NameSet NameSet.emptyNameSet NameSet.unionNameSet
      NestedRecursionHelpers.mapAndUnzipFix Panic.assertPanic
-     UniqSet.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
+     UniqSetInv.delOneFromUniqSet_Directly Unique.getUnique Util.debugIsOn
 *)

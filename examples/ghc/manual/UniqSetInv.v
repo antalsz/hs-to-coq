@@ -29,15 +29,14 @@ Import Unique.
 Import UniqFM.
 Import GHC.Base.
 
+Require Import IntMap.
+Require Import ContainerProofs.
+
 (* Converted type declarations: *)
 
 Require Proofs.GHC.List.
 Require Proofs.Data.Foldable.
-Require Import IntMap.
-Require Import Proofs.ContainerProofs.
-
 Require Import Proofs.GHC.Base.
-
 
 
 (* Properties about Uniques that we need. *)
@@ -196,17 +195,17 @@ Qed.
 (** The invariant is that for any unique, the result that we get out has 
     the same unique stored.
 *)
-Polymorphic Definition UniqInv@{i} {a:Type@{i}} (fm : UniqFM.UniqFM a) `{Unique.Uniquable a} : Type@{i} :=
-  forall (x:a)(y:a), 
-    UniqFM.lookupUFM fm x = Some y -> getUnique x = getUnique y. 
-
+Polymorphic Definition UniqInv@{i} {a:Type@{i}} : Type@{i} :=
+  forall (x:a)(y:a)(H:Unique.Uniquable a)(fm : UniqFM.UniqFM a),
+    UniqFM.lookupUFM fm x = Some y ->
+    getUnique x = getUnique y. 
 
 Polymorphic Definition UniqSet@{i} (a:Type@{i}) `{Unique.Uniquable a} : Type@{i} :=
   sigT (fun fm => UniqInv fm).
 
 Local Notation Mk_UniqSet s:= (@existT _ _ s _).
 
-Definition getUniqSet' {a}`{Uniquable a} (arg_0__ : UniqSet a) :=
+Definition getUniqSet' {a} `{Unique.Uniquable a} (arg_0__ : UniqSet a) :=
   let 'existT getUniqSet' _ := arg_0__ in
   getUniqSet'.
 
@@ -262,6 +261,8 @@ Program Instance Monoid__UniqSet {a}`{Unique.Uniquable a} : GHC.Base.Monoid (Uni
          GHC.Base.mempty__ := Monoid__UniqSet_mempty |}.
 
 (* Skipping instance Data__UniqSet of class Data *)
+
+About UniqFM.addToUFM.
 
 Program Definition addOneToUniqSet {a} `{Unique.Uniquable a}
    : UniqSet a -> a -> UniqSet a :=

@@ -1,4 +1,4 @@
-(* Default settings (from HsToCoq.Coq.Preamble) *)
+* Default settings (from HsToCoq.Coq.Preamble) *)
 
 Generalizable All Variables.
 
@@ -26,7 +26,7 @@ Require Module.
 Require Name.
 Require OccName.
 Require Pair.
-Require UniqSet.
+Require UniqSetInv.
 Require UniqSupply.
 Require Unique.
 Require Util.
@@ -544,14 +544,18 @@ Definition OutBndr :=
 
 Inductive TaggedBndr t : Type := | TB : CoreBndr -> t -> TaggedBndr t.
 
+Definition realUnique (arg_0__ : Var) :=
+  let 'Mk_Id _ realUnique _ _ _ _ := arg_0__ in
+  realUnique.
+
 Definition DVarSet :=
-  (UniqSet.UniqSet Var)%type.
+  (UniqSetInv.UniqSet Var)%type.
 
 Definition CoVar :=
   Id%type.
 
 Definition CoVarSet :=
-  (UniqSet.UniqSet CoVar)%type.
+  (UniqSetInv.UniqSet CoVar)%type.
 
 Definition InCoVar :=
   CoVar%type.
@@ -563,7 +567,7 @@ Definition DFunId :=
   Id%type.
 
 Definition DIdSet :=
-  (UniqSet.UniqSet Id)%type.
+  (UniqSetInv.UniqSet Id)%type.
 
 Definition EvId :=
   Id%type.
@@ -581,7 +585,7 @@ Definition IpId :=
   EvId%type.
 
 Definition IdSet :=
-  (UniqSet.UniqSet Id)%type.
+  (UniqSetInv.UniqSet Id)%type.
 
 Definition IdUnfoldingFun :=
   (Id -> Unfolding)%type.
@@ -602,10 +606,10 @@ Definition TyCoVar :=
   Id%type.
 
 Definition DTyCoVarSet :=
-  (UniqSet.UniqSet TyCoVar)%type.
+  (UniqSetInv.UniqSet TyCoVar)%type.
 
 Definition TyCoVarSet :=
-  (UniqSet.UniqSet TyCoVar)%type.
+  (UniqSetInv.UniqSet TyCoVar)%type.
 
 Definition InVar :=
   Var%type.
@@ -628,7 +632,7 @@ Inductive PredTree : Type
   |  IrredPred : PredType -> PredTree.
 
 Definition DTyVarSet :=
-  (UniqSet.UniqSet TyVar)%type.
+  (UniqSetInv.UniqSet TyVar)%type.
 
 Definition InTyVar :=
   TyVar%type.
@@ -779,13 +783,13 @@ Definition AnnAlt :=
   fun bndr_ annot_ => (AltCon * list bndr_ * AnnExpr bndr_ annot_)%type%type.
 
 Definition TyVarSet :=
-  (UniqSet.UniqSet TyVar)%type.
+  (UniqSetInv.UniqSet TyVar)%type.
 
 Definition TypeVar :=
   Var%type.
 
 Definition VarSet :=
-  (UniqSet.UniqSet Var)%type.
+  (UniqSetInv.UniqSet Var)%type.
 
 Inductive InScopeSet : Type := | InScope : VarSet -> nat -> InScopeSet.
 
@@ -2060,10 +2064,6 @@ Definition id_details (arg_0__ : Var) :=
   let 'Mk_Id _ _ _ _ id_details _ := arg_0__ in
   id_details.
 
-Definition realUnique (arg_0__ : Var) :=
-  let 'Mk_Id _ realUnique _ _ _ _ := arg_0__ in
-  realUnique.
-
 Definition varName (arg_0__ : Var) :=
   let 'Mk_Id varName _ _ _ _ _ := arg_0__ in
   varName.
@@ -2586,7 +2586,7 @@ Axiom ty_co_subst : LiftingContext -> Role -> Type_ -> Coercion.
 
 Axiom tyThingCategory : TyThing -> GHC.Base.String.
 
-Axiom tyConsOfType : Type_ -> UniqSet.UniqSet TyCon.
+Axiom tyConsOfType : Type_ -> UniqSetInv.UniqSet TyCon.
 
 Axiom tyConVisibleTyVars : TyCon -> list TyVar.
 
@@ -3658,7 +3658,7 @@ Axiom lazyApply2Dmd : Demand.
 
 Axiom lazyApply1Dmd : Demand.
 
-Axiom kindTyConKeys : UniqSet.UniqSet Unique.Unique.
+Axiom kindTyConKeys : UniqSetInv.UniqSet Unique.Unique.
 
 Axiom kill_usage : KillFlags -> Demand -> Demand.
 
@@ -4514,18 +4514,18 @@ Definition unitVarEnv {a} : Var -> a -> VarEnv a :=
   UniqFM.unitUFM.
 
 Definition unitDVarSet : Var -> DVarSet :=
-  UniqSet.unitUniqSet.
+  UniqSetInv.unitUniqSet.
 
 Definition unitVarSet : Var -> VarSet :=
-  UniqSet.unitUniqSet.
+  UniqSetInv.unitUniqSet.
 
 Axiom uniqAway : InScopeSet -> Var -> Var.
 
 Definition unionVarSets : list VarSet -> VarSet :=
-  UniqSet.unionManyUniqSets.
+  UniqSetInv.unionManyUniqSets.
 
 Definition unionVarSet : VarSet -> VarSet -> VarSet :=
-  UniqSet.unionUniqSets.
+  UniqSetInv.unionUniqSets.
 
 Definition unionInScope : InScopeSet -> InScopeSet -> InScopeSet :=
   fun arg_0__ arg_1__ =>
@@ -4534,10 +4534,10 @@ Definition unionInScope : InScopeSet -> InScopeSet -> InScopeSet :=
     end.
 
 Definition unionDVarSets : list DVarSet -> DVarSet :=
-  UniqSet.unionManyUniqSets.
+  UniqSetInv.unionManyUniqSets.
 
 Definition unionDVarSet : DVarSet -> DVarSet -> DVarSet :=
-  UniqSet.unionUniqSets.
+  UniqSetInv.unionUniqSets.
 
 Axiom unfoldingTemplate : Unfolding -> CoreExpr.
 
@@ -4609,10 +4609,10 @@ Definition tickishFloatable {id} : Tickish id -> bool :=
   fun t => andb (tickishScopesLike t SoftScope) (negb (tickishCounts t)).
 
 Definition sizeVarSet : VarSet -> nat :=
-  UniqSet.sizeUniqSet.
+  UniqSetInv.sizeUniqSet.
 
 Definition sizeDVarSet : DVarSet -> nat :=
-  UniqSet.sizeUniqSet.
+  UniqSetInv.sizeUniqSet.
 
 Definition setVarUnique : Var -> Unique.Unique -> Var :=
   fun var uniq =>
@@ -4893,7 +4893,7 @@ Definition partitionVarEnv {a}
 
 Definition partitionDVarSet
    : (Var -> bool) -> DVarSet -> (DVarSet * DVarSet)%type :=
-  UniqSet.partitionUniqSet.
+  UniqSetInv.partitionUniqSet.
 
 Definition partitionDVarEnv {a}
    : (a -> bool) -> DVarEnv a -> (DVarEnv a * DVarEnv a)%type :=
@@ -4936,10 +4936,10 @@ Definition mkVarEnv {a} : list (Var * a)%type -> VarEnv a :=
   UniqFM.listToUFM.
 
 Definition mkDVarSet : list Var -> DVarSet :=
-  UniqSet.mkUniqSet.
+  UniqSetInv.mkUniqSet.
 
 Definition mkVarSet : list Var -> VarSet :=
-  UniqSet.mkUniqSet.
+  UniqSetInv.mkUniqSet.
 
 Definition mkVarEnv_Directly {a} : list (Unique.Unique * a)%type -> VarEnv a :=
   UniqFM.listToUFM_Directly.
@@ -5039,13 +5039,13 @@ Definition mkConApp2 {b} : DataCon -> list Type_ -> list Var -> Expr b :=
            (GHC.Base.map varToCoreExpr arg_ids).
 
 Definition minusVarSet : VarSet -> VarSet -> VarSet :=
-  UniqSet.minusUniqSet.
+  UniqSetInv.minusUniqSet.
 
 Definition minusVarEnv {a} {b} : VarEnv a -> VarEnv b -> VarEnv a :=
   UniqFM.minusUFM.
 
 Definition minusDVarSet : DVarSet -> DVarSet -> DVarSet :=
-  UniqSet.minusUniqSet.
+  UniqSetInv.minusUniqSet.
 
 Definition minusDVarEnv {a} {a'} : DVarEnv a -> DVarEnv a' -> DVarEnv a :=
   UniqFM.minusUFM.
@@ -5079,13 +5079,13 @@ Definition lookupVarEnv_NF {a} `{_ : GHC.Err.Default a} (env : VarEnv a) id
   end.
 
 Definition lookupVarSet : VarSet -> Var -> option Var :=
-  UniqSet.lookupUniqSet.
+  UniqSetInv.lookupUniqSet.
 
 Definition lookupVarSetByName : VarSet -> Name.Name -> option Var :=
-  UniqSet.lookupUniqSet.
+  UniqSetInv.lookupUniqSet.
 
 Definition lookupVarSet_Directly : VarSet -> Unique.Unique -> option Var :=
-  UniqSet.lookupUniqSet_Directly.
+  UniqSetInv.lookupUniqSet_Directly.
 
 Definition lookupWithDefaultVarEnv {a} : VarEnv a -> a -> Var -> a :=
   UniqFM.lookupWithDefaultUFM.
@@ -5237,7 +5237,7 @@ Definition isEvaldUnfolding : Unfolding -> bool :=
   fun arg_0__ => false.
 
 Definition isEmptyVarSet : VarSet -> bool :=
-  UniqSet.isEmptyUniqSet.
+  UniqSetInv.isEmptyUniqSet.
 
 Definition subVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => isEmptyVarSet (minusVarSet s1 s2).
@@ -5264,7 +5264,7 @@ Definition isEmptyRuleInfo : RuleInfo -> bool :=
   fun x => true.
 
 Definition isEmptyDVarSet : DVarSet -> bool :=
-  UniqSet.isEmptyUniqSet.
+  UniqSetInv.isEmptyUniqSet.
 
 Definition subDVarSet : DVarSet -> DVarSet -> bool :=
   fun s1 s2 => isEmptyDVarSet (minusDVarSet s1 s2).
@@ -5323,10 +5323,10 @@ Definition intersectsVarEnv {a} : VarEnv a -> VarEnv a -> bool :=
   fun e1 e2 => negb (isEmptyVarEnv (UniqFM.intersectUFM e1 e2)).
 
 Definition intersectVarSet : VarSet -> VarSet -> VarSet :=
-  UniqSet.intersectUniqSets.
+  UniqSetInv.intersectUniqSets.
 
 Definition intersectDVarSet : DVarSet -> DVarSet -> DVarSet :=
-  UniqSet.intersectUniqSets.
+  UniqSetInv.intersectUniqSets.
 
 Definition idInfo `{Util.HasDebugCallStack} : Id -> IdInfo :=
   fun '(Mk_Id _ _ _ _ _ info) => info.
@@ -5341,7 +5341,7 @@ Definition getInScopeVars : InScopeSet -> VarSet :=
   fun '(InScope vs _) => vs.
 
 Definition foldDVarSet {a} : (Var -> a -> a) -> a -> DVarSet -> a :=
-  UniqSet.nonDetFoldUniqSet.
+  UniqSetInv.nonDetFoldUniqSet.
 
 Definition foldDVarEnv {a} {b} : (a -> b -> b) -> b -> DVarEnv a -> b :=
   UniqFM.nonDetFoldUFM.
@@ -5363,7 +5363,7 @@ Definition fixVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
                                   fixVarSet fn new_vars).
 
 Definition filterVarSet : (Var -> bool) -> VarSet -> VarSet :=
-  UniqSet.filterUniqSet.
+  UniqSetInv.filterUniqSet.
 
 Definition filterVarEnv_Directly {a}
    : (Unique.Unique -> a -> bool) -> VarEnv a -> VarEnv a :=
@@ -5373,7 +5373,7 @@ Definition filterVarEnv {a} : (a -> bool) -> VarEnv a -> VarEnv a :=
   UniqFM.filterUFM.
 
 Definition filterDVarSet : (Var -> bool) -> DVarSet -> DVarSet :=
-  UniqSet.filterUniqSet.
+  UniqSetInv.filterUniqSet.
 
 Definition filterDVarEnv {a} : (a -> bool) -> DVarEnv a -> DVarEnv a :=
   UniqFM.filterUFM.
@@ -5408,16 +5408,16 @@ Definition extendVarEnv_Directly {a}
   UniqFM.addToUFM_Directly.
 
 Definition extendVarSet : VarSet -> Var -> VarSet :=
-  UniqSet.addOneToUniqSet.
+  UniqSetInv.addOneToUniqSet.
 
 Definition extendDVarSet : DVarSet -> Var -> DVarSet :=
-  UniqSet.addOneToUniqSet.
+  UniqSetInv.addOneToUniqSet.
 
 Definition extendDVarSetList : DVarSet -> list Var -> DVarSet :=
-  UniqSet.addListToUniqSet.
+  UniqSetInv.addListToUniqSet.
 
 Definition extendVarSetList : VarSet -> list Var -> VarSet :=
-  UniqSet.addListToUniqSet.
+  UniqSetInv.addListToUniqSet.
 
 Definition modifyVarEnv {a} : (a -> a) -> VarEnv a -> Var -> VarEnv a :=
   fun mangle_fn env key =>
@@ -5430,7 +5430,7 @@ Definition extendInScopeSetSet : InScopeSet -> VarSet -> InScopeSet :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
     | InScope in_scope n, vs =>
-        InScope (unionVarSet in_scope vs) (n GHC.Num.+ UniqSet.sizeUniqSet vs)
+        InScope (unionVarSet in_scope vs) (n GHC.Num.+ UniqSetInv.sizeUniqSet vs)
     end.
 
 Definition extendInScopeSetList : InScopeSet -> list Var -> InScopeSet :=
@@ -5498,7 +5498,7 @@ Definition expandUnfolding_maybe : Unfolding -> option CoreExpr :=
   fun arg_0__ => None.
 
 Definition emptyVarSet : VarSet :=
-  UniqSet.emptyUniqSet.
+  UniqSetInv.emptyUniqSet.
 
 Definition mapUnionVarSet {a} : (a -> VarSet) -> list a -> VarSet :=
   fun get_set xs =>
@@ -5546,7 +5546,7 @@ Definition emptyInScopeSet : InScopeSet :=
   InScope emptyVarSet #1.
 
 Definition emptyDVarSet : DVarSet :=
-  UniqSet.emptyUniqSet.
+  UniqSetInv.emptyUniqSet.
 
 Definition mapUnionDVarSet {a} : (a -> DVarSet) -> list a -> DVarSet :=
   fun get_set xs =>
@@ -5559,7 +5559,7 @@ Definition emptyDVarEnv {a} : DVarEnv a :=
   UniqFM.emptyUFM.
 
 Definition elemVarSetByKey : Unique.Unique -> VarSet -> bool :=
-  UniqSet.elemUniqSet_Directly.
+  UniqSetInv.elemUniqSet_Directly.
 
 Definition restrictVarEnv {a} : VarEnv a -> VarSet -> VarEnv a :=
   fun env vs =>
@@ -5613,22 +5613,22 @@ Definition delVarEnvList {a} : VarEnv a -> list Var -> VarEnv a :=
   UniqFM.delListFromUFM.
 
 Definition delDVarSet : DVarSet -> Var -> DVarSet :=
-  UniqSet.delOneFromUniqSet.
+  UniqSetInv.delOneFromUniqSet.
 
 Definition delVarSet : VarSet -> Var -> VarSet :=
-  UniqSet.delOneFromUniqSet.
+  UniqSetInv.delOneFromUniqSet.
 
 Definition delDVarSetList : DVarSet -> list Var -> DVarSet :=
-  UniqSet.delListFromUniqSet.
+  UniqSetInv.delListFromUniqSet.
 
 Definition delVarSetList : VarSet -> list Var -> VarSet :=
-  UniqSet.delListFromUniqSet.
+  UniqSetInv.delListFromUniqSet.
 
 Definition delVarEnv_Directly {a} : VarEnv a -> Unique.Unique -> VarEnv a :=
   UniqFM.delFromUFM_Directly.
 
 Definition delVarSetByKey : VarSet -> Unique.Unique -> VarSet :=
-  UniqSet.delOneFromUniqSet_Directly.
+  UniqSetInv.delOneFromUniqSet_Directly.
 
 Definition elemDVarEnv {a} : Var -> DVarEnv a -> bool :=
   UniqFM.elemUFM.
@@ -5637,10 +5637,10 @@ Definition elemVarEnv {a} : Var -> VarEnv a -> bool :=
   UniqFM.elemUFM.
 
 Definition elemDVarSet : Var -> DVarSet -> bool :=
-  UniqSet.elementOfUniqSet.
+  UniqSetInv.elementOfUniqSet.
 
 Definition elemVarSet : Var -> VarSet -> bool :=
-  UniqSet.elementOfUniqSet.
+  UniqSetInv.elementOfUniqSet.
 
 Definition elemVarEnvByKey {a} : Unique.Unique -> VarEnv a -> bool :=
   UniqFM.elemUFM_Directly.
@@ -5685,7 +5685,8 @@ Definition rnInScope : Var -> RnEnv2 -> bool :=
   fun x env => elemInScopeSet x (in_scope env).
 
 Definition disjointVarSet : VarSet -> VarSet -> bool :=
-  fun s1 s2 => UniqFM.disjointUFM (UniqSet.getUniqSet s1) (UniqSet.getUniqSet s2).
+  fun s1 s2 =>
+    UniqFM.disjointUFM (UniqSetInv.getUniqSet s1) (UniqSetInv.getUniqSet s2).
 
 Definition intersectsVarSet : VarSet -> VarSet -> bool :=
   fun s1 s2 => negb (disjointVarSet s1 s2).
@@ -5856,13 +5857,13 @@ Definition dVarSetToVarSet : DVarSet -> VarSet :=
   fun x => x.
 
 Definition dVarSetMinusVarSet : DVarSet -> VarSet -> DVarSet :=
-  UniqSet.minusUniqSet.
+  UniqSetInv.minusUniqSet.
 
 Definition dVarSetIntersectVarSet : DVarSet -> VarSet -> DVarSet :=
-  UniqSet.intersectUniqSets.
+  UniqSetInv.intersectUniqSets.
 
 Definition dVarSetElems : DVarSet -> list Var :=
-  UniqSet.nonDetEltsUniqSet.
+  UniqSetInv.nonDetEltsUniqSet.
 
 Definition dVarEnvElts {a} : DVarEnv a -> list a :=
   UniqFM.eltsUFM.
@@ -6053,7 +6054,7 @@ Definition binderArgFlag {tv} {argf} : TyVarBndr tv argf -> argf :=
   fun '(TvBndr _ argf) => argf.
 
 Definition anyVarSet : (Var -> bool) -> VarSet -> bool :=
-  UniqSet.uniqSetAny.
+  UniqSetInv.uniqSetAny.
 
 Definition anyDVarSet :=
   anyVarSet.
@@ -6062,7 +6063,7 @@ Definition anyDVarEnv {a} : (a -> bool) -> DVarEnv a -> bool :=
   UniqFM.anyUFM.
 
 Definition allVarSet : (Var -> bool) -> VarSet -> bool :=
-  UniqSet.uniqSetAll.
+  UniqSetInv.uniqSetAll.
 
 Definition allDVarSet :=
   allVarSet.
@@ -7335,18 +7336,19 @@ Program Instance Eq___Class : GHC.Base.Eq_ Class :=
      UniqFM.lookupUFM UniqFM.lookupUFM_Directly UniqFM.lookupWithDefaultUFM
      UniqFM.mapUFM UniqFM.minusUFM UniqFM.nonDetFoldUFM UniqFM.nonDetUFMToList
      UniqFM.partitionUFM UniqFM.plusMaybeUFM_C UniqFM.plusUFM UniqFM.plusUFMList
-     UniqFM.plusUFM_C UniqFM.plusUFM_CD UniqFM.unitUFM UniqSet.UniqSet
-     UniqSet.addListToUniqSet UniqSet.addOneToUniqSet UniqSet.delListFromUniqSet
-     UniqSet.delOneFromUniqSet UniqSet.delOneFromUniqSet_Directly
-     UniqSet.elemUniqSet_Directly UniqSet.elementOfUniqSet UniqSet.emptyUniqSet
-     UniqSet.filterUniqSet UniqSet.getUniqSet UniqSet.intersectUniqSets
-     UniqSet.isEmptyUniqSet UniqSet.lookupUniqSet UniqSet.lookupUniqSet_Directly
-     UniqSet.minusUniqSet UniqSet.mkUniqSet UniqSet.nonDetEltsUniqSet
-     UniqSet.nonDetFoldUniqSet UniqSet.partitionUniqSet UniqSet.sizeUniqSet
-     UniqSet.unionManyUniqSets UniqSet.unionUniqSets UniqSet.uniqSetAll
-     UniqSet.uniqSetAny UniqSet.unitUniqSet UniqSupply.UniqSupply Unique.Uniquable
-     Unique.Unique Unique.deriveUnique Unique.getKey Unique.getUnique
-     Unique.getUnique__ Unique.isLocalUnique Unique.mkUniqueGrimily
+     UniqFM.plusUFM_C UniqFM.plusUFM_CD UniqFM.unitUFM UniqSetInv.UniqSet
+     UniqSetInv.addListToUniqSet UniqSetInv.addOneToUniqSet
+     UniqSetInv.delListFromUniqSet UniqSetInv.delOneFromUniqSet
+     UniqSetInv.delOneFromUniqSet_Directly UniqSetInv.elemUniqSet_Directly
+     UniqSetInv.elementOfUniqSet UniqSetInv.emptyUniqSet UniqSetInv.filterUniqSet
+     UniqSetInv.getUniqSet UniqSetInv.intersectUniqSets UniqSetInv.isEmptyUniqSet
+     UniqSetInv.lookupUniqSet UniqSetInv.lookupUniqSet_Directly
+     UniqSetInv.minusUniqSet UniqSetInv.mkUniqSet UniqSetInv.nonDetEltsUniqSet
+     UniqSetInv.nonDetFoldUniqSet UniqSetInv.partitionUniqSet UniqSetInv.sizeUniqSet
+     UniqSetInv.unionManyUniqSets UniqSetInv.unionUniqSets UniqSetInv.uniqSetAll
+     UniqSetInv.uniqSetAny UniqSetInv.unitUniqSet UniqSupply.UniqSupply
+     Unique.Uniquable Unique.Unique Unique.deriveUnique Unique.getKey
+     Unique.getUnique Unique.getUnique__ Unique.isLocalUnique Unique.mkUniqueGrimily
      Unique.nonDetCmpUnique Util.HasDebugCallStack Util.count Util.debugIsOn
      Util.foldl2 Util.zipEqual
 *)

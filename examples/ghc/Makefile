@@ -14,6 +14,8 @@ HANDMOD = \
   AxiomatizedTypes \
   NestedRecursionHelpers \
   IntMap \
+  UniqSetInv \
+  ContainerProofs \
   # Used by CSE
   # TysWiredIn \
 

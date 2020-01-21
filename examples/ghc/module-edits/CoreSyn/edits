@@ -1,3 +1,5 @@
+rename module UniqSet UniqSetInv
+
 import module AxiomatizedTypes
 import module Literal
 

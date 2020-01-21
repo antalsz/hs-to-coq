@@ -1,3 +1,4 @@
+rename module UniqSet UniqSetInv
 
 # Make it easier for Coq to see termination
 rename value Util.mapAndUnzip = NestedRecursionHelpers.mapAndUnzipFix 

@@ -7,7 +7,6 @@
 -Q ../../containers/theories ""
 -arg -w -arg -masking-absolute-name
 Util.v
-ContainerProofs.v
 Axioms.v
 ScopeInvariant.v
 JoinPointInvariants.v

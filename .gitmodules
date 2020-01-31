@@ -22,3 +22,6 @@
 [submodule "random"]
 	path = examples/shuffle/random
 	url = https://github.com/haskell/random.git
+[submodule "examples/wc/wc"]
+	path = examples/wc/wc
+	url = git@github.com:ChrisPenner/wc.git

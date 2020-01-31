@@ -10,6 +10,11 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+(* Preamble *)
+
+Require String.
+Import String.StringSyntax.
+
 (* Converted imports: *)
 
 Require BL.
@@ -25,9 +30,6 @@ Require Import IO.
 Require Import Types.
 
 (* No type declarations to convert. *)
-
-(* Midamble *)
-
 
 (* Converted value declarations: *)
 
@@ -58,9 +60,9 @@ Definition multiCoreCount : String -> IO Counts :=
                ((countBytes ∘ limiter) <$!> BL.hGetContents fileHandle)))))).
 
 (* External variables:
-     AbsoluteSeek ByteString Counts IO ReadMode String Traversable bool countChar div
-     enumFromTo fileSize fold fromInteger fromIntegral getFileStatus hSeek id mempty
+     AbsoluteSeek Counts IO ReadMode String Traversable bool countChar div enumFromTo
+     fileSize fold fromInteger fromIntegral getFileStatus hSeek id mempty
      numCapabilities op_z2218U__ op_zeze__ op_zgzg__ op_zgzgze__ op_zlzdzg__
      op_zlzdznzg__ op_zlzlzgzg__ op_zm__ op_zt__ openBinaryFile putStrLn show
-     BL.foldl' BL.hGetContents BL.take
+     BL.ByteString BL.foldl' BL.hGetContents BL.take
 *)

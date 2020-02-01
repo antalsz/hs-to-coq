@@ -1,3 +1,7 @@
 rename type GHC.Word.Word32 = nat
 
 class kinds Socket.Recursive (Type -> Type)
+
+# Ideally, these should be cofixpoints
+termination Server.doOneConnectionBody deferred
+termination Server.doOneConnectionMain deferred

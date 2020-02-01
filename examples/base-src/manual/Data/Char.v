@@ -10,6 +10,9 @@ Generalizable All Variables.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
+Require Ascii.
+Import Ascii.AsciiSyntax.
+
 (* No data type declarations to convert. *)
 
 (* Converted value declarations: *)

@@ -36,8 +36,9 @@ rename value Data.ByteString.readFile = BL.readFile
 #
 # IO
 #
-rename type GHC.Types.IO = GHC.Base.IO
+rename type GHC.Types.IO = IO.IO
 rename type GHC.IO.Handle.Handle = IO.Handle
+rename value System.IO.readFile = IO.readFile
 
 rename type System.Posix.Files.FileStatus = IO.FileStatus
 rename value System.Posix.Files.getFileStatus = IO.getFileStatus

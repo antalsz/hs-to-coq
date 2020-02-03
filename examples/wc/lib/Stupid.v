@@ -13,8 +13,11 @@ Require Coq.Program.Wf.
 (* Converted imports: *)
 
 Require Import Data.Foldable.
+Require Import Data.Functor.
 Require Data.OldList.
+Require Import Data.Traversable.
 Require Import GHC.Base.
+Require IO.
 Require Import Types.
 
 (* No type declarations to convert. *)
@@ -34,6 +37,13 @@ Definition stupidCountFile : String -> Counts :=
     fromTuple (pair (pair (length s) (length (Data.OldList.words s))) (length
                      (Data.OldList.lines s))).
 
+Definition stupid : list String -> IO.IO (list (String * Counts)%type) :=
+  fun paths =>
+    for_ paths (fun fp =>
+                  (stupidCountFile <$> IO.readFile fp) >>=
+                  (fun count => return_ (pair fp count))).
+
 (* External variables:
-     Counts String fromTuple length pair Data.OldList.lines Data.OldList.words
+     Counts String for_ fromTuple length list op_zgzgze__ op_zlzdzg__ op_zt__ pair
+     return_ Data.OldList.lines Data.OldList.words IO.IO IO.readFile
 *)

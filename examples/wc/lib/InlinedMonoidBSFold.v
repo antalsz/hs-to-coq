@@ -16,6 +16,7 @@ Require BL.
 Require Import Data.Functor.
 Require Import Data.Traversable.
 Require Import GHC.Base.
+Require IO.
 Require Types.
 
 (* No type declarations to convert. *)
@@ -26,12 +27,12 @@ Definition countFile : BL.ByteString -> Types.Counts :=
   BL.foldl' (fun a b => a <<>> Types.countChar b) mempty.
 
 Definition inlinedMonoidBSFold
-   : list String -> IO (list (String * Types.Counts)%type) :=
+   : list String -> IO.IO (list (String * Types.Counts)%type) :=
   fun paths =>
     for_ paths (fun fp =>
                   (countFile <$> BL.readFile fp) >>= (fun count => return_ (pair fp count))).
 
 (* External variables:
-     IO String for_ list mempty op_zgzgze__ op_zlzdzg__ op_zlzlzgzg__ op_zt__ pair
-     return_ BL.ByteString BL.foldl' BL.readFile Types.Counts Types.countChar
+     String for_ list mempty op_zgzgze__ op_zlzdzg__ op_zlzlzgzg__ op_zt__ pair
+     return_ BL.ByteString BL.foldl' BL.readFile IO.IO Types.Counts Types.countChar
 *)

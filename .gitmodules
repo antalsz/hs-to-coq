@@ -24,4 +24,4 @@
 	url = https://github.com/haskell/random.git
 [submodule "examples/wc/wc"]
 	path = examples/wc/wc
-	url = git@github.com:ChrisPenner/wc.git
+	url = https://github.com/ChrisPenner/wc.git

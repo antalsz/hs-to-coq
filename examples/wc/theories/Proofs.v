@@ -38,8 +38,9 @@ Instance Eq_Flux : Eq_ Flux := eq_default eq_flux.
 Instance EqLaws_CharType : EqLaws CharType. Admitted.
 Instance EqLaws_Flux : EqLaws Flux. Admitted.
 
-Instance SemigroupLaws_Flux : SemigroupLaws Flux := {}.
+Instance SemigroupLaws_Flux : SemigroupLaws Flux.
 Proof.
+  constructor.
   intros x y z.
   destruct x eqn:Hx; destruct y eqn:Hy; destruct z eqn:Hz;  
     unfold op_zlzlzgzg__, Semigroup__Flux, Types.Semigroup__Flux_op_zlzlzgzg__; simpl.
@@ -52,7 +53,8 @@ Proof.
   all: omega.
 Qed.
 
-Instance Lawful_Flux : MonoidLaws Flux := {}.
+Instance Lawful_Flux : MonoidLaws Flux.
+constructor.
 + intros x. apply Eq_reflI. reflexivity.
 + intros x. destruct x. apply Eq_reflI. 
   unfold mappend, mempty, Monoid__Flux , mappend__ , mempty__, Types.Monoid__Flux_mempty . 
@@ -76,16 +78,18 @@ Instance EqLaws_Counts : EqLaws Counts. Admitted.
 
 Instance EqExact_Counts : EqExact Counts. Admitted.
 
-Instance SemigroupLaws_Counts : SemigroupLaws Counts := {}.
+Instance SemigroupLaws_Counts : SemigroupLaws Counts.
 Proof.
+  constructor.
   intros x y z.
   destruct x eqn:Hx; destruct y eqn:Hy; destruct z eqn:Hz;  
     unfold op_zlzlzgzg__, Semigroup__Counts, Types.Semigroup__Counts_op_zlzlzgzg__; simpl.
   unfold op_zeze__, Eq_Counts, eq_default, op_zeze____,eq_counts .
 Admitted.
 
-Instance MonoidLaws_Counts : MonoidLaws Counts := {}.
+Instance MonoidLaws_Counts : MonoidLaws Counts.
 Proof.
+  constructor.
   + intros x. destruct x. apply Eq_reflI. reflexivity.
   + intros x. destruct x. apply Eq_reflI. 
   unfold mappend, mempty, Monoid__Counts , mappend__ , mempty__, Types.Monoid__Counts_mempty . 
@@ -104,8 +108,8 @@ Qed.
 
 Opaque Z.add.
 
-Instance EqExactFlux : EqExact Flux := {}.
-Proof. intros x y.
+Instance EqExactFlux : EqExact Flux.
+Proof. constructor; intros x y.
        apply iff_reflect. split. intro h. subst. apply Eq_reflI. reflexivity.
 Admitted.  
 
@@ -131,8 +135,8 @@ Proof.
     rewrite <- Counts_assoc.
     f_equal.
     unfold countChar. unfold flux.
-    destruct (isSpace a) eqn:AS.
-    destruct (a == Types.newline) eqn:AN.
+    destruct (Unicode.isSpace a) eqn:AS.
+    destruct (a == newline) eqn:AN.
     ++ admit. (* can't be both space and newline *)
     ++ simpl. rewrite AN.
        destruct break as [ys zs] eqn:B.

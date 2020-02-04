@@ -6,4 +6,4 @@ import module Data.Functor
 
 # Need System.IO.readFile and GHC.Types.IO
 #
-skip Stupid.stupid
+

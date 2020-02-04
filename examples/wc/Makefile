@@ -5,21 +5,21 @@ OUT=lib
 # Handwritten modules (usually by modification of generated version)
 HANDMOD = \
    Types \
-	SimpleFold \
-	InlinedBSFold \
+   SimpleFold \
+   InlinedBSFold \
    SimpleBSFold \
-	BL \
-   IO \
+   BL \
+   IO
 
 # Generated modules
 MODULES =  \
    MonoidBSFold \
-	InlinedMonoidBSFold \
-	Lazy \
-	LazyUTFAgnostic \
-	Simple \
+   InlinedMonoidBSFold \
+   Lazy \
+   LazyUTFAgnostic \
+   Simple \
    Stupid \
-	Strict
+   Strict
 
 # generated from drop-in/
 DROPIN = \
@@ -52,7 +52,7 @@ $(OUT)/README.md:
 	mkdir -p deps
 	> $@
 	echo 'This directory contains a Coq’ified version of parts of GHC' >> $@
-	echo 'Do not edit files here! Instead, look in `examples/ghc`.' >> $@
+	echo 'Do not edit files here! Instead, look in `examples/wc`.' >> $@
 
 $(OUT)/edits:
 	mkdir -p $(OUT)

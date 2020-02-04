@@ -52,6 +52,4 @@ Proof.
   autorewrite with hs_simpl.
   + rewrite BL.ByteString_foldl_nil. reflexivity.
   + rewrite BL.ByteString_foldl_cons.
-Admitted.    
-                                                              
-
+Admitted.

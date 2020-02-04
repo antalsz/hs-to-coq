@@ -13,9 +13,9 @@ following command.
 
 .. code-block:: shell
 
-     $ stack exec hs-to-coq -e hs-to-coq/base/edits Main.hs --iface-dir hs-to-coq/base -o .
+     $ stack exec -- hs-to-coq -e hs-to-coq/base/edits Main.hs --iface-dir hs-to-coq/base -o .
 
-Adjust the paths to the ``hs-to-coq`` repository accordingly. This invocation
+Adjust the paths to the edits and base files in the ``hs-to-coq`` repository accordingly. This invocation
 uses the following commandline options.
 
 .. option:: -e <editfile>

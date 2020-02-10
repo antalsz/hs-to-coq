@@ -9,6 +9,7 @@ HANDMOD = \
    InlinedBSFold \
    SimpleBSFold \
    BL \
+   Monads \
    IO
 
 # Generated modules
@@ -23,7 +24,8 @@ MODULES =  \
 
 # generated from drop-in/
 DROPIN = \
-   MultiCore
+   MultiCore \
+   Control/Concurrent/Async
 
 
 VFILES_GEN       = $(addsuffix .v,$(MODULES))

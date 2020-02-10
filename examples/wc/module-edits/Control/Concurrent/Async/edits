@@ -1,0 +1,80 @@
+skip Control.Concurrent.Async.Async
+skip Control.Concurrent.Async.Eq___Async
+skip Control.Concurrent.Async.Ord__Async
+skip Control.Concurrent.Async.Functor__Async
+
+skip Control.Concurrent.Async.compareAsyncs
+skip Control.Concurrent.Async.async
+skip Control.Concurrent.Async.asyncBound
+skip Control.Concurrent.Async.asyncOn
+skip Control.Concurrent.Async.asyncWithUnmask
+skip Control.Concurrent.Async.asyncOnWithUnmask
+skip Control.Concurrent.Async.asyncUsing
+skip Control.Concurrent.Async.withAsync
+skip Control.Concurrent.Async.withAsyncBound
+skip Control.Concurrent.Async.withAsyncOn
+skip Control.Concurrent.Async.withAsyncWithUnmask
+skip Control.Concurrent.Async.withAsyncOnWithUnmask
+skip Control.Concurrent.Async.withAsyncUsing
+skip Control.Concurrent.Async.wait
+skip Control.Concurrent.Async.waitCatch
+skip Control.Concurrent.Async.poll
+skip Control.Concurrent.Async.waitSTM
+skip Control.Concurrent.Async.waitCatchSTM
+skip Control.Concurrent.Async.pollSTM
+skip Control.Concurrent.Async.cancel
+
+skip Control.Concurrent.Async.AsyncCancelled
+skip Control.Concurrent.Async.Eq___AsyncCancelled
+
+
+skip Control.Concurrent.Async.uninterruptibleCancel
+skip Control.Concurrent.Async.cancelWith
+skip Control.Concurrent.Async.waitAnyCatch
+skip Control.Concurrent.Async.waitAnyCatchSTM
+skip Control.Concurrent.Async.waitAnyCatchCancel
+skip Control.Concurrent.Async.waitAny
+skip Control.Concurrent.Async.waitAnySTM
+skip Control.Concurrent.Async.waitAnyCancel
+skip Control.Concurrent.Async.waitEitherCatch
+skip Control.Concurrent.Async.waitEitherCatchSTM
+skip Control.Concurrent.Async.waitEitherCatchCancel
+skip Control.Concurrent.Async.waitEither
+skip Control.Concurrent.Async.waitEitherSTM
+skip Control.Concurrent.Async.waitEither_
+skip Control.Concurrent.Async.waitEitherSTM_
+skip Control.Concurrent.Async.waitEitherCancel
+skip Control.Concurrent.Async.waitBoth
+skip Control.Concurrent.Async.waitBothSTM
+
+skip Control.Concurrent.Async.ExceptionInLinkedThread
+
+skip Control.Concurrent.Async.link
+skip Control.Concurrent.Async.linkOnly
+skip Control.Concurrent.Async.link2
+skip Control.Concurrent.Async.link2Only
+skip Control.Concurrent.Async.isCancel
+skip Control.Concurrent.Async.race
+skip Control.Concurrent.Async.race_
+
+skip class Data.Hashable.Class.Hashable
+
+skip Control.Concurrent.Async.concurrently'
+skip Control.Concurrent.Async.mapConcurrently_
+skip Control.Concurrent.Async.forConcurrently_
+skip Control.Concurrent.Async.concurrently_
+skip Control.Concurrent.Async.replicateConcurrently
+skip Control.Concurrent.Async.replicateConcurrently_
+
+skip Control.Concurrent.Async.forkRepeat
+skip Control.Concurrent.Async.catchAll
+skip Control.Concurrent.Async.tryAll
+
+skip Control.Concurrent.Async.rawForkOn
+skip Control.Concurrent.Async.rawForkIO
+
+rename value Control.Concurrent.Async.Concurrently = Control.Concurrent.Async.MkConcurrently
+
+redefine Definition Control.Concurrent.Async.concurrently {a b : Type} : IO.IO a -> (IO.IO b -> IO.IO (a * b)) := embed (@IO.Concurrently a b).
+
+order Control.Concurrent.Async.Functor__Concurrently Control.Concurrent.Async.Applicative__Concurrently_op_zlztzg__ Control.Concurrent.Async.Applicative__Concurrently Control.Concurrent.Async.Semigroup__Concurrently_op_zlzlzgzg__ Control.Concurrent.Async.Semigroup__Concurrently Control.Concurrent.Async.Monoid__Concurrently_mappend Control.Concurrent.Async.mapConcurrently Control.Concurrent.Async.forConcurrently

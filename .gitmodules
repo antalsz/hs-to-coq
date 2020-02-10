@@ -25,3 +25,6 @@
 [submodule "examples/wc/wc"]
 	path = examples/wc/wc
 	url = https://github.com/ChrisPenner/wc.git
+[submodule "examples/wc/async"]
+	path = examples/wc/async
+	url = https://github.com/simonmar/async.git

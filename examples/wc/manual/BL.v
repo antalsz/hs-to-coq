@@ -1,11 +1,15 @@
 Require GHC.Char.
 Require Import GHC.Base.
 
+Require Import ITree.ITree.
+
 Require Import IO.
 
 Axiom ByteString : Type.
 
 Axiom pack : String -> ByteString.
+
+Axiom length : ByteString -> Int.
 
 Axiom foldr  : forall {a}, (Char -> a -> a) -> a -> ByteString -> a.
 Axiom foldl' : forall {a}, (a -> Char -> a) -> a -> ByteString -> a.
@@ -14,6 +18,9 @@ Axiom take : Int -> ByteString -> ByteString.
 
 Axiom hGetContents : Handle -> IO ByteString.
 Axiom readFile : FilePath -> IO ByteString.
+
+Definition fdPRead (fd : Fd) (bc : ByteCount) (off : FileOffset) : IO ByteString :=
+  Vis (FdPRead fd bc off) (fun '(s, _) => Ret (pack s)).
 
 Axiom c2w : GHC.Char.Char -> N.
 Axiom isSpaceChar8 : GHC.Char.Char -> bool.
@@ -29,4 +36,4 @@ Axiom ByteString_foldr_cons : forall {B} (f: Char -> B -> B) (b:B) x xs,
 
 Axiom foldl_foldr:
   forall {b} (f : b -> Char -> b) (x : b) xs,
-    foldl' f x (pack xs) = foldr (fun x g a => g (f a x)) id (pack xs) x. 
+    foldl' f x (pack xs) = foldr (fun x g a => g (f a x)) id (pack xs) x.

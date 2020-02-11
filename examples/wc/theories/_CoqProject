@@ -7,4 +7,5 @@
 -Q ../../containers/theories ""
 -arg -w -arg -masking-absolute-name
 Types.v
+IO.v
 Proofs.v

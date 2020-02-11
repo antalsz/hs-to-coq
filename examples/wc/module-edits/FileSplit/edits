@@ -1,0 +1,13 @@
+rename type System.Posix.IO.ByteString = BL.ByteString
+rename value System.Posix.IO.ByteString.fdPread = BL.fdPRead
+
+rename value GHC.Conc.Sync.numCapabilities = IO.numCapabilities
+
+rename value System.IO.putStrLn = IO.putStrLn
+rename value System.Posix.Files.Common.fileSize = IO.fileSize
+rename value System.Posix.IO.openFd = IO.openFd
+rename value System.Posix.IO.Common.closeFd = IO.closeFd
+rename value System.Posix.IO.Common.defaultFileFlags = IO.defaultFileFlags
+rename value System.Posix.IO.Common.ReadOnly = IO.ReadOnly
+
+rename value GHC.Base.show = IO.show

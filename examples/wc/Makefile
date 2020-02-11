@@ -20,7 +20,8 @@ MODULES =  \
    LazyUTFAgnostic \
    Simple \
    Stupid \
-   Strict
+   Strict \
+   FileSplit
 
 # generated from drop-in/
 DROPIN = \
@@ -79,6 +80,7 @@ coq: $(OUT)/Makefile $(OUTFILES)
 
 HS_TO_COQ_OPTS=\
      -i wc/src \
+     -i drop-in \
      -e ../../base/edits \
      -e ../containers/edits \
      -e ../transformers/edits \

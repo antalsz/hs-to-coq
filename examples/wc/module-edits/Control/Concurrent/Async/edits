@@ -75,6 +75,16 @@ skip Control.Concurrent.Async.rawForkIO
 
 rename value Control.Concurrent.Async.Concurrently = Control.Concurrent.Async.MkConcurrently
 
-redefine Definition Control.Concurrent.Async.concurrently {a b : Type} : IO.IO a -> (IO.IO b -> IO.IO (a * b)) := embed (@IO.Concurrently a b).
+#redefine Definition Control.Concurrent.Async.concurrently {a b : Type} (pa : IO.IO a) (pb : IO.IO b) : IO.IO (a * b) :=
+#  @IO.newEmptyMVar a >>=
+#     (fun ma => @IO.newEmptyMVar b >>=
+#        (fun mb => Vis (IO.ForkIO (pa >>= (fun a => IO.putMVar ma a >> return_ tt))
+#                            (pb >>= (fun b => IO.putMVar mb b >> return_ tt)))
+#                    (fun _ => IO.takeMVar ma >>=
+#                       (fun a => IO.takeMVar mb >>=
+#                          (fun b => return_ (pair a b)))))).
+
+redefine Definition Control.Concurrent.Async.concurrently {a b : Type} :
+         IO.IO a -> (IO.IO b -> IO.IO (a * b)) := embed IO.Concurrently.
 
 order Control.Concurrent.Async.Functor__Concurrently Control.Concurrent.Async.Applicative__Concurrently_op_zlztzg__ Control.Concurrent.Async.Applicative__Concurrently Control.Concurrent.Async.Semigroup__Concurrently_op_zlzlzgzg__ Control.Concurrent.Async.Semigroup__Concurrently Control.Concurrent.Async.Monoid__Concurrently_mappend Control.Concurrent.Async.mapConcurrently Control.Concurrent.Async.forConcurrently

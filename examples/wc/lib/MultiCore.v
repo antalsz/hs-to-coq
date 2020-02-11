@@ -31,6 +31,10 @@ Require Import Types.
 
 (* No type declarations to convert. *)
 
+(* Midamble *)
+
+Axiom show : Int -> String.
+
 (* Converted value declarations: *)
 
 Axiom forConcurrently : forall {t} {a} {b},

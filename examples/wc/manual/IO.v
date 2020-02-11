@@ -21,6 +21,12 @@ Inductive IOMode : Type :=
   | AppendMode    : IOMode
   | ReadWriteMode : IOMode.
 
+(** This should be translated from [System.Posix.IO.Common]. *)
+Inductive OpenMode : Type :=
+  | ReadOnly : OpenMode
+  | WriteOnly : OpenMode
+  | ReadWrite : OpenMode.
+
 (** Originally [Word32]: defined as [HTYPE_MODE_T] at
    [https://hackage.haskell.org/package/base-4.1.0.0/src/include/HsBaseConfig.h]
    *)
@@ -47,8 +53,24 @@ Definition Fd : Type := CInt.
 Definition ByteCount : Type := CSize.
 Definition FileOffset : Type := COff.
 
+Set Printing Universes.
+
+Axiom MVar : Type -> Type.
+
+(** This should be translated from [System.Posix.IO.Common]. *)
+Record OpenFileFlags :=
+  MkOpenFileFlags {
+    append    : bool; (* [O_APPEND] *)
+    exclusive : bool; (* [O_EXCL] *)
+    noctty    : bool; (* [O_NOCTTY] *)
+    nonBlock  : bool; (* [O_NONBLOCK] *)
+    trunc     : bool }.
+
+Definition defaultFileFlags : OpenFileFlags :=
+  MkOpenFileFlags false false false false false.
+
 Inductive IOE : Type -> Type :=
-| OpenFd : FilePath -> IOMode -> option FileMode -> IOE Fd
+| OpenFd : FilePath -> OpenMode -> option FileMode -> OpenFileFlags -> IOE Fd
 | CloseFd : Fd -> IOE unit
 | FdRead : Fd -> ByteCount -> IOE (String * ByteCount)
 | FdPRead : Fd -> ByteCount -> FileOffset -> IOE (String * ByteCount)
@@ -57,11 +79,24 @@ Inductive IOE : Type -> Type :=
     and [MVar]. I put [Concurrently] here as an effect simply for convenience
     and it should be changed to use the actual underlying operations when there
     is time. *)
-| Concurrently {a b}: itree IOE a -> itree IOE b -> IOE (a * b).
+| Concurrently {a b} : itree IOE a -> itree IOE b -> IOE (a * b).
+(*
+| ForkIO : itree IOE unit -> itree IOE unit -> IOE unit
+| NewEmptyMVar {a} : IOE (MVar a)
+| TakeMVar {a} : MVar a -> IOE a
+| PutMVar {a} : MVar a -> a -> IOE (MVar unit).
+*)
 
 Definition IO := itree IOE.
 
-Definition openFd : FilePath -> IOMode -> option FileMode -> IO Fd := embed OpenFd.
+(*
+Definition newEmptyMVar {a} := embed (@NewEmptyMVar a).
+Definition takeMVar {a} := embed (@TakeMVar a).
+Definition putMVar {a} := embed (@PutMVar a).
+*)
+
+Definition openFd : FilePath -> OpenMode -> option FileMode -> OpenFileFlags -> IO Fd :=
+  embed OpenFd.
   
 Definition closeFd : Fd -> IO unit := embed CloseFd.
 
@@ -81,7 +116,7 @@ Instance Monad_IO : Monad IO := Monad_Monad IO.
 
 (** This is not a REAL implementation! *)
 Definition getFileStatus (f : FilePath) : IO FileStatus :=
-  openFd f ReadMode None >>=
+  openFd f ReadOnly None defaultFileFlags >>=
          (fun fd => getFdStatus fd >>=
                              (fun st => closeFd fd >> return_ st)).
 
@@ -89,7 +124,7 @@ Axiom fileSize : FileStatus -> FileOffset.
 
 (** This is not a REAL implementation! *)
 Definition readFile (f : FilePath) : IO String :=
-  openFd f ReadMode None >>=
+  openFd f ReadOnly None defaultFileFlags >>=
          (fun fd => getFdStatus fd >>=
                              (fun st => fdRead fd (Z.to_N (fileSize st)) >>=
                                             (fun '(s, _) => closeFd fd >> return_ s))).
@@ -99,7 +134,5 @@ Axiom openBinaryFile : FilePath -> IOMode -> IO Handle.
 
 Axiom hSeek : Handle -> SeekMode -> Integer -> IO unit.
 
-Axiom putStrLn : String -> IO unit.
-
-Axiom show : Int -> String.
-
+Definition putStrLn (_ : String) : IO unit :=
+  return_ tt.

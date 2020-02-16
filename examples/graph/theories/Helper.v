@@ -2,6 +2,9 @@ Require Import Coq.Bool.Bool.
 Require Import Coq.Lists.List.
 Require Import Coq.Lists.ListDec.
 Require Import Coq.Lists.SetoidList.
+Require Import Coq.Wellfounded.Inverse_Image.
+Require Import Omega.
+
 (*Helper Lemmas and tactics*)
 
 Definition null {a} (l: list a) :=
@@ -19,16 +22,27 @@ repeat(match goal with
             |[H: _ /\ _ |- _] => destruct H 
             end; try(rewrite andb_true_iff in *)).
 
+(*Solve trivial goals that can be solved by [assumption] and [reflexivity]*)
+Ltac solve_assume := repeat(split; try(intros); try(assumption); try(reflexivity)).
+
 (*Ltac for solving statements of the form: In x l, where l may be many lists appended together*) 
 Ltac solve_in :=
   match goal with
   | [ H : _ |- In ?x (?l ++ ?r)] => apply in_or_app; solve_in
-  | [ H : _ |- In ?x ?s \/ In ?x ?s'] => (right; solve_in) + (left; solve_in) 
+  | [ H : _ |- In ?x ?s \/ In ?x ?s'] => first [ left; solve_in | right; solve_in ] 
   | [ H : _ |- In ?x (?x :: ?l)] => simpl; left; reflexivity
-  | [H : _ |- In ?x (?a :: ?l)] => simpl; right; solve_in
+  | [ H : _ |- In ?x (?a :: ?l)] => simpl; right; solve_in
   | [ H : _ |- _ ] => try(reflexivity); assumption
 end. 
 
+(*Destruct if-then-else statments in either the goal or hypothesis*)
+Ltac destruct_if :=
+  match goal with 
+    | [H: (if ?b then _ else _) = _ |- _] => destruct b
+    | [H: _ |- (if ?b then _ else _) = _ ] => destruct b
+    end. 
+
+(*If [x] is in the list [l], we can find the first occurence of [x] in the list*)
 Lemma in_split_app_fst: forall (A: Type) (l: list A) (x: A),
   (forall x y : A, {x = y} + {x <> y}) ->
   In x l ->
@@ -42,6 +56,7 @@ Proof.
     simpl in H1. destruct H1. subst. contradiction. apply H0 in H. contradiction.
 Qed.
 
+(*A list has a duplicate iff we can write l as l1 ++ w :: l2 ++ w :: l3 for some w*)
 Lemma no_no_dup: forall (A: Type) (l: list A),
   (forall x y : A, {x = y} + {x <> y}) ->
   ~(NoDup l) <-> (exists w l1 l2 l3, l = l1 ++ w :: l2 ++ w :: l3).
@@ -192,8 +207,6 @@ Fixpoint split_function {A : Type} (f: A -> bool) (l: list A) :=
     end
   end.
 
-Require Import Coq.Wellfounded.Inverse_Image.
-Require Import Omega.
 
 Lemma rewrite_split_function: forall {A} (f: A -> bool) x y l,
   split_function f (x :: y :: l) = if (f x) then if negb (f y) then (Some (x,y)) else (split_function f (y :: l))
@@ -284,4 +297,70 @@ Proof.
   assert ((h :: nil) ++ rev t = h :: rev t). reflexivity. rewrite H0.
   reflexivity. assumption.
 Qed.
+
+(*Function to find min value of a list according to a decidable lt relation *)
+Section Min.
+
+Variable A : Type.
+Variable lt: A -> A -> Prop.
+Variable eqb : A -> A -> Prop.
+Variable lt_dec: forall x y, {lt x y} + {~lt x y}.
+Variable eq_dec: forall x y, {eqb x y} + {~ eqb x y}.
+Variable eqb_equiv: RelationClasses.Equivalence eqb.
+Variable lt_trans: forall x y z, lt x y -> lt y z -> lt x z.
+Variable lt_neq: forall x y, lt x y -> ~eqb x y.
+Variable lt_total: forall x y, lt x y \/ eqb x y \/ lt y x.
+Variable lt_antisym: forall x y, lt x y -> ~lt y x.
+Variable lt_compat_r: forall x y z, lt x y -> eqb y z -> lt x z.
+
+(*General function for finding minimum according to a decidable lt relation*)
+Definition min_list (l: list A) : option A :=
+  fold_right (fun x acc => match acc with
+                           | Some y => if lt_dec x y then Some x else Some y
+                           | None => Some x
+                           end) None l.
+
+(*Proof that this actually finds the minimum*)
+Lemma min_list_empty: forall (l: list A) ,
+  min_list l = None <-> l = nil.
+Proof.
+  intros. split; intros. unfold min_list in H. destruct l. reflexivity. simpl in H.
+  destruct (fold_right
+        (fun (x : A) (acc : option A) =>
+         match acc with
+         | Some y => if lt_dec x y then Some x else Some y
+         | None => Some x
+         end) None l). destruct (lt_dec a a0); inversion H. inversion H. subst. simpl. reflexivity.
+Qed.
+
+Lemma min_list_in: forall (l: list A) x,
+  min_list l = Some x -> In x l.
+Proof.
+  intros. generalize dependent x. induction l; intros. simpl in H. inversion H. simpl in H.
+  destruct (min_list l) eqn : M. destruct (lt_dec a a0). inversion H; subst. solve_in.
+  inversion H. subst. right. apply IHl. reflexivity. inversion H; subst. solve_in.
+Qed.
+
+Lemma min_list_min: forall (l: list A) x,
+  min_list l = Some x ->  forall y, ~eqb x y -> In y l -> lt x y.
+Proof.
+  intros. generalize dependent x. induction l; intros.
+  - simpl in H. inversion H.
+  - simpl in H. destruct (min_list l) eqn : M.
+    + destruct (lt_dec a a0).
+      * inversion H; subst. 
+        simpl in H1. destruct H1. subst. destruct eqb_equiv. unfold RelationClasses.Reflexive in Equivalence_Reflexive.
+        specialize (Equivalence_Reflexive y). contradiction. 
+        destruct (eq_dec y a0). eapply lt_compat_r. apply l0. destruct eqb_equiv as [E1 E2 E3]. eapply E2.
+        assumption.
+        eapply lt_trans. apply l0. apply IHl. assumption. reflexivity.
+        intro. destruct eqb_equiv as [E1 E2 E3]. apply E2 in H2. contradiction.
+      * inversion H; subst. simpl in H1. destruct H1.
+        subst. specialize (lt_total x y). destruct lt_total. assumption. destruct H1. contradiction.
+        contradiction. apply IHl. assumption. reflexivity. assumption.
+   + inversion H; subst. rewrite min_list_empty in M. subst. destruct H1. subst.
+     destruct eqb_equiv as [E1 E2 E3]. pose proof (E1 y). contradiction. destruct H1.
+Qed.
+
+End Min.
 

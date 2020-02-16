@@ -16,6 +16,426 @@ Section Path.
 
 Context {a : Type} {b : Type} { gr : Type -> Type -> Type} {Hgraph : Graph.Graph gr} {Hlaw : Graph.LawfulGraph gr}.
 
+Inductive path': (gr a b) -> Node -> Node -> (list Node) -> Prop :=
+  | p_single: forall g v, vIn g v = true -> path' g v v (v :: nil)
+  | p_multi: forall g u v v' l,
+      path' g u v' l ->
+      eIn g v' v = true ->
+      path' g u v (v :: l).
+
+(** Useful results about paths **)
+
+(*The last element in a path is the end vertex*)
+Lemma path_fst: forall g u v a l,
+  path' g u v (a :: l) ->
+  a = v.
+Proof.
+  intros. inversion H; subst; reflexivity.
+Qed.
+
+Lemma path_lst: forall g u v l,
+  path' g u v l ->
+  exists l1, l = l1 ++ u :: nil.
+Proof.
+  intros. induction H; subst.
+  - exists nil; reflexivity.
+  - destruct IHpath'. subst. exists (v :: x). reflexivity.
+Qed. 
+
+(*Any subpath of a path is also a valid path*)
+Lemma path_app: forall g u v a l1 l2,
+  path' g u v (l1 ++ a :: l2) <->
+  path' g a v (l1 ++ a :: nil)/\ path' g u a (a :: l2).
+Proof.
+  intros. split; intros. generalize dependent v. generalize dependent l2. induction l1; intros.
+  - simpl in H. inversion H; subst. simpl. split; assumption. simpl. split.
+    + constructor. eapply edges_valid. apply H6.
+    + assumption.
+  - simpl in *. inversion H; subst.
+    + destruct l1; inversion H5.
+    + apply IHl1 in H5. destruct H5. split; try assumption. econstructor. apply H0. assumption.
+  - destruct_all. generalize dependent v. generalize dependent a0. revert l2. induction l1; intros.
+    + simpl in H. inversion H; subst. simpl. assumption. inversion H6.
+    + simpl. simpl in H. assert (a0 = v) by (apply path_fst in H; assumption). subst.
+      inversion H; subst.
+      * destruct l1; inversion H1.
+      * econstructor. apply IHl1. assumption. apply H2. assumption.
+Qed. 
+
+(*If there is a path that includes a cycle, there is also a valid path without that cycle*)
+Lemma path_remove_cycle: forall g u v w l1 l2 l3,
+  path' g u v (l1 ++ w :: l2 ++ w :: l3) ->
+  path' g u v (l1 ++ w :: l3).
+Proof.
+  intros. apply path_app in H. destruct_all. inversion H0; subst. destruct l2; inversion H1.
+  apply path_app in H2. destruct_all.
+  apply path_app. simplify'.
+Qed.
+
+(*TODO: Move to helper*)
+Ltac solve_assume := repeat(split; try(intros); try(assumption); try(reflexivity)).
+
+Ltac solve_in :=
+  match goal with
+  | [ H : _ |- In ?x (?l ++ ?r)] => apply in_or_app; solve_in
+  | [ H : _ |- In ?x ?s \/ In ?x ?s'] => first [ left; solve_in | right; solve_in ] 
+  | [ H : _ |- In ?x (?x :: ?l)] => simpl; left; reflexivity
+  | [ H : _ |- In ?x (?a :: ?l)] => simpl; right; solve_in
+  | [ H : _ |- _ ] => try(reflexivity); assumption
+end. 
+
+Ltac destruct_if :=
+  match goal with 
+    | [H: (if ?b then _ else _) = _ |- _] => destruct b
+    | [H: _ |- (if ?b then _ else _) = _ ] => destruct b
+    end. 
+
+(*If there is a path from u to v, then there is a path that contains no duplicates*)
+Lemma path_no_dups: forall g u v l,
+  path' g u v l ->
+  exists l1, path' g u v l1 /\ NoDup l1 /\
+  (forall x, In x l1 -> In x l).
+  Proof.
+    intros. induction l using (well_founded_induction
+                       (wf_inverse_image _ nat _ (@length _)
+                          PeanoNat.Nat.lt_wf_0)).
+    destruct (NoDup_dec (N.eq_dec) l).
+    - exists l. solve_assume.
+    - rewrite no_no_dup in n. destruct_all. subst. 
+      apply path_remove_cycle in H. specialize (H0 (x0 ++ x :: x2)). destruct H0 as [l].
+      repeat(rewrite app_length; simpl). omega. apply H. exists l. destruct_all; solve_assume.
+      apply H2 in H3. apply in_app_or in H3. destruct H3. solve_in. simpl in H3; solve_in.
+      apply N.eq_dec.
+Qed.
+
+(*Every vertex in a path is in the graph*)
+Lemma path_implies_in_graph: forall g u v l,
+  path' g u v l ->
+  vIn g u = true /\ vIn g v = true /\ (forall x, In x l -> vIn g x = true).
+Proof.
+  intros. induction H.
+  - simplify'. inversion H0; subst. assumption. inversion H1.
+  - destruct_all. solve_assume. eapply edges_valid. apply H0. simpl in H4.
+    destruct H4; subst. eapply edges_valid. apply H0. apply H3; assumption.
+Qed. 
+
+Section AllPaths.
+
+(*Find all u-v paths from a given vertex of length n*)
+Fixpoint paths_of_length (g: gr a b) (u v : Node) (n : nat) : list (list Node) :=
+  match n with
+  | O => nil
+  | S(O) => if N.eq_dec u v then if vIn g v then (v :: nil) :: nil else nil else nil
+  | S(m) => fold_right (fun x t => match (paths_of_length g u x m) with
+                                    | nil => t
+                                    | l => if (eIn g x v) then (map (fun y => v :: y) l) ++ t else t
+                                    end) nil (nodeList g)
+  end.
+
+Fixpoint All {T} (P: T -> Prop) (ls : list T) : Prop :=
+  match ls with
+    | nil => True
+    | cons h t => P h /\ All P t
+  end.
+
+(*This function finds paths of correct length*)
+Lemma paths_of_length_n: forall g u v n,
+  forall l, In l (paths_of_length g u v n) -> length l = n.
+Proof.
+  intros. destruct n. simpl in H. destruct H. generalize dependent u. revert v. revert l. induction n; intros.
+  - simpl in H. destruct (N.eq_dec u v). subst. destruct (vIn g v). simpl in H. destruct H.
+    subst. simpl. reflexivity. destruct H. inversion H. inversion H.
+  - remember (S(n)) as m. simpl in H. rewrite Heqm in H. rewrite <- Heqm in H. induction (nodeList g).
+    simpl in H. destruct H. simpl in H. destruct (paths_of_length g u a0 m) eqn : P. apply IHl0. apply H.
+    destruct (eIn g a0 v) eqn : E. simpl in H. destruct H. subst. simpl. erewrite IHn. reflexivity.
+    rewrite P. left. reflexivity. apply in_app_or in H. destruct H. rewrite in_map_iff in H.
+    destruct_all. subst. simpl. erewrite IHn. reflexivity. rewrite P. right. assumption.
+    apply IHl0. apply H. apply IHl0. apply H.
+Qed.
+
+(*This function finds valid paths*)
+Lemma paths_of_length_are_paths: forall g u v n,
+  (forall l, In l (paths_of_length g u v n) -> path' g u v l).
+Proof.
+  intros. destruct n. simpl in H. destruct H. generalize dependent u. revert v. revert l.
+  induction n; intros.
+  - simpl in H. destruct (N.eq_dec u v). subst. destruct (vIn g v) eqn : V. simpl in H.
+    destruct H. subst. constructor. assumption. destruct H. inversion H. inversion H.
+  - remember (S(n)) as m. simpl in H. rewrite Heqm in H. rewrite <- Heqm in H.
+   assert (forall l' l, (forall v', In v' l' -> vIn g v' = true) ->
+    In l
+      (fold_right
+         (fun (x : Node) (t : list (list Node)) =>
+          match paths_of_length g u x m with
+          | nil => t
+          | l0 :: l1 => if eIn g x v then (v :: l0) :: map (fun y : list Node => v :: y) l1 ++ t else t
+          end) nil l') -> path' g u v l). { intros. induction l'. simpl in H1. destruct H1.
+      simpl in H1. destruct (paths_of_length g u a0 m) eqn : P. apply IHl'. 
+      intros. apply H0. right. assumption. apply H1. destruct (eIn g a0 v) eqn : E. simpl in H1.
+      destruct H1. subst. eapply p_multi. apply IHn. rewrite P. left. reflexivity. assumption.
+      apply in_app_or in H1. destruct H1. rewrite in_map_iff in H1. destruct_all. subst.
+      eapply p_multi. apply IHn. rewrite P. right. assumption. assumption. apply IHl'. intros.
+      apply H0. right. assumption. apply H1. apply IHl'. intros. apply H0. right. assumption.
+      apply H1. } (apply (H0 (nodeList g))). intros. unfold vIn. unfold mem. destruct_if. reflexivity.
+      contradiction. apply H.
+Qed.
+(*
+Lemma in_path': forall u v l,
+  path' g u v l ->
+  vIn g u = true /\ vIn g v = true.
+Proof.
+  intros. remember g as g0. induction H; subst. split; assumption.
+  eapply edges_valid in H0. destruct_all. split. apply IHpath'. reflexivity. assumption. assumption.
+  assumption.
+Qed.
+*)
+
+(*This function finds all paths of length n from u to v*)
+Lemma paths_of_length_appear: forall g u v n l,
+  path' g u v l /\ length l = n -> In l (paths_of_length g u v n).
+Proof.
+  intros. generalize dependent v. revert u. revert n. induction l; simpl in *; intros; destruct_all.
+  - subst. inversion H.
+  - destruct n. omega. assert (length l = n) by omega. clear H0. remember n as n'. inversion H.  subst.
+    simpl. destruct (N.eq_dec a0 a0). rewrite H5. left. reflexivity. contradiction. subst.
+    simpl. destruct (length l) eqn : L. destruct l. inversion H6. simpl in L. inversion L.
+    assert (forall a v'' l', In a l' ->
+      In l (paths_of_length g u a (S n)) ->
+      eIn g a v'' = true ->
+      In (v'' :: l)
+  (fold_right
+     (fun (x : Node) (t : list (list Node)) =>
+      match paths_of_length g u x (S n) with
+      | nil => t
+      | l0 :: l1 => if eIn g x v'' then (v'' :: l0) :: map (fun y : list Node => v'' :: y) l1 ++ t else t
+      end) nil l')). { intros. induction l'. inversion H0. simpl in H0. destruct (N.eq_dec a2 a1). subst. 
+      unfold fold_right. destruct (paths_of_length g u a1 (S n)) eqn : P.
+      inversion H1.  rewrite H2. simpl in H1. destruct H1. subst. left. reflexivity.
+      right. apply in_or_app. left. rewrite in_map_iff. exists l. split. reflexivity. assumption.
+      destruct H0. subst. contradiction. 
+      unfold fold_right. destruct (paths_of_length g u a2 (S n)) eqn : P.
+      apply IHl'. assumption. destruct (eIn g a2 v'') eqn :  simpl. right.
+      apply in_or_app. right. apply IHl'. assumption. apply IHl'. assumption. }
+      apply (H0 v'). apply edges_valid in H7. unfold vIn in H7. destruct H7.
+      unfold mem in H1. destruct_if. assumption. inversion H1.
+      apply IHl. split. assumption. reflexivity. assumption.
+Qed.
+
+(*What we want to say: This function defines all of the paths from u to v of length n*)
+Lemma paths_of_length_def: forall g u v n l,
+  In l (paths_of_length g u v n) <-> path' g u v l /\ length l = n.
+Proof.
+  intros. split; intros.
+  - split. eapply paths_of_length_are_paths. apply H.
+    eapply paths_of_length_n. apply H.
+  - eapply paths_of_length_appear. apply H.
+Qed.
+
+(*If there is a path, then there is a path at most as large as the number of vertices in the graph (because
+  there is a path with no duplicates and every vertex is in the graph*)
+Lemma path_shorter_than_graph_size: forall g u v l,
+  path' g u v l ->
+  exists l', path' g u v l' /\ length l' <= length(nodeList g).
+Proof.
+  intros. apply path_no_dups in H. destruct_all. 
+  assert (forall a, In a x -> In a (nodeList g)). intros.
+  apply path_implies_in_graph in H. destruct_all. apply H4 in H2. unfold vIn in H2.
+  unfold mem in H2.  match goal with | [H: (if ?x then _ else _) = _  |- _] => destruct x eqn : ? end.
+  assumption. inversion H2. 
+  exists x. split. apply H. eapply NoDup_incl_length. apply H0. unfold incl. apply H2.
+Qed.
+
+Definition natNodes (g : gr a b) := (BinInt.Z.abs_nat(Graph.noNodes g)).
+
+(*By the above lemma, we can simply define distance by repeatedly checking if there is a list with 
+  the given distance*)
+Definition distance_list (l: list nat) (g: gr a b) (u v : Node) : option nat :=
+  (*if (N.eq_dec u v) then if vIn g v then (Some 0) else None else*)
+  fold_right (fun x acc => match paths_of_length g u v x with
+                            | nil => acc
+                            | _ => Some x
+                           end) None l.
+
+Definition distance := fun g => distance_list (seq 0 (natNodes g + 1)) g.
+
+
+(*[distance_list] is none iff there is no path of size <= n*)
+Lemma distance_list_none: forall l g u v,
+  distance_list l g u v = None <-> (forall x, In x l -> paths_of_length g u v x = nil).
+Proof.
+  intros. induction l; simpl.
+  - split; auto; intros. destruct H0.
+  - split; intros.
+    + destruct H0. subst. destruct (paths_of_length g u v x) eqn : E. reflexivity.
+      inversion H. destruct (paths_of_length g u v a0). apply IHl in H0. assumption.
+      assumption. inversion H.
+    + destruct (paths_of_length g u v a0) eqn : E. 
+      apply IHl. intros. apply H. right. assumption. 
+      rewrite H in E. inversion E. auto.
+Qed.
+
+(*distance returns None iff u and v are not connected*)
+Lemma distance_none: forall g u v,
+  distance g u v = None <-> (forall l, ~path' g u v l).
+Proof.
+  intros. unfold distance; split; intros.
+  - rewrite distance_list_none in H. intro.
+    apply path_shorter_than_graph_size in H0.
+    destruct_all.
+    specialize (H (length x)).
+    assert (paths_of_length g u v (length x) = nil). apply H.
+    apply in_seq. simpl. split. omega. unfold natNodes. rewrite noNodes_def. unfold nodeList in H1.
+    unfold ulabNodes in H1. rewrite map_length in H1.
+    assert (forall n m, n <= m -> n < m + 1). intros. omega. apply H2. assumption.
+    pose proof (paths_of_length_def g u v (length x) x). 
+    destruct H3. rewrite H2 in H4. simpl in H4. apply H4. solve_assume.
+  - rewrite distance_list_none. intros. destruct (paths_of_length g u v x) eqn : P.
+    + reflexivity.
+    + pose proof (paths_of_length_def g u v x l). destruct H1.
+      assert (In l (paths_of_length g u v x)). rewrite P. solve_in.
+      apply H1 in H3. destruct_all. exfalso. eapply H. apply H3.
+Qed. 
+
+Require Import Coq.Sorting.Sorted.
+
+(*Helper lemma for some case*)
+Lemma distance_list_some: forall l g u v n,
+  StronglySorted Nat.le l ->
+  distance_list l g u v = Some n ->
+  In n l /\ paths_of_length g u v n <> nil /\ (forall x p, In x l -> path' g u v p -> length p = x -> n <= length p).
+Proof.
+  intros. generalize dependent n. revert u v g. induction l; intros.
+  - simpl in H0. inversion H0.
+  - simpl in H0. inversion H; subst. destruct (paths_of_length g u v a0) eqn : P.
+    apply IHl in H0. destruct_all. solve_assume. solve_in. subst. 
+    simpl in H5. destruct H5.
+    + subst. pose proof (paths_of_length_def g u v (length p) p).
+      rewrite P in H5. destruct H5. exfalso. apply H7. solve_assume.
+    + eapply H2. apply H5. assumption. reflexivity.
+    + assumption.
+    + inversion H0; subst. solve_assume. solve_in. rewrite P. intro. inversion H1.
+      subst. simpl in H1. destruct H1. subst. omega. rewrite Forall_forall in H4.
+      apply H4. assumption.
+Qed.
+
+(*Definition of shortest path*)
+Definition shortest_path g u v l :=
+  path' g u v l /\ (forall l', length l' < length l -> ~path' g u v l'). 
+
+(*One final lemma, that [seq] is [StronglySorted]*)
+Lemma seq_sorted: forall n m,
+  StronglySorted Nat.le (seq n m).
+Proof.
+  intros. revert n. induction m.
+  - simpl. constructor.
+  - simpl. constructor. apply IHm. rewrite Forall_forall. intros.
+    rewrite in_seq in H. destruct H. assert (forall a b, S a <= b -> a <= b). intros. omega.
+    apply H1. assumption.
+Qed. 
+
+Definition distance_some: forall g u v n,
+  distance g u v = Some n -> exists l, shortest_path g u v l /\ length l = n.
+Proof.
+  intros. unfold distance in H. apply distance_list_some in H.
+  - destruct_all. destruct (paths_of_length g u v n) eqn : P.
+    + contradiction.
+    + pose proof (paths_of_length_def g u v n l). destruct H2. clear H3. rewrite P in H2. simpl in H2.
+      assert (path' g u v l /\ length l = n). apply H2. left. reflexivity. clear H2.
+      destruct_all. exists l. split. unfold shortest_path. split. assumption. intros.
+      intro. eapply H1 in H5. omega. assert (In (length l') (seq 0 (natNodes g + 1))).
+      rewrite in_seq. rewrite in_seq in H. omega. apply H6. reflexivity. assumption.
+  - apply seq_sorted.
+Qed. 
+
+(* Key property of shortest paths - if u -> v is a shortest path passing through w, 
+  then the length is the shortest path from u to w + the shortest path from w to v (plus 1)*)
+(*Not quite true because we count endpoints multiple times - TODO: see what is needed, come back after BFS*)
+
+(*Lemma shortest_path_transitive: forall g u v l w l' l'',
+  shortest_path g u v l ->
+  In w l ->
+  shortest_path g u w l' ->
+  shortest_path g w v l'' ->
+  length l = length l' + length l'' + 1.
+Proof.
+  intros. unfold shortest_path in *. destruct_all.
+  assert (length l < length l' + length l'' + 1 \/
+  length l > length l' + length l'' + 1 \/ length l = length l' + length l'' + 1) by omega.
+  destruct H6.
+  - apply in_split_app_fst in H0. destruct_all.
+    rewrite H0 in H. apply path_app in H. destruct H.
+    assert (length l = length x + length x0 + 1). rewrite H0. rewrite app_length.
+    simpl. omega. rewrite H9 in H6. 
+    assert (length x + length x0 < length l' + length l'') by omega. clear H6. clear H9.
+    assert (length x < length l'' \/ length x0 < length l') by omega. destruct H6.
+    + exfalso. eapply H3. apply H6. 
+  rewrite H3 in H6. inversion H. assumption.
+  rewrite H4 in H8. inversion H8. assumption. apply N.eq_dec.
+  destruct H6. assert (path_list g u v (l'' ++ w :: l') = true).
+  rewrite path_app. split; assumption. rewrite H5 in H7.
+  inversion H7. rewrite app_length. simpl. omega. assumption.
+Qed.
+
+(*Decidability of [path]*)
+
+Lemma path_equiv: forall g u v,
+  (exists l, path g u v l) <-> path_of_length g u v (length(nodeList g)) = true.
+Proof.
+  intros. split; intros.
+  - setoid_rewrite path_list_equiv in H. destruct H. apply path_shorter_than_graph_size in H.
+    destruct_all. eapply path_of_size_implies_function. apply H0. apply H.
+  - setoid_rewrite path_list_equiv. pose proof (path_of_length_implies_path _ _ _ _ H).
+    destruct_all. exists x. assumption. 
+Qed.
+
+Lemma path_dec: forall g u v,
+  {exists l, path g u v l} + {~exists l, path g u v l}.
+Proof.
+  intros. destruct (path_of_length g u v (length(nodeList g))) eqn : ?.
+  left. apply path_equiv; assumption.
+  right. intro. apply path_equiv in H. rewrite H in Heqb0. inversion Heqb0.
+Qed.
+
+
+Definition distance (g: gr a b) (u v : Node) : option nat :=
+  if (N.eq_dec u v) then if vIn g v then (Some 0) else None else
+  fold_right (fun x acc => match paths_of_length g u v x with
+                            | nil => acc
+                            | _ => Some x
+                           end) None (seq 0 (natNodes g + 1)).
+
+(*Now we prove that this actually finds the shortest path*)
+
+(*First, a helper lemma*)
+Lemma shortest_none_helper: forall l u v,
+  (fold_right
+  (fun (x : nat) (acc : option (list Node)) =>
+   match min_weight_size_n u v x with
+   | Some l =>
+       match acc with
+       | Some l' => if lt_weight_b l l' then Some l else Some l'
+       | None => Some l
+       end
+   | None => match acc with
+             | Some l => Some l
+             | None => None
+             end
+   end) None l) = None <-> (forall x, In x l -> min_weight_size_n u v x = None).
+
+Lemma distance_none: forall g u v,
+  distance g u v = None <-> (forall l, ~path' g u v l).
+Proof.
+  intros. unfold distance.
+
+
+Definition shortest_wpath u v l :=
+  path' g u v l /\ forall l', path' g u v l' -> le_weight l l'.
+
+Lemma find_shortest_wpath_correct: forall u v l,
+  find_shortest_wpath u v = Some l -> shortest_wpath u v l. 
+
+
+(*
 (*Inductive and Fixpoint definitions for a path between two vertices. The Fixpoint instance proves that this is
   decidable, and we prove their equivalence*)
 Inductive path : (gr a b) -> Node -> Node -> (list Node) -> Prop :=
@@ -100,7 +520,7 @@ Proof.
   - apply edges_valid in H. simplify'.
   - rewrite andb_true_iff in H. destruct H. apply IHl in H0. apply edges_valid in H. crush.
 Qed. 
-
+*)
 
 (*We want a function to get the distance between two nodes. This is a horribly inefficient function to help do this*)
 (*A terrible function to find if a path of length <= n between two vertices exists*)
@@ -329,54 +749,12 @@ Proof.
     destruct H0. inversion H0.
 Qed.
 
-(* Key property of shortest paths - if u -> v is a shortest path passing through w, 
-  then the length is the shortest path from u to w + the shortest path from w to v (plus 1)*)
+
 Definition shortest_path g u v l :=
   path_list g u v l = true /\ (forall l', length l' < length l -> path_list g u v l' = false). 
 
-Lemma shortest_path_transitive: forall g u v l w l' l'',
-  shortest_path g u v l ->
-  In w l ->
-  shortest_path g u w l' ->
-  shortest_path g w v l'' ->
-  length l = length l' + length l'' + 1.
-Proof.
-  intros. unfold shortest_path in *. destruct_all.
-  assert (length l < length l' + length l'' + 1 \/
-  length l > length l' + length l'' + 1 \/ length l = length l' + length l'' + 1) by omega.
-  destruct H6. apply in_split_app_fst in H0. destruct_all.
-  rewrite H0 in H. apply path_app in H. destruct H.
-  assert (length l = length x + length x0 + 1). rewrite H0. rewrite app_length.
-  simpl. omega. rewrite H9 in H6. 
-  assert (length x + length x0 < length l' + length l'') by omega. clear H6. clear H9.
-  assert (length x < length l'' \/ length x0 < length l') by omega. destruct H6.
-  rewrite H3 in H. inversion H. assumption.
-  rewrite H4 in H8. inversion H8. assumption. apply N.eq_dec.
-  destruct H6. assert (path_list g u v (l'' ++ w :: l') = true).
-  rewrite path_app. split; assumption. rewrite H5 in H7.
-  inversion H7. rewrite app_length. simpl. omega. assumption.
-Qed.
 
-(*Decidability of [path]*)
-
-Lemma path_equiv: forall g u v,
-  (exists l, path g u v l) <-> path_of_length g u v (length(nodeList g)) = true.
-Proof.
-  intros. split; intros.
-  - setoid_rewrite path_list_equiv in H. destruct H. apply path_shorter_than_graph_size in H.
-    destruct_all. eapply path_of_size_implies_function. apply H0. apply H.
-  - setoid_rewrite path_list_equiv. pose proof (path_of_length_implies_path _ _ _ _ H).
-    destruct_all. exists x. assumption. 
-Qed.
-
-Lemma path_dec: forall g u v,
-  {exists l, path g u v l} + {~exists l, path g u v l}.
-Proof.
-  intros. destruct (path_of_length g u v (length(nodeList g))) eqn : ?.
-  left. apply path_equiv; assumption.
-  right. intro. apply path_equiv in H. rewrite H in Heqb0. inversion Heqb0.
-Qed.
-
+*)
 (* Weighted paths. We first define a new path definition that matches the one used in FGL code*)
 
 Inductive path': (gr a b) -> Node -> Node -> (list Node) -> Prop :=
@@ -467,11 +845,7 @@ Fixpoint path_cost (g: gr a b) (l: list Node) : option b :=
 Definition eInP (g: gr a b) (u v : Node) : Prop :=
   In (u,v) (ulabEdges (labEdges g)).
 
-Ltac destruct_if :=
-  match goal with 
-    | [H: (if ?b then _ else _) = _ |- _] => destruct b
-    | [H: _ |- (if ?b then _ else _) = _ ] => destruct b
-    end. 
+
 
 Lemma eIn_equiv: forall g u v,
   eIn g u v = true <-> eInP g u v.
@@ -708,113 +1082,7 @@ Proof.
 Qed. 
 
 (*Back to not as general version*)
-(*All paths from a given vertex of size n*)
-Fixpoint paths_of_length (u v : Node) (n : nat) : list (list Node) :=
-  match n with
-  | O => nil
-  | S(O) => if N.eq_dec u v then if vIn g v then (v :: nil) :: nil else nil else nil
-  | S(m) => fold_right (fun x t => match (paths_of_length u x m) with
-                                    | nil => t
-                                    | l => if (eIn g x v) then (map (fun y => v :: y) l) ++ t else t
-                                    end) nil (nodeList g)
-  end.
-
-  Fixpoint All {T} (P: T -> Prop) (ls : list T) : Prop :=
-    match ls with
-      | nil => True
-      | cons h t => P h /\ All P t
-    end.
-
-Lemma paths_of_length_n: forall u v n,
-  forall l, In l (paths_of_length u v n) -> length l = n.
-Proof.
-  intros. destruct n. simpl in H. destruct H. generalize dependent u. revert v. revert l. induction n; intros.
-  - simpl in H. destruct (N.eq_dec u v). subst. destruct (vIn g v). simpl in H. destruct H.
-    subst. simpl. reflexivity. destruct H. inversion H. inversion H.
-  - remember (S(n)) as m. simpl in H. rewrite Heqm in H. rewrite <- Heqm in H. induction (nodeList g).
-    simpl in H. destruct H. simpl in H. destruct (paths_of_length u a0 m) eqn : P. apply IHl0. apply H.
-    destruct (eIn g a0 v) eqn : E. simpl in H. destruct H. subst. simpl. erewrite IHn. reflexivity.
-    rewrite P. left. reflexivity. apply in_app_or in H. destruct H. rewrite in_map_iff in H.
-    destruct_all. subst. simpl. erewrite IHn. reflexivity. rewrite P. right. assumption.
-    apply IHl0. apply H. apply IHl0. apply H.
-Qed.
-
-Lemma paths_of_length_are_paths: forall u v n,
-  (forall l, In l (paths_of_length u v n) -> path' g u v l).
-Proof.
-  intros. destruct n. simpl in H. destruct H. generalize dependent u. revert v. revert l.
-  induction n; intros.
-  - simpl in H. destruct (N.eq_dec u v). subst. destruct (vIn g v) eqn : V. simpl in H.
-    destruct H. subst. constructor. assumption. destruct H. inversion H. inversion H.
-  - remember (S(n)) as m. simpl in H. rewrite Heqm in H. rewrite <- Heqm in H.
-   assert (forall l' l, (forall v', In v' l' -> vIn g v' = true) ->
-    In l
-      (fold_right
-         (fun (x : Node) (t : list (list Node)) =>
-          match paths_of_length u x m with
-          | nil => t
-          | l0 :: l1 => if eIn g x v then (v :: l0) :: map (fun y : list Node => v :: y) l1 ++ t else t
-          end) nil l') -> path' g u v l). { intros. induction l'. simpl in H1. destruct H1.
-      simpl in H1. destruct (paths_of_length u a0 m) eqn : P. apply IHl'. 
-      intros. apply H0. right. assumption. apply H1. destruct (eIn g a0 v) eqn : E. simpl in H1.
-      destruct H1. subst. eapply p_multi. apply IHn. rewrite P. left. reflexivity. assumption.
-      apply in_app_or in H1. destruct H1. rewrite in_map_iff in H1. destruct_all. subst.
-      eapply p_multi. apply IHn. rewrite P. right. assumption. assumption. apply IHl'. intros.
-      apply H0. right. assumption. apply H1. apply IHl'. intros. apply H0. right. assumption.
-      apply H1. } (apply (H0 (nodeList g))). intros. unfold vIn. unfold mem. destruct_if. reflexivity.
-      contradiction. apply H.
-Qed.
-
-Lemma in_path': forall u v l,
-  path' g u v l ->
-  vIn g u = true /\ vIn g v = true.
-Proof.
-  intros. remember g as g0. induction H; subst. split; assumption.
-  eapply edges_valid in H0. destruct_all. split. apply IHpath'. reflexivity. assumption. assumption.
-  assumption.
-Qed.
-
-
-
-Lemma paths_of_length_appear: forall u v n l,
-  path' g u v l /\ length l = n -> In l (paths_of_length u v n).
-Proof.
-  intros. generalize dependent v. revert u. revert n. induction l; simpl in *; intros; destruct_all.
-  - subst. inversion H.
-  - destruct n. omega. assert (length l = n) by omega. clear H0. remember n as n'. inversion H.  subst.
-    simpl. destruct (N.eq_dec a0 a0). rewrite H5. left. reflexivity. contradiction. subst.
-    simpl. destruct (length l) eqn : L. destruct l. inversion H6. simpl in L. inversion L.
-    assert (forall a v'' l', In a l' ->
-      In l (paths_of_length u a (S n)) ->
-      eIn g a v'' = true ->
-      In (v'' :: l)
-  (fold_right
-     (fun (x : Node) (t : list (list Node)) =>
-      match paths_of_length u x (S n) with
-      | nil => t
-      | l0 :: l1 => if eIn g x v'' then (v'' :: l0) :: map (fun y : list Node => v'' :: y) l1 ++ t else t
-      end) nil l')). { intros. induction l'. inversion H0. simpl in H0. destruct (N.eq_dec a2 a1). subst. 
-      unfold fold_right. destruct (paths_of_length u a1 (S n)) eqn : P.
-      inversion H1.  rewrite H2. simpl in H1. destruct H1. subst. left. reflexivity.
-      right. apply in_or_app. left. rewrite in_map_iff. exists l. split. reflexivity. assumption.
-      destruct H0. subst. contradiction. 
-      unfold fold_right. destruct (paths_of_length u a2 (S n)) eqn : P.
-      apply IHl'. assumption. destruct (eIn g a2 v'') eqn :  simpl. right.
-      apply in_or_app. right. apply IHl'. assumption. apply IHl'. assumption. }
-      apply (H0 v'). apply edges_valid in H7. unfold vIn in H7. destruct H7.
-      unfold mem in H1. destruct_if. assumption. inversion H1.
-      apply IHl. split. assumption. reflexivity. assumption.
-Qed.
-
-(*What we want to say: This function defines all of the paths from u to v of length n*)
-Lemma paths_of_length_def: forall u v n l,
-  In l (paths_of_length u v n) <-> path' g u v l /\ length l = n.
-Proof.
-  intros. split; intros.
-  - split. eapply paths_of_length_are_paths. apply H.
-    eapply paths_of_length_n. apply H.
-  - eapply paths_of_length_appear. apply H.
-Qed.
+(*had paths of lenght n here*)
 
 Section Min.
 
@@ -1334,7 +1602,6 @@ Proof.
 Qed.
 
 (*The following lemma proves finally that this function actually computes the shortest path*)
-
 Definition shortest_wpath u v l :=
   path' g u v l /\ forall l', path' g u v l' -> le_weight l l'.
 

@@ -1226,7 +1226,7 @@ Qed.
 
 (** Correctness of BFS **)
 
-(*Now we will prove that every (v',d) pair in the output has the property that d' is the distance from v
+(*Now we will prove that every (v',d) pair in the output has the property that (d'+1) is the distance from v
   to v'. This requires several lemmas first.*)
 
 (*Find distance from state*)
@@ -1281,7 +1281,7 @@ Lemma second_state: forall s g v,
   bfs_step (start g v) s ->
   get_dists s = (v, 0%Z) :: nil.
 Proof.
-  intros. unfold start in H0. inversion 0; subst; simpl. reflexivity.
+  intros. unfold start in H0. inversion H0; subst; simpl. reflexivity.
   rewrite <- match_in in H. destruct H. destruct H. rewrite H in H8. inversion H8.
 Qed.
 
@@ -1461,6 +1461,12 @@ Proof.
     + assumption.
 Qed.
 
+Definition dist_plus_one s v :=
+  match find_dist s v with
+  | Some n => Some (n + 1)
+  | None => None
+  end.
+
 (** The big result: Every (v', d) pair that appears in the output is actually the shortest
   distance from v to v'. This also implies reachability, although that was already proved separately
   (and is needed for this proof) **)
@@ -1470,154 +1476,133 @@ Theorem bfs_tail_correct: forall s g v,
   done s = true ->
   (forall v',
   vIn g v' = true ->
-  find_dist s v' = distance g v v').
+  dist_plus_one s v' = distance g v v').
 Proof.
   intros. destruct (distance g v v') eqn : D.
   - generalize dependent v'. induction n as [ n IHn ] using (well_founded_induction lt_wf).
-    intros. destruct (find_dist s v') as [n'|] eqn : D' .
+    intros. unfold dist_plus_one. destruct (find_dist s v') as [n'|] eqn : D' .
     rewrite find_dist_in in D'.
     pose proof (dist_upper_bound _ _ _ _ _ H D'). rewrite D in H2.
     rewrite Nat2Z.id in H2. simpl in H2.
-    destruct (Nat.eq_dec n n'). subst. reflexivity. rewrite Nat.leb_le in H2.
-    assert (n < n') by omega. clear n0. clear H2.
+    rewrite Nat.leb_le in H2. assert (n = n' + 1 \/ n < n' + 1) by omega.
+    destruct H3. subst. reflexivity. clear H2.
     (*It cannot be the start node*)
-    destruct (N.eq_dec v v'). subst. unfold distance in D. rewrite distance_some in D. destruct D as [JO D].
-    destruct D. destruct H2. subst. pose proof (start_0_dist _ _ _ H).
-    assert (In (v', 0%Z) (get_dists s)). apply H4. intro. rewrite H5 in D'. destruct D'.
+    destruct (N.eq_dec v v'). subst. unfold distance in D. apply distance_some in D. destruct D as [l].
+    destruct H2. subst. assert (shortest_path g v' v' (v' ::  nil)) by (apply distance_refl; assumption).
+    apply distance_of_shortest_path in H4. simpl in H4. eapply shortest_path_distance in H4.
+    rewrite H4. 
+    pose proof (start_0_dist _ _ _ H).
+    assert (In (v', 0%Z) (get_dists s)). apply H5. intro. rewrite H6 in D'. destruct D'.
     assert (Z.of_nat n' = 0%Z). eapply NoDup_pairs. apply   (no_dups_output _ _ _ H).
-    apply D'. assumption. assert (n' = 0) by omega. subst. omega. destruct_all. contradiction.
+    apply D'. assumption. assert (n' = 0) by omega. subst. omega. assumption. 
     (*Get predecessor on shortest path*)
-    assert (P := D). unfold distance in P. rewrite distance_some in P. destruct P as [JO P]. destruct P. destruct H2.
-    subst. contradiction. destruct H2. destruct H4. destruct H5.
-    destruct H5 as [l]. destruct H5. destruct l as [| w l]. simpl in H7.
-    inversion H5. subst.
-    (*case when v, v' is edge*)
-    assert (n = 1) by omega. subst. clear H2. clear H7. assert (vIn g v = true).
-    eapply valid_in; apply H. pose proof (done_not_start g v H2). rewrite not_done_step in H7.
-    destruct H7 as [s2]. pose proof (second_state s2 _ _ H2 H7).
-    unfold start in H7. inversion H7; subst. simpl in *.
-    assert (valid (g', suci c 1%Z, (v, 0%Z) :: nil) g v). eapply v_step.
-    apply v_start. assumption. apply H7.
-    assert (In (v', 1%Z) (suci c 1%Z)). rewrite suci_def. split. reflexivity.
-    apply H8. apply H17. apply (@in_split_app_fst_map _ _ N.eq_dec Z.eq_dec) in H11.
-    destruct H11 as [l1]. destruct H11 as [l2]. destruct H11.
-    assert (In (v', 1%Z) (get_dists s)). eapply first_queue_in_dists. apply H10.
-    assumption. simpl. apply H11. apply H12. simpl. intro. destruct H13. subst.
-    contradiction. destruct H13. assumption.
-    pose proof (no_dups_output _ _ _ H).  
-    epose proof ((NoDup_pairs (get_dists s)) _ _ _ H14 H13 D'). omega.
-    intros. rewrite suci_def in H12. omega. apply H17.
-    rewrite <- match_in in H2. destruct_all. rewrite H2 in H17. inversion H17.
-    apply v_start. apply H2. 
-    (*Now, the case when there is an intermediate neighbor (slightly harder but the same basic idea)*)
-    inversion H5; subst.
+    assert (P := D). unfold distance in P. apply distance_some in P. destruct P as [l].
+    destruct_all. assert (S:=H2). unfold shortest_path in H2. destruct_all.
+    inversion H2; subst. contradiction.
+    rename v'0 into w. simpl in H3.
     assert (vIn g v = true). eapply valid_in. apply H.
     destruct (distance g v w) as [nw|] eqn : DW . unfold distance in DW. assert (E := DW).
-    rewrite distance_some in DW. simpl in H7. destruct DW as [JO' DW]. destruct DW. destruct H9. symmetry in H9. subst.
-    assert (path_list g v v' nil = true). simpl. assumption. rewrite H6 in H9. inversion H9.
-    simpl. omega. assert (nw + 1 = n). { destruct_all.
-    pose proof (shortest_path_transitive g v v' (w :: l) w x nil). simpl in H16.
-    assert (S(length l) = length x + 0 + 1). apply H16. unfold shortest_path.
-    split; try(assumption). rewrite <- path_list_equiv. apply H5. intros.
-    apply H6. simpl in H17. omega. left. reflexivity. unfold shortest_path.
-    split. rewrite <- path_list_equiv. assumption. intros. apply H12. omega.
-    unfold shortest_path. split. simpl. assumption. intros. simpl in H17. omega.
-    omega. } subst. 
-    assert (find_dist s w = Some nw). apply IHn. omega. apply edges_valid in H14. destruct H14. assumption.
-    assumption. rewrite find_dist_in in H10. 
+    apply distance_some in DW. destruct DW as [lw]. destruct H8.
+    assert (nw + 1 = length (v' :: l0)). { (*idea, since lw is sp from v -> w, we know that
+    length l0 >= length lw, if greater, then can have shorter path to v, so must be equal, this proves claim*)
+    assert (length lw <= length l0). { unfold shortest_path in H8. destruct_all.
+    assert (length lw <= length l0 \/ length l0 < length lw) by omega. destruct H11. assumption.
+    apply H10 in H11. contradiction. } assert (length lw < length l0 \/ length lw = length l0) by omega.
+    destruct H11. assert (path' g v v' (v' :: lw)). eapply p_multi. unfold shortest_path in H8.
+    apply H8. assumption. exfalso. apply (H5 (v' :: lw)). simpl. omega. assumption. subst. 
+    simpl. rewrite H11. omega. } rewrite <- H10. 
+    assert (dist_plus_one s w = Some nw). apply IHn. omega. apply edges_valid in H7. destruct H7. assumption.
+    assumption. unfold dist_plus_one in H11. destruct (find_dist s w) eqn : F. 2 : { inversion H11. }
+    inversion H11; subst. rewrite find_dist_in in F.
     (*we know that the predecessor has distance 1 less and is thus in the distances correctly. We now
     look at the state at which this vertex is added to the distances*)
-    pose proof (output_is_added _ _ _ _ _ H H10). destruct H11 as [sw]. destruct H11 as [c].
-    destruct H11 as [g']. destruct H11. destruct H12. destruct H15. destruct H16. 
-    destruct H17 as [l2]. destruct H15. destruct H15. 
+    pose proof (output_is_added _ _ _ _ _ H F). destruct H9 as [sw]. destruct H9 as [c].
+    destruct H9 as [g']. destruct H9. destruct H12. destruct H14. destruct H15. 
+    destruct H16 as [l2]. destruct H14. destruct H14. 
     (*first case, v' is already finished *)
+    assert (L: n < n'). { assert (length l0 = length lw). simpl in H10; inversion H10. omega.
+    rewrite H18 in H3. rewrite <- H18 in H3. omega. }
     destruct (In_dec N.eq_dec v' (map fst (get_dists sw))).
-    rewrite H17 in i. rewrite map_app in i. apply in_app_or in i. destruct i.
-    rewrite in_map_iff in H19. destruct H19. destruct x0. simpl in H19. destruct H19; subst.
-    pose proof (dists_sorted _ _ _ H11). rewrite H17 in H19. rewrite map_app in H19. 
-    simpl in H19. epose proof (sort_app (map snd l2) (Z.of_nat nw :: nil) Z.le H19).
+    rewrite H16 in i. rewrite map_app in i. apply in_app_or in i. destruct i.
+    rewrite in_map_iff in H18. destruct H18. destruct x0. simpl in H18. destruct H18; subst.
+    pose proof (dists_sorted _ _ _ H9). rewrite H16 in H18. rewrite map_app in H18. 
+    simpl in H18. epose proof (sort_app (map snd l2) (Z.of_nat n :: nil) Z.le H18).
     assert (Relations_1.Transitive Z.le). unfold Relations_1.Transitive. intros; omega.
-    specialize (H21 H22); clear H22. specialize (H21 i (Z.of_nat nw)).
-    assert (i <= Z.of_nat nw)%Z.  apply H21. rewrite in_map_iff. exists (v', i).
-    split. reflexivity. assumption. simpl. left. reflexivity. clear H21.
-    pose proof (no_dups_output _ _ _ H). epose proof (NoDup_pairs _ v' i (Z.of_nat n') H21).
-    assert (i = Z.of_nat n'). apply H23. eapply output_preserved_strong.
-    apply H11. assumption. rewrite H17. solve_in. assumption. omega.
-    simpl in H19. destruct H19. subst. destruct_all. rewrite path_list_equiv in H20.
-    rewrite H6 in H20. inversion H20. omega. destruct H19.
+    specialize (H20 H21); clear H21. specialize (H20 i (Z.of_nat n)).
+    assert (i <= Z.of_nat n)%Z.  apply H20. rewrite in_map_iff. exists (v', i).
+    split. reflexivity. assumption. simpl. left. reflexivity. clear H20.
+    pose proof (no_dups_output _ _ _ H). epose proof (NoDup_pairs _ v' i (Z.of_nat n') H20).
+    assert (i = Z.of_nat n'). apply H22. eapply output_preserved_strong.
+    apply H9. assumption. rewrite H16. solve_in. assumption. subst.
+     omega. 
+    simpl in H18. destruct H18. subst. exfalso. apply (H5 l0). simpl. omega. assumption. destruct H18.
     (* Now we know that v' has not been finished already. Now we need to see if it was already in
         the queue or not*)
     (*Next case: v' not already done, but it is already on the queue*)
     (*Hmm do we need that - just look at 1st position on the queue, it is <= nw + 1 by sorted, already a contradiction*)
-    simpl in H15. assert (In v' (map fst (suci c (Z.of_nat nw + 1)%Z))). { assert (vIn (get_graph sw) v' = true). 
+    simpl in H14. assert (In v' (map fst (suci c (Z.of_nat n + 1)%Z))). { assert (vIn (get_graph sw) v' = true). 
     destruct (vIn (get_graph sw) v') eqn : ?. reflexivity. rewrite <- graph_iff_not_output in Heqb0.
-    contradiction. apply H11. assumption.
-    pose proof suci_def. pose proof (prior_state _ _ _ H11 H16). destruct H21 as [sp]. destruct H21.
-    specialize (H18 _ H21 H22). destruct H18. destruct H23. simpl in H15. 
-    specialize (H20 v' ((Z.of_nat nw + 1)%Z) ((Z.of_nat nw + 1)%Z) c w (get_graph sp) g' H23).
-    destruct H20. rewrite in_map_iff. exists (v', (Z.of_nat nw + 1)%Z). simpl. split. reflexivity.
-    apply H25. split. reflexivity. rewrite edge_in_state. split; try(assumption).
+    contradiction. apply H9. assumption.
+    pose proof suci_def. pose proof (prior_state _ _ _ H9 H15). destruct H20 as [sp]. destruct H20.
+    specialize (H17 _ H20 H21). destruct H17. destruct H22. simpl in H14. 
+    specialize (H19 v' ((Z.of_nat n + 1)%Z) ((Z.of_nat n + 1)%Z) c w (get_graph sp) g' H22).
+    destruct H19. rewrite in_map_iff. exists (v', (Z.of_nat n + 1)%Z). simpl. split. reflexivity.
+    apply H24. split. reflexivity. rewrite edge_in_state. (*solve_assume.*) split; try(assumption).
     rewrite <- match_in. exists c. exists g'. assumption. 
     destruct (vIn (get_graph sp) v') eqn : V. reflexivity. rewrite <- graph_iff_not_output in V.
-    assert (In v' (map fst (get_dists sw))). eapply output_preserved. apply H21.
-    eapply multi_step. apply H22. constructor. assumption. contradiction. apply H21. assumption.
-    apply H21. assumption. }
-    assert (In v' (map fst (get_queue sw))). rewrite H15. rewrite map_app. solve_in.
-    epose proof (@in_split_app_special _ _ N.eq_dec _ _ H20). destruct H21 as [i]. 
-    destruct H21 as [l']. destruct H21 as [l'']. clear H20. assert (H20 := H21). clear H21. destruct H20.
-    assert (suci c (Z.of_nat nw + 1)%Z <> nil). 
-    destruct (suci c (Z.of_nat nw + 1)%Z) eqn : S. destruct H19. intro. inversion H22.
-    pose proof (exists_last H22). destruct H23. destruct s0. rewrite e in H15.
-    assert (Sorted Z.le (map snd (get_queue sw))). 
-    destruct l'. simpl in H20.
-    pose proof (queue_structure _ _ _ _ _ _ H11 H20). apply H23. simpl in H20. destruct p.
-    pose proof (queue_structure _ _ _ _ _ _ H11 H20). apply H23.
-    assert (i <= (Z.of_nat  nw + 1))%Z. { destruct x1. 
-    assert (In (n1, i0) (suci c (Z.of_nat nw + 1)%Z )) by (rewrite e; solve_in).
-    pose proof suci_def. pose proof (prior_state _ _ _ H11 H16). destruct H26 as [sp]. destruct H26.
-    specialize (H18 _ H26 H27). destruct H18. destruct H28. 
-    specialize (H25 n1 i0 ((Z.of_nat nw + 1)%Z) c w (get_graph sp) g' H28).
-    rewrite H25 in H24. destruct H24. subst.
-    clear H27. clear H26. clear H25. destruct l''.  rewrite H15 in H20.
-    pose proof ( app_inj_tail  (x ++ x0) l' (n1, (Z.of_nat nw + 1)%Z) (v', i)).
-    assert (x ++ x0 = l' /\ (n1, (Z.of_nat nw + 1)%Z) = (v', i)). apply H24. rewrite <- app_assoc.
-    apply H20. clear H24. destruct H25. inversion H25; subst. omega.
-    remember (p :: l'') as l'''. assert (l''' <> nil). subst. intro. inversion H24.
-    pose proof (exists_last H24). destruct H25. destruct s0. rewrite e0 in H20.
-    rewrite H15 in H20. destruct x2.
-    pose proof  ( app_inj_tail  (x ++ x0) ( l' ++ (v', i) :: x1) (n1, (Z.of_nat nw + 1)%Z) (n2, i0)).
-    assert (x ++ x0 = l' ++ (v', i) :: x1 /\ (n1, (Z.of_nat nw + 1)%Z) = (n2, i0)). apply H25.
-    rewrite <- app_assoc. rewrite H20. rewrite <- app_assoc. simpl. reflexivity. clear H25.
-    destruct H26. inversion H26; subst. rewrite app_assoc in H15. rewrite H25 in H15.
-    rewrite H15 in H23. rewrite map_app in H23. eapply sort_app in H23.
-    apply H23. unfold Relations_1.Transitive. intros. omega. rewrite map_app.
+    assert (In v' (map fst (get_dists sw))). eapply output_preserved. apply H20.
+    eapply multi_step. apply H21. constructor. assumption. contradiction. apply H20. assumption.
+    apply H20. assumption. }
+    assert (In v' (map fst (get_queue sw))). rewrite H14. rewrite map_app. solve_in.
+    epose proof (@in_split_app_special _ _ N.eq_dec _ _ H19). destruct H20 as [i]. 
+    destruct H20 as [l']. destruct H20 as [l'']. clear H19. assert (H19 := H20). clear H20. destruct H19.
+    assert (suci c (Z.of_nat n + 1)%Z <> nil). {
+    destruct (suci c (Z.of_nat n + 1)%Z) eqn : S'. destruct H18. intro. inversion H21. }
+    pose proof (exists_last H21). destruct H22. destruct s0. rewrite e in H14.
+    assert (Sorted Z.le (map snd (get_queue sw))). { 
+    destruct l'. simpl in H19.
+    pose proof (queue_structure _ _ _ _ _ _ H9 H19). apply H22. simpl in H19. destruct p.
+    pose proof (queue_structure _ _ _ _ _ _ H9 H19). apply H22. }
+    assert (i <= (Z.of_nat  n + 1))%Z. { destruct x1.
+    assert (In (n2, i0) (suci c (Z.of_nat n + 1)%Z )) by (rewrite e; solve_in).
+    pose proof suci_def. pose proof (prior_state _ _ _ H9 H15). destruct H25 as [sp]. destruct H25.
+    specialize (H17 _ H25 H26). destruct H17. destruct H27. 
+    specialize (H24 n2 i0 ((Z.of_nat n + 1)%Z) c w (get_graph sp) g' H27).
+    rewrite H24 in H23. destruct H23. subst.
+    clear H26. clear H25. clear H24. destruct l''. rewrite H14 in H19.
+    pose proof ( app_inj_tail  (x ++ x0) l' (n2, (Z.of_nat n + 1)%Z) (v', i)).
+    assert (x ++ x0 = l' /\ (n2, (Z.of_nat n + 1)%Z) = (v', i)). apply H23. rewrite <- app_assoc.
+    apply H19. clear H23. destruct H24. inversion H24; subst. omega.
+    remember (p :: l'') as l'''. assert (l''' <> nil). subst. intro. inversion H23.
+    pose proof (exists_last H23). destruct H24. destruct s0. rewrite e0 in H19.
+    rewrite H14 in H19. destruct x2.
+    pose proof  ( app_inj_tail  (x ++ x0) ( l' ++ (v', i) :: x1) (n2, (Z.of_nat n + 1)%Z) (n3, i0)).
+    assert (x ++ x0 = l' ++ (v', i) :: x1 /\ (n2, (Z.of_nat n + 1)%Z) = (n3, i0)). apply H24.
+    rewrite <- app_assoc. rewrite H19. rewrite <- app_assoc. simpl. reflexivity. clear H24.
+    destruct H25. inversion H25; subst. rewrite app_assoc in H14. rewrite H24 in H14.
+    rewrite H14 in H22. rewrite map_app in H22. eapply sort_app in H22.
+    apply H22. unfold Relations_1.Transitive. intros. omega. rewrite map_app.
     simpl. solve_in. simpl. left. reflexivity. }
-    pose proof (first_queue_in_dists _ _ _ _ _ _ _ _ H11 H H20 H21 n H0).
+    pose proof (first_queue_in_dists _ _ _ _ _ _ _ _ H9 H H19 H20 n1 H0).
     assert (i = Z.of_nat n'). eapply NoDup_pairs. eapply no_dups_output.
-    apply H. apply H25. assumption. subst. omega. apply H.
-    (*The hard part is over!*)
-    unfold distance in DW. rewrite distance_none in DW. destruct DW. destruct H9. rewrite path_list_equiv in H13.
-    rewrite H9 in H13. inversion H13. apply path_list_equiv in H13. apply path_implies_in_graph in H13. destruct_all.
-    rewrite H9 in H11. inversion H11. apply H.
-    rewrite find_dist_not in D'. unfold distance in D. rewrite distance_some in D.
-    destruct D as [JO D]. destruct D. destruct_all. subst. exfalso. apply (D' 0%Z). eapply start_0_dist.
-    apply H. intro. rewrite dists_nil_iff_start in H2. 
-    assert (done s = false). rewrite H2. apply done_not_start .  apply H1.
-    rewrite H3 in H0. inversion H0. assumption. destruct_all.
-     pose proof (output_iff_reachable _ _ _ v' H H0). destruct H7.
-    assert (In v' (map fst (get_dists s))). apply H8. right.
-    exists x. assumption. exfalso. rewrite in_map_iff in H9.
-    destruct H9. destruct x0. simpl in H9; destruct H9; subst.
-    apply (D' i). assumption.
+    apply H. apply H24. assumption. subst.
+    assert (n' <= n + 1). omega. assert (n' < n + 1 \/ n' = n + 1) by omega.
+    destruct H26. omega. subst. reflexivity. apply H.
+    (*The hard part is over! The rest of the cases are basically just showing that None cases give contradictions*)
+    unfold distance in DW. rewrite distance_none in DW. exfalso.
+    apply (DW l0). assumption. apply H. rewrite find_dist_not in D'.
+    pose proof (output_iff_reachable _ _ _ v' H H0). assert (In v' (map fst (get_dists s))).
+    apply H2. apply distance_some in D. destruct_all. exists x. apply H3.
+    rewrite in_map_iff in H3. destruct_all. destruct x; subst. exfalso. apply (D' i).
+    simpl; assumption.
   - pose proof (output_iff_reachable _ _ _ v' H H0).
     unfold distance in D. rewrite distance_none in D.
-    destruct H2. apply contrapositive in H2. rewrite find_dist_not. intros.
-    intro. apply H2. rewrite in_map_iff. exists (v', y). simpl. split. reflexivity.
-    assumption. intro. destruct H4. subst. destruct D. destruct_all; contradiction.
-    rewrite H4 in H1. inversion H1.
-    destruct H4. destruct D. destruct H5. rewrite path_list_equiv in H4. rewrite H5 in H4. inversion H4.
-    apply path_list_equiv in H4. apply path_implies_in_graph in H4. destruct_all. rewrite H5 in H6. inversion H6.
-Qed. 
+    unfold dist_plus_one. destruct (find_dist s v') eqn : F.
+    rewrite find_dist_in in F. assert ((exists l : list Node, path' g v v' l)).
+    apply H2. rewrite in_map_iff. exists (v', Z.of_nat n). simpl. solve_assume.
+    destruct_all. exfalso. apply (D x). assumption. apply H. reflexivity.
+Qed.
+
 End Correctness.
 
 (** ** Equivalence and Correctness of [level] (bfs with distances) **)

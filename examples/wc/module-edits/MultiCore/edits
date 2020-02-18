@@ -5,7 +5,7 @@ skip module GHC.IO.Handle.FD
 skip module System.IO
 skip module GHC.Conc.Sync
 
-rename type Data.ByteString.Lazy.Internal.ByteString = MultiCore.ByteString
+rename type Data.ByteString.Lazy.Internal.ByteString = BL.ByteString
 
 
 rename type GHC.Types.IO = GHC.Base.IO

@@ -1171,7 +1171,7 @@ Proof.
              apply find_shortest_wpath_correct in P.  assert (S:= P). unfold shortest_wpath in P.
              destruct P.
                (*Therefore, let us consider the first vertex in S on the path such that its sucessor is not in S*)
-             pose proof (path_start g Hsimple HNonneg _ _  _ H8). destruct H10 as [l1].
+             pose proof (path_lst g _ _  _ H8). destruct H10 as [l1].
              assert (exists x y, rev_split_function (fun z => negb(vIn g0 z)) l = Some (x,y)). {
              rewrite H10. rewrite rev_split_function_exists. exists v'. split.
              subst. inversion H8; subst. contradiction. destruct l1. inversion H10; subst. contradiction.  inversion H10; subst.
@@ -1523,12 +1523,12 @@ Proof.
     rewrite find_dist_in in F. pose proof (output_iff_reachable).
     assert (In v' (map snd (get_dists s))). rewrite in_map_iff. exists (b0, v').
     split. reflexivity. assumption. rewrite H1 in H2. 2 : { apply H. }
-    destruct_all. apply in_path' in H2. destruct H2. rewrite Heqb0 in H3. inversion H3. assumption.
-    assumption. assumption. apply H. reflexivity. } rewrite H1.
+    destruct_all. apply path_implies_in_graph in H2. destruct H2. rewrite Heqb0 in H3. destruct H3. inversion H3.
+    assumption. apply H. reflexivity. } rewrite H1.
     destruct ((find_shortest_wpath g v v')) eqn : F. simpl.
     apply find_shortest_wpath_correct in F. unfold shortest_wpath in F. destruct_all.
-    apply in_path' in H2. destruct_all. rewrite H4 in Heqb0. inversion Heqb0.
-    assumption. assumption. assumption. assumption. simpl.
+    apply path_implies_in_graph in H2. destruct H2. destruct H4. clear H5. rewrite H4 in Heqb0. inversion Heqb0.
+    assumption. assumption.  simpl.
     destruct (Base.EqLaws_option); apply Eq_refl.
 Qed.
 
@@ -2145,93 +2145,7 @@ Proof.
   simpl. reflexivity.
 Qed.
 
-(*Need a more careful specification of List.zip*)
-Lemma zip_spec: forall {A B} (l: list A) (l': list B) x y,
-  length l = length l' ->
-  In (x,y) (List.zip l l') ->
-  exists l1 l2 l3 l4, l = l1 ++ x :: l2 /\ l' = l3 ++ y :: l4 /\
-  length l1 = length l3 /\ length l2 = length l4.
-Proof.
-  intros. generalize dependent l'. induction l; intros.
-  - simpl in H0. destruct H0.
-  - destruct l'. simpl in H. omega. simpl in H. inversion H.
-    simpl in H0. destruct H0. inversion H0; subst.
-    exists nil. exists l. exists nil. exists l'. split. reflexivity.
-    split. reflexivity. split. reflexivity. assumption.
-    specialize (IHl _ H2 H0). destruct_all. exists (a0 :: x0).
-    rewrite H1. exists x1. exists (b0 :: x2). rewrite H3. exists x3. split. reflexivity.
-    split. reflexivity. split. simpl. rewrite H4. reflexivity. assumption.
-Qed.
 
-Lemma in_zip_map_weak: forall {A B C} (l: list A) (l': list B) x y (f: A -> C) f',
-  length l = length l' ->
-  In (x,y) (List.zip l l') ->
-  map f l = map f' l' ->
-  f x = f' y.
-Proof.
-  intros. generalize dependent l'. induction l; intros.
-  - simpl in H0. inversion H0.
-  - destruct l'. simpl in H. omega.
-    simpl in H. inversion H. simpl in H1. simpl in H0. inversion H1.
-    destruct H0. inversion H0; subst. assumption.
-    eapply IHl. apply H3. assumption. assumption.
-Qed.
-
-
-
-Lemma map_length: forall {A B C} (l: list A) (l' : list B) (f: A -> C) f',
-  map f l = map f' l' ->
-  length l = length l'.
-Proof.
-  intros. generalize dependent l'. induction l; intros.
-  - simpl in H. destruct l'. reflexivity. inversion H.
-  - destruct l'. inversion H. simpl in H. simpl. inversion H; subst.
-    erewrite IHl. reflexivity. assumption.
-Qed.
-
-Lemma in_zip_map: forall {A B C} (l: list A) (l': list B) x y (f: A -> C) f',
-  In (x,y) (List.zip l l') ->
-  map f l = map f' l' ->
-  f x = f' y.
-Proof.
-  intros. eapply in_zip_map_weak. eapply map_length. apply H0. assumption. assumption.
-Qed.
-
-Lemma in_zip_reverse: forall {A} {B} (l: list A) (l' : list B) x,
-  length l = length l' ->
-  In x l ->
-  exists y, In (x,y) (List.zip l l').
-Proof.
-  intros. generalize dependent l'. induction l; intros.
-  - inversion H0.
-  - simpl in H. destruct l'. simpl in H. omega.
-    simpl in H. inversion H. simpl in H0. destruct H0. subst. exists b0. simpl.
-    left. reflexivity. specialize (IHl H0 _ H2). destruct_all. exists x0. simpl. right. assumption.
-Qed.
-
-Lemma in_zip_reverse_snd: forall {A} {B} (l: list A) (l' : list B) x,
-  length l = length l' ->
-  In x l' ->
-  exists y, In (y, x) (List.zip l l').
-Proof.
-  intros. generalize dependent l. induction l'; intros.
-  - inversion H0.
-  - simpl in H. destruct l. simpl in H. omega.
-    simpl in H. inversion H. simpl in H0. destruct H0. subst. exists a1. simpl.
-    left. reflexivity. specialize (IHl' H0 _ H2). destruct_all. exists x0. simpl. right. assumption.
-Qed.
-
-(*Copied from BFS: TODO move to helper*)
-Lemma zip_in: forall {a} {b} (l1 : list a) (l2: list b),
-  (forall x y, In (x,y) (List.zip l1 l2) -> In x l1 /\ In y l2).
-Proof.
-  intros. generalize dependent l2. induction l1; intros.
-  - simpl in H. destruct H.
-  - simpl in H. destruct l2. destruct H.
-    simpl in H.  destruct H. inversion H; subst.
-    split; simpl; left; reflexivity. simpl. apply IHl1 in H. destruct H.
-    split; right; assumption. 
-Qed. 
 
 (*For the final proof of correctness, we need the same assumptions as before*)
 Section SpTreeCorrect.
@@ -2259,8 +2173,8 @@ Proof.
   rewrite spDistTree_tail in H1. remember (sp_tail (start g v)) as s.
   assert (path' g v u  (unlabel_path (LP ((u, d) :: unLPath)))). apply path'_WPath. assumption.
   assumption. exists d. assumption.
-  assert (vIn g v = true). apply in_path' in H4. apply H4. assumption. assumption.
-  assert (valid s g v). subst. eapply multi_valid. apply v_start. assumption.
+  assert (vIn g v = true). apply path_implies_in_graph in H4. destruct H4. apply H4. 
+  assert (valid s g v). subst. eapply multi_valid. apply v_start. destruct H4. apply H4. assumption.
   eapply sp_tail_multi. 
   assert (done s = true). subst. eapply sp_tail_done.
   pose proof (sp_correct_all _ Hsimple HNonneg _ _ u H6 H7).
@@ -2289,7 +2203,7 @@ Theorem spTree_shortest_paths: forall v u d t,
   shortest_wpath g v u (unlabel_path (LP ((u,d) :: t))) /\ path_cost g (unlabel_path (LP ((u,d) :: t))) = Some d.
 Proof.
   intros. pose proof spTree_finds_shortest_paths.
-  assert (length (spTree v g) = length (spDistTree v g)). eapply map_length. apply vertex_and_weight_same.
+  assert (length (spTree v g) = length (spDistTree v g)). eapply map_length_rev. apply vertex_and_weight_same.
   epose proof (in_zip_reverse _ _ _ H1 H). destruct H2. destruct x.
   apply spTree_finds_shortest_paths in H2. destruct_all. simpl in H2.
   assert (n = u). unfold shortest_wpath in H2. destruct H2.
@@ -2303,12 +2217,12 @@ Theorem spTree_reachable: forall v u,
   (exists l, path' g v u l ) <-> (exists p, In p (spTree v g) /\ shortest_wpath g v u (unlabel_path p)).
 Proof.
   intros. remember (sp_tail (start g v)) as s. destruct (vIn g v) eqn : V. 2 : {
-  split; intros. destruct H. apply in_path' in H. destruct_all. rewrite H in V. inversion V.
-  assumption. assumption. destruct_all. unfold shortest_wpath in H0. destruct_all.
-  apply in_path' in H0. destruct_all. rewrite H0 in V. inversion V. assumption. assumption. }
+  split; intros. destruct H. apply path_implies_in_graph in H. destruct_all. clear H1. rewrite H in V. inversion V.
+  destruct_all. unfold shortest_wpath in H0. destruct_all.
+  apply path_implies_in_graph in H0. destruct_all. rewrite H0 in V. inversion V. }
   assert (valid s g v). subst. eapply multi_valid. apply v_start. assumption. apply sp_tail_multi.
   assert (done s = true). subst. apply sp_tail_done.
-  assert (length (spTree v g) = length (spDistTree v g)). eapply map_length. apply vertex_and_weight_same.
+  assert (length (spTree v g) = length (spDistTree v g)). eapply map_length_rev. apply vertex_and_weight_same.
  split; intros.
   - pose proof output_iff_reachable s g v u H H0. rewrite <- H3 in H2.
     clear H3. subst. rewrite <- spDistTree_tail in H2.
@@ -2435,7 +2349,7 @@ Proof.
 Qed.
 
 (*Since shortest paths are not unique, we cannot say that sp gives Some p iff p is a shortest path,
-  but we do know that sp return p iff there is some shortest path*)
+  but we do know that sp returns Some p iff there is some shortest path*)
 Theorem sp_iff_shortest_path: forall v u,
   (exists p, sp v u g = Some p) <-> (exists p', shortest_wpath g v u p').
 Proof.

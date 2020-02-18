@@ -5,6 +5,7 @@ Require Import Coq.Lists.SetoidList.
 Require Import Coq.Wellfounded.Inverse_Image.
 Require Import Omega.
 
+
 (*Helper Lemmas and tactics*)
 
 Definition null {a} (l: list a) :=
@@ -363,4 +364,95 @@ Proof.
 Qed.
 
 End Min.
+
+Require GHC.List.
+
+
+
+(*Rsults about [List.zip]*)
+
+
+Lemma zip_spec: forall {A B} (l: list A) (l': list B) x y,
+  length l = length l' ->
+  In (x,y) (List.zip l l') ->
+  exists l1 l2 l3 l4, l = l1 ++ x :: l2 /\ l' = l3 ++ y :: l4 /\
+  length l1 = length l3 /\ length l2 = length l4.
+Proof.
+  intros. generalize dependent l'. induction l; intros.
+  - simpl in H0. destruct H0.
+  - destruct l'. simpl in H. omega. simpl in H. inversion H.
+    simpl in H0. destruct H0. inversion H0; subst.
+    exists nil. exists l. exists nil. exists l'. split. reflexivity.
+    split. reflexivity. split. reflexivity. assumption.
+    specialize (IHl _ H2 H0). destruct_all. exists (a :: x0).
+    rewrite H1. exists x1. exists (b :: x2). rewrite H3. exists x3. split. reflexivity.
+    split. reflexivity. split. simpl. rewrite H4. reflexivity. assumption.
+Qed.
+
+Lemma in_zip_map_weak: forall {A B C} (l: list A) (l': list B) x y (f: A -> C) f',
+  length l = length l' ->
+  In (x,y) (List.zip l l') ->
+  map f l = map f' l' ->
+  f x = f' y.
+Proof.
+  intros. generalize dependent l'. induction l; intros.
+  - simpl in H0. inversion H0.
+  - destruct l'. simpl in H. omega.
+    simpl in H. inversion H. simpl in H1. simpl in H0. inversion H1.
+    destruct H0. inversion H0; subst. assumption.
+    eapply IHl. apply H3. assumption. assumption.
+Qed.
+
+Lemma map_length_rev: forall {A B C} (l: list A) (l' : list B) (f: A -> C) f',
+  map f l = map f' l' ->
+  length l = length l'.
+Proof.
+  intros. generalize dependent l'. induction l; intros.
+  - simpl in H. destruct l'. reflexivity. inversion H.
+  - destruct l'. inversion H. simpl in H. simpl. inversion H; subst.
+    erewrite IHl. reflexivity. assumption.
+Qed.
+
+Lemma in_zip_map: forall {A B C} (l: list A) (l': list B) x y (f: A -> C) f',
+  In (x,y) (List.zip l l') ->
+  map f l = map f' l' ->
+  f x = f' y.
+Proof.
+  intros. eapply in_zip_map_weak. eapply map_length_rev. apply H0. assumption. assumption.
+Qed.
+
+Lemma in_zip_reverse: forall {A} {B} (l: list A) (l' : list B) x,
+  length l = length l' ->
+  In x l ->
+  exists y, In (x,y) (List.zip l l').
+Proof.
+  intros. generalize dependent l'. induction l; intros.
+  - inversion H0.
+  - simpl in H. destruct l'. simpl in H. omega.
+    simpl in H. inversion H. simpl in H0. destruct H0. subst. exists b. simpl.
+    left. reflexivity. specialize (IHl H0 _ H2). destruct_all. exists x0. simpl. right. assumption.
+Qed.
+
+Lemma in_zip_reverse_snd: forall {A} {B} (l: list A) (l' : list B) x,
+  length l = length l' ->
+  In x l' ->
+  exists y, In (y, x) (List.zip l l').
+Proof.
+  intros. generalize dependent l. induction l'; intros.
+  - inversion H0.
+  - simpl in H. destruct l. simpl in H. omega.
+    simpl in H. inversion H. simpl in H0. destruct H0. subst. exists a0. simpl.
+    left. reflexivity. specialize (IHl' H0 _ H2). destruct_all. exists x0. simpl. right. assumption.
+Qed.
+
+Lemma zip_in: forall {a} {b} (l1 : list a) (l2: list b),
+  (forall x y, In (x,y) (List.zip l1 l2) -> In x l1 /\ In y l2).
+Proof.
+  intros. generalize dependent l2. induction l1; intros.
+  - simpl in H. destruct H.
+  - simpl in H. destruct l2. destruct H.
+    simpl in H.  destruct H. inversion H; subst.
+    split; simpl; left; reflexivity. simpl. apply IHl1 in H. destruct H.
+    split; right; assumption. 
+Qed. 
 

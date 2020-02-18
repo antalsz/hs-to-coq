@@ -1733,27 +1733,35 @@ Qed.
   each v' that is reachable from v. Note that this also implies that a vertex is in this list iff it is
   reachable from v.*)
 Theorem level_finds_shortest_path: forall v g v',
-  find_dist_list (level v g) v' = distance g v v'.
+  match (find_dist_list (level v g) v') with
+  | Some n => Some (n+1)
+  | None => None
+  end = distance g v v'.
 Proof.
-  intros. 
+  intros.
   destruct (vIn g v) eqn : H.
+  assert (V: valid (bfs_tail (start g v)) g v). eapply multi_valid. apply v_start. assumption.
+  eapply bfs_tail_multi. assert (D': done (bfs_tail (start g v)) = true). eapply bfs_tail_done.
   rewrite <- level_tail_equiv.
   destruct (vIn g v') eqn : D.
-  - pose proof bfs_tail_correct. unfold find_dist in H0. apply H0. eapply multi_valid.
-    apply v_start. assumption. eapply bfs_tail_multi. eapply bfs_tail_done. assumption.
-  - destruct (distance g v v') eqn : ?.
-    + unfold distance in Heqo. rewrite distance_some in Heqo. destruct Heqo. rewrite D in H0. inversion H0.
-    + pose proof find_dist_not. unfold find_dist in H0. rewrite H0. clear H0. intro. intro.
-      pose proof output_iff_reachable. assert (In v' (map fst (get_dists (bfs_tail (start g v))))).
-      rewrite in_map_iff. exists (v',y). split;simpl. reflexivity. assumption.
-      specialize (H1 (bfs_tail (start g v)) g v v'). rewrite H1 in H2. clear H1.
-      destruct H2. subst. rewrite D in H. inversion H.  destruct H1. apply path_list_equiv in H1.
-      apply path_implies_in_graph in H1. destruct_all. rewrite H2 in D. inversion D.
-      eapply multi_valid. apply v_start. assumption. apply bfs_tail_multi. apply bfs_tail_done.
-  - rewrite level_invalid. simpl. unfold distance. symmetry. rewrite distance_none. destruct (N.eq_dec v v').
-    subst. right. assumption. left. split. intro. destruct (path_list g v v' l) eqn : ?.
-    apply path_implies_in_graph in Heqb0. destruct_all. rewrite H0 in H. inversion H. reflexivity. assumption.
-    assumption.
+  - pose proof bfs_tail_correct. unfold dist_plus_one in H0. unfold find_dist in H0.
+    specialize (H0 (bfs_tail (start g v)) g v).
+    specialize (H0 V D' v' D). rewrite <- H0. reflexivity.
+  - replace (find_dist_list (get_dists (bfs_tail (start g v))) v') with (find_dist (bfs_tail (start g v)) v') by
+    (unfold find_dist; reflexivity).
+    destruct (find_dist (bfs_tail (start g v)) v') eqn : F.
+    + rewrite find_dist_in in F. pose proof output_iff_reachable.
+      assert (exists l, path' g v v' l). rewrite <- H0. rewrite in_map_iff. exists (v', Z.of_nat n).
+      solve_assume. apply F. assumption. assumption. destruct_all. apply path_implies_in_graph in H1.
+      destruct_all. rewrite H2 in D. inversion D. apply V.
+    + destruct (distance g v v') eqn : DI.
+      * apply distance_some in DI. destruct_all. unfold shortest_path in H0.
+        destruct_all. apply path_implies_in_graph in H0. destruct_all. rewrite H3 in D. inversion D.
+      * reflexivity.
+  - assert (A:= H). apply level_invalid in H. rewrite H. simpl. destruct (distance g v v') eqn : D.
+    + apply distance_some in D. destruct_all. unfold shortest_path in H0. destruct_all.
+      apply path_implies_in_graph in H0. destruct_all. rewrite H0 in A. inversion A.
+    + reflexivity.
 Qed. 
 
 (*The resulting list is sorted by shortest path distance*)
@@ -2006,7 +2014,6 @@ Proof.
   rewrite unfold_bf'. simpl. 
    unfold deferredFix2 in *. unfold curry in *.
   rewrite (deferredFix_eq_on _ (fun x => True) ( (bf_measure_queue (_)) )).
-  (*TODO: see if i should do induction on queue inssead*)
   - simpl.  destruct (toList _ q) eqn : Q'. rewrite <- toList_queueEmpty in Q'. rewrite Q'. simpl.
     reflexivity. assert (queueEmpty q = false). destruct (queueEmpty q) eqn : ?.
     rewrite toList_queueEmpty in Heqb0. rewrite Heqb0 in Q'. inversion Q'.
@@ -2036,8 +2043,9 @@ Proof.
 Qed.
 
 (** ** Correctness of [bf] **)
-(*We want to prove two claims: that bf returns valid paths, and that the length of each path is equal to the value
-  returned by [leveln]*)
+(*We want to prove that each is a shortest path. We need to know that the returned paths are valid and that
+  their length equals the result of [distance]*)
+
 
 (*Valid paths. Because we defined a path as the list between vertex u and v, we simply pull out the last
   vertex from the list, verify that it is v, and the rest should be a path according to our previous definition*)
@@ -2045,6 +2053,7 @@ Qed.
   match l with
   | 
 *)
+(*
 Definition valid_path (g: gr a b) (v u : Node) (l: list Node) : Prop :=
   (u = v /\ l = (v :: nil)) \/ exists l', l = u :: l' ++ (v :: nil) /\ path g v u l'.
 
@@ -2084,7 +2093,7 @@ Proof.
   - simpl in *. destruct H. destruct H0. subst. auto. apply IHl; assumption.
   - simpl. split. apply H. simpl. left. reflexivity. apply IHl. intros. apply H. right. assumption.
 Qed.
-
+*)
 Definition bf_state : Type := gr a b * list Path * list Path.
 
 Definition bf_queue (s: bf_state) :=
@@ -2134,40 +2143,36 @@ Proof.
     subst. apply IHbf_valid.
 Qed.
 
-Lemma queue_valid_paths: forall s v g,
+Lemma queue_valid_paths: forall s v g v' l,
   bf_valid s g v ->
-  All (fun x => exists u, valid_path g v u x) (bf_queue s).
+  In (v' :: l) (bf_queue s) ->
+  path' g v v' (v' :: l).
 Proof.
-  intros. induction H.
-  - simpl. split. exists v. unfold valid_path. left. split; reflexivity. auto.
+  intros. generalize dependent v'. revert l. induction H; intros.
+  - simpl in H0. destruct H0. inversion H0; subst. constructor. assumption. destruct H0.  
   - inversion H0; subst; simpl in *.
-    destruct IHbf_valid. apply All_app. split. assumption.
-    apply All_in. intros. rewrite in_map_iff in H5. destruct H5. destruct H5.
-     destruct H3 as [u]. unfold valid_path in H3.
-    destruct H3. destruct_all. subst. inversion H7; subst.
-    exists x0. unfold valid_path. right. exists nil. inversion H7; subst.
-    simpl. split. reflexivity. constructor. unfold suc' in H6. unfold Base.op_z2218U__ in H6.
-    unfold Base.map in H6. rewrite snd_equiv in H6. destruct c. destruct p. destruct p. rewrite context4l'_def in H6.
-    assert (eIn g0 v x0 = true). apply H6. eapply bf_graph_subset. apply H. simpl. assumption.
-    apply H2. destruct H3 as [l']. destruct H3. inversion H3. subst. exists x0. unfold valid_path.
-    right. exists (u :: l'). split. simpl. reflexivity. constructor. assumption.
-    unfold suc' in H6. unfold Base.op_z2218U__ in H6. unfold Base.map in H6. rewrite snd_equiv in H6.
-    destruct c. destruct p. destruct p.
-    rewrite context4l'_def in H6. eapply bf_graph_subset. apply H. simpl. apply H6. apply H2.
-    apply IHbf_valid.
+    apply in_app_or in H1. destruct H1. apply IHbf_valid. right. assumption.
+    rewrite in_map_iff in H1. destruct_all. inversion H1; subst.
+    eapply p_multi. apply IHbf_valid. left. reflexivity. unfold suc' in H4.
+    unfold Base.op_z2218U__ in H4. unfold Base.map in H4. rewrite snd_equiv in H4.
+    destruct c. destruct p. destruct p. rewrite context4l'_def in H4. 
+    assert (eIn g0 v0 v' = true). apply H4. eapply bf_graph_subset. apply H.
+    simpl. assumption. apply H3. apply IHbf_valid. right. assumption.
 Qed.
 
-Lemma output_valid_paths: forall s v g,
+
+Lemma output_valid_paths: forall s v g v' l,
   bf_valid s g v ->
-  All (fun x => exists u, valid_path g v u x) (bf_out s).
+  In (v' :: l) (bf_out s) ->
+  path' g v v' (v' :: l).
 Proof.
   intros. induction H.
-  - simpl. auto.
-  - inversion H0; subst; simpl in *.
-    + apply All_app. split. assumption. simpl. split. 
-      pose proof (queue_valid_paths _ _ _ H). rewrite All_in in H3. apply H3.
-      simpl. left. reflexivity. auto.
-    + assumption.
+  - simpl in H0. destruct H0.
+  - inversion H1; subst; simpl in *.
+    + apply in_app_or in H0. destruct H0. apply IHbf_valid. assumption.
+      pose proof (queue_valid_paths _ _ _ v' l H). apply H4. simpl. left. simpl in H0.
+      destruct H0; inversion H0. subst. reflexivity.
+    + apply IHbf_valid; assumption.
 Qed.
 
 (*Now need to prove equivalence with the translated version**)
@@ -2293,12 +2298,16 @@ Proof.
 Qed. 
 
 (*1. All paths in the output are valid*)
-Theorem bft_paths_valid: forall v g,
-  All (fun x => exists u, valid_path g v u x) (bft v g).
+Theorem bft_paths_valid: forall v (g: gr a b) v' l,
+  In (v' :: l) (bft v g) ->
+  path' g v v' (v' :: l).
 Proof.
-  intros. destruct (vIn g v) eqn : V. rewrite <- bft_tail_equiv. apply output_valid_paths. eapply bf_multi_valid.
-  apply v_bf_start. assumption. apply bf_tail_multi. rewrite bf_invalid_v. simpl. auto. assumption.
+  intros. destruct (vIn g v) eqn : V. rewrite <- bft_tail_equiv in H. eapply output_valid_paths in H.
+  apply H. eapply bf_multi_valid.
+  apply v_bf_start. assumption. apply bf_tail_multi. rewrite bf_invalid_v in H. simpl in H. inversion H.
+  assumption. 
 Qed.
+
 
 Lemma zip_fst_map: forall {A B} (l: list A) (l' : list B) l'',
    length l = length l' ->
@@ -2337,7 +2346,7 @@ Proof.
     unfold list_length_lt. simpl. omega. apply H2. reflexivity.
 Qed.
 
-Theorem bft_vertex_order: forall (g: gr a b) v,
+Lemma bft_vertex_order: forall (g: gr a b) v,
   map (fun x => Some (fst x)) (level v g) = map (fun x => head x) (bft v g).
 Proof.
   intros. unfold level. unfold bft. rewrite <- leveln_leveln'_equiv.
@@ -2388,7 +2397,7 @@ Proof.
     apply H5. apply H4. reflexivity.
 Qed.
 
-Theorem bft_length: forall (g: gr a b) v,
+Lemma bft_length: forall (g: gr a b) v,
   map snd (level v g) = map (fun x => (List.length x - 1)%Z) (bft v g).
 Proof.
   intros. unfold level. unfold bft. rewrite <- leveln_leveln'_equiv.
@@ -2397,6 +2406,52 @@ Proof.
   - simpl. reflexivity.
   - simpl. reflexivity.
 Qed.
+
+(*The big result: that [bft] finds shortest paths. We use List.zip to preserve order*)
+Theorem bft_shortest_paths: forall (g: gr a b) v p d u,
+  In (p, (u, d)) (List.zip (bft v g) (level v g)) ->
+  shortest_path g v u p /\ length p = Z.to_nat d + 1.
+Proof.
+  intros. pose proof (bft_length g v).
+  pose proof (bft_vertex_order g v). symmetry in H0. symmetry in H1.
+  pose proof (in_zip_map (bft v g) (level v g) p (u,d) _ _ H H0).
+  pose proof (in_zip_map (bft v g) (level v g) p (u,d) _ _ H H1).
+  simpl in H2. simpl in H3. unfold hd_error in H3. destruct p. inversion H3.
+  inversion H3; subst. 
+  assert ((List.length (u :: p) -1)%Z = Z.of_nat (length p)). {
+  unfold List.length at 1. rewrite len_acc_def.
+  assert (forall n, (Num.fromInteger 0 + Z.of_nat n)%Z = Z.of_nat n). intros.
+  simpl. reflexivity. rewrite H2. clear H2.
+  assert (length (u :: p) = (1 + length p)). simpl. reflexivity. rewrite H2. clear H2.
+  rewrite Nat2Z.inj_add. assert (Z.of_nat 1 = 1%Z). simpl. reflexivity. rewrite H2.
+  assert (forall z1 z2, (z1 + z2 - z1)%Z = z2%Z). intros. omega. rewrite H4. reflexivity. }
+  assert (V': valid (bfs_tail (start g v)) g v). destruct (vIn g v) eqn : V.
+  eapply multi_valid. apply v_start. apply V. apply bfs_tail_multi. 
+  apply bf_invalid_v in V. rewrite V in H. inversion H.
+  split.
+  - apply zip_in in H. destruct_all. pose proof (level_finds_shortest_path v g u).
+    rewrite <- level_tail_equiv in H5. rewrite <- level_tail_equiv in H4. 
+      replace (find_dist_list (get_dists (bfs_tail (start g v)))) with
+      (find_dist (bfs_tail (start g v))) in H5 by (unfold find_dist_list; reflexivity).
+    destruct (find_dist (bfs_tail (start g v)) u) eqn : F.
+    + rewrite find_dist_in in F.
+      pose proof (no_dup_level v g). rewrite <- level_tail_equiv in H6.
+      assert ((List.length (u :: p) -1)%Z = Z.of_nat n).
+      eapply NoDup_pairs in H6. apply H6. apply H4. apply F.
+      symmetry in H5. apply distance_some in H5. destruct H5 as [l].
+      destruct_all.
+      eapply shortest_path_of_length. apply H5. apply bft_paths_valid.
+      assumption. rewrite H8.
+      assert (forall z1 z2 z3, (z1 - z2)%Z = z3%Z -> z1 = (z3 + z2)%Z). intros. omega.
+      assert (List.length (u :: p) = (Z.of_nat n + 1)%Z). apply H9. assumption.
+      rewrite length_equiv. rewrite H10. rewrite Z2Nat.inj_add. rewrite Nat2Z.id.
+      simpl. unfold Pos.to_nat. simpl. reflexivity. omega. omega. apply V'.
+    + symmetry in H5. pose proof (output_iff_reachable (bfs_tail (start g v)) g v u).
+      unfold distance in H5. assert (exists l, path' g v u l). apply H6.
+      assumption. apply bfs_tail_done. rewrite in_map_iff. exists (u, (List.length (u :: p) - 1)%Z).
+      simpl. solve_assume. rewrite distance_none in H5. destruct_all. exfalso; apply (H5 x); assumption.
+  - rewrite H2. rewrite Nat2Z.id. simpl. omega.
+Qed. 
 
 End Bft. 
 
@@ -2502,7 +2557,7 @@ Proof.
   - auto.
 Qed.
 
-(** ** COrrectness of [lbf] **)
+(** ** Correctness of [lbf] **)
 
 (*The correctness property is simple: [lb] is the same as [bf] when we remove the labels*)
 

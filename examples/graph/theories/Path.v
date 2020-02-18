@@ -369,6 +369,17 @@ Proof.
     apply (D l). assumption.
 Qed.
 
+(*Any valid path with the same length of the shortest path is a shortest path*)
+Lemma shortest_path_of_length: forall g u v l l',
+  shortest_path g u v l ->
+  path' g u v l' ->
+  length l = length l' ->
+  shortest_path g u v l'.
+Proof.
+  intros. unfold shortest_path in *. split. assumption.
+  intros. intro. destruct H. rewrite <- H1 in H2. apply H4 in H2. contradiction.
+Qed.
+
 
 End AllPaths.
 

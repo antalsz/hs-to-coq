@@ -8,14 +8,14 @@
 
 [submodule "examples/ghc/ghc"]
 	path = examples/ghc/ghc
-	url = https://gitlab.haskell.org/ghc/ghc.git
+	url = https://gitlab.haskell.org/ghc/ghc.git 
 [submodule "doc/_themes/sphinx_rtd_theme"]
 	path = doc/_themes/sphinx_rtd_theme
-	url = https://github.com/rtfd/sphinx_rtd_theme
+	url = https://github.com/rtfd/sphinx_rtd_theme.git
 	ignore = dirty
 [submodule "functional-shuffle"]
 	path = examples/shuffle/functional-shuffle
-	url = https://github.com/antalsz/functional-shuffle
+	url = https://github.com/antalsz/functional-shuffle.git
 [submodule "MonadRandom"]
 	path = examples/shuffle/MonadRandom
 	url = https://github.com/byorgey/MonadRandom.git

@@ -264,7 +264,7 @@ type Missings = [Missing]
 
 isCompleteMultiPattern :: forall m. TypeInfoMonad m => [MultPattern] -> m Bool
 isCompleteMultiPattern [] = pure True -- Maybe an empty data type?
-isCompleteMultiPattern mpats = null <$> goGroup mpats
+isCompleteMultiPattern mpats = null <$> goGroup (reverse mpats)
   where
     -- Initially, we miss everything
     initMissings = [[]]

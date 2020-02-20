@@ -101,6 +101,35 @@ The flag `quick` is like the above but doesn't run the tests.
     $ ./boot.sh quick
 
 
+Troubleshooting
+--------------------------------
 
+1. lndir: command not found
 
+On Mac OSX, you may need to install XQuartz and imake to run `examples/boot.sh`. 
 
+If you get the error message while trying to run `./boot.sh`: 
+
+.. code-block:: shell
+
+    > lndir: command not found
+   
+The following commands will install XQuartz and imake through `brew`:
+
+.. code-block:: shell
+
+    $ brew cask install xquartz
+    $ brew install imake
+    
+Depending on your `brew cask` setup, you may also need to update your $PATH
+variable. 
+
+.. code-block:: shell
+
+    $ export PATH=$PATH:/usr/X11/bin >> ~/.bash_profile
+    
+2. git submodule update --init --recursive gives error fatal: Needed a single revision
+
+Try removing the submodule directory that the error was triggered on, and run the command again. 
+(i.e. If the error was on `examples/wc/wc`, a `rm -rf examples/wc/wc` followed by a
+`git submodule update --init --recursive` will do the trick. 

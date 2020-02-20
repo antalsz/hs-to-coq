@@ -8,7 +8,7 @@
 
 [submodule "examples/ghc/ghc"]
 	path = examples/ghc/ghc
-	url = git://git.haskell.org/ghc.git
+	url = https://gitlab.haskell.org/ghc/ghc.git
 [submodule "doc/_themes/sphinx_rtd_theme"]
 	path = doc/_themes/sphinx_rtd_theme
 	url = https://github.com/rtfd/sphinx_rtd_theme

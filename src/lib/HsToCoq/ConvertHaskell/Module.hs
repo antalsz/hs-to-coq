@@ -17,7 +17,7 @@ import Data.Traversable
 import HsToCoq.Util.Monad
 import Data.Function
 import Data.Maybe
-import Data.List.NonEmpty (NonEmpty(..))
+import Data.List.NonEmpty (NonEmpty (..), fromList)
 import HsToCoq.Util.List
 import HsToCoq.Util.Containers
 
@@ -103,9 +103,12 @@ convertHsGroup HsGroup{..} = do
                                                             (cdef^.convDefType)
                                                             (cdef^.convDefBody) NotExistingClass
                              in pure $
-                                [ if useProgram
-                                  then ProgramSentence (DefinitionSentence def) obl
-                                  else DefinitionSentence def ] ++
+                                [ case (cdef^.convDefBody) of
+                                    Fix (FixOne (FixBody qual bind ord mterm term))
+                                      -> FixpointSentence (Fixpoint [(FixBody qual (fromList $ (cdef^.convDefArgs) ++ (toList (bind))) ord mterm term)] [])
+                                    _ -> if useProgram
+                                         then ProgramSentence (DefinitionSentence def) obl
+                                         else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
                    (\_ _ ->  -- TODO add a warming that the top-level pattern was skipped

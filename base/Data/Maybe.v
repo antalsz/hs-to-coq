@@ -41,13 +41,13 @@ Definition mapMaybeFB {b} {r} {a}
     | Some r => cons_ r next
     end.
 
-Definition mapMaybe {a} {b} : (a -> option b) -> list a -> list b :=
-  fix mapMaybe (arg_0__ : (a -> option b)) (arg_1__ : list a) : list b
-        := match arg_0__, arg_1__ with
-           | _, nil => nil
-           | f, cons x xs =>
-               let rs := mapMaybe f xs in match f x with | None => rs | Some r => cons r rs end
-           end.
+Fixpoint mapMaybe {a} {b} (arg_0__ : (a -> option b)) (arg_1__ : list a) : list
+                                                                           b
+           := match arg_0__, arg_1__ with
+              | _, nil => nil
+              | f, cons x xs =>
+                  let rs := mapMaybe f xs in match f x with | None => rs | Some r => cons r rs end
+              end.
 
 Definition listToMaybe {a} : list a -> option a :=
   GHC.Base.foldr (GHC.Base.const GHC.Base.∘ Some) None.

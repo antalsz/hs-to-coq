@@ -491,14 +491,13 @@ Definition extendSubst : Subst -> Var -> CoreArg -> Subst :=
         else extendIdSubst subst var arg
     end.
 
-Definition extendSubstList : Subst -> list (Var * CoreArg)%type -> Subst :=
-  fix extendSubstList (arg_0__ : Subst) (arg_1__ : list (Var * CoreArg)%type)
-        : Subst
-        := match arg_0__, arg_1__ with
-           | subst, nil => subst
-           | subst, cons (pair var rhs) prs =>
-               extendSubstList (extendSubst subst var rhs) prs
-           end.
+Fixpoint extendSubstList (arg_0__ : Subst) (arg_1__ : list (Var * CoreArg)%type)
+           : Subst
+           := match arg_0__, arg_1__ with
+              | subst, nil => subst
+              | subst, cons (pair var rhs) prs =>
+                  extendSubstList (extendSubst subst var rhs) prs
+              end.
 
 Definition emptySubst : Subst :=
   Mk_Subst emptyInScopeSet emptyVarEnv emptyVarEnv emptyVarEnv.

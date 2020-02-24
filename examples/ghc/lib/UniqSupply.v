@@ -58,10 +58,9 @@ Admitted.
 
 (* Converted value declarations: *)
 
-Definition uniqsFromSupply : UniqSupply -> list Unique.Unique :=
-  fix uniqsFromSupply (arg_0__ : UniqSupply) : list Unique.Unique
-        := let 'MkSplitUniqSupply n _ s2 := arg_0__ in
-           cons (Unique.mkUniqueGrimily n) (uniqsFromSupply s2).
+Fixpoint uniqsFromSupply (arg_0__ : UniqSupply) : list Unique.Unique
+           := let 'MkSplitUniqSupply n _ s2 := arg_0__ in
+              cons (Unique.mkUniqueGrimily n) (uniqsFromSupply s2).
 
 Definition uniqFromSupply : UniqSupply -> Unique.Unique :=
   fun '(MkSplitUniqSupply n _ _) => Unique.mkUniqueGrimily n.
@@ -103,10 +102,9 @@ Definition splitUniqSupply4
 Definition returnUs {a} : a -> UniqSM a :=
   fun result => USM (fun us => pair result us).
 
-Definition listSplitUniqSupply : UniqSupply -> list UniqSupply :=
-  fix listSplitUniqSupply (arg_0__ : UniqSupply) : list UniqSupply
-        := let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in
-           cons s1 (listSplitUniqSupply s2).
+Fixpoint listSplitUniqSupply (arg_0__ : UniqSupply) : list UniqSupply
+           := let 'MkSplitUniqSupply _ s1 s2 := arg_0__ in
+              cons s1 (listSplitUniqSupply s2).
 
 Definition liftUSM {a} : UniqSM a -> UniqSupply -> (a * UniqSupply)%type :=
   fun arg_0__ arg_1__ =>
@@ -120,14 +118,14 @@ Definition lazyThenUs {a} {b} : UniqSM a -> (a -> UniqSM b) -> UniqSM b :=
            let 'pair result us' := liftUSM expr us in
            unUSM (cont result) us').
 
-Definition lazyMapUs {a} {b} : (a -> UniqSM b) -> list a -> UniqSM (list b) :=
-  fix lazyMapUs (arg_0__ : (a -> UniqSM b)) (arg_1__ : list a) : UniqSM (list b)
-        := match arg_0__, arg_1__ with
-           | _, nil => returnUs nil
-           | f, cons x xs =>
-               lazyThenUs (f x) (fun r =>
-                             lazyThenUs (lazyMapUs f xs) (fun rs => returnUs (cons r rs)))
-           end.
+Fixpoint lazyMapUs {a} {b} (arg_0__ : (a -> UniqSM b)) (arg_1__ : list a)
+           : UniqSM (list b)
+           := match arg_0__, arg_1__ with
+              | _, nil => returnUs nil
+              | f, cons x xs =>
+                  lazyThenUs (f x) (fun r =>
+                                lazyThenUs (lazyMapUs f xs) (fun rs => returnUs (cons r rs)))
+              end.
 
 Definition initUs_ {a} : UniqSupply -> UniqSM a -> a :=
   fun init_us m => let 'pair r _ := unUSM m init_us in r.

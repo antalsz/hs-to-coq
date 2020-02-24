@@ -60,16 +60,15 @@ Definition snocOL {a} : OrdList a -> a -> OrdList a :=
 Definition nilOL {a} : OrdList a :=
   None.
 
-Definition mapOL {a} {b} : (a -> b) -> OrdList a -> OrdList b :=
-  fix mapOL (arg_0__ : (a -> b)) (arg_1__ : OrdList a) : OrdList b
-        := match arg_0__, arg_1__ with
-           | _, None => None
-           | f, One x => One (f x)
-           | f, Cons x xs => Cons (f x) (mapOL f xs)
-           | f, Snoc xs x => Snoc (mapOL f xs) (f x)
-           | f, Two x y => Two (mapOL f x) (mapOL f y)
-           | f, Many xs => Many (GHC.Base.map f xs)
-           end.
+Fixpoint mapOL {a} {b} (arg_0__ : (a -> b)) (arg_1__ : OrdList a) : OrdList b
+           := match arg_0__, arg_1__ with
+              | _, None => None
+              | f, One x => One (f x)
+              | f, Cons x xs => Cons (f x) (mapOL f xs)
+              | f, Snoc xs x => Snoc (mapOL f xs) (f x)
+              | f, Two x y => Two (mapOL f x) (mapOL f y)
+              | f, Many xs => Many (GHC.Base.map f xs)
+              end.
 
 Definition isNilOL {a} : OrdList a -> bool :=
   fun arg_0__ => match arg_0__ with | None => true | _ => false end.
@@ -87,27 +86,27 @@ Definition fromOL {a} : OrdList a -> list a :=
                  end in
     go a nil.
 
-Definition foldrOL {a} {b} : (a -> b -> b) -> b -> OrdList a -> b :=
-  fix foldrOL (arg_0__ : (a -> b -> b)) (arg_1__ : b) (arg_2__ : OrdList a) : b
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, z, None => z
-           | k, z, One x => k x z
-           | k, z, Cons x xs => k x (foldrOL k z xs)
-           | k, z, Snoc xs x => foldrOL k (k x z) xs
-           | k, z, Two b1 b2 => foldrOL k (foldrOL k z b2) b1
-           | k, z, Many xs => Data.Foldable.foldr k z xs
-           end.
+Fixpoint foldrOL {a} {b} (arg_0__ : (a -> b -> b)) (arg_1__ : b) (arg_2__
+                   : OrdList a) : b
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, z, None => z
+              | k, z, One x => k x z
+              | k, z, Cons x xs => k x (foldrOL k z xs)
+              | k, z, Snoc xs x => foldrOL k (k x z) xs
+              | k, z, Two b1 b2 => foldrOL k (foldrOL k z b2) b1
+              | k, z, Many xs => Data.Foldable.foldr k z xs
+              end.
 
-Definition foldlOL {b} {a} : (b -> a -> b) -> b -> OrdList a -> b :=
-  fix foldlOL (arg_0__ : (b -> a -> b)) (arg_1__ : b) (arg_2__ : OrdList a) : b
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, z, None => z
-           | k, z, One x => k z x
-           | k, z, Cons x xs => foldlOL k (k z x) xs
-           | k, z, Snoc xs x => k (foldlOL k z xs) x
-           | k, z, Two b1 b2 => foldlOL k (foldlOL k z b1) b2
-           | k, z, Many xs => Data.Foldable.foldl k z xs
-           end.
+Fixpoint foldlOL {b} {a} (arg_0__ : (b -> a -> b)) (arg_1__ : b) (arg_2__
+                   : OrdList a) : b
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, z, None => z
+              | k, z, One x => k z x
+              | k, z, Cons x xs => foldlOL k (k z x) xs
+              | k, z, Snoc xs x => k (foldlOL k z xs) x
+              | k, z, Two b1 b2 => foldlOL k (foldlOL k z b1) b2
+              | k, z, Many xs => Data.Foldable.foldl k z xs
+              end.
 
 Definition consOL {a} : a -> OrdList a -> OrdList a :=
   fun a bs => Cons a bs.

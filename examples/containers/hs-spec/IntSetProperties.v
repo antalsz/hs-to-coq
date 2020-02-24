@@ -225,15 +225,16 @@ Definition prop_Single : Coq.Numbers.BinNums.N -> bool :=
     (Data.IntSet.Internal.insert x Data.IntSet.Internal.empty GHC.Base.==
      Data.IntSet.Internal.singleton x).
 
-Definition prop_Prefix : Data.IntSet.Internal.IntSet -> bool :=
-  fix prop_Prefix (arg_0__ : Data.IntSet.Internal.IntSet) : bool
-        := match arg_0__ with
-           | (Data.IntSet.Internal.Bin prefix msk left_ right_ as s) =>
-               andb (Data.Foldable.all (fun elem =>
-                                          Data.IntSet.Internal.match_ elem prefix msk) (Data.IntSet.Internal.toList s))
-                    (andb (prop_Prefix left_) (prop_Prefix right_))
-           | _ => true
-           end.
+Fixpoint prop_Prefix (arg_0__ : Data.IntSet.Internal.IntSet) : bool
+           := match arg_0__ with
+              | (Data.IntSet.Internal.Bin prefix msk left_ right_ as s) =>
+                  andb (Data.Foldable.all (fun elem =>
+                                             Data.IntSet.Internal.match_ elem prefix msk) (Data.IntSet.Internal.toList
+                                                                                           s)) (andb (prop_Prefix left_)
+                                                                                                     (prop_Prefix
+                                                                                                      right_))
+              | _ => true
+              end.
 
 Definition prop_NotMember
    : list Coq.Numbers.BinNums.N -> Coq.Numbers.BinNums.N -> bool :=
@@ -331,14 +332,13 @@ Definition powersOf2 : Data.IntSet.Internal.IntSet :=
                                                             cons (Coq.NArith.BinNat.N.pow #2 i) nil)
                                                          (GHC.Enum.enumFromTo #0 #63)).
 
-Definition prop_MaskPow2 : Data.IntSet.Internal.IntSet -> bool :=
-  fix prop_MaskPow2 (arg_0__ : Data.IntSet.Internal.IntSet) : bool
-        := match arg_0__ with
-           | Data.IntSet.Internal.Bin _ msk left_ right_ =>
-               andb (Data.IntSet.Internal.member msk powersOf2) (andb (prop_MaskPow2 left_)
-                                                                      (prop_MaskPow2 right_))
-           | _ => true
-           end.
+Fixpoint prop_MaskPow2 (arg_0__ : Data.IntSet.Internal.IntSet) : bool
+           := match arg_0__ with
+              | Data.IntSet.Internal.Bin _ msk left_ right_ =>
+                  andb (Data.IntSet.Internal.member msk powersOf2) (andb (prop_MaskPow2 left_)
+                                                                         (prop_MaskPow2 right_))
+              | _ => true
+              end.
 
 Definition forValid {a} `{Test.QuickCheck.Property.Testable a}
    : (Data.IntSet.Internal.IntSet -> a) -> Prop :=

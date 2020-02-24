@@ -229,18 +229,16 @@ Definition mkAnd {a} `{GHC.Base.Eq_ a}
   Data.Maybe.maybe mkFalse (mkAnd' GHC.Base.∘ Data.OldList.nub) GHC.Base.∘
   MonadUtils.concatMapM fromAnd.
 
-Definition simplify {a} `{GHC.Base.Eq_ a}
-   : (a -> option bool) -> BooleanFormula a -> BooleanFormula a :=
-  fix simplify (arg_0__ : (a -> option bool)) (arg_1__ : BooleanFormula a)
-        : BooleanFormula a
-        := match arg_0__, arg_1__ with
-           | f, Var a => match f a with | None => Var a | Some b => mkBool b end
-           | f, And xs =>
-               mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
-           | f, Or xs =>
-               mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
-           | f, Parens x => simplify f (SrcLoc.unLoc x)
-           end.
+Fixpoint simplify {a} `{GHC.Base.Eq_ a} (arg_0__ : (a -> option bool)) (arg_1__
+                    : BooleanFormula a) : BooleanFormula a
+           := match arg_0__, arg_1__ with
+              | f, Var a => match f a with | None => Var a | Some b => mkBool b end
+              | f, And xs =>
+                  mkAnd (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
+              | f, Or xs =>
+                  mkOr (GHC.Base.map (fun '(SrcLoc.L l x) => SrcLoc.L l (simplify f x)) xs)
+              | f, Parens x => simplify f (SrcLoc.unLoc x)
+              end.
 
 Definition memberClauseAtoms {a} `{Unique.Uniquable a}
    : a -> Clause a -> bool :=
@@ -258,14 +256,14 @@ Definition isUnsatisfied {a} `{GHC.Base.Eq_ a}
 Definition isFalse {a} : BooleanFormula a -> bool :=
   fun arg_0__ => match arg_0__ with | Or nil => true | _ => false end.
 
-Definition impliesAtom {a} `{GHC.Base.Eq_ a} : BooleanFormula a -> a -> bool :=
-  fix impliesAtom (arg_0__ : BooleanFormula a) (arg_1__ : a) : bool
-        := match arg_0__, arg_1__ with
-           | Var x, y => x GHC.Base.== y
-           | And xs, y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
-           | Or xs, y => Data.Foldable.all (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
-           | Parens x, y => impliesAtom (SrcLoc.unLoc x) y
-           end.
+Fixpoint impliesAtom {a} `{GHC.Base.Eq_ a} (arg_0__ : BooleanFormula a) (arg_1__
+                       : a) : bool
+           := match arg_0__, arg_1__ with
+              | Var x, y => x GHC.Base.== y
+              | And xs, y => Data.Foldable.any (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
+              | Or xs, y => Data.Foldable.all (fun x => impliesAtom (SrcLoc.unLoc x) y) xs
+              | Parens x, y => impliesAtom (SrcLoc.unLoc x) y
+              end.
 
 Definition extendClauseAtoms {a} `{Unique.Uniquable a}
    : Clause a -> a -> Clause a :=
@@ -330,14 +328,13 @@ Definition implies {a} `{Unique.Uniquable a}
     go (Mk_Clause UniqSet.emptyUniqSet (cons e1 nil)) (Mk_Clause
                                                        UniqSet.emptyUniqSet (cons e2 nil)).
 
-Definition eval {a} : (a -> bool) -> BooleanFormula a -> bool :=
-  fix eval (arg_0__ : (a -> bool)) (arg_1__ : BooleanFormula a) : bool
-        := match arg_0__, arg_1__ with
-           | f, Var x => f x
-           | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-           | f, Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
-           | f, Parens x => eval f (SrcLoc.unLoc x)
-           end.
+Fixpoint eval {a} (arg_0__ : (a -> bool)) (arg_1__ : BooleanFormula a) : bool
+           := match arg_0__, arg_1__ with
+              | f, Var x => f x
+              | f, And xs => Data.Foldable.all (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+              | f, Or xs => Data.Foldable.any (eval f GHC.Base.∘ SrcLoc.unLoc) xs
+              | f, Parens x => eval f (SrcLoc.unLoc x)
+              end.
 
 Local Definition Eq___BooleanFormula_op_zeze__ {inst_a} `{GHC.Base.Eq_ inst_a}
    : BooleanFormula inst_a -> BooleanFormula inst_a -> bool :=

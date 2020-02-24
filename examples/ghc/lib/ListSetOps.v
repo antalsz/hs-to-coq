@@ -110,16 +110,14 @@ Definition assocMaybe {a} {b} `{(GHC.Base.Eq_ a)}
                  end in
     lookup alist.
 
-Definition assocDefaultUsing {a} {b}
-   : (a -> a -> bool) -> b -> Assoc a b -> a -> b :=
-  fix assocDefaultUsing (arg_0__ : (a -> a -> bool)) (arg_1__ : b) (arg_2__
-                          : Assoc a b) (arg_3__ : a) : b
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | _, deflt, nil, _ => deflt
-           | eq, deflt, cons (pair k v) rest, key =>
-               if eq k key : bool then v else
-               assocDefaultUsing eq deflt rest key
-           end.
+Fixpoint assocDefaultUsing {a} {b} (arg_0__ : (a -> a -> bool)) (arg_1__ : b)
+                           (arg_2__ : Assoc a b) (arg_3__ : a) : b
+           := match arg_0__, arg_1__, arg_2__, arg_3__ with
+              | _, deflt, nil, _ => deflt
+              | eq, deflt, cons (pair k v) rest, key =>
+                  if eq k key : bool then v else
+                  assocDefaultUsing eq deflt rest key
+              end.
 
 Definition assocUsing {a} {b} `{GHC.Err.Default b}
    : (a -> a -> bool) -> GHC.Base.String -> Assoc a b -> a -> b :=

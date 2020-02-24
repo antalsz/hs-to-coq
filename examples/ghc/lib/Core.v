@@ -5346,13 +5346,12 @@ Definition foldDVarSet {a} : (Var -> a -> a) -> a -> DVarSet -> a :=
 Definition foldDVarEnv {a} {b} : (a -> b -> b) -> b -> DVarEnv a -> b :=
   UniqFM.nonDetFoldUFM.
 
-Definition flattenBinds {b} : list (Bind b) -> list (b * Expr b)%type :=
-  fix flattenBinds (arg_0__ : list (Bind b)) : list (b * Expr b)%type
-        := match arg_0__ with
-           | cons (NonRec b r) binds => cons (pair b r) (flattenBinds binds)
-           | cons (Rec prs1) binds => Coq.Init.Datatypes.app prs1 (flattenBinds binds)
-           | nil => nil
-           end.
+Fixpoint flattenBinds {b} (arg_0__ : list (Bind b)) : list (b * Expr b)%type
+           := match arg_0__ with
+              | cons (NonRec b r) binds => cons (pair b r) (flattenBinds binds)
+              | cons (Rec prs1) binds => Coq.Init.Datatypes.app prs1 (flattenBinds binds)
+              | nil => nil
+              end.
 
 Definition fixVarSet : (VarSet -> VarSet) -> VarSet -> VarSet :=
   GHC.DeferredFix.deferredFix2 (fun fixVarSet
@@ -5737,33 +5736,32 @@ Definition delBndrL : RnEnv2 -> Var -> RnEnv2 :=
         RV2 (delVarEnv env v) envR_3__ (extendInScopeSet in_scope v)
     end.
 
-Definition deTagExpr {t} : TaggedExpr t -> CoreExpr :=
-  fix deTagExpr (arg_0__ : TaggedExpr t) : CoreExpr
-        := let deTagBind (arg_0__ : TaggedBind t) : CoreBind :=
-             match arg_0__ with
-             | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
-             | Rec prs =>
-                 Rec (let cont_2__ arg_3__ :=
-                        let 'pair (TB b _) rhs := arg_3__ in
-                        cons (pair b (deTagExpr rhs)) nil in
-                      Coq.Lists.List.flat_map cont_2__ prs)
-             end in
-           let deTagAlt (arg_0__ : TaggedAlt t) : CoreAlt :=
-             let 'pair (pair con bndrs) rhs := arg_0__ in
-             pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
-                         Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs) in
-           match arg_0__ with
-           | Mk_Var v => Mk_Var v
-           | Lit l => Lit l
-           | Mk_Type ty => Mk_Type ty
-           | Mk_Coercion co => Mk_Coercion co
-           | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
-           | Lam (TB b _) e => Lam b (deTagExpr e)
-           | Let bind body => Let (deTagBind bind) (deTagExpr body)
-           | Case e (TB b _) ty alts =>
-               Case (deTagExpr e) b ty (GHC.Base.map deTagAlt alts)
-           | Cast e co => Cast (deTagExpr e) co
-           end.
+Fixpoint deTagExpr {t} (arg_0__ : TaggedExpr t) : CoreExpr
+           := let deTagBind (arg_0__ : TaggedBind t) : CoreBind :=
+                match arg_0__ with
+                | NonRec (TB b _) rhs => NonRec b (deTagExpr rhs)
+                | Rec prs =>
+                    Rec (let cont_2__ arg_3__ :=
+                           let 'pair (TB b _) rhs := arg_3__ in
+                           cons (pair b (deTagExpr rhs)) nil in
+                         Coq.Lists.List.flat_map cont_2__ prs)
+                end in
+              let deTagAlt (arg_0__ : TaggedAlt t) : CoreAlt :=
+                let 'pair (pair con bndrs) rhs := arg_0__ in
+                pair (pair con (let cont_1__ arg_2__ := let 'TB b _ := arg_2__ in cons b nil in
+                            Coq.Lists.List.flat_map cont_1__ bndrs)) (deTagExpr rhs) in
+              match arg_0__ with
+              | Mk_Var v => Mk_Var v
+              | Lit l => Lit l
+              | Mk_Type ty => Mk_Type ty
+              | Mk_Coercion co => Mk_Coercion co
+              | App e1 e2 => App (deTagExpr e1) (deTagExpr e2)
+              | Lam (TB b _) e => Lam b (deTagExpr e)
+              | Let bind body => Let (deTagBind bind) (deTagExpr body)
+              | Case e (TB b _) ty alts =>
+                  Case (deTagExpr e) b ty (GHC.Base.map deTagAlt alts)
+              | Cast e co => Cast (deTagExpr e) co
+              end.
 
 Definition deTagBind {t} : TaggedBind t -> CoreBind :=
   fun arg_0__ =>

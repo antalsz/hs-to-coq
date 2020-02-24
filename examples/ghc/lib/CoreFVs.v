@@ -140,37 +140,37 @@ Definition addBndr : Core.CoreBndr -> FV.FV -> FV.FV :=
 Definition addBndrs : list Core.CoreBndr -> FV.FV -> FV.FV :=
   fun bndrs fv => Data.Foldable.foldr addBndr fv bndrs.
 
-Definition expr_fvs : Core.CoreExpr -> FV.FV :=
-  fix expr_fvs arg_0__ arg_1__ arg_2__ arg_3__
-        := match arg_0__, arg_1__, arg_2__, arg_3__ with
-           | Core.Mk_Type ty, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
-           | Core.Mk_Coercion co, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
-           | Core.Mk_Var var, fv_cand, in_scope, acc => FV.unitFV var fv_cand in_scope acc
-           | Core.Lit _, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
-           | Core.App fun_ arg, fv_cand, in_scope, acc =>
-               (FV.unionFV (expr_fvs fun_) (expr_fvs arg)) fv_cand in_scope acc
-           | Core.Lam bndr body, fv_cand, in_scope, acc =>
-               addBndr bndr (expr_fvs body) fv_cand in_scope acc
-           | Core.Cast expr co, fv_cand, in_scope, acc =>
-               (FV.unionFV (expr_fvs expr) FV.emptyFV) fv_cand in_scope acc
-           | Core.Case scrut bndr ty alts, fv_cand, in_scope, acc =>
-               let alt_fvs :=
-                 fun '(pair (pair _ bndrs) rhs) => addBndrs bndrs (expr_fvs rhs) in
-               (FV.unionFV (FV.unionFV (expr_fvs scrut) FV.emptyFV) (addBndr bndr (FV.unionsFV
-                                                                                   (Lists.List.map alt_fvs alts))))
-               fv_cand in_scope acc
-           | Core.Let (Core.NonRec bndr rhs) body, fv_cand, in_scope, acc =>
-               (FV.unionFV (let 'pair bndr rhs := pair bndr rhs in
-                            FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr)) (addBndr bndr
-                            (expr_fvs body))) fv_cand in_scope acc
-           | Core.Let (Core.Rec pairs) body, fv_cand, in_scope, acc =>
-               addBndrs (GHC.Base.map Data.Tuple.fst pairs) (FV.unionFV (FV.unionsFV
-                                                                         (Lists.List.map (fun '(pair bndr rhs) =>
-                                                                                            FV.unionFV (expr_fvs rhs)
-                                                                                                       (bndrRuleAndUnfoldingFVs
-                                                                                                        bndr)) pairs))
-                                                                        (expr_fvs body)) fv_cand in_scope acc
-           end.
+Fixpoint expr_fvs `(arg_0__ : Core.CoreExpr) arg_1__ arg_2__ arg_3__
+           := match arg_0__, arg_1__, arg_2__, arg_3__ with
+              | Core.Mk_Type ty, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+              | Core.Mk_Coercion co, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+              | Core.Mk_Var var, fv_cand, in_scope, acc => FV.unitFV var fv_cand in_scope acc
+              | Core.Lit _, fv_cand, in_scope, acc => FV.emptyFV fv_cand in_scope acc
+              | Core.App fun_ arg, fv_cand, in_scope, acc =>
+                  (FV.unionFV (expr_fvs fun_) (expr_fvs arg)) fv_cand in_scope acc
+              | Core.Lam bndr body, fv_cand, in_scope, acc =>
+                  addBndr bndr (expr_fvs body) fv_cand in_scope acc
+              | Core.Cast expr co, fv_cand, in_scope, acc =>
+                  (FV.unionFV (expr_fvs expr) FV.emptyFV) fv_cand in_scope acc
+              | Core.Case scrut bndr ty alts, fv_cand, in_scope, acc =>
+                  let alt_fvs :=
+                    fun '(pair (pair _ bndrs) rhs) => addBndrs bndrs (expr_fvs rhs) in
+                  (FV.unionFV (FV.unionFV (expr_fvs scrut) FV.emptyFV) (addBndr bndr (FV.unionsFV
+                                                                                      (Lists.List.map alt_fvs alts))))
+                  fv_cand in_scope acc
+              | Core.Let (Core.NonRec bndr rhs) body, fv_cand, in_scope, acc =>
+                  (FV.unionFV (let 'pair bndr rhs := pair bndr rhs in
+                               FV.unionFV (expr_fvs rhs) (bndrRuleAndUnfoldingFVs bndr)) (addBndr bndr
+                               (expr_fvs body))) fv_cand in_scope acc
+              | Core.Let (Core.Rec pairs) body, fv_cand, in_scope, acc =>
+                  addBndrs (GHC.Base.map Data.Tuple.fst pairs) (FV.unionFV (FV.unionsFV
+                                                                            (Lists.List.map (fun '(pair bndr rhs) =>
+                                                                                               FV.unionFV (expr_fvs rhs)
+                                                                                                          (bndrRuleAndUnfoldingFVs
+                                                                                                           bndr))
+                                                                                            pairs)) (expr_fvs body))
+                  fv_cand in_scope acc
+              end.
 
 Definition exprFVs : Core.CoreExpr -> FV.FV :=
   FV.filterFV Core.isLocalVar GHC.Base.∘ expr_fvs.

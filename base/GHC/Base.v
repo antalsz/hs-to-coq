@@ -666,13 +666,12 @@ Definition sequence {m} {a} `{Monad m} : list (m a) -> m (list a) :=
 Definition flip {a} {b} {c} : (a -> b -> c) -> b -> a -> c :=
   fun f x y => f y x.
 
-Definition eqString : String -> String -> bool :=
-  fix eqString (arg_0__ arg_1__ : String) : bool
-        := match arg_0__, arg_1__ with
-           | nil, nil => true
-           | cons c1 cs1, cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)
-           | _, _ => false
-           end.
+Fixpoint eqString (arg_0__ arg_1__ : String) : bool
+           := match arg_0__, arg_1__ with
+              | nil, nil => true
+              | cons c1 cs1, cons c2 cs2 => andb (c1 == c2) (eqString cs1 cs2)
+              | _, _ => false
+              end.
 
 Definition const {a} {b} : a -> b -> a :=
   fun arg_0__ arg_1__ => match arg_0__, arg_1__ with | x, _ => x end.

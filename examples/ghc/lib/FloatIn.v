@@ -60,13 +60,12 @@ Instance Default_FloatInBind : GHC.Err.Default FloatInBind :=
 
 (* Converted value declarations: *)
 
-Definition wrapFloats : FloatInBinds -> Core.CoreExpr -> Core.CoreExpr :=
-  fix wrapFloats (arg_0__ : FloatInBinds) (arg_1__ : Core.CoreExpr)
-        : Core.CoreExpr
-        := match arg_0__, arg_1__ with
-           | nil, e => e
-           | cons (FB _ _ fl) bs, e => wrapFloats bs (MkCore.wrapFloat fl e)
-           end.
+Fixpoint wrapFloats (arg_0__ : FloatInBinds) (arg_1__ : Core.CoreExpr)
+           : Core.CoreExpr
+           := match arg_0__, arg_1__ with
+              | nil, e => e
+              | cons (FB _ _ fl) bs, e => wrapFloats bs (MkCore.wrapFloat fl e)
+              end.
 
 Definition noFloatIntoLam : list Core.Var -> bool :=
   fun bndrs =>

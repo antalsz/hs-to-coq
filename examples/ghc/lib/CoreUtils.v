@@ -333,58 +333,57 @@ Axiom expr_ok : (AxiomatizedTypes.PrimOp -> bool) -> Core.CoreExpr -> bool.
 
 Axiom exprType : Core.CoreExpr -> AxiomatizedTypes.Type_.
 
-Definition mkCast
-   : Core.CoreExpr -> AxiomatizedTypes.Coercion -> Core.CoreExpr :=
-  fix mkCast (arg_0__ : Core.CoreExpr) (arg_1__ : AxiomatizedTypes.Coercion)
-        : Core.CoreExpr
-        := match arg_0__, arg_1__ with
-           | e, co =>
-               if (if andb Util.debugIsOn (negb (Core.coercionRole co GHC.Base.==
-                                                 AxiomatizedTypes.Representational)) : bool
-                   then (GHC.Err.error (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend
-                                                                            (GHC.Base.mappend (GHC.Base.mappend
-                                                                                               (Datatypes.id
-                                                                                                (GHC.Base.hs_string__
-                                                                                                 "coercion"))
-                                                                                               Panic.someSDoc)
-                                                                                              Panic.someSDoc)
-                                                                            Panic.someSDoc) (Datatypes.id
-                                                                            (GHC.Base.hs_string__ "has wrong role")))
-                                                         Panic.someSDoc))
-                   else Core.isReflCo co) : bool
-               then e else
-               let j_7__ :=
-                 match arg_0__, arg_1__ with
-                 | Core.Cast expr co2, co =>
-                     Panic.warnPprTrace (let 'Pair.Mk_Pair _from_ty2 to_ty2 := Core.coercionKind
-                                                                                 co2 in
-                                         let 'Pair.Mk_Pair from_ty _to_ty := Core.coercionKind co in
-                                         negb (Core.eqType from_ty to_ty2)) (GHC.Base.hs_string__
-                                         "ghc/compiler/coreSyn/CoreUtils.hs") #279 (Panic.someSDoc) (mkCast expr
-                                                                                                            (Core.mkTransCo
-                                                                                                             co2 co))
-                 | expr, co =>
-                     let 'Pair.Mk_Pair from_ty _to_ty := Core.coercionKind co in
-                     Panic.warnPprTrace (negb (Core.eqType from_ty (exprType expr)))
-                                        (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreUtils.hs") #290
-                                        (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend
-                                                                                               (Datatypes.id
-                                                                                                (GHC.Base.hs_string__
-                                                                                                 "Trying to coerce"))
-                                                                                               (Datatypes.id
-                                                                                                (GHC.Base.hs_string__
-                                                                                                 "("))) Panic.someSDoc)
-                                                                            Panic.someSDoc) (Datatypes.id
-                                                           (GHC.Base.hs_string__ ")"))) (Core.Cast expr co)
-                 end in
-               match arg_0__, arg_1__ with
-               | Core.Mk_Coercion e_co, co =>
-                   if Core.isCoercionType (Pair.pSnd (Core.coercionKind co)) : bool
-                   then Core.Mk_Coercion (Core.mkCoCast e_co co) else
-                   j_7__
-               | _, _ => j_7__
-               end
-           end.
+Fixpoint mkCast (arg_0__ : Core.CoreExpr) (arg_1__ : AxiomatizedTypes.Coercion)
+           : Core.CoreExpr
+           := match arg_0__, arg_1__ with
+              | e, co =>
+                  if (if andb Util.debugIsOn (negb (Core.coercionRole co GHC.Base.==
+                                                    AxiomatizedTypes.Representational)) : bool
+                      then (GHC.Err.error (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend
+                                                                               (GHC.Base.mappend (GHC.Base.mappend
+                                                                                                  (Datatypes.id
+                                                                                                   (GHC.Base.hs_string__
+                                                                                                    "coercion"))
+                                                                                                  Panic.someSDoc)
+                                                                                                 Panic.someSDoc)
+                                                                               Panic.someSDoc) (Datatypes.id
+                                                                               (GHC.Base.hs_string__ "has wrong role")))
+                                                            Panic.someSDoc))
+                      else Core.isReflCo co) : bool
+                  then e else
+                  let j_7__ :=
+                    match arg_0__, arg_1__ with
+                    | Core.Cast expr co2, co =>
+                        Panic.warnPprTrace (let 'Pair.Mk_Pair _from_ty2 to_ty2 := Core.coercionKind
+                                                                                    co2 in
+                                            let 'Pair.Mk_Pair from_ty _to_ty := Core.coercionKind co in
+                                            negb (Core.eqType from_ty to_ty2)) (GHC.Base.hs_string__
+                                            "ghc/compiler/coreSyn/CoreUtils.hs") #279 (Panic.someSDoc) (mkCast expr
+                                                                                                               (Core.mkTransCo
+                                                                                                                co2 co))
+                    | expr, co =>
+                        let 'Pair.Mk_Pair from_ty _to_ty := Core.coercionKind co in
+                        Panic.warnPprTrace (negb (Core.eqType from_ty (exprType expr)))
+                                           (GHC.Base.hs_string__ "ghc/compiler/coreSyn/CoreUtils.hs") #290
+                                           (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend (GHC.Base.mappend
+                                                                                                  (Datatypes.id
+                                                                                                   (GHC.Base.hs_string__
+                                                                                                    "Trying to coerce"))
+                                                                                                  (Datatypes.id
+                                                                                                   (GHC.Base.hs_string__
+                                                                                                    "(")))
+                                                                                                 Panic.someSDoc)
+                                                                               Panic.someSDoc) (Datatypes.id
+                                                              (GHC.Base.hs_string__ ")"))) (Core.Cast expr co)
+                    end in
+                  match arg_0__, arg_1__ with
+                  | Core.Mk_Coercion e_co, co =>
+                      if Core.isCoercionType (Pair.pSnd (Core.coercionKind co)) : bool
+                      then Core.Mk_Coercion (Core.mkCoCast e_co co) else
+                      j_7__
+                  | _, _ => j_7__
+                  end
+              end.
 
 Axiom exprOkForSpeculation : Core.CoreExpr -> bool.
 
@@ -393,19 +392,18 @@ Definition needsCaseBinding : AxiomatizedTypes.Type_ -> Core.CoreExpr -> bool :=
 
 Axiom exprOkForSideEffects : Core.CoreExpr -> bool.
 
-Definition exprIsTrivial : Core.CoreExpr -> bool :=
-  fix exprIsTrivial (arg_0__ : Core.CoreExpr) : bool
-        := match arg_0__ with
-           | Core.Mk_Var _ => true
-           | Core.Mk_Type _ => true
-           | Core.Mk_Coercion _ => true
-           | Core.Lit lit => Literal.litIsTrivial lit
-           | Core.App e arg => andb (negb (Core.isRuntimeArg arg)) (exprIsTrivial e)
-           | Core.Lam b e => andb (negb (Core.isRuntimeVar b)) (exprIsTrivial e)
-           | Core.Cast e _ => exprIsTrivial e
-           | Core.Case e _ _ nil => exprIsTrivial e
-           | _ => false
-           end.
+Fixpoint exprIsTrivial (arg_0__ : Core.CoreExpr) : bool
+           := match arg_0__ with
+              | Core.Mk_Var _ => true
+              | Core.Mk_Type _ => true
+              | Core.Mk_Coercion _ => true
+              | Core.Lit lit => Literal.litIsTrivial lit
+              | Core.App e arg => andb (negb (Core.isRuntimeArg arg)) (exprIsTrivial e)
+              | Core.Lam b e => andb (negb (Core.isRuntimeVar b)) (exprIsTrivial e)
+              | Core.Cast e _ => exprIsTrivial e
+              | Core.Case e _ _ nil => exprIsTrivial e
+              | _ => false
+              end.
 
 Definition exprIsTickedString_maybe : Core.CoreExpr -> option GHC.Base.String :=
   fun arg_0__ =>
@@ -517,18 +515,17 @@ Definition exprIsBottom : Core.CoreExpr -> bool :=
     if isEmptyTy (exprType e) : bool then true else
     go #0 e.
 
-Definition exprIsBig {b} : Core.Expr b -> bool :=
-  fix exprIsBig (arg_0__ : Core.Expr b) : bool
-        := match arg_0__ with
-           | Core.Lit _ => false
-           | Core.Mk_Var _ => false
-           | Core.Mk_Type _ => false
-           | Core.Mk_Coercion _ => false
-           | Core.Lam _ e => exprIsBig e
-           | Core.App f a => orb (exprIsBig f) (exprIsBig a)
-           | Core.Cast e _ => exprIsBig e
-           | _ => true
-           end.
+Fixpoint exprIsBig {b} (arg_0__ : Core.Expr b) : bool
+           := match arg_0__ with
+              | Core.Lit _ => false
+              | Core.Mk_Var _ => false
+              | Core.Mk_Type _ => false
+              | Core.Mk_Coercion _ => false
+              | Core.Lam _ e => exprIsBig e
+              | Core.App f a => orb (exprIsBig f) (exprIsBig a)
+              | Core.Cast e _ => exprIsBig e
+              | _ => true
+              end.
 
 Definition eqTickish
    : Core.RnEnv2 -> Core.Tickish Core.Id -> Core.Tickish Core.Id -> bool :=

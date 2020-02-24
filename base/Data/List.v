@@ -19,15 +19,15 @@ Import GHC.Base.Notations.
 
 (* Converted value declarations: *)
 
-Definition isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} : list a -> list a -> bool :=
-  fix isSubsequenceOf (arg_0__ arg_1__ : list a) : bool
-        := match arg_0__, arg_1__ with
-           | nil, _ => true
-           | _, nil => false
-           | (cons x a' as a), cons y b =>
-               if x GHC.Base.== y : bool then isSubsequenceOf a' b else
-               isSubsequenceOf a b
-           end.
+Fixpoint isSubsequenceOf {a} `{(GHC.Base.Eq_ a)} (arg_0__ arg_1__ : list a)
+           : bool
+           := match arg_0__, arg_1__ with
+              | nil, _ => true
+              | _, nil => false
+              | (cons x a' as a), cons y b =>
+                  if x GHC.Base.== y : bool then isSubsequenceOf a' b else
+                  isSubsequenceOf a b
+              end.
 
 (* External variables:
      bool cons false list nil true GHC.Base.Eq_ GHC.Base.op_zeze__

@@ -44,13 +44,13 @@ Definition unionFV : FV -> FV -> FV :=
   fun fv1 fv2 fv_cand in_scope acc =>
     fv1 fv_cand in_scope (fv2 fv_cand in_scope acc).
 
-Definition mapUnionFV {a} : (a -> FV) -> list a -> FV :=
-  fix mapUnionFV arg_0__ arg_1__ arg_2__ arg_3__ arg_4__
-        := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
-           | _f, nil, _fv_cand, _in_scope, acc => acc
-           | f, cons a as_, fv_cand, in_scope, acc =>
-               mapUnionFV f as_ fv_cand in_scope (f a fv_cand in_scope acc)
-           end.
+Fixpoint mapUnionFV {a} `(arg_0__ : (a -> FV)) `(arg_1__ : list a) arg_2__
+                    arg_3__ arg_4__
+           := match arg_0__, arg_1__, arg_2__, arg_3__, arg_4__ with
+              | _f, nil, _fv_cand, _in_scope, acc => acc
+              | f, cons a as_, fv_cand, in_scope, acc =>
+                  mapUnionFV f as_ fv_cand in_scope (f a fv_cand in_scope acc)
+              end.
 
 Definition mkFVs : list Core.Var -> FV :=
   fun vars fv_cand in_scope acc => mapUnionFV unitFV vars fv_cand in_scope acc.

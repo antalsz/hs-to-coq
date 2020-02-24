@@ -247,12 +247,12 @@ Definition member {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
 Definition notMember {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> bool :=
   fun k m => negb (member k m).
 
-Definition mapWithKey {k} {a} {b} : (k -> a -> b) -> Map k a -> Map k b :=
-  fix mapWithKey (arg_0__ : (k -> a -> b)) (arg_1__ : Map k a) : Map k b
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | f, Bin sx kx x l r => Bin sx kx (f kx x) (mapWithKey f l) (mapWithKey f r)
-           end.
+Fixpoint mapWithKey {k} {a} {b} (arg_0__ : (k -> a -> b)) (arg_1__ : Map k a)
+           : Map k b
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | f, Bin sx kx x l r => Bin sx kx (f kx x) (mapWithKey f l) (mapWithKey f r)
+              end.
 
 Definition map {a} {b} {k} : (a -> b) -> Map k a -> Map k b :=
   fun f =>
@@ -298,14 +298,13 @@ Definition mapMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
     Mk_WhenMissing (fun m => GHC.Base.pure (mapWithKey f m)) (fun k x =>
                       GHC.Base.pure (Some (f k x))).
 
-Definition mapKeysMonotonic {k1} {k2} {a}
-   : (k1 -> k2) -> Map k1 a -> Map k2 a :=
-  fix mapKeysMonotonic (arg_0__ : (k1 -> k2)) (arg_1__ : Map k1 a) : Map k2 a
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | f, Bin sz k x l r =>
-               Bin sz (f k) x (mapKeysMonotonic f l) (mapKeysMonotonic f r)
-           end.
+Fixpoint mapKeysMonotonic {k1} {k2} {a} (arg_0__ : (k1 -> k2)) (arg_1__
+                            : Map k1 a) : Map k2 a
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | f, Bin sz k x l r =>
+                  Bin sz (f k) x (mapKeysMonotonic f l) (mapKeysMonotonic f r)
+              end.
 
 Definition mapGentlyWhenMissing {f} {a} {b} {k} {x} `{GHC.Base.Functor f}
    : (a -> b) -> WhenMissing f k x a -> WhenMissing f k x b :=
@@ -319,31 +318,28 @@ Definition mapGentlyWhenMatched {f} {a} {b} {k} {x} {y} `{GHC.Base.Functor f}
     zipWithMaybeAMatched (fun k x y =>
                             GHC.Base.fmap f Data.Functor.<$> runWhenMatched t k x y).
 
-Definition mapAccumRWithKey {a} {k} {b} {c}
-   : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
-  fix mapAccumRWithKey (arg_0__ : (a -> k -> b -> (a * c)%type)) (arg_1__ : a)
-                       (arg_2__ : Map k b) : (a * Map k c)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, a, Tip => pair a Tip
-           | f, a, Bin sx kx x l r =>
-               let 'pair a1 r' := mapAccumRWithKey f a r in
-               let 'pair a2 x' := f a1 kx x in
-               let 'pair a3 l' := mapAccumRWithKey f a2 l in
-               pair a3 (Bin sx kx x' l' r')
-           end.
+Fixpoint mapAccumRWithKey {a} {k} {b} {c} (arg_0__
+                            : (a -> k -> b -> (a * c)%type)) (arg_1__ : a) (arg_2__ : Map k b) : (a *
+                                                                                                  Map k c)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, a, Tip => pair a Tip
+              | f, a, Bin sx kx x l r =>
+                  let 'pair a1 r' := mapAccumRWithKey f a r in
+                  let 'pair a2 x' := f a1 kx x in
+                  let 'pair a3 l' := mapAccumRWithKey f a2 l in
+                  pair a3 (Bin sx kx x' l' r')
+              end.
 
-Definition mapAccumL {a} {k} {b} {c}
-   : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
-  fix mapAccumL (arg_0__ : (a -> k -> b -> (a * c)%type)) (arg_1__ : a) (arg_2__
-                  : Map k b) : (a * Map k c)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, a, Tip => pair a Tip
-           | f, a, Bin sx kx x l r =>
-               let 'pair a1 l' := mapAccumL f a l in
-               let 'pair a2 x' := f a1 kx x in
-               let 'pair a3 r' := mapAccumL f a2 r in
-               pair a3 (Bin sx kx x' l' r')
-           end.
+Fixpoint mapAccumL {a} {k} {b} {c} (arg_0__ : (a -> k -> b -> (a * c)%type))
+                   (arg_1__ : a) (arg_2__ : Map k b) : (a * Map k c)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, a, Tip => pair a Tip
+              | f, a, Bin sx kx x l r =>
+                  let 'pair a1 l' := mapAccumL f a l in
+                  let 'pair a2 x' := f a1 kx x in
+                  let 'pair a3 r' := mapAccumL f a2 r in
+                  pair a3 (Bin sx kx x' l' r')
+              end.
 
 Definition mapAccumWithKey {a} {k} {b} {c}
    : (a -> k -> b -> (a * c)%type) -> a -> Map k b -> (a * Map k c)%type :=
@@ -357,12 +353,12 @@ Definition mapAccum {a} {b} {c} {k}
                        | a', _, x' => f a' x'
                        end) a m.
 
-Definition lookupMinSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
-  fix lookupMinSure (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a) : (k * a)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | k, a, Tip => pair k a
-           | _, _, Bin _ k a l _ => lookupMinSure k a l
-           end.
+Fixpoint lookupMinSure {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
+           : (k * a)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | k, a, Tip => pair k a
+              | _, _, Bin _ k a l _ => lookupMinSure k a l
+              end.
 
 Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
   fun arg_0__ =>
@@ -371,12 +367,12 @@ Definition lookupMin {k} {a} : Map k a -> option (k * a)%type :=
     | Bin _ k x l _ => Some (lookupMinSure k x l)
     end.
 
-Definition lookupMaxSure {k} {a} : k -> a -> Map k a -> (k * a)%type :=
-  fix lookupMaxSure (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a) : (k * a)%type
-        := match arg_0__, arg_1__, arg_2__ with
-           | k, a, Tip => pair k a
-           | _, _, Bin _ k a _ r => lookupMaxSure k a r
-           end.
+Fixpoint lookupMaxSure {k} {a} (arg_0__ : k) (arg_1__ : a) (arg_2__ : Map k a)
+           : (k * a)%type
+           := match arg_0__, arg_1__, arg_2__ with
+              | k, a, Tip => pair k a
+              | _, _, Bin _ k a _ r => lookupMaxSure k a r
+              end.
 
 Definition lookupMax {k} {a} : Map k a -> option (k * a)%type :=
   fun arg_0__ =>
@@ -512,20 +508,19 @@ Definition lmapWhenMissing {b} {a} {f} {k} {x}
     Mk_WhenMissing (fun m => missingSubtree t (GHC.Base.fmap f m)) (fun k x =>
                       missingKey t k (f x)).
 
-Definition keysSet {k} {a} : Map k a -> Data.Set.Internal.Set_ k :=
-  fix keysSet (arg_0__ : Map k a) : Data.Set.Internal.Set_ k
-        := match arg_0__ with
-           | Tip => Data.Set.Internal.Tip
-           | Bin sz kx _ l r => Data.Set.Internal.Bin sz kx (keysSet l) (keysSet r)
-           end.
+Fixpoint keysSet {k} {a} (arg_0__ : Map k a) : Data.Set.Internal.Set_ k
+           := match arg_0__ with
+              | Tip => Data.Set.Internal.Tip
+              | Bin sz kx _ l r => Data.Set.Internal.Bin sz kx (keysSet l) (keysSet r)
+              end.
 
-Definition fromSet {k} {a} : (k -> a) -> Data.Set.Internal.Set_ k -> Map k a :=
-  fix fromSet (arg_0__ : (k -> a)) (arg_1__ : Data.Set.Internal.Set_ k) : Map k a
-        := match arg_0__, arg_1__ with
-           | _, Data.Set.Internal.Tip => Tip
-           | f, Data.Set.Internal.Bin sz x l r =>
-               Bin sz x (f x) (fromSet f l) (fromSet f r)
-           end.
+Fixpoint fromSet {k} {a} (arg_0__ : (k -> a)) (arg_1__
+                   : Data.Set.Internal.Set_ k) : Map k a
+           := match arg_0__, arg_1__ with
+              | _, Data.Set.Internal.Tip => Tip
+              | f, Data.Set.Internal.Bin sz x l r =>
+                  Bin sz x (f x) (fromSet f l) (fromSet f r)
+              end.
 
 Definition foldrWithKey' {k} {a} {b}
    : (k -> a -> b -> b) -> b -> Map k a -> b :=
@@ -739,20 +734,18 @@ Definition balanceR {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
         end
     end.
 
-Definition deleteMin {k} {a} : Map k a -> Map k a :=
-  fix deleteMin (arg_0__ : Map k a) : Map k a
-        := match arg_0__ with
-           | Bin _ _ _ Tip r => r
-           | Bin _ kx x l r => balanceR kx x (deleteMin l) r
-           | Tip => Tip
-           end.
+Fixpoint deleteMin {k} {a} (arg_0__ : Map k a) : Map k a
+           := match arg_0__ with
+              | Bin _ _ _ Tip r => r
+              | Bin _ kx x l r => balanceR kx x (deleteMin l) r
+              | Tip => Tip
+              end.
 
-Definition insertMax {k} {a} : k -> a -> Map k a -> Map k a :=
-  fix insertMax (kx : k) (x : a) (t : Map k a) : Map k a
-        := match t with
-           | Tip => singleton kx x
-           | Bin _ ky y l r => balanceR ky y l (insertMax kx x r)
-           end.
+Fixpoint insertMax {k} {a} (kx : k) (x : a) (t : Map k a) : Map k a
+           := match t with
+              | Tip => singleton kx x
+              | Bin _ ky y l r => balanceR ky y l (insertMax kx x r)
+              end.
 
 Definition minViewSure {k} {a} : k -> a -> Map k a -> Map k a -> MinView k a :=
   let fix go arg_0__ arg_1__ arg_2__ arg_3__
@@ -780,19 +773,17 @@ Definition minView {k} {a} : Map k a -> option (a * Map k a)%type :=
     | Some (pair (pair _ x) t') => Some (pair x t')
     end.
 
-Definition updateMinWithKey {k} {a}
-   : (k -> a -> option a) -> Map k a -> Map k a :=
-  fix updateMinWithKey (arg_0__ : (k -> a -> option a)) (arg_1__ : Map k a) : Map
-                                                                              k a
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | f, Bin sx kx x Tip r =>
-               match f kx x with
-               | None => r
-               | Some x' => Bin sx kx x' Tip r
-               end
-           | f, Bin _ kx x l r => balanceR kx x (updateMinWithKey f l) r
-           end.
+Fixpoint updateMinWithKey {k} {a} (arg_0__ : (k -> a -> option a)) (arg_1__
+                            : Map k a) : Map k a
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | f, Bin sx kx x Tip r =>
+                  match f kx x with
+                  | None => r
+                  | Some x' => Bin sx kx x' Tip r
+                  end
+              | f, Bin _ kx x l r => balanceR kx x (updateMinWithKey f l) r
+              end.
 
 Definition updateMin {a} {k} : (a -> option a) -> Map k a -> Map k a :=
   fun f m =>
@@ -842,13 +833,12 @@ Definition balanceL {k} {a} : k -> a -> Map k a -> Map k a -> Map k a :=
         end
     end.
 
-Definition deleteMax {k} {a} : Map k a -> Map k a :=
-  fix deleteMax (arg_0__ : Map k a) : Map k a
-        := match arg_0__ with
-           | Bin _ _ _ l Tip => l
-           | Bin _ kx x l r => balanceL kx x l (deleteMax r)
-           | Tip => Tip
-           end.
+Fixpoint deleteMax {k} {a} (arg_0__ : Map k a) : Map k a
+           := match arg_0__ with
+              | Bin _ _ _ l Tip => l
+              | Bin _ kx x l r => balanceL kx x l (deleteMax r)
+              | Tip => Tip
+              end.
 
 Definition insert {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
   fun kx0 =>
@@ -898,12 +888,11 @@ Definition insertLookupWithKey {k} {a} `{GHC.Base.Ord k}
                end in
     id GHC.Base.∘ go f0 k0 x0.
 
-Definition insertMin {k} {a} : k -> a -> Map k a -> Map k a :=
-  fix insertMin (kx : k) (x : a) (t : Map k a) : Map k a
-        := match t with
-           | Tip => singleton kx x
-           | Bin _ ky y l r => balanceL ky y (insertMin kx x l) r
-           end.
+Fixpoint insertMin {k} {a} (kx : k) (x : a) (t : Map k a) : Map k a
+           := match t with
+              | Tip => singleton kx x
+              | Bin _ ky y l r => balanceL ky y (insertMin kx x l) r
+              end.
 
 Definition insertR {k} {a} `{GHC.Base.Ord k} : k -> a -> Map k a -> Map k a :=
   fun kx0 =>
@@ -1058,14 +1047,14 @@ Definition drop {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
         end
     end.
 
-Definition dropWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
-  fix dropWhileAntitone (arg_0__ : (k -> bool)) (arg_1__ : Map k a) : Map k a
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | p, Bin _ kx x l r =>
-               if p kx : bool then dropWhileAntitone p r else
-               link kx x (dropWhileAntitone p l) r
-           end.
+Fixpoint dropWhileAntitone {k} {a} (arg_0__ : (k -> bool)) (arg_1__ : Map k a)
+           : Map k a
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | p, Bin _ kx x l r =>
+                  if p kx : bool then dropWhileAntitone p r else
+                  link kx x (dropWhileAntitone p l) r
+              end.
 
 Definition fromDistinctAscList {k} {a} : list (k * a)%type -> Map k a :=
   fun arg_0__ =>
@@ -1363,20 +1352,18 @@ Definition splitLookup {k} {a} `{GHC.Base.Ord k}
     let 'Mk_StrictTriple l mv r := go k0 m in
     pair (pair l mv) r.
 
-Definition submap' {a} {b} {c} `{GHC.Base.Ord a}
-   : (b -> c -> bool) -> Map a b -> Map a c -> bool :=
-  fix submap' (arg_0__ : (b -> c -> bool)) (arg_1__ : Map a b) (arg_2__ : Map a c)
-        : bool
-        := match arg_0__, arg_1__, arg_2__ with
-           | _, Tip, _ => true
-           | _, _, Tip => false
-           | f, Bin _ kx x l r, t =>
-               let 'pair (pair lt found) gt := splitLookup kx t in
-               match found with
-               | None => false
-               | Some y => andb (f x y) (andb (submap' f l lt) (submap' f r gt))
-               end
-           end.
+Fixpoint submap' {a} {b} {c} `{GHC.Base.Ord a} (arg_0__ : (b -> c -> bool))
+                 (arg_1__ : Map a b) (arg_2__ : Map a c) : bool
+           := match arg_0__, arg_1__, arg_2__ with
+              | _, Tip, _ => true
+              | _, _, Tip => false
+              | f, Bin _ kx x l r, t =>
+                  let 'pair (pair lt found) gt := splitLookup kx t in
+                  match found with
+                  | None => false
+                  | Some y => andb (f x y) (andb (submap' f l lt) (submap' f r gt))
+                  end
+              end.
 
 Definition isProperSubmapOfBy {k} {a} {b} `{GHC.Base.Ord k}
    : (a -> b -> bool) -> Map k a -> Map k b -> bool :=
@@ -1442,76 +1429,73 @@ Definition take {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
         end
     end.
 
-Definition takeWhileAntitone {k} {a} : (k -> bool) -> Map k a -> Map k a :=
-  fix takeWhileAntitone (arg_0__ : (k -> bool)) (arg_1__ : Map k a) : Map k a
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | p, Bin _ kx x l r =>
-               if p kx : bool then link kx x l (takeWhileAntitone p r) else
-               takeWhileAntitone p l
-           end.
+Fixpoint takeWhileAntitone {k} {a} (arg_0__ : (k -> bool)) (arg_1__ : Map k a)
+           : Map k a
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | p, Bin _ kx x l r =>
+                  if p kx : bool then link kx x l (takeWhileAntitone p r) else
+                  takeWhileAntitone p l
+              end.
 
-Definition union {k} {a} `{GHC.Base.Ord k} : Map k a -> Map k a -> Map k a :=
-  fix union (arg_0__ arg_1__ : Map k a) : Map k a
-        := match arg_0__, arg_1__ with
-           | t1, Tip => t1
-           | t1, Bin _ k x Tip Tip => insertR k x t1
-           | Bin _ k x Tip Tip, t2 => insert k x t2
-           | Tip, t2 => t2
-           | (Bin _ k1 x1 l1 r1 as t1), t2 =>
-               let 'pair l2 r2 := split k1 t2 in
-               let r1r2 := union r1 r2 in
-               let l1l2 := union l1 l2 in
-               if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
-                       (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
-               then t1 else
-               link k1 x1 l1l2 r1r2
-           end.
+Fixpoint union {k} {a} `{GHC.Base.Ord k} (arg_0__ arg_1__ : Map k a) : Map k a
+           := match arg_0__, arg_1__ with
+              | t1, Tip => t1
+              | t1, Bin _ k x Tip Tip => insertR k x t1
+              | Bin _ k x Tip Tip, t2 => insert k x t2
+              | Tip, t2 => t2
+              | (Bin _ k1 x1 l1 r1 as t1), t2 =>
+                  let 'pair l2 r2 := split k1 t2 in
+                  let r1r2 := union r1 r2 in
+                  let l1l2 := union l1 l2 in
+                  if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
+                          (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
+                  then t1 else
+                  link k1 x1 l1l2 r1r2
+              end.
 
 Definition unions {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
    : f (Map k a) -> Map k a :=
   fun ts => Data.Foldable.foldl' union empty ts.
 
-Definition unionWith {k} {a} `{GHC.Base.Ord k}
-   : (a -> a -> a) -> Map k a -> Map k a -> Map k a :=
-  fix unionWith (arg_0__ : (a -> a -> a)) (arg_1__ arg_2__ : Map k a) : Map k a
-        := match arg_0__, arg_1__, arg_2__ with
-           | _f, t1, Tip => t1
-           | f, t1, Bin _ k x Tip Tip => insertWithR f k x t1
-           | f, Bin _ k x Tip Tip, t2 => insertWith f k x t2
-           | _f, Tip, t2 => t2
-           | f, Bin _ k1 x1 l1 r1, t2 =>
-               let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
-               let r1r2 := unionWith f r1 r2 in
-               let l1l2 := unionWith f l1 l2 in
-               match mb with
-               | None => link k1 x1 l1l2 r1r2
-               | Some x2 => link k1 (f x1 x2) l1l2 r1r2
-               end
-           end.
+Fixpoint unionWith {k} {a} `{GHC.Base.Ord k} (arg_0__ : (a -> a -> a)) (arg_1__
+                    arg_2__
+                     : Map k a) : Map k a
+           := match arg_0__, arg_1__, arg_2__ with
+              | _f, t1, Tip => t1
+              | f, t1, Bin _ k x Tip Tip => insertWithR f k x t1
+              | f, Bin _ k x Tip Tip, t2 => insertWith f k x t2
+              | _f, Tip, t2 => t2
+              | f, Bin _ k1 x1 l1 r1, t2 =>
+                  let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
+                  let r1r2 := unionWith f r1 r2 in
+                  let l1l2 := unionWith f l1 l2 in
+                  match mb with
+                  | None => link k1 x1 l1l2 r1r2
+                  | Some x2 => link k1 (f x1 x2) l1l2 r1r2
+                  end
+              end.
 
 Definition unionsWith {f} {k} {a} `{Data.Foldable.Foldable f} `{GHC.Base.Ord k}
    : (a -> a -> a) -> f (Map k a) -> Map k a :=
   fun f ts => Data.Foldable.foldl' (unionWith f) empty ts.
 
-Definition unionWithKey {k} {a} `{GHC.Base.Ord k}
-   : (k -> a -> a -> a) -> Map k a -> Map k a -> Map k a :=
-  fix unionWithKey (arg_0__ : (k -> a -> a -> a)) (arg_1__ arg_2__ : Map k a)
-        : Map k a
-        := match arg_0__, arg_1__, arg_2__ with
-           | _f, t1, Tip => t1
-           | f, t1, Bin _ k x Tip Tip => insertWithKeyR f k x t1
-           | f, Bin _ k x Tip Tip, t2 => insertWithKey f k x t2
-           | _f, Tip, t2 => t2
-           | f, Bin _ k1 x1 l1 r1, t2 =>
-               let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
-               let r1r2 := unionWithKey f r1 r2 in
-               let l1l2 := unionWithKey f l1 l2 in
-               match mb with
-               | None => link k1 x1 l1l2 r1r2
-               | Some x2 => link k1 (f k1 x1 x2) l1l2 r1r2
-               end
-           end.
+Fixpoint unionWithKey {k} {a} `{GHC.Base.Ord k} (arg_0__ : (k -> a -> a -> a))
+                      (arg_1__ arg_2__ : Map k a) : Map k a
+           := match arg_0__, arg_1__, arg_2__ with
+              | _f, t1, Tip => t1
+              | f, t1, Bin _ k x Tip Tip => insertWithKeyR f k x t1
+              | f, Bin _ k x Tip Tip, t2 => insertWithKey f k x t2
+              | _f, Tip, t2 => t2
+              | f, Bin _ k1 x1 l1 r1, t2 =>
+                  let 'pair (pair l2 mb) r2 := splitLookup k1 t2 in
+                  let r1r2 := unionWithKey f r1 r2 in
+                  let l1l2 := unionWithKey f l1 l2 in
+                  match mb with
+                  | None => link k1 x1 l1l2 r1r2
+                  | Some x2 => link k1 (f k1 x1 x2) l1l2 r1r2
+                  end
+              end.
 
 Definition maxViewSure {k} {a} : k -> a -> Map k a -> Map k a -> MaxView k a :=
   let fix go arg_0__ arg_1__ arg_2__ arg_3__
@@ -1556,18 +1540,17 @@ Definition delete {k} {a} `{GHC.Base.Ord k} : k -> Map k a -> Map k a :=
              end in
   go.
 
-Definition deleteAt {k} {a} : GHC.Num.Int -> Map k a -> Map k a :=
-  fix deleteAt (i : GHC.Num.Int) (t : Map k a) : Map k a
-        := match t with
-           | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.deleteAt: index out of range")
-           | Bin _ kx x l r =>
-               let sizeL := size l in
-               match GHC.Base.compare i sizeL with
-               | Lt => balanceR kx x (deleteAt i l) r
-               | Gt => balanceL kx x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
-               | Eq => glue l r
-               end
-           end.
+Fixpoint deleteAt {k} {a} (i : GHC.Num.Int) (t : Map k a) : Map k a
+           := match t with
+              | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.deleteAt: index out of range")
+              | Bin _ kx x l r =>
+                  let sizeL := size l in
+                  match GHC.Base.compare i sizeL with
+                  | Lt => balanceR kx x (deleteAt i l) r
+                  | Gt => balanceL kx x l (deleteAt ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
+                  | Eq => glue l r
+                  end
+              end.
 
 Program Fixpoint link2 {k} {a} (arg_0__ arg_1__ : Map k a) {measure (Nat.add
                         (map_size arg_0__) (map_size arg_1__))} : Map k a
@@ -1583,19 +1566,18 @@ Program Fixpoint link2 {k} {a} (arg_0__ arg_1__ : Map k a) {measure (Nat.add
                       end.
 Solve Obligations with (termination_by_omega).
 
-Definition difference {k} {a} {b} `{GHC.Base.Ord k}
-   : Map k a -> Map k b -> Map k a :=
-  fix difference (arg_0__ : Map k a) (arg_1__ : Map k b) : Map k a
-        := match arg_0__, arg_1__ with
-           | Tip, _ => Tip
-           | t1, Tip => t1
-           | t1, Bin _ k _ l2 r2 =>
-               let 'pair l1 r1 := split k t1 in
-               let r1r2 := difference r1 r2 in
-               let l1l2 := difference l1 l2 in
-               if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool then t1 else
-               link2 l1l2 r1r2
-           end.
+Fixpoint difference {k} {a} {b} `{GHC.Base.Ord k} (arg_0__ : Map k a) (arg_1__
+                      : Map k b) : Map k a
+           := match arg_0__, arg_1__ with
+              | Tip, _ => Tip
+              | t1, Tip => t1
+              | t1, Bin _ k _ l2 r2 =>
+                  let 'pair l1 r1 := split k t1 in
+                  let r1r2 := difference r1 r2 in
+                  let l1l2 := difference l1 l2 in
+                  if (size l1l2 GHC.Num.+ size r1r2) GHC.Base.== size t1 : bool then t1 else
+                  link2 l1l2 r1r2
+              end.
 
 Definition op_zrzr__ {k} {a} {b} `{GHC.Base.Ord k}
    : Map k a -> Map k b -> Map k a :=
@@ -1605,20 +1587,20 @@ Notation "'_\\_'" := (op_zrzr__).
 
 Infix "\\" := (_\\_) (at level 99).
 
-Definition filterWithKey {k} {a} : (k -> a -> bool) -> Map k a -> Map k a :=
-  fix filterWithKey (arg_0__ : (k -> a -> bool)) (arg_1__ : Map k a) : Map k a
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | p, (Bin _ kx x l r as t) =>
-               let pr := filterWithKey p r in
-               let pl := filterWithKey p l in
-               if p kx x : bool
-               then if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
-                            (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
-                    then t
-                    else link kx x pl pr else
-               link2 pl pr
-           end.
+Fixpoint filterWithKey {k} {a} (arg_0__ : (k -> a -> bool)) (arg_1__ : Map k a)
+           : Map k a
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | p, (Bin _ kx x l r as t) =>
+                  let pr := filterWithKey p r in
+                  let pl := filterWithKey p l in
+                  if p kx x : bool
+                  then if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
+                               (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
+                       then t
+                       else link kx x pl pr else
+                  link2 pl pr
+              end.
 
 Definition filter {a} {k} : (a -> bool) -> Map k a -> Map k a :=
   fun p m =>
@@ -1633,25 +1615,23 @@ Definition filterMissing {f} {k} {x} `{GHC.Base.Applicative f}
     Mk_WhenMissing (fun m => GHC.Base.pure (filterWithKey f m)) (fun k x =>
                       GHC.Base.pure (if f k x : bool then Some x else None)).
 
-Definition filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f}
-   : (k -> a -> f bool) -> Map k a -> f (Map k a) :=
-  fix filterWithKeyA (arg_0__ : (k -> a -> f bool)) (arg_1__ : Map k a) : f (Map k
-                                                                             a)
-        := match arg_0__, arg_1__ with
-           | _, Tip => GHC.Base.pure Tip
-           | p, (Bin _ kx x l r as t) =>
-               let combine :=
-                 fun arg_3__ arg_4__ arg_5__ =>
-                   match arg_3__, arg_4__, arg_5__ with
-                   | true, pl, pr =>
-                       if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
-                               (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
-                       then t else
-                       link kx x pl pr
-                   | false, pl, pr => link2 pl pr
-                   end in
-               GHC.Base.liftA3 combine (p kx x) (filterWithKeyA p l) (filterWithKeyA p r)
-           end.
+Fixpoint filterWithKeyA {f} {k} {a} `{GHC.Base.Applicative f} (arg_0__
+                          : (k -> a -> f bool)) (arg_1__ : Map k a) : f (Map k a)
+           := match arg_0__, arg_1__ with
+              | _, Tip => GHC.Base.pure Tip
+              | p, (Bin _ kx x l r as t) =>
+                  let combine :=
+                    fun arg_3__ arg_4__ arg_5__ =>
+                      match arg_3__, arg_4__, arg_5__ with
+                      | true, pl, pr =>
+                          if andb (Utils.Containers.Internal.PtrEquality.ptrEq pl l)
+                                  (Utils.Containers.Internal.PtrEquality.ptrEq pr r) : bool
+                          then t else
+                          link kx x pl pr
+                      | false, pl, pr => link2 pl pr
+                      end in
+                  GHC.Base.liftA3 combine (p kx x) (filterWithKeyA p l) (filterWithKeyA p r)
+              end.
 
 Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
    : (k -> x -> f bool) -> WhenMissing f k x x :=
@@ -1659,57 +1639,52 @@ Definition filterAMissing {f} {k} {x} `{GHC.Base.Applicative f}
     Mk_WhenMissing (fun m => filterWithKeyA f m) (fun k x =>
                       boolITE None (Some x) Data.Functor.<$> f k x).
 
-Definition intersection {k} {a} {b} `{GHC.Base.Ord k}
-   : Map k a -> Map k b -> Map k a :=
-  fix intersection (arg_0__ : Map k a) (arg_1__ : Map k b) : Map k a
-        := match arg_0__, arg_1__ with
-           | Tip, _ => Tip
-           | _, Tip => Tip
-           | (Bin _ k x l1 r1 as t1), t2 =>
-               let 'pair (pair l2 mb) r2 := splitMember k t2 in
-               let l1l2 := intersection l1 l2 in
-               let r1r2 := intersection r1 r2 in
-               if mb : bool
-               then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
-                            (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
-                    then t1
-                    else link k x l1l2 r1r2 else
-               link2 l1l2 r1r2
-           end.
+Fixpoint intersection {k} {a} {b} `{GHC.Base.Ord k} (arg_0__ : Map k a) (arg_1__
+                        : Map k b) : Map k a
+           := match arg_0__, arg_1__ with
+              | Tip, _ => Tip
+              | _, Tip => Tip
+              | (Bin _ k x l1 r1 as t1), t2 =>
+                  let 'pair (pair l2 mb) r2 := splitMember k t2 in
+                  let l1l2 := intersection l1 l2 in
+                  let r1r2 := intersection r1 r2 in
+                  if mb : bool
+                  then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
+                               (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
+                       then t1
+                       else link k x l1l2 r1r2 else
+                  link2 l1l2 r1r2
+              end.
 
-Definition intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k}
-   : (a -> b -> c) -> Map k a -> Map k b -> Map k c :=
-  fix intersectionWith (arg_0__ : (a -> b -> c)) (arg_1__ : Map k a) (arg_2__
-                         : Map k b) : Map k c
-        := match arg_0__, arg_1__, arg_2__ with
-           | _f, Tip, _ => Tip
-           | _f, _, Tip => Tip
-           | f, Bin _ k x1 l1 r1, t2 =>
-               let 'pair (pair l2 mb) r2 := splitLookup k t2 in
-               let l1l2 := intersectionWith f l1 l2 in
-               let r1r2 := intersectionWith f r1 r2 in
-               match mb with
-               | Some x2 => link k (f x1 x2) l1l2 r1r2
-               | None => link2 l1l2 r1r2
-               end
-           end.
+Fixpoint intersectionWith {k} {a} {b} {c} `{GHC.Base.Ord k} (arg_0__
+                            : (a -> b -> c)) (arg_1__ : Map k a) (arg_2__ : Map k b) : Map k c
+           := match arg_0__, arg_1__, arg_2__ with
+              | _f, Tip, _ => Tip
+              | _f, _, Tip => Tip
+              | f, Bin _ k x1 l1 r1, t2 =>
+                  let 'pair (pair l2 mb) r2 := splitLookup k t2 in
+                  let l1l2 := intersectionWith f l1 l2 in
+                  let r1r2 := intersectionWith f r1 r2 in
+                  match mb with
+                  | Some x2 => link k (f x1 x2) l1l2 r1r2
+                  | None => link2 l1l2 r1r2
+                  end
+              end.
 
-Definition intersectionWithKey {k} {a} {b} {c} `{GHC.Base.Ord k}
-   : (k -> a -> b -> c) -> Map k a -> Map k b -> Map k c :=
-  fix intersectionWithKey (arg_0__ : (k -> a -> b -> c)) (arg_1__ : Map k a)
-                          (arg_2__ : Map k b) : Map k c
-        := match arg_0__, arg_1__, arg_2__ with
-           | _f, Tip, _ => Tip
-           | _f, _, Tip => Tip
-           | f, Bin _ k x1 l1 r1, t2 =>
-               let 'pair (pair l2 mb) r2 := splitLookup k t2 in
-               let l1l2 := intersectionWithKey f l1 l2 in
-               let r1r2 := intersectionWithKey f r1 r2 in
-               match mb with
-               | Some x2 => link k (f k x1 x2) l1l2 r1r2
-               | None => link2 l1l2 r1r2
-               end
-           end.
+Fixpoint intersectionWithKey {k} {a} {b} {c} `{GHC.Base.Ord k} (arg_0__
+                               : (k -> a -> b -> c)) (arg_1__ : Map k a) (arg_2__ : Map k b) : Map k c
+           := match arg_0__, arg_1__, arg_2__ with
+              | _f, Tip, _ => Tip
+              | _f, _, Tip => Tip
+              | f, Bin _ k x1 l1 r1, t2 =>
+                  let 'pair (pair l2 mb) r2 := splitLookup k t2 in
+                  let l1l2 := intersectionWithKey f l1 l2 in
+                  let r1r2 := intersectionWithKey f r1 r2 in
+                  match mb with
+                  | Some x2 => link k (f k x1 x2) l1l2 r1r2
+                  | None => link2 l1l2 r1r2
+                  end
+              end.
 
 Definition mapEitherWithKey {k} {a} {b} {c}
    : (k -> a -> Data.Either.Either b c) -> Map k a -> (Map k b * Map k c)%type :=
@@ -1735,18 +1710,16 @@ Definition mapEither {a} {b} {c} {k}
                         | _, x => f x
                         end) m.
 
-Definition mapMaybeWithKey {k} {a} {b}
-   : (k -> a -> option b) -> Map k a -> Map k b :=
-  fix mapMaybeWithKey (arg_0__ : (k -> a -> option b)) (arg_1__ : Map k a) : Map k
-                                                                             b
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | f, Bin _ kx x l r =>
-               match f kx x with
-               | Some y => link kx y (mapMaybeWithKey f l) (mapMaybeWithKey f r)
-               | None => link2 (mapMaybeWithKey f l) (mapMaybeWithKey f r)
-               end
-           end.
+Fixpoint mapMaybeWithKey {k} {a} {b} (arg_0__ : (k -> a -> option b)) (arg_1__
+                           : Map k a) : Map k b
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | f, Bin _ kx x l r =>
+                  match f kx x with
+                  | Some y => link kx y (mapMaybeWithKey f l) (mapMaybeWithKey f r)
+                  | None => link2 (mapMaybeWithKey f l) (mapMaybeWithKey f r)
+                  end
+              end.
 
 Definition mapMaybe {a} {b} {k} : (a -> option b) -> Map k a -> Map k b :=
   fun f =>
@@ -1854,24 +1827,22 @@ Definition partition {a} {k}
                         | _, x => p x
                         end) m.
 
-Definition restrictKeys {k} {a} `{GHC.Base.Ord k}
-   : Map k a -> Data.Set.Internal.Set_ k -> Map k a :=
-  fix restrictKeys (arg_0__ : Map k a) (arg_1__ : Data.Set.Internal.Set_ k) : Map
-                                                                              k a
-        := match arg_0__, arg_1__ with
-           | Tip, _ => Tip
-           | _, Data.Set.Internal.Tip => Tip
-           | (Bin _ k x l1 r1 as m), s =>
-               let 'pair (pair l2 b) r2 := Data.Set.Internal.splitMember k s in
-               let l1l2 := restrictKeys l1 l2 in
-               let r1r2 := restrictKeys r1 r2 in
-               if b : bool
-               then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
-                            (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
-                    then m
-                    else link k x l1l2 r1r2 else
-               link2 l1l2 r1r2
-           end.
+Fixpoint restrictKeys {k} {a} `{GHC.Base.Ord k} (arg_0__ : Map k a) (arg_1__
+                        : Data.Set.Internal.Set_ k) : Map k a
+           := match arg_0__, arg_1__ with
+              | Tip, _ => Tip
+              | _, Data.Set.Internal.Tip => Tip
+              | (Bin _ k x l1 r1 as m), s =>
+                  let 'pair (pair l2 b) r2 := Data.Set.Internal.splitMember k s in
+                  let l1l2 := restrictKeys l1 l2 in
+                  let r1r2 := restrictKeys r1 r2 in
+                  if b : bool
+                  then if andb (Utils.Containers.Internal.PtrEquality.ptrEq l1l2 l1)
+                               (Utils.Containers.Internal.PtrEquality.ptrEq r1r2 r1) : bool
+                       then m
+                       else link k x l1l2 r1r2 else
+                  link2 l1l2 r1r2
+              end.
 
 Definition traverseMaybeWithKey {f} {k} {a} {b} `{GHC.Base.Applicative f}
    : (k -> a -> f (option b)) -> Map k a -> f (Map k b) :=
@@ -1895,22 +1866,20 @@ Definition traverseMaybeMissing {f} {k} {x} {y} `{GHC.Base.Applicative f}
    : (k -> x -> f (option y)) -> WhenMissing f k x y :=
   fun f => Mk_WhenMissing (traverseMaybeWithKey f) f.
 
-Definition withoutKeys {k} {a} `{GHC.Base.Ord k}
-   : Map k a -> Data.Set.Internal.Set_ k -> Map k a :=
-  fix withoutKeys (arg_0__ : Map k a) (arg_1__ : Data.Set.Internal.Set_ k) : Map k
-                                                                             a
-        := match arg_0__, arg_1__ with
-           | Tip, _ => Tip
-           | m, Data.Set.Internal.Tip => m
-           | m, Data.Set.Internal.Bin _ k ls rs =>
-               let 'pair (pair lm b) rm := splitMember k m in
-               let rm' := withoutKeys rm rs in
-               let lm' := withoutKeys lm ls in
-               if andb (negb b) (andb (Utils.Containers.Internal.PtrEquality.ptrEq lm' lm)
-                                      (Utils.Containers.Internal.PtrEquality.ptrEq rm' rm)) : bool
-               then m else
-               link2 lm' rm'
-           end.
+Fixpoint withoutKeys {k} {a} `{GHC.Base.Ord k} (arg_0__ : Map k a) (arg_1__
+                       : Data.Set.Internal.Set_ k) : Map k a
+           := match arg_0__, arg_1__ with
+              | Tip, _ => Tip
+              | m, Data.Set.Internal.Tip => m
+              | m, Data.Set.Internal.Bin _ k ls rs =>
+                  let 'pair (pair lm b) rm := splitMember k m in
+                  let rm' := withoutKeys rm rs in
+                  let lm' := withoutKeys lm ls in
+                  if andb (negb b) (andb (Utils.Containers.Internal.PtrEquality.ptrEq lm' lm)
+                                         (Utils.Containers.Internal.PtrEquality.ptrEq rm' rm)) : bool
+                  then m else
+                  link2 lm' rm'
+              end.
 
 Definition maxViewWithKey {k} {a}
    : Map k a -> option ((k * a)%type * Map k a)%type :=
@@ -1928,20 +1897,18 @@ Definition maxView {k} {a} : Map k a -> option (a * Map k a)%type :=
     | Some (pair (pair _ x) t') => Some (pair x t')
     end.
 
-Definition updateAt {k} {a}
-   : (k -> a -> option a) -> GHC.Num.Int -> Map k a -> Map k a :=
-  fix updateAt (f : (k -> a -> option a)) (i : GHC.Num.Int) (t : Map k a) : Map k
-                                                                            a
-        := match t with
-           | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.updateAt: index out of range")
-           | Bin sx kx x l r =>
-               let sizeL := size l in
-               match GHC.Base.compare i sizeL with
-               | Lt => balanceR kx x (updateAt f i l) r
-               | Gt => balanceL kx x l (updateAt f ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
-               | Eq => match f kx x with | Some x' => Bin sx kx x' l r | None => glue l r end
-               end
-           end.
+Fixpoint updateAt {k} {a} (f : (k -> a -> option a)) (i : GHC.Num.Int) (t
+                    : Map k a) : Map k a
+           := match t with
+              | Tip => GHC.Err.error (GHC.Base.hs_string__ "Map.updateAt: index out of range")
+              | Bin sx kx x l r =>
+                  let sizeL := size l in
+                  match GHC.Base.compare i sizeL with
+                  | Lt => balanceR kx x (updateAt f i l) r
+                  | Gt => balanceL kx x l (updateAt f ((i GHC.Num.- sizeL) GHC.Num.- #1) r)
+                  | Eq => match f kx x with | Some x' => Bin sx kx x' l r | None => glue l r end
+                  end
+              end.
 
 Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
    : (k -> a -> option a) -> k -> Map k a -> (option a * Map k a)%type :=
@@ -1969,19 +1936,17 @@ Definition updateLookupWithKey {k} {a} `{GHC.Base.Ord k}
                end in
     id GHC.Base.∘ go f0 k0.
 
-Definition updateMaxWithKey {k} {a}
-   : (k -> a -> option a) -> Map k a -> Map k a :=
-  fix updateMaxWithKey (arg_0__ : (k -> a -> option a)) (arg_1__ : Map k a) : Map
-                                                                              k a
-        := match arg_0__, arg_1__ with
-           | _, Tip => Tip
-           | f, Bin sx kx x l Tip =>
-               match f kx x with
-               | None => l
-               | Some x' => Bin sx kx x' l Tip
-               end
-           | f, Bin _ kx x l r => balanceL kx x l (updateMaxWithKey f r)
-           end.
+Fixpoint updateMaxWithKey {k} {a} (arg_0__ : (k -> a -> option a)) (arg_1__
+                            : Map k a) : Map k a
+           := match arg_0__, arg_1__ with
+              | _, Tip => Tip
+              | f, Bin sx kx x l Tip =>
+                  match f kx x with
+                  | None => l
+                  | Some x' => Bin sx kx x' l Tip
+                  end
+              | f, Bin _ kx x l r => balanceL kx x l (updateMaxWithKey f r)
+              end.
 
 Definition updateMax {a} {k} : (a -> option a) -> Map k a -> Map k a :=
   fun f m =>

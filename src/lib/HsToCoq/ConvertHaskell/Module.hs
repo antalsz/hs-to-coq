@@ -111,7 +111,7 @@ convertHsGroup HsGroup{..} = do
                                          else DefinitionSentence def ] ++
                                 [ NotationSentence n | n <- buildInfixNotations sigs (cdef^.convDefName) ]
                    )
-                   (\_ _ ->  -- TODO add a warming that the top-level pattern was skipped
+                   (\_ _ ->  -- TODO add a warning that the top-level pattern was skipped
                       pure (Nothing,[]) --convUnsupported' "top-level pattern bindings"
                            )
                    (\ax   ty  -> pure (Just ax, [typedAxiom ax ty]))

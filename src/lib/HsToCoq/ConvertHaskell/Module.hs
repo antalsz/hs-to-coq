@@ -66,6 +66,12 @@ data ConvertedModuleDeclarations =
                               }
   deriving (Eq, Ord, Show, Data)
 
+annotateFixpoint :: [Binder] -> (Maybe Term) -> [Binder]
+annotateFixpoint [] _ = []
+annotateFixpoint ((Inferred e n):tl) (Just (Arrow x y)) = (Typed Generalizable e (fromList [n]) x):(annotateFixpoint tl (Just y))
+annotateFixpoint (a:tl) (Just (Arrow _ y)) = a:(annotateFixpoint tl (Just y))
+annotateFixpoint x _ = x
+
 convertHsGroup :: ConversionMonad r m => HsGroup GhcRn -> m ConvertedModuleDeclarations
 convertHsGroup HsGroup{..} = do
   mod                 <- view currentModule
@@ -105,7 +111,7 @@ convertHsGroup HsGroup{..} = do
                              in pure $
                                 [ case (cdef^.convDefBody) of
                                     Fix (FixOne (FixBody qual bind ord mterm term))
-                                      -> FixpointSentence (Fixpoint [(FixBody qual (fromList $ (cdef^.convDefArgs) ++ (toList (bind))) ord mterm term)] [])
+                                      -> FixpointSentence (Fixpoint [(FixBody qual (fromList $ (cdef^.convDefArgs) ++ annotateFixpoint (toList (bind)) (cdef^.convDefType)) ord mterm term)] [])
                                     _ -> if useProgram
                                          then ProgramSentence (DefinitionSentence def) obl
                                          else DefinitionSentence def ] ++

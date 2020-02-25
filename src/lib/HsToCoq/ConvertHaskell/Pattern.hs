@@ -257,14 +257,18 @@ mutExcl (ConApp con1 args1) (ConApp con2 args2)
 mutExcl _ _ = False
 
 -- A simple completeness checker. Traverses the list of patterns, and keep
--- tracks of all pattern summaries that we still need to match
--- Internally, we use OtherSummary as “everything yet has to match”
+-- tracks of all pattern summaries that we still need to match Internally, we
+-- use OtherSummary as “everything yet has to match”
 type Missing = [PatternSummary]
 type Missings = [Missing]
 
 isCompleteMultiPattern :: forall m. TypeInfoMonad m => [MultPattern] -> m Bool
-isCompleteMultiPattern [] = pure True -- Maybe an empty data type?
-isCompleteMultiPattern mpats = null <$> goGroup mpats
+-- Maybe an empty data type?
+isCompleteMultiPattern [] = pure True
+-- Reverse the list of patterns when checking for completeness. In Haskell more
+-- general patterns follow specialized patterns and in particular the catch-all
+-- clause is always last.
+isCompleteMultiPattern mpats = null <$> goGroup (reverse mpats)
   where
     -- Initially, we miss everything
     initMissings = [[]]

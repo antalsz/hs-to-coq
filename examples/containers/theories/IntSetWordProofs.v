@@ -4919,7 +4919,7 @@ Proof.
   rewrite foldlBits_eq at 1. unfold foldlBits_go, proj1_sig.
   unfoldMethods. Int_Word_N.
   replace (wordToN bm =? Z.to_N 0)%N with false
-    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; zify; rewrite Z2N.id; omega).
+    by (symmetry; apply N.eqb_neq; unfold isBitMask in *; lia).
   (* eek *)
   replace (Sumbool.sumbool_of_bool false) with (@right (false = true) (false = false) (@eq_refl bool false))
     by reflexivity.
@@ -6404,7 +6404,7 @@ Module IntSetFSet <: WSfun(Int_as_OT) <: WS <: Sfun(Int_as_OT) <: S.
   Definition filter : (elt -> bool) -> t -> t.
     refine (fun p ws =>
        s <-- ws;;
-       pack (filter p s) _).
+       pack (Data.IntSet.InternalWord.filter p s) _).
     apply filter_WF; assumption.
   Defined.
 

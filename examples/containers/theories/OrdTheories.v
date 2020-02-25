@@ -44,7 +44,7 @@ Module OrdTheories(E: OrderedType).
   Proof.
     rewrite /_GHC.Base.<_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /ot_compare.
-    do 2 destruct_match=>//; constructor; auto.
+    do 2 destruct_match=>//; constructor; auto with ordered_type.
   Qed.
 
   Lemma elt_leP { e1 e2 } : reflect (OrdFacts.TO.le e1 e2) (e1 GHC.Base.<= e2).
@@ -60,7 +60,7 @@ Module OrdTheories(E: OrderedType).
   Proof.
     rewrite /_GHC.Base.>_ /Ord_t /ord_default /=.
     rewrite /_GHC.Base.==_ /Eq_comparison___ /= /eq_comparison /ot_compare.
-    do 2 destruct_match=>//; constructor; auto.
+    do 2 destruct_match=>//; constructor; auto with ordered_type.
   Qed.
 
   Lemma elt_geP { e1 e2 } : reflect (OrdFacts.TO.le e2 e1) (e1 GHC.Base.>= e2).
@@ -75,7 +75,7 @@ Module OrdTheories(E: OrderedType).
   Lemma elt_compare_ltP {e1 e2} :
     reflect (E.lt e1 e2) (eq_comparison (compare e1 e2) Lt).
   Proof.
-    rewrite_compare_e; destruct_match; constructor; auto.
+    rewrite_compare_e; destruct_match; constructor; auto with ordered_type.
   Qed.
 
   Lemma elt_compare_lt'P {e1 e2} :
@@ -90,7 +90,7 @@ Module OrdTheories(E: OrderedType).
   Lemma elt_compare_gtP {e1 e2} :
     reflect (E.lt e2 e1) (eq_comparison (compare e1 e2) Gt).
   Proof.
-    rewrite_compare_e; destruct_match; constructor; auto.
+    rewrite_compare_e; destruct_match; constructor; auto with ordered_type.
   Qed.
 
   Lemma elt_compare_gt'P {e1 e2} :
@@ -105,7 +105,7 @@ Module OrdTheories(E: OrderedType).
   Lemma elt_compare_eqP {e1 e2} :
     reflect (E.eq e1 e2) (eq_comparison (compare e1 e2) Eq).
   Proof.
-    rewrite_compare_e; destruct_match; constructor; auto.
+    rewrite_compare_e; destruct_match; constructor; auto with ordered_type.
   Qed.
 
   Lemma elt_compare_eq'P {e1 e2} :
@@ -178,9 +178,9 @@ Module OrdTheories(E: OrderedType).
   Proof.
     constructor.
     - rewrite /ssrbool.reflexive. intros.
-      apply /elt_eqP. auto.
+      apply /elt_eqP. auto with ordered_type.
     - rewrite /ssrbool.symmetric. intros x y.
-      apply /elt_eqP. destruct_match; move: Heq; move /elt_eqP; auto.
+      apply /elt_eqP. destruct_match; move: Heq; move /elt_eqP; auto with ordered_type.
     - rewrite /ssrbool.transitive. intros y x z.
       move /elt_eqP => H1 /elt_eqP H2. apply /elt_eqP; OrdFacts.order.
     - intros x y. rewrite /_GHC.Base./=_ /Eq_t /=.

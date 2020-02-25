@@ -45,6 +45,7 @@ Next Obligation.
     apply N.eqb_neq in e0.
     pose proof (N.mod_upper_bound x 2).
     pose proof (N.div_mod' x 2).
+    remember (x mod 2) as y.
     lia.
   * rewrite N.eqb_neq in *.
     rewrite memo_spec by (apply N.div_lt; lia).

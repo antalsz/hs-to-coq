@@ -66,8 +66,7 @@ Proof.
       simpl_options.
 
       destruct_ptrEq.
-      - destruct (sem s1 y) eqn:?; simpl isSome in *; try lia.
-        solve_Desc e.
+      - destruct (sem s1 y) eqn:?; simpl isSome in *; try lia; solve_Desc e.
       - destruct (sem s1 y); simpl isSome in *;
         applyDesc e (@balanceL_Desc e a);
         cbv match in *;

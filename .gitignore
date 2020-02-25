@@ -13,6 +13,8 @@ cabal.project.local
 
 # Coq
 *.vo
+*.vos
+*.vok
 *.glob
 .*.aux
 *.v.d

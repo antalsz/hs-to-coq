@@ -52,9 +52,8 @@ jobs:
       # Coq
       - if ! [ -e $HOME/.opam/config ]; then opam init -j 2 -n -y; fi
       - opam repo add coq-released http://coq.inria.fr/opam/released || true
-      - opam list -i coq.8.10.2 --silent || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.10.2 ocamlfind.1.8.0 ; }
+      - opam list -i coq.8.11.0 --silent || { opam update && opam unpin coq && opam install -v -y -j 1  coq.8.11.0 ocamlfind.1.8.0 ; }
       - opam list -i coq-mathcomp-ssreflect --silent || opam install -y coq-mathcomp-ssreflect
-      - opam list -i coq-itree.3.0.0 --silent || opam install -y coq-itree.3.0.0
 
       # Dependencies
       - stack --no-terminal --install-ghc test --only-dependencies
@@ -112,7 +111,6 @@ jobs:
       - make -j2 -C examples/dlist
       - make -j2 -C examples/intervals
       - make -j2 -C examples/coinduction
-      - make -j2 -C examples/wc
 
   - name: tests and base tests
     script:

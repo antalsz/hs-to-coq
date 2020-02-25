@@ -7,6 +7,24 @@ Require Import Omega.
 
 Require Import Data.Bits.
 
+(** Copied from [Coq.ZArith.Zlogarithm]. *)
+Fixpoint Is_power (p:positive) : Prop :=
+  match p with
+    | xH => True
+    | xO q => Is_power q
+    | xI q => False
+  end.
+
+(** Copied from [Coq.ZArith.Zlogarithm]. *)
+Lemma Is_power_correct :
+  forall p:positive, Is_power p <-> (exists y : nat, p = shift_nat y 1).
+Proof.
+  split;
+    [ elim p;
+      [ simpl in |- *; tauto | simpl in |- *; intros; generalize (H H0); intro H1; elim H1; intros y0 Hy0; exists (S y0); rewrite Hy0; reflexivity | intro; exists 0%nat; reflexivity ]
+    | intros; elim H; intros; rewrite H0; elim x; intros; simpl in |- *; trivial ].
+Qed.
+
 Lemma Pos_popcount_pow2:
   forall n, Pos_popcount (Pos.pow 2 n) = 1%positive.
 Proof.

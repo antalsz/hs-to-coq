@@ -4,6 +4,8 @@ Require Import MapProofs.Bounds.
 Require Import MapProofs.MapFunctionProofs.
 Require Import MapProofs.ToListProofs.
 Require Import MapProofs.UnionIntersectDifferenceProofs.
+Require Import Data.Functor.Classes.
+Require Import Proofs.Data.Functor.Classes.
 (** ** [Maps]s with [WF] *)
 
 Definition WFMap  (e : Type) `{Ord e} (a: Type)  : Type := {m : Map e a | WF m}.
@@ -355,8 +357,6 @@ Qed.
 
 
 (** ** Verification of [Eq1] - NOT COMPLETE*)
-Require Import Data.Functor.Classes.
-Require Import Proofs.Data.Functor.Classes.
 Global Instance Eq1Laws_list: Eq1Laws list (@Eq_list).
 Proof.
   constructor.

@@ -3,6 +3,7 @@ Set Bullet Behavior "Strict Subproofs".
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
 Require Export MapProofs.PairTypeclass.
+Require Import Coq.Sorting.Sorted.
 
 Section WF_1.
 Context {e : Type} {a b : Type} {HEq : Eq_ e} {HOrd : Ord e} {HEqLaws : EqLaws e}  {HOrdLaws : OrdLaws e}.
@@ -387,7 +388,6 @@ Qed.
 
 (** *** Sortedness of [toList] *)
 
-Require Import Coq.Sorting.Sorted.
 Close Scope Z.
 
 (*Maps are sorted only by keys*)

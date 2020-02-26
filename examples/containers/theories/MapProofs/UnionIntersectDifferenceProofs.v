@@ -1,5 +1,6 @@
 Require Import MapProofs.Common.
 Set Bullet Behavior "Strict Subproofs".
+Require Proofs.Data.Foldable.
 Require Import MapProofs.Bounds.
 Require Import MapProofs.Tactics.
 Require Import MapProofs.InsertProofs.
@@ -138,8 +139,6 @@ Proof.
   - simpl. reflexivity.
   - simpl. rewrite IHl1. rewrite oro_assoc. reflexivity.
 Qed.
-
-Require Proofs.Data.Foldable.
 
 Lemma unions_Desc:
   forall (ss: list (Map e a)) lb ub,

@@ -11,6 +11,8 @@ Require Import Psatz.
 Require Import CustomTactics.
 Require Import SortedUtil.
 Require Import Coq.Classes.Morphisms. (* For [Proper] *)
+Require Import Coq.Wellfounded.Wellfounded.
+
 Set Bullet Behavior "Strict Subproofs".
 
 (** This file contains our specifications and proofs for [Data.Set]. The file
@@ -2552,9 +2554,6 @@ Proof.
   replace (2^1)%Z with 2%Z by reflexivity.
   apply Z_div_lt; lia.
 Qed.
-
-Require Import Coq.Wellfounded.Wellfounded.
-
 
 Lemma fromDistinctAscList_create_eq:
   forall i xs, (1 <= i)%Z ->
@@ -5234,13 +5233,13 @@ Module SetFSet (E : OrderedType) <: WSfun(E) <: WS <: Sfun(E) <: S.
   Program Definition fold : forall A : Type, (elt -> A -> A) -> t -> A -> A
     := fun a k s n => foldl (fun x e => k e x) n s.
 
-  Program Definition filter : (elt -> bool) -> t -> t := filter.
+  Program Definition filter : (elt -> bool) -> t -> t := Data.Set.Internal.filter.
   Next Obligation.
     destruct x0. simpl.
     eapply filter_Bounded with (ub := None) (lb := None); assumption.
   Qed.
 
-  Program Definition partition : (elt -> bool) -> t -> t * t := partition.
+  Program Definition partition : (elt -> bool) -> t -> t * t := Data.Set.Internal.partition.
   Next Obligation.
     destruct x0. simpl.
     eapply partition_Bounded with (ub := None) (lb := None); intuition.

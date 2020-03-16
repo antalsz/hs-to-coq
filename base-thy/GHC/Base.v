@@ -135,7 +135,7 @@ Proof. by elim: xs. Qed. (* ??? That works?! *)
 
 (** ** [Eq_] instances *)
 
-Class EqLaws (t : Type) `{Eq_ t} :=
+Polymorphic Cumulative Class EqLaws (t : Type) `{Eq_ t} :=
   { Eq_refl  : reflexive  _==_;
     Eq_sym   : symmetric  _==_;
     Eq_trans : transitive _==_;
@@ -332,13 +332,13 @@ Hint Rewrite @simpl_option_some_eq @simpl_option_none_eq
 
 (** ** [EqExact] **)
 
-Class EqExact (t : Type) `{EqLaws t} :=
+Polymorphic Cumulative Class EqExact (t : Type) `{EqLaws t} :=
   { Eq_eq : forall x y : t, reflect (x = y) (x == y) }.
 
 Theorem Neq_neq {t} `{EqExact t} (x y : t) : reflect (x <> y) (x /= y).
 Proof. by rewrite Neq_inv; case CMP: (x == y) => /=; move/Eq_eq in CMP; constructor. Qed.
 
-Lemma Build_EqLaws_reflect (t : Type) `{Eq_ t} :
+Polymorphic Lemma Build_EqLaws_reflect (t : Type) `{Eq_ t} :
   (forall x y : t, reflect (x = y) (x == y)) ->
   (forall x y, x == y = ~~ (x /= y))         ->
   EqLaws t.
@@ -489,25 +489,25 @@ Qed.
 
 (* -------------------------------------------------------------------- *)
 
-Class SemigroupLaws (t : Type) `{ Semigroup t } `{ EqLaws t } :=
+Polymorphic Cumulative Class SemigroupLaws (t : Type) `{ Semigroup t } `{ EqLaws t } :=
   { semigroup_assoc    : forall (x y z : t), ((x <<>> (y <<>> z)) == ((x <<>> y) <<>> z)) = true;
   }.
 
-Class MonoidLaws (t : Type) `{ Monoid t } `{SemigroupLaws t} `{ EqLaws t } :=
+Polymorphic Cumulative Class MonoidLaws (t : Type) `{ Monoid t } `{SemigroupLaws t} `{ EqLaws t } :=
   { monoid_left_id  : forall x, (mappend mempty x == x) = true;
     monoid_right_id : forall x, (mappend x mempty == x) = true;
     monoid_semigroup : forall x y, (mappend x y == (x <<>> y)) = true;
     monoid_mconcat  : forall x, (mconcat x == foldr mappend mempty x) = true
   }.
 
-Class FunctorLaws (t : Type -> Type) `{Functor t} :=
+Polymorphic Cumulative Class FunctorLaws (t : Type -> Type) `{Functor t} :=
     {
       functor_identity    : forall a (x: t a), fmap id x = x;
       functor_composition : forall a b c (f : a -> b) (g : b -> c) (x : t a),
           fmap g (fmap f x) = fmap (g ∘ f) x
     }.
 
-Class ApplicativeLaws (t : Type -> Type) `{!Functor t, !Applicative t, !FunctorLaws t} :=
+Polymorphic Cumulative Class ApplicativeLaws (t : Type -> Type) `{!Functor t, !Applicative t, !FunctorLaws t} :=
  { applicative_identity : forall a (v : t a), (pure id <*> v) = v;
    applicative_composition : forall a b c (u : t (b -> c)) (v : t (a -> b)) (w : t a),
      (pure _∘_ <*> u <*> v <*> w) = (u <*> (v <*> w));
@@ -522,7 +522,7 @@ Class ApplicativeLaws (t : Type -> Type) `{!Functor t, !Applicative t, !FunctorL
      (* free theorem *)
  }.
 
-Class MonadLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !FunctorLaws t, !ApplicativeLaws t} :=
+Polymorphic Cumulative Class MonadLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !FunctorLaws t, !ApplicativeLaws t} :=
   { monad_left_id : forall A B (a :A) (k : A -> t B), (return_ a >>= k)  =  (k a);
     monad_right_id : forall A (m : t A),  (m >>= return_)  =  m;
     monad_composition : forall A B C (m : t A) (k : A -> t B) (h : B -> t C),
@@ -771,3 +771,4 @@ Hint Rewrite orb_diag orb_false_r orb_true_r orb_false_l orb_true_l : hs_simpl.
 Hint Rewrite negb_involutive : hs_simpl.
 
 Hint Rewrite andb_true_iff orb_true_iff negb_true_iff negb_false_iff : hs_simpl.
+

@@ -4,7 +4,9 @@ Require Import GHC.Num.
 Export String.StringSyntax.
 Export Ascii.AsciiSyntax.
 
-Class Default (a :Type) := {
+Set Universe Polymorphism.
+
+Polymorphic Cumulative Class Default (a :Type) := {
   default : a
 }.
 
@@ -21,8 +23,6 @@ Instance default_pair {a}{b}`{Default a}`{Default b} : Default (a * b)%type :=
 Instance default_arr {a}{b} `{Default b} : Default (a -> b) := { default := fun x => default }.
 Instance default_option {a} : Default (option a) := { default := None }.
 Instance default_list {a} : Default (list a) := { default := nil } .
-
-
 
 (* The use of [Qed] is crucial, this way we cannot look through [error] in our proofs. *)
 Definition error {a} `{Default a} : String -> a.

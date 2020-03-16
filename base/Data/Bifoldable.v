@@ -23,6 +23,8 @@ Require GHC.Tuple.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
+Set Universe Polymorphism.
+
 (* Converted type declarations: *)
 
 Record Bifoldable__Dict p := Bifoldable__Dict_Build {

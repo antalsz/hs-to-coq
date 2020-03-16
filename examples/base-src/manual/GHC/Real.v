@@ -53,10 +53,10 @@ Definition numerator := QArith_base.Qnum.
 Definition denominator := QArith_base.Qden.
 
 
-Class Real a `{(Num a)} `{(Ord a)} := {
+Polymorphic Cumulative Class Real a `{(Num a)} `{(Ord a)} := {
   toRational : (a -> Rational) }.
 
-Class Integral a `{(Real a)} `{(Enum a)} := {
+Polymorphic Cumulative Class Integral a `{(Real a)} `{(Enum a)} := {
   div : (a -> (a -> a)) ;
   divMod : (a -> (a -> (a * a))) ;
   mod_ : (a -> (a -> a)) ;
@@ -65,7 +65,7 @@ Class Integral a `{(Real a)} `{(Enum a)} := {
   rem : (a -> (a -> a)) ;
   toInteger : (a -> Z) }.
 
-Class Fractional a `{((Num a))} := {
+Polymorphic Cumulative Class Fractional a `{((Num a))} := {
   op_zs__ : (a -> (a -> a)) ;
   fromRational : (Rational -> a) ;
   recip : (a -> a) }.
@@ -74,7 +74,7 @@ Infix "/" := (op_zs__) (left associativity, at level 40).
 
 Notation "'_/_'" := (op_zs__).
 
-Class RealFrac a `{(Real a)} `{(Fractional a)} := {
+Polymorphic Cumulative Class RealFrac a `{(Real a)} `{(Fractional a)} := {
   ceiling : (forall {b}, (forall `{((Integral b))}, (a -> b))) ;
   floor : (forall {b}, (forall `{((Integral b))}, (a -> b))) ;
   properFraction : (forall {b}, (forall `{((Integral b))}, (a -> (b * a)))) ;
@@ -88,7 +88,9 @@ Definition ratioPrec : Int := #7.
 
 Definition ratioPrec1 : Int := (ratioPrec + #1)%Z.
 
-Definition fromIntegral {a} {b} `{(Integral a)} `{(Num b)} : (a -> b) :=
+Set Printing Universes.
+
+Polymorphic Definition fromIntegral {a} {b} `{(Integral a)} `{(Num b)} : (a -> b) :=
   (fromInteger ∘ toInteger).
 
 Instance instance__Real_Int__72__ : (Real Int) := {

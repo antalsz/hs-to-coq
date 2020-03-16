@@ -29,9 +29,11 @@ Require GHC.Tuple.
 Import GHC.Base.Notations.
 Import GHC.Num.Notations.
 
+Set Universe Polymorphism.
+
 (* Converted type declarations: *)
 
-Record Foldable__Dict t := Foldable__Dict_Build {
+Polymorphic Cumulative Record Foldable__Dict t := Foldable__Dict_Build {
   fold__ : forall {m}, forall `{GHC.Base.Monoid m}, t m -> m ;
   foldMap__ : forall {m} {a}, forall `{GHC.Base.Monoid m}, (a -> m) -> t a -> m ;
   foldl__ : forall {b} {a}, (b -> a -> b) -> b -> t a -> b ;

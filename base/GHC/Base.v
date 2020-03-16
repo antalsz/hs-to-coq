@@ -19,19 +19,21 @@ Require GHC.Tuple.
 
 (* Converted type declarations: *)
 
-Record Semigroup__Dict a := Semigroup__Dict_Build {
+Set Printing Universes.
+
+Polymorphic Cumulative Record Semigroup__Dict a := Semigroup__Dict_Build {
   op_zlzlzgzg____ : a -> a -> a }.
 
-Definition Semigroup a :=
-  forall r__, (Semigroup__Dict a -> r__) -> r__.
+Polymorphic Definition Semigroup@{i} (a : Type@{i}) :=
+  forall (r__ : Type@{i}), (Semigroup__Dict a -> r__) -> r__.
 Existing Class Semigroup.
 
-Record Monoid__Dict a := Monoid__Dict_Build {
+Polymorphic Cumulative Record Monoid__Dict a := Monoid__Dict_Build {
   mappend__ : a -> a -> a ;
   mconcat__ : list a -> a ;
   mempty__ : a }.
 
-Definition op_zlzlzgzg__ `{g__0__ : Semigroup a} : a -> a -> a :=
+Polymorphic Definition op_zlzlzgzg__ `{g__0__ : Semigroup a} : a -> a -> a :=
   g__0__ _ (op_zlzlzgzg____ a).
 
 Notation "'_<<>>_'" := (op_zlzlzgzg__).
@@ -40,61 +42,61 @@ Infix "<<>>" := (_<<>>_) (at level 99).
 
 Inductive NonEmpty a : Type := | NEcons : a -> list a -> NonEmpty a.
 
-Definition Monoid a `{Semigroup a} :=
-  forall r__, (Monoid__Dict a -> r__) -> r__.
+Polymorphic Definition Monoid@{i} (a : Type@{i}) `{Semigroup a} :=
+  forall (r__ : Type@{i}), (Monoid__Dict a -> r__) -> r__.
 Existing Class Monoid.
 
-Definition mappend `{g__0__ : Monoid a} : a -> a -> a :=
+Polymorphic Definition mappend `{g__0__ : Monoid a} : a -> a -> a :=
   g__0__ _ (mappend__ a).
 
-Definition mconcat `{g__0__ : Monoid a} : list a -> a :=
+Polymorphic Definition mconcat `{g__0__ : Monoid a} : list a -> a :=
   g__0__ _ (mconcat__ a).
 
-Definition mempty `{g__0__ : Monoid a} : a :=
+Polymorphic Definition mempty `{g__0__ : Monoid a} : a :=
   g__0__ _ (mempty__ a).
 
-Record Functor__Dict f := Functor__Dict_Build {
+Polymorphic Cumulative Record Functor__Dict f := Functor__Dict_Build {
   fmap__ : forall {a} {b}, (a -> b) -> f a -> f b ;
   op_zlzd____ : forall {a} {b}, a -> f b -> f a }.
 
-Definition Functor f :=
+Polymorphic Definition Functor f :=
   forall r__, (Functor__Dict f -> r__) -> r__.
 Existing Class Functor.
 
-Record Applicative__Dict f := Applicative__Dict_Build {
-  liftA2__ : forall {a} {b} {c}, (a -> b -> c) -> f a -> f b -> f c ;
-  op_zlztzg____ : forall {a} {b}, f (a -> b) -> f a -> f b ;
-  op_ztzg____ : forall {a} {b}, f a -> f b -> f b ;
-  pure__ : forall {a}, a -> f a }.
+Polymorphic Cumulative Record Applicative__Dict@{i j p q m} (f : Type@{i} -> Type@{j}) := Applicative__Dict_Build {
+  liftA2__ : forall {a : Type@{p}} {b : Type@{q}} {c : Type@{m}}, (a -> b -> c) -> f a -> f b -> f c ;
+  op_zlztzg____ : forall {a : Type@{p}} {b : Type@{m}}, f (a -> b) -> f a -> f b ;
+  op_ztzg____ : forall {a : Type@{p}} {b : Type@{m}}, f a -> f b -> f b ;
+  pure__ : forall {a : Type@{m}}, a -> f a }.
 
-Definition fmap `{g__0__ : Functor f}
+Polymorphic Definition fmap `{g__0__ : Functor f}
    : forall {a} {b}, (a -> b) -> f a -> f b :=
   g__0__ _ (fmap__ f).
 
-Definition op_zlzd__ `{g__0__ : Functor f} : forall {a} {b}, a -> f b -> f a :=
+Polymorphic Definition op_zlzd__ `{g__0__ : Functor f} : forall {a} {b}, a -> f b -> f a :=
   g__0__ _ (op_zlzd____ f).
 
 Notation "'_<$_'" := (op_zlzd__).
 
 Infix "<$" := (_<$_) (at level 99).
 
-Definition Applicative f `{Functor f} :=
+Polymorphic Definition Applicative f `{Functor f} :=
   forall r__, (Applicative__Dict f -> r__) -> r__.
 Existing Class Applicative.
 
-Definition liftA2 `{g__0__ : Applicative f}
+Polymorphic Definition liftA2 `{g__0__ : Applicative f}
    : forall {a} {b} {c}, (a -> b -> c) -> f a -> f b -> f c :=
   g__0__ _ (liftA2__ f).
 
-Definition op_zlztzg__ `{g__0__ : Applicative f}
+Polymorphic Definition op_zlztzg__ `{g__0__ : Applicative f}
    : forall {a} {b}, f (a -> b) -> f a -> f b :=
   g__0__ _ (op_zlztzg____ f).
 
-Definition op_ztzg__ `{g__0__ : Applicative f}
+Polymorphic Definition op_ztzg__ `{g__0__ : Applicative f}
    : forall {a} {b}, f a -> f b -> f b :=
   g__0__ _ (op_ztzg____ f).
 
-Definition pure `{g__0__ : Applicative f} : forall {a}, a -> f a :=
+Polymorphic Definition pure `{g__0__ : Applicative f} : forall {a}, a -> f a :=
   g__0__ _ (pure__ f).
 
 Notation "'_<*>_'" := (op_zlztzg__).
@@ -105,23 +107,23 @@ Notation "'_*>_'" := (op_ztzg__).
 
 Infix "*>" := (_*>_) (at level 99).
 
-Record Monad__Dict m := Monad__Dict_Build {
+Polymorphic Cumulative Record Monad__Dict m := Monad__Dict_Build {
   op_zgzg____ : forall {a} {b}, m a -> m b -> m b ;
   op_zgzgze____ : forall {a} {b}, m a -> (a -> m b) -> m b ;
   return___ : forall {a}, a -> m a }.
 
-Definition Monad m `{Applicative m} :=
+Polymorphic Definition Monad m `{Applicative m} :=
   forall r__, (Monad__Dict m -> r__) -> r__.
 Existing Class Monad.
 
-Definition op_zgzg__ `{g__0__ : Monad m} : forall {a} {b}, m a -> m b -> m b :=
+Polymorphic Definition op_zgzg__ `{g__0__ : Monad m} : forall {a} {b}, m a -> m b -> m b :=
   g__0__ _ (op_zgzg____ m).
 
-Definition op_zgzgze__ `{g__0__ : Monad m}
+Polymorphic Definition op_zgzgze__ `{g__0__ : Monad m}
    : forall {a} {b}, m a -> (a -> m b) -> m b :=
   g__0__ _ (op_zgzgze____ m).
 
-Definition return_ `{g__0__ : Monad m} : forall {a}, a -> m a :=
+Polymorphic Definition return_ `{g__0__ : Monad m} : forall {a}, a -> m a :=
   g__0__ _ (return___ m).
 
 Notation "'_>>_'" := (op_zgzg__).
@@ -224,25 +226,25 @@ Arguments Synonym {A}%type _uniq%type x%type.
 (*********** built in classes Eq & Ord **********************)
 
 (* Don't clash with Eq constructor for the comparison type. *)
-Record Eq___Dict a := Eq___Dict_Build {
+Polymorphic Cumulative Record Eq___Dict a := Eq___Dict_Build {
   op_zeze____ : (a -> (a -> bool)) ;
   op_zsze____ : (a -> (a -> bool)) }.
 
-Definition Eq_ a := forall r, (Eq___Dict a -> r) -> r.
+Polymorphic Definition Eq_@{i} (a : Type@{i}) := forall (r : Type@{i}), (Eq___Dict a -> r) -> r.
 Existing Class Eq_.
 
-Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
-Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
+Polymorphic Definition op_zeze__ {a} {g : Eq_ a} := g _ (op_zeze____ _).
+Polymorphic Definition op_zsze__ {a} {g : Eq_ a} := g _ (op_zsze____ _).
 
 Notation "'_/=_'" := (op_zsze__).
 Infix "/=" := (op_zsze__) (no associativity, at level 70).
 Notation "'_==_'" := (op_zeze__).
 Infix "==" := (op_zeze__) (no associativity, at level 70).
 
-Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
+Polymorphic Definition eq_default {a} (eq : a -> a -> bool) : Eq_ a :=
   fun _ k => k {|op_zeze____ := eq; op_zsze____ := fun x y => negb (eq x y) |}.
 
-Record Ord__Dict a := Ord__Dict_Build {
+Polymorphic Cumulative Record Ord__Dict a := Ord__Dict_Build {
   op_zl____ : a -> a -> bool ;
   op_zlze____ : a -> a -> bool ;
   op_zg____ : a -> a -> bool ;
@@ -251,30 +253,29 @@ Record Ord__Dict a := Ord__Dict_Build {
   max__ : a -> a -> a ;
   min__ : a -> a -> a }.
 
-Definition Ord a `{Eq_ a} :=
-  forall r, (Ord__Dict a -> r) -> r.
-
+Polymorphic Definition Ord@{i} (a : Type@{i}) `{Eq_ a} :=
+  forall (r : Type@{i}), (Ord__Dict a -> r) -> r.
 Existing Class Ord.
 
-Definition op_zl__ `{g : Ord a} : a -> a -> bool :=
+Polymorphic Definition op_zl__ `{g : Ord a} : a -> a -> bool :=
   g _ (op_zl____ a).
 
-Definition op_zlze__ `{g : Ord a} : a -> a -> bool :=
+Polymorphic Definition op_zlze__ `{g : Ord a} : a -> a -> bool :=
   g _ (op_zlze____ a).
 
-Definition op_zg__ `{g : Ord a} : a -> a -> bool :=
+Polymorphic Definition op_zg__ `{g : Ord a} : a -> a -> bool :=
   g _ (op_zg____ a).
 
-Definition op_zgze__ `{g : Ord a} : a -> a -> bool :=
+Polymorphic Definition op_zgze__ `{g : Ord a} : a -> a -> bool :=
   g _ (op_zgze____ a).
 
-Definition compare `{g : Ord a} : a -> a -> comparison :=
+Polymorphic Definition compare `{g : Ord a} : a -> a -> comparison :=
   g _ (compare__ a).
 
-Definition max `{g : Ord a} : a -> a -> a :=
+Polymorphic Definition max `{g : Ord a} : a -> a -> a :=
   g _ (max__ a).
 
-Definition min `{g : Ord a} : a -> a -> a :=
+Polymorphic Definition min `{g : Ord a} : a -> a -> a :=
   g _ (min__ a).
 
 Notation "'_<_'" := (op_zl__).
@@ -414,7 +415,7 @@ Definition compare_comparison  (x : comparison) (y: comparison) :=
   | Gt, Gt => Eq
 end.
 
-Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
+Polymorphic Definition ord_default {a} (comp : a -> a -> comparison) `{Eq_ a} : Ord a :=
   fun _ k => k (Ord__Dict_Build _
   (fun x y => (comp x y) == Lt)
   ( fun x y => negb ((comp y x) == Lt))
@@ -449,16 +450,16 @@ Definition compare_pair {t1} {t2} `{Ord t1} `{Ord t2} (a b : (t1 * t2)) :=
     end
   end.
 
-Instance Eq_pair___ {a} {b} `{Eq_ a} `{Eq_ b} : Eq_ (a * b) := fun _ k => k
+Polymorphic Instance Eq_pair___ {a} {b} `{Eq_ a} `{Eq_ b} : Eq_ (a * b) := fun _ k => k
   {| op_zeze____ := eq_pair;
      op_zsze____ := fun x y => negb (eq_pair x y)
   |}.
 
-Instance Ord_pair___ {a} {b} `{Ord a} `{Ord b} : Ord (a * b) :=
+Polymorphic Instance Ord_pair___ {a} {b} `{Ord a} `{Ord b} : Ord (a * b) :=
   ord_default compare_pair.
 
 (* TODO: are these available in a library somewhere? *)
-Definition eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
+Polymorphic Definition eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
 	fix eqlist xs ys :=
 	    match xs , ys with
 	    | nil , nil => true
@@ -466,7 +467,7 @@ Definition eqlist {a} `{Eq_ a} : list a -> list a -> bool :=
 	    | _ ,  _ => false
 	    end.
 
-Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
+Polymorphic Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
     match xs , ys with
     | nil , nil => Eq
     | nil , _   => Lt
@@ -479,12 +480,12 @@ Fixpoint compare_list {a} `{Ord a} (xs :  list a) (ys : list a) : comparison :=
       end
     end.
 
-Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) := fun _ k => k
+Polymorphic Instance Eq_list {a} `{Eq_ a} : Eq_ (list a) := fun _ k => k
   {| op_zeze____ := eqlist;
      op_zsze____ := fun x y => negb (eqlist x y)
   |}.
 
-Instance Ord_list {a} `{Ord a}: Ord (list a) :=
+Polymorphic Instance Ord_list {a} `{Ord a}: Ord (list a) :=
   ord_default compare_list.
 
 
@@ -493,7 +494,7 @@ Instance Ord_list {a} `{Ord a}: Ord (list a) :=
 
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
-Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
+Polymorphic Fixpoint scanr {a b:Type} (f : a -> b -> b) (q0 : b) (xs : list a) : list b :=
   match xs with
   | nil => q0 :: nil
   | y :: ys => match scanr f q0 ys with
@@ -504,7 +505,7 @@ end.
 
 
 (* The inner nil case is impossible. So it is left out of the Haskell version. *)
-Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
+Polymorphic Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
   match xs with
   | nil => q0 :: nil
   | y :: nil => y :: nil
@@ -514,18 +515,18 @@ Fixpoint scanr1 {a :Type} (f : a -> a -> a) (q0 : a) (xs : list a) : list a :=
               end
 end.
 
-Definition foldl {a}{b} k z0 xs :=
+Polymorphic Definition foldl {a}{b} k z0 xs :=
   fold_right (fun (v:a) (fn:b->b) => (fun (z:b) => fn (k z v))) (id : b -> b) xs z0.
 
-Definition foldl' {a}{b} k z0 xs :=
+Polymorphic Definition foldl' {a}{b} k z0 xs :=
   fold_right (fun(v:a) (fn:b->b) => (fun(z:b) => fn (k z v))) (id : b -> b) xs z0.
 
 (* Less general type for build *)
-Definition build {a} : (forall {b}, (a -> b -> b) -> b -> b) -> list a :=
+Polymorphic Definition build {a} : (forall {b}, (a -> b -> b) -> b -> b) -> list a :=
   fun g => g _ (fun x y => x :: y) nil.
 
 (* A copy of it, to facilitate the rewrite rule in the edits file *)
-Definition build' : forall {a}, (forall {b}, (a -> b -> b) -> b -> b) -> list a := @build.
+Polymorphic Definition build' : forall {a}, (forall {b}, (a -> b -> b) -> b -> b) -> list a := @build.
 
 (********************************************************************)
 
@@ -692,7 +693,7 @@ Definition asTypeOf {a} : a -> a -> a :=
 Definition ap {m} {a} {b} `{(Monad m)} : m (a -> b) -> m a -> m b :=
   fun m1 m2 => m1 >>= (fun x1 => m2 >>= (fun x2 => return_ (x1 x2))).
 
-Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a}
+Local Polymorphic Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -701,16 +702,16 @@ Local Definition Eq___option_op_zeze__ {inst_a} `{Eq_ inst_a}
     | _, _ => false
     end.
 
-Local Definition Eq___option_op_zsze__ {inst_a} `{Eq_ inst_a}
+Local Polymorphic Definition Eq___option_op_zsze__ {inst_a} `{Eq_ inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun x y => negb (Eq___option_op_zeze__ x y).
 
-Program Instance Eq___option {a} `{Eq_ a} : Eq_ (option a) :=
+Polymorphic Program Instance Eq___option {a} `{Eq_ a} : Eq_ (option a) :=
   fun _ k__ =>
     k__ {| op_zeze____ := Eq___option_op_zeze__ ;
            op_zsze____ := Eq___option_op_zsze__ |}.
 
-Local Definition Ord__option_op_zl__ {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_op_zl__ {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun a b =>
     match a with
@@ -718,19 +719,19 @@ Local Definition Ord__option_op_zl__ {inst_a} `{Ord inst_a}
     | Some a1 => match b with | Some b1 => (a1 < b1) | _ => false end
     end.
 
-Local Definition Ord__option_op_zlze__ {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_op_zlze__ {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun a b => negb (Ord__option_op_zl__ b a).
 
-Local Definition Ord__option_op_zg__ {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_op_zg__ {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun a b => Ord__option_op_zl__ b a.
 
-Local Definition Ord__option_op_zgze__ {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_op_zgze__ {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> bool :=
   fun a b => negb (Ord__option_op_zl__ a b).
 
-Local Definition Ord__option_compare {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_compare {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> comparison :=
   fun a b =>
     match a with
@@ -738,15 +739,15 @@ Local Definition Ord__option_compare {inst_a} `{Ord inst_a}
     | Some a1 => match b with | Some b1 => (compare a1 b1) | _ => Gt end
     end.
 
-Local Definition Ord__option_max {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_max {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> option inst_a :=
   fun x y => if Ord__option_op_zlze__ x y : bool then y else x.
 
-Local Definition Ord__option_min {inst_a} `{Ord inst_a}
+Local Polymorphic Definition Ord__option_min {inst_a} `{Ord inst_a}
    : option inst_a -> option inst_a -> option inst_a :=
   fun x y => if Ord__option_op_zlze__ x y : bool then x else y.
 
-Program Instance Ord__option {a} `{Ord a} : Ord (option a) :=
+Polymorphic Program Instance Ord__option {a} `{Ord a} : Ord (option a) :=
   fun _ k__ =>
     k__ {| op_zl____ := Ord__option_op_zl__ ;
            op_zlze____ := Ord__option_op_zlze__ ;
@@ -767,7 +768,7 @@ Local Definition Eq___NonEmpty_op_zsze__ {inst_a} `{Eq_ inst_a}
    : NonEmpty inst_a -> NonEmpty inst_a -> bool :=
   fun x y => negb (Eq___NonEmpty_op_zeze__ x y).
 
-Program Instance Eq___NonEmpty {a} `{Eq_ a} : Eq_ (NonEmpty a) :=
+Polymorphic Program Instance Eq___NonEmpty {a} `{Eq_ a} : Eq_ (NonEmpty a) :=
   fun _ k__ =>
     k__ {| op_zeze____ := Eq___NonEmpty_op_zeze__ ;
            op_zsze____ := Eq___NonEmpty_op_zsze__ |}.
@@ -819,7 +820,7 @@ Local Definition Functor__pair_type_op_zlzd__ {inst_a}
      a -> (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) a :=
   fun {a} {b} => Functor__pair_type_fmap ∘ const.
 
-Program Instance Functor__pair_type {a} : Functor (GHC.Tuple.pair_type a) :=
+Polymorphic Program Instance Functor__pair_type {a} : Functor (GHC.Tuple.pair_type a) :=
   fun _ k__ =>
     k__ {| fmap__ := fun {a} {b} => Functor__pair_type_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__pair_type_op_zlzd__ |}.
@@ -834,7 +835,7 @@ Local Definition Functor__arrow_op_zlzd__ {inst_r}
      a -> (GHC.Prim.arrow inst_r) b -> (GHC.Prim.arrow inst_r) a :=
   fun {a} {b} => Functor__arrow_fmap ∘ const.
 
-Program Instance Functor__arrow {r} : Functor (GHC.Prim.arrow r) :=
+Polymorphic Program Instance Functor__arrow {r} : Functor (GHC.Prim.arrow r) :=
   fun _ k__ =>
     k__ {| fmap__ := fun {a} {b} => Functor__arrow_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__arrow_op_zlzd__ |}.
@@ -933,7 +934,7 @@ Local Definition Applicative__arrow_pure {inst_a}
    : forall {a}, a -> (GHC.Prim.arrow inst_a) a :=
   fun {a} => const.
 
-Program Instance Applicative__arrow {a} : Applicative (GHC.Prim.arrow a) :=
+Polymorphic Program Instance Applicative__arrow {a} : Applicative (GHC.Prim.arrow a) :=
   fun _ k__ =>
     k__ {| liftA2__ := fun {a} {b} {c} => Applicative__arrow_liftA2 ;
            op_zlztzg____ := fun {a} {b} => Applicative__arrow_op_zlztzg__ ;
@@ -1040,7 +1041,7 @@ Local Definition Semigroup__option_op_zlzlzgzg__ {inst_a} `{Semigroup inst_a}
     | Some a, Some b => Some (a <<>> b)
     end.
 
-Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
+Polymorphic Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__option_op_zlzlzgzg__ |}.
 
 Local Definition Semigroup__comparison_op_zlzlzgzg__
@@ -1079,7 +1080,7 @@ Local Definition Semigroup__arrow_op_zlzlzgzg__ {inst_b} {inst_a} `{Semigroup
    : (inst_a -> inst_b) -> (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   fun f g => fun x => f x <<>> g x.
 
-Program Instance Semigroup__arrow {b} {a} `{Semigroup b} : Semigroup (a -> b) :=
+Polymorphic Program Instance Semigroup__arrow {b} {a} `{Semigroup b} : Semigroup (a -> b) :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__arrow_op_zlzlzgzg__ |}.
 
 Local Definition Semigroup__NonEmpty_op_zlzlzgzg__ {inst_a}
@@ -1089,14 +1090,14 @@ Local Definition Semigroup__NonEmpty_op_zlzlzgzg__ {inst_a}
     | NEcons a as_, NEcons b bs => NEcons a (Coq.Init.Datatypes.app as_ (cons b bs))
     end.
 
-Program Instance Semigroup__NonEmpty {a} : Semigroup (NonEmpty a) :=
+Polymorphic Program Instance Semigroup__NonEmpty {a} : Semigroup (NonEmpty a) :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__NonEmpty_op_zlzlzgzg__ |}.
 
 Local Definition Semigroup__list_op_zlzlzgzg__ {inst_a}
    : list inst_a -> list inst_a -> list inst_a :=
   Coq.Init.Datatypes.app.
 
-Program Instance Semigroup__list {a} : Semigroup (list a) :=
+Polymorphic Program Instance Semigroup__list {a} : Semigroup (list a) :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__list_op_zlzlzgzg__ |}.
 
 (* Skipping instance `GHC.Base.Monoid__IO' of class `GHC.Base.Monoid' *)
@@ -1132,7 +1133,7 @@ Local Definition Applicative__pair_type_pure {inst_a} `{Monoid inst_a}
    : forall {a}, a -> (GHC.Tuple.pair_type inst_a) a :=
   fun {a} => fun x => pair mempty x.
 
-Program Instance Applicative__pair_type {a} `{Monoid a}
+Polymorphic Program Instance Applicative__pair_type {a} `{Monoid a}
    : Applicative (GHC.Tuple.pair_type a) :=
   fun _ k__ =>
     k__ {| liftA2__ := fun {a} {b} {c} => Applicative__pair_type_liftA2 ;
@@ -1152,7 +1153,7 @@ Local Definition Monoid__option_mconcat {inst_a} `{Semigroup inst_a}
    : list (option inst_a) -> (option inst_a) :=
   foldr Monoid__option_mappend Monoid__option_mempty.
 
-Program Instance Monoid__option {a} `{Semigroup a} : Monoid (option a) :=
+Polymorphic Program Instance Monoid__option {a} `{Semigroup a} : Monoid (option a) :=
   fun _ k__ =>
     k__ {| mappend__ := Monoid__option_mappend ;
            mconcat__ := Monoid__option_mconcat ;
@@ -1212,7 +1213,7 @@ Local Definition Monoid__arrow_mconcat {inst_b} {inst_a} `{Monoid inst_b}
    : list (inst_a -> inst_b) -> (inst_a -> inst_b) :=
   foldr Monoid__arrow_mappend Monoid__arrow_mempty.
 
-Program Instance Monoid__arrow {b} {a} `{Monoid b} : Monoid (a -> b) :=
+Polymorphic Program Instance Monoid__arrow {b} {a} `{Monoid b} : Monoid (a -> b) :=
   fun _ k__ =>
     k__ {| mappend__ := Monoid__arrow_mappend ;
            mconcat__ := Monoid__arrow_mconcat ;
@@ -1231,7 +1232,7 @@ Local Definition Monoid__list_mconcat {inst_a}
 Local Definition Monoid__list_mempty {inst_a} : list inst_a :=
   nil.
 
-Program Instance Monoid__list {a} : Monoid (list a) :=
+Polymorphic Program Instance Monoid__list {a} : Monoid (list a) :=
   fun _ k__ =>
     k__ {| mappend__ := Monoid__list_mappend ;
            mconcat__ := Monoid__list_mconcat ;
@@ -1292,7 +1293,7 @@ Local Definition Monad__arrow_return_ {inst_r}
    : forall {a}, a -> (GHC.Prim.arrow inst_r) a :=
   fun {a} => pure.
 
-Program Instance Monad__arrow {r} : Monad (GHC.Prim.arrow r) :=
+Polymorphic Program Instance Monad__arrow {r} : Monad (GHC.Prim.arrow r) :=
   fun _ k__ =>
     k__ {| op_zgzg____ := fun {a} {b} => Monad__arrow_op_zgzg__ ;
            op_zgzgze____ := fun {a} {b} => Monad__arrow_op_zgzgze__ ;
@@ -1318,7 +1319,7 @@ Local Definition Monad__pair_type_op_zgzg__ {inst_a} `{Monoid inst_a}
      (GHC.Tuple.pair_type inst_a) b -> (GHC.Tuple.pair_type inst_a) b :=
   fun {a} {b} => fun m k => Monad__pair_type_op_zgzgze__ m (fun arg_0__ => k).
 
-Program Instance Monad__pair_type {a} `{Monoid a}
+Polymorphic Program Instance Monad__pair_type {a} `{Monoid a}
    : Monad (GHC.Tuple.pair_type a) :=
   fun _ k__ =>
     k__ {| op_zgzg____ := fun {a} {b} => Monad__pair_type_op_zgzg__ ;

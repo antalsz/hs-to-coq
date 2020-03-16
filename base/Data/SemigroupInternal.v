@@ -30,17 +30,17 @@ Import GHC.Num.Notations.
 
 (* Converted type declarations: *)
 
-Inductive Sum a : Type := | Mk_Sum (getSum : a) : Sum a.
+Polymorphic Cumulative Inductive Sum a : Type := | Mk_Sum (getSum : a) : Sum a.
 
-Inductive Product a : Type := | Mk_Product (getProduct : a) : Product a.
+Polymorphic Cumulative Inductive Product a : Type := | Mk_Product (getProduct : a) : Product a.
 
-Inductive Endo a : Type := | Mk_Endo (appEndo : a -> a) : Endo a.
+Polymorphic Cumulative Inductive Endo a : Type := | Mk_Endo (appEndo : a -> a) : Endo a.
 
-Inductive Dual a : Type := | Mk_Dual (getDual : a) : Dual a.
+Polymorphic Cumulative Inductive Dual a : Type := | Mk_Dual (getDual : a) : Dual a.
 
 Inductive Any : Type := | Mk_Any (getAny : bool) : Any.
 
-Inductive Alt (f : Type -> Type) a : Type := | Mk_Alt (getAlt : f a) : Alt f a.
+Polymorphic Cumulative Inductive Alt (f : Type -> Type) a : Type := | Mk_Alt (getAlt : f a) : Alt f a.
 
 Inductive All : Type := | Mk_All (getAll : bool) : All.
 

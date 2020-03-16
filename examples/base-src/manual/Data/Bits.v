@@ -20,7 +20,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 (* Converted data type declarations: *)
-Class Bits a `{Eq_ a} := {
+Polymorphic Cumulative Class Bits a `{Eq_ a} := {
   op_zizazi__ : a -> a -> a ;
   op_zizbzi__ : a -> a -> a ;
   bit : Int -> a ;
@@ -52,7 +52,7 @@ Infix ".|." := (op_zizbzi__) (left associativity, at level 61).
 
 Notation "'_.|._'" := (op_zizbzi__).
 
-Class FiniteBits b `{Bits b} := {
+Polymorphic Cumulative Class FiniteBits b `{Bits b} := {
   countLeadingZeros : b -> Int ;
   countTrailingZeros : b -> Int ;
   finiteBitSize : b -> Int }.

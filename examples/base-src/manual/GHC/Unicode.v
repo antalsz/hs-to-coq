@@ -114,7 +114,7 @@ Definition isSpace : Char -> bool := (fun arg_5__ =>
              in (if (uc <= #887)
                 then (orb (orb (uc == #32) ((uc - #9) <= #4)) (uc == #160))
                 else (iswspace (ord c) /= #0)))
-    end)).
+     end)).
 
 Definition isPrint : Char -> bool := (fun arg_14__ =>
     (match arg_14__ with

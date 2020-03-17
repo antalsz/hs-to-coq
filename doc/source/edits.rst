@@ -448,12 +448,11 @@ Effect:
   dependency calculations inside ``hs-to-coq`` might go wrong – but this is not
   always critical.)
 
-  Our Coq parser is dramatically incomplete, and you may need to pick a simpler
-  syntactic representation of terms to get them to parse correctly.  One example
-  is that the terms to either side of a function arrow must be either single
-  names or surrounded by parentheses; for example, ``F -> G`` will parse
-  correctly, as will ``(F X) -> (G Y)``, but ``F X -> G Y`` will come out as
-  ``F X _->_ G Y``.
+  Our Coq parser is dramatically incomplete, and you may need to add parentheses
+  or pick a simpler syntactic representation of terms to get them to parse
+  correctly or at all.  One example is that ``hs-to-coq`` does not understand
+  the associativity of the function arrow when parsing: ``a -> b -> c`` will not
+  parse, and needs to be given as ``a -> (b -> c)``.
 
   When providing a ``Theorem`` – or a ``Lemma``, a ``Remark``, a ``Fact``, a
   ``Corollary``, a ``Proposition``, or an ``Example`` – it must be immediately
@@ -467,7 +466,7 @@ Examples:
    .. code-block:: shell
 
       add Data.Foldable Definition Data.Foldable.elem {f} `{(Foldable f)} {a} `{(GHC.Base.Eq_ a)} :
-        a -> ((f a) -> bool) :=
+        a -> (f a -> bool) :=
         fun x xs => Data.Foldable.any (fun y => x GHC.Base.== y) xs.
 
       add Data.Monoid Instance Unpeel_Last a : GHC.Prim.Unpeel (Last a) (option a) :=

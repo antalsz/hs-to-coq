@@ -160,11 +160,7 @@ nat = parseToken (read . T.unpack) isDigit isDigit
 
 -- No escape sequences for now
 stringLit :: MonadParse m => m Text
-stringLit = do
-    _ <- parseChar (is '"')
-    s <- parseToken id (not . is '"') (not . is '"')
-    _ <- parseChar (is '"')
-    return s
+stringLit = parseChar (is '"') *> parseChars (not . is '"') <* parseChar (is '"')
 
 parseUntilAny :: MonadParse m => [(Text, a)] -> m (Text, a)
 parseUntilAny stops = do

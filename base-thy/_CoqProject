@@ -4,6 +4,7 @@
 ./Data/Foldable.v
 ./Data/Traversable.v
 ./Data/Functor/Classes.v
+./Data/Functor/Identity.v
 ./Data/OldList.v
 ./Data/Ord.v
 ./Data/Proxy.v

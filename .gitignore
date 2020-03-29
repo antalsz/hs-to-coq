@@ -13,6 +13,8 @@ cabal.project.local
 
 # Coq
 *.vo
+*.vos
+*.vok
 *.glob
 .*.aux
 *.v.d
@@ -20,6 +22,7 @@ cabal.project.local
 Makefile.coq.conf
 Makefile.bak
 Makefile.conf
+.Makefile.d
 .lia.cache
 
 # Haskell

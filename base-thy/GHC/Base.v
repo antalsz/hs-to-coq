@@ -527,6 +527,7 @@ Class MonadLaws (t : Type -> Type) `{!Functor t, !Applicative t, !Monad t, !Func
     monad_right_id : forall A (m : t A),  (m >>= return_)  =  m;
     monad_composition : forall A B C (m : t A) (k : A -> t B) (h : B -> t C),
         (m >>= (fun x => k x >>= h))  =  ((m >>= k) >>= h);
+    monad_then: forall A B (m1 : t A) (m2 : t B), (m1 >> m2) = (m1 >>= fun _ => m2);
     monad_applicative_pure : forall A (x:A), pure x = return_ x;
     monad_applicative_ap : forall A B (f : t (A -> B)) (x: t A), (f <*> x) = ap f x
   }.
@@ -729,6 +730,7 @@ Proof.
   - destruct m; try destruct (k x); auto.
   - auto.
   - auto.
+  - auto.
 Qed.
 
 Instance instance_MonadLaws_list : MonadLaws list.
@@ -752,6 +754,7 @@ Proof.
     rewrite flat_map_cons_id.
     rewrite flat_map_cons_id.
     auto.
+  - auto.
   - auto.
   - apply flat_map_cong => f1.
     by rewrite flat_map_cons_id.

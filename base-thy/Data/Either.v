@@ -68,4 +68,5 @@ Proof.
   - destruct m; try destruct (k x); auto.
   - auto.
   - auto.
+  - auto.
 Qed.

@@ -7,13 +7,13 @@
 #   nix-build -A haskellPackages.hs-to-coq
 # After building, you can run result/bin/hs-to-coq
 
-{ coqPackages' ? "coqPackages_8_8"
-, haskell' ? "ghc843"
+{ coqPackages ? "coqPackages_8_8"
+, ghcVersion  ? "ghc882"
 
-, rev      ? "89b618771ad4b0cfdb874dee3d51eb267c4257dd"
-, sha256   ? "0jlyggy7pvqj2a6iyn44r7pscz9ixjb6fn6s4ssvahfywsncza6y"
+, rev    ? "1fe82110febdf005d97b2927610ee854a38a8f26"
+, sha256 ? "08x6saa7iljyq2m0j6p9phy0v17r3p8l7vklv7y7gvhdc7a85ppi"
 
-, pkgs     ? import (builtins.fetchTarball {
+, pkgs   ? import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256; }) {
     config.allowUnfree = true;
@@ -22,8 +22,8 @@
 }:
 
 let
-  coqPackages = pkgs.${coqPackages'} // {
-    hs-to-coq = with pkgs.${coqPackages'}; pkgs.stdenv.mkDerivation rec {
+  coqPackages' = pkgs.${coqPackages} // {
+    hs-to-coq = with pkgs.${coqPackages}; pkgs.stdenv.mkDerivation rec {
       name = "coq${coq.coq-version}-hs-to-coq-${version}";
       version = "1.0";
 
@@ -51,10 +51,10 @@ let
     };
   };
 
-  haskellPackages = pkgs.haskell.packages.${haskell'} // {
+  haskellPackages' = pkgs.haskell.packages.${ghcVersion} // {
     hs-to-coq =
       with pkgs.haskell.lib;
-      with pkgs.haskell.packages.${haskell'}.override {
+      with pkgs.haskell.packages.${ghcVersion}.override {
         overrides = self: super: {
           tasty      = doJailbreak super.tasty;
           indents    = doJailbreak super.indents;
@@ -65,5 +65,6 @@ let
   };
 
 in {
-  inherit coqPackages haskellPackages;
+  coqPackages = coqPackages';
+  haskellPackages = haskellPackages';
 }

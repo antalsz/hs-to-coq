@@ -2,3 +2,12 @@ add Types Axiom Types.newline : GHC.Char.Char.
 
 order Types.Semigroup__Flux Types.Monoid__Flux_mappend
 order Types.Semigroup__Counts Types.Monoid__Counts_mappend Types.countByteUTF8 
+
+redefine Polymorphic Instance Types.Semigroup__Counts@{i} : Semigroup Counts :=
+  fun (_ : Type@{i}) k__ => k__ {| op_zlzlzgzg____ := Semigroup__Counts_op_zlzlzgzg__ |}.
+
+redefine Polymorphic Instance Types.Monoid__Counts@{i} : Monoid Counts :=
+  fun (r__ : Type@{i}) k__ =>
+    k__ {| mappend__ := Monoid__Counts_mappend ;
+           mconcat__ := Monoid__Counts_mconcat ;
+           mempty__ := Monoid__Counts_mempty |}.

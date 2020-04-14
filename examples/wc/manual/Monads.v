@@ -1,6 +1,8 @@
 Require Import GHC.Base.
 From ExtLib.Structures Require Functor Applicative Monad.
 
+Set Universe Polymorphism.
+
 Section Functors.
 
   Variable f : Type -> Type.

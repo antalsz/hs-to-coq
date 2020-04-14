@@ -30,28 +30,28 @@ Inductive OpenMode : Type :=
 (** Originally [Word32]: defined as [HTYPE_MODE_T] at
    [https://hackage.haskell.org/package/base-4.1.0.0/src/include/HsBaseConfig.h]
    *)
-Definition CMode : Type := Word.
+Definition CMode : Set := Word.
 
 (** Originally [Int32]: defined as [HTYPE_INT] at
    [https://hackage.haskell.org/package/base-4.1.0.0/src/include/HsBaseConfig.h]
    *)
-Definition CInt : Type := Int.
+Definition CInt : Set := Int.
 
 (** Originally [Word32]: defined as [HTYPE_SIZE_T] at
    [https://hackage.haskell.org/package/base-4.1.0.0/src/include/HsBaseConfig.h]
    *)
-Definition CSize : Type := Word.
+Definition CSize : Set := Word.
 
 (** Originally [Int64]: defined as [HTYPE_OFF_T] at
    [https://hackage.haskell.org/package/base-4.1.0.0/src/include/HsBaseConfig.h]
    *)
-Definition COff : Type := Int.
+Definition COff : Set := Int.
 
 (** [System.Posix.Types] from [base] *)
-Definition FileMode : Type := CMode.
-Definition Fd : Type := CInt.
-Definition ByteCount : Type := CSize.
-Definition FileOffset : Type := COff.
+Definition FileMode : Set := CMode.
+Definition Fd : Set := CInt.
+Definition ByteCount : Set := CSize.
+Definition FileOffset : Set := COff.
 
 Set Printing Universes.
 
@@ -108,11 +108,11 @@ Definition fdRead : Fd -> ByteCount -> IO (String * ByteCount) := embed FdRead.
 
 Definition getFdStatus : Fd -> IO FileStatus := embed GetFdStatus.
 
-Instance Functor_IO : Functor IO := Functor_Functor IO.
+Polymorphic Instance Functor_IO : Functor IO := Functor_Functor IO.
 
-Instance Applicative_IO : Applicative IO := Applicative_Applicative IO.
+Polymorphic Instance Applicative_IO : Applicative IO := Applicative_Applicative IO.
 
-Instance Monad_IO : Monad IO := Monad_Monad IO.
+Polymorphic Instance Monad_IO : Monad IO := Monad_Monad IO.
 
 (** This is not a REAL implementation! *)
 Definition getFileStatus (f : FilePath) : IO FileStatus :=

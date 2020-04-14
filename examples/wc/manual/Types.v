@@ -19,8 +19,7 @@ Require GHC.Err.
 Require Import GHC.Num.
 Require GHC.Unicode.
 
-Locate newline.
-
+Set Universe Polymorphism.
 
 (* Converted type declarations: *)
 
@@ -157,8 +156,8 @@ Local Definition Semigroup__Counts_op_zlzlzgzg__ : Counts -> Counts -> Counts :=
     | Mk_Counts a b c, Mk_Counts a' b' c' => Mk_Counts (a + a') (b <<>> b') (c + c')
     end.
 
-Program Instance Semigroup__Counts : Semigroup Counts :=
-  fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__Counts_op_zlzlzgzg__ |}.
+Polymorphic Program Instance Semigroup__Counts@{i} : Semigroup Counts :=
+  fun (_ : Type@{i}) k__ => k__ {| op_zlzlzgzg____ := Semigroup__Counts_op_zlzlzgzg__ |}.
 
 Local Definition Monoid__Counts_mappend : Counts -> Counts -> Counts :=
   _<<>>_.
@@ -169,8 +168,8 @@ Local Definition Monoid__Counts_mempty : Counts :=
 Local Definition Monoid__Counts_mconcat : list Counts -> Counts :=
   foldr Monoid__Counts_mappend Monoid__Counts_mempty.
 
-Program Instance Monoid__Counts : Monoid Counts :=
-  fun _ k__ =>
+Polymorphic Program Instance Monoid__Counts@{i} : Monoid Counts :=
+  fun (r__ : Type@{i}) k__ =>
     k__ {| mappend__ := Monoid__Counts_mappend ;
            mconcat__ := Monoid__Counts_mconcat ;
            mempty__ := Monoid__Counts_mempty |}.

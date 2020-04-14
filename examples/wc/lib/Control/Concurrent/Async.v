@@ -28,16 +28,16 @@ Inductive Concurrently a : Type
 
 Arguments MkConcurrently {_} _.
 
-Definition runConcurrently {a} (arg_0__ : Concurrently a) :=
+Polymorphic Definition runConcurrently {a} (arg_0__ : Concurrently a) :=
   let 'MkConcurrently runConcurrently := arg_0__ in
   runConcurrently.
 
 (* Converted value declarations: *)
 
-Definition concurrently {a b : Type} : IO.IO a -> IO.IO b -> IO.IO (a * b) :=
+Polymorphic Definition concurrently {a b : Type} : IO.IO a -> IO.IO b -> IO.IO (a * b) :=
   embed IO.Concurrently.
 
-Local Definition Functor__Concurrently_fmap
+Local Polymorphic Definition Functor__Concurrently_fmap
    : forall {a} {b}, (a -> b) -> Concurrently a -> Concurrently b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
@@ -45,16 +45,16 @@ Local Definition Functor__Concurrently_fmap
       | f, MkConcurrently a => MkConcurrently (f <$> a)
       end.
 
-Local Definition Functor__Concurrently_op_zlzd__
+Local Polymorphic Definition Functor__Concurrently_op_zlzd__
    : forall {a} {b}, a -> Concurrently b -> Concurrently a :=
   fun {a} {b} => Functor__Concurrently_fmap ∘ const.
 
-Program Instance Functor__Concurrently : Functor Concurrently :=
+Polymorphic Program Instance Functor__Concurrently : Functor Concurrently :=
   fun _ k__ =>
     k__ {| fmap__ := fun {a} {b} => Functor__Concurrently_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__Concurrently_op_zlzd__ |}.
 
-Local Definition Applicative__Concurrently_op_zlztzg__
+Local Polymorphic Definition Applicative__Concurrently_op_zlztzg__
    : forall {a} {b}, Concurrently (a -> b) -> Concurrently a -> Concurrently b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
@@ -63,19 +63,20 @@ Local Definition Applicative__Concurrently_op_zlztzg__
           MkConcurrently ((fun '(pair f a) => f a) <$> concurrently fs as_)
       end.
 
-Local Definition Applicative__Concurrently_liftA2
+Local Polymorphic Definition Applicative__Concurrently_liftA2
    : forall {a} {b} {c},
      (a -> b -> c) -> Concurrently a -> Concurrently b -> Concurrently c :=
   fun {a} {b} {c} => fun f x => Applicative__Concurrently_op_zlztzg__ (fmap f x).
 
-Axiom Applicative__Concurrently_op_ztzg__
-   : forall {a} {b}, Concurrently a -> Concurrently b -> Concurrently b.
+Local Polymorphic Definition Applicative__Concurrently_op_ztzg__
+   : forall {a} {b}, Concurrently a -> Concurrently b -> Concurrently b :=
+  fun {a} {b} => fun a1 a2 => Applicative__Concurrently_op_zlztzg__ (id <$ a1) a2.
 
-Local Definition Applicative__Concurrently_pure
+Local Polymorphic Definition Applicative__Concurrently_pure
    : forall {a}, a -> Concurrently a :=
   fun {a} => MkConcurrently ∘ return_.
 
-Program Instance Applicative__Concurrently : Applicative Concurrently :=
+Polymorphic Program Instance Applicative__Concurrently : Applicative Concurrently :=
   fun _ k__ =>
     k__ {| liftA2__ := fun {a} {b} {c} => Applicative__Concurrently_liftA2 ;
            op_zlztzg____ := fun {a} {b} => Applicative__Concurrently_op_zlztzg__ ;
@@ -96,11 +97,11 @@ Local Definition Monoid__Concurrently_mappend {inst_a} `{Semigroup inst_a}
    : (Concurrently inst_a) -> (Concurrently inst_a) -> (Concurrently inst_a) :=
   _<<>>_.
 
-Definition mapConcurrently {t} {a} {b} `{Traversable t}
+Polymorphic Definition mapConcurrently {t} {a} {b} `{Traversable t}
    : (a -> IO.IO b) -> t a -> IO.IO (t b) :=
   fun f => runConcurrently ∘ traverse (MkConcurrently ∘ f).
 
-Definition forConcurrently {t} {a} {b} `{Traversable t}
+Polymorphic Definition forConcurrently {t} {a} {b} `{Traversable t}
    : t a -> (a -> IO.IO b) -> IO.IO (t b) :=
   flip mapConcurrently.
 

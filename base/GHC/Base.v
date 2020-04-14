@@ -600,7 +600,7 @@ Definition mapFB {elt} {lst} {a}
    : (elt -> lst -> lst) -> (a -> elt) -> a -> lst -> lst :=
   fun c f => fun x ys => c (f x) ys.
 
-Definition map {A B : Type} (f : A -> B) xs :=
+Polymorphic Definition map {A B : Type} (f : A -> B) xs :=
   Coq.Lists.List.map f xs.
 
 Definition liftM5 {m} {a1} {a2} {a3} {a4} {a5} {r} `{(Monad m)}
@@ -775,20 +775,20 @@ Polymorphic Program Instance Eq___NonEmpty {a} `{Eq_ a} : Eq_ (NonEmpty a) :=
 
 (* Skipping instance `GHC.Base.Ord__NonEmpty' of class `GHC.Base.Ord' *)
 
-Local Definition Functor__list_fmap
+Local Polymorphic Definition Functor__list_fmap
    : forall {a} {b}, (a -> b) -> list a -> list b :=
   fun {a} {b} => map.
 
-Local Definition Functor__list_op_zlzd__
+Local Polymorphic Definition Functor__list_op_zlzd__
    : forall {a} {b}, a -> list b -> list a :=
   fun {a} {b} => Functor__list_fmap ∘ const.
 
-Program Instance Functor__list : Functor list :=
+Polymorphic Program Instance Functor__list : Functor list :=
   fun _ k__ =>
     k__ {| fmap__ := fun {a} {b} => Functor__list_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__list_op_zlzd__ |}.
 
-Local Definition Functor__option_fmap
+Local Polymorphic Definition Functor__option_fmap
    : forall {a} {b}, (a -> b) -> option a -> option b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
@@ -797,11 +797,11 @@ Local Definition Functor__option_fmap
       | f, Some a => Some (f a)
       end.
 
-Local Definition Functor__option_op_zlzd__
+Local Polymorphic Definition Functor__option_op_zlzd__
    : forall {a} {b}, a -> option b -> option a :=
   fun {a} {b} => Functor__option_fmap ∘ const.
 
-Program Instance Functor__option : Functor option :=
+Polymorphic Program Instance Functor__option : Functor option :=
   fun _ k__ =>
     k__ {| fmap__ := fun {a} {b} => Functor__option_fmap ;
            op_zlzd____ := fun {a} {b} => Functor__option_op_zlzd__ |}.
@@ -874,7 +874,7 @@ Program Instance Applicative__list : Applicative list :=
            op_ztzg____ := fun {a} {b} => Applicative__list_op_ztzg__ ;
            pure__ := fun {a} => Applicative__list_pure |}.
 
-Local Definition Applicative__option_liftA2
+Local Polymorphic Definition Applicative__option_liftA2
    : forall {a} {b} {c}, (a -> b -> c) -> option a -> option b -> option c :=
   fun {a} {b} {c} =>
     fun arg_0__ arg_1__ arg_2__ =>
@@ -883,7 +883,7 @@ Local Definition Applicative__option_liftA2
       | _, _, _ => None
       end.
 
-Local Definition Applicative__option_op_zlztzg__
+Local Polymorphic Definition Applicative__option_op_zlztzg__
    : forall {a} {b}, option (a -> b) -> option a -> option b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
@@ -892,7 +892,7 @@ Local Definition Applicative__option_op_zlztzg__
       | None, _m => None
       end.
 
-Local Definition Applicative__option_op_ztzg__
+Local Polymorphic Definition Applicative__option_op_ztzg__
    : forall {a} {b}, option a -> option b -> option b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
@@ -901,10 +901,10 @@ Local Definition Applicative__option_op_ztzg__
       | None, _m2 => None
       end.
 
-Local Definition Applicative__option_pure : forall {a}, a -> option a :=
+Local Polymorphic Definition Applicative__option_pure : forall {a}, a -> option a :=
   fun {a} => Some.
 
-Program Instance Applicative__option : Applicative option :=
+Polymorphic Program Instance Applicative__option : Applicative option :=
   fun _ k__ =>
     k__ {| liftA2__ := fun {a} {b} {c} => Applicative__option_liftA2 ;
            op_zlztzg____ := fun {a} {b} => Applicative__option_op_zlztzg__ ;
@@ -1032,7 +1032,7 @@ Program Instance Applicative__NonEmpty : Applicative NonEmpty :=
 
 (* Skipping instance `GHC.Base.Semigroup__IO' of class `GHC.Base.Semigroup' *)
 
-Local Definition Semigroup__option_op_zlzlzgzg__ {inst_a} `{Semigroup inst_a}
+Local Polymorphic Definition Semigroup__option_op_zlzlzgzg__ {inst_a} `{Semigroup inst_a}
    : (option inst_a) -> (option inst_a) -> (option inst_a) :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -1044,7 +1044,7 @@ Local Definition Semigroup__option_op_zlzlzgzg__ {inst_a} `{Semigroup inst_a}
 Polymorphic Program Instance Semigroup__option {a} `{Semigroup a} : Semigroup (option a) :=
   fun _ k__ => k__ {| op_zlzlzgzg____ := Semigroup__option_op_zlzlzgzg__ |}.
 
-Local Definition Semigroup__comparison_op_zlzlzgzg__
+Local Polymorphic Definition Semigroup__comparison_op_zlzlzgzg__
    : comparison -> comparison -> comparison :=
   fun arg_0__ arg_1__ =>
     match arg_0__, arg_1__ with
@@ -1141,15 +1141,15 @@ Polymorphic Program Instance Applicative__pair_type {a} `{Monoid a}
            op_ztzg____ := fun {a} {b} => Applicative__pair_type_op_ztzg__ ;
            pure__ := fun {a} => Applicative__pair_type_pure |}.
 
-Local Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
+Local Polymorphic Definition Monoid__option_mappend {inst_a} `{Semigroup inst_a}
    : (option inst_a) -> (option inst_a) -> (option inst_a) :=
   _<<>>_.
 
-Local Definition Monoid__option_mempty {inst_a} `{Semigroup inst_a}
+Local Polymorphic Definition Monoid__option_mempty {inst_a} `{Semigroup inst_a}
    : (option inst_a) :=
   None.
 
-Local Definition Monoid__option_mconcat {inst_a} `{Semigroup inst_a}
+Local Polymorphic Definition Monoid__option_mconcat {inst_a} `{Semigroup inst_a}
    : list (option inst_a) -> (option inst_a) :=
   foldr Monoid__option_mappend Monoid__option_mempty.
 
@@ -1255,11 +1255,11 @@ Program Instance Monad__NonEmpty : Monad NonEmpty :=
            op_zgzgze____ := fun {a} {b} => Monad__NonEmpty_op_zgzgze__ ;
            return___ := fun {a} => Monad__NonEmpty_return_ |}.
 
-Local Definition Monad__option_op_zgzg__
+Local Polymorphic Definition Monad__option_op_zgzg__
    : forall {a} {b}, option a -> option b -> option b :=
   fun {a} {b} => _*>_.
 
-Local Definition Monad__option_op_zgzgze__
+Local Polymorphic Definition Monad__option_op_zgzgze__
    : forall {a} {b}, option a -> (a -> option b) -> option b :=
   fun {a} {b} =>
     fun arg_0__ arg_1__ =>
@@ -1268,10 +1268,10 @@ Local Definition Monad__option_op_zgzgze__
       | None, _ => None
       end.
 
-Local Definition Monad__option_return_ : forall {a}, a -> option a :=
+Local Polymorphic Definition Monad__option_return_ : forall {a}, a -> option a :=
   fun {a} => pure.
 
-Program Instance Monad__option : Monad option :=
+Polymorphic Program Instance Monad__option : Monad option :=
   fun _ k__ =>
     k__ {| op_zgzg____ := fun {a} {b} => Monad__option_op_zgzg__ ;
            op_zgzgze____ := fun {a} {b} => Monad__option_op_zgzgze__ ;

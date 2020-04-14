@@ -10,6 +10,8 @@ Unset Printing Implicit Defensive.
 Require Coq.Program.Tactics.
 Require Coq.Program.Wf.
 
+Set Universe Polymorphism.
+
 (* Converted imports: *)
 
 Require Data.Foldable.
